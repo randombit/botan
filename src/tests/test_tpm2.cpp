@@ -1217,13 +1217,13 @@ std::vector<Test::Result> test_tpm2_ecc() {
          CHECK("Read a software public key from a TPM serialization", [&](Test::Result& result) {
             auto pk = load_persistent_ecc<Botan::TPM2::EC_PublicKey>(result, ctx, persistent_key_id, password, session);
             result.test_no_throw("Botan can read serialized ECC public key", [&] {
-               auto pk_sw = Botan::ECDSA_PublicKey(pk->algorithm_identifier(), pk->public_key_bits());
+               std::ignore = Botan::ECDSA_PublicKey(pk->algorithm_identifier(), pk->public_key_bits());
             });
 
             auto sk =
                load_persistent_ecc<Botan::TPM2::EC_PrivateKey>(result, ctx, persistent_key_id, password, session);
             result.test_no_throw("Botan can read serialized public key from ECC private key", [&] {
-               auto sk_sw = Botan::ECDSA_PublicKey(sk->algorithm_identifier(), sk->public_key_bits());
+               std::ignore = Botan::ECDSA_PublicKey(sk->algorithm_identifier(), sk->public_key_bits());
             });
          }),
    };
