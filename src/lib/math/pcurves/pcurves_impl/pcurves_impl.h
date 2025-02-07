@@ -1116,6 +1116,58 @@ class ProjectiveCurvePoint {
          return Self(X3, Y3, Z3);
       }
 
+      // Either add or subtract based on the CT::Choice
+      constexpr static Self add_or_sub(const Self& a, const AffinePoint& b, CT::Choice sub) {
+         const auto a_is_identity = a.is_identity();
+         const auto b_is_identity = b.is_identity();
+         if((a_is_identity && b_is_identity).as_bool()) {
+            return Self::identity();
+         }
+
+         /*
+         https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
+
+         Cost: 8M + 3S + 6add + 1*2
+         */
+
+         auto by = b.y();
+         FieldElement::conditional_assign(by, sub, by.negate());
+
+         const auto Z1Z1 = a.z().square();
+         const auto U2 = b.x() * Z1Z1;
+         const auto S2 = by * a.z() * Z1Z1;
+         const auto H = U2 - a.x();
+         const auto r = S2 - a.y();
+
+         // If r == H == 0 then we are in the doubling case
+         // For a == -b we compute the correct result because
+         // H will be zero, leading to Z3 being zero also
+         if((r.is_zero() && H.is_zero()).as_bool()) {
+            return a.dbl();
+         }
+
+         const auto HH = H.square();
+         const auto HHH = H * HH;
+         const auto V = a.x() * HH;
+         const auto t2 = r.square();
+         const auto t3 = V + V;
+         const auto t4 = t2 - HHH;
+         auto X3 = t4 - t3;
+         const auto t5 = V - X3;
+         const auto t6 = a.y() * HHH;
+         const auto t7 = r * t5;
+         auto Y3 = t7 - t6;
+         auto Z3 = a.z() * H;
+
+         // if a is identity then return b
+         FieldElement::conditional_assign(X3, Y3, Z3, a_is_identity, b.x(), by, FieldElement::one());
+
+         // if b is identity then return a
+         FieldElement::conditional_assign(X3, Y3, Z3, b_is_identity, a.x(), a.y(), a.z());
+
+         return Self(X3, Y3, Z3);
+      }
+
       /**
       * Projective point addition
       */
@@ -1891,6 +1943,110 @@ class WindowedMulTable final {
       }
 
    private:
+      std::vector<AffinePoint> m_table;
+};
+
+/**
+* Precomputed point multiplication table with Booth
+*/
+template <typename C, size_t W>
+class WindowedBoothMulTable final {
+   public:
+      typedef typename C::Scalar Scalar;
+      typedef typename C::AffinePoint AffinePoint;
+      typedef typename C::ProjectivePoint ProjectivePoint;
+
+      static constexpr size_t TableBits = W;
+      static_assert(TableBits >= 1 && TableBits <= 7);
+
+      static constexpr size_t WindowBits = TableBits + 1;
+
+      using BlindedScalar = BlindedScalarBits<C, WindowBits + 1>;
+
+      static constexpr size_t compute_full_windows(size_t sb, size_t wb) {
+         if(sb % wb == 0) {
+            return (sb - 1) / wb;
+         } else {
+            return sb / wb;
+         }
+      }
+
+      static constexpr size_t FullWindows = compute_full_windows(BlindedScalar::Bits + 1, WindowBits);
+
+      static constexpr size_t compute_initial_shift(size_t sb, size_t wb) {
+         if(sb % wb == 0) {
+            return wb;
+         } else {
+            return sb - (sb / wb) * wb;
+         }
+      }
+
+      static constexpr size_t InitialShift = compute_initial_shift(BlindedScalar::Bits + 1, WindowBits);
+
+      static_assert(FullWindows * WindowBits + InitialShift == BlindedScalar::Bits + 1);
+      static_assert(InitialShift > 0);
+
+      // 2^W elements [1*P, 2*P, ..., 2^W*P]
+      static constexpr size_t TableSize = 1 << TableBits;
+
+      WindowedBoothMulTable(const AffinePoint& p) : m_table{} {
+         std::vector<ProjectivePoint> table;
+         table.reserve(TableSize);
+
+         table.push_back(ProjectivePoint::from_affine(p));
+         for(size_t i = 1; i != TableSize; ++i) {
+            if(i % 2 == 1) {
+               table.push_back(table[i / 2].dbl());
+            } else {
+               table.push_back(table[i - 1] + p);
+            }
+         }
+
+         m_table = to_affine_batch<C>(table);
+      }
+
+      ProjectivePoint mul(const Scalar& s, RandomNumberGenerator& rng) const {
+         const BlindedScalar bits(s, rng);
+
+         auto accum = ProjectivePoint::identity();
+         CT::poison(accum);
+
+         for(size_t i = 0; i != FullWindows; ++i) {
+            const size_t idx = BlindedScalar::Bits - InitialShift - WindowBits * i;
+
+            const size_t w_i = bits.get_window(idx);
+            const auto [tidx, tneg] = booth_recode<WindowBits>(w_i);
+            accum = ProjectivePoint::add_or_sub(accum, AffinePoint::ct_select(m_table, tidx), tneg);
+
+            accum = accum.dbl_n(WindowBits);
+
+            if(i <= 3) {
+               accum.randomize_rep(rng);
+            }
+         }
+
+         // final window (note one bit shorter than previous reads)
+         const size_t w_l = bits.get_window(0) & ((1 << WindowBits) - 1);
+         const auto [tidx, tneg] = booth_recode<WindowBits>(w_l << 1);
+         accum = ProjectivePoint::add_or_sub(accum, AffinePoint::ct_select(m_table, tidx), tneg);
+
+         CT::unpoison(accum);
+         return accum;
+      }
+
+   private:
+      template <size_t B, typename T>
+      static constexpr std::pair<size_t, CT::Choice> booth_recode(T x) {
+         static_assert(B < sizeof(T) * 8 - 2, "Invalid B");
+
+         auto s_mask = CT::Mask<T>::expand(x >> B);
+         const T neg_x = (1 << (B + 1)) - x - 1;
+         T d = s_mask.select(neg_x, x);
+         d = (d >> 1) + (d & 1);
+
+         return std::make_pair(static_cast<size_t>(d), s_mask.as_choice());
+      }
+
       std::vector<AffinePoint> m_table;
 };
 
