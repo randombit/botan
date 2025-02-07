@@ -1386,6 +1386,16 @@ struct IntParams {
       static constexpr auto P = PI;
 };
 
+namespace detail {
+consteval bool has_module_xmd() {
+#if defined(BOTAN_HAS_XMD)
+   return true;
+#else
+   return false;
+#endif
+}
+}  // namespace detail
+
 /**
 * Elliptic Curve
 *
@@ -1393,15 +1403,6 @@ struct IntParams {
 */
 template <typename Params, template <typename FieldParamsT> typename FieldRep = MontgomeryRep>
 class EllipticCurve {
-   private:
-      consteval static bool has_module_xmd() {
-#if defined(BOTAN_HAS_XMD)
-         return true;
-#else
-         return false;
-#endif
-      }
-
    public:
       typedef typename Params::W W;
 
@@ -1436,8 +1437,9 @@ class EllipticCurve {
 
       static constexpr FieldElement SSWU_Z = FieldElement::constant(Params::Z);
 
-      static constexpr bool ValidForSswuHash = (has_module_xmd() && Params::Z != 0 && A.is_nonzero().as_bool() &&
-                                                B.is_nonzero().as_bool() && FieldElement::P_MOD_4 == 3);
+      static constexpr bool ValidForSswuHash =
+         (detail::has_module_xmd() && Params::Z != 0 && A.is_nonzero().as_bool() && B.is_nonzero().as_bool() &&
+          FieldElement::P_MOD_4 == 3);
 
       static constexpr bool OrderIsLessThanField = bigint_cmp(NW.data(), NW.size(), PW.data(), PW.size()) == -1;
 };
