@@ -80,7 +80,6 @@
 %{endif}
 %{if fuzzer_type}
 #define BOTAN_FUZZERS_ARE_BEING_BUILT
-#define BOTAN_FUZZER_IS_%{fuzzer_type}
 %{endif}
 
 %{if disable_deprecated_features}
