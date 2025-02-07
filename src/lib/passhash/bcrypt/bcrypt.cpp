@@ -8,6 +8,7 @@
 #include <botan/bcrypt.h>
 
 #include <botan/base64.h>
+#include <botan/mem_ops.h>
 #include <botan/rng.h>
 #include <botan/internal/blowfish.h>
 #include <botan/internal/ct_utils.h>

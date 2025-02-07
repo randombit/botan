@@ -7,6 +7,7 @@
 #include "perf.h"
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
+   #include <botan/assert.h>
    #include <botan/pk_algs.h>
 #endif
 

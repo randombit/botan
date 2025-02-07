@@ -8,6 +8,7 @@
 #ifndef BOTAN_ROUNDING_H_
 #define BOTAN_ROUNDING_H_
 
+#include <botan/assert.h>
 #include <botan/types.h>
 
 namespace Botan {

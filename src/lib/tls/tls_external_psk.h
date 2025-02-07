@@ -10,10 +10,9 @@
 #define BOTAN_TLS_EXTERNAL_PSK_H_
 
 #include <botan/secmem.h>
-#include <botan/strong_type.h>
 
-#include <utility>
-#include <vector>
+#include <string>
+#include <string_view>
 
 namespace Botan::TLS {
 
@@ -21,7 +20,7 @@ namespace Botan::TLS {
  * This is an externally provided PreSharedKey along with its identity, master
  * secret and (in case of TLS 1.3) a pre-provisioned Pseudo Random Function.
  */
-class ExternalPSK {
+class BOTAN_PUBLIC_API(3, 2) ExternalPSK {
    public:
       ExternalPSK(const ExternalPSK&) = delete;
       ExternalPSK& operator=(const ExternalPSK&) = delete;
@@ -43,10 +42,7 @@ class ExternalPSK {
        * Returns the master secret by moving it out of this object. Do not call
        * this method more than once.
        */
-      secure_vector<uint8_t> extract_master_secret() {
-         BOTAN_STATE_CHECK(!m_master_secret.empty());
-         return std::exchange(m_master_secret, {});
-      }
+      secure_vector<uint8_t> extract_master_secret();
 
       /**
        * External preshared keys in TLS 1.3 must be provisioned with a

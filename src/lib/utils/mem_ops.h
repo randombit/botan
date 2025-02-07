@@ -18,6 +18,8 @@
 #include <type_traits>
 #include <vector>
 
+BOTAN_FUTURE_INTERNAL_HEADER(mem_ops.h)
+
 /*
 The header mem_ops.h previously included the contents of allocator.h
 

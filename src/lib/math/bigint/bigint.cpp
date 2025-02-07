@@ -191,6 +191,31 @@ void BigInt::encode_words(word out[], size_t size) const {
    copy_mem(out, _data(), words);
 }
 
+void BigInt::Data::set_to_zero() {
+   m_reg.resize(m_reg.capacity());
+   clear_mem(m_reg.data(), m_reg.size());
+   m_sig_words = 0;
+}
+
+void BigInt::Data::mask_bits(size_t n) {
+   if(n == 0) {
+      return set_to_zero();
+   }
+
+   const size_t top_word = n / WordInfo<word>::bits;
+
+   // if(top_word < sig_words()) ?
+   if(top_word < size()) {
+      const word mask = (static_cast<word>(1) << (n % WordInfo<word>::bits)) - 1;
+      const size_t len = size() - (top_word + 1);
+      if(len > 0) {
+         clear_mem(&m_reg[top_word + 1], len);
+      }
+      m_reg[top_word] &= mask;
+      invalidate_sig_words();
+   }
+}
+
 size_t BigInt::Data::calc_sig_words() const {
    const size_t sz = m_reg.size();
    size_t sig = sz;

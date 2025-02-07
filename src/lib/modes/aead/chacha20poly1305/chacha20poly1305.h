@@ -10,6 +10,8 @@
 #define BOTAN_AEAD_CHACHA20_POLY1305_H_
 
 #include <botan/aead.h>
+
+#include <botan/assert.h>
 #include <botan/mac.h>
 #include <botan/stream_cipher.h>
 

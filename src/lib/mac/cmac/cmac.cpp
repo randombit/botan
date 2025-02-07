@@ -8,6 +8,7 @@
 #include <botan/internal/cmac.h>
 
 #include <botan/exceptn.h>
+#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/poly_dbl.h>
 #include <botan/internal/stl_util.h>

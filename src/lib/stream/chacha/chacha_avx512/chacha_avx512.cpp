@@ -5,6 +5,8 @@
 */
 
 #include <botan/internal/chacha.h>
+
+#include <botan/assert.h>
 #include <botan/internal/simd_avx512.h>
 
 namespace Botan {

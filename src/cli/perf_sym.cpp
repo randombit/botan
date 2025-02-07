@@ -5,6 +5,8 @@
 */
 
 #include "perf.h"
+
+#include <botan/assert.h>
 #include <set>
 
 #include <botan/symkey.h>

@@ -9,6 +9,7 @@
 
 #include <botan/der_enc.h>
 #include <botan/hash.h>
+#include <botan/mem_ops.h>
 #include <botan/pk_ops.h>
 #include <botan/rsa.h>
 #include <botan/internal/fmt.h>

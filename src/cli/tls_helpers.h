@@ -8,6 +8,7 @@
 #ifndef BOTAN_CLI_TLS_HELPERS_H_
 #define BOTAN_CLI_TLS_HELPERS_H_
 
+#include <botan/assert.h>
 #include <botan/credentials_manager.h>
 #include <botan/data_src.h>
 #include <botan/hex.h>
@@ -17,6 +18,7 @@
 #include <botan/x509self.h>
 #include <fstream>
 #include <memory>
+#include <utility>
 
 #include "cli_exceptions.h"
 

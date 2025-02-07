@@ -13,7 +13,6 @@
 
 #include <botan/asn1_obj.h>
 
-#include <botan/assert.h>
 #include <botan/pkix_enums.h>
 #include <iosfwd>
 #include <map>
@@ -610,7 +609,7 @@ class BOTAN_PUBLIC_API(2, 0) Extensions final : public ASN1_Object {
                                                                     bool critical,
                                                                     const std::vector<uint8_t>& body);
 
-      class Extensions_Info {
+      class BOTAN_UNSTABLE_API Extensions_Info {
          public:
             Extensions_Info(bool critical, std::unique_ptr<Certificate_Extension> ext) :
                   m_obj(std::move(ext)), m_bits(m_obj->encode_inner()), m_critical(critical) {}
@@ -624,10 +623,7 @@ class BOTAN_PUBLIC_API(2, 0) Extensions final : public ASN1_Object {
 
             const std::vector<uint8_t>& bits() const { return m_bits; }
 
-            const Certificate_Extension& obj() const {
-               BOTAN_ASSERT_NONNULL(m_obj.get());
-               return *m_obj;
-            }
+            const Certificate_Extension& obj() const;
 
          private:
             std::shared_ptr<Certificate_Extension> m_obj;

@@ -8,6 +8,7 @@
 #include <botan/internal/mgf1.h>
 
 #include <botan/hash.h>
+#include <botan/mem_ops.h>
 #include <algorithm>
 
 namespace Botan {

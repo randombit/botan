@@ -11,7 +11,6 @@
 
 #include <botan/p11.h>
 
-#include <botan/mem_ops.h>
 #include <memory>
 #include <string>
 #include <utility>
@@ -87,7 +86,7 @@ class BOTAN_PUBLIC_API(3, 7) MechanismWrapper final {
 
       /// Holds the mechanism parameters for OAEP, PSS and ECDH
       union MechanismParameters {
-            MechanismParameters() { clear_mem(this, 1); }
+            MechanismParameters() { std::memset(this, 0, sizeof(MechanismParameters)); }
 
             RsaPkcsOaepParams oaep_params;
             RsaPkcsPssParams pss_params;

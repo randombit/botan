@@ -14,6 +14,7 @@
 
 #include <botan/internal/xmss_wots.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/xmss_tools.h>

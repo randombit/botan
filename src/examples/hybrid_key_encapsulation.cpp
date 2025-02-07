@@ -27,10 +27,16 @@ class Hybrid_PublicKey : public virtual Botan::Public_Key {
    public:
       explicit Hybrid_PublicKey(std::unique_ptr<Botan::Public_Key> kex, std::unique_ptr<Botan::Public_Key> kem) :
             m_kex_pk(std::move(kex)), m_kem_pk(std::move(kem)) {
-         BOTAN_ASSERT_NONNULL(m_kex_pk);
-         BOTAN_ASSERT_NONNULL(m_kem_pk);
-         BOTAN_ASSERT_NOMSG(m_kex_pk->supports_operation(Botan::PublicKeyOperation::KeyAgreement));
-         BOTAN_ASSERT_NOMSG(m_kem_pk->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation));
+         if(m_kem_pk == nullptr || m_kex_pk == nullptr) {
+            throw std::runtime_error("Null arguments not allowed");
+         }
+
+         if(m_kex_pk->supports_operation(Botan::PublicKeyOperation::KeyAgreement)) {
+            throw std::runtime_error("The kex key must support key agreement");
+         }
+         if(m_kex_pk->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation)) {
+            throw std::runtime_error("The kem key must support key encapsulation");
+         }
       }
 
       std::string algo_name() const override {
@@ -165,9 +171,7 @@ class Hybrid_Encryption_Operation : public Botan::PK_Ops::KEM_Encryption {
       Hybrid_Encryption_Operation(const Hybrid_PublicKey& hybrid_pk, std::string_view kdf) :
             m_hybrid_pk(hybrid_pk),
             m_kem_encryptor(hybrid_pk.kem_public_key(), "Raw"),
-            m_kdf(Botan::KDF::create_or_throw(kdf)) {
-         BOTAN_ASSERT_NONNULL(m_kdf);
-      }
+            m_kdf(Botan::KDF::create_or_throw(kdf)) {}
 
       /**
        * This returns the length of the encapsulated key in bytes. For such a
@@ -236,7 +240,11 @@ class Hybrid_Encryption_Operation : public Botan::PK_Ops::KEM_Encryption {
 
          // 4. Hybrid: Concatenate the ephemeral public key and the KEM's
          //            encapsulation to form a combined "hybrid encapsulation".
-         BOTAN_ASSERT_NOMSG(out_encapsed_key.size() == kex_encapsed_key.size() + kem_encapsed_key.size());
+
+         if(out_encapsed_key.size() != kex_encapsed_key.size() + kem_encapsed_key.size()) {
+            throw std::runtime_error("The output span is not the expected size");
+         }
+
          std::copy(kex_encapsed_key.begin(), kex_encapsed_key.end(), out_encapsed_key.begin());
          std::copy(
             kem_encapsed_key.begin(), kem_encapsed_key.end(), out_encapsed_key.begin() + kex_encapsed_key.size());
@@ -252,7 +260,10 @@ class Hybrid_Encryption_Operation : public Botan::PK_Ops::KEM_Encryption {
          concat_shared_key.insert(concat_shared_key.end(), kem_encapsed_key.begin(), kem_encapsed_key.end());
          concat_shared_key.insert(concat_shared_key.end(), kem_shared_key.begin(), kem_shared_key.end());
 
-         BOTAN_ASSERT_NOMSG(out_shared_key.size() >= desired_shared_key_length);
+         if(out_shared_key.size() < desired_shared_key_length) {
+            throw std::runtime_error("The output span is smaller than the requested length");
+         }
+
          m_kdf->derive_key(out_shared_key.first(desired_shared_key_length), concat_shared_key, salt, {});
       }
 
@@ -276,9 +287,7 @@ class Hybrid_Decryption_Operation : public Botan::PK_Ops::KEM_Decryption {
             m_hybrid_sk(hybrid_sk),
             m_key_agreement(hybrid_sk.kex_private_key(), rng, "Raw"),
             m_kem_decryptor(hybrid_sk.kem_private_key(), rng, "Raw"),
-            m_kdf(Botan::KDF::create_or_throw(kdf)) {
-         BOTAN_ASSERT_NONNULL(m_kdf);
-      }
+            m_kdf(Botan::KDF::create_or_throw(kdf)) {}
 
       /**
        * This returns the length of the encapsulated key in bytes. For such a
@@ -303,7 +312,9 @@ class Hybrid_Decryption_Operation : public Botan::PK_Ops::KEM_Decryption {
                        std::span<const uint8_t> encapsulated_key,
                        size_t desired_shared_key_length,
                        std::span<const uint8_t> salt) override {
-         BOTAN_ASSERT_NOMSG(encapsulated_key.size() == encapsulated_key_length());
+         if(encapsulated_key.size() != encapsulated_key_length()) {
+            throw std::runtime_error("The provided encapsulated key is not of the expected length");
+         }
 
          // The basic idea of the hybrid operation:
          //  1. Extract the ephemeral public key and the KEM's encapsulation
@@ -340,7 +351,9 @@ class Hybrid_Decryption_Operation : public Botan::PK_Ops::KEM_Decryption {
          concat_shared_key.insert(concat_shared_key.end(), kem_encapsed_key.begin(), kem_encapsed_key.end());
          concat_shared_key.insert(concat_shared_key.end(), kem_shared_key.begin(), kem_shared_key.end());
 
-         BOTAN_ASSERT_NOMSG(out_shared_key.size() >= desired_shared_key_length);
+         if(out_shared_key.size() < desired_shared_key_length) {
+            throw std::runtime_error("The output buffer is smaller than the requested key length");
+         }
          m_kdf->derive_key(out_shared_key.first(desired_shared_key_length), concat_shared_key, salt, {});
       }
 

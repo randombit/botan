@@ -90,13 +90,7 @@ void ct_divide_word(const BigInt& x, word y, BigInt& q, word& r);
 * @param y a non-zero word
 * @return quotient floor(x / y)
 */
-inline BigInt ct_divide_word(const BigInt& x, word y) {
-   BigInt q;
-   word r;
-   ct_divide_word(x, y, q, r);
-   BOTAN_UNUSED(r);
-   return q;
-}
+BigInt ct_divide_word(const BigInt& x, word y);
 
 /**
 * BigInt word modulo, const time variant

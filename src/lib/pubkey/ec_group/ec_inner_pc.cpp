@@ -6,6 +6,8 @@
 
 #include <botan/internal/ec_inner_pc.h>
 
+#include <botan/mem_ops.h>
+
 namespace Botan {
 
 const EC_Scalar_Data_PC& EC_Scalar_Data_PC::checked_ref(const EC_Scalar_Data& data) {
