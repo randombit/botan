@@ -20,8 +20,6 @@ namespace Botan {
 
 class RandomNumberGenerator;
 
-static constexpr size_t BOTAN_MP_WORD_BITS = sizeof(word) * 8;
-
 /**
  * Arbitrary precision integer
  */
@@ -474,8 +472,8 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param set_it if the bit should be set
        */
       void conditionally_set_bit(size_t n, bool set_it) {
-         const size_t which = n / BOTAN_MP_WORD_BITS;
-         const word mask = static_cast<word>(set_it) << (n % BOTAN_MP_WORD_BITS);
+         const size_t which = n / (sizeof(word) * 8);
+         const word mask = static_cast<word>(set_it) << (n % (sizeof(word) * 8));
          m_data.set_word_at(which, word_at(which) | mask);
       }
 
@@ -496,7 +494,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param n the bit offset to test
        * @result true, if the bit at position n is set, false otherwise
        */
-      bool get_bit(size_t n) const { return ((word_at(n / BOTAN_MP_WORD_BITS) >> (n % BOTAN_MP_WORD_BITS)) & 1); }
+      bool get_bit(size_t n) const { return ((word_at(n / (sizeof(word) * 8)) >> (n % (sizeof(word) * 8))) & 1); }
 
       /**
        * Return (a maximum of) 32 bits of the complete value
@@ -631,7 +629,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
 
       /**
        * Get the number of high bits unset in the top (allocated) word
-       * of this integer. Returns BOTAN_MP_WORD_BITS only iff *this is
+       * of this integer. Returns (sizeof(word) * 8) only iff *this is
        * zero. Ignores sign.
        */
       BOTAN_DEPRECATED("Deprecated no replacement") size_t top_bits_free() const;
@@ -1018,11 +1016,11 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
                   return set_to_zero();
                }
 
-               const size_t top_word = n / BOTAN_MP_WORD_BITS;
+               const size_t top_word = n / (sizeof(word) * 8);
 
                // if(top_word < sig_words()) ?
                if(top_word < size()) {
-                  const word mask = (static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS)) - 1;
+                  const word mask = (static_cast<word>(1) << (n % (sizeof(word) * 8))) - 1;
                   const size_t len = size() - (top_word + 1);
                   if(len > 0) {
                      clear_mem(&m_reg[top_word + 1], len);
