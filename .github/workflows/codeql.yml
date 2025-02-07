@@ -16,7 +16,7 @@ permissions:
 jobs:
   codeql_cpp:
     name: C++
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       actions: read
       contents: read
@@ -36,7 +36,7 @@ jobs:
           cache-key: linux-gcc-x86_64-codeql
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
           languages: cpp
           config-file: ./src/configs/codeql.yml
@@ -45,13 +45,13 @@ jobs:
         run: ./src/scripts/ci_build.py --compiler-cache=none codeql
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
         with:
           category: cpp
 
   codeql_py:
     name: Python
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       actions: read
       contents: read
@@ -62,12 +62,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
           languages: python
           config-file: ./src/configs/codeql.yml
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
         with:
           category: python
