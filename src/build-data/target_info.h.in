@@ -43,6 +43,11 @@
 %{endfor}
 
 /*
+* Operating system information
+*/
+#define BOTAN_TARGET_OS_IS_%{os_name|upper}
+
+/*
 * System paths
 */
 #define BOTAN_INSTALL_PREFIX R"(%{prefix})"

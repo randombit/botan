@@ -8,6 +8,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/internal/os_utils.h>
+#include <botan/internal/target_info.h>
 #include <thread>
 
 namespace Botan {
