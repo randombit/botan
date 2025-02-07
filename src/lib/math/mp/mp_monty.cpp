@@ -28,7 +28,8 @@ namespace Botan {
 * https://eprint.iacr.org/2013/882.pdf
 * https://www.microsoft.com/en-us/research/wp-content/uploads/1996/01/j37acmon.pdf
 */
-void bigint_monty_redc_generic(word z[], size_t z_size, const word p[], size_t p_size, word p_dash, word ws[]) {
+void bigint_monty_redc_generic(
+   word r[], const word z[], size_t z_size, const word p[], size_t p_size, word p_dash, word ws[]) {
    BOTAN_ARG_CHECK(z_size >= 2 * p_size && p_size > 0, "Invalid sizes for bigint_monty_redc_generic");
 
    word3<word> accum;
@@ -79,10 +80,7 @@ void bigint_monty_redc_generic(word z[], size_t z_size, const word p[], size_t p
    * the Montgomery result is < P
    */
 
-   bigint_monty_maybe_sub(p_size, z, w1, ws, p);
-
-   // Clear the high words that contain the original input
-   clear_mem(z + p_size, z_size - p_size);
+   bigint_monty_maybe_sub(p_size, r, w1, ws, p);
 }
 
 }  // namespace Botan

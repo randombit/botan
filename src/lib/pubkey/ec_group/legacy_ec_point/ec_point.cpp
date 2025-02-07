@@ -52,7 +52,7 @@ void to_rep(const EC_Group_Data& group, BigInt& x, secure_vector<word>& ws) {
 }
 
 void from_rep(const EC_Group_Data& group, BigInt& z, secure_vector<word>& ws) {
-   group.monty().redc_in_place(z, ws);
+   z = group.monty().redc(z, ws);
 }
 
 BigInt from_rep_to_tmp(const EC_Group_Data& group, const BigInt& x, secure_vector<word>& ws) {

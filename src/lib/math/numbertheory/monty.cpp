@@ -58,21 +58,9 @@ BigInt Montgomery_Params::redc(const BigInt& x, secure_vector<word>& ws) const {
    BigInt z = x;
    z.grow_to(2 * m_p_words);
 
-   bigint_monty_redc(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
+   bigint_monty_redc_inplace(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
 
    return z;
-}
-
-void Montgomery_Params::redc_in_place(BigInt& x, secure_vector<word>& ws) const {
-   const size_t output_size = 2 * m_p_words;
-
-   if(ws.size() < output_size) {
-      ws.resize(output_size);
-   }
-
-   x.grow_to(output_size);
-
-   bigint_monty_redc(x.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
 }
 
 BigInt Montgomery_Params::mul(const BigInt& x, const BigInt& y, secure_vector<word>& ws) const {
@@ -106,7 +94,7 @@ void Montgomery_Params::mul(BigInt& z, const BigInt& x, const BigInt& y, secure_
               ws.data(),
               ws.size());
 
-   bigint_monty_redc(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
+   bigint_monty_redc_inplace(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
 }
 
 BigInt Montgomery_Params::mul(const BigInt& x, std::span<const word> y, secure_vector<word>& ws) const {
@@ -137,7 +125,7 @@ void Montgomery_Params::mul(BigInt& z, const BigInt& x, std::span<const word> y,
               ws.data(),
               ws.size());
 
-   bigint_monty_redc(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
+   bigint_monty_redc_inplace(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
 }
 
 void Montgomery_Params::mul_by(BigInt& x, std::span<const word> y, secure_vector<word>& ws) const {
@@ -163,7 +151,7 @@ void Montgomery_Params::mul_by(BigInt& x, std::span<const word> y, secure_vector
               ws_data,
               output_size);
 
-   bigint_monty_redc(z_data, m_p._data(), m_p_words, m_p_dash, ws_data, output_size);
+   bigint_monty_redc_inplace(z_data, m_p._data(), m_p_words, m_p_dash, ws_data, output_size);
 
    if(x.size() < output_size) {
       x.grow_to(output_size);
@@ -194,7 +182,7 @@ void Montgomery_Params::mul_by(BigInt& x, const BigInt& y, secure_vector<word>& 
               ws_data,
               output_size);
 
-   bigint_monty_redc(z_data, m_p._data(), m_p_words, m_p_dash, ws_data, output_size);
+   bigint_monty_redc_inplace(z_data, m_p._data(), m_p_words, m_p_dash, ws_data, output_size);
 
    if(x.size() < output_size) {
       x.grow_to(output_size);
@@ -230,7 +218,7 @@ void Montgomery_Params::sqr(BigInt& z, std::span<const word> x, secure_vector<wo
 
    bigint_sqr(z.mutable_data(), z.size(), x.data(), x.size(), std::min(m_p_words, x.size()), ws.data(), ws.size());
 
-   bigint_monty_redc(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
+   bigint_monty_redc_inplace(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
 }
 
 void Montgomery_Params::square_this(BigInt& x, secure_vector<word>& ws) const {
@@ -247,7 +235,7 @@ void Montgomery_Params::square_this(BigInt& x, secure_vector<word>& ws) const {
 
    bigint_sqr(z_data, output_size, x._data(), x.size(), std::min(m_p_words, x.size()), ws_data, output_size);
 
-   bigint_monty_redc(z_data, m_p._data(), m_p_words, m_p_dash, ws_data, output_size);
+   bigint_monty_redc_inplace(z_data, m_p._data(), m_p_words, m_p_dash, ws_data, output_size);
 
    if(x.size() < output_size) {
       x.grow_to(output_size);
