@@ -83,16 +83,6 @@ EC_AffinePoint_Data_BN::EC_AffinePoint_Data_BN(std::shared_ptr<const EC_Group_Da
    }
 }
 
-EC_AffinePoint_Data_BN::EC_AffinePoint_Data_BN(std::shared_ptr<const EC_Group_Data> group,
-                                               std::span<const uint8_t> pt) :
-      m_group(std::move(group)) {
-   BOTAN_ASSERT_NONNULL(m_group);
-   m_pt = Botan::OS2ECP(pt, m_group->curve());
-   if(!m_pt.is_zero()) {
-      m_xy = m_pt.xy_bytes();
-   }
-}
-
 std::unique_ptr<EC_AffinePoint_Data> EC_AffinePoint_Data_BN::clone() const {
    return std::make_unique<EC_AffinePoint_Data_BN>(m_group, m_pt);
 }

@@ -203,14 +203,8 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          return stash(C::ProjectivePoint::from_affine(from_stash(pt)));
       }
 
-      ProjectivePoint point_double(const ProjectivePoint& pt) const override { return stash(from_stash(pt).dbl()); }
-
-      ProjectivePoint point_add(const ProjectivePoint& a, const ProjectivePoint& b) const override {
-         return stash(from_stash(a) + from_stash(b));
-      }
-
-      ProjectivePoint point_add_mixed(const ProjectivePoint& a, const AffinePoint& b) const override {
-         return stash(from_stash(a) + from_stash(b));
+      ProjectivePoint point_add(const AffinePoint& a, const AffinePoint& b) const override {
+         return stash(C::ProjectivePoint::from_affine(from_stash(a)) + from_stash(b));
       }
 
       AffinePoint point_negate(const AffinePoint& pt) const override { return stash(from_stash(pt).negate()); }
@@ -222,17 +216,6 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
       void serialize_point(std::span<uint8_t> bytes, const AffinePoint& pt) const override {
          BOTAN_ARG_CHECK(bytes.size() == C::AffinePoint::BYTES, "Invalid length for serialize_point");
          from_stash(pt).serialize_to(bytes.subspan<0, C::AffinePoint::BYTES>());
-      }
-
-      void serialize_point_compressed(std::span<uint8_t> bytes, const AffinePoint& pt) const override {
-         BOTAN_ARG_CHECK(bytes.size() == C::AffinePoint::COMPRESSED_BYTES,
-                         "Invalid length for serialize_point_compressed");
-         from_stash(pt).serialize_compressed_to(bytes.subspan<0, C::AffinePoint::COMPRESSED_BYTES>());
-      }
-
-      void serialize_point_x(std::span<uint8_t> bytes, const AffinePoint& pt) const override {
-         BOTAN_ARG_CHECK(bytes.size() == C::FieldElement::BYTES, "Invalid length for serialize_point_x");
-         from_stash(pt).serialize_x_to(bytes.subspan<0, C::FieldElement::BYTES>());
       }
 
       void serialize_scalar(std::span<uint8_t> bytes, const Scalar& scalar) const override {
@@ -321,8 +304,6 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
       bool scalar_equal(const Scalar& a, const Scalar& b) const override {
          return (from_stash(a) == from_stash(b)).as_bool();
       }
-
-      Scalar scalar_zero() const override { return stash(C::Scalar::zero()); }
 
       Scalar scalar_one() const override { return stash(C::Scalar::one()); }
 

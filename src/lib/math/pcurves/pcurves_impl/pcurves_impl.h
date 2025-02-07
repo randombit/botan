@@ -857,27 +857,6 @@ class AffineCurvePoint final {
       }
 
       /**
-      * Serialize the point in compressed format
-      */
-      constexpr void serialize_compressed_to(std::span<uint8_t, Self::COMPRESSED_BYTES> bytes) const {
-         BOTAN_STATE_CHECK(this->is_identity().as_bool() == false);
-         const uint8_t hdr = CT::Mask<uint8_t>::from_choice(y().is_even()).select(0x02, 0x03);
-
-         BufferStuffer pack(bytes);
-         pack.append(hdr);
-         x().serialize_to(pack.next<FieldElement::BYTES>());
-         BOTAN_DEBUG_ASSERT(pack.full());
-      }
-
-      /**
-      * Serialize the affine x coordinate only
-      */
-      constexpr void serialize_x_to(std::span<uint8_t, FieldElement::BYTES> bytes) const {
-         BOTAN_STATE_CHECK(this->is_identity().as_bool() == false);
-         x().serialize_to(bytes);
-      }
-
-      /**
       * If idx is zero then return the identity element. Otherwise return pts[idx - 1]
       *
       * Returns the identity element also if idx is out of range
@@ -904,49 +883,29 @@ class AffineCurvePoint final {
       * Point deserialization
       *
       * This accepts compressed or uncompressed formats.
-      *
-      * It also currently accepts the deprecated hybrid format.
-      * TODO(Botan4): remove support for decoding hybrid points
       */
       static std::optional<Self> deserialize(std::span<const uint8_t> bytes) {
-         if(bytes.size() == Self::BYTES) {
-            if(bytes[0] == 0x04) {
-               auto x = FieldElement::deserialize(bytes.subspan(1, FieldElement::BYTES));
-               auto y = FieldElement::deserialize(bytes.subspan(1 + FieldElement::BYTES, FieldElement::BYTES));
+         if(bytes.size() == Self::BYTES && bytes[0] == 0x04) {
+            auto x = FieldElement::deserialize(bytes.subspan(1, FieldElement::BYTES));
+            auto y = FieldElement::deserialize(bytes.subspan(1 + FieldElement::BYTES, FieldElement::BYTES));
 
-               if(x && y) {
-                  const auto lhs = (*y).square();
-                  const auto rhs = Self::x3_ax_b(*x);
-                  if((lhs == rhs).as_bool()) {
-                     return Self(*x, *y);
-                  }
-               }
-            } else if(bytes[0] == 0x06 || bytes[0] == 0x07) {
-               // Deprecated "hybrid" encoding
-               const CT::Choice y_is_even = CT::Mask<uint8_t>::is_equal(bytes[0], 0x06).as_choice();
-               auto x = FieldElement::deserialize(bytes.subspan(1, FieldElement::BYTES));
-               auto y = FieldElement::deserialize(bytes.subspan(1 + FieldElement::BYTES, FieldElement::BYTES));
-
-               if(x && y && (y_is_even == y->is_even()).as_bool()) {
-                  const auto lhs = (*y).square();
-                  const auto rhs = Self::x3_ax_b(*x);
-                  if((lhs == rhs).as_bool()) {
-                     return Self(*x, *y);
-                  }
+            if(x && y) {
+               const auto lhs = (*y).square();
+               const auto rhs = Self::x3_ax_b(*x);
+               if((lhs == rhs).as_bool()) {
+                  return Self(*x, *y);
                }
             }
-         } else if(bytes.size() == Self::COMPRESSED_BYTES) {
-            if(bytes[0] == 0x02 || bytes[0] == 0x03) {
-               const CT::Choice y_is_even = CT::Mask<uint8_t>::is_equal(bytes[0], 0x02).as_choice();
+         } else if(bytes.size() == Self::COMPRESSED_BYTES && (bytes[0] == 0x02 || bytes[0] == 0x03)) {
+            const CT::Choice y_is_even = CT::Mask<uint8_t>::is_equal(bytes[0], 0x02).as_choice();
 
-               if(auto x = FieldElement::deserialize(bytes.subspan(1, FieldElement::BYTES))) {
-                  auto [y, is_square] = x3_ax_b(*x).sqrt();
+            if(auto x = FieldElement::deserialize(bytes.subspan(1, FieldElement::BYTES))) {
+               auto [y, is_square] = x3_ax_b(*x).sqrt();
 
-                  if(is_square.as_bool()) {
-                     const auto flip_y = y_is_even != y.is_even();
-                     FieldElement::conditional_assign(y, flip_y, y.negate());
-                     return Self(*x, y);
-                  }
+               if(is_square.as_bool()) {
+                  const auto flip_y = y_is_even != y.is_even();
+                  FieldElement::conditional_assign(y, flip_y, y.negate());
+                  return Self(*x, y);
                }
             }
          } else if(bytes.size() == 1 && bytes[0] == 0x00) {

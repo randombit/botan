@@ -237,8 +237,6 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       /// This will be in the range [1,n) where n is the group order
       std::unique_ptr<EC_Scalar_Data> scalar_random(RandomNumberGenerator& rng) const;
 
-      std::unique_ptr<EC_Scalar_Data> scalar_zero() const;
-
       std::unique_ptr<EC_Scalar_Data> scalar_one() const;
 
       std::unique_ptr<EC_Scalar_Data> gk_x_mod_order(const EC_Scalar_Data& scalar,

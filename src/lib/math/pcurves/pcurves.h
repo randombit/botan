@@ -260,40 +260,44 @@ class PrimeOrderCurve {
 
       virtual bool affine_point_is_identity(const AffinePoint& pt) const = 0;
 
-      virtual ProjectivePoint point_double(const ProjectivePoint& pt) const = 0;
-
       virtual AffinePoint point_negate(const AffinePoint& pt) const = 0;
 
-      virtual ProjectivePoint point_add(const ProjectivePoint& a, const ProjectivePoint& b) const = 0;
-
-      virtual ProjectivePoint point_add_mixed(const ProjectivePoint& a, const AffinePoint& b) const = 0;
+      virtual ProjectivePoint point_add(const AffinePoint& a, const AffinePoint& b) const = 0;
 
       virtual void serialize_point(std::span<uint8_t> bytes, const AffinePoint& pt) const = 0;
 
-      virtual void serialize_point_compressed(std::span<uint8_t> bytes, const AffinePoint& pt) const = 0;
-
-      virtual void serialize_point_x(std::span<uint8_t> bytes, const AffinePoint& pt) const = 0;
-
       virtual void serialize_scalar(std::span<uint8_t> bytes, const Scalar& scalar) const = 0;
-
-      /**
-      * Return the scalar zero
-      */
-      virtual Scalar scalar_zero() const = 0;
 
       /**
       * Return the scalar one
       */
       virtual Scalar scalar_one() const = 0;
 
+      /// Scalar addition
       virtual Scalar scalar_add(const Scalar& a, const Scalar& b) const = 0;
+
+      /// Scalar subtraction
       virtual Scalar scalar_sub(const Scalar& a, const Scalar& b) const = 0;
+
+      /// Scalar multiplication
       virtual Scalar scalar_mul(const Scalar& a, const Scalar& b) const = 0;
+
+      /// Scalar squaring
       virtual Scalar scalar_square(const Scalar& s) const = 0;
+
+      /// Scalar inversion
       virtual Scalar scalar_invert(const Scalar& s) const = 0;
+
+      /// Scalar inversion (variable time)
       virtual Scalar scalar_invert_vartime(const Scalar& s) const = 0;
+
+      /// Scalar negation
       virtual Scalar scalar_negate(const Scalar& s) const = 0;
+
+      /// Test if scalar is zero
       virtual bool scalar_is_zero(const Scalar& s) const = 0;
+
+      /// Test if two scalars are equal
       virtual bool scalar_equal(const Scalar& a, const Scalar& b) const = 0;
 
       /**

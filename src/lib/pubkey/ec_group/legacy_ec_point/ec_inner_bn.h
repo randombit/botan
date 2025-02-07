@@ -58,8 +58,6 @@ class EC_AffinePoint_Data_BN final : public EC_AffinePoint_Data {
    public:
       EC_AffinePoint_Data_BN(std::shared_ptr<const EC_Group_Data> group, EC_Point pt);
 
-      EC_AffinePoint_Data_BN(std::shared_ptr<const EC_Group_Data> group, std::span<const uint8_t> pt);
-
       const std::shared_ptr<const EC_Group_Data>& group() const override;
 
       std::unique_ptr<EC_AffinePoint_Data> clone() const override;
