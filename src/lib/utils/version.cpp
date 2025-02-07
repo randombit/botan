@@ -91,6 +91,14 @@ uint32_t version_patch() {
    return BOTAN_VERSION_PATCH;
 }
 
+bool unsafe_for_production_build() {
+#if defined(BOTAN_UNSAFE_FUZZER_MODE) || defined(BOTAN_TERMINATE_ON_ASSERTS)
+   return true;
+#else
+   return false;
+#endif
+}
+
 std::string runtime_version_check(uint32_t major, uint32_t minor, uint32_t patch) {
    if(major != version_major() || minor != version_minor() || patch != version_patch()) {
       return fmt("Warning: linked version ({}) does not match version built against ({}.{}.{})\n",
