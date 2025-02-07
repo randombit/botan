@@ -170,6 +170,17 @@
 #define BOTAN_OPTIMIZE_FOR_SIZE
 %{endif}
 
+#if defined(BOTAN_HAS_VALGRIND)
+   /**
+    * If `BOTAN_CT_POISON_ENABLED` is defined, then the `CT::poison` and
+    * `CT::unpoison` functions have an effect and do not just compile to no-ops.
+    *
+    * At the moment that is only the case when building with valgrind support. We
+    * could potentially add support for other tools in the future.
+    */
+   #define BOTAN_CT_POISON_ENABLED
+#endif
+
 /**
  * @}
  */
@@ -198,81 +209,6 @@
 
 /** Local/misc configuration options (if any) follow */
 %{local_config}
-
-/*
-* Things you can edit (but probably shouldn't)
-*/
-
-/** How much to allocate for a buffer of no particular size */
-#define BOTAN_DEFAULT_BUFFER_SIZE 4096
-
-#if defined(BOTAN_HAS_VALGRIND) || defined(BOTAN_ENABLE_DEBUG_ASSERTS)
-   /**
-    * @brief Prohibits access to unused memory pages in Botan's memory pool
-    *
-    * If BOTAN_MEM_POOL_USE_MMU_PROTECTIONS is defined, the Memory_Pool
-    * class used for mlock'ed memory will use OS calls to set page
-    * permissions so as to prohibit access to pages on the free list, then
-    * enable read/write access when the page is set to be used. This will
-    * turn (some) use after free bugs into a crash.
-    *
-    * The additional syscalls have a substantial performance impact, which
-    * is why this option is not enabled by default. It is used when built for
-    * running in valgrind or debug assertions are enabled.
-    */
-   #define BOTAN_MEM_POOL_USE_MMU_PROTECTIONS
-#endif
-
-#if defined(BOTAN_HAS_VALGRIND)
-   /**
-    * If `BOTAN_CT_POISON_ENABLED` is defined, then the `CT::poison` and
-    * `CT::unpoison` functions have an effect and do not just compile to no-ops.
-    *
-    * At the moment that is only the case when building with valgrind support. We
-    * could potentially add support for other tools in the future.
-    */
-   #define BOTAN_CT_POISON_ENABLED
-#endif
-
-/**
-* If enabled uses memset via volatile function pointer to zero memory,
-* otherwise does a byte at a time write via a volatile pointer.
-*/
-#define BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO 1
-
-/**
-* Normally blinding is performed by choosing a random starting point (plus
-* its inverse, of a form appropriate to the algorithm being blinded), and
-* then choosing new blinding operands by successive squaring of both
-* values. This is much faster than computing a new starting point but
-* introduces some possible corelation
-*
-* To avoid possible leakage problems in long-running processes, the blinder
-* periodically reinitializes the sequence. This value specifies how often
-* a new sequence should be started.
-*/
-#define BOTAN_BLINDING_REINIT_INTERVAL 64
-
-/**
-* Userspace RNGs like HMAC_DRBG will reseed after a specified number
-* of outputs are generated. Set to zero to disable automatic reseeding.
-*/
-#define BOTAN_RNG_DEFAULT_RESEED_INTERVAL 1024
-
-/** Number of entropy bits polled for reseeding userspace RNGs like HMAC_DRBG */
-#define BOTAN_RNG_RESEED_POLL_BITS 256
-
-#define BOTAN_RNG_RESEED_DEFAULT_TIMEOUT std::chrono::milliseconds(50)
-
-/**
-* Specifies (in order) the list of entropy sources that will be used
-* to seed an in-memory RNG.
-*/
-#define BOTAN_ENTROPY_DEFAULT_SOURCES \
-   { "rdseed", "hwrng", "getentropy", "system_rng", "system_stats" }
-
-/** Multiplier on a block cipher's native parallelism */
-#define BOTAN_BLOCK_CIPHER_PAR_MULT 4
 
 /**
  * @}

@@ -135,6 +135,11 @@ __extension__ typedef unsigned __int128 uint128_t;
 */
 static_assert(sizeof(std::size_t) == 8 || sizeof(std::size_t) == 4, "This platform has an unexpected size for size_t");
 
+/**
+* How much to allocate for a buffer of no particular size
+*/
+constexpr size_t DefaultBufferSize = 4096;
+
 }  // namespace Botan
 
 #endif

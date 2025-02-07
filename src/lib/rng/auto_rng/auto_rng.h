@@ -29,8 +29,8 @@ class BOTAN_PUBLIC_API(2, 0) AutoSeeded_RNG final : public RandomNumberGenerator
       void force_reseed();
 
       size_t reseed(Entropy_Sources& srcs,
-                    size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS,
-                    std::chrono::milliseconds poll_timeout = BOTAN_RNG_RESEED_DEFAULT_TIMEOUT) override;
+                    size_t poll_bits = RandomNumberGenerator::DefaultPollBits,
+                    std::chrono::milliseconds poll_timeout = RandomNumberGenerator::DefaultPollTimeout) override;
 
       std::string name() const override;
 
@@ -43,7 +43,7 @@ class BOTAN_PUBLIC_API(2, 0) AutoSeeded_RNG final : public RandomNumberGenerator
       * @param reseed_interval specifies a limit of how many times
       * the RNG will be called before automatic reseeding is performed
       */
-      AutoSeeded_RNG(size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
+      AutoSeeded_RNG(size_t reseed_interval = RandomNumberGenerator::DefaultReseedInterval);
 
       /**
       * Create an AutoSeeded_RNG which will get seed material from some other
@@ -55,7 +55,8 @@ class BOTAN_PUBLIC_API(2, 0) AutoSeeded_RNG final : public RandomNumberGenerator
       * @param reseed_interval specifies a limit of how many times
       * the RNG will be called before automatic reseeding is performed
       */
-      AutoSeeded_RNG(RandomNumberGenerator& underlying_rng, size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
+      AutoSeeded_RNG(RandomNumberGenerator& underlying_rng,
+                     size_t reseed_interval = RandomNumberGenerator::DefaultReseedInterval);
 
       /**
       * Create an AutoSeeded_RNG which will get seed material from a set of
@@ -65,7 +66,8 @@ class BOTAN_PUBLIC_API(2, 0) AutoSeeded_RNG final : public RandomNumberGenerator
       * @param reseed_interval specifies a limit of how many times
       * the RNG will be called before automatic reseeding is performed
       */
-      AutoSeeded_RNG(Entropy_Sources& entropy_sources, size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
+      AutoSeeded_RNG(Entropy_Sources& entropy_sources,
+                     size_t reseed_interval = RandomNumberGenerator::DefaultReseedInterval);
 
       /**
       * Create an AutoSeeded_RNG which will get seed material from both an
@@ -79,7 +81,7 @@ class BOTAN_PUBLIC_API(2, 0) AutoSeeded_RNG final : public RandomNumberGenerator
       */
       AutoSeeded_RNG(RandomNumberGenerator& underlying_rng,
                      Entropy_Sources& entropy_sources,
-                     size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
+                     size_t reseed_interval = RandomNumberGenerator::DefaultReseedInterval);
 
       ~AutoSeeded_RNG() override;
 

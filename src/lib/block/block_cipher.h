@@ -45,6 +45,14 @@ class BOTAN_PUBLIC_API(2, 0) BlockCipher : public SymmetricAlgorithm {
       static std::vector<std::string> providers(std::string_view algo_spec);
 
       /**
+      * Multiplier on a block cipher's native parallelism
+      *
+      * Usually notable performance gains come from further loop blocking,
+      * at least for 2 or 4x
+      */
+      static constexpr size_t ParallelismMult = 4;
+
+      /**
       * @return block size of this algorithm
       */
       virtual size_t block_size() const = 0;
@@ -57,7 +65,7 @@ class BOTAN_PUBLIC_API(2, 0) BlockCipher : public SymmetricAlgorithm {
       /**
       * @return prefererred parallelism of this cipher in bytes
       */
-      size_t parallel_bytes() const { return parallelism() * block_size() * BOTAN_BLOCK_CIPHER_PAR_MULT; }
+      size_t parallel_bytes() const { return parallelism() * block_size() * BlockCipher::ParallelismMult; }
 
       /**
       * @return provider information about this implementation. Default is "base",

@@ -10,6 +10,7 @@
 #if defined(BOTAN_HAS_RSA)
    #include "test_pubkey.h"
    #include <botan/rsa.h>
+   #include <botan/internal/blinding.h>
    #include <botan/internal/fmt.h>
 #endif
 
@@ -197,7 +198,7 @@ class RSA_Blinding_Tests final : public Test {
    #if defined(BOTAN_HAS_EMSA_RAW)
 
          /*
-         * The blinder chooses a new starting point BOTAN_BLINDING_REINIT_INTERVAL
+         * The blinder chooses a new starting point Blinder::ReinitInterval
          * so sign several times that with a single key.
          *
          * Very small values (padding/hashing disabled, only low byte set on input)
@@ -208,7 +209,7 @@ class RSA_Blinding_Tests final : public Test {
             rsa, this->rng(), "Raw", Botan::Signature_Format::Standard, "base");  // don't try this at home
          Botan::PK_Verifier verifier(rsa, "Raw", Botan::Signature_Format::Standard, "base");
 
-         for(size_t i = 1; i <= BOTAN_BLINDING_REINIT_INTERVAL * 6; ++i) {
+         for(size_t i = 1; i <= Botan::Blinder::ReinitInterval * 6; ++i) {
             std::vector<uint8_t> input(16);
             input[input.size() - 1] = static_cast<uint8_t>(i | 1);
 
@@ -224,7 +225,7 @@ class RSA_Blinding_Tests final : public Test {
    #if defined(BOTAN_HAS_EME_RAW)
 
          /*
-         * The blinder chooses a new starting point BOTAN_BLINDING_REINIT_INTERVAL
+         * The blinder chooses a new starting point Blinder::ReinitInterval
          * so decrypt several times that with a single key.
          *
          * Very small values (padding/hashing disabled, only low byte set on input)
@@ -240,12 +241,12 @@ class RSA_Blinding_Tests final : public Test {
          blinder initialization plus the exponent blinding bits which
          is 2*64 bits per operation.
          */
-         const size_t rng_bytes = rsa.get_n().bytes() + (2 * 8 * BOTAN_BLINDING_REINIT_INTERVAL);
+         const size_t rng_bytes = rsa.get_n().bytes() + (2 * 8 * Botan::Blinder::ReinitInterval);
 
          Fixed_Output_RNG fixed_rng(this->rng(), rng_bytes);
          Botan::PK_Decryptor_EME decryptor(rsa, fixed_rng, "Raw", "base");
 
-         for(size_t i = 1; i <= BOTAN_BLINDING_REINIT_INTERVAL; ++i) {
+         for(size_t i = 1; i <= Botan::Blinder::ReinitInterval; ++i) {
             std::vector<uint8_t> input(16);
             input[input.size() - 1] = static_cast<uint8_t>(i);
 

@@ -72,7 +72,8 @@ class BOTAN_PUBLIC_API(2, 3) ChaCha_RNG final : public Stateful_RNG {
       * @param reseed_interval specifies a limit of how many times
       * the RNG will be called before automatic reseeding is performed
       */
-      ChaCha_RNG(RandomNumberGenerator& underlying_rng, size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
+      ChaCha_RNG(RandomNumberGenerator& underlying_rng,
+                 size_t reseed_interval = RandomNumberGenerator::DefaultReseedInterval);
 
       /**
       * Automatic reseeding from @p entropy_sources will take place after
@@ -82,7 +83,8 @@ class BOTAN_PUBLIC_API(2, 3) ChaCha_RNG final : public Stateful_RNG {
       * @param reseed_interval specifies a limit of how many times
       * the RNG will be called before automatic reseeding is performed.
       */
-      ChaCha_RNG(Entropy_Sources& entropy_sources, size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
+      ChaCha_RNG(Entropy_Sources& entropy_sources,
+                 size_t reseed_interval = RandomNumberGenerator::DefaultReseedInterval);
 
       /**
       * Automatic reseeding from @p underlying_rng and @p entropy_sources
@@ -97,7 +99,7 @@ class BOTAN_PUBLIC_API(2, 3) ChaCha_RNG final : public Stateful_RNG {
       */
       ChaCha_RNG(RandomNumberGenerator& underlying_rng,
                  Entropy_Sources& entropy_sources,
-                 size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
+                 size_t reseed_interval = RandomNumberGenerator::DefaultReseedInterval);
 
       std::string name() const override { return "ChaCha_RNG"; }
 

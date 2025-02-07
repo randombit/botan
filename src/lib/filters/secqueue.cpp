@@ -18,7 +18,7 @@ namespace Botan {
 */
 class SecureQueueNode final {
    public:
-      SecureQueueNode() : m_buffer(BOTAN_DEFAULT_BUFFER_SIZE) {
+      SecureQueueNode() : m_buffer(DefaultBufferSize) {
          m_next = nullptr;
          m_start = m_end = 0;
       }

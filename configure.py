@@ -3574,6 +3574,9 @@ botan
     if options.unsafe_terminate_on_asserts:
         logging.warning("Terminating on assertion failures is NOT SAFE FOR PRODUCTION")
 
+    if options.local_config is not None:
+        logging.warning("Use of --with-local-config is deprecated and will be removed in 3.9 (open an issue if this affects you)")
+
 def list_os_features(all_os_features, info_os):
     for feat in all_os_features:
         os_with_feat = [o for o in info_os.keys() if feat in info_os[o].target_features]

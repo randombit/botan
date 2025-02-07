@@ -42,7 +42,7 @@ namespace {
 class System_RNG_EntropySource final : public Entropy_Source {
    public:
       size_t poll(RandomNumberGenerator& rng) override {
-         const size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS;
+         const size_t poll_bits = RandomNumberGenerator::DefaultPollBits;
          rng.reseed_from_rng(system_rng(), poll_bits);
          return poll_bits;
       }
@@ -92,9 +92,8 @@ class Processor_RNG_EntropySource final : public Entropy_Source {
 class Jitter_RNG_EntropySource final : public Entropy_Source {
    public:
       size_t poll(RandomNumberGenerator& rng) override {
-         const size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS;
-         rng.reseed_from_rng(m_rng, poll_bits);
-         return poll_bits;
+         rng.reseed_from_rng(m_rng);
+         return RandomNumberGenerator::DefaultPollBits;
       }
 
       std::string name() const override { return m_rng.name(); }
@@ -203,7 +202,7 @@ Entropy_Sources::Entropy_Sources(const std::vector<std::string>& sources) {
 }
 
 Entropy_Sources& Entropy_Sources::global_sources() {
-   static Entropy_Sources global_entropy_sources(BOTAN_ENTROPY_DEFAULT_SOURCES);
+   static Entropy_Sources global_entropy_sources({"rdseed", "hwrng", "getentropy", "system_rng", "system_stats"});
 
    return global_entropy_sources;
 }

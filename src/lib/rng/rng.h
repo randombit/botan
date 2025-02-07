@@ -30,6 +30,22 @@ class Entropy_Sources;
 */
 class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
    public:
+      /**
+      * Userspace RNGs like HMAC_DRBG will reseed after a specified number
+      * of outputs are generated. Set to zero to disable automatic reseeding.
+      */
+      static constexpr size_t DefaultReseedInterval = 1024;
+
+      /**
+      * Number of entropy bits polled for reseeding userspace RNGs like HMAC_DRBG
+      */
+      static constexpr size_t DefaultPollBits = 256;
+
+      /**
+      * Default poll timeout
+      */
+      static constexpr auto DefaultPollTimeout = std::chrono::milliseconds(50);
+
       virtual ~RandomNumberGenerator() = default;
 
       RandomNumberGenerator() = default;
@@ -155,8 +171,8 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       * Sets the seeded state to true if enough entropy was added.
       */
       virtual size_t reseed(Entropy_Sources& srcs,
-                            size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS,
-                            std::chrono::milliseconds poll_timeout = BOTAN_RNG_RESEED_DEFAULT_TIMEOUT);
+                            size_t poll_bits = RandomNumberGenerator::DefaultPollBits,
+                            std::chrono::milliseconds poll_timeout = RandomNumberGenerator::DefaultPollTimeout);
 
       /**
       * Reseed by reading specified bits from the RNG
@@ -165,7 +181,8 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       *
       * @throws Exception if RNG accepts input but reseeding failed.
       */
-      virtual void reseed_from_rng(RandomNumberGenerator& rng, size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS);
+      virtual void reseed_from_rng(RandomNumberGenerator& rng,
+                                   size_t poll_bits = RandomNumberGenerator::DefaultPollBits);
 
       // Some utility functions built on the interface above:
 

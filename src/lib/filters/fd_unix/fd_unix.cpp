@@ -16,7 +16,7 @@ namespace Botan {
 * Write data from a pipe into a Unix fd
 */
 int operator<<(int fd, Pipe& pipe) {
-   secure_vector<uint8_t> buffer(BOTAN_DEFAULT_BUFFER_SIZE);
+   secure_vector<uint8_t> buffer(DefaultBufferSize);
    while(pipe.remaining()) {
       size_t got = pipe.read(buffer.data(), buffer.size());
       size_t position = 0;
@@ -37,7 +37,7 @@ int operator<<(int fd, Pipe& pipe) {
 * Read data from a Unix fd into a pipe
 */
 int operator>>(int fd, Pipe& pipe) {
-   secure_vector<uint8_t> buffer(BOTAN_DEFAULT_BUFFER_SIZE);
+   secure_vector<uint8_t> buffer(DefaultBufferSize);
    while(true) {
       ssize_t ret = ::read(fd, buffer.data(), buffer.size());
       if(ret < 0) {

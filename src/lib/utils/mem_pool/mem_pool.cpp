@@ -9,6 +9,23 @@
 #include <botan/mem_ops.h>
 #include <algorithm>
 
+#if defined(BOTAN_HAS_VALGRIND) || defined(BOTAN_ENABLE_DEBUG_ASSERTS)
+   /**
+    * @brief Prohibits access to unused memory pages in Botan's memory pool
+    *
+    * If BOTAN_MEM_POOL_USE_MMU_PROTECTIONS is defined, the Memory_Pool
+    * class used for mlock'ed memory will use OS calls to set page
+    * permissions so as to prohibit access to pages on the free list, then
+    * enable read/write access when the page is set to be used. This will
+    * turn (some) use after free bugs into a crash.
+    *
+    * The additional syscalls have a substantial performance impact, which
+    * is why this option is not enabled by default. It is used when built for
+    * running in valgrind or debug assertions are enabled.
+    */
+   #define BOTAN_MEM_POOL_USE_MMU_PROTECTIONS
+#endif
+
 #if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS) && defined(BOTAN_HAS_OS_UTILS)
    #include <botan/internal/os_utils.h>
 #endif

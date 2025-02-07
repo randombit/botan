@@ -33,7 +33,7 @@ BigInt Blinder::blinding_nonce() const {
 BigInt Blinder::blind(const BigInt& i) const {
    ++m_counter;
 
-   if((BOTAN_BLINDING_REINIT_INTERVAL > 0) && (m_counter > BOTAN_BLINDING_REINIT_INTERVAL)) {
+   if((ReinitInterval > 0) && (m_counter > ReinitInterval)) {
       const BigInt k = blinding_nonce();
       m_e = m_fwd_fn(k);
       m_d = m_inv_fn(k);
