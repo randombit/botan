@@ -8,6 +8,7 @@
 #include <botan/version.h>
 
 #include <botan/internal/fmt.h>
+#include <botan/internal/target_info.h>
 
 namespace Botan {
 

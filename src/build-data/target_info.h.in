@@ -24,6 +24,10 @@
 
 [[maybe_unused]] static constexpr bool OptimizeForSize = %{optimize_for_size|as_bool};
 
+%{if terminate_on_asserts}
+#define BOTAN_TERMINATE_ON_ASSERTS
+%{endif}
+
 /*
 * Compiler Information
 */

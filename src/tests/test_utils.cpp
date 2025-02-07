@@ -18,6 +18,7 @@
 #include <botan/internal/parsing.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/target_info.h>
 
 #include <bit>
 #include <ctime>

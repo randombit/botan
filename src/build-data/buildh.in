@@ -112,10 +112,6 @@
 #define BOTAN_ENABLE_DEBUG_ASSERTS
 %{endif}
 
-%{if terminate_on_asserts}
-#define BOTAN_TERMINATE_ON_ASSERTS
-%{endif}
-
 /**
  * @}
  */
