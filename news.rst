@@ -1,6 +1,21 @@
 Release Notes
 ========================================
 
+Version 3.8.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add fast variable-time scalar inversion for ECDSA signature verification (GH #4620)
+
+* The ``build.h`` header previously included various parameters which could be
+  modified by end users prior to compilation. These have been removed. (GH #4639)
+
+* Add an FFI example which also works as a test in CI that prevents accidentally
+  making changes to ffi.h or build.h that make them incompatible with C. (GH #4640)
+
+* Internal elliptic curve optimizations and cleanups (GH #4625 #4632)
+
+* Internal RSA signature padding cleanups (GH #4635)
+
 Version 3.7.1, 2025-02-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
