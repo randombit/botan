@@ -8,6 +8,7 @@
 #include <botan/entropy_src.h>
 
 #include <botan/rng.h>
+#include <botan/internal/target_info.h>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    #include <botan/system_rng.h>

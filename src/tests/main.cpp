@@ -13,6 +13,7 @@
 #include <vector>
 
 #include <botan/version.h>
+#include <botan/internal/target_info.h>
 
 namespace {
 

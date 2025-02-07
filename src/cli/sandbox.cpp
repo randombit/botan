@@ -7,6 +7,8 @@
 #include "sandbox.h"
 #include <botan/allocator.h>
 
+#include <botan/internal/target_info.h>
+
 #if defined(BOTAN_TARGET_OS_HAS_PLEDGE)
    #include <unistd.h>
 #elif defined(BOTAN_TARGET_OS_HAS_CAP_ENTER)

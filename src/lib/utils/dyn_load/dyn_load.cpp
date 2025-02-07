@@ -9,6 +9,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/target_info.h>
 #include <sstream>
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)

@@ -10,6 +10,8 @@
 
 #include "cli.h"
 
+#include <botan/internal/target_info.h>
+
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM) && defined(BOTAN_TARGET_OS_HAS_SOCKETS)
 
    #include <botan/hex.h>

@@ -97,7 +97,7 @@
 
 /* Target identification and feature test macros */
 
-%{for os_features}
+%{for os_features_public}
 #define BOTAN_TARGET_OS_HAS_%{i|upper}
 %{endfor}
 

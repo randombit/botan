@@ -53,6 +53,10 @@
 */
 #define BOTAN_TARGET_OS_IS_%{os_name|upper}
 
+%{for os_features}
+#define BOTAN_TARGET_OS_HAS_%{i|upper}
+%{endfor}
+
 /*
 * System paths
 */

@@ -1702,6 +1702,14 @@ class OsInfo(InfoObject):
 
         return sorted(feats)
 
+    def enabled_features_public(self, options):
+        public_feat = set(['threads', 'filesystem'])
+        return list(set(self.enabled_features(options)) & public_feat)
+
+    def enabled_features_internal(self, options):
+        public_feat = set(['threads', 'filesystem'])
+        return list(set(self.enabled_features(options)) - public_feat)
+
     def macros(self, cc):
         value = [cc.add_compile_definition_option + define
                  for define in self.feature_macros]
@@ -2312,7 +2320,8 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'build_ct_selftest': bool('ct_selftest' in options.build_targets),
         'ct_selftest_src': os.path.join(source_paths.src_dir, 'ct_selftest', 'ct_selftest.cpp'),
 
-        'os_features': osinfo.enabled_features(options),
+        'os_features': osinfo.enabled_features_internal(options),
+        'os_features_public': osinfo.enabled_features_public(options),
         'os_name': osinfo.basename,
         'cpu_features': arch.supported_isa_extensions(cc, options),
         'system_cert_bundle': options.system_cert_bundle,
