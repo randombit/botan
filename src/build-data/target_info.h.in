@@ -38,6 +38,8 @@
 */
 #define BOTAN_TARGET_ARCH "%{arch}"
 
+#define BOTAN_TARGET_ARCH_IS_%{arch|upper}
+
 %{if cpu_family}
 #define BOTAN_TARGET_CPU_IS_%{cpu_family|upper}_FAMILY
 %{endif}

@@ -113,7 +113,6 @@
 #define BOTAN_HAS_SANITIZER_%{i|upper}
 %{endfor}
 
-#define BOTAN_TARGET_ARCH_IS_%{arch|upper}
 %{if endian}
 #define BOTAN_TARGET_CPU_IS_%{endian|upper}_ENDIAN
 %{endif}
@@ -162,20 +161,5 @@
 /**
  * @}
  */
-
-/* Check for a common build problem */
-
-#if defined(BOTAN_TARGET_ARCH_IS_X86_64) && ((defined(_MSC_VER) && !defined(_WIN64)) || \
-                                             (defined(__clang__) && !defined(__x86_64__)) || \
-                                             (defined(__GNUG__) && !defined(__x86_64__)))
-    #error "Trying to compile Botan configured as x86_64 with non-x86_64 compiler."
-#endif
-
-#if defined(BOTAN_TARGET_ARCH_IS_X86_32) && ((defined(_MSC_VER) && defined(_WIN64)) || \
-                                             (defined(__clang__) && !defined(__i386__)) || \
-                                             (defined(__GNUG__) && !defined(__i386__)))
-
-    #error "Trying to compile Botan configured as x86_32 with non-x86_32 compiler."
-#endif
 
 #endif
