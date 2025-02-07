@@ -4,14 +4,6 @@
 /**
 * @file  build.h
 * @brief Build configuration for Botan %{version}
-*
-* Automatically generated from
-* '%{command_line}'
-*
-* Target
-*  - Compiler: %{cxx} %{cxx_abi_flags} %{cc_lang_flags} %{cc_compile_flags}
-*  - Arch: %{arch}
-*  - OS: %{os}
 */
 
 /**
