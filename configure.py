@@ -1199,17 +1199,12 @@ class ArchInfo(InfoObject):
             {
                 'endian': None,
                 'family': None,
-                'wordsize': 32
             })
 
         self.aliases = lex.aliases
         self.endian = lex.endian
         self.family = lex.family
         self.isa_extensions = lex.isa_extensions
-        self.wordsize = int(lex.wordsize)
-
-        if self.wordsize not in [32, 64]:
-            logging.error('Unexpected wordsize %d for arch %s', self.wordsize, infofile)
 
         alphanumeric = re.compile('^[a-z0-9]+$')
         for isa in self.isa_extensions:
@@ -2250,7 +2245,6 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'compiler': options.compiler,
         'cpu_family': arch.family,
         'endian': options.with_endian,
-        'cpu_is_64bit': arch.wordsize == 64,
 
         'python_exe': choose_python_exe(),
         'python_version': options.python_version,

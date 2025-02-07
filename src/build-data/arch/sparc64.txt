@@ -1,3 +1,2 @@
 family sparc
-wordsize 64
 endian big

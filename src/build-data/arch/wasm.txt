@@ -1,2 +1,1 @@
 endian little
-wordsize 32

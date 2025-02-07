@@ -1,3 +1,2 @@
 family riscv
 endian little
-wordsize 64
