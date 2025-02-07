@@ -11,6 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/types.h>
 #include <botan/internal/parsing.h>
+#include <botan/internal/target_info.h>
 #include <ostream>
 
 #if defined(BOTAN_HAS_OS_UTILS)

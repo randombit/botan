@@ -117,9 +117,6 @@
 %{if endian}
 #define BOTAN_TARGET_CPU_IS_%{endian|upper}_ENDIAN
 %{endif}
-%{if cpu_family}
-#define BOTAN_TARGET_CPU_IS_%{cpu_family|upper}_FAMILY
-%{endif}
 
 %{if with_valgrind}
 #define BOTAN_HAS_VALGRIND
