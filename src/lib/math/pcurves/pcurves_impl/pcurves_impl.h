@@ -1393,6 +1393,15 @@ struct IntParams {
 */
 template <typename Params, template <typename FieldParamsT> typename FieldRep = MontgomeryRep>
 class EllipticCurve {
+   private:
+      consteval static bool has_module_xmd() {
+#if defined(BOTAN_HAS_XMD)
+         return true;
+#else
+         return false;
+#endif
+      }
+
    public:
       typedef typename Params::W W;
 
@@ -1427,8 +1436,8 @@ class EllipticCurve {
 
       static constexpr FieldElement SSWU_Z = FieldElement::constant(Params::Z);
 
-      static constexpr bool ValidForSswuHash =
-         (Params::Z != 0 && A.is_nonzero().as_bool() && B.is_nonzero().as_bool() && FieldElement::P_MOD_4 == 3);
+      static constexpr bool ValidForSswuHash = (has_module_xmd() && Params::Z != 0 && A.is_nonzero().as_bool() &&
+                                                B.is_nonzero().as_bool() && FieldElement::P_MOD_4 == 3);
 
       static constexpr bool OrderIsLessThanField = bigint_cmp(NW.data(), NW.size(), PW.data(), PW.size()) == -1;
 };
@@ -2259,7 +2268,6 @@ template <typename C, bool RO>
    requires C::ValidForSswuHash
 inline auto hash_to_curve_sswu(std::string_view hash, std::span<const uint8_t> pw, std::span<const uint8_t> dst)
    -> std::conditional_t<RO, typename C::ProjectivePoint, typename C::AffinePoint> {
-#if defined(BOTAN_HAS_XMD)
    constexpr size_t SecurityLevel = (C::OrderBits + 1) / 2;
    constexpr size_t L = (C::PrimeFieldBits + SecurityLevel + 7) / 8;
    constexpr size_t Cnt = RO ? 2 : 1;
@@ -2279,10 +2287,6 @@ inline auto hash_to_curve_sswu(std::string_view hash, std::span<const uint8_t> p
       const auto u = C::FieldElement::from_wide_bytes(std::span<const uint8_t, L>(xmd.data(), L));
       return map_to_curve_sswu<C>(u);
    }
-#else
-   BOTAN_UNUSED(hash, pw, dst);
-   throw Not_Implemented("Hash to curve not available due to missing XMD");
-#endif
 }
 
 }  // namespace

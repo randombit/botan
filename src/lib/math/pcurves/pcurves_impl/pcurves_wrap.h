@@ -255,7 +255,8 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          if constexpr(C::ValidForSswuHash) {
             return stash(hash_to_curve_sswu<C, false>(hash, input, domain_sep));
          } else {
-            throw Not_Implemented("Hash to curve is not implemented for this curve");
+            throw Not_Implemented(
+               "Hash to curve is not available (not available for this curve or this build does not contain XMD).");
          }
       }
 
@@ -265,7 +266,8 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          if constexpr(C::ValidForSswuHash) {
             return stash(hash_to_curve_sswu<C, true>(hash, input, domain_sep));
          } else {
-            throw Not_Implemented("Hash to curve is not implemented for this curve");
+            throw Not_Implemented(
+               "Hash to curve is not available (not available for this curve or this build does not contain XMD).");
          }
       }
 
