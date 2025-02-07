@@ -36,6 +36,9 @@
 /*
 * External tool settings
 */
+%{if with_valgrind}
+#define BOTAN_HAS_VALGRIND
+%{endif}
 
 %{if fuzzer_type}
 #define BOTAN_FUZZER_IS_%{fuzzer_type}

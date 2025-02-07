@@ -7,6 +7,7 @@
 #include <botan/internal/mem_pool.h>
 
 #include <botan/mem_ops.h>
+#include <botan/internal/target_info.h>
 #include <algorithm>
 
 #if defined(BOTAN_HAS_VALGRIND) || defined(BOTAN_ENABLE_DEBUG_ASSERTS)
