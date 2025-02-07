@@ -11,7 +11,7 @@
 #include <botan/types.h>
 #include <type_traits>
 
-#if defined(BOTAN_BUILD_COMPILER_IS_MSVC) && defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
+#if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
    #include <intrin.h>
 #endif
 

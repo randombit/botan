@@ -1,5 +1,4 @@
 endian little
-wordsize 64
 
 family x86
 
