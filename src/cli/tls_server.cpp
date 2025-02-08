@@ -3,6 +3,7 @@
 * (C) 2014 Jack Lloyd
 *     2017 René Korthaus, Rohde & Schwarz Cybersecurity
 *     2023 René Meusel, Rohde & Schwarz Cybersecurity
+      2025 Kagan Can Sit
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -40,8 +41,8 @@
    #include <list>
    #include <memory>
 
-   #include "socket_utils.h"
    #include "tls_helpers.h"
+   #include <botan/internal/socket_platform.h>
 
 namespace Botan_CLI {
 
@@ -122,10 +123,10 @@ class TLS_Server final : public Command {
                "tls_server cert-or-pubkey key --port=443 --psk= --psk-identity= --psk-prf=SHA-256 --type=tcp --policy=default --dump-traces= --max-clients=0")
    #endif
       {
-         init_sockets();
+         Botan::OS::Socket_Platform::socket_init();
       }
 
-      ~TLS_Server() override { stop_sockets(); }
+      ~TLS_Server() override { Botan::OS::Socket_Platform::socket_fini(); }
 
       TLS_Server(const TLS_Server& other) = delete;
       TLS_Server(TLS_Server&& other) = delete;
@@ -239,7 +240,8 @@ class TLS_Server final : public Command {
                      ssize_t got = ::recv(m_socket, Botan::cast_uint8_ptr_to_char(buf), sizeof(buf), 0);
 
                      if(got == -1) {
-                        error_output() << "Error in socket read - " << err_to_string(errno) << std::endl;
+                        error_output() << "Error in socket read - "
+                                       << Botan::OS::Socket_Platform::get_last_socket_error() << std::endl;
                         break;
                      }
 
@@ -266,8 +268,8 @@ class TLS_Server final : public Command {
                   } catch(std::exception& e) {
                      error_output() << "Connection problem: " << e.what() << std::endl;
                      if(m_is_tcp) {
-                        close_socket(m_socket);
-                        m_socket = invalid_socket();
+                        Botan::OS::Socket_Platform::close_socket(m_socket);
+                        m_socket = Botan::OS::Socket_Platform::invalid_socket();
                      }
                   }
                }
@@ -276,12 +278,12 @@ class TLS_Server final : public Command {
             }
 
             if(m_is_tcp) {
-               close_socket(m_socket);
-               m_socket = invalid_socket();
+               Botan::OS::Socket_Platform::close_socket(m_socket);
+               m_socket = Botan::OS::Socket_Platform::invalid_socket();
             }
          }
 
-         close_socket(server_fd);
+         Botan::OS::Socket_Platform::close_socket(server_fd);
       }
 
    public:
@@ -293,7 +295,8 @@ class TLS_Server final : public Command {
             ssize_t sent = ::send(m_socket, buf.data(), static_cast<sendrecv_len_type>(buf.size()), MSG_NOSIGNAL);
 
             if(sent == -1) {
-               error_output() << "Error writing to socket - " << err_to_string(errno) << std::endl;
+               error_output() << "Error writing to socket - " << Botan::OS::Socket_Platform::get_last_socket_error()
+                              << std::endl;
             } else if(sent >= 0 && static_cast<size_t>(sent) != buf.size()) {
                error_output() << "Packet of length " << buf.size() << " truncated to " << sent << std::endl;
             }
@@ -317,11 +320,16 @@ class TLS_Server final : public Command {
       void push_pending_output(std::string line) { m_pending_output.emplace_back(std::move(line)); }
 
    private:
+      using socket_type = Botan::OS::Socket_Platform::socket_type;
+      using socket_op_ret_type = Botan::OS::Socket_Platform::socket_op_ret_type;
+      using socklen_type = Botan::OS::Socket_Platform::socklen_type;
+      using sendrecv_len_type = Botan::OS::Socket_Platform::sendrecv_len_type;
+
       socket_type make_server_socket(uint16_t port) {
          const int type = m_is_tcp ? SOCK_STREAM : SOCK_DGRAM;
 
          socket_type fd = ::socket(PF_INET, type, 0);
-         if(fd == invalid_socket()) {
+         if(fd == Botan::OS::Socket_Platform::invalid_socket()) {
             throw CLI_Error("Unable to acquire socket");
          }
 
@@ -334,14 +342,14 @@ class TLS_Server final : public Command {
          socket_info.sin_addr.s_addr = INADDR_ANY;
 
          if(::bind(fd, reinterpret_cast<struct sockaddr*>(&socket_info), sizeof(struct sockaddr)) != 0) {
-            close_socket(fd);
+            Botan::OS::Socket_Platform::close_socket(fd);
             throw CLI_Error("server bind failed");
          }
 
          if(m_is_tcp) {
             constexpr int backlog = std::min(100, SOMAXCONN);
             if(::listen(fd, backlog) != 0) {
-               close_socket(fd);
+               Botan::OS::Socket_Platform::close_socket(fd);
                throw CLI_Error("listen failed");
             }
          }
@@ -360,7 +368,7 @@ class TLS_Server final : public Command {
          return fd;
       }
 
-      socket_type m_socket = invalid_socket();
+      socket_type m_socket = Botan::OS::Socket_Platform::invalid_socket();
       bool m_is_tcp = false;
       uint32_t m_socket_id = 0;
       std::list<std::string> m_pending_output;
