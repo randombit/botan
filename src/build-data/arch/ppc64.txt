@@ -1,7 +1,6 @@
 endian big
 
 family ppc
-wordsize 64
 
 <aliases>
 powerpc64

@@ -1,0 +1,88 @@
+#ifndef BOTAN_TARGET_INFO_H_
+#define BOTAN_TARGET_INFO_H_
+
+#include <botan/build.h>
+
+/**
+* @file  target_info.h
+*
+* Automatically generated from
+* '%{command_line}'
+*
+* Target
+*  - Compiler: %{cxx} %{cxx_abi_flags} %{cc_lang_flags} %{cc_compile_flags}
+*  - Arch: %{arch}
+*  - OS: %{os}
+*/
+
+/*
+* Configuration
+*/
+%{if cxx_ct_value_barrier_type}
+#define BOTAN_CT_VALUE_BARRIER_USE_%{cxx_ct_value_barrier_type|upper}
+%{endif}
+
+[[maybe_unused]] static constexpr bool OptimizeForSize = %{optimize_for_size|as_bool};
+
+%{if terminate_on_asserts}
+#define BOTAN_TERMINATE_ON_ASSERTS
+%{endif}
+
+/*
+* Compiler Information
+*/
+#define BOTAN_BUILD_COMPILER_IS_%{cc_macro}
+
+%{if cxx_supports_gcc_inline_asm}
+#define BOTAN_USE_GCC_INLINE_ASM
+%{endif}
+
+/*
+* External tool settings
+*/
+%{if with_valgrind}
+#define BOTAN_HAS_VALGRIND
+%{endif}
+
+%{if fuzzer_type}
+#define BOTAN_FUZZER_IS_%{fuzzer_type}
+%{endif}
+
+/*
+* CPU feature information
+*/
+#define BOTAN_TARGET_ARCH "%{arch}"
+
+#define BOTAN_TARGET_ARCH_IS_%{arch|upper}
+
+%{if cpu_family}
+#define BOTAN_TARGET_CPU_IS_%{cpu_family|upper}_FAMILY
+%{endif}
+
+%{for cpu_features}
+#define BOTAN_TARGET_CPU_SUPPORTS_%{i|upper}
+%{endfor}
+
+/*
+* Operating system information
+*/
+#define BOTAN_TARGET_OS_IS_%{os_name|upper}
+
+%{for os_features}
+#define BOTAN_TARGET_OS_HAS_%{i|upper}
+%{endfor}
+
+/*
+* System paths
+*/
+#define BOTAN_INSTALL_PREFIX R"(%{prefix})"
+#define BOTAN_INSTALL_HEADER_DIR R"(%{includedir}/botan-%{version_major})"
+#define BOTAN_INSTALL_LIB_DIR R"(%{libdir})"
+#define BOTAN_LIB_LINK "%{link_to}"
+#define BOTAN_LINK_FLAGS "%{cxx_abi_flags}"
+
+%{if system_cert_bundle}
+#define BOTAN_SYSTEM_CERT_BUNDLE "%{system_cert_bundle}"
+%{endif}
+
+#endif

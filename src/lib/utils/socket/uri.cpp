@@ -11,6 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
+#include <botan/internal/target_info.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
    #include <arpa/inet.h>

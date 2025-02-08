@@ -10,6 +10,7 @@
 
 #include <botan/assert.h>
 #include <botan/exceptn.h>
+#include <botan/internal/target_info.h>
 #include <ctime>
 #include <iomanip>
 #include <sstream>

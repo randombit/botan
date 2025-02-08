@@ -10,6 +10,7 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/target_info.h>
 #include <chrono>
 
 #if defined(BOTAN_HAS_BOOST_ASIO)

@@ -36,7 +36,7 @@ Modular_Reducer Modular_Reducer::for_secret_modulus(const BigInt& mod) {
    size_t mod_words = mod.sig_words();
 
    // Compute mu = floor(2^{2k} / m)
-   const size_t mu_bits = 2 * BOTAN_MP_WORD_BITS * mod_words;
+   const size_t mu_bits = 2 * WordInfo<word>::bits * mod_words;
    return Modular_Reducer(mod, ct_divide_pow2k(mu_bits, mod), mod_words);
 }
 
@@ -47,7 +47,7 @@ Modular_Reducer Modular_Reducer::for_public_modulus(const BigInt& mod) {
    size_t mod_words = mod.sig_words();
 
    // Compute mu = floor(2^{2k} / m)
-   const size_t mu_bits = 2 * BOTAN_MP_WORD_BITS * mod_words;
+   const size_t mu_bits = 2 * WordInfo<word>::bits * mod_words;
    return Modular_Reducer(mod, BigInt::power_of_2(mu_bits) / mod, mod_words);
 }
 
@@ -110,14 +110,14 @@ void Modular_Reducer::reduce(BigInt& t1, const BigInt& x, secure_vector<word>& w
 
    t1 = x;
    t1.set_sign(BigInt::Positive);
-   t1 >>= (BOTAN_MP_WORD_BITS * (m_mod_words - 1));
+   t1 >>= (WordInfo<word>::bits * (m_mod_words - 1));
 
    t1.mul(m_mu, ws);
-   t1 >>= (BOTAN_MP_WORD_BITS * (m_mod_words + 1));
+   t1 >>= (WordInfo<word>::bits * (m_mod_words + 1));
 
    // TODO add masked mul to avoid computing high bits
    t1.mul(m_modulus, ws);
-   t1.mask_bits(BOTAN_MP_WORD_BITS * (m_mod_words + 1));
+   t1.mask_bits(WordInfo<word>::bits * (m_mod_words + 1));
 
    t1.rev_sub(x._data(), std::min(x_sw, m_mod_words + 1), ws);
 

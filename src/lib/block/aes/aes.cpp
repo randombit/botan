@@ -408,43 +408,43 @@ inline void ks_expand(uint32_t B[8], const uint32_t K[], size_t r) {
 
 inline void shift_rows(uint32_t B[8]) {
    // 3 0 1 2 7 4 5 6 10 11 8 9 14 15 12 13 17 18 19 16 21 22 23 20 24 25 26 27 28 29 30 31
-#if defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
-   for(size_t i = 0; i != 8; i += 2) {
-      uint64_t x = (static_cast<uint64_t>(B[i]) << 32) | B[i + 1];
-      x = bit_permute_step<uint64_t>(x, 0x0022331100223311, 2);
-      x = bit_permute_step<uint64_t>(x, 0x0055005500550055, 1);
-      B[i] = static_cast<uint32_t>(x >> 32);
-      B[i + 1] = static_cast<uint32_t>(x);
+   if constexpr(HasNative64BitRegisters) {
+      for(size_t i = 0; i != 8; i += 2) {
+         uint64_t x = (static_cast<uint64_t>(B[i]) << 32) | B[i + 1];
+         x = bit_permute_step<uint64_t>(x, 0x0022331100223311, 2);
+         x = bit_permute_step<uint64_t>(x, 0x0055005500550055, 1);
+         B[i] = static_cast<uint32_t>(x >> 32);
+         B[i + 1] = static_cast<uint32_t>(x);
+      }
+   } else {
+      for(size_t i = 0; i != 8; ++i) {
+         uint32_t x = B[i];
+         x = bit_permute_step<uint32_t>(x, 0x00223311, 2);
+         x = bit_permute_step<uint32_t>(x, 0x00550055, 1);
+         B[i] = x;
+      }
    }
-#else
-   for(size_t i = 0; i != 8; ++i) {
-      uint32_t x = B[i];
-      x = bit_permute_step<uint32_t>(x, 0x00223311, 2);
-      x = bit_permute_step<uint32_t>(x, 0x00550055, 1);
-      B[i] = x;
-   }
-#endif
 }
 
 inline void inv_shift_rows(uint32_t B[8]) {
    // Inverse of shift_rows, just inverting the steps
 
-#if defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
-   for(size_t i = 0; i != 8; i += 2) {
-      uint64_t x = (static_cast<uint64_t>(B[i]) << 32) | B[i + 1];
-      x = bit_permute_step<uint64_t>(x, 0x0055005500550055, 1);
-      x = bit_permute_step<uint64_t>(x, 0x0022331100223311, 2);
-      B[i] = static_cast<uint32_t>(x >> 32);
-      B[i + 1] = static_cast<uint32_t>(x);
+   if constexpr(HasNative64BitRegisters) {
+      for(size_t i = 0; i != 8; i += 2) {
+         uint64_t x = (static_cast<uint64_t>(B[i]) << 32) | B[i + 1];
+         x = bit_permute_step<uint64_t>(x, 0x0055005500550055, 1);
+         x = bit_permute_step<uint64_t>(x, 0x0022331100223311, 2);
+         B[i] = static_cast<uint32_t>(x >> 32);
+         B[i + 1] = static_cast<uint32_t>(x);
+      }
+   } else {
+      for(size_t i = 0; i != 8; ++i) {
+         uint32_t x = B[i];
+         x = bit_permute_step<uint32_t>(x, 0x00550055, 1);
+         x = bit_permute_step<uint32_t>(x, 0x00223311, 2);
+         B[i] = x;
+      }
    }
-#else
-   for(size_t i = 0; i != 8; ++i) {
-      uint32_t x = B[i];
-      x = bit_permute_step<uint32_t>(x, 0x00550055, 1);
-      x = bit_permute_step<uint32_t>(x, 0x00223311, 2);
-      B[i] = x;
-   }
-#endif
 }
 
 inline void mix_columns(uint32_t B[8]) {

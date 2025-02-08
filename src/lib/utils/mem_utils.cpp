@@ -6,6 +6,7 @@
 
 #include <botan/mem_ops.h>
 
+#include <botan/internal/target_info.h>
 #include <cstring>
 
 #if defined(BOTAN_TARGET_OS_HAS_RTLSECUREZEROMEMORY)

@@ -1199,17 +1199,12 @@ class ArchInfo(InfoObject):
             {
                 'endian': None,
                 'family': None,
-                'wordsize': 32
             })
 
         self.aliases = lex.aliases
         self.endian = lex.endian
         self.family = lex.family
         self.isa_extensions = lex.isa_extensions
-        self.wordsize = int(lex.wordsize)
-
-        if self.wordsize not in [32, 64]:
-            logging.error('Unexpected wordsize %d for arch %s', self.wordsize, infofile)
 
         alphanumeric = re.compile('^[a-z0-9]+$')
         for isa in self.isa_extensions:
@@ -1707,6 +1702,14 @@ class OsInfo(InfoObject):
 
         return sorted(feats)
 
+    def enabled_features_public(self, options):
+        public_feat = set(['threads', 'filesystem'])
+        return list(set(self.enabled_features(options)) & public_feat)
+
+    def enabled_features_internal(self, options):
+        public_feat = set(['threads', 'filesystem'])
+        return list(set(self.enabled_features(options)) - public_feat)
+
     def macros(self, cc):
         value = [cc.add_compile_definition_option + define
                  for define in self.feature_macros]
@@ -1794,18 +1797,23 @@ def process_template_string(template_text, variables, template_source):
                 k = match.group(1)
                 if k.endswith('|upper'):
                     k = k.replace('|upper', '')
-                    v = get_replacement(k).upper()
+                    return get_replacement(k).upper()
                 elif k.endswith('|concat'):
                     k = k.replace('|concat', '')
                     if not match.group(2):
                         raise InternalError("|concat must be of the form '%{val|concat:<some static value>}'")
                     v = get_replacement(k)
-                    if v:
-                        v = f"{v}{match.group(2)}"
-                else:
-                    v = get_replacement(k)
+                    return f"{v}{match.group(2)}"
+                elif k.endswith('|as_bool'):
+                    k = k.replace('|as_bool', '')
 
-                return v
+                    if k not in self.vals:
+                        raise KeyError(k)
+                    v = self.vals.get(k)
+
+                    return str(bool(v)).lower()
+                else:
+                    return get_replacement(k)
 
             def insert_join(match):
                 var = match.group(1)
@@ -2053,11 +2061,6 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
 
         return sorted(libs)
 
-    def choose_mp_bits():
-        mp_bits = arch.wordsize # allow command line override?
-        logging.debug('Using MP bits %d', mp_bits)
-        return mp_bits
-
     def configure_command_line():
         # Cut absolute path from main executable (e.g. configure.py or python interpreter)
         # to get the same result when configuring the same thing on different machines
@@ -2250,9 +2253,6 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'compiler': options.compiler,
         'cpu_family': arch.family,
         'endian': options.with_endian,
-        'cpu_is_64bit': arch.wordsize == 64,
-
-        'mp_bits': choose_mp_bits(),
 
         'python_exe': choose_python_exe(),
         'python_version': options.python_version,
@@ -2320,7 +2320,8 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'build_ct_selftest': bool('ct_selftest' in options.build_targets),
         'ct_selftest_src': os.path.join(source_paths.src_dir, 'ct_selftest', 'ct_selftest.cpp'),
 
-        'os_features': osinfo.enabled_features(options),
+        'os_features': osinfo.enabled_features_internal(options),
+        'os_features_public': osinfo.enabled_features_public(options),
         'os_name': osinfo.basename,
         'cpu_features': arch.supported_isa_extensions(cc, options),
         'system_cert_bundle': options.system_cert_bundle,
@@ -3439,6 +3440,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
         return os.path.join(build_paths.doc_module_info, p)
 
     write_template(in_build_dir('build.h'), in_build_data('buildh.in'))
+    write_template(in_build_dir('target_info.h'), in_build_data('target_info.h.in'))
     write_template(in_build_dir('botan.doxy'), in_build_data('botan.doxy.in'))
 
     if options.with_cmake_config:
@@ -3685,6 +3687,7 @@ def main(argv):
 
     build_paths = BuildPaths(source_paths, options, using_mods)
     build_paths.public_headers.append(os.path.join(build_paths.build_dir, 'build.h'))
+    build_paths.internal_headers.append(os.path.join(build_paths.build_dir, 'target_info.h'))
 
     template_vars = create_template_vars(source_paths, build_paths, options, using_mods, not_using_mods, cc, arch, osinfo)
 

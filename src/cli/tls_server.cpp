@@ -10,6 +10,8 @@
 #include "cli.h"
 #include "sandbox.h"
 
+#include <botan/internal/target_info.h>
+
 #if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
    #include <sys/socket.h>
 #endif

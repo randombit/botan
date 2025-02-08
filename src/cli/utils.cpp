@@ -10,6 +10,7 @@
 #include <botan/version.h>
 #include <botan/internal/cpuid.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/target_info.h>
 #include <iomanip>
 #include <sstream>
 

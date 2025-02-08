@@ -148,7 +148,7 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k) {
 
    const size_t a_words = a.sig_words();
 
-   X.grow_to(round_up(k, BOTAN_MP_WORD_BITS) / BOTAN_MP_WORD_BITS);
+   X.grow_to(round_up(k, WordInfo<word>::bits) / WordInfo<word>::bits);
    b.grow_to(a_words);
 
    /*
@@ -156,7 +156,7 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k) {
    granularity because of the length of a, so no point in doing more
    than this.
    */
-   const size_t iter = round_up(k, BOTAN_MP_WORD_BITS);
+   const size_t iter = round_up(k, WordInfo<word>::bits);
 
    for(size_t i = 0; i != iter; ++i) {
       const bool b0 = b.get_bit(0);

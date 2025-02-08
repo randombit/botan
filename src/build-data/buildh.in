@@ -4,14 +4,6 @@
 /**
 * @file  build.h
 * @brief Build configuration for Botan %{version}
-*
-* Automatically generated from
-* '%{command_line}'
-*
-* Target
-*  - Compiler: %{cxx} %{cxx_abi_flags} %{cc_lang_flags} %{cc_compile_flags}
-*  - Arch: %{arch}
-*  - OS: %{os}
 */
 
 /**
@@ -79,9 +71,6 @@
  * @{
  */
 
-/** How many bits per limb in a BigInt */
-#define BOTAN_MP_WORD_BITS %{mp_bits}
-
 %{if fuzzer_mode}
 /** Disables certain validation checks to ease fuzzability of the library
  * @warning This causes the library build to be insecure, hence, it must not be
@@ -91,7 +80,6 @@
 %{endif}
 %{if fuzzer_type}
 #define BOTAN_FUZZERS_ARE_BEING_BUILT
-#define BOTAN_FUZZER_IS_%{fuzzer_type}
 %{endif}
 
 %{if disable_deprecated_features}
@@ -102,84 +90,27 @@
 #define BOTAN_ENABLE_EXPERIMENTAL_FEATURES
 %{endif}
 
-#define BOTAN_INSTALL_PREFIX R"(%{prefix})"
-#define BOTAN_INSTALL_HEADER_DIR R"(%{includedir}/botan-%{version_major})"
-#define BOTAN_INSTALL_LIB_DIR R"(%{libdir})"
-#define BOTAN_LIB_LINK "%{link_to}"
-#define BOTAN_LINK_FLAGS "%{cxx_abi_flags}"
-
-%{if system_cert_bundle}
-#define BOTAN_SYSTEM_CERT_BUNDLE "%{system_cert_bundle}"
-%{endif}
-
 #ifndef BOTAN_DLL
   #define BOTAN_DLL %{visibility_attribute}
 #endif
 
 /* Target identification and feature test macros */
 
-#define BOTAN_TARGET_OS_IS_%{os_name|upper}
-
-%{for os_features}
+%{for os_features_public}
 #define BOTAN_TARGET_OS_HAS_%{i|upper}
 %{endfor}
-
-#define BOTAN_BUILD_COMPILER_IS_%{cc_macro}
-
-%{if cxx_supports_gcc_inline_asm}
-#define BOTAN_USE_GCC_INLINE_ASM
-%{endif}
-
-%{if cxx_ct_value_barrier_type}
-#define BOTAN_CT_VALUE_BARRIER_USE_%{cxx_ct_value_barrier_type|upper}
-%{endif}
 
 %{for sanitizer_types}
 #define BOTAN_HAS_SANITIZER_%{i|upper}
 %{endfor}
 
-#define BOTAN_TARGET_ARCH "%{arch}"
-#define BOTAN_TARGET_ARCH_IS_%{arch|upper}
 %{if endian}
 #define BOTAN_TARGET_CPU_IS_%{endian|upper}_ENDIAN
-%{endif}
-%{if cpu_family}
-#define BOTAN_TARGET_CPU_IS_%{cpu_family|upper}_FAMILY
-%{endif}
-%{if cpu_is_64bit}
-#define BOTAN_TARGET_CPU_HAS_NATIVE_64BIT
-%{endif}
-
-%{for cpu_features}
-#define BOTAN_TARGET_SUPPORTS_%{i|upper}
-%{endfor}
-
-%{if with_valgrind}
-#define BOTAN_HAS_VALGRIND
 %{endif}
 
 %{if with_debug_asserts}
 #define BOTAN_ENABLE_DEBUG_ASSERTS
 %{endif}
-
-%{if terminate_on_asserts}
-#define BOTAN_TERMINATE_ON_ASSERTS
-%{endif}
-
-%{if optimize_for_size}
-#define BOTAN_OPTIMIZE_FOR_SIZE
-%{endif}
-
-#if defined(BOTAN_HAS_VALGRIND)
-   /**
-    * If `BOTAN_CT_POISON_ENABLED` is defined, then the `CT::poison` and
-    * `CT::unpoison` functions have an effect and do not just compile to no-ops.
-    *
-    * At the moment that is only the case when building with valgrind support. We
-    * could potentially add support for other tools in the future.
-    */
-   #define BOTAN_CT_POISON_ENABLED
-#endif
 
 /**
  * @}
@@ -213,20 +144,5 @@
 /**
  * @}
  */
-
-/* Check for a common build problem */
-
-#if defined(BOTAN_TARGET_ARCH_IS_X86_64) && ((defined(_MSC_VER) && !defined(_WIN64)) || \
-                                             (defined(__clang__) && !defined(__x86_64__)) || \
-                                             (defined(__GNUG__) && !defined(__x86_64__)))
-    #error "Trying to compile Botan configured as x86_64 with non-x86_64 compiler."
-#endif
-
-#if defined(BOTAN_TARGET_ARCH_IS_X86_32) && ((defined(_MSC_VER) && defined(_WIN64)) || \
-                                             (defined(__clang__) && !defined(__i386__)) || \
-                                             (defined(__GNUG__) && !defined(__i386__)))
-
-    #error "Trying to compile Botan configured as x86_32 with non-x86_32 compiler."
-#endif
 
 #endif

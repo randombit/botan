@@ -84,6 +84,20 @@ BOTAN_PUBLIC_API(2, 0) uint32_t version_patch();
 */
 BOTAN_PUBLIC_API(2, 0) std::string runtime_version_check(uint32_t major, uint32_t minor, uint32_t patch);
 
+/**
+* Certain build-time options, used for testing, result in a binary which is not
+* safe for use in a production system. This function can be used to test for such
+* a configuration at runtime.
+*
+* Currently these unsafe conditions include:
+*
+* - Unsafe fuzzer mode (--unsafe-fuzzer-mode) which intentionally disables various
+*   checks in order to improve the effectiveness of fuzzing.
+* - Terminate on asserts (--unsafe-terminate-on-asserts) which intentionally aborts
+*   if any internal assertion failure occurs, rather than throwing an exception.
+*/
+BOTAN_PUBLIC_API(3, 8) bool unsafe_for_production_build();
+
 /*
 * Macros for compile-time version checks
 *

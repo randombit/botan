@@ -22,6 +22,7 @@
 #include <botan/internal/monty_exp.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/target_info.h>
 #include <botan/internal/workfactor.h>
 
 #if defined(BOTAN_HAS_THREAD_UTILS)

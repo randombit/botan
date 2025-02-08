@@ -16,26 +16,17 @@
 namespace Botan {
 
 BigInt::BigInt(uint64_t n) {
-#if BOTAN_MP_WORD_BITS == 64
-   m_data.set_word_at(0, n);
-#else
-   m_data.set_word_at(1, static_cast<word>(n >> 32));
-   m_data.set_word_at(0, static_cast<word>(n));
-#endif
+   if constexpr(sizeof(word) == 8) {
+      m_data.set_word_at(0, static_cast<word>(n));
+   } else {
+      m_data.set_word_at(1, static_cast<word>(n >> 32));
+      m_data.set_word_at(0, static_cast<word>(n));
+   }
 }
 
 //static
 BigInt BigInt::from_u64(uint64_t n) {
-   BigInt bn;
-
-#if BOTAN_MP_WORD_BITS == 64
-   bn.set_word_at(0, n);
-#else
-   bn.set_word_at(1, static_cast<word>(n >> 32));
-   bn.set_word_at(0, static_cast<word>(n));
-#endif
-
-   return bn;
+   return BigInt(n);
 }
 
 //static
@@ -231,8 +222,8 @@ uint32_t BigInt::get_substring(size_t offset, size_t length) const {
 
    const uint32_t mask = 0xFFFFFFFF >> (32 - length);
 
-   const size_t word_offset = offset / BOTAN_MP_WORD_BITS;
-   const size_t wshift = (offset % BOTAN_MP_WORD_BITS);
+   const size_t word_offset = offset / WordInfo<word>::bits;
+   const size_t wshift = (offset % WordInfo<word>::bits);
 
    /*
    * The substring is contained within one or at most two words. The
@@ -241,11 +232,11 @@ uint32_t BigInt::get_substring(size_t offset, size_t length) const {
    */
    const word w0 = word_at(word_offset);
 
-   if(wshift == 0 || (offset + length) / BOTAN_MP_WORD_BITS == word_offset) {
+   if(wshift == 0 || (offset + length) / WordInfo<word>::bits == word_offset) {
       return static_cast<uint32_t>(w0 >> wshift) & mask;
    } else {
       const word w1 = word_at(word_offset + 1);
-      return static_cast<uint32_t>((w0 >> wshift) | (w1 << (BOTAN_MP_WORD_BITS - wshift))) & mask;
+      return static_cast<uint32_t>((w0 >> wshift) | (w1 << (WordInfo<word>::bits - wshift))) & mask;
    }
 }
 
@@ -271,10 +262,10 @@ uint32_t BigInt::to_u32bit() const {
 * Clear bit number n
 */
 void BigInt::clear_bit(size_t n) {
-   const size_t which = n / BOTAN_MP_WORD_BITS;
+   const size_t which = n / WordInfo<word>::bits;
 
    if(which < size()) {
-      const word mask = ~(static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS));
+      const word mask = ~(static_cast<word>(1) << (n % WordInfo<word>::bits));
       m_data.set_word_at(which, word_at(which) & mask);
    }
 }
@@ -289,7 +280,7 @@ size_t BigInt::top_bits_free() const {
    const word top_word = word_at(words - 1);
    const size_t bits_used = high_bit(CT::value_barrier(top_word));
    CT::unpoison(bits_used);
-   return BOTAN_MP_WORD_BITS - bits_used;
+   return WordInfo<word>::bits - bits_used;
 }
 
 size_t BigInt::bits() const {
@@ -299,8 +290,8 @@ size_t BigInt::bits() const {
       return 0;
    }
 
-   const size_t full_words = (words - 1) * BOTAN_MP_WORD_BITS;
-   const size_t top_bits = BOTAN_MP_WORD_BITS - top_bits_free();
+   const size_t full_words = (words - 1) * WordInfo<word>::bits;
+   const size_t top_bits = WordInfo<word>::bits - top_bits_free();
 
    return full_words + top_bits;
 }
@@ -453,7 +444,7 @@ void BigInt::ct_shift_left(size_t shift) {
 
    auto shl_word = [](const BigInt& a, BigInt& result) {
       // the most significant word is not copied, aka. shifted out
-      bigint_shl2(result.mutable_data(), a._data(), a.size() - 1 /* ignore msw */, BOTAN_MP_WORD_BITS);
+      bigint_shl2(result.mutable_data(), a._data(), a.size() - 1 /* ignore msw */, WordInfo<word>::bits);
       // we left-shifted by a full word, the least significant word must be zero'ed
       clear_mem(result.mutable_data(), 1);
    };
@@ -519,7 +510,6 @@ void BigInt::ct_cond_assign(bool predicate, const BigInt& other) {
    cond_flip_sign((mask.as_choice() && !same_sign).as_bool());
 }
 
-#if defined(BOTAN_CT_POISON_ENABLED)
 void BigInt::_const_time_poison() const {
    CT::poison(m_data.const_data(), m_data.size());
 }
@@ -527,6 +517,5 @@ void BigInt::_const_time_poison() const {
 void BigInt::_const_time_unpoison() const {
    CT::unpoison(m_data.const_data(), m_data.size());
 }
-#endif
 
 }  // namespace Botan

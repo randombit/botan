@@ -10,6 +10,7 @@
 
 #include <botan/compiler.h>
 #include <botan/internal/cpuid.h>
+#include <botan/internal/target_info.h>
 
 #include <immintrin.h>
 

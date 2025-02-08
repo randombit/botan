@@ -18,6 +18,7 @@
 #include <botan/secmem.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/target_info.h>
 
 #include <optional>
 #include <span>

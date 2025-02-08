@@ -9,6 +9,7 @@
 
 #include <botan/chacha_rng.h>
 #include <botan/exceptn.h>
+#include <botan/internal/target_info.h>
 #include <iostream>
 #include <stdint.h>
 #include <stdlib.h>  // for setenv

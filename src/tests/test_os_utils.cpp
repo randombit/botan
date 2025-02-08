@@ -9,11 +9,7 @@
 
 #if defined(BOTAN_HAS_OS_UTILS)
    #include <botan/internal/os_utils.h>
-#endif
-
-// For __ud2 intrinsic
-#if defined(BOTAN_TARGET_COMPILER_IS_MSVC)
-   #include <intrin.h>
+   #include <botan/internal/target_info.h>
 #endif
 
 namespace Botan_Tests {
@@ -162,13 +158,7 @@ class OS_Utils_Tests final : public Test {
 
          std::function<int()> crash_probe;
 
-   #if defined(BOTAN_TARGET_COMPILER_IS_MSVC)
-         crash_probe = []() noexcept -> int {
-            __ud2();
-            return 3;
-         };
-
-   #elif defined(BOTAN_USE_GCC_INLINE_ASM)
+   #if defined(BOTAN_USE_GCC_INLINE_ASM)
 
       #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
          crash_probe = []() noexcept -> int {

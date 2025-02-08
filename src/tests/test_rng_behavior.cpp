@@ -8,6 +8,8 @@
 #include "test_rng.h"
 #include "tests.h"
 
+#include <botan/internal/target_info.h>
+
 #if defined(BOTAN_HAS_STATEFUL_RNG)
    #include <botan/stateful_rng.h>
 #endif
