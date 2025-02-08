@@ -1803,7 +1803,10 @@ def process_template_string(template_text, variables, template_source):
                     if not match.group(2):
                         raise InternalError("|concat must be of the form '%{val|concat:<some static value>}'")
                     v = get_replacement(k)
-                    return f"{v}{match.group(2)}"
+                    if v:
+                        return f"{v}{match.group(2)}"
+                    else:
+                        return v
                 elif k.endswith('|as_bool'):
                     k = k.replace('|as_bool', '')
 
