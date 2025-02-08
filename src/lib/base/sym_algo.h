@@ -8,12 +8,14 @@
 #ifndef BOTAN_SYMMETRIC_ALGORITHM_H_
 #define BOTAN_SYMMETRIC_ALGORITHM_H_
 
-#include <botan/symkey.h>
 #include <botan/types.h>
 
 #include <span>
+#include <string>
 
 namespace Botan {
+
+class OctetString;
 
 /**
 * Represents the length requirements on an algorithm key
@@ -110,7 +112,7 @@ class BOTAN_PUBLIC_API(2, 0) SymmetricAlgorithm {
       * Set the symmetric key of this object.
       * @param key the SymmetricKey to be set.
       */
-      void set_key(const SymmetricKey& key) { set_key(std::span{key.begin(), key.length()}); }
+      void set_key(const OctetString& key);
 
       /**
       * Set the symmetric key of this object.

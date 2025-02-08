@@ -7,7 +7,6 @@
 #ifndef BOTAN_PCURVES_ID_H_
 #define BOTAN_PCURVES_ID_H_
 
-#include <botan/secmem.h>
 #include <botan/types.h>
 #include <optional>
 #include <string>

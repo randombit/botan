@@ -13,12 +13,12 @@
 #include <botan/rng.h>
 #include <botan/symkey.h>
 #include <botan/types.h>
+#include <deque>
 #include <functional>
 #include <iosfwd>
 #include <map>
 #include <memory>
 #include <optional>
-#include <ranges>
 #include <set>
 #include <span>
 #include <sstream>

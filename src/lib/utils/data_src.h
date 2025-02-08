@@ -11,6 +11,7 @@
 
 #include <botan/secmem.h>
 #include <iosfwd>
+#include <memory>
 #include <span>
 #include <string>
 #include <string_view>

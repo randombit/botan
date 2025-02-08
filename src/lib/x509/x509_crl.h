@@ -11,6 +11,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/pkix_enums.h>
 #include <botan/x509_obj.h>
+#include <memory>
 #include <vector>
 
 namespace Botan {

@@ -12,6 +12,7 @@
 #include <botan/ber_dec.h>
 #include <botan/hash.h>
 #include <botan/pkix_types.h>
+#include <algorithm>
 #include <array>
 #include <functional>
 #include <vector>

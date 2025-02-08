@@ -10,6 +10,8 @@
 
 #include <botan/bigint.h>
 #include <botan/sym_algo.h>
+#include <botan/symkey.h>
+#include <memory>
 
 namespace Botan {
 
@@ -81,6 +83,8 @@ class BOTAN_PUBLIC_API(2, 5) FPE_FE1 final : public SymmetricAlgorithm {
       size_t m_rounds;
 };
 
+class OctetString;
+
 namespace FPE {
 
 /**
@@ -98,7 +102,7 @@ namespace FPE {
 * may be insecure for some values of n. Prefer FPE_FE1 class
 */
 BigInt BOTAN_PUBLIC_API(2, 0)
-   fe1_encrypt(const BigInt& n, const BigInt& X, const SymmetricKey& key, const std::vector<uint8_t>& tweak);
+   fe1_encrypt(const BigInt& n, const BigInt& X, const OctetString& key, const std::vector<uint8_t>& tweak);
 
 /**
 * Decrypt X from and onto the group Z_n using key and tweak
@@ -111,7 +115,7 @@ BigInt BOTAN_PUBLIC_API(2, 0)
 * may be insecure for some values of n. Prefer FPE_FE1 class
 */
 BigInt BOTAN_PUBLIC_API(2, 0)
-   fe1_decrypt(const BigInt& n, const BigInt& X, const SymmetricKey& key, const std::vector<uint8_t>& tweak);
+   fe1_decrypt(const BigInt& n, const BigInt& X, const OctetString& key, const std::vector<uint8_t>& tweak);
 
 }  // namespace FPE
 

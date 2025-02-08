@@ -10,6 +10,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
+#include <algorithm>
 
 namespace Botan {
 

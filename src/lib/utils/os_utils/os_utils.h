@@ -11,6 +11,7 @@
 #include <botan/types.h>
 #include <ctime>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>

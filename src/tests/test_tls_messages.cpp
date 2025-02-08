@@ -20,10 +20,11 @@
    #include <botan/tls_messages.h>
    #include <botan/tls_version.h>
    #include <botan/internal/loadstor.h>
+   #include <algorithm>
    #include <exception>
+
    #if defined(BOTAN_HAS_TLS_13)
       #include "test_rng.h"
-
       #include <botan/internal/tls_reader.h>
    #endif
 #endif

@@ -7,6 +7,7 @@
 
 #include "test_reporter.h"
 
+#include <algorithm>
 #include <numeric>
 
 namespace Botan_Tests {

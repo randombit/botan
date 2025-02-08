@@ -11,6 +11,7 @@
 
    #include <botan/fpe_fe1.h>
    #include <botan/pbkdf.h>
+   #include <botan/symkey.h>
 
 namespace Botan_CLI {
 

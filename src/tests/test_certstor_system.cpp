@@ -14,6 +14,7 @@
    #include <botan/certstor_system.h>
    #include <botan/der_enc.h>
    #include <botan/hex.h>
+   #include <algorithm>
    #include <memory>
 
 namespace Botan_Tests {

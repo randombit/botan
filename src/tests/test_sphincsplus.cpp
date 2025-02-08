@@ -19,6 +19,7 @@
    #include <botan/sphincsplus.h>
    #include <botan/internal/loadstor.h>
    #include <botan/internal/sp_hash.h>
+   #include <algorithm>
 
    #include "test_pubkey.h"
 

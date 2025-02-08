@@ -19,6 +19,7 @@
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_reader.h>
 
+#include <algorithm>
 #include <iterator>
 
 namespace Botan::TLS {
@@ -106,6 +107,13 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
 }
 
 }  // namespace
+
+Extension* Extensions::get(Extension_Code type) const {
+   const auto i =
+      std::find_if(m_extensions.cbegin(), m_extensions.cend(), [type](const auto& ext) { return ext->type() == type; });
+
+   return (i != m_extensions.end()) ? i->get() : nullptr;
+}
 
 void Extensions::add(std::unique_ptr<Extension> extn) {
    if(has(extn->type())) {

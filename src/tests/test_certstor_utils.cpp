@@ -11,6 +11,7 @@
 
    #include <botan/ber_dec.h>
    #include <botan/hex.h>
+   #include <algorithm>
 
 namespace Botan_Tests {
 

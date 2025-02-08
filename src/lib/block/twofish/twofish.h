@@ -9,6 +9,7 @@
 #define BOTAN_TWOFISH_H_
 
 #include <botan/block_cipher.h>
+#include <botan/secmem.h>
 
 namespace Botan {
 

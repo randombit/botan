@@ -10,9 +10,9 @@
 #define BOTAN_KDF_BASE_H_
 
 #include <botan/concepts.h>
-#include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/secmem.h>
+#include <memory>
 #include <span>
 #include <string>
 #include <string_view>
@@ -277,16 +277,11 @@ class BOTAN_PUBLIC_API(2, 0) KDF {
 BOTAN_DEPRECATED("Use KDF::create")
 
 inline KDF* get_kdf(std::string_view algo_spec) {
-   auto kdf = KDF::create(algo_spec);
-   if(kdf) {
-      return kdf.release();
-   }
-
    if(algo_spec == "Raw") {
       return nullptr;
    }
 
-   throw Algorithm_Not_Found(algo_spec);
+   return KDF::create_or_throw(algo_spec).release();
 }
 
 }  // namespace Botan

@@ -10,6 +10,7 @@
 
 #include <botan/secmem.h>
 #include <botan/internal/cpuid.h>
+#include <algorithm>
 #include <iterator>
 #include <type_traits>
 

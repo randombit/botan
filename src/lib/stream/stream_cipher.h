@@ -9,6 +9,7 @@
 #define BOTAN_STREAM_CIPHER_H_
 
 #include <botan/concepts.h>
+#include <botan/secmem.h>
 #include <botan/sym_algo.h>
 #include <memory>
 #include <string>

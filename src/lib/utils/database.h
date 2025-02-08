@@ -11,6 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/types.h>
 #include <chrono>
+#include <memory>
 #include <string>
 #include <vector>
 

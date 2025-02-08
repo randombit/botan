@@ -9,6 +9,7 @@
 #define BOTAN_DL_PARAM_H_
 
 #include <botan/bigint.h>
+#include <memory>
 #include <string_view>
 
 namespace Botan {
