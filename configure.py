@@ -1704,11 +1704,11 @@ class OsInfo(InfoObject):
 
     def enabled_features_public(self, options):
         public_feat = set(['threads', 'filesystem'])
-        return list(set(self.enabled_features(options)) & public_feat)
+        return sorted(list(set(self.enabled_features(options)) & public_feat))
 
     def enabled_features_internal(self, options):
         public_feat = set(['threads', 'filesystem'])
-        return list(set(self.enabled_features(options)) - public_feat)
+        return sorted(list(set(self.enabled_features(options)) - public_feat))
 
     def macros(self, cc):
         value = [cc.add_compile_definition_option + define
