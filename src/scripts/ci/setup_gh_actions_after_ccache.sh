@@ -38,15 +38,12 @@ function build_and_install_esdm() {
     meson compile -C build
     sudo meson install -C build
     popd
+    echo "BOTAN_BUILD_WITH_ESDM=1" >> "$GITHUB_ENV"
 }
 
 if type -p "apt-get"; then
-    if [ "$TARGET" = "shared" ]; then
-        build_and_install_esdm
-
-    elif [ "$TARGET" = "coverage" ] || [ "$TARGET" = "sanitizer" ] || [ "$TARGET" = "clang-tidy" ]; then
+    if [ "$TARGET" = "coverage" ] || [ "$TARGET" = "clang-tidy" ]; then
         build_and_install_jitterentropy
         build_and_install_esdm
-
     fi
 fi
