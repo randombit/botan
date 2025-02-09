@@ -86,6 +86,7 @@ class LoggingGroup:
 
     def __init__(self, group_title):
         self.group_title = group_title
+        self.start_time = time.time()
 
     def __enter__(self):
         if is_running_in_github_actions():
@@ -94,11 +95,15 @@ class LoggingGroup:
             print("Running '%s' ..." % self.group_title)
 
         sys.stdout.flush()
-        return is_running_in_github_actions()
 
     def __exit__(self, exc_type, exc_value, exc_tb):
+        time_taken = int(time.time() - self.start_time)
+
         if is_running_in_github_actions():
             print("::endgroup::")
+
+        if time_taken > 10:
+            print("> Running '%s' took %d seconds" % (self.group_title, time_taken))
 
 def build_targets(target, target_os):
     if target in ['shared', 'minimized', 'bsi', 'nist', 'examples']:
@@ -544,8 +549,6 @@ def run_cmd(cmd, root_dir, build_dir):
     """
 
     with LoggingGroup(' '.join(cmd)):
-        start = time.time()
-
         cmd = [os.path.expandvars(elem) for elem in cmd]
         sub_env = os.environ.copy()
         sub_env['LD_LIBRARY_PATH'] = os.path.abspath(build_dir)
@@ -570,11 +573,6 @@ def run_cmd(cmd, root_dir, build_dir):
 
         proc = subprocess.Popen(cmd, cwd=cwd, close_fds=True, env=sub_env, stdout=redirect_stdout_fd)
         proc.communicate()
-
-        time_taken = int(time.time() - start)
-
-        if time_taken > 10:
-            print("Ran for %d seconds" % (time_taken))
 
         if proc.returncode != 0:
             print("Command '%s' failed with error code %d" % (' '.join(cmd), proc.returncode))
