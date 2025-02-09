@@ -707,7 +707,8 @@ def cli_rng_tests(_tmp_dir):
 
     rngs = ['system', 'auto', 'entropy']
     # execute ESDM tests only on Linux
-    if platform.system() == "Linux":
+
+    if 'BOTAN_BUILD_WITH_ESDM' in os.environ:
         rngs += ['esdm-full', 'esdm-pr']
 
     for rng in rngs:

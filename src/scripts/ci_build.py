@@ -212,9 +212,6 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         # Workaround for https://github.com/actions/runner-images/issues/10004
         flags += ['--extra-cxxflags=/D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR']
 
-    if target_os == 'linux' and target in ['shared', 'coverage', 'sanitizer']:
-        flags += ['--with-esdm_rng']
-
     if target in ['minimized']:
         flags += ['--minimized-build', '--enable-modules=system_rng,sha2_32,sha2_64,aes']
 
@@ -491,8 +488,11 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 #       only works for individual test names.
                 test_cmd += ["--tpm2-tcti-name=disabled"]
 
-        if is_running_in_github_actions() and 'BOTAN_BUILD_WITH_JITTERENTROPY' in os.environ:
-            flags += ['--enable-modules=jitter_rng']
+        if is_running_in_github_actions():
+            if 'BOTAN_BUILD_WITH_JITTERENTROPY' in os.environ:
+                flags += ['--enable-modules=jitter_rng']
+            if 'BOTAN_BUILD_WITH_ESDM' in os.environ:
+                flags += ['--with-esdm_rng']
 
         if target in ['coverage']:
             flags += ['--with-tpm']
@@ -934,13 +934,12 @@ def main(args=None):
         cmds.append(make_cmd + ['clean'])
         cmds.append(make_cmd + ['distclean'])
 
+    esdm_process = None
     # start ESDM in background, if on Linux
-    if target in ['shared', 'coverage', 'sanitizer'] and platform.system() == "Linux":
+    if is_running_in_github_actions() and 'BOTAN_BUILD_WITH_ESDM' in os.environ:
         print('Starting esdm-server for this target')
         esdm_process = subprocess.Popen('sudo /usr/bin/esdm-server -f', shell=True)
         assert esdm_process.poll() is None, f"esdm-server did not start for target {target}"
-    else:
-        print('Not starting esdm-server for this target')
 
     for cmd in cmds:
         if options.dry_run:
@@ -948,7 +947,7 @@ def main(args=None):
         else:
             run_cmd(cmd, root_dir, build_dir)
 
-    if target in ['shared', 'coverage', 'sanitizer'] and platform.system() == "Linux":
+    if esdm_process:
         print('Stopping esdm-server')
         esdm_process.kill()
 
