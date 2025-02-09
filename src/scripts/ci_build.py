@@ -445,10 +445,13 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
             flags += ['--with-commoncrypto']
 
         def add_boost_support(target, target_os):
-            if target in ['coverage', 'shared', 'amalgamation']:
+            if target in ['coverage', 'amalgamation']:
                 return True
 
             if target == 'sanitizer' and target_os == 'linux':
+                return True
+
+            if target == 'shared' and target_os != 'windows':
                 return True
 
             return False
