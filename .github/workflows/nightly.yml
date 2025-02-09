@@ -70,6 +70,9 @@ jobs:
 
       matrix:
         include:
+          - target: cross-arm32
+            compiler: gcc
+            host_os: ubuntu-24.04
           - target: cross-alpha
             compiler: gcc
             host_os: ubuntu-24.04
