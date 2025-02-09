@@ -4,17 +4,32 @@ Release Notes
 Version 3.8.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add fast variable-time scalar inversion for ECDSA signature verification (GH #4620)
+* Ongoing elliptic curve optimizations and cleanups (GH #4620 #4623 #4625 #4627
+  #4632 #4634)
 
-* The ``build.h`` header previously included various parameters which could be
-  modified by end users prior to compilation. These have been removed. (GH #4639)
+* Previously ``build.h`` included various parameters which could be modified by
+  end users prior to compilation. These have been removed. (GH #4639)
+
+* Previously ``build.h`` had macros reflecting various information about the
+  target system, such as ``BOTAN_TARGET_OS_IS_LINUX``. Now all such macros have
+  been moved to a new internal header. This allows sharing all installed
+  headers, including ``build.h``, across multiple different builds of the
+  library, as long as they all have the same version and module selection. This
+  simplifies vendoring the library. (GH #4642)
+
+* Various headers have been modified to minimize the number of inclusions they
+  make. You may need to modify your application to directly include any headers
+  which up until now had been implicitly pulled in. (GH #4650)
 
 * Add an FFI example which also works as a test in CI that prevents accidentally
-  making changes to ffi.h or build.h that make them incompatible with C. (GH #4640)
-
-* Internal elliptic curve optimizations and cleanups (GH #4625 #4632)
+  making changes to ``ffi.h`` or ``build.h`` that make them incompatible with C. (GH #4640)
 
 * Internal RSA signature padding cleanups (GH #4635)
+
+* Fix a bug that caused the tests to skip testing AES-NI if AES-VAES was supported.
+  (GH #4649)
+
+* Update GHA CodeQL actions (GH #4644)
 
 Version 3.7.1, 2025-02-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
