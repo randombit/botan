@@ -18,6 +18,8 @@
    #include <botan/rng.h>
    #include <botan/internal/blinding.h>
    #include <botan/internal/mod_inv.h>
+   #include <botan/internal/monty.h>
+   #include <botan/internal/monty_exp.h>
    #include <botan/internal/pk_ops_impl.h>
 
 namespace Botan::PKCS11 {
@@ -116,11 +118,16 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
                                       RandomNumberGenerator& rng) :
             m_key(key),
             m_mechanism(MechanismWrapper::create_rsa_crypt_mechanism(padding)),
-            m_barrett_mod_n(Modular_Reducer::for_public_modulus(m_key.get_n())),
+            m_mod_n(Modular_Reducer::for_public_modulus(m_key.get_n())),
+            m_monty_n(std::make_shared<Montgomery_Params>(m_key.get_n(), m_mod_n)),
             m_blinder(
-               m_barrett_mod_n,
+               m_mod_n,
                rng,
-               [this](const BigInt& k) { return power_mod(k, m_key.get_e(), m_key.get_n()); },
+               [this](const BigInt& k) {
+                  const size_t powm_window = 1;
+                  auto powm_m_n = monty_precompute(m_monty_n, k, powm_window, false);
+                  return monty_execute_vartime(*powm_m_n, m_key.get_e()).value();
+               },
                [this](const BigInt& k) { return inverse_mod_rsa_public_modulus(k, m_key.get_n()); }) {
          m_bits = m_key.get_n().bits() - 1;
       }
@@ -161,7 +168,8 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
    private:
       const PKCS11_RSA_PrivateKey& m_key;
       MechanismWrapper m_mechanism;
-      Modular_Reducer m_barrett_mod_n;
+      Modular_Reducer m_mod_n;
+      std::shared_ptr<const Montgomery_Params> m_monty_n;
       size_t m_bits = 0;
       Blinder m_blinder;
 };
