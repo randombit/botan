@@ -14,10 +14,6 @@
 #include <botan/internal/stl_util.h>
 #include <vector>
 
-#if defined(BOTAN_HAS_XMD)
-   #include <botan/internal/xmd.h>
-#endif
-
 namespace Botan {
 
 /*
@@ -2250,39 +2246,36 @@ inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::
 /**
 * Hash to curve (SSWU); RFC 9380
 *
-* Hashes the input using XMD and the specified hash function, producing either one or
-* two field elements `u`/(`u0`,`u1`) resp. These are then mapped to curve point(s)
-* using SSWU, and if a pair of points were generated these are combined using point
-* addition.
+* This is the Simplified Shallue-van de Woestijne-Ulas (SSWU) map.
+*
+* The parameter expand_message models the function of RFC 9380 and is provided
+* by higher levels. For the curves implemented here it will typically be XMD,
+* but could also be an XOF (expand_message_xof) or a MHF like Argon2.
+*
+* For details see RFC 9380 sections 3, 5.2 and 6.6.2.
 */
-template <typename C, bool RO>
+template <typename C, bool RO, std::invocable<std::span<uint8_t>> ExpandMsg>
    requires C::ValidForSswuHash
-inline auto hash_to_curve_sswu(std::string_view hash, std::span<const uint8_t> pw, std::span<const uint8_t> dst)
+inline auto hash_to_curve_sswu(ExpandMsg expand_message)
    -> std::conditional_t<RO, typename C::ProjectivePoint, typename C::AffinePoint> {
-#if defined(BOTAN_HAS_XMD)
    constexpr size_t SecurityLevel = (C::OrderBits + 1) / 2;
    constexpr size_t L = (C::PrimeFieldBits + SecurityLevel + 7) / 8;
    constexpr size_t Cnt = RO ? 2 : 1;
 
-   std::array<uint8_t, L * Cnt> xmd;
-
-   expand_message_xmd(hash, xmd, pw, dst);
+   std::array<uint8_t, L * Cnt> uniform_bytes;
+   expand_message(uniform_bytes);
 
    if constexpr(RO) {
-      const auto u0 = C::FieldElement::from_wide_bytes(std::span<const uint8_t, L>(xmd.data(), L));
-      const auto u1 = C::FieldElement::from_wide_bytes(std::span<const uint8_t, L>(xmd.data() + L, L));
+      const auto u0 = C::FieldElement::from_wide_bytes(std::span<const uint8_t, L>(uniform_bytes.data(), L));
+      const auto u1 = C::FieldElement::from_wide_bytes(std::span<const uint8_t, L>(uniform_bytes.data() + L, L));
 
       auto accum = C::ProjectivePoint::from_affine(map_to_curve_sswu<C>(u0));
       accum += map_to_curve_sswu<C>(u1);
       return accum;
    } else {
-      const auto u = C::FieldElement::from_wide_bytes(std::span<const uint8_t, L>(xmd.data(), L));
+      const auto u = C::FieldElement::from_wide_bytes(std::span<const uint8_t, L>(uniform_bytes.data(), L));
       return map_to_curve_sswu<C>(u);
    }
-#else
-   BOTAN_UNUSED(hash, pw, dst);
-   throw Not_Implemented("Hash to curve not available due to missing XMD");
-#endif
 }
 
 }  // namespace
