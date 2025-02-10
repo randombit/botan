@@ -71,7 +71,7 @@ class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override {
          const EC_Group& group = m_key.domain();
          if(auto input_point = EC_AffinePoint::deserialize(group, {w, w_len})) {
-            return input_point->mul(m_key._private_key(), m_rng, m_ws).x_bytes();
+            return input_point->mul(m_key._private_key(), m_rng).x_bytes();
          } else {
             throw Decoding_Error("ECIES - Invalid elliptic curve point");
          }
@@ -80,7 +80,6 @@ class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
    private:
       ECIES_PrivateKey m_key;
       RandomNumberGenerator& m_rng;
-      std::vector<BigInt> m_ws;
 };
 
 std::unique_ptr<PK_Ops::Key_Agreement> ECIES_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
@@ -180,10 +179,9 @@ SymmetricKey ECIES_KA_Operation::derive_secret(std::span<const uint8_t> eph_publ
 
    // ISO 18033: step b
    if(m_params.old_cofactor_mode() && m_params.domain().has_cofactor()) {
-      std::vector<BigInt> ws;
       Null_RNG null_rng;
       auto cofactor = EC_Scalar::from_bigint(m_params.domain(), m_params.domain().get_cofactor());
-      other_point = other_point.mul(cofactor, null_rng, ws);
+      other_point = other_point.mul(cofactor, null_rng);
    }
 
    secure_vector<uint8_t> derivation_input;

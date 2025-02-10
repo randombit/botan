@@ -150,7 +150,6 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature {
       const EC_Scalar m_x;
       std::unique_ptr<HashFunction> m_hash;
       std::vector<uint8_t> m_prefix;
-      std::vector<BigInt> m_ws;
       bool m_prefix_used;
 };
 
@@ -165,7 +164,7 @@ std::vector<uint8_t> ECKCDSA_Signature_Operation::raw_sign(std::span<const uint8
 
    // We cannot use gk_x_mod_order because ECKCDSA, unlike ECDSA or ECGDSA, does
    // not reduce the x coordinate modulo the group order.
-   m_hash->update(EC_AffinePoint::g_mul(k, rng, m_ws).x_bytes());
+   m_hash->update(EC_AffinePoint::g_mul(k, rng).x_bytes());
    auto c = m_hash->final_stdvec();
    truncate_hash_if_needed(c, m_group.get_order_bytes());
 

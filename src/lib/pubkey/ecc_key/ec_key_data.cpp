@@ -57,11 +57,10 @@ EC_PrivateKey_Data::EC_PrivateKey_Data(EC_Group group, std::span<const uint8_t> 
 std::shared_ptr<EC_PublicKey_Data> EC_PrivateKey_Data::public_key(RandomNumberGenerator& rng,
                                                                   bool with_modular_inverse) const {
    auto public_point = [&] {
-      std::vector<BigInt> ws;
       if(with_modular_inverse) {
-         return EC_AffinePoint::g_mul(m_scalar.invert(), rng, ws);
+         return EC_AffinePoint::g_mul(m_scalar.invert(), rng);
       } else {
-         return EC_AffinePoint::g_mul(m_scalar, rng, ws);
+         return EC_AffinePoint::g_mul(m_scalar, rng);
       }
    };
 

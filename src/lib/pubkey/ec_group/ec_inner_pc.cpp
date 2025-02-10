@@ -104,10 +104,7 @@ const std::shared_ptr<const EC_Group_Data>& EC_AffinePoint_Data_PC::group() cons
 }
 
 std::unique_ptr<EC_AffinePoint_Data> EC_AffinePoint_Data_PC::mul(const EC_Scalar_Data& scalar,
-                                                                 RandomNumberGenerator& rng,
-                                                                 std::vector<BigInt>& ws) const {
-   BOTAN_UNUSED(ws);
-
+                                                                 RandomNumberGenerator& rng) const {
    BOTAN_ARG_CHECK(scalar.group() == m_group, "Curve mismatch");
    const auto& k = EC_Scalar_Data_PC::checked_ref(scalar).value();
    auto& pcurve = m_group->pcurve();
@@ -116,10 +113,7 @@ std::unique_ptr<EC_AffinePoint_Data> EC_AffinePoint_Data_PC::mul(const EC_Scalar
 }
 
 secure_vector<uint8_t> EC_AffinePoint_Data_PC::mul_x_only(const EC_Scalar_Data& scalar,
-                                                          RandomNumberGenerator& rng,
-                                                          std::vector<BigInt>& ws) const {
-   BOTAN_UNUSED(ws);
-
+                                                          RandomNumberGenerator& rng) const {
    BOTAN_ARG_CHECK(scalar.group() == m_group, "Curve mismatch");
    const auto& k = EC_Scalar_Data_PC::checked_ref(scalar).value();
    return m_group->pcurve().mul_x_only(m_pt, k, rng);

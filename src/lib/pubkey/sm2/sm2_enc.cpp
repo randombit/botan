@@ -42,9 +42,9 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption {
       std::vector<uint8_t> encrypt(std::span<const uint8_t> msg, RandomNumberGenerator& rng) override {
          const auto k = EC_Scalar::random(m_group, rng);
 
-         const EC_AffinePoint C1 = EC_AffinePoint::g_mul(k, rng, m_ws);
+         const EC_AffinePoint C1 = EC_AffinePoint::g_mul(k, rng);
 
-         const EC_AffinePoint kPB = m_peer.mul(k, rng, m_ws);
+         const EC_AffinePoint kPB = m_peer.mul(k, rng);
 
          const auto x2_bytes = kPB.x_bytes();
          const auto y2_bytes = kPB.y_bytes();
@@ -80,7 +80,6 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption {
       const EC_AffinePoint m_peer;
       std::unique_ptr<HashFunction> m_hash;
       std::unique_ptr<KDF> m_kdf;
-      std::vector<BigInt> m_ws;
 };
 
 class SM2_Decryption_Operation final : public PK_Ops::Decryption {
@@ -155,7 +154,7 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
             return secure_vector<uint8_t>();
          }
 
-         const auto dbC1 = C1->mul(m_x, m_rng, m_ws);
+         const auto dbC1 = C1->mul(m_x, m_rng);
          const auto x2_bytes = dbC1.x_bytes();
          const auto y2_bytes = dbC1.y_bytes();
 
@@ -180,7 +179,6 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
       const EC_Group m_group;
       const EC_Scalar m_x;
       RandomNumberGenerator& m_rng;
-      std::vector<BigInt> m_ws;
       std::unique_ptr<HashFunction> m_hash;
       std::unique_ptr<KDF> m_kdf;
 };

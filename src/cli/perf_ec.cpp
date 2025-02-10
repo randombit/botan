@@ -44,8 +44,6 @@ class PerfTest_EllipticCurve final : public PerfTest {
             auto h2c_nu_timer = config.make_timer(group_name + " hash to curve (NU)");
             auto h2c_ro_timer = config.make_timer(group_name + " hash to curve (RO)");
 
-            std::vector<Botan::BigInt> ws;
-
             auto g = Botan::EC_AffinePoint::generator(group);
 
             const bool h2c_supported = [&]() {
@@ -60,8 +58,8 @@ class PerfTest_EllipticCurve final : public PerfTest {
             while(bp_timer->under(run) && vp_timer->under(run)) {
                const auto k = Botan::EC_Scalar::random(group, rng);
                const auto k2 = Botan::EC_Scalar::random(group, rng);
-               const auto r1 = bp_timer->run([&]() { return Botan::EC_AffinePoint::g_mul(k, rng, ws); });
-               const auto r2 = vp_timer->run([&]() { return g.mul(k, rng, ws); });
+               const auto r1 = bp_timer->run([&]() { return Botan::EC_AffinePoint::g_mul(k, rng); });
+               const auto r2 = vp_timer->run([&]() { return g.mul(k, rng); });
 
                const auto r1_bytes = r1.serialize_uncompressed();
                const auto r2_bytes = r2.serialize_uncompressed();

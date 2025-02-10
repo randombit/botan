@@ -92,11 +92,11 @@ const std::shared_ptr<const EC_Group_Data>& EC_AffinePoint_Data_BN::group() cons
 }
 
 std::unique_ptr<EC_AffinePoint_Data> EC_AffinePoint_Data_BN::mul(const EC_Scalar_Data& scalar,
-                                                                 RandomNumberGenerator& rng,
-                                                                 std::vector<BigInt>& ws) const {
+                                                                 RandomNumberGenerator& rng) const {
    BOTAN_ARG_CHECK(scalar.group() == m_group, "Curve mismatch");
    const auto& bn = EC_Scalar_Data_BN::checked_ref(scalar);
 
+   std::vector<BigInt> ws;
    EC_Point_Var_Point_Precompute mul(m_pt, rng, ws);
 
    // We pass order*cofactor here to "correctly" handle the case where the
@@ -110,11 +110,11 @@ std::unique_ptr<EC_AffinePoint_Data> EC_AffinePoint_Data_BN::mul(const EC_Scalar
 }
 
 secure_vector<uint8_t> EC_AffinePoint_Data_BN::mul_x_only(const EC_Scalar_Data& scalar,
-                                                          RandomNumberGenerator& rng,
-                                                          std::vector<BigInt>& ws) const {
+                                                          RandomNumberGenerator& rng) const {
    BOTAN_ARG_CHECK(scalar.group() == m_group, "Curve mismatch");
    const auto& bn = EC_Scalar_Data_BN::checked_ref(scalar);
 
+   std::vector<BigInt> ws;
    EC_Point_Var_Point_Precompute mul(m_pt, rng, ws);
 
    // We pass order*cofactor here to "correctly" handle the case where the

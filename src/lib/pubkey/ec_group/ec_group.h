@@ -501,14 +501,15 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * Blinded point multiplication, attempts resistance to side channels
       * @param k_bn the scalar
       * @param rng a random number generator
-      * @param ws a temp workspace
+      * @param ws a (no longer used) temp workspace
       * @return base_point*k
       */
       BOTAN_DEPRECATED("Use EC_AffinePoint and EC_Scalar")
       EC_Point
          blinded_base_point_multiply(const BigInt& k_bn, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const {
+         BOTAN_UNUSED(ws);
          auto k = EC_Scalar::from_bigint(*this, k_bn);
-         auto pt = EC_AffinePoint::g_mul(k, rng, ws);
+         auto pt = EC_AffinePoint::g_mul(k, rng);
          return pt.to_legacy_point();
       }
 
@@ -518,14 +519,15 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       *
       * @param k_bn the scalar
       * @param rng a random number generator
-      * @param ws a temp workspace
+      * @param ws a (no longer used) temp workspace
       * @return x coordinate of base_point*k
       */
       BOTAN_DEPRECATED("Use EC_AffinePoint and EC_Scalar")
       BigInt
          blinded_base_point_multiply_x(const BigInt& k_bn, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const {
+         BOTAN_UNUSED(ws);
          auto k = EC_Scalar::from_bigint(*this, k_bn);
-         return BigInt(EC_AffinePoint::g_mul(k, rng, ws).x_bytes());
+         return BigInt(EC_AffinePoint::g_mul(k, rng).x_bytes());
       }
 
       /**
@@ -533,7 +535,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @param point input point
       * @param k_bn the scalar
       * @param rng a random number generator
-      * @param ws a temp workspace
+      * @param ws a (no longer used) temp workspace
       * @return point*k
       */
       BOTAN_DEPRECATED("Use EC_AffinePoint and EC_Scalar")
@@ -541,9 +543,10 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
                                           const BigInt& k_bn,
                                           RandomNumberGenerator& rng,
                                           std::vector<BigInt>& ws) const {
+         BOTAN_UNUSED(ws);
          auto k = EC_Scalar::from_bigint(*this, k_bn);
          auto pt = EC_AffinePoint(*this, point);
-         return pt.mul(k, rng, ws).to_legacy_point();
+         return pt.mul(k, rng).to_legacy_point();
       }
 
       /**
