@@ -14,6 +14,15 @@
 
 namespace Botan::PCurve {
 
+#if !defined(BOTAN_HAS_PCURVES_GENERIC)
+//static
+std::shared_ptr<const PrimeOrderCurve> PCurveInstance::from_params(
+   const BigInt& p, const BigInt& a, const BigInt& b, const BigInt& base_x, const BigInt& base_y, const BigInt& order) {
+   BOTAN_UNUSED(p, a, b, base_x, base_y, order);
+   return nullptr;
+}
+#endif
+
 #if !defined(BOTAN_HAS_PCURVES_SECP192R1)
 //static
 std::shared_ptr<const PrimeOrderCurve> PCurveInstance::secp192r1() {
@@ -97,6 +106,12 @@ std::shared_ptr<const PrimeOrderCurve> PCurveInstance::numsp512d1() {
    return nullptr;
 }
 #endif
+
+//static
+std::shared_ptr<const PrimeOrderCurve> PrimeOrderCurve::from_params(
+   const BigInt& p, const BigInt& a, const BigInt& b, const BigInt& base_x, const BigInt& base_y, const BigInt& order) {
+   return PCurveInstance::from_params(p, a, b, base_x, base_y, order);
+}
 
 std::shared_ptr<const PrimeOrderCurve> PrimeOrderCurve::from_id(PrimeOrderCurveId id) {
    switch(id.code()) {
