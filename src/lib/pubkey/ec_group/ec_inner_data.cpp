@@ -16,6 +16,10 @@
    #include <botan/internal/point_mul.h>
 #endif
 
+#if defined(BOTAN_HAS_XMD)
+   #include <botan/internal/xmd.h>
+#endif
+
 namespace Botan {
 
 EC_Group_Data::~EC_Group_Data() = default;
@@ -307,11 +311,36 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_deserialize(std::span<
    }
 }
 
+namespace {
+
+std::function<void(std::span<uint8_t>)> h2c_expand_message(std::string_view hash_fn,
+                                                           std::span<const uint8_t> input,
+                                                           std::span<const uint8_t> domain_sep) {
+   /*
+   * This could be extended to support expand_message_xof or a MHF like Argon2
+   */
+
+   if(hash_fn.starts_with("SHAKE")) {
+      throw Not_Implemented("Hash to curve currently does not support expand_message_xof");
+   }
+
+   return [=](std::span<uint8_t> uniform_bytes) {
+#if defined(BOTAN_HAS_XMD)
+      expand_message_xmd(hash_fn, uniform_bytes, input, domain_sep);
+#else
+      BOTAN_UNUSED(hash_fn, uniform_bytes, input, domain_sep);
+      throw Not_Implemented("Hash to curve is not implemented due to XMD being disabled");
+#endif
+   };
+}
+
+}  // namespace
+
 std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_hash_to_curve_ro(std::string_view hash_fn,
                                                                            std::span<const uint8_t> input,
                                                                            std::span<const uint8_t> domain_sep) const {
    if(m_pcurve) {
-      auto pt = m_pcurve->hash_to_curve_ro(hash_fn, input, domain_sep);
+      auto pt = m_pcurve->hash_to_curve_ro(h2c_expand_message(hash_fn, input, domain_sep));
       return std::make_unique<EC_AffinePoint_Data_PC>(shared_from_this(), m_pcurve->point_to_affine(pt));
    } else {
       throw Not_Implemented("Hash to curve is not implemented for this curve");
@@ -322,7 +351,7 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_hash_to_curve_nu(std::
                                                                            std::span<const uint8_t> input,
                                                                            std::span<const uint8_t> domain_sep) const {
    if(m_pcurve) {
-      auto pt = m_pcurve->hash_to_curve_nu(hash_fn, input, domain_sep);
+      auto pt = m_pcurve->hash_to_curve_nu(h2c_expand_message(hash_fn, input, domain_sep));
       return std::make_unique<EC_AffinePoint_Data_PC>(shared_from_this(), std::move(pt));
    } else {
       throw Not_Implemented("Hash to curve is not implemented for this curve");
