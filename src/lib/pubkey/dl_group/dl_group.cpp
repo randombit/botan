@@ -240,9 +240,13 @@ BigInt make_dsa_generator(const BigInt& p, const BigInt& q) {
       throw Invalid_Argument("make_dsa_generator q does not divide p-1");
    }
 
+   // TODO we compute these, then throw them away and recompute in DL_Group_Data
+   auto reduce_mod = Modular_Reducer::for_public_modulus(p);
+   auto monty_params = std::make_shared<Montgomery_Params>(p, reduce_mod);
+   const size_t e_bits = e.bits();
+
    for(size_t i = 0; i != PRIME_TABLE_SIZE; ++i) {
-      // TODO precompute!
-      BigInt g = power_mod(BigInt::from_word(PRIMES[i]), e, p);
+      BigInt g = monty_exp(monty_params, BigInt::from_word(PRIMES[i]), e, e_bits).value();
       if(g > 1) {
          return g;
       }
