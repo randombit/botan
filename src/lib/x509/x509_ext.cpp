@@ -9,6 +9,7 @@
 
 #include <botan/x509_ext.h>
 
+#include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/hash.h>
@@ -125,6 +126,11 @@ std::unique_ptr<Certificate_Extension> Extensions::create_extn_obj(const OID& oi
       extn->decode_inner(body);
    }
    return extn;
+}
+
+const Certificate_Extension& Extensions::Extensions_Info::obj() const {
+   BOTAN_ASSERT_NONNULL(m_obj.get());
+   return *m_obj;
 }
 
 /*
@@ -845,6 +851,21 @@ void TNAuthList::decode_inner(const std::vector<uint8_t>& in) {
    if(m_tn_entries.empty()) {
       throw Decoding_Error("TNAuthorizationList is empty");
    }
+}
+
+const std::string& TNAuthList::Entry::service_provider_code() const {
+   BOTAN_STATE_CHECK(type() == Type::ServiceProviderCode);
+   return std::get<ASN1_String>(m_data).value();
+}
+
+const TNAuthList::Entry::RangeContainer& TNAuthList::Entry::telephone_number_range() const {
+   BOTAN_STATE_CHECK(type() == Type::TelephoneNumberRange);
+   return std::get<RangeContainer>(m_data);
+}
+
+const std::string& TNAuthList::Entry::telephone_number() const {
+   BOTAN_STATE_CHECK(type() == Type::TelephoneNumber);
+   return std::get<ASN1_String>(m_data).value();
 }
 
 void OCSP_NoCheck::decode_inner(const std::vector<uint8_t>& buf) {

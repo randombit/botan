@@ -7,6 +7,7 @@
 
 #include <botan/entropy_src.h>
 
+#include <botan/assert.h>
 #include <botan/rng.h>
 #include <botan/internal/target_info.h>
 

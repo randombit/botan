@@ -66,11 +66,7 @@ class BOTAN_PUBLIC_API(2, 0) StreamCipher : public SymmetricAlgorithm {
       * @param out the byte array to hold the output, i.e. the ciphertext
       *            with at least the same size as @p in
       */
-      void cipher(std::span<const uint8_t> in, std::span<uint8_t> out) {
-         BOTAN_ARG_CHECK(in.size() <= out.size(),
-                         "Output buffer of stream cipher must be at least as long as input buffer");
-         cipher_bytes(in.data(), out.data(), in.size());
-      }
+      void cipher(std::span<const uint8_t> in, std::span<uint8_t> out);
 
       /**
       * Write keystream bytes to a buffer

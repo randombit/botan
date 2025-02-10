@@ -9,7 +9,7 @@
 #ifndef BOTAN_CONCEPTS_H_
 #define BOTAN_CONCEPTS_H_
 
-#include <botan/assert.h>
+#include <botan/exceptn.h>
 
 #include <concepts>
 #include <cstdint>
@@ -110,7 +110,9 @@ inline constexpr void assert_exact_byte_length(R&& r) {
    if constexpr(statically_spanable_range<R>) {
       static_assert(s.size_bytes() == expected, "memory region does not have expected byte lengths");
    } else {
-      BOTAN_ASSERT(s.size_bytes() == expected, "memory region does not have expected byte lengths");
+      if(s.size_bytes() != expected) {
+         throw Invalid_Argument("Memory regions did not have expected byte lengths");
+      }
    }
 }
 
@@ -134,8 +136,12 @@ inline constexpr void assert_equal_byte_lengths(R0&& r0, Rs&&... rs)
       (assert_exact_byte_length<expected_size>(rs), ...);
    } else {
       const size_t expected_size = s0.size_bytes();
-      BOTAN_ARG_CHECK(((std::span<const std::ranges::range_value_t<Rs>>{rs}.size_bytes() == expected_size) && ...),
-                      "memory regions don't have equal lengths");
+      const bool correct_size =
+         ((std::span<const std::ranges::range_value_t<Rs>>{rs}.size_bytes() == expected_size) && ...);
+
+      if(!correct_size) {
+         throw Invalid_Argument("Memory regions did not have equal lengths");
+      }
    }
 }
 

@@ -9,6 +9,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/hex.h>
+#include <botan/mem_ops.h>
 #include <algorithm>
 
 namespace Botan {

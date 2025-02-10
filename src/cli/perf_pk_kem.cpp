@@ -19,10 +19,7 @@ class PerfTest_PK_KEM : public PerfTest {
    public:
       virtual std::string algo() const = 0;
 
-      virtual std::vector<std::string> keygen_params(const PerfConfig& config) const {
-         BOTAN_UNUSED(config);
-         return {""};
-      }
+      virtual std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const { return {""}; }
 
       void go(const PerfConfig& config) override {
          const std::string alg = this->algo();
@@ -93,8 +90,7 @@ class PerfTest_Kyber final : public PerfTest_PK_KEM {
    public:
       std::string algo() const override { return "Kyber"; }
 
-      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
-         BOTAN_UNUSED(config);
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
          return {
             "Kyber-512-r3",
             "Kyber-512-90s-r3",
@@ -116,8 +112,7 @@ class PerfTest_ML_KEM final : public PerfTest_PK_KEM {
    public:
       std::string algo() const override { return "ML-KEM"; }
 
-      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
-         BOTAN_UNUSED(config);
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
          return {
             "ML-KEM-512",
             "ML-KEM-768",
@@ -136,8 +131,7 @@ class PerfTest_FrodoKEM final : public PerfTest_PK_KEM {
    public:
       std::string algo() const override { return "FrodoKEM"; }
 
-      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
-         BOTAN_UNUSED(config);
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
          return {
             "FrodoKEM-640-SHAKE",
             "FrodoKEM-640-AES",
@@ -165,8 +159,7 @@ class PerfTest_Classic_McEliece final : public PerfTest_PK_KEM {
    public:
       std::string algo() const override { return "ClassicMcEliece"; }
 
-      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
-         BOTAN_UNUSED(config);
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
          return {
             "mceliece348864",
             "mceliece348864f",

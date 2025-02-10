@@ -10,7 +10,6 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/data_src.h>
-#include <botan/mem_ops.h>
 
 namespace Botan {
 
@@ -160,7 +159,7 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
                                      "; Output type size is " + std::to_string(sizeof(T)));
          }
 
-         copy_mem(reinterpret_cast<uint8_t*>(&out), obj.bits(), obj.length());
+         std::memcpy(reinterpret_cast<uint8_t*>(&out), obj.bits(), obj.length());
 
          return (*this);
       }

@@ -7,6 +7,8 @@
 
 #include <botan/jitter_rng.h>
 
+#include <botan/assert.h>
+
 #include <jitterentropy.h>
 
 namespace Botan {

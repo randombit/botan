@@ -11,6 +11,8 @@
 
 #include <botan/api.h>
 
+BOTAN_FUTURE_INTERNAL_HEADER(assert.h)
+
 namespace Botan {
 
 /**

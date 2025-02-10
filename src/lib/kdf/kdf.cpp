@@ -7,6 +7,7 @@
 
 #include <botan/kdf.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/mac.h>

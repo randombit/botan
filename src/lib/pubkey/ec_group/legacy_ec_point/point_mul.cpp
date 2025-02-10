@@ -6,6 +6,7 @@
 
 #include <botan/internal/point_mul.h>
 
+#include <botan/mem_ops.h>
 #include <botan/reducer.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>

@@ -29,6 +29,11 @@ CurveGFp::CurveGFp(const EC_Group_Data* group) : m_group(group) {
    BOTAN_ASSERT_NONNULL(m_group);
 }
 
+const EC_Group_Data& CurveGFp::group() const {
+   BOTAN_ASSERT_NONNULL(m_group);
+   return *m_group;
+}
+
 const BigInt& CurveGFp::get_a() const {
    return this->group().a();
 }
@@ -161,6 +166,18 @@ inline void resize_ws(std::vector<BigInt>& ws_bn, size_t cap_size) {
 
 }  // namespace
 
+void EC_Point::add_affine(const EC_Point& other, std::vector<BigInt>& workspace) {
+   BOTAN_ASSERT_NOMSG(m_curve == other.m_curve);
+   BOTAN_DEBUG_ASSERT(other.is_affine());
+
+   const size_t p_words = m_curve.get_p_words();
+   add_affine(other.m_x._data(),
+              std::min(p_words, other.m_x.size()),
+              other.m_y._data(),
+              std::min(p_words, other.m_y.size()),
+              workspace);
+}
+
 void EC_Point::add_affine(
    const word x_words[], size_t x_size, const word y_words[], size_t y_size, std::vector<BigInt>& ws_bn) {
    if((CT::all_zeros(x_words, x_size) & CT::all_zeros(y_words, y_size)).as_bool()) {
@@ -238,6 +255,20 @@ void EC_Point::add_affine(
 
    fe_mul(group, T0, m_z, T4, ws);
    m_z.swap(T0);
+}
+
+void EC_Point::add(const EC_Point& other, std::vector<BigInt>& workspace) {
+   BOTAN_ARG_CHECK(m_curve == other.m_curve, "cannot add points on different curves");
+
+   const size_t p_words = m_curve.get_p_words();
+
+   add(other.m_x._data(),
+       std::min(p_words, other.m_x.size()),
+       other.m_y._data(),
+       std::min(p_words, other.m_y.size()),
+       other.m_z._data(),
+       std::min(p_words, other.m_z.size()),
+       workspace);
 }
 
 void EC_Point::add(const word x_words[],

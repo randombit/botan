@@ -7,6 +7,7 @@
 #include <botan/internal/raw_hash.h>
 
 #include <botan/exceptn.h>
+#include <botan/mem_ops.h>
 
 namespace Botan {
 

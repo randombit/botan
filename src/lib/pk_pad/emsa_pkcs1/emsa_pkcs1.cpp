@@ -8,6 +8,7 @@
 #include <botan/internal/emsa_pkcs1.h>
 
 #include <botan/exceptn.h>
+#include <botan/mem_ops.h>
 #include <botan/internal/hash_id.h>
 #include <botan/internal/stl_util.h>
 

@@ -7,6 +7,7 @@
 
 #include <botan/tls_ciphersuite.h>
 
+#include <botan/assert.h>
 #include <botan/block_cipher.h>
 #include <botan/exceptn.h>
 #include <botan/hash.h>

@@ -59,7 +59,7 @@ class BOTAN_PUBLIC_API(2, 0) Channel {
       * Inject plaintext intended for counterparty
       * Throws an exception if is_active() is false
       */
-      void send(std::string_view val) { this->send(std::span(cast_char_ptr_to_uint8(val.data()), val.size())); }
+      void send(std::string_view s) { this->send({reinterpret_cast<const uint8_t*>(s.data()), s.size()}); }
 
       /**
       * Inject plaintext intended for counterparty

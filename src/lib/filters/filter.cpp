@@ -7,6 +7,7 @@
 
 #include <botan/filter.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 
 namespace Botan {
@@ -19,6 +20,11 @@ Filter::Filter() {
    m_port_num = 0;
    m_filter_owns = 0;
    m_owned = false;
+}
+
+void Filter::send(std::span<uint8_t> in, size_t length) {
+   BOTAN_ASSERT_NOMSG(length <= in.size());
+   send(in.data(), length);
 }
 
 /*

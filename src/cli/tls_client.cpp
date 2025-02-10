@@ -388,7 +388,7 @@ class TLS_Client final : public Command {
    private:
       static socket_type connect_to_host(const std::string& host, uint16_t port, bool tcp) {
          addrinfo hints;
-         Botan::clear_mem(&hints, 1);
+         std::memset(&hints, 0, sizeof(hints));
          hints.ai_family = AF_UNSPEC;
          hints.ai_socktype = tcp ? SOCK_STREAM : SOCK_DGRAM;
          addrinfo *res, *rp = nullptr;

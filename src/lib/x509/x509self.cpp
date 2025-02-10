@@ -7,6 +7,7 @@
 
 #include <botan/x509self.h>
 
+#include <botan/assert.h>
 #include <botan/der_enc.h>
 #include <botan/hash.h>
 #include <botan/pubkey.h>

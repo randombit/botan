@@ -271,19 +271,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       * @param other the point to add to *this
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       */
-      void add(const EC_Point& other, std::vector<BigInt>& workspace) {
-         BOTAN_ARG_CHECK(m_curve == other.m_curve, "cannot add points on different curves");
-
-         const size_t p_words = m_curve.get_p_words();
-
-         add(other.m_x._data(),
-             std::min(p_words, other.m_x.size()),
-             other.m_y._data(),
-             std::min(p_words, other.m_y.size()),
-             other.m_z._data(),
-             std::min(p_words, other.m_z.size()),
-             workspace);
-      }
+      void add(const EC_Point& other, std::vector<BigInt>& workspace);
 
       /**
       * Point addition. Array version.
@@ -313,17 +301,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       * @param other affine point to add - assumed to be affine!
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       */
-      void add_affine(const EC_Point& other, std::vector<BigInt>& workspace) {
-         BOTAN_ASSERT_NOMSG(m_curve == other.m_curve);
-         BOTAN_DEBUG_ASSERT(other.is_affine());
-
-         const size_t p_words = m_curve.get_p_words();
-         add_affine(other.m_x._data(),
-                    std::min(p_words, other.m_x.size()),
-                    other.m_y._data(),
-                    std::min(p_words, other.m_y.size()),
-                    workspace);
-      }
+      void add_affine(const EC_Point& other, std::vector<BigInt>& workspace);
 
       /**
       * Point addition - mixed J+A. Array version.
