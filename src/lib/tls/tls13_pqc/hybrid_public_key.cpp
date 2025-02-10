@@ -13,6 +13,7 @@
 #include <botan/pk_algs.h>
 
 #include <botan/internal/fmt.h>
+#include <botan/internal/hybrid_kem_ops.h>
 #include <botan/internal/kex_to_kem_adapter.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/stl_util.h>
@@ -133,6 +134,98 @@ std::vector<size_t> public_value_lengths_for_group(Group_Params group) {
    }
 }
 
+std::vector<std::unique_ptr<Public_Key>> convert_kex_to_kem_pks(std::vector<std::unique_ptr<Public_Key>> pks) {
+   std::vector<std::unique_ptr<Public_Key>> result;
+   std::transform(pks.begin(), pks.end(), std::back_inserter(result), [](auto& key) -> std::unique_ptr<Public_Key> {
+      BOTAN_ARG_CHECK(key != nullptr, "Public key list contains a nullptr");
+      if(key->supports_operation(PublicKeyOperation::KeyAgreement) &&
+         !key->supports_operation(PublicKeyOperation::KeyEncapsulation)) {
+         return std::make_unique<KEX_to_KEM_Adapter_PublicKey>(std::move(key));
+      } else {
+         return std::move(key);
+      }
+   });
+   return result;
+}
+
+std::vector<std::unique_ptr<Private_Key>> convert_kex_to_kem_sks(std::vector<std::unique_ptr<Private_Key>> sks) {
+   std::vector<std::unique_ptr<Private_Key>> result;
+   std::transform(sks.begin(), sks.end(), std::back_inserter(result), [](auto& key) -> std::unique_ptr<Private_Key> {
+      BOTAN_ARG_CHECK(key != nullptr, "Private key list contains a nullptr");
+      if(key->supports_operation(PublicKeyOperation::KeyAgreement) &&
+         !key->supports_operation(PublicKeyOperation::KeyEncapsulation)) {
+         auto ka_key = dynamic_cast<PK_Key_Agreement_Key*>(key.get());
+         BOTAN_ASSERT_NONNULL(ka_key);
+         (void)key.release();
+         return std::make_unique<KEX_to_KEM_Adapter_PrivateKey>(std::unique_ptr<PK_Key_Agreement_Key>(ka_key));
+      } else {
+         return std::move(key);
+      }
+   });
+   return result;
+}
+
+template <typename KEM_Operation>
+void concat_secret_combiner(KEM_Operation& op,
+                            std::span<uint8_t> out_shared_secret,
+                            const std::vector<secure_vector<uint8_t>>& shared_secrets,
+                            size_t desired_shared_key_len) {
+   BOTAN_ARG_CHECK(out_shared_secret.size() == op.shared_key_length(desired_shared_key_len),
+                   "Invalid output buffer size");
+
+   BufferStuffer shared_secret_stuffer(out_shared_secret);
+   for(size_t idx = 0; idx < shared_secrets.size(); idx++) {
+      shared_secret_stuffer.append(shared_secrets.at(idx));
+   }
+   BOTAN_ASSERT_NOMSG(shared_secret_stuffer.full());
+}
+
+template <typename KEM_Operation>
+size_t concat_shared_key_length(const std::vector<KEM_Operation>& operation) {
+   return reduce(
+      operation, size_t(0), [](size_t acc, const auto& op) { return acc + op.shared_key_length(0 /*no KDF*/); });
+}
+
+/// Encryptor that simply concatenates the multiple shared secrets
+class Hybrid_TLS_KEM_Encryptor final : public KEM_Encryption_with_Combiner {
+   public:
+      Hybrid_TLS_KEM_Encryptor(const std::vector<std::unique_ptr<Public_Key>>& public_keys, std::string_view provider) :
+            KEM_Encryption_with_Combiner(public_keys, provider) {}
+
+      void combine_shared_secrets(std::span<uint8_t> out_shared_secret,
+                                  const std::vector<secure_vector<uint8_t>>& shared_secrets,
+                                  const std::vector<std::vector<uint8_t>>& /*ciphertexts*/,
+                                  size_t desired_shared_key_len,
+                                  std::span<const uint8_t> /*salt*/) override {
+         concat_secret_combiner(*this, out_shared_secret, shared_secrets, desired_shared_key_len);
+      }
+
+      size_t shared_key_length(size_t /*desired_shared_key_len*/) const override {
+         return concat_shared_key_length(encryptors());
+      }
+};
+
+/// Decryptor that simply concatenates the multiple shared secrets
+class Hybrid_TLS_KEM_Decryptor final : public KEM_Decryption_with_Combiner {
+   public:
+      Hybrid_TLS_KEM_Decryptor(const std::vector<std::unique_ptr<Private_Key>>& private_keys,
+                               RandomNumberGenerator& rng,
+                               const std::string_view provider) :
+            KEM_Decryption_with_Combiner(private_keys, rng, provider) {}
+
+      void combine_shared_secrets(std::span<uint8_t> out_shared_secret,
+                                  const std::vector<secure_vector<uint8_t>>& shared_secrets,
+                                  const std::vector<std::vector<uint8_t>>& /*ciphertexts*/,
+                                  size_t desired_shared_key_len,
+                                  std::span<const uint8_t> /*salt*/) override {
+         concat_secret_combiner(*this, out_shared_secret, shared_secrets, desired_shared_key_len);
+      }
+
+      size_t shared_key_length(size_t /*desired_shared_key_len*/) const override {
+         return concat_shared_key_length(decryptors());
+      }
+};
+
 }  // namespace
 
 std::unique_ptr<Hybrid_KEM_PublicKey> Hybrid_KEM_PublicKey::load_for_group(
@@ -157,56 +250,23 @@ std::unique_ptr<Hybrid_KEM_PublicKey> Hybrid_KEM_PublicKey::load_for_group(
    return std::make_unique<Hybrid_KEM_PublicKey>(std::move(pks));
 }
 
-Hybrid_KEM_PublicKey::Hybrid_KEM_PublicKey(std::vector<std::unique_ptr<Public_Key>> pks) {
-   BOTAN_ARG_CHECK(pks.size() >= 2, "List of public keys must include at least two keys");
-   BOTAN_ARG_CHECK(std::all_of(pks.begin(), pks.end(), [](const auto& pk) { return pk != nullptr; }),
-                   "List of public keys contains a nullptr");
-   BOTAN_ARG_CHECK(std::all_of(pks.begin(),
-                               pks.end(),
-                               [](const auto& pk) {
-                                  return pk->supports_operation(PublicKeyOperation::KeyEncapsulation) ||
-                                         pk->supports_operation(PublicKeyOperation::KeyAgreement);
-                               }),
-                   "Some provided public key is not compatible with this hybrid wrapper");
+Hybrid_KEM_PublicKey::Hybrid_KEM_PublicKey(std::vector<std::unique_ptr<Public_Key>> pks) :
+      Hybrid_PublicKey(convert_kex_to_kem_pks(std::move(pks))) {}
 
-   std::transform(
-      pks.begin(), pks.end(), std::back_inserter(m_public_keys), [](auto& key) -> std::unique_ptr<Public_Key> {
-         if(key->supports_operation(PublicKeyOperation::KeyAgreement) &&
-            !key->supports_operation(PublicKeyOperation::KeyEncapsulation)) {
-            return std::make_unique<KEX_to_KEM_Adapter_PublicKey>(std::move(key));
-         } else {
-            return std::move(key);
-         }
-      });
-
-   m_key_length =
-      reduce(m_public_keys, size_t(0), [](size_t kl, const auto& key) { return std::max(kl, key->key_length()); });
-   m_estimated_strength = reduce(
-      m_public_keys, size_t(0), [](size_t es, const auto& key) { return std::max(es, key->estimated_strength()); });
-}
+Hybrid_KEM_PrivateKey::Hybrid_KEM_PrivateKey(std::vector<std::unique_ptr<Private_Key>> sks) :
+      Hybrid_PublicKey(convert_kex_to_kem_pks(extract_public_keys(sks))),
+      Hybrid_PrivateKey(convert_kex_to_kem_sks(std::move(sks))) {}
 
 std::string Hybrid_KEM_PublicKey::algo_name() const {
    std::ostringstream algo_name("Hybrid(");
-   for(size_t i = 0; i < m_public_keys.size(); ++i) {
+   for(size_t i = 0; i < public_keys().size(); ++i) {
       if(i > 0) {
          algo_name << ",";
       }
-      algo_name << m_public_keys[i]->algo_name();
+      algo_name << public_keys().at(i)->algo_name();
    }
    algo_name << ")";
    return algo_name.str();
-}
-
-size_t Hybrid_KEM_PublicKey::estimated_strength() const {
-   return m_estimated_strength;
-}
-
-size_t Hybrid_KEM_PublicKey::key_length() const {
-   return m_key_length;
-}
-
-bool Hybrid_KEM_PublicKey::check_key(RandomNumberGenerator& rng, bool strong) const {
-   return reduce(m_public_keys, true, [&](bool ckr, const auto& key) { return ckr && key->check_key(rng, strong); });
 }
 
 AlgorithmIdentifier Hybrid_KEM_PublicKey::algorithm_identifier() const {
@@ -225,86 +285,22 @@ std::vector<uint8_t> Hybrid_KEM_PublicKey::raw_public_key_bits() const {
    //   to be used with values that are not fixed-length, a length prefix or
    //   other unambiguous encoding must be used to ensure that the composition
    //   of the two values is injective.
-   return reduce(m_public_keys, std::vector<uint8_t>(), [](auto pkb, const auto& key) {
+   return reduce(public_keys(), std::vector<uint8_t>(), [](auto pkb, const auto& key) {
       return concat(pkb, key->raw_public_key_bits());
    });
 }
 
 std::unique_ptr<Private_Key> Hybrid_KEM_PublicKey::generate_another(RandomNumberGenerator& rng) const {
-   std::vector<std::unique_ptr<Private_Key>> new_private_keys;
-   std::transform(
-      m_public_keys.begin(), m_public_keys.end(), std::back_inserter(new_private_keys), [&](const auto& public_key) {
-         return public_key->generate_another(rng);
-      });
-   return std::make_unique<Hybrid_KEM_PrivateKey>(std::move(new_private_keys));
+   return std::make_unique<Hybrid_KEM_PrivateKey>(generate_other_sks_from_pks(rng));
 }
-
-bool Hybrid_KEM_PublicKey::supports_operation(PublicKeyOperation op) const {
-   return PublicKeyOperation::KeyEncapsulation == op;
-}
-
-namespace {
-
-class Hybrid_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KDF {
-   public:
-      Hybrid_KEM_Encryption_Operation(const Hybrid_KEM_PublicKey& key,
-                                      std::string_view kdf,
-                                      std::string_view provider) :
-            PK_Ops::KEM_Encryption_with_KDF(kdf), m_raw_kem_shared_key_length(0), m_encapsulated_key_length(0) {
-         m_kem_encryptors.reserve(key.public_keys().size());
-         for(const auto& k : key.public_keys()) {
-            const auto& newenc = m_kem_encryptors.emplace_back(*k, "Raw", provider);
-            m_raw_kem_shared_key_length += newenc.shared_key_length(0 /* no KDF */);
-            m_encapsulated_key_length += newenc.encapsulated_key_length();
-         }
-      }
-
-      size_t raw_kem_shared_key_length() const override { return m_raw_kem_shared_key_length; }
-
-      size_t encapsulated_key_length() const override { return m_encapsulated_key_length; }
-
-      void raw_kem_encrypt(std::span<uint8_t> out_encapsulated_key,
-                           std::span<uint8_t> raw_shared_key,
-                           Botan::RandomNumberGenerator& rng) override {
-         BOTAN_ASSERT_NOMSG(out_encapsulated_key.size() == encapsulated_key_length());
-         BOTAN_ASSERT_NOMSG(raw_shared_key.size() == raw_kem_shared_key_length());
-
-         BufferStuffer encaps_key_stuffer(out_encapsulated_key);
-         BufferStuffer shared_key_stuffer(raw_shared_key);
-
-         for(auto& kem_enc : m_kem_encryptors) {
-            kem_enc.encrypt(encaps_key_stuffer.next(kem_enc.encapsulated_key_length()),
-                            shared_key_stuffer.next(kem_enc.shared_key_length(0 /* no KDF */)),
-                            rng);
-         }
-      }
-
-   private:
-      std::vector<PK_KEM_Encryptor> m_kem_encryptors;
-      size_t m_raw_kem_shared_key_length;
-      size_t m_encapsulated_key_length;
-};
-
-}  // namespace
 
 std::unique_ptr<Botan::PK_Ops::KEM_Encryption> Hybrid_KEM_PublicKey::create_kem_encryption_op(
-   std::string_view kdf, std::string_view provider) const {
-   return std::make_unique<Hybrid_KEM_Encryption_Operation>(*this, kdf, provider);
-}
-
-namespace {
-
-auto extract_public_keys(const std::vector<std::unique_ptr<Private_Key>>& private_keys) {
-   std::vector<std::unique_ptr<Public_Key>> public_keys;
-   public_keys.reserve(private_keys.size());
-   for(const auto& private_key : private_keys) {
-      BOTAN_ARG_CHECK(private_key != nullptr, "List of private keys contains a nullptr");
-      public_keys.push_back(private_key->public_key());
+   std::string_view params, std::string_view provider) const {
+   if(params != "Raw" && !params.empty()) {
+      throw Botan::Invalid_Argument("Hybrid KEM encryption does not support KDFs");
    }
-   return public_keys;
+   return std::make_unique<Hybrid_TLS_KEM_Encryptor>(public_keys(), provider);
 }
-
-}  // namespace
 
 std::unique_ptr<Hybrid_KEM_PrivateKey> Hybrid_KEM_PrivateKey::generate_from_group(Group_Params group,
                                                                                   RandomNumberGenerator& rng) {
@@ -317,88 +313,12 @@ std::unique_ptr<Hybrid_KEM_PrivateKey> Hybrid_KEM_PrivateKey::generate_from_grou
    return std::make_unique<Hybrid_KEM_PrivateKey>(std::move(private_keys));
 }
 
-Hybrid_KEM_PrivateKey::Hybrid_KEM_PrivateKey(std::vector<std::unique_ptr<Private_Key>> sks) :
-      Hybrid_KEM_PublicKey(extract_public_keys(sks)) {
-   BOTAN_ARG_CHECK(sks.size() >= 2, "List of private keys must include at least two keys");
-   BOTAN_ARG_CHECK(std::all_of(sks.begin(),
-                               sks.end(),
-                               [](const auto& sk) {
-                                  return sk->supports_operation(PublicKeyOperation::KeyEncapsulation) ||
-                                         sk->supports_operation(PublicKeyOperation::KeyAgreement);
-                               }),
-                   "Some provided private key is not compatible with this hybrid wrapper");
-
-   std::transform(
-      sks.begin(), sks.end(), std::back_inserter(m_private_keys), [](auto& key) -> std::unique_ptr<Private_Key> {
-         if(key->supports_operation(PublicKeyOperation::KeyAgreement) &&
-            !key->supports_operation(PublicKeyOperation::KeyEncapsulation)) {
-            auto ka_key = dynamic_cast<PK_Key_Agreement_Key*>(key.get());
-            BOTAN_ASSERT_NONNULL(ka_key);
-            (void)key.release();
-            return std::make_unique<KEX_to_KEM_Adapter_PrivateKey>(std::unique_ptr<PK_Key_Agreement_Key>(ka_key));
-         } else {
-            return std::move(key);
-         }
-      });
-}
-
-secure_vector<uint8_t> Hybrid_KEM_PrivateKey::private_key_bits() const {
-   throw Not_Implemented("Hybrid private keys cannot be serialized");
-}
-
-std::unique_ptr<Public_Key> Hybrid_KEM_PrivateKey::public_key() const {
-   return std::make_unique<Hybrid_KEM_PublicKey>(extract_public_keys(m_private_keys));
-}
-
-bool Hybrid_KEM_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
-   return reduce(m_public_keys, true, [&](bool ckr, const auto& key) { return ckr && key->check_key(rng, strong); });
-}
-
-namespace {
-
-class Hybrid_KEM_Decryption final : public PK_Ops::KEM_Decryption_with_KDF {
-   public:
-      Hybrid_KEM_Decryption(const Hybrid_KEM_PrivateKey& key,
-                            RandomNumberGenerator& rng,
-                            const std::string_view kdf,
-                            const std::string_view provider) :
-            PK_Ops::KEM_Decryption_with_KDF(kdf), m_encapsulated_key_length(0), m_raw_kem_shared_key_length(0) {
-         m_decryptors.reserve(key.private_keys().size());
-         for(const auto& private_key : key.private_keys()) {
-            const auto& newdec = m_decryptors.emplace_back(*private_key, rng, "Raw", provider);
-            m_encapsulated_key_length += newdec.encapsulated_key_length();
-            m_raw_kem_shared_key_length += newdec.shared_key_length(0 /* no KDF */);
-         }
-      }
-
-      void raw_kem_decrypt(std::span<uint8_t> out_shared_key, std::span<const uint8_t> encap_key) override {
-         BOTAN_ASSERT_NOMSG(out_shared_key.size() == raw_kem_shared_key_length());
-         BOTAN_ASSERT_NOMSG(encap_key.size() == encapsulated_key_length());
-
-         BufferSlicer encap_key_slicer(encap_key);
-         BufferStuffer shared_secret_stuffer(out_shared_key);
-
-         for(auto& decryptor : m_decryptors) {
-            decryptor.decrypt(shared_secret_stuffer.next(decryptor.shared_key_length(0 /* no KDF */)),
-                              encap_key_slicer.take(decryptor.encapsulated_key_length()));
-         }
-      }
-
-      size_t encapsulated_key_length() const override { return m_encapsulated_key_length; }
-
-      size_t raw_kem_shared_key_length() const override { return m_raw_kem_shared_key_length; }
-
-   private:
-      std::vector<PK_KEM_Decryptor> m_decryptors;
-      size_t m_encapsulated_key_length;
-      size_t m_raw_kem_shared_key_length;
-};
-
-}  // namespace
-
 std::unique_ptr<Botan::PK_Ops::KEM_Decryption> Hybrid_KEM_PrivateKey::create_kem_decryption_op(
-   RandomNumberGenerator& rng, std::string_view kdf, std::string_view provider) const {
-   return std::make_unique<Hybrid_KEM_Decryption>(*this, rng, kdf, provider);
+   RandomNumberGenerator& rng, std::string_view params, std::string_view provider) const {
+   if(params != "Raw" && !params.empty()) {
+      throw Botan::Invalid_Argument("Hybrid KEM decryption does not support KDFs");
+   }
+   return std::make_unique<Hybrid_TLS_KEM_Decryptor>(private_keys(), rng, provider);
 }
 
 }  // namespace Botan::TLS
