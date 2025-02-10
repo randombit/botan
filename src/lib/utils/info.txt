@@ -29,6 +29,7 @@ version.h
 alignment_buffer.h
 bit_ops.h
 bswap.h
+buffer_transformer.h
 calendar.h
 charset.h
 codec_base.h
