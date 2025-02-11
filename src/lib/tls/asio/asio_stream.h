@@ -260,7 +260,9 @@ class Stream {
       using native_handle_type = typename std::add_pointer<ChannelT>::type;
 
       native_handle_type native_handle() {
-         BOTAN_STATE_CHECK(m_native_handle != nullptr);
+         if(m_native_handle == nullptr) {
+            throw Botan::Invalid_State("ASIO native handle unexpectedly null");
+         }
          return m_native_handle.get();
       }
 
@@ -287,8 +289,7 @@ class Stream {
        * @param callback the callback implementation
        * @param ec This parameter is unused.
        */
-      void set_verify_callback(Context::Verify_Callback callback, boost::system::error_code& ec) {
-         BOTAN_UNUSED(ec);
+      void set_verify_callback(Context::Verify_Callback callback, [[maybe_unused]] boost::system::error_code& ec) {
          m_context->set_verify_callback(std::move(callback));
       }
 
@@ -297,8 +298,7 @@ class Stream {
        * @param depth the desired verification depth
        * @throws Not_Implemented todo
        */
-      void set_verify_depth(int depth) {
-         BOTAN_UNUSED(depth);
+      void set_verify_depth([[maybe_unused]] int depth) {
          throw Not_Implemented("set_verify_depth is not implemented");
       }
 
@@ -307,8 +307,7 @@ class Stream {
        * @param depth the desired verification depth
        * @param ec Will be set to `Botan::ErrorType::NotImplemented`
        */
-      void set_verify_depth(int depth, boost::system::error_code& ec) {
-         BOTAN_UNUSED(depth);
+      void set_verify_depth([[maybe_unused]] int depth, boost::system::error_code& ec) {
          ec = ErrorType::NotImplemented;
       }
 
@@ -318,8 +317,7 @@ class Stream {
        * @throws Not_Implemented todo
        */
       template <typename verify_mode>
-      void set_verify_mode(verify_mode v) {
-         BOTAN_UNUSED(v);
+      void set_verify_mode([[maybe_unused]] verify_mode v) {
          throw Not_Implemented("set_verify_mode is not implemented");
       }
 
@@ -329,8 +327,7 @@ class Stream {
        * @param ec Will be set to `Botan::ErrorType::NotImplemented`
        */
       template <typename verify_mode>
-      void set_verify_mode(verify_mode v, boost::system::error_code& ec) {
-         BOTAN_UNUSED(v);
+      void set_verify_mode([[maybe_unused]] verify_mode v, boost::system::error_code& ec) {
          ec = ErrorType::NotImplemented;
       }
 
@@ -392,8 +389,6 @@ class Stream {
             // handled by `handle_tls_protocol_errors()` in the next iteration.
             read_and_process_encrypted_data_from_peer(ec);
          }
-
-         BOTAN_ASSERT_NOMSG(ec.failed());
       }
 
       /**
@@ -427,10 +422,9 @@ class Stream {
        * @throws Not_Implemented todo
        */
       template <typename ConstBufferSequence, detail::basic_completion_token BufferedHandshakeHandler>
-      auto async_handshake(Connection_Side side,
-                           const ConstBufferSequence& buffers,
-                           BufferedHandshakeHandler&& handler) {
-         BOTAN_UNUSED(side, buffers, handler);
+      auto async_handshake([[maybe_unused]] Connection_Side side,
+                           [[maybe_unused]] const ConstBufferSequence& buffers,
+                           [[maybe_unused]] BufferedHandshakeHandler&& handler) {
          throw Not_Implemented("buffered async handshake is not implemented");
       }
 
@@ -569,7 +563,6 @@ class Stream {
             read_and_process_encrypted_data_from_peer(ec);
          }
 
-         BOTAN_ASSERT_NOMSG(ec.failed());
          return 0;
       }
 
@@ -739,7 +732,9 @@ class Stream {
          // Do not attempt to instantiate the native_handle when a custom (mocked) channel type template parameter has
          // been specified. This allows mocking the native_handle in test code.
          if constexpr(std::is_same<ChannelT, Channel>::value) {
-            BOTAN_STATE_CHECK(m_native_handle == nullptr);
+            if(m_native_handle != nullptr) {
+               throw Botan::Invalid_State("ASIO native handle unexpectedly set");
+            }
 
             try_with_error_code(
                [&] {
@@ -828,8 +823,13 @@ class Stream {
          // If we have received application data in a previous invocation, this
          // data needs to be passed to the application first. Otherwise, it
          // might get overwritten.
-         BOTAN_ASSERT(!has_received_data(), "receive buffer is empty");
-         BOTAN_ASSERT(!error_from_us() && !alert_from_peer(), "TLS session is healthy");
+         if(has_received_data()) {
+            throw Botan::Invalid_State("ASIO receive buffer not empty");
+         }
+
+         if(error_from_us() || alert_from_peer()) {
+            throw Botan::Invalid_State("ASIO TLS session no longer healthy");
+         }
 
          // If there's no existing error condition, read and process data from
          // the peer and report any sort of network error. TLS related errors do
@@ -912,8 +912,9 @@ class Stream {
        * @param read_buffer Input buffer containing the encrypted data.
        */
       void process_encrypted_data(const boost::asio::const_buffer& read_buffer) {
-         BOTAN_ASSERT(!alert_from_peer() && !error_from_us(),
-                      "no one sent an alert before (no data allowed after that)");
+         if(alert_from_peer() || error_from_us()) {
+            throw Botan::Invalid_State("ASIO TLS session no longer healthy");
+         }
 
          // If the local TLS implementation generates an alert, we are notified
          // with an exception that is caught in try_with_error_code(). The error

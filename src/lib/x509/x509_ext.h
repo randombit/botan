@@ -10,7 +10,6 @@
 
 #include <botan/pkix_types.h>
 
-#include <botan/assert.h>
 #include <set>
 
 namespace Botan {
@@ -510,7 +509,7 @@ class OCSP_NoCheck final : public Certificate_Extension {
 */
 class BOTAN_PUBLIC_API(3, 5) TNAuthList final : public Certificate_Extension {
    public:
-      class Entry final : public ASN1_Object {
+      class BOTAN_PUBLIC_API(3, 5) Entry final : public ASN1_Object {
          public:
             /* TNEntry choice values
              * see: https://datatracker.ietf.org/doc/html/rfc8226#section-9 */
@@ -529,20 +528,11 @@ class BOTAN_PUBLIC_API(3, 5) TNAuthList final : public Certificate_Extension {
 
             Type type() const { return m_type; }
 
-            const std::string& service_provider_code() const {
-               BOTAN_STATE_CHECK(type() == Type::ServiceProviderCode);
-               return std::get<ASN1_String>(m_data).value();
-            }
+            const std::string& service_provider_code() const;
 
-            const RangeContainer& telephone_number_range() const {
-               BOTAN_STATE_CHECK(type() == Type::TelephoneNumberRange);
-               return std::get<RangeContainer>(m_data);
-            }
+            const RangeContainer& telephone_number_range() const;
 
-            const std::string& telephone_number() const {
-               BOTAN_STATE_CHECK(type() == Type::TelephoneNumber);
-               return std::get<ASN1_String>(m_data).value();
-            }
+            const std::string& telephone_number() const;
 
          private:
             Type m_type;

@@ -10,6 +10,8 @@
 
 #include <botan/cipher_mode.h>
 
+#include <botan/assert.h>
+
 #if defined(BOTAN_HAS_STREAM_CIPHER)
    #include <botan/stream_cipher.h>
 #endif

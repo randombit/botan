@@ -7,6 +7,8 @@
 
 #include <botan/chacha_rng.h>
 
+#include <botan/assert.h>
+
 namespace Botan {
 
 ChaCha_RNG::ChaCha_RNG() : Stateful_RNG() {

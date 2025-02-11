@@ -8,6 +8,7 @@
 
 #include <botan/hash.h>
 #include <botan/mac.h>
+#include <botan/mem_ops.h>
 
 namespace Botan {
 

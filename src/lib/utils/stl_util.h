@@ -10,6 +10,11 @@
 #ifndef BOTAN_STL_UTIL_H_
 #define BOTAN_STL_UTIL_H_
 
+#include <botan/assert.h>
+#include <botan/concepts.h>
+#include <botan/secmem.h>
+#include <botan/strong_type.h>
+
 #include <algorithm>
 #include <functional>
 #include <optional>
@@ -18,10 +23,6 @@
 #include <tuple>
 #include <variant>
 #include <vector>
-
-#include <botan/concepts.h>
-#include <botan/secmem.h>
-#include <botan/strong_type.h>
 
 namespace Botan {
 

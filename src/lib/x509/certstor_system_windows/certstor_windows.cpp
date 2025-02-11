@@ -9,6 +9,7 @@
 
 #include <botan/certstor_windows.h>
 
+#include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/hash.h>
 #include <botan/pkix_types.h>

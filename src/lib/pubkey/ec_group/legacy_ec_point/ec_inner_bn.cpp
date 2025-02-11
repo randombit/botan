@@ -6,6 +6,7 @@
 
 #include <botan/internal/ec_inner_bn.h>
 
+#include <botan/mem_ops.h>
 #include <botan/internal/mod_inv.h>
 
 namespace Botan {

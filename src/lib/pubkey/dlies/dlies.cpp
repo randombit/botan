@@ -7,6 +7,7 @@
 */
 
 #include <botan/dlies.h>
+#include <botan/mem_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/stl_util.h>
 #include <limits>

@@ -224,6 +224,7 @@ internal to the library in the future.
   and ``argon2.h``: Use the ``PasswordHash`` interface instead.
 
   Internal implementation headers - seemingly no reason for applications to use:
+  ``assert.h``,
   ``curve_gfp.h``,
   ``numthry.h``,
   ``reducer.h``,
@@ -234,4 +235,5 @@ internal to the library in the future.
   the library API and most are just sufficient for what the library needs
   to implement other functionality.
   ``compiler.h``,
+  ``mem_ops.h``,
   ``uuid.h``,

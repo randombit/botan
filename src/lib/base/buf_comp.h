@@ -9,7 +9,6 @@
 #define BOTAN_BUFFERED_COMPUTATION_H_
 
 #include <botan/concepts.h>
-#include <botan/mem_ops.h>
 #include <botan/secmem.h>
 #include <span>
 #include <string_view>
@@ -53,7 +52,7 @@ class BOTAN_PUBLIC_API(2, 0) Buffered_Computation {
       * @param str the input to process as a std::string_view. Will be interpreted
       * as a byte array based on the strings encoding.
       */
-      void update(std::string_view str) { add_data({cast_char_ptr_to_uint8(str.data()), str.size()}); }
+      void update(std::string_view str);
 
       /**
       * Process a single byte.
@@ -83,10 +82,7 @@ class BOTAN_PUBLIC_API(2, 0) Buffered_Computation {
 
       std::vector<uint8_t> final_stdvec() { return final<std::vector<uint8_t>>(); }
 
-      void final(std::span<uint8_t> out) {
-         BOTAN_ARG_CHECK(out.size() >= output_length(), "provided output buffer has insufficient capacity");
-         final_result(out);
-      }
+      void final(std::span<uint8_t> out);
 
       template <concepts::resizable_byte_buffer T>
       void final(T& out) {

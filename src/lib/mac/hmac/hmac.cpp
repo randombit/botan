@@ -8,6 +8,7 @@
 
 #include <botan/internal/hmac.h>
 
+#include <botan/mem_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 

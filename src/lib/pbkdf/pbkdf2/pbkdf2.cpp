@@ -9,6 +9,7 @@
 #include <botan/pbkdf2.h>
 
 #include <botan/exceptn.h>
+#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/time_utils.h>
 

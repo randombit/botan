@@ -19,10 +19,7 @@ class PerfTest_PKKa : public PerfTest {
    public:
       virtual std::string algo() const = 0;
 
-      virtual std::vector<std::string> keygen_params(const PerfConfig& config) const {
-         BOTAN_UNUSED(config);
-         return {""};
-      }
+      virtual std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const { return {""}; }
 
       void go(const PerfConfig& config) override {
          const std::string alg = this->algo();
@@ -91,8 +88,7 @@ class PerfTest_DH final : public PerfTest_PKKa {
    public:
       std::string algo() const override { return "DH"; }
 
-      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
-         BOTAN_UNUSED(config);
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
          return {
             "ffdhe/ietf/2048",
             "ffdhe/ietf/3072",

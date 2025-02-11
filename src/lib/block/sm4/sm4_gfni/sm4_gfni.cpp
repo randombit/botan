@@ -6,6 +6,7 @@
 
 #include <botan/internal/sm4.h>
 
+#include <botan/mem_ops.h>
 #include <botan/internal/simd_avx2.h>
 #include <botan/internal/simd_avx2_gfni.h>
 

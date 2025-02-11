@@ -10,6 +10,7 @@
 
 #include <botan/internal/frodo_constants.h>
 
+#include <botan/assert.h>
 #include <botan/xof.h>
 
 namespace Botan {

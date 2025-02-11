@@ -7,6 +7,7 @@
 
 #include <botan/internal/rfc6979.h>
 
+#include <botan/assert.h>
 #include <botan/hmac_drbg.h>
 #include <botan/mac.h>
 #include <botan/internal/fmt.h>

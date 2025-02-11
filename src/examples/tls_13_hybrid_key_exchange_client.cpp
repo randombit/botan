@@ -11,19 +11,17 @@
  */
 class Callbacks : public Botan::TLS::Callbacks {
    public:
-      void tls_emit_data(std::span<const uint8_t> data) override {
-         BOTAN_UNUSED(data);
+      void tls_emit_data([[maybe_unused]] std::span<const uint8_t> data) override {
          // send data to tls server, e.g., using BSD sockets or boost asio
       }
 
-      void tls_record_received(uint64_t seq_no, std::span<const uint8_t> data) override {
-         BOTAN_UNUSED(seq_no, data);
+      void tls_record_received([[maybe_unused]] uint64_t seq_no,
+                               [[maybe_unused]] std::span<const uint8_t> data) override {
          // process full TLS record received by tls server, e.g.,
          // by passing it to the application
       }
 
-      void tls_alert(Botan::TLS::Alert alert) override {
-         BOTAN_UNUSED(alert);
+      void tls_alert([[maybe_unused]] Botan::TLS::Alert alert) override {
          // handle a tls alert received from the tls server
       }
 };
@@ -36,9 +34,8 @@ class Callbacks : public Botan::TLS::Callbacks {
  */
 class Client_Credentials : public Botan::Credentials_Manager {
    public:
-      std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(const std::string& type,
-                                                                             const std::string& context) override {
-         BOTAN_UNUSED(type, context);
+      std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(
+         [[maybe_unused]] const std::string& type, [[maybe_unused]] const std::string& context) override {
          // return a list of certificates of CAs we trust for tls server certificates,
          // e.g., all the certificates in the local directory "cas"
          return {&m_cert_store};
