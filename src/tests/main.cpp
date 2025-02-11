@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
    try {
       const std::string arg_spec =
          "botan-test --verbose --help --data-dir= --pkcs11-lib= --provider= "
-         "--tpm2-tcti-name= --tpm2-tcti-conf= --tpm2-persistent-rsa-handle=0x81000008 "
+         "--tpm2-tcti-name=disabled --tpm2-tcti-conf= --tpm2-persistent-rsa-handle=0x81000008 "
          "--tpm2-persistent-ecc-handle=0x81000010 --tpm2-persistent-auth-value=password "
          "--log-success --abort-on-first-fail --no-stdout --no-avoid-undefined "
          "--skip-tests= --test-threads=0 --test-results-dir= --run-long-tests "
