@@ -39,7 +39,7 @@ EC_PrivateKey::EC_PrivateKey(Object handle,
       Botan::EC_PublicKey(std::move(public_key.first), public_key.second) {}
 
 std::unique_ptr<Public_Key> EC_PrivateKey::public_key() const {
-   return std::make_unique<Botan::ECDSA_PublicKey>(domain(), public_point());
+   return std::make_unique<Botan::ECDSA_PublicKey>(domain(), _public_ec_point());
 }
 
 std::vector<uint8_t> EC_PublicKey::public_key_bits() const {
