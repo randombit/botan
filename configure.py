@@ -441,7 +441,7 @@ def process_command_line(args):
     build_group.add_option('--enable-sanitizers', metavar='SAN', default='',
                            help='enable specific sanitizers')
 
-    add_with_without_pair(build_group, 'stack-protector', True, 'disable stack smashing protections')
+    add_with_without_pair(build_group, 'stack-protector', None, 'disable stack smashing protections')
 
     add_with_without_pair(build_group, 'coverage-info', False, 'add coverage info')
 
@@ -3657,9 +3657,9 @@ def main(argv):
 
     if options.enable_cc_tests:
         cc_min_version = options.cc_min_version or calculate_cc_min_version(options, cc, source_paths)
-        cc_arch = check_compiler_arch(options, cc, info_arch, source_paths)
 
-        if options.arch != 'generic':
+        if options.arch not in ['generic', 'llvm']:
+            cc_arch = check_compiler_arch(options, cc, info_arch, source_paths)
             if cc_arch is not None and cc_arch != options.arch:
                 logging.error("Configured target is %s but compiler probe indicates %s", options.arch, cc_arch)
     else:
