@@ -3012,10 +3012,19 @@ class FFI_ECDH_Test final : public FFI_Test {
          ffi_test_pubkey_export(result, loaded_pubkey1, priv1, rng);
          ffi_test_pubkey_export(result, pub2, priv2, rng);
 
+   #if defined(BOTAN_HAS_KDF2) && defined(BOTAN_HAS_SHA_256)
+         constexpr bool has_kdf2_sha256 = true;
+   #else
+         constexpr bool has_kdf2_sha256 = false;
+   #endif
+
+         const char* kdf = has_kdf2_sha256 ? "KDF2(SHA-256)" : "Raw";
+         constexpr size_t salt_len = has_kdf2_sha256 ? 32 : 0;
+
          botan_pk_op_ka_t ka1;
-         REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka1, loaded_privkey1, "KDF2(SHA-256)", 0));
+         REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka1, loaded_privkey1, kdf, 0));
          botan_pk_op_ka_t ka2;
-         REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka2, priv2, "KDF2(SHA-256)", 0));
+         REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka2, priv2, kdf, 0));
 
          size_t pubkey1_len = 0;
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
@@ -3030,10 +3039,10 @@ class FFI_ECDH_Test final : public FFI_Test {
          std::vector<uint8_t> pubkey2(pubkey2_len);
          REQUIRE_FFI_OK(botan_pk_op_key_agreement_export_public, (priv2, pubkey2.data(), &pubkey2_len));
 
-         std::vector<uint8_t> salt(32);
+         std::vector<uint8_t> salt(salt_len);
          TEST_FFI_OK(botan_rng_get, (rng, salt.data(), salt.size()));
 
-         const size_t shared_key_len = 64;
+         const size_t shared_key_len = 32;
 
          std::vector<uint8_t> key1(shared_key_len);
          size_t key1_len = key1.size();
