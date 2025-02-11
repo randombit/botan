@@ -116,8 +116,7 @@ std::string make_bcrypt(std::string_view pass, const std::vector<uint8_t>& salt,
    copy_mem(pass_with_trailing_null.data(), cast_char_ptr_to_uint8(pass.data()), pass.length());
 
    // Include the trailing NULL byte, so we need c_str() not data()
-   blowfish.salted_set_key(
-      pass_with_trailing_null.data(), pass_with_trailing_null.size(), salt.data(), salt.size(), work_factor);
+   blowfish.salted_set_key(pass_with_trailing_null, salt, work_factor);
 
    std::vector<uint8_t> ctext(BCRYPT_MAGIC, BCRYPT_MAGIC + 8 * 3);
 
