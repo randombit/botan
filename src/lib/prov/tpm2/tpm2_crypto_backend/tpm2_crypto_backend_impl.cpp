@@ -646,7 +646,7 @@ TSS2_RC get_ecdh_point(TPM2B_PUBLIC* key,
 
       // 1: Get TPM public key
       const auto [tpm_ec_group, tpm_ec_point] = Botan::TPM2::ecc_pubkey_from_tss2_public(key);
-      const auto tpm_sw_pubkey = Botan::ECDH_PublicKey(tpm_ec_group, tpm_ec_point.to_legacy_point());
+      const auto tpm_sw_pubkey = Botan::ECDH_PublicKey(tpm_ec_group, tpm_ec_point);
 
       const auto curve_order_byte_size = tpm_sw_pubkey.domain().get_p_bytes();
 
