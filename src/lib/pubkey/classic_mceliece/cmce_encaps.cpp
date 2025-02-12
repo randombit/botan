@@ -95,8 +95,8 @@ void Classic_McEliece_Encryptor::raw_kem_encrypt(std::span<uint8_t> out_encapsul
    const CmceErrorVector e = [&] {
       // Emergency abort in case unexpected logical error to prevent endless loops
       //   Success probability: >24% per attempt (25% that elements are distinct * 96% enough elements are in range)
-      //   => 203 attempts for 2^(-80) fail probability
-      constexpr size_t MAX_ATTEMPTS = 203;
+      //   => 647 attempts for 2^(-256) fail probability
+      constexpr size_t MAX_ATTEMPTS = 647;
       for(size_t attempt = 0; attempt < MAX_ATTEMPTS; ++attempt) {
          if(auto maybe_e = fixed_weight_vector_gen(params, rng)) {
             return maybe_e.value();
