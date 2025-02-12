@@ -169,6 +169,9 @@ std::optional<EC_AffinePoint> EC_AffinePoint::mul_px_qy(const EC_AffinePoint& p,
 }
 
 EC_AffinePoint EC_AffinePoint::add(const EC_AffinePoint& q) const {
+   if(this->is_identity()) {
+      return q;
+   }
    auto pt = _inner().group()->affine_add(_inner(), q._inner());
    return EC_AffinePoint(std::move(pt));
 }

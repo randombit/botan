@@ -14,6 +14,8 @@
 #include <botan/internal/stl_util.h>
 #include <vector>
 
+#include <botan/hex.h> // remove this
+
 namespace Botan {
 
 /*
@@ -998,9 +1000,14 @@ class ProjectiveCurvePoint {
 
       friend constexpr Self operator+(const Self& a, const Self& b) { return Self::add(a, b); }
 
-      friend constexpr Self operator+(const Self& a, const AffinePoint& b) { return Self::add_mixed(a, b); }
+      friend constexpr Self operator+(const Self& a, const AffinePoint& b) {
+         if(a.is_identity().as_bool()) {
+            return Self::from_affine(b);
+         }
+         return Self::add_mixed(a, b);
+      }
 
-      friend constexpr Self operator+(const AffinePoint& a, const Self& b) { return Self::add_mixed(b, a); }
+      friend constexpr Self operator+(const AffinePoint& a, const Self& b) { return b + a; }
 
       constexpr Self& operator+=(const Self& other) {
          (*this) = (*this) + other;
@@ -1024,11 +1031,19 @@ class ProjectiveCurvePoint {
       * Mixed (projective + affine) point addition
       */
       constexpr static Self add_mixed(const Self& a, const AffinePoint& b) {
-         const auto a_is_identity = a.is_identity();
-         const auto b_is_identity = b.is_identity();
-         if((a_is_identity && b_is_identity).as_bool()) {
-            return Self::identity();
+         /*
+         * This function is used in scalar multiplications where a is an accumulator
+         * and b is a value taken from a table. Potentially b is the identity
+         * element, and we cannot leak this fact since it would reveal information
+         * about the scalar. However we can require callers to set up a to be
+         * a non-identity element.
+         */
+         if(a.is_identity().as_bool()) {
+            abort();
          }
+         BOTAN_STATE_CHECK(!a.is_identity().as_bool());
+
+         const auto b_is_identity = b.is_identity();
 
          /*
          https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
@@ -1061,9 +1076,6 @@ class ProjectiveCurvePoint {
          const auto t7 = r * t5;
          auto Y3 = t7 - t6;
          auto Z3 = a.z() * H;
-
-         // if a is identity then return b
-         FieldElement::conditional_assign(X3, Y3, Z3, a_is_identity, b.x(), b.y(), FieldElement::one());
 
          // if b is identity then return a
          FieldElement::conditional_assign(X3, Y3, Z3, b_is_identity, a.x(), a.y(), a.z());
@@ -1642,8 +1654,14 @@ class BlindedScalarBits final {
             comba_mul<n_words>(mask_n, mask, C::NW.data());
             bigint_add2_nc(mask_n, 2 * n_words, sw.data(), sw.size());
 
+            // Now if s + k*n is even, add one more n; this ensures the low bit is set
+            bigint_cnd_add((mask_n[0] & 1) ^ 1, mask_n, 2 * n_words, C::NW.data(), C::NW.size());
+
             std::reverse(mask_n, mask_n + 2 * n_words);
             m_bytes = store_be<std::vector<uint8_t>>(mask_n);
+
+            std::array<uint8_t, C::Scalar::BYTES> sbytes;
+            scalar.serialize_to(sbytes);
          } else {
             static_assert(Bytes == C::Scalar::BYTES);
             m_bytes.resize(Bytes);
@@ -1773,6 +1791,8 @@ class PrecomputedBaseMulTable final {
 
          auto accum = [&]() {
             const size_t w_0 = bits.get_window(0);
+            BOTAN_ASSERT_NOMSG(w_0 > 0); // remove this
+            BOTAN_DEBUG_ASSERT(w_0 > 0);
             const auto tbl_0 = table.first(WindowElements);
             auto pt = ProjectivePoint::from_affine(AffinePoint::ct_select(tbl_0, w_0));
             CT::poison(pt);
@@ -1850,6 +1870,7 @@ class WindowedMulTable final {
          auto accum = [&]() {
             const size_t w_0 = bits.get_window((Windows - 1) * WindowBits);
             // Guaranteed because we set the high bit of the randomizer
+            BOTAN_ASSERT_NOMSG(w_0 > 0); // remove this
             BOTAN_DEBUG_ASSERT(w_0 != 0);
             auto pt = ProjectivePoint::from_affine(AffinePoint::ct_select(m_table, w_0));
             CT::poison(pt);
@@ -1971,7 +1992,19 @@ class WindowedBoothMulTable final {
 
             const size_t w_i = bits.get_window(idx);
             const auto [tidx, tneg] = booth_recode<WindowBits>(w_i);
-            accum = ProjectivePoint::add_or_sub(accum, AffinePoint::ct_select(m_table, tidx), tneg);
+
+            const auto t_i = AffinePoint::ct_select(m_table, tidx);
+            if(i == 0) {
+               if(tidx == 0) {
+                  printf("w_i = %zu\n", w_i);
+               }
+               BOTAN_ASSERT_NOMSG(tidx > 0); // remove me
+               BOTAN_DEBUG_ASSERT(tidx > 0);
+               accum = ProjectivePoint::from_affine(t_i);
+               accum.conditional_assign(tneg, accum.negate());
+            } else {
+               accum = ProjectivePoint::add_or_sub(accum, t_i, tneg);
+            }
 
             accum = accum.dbl_n(WindowBits);
 
@@ -2144,21 +2177,33 @@ class WindowedMul2Table final {
       ProjectivePoint mul2_vartime(const Scalar& s1, const Scalar& s2) const {
          constexpr size_t Windows = (Scalar::BITS + WindowBits - 1) / WindowBits;
 
+         bool s1_is_zero = s1.is_zero().as_bool();
+         bool s2_is_zero = s2.is_zero().as_bool();
+
+         if(s1_is_zero && s2_is_zero) {
+            return ProjectivePoint::identity();
+         }
+
          const UnblindedScalarBits<C, W> bits1(s1);
          const UnblindedScalarBits<C, W> bits2(s2);
 
-         auto accum = [&]() {
-            const size_t w_1 = bits1.get_window((Windows - 1) * WindowBits);
-            const size_t w_2 = bits2.get_window((Windows - 1) * WindowBits);
-            const size_t window = w_1 + (w_2 << WindowBits);
-            if(window > 0) {
-               return ProjectivePoint::from_affine(m_table[window - 1]);
-            } else {
-               return ProjectivePoint::identity();
+         auto [w_0, first_nonempty_window] = [&]() {
+            for(size_t i = 0; i != Windows; ++i) {
+               const size_t w_1 = bits1.get_window((Windows - i - 1) * WindowBits);
+               const size_t w_2 = bits2.get_window((Windows - i - 1) * WindowBits);
+               const size_t window = w_1 + (w_2 << WindowBits);
+               if(window > 0) {
+                  return std::make_pair(window, i);
+               }
             }
+            // We checked for s1 == s2 == 0 above, so we must see a window eventually
+            BOTAN_ASSERT_UNREACHABLE();
          }();
 
-         for(size_t i = 1; i != Windows; ++i) {
+         BOTAN_ASSERT_NOMSG(w_0 > 0);
+         auto accum = ProjectivePoint::from_affine(m_table[w_0 - 1]);
+
+         for(size_t i = first_nonempty_window + 1; i < Windows; ++i) {
             accum = accum.dbl_n(WindowBits);
 
             const size_t w_1 = bits1.get_window((Windows - i - 1) * WindowBits);
