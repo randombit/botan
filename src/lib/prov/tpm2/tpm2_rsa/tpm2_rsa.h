@@ -13,15 +13,6 @@
 
 namespace Botan::TPM2 {
 
-/**
- * This helper function transforms a @p public_blob in a TPM2B_PUBLIC* format
- * into the functional components of an RSA public key. Namely, a pair of
- * modulus and exponent as big integers.
- *
- * @param public_blob The public blob to decompose into RSA pubkey components
- */
-std::pair<BigInt, BigInt> rsa_pubkey_components_from_tss2_public(const TPM2B_PUBLIC* public_blob);
-
 BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 
