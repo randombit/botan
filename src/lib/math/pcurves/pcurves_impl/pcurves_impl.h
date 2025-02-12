@@ -1027,6 +1027,10 @@ class ProjectiveCurvePoint {
          FieldElement::conditional_assign(m_x, m_y, m_z, cond, pt.x(), pt.y(), pt.z());
       }
 
+      constexpr static Self add_mixed(const Self& a, const AffinePoint& b) {
+
+      }
+
       /**
       * Mixed (projective + affine) point addition
       */
@@ -1809,7 +1813,7 @@ class PrecomputedBaseMulTable final {
             discrete logarithms of the points we're selecting out of the table are
             larger than the largest possible dlog of accum.
             */
-            accum += AffinePoint::ct_select(tbl_i, w_i);
+            accum = accum.add_mixed(AffinePoint::ct_select(tbl_i, w_i));
 
             if(i <= 3) {
                accum.randomize_rep(rng);
@@ -1907,7 +1911,7 @@ class WindowedMulTable final {
             factor is always less than the group order (substantially so),
             it is not possible for the dlog of accum to overflow a second time.
             */
-            accum += AffinePoint::ct_select(m_table, w_i);
+            accum = accum.add_mixed(AffinePoint::ct_select(m_table, w_i));
 
             if(i <= 3) {
                accum.randomize_rep(rng);
@@ -2154,7 +2158,7 @@ class WindowedMul2Table final {
             const size_t w_1 = bits1.get_window((Windows - i - 1) * WindowBits);
             const size_t w_2 = bits2.get_window((Windows - i - 1) * WindowBits);
             const size_t window = w_1 + (w_2 << WindowBits);
-            accum += AffinePoint::ct_select(m_table, window);
+            accum.add_mixed(AffinePoint::ct_select(m_table, window));
 
             if(i <= 3) {
                accum.randomize_rep(rng);
