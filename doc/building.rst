@@ -1029,7 +1029,7 @@ disables modules prohibited by a text policy in ``src/build-data/policy``.
 Additional modules can be enabled if not prohibited by the policy.
 Currently available policies include ``bsi``, ``nist`` and ``modern``::
 
- $ ./configure.py --module-policy=bsi --enable-modules=tls,xts
+ $ ./configure.py --module-policy=bsi --enable-modules=tls13_pqc,xts
 
 ``--enable-modules=MODS``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
