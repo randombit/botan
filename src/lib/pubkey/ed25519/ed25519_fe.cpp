@@ -47,7 +47,7 @@ FE_25519 FE_25519::invert(const FE_25519& z) {
    return t0;
 }
 
-FE_25519 FE_25519::pow_22523(const fe& z) {
+FE_25519 FE_25519::pow_22523(const FE_25519& z) {
    FE_25519 t0;
    FE_25519 t1;
    FE_25519 t2;
