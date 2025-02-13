@@ -925,7 +925,7 @@ def main(args=None):
 
             if have_prog('coveralls'):
                 # If coveralls command exists, assume we are in CI and report to coveralls.io
-                cmds.append(['coveralls', '--format=lcov', '--file=%s' % (cov_file)])
+                cmds.append(['coveralls', '--no-fail', '--format=lcov', '--file=%s' % (cov_file)])
             else:
                 # Otherwise generate a local HTML report
                 cmds.append(['genhtml', cov_file, '--output-directory', os.path.join(build_dir, 'lcov-out')])
