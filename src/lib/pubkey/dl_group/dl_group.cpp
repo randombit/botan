@@ -277,18 +277,15 @@ DL_Group::DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, siz
       const BigInt q = (p - 1) / 2;
 
       /*
-      Always choose a generator that is quadratic reside mod p,
-      this forces g to be a generator of the subgroup of size q.
+      Always choose a generator that is quadratic reside mod p, this forces g to
+      be a generator of the subgroup of size q.
+
+      We use 2 by default, but if 2 is not a quadratic reside then use 4 which
+      is always a quadratic reside, being the square of 2 (or p - 2)
       */
       BigInt g = BigInt::from_word(2);
       if(jacobi(g, p) != 1) {
-         // prime table does not contain 2
-         for(size_t i = 0; i < PRIME_TABLE_SIZE; ++i) {
-            g = BigInt::from_word(PRIMES[i]);
-            if(jacobi(g, p) == 1) {
-               break;
-            }
-         }
+         g = BigInt::from_word(4);
       }
 
       m_data = std::make_shared<DL_Group_Data>(p, q, g, DL_Group_Source::RandomlyGenerated);
