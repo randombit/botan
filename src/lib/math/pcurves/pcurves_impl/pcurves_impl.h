@@ -1971,7 +1971,13 @@ class WindowedBoothMulTable final {
 
             const size_t w_i = bits.get_window(idx);
             const auto [tidx, tneg] = booth_recode<WindowBits>(w_i);
-            accum = ProjectivePoint::add_or_sub(accum, AffinePoint::ct_select(m_table, tidx), tneg);
+
+            if(i == 0) {
+               accum = ProjectivePoint::from_affine(AffinePoint::ct_select(m_table, tidx));
+               accum.conditional_assign(tneg, accum.negate());
+            } else {
+               accum = ProjectivePoint::add_or_sub(accum, AffinePoint::ct_select(m_table, tidx), tneg);
+            }
 
             accum = accum.dbl_n(WindowBits);
 
