@@ -1,0 +1,17 @@
+<defines>
+HYBRID_KEM -> 20240425
+</defines>
+
+<module_info>
+name -> "Hybrid KEM"
+type -> "Internal"
+</module_info>
+
+<header:internal>
+hybrid_kem.h
+hybrid_kem_ops.h
+</header:internal>
+
+<requires>
+
+</requires>
