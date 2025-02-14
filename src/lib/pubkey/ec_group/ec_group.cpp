@@ -331,6 +331,11 @@ EC_Group& EC_Group::operator=(const EC_Group&) = default;
 EC_Group::EC_Group(std::shared_ptr<EC_Group_Data>&& data) : m_data(std::move(data)) {}
 
 //static
+bool EC_Group::supports_named_group(std::string_view name) {
+   return EC_Group::known_named_groups().contains(std::string(name));
+}
+
+//static
 bool EC_Group::supports_application_specific_group() {
 #if defined(BOTAN_HAS_LEGACY_EC_POINT) || defined(BOTAN_HAS_PCURVES_GENERIC)
    return true;
