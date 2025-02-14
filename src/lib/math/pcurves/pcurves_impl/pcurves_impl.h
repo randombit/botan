@@ -2153,18 +2153,30 @@ class WindowedMul2Table final {
          const UnblindedScalarBits<C, W> bits1(s1);
          const UnblindedScalarBits<C, W> bits2(s2);
 
-         auto accum = [&]() {
-            const size_t w_1 = bits1.get_window((Windows - 1) * WindowBits);
-            const size_t w_2 = bits2.get_window((Windows - 1) * WindowBits);
-            const size_t window = w_1 + (w_2 << WindowBits);
-            if(window > 0) {
-               return ProjectivePoint::from_affine(m_table[window - 1]);
-            } else {
-               return ProjectivePoint::identity();
+         bool s1_is_zero = s1.is_zero().as_bool();
+         bool s2_is_zero = s2.is_zero().as_bool();
+
+         if(s1_is_zero && s2_is_zero) {
+            return ProjectivePoint::identity();
+         }
+
+         auto [w_0, first_nonempty_window] = [&]() {
+            for(size_t i = 0; i != Windows; ++i) {
+               const size_t w_1 = bits1.get_window((Windows - i - 1) * WindowBits);
+               const size_t w_2 = bits2.get_window((Windows - i - 1) * WindowBits);
+               const size_t window = w_1 + (w_2 << WindowBits);
+               if(window > 0) {
+                  return std::make_pair(window, i);
+               }
             }
+            // We checked for s1 == s2 == 0 above, so we must see a window eventually
+            BOTAN_ASSERT_UNREACHABLE();
          }();
 
-         for(size_t i = 1; i != Windows; ++i) {
+         BOTAN_ASSERT_NOMSG(w_0 > 0);
+         auto accum = ProjectivePoint::from_affine(m_table[w_0 - 1]);
+
+         for(size_t i = first_nonempty_window + 1; i < Windows; ++i) {
             accum = accum.dbl_n(WindowBits);
 
             const size_t w_1 = bits1.get_window((Windows - i - 1) * WindowBits);
