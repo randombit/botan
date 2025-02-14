@@ -168,8 +168,6 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_System_Params final : public ECIES_KA_Params 
 
 /**
 * ECIES secret derivation according to ISO 18033-2
-*
-* TODO(Botan4) hide this
 */
 class BOTAN_PUBLIC_API(2, 0) ECIES_KA_Operation {
    public:
@@ -180,7 +178,6 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_KA_Operation {
       * (according to ISO 18033 cofactor mode is only used during decryption)
       * @param rng the RNG to use
       */
-      BOTAN_DEPRECATED("Deprecated no replacement")
       ECIES_KA_Operation(const PK_Key_Agreement_Key& private_key,
                          const ECIES_KA_Params& ecies_params,
                          bool for_encryption,
