@@ -148,6 +148,8 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
 
          // test encryption / decryption
 
+         // TODO(Botan4) clean this up after removing cofactor support
+
          for(auto comp_type : {Botan::EC_Point_Format::Uncompressed,
                                Botan::EC_Point_Format::Compressed,
                                Botan::EC_Point_Format::Hybrid}) {
@@ -202,12 +204,27 @@ class ECIES_Tests final : public Text_Based_Test {
             Text_Based_Test("pubkey/ecies.vec",
                             "Curve,PrivateKey,OtherPrivateKey,Kdf,Dem,DemKeyLen,Mac,MacKeyLen,Format,"
                             "CofactorMode,OldCofactorMode,CheckMode,SingleHashMode,Label,Plaintext,Ciphertext",
-                            "Iv") {}
+                            "Iv") {
+         // In order to test cofactor handling flags some of the tests use secp112r2 which has a cofactor of 4
+         // TODO(Botan4) kill it with fire
+         if(Botan::EC_Group::supports_application_specific_group()) {
+            auto p = Botan::BigInt::from_string("0xDB7C2ABF62E35E668076BEAD208B");
+            auto a = Botan::BigInt::from_string("0x6127C24C05F38A0AAAF65C0EF02C");
+            auto b = Botan::BigInt::from_string("0x51DEF1815DB5ED74FCC34C85D709");
+
+            auto g_x = Botan::BigInt::from_string("0x4BA30AB5E892B4E1649DD0928643");
+            auto g_y = Botan::BigInt::from_string("0xADCD46F5882E3747DEF36E956E97");
+            auto order = Botan::BigInt::from_string("0x36DF0AAFD8B8D7597CA10520D04B");
+            auto cofactor = Botan::BigInt::from_u64(4);
+            m_secp112r2 = std::make_unique<Botan::EC_Group>(p, a, b, g_x, g_y, order, cofactor);
+         }
+      }
 
       bool skip_this_test(const std::string&, const VarMap& vars) override {
          const auto curve = vars.get_req_str("Curve");
 
-         if(curve.starts_with("-----BEGIN EC PARAMETERS")) {
+         // TODO(Botan4) remove this since cofactors no longer supported
+         if(curve == "secp112r2") {
             return !Botan::EC_Group::supports_application_specific_group();
          } else {
             return !Botan::EC_Group::supports_named_group(curve);
@@ -237,10 +254,16 @@ class ECIES_Tests final : public Text_Based_Test {
 
          const Flags flags = ecies_flags(cofactor_mode, old_cofactor_mode, check_mode, single_hash_mode);
 
-         // This test uses a mix of named curves plus PEM, so we use the deprecated constructor atm
-         const Botan::EC_Group domain(curve);
-         const Botan::ECDH_PrivateKey private_key(this->rng(), domain, private_key_value);
-         const Botan::ECDH_PrivateKey other_private_key(this->rng(), domain, other_private_key_value);
+         const auto group = [&]() {
+            if(curve == "secp112r2") {
+               return *m_secp112r2;
+            } else {
+               return Botan::EC_Group::from_name(curve);
+            }
+         }();
+
+         const Botan::ECDH_PrivateKey private_key(this->rng(), group, private_key_value);
+         const Botan::ECDH_PrivateKey other_private_key(this->rng(), group, other_private_key_value);
 
          const Botan::ECIES_System_Params ecies_params(
             private_key.domain(), kdf, dem, dem_key_len, mac, mac_key_len, compression_type, flags);
@@ -249,6 +272,9 @@ class ECIES_Tests final : public Text_Based_Test {
 
          return result;
       }
+
+   private:
+      std::unique_ptr<Botan::EC_Group> m_secp112r2;
 };
 
 BOTAN_REGISTER_TEST("pubkey", "ecies", ECIES_Tests);
