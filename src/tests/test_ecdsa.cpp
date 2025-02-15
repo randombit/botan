@@ -14,6 +14,7 @@
    #include <botan/ecdsa.h>
    #include <botan/hash.h>
    #include <botan/pk_algs.h>
+   #include <botan/pkcs8.h>
 #endif
 
 namespace Botan_Tests {
@@ -308,6 +309,45 @@ class ECDSA_AllGroups_Test : public Test {
       }
 };
 
+class ECDSA_ExplicitCurveKey_Test : public Text_Based_Test {
+   public:
+      ECDSA_ExplicitCurveKey_Test() : Text_Based_Test("pubkey/ecdsa_explicit.vec", "Key") {}
+
+      bool clear_between_callbacks() const override { return false; }
+
+      bool skip_this_test(const std::string& group, const VarMap&) override {
+         return !Botan::EC_Group::supports_named_group(group);
+      }
+
+      Test::Result run_one_test(const std::string& group_name, const VarMap& vars) override {
+         Test::Result result("ECDSA explicit key " + group_name);
+
+         const auto key_bytes = vars.get_req_bin("Key");
+
+         try {
+            const auto expected_oid = Botan::OID::from_name(group_name).value();
+
+            auto key = Botan::PKCS8::load_key(key_bytes);
+            auto ecdsa = dynamic_cast<const Botan::ECDSA_PrivateKey*>(key.get());
+            if(ecdsa) {
+               result.test_success("Returned key was ECDSA");
+            } else {
+               result.test_failure("Returned key was some other type");
+            }
+
+            const auto& group = ecdsa->domain();
+            result.test_eq("Key is marked as explicit encoding", group.used_explicit_encoding(), true);
+
+            result.confirm("Group has expected OID", group.get_curve_oid() == expected_oid);
+
+         } catch(Botan::Exception& e) {
+            result.test_failure("Failed to parse key", e.what());
+         }
+
+         return result;
+      }
+};
+
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_verify", ECDSA_Verification_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_verify_wycheproof", ECDSA_Wycheproof_Verification_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_sign", ECDSA_Signature_KAT_Tests);
@@ -317,6 +357,7 @@ BOTAN_REGISTER_TEST("pubkey", "ecdsa_keygen", ECDSA_Keygen_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_keygen_stability", ECDSA_Keygen_Stability_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_invalid", ECDSA_Invalid_Key_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_all_groups", ECDSA_AllGroups_Test);
+BOTAN_REGISTER_TEST("pubkey", "ecdsa_explicit_curve_key", ECDSA_ExplicitCurveKey_Test);
 
 #endif
 
