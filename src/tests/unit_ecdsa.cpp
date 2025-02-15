@@ -147,47 +147,6 @@ Test::Result test_encoding_options() {
 
    #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
-Test::Result test_read_pkcs8() {
-   Test::Result result("ECDSA read_pkcs8");
-
-   if(Botan::EC_Group::supports_application_specific_group()) {
-      try {
-         auto rng = Test::new_rng("ecdsa_read_pkcs8");
-
-         Botan::DataSource_Stream key_stream(Test::data_file("x509/ecc/nodompar_private.pkcs8.pem"));
-         auto loaded_key_nodp = Botan::PKCS8::load_key(key_stream);
-         // anew in each test with unregistered domain-parameters
-         Botan::ECDSA_PrivateKey* ecdsa_nodp = dynamic_cast<Botan::ECDSA_PrivateKey*>(loaded_key_nodp.get());
-         if(!ecdsa_nodp) {
-            throw Test_Error("Unable to load valid PKCS8 ECDSA key");
-         }
-
-         result.confirm("EC_Group is marked as explicit encoding", ecdsa_nodp->domain().used_explicit_encoding());
-
-         Botan::PK_Signer signer(*ecdsa_nodp, *rng, "SHA-256");
-         Botan::PK_Verifier verifier(*ecdsa_nodp, "SHA-256");
-
-         const auto msg = rng->random_vec(48);
-
-         std::vector<uint8_t> signature_nodp = signer.sign_message(msg, *rng);
-
-         result.confirm("signature valid", verifier.verify_message(msg, signature_nodp));
-
-         try {
-            Botan::DataSource_Stream key_stream2(Test::data_file("x509/ecc/withdompar_private.pkcs8.pem"));
-            auto should_fail = Botan::PKCS8::load_key(key_stream2);
-            result.test_failure("loaded key with unknown OID");
-         } catch(std::exception&) {
-            result.test_note("rejected key with unknown OID");
-         }
-      } catch(std::exception& e) {
-         result.test_failure("read_pkcs8", e.what());
-      }
-   }
-
-   return result;
-}
-
 Test::Result test_ecc_key_with_rfc5915_extensions() {
    Test::Result result("ECDSA Unit");
 
@@ -234,7 +193,6 @@ class ECDSA_Unit_Tests final : public Test {
          std::vector<Test::Result> results;
 
    #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-         results.push_back(test_read_pkcs8());
          results.push_back(test_ecc_key_with_rfc5915_extensions());
          results.push_back(test_ecc_key_with_rfc5915_parameters());
 

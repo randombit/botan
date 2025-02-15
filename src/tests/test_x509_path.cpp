@@ -1236,6 +1236,25 @@ class CVE_2020_0601_Tests final : public Test {
             result.test_note("Skipping as application specific groups are not supported");
             return {result};
          }
+
+         if(!Botan::EC_Group::supports_named_group("secp384r1")) {
+            result.test_note("Skipping as secp384r1 is not supported");
+            return {result};
+         }
+
+         const auto& secp384r1 = Botan::EC_Group::from_name("secp384r1");
+         Botan::OID curveball_oid("1.3.6.1.4.1.25258.4.2020.0601");
+         Botan::EC_Group curveball(
+            curveball_oid,
+            secp384r1.get_p(),
+            secp384r1.get_a(),
+            secp384r1.get_b(),
+            BigInt(
+               "0xC711162A761D568EBEB96265D4C3CEB4F0C330EC8F6DD76E39BCC849ABABB8E34378D581065DEFC77D9FCED6B39075DE"),
+            BigInt(
+               "0x0CB090DE23BAC8D13E67E019A91B86311E5F342DEE17FD15FB7E278A32A1EAC98FC97E18CB2F3B2C487A7DA6F40107AC"),
+            secp384r1.get_order());
+
          auto ca_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/ca.pem"));
          auto fake_ca_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/fake_ca.pem"));
          auto ee_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/ee.pem"));
