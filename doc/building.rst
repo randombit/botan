@@ -469,6 +469,10 @@ support this there is a flag to ``configure.py`` called
 inserted into ``build/build.h`` which is (indirectly) included
 into every Botan header and source file.
 
+.. warning::
+
+   This option is deprecated and is planned to be removed in 3.9.0
+
 Enabling or Disabling Use of Certain OS Features
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
