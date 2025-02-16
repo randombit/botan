@@ -801,7 +801,7 @@ PK_Signature_Options parse_rsa_signature_algorithm(const AlgorithmIdentifier& al
    } else {
       SCAN_Name scan(padding);
 
-      if(scan.algo_name() != "EMSA3") {
+      if(scan.algo_name() != "PKCS1v15") {
          throw Decoding_Error("Unexpected OID for RSA signatures");
       }
 

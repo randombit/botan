@@ -33,7 +33,7 @@ void retrofit_legacy_parameters(SigOptsBaseT& builder,
 
    builder.with_provider(provider);
 
-   if(key.message_parts() != 1) {
+   if(key._signature_element_size_for_DER_encoding().has_value()) {
       builder.with_der_encoded_signature(format == Signature_Format::DerSequence);
    }
 
