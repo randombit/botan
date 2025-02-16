@@ -234,17 +234,6 @@ inline constexpr auto bigint_add3_nc(W z[], const W x[], size_t x_size, const W 
    return carry;
 }
 
-template <WordType W, size_t N>
-inline constexpr auto bigint_add(std::span<W, N> z, std::span<const W, N> x, std::span<const W, N> y) -> W {
-   if constexpr(N == 4) {
-      return word4_add3<W>(z.data(), x.data(), y.data(), 0);
-   } else if constexpr(N == 8) {
-      return word8_add3<W>(z.data(), x.data(), y.data(), 0);
-   } else {
-      return bigint_add3_nc(z.data(), x.data(), N, y.data(), N);
-   }
-}
-
 /**
 * Two operand addition
 * @param x the first operand (and output)
@@ -384,19 +373,8 @@ template <size_t N, WordType W>
 inline constexpr void bigint_monty_maybe_sub(W z[N], W x0, const W x[N], const W y[N]) {
    W borrow = 0;
 
-   if constexpr(N == 4) {
-      borrow = word4_sub3(z, x, y, borrow);
-   } else if constexpr(N == 8) {
-      borrow = word8_sub3(z, x, y, borrow);
-   } else {
-      const constexpr size_t blocks = N - (N % 8);
-      for(size_t i = 0; i != blocks; i += 8) {
-         borrow = word8_sub3(z + i, x + i, y + i, borrow);
-      }
-
-      for(size_t i = blocks; i != N; ++i) {
-         z[i] = word_sub(x[i], y[i], &borrow);
-      }
+   for(size_t i = 0; i != N; ++i) {
+      z[i] = word_sub(x[i], y[i], &borrow);
    }
 
    borrow = (x0 - borrow) > x0;
