@@ -37,13 +37,13 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
          if(m_group.has_cofactor()) {
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
             EC_AffinePoint input_point(m_group, m_group.get_cofactor() * m_group.OS2ECP(w, w_len));
-            return input_point.mul_x_only(m_l_times_priv, m_rng, m_ws);
+            return input_point.mul_x_only(m_l_times_priv, m_rng);
 #else
             throw Not_Implemented("Support for DH with cofactor adjustment not available in this build configuration");
 #endif
          } else {
             if(auto input_point = EC_AffinePoint::deserialize(m_group, {w, w_len})) {
-               return input_point->mul_x_only(m_l_times_priv, m_rng, m_ws);
+               return input_point->mul_x_only(m_l_times_priv, m_rng);
             } else {
                throw Decoding_Error("ECDH - Invalid elliptic curve point");
             }
@@ -66,7 +66,6 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
       const EC_Group m_group;
       const EC_Scalar m_l_times_priv;
       RandomNumberGenerator& m_rng;
-      std::vector<BigInt> m_ws;
 };
 
 }  // namespace

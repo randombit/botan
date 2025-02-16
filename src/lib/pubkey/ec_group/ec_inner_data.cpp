@@ -227,8 +227,7 @@ std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_from_bigint(const BigInt& 
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Group_Data::gk_x_mod_order(const EC_Scalar_Data& scalar,
-                                                              RandomNumberGenerator& rng,
-                                                              std::vector<BigInt>& ws) const {
+                                                              RandomNumberGenerator& rng) const {
    if(m_pcurve) {
       const auto& k = EC_Scalar_Data_PC::checked_ref(scalar);
       auto gk_x_mod_order = m_pcurve->base_point_mul_x_mod_order(k.value(), rng);
@@ -237,6 +236,7 @@ std::unique_ptr<EC_Scalar_Data> EC_Group_Data::gk_x_mod_order(const EC_Scalar_Da
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
       const auto& k = EC_Scalar_Data_BN::checked_ref(scalar);
       BOTAN_STATE_CHECK(m_base_mult != nullptr);
+      std::vector<BigInt> ws;
       const auto pt = m_base_mult->mul(k.value(), rng, m_order, ws);
 
       if(pt.is_zero()) {
@@ -245,7 +245,6 @@ std::unique_ptr<EC_Scalar_Data> EC_Group_Data::gk_x_mod_order(const EC_Scalar_Da
          return std::make_unique<EC_Scalar_Data_BN>(shared_from_this(), m_mod_order.reduce(pt.get_affine_x()));
       }
 #else
-      BOTAN_UNUSED(ws);
       throw Not_Implemented("Legacy EC interfaces disabled in this build configuration");
 #endif
    }
@@ -359,8 +358,7 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_hash_to_curve_nu(std::
 }
 
 std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_g_mul(const EC_Scalar_Data& scalar,
-                                                                RandomNumberGenerator& rng,
-                                                                std::vector<BigInt>& ws) const {
+                                                                RandomNumberGenerator& rng) const {
    if(m_pcurve) {
       const auto& k = EC_Scalar_Data_PC::checked_ref(scalar);
       auto pt = m_pcurve->point_to_affine(m_pcurve->mul_by_g(k.value(), rng));
@@ -371,10 +369,10 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_g_mul(const EC_Scalar_
       const auto& bn = EC_Scalar_Data_BN::checked_ref(scalar);
 
       BOTAN_STATE_CHECK(group->m_base_mult != nullptr);
+      std::vector<BigInt> ws;
       auto pt = group->m_base_mult->mul(bn.value(), rng, m_order, ws);
       return std::make_unique<EC_AffinePoint_Data_BN>(shared_from_this(), std::move(pt));
 #else
-      BOTAN_UNUSED(ws);
       throw Not_Implemented("Legacy EC interfaces disabled in this build configuration");
 #endif
    }

@@ -136,7 +136,6 @@ class GOST_3410_Signature_Operation final : public PK_Ops::Signature_with_Hash {
    private:
       const EC_Group m_group;
       const EC_Scalar m_x;
-      std::vector<BigInt> m_ws;
 };
 
 AlgorithmIdentifier GOST_3410_Signature_Operation::algorithm_identifier() const {
@@ -166,7 +165,7 @@ std::vector<uint8_t> GOST_3410_Signature_Operation::raw_sign(std::span<const uin
    const auto e = gost_msg_to_scalar(m_group, msg);
 
    const auto k = EC_Scalar::random(m_group, rng);
-   const auto r = EC_Scalar::gk_x_mod_order(k, rng, m_ws);
+   const auto r = EC_Scalar::gk_x_mod_order(k, rng);
    const auto s = (r * m_x) + (k * e);
 
    if(r.is_zero() || s.is_zero()) {

@@ -97,12 +97,9 @@ class EC_AffinePoint_Data {
       virtual void serialize_uncompressed_to(std::span<uint8_t> bytes) const = 0;
 
       virtual std::unique_ptr<EC_AffinePoint_Data> mul(const EC_Scalar_Data& scalar,
-                                                       RandomNumberGenerator& rng,
-                                                       std::vector<BigInt>& ws) const = 0;
+                                                       RandomNumberGenerator& rng) const = 0;
 
-      virtual secure_vector<uint8_t> mul_x_only(const EC_Scalar_Data& scalar,
-                                                RandomNumberGenerator& rng,
-                                                std::vector<BigInt>& ws) const = 0;
+      virtual secure_vector<uint8_t> mul_x_only(const EC_Scalar_Data& scalar, RandomNumberGenerator& rng) const = 0;
 
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
       virtual EC_Point to_legacy_point() const = 0;
@@ -239,9 +236,7 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
 
       std::unique_ptr<EC_Scalar_Data> scalar_one() const;
 
-      std::unique_ptr<EC_Scalar_Data> gk_x_mod_order(const EC_Scalar_Data& scalar,
-                                                     RandomNumberGenerator& rng,
-                                                     std::vector<BigInt>& ws) const;
+      std::unique_ptr<EC_Scalar_Data> gk_x_mod_order(const EC_Scalar_Data& scalar, RandomNumberGenerator& rng) const;
 
       /// Deserialize a point
       ///
@@ -256,9 +251,7 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
                                                                   std::span<const uint8_t> input,
                                                                   std::span<const uint8_t> domain_sep) const;
 
-      std::unique_ptr<EC_AffinePoint_Data> point_g_mul(const EC_Scalar_Data& scalar,
-                                                       RandomNumberGenerator& rng,
-                                                       std::vector<BigInt>& ws) const;
+      std::unique_ptr<EC_AffinePoint_Data> point_g_mul(const EC_Scalar_Data& scalar, RandomNumberGenerator& rng) const;
 
       std::unique_ptr<EC_AffinePoint_Data> mul_px_qy(const EC_AffinePoint_Data& p,
                                                      const EC_Scalar_Data& x,
