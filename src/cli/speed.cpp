@@ -42,6 +42,11 @@ class JSON_Output final {
 
          out << "[\n";
 
+         out << "{"
+             << "\"version\": \"" << Botan::short_version_cstr() << "\", "
+             << "\"git\": \"" << BOTAN_VERSION_VC_REVISION << "\""
+             << "},\n";
+
          for(size_t i = 0; i != m_results.size(); ++i) {
             const Timer& t = m_results[i];
 
