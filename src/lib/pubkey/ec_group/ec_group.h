@@ -420,19 +420,23 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
 
       /*
       * For internal use only
-      * TODO(Botan4): Add underscore prefix
+      * TODO(Botan4): Move this to an internal header
       */
       static std::shared_ptr<EC_Group_Data> EC_group_info(const OID& oid);
 
       /*
       * For internal use only
-      * TODO(Botan4): Add underscore prefix
+      *
+      * @warning this invalidates pointers and can cause memory corruption.
+      * This function exists only to be called in tests.
+      *
+      * TODO(Botan4): Move this to an internal header
       */
       static size_t clear_registered_curve_data();
 
       /*
       * For internal use only
-      * TODO(Botan4): Add underscore prefix
+      * TODO(Botan4): Move this to an internal header
       */
       static OID EC_group_identity_from_order(const BigInt& order);
 
