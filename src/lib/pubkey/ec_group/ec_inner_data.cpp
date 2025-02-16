@@ -56,6 +56,7 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
       m_has_cofactor(m_cofactor != 1),
       m_order_is_less_than_p(m_order < p),
       m_source(source) {
+   // TODO(Botan4) we can assume/assert the OID is set
    if(!m_oid.empty()) {
       DER_Encoder der(m_der_named_curve);
       der.encode(m_oid);
@@ -68,6 +69,16 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
          // still possibly null, if the curve is supported in general but not
          // available in the build
       }
+   }
+
+   // Try a generic pcurves instance
+   if(!m_pcurve && !m_has_cofactor) {
+      m_pcurve = PCurve::PrimeOrderCurve::from_params(p, a, b, g_x, g_y, order);
+      if(m_pcurve) {
+         m_engine = EC_Group_Engine::Generic;
+      }
+      // possibly still null here, if parameters unsuitable or if the
+      // pcurves_generic module wasn't included in the build
    }
 
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)

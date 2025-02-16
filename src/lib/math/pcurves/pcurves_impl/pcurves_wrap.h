@@ -26,11 +26,6 @@ concept curve_supports_scalar_invert = requires(const typename C::Scalar& s) {
 template <typename C>
 class PrimeOrderCurveImpl final : public PrimeOrderCurve {
    public:
-      static constexpr size_t BasePointWindowBits = 5;
-      static constexpr size_t VarPointWindowBits = 4;
-      static constexpr size_t Mul2PrecompWindowBits = 3;
-      static constexpr size_t Mul2WindowBits = 2;
-
       static_assert(C::OrderBits <= PrimeOrderCurve::MaximumBitLength);
       static_assert(C::PrimeFieldBits <= PrimeOrderCurve::MaximumBitLength);
 
