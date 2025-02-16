@@ -10,7 +10,7 @@
 
 #include <botan/data_src.h>
 #include <botan/exceptn.h>
-#include <botan/pk_keys.h>
+#include <botan/options_builder.h>
 #include <botan/secmem.h>
 #include <chrono>
 #include <functional>
@@ -21,6 +21,7 @@
 namespace Botan {
 
 class RandomNumberGenerator;
+class Private_Key;
 
 /**
 * PKCS #8 General Exception
@@ -35,14 +36,77 @@ class BOTAN_PUBLIC_API(2, 0) PKCS8_Exception final : public Decoding_Error {
 */
 namespace PKCS8 {
 
+namespace detail {
+
+struct Options_Container {
+      Option<"cipher", std::string> cipher;
+      Option<"password hash", std::string> pwhash;
+      Option<"password hash tuning duration", std::chrono::milliseconds> pwhash_duration;
+      Option<"password hash iterations", size_t> pwhash_iterations;
+      Option<"private key", std::reference_wrapper<const Private_Key>> private_key;
+
+      auto all_options() const { return std::tie(cipher, pwhash, pwhash_duration, pwhash_iterations, private_key); }
+};
+
+}  // namespace detail
+
+class BOTAN_PUBLIC_API(3, 8) Options_Builder final : protected OptionsBuilder<detail::Options_Container> {
+   public:
+      explicit Options_Builder(const Private_Key& private_key);
+
+   public:
+      Options_Builder& with_cipher(std::string_view cipher) & {
+         set_or_throw(options().cipher, std::string(cipher));
+         return *this;
+      }
+
+      Options_Builder with_cipher(std::string_view cipher) && { return std::move(with_cipher(cipher)); }
+
+      Options_Builder& with_pbkdf(std::string_view pbkdf) & {
+         set_or_throw(options().pwhash, std::string(pbkdf));
+         return *this;
+      }
+
+      Options_Builder with_pbkdf(std::string_view pbkdf) && { return std::move(with_pbkdf(pbkdf)); }
+
+      Options_Builder& with_pbkdf_desired_runtime(std::chrono::milliseconds pbkdf_duration) & {
+         if(is_set(options().pwhash_iterations)) {
+            throw Invalid_State("cannot set duration when iterations are already defined");
+         }
+         set_or_throw(options().pwhash_duration, pbkdf_duration);
+         return *this;
+      }
+
+      Options_Builder with_pbkdf_desired_runtime(std::chrono::milliseconds pbkdf_duration) && {
+         return std::move(with_pbkdf_desired_runtime(pbkdf_duration));
+      }
+
+      Options_Builder& with_pbkdf_iterations(size_t pbkdf_iterations) & {
+         if(is_set(options().pwhash_duration)) {
+            throw Invalid_State("cannot set iterations when tuning duration is already defined");
+         }
+         set_or_throw(options().pwhash_iterations, pbkdf_iterations);
+         return *this;
+      }
+
+      Options_Builder with_pbkdf_iterations(size_t pbkdf_iterations) && {
+         return std::move(with_pbkdf_iterations(pbkdf_iterations));
+      }
+
+   public:
+      std::vector<uint8_t> as_ber(RandomNumberGenerator& rng, std::string_view password);
+      secure_vector<uint8_t> as_unencrypted_ber();
+
+      std::string as_pem(RandomNumberGenerator& rng, std::string_view password);
+      std::string as_unencrypted_pem();
+};
+
 /**
 * BER encode a private key
 * @param key the private key to encode
 * @return BER encoded key
 */
-inline secure_vector<uint8_t> BER_encode(const Private_Key& key) {
-   return key.private_key_info();
-}
+BOTAN_PUBLIC_API(2, 0) secure_vector<uint8_t> BER_encode(const Private_Key& key);
 
 /**
 * Get a string containing a PEM encoded private key.
@@ -233,10 +297,7 @@ std::unique_ptr<Private_Key> load_key(std::span<const uint8_t> source);
 * @param key the key to copy
 * @return new copy of the key
 */
-inline std::unique_ptr<Private_Key> copy_key(const Private_Key& key) {
-   DataSource_Memory source(key.private_key_info());
-   return PKCS8::load_key(source);
-}
+BOTAN_PUBLIC_API(2, 0) std::unique_ptr<Private_Key> copy_key(const Private_Key& key);
 
 }  // namespace PKCS8
 

@@ -13,9 +13,11 @@
 #include <botan/der_enc.h>
 #include <botan/pem.h>
 #include <botan/pk_algs.h>
+#include <botan/pk_keys.h>
 #include <botan/rng.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/scan_name.h>
+#include <botan/internal/stl_util.h>
 
 #if defined(BOTAN_HAS_PKCS5_PBES2)
    #include <botan/internal/pbes2.h>
@@ -24,6 +26,66 @@
 namespace Botan::PKCS8 {
 
 namespace {
+
+class OptionsReader : public Options<detail::Options_Container> {
+   public:
+      OptionsReader(detail::Options_Container opts, std::string_view product_name) :
+            Options(std::move(opts), product_name) {
+         std::tie(m_default_cipher, m_default_pwhash) = [&]() -> std::pair<std::string, std::string> {
+            // We can assume that the private key is always set, as it is
+            // provided by the constructor of the PKCS8::Options_Builder.
+            const auto key_algo = peek(options().private_key).value().get().algo_name();
+            const bool nonstandard_pk = (key_algo == "McEliece" || key_algo == "XMSS");
+
+            // For algorithms where we are using a non-RFC format anyway, default to
+            // SIV or GCM. For others (RSA, ECDSA, ...) default to something widely
+            // compatible.
+            if(nonstandard_pk) {
+#if defined(BOTAN_HAS_AEAD_SIV) && defined(BOTAN_HAS_SHA2_64)
+               return {"AES-256/SIV", "SHA-512"};
+#elif defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
+               return {"AES-256/GCM", "SHA-512"};
+#endif
+            }
+
+            // Default is something compatible with everyone else
+            return {"AES-256/CBC", "SHA-256"};
+         }();
+      }
+
+   public:
+      [[nodiscard]] auto cipher() { return take(options().cipher).or_default(m_default_cipher); }
+
+      [[nodiscard]] auto pbkdf() {
+         // TODO(Botan4) Consider changing this to Scrypt
+         return take(options().pwhash).or_default(m_default_pwhash);
+      }
+
+      [[nodiscard]] std::variant<std::chrono::milliseconds, size_t> pbkdf_tune() {
+         // We're always consuming both, so that multiple invocations of this
+         // method don't result in inconsistent results and the consumption
+         // validation is satisfied.
+         auto iterations = take(options().pwhash_iterations).optional();
+         auto duration = take(options().pwhash_duration).optional();
+
+         if(iterations.has_value()) {
+            return *iterations;
+         }
+
+         if(duration.has_value()) {
+            return *duration;
+         }
+
+         using namespace std::chrono_literals;
+         return 300ms;  // default value
+      }
+
+      [[nodiscard]] const auto& private_key() { return take(options().private_key).required().get(); }
+
+   private:
+      std::string m_default_cipher;
+      std::string m_default_pwhash;
+};
 
 /*
 * Get info from an EncryptedPrivateKeyInfo
@@ -113,6 +175,60 @@ secure_vector<uint8_t> PKCS8_decode(DataSource& source,
 
 }  // namespace
 
+Options_Builder::Options_Builder(const Private_Key& private_key) {
+   with_product_name(fmt("Key Exporter for {}", private_key.algo_name()));
+   set_or_throw(options().private_key, private_key);
+}
+
+std::vector<uint8_t> Options_Builder::as_ber(RandomNumberGenerator& rng, std::string_view password) {
+#if defined(BOTAN_HAS_PKCS5_PBES2)
+   auto params = commit<OptionsReader>();
+
+   const std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbe_info = std::visit(
+      overloaded{
+         [&](std::chrono::milliseconds duration) {
+            return pbes2_encrypt_msec(params.private_key().private_key_info(),
+                                      password,
+                                      duration,
+                                      nullptr,
+                                      params.cipher(),
+                                      params.pbkdf(),
+                                      rng);
+         },
+         [&](size_t iterations) {
+            return pbes2_encrypt_iter(
+               params.private_key().private_key_info(), password, iterations, params.cipher(), params.pbkdf(), rng);
+         }},
+      params.pbkdf_tune());
+
+   params.validate_option_consumption();
+
+   std::vector<uint8_t> output;
+   DER_Encoder der(output);
+   der.start_sequence().encode(pbe_info.first).encode(pbe_info.second, ASN1_Type::OctetString).end_cons();
+
+   return output;
+#else
+   BOTAN_UNUSED(rng, password);
+   throw Encoding_Error("PKCS8: cannot encrypt because PBES2 was disabled in build");
+#endif
+}
+
+secure_vector<uint8_t> Options_Builder::as_unencrypted_ber() {
+   auto params = commit<OptionsReader>();
+   auto checker = scoped_cleanup([&] { params.validate_option_consumption(); });
+
+   return params.private_key().private_key_info();
+}
+
+std::string Options_Builder::as_pem(RandomNumberGenerator& rng, std::string_view password) {
+   return PEM_Code::encode(as_ber(rng, password), "ENCRYPTED PRIVATE KEY");
+}
+
+std::string Options_Builder::as_unencrypted_pem() {
+   return PEM_Code::encode(as_unencrypted_ber(), "PRIVATE KEY");
+}
+
 /*
 * PEM encode a PKCS #8 private key, unencrypted
 */
@@ -181,6 +297,10 @@ std::vector<uint8_t> BER_encode(const Private_Key& key,
    BOTAN_UNUSED(key, rng, pass, msec, pbe_algo);
    throw Encoding_Error("PKCS8::BER_encode cannot encrypt because PBES2 was disabled in build");
 #endif
+}
+
+secure_vector<uint8_t> BER_encode(const Private_Key& key) {
+   return key.private_key_info();
 }
 
 /*
@@ -351,6 +471,11 @@ std::unique_ptr<Private_Key> load_key(DataSource& source) {
    };
 
    return load_key(source, fail_fn, false);
+}
+
+std::unique_ptr<Private_Key> copy_key(const Private_Key& key) {
+   DataSource_Memory source(key.private_key_info());
+   return PKCS8::load_key(source);
 }
 
 }  // namespace Botan::PKCS8

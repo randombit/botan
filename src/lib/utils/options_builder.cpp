@@ -7,6 +7,7 @@
 
 #include <botan/options_builder.h>
 
+#include <botan/assert.h>
 #include <botan/hex.h>
 #include <botan/internal/fmt.h>
 
