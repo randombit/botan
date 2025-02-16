@@ -142,21 +142,24 @@ std::unique_ptr<TPM2::PrivateKey> RSA_PrivateKey::create_unrestricted_transient(
 
 namespace {
 
-SignatureAlgorithmSelection select_signature_algorithms(std::string_view padding) {
-   const SCAN_Name req(padding);
+SignatureAlgorithmSelection select_signature_algorithms(PK_Signature_Options& options) {
+   auto emsa = EMSA::create_or_throw(options);
+   const auto emsa_name = emsa->name();
+
+   const SCAN_Name req(emsa_name);
    if(req.arg_count() == 0) {
       throw Invalid_Argument("RSA signing padding scheme must at least specify a hash function");
    }
 
-   auto sig_scheme = rsa_signature_scheme_botan_to_tss2(padding);
+   auto sig_scheme = rsa_signature_scheme_botan_to_tss2(emsa_name);
    if(!sig_scheme) {
-      throw Not_Implemented(Botan::fmt("RSA signing with padding scheme {}", padding));
+      throw Not_Implemented(Botan::fmt("RSA signing with padding scheme {}", emsa_name));
    }
 
    return {
       .signature_scheme = sig_scheme.value(),
-      .hash_name = req.arg(0),
-      .padding = std::string(padding),
+      .hash_name = emsa->hash_function(),
+      .emsa = std::move(emsa),
    };
 }
 
@@ -166,8 +169,8 @@ size_t signature_length_for_key_handle(const SessionBundle& sessions, const Obje
 
 class RSA_Signature_Operation final : public Signature_Operation {
    public:
-      RSA_Signature_Operation(const Object& object, const SessionBundle& sessions, std::string_view padding) :
-            Signature_Operation(object, sessions, select_signature_algorithms(padding)) {}
+      RSA_Signature_Operation(const Object& object, const SessionBundle& sessions, PK_Signature_Options& options) :
+            Signature_Operation(object, sessions, select_signature_algorithms(options)) {}
 
       size_t signature_length() const override { return signature_length_for_key_handle(sessions(), key_handle()); }
 
@@ -175,14 +178,7 @@ class RSA_Signature_Operation final : public Signature_Operation {
          // TODO: This is essentially a copy of the ::algorithm_identifier()
          //       in `rsa.h`. We should probably refactor this into a common
          //       function.
-
-         // This EMSA object actually isn't required, we just need it to
-         // conveniently figure out the algorithm identifier.
-         //
-         // TODO: This is a hack, and we should clean this up.
-         BOTAN_STATE_CHECK(padding().has_value());
-         const auto emsa = EMSA::create_or_throw(padding().value());
-         const std::string emsa_name = emsa->name();
+         const std::string emsa_name = emsa()->name();
 
          try {
             const std::string full_name = "RSA/" + emsa_name;
@@ -216,8 +212,8 @@ class RSA_Signature_Operation final : public Signature_Operation {
 
 class RSA_Verification_Operation final : public Verification_Operation {
    public:
-      RSA_Verification_Operation(const Object& object, const SessionBundle& sessions, std::string_view padding) :
-            Verification_Operation(object, sessions, select_signature_algorithms(padding)) {}
+      RSA_Verification_Operation(const Object& object, const SessionBundle& sessions, PK_Signature_Options& options) :
+            Verification_Operation(object, sessions, select_signature_algorithms(options)) {}
 
    private:
       TPMT_SIGNATURE unmarshal_signature(std::span<const uint8_t> signature) const override {
@@ -390,17 +386,16 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption {
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Verification> RSA_PublicKey::create_verification_op(std::string_view params,
-                                                                            std::string_view provider) const {
-   BOTAN_UNUSED(provider);
-   return std::make_unique<RSA_Verification_Operation>(handles(), sessions(), params);
+std::unique_ptr<PK_Ops::Verification> RSA_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
+   options.exclude_provider();
+   return std::make_unique<RSA_Verification_Operation>(handles(), sessions(), options);
 }
 
-std::unique_ptr<PK_Ops::Signature> RSA_PrivateKey::create_signature_op(Botan::RandomNumberGenerator& rng,
-                                                                       std::string_view params,
-                                                                       std::string_view provider) const {
-   BOTAN_UNUSED(rng, provider);
-   return std::make_unique<RSA_Signature_Operation>(handles(), sessions(), params);
+std::unique_ptr<PK_Ops::Signature> RSA_PrivateKey::_create_signature_op(Botan::RandomNumberGenerator& rng,
+                                                                        PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng);
+   options.exclude_provider();
+   return std::make_unique<RSA_Signature_Operation>(handles(), sessions(), options);
 }
 
 std::unique_ptr<PK_Ops::Encryption> RSA_PublicKey::create_encryption_op(Botan::RandomNumberGenerator& rng,

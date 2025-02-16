@@ -4,7 +4,6 @@
 #include <botan/xmss.h>
 
 #include <iostream>
-#include <vector>
 
 int main() {
    // Create a random number generator used for key generation.
@@ -16,14 +15,14 @@ int main() {
    const Botan::XMSS_PublicKey& public_key(private_key);
 
    // create Public Key Signer using the private key.
-   Botan::PK_Signer signer(private_key, rng, "");
+   auto signer = private_key.signer().with_rng(rng).create();
 
    // create and sign a message using the Public Key Signer.
    Botan::secure_vector<uint8_t> msg{0x01, 0x02, 0x03, 0x04};
    auto sig = signer.sign_message(msg, rng);
 
    // create Public Key Verifier using the public key
-   Botan::PK_Verifier verifier(public_key, "");
+   auto verifier = public_key.signature_verifier().create();
 
    // verify the signature for the previously generated message.
    if(verifier.verify_message(msg, sig)) {

@@ -205,9 +205,9 @@ class RSA_Blinding_Tests final : public Test {
          * are used as an additional test on the blinders.
          */
 
-         Botan::PK_Signer signer(
-            rsa, this->rng(), "Raw", Botan::Signature_Format::Standard, "base");  // don't try this at home
-         Botan::PK_Verifier verifier(rsa, "Raw", Botan::Signature_Format::Standard, "base");
+         // don't try this at home
+         auto signer = rsa.signer().with_rng(this->rng()).with_hash("Raw").create();
+         auto verifier = rsa.signature_verifier().with_hash("Raw").create();
 
          for(size_t i = 1; i <= Botan::Blinder::ReinitInterval * 6; ++i) {
             std::vector<uint8_t> input(16);

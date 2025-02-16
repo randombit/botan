@@ -347,9 +347,11 @@ namespace Botan::TPM2 {
       return std::nullopt;
    }
 
-   if(scheme.value() == TPM2_ALG_RSAPSS && req.arg_count() != 1) {
-      // RSA signing using PSS with MGF1
-      return std::nullopt;
+   if(scheme.value() == TPM2_ALG_RSAPSS) {
+      // RSA signing using PSS with MGF1 and salt size of 32
+      if(req.arg(1, "MGF1") != "MGF1" || req.arg_as_integer(2, 32) != 32) {
+         return std::nullopt;
+      }
    }
 
    return TPMT_SIG_SCHEME{

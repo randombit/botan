@@ -9,7 +9,7 @@
 #define BOTAN_PUBKEY_H_
 
 #include <botan/asn1_obj.h>
-#include <botan/pk_keys.h>
+#include <botan/pk_enums.h>
 #include <botan/pk_ops_fwd.h>
 #include <botan/symkey.h>
 #include <span>
@@ -20,6 +20,11 @@
 namespace Botan {
 
 class RandomNumberGenerator;
+
+class Public_Key;
+class Private_Key;
+
+class PK_Signature_Options;
 
 /**
 * Public Key Encryptor
@@ -155,6 +160,16 @@ class BOTAN_PUBLIC_API(2, 0) PK_Decryptor {
 class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
    public:
       /**
+      * Construct a PK signer
+      *
+      * @param options controls the behavior of the signature generation, eg which hash function to use
+      *
+      * Note that most common algorithms (eg RSA or ECDSA) require an options
+      * parameter to specify at least which hash function to use.
+      */
+      explicit PK_Signer(PK_Signature_Options options);
+
+      /**
       * Construct a PK Signer.
       * @param key the key to use inside this signer
       * @param rng the random generator to use
@@ -273,8 +288,14 @@ class BOTAN_PUBLIC_API(2, 0) PK_Verifier final {
    public:
       /**
       * Construct a PK Verifier.
+      * @param options relating to the signature
+      */
+      explicit PK_Verifier(PK_Signature_Options options);
+
+      /**
+      * Construct a PK Verifier.
       * @param pub_key the public key to verify against
-      * @param padding the padding/hash to use (eg "SHA-512" or "PSS(SHA-256)")
+      * @param padding the padding/hash to use (eg "EMSA_PKCS1(SHA-256)")
       * @param format the signature format to use
       * @param provider the provider to use
       */

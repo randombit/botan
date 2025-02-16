@@ -126,9 +126,9 @@ namespace {
 class DSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
    public:
       DSA_Signature_Operation(const std::shared_ptr<const DL_PrivateKey>& key,
-                              std::string_view emsa,
+                              PK_Signature_Options& options,
                               RandomNumberGenerator& rng) :
-            PK_Ops::Signature_with_Hash(emsa), m_key(key) {
+            PK_Ops::Signature_with_Hash(options), m_key(key) {
          m_b = BigInt::random_integer(rng, 2, m_key->group().get_q());
          m_b_inv = m_key->group().inverse_mod_q(m_b);
       }
@@ -204,8 +204,8 @@ std::vector<uint8_t> DSA_Signature_Operation::raw_sign(std::span<const uint8_t> 
 */
 class DSA_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
-      DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key, std::string_view emsa) :
-            PK_Ops::Verification_with_Hash(emsa), m_key(key) {}
+      DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key, PK_Signature_Options& options) :
+            PK_Ops::Verification_with_Hash(options), m_key(key) {}
 
       DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key, const AlgorithmIdentifier& alg_id) :
             PK_Ops::Verification_with_Hash(alg_id, "DSA"), m_key(key) {}
@@ -251,12 +251,9 @@ bool DSA_Verification_Operation::verify(std::span<const uint8_t> input, std::spa
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::create_verification_op(std::string_view params,
-                                                                            std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<DSA_Verification_Operation>(this->m_public_key, params);
-   }
-   throw Provider_Not_Found(algo_name(), provider);
+std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
+   options.exclude_provider();
+   return std::make_unique<DSA_Verification_Operation>(this->m_public_key, options);
 }
 
 std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::create_x509_verification_op(
@@ -268,13 +265,10 @@ std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::create_x509_verification_op
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Signature> DSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-                                                                       std::string_view params,
-                                                                       std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<DSA_Signature_Operation>(this->m_private_key, params, rng);
-   }
-   throw Provider_Not_Found(algo_name(), provider);
+std::unique_ptr<PK_Ops::Signature> DSA_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                        PK_Signature_Options& options) const {
+   options.exclude_provider();
+   return std::make_unique<DSA_Signature_Operation>(this->m_private_key, options, rng);
 }
 
 }  // namespace Botan
