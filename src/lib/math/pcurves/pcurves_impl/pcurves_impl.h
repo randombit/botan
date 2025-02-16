@@ -224,7 +224,11 @@ class IntMod final {
       */
       friend constexpr Self operator+(const Self& a, const Self& b) {
          std::array<W, N> t;
-         W carry = bigint_add<W, N>(t, a.value(), b.value());
+
+         W carry = 0;
+         for(size_t i = 0; i != N; ++i) {
+            t[i] = word_add(a.m_val[i], b.m_val[i], &carry);
+         }
 
          std::array<W, N> r;
          bigint_monty_maybe_sub<N>(r.data(), carry, t.data(), P.data());
@@ -236,7 +240,11 @@ class IntMod final {
       */
       friend constexpr Self operator-(const Self& a, const Self& b) {
          std::array<W, N> r;
-         word carry = bigint_sub3(r.data(), a.data(), N, b.data(), N);
+         W carry = 0;
+         for(size_t i = 0; i != N; ++i) {
+            r[i] = word_sub(a.m_val[i], b.m_val[i], &carry);
+         }
+
          bigint_cnd_add(carry, r.data(), N, P.data(), N);
          return Self(r);
       }
@@ -373,11 +381,14 @@ class IntMod final {
       * Returns the additive inverse of (*this)
       */
       constexpr Self negate() const {
-         auto x_is_zero = CT::all_zeros(this->data(), N);
+         const W x_is_zero = ~CT::all_zeros(this->data(), N).value();
 
          std::array<W, N> r;
-         bigint_sub3(r.data(), P.data(), N, this->data(), N);
-         x_is_zero.if_set_zero_out(r.data(), N);
+         W carry = 0;
+         for(size_t i = 0; i != N; ++i) {
+            r[i] = word_sub(P[i] & x_is_zero, m_val[i], &carry);
+         }
+
          return Self(r);
       }
 
