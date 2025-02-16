@@ -124,7 +124,6 @@ snail-mail address (S), and Bitcoin address (B).
   E: jack@randombit.net
   W: https://www.randombit.net/
   P: 3F69 2E64 6D92 3BBE E7AE  9258 5C0F 96E8 4EC1 6D6B
-  B: 1DwxWb2J4vuX4vjsbzaCXW696rZfeamahz
   D: Original designer/author, maintainer 2001-current
   S: Vermont, USA
 
