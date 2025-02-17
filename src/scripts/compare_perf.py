@@ -30,7 +30,7 @@ def parse_perf_report(report):
         version = report[0]
 
         if 'git' in version and version['git'] != 'unknown':
-            version['git'] = 'git:' + version['git'][:8]
+            version['git'] = version['git'][:12]
 
         report = report[1:]
 
