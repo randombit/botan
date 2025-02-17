@@ -33,6 +33,8 @@
 */
 #define BOTAN_BUILD_COMPILER_IS_%{cc_macro}
 
+#define BOTAN_COMPILER_INVOCATION_STRING "%{cxx} %{cxx_abi_flags} %{cc_compile_flags}"
+
 %{if cxx_supports_gcc_inline_asm}
 #define BOTAN_USE_GCC_INLINE_ASM
 %{endif}

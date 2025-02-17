@@ -765,6 +765,7 @@ def main(args=None):
             'src/scripts/dist.py',
             'src/scripts/cleanup.py',
             'src/scripts/check.py',
+            'src/scripts/compare_perf.py',
             'src/scripts/build_docs.py',
             'src/scripts/website.py',
             'src/scripts/bench.py',
