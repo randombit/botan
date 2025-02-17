@@ -1768,7 +1768,10 @@ def cli_speed_tests(_tmp_dir):
     if len(json_blob) < 2:
         logging.error("Unexpected size for JSON output")
 
-    for b in json_blob:
+    if 'version' not in json_blob[0]:
+        logging.error("Didn't find version header in first JSON object")
+
+    for b in json_blob[1:]:
         for field in ['algo', 'op', 'events', 'bps', 'buf_size', 'nanos']:
             if field not in b:
                 logging.error('Missing field %s in JSON record %s', field, b)
