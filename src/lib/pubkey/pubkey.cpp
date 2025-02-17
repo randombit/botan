@@ -1,5 +1,5 @@
 /*
-* (C) 1999-2010,2015,2018 Jack Lloyd
+* (C) 1999-2010,2015,2018,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -250,22 +250,45 @@ SymmetricKey PK_Key_Agreement::derive_key(
    return SymmetricKey(m_op->agree(key_len, {peer_key, peer_key_len}, {salt, salt_len}));
 }
 
-PK_Signer::PK_Signer(const Private_Key& key,
-                     RandomNumberGenerator& rng,
-                     std::string_view emsa,
-                     Signature_Format format,
-                     std::string_view provider) :
-      m_sig_format(format) {
-   if(m_sig_format == Signature_Format::DerSequence) {
-      m_sig_element_size = key._signature_element_size_for_DER_encoding();
-      BOTAN_ARG_CHECK(m_sig_element_size.has_value(), "This key does not support DER signatures");
-   }
+namespace {
 
-   m_op = key.create_signature_op(rng, emsa, provider);
+void check_der_format_supported(Signature_Format format, std::optional<size_t> element_size) {
+   if(format != Signature_Format::Standard && !element_size.has_value()) {
+      throw Invalid_Argument("This algorithm does not support DER encoding");
+   }
+}
+
+}  // namespace
+
+PK_Signer::PK_Signer(PK_Signature_Options options) {
+   // Appease GCC warning about a possibly dangling reference because when using
+   // std::reference_wrapper's implicit conversion to the contained reference
+   // the wrapper does not outlive the reference which seems to confuse GCC.
+   const auto key_wrapped = options.private_key().required();
+   const Private_Key& key = key_wrapped.get();
+
+   // TODO: The downstream algorithms should decide whether to require an RNG
+   //       (e.g. explicitly 'deterministic' signatures should not require it).
+   RandomNumberGenerator& rng = options.rng().required();
+
+   m_op = key._create_signature_op(rng, options);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support signature generation", key.algo_name()));
    }
+   m_sig_format = options.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
+   m_sig_element_size = key._signature_element_size_for_DER_encoding();
+
+   check_der_format_supported(m_sig_format, m_sig_element_size);
+
+   options.validate_option_consumption();
 }
+
+PK_Signer::PK_Signer(const Private_Key& key,
+                     RandomNumberGenerator& rng,
+                     std::string_view padding,
+                     Signature_Format format,
+                     std::string_view provider) :
+      PK_Signer(PK_Signature_Options::from_legacy(key, rng, padding, format, provider)) {}
 
 AlgorithmIdentifier PK_Signer::algorithm_identifier() const {
    return m_op->algorithm_identifier();
@@ -366,22 +389,29 @@ std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng) {
    }
 }
 
-PK_Verifier::PK_Verifier(const Public_Key& key,
-                         std::string_view emsa,
-                         Signature_Format format,
-                         std::string_view provider) {
-   m_op = key.create_verification_op(emsa, provider);
+PK_Verifier::PK_Verifier(PK_Signature_Options options) {
+   // Appease GCC warning about a possibly dangling reference because when using
+   // std::reference_wrapper's implicit conversion to the contained reference
+   // the wrapper does not outlive the reference which seems to confuse GCC.
+   const auto key_wrapped = options.public_key().required();
+   const Public_Key& key = key_wrapped.get();
+   m_op = key._create_verification_op(options);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support signature verification", key.algo_name()));
    }
 
-   m_sig_format = format;
    m_sig_element_size = key._signature_element_size_for_DER_encoding();
+   m_sig_format = options.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
+   check_der_format_supported(m_sig_format, m_sig_element_size);
 
-   if(m_sig_format == Signature_Format::DerSequence) {
-      BOTAN_ARG_CHECK(m_sig_element_size.has_value(), "This key does not support DER signatures");
-   }
+   options.validate_option_consumption();
 }
+
+PK_Verifier::PK_Verifier(const Public_Key& pub_key,
+                         std::string_view padding,
+                         Signature_Format format,
+                         std::string_view provider) :
+      PK_Verifier(PK_Signature_Options::from_legacy(pub_key, padding, format, provider)) {}
 
 PK_Verifier::PK_Verifier(const Public_Key& key,
                          const AlgorithmIdentifier& signature_algorithm,

@@ -159,15 +159,16 @@ std::unique_ptr<TPM2::PrivateKey> EC_PrivateKey::create_unrestricted_transient(c
 
 namespace {
 
-SignatureAlgorithmSelection make_signature_scheme(std::string_view hash_name) {
+SignatureAlgorithmSelection make_signature_scheme(PK_Signature_Options& options) {
+   auto hash_name = options.hash_function().required();
    return {
       .signature_scheme =
          TPMT_SIG_SCHEME{
             .scheme = TPM2_ALG_ECDSA,  // Only support ECDSA
             .details = {.any = {.hashAlg = get_tpm2_hash_type(hash_name)}},
          },
-      .hash_name = std::string(hash_name),
-      .padding = std::nullopt,
+      .hash_name = std::move(hash_name),
+      .emsa = nullptr,  // ECC does not use an EMSA
    };
 }
 
@@ -183,8 +184,8 @@ size_t signature_length_for_key_handle(const SessionBundle& sessions, const Obje
 
 class EC_Signature_Operation final : public Signature_Operation {
    public:
-      EC_Signature_Operation(const Object& object, const SessionBundle& sessions, std::string_view hash) :
-            Signature_Operation(object, sessions, make_signature_scheme(hash)) {}
+      EC_Signature_Operation(const Object& object, const SessionBundle& sessions, PK_Signature_Options& options) :
+            Signature_Operation(object, sessions, make_signature_scheme(options)) {}
 
       size_t signature_length() const override { return signature_length_for_key_handle(sessions(), key_handle()); }
 
@@ -211,8 +212,8 @@ class EC_Signature_Operation final : public Signature_Operation {
 
 class EC_Verification_Operation final : public Verification_Operation {
    public:
-      EC_Verification_Operation(const Object& object, const SessionBundle& sessions, std::string_view hash) :
-            Verification_Operation(object, sessions, make_signature_scheme(hash)) {}
+      EC_Verification_Operation(const Object& object, const SessionBundle& sessions, PK_Signature_Options& options) :
+            Verification_Operation(object, sessions, make_signature_scheme(options)) {}
 
    private:
       TPMT_SIGNATURE unmarshal_signature(std::span<const uint8_t> sig_data) const override {
@@ -239,17 +240,16 @@ class EC_Verification_Operation final : public Verification_Operation {
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Verification> EC_PublicKey::create_verification_op(std::string_view params,
-                                                                           std::string_view provider) const {
-   BOTAN_UNUSED(provider);
-   return std::make_unique<EC_Verification_Operation>(handles(), sessions(), params);
+std::unique_ptr<PK_Ops::Verification> EC_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
+   options.exclude_provider();
+   return std::make_unique<EC_Verification_Operation>(handles(), sessions(), options);
 }
 
-std::unique_ptr<PK_Ops::Signature> EC_PrivateKey::create_signature_op(Botan::RandomNumberGenerator& rng,
-                                                                      std::string_view params,
-                                                                      std::string_view provider) const {
-   BOTAN_UNUSED(rng, provider);
-   return std::make_unique<EC_Signature_Operation>(handles(), sessions(), params);
+std::unique_ptr<PK_Ops::Signature> EC_PrivateKey::_create_signature_op(Botan::RandomNumberGenerator& rng,
+                                                                       PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng);
+   options.exclude_provider();
+   return std::make_unique<EC_Signature_Operation>(handles(), sessions(), options);
 }
 
 }  // namespace Botan::TPM2

@@ -273,18 +273,15 @@ class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature {
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::create_verification_op(std::string_view params,
-                                                                                std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      if(params.empty() || params == "Identity" || params == "Pure") {
-         return std::make_unique<Ed25519_Pure_Verify_Operation>(*this);
-      } else if(params == "Ed25519ph") {
-         return std::make_unique<Ed25519_Hashed_Verify_Operation>(*this, "SHA-512", true);
-      } else {
-         return std::make_unique<Ed25519_Hashed_Verify_Operation>(*this, params, false);
-      }
+std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
+   options.exclude_provider();
+
+   if(auto prehash = options.prehash().optional()) {
+      return std::make_unique<Ed25519_Hashed_Verify_Operation>(
+         *this, prehash->value_or("SHA-512"), !prehash->has_value());
+   } else {
+      return std::make_unique<Ed25519_Pure_Verify_Operation>(*this);
    }
-   throw Provider_Not_Found(algo_name(), provider);
 }
 
 std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
@@ -299,19 +296,17 @@ std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::create_x509_verificatio
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Signature> Ed25519_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                                                           std::string_view params,
-                                                                           std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      if(params.empty() || params == "Identity" || params == "Pure") {
-         return std::make_unique<Ed25519_Pure_Sign_Operation>(*this);
-      } else if(params == "Ed25519ph") {
-         return std::make_unique<Ed25519_Hashed_Sign_Operation>(*this, "SHA-512", true);
-      } else {
-         return std::make_unique<Ed25519_Hashed_Sign_Operation>(*this, params, false);
-      }
+std::unique_ptr<PK_Ops::Signature> Ed25519_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                            PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng);
+   options.exclude_provider();
+
+   if(auto prehash = options.prehash().optional()) {
+      return std::make_unique<Ed25519_Hashed_Sign_Operation>(
+         *this, prehash->value_or("SHA-512"), !prehash->has_value());
+   } else {
+      return std::make_unique<Ed25519_Pure_Sign_Operation>(*this);
    }
-   throw Provider_Not_Found(algo_name(), provider);
 }
 
 }  // namespace Botan

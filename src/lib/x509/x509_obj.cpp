@@ -11,7 +11,9 @@
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/pem.h>
+#include <botan/pk_keys.h>
 #include <botan/pubkey.h>
+#include <botan/internal/emsa.h>
 #include <botan/internal/fmt.h>
 #include <algorithm>
 #include <sstream>
@@ -111,7 +113,7 @@ std::pair<Certificate_Status_Code, std::string> X509_Object::verify_signature(co
       }
    } catch(Decoding_Error&) {
       return std::make_pair(Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS, "");
-   } catch(Algorithm_Not_Found&) {
+   } catch(Lookup_Error&) {
       return std::make_pair(Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN, "");
    } catch(...) {
       // This shouldn't happen, fallback to generic signature error
