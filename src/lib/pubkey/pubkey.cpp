@@ -255,9 +255,8 @@ PK_Signer::PK_Signer(const Private_Key& key,
                      std::string_view emsa,
                      Signature_Format format,
                      std::string_view provider) :
-      m_sig_format(format) {
+      m_sig_format(format), m_sig_element_size(key._signature_element_size_for_DER_encoding()) {
    if(m_sig_format == Signature_Format::DerSequence) {
-      m_sig_element_size = key._signature_element_size_for_DER_encoding();
       BOTAN_ARG_CHECK(m_sig_element_size.has_value(), "This key does not support DER signatures");
    }
 

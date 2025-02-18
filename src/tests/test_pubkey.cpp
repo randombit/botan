@@ -309,6 +309,31 @@ std::vector<Test::Result> PK_Sign_Verify_DER_Test::run() {
       }
    }
 
+   // Below follows a regression test for a bug introduced in #4592 that caused
+   // an assertion in PK_Signer when setting the output format explicitly using
+   // signer.set_output_format(Signature_Format::DerSequence)
+   try {
+      auto signer = Botan::PK_Signer(*privkey, this->rng(), padding /*, not setting DerSequence here */);
+      auto verifier = Botan::PK_Verifier(*pubkey, padding /*, not setting DerSequence here */);
+
+      // Setting the in/out formats explicitly, to ensure that PK_Signer/Verifier
+      // handle their internal state properly and not run into an assertion.
+      signer.set_output_format(Botan::Signature_Format::DerSequence);
+      verifier.set_input_format(Botan::Signature_Format::DerSequence);
+
+      const auto sig = signer.sign_message(message, this->rng());
+      const auto verified = verifier.verify_message(message, sig);
+
+      result.confirm("signature checks out", verified);
+      if(test_random_invalid_sigs()) {
+         check_invalid_signatures(result, verifier, message, sig, this->rng());
+      }
+   } catch(const Botan::Lookup_Error&) {
+      result.test_note("Skipping sign/verify regression test");
+   } catch(const std::exception& e) {
+      result.test_failure("regresstion test verification failed", e.what());
+   }
+
    return {result};
 }
 
