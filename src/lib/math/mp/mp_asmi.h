@@ -484,108 +484,6 @@ inline constexpr auto word8_madd3(W z[8], const W x[8], W y, W carry) -> W {
    return carry;
 }
 
-/*
-* Multiply-Add Accumulator
-* (w2,w1,w0) += x * y
-*/
-template <WordType W>
-inline constexpr void word3_muladd(W* w2, W* w1, W* w0, W x, W y) {
-#if defined(BOTAN_MP_USE_X86_64_ASM)
-   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
-      W z0 = 0, z1 = 0;
-
-      asm("mulq %[y]" : "=a"(z0), "=d"(z1) : "a"(x), [y] "rm"(y) : "cc");
-
-      asm(R"(
-          addq %[z0],%[w0]
-          adcq %[z1],%[w1]
-          adcq $0,%[w2]
-          )"
-          : [w0] "=r"(*w0), [w1] "=r"(*w1), [w2] "=r"(*w2)
-          : [z0] "r"(z0), [z1] "r"(z1), "0"(*w0), "1"(*w1), "2"(*w2)
-          : "cc");
-      return;
-   }
-#endif
-
-   W carry = *w0;
-   *w0 = word_madd2(x, y, &carry);
-   *w1 += carry;
-   *w2 += (*w1 < carry);
-}
-
-/*
-* 3-word addition
-* (w2,w1,w0) += x
-*/
-template <WordType W>
-inline constexpr void word3_add(W* w2, W* w1, W* w0, W x) {
-#if defined(BOTAN_MP_USE_X86_64_ASM)
-   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
-      asm(R"(
-         addq %[x],%[w0]
-         adcq $0,%[w1]
-         adcq $0,%[w2]
-         )"
-          : [w0] "=r"(*w0), [w1] "=r"(*w1), [w2] "=r"(*w2)
-          : [x] "r"(x), "0"(*w0), "1"(*w1), "2"(*w2)
-          : "cc");
-      return;
-   }
-#endif
-
-   *w0 += x;
-   W c1 = (*w0 < x);
-   *w1 += c1;
-   W c2 = (*w1 < c1);
-   *w2 += c2;
-}
-
-/*
-* Multiply-Add Accumulator
-* (w2,w1,w0) += 2 * x * y
-*/
-template <WordType W>
-inline constexpr void word3_muladd_2(W* w2, W* w1, W* w0, W x, W y) {
-#if defined(BOTAN_MP_USE_X86_64_ASM)
-   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
-      W z0 = 0, z1 = 0;
-
-      asm("mulq %[y]" : "=a"(z0), "=d"(z1) : "a"(x), [y] "rm"(y) : "cc");
-
-      asm(R"(
-         addq %[z0],%[w0]
-         adcq %[z1],%[w1]
-         adcq $0,%[w2]
-
-         addq %[z0],%[w0]
-         adcq %[z1],%[w1]
-         adcq $0,%[w2]
-         )"
-          : [w0] "=r"(*w0), [w1] "=r"(*w1), [w2] "=r"(*w2)
-          : [z0] "r"(z0), [z1] "r"(z1), "0"(*w0), "1"(*w1), "2"(*w2)
-          : "cc");
-      return;
-   }
-#endif
-
-   W carry = 0;
-   x = word_madd2(x, y, &carry);
-   y = carry;
-
-   const size_t top_bit_shift = WordInfo<W>::bits - 1;
-
-   W top = (y >> top_bit_shift);
-   y <<= 1;
-   y |= (x >> top_bit_shift);
-   x <<= 1;
-
-   carry = 0;
-   *w0 = word_add(*w0, x, &carry);
-   *w1 = word_add(*w1, y, &carry);
-   *w2 = word_add(*w2, top, &carry);
-}
-
 /**
 * Helper for 3-word accumulators
 *
@@ -640,11 +538,79 @@ class word3 final {
          m_w0 = 0;
       }
 
-      inline constexpr void mul(W x, W y) { word3_muladd(&m_w2, &m_w1, &m_w0, x, y); }
+      inline constexpr void mul(W x, W y) {
+   #if defined(BOTAN_MP_USE_X86_64_ASM)
+         if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+            W z0 = 0, z1 = 0;
 
-      inline constexpr void mul_x2(W x, W y) { word3_muladd_2(&m_w2, &m_w1, &m_w0, x, y); }
+            asm("mulq %[y]" : "=a"(z0), "=d"(z1) : "a"(x), [y] "rm"(y) : "cc");
 
-      inline constexpr void add(W x) { word3_add(&m_w2, &m_w1, &m_w0, x); }
+            asm(R"(
+                 addq %[z0],%[w0]
+                 adcq %[z1],%[w1]
+                 adcq $0,%[w2]
+                )"
+                : [w0] "=r"(m_w0), [w1] "=r"(m_w1), [w2] "=r"(m_w2)
+                : [z0] "r"(z0), [z1] "r"(z1), "0"(m_w0), "1"(m_w1), "2"(m_w2)
+                : "cc");
+            return;
+         }
+   #endif
+
+         typedef typename WordInfo<W>::dword dword;
+         const dword s = dword(x) * y + m_w0;
+         W carry = static_cast<W>(s >> WordInfo<W>::bits);
+         m_w0 = static_cast<W>(s);
+         m_w1 += carry;
+         m_w2 += (m_w1 < carry);
+      }
+
+      inline constexpr void mul_x2(W x, W y) {
+   #if defined(BOTAN_MP_USE_X86_64_ASM)
+         if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+            W z0 = 0, z1 = 0;
+
+            asm("mulq %[y]" : "=a"(z0), "=d"(z1) : "a"(x), [y] "rm"(y) : "cc");
+
+            asm(R"(
+                 addq %[z0],%[w0]
+                 adcq %[z1],%[w1]
+                 adcq $0,%[w2]
+
+                 addq %[z0],%[w0]
+                 adcq %[z1],%[w1]
+                 adcq $0,%[w2]
+                   )"
+                : [w0] "=r"(m_w0), [w1] "=r"(m_w1), [w2] "=r"(m_w2)
+                : [z0] "r"(z0), [z1] "r"(z1), "0"(m_w0), "1"(m_w1), "2"(m_w2)
+                : "cc");
+            return;
+         }
+   #endif
+
+         W carry = 0;
+         x = word_madd2(x, y, &carry);
+         y = carry;
+
+         carry = 0;
+         m_w0 = word_add(m_w0, x, &carry);
+         m_w1 = word_add(m_w1, y, &carry);
+         m_w2 += carry;
+
+         carry = 0;
+         m_w0 = word_add(m_w0, x, &carry);
+         m_w1 = word_add(m_w1, y, &carry);
+         m_w2 += carry;
+      }
+
+      inline constexpr void add(W x) {
+         constexpr W z = 0;
+
+         W carry = 0;
+         m_w0 = word_add(m_w0, x, &carry);
+         m_w1 = word_add(m_w1, z, &carry);
+         m_w2 += carry;
+      }
 
       inline constexpr W extract() {
          W r = m_w0;
