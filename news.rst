@@ -4,6 +4,10 @@ Release Notes
 Version 3.8.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Discussion has started regarding plans for Botan4, current ETA 2027. Check the
+  tracking ticket in https://github.com/randombit/botan/issues/4666 for the
+  current plans.
+
 * Ongoing elliptic curve optimizations and cleanups (GH #4620 #4623 #4625 #4627
   #4632 #4634)
 
