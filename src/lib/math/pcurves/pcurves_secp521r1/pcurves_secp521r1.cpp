@@ -40,11 +40,9 @@ class P521Rep final {
          }
 
          // Now t += z & (2**521-1)
-         W carry = word8_add2(t.data(), z.data(), static_cast<W>(0));
-
-         if constexpr(WordInfo<W>::bits == 32) {
-            constexpr size_t HN = N / 2;
-            carry = word8_add2(t.data() + HN, z.data() + HN, carry);
+         W carry = 0;
+         for(size_t i = 0; i != N - 1; ++i) {
+            t[i] = word_add(t[i], z[i], &carry);
          }
 
          // Now add the (partial) top words; this can't carry out

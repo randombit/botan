@@ -1,6 +1,6 @@
 /*
 * Lowest Level MPI Algorithms
-* (C) 1999-2010 Jack Lloyd
+* (C) 1999-2010,2025 Jack Lloyd
 *     2006 Luca Piccarreta
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -12,6 +12,7 @@
 #include <botan/compiler.h>
 #include <botan/types.h>
 #include <botan/internal/target_info.h>
+#include <concepts>
 
 #if !defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
    #include <botan/internal/donna128.h>
@@ -21,6 +22,21 @@ namespace Botan {
 
 #if defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_X86_64)
    #define BOTAN_MP_USE_X86_64_ASM
+#endif
+
+/*
+* Expressing an add with carry is sadly quite difficult in standard C/C++.
+*
+* Compilers will recognize various idioms and generate a reasonable carry
+* chain. Unfortunately which idioms the compiler will understand vary, so we
+* have to decide what to do based on the compiler. This is fragile; what will
+* work varies not just based on compiler but also version, target architecture,
+* and optimization flags.
+*/
+#if defined(__clang__)
+static constexpr bool use_dword_for_word_add = false;
+#else
+static constexpr bool use_dword_for_word_add = true;
 #endif
 
 /*
@@ -121,12 +137,6 @@ inline constexpr auto word_madd3(W a, W b, W c, W* d) -> W {
 
    #define ASM(x) x "\n\t"
 
-   #define DO_4_TIMES(MACRO, ARG) \
-      MACRO(ARG, 0)               \
-      MACRO(ARG, 1)               \
-      MACRO(ARG, 2)               \
-      MACRO(ARG, 3)
-
    #define DO_8_TIMES(MACRO, ARG) \
       MACRO(ARG, 0)               \
       MACRO(ARG, 1)               \
@@ -177,8 +187,8 @@ inline constexpr auto word_madd3(W a, W b, W c, W* d) -> W {
 */
 template <WordType W>
 inline constexpr auto word_add(W x, W y, W* carry) -> W {
-   if(!std::is_constant_evaluated()) {
 #if BOTAN_COMPILER_HAS_BUILTIN(__builtin_addc)
+   if(!std::is_constant_evaluated()) {
       if constexpr(std::same_as<W, unsigned int>) {
          return __builtin_addc(x, y, *carry & 1, carry);
       } else if constexpr(std::same_as<W, unsigned long>) {
@@ -186,23 +196,27 @@ inline constexpr auto word_add(W x, W y, W* carry) -> W {
       } else if constexpr(std::same_as<W, unsigned long long>) {
          return __builtin_addcll(x, y, *carry & 1, carry);
       }
-#elif defined(BOTAN_MP_USE_X86_64_ASM)
-      if(std::same_as<W, uint64_t>) {
-         asm(ADD_OR_SUBTRACT(ASM("adcq %[y],%[x]"))
-             : [x] "=r"(x), [carry] "=r"(*carry)
-             : "0"(x), [y] "rm"(y), "1"(*carry)
-             : "cc");
-         return x;
-      }
-#endif
    }
+#endif
 
-   const W cb = *carry & 1;
-   W z = x + y;
-   W c1 = (z < x);
-   z += cb;
-   *carry = c1 | (z < cb);
-   return z;
+   if constexpr(WordInfo<W>::dword_is_native && use_dword_for_word_add) {
+      /*
+      TODO(Botan4) this is largely a performance hack for GCCs that don't
+      support __builtin_addc, if we increase the minimum supported version of
+      GCC to GCC 14 then we can remove this and not worry about it
+      */
+      const W cb = *carry & 1;
+      const auto s = typename WordInfo<W>::dword(x) + y + cb;
+      *carry = static_cast<W>(s >> WordInfo<W>::bits);
+      return static_cast<W>(s);
+   } else {
+      const W cb = *carry & 1;
+      W z = x + y;
+      W c1 = (z < x);
+      z += cb;
+      *carry = c1 | (z < cb);
+      return z;
+   }
 }
 
 /*
@@ -257,32 +271,13 @@ inline constexpr auto word8_add3(W z[8], const W x[8], const W y[8], W carry) ->
    return carry;
 }
 
-template <WordType W>
-inline constexpr auto word4_add3(W z[4], const W x[4], const W y[4], W carry) -> W {
-#if defined(BOTAN_MP_USE_X86_64_ASM)
-   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
-      asm volatile(ADD_OR_SUBTRACT(DO_4_TIMES(ADDSUB3_OP, "adcq"))
-                   : [carry] "=r"(carry)
-                   : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
-                   : "cc", "memory");
-      return carry;
-   }
-#endif
-
-   z[0] = word_add(x[0], y[0], &carry);
-   z[1] = word_add(x[1], y[1], &carry);
-   z[2] = word_add(x[2], y[2], &carry);
-   z[3] = word_add(x[3], y[3], &carry);
-   return carry;
-}
-
 /*
 * Word Subtraction
 */
 template <WordType W>
 inline constexpr auto word_sub(W x, W y, W* carry) -> W {
-   if(!std::is_constant_evaluated()) {
 #if BOTAN_COMPILER_HAS_BUILTIN(__builtin_subc)
+   if(!std::is_constant_evaluated()) {
       if constexpr(std::same_as<W, unsigned int>) {
          return __builtin_subc(x, y, *carry & 1, carry);
       } else if constexpr(std::same_as<W, unsigned long>) {
@@ -290,16 +285,8 @@ inline constexpr auto word_sub(W x, W y, W* carry) -> W {
       } else if constexpr(std::same_as<W, unsigned long long>) {
          return __builtin_subcll(x, y, *carry & 1, carry);
       }
-#elif defined(BOTAN_MP_USE_X86_64_ASM)
-      if(std::same_as<W, uint64_t>) {
-         asm(ADD_OR_SUBTRACT(ASM("sbbq %[y],%[x]"))
-             : [x] "=r"(x), [carry] "=r"(*carry)
-             : "0"(x), [y] "rm"(y), "1"(*carry)
-             : "cc");
-         return x;
-      }
-#endif
    }
+#endif
 
    const W cb = *carry & 1;
    W t0 = x - y;
@@ -384,25 +371,6 @@ inline constexpr auto word8_sub3(W z[8], const W x[8], const W y[8], W carry) ->
    z[5] = word_sub(x[5], y[5], &carry);
    z[6] = word_sub(x[6], y[6], &carry);
    z[7] = word_sub(x[7], y[7], &carry);
-   return carry;
-}
-
-template <WordType W>
-inline constexpr auto word4_sub3(W z[4], const W x[4], const W y[4], W carry) -> W {
-#if defined(BOTAN_MP_USE_X86_64_ASM)
-   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
-      asm volatile(ADD_OR_SUBTRACT(DO_4_TIMES(ADDSUB3_OP, "sbbq"))
-                   : [carry] "=r"(carry)
-                   : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
-                   : "cc", "memory");
-      return carry;
-   }
-#endif
-
-   z[0] = word_sub(x[0], y[0], &carry);
-   z[1] = word_sub(x[1], y[1], &carry);
-   z[2] = word_sub(x[2], y[2], &carry);
-   z[3] = word_sub(x[3], y[3], &carry);
    return carry;
 }
 
@@ -645,7 +613,6 @@ class word3 final {
 
 #if defined(ASM)
    #undef ASM
-   #undef DO_4_TIMES
    #undef DO_8_TIMES
    #undef ADD_OR_SUBTRACT
    #undef ADDSUB2_OP

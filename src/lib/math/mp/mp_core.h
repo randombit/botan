@@ -234,17 +234,6 @@ inline constexpr auto bigint_add3_nc(W z[], const W x[], size_t x_size, const W 
    return carry;
 }
 
-template <WordType W, size_t N>
-inline constexpr auto bigint_add(std::span<W, N> z, std::span<const W, N> x, std::span<const W, N> y) -> W {
-   if constexpr(N == 4) {
-      return word4_add3<W>(z.data(), x.data(), y.data(), 0);
-   } else if constexpr(N == 8) {
-      return word8_add3<W>(z.data(), x.data(), y.data(), 0);
-   } else {
-      return bigint_add3_nc(z.data(), x.data(), N, y.data(), N);
-   }
-}
-
 /**
 * Two operand addition
 * @param x the first operand (and output)
@@ -384,19 +373,8 @@ template <size_t N, WordType W>
 inline constexpr void bigint_monty_maybe_sub(W z[N], W x0, const W x[N], const W y[N]) {
    W borrow = 0;
 
-   if constexpr(N == 4) {
-      borrow = word4_sub3(z, x, y, borrow);
-   } else if constexpr(N == 8) {
-      borrow = word8_sub3(z, x, y, borrow);
-   } else {
-      const constexpr size_t blocks = N - (N % 8);
-      for(size_t i = 0; i != blocks; i += 8) {
-         borrow = word8_sub3(z + i, x + i, y + i, borrow);
-      }
-
-      for(size_t i = blocks; i != N; ++i) {
-         z[i] = word_sub(x[i], y[i], &borrow);
-      }
+   for(size_t i = 0; i != N; ++i) {
+      z[i] = word_sub(x[i], y[i], &borrow);
    }
 
    borrow = (x0 - borrow) > x0;
@@ -1065,20 +1043,6 @@ void bigint_mul(word z[],
 void bigint_sqr(word z[], size_t z_size, const word x[], size_t x_size, size_t x_sw, word workspace[], size_t ws_size);
 
 /**
-* Return 2**B - C
-*/
-template <WordType W, size_t N, W C>
-consteval std::array<W, N> crandall_p() {
-   static_assert(C % 2 == 1);
-   std::array<W, N> P;
-   for(size_t i = 0; i != N; ++i) {
-      P[i] = WordInfo<W>::max;
-   }
-   P[0] = WordInfo<W>::max - (C - 1);
-   return P;
-}
-
-/**
 * Reduce z modulo p = 2**B - C where C is small
 *
 * z is assumed to be at most (p-1)**2
@@ -1107,10 +1071,61 @@ constexpr std::array<W, N> redc_crandall(std::span<const W, 2 * N> z) {
 
    carry = bigint_add2_nc(hi.data(), N, carry_c, 2);
 
-   constexpr auto P = crandall_p<W, N, C>();
+   constexpr W P0 = WordInfo<W>::max - (C - 1);
 
    std::array<W, N> r = {};
-   bigint_monty_maybe_sub<N, W>(r.data(), carry, hi.data(), P.data());
+
+   W borrow = 0;
+
+   /*
+   * For undetermined reasons, on GCC (only) removing this asm block causes
+   * massive (up to 20%) performance regressions in secp256k1.
+   *
+   * The generated code without the asm seems quite reasonable, and timing
+   * repeated calls to redc_crandall with the cycle counter show that GCC
+   * computes it in about the same number of cycles with or without the asm.
+   *
+   * So the cause of the regression is unclear. But it is reproducible across
+   * machines and GCC versions.
+   */
+#if defined(BOTAN_MP_USE_X86_64_ASM) && defined(__GNUC__) && !defined(__clang__)
+   if constexpr(N == 4 && std::same_as<W, uint64_t>) {
+      if(!std::is_constant_evaluated()) {
+         asm volatile(R"(
+                      movq 0(%[x]), %[borrow]
+                      subq %[p0], %[borrow]
+                      movq %[borrow], 0(%[r])
+                      movq 16(%[x]), %[borrow]
+                      sbbq $-1, %[borrow]
+                      movq %[borrow], 8(%[r])
+                      movq 16(%[x]), %[borrow]
+                      sbbq $-1, %[borrow]
+                      movq %[borrow], 16(%[r])
+                      movq 24(%[x]), %[borrow]
+                      sbbq $-1, %[borrow]
+                      movq %[borrow], 24(%[r])
+                      sbbq %[borrow],%[borrow]
+                      negq %[borrow]
+                      )"
+                      : [borrow] "=r"(borrow)
+                      : [x] "r"(hi.data()), [p0] "r"(P0), [r] "r"(r.data()), "0"(borrow)
+                      : "cc", "memory");
+      }
+
+      borrow = (carry - borrow) > carry;
+      CT::conditional_assign_mem(borrow, r.data(), hi.data(), N);
+      return r;
+   }
+#endif
+
+   r[0] = word_sub(hi[0], P0, &borrow);
+   for(size_t i = 1; i != N; ++i) {
+      r[i] = word_sub(hi[i], WordInfo<W>::max, &borrow);
+   }
+
+   borrow = (carry - borrow) > carry;
+
+   CT::conditional_assign_mem(borrow, r.data(), hi.data(), N);
 
    return r;
 }
