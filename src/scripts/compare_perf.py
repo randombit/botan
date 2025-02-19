@@ -106,8 +106,8 @@ def main(args = None):
         print(s)
 
     data_points = 0
-    speedups = 0
-    slowdowns = 0
+    speedups = []
+    slowdowns = []
     missing = 0
 
     while rep0 != [] and rep1 != []:
@@ -131,18 +131,22 @@ def main(args = None):
                 data_points += 1
 
                 if ratio >= 1 + reportable:
-                    print("+ %s speedup for %s" % (format_pct(ratio), algo))
-                    speedups += 1
+                    speedups.append((ratio, algo))
                 elif (orig / new) >= 1 + reportable:
-                    print("- %s slowdown for %s" % (format_pct(orig / new), algo))
-                    slowdowns += 1
+                    slowdowns.append((orig / new, algo))
 
             # go to next
             rep0 = rep0[1:]
             rep1 = rep1[1:]
 
+    for (pct, algo) in sorted(speedups, key=lambda v: v[0], reverse=True):
+        print("+ %s improvment in %s" % (format_pct(pct), algo))
+
+    for (pct, algo) in sorted(slowdowns, key=lambda v: v[0]):
+        print("- %s regression in %s" % (format_pct(pct), algo))
+
     if data_points > 0:
-        print("\nSummary: over %d tests saw %d speedups and %d slowdowns" % (data_points, speedups, slowdowns))
+        print("\nSummary: over %d tests saw %d speedups and %d slowdowns" % (data_points, len(speedups), len(slowdowns)))
     else:
         print("\nNo data points")
 
