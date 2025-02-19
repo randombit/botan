@@ -430,6 +430,22 @@ ofvkP1EDmpx50fHLawIDAQAB
             dec3 = botan.PrivateKey.load(pem3, passphrase)
             self.assertEqual(dec3.export(is_pem), ref_val)
 
+    def test_stateful_operations(self):
+        rng = botan.RandomNumberGenerator()
+        priv1 = botan.PrivateKey.create('RSA', '1024', rng)
+        self.assertEqual(priv1.stateful_operation(), False)
+
+        try:
+            remaining = priv1.remaining_operations()
+        except botan.BotanException as e:
+            self.assertEqual(str(e), "botan_privkey_remaining_operations failed: -3 (No value available)")
+
+        priv2 = botan.PrivateKey.create('XMSS', 'XMSS-SHA2_10_256', rng)
+        self.assertEqual(priv2.stateful_operation(), True)
+
+        remaining = priv2.remaining_operations()
+        self.assertEqual(remaining, 1024)
+
     def test_check_key(self):
         # valid (if rather small) RSA key
         n = 273279220906618527352827457840955116141

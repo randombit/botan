@@ -342,6 +342,36 @@ int botan_privkey_view_encrypted_pem(botan_privkey_t key,
    });
 }
 
+int botan_privkey_stateful_operation(botan_privkey_t key, int* out) {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      if(out == nullptr) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      if(k.stateful_operation()) {
+         *out = 1;
+      } else {
+         *out = 0;
+      }
+      return BOTAN_FFI_SUCCESS;
+   });
+}
+
+int botan_privkey_remaining_operations(botan_privkey_t key, uint64_t* out) {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      if(out == nullptr) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      auto remaining = k.remaining_operations();
+      if(remaining.has_value()) {
+         *out = remaining.value();
+         return BOTAN_FFI_SUCCESS;
+      }
+      return BOTAN_FFI_ERROR_NO_VALUE;
+   });
+}
+
 int botan_pubkey_estimated_strength(botan_pubkey_t key, size_t* estimate) {
    return BOTAN_FFI_VISIT(key, [=](const auto& k) { *estimate = k.estimated_strength(); });
 }

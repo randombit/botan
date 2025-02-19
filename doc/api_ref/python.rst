@@ -462,6 +462,13 @@ Private Key
      extracted with ``rsa_key.get_field("p")``. This function can also be
      used to extract the public parameters.
 
+  .. py:method:: stateful_operation()
+     Return whether the key is stateful or not.
+
+  .. py:method:: remaining_operations()
+     If the key is stateful, return the number of remaining operations.
+     Raises an exception if the key is not stateful.
+
 Public Key Operations
 ----------------------------------------
 

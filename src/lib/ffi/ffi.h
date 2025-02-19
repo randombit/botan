@@ -15,7 +15,7 @@ extern "C" {
 
 /*
 This header exports some of botan's functionality via a C89 interface. This API
-is uesd by the Python, OCaml, Rust, Ruby, and Haskell bindings via those languages
+is used by the Python, OCaml, Rust, Ruby, and Haskell bindings via those languages
 respective ctypes/FFI libraries.
 
 The API is intended to be as easy as possible to call from other
@@ -116,6 +116,7 @@ enum BOTAN_FFI_ERROR {
 
    BOTAN_FFI_ERROR_INVALID_INPUT = -1,
    BOTAN_FFI_ERROR_BAD_MAC = -2,
+   BOTAN_FFI_ERROR_NO_VALUE = -3,
 
    BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE = -10,
    BOTAN_FFI_ERROR_STRING_CONVERSION_ERROR = -11,
@@ -1362,6 +1363,20 @@ BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_destroy(botan_pubkey_t key);
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_get_field(botan_mp_t output, botan_pubkey_t key, const char* field_name);
 
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_get_field(botan_mp_t output, botan_privkey_t key, const char* field_name);
+
+/**
+* Checks whether a key is stateful and sets
+* @param out to 1 if it is, or 0 if the key is not stateful
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_privkey_stateful_operation(botan_privkey_t key, int* out);
+
+/**
+* Gets information on many operations a (stateful) key has remaining and sets
+* @param out to that value
+* @return 0 on success, a negative value on failure or if the key is not stateful
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_privkey_remaining_operations(botan_privkey_t key, uint64_t* out);
 
 /*
 * Algorithm specific key operations: RSA
