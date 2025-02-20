@@ -233,7 +233,8 @@ class FFI_Utils_Test final : public FFI_Test {
       std::string name() const override { return "FFI Utils"; }
 
       void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
-         result.test_is_eq("FFI API version", botan_ffi_api_version(), uint32_t(BOTAN_HAS_FFI));
+         result.test_is_eq("FFI API version macro", uint32_t(BOTAN_FFI_API_VERSION), uint32_t(BOTAN_HAS_FFI));
+         result.test_is_eq("FFI API version function", botan_ffi_api_version(), uint32_t(BOTAN_HAS_FFI));
          result.test_is_eq("Major version", botan_version_major(), Botan::version_major());
          result.test_is_eq("Minor version", botan_version_minor(), Botan::version_minor());
          result.test_is_eq("Patch version", botan_version_patch(), Botan::version_patch());
