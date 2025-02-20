@@ -683,8 +683,8 @@ int botan_privkey_load_ed25519(botan_privkey_t* key, const uint8_t privkey[32]) 
 #if defined(BOTAN_HAS_ED25519)
    *key = nullptr;
    return ffi_guard_thunk(__func__, [=]() -> int {
-      const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 32);
-      auto ed25519 = std::make_unique<Botan::Ed25519_PrivateKey>(privkey_vec);
+      auto ed25519 =
+         std::make_unique<Botan::Ed25519_PrivateKey>(Botan::Ed25519_PrivateKey::from_seed(std::span{privkey, 32}));
       *key = new botan_privkey_struct(std::move(ed25519));
       return BOTAN_FFI_SUCCESS;
    });
