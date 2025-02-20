@@ -319,6 +319,8 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_pubkey_destroy, [c_void_p])
     ffi_api(dll.botan_pubkey_get_field, [c_void_p, c_void_p, c_char_p])
     ffi_api(dll.botan_privkey_get_field, [c_void_p, c_void_p, c_char_p])
+    ffi_api(dll.botan_privkey_stateful_operation, [c_void_p, POINTER(c_int)])
+    ffi_api(dll.botan_privkey_remaining_operations, [c_void_p, POINTER(c_uint64)])
     ffi_api(dll.botan_privkey_load_rsa, [c_void_p, c_void_p, c_void_p, c_void_p])
     ffi_api(dll.botan_privkey_load_rsa_pkcs1, [c_void_p, c_char_p, c_size_t])
     ffi_api(dll.botan_privkey_rsa_get_p, [c_void_p, c_void_p])
@@ -1515,6 +1517,18 @@ class PrivateKey:
         v = MPI()
         _DLL.botan_privkey_get_field(v.handle_(), self.__obj, _ctype_str(field_name))
         return int(v)
+
+    def stateful_operation(self):
+        r = c_int(0)
+        _DLL.botan_privkey_stateful_operation(self.__obj, byref(r))
+        if r.value == 0:
+            return False
+        return True
+
+    def remaining_operations(self):
+        r = c_uint64(0)
+        _DLL.botan_privkey_remaining_operations(self.__obj, byref(r))
+        return r.value
 
 class PKEncrypt:
     def __init__(self, key, padding):

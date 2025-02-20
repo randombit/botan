@@ -2414,6 +2414,31 @@ class FFI_Keywrap_Test final : public FFI_Test {
       }
 };
 
+class FFI_XMSS_Test final : public FFI_Test {
+   public:
+      std::string name() const override { return "FFI XMSS"; }
+
+      void ffi_test(Test::Result& result, botan_rng_t rng) override {
+         botan_privkey_t priv;
+         if(TEST_FFI_INIT(botan_privkey_create, (&priv, "XMSS", "XMSS-SHA2_10_256", rng))) {
+            TEST_FFI_OK(botan_privkey_check_key, (priv, rng, 0));
+
+            TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_privkey_stateful_operation, (priv, nullptr));
+            TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_privkey_remaining_operations, (priv, nullptr));
+
+            int stateful;
+            TEST_FFI_OK(botan_privkey_stateful_operation, (priv, &stateful));
+            result.confirm("key is stateful", stateful, true);
+
+            uint64_t remaining;
+            TEST_FFI_OK(botan_privkey_remaining_operations, (priv, &remaining));
+            result.confirm("key has remaining operations", remaining == 1024, true);
+
+            TEST_FFI_OK(botan_privkey_destroy, (priv));
+         }
+      }
+};
+
 class FFI_RSA_Test final : public FFI_Test {
    public:
       std::string name() const override { return "FFI RSA"; }
@@ -2423,6 +2448,13 @@ class FFI_RSA_Test final : public FFI_Test {
 
          if(TEST_FFI_INIT(botan_privkey_create_rsa, (&priv, rng, 1024))) {
             TEST_FFI_OK(botan_privkey_check_key, (priv, rng, 0));
+
+            int stateful;
+            TEST_FFI_OK(botan_privkey_stateful_operation, (priv, &stateful));
+            result.confirm("key is not stateful", stateful, false);
+
+            uint64_t remaining;
+            TEST_FFI_FAIL("key is not stateful", botan_privkey_remaining_operations, (priv, &remaining));
 
             botan_pubkey_t pub;
             TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
@@ -4140,6 +4172,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_fpe", FFI_FPE_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_totp", FFI_TOTP_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_hotp", FFI_HOTP_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_keywrap", FFI_Keywrap_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_xmss", FFI_XMSS_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_rsa", FFI_RSA_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_dsa", FFI_DSA_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ecdsa", FFI_ECDSA_Test);

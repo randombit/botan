@@ -167,6 +167,9 @@ const char* botan_error_description(int err) {
       case BOTAN_FFI_ERROR_BAD_MAC:
          return "Invalid authentication code";
 
+      case BOTAN_FFI_ERROR_NO_VALUE:
+         return "No value available";
+
       case BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE:
          return "Insufficient buffer space";
 
