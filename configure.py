@@ -1552,8 +1552,7 @@ class CompilerInfo(InfoObject):
             if not (options.debug_mode or sanitizers_enabled):
                 yield self.cpu_flags_no_debug[options.arch]
 
-        for flag in options.extra_cxxflags:
-            yield flag
+        yield from options.extra_cxxflags
 
         for definition in options.define_build_macro:
             yield self.add_compile_definition_option + definition
@@ -2823,8 +2822,7 @@ class AmalgamationHeader:
         for line in self.file_contents[name]:
             header = AmalgamationHelper.is_botan_include(line)
             if header:
-                for c in self.header_contents(header):
-                    yield c
+                yield from self.header_contents(header)
             else:
                 std_header = AmalgamationHelper.is_unconditional_std_include(line)
 

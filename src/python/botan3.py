@@ -1954,19 +1954,15 @@ class MPI:
 
     def __repr__(self):
         # Should have a better size estimate than this ...
-        out_len = c_size_t(self.bit_count() // 2)
+        bits = self.bit_count()
+        est_digits = 4 if bits < 3 else bits
+        out_len = c_size_t(est_digits)
         out = create_string_buffer(out_len.value)
 
         _DLL.botan_mp_to_str(self.__obj, c_uint8(10), out, byref(out_len))
 
-        out = out.raw[0:int(out_len.value)]
-        if out[-1] == '\x00':
-            out = out[:-1]
-            s = _ctype_to_str(out)
-        if s[0] == '0':
-            return s[1:]
-        else:
-            return s
+        out = out.raw[0:int(out_len.value - 1)]
+        return _ctype_to_str(out)
 
     def to_bytes(self):
         byte_count = self.byte_count()
