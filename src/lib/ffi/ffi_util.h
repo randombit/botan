@@ -142,12 +142,17 @@ int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name) {
 
 #define BOTAN_FFI_CHECKED_DELETE(o) ffi_delete_object(o, __func__)
 
-template <typename Alloc>
-inline int invoke_view_callback(botan_view_bin_fn view, botan_view_ctx ctx, const std::vector<uint8_t, Alloc>& buf) {
+inline int invoke_view_callback(botan_view_bin_fn view, botan_view_ctx ctx, std::span<const uint8_t> buf) {
+   if(view == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
    return view(ctx, buf.data(), buf.size());
 }
 
 inline int invoke_view_callback(botan_view_str_fn view, botan_view_ctx ctx, std::string_view str) {
+   if(view == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
    return view(ctx, str.data(), str.size() + 1);
 }
 
@@ -197,8 +202,7 @@ inline int write_output(uint8_t out[], size_t* out_len, const uint8_t buf[], siz
    }
 }
 
-template <typename Alloc>
-int write_vec_output(uint8_t out[], size_t* out_len, const std::vector<uint8_t, Alloc>& buf) {
+inline int write_vec_output(uint8_t out[], size_t* out_len, std::span<const uint8_t> buf) {
    return write_output(out, out_len, buf.data(), buf.size());
 }
 
