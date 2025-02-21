@@ -181,10 +181,6 @@ class PrimeOrderCurve {
                                                 const Scalar& scalar,
                                                 RandomNumberGenerator& rng) const = 0;
 
-      /// Setup a table for 2-ary multiplication
-      virtual std::unique_ptr<const PrecomputedMul2Table> mul2_setup(const AffinePoint& p,
-                                                                     const AffinePoint& pq) const = 0;
-
       /// Setup a table for 2-ary multiplication where the first point is the generator
       virtual std::unique_ptr<const PrecomputedMul2Table> mul2_setup_g(const AffinePoint& q) const = 0;
 
@@ -246,8 +242,6 @@ class PrimeOrderCurve {
       virtual std::optional<Scalar> scalar_from_wide_bytes(std::span<const uint8_t> bytes) const = 0;
 
       virtual AffinePoint point_to_affine(const ProjectivePoint& pt) const = 0;
-
-      virtual ProjectivePoint point_to_projective(const AffinePoint& pt) const = 0;
 
       virtual bool affine_point_is_identity(const AffinePoint& pt) const = 0;
 

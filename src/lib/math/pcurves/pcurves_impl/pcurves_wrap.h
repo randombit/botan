@@ -70,11 +70,6 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
             WindowedMul2Table<C, Mul2PrecompWindowBits> m_table;
       };
 
-      std::unique_ptr<const PrecomputedMul2Table> mul2_setup(const AffinePoint& p,
-                                                             const AffinePoint& q) const override {
-         return std::make_unique<PrecomputedMul2TableC>(from_stash(p), from_stash(q));
-      }
-
       std::unique_ptr<const PrecomputedMul2Table> mul2_setup_g(const AffinePoint& q) const override {
          return std::make_unique<PrecomputedMul2TableC>(C::G, from_stash(q));
       }
@@ -198,10 +193,6 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
 
       AffinePoint point_to_affine(const ProjectivePoint& pt) const override {
          return stash(to_affine<C>(from_stash(pt)));
-      }
-
-      ProjectivePoint point_to_projective(const AffinePoint& pt) const override {
-         return stash(C::ProjectivePoint::from_affine(from_stash(pt)));
       }
 
       ProjectivePoint point_add(const AffinePoint& a, const AffinePoint& b) const override {
