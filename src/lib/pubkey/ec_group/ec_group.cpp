@@ -48,13 +48,6 @@ class EC_Group_Data_Map final {
          std::shared_ptr<EC_Group_Data> data = EC_Group::EC_group_info(oid);
 
          if(data) {
-            for(auto curve : m_registered_curves) {
-               if(curve->oid().empty() == true && curve->params_match(*data)) {
-                  curve->set_oid(oid);
-                  return curve;
-               }
-            }
-
             m_registered_curves.push_back(data);
             return data;
          }
@@ -72,97 +65,109 @@ class EC_Group_Data_Map final {
                                                       const BigInt& cofactor,
                                                       const OID& oid,
                                                       EC_Group_Source source) {
+         BOTAN_ASSERT_NOMSG(oid.has_value());
+
          lock_guard_type<mutex_type> lock(m_mutex);
 
          for(auto i : m_registered_curves) {
-            /*
-            * The params may be the same but you are trying to register under a
-            * different OID than the one we are using, so using a different
-            * group, since EC_Group's model assumes a single OID per group.
-            */
-            if(!oid.empty() && !i->oid().empty() && i->oid() != oid) {
-               continue;
-            }
+            if(i->oid() == oid) {
+               /*
+               * If both OID and params are the same then we are done, just return
+               * the already registered curve obj.
+               *
+               * First verify that the params match, to catch an application
+               * that is attempting to register a EC_Group under the same OID as
+               * another group currently in use
+               */
+               if(!i->params_match(p, a, b, g_x, g_y, order, cofactor)) {
+                  throw Invalid_Argument("Attempting to register a curve using OID " + oid.to_string() +
+                                         " but a distinct curve is already registered using that OID");
+               }
 
-            const bool same_oid = !oid.empty() && i->oid() == oid;
-            const bool same_params = i->params_match(p, a, b, g_x, g_y, order, cofactor);
-
-            /*
-            * If the params and OID are the same then we are done, just return
-            * the already registered curve obj.
-            */
-            if(same_params && same_oid) {
                return i;
-            }
-
-            /*
-            * If same params and the new OID is empty, then that's ok too
-            */
-            if(same_params && oid.empty()) {
-               return i;
-            }
-
-            /*
-            * Check for someone trying to reuse an already in-use OID
-            */
-            if(same_oid && !same_params) {
-               throw Invalid_Argument("Attempting to register a curve using OID " + oid.to_string() +
-                                      " but a distinct curve is already registered using that OID");
             }
 
             /*
             * If the same curve was previously created without an OID but is now
             * being registered again using an OID, save that OID.
+            *
+            * TODO(Botan4) remove this block; this situation won't be possible since
+            * we will require all groups to have an OID
             */
-            if(same_params && i->oid().empty() && !oid.empty()) {
+            if(i->oid().empty() && i->params_match(p, a, b, g_x, g_y, order, cofactor)) {
                i->set_oid(oid);
                return i;
             }
          }
 
          /*
-         Not found in current list, so we need to create a new entry
-
-         If an OID is set, try to look up relative our static tables to detect a duplicate
-         registration under an OID
+         * Not found in current list, so we need to create a new entry
          */
+         auto new_group = [&] {
+            if(auto g = EC_Group::EC_group_info(oid); g != nullptr) {
+               /*
+               * This turned out to be the OID of one of the builtin groups. Verify
+               * that all of the provided parameters match that builtin group.
+               */
+               BOTAN_ARG_CHECK(g->params_match(p, a, b, g_x, g_y, order, cofactor),
+                               "Attempting to register an EC group under OID of hardcoded group");
 
-         auto new_group = EC_Group_Data::create(p, a, b, g_x, g_y, order, cofactor, oid, source);
-
-         if(oid.has_value()) {
-            std::shared_ptr<EC_Group_Data> data = EC_Group::EC_group_info(oid);
-            if(data != nullptr && !new_group->params_match(*data)) {
-               throw Invalid_Argument("Attempting to register an EC group under OID of hardcoded group");
+               return g;
+            } else {
+               /*
+               * This path is taken for an application registering a new EC_Group with an OID specified
+               */
+               return EC_Group_Data::create(p, a, b, g_x, g_y, order, cofactor, oid, source);
             }
-         } else {
-            // Here try to use the order as a hint to look up the group id, to identify common groups
-            const OID oid_from_store = EC_Group::EC_group_identity_from_order(order);
-            if(oid_from_store.has_value()) {
-               std::shared_ptr<EC_Group_Data> data = EC_Group::EC_group_info(oid_from_store);
+         }();
 
-               /*
-               If EC_group_identity_from_order returned an OID then looking up that OID
-               must always return a result.
-               */
-               BOTAN_ASSERT_NOMSG(data != nullptr);
+         m_registered_curves.push_back(new_group);
+         return new_group;
+      }
 
-               /*
-               It is possible (if unlikely) that someone is registering another group
-               that happens to have an order equal to that of a well known group -
-               so verify all values before assigning the OID.
-               */
-               if(new_group->params_match(*data)) {
-                  new_group->set_oid(oid_from_store);
-               }
+      std::shared_ptr<EC_Group_Data> lookup_or_create_without_oid(const BigInt& p,
+                                                                  const BigInt& a,
+                                                                  const BigInt& b,
+                                                                  const BigInt& g_x,
+                                                                  const BigInt& g_y,
+                                                                  const BigInt& order,
+                                                                  const BigInt& cofactor,
+                                                                  EC_Group_Source source) {
+         lock_guard_type<mutex_type> lock(m_mutex);
+
+         for(auto i : m_registered_curves) {
+            if(i->params_match(p, a, b, g_x, g_y, order, cofactor)) {
+               return i;
             }
          }
 
+         // Try to use the order as a hint to look up the group id
+         const OID oid_from_order = EC_Group::EC_group_identity_from_order(order);
+         if(oid_from_order.has_value()) {
+            auto new_group = EC_Group::EC_group_info(oid_from_order);
+
+            // Have to check all params in the (unlikely/malicious) event of an order collision
+            if(new_group && new_group->params_match(p, a, b, g_x, g_y, order, cofactor)) {
+               m_registered_curves.push_back(new_group);
+               return new_group;
+            }
+         }
+
+         /*
+         * At this point we have failed to identify the group; it is not any of
+         * the builtin values, nor is it a group that the user had previously
+         * registered explicitly. We create the group data without an OID.
+         *
+         * TODO(Botan4) remove this; throw an exception instead
+         */
+         auto new_group = EC_Group_Data::create(p, a, b, g_x, g_y, order, cofactor, OID(), source);
          m_registered_curves.push_back(new_group);
          return new_group;
       }
 
    private:
       mutex_type m_mutex;
+      // TODO(Botan4): Once OID is required we could make this into a map
       std::vector<std::shared_ptr<EC_Group_Data>> m_registered_curves;
 };
 
@@ -191,6 +196,8 @@ std::shared_ptr<EC_Group_Data> EC_Group::load_EC_group_info(const char* p_str,
                                                             const char* g_y_str,
                                                             const char* order_str,
                                                             const OID& oid) {
+   BOTAN_ARG_CHECK(oid.has_value(), "EC_Group::load_EC_group_info OID must be set");
+
    const BigInt p(p_str);
    const BigInt a(a_str);
    const BigInt b(b_str);
@@ -245,6 +252,7 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
          throw Decoding_Error("ECC p parameter is invalid size");
       }
 
+      // TODO(Botan4) we can remove this check since we'll only accept pre-registered groups
       auto mod_p = Modular_Reducer::for_public_modulus(p);
       if(!is_bailie_psw_probable_prime(p, mod_p)) {
          throw Decoding_Error("ECC p parameter is not a prime");
@@ -262,11 +270,13 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
          throw Decoding_Error("Invalid ECC group order");
       }
 
+      // TODO(Botan4) we can remove this check since we'll only accept pre-registered groups
       auto mod_order = Modular_Reducer::for_public_modulus(order);
       if(!is_bailie_psw_probable_prime(order, mod_order)) {
          throw Decoding_Error("Invalid ECC order parameter");
       }
 
+      // TODO(Botan4) Require cofactor == 1
       if(cofactor <= 0 || cofactor >= 16) {
          throw Decoding_Error("Invalid ECC cofactor parameter");
       }
@@ -287,6 +297,7 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
                return std::make_pair(x, y);
             }
          } else if((hdr == 0x02 || hdr == 0x03) && base_pt.size() == 1 + p_bytes) {
+            // TODO(Botan4) remove this branch; we won't support compressed points
             BigInt x = BigInt::decode(&base_pt[1], p_bytes);
             BigInt y = sqrt_modulo_prime(((x * x + a) * x + b) % p, p);
 
@@ -303,13 +314,14 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
          throw Decoding_Error("Invalid ECC base point encoding");
       }();
 
+      // TODO(Botan4) we can remove this check since we'll only accept pre-registered groups
       auto y2 = mod_p.square(g_y);
       auto x3_ax_b = mod_p.reduce(mod_p.cube(g_x) + mod_p.multiply(a, g_x) + b);
       if(y2 != x3_ax_b) {
          throw Decoding_Error("Invalid ECC base point");
       }
 
-      auto data = ec_group_data().lookup_or_create(p, a, b, g_x, g_y, order, cofactor, OID(), source);
+      auto data = ec_group_data().lookup_or_create_without_oid(p, a, b, g_x, g_y, order, cofactor, source);
       return std::make_pair(data, true);
    } else if(next_obj_type == ASN1_Type::Null) {
       throw Decoding_Error("Decoding ImplicitCA ECC parameters is not supported");
@@ -412,8 +424,13 @@ EC_Group::EC_Group(const BigInt& p,
                    const BigInt& order,
                    const BigInt& cofactor,
                    const OID& oid) {
-   m_data =
-      ec_group_data().lookup_or_create(p, a, b, base_x, base_y, order, cofactor, oid, EC_Group_Source::ExternalSource);
+   if(oid.has_value()) {
+      m_data = ec_group_data().lookup_or_create(
+         p, a, b, base_x, base_y, order, cofactor, oid, EC_Group_Source::ExternalSource);
+   } else {
+      m_data = ec_group_data().lookup_or_create_without_oid(
+         p, a, b, base_x, base_y, order, cofactor, EC_Group_Source::ExternalSource);
+   }
 }
 
 EC_Group::EC_Group(const OID& oid,
