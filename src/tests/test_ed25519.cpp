@@ -54,11 +54,9 @@ class Ed25519_Signature_Tests final : public PK_Signature_Generation_Test {
          const std::vector<uint8_t> privkey = vars.get_req_bin("Privkey");
          const std::vector<uint8_t> pubkey = vars.get_req_bin("Pubkey");
 
-         Botan::secure_vector<uint8_t> seed(privkey.begin(), privkey.end());
+         auto key = std::make_unique<Botan::Ed25519_PrivateKey>(Botan::Ed25519_PrivateKey::from_seed(privkey));
 
-         auto key = std::make_unique<Botan::Ed25519_PrivateKey>(seed);
-
-         if(key->get_public_key() != pubkey) {
+         if(key->raw_public_key_bits() != pubkey) {
             throw Test_Error("Invalid Ed25519 key in test data");
          }
 

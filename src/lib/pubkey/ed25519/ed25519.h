@@ -1,9 +1,7 @@
 /*
 * Ed25519
 * (C) 2017 Ribose Inc
-*
-* Based on the public domain code from SUPERCOP ref10 by
-* Peter Schwabe, Daniel J. Bernstein, Niels Duif, Tanja Lange, Bo-Yin Yang
+*     2025 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -12,6 +10,7 @@
 #define BOTAN_ED25519_H_
 
 #include <botan/pk_keys.h>
+#include <span>
 
 namespace Botan {
 
@@ -35,7 +34,9 @@ class BOTAN_PUBLIC_API(2, 2) Ed25519_PublicKey : public virtual Public_Key {
 
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::Signature); }
 
-      const std::vector<uint8_t>& get_public_key() const { return m_public; }
+      BOTAN_DEPRECATED("Use raw_public_key_bits") const std::vector<uint8_t>& get_public_key() const {
+         return m_public;
+      }
 
       /**
       * Create a Ed25519 Public Key.
@@ -73,16 +74,41 @@ class BOTAN_PUBLIC_API(2, 2) Ed25519_PrivateKey final : public Ed25519_PublicKey
       Ed25519_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
 
       /**
-      * Generate a private key.
+      * Generate a new random private key.
       * @param rng the RNG to use
       */
       explicit Ed25519_PrivateKey(RandomNumberGenerator& rng);
 
       /**
       * Construct a private key from the specified parameters.
+      *
       * @param secret_key the private key
+      *
+      * The behavior of this function depends on the input length.
+      *
+      * If the input is 32 bytes long then it is treated as a seed, and a new
+      * keypair is generated.
+      *
+      * If the input is 64 bytes long then it is treated as a pair of 32 byte
+      * values, first the private key and then the public key.
+      *
+      * This constructor is deprecated since the above behavior is
+      * quite surprising. If you are relying on it, please comment in #4666.
       */
-      explicit Ed25519_PrivateKey(const secure_vector<uint8_t>& secret_key);
+      BOTAN_DEPRECATED("Use from_seed or from_bytes") explicit Ed25519_PrivateKey(std::span<const uint8_t> secret_key);
+
+      /**
+      * Generate a new Ed25519_PrivateKey from the provided 32-byte seed
+      */
+      static Ed25519_PrivateKey from_seed(std::span<const uint8_t> seed);
+
+      /**
+      * Decode the Ed25519_PrivateKey from the provided 64-byte value
+      *
+      * The first 32 bytes are the private key and the last 32 bytes
+      * are the precomputed public key.
+      */
+      static Ed25519_PrivateKey from_bytes(std::span<const uint8_t> bytes);
 
       BOTAN_DEPRECATED("Use raw_private_key_bits") const secure_vector<uint8_t>& get_private_key() const {
          return m_private;
