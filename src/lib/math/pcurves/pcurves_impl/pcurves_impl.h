@@ -8,6 +8,7 @@
 #define BOTAN_PCURVES_IMPL_H_
 
 #include <botan/rng.h>
+#include <botan/template_utils.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/pcurves_util.h>
