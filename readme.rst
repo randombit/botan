@@ -130,7 +130,6 @@ Ciphers, hashes, MACs, and checksums
 * Hash functions SHA-1, SHA-2, SHA-3, RIPEMD-160, BLAKE2b/BLAKE2s, Skein-512, SM3, Whirlpool
 * Password hashing schemes Argon2, Scrypt, bcrypt, and PBKDF2
 * Authentication codes HMAC, CMAC, Poly1305, KMAC, SipHash, GMAC
-* Non-cryptographic checksums Adler32, CRC24, CRC32
 
 Other Useful Things
 ----------------------------------------
@@ -150,3 +149,4 @@ Other Useful Things
 * Encoding schemes including hex, base32, base64 and base58
 * NIST key wrapping
 * Boost.Asio compatible TLS client stream
+* 24-bit OpenPGP CRC
