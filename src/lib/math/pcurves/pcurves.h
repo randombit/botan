@@ -7,8 +7,6 @@
 #ifndef BOTAN_PCURVES_H_
 #define BOTAN_PCURVES_H_
 
-#include <botan/internal/pcurves_id.h>
-
 #include <botan/concepts.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
@@ -42,15 +40,7 @@ class PrimeOrderCurve {
       /// Number of words used to store MaximumByteLength
       static const size_t StorageWords = (MaximumByteLength + sizeof(word) - 1) / sizeof(word);
 
-      static std::shared_ptr<const PrimeOrderCurve> from_name(std::string_view name) {
-         if(auto id = PrimeOrderCurveId::from_string(name)) {
-            return PrimeOrderCurve::from_id(id.value());
-         } else {
-            return {};
-         }
-      }
-
-      static std::shared_ptr<const PrimeOrderCurve> from_id(PrimeOrderCurveId id);
+      static std::shared_ptr<const PrimeOrderCurve> for_named_curve(std::string_view name);
 
       typedef std::array<word, StorageWords> StorageUnit;
       typedef std::shared_ptr<const PrimeOrderCurve> CurvePtr;

@@ -10,6 +10,5 @@ type -> "Internal"
 
 <header:internal>
 pcurves.h
-pcurves_id.h
 pcurves_instance.h
 </header:internal>
