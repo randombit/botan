@@ -139,6 +139,9 @@ Deprecated modules include
   permutation, but rather the Keccak hash originally proposed during
   the SHA-3 competition.
 
+- MAC ``siphash``: Only supports a 64-bit output length, and not really intended
+  for cryptography per se.
+
 - MAC ``x919_mac``: Quite obsolete at this point
 
 - Signature scheme ``dsa``: Finite field DSA is slow, very rarely used anymore,
