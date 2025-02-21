@@ -24,7 +24,8 @@ class P521Rep final {
       constexpr static std::array<W, N> one() { return std::array<W, N>{1}; }
 
       constexpr static std::array<W, N> redc(const std::array<W, 2 * N>& z) {
-         constexpr W TOP_MASK = static_cast<W>(0x1FF);
+         // Regardless of word size (32 or 64) the top word is 9 bits long
+         constexpr W TOP_BITS = static_cast<W>(0x1FF);
 
          /*
          * Extract the high part of z (z >> 521)
@@ -47,13 +48,29 @@ class P521Rep final {
 
          // Now add the (partial) top words; this can't carry out
          // since both inputs are at most 2**9-1
-         t[N - 1] += (z[N - 1] & TOP_MASK) + carry;
+         t[N - 1] += (z[N - 1] & TOP_BITS) + carry;
 
-         // But might be greater than modulus:
-         std::array<W, N> r;
-         bigint_monty_maybe_sub<N>(r.data(), static_cast<W>(0), t.data(), P.data());
+         /*
+         Since the modulus P is exactly 2**521 - 1 the only way the computed
+         result can be larger than P is if the top word is larger than TOP_BITS
 
-         return r;
+         If this is the case then we need to conditionally subtract P
+
+         Since TOP_BITS has the low 9 bits set, we can check if t[N - 1] > TOP_BITS
+         by checking if t[N - 1] >> 9 has any bits set. Doing it this way is
+         faster than a standard comparison since CT::Mask::is_gt requires
+         several bit operations.
+         */
+
+         const W need_sub = ~CT::Mask<W>::is_zero(t[N - 1] >> 9).value();
+
+         W borrow = 0;
+         for(size_t i = 0; i != N - 1; ++i) {
+            t[i] = word_sub(t[i], need_sub & WordInfo<W>::max, &borrow);
+         }
+         t[N - 1] = word_sub(t[N - 1], need_sub & TOP_BITS, &borrow);
+
+         return t;
       }
 
       constexpr static std::array<W, N> to_rep(const std::array<W, N>& x) { return x; }
