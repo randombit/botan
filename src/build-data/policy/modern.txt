@@ -8,8 +8,11 @@ sha2_32
 sha2_64
 blake2
 skein
-keccak
+keccak # this is a pre-standard implementation, TODO(Botan4): remove
+shake
 sha3
+
+shake_xof
 
 gcm
 ocb
