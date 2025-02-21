@@ -60,13 +60,13 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
       DER_Encoder der(m_der_named_curve);
       der.encode(m_oid);
 
-      if(const auto id = PCurve::PrimeOrderCurveId::from_oid(m_oid)) {
-         m_pcurve = PCurve::PrimeOrderCurve::from_id(*id);
-         if(m_pcurve) {
-            m_engine = EC_Group_Engine::Optimized;
-         }
-         // still possibly null, if the curve is supported in general but not
-         // available in the build
+      const std::string name = m_oid.human_name_or_empty();
+      if(!name.empty()) {
+         // returns nullptr if unknown or not supported
+         m_pcurve = PCurve::PrimeOrderCurve::for_named_curve(name);
+      }
+      if(m_pcurve) {
+         m_engine = EC_Group_Engine::Optimized;
       }
    }
 
