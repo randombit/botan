@@ -17,8 +17,8 @@ def ops_per_second(events, nanos):
     return (events * 1000000000) / nanos
 
 def format_pct(r):
-    assert r > 1
-    return "%.01f%%" % ((r - 1) * 100)
+    #assert r > 1
+    return "%.01f%%" % (abs(r - 1) * 100)
 
 def parse_perf_report(report):
     if len(report) == 0:
