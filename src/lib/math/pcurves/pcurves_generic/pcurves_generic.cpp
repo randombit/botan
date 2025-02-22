@@ -824,6 +824,8 @@ class GenericAffinePoint final {
          return GenericAffinePoint(GenericField::zero(curve), GenericField::zero(curve));
       }
 
+      static GenericAffinePoint identity(const GenericAffinePoint& pt) { return identity(pt.curve()); }
+
       CT::Choice is_identity() const { return x().is_zero() && y().is_zero(); }
 
       GenericAffinePoint negate() const { return GenericAffinePoint(x(), y().negate()); }
@@ -1193,7 +1195,7 @@ class GenericWindowedMul final {
       }
 
    private:
-      std::vector<GenericAffinePoint> m_table;
+      AffinePointTable<GenericCurve> m_table;
 };
 
 class GenericBaseMulTable final {
@@ -1202,12 +1204,8 @@ class GenericBaseMulTable final {
 
       static constexpr size_t WindowElements = (1 << WindowBits) - 1;
 
-      GenericBaseMulTable(const GenericAffinePoint& pt) {
-         const size_t order_bits = pt.curve()->order_bits();
-         const size_t blinded_scalar_bits = order_bits + GenericBlindedScalarBits::blinding_bits(order_bits);
-
-         m_table = basemul_setup<GenericCurve, WindowBits>(pt, blinded_scalar_bits);
-      }
+      GenericBaseMulTable(const GenericAffinePoint& pt) :
+            m_table(basemul_setup<GenericCurve, WindowBits>(pt, blinded_scalar_bits(*pt.curve()))) {}
 
       GenericProjectivePoint mul(const GenericScalar& s, RandomNumberGenerator& rng) {
          GenericBlindedScalarBits scalar(s, rng, WindowBits);
@@ -1215,6 +1213,11 @@ class GenericBaseMulTable final {
       }
 
    private:
+      static size_t blinded_scalar_bits(const GenericPrimeOrderCurve& curve) {
+         const size_t order_bits = curve.order_bits();
+         return order_bits + GenericBlindedScalarBits::blinding_bits(order_bits);
+      }
+
       std::vector<GenericAffinePoint> m_table;
 };
 

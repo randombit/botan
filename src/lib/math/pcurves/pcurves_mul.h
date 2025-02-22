@@ -25,6 +25,81 @@ static constexpr size_t VarPointWindowBits = 4;
 static constexpr size_t Mul2PrecompWindowBits = 3;
 static constexpr size_t Mul2WindowBits = 2;
 
+/**
+* A precomputed table of affine points with constant time lookup
+*
+* If R is zero then the entire table is scanned for each lookup.
+*
+* If R is not zero, then the table must be a multiple of R points long.
+* Each lookup will be examine a range of length R, as in
+* pts[0..R], pts[R..2*R], ...
+*/
+template <typename C, size_t R = 0>
+class AffinePointTable final {
+   public:
+      using AffinePoint = typename C::AffinePoint;
+      using ProjectivePoint = typename C::ProjectivePoint;
+      using WordType = typename C::WordType;
+
+      static constexpr bool WholeRangeSearch = (R == 0);
+
+      AffinePointTable(std::span<const ProjectivePoint> pts) {
+         BOTAN_ASSERT_NOMSG(pts.size() > 1);
+
+         if constexpr(R > 0) {
+            BOTAN_ASSERT_NOMSG(pts.size() % R == 0);
+         }
+
+         // TODO scatter/gather with SIMD lookup
+         m_table = to_affine_batch<C>(pts);
+      }
+
+      /**
+      * If idx is zero then return the identity element. Otherwise return pts[idx - 1]
+      */
+      inline AffinePoint ct_select(size_t idx) const
+         requires(WholeRangeSearch)
+      {
+         BOTAN_DEBUG_ASSERT(idx < m_table.size() + 1);
+
+         auto result = AffinePoint::identity(m_table[0]);
+
+         // Intentionally wrapping; set to maximum size_t if idx == 0
+         const size_t idx1 = static_cast<size_t>(idx - 1);
+         for(size_t i = 0; i != m_table.size(); ++i) {
+            const auto found = CT::Mask<size_t>::is_equal(idx1, i).as_choice();
+            result.conditional_assign(found, m_table[i]);
+         }
+
+         return result;
+      }
+
+      /**
+      * If idx is zero then return the identity element. Otherwise return pts[idx - 1]
+      * out of the table subrange pts[iter*R..(iter+1)*R]
+      */
+      inline AffinePoint ct_select(size_t idx, size_t iter) const
+         requires(!WholeRangeSearch)
+      {
+         BOTAN_DEBUG_ASSERT(idx < R + 1);
+         BOTAN_DEBUG_ASSERT(R * (iter + 1) <= m_table.size());
+
+         auto result = AffinePoint::identity(m_table[R * iter]);
+
+         // Intentionally wrapping; set to maximum size_t if idx == 0
+         const size_t idx1 = static_cast<size_t>(idx - 1);
+         for(size_t i = 0; i != R; ++i) {
+            const auto found = CT::Mask<size_t>::is_equal(idx1, i).as_choice();
+            result.conditional_assign(found, m_table[R * iter + i]);
+         }
+
+         return result;
+      }
+
+   private:
+      std::vector<AffinePoint> m_table;
+};
+
 /*
 * Base point precomputation table
 *
@@ -139,7 +214,7 @@ typename C::ProjectivePoint basemul_exec(std::span<const typename C::AffinePoint
 * Variable point table mul setup and online phase
 */
 template <typename C, size_t TableSize>
-std::vector<typename C::AffinePoint> varpoint_setup(const typename C::AffinePoint& p) {
+AffinePointTable<C> varpoint_setup(const typename C::AffinePoint& p) {
    static_assert(TableSize > 2);
 
    std::vector<typename C::ProjectivePoint> table;
@@ -154,18 +229,18 @@ std::vector<typename C::AffinePoint> varpoint_setup(const typename C::AffinePoin
       }
    }
 
-   return to_affine_batch<C>(table);
+   return AffinePointTable<C>(table);
 }
 
 template <typename C, size_t WindowBits, typename BlindedScalar>
-typename C::ProjectivePoint varpoint_exec(std::span<const typename C::AffinePoint> table,
+typename C::ProjectivePoint varpoint_exec(const AffinePointTable<C>& table,
                                           const BlindedScalar& scalar,
                                           RandomNumberGenerator& rng) {
    const size_t windows = (scalar.bits() + WindowBits - 1) / WindowBits;
 
    auto accum = [&]() {
       const size_t w_0 = scalar.get_window((windows - 1) * WindowBits);
-      auto pt = C::ProjectivePoint::from_affine(C::AffinePoint::ct_select(table, w_0));
+      auto pt = C::ProjectivePoint::from_affine(table.ct_select(w_0));
       CT::poison(pt);
       pt.randomize_rep(rng);
       return pt;
@@ -201,7 +276,7 @@ typename C::ProjectivePoint varpoint_exec(std::span<const typename C::AffinePoin
       it is not possible for the dlog of accum to overflow a second time.
       */
 
-      accum += C::AffinePoint::ct_select(table, w_i);
+      accum += table.ct_select(w_i);
 
       if(i <= 3) {
          accum.randomize_rep(rng);
