@@ -79,13 +79,9 @@ class EC_AffinePoint_Data_PC final : public EC_AffinePoint_Data {
 
       void serialize_uncompressed_to(std::span<uint8_t> bytes) const override;
 
-      std::unique_ptr<EC_AffinePoint_Data> mul(const EC_Scalar_Data& scalar,
-                                               RandomNumberGenerator& rng,
-                                               std::vector<BigInt>& ws) const override;
+      std::unique_ptr<EC_AffinePoint_Data> mul(const EC_Scalar_Data& scalar, RandomNumberGenerator& rng) const override;
 
-      secure_vector<uint8_t> mul_x_only(const EC_Scalar_Data& scalar,
-                                        RandomNumberGenerator& rng,
-                                        std::vector<BigInt>& ws) const override;
+      secure_vector<uint8_t> mul_x_only(const EC_Scalar_Data& scalar, RandomNumberGenerator& rng) const override;
 
       const PCurve::PrimeOrderCurve::AffinePoint& value() const { return m_pt; }
 

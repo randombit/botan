@@ -35,7 +35,6 @@ class ECC_Basepoint_Mul_Tests final : public Text_Based_Test {
          const auto group = Botan::EC_Group::from_name(group_id);
 
          const Botan::BigInt k(k_bytes);
-         std::vector<Botan::BigInt> ws;
 
    #if defined(BOTAN_HAS_LEGACY_EC_POINT)
          const auto pt = group.OS2ECP(P_bytes);
@@ -44,11 +43,11 @@ class ECC_Basepoint_Mul_Tests final : public Text_Based_Test {
    #endif
 
          const auto scalar = Botan::EC_Scalar::from_bigint(group, k);
-         const auto apg = Botan::EC_AffinePoint::g_mul(scalar, this->rng(), ws);
+         const auto apg = Botan::EC_AffinePoint::g_mul(scalar, this->rng());
          result.test_eq("AffinePoint::g_mul", apg.serialize_uncompressed(), P_bytes);
 
          const auto ag = Botan::EC_AffinePoint::generator(group);
-         const auto ap = ag.mul(scalar, this->rng(), ws);
+         const auto ap = ag.mul(scalar, this->rng());
          result.test_eq("AffinePoint::mul", ap.serialize_uncompressed(), P_bytes);
 
          return result;
@@ -74,23 +73,20 @@ class ECC_Varpoint_Mul_Tests final : public Text_Based_Test {
 
          const auto group = Botan::EC_Group::from_name(group_id);
 
-         std::vector<Botan::BigInt> ws;
-
    #if defined(BOTAN_HAS_LEGACY_EC_POINT)
          const Botan::EC_Point p1 = group.OS2ECP(p) * k;
          result.test_eq("EC_Point Montgomery ladder", p1.encode(Botan::EC_Point::Compressed), z);
-         result.confirm("Output point is on the curve", p1.on_the_curve());
    #endif
 
          const auto s_k = Botan::EC_Scalar::from_bigint(group, k);
          const auto apt = Botan::EC_AffinePoint::deserialize(group, p).value();
-         const auto apt_k = apt.mul(s_k, this->rng(), ws);
+         const auto apt_k = apt.mul(s_k, this->rng());
          result.test_eq("p * k (AffinePoint)", apt_k.serialize_compressed(), z);
 
-         const auto apt_k_neg = apt.negate().mul(s_k.negate(), this->rng(), ws);
+         const auto apt_k_neg = apt.negate().mul(s_k.negate(), this->rng());
          result.test_eq("-p * -k (AffinePoint)", apt_k_neg.serialize_compressed(), z);
 
-         const auto neg_apt_neg_k = apt.mul(s_k.negate(), this->rng(), ws).negate();
+         const auto neg_apt_neg_k = apt.mul(s_k.negate(), this->rng()).negate();
          result.test_eq("-(p * -k) (AffinePoint)", neg_apt_neg_k.serialize_compressed(), z);
 
          return result;
@@ -129,8 +125,7 @@ class ECC_Mul2_Tests final : public Text_Based_Test {
             }
 
             // Now check the same using naive multiply and add:
-            std::vector<BigInt> ws;
-            auto z = p.mul(x, rng(), ws).add(q.mul(y, rng(), ws));
+            auto z = p.mul(x, rng()).add(q.mul(y, rng()));
             if(with_final_negation) {
                z = z.negate();
             }
@@ -185,8 +180,7 @@ class ECC_Mul2_Inf_Tests final : public Test {
             const auto g = Botan::EC_AffinePoint::generator(group);
 
             // Choose some other random point z
-            std::vector<Botan::BigInt> ws;
-            const auto z = g.mul(Botan::EC_Scalar::random(group, rng()), rng(), ws);
+            const auto z = g.mul(Botan::EC_Scalar::random(group, rng()), rng());
 
             const auto r = Botan::EC_Scalar::random(group, rng());
             const auto neg_r = r.negate();
@@ -230,8 +224,7 @@ class ECC_Point_Addition_Tests final : public Test {
             result.test_eq("g is not the identity element", g.is_identity(), false);
 
             // Choose some other random point z
-            std::vector<Botan::BigInt> ws;
-            const auto z = g.mul(Botan::EC_Scalar::random(group, rng()), rng(), ws);
+            const auto z = g.mul(Botan::EC_Scalar::random(group, rng()), rng());
             result.test_eq("z is not the identity element", z.is_identity(), false);
 
             const auto id = Botan::EC_AffinePoint::identity(group);
