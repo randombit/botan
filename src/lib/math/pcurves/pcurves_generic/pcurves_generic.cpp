@@ -1221,7 +1221,7 @@ class GenericBaseMulTable final {
       std::vector<GenericAffinePoint> m_table;
 };
 
-class GenericWindowedMul2 final : public PrimeOrderCurve::PrecomputedMul2Table {
+class GenericWindowedMul2 final {
    public:
       static constexpr size_t WindowBits = Mul2PrecompWindowBits;
 
@@ -1230,7 +1230,7 @@ class GenericWindowedMul2 final : public PrimeOrderCurve::PrecomputedMul2Table {
       GenericWindowedMul2& operator=(const GenericWindowedMul2& other) = delete;
       GenericWindowedMul2& operator=(GenericWindowedMul2&& other) = delete;
 
-      ~GenericWindowedMul2() override = default;
+      ~GenericWindowedMul2() = default;
 
       GenericWindowedMul2(const GenericAffinePoint& p, const GenericAffinePoint& q) :
             m_table(mul2_setup<GenericCurve, WindowBits>(p, q)) {}
@@ -1240,6 +1240,24 @@ class GenericWindowedMul2 final : public PrimeOrderCurve::PrecomputedMul2Table {
          GenericBlindedScalarBits y_bits(y, rng, WindowBits);
          return mul2_exec<GenericCurve, WindowBits>(m_table, x_bits, y_bits, rng);
       }
+
+   private:
+      AffinePointTable<GenericCurve> m_table;
+};
+
+class GenericVartimeWindowedMul2 final : public PrimeOrderCurve::PrecomputedMul2Table {
+   public:
+      static constexpr size_t WindowBits = Mul2PrecompWindowBits;
+
+      GenericVartimeWindowedMul2(const GenericVartimeWindowedMul2& other) = delete;
+      GenericVartimeWindowedMul2(GenericVartimeWindowedMul2&& other) = delete;
+      GenericVartimeWindowedMul2& operator=(const GenericVartimeWindowedMul2& other) = delete;
+      GenericVartimeWindowedMul2& operator=(GenericVartimeWindowedMul2&& other) = delete;
+
+      ~GenericVartimeWindowedMul2() override = default;
+
+      GenericVartimeWindowedMul2(const GenericAffinePoint& p, const GenericAffinePoint& q) :
+            m_table(to_affine_batch<GenericCurve>(mul2_setup<GenericCurve, WindowBits>(p, q))) {}
 
       GenericProjectivePoint mul2_vartime(const GenericScalar& x, const GenericScalar& y) const {
          const auto x_bits = x.serialize<std::vector<uint8_t>>();
@@ -1326,13 +1344,13 @@ secure_vector<uint8_t> GenericPrimeOrderCurve::mul_x_only(const AffinePoint& pt,
 
 std::unique_ptr<const PrimeOrderCurve::PrecomputedMul2Table> GenericPrimeOrderCurve::mul2_setup_g(
    const AffinePoint& q) const {
-   return std::make_unique<GenericWindowedMul2>(from_stash(generator()), from_stash(q));
+   return std::make_unique<GenericVartimeWindowedMul2>(from_stash(generator()), from_stash(q));
 }
 
 std::optional<PrimeOrderCurve::ProjectivePoint> GenericPrimeOrderCurve::mul2_vartime(const PrecomputedMul2Table& tableb,
                                                                                      const Scalar& s1,
                                                                                      const Scalar& s2) const {
-   const auto& tbl = dynamic_cast<const GenericWindowedMul2&>(tableb);
+   const auto& tbl = dynamic_cast<const GenericVartimeWindowedMul2&>(tableb);
    auto pt = tbl.mul2_vartime(from_stash(s1), from_stash(s2));
    if(pt.is_identity().as_bool()) {
       return {};
@@ -1356,7 +1374,7 @@ bool GenericPrimeOrderCurve::mul2_vartime_x_mod_order_eq(const PrecomputedMul2Ta
                                                          const Scalar& v,
                                                          const Scalar& s1,
                                                          const Scalar& s2) const {
-   const auto& tbl = dynamic_cast<const GenericWindowedMul2&>(tableb);
+   const auto& tbl = dynamic_cast<const GenericVartimeWindowedMul2&>(tableb);
    auto pt = tbl.mul2_vartime(from_stash(s1), from_stash(s2));
 
    if(!pt.is_identity().as_bool()) {

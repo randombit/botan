@@ -309,7 +309,8 @@ typename C::ProjectivePoint varpoint_exec(const AffinePointTable<C>& table,
 */
 
 template <typename C, size_t WindowBits>
-std::vector<typename C::AffinePoint> mul2_setup(const typename C::AffinePoint& p, const typename C::AffinePoint& q) {
+std::vector<typename C::ProjectivePoint> mul2_setup(const typename C::AffinePoint& p,
+                                                    const typename C::AffinePoint& q) {
    static_assert(WindowBits >= 1 && WindowBits <= 4);
 
    // 2^(2*W) elements, less the identity element
@@ -364,11 +365,11 @@ std::vector<typename C::AffinePoint> mul2_setup(const typename C::AffinePoint& p
       table.emplace_back(next_tbl_e());
    }
 
-   return to_affine_batch<C>(table);
+   return table;
 }
 
 template <typename C, size_t WindowBits, typename BlindedScalar>
-typename C::ProjectivePoint mul2_exec(std::span<const typename C::AffinePoint> table,
+typename C::ProjectivePoint mul2_exec(const AffinePointTable<C>& table,
                                       const BlindedScalar& x,
                                       const BlindedScalar& y,
                                       RandomNumberGenerator& rng) {
@@ -378,7 +379,7 @@ typename C::ProjectivePoint mul2_exec(std::span<const typename C::AffinePoint> t
       const size_t w_1 = x.get_window((Windows - 1) * WindowBits);
       const size_t w_2 = y.get_window((Windows - 1) * WindowBits);
       const size_t window = w_1 + (w_2 << WindowBits);
-      auto pt = C::ProjectivePoint::from_affine(C::AffinePoint::ct_select(table, window));
+      auto pt = C::ProjectivePoint::from_affine(table.ct_select(window));
       CT::poison(pt);
       pt.randomize_rep(rng);
       return pt;
@@ -390,7 +391,7 @@ typename C::ProjectivePoint mul2_exec(std::span<const typename C::AffinePoint> t
       const size_t w_1 = x.get_window((Windows - i - 1) * WindowBits);
       const size_t w_2 = y.get_window((Windows - i - 1) * WindowBits);
       const size_t window = w_1 + (w_2 << WindowBits);
-      accum += C::AffinePoint::ct_select(table, window);
+      accum += table.ct_select(window);
 
       if(i <= 3) {
          accum.randomize_rep(rng);

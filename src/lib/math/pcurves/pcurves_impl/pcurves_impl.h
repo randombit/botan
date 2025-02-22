@@ -1520,20 +1520,37 @@ class WindowedMul2Table final {
       typedef typename C::AffinePoint AffinePoint;
       typedef typename C::ProjectivePoint ProjectivePoint;
 
-      static constexpr size_t WindowBits = W;
-
-      WindowedMul2Table(const AffinePoint& p, const AffinePoint& q) : m_table(mul2_setup<C, WindowBits>(p, q)) {}
+      WindowedMul2Table(const AffinePoint& p, const AffinePoint& q) : m_table(mul2_setup<C, W>(p, q)) {}
 
       /**
       * Constant time 2-ary multiplication
       */
       ProjectivePoint mul2(const Scalar& s1, const Scalar& s2, RandomNumberGenerator& rng) const {
-         using BlindedScalar = BlindedScalarBits<C, WindowBits>;
+         using BlindedScalar = BlindedScalarBits<C, W>;
          BlindedScalar bits1(s1, rng);
          BlindedScalar bits2(s2, rng);
 
-         return mul2_exec<C, WindowBits>(m_table, bits1, bits2, rng);
+         return mul2_exec<C, W>(m_table, bits1, bits2, rng);
       }
+
+   private:
+      AffinePointTable<C> m_table;
+};
+
+template <typename C, size_t W>
+class VartimeMul2Table final {
+   public:
+      // We look at W bits of each scalar per iteration
+      static_assert(W >= 1 && W <= 4);
+
+      static constexpr size_t WindowBits = W;
+
+      using Scalar = typename C::Scalar;
+      using AffinePoint = typename C::AffinePoint;
+      using ProjectivePoint = typename C::ProjectivePoint;
+
+      VartimeMul2Table(const AffinePoint& p, const AffinePoint& q) :
+            m_table(to_affine_batch<C>(mul2_setup<C, W>(p, q))) {}
 
       /**
       * Variable time 2-ary multiplication
