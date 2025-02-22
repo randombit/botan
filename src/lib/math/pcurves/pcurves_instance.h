@@ -10,6 +10,12 @@
 #include <botan/build.h>
 #include <memory>
 
+namespace Botan {
+
+class BigInt;
+
+}
+
 namespace Botan::PCurve {
 
 class PrimeOrderCurve;
@@ -62,6 +68,15 @@ class PCurveInstance final {
 
 #if defined(BOTAN_HAS_PCURVES_NUMSP512D1)
       static std::shared_ptr<const PrimeOrderCurve> numsp512d1();
+#endif
+
+#if defined(BOTAN_HAS_PCURVES_GENERIC)
+      static std::shared_ptr<const PrimeOrderCurve> from_params(const BigInt& p,
+                                                                const BigInt& a,
+                                                                const BigInt& b,
+                                                                const BigInt& base_x,
+                                                                const BigInt& base_y,
+                                                                const BigInt& order);
 #endif
 };
 
