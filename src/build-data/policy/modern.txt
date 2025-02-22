@@ -23,7 +23,6 @@ hkdf
 cmac
 hmac
 poly1305
-siphash
 
 pbkdf2
 bcrypt

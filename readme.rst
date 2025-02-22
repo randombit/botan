@@ -129,7 +129,7 @@ Ciphers, hashes, MACs, and checksums
 * Stream ciphers (X)ChaCha20, (X)Salsa20, RC4
 * Hash functions SHA-1, SHA-2, SHA-3, RIPEMD-160, BLAKE2b/BLAKE2s, Skein-512, SM3, Whirlpool
 * Password hashing schemes Argon2, Scrypt, bcrypt, and PBKDF2
-* Authentication codes HMAC, CMAC, Poly1305, KMAC, SipHash, GMAC
+* Authentication codes HMAC, CMAC, Poly1305, KMAC, GMAC
 
 Other Useful Things
 ----------------------------------------
