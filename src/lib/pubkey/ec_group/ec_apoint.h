@@ -62,7 +62,7 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
 
       /// Hash to curve (RFC 9380), random oracle variant
       ///
-      /// Only supported for specific groups
+      /// Only supported for specific groups; check EC_Group::hash_to_curve_supported
       static EC_AffinePoint hash_to_curve_ro(const EC_Group& group,
                                              std::string_view hash_fn,
                                              std::span<const uint8_t> input,
@@ -70,7 +70,7 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
 
       /// Hash to curve (RFC 9380), non uniform variant
       ///
-      /// Only supported for specific groups
+      /// Only supported for specific groups; check EC_Group::hash_to_curve_supported
       static EC_AffinePoint hash_to_curve_nu(const EC_Group& group,
                                              std::string_view hash_fn,
                                              std::span<const uint8_t> input,

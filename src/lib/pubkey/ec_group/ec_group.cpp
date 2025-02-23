@@ -601,6 +601,10 @@ bool EC_Group::has_cofactor() const {
    return data().has_cofactor();
 }
 
+bool EC_Group::hash_to_curve_supported() const {
+   return data().hash_to_curve_supported();
+}
+
 const OID& EC_Group::get_curve_oid() const {
    return data().oid();
 }

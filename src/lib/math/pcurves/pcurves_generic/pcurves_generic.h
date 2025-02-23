@@ -84,6 +84,8 @@ class GenericPrimeOrderCurve final : public PrimeOrderCurve,
 
       std::optional<AffinePoint> deserialize_point(std::span<const uint8_t> bytes) const override;
 
+      bool hash_to_curve_supported() const override;
+
       AffinePoint hash_to_curve_nu(std::function<void(std::span<uint8_t>)> expand_message) const override;
 
       ProjectivePoint hash_to_curve_ro(std::function<void(std::span<uint8_t>)> expand_message) const override;

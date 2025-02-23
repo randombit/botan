@@ -48,14 +48,7 @@ class PerfTest_EllipticCurve final : public PerfTest {
 
             auto g = Botan::EC_AffinePoint::generator(group);
 
-            const bool h2c_supported = [&]() {
-               try {
-                  Botan::EC_AffinePoint::hash_to_curve_nu(group, "SHA-256", {}, {});
-               } catch(Botan::Not_Implemented&) {
-                  return false;
-               }
-               return true;
-            }();
+            const bool h2c_supported = group.hash_to_curve_supported();
 
             while(bp_timer->under(run) && vp_timer->under(run)) {
                const auto k = Botan::EC_Scalar::random(group, rng);

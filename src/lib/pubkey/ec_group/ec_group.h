@@ -418,6 +418,8 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       */
       bool has_cofactor() const;
 
+      bool hash_to_curve_supported() const;
+
       /*
       * For internal use only
       * TODO(Botan4): Move this to an internal header

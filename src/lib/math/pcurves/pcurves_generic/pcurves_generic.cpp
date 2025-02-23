@@ -1519,6 +1519,10 @@ GenericProjectivePoint GenericPrimeOrderCurve::from_stash(const PrimeOrderCurve:
    return GenericProjectivePoint(x, y, z);
 }
 
+bool GenericPrimeOrderCurve::hash_to_curve_supported() const {
+   return false;
+}
+
 PrimeOrderCurve::AffinePoint GenericPrimeOrderCurve::hash_to_curve_nu(
    std::function<void(std::span<uint8_t>)> expand_message) const {
    BOTAN_UNUSED(expand_message);

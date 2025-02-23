@@ -305,6 +305,11 @@ class PrimeOrderCurve {
       virtual Scalar random_scalar(RandomNumberGenerator& rng) const = 0;
 
       /**
+      * Check if hash to curve is supported
+      */
+      virtual bool hash_to_curve_supported() const = 0;
+
+      /**
       * RFC 9380 hash to curve (NU variant)
       *
       * This is currently only supported for a few specific curves

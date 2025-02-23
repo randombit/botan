@@ -81,7 +81,9 @@ class ECC_H2C_Tests final : public Text_Based_Test {
             }
 
             result.test_eq("Generated point serialization", pt, expected_point);
+            result.test_eq("Group should support hash to curve", group.hash_to_curve_supported(), true);
          } catch(Botan::Not_Implemented&) {
+            result.test_eq("Group should not support hash to curve", group.hash_to_curve_supported(), false);
             result.test_note("Skipping due to not implemented");
          }
 

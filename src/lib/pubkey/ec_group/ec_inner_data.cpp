@@ -54,6 +54,7 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
       m_a_is_minus_3(a == p - 3),
       m_a_is_zero(a.is_zero()),
       m_has_cofactor(m_cofactor != 1),
+      m_hash_to_curve_supported(false),
       m_order_is_less_than_p(m_order < p),
       m_source(source) {
    // TODO(Botan4) we can assume/assert the OID is set
@@ -79,6 +80,10 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
       }
       // possibly still null here, if parameters unsuitable or if the
       // pcurves_generic module wasn't included in the build
+   }
+
+   if(m_pcurve) {
+      m_hash_to_curve_supported = m_pcurve->hash_to_curve_supported();
    }
 
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
