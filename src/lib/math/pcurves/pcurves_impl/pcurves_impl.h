@@ -311,13 +311,13 @@ class IntMod final {
       /**
       * Conditional assignment
       *
-      * If `cond` is true, sets `x` to `nx`
+      * If `cond` is true, sets *this to `nx`
       */
-      static constexpr void conditional_assign(Self& x, CT::Choice cond, const Self& nx) {
+      constexpr void conditional_assign(CT::Choice cond, const Self& nx) {
          const W mask = CT::Mask<W>::from_choice(cond).value();
 
          for(size_t i = 0; i != N; ++i) {
-            x.m_val[i] = choose(mask, nx.m_val[i], x.m_val[i]);
+            m_val[i] = choose(mask, nx.m_val[i], m_val[i]);
          }
       }
 
@@ -591,9 +591,10 @@ class IntMod final {
 
             constexpr auto P_PLUS_1_OVER_4 = p_plus_1_over_4(P);
             auto z = pow_vartime(P_PLUS_1_OVER_4);
-            const CT::Choice correct = (z.square() == *this);
+
             // Zero out the return value if it would otherwise be incorrect
-            Self::conditional_assign(z, !correct, Self::zero());
+            const CT::Choice correct = (z.square() == *this);
+            z.conditional_assign(!correct, Self::zero());
             return {z, correct};
          } else {
             // Shanks-Tonelli, following I.4 in RFC 9380
@@ -624,14 +625,15 @@ class IntMod final {
             for(size_t i = C1_C2.first; i >= 2; i--) {
                b.square_n(i - 2);
                const CT::Choice e = b.is_one();
-               Self::conditional_assign(z, !e, z * c);
+               z.conditional_assign(!e, z * c);
                c.square_n(1);
-               Self::conditional_assign(t, !e, t * c);
+               t.conditional_assign(!e, t * c);
                b = t;
             }
 
+            // Zero out the return value if it would otherwise be incorrect
             const CT::Choice correct = (z.square() == *this);
-            Self::conditional_assign(z, !correct, Self::zero());
+            z.conditional_assign(!correct, Self::zero());
             return {z, correct};
          }
       }
@@ -913,7 +915,7 @@ class AffineCurvePoint final {
 
                if(is_square.as_bool()) {
                   const auto flip_y = y_is_even != y.is_even();
-                  FieldElement::conditional_assign(y, flip_y, y.negate());
+                  y.conditional_assign(flip_y, y.negate());
                   return Self(*x, y);
                }
             }
@@ -1631,7 +1633,7 @@ inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::
    const auto z2_u4 = z_u2.square();
    const auto tv1 = invert_field_element<C>(z2_u4 + z_u2);
    auto x1 = SSWU_C1<C>() * (C::FieldElement::one() + tv1);
-   C::FieldElement::conditional_assign(x1, tv1.is_zero(), SSWU_C2<C>());
+   x1.conditional_assign(tv1.is_zero(), SSWU_C2<C>());
    const auto gx1 = C::AffinePoint::x3_ax_b(x1);
 
    const auto x2 = z_u2 * x1;
@@ -1646,8 +1648,7 @@ inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::
 
    C::FieldElement::conditional_assign(x, y, gx1_is_square, x1, gx1_sqrt);
 
-   const auto flip_y = y.is_even() != u.is_even();
-   C::FieldElement::conditional_assign(y, flip_y, y.negate());
+   y.conditional_assign(y.is_even() != u.is_even(), y.negate());
 
    auto pt = typename C::AffinePoint(x, y);
 

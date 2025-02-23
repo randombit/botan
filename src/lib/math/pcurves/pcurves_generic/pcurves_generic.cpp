@@ -716,11 +716,11 @@ class GenericField final {
 
       void _const_time_unpoison() const { CT::unpoison(m_val); }
 
-      static void conditional_assign(GenericField& x, CT::Choice cond, const GenericField& nx) {
+      void conditional_assign(CT::Choice cond, const GenericField& nx) {
          const W mask = CT::Mask<W>::from_choice(cond).value();
 
          for(size_t i = 0; i != N; ++i) {
-            x.m_val[i] = choose(mask, nx.m_val[i], x.m_val[i]);
+            m_val[i] = choose(mask, nx.m_val[i], m_val[i]);
          }
       }
 
@@ -766,7 +766,7 @@ class GenericField final {
          auto z = pow_vartime(m_curve->_params().field_p_plus_1_over_4());
          const CT::Choice correct = (z.square() == *this);
          // Zero out the return value if it would otherwise be incorrect
-         conditional_assign(z, !correct, zero(m_curve));
+         z.conditional_assign(!correct, zero(m_curve));
          return {z, correct};
       }
 
@@ -896,7 +896,7 @@ class GenericAffinePoint final {
 
                if(is_square.as_bool()) {
                   const auto flip_y = y_is_even != y.is_even();
-                  GenericField::conditional_assign(y, flip_y, y.negate());
+                  y.conditional_assign(flip_y, y.negate());
                   return GenericAffinePoint(*x, y);
                }
             }

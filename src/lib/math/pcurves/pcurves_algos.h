@@ -258,7 +258,7 @@ inline constexpr ProjectivePoint point_add_or_sub_mixed(const ProjectivePoint& a
    */
 
    auto by = b.y();
-   FieldElement::conditional_assign(by, sub, by.negate());
+   by.conditional_assign(sub, by.negate());
 
    const auto Z1Z1 = a.z().square();
    const auto U2 = b.x() * Z1Z1;
