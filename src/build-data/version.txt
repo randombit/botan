@@ -3,7 +3,7 @@ release_major = 3
 release_minor = 8
 release_patch = 0
 
-release_so_abi_rev = 7
+release_so_abi_rev = 8
 
 release_suffix = ''
 

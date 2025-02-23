@@ -68,7 +68,7 @@ API follows a few simple rules:
 * that declaration is not visible here since this header is intentionally
 * free-standing, depending only on a few C standard library headers.
 */
-#define BOTAN_FFI_API_VERSION 20240408
+#define BOTAN_FFI_API_VERSION 20250506
 
 /**
 * BOTAN_FFI_EXPORT indicates public FFI functions.
@@ -1548,11 +1548,17 @@ BOTAN_FFI_EXPORT(3, 6)
 int botan_pubkey_load_ml_dsa(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len, const char* mldsa_mode);
 
 /*
-* Algorithm specific key operations: Kyber
+* Algorithm specific key operations: Kyber R3
+*
+* Note that Kyber R3 support is somewhat deprecated and may be removed in a
+* future major release. Using the final ML-KEM is highly recommended in any new
+* system.
 */
 
+BOTAN_FFI_DEPRECATED("Kyber R3 support is deprecated")
 BOTAN_FFI_EXPORT(3, 1) int botan_privkey_load_kyber(botan_privkey_t* key, const uint8_t privkey[], size_t key_len);
 
+BOTAN_FFI_DEPRECATED("Kyber R3 support is deprecated")
 BOTAN_FFI_EXPORT(3, 1) int botan_pubkey_load_kyber(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len);
 
 BOTAN_FFI_DEPRECATED("Use generic botan_privkey_view_raw")

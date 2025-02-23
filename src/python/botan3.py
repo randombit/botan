@@ -13,10 +13,7 @@ Botan is released under the Simplified BSD License (see license.txt)
 This module uses the ctypes module and is usable by programs running
 under at least CPython 3.x, and PyPy
 
-It uses botan's ffi module, which exposes a C API. This version
-of the Python wrapper requires FFI version 20230403, which was
-introduced in Botan 3.0.0
-
+It uses botan's ffi module, which exposes a C API.
 """
 
 from ctypes import CDLL, CFUNCTYPE, POINTER, byref, create_string_buffer, \
@@ -29,7 +26,8 @@ from binascii import hexlify
 from datetime import datetime
 from collections.abc import Iterable
 
-BOTAN_FFI_VERSION = 20240408
+# This Python module requires the FFI API version introduced in Botan 3.8.0
+BOTAN_FFI_VERSION = 20250506
 
 #
 # Base exception for all exceptions raised from this module
@@ -72,7 +70,10 @@ def _load_botan_dll(expected_version):
     else:
         # assumed to be some Unix/Linux system
         possible_dll_names.append('libbotan-3.so')
-        possible_dll_names += ['libbotan-3.so.%d' % (v) for v in reversed(range(0, 16))]
+
+        min_minor = 8 # minimum supported FFI
+        max_minor = 32 # arbitrary but probably large enough
+        possible_dll_names += ['libbotan-3.so.%d' % (v) for v in reversed(range(min_minor, max_minor))]
 
     for dll_name in possible_dll_names:
         try:
