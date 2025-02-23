@@ -62,7 +62,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
                   m_table(x, y) {}
 
          private:
-            WindowedMul2Table<C, Mul2PrecompWindowBits> m_table;
+            VartimeMul2Table<C, Mul2PrecompWindowBits> m_table;
       };
 
       std::unique_ptr<const PrecomputedMul2Table> mul2_setup_g(const AffinePoint& q) const override {
