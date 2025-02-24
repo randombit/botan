@@ -12,26 +12,23 @@ starting 8 days before the release (ie the Monday of the week prior).
    This information is only useful if you are a developer of botan who
    is creating a new release of the library.
 
-Pre Release Testing
+Pre Release Checks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the week prior to a release:
-
-- [ ] Update relevant third party test suites (eg Limbo and BoGo)
-- [ ] Do maintainer-mode builds with Clang and GCC to catch any warnings
-- [ ] Test build configurations using `src/scripts/test_all_configs.py`
-- [ ] Test a few builds on platforms not in CI (eg OpenBSD, FreeBSD, Solaris)
-
-Final Changes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-When it is time to make the release:
+In the week prior to a release, after feature freeze goes into effect
 
 - [ ] Check that the version number in ``src/build-data/version.txt`` is correct.
 - [ ] Confirm that the release notes in ``news.rst`` are accurate and complete.
+- [ ] Diff ffi.h vs the previous release; is a new FFI version required?
+- [ ] Do maintainer-mode builds with Clang and GCC to catch any warnings
+- [ ] Test build configurations using `src/scripts/test_all_configs.py`
+- [ ] Test a few builds on platforms not in CI (eg OpenBSD, FreeBSD, Solaris)
+- [ ] Update relevant third party test suites (eg Limbo and BoGo)
 
 Tag the Release
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+At the time the release is created
 
 - [ ] Update the release date in ``news.rst``
 - [ ] Update ``readme.rst`` with the new release URL/date
