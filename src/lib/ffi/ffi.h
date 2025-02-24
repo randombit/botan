@@ -1497,8 +1497,10 @@ BOTAN_FFI_EXPORT(2, 2) int botan_privkey_load_ed25519(botan_privkey_t* key, cons
 
 BOTAN_FFI_EXPORT(2, 2) int botan_pubkey_load_ed25519(botan_pubkey_t* key, const uint8_t pubkey[32]);
 
+BOTAN_FFI_DEPRECATED("Use botan_privkey_view_raw")
 BOTAN_FFI_EXPORT(2, 2) int botan_privkey_ed25519_get_privkey(botan_privkey_t key, uint8_t output[64]);
 
+BOTAN_FFI_DEPRECATED("Use botan_pubkey_view_raw")
 BOTAN_FFI_EXPORT(2, 2) int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key, uint8_t pubkey[32]);
 
 /*
@@ -1509,8 +1511,10 @@ BOTAN_FFI_EXPORT(3, 4) int botan_privkey_load_ed448(botan_privkey_t* key, const 
 
 BOTAN_FFI_EXPORT(3, 4) int botan_pubkey_load_ed448(botan_pubkey_t* key, const uint8_t pubkey[57]);
 
+BOTAN_FFI_DEPRECATED("Use botan_privkey_view_raw")
 BOTAN_FFI_EXPORT(3, 4) int botan_privkey_ed448_get_privkey(botan_privkey_t key, uint8_t output[57]);
 
+BOTAN_FFI_DEPRECATED("Use botan_pubkey_view_raw")
 BOTAN_FFI_EXPORT(3, 4) int botan_pubkey_ed448_get_pubkey(botan_pubkey_t key, uint8_t pubkey[57]);
 
 /*
@@ -1521,8 +1525,10 @@ BOTAN_FFI_EXPORT(2, 8) int botan_privkey_load_x25519(botan_privkey_t* key, const
 
 BOTAN_FFI_EXPORT(2, 8) int botan_pubkey_load_x25519(botan_pubkey_t* key, const uint8_t pubkey[32]);
 
+BOTAN_FFI_DEPRECATED("Use botan_privkey_view_raw")
 BOTAN_FFI_EXPORT(2, 8) int botan_privkey_x25519_get_privkey(botan_privkey_t key, uint8_t output[32]);
 
+BOTAN_FFI_DEPRECATED("Use botan_pubkey_view_raw")
 BOTAN_FFI_EXPORT(2, 8) int botan_pubkey_x25519_get_pubkey(botan_pubkey_t key, uint8_t pubkey[32]);
 
 /*
@@ -1533,8 +1539,10 @@ BOTAN_FFI_EXPORT(3, 4) int botan_privkey_load_x448(botan_privkey_t* key, const u
 
 BOTAN_FFI_EXPORT(3, 4) int botan_pubkey_load_x448(botan_pubkey_t* key, const uint8_t pubkey[56]);
 
+BOTAN_FFI_DEPRECATED("Use botan_privkey_view_raw")
 BOTAN_FFI_EXPORT(3, 4) int botan_privkey_x448_get_privkey(botan_privkey_t key, uint8_t output[56]);
 
+BOTAN_FFI_DEPRECATED("Use botan_pubkey_view_raw")
 BOTAN_FFI_EXPORT(3, 4) int botan_pubkey_x448_get_pubkey(botan_pubkey_t key, uint8_t pubkey[56]);
 
 /*
