@@ -2324,7 +2324,7 @@ struct ESYS_CONTEXT;
 * @returns 1 if the crypto backend can be enabled
 */
 BOTAN_FFI_EXPORT(3, 6)
-int botan_tpm2_supports_crypto_backend();
+int botan_tpm2_supports_crypto_backend(void);
 
 /**
 * Initialize a TPM2 context
