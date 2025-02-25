@@ -1387,8 +1387,11 @@ class CompilerInfo(InfoObject):
         """
 
         def flag_builder():
+            # We always emit -fPIC or equivalent so that position independent executables
+            # can be created that link to the static library
+            yield self.shared_flags
+
             if options.build_shared_lib:
-                yield self.shared_flags
                 yield self.visibility_build_flags
 
             if 'debug' in self.lib_flags and options.with_debug_info:
