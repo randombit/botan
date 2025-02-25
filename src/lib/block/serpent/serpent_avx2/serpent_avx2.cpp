@@ -11,7 +11,8 @@
 
 namespace Botan {
 
-#if defined(__GNUG__) && !defined(__clang__)
+// TODO(Botan4) if minimum GCC is increased we can remove this
+#if defined(__GNUG__) && !defined(__clang__) && (__GNUG__ < 13)
 
 // These macros are redundant with the versions in serpent_sbox.h
 // but unfortunately removing them seems to trigger a bug in GCC
