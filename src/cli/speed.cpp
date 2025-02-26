@@ -17,9 +17,13 @@
 
 // Always available:
 #include <botan/version.h>
-#include <botan/internal/cpuid.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/target_info.h>
+
+#if defined(BOTAN_HAS_CPUID)
+   #include <botan/internal/cpuid.h>
+#endif
 
 #if defined(BOTAN_HAS_OS_UTILS)
    #include <botan/internal/os_utils.h>
@@ -430,6 +434,7 @@ class Speed final : public Command {
 
          const std::vector<size_t> buf_sizes = unique_buffer_sizes(get_arg("buf-size"));
 
+#if defined(BOTAN_HAS_CPUID)
          for(const std::string& cpuid_to_clear : Command::split_on(get_arg("clear-cpuid"), ',')) {
             auto bits = Botan::CPUID::bit_from_string(cpuid_to_clear);
             if(bits.empty()) {
@@ -440,10 +445,15 @@ class Speed final : public Command {
                Botan::CPUID::clear_cpuid_bit(bit);
             }
          }
+#endif
 
          if(verbose() || m_summary) {
+#if defined(BOTAN_HAS_CPUID)
             output() << Botan::version_string() << "\n"
                      << "CPUID: " << Botan::CPUID::to_string() << "\n\n";
+#else
+            output() << Botan::version_string() << "\n\n";
+#endif
          }
 
          const bool using_defaults = (algos.empty());

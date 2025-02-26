@@ -8,6 +8,6 @@ brief -> "Noekeon using SIMD instructions"
 </module_info>
 
 <requires>
-noekeon
+cpuid
 simd
 </requires>

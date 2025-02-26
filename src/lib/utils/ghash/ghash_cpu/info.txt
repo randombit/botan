@@ -10,6 +10,7 @@ brief -> "GHASH using SIMD instructions"
 endian little
 
 <requires>
+cpuid
 simd
 </requires>
 

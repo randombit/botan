@@ -10,3 +10,8 @@ brief -> "SHA-256 using BMI2 instructions"
 <isa>
 bmi2
 </isa>
+
+<requires>
+cpuid
+</requires>
+

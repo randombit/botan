@@ -13,3 +13,7 @@ sse2
 ssse3
 sse41
 </isa>
+
+<requires>
+cpuid
+</requires>

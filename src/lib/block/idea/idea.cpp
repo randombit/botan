@@ -7,9 +7,12 @@
 
 #include <botan/internal/idea.h>
 
-#include <botan/internal/cpuid.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
+
+#if defined(BOTAN_HAS_CPUID)
+   #include <botan/internal/cpuid.h>
+#endif
 
 namespace Botan {
 

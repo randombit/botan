@@ -12,6 +12,7 @@ avx512
 </isa>
 
 <requires>
+cpuid
 simd_avx512
 </requires>
 

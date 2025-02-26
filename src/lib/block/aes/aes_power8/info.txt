@@ -7,6 +7,10 @@ name -> "AES Power8"
 brief -> "AES using Power8 instructions"
 </module_info>
 
+<requires>
+cpuid
+</requires>
+
 <arch>
 ppc64
 </arch>

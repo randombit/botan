@@ -8,7 +8,7 @@ brief -> "SHACAL-2 using ARMv8 crypto instructions"
 </module_info>
 
 <requires>
-shacal2
+cpuid
 </requires>
 
 <isa>

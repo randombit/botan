@@ -10,3 +10,7 @@ brief -> "SHA-1 using ARMv8 crypto instructions"
 <isa>
 armv8crypto
 </isa>
+
+<requires>
+cpuid
+</requires>

@@ -8,12 +8,14 @@
 #include <botan/internal/sha1.h>
 
 #include <botan/internal/bit_ops.h>
-#include <botan/internal/cpuid.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/stl_util.h>
-
 #include <array>
+
+#if defined(BOTAN_HAS_CPUID)
+   #include <botan/internal/cpuid.h>
+#endif
 
 namespace Botan {
 

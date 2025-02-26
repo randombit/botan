@@ -11,3 +11,7 @@ brief -> "GHASH using Vector Permutation instructions"
 sse2
 ssse3
 </isa>
+
+<requires>
+cpuid
+</requires>
