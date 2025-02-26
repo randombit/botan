@@ -13,4 +13,5 @@ avx512
 
 <requires>
 simd_avx512
+cpuid
 </requires>

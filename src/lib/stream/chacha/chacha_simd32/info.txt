@@ -9,4 +9,5 @@ brief -> "ChaCha20 using SIMD instructions"
 
 <requires>
 simd
+cpuid
 </requires>

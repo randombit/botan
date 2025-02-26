@@ -11,7 +11,6 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/calendar.h>
 #include <botan/internal/charset.h>
-#include <botan/internal/cpuid.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
@@ -23,6 +22,10 @@
 #include <bit>
 #include <ctime>
 #include <functional>
+
+#if defined(BOTAN_HAS_CPUID)
+   #include <botan/internal/cpuid.h>
+#endif
 
 #if defined(BOTAN_HAS_POLY_DBL)
    #include <botan/internal/poly_dbl.h>
@@ -1202,6 +1205,8 @@ class ReadKV_Tests final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("utils", "util_read_kv", ReadKV_Tests);
 
+#if defined(BOTAN_HAS_CPUID)
+
 class CPUID_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -1219,7 +1224,7 @@ class CPUID_Tests final : public Test {
          const std::string cpuid_string = Botan::CPUID::to_string();
          result.test_success("CPUID::to_string doesn't crash");
 
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+   #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
          if(Botan::CPUID::has_sse2()) {
             result.confirm("Output string includes sse2", cpuid_string.find("sse2") != std::string::npos);
@@ -1231,13 +1236,15 @@ class CPUID_Tests final : public Test {
             Botan::CPUID::initialize();  // reset state
             result.test_eq("After reinitializing, has_sse2 returns true", Botan::CPUID::has_sse2(), true);
          }
-#endif
+   #endif
 
          return {result};
       }
 };
 
 BOTAN_REGISTER_SERIALIZED_TEST("utils", "cpuid", CPUID_Tests);
+
+#endif
 
 #if defined(BOTAN_HAS_UUID)
 

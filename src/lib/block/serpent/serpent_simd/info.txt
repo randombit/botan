@@ -8,5 +8,6 @@ brief -> "Serpent using SIMD instructions"
 </module_info>
 
 <requires>
+cpuid
 simd
 </requires>

@@ -10,3 +10,7 @@ brief -> "Argon2 using AVX2 instructions"
 <isa>
 avx2
 </isa>
+
+<requires>
+cpuid
+</requires>

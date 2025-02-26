@@ -7,9 +7,12 @@
 
 #include <botan/internal/noekeon.h>
 
-#include <botan/internal/cpuid.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+
+#if defined(BOTAN_HAS_CPUID)
+   #include <botan/internal/cpuid.h>
+#endif
 
 namespace Botan {
 

@@ -12,8 +12,11 @@
 #include "test_xml_reporter.h"
 
 #include <botan/version.h>
-#include <botan/internal/cpuid.h>
 #include <botan/internal/loadstor.h>
+
+#if defined(BOTAN_HAS_CPUID)
+   #include <botan/internal/cpuid.h>
+#endif
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
    #include <botan/internal/rwlock.h>
@@ -66,10 +69,12 @@ bool Test_Runner::run(const Test_Options& opts) {
    }
 
    for(auto& reporter : m_reporters) {
+#if defined(BOTAN_HAS_CPUID)
       const std::string cpuid = Botan::CPUID::to_string();
       if(!cpuid.empty()) {
          reporter->set_property("CPU flags", cpuid);
       }
+#endif
 
       if(!opts.pkcs11_lib().empty()) {
          reporter->set_property("pkcs11 library", opts.pkcs11_lib());
@@ -112,9 +117,14 @@ std::vector<Test::Result> run_a_test(const std::string& test_name) {
    std::vector<Test::Result> results;
 
    try {
+#if defined(BOTAN_HAS_CPUID)
       if(test_name == "simd_32" && Botan::CPUID::has_simd_32() == false) {
          results.push_back(Test::Result::Note(test_name, "SIMD not available on this platform"));
-      } else if(std::unique_ptr<Test> test = Test::get_test(test_name)) {
+         return results;
+      }
+#endif
+
+      if(std::unique_ptr<Test> test = Test::get_test(test_name)) {
          std::vector<Test::Result> test_results = test->run();
          for(auto& result : test_results) {
             if(!result.code_location() && test->registration_location()) {

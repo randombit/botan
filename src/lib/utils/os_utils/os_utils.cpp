@@ -10,8 +10,11 @@
 
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
-#include <botan/internal/cpuid.h>
 #include <botan/internal/target_info.h>
+
+#if defined(BOTAN_HAS_CPUID)
+   #include <botan/internal/cpuid.h>
+#endif
 
 #include <algorithm>
 #include <chrono>
@@ -191,7 +194,13 @@ uint64_t OS::get_cpu_cycle_counter() {
 
 #elif defined(BOTAN_USE_GCC_INLINE_ASM)
 
-   #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+   #if defined(BOTAN_TARGET_ARCH_IS_X86_64)
+
+   uint32_t rtc_low = 0, rtc_high = 0;
+   asm volatile("rdtsc" : "=d"(rtc_high), "=a"(rtc_low));
+   rtc = (static_cast<uint64_t>(rtc_high) << 32) | rtc_low;
+
+   #elif defined(BOTAN_TARGET_CPU_IS_X86_FAMILY) && defined(BOTAN_HAS_CPUID)
 
    if(CPUID::has_rdtsc()) {
       uint32_t rtc_low = 0, rtc_high = 0;

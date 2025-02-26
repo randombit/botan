@@ -8,11 +8,14 @@
 
 #if defined(BOTAN_HAS_SIMD_32)
    #include <botan/internal/bswap.h>
-   #include <botan/internal/cpuid.h>
    #include <botan/internal/loadstor.h>
    #include <botan/internal/rotate.h>
    #include <botan/internal/simd_32.h>
    #include <botan/internal/stl_util.h>
+#endif
+
+#if defined(BOTAN_HAS_CPUID)
+   #include <botan/internal/cpuid.h>
 #endif
 
 namespace Botan_Tests {
@@ -24,10 +27,12 @@ class SIMD_32_Tests final : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result("SIMD_4x32");
 
+   #if defined(BOTAN_HAS_CPUID)
          if(Botan::CPUID::has_simd_32() == false) {
             result.test_note("Skipping SIMD_4x32 tests due to missing CPU support at runtime");
             return {result};
          }
+   #endif
 
          const uint32_t pat1 = 0xAABBCCDD;
          const uint32_t pat2 = 0x87654321;

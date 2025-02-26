@@ -24,5 +24,6 @@ arm64
 </arch>
 
 <requires>
+cpuid
 simd
 </requires>

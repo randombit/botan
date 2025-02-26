@@ -12,5 +12,6 @@ sse2
 </isa>
 
 <requires>
+cpuid
 simd
 </requires>

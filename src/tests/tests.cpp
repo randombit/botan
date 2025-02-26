@@ -7,7 +7,6 @@
 #include "tests.h"
 
 #include <botan/hex.h>
-#include <botan/internal/cpuid.h>
 #include <botan/internal/filesystem.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
@@ -20,6 +19,10 @@
 
 #if defined(BOTAN_HAS_BIGINT)
    #include <botan/bigint.h>
+#endif
+
+#if defined(BOTAN_HAS_CPUID)
+   #include <botan/internal/cpuid.h>
 #endif
 
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
@@ -1062,11 +1065,13 @@ std::string Text_Based_Test::get_next_line() {
          m_cur = std::make_unique<std::ifstream>(m_srcs[0]);
          m_cur_src_name = m_srcs[0];
 
+#if defined(BOTAN_HAS_CPUID)
          // Reinit cpuid on new file if needed
          if(m_cpu_flags.empty() == false) {
             m_cpu_flags.clear();
             Botan::CPUID::initialize();
          }
+#endif
 
          if(!m_cur->good()) {
             throw Test_Error("Could not open input file '" + m_cur_src_name);
@@ -1114,10 +1119,15 @@ std::string strip_ws(const std::string& in) {
 
 std::vector<uint64_t> parse_cpuid_bits(const std::vector<std::string>& tok) {
    std::vector<uint64_t> bits;
+
+#if defined(BOTAN_HAS_CPUID)
    for(size_t i = 1; i < tok.size(); ++i) {
       const std::vector<Botan::CPUID::CPUID_bits> more = Botan::CPUID::bit_from_string(tok[i]);
       bits.insert(bits.end(), more.begin(), more.end());
    }
+#else
+   BOTAN_UNUSED(tok);
+#endif
 
    return bits;
 }
@@ -1210,6 +1220,7 @@ std::vector<Test::Result> Text_Based_Test::run() {
             uint64_t start = Test::timestamp();
 
             Test::Result result = run_one_test(header, vars);
+#if defined(BOTAN_HAS_CPUID)
             if(!m_cpu_flags.empty()) {
                for(const auto& cpuid_u64 : m_cpu_flags) {
                   Botan::CPUID::CPUID_bits cpuid_bit = static_cast<Botan::CPUID::CPUID_bits>(cpuid_u64);
@@ -1221,6 +1232,7 @@ std::vector<Test::Result> Text_Based_Test::run() {
                }
                Botan::CPUID::initialize();
             }
+#endif
             result.set_ns_consumed(Test::timestamp() - start);
 
             if(result.tests_failed()) {

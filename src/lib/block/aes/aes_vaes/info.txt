@@ -8,6 +8,7 @@ brief -> "AES using VAES"
 </module_info>
 
 <requires>
+cpuid
 simd_avx2
 </requires>
 

@@ -47,7 +47,3 @@ scan_name.h
 stl_util.h
 time_utils.h
 </header:internal>
-
-<requires>
-cpuid
-</requires>

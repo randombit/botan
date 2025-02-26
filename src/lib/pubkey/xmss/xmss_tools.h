@@ -9,8 +9,8 @@
 #define BOTAN_XMSS_TOOLS_H_
 
 #include <botan/secmem.h>
-#include <botan/internal/cpuid.h>
 #include <algorithm>
+#include <bit>
 #include <iterator>
 #include <type_traits>
 
@@ -54,7 +54,7 @@ class XMSS_Tools final {
 template <typename T, typename U>
 void XMSS_Tools::concat(secure_vector<uint8_t>& target, const T& src) {
    const uint8_t* src_bytes = reinterpret_cast<const uint8_t*>(&src);
-   if(CPUID::is_little_endian()) {
+   if constexpr(std::endian::native == std::endian::little) {
       std::reverse_copy(src_bytes, src_bytes + sizeof(src), std::back_inserter(target));
    } else {
       std::copy(src_bytes, src_bytes + sizeof(src), std::back_inserter(target));
@@ -69,7 +69,7 @@ void XMSS_Tools::concat(secure_vector<uint8_t>& target, const T& src, size_t len
    }
 
    const uint8_t* src_bytes = reinterpret_cast<const uint8_t*>(&src);
-   if(CPUID::is_little_endian()) {
+   if constexpr(std::endian::native == std::endian::little) {
       std::reverse_copy(src_bytes, src_bytes + c, std::back_inserter(target));
    } else {
       std::copy(src_bytes + sizeof(src) - c, src_bytes + sizeof(src), std::back_inserter(target));

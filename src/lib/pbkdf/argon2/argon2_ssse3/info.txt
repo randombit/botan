@@ -15,3 +15,7 @@ ssse3
 <cc>
 !msvc
 </cc>
+
+<requires>
+cpuid
+</requires>

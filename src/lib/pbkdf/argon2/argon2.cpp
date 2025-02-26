@@ -18,7 +18,7 @@
    #include <botan/internal/thread_pool.h>
 #endif
 
-#if defined(BOTAN_HAS_ARGON2_AVX2) || defined(BOTAN_HAS_ARGON2_SSSE3)
+#if defined(BOTAN_HAS_CPUID)
    #include <botan/internal/cpuid.h>
 #endif
 
