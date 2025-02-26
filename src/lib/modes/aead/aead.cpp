@@ -6,6 +6,7 @@
 
 #include <botan/aead.h>
 
+#include <botan/assert.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/scan_name.h>
 #include <sstream>
