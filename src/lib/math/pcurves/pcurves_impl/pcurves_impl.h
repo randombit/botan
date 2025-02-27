@@ -846,6 +846,9 @@ class AffineCurvePoint final {
 
       static constexpr Self identity() { return Self(FieldElement::zero(), FieldElement::zero()); }
 
+      // Helper for ct_select of pcurves_generic
+      static constexpr Self identity(const Self&) { return Self(FieldElement::zero(), FieldElement::zero()); }
+
       constexpr CT::Choice is_identity() const { return x().is_zero() && y().is_zero(); }
 
       AffineCurvePoint(const Self& other) = default;
@@ -873,7 +876,7 @@ class AffineCurvePoint final {
       * Returns the identity element also if idx is out of range
       */
       static constexpr auto ct_select(std::span<const Self> pts, size_t idx) {
-         auto result = Self::identity();
+         auto result = Self::identity(pts[0]);
 
          // Intentionally wrapping; set to maximum size_t if idx == 0
          const size_t idx1 = static_cast<size_t>(idx - 1);
@@ -1471,10 +1474,10 @@ class WindowedBoothMulTable final {
             const auto [tidx, tneg] = booth_recode<WindowBits>(w_i);
 
             if(i == 0) {
-               accum = ProjectivePoint::from_affine(AffinePoint::ct_select(m_table, tidx));
+               accum = ProjectivePoint::from_affine(m_table.ct_select(tidx));
                accum.conditional_assign(tneg, accum.negate());
             } else {
-               accum = ProjectivePoint::add_or_sub(accum, AffinePoint::ct_select(m_table, tidx), tneg);
+               accum = ProjectivePoint::add_or_sub(accum, m_table.ct_select(tidx), tneg);
             }
 
             accum = accum.dbl_n(WindowBits);
@@ -1487,7 +1490,7 @@ class WindowedBoothMulTable final {
          // final window (note one bit shorter than previous reads)
          const size_t w_l = bits.get_window(0) & ((1 << WindowBits) - 1);
          const auto [tidx, tneg] = booth_recode<WindowBits>(w_l << 1);
-         accum = ProjectivePoint::add_or_sub(accum, AffinePoint::ct_select(m_table, tidx), tneg);
+         accum = ProjectivePoint::add_or_sub(accum, m_table.ct_select(tidx), tneg);
 
          CT::unpoison(accum);
          return accum;
@@ -1506,7 +1509,7 @@ class WindowedBoothMulTable final {
          return std::make_pair(static_cast<size_t>(d), s_mask.as_choice());
       }
 
-      std::vector<AffinePoint> m_table;
+      AffinePointTable<C> m_table;
 };
 
 template <typename C, size_t W>
@@ -1519,20 +1522,37 @@ class WindowedMul2Table final {
       typedef typename C::AffinePoint AffinePoint;
       typedef typename C::ProjectivePoint ProjectivePoint;
 
-      static constexpr size_t WindowBits = W;
-
-      WindowedMul2Table(const AffinePoint& p, const AffinePoint& q) : m_table(mul2_setup<C, WindowBits>(p, q)) {}
+      WindowedMul2Table(const AffinePoint& p, const AffinePoint& q) : m_table(mul2_setup<C, W>(p, q)) {}
 
       /**
       * Constant time 2-ary multiplication
       */
       ProjectivePoint mul2(const Scalar& s1, const Scalar& s2, RandomNumberGenerator& rng) const {
-         using BlindedScalar = BlindedScalarBits<C, WindowBits>;
+         using BlindedScalar = BlindedScalarBits<C, W>;
          BlindedScalar bits1(s1, rng);
          BlindedScalar bits2(s2, rng);
 
-         return mul2_exec<C, WindowBits>(m_table, bits1, bits2, rng);
+         return mul2_exec<C, W>(m_table, bits1, bits2, rng);
       }
+
+   private:
+      AffinePointTable<C> m_table;
+};
+
+template <typename C, size_t W>
+class VartimeMul2Table final {
+   public:
+      // We look at W bits of each scalar per iteration
+      static_assert(W >= 1 && W <= 4);
+
+      static constexpr size_t WindowBits = W;
+
+      using Scalar = typename C::Scalar;
+      using AffinePoint = typename C::AffinePoint;
+      using ProjectivePoint = typename C::ProjectivePoint;
+
+      VartimeMul2Table(const AffinePoint& p, const AffinePoint& q) :
+            m_table(to_affine_batch<C>(mul2_setup<C, W>(p, q))) {}
 
       /**
       * Variable time 2-ary multiplication
