@@ -107,9 +107,7 @@ std::vector<std::string> Policy::allowed_signature_methods() const {
    return {
       "ECDSA",
       "RSA",
-#if defined(BOTAN_ENABLE_EXPERIMENTAL_FEATURES)
-      "ML-DSA",
-#endif
+      //"ML-DSA",
       //"IMPLICIT",
    };
    // clang-format on
