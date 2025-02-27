@@ -29,7 +29,9 @@ std::vector<Signature_Scheme> Policy::allowed_signature_schemes() const {
 
    for(Signature_Scheme scheme : Signature_Scheme::all_available_schemes()) {
       const bool sig_allowed = allowed_signature_method(scheme.algorithm_name());
-      const bool hash_allowed = allowed_signature_hash(scheme.hash_function_name());
+
+      const std::string hash_used = scheme.hash_function_name();
+      const bool hash_allowed = hash_used.empty() || allowed_signature_hash(hash_used);
 
       if(sig_allowed && hash_allowed) {
          schemes.push_back(scheme);
@@ -101,10 +103,16 @@ std::vector<std::string> Policy::allowed_key_exchange_methods() const {
 }
 
 std::vector<std::string> Policy::allowed_signature_methods() const {
+   // clang-format off
    return {
-      "ECDSA", "RSA",
+      "ECDSA",
+      "RSA",
+#if defined(BOTAN_ENABLE_EXPERIMENTAL_FEATURES)
+      "ML-DSA",
+#endif
       //"IMPLICIT",
    };
+   // clang-format on
 }
 
 bool Policy::allowed_signature_method(std::string_view sig_method) const {

@@ -43,6 +43,12 @@ const std::vector<Signature_Scheme>& Signature_Scheme::all_available_schemes() {
       ECDSA_SHA384,
       ECDSA_SHA512,
       ECDSA_SHA256,
+
+#if defined(BOTAN_HAS_ML_DSA) && defined(BOTAN_ENABLE_EXPERIMENTAL_FEATURES)
+      ML_DSA_44,
+      ML_DSA_65,
+      ML_DSA_87,
+#endif
    };
 
    return all_schemes;
@@ -94,12 +100,20 @@ std::string Signature_Scheme::to_string() const noexcept {
       case EDDSA_448:
          return "EDDSA_448";
 
+      case ML_DSA_44:
+         return "ML_DSA_44";
+      case ML_DSA_65:
+         return "ML_DSA_65";
+      case ML_DSA_87:
+         return "ML_DSA_87";
+
       default:
          return "Unknown signature scheme: " + std::to_string(m_code);
    }
 }
 
 std::string Signature_Scheme::hash_function_name() const noexcept {
+   // TODO(Botan4) this function should return an optional
    switch(m_code) {
       case RSA_PKCS1_SHA1:
       case ECDSA_SHA1:
@@ -122,7 +136,11 @@ std::string Signature_Scheme::hash_function_name() const noexcept {
 
       case EDDSA_25519:
       case EDDSA_448:
-         return "Pure";
+      case ML_DSA_44:
+      case ML_DSA_65:
+      case ML_DSA_87:
+         // TODO(Botan4) should be nullopt
+         return "";
 
       default:
          return "Unknown hash function";
@@ -130,6 +148,7 @@ std::string Signature_Scheme::hash_function_name() const noexcept {
 }
 
 std::string Signature_Scheme::padding_string() const noexcept {
+   // TODO(Botan4) this should return a nullopt
    switch(m_code) {
       case RSA_PKCS1_SHA1:
          return "PKCS1v15(SHA-1)";
@@ -161,8 +180,16 @@ std::string Signature_Scheme::padding_string() const noexcept {
       case EDDSA_448:
          return "Pure";
 
+      case ML_DSA_44:
+         return "";
+      case ML_DSA_65:
+         return "";
+      case ML_DSA_87:
+         return "";
+
       default:
-         return "Unknown padding";
+         // TODO(Botan4) throw or return nullopt
+         return "Unknown padding scheme";
    }
 }
 
@@ -189,12 +216,18 @@ std::string Signature_Scheme::algorithm_name() const noexcept {
       case EDDSA_448:
          return "Ed448";
 
+      case ML_DSA_44:
+      case ML_DSA_65:
+      case ML_DSA_87:
+         return "ML-DSA";
+
       default:
          return "Unknown algorithm";
    }
 }
 
 AlgorithmIdentifier Signature_Scheme::key_algorithm_identifier() const noexcept {
+   // TODO(Botan4) this should throw rather than returning an empty AlgorithmIdentifier
    switch(m_code) {
       // case ECDSA_SHA1:  not defined
       case ECDSA_SHA256:
@@ -218,12 +251,20 @@ AlgorithmIdentifier Signature_Scheme::key_algorithm_identifier() const noexcept 
       case RSA_PSS_SHA512:
          return {"RSA", AlgorithmIdentifier::USE_NULL_PARAM};
 
+      case ML_DSA_44:
+         return {"ML-DSA-4x4", AlgorithmIdentifier::USE_EMPTY_PARAM};
+      case ML_DSA_65:
+         return {"ML-DSA-6x5", AlgorithmIdentifier::USE_EMPTY_PARAM};
+      case ML_DSA_87:
+         return {"ML-DSA-8x7", AlgorithmIdentifier::USE_EMPTY_PARAM};
+
       default:
          return AlgorithmIdentifier();
    }
 }
 
 AlgorithmIdentifier Signature_Scheme::algorithm_identifier() const noexcept {
+   // TODO(Botan4) this should throw rather than returning an empty AlgorithmIdentifier
    switch(m_code) {
       case RSA_PKCS1_SHA1:
          return AlgorithmIdentifier(OID::from_string("RSA/PKCS1v15(SHA-1)"), AlgorithmIdentifier::USE_NULL_PARAM);
@@ -250,6 +291,13 @@ AlgorithmIdentifier Signature_Scheme::algorithm_identifier() const noexcept {
       case RSA_PSS_SHA512:
          return AlgorithmIdentifier(OID::from_string("RSA/PSS"), PSS_Params("SHA-512", 64).serialize());
 
+      case ML_DSA_44:
+         return AlgorithmIdentifier(OID::from_string("ML-DSA-4x4"), AlgorithmIdentifier::USE_EMPTY_PARAM);
+      case ML_DSA_65:
+         return AlgorithmIdentifier(OID::from_string("ML-DSA-6x5"), AlgorithmIdentifier::USE_EMPTY_PARAM);
+      case ML_DSA_87:
+         return AlgorithmIdentifier(OID::from_string("ML-DSA-8x7"), AlgorithmIdentifier::USE_EMPTY_PARAM);
+
       default:
          // Note that Ed25519 and Ed448 end up here
          return AlgorithmIdentifier();
@@ -257,27 +305,12 @@ AlgorithmIdentifier Signature_Scheme::algorithm_identifier() const noexcept {
 }
 
 std::optional<Signature_Format> Signature_Scheme::format() const noexcept {
-   switch(m_code) {
-      case RSA_PKCS1_SHA1:
-      case RSA_PKCS1_SHA256:
-      case RSA_PKCS1_SHA384:
-      case RSA_PKCS1_SHA512:
-      case RSA_PSS_SHA256:
-      case RSA_PSS_SHA384:
-      case RSA_PSS_SHA512:
-         return Signature_Format::Standard;
-
-      case ECDSA_SHA1:
-      case ECDSA_SHA256:
-      case ECDSA_SHA384:
-      case ECDSA_SHA512:
-      case EDDSA_25519:
-      case EDDSA_448:
-         return Signature_Format::DerSequence;
-
-      default:
-         return std::nullopt;
+   // TODO(Botan4) there is no reason for this function to return an optional
+   if(m_code == ECDSA_SHA1 || m_code == ECDSA_SHA256 || m_code == ECDSA_SHA384 || m_code == ECDSA_SHA512) {
+      return Signature_Format::DerSequence;
    }
+
+   return Signature_Format::Standard;
 }
 
 bool Signature_Scheme::is_compatible_with(const Protocol_Version& protocol_version) const noexcept {
@@ -290,14 +323,25 @@ bool Signature_Scheme::is_compatible_with(const Protocol_Version& protocol_versi
       return false;
    }
 
-   // RFC 8446 4.4.3:
-   //   RSA signatures MUST use an RSASSA-PSS algorithm, regardless of whether
-   //   RSASSA-PKCS1-v1_5 algorithms appear in "signature_algorithms".
-   //
-   // Note that this is enforced for TLS 1.3 and above only.
-   if(!protocol_version.is_pre_tls_13() && (m_code == RSA_PKCS1_SHA1 || m_code == RSA_PKCS1_SHA256 ||
-                                            m_code == RSA_PKCS1_SHA384 || m_code == RSA_PKCS1_SHA512)) {
-      return false;
+   // For the purposes of this function defined as anything 1.2 or earlier
+   const bool is_old_tls = protocol_version.is_pre_tls_13();
+
+   if(is_old_tls) {
+      // ML-DSA is TLS 1.3 only
+      if(m_code == ML_DSA_44 || m_code == ML_DSA_65 || m_code == ML_DSA_87) {
+         return false;
+      }
+   } else {
+      // RFC 8446 4.4.3:
+      //   RSA signatures MUST use an RSASSA-PSS algorithm, regardless of whether
+      //   RSASSA-PKCS1-v1_5 algorithms appear in "signature_algorithms".
+      //
+      // Note that this is enforced for TLS 1.3 and above only.
+
+      if((m_code == RSA_PKCS1_SHA1 || m_code == RSA_PKCS1_SHA256 || m_code == RSA_PKCS1_SHA384 ||
+          m_code == RSA_PKCS1_SHA512)) {
+         return false;
+      }
    }
 
    return true;
@@ -308,12 +352,20 @@ bool Signature_Scheme::is_suitable_for(const Private_Key& private_key) const noe
       return false;
    }
 
-   // The ECDSA private key length must match the utilized hash output length.
    const auto keylen = private_key.key_length();
-   if(keylen <= 250) {
+
+   // Above check is insufficient for ML-DSA
+   if(m_code == ML_DSA_44 && keylen != 44) {
+      return false;
+   }
+   if(m_code == ML_DSA_65 && keylen != 65) {
+      return false;
+   }
+   if(m_code == ML_DSA_87 && keylen != 87) {
       return false;
    }
 
+   // The ECDSA private key length must match the utilized hash output length.
    if(m_code == ECDSA_SHA256 && !(keylen >= 250 && keylen <= 350)) {
       return false;
    }
