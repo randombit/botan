@@ -13,7 +13,9 @@ spake2.h
 
 <requires>
 argon2
+ec_group
 hkdf
 hmac
+sha2_32
 sha2_64
 </requires>
