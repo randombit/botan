@@ -136,7 +136,7 @@ class RAII_LowLevel {
 
    private:
       Dynamically_Loaded_Library m_module;
-      FunctionListPtr m_func_list;
+      FunctionList* m_func_list;
       std::unique_ptr<LowLevel> m_low_level;
       SessionHandle m_session_handle;
       bool m_is_session_open;
@@ -224,7 +224,7 @@ Test::Result test_low_level_ctor() {
    Test::Result result("PKCS 11 low level - LowLevel ctor");
 
    Dynamically_Loaded_Library pkcs11_module(Test::pkcs11_lib());
-   FunctionListPtr func_list(nullptr);
+   FunctionList* func_list(nullptr);
    LowLevel::C_GetFunctionList(pkcs11_module, &func_list);
 
    LowLevel p11_low_level(func_list);
@@ -238,7 +238,7 @@ Test::Result test_low_level_ctor() {
 
 Test::Result test_c_get_function_list() {
    Dynamically_Loaded_Library pkcs11_module(Test::pkcs11_lib());
-   FunctionListPtr func_list = nullptr;
+   FunctionList* func_list = nullptr;
    return test_function(
       "C_GetFunctionList",
       std::bind(&LowLevel::C_GetFunctionList, std::ref(pkcs11_module), &func_list, std::placeholders::_1));
@@ -246,7 +246,7 @@ Test::Result test_c_get_function_list() {
 
 Test::Result test_initialize_finalize() {
    Dynamically_Loaded_Library pkcs11_module(Test::pkcs11_lib());
-   FunctionListPtr func_list = nullptr;
+   FunctionList* func_list = nullptr;
    LowLevel::C_GetFunctionList(pkcs11_module, &func_list);
 
    LowLevel p11_low_level(func_list);
@@ -254,8 +254,8 @@ Test::Result test_initialize_finalize() {
    // setting Flag::OsLockingOk should be the normal use case
    C_InitializeArgs init_args = {nullptr, nullptr, nullptr, nullptr, static_cast<CK_FLAGS>(Flag::OsLockingOk), nullptr};
 
-   auto init_bind = std::bind(&LowLevel::C_Initialize, p11_low_level, &init_args, std::placeholders::_1);
-   auto finalize_bind = std::bind(&LowLevel::C_Finalize, p11_low_level, nullptr, std::placeholders::_1);
+   auto init_bind = std::bind(&LowLevel::C_Initialize, &p11_low_level, &init_args, std::placeholders::_1);
+   auto finalize_bind = std::bind(&LowLevel::C_Finalize, &p11_low_level, nullptr, std::placeholders::_1);
    return test_function("C_Initialize", init_bind, "C_Finalize", finalize_bind);
 }
 
@@ -264,7 +264,7 @@ Test::Result test_c_get_info() {
 
    Info info = {};
    Test::Result result =
-      test_function("C_GetInfo", std::bind(&LowLevel::C_GetInfo, *p11_low_level.get(), &info, std::placeholders::_1));
+      test_function("C_GetInfo", std::bind(&LowLevel::C_GetInfo, p11_low_level.get(), &info, std::placeholders::_1));
    result.test_ne("C_GetInfo crypto major version", info.cryptokiVersion.major, 0);
 
    return result;
@@ -279,7 +279,7 @@ Test::Result test_c_get_slot_list() {
 
    auto slots_no_card = std::bind(
       static_cast<bool (LowLevel::*)(bool, std::vector<SlotId>&, ReturnValue*) const>(&LowLevel::C_GetSlotList),
-      *p11_low_level.get(),
+      p11_low_level.get(),
       false,  // no card present
       std::ref(slot_vec),
       std::placeholders::_1);
@@ -291,7 +291,7 @@ Test::Result test_c_get_slot_list() {
 
    auto slots_with_card = std::bind(
       static_cast<bool (LowLevel::*)(bool, std::vector<SlotId>&, ReturnValue*) const>(&LowLevel::C_GetSlotList),
-      *p11_low_level.get(),
+      p11_low_level.get(),
       true,  // card present
       std::ref(slot_vec),
       std::placeholders::_1);
@@ -310,7 +310,7 @@ Test::Result test_c_get_slot_info() {
    SlotInfo slot_info = {};
    Test::Result result = test_function(
       "C_GetSlotInfo",
-      std::bind(&LowLevel::C_GetSlotInfo, *p11_low_level.get(), slot_vec.at(0), &slot_info, std::placeholders::_1));
+      std::bind(&LowLevel::C_GetSlotInfo, p11_low_level.get(), slot_vec.at(0), &slot_info, std::placeholders::_1));
 
    std::string slot_desc(reinterpret_cast<char*>(slot_info.slotDescription));
    result.test_ne("C_GetSlotInfo returns non empty description", slot_desc.size(), 0);
@@ -325,7 +325,7 @@ Test::Result test_c_get_token_info() {
    TokenInfo token_info = {};
    Test::Result result = test_function(
       "C_GetTokenInfo",
-      std::bind(&LowLevel::C_GetTokenInfo, *p11_low_level.get(), slot_vec.at(0), &token_info, std::placeholders::_1));
+      std::bind(&LowLevel::C_GetTokenInfo, p11_low_level.get(), slot_vec.at(0), &token_info, std::placeholders::_1));
 
    std::string serial(reinterpret_cast<char*>(token_info.serialNumber));
    result.test_ne("C_GetTokenInfo returns non empty serial number", serial.size(), 0);
@@ -341,7 +341,7 @@ Test::Result test_c_wait_for_slot_event() {
 
    return test_function(
       "C_WaitForSlotEvent",
-      std::bind(&LowLevel::C_WaitForSlotEvent, *p11_low_level.get(), flags, &slot_id, nullptr, std::placeholders::_1),
+      std::bind(&LowLevel::C_WaitForSlotEvent, p11_low_level.get(), flags, &slot_id, nullptr, std::placeholders::_1),
       true,
       ReturnValue::NoEvent);
 }
@@ -354,7 +354,7 @@ Test::Result test_c_get_mechanism_list() {
 
    auto binder = std::bind(static_cast<bool (LowLevel::*)(SlotId, std::vector<MechanismType>&, ReturnValue*) const>(
                               &LowLevel::C_GetMechanismList),
-                           *p11_low_level.get(),
+                           p11_low_level.get(),
                            slot_vec.at(0),
                            std::ref(mechanisms),
                            std::placeholders::_1);
@@ -375,7 +375,7 @@ Test::Result test_c_get_mechanism_info() {
    MechanismInfo mechanism_info = {};
    return test_function("C_GetMechanismInfo",
                         std::bind(&LowLevel::C_GetMechanismInfo,
-                                  *p11_low_level.get(),
+                                  p11_low_level.get(),
                                   slot_vec.at(0),
                                   mechanisms.at(0),
                                   &mechanism_info,
@@ -392,7 +392,7 @@ Test::Result test_c_init_token() {
    auto sec_vec_binder = std::bind(
       static_cast<bool (LowLevel::*)(SlotId, const secure_vector<uint8_t>&, std::string_view, ReturnValue*) const>(
          &LowLevel::C_InitToken<secure_allocator<uint8_t>>),
-      *p11_low_level.get(),
+      p11_low_level.get(),
       slot_vec.at(0),
       SO_PIN(),
       std::ref(label_view),
@@ -410,7 +410,7 @@ Test::Result test_open_close_session() {
    SessionHandle session_handle = 0;
 
    auto open_session_ro = std::bind(&LowLevel::C_OpenSession,
-                                    *p11_low_level.get(),
+                                    p11_low_level.get(),
                                     slot_vec.at(0),
                                     ro_flags,
                                     nullptr,
@@ -419,7 +419,7 @@ Test::Result test_open_close_session() {
                                     std::placeholders::_1);
 
    auto close_session =
-      std::bind(&LowLevel::C_CloseSession, *p11_low_level.get(), std::ref(session_handle), std::placeholders::_1);
+      std::bind(&LowLevel::C_CloseSession, p11_low_level.get(), std::ref(session_handle), std::placeholders::_1);
 
    Test::Result result = test_function("C_OpenSession", open_session_ro, "C_CloseSession", close_session);
 
@@ -427,7 +427,7 @@ Test::Result test_open_close_session() {
    const Flags rw_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
 
    auto open_session_rw = std::bind(&LowLevel::C_OpenSession,
-                                    *p11_low_level.get(),
+                                    p11_low_level.get(),
                                     slot_vec.at(0),
                                     rw_flags,
                                     nullptr,
@@ -492,7 +492,7 @@ Test::Result test_c_get_session_info() {
    Test::Result result = test_function(
       "C_GetSessionInfo",
       std::bind(
-         &LowLevel::C_GetSessionInfo, *p11_low_level.get(), session_handle, &session_info, std::placeholders::_1));
+         &LowLevel::C_GetSessionInfo, p11_low_level.get(), session_handle, &session_info, std::placeholders::_1));
 
    result.confirm("C_GetSessionInfo returns same slot id as during call to C_OpenSession",
                   session_info.slotID == slot_vec.at(0));
@@ -512,7 +512,7 @@ Test::Result login_logout_helper(const RAII_LowLevel& p11_low_level,
    auto login_secvec_binder = std::bind(
       static_cast<bool (LowLevel::*)(SessionHandle, UserType, const secure_vector<uint8_t>&, ReturnValue*) const>(
          &LowLevel::C_Login<secure_allocator<uint8_t>>),
-      *p11_low_level.get(),
+      p11_low_level.get(),
       handle,
       user_type,
       std::ref(pin_as_sec_vec),
@@ -520,7 +520,7 @@ Test::Result login_logout_helper(const RAII_LowLevel& p11_low_level,
 
    auto logout_binder =
       std::bind(static_cast<bool (LowLevel::*)(SessionHandle, ReturnValue*) const>(&LowLevel::C_Logout),
-                *p11_low_level.get(),
+                p11_low_level.get(),
                 handle,
                 std::placeholders::_1);
 
@@ -567,7 +567,7 @@ Test::Result test_c_init_pin() {
    auto sec_vec_binder =
       std::bind(static_cast<bool (LowLevel::*)(SessionHandle, const secure_vector<uint8_t>&, ReturnValue*) const>(
                    &LowLevel::C_InitPIN<secure_allocator<uint8_t>>),
-                *p11_low_level.get(),
+                p11_low_level.get(),
                 session_handle,
                 PIN(),
                 std::placeholders::_1);
@@ -591,7 +591,7 @@ Test::Result test_c_set_pin() {
          static_cast<bool (LowLevel::*)(
             SessionHandle, const secure_vector<uint8_t>&, const secure_vector<uint8_t>&, ReturnValue*) const>(
             &LowLevel::C_SetPIN<secure_allocator<uint8_t>>),
-         *p11_low_level.get(),
+         p11_low_level.get(),
          session_handle,
          old_pin,
          new_pin,
@@ -661,7 +661,7 @@ Test::Result test_c_create_object_c_destroy_object() {
    auto dtemplate = data_template;
 
    auto create_bind = std::bind(&LowLevel::C_CreateObject,
-                                *p11_low_level.get(),
+                                p11_low_level.get(),
                                 session_handle,
                                 dtemplate.data(),
                                 static_cast<Ulong>(dtemplate.size()),
@@ -669,7 +669,7 @@ Test::Result test_c_create_object_c_destroy_object() {
                                 std::placeholders::_1);
 
    auto destroy_bind = std::bind(
-      &LowLevel::C_DestroyObject, *p11_low_level.get(), session_handle, std::ref(object_handle), std::placeholders::_1);
+      &LowLevel::C_DestroyObject, p11_low_level.get(), session_handle, std::ref(object_handle), std::placeholders::_1);
 
    return test_function("C_CreateObject", create_bind, "C_DestroyObject", destroy_bind);
 }
@@ -686,7 +686,7 @@ Test::Result test_c_get_object_size() {
    Ulong object_size = 0;
 
    auto bind = std::bind(&LowLevel::C_GetObjectSize,
-                         *p11_low_level.get(),
+                         p11_low_level.get(),
                          session_handle,
                          object_handle,
                          &object_size,
@@ -714,7 +714,7 @@ Test::Result test_c_get_attribute_value() {
       std::bind(static_cast<bool (LowLevel::*)(
                    SessionHandle, ObjectHandle, std::map<AttributeType, secure_vector<uint8_t>>&, ReturnValue*) const>(
                    &LowLevel::C_GetAttributeValue<secure_allocator<uint8_t>>),
-                *p11_low_level.get(),
+                p11_low_level.get(),
                 session_handle,
                 object_handle,
                 std::ref(getter),
@@ -767,7 +767,7 @@ Test::Result test_c_set_attribute_value() {
       std::bind(static_cast<bool (LowLevel::*)(
                    SessionHandle, ObjectHandle, std::map<AttributeType, secure_vector<uint8_t>>&, ReturnValue*) const>(
                    &LowLevel::C_SetAttributeValue<secure_allocator<uint8_t>>),
-                *p11_low_level.get(),
+                p11_low_level.get(),
                 session_handle,
                 object_handle,
                 std::ref(new_attributes),
@@ -804,7 +804,7 @@ Test::Result test_c_copy_object() {
                                       static_cast<CK_ULONG>(copied_label.size())};
 
    auto binder = std::bind(&LowLevel::C_CopyObject,
-                           *p11_low_level.get(),
+                           p11_low_level.get(),
                            session_handle,
                            object_handle,
                            &copy_attribute_values,
@@ -828,6 +828,23 @@ Test::Result test_c_copy_object() {
    p11_low_level.get()->C_DestroyObject(session_handle, copied_object_handle);
 
    return result;
+}
+
+Test::Result test_load_latest_interface() {
+   Test::Result res("Load latest PKCS #11 interface");
+   Botan::Dynamically_Loaded_Library pkcs11_module(Test::pkcs11_lib());
+   res.test_no_throw("Get function lists of latest interface", [&] {
+      auto latest_interface = InterfaceWrapper::latest_p11_interface(pkcs11_module);
+      latest_interface->func_2_40();
+      if(latest_interface->version().major >= 3) {
+         latest_interface->func_3_0();
+
+         if(latest_interface->version().major > 3 || latest_interface->version().minor >= 2) {
+            latest_interface->func_3_2();
+         }
+      }
+   });
+   return res;
 }
 
 class LowLevelTests final : public Test {
@@ -857,7 +874,9 @@ class LowLevelTests final : public Test {
             {STRING_AND_FUNCTION(test_c_get_object_size)},
             {STRING_AND_FUNCTION(test_c_get_attribute_value)},
             {STRING_AND_FUNCTION(test_c_set_attribute_value)},
-            {STRING_AND_FUNCTION(test_c_copy_object)}};
+            {STRING_AND_FUNCTION(test_c_copy_object)},
+            {STRING_AND_FUNCTION(test_load_latest_interface)},
+         };
 
          return run_pkcs11_tests("PKCS11 low level", fns);
       }
