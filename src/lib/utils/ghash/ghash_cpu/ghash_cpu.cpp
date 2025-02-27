@@ -9,6 +9,7 @@
 
 #include <botan/internal/simd_32.h>
 #include <botan/internal/target_info.h>
+#include <bit>
 
 #if defined(BOTAN_SIMD_USE_SSE2)
    #include <immintrin.h>
@@ -52,18 +53,24 @@ BOTAN_FORCE_INLINE SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_CLMUL_ISA) clmul(const SIMD_4x
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
    const SIMD_4x32 mask_lo = SIMD_4x32(0, 0, 0xFFFFFFFF, 0xFFFFFFFF);
+   constexpr uint8_t flip = (std::endian::native == std::endian::big) ? 0x11 : 0x00;
 
    SIMD_4x32 i1 = x;
    SIMD_4x32 i2 = H;
 
-   if(M == 0x11) {
+   if constexpr(std::endian::native == std::endian::big) {
+      i1 = reverse_vector(i1).bswap();
+      i2 = reverse_vector(i2).bswap();
+   }
+
+   if constexpr(M == (0x11 ^ flip)) {
       i1 &= mask_lo;
       i2 &= mask_lo;
-   } else if(M == 0x10) {
+   } else if constexpr(M == (0x10 ^ flip)) {
       i1 = i1.shift_elems_left<2>();
-   } else if(M == 0x01) {
+   } else if constexpr(M == (0x01 ^ flip)) {
       i2 = i2.shift_elems_left<2>();
-   } else if(M == 0x00) {
+   } else if constexpr(M == (0x00 ^ flip)) {
       i1 = mask_lo.andc(i1);
       i2 = mask_lo.andc(i2);
    }
@@ -77,7 +84,13 @@ BOTAN_FORCE_INLINE SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_CLMUL_ISA) clmul(const SIMD_4x
    auto rv = __builtin_altivec_crypto_vpmsumd(i1v, i2v);
    #endif
 
-   return SIMD_4x32(reinterpret_cast<__vector unsigned int>(rv));
+   auto z = SIMD_4x32(reinterpret_cast<__vector unsigned int>(rv));
+
+   if constexpr(std::endian::native == std::endian::big) {
+      z = reverse_vector(z).bswap();
+   }
+
+   return z;
 #endif
 }
 
