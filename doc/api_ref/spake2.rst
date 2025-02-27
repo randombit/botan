@@ -18,9 +18,9 @@ implement RFC 9832 compatible key confirmation, as described in RFC 9832 Section
 
 Each instance is configured with a set of parameters
 
-.. cpp:class:: SPAKE2_Parameters
+.. cpp:class:: SPAKE2::Parameters
 
-   .. cpp:function:: SPAKE2_Parameters(const EC_Group& group, \
+   .. cpp:function:: SPAKE2::Parameters(const EC_Group& group, \
                         std::string_view shared_secret, \
                         std::span<const uint8_t> a_identity = {}, \
                         std::span<const uint8_t> b_identity = {}, \
@@ -54,17 +54,17 @@ Each instance is configured with a set of parameters
       makes life difficult for an attacker who can compute discrete logarithms,
       but cannot do so cheaply.
 
-.. cpp:enum-class:: SPAKE2_PeerId
+.. cpp:enum-class:: SPAKE2::PeerId
 
-   .. cpp:enumerator:: SPAKE2_PeerId::PeerA
+   .. cpp:enumerator:: SPAKE2::PeerId::PeerA
 
-   .. cpp:enumerator:: SPAKE2_PeerId::PeerB
+   .. cpp:enumerator:: SPAKE2::PeerId::PeerB
 
 
-.. cpp:class:: SPAKE2_Context
+.. cpp:class:: SPAKE2::Context
 
-   .. cpp:function:: SPAKE2_Context(SPAKE2_PeerId whoami, \
-                     const SPAKE2_Parameters& params, \
+   .. cpp:function:: SPAKE2::Context(SPAKE2::PeerId whoami, \
+                     const SPAKE2::Parameters& params, \
                      RandomNumberGenerator& rng)
 
       Prepare for a SPAKE2 exchange

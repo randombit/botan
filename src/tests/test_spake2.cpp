@@ -32,16 +32,16 @@ class SPAKE2_KAT_Tests final : public Text_Based_Test {
 
          const Botan::EC_Scalar w(group, vars.get_req_bin("W"));
 
-         Botan::SPAKE2_Parameters params(group, w, a_id, b_id, {}, hash_fn, false);
+         Botan::SPAKE2::Parameters params(group, w, a_id, b_id, {}, hash_fn, false);
 
          Fixed_Output_RNG x_rng(rng());
          x_rng.add_entropy(vars.get_req_bin("X"));
-         Botan::SPAKE2_Context a_ctx(Botan::SPAKE2_PeerId::PeerA, params, x_rng);
+         Botan::SPAKE2::Context a_ctx(Botan::SPAKE2::PeerId::PeerA, params, x_rng);
          const auto a_msg = a_ctx.generate_message();
 
          Fixed_Output_RNG y_rng(rng());
          y_rng.add_entropy(vars.get_req_bin("Y"));
-         Botan::SPAKE2_Context b_ctx(Botan::SPAKE2_PeerId::PeerB, params, y_rng);
+         Botan::SPAKE2::Context b_ctx(Botan::SPAKE2::PeerId::PeerB, params, y_rng);
          const auto b_msg = b_ctx.generate_message();
 
          const auto a_ss = a_ctx.process_message(b_msg);
@@ -79,19 +79,19 @@ class SPAKE2_RT_Tests final : public Text_Based_Test {
          }();
 
          // Avoid doing Argon2 twice for each test
-         const auto w = Botan::SPAKE2_Parameters::hash_shared_secret(group, secret, a_id, b_id, {});
+         const auto w = Botan::SPAKE2::Parameters::hash_shared_secret(group, secret, a_id, b_id, {});
 
          for(bool per_user_params : {true, false}) {
             if(per_user_params && !h2c_supported) {
                continue;
             }
 
-            Botan::SPAKE2_Parameters params(group, w, a_id, b_id, {}, hash_fn, per_user_params);
+            Botan::SPAKE2::Parameters params(group, w, a_id, b_id, {}, hash_fn, per_user_params);
 
-            Botan::SPAKE2_Context a_ctx(Botan::SPAKE2_PeerId::PeerA, params, rng());
+            Botan::SPAKE2::Context a_ctx(Botan::SPAKE2::PeerId::PeerA, params, rng());
             const auto a_msg = a_ctx.generate_message();
 
-            Botan::SPAKE2_Context b_ctx(Botan::SPAKE2_PeerId::PeerB, params, rng());
+            Botan::SPAKE2::Context b_ctx(Botan::SPAKE2::PeerId::PeerB, params, rng());
             const auto b_msg = b_ctx.generate_message();
 
             const auto a_ss = a_ctx.process_message(b_msg);

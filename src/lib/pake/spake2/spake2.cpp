@@ -12,7 +12,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/stl_util.h>
 
-namespace Botan {
+namespace Botan::SPAKE2 {
 
 namespace {
 
@@ -35,7 +35,7 @@ std::vector<uint8_t> format_spake2_ad(std::span<const uint8_t> a_identity,
 
 }  // namespace
 
-EC_Scalar SPAKE2_Parameters::hash_shared_secret(const EC_Group& group,
+EC_Scalar Parameters::hash_shared_secret(const EC_Group& group,
                                                 std::string_view shared_secret,
                                                 std::span<const uint8_t> a_identity,
                                                 std::span<const uint8_t> b_identity,
@@ -55,15 +55,15 @@ EC_Scalar SPAKE2_Parameters::hash_shared_secret(const EC_Group& group,
    return EC_Scalar::from_bytes_mod_order(group, w_bytes);
 }
 
-SPAKE2_Parameters::SPAKE2_Parameters(const EC_Group& group,
+Parameters::Parameters(const EC_Group& group,
                                      std::string_view shared_secret,
                                      std::span<const uint8_t> a_identity,
                                      std::span<const uint8_t> b_identity,
                                      std::span<const uint8_t> context,
                                      std::string_view hash,
                                      bool per_user_params) :
-      SPAKE2_Parameters(group,
-                        SPAKE2_Parameters::hash_shared_secret(group, shared_secret, a_identity, b_identity, context),
+      Parameters(group,
+                        Parameters::hash_shared_secret(group, shared_secret, a_identity, b_identity, context),
                         a_identity,
                         b_identity,
                         context,
@@ -119,7 +119,7 @@ std::pair<EC_AffinePoint, EC_AffinePoint> spake2_params(const EC_Group& group,
 
 }  // namespace
 
-SPAKE2_Parameters::SPAKE2_Parameters(const EC_Group& group,
+Parameters::Parameters(const EC_Group& group,
                                      const EC_Scalar& shared_secret,
                                      std::span<const uint8_t> a_identity,
                                      std::span<const uint8_t> b_identity,
@@ -133,7 +133,7 @@ SPAKE2_Parameters::SPAKE2_Parameters(const EC_Group& group,
       m_a_identity(a_identity.begin(), a_identity.end()),
       m_b_identity(b_identity.begin(), b_identity.end()) {}
 
-std::vector<uint8_t> SPAKE2_Context::generate_message() {
+std::vector<uint8_t> Context::generate_message() {
    BOTAN_STATE_CHECK(!m_our_message.has_value());
 
    const auto eph_key = EC_Scalar::random(m_params.group(), m_rng);
@@ -141,14 +141,17 @@ std::vector<uint8_t> SPAKE2_Context::generate_message() {
    const auto& N_or_M = m_params.spake2_our_pt(m_whoami);
    const auto& g = EC_AffinePoint::generator(m_params.group());
    // Compute g*x + w*{M,N}
-   auto msg = EC_AffinePoint::mul_px_qy(g, eph_key, N_or_M, m_params.spake2_w(), m_rng).serialize_uncompressed();
 
-   m_our_message = std::make_pair(msg, eph_key);
-
-   return msg;
+   if(auto pt = EC_AffinePoint::mul_px_qy(g, eph_key, N_or_M, m_params.spake2_w(), m_rng)) {
+      auto msg = pt->serialize_uncompressed();
+      m_our_message = std::make_pair(msg, eph_key);
+      return msg;
+   } else {
+      throw Internal_Error("Computed the identity element during SPAKE2 key exchange");
+   }
 }
 
-secure_vector<uint8_t> SPAKE2_Context::process_message(std::span<const uint8_t> peer_message) {
+secure_vector<uint8_t> Context::process_message(std::span<const uint8_t> peer_message) {
    BOTAN_STATE_CHECK(m_our_message.has_value());
 
    // Reject anything except uncompressed points
@@ -165,6 +168,10 @@ secure_vector<uint8_t> SPAKE2_Context::process_message(std::span<const uint8_t> 
    const auto neg_xw = eph_key.negate() * m_params.spake2_w();
    const auto K = EC_AffinePoint::mul_px_qy(peer_pt, eph_key, N_or_M, neg_xw, m_rng);
 
+   if(!K) {
+      throw Internal_Error("Computed identity element during SPAKE2 key exchange");
+   }
+
    auto hash_fn = HashFunction::create_or_throw(m_params.hash_function());
 
    auto append_to_hash_with_le64 = [&](std::span<const uint8_t> data) {
@@ -176,7 +183,7 @@ secure_vector<uint8_t> SPAKE2_Context::process_message(std::span<const uint8_t> 
    append_to_hash_with_le64(m_params.b_identity());
 
    // Always pA followed by pB:
-   if(m_whoami == SPAKE2_PeerId::PeerA) {
+   if(m_whoami == PeerId::PeerA) {
       append_to_hash_with_le64(our_pt);
       append_to_hash_with_le64(peer_message);
    } else {
@@ -184,7 +191,7 @@ secure_vector<uint8_t> SPAKE2_Context::process_message(std::span<const uint8_t> 
       append_to_hash_with_le64(our_pt);
    }
 
-   append_to_hash_with_le64(K.serialize_uncompressed());
+   append_to_hash_with_le64(K->serialize_uncompressed());
    append_to_hash_with_le64(m_params.spake2_w().serialize());
 
    m_our_message.reset();

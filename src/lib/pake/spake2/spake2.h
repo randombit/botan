@@ -18,10 +18,14 @@ namespace Botan {
 
 class RandomNumberGenerator;
 
+}
+
+namespace Botan::SPAKE2 {
+
 /**
 * Identifies which peer we are in the protocol
 */
-enum class SPAKE2_PeerId {
+enum class PeerId {
    PeerA,
    PeerB,
 };
@@ -37,7 +41,7 @@ enum class SPAKE2_PeerId {
 * equivalent to Hash(TT) in RFC 9382 so it is possible to implement
 * RFC 9382 conformant key confirmation if necessary.
 */
-class BOTAN_PUBLIC_API(3, 7) SPAKE2_Parameters final {
+class BOTAN_PUBLIC_API(3, 7) Parameters final {
    public:
       /**
       * RFC 9382 compatible SPAKE2 configuration
@@ -64,7 +68,7 @@ class BOTAN_PUBLIC_API(3, 7) SPAKE2_Parameters final {
       * @param hash the hash function to use (SHA-512 highly recommended)
       * @param per_user_params if true then per-user N/M are used
       */
-      SPAKE2_Parameters(const EC_Group& group,
+      Parameters(const EC_Group& group,
                         std::string_view shared_secret,
                         std::span<const uint8_t> a_identity = {},
                         std::span<const uint8_t> b_identity = {},
@@ -98,7 +102,7 @@ class BOTAN_PUBLIC_API(3, 7) SPAKE2_Parameters final {
       * @param hash the hash function to use (SHA-512 highly recommended)
       * @param per_user_params if true then per-user N/M are used
       */
-      SPAKE2_Parameters(const EC_Group& group,
+      Parameters(const EC_Group& group,
                         const EC_Scalar& shared_secret,
                         std::span<const uint8_t> a_identity = {},
                         std::span<const uint8_t> b_identity = {},
@@ -128,16 +132,16 @@ class BOTAN_PUBLIC_API(3, 7) SPAKE2_Parameters final {
 
       const EC_AffinePoint& spake2_n() const { return m_params.second; }
 
-      const EC_AffinePoint& spake2_our_pt(SPAKE2_PeerId whoami) const {
-         if(whoami == SPAKE2_PeerId::PeerA) {
+      const EC_AffinePoint& spake2_our_pt(PeerId whoami) const {
+         if(whoami == PeerId::PeerA) {
             return m_params.first;  // M
          } else {
             return m_params.second;  // N
          }
       }
 
-      const EC_AffinePoint& spake2_their_pt(SPAKE2_PeerId whoami) const {
-         if(whoami == SPAKE2_PeerId::PeerA) {
+      const EC_AffinePoint& spake2_their_pt(PeerId whoami) const {
+         if(whoami == PeerId::PeerA) {
             return m_params.second;  // N
          } else {
             return m_params.first;  // M
@@ -172,9 +176,9 @@ class BOTAN_PUBLIC_API(3, 7) SPAKE2_Parameters final {
 * equivalent to Hash(TT) in RFC 9382 so it is possible to implement
 * RFC 9382 conformant key confirmation if necessary.
 */
-class BOTAN_PUBLIC_API(3, 7) SPAKE2_Context final {
+class BOTAN_PUBLIC_API(3, 7) Context final {
    public:
-      SPAKE2_Context(SPAKE2_PeerId whoami, const SPAKE2_Parameters& params, RandomNumberGenerator& rng) :
+      Context(PeerId whoami, const Parameters& params, RandomNumberGenerator& rng) :
             m_rng(rng), m_whoami(whoami), m_params(params) {}
 
       /**
@@ -191,11 +195,11 @@ class BOTAN_PUBLIC_API(3, 7) SPAKE2_Context final {
 
    private:
       RandomNumberGenerator& m_rng;
-      SPAKE2_PeerId m_whoami;
-      SPAKE2_Parameters m_params;
+      PeerId m_whoami;
+      Parameters m_params;
       std::optional<std::pair<std::vector<uint8_t>, EC_Scalar>> m_our_message;
 };
 
-}  // namespace Botan
+}  // namespace Botan::SPAKE2
 
 #endif
