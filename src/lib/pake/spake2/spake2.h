@@ -41,24 +41,23 @@ enum class PeerId {
 * equivalent to Hash(TT) in RFC 9382 so it is possible to implement
 * RFC 9382 conformant key confirmation if necessary.
 */
-class BOTAN_PUBLIC_API(3, 7) Parameters final {
+class BOTAN_PUBLIC_API(3, 8) Parameters final {
    public:
       /**
       * RFC 9382 compatible SPAKE2 configuration
       *
-      * The shared secret is hashed with Argon2id M=131072,t=3,p=1 and with the
-      * context string as the AD
+      * The shared secret is hashed with Argon2id M=131072,t=3,p=1 and with the context
+      * string as the AD
       *
-      * If the group is not P-256, P-384, or P-521, then the group must support
-      * RFC 9380 hash to curve. Curves with a cofactor are not supported.
+      * If the group is not P-256, P-384, or P-521, then the group must support RFC 9380
+      * hash to curve. Curves with a cofactor are not supported.
       *
-      * If per_user_params is true, this uses the "quantum annoying" variant
-      * where N/M are the output of hash to curve; this requires an attacker
-      * with a quantum computer to perform a discrete logarithm calculator per
-      * PAKE, rather than just once for the default (fixed) SPAKE2 parameters.
-      * This variant is described in RFC 9382 section 5, however note that a
-      * different input is used to hash_to_curve which includes not just the
-      * user identifiers but also the context string.
+      * If per_user_params is true, this uses the "quantum annoying" variant where N/M are
+      * the output of hash to curve; this requires an attacker with a quantum computer to
+      * perform a discrete logarithm calculation per PAKE, rather than just once for the
+      * default (fixed) SPAKE2 parameters. This variant is described in RFC 9382 section 5,
+      * however note that a different input is used to hash_to_curve which includes not
+      * just the user identifiers but also the context string.
       *
       * @param group the elliptic curve group to operate in
       * @param shared_secret the shared secret (eg a password)
@@ -79,20 +78,22 @@ class BOTAN_PUBLIC_API(3, 7) Parameters final {
       /**
       * RFC 9382 compatible SPAKE2 configuration
       *
-      * If the group is not P-256, P-384, or P-521, then the group must support
-      * RFC 9380 hash to curve. Curves with a cofactor are not supported.
+      * If the group is not P-256, P-384, or P-521, then the group must support RFC 9380
+      * hash to curve. Curves with a cofactor are not supported.
       *
-      * If per_user_params is true, this uses the "quantum annoying" variant
-      * where N/M are the output of hash to curve; this requires an attacker
-      * with a quantum computer to perform a discrete logarithm calculator per
-      * PAKE, rather than just once for the default (fixed) SPAKE2 parameters.
+      * If per_user_params is true, this uses the "quantum annoying" variant where N/M are
+      * the output of hash to curve; this requires an attacker with a quantum computer to
+      * perform a discrete logarithm calculation per PAKE, rather than just once for the
+      * default (fixed) SPAKE2 parameters.
       *
-      * Here the shared secret a random scalar. It should have been generated
-      * using a memory hard function such as Argon2id.
+      * Here the shared secret a random scalar. It should have been generated using a
+      * memory hard function such as Argon2id.
       *
-      * # ⚠️  Warning
-      *
-      * This interface exists primarily for testing, and is not safe for general use.
+      * @warning This interface is potentially unsafe, depending upon how shared_secret is
+      * derived from the password. The scalar value must be uniform random, and preferably
+      * computed in a way such that testing values is expensive for an attacker. It exists
+      * to support testing, as well as applications which require using a different
+      * password hashing scheme than the default one implemented by `hash_shared_secret`
       *
       * @param group the elliptic curve group to operate in
       * @param shared_secret an integer that is the hash of a shared secret
@@ -160,7 +161,7 @@ class BOTAN_PUBLIC_API(3, 7) Parameters final {
 * equivalent to Hash(TT) in RFC 9382 so it is possible to implement
 * RFC 9382 conformant key confirmation if necessary.
 */
-class BOTAN_PUBLIC_API(3, 7) Context final {
+class BOTAN_PUBLIC_API(3, 8) Context final {
    public:
       Context(PeerId whoami, const Parameters& params, RandomNumberGenerator& rng) :
             m_rng(rng), m_whoami(whoami), m_params(params) {}

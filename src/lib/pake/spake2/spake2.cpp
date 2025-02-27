@@ -91,11 +91,12 @@ std::pair<EC_AffinePoint, EC_AffinePoint> spake2_params(const EC_Group& group,
    if(per_user_params) {
       auto input = format_spake2_ad(a_identity, b_identity, context);
 
-      constexpr uint8_t spake2_m[] = {'S', 'P', 'A', 'K', 'E', '2', ' ', 'M'};
-      constexpr uint8_t spake2_n[] = {'S', 'P', 'A', 'K', 'E', '2', ' ', 'N'};
+      auto as_span = [](std::string_view domsep) {
+         return std::span(cast_char_ptr_to_uint8(domsep.data()), domsep.size());
+      };
 
-      auto m = EC_AffinePoint::hash_to_curve_ro(group, hash, input, spake2_m);
-      auto n = EC_AffinePoint::hash_to_curve_ro(group, hash, input, spake2_n);
+      auto m = EC_AffinePoint::hash_to_curve_ro(group, hash, input, as_span("SPAKE2 M"));
+      auto n = EC_AffinePoint::hash_to_curve_ro(group, hash, input, as_span("SPAKE2 N"));
 
       return std::make_pair(m, n);
    } else {
@@ -168,7 +169,7 @@ secure_vector<uint8_t> Context::process_message(std::span<const uint8_t> peer_me
    }
 
    // Will throw if not on the curve
-   EC_AffinePoint peer_pt(m_params.group(), peer_message);
+   const EC_AffinePoint peer_pt(m_params.group(), peer_message);
 
    const auto& [our_pt, eph_key] = m_our_message.value();
    const auto& N_or_M = spake2_their_pt(m_params, m_whoami);
@@ -181,6 +182,8 @@ secure_vector<uint8_t> Context::process_message(std::span<const uint8_t> peer_me
    }
 
    auto hash_fn = HashFunction::create_or_throw(m_params.hash_function());
+
+   // Now we compute Hash(TT) as described in RFC 9382 section 3.3 and section 4
 
    auto append_to_hash_with_le64 = [&](std::span<const uint8_t> data) {
       hash_fn->update(store_le(static_cast<uint64_t>(data.size())));
