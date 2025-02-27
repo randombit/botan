@@ -132,22 +132,6 @@ class BOTAN_PUBLIC_API(3, 7) Parameters final {
 
       const EC_AffinePoint& spake2_n() const { return m_params.second; }
 
-      const EC_AffinePoint& spake2_our_pt(PeerId whoami) const {
-         if(whoami == PeerId::PeerA) {
-            return m_params.first;  // M
-         } else {
-            return m_params.second;  // N
-         }
-      }
-
-      const EC_AffinePoint& spake2_their_pt(PeerId whoami) const {
-         if(whoami == PeerId::PeerA) {
-            return m_params.second;  // N
-         } else {
-            return m_params.first;  // M
-         }
-      }
-
       const EC_Scalar& spake2_w() const { return m_w; }
 
       const std::string& hash_function() const { return m_hash_fn; }

@@ -16,6 +16,14 @@ namespace Botan::SPAKE2 {
 
 namespace {
 
+const EC_AffinePoint& spake2_our_pt(const Parameters& params, PeerId whoami) {
+   return (whoami == PeerId::PeerA) ? params.spake2_m() : params.spake2_n();
+}
+
+const EC_AffinePoint& spake2_their_pt(const Parameters& params, PeerId whoami) {
+   return (whoami == PeerId::PeerA) ? params.spake2_n() : params.spake2_m();
+}
+
 std::vector<uint8_t> format_spake2_ad(std::span<const uint8_t> a_identity,
                                       std::span<const uint8_t> b_identity,
                                       std::span<const uint8_t> context) {
@@ -138,7 +146,7 @@ std::vector<uint8_t> Context::generate_message() {
 
    const auto eph_key = EC_Scalar::random(m_params.group(), m_rng);
 
-   const auto& N_or_M = m_params.spake2_our_pt(m_whoami);
+   const auto& N_or_M = spake2_our_pt(m_params, m_whoami);
    const auto& g = EC_AffinePoint::generator(m_params.group());
    // Compute g*x + w*{M,N}
 
@@ -163,7 +171,7 @@ secure_vector<uint8_t> Context::process_message(std::span<const uint8_t> peer_me
    EC_AffinePoint peer_pt(m_params.group(), peer_message);
 
    const auto& [our_pt, eph_key] = m_our_message.value();
-   const auto& N_or_M = m_params.spake2_their_pt(m_whoami);
+   const auto& N_or_M = spake2_their_pt(m_params, m_whoami);
    // Compute x*(pt-w*N_or_M)
    const auto neg_xw = eph_key.negate() * m_params.spake2_w();
    const auto K = EC_AffinePoint::mul_px_qy(peer_pt, eph_key, N_or_M, neg_xw, m_rng);
