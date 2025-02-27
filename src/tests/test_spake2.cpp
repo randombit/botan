@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_PAKE_SPAKE2)
    #include "test_rng.h"
+   #include <botan/hash.h>
    #include <botan/spake2.h>
 #endif
 
@@ -56,51 +57,95 @@ class SPAKE2_KAT_Tests final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("pake", "spake2_kat", SPAKE2_KAT_Tests);
 
-class SPAKE2_RT_Tests final : public Text_Based_Test {
+class SPAKE2_RT_Tests final : public Test {
    public:
-      SPAKE2_RT_Tests() : Text_Based_Test("pake/spake2_rt.vec", "Group,Secret,Hash,AId,BId") {}
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
 
-      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
-         Test::Result result("SPAKE2 round trip");
+         const std::vector<std::string> groups = {"secp256r1", "secp384r1", "secp521r1"};
+         const std::vector<std::string> hash_fns = {"SHA-256", "SHA-384", "SHA-512"};
 
-         const auto group = Botan::EC_Group::from_name(vars.get_req_str("Group"));
-         const std::string hash_fn = vars.get_req_str("Hash");
-         const std::vector<uint8_t> a_id = vars.get_req_bin("AId");
-         const std::vector<uint8_t> b_id = vars.get_req_bin("BId");
-         const std::string secret = vars.get_req_str("Secret");
+         const std::vector<uint8_t> a_id = { 0xF0, 0x0F, 0xEE };
+         const std::vector<uint8_t> b_id = { 0xAB, 0xE0 };
+         const std::string secret = "squirrel";
+         const auto context = rng().random_vec(32);
 
-         const bool h2c_supported = [&]() {
-            try {
-               Botan::EC_AffinePoint::hash_to_curve_nu(group, hash_fn, {}, {});
-               return true;
-            } catch(Botan::Not_Implemented&) {
-               return false;
-            }
-         }();
+         for(const auto& group_name : groups) {
+            Test::Result result("SPAKE2 round trip " + group_name);
+            result.start_timer();
 
-         // Avoid doing Argon2 twice for each test
-         const auto w = Botan::SPAKE2::Parameters::hash_shared_secret(group, secret, a_id, b_id, {});
-
-         for(bool per_user_params : {true, false}) {
-            if(per_user_params && !h2c_supported) {
+            if(!Botan::EC_Group::supports_named_group(group_name)) {
                continue;
             }
 
-            Botan::SPAKE2::Parameters params(group, w, a_id, b_id, {}, hash_fn, per_user_params);
+            const auto group = Botan::EC_Group::from_name(group_name);
 
-            Botan::SPAKE2::Context a_ctx(Botan::SPAKE2::PeerId::PeerA, params, rng());
-            const auto a_msg = a_ctx.generate_message();
+            for(const auto& hash_fn : hash_fns) {
+               const bool h2c_supported = [&]() {
+                  try {
+                     Botan::EC_AffinePoint::hash_to_curve_nu(group, hash_fn, {}, {});
+                     return true;
+                  } catch(Botan::Not_Implemented&) {
+                     return false;
+                  }
+               }();
 
-            Botan::SPAKE2::Context b_ctx(Botan::SPAKE2::PeerId::PeerB, params, rng());
-            const auto b_msg = b_ctx.generate_message();
+               const auto w = test_hash_shared_secret(group, secret, a_id, b_id, context);
 
-            const auto a_ss = a_ctx.process_message(b_msg);
-            const auto b_ss = b_ctx.process_message(a_msg);
+               for(bool per_user_params : {true, false}) {
+                  if(per_user_params && !h2c_supported) {
+                     continue;
+                  }
 
-            result.test_eq("Peers produced the same shared secret", a_ss, b_ss);
+                  Botan::SPAKE2::Parameters params(group, w, a_id, b_id, context, hash_fn, per_user_params);
+
+                  Botan::SPAKE2::Context a_ctx(Botan::SPAKE2::PeerId::PeerA, params, rng());
+                  const auto a_msg = a_ctx.generate_message();
+
+                  Botan::SPAKE2::Context b_ctx(Botan::SPAKE2::PeerId::PeerB, params, rng());
+                  const auto b_msg = b_ctx.generate_message();
+
+                  const auto a_ss = a_ctx.process_message(b_msg);
+                  const auto b_ss = b_ctx.process_message(a_msg);
+
+                  result.test_eq("Peers produced the same shared secret", a_ss, b_ss);
+               }
+            }
+            result.end_timer();
+            results.push_back(result);
          }
 
-         return result;
+         return results;
+      }
+
+   private:
+      static Botan::EC_Scalar test_hash_shared_secret(const Botan::EC_Group& group,
+                                                      std::string_view secret,
+                                                      std::span<const uint8_t> a_id,
+                                                      std::span<const uint8_t> b_id,
+                                                      std::span<const uint8_t> context) {
+         auto hash = Botan::HashFunction::create_or_throw("SHA-512");
+
+         /***
+         * WARNING do not copy this into production code
+         *
+         * For P-521 this will leave the top 9 bits of the output unset, and
+         * will consequently break the whole protocol.
+         *
+         * This is just a standin for SPAKE2::Parameters::hash_shared_secret that is
+         * fast, to avoid repeated Argon2 calculations in the test
+         ***/
+
+         auto a_h = hash->process(a_id);
+         auto b_h = hash->process(b_id);
+         auto c_h = hash->process(context);
+
+         hash->update(a_h);
+         hash->update(b_h);
+         hash->update(c_h);
+         hash->update(secret);
+
+         return Botan::EC_Scalar::from_bytes_mod_order(group, hash->final());
       }
 };
 
