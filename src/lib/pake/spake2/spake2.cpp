@@ -44,10 +44,10 @@ std::vector<uint8_t> format_spake2_ad(std::span<const uint8_t> a_identity,
 }  // namespace
 
 EC_Scalar Parameters::hash_shared_secret(const EC_Group& group,
-                                                std::string_view shared_secret,
-                                                std::span<const uint8_t> a_identity,
-                                                std::span<const uint8_t> b_identity,
-                                                std::span<const uint8_t> context) {
+                                         std::string_view shared_secret,
+                                         std::span<const uint8_t> a_identity,
+                                         std::span<const uint8_t> b_identity,
+                                         std::span<const uint8_t> context) {
    constexpr size_t M = 128 * 1024;
    constexpr size_t t = 3;
    constexpr size_t p = 1;
@@ -64,19 +64,19 @@ EC_Scalar Parameters::hash_shared_secret(const EC_Group& group,
 }
 
 Parameters::Parameters(const EC_Group& group,
-                                     std::string_view shared_secret,
-                                     std::span<const uint8_t> a_identity,
-                                     std::span<const uint8_t> b_identity,
-                                     std::span<const uint8_t> context,
-                                     std::string_view hash,
-                                     bool per_user_params) :
+                       std::string_view shared_secret,
+                       std::span<const uint8_t> a_identity,
+                       std::span<const uint8_t> b_identity,
+                       std::span<const uint8_t> context,
+                       std::string_view hash,
+                       bool per_user_params) :
       Parameters(group,
-                        Parameters::hash_shared_secret(group, shared_secret, a_identity, b_identity, context),
-                        a_identity,
-                        b_identity,
-                        context,
-                        hash,
-                        per_user_params) {}
+                 Parameters::hash_shared_secret(group, shared_secret, a_identity, b_identity, context),
+                 a_identity,
+                 b_identity,
+                 context,
+                 hash,
+                 per_user_params) {}
 
 namespace {
 
@@ -128,12 +128,12 @@ std::pair<EC_AffinePoint, EC_AffinePoint> spake2_params(const EC_Group& group,
 }  // namespace
 
 Parameters::Parameters(const EC_Group& group,
-                                     const EC_Scalar& shared_secret,
-                                     std::span<const uint8_t> a_identity,
-                                     std::span<const uint8_t> b_identity,
-                                     std::span<const uint8_t> context,
-                                     std::string_view hash,
-                                     bool per_user_params) :
+                       const EC_Scalar& shared_secret,
+                       std::span<const uint8_t> a_identity,
+                       std::span<const uint8_t> b_identity,
+                       std::span<const uint8_t> context,
+                       std::string_view hash,
+                       bool per_user_params) :
       m_group(group),
       m_params(spake2_params(m_group, hash, a_identity, b_identity, context, per_user_params)),
       m_w(shared_secret),
@@ -207,4 +207,4 @@ secure_vector<uint8_t> Context::process_message(std::span<const uint8_t> peer_me
    return hash_fn->final();
 }
 
-}  // namespace Botan
+}  // namespace Botan::SPAKE2

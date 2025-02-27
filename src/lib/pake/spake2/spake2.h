@@ -69,12 +69,12 @@ class BOTAN_PUBLIC_API(3, 7) Parameters final {
       * @param per_user_params if true then per-user N/M are used
       */
       Parameters(const EC_Group& group,
-                        std::string_view shared_secret,
-                        std::span<const uint8_t> a_identity = {},
-                        std::span<const uint8_t> b_identity = {},
-                        std::span<const uint8_t> context = {},
-                        std::string_view hash = "SHA-512",
-                        bool per_user_params = true);
+                 std::string_view shared_secret,
+                 std::span<const uint8_t> a_identity = {},
+                 std::span<const uint8_t> b_identity = {},
+                 std::span<const uint8_t> context = {},
+                 std::string_view hash = "SHA-512",
+                 bool per_user_params = true);
 
       /**
       * RFC 9382 compatible SPAKE2 configuration
@@ -103,12 +103,12 @@ class BOTAN_PUBLIC_API(3, 7) Parameters final {
       * @param per_user_params if true then per-user N/M are used
       */
       Parameters(const EC_Group& group,
-                        const EC_Scalar& shared_secret,
-                        std::span<const uint8_t> a_identity = {},
-                        std::span<const uint8_t> b_identity = {},
-                        std::span<const uint8_t> context = {},
-                        std::string_view hash = "SHA-512",
-                        bool per_user_params = true);
+                 const EC_Scalar& shared_secret,
+                 std::span<const uint8_t> a_identity = {},
+                 std::span<const uint8_t> b_identity = {},
+                 std::span<const uint8_t> context = {},
+                 std::string_view hash = "SHA-512",
+                 bool per_user_params = true);
 
       /**
       * Return the default mapping from a shared secret (plus identifiers) to
