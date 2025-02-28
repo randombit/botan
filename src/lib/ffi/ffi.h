@@ -32,28 +32,27 @@ API follows a few simple rules:
 - Use simple types: size_t for lengths, const char* NULL terminated strings,
   uint8_t for binary.
 
-- No ownership of memory transfers across the API boundary. The API will
-  consume data from const pointers, and will produce output by writing to
-  buffers provided by (and allocated by) the caller.
+- No ownership of memory transfers across the API boundary. The API will consume
+  data from const pointers with specifed lengths. Outputs are either placed into
+  buffers provided by (and allocated by) the caller, or are returned via a
+  callback (what the FFI layer calls "view" functions).
 
-- If exporting a value (a string or a blob) the function takes a pointer to the
-  output array and a read/write pointer to the length. If the length is insufficient, an
-  error is returned. So passing nullptr/0 allows querying the final value.
+  When writing to an application-provided buffer, the function takes a pointer
+  to the output array and a read/write pointer to the length. The length field
+  is always set to the actual amount of data that would have been written. If
+  the input buffer's size was insufficient an error is returned.
 
-  Typically there is also a function which allows querying the expected output
-  length of a function, for example `botan_hash_output_length` allows knowing in
-  advance the expected size for `botan_hash_final`. Some of these are exact,
-  while others such as `botan_pk_op_decrypt_output_length` only provide an upper
-  bound.
+  In many situations the length of the output can be known in advance without
+  difficulty, in which case there will be a function which allows querying the
+  expected output length. For example `botan_hash_output_length` allows knowing
+  in advance the expected size for `botan_hash_final`. Some of these are exact,
+  while others such as `botan_pk_op_decrypt_output_length` can only provide an
+  upper bound for various technical reasons.
 
-  The big exception to this currently is the various functions which serialize
-  public and private keys, where there are currently no function that can
-  estimate the serialized size. Here view functions are used; see the handbook
-  for further details.
+  In some cases knowing the exact size is difficult or impossible. In these
+  situations view functions are used; see the handbook for further details.
 
- TODO:
- - Doxygen comments for all functions/params
- - TLS
+  TODO: Doxygen comments for all parameters
 */
 
 #include <stddef.h>
@@ -90,7 +89,7 @@ API follows a few simple rules:
    #endif
 #endif
 
-#if !defined(BOTAN_NO_DEPRECATED_WARNINGS)
+#if !defined(BOTAN_NO_DEPRECATED_WARNINGS) && !defined(BOTAN_IS_BEING_BUILT)
    #if defined(__has_attribute)
       #if __has_attribute(deprecated)
          #define BOTAN_FFI_DEPRECATED(msg) __attribute__((deprecated(msg)))
@@ -112,6 +111,7 @@ API follows a few simple rules:
 */
 enum BOTAN_FFI_ERROR {
    BOTAN_FFI_SUCCESS = 0,
+
    BOTAN_FFI_INVALID_VERIFIER = 1,
 
    BOTAN_FFI_ERROR_INVALID_INPUT = -1,
@@ -144,6 +144,9 @@ enum BOTAN_FFI_ERROR {
    BOTAN_FFI_ERROR_UNKNOWN_ERROR = -100,
 };
 
+/**
+* The application provided context for a view function
+*/
 typedef void* botan_view_ctx;
 
 /**
@@ -213,8 +216,9 @@ BOTAN_FFI_EXPORT(2, 0) uint32_t botan_version_minor(void);
 BOTAN_FFI_EXPORT(2, 0) uint32_t botan_version_patch(void);
 
 /**
-* Return the date this version was released as
-* an integer, or 0 if an unreleased version
+* Return the date this version was released as an integer.
+*
+* Returns 0 if the library was not built from an official release
 */
 BOTAN_FFI_EXPORT(2, 0) uint32_t botan_version_datestamp(void);
 
@@ -235,6 +239,9 @@ BOTAN_FFI_EXPORT(2, 0) int botan_same_mem(const uint8_t* x, const uint8_t* y, si
 */
 BOTAN_FFI_EXPORT(2, 2) int botan_scrub_mem(void* mem, size_t bytes);
 
+/**
+* Flag that can be provided to botan_hex_encode to request lower case hex
+*/
 #define BOTAN_FFI_HEX_LOWER_CASE 1
 
 /**
@@ -259,6 +266,13 @@ BOTAN_FFI_EXPORT(2, 3) int botan_hex_decode(const char* hex_str, size_t in_len, 
 
 /**
 * Perform base64 encoding
+*
+* @param x the input data
+* @param len the length of x
+* @param out the output buffer
+* @param out_len the size of the output buffer on input, set to the number of bytes written
+* @return 0 on success, a negative value on failure
+
 */
 BOTAN_FFI_EXPORT(2, 3) int botan_base64_encode(const uint8_t* x, size_t len, char* out, size_t* out_len);
 
@@ -305,6 +319,7 @@ int botan_rng_init_custom(botan_rng_t* rng_out,
 
 /**
 * Get random bytes from a random number generator
+*
 * @param rng rng object
 * @param out output buffer of size out_len
 * @param out_len number of requested bytes
@@ -314,6 +329,7 @@ BOTAN_FFI_EXPORT(2, 0) int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t o
 
 /**
 * Get random bytes from system random number generator
+*
 * @param out output buffer of size out_len
 * @param out_len number of requested bytes
 * @return 0 on success, negative on failure
@@ -358,7 +374,7 @@ BOTAN_FFI_EXPORT(2, 8) int botan_rng_add_entropy(botan_rng_t rng, const uint8_t*
 BOTAN_FFI_EXPORT(2, 0) int botan_rng_destroy(botan_rng_t rng);
 
 /*
-* Hash type
+* Opaque type of a hash function
 */
 typedef struct botan_hash_struct* botan_hash_t;
 
@@ -438,7 +454,7 @@ BOTAN_FFI_EXPORT(2, 0) int botan_hash_destroy(botan_hash_t hash);
 BOTAN_FFI_EXPORT(2, 8) int botan_hash_name(botan_hash_t hash, char* name, size_t* name_len);
 
 /*
-* Message Authentication type
+* Opaque type of a message authentication code
 */
 typedef struct botan_mac_struct* botan_mac_t;
 
@@ -534,7 +550,7 @@ int botan_mac_get_keyspec(botan_mac_t mac,
 BOTAN_FFI_EXPORT(2, 0) int botan_mac_destroy(botan_mac_t mac);
 
 /*
-* Cipher modes
+* Opaque type of a cipher mode
 */
 typedef struct botan_cipher_struct* botan_cipher_t;
 
@@ -1191,6 +1207,7 @@ BOTAN_FFI_EXPORT(2, 0) int botan_privkey_destroy(botan_privkey_t key);
 * Returns 0 on success and sets
 * If some other error occurs a negative integer is returned.
 */
+BOTAN_FFI_DEPRECATED("Use botan_privkey_view_{der,pem,raw}")
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_export(botan_privkey_t key, uint8_t out[], size_t* out_len, uint32_t flags);
 
 /**
@@ -1229,6 +1246,7 @@ int botan_privkey_export_encrypted(botan_privkey_t key,
 *
 * Note: starting in 3.0, the output iterations count is not provided
 */
+BOTAN_FFI_DEPRECATED("Use botan_privkey_view_encrypted_{der,pem}_timed")
 BOTAN_FFI_EXPORT(2, 0)
 int botan_privkey_export_encrypted_pbkdf_msec(botan_privkey_t key,
                                               uint8_t out[],
@@ -1244,6 +1262,7 @@ int botan_privkey_export_encrypted_pbkdf_msec(botan_privkey_t key,
 /**
 * Export a private key using the specified number of iterations.
 */
+BOTAN_FFI_DEPRECATED("Use botan_privkey_view_encrypted_{der,pem}")
 BOTAN_FFI_EXPORT(2, 0)
 int botan_privkey_export_encrypted_pbkdf_iter(botan_privkey_t key,
                                               uint8_t out[],
@@ -1323,6 +1342,7 @@ BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_load(botan_pubkey_t* key, const uint8_t 
 
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_export_pubkey(botan_pubkey_t* out, botan_privkey_t in);
 
+BOTAN_FFI_DEPRECATED("Use botan_pubkey_view_{der,pem,raw}")
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint32_t flags);
 
 /**
