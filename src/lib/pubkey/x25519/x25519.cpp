@@ -66,13 +66,13 @@ std::unique_ptr<Private_Key> X25519_PublicKey::generate_another(RandomNumberGene
    return std::make_unique<X25519_PrivateKey>(rng);
 }
 
-X25519_PrivateKey::X25519_PrivateKey(const secure_vector<uint8_t>& secret_key) {
+X25519_PrivateKey::X25519_PrivateKey(std::span<const uint8_t> secret_key) {
    if(secret_key.size() != 32) {
       throw Decoding_Error("Invalid size for X25519 private key");
    }
 
    m_public.resize(32);
-   m_private = secret_key;
+   m_private.assign(secret_key.begin(), secret_key.end());
    curve25519_basepoint(m_public.data(), m_private.data());
 }
 

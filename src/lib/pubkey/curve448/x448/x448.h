@@ -41,7 +41,9 @@ class BOTAN_PUBLIC_API(3, 4) X448_PublicKey : public virtual Public_Key {
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
-      std::vector<uint8_t> public_value() const { return {m_public.begin(), m_public.end()}; }
+      BOTAN_DEPRECATED("Use raw_public_key_bits") std::vector<uint8_t> public_value() const {
+         return raw_public_key_bits();
+      }
 
       std::vector<uint8_t> raw_public_key_bits() const override;
 
@@ -85,7 +87,7 @@ class BOTAN_PUBLIC_API(3, 4) X448_PrivateKey final : public X448_PublicKey,
       */
       explicit X448_PrivateKey(std::span<const uint8_t> secret_key);
 
-      std::vector<uint8_t> public_value() const override { return X448_PublicKey::public_key_bits(); }
+      std::vector<uint8_t> public_value() const override { return raw_public_key_bits(); }
 
       secure_vector<uint8_t> raw_private_key_bits() const override { return {m_private.begin(), m_private.end()}; }
 
