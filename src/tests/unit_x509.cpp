@@ -922,6 +922,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    result.test_eq("User1 serial matches expected", user1_cert.serial_number().at(0), size_t(99));
 
    Botan::X509_Certificate user2_cert = ca.sign_request(user2_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+   result.test_eq("extended key usage is set", user2_cert.has_ex_constraint("PKIX.EmailProtection"), true);
 
    Botan::X509_Certificate user3_cert = ca.sign_request(user3_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
