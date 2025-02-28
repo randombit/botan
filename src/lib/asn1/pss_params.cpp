@@ -47,8 +47,6 @@ std::vector<uint8_t> PSS_Params::serialize() const {
 }
 
 void PSS_Params::encode_into(DER_Encoder& to) const {
-   const size_t trailer_field = 1;
-
    to.start_sequence()
       .start_context_specific(0)
       .encode(m_hash)
@@ -58,9 +56,6 @@ void PSS_Params::encode_into(DER_Encoder& to) const {
       .end_cons()
       .start_context_specific(2)
       .encode(m_salt_len)
-      .end_cons()
-      .start_context_specific(3)
-      .encode(trailer_field)
       .end_cons()
       .end_cons();
 }
