@@ -93,32 +93,6 @@ void CPUID::initialize() {
 
 namespace {
 
-// Returns true if big-endian
-bool runtime_check_if_big_endian() {
-   // Check runtime endian
-   const uint32_t endian32 = 0x01234567;
-   const uint8_t* e8 = reinterpret_cast<const uint8_t*>(&endian32);
-
-   bool is_big_endian = false;
-
-   if(e8[0] == 0x01 && e8[1] == 0x23 && e8[2] == 0x45 && e8[3] == 0x67) {
-      is_big_endian = true;
-   } else if(e8[0] == 0x67 && e8[1] == 0x45 && e8[2] == 0x23 && e8[3] == 0x01) {
-      is_big_endian = false;
-   } else {
-      throw Internal_Error("Unexpected endian at runtime, neither big nor little");
-   }
-
-   // If we were compiled with a known endian, verify it matches at runtime
-#if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   BOTAN_ASSERT(!is_big_endian, "Build and runtime endian match");
-#elif defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   BOTAN_ASSERT(is_big_endian, "Build and runtime endian match");
-#endif
-
-   return is_big_endian;
-}
-
 #if defined(BOTAN_CPUID_HAS_DETECTION)
 uint32_t cleared_cpuid_bits() {
    uint32_t cleared = 0;
@@ -148,10 +122,6 @@ CPUID::CPUID_Data::CPUID_Data() {
 #endif
 
    m_processor_features |= CPUID::CPUID_INITIALIZED_BIT;
-
-   if(runtime_check_if_big_endian()) {
-      m_processor_features |= CPUID::CPUID_IS_BIG_ENDIAN_BIT;
-   }
 }
 
 std::vector<CPUID::CPUID_bits> CPUID::bit_from_string(std::string_view tok) {
