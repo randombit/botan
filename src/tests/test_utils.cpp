@@ -1212,15 +1212,6 @@ class CPUID_Tests final : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result("CPUID");
 
-         result.confirm("Endian is either little or big",
-                        Botan::CPUID::is_big_endian() || Botan::CPUID::is_little_endian());
-
-         if(Botan::CPUID::is_little_endian()) {
-            result.test_eq("If endian is little, it is not also big endian", Botan::CPUID::is_big_endian(), false);
-         } else {
-            result.test_eq("If endian is big, it is not also little endian", Botan::CPUID::is_little_endian(), false);
-         }
-
          const std::string cpuid_string = Botan::CPUID::to_string();
          result.test_success("CPUID::to_string doesn't crash");
 

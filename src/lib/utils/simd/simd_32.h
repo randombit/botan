@@ -28,8 +28,8 @@
    #endif
 
 #elif defined(BOTAN_TARGET_CPU_SUPPORTS_NEON)
-   #include <botan/internal/cpuid.h>
    #include <arm_neon.h>
+   #include <bit>
    #define BOTAN_SIMD_USE_NEON
 
 #else
@@ -166,7 +166,11 @@ class SIMD_4x32 final {
          return SIMD_4x32(R);
 #elif defined(BOTAN_SIMD_USE_NEON)
          SIMD_4x32 l(vld1q_u32(static_cast<const uint32_t*>(in)));
-         return CPUID::is_big_endian() ? l.bswap() : l;
+         if constexpr(std::endian::native == std::endian::big) {
+            return l.bswap();
+         } else {
+            return l;
+         }
 #endif
       }
 
@@ -184,7 +188,11 @@ class SIMD_4x32 final {
 
 #elif defined(BOTAN_SIMD_USE_NEON)
          SIMD_4x32 l(vld1q_u32(static_cast<const uint32_t*>(in)));
-         return CPUID::is_little_endian() ? l.bswap() : l;
+         if constexpr(std::endian::native == std::endian::little) {
+            return l.bswap();
+         } else {
+            return l;
+         }
 #endif
       }
 
@@ -217,7 +225,7 @@ class SIMD_4x32 final {
          Botan::store_le(out, vec.R[0], vec.R[1], vec.R[2], vec.R[3]);
 
 #elif defined(BOTAN_SIMD_USE_NEON)
-         if(CPUID::is_little_endian()) {
+         if constexpr(std::endian::native == std::endian::little) {
             vst1q_u8(out, vreinterpretq_u8_u32(m_simd));
          } else {
             vst1q_u8(out, vreinterpretq_u8_u32(bswap().m_simd));
@@ -244,7 +252,7 @@ class SIMD_4x32 final {
          Botan::store_be(out, vec.R[0], vec.R[1], vec.R[2], vec.R[3]);
 
 #elif defined(BOTAN_SIMD_USE_NEON)
-         if(CPUID::is_little_endian()) {
+         if constexpr(std::endian::native == std::endian::little) {
             vst1q_u8(out, vreinterpretq_u8_u32(bswap().m_simd));
          } else {
             vst1q_u8(out, vreinterpretq_u8_u32(m_simd));

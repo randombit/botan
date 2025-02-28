@@ -12,7 +12,7 @@
 #include <botan/internal/aes.h>
 
 #include <botan/compiler.h>
-#include <botan/internal/cpuid.h>
+#include <bit>
 
 #include <altivec.h>
 #undef vector
@@ -26,8 +26,10 @@ typedef __vector unsigned char Altivec8x16;
 
 namespace {
 
+static_assert(std::endian::native == std::endian::big || std::endian::native == std::endian::little);
+
 inline Altivec8x16 reverse_vec(Altivec8x16 src) {
-   if(CPUID::is_little_endian()) {
+   if constexpr(std::endian::native == std::endian::little) {
       const Altivec8x16 mask = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
       const Altivec8x16 zero = {0};
       return vec_perm(src, zero, mask);

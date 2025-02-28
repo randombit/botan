@@ -57,26 +57,6 @@ class BOTAN_TEST_API CPUID final {
       */
       static std::string to_string();
 
-      static bool is_little_endian() {
-#if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-         return true;
-#elif defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-         return false;
-#else
-         return !has_cpuid_bit(CPUID_IS_BIG_ENDIAN_BIT);
-#endif
-      }
-
-      static bool is_big_endian() {
-#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-         return true;
-#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-         return false;
-#else
-         return has_cpuid_bit(CPUID_IS_BIG_ENDIAN_BIT);
-#endif
-      }
-
       /**
       * Return true if a 4x32 SIMD instruction set is available
       * (SSE2, NEON, or Altivec/VMX)
@@ -143,7 +123,6 @@ class BOTAN_TEST_API CPUID final {
          CPUID_ARM_SM4_BIT = (1U << 23),
 #endif
 
-         CPUID_IS_BIG_ENDIAN_BIT = (1U << 30),
          CPUID_INITIALIZED_BIT = (1U << 31)
       };
 
