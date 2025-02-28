@@ -16,11 +16,15 @@
    #include <botan/internal/cpuid.h>
 #endif
 
-namespace Botan {
-
 #if defined(BOTAN_HAS_AES_POWER8) || defined(BOTAN_HAS_AES_ARMV8) || defined(BOTAN_HAS_AES_NI)
    #define BOTAN_HAS_HW_AES_SUPPORT
 #endif
+
+#if defined(BOTAN_HAS_HW_AES_SUPPORT)
+   #include <bit>
+#endif
+
+namespace Botan {
 
 /*
 * One of three AES implementation strategies are used to get a constant time
@@ -882,13 +886,14 @@ void AES_128::key_schedule(std::span<const uint8_t> key) {
 
 #if defined(BOTAN_HAS_AES_VAES)
    if(CPUID::has_avx2_vaes()) {
-      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, CPUID::is_little_endian());
+      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, true);
    }
 #endif
 
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
    if(CPUID::has_hw_aes()) {
-      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, CPUID::is_little_endian());
+      constexpr bool is_little_endian = std::endian::native == std::endian::little;
+      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, is_little_endian);
    }
 #endif
 
@@ -963,13 +968,14 @@ void AES_192::key_schedule(std::span<const uint8_t> key) {
 
 #if defined(BOTAN_HAS_AES_VAES)
    if(CPUID::has_avx2_vaes()) {
-      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, CPUID::is_little_endian());
+      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, true);
    }
 #endif
 
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
    if(CPUID::has_hw_aes()) {
-      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, CPUID::is_little_endian());
+      constexpr bool is_little_endian = std::endian::native == std::endian::little;
+      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, is_little_endian);
    }
 #endif
 
@@ -1044,13 +1050,14 @@ void AES_256::key_schedule(std::span<const uint8_t> key) {
 
 #if defined(BOTAN_HAS_AES_VAES)
    if(CPUID::has_avx2_vaes()) {
-      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, CPUID::is_little_endian());
+      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, true);
    }
 #endif
 
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
    if(CPUID::has_hw_aes()) {
-      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, CPUID::is_little_endian());
+      constexpr bool is_little_endian = std::endian::native == std::endian::little;
+      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, is_little_endian);
    }
 #endif
 
