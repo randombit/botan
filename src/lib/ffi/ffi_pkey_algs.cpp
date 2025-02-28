@@ -242,10 +242,9 @@ int botan_privkey_load_rsa_pkcs1(botan_privkey_t* key, const uint8_t bits[], siz
    }
    *key = nullptr;
 
-   Botan::secure_vector<uint8_t> src(bits, bits + len);
    return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::AlgorithmIdentifier alg_id("RSA", Botan::AlgorithmIdentifier::USE_NULL_PARAM);
-      auto rsa = std::make_unique<Botan::RSA_PrivateKey>(alg_id, src);
+      auto rsa = std::make_unique<Botan::RSA_PrivateKey>(alg_id, std::span{bits, len});
       *key = new botan_privkey_struct(std::move(rsa));
       return BOTAN_FFI_SUCCESS;
    });
@@ -670,8 +669,9 @@ int botan_pubkey_sm2_compute_za(
       const std::string ident_str(ident);
       std::unique_ptr<Botan::HashFunction> hash = Botan::HashFunction::create_or_throw(hash_algo);
 
-      const std::vector<uint8_t> za =
-         Botan::sm2_compute_za(*hash, ident_str, ec_key->domain(), ec_key->_public_ec_point());
+      const auto& pt = ec_key->_public_ec_point();
+
+      const auto za = Botan::sm2_compute_za(*hash, ident_str, ec_key->domain(), pt);
 
       return write_vec_output(out, out_len, za);
    });
@@ -894,8 +894,7 @@ int botan_privkey_load_x25519(botan_privkey_t* key, const uint8_t privkey[32]) {
    }
    *key = nullptr;
    return ffi_guard_thunk(__func__, [=]() -> int {
-      const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 32);
-      auto x25519 = std::make_unique<Botan::X25519_PrivateKey>(privkey_vec);
+      auto x25519 = std::make_unique<Botan::X25519_PrivateKey>(std::span{privkey, 32});
       *key = new botan_privkey_struct(std::move(x25519));
       return BOTAN_FFI_SUCCESS;
    });
@@ -912,8 +911,7 @@ int botan_pubkey_load_x25519(botan_pubkey_t* key, const uint8_t pubkey[32]) {
    }
    *key = nullptr;
    return ffi_guard_thunk(__func__, [=]() -> int {
-      const std::vector<uint8_t> pubkey_vec(pubkey, pubkey + 32);
-      auto x25519 = std::make_unique<Botan::X25519_PublicKey>(pubkey_vec);
+      auto x25519 = std::make_unique<Botan::X25519_PublicKey>(std::span{pubkey, 32});
       *key = new botan_pubkey_struct(std::move(x25519));
       return BOTAN_FFI_SUCCESS;
    });
@@ -947,11 +945,7 @@ int botan_pubkey_x25519_get_pubkey(botan_pubkey_t key, uint8_t output[32]) {
 #if defined(BOTAN_HAS_X25519)
    return BOTAN_FFI_VISIT(key, [=](const auto& k) {
       if(auto x25519 = dynamic_cast<const Botan::X25519_PublicKey*>(&k)) {
-         const std::vector<uint8_t>& x25519_key = x25519->public_value();
-         if(x25519_key.size() != 32) {
-            return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
-         }
-         Botan::copy_mem(output, x25519_key.data(), x25519_key.size());
+         Botan::copy_mem(std::span{output, 32}, x25519->raw_public_key_bits());
          return BOTAN_FFI_SUCCESS;
       } else {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
@@ -972,7 +966,7 @@ int botan_privkey_load_x448(botan_privkey_t* key, const uint8_t privkey[56]) {
    }
    *key = nullptr;
    return ffi_guard_thunk(__func__, [=]() -> int {
-      auto x448 = std::make_unique<Botan::X448_PrivateKey>(std::span(privkey, 56));
+      auto x448 = std::make_unique<Botan::X448_PrivateKey>(std::span{privkey, 56});
       *key = new botan_privkey_struct(std::move(x448));
       return BOTAN_FFI_SUCCESS;
    });
@@ -989,7 +983,7 @@ int botan_pubkey_load_x448(botan_pubkey_t* key, const uint8_t pubkey[56]) {
    }
    *key = nullptr;
    return ffi_guard_thunk(__func__, [=]() -> int {
-      auto x448 = std::make_unique<Botan::X448_PublicKey>(std::span(pubkey, 56));
+      auto x448 = std::make_unique<Botan::X448_PublicKey>(std::span{pubkey, 56});
       *key = new botan_pubkey_struct(std::move(x448));
       return BOTAN_FFI_SUCCESS;
    });
@@ -1004,7 +998,7 @@ int botan_privkey_x448_get_privkey(botan_privkey_t key, uint8_t output[56]) {
    return BOTAN_FFI_VISIT(key, [=](const auto& k) {
       if(auto x448 = dynamic_cast<const Botan::X448_PrivateKey*>(&k)) {
          const auto x448_key = x448->raw_private_key_bits();
-         Botan::copy_mem(std::span(output, 56), x448_key);
+         Botan::copy_mem(std::span{output, 56}, x448_key);
          return BOTAN_FFI_SUCCESS;
       } else {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
@@ -1020,8 +1014,7 @@ int botan_pubkey_x448_get_pubkey(botan_pubkey_t key, uint8_t output[56]) {
 #if defined(BOTAN_HAS_X448)
    return BOTAN_FFI_VISIT(key, [=](const auto& k) {
       if(auto x448 = dynamic_cast<const Botan::X448_PublicKey*>(&k)) {
-         const std::vector<uint8_t>& x448_key = x448->public_value();
-         Botan::copy_mem(std::span(output, 56), x448_key);
+         Botan::copy_mem(std::span{output, 56}, x448->raw_public_key_bits());
          return BOTAN_FFI_SUCCESS;
       } else {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
