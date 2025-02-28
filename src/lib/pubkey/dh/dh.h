@@ -48,7 +48,9 @@ class BOTAN_PUBLIC_API(2, 0) DH_PublicKey : public virtual Public_Key {
       size_t estimated_strength() const override;
       size_t key_length() const override;
 
-      std::vector<uint8_t> public_value() const;
+      BOTAN_DEPRECATED("Use raw_public_key_bits") std::vector<uint8_t> public_value() const {
+         return raw_public_key_bits();
+      }
 
       std::string algo_name() const override { return "DH"; }
 

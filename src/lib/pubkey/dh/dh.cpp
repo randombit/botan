@@ -21,10 +21,6 @@ DH_PublicKey::DH_PublicKey(const DL_Group& group, const BigInt& y) {
    m_public_key = std::make_shared<DL_PublicKey>(group, y);
 }
 
-std::vector<uint8_t> DH_PublicKey::public_value() const {
-   return m_public_key->public_key_as_bytes();
-}
-
 size_t DH_PublicKey::estimated_strength() const {
    return m_public_key->estimated_strength();
 }
@@ -46,7 +42,7 @@ AlgorithmIdentifier DH_PublicKey::algorithm_identifier() const {
 }
 
 std::vector<uint8_t> DH_PublicKey::raw_public_key_bits() const {
-   return public_value();
+   return m_public_key->public_key_as_bytes();
 }
 
 std::vector<uint8_t> DH_PublicKey::public_key_bits() const {
@@ -81,7 +77,7 @@ std::unique_ptr<Public_Key> DH_PrivateKey::public_key() const {
 }
 
 std::vector<uint8_t> DH_PrivateKey::public_value() const {
-   return DH_PublicKey::public_value();
+   return raw_public_key_bits();
 }
 
 secure_vector<uint8_t> DH_PrivateKey::private_key_bits() const {
