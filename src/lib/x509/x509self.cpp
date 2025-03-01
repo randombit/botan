@@ -42,7 +42,7 @@ X509_DN load_dn_info(const X509_Cert_Options& opts) {
    return subject_dn;
 }
 
-auto create_alt_name_ext(const X509_Cert_Options& opts, Extensions& extensions) {
+auto create_alt_name_ext(const X509_Cert_Options& opts, const Extensions& extensions) {
    AlternativeName subject_alt;
 
    /*
@@ -143,7 +143,9 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
 
    extensions.replace(create_alt_name_ext(opts, extensions));
 
-   create_alt_name_ext(opts, extensions);
+   if(!opts.ex_constraints.empty()) {
+      extensions.add_new(std::make_unique<Cert_Extension::Extended_Key_Usage>(opts.ex_constraints));
+   }
 
    return PKCS10_Request::create(key, subject_dn, extensions, hash_fn, rng, opts.padding_scheme, opts.challenge);
 }
