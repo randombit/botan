@@ -9,6 +9,10 @@
 #include <botan/internal/target_info.h>
 #include <cstring>
 
+#if defined(BOTAN_TARGET_OS_HAS_EXPLICIT_BZERO)
+   #include <string.h>
+#endif
+
 #if defined(BOTAN_TARGET_OS_HAS_RTLSECUREZEROMEMORY)
    #define NOMINMAX 1
    #define _WINSOCKAPI_  // stop windows.h including winsock.h

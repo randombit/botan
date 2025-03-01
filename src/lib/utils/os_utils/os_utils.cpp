@@ -22,10 +22,6 @@
 #include <iomanip>
 #include <sstream>
 
-#if defined(BOTAN_TARGET_OS_HAS_EXPLICIT_BZERO)
-   #include <string.h>
-#endif
-
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    #include <errno.h>
    #include <pthread.h>
