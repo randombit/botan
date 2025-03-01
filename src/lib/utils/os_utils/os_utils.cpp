@@ -48,11 +48,6 @@
    #include <sys/auxv.h>
 #endif
 
-#if defined(BOTAN_TARGET_OS_HAS_AUXINFO)
-   #include <dlfcn.h>
-   #include <elf.h>
-#endif
-
 #if defined(BOTAN_TARGET_OS_HAS_WIN32)
    #define NOMINMAX 1
    #define _WINSOCKAPI_  // stop windows.h including winsock.h
@@ -97,9 +92,7 @@ uint32_t OS::get_process_id() {
 
 namespace {
 
-#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO) || \
-   defined(BOTAN_TARGET_OS_HAS_AUXINFO)
-
+#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
    #define BOTAN_TARGET_HAS_AUXVAL_INTERFACE
 #endif
 
@@ -136,13 +129,6 @@ std::optional<unsigned long> get_auxval(std::optional<unsigned long> id) {
       if(::elf_aux_info(static_cast<int>(*id), &auxinfo, sizeof(auxinfo)) == 0) {
          return auxinfo;
       }
-#elif defined(BOTAN_TARGET_OS_HAS_AUXINFO)
-      for(const AuxInfo* auxinfo = static_cast<AuxInfo*>(::_dlauxinfo()); auxinfo != AT_NULL; ++auxinfo) {
-         if(*id == auxinfo->a_type) {
-            return auxinfo->a_v;
-         }
-      }
-      // no match; fall off the end and return nullopt
 #endif
    }
 
