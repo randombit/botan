@@ -27,7 +27,6 @@ Hardware Specific Optimizations
 * Combine AES-NI, ARMv8 and POWER AES implementations (as already done for CLMUL)
 * GFNI implementations for: Camellia, SEED, ARIA
 * NEON/VMX support for the SIMD based GHASH
-* Vector permute AES only supports little-endian systems; fix for big-endian
 * Poly1305 using AVX2
 * SHA-512 using BMI2+AVX2 and/or new Intel instructions
 * SM3 using x86 SM3-NI

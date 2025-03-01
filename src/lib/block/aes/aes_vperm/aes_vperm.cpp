@@ -15,6 +15,7 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/simd_32.h>
 #include <botan/internal/target_info.h>
+#include <bit>
 
 #if defined(BOTAN_SIMD_USE_SSE2)
    #include <tmmintrin.h>
@@ -24,7 +25,7 @@ namespace Botan {
 
 namespace {
 
-inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) shuffle(SIMD_4x32 a, SIMD_4x32 b) {
+inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) native_shuffle(SIMD_4x32 a, SIMD_4x32 b) {
 #if defined(BOTAN_SIMD_USE_SSE2)
    return SIMD_4x32(_mm_shuffle_epi8(a.raw(), b.raw()));
 #elif defined(BOTAN_SIMD_USE_NEON)
@@ -53,6 +54,14 @@ inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) shuffle(SIMD_4x32 a, SIMD_4x32 
 #else
    #error "No shuffle implementation available"
 #endif
+}
+
+inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) shuffle(SIMD_4x32 a, SIMD_4x32 b) {
+   if constexpr(std::endian::native == std::endian::little) {
+      return native_shuffle(a, b);
+   } else {
+      return native_shuffle(a.bswap(), b.bswap()).bswap();
+   }
 }
 
 inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) alignr8(SIMD_4x32 a, SIMD_4x32 b) {
@@ -306,17 +315,17 @@ void BOTAN_FUNC_ISA(BOTAN_VPERM_ISA)
 
 void AES_128::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_4x32 K[11] = {
-      SIMD_4x32(&m_EK[4 * 0]),
-      SIMD_4x32(&m_EK[4 * 1]),
-      SIMD_4x32(&m_EK[4 * 2]),
-      SIMD_4x32(&m_EK[4 * 3]),
-      SIMD_4x32(&m_EK[4 * 4]),
-      SIMD_4x32(&m_EK[4 * 5]),
-      SIMD_4x32(&m_EK[4 * 6]),
-      SIMD_4x32(&m_EK[4 * 7]),
-      SIMD_4x32(&m_EK[4 * 8]),
-      SIMD_4x32(&m_EK[4 * 9]),
-      SIMD_4x32(&m_EK[4 * 10]),
+      SIMD_4x32::load_le(&m_EK[4 * 0]),
+      SIMD_4x32::load_le(&m_EK[4 * 1]),
+      SIMD_4x32::load_le(&m_EK[4 * 2]),
+      SIMD_4x32::load_le(&m_EK[4 * 3]),
+      SIMD_4x32::load_le(&m_EK[4 * 4]),
+      SIMD_4x32::load_le(&m_EK[4 * 5]),
+      SIMD_4x32::load_le(&m_EK[4 * 6]),
+      SIMD_4x32::load_le(&m_EK[4 * 7]),
+      SIMD_4x32::load_le(&m_EK[4 * 8]),
+      SIMD_4x32::load_le(&m_EK[4 * 9]),
+      SIMD_4x32::load_le(&m_EK[4 * 10]),
    };
 
    return vperm_encrypt_blocks(in, out, blocks, K, 10);
@@ -324,17 +333,17 @@ void AES_128::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 
 void AES_128::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_4x32 K[11] = {
-      SIMD_4x32(&m_DK[4 * 0]),
-      SIMD_4x32(&m_DK[4 * 1]),
-      SIMD_4x32(&m_DK[4 * 2]),
-      SIMD_4x32(&m_DK[4 * 3]),
-      SIMD_4x32(&m_DK[4 * 4]),
-      SIMD_4x32(&m_DK[4 * 5]),
-      SIMD_4x32(&m_DK[4 * 6]),
-      SIMD_4x32(&m_DK[4 * 7]),
-      SIMD_4x32(&m_DK[4 * 8]),
-      SIMD_4x32(&m_DK[4 * 9]),
-      SIMD_4x32(&m_DK[4 * 10]),
+      SIMD_4x32::load_le(&m_DK[4 * 0]),
+      SIMD_4x32::load_le(&m_DK[4 * 1]),
+      SIMD_4x32::load_le(&m_DK[4 * 2]),
+      SIMD_4x32::load_le(&m_DK[4 * 3]),
+      SIMD_4x32::load_le(&m_DK[4 * 4]),
+      SIMD_4x32::load_le(&m_DK[4 * 5]),
+      SIMD_4x32::load_le(&m_DK[4 * 6]),
+      SIMD_4x32::load_le(&m_DK[4 * 7]),
+      SIMD_4x32::load_le(&m_DK[4 * 8]),
+      SIMD_4x32::load_le(&m_DK[4 * 9]),
+      SIMD_4x32::load_le(&m_DK[4 * 10]),
    };
 
    return vperm_decrypt_blocks(in, out, blocks, K, 10);
@@ -342,19 +351,19 @@ void AES_128::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 
 void AES_192::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_4x32 K[13] = {
-      SIMD_4x32(&m_EK[4 * 0]),
-      SIMD_4x32(&m_EK[4 * 1]),
-      SIMD_4x32(&m_EK[4 * 2]),
-      SIMD_4x32(&m_EK[4 * 3]),
-      SIMD_4x32(&m_EK[4 * 4]),
-      SIMD_4x32(&m_EK[4 * 5]),
-      SIMD_4x32(&m_EK[4 * 6]),
-      SIMD_4x32(&m_EK[4 * 7]),
-      SIMD_4x32(&m_EK[4 * 8]),
-      SIMD_4x32(&m_EK[4 * 9]),
-      SIMD_4x32(&m_EK[4 * 10]),
-      SIMD_4x32(&m_EK[4 * 11]),
-      SIMD_4x32(&m_EK[4 * 12]),
+      SIMD_4x32::load_le(&m_EK[4 * 0]),
+      SIMD_4x32::load_le(&m_EK[4 * 1]),
+      SIMD_4x32::load_le(&m_EK[4 * 2]),
+      SIMD_4x32::load_le(&m_EK[4 * 3]),
+      SIMD_4x32::load_le(&m_EK[4 * 4]),
+      SIMD_4x32::load_le(&m_EK[4 * 5]),
+      SIMD_4x32::load_le(&m_EK[4 * 6]),
+      SIMD_4x32::load_le(&m_EK[4 * 7]),
+      SIMD_4x32::load_le(&m_EK[4 * 8]),
+      SIMD_4x32::load_le(&m_EK[4 * 9]),
+      SIMD_4x32::load_le(&m_EK[4 * 10]),
+      SIMD_4x32::load_le(&m_EK[4 * 11]),
+      SIMD_4x32::load_le(&m_EK[4 * 12]),
    };
 
    return vperm_encrypt_blocks(in, out, blocks, K, 12);
@@ -362,19 +371,19 @@ void AES_192::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 
 void AES_192::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_4x32 K[13] = {
-      SIMD_4x32(&m_DK[4 * 0]),
-      SIMD_4x32(&m_DK[4 * 1]),
-      SIMD_4x32(&m_DK[4 * 2]),
-      SIMD_4x32(&m_DK[4 * 3]),
-      SIMD_4x32(&m_DK[4 * 4]),
-      SIMD_4x32(&m_DK[4 * 5]),
-      SIMD_4x32(&m_DK[4 * 6]),
-      SIMD_4x32(&m_DK[4 * 7]),
-      SIMD_4x32(&m_DK[4 * 8]),
-      SIMD_4x32(&m_DK[4 * 9]),
-      SIMD_4x32(&m_DK[4 * 10]),
-      SIMD_4x32(&m_DK[4 * 11]),
-      SIMD_4x32(&m_DK[4 * 12]),
+      SIMD_4x32::load_le(&m_DK[4 * 0]),
+      SIMD_4x32::load_le(&m_DK[4 * 1]),
+      SIMD_4x32::load_le(&m_DK[4 * 2]),
+      SIMD_4x32::load_le(&m_DK[4 * 3]),
+      SIMD_4x32::load_le(&m_DK[4 * 4]),
+      SIMD_4x32::load_le(&m_DK[4 * 5]),
+      SIMD_4x32::load_le(&m_DK[4 * 6]),
+      SIMD_4x32::load_le(&m_DK[4 * 7]),
+      SIMD_4x32::load_le(&m_DK[4 * 8]),
+      SIMD_4x32::load_le(&m_DK[4 * 9]),
+      SIMD_4x32::load_le(&m_DK[4 * 10]),
+      SIMD_4x32::load_le(&m_DK[4 * 11]),
+      SIMD_4x32::load_le(&m_DK[4 * 12]),
    };
 
    return vperm_decrypt_blocks(in, out, blocks, K, 12);
@@ -382,21 +391,21 @@ void AES_192::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 
 void AES_256::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_4x32 K[15] = {
-      SIMD_4x32(&m_EK[4 * 0]),
-      SIMD_4x32(&m_EK[4 * 1]),
-      SIMD_4x32(&m_EK[4 * 2]),
-      SIMD_4x32(&m_EK[4 * 3]),
-      SIMD_4x32(&m_EK[4 * 4]),
-      SIMD_4x32(&m_EK[4 * 5]),
-      SIMD_4x32(&m_EK[4 * 6]),
-      SIMD_4x32(&m_EK[4 * 7]),
-      SIMD_4x32(&m_EK[4 * 8]),
-      SIMD_4x32(&m_EK[4 * 9]),
-      SIMD_4x32(&m_EK[4 * 10]),
-      SIMD_4x32(&m_EK[4 * 11]),
-      SIMD_4x32(&m_EK[4 * 12]),
-      SIMD_4x32(&m_EK[4 * 13]),
-      SIMD_4x32(&m_EK[4 * 14]),
+      SIMD_4x32::load_le(&m_EK[4 * 0]),
+      SIMD_4x32::load_le(&m_EK[4 * 1]),
+      SIMD_4x32::load_le(&m_EK[4 * 2]),
+      SIMD_4x32::load_le(&m_EK[4 * 3]),
+      SIMD_4x32::load_le(&m_EK[4 * 4]),
+      SIMD_4x32::load_le(&m_EK[4 * 5]),
+      SIMD_4x32::load_le(&m_EK[4 * 6]),
+      SIMD_4x32::load_le(&m_EK[4 * 7]),
+      SIMD_4x32::load_le(&m_EK[4 * 8]),
+      SIMD_4x32::load_le(&m_EK[4 * 9]),
+      SIMD_4x32::load_le(&m_EK[4 * 10]),
+      SIMD_4x32::load_le(&m_EK[4 * 11]),
+      SIMD_4x32::load_le(&m_EK[4 * 12]),
+      SIMD_4x32::load_le(&m_EK[4 * 13]),
+      SIMD_4x32::load_le(&m_EK[4 * 14]),
    };
 
    return vperm_encrypt_blocks(in, out, blocks, K, 14);
@@ -404,21 +413,21 @@ void AES_256::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 
 void AES_256::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_4x32 K[15] = {
-      SIMD_4x32(&m_DK[4 * 0]),
-      SIMD_4x32(&m_DK[4 * 1]),
-      SIMD_4x32(&m_DK[4 * 2]),
-      SIMD_4x32(&m_DK[4 * 3]),
-      SIMD_4x32(&m_DK[4 * 4]),
-      SIMD_4x32(&m_DK[4 * 5]),
-      SIMD_4x32(&m_DK[4 * 6]),
-      SIMD_4x32(&m_DK[4 * 7]),
-      SIMD_4x32(&m_DK[4 * 8]),
-      SIMD_4x32(&m_DK[4 * 9]),
-      SIMD_4x32(&m_DK[4 * 10]),
-      SIMD_4x32(&m_DK[4 * 11]),
-      SIMD_4x32(&m_DK[4 * 12]),
-      SIMD_4x32(&m_DK[4 * 13]),
-      SIMD_4x32(&m_DK[4 * 14]),
+      SIMD_4x32::load_le(&m_DK[4 * 0]),
+      SIMD_4x32::load_le(&m_DK[4 * 1]),
+      SIMD_4x32::load_le(&m_DK[4 * 2]),
+      SIMD_4x32::load_le(&m_DK[4 * 3]),
+      SIMD_4x32::load_le(&m_DK[4 * 4]),
+      SIMD_4x32::load_le(&m_DK[4 * 5]),
+      SIMD_4x32::load_le(&m_DK[4 * 6]),
+      SIMD_4x32::load_le(&m_DK[4 * 7]),
+      SIMD_4x32::load_le(&m_DK[4 * 8]),
+      SIMD_4x32::load_le(&m_DK[4 * 9]),
+      SIMD_4x32::load_le(&m_DK[4 * 10]),
+      SIMD_4x32::load_le(&m_DK[4 * 11]),
+      SIMD_4x32::load_le(&m_DK[4 * 12]),
+      SIMD_4x32::load_le(&m_DK[4 * 13]),
+      SIMD_4x32::load_le(&m_DK[4 * 14]),
    };
 
    return vperm_decrypt_blocks(in, out, blocks, K, 14);
