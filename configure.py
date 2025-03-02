@@ -132,6 +132,39 @@ class Version:
         return Version.get_data()["release_datestamp"]
 
     @staticmethod
+    def short_version_string():
+        return "%d.%d.%d%s" % (Version.major(), Version.minor(), Version.patch(), Version.suffix())
+
+    @staticmethod
+    def full_version_string(options):
+        version = "Botan %s" % (Version.short_version_string())
+
+        if options.unsafe_fuzzer_mode or options.unsafe_terminate_on_asserts:
+            version += " UNSAFE "
+            if options.unsafe_fuzzer_mode:
+                version += "FUZZER MODE "
+            if options.unsafe_terminate_on_asserts:
+                version += "TERMINATE ON ASSERTS "
+            version += "BUILD"
+
+        version += " ("
+        version += Version.release_type()
+
+        if Version.datestamp() != 0:
+            version += ", dated %d" % (Version.datestamp())
+
+        if Version.vc_rev() != "unknown":
+            version += ", revision %s" % (Version.vc_rev())
+
+        if options.distribution_info is not None:
+            version += ", distribution '%s'" % (options.distribution_info)
+
+        version += ")"
+
+        return version
+
+
+    @staticmethod
     def as_string():
         return '%d.%d.%d%s' % (Version.major(), Version.minor(), Version.patch(), Version.suffix())
 
@@ -502,8 +535,7 @@ def process_command_line(args):
                            help='include the contents of FILE into build.h')
 
     build_group.add_option('--distribution-info', metavar='STRING',
-                           help='distribution specific version',
-                           default='unspecified')
+                           help='distribution specific version', default=None)
 
     build_group.add_option('--maintainer-mode', dest='maintainer_mode',
                            action='store_true', default=False,
@@ -512,9 +544,6 @@ def process_command_line(args):
     build_group.add_option('--werror-mode', dest='werror_mode',
                            action='store_true', default=False,
                            help="Prohibit compiler warnings")
-
-    build_group.add_option('--no-store-vc-rev', action='store_true', default=False,
-                           help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--no-install-python-module', action='store_true', default=False,
                            help='skip installing Python module')
@@ -2163,8 +2192,10 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'version_major':  Version.major(),
         'version_minor':  Version.minor(),
         'version_patch':  Version.patch(),
-        'version_suffix': Version.suffix(),
-        'version_vc_rev': 'unknown' if options.no_store_vc_rev else Version.vc_rev(),
+        'version_vc_rev': None if Version.vc_rev() == 'unknown' else Version.vc_rev(),
+
+        'version_vc_rev_or_unknown': 'unknown' if Version.datestamp() == 0 else Version.vc_rev(),
+
         'abi_rev':        Version.so_rev(),
 
         'version':        Version.as_string(),
@@ -2172,6 +2203,10 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'version_datestamp': Version.datestamp(),
 
         'distribution_info': options.distribution_info,
+        'distribution_info_or_unspecified': options.distribution_info or 'unspecified',
+
+        'full_version_string': Version.full_version_string(options),
+        'short_version_string': Version.short_version_string(),
 
         'macos_so_compat_ver': '%s.%s.0' % (Version.packed(), Version.so_rev()),
         'macos_so_current_ver': '%s.%s.%s' % (Version.packed(), Version.so_rev(), Version.patch()),
@@ -3445,6 +3480,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
 
     write_template(in_build_dir('build.h'), in_build_data('buildh.in'))
     write_template(in_build_dir('target_info.h'), in_build_data('target_info.h.in'))
+    write_template(in_build_dir('version_info.h'), in_build_data('version_info.h.in'))
     write_template(in_build_dir('botan.doxy'), in_build_data('botan.doxy.in'))
 
     if options.with_cmake_config:
@@ -3691,7 +3727,8 @@ def main(argv):
 
     build_paths = BuildPaths(source_paths, options, using_mods)
     build_paths.public_headers.append(os.path.join(build_paths.build_dir, 'build.h'))
-    build_paths.internal_headers.append(os.path.join(build_paths.build_dir, 'target_info.h'))
+    for internal_headers in ['target_info.h', 'version_info.h']:
+        build_paths.internal_headers.append(os.path.join(build_paths.build_dir, internal_headers))
 
     template_vars = create_template_vars(source_paths, build_paths, options, using_mods, not_using_mods, cc, arch, osinfo)
 

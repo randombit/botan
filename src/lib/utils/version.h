@@ -9,6 +9,7 @@
 #define BOTAN_VERSION_H_
 
 #include <botan/types.h>
+#include <optional>
 #include <string>
 
 namespace Botan {
@@ -69,6 +70,24 @@ BOTAN_PUBLIC_API(2, 0) uint32_t version_minor();
 * @return patch number
 */
 BOTAN_PUBLIC_API(2, 0) uint32_t version_patch();
+
+/**
+* Returns a string that is set to a revision identifier corresponding to the
+* source, or `nullopt` if this could not be determined. It is set for all
+* official releases, and for builds that originated from within a git checkout.
+*
+* @return VC revision
+*/
+BOTAN_PUBLIC_API(3, 8) std::optional<std::string> version_vc_revision();
+
+/**
+* Return any string that is set at build time using the `--distribution-info`
+* option. It allows a packager of the library to specify any distribution-specific
+* patches. If no value is given at build time, returns `nullopt`.
+*
+* @return distribution info
+*/
+BOTAN_PUBLIC_API(3, 8) std::optional<std::string> version_distribution_info();
 
 /**
 * Usable for checking that the DLL version loaded at runtime exactly matches the

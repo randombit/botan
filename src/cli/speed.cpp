@@ -48,9 +48,13 @@ class JSON_Output final {
 
          out << "{"
              << "\"arch\": \"" << BOTAN_TARGET_ARCH << "\", "
-             << "\"version\": \"" << Botan::short_version_cstr() << "\", "
-             << "\"git\": \"" << BOTAN_VERSION_VC_REVISION << "\", "
-             << "\"compiler\": \"" << BOTAN_COMPILER_INVOCATION_STRING << "\""
+             << "\"version\": \"" << Botan::short_version_cstr() << "\", ";
+
+         if(auto vc_revision = Botan::version_vc_revision()) {
+            out << "\"git\": \"" << *vc_revision << "\", ";
+         }
+
+         out << "\"compiler\": \"" << BOTAN_COMPILER_INVOCATION_STRING << "\""
              << "},\n";
 
          for(size_t i = 0; i != m_results.size(); ++i) {

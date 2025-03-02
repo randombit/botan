@@ -9,62 +9,18 @@
 
 #include <botan/internal/fmt.h>
 #include <botan/internal/target_info.h>
+#include <botan/internal/version_info.h>
 
 namespace Botan {
 
-/*
-  These are intentionally compiled rather than inlined, so an
-  application running against a shared library can test the true
-  version they are running against.
-*/
-
-// NOLINTNEXTLINE(*-macro-usage)
-#define QUOTE(name) #name
-// NOLINTNEXTLINE(*-macro-usage)
-#define STR(macro) QUOTE(macro)
-
 const char* short_version_cstr() {
-   return STR(BOTAN_VERSION_MAJOR) "." STR(BOTAN_VERSION_MINOR) "." STR(BOTAN_VERSION_PATCH)
-#if defined(BOTAN_VERSION_SUFFIX)
-      STR(BOTAN_VERSION_SUFFIX)
-#endif
-         ;
+   return BOTAN_SHORT_VERSION_STRING;
 }
 
 const char* version_cstr() {
-   /*
-   It is intentional that this string is a compile-time constant;
-   it makes it much easier to find in binaries.
-   */
-
-   return "Botan " STR(BOTAN_VERSION_MAJOR) "." STR(BOTAN_VERSION_MINOR) "." STR(BOTAN_VERSION_PATCH)
-#if defined(BOTAN_VERSION_SUFFIX)
-      STR(BOTAN_VERSION_SUFFIX)
-#endif
-         " ("
-#if defined(BOTAN_UNSAFE_FUZZER_MODE) || defined(BOTAN_TERMINATE_ON_ASSERTS)
-         "UNSAFE "
-   #if defined(BOTAN_UNSAFE_FUZZER_MODE)
-         "FUZZER MODE "
-   #endif
-   #if defined(BOTAN_TERMINATE_ON_ASSERTS)
-         "TERMINATE ON ASSERTS "
-   #endif
-         "BUILD "
-#endif
-      BOTAN_VERSION_RELEASE_TYPE
-#if(BOTAN_VERSION_DATESTAMP != 0)
-         ", dated " STR(BOTAN_VERSION_DATESTAMP)
-#endif
-            ", revision " BOTAN_VERSION_VC_REVISION ", distribution " BOTAN_DISTRIBUTION_INFO ")";
+   return BOTAN_FULL_VERSION_STRING;
 }
 
-#undef STR
-#undef QUOTE
-
-/*
-* Return the version as a string
-*/
 std::string version_string() {
    return std::string(version_cstr());
 }
@@ -75,6 +31,22 @@ std::string short_version_string() {
 
 uint32_t version_datestamp() {
    return BOTAN_VERSION_DATESTAMP;
+}
+
+std::optional<std::string> version_vc_revision() {
+#if defined(BOTAN_VC_REVISION)
+   return std::string(BOTAN_VC_REVISION);
+#else
+   return std::nullopt;
+#endif
+}
+
+std::optional<std::string> version_distribution_info() {
+#if defined(BOTAN_DISTRIBUTION_INFO_STRING)
+   return std::string(BOTAN_DISTRIBUTION_INFO_STRING);
+#else
+   return std::nullopt;
+#endif
 }
 
 /*
