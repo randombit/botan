@@ -78,7 +78,7 @@ which is fast and quite simple to run in constant time.
 For general ``e``, the inversion proceeds using a technique based on the CRT -
 ``phi(n)`` is factored to ``2**k * o`` for some ``k`` > 1 and some odd
 ``o``. Then ``e`` is inverted modulo ``2**k`` and also modulo ``o``. The
-inversion modulo ``2**k`` is done via a specialized constant-time algoirthm
+inversion modulo ``2**k`` is done via a specialized constant-time algorithm
 which only works for powers of 2. Then the two inversions are combined using the
 CRT. This process does leak the value of ``k``; when generating keys Botan
 chooses ``p`` and ``q`` so that ``k`` is always 1.
