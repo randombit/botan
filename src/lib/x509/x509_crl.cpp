@@ -128,7 +128,18 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body, cons
       throw Decoding_Error("Algorithm identifier mismatch in CRL");
    }
 
-   tbs_crl.decode(data->m_issuer).decode(data->m_this_update).decode(data->m_next_update);
+   tbs_crl.decode(data->m_issuer).decode(data->m_this_update);
+
+   // According to RFC 5280 Section 5.1, nextUpdate is OPTIONAL and may be
+   // encoded as either a UTCTime or a GeneralizedTime. Section 5.1.2.5
+   // further states that "[c]onforming CRL issuers MUST include the nextUpdate
+   // field in all CRLs". Obviously, not everyone complies...
+   //
+   // See https://github.com/randombit/botan/issues/4722 for more details.
+   tbs_crl.decode_optional(data->m_next_update, ASN1_Type::UtcTime, ASN1_Class::Universal);
+   if(!data->m_next_update.time_is_set()) {
+      tbs_crl.decode_optional(data->m_next_update, ASN1_Type::GeneralizedTime, ASN1_Class::Universal);
+   }
 
    BER_Object next = tbs_crl.get_next_object();
 
