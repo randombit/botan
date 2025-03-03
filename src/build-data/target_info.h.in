@@ -28,6 +28,14 @@
 #define BOTAN_TERMINATE_ON_ASSERTS
 %{endif}
 
+%{if fuzzer_mode}
+/** Disables certain validation checks to ease fuzzability of the library
+ * @warning This causes the library build to be insecure, hence, it must not be
+ *          used in a production environment!
+ */
+#define BOTAN_UNSAFE_FUZZER_MODE
+%{endif}
+
 /*
 * Compiler Information
 */
@@ -49,6 +57,10 @@
 %{if fuzzer_type}
 #define BOTAN_FUZZER_IS_%{fuzzer_type}
 %{endif}
+
+%{for sanitizer_types}
+#define BOTAN_HAS_SANITIZER_%{i|upper}
+%{endfor}
 
 /*
 * CPU feature information

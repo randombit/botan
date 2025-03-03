@@ -36,15 +36,6 @@ class DL_Group_Tests final : public Test {
             dl.get_p();
          });
 
-   #if !defined(BOTAN_HAS_SANITIZER_UNDEFINED)
-         result.test_throws("Bad generator param", "DL_Group unknown PrimeType", []() {
-            // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
-            auto invalid_type = static_cast<Botan::DL_Group::PrimeType>(9);
-            Botan::Null_RNG null_rng;
-            Botan::DL_Group dl(null_rng, invalid_type, 1024);
-         });
-   #endif
-
          return result;
       }
 

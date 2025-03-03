@@ -84,22 +84,21 @@
  * @{
  */
 
-%{if fuzzer_mode}
-/** Disables certain validation checks to ease fuzzability of the library
- * @warning This causes the library build to be insecure, hence, it must not be
- *          used in a production environment!
- */
-#define BOTAN_UNSAFE_FUZZER_MODE
-%{endif}
 %{if fuzzer_type}
 #define BOTAN_FUZZERS_ARE_BEING_BUILT
 %{endif}
 
 %{if disable_deprecated_features}
+/**
+ * Indicates that deprecated features have been disabled
+ */
 #define BOTAN_DISABLE_DEPRECATED_FEATURES
 %{endif}
 
 %{if enable_experimental_features}
+/**
+ * Indicates that experimental features have been enabled
+ */
 #define BOTAN_ENABLE_EXPERIMENTAL_FEATURES
 %{endif}
 
@@ -113,15 +112,15 @@
 #define BOTAN_TARGET_OS_HAS_%{i|upper}
 %{endfor}
 
-%{for sanitizer_types}
-#define BOTAN_HAS_SANITIZER_%{i|upper}
-%{endfor}
-
 %{if endian}
 #define BOTAN_TARGET_CPU_IS_%{endian|upper}_ENDIAN
 %{endif}
 
 %{if with_debug_asserts}
+/**
+ * Has to be public due to use in assert.h
+ * TODO(Botan4) move this to target_info.h once assert.h is internal
+ */
 #define BOTAN_ENABLE_DEBUG_ASSERTS
 %{endif}
 

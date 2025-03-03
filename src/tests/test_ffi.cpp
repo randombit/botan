@@ -18,6 +18,7 @@
    #include <botan/internal/fmt.h>
    #include <botan/internal/loadstor.h>
    #include <botan/internal/stl_util.h>
+   #include <botan/internal/target_info.h>
    #include <set>
 #endif
 
