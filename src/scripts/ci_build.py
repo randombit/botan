@@ -378,57 +378,57 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
             if target == 'cross-arm32':
                 flags += ['--cpu=armv7', '--extra-cxxflags=-D_FILE_OFFSET_BITS=64']
                 cc_bin = 'arm-linux-gnueabihf-g++'
-                test_prefix = ['qemu-arm', '-L', '/usr/arm-linux-gnueabihf/']
+                test_prefix = ['qemu-arm', '-L', '/usr/arm-linux-gnueabihf/', '-accel', 'tcg,thread=multi,tb-size=256']
             elif target in ['cross-arm64', 'cross-arm64-amalgamation']:
                 flags += ['--cpu=aarch64']
                 cc_bin = 'aarch64-linux-gnu-g++'
-                test_prefix = ['qemu-aarch64', '-L', '/usr/aarch64-linux-gnu/']
+                test_prefix = ['qemu-aarch64', '-L', '/usr/aarch64-linux-gnu/', '-accel', 'tcg,thread=multi,tb-size=256']
             elif target == 'cross-alpha':
                 flags += ['--cpu=alpha']
                 cc_bin = 'alpha-linux-gnu-g++'
-                test_prefix = ['qemu-alpha', '-L', '/usr/alpha-linux-gnu/']
+                test_prefix = ['qemu-alpha', '-L', '/usr/alpha-linux-gnu/', '-accel', 'tcg,thread=multi,tb-size=256']
                 flags += ['--without-stack-protector'] # not supported
             elif target == 'cross-sh4':
                 flags += ['--cpu=sh4']
                 cc_bin = 'sh4-linux-gnu-g++'
-                test_prefix = ['qemu-sh4', '-L', '/usr/sh4-linux-gnu/']
+                test_prefix = ['qemu-sh4', '-L', '/usr/sh4-linux-gnu/', '-accel', 'tcg,thread=multi,tb-size=256']
             elif target == 'cross-m68k':
                 flags += ['--cpu=m68k']
                 cc_bin = 'm68k-linux-gnu-g++'
-                test_prefix = ['qemu-m68k', '-L', '/usr/m68k-linux-gnu/']
+                test_prefix = ['qemu-m68k', '-L', '/usr/m68k-linux-gnu/', '-accel', 'tcg,thread=multi,tb-size=256']
             elif target == 'cross-hppa64':
                 flags += ['--cpu=hppa']
                 cc_bin = 'hppa-linux-gnu-g++'
-                test_prefix = ['qemu-hppa', '-L', '/usr/hppa-linux-gnu/']
+                test_prefix = ['qemu-hppa', '-L', '/usr/hppa-linux-gnu/', '-accel', 'tcg,thread=multi,tb-size=256']
             elif target == 'cross-sparc64':
                 flags += ['--cpu=sparc64']
                 cc_bin = 'sparc64-linux-gnu-g++'
-                test_prefix = ['qemu-sparc64', '-L', '/usr/sparc64-linux-gnu/']
+                test_prefix = ['qemu-sparc64', '-L', '/usr/sparc64-linux-gnu/', '-accel', 'tcg,thread=multi,tb-size=256']
             elif target == 'cross-ppc32':
                 flags += ['--cpu=ppc32']
                 cc_bin = 'powerpc-linux-gnu-g++'
-                test_prefix = ['qemu-ppc', '-L', '/usr/powerpc-linux-gnu/']
+                test_prefix = ['qemu-ppc', '-L', '/usr/powerpc-linux-gnu/', '-accel', 'tcg,thread=multi,tb-size=256']
                 test_cmd = None # qemu crashes ...
             elif target == 'cross-ppc64':
                 flags += ['--cpu=ppc64', '--with-endian=little']
                 cc_bin = 'powerpc64le-linux-gnu-g++'
-                test_prefix = ['qemu-ppc64le', '-cpu', 'power10', '-L', '/usr/powerpc64le-linux-gnu/']
+                test_prefix = ['qemu-ppc64le', '-cpu', 'power10', '-L', '/usr/powerpc64le-linux-gnu/', '-accel', 'tcg,thread=multi,tb-size=256']
             elif target == 'cross-riscv64':
                 flags += ['--cpu=riscv64']
                 cc_bin = 'riscv64-linux-gnu-g++'
-                test_prefix = ['qemu-riscv64', '-L', '/usr/riscv64-linux-gnu/']
+                test_prefix = ['qemu-riscv64', '-L', '/usr/riscv64-linux-gnu/', '-accel', 'tcg,thread=multi,tb-size=256']
             elif target == 'cross-s390x':
                 flags += ['--cpu=s390x']
                 cc_bin = 's390x-linux-gnu-g++'
-                test_prefix = ['qemu-s390x', '-L', '/usr/s390x-linux-gnu/']
+                test_prefix = ['qemu-s390x', '-L', '/usr/s390x-linux-gnu/', '-accel', 'tcg,thread=multi,tb-size=256']
             elif target == 'cross-mips':
                 flags += ['--cpu=mips32', '--with-endian=big']
                 cc_bin = 'mips-linux-gnu-g++'
-                test_prefix = ['qemu-mips', '-L', '/usr/mips-linux-gnu/']
+                test_prefix = ['qemu-mips', '-L', '/usr/mips-linux-gnu/', '-accel', 'tcg,thread=multi,tb-size=256']
             elif target == 'cross-mips64':
                 flags += ['--cpu=mips64', '--with-endian=big']
                 cc_bin = 'mips64-linux-gnuabi64-g++'
-                test_prefix = ['qemu-mips64', '-L', '/usr/mips64-linux-gnuabi64/']
+                test_prefix = ['qemu-mips64', '-L', '/usr/mips64-linux-gnuabi64/', '-accel', 'tcg,thread=multi,tb-size=256']
             elif target in ['cross-arm32-baremetal']:
                 flags += ['--cpu=arm32', '--disable-neon', '--without-stack-protector', '--ldflags=-specs=nosys.specs']
                 cc_bin = 'arm-none-eabi-c++'
