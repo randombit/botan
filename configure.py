@@ -1860,6 +1860,7 @@ def process_template_string(template_text, variables, template_source):
             output = ""
             idx = 0
 
+            # pylint: disable=too-many-nested-blocks
             while idx < len(lines):
                 cond_match = self.cond_pattern.match(lines[idx])
                 for_match = self.for_pattern.match(lines[idx])
@@ -1911,12 +1912,12 @@ def process_template_string(template_text, variables, template_source):
                         else:
                             output += for_body.replace('%{i}', v).replace('%{i|upper}', v.upper())
 
-                        omitlast_match = self.omitlast_pattern.match(output)
-                        if omitlast_match:
-                            output = omitlast_match.group(1)
-                            if i + 1 < len(var):
-                                output += omitlast_match.group(2)
-                            output += omitlast_match.group(3)
+                        if output.find('%{omitlast') >= 0:
+                            if omitlast_match := self.omitlast_pattern.match(output):
+                                output = omitlast_match.group(1)
+                                if i + 1 < len(var):
+                                    output += omitlast_match.group(2)
+                                    output += omitlast_match.group(3)
 
                     output += "\n"
                 else:
