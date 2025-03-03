@@ -322,12 +322,12 @@ def cli_version_tests(_tmp_dir):
 
     version_re = re.compile(r'[0-9]\.[0-9]+\.[0-9](\-[a-z]+[0-9]+)?')
     if not version_re.match(output):
-        logging.error("Unexpected version output %s", output)
+        logging.error("Unexpected short version output %s", output)
 
     output = test_cli("version", ["--full"], None, None)
-    version_full_re = re.compile(r'Botan [0-9]\.[0-9]+\.[0-9](\-[a-z]+[0-9]+)? \(.* revision .*, distribution .*\)$')
+    version_full_re = re.compile(r'Botan [0-9]\.[0-9]+\.[0-9](\-[a-z]+[0-9]+)?( UNSAFE .* BUILD)? \(.*\)$')
     if not version_full_re.match(output):
-        logging.error("Unexpected version output %s", output)
+        logging.error("Unexpected long version output %s", output)
 
 def cli_is_prime_tests(_tmp_dir):
     test_cli("is_prime", "5", "5 is probably prime")
@@ -1645,7 +1645,7 @@ def cli_speed_pbkdf_tests(_tmp_dir):
 def cli_speed_table_tests(_tmp_dir):
     msec = 1
 
-    version_re = re.compile(r'^Botan 3\.[0-9]+\.[0-9](\-.*[0-9]+)? \(.*, revision .*, distribution .*\)')
+    version_re = re.compile(r'Botan [0-9]\.[0-9]+\.[0-9](\-[a-z]+[0-9]+)?( UNSAFE .* BUILD)? \(.*\)$')
     cpuid_re = re.compile(r'^CPUID: [a-z_0-9 ]*$')
     format_re = re.compile(r'^.* buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB\/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms\)')
     tbl_hdr_re = re.compile(r'^algo +operation +1024 bytes$')
