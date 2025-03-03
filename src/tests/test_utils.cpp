@@ -477,25 +477,25 @@ class Utility_Function_Tests final : public Test {
 
       template <std::unsigned_integral T>
       static T fb_load_be(std::array<const uint8_t, sizeof(T)> in) {
-         return Botan::detail::fallback_load_any<Botan::detail::Endianness::Big, T>(in);
+         return Botan::detail::fallback_load_any<std::endian::big, T>(in);
       }
 
       template <std::unsigned_integral T>
       static T fb_load_le(std::array<const uint8_t, sizeof(T)> in) {
-         return Botan::detail::fallback_load_any<Botan::detail::Endianness::Little, T>(in);
+         return Botan::detail::fallback_load_any<std::endian::little, T>(in);
       }
 
       template <std::unsigned_integral T>
       static decltype(auto) fb_store_be(const T in) {
          std::array<uint8_t, sizeof(T)> out;
-         Botan::detail::fallback_store_any<Botan::detail::Endianness::Big, T>(in, out);
+         Botan::detail::fallback_store_any<std::endian::big, T>(in, out);
          return out;
       }
 
       template <std::unsigned_integral T>
       static decltype(auto) fb_store_le(const T in) {
          std::array<uint8_t, sizeof(T)> out;
-         Botan::detail::fallback_store_any<Botan::detail::Endianness::Little, T>(in, out);
+         Botan::detail::fallback_store_any<std::endian::little, T>(in, out);
          return out;
       }
 

@@ -2292,7 +2292,6 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'arch': options.arch,
         'compiler': options.compiler,
         'cpu_family': arch.family,
-        'endian': options.with_endian,
 
         'python_exe': choose_python_exe(),
         'python_version': options.python_version,
