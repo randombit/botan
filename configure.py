@@ -870,7 +870,6 @@ class ModuleInfo(InfoObject):
             ['defines', 'libs', 'frameworks', 'module_info'],
             {
                 'load_on': 'auto',
-                'endian': 'any',
             })
 
         def check_header_duplicates(header_list_public, header_list_internal):
@@ -924,7 +923,6 @@ class ModuleInfo(InfoObject):
         self.os_features = lex.os_features
         self.requires = lex.requires
         self.warning = combine_lines(lex.warning)
-        self.endian = lex.endian
         self._parse_module_info(lex)
 
         # Modify members
@@ -1048,10 +1046,6 @@ class ModuleInfo(InfoObject):
     def compatible_cpu(self, archinfo, options):
         arch_name = archinfo.basename
         cpu_name = options.arch
-
-        if self.endian != 'any':
-            if self.endian != options.with_endian:
-                return False
 
         for isa in self.isa:
             if isa.find(':') > 0:
