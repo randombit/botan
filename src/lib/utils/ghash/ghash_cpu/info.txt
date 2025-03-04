@@ -7,8 +7,6 @@ name -> "GHASH SIMD"
 brief -> "GHASH using SIMD instructions"
 </module_info>
 
-endian little
-
 <requires>
 cpuid
 simd
