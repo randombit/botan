@@ -433,9 +433,6 @@ def process_command_line(args):
     target_group.add_option('--compiler-cache',
                             help='specify a compiler cache to use')
 
-    target_group.add_option('--with-endian', metavar='ORDER', default=None,
-                            help='override byte order guess')
-
     target_group.add_option('--ct-value-barrier-type', metavar='TYPE', default=None,
                             help=optparse.SUPPRESS_HELP)
 
@@ -697,9 +694,6 @@ def process_command_line(args):
 
     if args != []:
         raise UserError('Unhandled option(s): ' + ' '.join(args))
-
-    if options.with_endian not in [None, 'little', 'big']:
-        raise UserError('Bad value to --with-endian "%s"' % (options.with_endian))
 
     if options.debug_mode:
         options.no_optimizations = True
@@ -1220,12 +1214,10 @@ class ArchInfo(InfoObject):
             ['aliases', 'isa_extensions'],
             [],
             {
-                'endian': None,
                 'family': None,
             })
 
         self.aliases = lex.aliases
-        self.endian = lex.endian
         self.family = lex.family
         self.isa_extensions = lex.isa_extensions
 
@@ -3698,21 +3690,6 @@ def main(argv):
 
     logging.info('Target is %s:%s-%s-%s',
                  options.compiler, cc_min_version, options.os, options.arch)
-
-    def choose_endian(arch_info, options):
-        if options.with_endian is not None:
-            return options.with_endian
-
-        if options.cpu.endswith('eb') or options.cpu.endswith('be'):
-            return 'big'
-        if options.cpu.endswith('el') or options.cpu.endswith('le'):
-            return 'little'
-
-        if arch_info.endian:
-            logging.info('Assuming target %s is %s endian', arch_info.basename, arch_info.endian)
-        return arch_info.endian
-
-    options.with_endian = choose_endian(arch, options)
 
     chooser = ModulesChooser(info_modules, module_policy, arch, osinfo, cc, cc_min_version, options)
     loaded_module_names = chooser.choose()

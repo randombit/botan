@@ -1,4 +1,3 @@
-endian little
 family arm
 
 <aliases>

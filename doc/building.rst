@@ -702,14 +702,6 @@ picks either MD or MDd depending on if debug mode is set.
 
 Specify a compiler cache (like ccache) to use for each compiler invocation.
 
-``--with-endian=ORDER``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The parameter should be either "little" or "big". If not used then if
-the target architecture has a default, that is used. Otherwise left
-unspecified, which causes less optimal codepaths to be used but will
-work on either little or big endian.
-
 ``--with-os-features=FEAT``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

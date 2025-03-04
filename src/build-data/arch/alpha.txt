@@ -1,4 +1,3 @@
-endian little
 
 <aliases>
 axp

@@ -1,2 +1,1 @@
 family sparc
-endian big

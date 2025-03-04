@@ -1,2 +1,1 @@
 family loongarch
-endian little

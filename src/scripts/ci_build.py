@@ -410,7 +410,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 test_prefix = ['qemu-ppc', '-L', '/usr/powerpc-linux-gnu/']
                 test_cmd = None # qemu crashes ...
             elif target == 'cross-ppc64':
-                flags += ['--cpu=ppc64', '--with-endian=little']
+                flags += ['--cpu=ppc64']
                 cc_bin = 'powerpc64le-linux-gnu-g++'
                 test_prefix = ['qemu-ppc64le', '-cpu', 'power10', '-L', '/usr/powerpc64le-linux-gnu/']
             elif target == 'cross-riscv64':
@@ -422,11 +422,11 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 cc_bin = 's390x-linux-gnu-g++'
                 test_prefix = ['qemu-s390x', '-L', '/usr/s390x-linux-gnu/']
             elif target == 'cross-mips':
-                flags += ['--cpu=mips32', '--with-endian=big']
+                flags += ['--cpu=mips32']
                 cc_bin = 'mips-linux-gnu-g++'
                 test_prefix = ['qemu-mips', '-L', '/usr/mips-linux-gnu/']
             elif target == 'cross-mips64':
-                flags += ['--cpu=mips64', '--with-endian=big']
+                flags += ['--cpu=mips64']
                 cc_bin = 'mips64-linux-gnuabi64-g++'
                 test_prefix = ['qemu-mips64', '-L', '/usr/mips64-linux-gnuabi64/']
             elif target in ['cross-arm32-baremetal']:
