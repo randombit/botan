@@ -1,3 +1,2 @@
-endian big
 
 family ppc
