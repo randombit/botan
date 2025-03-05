@@ -53,6 +53,7 @@ class Client_Policy : public Botan::TLS::Default_Policy {
          auto groups = Botan::TLS::Default_Policy::key_exchange_groups();
          groups.push_back(Botan::TLS::Group_Params::HYBRID_X25519_ML_KEM_768);
          groups.push_back(Botan::TLS::Group_Params::HYBRID_SECP256R1_ML_KEM_768);
+         groups.push_back(Botan::TLS::Group_Params::HYBRID_SECP384R1_ML_KEM_1024);
          return groups;
       }
 

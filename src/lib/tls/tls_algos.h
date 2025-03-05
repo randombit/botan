@@ -114,6 +114,7 @@ enum class Group_Params_Code : uint16_t {
 
    // https://datatracker.ietf.org/doc/draft-kwiatkowski-tls-ecdhe-mlkem/03/
    HYBRID_SECP256R1_ML_KEM_768 = 0x11EB,
+   HYBRID_SECP384R1_ML_KEM_1024 = 0x11ED,
    HYBRID_X25519_ML_KEM_768 = 0x11EC,
 
    // https://github.com/open-quantum-safe/oqs-provider/blob/main/ALGORITHMS.md
@@ -211,6 +212,7 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
 
       constexpr bool is_pqc_hybrid_ml_kem() const {
          return m_code == Group_Params_Code::HYBRID_SECP256R1_ML_KEM_768 ||
+                m_code == Group_Params_Code::HYBRID_SECP384R1_ML_KEM_1024 ||
                 m_code == Group_Params_Code::HYBRID_X25519_ML_KEM_768;
       }
 
