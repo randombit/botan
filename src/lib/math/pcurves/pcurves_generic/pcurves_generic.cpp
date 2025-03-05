@@ -1407,7 +1407,15 @@ PrimeOrderCurve::AffinePoint GenericPrimeOrderCurve::generator() const {
 }
 
 PrimeOrderCurve::AffinePoint GenericPrimeOrderCurve::point_to_affine(const ProjectivePoint& pt) const {
-   return stash(to_affine<GenericCurve>(from_stash(pt)));
+   auto affine = to_affine<GenericCurve>(from_stash(pt));
+
+   const auto y2 = affine.y().square();
+   const auto x3_ax_b = GenericCurve::AffinePoint::x3_ax_b(affine.x());
+   const auto valid_point = affine.is_identity() || (y2 == x3_ax_b);
+
+   BOTAN_ASSERT(valid_point.as_bool(), "Computed point is on the curve");
+
+   return stash(affine);
 }
 
 PrimeOrderCurve::ProjectivePoint GenericPrimeOrderCurve::point_add(const AffinePoint& a, const AffinePoint& b) const {

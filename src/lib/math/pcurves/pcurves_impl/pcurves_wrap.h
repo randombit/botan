@@ -187,7 +187,15 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
       AffinePoint generator() const override { return stash(C::G); }
 
       AffinePoint point_to_affine(const ProjectivePoint& pt) const override {
-         return stash(to_affine<C>(from_stash(pt)));
+         auto affine = to_affine<C>(from_stash(pt));
+
+         const auto y2 = affine.y().square();
+         const auto x3_ax_b = C::AffinePoint::x3_ax_b(affine.x());
+         const auto valid_point = affine.is_identity() || (y2 == x3_ax_b);
+
+         BOTAN_ASSERT(valid_point.as_bool(), "Computed point is on the curve");
+
+         return stash(affine);
       }
 
       ProjectivePoint point_add(const AffinePoint& a, const AffinePoint& b) const override {
