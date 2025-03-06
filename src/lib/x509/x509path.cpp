@@ -384,7 +384,7 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
             status.insert(Certificate_Status_Code::CRL_NOT_YET_VALID);
          }
 
-         if(validation_time > crls[i]->next_update()) {
+         if(crls[i]->next_update().time_is_set() && validation_time > crls[i]->next_update()) {
             status.insert(Certificate_Status_Code::CRL_HAS_EXPIRED);
          }
 
