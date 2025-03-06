@@ -15,6 +15,7 @@
    #include <botan/tls_policy.h>
    #include <botan/tls_session.h>
    #include <botan/tls_version.h>
+   #include <botan/internal/fmt.h>
 
    #if defined(BOTAN_HAS_TLS_CBC)
       #include <botan/internal/tls_cbc.h>
@@ -291,6 +292,9 @@ class Test_TLS_Alert_Strings : public Test {
 
 BOTAN_REGISTER_TEST("tls", "tls_alert_strings", Test_TLS_Alert_Strings);
 
+   #if defined(BOTAN_HAS_TLS_13) && defined(BOTAN_HAS_TLS_13_PQC) && defined(BOTAN_HAS_X25519) && \
+      defined(BOTAN_HAS_X448)
+
 class Test_TLS_Policy_Text : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -301,21 +305,48 @@ class Test_TLS_Policy_Text : public Test {
          for(const std::string& policy : policies) {
             const std::string from_policy_obj = tls_policy_string(policy);
 
-   #if defined(BOTAN_HAS_TLS_13)
             const std::string policy_file = policy + (policy == "default" || policy == "strict" ? "_tls13" : "");
-   #else
-            const std::string policy_file = policy;
-   #endif
 
             const std::string from_file = read_tls_policy(policy_file);
 
-            result.test_eq("Values for TLS policy from " + policy_file, from_policy_obj, from_file);
+            if(from_policy_obj != from_file) {
+               std::string d = diff(from_policy_obj, from_file);
+               result.test_failure(Botan::fmt("Values for TLS policy from {} don't match (diff {})", policy_file, d));
+            } else {
+               result.test_success("Values from TLS policy from " + policy_file + " match");
+            }
          }
 
          return {result};
       }
 
    private:
+      static std::string diff(const std::string& a_str, const std::string& b_str) {
+         std::istringstream a_ss(a_str);
+         std::istringstream b_ss(b_str);
+
+         std::ostringstream diff;
+
+         for(;;) {
+            if(!a_ss && !b_ss) {
+               break;  // done
+            }
+
+            std::string a_line;
+            std::getline(a_ss, a_line, '\n');
+
+            std::string b_line;
+            std::getline(b_ss, b_line, '\n');
+
+            if(a_line != b_line) {
+               diff << "- " << a_line << "\n"
+                    << "+ " << b_line << "\n";
+            }
+         }
+
+         return diff.str();
+      }
+
       static std::string read_tls_policy(const std::string& policy_str) {
          const std::string fspath = Test::data_file("tls-policy/" + policy_str + ".txt");
 
@@ -351,6 +382,7 @@ class Test_TLS_Policy_Text : public Test {
 };
 
 BOTAN_REGISTER_TEST("tls", "tls_policy_text", Test_TLS_Policy_Text);
+   #endif
 
 class Test_TLS_Ciphersuites : public Test {
    public:
