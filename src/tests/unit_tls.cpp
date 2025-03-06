@@ -641,11 +641,6 @@ class Test_Policy final : public Botan::TLS::Text_Policy {
    public:
       Test_Policy() : Text_Policy("") {}
 
-      bool acceptable_protocol_version(Botan::TLS::Protocol_Version version) const override {
-         // TODO: handle TLS 1.3 server once the time is ripe.
-         return version.is_pre_tls_13();
-      }
-
       size_t dtls_initial_timeout() const override { return 1; }
 
       size_t dtls_maximum_timeout() const override { return 8; }
@@ -736,6 +731,7 @@ class TLS_Roundtrip_Tests final : public Test {
          policy->set("ciphers", cipher_policy);
          policy->set("macs", mac_policy);
          policy->set("key_exchange_methods", kex_policy);
+         policy->set("allow_tls13", "false");
          policy->set("allow_tls12", "true");
          policy->set("allow_dtls12", "true");
 
@@ -749,6 +745,37 @@ class TLS_Roundtrip_Tests final : public Test {
 
          std::vector<Botan::TLS::Protocol_Version> versions = {Botan::TLS::Protocol_Version::TLS_V12,
                                                                Botan::TLS::Protocol_Version::DTLS_V12};
+
+         return test_with_policy(
+            test_descr, results, client_ses, server_ses, creds, versions, policy, rng, client_auth);
+      }
+
+      static void test_all(const std::string& test_descr,
+                           std::vector<Test::Result>& results,
+                           const std::shared_ptr<Botan::TLS::Session_Manager>& client_ses,
+                           const std::shared_ptr<Botan::TLS::Session_Manager>& server_ses,
+                           const std::shared_ptr<Credentials_Manager_Test>& creds,
+                           std::shared_ptr<Botan::RandomNumberGenerator>& rng,
+                           const std::string& kex_policy,
+                           const std::string& cipher_policy,
+                           bool client_auth = false,
+                           const std::map<std::string, std::string>& extra_policies = {}) {
+         auto policy = std::make_shared<Test_Policy>();
+         policy->set("ciphers", cipher_policy);
+         policy->set("macs", "AEAD");
+         policy->set("key_exchange_methods", kex_policy);
+         policy->set("allow_tls13", "true");
+         policy->set("allow_tls12", "true");
+         policy->set("allow_dtls12", "true");
+
+         for(const auto& kv : extra_policies) {
+            policy->set(kv.first, kv.second);
+         }
+
+         std::vector<Botan::TLS::Protocol_Version> versions = {
+            Botan::TLS::Protocol_Version::TLS_V12,
+            Botan::TLS::Protocol_Version::TLS_V13,
+            Botan::TLS::Protocol_Version::DTLS_V12};
 
          return test_with_policy(
             test_descr, results, client_ses, server_ses, creds, versions, policy, rng, client_auth);
@@ -937,7 +964,7 @@ class TLS_Roundtrip_Tests final : public Test {
 
    #if defined(BOTAN_HAS_CAMELLIA) && defined(BOTAN_HAS_AEAD_GCM)
          test_tls12(
-            "Camellia-128/GCM ECDH", results, client_ses, server_ses, creds, rng, "ECDH", "Camellia-128/GCM", "AEAD");
+            "Camellia-128/GCM ECDH", results, client_ses, server_ses, creds, rng, "ECDH", "Camellia-128/GCM");
    #endif
 
    #if defined(BOTAN_HAS_ARIA)
@@ -954,16 +981,16 @@ class TLS_Roundtrip_Tests final : public Test {
                     "AES-128/GCM",
                     "AEAD",
                     {{"use_ecc_point_compression", "true"}});
-         test_tls12("AES-256/GCM p521",
-                    results,
-                    client_ses,
-                    server_ses,
-                    creds,
-                    rng,
-                    "ECDH",
-                    "AES-256/GCM",
-                    "AEAD",
-                    {{"groups", "secp521r1"}});
+         test_all("AES-256/GCM p521",
+                  results,
+                  client_ses,
+                  server_ses,
+                  creds,
+                  rng,
+                  "ECDH",
+                  "AES-256/GCM",
+                  false,
+                  {{"groups", "secp521r1"}});
          test_tls12("AES-128/GCM bp256r1",
                     results,
                     client_ses,
@@ -976,16 +1003,16 @@ class TLS_Roundtrip_Tests final : public Test {
                     {{"groups", "brainpool256r1"}});
 
    #if defined(BOTAN_HAS_X25519)
-         test_tls12("AES-128/GCM x25519",
-                    results,
-                    client_ses,
-                    server_ses,
-                    creds,
-                    rng,
-                    "ECDH",
-                    "AES-128/GCM",
-                    "AEAD",
-                    {{"groups", "x25519"}});
+         test_all("AES-128/GCM x25519",
+                  results,
+                  client_ses,
+                  server_ses,
+                  creds,
+                  rng,
+                  "ECDH",
+                  "AES-128/GCM",
+                  false,
+                  {{"groups", "x25519"}});
    #endif
 
          test_tls12("AES-128/GCM FFDHE-2048",
