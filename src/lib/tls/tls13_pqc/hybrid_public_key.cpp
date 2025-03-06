@@ -99,7 +99,7 @@ std::vector<AlgorithmIdentifier> algorithm_identifiers_for_group(Group_Params gr
    return result;
 }
 
-std::vector<size_t> public_value_lengths_for_group(Group_Params group) {
+std::vector<size_t> public_key_lengths_for_group(Group_Params group) {
    BOTAN_ASSERT_NOMSG(group.is_pqc_hybrid());
 
    // This duplicates information of the algorithm internals.
@@ -238,24 +238,24 @@ class Hybrid_TLS_KEM_Decryptor final : public KEM_Decryption_with_Combiner {
 }  // namespace
 
 std::unique_ptr<Hybrid_KEM_PublicKey> Hybrid_KEM_PublicKey::load_for_group(
-   Group_Params group, std::span<const uint8_t> concatenated_public_values) {
-   const auto public_value_lengths = public_value_lengths_for_group(group);
+   Group_Params group, std::span<const uint8_t> concatenated_public_keys) {
+   const auto public_key_lengths = public_key_lengths_for_group(group);
    auto alg_ids = algorithm_identifiers_for_group(group);
-   BOTAN_ASSERT_NOMSG(public_value_lengths.size() == alg_ids.size());
+   BOTAN_ASSERT_NOMSG(public_key_lengths.size() == alg_ids.size());
 
-   const auto expected_public_values_length =
-      reduce(public_value_lengths, size_t(0), [](size_t acc, size_t len) { return acc + len; });
-   if(expected_public_values_length != concatenated_public_values.size()) {
+   const auto expected_public_keys_length =
+      reduce(public_key_lengths, size_t(0), [](size_t acc, size_t len) { return acc + len; });
+   if(expected_public_keys_length != concatenated_public_keys.size()) {
       throw Decoding_Error("Concatenated public values have an unexpected length");
    }
 
-   BufferSlicer public_value_slicer(concatenated_public_values);
+   BufferSlicer public_key_slicer(concatenated_public_keys);
    std::vector<std::unique_ptr<Public_Key>> pks;
    pks.reserve(alg_ids.size());
    for(size_t idx = 0; idx < alg_ids.size(); ++idx) {
-      pks.emplace_back(load_public_key(alg_ids[idx], public_value_slicer.take(public_value_lengths[idx])));
+      pks.emplace_back(load_public_key(alg_ids[idx], public_key_slicer.take(public_key_lengths[idx])));
    }
-   BOTAN_ASSERT_NOMSG(public_value_slicer.empty());
+   BOTAN_ASSERT_NOMSG(public_key_slicer.empty());
    return std::make_unique<Hybrid_KEM_PublicKey>(std::move(pks));
 }
 
