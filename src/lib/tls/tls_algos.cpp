@@ -191,6 +191,7 @@ std::optional<Group_Params_Code> Group_Params::pqc_hybrid_ecc() const {
       case Group_Params_Code::HYBRID_SECP256R1_eFRODOKEM_640_AES_OQS:
          return Group_Params_Code::SECP256R1;
 
+      case Group_Params_Code::HYBRID_SECP384R1_ML_KEM_1024:
       case Group_Params_Code::HYBRID_SECP384R1_eFRODOKEM_976_SHAKE_OQS:
       case Group_Params_Code::HYBRID_SECP384R1_eFRODOKEM_976_AES_OQS:
          return Group_Params_Code::SECP384R1;
@@ -280,6 +281,9 @@ std::optional<Group_Params> Group_Params::from_string(std::string_view group_nam
    }
    if(group_name == "secp256r1/ML-KEM-768") {
       return Group_Params::HYBRID_SECP256R1_ML_KEM_768;
+   }
+   if(group_name == "secp384r1/ML-KEM-1024") {
+      return Group_Params::HYBRID_SECP384R1_ML_KEM_1024;
    }
 
    if(group_name == "x25519/eFrodoKEM-640-SHAKE") {
@@ -394,6 +398,8 @@ std::optional<std::string> Group_Params::to_string() const {
          return "x25519/ML-KEM-768";
       case Group_Params::HYBRID_SECP256R1_ML_KEM_768:
          return "secp256r1/ML-KEM-768";
+      case Group_Params::HYBRID_SECP384R1_ML_KEM_1024:
+         return "secp384r1/ML-KEM-1024";
 
       default:
          return std::nullopt;

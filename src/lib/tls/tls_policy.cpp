@@ -182,8 +182,14 @@ std::vector<Group_Params> Policy::key_exchange_groups() const {
 
       Group_Params::SECP256R1,
 
-#if defined(BOTAN_HAS_X25519) && defined(BOTAN_HAS_ML_KEM) && defined(BOTAN_HAS_TLS_13_PQC)
+#if defined(BOTAN_HAS_ML_KEM) && defined(BOTAN_HAS_TLS_13_PQC)
+
+#if defined(BOTAN_HAS_X25519)
       Group_Params_Code::HYBRID_X25519_ML_KEM_768,
+#endif
+
+      Group_Params_Code::HYBRID_SECP256R1_ML_KEM_768,
+      Group_Params_Code::HYBRID_SECP384R1_ML_KEM_1024,
 #endif
 
 #if defined(BOTAN_HAS_X448)

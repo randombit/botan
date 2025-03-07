@@ -10,6 +10,7 @@
 
 #include <botan/internal/hybrid_public_key.h>
 
+#include <botan/ec_group.h>
 #include <botan/pk_algs.h>
 
 #include <botan/internal/fmt.h>
@@ -41,6 +42,8 @@ std::vector<std::pair<std::string, std::string>> algorithm_specs_for_group(Group
          return {{"ML-KEM", "ML-KEM-768"}, {"X25519", "X25519"}};
       case Group_Params::HYBRID_SECP256R1_ML_KEM_768:
          return {{"ECDH", "secp256r1"}, {"ML-KEM", "ML-KEM-768"}};
+      case Group_Params::HYBRID_SECP384R1_ML_KEM_1024:
+         return {{"ECDH", "secp384r1"}, {"ML-KEM", "ML-KEM-1024"}};
 
       case Group_Params::HYBRID_X25519_eFRODOKEM_640_SHAKE_OQS:
          return {{"X25519", "X25519"}, {"FrodoKEM", "eFrodoKEM-640-SHAKE"}};
@@ -86,13 +89,17 @@ std::vector<AlgorithmIdentifier> algorithm_identifiers_for_group(Group_Params gr
    // TODO: This is inconvenient, confusing and error-prone. Find a better way
    //       to load arbitrary public keys.
    for(const auto& spec : specs) {
-      result.push_back(AlgorithmIdentifier(spec.second, AlgorithmIdentifier::USE_EMPTY_PARAM));
+      if(spec.first == "ECDH") {
+         result.push_back(AlgorithmIdentifier("ECDH", EC_Group::from_name(spec.second).DER_encode()));
+      } else {
+         result.push_back(AlgorithmIdentifier(spec.second, AlgorithmIdentifier::USE_EMPTY_PARAM));
+      }
    }
 
    return result;
 }
 
-std::vector<size_t> public_value_lengths_for_group(Group_Params group) {
+std::vector<size_t> public_key_lengths_for_group(Group_Params group) {
    BOTAN_ASSERT_NOMSG(group.is_pqc_hybrid());
 
    // This duplicates information of the algorithm internals.
@@ -103,7 +110,9 @@ std::vector<size_t> public_value_lengths_for_group(Group_Params group) {
       case Group_Params::HYBRID_X25519_ML_KEM_768:
          return {1184, 32};
       case Group_Params::HYBRID_SECP256R1_ML_KEM_768:
-         return {32, 1184};
+         return {65, 1184};
+      case Group_Params::HYBRID_SECP384R1_ML_KEM_1024:
+         return {97, 1568};
 
       case Group_Params::HYBRID_X25519_eFRODOKEM_640_SHAKE_OQS:
          return {32, 9616};
@@ -115,19 +124,19 @@ std::vector<size_t> public_value_lengths_for_group(Group_Params group) {
          return {56, 15632};
 
       case Group_Params::HYBRID_SECP256R1_eFRODOKEM_640_SHAKE_OQS:
-         return {32, 9616};
+         return {65, 9616};
       case Group_Params::HYBRID_SECP256R1_eFRODOKEM_640_AES_OQS:
-         return {32, 9616};
+         return {65, 9616};
 
       case Group_Params::HYBRID_SECP384R1_eFRODOKEM_976_SHAKE_OQS:
-         return {48, 15632};
+         return {97, 15632};
       case Group_Params::HYBRID_SECP384R1_eFRODOKEM_976_AES_OQS:
-         return {48, 15632};
+         return {97, 15632};
 
       case Group_Params::HYBRID_SECP521R1_eFRODOKEM_1344_SHAKE_OQS:
-         return {66, 21520};
+         return {133, 21520};
       case Group_Params::HYBRID_SECP521R1_eFRODOKEM_1344_AES_OQS:
-         return {66, 21520};
+         return {133, 21520};
 
       default:
          return {};
@@ -229,24 +238,24 @@ class Hybrid_TLS_KEM_Decryptor final : public KEM_Decryption_with_Combiner {
 }  // namespace
 
 std::unique_ptr<Hybrid_KEM_PublicKey> Hybrid_KEM_PublicKey::load_for_group(
-   Group_Params group, std::span<const uint8_t> concatenated_public_values) {
-   const auto public_value_lengths = public_value_lengths_for_group(group);
+   Group_Params group, std::span<const uint8_t> concatenated_public_keys) {
+   const auto public_key_lengths = public_key_lengths_for_group(group);
    auto alg_ids = algorithm_identifiers_for_group(group);
-   BOTAN_ASSERT_NOMSG(public_value_lengths.size() == alg_ids.size());
+   BOTAN_ASSERT_NOMSG(public_key_lengths.size() == alg_ids.size());
 
-   const auto expected_public_values_length =
-      reduce(public_value_lengths, size_t(0), [](size_t acc, size_t len) { return acc + len; });
-   if(expected_public_values_length != concatenated_public_values.size()) {
+   const auto expected_public_keys_length =
+      reduce(public_key_lengths, size_t(0), [](size_t acc, size_t len) { return acc + len; });
+   if(expected_public_keys_length != concatenated_public_keys.size()) {
       throw Decoding_Error("Concatenated public values have an unexpected length");
    }
 
-   BufferSlicer public_value_slicer(concatenated_public_values);
+   BufferSlicer public_key_slicer(concatenated_public_keys);
    std::vector<std::unique_ptr<Public_Key>> pks;
    pks.reserve(alg_ids.size());
    for(size_t idx = 0; idx < alg_ids.size(); ++idx) {
-      pks.emplace_back(load_public_key(alg_ids[idx], public_value_slicer.take(public_value_lengths[idx])));
+      pks.emplace_back(load_public_key(alg_ids[idx], public_key_slicer.take(public_key_lengths[idx])));
    }
-   BOTAN_ASSERT_NOMSG(public_value_slicer.empty());
+   BOTAN_ASSERT_NOMSG(public_key_slicer.empty());
    return std::make_unique<Hybrid_KEM_PublicKey>(std::move(pks));
 }
 
