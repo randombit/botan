@@ -216,7 +216,7 @@ bool Certificate_Store_In_SQL::insert_key(const X509_Certificate& cert, const Pr
       return false;
    }
 
-   auto pkcs8 = PKCS8::BER_encode(key, m_rng, m_password);
+   auto pkcs8 = PKCS8::encrypt_private_key(key, m_password, m_rng).as_bytes();
    auto fpr = key.fingerprint_private("SHA-256");
 
    auto stmt1 =
