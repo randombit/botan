@@ -37,7 +37,12 @@ def parse_perf_report(report):
     results = []
     for t in report:
         if 'algo' in t and 'op' in t and 'events' in t and 'nanos' in t:
-            results.append(((t['algo'], t['op']), ops_per_second(t['events'], t['nanos'])))
+
+            op = t['op']
+            if 'buf_size' in t:
+                op += ' ' + str(t['buf_size']) + ' buffer'
+
+            results.append(((t['algo'], op), ops_per_second(t['events'], t['nanos'])))
         else:
             print("Unexpected record", t)
 
