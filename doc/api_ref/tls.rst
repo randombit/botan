@@ -793,17 +793,22 @@ policy settings from a file.
  .. cpp:function:: std::vector<Group_Params> key_exchange_groups() const
 
      Return a list of ECC curve and DH group TLS identifiers we are willing to use, in order of preference.
-     The default ordering puts the best performing ECC first.
 
      Default:
-     Group_Params::X25519,
-     Group_Params::SECP256R1, Group_Params::BRAINPOOL256R1,
-     Group_Params::SECP384R1, Group_Params::BRAINPOOL384R1,
-     Group_Params::SECP521R1, Group_Params::BRAINPOOL512R1,
-     Group_Params::FFDHE_2048, Group_Params::FFDHE_3072, Group_Params::FFDHE_4096,
-     Group_Params::FFDHE_6144, Group_Params::FFDHE_8192
 
-     No other values are currently defined.
+     Group_Params::X25519,
+     Group_Params::SECP256R1,
+     Group_Params_Code::HYBRID_X25519_ML_KEM_768,
+     Group_Params_Code::HYBRID_SECP256R1_ML_KEM_768,
+     Group_Params_Code::HYBRID_SECP384R1_ML_KEM_1024,
+     Group_Params::X448,
+     Group_Params::SECP384R1,
+     Group_Params::SECP521R1,
+     Group_Params::BRAINPOOL256R1,
+     Group_Params::BRAINPOOL384R1,
+     Group_Params::BRAINPOOL512R1,
+     Group_Params::FFDHE_2048,
+     Group_Params::FFDHE_3072,
 
  .. cpp:function:: std::vector<Group_Param> key_exchange_groups_to_offer() const
 
@@ -1134,6 +1139,7 @@ Currently, Botan supports the following post-quantum secure key exchanges:
   to be in the future standardized by IETF
 
   * ``HYBRID_SECP256R1_ML_KEM_768`` ("secp256r1/ML-KEM-768")
+  * ``HYBRID_SECP384R1_ML_KEM_1024`` ("secp384r1/ML-KEM-1024")
   * ``HYBRID_X25519_ML_KEM_768`` ("x25519/ML-KEM-768")
 
 * Pure ML-KEM as documented in IETF draft ``draft-connolly-tls-mlkem-key-agreement``
