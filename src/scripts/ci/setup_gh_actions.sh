@@ -57,13 +57,8 @@ if type -p "apt-get"; then
         # (l)ist mode (avoiding https://github.com/actions/runner-images/issues/9996)
         sudo NEEDRESTART_MODE=l apt-get -qq install valgrind
 
-    elif [ "$TARGET" = "static" ]; then
-        sudo apt-get -qq install "${tpm2_specific_packages[@]}"
-        echo "BOTAN_TPM2_ENABLED=${ci_support_of_tpm2}" >> "$GITHUB_ENV"
-
     elif [ "$TARGET" = "shared" ]; then
-        sudo apt-get -qq install libboost-dev "${tpm2_specific_packages[@]}"
-        echo "BOTAN_TPM2_ENABLED=${ci_support_of_tpm2}" >> "$GITHUB_ENV"
+        sudo apt-get -qq install libboost-dev
 
     elif [ "$TARGET" = "examples" ] || [ "$TARGET" = "amalgamation" ] || [ "$TARGET" = "tlsanvil" ] || [ "$TARGET" = "clang-tidy" ] ; then
         sudo apt-get -qq install libboost-dev libtss2-dev

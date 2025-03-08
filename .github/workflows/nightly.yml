@@ -173,22 +173,32 @@ jobs:
         compiler: ["clang", "gcc"]
         cxxflags: ["-O1", "-O2", "-O3"]
         target:   ["valgrind-ct-full"]
+        platform: ["ubuntu-24.04", "ubuntu-24.04-arm"]
+
+        exclude:
+          - platform: "ubuntu-24.04-arm"
+            compiler: clang
+          - platform: "ubuntu-24.04-arm"
+            cxxflags: "-O1"
 
         include:
           - compiler: clang
             cxxflags: ""              # default compilation flags
             target:   "valgrind-full" # memory bug detection
+            platform: "ubuntu-24.04"
           - compiler: clang
             cxxflags: "-Os"
             # Clang's -Os generated binary is fast enough to run the full test suite.
             target:   "valgrind-ct-full"
+            platform: "ubuntu-24.04"
           - compiler: gcc
             cxxflags: "-Os"
             # GCC with -Os generates a much slower binary, that won't finish
             # before timing out on GH Actions, so we run a reduced set of tests.
             target:   "valgrind-ct"
+            platform: "ubuntu-24.04"
 
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.platform }}
 
     steps:
       - uses: actions/checkout@v4
@@ -200,7 +210,7 @@ jobs:
         uses: ./.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
-          cache-key: linux-x86_64-${{ matrix.compiler }}-${{ matrix.target }}-${{ matrix.cxxflags }}
+          cache-key: ${{ matrix.platform }}-${{ matrix.compiler }}-${{ matrix.target }}-${{ matrix.cxxflags }}
 
       - name: Valgrind Checks
         run: python3 ./src/scripts/ci_build.py --make-tool=make --cc=${{ matrix.compiler }} --custom-optimization-flags="${{ matrix.cxxflags }}" ${{ matrix.target }}

@@ -252,7 +252,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if target == 'coverage':
         flags += ['--with-coverage-info']
 
-    if target in ['coverage']:
+    if target in ['coverage', 'valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full']:
         flags += ['--with-debug-info']
 
     if target in ['coverage', 'sanitizer', 'fuzzers']:
@@ -266,7 +266,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
         test_prefix = ['valgrind',
                        '-v',
-                       '--error-exitcode=9']
+                       '--error-exitcode=9',
+                       '--show-reachable=yes',
+                       '--track-origins=yes']
 
         # For finding memory bugs, we're enabling more features that add runtime
         # overhead which we don't need for the secret-dependent execution checks
