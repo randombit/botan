@@ -96,3 +96,7 @@ This example encrypts a credit card number with a valid `Luhn checksum
 format, including a correct checksum.
 
 .. literalinclude:: ../../src/cli/cc_enc.cpp
+
+This example encrypts a string of dictionary words onto another string of dictionary words:
+
+.. literalinclude:: ../../src/examples/fpe_dictionary.cpp

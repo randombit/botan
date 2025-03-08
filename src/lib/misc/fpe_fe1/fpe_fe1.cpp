@@ -27,6 +27,8 @@ const size_t MAX_N_BYTES = 128 / 8;
 * typical uses of FPE (typically, n is a power of 10)
 */
 void factor(BigInt n, BigInt& a, BigInt& b) {
+   BOTAN_ARG_CHECK(n >= 2, "Invalid FPE modulus");
+
    a = BigInt::one();
    b = BigInt::one();
 
