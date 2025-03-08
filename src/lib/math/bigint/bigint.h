@@ -486,7 +486,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * Clear all but the lowest n bits
        * @param n amount of bits to keep
        */
-      void mask_bits(size_t n) { m_data.mask_bits(n); }
+      BOTAN_DEPRECATED("Deprecated no replacement") void mask_bits(size_t n) { m_data.mask_bits(n); }
 
       /**
        * Return bit value at specified position
@@ -509,7 +509,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * [0 ... 2**32-1], or otherwise throw an exception.
        * @result the value as a uint32_t if conversion is possible
        */
-      uint32_t to_u32bit() const;
+      BOTAN_DEPRECATED("Deprecated no replacement") uint32_t to_u32bit() const;
 
       /**
        * Convert this value to a decimal string.
@@ -583,7 +583,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       /**
        * Flip the sign of this BigInt
        */
-      void flip_sign() { set_sign(reverse_sign()); }
+      BOTAN_DEPRECATED("Deprecated no replacement") void flip_sign() { set_sign(reverse_sign()); }
 
       /**
        * Set sign of the integer
@@ -776,24 +776,24 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * If predicate is true assign other to *this
        * Uses a masked operation to avoid side channels
        */
-      void ct_cond_assign(bool predicate, const BigInt& other);
+      BOTAN_DEPRECATED("Deprecated no replacement") void ct_cond_assign(bool predicate, const BigInt& other);
 
       /**
        * If predicate is true swap *this and other
        * Uses a masked operation to avoid side channels
        */
-      void ct_cond_swap(bool predicate, BigInt& other);
+      BOTAN_DEPRECATED("Deprecated no replacement") void ct_cond_swap(bool predicate, BigInt& other);
 
       /**
        * If predicate is true add value to *this
        */
-      void ct_cond_add(bool predicate, const BigInt& value);
+      BOTAN_DEPRECATED("Deprecated no replacement") void ct_cond_add(bool predicate, const BigInt& value);
 
       /**
        * Shift @p shift bits to the left, runtime is independent of
        * the value of @p shift.
        */
-      void ct_shift_left(size_t shift);
+      BOTAN_DEPRECATED("Deprecated no replacement") void ct_shift_left(size_t shift);
 
       /**
        * If predicate is true flip the sign of *this
