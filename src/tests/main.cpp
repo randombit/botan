@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
          "--log-success --abort-on-first-fail --no-stdout --no-avoid-undefined "
          "--skip-tests= --test-threads=0 --test-results-dir= --run-long-tests "
          "--run-memory-intensive-tests --run-online-tests --test-runs=1 "
-         "--drbg-seed= --report-properties= *suites";
+         "--drbg-seed= --report-properties= --list-tests *suites";
 
       Botan_CLI::Argument_Parser parser(arg_spec);
 
@@ -74,6 +74,13 @@ int main(int argc, char* argv[]) {
 
       if(parser.flag_set("help")) {
          std::cout << help_text(arg_spec);
+         return 0;
+      }
+
+      if(parser.flag_set("list-tests")) {
+         for(const auto& test_name : Botan_Tests::Test::registered_tests()) {
+            std::cout << test_name << "\n";
+         }
          return 0;
       }
 
