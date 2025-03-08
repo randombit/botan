@@ -269,9 +269,12 @@ jobs:
           - target: cross-i386
             compiler: gcc
             host_os: ubuntu-22.04
-          - target: cross-arm64
+          - target: shared
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-24.04-arm
+          - target: shared
+            compiler: clang
+            host_os: ubuntu-24.04-arm
           - target: cross-ppc64
             compiler: gcc
             host_os: ubuntu-24.04
