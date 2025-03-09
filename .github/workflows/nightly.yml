@@ -75,31 +75,31 @@ jobs:
             host_os: ubuntu-24.04
           - target: cross-alpha
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-24.04-arm
           - target: cross-hppa64
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-24.04-arm
           - target: cross-m68k
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-24.04-arm
           - target: cross-mips
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-24.04-arm
           - target: cross-ppc32
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-24.04-arm
           - target: cross-sh4
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-24.04-arm
           - target: cross-sparc64
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-24.04-arm
           - target: cross-riscv64
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-24.04-arm
           - target: cross-s390x
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-24.04-arm
           - target: cross-android-arm64-amalgamation
             compiler: clang
             host_os: ubuntu-24.04

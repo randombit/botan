@@ -280,10 +280,10 @@ jobs:
             host_os: ubuntu-24.04-arm
           - target: cross-ppc64
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-24.04-arm
           - target: cross-mips64
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-24.04-arm
           - target: cross-android-arm64
             compiler: clang
             host_os: ubuntu-24.04
@@ -296,7 +296,7 @@ jobs:
             host_os: macos-13
           - target: cross-arm32-baremetal
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-24.04-arm
 
     runs-on: ${{ matrix.host_os }}
 
