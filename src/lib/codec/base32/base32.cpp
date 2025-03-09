@@ -1,7 +1,7 @@
 /*
 * Base32 Encoding and Decoding
 * (C) 2018 Erwan Chaussy
-* (C) 2018,2020 Jack Lloyd
+* (C) 2018,2020,2025 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -12,6 +12,8 @@
 #include <botan/internal/codec_base.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/int_utils.h>
+#include <botan/internal/loadstor.h>
 #include <botan/internal/rounding.h>
 
 namespace Botan {
@@ -68,15 +70,12 @@ class Base32 final {
 
 namespace {
 
-char lookup_base32_char(uint8_t x) {
-   BOTAN_DEBUG_ASSERT(x < 32);
+uint64_t lookup_base32_char(uint64_t x) {
+   uint64_t r = x;
+   r += swar_lt<uint64_t>(x, 0x1a1a1a1a1a1a1a1a) & 0x2929292929292929;
+   r += 0x1818181818181818;
 
-   const auto in_AZ = CT::Mask<uint8_t>::is_lt(x, 26);
-
-   const char c_AZ = 'A' + x;
-   const char c_27 = '2' + (x - 26);
-
-   return in_AZ.select(c_AZ, c_27);
+   return r;
 }
 
 }  // namespace
@@ -92,14 +91,16 @@ void Base32::encode(char out[8], const uint8_t in[5]) noexcept {
    const uint8_t b6 = ((in[3] & 0x03) << 3) | (in[4] >> 5);
    const uint8_t b7 = in[4] & 0x1F;
 
-   out[0] = lookup_base32_char(b0);
-   out[1] = lookup_base32_char(b1);
-   out[2] = lookup_base32_char(b2);
-   out[3] = lookup_base32_char(b3);
-   out[4] = lookup_base32_char(b4);
-   out[5] = lookup_base32_char(b5);
-   out[6] = lookup_base32_char(b6);
-   out[7] = lookup_base32_char(b7);
+   auto b = lookup_base32_char(make_uint64(b0, b1, b2, b3, b4, b5, b6, b7));
+
+   out[0] = static_cast<char>(get_byte<0>(b));
+   out[1] = static_cast<char>(get_byte<1>(b));
+   out[2] = static_cast<char>(get_byte<2>(b));
+   out[3] = static_cast<char>(get_byte<3>(b));
+   out[4] = static_cast<char>(get_byte<4>(b));
+   out[5] = static_cast<char>(get_byte<5>(b));
+   out[6] = static_cast<char>(get_byte<6>(b));
+   out[7] = static_cast<char>(get_byte<7>(b));
 }
 
 //static
@@ -165,6 +166,14 @@ secure_vector<uint8_t> base32_decode(const char input[], size_t input_length, bo
 
 secure_vector<uint8_t> base32_decode(std::string_view input, bool ignore_ws) {
    return base32_decode(input.data(), input.size(), ignore_ws);
+}
+
+size_t base32_encode_max_output(size_t input_length) {
+   return Base32::encode_max_output(input_length);
+}
+
+size_t base32_decode_max_output(size_t input_length) {
+   return Base32::decode_max_output(input_length);
 }
 
 }  // namespace Botan

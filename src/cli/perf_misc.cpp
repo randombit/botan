@@ -11,6 +11,10 @@
 #include <botan/assert.h>
 #include <botan/hex.h>
 
+#if defined(BOTAN_HAS_BASE32_CODEC)
+   #include <botan/base32.h>
+#endif
+
 #if defined(BOTAN_HAS_BASE64_CODEC)
    #include <botan/base64.h>
 #endif
@@ -59,6 +63,40 @@ class PerfTest_Hex final : public PerfTest {
 };
 
 BOTAN_REGISTER_PERF_TEST("hex", PerfTest_Hex);
+
+#if defined(BOTAN_HAS_BASE32_CODEC)
+class PerfTest_Base32 final : public PerfTest {
+   public:
+      void go(const PerfConfig& config) override {
+         for(size_t buf_size : config.buffer_sizes()) {
+            std::vector<uint8_t> ibuf(buf_size);
+            std::vector<uint8_t> rbuf(buf_size);
+            const size_t olen = Botan::base32_encode_max_output(ibuf.size());
+
+            auto enc_timer = config.make_timer("base32", ibuf.size(), "encode", "", ibuf.size());
+
+            auto dec_timer = config.make_timer("base32", olen, "decode", "", olen);
+
+            const auto msec = config.runtime();
+
+            while(enc_timer->under(msec) && dec_timer->under(msec)) {
+               config.rng().randomize(ibuf);
+
+               std::string b32 = enc_timer->run([&]() { return Botan::base32_encode(ibuf); });
+
+               dec_timer->run([&]() { Botan::base32_decode(rbuf.data(), b32); });
+               BOTAN_ASSERT(rbuf == ibuf, "Encode/decode round trip ok");
+            }
+
+            config.record_result(*enc_timer);
+            config.record_result(*dec_timer);
+         }
+      }
+};
+
+BOTAN_REGISTER_PERF_TEST("base32", PerfTest_Base32);
+
+#endif
 
 #if defined(BOTAN_HAS_BASE64_CODEC)
 class PerfTest_Base64 final : public PerfTest {
