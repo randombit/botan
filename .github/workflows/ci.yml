@@ -272,6 +272,9 @@ jobs:
           - target: shared
             compiler: gcc
             host_os: ubuntu-24.04-arm
+          - target: amalgamation
+            compiler: gcc
+            host_os: ubuntu-24.04-arm
           - target: shared
             compiler: clang
             host_os: ubuntu-24.04-arm

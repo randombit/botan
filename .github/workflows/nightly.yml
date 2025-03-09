@@ -103,9 +103,6 @@ jobs:
           - target: cross-android-arm64-amalgamation
             compiler: clang
             host_os: ubuntu-24.04
-          - target: cross-arm64-amalgamation
-            compiler: gcc
-            host_os: ubuntu-24.04
           - target: emscripten
             compiler: emcc
             host_os: macos-14
