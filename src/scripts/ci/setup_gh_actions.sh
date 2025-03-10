@@ -119,6 +119,8 @@ if type -p "apt-get"; then
         tar -xvf "${INTEL_SDE_VERSION}.tar.xz"
         echo "${INTEL_SDE_VERSION}" >> "$GITHUB_PATH"
 
+        echo "CXX=g++-14" >> "$GITHUB_ENV"
+
     elif [ "$TARGET" = "cross-android-arm32" ] || [ "$TARGET" = "cross-android-arm64" ] || [ "$TARGET" = "cross-android-arm64-amalgamation" ]; then
         wget -nv "https://dl.google.com/android/repository/${ANDROID_NDK}-linux.zip"
         unzip -qq "$ANDROID_NDK"-linux.zip

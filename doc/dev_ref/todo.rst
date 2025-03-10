@@ -28,7 +28,7 @@ Hardware Specific Optimizations
 * GFNI implementations for: Camellia, SEED, ARIA
 * NEON/VMX support for the SIMD based GHASH
 * Poly1305 using AVX2
-* SHA-512 using BMI2+AVX2 and/or new Intel instructions
+* SHA-512 using BMI2+AVX2
 * SM3 using x86 SM3-NI
 * SM4 using x86 SM4-NI
 * Constant time bitsliced DES
