@@ -141,8 +141,11 @@ std::vector<CPUID::CPUID_bits> CPUID::bit_from_string(std::string_view tok) {
       return {CPUID::CPUID_AVX512_BIT};
    }
    // there were two if statements testing "sha" and "intel_sha" separately; combined
+   // TODO(Botan4) remove "sha"
    else if(tok == "sha" || tok == "intel_sha") {
       return {CPUID::CPUID_SHA_BIT};
+   } else if(tok == "intel_sha512") {
+      return {CPUID::CPUID_SHA512_BIT};
    } else if(tok == "rdtsc") {
       return {CPUID::CPUID_RDTSC_BIT};
    } else if(tok == "bmi2") {

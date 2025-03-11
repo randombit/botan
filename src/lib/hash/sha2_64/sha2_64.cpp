@@ -22,15 +22,21 @@ namespace Botan {
 namespace {
 
 std::string sha512_provider() {
-#if defined(BOTAN_HAS_SHA2_64_BMI2)
-   if(CPUID::has_bmi2()) {
-      return "bmi2";
+#if defined(BOTAN_HAS_SHA2_64_X86)
+   if(CPUID::has_intel_sha512()) {
+      return "x86";
    }
 #endif
 
 #if defined(BOTAN_HAS_SHA2_64_ARMV8)
    if(CPUID::has_arm_sha2_512()) {
       return "armv8";
+   }
+#endif
+
+#if defined(BOTAN_HAS_SHA2_64_BMI2)
+   if(CPUID::has_bmi2()) {
+      return "bmi2";
    }
 #endif
 
@@ -44,15 +50,21 @@ std::string sha512_provider() {
 */
 //static
 void SHA_512::compress_digest(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
-#if defined(BOTAN_HAS_SHA2_64_BMI2)
-   if(CPUID::has_bmi2()) {
-      return compress_digest_bmi2(digest, input, blocks);
+#if defined(BOTAN_HAS_SHA2_64_X86)
+   if(CPUID::has_intel_sha512()) {
+      return compress_digest_x86(digest, input, blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_SHA2_64_ARMV8)
    if(CPUID::has_arm_sha2_512()) {
       return compress_digest_armv8(digest, input, blocks);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SHA2_64_BMI2)
+   if(CPUID::has_bmi2()) {
+      return compress_digest_bmi2(digest, input, blocks);
    }
 #endif
 
