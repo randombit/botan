@@ -481,7 +481,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
             # slower tests to take as long as 5 minutes
             test_cmd.remove('--run-long-tests')
 
-    flags += ['--cc-bin=%s' % (cc_bin)]
+    if os.getenv('CXX') is None:
+        flags += ['--cc-bin=%s' % (cc_bin)]
 
     if test_cmd is None:
         run_test_command = None
