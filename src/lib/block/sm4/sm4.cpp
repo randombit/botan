@@ -170,6 +170,12 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    }
 #endif
 
+#if defined(BOTAN_HAS_SM4_X86)
+   if(CPUID::has_intel_sm4()) {
+      return sm4_x86_encrypt(in, out, blocks);
+   }
+#endif
+
 #if defined(BOTAN_HAS_SM4_GFNI)
    if(CPUID::has_gfni()) {
       return sm4_gfni_encrypt(in, out, blocks);
@@ -234,6 +240,12 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
 #if defined(BOTAN_HAS_SM4_ARMV8)
    if(CPUID::has_arm_sm4()) {
       return sm4_armv8_decrypt(in, out, blocks);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SM4_X86)
+   if(CPUID::has_intel_sm4()) {
+      return sm4_x86_decrypt(in, out, blocks);
    }
 #endif
 
