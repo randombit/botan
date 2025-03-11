@@ -12,7 +12,7 @@ permissions:
 
 on:
   workflow_dispatch:
-  push:
+  pull_request:
     paths:
       # Run if a pull request changes this workflow to
       # validate it works properly before merging.
