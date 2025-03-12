@@ -10,6 +10,7 @@ name -> "Socket"
 uri.h
 socket.h
 socket_udp.h
+socket_asio.h
 </header:internal>
 
 <libs>

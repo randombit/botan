@@ -11,20 +11,12 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/socket_asio.h>
 #include <botan/internal/target_info.h>
 #include <botan/internal/uri.h>
 #include <chrono>
 
-#if defined(BOTAN_HAS_BOOST_ASIO)
-   /*
-   * We don't need serial port support anyway, and asking for it
-   * causes macro conflicts with Darwin's termios.h when this
-   * file is included in the amalgamation. GH #350
-   */
-   #define BOOST_ASIO_DISABLE_SERIAL_PORT
-   #include <boost/asio.hpp>
-   #include <boost/asio/system_timer.hpp>
-#elif defined(BOTAN_TARGET_OS_HAS_SOCKETS)
+#if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
    #include <errno.h>
    #include <fcntl.h>
    #include <netdb.h>
@@ -42,96 +34,7 @@ namespace Botan {
 
 namespace {
 
-#if defined(BOTAN_HAS_BOOST_ASIO)
-class Asio_SocketUDP final : public OS::SocketUDP {
-   public:
-      Asio_SocketUDP(std::string_view hostname, std::string_view service, std::chrono::microseconds timeout) :
-            m_timeout(timeout), m_timer(m_io), m_udp(m_io) {
-         m_timer.expires_after(m_timeout);
-         check_timeout();
-
-         boost::asio::ip::udp::resolver resolver(m_io);
-         boost::asio::ip::udp::resolver::results_type dns_iter =
-            resolver.resolve(std::string{hostname}, std::string{service});
-
-         boost::system::error_code ec = boost::asio::error::would_block;
-
-         auto connect_cb = [&ec](const boost::system::error_code& e,
-                                 const boost::asio::ip::udp::resolver::results_type::iterator&) { ec = e; };
-
-         boost::asio::async_connect(m_udp, dns_iter.begin(), dns_iter.end(), connect_cb);
-
-         while(ec == boost::asio::error::would_block) {
-            m_io.run_one();
-         }
-
-         if(ec) {
-            throw boost::system::system_error(ec);
-         }
-         if(m_udp.is_open() == false) {
-            throw System_Error(fmt("Connection to host {} failed", hostname));
-         }
-      }
-
-      void write(const uint8_t buf[], size_t len) override {
-         m_timer.expires_after(m_timeout);
-
-         boost::system::error_code ec = boost::asio::error::would_block;
-
-         m_udp.async_send(boost::asio::buffer(buf, len), [&ec](boost::system::error_code e, size_t) { ec = e; });
-
-         while(ec == boost::asio::error::would_block) {
-            m_io.run_one();
-         }
-
-         if(ec) {
-            throw boost::system::system_error(ec);
-         }
-      }
-
-      size_t read(uint8_t buf[], size_t len) override {
-         m_timer.expires_after(m_timeout);
-
-         boost::system::error_code ec = boost::asio::error::would_block;
-         size_t got = 0;
-
-         m_udp.async_receive(boost::asio::buffer(buf, len), [&](boost::system::error_code cb_ec, size_t cb_got) {
-            ec = cb_ec;
-            got = cb_got;
-         });
-
-         while(ec == boost::asio::error::would_block) {
-            m_io.run_one();
-         }
-
-         if(ec) {
-            if(ec == boost::asio::error::eof) {
-               return 0;
-            }
-            throw boost::system::system_error(ec);  // Some other error.
-         }
-
-         return got;
-      }
-
-   private:
-      void check_timeout() {
-         if(m_udp.is_open() && m_timer.expiry() < std::chrono::system_clock::now()) {
-            boost::system::error_code err;
-
-            // NOLINTNEXTLINE(bugprone-unused-return-value,cert-err33-c)
-            m_udp.close(err);
-         }
-
-         m_timer.async_wait(std::bind(&Asio_SocketUDP::check_timeout, this));
-      }
-
-      const std::chrono::microseconds m_timeout;
-      boost::asio::io_context m_io;
-      boost::asio::system_timer m_timer;
-      boost::asio::ip::udp::socket m_udp;
-};
-#elif defined(BOTAN_TARGET_OS_HAS_SOCKETS) || defined(BOTAN_TARGET_OS_HAS_WINSOCK2)
+#if defined(BOTAN_TARGET_OS_HAS_SOCKETS) || defined(BOTAN_TARGET_OS_HAS_WINSOCK2)
 class BSD_SocketUDP final : public OS::SocketUDP {
    public:
       BSD_SocketUDP(std::string_view hostname, std::string_view service, std::chrono::microseconds timeout) :
@@ -319,7 +222,9 @@ std::unique_ptr<OS::SocketUDP> OS::open_socket_udp(std::string_view hostname,
                                                    std::string_view service,
                                                    std::chrono::microseconds timeout) {
 #if defined(BOTAN_HAS_BOOST_ASIO)
-   return std::make_unique<Asio_SocketUDP>(hostname, service, timeout);
+   // In the old implementation, the parameter taken for UDP was microseconds. Homewer template calls are in milliseconds.
+   return std::make_unique<Asio_SocketUDP>(
+      hostname, service, std::chrono::duration_cast<std::chrono::milliseconds>(timeout));
 #elif defined(BOTAN_TARGET_OS_HAS_SOCKETS) || defined(BOTAN_TARGET_OS_HAS_WINSOCK2)
    return std::make_unique<BSD_SocketUDP>(hostname, service, timeout);
 #else
