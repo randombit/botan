@@ -201,13 +201,24 @@ class SIMD_8x32 final {
 
       BOTAN_AVX2_FN
       SIMD_8x32 bswap() const noexcept {
-         const uint8_t BSWAP_MASK[32] = {3,  2,  1,  0,  7,  6,  5,  4,  11, 10, 9,  8,  15, 14, 13, 12,
-                                         19, 18, 17, 16, 23, 22, 21, 20, 27, 26, 25, 24, 31, 30, 29, 28};
+         alignas(32) const uint8_t BSWAP_TBL[32] = {3,  2,  1,  0,  7,  6,  5,  4,  11, 10, 9,  8,  15, 14, 13, 12,
+                                                    19, 18, 17, 16, 23, 22, 21, 20, 27, 26, 25, 24, 31, 30, 29, 28};
 
-         const __m256i bswap = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(BSWAP_MASK));
+         const __m256i bswap = _mm256_load_si256(reinterpret_cast<const __m256i*>(BSWAP_TBL));
 
          const __m256i output = _mm256_shuffle_epi8(m_avx2, bswap);
 
+         return SIMD_8x32(output);
+      }
+
+      // Equivalent to rev_words().bswap()
+      BOTAN_AVX2_FN
+      SIMD_8x32 reverse() const noexcept {
+         alignas(32) const uint8_t REV_TBL[32] = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
+                                                  15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+
+         const __m256i bswap = _mm256_load_si256(reinterpret_cast<const __m256i*>(REV_TBL));
+         const __m256i output = _mm256_shuffle_epi8(m_avx2, bswap);
          return SIMD_8x32(output);
       }
 
