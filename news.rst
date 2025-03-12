@@ -10,7 +10,16 @@ Version 3.8.0, Not Yet Released
 
 * Ongoing elliptic curve optimizations and cleanups (GH #4554 #4620 #4623 #4625
   #4627 #4632 #4634 #4686 #4687 #4688 #4689 #4690 #4692 #4695 #4703 #4706 #4708
-  #4710 #4711)
+  #4710 #4711 #4746)
+
+* Add support for SHA-512 instructions added in upcoming Intel processors (GH #4766)
+
+* Add support for SM4 instructions added in upcoming Intel processors (GH #4768)
+
+* Add support for TLS 1.3 post-quantum KEM secp384r1/ML-KEM-1024 (GH #4752)
+
+* Fix bugs in the server-side implementation of TLS 1.3 post-quantum hybrid
+  encryption which affected ciphersuites using NIST curves. (GH #4752)
 
 * Previously ``build.h`` included various parameters which could be modified by
   end users prior to compilation. These have been removed. (GH #4639)
@@ -20,7 +29,7 @@ Version 3.8.0, Not Yet Released
   been moved to a new internal header. This allows sharing all installed
   headers, including ``build.h``, across multiple different builds of the
   library, as long as they all have the same version and module selection. This
-  simplifies vendoring the library. (GH #4642)
+  simplifies vendoring the library. (GH #4642 #4747)
 
 * Various headers have been modified to minimize the number of inclusions they
   make. You may need to modify your application to directly include any headers
@@ -33,12 +42,25 @@ Version 3.8.0, Not Yet Released
 
 * Add missing checks for null pointer arguments in FFI (#4704)
 
+* Faster base32 encoding using SWAR technique (GH #4765)
+
+* Add support for X.509 CRLs with the ``nextUpdate`` field unset. Such CRLs
+  are prohibited by RFC 5280, but do unfortunately exist within the ecosystem. (GH #4732)
+
 * When encoding a RSASSA-PSS-Params struct, skip encoding the trailer field
   default value, as required by RFC 4055 (GH #4731)
+
+* Extend vector permute AES to support big-endian AltiVec/VMX systems. (GH #4738)
+
+* Extend use of POWER VMULL instruction to also support big-endian systems. (GH #4743)
 
 * Fix encoding extended key usage in PKCS10 requests (GH #4725)
 
 * Add internal API for hybrid PQ combiner keys (GH #4067)
+
+* Add a couple examples of using format preserving encryption (GH #4758)
+
+* CI cleanups and improvements (GH #4756 #4761 #4762 #4767)
 
 * The ``Ed25519_PrivateKey`` constructor had behavior that varied based on the
   input length. Add explicit ``from_seed`` and ``from_bytes`` functions which
@@ -58,7 +80,7 @@ Version 3.8.0, Not Yet Released
 * Remove support for NetBSD `_dlauxinfo` which did not provide the information
   that the library had expected it to. (GH #4736)
 
-* Add a script for comparing the performance between versions (GH #4693)
+* Add a script for comparing the performance between versions (GH #4693 #4754)
 
 * Update GHA CodeQL actions (GH #4644)
 
