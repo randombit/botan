@@ -18,12 +18,20 @@ ARCH="$2"
 
 SCRIPT_LOCATION=$(cd "$(dirname "$0")"; pwd)
 
+if [ "$GITHUB_ACTIONS" != "true" ]; then
+    echo "This script should only run in a Github Actions environment" >&2
+    exit 1
+fi
+
 if [ -z "$REPO_CONFIG_LOADED" ]; then
     echo "Repository configuration not loaded" >&2
     exit 1
 fi
 
 if type -p "apt-get"; then
+
+    sudo rm /var/lib/man-db/auto-update
+
     # TPM2-TSS library (to build the library against)
     tpm2_specific_packages=("libtss2-dev")
 
