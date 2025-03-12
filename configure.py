@@ -1195,15 +1195,19 @@ class ModulePolicyInfo(InfoObject):
         self.prohibited = lex.prohibited
 
     def cross_check(self, modules):
-        def check(tp, lst):
+        def check(tp, lst, required):
+            msg = "Module policy %s includes non-existent module %s in <%s>"
+
             for mod in lst:
                 if mod not in modules:
-                    logging.error("Module policy %s includes non-existent module %s in <%s>",
-                                  self.infofile, mod, tp)
+                    if required:
+                        logging.error(msg, self.infofile, mod, tp)
+                    else:
+                        logging.warning(msg, self.infofile, mod, tp)
 
-        check('required', self.required)
-        check('if_available', self.if_available)
-        check('prohibited', self.prohibited)
+        check('required', self.required, True)
+        check('if_available', self.if_available, False)
+        check('prohibited', self.prohibited, False)
 
 
 class ArchInfo(InfoObject):
