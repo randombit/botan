@@ -1,210 +1,125 @@
 /*
-* SHA-1 using Intel SHA intrinsic
-*
 * Based on public domain code by Sean Gulley
-* (https://github.com/mitls/hacl-star/tree/master/experimental/hash)
+*
 * Adapted to Botan by Jeffrey Walton.
 *
 * Further changes
 *
-* (C) 2017 Jack Lloyd
+* (C) 2017,2025 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/internal/sha1.h>
+
+#include <botan/internal/simd_32.h>
 #include <immintrin.h>
 
 namespace Botan {
 
+namespace {
+
+BOTAN_FUNC_ISA_INLINE("sha") SIMD_4x32 sha1_x86_nexte(const SIMD_4x32& x, const SIMD_4x32& y) {
+   return SIMD_4x32(_mm_sha1nexte_epu32(x.raw(), y.raw()));
+}
+
+BOTAN_FUNC_ISA_INLINE("sha") SIMD_4x32 sha1_x86_msg1(const SIMD_4x32& W0, const SIMD_4x32& W1) {
+   return SIMD_4x32(_mm_sha1msg1_epu32(W0.raw(), W1.raw()));
+}
+
+BOTAN_FUNC_ISA_INLINE("sha,sse2")
+void sha1_x86_next_msg(const SIMD_4x32& W0, SIMD_4x32& W1, SIMD_4x32& W2, SIMD_4x32& W3) {
+   W3 = SIMD_4x32(_mm_sha1msg1_epu32(W3.raw(), W0.raw()));
+   W1 = SIMD_4x32(_mm_sha1msg2_epu32(W1.raw(), W0.raw()));
+   W2 ^= W0;
+}
+
+template <uint8_t R1, uint8_t R2 = R1>
+BOTAN_FUNC_ISA_INLINE("sha,sse2")
+void sha1_x86_rnds8(SIMD_4x32& ABCD, SIMD_4x32& E, const SIMD_4x32& W0, const SIMD_4x32& W1) {
+   auto TE = ABCD;
+   ABCD = SIMD_4x32(_mm_sha1rnds4_epu32(ABCD.raw(), sha1_x86_nexte(E, W0).raw(), R1));
+
+   E = ABCD;
+   ABCD = SIMD_4x32(_mm_sha1rnds4_epu32(ABCD.raw(), sha1_x86_nexte(TE, W1).raw(), R2));
+}
+
+BOTAN_FUNC_ISA_INLINE("sse2") SIMD_4x32 rev_words(const SIMD_4x32& v) {
+   return SIMD_4x32(_mm_shuffle_epi32(v.raw(), 0b00011011));
+}
+
+}  // namespace
+
 BOTAN_FUNC_ISA("sha,ssse3,sse4.1")
-void SHA_1::sha1_compress_x86(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
-   const __m128i MASK = _mm_set_epi64x(0x0001020304050607, 0x08090a0b0c0d0e0f);
-   const __m128i* input_mm = reinterpret_cast<const __m128i*>(input.data());
+void SHA_1::sha1_compress_x86(digest_type& digest, std::span<const uint8_t> input_span, size_t blocks) {
+   const uint8_t* input = input_span.data();
 
-   uint32_t* state = digest.data();
+   SIMD_4x32 ABCD = rev_words(SIMD_4x32::load_le(&digest[0]));
+   SIMD_4x32 E0 = SIMD_4x32(0, 0, 0, digest[4]);
 
-   // Load initial values
-   __m128i ABCD = _mm_loadu_si128(reinterpret_cast<__m128i*>(state));
-   __m128i E0 = _mm_set_epi32(state[4], 0, 0, 0);
-   ABCD = _mm_shuffle_epi32(ABCD, 0x1B);
-
-   while(blocks) {
+   while(blocks > 0) {
       // Save current hash
-      const __m128i ABCD_SAVE = ABCD;
-      const __m128i E0_SAVE = E0;
+      const auto ABCD_SAVE = ABCD;
+      const auto E0_SAVE = E0;
 
-      __m128i MSG0, MSG1, MSG2, MSG3;
-      __m128i E1;
+      auto W0 = rev_words(SIMD_4x32::load_be(input));
+      auto W1 = rev_words(SIMD_4x32::load_be(input + 16));
+      auto W2 = rev_words(SIMD_4x32::load_be(input + 32));
+      auto W3 = rev_words(SIMD_4x32::load_be(input + 48));
 
-      // Rounds 0-3
-      MSG0 = _mm_loadu_si128(input_mm + 0);
-      MSG0 = _mm_shuffle_epi8(MSG0, MASK);
-      E0 = _mm_add_epi32(E0, MSG0);
-      E1 = ABCD;
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E0, 0);
+      auto E1 = ABCD;
+      ABCD = SIMD_4x32(_mm_sha1rnds4_epu32(ABCD.raw(), _mm_add_epi32(E0.raw(), W0.raw()), 0));
 
-      // Rounds 4-7
-      MSG1 = _mm_loadu_si128(input_mm + 1);
-      MSG1 = _mm_shuffle_epi8(MSG1, MASK);
-      E1 = _mm_sha1nexte_epu32(E1, MSG1);
       E0 = ABCD;
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E1, 0);
-      MSG0 = _mm_sha1msg1_epu32(MSG0, MSG1);
+      ABCD = SIMD_4x32(_mm_sha1rnds4_epu32(ABCD.raw(), _mm_sha1nexte_epu32(E1.raw(), W1.raw()), 0));
 
-      // Rounds 8-11
-      MSG2 = _mm_loadu_si128(input_mm + 2);
-      MSG2 = _mm_shuffle_epi8(MSG2, MASK);
-      E0 = _mm_sha1nexte_epu32(E0, MSG2);
-      E1 = ABCD;
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E0, 0);
-      MSG1 = _mm_sha1msg1_epu32(MSG1, MSG2);
-      MSG0 = _mm_xor_si128(MSG0, MSG2);
+      sha1_x86_rnds8<0>(ABCD, E0, W2, W3);
 
-      // Rounds 12-15
-      MSG3 = _mm_loadu_si128(input_mm + 3);
-      MSG3 = _mm_shuffle_epi8(MSG3, MASK);
-      E1 = _mm_sha1nexte_epu32(E1, MSG3);
-      E0 = ABCD;
-      MSG0 = _mm_sha1msg2_epu32(MSG0, MSG3);
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E1, 0);
-      MSG2 = _mm_sha1msg1_epu32(MSG2, MSG3);
-      MSG1 = _mm_xor_si128(MSG1, MSG3);
+      W0 = sha1_x86_msg1(W0, W1);
+      W1 = sha1_x86_msg1(W1, W2);
+      W0 ^= W2;
 
-      // Rounds 16-19
-      E0 = _mm_sha1nexte_epu32(E0, MSG0);
-      E1 = ABCD;
-      MSG1 = _mm_sha1msg2_epu32(MSG1, MSG0);
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E0, 0);
-      MSG3 = _mm_sha1msg1_epu32(MSG3, MSG0);
-      MSG2 = _mm_xor_si128(MSG2, MSG0);
+      sha1_x86_next_msg(W3, W0, W1, W2);
+      sha1_x86_next_msg(W0, W1, W2, W3);
+      sha1_x86_rnds8<0, 1>(ABCD, E0, W0, W1);
 
-      // Rounds 20-23
-      E1 = _mm_sha1nexte_epu32(E1, MSG1);
-      E0 = ABCD;
-      MSG2 = _mm_sha1msg2_epu32(MSG2, MSG1);
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E1, 1);
-      MSG0 = _mm_sha1msg1_epu32(MSG0, MSG1);
-      MSG3 = _mm_xor_si128(MSG3, MSG1);
+      sha1_x86_next_msg(W1, W2, W3, W0);
+      sha1_x86_next_msg(W2, W3, W0, W1);
+      sha1_x86_rnds8<1>(ABCD, E0, W2, W3);
 
-      // Rounds 24-27
-      E0 = _mm_sha1nexte_epu32(E0, MSG2);
-      E1 = ABCD;
-      MSG3 = _mm_sha1msg2_epu32(MSG3, MSG2);
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E0, 1);
-      MSG1 = _mm_sha1msg1_epu32(MSG1, MSG2);
-      MSG0 = _mm_xor_si128(MSG0, MSG2);
+      sha1_x86_next_msg(W3, W0, W1, W2);
+      sha1_x86_next_msg(W0, W1, W2, W3);
+      sha1_x86_rnds8<1>(ABCD, E0, W0, W1);
 
-      // Rounds 28-31
-      E1 = _mm_sha1nexte_epu32(E1, MSG3);
-      E0 = ABCD;
-      MSG0 = _mm_sha1msg2_epu32(MSG0, MSG3);
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E1, 1);
-      MSG2 = _mm_sha1msg1_epu32(MSG2, MSG3);
-      MSG1 = _mm_xor_si128(MSG1, MSG3);
+      sha1_x86_next_msg(W1, W2, W3, W0);
+      sha1_x86_next_msg(W2, W3, W0, W1);
+      sha1_x86_rnds8<2>(ABCD, E0, W2, W3);
 
-      // Rounds 32-35
-      E0 = _mm_sha1nexte_epu32(E0, MSG0);
-      E1 = ABCD;
-      MSG1 = _mm_sha1msg2_epu32(MSG1, MSG0);
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E0, 1);
-      MSG3 = _mm_sha1msg1_epu32(MSG3, MSG0);
-      MSG2 = _mm_xor_si128(MSG2, MSG0);
+      sha1_x86_next_msg(W3, W0, W1, W2);
+      sha1_x86_next_msg(W0, W1, W2, W3);
+      sha1_x86_rnds8<2>(ABCD, E0, W0, W1);
 
-      // Rounds 36-39
-      E1 = _mm_sha1nexte_epu32(E1, MSG1);
-      E0 = ABCD;
-      MSG2 = _mm_sha1msg2_epu32(MSG2, MSG1);
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E1, 1);
-      MSG0 = _mm_sha1msg1_epu32(MSG0, MSG1);
-      MSG3 = _mm_xor_si128(MSG3, MSG1);
+      sha1_x86_next_msg(W1, W2, W3, W0);
+      sha1_x86_next_msg(W2, W3, W0, W1);
+      sha1_x86_rnds8<2, 3>(ABCD, E0, W2, W3);
 
-      // Rounds 40-43
-      E0 = _mm_sha1nexte_epu32(E0, MSG2);
-      E1 = ABCD;
-      MSG3 = _mm_sha1msg2_epu32(MSG3, MSG2);
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E0, 2);
-      MSG1 = _mm_sha1msg1_epu32(MSG1, MSG2);
-      MSG0 = _mm_xor_si128(MSG0, MSG2);
+      sha1_x86_next_msg(W3, W0, W1, W2);
+      sha1_x86_next_msg(W0, W1, W2, W3);
+      sha1_x86_rnds8<3>(ABCD, E0, W0, W1);
 
-      // Rounds 44-47
-      E1 = _mm_sha1nexte_epu32(E1, MSG3);
-      E0 = ABCD;
-      MSG0 = _mm_sha1msg2_epu32(MSG0, MSG3);
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E1, 2);
-      MSG2 = _mm_sha1msg1_epu32(MSG2, MSG3);
-      MSG1 = _mm_xor_si128(MSG1, MSG3);
+      sha1_x86_next_msg(W1, W2, W3, W0);
+      sha1_x86_next_msg(W2, W3, W0, W1);
+      sha1_x86_rnds8<3>(ABCD, E0, W2, W3);
 
-      // Rounds 48-51
-      E0 = _mm_sha1nexte_epu32(E0, MSG0);
-      E1 = ABCD;
-      MSG1 = _mm_sha1msg2_epu32(MSG1, MSG0);
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E0, 2);
-      MSG3 = _mm_sha1msg1_epu32(MSG3, MSG0);
-      MSG2 = _mm_xor_si128(MSG2, MSG0);
+      ABCD += ABCD_SAVE;
+      E0 = sha1_x86_nexte(E0, E0_SAVE);
 
-      // Rounds 52-55
-      E1 = _mm_sha1nexte_epu32(E1, MSG1);
-      E0 = ABCD;
-      MSG2 = _mm_sha1msg2_epu32(MSG2, MSG1);
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E1, 2);
-      MSG0 = _mm_sha1msg1_epu32(MSG0, MSG1);
-      MSG3 = _mm_xor_si128(MSG3, MSG1);
-
-      // Rounds 56-59
-      E0 = _mm_sha1nexte_epu32(E0, MSG2);
-      E1 = ABCD;
-      MSG3 = _mm_sha1msg2_epu32(MSG3, MSG2);
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E0, 2);
-      MSG1 = _mm_sha1msg1_epu32(MSG1, MSG2);
-      MSG0 = _mm_xor_si128(MSG0, MSG2);
-
-      // Rounds 60-63
-      E1 = _mm_sha1nexte_epu32(E1, MSG3);
-      E0 = ABCD;
-      MSG0 = _mm_sha1msg2_epu32(MSG0, MSG3);
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E1, 3);
-      MSG2 = _mm_sha1msg1_epu32(MSG2, MSG3);
-      MSG1 = _mm_xor_si128(MSG1, MSG3);
-
-      // Rounds 64-67
-      E0 = _mm_sha1nexte_epu32(E0, MSG0);
-      E1 = ABCD;
-      MSG1 = _mm_sha1msg2_epu32(MSG1, MSG0);
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E0, 3);
-      MSG3 = _mm_sha1msg1_epu32(MSG3, MSG0);
-      MSG2 = _mm_xor_si128(MSG2, MSG0);
-
-      // Rounds 68-71
-      E1 = _mm_sha1nexte_epu32(E1, MSG1);
-      E0 = ABCD;
-      MSG2 = _mm_sha1msg2_epu32(MSG2, MSG1);
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E1, 3);
-      MSG3 = _mm_xor_si128(MSG3, MSG1);
-
-      // Rounds 72-75
-      E0 = _mm_sha1nexte_epu32(E0, MSG2);
-      E1 = ABCD;
-      MSG3 = _mm_sha1msg2_epu32(MSG3, MSG2);
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E0, 3);
-
-      // Rounds 76-79
-      E1 = _mm_sha1nexte_epu32(E1, MSG3);
-      E0 = ABCD;
-      ABCD = _mm_sha1rnds4_epu32(ABCD, E1, 3);
-
-      // Add values back to state
-      E0 = _mm_sha1nexte_epu32(E0, E0_SAVE);
-      ABCD = _mm_add_epi32(ABCD, ABCD_SAVE);
-
-      input_mm += 4;
+      input += 64;
       blocks--;
    }
 
-   // Save state
-   ABCD = _mm_shuffle_epi32(ABCD, 0x1B);
-   _mm_storeu_si128(reinterpret_cast<__m128i*>(state), ABCD);
-   state[4] = _mm_extract_epi32(E0, 3);
+   rev_words(ABCD).store_le(&digest[0]);
+   digest[4] = _mm_extract_epi32(E0.raw(), 3);
 }
 
 }  // namespace Botan
