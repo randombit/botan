@@ -147,8 +147,6 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
          const std::vector<Botan::X509_DN>& acceptable_cas,
          const std::string& type,
          const std::string& hostname) override {
-         BOTAN_UNUSED(cert_signature_schemes);
-
          if(type == "tls-client") {
             for(const auto& dn : acceptable_cas) {
                for(const auto& cred : m_certs) {
@@ -160,6 +158,12 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
          } else if(type == "tls-server") {
             for(const auto& i : m_certs) {
                if(std::find(algos.begin(), algos.end(), i.key->algo_name()) == algos.end()) {
+                  continue;
+               }
+
+               if(std::find(cert_signature_schemes.begin(),
+                            cert_signature_schemes.end(),
+                            i.certs[0].subject_public_key_algo()) == cert_signature_schemes.end()) {
                   continue;
                }
 
@@ -280,7 +284,7 @@ class TLS_All_Policy final : public Botan::TLS::Policy {
       }
 
       std::vector<std::string> allowed_signature_methods() const override {
-         return {"ECDSA", "RSA", "DSA", "IMPLICIT"};
+         return {"ECDSA", "RSA", "ML-DSA", "IMPLICIT"};
       }
 
       bool allow_tls12() const override { return true; }
