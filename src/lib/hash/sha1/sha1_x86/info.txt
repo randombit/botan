@@ -16,4 +16,5 @@ sse41
 
 <requires>
 cpuid
+simd
 </requires>
