@@ -25,9 +25,9 @@ def format_map(m, for_oid = False):
             s += '      '
 
         if for_oid:
-            s += '{"%s", OID(%s)},\n' % (k,format_oid(v))
+            s += '{"%s", %s},\n' % (k,format_oid(v))
         else:
-            s += '{OID(%s), "%s"},\n' % (format_oid(k),v)
+            s += '{%s, "%s"},\n' % (format_oid(k),v)
 
     s = s[:-2] # chomp last two chars
 
@@ -52,15 +52,29 @@ def format_as_map(oid2str, str2oid):
 namespace Botan {
 
 std::unordered_map<OID, std::string> OID_Map::load_oid2str_map() {
-   return std::unordered_map<OID, std::string>{
-
+   std::pair<std::vector<uint32_t>, const char*> oid_maps[] = {
       %s};
+
+   std::unordered_map<OID, std::string> map;
+
+   for(auto& entry : oid_maps) {
+      map.insert(std::make_pair(OID(std::move(entry.first)), entry.second));
+   }
+
+   return map;
 }
 
 std::unordered_map<std::string, OID> OID_Map::load_str2oid_map() {
-   return std::unordered_map<std::string, OID>{
-
+   std::pair<const char*, std::vector<uint32_t>> oid_maps[] = {
       %s};
+
+   std::unordered_map<std::string, OID> map;
+
+   for(auto& entry : oid_maps) {
+      map.insert(std::make_pair(std::string(entry.first), OID(std::move(entry.second))));
+   }
+
+   return map;
 }
 
 }  // namespace Botan""" % (
@@ -74,7 +88,7 @@ def format_dn_ub_map(dn_ub, oid2str):
     for k in sorted(dn_ub.keys()):
         v = dn_ub[k]
 
-        expr = "   {OID({%s}), %s}, " % (k.replace('.', ', '), v)
+        expr = "   {{%s}, %s}, " % (k.replace('.', ', '), v)
         s += expr
         s += ' '*(32 - len(expr))
         s += ' // %s\n' % (oid2str[k])
