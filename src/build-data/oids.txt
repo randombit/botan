@@ -422,6 +422,11 @@
 1.3.132.0.33 = secp224r1
 1.3.132.0.34 = secp384r1
 1.3.132.0.35 = secp521r1
+
+# TODO(Botan4) remove this OID assignment
+#
+# This was assigned by TU-Darmstadt to "primeCurve 38" which may or may not be
+# secp521r1. In any case this OID is not used by any other implementation.
 1.3.6.1.4.1.8301.3.1.2.9.0.38 = secp521r1
 
 1.2.840.10045.3.1.1 = secp192r1
