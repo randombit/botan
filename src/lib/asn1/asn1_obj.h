@@ -236,7 +236,7 @@ class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
       /**
       * Initialize an OID from a vector of integer values
       */
-      BOTAN_DEPRECATED("Use another contructor") explicit OID(std::vector<uint32_t>&& init);
+      explicit OID(std::vector<uint32_t>&& init);
 
       /**
       * Construct an OID from a string.
