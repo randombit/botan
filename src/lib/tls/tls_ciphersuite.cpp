@@ -30,6 +30,8 @@ size_t Ciphersuite::nonce_bytes_from_handshake() const {
          return 4;
       case Nonce_Format::AEAD_XOR_12:
          return 12;
+      case Nonce_Format::NULL_CIPHER:
+         return 0;
    }
 
    throw Invalid_State("In Ciphersuite::nonce_bytes_from_handshake invalid enum value");
@@ -43,6 +45,8 @@ size_t Ciphersuite::nonce_bytes_from_record(Protocol_Version version) const {
       case Nonce_Format::AEAD_IMPLICIT_4:
          return 8;
       case Nonce_Format::AEAD_XOR_12:
+         return 0;
+      case Nonce_Format::NULL_CIPHER:
          return 0;
    }
 
@@ -77,7 +81,11 @@ bool Ciphersuite::usable_in_version(Protocol_Version version) const {
 }
 
 bool Ciphersuite::cbc_ciphersuite() const {
-   return (mac_algo() != "AEAD");
+   return (mac_algo() != "AEAD" && cipher_algo() != "NULL");
+}
+
+bool Ciphersuite::null_ciphersuite() const {
+   return (cipher_algo() == "NULL");
 }
 
 bool Ciphersuite::aead_ciphersuite() const {
@@ -124,7 +132,8 @@ bool have_cipher(std::string_view cipher) {
 }  // namespace
 
 bool Ciphersuite::is_usable() const {
-   if(!m_cipher_keylen) {  // uninitialized object
+   if(((cipher_algo() != "NULL") && (m_cipher_keylen == 0)) ||
+      ((cipher_algo() == "NULL") && (m_cipher_keylen != 0))) {  // invalid keylen state
       return false;
    }
 
@@ -133,8 +142,15 @@ bool Ciphersuite::is_usable() const {
    }
 
 #if !defined(BOTAN_HAS_TLS_CBC)
-   if(cbc_ciphersuite())
+   if(cbc_ciphersuite()) {
       return false;
+   }
+#endif
+
+#if !defined(BOTAN_HAS_TLS_NULL)
+   if(null_ciphersuite()) {
+      return false;
+   }
 #endif
 
    if(mac_algo() == "AEAD") {
@@ -152,18 +168,21 @@ bool Ciphersuite::is_usable() const {
          const auto& mode = cipher_and_mode[1];
 
 #if !defined(BOTAN_HAS_AEAD_CCM)
-         if(mode == "CCM" || mode == "CCM-8")
+         if(mode == "CCM" || mode == "CCM-8") {
             return false;
+         }
 #endif
 
 #if !defined(BOTAN_HAS_AEAD_GCM)
-         if(mode == "GCM")
+         if(mode == "GCM") {
             return false;
+         }
 #endif
 
 #if !defined(BOTAN_HAS_AEAD_OCB)
-         if(mode == "OCB(12)" || mode == "OCB")
+         if(mode == "OCB(12)" || mode == "OCB") {
             return false;
+         }
 #endif
 
          // Potentially unused if all AEADs are available
@@ -171,7 +190,7 @@ bool Ciphersuite::is_usable() const {
       }
    } else {
       // Old non-AEAD schemes
-      if(!have_cipher(cipher_algo())) {
+      if(!have_cipher(cipher_algo()) && (cipher_algo() != "NULL")) {
          return false;
       }
       if(!have_hash(mac_algo())) {  // HMAC

@@ -13,6 +13,8 @@ Version 3.9.0, Not Yet Released
 
 * Work around a GCC 13/14 miscompilation when LTO is used (GH #4863 #4862)
 
+* Add support for TLS 1.2 null ciphers (GH #4776)
+
 Version 3.8.1, 2025-05-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
