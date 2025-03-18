@@ -1,0 +1,19 @@
+# Disable this module by default
+load_on request
+
+<defines>
+TLS_NULL -> 20240830
+</defines>
+
+<module_info>
+name -> "TLS 1.2 Null cipher"
+brief -> "Null cipher + HMAC AEAD mode of operation for TLS 1.2"
+</module_info>
+
+<header:internal>
+tls_null.h
+</header:internal>
+
+<requires>
+hmac
+</requires>
