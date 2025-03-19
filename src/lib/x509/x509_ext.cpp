@@ -91,7 +91,7 @@ std::unique_ptr<Certificate_Extension> extension_from_oid(const OID& oid) {
 
 bool is_valid_telephone_number(const ASN1_String& tn) {
    //TelephoneNumber ::= IA5String (SIZE (1..15)) (FROM ("0123456789#*"))
-   static std::string valid_tn_chars("0123456789#*");
+   const std::string valid_tn_chars("0123456789#*");
 
    if(tn.empty() || (tn.size() > 15)) {
       return false;
