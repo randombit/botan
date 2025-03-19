@@ -10,10 +10,10 @@
 #include <botan/exceptn.h>
 #include <botan/ffi.h>
 #include <botan/mem_ops.h>
+#include <concepts>
 #include <cstdint>
-#include <functional>
+#include <exception>
 #include <memory>
-#include <stdexcept>
 
 namespace Botan_FFI {
 
@@ -57,7 +57,11 @@ struct botan_struct {
    struct NAME final : public Botan_FFI::botan_struct<int, MAGIC> {}
 
 // Declared in ffi.cpp
-int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc = BOTAN_FFI_ERROR_EXCEPTION_THROWN);
+void ffi_clear_last_exception();
+
+int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc);
+
+int ffi_error_exception_thrown(const char* func_name, const char* exn, Botan::ErrorType err);
 
 template <typename T, uint32_t M>
 T& safe_get(botan_struct<T, M>* p) {
@@ -75,7 +79,24 @@ T& safe_get(botan_struct<T, M>* p) {
    throw FFI_Error("Invalid object pointer", BOTAN_FFI_ERROR_INVALID_OBJECT);
 }
 
-int ffi_guard_thunk(const char* func_name, const std::function<int()>& thunk);
+template <std::invocable T>
+int ffi_guard_thunk(const char* func_name, T thunk) {
+   ffi_clear_last_exception();
+
+   try {
+      return thunk();
+   } catch(std::bad_alloc&) {
+      return ffi_error_exception_thrown(func_name, "bad_alloc", BOTAN_FFI_ERROR_OUT_OF_MEMORY);
+   } catch(Botan_FFI::FFI_Error& e) {
+      return ffi_error_exception_thrown(func_name, e.what(), e.error_code());
+   } catch(Botan::Exception& e) {
+      return ffi_error_exception_thrown(func_name, e.what(), e.error_type());
+   } catch(std::exception& e) {
+      return ffi_error_exception_thrown(func_name, e.what(), BOTAN_FFI_ERROR_EXCEPTION_THROWN);
+   } catch(...) {
+      return ffi_error_exception_thrown(func_name, "unknown exception", BOTAN_FFI_ERROR_EXCEPTION_THROWN);
+   }
+}
 
 template <typename T, uint32_t M, typename F>
 int botan_ffi_visit(botan_struct<T, M>* o, F func, const char* func_name) {

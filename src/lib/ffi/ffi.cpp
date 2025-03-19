@@ -26,48 +26,6 @@ namespace {
 // NOLINTNEXTLINE(*-avoid-non-const-global-variables)
 thread_local std::string g_last_exception_what;
 
-}  // namespace
-
-int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc) {
-   g_last_exception_what.assign(exn);
-
-#if defined(BOTAN_HAS_OS_UTILS)
-   std::string val;
-   if(Botan::OS::read_env_variable(val, "BOTAN_FFI_PRINT_EXCEPTIONS") == true && !val.empty()) {
-      static_cast<void>(std::fprintf(stderr, "in %s exception '%s' returning %d\n", func_name, exn, rc));
-   }
-#endif
-
-   return rc;
-}
-
-int botan_view_str_bounce_fn(botan_view_ctx vctx, const char* str, size_t len) {
-   return botan_view_bin_bounce_fn(vctx, reinterpret_cast<const uint8_t*>(str), len);
-}
-
-int botan_view_bin_bounce_fn(botan_view_ctx vctx, const uint8_t* buf, size_t len) {
-   if(vctx == nullptr || buf == nullptr) {
-      return BOTAN_FFI_ERROR_NULL_POINTER;
-   }
-
-   botan_view_bounce_struct* ctx = static_cast<botan_view_bounce_struct*>(vctx);
-
-   const size_t avail = *ctx->out_len;
-   *ctx->out_len = len;
-
-   if(avail < len || ctx->out_ptr == nullptr) {
-      if(ctx->out_ptr) {
-         Botan::clear_mem(ctx->out_ptr, avail);
-      }
-      return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
-   } else {
-      Botan::copy_mem(ctx->out_ptr, buf, len);
-      return BOTAN_FFI_SUCCESS;
-   }
-}
-
-namespace {
-
 int ffi_map_error_type(Botan::ErrorType err) {
    switch(err) {
       case Botan::ErrorType::Unknown:
@@ -125,21 +83,49 @@ int ffi_map_error_type(Botan::ErrorType err) {
 
 }  // namespace
 
-int ffi_guard_thunk(const char* func_name, const std::function<int()>& thunk) {
+void ffi_clear_last_exception() {
    g_last_exception_what.clear();
+}
 
-   try {
-      return thunk();
-   } catch(std::bad_alloc&) {
-      return ffi_error_exception_thrown(func_name, "bad_alloc", BOTAN_FFI_ERROR_OUT_OF_MEMORY);
-   } catch(Botan_FFI::FFI_Error& e) {
-      return ffi_error_exception_thrown(func_name, e.what(), e.error_code());
-   } catch(Botan::Exception& e) {
-      return ffi_error_exception_thrown(func_name, e.what(), ffi_map_error_type(e.error_type()));
-   } catch(std::exception& e) {
-      return ffi_error_exception_thrown(func_name, e.what());
-   } catch(...) {
-      return ffi_error_exception_thrown(func_name, "unknown exception");
+int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc) {
+   g_last_exception_what.assign(exn);
+
+#if defined(BOTAN_HAS_OS_UTILS)
+   std::string val;
+   if(Botan::OS::read_env_variable(val, "BOTAN_FFI_PRINT_EXCEPTIONS") == true && !val.empty()) {
+      static_cast<void>(std::fprintf(stderr, "in %s exception '%s' returning %d\n", func_name, exn, rc));
+   }
+#endif
+
+   return rc;
+}
+
+int ffi_error_exception_thrown(const char* func_name, const char* exn, Botan::ErrorType err) {
+   return ffi_error_exception_thrown(func_name, exn, ffi_map_error_type(err));
+}
+
+int botan_view_str_bounce_fn(botan_view_ctx vctx, const char* str, size_t len) {
+   return botan_view_bin_bounce_fn(vctx, reinterpret_cast<const uint8_t*>(str), len);
+}
+
+int botan_view_bin_bounce_fn(botan_view_ctx vctx, const uint8_t* buf, size_t len) {
+   if(vctx == nullptr || buf == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   botan_view_bounce_struct* ctx = static_cast<botan_view_bounce_struct*>(vctx);
+
+   const size_t avail = *ctx->out_len;
+   *ctx->out_len = len;
+
+   if(avail < len || ctx->out_ptr == nullptr) {
+      if(ctx->out_ptr) {
+         Botan::clear_mem(ctx->out_ptr, avail);
+      }
+      return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
+   } else {
+      Botan::copy_mem(ctx->out_ptr, buf, len);
+      return BOTAN_FFI_SUCCESS;
    }
 }
 
