@@ -318,19 +318,8 @@ targeting Android API 28::
   $ ./configure.py --os=android --cc=clang --cpu=arm64
   $ make
 
-If you are building for mobile development consider restricting the build
-to only what you need (see :ref:`minimized_builds`)
-
-Docker
-^^^^^^^^^^^
-
-To build android version, there is the possibility to use
-the docker way::
-
-  sudo ANDROID_SDK_VER=29 ANDROID_ARCH=aarch64 src/scripts/docker-android.sh
-
-This will produce the docker-builds/android folder containing
-each architecture compiled.
+If you are building for mobile development, consider restricting the build
+to only what you need (see :ref:`minimized_builds`) to minimize code size.
 
 Emscripten (WebAssembly)
 ---------------------------
