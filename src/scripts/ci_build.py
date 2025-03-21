@@ -908,6 +908,7 @@ def main(args=None):
             build_config = os.path.join(build_dir, 'build', 'build_config.json')
             cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/ci_check_install.py'), build_config])
             cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/ci_check_headers.py'), build_config])
+            cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/ci_report_sizes.py'), build_config])
 
         if target in ['coverage']:
             if have_prog('coverage'):
