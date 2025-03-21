@@ -5,13 +5,12 @@
 */
 
 #include "sandbox.h"
+
 #include <botan/allocator.h>
-
 #include <botan/internal/target_info.h>
+#include <memory>
 
-#if defined(BOTAN_TARGET_OS_HAS_PLEDGE)
-   #include <unistd.h>
-#elif defined(BOTAN_TARGET_OS_HAS_CAP_ENTER)
+#if defined(BOTAN_TARGET_OS_HAS_CAP_ENTER)
    #include <sys/capsicum.h>
    #include <unistd.h>
 #elif defined(BOTAN_TARGET_OS_HAS_SETPPRIV)
@@ -32,9 +31,7 @@ struct SandboxPrivDelete {
 #endif
 
 Sandbox::Sandbox() {
-#if defined(BOTAN_TARGET_OS_HAS_PLEDGE)
-   m_name = "pledge";
-#elif defined(BOTAN_TARGET_OS_HAS_CAP_ENTER)
+#if defined(BOTAN_TARGET_OS_HAS_CAP_ENTER)
    m_name = "capsicum";
 #elif defined(BOTAN_TARGET_OS_HAS_SETPPRIV)
    m_name = "privilege";
@@ -48,10 +45,7 @@ Sandbox::Sandbox() {
 bool Sandbox::init() {
    Botan::initialize_allocator();
 
-#if defined(BOTAN_TARGET_OS_HAS_PLEDGE)
-   const static char* opts = "stdio rpath inet error";
-   return (::pledge(opts, nullptr) == 0);
-#elif defined(BOTAN_TARGET_OS_HAS_CAP_ENTER)
+#if defined(BOTAN_TARGET_OS_HAS_CAP_ENTER)
    cap_rights_t wt, rd;
 
    if(::cap_rights_init(&wt, CAP_READ, CAP_WRITE) == nullptr) {

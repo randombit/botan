@@ -16,7 +16,6 @@ arc4random
 elf_aux_info
 getentropy
 explicit_bzero
-pledge
 alloc_conceal
 
 atomics
