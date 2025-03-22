@@ -89,13 +89,13 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(uint64_t seq, RandomNum
       case Nonce_Format::AEAD_XOR_12: {
          std::vector<uint8_t> nonce(12);
          store_be(seq, nonce.data() + 4);
-         xor_buf(nonce, m_nonce.data(), m_nonce.size());
+         xor_buf(std::span(nonce), std::span(m_nonce));
          return nonce;
       }
       case Nonce_Format::AEAD_IMPLICIT_4: {
          BOTAN_ASSERT_NOMSG(m_nonce.size() == 4);
          std::vector<uint8_t> nonce(12);
-         copy_mem(&nonce[0], m_nonce.data(), 4);
+         copy_mem(std::span<uint8_t>(nonce.data(), 4), std::span<const uint8_t>(m_nonce.data(), 4));
          store_be(seq, &nonce[nonce_bytes_from_handshake()]);
          return nonce;
       }
@@ -121,7 +121,7 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(const uint8_t record[],
       case Nonce_Format::AEAD_XOR_12: {
          std::vector<uint8_t> nonce(12);
          store_be(seq, nonce.data() + 4);
-         xor_buf(nonce, m_nonce.data(), m_nonce.size());
+         xor_buf(std::span(nonce), std::span(m_nonce));
          return nonce;
       }
       case Nonce_Format::AEAD_IMPLICIT_4: {
@@ -130,8 +130,9 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(const uint8_t record[],
             throw Decoding_Error("Invalid AEAD packet too short to be valid");
          }
          std::vector<uint8_t> nonce(12);
-         copy_mem(&nonce[0], m_nonce.data(), 4);
-         copy_mem(&nonce[nonce_bytes_from_handshake()], record, nonce_bytes_from_record());
+         copy_mem(std::span(nonce.data(), 4), std::span(m_nonce.data(), 4));
+         copy_mem(std::span(nonce.data() + nonce_bytes_from_handshake(), nonce_bytes_from_record()),
+                  std::span(record, nonce_bytes_from_record()));
          return nonce;
       }
    }

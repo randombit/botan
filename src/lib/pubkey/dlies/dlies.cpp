@@ -183,7 +183,7 @@ secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
          return secure_vector<uint8_t>();
       }
    } else {
-      xor_buf(ciphertext, secret_keys.data(), cipher_key_len);
+      xor_buf(std::span(ciphertext).first(cipher_key_len), std::span(secret_keys.data(), cipher_key_len));
    }
 
    return ciphertext;

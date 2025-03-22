@@ -20,6 +20,7 @@
 
 #include <botan/assert.h>
 #include <botan/mem_ops.h>
+#include <botan/secmem.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/pqcrystals_helpers.h>
 
@@ -214,8 +215,7 @@ class Polynomial {
       using T = typename Trait::T;
 
    private:
-      // TODO: perhaps secure vector
-      std::vector<T> m_coeffs_storage;
+      Botan::secure_vector<T> m_coeffs_storage;
       std::span<T, Trait::N> m_coeffs;
 
    private:
@@ -355,7 +355,7 @@ class PolynomialVector {
       using T = typename Trait::T;
 
    private:
-      std::vector<T> m_polys_storage;
+      Botan::secure_vector<T> m_polys_storage;
       std::vector<Polynomial<Trait, D>> m_vec;
 
    private:
