@@ -84,6 +84,8 @@ Version 3.8.0, Not Yet Released
 
 * Update GHA CodeQL actions (GH #4644)
 
+* Add support for null ciphers
+
 Version 3.7.1, 2025-02-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

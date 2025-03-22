@@ -249,7 +249,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         flags += ['--ldflags=-static']
 
     if target == 'coverage':
-        flags += ['--with-coverage-info']
+        flags += ['--with-coverage-info', '--enable-modules=tls_null']
 
     if target in ['coverage', 'valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full']:
         flags += ['--with-debug-info']
