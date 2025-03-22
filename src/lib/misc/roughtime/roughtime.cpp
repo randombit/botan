@@ -47,7 +47,8 @@ template <typename T>
 T copy(const uint8_t* t)
    requires(is_array<T>::value)
 {
-   return typecast_copy<T>(t);  //arrays are endianess independent, so we do a memcpy
+   //arrays are endianess independent, so we do a memcpy
+   return typecast_copy<T>(std::span<const uint8_t, sizeof(T)>(t, sizeof(T)));
 }
 
 template <typename T>
@@ -149,7 +150,7 @@ std::array<uint8_t, N> vector_to_array(std::vector<uint8_t, T> vec) {
    if(vec.size() != N) {
       throw std::logic_error("Invalid vector size");
    }
-   return typecast_copy<std::array<uint8_t, N>>(vec.data());
+   return typecast_copy<std::array<uint8_t, N>>(std::span<const uint8_t>{vec});
 }
 }  // namespace
 
@@ -159,7 +160,7 @@ Nonce::Nonce(const std::vector<uint8_t>& nonce) {
    if(nonce.size() != 64) {
       throw Invalid_Argument("Roughtime nonce must be 64 bytes long");
    }
-   m_nonce = typecast_copy<std::array<uint8_t, 64>>(nonce.data());
+   m_nonce = typecast_copy<std::array<uint8_t, 64>>(std::span<const uint8_t>{nonce});
 }
 
 Nonce::Nonce(RandomNumberGenerator& rng) {
@@ -204,8 +205,12 @@ Response Response::from_bits(const std::vector<uint8_t>& response, const Nonce& 
    auto hash = hashLeaf(nonce.get_nonce());
    auto index = indx;
    size_t level = 0;
+
+   std::span<const uint8_t> path_span{path};
+
    while(level < levels) {
-      hashNode(hash, typecast_copy<std::array<uint8_t, 64>>(path.data() + level * 64), index & 1);
+      auto node_data = path_span.subspan(level * 64, 64);
+      hashNode(hash, typecast_copy<std::array<uint8_t, 64>>(node_data), index & 1);
       ++level;
       index >>= 1;
    }

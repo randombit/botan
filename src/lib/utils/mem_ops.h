@@ -218,7 +218,7 @@ inline constexpr ToT typecast_copy(FromR&& src) noexcept {
    return dst;
 }
 
-// TODO: deprecate and replace
+BOTAN_DEPRECATED("This function is deprecated, use span version instead")
 template <typename T>
 inline constexpr void typecast_copy(uint8_t out[], T in[], size_t N)
    requires std::is_trivially_copyable<T>::value
@@ -227,7 +227,7 @@ inline constexpr void typecast_copy(uint8_t out[], T in[], size_t N)
    typecast_copy(std::span<uint8_t>(out, sizeof(T) * N), std::span<const T>(in, N));
 }
 
-// TODO: deprecate and replace
+BOTAN_DEPRECATED("This function is deprecated, use span version instead")
 template <typename T>
 inline constexpr void typecast_copy(T out[], const uint8_t in[], size_t N)
    requires std::is_trivial<T>::value
@@ -236,14 +236,14 @@ inline constexpr void typecast_copy(T out[], const uint8_t in[], size_t N)
    typecast_copy(std::span<T>(out, N), std::span<const uint8_t>(in, N * sizeof(T)));
 }
 
-// TODO: deprecate and replace
+BOTAN_DEPRECATED("This function is deprecated, use span version instead")
 template <typename T>
 inline constexpr void typecast_copy(uint8_t out[], const T& in) {
    // asserts that *out points to the correct amount of memory
    typecast_copy(std::span<uint8_t, sizeof(T)>(out, sizeof(T)), in);
 }
 
-// TODO: deprecate and replace
+BOTAN_DEPRECATED("This function is deprecated, use span version instead")
 template <typename T>
    requires std::is_trivial<typename std::decay<T>::type>::value
 inline constexpr void typecast_copy(T& out, const uint8_t in[]) {
@@ -251,7 +251,7 @@ inline constexpr void typecast_copy(T& out, const uint8_t in[]) {
    typecast_copy(out, std::span<const uint8_t, sizeof(T)>(in, sizeof(T)));
 }
 
-// TODO: deprecate and replace
+BOTAN_DEPRECATED("This function is deprecated, use span version instead")
 template <typename To>
    requires std::is_trivial<To>::value
 inline constexpr To typecast_copy(const uint8_t src[]) noexcept {
@@ -427,7 +427,7 @@ inline void xor_buf(std::span<uint8_t> out, std::span<const uint8_t> in, size_t 
    xor_buf(out.first(n), in.first(n));
 }
 
-// TODO: deprecate and replace, use .subspan()
+BOTAN_DEPRECATED("This function is deprecated, use .subspan instead")
 template <typename Alloc>
 void xor_buf(std::vector<uint8_t, Alloc>& out, const uint8_t* in, size_t n) {
    BOTAN_ARG_CHECK(out.size() >= n, "output vector is too small");
@@ -435,7 +435,7 @@ void xor_buf(std::vector<uint8_t, Alloc>& out, const uint8_t* in, size_t n) {
    xor_buf(std::span{out}.first(n), std::span{in, n});
 }
 
-// TODO: deprecate and replace
+BOTAN_DEPRECATED("This function is deprecated, use .subspan instead")
 template <typename Alloc, typename Alloc2>
 void xor_buf(std::vector<uint8_t, Alloc>& out, const uint8_t* in, const std::vector<uint8_t, Alloc2>& in2, size_t n) {
    BOTAN_ARG_CHECK(out.size() >= n, "output vector is too small");
