@@ -25,13 +25,13 @@ void CMAC::add_data(std::span<const uint8_t> input) {
    copy_mem(m_buffer.data() + m_position, input.data(), initial_fill);
 
    if(m_position + input.size() > bs) {
-      xor_buf(m_state, m_buffer, bs);
+      xor_buf(m_state, std::span{m_buffer}.first(bs));
       m_cipher->encrypt(m_state);
 
       BufferSlicer in(input);
       in.skip(bs - m_position);
       while(in.remaining() > bs) {
-         xor_buf(m_state, in.take(bs), bs);
+         xor_buf(m_state, in.take(bs));
          m_cipher->encrypt(m_state);
       }
 
@@ -47,13 +47,13 @@ void CMAC::add_data(std::span<const uint8_t> input) {
 * Finalize an CMAC Calculation
 */
 void CMAC::final_result(std::span<uint8_t> mac) {
-   xor_buf(m_state, m_buffer, m_position);
+   xor_buf(std::span{m_state}.first(m_position), std::span{m_buffer}.first(m_position));
 
    if(m_position == output_length()) {
-      xor_buf(m_state, m_B, output_length());
+      xor_buf(m_state, m_B);
    } else {
       m_state[m_position] ^= 0x80;
-      xor_buf(m_state, m_P, output_length());
+      xor_buf(m_state, m_P);
    }
 
    m_cipher->encrypt(m_state);
