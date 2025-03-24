@@ -85,10 +85,8 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          }
 
          const auto private_key = state.callbacks().tls_generate_ephemeral_key(group, rng);
-         auto shared_secret = CT::strip_leading_zeros(
+         m_pre_master = CT::strip_leading_zeros(
             state.callbacks().tls_ephemeral_key_agreement(group, *private_key, peer_public_value, rng, policy));
-
-         m_pre_master = std::move(shared_secret);
          append_tls_length_value(m_key_material, private_key->public_value(), 2);
       } else if(kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK) {
          const uint8_t curve_type = reader.get_byte();
