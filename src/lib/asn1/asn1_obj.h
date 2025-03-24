@@ -9,6 +9,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/secmem.h>
+#include <array>
 #include <chrono>
 #include <iosfwd>
 #include <optional>
@@ -237,6 +238,13 @@ class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
       * Initialize an OID from a vector of integer values
       */
       explicit OID(std::vector<uint32_t>&& init);
+
+      /**
+      * Initialize an OID from an array of integer values
+      * TODO(Botan4): replace this and the c'tor above with std::span
+      */
+      template <size_t N>
+      explicit OID(const std::array<uint32_t, N>& init) : OID(std::vector<uint32_t>(init.begin(), init.end())) {}
 
       /**
       * Construct an OID from a string.
