@@ -88,13 +88,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          auto shared_secret = CT::strip_leading_zeros(
             state.callbacks().tls_ephemeral_key_agreement(group, *private_key, peer_public_value, rng, policy));
 
-         if(kex_algo == Kex_Algo::DH) {
-            m_pre_master = std::move(shared_secret);
-         } else {
-            append_tls_length_value(m_pre_master, shared_secret, 2);
-            append_tls_length_value(m_pre_master, psk.bits_of(), 2);
-         }
-
+         m_pre_master = std::move(shared_secret);
          append_tls_length_value(m_key_material, private_key->public_value(), 2);
       } else if(kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK) {
          const uint8_t curve_type = reader.get_byte();
