@@ -11,6 +11,7 @@ brief -> "Wrapper for elliptic curve groups"
 <requires>
 asn1
 numbertheory
+literals
 pcurves
 pem
 </requires>

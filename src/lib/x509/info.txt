@@ -11,6 +11,7 @@ brief -> "Handles X.509 certificates and their validation"
 
 <requires>
 asn1
+literals
 pubkey
 sha1
 sha2_32

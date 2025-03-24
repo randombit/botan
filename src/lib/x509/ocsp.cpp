@@ -11,6 +11,7 @@
 #include <botan/ber_dec.h>
 #include <botan/certstor.h>
 #include <botan/der_enc.h>
+#include <botan/literals.h>
 #include <botan/pubkey.h>
 #include <botan/x509_ext.h>
 #include <botan/internal/parsing.h>
@@ -101,7 +102,8 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
    if(response_outer.more_items()) {
       BER_Decoder response_bytes = response_outer.start_context_specific(0).start_sequence();
 
-      response_bytes.decode_and_check(OID("1.3.6.1.5.5.7.48.1.1"), "Unknown response type in OCSP response");
+      using namespace Botan::literals;
+      response_bytes.decode_and_check("1.3.6.1.5.5.7.48.1.1"_oid, "Unknown response type in OCSP response");
 
       BER_Decoder basicresponse = BER_Decoder(response_bytes.get_next_octet_string()).start_sequence();
 

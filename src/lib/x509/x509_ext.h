@@ -8,6 +8,7 @@
 #ifndef BOTAN_X509_EXTENSIONS_H_
 #define BOTAN_X509_EXTENSIONS_H_
 
+#include <botan/literals.h>
 #include <botan/pkix_types.h>
 
 #include <set>
@@ -35,7 +36,10 @@ class BOTAN_PUBLIC_API(2, 0) Basic_Constraints final : public Certificate_Extens
 
       size_t get_path_limit() const;
 
-      static OID static_oid() { return OID("2.5.29.19"); }
+      static OID static_oid() {
+         using namespace Botan::literals;
+         return "2.5.29.19"_oid;
+      }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -64,7 +68,10 @@ class BOTAN_PUBLIC_API(2, 0) Key_Usage final : public Certificate_Extension {
 
       Key_Constraints get_constraints() const { return m_constraints; }
 
-      static OID static_oid() { return OID("2.5.29.15"); }
+      static OID static_oid() {
+         using namespace Botan::literals;
+         return "2.5.29.15"_oid;
+      }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -96,7 +103,10 @@ class BOTAN_PUBLIC_API(2, 0) Subject_Key_ID final : public Certificate_Extension
 
       const std::vector<uint8_t>& get_key_id() const { return m_key_id; }
 
-      static OID static_oid() { return OID("2.5.29.14"); }
+      static OID static_oid() {
+         using namespace Botan::literals;
+         return "2.5.29.14"_oid;
+      }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -126,7 +136,10 @@ class BOTAN_PUBLIC_API(2, 0) Authority_Key_ID final : public Certificate_Extensi
 
       const std::vector<uint8_t>& get_key_id() const { return m_key_id; }
 
-      static OID static_oid() { return OID("2.5.29.35"); }
+      static OID static_oid() {
+         using namespace Botan::literals;
+         return "2.5.29.35"_oid;
+      }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -148,7 +161,10 @@ class BOTAN_PUBLIC_API(2, 4) Subject_Alternative_Name final : public Certificate
    public:
       const AlternativeName& get_alt_name() const { return m_alt_name; }
 
-      static OID static_oid() { return OID("2.5.29.17"); }
+      static OID static_oid() {
+         using namespace Botan::literals;
+         return "2.5.29.17"_oid;
+      }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -176,7 +192,10 @@ class BOTAN_PUBLIC_API(2, 0) Issuer_Alternative_Name final : public Certificate_
    public:
       const AlternativeName& get_alt_name() const { return m_alt_name; }
 
-      static OID static_oid() { return OID("2.5.29.18"); }
+      static OID static_oid() {
+         using namespace Botan::literals;
+         return "2.5.29.18"_oid;
+      }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -212,7 +231,10 @@ class BOTAN_PUBLIC_API(2, 0) Extended_Key_Usage final : public Certificate_Exten
 
       const std::vector<OID>& object_identifiers() const { return m_oids; }
 
-      static OID static_oid() { return OID("2.5.29.37"); }
+      static OID static_oid() {
+         using namespace Botan::literals;
+         return "2.5.29.37"_oid;
+      }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -248,7 +270,10 @@ class BOTAN_PUBLIC_API(2, 0) Name_Constraints final : public Certificate_Extensi
 
       const NameConstraints& get_name_constraints() const { return m_name_constraints; }
 
-      static OID static_oid() { return OID("2.5.29.30"); }
+      static OID static_oid() {
+         using namespace Botan::literals;
+         return "2.5.29.30"_oid;
+      }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -278,7 +303,10 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Policies final : public Certificate_Ext
 
       const std::vector<OID>& get_policy_oids() const { return m_oids; }
 
-      static OID static_oid() { return OID("2.5.29.32"); }
+      static OID static_oid() {
+         using namespace Botan::literals;
+         return "2.5.29.32"_oid;
+      }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -316,7 +344,10 @@ class BOTAN_PUBLIC_API(2, 0) Authority_Information_Access final : public Certifi
 
       std::string ocsp_responder() const { return m_ocsp_responder; }
 
-      static OID static_oid() { return OID("1.3.6.1.5.5.7.1.1"); }
+      static OID static_oid() {
+         using namespace Botan::literals;
+         return "1.3.6.1.5.5.7.1.1"_oid;
+      }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -347,7 +378,10 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Number final : public Certificate_Extension {
 
       size_t get_crl_number() const;
 
-      static OID static_oid() { return OID("2.5.29.20"); }
+      static OID static_oid() {
+         using namespace Botan::literals;
+         return "2.5.29.20"_oid;
+      }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -376,7 +410,10 @@ class BOTAN_PUBLIC_API(2, 0) CRL_ReasonCode final : public Certificate_Extension
 
       CRL_Code get_reason() const { return m_reason; }
 
-      static OID static_oid() { return OID("2.5.29.21"); }
+      static OID static_oid() {
+         using namespace Botan::literals;
+         return "2.5.29.21"_oid;
+      }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -422,7 +459,10 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Distribution_Points final : public Certificate_
 
       const std::vector<std::string>& crl_distribution_urls() const { return m_crl_distribution_urls; }
 
-      static OID static_oid() { return OID("2.5.29.31"); }
+      static OID static_oid() {
+         using namespace Botan::literals;
+         return "2.5.29.31"_oid;
+      }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -455,7 +495,10 @@ class CRL_Issuing_Distribution_Point final : public Certificate_Extension {
 
       const AlternativeName& get_point() const { return m_distribution_point.point(); }
 
-      static OID static_oid() { return OID("2.5.29.28"); }
+      static OID static_oid() {
+         using namespace Botan::literals;
+         return "2.5.29.28"_oid;
+      }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -487,7 +530,10 @@ class OCSP_NoCheck final : public Certificate_Extension {
 
       std::unique_ptr<Certificate_Extension> copy() const override { return std::make_unique<OCSP_NoCheck>(); }
 
-      static OID static_oid() { return OID("1.3.6.1.5.5.7.48.1.5"); }
+      static OID static_oid() {
+         using namespace Botan::literals;
+         return "1.3.6.1.5.5.7.48.1.5"_oid;
+      }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -543,7 +589,10 @@ class BOTAN_PUBLIC_API(3, 5) TNAuthList final : public Certificate_Extension {
 
       std::unique_ptr<Certificate_Extension> copy() const override { return std::make_unique<TNAuthList>(*this); }
 
-      static OID static_oid() { return OID("1.3.6.1.5.5.7.1.26"); }
+      static OID static_oid() {
+         using namespace Botan::literals;
+         return "1.3.6.1.5.5.7.1.26"_oid;
+      }
 
       OID oid_of() const override { return static_oid(); }
 

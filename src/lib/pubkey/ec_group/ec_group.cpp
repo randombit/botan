@@ -12,6 +12,7 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/literals.h>
 #include <botan/mutex.h>
 #include <botan/numthry.h>
 #include <botan/pem.h>
@@ -231,10 +232,12 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
       std::vector<uint8_t> base_pt;
       std::vector<uint8_t> seed;
 
+      using namespace Botan::literals;
+
       ber.start_sequence()
          .decode_and_check<size_t>(1, "Unknown ECC param version code")
          .start_sequence()
-         .decode_and_check(OID("1.2.840.10045.1.1"), "Only prime ECC fields supported")
+         .decode_and_check("1.2.840.10045.1.1"_oid, "Only prime ECC fields supported")
          .decode(p)
          .end_cons()
          .start_sequence()
