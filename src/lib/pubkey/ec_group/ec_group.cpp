@@ -234,7 +234,7 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
       ber.start_sequence()
          .decode_and_check<size_t>(1, "Unknown ECC param version code")
          .start_sequence()
-         .decode_and_check(OID("1.2.840.10045.1.1"), "Only prime ECC fields supported")
+         .decode_and_check(OID({1, 2, 840, 10045, 1, 1}), "Only prime ECC fields supported")
          .decode(p)
          .end_cons()
          .start_sequence()
