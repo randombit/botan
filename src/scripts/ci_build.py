@@ -44,6 +44,7 @@ def known_targets():
         'cross-hppa64',
         'cross-i386',
         'cross-ios-arm64',
+        'cross-loongarch64',
         'cross-m68k',
         'cross-mips',
         'cross-mips64',
@@ -384,6 +385,10 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 flags += ['--cpu=s390x']
                 cc_bin = 's390x-linux-gnu-g++'
                 test_prefix = ['qemu-s390x', '-L', '/usr/s390x-linux-gnu/']
+            elif target == 'cross-loongarch64':
+                flags += ['--cpu=loongarch64']
+                cc_bin = 'loongarch64-linux-gnu-g++-14'
+                test_prefix = ['qemu-loongarch64', '-L', '/usr/loongarch64-linux-gnu/']
             elif target == 'cross-mips':
                 flags += ['--cpu=mips32']
                 cc_bin = 'mips-linux-gnu-g++'
