@@ -83,6 +83,14 @@ class ECDH_AllGroups_Tests : public Test {
                   Botan::ECDH_PublicKey(group, infinity);
                });
 
+               // Regression test: prohibit ECDH-agreement with all-zero public value
+               result.test_throws<Botan::Decoding_Error>("ECDH public value is point-at-infinity", [&] {
+                  const auto sk = Botan::ECDH_PrivateKey(rng(), group);
+                  Botan::PK_Key_Agreement ka(sk, rng(), kdf);
+                  const auto sec1_infinity = std::array{uint8_t(0x00)};
+                  const auto a_ss = ka.derive_key(0, sec1_infinity);
+               });
+
                for(size_t i = 0; i != 100; ++i) {
                   const Botan::ECDH_PrivateKey a_priv(rng(), group);
                   const auto a_pub = a_priv.public_value();
