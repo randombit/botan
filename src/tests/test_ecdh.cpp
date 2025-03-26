@@ -71,6 +71,18 @@ class ECDH_AllGroups_Tests : public Test {
             try {
                const auto group = Botan::EC_Group::from_name(group_name);
 
+               // Regression test: prohibit loading an all-zero private key
+               result.test_throws<Botan::Invalid_Argument>("all-zero private key is unacceptable", [&] {
+                  const auto one = Botan::EC_Scalar::one(group);
+                  Botan::ECDH_PrivateKey(group, one - one);
+               });
+
+               // Regression test: prohibit loading a public point that is the identity (point at infinity)
+               result.test_throws<Botan::Invalid_Argument>("point at infinity isn't a valid public key", [&] {
+                  const auto infinity = Botan::EC_AffinePoint::identity(group);
+                  Botan::ECDH_PublicKey(group, infinity);
+               });
+
                for(size_t i = 0; i != 100; ++i) {
                   const Botan::ECDH_PrivateKey a_priv(rng(), group);
                   const auto a_pub = a_priv.public_value();

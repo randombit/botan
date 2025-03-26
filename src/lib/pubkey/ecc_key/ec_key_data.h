@@ -23,13 +23,10 @@ class RandomNumberGenerator;
 
 class EC_PublicKey_Data final {
    public:
-      EC_PublicKey_Data(EC_Group group, EC_AffinePoint pt) : m_group(std::move(group)), m_point(std::move(pt)) {
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-         m_legacy_point = m_point.to_legacy_point();
-#endif
-      }
+      EC_PublicKey_Data(EC_Group group, EC_AffinePoint pt);
 
-      EC_PublicKey_Data(EC_Group group, std::span<const uint8_t> bytes);
+      EC_PublicKey_Data(const EC_Group& group, std::span<const uint8_t> bytes) :
+            EC_PublicKey_Data(group, EC_AffinePoint(group, bytes)) {}
 
       const EC_Group& group() const { return m_group; }
 
@@ -51,7 +48,7 @@ class EC_PrivateKey_Data final {
    public:
       EC_PrivateKey_Data(EC_Group group, EC_Scalar x);
 
-      EC_PrivateKey_Data(EC_Group group, std::span<const uint8_t> bytes);
+      EC_PrivateKey_Data(const EC_Group& group, std::span<const uint8_t> bytes);
 
       std::shared_ptr<EC_PublicKey_Data> public_key(RandomNumberGenerator& rng, bool with_modular_inverse) const;
 
