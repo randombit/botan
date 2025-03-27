@@ -1121,7 +1121,7 @@ class ModuleInfo(InfoObject):
 
         return supported_isa_flags(ccinfo, arch) and supported_compiler(ccinfo, cc_min_version)
 
-    def dependencies(self, osinfo):
+    def dependencies(self, osinfo, archinfo):
         # base is an implicit dep for all submodules
         deps = ['base']
         if self.parent_module is not None:
@@ -1130,8 +1130,11 @@ class ModuleInfo(InfoObject):
         for req in self.requires:
             if req.find('?') != -1:
                 (cond, dep) = req.split('?')
-                if osinfo is None or cond in osinfo.target_features:
+                if osinfo is None and archinfo is None:
                     deps.append(dep)
+                else:
+                    if cond == archinfo.basename or cond in osinfo.target_features:
+                        deps.append(dep)
             else:
                 deps.append(req)
 
@@ -1152,7 +1155,7 @@ class ModuleInfo(InfoObject):
 
             return True
 
-        missing = [s for s in self.dependencies(None) if s not in modules or is_dependency_on_virtual(self, modules[s])]
+        missing = [s for s in self.dependencies(None, None) if s not in modules or is_dependency_on_virtual(self, modules[s])]
 
         for modname in missing:
             if modname not in modules:
@@ -1985,7 +1988,7 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
         if src in module_that_owns:
             module = module_that_owns[src]
             isas = module.isas_needed(arch.basename)
-            if 'simd' in module.dependencies(osinfo):
+            if 'simd' in module.dependencies(osinfo, arch):
                 isas.append('simd')
 
             return cc.get_isa_specific_flags(isas, arch, options)
@@ -2615,7 +2618,7 @@ class ModulesChooser:
     def _modules_dependency_table(self):
         out = {}
         for modname in self._modules:
-            out[modname] = self._modules[modname].dependencies(self._osinfo)
+            out[modname] = self._modules[modname].dependencies(self._osinfo, self._archinfo)
         return out
 
     def _resolve_dependencies_for_all_modules(self):
