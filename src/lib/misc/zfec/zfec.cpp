@@ -309,7 +309,7 @@ void ZFEC::addmul(uint8_t z[], const uint8_t x[], uint8_t y, size_t size) {
 #endif
 
 #if defined(BOTAN_HAS_ZFEC_SSE2)
-   if(size >= 64 && CPUID::has_sse2()) {
+   if(size >= 64 && CPUID::has(CPUID::Feature::SSE2)) {
       const size_t consumed = addmul_sse2(z, x, y, size);
       z += consumed;
       x += consumed;
@@ -536,7 +536,7 @@ std::string ZFEC::provider() const {
 #endif
 
 #if defined(BOTAN_HAS_ZFEC_SSE2)
-   if(CPUID::has_sse2()) {
+   if(CPUID::has(CPUID::Feature::SSE2)) {
       return "sse2";
    }
 #endif

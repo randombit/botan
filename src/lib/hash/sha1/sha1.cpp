@@ -66,19 +66,19 @@ void SHA_1::compress_n(digest_type& digest, std::span<const uint8_t> input, size
    using namespace SHA1_F;
 
 #if defined(BOTAN_HAS_SHA1_X86_SHA_NI)
-   if(CPUID::has_intel_sha()) {
+   if(CPUID::has(CPUID::Feature::SHA)) {
       return sha1_compress_x86(digest, input, blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_SHA1_ARMV8)
-   if(CPUID::has_arm_sha1()) {
+   if(CPUID::has(CPUID::Feature::SHA1)) {
       return sha1_armv8_compress_n(digest, input, blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_SHA1_SSE2)
-   if(CPUID::has_sse2()) {
+   if(CPUID::has(CPUID::Feature::SSE2)) {
       return sse2_compress_n(digest, input, blocks);
    }
 
@@ -209,19 +209,19 @@ void SHA_1::init(digest_type& digest) {
 
 std::string SHA_1::provider() const {
 #if defined(BOTAN_HAS_SHA1_X86_SHA_NI)
-   if(CPUID::has_intel_sha()) {
+   if(CPUID::has(CPUID::Feature::SHA)) {
       return "intel_sha";
    }
 #endif
 
 #if defined(BOTAN_HAS_SHA1_ARMV8)
-   if(CPUID::has_arm_sha1()) {
+   if(CPUID::has(CPUID::Feature::SHA1)) {
       return "armv8_sha";
    }
 #endif
 
 #if defined(BOTAN_HAS_SHA1_SSE2)
-   if(CPUID::has_sse2()) {
+   if(CPUID::has(CPUID::Feature::SSE2)) {
       return "sse2";
    }
 #endif

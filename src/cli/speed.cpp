@@ -440,13 +440,10 @@ class Speed final : public Command {
 
 #if defined(BOTAN_HAS_CPUID)
          for(const std::string& cpuid_to_clear : Command::split_on(get_arg("clear-cpuid"), ',')) {
-            auto bits = Botan::CPUID::bit_from_string(cpuid_to_clear);
-            if(bits.empty()) {
+            if(auto bit = Botan::CPUID::bit_from_string(cpuid_to_clear)) {
+               Botan::CPUID::clear_cpuid_bit(*bit);
+            } else {
                error_output() << "Warning don't know CPUID flag '" << cpuid_to_clear << "'\n";
-            }
-
-            for(auto bit : bits) {
-               Botan::CPUID::clear_cpuid_bit(bit);
             }
          }
 #endif

@@ -1117,13 +1117,14 @@ std::string strip_ws(const std::string& in) {
    return in.substr(first_c, last_c - first_c + 1);
 }
 
-std::vector<uint64_t> parse_cpuid_bits(const std::vector<std::string>& tok) {
-   std::vector<uint64_t> bits;
+std::vector<std::string> parse_cpuid_bits(const std::vector<std::string>& tok) {
+   std::vector<std::string> bits;
 
 #if defined(BOTAN_HAS_CPUID)
    for(size_t i = 1; i < tok.size(); ++i) {
-      const std::vector<Botan::CPUID::CPUID_bits> more = Botan::CPUID::bit_from_string(tok[i]);
-      bits.insert(bits.end(), more.begin(), more.end());
+      if(auto bit = Botan::CPUID::bit_from_string(tok[i])) {
+         bits.push_back(bit->to_string());
+      }
    }
 #else
    BOTAN_UNUSED(tok);
@@ -1222,12 +1223,13 @@ std::vector<Test::Result> Text_Based_Test::run() {
             Test::Result result = run_one_test(header, vars);
 #if defined(BOTAN_HAS_CPUID)
             if(!m_cpu_flags.empty()) {
-               for(const auto& cpuid_u64 : m_cpu_flags) {
-                  Botan::CPUID::CPUID_bits cpuid_bit = static_cast<Botan::CPUID::CPUID_bits>(cpuid_u64);
-                  if(Botan::CPUID::has_cpuid_bit(cpuid_bit)) {
-                     Botan::CPUID::clear_cpuid_bit(cpuid_bit);
-                     // now re-run the test
-                     result.merge(run_one_test(header, vars));
+               for(const auto& cpuid_str : m_cpu_flags) {
+                  if(const auto bit = Botan::CPUID::Feature::from_string(cpuid_str)) {
+                     if(Botan::CPUID::has(*bit)) {
+                        Botan::CPUID::clear_cpuid_bit(*bit);
+                        // now re-run the test
+                        result.merge(run_one_test(header, vars));
+                     }
                   }
                }
                Botan::CPUID::initialize();

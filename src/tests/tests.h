@@ -877,7 +877,7 @@ class Text_Based_Test : public Test {
       std::unique_ptr<std::istream> m_cur;
       std::string m_cur_src_name;
       std::deque<std::string> m_srcs;
-      std::vector<uint64_t> m_cpu_flags;
+      std::vector<std::string> m_cpu_flags;
 };
 
 /**

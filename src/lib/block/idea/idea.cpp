@@ -107,7 +107,7 @@ void idea_op(const uint8_t in[], uint8_t out[], size_t blocks, const uint16_t K[
 
 size_t IDEA::parallelism() const {
 #if defined(BOTAN_HAS_IDEA_SSE2)
-   if(CPUID::has_sse2()) {
+   if(CPUID::has(CPUID::Feature::SSE2)) {
       return 8;
    }
 #endif
@@ -117,7 +117,7 @@ size_t IDEA::parallelism() const {
 
 std::string IDEA::provider() const {
 #if defined(BOTAN_HAS_IDEA_SSE2)
-   if(CPUID::has_sse2()) {
+   if(CPUID::has(CPUID::Feature::SSE2)) {
       return "sse2";
    }
 #endif
@@ -132,7 +132,7 @@ void IDEA::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_IDEA_SSE2)
-   if(CPUID::has_sse2()) {
+   if(CPUID::has(CPUID::Feature::SSE2)) {
       while(blocks >= 8) {
          sse2_idea_op_8(in, out, m_EK.data());
          in += 8 * BLOCK_SIZE;
@@ -152,7 +152,7 @@ void IDEA::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_IDEA_SSE2)
-   if(CPUID::has_sse2()) {
+   if(CPUID::has(CPUID::Feature::SSE2)) {
       while(blocks >= 8) {
          sse2_idea_op_8(in, out, m_DK.data());
          in += 8 * BLOCK_SIZE;

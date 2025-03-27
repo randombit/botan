@@ -75,13 +75,13 @@ ChaCha::ChaCha(size_t rounds) : m_rounds(rounds) {
 
 size_t ChaCha::parallelism() {
 #if defined(BOTAN_HAS_CHACHA_AVX512)
-   if(CPUID::has_avx512()) {
+   if(CPUID::has(CPUID::Feature::AVX512)) {
       return 16;
    }
 #endif
 
 #if defined(BOTAN_HAS_CHACHA_AVX2)
-   if(CPUID::has_avx2()) {
+   if(CPUID::has(CPUID::Feature::AVX2)) {
       return 8;
    }
 #endif
@@ -91,19 +91,19 @@ size_t ChaCha::parallelism() {
 
 std::string ChaCha::provider() const {
 #if defined(BOTAN_HAS_CHACHA_AVX512)
-   if(CPUID::has_avx512()) {
+   if(CPUID::has(CPUID::Feature::AVX512)) {
       return "avx512";
    }
 #endif
 
 #if defined(BOTAN_HAS_CHACHA_AVX2)
-   if(CPUID::has_avx2()) {
+   if(CPUID::has(CPUID::Feature::AVX2)) {
       return "avx2";
    }
 #endif
 
 #if defined(BOTAN_HAS_CHACHA_SIMD32)
-   if(CPUID::has_simd_32()) {
+   if(CPUID::has_simd_4x32()) {
       return "simd32";
    }
 #endif
@@ -115,7 +115,7 @@ void ChaCha::chacha(uint8_t output[], size_t output_blocks, uint32_t state[16], 
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
 
 #if defined(BOTAN_HAS_CHACHA_AVX512)
-   if(CPUID::has_avx512()) {
+   if(CPUID::has(CPUID::Feature::AVX512)) {
       while(output_blocks >= 16) {
          ChaCha::chacha_avx512_x16(output, state, rounds);
          output += 16 * 64;
@@ -125,7 +125,7 @@ void ChaCha::chacha(uint8_t output[], size_t output_blocks, uint32_t state[16], 
 #endif
 
 #if defined(BOTAN_HAS_CHACHA_AVX2)
-   if(CPUID::has_avx2()) {
+   if(CPUID::has(CPUID::Feature::AVX2)) {
       while(output_blocks >= 8) {
          ChaCha::chacha_avx2_x8(output, state, rounds);
          output += 8 * 64;
@@ -135,7 +135,7 @@ void ChaCha::chacha(uint8_t output[], size_t output_blocks, uint32_t state[16], 
 #endif
 
 #if defined(BOTAN_HAS_CHACHA_SIMD32)
-   if(CPUID::has_simd_32()) {
+   if(CPUID::has_simd_4x32()) {
       while(output_blocks >= 4) {
          ChaCha::chacha_simd32_x4(output, state, rounds);
          output += 4 * 64;

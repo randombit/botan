@@ -74,7 +74,7 @@ inline void gamma(uint32_t& A0, uint32_t& A1, uint32_t& A2, uint32_t& A3) {
 
 size_t Noekeon::parallelism() const {
 #if defined(BOTAN_HAS_NOEKEON_SIMD)
-   if(CPUID::has_simd_32()) {
+   if(CPUID::has_simd_4x32()) {
       return 4;
    }
 #endif
@@ -84,7 +84,7 @@ size_t Noekeon::parallelism() const {
 
 std::string Noekeon::provider() const {
 #if defined(BOTAN_HAS_NOEKEON_SIMD)
-   if(CPUID::has_simd_32()) {
+   if(CPUID::has_simd_4x32()) {
       return "simd";
    }
 #endif
@@ -105,7 +105,7 @@ void Noekeon::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_NOEKEON_SIMD)
-   if(CPUID::has_simd_32()) {
+   if(CPUID::has_simd_4x32()) {
       while(blocks >= 4) {
          simd_encrypt_4(in, out);
          in += 4 * BLOCK_SIZE;
@@ -153,7 +153,7 @@ void Noekeon::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_NOEKEON_SIMD)
-   if(CPUID::has_simd_32()) {
+   if(CPUID::has_simd_4x32()) {
       while(blocks >= 4) {
          simd_decrypt_4(in, out);
          in += 4 * BLOCK_SIZE;

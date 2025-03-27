@@ -38,13 +38,13 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
          SHA2_bit = (1 << 3),
       };
 
-      feat |= if_set(hwcap_neon, ARM_hwcap_bit::NEON_bit, CPUID::CPUID_ARM_NEON_BIT, allowed);
+      feat |= if_set(hwcap_neon, ARM_hwcap_bit::NEON_bit, CPUFeature::Bit::NEON, allowed);
 
-      if(feat & CPUID::CPUID_ARM_NEON_BIT) {
-         feat |= if_set(hwcap_crypto, ARM_hwcap_bit::AES_bit, CPUID::CPUID_ARM_AES_BIT, allowed);
-         feat |= if_set(hwcap_crypto, ARM_hwcap_bit::PMULL_bit, CPUID::CPUID_ARM_PMULL_BIT, allowed);
-         feat |= if_set(hwcap_crypto, ARM_hwcap_bit::SHA1_bit, CPUID::CPUID_ARM_SHA1_BIT, allowed);
-         feat |= if_set(hwcap_crypto, ARM_hwcap_bit::SHA2_bit, CPUID::CPUID_ARM_SHA2_BIT, allowed);
+      if(feat & CPUFeature::Bit::NEON) {
+         feat |= if_set(hwcap_crypto, ARM_hwcap_bit::AES_bit, CPUFeature::Bit::AES, allowed);
+         feat |= if_set(hwcap_crypto, ARM_hwcap_bit::PMULL_bit, CPUFeature::Bit::PMULL, allowed);
+         feat |= if_set(hwcap_crypto, ARM_hwcap_bit::SHA1_bit, CPUFeature::Bit::SHA1, allowed);
+         feat |= if_set(hwcap_crypto, ARM_hwcap_bit::SHA2_bit, CPUFeature::Bit::SHA2, allowed);
       }
    }
 #endif

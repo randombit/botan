@@ -1212,17 +1212,41 @@ class CPUID_Tests final : public Test {
          const std::string cpuid_string = Botan::CPUID::to_string();
          result.test_success("CPUID::to_string doesn't crash");
 
+         for(size_t b = 0; b != 32; ++b) {
+            try {
+               const auto bit = static_cast<uint32_t>(1) << b;
+               const auto feat = Botan::CPUID::Feature(static_cast<Botan::CPUID::Feature::Bit>(bit));
+
+               const std::string feat_str = feat.to_string();
+
+               result.confirm("Feature string is not empty", !feat_str.empty());
+
+               if(auto from_str = Botan::CPUID::Feature::from_string(feat_str)) {
+                  result.test_int_eq("Feature::from_string returns expected bit", from_str->as_u32(), bit);
+               } else {
+                  result.test_failure(
+                     Botan::fmt("Feature::from_string didn't recognize its own output ({})", feat_str));
+               }
+            } catch(Botan::Invalid_State&) {
+               // This will thrown if the bit is not a valid one
+            }
+         }
+
    #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
-         if(Botan::CPUID::has_sse2()) {
+         const auto bit = Botan::CPUID::Feature::SSE2;
+
+         if(Botan::CPUID::has(bit)) {
             result.confirm("Output string includes sse2", cpuid_string.find("sse2") != std::string::npos);
 
-            Botan::CPUID::clear_cpuid_bit(Botan::CPUID::CPUID_SSE2_BIT);
+            Botan::CPUID::clear_cpuid_bit(bit);
 
-            result.test_eq("After clearing cpuid bit, has_sse2 returns false", Botan::CPUID::has_sse2(), false);
+            result.test_eq(
+               "After clearing cpuid bit, CPUID::has for SSE2 returns false", Botan::CPUID::has(bit), false);
 
             Botan::CPUID::initialize();  // reset state
-            result.test_eq("After reinitializing, has_sse2 returns true", Botan::CPUID::has_sse2(), true);
+            result.test_eq(
+               "After reinitializing, CPUID::has for SSE2 returns true again", Botan::CPUID::has(bit), true);
          }
    #endif
 
