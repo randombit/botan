@@ -77,8 +77,8 @@ uint8_t bcrypt_encoding_to_base64(uint8_t c) {
 std::string bcrypt_base64_encode(const uint8_t input[], size_t length) {
    std::string b64 = base64_encode(input, length);
 
-   while(!b64.empty() && b64[b64.size() - 1] == '=') {
-      b64 = b64.substr(0, b64.size() - 1);
+   while(!b64.empty() && b64.back() == '=') {
+      b64.pop_back();
    }
 
    for(size_t i = 0; i != b64.size(); ++i) {
