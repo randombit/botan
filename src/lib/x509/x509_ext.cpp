@@ -25,65 +25,67 @@ namespace Botan {
 
 namespace {
 
+std::optional<uint32_t> is_sub_element_of(const OID& oid, std::initializer_list<uint32_t> prefix) {
+   const auto& c = oid.get_components();
+
+   if(c.size() != prefix.size() + 1) {
+      return {};
+   }
+
+   if(!std::equal(c.begin(), c.end() - 1, prefix.begin(), prefix.end())) {
+      return {};
+   }
+
+   return c[c.size() - 1];
+}
+
+template <std::derived_from<Certificate_Extension> T>
+auto make_extension([[maybe_unused]] const OID& oid) {
+   BOTAN_DEBUG_ASSERT(oid == T::static_oid());
+   return std::make_unique<T>();
+}
+
 std::unique_ptr<Certificate_Extension> extension_from_oid(const OID& oid) {
-   if(oid == Cert_Extension::Subject_Key_ID::static_oid()) {
-      return std::make_unique<Cert_Extension::Subject_Key_ID>();
+   if(auto iso_ext = is_sub_element_of(oid, {2, 5, 29})) {
+      // NOLINTNEXTLINE(*-switch-missing-default-case)
+      switch(*iso_ext) {
+         case 14:
+            return make_extension<Cert_Extension::Subject_Key_ID>(oid);
+         case 15:
+            return make_extension<Cert_Extension::Key_Usage>(oid);
+         case 17:
+            return make_extension<Cert_Extension::Subject_Alternative_Name>(oid);
+         case 18:
+            return make_extension<Cert_Extension::Issuer_Alternative_Name>(oid);
+         case 19:
+            return make_extension<Cert_Extension::Basic_Constraints>(oid);
+         case 20:
+            return make_extension<Cert_Extension::CRL_Number>(oid);
+         case 21:
+            return make_extension<Cert_Extension::CRL_ReasonCode>(oid);
+         case 28:
+            return make_extension<Cert_Extension::CRL_Issuing_Distribution_Point>(oid);
+         case 30:
+            return make_extension<Cert_Extension::Name_Constraints>(oid);
+         case 31:
+            return make_extension<Cert_Extension::CRL_Distribution_Points>(oid);
+         case 32:
+            return make_extension<Cert_Extension::Certificate_Policies>(oid);
+         case 35:
+            return make_extension<Cert_Extension::Authority_Key_ID>(oid);
+         case 37:
+            return make_extension<Cert_Extension::Extended_Key_Usage>(oid);
+      }
    }
 
-   if(oid == Cert_Extension::Key_Usage::static_oid()) {
-      return std::make_unique<Cert_Extension::Key_Usage>();
-   }
-
-   if(oid == Cert_Extension::Subject_Alternative_Name::static_oid()) {
-      return std::make_unique<Cert_Extension::Subject_Alternative_Name>();
-   }
-
-   if(oid == Cert_Extension::Issuer_Alternative_Name::static_oid()) {
-      return std::make_unique<Cert_Extension::Issuer_Alternative_Name>();
-   }
-
-   if(oid == Cert_Extension::Basic_Constraints::static_oid()) {
-      return std::make_unique<Cert_Extension::Basic_Constraints>();
-   }
-
-   if(oid == Cert_Extension::CRL_Number::static_oid()) {
-      return std::make_unique<Cert_Extension::CRL_Number>();
-   }
-
-   if(oid == Cert_Extension::CRL_ReasonCode::static_oid()) {
-      return std::make_unique<Cert_Extension::CRL_ReasonCode>();
-   }
-
-   if(oid == Cert_Extension::Authority_Key_ID::static_oid()) {
-      return std::make_unique<Cert_Extension::Authority_Key_ID>();
-   }
-
-   if(oid == Cert_Extension::Name_Constraints::static_oid()) {
-      return std::make_unique<Cert_Extension::Name_Constraints>();
-   }
-
-   if(oid == Cert_Extension::CRL_Distribution_Points::static_oid()) {
-      return std::make_unique<Cert_Extension::CRL_Distribution_Points>();
-   }
-
-   if(oid == Cert_Extension::CRL_Issuing_Distribution_Point::static_oid()) {
-      return std::make_unique<Cert_Extension::CRL_Issuing_Distribution_Point>();
-   }
-
-   if(oid == Cert_Extension::Certificate_Policies::static_oid()) {
-      return std::make_unique<Cert_Extension::Certificate_Policies>();
-   }
-
-   if(oid == Cert_Extension::Extended_Key_Usage::static_oid()) {
-      return std::make_unique<Cert_Extension::Extended_Key_Usage>();
-   }
-
-   if(oid == Cert_Extension::Authority_Information_Access::static_oid()) {
-      return std::make_unique<Cert_Extension::Authority_Information_Access>();
-   }
-
-   if(oid == Cert_Extension::TNAuthList::static_oid()) {
-      return std::make_unique<Cert_Extension::TNAuthList>();
+   if(auto pkix_ext = is_sub_element_of(oid, {1, 3, 6, 1, 5, 5, 7, 1})) {
+      // NOLINTNEXTLINE(*-switch-missing-default-case)
+      switch(*pkix_ext) {
+         case 1:
+            return make_extension<Cert_Extension::Authority_Information_Access>(oid);
+         case 26:
+            return make_extension<Cert_Extension::TNAuthList>(oid);
+      }
    }
 
    return nullptr;  // unknown
