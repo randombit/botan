@@ -91,9 +91,10 @@ void CPUID::initialize() {
    state() = CPUID_Data();
 }
 
+#if defined(BOTAN_HAS_CPUID_DETECTION)
+
 namespace {
 
-#if defined(BOTAN_CPUID_HAS_DETECTION)
 uint32_t cleared_cpuid_bits() {
    uint32_t cleared = 0;
 
@@ -110,14 +111,15 @@ uint32_t cleared_cpuid_bits() {
 
    return cleared;
 }
-#endif
 
 }  // namespace
+
+#endif
 
 CPUID::CPUID_Data::CPUID_Data() {
    m_processor_features = 0;
 
-#if defined(BOTAN_CPUID_HAS_DETECTION)
+#if defined(BOTAN_HAS_CPUID_DETECTION)
    m_processor_features = detect_cpu_features(~cleared_cpuid_bits());
 #endif
 

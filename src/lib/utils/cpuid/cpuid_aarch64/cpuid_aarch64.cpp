@@ -22,12 +22,10 @@
 
 namespace Botan {
 
-#if defined(BOTAN_TARGET_ARCH_IS_ARM64)
-
 namespace {
 
 std::optional<uint32_t> aarch64_feat_via_auxval(uint32_t allowed) {
-   #if defined(BOTAN_HAS_OS_UTILS)
+#if defined(BOTAN_HAS_OS_UTILS)
 
    if(auto auxval = OS::get_auxval_hwcap()) {
       uint32_t feat = 0;
@@ -69,15 +67,15 @@ std::optional<uint32_t> aarch64_feat_via_auxval(uint32_t allowed) {
 
       return feat;
    }
-   #else
+#else
    BOTAN_UNUSED(allowed);
-   #endif
+#endif
 
    return {};
 }
 
 std::optional<uint32_t> aarch64_feat_using_mac_api(uint32_t allowed) {
-   #if defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
+#if defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
    uint32_t feat = 0;
 
    auto sysctlbyname_has_feature = [](const char* feature_name) -> bool {
@@ -104,14 +102,14 @@ std::optional<uint32_t> aarch64_feat_using_mac_api(uint32_t allowed) {
    }
 
    return feat;
-   #else
+#else
    BOTAN_UNUSED(allowed);
    return {};
-   #endif
+#endif
 }
 
 std::optional<uint32_t> aarch64_feat_using_instr_probe(uint32_t allowed) {
-   #if defined(BOTAN_USE_GCC_INLINE_ASM)
+#if defined(BOTAN_USE_GCC_INLINE_ASM)
 
    /*
    No getauxval API available, fall back on probe functions.
@@ -169,10 +167,10 @@ std::optional<uint32_t> aarch64_feat_using_instr_probe(uint32_t allowed) {
    }
 
    return feat;
-   #else
+#else
    BOTAN_UNUSED(allowed);
    return {};
-   #endif
+#endif
 }
 
 }  // namespace
@@ -188,7 +186,5 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
       return 0;
    }
 }
-
-#endif
 
 }  // namespace Botan

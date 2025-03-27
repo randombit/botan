@@ -11,9 +11,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/target_info.h>
 
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-   #include <immintrin.h>
-#endif
+#include <immintrin.h>
 
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
    #include <intrin.h>
@@ -21,38 +19,36 @@
 
 namespace Botan {
 
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-
 namespace {
 
 void invoke_cpuid(uint32_t type, uint32_t out[4]) {
    clear_mem(out, 4);
 
-   #if defined(BOTAN_USE_GCC_INLINE_ASM)
+#if defined(BOTAN_USE_GCC_INLINE_ASM)
    asm volatile("cpuid\n\t" : "=a"(out[0]), "=b"(out[1]), "=c"(out[2]), "=d"(out[3]) : "0"(type));
 
-   #elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
    __cpuid((int*)out, type);
 
-   #else
+#else
    BOTAN_UNUSED(type);
-      #warning "No way of calling x86 cpuid instruction for this compiler"
-   #endif
+   #warning "No way of calling x86 cpuid instruction for this compiler"
+#endif
 }
 
 void invoke_cpuid_sublevel(uint32_t type, uint32_t level, uint32_t out[4]) {
    clear_mem(out, 4);
 
-   #if defined(BOTAN_USE_GCC_INLINE_ASM)
+#if defined(BOTAN_USE_GCC_INLINE_ASM)
    asm volatile("cpuid\n\t" : "=a"(out[0]), "=b"(out[1]), "=c"(out[2]), "=d"(out[3]) : "0"(type), "2"(level));
 
-   #elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
    __cpuidex((int*)out, type, level);
 
-   #else
+#else
    BOTAN_UNUSED(type, level);
-      #warning "No way of calling x86 cpuid instruction for this compiler"
-   #endif
+   #warning "No way of calling x86 cpuid instruction for this compiler"
+#endif
 }
 
 BOTAN_FUNC_ISA("xsave") uint64_t xgetbv() {
@@ -211,16 +207,14 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
    * If we don't have access to CPUID, we can still safely assume that
    * any x86-64 processor has SSE2 and RDTSC
    */
-   #if defined(BOTAN_TARGET_ARCH_IS_X86_64)
+#if defined(BOTAN_TARGET_ARCH_IS_X86_64)
    if(feat == 0) {
       feat |= CPUID::CPUID_SSE2_BIT & allowed;
       feat |= CPUID::CPUID_RDTSC_BIT & allowed;
    }
-   #endif
+#endif
 
    return feat;
 }
-
-#endif
 
 }  // namespace Botan

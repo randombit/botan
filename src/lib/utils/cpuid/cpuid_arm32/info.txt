@@ -1,0 +1,11 @@
+<defines>
+CPUID_DETECTION -> 20250327
+</defines>
+
+<module_info>
+name -> "CPUID for ARMv7"
+</module_info>
+
+<arch>
+arm32
+</arch>
