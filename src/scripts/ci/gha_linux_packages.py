@@ -78,6 +78,10 @@ def gha_linux_packages(target):
         packages.append('qemu-user')
         packages.append('g++-hppa-linux-gnu')
 
+    if target in ['cross-loongarch64']:
+        packages.append('qemu-user')
+        packages.append('g++-14-loongarch64-linux-gnu')
+
     if target in ['cross-mips']:
         packages.append('qemu-user')
         packages.append('g++-mips-linux-gnu')
