@@ -60,7 +60,7 @@ def run_git(args):
     return check_subprocess_results(proc, 'git')
 
 def maybe_gpg(val):
-    val = val.decode('ascii')
+    val = val.decode('utf-8')
     if 'BEGIN PGP SIGNATURE' in val:
         return val.split('\n')[-2]
     else:
