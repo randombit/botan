@@ -11,15 +11,23 @@
 
 namespace Botan {
 
-EC_PublicKey_Data::EC_PublicKey_Data(EC_Group group, std::span<const uint8_t> bytes) :
-      m_group(std::move(group)), m_point(m_group, bytes) {
+EC_PublicKey_Data::EC_PublicKey_Data(EC_Group group, EC_AffinePoint pt) :
+      m_group(std::move(group)), m_point(std::move(pt)) {
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
    m_legacy_point = m_point.to_legacy_point();
 #endif
+
+   // Checking that the point lies on the curve is done in the deserialization
+   // of EC_AffinePoint.
+   BOTAN_ARG_CHECK(!m_point.is_identity(), "ECC public key cannot be point at infinity");
 }
 
 EC_PrivateKey_Data::EC_PrivateKey_Data(EC_Group group, EC_Scalar x) :
-      m_group(std::move(group)), m_scalar(std::move(x)), m_legacy_x(m_scalar.to_bigint()) {}
+      m_group(std::move(group)), m_scalar(std::move(x)), m_legacy_x(m_scalar.to_bigint()) {
+   // Checking that the scalar is lower than the group order is ensured in the
+   // deserialization of the EC_Scalar or during the random generation respectively.
+   BOTAN_ARG_CHECK(m_scalar.is_nonzero(), "ECC private key cannot be zero");
+}
 
 namespace {
 
@@ -50,10 +58,8 @@ EC_Scalar decode_ec_secret_key_scalar(const EC_Group& group, std::span<const uin
 
 }  // namespace
 
-EC_PrivateKey_Data::EC_PrivateKey_Data(EC_Group group, std::span<const uint8_t> bytes) :
-      m_group(std::move(group)),
-      m_scalar(decode_ec_secret_key_scalar(m_group, bytes)),
-      m_legacy_x(m_scalar.to_bigint()) {}
+EC_PrivateKey_Data::EC_PrivateKey_Data(const EC_Group& group, std::span<const uint8_t> bytes) :
+      Botan::EC_PrivateKey_Data(group, decode_ec_secret_key_scalar(group, bytes)) {}
 
 std::shared_ptr<EC_PublicKey_Data> EC_PrivateKey_Data::public_key(RandomNumberGenerator& rng,
                                                                   bool with_modular_inverse) const {

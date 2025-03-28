@@ -34,20 +34,33 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
       size_t agreed_value_size() const override { return m_group.get_p_bytes(); }
 
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override {
-         if(m_group.has_cofactor()) {
+         const auto input_point = [&] {
+            if(m_group.has_cofactor()) {
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
-            EC_AffinePoint input_point(m_group, m_group.get_cofactor() * m_group.OS2ECP(w, w_len));
-            return input_point.mul_x_only(m_l_times_priv, m_rng);
+               return EC_AffinePoint(m_group, m_group.get_cofactor() * m_group.OS2ECP(w, w_len));
 #else
-            throw Not_Implemented("Support for DH with cofactor adjustment not available in this build configuration");
+               throw Not_Implemented(
+                  "Support for DH with cofactor adjustment not available in this build configuration");
 #endif
-         } else {
-            if(auto input_point = EC_AffinePoint::deserialize(m_group, {w, w_len})) {
-               return input_point->mul_x_only(m_l_times_priv, m_rng);
             } else {
-               throw Decoding_Error("ECDH - Invalid elliptic curve point");
+               if(auto point = EC_AffinePoint::deserialize(m_group, {w, w_len})) {
+                  return *point;
+               } else {
+                  throw Decoding_Error("ECDH - Invalid elliptic curve point: not on curve");
+               }
             }
+         }();
+
+         // Typical specs (such as BSI's TR-03111 Section 4.3.1) require that
+         // we check the resulting point of the multiplication to not be the
+         // point at infinity. However, since we ensure that our ECC private
+         // scalar can never be zero, checking the peer's input point is
+         // equivalent.
+         if(input_point.is_identity()) {
+            throw Decoding_Error("ECDH - Invalid elliptic curve point: identity");
          }
+
+         return input_point.mul_x_only(m_l_times_priv, m_rng);
       }
 
    private:
