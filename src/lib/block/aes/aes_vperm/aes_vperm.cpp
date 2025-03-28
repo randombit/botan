@@ -43,6 +43,36 @@ inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) native_shuffle(SIMD_4x32 a, SIM
    #endif
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
+   const auto r = vec_perm(reinterpret_cast<__vector signed char>(a.raw()),
+                           reinterpret_cast<__vector signed char>(a.raw()),
+                           reinterpret_cast<__vector unsigned char>(b.raw()));
+   return SIMD_4x32(reinterpret_cast<__vector unsigned int>(r));
+
+#elif defined(BOTAN_SIMD_USE_LSX)
+   return SIMD_4x32(__lsx_vshuf_b(a.raw(), a.raw(), b.raw()));
+#else
+   #error "No shuffle implementation available"
+#endif
+}
+
+inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) native_masked_shuffle(SIMD_4x32 a, SIMD_4x32 b) {
+#if defined(BOTAN_SIMD_USE_SSE2)
+   return SIMD_4x32(_mm_shuffle_epi8(a.raw(), b.raw()));
+#elif defined(BOTAN_SIMD_USE_NEON)
+   const uint8x16_t tbl = vreinterpretq_u8_u32(a.raw());
+   const uint8x16_t idx = vreinterpretq_u8_u32(b.raw());
+
+   #if defined(BOTAN_TARGET_ARCH_IS_ARM32)
+   const uint8x8x2_t tbl2 = {vget_low_u8(tbl), vget_high_u8(tbl)};
+
+   return SIMD_4x32(
+      vreinterpretq_u32_u8(vcombine_u8(vtbl2_u8(tbl2, vget_low_u8(idx)), vtbl2_u8(tbl2, vget_high_u8(idx)))));
+
+   #else
+   return SIMD_4x32(vreinterpretq_u32_u8(vqtbl1q_u8(tbl, idx)));
+   #endif
+
+#elif defined(BOTAN_SIMD_USE_ALTIVEC)
 
    const auto zero = vec_splat_s8(0x00);
    const auto mask = vec_cmplt(reinterpret_cast<__vector signed char>(b.raw()), zero);
@@ -76,6 +106,14 @@ inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) shuffle(SIMD_4x32 a, SIMD_4x32 
       return native_shuffle(a, b);
    } else {
       return native_shuffle(a.bswap(), b.bswap()).bswap();
+   }
+}
+
+inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) masked_shuffle(SIMD_4x32 a, SIMD_4x32 b) {
+   if constexpr(std::endian::native == std::endian::little) {
+      return native_masked_shuffle(a, b);
+   } else {
+      return native_masked_shuffle(a.bswap(), b.bswap()).bswap();
    }
 }
 
@@ -185,11 +223,11 @@ inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_enc_round(SIMD_4x32 B, SIMD
    const SIMD_4x32 t2 = shuffle(k_inv2, Bl);
    Bl ^= Bh;
 
-   const SIMD_4x32 t5 = Bl ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
-   const SIMD_4x32 t6 = Bh ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bl));
+   const SIMD_4x32 t5 = Bl ^ masked_shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
+   const SIMD_4x32 t6 = Bh ^ masked_shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bl));
 
-   const SIMD_4x32 t7 = shuffle(sb1t, t6) ^ shuffle(sb1u, t5) ^ K;
-   const SIMD_4x32 t8 = shuffle(sb2t, t6) ^ shuffle(sb2u, t5) ^ shuffle(t7, mc_forward[r % 4]);
+   const SIMD_4x32 t7 = masked_shuffle(sb1t, t6) ^ masked_shuffle(sb1u, t5) ^ K;
+   const SIMD_4x32 t8 = masked_shuffle(sb2t, t6) ^ masked_shuffle(sb2u, t5) ^ shuffle(t7, mc_forward[r % 4]);
 
    return shuffle(t8, mc_forward[r % 4]) ^ shuffle(t7, mc_backward[r % 4]) ^ t8;
 }
@@ -200,10 +238,10 @@ inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_enc_last_round(SIMD_4x32 B,
    const SIMD_4x32 t2 = shuffle(k_inv2, Bl);
    Bl ^= Bh;
 
-   const SIMD_4x32 t5 = Bl ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
-   const SIMD_4x32 t6 = Bh ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bl));
+   const SIMD_4x32 t5 = Bl ^ masked_shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
+   const SIMD_4x32 t6 = Bh ^ masked_shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bl));
 
-   return shuffle(shuffle(sbou, t5) ^ shuffle(sbot, t6) ^ K, vperm_sr[r % 4]);
+   return shuffle(masked_shuffle(sbou, t5) ^ masked_shuffle(sbot, t6) ^ K, vperm_sr[r % 4]);
 }
 
 inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_dec_first_round(SIMD_4x32 B, SIMD_4x32 K) {
@@ -217,15 +255,15 @@ inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_dec_round(SIMD_4x32 B, SIMD
 
    B ^= Bh;
 
-   const SIMD_4x32 t5 = B ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
-   const SIMD_4x32 t6 = Bh ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, B));
+   const SIMD_4x32 t5 = B ^ masked_shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
+   const SIMD_4x32 t6 = Bh ^ masked_shuffle(k_inv1, t2 ^ shuffle(k_inv1, B));
 
    const SIMD_4x32 mc = mcx[(r - 1) % 4];
 
-   const SIMD_4x32 t8 = shuffle(sb9t, t6) ^ shuffle(sb9u, t5) ^ K;
-   const SIMD_4x32 t9 = shuffle(t8, mc) ^ shuffle(sbdu, t5) ^ shuffle(sbdt, t6);
-   const SIMD_4x32 t12 = shuffle(t9, mc) ^ shuffle(sbbu, t5) ^ shuffle(sbbt, t6);
-   return shuffle(t12, mc) ^ shuffle(sbeu, t5) ^ shuffle(sbet, t6);
+   const SIMD_4x32 t8 = masked_shuffle(sb9t, t6) ^ masked_shuffle(sb9u, t5) ^ K;
+   const SIMD_4x32 t9 = shuffle(t8, mc) ^ masked_shuffle(sbdu, t5) ^ masked_shuffle(sbdt, t6);
+   const SIMD_4x32 t12 = shuffle(t9, mc) ^ masked_shuffle(sbbu, t5) ^ masked_shuffle(sbbt, t6);
+   return shuffle(t12, mc) ^ masked_shuffle(sbeu, t5) ^ masked_shuffle(sbet, t6);
 }
 
 inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_dec_last_round(SIMD_4x32 B, SIMD_4x32 K, size_t r) {
@@ -237,10 +275,10 @@ inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_dec_last_round(SIMD_4x32 B,
 
    B ^= Bh;
 
-   const SIMD_4x32 t5 = B ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
-   const SIMD_4x32 t6 = Bh ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, B));
+   const SIMD_4x32 t5 = B ^ masked_shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
+   const SIMD_4x32 t6 = Bh ^ masked_shuffle(k_inv1, t2 ^ shuffle(k_inv1, B));
 
-   const SIMD_4x32 x = shuffle(sboud, t5) ^ shuffle(sbotd, t6) ^ K;
+   const SIMD_4x32 x = masked_shuffle(sboud, t5) ^ masked_shuffle(sbotd, t6) ^ K;
    return shuffle(x, vperm_sr[which_sr]);
 }
 
@@ -525,10 +563,10 @@ SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_schedule_round(SIMD_4x32 input1, S
 
    Bl ^= Bh;
 
-   SIMD_4x32 t5 = Bl ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
-   SIMD_4x32 t6 = Bh ^ shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bl));
+   SIMD_4x32 t5 = Bl ^ masked_shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
+   SIMD_4x32 t6 = Bh ^ masked_shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bl));
 
-   return smeared ^ shuffle(sb1u, t5) ^ shuffle(sb1t, t6);
+   return smeared ^ masked_shuffle(sb1u, t5) ^ masked_shuffle(sb1t, t6);
 }
 
 SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_schedule_round(SIMD_4x32 rc, SIMD_4x32 input1, SIMD_4x32 input2) {
