@@ -88,6 +88,8 @@ class BOTAN_TEST_API CPUID final {
          return has(CPUID::Feature::NEON);
 #elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
          return CPUID::has(CPUID::Feature::ALTIVEC);
+#elif defined(BOTAN_TARGET_CPU_SUPPORTS_LSX)
+         return CPUID::has(CPUID::Feature::LSX);
 #else
          return false;
 #endif

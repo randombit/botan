@@ -51,6 +51,21 @@ inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) native_shuffle(SIMD_4x32 a, SIM
                            reinterpret_cast<__vector unsigned char>(b.raw()));
    return SIMD_4x32(reinterpret_cast<__vector unsigned int>(vec_sel(r, zero, mask)));
 
+#elif defined(BOTAN_SIMD_USE_LSX)
+   /*
+   * The behavior of vshuf.b unfortunately differs among microarchitectures
+   * when the index is larger than the available elements. In LA664 CPUs,
+   * larger indices result in a zero byte, which is exactly what we want.
+   * Unfortunately on LA464 machines, the output is instead undefined.
+   *
+   * So we must use a slower sequence that handles the larger indices.
+   * If we had a way of knowing at compile time that we are on an LA664
+   * or later, we could use __lsx_vshuf_b without the comparison or select.
+   */
+   const auto zero = __lsx_vldi(0);
+   const auto r = __lsx_vshuf_b(zero, a.raw(), b.raw());
+   const auto mask = __lsx_vslti_bu(b.raw(), 16);
+   return SIMD_4x32(__lsx_vbitsel_v(zero, r, mask));
 #else
    #error "No shuffle implementation available"
 #endif
@@ -72,6 +87,8 @@ inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) alignr8(SIMD_4x32 a, SIMD_4x32 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
    const __vector unsigned char mask = {8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
    return SIMD_4x32(vec_perm(b.raw(), a.raw(), mask));
+#elif defined(BOTAN_SIMD_USE_LSX)
+   return SIMD_4x32(__lsx_vshuf4i_d(a.raw(), b.raw(), 0b0011));
 #else
    #error "No alignr8 implementation available"
 #endif
