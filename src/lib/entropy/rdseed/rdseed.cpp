@@ -68,7 +68,7 @@ size_t Intel_Rdseed::poll(RandomNumberGenerator& rng) {
    const size_t RDSEED_BYTES = 1024;
    static_assert(RDSEED_BYTES % 4 == 0, "Bad RDSEED configuration");
 
-   if(CPUID::has_rdseed()) {
+   if(CPUID::has(CPUID::Feature::RDSEED)) {
       secure_vector<uint32_t> seed;
       seed.reserve(RDSEED_BYTES / 4);
 

@@ -34,7 +34,7 @@ Keccak_Permutation::Keccak_Permutation(size_t capacity, uint64_t custom_padding,
 
 std::string Keccak_Permutation::provider() const {
 #if defined(BOTAN_HAS_KECCAK_PERM_BMI2)
-   if(CPUID::has_bmi2()) {
+   if(CPUID::has(CPUID::Feature::BMI)) {
       return "bmi2";
    }
 #endif
@@ -125,7 +125,7 @@ void Keccak_Permutation::finish() {
 
 void Keccak_Permutation::permute() {
 #if defined(BOTAN_HAS_KECCAK_PERM_BMI2)
-   if(CPUID::has_bmi2()) {
+   if(CPUID::has(CPUID::Feature::BMI)) {
       return permute_bmi2();
    }
 #endif

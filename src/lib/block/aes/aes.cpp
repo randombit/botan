@@ -748,7 +748,7 @@ void aes_key_schedule(const uint8_t key[],
 
 size_t aes_parallelism() {
 #if defined(BOTAN_HAS_AES_VAES)
-   if(CPUID::has_avx2_vaes()) {
+   if(CPUID::has(CPUID::Feature::AVX2_AES)) {
       return 8;  // pipelined
    }
 #endif
@@ -771,7 +771,7 @@ size_t aes_parallelism() {
 
 const char* aes_provider() {
 #if defined(BOTAN_HAS_AES_VAES)
-   if(CPUID::has_avx2_vaes()) {
+   if(CPUID::has(CPUID::Feature::AVX2_AES)) {
       return "vaes";
    }
 #endif
@@ -833,7 +833,7 @@ void AES_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_AES_VAES)
-   if(CPUID::has_avx2_vaes()) {
+   if(CPUID::has(CPUID::Feature::AVX2_AES)) {
       return x86_vaes_encrypt_n(in, out, blocks);
    }
 #endif
@@ -857,7 +857,7 @@ void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_AES_VAES)
-   if(CPUID::has_avx2_vaes()) {
+   if(CPUID::has(CPUID::Feature::AVX2_AES)) {
       return x86_vaes_decrypt_n(in, out, blocks);
    }
 #endif
@@ -879,13 +879,13 @@ void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 
 void AES_128::key_schedule(std::span<const uint8_t> key) {
 #if defined(BOTAN_HAS_AES_NI)
-   if(CPUID::has_aes_ni()) {
+   if(CPUID::has(CPUID::Feature::AESNI)) {
       return aesni_key_schedule(key.data(), key.size());
    }
 #endif
 
 #if defined(BOTAN_HAS_AES_VAES)
-   if(CPUID::has_avx2_vaes()) {
+   if(CPUID::has(CPUID::Feature::AVX2_AES)) {
       return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, true);
    }
 #endif
@@ -915,7 +915,7 @@ void AES_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_AES_VAES)
-   if(CPUID::has_avx2_vaes()) {
+   if(CPUID::has(CPUID::Feature::AVX2_AES)) {
       return x86_vaes_encrypt_n(in, out, blocks);
    }
 #endif
@@ -939,7 +939,7 @@ void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_AES_VAES)
-   if(CPUID::has_avx2_vaes()) {
+   if(CPUID::has(CPUID::Feature::AVX2_AES)) {
       return x86_vaes_decrypt_n(in, out, blocks);
    }
 #endif
@@ -961,13 +961,13 @@ void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 
 void AES_192::key_schedule(std::span<const uint8_t> key) {
 #if defined(BOTAN_HAS_AES_NI)
-   if(CPUID::has_aes_ni()) {
+   if(CPUID::has(CPUID::Feature::AESNI)) {
       return aesni_key_schedule(key.data(), key.size());
    }
 #endif
 
 #if defined(BOTAN_HAS_AES_VAES)
-   if(CPUID::has_avx2_vaes()) {
+   if(CPUID::has(CPUID::Feature::AVX2_AES)) {
       return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, true);
    }
 #endif
@@ -997,7 +997,7 @@ void AES_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_AES_VAES)
-   if(CPUID::has_avx2_vaes()) {
+   if(CPUID::has(CPUID::Feature::AVX2_AES)) {
       return x86_vaes_encrypt_n(in, out, blocks);
    }
 #endif
@@ -1021,7 +1021,7 @@ void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_AES_VAES)
-   if(CPUID::has_avx2_vaes()) {
+   if(CPUID::has(CPUID::Feature::AVX2_AES)) {
       return x86_vaes_decrypt_n(in, out, blocks);
    }
 #endif
@@ -1043,13 +1043,13 @@ void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 
 void AES_256::key_schedule(std::span<const uint8_t> key) {
 #if defined(BOTAN_HAS_AES_NI)
-   if(CPUID::has_aes_ni()) {
+   if(CPUID::has(CPUID::Feature::AESNI)) {
       return aesni_key_schedule(key.data(), key.size());
    }
 #endif
 
 #if defined(BOTAN_HAS_AES_VAES)
-   if(CPUID::has_avx2_vaes()) {
+   if(CPUID::has(CPUID::Feature::AVX2_AES)) {
       return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, true);
    }
 #endif

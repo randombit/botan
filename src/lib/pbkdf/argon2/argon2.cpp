@@ -167,13 +167,13 @@ BOTAN_FORCE_INLINE void blamka_G(uint64_t& A, uint64_t& B, uint64_t& C, uint64_t
 
 void Argon2::blamka(uint64_t N[128], uint64_t T[128]) {
 #if defined(BOTAN_HAS_ARGON2_AVX2)
-   if(CPUID::has_avx2()) {
+   if(CPUID::has(CPUID::Feature::AVX2)) {
       return Argon2::blamka_avx2(N, T);
    }
 #endif
 
 #if defined(BOTAN_HAS_ARGON2_SSSE3)
-   if(CPUID::has_ssse3()) {
+   if(CPUID::has(CPUID::Feature::SSSE3)) {
       return Argon2::blamka_ssse3(N, T);
    }
 #endif

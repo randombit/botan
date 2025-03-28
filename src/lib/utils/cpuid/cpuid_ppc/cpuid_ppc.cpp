@@ -29,12 +29,12 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
          DARN_bit = (1 << 21),
       };
 
-      feat |= if_set(hwcap_altivec, PPC_hwcap_bit::ALTIVEC_bit, CPUID::CPUID_ALTIVEC_BIT, allowed);
+      feat |= if_set(hwcap_altivec, PPC_hwcap_bit::ALTIVEC_bit, CPUFeature::Bit::ALTIVEC, allowed);
 
    #if defined(BOTAN_TARGET_ARCH_IS_PPC64)
-      if(feat & CPUID::CPUID_ALTIVEC_BIT) {
-         feat |= if_set(hwcap_crypto, PPC_hwcap_bit::CRYPTO_bit, CPUID::CPUID_POWER_CRYPTO_BIT, allowed);
-         feat |= if_set(hwcap_crypto, PPC_hwcap_bit::DARN_bit, CPUID::CPUID_DARN_BIT, allowed);
+      if(feat & CPUFeature::Bit::ALTIVEC) {
+         feat |= if_set(hwcap_crypto, PPC_hwcap_bit::CRYPTO_bit, CPUFeature::Bit::POWER_CRYPTO, allowed);
+         feat |= if_set(hwcap_crypto, PPC_hwcap_bit::DARN_bit, CPUFeature::Bit::DARN, allowed);
       }
    #endif
 
@@ -48,9 +48,9 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
       return 1;
    };
 
-   if(allowed & CPUID::CPUID_ALTIVEC_BIT) {
+   if(allowed & CPUFeature::Bit::ALTIVEC) {
       if(OS::run_cpu_instruction_probe(vmx_probe) == 1) {
-         feat |= CPUID::CPUID_ALTIVEC_BIT;
+         feat |= CPUFeature::Bit::ALTIVEC;
       }
 
    #if defined(BOTAN_TARGET_CPU_IS_PPC64)
@@ -65,13 +65,13 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
          return (~output) != 0;
       };
 
-      if(feat & CPUID::CPUID_ALTIVEC_BIT) {
+      if(feat & CPUFeature::Bit::ALTIVEC) {
          if(OS::run_cpu_instruction_probe(vcipher_probe) == 1) {
-            feat |= CPUID::CPUID_POWER_CRYPTO_BIT & allowed;
+            feat |= CPUFeature::Bit::POWER_CRYPTO & allowed;
          }
 
          if(OS::run_cpu_instruction_probe(darn_probe) == 1) {
-            feat |= CPUID::CPUID_DARN_BIT & allowed;
+            feat |= CPUFeature::Bit::DARN & allowed;
          }
       }
    #endif

@@ -165,19 +165,19 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_SM4_ARMV8)
-   if(CPUID::has_arm_sm4()) {
+   if(CPUID::has(CPUID::Feature::SM4)) {
       return sm4_armv8_encrypt(in, out, blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_SM4_X86)
-   if(CPUID::has_intel_sm4()) {
+   if(CPUID::has(CPUID::Feature::SM4)) {
       return sm4_x86_encrypt(in, out, blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_SM4_GFNI)
-   if(CPUID::has_gfni()) {
+   if(CPUID::has(CPUID::Feature::GFNI)) {
       return sm4_gfni_encrypt(in, out, blocks);
    }
 #endif
@@ -238,19 +238,19 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_SM4_ARMV8)
-   if(CPUID::has_arm_sm4()) {
+   if(CPUID::has(CPUID::Feature::SM4)) {
       return sm4_armv8_decrypt(in, out, blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_SM4_X86)
-   if(CPUID::has_intel_sm4()) {
+   if(CPUID::has(CPUID::Feature::SM4)) {
       return sm4_x86_decrypt(in, out, blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_SM4_GFNI)
-   if(CPUID::has_gfni()) {
+   if(CPUID::has(CPUID::Feature::GFNI)) {
       return sm4_gfni_decrypt(in, out, blocks);
    }
 #endif
@@ -340,13 +340,13 @@ void SM4::clear() {
 
 size_t SM4::parallelism() const {
 #if defined(BOTAN_HAS_SM4_ARMV8)
-   if(CPUID::has_arm_sm4()) {
+   if(CPUID::has(CPUID::Feature::SM4)) {
       return 4;
    }
 #endif
 
 #if defined(BOTAN_HAS_SM4_GFNI)
-   if(CPUID::has_gfni()) {
+   if(CPUID::has(CPUID::Feature::GFNI)) {
       return 8;
    }
 #endif
@@ -356,13 +356,13 @@ size_t SM4::parallelism() const {
 
 std::string SM4::provider() const {
 #if defined(BOTAN_HAS_SM4_ARMV8)
-   if(CPUID::has_arm_sm4()) {
+   if(CPUID::has(CPUID::Feature::SM4)) {
       return "armv8";
    }
 #endif
 
 #if defined(BOTAN_HAS_SM4_GFNI)
-   if(CPUID::has_gfni()) {
+   if(CPUID::has(CPUID::Feature::GFNI)) {
       return "gfni";
    }
 #endif

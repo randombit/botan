@@ -7,6 +7,7 @@
 
 #include <botan/internal/cpuid.h>
 
+#include <botan/assert.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/target_info.h>
@@ -132,18 +133,18 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
       invoke_cpuid(1, cpuid);
       const uint64_t flags0 = (static_cast<uint64_t>(cpuid[2]) << 32) | cpuid[3];
 
-      feat |= if_set(flags0, x86_CPUID_1_bits::RDTSC, CPUID::CPUID_RDTSC_BIT, allowed);
+      feat |= if_set(flags0, x86_CPUID_1_bits::RDTSC, CPUFeature::Bit::RDTSC, allowed);
 
-      feat |= if_set(flags0, x86_CPUID_1_bits::RDRAND, CPUID::CPUID_RDRAND_BIT, allowed);
+      feat |= if_set(flags0, x86_CPUID_1_bits::RDRAND, CPUFeature::Bit::RDRAND, allowed);
 
-      feat |= if_set(flags0, x86_CPUID_1_bits::SSE2, CPUID::CPUID_SSE2_BIT, allowed);
+      feat |= if_set(flags0, x86_CPUID_1_bits::SSE2, CPUFeature::Bit::SSE2, allowed);
 
-      if(feat & CPUID::CPUID_SSE2_BIT) {
-         feat |= if_set(flags0, x86_CPUID_1_bits::SSSE3, CPUID::CPUID_SSSE3_BIT, allowed);
+      if(feat & CPUFeature::Bit::SSE2) {
+         feat |= if_set(flags0, x86_CPUID_1_bits::SSSE3, CPUFeature::Bit::SSSE3, allowed);
 
-         if(feat & CPUID::CPUID_SSSE3_BIT) {
-            feat |= if_set(flags0, x86_CPUID_1_bits::CLMUL, CPUID::CPUID_CLMUL_BIT, allowed);
-            feat |= if_set(flags0, x86_CPUID_1_bits::AESNI, CPUID::CPUID_AESNI_BIT, allowed);
+         if(feat & CPUFeature::Bit::SSSE3) {
+            feat |= if_set(flags0, x86_CPUID_1_bits::CLMUL, CPUFeature::Bit::CLMUL, allowed);
+            feat |= if_set(flags0, x86_CPUID_1_bits::AESNI, CPUFeature::Bit::AESNI, allowed);
          }
 
          const uint64_t osxsave64 = static_cast<uint64_t>(x86_CPUID_1_bits::OSXSAVE);
@@ -167,50 +168,50 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
       invoke_cpuid_sublevel(7, 1, cpuid);
       const uint32_t flags7_1 = cpuid[0];
 
-      feat |= if_set(flags7, x86_CPUID_7_bits::RDSEED, CPUID::CPUID_RDSEED_BIT, allowed);
-      feat |= if_set(flags7, x86_CPUID_7_bits::ADX, CPUID::CPUID_ADX_BIT, allowed);
+      feat |= if_set(flags7, x86_CPUID_7_bits::RDSEED, CPUFeature::Bit::RDSEED, allowed);
+      feat |= if_set(flags7, x86_CPUID_7_bits::ADX, CPUFeature::Bit::ADX, allowed);
 
       /*
       We only set the BMI bit if both BMI1 and BMI2 are supported, since
       typically we want to use both extensions in the same code.
       */
-      feat |= if_set(flags7, x86_CPUID_7_bits::BMI_1_AND_2, CPUID::CPUID_BMI_BIT, allowed);
+      feat |= if_set(flags7, x86_CPUID_7_bits::BMI_1_AND_2, CPUFeature::Bit::BMI, allowed);
 
-      if(feat & CPUID::CPUID_SSSE3_BIT) {
-         feat |= if_set(flags7, x86_CPUID_7_bits::SHA, CPUID::CPUID_SHA_BIT, allowed);
-         feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SM3, CPUID::CPUID_SM3_BIT, allowed);
+      if(feat & CPUFeature::Bit::SSSE3) {
+         feat |= if_set(flags7, x86_CPUID_7_bits::SHA, CPUFeature::Bit::SHA, allowed);
+         feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SM3, CPUFeature::Bit::SM3, allowed);
       }
 
       if(has_os_ymm_support) {
-         feat |= if_set(flags7, x86_CPUID_7_bits::AVX2, CPUID::CPUID_AVX2_BIT, allowed);
+         feat |= if_set(flags7, x86_CPUID_7_bits::AVX2, CPUFeature::Bit::AVX2, allowed);
 
-         if(feat & CPUID::CPUID_AVX2_BIT) {
-            feat |= if_set(flags7, x86_CPUID_7_bits::GFNI, CPUID::CPUID_GFNI_BIT, allowed);
-            feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VAES, CPUID::CPUID_AVX2_AES_BIT, allowed);
-            feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VCLMUL, CPUID::CPUID_AVX2_CLMUL_BIT, allowed);
-            feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SHA512, CPUID::CPUID_SHA512_BIT, allowed);
-            feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SM4, CPUID::CPUID_SM4_BIT, allowed);
+         if(feat & CPUFeature::Bit::AVX2) {
+            feat |= if_set(flags7, x86_CPUID_7_bits::GFNI, CPUFeature::Bit::GFNI, allowed);
+            feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VAES, CPUFeature::Bit::AVX2_AES, allowed);
+            feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VCLMUL, CPUFeature::Bit::AVX2_CLMUL, allowed);
+            feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SHA512, CPUFeature::Bit::SHA512, allowed);
+            feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SM4, CPUFeature::Bit::SM4, allowed);
 
             if(has_os_zmm_support) {
-               feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_PROFILE, CPUID::CPUID_AVX512_BIT, allowed);
+               feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_PROFILE, CPUFeature::Bit::AVX512, allowed);
 
-               if(feat & CPUID::CPUID_AVX512_BIT) {
-                  feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VAES, CPUID::CPUID_AVX512_AES_BIT, allowed);
-                  feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VCLMUL, CPUID::CPUID_AVX512_CLMUL_BIT, allowed);
+               if(feat & CPUFeature::Bit::AVX512) {
+                  feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VAES, CPUFeature::Bit::AVX512_AES, allowed);
+                  feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VCLMUL, CPUFeature::Bit::AVX512_CLMUL, allowed);
                }
             }
          }
       }
    }
 
-   /*
+/*
    * If we don't have access to CPUID, we can still safely assume that
    * any x86-64 processor has SSE2 and RDTSC
    */
 #if defined(BOTAN_TARGET_ARCH_IS_X86_64)
    if(feat == 0) {
-      feat |= CPUID::CPUID_SSE2_BIT & allowed;
-      feat |= CPUID::CPUID_RDTSC_BIT & allowed;
+      feat |= CPUFeature::Bit::SSE2 & allowed;
+      feat |= CPUFeature::Bit::RDTSC & allowed;
    }
 #endif
 
