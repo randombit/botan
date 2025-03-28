@@ -11,6 +11,8 @@ brief -> "Handle runtime feature detection of the current CPU"
 arm32?cpuid_arm32
 arm64?cpuid_aarch64
 
+loongarch64?cpuid_loongarch64
+
 ppc32?cpuid_ppc
 ppc64?cpuid_ppc
 
