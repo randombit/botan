@@ -9,6 +9,9 @@
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
    #include <botan/assert.h>
    #include <botan/pk_algs.h>
+   #include <botan/pkcs8.h>
+   #include <botan/x509_key.h>
+   #include <botan/internal/fmt.h>
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
@@ -17,6 +20,53 @@
 #endif
 
 namespace Botan_CLI {
+
+#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
+
+class PerfTest_PKKeyParsing final : public PerfTest {
+   public:
+      void go(const PerfConfig& config) override {
+         const auto runtime = config.runtime();
+         auto& rng = config.rng();
+
+         const std::pair<std::string, std::string> keygen_algos[] = {
+            {"RSA", "2048"},
+            {"ECDSA", "secp256r1"},
+            {"ECDSA", "brainpool512r1"},
+            {"DH", "modp/ietf/2048"},
+            {"X25519", ""},
+            {"Ed25519", ""},
+            {"ML-DSA", "ML-DSA-6x5"},
+            {"ML-KEM", "ML-KEM-768"},
+         };
+
+         for(const auto& [algo, params] : keygen_algos) {
+            auto sk = Botan::create_private_key(algo, rng, params);
+
+            if(!sk) {
+               continue;
+            }
+
+            const auto pk = sk->public_key();
+
+            const std::string nm = params.empty() ? algo : Botan::fmt("{} {}", algo, params);
+
+            auto pk_parse = config.make_timer(nm, 1, "public key parse");
+            const auto pk_bytes = pk->subject_public_key();
+            pk_parse->run_until_elapsed(runtime, [&]() { Botan::X509::load_key(pk_bytes); });
+            config.record_result(*pk_parse);
+
+            auto sk_parse = config.make_timer(nm, 1, "private key parse");
+            const auto sk_bytes = sk->private_key_info();
+            sk_parse->run_until_elapsed(runtime, [&]() { Botan::PKCS8::load_key(sk_bytes); });
+            config.record_result(*sk_parse);
+         }
+      }
+};
+
+BOTAN_REGISTER_PERF_TEST("key_parsing", PerfTest_PKKeyParsing);
+
+#endif
 
 #if defined(BOTAN_HAS_RSA)
 
