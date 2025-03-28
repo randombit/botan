@@ -1,4 +1,4 @@
-#test cpuid intel_sha avx2 sse2
+#test cpuid intel_sha avx2 sse2 neon altivec lsx
 
 [SHACAL2]
 

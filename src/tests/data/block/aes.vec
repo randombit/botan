@@ -1,7 +1,7 @@
 # Test vectors from NIST CAVP AESAVS
 # http://csrc.nist.gov/groups/STM/cavp/documents/aes/AESAVS.pdf
 
-#test cpuid avx2_vaes aesni armv8aes power_crypto ssse3 neon altivec
+#test cpuid avx2_vaes aesni armv8aes power_crypto ssse3 neon altivec lsx
 
 [AES-128]
 Key = 000102030405060708090A0B0C0D0E0F
