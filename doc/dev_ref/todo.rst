@@ -22,23 +22,20 @@ New Ciphers/Hashes/MACs
 
 Hardware Specific Optimizations
 ----------------------------------------
-
 * Stiched AES/GCM mode for CPUs supporting both AES and CLMUL
-* Combine AES-NI, ARMv8 and POWER AES implementations (as already done for CLMUL)
 * GFNI implementations for: Camellia, SEED, ARIA
-* NEON/VMX support for the SIMD based GHASH
+* NEON/VMX/LSX support for the SIMD based GHASH
 * Poly1305 using AVX2
 * SHA-512 using BMI2+AVX2
 * SM3 using x86 SM3-NI
-* SM4 using x86 SM4-NI
 * Constant time bitsliced DES
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
 * Improved Salsa implementations (SIMD_4x32 and/or AVX2)
-* Add CLMUL/PMULL implementations for CRC24/CRC32
+* Add CLMUL/PMULL implementations for CRC24
 * Add support for ARMv8.4-A SHA-3, SM3 and RNG instructions
 * POWER8 SHA-2 extensions (GH #1486 + #1487)
-* Add support for VPSUM on big-endian PPC64 (GH #2252)
 * Add support for RISC-V crypto extensions
+* Add support for using Loongarch64 LASX (256-bit SIMD)
 
 Public Key Crypto, Math
 ----------------------------------------
@@ -60,9 +57,6 @@ Utility Functions
 External Providers
 ----------------------------------------
 
-* /dev/crypto provider (ciphers, hashes)
-* Windows CryptoNG provider (ciphers, hashes)
-* Extend Apple CommonCrypto provider (HMAC, CMAC, RSA, ECDSA, ECDH)
 * Add support for iOS keychain access
 * Extend support for TPM 2.0 (PCR, NVRAM, Policies, etc)
 
@@ -82,7 +76,6 @@ PKIX
 ----------------------------------------
 
 * Further tests of validation API (see GH #785)
-* Test suite for validation of 'real world' cert chains (GH #611)
 * X.509 policy constraints
 * OCSP responder logic
 
