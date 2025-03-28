@@ -1,4 +1,4 @@
-set(PACKAGE_VERSION %{version})
+set(PACKAGE_VERSION %{version_major}.%{version_minor}.%{version_patch})
 
 # Botan follows semver:
 # * the requested version should be less or equal to the installed version, however
