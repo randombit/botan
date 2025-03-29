@@ -10,10 +10,6 @@
 #include <botan/internal/simd_32.h>
 #include <botan/internal/target_info.h>
 
-#if defined(BOTAN_SIMD_USE_SSE2)
-   #include <tmmintrin.h>
-#endif
-
 namespace Botan {
 
 namespace {
@@ -459,32 +455,9 @@ alignas(256) const uint8_t GFTBL[256 * 32] = {
    0x48, 0xb7, 0x70, 0x8f, 0x93, 0x6c, 0x00, 0x4b, 0x96, 0xdd, 0x31, 0x7a, 0xa7, 0xec, 0x62, 0x29, 0xf4, 0xbf, 0x53,
    0x18, 0xc5, 0x8e};
 
-inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) table_lookup(SIMD_4x32 t, SIMD_4x32 v) {
-#if defined(BOTAN_SIMD_USE_SSE2)
-   return SIMD_4x32(_mm_shuffle_epi8(t.raw(), v.raw()));
-#elif defined(BOTAN_SIMD_USE_LSX)
-   const auto zero = __lsx_vldi(0);
-   return SIMD_4x32(__lsx_vshuf_b(zero, t.raw(), v.raw()));
-#elif defined(BOTAN_SIMD_USE_NEON)
-   const uint8x16_t tbl = vreinterpretq_u8_u32(t.raw());
-   const uint8x16_t idx = vreinterpretq_u8_u32(v.raw());
-
-   #if defined(BOTAN_TARGET_ARCH_IS_ARM32)
-   const uint8x8x2_t tbl2 = {vget_low_u8(tbl), vget_high_u8(tbl)};
-
-   return SIMD_4x32(
-      vreinterpretq_u32_u8(vcombine_u8(vtbl2_u8(tbl2, vget_low_u8(idx)), vtbl2_u8(tbl2, vget_high_u8(idx)))));
-
-   #else
-   return SIMD_4x32(vreinterpretq_u32_u8(vqtbl1q_u8(tbl, idx)));
-   #endif
-
-#endif
-}
-
 }  // namespace
 
-BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) size_t ZFEC::addmul_vperm(uint8_t z[], const uint8_t x[], uint8_t y, size_t size) {
+BOTAN_FUNC_ISA(BOTAN_SIMD_ISA) size_t ZFEC::addmul_vperm(uint8_t z[], const uint8_t x[], uint8_t y, size_t size) {
    const auto mask = SIMD_4x32::splat_u8(0x0F);
 
    // fetch the lookup tables for the given y
@@ -503,8 +476,8 @@ BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) size_t ZFEC::addmul_vperm(uint8_t z[], const uin
       const auto x_hi = x_1.shr<4>() & mask;
 
       // 16x parallel lookups
-      const auto r_lo = table_lookup(t_lo, x_lo);
-      const auto r_hi = table_lookup(t_hi, x_hi);
+      const auto r_lo = SIMD_4x32::byte_shuffle(t_lo, x_lo);
+      const auto r_hi = SIMD_4x32::byte_shuffle(t_hi, x_hi);
 
       // sum the outputs.
       z_1 ^= r_lo;

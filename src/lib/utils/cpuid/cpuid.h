@@ -61,32 +61,14 @@ class BOTAN_TEST_API CPUID final {
 
       /**
       * Return true if a 4x32 SIMD instruction set is available
-      * (SSE2, NEON, or Altivec/VMX)
+      * (SSE2/SSSE3, NEON, Altivec/VMX, or LSX)
       */
       static bool has_simd_4x32() {
-#if defined(BOTAN_TARGET_CPU_SUPPORTS_SSE2)
-         return CPUID::has(CPUID::Feature::SSE2);
+#if defined(BOTAN_TARGET_CPU_SUPPORTS_SSSE3)
+         return CPUID::has(CPUID::Feature::SSSE3);
 #elif defined(BOTAN_TARGET_CPU_SUPPORTS_NEON)
          return CPUID::has(CPUID::Feature::NEON);
 #elif defined(BOTAN_TARGET_CPU_SUPPORTS_ALTIVEC)
-         return CPUID::has(CPUID::Feature::ALTIVEC);
-#elif defined(BOTAN_TARGET_CPU_SUPPORTS_LSX)
-         return CPUID::has(CPUID::Feature::LSX);
-#else
-         return false;
-#endif
-      }
-
-      /**
-      * Check if the processor supports byte-level vector permutes
-      * (SSSE3, NEON, Altivec)
-      */
-      static bool has_vperm() {
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-         return has(CPUID::Feature::SSSE3);
-#elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
-         return has(CPUID::Feature::NEON);
-#elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
          return CPUID::has(CPUID::Feature::ALTIVEC);
 #elif defined(BOTAN_TARGET_CPU_SUPPORTS_LSX)
          return CPUID::has(CPUID::Feature::LSX);
@@ -111,8 +93,7 @@ class BOTAN_TEST_API CPUID final {
       }
 
       /**
-      * Check if the processor supports carryless multiply
-      * (CLMUL, PMULL)
+      * Check if the processor supports carryless multiply (CLMUL, PMULL, VMUL)
       */
       static bool has_carryless_multiply() {
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
