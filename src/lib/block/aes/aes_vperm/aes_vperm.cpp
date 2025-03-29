@@ -533,7 +533,13 @@ void AES_192::vperm_key_schedule(const uint8_t keyb[], size_t /*unused*/) {
       // key2 with 8 high bytes masked off
       SIMD_4x32 t = key2;
       key2 = aes_schedule_round(rcon[2 * i], key2, key1);
-      const SIMD_4x32 key2t = SIMD_4x32::alignr8(key2, t);
+
+#if defined(_MSC_VER) && defined(_M_IX86)
+      const auto key2t = SIMD_4x32(_mm_alignr_epi8(key2.raw(), t.raw(), 8));
+#else
+      const auto key2t = SIMD_4x32::alignr8(key2, t);
+#endif
+
       aes_schedule_mangle(key2t, (i + 3) % 4).store_le(&m_EK[4 * (3 * i + 1)]);
       aes_schedule_mangle_dec(key2t, (i + 3) % 4).store_le(&m_DK[4 * (11 - 3 * i)]);
 
