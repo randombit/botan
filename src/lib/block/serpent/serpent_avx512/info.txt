@@ -15,8 +15,3 @@ avx512
 cpuid
 simd_avx512
 </requires>
-
-# MSVC miscompiles this code
-<cc>
-!msvc
-</cc>
