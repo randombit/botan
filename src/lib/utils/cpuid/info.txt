@@ -19,4 +19,6 @@ ppc64?cpuid_ppc
 x86_32?cpuid_x86
 x86_64?cpuid_x86
 x32?cpuid_x86
+
+riscv64?cpuid_riscv64
 </requires>
