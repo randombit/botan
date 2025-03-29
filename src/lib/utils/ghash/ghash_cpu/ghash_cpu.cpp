@@ -11,7 +11,7 @@
 #include <botan/internal/target_info.h>
 #include <bit>
 
-#if defined(BOTAN_SIMD_USE_SSE2)
+#if defined(BOTAN_SIMD_USE_SSSE3)
    #include <immintrin.h>
    #include <wmmintrin.h>
 #endif
@@ -20,8 +20,8 @@ namespace Botan {
 
 namespace {
 
-BOTAN_FUNC_ISA_INLINE(BOTAN_VPERM_ISA) SIMD_4x32 reverse_vector(const SIMD_4x32& in) {
-#if defined(BOTAN_SIMD_USE_SSE2)
+BOTAN_FUNC_ISA_INLINE(BOTAN_SIMD_ISA) SIMD_4x32 reverse_vector(const SIMD_4x32& in) {
+#if defined(BOTAN_SIMD_USE_SSSE3)
    const __m128i BSWAP_MASK = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
    return SIMD_4x32(_mm_shuffle_epi8(in.raw(), BSWAP_MASK));
 #elif defined(BOTAN_SIMD_USE_NEON)
@@ -38,7 +38,7 @@ template <int M>
 BOTAN_FORCE_INLINE SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_CLMUL_ISA) clmul(const SIMD_4x32& H, const SIMD_4x32& x) {
    static_assert(M == 0x00 || M == 0x01 || M == 0x10 || M == 0x11, "Valid clmul mode");
 
-#if defined(BOTAN_SIMD_USE_SSE2)
+#if defined(BOTAN_SIMD_USE_SSSE3)
    return SIMD_4x32(_mm_clmulepi64_si128(x.raw(), H.raw(), M));
 #elif defined(BOTAN_SIMD_USE_NEON)
    const uint64_t a = vgetq_lane_u64(vreinterpretq_u64_u32(x.raw()), M & 0x01);
@@ -157,7 +157,7 @@ inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_CLMUL_ISA) gcm_multiply_x4(const SIMD_4x32
 
 }  // namespace
 
-BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) void GHASH::ghash_precompute_cpu(const uint8_t H_bytes[16], uint64_t H_pow[4 * 2]) {
+BOTAN_FUNC_ISA(BOTAN_SIMD_ISA) void GHASH::ghash_precompute_cpu(const uint8_t H_bytes[16], uint64_t H_pow[4 * 2]) {
    const SIMD_4x32 H1 = reverse_vector(SIMD_4x32::load_le(H_bytes));
    const SIMD_4x32 H2 = gcm_multiply(H1, H1);
    const SIMD_4x32 H3 = gcm_multiply(H1, H2);
@@ -169,7 +169,7 @@ BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) void GHASH::ghash_precompute_cpu(const uint8_t H
    H4.store_le(H_pow + 6);
 }
 
-BOTAN_FUNC_ISA(BOTAN_VPERM_ISA)
+BOTAN_FUNC_ISA(BOTAN_SIMD_ISA)
 void GHASH::ghash_multiply_cpu(uint8_t x[16], const uint64_t H_pow[8], const uint8_t input[], size_t blocks) {
    /*
    * Algorithms 1 and 5 from Intel's CLMUL guide

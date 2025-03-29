@@ -1380,7 +1380,7 @@ class CompilerInfo(InfoObject):
         flags = set()
 
         def simd32_impl():
-            for simd_isa in ['sse2', 'altivec', 'neon']:
+            for simd_isa in ['ssse3', 'altivec', 'neon']:
                 if simd_isa in arch.isa_extensions and \
                    simd_isa not in options.disable_intrinsics and \
                    self.isa_flags_for(simd_isa, arch.basename):

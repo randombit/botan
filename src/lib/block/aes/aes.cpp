@@ -760,7 +760,7 @@ size_t aes_parallelism() {
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm()) {
+   if(CPUID::has_simd_4x32()) {
       return 2;  // pipelined
    }
 #endif
@@ -783,7 +783,7 @@ const char* aes_provider() {
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm()) {
+   if(CPUID::has_simd_4x32()) {
       return "vperm";
    }
 #endif
@@ -845,7 +845,7 @@ void AES_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm()) {
+   if(CPUID::has_simd_4x32()) {
       return vperm_encrypt_n(in, out, blocks);
    }
 #endif
@@ -869,7 +869,7 @@ void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm()) {
+   if(CPUID::has_simd_4x32()) {
       return vperm_decrypt_n(in, out, blocks);
    }
 #endif
@@ -898,7 +898,7 @@ void AES_128::key_schedule(std::span<const uint8_t> key) {
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm()) {
+   if(CPUID::has_simd_4x32()) {
       return vperm_key_schedule(key.data(), key.size());
    }
 #endif
@@ -927,7 +927,7 @@ void AES_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm()) {
+   if(CPUID::has_simd_4x32()) {
       return vperm_encrypt_n(in, out, blocks);
    }
 #endif
@@ -951,7 +951,7 @@ void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm()) {
+   if(CPUID::has_simd_4x32()) {
       return vperm_decrypt_n(in, out, blocks);
    }
 #endif
@@ -980,7 +980,7 @@ void AES_192::key_schedule(std::span<const uint8_t> key) {
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm()) {
+   if(CPUID::has_simd_4x32()) {
       return vperm_key_schedule(key.data(), key.size());
    }
 #endif
@@ -1009,7 +1009,7 @@ void AES_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm()) {
+   if(CPUID::has_simd_4x32()) {
       return vperm_encrypt_n(in, out, blocks);
    }
 #endif
@@ -1033,7 +1033,7 @@ void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm()) {
+   if(CPUID::has_simd_4x32()) {
       return vperm_decrypt_n(in, out, blocks);
    }
 #endif
@@ -1062,7 +1062,7 @@ void AES_256::key_schedule(std::span<const uint8_t> key) {
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
-   if(CPUID::has_vperm()) {
+   if(CPUID::has_simd_4x32()) {
       return vperm_key_schedule(key.data(), key.size());
    }
 #endif
