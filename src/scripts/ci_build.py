@@ -815,6 +815,8 @@ def main(args=None):
                 cmds.append([options.compiler_cache, '--show-stats'])
 
         if run_test_command is not None:
+            cmds.append(['file', 'botan-test'])
+            cmds.append(['ldd', 'botan-test'])
             cmds.append(run_test_command)
 
         if target in ['valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full']:
