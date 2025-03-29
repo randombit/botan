@@ -50,6 +50,7 @@ void sm4_x86_encrypt_x8(uint8_t out[8 * 16], const uint8_t inp[8 * 16], std::spa
    B3.reverse().store_le(out + 96);
 }
 
+BOTAN_FUNC_ISA_INLINE("sm4,avx2")
 void sm4_x86_decrypt_x2(uint8_t out[2 * 16], const uint8_t inp[2 * 16], std::span<const uint32_t> RK) {
    auto B0 = SIMD_8x32::load_be(inp);
 
@@ -61,6 +62,7 @@ void sm4_x86_decrypt_x2(uint8_t out[2 * 16], const uint8_t inp[2 * 16], std::spa
    B0.reverse().store_le(out);
 }
 
+BOTAN_FUNC_ISA_INLINE("sm4,avx2")
 void sm4_x86_decrypt_x8(uint8_t out[8 * 16], const uint8_t inp[8 * 16], std::span<const uint32_t> RK) {
    auto B0 = SIMD_8x32::load_be(inp);
    auto B1 = SIMD_8x32::load_be(inp + 32);
