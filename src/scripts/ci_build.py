@@ -342,7 +342,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
             if target == 'cross-arm32':
                 flags += ['--cpu=armv7', '--extra-cxxflags=-D_FILE_OFFSET_BITS=64']
                 cc_bin = 'arm-linux-gnueabihf-g++'
-                test_prefix = ['qemu-arm', '-L', '/usr/arm-linux-gnueabihf/']
+                if platform.machine() not in ['aarch64', 'armv7']:
+                    test_prefix = ['qemu-arm', '-L', '/usr/arm-linux-gnueabihf/']
             elif target in ['cross-arm64', 'cross-arm64-amalgamation']:
                 flags += ['--cpu=aarch64']
                 cc_bin = 'aarch64-linux-gnu-g++'
