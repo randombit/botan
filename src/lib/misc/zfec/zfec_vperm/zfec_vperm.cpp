@@ -462,6 +462,9 @@ alignas(256) const uint8_t GFTBL[256 * 32] = {
 inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) table_lookup(SIMD_4x32 t, SIMD_4x32 v) {
 #if defined(BOTAN_SIMD_USE_SSE2)
    return SIMD_4x32(_mm_shuffle_epi8(t.raw(), v.raw()));
+#elif defined(BOTAN_SIMD_USE_LSX)
+   const auto zero = __lsx_vldi(0);
+   return SIMD_4x32(__lsx_vshuf_b(zero, t.raw(), v.raw()));
 #elif defined(BOTAN_SIMD_USE_NEON)
    const uint8x16_t tbl = vreinterpretq_u8_u32(t.raw());
    const uint8x16_t idx = vreinterpretq_u8_u32(v.raw());

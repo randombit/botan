@@ -93,6 +93,9 @@ arm64:armv8sm4 -> "-march=armv8.2-a+sm4"
 arm64:armv8sha512 -> "-march=armv8.2-a+sha3"
 arm64:armv8sha3 -> "-march=armv8.2-a+sha3"
 
+loongarch64:lsx -> "-mlsx"
+loongarch64:lasx -> "-mlasx"
+
 # For Aarch32 -mfpu=neon is required
 # For Aarch64 NEON is enabled by default
 arm32:neon    -> "-mfpu=neon"

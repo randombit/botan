@@ -34,9 +34,19 @@ BOTAN_FUTURE_INTERNAL_HEADER(compiler.h)
 #endif
 
 /*
+* Hack for Loongarch64 GCC bug
+*
+* For some reason __has_attribute(target) is true, but it does not support the
+* target attribute... this supposedly is fixed in GCC 15 but this is untested.
+*/
+#if defined(__GNUC__) && defined(__loongarch64) && (__GNUC__ <= 14)
+   #define BOTAN_COMPILER_DOES_NOT_HAVE_TARGET_ATTRIBUTE
+#endif
+
+/*
 * Define BOTAN_FUNC_ISA
 */
-#if BOTAN_COMPILER_HAS_ATTRIBUTE(target)
+#if BOTAN_COMPILER_HAS_ATTRIBUTE(target) && !defined(BOTAN_COMPILER_DOES_NOT_HAVE_TARGET_ATTRIBUTE)
    #define BOTAN_FUNC_ISA(isa) BOTAN_COMPILER_ATTRIBUTE(target(isa))
 #else
    #define BOTAN_FUNC_ISA(isa)

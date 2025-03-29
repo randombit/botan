@@ -1,5 +1,5 @@
 
-#test cpuid avx512 avx2 simd
+#test cpuid avx512 avx2 sse2 neon altivec lsx
 
 [Serpent]
 Key = 00000000000000000000000000000000

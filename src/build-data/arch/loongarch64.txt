@@ -1,1 +1,6 @@
 family loongarch
+
+<isa_extensions>
+lsx
+lasx
+</isa_extensions>
