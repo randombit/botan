@@ -47,8 +47,8 @@ class SHA_1 final : public HashFunction {
       static void sha1_armv8_compress_n(digest_type& digest, std::span<const uint8_t> blocks, size_t block_count);
 #endif
 
-#if defined(BOTAN_HAS_SHA1_SSE2)
-      static void sse2_compress_n(digest_type& digest, std::span<const uint8_t> blocks, size_t block_count);
+#if defined(BOTAN_HAS_SHA1_SIMD_4X32)
+      static void simd_compress_n(digest_type& digest, std::span<const uint8_t> blocks, size_t block_count);
 #endif
 
 #if defined(BOTAN_HAS_SHA1_X86_SHA_NI)

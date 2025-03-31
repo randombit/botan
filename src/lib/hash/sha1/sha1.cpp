@@ -77,9 +77,9 @@ void SHA_1::compress_n(digest_type& digest, std::span<const uint8_t> input, size
    }
 #endif
 
-#if defined(BOTAN_HAS_SHA1_SSE2)
-   if(CPUID::has(CPUID::Feature::SSE2)) {
-      return sse2_compress_n(digest, input, blocks);
+#if defined(BOTAN_HAS_SHA1_SIMD_4X32)
+   if(CPUID::has_simd_4x32()) {
+      return simd_compress_n(digest, input, blocks);
    }
 
 #endif
@@ -220,9 +220,9 @@ std::string SHA_1::provider() const {
    }
 #endif
 
-#if defined(BOTAN_HAS_SHA1_SSE2)
-   if(CPUID::has(CPUID::Feature::SSE2)) {
-      return "sse2";
+#if defined(BOTAN_HAS_SHA1_SIMD_4X32)
+   if(CPUID::has_simd_4x32()) {
+      return "simd";
    }
 #endif
 
