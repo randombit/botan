@@ -3,16 +3,14 @@
 """
 Configuration program for botan
 
+This script supports Python 3 syntax only. At least CPython 3.10 is recommended.
+Latest PyPy3 should also work, but this is only occasionally tested.
+
 (C) 2009-2020 Jack Lloyd
 (C) 2015,2016,2017 Simon Warta (Kullo GmbH)
 (C) 2019-2022 René Meusel (neXenio GmbH, Rohde & Schwarz Cybersecurity GmbH)
 
 Botan is released under the Simplified BSD License (see license.txt)
-
-This script is regularly tested with CPython 3.x, and
-occasionally tested PyPy 4.
-
-On Jython target detection does not work (use --os and --cpu).
 """
 
 import collections
@@ -1906,7 +1904,8 @@ def process_template_string(template_text, variables, template_source):
                             output += for_body.replace('%{i}', v).replace('%{i|upper}', v.upper())
 
                         if output.find('%{omitlast') >= 0:
-                            if omitlast_match := self.omitlast_pattern.match(output):
+                            omitlast_match = self.omitlast_pattern.match(output)
+                            if omitlast_match:
                                 output = omitlast_match.group(1)
                                 if i + 1 < len(var):
                                     output += omitlast_match.group(2)
