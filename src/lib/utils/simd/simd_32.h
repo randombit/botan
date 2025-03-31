@@ -743,7 +743,7 @@ class SIMD_4x32 final {
 #endif
       }
 
-      static inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_SIMD_ISA) alignr8(SIMD_4x32 a, SIMD_4x32 b) {
+      static inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_SIMD_ISA) alignr8(const SIMD_4x32& a, const SIMD_4x32& b) {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_4x32(_mm_alignr_epi8(a.raw(), b.raw(), 8));
 #elif defined(BOTAN_SIMD_USE_NEON)

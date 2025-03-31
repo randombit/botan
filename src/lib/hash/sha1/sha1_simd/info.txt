@@ -1,0 +1,38 @@
+<defines>
+SHA1_SIMD_4X32 -> 20250331
+</defines>
+
+<module_info>
+name -> "SHA-1 SIMD"
+brief -> "SHA-1 using SIMD instructions"
+</module_info>
+
+<isa>
+x86_32:sse2
+x86_64:sse2
+x86_32:ssse3
+x86_64:ssse3
+x32:sse2
+x32:ssse3
+arm32:neon
+arm64:neon
+loongarch64:lsx
+
+# AltiVec/VMX also does work, but at least on the machines tested (POWER8 and
+# POWER10) this was slower than scalar, while for ARM and x86 speedups of
+# 25-30% are typical.
+</isa>
+
+<arch>
+x86_32
+x86_64
+x32
+arm32
+arm64
+loongarch64
+</arch>
+
+<requires>
+cpuid
+simd
+</requires>

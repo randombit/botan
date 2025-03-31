@@ -1,5 +1,5 @@
 /*
-* SHA-1 using SSE2
+* SHA-1 using SIMD instructions
 * Based on public domain code by Dean Gaudet
 *    (http://arctic.org/~dean/crypto/sha1.html)
 * (C) 2009-2011,2023 Jack Lloyd
@@ -13,11 +13,10 @@
 #include <botan/internal/rotate.h>
 #include <botan/internal/simd_32.h>
 #include <botan/internal/stl_util.h>
-#include <emmintrin.h>
 
 namespace Botan {
 
-namespace SHA1_SSE2_F {
+namespace SHA1_SIMD_F {
 
 namespace {
 
@@ -50,12 +49,9 @@ W0 = W[t]..W[t+3]
 */
 BOTAN_FORCE_INLINE SIMD_4x32 prep(SIMD_4x32& XW0, SIMD_4x32 XW1, SIMD_4x32 XW2, SIMD_4x32 XW3, SIMD_4x32 K) {
    SIMD_4x32 T0 = XW0;
+   SIMD_4x32 T1 = SIMD_4x32::alignr8(XW1, XW0);
    /* load W[t-4] 16-byte aligned, and shift */
    SIMD_4x32 T2 = XW3.shift_elems_right<1>();
-   /* get high 64-bits of XW0 into low 64-bits */
-   SIMD_4x32 T1 = SIMD_4x32(_mm_shuffle_epi32(XW0.raw(), _MM_SHUFFLE(1, 0, 3, 2)));
-   /* load high 64-bits of T1 */
-   T1 = SIMD_4x32(_mm_unpacklo_epi64(T1.raw(), XW1.raw()));
 
    T0 ^= T1;
    T2 ^= XW2;
@@ -106,14 +102,15 @@ inline void F4(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
 
 }  // namespace
 
-}  // namespace SHA1_SSE2_F
+}  // namespace SHA1_SIMD_F
 
 /*
-* SHA-1 Compression Function using SSE for message expansion
+* SHA-1 Compression Function using SIMD for message expansion
 */
 //static
-BOTAN_FUNC_ISA("sse2") void SHA_1::sse2_compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
-   using namespace SHA1_SSE2_F;
+BOTAN_FUNC_ISA(BOTAN_SIMD_ISA)
+void SHA_1::simd_compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
+   using namespace SHA1_SIMD_F;
 
    const SIMD_4x32 K00_19 = SIMD_4x32::splat(0x5A827999);
    const SIMD_4x32 K20_39 = SIMD_4x32::splat(0x6ED9EBA1);
