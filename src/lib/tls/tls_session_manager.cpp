@@ -107,54 +107,48 @@ std::vector<Session_with_Handle> Session_Manager::find_and_filter(const Server_I
          break;
       }
 
-      // TODO: C++20, use std::ranges::remove_if() once XCode and Android NDK caught up.
-      sessions_and_handles.erase(
-         std::remove_if(sessions_and_handles.begin(),
-                        sessions_and_handles.end(),
-                        [&](const auto& session) {
-                           const auto age =
-                              std::chrono::duration_cast<std::chrono::seconds>(now - session.session.start_time());
+      std::erase_if(sessions_and_handles, [&](const auto& session) {
+         const auto age = std::chrono::duration_cast<std::chrono::seconds>(now - session.session.start_time());
 
-                           // RFC 5077 3.3 -- "Old Session Tickets"
-                           //    The ticket_lifetime_hint field contains a hint from the
-                           //    server about how long the ticket should be stored. [...]
-                           //    A client SHOULD delete the ticket and associated state when
-                           //    the time expires. It MAY delete the ticket earlier based on
-                           //    local policy.
-                           //
-                           // RFC 5246 F.1.4 -- TLS 1.2
-                           //    If either party suspects that the session may have been
-                           //    compromised, or that certificates may have expired or been
-                           //    revoked, it should force a full handshake.  An upper limit of
-                           //    24 hours is suggested for session ID lifetimes.
-                           //
-                           // RFC 8446 4.2.11.1 -- TLS 1.3
-                           //    The client's view of the age of a ticket is the time since the
-                           //    receipt of the NewSessionTicket message.  Clients MUST NOT
-                           //    attempt to use tickets which have ages greater than the
-                           //    "ticket_lifetime" value which was provided with the ticket.
-                           //
-                           // RFC 8446 4.6.1 -- TLS 1.3
-                           //    Clients MUST NOT cache tickets for longer than 7 days,
-                           //    regardless of the ticket_lifetime, and MAY delete tickets
-                           //    earlier based on local policy.
-                           //
-                           // Note: TLS 1.3 tickets with a lifetime longer than 7 days are
-                           //       rejected during parsing with an "Illegal Parameter" alert.
-                           //       Other suggestions are left to the application via
-                           //       Policy::session_ticket_lifetime(). Session lifetimes as
-                           //       communicated by the server via the "lifetime_hint" are
-                           //       obeyed regardless of the policy setting.
-                           const auto session_lifetime_hint = session.session.lifetime_hint();
-                           const bool expired = age > std::min(policy_lifetime, session_lifetime_hint);
+         // RFC 5077 3.3 -- "Old Session Tickets"
+         //    The ticket_lifetime_hint field contains a hint from the
+         //    server about how long the ticket should be stored. [...]
+         //    A client SHOULD delete the ticket and associated state when
+         //    the time expires. It MAY delete the ticket earlier based on
+         //    local policy.
+         //
+         // RFC 5246 F.1.4 -- TLS 1.2
+         //    If either party suspects that the session may have been
+         //    compromised, or that certificates may have expired or been
+         //    revoked, it should force a full handshake.  An upper limit of
+         //    24 hours is suggested for session ID lifetimes.
+         //
+         // RFC 8446 4.2.11.1 -- TLS 1.3
+         //    The client's view of the age of a ticket is the time since the
+         //    receipt of the NewSessionTicket message.  Clients MUST NOT
+         //    attempt to use tickets which have ages greater than the
+         //    "ticket_lifetime" value which was provided with the ticket.
+         //
+         // RFC 8446 4.6.1 -- TLS 1.3
+         //    Clients MUST NOT cache tickets for longer than 7 days,
+         //    regardless of the ticket_lifetime, and MAY delete tickets
+         //    earlier based on local policy.
+         //
+         // Note: TLS 1.3 tickets with a lifetime longer than 7 days are
+         //       rejected during parsing with an "Illegal Parameter" alert.
+         //       Other suggestions are left to the application via
+         //       Policy::session_ticket_lifetime(). Session lifetimes as
+         //       communicated by the server via the "lifetime_hint" are
+         //       obeyed regardless of the policy setting.
+         const auto session_lifetime_hint = session.session.lifetime_hint();
+         const bool expired = age > std::min(policy_lifetime, session_lifetime_hint);
 
-                           if(expired) {
-                              remove(session.handle);
-                           }
+         if(expired) {
+            remove(session.handle);
+         }
 
-                           return expired;
-                        }),
-         sessions_and_handles.end());
+         return expired;
+      });
    }
 
    return sessions_and_handles;

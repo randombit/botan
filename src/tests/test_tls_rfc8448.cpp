@@ -605,19 +605,7 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager {
          return found_sessions;
       }
 
-      size_t remove(const Session_Handle& handle) override {
-         // TODO: C++20 allows to simply implement the entire method like:
-         //
-         //   return std::erase_if(m_sessions, find_by_handle(handle));
-         //
-         // Unfortunately, at the time of this writing Android NDK shipped with
-         // a std::erase_if that returns void.
-         auto rm_itr = std::remove_if(m_sessions.begin(), m_sessions.end(), find_by_handle(handle));
-
-         const auto elements_being_removed = std::distance(rm_itr, m_sessions.end());
-         m_sessions.erase(rm_itr);
-         return elements_being_removed;
-      }
+      size_t remove(const Session_Handle& handle) override { return std::erase_if(m_sessions, find_by_handle(handle)); }
 
       size_t remove_all() override {
          const auto sessions = m_sessions.size();
