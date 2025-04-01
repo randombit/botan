@@ -10,11 +10,14 @@ Version 3.8.0, Not Yet Released
 
 * Ongoing elliptic curve optimizations and cleanups (GH #4554 #4620 #4623 #4625
   #4627 #4632 #4634 #4686 #4687 #4688 #4689 #4690 #4692 #4695 #4703 #4706 #4708
-  #4710 #4711 #4746)
+  #4710 #4711 #4746 #4794)
 
 * Add support for SHA-512 instructions added in upcoming Intel processors (GH #4766)
 
 * Add support for SM4 instructions added in upcoming Intel processors (GH #4768)
+
+* The SHA-1 implementation using SSE2 has been extended to support NEON and LoongArch LSX.
+  (GH #4809)
 
 * Add support for TLS 1.3 post-quantum KEM secp384r1/ML-KEM-1024 (GH #4752)
 
@@ -58,24 +61,44 @@ Version 3.8.0, Not Yet Released
 
 * Add internal API for hybrid PQ combiner keys (GH #4067)
 
+* Internal refactorings of CPU feature detection. (GH #4718)
+
+* Add support for CPU feature detection on RISCV64 (GH #4800)
+
+* Add support for the LoongArch LSX SIMD extension in AES, SHA-1, ZFEC, ChaCha (GH #4799)
+
+* Various SIMD-enabled implementations which previously only required SSE2 now additionally
+  require SSSE3. Such optimizations will no longer be used on (now quite rare) CPUs which
+  support SSE2 but not SSSE3. (GH #4803)
+
+* Optimize parsing of large CRLs (GH #4789 #4790)
+
+* Improve performance of RSA public and private key parsing (GH #4793)
+
 * Add a couple examples of using format preserving encryption (GH #4758)
 
-* CI cleanups and improvements (GH #4756 #4761 #4762 #4767)
+* CI cleanups and improvements (GH #4756 #4761 #4762 #4767 #4770)
 
 * The ``Ed25519_PrivateKey`` constructor had behavior that varied based on the
   input length. Add explicit ``from_seed`` and ``from_bytes`` functions which
   make the two options explicit. (GH #4701 #4702)
 
+* Add some examples of using format preserving encryption (GH #4758)
+
 * Add a new cleaner interface for handling ECIES flags (GH #4691)
 
 * Internal RSA signature padding cleanups (GH #4635)
+
+* Cleanups to the implementations of SHA-1 and SHA-256 using SHA-NI (GH #4773 #4774)
+
+* Cleanups to reduce code size where possible (GH #4775 #4777 #4781)
 
 * Fix a bug that caused the tests to skip testing AES-NI if AES-VAES was supported.
   (GH #4649)
 
 * Now even for purely static library builds, ``-fPIC`` is used to compile the
   library objects. This allows linking position independent executables (PIE)
-  against the static library. (GH #tkk)
+  against the static library. (GH #4716)
 
 * Remove support for NetBSD `_dlauxinfo` which did not provide the information
   that the library had expected it to. (GH #4736)
