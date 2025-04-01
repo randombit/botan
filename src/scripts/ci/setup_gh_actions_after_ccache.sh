@@ -20,7 +20,14 @@ function build_and_install_jitterentropy() {
     mkdir jitterentropy-library
     curl -L "https://github.com/smuellerDD/jitterentropy-library/archive/refs/tags/v${JITTERENTROPY_VERSION}.tar.gz" | tar -xz -C .
     jel_dir="$(realpath jitterentropy-library-*)"
-    cmake -B "${jel_dir}/build" -S "${jel_dir}" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER_LAUNCHER=ccache
+
+    # The -DCMAKE_POLICY_VERSION_MINIMUM=3.5 directive is a workaround because
+    # recent versions of CMake refused to configure this project as it still
+    # claims compatibility with 2.x releases of CMake which have now fallen out
+    # of support.
+    #
+    #   See also: https://github.com/smuellerDD/jitterentropy-library/issues/147
+    cmake -B "${jel_dir}/build" -S "${jel_dir}" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_POLICY_VERSION_MINIMUM=3.5
     cmake --build "${jel_dir}/build"
     sudo cmake --install "${jel_dir}/build"
     echo "BOTAN_BUILD_WITH_JITTERENTROPY=1" >> "$GITHUB_ENV"
