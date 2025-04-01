@@ -8,7 +8,7 @@
 
 #include <botan/internal/os_utils.h>
 
-#if defined(BOTAN_TARGET_OS_IS_LINUX)
+#if defined(BOTAN_TARGET_OS_IS_LINUX) && __has_include(<sys/hwprobe.h>)
    #include <asm/hwprobe.h>
    #include <sys/hwprobe.h>
 
@@ -72,6 +72,8 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
          feat |= if_set(riscv_features, RISCV_HWPROBE_bit::Vector_SM4, CPUFeature::Bit::VECTOR_SM4, allowed);
       }
    }
+#else
+   BOTAN_UNUSED(allowed);
 #endif
 
    return feat;
