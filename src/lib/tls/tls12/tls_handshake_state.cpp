@@ -108,79 +108,93 @@ void Handshake_State::hello_verify_request(const Hello_Verify_Request& hello_ver
    note_message(*m_client_hello);
 }
 
-void Handshake_State::client_hello(Client_Hello_12* client_hello) {
+void Handshake_State::client_hello(std::unique_ptr<Client_Hello_12> client_hello) {
+   // Legacy behavior (exception to the rule): Allow client_hello to be nullptr to reset state.
    if(client_hello == nullptr) {
       m_client_hello.reset();
       hash().reset();
    } else {
-      m_client_hello.reset(client_hello);
+      m_client_hello = std::move(client_hello);
       note_message(*m_client_hello);
    }
 }
 
-void Handshake_State::server_hello(Server_Hello_12* server_hello) {
-   m_server_hello.reset(server_hello);
+void Handshake_State::server_hello(std::unique_ptr<Server_Hello_12> server_hello) {
+   BOTAN_ASSERT_NONNULL(server_hello);
+   m_server_hello = std::move(server_hello);
    m_ciphersuite = Ciphersuite::by_id(m_server_hello->ciphersuite());
    note_message(*m_server_hello);
 }
 
-void Handshake_State::server_certs(Certificate_12* server_certs) {
-   m_server_certs.reset(server_certs);
+void Handshake_State::server_certs(std::unique_ptr<Certificate_12> server_certs) {
+   BOTAN_ASSERT_NONNULL(server_certs);
+   m_server_certs = std::move(server_certs);
    note_message(*m_server_certs);
 }
 
-void Handshake_State::server_cert_status(Certificate_Status* server_cert_status) {
-   m_server_cert_status.reset(server_cert_status);
+void Handshake_State::server_cert_status(std::unique_ptr<Certificate_Status> server_cert_status) {
+   BOTAN_ASSERT_NONNULL(server_cert_status);
+   m_server_cert_status = std::move(server_cert_status);
    note_message(*m_server_cert_status);
 }
 
-void Handshake_State::server_kex(Server_Key_Exchange* server_kex) {
-   m_server_kex.reset(server_kex);
+void Handshake_State::server_kex(std::unique_ptr<Server_Key_Exchange> server_kex) {
+   BOTAN_ASSERT_NONNULL(server_kex);
+   m_server_kex = std::move(server_kex);
    note_message(*m_server_kex);
 }
 
-void Handshake_State::cert_req(Certificate_Request_12* cert_req) {
-   m_cert_req.reset(cert_req);
+void Handshake_State::cert_req(std::unique_ptr<Certificate_Request_12> cert_req) {
+   BOTAN_ASSERT_NONNULL(cert_req);
+   m_cert_req = std::move(cert_req);
    note_message(*m_cert_req);
 }
 
-void Handshake_State::server_hello_done(Server_Hello_Done* server_hello_done) {
-   m_server_hello_done.reset(server_hello_done);
+void Handshake_State::server_hello_done(std::unique_ptr<Server_Hello_Done> server_hello_done) {
+   BOTAN_ASSERT_NONNULL(server_hello_done);
+   m_server_hello_done = std::move(server_hello_done);
    note_message(*m_server_hello_done);
 }
 
-void Handshake_State::client_certs(Certificate_12* client_certs) {
-   m_client_certs.reset(client_certs);
+void Handshake_State::client_certs(std::unique_ptr<Certificate_12> client_certs) {
+   BOTAN_ASSERT_NONNULL(client_certs);
+   m_client_certs = std::move(client_certs);
    note_message(*m_client_certs);
 }
 
-void Handshake_State::client_kex(Client_Key_Exchange* client_kex) {
-   m_client_kex.reset(client_kex);
+void Handshake_State::client_kex(std::unique_ptr<Client_Key_Exchange> client_kex) {
+   BOTAN_ASSERT_NONNULL(client_kex);
+   m_client_kex = std::move(client_kex);
    note_message(*m_client_kex);
 }
 
-void Handshake_State::client_verify(Certificate_Verify_12* client_verify) {
-   m_client_verify.reset(client_verify);
+void Handshake_State::client_verify(std::unique_ptr<Certificate_Verify_12> client_verify) {
+   BOTAN_ASSERT_NONNULL(client_verify);
+   m_client_verify = std::move(client_verify);
    note_message(*m_client_verify);
 }
 
-void Handshake_State::server_verify(Certificate_Verify_12* server_verify) {
-   m_server_verify.reset(server_verify);
+void Handshake_State::server_verify(std::unique_ptr<Certificate_Verify_12> server_verify) {
+   BOTAN_ASSERT_NONNULL(server_verify);
+   m_server_verify = std::move(server_verify);
    note_message(*m_server_verify);
 }
 
-void Handshake_State::new_session_ticket(New_Session_Ticket_12* new_session_ticket) {
-   m_new_session_ticket.reset(new_session_ticket);
+void Handshake_State::new_session_ticket(std::unique_ptr<New_Session_Ticket_12> new_session_ticket) {
+   BOTAN_ASSERT_NONNULL(new_session_ticket);
+   m_new_session_ticket = std::move(new_session_ticket);
    note_message(*m_new_session_ticket);
 }
 
-void Handshake_State::server_finished(Finished_12* server_finished) {
-   m_server_finished.reset(server_finished);
+void Handshake_State::server_finished(std::unique_ptr<Finished_12> server_finished) {
+   BOTAN_ASSERT_NONNULL(server_finished);
+   m_server_finished = std::move(server_finished);
    note_message(*m_server_finished);
 }
 
-void Handshake_State::client_finished(Finished_12* client_finished) {
-   m_client_finished.reset(client_finished);
+void Handshake_State::client_finished(std::unique_ptr<Finished_12> client_finished) {
+   BOTAN_ASSERT_NONNULL(client_finished);
+   m_client_finished = std::move(client_finished);
    note_message(*m_client_finished);
 }
 
