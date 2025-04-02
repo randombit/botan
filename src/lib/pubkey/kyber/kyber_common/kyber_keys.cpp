@@ -99,7 +99,7 @@ secure_vector<uint8_t> Seed_Expanding_Keypair_Codec::encode_keypair(KyberInterna
    const auto& seed = keypair.second->seed();
    BOTAN_ARG_CHECK(seed.d.has_value(), "Cannot encode keypair without the full private seed");
    return concat<secure_vector<uint8_t>>(seed.d.value(), seed.z);
-};
+}
 
 Kyber_PublicKeyInternal::Kyber_PublicKeyInternal(KyberConstants mode, KyberSerializedPublicKey public_key) :
       m_mode(std::move(mode)),
