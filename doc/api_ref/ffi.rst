@@ -646,7 +646,7 @@ KDF
 Multiple Precision Integers
 ----------------------------------------
 
-.. versionadded: 2.1.0
+.. versionadded:: 2.1.0
 
 .. cpp:type:: opaque* botan_mp_t
 
@@ -834,6 +834,46 @@ Password Hashing
    if the combination is not valid (but otherwise well formed),
    negative on error.
 
+
+Object Identifiers
+----------------------------------------
+
+.. versionadded:: 3.8.0
+
+.. cpp:type:: opaque* botan_asn1_oid_t
+
+   An opaque data type for an object identifier. Don't mess with it.
+
+.. cpp:function:: int botan_oid_destroy(botan_asn1_oid_t oid)
+
+   Destroy an object.
+
+.. cpp:function:: int botan_oid_from_string(botan_asn1_oid_t* oid, const char* oid_str)
+
+   Create an OID from a string, either dot notation (e.g. '1.2.3.4') or a registered name (e.g. 'RSA')
+
+.. cpp:function:: int botan_oid_register(botan_asn1_oid_t oid, const char* name)
+
+   Register an OID so that it may later be retrieved by name
+
+.. cpp:function:: int botan_oid_view_string(botan_asn1_oid_t oid, botan_view_ctx ctx, botan_view_str_fn view)
+
+   View the OID in dot notation
+
+.. cpp:function:: int botan_oid_view_name(botan_asn1_oid_t oid, botan_view_ctx ctx, botan_view_str_fn view)
+
+   View the OID as a name if it has one, otherwise as dot notation
+
+.. cpp:function:: int botan_oid_equal(botan_asn1_oid_t a, botan_asn1_oid_t b)
+
+   Three way comparison: set result to -1 if ``a`` is less than ``b``,
+   0 if ``a`` is equal to ``b``, and 1 if ``a`` is greater than ``b``.
+
+.. cpp:function:: int botan_oid_cmp(int* result, botan_asn1_oid_t a, botan_asn1_oid_t b)
+
+   Return 1 if ``a`` is equal to ``b``, 0 if ``a`` is not equal to ``b``
+
+
 Public Key Creation, Import and Export
 ----------------------------------------
 
@@ -966,7 +1006,7 @@ Public Key Creation, Import and Export
 
    Deprecated, use ``botan_privkey_export_encrypted_msec`` or ``botan_privkey_export_encrypted_iter``
 
-.. cpp::function:: int botan_privkey_export_encrypted_pbkdf_msec(botan_privkey_t key,
+.. cpp:function:: int botan_privkey_export_encrypted_pbkdf_msec(botan_privkey_t key, \
                                                         uint8_t out[], size_t* out_len, \
                                                         botan_rng_t rng, \
                                                         const char* passphrase, \
@@ -982,7 +1022,7 @@ Public Key Creation, Import and Export
     ``cipher_algo`` must specify a CBC mode cipher (such as "AES-128/CBC") or as
     a Botan-specific extension a GCM mode may be used.
 
-.. cpp::function:: int botan_privkey_export_encrypted_pbkdf_iter(botan_privkey_t key, \
+.. cpp:function:: int botan_privkey_export_encrypted_pbkdf_iter(botan_privkey_t key, \
                                                         uint8_t out[], size_t* out_len, \
                                                         botan_rng_t rng, \
                                                         const char* passphrase, \
@@ -1002,6 +1042,19 @@ Public Key Creation, Import and Export
 
     Read an algorithm specific field from the private key object, placing it into output.
     For example "p" or "q" for RSA keys, or "x" for DSA keys or ECC keys.
+
+.. cpp:function:: int botan_privkey_oid(botan_asn1_oid_t* oid, botan_privkey_t key)
+
+   Get the key's associated OID.
+
+.. cpp:function:: int botan_privkey_stateful_operation(botan_privkey_t key, int* out)
+
+   Checks whether a key is stateful and set ``out`` to 1 if it is, 0 otherwise.
+
+.. cpp:function:: int botan_privkey_remaining_operations(botan_privkey_t key, uint64_t* out)
+
+   Set ``out`` to the number of remaining operations.
+   If the key is not stateful, an error will be returned.
 
 .. cpp:type:: opaque* botan_pubkey_t
 
@@ -1042,6 +1095,10 @@ Public Key Creation, Import and Export
 
     Read an algorithm specific field from the public key object, placing it into output.
     For example "n" or "e" for RSA keys or "p", "q", "g", and "y" for DSA keys.
+
+.. cpp:function:: int botan_pubkey_oid(botan_asn1_oid_t* oid, botan_privkey_t key)
+
+   Get the key's associated OID.
 
 RSA specific functions
 ----------------------------------------

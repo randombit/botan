@@ -344,6 +344,10 @@ Public Key
      vary depending on the algorithm. For example RSA public modulus can be
      extracted with ``rsa_key.get_field("n")``.
 
+  .. py:method:: object_identifier()
+
+     Returns the associated OID
+
   .. py:method:: fingerprint(hash = 'SHA-256')
 
      Returns a hash of the public key
@@ -462,6 +466,10 @@ Private Key
      extracted with ``rsa_key.get_field("p")``. This function can also be
      used to extract the public parameters.
 
+  .. py:method:: object_identifier()
+
+     Returns the associated OID
+
   .. py:method:: stateful_operation()
      Return whether the key is stateful or not.
 
@@ -568,6 +576,29 @@ Multiple Precision Integers (MPI)
    .. py:method:: gcd(other):
 
       Return the greatest common divisor of ``self`` and ``other``
+
+
+Object Identifiers (OID)
+-------------------------------------
+.. versionadded:: 3.8.0
+
+.. py:class:: OID(object)
+
+   .. py:classmethod:: from_string(value)
+
+      Create a new OID from dot notation or from a known name
+
+   .. py:method:: to_string()
+
+      Export the OID in dot notation
+
+   .. py:method:: to_name()
+
+      Export the OID as a name if it has one, else in dot notation
+
+   .. py:method:: register(name)
+
+      Register the OID so that it may later be retrieved by the given name
 
 
 Format Preserving Encryption (FE1 scheme)

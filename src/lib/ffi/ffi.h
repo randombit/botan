@@ -1111,6 +1111,55 @@ int botan_bcrypt_generate(
 BOTAN_FFI_EXPORT(2, 0) int botan_bcrypt_is_valid(const char* pass, const char* hash);
 
 /*
+* OIDs
+*/
+
+typedef struct botan_asn1_oid_struct* botan_asn1_oid_t;
+
+/**
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_oid_destroy(botan_asn1_oid_t oid);
+
+/**
+* Create an OID from a string, either dot notation (e.g. '1.2.3.4') or a registered name (e.g. 'RSA')
+* @param oid hanlder to the resulting OID
+* @param oid_str the name of the OID to create
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_oid_from_string(botan_asn1_oid_t* oid, const char* oid_str);
+
+/**
+* Registers an OID so that it may later be retrieved by name
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_oid_register(botan_asn1_oid_t oid, const char* name);
+
+/**
+* View an OID in dot notation
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_oid_view_string(botan_asn1_oid_t oid, botan_view_ctx ctx, botan_view_str_fn view);
+
+/**
+* View an OIDs registered name if it exists, else its dot notation
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_oid_view_name(botan_asn1_oid_t oid, botan_view_ctx ctx, botan_view_str_fn view);
+
+/**
+* @returns 0 if a != b
+* @returns 1 if a == b
+* @returns negative number on error
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_oid_equal(botan_asn1_oid_t a, botan_asn1_oid_t b);
+
+/**
+* Sets @param result to comparison result:
+* -1 if a < b, 0 if a == b, 1 if a > b
+* @returns negative number on error or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_oid_cmp(int* result, botan_asn1_oid_t a, botan_asn1_oid_t b);
+
+/*
 * Public/private key creation, import, ...
 */
 typedef struct botan_privkey_struct* botan_privkey_t;
@@ -1383,6 +1432,15 @@ BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_destroy(botan_pubkey_t key);
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_get_field(botan_mp_t output, botan_pubkey_t key, const char* field_name);
 
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_get_field(botan_mp_t output, botan_privkey_t key, const char* field_name);
+
+/*
+* Get the OID from public or private keys
+*/
+BOTAN_FFI_EXPORT(3, 8)
+int botan_pubkey_oid(botan_asn1_oid_t* oid, botan_pubkey_t key);
+
+BOTAN_FFI_EXPORT(3, 8)
+int botan_privkey_oid(botan_asn1_oid_t* oid, botan_privkey_t key);
 
 /**
 * Checks whether a key is stateful and sets
