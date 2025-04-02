@@ -18,6 +18,8 @@ class Public_Key;
 * Certificate validation status code
 */
 enum class Certificate_Status_Code {
+   // TODO(Botan4) renumber this, e.g. Validation Errors -> IP_ADDR_BLOCKS_ERROR
+
    OK = 0,
    VERIFIED = 0,
 
@@ -67,6 +69,8 @@ enum class Certificate_Status_Code {
    CERT_CHAIN_TOO_LONG = 4002,
    CA_CERT_NOT_FOR_CERT_ISSUER = 4003,
    NAME_CONSTRAINT_ERROR = 4004,
+   IPADDR_BLOCKS_ERROR = 4011,
+   AS_BLOCKS_ERROR = 4012,
 
    // Revocation errors
    CA_CERT_NOT_FOR_CRL_ISSUER = 4005,
