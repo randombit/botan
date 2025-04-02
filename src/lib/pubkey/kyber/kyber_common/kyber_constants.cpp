@@ -70,21 +70,18 @@ KyberConstants::KyberConstants(KyberMode mode) : m_mode(mode) {
 #ifdef BOTAN_HAS_KYBER_90S
    if(mode.is_kyber_round3() && mode.is_90s()) {
       m_symmetric_primitives = std::make_unique<Kyber_90s_Symmetric_Primitives>();
-      m_keypair_codec = std::make_unique<Kyber_Expanded_Keypair_Codec>();
    }
 #endif
 
 #ifdef BOTAN_HAS_KYBER
    if(mode.is_kyber_round3() && mode.is_modern()) {
       m_symmetric_primitives = std::make_unique<Kyber_Modern_Symmetric_Primitives>();
-      m_keypair_codec = std::make_unique<Kyber_Expanded_Keypair_Codec>();
    }
 #endif
 
 #ifdef BOTAN_HAS_ML_KEM
    if(mode.is_ml_kem()) {
       m_symmetric_primitives = std::make_unique<ML_KEM_Symmetric_Primitives>();
-      m_keypair_codec = std::make_unique<ML_KEM_Expanding_Keypair_Codec>();
    }
 #endif
 
@@ -92,14 +89,9 @@ KyberConstants::KyberConstants(KyberMode mode) : m_mode(mode) {
    m_polynomial_vector_bytes = (bitlen(Q) * (N / 8)) * k();
    m_polynomial_vector_compressed_bytes = d_u() * k() * (N / 8);
    m_polynomial_compressed_bytes = d_v() * (N / 8);
-   m_private_key_bytes = static_cast<uint32_t>([this]() -> size_t {
-      if(m_mode.is_ml_kem()) {
-         // ML-KEM's private keys are simply expanded from their seeds.
-         return 2 * SEED_BYTES;
-      } else {
-         return m_polynomial_vector_bytes + public_key_bytes() + PUBLIC_KEY_HASH_BYTES + SEED_BYTES;
-      }
-   }());
+   m_expanded_private_key_bytes =
+      static_cast<uint32_t>(m_polynomial_vector_bytes + public_key_bytes() + PUBLIC_KEY_HASH_BYTES + SEED_BYTES);
+   m_seed_private_key_bytes = 2 * SEED_BYTES;
 
    if(!m_symmetric_primitives) {
       throw Not_Implemented("requested Kyber mode is not enabled in this build");

@@ -172,9 +172,12 @@ ML-KEM (FIPS 203)
 ~~~~~~~~~~~~~~~~~
 
 Post-quantum key encapsulation scheme based on (structured) lattices. This
-algorithm is standardized in FIPS 203. Decapsulation keys are always stored and
-expanded from the 64-byte private random seeds (``d || z``), loading the
-expanded key format specified in FIPS 203 is explicitly not supported.
+algorithm is standardized in FIPS 203. New decapsulation keys are stored and
+expanded from the 64-byte private random seeds (``d || z``).
+Keys imported as seeds are always serialized as seeds, while keys imported in
+expanded format (as specified in FIPS 203) are serialized in expanded format.
+Exporting seeds as expanded keys is supported using ML-KEM private key-specific
+methods.
 
 Support for ML-KEM is implemented in the module ``ml_kem``.
 

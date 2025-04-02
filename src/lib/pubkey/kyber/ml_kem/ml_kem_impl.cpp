@@ -67,23 +67,4 @@ void ML_KEM_Decryptor::decapsulate(StrongSpan<KyberSharedSecret> out_shared_key,
 
    CT::unpoison(out_shared_key);
 }
-
-KyberInternalKeypair ML_KEM_Expanding_Keypair_Codec::decode_keypair(std::span<const uint8_t> private_key,
-                                                                    KyberConstants mode) const {
-   BufferSlicer s(private_key);
-   auto seed = KyberPrivateKeySeed{
-      s.copy<KyberSeedRandomness>(KyberConstants::SEED_BYTES),
-      s.copy<KyberImplicitRejectionValue>(KyberConstants::SEED_BYTES),
-   };
-   BOTAN_ASSERT_NOMSG(s.empty());
-   return Kyber_Algos::expand_keypair(std::move(seed), std::move(mode));
-}
-
-secure_vector<uint8_t> ML_KEM_Expanding_Keypair_Codec::encode_keypair(KyberInternalKeypair keypair) const {
-   BOTAN_ASSERT_NONNULL(keypair.second);
-   const auto& seed = keypair.second->seed();
-   BOTAN_ARG_CHECK(seed.d.has_value(), "Cannot encode keypair without the full private seed");
-   return concat<secure_vector<uint8_t>>(seed.d.value(), seed.z);
-}
-
 }  // namespace Botan

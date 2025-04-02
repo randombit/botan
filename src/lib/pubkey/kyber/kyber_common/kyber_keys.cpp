@@ -27,6 +27,80 @@ KyberSerializedPublicKey validate_public_key_length(KyberSerializedPublicKey pub
 
 }  // namespace
 
+/**
+ * Key decoding as specified in Crystals Kyber (Version 3.01),
+ * Algorithms 4 (CPAPKE.KeyGen()), and 7 (CCAKEM.KeyGen())
+ *
+ * Public Key: pk  := (encode(t) || rho)
+ * Secret Key: sk' := encode(s)
+ *
+ * Expanded Secret Key: sk  := (sk' || pk || H(pk) || z)
+ */
+KyberInternalKeypair Expanded_Keypair_Codec::decode_keypair(std::span<const uint8_t> sk, KyberConstants mode) const {
+   auto scope = CT::scoped_poison(sk);
+   BufferSlicer s(sk);
+
+   auto skpv = Kyber_Algos::decode_polynomial_vector(s.take(mode.polynomial_vector_bytes()), mode);
+   auto pub_key = s.copy<KyberSerializedPublicKey>(mode.public_key_bytes());
+   auto puk_key_hash = s.take<KyberHashedPublicKey>(KyberConstants::PUBLIC_KEY_HASH_BYTES);
+   auto z = s.copy<KyberImplicitRejectionValue>(KyberConstants::SEED_BYTES);
+
+   BOTAN_ASSERT_NOMSG(s.empty());
+
+   CT::unpoison_all(pub_key, puk_key_hash, skpv, z);
+
+   KyberInternalKeypair keypair{
+      std::make_shared<Kyber_PublicKeyInternal>(mode, std::move(pub_key)),
+      std::make_shared<Kyber_PrivateKeyInternal>(
+         std::move(mode),
+         std::move(skpv),
+         KyberPrivateKeySeed{std::nullopt,  // Reading from an expanded and encoded
+                             // private key cannot reconstruct the
+                             // original seed from key generation.
+                             std::move(z)}),
+   };
+
+   BOTAN_ASSERT(keypair.first && keypair.second, "reading private key encoding");
+   BOTAN_ARG_CHECK(keypair.first->H_public_key_bits_raw().size() == puk_key_hash.size() &&
+                      std::equal(keypair.first->H_public_key_bits_raw().begin(),
+                                 keypair.first->H_public_key_bits_raw().end(),
+                                 puk_key_hash.begin()),
+                   "public key's hash does not match the stored hash");
+
+   return keypair;
+}
+
+secure_vector<uint8_t> Expanded_Keypair_Codec::encode_keypair(KyberInternalKeypair keypair) const {
+   BOTAN_ASSERT_NONNULL(keypair.first);
+   BOTAN_ASSERT_NONNULL(keypair.second);
+   const auto& mode = keypair.first->mode();
+   auto scope = CT::scoped_poison(*keypair.second);
+   auto result = concat(Kyber_Algos::encode_polynomial_vector(keypair.second->s().reduce(), mode),
+                        keypair.first->public_key_bits_raw(),
+                        keypair.first->H_public_key_bits_raw(),
+                        keypair.second->z());
+   CT::unpoison(result);
+   return result;
+}
+
+KyberInternalKeypair Seed_Expanding_Keypair_Codec::decode_keypair(std::span<const uint8_t> private_key,
+                                                                  KyberConstants mode) const {
+   BufferSlicer s(private_key);
+   auto seed = KyberPrivateKeySeed{
+      s.copy<KyberSeedRandomness>(KyberConstants::SEED_BYTES),
+      s.copy<KyberImplicitRejectionValue>(KyberConstants::SEED_BYTES),
+   };
+   BOTAN_ASSERT_NOMSG(s.empty());
+   return Kyber_Algos::expand_keypair(std::move(seed), std::move(mode));
+}
+
+secure_vector<uint8_t> Seed_Expanding_Keypair_Codec::encode_keypair(KyberInternalKeypair keypair) const {
+   BOTAN_ASSERT_NONNULL(keypair.second);
+   const auto& seed = keypair.second->seed();
+   BOTAN_ARG_CHECK(seed.d.has_value(), "Cannot encode keypair without the full private seed");
+   return concat<secure_vector<uint8_t>>(seed.d.value(), seed.z);
+};
+
 Kyber_PublicKeyInternal::Kyber_PublicKeyInternal(KyberConstants mode, KyberSerializedPublicKey public_key) :
       m_mode(std::move(mode)),
       m_public_key_bits_raw(validate_public_key_length(std::move(public_key), m_mode.public_key_bytes())),
