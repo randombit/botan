@@ -269,6 +269,14 @@ def _set_prototypes(dll):
             [c_char_p, POINTER(c_size_t), c_char_p, c_void_p, c_size_t, c_uint32])
     ffi_api(dll.botan_bcrypt_is_valid, [c_char_p, c_char_p])
 
+    # OID
+    ffi_api(dll.botan_oid_from_string, [c_void_p, c_char_p])
+    ffi_api(dll.botan_oid_register, [c_void_p, c_char_p])
+    ffi_api(dll.botan_oid_view_string, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_oid_view_name, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_oid_equal, [c_void_p, c_void_p])
+    ffi_api(dll.botan_oid_cmp, [POINTER(c_int), c_void_p, c_void_p])
+
     #  PUBKEY
     ffi_api(dll.botan_privkey_create, [c_void_p, c_char_p, c_char_p, c_void_p])
     ffi_api(dll.botan_privkey_check_key, [c_void_p, c_void_p, c_uint32], [-1])
@@ -320,6 +328,8 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_pubkey_destroy, [c_void_p])
     ffi_api(dll.botan_pubkey_get_field, [c_void_p, c_void_p, c_char_p])
     ffi_api(dll.botan_privkey_get_field, [c_void_p, c_void_p, c_char_p])
+    ffi_api(dll.botan_pubkey_oid, [c_void_p, c_void_p])
+    ffi_api(dll.botan_privkey_oid, [c_void_p, c_void_p])
     ffi_api(dll.botan_privkey_stateful_operation, [c_void_p, POINTER(c_int)])
     ffi_api(dll.botan_privkey_remaining_operations, [c_void_p, POINTER(c_uint64)])
     ffi_api(dll.botan_privkey_load_rsa, [c_void_p, c_void_p, c_void_p, c_void_p])
@@ -1326,6 +1336,11 @@ class PublicKey: # pylint: disable=invalid-name
         _DLL.botan_pubkey_get_field(v.handle_(), self.__obj, _ctype_str(field_name))
         return int(v)
 
+    def object_identifier(self):
+        oid = OID()
+        _DLL.botan_pubkey_oid(byref(oid.handle_()), self.__obj)
+        return oid
+
     def get_public_point(self):
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_pubkey_view_ec_public_point(self.__obj, vc, vfn))
 
@@ -1518,6 +1533,11 @@ class PrivateKey:
         v = MPI()
         _DLL.botan_privkey_get_field(v.handle_(), self.__obj, _ctype_str(field_name))
         return int(v)
+
+    def object_identifier(self):
+        oid = OID()
+        _DLL.botan_privkey_oid(byref(oid.handle_()), self.__obj)
+        return oid
 
     def stateful_operation(self):
         r = c_int(0)
@@ -2122,6 +2142,60 @@ class MPI:
 
     def set_bit(self, bit):
         _DLL.botan_mp_set_bit(self.__obj, c_size_t(bit))
+
+
+class OID:
+    def __init__(self, obj=None):
+        if not obj:
+            obj = c_void_p(0)
+        self.__obj = obj
+
+    @classmethod
+    def from_string(cls, value):
+        oid = OID()
+        _DLL.botan_oid_from_string(byref(oid.handle_()), _ctype_str(value))
+        return oid
+
+    def __del__(self):
+        _DLL.botan_oid_destroy(self.__obj)
+
+    def handle_(self):
+        return self.__obj
+
+    def to_string(self):
+        return _call_fn_viewing_str(
+            lambda vc, vfn: _DLL.botan_oid_view_string(self.__obj, vc, vfn))
+
+    def to_name(self):
+        return _call_fn_viewing_str(
+            lambda vc, vfn: _DLL.botan_oid_view_name(self.__obj, vc, vfn))
+
+    def register(self, name):
+        _DLL.botan_oid_register(self.__obj, _ctype_str(name))
+
+    def cmp(self, other):
+        r = c_int(0)
+        _DLL.botan_oid_cmp(byref(r), self.__obj, other.handle_())
+        return r.value
+
+    def __eq__(self, other):
+        return self.cmp(other) == 0
+
+    def __ne__(self, other):
+        return self.cmp(other) != 0
+
+    def __lt__(self, other):
+        return self.cmp(other) < 0
+
+    def __le__(self, other):
+        return self.cmp(other) <= 0
+
+    def __gt__(self, other):
+        return self.cmp(other) > 0
+
+    def __ge__(self, other):
+        return self.cmp(other) >= 0
+
 
 class FormatPreservingEncryptionFE1:
 
