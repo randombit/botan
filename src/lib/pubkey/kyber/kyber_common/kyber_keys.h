@@ -26,6 +26,20 @@ class Kyber_Keypair_Codec {
       virtual KyberInternalKeypair decode_keypair(std::span<const uint8_t> private_key, KyberConstants mode) const = 0;
 };
 
+/// Codec for expanded private keys (as specified in FIPS 203)
+class Expanded_Keypair_Codec final : public Kyber_Keypair_Codec {
+   public:
+      KyberInternalKeypair decode_keypair(std::span<const uint8_t> buffer, KyberConstants mode) const override;
+      secure_vector<uint8_t> encode_keypair(KyberInternalKeypair private_key) const override;
+};
+
+/// Codec for private keys as 64-byte seeds: d || z
+class Seed_Expanding_Keypair_Codec final : public Kyber_Keypair_Codec {
+   public:
+      KyberInternalKeypair decode_keypair(std::span<const uint8_t> buffer, KyberConstants mode) const override;
+      secure_vector<uint8_t> encode_keypair(KyberInternalKeypair keypair) const override;
+};
+
 class Kyber_PublicKeyInternal {
    public:
       Kyber_PublicKeyInternal(KyberConstants mode, KyberSerializedPublicKey public_key);
