@@ -6,6 +6,7 @@
 
 #include <botan/internal/cpuid.h>
 
+#include <botan/assert.h>
 #include <botan/internal/os_utils.h>
 
 #if defined(BOTAN_TARGET_OS_IS_LINUX) && __has_include(<sys/hwprobe.h>)
