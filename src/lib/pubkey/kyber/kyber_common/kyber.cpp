@@ -336,7 +336,7 @@ secure_vector<uint8_t> Kyber_PrivateKey::_expanded_private_key_bits() const {
 }
 
 std::optional<secure_vector<uint8_t>> Kyber_PrivateKey::_seed_private_key_bits() const {
-   if(!m_private->seed().d.has_value()) {
+   if(!mode().is_ml_kem() || !m_private->seed().d.has_value()) {
       return std::nullopt;
    }
    return Seed_Expanding_Keypair_Codec().encode_keypair({m_public, m_private});

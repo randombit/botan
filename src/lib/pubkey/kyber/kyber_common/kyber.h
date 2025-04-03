@@ -179,8 +179,9 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
       secure_vector<uint8_t> _expanded_private_key_bits() const;
 
       /**
-       * Get the private key bytes as 64-byte seeds: d || z. If the private key
-       * was loaded using expanded key bytes std::nullopt is returned.
+       * Get the private key bytes as a 64-byte seed: d || z. If the private key
+       * is a Kyber Round 3 key or was loaded using expanded key bytes
+       * std::nullopt is returned.
        */
       std::optional<secure_vector<uint8_t>> _seed_private_key_bits() const;
 
