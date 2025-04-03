@@ -46,10 +46,20 @@ class SIMD_8x32 final {
       }
 
       BOTAN_AVX2_FN
+      explicit SIMD_8x32(uint32_t B0, uint32_t B1, uint32_t B2, uint32_t B3) noexcept {
+         m_avx2 = _mm256_set_epi32(B3, B2, B1, B0, B3, B2, B1, B0);
+      }
+
+      BOTAN_AVX2_FN
       static SIMD_8x32 splat(uint32_t B) noexcept { return SIMD_8x32(_mm256_set1_epi32(B)); }
 
       BOTAN_AVX2_FN
       static SIMD_8x32 load_le(const uint8_t* in) noexcept {
+         return SIMD_8x32(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(in)));
+      }
+
+      BOTAN_AVX2_FN
+      static SIMD_8x32 load_le(const uint32_t* in) noexcept {
          return SIMD_8x32(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(in)));
       }
 
@@ -72,6 +82,24 @@ class SIMD_8x32 final {
       BOTAN_AVX2_FN
       void store_le128(uint8_t out[]) const noexcept {
          _mm_storeu_si128(reinterpret_cast<__m128i*>(out), _mm256_extracti128_si256(raw(), 0));
+      }
+
+      BOTAN_AVX2_FN
+      static SIMD_8x32 load_le128(const uint32_t in1[], const uint32_t in2[]) noexcept {
+         return SIMD_8x32(
+            _mm256_loadu2_m128i(reinterpret_cast<const __m128i*>(in2), reinterpret_cast<const __m128i*>(in1)));
+      }
+
+      BOTAN_AVX2_FN
+      static SIMD_8x32 load_be128(const uint8_t in1[], const uint8_t in2[]) noexcept {
+         return SIMD_8x32(
+                   _mm256_loadu2_m128i(reinterpret_cast<const __m128i*>(in2), reinterpret_cast<const __m128i*>(in1)))
+            .bswap();
+      }
+
+      BOTAN_AVX2_FN
+      void store_le128(uint32_t out1[], uint32_t out2[]) const noexcept {
+         _mm256_storeu2_m128i(reinterpret_cast<__m128i*>(out2), reinterpret_cast<__m128i*>(out1), raw());
       }
 
       BOTAN_AVX2_FN
@@ -272,6 +300,10 @@ class SIMD_8x32 final {
 #else
          return SIMD_8x32::choose(x ^ y, z, y);
 #endif
+      }
+
+      static inline SIMD_8x32 BOTAN_AVX2_FN byte_shuffle(const SIMD_8x32& tbl, const SIMD_8x32& idx) {
+         return SIMD_8x32(_mm256_shuffle_epi8(tbl.raw(), idx.raw()));
       }
 
       BOTAN_AVX2_FN
