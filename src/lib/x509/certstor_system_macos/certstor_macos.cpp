@@ -67,12 +67,10 @@ class scoped_CFType {
 X509_DN normalize(const X509_DN& dn) {
    X509_DN result;
 
-   for(const auto& rdn : dn.dn_info()) {
-      // TODO: C++14 - use std::get<ASN1_String>(), resp. std::get<OID>()
-      const auto oid = rdn.first;
-      auto str = rdn.second;
-
-      if(str.tagging() == ASN1_Type::PrintableString) {
+   for(const auto& [oid, str] : dn.dn_info()) {
+      if(str.tagging() != ASN1_Type::PrintableString) {
+         result.add_attribute(oid, str);
+      } else {
          std::string normalized;
          normalized.reserve(str.value().size());
          for(const char c : str.value()) {
@@ -90,10 +88,8 @@ X509_DN normalize(const X509_DN& dn) {
             normalized.erase(normalized.end() - 1);
          }
 
-         str = ASN1_String(normalized, str.tagging());
+         result.add_attribute(oid, {normalized, str.tagging()});
       }
-
-      result.add_attribute(oid, str);
    }
 
    return result;
