@@ -9,5 +9,5 @@ brief -> "SHACAL-2 using SIMD instructions"
 
 <requires>
 cpuid
-simd
+simd_4x32
 </requires>

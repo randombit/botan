@@ -141,7 +141,7 @@ system_rng
 # utils
 http_util # needed by x509 for OCSP online checks
 locking_allocator
-simd
+simd_4x32
 </if_available>
 
 <prohibited>

@@ -9,7 +9,7 @@ brief -> "GHASH using SIMD instructions"
 
 <requires>
 cpuid
-simd
+simd_4x32
 </requires>
 
 <isa>

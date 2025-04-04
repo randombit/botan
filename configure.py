@@ -1987,7 +1987,7 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
         if src in module_that_owns:
             module = module_that_owns[src]
             isas = module.isas_needed(arch.basename)
-            if 'simd' in module.dependencies(osinfo, arch):
+            if 'simd_4x32' in module.dependencies(osinfo, arch):
                 isas.append('simd')
 
             return cc.get_isa_specific_flags(isas, arch, options)

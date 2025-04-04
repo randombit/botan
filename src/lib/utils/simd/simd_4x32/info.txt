@@ -1,18 +1,19 @@
 <defines>
-AES_VPERM -> 20190901
+SIMD_4X32 -> 20131128
 </defines>
 
 <module_info>
-name -> "AES Vector Permutation"
-brief -> "AES using Vector Permutation Instructions"
+name -> "SIMD 4x32"
+brief -> "Lightweight wrappers for SIMD 4x32"
 </module_info>
 
+<header:internal>
+simd_4x32.h
+</header:internal>
+
 <isa>
-x86_32:sse2
-x86_64:sse2
 x86_32:ssse3
 x86_64:ssse3
-x32:sse2
 x32:ssse3
 arm32:neon
 arm64:neon
@@ -31,8 +32,3 @@ ppc32
 ppc64
 loongarch64
 </arch>
-
-<requires>
-cpuid
-simd_4x32
-</requires>

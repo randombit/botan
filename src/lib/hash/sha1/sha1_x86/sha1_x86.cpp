@@ -12,7 +12,7 @@
 
 #include <botan/internal/sha1.h>
 
-#include <botan/internal/simd_32.h>
+#include <botan/internal/simd_4x32.h>
 #include <immintrin.h>
 
 namespace Botan {

@@ -8,7 +8,7 @@
 #include <botan/internal/aes.h>
 
 #include <botan/internal/loadstor.h>
-#include <botan/internal/simd_32.h>
+#include <botan/internal/simd_4x32.h>
 #include <wmmintrin.h>
 
 namespace Botan {
