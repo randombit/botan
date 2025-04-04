@@ -1,0 +1,36 @@
+<defines>
+SHA2_32_SIMD -> 20250402
+</defines>
+
+<module_info>
+name -> "SHA-256 using SIMD"
+brief -> "SHA-256 using SIMD instructions"
+</module_info>
+
+<isa>
+x86_64:ssse3
+x86_32:ssse3
+x32:ssse3
+
+arm32:neon
+arm64:neon
+</isa>
+
+<arch>
+x86_64
+x86_32
+x32
+
+arm32
+arm64
+
+# Works for VMX and LSX but not faster on systems tested so far
+#ppc32
+#ppc64
+#loongson64
+</arch>
+
+<requires>
+cpuid
+simd
+</requires>
