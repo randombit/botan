@@ -58,6 +58,7 @@ enum class Nonce_Format {
    CBC_MODE,
    AEAD_IMPLICIT_4,
    AEAD_XOR_12,
+   NULL_CIPHER,
 };
 
 // TODO encoding should match signature_algorithms extension
