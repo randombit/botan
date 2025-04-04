@@ -91,8 +91,8 @@ class SHA_256 final : public HashFunction {
       static void compress_digest_armv8(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
 #endif
 
-#if defined(BOTAN_HAS_SHA2_32_X86_BMI2)
-      static void compress_digest_x86_bmi2(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
+#if defined(BOTAN_HAS_SHA2_32_X86_AVX2)
+      static void compress_digest_x86_avx2(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
 #endif
 
 #if defined(BOTAN_HAS_SHA2_32_X86)
