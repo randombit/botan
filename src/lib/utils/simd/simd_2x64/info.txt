@@ -1,0 +1,26 @@
+<defines>
+SIMD_2X64 -> 20250405
+</defines>
+
+<module_info>
+name -> "SIMD 2x64"
+brief -> "Lightweight wrappers for SIMD 2x64"
+</module_info>
+
+<header:internal>
+simd_2x64.h
+</header:internal>
+
+# TODO support NEON/VMX/LSX here
+
+<isa>
+x86_32:ssse3
+x86_64:ssse3
+x32:ssse3
+</isa>
+
+<arch>
+x86_32
+x86_64
+x32
+</arch>

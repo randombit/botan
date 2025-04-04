@@ -18,4 +18,5 @@ ssse3
 
 <requires>
 cpuid
+simd_2x64
 </requires>
