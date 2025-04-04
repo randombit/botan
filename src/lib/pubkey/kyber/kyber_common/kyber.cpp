@@ -262,10 +262,10 @@ secure_vector<uint8_t> Kyber_PrivateKey::raw_private_key_bits() const {
 }
 
 secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits() const {
-   if(auto seedSk = _seed_private_key_bits()) {
-      return std::move(seedSk.value());
+   if(auto seed_sk = seed_private_key_bits()) {
+      return std::move(seed_sk.value());
    }
-   return _expanded_private_key_bits();
+   return expanded_private_key_bits();
 }
 
 bool Kyber_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
@@ -331,11 +331,11 @@ std::unique_ptr<PK_Ops::KEM_Decryption> Kyber_PrivateKey::create_kem_decryption_
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-secure_vector<uint8_t> Kyber_PrivateKey::_expanded_private_key_bits() const {
+secure_vector<uint8_t> Kyber_PrivateKey::expanded_private_key_bits() const {
    return Expanded_Keypair_Codec().encode_keypair({m_public, m_private});
 }
 
-std::optional<secure_vector<uint8_t>> Kyber_PrivateKey::_seed_private_key_bits() const {
+std::optional<secure_vector<uint8_t>> Kyber_PrivateKey::seed_private_key_bits() const {
    if(!mode().is_ml_kem() || !m_private->seed().d.has_value()) {
       return std::nullopt;
    }

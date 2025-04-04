@@ -139,7 +139,7 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
                                                       public virtual Private_Key {
    public:
       /**
-       * Create a new private. The private key will be encoded a the 64 byte
+       * Create a new private key. The private key will be encoded as the 64 byte
        * seed.
        */
       Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode mode);
@@ -176,14 +176,14 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
       /**
        * Get the private key bytes in expanded format as specified in FIPS 203.
        */
-      secure_vector<uint8_t> _expanded_private_key_bits() const;
+      secure_vector<uint8_t> expanded_private_key_bits() const;
 
       /**
        * Get the private key bytes as a 64-byte seed: d || z. If the private key
        * is a Kyber Round 3 key or was loaded using expanded key bytes
        * std::nullopt is returned.
        */
-      std::optional<secure_vector<uint8_t>> _seed_private_key_bits() const;
+      std::optional<secure_vector<uint8_t>> seed_private_key_bits() const;
 
    private:
       friend class Kyber_KEM_Decryptor;
