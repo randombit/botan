@@ -19,6 +19,10 @@ Version 3.8.0, Not Yet Released
 * The SHA-1 implementation using SSE2 has been extended to support NEON and LoongArch LSX.
   (GH #4809)
 
+* Add SHA-256 and SHA-512 implementations using AVX2/BMI2 (GH #4818 #4821)
+
+* Add SHA-256 implementation using SSSE3 or NEON for message expansion (GH #4819)
+
 * Add support for TLS 1.3 post-quantum KEM secp384r1/ML-KEM-1024 (GH #4752)
 
 * Fix bugs in the server-side implementation of TLS 1.3 post-quantum hybrid
@@ -63,7 +67,7 @@ Version 3.8.0, Not Yet Released
 
 * Internal refactorings of CPU feature detection. (GH #4718)
 
-* Add support for CPU feature detection on RISCV64 (GH #4800)
+* Add support for CPU feature detection on RISCV64 (GH #4800 #4815)
 
 * Add support for the LoongArch LSX SIMD extension in AES, SHA-1, ZFEC, ChaCha (GH #4799)
 
@@ -71,13 +75,13 @@ Version 3.8.0, Not Yet Released
   require SSSE3. Such optimizations will no longer be used on (now quite rare) CPUs which
   support SSE2 but not SSSE3. (GH #4803)
 
-* Optimize parsing of large CRLs (GH #4789 #4790)
+* Optimize parsing of large CRLs (GH #4789 #4790 #4792)
 
 * Improve performance of RSA public and private key parsing (GH #4793)
 
 * Add a couple examples of using format preserving encryption (GH #4758)
 
-* CI cleanups and improvements (GH #4756 #4761 #4762 #4767 #4770)
+* CI cleanups and improvements (GH #4756 #4761 #4762 #4767 #4770 #4812 #4813)
 
 * The ``Ed25519_PrivateKey`` constructor had behavior that varied based on the
   input length. Add explicit ``from_seed`` and ``from_bytes`` functions which
@@ -100,7 +104,7 @@ Version 3.8.0, Not Yet Released
   library objects. This allows linking position independent executables (PIE)
   against the static library. (GH #4716)
 
-* Remove support for NetBSD `_dlauxinfo` which did not provide the information
+* Remove support for NetBSD ``_dlauxinfo`` which did not provide the information
   that the library had expected it to. (GH #4736)
 
 * Add a script for comparing the performance between versions (GH #4693 #4754)
