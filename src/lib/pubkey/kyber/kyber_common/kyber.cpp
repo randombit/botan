@@ -242,12 +242,15 @@ Kyber_PrivateKey::Kyber_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<
 Kyber_PrivateKey::Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode m) {
    KyberConstants mode(m);
 
-   if(mode.private_key_bytes() != sk.size()) {
+   if(mode.mode().is_ml_kem() && sk.size() == mode.seed_private_key_bytes()) {
+      std::tie(m_public, m_private) = Seed_Expanding_Keypair_Codec().decode_keypair(sk, std::move(mode));
+   } else if(sk.size() == mode.expanded_private_key_bytes()) {
+      std::tie(m_public, m_private) = Expanded_Keypair_Codec().decode_keypair(sk, std::move(mode));
+   } else if(!mode.mode().is_ml_kem() && sk.size() == mode.seed_private_key_bytes()) {
+      throw Invalid_Argument("Kyber round 3 private keys do not support the seed format");
+   } else {
       throw Invalid_Argument("Private key does not have the correct byte count");
    }
-
-   const auto& codec = mode.keypair_codec();
-   std::tie(m_public, m_private) = codec.decode_keypair(sk, std::move(mode));
 }
 
 std::unique_ptr<Public_Key> Kyber_PrivateKey::public_key() const {
@@ -259,7 +262,10 @@ secure_vector<uint8_t> Kyber_PrivateKey::raw_private_key_bits() const {
 }
 
 secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits() const {
-   return m_private->mode().keypair_codec().encode_keypair({m_public, m_private});
+   if(auto seed_sk = seed_private_key_bits()) {
+      return std::move(seed_sk.value());
+   }
+   return expanded_private_key_bits();
 }
 
 bool Kyber_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
@@ -323,6 +329,17 @@ std::unique_ptr<PK_Ops::KEM_Decryption> Kyber_PrivateKey::create_kem_decryption_
       BOTAN_ASSERT_UNREACHABLE();
    }
    throw Provider_Not_Found(algo_name(), provider);
+}
+
+secure_vector<uint8_t> Kyber_PrivateKey::expanded_private_key_bits() const {
+   return Expanded_Keypair_Codec().encode_keypair({m_public, m_private});
+}
+
+std::optional<secure_vector<uint8_t>> Kyber_PrivateKey::seed_private_key_bits() const {
+   if(!mode().is_ml_kem() || !m_private->seed().d.has_value()) {
+      return std::nullopt;
+   }
+   return Seed_Expanding_Keypair_Codec().encode_keypair({m_public, m_private});
 }
 
 }  // namespace Botan

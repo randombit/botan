@@ -254,7 +254,27 @@ class Kyber_Encoding_Test : public Text_Based_Test {
 
             result.test_eq("sk's encoding of pk", skr->public_key_bits(), pk_raw);
             result.test_eq("sk's encoding of sk", skr->private_key_bits(), sk_raw);
-            result.test_eq("pk's encoding of pk", skr->public_key_bits(), pk_raw);
+            result.test_eq("pk's encoding of pk", pkr->public_key_bits(), pk_raw);
+
+            // expanded vs seed encoding
+            if(const auto seed_sk = skr->seed_private_key_bits()) {
+               result.test_eq("sk's seed encoding of sk", seed_sk.value(), sk_raw);
+               const auto skr_expanded =
+                  std::make_unique<Botan::Kyber_PrivateKey>(skr->expanded_private_key_bits(), mode);
+               result.test_eq("sk's expanded encoding consistency",
+                              skr->expanded_private_key_bits(),
+                              skr_expanded->expanded_private_key_bits());
+               result.confirm("expect no seed in expanded sk", !skr_expanded->seed_private_key_bits().has_value());
+
+               const auto encapsulation = Botan::PK_KEM_Encryptor(*pkr, "Raw").encrypt(rng());
+               result.test_eq(
+                  "expanded sk decapsulation",
+                  Botan::PK_KEM_Decryptor(*skr_expanded, rng(), "Raw").decrypt(encapsulation.encapsulated_shared_key()),
+                  encapsulation.shared_key());
+
+            } else {
+               result.test_eq("sk's expanded encoding of sk", skr->expanded_private_key_bits(), sk_raw);
+            }
          }
 
          return result;

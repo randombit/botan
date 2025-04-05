@@ -138,10 +138,28 @@ BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_PublicKey,
                                                       public virtual Private_Key {
    public:
+      /**
+       * Create a new private key. The private key will be encoded as the 64 byte
+       * seed.
+       */
       Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode mode);
 
+      /**
+       * Import a private key using its key bytes. Supported are key bytes as
+       * 64-byte seeds (not supported for Kyber Round 3 instances),
+       * as well as the expanded encoding specified by FIPS 203. Note that the
+       * encoding used in this constructor is reflected by the calls for
+       * private_key_bits, private_key_info, etc.
+       */
       Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode mode);
 
+      /**
+       * Import a private key using its key bytes. Supported are key bytes as
+       * 64-byte seeds (not supported for Kyber Round 3 instances),
+       * as well as the expanded encoding specified by FIPS 203. Note that the
+       * encoding used in this constructor is reflected by the calls for
+       * private_key_bits, private_key_info, etc.
+       */
       Kyber_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
 
       std::unique_ptr<Public_Key> public_key() const override;
@@ -155,6 +173,17 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
       std::unique_ptr<PK_Ops::KEM_Decryption> create_kem_decryption_op(RandomNumberGenerator& rng,
                                                                        std::string_view params,
                                                                        std::string_view provider) const override;
+      /**
+       * Get the private key bytes in expanded format as specified in FIPS 203.
+       */
+      secure_vector<uint8_t> expanded_private_key_bits() const;
+
+      /**
+       * Get the private key bytes as a 64-byte seed: d || z. If the private key
+       * is a Kyber Round 3 key or was loaded using expanded key bytes
+       * std::nullopt is returned.
+       */
+      std::optional<secure_vector<uint8_t>> seed_private_key_bits() const;
 
    private:
       friend class Kyber_KEM_Decryptor;

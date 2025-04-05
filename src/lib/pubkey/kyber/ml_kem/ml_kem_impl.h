@@ -105,12 +105,6 @@ class ML_KEM_Symmetric_Primitives final : public Kyber_Symmetric_Primitives {
       std::unique_ptr<Botan::XOF> m_shake256;
 };
 
-class ML_KEM_Expanding_Keypair_Codec final : public Kyber_Keypair_Codec {
-   public:
-      KyberInternalKeypair decode_keypair(std::span<const uint8_t> buffer, KyberConstants mode) const override;
-      secure_vector<uint8_t> encode_keypair(KyberInternalKeypair keypair) const override;
-};
-
 }  // namespace Botan
 
 #endif
