@@ -121,7 +121,7 @@ ghash_vperm
 # hash
 sha2_32_x86
 sha2_32_armv8
-sha2_32_bmi2
+sha2_32_avx2
 sha2_64_bmi2
 keccak_perm_bmi2
 

@@ -67,12 +67,12 @@ serpent_avx2
 chacha_simd32
 chacha_avx2
 
-sha1_sse2
+sha1_simd
 sha1_x86
 sha1_armv8
 sha2_32_x86
 sha2_32_armv8
-sha2_32_bmi2
+sha2_32_avx2
 sha2_64_bmi2
 keccak_perm_bmi2
 
