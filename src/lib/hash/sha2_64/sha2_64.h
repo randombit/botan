@@ -86,8 +86,8 @@ class SHA_512 final : public HashFunction {
    public:
       static void compress_digest(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
 
-#if defined(BOTAN_HAS_SHA2_64_BMI2)
-      static void compress_digest_bmi2(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
+#if defined(BOTAN_HAS_SHA2_64_X86_AVX2)
+      static void compress_digest_x86_avx2(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
 #endif
 
 #if defined(BOTAN_HAS_SHA2_64_X86)

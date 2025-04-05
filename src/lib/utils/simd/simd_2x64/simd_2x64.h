@@ -38,6 +38,13 @@ class SIMD_2x64 final {
          return SIMD_2x64(_mm_loadu_si128(reinterpret_cast<const __m128i*>(in)));
       }
 
+      static SIMD_2x64 load_be(const void* in) { return SIMD_2x64::load_le(in).bswap(); }
+
+      SIMD_2x64 BOTAN_SIMD_2X64_FN bswap() const {
+         const auto idx = _mm_set_epi8(8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7);
+         return SIMD_2x64(_mm_shuffle_epi8(m_simd, idx));
+      }
+
       void store_le(uint64_t out[2]) const { this->store_le(reinterpret_cast<uint8_t*>(out)); }
 
       void store_le(uint8_t out[]) const { _mm_storeu_si128(reinterpret_cast<__m128i*>(out), m_simd); }
@@ -62,7 +69,10 @@ class SIMD_2x64 final {
       BOTAN_SIMD_2X64_FN SIMD_2x64 rotr() const
          requires(ROT > 0 && ROT < 64)
       {
-         if constexpr(ROT == 16) {
+         if constexpr(ROT == 8) {
+            auto tab = _mm_setr_epi8(1, 2, 3, 4, 5, 6, 7, 0, 9, 10, 11, 12, 13, 14, 15, 8);
+            return SIMD_2x64(_mm_shuffle_epi8(m_simd, tab));
+         } else if constexpr(ROT == 16) {
             auto tab = _mm_setr_epi8(2, 3, 4, 5, 6, 7, 0, 1, 10, 11, 12, 13, 14, 15, 8, 9);
             return SIMD_2x64(_mm_shuffle_epi8(m_simd, tab));
          } else if constexpr(ROT == 24) {
@@ -82,8 +92,14 @@ class SIMD_2x64 final {
          return this->rotr<64 - ROT>();
       }
 
-      BOTAN_SIMD_2X64_FN
-      static SIMD_2x64 alignr8(SIMD_2x64 a, SIMD_2x64 b) { return SIMD_2x64(_mm_alignr_epi8(a.m_simd, b.m_simd, 8)); }
+      template <int SHIFT>
+      SIMD_2x64 shr() const noexcept {
+         return SIMD_2x64(_mm_srli_epi64(m_simd, SHIFT));
+      }
+
+      static SIMD_2x64 BOTAN_SIMD_2X64_FN alignr8(const SIMD_2x64& a, const SIMD_2x64& b) {
+         return SIMD_2x64(_mm_alignr_epi8(a.m_simd, b.m_simd, 8));
+      }
 
       // Argon2 specific operation
       static void twist(SIMD_2x64& B0, SIMD_2x64& B1, SIMD_2x64& C0, SIMD_2x64& C1, SIMD_2x64& D0, SIMD_2x64& D1) {

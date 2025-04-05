@@ -38,8 +38,21 @@ class SIMD_4x64 final {
             _mm256_loadu2_m128i(reinterpret_cast<const __m128i*>(inl), reinterpret_cast<const __m128i*>(inh)));
       }
 
+      static BOTAN_FUNC_ISA("avx2") SIMD_4x64 load_be2(const void* inl, const void* inh) {
+         return SIMD_4x64::load_le2(inl, inh).bswap();
+      }
+
       static BOTAN_FUNC_ISA("avx2") SIMD_4x64 load_le(const void* in) {
          return SIMD_4x64(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(in)));
+      }
+
+      static BOTAN_FUNC_ISA("avx2") SIMD_4x64 load_be(const void* in) { return SIMD_4x64::load_le(in).bswap(); }
+
+      SIMD_4x64 BOTAN_FUNC_ISA("avx2") bswap() const {
+         const auto idx = _mm256_set_epi8(
+            8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7);
+
+         return SIMD_4x64(_mm256_shuffle_epi8(m_simd, idx));
       }
 
       void store_le(uint64_t out[4]) const { this->store_le(reinterpret_cast<uint8_t*>(out)); }
@@ -77,7 +90,15 @@ class SIMD_4x64 final {
       SIMD_4x64 rotr() const
          requires(ROT > 0 && ROT < 64)
       {
-         if constexpr(ROT == 16) {
+#if defined(__AVX512VL__)
+         return SIMD_4x64(_mm256_ror_epi64(m_simd, ROT));
+#else
+         if constexpr(ROT == 8) {
+            auto shuf_rot_8 =
+               _mm256_set_epi64x(0x080f0e0d0c0b0a09, 0x0007060504030201, 0x080f0e0d0c0b0a09, 0x0007060504030201);
+
+            return SIMD_4x64(_mm256_shuffle_epi8(m_simd, shuf_rot_8));
+         } else if constexpr(ROT == 16) {
             auto shuf_rot_16 =
                _mm256_set_epi64x(0x09080f0e0d0c0b0a, 0x0100070605040302, 0x09080f0e0d0c0b0a, 0x0100070605040302);
 
@@ -96,11 +117,21 @@ class SIMD_4x64 final {
             return SIMD_4x64(_mm256_or_si256(_mm256_srli_epi64(m_simd, static_cast<int>(ROT)),
                                              _mm256_slli_epi64(m_simd, static_cast<int>(64 - ROT))));
          }
+#endif
       }
 
       template <size_t ROT>
       SIMD_4x64 rotl() const {
          return this->rotr<64 - ROT>();
+      }
+
+      template <int SHIFT>
+      SIMD_4x64 BOTAN_FUNC_ISA("avx2") shr() const noexcept {
+         return SIMD_4x64(_mm256_srli_epi64(m_simd, SHIFT));
+      }
+
+      static SIMD_4x64 BOTAN_FUNC_ISA("avx2") alignr8(const SIMD_4x64& a, const SIMD_4x64& b) {
+         return SIMD_4x64(_mm256_alignr_epi8(a.m_simd, b.m_simd, 8));
       }
 
       // Argon2 specific operation

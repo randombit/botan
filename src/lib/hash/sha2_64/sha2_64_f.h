@@ -39,6 +39,18 @@ BOTAN_FORCE_INLINE void SHA2_64_F(uint64_t A,
    M1 += M2_sigma + M3 + M4_sigma;
 }
 
+/*
+* SHA-512 F1 Function (No Message Expansion)
+*/
+BOTAN_FORCE_INLINE void SHA2_64_F(
+   uint64_t A, uint64_t B, uint64_t C, uint64_t& D, uint64_t E, uint64_t F, uint64_t G, uint64_t& H, uint64_t M) {
+   const uint64_t E_rho = rho<14, 18, 41>(E);
+   const uint64_t A_rho = rho<28, 34, 39>(A);
+   H += E_rho + choose(E, F, G) + M;
+   D += H;
+   H += A_rho + majority(A, B, C);
+}
+
 }  // namespace Botan
 
 #endif
