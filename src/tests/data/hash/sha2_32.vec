@@ -1,4 +1,4 @@
-#test cpuid intel_sha armv8sha2 bmi2
+#test cpuid intel_sha armv8sha2 avx2 sse2 neon
 
 [SHA-224]
 In = 

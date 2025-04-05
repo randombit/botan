@@ -59,6 +59,8 @@
    #define BOTAN_VPERM_ISA "lsx"
 #endif
 
+#define BOTAN_SIMD_4X32_FN BOTAN_FUNC_ISA(BOTAN_SIMD_ISA)
+
 namespace Botan {
 
 #if defined(BOTAN_SIMD_USE_SSSE3) || defined(BOTAN_SIMD_USE_LSX)
@@ -180,7 +182,7 @@ class SIMD_4x32 final {
       /**
       * Load a SIMD register with big-endian convention
       */
-      static SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_SIMD_ISA) load_be(const void* in) noexcept {
+      static SIMD_4x32 BOTAN_SIMD_4X32_FN load_be(const void* in) noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3) || defined(BOTAN_SIMD_USE_LSX)
          return load_le(in).bswap();
 
@@ -242,7 +244,7 @@ class SIMD_4x32 final {
       /**
       * Load a SIMD register with big-endian convention
       */
-      BOTAN_FUNC_ISA(BOTAN_SIMD_ISA) void store_be(uint8_t out[]) const noexcept {
+      BOTAN_SIMD_4X32_FN void store_be(uint8_t out[]) const noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3) || defined(BOTAN_SIMD_USE_LSX)
 
          bswap().store_le(out);
@@ -302,8 +304,7 @@ class SIMD_4x32 final {
       * Left rotation by a compile time constant
       */
       template <size_t ROT>
-      BOTAN_FUNC_ISA(BOTAN_SIMD_ISA)
-      SIMD_4x32 rotl() const noexcept
+      BOTAN_SIMD_4X32_FN SIMD_4x32 rotl() const noexcept
          requires(ROT > 0 && ROT < 32)
       {
 #if defined(BOTAN_SIMD_USE_SSSE3)
@@ -529,7 +530,7 @@ class SIMD_4x32 final {
       /**
       * Return copy *this with each word byte swapped
       */
-      BOTAN_FUNC_ISA(BOTAN_SIMD_ISA) SIMD_4x32 bswap() const noexcept {
+      BOTAN_SIMD_4X32_FN SIMD_4x32 bswap() const noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          const auto idx = _mm_set_epi8(12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3);
 
@@ -678,7 +679,7 @@ class SIMD_4x32 final {
       * This function assumes that each byte of idx is <= 16; it may produce incorrect
       * results if this does not hold.
       */
-      static inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_SIMD_ISA) byte_shuffle(const SIMD_4x32& tbl, const SIMD_4x32& idx) {
+      static inline SIMD_4x32 BOTAN_SIMD_4X32_FN byte_shuffle(const SIMD_4x32& tbl, const SIMD_4x32& idx) {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_4x32(_mm_shuffle_epi8(tbl.raw(), idx.raw()));
 #elif defined(BOTAN_SIMD_USE_NEON)
@@ -713,8 +714,7 @@ class SIMD_4x32 final {
       * behaviors depending on the CPU; possibly the output is zero, tbl[idx % 16],
       * or even undefined.
       */
-      inline static SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_SIMD_ISA)
-         masked_byte_shuffle(const SIMD_4x32& tbl, const SIMD_4x32& idx) {
+      inline static SIMD_4x32 BOTAN_SIMD_4X32_FN masked_byte_shuffle(const SIMD_4x32& tbl, const SIMD_4x32& idx) {
 #if defined(BOTAN_SIMD_USE_ALTIVEC)
          const auto zero = vec_splat_s8(0x00);
          const auto mask = vec_cmplt(reinterpret_cast<__vector signed char>(idx.raw()), zero);
@@ -743,7 +743,21 @@ class SIMD_4x32 final {
 #endif
       }
 
-      static inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_SIMD_ISA) alignr8(const SIMD_4x32& a, const SIMD_4x32& b) {
+      static inline SIMD_4x32 BOTAN_SIMD_4X32_FN alignr4(const SIMD_4x32& a, const SIMD_4x32& b) {
+#if defined(BOTAN_SIMD_USE_SSSE3)
+         return SIMD_4x32(_mm_alignr_epi8(a.raw(), b.raw(), 4));
+#elif defined(BOTAN_SIMD_USE_NEON)
+         return SIMD_4x32(vextq_u32(b.raw(), a.raw(), 1));
+#elif defined(BOTAN_SIMD_USE_ALTIVEC)
+         const __vector unsigned char mask = {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
+         return SIMD_4x32(vec_perm(b.raw(), a.raw(), mask));
+#elif defined(BOTAN_SIMD_USE_LSX)
+         const auto mask = SIMD_4x32(0x07060504, 0x0B0A0908, 0x0F0E0D0C, 0x13121110);
+         return SIMD_4x32(__lsx_vshuf_b(a.raw(), b.raw(), mask.raw()));
+#endif
+      }
+
+      static inline SIMD_4x32 BOTAN_SIMD_4X32_FN alignr8(const SIMD_4x32& a, const SIMD_4x32& b) {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_4x32(_mm_alignr_epi8(a.raw(), b.raw(), 8));
 #elif defined(BOTAN_SIMD_USE_NEON)
@@ -765,12 +779,12 @@ class SIMD_4x32 final {
 };
 
 template <size_t R>
-inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_SIMD_ISA) rotl(SIMD_4x32 input) {
+inline SIMD_4x32 BOTAN_SIMD_4X32_FN rotl(SIMD_4x32 input) {
    return input.rotl<R>();
 }
 
 template <size_t R>
-inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_SIMD_ISA) rotr(SIMD_4x32 input) {
+inline SIMD_4x32 BOTAN_SIMD_4X32_FN rotr(SIMD_4x32 input) {
    return input.rotr<R>();
 }
 
