@@ -34,8 +34,8 @@ std::string sha512_provider() {
    }
 #endif
 
-#if defined(BOTAN_HAS_SHA2_64_BMI2)
-   if(CPUID::has(CPUID::Feature::BMI)) {
+#if defined(BOTAN_HAS_SHA2_64_X86_AVX2)
+   if(CPUID::has(CPUID::Feature::AVX2) && CPUID::has(CPUID::Feature::BMI)) {
       return "bmi2";
    }
 #endif
@@ -62,9 +62,9 @@ void SHA_512::compress_digest(digest_type& digest, std::span<const uint8_t> inpu
    }
 #endif
 
-#if defined(BOTAN_HAS_SHA2_64_BMI2)
-   if(CPUID::has(CPUID::Feature::BMI)) {
-      return compress_digest_bmi2(digest, input, blocks);
+#if defined(BOTAN_HAS_SHA2_64_X86_AVX2)
+   if(CPUID::has(CPUID::Feature::AVX2) && CPUID::has(CPUID::Feature::BMI)) {
+      return compress_digest_x86_avx2(digest, input, blocks);
    }
 #endif
 
