@@ -10,7 +10,7 @@
    #include <botan/internal/bswap.h>
    #include <botan/internal/loadstor.h>
    #include <botan/internal/rotate.h>
-   #include <botan/internal/simd_32.h>
+   #include <botan/internal/simd_4x32.h>
    #include <botan/internal/stl_util.h>
 #endif
 

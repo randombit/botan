@@ -8,6 +8,6 @@ brief -> "ChaCha20 using SIMD instructions"
 </module_info>
 
 <requires>
-simd
+simd_4x32
 cpuid
 </requires>

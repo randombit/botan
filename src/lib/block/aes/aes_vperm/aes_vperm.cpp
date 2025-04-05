@@ -13,7 +13,7 @@
 #include <botan/internal/aes.h>
 
 #include <botan/internal/ct_utils.h>
-#include <botan/internal/simd_32.h>
+#include <botan/internal/simd_4x32.h>
 #include <botan/internal/target_info.h>
 #include <bit>
 

@@ -13,4 +13,5 @@ avx2
 
 <requires>
 cpuid
+simd_4x64
 </requires>

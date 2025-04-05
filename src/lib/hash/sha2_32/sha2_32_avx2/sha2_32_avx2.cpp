@@ -9,7 +9,7 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/sha2_32_f.h>
-#include <botan/internal/simd_32.h>
+#include <botan/internal/simd_4x32.h>
 #include <botan/internal/simd_avx2.h>
 
 #include <immintrin.h>
