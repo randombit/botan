@@ -7,6 +7,7 @@
 
 #include <botan/zfec.h>
 
+#include <botan/internal/isa_extn.h>
 #include <botan/internal/simd_4x32.h>
 #include <botan/internal/target_info.h>
 
@@ -457,7 +458,7 @@ alignas(256) const uint8_t GFTBL[256 * 32] = {
 
 }  // namespace
 
-BOTAN_FUNC_ISA(BOTAN_SIMD_ISA) size_t ZFEC::addmul_vperm(uint8_t z[], const uint8_t x[], uint8_t y, size_t size) {
+BOTAN_FN_ISA_SIMD_4X32 size_t ZFEC::addmul_vperm(uint8_t z[], const uint8_t x[], uint8_t y, size_t size) {
    const auto mask = SIMD_4x32::splat_u8(0x0F);
 
    // fetch the lookup tables for the given y

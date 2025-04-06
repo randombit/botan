@@ -15,7 +15,7 @@ namespace Botan {
 
 namespace {
 
-BOTAN_SIMD_4X32_FN BOTAN_FORCE_INLINE SIMD_4x32 sha256_simd_next_w(SIMD_4x32 x[4]) {
+BOTAN_FN_ISA_SIMD_4X32 BOTAN_FORCE_INLINE SIMD_4x32 sha256_simd_next_w(SIMD_4x32 x[4]) {
    const SIMD_4x32 lo_mask = SIMD_4x32(0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000);
    const SIMD_4x32 hi_mask = SIMD_4x32(0x00000000, 0x00000000, 0xFFFFFFFF, 0xFFFFFFFF);
 
@@ -46,9 +46,9 @@ BOTAN_SIMD_4X32_FN BOTAN_FORCE_INLINE SIMD_4x32 sha256_simd_next_w(SIMD_4x32 x[4
 
 }  // namespace
 
-BOTAN_SIMD_4X32_FN void SHA_256::compress_digest_x86_simd(digest_type& digest,
-                                                          std::span<const uint8_t> input,
-                                                          size_t blocks) {
+void BOTAN_FN_ISA_SIMD_4X32 SHA_256::compress_digest_x86_simd(digest_type& digest,
+                                                              std::span<const uint8_t> input,
+                                                              size_t blocks) {
    // clang-format off
 
    alignas(64) const uint32_t K[64] = {

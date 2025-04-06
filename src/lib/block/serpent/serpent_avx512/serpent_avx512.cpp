@@ -5,6 +5,7 @@
 */
 
 #include <botan/internal/serpent.h>
+
 #include <botan/internal/serpent_sbox.h>
 #include <botan/internal/simd_avx512.h>
 
@@ -265,8 +266,7 @@ BOTAN_FORCE_INLINE void SBoxD7(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD
 
 }  // namespace
 
-BOTAN_AVX512_FN
-void Serpent::avx512_encrypt_16(const uint8_t in[16 * 16], uint8_t out[16 * 16]) const {
+void BOTAN_FN_ISA_AVX512 Serpent::avx512_encrypt_16(const uint8_t in[16 * 16], uint8_t out[16 * 16]) const {
    using namespace Botan::Serpent_F;
 
    SIMD_16x32 B0 = SIMD_16x32::load_le(in);
@@ -387,8 +387,7 @@ void Serpent::avx512_encrypt_16(const uint8_t in[16 * 16], uint8_t out[16 * 16])
    SIMD_16x32::zero_registers();
 }
 
-BOTAN_AVX512_FN
-void Serpent::avx512_decrypt_16(const uint8_t in[16 * 16], uint8_t out[16 * 16]) const {
+void BOTAN_FN_ISA_AVX512 Serpent::avx512_decrypt_16(const uint8_t in[16 * 16], uint8_t out[16 * 16]) const {
    using namespace Botan::Serpent_F;
 
    SIMD_16x32 B0 = SIMD_16x32::load_le(in);

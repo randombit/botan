@@ -6,7 +6,7 @@
 
 #include <botan/internal/sm4.h>
 
-#include <botan/compiler.h>
+#include <botan/internal/isa_extn.h>
 #include <arm_neon.h>
 
 namespace Botan {
@@ -33,8 +33,7 @@ inline uint32x4_t bqswap_32(uint32x4_t B) {
    return vreinterpretq_u32_u8(vqtbl1q_u8(vreinterpretq_u8_u32(B), vld1q_u8(bswap_tbl)));
 }
 
-inline void BOTAN_FUNC_ISA("arch=armv8.2-a+sm4")
-   SM4_E(uint32x4_t& B0, uint32x4_t& B1, uint32x4_t& B2, uint32x4_t& B3, uint32x4_t K) {
+inline void BOTAN_FN_ISA_SM4 SM4_E(uint32x4_t& B0, uint32x4_t& B1, uint32x4_t& B2, uint32x4_t& B3, uint32x4_t K) {
    B0 = vsm4eq_u32(B0, K);
    B1 = vsm4eq_u32(B1, K);
    B2 = vsm4eq_u32(B2, K);
@@ -43,9 +42,7 @@ inline void BOTAN_FUNC_ISA("arch=armv8.2-a+sm4")
 
 }  // namespace
 
-void BOTAN_FUNC_ISA("arch=armv8.2-a+sm4") SM4::sm4_armv8_encrypt(const uint8_t input8[],
-                                                                 uint8_t output8[],
-                                                                 size_t blocks) const {
+void BOTAN_FN_ISA_SM4 SM4::sm4_armv8_encrypt(const uint8_t input8[], uint8_t output8[], size_t blocks) const {
    const uint32x4_t K0 = vld1q_u32(&m_RK[0]);
    const uint32x4_t K1 = vld1q_u32(&m_RK[4]);
    const uint32x4_t K2 = vld1q_u32(&m_RK[8]);
@@ -102,9 +99,7 @@ void BOTAN_FUNC_ISA("arch=armv8.2-a+sm4") SM4::sm4_armv8_encrypt(const uint8_t i
    }
 }
 
-void BOTAN_FUNC_ISA("arch=armv8.2-a+sm4") SM4::sm4_armv8_decrypt(const uint8_t input8[],
-                                                                 uint8_t output8[],
-                                                                 size_t blocks) const {
+void BOTAN_FN_ISA_SM4 SM4::sm4_armv8_decrypt(const uint8_t input8[], uint8_t output8[], size_t blocks) const {
    const uint32x4_t K0 = qswap_32(vld1q_u32(&m_RK[0]));
    const uint32x4_t K1 = qswap_32(vld1q_u32(&m_RK[4]));
    const uint32x4_t K2 = qswap_32(vld1q_u32(&m_RK[8]));

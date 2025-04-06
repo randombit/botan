@@ -10,6 +10,7 @@
 #include <botan/internal/sha1.h>
 
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/isa_extn.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/simd_4x32.h>
 #include <botan/internal/stl_util.h>
@@ -108,8 +109,7 @@ inline void F4(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
 * SHA-1 Compression Function using SIMD for message expansion
 */
 //static
-BOTAN_FUNC_ISA(BOTAN_SIMD_ISA)
-void SHA_1::simd_compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
+void BOTAN_FN_ISA_SIMD_4X32 SHA_1::simd_compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
    using namespace SHA1_SIMD_F;
 
    const SIMD_4x32 K00_19 = SIMD_4x32::splat(0x5A827999);

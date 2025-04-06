@@ -6,6 +6,7 @@
 
 #include <botan/zfec.h>
 
+#include <botan/internal/isa_extn.h>
 #include <botan/internal/simd_4x32.h>
 #include <immintrin.h>
 
@@ -23,7 +24,7 @@ inline SIMD_4x32 high_bit_set_u8(SIMD_4x32 v) {
 
 }  // namespace
 
-BOTAN_FUNC_ISA("sse2") size_t ZFEC::addmul_sse2(uint8_t z[], const uint8_t x[], uint8_t y, size_t size) {
+BOTAN_FN_ISA_SSE2 size_t ZFEC::addmul_sse2(uint8_t z[], const uint8_t x[], uint8_t y, size_t size) {
    const SIMD_4x32 polynomial = SIMD_4x32::splat_u8(0x1D);
 
    const size_t orig_size = size;

@@ -7,6 +7,7 @@
 #include <botan/internal/sha2_64.h>
 
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/isa_extn.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/sha2_64_f.h>
 #include <botan/internal/simd_2x64.h>
@@ -14,12 +15,10 @@
 
 namespace Botan {
 
-#define BOTAN_AVX2_BMI2_FN BOTAN_FUNC_ISA("avx2,bmi2")
-
 namespace {
 
 template <typename SIMD_T>
-BOTAN_FORCE_INLINE BOTAN_AVX2_BMI2_FN SIMD_T sha512_next_w(SIMD_T x[8]) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_BMI2 SIMD_T sha512_next_w(SIMD_T x[8]) {
    auto t0 = SIMD_T::alignr8(x[1], x[0]);
    auto t1 = SIMD_T::alignr8(x[5], x[4]);
 
@@ -42,9 +41,9 @@ BOTAN_FORCE_INLINE BOTAN_AVX2_BMI2_FN SIMD_T sha512_next_w(SIMD_T x[8]) {
 
 }  // namespace
 
-BOTAN_AVX2_BMI2_FN void SHA_512::compress_digest_x86_avx2(digest_type& digest,
-                                                          std::span<const uint8_t> input,
-                                                          size_t blocks) {
+BOTAN_FN_ISA_AVX2_BMI2 void SHA_512::compress_digest_x86_avx2(digest_type& digest,
+                                                              std::span<const uint8_t> input,
+                                                              size_t blocks) {
    // clang-format off
    alignas(64) const uint64_t K[80] = {
       0x428A2F98D728AE22, 0x7137449123EF65CD, 0xB5C0FBCFEC4D3B2F, 0xE9B5DBA58189DBBC,

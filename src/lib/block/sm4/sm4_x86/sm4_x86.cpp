@@ -7,18 +7,20 @@
 #include <botan/internal/sm4.h>
 
 #include <botan/mem_ops.h>
+#include <botan/internal/isa_extn.h>
 #include <botan/internal/simd_avx2.h>
 
 namespace Botan {
 
 namespace {
 
-BOTAN_FUNC_ISA_INLINE("sm4,avx2") SIMD_8x32 sm4_x86_rnds4(const SIMD_8x32& b, const SIMD_8x32& k) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_SM4 SIMD_8x32 sm4_x86_rnds4(const SIMD_8x32& b, const SIMD_8x32& k) {
    return SIMD_8x32(_mm256_sm4rnds4_epi32(b.raw(), k.raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("sm4,avx2")
-void sm4_x86_encrypt_x2(uint8_t out[2 * 16], const uint8_t inp[2 * 16], std::span<const uint32_t> RK) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_SM4 void sm4_x86_encrypt_x2(uint8_t out[2 * 16],
+                                                                 const uint8_t inp[2 * 16],
+                                                                 std::span<const uint32_t> RK) {
    auto B0 = SIMD_8x32::load_be(inp);
 
    for(size_t i = 0; i != 8; ++i) {
@@ -29,8 +31,9 @@ void sm4_x86_encrypt_x2(uint8_t out[2 * 16], const uint8_t inp[2 * 16], std::spa
    B0.reverse().store_le(out);
 }
 
-BOTAN_FUNC_ISA_INLINE("sm4,avx2")
-void sm4_x86_encrypt_x8(uint8_t out[8 * 16], const uint8_t inp[8 * 16], std::span<const uint32_t> RK) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_SM4 void sm4_x86_encrypt_x8(uint8_t out[8 * 16],
+                                                                 const uint8_t inp[8 * 16],
+                                                                 std::span<const uint32_t> RK) {
    auto B0 = SIMD_8x32::load_be(inp);
    auto B1 = SIMD_8x32::load_be(inp + 32);
    auto B2 = SIMD_8x32::load_be(inp + 64);
@@ -50,8 +53,9 @@ void sm4_x86_encrypt_x8(uint8_t out[8 * 16], const uint8_t inp[8 * 16], std::spa
    B3.reverse().store_le(out + 96);
 }
 
-BOTAN_FUNC_ISA_INLINE("sm4,avx2")
-void sm4_x86_decrypt_x2(uint8_t out[2 * 16], const uint8_t inp[2 * 16], std::span<const uint32_t> RK) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_SM4 void sm4_x86_decrypt_x2(uint8_t out[2 * 16],
+                                                                 const uint8_t inp[2 * 16],
+                                                                 std::span<const uint32_t> RK) {
    auto B0 = SIMD_8x32::load_be(inp);
 
    for(size_t i = 0; i != 8; ++i) {
@@ -62,8 +66,9 @@ void sm4_x86_decrypt_x2(uint8_t out[2 * 16], const uint8_t inp[2 * 16], std::spa
    B0.reverse().store_le(out);
 }
 
-BOTAN_FUNC_ISA_INLINE("sm4,avx2")
-void sm4_x86_decrypt_x8(uint8_t out[8 * 16], const uint8_t inp[8 * 16], std::span<const uint32_t> RK) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_SM4 void sm4_x86_decrypt_x8(uint8_t out[8 * 16],
+                                                                 const uint8_t inp[8 * 16],
+                                                                 std::span<const uint32_t> RK) {
    auto B0 = SIMD_8x32::load_be(inp);
    auto B1 = SIMD_8x32::load_be(inp + 32);
    auto B2 = SIMD_8x32::load_be(inp + 64);
@@ -85,7 +90,7 @@ void sm4_x86_decrypt_x8(uint8_t out[8 * 16], const uint8_t inp[8 * 16], std::spa
 
 }  // namespace
 
-void BOTAN_FUNC_ISA("sm4,avx2") SM4::sm4_x86_encrypt(const uint8_t inp[], uint8_t out[], size_t blocks) const {
+void BOTAN_FN_ISA_AVX2_SM4 SM4::sm4_x86_encrypt(const uint8_t inp[], uint8_t out[], size_t blocks) const {
    while(blocks >= 8) {
       sm4_x86_encrypt_x8(out, inp, m_RK);
       inp += 8 * 16;
@@ -109,7 +114,7 @@ void BOTAN_FUNC_ISA("sm4,avx2") SM4::sm4_x86_encrypt(const uint8_t inp[], uint8_
    }
 }
 
-void BOTAN_FUNC_ISA("sm4,avx2") SM4::sm4_x86_decrypt(const uint8_t inp[], uint8_t out[], size_t blocks) const {
+void BOTAN_FN_ISA_AVX2_SM4 SM4::sm4_x86_decrypt(const uint8_t inp[], uint8_t out[], size_t blocks) const {
    while(blocks >= 8) {
       sm4_x86_decrypt_x8(out, inp, m_RK);
       inp += 8 * 16;

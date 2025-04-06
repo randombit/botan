@@ -9,14 +9,13 @@
 
 #include <botan/compiler.h>
 #include <botan/types.h>
+#include <botan/internal/isa_extn.h>
 #include <botan/internal/target_info.h>
 
 #if defined(BOTAN_TARGET_CPU_SUPPORTS_SSSE3)
    #include <emmintrin.h>
    #include <tmmintrin.h>
    #define BOTAN_SIMD_USE_SSSE3
-   #define BOTAN_SIMD_2X64_ISA "ssse3"
-   #define BOTAN_SIMD_2X64_FN BOTAN_FUNC_ISA(BOTAN_SIMD_2X64_ISA)
 #endif
 
 namespace Botan {
@@ -40,7 +39,7 @@ class SIMD_2x64 final {
 
       static SIMD_2x64 load_be(const void* in) { return SIMD_2x64::load_le(in).bswap(); }
 
-      SIMD_2x64 BOTAN_SIMD_2X64_FN bswap() const {
+      SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 bswap() const {
          const auto idx = _mm_set_epi8(8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7);
          return SIMD_2x64(_mm_shuffle_epi8(m_simd, idx));
       }
@@ -66,7 +65,7 @@ class SIMD_2x64 final {
       void operator^=(const SIMD_2x64& other) { m_simd = _mm_xor_si128(m_simd, other.m_simd); }
 
       template <size_t ROT>
-      BOTAN_SIMD_2X64_FN SIMD_2x64 rotr() const
+      BOTAN_FN_ISA_SIMD_2X64 SIMD_2x64 rotr() const
          requires(ROT > 0 && ROT < 64)
       {
          if constexpr(ROT == 8) {
@@ -97,7 +96,7 @@ class SIMD_2x64 final {
          return SIMD_2x64(_mm_srli_epi64(m_simd, SHIFT));
       }
 
-      static SIMD_2x64 BOTAN_SIMD_2X64_FN alignr8(const SIMD_2x64& a, const SIMD_2x64& b) {
+      static SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 alignr8(const SIMD_2x64& a, const SIMD_2x64& b) {
          return SIMD_2x64(_mm_alignr_epi8(a.m_simd, b.m_simd, 8));
       }
 

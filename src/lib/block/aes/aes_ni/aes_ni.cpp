@@ -7,6 +7,7 @@
 
 #include <botan/internal/aes.h>
 
+#include <botan/internal/isa_extn.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/simd_4x32.h>
 #include <wmmintrin.h>
@@ -16,8 +17,7 @@ namespace Botan {
 namespace {
 
 template <uint8_t RC>
-BOTAN_FUNC_ISA("ssse3,aes")
-inline __m128i aes_128_key_expansion(__m128i key, __m128i key_getting_rcon) {
+BOTAN_FN_ISA_AESNI inline __m128i aes_128_key_expansion(__m128i key, __m128i key_getting_rcon) {
    __m128i key_with_rcon = _mm_aeskeygenassist_si128(key_getting_rcon, RC);
    key_with_rcon = _mm_shuffle_epi32(key_with_rcon, _MM_SHUFFLE(3, 3, 3, 3));
    key = _mm_xor_si128(key, _mm_slli_si128(key, 4));
@@ -26,7 +26,7 @@ inline __m128i aes_128_key_expansion(__m128i key, __m128i key_getting_rcon) {
    return _mm_xor_si128(key, key_with_rcon);
 }
 
-BOTAN_FUNC_ISA("ssse3")
+BOTAN_FN_ISA_AESNI
 void aes_192_key_expansion(
    __m128i* K1, __m128i* K2, __m128i key2_with_rcon, secure_vector<uint32_t>& out, size_t offset) {
    __m128i key1 = *K1;
@@ -56,7 +56,7 @@ void aes_192_key_expansion(
 /*
 * The second half of the AES-256 key expansion (other half same as AES-128)
 */
-BOTAN_FUNC_ISA("ssse3,aes") __m128i aes_256_key_expansion(__m128i key, __m128i key2) {
+BOTAN_FN_ISA_AESNI __m128i aes_256_key_expansion(__m128i key, __m128i key2) {
    __m128i key_with_rcon = _mm_aeskeygenassist_si128(key2, 0x00);
    key_with_rcon = _mm_shuffle_epi32(key_with_rcon, _MM_SHUFFLE(2, 2, 2, 2));
 
@@ -73,44 +73,48 @@ BOTAN_FORCE_INLINE void keyxor(SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4
    B3 ^= K;
 }
 
-BOTAN_FUNC_ISA_INLINE("aes") void aesenc(SIMD_4x32 K, SIMD_4x32& B) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AESNI void aesenc(SIMD_4x32 K, SIMD_4x32& B) {
    B = SIMD_4x32(_mm_aesenc_si128(B.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("aes") void aesenc(SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AESNI void aesenc(
+   SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) {
    B0 = SIMD_4x32(_mm_aesenc_si128(B0.raw(), K.raw()));
    B1 = SIMD_4x32(_mm_aesenc_si128(B1.raw(), K.raw()));
    B2 = SIMD_4x32(_mm_aesenc_si128(B2.raw(), K.raw()));
    B3 = SIMD_4x32(_mm_aesenc_si128(B3.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("aes") void aesenclast(SIMD_4x32 K, SIMD_4x32& B) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AESNI void aesenclast(SIMD_4x32 K, SIMD_4x32& B) {
    B = SIMD_4x32(_mm_aesenclast_si128(B.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("aes") void aesenclast(SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AESNI void aesenclast(
+   SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) {
    B0 = SIMD_4x32(_mm_aesenclast_si128(B0.raw(), K.raw()));
    B1 = SIMD_4x32(_mm_aesenclast_si128(B1.raw(), K.raw()));
    B2 = SIMD_4x32(_mm_aesenclast_si128(B2.raw(), K.raw()));
    B3 = SIMD_4x32(_mm_aesenclast_si128(B3.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("aes") void aesdec(SIMD_4x32 K, SIMD_4x32& B) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AESNI void aesdec(SIMD_4x32 K, SIMD_4x32& B) {
    B = SIMD_4x32(_mm_aesdec_si128(B.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("aes") void aesdec(SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AESNI void aesdec(
+   SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) {
    B0 = SIMD_4x32(_mm_aesdec_si128(B0.raw(), K.raw()));
    B1 = SIMD_4x32(_mm_aesdec_si128(B1.raw(), K.raw()));
    B2 = SIMD_4x32(_mm_aesdec_si128(B2.raw(), K.raw()));
    B3 = SIMD_4x32(_mm_aesdec_si128(B3.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("aes") void aesdeclast(SIMD_4x32 K, SIMD_4x32& B) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AESNI void aesdeclast(SIMD_4x32 K, SIMD_4x32& B) {
    B = SIMD_4x32(_mm_aesdeclast_si128(B.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("aes") void aesdeclast(SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AESNI void aesdeclast(
+   SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) {
    B0 = SIMD_4x32(_mm_aesdeclast_si128(B0.raw(), K.raw()));
    B1 = SIMD_4x32(_mm_aesdeclast_si128(B1.raw(), K.raw()));
    B2 = SIMD_4x32(_mm_aesdeclast_si128(B2.raw(), K.raw()));
@@ -122,7 +126,7 @@ BOTAN_FUNC_ISA_INLINE("aes") void aesdeclast(SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x
 /*
 * AES-128 Encryption
 */
-BOTAN_FUNC_ISA("ssse3,aes") void AES_128::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FN_ISA_AESNI void AES_128::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_4x32 K0 = SIMD_4x32::load_le(&m_EK[4 * 0]);
    const SIMD_4x32 K1 = SIMD_4x32::load_le(&m_EK[4 * 1]);
    const SIMD_4x32 K2 = SIMD_4x32::load_le(&m_EK[4 * 2]);
@@ -185,7 +189,7 @@ BOTAN_FUNC_ISA("ssse3,aes") void AES_128::hw_aes_encrypt_n(const uint8_t in[], u
 /*
 * AES-128 Decryption
 */
-BOTAN_FUNC_ISA("ssse3,aes") void AES_128::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FN_ISA_AESNI void AES_128::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_4x32 K0 = SIMD_4x32::load_le(&m_DK[4 * 0]);
    const SIMD_4x32 K1 = SIMD_4x32::load_le(&m_DK[4 * 1]);
    const SIMD_4x32 K2 = SIMD_4x32::load_le(&m_DK[4 * 2]);
@@ -248,7 +252,7 @@ BOTAN_FUNC_ISA("ssse3,aes") void AES_128::hw_aes_decrypt_n(const uint8_t in[], u
 /*
 * AES-128 Key Schedule
 */
-BOTAN_FUNC_ISA("ssse3,aes") void AES_128::aesni_key_schedule(const uint8_t key[], size_t /*length*/) {
+BOTAN_FN_ISA_AESNI void AES_128::aesni_key_schedule(const uint8_t key[], size_t /*length*/) {
    m_EK.resize(44);
    m_DK.resize(44);
 
@@ -296,7 +300,7 @@ BOTAN_FUNC_ISA("ssse3,aes") void AES_128::aesni_key_schedule(const uint8_t key[]
 /*
 * AES-192 Encryption
 */
-BOTAN_FUNC_ISA("ssse3,aes") void AES_192::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FN_ISA_AESNI void AES_192::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_4x32 K0 = SIMD_4x32::load_le(&m_EK[4 * 0]);
    const SIMD_4x32 K1 = SIMD_4x32::load_le(&m_EK[4 * 1]);
    const SIMD_4x32 K2 = SIMD_4x32::load_le(&m_EK[4 * 2]);
@@ -366,7 +370,7 @@ BOTAN_FUNC_ISA("ssse3,aes") void AES_192::hw_aes_encrypt_n(const uint8_t in[], u
 /*
 * AES-192 Decryption
 */
-BOTAN_FUNC_ISA("ssse3,aes") void AES_192::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FN_ISA_AESNI void AES_192::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_4x32 K0 = SIMD_4x32::load_le(&m_DK[4 * 0]);
    const SIMD_4x32 K1 = SIMD_4x32::load_le(&m_DK[4 * 1]);
    const SIMD_4x32 K2 = SIMD_4x32::load_le(&m_DK[4 * 2]);
@@ -436,7 +440,7 @@ BOTAN_FUNC_ISA("ssse3,aes") void AES_192::hw_aes_decrypt_n(const uint8_t in[], u
 /*
 * AES-192 Key Schedule
 */
-BOTAN_FUNC_ISA("ssse3,aes") void AES_192::aesni_key_schedule(const uint8_t key[], size_t /*length*/) {
+BOTAN_FN_ISA_AESNI void AES_192::aesni_key_schedule(const uint8_t key[], size_t /*length*/) {
    m_EK.resize(52);
    m_DK.resize(52);
 
@@ -477,7 +481,7 @@ BOTAN_FUNC_ISA("ssse3,aes") void AES_192::aesni_key_schedule(const uint8_t key[]
 /*
 * AES-256 Encryption
 */
-BOTAN_FUNC_ISA("ssse3,aes") void AES_256::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FN_ISA_AESNI void AES_256::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_4x32 K0 = SIMD_4x32::load_le(&m_EK[4 * 0]);
    const SIMD_4x32 K1 = SIMD_4x32::load_le(&m_EK[4 * 1]);
    const SIMD_4x32 K2 = SIMD_4x32::load_le(&m_EK[4 * 2]);
@@ -553,7 +557,7 @@ BOTAN_FUNC_ISA("ssse3,aes") void AES_256::hw_aes_encrypt_n(const uint8_t in[], u
 /*
 * AES-256 Decryption
 */
-BOTAN_FUNC_ISA("ssse3,aes") void AES_256::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FN_ISA_AESNI void AES_256::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_4x32 K0 = SIMD_4x32::load_le(&m_DK[4 * 0]);
    const SIMD_4x32 K1 = SIMD_4x32::load_le(&m_DK[4 * 1]);
    const SIMD_4x32 K2 = SIMD_4x32::load_le(&m_DK[4 * 2]);
@@ -629,7 +633,7 @@ BOTAN_FUNC_ISA("ssse3,aes") void AES_256::hw_aes_decrypt_n(const uint8_t in[], u
 /*
 * AES-256 Key Schedule
 */
-BOTAN_FUNC_ISA("ssse3,aes") void AES_256::aesni_key_schedule(const uint8_t key[], size_t /*length*/) {
+BOTAN_FN_ISA_AESNI void AES_256::aesni_key_schedule(const uint8_t key[], size_t /*length*/) {
    m_EK.resize(60);
    m_DK.resize(60);
 

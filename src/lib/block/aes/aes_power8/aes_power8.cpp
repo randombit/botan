@@ -11,7 +11,7 @@
 
 #include <botan/internal/aes.h>
 
-#include <botan/compiler.h>
+#include <botan/internal/isa_extn.h>
 #include <bit>
 
 #include <altivec.h>
@@ -38,15 +38,15 @@ inline Altivec8x16 reverse_vec(Altivec8x16 src) {
    }
 }
 
-BOTAN_FUNC_ISA("vsx") inline Altivec64x2 load_key(const uint32_t key[]) {
+BOTAN_FN_ISA_AES inline Altivec64x2 load_key(const uint32_t key[]) {
    return reinterpret_cast<Altivec64x2>(reverse_vec(reinterpret_cast<Altivec8x16>(vec_vsx_ld(0, key))));
 }
 
-BOTAN_FUNC_ISA("vsx") inline Altivec64x2 load_block(const uint8_t src[]) {
+BOTAN_FN_ISA_AES inline Altivec64x2 load_block(const uint8_t src[]) {
    return reinterpret_cast<Altivec64x2>(reverse_vec(vec_vsx_ld(0, src)));
 }
 
-BOTAN_FUNC_ISA("vsx") inline void store_block(Altivec64x2 src, uint8_t dest[]) {
+BOTAN_FN_ISA_AES inline void store_block(Altivec64x2 src, uint8_t dest[]) {
    vec_vsx_st(reverse_vec(reinterpret_cast<Altivec8x16>(src)), 0, dest);
 }
 
@@ -99,7 +99,7 @@ inline void store_blocks(Altivec64x2 B0, Altivec64x2 B1, Altivec64x2 B2, Altivec
 
 }  // namespace
 
-BOTAN_FUNC_ISA("crypto,vsx") void AES_128::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FN_ISA_AES void AES_128::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const Altivec64x2 K0 = load_key(&m_EK[0]);
    const Altivec64x2 K1 = load_key(&m_EK[4]);
    const Altivec64x2 K2 = load_key(&m_EK[8]);
@@ -159,7 +159,7 @@ BOTAN_FUNC_ISA("crypto,vsx") void AES_128::hw_aes_encrypt_n(const uint8_t in[], 
    }
 }
 
-BOTAN_FUNC_ISA("crypto,vsx") void AES_128::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FN_ISA_AES void AES_128::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const Altivec64x2 K0 = load_key(&m_EK[40]);
    const Altivec64x2 K1 = load_key(&m_EK[36]);
    const Altivec64x2 K2 = load_key(&m_EK[32]);
@@ -219,7 +219,7 @@ BOTAN_FUNC_ISA("crypto,vsx") void AES_128::hw_aes_decrypt_n(const uint8_t in[], 
    }
 }
 
-BOTAN_FUNC_ISA("crypto,vsx") void AES_192::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FN_ISA_AES void AES_192::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const Altivec64x2 K0 = load_key(&m_EK[0]);
    const Altivec64x2 K1 = load_key(&m_EK[4]);
    const Altivec64x2 K2 = load_key(&m_EK[8]);
@@ -285,7 +285,7 @@ BOTAN_FUNC_ISA("crypto,vsx") void AES_192::hw_aes_encrypt_n(const uint8_t in[], 
    }
 }
 
-BOTAN_FUNC_ISA("crypto,vsx") void AES_192::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FN_ISA_AES void AES_192::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const Altivec64x2 K0 = load_key(&m_EK[48]);
    const Altivec64x2 K1 = load_key(&m_EK[44]);
    const Altivec64x2 K2 = load_key(&m_EK[40]);
@@ -351,7 +351,7 @@ BOTAN_FUNC_ISA("crypto,vsx") void AES_192::hw_aes_decrypt_n(const uint8_t in[], 
    }
 }
 
-BOTAN_FUNC_ISA("crypto,vsx") void AES_256::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FN_ISA_AES void AES_256::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const Altivec64x2 K0 = load_key(&m_EK[0]);
    const Altivec64x2 K1 = load_key(&m_EK[4]);
    const Altivec64x2 K2 = load_key(&m_EK[8]);
@@ -423,7 +423,7 @@ BOTAN_FUNC_ISA("crypto,vsx") void AES_256::hw_aes_encrypt_n(const uint8_t in[], 
    }
 }
 
-BOTAN_FUNC_ISA("crypto,vsx") void AES_256::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FN_ISA_AES void AES_256::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const Altivec64x2 K0 = load_key(&m_EK[56]);
    const Altivec64x2 K1 = load_key(&m_EK[52]);
    const Altivec64x2 K2 = load_key(&m_EK[48]);

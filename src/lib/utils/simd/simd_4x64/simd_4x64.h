@@ -9,12 +9,11 @@
 
 #include <botan/compiler.h>
 #include <botan/types.h>
+#include <botan/internal/isa_extn.h>
 #include <botan/internal/target_info.h>
 
 #if defined(BOTAN_TARGET_CPU_SUPPORTS_AVX2)
    #include <immintrin.h>
-   #define BOTAN_SIMD_4X64_ISA "avx2"
-   #define BOTAN_SIMD_4X64_FN BOTAN_FUNC_ISA(BOTAN_SIMD_4X64_ISA)
 #endif
 
 namespace Botan {
@@ -30,25 +29,25 @@ class SIMD_4x64 final {
       ~SIMD_4x64() = default;
 
       // zero initialized
-      BOTAN_FUNC_ISA("avx2") SIMD_4x64() { m_simd = _mm256_setzero_si256(); }
+      BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64() { m_simd = _mm256_setzero_si256(); }
 
       // Load two halves at different addresses
-      static BOTAN_FUNC_ISA("avx2") SIMD_4x64 load_le2(const void* inl, const void* inh) {
+      static BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 load_le2(const void* inl, const void* inh) {
          return SIMD_4x64(
             _mm256_loadu2_m128i(reinterpret_cast<const __m128i*>(inl), reinterpret_cast<const __m128i*>(inh)));
       }
 
-      static BOTAN_FUNC_ISA("avx2") SIMD_4x64 load_be2(const void* inl, const void* inh) {
+      static BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 load_be2(const void* inl, const void* inh) {
          return SIMD_4x64::load_le2(inl, inh).bswap();
       }
 
-      static BOTAN_FUNC_ISA("avx2") SIMD_4x64 load_le(const void* in) {
+      static BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 load_le(const void* in) {
          return SIMD_4x64(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(in)));
       }
 
-      static BOTAN_FUNC_ISA("avx2") SIMD_4x64 load_be(const void* in) { return SIMD_4x64::load_le(in).bswap(); }
+      static BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 load_be(const void* in) { return SIMD_4x64::load_le(in).bswap(); }
 
-      SIMD_4x64 BOTAN_FUNC_ISA("avx2") bswap() const {
+      SIMD_4x64 BOTAN_FN_ISA_SIMD_4X64 bswap() const {
          const auto idx = _mm256_set_epi8(
             8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7);
 
@@ -57,11 +56,11 @@ class SIMD_4x64 final {
 
       void store_le(uint64_t out[4]) const { this->store_le(reinterpret_cast<uint8_t*>(out)); }
 
-      BOTAN_FUNC_ISA("avx2") void store_le(uint8_t out[]) const {
+      BOTAN_FN_ISA_SIMD_4X64 void store_le(uint8_t out[]) const {
          _mm256_storeu_si256(reinterpret_cast<__m256i*>(out), m_simd);
       }
 
-      BOTAN_FUNC_ISA("avx2") void store_le2(void* outh, void* outl) {
+      BOTAN_FN_ISA_SIMD_4X64 void store_le2(void* outh, void* outl) {
          _mm256_storeu2_m128i(reinterpret_cast<__m128i*>(outh), reinterpret_cast<__m128i*>(outl), m_simd);
       }
 
@@ -77,17 +76,16 @@ class SIMD_4x64 final {
          return retval;
       }
 
-      BOTAN_FUNC_ISA("avx2") void operator+=(const SIMD_4x64& other) {
+      BOTAN_FN_ISA_SIMD_4X64 void operator+=(const SIMD_4x64& other) {
          m_simd = _mm256_add_epi64(m_simd, other.m_simd);
       }
 
-      BOTAN_FUNC_ISA("avx2") void operator^=(const SIMD_4x64& other) {
+      BOTAN_FN_ISA_SIMD_4X64 void operator^=(const SIMD_4x64& other) {
          m_simd = _mm256_xor_si256(m_simd, other.m_simd);
       }
 
       template <size_t ROT>
-      BOTAN_FUNC_ISA("avx2")
-      SIMD_4x64 rotr() const
+      BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 rotr() const
          requires(ROT > 0 && ROT < 64)
       {
 #if defined(__AVX512VL__)
@@ -126,22 +124,22 @@ class SIMD_4x64 final {
       }
 
       template <int SHIFT>
-      SIMD_4x64 BOTAN_FUNC_ISA("avx2") shr() const noexcept {
+      SIMD_4x64 BOTAN_FN_ISA_SIMD_4X64 shr() const noexcept {
          return SIMD_4x64(_mm256_srli_epi64(m_simd, SHIFT));
       }
 
-      static SIMD_4x64 BOTAN_FUNC_ISA("avx2") alignr8(const SIMD_4x64& a, const SIMD_4x64& b) {
+      static SIMD_4x64 BOTAN_FN_ISA_SIMD_4X64 alignr8(const SIMD_4x64& a, const SIMD_4x64& b) {
          return SIMD_4x64(_mm256_alignr_epi8(a.m_simd, b.m_simd, 8));
       }
 
       // Argon2 specific operation
-      static BOTAN_FUNC_ISA("avx2") SIMD_4x64 mul2_32(SIMD_4x64 x, SIMD_4x64 y) {
+      static BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 mul2_32(SIMD_4x64 x, SIMD_4x64 y) {
          const __m256i m = _mm256_mul_epu32(x.m_simd, y.m_simd);
          return SIMD_4x64(_mm256_add_epi64(m, m));
       }
 
       template <uint8_t CTRL>
-      static BOTAN_FUNC_ISA("avx2") SIMD_4x64 permute_4x64(SIMD_4x64 x) {
+      static BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 permute_4x64(SIMD_4x64 x) {
          return SIMD_4x64(_mm256_permute4x64_epi64(x.m_simd, CTRL));
       }
 
@@ -159,7 +157,7 @@ class SIMD_4x64 final {
          D = SIMD_4x64::permute_4x64<0b00'11'10'01>(D);
       }
 
-      explicit BOTAN_FUNC_ISA("avx2") SIMD_4x64(__m256i x) : m_simd(x) {}
+      explicit BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64(__m256i x) : m_simd(x) {}
 
    private:
       __m256i m_simd;

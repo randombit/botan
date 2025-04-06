@@ -7,6 +7,7 @@
 
 #include <botan/internal/ghash.h>
 
+#include <botan/internal/isa_extn.h>
 #include <botan/internal/simd_4x32.h>
 #include <botan/internal/target_info.h>
 #include <bit>
@@ -20,7 +21,7 @@ namespace Botan {
 
 namespace {
 
-BOTAN_FUNC_ISA_INLINE(BOTAN_SIMD_ISA) SIMD_4x32 reverse_vector(const SIMD_4x32& in) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_SIMD_4X32 SIMD_4x32 reverse_vector(const SIMD_4x32& in) {
 #if defined(BOTAN_SIMD_USE_SSSE3)
    const __m128i BSWAP_MASK = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
    return SIMD_4x32(_mm_shuffle_epi8(in.raw(), BSWAP_MASK));
@@ -35,7 +36,7 @@ BOTAN_FUNC_ISA_INLINE(BOTAN_SIMD_ISA) SIMD_4x32 reverse_vector(const SIMD_4x32& 
 }
 
 template <int M>
-BOTAN_FORCE_INLINE SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_CLMUL_ISA) clmul(const SIMD_4x32& H, const SIMD_4x32& x) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_CLMUL SIMD_4x32 clmul(const SIMD_4x32& H, const SIMD_4x32& x) {
    static_assert(M == 0x00 || M == 0x01 || M == 0x10 || M == 0x11, "Valid clmul mode");
 
 #if defined(BOTAN_SIMD_USE_SSSE3)
@@ -94,7 +95,7 @@ BOTAN_FORCE_INLINE SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_CLMUL_ISA) clmul(const SIMD_4x
 #endif
 }
 
-inline SIMD_4x32 gcm_reduce(const SIMD_4x32& B0, const SIMD_4x32& B1) {
+inline SIMD_4x32 BOTAN_FN_ISA_CLMUL gcm_reduce(const SIMD_4x32& B0, const SIMD_4x32& B1) {
    SIMD_4x32 X0 = B1.shr<31>();
    SIMD_4x32 X1 = B1.shl<1>();
    SIMD_4x32 X2 = B0.shr<31>();
@@ -113,7 +114,7 @@ inline SIMD_4x32 gcm_reduce(const SIMD_4x32& B0, const SIMD_4x32& B1) {
    return X0;
 }
 
-inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_CLMUL_ISA) gcm_multiply(const SIMD_4x32& H, const SIMD_4x32& x) {
+inline SIMD_4x32 BOTAN_FN_ISA_CLMUL gcm_multiply(const SIMD_4x32& H, const SIMD_4x32& x) {
    SIMD_4x32 T0 = clmul<0x11>(H, x);
    SIMD_4x32 T1 = clmul<0x10>(H, x);
    SIMD_4x32 T2 = clmul<0x01>(H, x);
@@ -126,14 +127,14 @@ inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_CLMUL_ISA) gcm_multiply(const SIMD_4x32& H
    return gcm_reduce(T0, T3);
 }
 
-inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_CLMUL_ISA) gcm_multiply_x4(const SIMD_4x32& H1,
-                                                                 const SIMD_4x32& H2,
-                                                                 const SIMD_4x32& H3,
-                                                                 const SIMD_4x32& H4,
-                                                                 const SIMD_4x32& X1,
-                                                                 const SIMD_4x32& X2,
-                                                                 const SIMD_4x32& X3,
-                                                                 const SIMD_4x32& X4) {
+inline SIMD_4x32 BOTAN_FN_ISA_CLMUL gcm_multiply_x4(const SIMD_4x32& H1,
+                                                    const SIMD_4x32& H2,
+                                                    const SIMD_4x32& H3,
+                                                    const SIMD_4x32& H4,
+                                                    const SIMD_4x32& X1,
+                                                    const SIMD_4x32& X2,
+                                                    const SIMD_4x32& X3,
+                                                    const SIMD_4x32& X4) {
    /*
    * Mutiply with delayed reduction, algorithm by Krzysztof Jankowski
    * and Pierre Laurent of Intel
@@ -157,7 +158,7 @@ inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_CLMUL_ISA) gcm_multiply_x4(const SIMD_4x32
 
 }  // namespace
 
-BOTAN_FUNC_ISA(BOTAN_SIMD_ISA) void GHASH::ghash_precompute_cpu(const uint8_t H_bytes[16], uint64_t H_pow[4 * 2]) {
+void BOTAN_FN_ISA_CLMUL GHASH::ghash_precompute_cpu(const uint8_t H_bytes[16], uint64_t H_pow[4 * 2]) {
    const SIMD_4x32 H1 = reverse_vector(SIMD_4x32::load_le(H_bytes));
    const SIMD_4x32 H2 = gcm_multiply(H1, H1);
    const SIMD_4x32 H3 = gcm_multiply(H1, H2);
@@ -169,8 +170,10 @@ BOTAN_FUNC_ISA(BOTAN_SIMD_ISA) void GHASH::ghash_precompute_cpu(const uint8_t H_
    H4.store_le(H_pow + 6);
 }
 
-BOTAN_FUNC_ISA(BOTAN_SIMD_ISA)
-void GHASH::ghash_multiply_cpu(uint8_t x[16], const uint64_t H_pow[8], const uint8_t input[], size_t blocks) {
+void BOTAN_FN_ISA_CLMUL GHASH::ghash_multiply_cpu(uint8_t x[16],
+                                                  const uint64_t H_pow[8],
+                                                  const uint8_t input[],
+                                                  size_t blocks) {
    /*
    * Algorithms 1 and 5 from Intel's CLMUL guide
    */

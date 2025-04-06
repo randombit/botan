@@ -6,26 +6,29 @@
 
 #include <botan/internal/sha2_64.h>
 
+#include <botan/internal/isa_extn.h>
 #include <immintrin.h>
 
 namespace Botan {
 
 namespace {
 
-BOTAN_FUNC_ISA_INLINE("sha512,avx2") void sha512_msg_expand(__m256i& m0, __m256i& m1, __m256i& m2, __m256i& m3) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHA512 void sha512_msg_expand(__m256i& m0, __m256i& m1, __m256i& m2, __m256i& m3) {
    m3 = _mm256_sha512msg1_epi64(m3, _mm256_extracti128_si256(m0, 0));
    m2 = _mm256_add_epi64(m2, _mm256_permute4x64_epi64(_mm256_blend_epi32(m0, m1, 3), 0b00111001));
    m2 = _mm256_sha512msg2_epi64(m2, m1);
 }
 
-BOTAN_FUNC_ISA_INLINE("sha512,avx2")
-void sha512_4rounds(__m256i& state0, __m256i& state1, const __m256i msg, const __m256i K) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHA512 void sha512_4rounds(__m256i& state0,
+                                                           __m256i& state1,
+                                                           const __m256i msg,
+                                                           const __m256i K) {
    const auto tmp = _mm256_add_epi64(msg, K);
    state0 = _mm256_sha512rnds2_epi64(state0, state1, _mm256_extracti128_si256(tmp, 0));
    state1 = _mm256_sha512rnds2_epi64(state1, state0, _mm256_extracti128_si256(tmp, 1));
 }
 
-BOTAN_FUNC_ISA_INLINE("avx2") void permute_state(__m256i& state0, __m256i& state1) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 void permute_state(__m256i& state0, __m256i& state1) {
    state0 = _mm256_shuffle_epi32(state0, 0b01001110);
    state1 = _mm256_shuffle_epi32(state1, 0b01001110);
    auto statet = state0;
@@ -35,7 +38,7 @@ BOTAN_FUNC_ISA_INLINE("avx2") void permute_state(__m256i& state0, __m256i& state
 
 }  // namespace
 
-BOTAN_FUNC_ISA("sha512,avx2")
+BOTAN_FN_ISA_SHA512
 void SHA_512::compress_digest_x86(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
    alignas(128) static const uint64_t K[] = {
       0x428A2F98D728AE22, 0x7137449123EF65CD, 0xB5C0FBCFEC4D3B2F, 0xE9B5DBA58189DBBC, 0x3956C25BF348B538,
