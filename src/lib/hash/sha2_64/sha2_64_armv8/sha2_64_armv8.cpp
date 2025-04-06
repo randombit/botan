@@ -7,6 +7,8 @@
 */
 
 #include <botan/internal/sha2_64.h>
+
+#include <botan/internal/isa_extn.h>
 #include <arm_neon.h>
 
 namespace Botan {
@@ -14,8 +16,9 @@ namespace Botan {
 /*
 * SHA-512 using CPU instructions in ARMv8
 */
-BOTAN_FUNC_ISA("arch=armv8.2-a+sha3")
-void SHA_512::compress_digest_armv8(digest_type& digest, std::span<const uint8_t> input8, size_t blocks) {
+void BOTAN_FN_ISA_SHA512 SHA_512::compress_digest_armv8(digest_type& digest,
+                                                        std::span<const uint8_t> input8,
+                                                        size_t blocks) {
    alignas(128) static const uint64_t K[] = {
       0x428A2F98D728AE22, 0x7137449123EF65CD, 0xB5C0FBCFEC4D3B2F, 0xE9B5DBA58189DBBC, 0x3956C25BF348B538,
       0x59F111F1B605D019, 0x923F82A4AF194F9B, 0xAB1C5ED5DA6D8118, 0xD807AA98A3030242, 0x12835B0145706FBE,

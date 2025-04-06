@@ -48,8 +48,7 @@ namespace Botan {
 
 #endif
 
-BOTAN_AVX2_FN
-void Serpent::avx2_encrypt_8(const uint8_t in[128], uint8_t out[128]) const {
+void BOTAN_FN_ISA_AVX2 Serpent::avx2_encrypt_8(const uint8_t in[128], uint8_t out[128]) const {
    using namespace Botan::Serpent_F;
 
    SIMD_8x32::reset_registers();
@@ -172,8 +171,7 @@ void Serpent::avx2_encrypt_8(const uint8_t in[128], uint8_t out[128]) const {
    SIMD_8x32::zero_registers();
 }
 
-BOTAN_AVX2_FN
-void Serpent::avx2_decrypt_8(const uint8_t in[128], uint8_t out[128]) const {
+void BOTAN_FN_ISA_AVX2 Serpent::avx2_decrypt_8(const uint8_t in[128], uint8_t out[128]) const {
    using namespace Botan::Serpent_F;
 
    SIMD_8x32::reset_registers();

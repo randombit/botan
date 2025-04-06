@@ -12,8 +12,7 @@
 namespace Botan {
 
 //static
-BOTAN_AVX2_FN
-void ChaCha::chacha_avx2_x8(uint8_t output[64 * 8], uint32_t state[16], size_t rounds) {
+void BOTAN_FN_ISA_AVX2 ChaCha::chacha_avx2_x8(uint8_t output[64 * 8], uint32_t state[16], size_t rounds) {
    SIMD_8x32::reset_registers();
 
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");

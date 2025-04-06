@@ -8,6 +8,8 @@
 */
 
 #include <botan/internal/sha1.h>
+
+#include <botan/internal/isa_extn.h>
 #include <arm_neon.h>
 
 namespace Botan {
@@ -16,8 +18,9 @@ namespace Botan {
 * SHA-1 using CPU instructions in ARMv8
 */
 //static
-BOTAN_FUNC_ISA("+crypto+sha2")
-void SHA_1::sha1_armv8_compress_n(digest_type& digest, std::span<const uint8_t> input8, size_t blocks) {
+void BOTAN_FN_ISA_SHA2 SHA_1::sha1_armv8_compress_n(digest_type& digest,
+                                                    std::span<const uint8_t> input8,
+                                                    size_t blocks) {
    uint32x4_t ABCD;
    uint32_t E0;
 

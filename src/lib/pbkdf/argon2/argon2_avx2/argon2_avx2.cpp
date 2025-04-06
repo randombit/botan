@@ -7,13 +7,14 @@
 #include <botan/argon2.h>
 
 #include <botan/compiler.h>
+#include <botan/internal/isa_extn.h>
 #include <botan/internal/simd_4x64.h>
 
 namespace Botan {
 
 namespace {
 
-BOTAN_FORCE_INLINE void blamka_G(SIMD_4x64& A, SIMD_4x64& B, SIMD_4x64& C, SIMD_4x64& D) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 void blamka_G(SIMD_4x64& A, SIMD_4x64& B, SIMD_4x64& C, SIMD_4x64& D) {
    A += B + SIMD_4x64::mul2_32(A, B);
    D ^= A;
    D = D.rotr<32>();
@@ -31,7 +32,7 @@ BOTAN_FORCE_INLINE void blamka_G(SIMD_4x64& A, SIMD_4x64& B, SIMD_4x64& C, SIMD_
    B = B.rotr<63>();
 }
 
-BOTAN_FORCE_INLINE void blamka_R(SIMD_4x64& A, SIMD_4x64& B, SIMD_4x64& C, SIMD_4x64& D) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 void blamka_R(SIMD_4x64& A, SIMD_4x64& B, SIMD_4x64& C, SIMD_4x64& D) {
    blamka_G(A, B, C, D);
 
    SIMD_4x64::twist(B, C, D);
@@ -41,7 +42,7 @@ BOTAN_FORCE_INLINE void blamka_R(SIMD_4x64& A, SIMD_4x64& B, SIMD_4x64& C, SIMD_
 
 }  // namespace
 
-BOTAN_FUNC_ISA("avx2") void Argon2::blamka_avx2(uint64_t N[128], uint64_t T[128]) {
+BOTAN_FN_ISA_AVX2 void Argon2::blamka_avx2(uint64_t N[128], uint64_t T[128]) {
    for(size_t i = 0; i != 8; ++i) {
       SIMD_4x64 A = SIMD_4x64::load_le(&N[16 * i + 4 * 0]);
       SIMD_4x64 B = SIMD_4x64::load_le(&N[16 * i + 4 * 1]);

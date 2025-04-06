@@ -45,6 +45,8 @@ BOTAN_FUTURE_INTERNAL_HEADER(compiler.h)
 
 /*
 * Define BOTAN_FUNC_ISA
+*
+* TODO(Botan4) Move this to isa_extn.h
 */
 #if BOTAN_COMPILER_HAS_ATTRIBUTE(target) && !defined(BOTAN_COMPILER_DOES_NOT_HAVE_TARGET_ATTRIBUTE)
    #define BOTAN_FUNC_ISA(isa) BOTAN_COMPILER_ATTRIBUTE(target(isa))
@@ -54,6 +56,8 @@ BOTAN_FUTURE_INTERNAL_HEADER(compiler.h)
 
 /*
 * Define BOTAN_FUNC_ISA_INLINE
+*
+* TODO(Botan4) Remove this
 */
 #define BOTAN_FUNC_ISA_INLINE(isa) BOTAN_FUNC_ISA(isa) BOTAN_FORCE_INLINE
 

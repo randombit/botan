@@ -10,6 +10,7 @@
 
 #include <botan/internal/sha2_32.h>
 
+#include <botan/internal/isa_extn.h>
 #include <botan/internal/simd_4x32.h>
 #include <immintrin.h>
 
@@ -17,20 +18,22 @@ namespace Botan {
 
 namespace {
 
-BOTAN_FUNC_ISA_INLINE("sha,sse2")
-void sha256_rnds4(SIMD_4x32& S0, SIMD_4x32& S1, const SIMD_4x32& msg, const SIMD_4x32& k) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha256_rnds4(SIMD_4x32& S0,
+                                                        SIMD_4x32& S1,
+                                                        const SIMD_4x32& msg,
+                                                        const SIMD_4x32& k) {
    const auto mk = msg + k;
    S1 = SIMD_4x32(_mm_sha256rnds2_epu32(S1.raw(), S0.raw(), mk.raw()));
    S0 = SIMD_4x32(_mm_sha256rnds2_epu32(S0.raw(), S1.raw(), mk.shift_elems_right<2>().raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("sha,ssse3") void sha256_msg_exp(SIMD_4x32& m0, SIMD_4x32& m1, SIMD_4x32& m2) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha256_msg_exp(SIMD_4x32& m0, SIMD_4x32& m1, SIMD_4x32& m2) {
    m2 += SIMD_4x32(_mm_alignr_epi8(m1.raw(), m0.raw(), 4));
    m0 = SIMD_4x32(_mm_sha256msg1_epu32(m0.raw(), m1.raw()));
    m2 = SIMD_4x32(_mm_sha256msg2_epu32(m2.raw(), m1.raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("ssse3,sse4.1") void sha256_permute_state(SIMD_4x32& S0, SIMD_4x32& S1) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha256_permute_state(SIMD_4x32& S0, SIMD_4x32& S1) {
    S0 = SIMD_4x32(_mm_shuffle_epi32(S0.raw(), 0b10110001));  // CDAB
    S1 = SIMD_4x32(_mm_shuffle_epi32(S1.raw(), 0b00011011));  // EFGH
 
@@ -41,8 +44,9 @@ BOTAN_FUNC_ISA_INLINE("ssse3,sse4.1") void sha256_permute_state(SIMD_4x32& S0, S
 
 }  // namespace
 
-BOTAN_FUNC_ISA("sha,sse4.1,ssse3")
-void SHA_256::compress_digest_x86(digest_type& digest, std::span<const uint8_t> input_span, size_t blocks) {
+void BOTAN_FN_ISA_SHANI SHA_256::compress_digest_x86(digest_type& digest,
+                                                     std::span<const uint8_t> input_span,
+                                                     size_t blocks) {
    alignas(64) static const uint32_t K[] = {
       0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5, 0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
       0xD807AA98, 0x12835B01, 0x243185BE, 0x550C7DC3, 0x72BE5D74, 0x80DEB1FE, 0x9BDC06A7, 0xC19BF174,

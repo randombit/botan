@@ -12,6 +12,7 @@
 
 #include <botan/internal/sha1.h>
 
+#include <botan/internal/isa_extn.h>
 #include <botan/internal/simd_4x32.h>
 #include <immintrin.h>
 
@@ -19,24 +20,28 @@ namespace Botan {
 
 namespace {
 
-BOTAN_FUNC_ISA_INLINE("sha") SIMD_4x32 sha1_x86_nexte(const SIMD_4x32& x, const SIMD_4x32& y) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI SIMD_4x32 sha1_x86_nexte(const SIMD_4x32& x, const SIMD_4x32& y) {
    return SIMD_4x32(_mm_sha1nexte_epu32(x.raw(), y.raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("sha") SIMD_4x32 sha1_x86_msg1(const SIMD_4x32& W0, const SIMD_4x32& W1) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI SIMD_4x32 sha1_x86_msg1(const SIMD_4x32& W0, const SIMD_4x32& W1) {
    return SIMD_4x32(_mm_sha1msg1_epu32(W0.raw(), W1.raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("sha,sse2")
-void sha1_x86_next_msg(const SIMD_4x32& W0, SIMD_4x32& W1, SIMD_4x32& W2, SIMD_4x32& W3) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha1_x86_next_msg(const SIMD_4x32& W0,
+                                                             SIMD_4x32& W1,
+                                                             SIMD_4x32& W2,
+                                                             SIMD_4x32& W3) {
    W3 = SIMD_4x32(_mm_sha1msg1_epu32(W3.raw(), W0.raw()));
    W1 = SIMD_4x32(_mm_sha1msg2_epu32(W1.raw(), W0.raw()));
    W2 ^= W0;
 }
 
 template <uint8_t R1, uint8_t R2 = R1>
-BOTAN_FUNC_ISA_INLINE("sha,sse2")
-void sha1_x86_rnds8(SIMD_4x32& ABCD, SIMD_4x32& E, const SIMD_4x32& W0, const SIMD_4x32& W1) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha1_x86_rnds8(SIMD_4x32& ABCD,
+                                                          SIMD_4x32& E,
+                                                          const SIMD_4x32& W0,
+                                                          const SIMD_4x32& W1) {
    auto TE = ABCD;
    ABCD = SIMD_4x32(_mm_sha1rnds4_epu32(ABCD.raw(), sha1_x86_nexte(E, W0).raw(), R1));
 
@@ -44,14 +49,15 @@ void sha1_x86_rnds8(SIMD_4x32& ABCD, SIMD_4x32& E, const SIMD_4x32& W0, const SI
    ABCD = SIMD_4x32(_mm_sha1rnds4_epu32(ABCD.raw(), sha1_x86_nexte(TE, W1).raw(), R2));
 }
 
-BOTAN_FUNC_ISA_INLINE("sse2") SIMD_4x32 rev_words(const SIMD_4x32& v) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI SIMD_4x32 rev_words(const SIMD_4x32& v) {
    return SIMD_4x32(_mm_shuffle_epi32(v.raw(), 0b00011011));
 }
 
 }  // namespace
 
-BOTAN_FUNC_ISA("sha,ssse3,sse4.1")
-void SHA_1::sha1_compress_x86(digest_type& digest, std::span<const uint8_t> input_span, size_t blocks) {
+void BOTAN_FN_ISA_SHANI SHA_1::sha1_compress_x86(digest_type& digest,
+                                                 std::span<const uint8_t> input_span,
+                                                 size_t blocks) {
    const uint8_t* input = input_span.data();
 
    SIMD_4x32 ABCD = rev_words(SIMD_4x32::load_le(&digest[0]));

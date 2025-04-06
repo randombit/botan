@@ -6,6 +6,7 @@
 
 #include <botan/internal/aes.h>
 
+#include <botan/internal/isa_extn.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/simd_avx2.h>
 #include <wmmintrin.h>
@@ -21,48 +22,48 @@ BOTAN_FORCE_INLINE void keyxor(SIMD_8x32 K, SIMD_8x32& B0, SIMD_8x32& B1, SIMD_8
    B3 ^= K;
 }
 
-BOTAN_FUNC_ISA_INLINE("vaes,avx2") void aesenc(SIMD_8x32 K, SIMD_8x32& B) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_VAES void aesenc(SIMD_8x32 K, SIMD_8x32& B) {
    B = SIMD_8x32(_mm256_aesenc_epi128(B.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("vaes,avx2")
-void aesenc(SIMD_8x32 K, SIMD_8x32& B0, SIMD_8x32& B1, SIMD_8x32& B2, SIMD_8x32& B3) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_VAES void aesenc(
+   SIMD_8x32 K, SIMD_8x32& B0, SIMD_8x32& B1, SIMD_8x32& B2, SIMD_8x32& B3) {
    B0 = SIMD_8x32(_mm256_aesenc_epi128(B0.raw(), K.raw()));
    B1 = SIMD_8x32(_mm256_aesenc_epi128(B1.raw(), K.raw()));
    B2 = SIMD_8x32(_mm256_aesenc_epi128(B2.raw(), K.raw()));
    B3 = SIMD_8x32(_mm256_aesenc_epi128(B3.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("vaes,avx2") void aesenclast(SIMD_8x32 K, SIMD_8x32& B) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_VAES void aesenclast(SIMD_8x32 K, SIMD_8x32& B) {
    B = SIMD_8x32(_mm256_aesenclast_epi128(B.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("vaes,avx2")
-void aesenclast(SIMD_8x32 K, SIMD_8x32& B0, SIMD_8x32& B1, SIMD_8x32& B2, SIMD_8x32& B3) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_VAES void aesenclast(
+   SIMD_8x32 K, SIMD_8x32& B0, SIMD_8x32& B1, SIMD_8x32& B2, SIMD_8x32& B3) {
    B0 = SIMD_8x32(_mm256_aesenclast_epi128(B0.raw(), K.raw()));
    B1 = SIMD_8x32(_mm256_aesenclast_epi128(B1.raw(), K.raw()));
    B2 = SIMD_8x32(_mm256_aesenclast_epi128(B2.raw(), K.raw()));
    B3 = SIMD_8x32(_mm256_aesenclast_epi128(B3.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("vaes,avx2") void aesdec(SIMD_8x32 K, SIMD_8x32& B) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_VAES void aesdec(SIMD_8x32 K, SIMD_8x32& B) {
    B = SIMD_8x32(_mm256_aesdec_epi128(B.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("vaes,avx2")
-void aesdec(SIMD_8x32 K, SIMD_8x32& B0, SIMD_8x32& B1, SIMD_8x32& B2, SIMD_8x32& B3) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_VAES void aesdec(
+   SIMD_8x32 K, SIMD_8x32& B0, SIMD_8x32& B1, SIMD_8x32& B2, SIMD_8x32& B3) {
    B0 = SIMD_8x32(_mm256_aesdec_epi128(B0.raw(), K.raw()));
    B1 = SIMD_8x32(_mm256_aesdec_epi128(B1.raw(), K.raw()));
    B2 = SIMD_8x32(_mm256_aesdec_epi128(B2.raw(), K.raw()));
    B3 = SIMD_8x32(_mm256_aesdec_epi128(B3.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("vaes,avx2") void aesdeclast(SIMD_8x32 K, SIMD_8x32& B) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_VAES void aesdeclast(SIMD_8x32 K, SIMD_8x32& B) {
    B = SIMD_8x32(_mm256_aesdeclast_epi128(B.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA_INLINE("vaes,avx2")
-void aesdeclast(SIMD_8x32 K, SIMD_8x32& B0, SIMD_8x32& B1, SIMD_8x32& B2, SIMD_8x32& B3) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_VAES void aesdeclast(
+   SIMD_8x32 K, SIMD_8x32& B0, SIMD_8x32& B1, SIMD_8x32& B2, SIMD_8x32& B3) {
    B0 = SIMD_8x32(_mm256_aesdeclast_epi128(B0.raw(), K.raw()));
    B1 = SIMD_8x32(_mm256_aesdeclast_epi128(B1.raw(), K.raw()));
    B2 = SIMD_8x32(_mm256_aesdeclast_epi128(B2.raw(), K.raw()));
@@ -74,7 +75,7 @@ void aesdeclast(SIMD_8x32 K, SIMD_8x32& B0, SIMD_8x32& B1, SIMD_8x32& B2, SIMD_8
 /*
 * AES-128 Encryption
 */
-BOTAN_FUNC_ISA("vaes,avx2") void AES_128::x86_vaes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FN_ISA_AVX2_VAES void AES_128::x86_vaes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_8x32 K0 = SIMD_8x32::load_le128(&m_EK[4 * 0]);
    const SIMD_8x32 K1 = SIMD_8x32::load_le128(&m_EK[4 * 1]);
    const SIMD_8x32 K2 = SIMD_8x32::load_le128(&m_EK[4 * 2]);
@@ -159,7 +160,7 @@ BOTAN_FUNC_ISA("vaes,avx2") void AES_128::x86_vaes_encrypt_n(const uint8_t in[],
 /*
 * AES-128 Decryption
 */
-BOTAN_FUNC_ISA("vaes,avx2") void AES_128::x86_vaes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FN_ISA_AVX2_VAES void AES_128::x86_vaes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_8x32 K0 = SIMD_8x32::load_le128(&m_DK[4 * 0]);
    const SIMD_8x32 K1 = SIMD_8x32::load_le128(&m_DK[4 * 1]);
    const SIMD_8x32 K2 = SIMD_8x32::load_le128(&m_DK[4 * 2]);
@@ -244,7 +245,7 @@ BOTAN_FUNC_ISA("vaes,avx2") void AES_128::x86_vaes_decrypt_n(const uint8_t in[],
 /*
 * AES-192 Encryption
 */
-BOTAN_FUNC_ISA("vaes,avx2") void AES_192::x86_vaes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FN_ISA_AVX2_VAES void AES_192::x86_vaes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_8x32 K0 = SIMD_8x32::load_le128(&m_EK[4 * 0]);
    const SIMD_8x32 K1 = SIMD_8x32::load_le128(&m_EK[4 * 1]);
    const SIMD_8x32 K2 = SIMD_8x32::load_le128(&m_EK[4 * 2]);
@@ -337,7 +338,7 @@ BOTAN_FUNC_ISA("vaes,avx2") void AES_192::x86_vaes_encrypt_n(const uint8_t in[],
 /*
 * AES-192 Decryption
 */
-BOTAN_FUNC_ISA("vaes,avx2") void AES_192::x86_vaes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FN_ISA_AVX2_VAES void AES_192::x86_vaes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_8x32 K0 = SIMD_8x32::load_le128(&m_DK[4 * 0]);
    const SIMD_8x32 K1 = SIMD_8x32::load_le128(&m_DK[4 * 1]);
    const SIMD_8x32 K2 = SIMD_8x32::load_le128(&m_DK[4 * 2]);
@@ -427,7 +428,7 @@ BOTAN_FUNC_ISA("vaes,avx2") void AES_192::x86_vaes_decrypt_n(const uint8_t in[],
    }
 }
 
-BOTAN_FUNC_ISA("vaes,avx2") void AES_256::x86_vaes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FN_ISA_AVX2_VAES void AES_256::x86_vaes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_8x32 K0 = SIMD_8x32::load_le128(&m_EK[4 * 0]);
    const SIMD_8x32 K1 = SIMD_8x32::load_le128(&m_EK[4 * 1]);
    const SIMD_8x32 K2 = SIMD_8x32::load_le128(&m_EK[4 * 2]);
@@ -528,7 +529,7 @@ BOTAN_FUNC_ISA("vaes,avx2") void AES_256::x86_vaes_encrypt_n(const uint8_t in[],
 /*
 * AES-256 Decryption
 */
-BOTAN_FUNC_ISA("vaes,avx2") void AES_256::x86_vaes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FN_ISA_AVX2_VAES void AES_256::x86_vaes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_8x32 K0 = SIMD_8x32::load_le128(&m_DK[4 * 0]);
    const SIMD_8x32 K1 = SIMD_8x32::load_le128(&m_DK[4 * 1]);
    const SIMD_8x32 K2 = SIMD_8x32::load_le128(&m_DK[4 * 2]);

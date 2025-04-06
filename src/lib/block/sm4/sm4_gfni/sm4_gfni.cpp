@@ -7,6 +7,7 @@
 #include <botan/internal/sm4.h>
 
 #include <botan/mem_ops.h>
+#include <botan/internal/isa_extn.h>
 #include <botan/internal/simd_avx2.h>
 #include <botan/internal/simd_avx2_gfni.h>
 
@@ -14,7 +15,7 @@ namespace Botan {
 
 namespace {
 
-BOTAN_FUNC_ISA_INLINE(BOTAN_GFNI_ISA) SIMD_8x32 sm4_sbox(const SIMD_8x32& x) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_GFNI SIMD_8x32 sm4_sbox(const SIMD_8x32& x) {
    /*
    * See https://eprint.iacr.org/2022/1154 section 3.3 for details on
    * how this works
@@ -47,13 +48,14 @@ BOTAN_FUNC_ISA_INLINE(BOTAN_GFNI_ISA) SIMD_8x32 sm4_sbox(const SIMD_8x32& x) {
    return gf2p8affineinv<post_a, post_c>(y);
 }
 
-BOTAN_FUNC_ISA_INLINE(BOTAN_GFNI_ISA) SIMD_8x32 sm4_f(const SIMD_8x32& x) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_GFNI SIMD_8x32 sm4_f(const SIMD_8x32& x) {
    SIMD_8x32 sx = sm4_sbox(x);
    return sx ^ sx.rotl<2>() ^ sx.rotl<10>() ^ sx.rotl<18>() ^ sx.rotl<24>();
 }
 
-BOTAN_FUNC_ISA_INLINE(BOTAN_GFNI_ISA)
-void sm4_gfni_encrypt_8(const uint8_t ptext[8 * 16], uint8_t ctext[8 * 16], std::span<const uint32_t> RK) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_GFNI void sm4_gfni_encrypt_8(const uint8_t ptext[8 * 16],
+                                                                  uint8_t ctext[8 * 16],
+                                                                  std::span<const uint32_t> RK) {
    SIMD_8x32 B0 = SIMD_8x32::load_be(ptext);
    SIMD_8x32 B1 = SIMD_8x32::load_be(ptext + 16 * 2);
    SIMD_8x32 B2 = SIMD_8x32::load_be(ptext + 16 * 4);
@@ -81,8 +83,9 @@ void sm4_gfni_encrypt_8(const uint8_t ptext[8 * 16], uint8_t ctext[8 * 16], std:
    B0.rev_words().store_be(ctext + 16 * 6);
 }
 
-BOTAN_FUNC_ISA_INLINE(BOTAN_GFNI_ISA)
-void sm4_gfni_decrypt_8(const uint8_t ctext[8 * 16], uint8_t ptext[8 * 16], std::span<const uint32_t> RK) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_GFNI void sm4_gfni_decrypt_8(const uint8_t ctext[8 * 16],
+                                                                  uint8_t ptext[8 * 16],
+                                                                  std::span<const uint32_t> RK) {
    SIMD_8x32 B0 = SIMD_8x32::load_be(ctext);
    SIMD_8x32 B1 = SIMD_8x32::load_be(ctext + 16 * 2);
    SIMD_8x32 B2 = SIMD_8x32::load_be(ctext + 16 * 4);
@@ -112,7 +115,7 @@ void sm4_gfni_decrypt_8(const uint8_t ctext[8 * 16], uint8_t ptext[8 * 16], std:
 
 }  // namespace
 
-void BOTAN_FUNC_ISA("gfni,avx2") SM4::sm4_gfni_encrypt(const uint8_t ptext[], uint8_t ctext[], size_t blocks) const {
+void BOTAN_FN_ISA_AVX2_GFNI SM4::sm4_gfni_encrypt(const uint8_t ptext[], uint8_t ctext[], size_t blocks) const {
    while(blocks >= 8) {
       sm4_gfni_encrypt_8(ptext, ctext, m_RK);
       ptext += 16 * 8;
@@ -129,7 +132,7 @@ void BOTAN_FUNC_ISA("gfni,avx2") SM4::sm4_gfni_encrypt(const uint8_t ptext[], ui
    }
 }
 
-void BOTAN_FUNC_ISA("gfni,avx2") SM4::sm4_gfni_decrypt(const uint8_t ctext[], uint8_t ptext[], size_t blocks) const {
+void BOTAN_FN_ISA_AVX2_GFNI SM4::sm4_gfni_decrypt(const uint8_t ctext[], uint8_t ptext[], size_t blocks) const {
    while(blocks >= 8) {
       sm4_gfni_decrypt_8(ctext, ptext, m_RK);
       ptext += 16 * 8;

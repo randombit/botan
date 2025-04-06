@@ -6,7 +6,7 @@
 
 #include <botan/internal/shacal2.h>
 
-#include <botan/compiler.h>
+#include <botan/internal/isa_extn.h>
 #include <arm_neon.h>
 
 namespace Botan {
@@ -15,7 +15,7 @@ namespace Botan {
 Only encryption is supported since the inverse round function would
 require a different instruction
 */
-BOTAN_FUNC_ISA("+crypto+sha2")
+BOTAN_FN_ISA_SHA2
 void SHACAL2::armv8_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const uint32_t* input32 = reinterpret_cast<const uint32_t*>(in);
    uint32_t* output32 = reinterpret_cast<uint32_t*>(out);

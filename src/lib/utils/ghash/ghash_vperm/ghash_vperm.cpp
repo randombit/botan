@@ -6,14 +6,14 @@
 
 #include <botan/internal/ghash.h>
 
-#include <botan/compiler.h>
+#include <botan/internal/isa_extn.h>
 #include <immintrin.h>
 
 namespace Botan {
 
 // TODO: extend this to support NEON and AltiVec
 
-BOTAN_FUNC_ISA("ssse3")
+BOTAN_FN_ISA_SIMD_4X32
 void GHASH::ghash_multiply_vperm(uint8_t x[16], const uint64_t HM[256], const uint8_t input_bytes[], size_t blocks) {
    const __m128i BSWAP_MASK = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
 

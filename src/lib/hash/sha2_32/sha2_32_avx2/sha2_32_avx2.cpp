@@ -7,6 +7,7 @@
 #include <botan/internal/sha2_32.h>
 
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/isa_extn.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/sha2_32_f.h>
 #include <botan/internal/simd_4x32.h>
@@ -16,40 +17,38 @@
 
 namespace Botan {
 
-#define BOTAN_AVX2_BMI2_FN BOTAN_FUNC_ISA("avx2,bmi2")
-
 namespace {
 
-BOTAN_AVX2_BMI2_FN inline SIMD_4x32 alignr4(const SIMD_4x32& a, const SIMD_4x32& b) {
+BOTAN_FN_ISA_AVX2_BMI2 inline SIMD_4x32 alignr4(const SIMD_4x32& a, const SIMD_4x32& b) {
    return SIMD_4x32(_mm_alignr_epi8(a.raw(), b.raw(), 4));
 }
 
 template <size_t S>
-BOTAN_AVX2_BMI2_FN inline SIMD_4x32 shr64(const SIMD_4x32& a) {
+BOTAN_FN_ISA_AVX2_BMI2 inline SIMD_4x32 shr64(const SIMD_4x32& a) {
    return SIMD_4x32(_mm_srli_epi64(a.raw(), S));
 }
 
 template <uint8_t S>
-BOTAN_AVX2_BMI2_FN inline SIMD_4x32 shuffle_32(const SIMD_4x32& a) {
+BOTAN_FN_ISA_AVX2_BMI2 inline SIMD_4x32 shuffle_32(const SIMD_4x32& a) {
    return SIMD_4x32(_mm_shuffle_epi32(a.raw(), S));
 }
 
-BOTAN_AVX2_BMI2_FN inline SIMD_8x32 alignr4(const SIMD_8x32& a, const SIMD_8x32& b) {
+BOTAN_FN_ISA_AVX2_BMI2 inline SIMD_8x32 alignr4(const SIMD_8x32& a, const SIMD_8x32& b) {
    return SIMD_8x32(_mm256_alignr_epi8(a.raw(), b.raw(), 4));
 }
 
 template <size_t S>
-BOTAN_AVX2_BMI2_FN inline SIMD_8x32 shr64(const SIMD_8x32& a) {
+BOTAN_FN_ISA_AVX2_BMI2 inline SIMD_8x32 shr64(const SIMD_8x32& a) {
    return SIMD_8x32(_mm256_srli_epi64(a.raw(), S));
 }
 
 template <uint8_t S>
-BOTAN_AVX2_BMI2_FN inline SIMD_8x32 shuffle_32(const SIMD_8x32& a) {
+BOTAN_FN_ISA_AVX2_BMI2 inline SIMD_8x32 shuffle_32(const SIMD_8x32& a) {
    return SIMD_8x32(_mm256_shuffle_epi32(a.raw(), S));
 }
 
 template <typename SIMD_T>
-BOTAN_AVX2_BMI2_FN BOTAN_FORCE_INLINE SIMD_T next_w(SIMD_T x[4]) {
+BOTAN_FN_ISA_AVX2_BMI2 BOTAN_FORCE_INLINE SIMD_T next_w(SIMD_T x[4]) {
    constexpr size_t sigma0_0 = 7;
    constexpr size_t sigma0_1 = 18;
    constexpr size_t sigma0_2 = 3;
@@ -98,9 +97,9 @@ BOTAN_AVX2_BMI2_FN BOTAN_FORCE_INLINE SIMD_T next_w(SIMD_T x[4]) {
 
 }  // namespace
 
-BOTAN_AVX2_BMI2_FN void SHA_256::compress_digest_x86_avx2(digest_type& digest,
-                                                          std::span<const uint8_t> input,
-                                                          size_t blocks) {
+BOTAN_FN_ISA_AVX2_BMI2 void SHA_256::compress_digest_x86_avx2(digest_type& digest,
+                                                              std::span<const uint8_t> input,
+                                                              size_t blocks) {
    // clang-format off
 
    alignas(64) const uint32_t K[64] = {

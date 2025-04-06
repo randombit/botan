@@ -12,8 +12,7 @@
 namespace Botan {
 
 //static
-BOTAN_AVX512_FN
-void ChaCha::chacha_avx512_x16(uint8_t output[64 * 16], uint32_t state[16], size_t rounds) {
+void BOTAN_FN_ISA_AVX512 ChaCha::chacha_avx512_x16(uint8_t output[64 * 16], uint32_t state[16], size_t rounds) {
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
    const SIMD_16x32 CTR0 = SIMD_16x32(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
 
