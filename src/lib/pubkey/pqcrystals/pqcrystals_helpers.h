@@ -97,7 +97,7 @@ consteval T modular_inverse(T q, T2 m = T2(1) << sizeof(T) * 8) {
 
 constexpr auto bitlen(size_t x) {
    return ceil_log2(x + 1);
-};
+}
 
 /**
  * Precompute the zeta-values for the NTT. Note that the pre-computed values

@@ -84,6 +84,6 @@ secure_vector<uint8_t> ML_KEM_Expanding_Keypair_Codec::encode_keypair(KyberInter
    const auto& seed = keypair.second->seed();
    BOTAN_ARG_CHECK(seed.d.has_value(), "Cannot encode keypair without the full private seed");
    return concat<secure_vector<uint8_t>>(seed.d.value(), seed.z);
-};
+}
 
 }  // namespace Botan

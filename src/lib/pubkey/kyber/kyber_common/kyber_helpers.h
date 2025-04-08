@@ -54,7 +54,7 @@ constexpr std::make_unsigned_t<KyberConstants::T> compress(KyberConstants::T x) 
    constexpr size_t p = 33;
    constexpr unsigned_T mask = (1 << d) - 1;
    return static_cast<unsigned_T>((n * m) >> p) & mask;
-};
+}
 
 /**
  * NIST FIPS 203, Formula 4.8 (Decompress)
