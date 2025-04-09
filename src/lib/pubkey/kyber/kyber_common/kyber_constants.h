@@ -110,14 +110,16 @@ class KyberConstants final {
       /// byte length of an encoded public key
       size_t public_key_bytes() const { return polynomial_vector_bytes() + SEED_BYTES; }
 
-      /// byte length of an encoded private key
-      size_t private_key_bytes() const { return m_private_key_bytes; }
+      /// byte length of a private key with expanded encoding as defined
+      //  in FIPS 203
+      size_t expanded_private_key_bytes() const { return m_expanded_private_key_bytes; }
+
+      /// byte length of an private key encoded as the seed: d || z
+      size_t seed_private_key_bytes() const { return m_seed_private_key_bytes; }
 
       /// @}
 
       Kyber_Symmetric_Primitives& symmetric_primitives() const { return *m_symmetric_primitives; }
-
-      Kyber_Keypair_Codec& keypair_codec() const { return *m_keypair_codec; }
 
    private:
       KyberMode m_mode;
@@ -131,9 +133,10 @@ class KyberConstants final {
       uint32_t m_polynomial_vector_bytes;
       uint32_t m_polynomial_vector_compressed_bytes;
       uint32_t m_polynomial_compressed_bytes;
-      uint32_t m_private_key_bytes;
 
-      std::unique_ptr<Kyber_Keypair_Codec> m_keypair_codec;
+      uint32_t m_expanded_private_key_bytes;
+      uint32_t m_seed_private_key_bytes;
+
       std::unique_ptr<Kyber_Symmetric_Primitives> m_symmetric_primitives;
 };
 

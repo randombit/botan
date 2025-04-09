@@ -77,6 +77,17 @@ class BOTAN_PUBLIC_API(3, 0) KyberMode {
       Mode m_mode;
 };
 
+/// Byte encoding format of ML-KEM and ML-DSA the private key
+enum class MlPrivateKeyFormat {
+   /// Only supported for ML-KEM/ML-DSA keys:
+   /// - ML-KEM: 64-byte seed: d || z
+   /// - ML-DSA: 32-byte seed: xi (private_key_bits_with_format not yet
+   ///   yet supported for ML-DSA)
+   Seed,
+   /// The expanded format, i.e., the format specified in FIPS-203/204.
+   Expanded,
+};
+
 class Kyber_PublicKeyInternal;
 class Kyber_PrivateKeyInternal;
 
@@ -138,10 +149,28 @@ BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_PublicKey,
                                                       public virtual Private_Key {
    public:
+      /**
+       * Create a new private key. The private key will be encoded as the 64 byte
+       * seed.
+       */
       Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode mode);
 
+      /**
+       * Import a private key using its key bytes. Supported are key bytes as
+       * 64-byte seeds (not supported for Kyber Round 3 instances),
+       * as well as the expanded encoding specified by FIPS 203. Note that the
+       * encoding used in this constructor is reflected by the calls for
+       * private_key_bits, private_key_info, etc.
+       */
       Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode mode);
 
+      /**
+       * Import a private key using its key bytes. Supported are key bytes as
+       * 64-byte seeds (not supported for Kyber Round 3 instances),
+       * as well as the expanded encoding specified by FIPS 203. Note that the
+       * encoding used in this constructor is reflected by the calls for
+       * private_key_bits, private_key_info, etc.
+       */
       Kyber_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
 
       std::unique_ptr<Public_Key> public_key() const override;
@@ -155,6 +184,26 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
       std::unique_ptr<PK_Ops::KEM_Decryption> create_kem_decryption_op(RandomNumberGenerator& rng,
                                                                        std::string_view params,
                                                                        std::string_view provider) const override;
+
+      /**
+       * The private key format from which the key was loaded. It is the format
+       * used for the private_key_bits(), raw_private_key_bits() andFIPS
+       * private_key_info() methods.
+       *
+       * Note that keys in Seed format can be serialized to Expanded format
+       * using the method private_key_bits_with_format but NOT the other way
+       * around.
+       */
+      MlPrivateKeyFormat private_key_format() const;
+
+      /**
+       * Encode the private key in the specified format. Note that the seed
+       * format is only available for new ML-KEM keys and those loaded from
+       * seeds.
+       * @throws Encoding_Error if the private key cannot be encoded in the
+       *         requested format.
+       */
+      secure_vector<uint8_t> private_key_bits_with_format(MlPrivateKeyFormat format) const;
 
    private:
       friend class Kyber_KEM_Decryptor;

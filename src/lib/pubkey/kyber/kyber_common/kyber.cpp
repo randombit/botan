@@ -242,12 +242,15 @@ Kyber_PrivateKey::Kyber_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<
 Kyber_PrivateKey::Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode m) {
    KyberConstants mode(m);
 
-   if(mode.private_key_bytes() != sk.size()) {
+   if(mode.mode().is_ml_kem() && sk.size() == mode.seed_private_key_bytes()) {
+      std::tie(m_public, m_private) = Seed_Expanding_Keypair_Codec().decode_keypair(sk, std::move(mode));
+   } else if(sk.size() == mode.expanded_private_key_bytes()) {
+      std::tie(m_public, m_private) = Expanded_Keypair_Codec().decode_keypair(sk, std::move(mode));
+   } else if(!mode.mode().is_ml_kem() && sk.size() == mode.seed_private_key_bytes()) {
+      throw Invalid_Argument("Kyber round 3 private keys do not support the seed format");
+   } else {
       throw Invalid_Argument("Private key does not have the correct byte count");
    }
-
-   const auto& codec = mode.keypair_codec();
-   std::tie(m_public, m_private) = codec.decode_keypair(sk, std::move(mode));
 }
 
 std::unique_ptr<Public_Key> Kyber_PrivateKey::public_key() const {
@@ -259,7 +262,7 @@ secure_vector<uint8_t> Kyber_PrivateKey::raw_private_key_bits() const {
 }
 
 secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits() const {
-   return m_private->mode().keypair_codec().encode_keypair({m_public, m_private});
+   return private_key_bits_with_format(private_key_format());
 }
 
 bool Kyber_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
@@ -325,4 +328,26 @@ std::unique_ptr<PK_Ops::KEM_Decryption> Kyber_PrivateKey::create_kem_decryption_
    throw Provider_Not_Found(algo_name(), provider);
 }
 
+MlPrivateKeyFormat Kyber_PrivateKey::private_key_format() const {
+   if(mode().is_ml_kem() && m_private->seed().d.has_value()) {
+      return MlPrivateKeyFormat::Seed;
+   }
+   return MlPrivateKeyFormat::Expanded;
+}
+
+secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits_with_format(MlPrivateKeyFormat format) const {
+   if(format == MlPrivateKeyFormat::Seed && private_key_format() != MlPrivateKeyFormat::Seed) {
+      throw Encoding_Error("Expanded private keys do not support the seed format");
+   }
+   const auto codec = [&]() -> std::unique_ptr<Kyber_Keypair_Codec> {
+      switch(format) {
+         case MlPrivateKeyFormat::Seed:
+            return std::make_unique<Seed_Expanding_Keypair_Codec>();
+         case MlPrivateKeyFormat::Expanded:
+            return std::make_unique<Expanded_Keypair_Codec>();
+      }
+      BOTAN_ASSERT_UNREACHABLE();
+   }();
+   return codec->encode_keypair({m_public, m_private});
+}
 }  // namespace Botan
