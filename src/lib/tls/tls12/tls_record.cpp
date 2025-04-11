@@ -15,6 +15,7 @@
 #include <botan/tls_exceptn.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/stl_util.h>
 #include <botan/internal/tls_seq_numbers.h>
 #include <botan/internal/tls_session_key.h>
 #include <sstream>
@@ -88,16 +89,13 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(uint64_t seq, RandomNum
       }
       case Nonce_Format::AEAD_XOR_12: {
          std::vector<uint8_t> nonce(12);
-         store_be(seq, nonce.data() + 4);
-         xor_buf(nonce, m_nonce.data(), m_nonce.size());
+         store_be(seq, std::span{nonce}.last<8>());
+         xor_buf(nonce, m_nonce);
          return nonce;
       }
       case Nonce_Format::AEAD_IMPLICIT_4: {
          BOTAN_ASSERT_NOMSG(m_nonce.size() == 4);
-         std::vector<uint8_t> nonce(12);
-         copy_mem(&nonce[0], m_nonce.data(), 4);
-         store_be(seq, &nonce[nonce_bytes_from_handshake()]);
-         return nonce;
+         return concat(m_nonce, store_be(seq));
       }
    }
 
@@ -120,8 +118,8 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(const uint8_t record[],
       }
       case Nonce_Format::AEAD_XOR_12: {
          std::vector<uint8_t> nonce(12);
-         store_be(seq, nonce.data() + 4);
-         xor_buf(nonce, m_nonce.data(), m_nonce.size());
+         store_be(seq, std::span{nonce}.last<8>());
+         xor_buf(nonce, m_nonce);
          return nonce;
       }
       case Nonce_Format::AEAD_IMPLICIT_4: {
@@ -129,10 +127,7 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(const uint8_t record[],
          if(record_len < nonce_bytes_from_record()) {
             throw Decoding_Error("Invalid AEAD packet too short to be valid");
          }
-         std::vector<uint8_t> nonce(12);
-         copy_mem(&nonce[0], m_nonce.data(), 4);
-         copy_mem(&nonce[nonce_bytes_from_handshake()], record, nonce_bytes_from_record());
-         return nonce;
+         return concat(m_nonce, std::span{record, record_len}.first(nonce_bytes_from_record()));
       }
    }
 
