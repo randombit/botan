@@ -280,6 +280,27 @@ and are completely obscure and unused outside of that context.
 
 GOST-34.10 support is deprecated.
 
+KEM Combiner
+------------
+
+A KEM Combiner is a key encapsulation mechanism (KEM) that combines multiple
+KEMs into a single KEM. The resulting KEM is secure if at least one combined
+KEM is secure. Usually, the KEM Combiner combines a classical KEM with a
+post-quantum secure KEM. Note that every key exchange algorithm can also be
+described as a KEM.
+
+Ounsworth KEM Combiner
+~~~~~~~~~~~~~~~~~~~~~~
+
+This combiner is based on
+`draft-ounsworth-cfrg-kem-combiners-05 <https://github.com/EntrustCorporation/draft-ounsworth-cfrg-kem-combiners/blob/475ff53eb8fb7213f6e5ab26dd23e5dc3203f7fa/draft-ounsworth-cfrg-kem-combiners.txt>`_
+(Feb 2024). It is a generic combiner that achieves IND-CCA security if at least
+one combined KEM is. Every KEM that implements Botan's private and public key
+interfaces can be an ingredient of this combiner. However, some KEMs are
+predefined for easier usage. The predefined KEMs are Kyber (Round 3) and
+FrodoKEM for post-quantum security and X25519, X448, and ECDH (with various
+named curves) as classical key exchange algorithms formulated as KEMs.
+
 .. _creating_new_private_keys:
 
 Creating New Private Keys

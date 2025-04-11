@@ -43,6 +43,19 @@ Values currently assigned are::
   kyber-768-90s  OBJECT IDENTIFIER ::= { kyber-90s 2 }
   kyber-1024-90s OBJECT IDENTIFIER ::= { kyber-90s 3 }
 
+  ounsworth-kem-combiner OBJECT IDENTIFIER ::= { publicKey 20 }
+
+  ounsworth-kem-combiner-kyber-768-r3-x25519-kmac-256 OBJECT IDENTIFIER ::= { ounsworth-kem-combiner 1 }
+  ounsworth-kem-combiner-kyber-1024-r3-x448-kmac-256 OBJECT IDENTIFIER ::= { ounsworth-kem-combiner 2 }
+
+  ounsworth-kem-combiner-kyber-512-r3-ecdh-secp256r1-kmac-128 OBJECT IDENTIFIER ::= { ounsworth-kem-combiner 3 }
+  ounsworth-kem-combiner-kyber-768-r3-ecdh-secp384r1-kmac-256 OBJECT IDENTIFIER ::= { ounsworth-kem-combiner 4 }
+  ounsworth-kem-combiner-kyber-1024-r3-ecdh-secp512r1-kmac-256 OBJECT IDENTIFIER ::= { ounsworth-kem-combiner 5 }
+
+  ounsworth-kem-combiner-frodokem-640-shake-ecdh-brainpool256r1-kmac-128 OBJECT IDENTIFIER ::= { ounsworth-kem-combiner 6 }
+  ounsworth-kem-combiner-frodokem-976-shake-ecdh-brainpool384r1-kmac-256 OBJECT IDENTIFIER ::= { ounsworth-kem-combiner 7 }
+  ounsworth-kem-combiner-frodokem-1344-shake-ecdh-brainpool512r1-kmac-256 OBJECT IDENTIFIER ::= { ounsworth-kem-combiner 8 }
+
   xmss        OBJECT IDENTIFIER ::= { publicKey 8 }
 
   -- The current dilithium implementation is compatible with the reference

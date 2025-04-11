@@ -62,6 +62,19 @@
 1.3.6.1.4.1.25258.1.11.2 = Kyber-768-90s-r3
 1.3.6.1.4.1.25258.1.11.3 = Kyber-1024-90s-r3
 
+# Ounsworth KEM Combiner Draft (Feb 2024)
+# https://github.com/EntrustCorporation/draft-ounsworth-cfrg-kem-combiners/blob/475ff53eb8fb7213f6e5ab26dd23e5dc3203f7fa/draft-ounsworth-cfrg-kem-combiners.txt
+1.3.6.1.4.1.25258.1.20.1 = OunsworthKEMCombiner/Kyber-768-r3/X25519/KMAC-256
+1.3.6.1.4.1.25258.1.20.2 = OunsworthKEMCombiner/Kyber-1024-r3/X448/KMAC-256
+
+1.3.6.1.4.1.25258.1.20.3 = OunsworthKEMCombiner/Kyber-512-r3/ECDH-secp256r1/KMAC-128
+1.3.6.1.4.1.25258.1.20.4 = OunsworthKEMCombiner/Kyber-768-r3/ECDH-secp384r1/KMAC-256
+1.3.6.1.4.1.25258.1.20.5 = OunsworthKEMCombiner/Kyber-1024-r3/ECDH-secp521r1/KMAC-256
+
+1.3.6.1.4.1.25258.1.20.6 = OunsworthKEMCombiner/FrodoKEM-640-SHAKE/ECDH-brainpool256r1/KMAC-128
+1.3.6.1.4.1.25258.1.20.7 = OunsworthKEMCombiner/FrodoKEM-976-SHAKE/ECDH-brainpool384r1/KMAC-256
+1.3.6.1.4.1.25258.1.20.8 = OunsworthKEMCombiner/FrodoKEM-1344-SHAKE/ECDH-brainpool512r1/KMAC-256
+
 # Dilithium OIDs are currently in Botan's private arc
 1.3.6.1.4.1.25258.1.9.1 = Dilithium-4x4-r3
 1.3.6.1.4.1.25258.1.9.2 = Dilithium-6x5-r3
