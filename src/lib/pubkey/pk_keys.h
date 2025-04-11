@@ -10,6 +10,7 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/pk_ops_fwd.h>
+#include <botan/pkcs8.h>
 #include <botan/secmem.h>
 
 #include <memory>
@@ -315,6 +316,11 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       * @return PKCS #8 private key encoding for this key object
       */
       secure_vector<uint8_t> private_key_info() const;
+
+      /**
+      * @return a handle to configure and perform an (encrypted) PKCS8 serialization
+      */
+      virtual PKCS8::Options_Builder serialize() const { return PKCS8::Options_Builder(*this); }
 
       /**
       * @return PKCS #8 AlgorithmIdentifier for this key
