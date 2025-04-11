@@ -9,6 +9,8 @@
 #define BOTAN_JITTER_RNG_H_
 
 #include <botan/rng.h>
+#include <memory>
+#include <string>
 
 namespace Botan {
 
@@ -35,6 +37,7 @@ class BOTAN_PUBLIC_API(3, 6) Jitter_RNG final : public RandomNumberGenerator {
 
       std::unique_ptr<Jitter_RNG_Internal> m_jitter;
 };
+
 }  // namespace Botan
 
 #endif

@@ -95,4 +95,5 @@ void Jitter_RNG::fill_bytes_with_input(std::span<uint8_t> out, std::span<const u
 
    m_jitter->collect_into_buffer(out);
 }
-};  // namespace Botan
+
+}  // namespace Botan
