@@ -326,24 +326,22 @@
 1.2.840.113549.1.1.7 = RSA/OAEP
 1.2.840.113549.1.1.8 = MGF1
 
-# DN with upper bounds from RFC 5280, Appendix A
 [dn]
-2.5.4.3 = X520.CommonName = 64
-2.5.4.4 = X520.Surname = 40
-2.5.4.5 = X520.SerialNumber = 64
-2.5.4.6 = X520.Country = 3
-2.5.4.7 = X520.Locality = 128
-2.5.4.8 = X520.State = 128
-2.5.4.9 = X520.StreetAddress = 128
-2.5.4.10 = X520.Organization = 64
-2.5.4.11 = X520.OrganizationalUnit = 64
-2.5.4.12 = X520.Title = 64
-# the following three types are naming attributes of type "X520name" and inherit its bound
-2.5.4.42 = X520.GivenName = 32768
-2.5.4.43 = X520.Initials = 32768
-2.5.4.44 = X520.GenerationalQualifier = 32768
-2.5.4.46 = X520.DNQualifier = 64
-2.5.4.65 = X520.Pseudonym = 128
+2.5.4.3 = X520.CommonName
+2.5.4.4 = X520.Surname
+2.5.4.5 = X520.SerialNumber
+2.5.4.6 = X520.Country
+2.5.4.7 = X520.Locality
+2.5.4.8 = X520.State
+2.5.4.9 = X520.StreetAddress
+2.5.4.10 = X520.Organization
+2.5.4.11 = X520.OrganizationalUnit
+2.5.4.12 = X520.Title
+2.5.4.42 = X520.GivenName
+2.5.4.43 = X520.Initials
+2.5.4.44 = X520.GenerationalQualifier
+2.5.4.46 = X520.DNQualifier
+2.5.4.65 = X520.Pseudonym
 
 [pbe]
 1.2.840.113549.1.5.12 = PKCS5.PBKDF2

@@ -31,6 +31,10 @@ x509path.h
 x509self.h
 </header:public>
 
+<header:internal>
+x509_utils.h
+</header:internal>
+
 <os_features>
 
 # Almost all of the X509 code works fine without a clock, but supporting this
