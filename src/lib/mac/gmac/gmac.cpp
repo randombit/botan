@@ -56,7 +56,7 @@ void GMAC::key_schedule(std::span<const uint8_t> key) {
 }
 
 void GMAC::start_msg(std::span<const uint8_t> nonce) {
-   secure_vector<uint8_t> y0(GCM_BS);
+   std::array<uint8_t, GCM_BS> y0 = {0};
 
    if(nonce.size() == 12) {
       copy_mem(y0.data(), nonce.data(), nonce.size());
@@ -65,9 +65,8 @@ void GMAC::start_msg(std::span<const uint8_t> nonce) {
       m_ghash->nonce_hash(y0, nonce);
    }
 
-   secure_vector<uint8_t> m_enc_y0(GCM_BS);
-   m_cipher->encrypt(y0.data(), m_enc_y0.data());
-   m_ghash->start(m_enc_y0);
+   m_cipher->encrypt(y0.data());
+   m_ghash->start(y0);
    m_initialized = true;
 }
 
