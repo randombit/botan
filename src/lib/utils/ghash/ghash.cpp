@@ -99,7 +99,9 @@ void GHASH::key_schedule(std::span<const uint8_t> key) {
 
    const uint64_t R = 0xE100000000000000;
 
-   m_HM.resize(256);
+   if(m_HM.size() != 256) {
+      m_HM.resize(256);
+   }
 
    // precompute the multiples of H
    for(size_t i = 0; i != 2; ++i) {
@@ -120,7 +122,9 @@ void GHASH::key_schedule(std::span<const uint8_t> key) {
 
 #if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
    if(CPUID::has_carryless_multiply()) {
-      m_H_pow.resize(8);
+      if(m_H_pow.size() != 8) {
+         m_H_pow.resize(8);
+      }
       ghash_precompute_cpu(key.data(), m_H_pow.data());
    }
 #endif
@@ -171,15 +175,13 @@ void GHASH::final(std::span<uint8_t> mac) {
    m_nonce.reset();
 }
 
-void GHASH::nonce_hash(secure_vector<uint8_t>& y0, std::span<const uint8_t> nonce) {
+void GHASH::nonce_hash(std::span<uint8_t, GCM_BS> y0, std::span<const uint8_t> nonce) {
    assert_key_material_set();
    BOTAN_STATE_CHECK(!m_nonce);
-   BOTAN_ARG_CHECK(y0.size() == GCM_BS, "ghash state must be 16 bytes");
 
-   auto sy0 = std::span<uint8_t, GCM_BS>{y0};
-   ghash_update(sy0, nonce);
-   ghash_zeropad(sy0);
-   ghash_final_block(sy0, 0, nonce.size());
+   ghash_update(y0, nonce);
+   ghash_zeropad(y0);
+   ghash_final_block(y0, 0, nonce.size());
 }
 
 void GHASH::clear() {

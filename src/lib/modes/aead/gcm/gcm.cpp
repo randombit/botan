@@ -84,7 +84,7 @@ void GCM_Mode::key_schedule(std::span<const uint8_t> key) {
    const std::vector<uint8_t> zeros(GCM_BS);
    m_ctr->set_iv(zeros.data(), zeros.size());
 
-   secure_vector<uint8_t> H(GCM_BS);
+   uint8_t H[GCM_BS] = {0};
    m_ctr->encipher(H);
    m_ghash->set_key(H);
 }
@@ -109,7 +109,7 @@ void GCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
       copy_mem(m_y0.data(), nonce, nonce_len);
       m_y0[15] = 1;
    } else {
-      m_ghash->nonce_hash(m_y0, {nonce, nonce_len});
+      m_ghash->nonce_hash(std::span<uint8_t, GCM_BS>(m_y0), {nonce, nonce_len});
    }
 
    m_ctr->set_iv(m_y0.data(), m_y0.size());

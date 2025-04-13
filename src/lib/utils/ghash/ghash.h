@@ -22,7 +22,7 @@ class GHASH final : public SymmetricAlgorithm {
 
    public:
       /// Hashing of non-default length nonce values for both GCM and GMAC use-cases
-      void nonce_hash(secure_vector<uint8_t>& y0, std::span<const uint8_t> nonce);
+      void nonce_hash(std::span<uint8_t, GCM_BS> y0, std::span<const uint8_t> nonce);
 
       void start(std::span<const uint8_t> nonce);
 
