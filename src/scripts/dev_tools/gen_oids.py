@@ -34,7 +34,7 @@ def format_map(m, for_oid = False):
     return s
 
 
-def format_as_map(oid2str, str2oid):
+def format_as_map(oid2str, dup_oids):
    return """/*
 * OID maps
 *
@@ -51,26 +51,42 @@ def format_as_map(oid2str, str2oid):
 
 namespace Botan {
 
+namespace {
+
+std::vector<std::pair<const char*, std::vector<uint32_t>>> oid_maps() {
+   // clang-format off
+   return {
+      %s
+   };
+   // clang-format on
+}
+
+}  // namespace
+
 std::unordered_map<OID, std::string> OID_Map::load_oid2str_map() {
-   std::pair<std::vector<uint32_t>, const char*> oid_maps[] = {
-      %s};
+   std::pair<std::vector<uint32_t>, const char*> dup_oids[] = {
+      // clang-format off
+      %s
+      // clang-format on
+   };
 
    std::unordered_map<OID, std::string> map;
 
-   for(auto& entry : oid_maps) {
-      map.insert(std::make_pair(OID(std::move(entry.first)), entry.second));
+   for(auto& entry : oid_maps()) {
+      map.insert(std::make_pair(OID(std::move(entry.second)), entry.first));
+   }
+
+   for(auto& entry : dup_oids) {
+      map.insert(std::make_pair(OID(std::move(entry.first)), std::string(entry.second)));
    }
 
    return map;
 }
 
 std::unordered_map<std::string, OID> OID_Map::load_str2oid_map() {
-   std::pair<const char*, std::vector<uint32_t>> oid_maps[] = {
-      %s};
-
    std::unordered_map<std::string, OID> map;
 
-   for(auto& entry : oid_maps) {
+   for(auto& entry : oid_maps()) {
       map.insert(std::make_pair(std::string(entry.first), OID(std::move(entry.second))));
    }
 
@@ -80,8 +96,8 @@ std::unordered_map<std::string, OID> OID_Map::load_str2oid_map() {
 }  // namespace Botan""" % (
     sys.argv[0],
     datetime.date.today().strftime("%Y-%m-%d"),
-    format_map(oid2str),
-    format_map(str2oid, True))
+    format_map(oid2str, True),
+    format_map(dup_oids))
 
 def format_dn_ub_map(dn_ub, oid2str):
     s = ''
@@ -185,6 +201,7 @@ def main(args = None):
 
     oid2str = {}
     str2oid = {}
+    dup_oids = {}
     dn_ub = {}
     cur_hdr = None
 
@@ -214,20 +231,19 @@ def main(args = None):
         else:
             oid2str[oid] = nam
 
+        if nam not in str2oid:
+            str2oid[nam] = oid
+        else:
+            dup_oids[oid] = nam
+
         # parse upper bounds for DNs
         if cur_hdr == "dn":
             if match.lastindex < 3:
                 raise Exception("Could not find an upper bound for DN " + match.group(1))
             dn_ub[oid] = match.group(3)
 
-        if nam in str2oid:
-            #str2oid[nam] = oid
-            pass
-        else:
-            str2oid[nam] = oid
-
     if args[1] == "oids":
-        print(format_as_map(oid2str, str2oid))
+        print(format_as_map(str2oid, dup_oids))
     elif args[1] == "dn_ub":
         print(format_dn_ub_as_map(dn_ub,oid2str))
     else:
