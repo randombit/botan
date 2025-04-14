@@ -1,0 +1,26 @@
+<defines>
+OUNSWORTH -> 20240528
+</defines>
+
+<module_info>
+name -> "Ounsworth"
+lifecycle -> "Experimental"
+</module_info>
+
+<header:internal>
+ounsworth_internal.h
+</header:internal>
+
+<header:public>
+ounsworth.h
+ounsworth_mode.h
+</header:public>
+
+<requires>
+asn1
+hybrid_kem
+kex_to_kem_adapter
+kmac
+sha3
+sp800_56a
+</requires>

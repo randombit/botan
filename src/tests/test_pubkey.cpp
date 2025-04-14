@@ -643,7 +643,8 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
                            key.object_identifier().to_string());
          } else {
             const bool exception = name == "Kyber" || name == "ML-KEM" || name == "ML-DSA" || name == "SLH-DSA" ||
-                                   name == "FrodoKEM" || name == "SPHINCS+" || name == "ClassicMcEliece";
+                                   name == "FrodoKEM" || name == "SPHINCS+" || name == "ClassicMcEliece" ||
+                                   name == "OunsworthKEMCombiner";
             if(!exception) {
                result.test_failure("Keys name " + name + " does not map to an OID");
             }

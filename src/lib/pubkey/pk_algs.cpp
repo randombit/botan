@@ -91,6 +91,10 @@
    #include <botan/ml_kem.h>
 #endif
 
+#if defined(BOTAN_HAS_OUNSWORTH)
+   #include <botan/ounsworth.h>
+#endif
+
 #if defined(BOTAN_HAS_HSS_LMS)
    #include <botan/hss_lms.h>
 #endif
@@ -166,6 +170,11 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_ML_KEM)
    if(alg_name.starts_with("ML-KEM-")) {
       return std::make_unique<ML_KEM_PublicKey>(alg_id, key_bits);
+   }
+#endif
+#if defined(BOTAN_HAS_OUNSWORTH)
+   if(alg_name == "OunsworthKEMCombiner") {
+      return std::make_unique<Ounsworth_PublicKey>(alg_id, key_bits);
    }
 #endif
 
@@ -343,6 +352,12 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_ML_KEM)
    if(alg_name.starts_with("ML-KEM-")) {
       return std::make_unique<ML_KEM_PrivateKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_OUNSWORTH)
+   if(alg_name.starts_with("OunsworthKEMCombiner")) {
+      return std::make_unique<Ounsworth_PrivateKey>(alg_id, key_bits);
    }
 #endif
 
@@ -570,6 +585,12 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
       }();
 
       return std::make_unique<ML_KEM_PrivateKey>(rng, mode);
+   }
+#endif
+
+#if defined(BOTAN_HAS_OUNSWORTH)
+   if(alg_name == "OunsworthKEMCombiner") {
+      return std::make_unique<Ounsworth_PrivateKey>(rng, params);
    }
 #endif
 
