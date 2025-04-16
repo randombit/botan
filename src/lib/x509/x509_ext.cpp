@@ -17,6 +17,7 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/x509_utils.h>
 #include <algorithm>
 #include <set>
 #include <sstream>
@@ -24,20 +25,6 @@
 namespace Botan {
 
 namespace {
-
-std::optional<uint32_t> is_sub_element_of(const OID& oid, std::initializer_list<uint32_t> prefix) {
-   const auto& c = oid.get_components();
-
-   if(c.size() != prefix.size() + 1) {
-      return {};
-   }
-
-   if(!std::equal(c.begin(), c.end() - 1, prefix.begin(), prefix.end())) {
-      return {};
-   }
-
-   return c[c.size() - 1];
-}
 
 template <std::derived_from<Certificate_Extension> T>
 auto make_extension([[maybe_unused]] const OID& oid) {
