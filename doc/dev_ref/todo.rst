@@ -26,7 +26,6 @@ Hardware Specific Optimizations
 * GFNI implementations for: Camellia, SEED, ARIA
 * NEON/VMX/LSX support for the SIMD based GHASH
 * Poly1305 using AVX2
-* SHA-512 using BMI2+AVX2
 * SM3 using x86 SM3-NI
 * Constant time bitsliced DES
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
