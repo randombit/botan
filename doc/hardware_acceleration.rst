@@ -7,7 +7,7 @@ that are not available on all platforms and either speed up the algorithm
 or improve security in terms of side channel resistance.
 
 A “base” software implementation is always provided. For example, for the AES-128
-block cipher three implementations are available. All of the AES-128 implementations
+block cipher three implementations are available. All of the AES implementations
 are immune to common cache/timing based side channels.
 
 * If AES hardware support is available (AES-NI, POWER8, Aarch64) use that
@@ -18,6 +18,10 @@ are immune to common cache/timing based side channels.
 The following sections list the platforms and algorithms for which hardware acceleration
 is available. If the CPU specific optimizations are available at runtime, they are
 automatically used if enabled in the build. If not, the base implementation is used.
+
+It is possible to disable CPU-specific optimizations at runtime by setting the
+environment variable ``BOTAN_CLEAR_CPUID``. For example
+``BOTAN_CLEAR_CPUID=avx2`` will disable use of any AVX2 instructions.
 
 x86
 --------------
@@ -45,13 +49,13 @@ On x86-64 and x86-32 platforms, the following CPU specific optimizations are ava
 |           |                                            |                    |            |
 |           | AVX2                                       | `chacha_avx2`      | 2.8.0      |
 |           |                                            |                    |            |
-|           | SSE2                                       | `chacha_simd32`    | 1.11.32    |
+|           | SSSE3                                      | `chacha_simd32`    | 1.11.32    |
 +-----------+--------------------------------------------+--------------------+------------+
 | IDEA      | SSE2                                       | `idea_sse2`        | 1.9.4      |
 +-----------+--------------------------------------------+--------------------+------------+
 | KMAC      | BMI2                                       | `keccak_perm_bmi2` | 3.2.0      |
 +-----------+--------------------------------------------+--------------------+------------+
-| NOEKEON   | SSE2                                       | `noekeon_simd`     | 1.9.4      |
+| NOEKEON   | SSSE3                                      | `noekeon_simd`     | 1.9.4      |
 +-----------+--------------------------------------------+--------------------+------------+
 | RDRAND    | RDRAND                                     | `processor_rng`    | 1.11.31    |
 +-----------+--------------------------------------------+--------------------+------------+
@@ -61,7 +65,7 @@ On x86-64 and x86-32 platforms, the following CPU specific optimizations are ava
 |           |                                            |                    |            |
 |           | AVX2                                       | `serpent_avx2`     | 2.8.0      |
 |           |                                            |                    |            |
-|           | SSE2                                       | `serpent_simd`     | 1.9.0      |
+|           | SSSE3                                      | `serpent_simd`     | 1.9.0      |
 +-----------+--------------------------------------------+--------------------+------------+
 | SHACAL2   | Intel SHA Extensions                       | `shacal2_x86`      | 2.3.0      |
 |           |                                            |                    |            |
@@ -71,15 +75,23 @@ On x86-64 and x86-32 platforms, the following CPU specific optimizations are ava
 +-----------+--------------------------------------------+--------------------+------------+
 | SHA-1     | Intel SHA Extensions                       | `sha1_x86`         | 2.2.0      |
 |           |                                            |                    |            |
-|           | SSE2                                       | `sha1_sse2`        | 1.7.12     |
+|           | SSSE3                                      | `sha1_simd`        | 1.7.12     |
 +-----------+--------------------------------------------+--------------------+------------+
 | SHA-256   | Intel SHA Extensions                       | `sha2_32_x86`      | 2.2.0      |
 |           |                                            |                    |            |
-|           | BMI2                                       | `sha2_32_bmi2`     | 2.7.0      |
+|           | SSSE3                                      | `sha2_32_simd`     | 3.8.0      |
+|           |                                            |                    |            |
+|           | AVX2 + BMI2                                | `sha2_32_avx2`     | 3.8.0      |
++-----------+--------------------------------------------+--------------------+------------+
+| SHA-512   | Intel SHA Extensions                       | `sha2_64_x86`      | 3.8.0      |
+|           |                                            |                    |            |
+|           | AVX2 + BMI2                                | `sha2_64_avx2`     | 3.8.0      |
 +-----------+--------------------------------------------+--------------------+------------+
 | SHA-3     | BMI2                                       | `keccak_perm_bmi2` | 2.10.0     |
 +-----------+--------------------------------------------+--------------------+------------+
-| SM4       | GFNI                                       | `sm4_gfni`         | 3.6.0      |
+| SM4       | AVX2 + GFNI                                | `sm4_gfni`         | 3.6.0      |
++-----------+--------------------------------------------+--------------------+------------+
+| ZFEC      | SSSE2                                      | `zfec_vperm`       | 3.0.0      |
 +-----------+--------------------------------------------+--------------------+------------+
 
 ARM
@@ -93,8 +105,6 @@ On arm64 and arm32 platforms, the following CPU specific optimizations are avail
 | AES       | NEON                                       | `aes_armv8`        | 1.9.3      |
 +-----------+--------------------------------------------+--------------------+------------+
 | AES-GCM   | PMULL (arm64 only)                         | `ghash_cpu`        | 2.3.0      |
-|           |                                            |                    |            |
-|           | NEON                                       | `ghash_vperm`      | 2.12.0     |
 +-----------+--------------------------------------------+--------------------+------------+
 | ChaCha    | NEON                                       | `chacha_simd32`    | 2.8.0      |
 +-----------+--------------------------------------------+--------------------+------------+
@@ -107,14 +117,20 @@ On arm64 and arm32 platforms, the following CPU specific optimizations are avail
 |           | ARMv8 Cryptography Extensions (arm64 only) | `shacal2_armv8`    | 2.13.0     |
 +-----------+--------------------------------------------+--------------------+------------+
 | SHA-1     | ARMv8 Cryptography Extensions (arm64 only) | `sha1_armv8`       | 2.2.0      |
+|           |                                            |                    |            |
+|           | NEON                                       | `sha1_simd`        | 3.8.0      |
 +-----------+--------------------------------------------+--------------------+------------+
 | SHA-256   | ARMv8 Cryptography Extensions (arm64 only) | `sha2_32_armv8`    | 2.2.0      |
+|           |                                            |                    |            |
+|           | NEON                                       | `sha2_32_simd`     | 3.8.0      |
 +-----------+--------------------------------------------+--------------------+------------+
 | SHA-384   | ARMv8 Cryptography Extensions (arm64 only) | `sha2_64_armv8`    | 3.3.0      |
 +-----------+--------------------------------------------+--------------------+------------+
 | SHA-512   | ARMv8 Cryptography Extensions (arm64 only) | `sha2_64_armv8`    | 3.3.0      |
 +-----------+--------------------------------------------+--------------------+------------+
 | SM4       | ARMv8 Cryptography Extensions (arm64 only) | `sm4_armv8`        | 2.8.0      |
++-----------+--------------------------------------------+--------------------+------------+
+| ZFEC      | NEON                                       | `zfec_vperm`       | 3.0.0      |
 +-----------+--------------------------------------------+--------------------+------------+
 
 PowerPC
@@ -129,8 +145,6 @@ On ppc64 and ppc32 platforms, the following CPU specific optimizations are avail
 |           |                                            |                    |            |
 |           | AltiVec                                    | `aes_vperm`        | 2.12.0     |
 +-----------+--------------------------------------------+--------------------+------------+
-| AES-GCM   | AltiVec                                    | `ghash_vperm`      | 2.12.0     |
-+-----------+--------------------------------------------+--------------------+------------+
 | ChaCha    | AltiVec                                    | `chacha_simd32`    | 2.8.0      |
 +-----------+--------------------------------------------+--------------------+------------+
 | DARN      | POWER9                                     | `processor_rng`    | 2.15.0     |
@@ -140,6 +154,36 @@ On ppc64 and ppc32 platforms, the following CPU specific optimizations are avail
 | SHACAL2   | AltiVec                                    | `shacal2_simd`     | 2.3.0      |
 +-----------+--------------------------------------------+--------------------+------------+
 | NOEKEON   | AltiVec                                    | `noekeon_simd`     | 1.9.4      |
++-----------+--------------------------------------------+--------------------+------------+
+
+Loongarch64
+--------------
+
+On loongarch64, the LSX extensions are used.
+
+.. note::
+
+   Loongarch64 apparently supports a "crypto" extension, for which hwcaps exist
+   for Linux, and there are shipping processors which do support these
+   extensions. However no documentation has been so far located. If you are
+   aware of any such documentation please do contact the maintainers.
+
++-----------+--------------------------------------------+--------------------+------------+
+| Algorithm | Extension                                  | Module             | Added in   |
++===========+============================================+====================+============+
+| AES       | LSX                                        | `aes_vperm`        | 3.8.0      |
++-----------+--------------------------------------------+--------------------+------------+
+| ChaCha    | LSX                                        | `chacha_simd32`    | 3.8.0      |
++-----------+--------------------------------------------+--------------------+------------+
+| Serpent   | LSX                                        | `serpent_simd`     | 3.8.0      |
++-----------+--------------------------------------------+--------------------+------------+
+| SHA-1     | LSX                                        | `sha1_simd`        | 3.8.0      |
++-----------+--------------------------------------------+--------------------+------------+
+| SHACAL2   | LSX                                        | `shacal2_simd`     | 3.8.0      |
++-----------+--------------------------------------------+--------------------+------------+
+| NOEKEON   | LSX                                        | `noekeon_simd`     | 3.8.0      |
++-----------+--------------------------------------------+--------------------+------------+
+| ZFEC      | LSX                                        | `zfec_vperm`       | 3.8.0      |
 +-----------+--------------------------------------------+--------------------+------------+
 
 Configuring Acceleration
