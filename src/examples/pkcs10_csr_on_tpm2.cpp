@@ -75,7 +75,7 @@ int main() {
    //                                               session);
 
    // Create a Certificate Signing Request (CSR)
-   const Botan::X509_DN dn({
+   const Botan::X509_DN dn(std::unordered_map<std::string, std::string>{
       {"X520.CommonName", "TPM-hosted test"},
       {"X520.Country", "DE"},
       {"X520.Organization", "Rohde & Schwarz"},
