@@ -377,6 +377,10 @@ Private Key
      "curve25519" and "x448" (which are actually completely distinct key types
      with a non-standard encoding).
 
+  .. py:classmethod:: create_ec(algo, ec_group, rng)
+
+     Creates a new ec private key.
+
   .. py:classmethod:: load(val, passphrase="")
 
      Return a private key (DER or PEM formats accepted)
@@ -599,6 +603,77 @@ Object Identifiers (OID)
    .. py:method:: register(name)
 
       Register the OID so that it may later be retrieved by the given name
+
+
+EC Groups
+-------------------------------------
+.. versionadded:: 3.8.0
+
+.. py:class:: ECGroup(object)
+
+   .. py:classmethod:: supports_application_specific_group()
+
+      Returns true if in this build configuration it is possible to register an application specific elliptic curve
+
+   .. py:classmethod:: supports_named_group(name)
+
+      Returns true if in this build configuration ECGroup.from_name(name) will succeed
+
+   .. py:classmethod:: from_params(oid, p, a, b, base_x, base_y, order)
+
+      Creates a new ECGroup from ec parameters
+
+   .. py:classmethod:: from_ber(ber)
+
+      Creates a new ECGroup from a BER blob
+
+   .. py:classmethod:: from_pem(pem)
+
+      Creates a new ECGroup from a pem encoding
+
+   .. py:classmethod:: from_oid(oid)
+
+      Creates a new ECGroup from a group named by an OID
+
+   .. py:classmethod:: from_name(name)
+
+      Creates a new ECGroup from a common group name
+
+   .. py:method:: to_der()
+
+      Export the group in DER encoding
+
+   .. py:method:: to_pem()
+
+      Export the group in PEM encoding
+
+   .. py:method:: get_curve_oid()
+
+      Get the curve OID
+
+   .. py:method:: get_p()
+
+      Get the prime modulus of the field
+
+   .. py:method:: get_a()
+
+      Get the a parameter of the elliptic curve equation
+
+   .. py:method:: get_b()
+
+      Get the b parameter of the elliptic curve equation
+
+   .. py:method:: get_g_x()
+
+      Get the x coordinate of the base point
+
+   .. py:method:: get_g_y()
+
+      Get the y coordinate of the base point
+
+   .. py:method:: get_order()
+
+      Get the order of the base point
 
 
 Format Preserving Encryption (FE1 scheme)

@@ -13,6 +13,7 @@
 #include <botan/version.h>
 
 #if defined(BOTAN_HAS_FFI)
+   #include <botan/ec_group.h>
    #include <botan/ffi.h>
    #include <botan/hex.h>
    #include <botan/internal/fmt.h>
@@ -4275,6 +4276,257 @@ class FFI_OID_Test final : public FFI_Test {
       }
 };
 
+class FFI_EC_Group_Test final : public FFI_Test {
+   public:
+      std::string name() const override { return "FFI EC Group"; }
+
+      void ffi_test(Test::Result& result, botan_rng_t rng) override {
+         int appl_spec_groups;
+         int named_group;
+         TEST_FFI_OK(botan_ec_group_supports_application_specific_group, (&appl_spec_groups));
+         TEST_FFI_OK(botan_ec_group_supports_named_group, ("secp256r1", &named_group));
+         result.confirm("application specific groups support matches build",
+                        appl_spec_groups,
+                        Botan::EC_Group::supports_application_specific_group());
+         result.confirm(
+            "named group support matches build", named_group, Botan::EC_Group::supports_named_group("secp256r1"));
+
+         if(named_group) {
+            botan_ec_group_t group_from_name;
+            botan_asn1_oid_t oid_from_name;
+            botan_mp_t p_from_name;
+            botan_mp_t a_from_name;
+            botan_mp_t b_from_name;
+            botan_mp_t g_x_from_name;
+            botan_mp_t g_y_from_name;
+            botan_mp_t order_from_name;
+
+            TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_ec_group_from_name, (&group_from_name, ""));
+
+            TEST_FFI_OK(botan_ec_group_from_name, (&group_from_name, "secp256r1"));
+
+            get_group_parameters(group_from_name,
+                                 &oid_from_name,
+                                 &p_from_name,
+                                 &a_from_name,
+                                 &b_from_name,
+                                 &g_x_from_name,
+                                 &g_y_from_name,
+                                 &order_from_name,
+                                 result);
+
+            botan_asn1_oid_t group_oid;
+            botan_ec_group_t group_from_oid;
+            botan_asn1_oid_t oid_from_oid;
+            botan_mp_t p_from_oid;
+            botan_mp_t a_from_oid;
+            botan_mp_t b_from_oid;
+            botan_mp_t g_x_from_oid;
+            botan_mp_t g_y_from_oid;
+            botan_mp_t order_from_oid;
+
+            TEST_FFI_OK(botan_oid_from_string, (&group_oid, "1.2.840.10045.3.1.7"));
+
+            TEST_FFI_OK(botan_ec_group_from_oid, (&group_from_oid, group_oid));
+
+            get_group_parameters(group_from_oid,
+                                 &oid_from_oid,
+                                 &p_from_oid,
+                                 &a_from_oid,
+                                 &b_from_oid,
+                                 &g_x_from_oid,
+                                 &g_y_from_oid,
+                                 &order_from_oid,
+                                 result);
+
+            TEST_FFI_RC(1, botan_oid_equal, (group_oid, oid_from_oid));
+            TEST_FFI_RC(1, botan_oid_equal, (oid_from_name, oid_from_oid));
+
+            if(appl_spec_groups) {
+               botan_asn1_oid_t group_parameter_oid;
+               botan_mp_t p_parameter;
+               botan_mp_t a_parameter;
+               botan_mp_t b_parameter;
+               botan_mp_t g_x_parameter;
+               botan_mp_t g_y_parameter;
+               botan_mp_t order_parameter;
+
+               botan_ec_group_t group_from_parameters;
+               botan_asn1_oid_t oid_from_parameters;
+               botan_mp_t p_from_parameters;
+               botan_mp_t a_from_parameters;
+               botan_mp_t b_from_parameters;
+               botan_mp_t g_x_from_parameters;
+               botan_mp_t g_y_from_parameters;
+               botan_mp_t order_from_parameters;
+
+               TEST_FFI_OK(botan_oid_from_string, (&group_parameter_oid, "1.3.6.1.4.1.25258.100.0"));
+               botan_oid_register(group_parameter_oid, "secp256r1-but-manually-registered");
+               botan_mp_init(&p_parameter);
+               botan_mp_init(&a_parameter);
+               botan_mp_init(&b_parameter);
+               botan_mp_init(&g_x_parameter);
+               botan_mp_init(&g_y_parameter);
+               botan_mp_init(&order_parameter);
+
+               botan_mp_set_from_str(p_parameter, "0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF");
+               botan_mp_set_from_str(a_parameter, "0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC");
+               botan_mp_set_from_str(b_parameter, "0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B");
+               botan_mp_set_from_str(g_x_parameter,
+                                     "0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296");
+               botan_mp_set_from_str(g_y_parameter,
+                                     "0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5");
+               botan_mp_set_from_str(order_parameter,
+                                     "0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551");
+
+               TEST_FFI_OK(botan_ec_group_from_params,
+                           (&group_from_parameters,
+                            group_parameter_oid,
+                            p_parameter,
+                            a_parameter,
+                            b_parameter,
+                            g_x_parameter,
+                            g_y_parameter,
+                            order_parameter));
+
+               get_group_parameters(group_from_parameters,
+                                    &oid_from_parameters,
+                                    &p_from_parameters,
+                                    &a_from_parameters,
+                                    &b_from_parameters,
+                                    &g_x_from_parameters,
+                                    &g_y_from_parameters,
+                                    &order_from_parameters,
+                                    result);
+
+               botan_ec_group_t group_from_registered_oid;
+
+               TEST_FFI_OK(botan_ec_group_from_name, (&group_from_registered_oid, "secp256r1-but-manually-registered"));
+
+               // we registered this group under a different oid
+               TEST_FFI_RC(0, botan_oid_equal, (oid_from_oid, oid_from_parameters));
+
+               TEST_FFI_RC(1, botan_ec_group_equal, (group_from_name, group_from_parameters));
+               TEST_FFI_RC(1, botan_ec_group_equal, (group_from_parameters, group_from_registered_oid));
+
+               std::vector<std::tuple<botan_mp_t, botan_mp_t>> parameters_inner = {
+                  {p_from_name, p_from_parameters},
+                  {a_from_name, a_from_parameters},
+                  {b_from_name, b_from_parameters},
+                  {g_x_from_name, g_x_from_parameters},
+                  {g_y_from_name, g_y_from_parameters},
+                  {order_from_name, order_from_parameters}};
+
+               for(auto [x, y] : parameters_inner) {
+                  TEST_FFI_RC(1, botan_mp_equal, (x, y));
+                  botan_mp_destroy(y);
+               }
+
+               botan_mp_destroy(p_parameter);
+               botan_mp_destroy(a_parameter);
+               botan_mp_destroy(b_parameter);
+               botan_mp_destroy(g_x_parameter);
+               botan_mp_destroy(g_y_parameter);
+               botan_mp_destroy(order_parameter);
+
+               botan_oid_destroy(group_parameter_oid);
+               botan_oid_destroy(oid_from_parameters);
+
+               TEST_FFI_OK(botan_ec_group_destroy, (group_from_parameters));
+               TEST_FFI_OK(botan_ec_group_destroy, (group_from_registered_oid));
+            }
+
+            botan_oid_destroy(oid_from_name);
+            botan_oid_destroy(group_oid);
+            botan_oid_destroy(oid_from_oid);
+
+            std::vector<std::tuple<botan_mp_t, botan_mp_t>> parameters = {{p_from_name, p_from_oid},
+                                                                          {a_from_name, a_from_oid},
+                                                                          {b_from_name, b_from_oid},
+                                                                          {g_x_from_name, g_x_from_oid},
+                                                                          {g_y_from_name, g_y_from_oid},
+                                                                          {order_from_name, order_from_oid}};
+
+            for(auto [x, y] : parameters) {
+               TEST_FFI_RC(1, botan_mp_equal, (x, y));
+               botan_mp_destroy(x);
+               botan_mp_destroy(y);
+            }
+
+            botan_ec_group_t secp384r1;
+            botan_ec_group_t secp384r1_with_seed;
+
+            TEST_FFI_OK(botan_ec_group_from_name, (&secp384r1, "secp384r1"));
+            TEST_FFI_OK(botan_ec_group_from_pem,
+                        (&secp384r1_with_seed, Test::read_data_file("x509/ecc/secp384r1_seed.pem").c_str()));
+
+            botan_mp_t p;
+            botan_mp_t p_with_seed;
+            TEST_FFI_OK(botan_ec_group_get_p, (&p, secp384r1));
+            TEST_FFI_OK(botan_ec_group_get_p, (&p_with_seed, secp384r1_with_seed));
+            TEST_FFI_RC(1, botan_mp_equal, (p, p_with_seed));
+            botan_mp_destroy(p);
+            botan_mp_destroy(p_with_seed);
+
+            TEST_FFI_RC(0, botan_ec_group_equal, (group_from_name, secp384r1));
+            TEST_FFI_RC(1, botan_ec_group_equal, (group_from_name, group_from_oid));
+
+            ViewBytesSink der_bytes;
+            TEST_FFI_OK(botan_ec_group_view_der, (group_from_name, der_bytes.delegate(), der_bytes.callback()));
+            botan_ec_group_t group_from_ber;
+            TEST_FFI_OK(
+               botan_ec_group_from_ber,
+               (&group_from_ber, reinterpret_cast<const uint8_t*>(der_bytes.get().data()), der_bytes.get().size()));
+
+            ViewStringSink pem_string;
+            TEST_FFI_OK(botan_ec_group_view_pem, (group_from_name, pem_string.delegate(), pem_string.callback()));
+            std::string pem_actual = {pem_string.get().begin(), pem_string.get().end()};
+
+            botan_ec_group_t group_from_pem;
+            TEST_FFI_OK(botan_ec_group_from_pem, (&group_from_pem, pem_actual.c_str()));
+
+            TEST_FFI_RC(1, botan_ec_group_equal, (group_from_name, group_from_ber));
+            TEST_FFI_RC(1, botan_ec_group_equal, (group_from_name, group_from_pem));
+
+            botan_privkey_t priv;
+            TEST_FFI_OK(botan_ec_privkey_create, (&priv, "ECDSA", secp384r1, rng));
+            char namebuf[32] = {0};
+            size_t name_len = sizeof(namebuf);
+
+            TEST_FFI_OK(botan_privkey_algo_name, (priv, &namebuf[0], &name_len));
+            result.test_eq("Key name is expected value", namebuf, "ECDSA");
+
+            botan_privkey_destroy(priv);
+
+            TEST_FFI_OK(botan_ec_group_destroy, (group_from_name));
+            TEST_FFI_OK(botan_ec_group_destroy, (group_from_oid));
+            TEST_FFI_OK(botan_ec_group_destroy, (secp384r1));
+            TEST_FFI_OK(botan_ec_group_destroy, (secp384r1_with_seed));
+            TEST_FFI_OK(botan_ec_group_destroy, (group_from_ber));
+            TEST_FFI_OK(botan_ec_group_destroy, (group_from_pem));
+         }
+      }
+
+   private:
+      static void get_group_parameters(botan_ec_group_t ec_group,
+                                       botan_asn1_oid_t* oid,
+                                       botan_mp_t* p,
+                                       botan_mp_t* a,
+                                       botan_mp_t* b,
+                                       botan_mp_t* g_x,
+                                       botan_mp_t* g_y,
+                                       botan_mp_t* order,
+                                       Test::Result& result) {
+         TEST_FFI_OK(botan_ec_group_get_curve_oid, (oid, ec_group));
+         TEST_FFI_OK(botan_ec_group_get_p, (p, ec_group));
+         TEST_FFI_OK(botan_ec_group_get_a, (a, ec_group));
+         TEST_FFI_OK(botan_ec_group_get_b, (b, ec_group));
+         TEST_FFI_OK(botan_ec_group_get_g_x, (g_x, ec_group));
+         TEST_FFI_OK(botan_ec_group_get_g_y, (g_y, ec_group));
+         TEST_FFI_OK(botan_ec_group_get_order, (order, ec_group));
+      }
+};
+
 BOTAN_REGISTER_TEST("ffi", "ffi_utils", FFI_Utils_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_rng", FFI_RNG_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_rsa_cert", FFI_RSA_Cert_Test);
@@ -4325,6 +4577,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_cmce", FFI_Classic_McEliece_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_elgamal", FFI_ElGamal_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_dh", FFI_DH_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_oid", FFI_OID_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_ec_group", FFI_EC_Group_Test);
 
 #endif
 

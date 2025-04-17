@@ -33,7 +33,7 @@ int botan_oid_from_string(botan_asn1_oid_t* oid_obj, const char* oid_str) {
       } catch(Botan::Lookup_Error&) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }
-      std::unique_ptr<Botan::OID> oid_ptr = std::make_unique<Botan::OID>(std::move(oid));
+      auto oid_ptr = std::make_unique<Botan::OID>(std::move(oid));
       *oid_obj = new botan_asn1_oid_struct(std::move(oid_ptr));
       return BOTAN_FFI_SUCCESS;
    });

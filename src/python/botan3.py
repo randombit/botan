@@ -278,8 +278,30 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_oid_equal, [c_void_p, c_void_p])
     ffi_api(dll.botan_oid_cmp, [POINTER(c_int), c_void_p, c_void_p])
 
+    # EC Group
+    ffi_api(dll.botan_ec_group_destroy, [c_void_p])
+    ffi_api(dll.botan_ec_group_supports_application_specific_group, [POINTER(c_int)])
+    ffi_api(dll.botan_ec_group_supports_named_group, [c_char_p, POINTER(c_int)])
+    ffi_api(dll.botan_ec_group_from_params,
+            [c_void_p, c_void_p, c_void_p, c_void_p, c_void_p, c_void_p, c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_group_from_ber, [c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_ec_group_from_pem, [c_void_p, c_char_p])
+    ffi_api(dll.botan_ec_group_from_oid, [c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_group_from_name, [c_void_p, c_char_p])
+    ffi_api(dll.botan_ec_group_view_der, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_ec_group_view_pem, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_ec_group_get_curve_oid, [c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_group_get_p, [c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_group_get_a, [c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_group_get_b, [c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_group_get_g_x, [c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_group_get_g_y, [c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_group_get_order, [c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_group_equal, [c_void_p, c_void_p])
+
     #  PUBKEY
     ffi_api(dll.botan_privkey_create, [c_void_p, c_char_p, c_char_p, c_void_p])
+    ffi_api(dll.botan_ec_privkey_create, [c_void_p, c_char_p, c_void_p, c_void_p])
     ffi_api(dll.botan_privkey_check_key, [c_void_p, c_void_p, c_uint32], [-1])
     ffi_api(dll.botan_privkey_create_rsa, [c_void_p, c_void_p, c_size_t])
     ffi_api(dll.botan_privkey_create_ecdsa, [c_void_p, c_void_p, c_char_p])
@@ -1388,6 +1410,12 @@ class PrivateKey:
         return priv
 
     @classmethod
+    def create_ec(cls, algo, ec_group, rng_obj):
+        obj = c_void_p(0)
+        _DLL.botan_ec_privkey_create(byref(obj), _ctype_str(algo), ec_group.handle_(), rng_obj.handle_())
+        return PrivateKey(obj)
+
+    @classmethod
     def load_rsa(cls, p, q, e):
         priv = PrivateKey()
         p = MPI(p)
@@ -2196,6 +2224,122 @@ class OID:
 
     def __ge__(self, other):
         return self.cmp(other) >= 0
+
+
+class ECGroup:
+    def __init__(self, obj=None):
+        if not obj:
+            obj = c_void_p(0)
+        self.__obj = obj
+
+    def handle_(self):
+        return self.__obj
+
+    def __del__(self):
+        _DLL.botan_ec_group_destroy(self.__obj)
+
+    @classmethod
+    def supports_application_specific_group(cls):
+        r = c_int(0)
+        _DLL.botan_ec_group_supports_application_specific_group(byref(r))
+        if r.value == 0:
+            return False
+        return True
+
+    @classmethod
+    def supports_named_group(cls, name):
+        r = c_int(0)
+        _DLL.botan_ec_group_supports_named_group(_ctype_str(name), byref(r))
+        if r.value == 0:
+            return False
+        return True
+
+    @classmethod
+    def from_params(cls, oid, p, a, b, base_x, base_y, order):
+        ec_group = ECGroup()
+        _DLL.botan_ec_group_from_params(
+            byref(ec_group.handle_()),
+            oid.handle_(),
+            p.handle_(),
+            a.handle_(),
+            b.handle_(),
+            base_x.handle_(),
+            base_y.handle_(),
+            order.handle_()
+        )
+        return ec_group
+
+    @classmethod
+    def from_ber(cls, ber):
+        ec_group = ECGroup()
+        _DLL.botan_ec_group_from_ber(byref(ec_group.handle_()), ber, len(ber))
+        return ec_group
+
+    @classmethod
+    def from_pem(cls, pem):
+        ec_group = ECGroup()
+        _DLL.botan_ec_group_from_pem(byref(ec_group.handle_()), _ctype_str(pem))
+        return ec_group
+
+    @classmethod
+    def from_oid(cls, oid):
+        ec_group = ECGroup()
+        _DLL.botan_ec_group_from_oid(byref(ec_group.handle_()), oid.handle_())
+        return ec_group
+
+    @classmethod
+    def from_name(cls, name):
+        ec_group = ECGroup()
+        _DLL.botan_ec_group_from_name(byref(ec_group.handle_()), _ctype_str(name))
+        return ec_group
+
+    def to_der(self):
+        return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_ec_group_view_der(self.__obj, vc, vfn))
+
+    def to_pem(self):
+        return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_ec_group_view_pem(self.__obj, vc, vfn))
+
+    def get_curve_oid(self):
+        oid = OID()
+        _DLL.botan_ec_group_get_curve_oid(byref(oid.handle_()), self.__obj)
+        return oid
+
+    def get_p(self):
+        p = MPI()
+        _DLL.botan_ec_group_get_p(byref(p.handle_()), self.__obj)
+        return p
+
+    def get_a(self):
+        a = MPI()
+        _DLL.botan_ec_group_get_a(byref(a.handle_()), self.__obj)
+        return a
+
+    def get_b(self):
+        b = MPI()
+        _DLL.botan_ec_group_get_b(byref(b.handle_()), self.__obj)
+        return b
+
+    def get_g_x(self):
+        g_x = MPI()
+        _DLL.botan_ec_group_get_g_x(byref(g_x.handle_()), self.__obj)
+        return g_x
+
+    def get_g_y(self):
+        g_y = MPI()
+        _DLL.botan_ec_group_get_g_y(byref(g_y.handle_()), self.__obj)
+        return g_y
+
+    def get_order(self):
+        order = MPI()
+        _DLL.botan_ec_group_get_order(byref(order.handle_()), self.__obj)
+        return order
+
+    def __eq__(self, other):
+        rc = _DLL.botan_ec_group_equal(self.__obj, other.handle_())
+        return rc == 1
+
+    def __ne__(self, other):
+        return not self == other
 
 
 class FormatPreservingEncryptionFE1:
