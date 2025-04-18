@@ -89,6 +89,10 @@ const char* to_string(Certificate_Status_Code code) {
          return "Certificate does not match provided name";
       case Certificate_Status_Code::NAME_CONSTRAINT_ERROR:
          return "Certificate does not pass name constraint";
+      case Certificate_Status_Code::IPADDR_BLOCKS_ERROR:
+         return "IP Address Blocks extension invalid";
+      case Certificate_Status_Code::AS_BLOCKS_ERROR:
+         return "AS Number Blocks extension invalid";
       case Certificate_Status_Code::UNKNOWN_CRITICAL_EXTENSION:
          return "Unknown critical extension encountered";
       case Certificate_Status_Code::DUPLICATE_CERT_EXTENSION:
