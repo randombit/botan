@@ -24,23 +24,23 @@ class Base32 final {
    public:
       static std::string name() noexcept { return "base32"; }
 
-      static size_t encoding_bytes_in() noexcept { return m_encoding_bytes_in; }
+      static constexpr size_t encoding_bytes_in() noexcept { return m_encoding_bytes_in; }
 
-      static size_t encoding_bytes_out() noexcept { return m_encoding_bytes_out; }
+      static constexpr size_t encoding_bytes_out() noexcept { return m_encoding_bytes_out; }
 
-      static size_t decoding_bytes_in() noexcept { return m_encoding_bytes_out; }
+      static constexpr size_t decoding_bytes_in() noexcept { return m_encoding_bytes_out; }
 
-      static size_t decoding_bytes_out() noexcept { return m_encoding_bytes_in; }
+      static constexpr size_t decoding_bytes_out() noexcept { return m_encoding_bytes_in; }
 
-      static size_t bits_consumed() noexcept { return m_encoding_bits; }
+      static constexpr size_t bits_consumed() noexcept { return m_encoding_bits; }
 
-      static size_t remaining_bits_before_padding() noexcept { return m_remaining_bits_before_padding; }
+      static constexpr size_t remaining_bits_before_padding() noexcept { return m_remaining_bits_before_padding; }
 
-      static size_t encode_max_output(size_t input_length) {
+      static constexpr size_t encode_max_output(size_t input_length) {
          return (round_up(input_length, m_encoding_bytes_in) / m_encoding_bytes_in) * m_encoding_bytes_out;
       }
 
-      static size_t decode_max_output(size_t input_length) {
+      static constexpr size_t decode_max_output(size_t input_length) {
          return (round_up(input_length, m_encoding_bytes_out) * m_encoding_bytes_in) / m_encoding_bytes_out;
       }
 
@@ -61,11 +61,11 @@ class Base32 final {
       static size_t bytes_to_remove(size_t final_truncate) { return final_truncate ? (final_truncate / 2) + 1 : 0; }
 
    private:
-      static const size_t m_encoding_bits = 5;
-      static const size_t m_remaining_bits_before_padding = 6;
+      static constexpr size_t m_encoding_bits = 5;
+      static constexpr size_t m_remaining_bits_before_padding = 6;
 
-      static const size_t m_encoding_bytes_in = 5;
-      static const size_t m_encoding_bytes_out = 8;
+      static constexpr size_t m_encoding_bytes_in = 5;
+      static constexpr size_t m_encoding_bytes_out = 8;
 };
 
 namespace {
