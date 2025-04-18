@@ -334,8 +334,11 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         elif target == 'cross-win64':
             # MinGW in 16.04 is lacking std::mutex for unknown reason
             cc_bin = 'x86_64-w64-mingw32-g++'
-            flags += ['--cpu=x86_64', '--cc-abi-flags=-static',
-                      '--ar-command=x86_64-w64-mingw32-ar', '--without-os-feature=threads']
+            flags += ['--cpu=x86_64', '--cc-abi-flags=-static', '--without-os-feature=threads']
+            if os.getenv('AR') is None:
+                flags += [ '--ar-command=x86_64-w64-mingw32-ar' ]
+            else:
+                flags += [ '--ar-command=%s' % os.getenv('AR') ]
             test_cmd = [os.path.join(root_dir, 'botan-test.exe')] + test_cmd[1:]
             test_prefix = ['wine']
         else:
