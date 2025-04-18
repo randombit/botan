@@ -12,6 +12,7 @@
 #include <botan/pk_keys.h>
 #include <botan/pkcs8.h>
 #include <botan/x509_key.h>
+#include <botan/internal/ffi_oid.h>
 #include <botan/internal/ffi_pkey.h>
 #include <botan/internal/ffi_rng.h>
 #include <botan/internal/ffi_util.h>
@@ -339,6 +340,32 @@ int botan_privkey_view_encrypted_pem(botan_privkey_t key,
       auto pkcs8 = Botan::PKCS8::PEM_encode_encrypted_pbkdf_iter(k, rng, passphrase, pbkdf_iter, cipher, pbkdf_algo);
 
       return invoke_view_callback(view, ctx, pkcs8);
+   });
+}
+
+int botan_pubkey_oid(botan_asn1_oid_t* oid, botan_pubkey_t key) {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      if(oid == nullptr) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      std::unique_ptr<Botan::OID> o = std::make_unique<Botan::OID>(k.object_identifier());
+      *oid = new botan_asn1_oid_struct(std::move(o));
+
+      return BOTAN_FFI_SUCCESS;
+   });
+}
+
+int botan_privkey_oid(botan_asn1_oid_t* oid, botan_privkey_t key) {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      if(oid == nullptr) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      std::unique_ptr<Botan::OID> o = std::make_unique<Botan::OID>(k.object_identifier());
+      *oid = new botan_asn1_oid_struct(std::move(o));
+
+      return BOTAN_FFI_SUCCESS;
    });
 }
 
