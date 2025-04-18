@@ -25,8 +25,10 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
+#include <botan/internal/target_info.h>
 #include <chrono>
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
 #if defined(BOTAN_HAS_BIGINT)
@@ -62,6 +64,19 @@
 
 #if defined(BOTAN_HAS_ECDSA)
    #include <botan/ecdsa.h>
+#endif
+
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+   #include <botan/system_rng.h>
+#endif
+
+#if defined(BOTAN_HAS_CHACHA_RNG)
+   #include <botan/chacha_rng.h>
+#endif
+
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   #include <signal.h>
+   #include <stdlib.h>
 #endif
 
 namespace Botan_CLI {
@@ -539,22 +554,46 @@ std::unique_ptr<Timing_Test> Timing_Test_Command::lookup_timing_test(std::string
 
 BOTAN_REGISTER_COMMAND("timing_test", Timing_Test_Command);
 
-#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_PKCS1) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_PKCS1) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM) && \
+   defined(BOTAN_HAS_SYSTEM_RNG)
 
 class MARVIN_Test_Command final : public Command {
    public:
-      MARVIN_Test_Command() : Command("marvin_test key_file ctext_dir --runs=10 --output-nsec --expect-pt-len=0") {}
+      MARVIN_Test_Command() :
+            Command("marvin_test key_file ctext_dir --runs=1000 --report-every=0 --output-nsec --expect-pt-len=0") {}
 
       std::string group() const override { return "testing"; }
 
       std::string description() const override { return "Run a test for MARVIN attack"; }
+
+   #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+      static inline volatile sig_atomic_t g_sigint_recv = 0;
+
+      static void marvin_sigint_handler(int /*signal*/) { g_sigint_recv = 1; }
+   #endif
 
       void go() override {
          const std::string key_file = get_arg("key_file");
          const std::string ctext_dir = get_arg("ctext_dir");
          const size_t measurement_runs = get_arg_sz("runs");
          const size_t expect_pt_len = get_arg_sz("expect-pt-len");
+         const size_t report_every = get_arg_sz("report-every");
          const bool output_nsec = flag_set("output-nsec");
+
+   #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+         ::setenv("BOTAN_THREAD_POOL_SIZE", "none", /*overwrite?*/ 1);
+
+         struct sigaction sigaction;
+
+         sigaction.sa_handler = marvin_sigint_handler;
+         sigemptyset(&sigaction.sa_mask);
+         sigaction.sa_flags = 0;
+
+         int rc = ::sigaction(SIGINT, &sigaction, nullptr);
+         if(rc != 0) {
+            throw CLI_Error("Failed to set SIGINT handler");
+         }
+   #endif
 
          Botan::DataSource_Stream key_src(key_file);
          const auto key = Botan::PKCS8::load_key(key_src);
@@ -589,7 +628,13 @@ class MARVIN_Test_Command final : public Command {
             throw CLI_Usage_Error("Empty ciphertext directory for MARVIN test");
          }
 
-         Botan::PK_Decryptor_EME op(*key, rng(), "PKCS1v15");
+   #if defined(BOTAN_HAS_CHACHA_RNG)
+         auto rng = Botan::ChaCha_RNG(Botan::system_rng());
+   #else
+         auto& rng = Botan::system_rng();
+   #endif
+
+         Botan::PK_Decryptor_EME op(*key, rng, "PKCS1v15");
 
          std::vector<size_t> indexes;
          for(size_t i = 0; i != names.size(); ++i) {
@@ -601,8 +646,15 @@ class MARVIN_Test_Command final : public Command {
             m.reserve(measurement_runs);
          }
 
+         // This is only set differently if we exit early from the loop
+         size_t runs_completed = measurement_runs;
+
          for(size_t r = 0; r != measurement_runs; ++r) {
-            shuffle(indexes, rng());
+            if(r > 0 && report_every > 0 && (r % report_every) == 0) {
+               std::cerr << "Gathering sample # " << r << "\n";
+            }
+
+            shuffle(indexes, rng);
 
             std::vector<uint8_t> ciphertext(modulus_bytes);
             for(size_t i = 0; i != indexes.size(); ++i) {
@@ -612,11 +664,20 @@ class MARVIN_Test_Command final : public Command {
                Botan::copy_mem(&ciphertext[0], &ciphertext_data[testcase * modulus_bytes], modulus_bytes);
 
                TimingTestTimer timer;
-               op.decrypt_or_random(ciphertext.data(), modulus_bytes, expect_pt_len, rng());
+               op.decrypt_or_random(ciphertext.data(), modulus_bytes, expect_pt_len, rng);
                const uint64_t duration = timer.complete();
                BOTAN_ASSERT_NOMSG(measurements[testcase].size() == r);
                measurements[testcase].push_back(duration);
             }
+
+   #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+            // Early exit check
+            if(g_sigint_recv != 0) {
+               std::cerr << "Exiting early after " << r << " measurements\n";
+               runs_completed = r;
+               break;
+            }
+   #endif
          }
 
          for(size_t t = 0; t != names.size(); ++t) {
@@ -627,7 +688,7 @@ class MARVIN_Test_Command final : public Command {
          }
          output() << "\n";
 
-         for(size_t r = 0; r != measurement_runs; ++r) {
+         for(size_t r = 0; r != runs_completed; ++r) {
             for(size_t t = 0; t != names.size(); ++t) {
                if(t > 0) {
                   output() << ",";
