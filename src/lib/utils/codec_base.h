@@ -13,6 +13,7 @@
 #include <botan/mem_ops.h>
 #include <array>
 #include <string>
+#include <type_traits>
 
 namespace Botan {
 
@@ -35,8 +36,8 @@ size_t base_encode(
    Base&& base, char output[], const uint8_t input[], size_t input_length, size_t& input_consumed, bool final_inputs) {
    input_consumed = 0;
 
-   constexpr size_t encoding_bytes_in = Base::encoding_bytes_in();
-   constexpr size_t encoding_bytes_out = Base::encoding_bytes_out();
+   constexpr size_t encoding_bytes_in = std::remove_reference_t<Base>::encoding_bytes_in();
+   constexpr size_t encoding_bytes_out = std::remove_reference_t<Base>::encoding_bytes_out();
 
    size_t input_remaining = input_length;
    size_t output_produced = 0;
@@ -116,8 +117,8 @@ size_t base_decode(Base&& base,
                    size_t& input_consumed,
                    bool final_inputs,
                    bool ignore_ws = true) {
-   constexpr size_t decoding_bytes_in = Base::decoding_bytes_in();
-   constexpr size_t decoding_bytes_out = Base::decoding_bytes_out();
+   constexpr size_t decoding_bytes_in = std::remove_reference_t<Base>::decoding_bytes_in();
+   constexpr size_t decoding_bytes_out = std::remove_reference_t<Base>::decoding_bytes_out();
 
    uint8_t* out_ptr = output;
    std::array<uint8_t, decoding_bytes_in> decode_buf{};
