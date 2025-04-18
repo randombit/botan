@@ -112,7 +112,7 @@ def gha_linux_packages(target):
         packages.append('lcov')
         packages.append('python3-coverage')
 
-    if target in ['coverage', 'sanitizer']:
+    if target in ['coverage', 'sanitizer', 'clang-tidy']:
         packages.append('softhsm2')
         packages.append('libtspi-dev')     # TPM 1 development library [TODO(Botan4) remove this]
         packages.append('libtss2-dev')     # TPM 2 development library
