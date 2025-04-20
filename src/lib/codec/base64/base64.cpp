@@ -24,23 +24,23 @@ class Base64 final {
    public:
       static std::string name() noexcept { return "base64"; }
 
-      static size_t encoding_bytes_in() noexcept { return m_encoding_bytes_in; }
+      static constexpr size_t encoding_bytes_in() noexcept { return m_encoding_bytes_in; }
 
-      static size_t encoding_bytes_out() noexcept { return m_encoding_bytes_out; }
+      static constexpr size_t encoding_bytes_out() noexcept { return m_encoding_bytes_out; }
 
-      static size_t decoding_bytes_in() noexcept { return m_encoding_bytes_out; }
+      static constexpr size_t decoding_bytes_in() noexcept { return m_encoding_bytes_out; }
 
-      static size_t decoding_bytes_out() noexcept { return m_encoding_bytes_in; }
+      static constexpr size_t decoding_bytes_out() noexcept { return m_encoding_bytes_in; }
 
-      static size_t bits_consumed() noexcept { return m_encoding_bits; }
+      static constexpr size_t bits_consumed() noexcept { return m_encoding_bits; }
 
-      static size_t remaining_bits_before_padding() noexcept { return m_remaining_bits_before_padding; }
+      static constexpr size_t remaining_bits_before_padding() noexcept { return m_remaining_bits_before_padding; }
 
-      static size_t encode_max_output(size_t input_length) {
+      static constexpr size_t encode_max_output(size_t input_length) {
          return (round_up(input_length, m_encoding_bytes_in) / m_encoding_bytes_in) * m_encoding_bytes_out;
       }
 
-      static size_t decode_max_output(size_t input_length) {
+      static constexpr size_t decode_max_output(size_t input_length) {
          return (round_up(input_length, m_encoding_bytes_out) * m_encoding_bytes_in) / m_encoding_bytes_out;
       }
 
@@ -59,11 +59,11 @@ class Base64 final {
       static size_t bytes_to_remove(size_t final_truncate) { return final_truncate; }
 
    private:
-      static const size_t m_encoding_bits = 6;
-      static const size_t m_remaining_bits_before_padding = 8;
+      static constexpr size_t m_encoding_bits = 6;
+      static constexpr size_t m_remaining_bits_before_padding = 8;
 
-      static const size_t m_encoding_bytes_in = 3;
-      static const size_t m_encoding_bytes_out = 4;
+      static constexpr size_t m_encoding_bytes_in = 3;
+      static constexpr size_t m_encoding_bytes_out = 4;
 };
 
 uint32_t lookup_base64_chars(uint32_t x32) {
