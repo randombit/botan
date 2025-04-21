@@ -216,7 +216,7 @@ class BOTAN_PUBLIC_API(2, 0) BER_Bad_Tag final : public BER_Decoding_Error {
 class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
    public:
       /**
-      * Create an uninitialied OID object
+      * Create an uninitialised OID object
       */
       explicit OID() = default;
 

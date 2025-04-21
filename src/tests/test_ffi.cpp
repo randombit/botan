@@ -3408,6 +3408,34 @@ class ViewBytesSink final {
 };
 
 /**
+ * See ViewBytesSink for how to use this. Works for `botan_view_str_fn` instead.
+*/
+class ViewStringSink final {
+   public:
+      void* delegate() { return this; }
+
+      botan_view_str_fn callback() { return &write_fn; }
+
+      std::string_view get() { return m_str; }
+
+   private:
+      static int write_fn(void* ctx, const char* str, size_t len) {
+         if(!ctx || !str) {
+            return BOTAN_FFI_ERROR_NULL_POINTER;
+         }
+
+         auto* sink = static_cast<ViewStringSink*>(ctx);
+         // discard the null terminator
+         sink->m_str = std::string(str, len - 1);
+
+         return 0;
+      }
+
+   private:
+      std::string m_str;
+};
+
+/**
  * Base class for roundtrip tests of FFI bindings for Key Encapsulation Mechanisms.
  */
 class FFI_KEM_Roundtrip_Test : public FFI_Test {
@@ -4147,6 +4175,106 @@ class FFI_DH_Test final : public FFI_Test {
       }
 };
 
+class FFI_OID_Test final : public FFI_Test {
+   public:
+      std::string name() const override { return "FFI OID"; }
+
+      void ffi_test(Test::Result& result, botan_rng_t rng) override {
+         botan_asn1_oid_t oid;
+         botan_asn1_oid_t new_oid;
+         botan_asn1_oid_t new_oid_from_string;
+         botan_asn1_oid_t oid_a;
+         botan_asn1_oid_t oid_b;
+         botan_asn1_oid_t oid_c;
+
+         TEST_FFI_FAIL("empty oid", botan_oid_from_string, (&oid, ""));
+         TEST_FFI_OK(botan_oid_from_string, (&oid, "1.2.3.4.5"));
+
+         TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_oid_from_string, (&new_oid, "a.a.a"));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER, botan_oid_from_string, (&new_oid, "0.40"));
+         TEST_FFI_RC(
+            BOTAN_FFI_ERROR_BAD_PARAMETER, botan_oid_from_string, (&new_oid, "random-name-that-definitely-has-no-oid"));
+
+         TEST_FFI_OK(botan_oid_from_string, (&new_oid, "1.2.3.4.5.6.7.8"));
+         TEST_FFI_OK(botan_oid_register, (new_oid, "random-name-that-definitely-has-no-oid"));
+
+         TEST_FFI_OK(botan_oid_from_string, (&new_oid_from_string, "random-name-that-definitely-has-no-oid"));
+         TEST_FFI_RC(1, botan_oid_equal, (new_oid, new_oid_from_string));
+
+         TEST_FFI_OK(botan_oid_from_string, (&oid_a, "1.2.3.4.5.6"));
+         TEST_FFI_OK(botan_oid_from_string, (&oid_b, "1.2.3.4.5.6"));
+         TEST_FFI_OK(botan_oid_from_string, (&oid_c, "1.2.3.4.4"));
+
+         TEST_FFI_RC(1, botan_oid_equal, (oid_a, oid_b));
+         TEST_FFI_RC(0, botan_oid_equal, (oid_a, oid_c));
+
+         int res;
+
+         TEST_FFI_OK(botan_oid_cmp, (&res, oid_a, oid_b));
+         result.confirm("oid_a and oid_b are equal", res == 0);
+
+         TEST_FFI_OK(botan_oid_cmp, (&res, oid_a, oid_c));
+         result.confirm("oid_a is bigger", res == 1);
+
+         TEST_FFI_OK(botan_oid_cmp, (&res, oid_c, oid_a));
+         result.confirm("oid_c is smaller", res == -1);
+
+         TEST_FFI_OK(botan_oid_destroy, (oid));
+         TEST_FFI_OK(botan_oid_destroy, (new_oid));
+         TEST_FFI_OK(botan_oid_destroy, (new_oid_from_string));
+         TEST_FFI_OK(botan_oid_destroy, (oid_a));
+         TEST_FFI_OK(botan_oid_destroy, (oid_b));
+         TEST_FFI_OK(botan_oid_destroy, (oid_c));
+
+         botan_privkey_t priv;
+         if(TEST_FFI_INIT(botan_privkey_create_rsa, (&priv, rng, 1024))) {
+            TEST_FFI_OK(botan_privkey_check_key, (priv, rng, 0));
+
+            const std::string oid_rsa_expexted = "1.2.840.113549.1.1.1";
+
+            botan_asn1_oid_t rsa_oid_priv;
+            botan_asn1_oid_t rsa_oid_pub;
+            botan_asn1_oid_t rsa_oid_expected;
+            botan_asn1_oid_t rsa_oid_from_name;
+
+            TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_oid_from_string, (&rsa_oid_expected, nullptr));
+            TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_oid_from_string, (nullptr, "1.2.3.4.5"));
+            TEST_FFI_OK(botan_oid_from_string, (&rsa_oid_expected, oid_rsa_expexted.c_str()));
+            TEST_FFI_OK(botan_privkey_oid, (&rsa_oid_priv, priv));
+
+            TEST_FFI_RC(1, botan_oid_equal, (rsa_oid_priv, rsa_oid_expected));
+
+            botan_pubkey_t pub;
+            TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
+
+            TEST_FFI_OK(botan_pubkey_oid, (&rsa_oid_pub, pub));
+            TEST_FFI_RC(1, botan_oid_equal, (rsa_oid_pub, rsa_oid_expected));
+
+            ViewStringSink oid_string;
+            TEST_FFI_OK(botan_oid_view_string, (rsa_oid_expected, oid_string.delegate(), oid_string.callback()));
+            std::string oid_actual = {oid_string.get().begin(), oid_string.get().end()};
+
+            result.test_eq("oid to string", oid_actual, oid_rsa_expexted);
+
+            TEST_FFI_OK(botan_oid_from_string, (&rsa_oid_from_name, "RSA"));
+            TEST_FFI_RC(1, botan_oid_equal, (rsa_oid_expected, rsa_oid_from_name));
+
+            ViewStringSink rsa_name;
+            TEST_FFI_OK(botan_oid_view_name, (rsa_oid_from_name, rsa_name.delegate(), rsa_name.callback()));
+            std::string rsa_name_string = {rsa_name.get().begin(), rsa_name.get().end()};
+            result.test_eq("oid to name", rsa_name_string, "RSA");
+
+            TEST_FFI_OK(botan_oid_destroy, (rsa_oid_priv));
+            TEST_FFI_OK(botan_oid_destroy, (rsa_oid_pub));
+            TEST_FFI_OK(botan_oid_destroy, (rsa_oid_expected));
+            TEST_FFI_OK(botan_oid_destroy, (rsa_oid_from_name));
+
+            TEST_FFI_OK(botan_pubkey_destroy, (pub));
+            TEST_FFI_OK(botan_privkey_destroy, (priv));
+         }
+      }
+};
+
 BOTAN_REGISTER_TEST("ffi", "ffi_utils", FFI_Utils_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_rng", FFI_RNG_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_rsa_cert", FFI_RSA_Cert_Test);
@@ -4196,6 +4324,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_frodokem", FFI_FrodoKEM_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_cmce", FFI_Classic_McEliece_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_elgamal", FFI_ElGamal_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_dh", FFI_DH_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_oid", FFI_OID_Test);
 
 #endif
 

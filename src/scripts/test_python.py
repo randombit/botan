@@ -1045,6 +1045,43 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertEqual(sk_read.to_raw(), sk_bits)
         self.assertEqual(pk_read.to_raw(), pk_bits)
 
+    def test_oids(self):
+        oid = botan.OID.from_string("1.2.3.4.5")
+        self.assertEqual(oid.to_string(), "1.2.3.4.5")
+
+        new_oid = botan.OID.from_string("1.2.3.4.5.6.7.8")
+        new_oid.register("random-name-that-definitely-has-no-oid")
+        new_oid_from_string = botan.OID.from_string("random-name-that-definitely-has-no-oid")
+        self.assertEqual(new_oid, new_oid_from_string)
+        self.assertEqual(new_oid.to_string(), new_oid_from_string.to_string())
+        self.assertEqual(new_oid.to_name(), new_oid_from_string.to_name())
+
+        oid_rsa = botan.OID.from_string("RSA")
+        self.assertEqual(oid_rsa.to_string(), "1.2.840.113549.1.1.1")
+        self.assertEqual(oid_rsa.to_name(), "RSA")
+
+        oid_a = botan.OID.from_string("1.2.3.4.5.6")
+        oid_b = botan.OID.from_string("1.2.3.4.5.6")
+        oid_c = botan.OID.from_string("1.2.3.4")
+        self.assertEqual(oid_a, oid_b)
+        self.assertNotEqual(oid_a, oid_c)
+        self.assertTrue(oid_a > oid_c)
+        self.assertTrue(oid_a >= oid_c)
+        self.assertTrue(oid_c < oid_a)
+        self.assertTrue(oid_c <= oid_a)
+
+        rng = botan.RandomNumberGenerator()
+        priv = botan.PrivateKey.create("RSA", "1024", rng)
+        oid_rsa_priv = priv.object_identifier()
+        self.assertEqual(oid_rsa_priv, oid_rsa)
+        self.assertEqual(oid_rsa_priv.to_string(), oid_rsa.to_string())
+        self.assertEqual(oid_rsa_priv.to_name(), oid_rsa.to_name())
+
+        pub = priv.get_public_key()
+        oid_rsa_pub = pub.object_identifier()
+        self.assertEqual(oid_rsa_pub, oid_rsa)
+        self.assertEqual(oid_rsa_pub.to_string(), oid_rsa.to_string())
+        self.assertEqual(oid_rsa_pub.to_name(), oid_rsa_pub.to_name())
 
 class BotanPythonZfecTests(unittest.TestCase):
     """

@@ -9,6 +9,7 @@ brief -> "C API for Botan's functionality"
 
 <header:internal>
 ffi_mp.h
+ffi_oid.h
 ffi_pkey.h
 ffi_rng.h
 ffi_util.h
