@@ -9,7 +9,7 @@
 #define BOTAN_BLINDER_H_
 
 #include <botan/bigint.h>
-#include <botan/reducer.h>
+#include <botan/internal/barrett.h>
 #include <functional>
 
 namespace Botan {
@@ -68,7 +68,7 @@ class Blinder final {
       * @note Lifetime: The rng and reducer arguments are captured by
       * reference and must live as long as the Blinder does
       */
-      Blinder(const Modular_Reducer& reducer,
+      Blinder(const Barrett_Reduction& reducer,
               RandomNumberGenerator& rng,
               std::function<BigInt(const BigInt&)> fwd_func,
               std::function<BigInt(const BigInt&)> inv_func);
@@ -82,7 +82,7 @@ class Blinder final {
    private:
       BigInt blinding_nonce() const;
 
-      const Modular_Reducer& m_reducer;
+      const Barrett_Reduction& m_reducer;
       RandomNumberGenerator& m_rng;
       std::function<BigInt(const BigInt&)> m_fwd_fn;
       std::function<BigInt(const BigInt&)> m_inv_fn;

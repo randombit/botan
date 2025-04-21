@@ -15,8 +15,8 @@
 #include <botan/mutex.h>
 #include <botan/numthry.h>
 #include <botan/pem.h>
-#include <botan/reducer.h>
 #include <botan/rng.h>
+#include <botan/internal/barrett.h>
 #include <botan/internal/ec_inner_data.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/primality.h>
@@ -253,7 +253,7 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
       }
 
       // TODO(Botan4) we can remove this check since we'll only accept pre-registered groups
-      auto mod_p = Modular_Reducer::for_public_modulus(p);
+      auto mod_p = Barrett_Reduction::for_public_modulus(p);
       if(!is_bailie_psw_probable_prime(p, mod_p)) {
          throw Decoding_Error("ECC p parameter is not a prime");
       }
@@ -271,7 +271,7 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
       }
 
       // TODO(Botan4) we can remove this check since we'll only accept pre-registered groups
-      auto mod_order = Modular_Reducer::for_public_modulus(order);
+      auto mod_order = Barrett_Reduction::for_public_modulus(order);
       if(!is_bailie_psw_probable_prime(order, mod_order)) {
          throw Decoding_Error("Invalid ECC order parameter");
       }
@@ -479,10 +479,10 @@ EC_Group::EC_Group(const OID& oid,
    BOTAN_ARG_CHECK(base_y >= 0 && base_y < p, "EC_Group base_y is invalid");
    BOTAN_ARG_CHECK(p.bits() == order.bits(), "EC_Group p and order must have the same number of bits");
 
-   auto mod_p = Modular_Reducer::for_public_modulus(p);
+   auto mod_p = Barrett_Reduction::for_public_modulus(p);
    BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(p, mod_p), "EC_Group p is not prime");
 
-   auto mod_order = Modular_Reducer::for_public_modulus(order);
+   auto mod_order = Barrett_Reduction::for_public_modulus(order);
    BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(order, mod_order), "EC_Group order is not prime");
 
    // This catches someone "ignoring" a cofactor and just trying to
@@ -713,7 +713,7 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
    }
 
    //compute the discriminant: 4*a^3 + 27*b^2 which must be nonzero
-   auto mod_p = Modular_Reducer::for_public_modulus(p);
+   auto mod_p = Barrett_Reduction::for_public_modulus(p);
 
    const BigInt discriminant = mod_p.reduce(mod_p.multiply(4, mod_p.cube(a)) + mod_p.multiply(27, mod_p.square(b)));
 

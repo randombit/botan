@@ -48,7 +48,7 @@ void EC_Scalar_Data_BN::square_self() {
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_BN::negate() const {
-   return std::make_unique<EC_Scalar_Data_BN>(m_group, m_group->mod_order().reduce(-m_v));
+   return std::make_unique<EC_Scalar_Data_BN>(m_group, m_group->mod_order().reduce(m_group->order() - m_v));
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_BN::invert() const {
@@ -64,7 +64,8 @@ std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_BN::add(const EC_Scalar_Data& oth
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_BN::sub(const EC_Scalar_Data& other) const {
-   return std::make_unique<EC_Scalar_Data_BN>(m_group, m_group->mod_order().reduce(m_v - checked_ref(other).value()));
+   return std::make_unique<EC_Scalar_Data_BN>(
+      m_group, m_group->mod_order().reduce(m_v + (m_group->order() - checked_ref(other).value())));
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_BN::mul(const EC_Scalar_Data& other) const {

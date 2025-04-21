@@ -12,7 +12,7 @@
 #include <botan/ec_group.h>
 #include <botan/hex.h>
 #include <botan/numthry.h>
-#include <botan/reducer.h>
+#include <botan/internal/barrett.h>
 
 namespace {
 

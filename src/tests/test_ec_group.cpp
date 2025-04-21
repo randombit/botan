@@ -15,8 +15,8 @@
    #include <botan/hex.h>
    #include <botan/numthry.h>
    #include <botan/pk_keys.h>
-   #include <botan/reducer.h>
    #include <botan/x509_key.h>
+   #include <botan/internal/barrett.h>
    #include <botan/internal/ec_inner_data.h>
 #endif
 
@@ -80,7 +80,7 @@ Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, const
 
 Botan::EC_Point create_random_point(Botan::RandomNumberGenerator& rng, const Botan::EC_Group& group) {
    const Botan::BigInt& p = group.get_p();
-   auto mod_p = Botan::Modular_Reducer::for_public_modulus(p);
+   auto mod_p = Botan::Barrett_Reduction::for_public_modulus(p);
 
    for(;;) {
       const Botan::BigInt x = Botan::BigInt::random_integer(rng, 1, p);

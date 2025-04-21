@@ -11,7 +11,7 @@
    #include "test_rng.h"
    #include <botan/bigint.h>
    #include <botan/numthry.h>
-   #include <botan/reducer.h>
+   #include <botan/internal/barrett.h>
    #include <botan/internal/ct_utils.h>
    #include <botan/internal/divide.h>
    #include <botan/internal/fmt.h>
@@ -455,11 +455,13 @@ class BigInt_Mod_Test final : public Text_Based_Test {
          e %= b;
          result.test_eq("a %= b", e, expected);
 
-         auto mod_b_pub = Botan::Modular_Reducer::for_public_modulus(b);
-         result.test_eq("Barrett public", mod_b_pub.reduce(a), expected);
+         if(a.is_positive() && a < (b * b)) {
+            auto mod_b_pub = Botan::Barrett_Reduction::for_public_modulus(b);
+            result.test_eq("Barrett public", mod_b_pub.reduce(a), expected);
 
-         auto mod_b_sec = Botan::Modular_Reducer::for_secret_modulus(b);
-         result.test_eq("Barrett secret", mod_b_sec.reduce(a), expected);
+            auto mod_b_sec = Botan::Barrett_Reduction::for_secret_modulus(b);
+            result.test_eq("Barrett secret", mod_b_sec.reduce(a), expected);
+         }
 
          // if b fits into a Botan::word test %= operator for words
          if(b.sig_words() == 1) {
@@ -486,6 +488,55 @@ class BigInt_Mod_Test final : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_TEST("math", "bn_mod", BigInt_Mod_Test);
+
+class Barrett_Redc_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("Barrett reduction");
+
+         for(size_t t = 0; t != 10000; ++t) {
+            const auto mod = [&]() {
+               if(t <= 16) {
+                  return BigInt::from_u64(t) + 1;
+               } else {
+                  const size_t bits = (t / 4) + 2;
+
+                  if(t % 4 == 0) {
+                     return BigInt::power_of_2(bits);
+                  } else if(t % 4 == 1) {
+                     return BigInt::power_of_2(bits) - 1;
+                  } else if(t % 4 == 2) {
+                     return BigInt::power_of_2(bits) + 1;
+                  } else {
+                     Botan::BigInt b;
+                     b.randomize(rng(), bits, true);
+                     return b;
+                  }
+               }
+            }();
+
+            const size_t mod_bits = mod.bits();
+            auto barrett = Botan::Barrett_Reduction::for_public_modulus(mod);
+
+            for(size_t i = 0; i != 10; ++i) {
+               const auto input = [&]() {
+                  Botan::BigInt b;
+                  b.randomize(rng(), 2 * mod_bits, false);
+                  return b;
+               }();
+
+               const auto reduced_ref = input % mod;
+               const auto reduced_barrett = barrett.reduce(input);
+
+               result.test_eq("Barrett reduction matches variable time division", reduced_barrett, reduced_ref);
+            }
+         }
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("math", "barrett_redc", Barrett_Redc_Test);
 
 class BigInt_GCD_Test final : public Text_Based_Test {
    public:
@@ -757,7 +808,7 @@ BOTAN_REGISTER_TEST("math", "bn_rand", BigInt_Rand_Test);
 class Lucas_Primality_Test final : public Test {
    public:
       std::vector<Test::Result> run() override {
-         const uint32_t lucas_max = (Test::run_long_tests() ? 100000 : 6000);
+         const uint32_t lucas_max = (Test::run_long_tests() ? 100000 : 10000) + 1;
 
          // OEIS A217120
          std::set<uint32_t> lucas_pp{
@@ -770,7 +821,7 @@ class Lucas_Primality_Test final : public Test {
          Test::Result result("Lucas primality test");
 
          for(uint32_t i = 3; i <= lucas_max; i += 2) {
-            auto mod_i = Botan::Modular_Reducer::for_public_modulus(i);
+            auto mod_i = Botan::Barrett_Reduction::for_public_modulus(i);
             const bool passes_lucas = Botan::is_lucas_probable_prime(i, mod_i);
             const bool is_prime = Botan::is_prime(i, this->rng());
 

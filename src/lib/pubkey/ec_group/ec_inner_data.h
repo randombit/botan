@@ -17,7 +17,7 @@
 #include <span>
 
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
-   #include <botan/reducer.h>
+   #include <botan/internal/barrett.h>
 #endif
 
 namespace Botan {
@@ -173,7 +173,7 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
 
       const BigInt& monty_b() const { return m_b_r; }
 
-      const Modular_Reducer& mod_order() const { return m_mod_order; }
+      const Barrett_Reduction& mod_order() const { return m_mod_order; }
 #endif
 
       bool order_is_less_than_p() const { return m_order_is_less_than_p; }
@@ -306,8 +306,8 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       CurveGFp m_curve;
       EC_Point m_base_point;
 
-      Modular_Reducer m_mod_field;
-      Modular_Reducer m_mod_order;
+      Barrett_Reduction m_mod_field;
+      Barrett_Reduction m_mod_order;
 
       // Montgomery parameters (only used for legacy EC_Point)
       Montgomery_Params m_monty;

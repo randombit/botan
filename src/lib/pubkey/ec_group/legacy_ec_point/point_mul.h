@@ -11,11 +11,11 @@
 
 namespace Botan {
 
-class Modular_Reducer;
+class Barrett_Reduction;
 
 class EC_Point_Base_Point_Precompute final {
    public:
-      EC_Point_Base_Point_Precompute(const EC_Point& base_point, const Modular_Reducer& mod_order);
+      EC_Point_Base_Point_Precompute(const EC_Point& base_point, const Barrett_Reduction& mod_order);
 
       EC_Point mul(const BigInt& k,
                    RandomNumberGenerator& rng,
@@ -24,7 +24,7 @@ class EC_Point_Base_Point_Precompute final {
 
    private:
       const EC_Point& m_base_point;
-      const Modular_Reducer& m_mod_order;
+      const Barrett_Reduction& m_mod_order;
 
       enum { WINDOW_BITS = 3 };
 

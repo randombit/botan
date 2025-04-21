@@ -111,7 +111,7 @@ std::pair<BigInt, SymmetricKey> srp6_client_agree(std::string_view identifier,
 
    const BigInt g_x_p = group.power_g_p(x, hash_fn->output_length() * 8);
 
-   const BigInt B_k_g_x_p = group.mod_p(B - group.multiply_mod_p(k, g_x_p));
+   const BigInt B_k_g_x_p = group.mod_p(B + group.mod_p(p - group.multiply_mod_p(k, g_x_p)));
 
    const BigInt a_ux = a + u * x;
 

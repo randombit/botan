@@ -8,8 +8,8 @@
 #include <botan/internal/primality.h>
 
 #include <botan/numthry.h>
-#include <botan/reducer.h>
 #include <botan/rng.h>
+#include <botan/internal/barrett.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
@@ -171,7 +171,7 @@ BigInt random_prime(
 
          BOTAN_DEBUG_ASSERT(no_small_multiples(p, sieve));
 
-         auto mod_p = Modular_Reducer::for_secret_modulus(p);
+         auto mod_p = Barrett_Reduction::for_secret_modulus(p);
 
          if(coprime > 1) {
             /*
@@ -259,7 +259,7 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
 
          BOTAN_DEBUG_ASSERT(no_small_multiples(p, sieve));
 
-         auto mod_p = Modular_Reducer::for_secret_modulus(p);
+         auto mod_p = Barrett_Reduction::for_secret_modulus(p);
 
          /*
          * Do a single primality test first before checking coprimality, since

@@ -13,7 +13,7 @@
 namespace Botan {
 
 class BigInt;
-class Modular_Reducer;
+class Barrett_Reduction;
 class Montgomery_Exponentation_State;
 
 /*

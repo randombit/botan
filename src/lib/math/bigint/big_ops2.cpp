@@ -163,7 +163,9 @@ BigInt& BigInt::mul(const BigInt& y, secure_vector<word>& ws) {
       set_word_at(x_sw, carry);
    } else {
       const size_t new_size = x_sw + y_sw + 1;
-      ws.resize(new_size);
+      if(ws.size() < new_size) {
+         ws.resize(new_size);
+      }
       secure_vector<word> z_reg(new_size);
 
       bigint_mul(z_reg.data(), z_reg.size(), _data(), size(), x_sw, y._data(), y.size(), y_sw, ws.data(), ws.size());

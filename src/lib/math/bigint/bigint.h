@@ -947,6 +947,18 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       void _assign_from_bytes(std::span<const uint8_t> bytes) { assign_from_bytes(bytes); }
 
       /**
+       * Create a BigInt from a word vector
+       *
+       * @warning this is an implementation detail which is not for
+       * public use and not covered by SemVer.
+       */
+      static BigInt _from_words(secure_vector<word>&& words) {
+         BigInt bn;
+         bn.m_data.swap(words);
+         return bn;
+      }
+
+      /**
        * Mark this BigInt as holding secret data
        *
        * @warning this is an implementation detail which is not for
