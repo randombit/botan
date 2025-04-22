@@ -85,6 +85,10 @@ void Reporter::record(const std::string& name, const Test::Result& result) {
    suite.record(result);
 }
 
+void Reporter::waiting_for_next_results(const std::string& test_name) {
+   next_testsuite(test_name);
+}
+
 void Reporter::record(const std::string& testsuite_name, const std::vector<Botan_Tests::Test::Result>& results) {
    std::map<std::string, Botan_Tests::Test::Result> combined;
    for(const auto& result : results) {
@@ -98,7 +102,6 @@ void Reporter::record(const std::string& testsuite_name, const std::vector<Botan
       i->second.merge(result);
    }
 
-   next_testsuite(testsuite_name);
    for(const auto& result : combined) {
       record(testsuite_name, result.second);
    }
