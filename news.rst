@@ -12,6 +12,9 @@ Version 3.8.0, Not Yet Released
   #4627 #4632 #4634 #4686 #4687 #4688 #4689 #4690 #4692 #4695 #4703 #4706 #4708
   #4710 #4711 #4746 #4794)
 
+* Add support for extended private keys in ML-KEM to handle certain implementations
+  which do not use the seed encoding. (GH #4817)
+
 * Add support for SHA-512 instructions added in upcoming Intel processors (GH #4766)
 
 * Add support for SM4 instructions added in upcoming Intel processors (GH #4768)
@@ -45,7 +48,7 @@ Version 3.8.0, Not Yet Released
 * Add an FFI example which also works as a test in CI that prevents accidentally
   making changes to ``ffi.h`` or ``build.h`` that make them incompatible with C. (GH #4640)
 
-* Add new FFI functions regarding stateful private keys (GH #4700)
+* Add new FFI functions regarding stateful private keys (GH #4700), OIDS (GH #4816)
 
 * Add missing checks for null pointer arguments in FFI (#4704)
 
@@ -90,6 +93,8 @@ Version 3.8.0, Not Yet Released
 * Add some examples of using format preserving encryption (GH #4758)
 
 * Add a new cleaner interface for handling ECIES flags (GH #4691)
+
+* Reduce use of heap in GCM/GMAC (GH #4826) and hex/base64 (GH #4832)
 
 * Internal RSA signature padding cleanups (GH #4635)
 
