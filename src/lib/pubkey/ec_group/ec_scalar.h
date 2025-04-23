@@ -25,7 +25,7 @@ class EC_Scalar_Data;
 /**
 * Represents an integer modulo the prime group order of an elliptic curve
 */
-class BOTAN_UNSTABLE_API EC_Scalar final {
+class BOTAN_PUBLIC_API(3, 6) EC_Scalar final {
    public:
       /**
       * Deserialize a scalar

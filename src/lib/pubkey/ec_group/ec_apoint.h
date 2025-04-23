@@ -33,7 +33,7 @@ class EC_AffinePoint_Data;
 
 /// Elliptic Curve Point in Affine Representation
 ///
-class BOTAN_UNSTABLE_API EC_AffinePoint final {
+class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
    public:
       /// Point deserialization. Throws if wrong length or not a valid point
       ///
