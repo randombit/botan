@@ -14,7 +14,7 @@
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
    #include <botan/numthry.h>
-   #include <botan/reducer.h>
+   #include <botan/internal/barrett.h>
    #include <botan/internal/primality.h>
 #endif
 
@@ -160,14 +160,14 @@ class PerfTest_BnRedc final : public PerfTest {
             auto barrett_setup_sec_timer = config.make_timer(bit_str + "Barrett setup secret");
 
             while(barrett_setup_sec_timer->under(runtime)) {
-               barrett_setup_sec_timer->run([&]() { Botan::Modular_Reducer::for_secret_modulus(p); });
-               barrett_setup_pub_timer->run([&]() { Botan::Modular_Reducer::for_public_modulus(p); });
+               barrett_setup_sec_timer->run([&]() { Botan::Barrett_Reduction::for_secret_modulus(p); });
+               barrett_setup_pub_timer->run([&]() { Botan::Barrett_Reduction::for_public_modulus(p); });
             }
 
             config.record_result(*barrett_setup_pub_timer);
             config.record_result(*barrett_setup_sec_timer);
 
-            auto mod_p = Botan::Modular_Reducer::for_public_modulus(p);
+            auto mod_p = Botan::Barrett_Reduction::for_public_modulus(p);
 
             auto barrett_timer = config.make_timer(bit_str + "Barrett redc");
             auto knuth_timer = config.make_timer(bit_str + "Knuth redc");
@@ -242,7 +242,7 @@ class PerfTest_IsPrime final : public PerfTest {
             Botan::BigInt n = Botan::random_prime(config.rng(), bits);
 
             while(lucas_timer->under(runtime)) {
-               auto mod_n = Botan::Modular_Reducer::for_public_modulus(n);
+               auto mod_n = Botan::Barrett_Reduction::for_public_modulus(n);
 
                mr_timer->run([&]() { return Botan::is_miller_rabin_probable_prime(n, mod_n, config.rng(), 2); });
 

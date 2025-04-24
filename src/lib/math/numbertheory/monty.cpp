@@ -7,14 +7,14 @@
 #include <botan/internal/monty.h>
 
 #include <botan/numthry.h>
-#include <botan/reducer.h>
+#include <botan/internal/barrett.h>
 #include <botan/internal/mp_core.h>
 
 #include <utility>
 
 namespace Botan {
 
-Montgomery_Params::Montgomery_Params(const BigInt& p, const Modular_Reducer& mod_p) {
+Montgomery_Params::Montgomery_Params(const BigInt& p, const Barrett_Reduction& mod_p) {
    if(p.is_even() || p < 3) {
       throw Invalid_Argument("Montgomery_Params invalid modulus");
    }
@@ -41,7 +41,7 @@ Montgomery_Params::Montgomery_Params(const BigInt& p) {
 
    const BigInt r = BigInt::power_of_2(m_p_words * WordInfo<word>::bits);
 
-   auto mod_p = Modular_Reducer::for_secret_modulus(p);
+   auto mod_p = Barrett_Reduction::for_secret_modulus(p);
 
    m_r1 = mod_p.reduce(r);
    m_r2 = mod_p.square(m_r1);

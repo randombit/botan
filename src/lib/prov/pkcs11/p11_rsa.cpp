@@ -118,7 +118,7 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
                                       RandomNumberGenerator& rng) :
             m_key(key),
             m_mechanism(MechanismWrapper::create_rsa_crypt_mechanism(padding)),
-            m_mod_n(Modular_Reducer::for_public_modulus(m_key.get_n())),
+            m_mod_n(Barrett_Reduction::for_public_modulus(m_key.get_n())),
             m_monty_n(std::make_shared<Montgomery_Params>(m_key.get_n(), m_mod_n)),
             m_blinder(
                m_mod_n,
@@ -168,7 +168,7 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
    private:
       const PKCS11_RSA_PrivateKey& m_key;
       MechanismWrapper m_mechanism;
-      Modular_Reducer m_mod_n;
+      Barrett_Reduction m_mod_n;
       std::shared_ptr<const Montgomery_Params> m_monty_n;
       size_t m_bits = 0;
       Blinder m_blinder;

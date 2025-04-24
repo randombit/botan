@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-class Modular_Reducer;
+class Barrett_Reduction;
 
 class Montgomery_Params;
 
@@ -140,7 +140,7 @@ class BOTAN_TEST_API Montgomery_Params final {
       * Initialize a set of Montgomery reduction parameters. These values
       * can be shared by all values in a specific Montgomery domain.
       */
-      Montgomery_Params(const BigInt& p, const Modular_Reducer& mod_p);
+      Montgomery_Params(const BigInt& p, const Barrett_Reduction& mod_p);
 
       /**
       * Initialize a set of Montgomery reduction parameters. These values

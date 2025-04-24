@@ -11,7 +11,7 @@
 #include <botan/der_enc.h>
 #include <botan/numthry.h>
 #include <botan/pem.h>
-#include <botan/reducer.h>
+#include <botan/internal/barrett.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/mod_inv.h>
@@ -29,8 +29,8 @@ class DL_Group_Data final {
             m_p(p),
             m_q(q),
             m_g(g),
-            m_mod_p(Modular_Reducer::for_public_modulus(p)),
-            m_mod_q(Modular_Reducer::for_public_modulus(q)),
+            m_mod_p(Barrett_Reduction::for_public_modulus(p)),
+            m_mod_q(Barrett_Reduction::for_public_modulus(q)),
             m_monty_params(std::make_shared<Montgomery_Params>(m_p, m_mod_p)),
             m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
             m_p_bits(p.bits()),
@@ -42,7 +42,7 @@ class DL_Group_Data final {
       DL_Group_Data(const BigInt& p, const BigInt& g, DL_Group_Source source) :
             m_p(p),
             m_g(g),
-            m_mod_p(Modular_Reducer::for_public_modulus(p)),
+            m_mod_p(Barrett_Reduction::for_public_modulus(p)),
             m_monty_params(std::make_shared<Montgomery_Params>(m_p, m_mod_p)),
             m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
             m_p_bits(p.bits()),
@@ -64,9 +64,9 @@ class DL_Group_Data final {
 
       const BigInt& g() const { return m_g; }
 
-      const Modular_Reducer& reducer_mod_p() const { return m_mod_p; }
+      const Barrett_Reduction& reducer_mod_p() const { return m_mod_p; }
 
-      const Modular_Reducer& reducer_mod_q() const {
+      const Barrett_Reduction& reducer_mod_q() const {
          BOTAN_STATE_CHECK(m_mod_q);
          return *m_mod_q;
       }
@@ -113,8 +113,8 @@ class DL_Group_Data final {
       BigInt m_p;
       BigInt m_q;  // zero if no q set
       BigInt m_g;
-      Modular_Reducer m_mod_p;
-      std::optional<Modular_Reducer> m_mod_q;
+      Barrett_Reduction m_mod_p;
+      std::optional<Barrett_Reduction> m_mod_q;
       std::shared_ptr<const Montgomery_Params> m_monty_params;
       std::shared_ptr<const Montgomery_Exponentation_State> m_monty;
       size_t m_p_bits;
@@ -241,7 +241,7 @@ BigInt make_dsa_generator(const BigInt& p, const BigInt& q) {
    }
 
    // TODO we compute these, then throw them away and recompute in DL_Group_Data
-   auto reduce_mod = Modular_Reducer::for_public_modulus(p);
+   auto reduce_mod = Barrett_Reduction::for_public_modulus(p);
    auto monty_params = std::make_shared<Montgomery_Params>(p, reduce_mod);
 
    for(size_t i = 0; i != PRIME_TABLE_SIZE; ++i) {
@@ -295,12 +295,13 @@ DL_Group::DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, siz
       }
 
       const BigInt q = random_prime(rng, qbits);
-      auto mod_2q = Modular_Reducer::for_public_modulus(2 * q);
+      const BigInt q2 = q * 2;
       BigInt X;
       BigInt p;
       while(p.bits() != pbits || !is_prime(p, rng, 128, true)) {
          X.randomize(rng, pbits);
-         p = X - mod_2q.reduce(X) + 1;
+         // Variable time division is OK here since DH groups are public anyway
+         p = X - (X % q2) + 1;
       }
 
       const BigInt g = make_dsa_generator(p, q);
@@ -527,7 +528,7 @@ BigInt DL_Group::multiply_mod_p(const BigInt& x, const BigInt& y) const {
    return data().reducer_mod_p().multiply(x, y);
 }
 
-const Modular_Reducer& DL_Group::_reducer_mod_p() const {
+const Barrett_Reduction& DL_Group::_reducer_mod_p() const {
    return data().reducer_mod_p();
 }
 

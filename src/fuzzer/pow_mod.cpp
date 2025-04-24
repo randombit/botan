@@ -7,7 +7,7 @@
 #include "fuzzers.h"
 
 #include <botan/numthry.h>
-#include <botan/reducer.h>
+#include <botan/internal/barrett.h>
 
 namespace {
 
@@ -19,7 +19,7 @@ Botan::BigInt simple_power_mod(Botan::BigInt x, Botan::BigInt n, const Botan::Bi
       return 1;
    }
 
-   Botan::Modular_Reducer mod_p(p);
+   auto mod_p = Botan::Barrett_Reduction::for_public_modulus(p);
    Botan::BigInt y = 1;
 
    while(n > 1) {

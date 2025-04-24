@@ -11,7 +11,7 @@
 #include <botan/der_enc.h>
 #include <botan/numthry.h>
 #include <botan/pss_params.h>
-#include <botan/reducer.h>
+#include <botan/internal/barrett.h>
 #include <botan/internal/blinding.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/emsa.h>
@@ -36,7 +36,7 @@ class RSA_Public_Data final {
       RSA_Public_Data(BigInt&& n, BigInt&& e) :
             m_n(std::move(n)),
             m_e(std::move(e)),
-            m_mod_n(Modular_Reducer::for_public_modulus(m_n)),
+            m_mod_n(Barrett_Reduction::for_public_modulus(m_n)),
             m_monty_n(std::make_shared<Montgomery_Params>(m_n, m_mod_n)),
             m_public_modulus_bits(m_n.bits()),
             m_public_modulus_bytes(m_n.bytes()) {}
@@ -57,12 +57,12 @@ class RSA_Public_Data final {
 
       const std::shared_ptr<const Montgomery_Params>& monty_n() const { return m_monty_n; }
 
-      const Modular_Reducer& reducer_mod_n() const { return m_mod_n; }
+      const Barrett_Reduction& reducer_mod_n() const { return m_mod_n; }
 
    private:
       BigInt m_n;
       BigInt m_e;
-      Modular_Reducer m_mod_n;
+      Barrett_Reduction m_mod_n;
       std::shared_ptr<const Montgomery_Params> m_monty_n;
       size_t m_public_modulus_bits;
       size_t m_public_modulus_bytes;
@@ -505,7 +505,7 @@ class RSA_Private_Operation {
 #if defined(BOTAN_RSA_USE_ASYNC)
          /*
          * Precompute m.sig_words in the main thread before calling async. Otherwise
-         * the two threads race (during Modular_Reducer::reduce) and while the output
+         * the two threads race (during Barrett_Reduction::reduce) and while the output
          * is correct in both threads, helgrind warns.
          */
          m.sig_words();

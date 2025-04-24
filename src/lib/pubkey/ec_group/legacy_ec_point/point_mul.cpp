@@ -7,8 +7,8 @@
 #include <botan/internal/point_mul.h>
 
 #include <botan/mem_ops.h>
-#include <botan/reducer.h>
 #include <botan/rng.h>
+#include <botan/internal/barrett.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/rounding.h>
 
@@ -16,13 +16,13 @@ namespace Botan {
 
 namespace {
 
-size_t blinding_size(const BigInt& group_order) {
-   return (group_order.bits() + 1) / 2;
+size_t blinding_size(size_t order_bits) {
+   return (order_bits + 1) / 2;
 }
 
 BigInt blinding_mask(const BigInt& group_order, RandomNumberGenerator& rng) {
    if(rng.is_seeded()) {
-      BigInt mask(rng, blinding_size(group_order));
+      BigInt mask(rng, blinding_size(group_order.bits()));
       mask.set_bit(0);
       return mask;
    } else {
@@ -37,13 +37,14 @@ EC_Point multi_exponentiate(const EC_Point& x, const BigInt& z1, const EC_Point&
    return xy_mul.multi_exp(z1, z2);
 }
 
-EC_Point_Base_Point_Precompute::EC_Point_Base_Point_Precompute(const EC_Point& base, const Modular_Reducer& mod_order) :
+EC_Point_Base_Point_Precompute::EC_Point_Base_Point_Precompute(const EC_Point& base,
+                                                               const Barrett_Reduction& mod_order) :
       m_base_point(base), m_mod_order(mod_order), m_p_words(base.get_curve().get_p_words()) {
    std::vector<BigInt> ws(EC_Point::WORKSPACE_SIZE);
 
-   const size_t order_bits = mod_order.get_modulus().bits();
+   const size_t order_bits = mod_order.modulus_bits();
 
-   const size_t T_bits = round_up(order_bits + blinding_size(mod_order.get_modulus()), WINDOW_BITS) / WINDOW_BITS;
+   const size_t T_bits = round_up(order_bits + blinding_size(order_bits), WINDOW_BITS) / WINDOW_BITS;
 
    std::vector<EC_Point> T(WINDOW_SIZE * T_bits);
 

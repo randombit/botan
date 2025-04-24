@@ -7,7 +7,7 @@
 #include "fuzzers.h"
 
 #include <botan/numthry.h>
-#include <botan/reducer.h>
+#include <botan/internal/barrett.h>
 #include <botan/internal/divide.h>
 
 void fuzz(std::span<const uint8_t> in) {
@@ -21,7 +21,7 @@ void fuzz(std::span<const uint8_t> in) {
       return;
    }
 
-   const size_t x_len = 2 * ((in.size() + 2) / 3);
+   const size_t x_len = 2 * in.size() / 3;
 
    Botan::BigInt x = Botan::BigInt::from_bytes(in.subspan(0, x_len));
    const Botan::BigInt p = Botan::BigInt::from_bytes(in.subspan(x_len, in.size() - x_len));
@@ -30,23 +30,19 @@ void fuzz(std::span<const uint8_t> in) {
       return;
    }
 
-   const size_t x_bits = x.bits();
-   if(x_bits % 8 == 0 && x_bits / 8 == x_len) {
-      x.flip_sign();
-   }
+   try {
+      const auto mod_p = Botan::Barrett_Reduction::for_public_modulus(p);
+      const Botan::BigInt z = mod_p.reduce(x);
 
-   const Botan::BigInt ref = x % p;
+      const Botan::BigInt ref = x % p;
+      const Botan::BigInt ct = ct_modulo(x, p);
 
-   const Botan::Modular_Reducer mod_p(p);
-   const Botan::BigInt z = mod_p.reduce(x);
-
-   const Botan::BigInt ct = ct_modulo(x, p);
-
-   if(ref != z || ref != ct) {
-      FUZZER_WRITE_AND_CRASH("X = " << x.to_hex_string() << "\n"
-                                    << "P = " << p.to_hex_string() << "\n"
-                                    << "Barrett = " << z.to_hex_string() << "\n"
-                                    << "Ct = " << ct.to_hex_string() << "\n"
-                                    << "Ref = " << ref.to_hex_string() << "\n");
-   }
+      if(ref != z || ref != ct) {
+         FUZZER_WRITE_AND_CRASH("X = " << x.to_hex_string() << "\n"
+                                       << "P = " << p.to_hex_string() << "\n"
+                                       << "Barrett = " << z.to_hex_string() << "\n"
+                                       << "Ct = " << ct.to_hex_string() << "\n"
+                                       << "Ref = " << ref.to_hex_string() << "\n");
+      }
+   } catch(Botan::Invalid_Argument&) {}
 }

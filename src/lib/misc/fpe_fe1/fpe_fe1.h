@@ -15,7 +15,6 @@
 
 namespace Botan {
 
-class Modular_Reducer;
 class MessageAuthenticationCode;
 
 /**
@@ -76,7 +75,6 @@ class BOTAN_PUBLIC_API(2, 5) FPE_FE1 final : public SymmetricAlgorithm {
       secure_vector<uint8_t> compute_tweak_mac(const uint8_t tweak[], size_t tweak_len) const;
 
       std::unique_ptr<MessageAuthenticationCode> m_mac;
-      std::unique_ptr<Modular_Reducer> mod_a;
       std::vector<uint8_t> m_n_bytes;
       BigInt m_a;
       BigInt m_b;

@@ -10,8 +10,8 @@
 #include <botan/bigint.h>
 #include <botan/hash.h>
 #include <botan/numthry.h>
-#include <botan/reducer.h>
 #include <botan/rng.h>
+#include <botan/internal/barrett.h>
 #include <botan/internal/fmt.h>
 
 namespace Botan {
@@ -106,7 +106,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
    BigInt X;
    std::vector<uint8_t> V(HASH_SIZE * (n + 1));
 
-   auto mod_2q = Modular_Reducer::for_public_modulus(2 * q);
+   const BigInt q2 = 2 * q;
 
    for(size_t j = 0; j != 4 * pbits; ++j) {
       for(size_t k = 0; k <= n; ++k) {
@@ -119,7 +119,8 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
          X._assign_from_bytes(std::span{V}.subspan(HASH_SIZE - 1 - b / 8));
          X.set_bit(pbits - 1);
 
-         p = X - (mod_2q.reduce(X) - 1);
+         // Variable time division is OK here since DSA primes are public anyway
+         p = X - ((X % q2) - 1);
 
          if(p.bits() == pbits && is_prime(p, rng, 128, true)) {
             return true;

@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-class Modular_Reducer;
+class Barrett_Reduction;
 class Montgomery_Params;
 class DL_Group_Data;
 
@@ -377,7 +377,7 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       /*
       * For internal use only
       */
-      const Modular_Reducer& _reducer_mod_p() const;
+      const Barrett_Reduction& _reducer_mod_p() const;
 
    private:
       DL_Group(std::shared_ptr<DL_Group_Data> data) : m_data(std::move(data)) {}
