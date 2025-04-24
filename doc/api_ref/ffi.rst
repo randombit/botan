@@ -874,6 +874,100 @@ Object Identifiers
    Return 1 if ``a`` is equal to ``b``, 0 if ``a`` is not equal to ``b``
 
 
+EC Groups
+----------------------------------------
+
+.. versionadded:: 3.8.0
+
+.. cpp:type:: opaque* botan_ec_group_t
+
+   An opaque data type for an EC Group. Don't mess with it.
+
+.. cpp:function:: int botan_ec_group_destroy(botan_ec_group_t oid)
+
+   Destroy an object.
+
+.. cpp:function:: int botan_ec_group_supports_application_specific_group(int* out)
+
+   Checks if in this build configuration it is possible to register an application specific elliptic curve,
+   and sets ``out`` to 1 if so, 0 otherwise.
+
+.. cpp:function:: int botan_ec_group_supports_named_group(const char* name, int* out)
+
+   Checks if in this build configuration botan_ec_group_from_name(group_ptr, name) will succeed,
+   and sets ``out`` to 1 if so, 0 otherwise.
+
+.. cpp:function:: int botan_ec_group_from_params(botan_ec_group_t* ec_group, \
+                               botan_asn1_oid_t oid, \
+                               botan_mp_t p, \
+                               botan_mp_t a, \
+                               botan_mp_t b, \
+                               botan_mp_t base_x, \
+                               botan_mp_t base_y, \
+                               botan_mp_t order)
+
+   Create a new EC Group from the given parameters.
+
+   .. warning::
+      Use only elliptic curve parameters you trust.
+
+.. cpp:function:: int botan_ec_group_from_ber(botan_ec_group_t* ec_group, const uint8_t* ber, size_t ber_len)
+
+   Decode a BER encoded ECC domain parameter set
+
+.. cpp:function:: int botan_ec_group_from_pem(botan_ec_group_t* ec_group, const char* pem)
+
+   Initialize an EC Group from the PEM/ASN.1 encoding
+
+.. cpp:function:: int botan_ec_group_from_oid(botan_ec_group_t* ec_group, botan_asn1_oid_t oid)
+
+   Initialize an EC Group from a group named by an object identifier
+
+.. cpp:function:: int botan_ec_group_from_name(botan_ec_group_t* ec_group, const char* name)
+
+   Initialize an EC Group from a common group name (eg "secp256r1")
+
+.. cpp:function:: int botan_ec_group_view_der(botan_ec_group_t ec_group, botan_view_ctx ctx, botan_view_bin_fn view)
+
+   View an EC Group in DER encoding
+
+.. cpp:function:: int botan_ec_group_view_pem(botan_ec_group_t ec_group, botan_view_ctx ctx, botan_view_str_fn view)
+
+   View an EC Group in PEM encoding
+
+.. cpp:function:: int botan_ec_group_get_curve_oid(botan_asn1_oid_t* oid, botan_ec_group_t ec_group)
+
+   Get the curve OID of an EC Group
+
+.. cpp:function:: int botan_ec_group_get_p(botan_mp_t* p, botan_ec_group_t ec_group)
+
+   Get the prime modulus of the field
+
+.. cpp:function:: int botan_ec_group_get_a(botan_mp_t* a, botan_ec_group_t ec_group)
+
+   Get the a parameter of the elliptic curve equation
+
+.. cpp:function:: int botan_ec_group_get_b(botan_mp_t* b, botan_ec_group_t ec_group)
+
+   Get the b parameter of the elliptic curve equation
+
+.. cpp:function:: int botan_ec_group_get_g_x(botan_mp_t* g_x, botan_ec_group_t ec_group)
+
+   Get the x coordinate of the base point
+
+.. cpp:function:: int botan_ec_group_get_g_y(botan_mp_t* g_y, botan_ec_group_t ec_group)
+
+   Get the y coordinate of the base point
+
+.. cpp:function:: int botan_ec_group_get_order(botan_mp_t* order, botan_ec_group_t ec_group)
+
+   Get the order of the base point
+
+.. cpp:function:: int botan_ec_group_equal(botan_ec_group_t curve1, botan_ec_group_t curve2)
+
+   Return 1 if ``curve1`` is equal to ``curve2``, 0 if ``curve1`` is not equal to ``curve2``
+
+
 Public Key Creation, Import and Export
 ----------------------------------------
 
@@ -888,6 +982,11 @@ Public Key Creation, Import and Export
 .. cpp:function:: int botan_privkey_create(botan_privkey_t* key, \
                                    const char* algo_name, \
                                    const char* algo_params, \
+                                   botan_rng_t rng)
+
+.. cpp:function:: int botan_ec_privkey_create(botan_privkey_t* key, \
+                                   const char* algo_name, \
+                                   botan_ec_group_t ec_group, \
                                    botan_rng_t rng)
 
 .. cpp:function:: int botan_privkey_create_rsa(botan_privkey_t* key, botan_rng_t rng, size_t n_bits)

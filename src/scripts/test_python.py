@@ -545,6 +545,10 @@ ofvkP1EDmpx50fHLawIDAQAB
         group = 'secp256r1'
         msg = 'test message'
 
+        if not botan.ECGroup.supports_named_group(group):
+            self.skipTest("No secp256r1 group support in this build")
+            return
+
         priv = botan.PrivateKey.create('ECDSA', group, rng)
         pub = priv.get_public_key()
         self.assertEqual(pub.get_field('public_x'), priv.get_field('public_x'))
@@ -585,6 +589,10 @@ ofvkP1EDmpx50fHLawIDAQAB
         group = 'sm2p256v1'
         msg = 'test message'
 
+        if not botan.ECGroup.supports_named_group(group):
+            self.skipTest("No sm2p256v1 group support in this build")
+            return
+
         priv = botan.PrivateKey.create('SM2', group, rng)
         pub = priv.get_public_key()
         self.assertEqual(pub.get_field('public_x'), priv.get_field('public_x'))
@@ -620,6 +628,9 @@ ofvkP1EDmpx50fHLawIDAQAB
         kdf = 'KDF2(SHA-384)'
 
         for grp in ['secp256r1', 'secp384r1', 'brainpool256r1']:
+            if not botan.ECGroup.supports_named_group(grp):
+                continue
+
             a_priv = botan.PrivateKey.create('ECDH', grp, a_rng)
             b_priv = botan.PrivateKey.create('ECDH', grp, b_rng)
 
@@ -1082,6 +1093,49 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertEqual(oid_rsa_pub, oid_rsa)
         self.assertEqual(oid_rsa_pub.to_string(), oid_rsa.to_string())
         self.assertEqual(oid_rsa_pub.to_name(), oid_rsa_pub.to_name())
+
+    def test_ec_group(self):
+        if not botan.ECGroup.supports_named_group("secp256r1"):
+            self.skipTest("No secp256r1 group support in this build")
+            return
+
+        secp256r1_oid = botan.OID.from_string("1.2.840.10045.3.1.7")
+
+        group_from_name = botan.ECGroup.from_name("secp256r1")
+        group_from_oid = botan.ECGroup.from_oid(secp256r1_oid)
+
+        self.assertEqual(secp256r1_oid, group_from_name.get_curve_oid())
+        self.assertEqual(group_from_name, group_from_oid)
+
+        rng = botan.RandomNumberGenerator()
+        priv = botan.PrivateKey.create_ec("ECDSA", group_from_name, rng)
+        self.assertEqual(priv.algo_name(), "ECDSA")
+
+        self.assertEqual(group_from_name, botan.ECGroup.from_pem(group_from_name.to_pem()))
+        self.assertEqual(group_from_name, botan.ECGroup.from_ber(group_from_name.to_der()))
+
+        if botan.ECGroup.supports_application_specific_group():
+            secp256r1_new_oid = botan.OID.from_string("1.3.6.1.4.1.25258.100.0")
+            secp256r1_new_oid.register("secp256r1-but-manually-registered")
+
+            p = botan.MPI("FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF", 16)
+            a = botan.MPI("FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC", 16)
+            b = botan.MPI("5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B", 16)
+            g_x = botan.MPI("6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296", 16)
+            g_y = botan.MPI("4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5", 16)
+            order = botan.MPI("FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551", 16)
+
+            group_from_parameters = botan.ECGroup.from_params(secp256r1_new_oid, p, a, b, g_x, g_y, order)
+
+            self.assertEqual(group_from_name, group_from_parameters)
+
+            self.assertEqual(p, group_from_name.get_p())
+            self.assertEqual(a, group_from_name.get_a())
+            self.assertEqual(b, group_from_name.get_b())
+            self.assertEqual(g_x, group_from_name.get_g_x())
+            self.assertEqual(g_y, group_from_name.get_g_y())
+            self.assertEqual(order, group_from_name.get_order())
+
 
 class BotanPythonZfecTests(unittest.TestCase):
     """

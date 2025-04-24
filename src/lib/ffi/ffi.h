@@ -1160,6 +1160,141 @@ BOTAN_FFI_EXPORT(3, 8) int botan_oid_equal(botan_asn1_oid_t a, botan_asn1_oid_t 
 BOTAN_FFI_EXPORT(3, 8) int botan_oid_cmp(int* result, botan_asn1_oid_t a, botan_asn1_oid_t b);
 
 /*
+* EC Groups
+*/
+
+typedef struct botan_ec_group_struct* botan_ec_group_t;
+
+/**
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_destroy(botan_ec_group_t ec_group);
+
+/**
+* Checks if in this build configuration it is possible to register an application specific elliptic curve and sets
+* @param out to 1 if so, 0 otherwise
+* @returns 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_supports_application_specific_group(int* out);
+
+/**
+* Checks if in this build configuration botan_ec_group_from_name(group_ptr, name) will succeed and sets
+* @param out to 1 if so, 0 otherwise.
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_supports_named_group(const char* name, int* out);
+
+/**
+* Create a new EC Group from parameters
+* @warning use only elliptic curve parameters that you trust
+*
+* @param ec_group the new object will be placed here
+* @param p the elliptic curve prime (at most 521 bits)
+* @param a the elliptic curve a param
+* @param b the elliptic curve b param
+* @param base_x the x coordinate of the group generator
+* @param base_y the y coordinate of the group generator
+* @param order the order of the group
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8)
+int botan_ec_group_from_params(botan_ec_group_t* ec_group,
+                               botan_asn1_oid_t oid,
+                               botan_mp_t p,
+                               botan_mp_t a,
+                               botan_mp_t b,
+                               botan_mp_t base_x,
+                               botan_mp_t base_y,
+                               botan_mp_t order);
+
+/**
+* Decode a BER encoded ECC domain parameter set
+* @param ec_group the new object will be placed here
+* @param ber encoding
+* @param ber_len size of the encoding in bytes
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_from_ber(botan_ec_group_t* ec_group, const uint8_t* ber, size_t ber_len);
+
+/**
+* Initialize an EC Group from the PEM/ASN.1 encoding
+* @param ec_group the new object will be placed here
+* @param pem encoding
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_from_pem(botan_ec_group_t* ec_group, const char* pem);
+
+/**
+* Initialize an EC Group from a group named by an object identifier
+* @param ec_group the new object will be placed here
+* @param oid a known OID
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_from_oid(botan_ec_group_t* ec_group, botan_asn1_oid_t oid);
+
+/**
+* Initialize an EC Group from a common group name (eg "secp256r1")
+* @param ec_group the new object will be placed here
+* @param name a known group name
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_from_name(botan_ec_group_t* ec_group, const char* name);
+
+/**
+* View an EC Group in DER encoding
+*/
+BOTAN_FFI_EXPORT(3, 8)
+int botan_ec_group_view_der(botan_ec_group_t ec_group, botan_view_ctx ctx, botan_view_bin_fn view);
+
+/**
+* View an EC Group in PEM encoding
+*/
+BOTAN_FFI_EXPORT(3, 8)
+int botan_ec_group_view_pem(botan_ec_group_t ec_group, botan_view_ctx ctx, botan_view_str_fn view);
+
+/**
+* Get the curve OID of an EC Group
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_get_curve_oid(botan_asn1_oid_t* oid, botan_ec_group_t ec_group);
+
+/**
+* Get the prime modulus of the field
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_get_p(botan_mp_t* p, botan_ec_group_t ec_group);
+
+/**
+* Get the a parameter of the elliptic curve equation
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_get_a(botan_mp_t* a, botan_ec_group_t ec_group);
+
+/**
+* Get the b parameter of the elliptic curve equation
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_get_b(botan_mp_t* b, botan_ec_group_t ec_group);
+
+/**
+* Get the x coordinate of the base point
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_get_g_x(botan_mp_t* g_x, botan_ec_group_t ec_group);
+
+/**
+* Get the y coordinate of the base point
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_get_g_y(botan_mp_t* g_y, botan_ec_group_t ec_group);
+
+/**
+* Get the order of the base point
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_get_order(botan_mp_t* order, botan_ec_group_t ec_group);
+
+/**
+* @returns 0 if curve1 != curve2
+* @returns 1 if curve1 == curve2
+* @returns negative number on error
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_equal(botan_ec_group_t curve1, botan_ec_group_t curve2);
+
+/*
 * Public/private key creation, import, ...
 */
 typedef struct botan_privkey_struct* botan_privkey_t;
@@ -1174,6 +1309,16 @@ typedef struct botan_privkey_struct* botan_privkey_t;
 */
 BOTAN_FFI_EXPORT(2, 0)
 int botan_privkey_create(botan_privkey_t* key, const char* algo_name, const char* algo_params, botan_rng_t rng);
+
+/**
+* Create a new ec private key
+* @param key the new object will be placed here
+* @param algo_name something like "ECDSA" or "ECDH"
+* @param ec_group a (possibly application specific) elliptic curve
+* @param rng a random number generator
+*/
+BOTAN_FFI_EXPORT(3, 8)
+int botan_ec_privkey_create(botan_privkey_t* key, const char* algo_name, botan_ec_group_t ec_group, botan_rng_t rng);
 
 #define BOTAN_CHECK_KEY_EXPENSIVE_TESTS 1
 
