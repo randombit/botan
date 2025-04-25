@@ -658,8 +658,8 @@ std::vector<uint8_t> EC_Group::DER_encode(EC_Group_Encoding form) const {
    }
 }
 
-std::string EC_Group::PEM_encode() const {
-   const std::vector<uint8_t> der = DER_encode(EC_Group_Encoding::Explicit);
+std::string EC_Group::PEM_encode(EC_Group_Encoding form) const {
+   const std::vector<uint8_t> der = DER_encode(form);
    return PEM_Code::encode(der, "EC PARAMETERS");
 }
 

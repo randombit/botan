@@ -366,7 +366,7 @@ class EC_Group_Info final : public Command {
          const auto ec_group = Botan::EC_Group::from_name(get_arg("name"));
 
          if(flag_set("pem")) {
-            output() << ec_group.PEM_encode();
+            output() << ec_group.PEM_encode(Botan::EC_Group_Encoding::NamedCurve);
          } else {
             output() << "P = " << std::hex << ec_group.get_p() << "\n"
                      << "A = " << std::hex << ec_group.get_a() << "\n"
