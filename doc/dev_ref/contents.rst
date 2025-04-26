@@ -16,6 +16,7 @@ contributions to the library
    todo
    os
    oids
+   pcurves
    next_major
    reading_list
    mistakes

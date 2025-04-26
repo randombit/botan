@@ -1,0 +1,49 @@
+/*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+#include <botan/internal/pcurves_instance.h>
+
+#include <botan/internal/pcurves_wrap.h>
+
+namespace Botan::PCurve {
+
+namespace {
+
+namespace {{ curve["Name"] }} {
+
+// clang-format off
+class Params final : public EllipticCurveParameters<
+   "{{ "%X" % curve['P'] }}",
+   "{{ "%X" % curve['A'] }}",
+   "{{ "%X" % curve['B'] }}",
+   "{{ "%X" % curve['N'] }}",
+   "{{ "%X" % curve['X'] }}",
+   "{{ "%X" % curve['Y'] }}"> {
+};
+// clang-format on
+
+class Curve final : public EllipticCurve<Params> {
+   public:
+      // Return the square of the inverse of x
+      static constexpr FieldElement fe_invert2(const FieldElement& x) {
+         // Generated using https://github.com/mmcloughlin/addchain
+         {{ addchain_fe2 }}
+      }
+
+      // Return the inverse of an integer modulo the order
+      static constexpr Scalar scalar_invert(const Scalar& x) {
+         // Generated using https://github.com/mmcloughlin/addchain
+         {{ addchain_scalar }}
+      }
+};
+
+}  // namespace {{ curve["Name"] }}
+
+}  // namespace
+
+std::shared_ptr<const PrimeOrderCurve> PCurveInstance::{{ curve["Name"] }}() {
+   return PrimeOrderCurveImpl<{{ curve["Name"] }}::Curve>::instance();
+}
+
+}  // namespace Botan::PCurve
