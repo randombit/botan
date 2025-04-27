@@ -293,10 +293,15 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       std::vector<uint8_t> DER_encode() const;
 
       /**
-      * Return the PEM encoding (always in explicit form)
+      * Return the PEM encoding
       * @return string containing PEM data
+      *
+      * @warning In Botan4 the form parameter will be removed and only
+      * namedCurve will be supported
+      *
+      * TODO(Botan4) remove the argument
       */
-      std::string PEM_encode() const;
+      std::string PEM_encode(EC_Group_Encoding form = EC_Group_Encoding::Explicit) const;
 
       /**
       * Return the size of p in bits (same as get_p().bits())
