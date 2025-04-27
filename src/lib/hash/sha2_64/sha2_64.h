@@ -90,6 +90,10 @@ class SHA_512 final : public HashFunction {
       static void compress_digest_x86_avx2(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
 #endif
 
+#if defined(BOTAN_HAS_SHA2_64_X86_AVX512)
+      static void compress_digest_x86_avx512(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
+#endif
+
 #if defined(BOTAN_HAS_SHA2_64_X86)
       static void compress_digest_x86(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
 #endif
