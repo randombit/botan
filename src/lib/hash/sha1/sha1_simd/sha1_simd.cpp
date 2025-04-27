@@ -136,137 +136,137 @@ void BOTAN_FN_ISA_SIMD_4X32 SHA_1::simd_compress_n(digest_type& digest, std::spa
       SIMD_4x32 P2 = W2 + K00_19;
       SIMD_4x32 P3 = W3 + K00_19;
 
-      SIMD_4x32(P0).store_le(PT);
+      P0.store_le(PT);
       F1(A, B, C, D, E, PT[0]);
       F1(E, A, B, C, D, PT[1]);
       F1(D, E, A, B, C, PT[2]);
       F1(C, D, E, A, B, PT[3]);
       P0 = prep(W0, W1, W2, W3, K00_19);
 
-      SIMD_4x32(P1).store_le(PT);
+      P1.store_le(PT);
       F1(B, C, D, E, A, PT[0]);
       F1(A, B, C, D, E, PT[1]);
       F1(E, A, B, C, D, PT[2]);
       F1(D, E, A, B, C, PT[3]);
       P1 = prep(W1, W2, W3, W0, K20_39);
 
-      SIMD_4x32(P2).store_le(PT);
+      P2.store_le(PT);
       F1(C, D, E, A, B, PT[0]);
       F1(B, C, D, E, A, PT[1]);
       F1(A, B, C, D, E, PT[2]);
       F1(E, A, B, C, D, PT[3]);
       P2 = prep(W2, W3, W0, W1, K20_39);
 
-      SIMD_4x32(P3).store_le(PT);
+      P3.store_le(PT);
       F1(D, E, A, B, C, PT[0]);
       F1(C, D, E, A, B, PT[1]);
       F1(B, C, D, E, A, PT[2]);
       F1(A, B, C, D, E, PT[3]);
       P3 = prep(W3, W0, W1, W2, K20_39);
 
-      SIMD_4x32(P0).store_le(PT);
+      P0.store_le(PT);
       F1(E, A, B, C, D, PT[0]);
       F1(D, E, A, B, C, PT[1]);
       F1(C, D, E, A, B, PT[2]);
       F1(B, C, D, E, A, PT[3]);
       P0 = prep(W0, W1, W2, W3, K20_39);
 
-      SIMD_4x32(P1).store_le(PT);
+      P1.store_le(PT);
       F2(A, B, C, D, E, PT[0]);
       F2(E, A, B, C, D, PT[1]);
       F2(D, E, A, B, C, PT[2]);
       F2(C, D, E, A, B, PT[3]);
       P1 = prep(W1, W2, W3, W0, K20_39);
 
-      SIMD_4x32(P2).store_le(PT);
+      P2.store_le(PT);
       F2(B, C, D, E, A, PT[0]);
       F2(A, B, C, D, E, PT[1]);
       F2(E, A, B, C, D, PT[2]);
       F2(D, E, A, B, C, PT[3]);
       P2 = prep(W2, W3, W0, W1, K40_59);
 
-      SIMD_4x32(P3).store_le(PT);
+      P3.store_le(PT);
       F2(C, D, E, A, B, PT[0]);
       F2(B, C, D, E, A, PT[1]);
       F2(A, B, C, D, E, PT[2]);
       F2(E, A, B, C, D, PT[3]);
       P3 = prep(W3, W0, W1, W2, K40_59);
 
-      SIMD_4x32(P0).store_le(PT);
+      P0.store_le(PT);
       F2(D, E, A, B, C, PT[0]);
       F2(C, D, E, A, B, PT[1]);
       F2(B, C, D, E, A, PT[2]);
       F2(A, B, C, D, E, PT[3]);
       P0 = prep(W0, W1, W2, W3, K40_59);
 
-      SIMD_4x32(P1).store_le(PT);
+      P1.store_le(PT);
       F2(E, A, B, C, D, PT[0]);
       F2(D, E, A, B, C, PT[1]);
       F2(C, D, E, A, B, PT[2]);
       F2(B, C, D, E, A, PT[3]);
       P1 = prep(W1, W2, W3, W0, K40_59);
 
-      SIMD_4x32(P2).store_le(PT);
+      P2.store_le(PT);
       F3(A, B, C, D, E, PT[0]);
       F3(E, A, B, C, D, PT[1]);
       F3(D, E, A, B, C, PT[2]);
       F3(C, D, E, A, B, PT[3]);
       P2 = prep(W2, W3, W0, W1, K40_59);
 
-      SIMD_4x32(P3).store_le(PT);
+      P3.store_le(PT);
       F3(B, C, D, E, A, PT[0]);
       F3(A, B, C, D, E, PT[1]);
       F3(E, A, B, C, D, PT[2]);
       F3(D, E, A, B, C, PT[3]);
       P3 = prep(W3, W0, W1, W2, K60_79);
 
-      SIMD_4x32(P0).store_le(PT);
+      P0.store_le(PT);
       F3(C, D, E, A, B, PT[0]);
       F3(B, C, D, E, A, PT[1]);
       F3(A, B, C, D, E, PT[2]);
       F3(E, A, B, C, D, PT[3]);
       P0 = prep(W0, W1, W2, W3, K60_79);
 
-      SIMD_4x32(P1).store_le(PT);
+      P1.store_le(PT);
       F3(D, E, A, B, C, PT[0]);
       F3(C, D, E, A, B, PT[1]);
       F3(B, C, D, E, A, PT[2]);
       F3(A, B, C, D, E, PT[3]);
       P1 = prep(W1, W2, W3, W0, K60_79);
 
-      SIMD_4x32(P2).store_le(PT);
+      P2.store_le(PT);
       F3(E, A, B, C, D, PT[0]);
       F3(D, E, A, B, C, PT[1]);
       F3(C, D, E, A, B, PT[2]);
       F3(B, C, D, E, A, PT[3]);
       P2 = prep(W2, W3, W0, W1, K60_79);
 
-      SIMD_4x32(P3).store_le(PT);
+      P3.store_le(PT);
       F4(A, B, C, D, E, PT[0]);
       F4(E, A, B, C, D, PT[1]);
       F4(D, E, A, B, C, PT[2]);
       F4(C, D, E, A, B, PT[3]);
       P3 = prep(W3, W0, W1, W2, K60_79);
 
-      SIMD_4x32(P0).store_le(PT);
+      P0.store_le(PT);
       F4(B, C, D, E, A, PT[0]);
       F4(A, B, C, D, E, PT[1]);
       F4(E, A, B, C, D, PT[2]);
       F4(D, E, A, B, C, PT[3]);
 
-      SIMD_4x32(P1).store_le(PT);
+      P1.store_le(PT);
       F4(C, D, E, A, B, PT[0]);
       F4(B, C, D, E, A, PT[1]);
       F4(A, B, C, D, E, PT[2]);
       F4(E, A, B, C, D, PT[3]);
 
-      SIMD_4x32(P2).store_le(PT);
+      P2.store_le(PT);
       F4(D, E, A, B, C, PT[0]);
       F4(C, D, E, A, B, PT[1]);
       F4(B, C, D, E, A, PT[2]);
       F4(A, B, C, D, E, PT[3]);
 
-      SIMD_4x32(P3).store_le(PT);
+      P3.store_le(PT);
       F4(E, A, B, C, D, PT[0]);
       F4(D, E, A, B, C, PT[1]);
       F4(C, D, E, A, B, PT[2]);
