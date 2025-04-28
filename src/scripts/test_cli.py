@@ -1115,6 +1115,7 @@ def cli_tls_socket_tests(tmp_dir):
 
     psk = "FEEDFACECAFEBEEF"
     psk_identity = "test-psk"
+    psk_prf = "SHA-384"
 
     class TestConfig:
         def __init__(self, name, protocol_version, policy, **kwargs):
@@ -1125,6 +1126,7 @@ def cli_tls_socket_tests(tmp_dir):
             self.expect_error = kwargs.get("expect_error", False)
             self.psk = kwargs.get("psk")
             self.psk_identity = kwargs.get("psk_identity")
+            self.psk_prf = kwargs.get("psk_prf")
 
     configs = [
         # Explicitly testing x448-based key exchange against ourselves, as Bogo test
@@ -1154,9 +1156,8 @@ def cli_tls_socket_tests(tmp_dir):
                    psk=psk, psk_identity=psk_identity,
                    stdout_regex=f'Handshake complete, TLS v1\\.2.*\nUtilized PSK identity: {psk_identity}.*'),
 
-        # TODO this test fails without ciphers=ChaCha20Poly1305, it is quite unclear why this should be so
-        TestConfig("PSK TLS 1.3", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_methods=ECDHE_PSK\nciphers=ChaCha20Poly1305",
-                   psk=psk, psk_identity=psk_identity,
+        TestConfig("PSK TLS 1.3", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_methods=ECDHE_PSK\n",
+                   psk=psk, psk_identity=psk_identity, psk_prf=psk_prf,
                    stdout_regex=f'Handshake complete, TLS v1\\.3.*\nUtilized PSK identity: {psk_identity}.*'),
 
         TestConfig("Kyber KEM", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_groups=ML-KEM-768"),
@@ -1164,11 +1165,12 @@ def cli_tls_socket_tests(tmp_dir):
     ]
 
     class TestServer(AsyncTestProcess):
-        def __init__(self, tmp_dir, port, psk, psk_identity, clients=0):
+        def __init__(self, tmp_dir, port, psk, psk_identity, psk_prf, clients=0):
             super().__init__("Server")
             self.port = port
             self.psk = psk
             self.psk_identity = psk_identity
+            self.psk_prf = psk_prf
             self.clients = clients
 
             self.cert_suite = ServerCertificateSuite(tmp_dir, "secp256r1", "SHA-384")
@@ -1186,6 +1188,7 @@ def cli_tls_socket_tests(tmp_dir):
             server_cmd = [CLI_PATH, "tls_server", f"--max-clients={self.clients}",
                           f"--port={self.port}", f"--policy={self.policy}",
                           f"--psk={self.psk}", f"--psk-identity={self.psk_identity}",
+                          f"--psk-prf={self.psk_prf}",
                           self.cert_suite.cert, self.cert_suite.private_key]
 
             await self._launch(server_cmd, b'Listening for new connections')
@@ -1241,6 +1244,8 @@ def cli_tls_socket_tests(tmp_dir):
                           f'--tls-version={self.config.protocol_version}', f'--policy={self.policy}']
             if self.config.psk:
                 client_cmd += [f'--psk={self.config.psk}', f'--psk-identity={self.config.psk_identity}']
+                if self.config.psk_prf:
+                    client_cmd += [f'--psk-prf={self.config.psk_prf}']
 
             await self._launch(client_cmd, b'Handshake complete' if not self.config.expect_error else None)
 
@@ -1250,7 +1255,7 @@ def cli_tls_socket_tests(tmp_dir):
             await self._finalize()
 
     async def run_async_test():
-        async with TestServer(tmp_dir, port_for('tls_server'), psk, psk_identity, len(configs)) as server:
+        async with TestServer(tmp_dir, port_for('tls_server'), psk, psk_identity, psk_prf, len(configs)) as server:
             errors = 0
             for tls_config in configs:
                 logging.debug("Running test for %s in TLS %s mode", tls_config.name, tls_config.protocol_version)
