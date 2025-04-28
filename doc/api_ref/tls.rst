@@ -700,14 +700,13 @@ policy settings from a file.
 
      Cipher names without an explicit mode refers to CBC+HMAC ciphersuites.
 
-     Default value: "ChaCha20Poly1305", "AES-256/GCM", "AES-128/GCM"
+     Default value: "AES-256/GCM", "AES-128/GCM", "ChaCha20Poly1305"
 
      Also allowed: "AES-256", "AES-128",
      "AES-256/CCM", "AES-128/CCM", "AES-256/CCM(8)", "AES-128/CCM(8)",
      "Camellia-256/GCM", "Camellia-128/GCM", "ARIA-256/GCM", "ARIA-128/GCM"
 
-     Also allowed (though currently experimental): "AES-128/OCB(12)",
-     "AES-256/OCB(12)"
+     Also allowed (though currently experimental): "AES-256/OCB(12)"
 
      In versions up to 2.8.0, the CBC and CCM ciphersuites "AES-256",
      "AES-128", "AES-256/CCM" and "AES-128/CCM" were enabled by default.
