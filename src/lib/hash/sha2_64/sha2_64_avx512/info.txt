@@ -1,0 +1,25 @@
+<defines>
+SHA2_64_X86_AVX512 -> 20250427
+</defines>
+
+<module_info>
+name -> "SHA-512 AVX512/BMI2"
+brief -> "SHA-512 using AVX512/BMI2 instructions"
+</module_info>
+
+<isa>
+bmi2
+avx512
+</isa>
+
+# Needs 64-bit registers to be useful
+<arch>
+x86_64
+x32
+</arch>
+
+<requires>
+cpuid
+simd_4x64
+simd_2x64
+</requires>

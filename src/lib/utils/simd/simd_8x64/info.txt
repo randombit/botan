@@ -1,0 +1,21 @@
+<defines>
+SIMD_8X64 -> 20250427
+</defines>
+
+<module_info>
+name -> "SIMD 8x64"
+brief -> "Lightweight wrappers for SIMD 8x64"
+</module_info>
+
+<header:internal>
+simd_8x64.h
+</header:internal>
+
+<isa>
+avx512
+</isa>
+
+<arch>
+x86_64
+x32
+</arch>

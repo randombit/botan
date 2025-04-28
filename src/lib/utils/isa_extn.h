@@ -22,17 +22,19 @@
    #define BOTAN_FN_ISA_SIMD_4X32 BOTAN_FUNC_ISA("ssse3")
    #define BOTAN_FN_ISA_SIMD_2X64 BOTAN_FUNC_ISA("ssse3")
    #define BOTAN_FN_ISA_SIMD_4X64 BOTAN_FUNC_ISA("avx2")
+   #define BOTAN_FN_ISA_SIMD_8X64 BOTAN_FN_ISA_AVX512
    #define BOTAN_FN_ISA_CLMUL BOTAN_FUNC_ISA("pclmul,ssse3")
    #define BOTAN_FN_ISA_AESNI BOTAN_FUNC_ISA("aes,ssse3")
    #define BOTAN_FN_ISA_SHANI BOTAN_FUNC_ISA("sha,ssse3,sse4.1")
    #define BOTAN_FN_ISA_SHA512 BOTAN_FUNC_ISA("sha512,avx2")
    #define BOTAN_FN_ISA_SSE2 BOTAN_FUNC_ISA("sse2")
    #define BOTAN_FN_ISA_AVX2 BOTAN_FUNC_ISA("avx2")
-   #define BOTAN_FN_ISA_AVX2_BMI2 BOTAN_FUNC_ISA("avx2,bmi2")
+   #define BOTAN_FN_ISA_AVX2_BMI2 BOTAN_FUNC_ISA("avx2,bmi,bmi2")
    #define BOTAN_FN_ISA_AVX2_VAES BOTAN_FUNC_ISA("vaes,avx2")
    #define BOTAN_FN_ISA_AVX2_SM4 BOTAN_FUNC_ISA("sm4,avx2")
    #define BOTAN_FN_ISA_AVX2_GFNI BOTAN_FUNC_ISA("gfni,avx2")
    #define BOTAN_FN_ISA_AVX512 BOTAN_FUNC_ISA("avx512f,avx512dq,avx512bw")
+   #define BOTAN_FN_ISA_AVX512_BMI2 BOTAN_FUNC_ISA("avx512f,avx512dq,avx512bw,bmi,bmi2")
 
 #endif
 
