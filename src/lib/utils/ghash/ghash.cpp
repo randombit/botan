@@ -86,7 +86,7 @@ void GHASH::ghash_multiply(std::span<uint8_t, GCM_BS> x, std::span<const uint8_t
 }
 
 bool GHASH::has_keying_material() const {
-   return !m_HM.empty();
+   return !m_HM.empty() || !m_H_pow.empty();
 }
 
 void GHASH::key_schedule(std::span<const uint8_t> key) {
@@ -96,6 +96,18 @@ void GHASH::key_schedule(std::span<const uint8_t> key) {
 
    BOTAN_ASSERT_NOMSG(key.size() == GCM_BS);
    auto H = load_be<std::array<uint64_t, 2>>(key.first<GCM_BS>());
+
+#if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
+   if(CPUID::has_carryless_multiply()) {
+      zap(m_HM);
+      if(m_H_pow.size() != 8) {
+         m_H_pow.resize(8);
+      }
+      ghash_precompute_cpu(key.data(), m_H_pow.data());
+      // m_HM left empty
+      return;
+   }
+#endif
 
    const uint64_t R = 0xE100000000000000;
 
@@ -119,15 +131,6 @@ void GHASH::key_schedule(std::span<const uint8_t> key) {
          H[0] = (H[0] >> 1) ^ carry;
       }
    }
-
-#if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
-   if(CPUID::has_carryless_multiply()) {
-      if(m_H_pow.size() != 8) {
-         m_H_pow.resize(8);
-      }
-      ghash_precompute_cpu(key.data(), m_H_pow.data());
-   }
-#endif
 }
 
 void GHASH::start(std::span<const uint8_t> nonce) {
@@ -186,6 +189,7 @@ void GHASH::nonce_hash(std::span<uint8_t, GCM_BS> y0, std::span<const uint8_t> n
 
 void GHASH::clear() {
    zap(m_HM);
+   zap(m_H_pow);
    reset();
 }
 
