@@ -254,11 +254,10 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
 class TLS_All_Policy final : public Botan::TLS::Policy {
    public:
       std::vector<std::string> allowed_ciphers() const override {
-         return std::vector<std::string>{"ChaCha20Poly1305",
-                                         "AES-256/OCB(12)",
-                                         "AES-128/OCB(12)",
-                                         "AES-256/GCM",
+         return std::vector<std::string>{"AES-256/GCM",
                                          "AES-128/GCM",
+                                         "ChaCha20Poly1305",
+                                         "AES-256/OCB(12)",
                                          "AES-256/CCM",
                                          "AES-128/CCM",
                                          "AES-256/CCM(8)",

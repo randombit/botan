@@ -51,9 +51,9 @@ std::optional<std::vector<Signature_Scheme>> Policy::acceptable_certificate_sign
 std::vector<std::string> Policy::allowed_ciphers() const {
    return {
       //"AES-256/OCB(12)",
-      "ChaCha20Poly1305",
       "AES-256/GCM",
       "AES-128/GCM",
+      "ChaCha20Poly1305",
       //"AES-256/CCM",
       //"AES-128/CCM",
       //"AES-256/CCM(8)",
@@ -717,7 +717,7 @@ std::string Policy::to_string() const {
 }
 
 std::vector<std::string> Strict_Policy::allowed_ciphers() const {
-   return {"ChaCha20Poly1305", "AES-256/GCM", "AES-128/GCM"};
+   return {"AES-256/GCM", "AES-128/GCM", "ChaCha20Poly1305"};
 }
 
 std::vector<std::string> Strict_Policy::allowed_signature_hashes() const {
