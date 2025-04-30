@@ -684,7 +684,7 @@ DilithiumInternalKeypair expand_keypair(DilithiumSeedRandomness xi, DilithiumCon
    CT::unpoison(*keypair.second);
 
    return keypair;
-};
+}
 
 /**
  * NIST FIPS 204, Algorithm 32 (ExpandA)
