@@ -91,20 +91,20 @@ size_t ChaCha::parallelism() {
 
 std::string ChaCha::provider() const {
 #if defined(BOTAN_HAS_CHACHA_AVX512)
-   if(CPUID::has(CPUID::Feature::AVX512)) {
-      return "avx512";
+   if(auto feat = CPUID::check(CPUID::Feature::AVX512)) {
+      return *feat;
    }
 #endif
 
 #if defined(BOTAN_HAS_CHACHA_AVX2)
-   if(CPUID::has(CPUID::Feature::AVX2)) {
-      return "avx2";
+   if(auto feat = CPUID::check(CPUID::Feature::AVX2)) {
+      return *feat;
    }
 #endif
 
 #if defined(BOTAN_HAS_CHACHA_SIMD32)
-   if(CPUID::has_simd_4x32()) {
-      return "simd32";
+   if(auto feat = CPUID::check(CPUID::Feature::SIMD_4X32)) {
+      return *feat;
    }
 #endif
 
@@ -135,7 +135,7 @@ void ChaCha::chacha(uint8_t output[], size_t output_blocks, uint32_t state[16], 
 #endif
 
 #if defined(BOTAN_HAS_CHACHA_SIMD32)
-   if(CPUID::has_simd_4x32()) {
+   if(CPUID::has(CPUID::Feature::SIMD_4X32)) {
       while(output_blocks >= 4) {
          ChaCha::chacha_simd32_x4(output, state, rounds);
          output += 4 * 64;

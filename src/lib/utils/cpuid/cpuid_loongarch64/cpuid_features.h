@@ -21,6 +21,8 @@ class BOTAN_TEST_API CPUFeature {
          LSX = (1U << 0),
          LASX = (1U << 1),
          CRYPTO = (1U << 2),
+
+         SIMD_4X32 = LSX,
       };
 
       CPUFeature(Bit b) : m_bit(b) {}

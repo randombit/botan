@@ -60,54 +60,45 @@ class BOTAN_TEST_API CPUID final {
       static std::string to_string();
 
       /**
-      * Return true if a 4x32 SIMD instruction set is available
-      * (SSE2/SSSE3, NEON, Altivec/VMX, or LSX)
+      * Check if a feature is supported returning the associated string if so
+      *
+      * This is a helper function used to implement provider()
       */
-      static bool has_simd_4x32() {
-#if defined(BOTAN_TARGET_CPU_SUPPORTS_SSSE3)
-         return CPUID::has(CPUID::Feature::SSSE3);
-#elif defined(BOTAN_TARGET_CPU_SUPPORTS_NEON)
-         return CPUID::has(CPUID::Feature::NEON);
-#elif defined(BOTAN_TARGET_CPU_SUPPORTS_ALTIVEC)
-         return CPUID::has(CPUID::Feature::ALTIVEC);
-#elif defined(BOTAN_TARGET_CPU_SUPPORTS_LSX)
-         return CPUID::has(CPUID::Feature::LSX);
-#else
-         return false;
-#endif
+      static std::optional<std::string> check(CPUID::Feature feat) {
+         if(state().has_bit(feat.as_u32())) {
+            return feat.to_string();
+         } else {
+            return {};
+         }
       }
 
       /**
-      * Check if the processor supports hardware AES instructions
+      * Check if a feature is supported returning the associated string if so
+      *
+      * This is a helper function used to implement provider()
       */
-      static bool has_hw_aes() {
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-         return has(CPUID::Feature::AESNI);
-#elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
-         return has(CPUID::Feature::AES);
-#elif defined(BOTAN_TARGET_CPU_IS_PPC64)
-         return has(CPUID::Feature::POWER_CRYPTO);
-#else
-         return false;
-#endif
+      static std::optional<std::string> check(CPUID::Feature feat1, CPUID::Feature feat2) {
+         if(state().has_bit((feat1.as_u32() | feat2.as_u32()))) {
+            // Typically feat2 is a secondary feature that is almost but not
+            // completely implied by feat1 (ex: AVX2 + BMI2) which we have to
+            // check for completness, but don't reflect into the provider name.
+            return feat1.to_string();
+         } else {
+            return {};
+         }
       }
 
       /**
-      * Check if the processor supports carryless multiply (CLMUL, PMULL, VMUL)
+      * Check if a feature is supported
       */
-      static bool has_carryless_multiply() {
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-         return has(CPUID::Feature::CLMUL);
-#elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
-         return has(CPUID::Feature::PMULL);
-#elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
-         return has(CPUID::Feature::POWER_CRYPTO);
-#else
-         return false;
-#endif
-      }
+      static bool has(CPUID::Feature feat) { return state().has_bit(feat.as_u32()); }
 
-      static bool has(CPUID::Feature elem) { return state().has_bit(elem.as_u32()); }
+      /**
+      * Check if two features are both supported
+      */
+      static bool has(CPUID::Feature feat1, CPUID::Feature feat2) {
+         return state().has_bit(feat1.as_u32() | feat2.as_u32());
+      }
 
       /*
       * Clear a CPUID bit
