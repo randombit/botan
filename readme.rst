@@ -80,7 +80,7 @@ released on 2025-02-05.
 Botan2
 --------
 
-Botan2 has, as of 2025-1-1, reached end of life. No further releases are expected.
+Botan2 has, as of 2025-01-01, reached end of life. No further releases are expected.
 
 The latest release in the Botan2 series is
 `2.19.5 <https://botan.randombit.net/releases/Botan-2.19.5.tar.xz>`_
