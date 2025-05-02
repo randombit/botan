@@ -23,26 +23,26 @@ namespace {
 
 std::string sha512_provider() {
 #if defined(BOTAN_HAS_SHA2_64_X86)
-   if(CPUID::has(CPUID::Feature::SHA512)) {
-      return "x86";
+   if(auto feat = CPUID::check(CPUID::Feature::SHA512)) {
+      return *feat;
    }
 #endif
 
 #if defined(BOTAN_HAS_SHA2_64_ARMV8)
-   if(CPUID::has(CPUID::Feature::SHA2_512)) {
-      return "armv8";
+   if(auto feat = CPUID::check(CPUID::Feature::SHA2_512)) {
+      return *feat;
    }
 #endif
 
 #if defined(BOTAN_HAS_SHA2_64_X86_AVX512)
-   if(CPUID::has(CPUID::Feature::AVX512) && CPUID::has(CPUID::Feature::BMI)) {
-      return "avx512";
+   if(auto feat = CPUID::check(CPUID::Feature::AVX512, CPUID::Feature::BMI)) {
+      return *feat;
    }
 #endif
 
 #if defined(BOTAN_HAS_SHA2_64_X86_AVX2)
-   if(CPUID::has(CPUID::Feature::AVX2) && CPUID::has(CPUID::Feature::BMI)) {
-      return "bmi2";
+   if(auto feat = CPUID::check(CPUID::Feature::AVX2, CPUID::Feature::BMI)) {
+      return *feat;
    }
 #endif
 
@@ -69,13 +69,13 @@ void SHA_512::compress_digest(digest_type& digest, std::span<const uint8_t> inpu
 #endif
 
 #if defined(BOTAN_HAS_SHA2_64_X86_AVX512)
-   if(CPUID::has(CPUID::Feature::AVX512) && CPUID::has(CPUID::Feature::BMI)) {
+   if(CPUID::has(CPUID::Feature::AVX512, CPUID::Feature::BMI)) {
       return compress_digest_x86_avx512(digest, input, blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_SHA2_64_X86_AVX2)
-   if(CPUID::has(CPUID::Feature::AVX2) && CPUID::has(CPUID::Feature::BMI)) {
+   if(CPUID::has(CPUID::Feature::AVX2, CPUID::Feature::BMI)) {
       return compress_digest_x86_avx2(digest, input, blocks);
    }
 #endif

@@ -41,6 +41,10 @@ class BOTAN_TEST_API CPUFeature {
          AVX512_CLMUL = (1U << 25),
          SM3 = (1U << 26),
          SM4 = (1U << 27),
+
+         SIMD_4X32 = SSSE3,
+         HW_AES = AESNI,
+         HW_CLMUL = CLMUL,
       };
 
       CPUFeature(Bit b) : m_bit(b) {}

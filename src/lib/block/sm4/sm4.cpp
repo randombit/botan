@@ -356,14 +356,14 @@ size_t SM4::parallelism() const {
 
 std::string SM4::provider() const {
 #if defined(BOTAN_HAS_SM4_ARMV8)
-   if(CPUID::has(CPUID::Feature::SM4)) {
-      return "armv8";
+   if(auto feat = CPUID::check(CPUID::Feature::SM4)) {
+      return *feat;
    }
 #endif
 
 #if defined(BOTAN_HAS_SM4_GFNI)
-   if(CPUID::has(CPUID::Feature::GFNI)) {
-      return "gfni";
+   if(auto feat = CPUID::check(CPUID::Feature::GFNI)) {
+      return *feat;
    }
 #endif
 

@@ -22,13 +22,13 @@ namespace Botan {
 
 std::string GHASH::provider() const {
 #if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
-   if(CPUID::has_carryless_multiply()) {
+   if(CPUID::has(CPUID::Feature::HW_CLMUL)) {
       return "clmul";
    }
 #endif
 
 #if defined(BOTAN_HAS_GHASH_CLMUL_VPERM)
-   if(CPUID::has_simd_4x32()) {
+   if(CPUID::has(CPUID::Feature::SIMD_4X32)) {
       return "vperm";
    }
 #endif
@@ -40,14 +40,14 @@ void GHASH::ghash_multiply(std::span<uint8_t, GCM_BS> x, std::span<const uint8_t
    BOTAN_ASSERT_NOMSG(input.size() % GCM_BS == 0);
 
 #if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
-   if(CPUID::has_carryless_multiply()) {
+   if(CPUID::has(CPUID::Feature::HW_CLMUL)) {
       BOTAN_ASSERT_NOMSG(!m_H_pow.empty());
       return ghash_multiply_cpu(x.data(), m_H_pow.data(), input.data(), blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_GHASH_CLMUL_VPERM)
-   if(CPUID::has_simd_4x32()) {
+   if(CPUID::has(CPUID::Feature::SIMD_4X32)) {
       return ghash_multiply_vperm(x.data(), m_HM.data(), input.data(), blocks);
    }
 #endif
@@ -98,7 +98,7 @@ void GHASH::key_schedule(std::span<const uint8_t> key) {
    auto H = load_be<std::array<uint64_t, 2>>(key.first<GCM_BS>());
 
 #if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
-   if(CPUID::has_carryless_multiply()) {
+   if(CPUID::has(CPUID::Feature::HW_CLMUL)) {
       zap(m_HM);
       if(m_H_pow.size() != 8) {
          m_H_pow.resize(8);

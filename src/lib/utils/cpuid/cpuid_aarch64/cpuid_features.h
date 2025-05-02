@@ -28,6 +28,10 @@ class BOTAN_TEST_API CPUFeature {
          SHA2_512 = (1U << 21),
          SM3 = (1U << 22),
          SM4 = (1U << 23),
+
+         SIMD_4X32 = NEON,
+         HW_AES = AES,
+         HW_CLMUL = PMULL,
       };
 
       CPUFeature(Bit b) : m_bit(b) {}

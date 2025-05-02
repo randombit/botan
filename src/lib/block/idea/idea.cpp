@@ -117,8 +117,8 @@ size_t IDEA::parallelism() const {
 
 std::string IDEA::provider() const {
 #if defined(BOTAN_HAS_IDEA_SSE2)
-   if(CPUID::has(CPUID::Feature::SSE2)) {
-      return "sse2";
+   if(auto feat = CPUID::check(CPUID::Feature::SSE2)) {
+      return *feat;
    }
 #endif
 

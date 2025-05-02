@@ -21,6 +21,10 @@ class BOTAN_TEST_API CPUFeature {
          ALTIVEC = (1U << 0),
          POWER_CRYPTO = (1U << 1),
          DARN = (1U << 2),
+
+         SIMD_4X32 = ALTIVEC,
+         HW_AES = POWER_CRYPTO,
+         HW_CLMUL = POWER_CRYPTO,
       };
 
       CPUFeature(Bit b) : m_bit(b) {}
