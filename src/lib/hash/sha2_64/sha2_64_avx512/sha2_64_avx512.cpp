@@ -155,9 +155,7 @@ BOTAN_FN_ISA_AVX512_BMI2 void SHA_512::compress_digest_x86_avx512(digest_type& d
    // clang-format on
 
    alignas(64) uint64_t W[16] = {0};
-   alignas(64) uint64_t W2[80];
-   alignas(64) uint64_t W3[80];
-   alignas(64) uint64_t W4[80];
+   alignas(64) uint64_t WN[3][80];
 
    uint64_t A = digest[0];
    uint64_t B = digest[1];
@@ -177,7 +175,7 @@ BOTAN_FN_ISA_AVX512_BMI2 void SHA_512::compress_digest_x86_avx512(digest_type& d
          WS[i] = SIMD_8x64::load_be4(
             &data[16 * i], &data[1 * 128 + 16 * i], &data[2 * 128 + 16 * i], &data[3 * 128 + 16 * i]);
          auto WK = WS[i] + SIMD_8x64::load_le(&K4[8 * i]);
-         WK.store_le4(&W[2 * i], &W2[2 * i], &W3[2 * i], &W4[2 * i]);
+         WK.store_le4(&W[2 * i], &WN[0][2 * i], &WN[1][2 * i], &WN[2][2 * i]);
       }
 
       data += 4 * 128;
@@ -188,42 +186,42 @@ BOTAN_FN_ISA_AVX512_BMI2 void SHA_512::compress_digest_x86_avx512(digest_type& d
          auto w = sha512_next_w_avx512(WS) + SIMD_8x64::load_le(&K4[4 * (r + 16)]);
          SHA2_64_F(A, B, C, D, E, F, G, H, W[0]);
          SHA2_64_F(H, A, B, C, D, E, F, G, W[1]);
-         w.store_le4(&W[0], &W2[r + 16], &W3[r + 16], &W4[r + 16]);
+         w.store_le4(&W[0], &WN[0][r + 16], &WN[1][r + 16], &WN[2][r + 16]);
 
          w = sha512_next_w_avx512(WS) + SIMD_8x64::load_le(&K4[4 * (r + 18)]);
          SHA2_64_F(G, H, A, B, C, D, E, F, W[2]);
          SHA2_64_F(F, G, H, A, B, C, D, E, W[3]);
-         w.store_le4(&W[2], &W2[r + 18], &W3[r + 18], &W4[r + 18]);
+         w.store_le4(&W[2], &WN[0][r + 18], &WN[1][r + 18], &WN[2][r + 18]);
 
          w = sha512_next_w_avx512(WS) + SIMD_8x64::load_le(&K4[4 * (r + 20)]);
          SHA2_64_F(E, F, G, H, A, B, C, D, W[4]);
          SHA2_64_F(D, E, F, G, H, A, B, C, W[5]);
-         w.store_le4(&W[4], &W2[r + 20], &W3[r + 20], &W4[r + 20]);
+         w.store_le4(&W[4], &WN[0][r + 20], &WN[1][r + 20], &WN[2][r + 20]);
 
          w = sha512_next_w_avx512(WS) + SIMD_8x64::load_le(&K4[4 * (r + 22)]);
          SHA2_64_F(C, D, E, F, G, H, A, B, W[6]);
          SHA2_64_F(B, C, D, E, F, G, H, A, W[7]);
-         w.store_le4(&W[6], &W2[r + 22], &W3[r + 22], &W4[r + 22]);
+         w.store_le4(&W[6], &WN[0][r + 22], &WN[1][r + 22], &WN[2][r + 22]);
 
          w = sha512_next_w_avx512(WS) + SIMD_8x64::load_le(&K4[4 * (r + 24)]);
          SHA2_64_F(A, B, C, D, E, F, G, H, W[8]);
          SHA2_64_F(H, A, B, C, D, E, F, G, W[9]);
-         w.store_le4(&W[8], &W2[r + 24], &W3[r + 24], &W4[r + 24]);
+         w.store_le4(&W[8], &WN[0][r + 24], &WN[1][r + 24], &WN[2][r + 24]);
 
          w = sha512_next_w_avx512(WS) + SIMD_8x64::load_le(&K4[4 * (r + 26)]);
          SHA2_64_F(G, H, A, B, C, D, E, F, W[10]);
          SHA2_64_F(F, G, H, A, B, C, D, E, W[11]);
-         w.store_le4(&W[10], &W2[r + 26], &W3[r + 26], &W4[r + 26]);
+         w.store_le4(&W[10], &WN[0][r + 26], &WN[1][r + 26], &WN[2][r + 26]);
 
          w = sha512_next_w_avx512(WS) + SIMD_8x64::load_le(&K4[4 * (r + 28)]);
          SHA2_64_F(E, F, G, H, A, B, C, D, W[12]);
          SHA2_64_F(D, E, F, G, H, A, B, C, W[13]);
-         w.store_le4(&W[12], &W2[r + 28], &W3[r + 28], &W4[r + 28]);
+         w.store_le4(&W[12], &WN[0][r + 28], &WN[1][r + 28], &WN[2][r + 28]);
 
          w = sha512_next_w_avx512(WS) + SIMD_8x64::load_le(&K4[4 * (r + 30)]);
          SHA2_64_F(C, D, E, F, G, H, A, B, W[14]);
          SHA2_64_F(B, C, D, E, F, G, H, A, W[15]);
-         w.store_le4(&W[14], &W2[r + 30], &W3[r + 30], &W4[r + 30]);
+         w.store_le4(&W[14], &WN[0][r + 30], &WN[1][r + 30], &WN[2][r + 30]);
       }
 
       // Final 16 rounds of SHA-512
@@ -254,287 +252,35 @@ BOTAN_FN_ISA_AVX512_BMI2 void SHA_512::compress_digest_x86_avx512(digest_type& d
       H = (digest[7] += H);
 
       // Block 2,3,4 of SHA-512 compression, with pre-expanded messages
-      SHA2_64_F(A, B, C, D, E, F, G, H, W2[0]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W2[1]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W2[2]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W2[3]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W2[4]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W2[5]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W2[6]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W2[7]);
-      SHA2_64_F(A, B, C, D, E, F, G, H, W2[8]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W2[9]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W2[10]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W2[11]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W2[12]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W2[13]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W2[14]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W2[15]);
+      for(size_t b = 0; b != 3; ++b) {
+         for(size_t r = 0; r != 80; r += 16) {
+            SHA2_64_F(A, B, C, D, E, F, G, H, WN[b][r + 0]);
+            SHA2_64_F(H, A, B, C, D, E, F, G, WN[b][r + 1]);
+            SHA2_64_F(G, H, A, B, C, D, E, F, WN[b][r + 2]);
+            SHA2_64_F(F, G, H, A, B, C, D, E, WN[b][r + 3]);
+            SHA2_64_F(E, F, G, H, A, B, C, D, WN[b][r + 4]);
+            SHA2_64_F(D, E, F, G, H, A, B, C, WN[b][r + 5]);
+            SHA2_64_F(C, D, E, F, G, H, A, B, WN[b][r + 6]);
+            SHA2_64_F(B, C, D, E, F, G, H, A, WN[b][r + 7]);
+            SHA2_64_F(A, B, C, D, E, F, G, H, WN[b][r + 8]);
+            SHA2_64_F(H, A, B, C, D, E, F, G, WN[b][r + 9]);
+            SHA2_64_F(G, H, A, B, C, D, E, F, WN[b][r + 10]);
+            SHA2_64_F(F, G, H, A, B, C, D, E, WN[b][r + 11]);
+            SHA2_64_F(E, F, G, H, A, B, C, D, WN[b][r + 12]);
+            SHA2_64_F(D, E, F, G, H, A, B, C, WN[b][r + 13]);
+            SHA2_64_F(C, D, E, F, G, H, A, B, WN[b][r + 14]);
+            SHA2_64_F(B, C, D, E, F, G, H, A, WN[b][r + 15]);
+         }
 
-      SHA2_64_F(A, B, C, D, E, F, G, H, W2[16]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W2[17]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W2[18]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W2[19]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W2[20]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W2[21]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W2[22]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W2[23]);
-      SHA2_64_F(A, B, C, D, E, F, G, H, W2[24]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W2[25]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W2[26]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W2[27]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W2[28]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W2[29]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W2[30]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W2[31]);
-
-      SHA2_64_F(A, B, C, D, E, F, G, H, W2[32]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W2[33]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W2[34]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W2[35]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W2[36]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W2[37]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W2[38]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W2[39]);
-      SHA2_64_F(A, B, C, D, E, F, G, H, W2[40]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W2[41]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W2[42]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W2[43]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W2[44]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W2[45]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W2[46]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W2[47]);
-
-      SHA2_64_F(A, B, C, D, E, F, G, H, W2[48]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W2[49]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W2[50]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W2[51]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W2[52]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W2[53]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W2[54]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W2[55]);
-      SHA2_64_F(A, B, C, D, E, F, G, H, W2[56]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W2[57]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W2[58]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W2[59]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W2[60]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W2[61]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W2[62]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W2[63]);
-
-      SHA2_64_F(A, B, C, D, E, F, G, H, W2[64]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W2[65]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W2[66]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W2[67]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W2[68]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W2[69]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W2[70]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W2[71]);
-      SHA2_64_F(A, B, C, D, E, F, G, H, W2[72]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W2[73]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W2[74]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W2[75]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W2[76]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W2[77]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W2[78]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W2[79]);
-
-      A = (digest[0] += A);
-      B = (digest[1] += B);
-      C = (digest[2] += C);
-      D = (digest[3] += D);
-      E = (digest[4] += E);
-      F = (digest[5] += F);
-      G = (digest[6] += G);
-      H = (digest[7] += H);
-
-      SHA2_64_F(A, B, C, D, E, F, G, H, W3[0]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W3[1]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W3[2]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W3[3]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W3[4]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W3[5]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W3[6]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W3[7]);
-      SHA2_64_F(A, B, C, D, E, F, G, H, W3[8]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W3[9]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W3[10]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W3[11]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W3[12]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W3[13]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W3[14]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W3[15]);
-
-      SHA2_64_F(A, B, C, D, E, F, G, H, W3[16]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W3[17]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W3[18]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W3[19]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W3[20]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W3[21]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W3[22]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W3[23]);
-      SHA2_64_F(A, B, C, D, E, F, G, H, W3[24]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W3[25]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W3[26]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W3[27]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W3[28]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W3[29]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W3[30]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W3[31]);
-
-      SHA2_64_F(A, B, C, D, E, F, G, H, W3[32]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W3[33]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W3[34]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W3[35]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W3[36]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W3[37]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W3[38]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W3[39]);
-      SHA2_64_F(A, B, C, D, E, F, G, H, W3[40]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W3[41]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W3[42]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W3[43]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W3[44]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W3[45]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W3[46]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W3[47]);
-
-      SHA2_64_F(A, B, C, D, E, F, G, H, W3[48]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W3[49]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W3[50]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W3[51]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W3[52]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W3[53]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W3[54]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W3[55]);
-      SHA2_64_F(A, B, C, D, E, F, G, H, W3[56]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W3[57]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W3[58]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W3[59]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W3[60]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W3[61]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W3[62]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W3[63]);
-
-      SHA2_64_F(A, B, C, D, E, F, G, H, W3[64]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W3[65]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W3[66]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W3[67]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W3[68]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W3[69]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W3[70]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W3[71]);
-      SHA2_64_F(A, B, C, D, E, F, G, H, W3[72]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W3[73]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W3[74]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W3[75]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W3[76]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W3[77]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W3[78]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W3[79]);
-
-      A = (digest[0] += A);
-      B = (digest[1] += B);
-      C = (digest[2] += C);
-      D = (digest[3] += D);
-      E = (digest[4] += E);
-      F = (digest[5] += F);
-      G = (digest[6] += G);
-      H = (digest[7] += H);
-
-      SHA2_64_F(A, B, C, D, E, F, G, H, W4[0]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W4[1]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W4[2]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W4[3]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W4[4]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W4[5]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W4[6]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W4[7]);
-      SHA2_64_F(A, B, C, D, E, F, G, H, W4[8]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W4[9]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W4[10]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W4[11]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W4[12]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W4[13]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W4[14]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W4[15]);
-
-      SHA2_64_F(A, B, C, D, E, F, G, H, W4[16]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W4[17]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W4[18]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W4[19]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W4[20]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W4[21]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W4[22]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W4[23]);
-      SHA2_64_F(A, B, C, D, E, F, G, H, W4[24]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W4[25]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W4[26]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W4[27]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W4[28]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W4[29]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W4[30]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W4[31]);
-
-      SHA2_64_F(A, B, C, D, E, F, G, H, W4[32]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W4[33]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W4[34]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W4[35]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W4[36]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W4[37]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W4[38]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W4[39]);
-      SHA2_64_F(A, B, C, D, E, F, G, H, W4[40]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W4[41]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W4[42]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W4[43]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W4[44]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W4[45]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W4[46]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W4[47]);
-
-      SHA2_64_F(A, B, C, D, E, F, G, H, W4[48]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W4[49]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W4[50]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W4[51]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W4[52]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W4[53]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W4[54]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W4[55]);
-      SHA2_64_F(A, B, C, D, E, F, G, H, W4[56]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W4[57]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W4[58]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W4[59]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W4[60]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W4[61]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W4[62]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W4[63]);
-
-      SHA2_64_F(A, B, C, D, E, F, G, H, W4[64]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W4[65]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W4[66]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W4[67]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W4[68]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W4[69]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W4[70]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W4[71]);
-      SHA2_64_F(A, B, C, D, E, F, G, H, W4[72]);
-      SHA2_64_F(H, A, B, C, D, E, F, G, W4[73]);
-      SHA2_64_F(G, H, A, B, C, D, E, F, W4[74]);
-      SHA2_64_F(F, G, H, A, B, C, D, E, W4[75]);
-      SHA2_64_F(E, F, G, H, A, B, C, D, W4[76]);
-      SHA2_64_F(D, E, F, G, H, A, B, C, W4[77]);
-      SHA2_64_F(C, D, E, F, G, H, A, B, W4[78]);
-      SHA2_64_F(B, C, D, E, F, G, H, A, W4[79]);
-
-      A = (digest[0] += A);
-      B = (digest[1] += B);
-      C = (digest[2] += C);
-      D = (digest[3] += D);
-      E = (digest[4] += E);
-      F = (digest[5] += F);
-      G = (digest[6] += G);
-      H = (digest[7] += H);
+         A = (digest[0] += A);
+         B = (digest[1] += B);
+         C = (digest[2] += C);
+         D = (digest[3] += D);
+         E = (digest[4] += E);
+         F = (digest[5] += F);
+         G = (digest[6] += G);
+         H = (digest[7] += H);
+      }
    }
 
    while(blocks > 0) {
