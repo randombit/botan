@@ -1,0 +1,17 @@
+<defines>
+CAMELLIA_GFNI -> 20250502
+</defines>
+
+<module_info>
+name -> "Camellia using GFNI"
+</module_info>
+
+<isa>
+avx2
+gfni
+</isa>
+
+<requires>
+simd_avx2
+cpuid
+</requires>
