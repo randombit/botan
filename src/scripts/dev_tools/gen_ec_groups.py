@@ -189,10 +189,13 @@ def main():
             """))
 
         with open(impl_path, 'w', encoding='utf8') as src_file:
-            # TODO if P is a Crandall number generate an appropriate Rep type
+            crandall = (1 << pcurve["P"].bit_length()) - pcurve["P"]
+            if crandall > 2**32:
+                crandall = 0
 
             template = env.get_template("pcurves_stub.cpp.in")
             src_file.write(template.render(curve = pcurve,
+                                           crandall=crandall,
                                            addchain_fe2=indent(addchain_fe2, 9 * ' ', OmitFirstLine()),
                                            addchain_scalar=indent(addchain_scalar, 9 * ' ', OmitFirstLine())))
             src_file.write("\n")
