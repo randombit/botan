@@ -1,12 +1,12 @@
 /*
-* Lightweight wrappers for SIMD operations
+* Lightweight wrappers for SIMD (4x32 bit) operations
 * (C) 2009,2011,2016,2017,2019,2025 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_SIMD_32_H_
-#define BOTAN_SIMD_32_H_
+#ifndef BOTAN_SIMD_4X32_H_
+#define BOTAN_SIMD_4X32_H_
 
 #include <botan/compiler.h>
 #include <botan/types.h>

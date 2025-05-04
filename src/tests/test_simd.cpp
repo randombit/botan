@@ -6,7 +6,7 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_SIMD_32)
+#if defined(BOTAN_HAS_SIMD_4X32)
    #include <botan/internal/bswap.h>
    #include <botan/internal/loadstor.h>
    #include <botan/internal/rotate.h>
@@ -20,15 +20,15 @@
 
 namespace Botan_Tests {
 
-#if defined(BOTAN_HAS_SIMD_32)
+#if defined(BOTAN_HAS_SIMD_4X32)
 
-class SIMD_32_Tests final : public Test {
+class SIMD_4X32_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("SIMD_4x32");
 
    #if defined(BOTAN_HAS_CPUID)
-         if(Botan::CPUID::has(CPUID::Feature::SIMD_4X32) == false) {
+         if(Botan::CPUID::has(Botan::CPUID::Feature::SIMD_4X32) == false) {
             result.test_note("Skipping SIMD_4x32 tests due to missing CPU support at runtime");
             return {result};
          }
@@ -232,7 +232,7 @@ class SIMD_32_Tests final : public Test {
       }
 };
 
-BOTAN_REGISTER_TEST("utils", "simd_32", SIMD_32_Tests);
+BOTAN_REGISTER_TEST("utils", "simd_4x32", SIMD_4X32_Tests);
 #endif
 
 }  // namespace Botan_Tests
