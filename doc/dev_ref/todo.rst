@@ -27,6 +27,8 @@ Hardware Specific Optimizations
 * NEON/VMX/LSX support for the SIMD based GHASH
 * Poly1305 using AVX2
 * SM3 using x86 SM3-NI
+* SM3 using AVX2/BMI2
+* SHA-1 using AVX2/BMI2
 * Constant time bitsliced DES
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
 * Improved Salsa implementations (SIMD_4x32 and/or AVX2)
