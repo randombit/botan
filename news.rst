@@ -24,9 +24,11 @@ Version 3.8.0, Not Yet Released
 
 * Add SHA-256 and SHA-512 implementations using AVX2/BMI2 (GH #4818 #4821)
 
-* Add SHA-512 implementation using AVX-512/BMI2 (GH #4842)
+* Add SHA-512 implementation using AVX-512/BMI2 (GH #4842 #4849)
 
 * Add SHA-256 implementation using SSSE3 or NEON for message expansion (GH #4819)
+
+* The default TLS policy now prefers AES/GCM over ChaCha20Poly1305 (GH #4843)
 
 * Add support for TLS 1.3 post-quantum KEM secp384r1/ML-KEM-1024 (GH #4752)
 
@@ -109,6 +111,9 @@ Version 3.8.0, Not Yet Released
 
 * Fix a bug that caused the tests to skip testing AES-NI if AES-VAES was supported.
   (GH #4649)
+
+* Fix issues with CMake integration when built in Debian-style multiarch setups.
+  (GH #4839)
 
 * Now even for purely static library builds, ``-fPIC`` is used to compile the
   library objects. This allows linking position independent executables (PIE)
