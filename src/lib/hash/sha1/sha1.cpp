@@ -10,7 +10,7 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
-#include <botan/internal/stl_util.h>
+#include <botan/internal/sha1_f.h>
 #include <array>
 
 #if defined(BOTAN_HAS_CPUID)
@@ -18,46 +18,6 @@
 #endif
 
 namespace Botan {
-
-namespace SHA1_F {
-
-namespace {
-
-/*
-* SHA-1 F1 Function
-*/
-inline void F1(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg) {
-   E += choose(B, C, D) + msg + 0x5A827999 + rotl<5>(A);
-   B = rotl<30>(B);
-}
-
-/*
-* SHA-1 F2 Function
-*/
-inline void F2(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg) {
-   E += (B ^ C ^ D) + msg + 0x6ED9EBA1 + rotl<5>(A);
-   B = rotl<30>(B);
-}
-
-/*
-* SHA-1 F3 Function
-*/
-inline void F3(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg) {
-   E += majority(B, C, D) + msg + 0x8F1BBCDC + rotl<5>(A);
-   B = rotl<30>(B);
-}
-
-/*
-* SHA-1 F4 Function
-*/
-inline void F4(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uint32_t msg) {
-   E += (B ^ C ^ D) + msg + 0xCA62C1D6 + rotl<5>(A);
-   B = rotl<30>(B);
-}
-
-}  // namespace
-
-}  // namespace SHA1_F
 
 /*
 * SHA-1 Compression Function
@@ -77,11 +37,16 @@ void SHA_1::compress_n(digest_type& digest, std::span<const uint8_t> input, size
    }
 #endif
 
+#if defined(BOTAN_HAS_SHA1_AVX2)
+   if(CPUID::has(CPUID::Feature::AVX2, CPUID::Feature::BMI)) {
+      return avx2_compress_n(digest, input, blocks);
+   }
+#endif
+
 #if defined(BOTAN_HAS_SHA1_SIMD_4X32)
    if(CPUID::has(CPUID::Feature::SIMD_4X32)) {
       return simd_compress_n(digest, input, blocks);
    }
-
 #endif
 
    uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3], E = digest[4];
@@ -108,89 +73,89 @@ void SHA_1::compress_n(digest_type& digest, std::span<const uint8_t> input, size
 
       // clang-format on
 
-      F1(A, B, C, D, E, W[0]);
-      F1(E, A, B, C, D, W[1]);
-      F1(D, E, A, B, C, W[2]);
-      F1(C, D, E, A, B, W[3]);
-      F1(B, C, D, E, A, W[4]);
-      F1(A, B, C, D, E, W[5]);
-      F1(E, A, B, C, D, W[6]);
-      F1(D, E, A, B, C, W[7]);
-      F1(C, D, E, A, B, W[8]);
-      F1(B, C, D, E, A, W[9]);
-      F1(A, B, C, D, E, W[10]);
-      F1(E, A, B, C, D, W[11]);
-      F1(D, E, A, B, C, W[12]);
-      F1(C, D, E, A, B, W[13]);
-      F1(B, C, D, E, A, W[14]);
-      F1(A, B, C, D, E, W[15]);
-      F1(E, A, B, C, D, W[16]);
-      F1(D, E, A, B, C, W[17]);
-      F1(C, D, E, A, B, W[18]);
-      F1(B, C, D, E, A, W[19]);
+      F1(A, B, C, D, E, W[0] + K1);
+      F1(E, A, B, C, D, W[1] + K1);
+      F1(D, E, A, B, C, W[2] + K1);
+      F1(C, D, E, A, B, W[3] + K1);
+      F1(B, C, D, E, A, W[4] + K1);
+      F1(A, B, C, D, E, W[5] + K1);
+      F1(E, A, B, C, D, W[6] + K1);
+      F1(D, E, A, B, C, W[7] + K1);
+      F1(C, D, E, A, B, W[8] + K1);
+      F1(B, C, D, E, A, W[9] + K1);
+      F1(A, B, C, D, E, W[10] + K1);
+      F1(E, A, B, C, D, W[11] + K1);
+      F1(D, E, A, B, C, W[12] + K1);
+      F1(C, D, E, A, B, W[13] + K1);
+      F1(B, C, D, E, A, W[14] + K1);
+      F1(A, B, C, D, E, W[15] + K1);
+      F1(E, A, B, C, D, W[16] + K1);
+      F1(D, E, A, B, C, W[17] + K1);
+      F1(C, D, E, A, B, W[18] + K1);
+      F1(B, C, D, E, A, W[19] + K1);
 
-      F2(A, B, C, D, E, W[20]);
-      F2(E, A, B, C, D, W[21]);
-      F2(D, E, A, B, C, W[22]);
-      F2(C, D, E, A, B, W[23]);
-      F2(B, C, D, E, A, W[24]);
-      F2(A, B, C, D, E, W[25]);
-      F2(E, A, B, C, D, W[26]);
-      F2(D, E, A, B, C, W[27]);
-      F2(C, D, E, A, B, W[28]);
-      F2(B, C, D, E, A, W[29]);
-      F2(A, B, C, D, E, W[30]);
-      F2(E, A, B, C, D, W[31]);
-      F2(D, E, A, B, C, W[32]);
-      F2(C, D, E, A, B, W[33]);
-      F2(B, C, D, E, A, W[34]);
-      F2(A, B, C, D, E, W[35]);
-      F2(E, A, B, C, D, W[36]);
-      F2(D, E, A, B, C, W[37]);
-      F2(C, D, E, A, B, W[38]);
-      F2(B, C, D, E, A, W[39]);
+      F2(A, B, C, D, E, W[20] + K2);
+      F2(E, A, B, C, D, W[21] + K2);
+      F2(D, E, A, B, C, W[22] + K2);
+      F2(C, D, E, A, B, W[23] + K2);
+      F2(B, C, D, E, A, W[24] + K2);
+      F2(A, B, C, D, E, W[25] + K2);
+      F2(E, A, B, C, D, W[26] + K2);
+      F2(D, E, A, B, C, W[27] + K2);
+      F2(C, D, E, A, B, W[28] + K2);
+      F2(B, C, D, E, A, W[29] + K2);
+      F2(A, B, C, D, E, W[30] + K2);
+      F2(E, A, B, C, D, W[31] + K2);
+      F2(D, E, A, B, C, W[32] + K2);
+      F2(C, D, E, A, B, W[33] + K2);
+      F2(B, C, D, E, A, W[34] + K2);
+      F2(A, B, C, D, E, W[35] + K2);
+      F2(E, A, B, C, D, W[36] + K2);
+      F2(D, E, A, B, C, W[37] + K2);
+      F2(C, D, E, A, B, W[38] + K2);
+      F2(B, C, D, E, A, W[39] + K2);
 
-      F3(A, B, C, D, E, W[40]);
-      F3(E, A, B, C, D, W[41]);
-      F3(D, E, A, B, C, W[42]);
-      F3(C, D, E, A, B, W[43]);
-      F3(B, C, D, E, A, W[44]);
-      F3(A, B, C, D, E, W[45]);
-      F3(E, A, B, C, D, W[46]);
-      F3(D, E, A, B, C, W[47]);
-      F3(C, D, E, A, B, W[48]);
-      F3(B, C, D, E, A, W[49]);
-      F3(A, B, C, D, E, W[50]);
-      F3(E, A, B, C, D, W[51]);
-      F3(D, E, A, B, C, W[52]);
-      F3(C, D, E, A, B, W[53]);
-      F3(B, C, D, E, A, W[54]);
-      F3(A, B, C, D, E, W[55]);
-      F3(E, A, B, C, D, W[56]);
-      F3(D, E, A, B, C, W[57]);
-      F3(C, D, E, A, B, W[58]);
-      F3(B, C, D, E, A, W[59]);
+      F3(A, B, C, D, E, W[40] + K3);
+      F3(E, A, B, C, D, W[41] + K3);
+      F3(D, E, A, B, C, W[42] + K3);
+      F3(C, D, E, A, B, W[43] + K3);
+      F3(B, C, D, E, A, W[44] + K3);
+      F3(A, B, C, D, E, W[45] + K3);
+      F3(E, A, B, C, D, W[46] + K3);
+      F3(D, E, A, B, C, W[47] + K3);
+      F3(C, D, E, A, B, W[48] + K3);
+      F3(B, C, D, E, A, W[49] + K3);
+      F3(A, B, C, D, E, W[50] + K3);
+      F3(E, A, B, C, D, W[51] + K3);
+      F3(D, E, A, B, C, W[52] + K3);
+      F3(C, D, E, A, B, W[53] + K3);
+      F3(B, C, D, E, A, W[54] + K3);
+      F3(A, B, C, D, E, W[55] + K3);
+      F3(E, A, B, C, D, W[56] + K3);
+      F3(D, E, A, B, C, W[57] + K3);
+      F3(C, D, E, A, B, W[58] + K3);
+      F3(B, C, D, E, A, W[59] + K3);
 
-      F4(A, B, C, D, E, W[60]);
-      F4(E, A, B, C, D, W[61]);
-      F4(D, E, A, B, C, W[62]);
-      F4(C, D, E, A, B, W[63]);
-      F4(B, C, D, E, A, W[64]);
-      F4(A, B, C, D, E, W[65]);
-      F4(E, A, B, C, D, W[66]);
-      F4(D, E, A, B, C, W[67]);
-      F4(C, D, E, A, B, W[68]);
-      F4(B, C, D, E, A, W[69]);
-      F4(A, B, C, D, E, W[70]);
-      F4(E, A, B, C, D, W[71]);
-      F4(D, E, A, B, C, W[72]);
-      F4(C, D, E, A, B, W[73]);
-      F4(B, C, D, E, A, W[74]);
-      F4(A, B, C, D, E, W[75]);
-      F4(E, A, B, C, D, W[76]);
-      F4(D, E, A, B, C, W[77]);
-      F4(C, D, E, A, B, W[78]);
-      F4(B, C, D, E, A, W[79]);
+      F4(A, B, C, D, E, W[60] + K4);
+      F4(E, A, B, C, D, W[61] + K4);
+      F4(D, E, A, B, C, W[62] + K4);
+      F4(C, D, E, A, B, W[63] + K4);
+      F4(B, C, D, E, A, W[64] + K4);
+      F4(A, B, C, D, E, W[65] + K4);
+      F4(E, A, B, C, D, W[66] + K4);
+      F4(D, E, A, B, C, W[67] + K4);
+      F4(C, D, E, A, B, W[68] + K4);
+      F4(B, C, D, E, A, W[69] + K4);
+      F4(A, B, C, D, E, W[70] + K4);
+      F4(E, A, B, C, D, W[71] + K4);
+      F4(D, E, A, B, C, W[72] + K4);
+      F4(C, D, E, A, B, W[73] + K4);
+      F4(B, C, D, E, A, W[74] + K4);
+      F4(A, B, C, D, E, W[75] + K4);
+      F4(E, A, B, C, D, W[76] + K4);
+      F4(D, E, A, B, C, W[77] + K4);
+      F4(C, D, E, A, B, W[78] + K4);
+      F4(B, C, D, E, A, W[79] + K4);
 
       A = (digest[0] += A);
       B = (digest[1] += B);
@@ -216,6 +181,12 @@ std::string SHA_1::provider() const {
 
 #if defined(BOTAN_HAS_SHA1_ARMV8)
    if(auto feat = CPUID::check(CPUID::Feature::SHA1)) {
+      return *feat;
+   }
+#endif
+
+#if defined(BOTAN_HAS_SHA1_AVX2)
+   if(auto feat = CPUID::check(CPUID::Feature::AVX2, CPUID::Feature::BMI)) {
       return *feat;
    }
 #endif

@@ -51,6 +51,10 @@ class SHA_1 final : public HashFunction {
       static void simd_compress_n(digest_type& digest, std::span<const uint8_t> blocks, size_t block_count);
 #endif
 
+#if defined(BOTAN_HAS_SHA1_AVX2)
+      static void avx2_compress_n(digest_type& digest, std::span<const uint8_t> blocks, size_t block_count);
+#endif
+
 #if defined(BOTAN_HAS_SHA1_X86_SHA_NI)
       // Using x86 SHA instructions in Intel Goldmont and Cannonlake
       static void sha1_compress_x86(digest_type& digest, std::span<const uint8_t> blocks, size_t block_count);

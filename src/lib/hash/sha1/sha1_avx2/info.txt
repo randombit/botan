@@ -1,0 +1,24 @@
+<defines>
+SHA1_AVX2 -> 20250505
+</defines>
+
+<module_info>
+name -> "SHA-1 AVX2/BMI2"
+brief -> "SHA-1 using AVX2/BMI2 instructions"
+</module_info>
+
+<isa>
+avx2
+bmi2
+</isa>
+
+<arch>
+x86_32
+x86_64
+x32
+</arch>
+
+<requires>
+cpuid
+simd_avx2
+</requires>
