@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 3.8.0, Not Yet Released
+Version 3.8.0, 2025-05-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Discussion has started regarding plans for Botan4, current ETA 2027. Check the
