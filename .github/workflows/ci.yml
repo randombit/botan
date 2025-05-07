@@ -230,7 +230,13 @@ jobs:
           - target: minimized
             compiler: gcc
             host_os: ubuntu-24.04
-          - target: bsi
+          - target: policy-bsi
+            compiler: gcc
+            host_os: ubuntu-24.04
+          - target: policy-fips140
+            compiler: gcc
+            host_os: ubuntu-24.04
+          - target: policy-modern
             compiler: gcc
             host_os: ubuntu-24.04
           - target: docs
