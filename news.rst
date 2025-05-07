@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 3.8.1, Not Yet Released
+Version 3.8.1, 2025-05-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fix a bug that prevented building using the `fips140` or `modern` module
