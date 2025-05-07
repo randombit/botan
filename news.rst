@@ -1,6 +1,15 @@
 Release Notes
 ========================================
 
+Version 3.8.1, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix a bug that prevented building using the `fips140` or `modern` module
+  policies. (GH #4854 #4856)
+
+* Fix a missing include that caused compilation failures with libc++20
+  (GH #4855 #4857)
+
 Version 3.8.0, 2025-05-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
