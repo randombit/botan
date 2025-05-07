@@ -8,7 +8,6 @@ sha2_32
 sha2_64
 blake2
 skein
-keccak # this is a pre-standard implementation, TODO(Botan4): remove
 shake
 sha3
 
@@ -71,12 +70,11 @@ sha1_simd
 sha1_x86
 sha1_armv8
 sha2_32_x86
+sha2_32_simd
 sha2_32_armv8
 sha2_32_avx2
 sha2_64_avx2
 keccak_perm_bmi2
-
-simd
 
 sessions_sql
 certstor_sql

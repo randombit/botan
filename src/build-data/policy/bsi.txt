@@ -121,6 +121,7 @@ ghash_vperm
 # hash
 sha2_32_x86
 sha2_32_armv8
+sha2_32_simd
 sha2_32_avx2
 sha2_64_avx2
 keccak_perm_bmi2
@@ -141,7 +142,6 @@ system_rng
 # utils
 http_util # needed by x509 for OCSP online checks
 locking_allocator
-simd_4x32
 </if_available>
 
 <prohibited>
