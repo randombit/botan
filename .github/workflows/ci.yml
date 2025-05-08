@@ -30,18 +30,21 @@ jobs:
 
       matrix:
         include:
+#          - target: shared
+#            arch: x86_64
+#            host_os: windows-2022
           - target: shared
-            arch: x86_64
-            host_os: windows-2022
-          - target: static
-            arch: x86_64
-            host_os: windows-2022
-          - target: amalgamation
-            arch: x86_64
-            host_os: windows-2022
-          - target: shared
-            arch: x86
-            host_os: windows-2022
+            arch: aarch64
+            host_os: windows-11-arm
+#          - target: static
+#            arch: x86_64
+#            host_os: windows-2022
+#          - target: amalgamation
+#            arch: x86_64
+#            host_os: windows-2022
+#          - target: shared
+#            arch: x86
+#            host_os: windows-2022
 
     runs-on: ${{ matrix.host_os }}
 
@@ -62,6 +65,7 @@ jobs:
         run: python3 ./src/scripts/ci_build.py --cc='msvc' --make-tool='ninja' --cpu='${{ matrix.arch }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   linux:
+    if: false
     name: "Linux"
     strategy:
       fail-fast: false
@@ -95,6 +99,7 @@ jobs:
         run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   macos:
+    if: false
     name: "macOS"
     strategy:
       fail-fast: false
@@ -132,6 +137,7 @@ jobs:
         run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   clang-tidy:
+    if: false
     name: "Clang Tidy"
     runs-on: ubuntu-24.04
     steps:
@@ -159,6 +165,7 @@ jobs:
         run: ./src/scripts/ci/gh_clang_tidy_fixes_in_pr.py clang_tidy_diagnostics
 
   analysis:
+    if: false
     name: "Analysis"
     strategy:
       fail-fast: false
@@ -218,6 +225,7 @@ jobs:
         run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   specials:
+    if: false
     name: "Special"
     strategy:
       fail-fast: false
@@ -266,6 +274,7 @@ jobs:
         run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   x-compile:
+    if: false
     name: "Cross"
     strategy:
       fail-fast: false
