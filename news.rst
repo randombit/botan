@@ -1,6 +1,16 @@
 Release Notes
 ========================================
 
+Version 3.9.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add SHA-1 implementation using AVX2/BMI2 (GH #4852)
+
+* Modify `BOTAN_CLEAR_CPUID` so that clearing `ssse3` also disables AVX2/AVX512
+  (GH #4853)
+
+* Work around a GCC 13/14 miscompilation when LTO is used (GH #4863 #4862)
+
 Version 3.8.1, 2025-05-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
