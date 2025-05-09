@@ -14,6 +14,7 @@
 #include <botan/asn1_obj.h>
 
 #include <botan/pkix_enums.h>
+#include <initializer_list>
 #include <iosfwd>
 #include <map>
 #include <memory>
@@ -40,6 +41,12 @@ inline std::string key_constraints_to_string(Key_Constraints c) {
 class BOTAN_PUBLIC_API(2, 0) X509_DN final : public ASN1_Object {
    public:
       X509_DN() = default;
+
+      explicit X509_DN(std::initializer_list<std::pair<std::string_view, std::string_view>> args) {
+         for(const auto& i : args) {
+            add_attribute(i.first, i.second);
+         }
+      }
 
       explicit X509_DN(const std::multimap<OID, std::string>& args) {
          for(const auto& i : args) {
