@@ -17,9 +17,13 @@
    #include <botan/tpm2_rsa.h>
    #include <botan/tpm2_session.h>
 
+namespace {
+
 std::span<const uint8_t> as_byteview(std::string_view str) {
    return {reinterpret_cast<const uint8_t*>(str.data()), str.size()};
 }
+
+}  // namespace
 
 int main() {
    // This TCTI configuration is just an example, adjust as needed!
