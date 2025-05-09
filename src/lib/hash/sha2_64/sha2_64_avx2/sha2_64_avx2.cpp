@@ -128,6 +128,27 @@ BOTAN_FN_ISA_AVX2_BMI2 void SHA_512::compress_digest_x86_avx2(digest_type& diges
 
    const uint8_t* data = input.data();
 
+   while(blocks >= 4) {
+      data += 4 * 128;
+      blocks -= 4;
+
+      auto W0 = SIMD_4x32::load_le(&data[32*0]);
+      auto W1 = SIMD_4x32::load_le(&data[32*1]);
+      auto W3 = SIMD_4x32::load_le(&data[32*3]);
+      auto W4 = SIMD_4x32::load_le(&data[32*4]);
+      auto W5 = SIMD_4x32::load_le(&data[32*5]);
+      auto W6 = SIMD_4x32::load_le(&data[32*6]);
+      auto W7 = SIMD_4x32::load_le(&data[32*7]);
+      auto W8 = SIMD_4x32::load_le(&data[32*8]);
+      auto W9 = SIMD_4x32::load_le(&data[32*9]);
+      auto W10 = SIMD_4x32::load_le(&data[32*10]);
+      auto W11 = SIMD_4x32::load_le(&data[32*11]);
+      auto W12 = SIMD_4x32::load_le(&data[32*12]);
+      auto W13 = SIMD_4x32::load_le(&data[32*13]);
+      auto W14 = SIMD_4x32::load_le(&data[32*14]);
+      auto W15 = SIMD_4x32::load_le(&data[32*15]);
+   }
+
    while(blocks >= 2) {
       SIMD_4x64 WS[8];
 

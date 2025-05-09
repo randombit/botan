@@ -159,6 +159,8 @@ class SIMD_4x64 final {
 
       explicit BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64(__m256i x) : m_simd(x) {}
 
+      __m256i raw() const { return m_simd; }
+
    private:
       __m256i m_simd;
 };
