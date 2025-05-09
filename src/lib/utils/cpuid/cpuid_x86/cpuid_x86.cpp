@@ -180,24 +180,26 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
       if(feat & CPUFeature::Bit::SSSE3) {
          feat |= if_set(flags7, x86_CPUID_7_bits::SHA, CPUFeature::Bit::SHA, allowed);
          feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SM3, CPUFeature::Bit::SM3, allowed);
-      }
 
-      if(has_os_ymm_support) {
-         feat |= if_set(flags7, x86_CPUID_7_bits::AVX2, CPUFeature::Bit::AVX2, allowed);
+         // We only consider AVX2 if SSSE3 is supported
+         if(has_os_ymm_support) {
+            feat |= if_set(flags7, x86_CPUID_7_bits::AVX2, CPUFeature::Bit::AVX2, allowed);
 
-         if(feat & CPUFeature::Bit::AVX2) {
-            feat |= if_set(flags7, x86_CPUID_7_bits::GFNI, CPUFeature::Bit::GFNI, allowed);
-            feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VAES, CPUFeature::Bit::AVX2_AES, allowed);
-            feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VCLMUL, CPUFeature::Bit::AVX2_CLMUL, allowed);
-            feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SHA512, CPUFeature::Bit::SHA512, allowed);
-            feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SM4, CPUFeature::Bit::SM4, allowed);
+            if(feat & CPUFeature::Bit::AVX2) {
+               feat |= if_set(flags7, x86_CPUID_7_bits::GFNI, CPUFeature::Bit::GFNI, allowed);
+               feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VAES, CPUFeature::Bit::AVX2_AES, allowed);
+               feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VCLMUL, CPUFeature::Bit::AVX2_CLMUL, allowed);
+               feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SHA512, CPUFeature::Bit::SHA512, allowed);
+               feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SM4, CPUFeature::Bit::SM4, allowed);
 
-            if(has_os_zmm_support) {
-               feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_PROFILE, CPUFeature::Bit::AVX512, allowed);
+               // Likewise we only consider AVX-512 if AVX2 is supported
+               if(has_os_zmm_support) {
+                  feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_PROFILE, CPUFeature::Bit::AVX512, allowed);
 
-               if(feat & CPUFeature::Bit::AVX512) {
-                  feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VAES, CPUFeature::Bit::AVX512_AES, allowed);
-                  feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VCLMUL, CPUFeature::Bit::AVX512_CLMUL, allowed);
+                  if(feat & CPUFeature::Bit::AVX512) {
+                     feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VAES, CPUFeature::Bit::AVX512_AES, allowed);
+                     feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VCLMUL, CPUFeature::Bit::AVX512_CLMUL, allowed);
+                  }
                }
             }
          }
