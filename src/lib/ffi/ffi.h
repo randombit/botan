@@ -2131,6 +2131,12 @@ BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_serial_number(botan_x509_cert_t c
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_authority_key_id(botan_x509_cert_t cert, uint8_t out[], size_t* out_len);
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_subject_key_id(botan_x509_cert_t cert, uint8_t out[], size_t* out_len);
 
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_get_basic_constraints(botan_x509_cert_t cert, int* is_ca, size_t* limit);
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_get_key_constraints(botan_x509_cert_t cert, uint32_t* usage);
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_get_ocsp_responder(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_str_fn view);
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_is_self_signed(botan_x509_cert_t cert, int* out);
+
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_public_key_bits(botan_x509_cert_t cert, uint8_t out[], size_t* out_len);
 
 BOTAN_FFI_EXPORT(3, 0)
@@ -2152,6 +2158,8 @@ BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_to_string(botan_x509_cert_t cert, cha
 
 BOTAN_FFI_EXPORT(3, 0)
 int botan_x509_cert_view_as_string(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_str_fn view);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_view_pem(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_str_fn view);
 
 /* Must match values of Key_Constraints in key_constraints.h */
 enum botan_x509_cert_key_constraints /* NOLINT(*-enum-size) */ {
@@ -2200,6 +2208,99 @@ int botan_x509_cert_verify(int* validation_result,
 * or else NULL if unknown.
 */
 BOTAN_FFI_EXPORT(2, 8) const char* botan_x509_cert_validation_status(int code);
+
+typedef struct botan_x509_cert_opts_struct* botan_x509_cert_opts_t;
+typedef struct botan_x509_ca_struct* botan_x509_ca_t;
+typedef struct botan_x509_pkcs10_req_struct* botan_x509_pkcs10_req_t;
+typedef struct botan_x509_time_struct* botan_x509_time_t;
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_destroy(botan_x509_cert_opts_t opts);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_ca_destroy(botan_x509_ca_t ca);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_pkcs10_req_destroy(botan_x509_pkcs10_req_t req);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_time_destroy(botan_x509_time_t time);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_create_cert_opts(botan_x509_cert_opts_t* opts_obj, const char* opts, uint32_t* expire_time);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_common_name(botan_x509_cert_opts_t opts, const char* name);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_country(botan_x509_cert_opts_t opts, const char* country);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_organization(botan_x509_cert_opts_t opts, const char* organization);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_org_unit(botan_x509_cert_opts_t opts, const char* org_unit);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_locality(botan_x509_cert_opts_t opts, const char* locality);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_state(botan_x509_cert_opts_t opts, const char* state);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_serial_number(botan_x509_cert_opts_t opts, const char* serial_number);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_email(botan_x509_cert_opts_t opts, const char* email);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_uri(botan_x509_cert_opts_t opts, const char* uri);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_ip(botan_x509_cert_opts_t opts, const char* ip);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_dns(botan_x509_cert_opts_t opts, const char* dns);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_xmpp(botan_x509_cert_opts_t opts, const char* xmpp);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_challenge(botan_x509_cert_opts_t opts, const char* challenge);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_opts_more_org_units(botan_x509_cert_opts_t opts, const char** more_org_units, size_t cnt);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_opts_more_dns(botan_x509_cert_opts_t opts, const char** more_dns, size_t cnt);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_ca_key(botan_x509_cert_opts_t opts, size_t limit);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_set_padding_scheme(botan_x509_cert_opts_t opts, const char* scheme);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_not_before(botan_x509_cert_opts_t opts, botan_x509_time_t not_before);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_not_after(botan_x509_cert_opts_t opts, botan_x509_time_t not_after);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_add_constraints(botan_x509_cert_opts_t opts, uint32_t usage);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_add_ex_constraint(botan_x509_cert_opts_t opts, botan_asn1_oid_t oid);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_create_self_signed_cert(botan_x509_cert_t* cert_obj,
+                                       botan_privkey_t key,
+                                       botan_x509_cert_opts_t opts,
+                                       const char* hash_fn,
+                                       const char* sig_padding,
+                                       botan_rng_t rng);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_create_ca(botan_x509_ca_t* ca_obj,
+                         botan_x509_cert_t ca_cert,
+                         botan_privkey_t key,
+                         const char* hash_fn,
+                         const char* sig_padding,
+                         botan_rng_t rng);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_create_pkcs10_req(botan_x509_pkcs10_req_t* req_obj,
+                                 botan_x509_cert_opts_t opts,
+                                 botan_privkey_t key,
+                                 const char* hash_fn,
+                                 botan_rng_t rng);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_sign_req(botan_x509_cert_t* cert_obj,
+                        botan_x509_ca_t ca,
+                        botan_x509_pkcs10_req_t req,
+                        botan_rng_t rng,
+                        botan_x509_time_t not_before,
+                        botan_x509_time_t not_after);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_create_time(botan_x509_time_t* time_obj, uint64_t time_since_epoch);
 
 /*
 * X.509 CRL

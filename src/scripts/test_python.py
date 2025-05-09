@@ -12,6 +12,7 @@ import os
 import platform
 import argparse
 import sys
+import time
 from itertools import permutations
 
 # Starting with Python 3.8 DLL search locations are more restricted on Windows.
@@ -783,6 +784,36 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertFalse(int04_1.is_revoked(rootcrl))
         self.assertTrue(end21.is_revoked(int21crl))
 
+    def test_cert_creation(self):
+        hash_fn = "SHA-256"
+        padding_method = "EMSA3(SHA-256)"
+
+        rng = botan.RandomNumberGenerator()
+        ca_key = botan.PrivateKey.create("RSA", "4096", rng)
+        ca_opts = botan.X509Opts("Test CA/US/Botan Project/Testing")
+        ca_opts.set_ca_key(1)
+        ca_opts.set_constraints(["DIGITAL_SIGNATURE"])
+        ca_cert = botan.X509Cert.create_self_signed(ca_key, ca_opts, hash_fn, padding_method, rng)
+        constraints = ca_cert.key_constraints()
+        self.assertEqual(len(constraints), 3)
+        for item in ["DIGITAL_SIGNATURE", "KEY_CERT_SIGN", "CRL_SIGN"]:
+            self.assertTrue(item in constraints)
+
+        self.assertTrue(ca_cert.is_self_signed())
+        self.assertEqual(ca_cert.key_constraints(), ["DIGITAL_SIGNATURE", "KEY_CERT_SIGN", "CRL_SIGN"])
+        ca = botan.X509Ca(ca_cert, ca_key, rng, hash_fn)
+
+        cert_key = botan.PrivateKey.create("RSA", "4096", rng)
+        req_opts = botan.X509Opts("Test CA/US/Botan Project/Testing")
+        req_opts.set_uri("https://botan.randombit.net")
+        req_opts.set_more_dns(["botan.randombit.net", "randombit.net"])
+        req = req_opts.create_req(cert_key, hash_fn, rng)
+
+        cert = ca.sign(req, rng, botan.X509Time(int(time.time())), botan.X509Time(int(time.time()) + 60))
+        self.assertFalse(cert.is_self_signed())
+        self.assertEqual(cert.key_constraints(), ["NO_CONSTRAINTS"])
+
+        self.assertEqual(cert.verify(None, [ca_cert]), 0)
 
     def test_mpi(self):
         z = botan.MPI()

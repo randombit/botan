@@ -727,6 +727,71 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
       }
 };
 
+class FFI_Cert_Creation_Test final : public FFI_Test {
+   public:
+      std::string name() const override { return "FFI Cert Creation"; }
+
+      void ffi_test(Test::Result& result, botan_rng_t rng) override {
+         const std::string hash_fn{"SHA-256"};
+         const std::string padding_method{"EMSA3(SHA-256)"};
+
+         botan_privkey_t ca_key;
+         botan_privkey_t cert_key;
+
+         if(TEST_FFI_INIT(botan_privkey_create_rsa, (&ca_key, rng, 4096))) {
+            TEST_FFI_OK(botan_privkey_create_rsa, (&cert_key, rng, 4096));
+
+            uint64_t now =
+               std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch())
+                  .count();
+
+            botan_x509_time_t not_before;
+            botan_x509_time_t not_after;
+
+            if(TEST_FFI_INIT(botan_x509_create_time, (&not_before, now))) {
+               TEST_FFI_OK(botan_x509_create_time, (&not_after, now + 60 * 60));
+
+               botan_x509_cert_opts_t ca_opts;
+               TEST_FFI_OK(botan_x509_create_cert_opts, (&ca_opts, "Test CA/US/Botan Project/Testing", nullptr));
+               TEST_FFI_OK(botan_x509_cert_opts_ca_key, (ca_opts, 1));
+               TEST_FFI_OK(botan_x509_cert_opts_uri, (ca_opts, "https://botan.randombit.net"));
+               const char* dns_names[] = {"botan.randombit.net", "randombit.net"};
+               TEST_FFI_OK(botan_x509_cert_opts_more_dns, (ca_opts, dns_names, 2));
+
+               botan_x509_cert_t ca_cert;
+               TEST_FFI_OK(botan_x509_create_self_signed_cert, (&ca_cert, ca_key, ca_opts, hash_fn.c_str(), "", rng));
+
+               botan_x509_ca_t ca;
+               TEST_FFI_OK(botan_x509_create_ca, (&ca, ca_cert, ca_key, hash_fn.c_str(), padding_method.c_str(), rng));
+
+               botan_x509_cert_opts_t req_opts;
+               TEST_FFI_OK(botan_x509_create_cert_opts, (&req_opts, "Test CA/US/Botan Project/Testing", nullptr));
+
+               botan_x509_pkcs10_req_t req;
+               TEST_FFI_OK(botan_x509_create_pkcs10_req, (&req, req_opts, cert_key, hash_fn.c_str(), rng));
+
+               botan_x509_cert_t cert;
+               TEST_FFI_OK(botan_x509_sign_req, (&cert, ca, req, rng, not_before, not_after));
+
+               int rc;
+               TEST_FFI_RC(0, botan_x509_cert_verify, (&rc, cert, nullptr, 0, &ca_cert, 1, nullptr, 0, nullptr, 0));
+
+               TEST_FFI_OK(botan_x509_time_destroy, (not_before));
+               TEST_FFI_OK(botan_x509_time_destroy, (not_after));
+               TEST_FFI_OK(botan_x509_cert_opts_destroy, (ca_opts));
+               TEST_FFI_OK(botan_x509_cert_opts_destroy, (req_opts));
+               TEST_FFI_OK(botan_x509_ca_destroy, (ca));
+               TEST_FFI_OK(botan_x509_pkcs10_req_destroy, (req));
+               TEST_FFI_OK(botan_x509_cert_destroy, (ca_cert));
+               TEST_FFI_OK(botan_x509_cert_destroy, (cert));
+            }
+
+            TEST_FFI_OK(botan_privkey_destroy, (ca_key));
+            TEST_FFI_OK(botan_privkey_destroy, (cert_key));
+         }
+      }
+};
+
 class FFI_ECDSA_Certificate_Test final : public FFI_Test {
    public:
       std::string name() const override { return "FFI ECDSA cert"; }
@@ -4577,6 +4642,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_rsa_cert", FFI_RSA_Cert_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_zfec", FFI_ZFEC_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_crl", FFI_CRL_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_cert_validation", FFI_Cert_Validation_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_cert_creation", FFI_Cert_Creation_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ecdsa_certificate", FFI_ECDSA_Certificate_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_pkcs_hashid", FFI_PKCS_Hashid_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_cbc_cipher", FFI_CBC_Cipher_Test);
