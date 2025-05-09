@@ -79,14 +79,12 @@ int main() {
    //                                               session);
 
    // Create a Certificate Signing Request (CSR)
-   const auto dn = []() {
-      Botan::X509_DN d;
-      d.add_attribute("X520.CommonName", "TPM-hosted test");
-      d.add_attribute("X520.Country", "DE");
-      d.add_attribute("X520.Organization", "Rohde & Schwarz");
-      d.add_attribute("X520.OrganizationalUnit", "GB11");
-      return d;
-   }();
+   const Botan::X509_DN dn({
+      {"X520.CommonName", "TPM-hosted test"},
+      {"X520.Country", "DE"},
+      {"X520.Organization", "Rohde & Schwarz"},
+      {"X520.OrganizationalUnit", "GB11"},
+   });
 
    // Set up relevant extensions
    Botan::Extensions extensions;
