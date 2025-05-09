@@ -79,6 +79,9 @@ class SIMD_8x32 final {
       void store_le(uint8_t out[]) const noexcept { _mm256_storeu_si256(reinterpret_cast<__m256i*>(out), m_avx2); }
 
       BOTAN_FN_ISA_AVX2
+      void store_le(uint32_t out[]) const noexcept { _mm256_storeu_si256(reinterpret_cast<__m256i*>(out), m_avx2); }
+
+      BOTAN_FN_ISA_AVX2
       void store_le128(uint8_t out[]) const noexcept {
          _mm_storeu_si128(reinterpret_cast<__m128i*>(out), _mm256_extracti128_si256(raw(), 0));
       }
