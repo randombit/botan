@@ -23,7 +23,7 @@ namespace Botan {
 * If top bit of arg is set, return ~0. Otherwise return 0.
 */
 template <typename T>
-inline constexpr T expand_top_bit(T a)
+BOTAN_FORCE_INLINE constexpr T expand_top_bit(T a)
    requires(std::is_integral<T>::value)
 {
    return static_cast<T>(0) - (a >> (sizeof(T) * 8 - 1));
@@ -33,7 +33,7 @@ inline constexpr T expand_top_bit(T a)
 * If arg is zero, return ~0. Otherwise return 0
 */
 template <typename T>
-inline constexpr T ct_is_zero(T x)
+BOTAN_FORCE_INLINE constexpr T ct_is_zero(T x)
    requires(std::is_integral<T>::value)
 {
    return expand_top_bit<T>(~x & (x - 1));
@@ -45,7 +45,7 @@ inline constexpr T ct_is_zero(T x)
 * @return true iff arg is 2^n for some n > 0
 */
 template <typename T>
-inline constexpr bool is_power_of_2(T arg)
+BOTAN_FORCE_INLINE constexpr bool is_power_of_2(T arg)
    requires(std::is_unsigned<T>::value)
 {
    return (arg != 0) && (arg != 1) && ((arg & static_cast<T>(arg - 1)) == 0);
@@ -58,7 +58,7 @@ inline constexpr bool is_power_of_2(T arg)
 * @return index of the highest set bit in n
 */
 template <typename T>
-inline constexpr size_t high_bit(T n)
+BOTAN_FORCE_INLINE constexpr size_t high_bit(T n)
    requires(std::is_unsigned<T>::value)
 {
    size_t hb = 0;
@@ -80,7 +80,7 @@ inline constexpr size_t high_bit(T n)
 * @return number of significant bytes in n
 */
 template <typename T>
-inline constexpr size_t significant_bytes(T n)
+BOTAN_FORCE_INLINE constexpr size_t significant_bytes(T n)
    requires(std::is_integral<T>::value)
 {
    size_t b = 0;
@@ -102,7 +102,7 @@ inline constexpr size_t significant_bytes(T n)
 * @return maximum x st 2^x divides n
 */
 template <typename T>
-inline constexpr size_t ctz(T n)
+BOTAN_FORCE_INLINE constexpr size_t ctz(T n)
    requires(std::is_integral<T>::value)
 {
    /*
@@ -122,7 +122,7 @@ inline constexpr size_t ctz(T n)
 }
 
 template <typename T>
-inline constexpr T floor_log2(T n)
+BOTAN_FORCE_INLINE constexpr T floor_log2(T n)
    requires(std::is_unsigned<T>::value)
 {
    BOTAN_ARG_CHECK(n != 0, "log2(0) is not defined");
@@ -157,7 +157,7 @@ constexpr uint8_t ceil_log2(T x)
  * @returns ceil(a/b)
  */
 template <std::unsigned_integral T>
-inline constexpr T ceil_division(T a, T b) {
+BOTAN_FORCE_INLINE constexpr T ceil_division(T a, T b) {
    return (a + b - 1) / b;
 }
 
@@ -165,14 +165,14 @@ inline constexpr T ceil_division(T a, T b) {
  * Return the number of bytes necessary to contain @p bits bits.
  */
 template <typename T>
-inline constexpr T ceil_tobytes(T bits)
+BOTAN_FORCE_INLINE constexpr T ceil_tobytes(T bits)
    requires(std::is_integral<T>::value)
 {
    return (bits + 7) / 8;
 }
 
 // Potentially variable time ctz used for OCB
-inline constexpr size_t var_ctz32(uint32_t n) {
+BOTAN_FORCE_INLINE constexpr size_t var_ctz32(uint32_t n) {
 #if BOTAN_COMPILER_HAS_BUILTIN(__builtin_ctz)
    if(n == 0) {
       return 32;
@@ -184,7 +184,7 @@ inline constexpr size_t var_ctz32(uint32_t n) {
 }
 
 template <typename T>
-inline constexpr T bit_permute_step(T x, T mask, size_t shift) {
+BOTAN_FORCE_INLINE constexpr T bit_permute_step(T x, T mask, size_t shift) {
    /*
    See https://reflectionsonsecurity.wordpress.com/2014/05/11/efficient-bit-permutation-using-delta-swaps/
    and http://programming.sirrida.de/bit_perm.html
@@ -194,20 +194,20 @@ inline constexpr T bit_permute_step(T x, T mask, size_t shift) {
 }
 
 template <typename T>
-inline constexpr void swap_bits(T& x, T& y, T mask, size_t shift) {
+BOTAN_FORCE_INLINE constexpr void swap_bits(T& x, T& y, T mask, size_t shift) {
    const T swap = ((x >> shift) ^ y) & mask;
    x ^= swap << shift;
    y ^= swap;
 }
 
 template <typename T>
-inline constexpr T choose(T mask, T a, T b) {
+BOTAN_FORCE_INLINE constexpr T choose(T mask, T a, T b) {
    //return (mask & a) | (~mask & b);
    return (b ^ (mask & (a ^ b)));
 }
 
 template <typename T>
-inline constexpr T majority(T a, T b, T c) {
+BOTAN_FORCE_INLINE constexpr T majority(T a, T b, T c) {
    /*
    Considering each bit of a, b, c individually
 
@@ -224,7 +224,7 @@ inline constexpr T majority(T a, T b, T c) {
  * @returns the reversed bits in @p b.
  */
 template <std::unsigned_integral T>
-constexpr T ct_reverse_bits(T b) {
+inline constexpr T ct_reverse_bits(T b) {
    auto extend = [](uint8_t m) -> T {
       T mask = 0;
       for(size_t i = 0; i < sizeof(T); ++i) {
@@ -258,7 +258,7 @@ constexpr T ct_reverse_bits(T b) {
  * @returns the number of 1-bits in the provided value
  */
 template <std::unsigned_integral T>
-inline constexpr uint8_t ct_popcount(T x) {
+BOTAN_FORCE_INLINE constexpr uint8_t ct_popcount(T x) {
    constexpr size_t s = sizeof(T);
    static_assert(s <= 8, "T is not a suitable unsigned integer value");
    if constexpr(s == 8) {
