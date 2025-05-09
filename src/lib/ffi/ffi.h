@@ -2194,6 +2194,49 @@ int botan_x509_cert_verify(int* validation_result,
 */
 BOTAN_FFI_EXPORT(2, 8) const char* botan_x509_cert_validation_status(int code);
 
+typedef struct botan_x509_cert_opts_struct* botan_x509_cert_opts_t;
+typedef struct botan_x509_ca_struct* botan_x509_ca_t;
+typedef struct botan_x509_pkcs10_req_struct* botan_x509_pkcs10_req_t;
+typedef struct botan_x509_time_struct* botan_x509_time_t;
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_create_cert_opts(botan_x509_cert_opts_t* opts_obj, const char* opts, uint32_t* expire_time);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_ca_key(botan_x509_cert_opts_t opts, size_t limit);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_create_self_signed_cert(botan_x509_cert_t* cert_obj,
+                                       botan_privkey_t key,
+                                       botan_x509_cert_opts_t opts,
+                                       const char* hash_fn,
+                                       const char* sig_padding,
+                                       botan_rng_t rng);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_create_ca(botan_x509_ca_t* ca_obj,
+                         botan_x509_cert_t ca_cert,
+                         botan_privkey_t key,
+                         const char* hash_fn,
+                         const char* sig_padding,
+                         botan_rng_t rng);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_create_pkcs10_req(botan_x509_pkcs10_req_t* req_obj,
+                                 botan_x509_cert_opts_t opts,
+                                 botan_privkey_t key,
+                                 const char* hash_fn,
+                                 botan_rng_t rng);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_sign_req(botan_x509_cert_t* cert_obj,
+                        botan_x509_ca_t ca,
+                        botan_x509_pkcs10_req_t req,
+                        botan_rng_t rng,
+                        botan_x509_time_t not_before,
+                        botan_x509_time_t not_after);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_create_time(botan_x509_time_t* time_obj, uint64_t time_since_epoch);
+
 /*
 * X.509 CRL
 **************************/
