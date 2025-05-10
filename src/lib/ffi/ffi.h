@@ -2206,6 +2206,14 @@ typedef struct botan_x509_ca_struct* botan_x509_ca_t;
 typedef struct botan_x509_pkcs10_req_struct* botan_x509_pkcs10_req_t;
 typedef struct botan_x509_time_struct* botan_x509_time_t;
 
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_destroy(botan_x509_cert_opts_t opts);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_ca_destroy(botan_x509_ca_t ca);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_plcs10_req_destroy(botan_x509_pkcs10_req_t req);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_time_destroy(botan_x509_time_t time);
+
 BOTAN_FFI_EXPORT(3, 9)
 int botan_x509_create_cert_opts(botan_x509_cert_opts_t* opts_obj, const char* opts, uint32_t* expire_time);
 
