@@ -495,12 +495,26 @@ int botan_x509_cert_verify_with_crl(int* result_code,
 #endif
 }
 
-// TODO _destroy
-
 BOTAN_FFI_DECLARE_STRUCT(botan_x509_cert_opts_struct, Botan::X509_Cert_Options, 0x92597C7D);
 BOTAN_FFI_DECLARE_STRUCT(botan_x509_ca_struct, Botan::X509_CA, 0x8BE2A8F1);
 BOTAN_FFI_DECLARE_STRUCT(botan_x509_pkcs10_req_struct, Botan::PKCS10_Request, 0x87F0690A);
 BOTAN_FFI_DECLARE_STRUCT(botan_x509_time_struct, Botan::X509_Time, 0x739396FA);
+
+int botan_x509_cert_opts_destroy(botan_x509_cert_opts_t opts) {
+   return BOTAN_FFI_CHECKED_DELETE(opts);
+}
+
+int botan_x509_ca_destroy(botan_x509_ca_t ca) {
+   return BOTAN_FFI_CHECKED_DELETE(ca);
+}
+
+int botan_x509_plcs10_req_destroy(botan_x509_pkcs10_req_t req) {
+   return BOTAN_FFI_CHECKED_DELETE(req);
+}
+
+int botan_x509_time_destroy(botan_x509_time_t time) {
+   return BOTAN_FFI_CHECKED_DELETE(time);
+}
 
 int botan_x509_create_cert_opts(botan_x509_cert_opts_t* opts_obj, const char* opts, uint32_t* expire_time) {
    if(!opts_obj || !opts) {
