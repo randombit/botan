@@ -734,9 +734,9 @@ class FFI_Cert_Creation_Test final : public FFI_Test {
          const std::string curve{"secp384r1"};
 
          botan_privkey_t ca_key;
-         TEST_FFI_INIT(botan_privkey_create_rsa, (&ca_key, rng, 4096));
+         TEST_FFI_OK(botan_privkey_create_rsa, (&ca_key, rng, 4096));
          botan_privkey_t cert_key;
-         TEST_FFI_INIT(botan_privkey_create_rsa, (&cert_key, rng, 4096));
+         TEST_FFI_OK(botan_privkey_create_rsa, (&cert_key, rng, 4096));
 
          uint64_t now =
             std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch())
@@ -769,6 +769,16 @@ class FFI_Cert_Creation_Test final : public FFI_Test {
 
          int rc;
          TEST_FFI_RC(0, botan_x509_cert_verify, (&rc, cert, nullptr, 0, &ca_cert, 1, nullptr, 0, nullptr, 0));
+
+         TEST_FFI_OK(botan_privkey_destroy, (ca_key));
+         TEST_FFI_OK(botan_privkey_destroy, (cert_key));
+         TEST_FFI_OK(botan_x509_time_destroy, (not_before));
+         TEST_FFI_OK(botan_x509_time_destroy, (not_after));
+         TEST_FFI_OK(botan_x509_cert_opts_destroy, (ca_opts));
+         TEST_FFI_OK(botan_x509_cert_opts_destroy, (req_opts));
+         TEST_FFI_OK(botan_x509_plcs10_req_destroy, (req));
+         TEST_FFI_OK(botan_x509_cert_destroy, (ca_cert));
+         TEST_FFI_OK(botan_x509_cert_destroy, (cert));
       }
 };
 
