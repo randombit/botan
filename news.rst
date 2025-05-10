@@ -145,6 +145,8 @@ Version 3.8.0, 2025-05-06
 
 * Update GHA CodeQL actions (GH #4644)
 
+* Add support for TLS 1.2 null ciphers (GH #4776)
+
 Version 3.7.1, 2025-02-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
