@@ -432,7 +432,7 @@ References
 
 [CoronDpa] Coron,
 "Resistance against Differential Power Analysis for Elliptic Curve Cryptosystems"
-(https://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.1.5695)
+(https://citeseerx.ist.psu.edu/document?doi=4d5d6dfdb582c0d695953e92c408f2377a6c9039)
 
 [GcdFree] Joye, Paillier "GCD-Free Algorithms for Computing Modular Inverses"
 (https://marcjoye.github.io/papers/JP03gcdfree.pdf)
@@ -453,7 +453,7 @@ elliptic-curve cryptography. (https://safecurves.cr.yp.to)
 
 [MillionMsg] Bleichenbacher "Chosen Ciphertext Attacks Against Protocols Based
 on the RSA Encryption Standard PKCS1"
-(https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.19.8543)
+(https://archiv.infsec.ethz.ch/education/fs08/secsem/bleichenbacher98.pdf)
 
 [MillionMsgTiming] Meyer, Somorovsky, Weiss, Schwenk, Schinzel, Tews: Revisiting
 SSL/TLS Implementations: New Bleichenbacher Side Channels and Attacks
@@ -465,7 +465,7 @@ Encryption Padding (OAEP) as Standardized in PKCS #1 v2.0"
 
 [RsaFault] Boneh, Demillo, Lipton
 "On the importance of checking cryptographic protocols for faults"
-(https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.48.9764)
+(https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=7622200b9459a8c0e25e74ce7316c2402862e919)
 
 [RandomMonty] Le, Tan, Tunstall "Randomizing the Montgomery Powering Ladder"
 (https://eprint.iacr.org/2015/657)
