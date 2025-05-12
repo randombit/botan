@@ -22,14 +22,14 @@ namespace Botan {
 
 std::string GHASH::provider() const {
 #if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
-   if(CPUID::has(CPUID::Feature::HW_CLMUL)) {
-      return "clmul";
+   if(auto feat = CPUID::check(CPUID::Feature::HW_CLMUL)) {
+      return *feat;
    }
 #endif
 
 #if defined(BOTAN_HAS_GHASH_CLMUL_VPERM)
-   if(CPUID::has(CPUID::Feature::SIMD_4X32)) {
-      return "vperm";
+   if(auto feat = CPUID::check(CPUID::Feature::SIMD_4X32)) {
+      return *feat;
    }
 #endif
 
