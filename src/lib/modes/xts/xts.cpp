@@ -14,6 +14,22 @@
 
 namespace Botan {
 
+namespace {
+
+constexpr void swap_bytes_via_xor(std::span<uint8_t> a, std::span<uint8_t> b) {
+   BOTAN_DEBUG_ASSERT(a.size() == b.size());
+
+   // TODO: use std::views::zip once we shed some older compilers, like:
+   //       for(auto& [front, back] : std::views::zip(a, b))
+   for(auto front = a.begin(), back = b.begin(); front != a.end() && back != b.end(); ++front, ++back) {
+      *front ^= *back;
+      *back ^= *front;
+      *front ^= *back;
+   }
+}
+
+}  // namespace
+
 XTS_Mode::XTS_Mode(std::unique_ptr<BlockCipher> cipher) :
       m_cipher(std::move(cipher)),
       m_cipher_block_size(m_cipher->block_size()),
@@ -54,6 +70,15 @@ size_t XTS_Mode::minimum_final_size() const {
 
 Key_Length_Specification XTS_Mode::key_spec() const {
    return cipher().key_spec().multiple(2);
+}
+
+size_t XTS_Mode::output_length(size_t input_length) const {
+   return input_length;
+}
+
+size_t XTS_Mode::bytes_needed_for_finalization(size_t final_input_length) const {
+   BOTAN_ASSERT_NOMSG(final_input_length >= minimum_final_size());
+   return final_input_length;
 }
 
 size_t XTS_Mode::default_nonce_length() const {
@@ -104,10 +129,6 @@ void XTS_Mode::update_tweak(size_t which) {
    xts_update_tweak_block(m_tweak.data(), BS, blocks_in_tweak);
 }
 
-size_t XTS_Encryption::output_length(size_t input_length) const {
-   return input_length;
-}
-
 size_t XTS_Encryption::process_msg(uint8_t buf[], size_t sz) {
    BOTAN_STATE_CHECK(tweak_set());
    const size_t BS = cipher_block_size();
@@ -134,47 +155,39 @@ size_t XTS_Encryption::process_msg(uint8_t buf[], size_t sz) {
    return sz;
 }
 
-void XTS_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
-   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
-   const size_t sz = buffer.size() - offset;
-   uint8_t* buf = buffer.data() + offset;
-
-   BOTAN_ARG_CHECK(sz >= minimum_final_size(), "missing sufficient final input in XTS encrypt");
+size_t XTS_Encryption::finish_msg(std::span<uint8_t> buffer, [[maybe_unused]] size_t final_input) {
+   BOTAN_ASSERT_NOMSG(buffer.size() >= minimum_final_size());
+   BOTAN_DEBUG_ASSERT(buffer.size() == bytes_needed_for_finalization(final_input));
 
    const size_t BS = cipher_block_size();
 
-   if(sz % BS == 0) {
-      update(buffer, offset);
+   if(buffer.size() % BS == 0) {
+      process(buffer);
    } else {
       // steal ciphertext
-      const size_t full_blocks = ((sz / BS) - 1) * BS;
-      const size_t final_bytes = sz - full_blocks;
-      BOTAN_ASSERT(final_bytes > BS && final_bytes < 2 * BS, "Left over size in expected range");
+      const auto full_blocks = buffer.first(((buffer.size() / BS) - 1) * BS);
+      const auto tail = buffer.subspan(full_blocks.size());
+      BOTAN_ASSERT(tail.size() > BS && tail.size() < 2 * BS, "Left over size in expected range");
 
-      secure_vector<uint8_t> last(buf + full_blocks, buf + full_blocks + final_bytes);
-      buffer.resize(full_blocks + offset);
-      update(buffer, offset);
+      const auto full_tweak = std::span{tweak(), tweak_blocks() * BS};
+      const auto first_block_of_tail = tail.first(BS);
+      const auto final_bytes_of_tail = tail.subspan(BS);
+      const auto first_bytes_of_tail = tail.first(final_bytes_of_tail.size());
 
-      xor_buf(last, tweak(), BS);
-      cipher().encrypt(last);
-      xor_buf(last, tweak(), BS);
+      process(full_blocks);
 
-      for(size_t i = 0; i != final_bytes - BS; ++i) {
-         last[i] ^= last[i + BS];
-         last[i + BS] ^= last[i];
-         last[i] ^= last[i + BS];
-      }
+      xor_buf(first_block_of_tail, full_tweak.first(BS));
+      cipher().encrypt(first_block_of_tail);
+      xor_buf(first_block_of_tail, full_tweak.first(BS));
 
-      xor_buf(last, tweak() + BS, BS);
-      cipher().encrypt(last);
-      xor_buf(last, tweak() + BS, BS);
+      swap_bytes_via_xor(first_bytes_of_tail, final_bytes_of_tail);
 
-      buffer += last;
+      xor_buf(first_block_of_tail, full_tweak.subspan(BS, BS));
+      cipher().encrypt(first_block_of_tail);
+      xor_buf(first_block_of_tail, full_tweak.subspan(BS, BS));
    }
-}
 
-size_t XTS_Decryption::output_length(size_t input_length) const {
-   return input_length;
+   return buffer.size();
 }
 
 size_t XTS_Decryption::process_msg(uint8_t buf[], size_t sz) {
@@ -203,43 +216,39 @@ size_t XTS_Decryption::process_msg(uint8_t buf[], size_t sz) {
    return sz;
 }
 
-void XTS_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
-   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
-   const size_t sz = buffer.size() - offset;
-   uint8_t* buf = buffer.data() + offset;
-
-   BOTAN_ARG_CHECK(sz >= minimum_final_size(), "missing sufficient final input in XTS decrypt");
+size_t XTS_Decryption::finish_msg(std::span<uint8_t> buffer, [[maybe_unused]] size_t final_input) {
+   BOTAN_ASSERT_NOMSG(buffer.size() >= minimum_final_size());
+   BOTAN_DEBUG_ASSERT(buffer.size() == bytes_needed_for_finalization(final_input));
 
    const size_t BS = cipher_block_size();
 
-   if(sz % BS == 0) {
-      update(buffer, offset);
+   if(buffer.size() % BS == 0) {
+      process(buffer);
    } else {
       // steal ciphertext
-      const size_t full_blocks = ((sz / BS) - 1) * BS;
-      const size_t final_bytes = sz - full_blocks;
-      BOTAN_ASSERT(final_bytes > BS && final_bytes < 2 * BS, "Left over size in expected range");
+      const auto full_blocks = buffer.first(((buffer.size() / BS) - 1) * BS);
+      const auto tail = buffer.subspan(full_blocks.size());
+      BOTAN_ASSERT(tail.size() > BS && tail.size() < 2 * BS, "Left over size in expected range");
 
-      secure_vector<uint8_t> last(buf + full_blocks, buf + full_blocks + final_bytes);
-      buffer.resize(full_blocks + offset);
-      update(buffer, offset);
+      const auto full_tweak = std::span{tweak(), tweak_blocks() * BS};
+      const auto first_block_of_tail = tail.first(BS);
+      const auto final_bytes_of_tail = tail.subspan(BS);
+      const auto first_bytes_of_tail = tail.first(final_bytes_of_tail.size());
 
-      xor_buf(last, tweak() + BS, BS);
-      cipher().decrypt(last);
-      xor_buf(last, tweak() + BS, BS);
+      process(full_blocks);
 
-      for(size_t i = 0; i != final_bytes - BS; ++i) {
-         last[i] ^= last[i + BS];
-         last[i + BS] ^= last[i];
-         last[i] ^= last[i + BS];
-      }
+      xor_buf(first_block_of_tail, full_tweak.subspan(BS, BS));
+      cipher().decrypt(first_block_of_tail);
+      xor_buf(first_block_of_tail, full_tweak.subspan(BS, BS));
 
-      xor_buf(last, tweak(), BS);
-      cipher().decrypt(last);
-      xor_buf(last, tweak(), BS);
+      swap_bytes_via_xor(final_bytes_of_tail, first_bytes_of_tail);
 
-      buffer += last;
+      xor_buf(first_block_of_tail, full_tweak.first(BS));
+      cipher().decrypt(first_block_of_tail);
+      xor_buf(first_block_of_tail, full_tweak.first(BS));
    }
+
+   return buffer.size();
 }
 
 }  // namespace Botan
