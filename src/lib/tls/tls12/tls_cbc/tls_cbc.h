@@ -75,6 +75,8 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode {
 
       secure_vector<uint8_t>& msg() { return m_msg; }
 
+      const secure_vector<uint8_t>& msg() const { return m_msg; }
+
       std::vector<uint8_t> assoc_data_with_len(uint16_t len);
 
    private:
@@ -126,11 +128,13 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Encryption final : public TLS_CBC_HMAC_AE
 
       size_t output_length(size_t input_length) const override;
 
+      size_t bytes_needed_for_finalization(size_t final_input_length) const override;
+
       size_t minimum_final_size() const override { return 0; }
 
    private:
-      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-      void cbc_encrypt_record(secure_vector<uint8_t>& buffer, size_t offset, size_t padding_length);
+      size_t finish_msg(std::span<uint8_t> final_block, size_t final_input) override;
+      void cbc_encrypt_record(std::span<uint8_t> buffer, size_t padding_length);
 };
 
 /**
@@ -156,12 +160,14 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Decryption final : public TLS_CBC_HMAC_AE
 
       size_t output_length(size_t input_length) const override;
 
+      size_t bytes_needed_for_finalization(size_t final_input_length) const override;
+
       size_t minimum_final_size() const override { return tag_size(); }
 
    private:
-      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+      size_t finish_msg(std::span<uint8_t> final_block, size_t input_bytes) override;
 
-      void cbc_decrypt_record(uint8_t record_contents[], size_t record_len);
+      void cbc_decrypt_record(std::span<uint8_t> record_contents);
 
       void perform_additional_compressions(size_t plen, size_t padlen);
 };
@@ -169,10 +175,9 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Decryption final : public TLS_CBC_HMAC_AE
 /**
 * Check the TLS padding of a record
 * @param record the record bits
-* @param record_len length of record
 * @return 0 if padding is invalid, otherwise padding_bytes + 1
 */
-BOTAN_TEST_API uint16_t check_tls_cbc_padding(const uint8_t record[], size_t record_len);
+BOTAN_TEST_API uint16_t check_tls_cbc_padding(std::span<const uint8_t> record);
 
 }  // namespace Botan::TLS
 
