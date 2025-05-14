@@ -82,11 +82,15 @@ class GCM_Encryption final : public GCM_Mode {
 
       size_t output_length(size_t input_length) const override { return input_length + tag_size(); }
 
+      size_t bytes_needed_for_finalization(size_t final_input_length) const override {
+         return output_length(final_input_length);
+      }
+
       size_t minimum_final_size() const override { return 0; }
 
    private:
       size_t process_msg(uint8_t buf[], size_t size) override;
-      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+      size_t finish_msg(std::span<uint8_t> final_block, size_t input_bytes) override;
 };
 
 /**
@@ -106,11 +110,16 @@ class GCM_Decryption final : public GCM_Mode {
          return input_length - tag_size();
       }
 
+      size_t bytes_needed_for_finalization(size_t final_input_length) const override {
+         BOTAN_ARG_CHECK(final_input_length >= tag_size(), "Sufficient input");
+         return final_input_length;
+      }
+
       size_t minimum_final_size() const override { return tag_size(); }
 
    private:
       size_t process_msg(uint8_t buf[], size_t size) override;
-      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+      size_t finish_msg(std::span<uint8_t> final_block, size_t input_bytes) override;
 };
 
 }  // namespace Botan

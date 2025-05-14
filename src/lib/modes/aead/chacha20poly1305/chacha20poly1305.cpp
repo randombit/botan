@@ -87,8 +87,8 @@ void ChaCha20Poly1305_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
 
    if(cfrg_version()) {
       if(m_ad.size() % 16 != 0) {
-         const uint8_t zeros[16] = {0};
-         m_poly1305->update(zeros, 16 - m_ad.size() % 16);
+         std::array<uint8_t, 16> zeros{};
+         m_poly1305->update(std::span{zeros}.first(16 - m_ad.size() % 16));
       }
    } else {
       update_len(m_ad.size());
@@ -102,21 +102,30 @@ size_t ChaCha20Poly1305_Encryption::process_msg(uint8_t buf[], size_t sz) {
    return sz;
 }
 
-void ChaCha20Poly1305_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
-   update(buffer, offset);
+size_t ChaCha20Poly1305_Encryption::finish_msg(std::span<uint8_t> buffer, size_t input_bytes) {
+   const auto tag_length = tag_size();
+
+   BOTAN_ASSERT_NOMSG(input_bytes + tag_length == buffer.size());
+
+   const auto payload = buffer.first(input_bytes);
+   const auto tag = buffer.last(tag_length);
+
+   process(payload);
    if(cfrg_version()) {
       if(m_ctext_len % 16 != 0) {
-         const uint8_t zeros[16] = {0};
-         m_poly1305->update(zeros, 16 - m_ctext_len % 16);
+         std::array<uint8_t, 16> zeros{};
+         m_poly1305->update(std::span{zeros}.first(16 - m_ctext_len % 16));
       }
       update_len(m_ad.size());
    }
+
    update_len(m_ctext_len);
 
-   buffer.resize(buffer.size() + tag_size());
-   m_poly1305->final(&buffer[buffer.size() - tag_size()]);
+   m_poly1305->final(tag);
    m_ctext_len = 0;
    m_nonce_len = 0;
+
+   return buffer.size();
 }
 
 size_t ChaCha20Poly1305_Decryption::process_msg(uint8_t buf[], size_t sz) {
@@ -126,43 +135,40 @@ size_t ChaCha20Poly1305_Decryption::process_msg(uint8_t buf[], size_t sz) {
    return sz;
 }
 
-void ChaCha20Poly1305_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
-   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
-   const size_t sz = buffer.size() - offset;
-   uint8_t* buf = buffer.data() + offset;
+size_t ChaCha20Poly1305_Decryption::finish_msg(std::span<uint8_t> buffer, size_t input_bytes) {
+   const auto tag_length = tag_size();
 
-   BOTAN_ARG_CHECK(sz >= tag_size(), "input did not include the tag");
+   BOTAN_ASSERT_NOMSG(buffer.size() == input_bytes);
+   BOTAN_ASSERT_NOMSG(buffer.size() >= tag_length);
 
-   const size_t remaining = sz - tag_size();
+   const auto remaining = buffer.first(buffer.size() - tag_length);
+   const auto tag = buffer.last(tag_length);
 
-   if(remaining > 0) {
-      m_poly1305->update(buf, remaining);  // poly1305 of ciphertext
-      m_chacha->cipher1(buf, remaining);
-      m_ctext_len += remaining;
+   if(!remaining.empty()) {
+      process(remaining);
    }
 
    if(cfrg_version()) {
       if(m_ctext_len % 16 != 0) {
-         const uint8_t zeros[16] = {0};
-         m_poly1305->update(zeros, 16 - m_ctext_len % 16);
+         std::array<uint8_t, 16> zeros{};
+         m_poly1305->update(std::span{zeros}.first(16 - m_ctext_len % 16));
       }
       update_len(m_ad.size());
    }
 
    update_len(m_ctext_len);
 
-   uint8_t mac[16];
+   std::array<uint8_t, 16> mac{};
    m_poly1305->final(mac);
-
-   const uint8_t* included_tag = &buf[remaining];
 
    m_ctext_len = 0;
    m_nonce_len = 0;
 
-   if(!CT::is_equal(mac, included_tag, tag_size()).as_bool()) {
+   if(!CT::is_equal(mac.data(), tag.data(), tag.size()).as_bool()) {
       throw Invalid_Authentication_Tag("ChaCha20Poly1305 tag check failed");
    }
-   buffer.resize(offset + remaining);
+
+   return remaining.size();
 }
 
 }  // namespace Botan

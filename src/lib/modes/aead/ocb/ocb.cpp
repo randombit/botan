@@ -13,6 +13,7 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/poly_dbl.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -362,58 +363,64 @@ size_t OCB_Encryption::process_msg(uint8_t buf[], size_t sz) {
    return sz;
 }
 
-void OCB_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
+size_t OCB_Encryption::finish_msg(std::span<uint8_t> buffer, size_t input_bytes) {
    assert_key_material_set();
    BOTAN_STATE_CHECK(m_L->initialized());
 
    const size_t BS = block_size();
+   const size_t tag_length = tag_size();
 
-   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
-   const size_t sz = buffer.size() - offset;
-   uint8_t* buf = buffer.data() + offset;
+   BOTAN_ASSERT_NOMSG(input_bytes + tag_length == buffer.size());
+
+   const auto remaining = buffer.first(input_bytes);
+   const auto tag = buffer.last(tag_length);
 
    secure_vector<uint8_t> mac(BS);
 
-   if(sz > 0) {
-      const size_t final_full_blocks = sz / BS;
-      const size_t remainder_bytes = sz - (final_full_blocks * BS);
+   if(!remaining.empty()) {
+      const auto final_full_block_count = remaining.size() / BS;
+      const auto final_full_blocks = remaining.first(final_full_block_count * BS);
+      const auto remainder = remaining.subspan(final_full_blocks.size());
 
-      encrypt(buf, final_full_blocks);
-      mac = m_L->offset();
+      encrypt(final_full_blocks.data(), final_full_block_count);
+      copy_mem(mac, m_L->offset());
 
-      if(remainder_bytes > 0) {
-         BOTAN_ASSERT(remainder_bytes < BS, "Only a partial block left");
-         uint8_t* remainder = &buf[sz - remainder_bytes];
+      if(!remainder.empty()) {
+         BOTAN_ASSERT(remainder.size() < BS, "Only a partial block left");
 
-         xor_buf(m_checksum.data(), remainder, remainder_bytes);
-         m_checksum[remainder_bytes] ^= 0x80;
+         xor_buf(std::span{m_checksum}.first(remainder.size()), remainder);
+         m_checksum[remainder.size()] ^= 0x80;
 
          // Offset_*
-         mac ^= m_L->star();
+         xor_buf(mac, m_L->star());
 
          secure_vector<uint8_t> pad(BS);
          m_cipher->encrypt(mac, pad);
-         xor_buf(remainder, pad.data(), remainder_bytes);
+         xor_buf(remainder, std::span{pad}.first(remainder.size()));
       }
    } else {
-      mac = m_L->offset();
+      copy_mem(mac, m_L->offset());
    }
 
    // now compute the tag
 
    // fold checksum
-   for(size_t i = 0; i != m_checksum.size(); i += BS) {
-      xor_buf(mac.data(), m_checksum.data() + i, BS);
+   BufferSlicer cs(m_checksum);
+   while(cs.remaining() >= BS) {
+      xor_buf(mac, cs.take(BS));
    }
+   BOTAN_ASSERT_NOMSG(cs.empty());
 
-   xor_buf(mac.data(), m_L->dollar().data(), BS);
+   xor_buf(mac, m_L->dollar());
    m_cipher->encrypt(mac);
-   xor_buf(mac.data(), m_ad_hash.data(), BS);
+   xor_buf(mac, m_ad_hash);
 
-   buffer += std::make_pair(mac.data(), tag_size());
+   copy_mem(tag, std::span{mac}.first(tag.size()));
 
    zeroise(m_checksum);
    m_block_index = 0;
+
+   return buffer.size();
 }
 
 void OCB_Decryption::decrypt(uint8_t buffer[], size_t blocks) {
@@ -446,70 +453,68 @@ size_t OCB_Decryption::process_msg(uint8_t buf[], size_t sz) {
    return sz;
 }
 
-void OCB_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
+size_t OCB_Decryption::finish_msg(std::span<uint8_t> buffer, size_t input_bytes) {
    assert_key_material_set();
    BOTAN_STATE_CHECK(m_L->initialized());
 
    const size_t BS = block_size();
+   const auto tag_length = tag_size();
 
-   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
-   const size_t sz = buffer.size() - offset;
-   uint8_t* buf = buffer.data() + offset;
+   BOTAN_ASSERT_NOMSG(buffer.size() == input_bytes);
+   BOTAN_ASSERT_NOMSG(buffer.size() >= tag_length);
 
-   BOTAN_ARG_CHECK(sz >= tag_size(), "input did not include the tag");
-
-   const size_t remaining = sz - tag_size();
+   const auto remaining = buffer.first(buffer.size() - tag_length);
+   const auto tag = buffer.last(tag_length);
 
    secure_vector<uint8_t> mac(BS);
 
-   if(remaining > 0) {
-      const size_t final_full_blocks = remaining / BS;
-      const size_t final_bytes = remaining - (final_full_blocks * BS);
+   if(!remaining.empty()) {
+      const auto final_full_block_count = remaining.size() / BS;
+      const auto final_full_blocks = remaining.first(final_full_block_count * BS);
+      const auto remainder = remaining.subspan(final_full_blocks.size());
 
-      decrypt(buf, final_full_blocks);
-      mac ^= m_L->offset();
+      decrypt(final_full_blocks.data(), final_full_block_count);
+      copy_mem(mac, m_L->offset());
 
-      if(final_bytes > 0) {
-         BOTAN_ASSERT(final_bytes < BS, "Only a partial block left");
+      if(!remainder.empty()) {
+         BOTAN_ASSERT(remainder.size() < BS, "Only a partial block left");
 
-         uint8_t* remainder = &buf[remaining - final_bytes];
-
-         mac ^= m_L->star();
+         xor_buf(mac, m_L->star());
          secure_vector<uint8_t> pad(BS);
          m_cipher->encrypt(mac, pad);  // P_*
-         xor_buf(remainder, pad.data(), final_bytes);
+         xor_buf(remainder, std::span{pad}.first(remainder.size()));
 
-         xor_buf(m_checksum.data(), remainder, final_bytes);
-         m_checksum[final_bytes] ^= 0x80;
+         xor_buf(std::span{m_checksum}.first(remainder.size()), remainder);
+         m_checksum[remainder.size()] ^= 0x80;
       }
    } else {
-      mac = m_L->offset();
+      copy_mem(mac, m_L->offset());
    }
 
    // compute the mac
 
    // fold checksum
-   for(size_t i = 0; i != m_checksum.size(); i += BS) {
-      xor_buf(mac.data(), m_checksum.data() + i, BS);
+   BufferSlicer cs(m_checksum);
+   while(cs.remaining() >= BS) {
+      xor_buf(mac, cs.take(BS));
    }
+   BOTAN_ASSERT_NOMSG(cs.empty());
 
-   mac ^= m_L->dollar();
+   xor_buf(mac, m_L->dollar());
    m_cipher->encrypt(mac);
-   mac ^= m_ad_hash;
+   xor_buf(mac, m_ad_hash);
 
    // reset state
    zeroise(m_checksum);
    m_block_index = 0;
 
    // compare mac
-   const uint8_t* included_tag = &buf[remaining];
-
-   if(!CT::is_equal(mac.data(), included_tag, tag_size()).as_bool()) {
+   if(!CT::is_equal(mac.data(), tag.data(), tag.size()).as_bool()) {
       throw Invalid_Authentication_Tag("OCB tag check failed");
    }
 
    // remove tag from end of message
-   buffer.resize(remaining + offset);
+   return remaining.size();
 }
 
 }  // namespace Botan

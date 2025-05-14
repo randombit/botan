@@ -108,7 +108,7 @@ class TLS_CBC_Padding_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> record = vars.get_req_bin("Record");
          const size_t output = vars.get_req_sz("Output");
 
-         uint16_t res = Botan::TLS::check_tls_cbc_padding(record.data(), record.size());
+         uint16_t res = Botan::TLS::check_tls_cbc_padding(record);
 
          Test::Result result("TLS CBC padding check");
          result.test_eq("Expected", res, output);

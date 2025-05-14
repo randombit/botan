@@ -101,30 +101,34 @@ size_t TLS_NULL_HMAC_AEAD_Encryption::output_length(size_t input_length) const {
    return input_length + tag_size();
 }
 
-void TLS_NULL_HMAC_AEAD_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
-   process(std::span{buffer}.subspan(offset));
-   buffer.resize(buffer.size() + tag_size());
-   mac().final(std::span{buffer}.last(tag_size()));
+size_t TLS_NULL_HMAC_AEAD_Encryption::finish_msg(std::span<uint8_t> buffer, size_t input_bytes) {
+   const auto tag_length = tag_size();
+   BOTAN_ASSERT_NOMSG(input_bytes + tag_length == buffer.size());
+
+   process(buffer.first(input_bytes));
+   mac().final(buffer.last(tag_length));
+
+   return buffer.size();
 }
 
 size_t TLS_NULL_HMAC_AEAD_Decryption::output_length(size_t input_length) const {
    return input_length - tag_size();
 }
 
-void TLS_NULL_HMAC_AEAD_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
-   BOTAN_ARG_CHECK(buffer.size() >= tag_size() + offset,
-                   "TLS_NULL_HMAC_AEAD_Decryption needs at least tag_size() bytes in final buffer");
+size_t TLS_NULL_HMAC_AEAD_Decryption::finish_msg(std::span<uint8_t> buffer, size_t input_bytes) {
+   const auto tag_length = tag_size();
+   BOTAN_ASSERT_NOMSG(buffer.size() == input_bytes);
+   BOTAN_ASSERT_NOMSG(buffer.size() >= tag_length);
 
-   const auto data_and_tag = std::span{buffer}.subspan(offset);
-   const auto data = data_and_tag.first(data_and_tag.size() - tag_size());
-   const auto tag = data_and_tag.subspan(data.size());
+   const auto remaining = buffer.first(buffer.size() - tag_length);
+   const auto tag = buffer.subspan(remaining.size());
 
-   process(data);
+   process(remaining);
    if(!mac().verify_mac(tag)) {
       throw TLS_Exception(Alert::BadRecordMac, "Message authentication failure");
    }
 
-   buffer.resize(buffer.size() - tag_size());
+   return remaining.size();
 }
 
 }  // namespace Botan::TLS

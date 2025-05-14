@@ -128,17 +128,17 @@ size_t GCM_Encryption::process_msg(uint8_t buf[], size_t sz) {
    return sz;
 }
 
-void GCM_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
-   BOTAN_ARG_CHECK(offset <= buffer.size(), "Invalid offset");
-   const size_t sz = buffer.size() - offset;
-   uint8_t* buf = buffer.data() + offset;
+size_t GCM_Encryption::finish_msg(std::span<uint8_t> buffer, size_t input_bytes) {
+   const auto tag_length = tag_size();
 
-   m_ctr->cipher(buf, buf, sz);
-   m_ghash->update({buf, sz});
+   BOTAN_ASSERT_NOMSG(input_bytes + tag_length == buffer.size());
 
-   std::array<uint8_t, 16> mac = {0};
-   m_ghash->final(std::span(mac).first(tag_size()));
-   buffer += std::make_pair(mac.data(), tag_size());
+   const auto payload = buffer.first(input_bytes);
+   const auto tag = buffer.last(tag_length);
+
+   process(payload);
+   m_ghash->final(tag);
+   return buffer.size();
 }
 
 size_t GCM_Decryption::process_msg(uint8_t buf[], size_t sz) {
@@ -148,31 +148,28 @@ size_t GCM_Decryption::process_msg(uint8_t buf[], size_t sz) {
    return sz;
 }
 
-void GCM_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
-   BOTAN_ARG_CHECK(offset <= buffer.size(), "Invalid offset");
-   const size_t sz = buffer.size() - offset;
-   uint8_t* buf = buffer.data() + offset;
+size_t GCM_Decryption::finish_msg(std::span<uint8_t> buffer, size_t input_bytes) {
+   const auto tag_length = tag_size();
 
-   BOTAN_ARG_CHECK(sz >= tag_size(), "input did not include the tag");
+   BOTAN_ASSERT_NOMSG(buffer.size() == input_bytes);
+   BOTAN_ASSERT_NOMSG(buffer.size() >= tag_length);
 
-   const size_t remaining = sz - tag_size();
+   const auto remaining = buffer.first(buffer.size() - tag_length);
+   const auto tag = buffer.last(tag_length);
 
    // handle any final input before the tag
-   if(remaining > 0) {
-      m_ghash->update({buf, remaining});
-      m_ctr->cipher(buf, buf, remaining);
+   if(!remaining.empty()) {
+      process(remaining);
    }
 
    std::array<uint8_t, 16> mac = {0};
-   m_ghash->final(std::span(mac).first(tag_size()));
+   m_ghash->final(std::span{mac}.first(tag_length));
 
-   const uint8_t* included_tag = &buffer[remaining + offset];
-
-   if(!CT::is_equal(mac.data(), included_tag, tag_size()).as_bool()) {
+   if(!CT::is_equal(mac.data(), tag.data(), tag.size()).as_bool()) {
       throw Invalid_Authentication_Tag("GCM tag check failed");
    }
 
-   buffer.resize(offset + remaining);
+   return remaining.size();
 }
 
 }  // namespace Botan

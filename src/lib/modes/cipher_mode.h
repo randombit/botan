@@ -76,10 +76,35 @@ class BOTAN_PUBLIC_API(2, 0) Cipher_Mode : public SymmetricAlgorithm {
       */
       virtual size_t process_msg(uint8_t msg[], size_t msg_len) = 0;
 
-      /*
-      * Finishes a message
+      /**
+      * Returns the required size of the in/out buffer in finish_msg() assuming
+      * that it contains @p final_input_length bytes of final payload data. This
+      * is used to pre-allocate enough space for any encryption data overhead
+      * finish_msg() might produce at the end of the in/out buffer.
+      *
+      * @param final_input_length  the number of payload bytes for finalization
+      * @returns  the exact byte size required as in/out buffer of finish_msg()
+      *           (including the @p final_input_length)
       */
-      virtual void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) = 0;
+      virtual size_t bytes_needed_for_finalization(size_t final_input_length) const = 0;
+
+      /**
+      * Finishes a message
+      * @param final_block_and_more must be large enough to accommodate any
+      *                             additional overhead for encryption and/or
+      *                             all required bytes to finalize decryption.
+      * @param final_input_bytes    number of bytes in @p final_block_and_more
+      *                             that were provided by the downstream user.
+      *
+      * Note that @p final_input_bytes is always lower or equal than the size
+      * of the passed @p final_block_and_more buffer.
+      *
+      * @returns the number of bytes in @p final_block_and_more that comprise
+      *          the actual output bytes. This value will always be lower or
+      *          equal than the size of the passed @p final_block_and_more
+      *          buffer.
+      */
+      virtual size_t finish_msg(std::span<uint8_t> final_block_and_more, size_t final_input_bytes) = 0;
 
    public:
       /**
@@ -176,24 +201,30 @@ class BOTAN_PUBLIC_API(2, 0) Cipher_Mode : public SymmetricAlgorithm {
       *        minimum_final_size() bytes, and will be set to any final output
       * @param offset an offset into final_block to begin processing
       */
-      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) { finish_msg(final_block, offset); }
-
-      /**
-      * Complete procession of a message.
-      *
-      * Note: Using this overload with anything but a Botan::secure_vector<>
-      *       is copying the bytes in the in/out buffer.
-      *
-      * @param final_block in/out parameter which must be at least
-      *        minimum_final_size() bytes, and will be set to any final output
-      * @param offset an offset into final_block to begin processing
-      */
       template <concepts::resizable_byte_buffer T>
       void finish(T& final_block, size_t offset = 0) {
-         Botan::secure_vector<uint8_t> tmp(final_block.begin(), final_block.end());
-         finish_msg(tmp, offset);
-         final_block.resize(tmp.size());
-         std::copy(tmp.begin(), tmp.end(), final_block.begin());
+         if(offset > final_block.size()) {
+            throw Invalid_Argument("invalid offset");
+         }
+
+         const auto final_input_bytes = final_block.size() - offset;
+         if(final_input_bytes < minimum_final_size()) {
+            throw Invalid_Argument("final input message is too small");
+         }
+
+         const auto final_buffer_bytes = bytes_needed_for_finalization(final_input_bytes);
+
+         // Make room for additional overhead to be produced during finalization
+         if(final_input_bytes < final_buffer_bytes) {
+            final_block.resize(offset + final_buffer_bytes);
+         }
+
+         const auto out_bytes = finish_msg(std::span{final_block}.subspan(offset), final_input_bytes);
+
+         // Truncate bytes that were consumed during the finalization
+         if(out_bytes < final_buffer_bytes) {
+            final_block.resize(offset + out_bytes);
+         }
       }
 
       /**

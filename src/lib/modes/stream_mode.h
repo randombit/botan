@@ -29,6 +29,8 @@ class Stream_Cipher_Mode final : public Cipher_Mode {
 
       size_t output_length(size_t input_length) const override { return input_length; }
 
+      size_t bytes_needed_for_finalization(size_t final_input_length) const override { return final_input_length; }
+
       size_t update_granularity() const override { return 1; }
 
       size_t ideal_granularity() const override {
@@ -72,7 +74,7 @@ class Stream_Cipher_Mode final : public Cipher_Mode {
          return sz;
       }
 
-      void finish_msg(secure_vector<uint8_t>& buf, size_t offset) override { return update(buf, offset); }
+      size_t finish_msg(std::span<uint8_t> buf, size_t) override { return process(buf); }
 
       void key_schedule(std::span<const uint8_t> key) override { m_cipher->set_key(key); }
 

@@ -115,10 +115,13 @@ size_t SIV_Mode::process_msg(uint8_t buf[], size_t sz) {
    return 0;
 }
 
-secure_vector<uint8_t> SIV_Mode::S2V(const uint8_t* text, size_t text_len) {
-   const std::vector<uint8_t> zeros(block_size());
+std::array<uint8_t, SIV_Mode::tag_length> SIV_Mode::S2V(std::span<const uint8_t> text) {
+   const auto BS = block_size();
 
-   secure_vector<uint8_t> V = m_mac->process(zeros.data(), zeros.size());
+   const std::vector<uint8_t> zeros(BS);
+
+   secure_vector<uint8_t> V = m_mac->process(zeros);
+   BOTAN_DEBUG_ASSERT(V.size() == BS);
 
    for(size_t i = 0; i != m_ad_macs.size(); ++i) {
       poly_double_n(V.data(), V.size());
@@ -130,70 +133,74 @@ secure_vector<uint8_t> SIV_Mode::S2V(const uint8_t* text, size_t text_len) {
       V ^= m_nonce;
    }
 
-   if(text_len < block_size()) {
+   if(text.size() < BS) {
       poly_double_n(V.data(), V.size());
-      xor_buf(V.data(), text, text_len);
-      V[text_len] ^= 0x80;
-      return m_mac->process(V);
+      xor_buf(std::span{V}.first(text.size()), text);
+      V[text.size()] ^= 0x80;
+      m_mac->update(V);
+   } else {
+      m_mac->update(text.first(text.size() - BS));
+      xor_buf(std::span{V}, text.last(BS));
+      m_mac->update(V);
    }
 
-   m_mac->update(text, text_len - block_size());
-   xor_buf(V.data(), &text[text_len - block_size()], block_size());
-   m_mac->update(V);
-
-   return m_mac->final();
+   std::array<uint8_t, tag_length> out{};
+   m_mac->final(out);
+   return out;
 }
 
-void SIV_Mode::set_ctr_iv(secure_vector<uint8_t> V) {
+void SIV_Mode::set_ctr_iv(std::array<uint8_t, SIV_Mode::tag_length> V) {
    V[m_bs - 8] &= 0x7F;
    V[m_bs - 4] &= 0x7F;
 
-   ctr().set_iv(V.data(), V.size());
+   ctr().set_iv(V);
 }
 
-void SIV_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
-   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
+size_t SIV_Encryption::finish_msg(std::span<uint8_t> buffer, size_t input_bytes) {
+   auto& buffered = msg_buf();
+   BOTAN_ASSERT_NOMSG(buffered.size() + input_bytes + tag_length == buffer.size());
 
-   buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
-   msg_buf().clear();
+   const auto entire_payload = buffer.subspan(tag_length);
 
-   const secure_vector<uint8_t> V = S2V(buffer.data() + offset, buffer.size() - offset);
+   copy_mem(entire_payload.last(input_bytes), buffer.first(input_bytes));
+   copy_mem(entire_payload.first(buffered.size()), buffered);
 
-   buffer.insert(buffer.begin() + offset, V.begin(), V.end());
+   const auto V = S2V(entire_payload);
+   copy_mem(buffer.first<tag_length>(), V);
 
-   if(buffer.size() != offset + V.size()) {
+   if(!entire_payload.empty()) {
       set_ctr_iv(V);
-      ctr().cipher1(&buffer[offset + V.size()], buffer.size() - offset - V.size());
+      ctr().cipher1(entire_payload);
    }
+
+   return buffer.size();
 }
 
-void SIV_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
-   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
+size_t SIV_Decryption::finish_msg(std::span<uint8_t> buffer, size_t input_bytes) {
+   auto& buffered = msg_buf();
+   BOTAN_ASSERT_NOMSG(buffered.size() + input_bytes == buffer.size());
 
-   if(!msg_buf().empty()) {
-      buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
-      msg_buf().clear();
+   if(!buffered.empty()) {
+      copy_mem(buffer.last(input_bytes), buffer.first(input_bytes));
+      copy_mem(buffer.first(buffered.size()), buffered);
+      buffered.clear();
    }
 
-   const size_t sz = buffer.size() - offset;
-
-   BOTAN_ARG_CHECK(sz >= tag_size(), "input did not include the tag");
-
-   secure_vector<uint8_t> V(buffer.data() + offset, buffer.data() + offset + block_size());
-
-   if(buffer.size() != offset + V.size()) {
+   const auto V = typecast_copy<std::array<uint8_t, tag_length>>(buffer.first<tag_length>());
+   const auto encrypted_payload = buffer.subspan(tag_length);
+   const auto plaintext_payload = buffer.first(encrypted_payload.size());
+   if(!encrypted_payload.empty()) {
       set_ctr_iv(V);
-
-      ctr().cipher(buffer.data() + offset + V.size(), buffer.data() + offset, buffer.size() - offset - V.size());
+      ctr().cipher(encrypted_payload, plaintext_payload);
    }
 
-   const secure_vector<uint8_t> T = S2V(buffer.data() + offset, buffer.size() - offset - V.size());
+   const auto T = S2V(plaintext_payload);
 
    if(!CT::is_equal(T.data(), V.data(), T.size()).as_bool()) {
       throw Invalid_Authentication_Tag("SIV tag check failed");
    }
 
-   buffer.resize(buffer.size() - tag_size());
+   return plaintext_payload.size();
 }
 
 }  // namespace Botan

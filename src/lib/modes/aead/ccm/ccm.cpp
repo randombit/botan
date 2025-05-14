@@ -11,6 +11,7 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -168,24 +169,28 @@ secure_vector<uint8_t> CCM_Mode::format_c0() {
    return C;
 }
 
-void CCM_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
-   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
+size_t CCM_Encryption::finish_msg(std::span<uint8_t> buffer, size_t input_bytes) {
+   const auto tag_length = tag_size();
+   const auto& buffered = msg_buf();
 
-   buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
+   BOTAN_ASSERT_NOMSG(buffered.size() + input_bytes + tag_length == buffer.size());
 
-   const size_t sz = buffer.size() - offset;
-   uint8_t* buf = buffer.data() + offset;
+   const auto entire_payload = buffer.first(buffered.size() + input_bytes);
+   const auto tag = buffer.last(tag_length);
 
    const secure_vector<uint8_t>& ad = ad_buf();
    BOTAN_ARG_CHECK(ad.size() % CCM_BS == 0, "AD is block size multiple");
 
    const BlockCipher& E = cipher();
 
+   // TODO: consider using std::array<> for all those block-size'ed buffers
+   //       (this requires adapting more helper functions like `format_b0`, ...)
    secure_vector<uint8_t> T(CCM_BS);
-   E.encrypt(format_b0(sz), T);
+   E.encrypt(format_b0(entire_payload.size()), T);
 
-   for(size_t i = 0; i != ad.size(); i += CCM_BS) {
-      xor_buf(T.data(), &ad[i], CCM_BS);
+   BufferSlicer ad_bs(ad);
+   while(!ad_bs.empty()) {
+      xor_buf(T, ad_bs.take(CCM_BS));
       E.encrypt(T);
    }
 
@@ -196,37 +201,49 @@ void CCM_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    secure_vector<uint8_t> X(CCM_BS);
 
-   const uint8_t* buf_end = &buf[sz];
+   // copy all buffered input into the in/out buffer if needed
+   if(!buffered.empty()) {
+      copy_mem(entire_payload.last(input_bytes), entire_payload.first(input_bytes));
+      copy_mem(entire_payload.first(buffered.size()), buffered);
+   }
 
-   while(buf != buf_end) {
-      const size_t to_proc = std::min<size_t>(CCM_BS, buf_end - buf);
+   // TODO: Use BufferTransformer, once it is available
+   //       See https://github.com/randombit/botan/pull/4151
+   BufferSlicer payload_slicer(entire_payload);
+   BufferStuffer payload_stuffer(entire_payload);
 
-      xor_buf(T.data(), buf, to_proc);
+   while(!payload_slicer.empty()) {
+      const size_t to_proc = std::min<size_t>(CCM_BS, payload_slicer.remaining());
+      const auto in_chunk = payload_slicer.take(to_proc);
+      const auto out_chunk = payload_stuffer.next(to_proc);
+
+      xor_buf(std::span{T}.first(in_chunk.size()), in_chunk);
       E.encrypt(T);
 
       E.encrypt(C, X);
-      xor_buf(buf, X.data(), to_proc);
+      xor_buf(out_chunk, std::span{X}.first(out_chunk.size()));
       inc(C);
-
-      buf += to_proc;
    }
 
    T ^= S0;
 
-   buffer += std::make_pair(T.data(), tag_size());
+   BOTAN_DEBUG_ASSERT(tag.size() <= T.size());
+   copy_mem(tag, std::span{T}.first(tag.size()));
 
    reset();
+
+   return buffer.size();
 }
 
-void CCM_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
-   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
+size_t CCM_Decryption::finish_msg(std::span<uint8_t> buffer, size_t input_bytes) {
+   const auto tag_length = tag_size();
+   const auto& buffered = msg_buf();
 
-   buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
+   BOTAN_ASSERT_NOMSG(buffer.size() >= tag_length);
+   BOTAN_ASSERT_NOMSG(buffered.size() + input_bytes == buffer.size());
 
-   const size_t sz = buffer.size() - offset;
-   uint8_t* buf = buffer.data() + offset;
-
-   BOTAN_ARG_CHECK(sz >= tag_size(), "input did not include the tag");
+   const auto entire_payload = buffer.first(buffer.size() - tag_length);
+   const auto tag = buffer.last(tag_length);
 
    const secure_vector<uint8_t>& ad = ad_buf();
    BOTAN_ARG_CHECK(ad.size() % CCM_BS == 0, "AD is block size multiple");
@@ -234,10 +251,11 @@ void CCM_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    const BlockCipher& E = cipher();
 
    secure_vector<uint8_t> T(CCM_BS);
-   E.encrypt(format_b0(sz - tag_size()), T);
+   E.encrypt(format_b0(entire_payload.size()), T);
 
-   for(size_t i = 0; i != ad.size(); i += CCM_BS) {
-      xor_buf(T.data(), &ad[i], CCM_BS);
+   BufferSlicer ad_bs(ad);
+   while(!ad_bs.empty()) {
+      xor_buf(T, ad_bs.take<CCM_BS>());
       E.encrypt(T);
    }
 
@@ -249,30 +267,39 @@ void CCM_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    secure_vector<uint8_t> X(CCM_BS);
 
-   const uint8_t* buf_end = &buf[sz - tag_size()];
+   // copy all buffered input into the in/out buffer if needed
+   if(!buffered.empty()) {
+      copy_mem(buffer.last(input_bytes), buffer.first(input_bytes));
+      copy_mem(buffer.first(buffered.size()), buffered);
+   }
 
-   while(buf != buf_end) {
-      const size_t to_proc = std::min<size_t>(CCM_BS, buf_end - buf);
+   // TODO: Use BufferTransformer, once it is available
+   //       See https://github.com/randombit/botan/pull/4151
+   BufferSlicer payload_slicer(entire_payload);
+   BufferStuffer payload_stuffer(entire_payload);
+
+   while(!payload_slicer.empty()) {
+      const size_t to_proc = std::min<size_t>(CCM_BS, payload_slicer.remaining());
+      const auto in_chunk = payload_slicer.take(to_proc);
+      const auto out_chunk = payload_stuffer.next(to_proc);
 
       E.encrypt(C, X);
-      xor_buf(buf, X.data(), to_proc);
+      xor_buf(out_chunk, std::span{X}.first(out_chunk.size()));
       inc(C);
 
-      xor_buf(T.data(), buf, to_proc);
+      xor_buf(std::span{T}.first(in_chunk.size()), in_chunk);
       E.encrypt(T);
-
-      buf += to_proc;
    }
 
    T ^= S0;
 
-   if(!CT::is_equal(T.data(), buf_end, tag_size()).as_bool()) {
+   if(!CT::is_equal(T.data(), tag.data(), tag.size()).as_bool()) {
       throw Invalid_Authentication_Tag("CCM tag check failed");
    }
 
-   buffer.resize(buffer.size() - tag_size());
-
    reset();
+
+   return entire_payload.size();
 }
 
 }  // namespace Botan

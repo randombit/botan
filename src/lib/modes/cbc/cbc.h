@@ -27,6 +27,10 @@ class CBC_Mode : public Cipher_Mode {
 
       size_t ideal_granularity() const final;
 
+      size_t bytes_needed_for_finalization(size_t final_input_length) const final {
+         return output_length(final_input_length);
+      }
+
       Key_Length_Specification key_spec() const final;
 
       size_t default_nonce_length() const final;
@@ -84,7 +88,7 @@ class CBC_Encryption : public CBC_Mode {
 
    private:
       size_t process_msg(uint8_t buf[], size_t size) override;
-      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+      size_t finish_msg(std::span<uint8_t> final_block, size_t input_bytes) override;
 };
 
 /**
@@ -104,7 +108,7 @@ class CTS_Encryption final : public CBC_Encryption {
       bool valid_nonce_length(size_t n) const override;
 
    private:
-      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+      size_t finish_msg(std::span<uint8_t> final_block, size_t input_bytes) override;
 };
 
 /**
@@ -127,7 +131,7 @@ class CBC_Decryption : public CBC_Mode {
 
    private:
       size_t process_msg(uint8_t buf[], size_t size) override;
-      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+      size_t finish_msg(std::span<uint8_t> final_block, size_t input_bytes) override;
 
       secure_vector<uint8_t> m_tempbuf;
 };
@@ -147,7 +151,7 @@ class CTS_Decryption final : public CBC_Decryption {
       bool valid_nonce_length(size_t n) const override;
 
    private:
-      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+      size_t finish_msg(std::span<uint8_t> final_block, size_t input_bytes) override;
 };
 
 }  // namespace Botan

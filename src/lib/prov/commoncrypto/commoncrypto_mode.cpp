@@ -33,6 +33,7 @@ class CommonCrypto_Cipher_Mode final : public Cipher_Mode {
       size_t update_granularity() const override;
       size_t ideal_granularity() const override;
       size_t minimum_final_size() const override;
+      size_t bytes_needed_for_finalization(size_t final_input_length) const override;
       size_t default_nonce_length() const override;
       bool valid_nonce_length(size_t nonce_len) const override;
       void clear() override;
@@ -46,7 +47,7 @@ class CommonCrypto_Cipher_Mode final : public Cipher_Mode {
 
       void start_msg(const uint8_t nonce[], size_t nonce_len) override;
       size_t process_msg(uint8_t msg[], size_t msg_len) override;
-      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset0) override;
+      size_t finish_msg(std::span<uint8_t> final_block, size_t input_bytes) override;
 
       const std::string m_mode_name;
       Cipher_Dir m_direction;
@@ -110,30 +111,33 @@ size_t CommonCrypto_Cipher_Mode::process_msg(uint8_t msg[], size_t msg_len) {
    return outl;
 }
 
-void CommonCrypto_Cipher_Mode::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
+size_t CommonCrypto_Cipher_Mode::finish_msg(std::span<uint8_t> buffer, size_t input_bytes) {
    assert_key_material_set();
    BOTAN_STATE_CHECK(m_nonce_set);
 
-   BOTAN_ASSERT(buffer.size() >= offset, "Offset ok");
-   uint8_t* buf = buffer.data() + offset;
-   const size_t buf_size = buffer.size() - offset;
+   BOTAN_ASSERT_NOMSG(buffer.size() >= input_bytes);
 
-   size_t written = process(buf, buf_size);
+   const auto remaining_payload = buffer.first(input_bytes);
+   const size_t written_in_last_process = process(remaining_payload);
 
-   size_t outl = CCCryptorGetOutputLength(m_cipher, buf_size - written, true);
-   secure_vector<uint8_t> out(outl);
+   BOTAN_ASSERT_NOMSG(written_in_last_process <= buffer.size());
+   const auto final_out = buffer.subspan(written_in_last_process);
 
-   CCCryptorStatus status = CCCryptorFinal(m_cipher, out.data(), outl, &outl);
+   const size_t output_space_required = CCCryptorGetOutputLength(m_cipher, final_out.size(), true);
+   if(output_space_required < final_out.size()) {
+      throw Internal_Error("Insufficient space in buffer for finalization");
+   }
+
+   size_t written_in_finalization = 0;
+   CCCryptorStatus status = CCCryptorFinal(m_cipher, final_out.data(), final_out.size(), &written_in_finalization);
    if(status != kCCSuccess) {
       throw CommonCrypto_Error("CCCryptorFinal", status);
    }
 
-   size_t new_len = offset + written + outl;
-   if(m_opts.padding != ccNoPadding || buffer.size() < new_len) {
-      buffer.resize(new_len);
-   }
-   copy_mem(buffer.data() - offset + written, out.data(), outl);
-   written += outl;
+   const size_t output_bytes = written_in_last_process + written_in_finalization;
+   BOTAN_ASSERT_NOMSG(output_bytes <= buffer.size());
+
+   return output_bytes;
 }
 
 size_t CommonCrypto_Cipher_Mode::update_granularity() const {
@@ -149,6 +153,15 @@ size_t CommonCrypto_Cipher_Mode::minimum_final_size() const {
       return 0;
    else
       return m_opts.block_size;
+}
+
+size_t CommonCrypto_Cipher_Mode::bytes_needed_for_finalization(size_t final_input_length) const {
+   assert_key_material_set();
+   const auto expected_output_length = CCCryptorGetOutputLength(m_cipher, final_input_length, true);
+
+   // Ensure that the finalization sees all input bytes or is large enough to
+   // hold the expected encryption overhead.
+   return std::max(expected_output_length, final_input_length);
 }
 
 size_t CommonCrypto_Cipher_Mode::default_nonce_length() const {
