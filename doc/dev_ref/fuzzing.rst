@@ -85,7 +85,6 @@ Some other crypto corpus repositories include
 * https://github.com/randombit/crypto-corpus
 * https://github.com/mozilla/nss-fuzzing-corpus
 * https://github.com/google/boringssl/tree/master/fuzz
-* https://github.com/openssl/openssl/tree/master/fuzz/corpora
 
 Adding new fuzzers
 ---------------------
