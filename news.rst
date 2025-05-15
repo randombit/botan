@@ -6,6 +6,8 @@ Version 3.9.0, Not Yet Released
 
 * Add SHA-1 implementation using AVX2/BMI2 (GH #4852)
 
+* Add Camellia implementation using GFNI/AVX2 (GH #4848)
+
 * Modify `BOTAN_CLEAR_CPUID` so that clearing `ssse3` also disables AVX2/AVX512
   (GH #4853)
 
