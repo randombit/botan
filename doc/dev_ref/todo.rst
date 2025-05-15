@@ -28,12 +28,11 @@ Hardware Specific Optimizations
 * Poly1305 using AVX2
 * SM3 using x86 SM3-NI
 * SM3 using AVX2/BMI2
-* SHA-1 using AVX2/BMI2
 * Constant time bitsliced DES
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
 * Improved Salsa implementations (SIMD_4x32 and/or AVX2)
 * Add CLMUL/PMULL implementations for CRC24
-* Add support for ARMv8.4-A SHA-3, SM3 and RNG instructions
+* Add support for ARMv8.4-A SHA-3 and SM3 instructions
 * POWER8 SHA-2 extensions (GH #1486 + #1487)
 * Add support for RISC-V crypto extensions
 * Add support for using Loongarch64 LASX (256-bit SIMD)
@@ -87,7 +86,7 @@ New Protocols / Formats
 * ACME protocol (needs a story for JSON)
 * Cryptographic Message Syntax (RFC 5652)
 * Fernet symmetric encryption (https://cryptography.io/en/latest/fernet/)
-* RNCryptor format (https://github.com/RNCryptor/RNCryptor)
+* RNCryptor format (https://github.com/RNCryptor/RNCryptor-Spec)
 * Age format (https://age-encryption.org/v1)
 * Useful OpenPGP subset 1: symmetrically encrypted files.
   Not aiming to process arbitrary OpenPGP, but rather produce
