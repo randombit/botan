@@ -4,7 +4,8 @@ CRYPTO_BOX -> 20131128
 
 <module_info>
 name -> "Crypto Box"
-brief -> "High-Level API for password-based encryption"
+brief -> "High-Level API for password-based encryption (deprecated)"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>
