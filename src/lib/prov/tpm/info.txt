@@ -3,8 +3,8 @@ TPM -> 20151126
 </defines>
 
 <module_info>
-name -> "TPM"
-brief -> "Wrappers and Utilites to interact with TPMs"
+name -> "TPM v1 Support (deprecated)"
+brief -> "Wrappers and Utilites to interact with TPM v1"
 lifecycle -> "Deprecated"
 </module_info>
 
