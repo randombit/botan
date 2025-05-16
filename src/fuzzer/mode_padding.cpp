@@ -138,25 +138,25 @@ void fuzz(std::span<const uint8_t> in) {
    size_t len = in.size();
 
    if(pkcs7.valid_blocksize(len)) {
-      const size_t ct_pkcs7 = pkcs7.unpad(in.data(), len);
+      const size_t ct_pkcs7 = pkcs7.unpad(in);
       const size_t ref_pkcs7 = ref_pkcs7_unpad(in);
       FUZZER_ASSERT_EQUAL(ct_pkcs7, ref_pkcs7);
    }
 
    if(x923.valid_blocksize(len)) {
-      const size_t ct_x923 = x923.unpad(in.data(), len);
+      const size_t ct_x923 = x923.unpad(in);
       const size_t ref_x923 = ref_x923_unpad(in);
       FUZZER_ASSERT_EQUAL(ct_x923, ref_x923);
    }
 
    if(oneandzero.valid_blocksize(len)) {
-      const size_t ct_oneandzero = oneandzero.unpad(in.data(), len);
+      const size_t ct_oneandzero = oneandzero.unpad(in);
       const size_t ref_oneandzero = ref_oneandzero_unpad(in);
       FUZZER_ASSERT_EQUAL(ct_oneandzero, ref_oneandzero);
    }
 
    if(esp.valid_blocksize(len)) {
-      const size_t ct_esp = esp.unpad(in.data(), len);
+      const size_t ct_esp = esp.unpad(in);
       const size_t ref_esp = ref_esp_unpad(in);
       FUZZER_ASSERT_EQUAL(ct_esp, ref_esp);
    }
