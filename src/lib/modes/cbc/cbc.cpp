@@ -92,11 +92,7 @@ size_t CBC_Encryption::minimum_final_size() const {
 }
 
 size_t CBC_Encryption::output_length(size_t input_length) const {
-   if(input_length == 0) {
-      return block_size();
-   } else {
-      return round_up(input_length, block_size());
-   }
+   return padding().output_length(input_length, block_size());
 }
 
 size_t CBC_Encryption::process_msg(uint8_t buf[], size_t sz) {
@@ -127,8 +123,9 @@ void CBC_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    const size_t BS = block_size();
 
+   const size_t output_bytes = padding().output_length(buffer.size(), BS);
    const size_t bytes_in_final_block = (buffer.size() - offset) % BS;
-
+   buffer.resize(output_bytes);
    padding().add_padding(buffer, bytes_in_final_block, BS);
 
    BOTAN_ASSERT_EQUAL(buffer.size() % BS, offset % BS, "Padded to block boundary");
@@ -237,7 +234,7 @@ void CBC_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    update(buffer, offset);
 
-   const size_t pad_bytes = BS - padding().unpad(&buffer[buffer.size() - BS], BS);
+   const size_t pad_bytes = BS - padding().unpad(std::span{buffer}.last(BS));
    buffer.resize(buffer.size() - pad_bytes);  // remove padding
    if(pad_bytes == 0 && padding().name() != "NoPadding") {
       throw Decoding_Error("Invalid CBC padding");
