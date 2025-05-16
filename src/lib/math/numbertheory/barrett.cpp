@@ -153,11 +153,17 @@ BigInt barrett_reduce(
    return BigInt::_from_words(std::move(r));
 }
 
+CT::Choice acceptable_barrett_input(const BigInt& x, const BigInt& modulus) {
+   auto x_is_positive = CT::Choice::from_int(static_cast<uint32_t>(x.is_positive()));
+   auto x_lt_mod = bigint_ct_is_lt(x._data(), x.size(), modulus._data(), modulus.sig_words()).as_choice();
+   return x_is_positive && x_lt_mod;
+}
+
 }  // namespace
 
 BigInt Barrett_Reduction::multiply(const BigInt& x, const BigInt& y) const {
-   BOTAN_ARG_CHECK(x.is_positive() && x < m_modulus, "Invalid x param for Barrett multiply");
-   BOTAN_ARG_CHECK(y.is_positive() && y < m_modulus, "Invalid y param for Barrett multiply");
+   BOTAN_ARG_CHECK(acceptable_barrett_input(x, m_modulus).as_bool(), "Invalid x param for Barrett multiply");
+   BOTAN_ARG_CHECK(acceptable_barrett_input(y, m_modulus).as_bool(), "Invalid y param for Barrett multiply");
 
    secure_vector<word> ws(2 * (m_mod_words + 2));
    secure_vector<word> xy(2 * m_mod_words);
@@ -177,7 +183,7 @@ BigInt Barrett_Reduction::multiply(const BigInt& x, const BigInt& y) const {
 }
 
 BigInt Barrett_Reduction::square(const BigInt& x) const {
-   BOTAN_ARG_CHECK(x.is_positive() && x < m_modulus, "Invalid x param for Barrett square");
+   BOTAN_ARG_CHECK(acceptable_barrett_input(x, m_modulus).as_bool(), "Invalid x param for Barrett square");
 
    secure_vector<word> ws(2 * (m_mod_words + 2));
    secure_vector<word> x2(2 * m_mod_words);
