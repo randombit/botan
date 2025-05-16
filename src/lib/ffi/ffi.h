@@ -89,7 +89,7 @@ API follows a few simple rules:
    #endif
 #endif
 
-#if !defined(BOTAN_NO_DEPRECATED_WARNINGS) && !defined(BOTAN_IS_BEING_BUILT)
+#if !defined(BOTAN_NO_DEPRECATED_WARNINGS) && !defined(BOTAN_AMALGAMATION_H_) && !defined(BOTAN_IS_BEING_BUILT)
    #if defined(__has_attribute)
       #if __has_attribute(deprecated)
          #define BOTAN_FFI_DEPRECATED(msg) __attribute__((deprecated(msg)))
