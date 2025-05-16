@@ -65,37 +65,33 @@ class scoped_CFType {
  * See: opensource.apple.com/source/Security/Security-55471/sec/Security/SecCertificate.c.auto.html
  */
 X509_DN normalize(const X509_DN& dn) {
-   X509_DN result;
+   X509_DN result{};
 
-   for(const auto& rdn : dn.dn_info()) {
-      // TODO: C++14 - use std::get<ASN1_String>(), resp. std::get<OID>()
-      const auto oid = rdn.first;
-      auto str = rdn.second;
-
+   for(const auto& [oid, str] : dn.dn_info()) {
       if(str.tagging() == ASN1_Type::PrintableString) {
          std::string normalized;
          normalized.reserve(str.value().size());
+
          for(const char c : str.value()) {
             if(c != ' ') {
                // store all 'normal' characters as upper case
-               normalized.push_back(::toupper(c));
+               normalized.push_back(std::toupper(c));
             } else if(!normalized.empty() && normalized.back() != ' ') {
                // remove leading and squash multiple white spaces
                normalized.push_back(c);
             }
          }
 
-         if(normalized.back() == ' ') {
+         if(!normalized.empty() && normalized.back() == ' ') {
             // remove potential remaining single trailing white space char
-            normalized.erase(normalized.end() - 1);
+            normalized.pop_back();
          }
 
-         str = ASN1_String(normalized, str.tagging());
+         result.add_attribute(oid, ASN1_String(normalized, str.tagging()));
+      } else {
+         result.add_attribute(oid, str);
       }
-
-      result.add_attribute(oid, str);
    }
-
    return result;
 }
 
