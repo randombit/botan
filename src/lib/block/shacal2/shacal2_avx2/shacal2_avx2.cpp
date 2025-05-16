@@ -10,6 +10,8 @@
 
 namespace Botan {
 
+namespace SHACAL2_AVX2_F {
+
 namespace {
 
 void BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 SHACAL2_Fwd(const SIMD_8x32& A,
@@ -42,7 +44,11 @@ void BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 SHACAL2_Rev(const SIMD_8x32& A,
 
 }  // namespace
 
+}  // namespace SHACAL2_AVX2_F
+
 void BOTAN_FN_ISA_AVX2 SHACAL2::avx2_encrypt_8(const uint8_t in[], uint8_t out[]) const {
+   using namespace SHACAL2_AVX2_F;
+
    SIMD_8x32::reset_registers();
 
    SIMD_8x32 A = SIMD_8x32::load_be(in);
@@ -84,6 +90,8 @@ void BOTAN_FN_ISA_AVX2 SHACAL2::avx2_encrypt_8(const uint8_t in[], uint8_t out[]
 }
 
 void BOTAN_FN_ISA_AVX2 SHACAL2::avx2_decrypt_8(const uint8_t in[], uint8_t out[]) const {
+   using namespace SHACAL2_AVX2_F;
+
    SIMD_8x32::reset_registers();
 
    SIMD_8x32 A = SIMD_8x32::load_be(in);
