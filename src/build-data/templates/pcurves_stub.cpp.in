@@ -1,0 +1,72 @@
+/*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+#include <botan/internal/pcurves_instance.h>
+
+#include <botan/internal/pcurves_wrap.h>
+
+namespace Botan::PCurve {
+
+namespace {
+
+namespace {{ curve["Name"] }} {
+
+{% if crandall > 0 -%}
+template <typename Params>
+class {{ curve["Name"] | capitalize }}Rep final {
+   public:
+      static constexpr auto P = Params::P;
+      static constexpr size_t N = Params::N;
+      typedef typename Params::W W;
+
+      static constexpr W C = {{ crandall }};
+
+      constexpr static std::array<W, N> one() { return std::array<W, N>{1}; }
+
+      constexpr static std::array<W, N> redc(const std::array<W, 2 * N>& z) {
+         return redc_crandall<W, N, C>(std::span{z});
+      }
+
+      constexpr static std::array<W, N> to_rep(const std::array<W, N>& x) { return x; }
+
+      constexpr static std::array<W, N> wide_to_rep(const std::array<W, 2 * N>& x) { return redc(x); }
+
+      constexpr static std::array<W, N> from_rep(const std::array<W, N>& z) { return z; }
+};
+{% endif %}
+// clang-format off
+class Params final : public EllipticCurveParameters<
+   "{{ "%X" % curve['P'] }}",
+   "{{ "%X" % curve['A'] }}",
+   "{{ "%X" % curve['B'] }}",
+   "{{ "%X" % curve['N'] }}",
+   "{{ "%X" % curve['X'] }}",
+   "{{ "%X" % curve['Y'] }}"> {
+};
+// clang-format on
+
+class Curve final : public EllipticCurve<Params{% if crandall > 0 %}, {{ curve["Name"] | capitalize}}Rep{% endif %}> {
+   public:
+      // Return the square of the inverse of x
+      static constexpr FieldElement fe_invert2(const FieldElement& x) {
+         // Generated using https://github.com/mmcloughlin/addchain
+         {{ addchain_fe2 }}
+      }
+
+      // Return the inverse of an integer modulo the order
+      static constexpr Scalar scalar_invert(const Scalar& x) {
+         // Generated using https://github.com/mmcloughlin/addchain
+         {{ addchain_scalar }}
+      }
+};
+
+}  // namespace {{ curve["Name"] }}
+
+}  // namespace
+
+std::shared_ptr<const PrimeOrderCurve> PCurveInstance::{{ curve["Name"] }}() {
+   return PrimeOrderCurveImpl<{{ curve["Name"] }}::Curve>::instance();
+}
+
+}  // namespace Botan::PCurve
