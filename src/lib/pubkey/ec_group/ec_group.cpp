@@ -357,6 +357,15 @@ bool EC_Group::supports_application_specific_group() {
 }
 
 //static
+bool EC_Group::supports_application_specific_group_with_cofactor() {
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+   return true;
+#else
+   return false;
+#endif
+}
+
+//static
 EC_Group EC_Group::from_OID(const OID& oid) {
    auto data = ec_group_data().lookup(oid);
 

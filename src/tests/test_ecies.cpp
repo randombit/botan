@@ -77,12 +77,12 @@ void check_encrypt_decrypt(Test::Result& result,
    }
 }
 
-void check_encrypt_decrypt(Test::Result& result,
-                           const Botan::ECDH_PrivateKey& private_key,
-                           const Botan::ECDH_PrivateKey& other_private_key,
-                           const Botan::ECIES_System_Params& ecies_params,
-                           size_t iv_length,
-                           Botan::RandomNumberGenerator& rng) {
+[[maybe_unused]] void check_encrypt_decrypt(Test::Result& result,
+                                            const Botan::ECDH_PrivateKey& private_key,
+                                            const Botan::ECDH_PrivateKey& other_private_key,
+                                            const Botan::ECIES_System_Params& ecies_params,
+                                            size_t iv_length,
+                                            Botan::RandomNumberGenerator& rng) {
    const std::vector<uint8_t> plaintext{1, 2, 3};
    check_encrypt_decrypt(result,
                          private_key,
@@ -207,7 +207,7 @@ class ECIES_Tests final : public Text_Based_Test {
                             "Iv") {
          // In order to test cofactor handling flags some of the tests use secp112r2 which has a cofactor of 4
          // TODO(Botan4) kill it with fire
-         if(Botan::EC_Group::supports_application_specific_group()) {
+         if(Botan::EC_Group::supports_application_specific_group_with_cofactor()) {
             auto p = Botan::BigInt::from_string("0xDB7C2ABF62E35E668076BEAD208B");
             auto a = Botan::BigInt::from_string("0x6127C24C05F38A0AAAF65C0EF02C");
             auto b = Botan::BigInt::from_string("0x51DEF1815DB5ED74FCC34C85D709");
@@ -225,7 +225,7 @@ class ECIES_Tests final : public Text_Based_Test {
 
          // TODO(Botan4) remove this since cofactors no longer supported
          if(curve == "secp112r2") {
-            return !Botan::EC_Group::supports_application_specific_group();
+            return !Botan::EC_Group::supports_application_specific_group_with_cofactor();
          } else {
             return !Botan::EC_Group::supports_named_group(curve);
          }
