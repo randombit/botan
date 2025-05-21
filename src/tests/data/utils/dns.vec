@@ -1,0 +1,30 @@
+# Test for check_and_canonicalize_dns_name
+
+[Valid]
+DNS = localhost
+DNS = localhost.localdomain
+DNS = a.com
+DNS = a.b.com
+DNS = example.org
+DNS = a.longer.example.org
+DNS = sub.domain.net
+DNS = best.domain-ever123.io
+DNS = test.co.uk
+DNS = foo.bar.baz
+
+[Invalid]
+DNS =
+DNS = .
+DNS = -bad.com
+DNS = bad-.com
+DNS = down.-bad.com
+DNS = down.bad-.com
+DNS = really.bad-
+DNS = really.-bad
+DNS = .startingdot.com
+DNS = endingdot.com.
+DNS = inv@lid.com
+DNS = surprise!.party.com
+DNS = too..many.dots
+DNS = ..thats-a-lot-of-dots.com
+DNS = spaces not allowed.com

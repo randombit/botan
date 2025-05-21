@@ -1112,6 +1112,39 @@ class Hostname_Tests final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("utils", "hostname", Hostname_Tests);
 
+class DNS_Check_Tests final : public Text_Based_Test {
+   public:
+      DNS_Check_Tests() : Text_Based_Test("utils/dns.vec", "DNS") {}
+
+      Test::Result run_one_test(const std::string& type, const VarMap& vars) override {
+         Test::Result result("DNS name validation");
+
+         const std::string name = vars.get_req_str("DNS");
+         const bool valid = (type == "Invalid") ? false : true;
+
+         try {
+            const auto canonicalized = Botan::check_and_canonicalize_dns_name(name);
+            BOTAN_UNUSED(canonicalized);
+
+            if(valid) {
+               result.test_success("Accepted valid name");
+            } else {
+               result.test_failure("Accepted invalid name");
+            }
+         } catch(Botan::Decoding_Error&) {
+            if(valid) {
+               result.test_failure("Rejected valid name");
+            } else {
+               result.test_success("Rejected invalid name");
+            }
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("utils", "dns_check", DNS_Check_Tests);
+
 class IPv4_Parsing_Tests final : public Text_Based_Test {
    public:
       IPv4_Parsing_Tests() : Text_Based_Test("utils/ipv4.vec", "IPv4") {}
