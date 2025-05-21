@@ -20,6 +20,6 @@ x32
 
 <requires>
 cpuid
-simd_4x64
+simd_8x64
 simd_2x64
 </requires>
