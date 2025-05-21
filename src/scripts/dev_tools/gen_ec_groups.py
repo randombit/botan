@@ -6,9 +6,29 @@
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
+"""
+NOTE: This script requires the Jinja templating library to be installed.
+
+This script generates the following files
+
+src/lib/pubkey/ec_group/ec_named.cpp
+src/lib/math/pcurves/pcurves_instance.h
+src/lib/math/pcurves/pcurves.cpp
+
+Additionally if a group is given in ec_groups.txt with an `Impl` that contains
+"pcurves", and no pcurves implementation exists on disk, a default version will be
+created. This step requires that addchain (https://github.com/mmcloughlin/addchain)
+be installed.
+"""
+
 import sys
 import re
 import datetime
+import os
+import errno
+from textwrap import dedent, indent
+from jinja2 import Environment, FileSystemLoader
+from addchain import addchain_code
 
 def curve_info(src):
     re_kv = re.compile('([A-Za-z]+) = ([0-9A-Za-z-_\\. ]+)')
@@ -40,42 +60,14 @@ def curve_info(src):
             current[key] = int(val, 16)
 
         if key == 'N':
+            current["N32"] = current["N"] & 0xFFFFFFFF
+            current["OIDExpr"] = ['OID{%s}' % (oid.replace('.', ', ')) for oid in current['OID']]
             yield current
             current = {}
 
-def format_int(x):
-    return hex(x).upper().replace('0X', '0x')
-
-def print_curve(curve):
-    template_str = """   // %s
-   if(%s) {
-      return load_EC_group_info(
-         "%s",
-         "%s",
-         "%s",
-         "%s",
-         "%s",
-         "%s",
-         %s);
-   }
-"""
-
-    name = curve['Name']
-    oids = ['OID{%s}' % (oid.replace('.', ', ')) for oid in curve['OID']]
-    p = format_int(curve['P'])
-    a = format_int(curve['A'])
-    b = format_int(curve['B'])
-    x = format_int(curve['X'])
-    y = format_int(curve['Y'])
-    n = format_int(curve['N'])
-
-    oid_match = ' || '.join(['oid == %s' % oid for oid in oids])
-
-    pref_oid = 'oid' if len(oids) == 1 else oids[0]
-
-    return template_str % (name, oid_match, p, a, b, x, y, n, pref_oid)
-
 def format_names(names):
+    # This would be quite complicated to render in the Jinja template language so
+    # we pre-render it as a string and insert it directly
     legacy = []
     generic = []
     pcurves = []
@@ -115,32 +107,104 @@ def format_names(names):
         yield '      \"%s\",' % (nm)
     yield "#endif\n"
 
-def format_orders(orders):
-    template_str = """   if(low_bits == 0x%08X && order == BigInt("%s")) {\n      return OID{%s};\n   }\n""";
+def datestamp():
+    current_date = datetime.datetime.now()
+    return int(current_date.strftime("%Y%m%d"))
 
-    orders_seen = set([])
+class OmitFirstLine:
+    def __init__(self):
+        self.first_line = True
 
-    for (order,oid) in orders:
-        low_bits = order & 0xFFFFFFFF
-        order = format_int(order)
-        if order in orders_seen:
-            raise Exception("Duplicate EC group order %s" % (order))
-        orders_seen.add(order)
-        oid = oid[0].replace('.', ', ')
-        yield template_str % (low_bits, order, oid)
+    def __call__(self, l):
+        r = not self.first_line
+        self.first_line = False
+        return r
 
 def main():
     curves = [c for c in curve_info(open('./src/build-data/ec_groups.txt'))]
 
-    template_str = open('./src/build-data/ec_named.cpp.in').read()
+    pcurves = []
+    for c in curves:
+        if 'pcurve' in c['Impl']:
+            pcurves.append(c)
 
-    names = "\n".join(format_names([(c['Name'], c['Impl']) for c in curves]))
-    orders = "\n".join(format_orders([(c['N'], c['OID']) for c in curves]))
-    curves = '\n'.join([print_curve(curve) for curve in curves])
     this_script = sys.argv[0]
-    today = datetime.date.today().strftime("%Y-%m-%d")
+    date = datetime.date.today().strftime("%Y-%m-%d")
 
-    print(template_str % (this_script, today, curves, orders, names.strip()), end='')
+    env = Environment(loader=FileSystemLoader("src/build-data/templates"))
+
+    # write ec_named.cpp
+    with open('./src/lib/pubkey/ec_group/ec_named.cpp', encoding='utf8', mode='w') as ec_named:
+        template = env.get_template("ec_named.cpp.in")
+
+        named_groups = "\n".join(format_names([(c['Name'], c['Impl']) for c in curves]))
+
+        ec_named.write(template.render(script=this_script, date=date, curves=curves, named_groups=named_groups.strip()))
+        ec_named.write("\n")
+
+    # write pcurves_instance.h
+    with open('./src/lib/math/pcurves/pcurves_instance.h', encoding='utf8', mode='w') as pcurves_h:
+        template = env.get_template("pcurves_instance.h.in")
+        pcurves_h.write(template.render(script=this_script, date=date, pcurves=pcurves))
+        pcurves_h.write("\n")
+
+    # write pcurves.cpp
+    with open('./src/lib/math/pcurves/pcurves.cpp', encoding='utf8', mode='w') as pcurves_cpp:
+        template = env.get_template("pcurves.cpp.in")
+        pcurves_cpp.write(template.render(script=this_script, date=date, pcurves=pcurves))
+        pcurves_cpp.write("\n")
+
+    # Check if any pcurves modules need a new stub impl
+    for pcurve in pcurves:
+        curve = pcurve["Name"]
+        mod_dir = './src/lib/math/pcurves/pcurves_%s' % (curve)
+        info_path = os.path.join(mod_dir, 'info.txt')
+        impl_path = os.path.join(mod_dir, f'pcurves_{curve}.cpp')
+
+        if os.access(impl_path, os.R_OK):
+            continue
+
+        addchain_fe2 = addchain_code(pcurve['P'] - 3, 0)
+        addchain_scalar = addchain_code(pcurve['N'] - 2, 0)
+
+        try:
+            os.makedirs(mod_dir)
+        except OSError as ex:
+            if ex.errno != errno.EEXIST:
+                raise
+
+        module_define = f"PCURVES_{curve.upper()}"
+        if not re.match('^[0-9A-Za-z_]{3,30}$', module_define):
+            raise ValueError(f"Invalid preprocessor define name ({module_define}) for new pcurve module")
+
+        with open(info_path, 'w', encoding='utf8') as info_file:
+            info_file.write(dedent(f"""\
+                <defines>
+                {module_define} -> {datestamp()}
+                </defines>
+
+                <module_info>
+                name -> "PCurve {curve}"
+                </module_info>
+
+                <requires>
+                pcurves_impl
+                </requires>
+            """))
+
+        with open(impl_path, 'w', encoding='utf8') as src_file:
+            crandall = (1 << pcurve["P"].bit_length()) - pcurve["P"]
+            if crandall > 2**32:
+                crandall = 0
+
+            template = env.get_template("pcurves_stub.cpp.in")
+            src_file.write(template.render(curve = pcurve,
+                                           crandall=crandall,
+                                           addchain_fe2=indent(addchain_fe2, 9 * ' ', OmitFirstLine()),
+                                           addchain_scalar=indent(addchain_scalar, 9 * ' ', OmitFirstLine())))
+            src_file.write("\n")
+
+
     return 0
 
 if __name__ == '__main__':
