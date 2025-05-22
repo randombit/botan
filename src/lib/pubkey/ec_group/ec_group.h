@@ -250,6 +250,13 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       static bool supports_application_specific_group();
 
       /**
+      * Return true if in this build configuration it is possible to
+      * register an application specific elliptic curve with a cofactor
+      * larger than 1.
+      */
+      static bool supports_application_specific_group_with_cofactor();
+
+      /**
       * Return true if in this build configuration EC_Group::from_name(name) will succeed
       */
       static bool supports_named_group(std::string_view name);
