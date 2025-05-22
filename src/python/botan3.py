@@ -1851,7 +1851,7 @@ class X509Opts:
     def set_common_name(self, name):
         _DLL.botan_x509_cert_opts_common_name(self.__obj, _ctype_str(name))
 
-    def setcountry(self, country):
+    def set_country(self, country):
         _DLL.botan_x509_cert_opts_country(self.__obj, _ctype_str(country))
 
     def set_organization(self, organization):
@@ -1870,7 +1870,7 @@ class X509Opts:
         _DLL.botan_x509_cert_opts_serial_number(self.__obj, _ctype_str(serial_number))
 
     def set_email(self, email):
-        _DLL.botan_x509_cert_optsemail(self.__obj, _ctype_str(email))
+        _DLL.botan_x509_cert_opts_email(self.__obj, _ctype_str(email))
 
     def set_uri(self, uri):
         _DLL.botan_x509_cert_opts_uri(self.__obj, _ctype_str(uri))
@@ -1922,7 +1922,7 @@ class X509Opts:
         usage = 0
         for u in usage_list:
             if u not in usage_values:
-                return False
+                pass
             usage += usage_values[u]
         _DLL.botan_x509_cert_opts_add_constraints(self.__obj, c_uint32(usage))
 
@@ -2083,8 +2083,8 @@ class X509Cert: # pylint: disable=invalid-name
             return (True, limit.value)
 
     def ocsp_responder(self):
-        return _call_fn_returning_str(
-            lambda vc, vfn: _DLL.botan_x509_get_ocsp_responder(self.__obj,  vc, vfn))
+        return _call_fn_viewing_str(
+            lambda vc, vfn: _DLL.botan_x509_get_ocsp_responder(self.__obj, vc, vfn))
 
     def is_self_signed(self):
         self_signed = c_int(0)

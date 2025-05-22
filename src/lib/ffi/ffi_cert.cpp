@@ -144,8 +144,7 @@ int botan_x509_cert_view_as_string(botan_x509_cert_t cert, botan_view_ctx ctx, b
 
 int botan_x509_cert_view_pem(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_str_fn view) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_VISIT(
-      cert, [=](const auto& c) { return invoke_view_callback(view, ctx, c.PEM_encode()); });
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return invoke_view_callback(view, ctx, c.PEM_encode()); });
 #else
    BOTAN_UNUSED(cert, ctx, view);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
@@ -233,12 +232,6 @@ int botan_x509_is_self_signed(botan_x509_cert_t cert, int* out) {
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
-
-// TODO name constraints
-// TODO extended key usage
-// TODO cert policies
-// TODO ca issuers
-// TODO crl dist points
 
 int botan_x509_cert_destroy(botan_x509_cert_t cert) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
