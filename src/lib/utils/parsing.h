@@ -102,7 +102,7 @@ bool host_wildcard_match(std::string_view wildcard, std::string_view host);
 *
 * Otherwise throws Decoding_Error
 */
-std::string check_and_canonicalize_dns_name(std::string_view name);
+BOTAN_TEST_API std::string check_and_canonicalize_dns_name(std::string_view name);
 
 }  // namespace Botan
 

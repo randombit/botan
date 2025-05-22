@@ -400,7 +400,7 @@ std::string check_and_canonicalize_dns_name(std::string_view name) {
       char c = name[i];
 
       if(c == '.') {
-         if(name[i - 1] == '.') {
+         if(i > 0 && name[i - 1] == '.') {
             throw Decoding_Error("DNS name contains sequential period chars");
          }
          if(i == name.size() - 1) {
@@ -415,6 +415,13 @@ std::string check_and_canonicalize_dns_name(std::string_view name) {
       const uint8_t mapped = DNS_CHAR_MAPPING[cu];
       if(mapped == 0) {
          throw Decoding_Error("DNS name includes invalid character");
+      }
+      if(mapped == '-') {
+         if(i == 0 || (i > 0 && name[i - 1] == '.')) {
+            throw Decoding_Error("DNS name has label with leading hyphen");
+         } else if(i == name.size() - 1 || (i < name.size() - 1 && name[i + 1] == '.')) {
+            throw Decoding_Error("DNS name has label with trailing hyphen");
+         }
       }
       // TODO check label lengths
       canon.push_back(static_cast<char>(mapped));
