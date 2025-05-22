@@ -107,26 +107,24 @@ class Handshake_State {
 
       void hello_verify_request(const Hello_Verify_Request& hello_verify);
 
-      // TODO: take unique_ptr instead of raw pointers for all of these, as
-      // we're taking the ownership
-      void client_hello(Client_Hello_12* client_hello);
-      void server_hello(Server_Hello_12* server_hello);
-      void server_cert_status(Certificate_Status* server_cert_status);
-      void server_kex(Server_Key_Exchange* server_kex);
-      void cert_req(Certificate_Request_12* cert_req);
-      void server_hello_done(Server_Hello_Done* server_hello_done);
-      void client_kex(Client_Key_Exchange* client_kex);
+      void client_hello(std::unique_ptr<Client_Hello_12> client_hello);
+      void server_hello(std::unique_ptr<Server_Hello_12> server_hello);
+      void server_cert_status(std::unique_ptr<Certificate_Status> server_cert_status);
+      void server_kex(std::unique_ptr<Server_Key_Exchange> server_kex);
+      void cert_req(std::unique_ptr<Certificate_Request_12> cert_req);
+      void server_hello_done(std::unique_ptr<Server_Hello_Done> server_hello_done);
+      void client_kex(std::unique_ptr<Client_Key_Exchange> client_kex);
 
-      void client_certs(Certificate_12* client_certs);
-      void server_certs(Certificate_12* server_certs);
+      void client_certs(std::unique_ptr<Certificate_12> client_certs);
+      void server_certs(std::unique_ptr<Certificate_12> server_certs);
 
-      void client_verify(Certificate_Verify_12* client_verify);
-      void server_verify(Certificate_Verify_12* server_verify);
+      void client_verify(std::unique_ptr<Certificate_Verify_12> client_verify);
+      void server_verify(std::unique_ptr<Certificate_Verify_12> server_verify);
 
-      void server_finished(Finished_12* server_finished);
-      void client_finished(Finished_12* client_finished);
+      void server_finished(std::unique_ptr<Finished_12> server_finished);
+      void client_finished(std::unique_ptr<Finished_12> client_finished);
 
-      void new_session_ticket(New_Session_Ticket_12* new_session_ticket);
+      void new_session_ticket(std::unique_ptr<New_Session_Ticket_12> new_session_ticket);
 
       const Client_Hello_12* client_hello() const { return m_client_hello.get(); }
 
