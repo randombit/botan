@@ -34,7 +34,7 @@ jobs:
             host_os: windows-2022
             make_tool: ninja
           - target: sanitizer
-            compiler: gcc
+            compiler: gcc-14
             host_os: ubuntu-24.04
 
     runs-on: ${{ matrix.host_os }}

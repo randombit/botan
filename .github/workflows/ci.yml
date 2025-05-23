@@ -170,7 +170,7 @@ jobs:
       matrix:
         include:
           - target: coverage
-            compiler: gcc
+            compiler: gcc-14
             host_os: ubuntu-24.04
           - target: sanitizer
             compiler: clang
