@@ -10,6 +10,7 @@
 #include <botan/internal/rotate.h>
 #include <botan/internal/sha2_32_f.h>
 #include <botan/internal/simd_4x32.h>
+#include <botan/internal/stack_scrubbing.h>
 
 namespace Botan {
 
@@ -46,9 +47,8 @@ BOTAN_FN_ISA_SIMD_4X32 BOTAN_FORCE_INLINE SIMD_4x32 sha256_simd_next_w(SIMD_4x32
 
 }  // namespace
 
-void BOTAN_FN_ISA_SIMD_4X32 SHA_256::compress_digest_x86_simd(digest_type& digest,
-                                                              std::span<const uint8_t> input,
-                                                              size_t blocks) {
+void BOTAN_FN_ISA_SIMD_4X32 BOTAN_SCRUB_STACK_AFTER_RETURN
+SHA_256::compress_digest_x86_simd(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
    // clang-format off
 
    alignas(64) const uint32_t K[64] = {
