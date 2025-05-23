@@ -66,19 +66,20 @@ Dynamically_Loaded_Library::~Dynamically_Loaded_Library() {
 #endif
 }
 
-void* Dynamically_Loaded_Library::resolve_symbol(const std::string& symbol) {
-   void* addr = nullptr;
+void* Dynamically_Loaded_Library::resolve_symbol(const std::string& symbol) const {
+   if(void* addr = resolve_symbol_internal(symbol)) {
+      return addr;
+   }
+   throw Invalid_Argument(fmt("Failed to resolve symbol {} in {}", symbol, m_lib_name));
+}
 
+void* Dynamically_Loaded_Library::resolve_symbol_internal(const std::string& symbol) const {
+   void* addr = nullptr;
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    addr = ::dlsym(m_lib, symbol.c_str());
 #elif defined(BOTAN_TARGET_OS_HAS_WIN32)
    addr = reinterpret_cast<void*>(::GetProcAddress(reinterpret_cast<HMODULE>(m_lib), symbol.c_str()));
 #endif
-
-   if(!addr) {
-      throw Invalid_Argument(fmt("Failed to resolve symbol {} in {}", symbol, m_lib_name));
-   }
-
    return addr;
 }
 
