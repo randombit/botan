@@ -55,6 +55,7 @@ jobs:
         uses: ./.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
+          compiler: msvc
           cache-key: ${{ matrix.host_os }}-msvc-${{ matrix.arch }}-${{ matrix.target }}
           arch: ${{ matrix.arch }}
 
@@ -89,6 +90,7 @@ jobs:
         uses: ./.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
+          compiler: ${{ matrix.compiler }}
           cache-key: linux-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
       - name: Build and Test Botan
@@ -126,6 +128,7 @@ jobs:
         uses: ./.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
+          compiler: ${{ matrix.compiler }}
           cache-key: macos-${{ matrix.compiler }}-${{ matrix.os }}-${{ matrix.target }}
 
       - name: Build and Test Botan
@@ -144,6 +147,7 @@ jobs:
         uses: ./.github/actions/setup-build-agent
         with:
           target: clang-tidy
+          compiler: clang
           cache-key: linux-x86_64-clang-tidy
 
       - name: Configure Build
@@ -212,6 +216,7 @@ jobs:
         uses: ./source/.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
+          compiler: ${{ matrix.compiler }}
           cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
       - name: Build and Test Botan
@@ -260,6 +265,7 @@ jobs:
         uses: ./source/.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
+          compiler: ${{ matrix.compiler }}
           cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
       - name: Build and Test Botan
@@ -319,6 +325,7 @@ jobs:
         uses: ./.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
+          compiler: ${{ matrix.compiler }}
           cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-xcompile-${{ matrix.target }}
 
       - name: Build and Test Botan

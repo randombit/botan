@@ -58,6 +58,7 @@ jobs:
         uses: ./source/.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
+          compiler: ${{ matrix.compiler }}
           cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
       - name: Build and Test Botan
@@ -119,6 +120,7 @@ jobs:
         uses: ./.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
+          compiler: ${{ matrix.compiler }}
           cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-xcompile-${{ matrix.target }}
 
       - name: Build and Test Botan
@@ -139,6 +141,7 @@ jobs:
         uses: ./.github/actions/setup-build-agent
         with:
           target: clang-tidy
+          compiler: clang
           cache-key: linux-x86_64-clang-tidy
 
       - name: Install dependencies
@@ -204,6 +207,7 @@ jobs:
         uses: ./.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
+          compiler: ${{ matrix.compiler }}
           cache-key: ${{ matrix.platform }}-${{ matrix.compiler }}-${{ matrix.target }}-${{ matrix.cxxflags }}
 
       - name: Valgrind Checks
@@ -224,6 +228,7 @@ jobs:
         uses: ./.github/actions/setup-build-agent
         with:
           target: hybrid-tls13-interop-test
+          compiler: gcc
           cache-key: linux-x86_64-hybrid_tls
 
       - name: Hybrid PQ/T TLS 1.3 Online Interop Checks
