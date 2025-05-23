@@ -16,6 +16,9 @@ def gha_linux_packages(target, compiler):
         'libsqlite3-dev',
     ]
 
+    if compiler in ['gcc-14']:
+        packages.append('gcc-14')
+
     if target.startswith('valgrind'):
         packages.append('valgrind')
 
