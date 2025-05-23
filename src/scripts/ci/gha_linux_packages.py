@@ -8,7 +8,7 @@ Botan is released under the Simplified BSD License (see license.txt)
 
 import sys
 
-def gha_linux_packages(target):
+def gha_linux_packages(target, compiler):
     packages = [
         'ccache',
         'libbz2-dev',
@@ -138,13 +138,14 @@ def main(args = None):
     if args is None:
         args = sys.argv
 
-    if len(args) != 2:
-        print("Unexpected usage: %s <target>" % (args[0]))
+    if len(args) != 3:
+        print("Unexpected usage: %s <target> <compiler>" % (args[0]))
         return 1
 
     target = args[1]
+    compiler = args[2]
 
-    print(" ".join(gha_linux_packages(target)))
+    print(" ".join(gha_linux_packages(target, compiler)))
 
     return 0
 

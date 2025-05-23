@@ -11,6 +11,10 @@ inputs:
   target:
     description: The ci_build.py target going to be built on this agent
     required: true
+  compiler:
+    description: The compiler used to build this target
+    required: false
+    default: unknown
   cache-key:
     description: The actions/cache key to be used for this runs, caching will be disabled when no key is provided
     required: false
@@ -23,11 +27,11 @@ runs:
   using: composite
   steps:
     - name: Setup Build Agent (Windows)
-      run: ${{ github.action_path }}/../../../src/scripts/ci/setup_gh_actions.ps1 "${{ inputs.target }}" "${{ inputs.arch }}"
+      run: ${{ github.action_path }}/../../../src/scripts/ci/setup_gh_actions.ps1 "${{ inputs.target }}" "${{ inputs.compiler }}" "${{ inputs.arch }}"
       shell: pwsh
       if: runner.os == 'Windows'
     - name: Setup Build Agent (Unix-like)
-      run: ${{ github.action_path }}/../../../src/scripts/ci/setup_gh_actions.sh "${{ inputs.target }}" "${{ inputs.arch }}"
+      run: ${{ github.action_path }}/../../../src/scripts/ci/setup_gh_actions.sh "${{ inputs.target }}" "${{ inputs.compiler }}" "${{ inputs.arch }}"
       shell: bash
       if: runner.os != 'Windows'
 
