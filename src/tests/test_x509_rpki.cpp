@@ -393,7 +393,7 @@ Test::Result test_x509_ip_addr_blocks_extension_encode() {
          if(push_ipv4_family) {
             auto family = dec_addr_blocks[0];
             result.confirm("ipv4 family afi", ipv4_addr_family.afi() == family.afi(), true);
-            result.confirm("ipv4 family safi", ipv4_addr_family.safi() == family.safi(), true);
+            result.test_eq("ipv4 family safi", ipv4_addr_family.safi(), family.safi());
             auto choice = std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(family.addr_choice());
 
             if(!inherit_ipv4) {
@@ -418,7 +418,7 @@ Test::Result test_x509_ip_addr_blocks_extension_encode() {
          if(push_ipv6_family) {
             auto family = dec_addr_blocks[dec_addr_blocks.size() - 1];
             result.confirm("ipv6 family afi", ipv6_addr_family.afi() == family.afi(), true);
-            result.confirm("ipv6 family safi", ipv6_addr_family.safi() == family.safi(), true);
+            result.test_eq("ipv6 family safi", ipv6_addr_family.safi(), family.safi());
             auto choice = std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(family.addr_choice());
             if(!inherit_ipv6) {
                auto ranges = choice.ranges().value();
@@ -510,7 +510,7 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_edge_cases() {
                const auto& dec_addr_blocks = ip_blocks->addr_blocks();
                auto family = dec_addr_blocks[0];
                result.confirm("ipv6 family afi", ipv6_addr_family.afi() == family.afi(), true);
-               result.confirm("ipv6 family safi", ipv6_addr_family.safi() == family.safi(), true);
+               result.test_eq("ipv6 family safi", ipv6_addr_family.safi(), family.safi());
                auto choice = std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(family.addr_choice());
                auto ranges = choice.ranges().value();
 
@@ -684,7 +684,7 @@ Test::Result test_x509_ip_addr_blocks_family_merge() {
       const IPAddressBlocks::IPAddressFamily& exp = expected_blocks[i];
 
       result.confirm("blocks match push order by afi at index " + std::to_string(i), dec.afi() == exp.afi(), true);
-      result.confirm("blocks match push order by safi at index " + std::to_string(i), dec.safi() == exp.safi(), true);
+      result.test_eq("blocks match push order by safi at index " + std::to_string(i), dec.safi(), exp.safi());
 
       if((exp.afi() == 1) && (dec.afi() == 1)) {
          auto dec_choice = std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(dec.addr_choice());
