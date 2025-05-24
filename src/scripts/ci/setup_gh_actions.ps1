@@ -9,6 +9,7 @@
 param(
     [Parameter()]
     [String]$TARGET,
+    [String]$COMPILER,
     [String]$ARCH
 )
 

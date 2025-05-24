@@ -12,9 +12,10 @@ command -v shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if
 set -ex
 
 TARGET="$1"
+COMPILER="$2"
 
 # shellcheck disable=SC2034
-ARCH="$2"
+ARCH="$3"
 
 SCRIPT_LOCATION=$(cd "$(dirname "$0")"; pwd)
 
@@ -34,7 +35,7 @@ if type -p "apt-get"; then
 
     sudo apt-get -qq update
     # shellcheck disable=SC2046
-    sudo apt-get -qq install $("${SCRIPT_LOCATION}"/gha_linux_packages.py "$TARGET")
+    sudo apt-get -qq install $("${SCRIPT_LOCATION}"/gha_linux_packages.py "$TARGET" "$COMPILER")
 
     if [ "$TARGET" = "sde" ]; then
         wget -nv "https://downloadmirror.intel.com/823664/${INTEL_SDE_VERSION}.tar.xz"
