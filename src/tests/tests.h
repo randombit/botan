@@ -396,6 +396,20 @@ class Test {
                return test_eq(what, static_cast<size_t>(x), static_cast<size_t>(y));
             }
 
+            template <typename T>
+            bool test_eq(const std::string& what, const std::optional<T>& a, const std::optional<T>& b) {
+               if(a.has_value() != b.has_value()) {
+                  std::ostringstream err;
+                  err << m_who << " " << what << " only one of a/b was nullopt";
+                  return test_failure(err.str());
+               } else if(a.has_value() && b.has_value()) {
+                  return test_is_eq(what, a.value(), b.value());
+               } else {
+                  // both nullopt
+                  return test_success();
+               }
+            }
+
             bool test_lt(const std::string& what, size_t produced, size_t expected);
             bool test_lte(const std::string& what, size_t produced, size_t expected);
             bool test_gt(const std::string& what, size_t produced, size_t expected);
