@@ -18,6 +18,10 @@
    #include <botan/internal/calendar.h>
 #endif
 
+#if defined(BOTAN_HAS_ECC_GROUP)
+   #include <botan/ec_group.h>
+#endif
+
 namespace Botan_Tests {
 
 namespace {
@@ -43,6 +47,12 @@ std::unique_ptr<Botan::Private_Key> generate_key(const std::string& algo, Botan:
    std::string params;
    if(algo == "ECDSA") {
       params = "secp256r1";
+
+   #if defined(BOTAN_HAS_ECC_GROUP)
+      if(Botan::EC_Group::supports_named_group("secp192r1")) {
+         params = "secp192r1";
+      }
+   #endif
    } else if(algo == "Ed25519") {
       params = "";
    } else if(algo == "RSA") {
@@ -88,16 +98,18 @@ Botan::X509_Cert_Options req_opts(const std::string& algo, const std::string& si
 }
 
 std::tuple<std::string, std::string, std::string> get_sig_algo_padding() {
-   const std::string hash_fn{"SHA-256"};
    #if defined(BOTAN_HAS_ECDSA)
    const std::string sig_algo{"ECDSA"};
    const std::string padding_method;
+   const std::string hash_fn{"SHA-256"};
    #elif defined(BOTAN_HAS_ED25519)
    const std::string sig_algo{"Ed25519"};
    const std::string padding_method;
+   const std::string hash_fn{"SHA-512"};
    #elif defined(BOTAN_HAS_RSA)
    const std::string sig_algo{"RSA"};
    const std::string padding_method{"EMSA3(SHA-256)"};
+   const std::string hash_fn{"SHA-256"};
    #endif
 
    return std::make_tuple(sig_algo, padding_method, hash_fn);
