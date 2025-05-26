@@ -8,6 +8,7 @@ brief -> "SHA-512 using ARMv8 crypto instructions"
 </module_info>
 
 <isa>
+armv8crypto
 armv8sha512
 </isa>
 
