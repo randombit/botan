@@ -580,14 +580,16 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
             static constexpr size_t Length = static_cast<size_t>(V);
 
          public:
-            IPAddress() = default;
-            explicit IPAddress(std::span<uint8_t> v);
+            explicit IPAddress(std::span<const uint8_t> v);
 
             std::array<uint8_t, Length> value() const { return m_value; }
 
-            friend IPAddress<V> operator++(const IPAddress<V> v) {
-               std::array<uint8_t, Length> val = v.value();
-               for(auto it = val.rbegin(); it != val.rend(); it++) {
+         private:
+            friend class IPAddressBlocks;
+            IPAddress() = default;
+
+            void next() {
+               for(auto it = m_value.rbegin(); it != m_value.rend(); it++) {
                   // we increment the current octet
                   (*it)++;
                   // if it did not wrap around we are done, else look at the next octet
@@ -595,13 +597,12 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
                      break;
                   }
                }
-               return IPAddress<V>(val);
             }
 
             friend IPAddress<V> operator+(IPAddress<V> lhs, size_t rhs) {
                // we only really need to be able to compute +1, so this is fine
                for(size_t i = 0; i < rhs; i++) {
-                  lhs = ++lhs;
+                  lhs.next();
                }
                return IPAddress<V>(lhs);
             }
@@ -621,7 +622,6 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
                return lhs.value() == rhs.value();
             }
 
-         private:
             std::array<uint8_t, Length> m_value;
       };
 
@@ -633,8 +633,7 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
 
             IPAddressOrRange() = default;
 
-            // NOLINTNEXTLINE(*-explicit-conversions) FIXME
-            IPAddressOrRange(const IPAddress<V>& addr) : m_min(addr), m_max(addr) {}
+            explicit IPAddressOrRange(const IPAddress<V>& addr) : m_min(addr), m_max(addr) {}
 
             IPAddressOrRange(const IPAddress<V>& min, const IPAddress<V>& max) : m_min(min), m_max(max) {
                if(max < min) {
@@ -649,6 +648,8 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
          private:
             IPAddress<V> m_min{};
             IPAddress<V> m_max{};
+
+            IPAddress<V> decode_single_address(std::vector<uint8_t> decoded, bool min);
       };
 
       template <Version V>
@@ -661,8 +662,7 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
 
             IPAddressChoice() = default;
 
-            // NOLINTNEXTLINE(*-explicit-conversions) FIXME
-            IPAddressChoice(std::optional<std::span<const IPAddressOrRange<V>>> ranges);
+            explicit IPAddressChoice(std::optional<std::span<const IPAddressOrRange<V>>> ranges);
 
          private:
             std::optional<std::vector<IPAddressOrRange<V>>> m_ip_addr_ranges;
@@ -693,7 +693,7 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
             const AddrChoice& addr_choice() const { return m_ip_addr_choice; }
 
          private:
-            uint16_t m_afi = 0;
+            uint16_t m_afi = 1;
             std::optional<uint8_t> m_safi;
             AddrChoice m_ip_addr_choice;
       };
@@ -715,6 +715,38 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
                     const std::vector<X509_Certificate>& cert_path,
                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
                     size_t pos) override;
+
+      /// Add a single IP address to this extension (for the specified SAFI, if any)
+      template <Version V>
+      void add_address(const std::array<uint8_t, static_cast<size_t>(V)>& address,
+                       std::optional<uint8_t> safi = std::nullopt) {
+         add_address<V>(address, address, safi);
+      }
+
+      /// Add an IP address range to this extension (for the specified SAFI, if any)
+      template <Version V>
+      void add_address(const std::array<uint8_t, static_cast<std::size_t>(V)>& min,
+                       const std::array<uint8_t, static_cast<std::size_t>(V)>& max,
+                       std::optional<uint8_t> safi = std::nullopt) {
+         std::vector<IPAddressOrRange<V>> addresses = {IPAddressOrRange<V>(IPAddress<V>(min), IPAddress<V>(max))};
+         m_ip_addr_blocks.push_back(IPAddressFamily(IPAddressChoice<V>(addresses), safi));
+         sort_and_merge();
+      }
+
+      /// Make the extension contain no allowed IP addresses for the specified IP version (and SAFI, if any)
+      template <Version V>
+      void restrict(std::optional<uint8_t> safi = std::nullopt) {
+         std::vector<IPAddressOrRange<V>> addresses = {};
+         m_ip_addr_blocks.push_back(IPAddressFamily(IPAddressChoice<V>(addresses), safi));
+         sort_and_merge();
+      }
+
+      /// Mark the specified IP version as 'inherit' (for the specified SAFI, if any)
+      template <Version V>
+      void inherit(std::optional<uint8_t> safi = std::nullopt) {
+         m_ip_addr_blocks.push_back(IPAddressFamily(IPAddressChoice<V>(), safi));
+         sort_and_merge();
+      }
 
       const std::vector<IPAddressFamily>& addr_blocks() const { return m_ip_addr_blocks; }
 
@@ -787,10 +819,8 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
             void encode_into(DER_Encoder&) const override;
             void decode_from(BER_Decoder& from) override;
 
-            ASIdentifiers() = default;
-
-            ASIdentifiers(const std::optional<ASIdentifierChoice>& asnum,
-                          const std::optional<ASIdentifierChoice>& rdi) :
+            explicit ASIdentifiers(const std::optional<ASIdentifierChoice>& asnum,
+                                   const std::optional<ASIdentifierChoice>& rdi) :
                   m_asnum(asnum), m_rdi(rdi) {
                if(!m_asnum.has_value() && !m_rdi.has_value()) {
                   throw Decoding_Error("One of asnum, rdi must be present");
@@ -802,6 +832,9 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
             const std::optional<ASIdentifierChoice>& rdi() const { return m_rdi; }
 
          private:
+            friend class ASBlocks;
+            ASIdentifiers() = default;
+
             std::optional<ASIdentifierChoice> m_asnum;
             std::optional<ASIdentifierChoice> m_rdi;
       };
@@ -822,6 +855,40 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
                     size_t pos) override;
 
+      /// Add a single asnum to this extension
+      void add_asnum(asnum_t asnum) { add_asnum(asnum, asnum); }
+
+      /// Add an asnum range to this extension
+      void add_asnum(asnum_t min, asnum_t max) {
+         m_as_identifiers = ASIdentifiers(add_new(m_as_identifiers.asnum(), min, max), m_as_identifiers.rdi());
+      }
+
+      /// Make the extension contain no allowed asnum's
+      void restrict_asnum() {
+         std::vector<ASIdOrRange> empty;
+         m_as_identifiers = ASIdentifiers(ASIdentifierChoice(empty), m_as_identifiers.rdi());
+      }
+
+      /// Mark the asnum entry as 'inherit'
+      void inherit_asnum() { m_as_identifiers = ASIdentifiers(ASIdentifierChoice(), m_as_identifiers.rdi()); }
+
+      /// Add a single rdi to this extension
+      void add_rdi(asnum_t rdi) { add_rdi(rdi, rdi); }
+
+      /// Add an rdi range to this extension
+      void add_rdi(asnum_t min, asnum_t max) {
+         m_as_identifiers = ASIdentifiers(m_as_identifiers.asnum(), add_new(m_as_identifiers.rdi(), min, max));
+      }
+
+      /// Make the extension contain no allowed rdi's
+      void restrict_rdi() {
+         std::vector<ASIdOrRange> empty;
+         m_as_identifiers = ASIdentifiers(m_as_identifiers.asnum(), ASIdentifierChoice(empty));
+      }
+
+      /// Mark the rdi entry as 'inherit'
+      void inherit_rdi() { m_as_identifiers = ASIdentifiers(m_as_identifiers.asnum(), ASIdentifierChoice()); }
+
       const ASIdentifiers& as_identifiers() const { return m_as_identifiers; }
 
    private:
@@ -830,6 +897,17 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
       std::string oid_name() const override { return "PKIX.AutonomousSysIds"; }
 
       bool should_encode() const override { return true; }
+
+      ASIdentifierChoice add_new(const std::optional<ASIdentifierChoice>& old, asnum_t min, asnum_t max) {
+         std::vector<ASIdOrRange> range;
+         if(!old.has_value() || !old.value().ranges().has_value()) {
+            range = {ASIdOrRange(min, max)};
+         } else {
+            range = old.value().ranges().value();
+            range.push_back(ASIdOrRange(min, max));
+         }
+         return ASIdentifierChoice(range);
+      }
 
       std::vector<uint8_t> encode_inner() const override;
       void decode_inner(const std::vector<uint8_t>&) override;
