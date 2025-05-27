@@ -1058,35 +1058,31 @@ Test::Result test_x509_as_blocks_extension_encode() {
          continue;
       }
 
-      ASBlocks::ASIdOrRange asnum_id_or_range0 = ASBlocks::ASIdOrRange(0, 999);
-      ASBlocks::ASIdOrRange asnum_id_or_range1 = ASBlocks::ASIdOrRange(5042);
-      ASBlocks::ASIdOrRange asnum_id_or_range2 = ASBlocks::ASIdOrRange(5043, 4294967295);
+      std::unique_ptr<ASBlocks> blocks = std::make_unique<ASBlocks>();
 
-      ASBlocks::ASIdOrRange rdi_id_or_range0 = ASBlocks::ASIdOrRange(1234, 5678);
-      ASBlocks::ASIdOrRange rdi_id_or_range1 = ASBlocks::ASIdOrRange(32768);
-      ASBlocks::ASIdOrRange rdi_id_or_range2 = ASBlocks::ASIdOrRange(32769, 4294967295);
-
-      std::vector<ASBlocks::ASIdOrRange> as_ranges;
-      if(push_asnum) {
-         as_ranges.push_back(asnum_id_or_range0);
-         as_ranges.push_back(asnum_id_or_range1);
-         as_ranges.push_back(asnum_id_or_range2);
+      if(include_asnum) {
+         if(push_asnum) {
+            blocks->add_asnum(0, 999);
+            blocks->add_asnum(5042);
+            blocks->add_asnum(5043, 4294967295);
+         } else {
+            blocks->restrict_asnum();
+         }
+      } else {
+         blocks->inherit_asnum();
       }
 
-      std::vector<ASBlocks::ASIdOrRange> rdi_ranges;
-      if(push_rdi) {
-         rdi_ranges.push_back(rdi_id_or_range0);
-         rdi_ranges.push_back(rdi_id_or_range1);
-         rdi_ranges.push_back(rdi_id_or_range2);
+      if(include_rdi) {
+         if(push_rdi) {
+            blocks->add_rdi(1234, 5678);
+            blocks->add_rdi(32768);
+            blocks->add_rdi(32769, 4294967295);
+         } else {
+            blocks->restrict_rdi();
+         }
+      } else {
+         blocks->inherit_rdi();
       }
-
-      ASBlocks::ASIdentifierChoice asnum = ASBlocks::ASIdentifierChoice(as_ranges);
-      ASBlocks::ASIdentifierChoice rdi = ASBlocks::ASIdentifierChoice(rdi_ranges);
-
-      ASBlocks::ASIdentifiers ident = ASBlocks::ASIdentifiers(include_asnum ? std::optional(asnum) : std::nullopt,
-                                                              include_rdi ? std::optional(rdi) : std::nullopt);
-
-      std::unique_ptr<ASBlocks> blocks = std::make_unique<ASBlocks>(ident);
 
       Botan::X509_Cert_Options opts = req_opts(sig_algo);
       opts.extensions.add(std::move(blocks));
@@ -1113,7 +1109,7 @@ Test::Result test_x509_as_blocks_extension_encode() {
                result.confirm("asnum has no entries", asnum_entries.empty(), true);
             }
          } else {
-            result.confirm("no asnum entry", identifier.asnum().has_value(), false);
+            result.confirm("asnum has no entry", identifier.asnum().value().ranges().has_value(), false);
          }
 
          if(include_rdi) {
@@ -1129,7 +1125,7 @@ Test::Result test_x509_as_blocks_extension_encode() {
                result.confirm("rdi has no entries", rdi_entries.empty(), true);
             }
          } else {
-            result.confirm("rdi has no entry", identifier.rdi().has_value(), false);
+            result.confirm("rdi has no entry", identifier.rdi().value().ranges().has_value(), false);
          }
       }
    }
@@ -1149,27 +1145,15 @@ Test::Result test_x509_as_blocks_range_merge() {
    auto [ca_cert, ca, sub_key, sig_algo, hash_fn] = make_ca(rng);
    Botan::X509_Cert_Options opts = req_opts(sig_algo);
 
-   std::vector<std::vector<uint16_t>> ranges = {
-      {2005, 37005},
-      {60, 70},
-      {22, 50},
-      {35, 2000},
-      {2001, 2004},
-      {21, 21},
-      {0, 20},
-   };
+   std::unique_ptr<ASBlocks> blocks = std::make_unique<ASBlocks>();
 
-   std::vector<ASBlocks::ASIdOrRange> as_ranges;
-   for(auto pair : ranges) {
-      auto range = ASBlocks::ASIdOrRange(pair[0], pair[1]);
-      as_ranges.push_back(range);
-   }
-
-   ASBlocks::ASIdentifierChoice asnum = ASBlocks::ASIdentifierChoice(as_ranges);
-
-   ASBlocks::ASIdentifiers ident = ASBlocks::ASIdentifiers(std::optional(asnum), std::nullopt);
-
-   std::unique_ptr<ASBlocks> blocks = std::make_unique<ASBlocks>(ident);
+   blocks->add_asnum(2005, 37005);
+   blocks->add_asnum(60, 70);
+   blocks->add_asnum(22, 50);
+   blocks->add_asnum(35, 2000);
+   blocks->add_asnum(2001, 2004);
+   blocks->add_asnum(21);
+   blocks->add_asnum(0, 20);
 
    opts.extensions.add(std::move(blocks));
 
@@ -1208,81 +1192,36 @@ Test::Result test_x509_as_blocks_path_validation_success() {
    */
 
    // Root Cert, both as and rdi
-   ASBlocks::ASIdOrRange root_asnum_id_or_range0 = ASBlocks::ASIdOrRange(0, 999);
-   ASBlocks::ASIdOrRange root_asnum_id_or_range1 = ASBlocks::ASIdOrRange(5042);
-   ASBlocks::ASIdOrRange root_asnum_id_or_range2 = ASBlocks::ASIdOrRange(5043, 4294967295);
 
-   ASBlocks::ASIdOrRange root_rdi_id_or_range0 = ASBlocks::ASIdOrRange(1234, 5678);
-   ASBlocks::ASIdOrRange root_rdi_id_or_range1 = ASBlocks::ASIdOrRange(32768);
-   ASBlocks::ASIdOrRange root_rdi_id_or_range2 = ASBlocks::ASIdOrRange(32769, 4294967295);
+   std::unique_ptr<ASBlocks> root_blocks = std::make_unique<ASBlocks>();
 
-   std::vector<ASBlocks::ASIdOrRange> root_as_ranges;
-   root_as_ranges.push_back(root_asnum_id_or_range0);
-   root_as_ranges.push_back(root_asnum_id_or_range1);
-   root_as_ranges.push_back(root_asnum_id_or_range2);
+   root_blocks->add_asnum(0, 999);
+   root_blocks->add_asnum(5042);
+   root_blocks->add_asnum(5043, 4294967295);
 
-   std::vector<ASBlocks::ASIdOrRange> root_rdi_ranges;
-   root_rdi_ranges.push_back(root_rdi_id_or_range0);
-   root_rdi_ranges.push_back(root_rdi_id_or_range1);
-   root_rdi_ranges.push_back(root_rdi_id_or_range2);
-
-   ASBlocks::ASIdentifierChoice root_asnum = ASBlocks::ASIdentifierChoice(root_as_ranges);
-   ASBlocks::ASIdentifierChoice root_rdi = ASBlocks::ASIdentifierChoice(root_rdi_ranges);
-   ASBlocks::ASIdentifiers root_ident = ASBlocks::ASIdentifiers(root_asnum, root_rdi);
-   std::unique_ptr<ASBlocks> root_blocks = std::make_unique<ASBlocks>(root_ident);
+   root_blocks->add_rdi(1234, 5678);
+   root_blocks->add_rdi(32768);
+   root_blocks->add_rdi(32769, 4294967295);
 
    // Inherit cert, both as 'inherit'
-   ASBlocks::ASIdentifierChoice inherit_asnum = ASBlocks::ASIdentifierChoice();
-   ASBlocks::ASIdentifierChoice inherit_rdi = ASBlocks::ASIdentifierChoice();
-   ASBlocks::ASIdentifiers inherit_ident = ASBlocks::ASIdentifiers(inherit_asnum, inherit_rdi);
-   std::unique_ptr<ASBlocks> inherit_blocks = std::make_unique<ASBlocks>(inherit_ident);
-
-   // Dynamic cert
-   ASBlocks::ASIdOrRange dyn_asnum_id_or_range0 = ASBlocks::ASIdOrRange(100, 600);
-   ASBlocks::ASIdOrRange dyn_asnum_id_or_range1 = ASBlocks::ASIdOrRange(678);
-   ASBlocks::ASIdOrRange dyn_asnum_id_or_range2 = ASBlocks::ASIdOrRange(5042, 5101);
-
-   ASBlocks::ASIdOrRange dyn_rdi_id_or_range0 = ASBlocks::ASIdOrRange(1500, 5000);
-   ASBlocks::ASIdOrRange dyn_rdi_id_or_range1 = ASBlocks::ASIdOrRange(33000, 60000);
-
-   std::vector<ASBlocks::ASIdOrRange> dyn_as_ranges;
-   dyn_as_ranges.push_back(dyn_asnum_id_or_range0);
-   dyn_as_ranges.push_back(dyn_asnum_id_or_range1);
-   dyn_as_ranges.push_back(dyn_asnum_id_or_range2);
-
-   std::vector<ASBlocks::ASIdOrRange> dyn_rdi_ranges;
-   dyn_rdi_ranges.push_back(dyn_rdi_id_or_range0);
-   dyn_rdi_ranges.push_back(dyn_rdi_id_or_range1);
+   std::unique_ptr<ASBlocks> inherit_blocks = std::make_unique<ASBlocks>();
+   inherit_blocks->inherit_asnum();
+   inherit_blocks->inherit_rdi();
 
    // Subject cert
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range0 = ASBlocks::ASIdOrRange(120, 180);
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range1 = ASBlocks::ASIdOrRange(220, 240);
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range2 = ASBlocks::ASIdOrRange(260, 511);
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range3 = ASBlocks::ASIdOrRange(678);
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range4 = ASBlocks::ASIdOrRange(5043, 5100);
 
-   ASBlocks::ASIdOrRange sub_rdi_id_or_range0 = ASBlocks::ASIdOrRange(1500, 2300);
-   ASBlocks::ASIdOrRange sub_rdi_id_or_range1 = ASBlocks::ASIdOrRange(2500, 4000);
-   ASBlocks::ASIdOrRange sub_rdi_id_or_range2 = ASBlocks::ASIdOrRange(1567);
-   ASBlocks::ASIdOrRange sub_rdi_id_or_range3 = ASBlocks::ASIdOrRange(33100, 40000);
+   std::unique_ptr<ASBlocks> sub_blocks = std::make_unique<ASBlocks>();
 
-   std::vector<ASBlocks::ASIdOrRange> sub_as_ranges;
-   sub_as_ranges.push_back(sub_asnum_id_or_range0);
-   sub_as_ranges.push_back(sub_asnum_id_or_range1);
-   sub_as_ranges.push_back(sub_asnum_id_or_range2);
-   sub_as_ranges.push_back(sub_asnum_id_or_range3);
-   sub_as_ranges.push_back(sub_asnum_id_or_range4);
+   sub_blocks->add_asnum(120, 180);
+   sub_blocks->add_asnum(220, 240);
+   sub_blocks->add_asnum(260, 511);
+   sub_blocks->add_asnum(678);
+   sub_blocks->add_asnum(5043, 5100);
 
-   std::vector<ASBlocks::ASIdOrRange> sub_rdi_ranges;
-   sub_rdi_ranges.push_back(sub_rdi_id_or_range0);
-   sub_rdi_ranges.push_back(sub_rdi_id_or_range1);
-   sub_rdi_ranges.push_back(sub_rdi_id_or_range2);
-   sub_rdi_ranges.push_back(sub_rdi_id_or_range3);
-
-   ASBlocks::ASIdentifierChoice sub_asnum = ASBlocks::ASIdentifierChoice(sub_as_ranges);
-   ASBlocks::ASIdentifierChoice sub_rdi = ASBlocks::ASIdentifierChoice(sub_rdi_ranges);
-   ASBlocks::ASIdentifiers sub_ident = ASBlocks::ASIdentifiers(sub_asnum, sub_rdi);
-   std::unique_ptr<ASBlocks> sub_blocks = std::make_unique<ASBlocks>(sub_ident);
+   sub_blocks->add_rdi(1500, 2300);
+   sub_blocks->add_rdi(2500, 4000);
+   sub_blocks->add_rdi(1567);
+   sub_blocks->add_rdi(33100, 40000);
 
    Botan::X509_Cert_Options root_opts = ca_opts();
    root_opts.extensions.add(std::move(root_blocks));
@@ -1298,12 +1237,21 @@ Test::Result test_x509_as_blocks_path_validation_success() {
       bool include_asnum = i & 1;
       bool include_rdi = (i >> 1) & 1;
 
-      ASBlocks::ASIdentifierChoice dyn_asnum =
-         ASBlocks::ASIdentifierChoice(include_asnum ? std::optional(dyn_as_ranges) : std::nullopt);
-      ASBlocks::ASIdentifierChoice dyn_rdi =
-         ASBlocks::ASIdentifierChoice(include_rdi ? std::optional(dyn_rdi_ranges) : std::nullopt);
-      ASBlocks::ASIdentifiers dyn_ident = ASBlocks::ASIdentifiers(dyn_asnum, dyn_rdi);
-      std::unique_ptr<ASBlocks> dyn_blocks = std::make_unique<ASBlocks>(dyn_ident);
+      std::unique_ptr<ASBlocks> dyn_blocks = std::make_unique<ASBlocks>();
+      if(include_asnum) {
+         dyn_blocks->add_asnum(100, 600);
+         dyn_blocks->add_asnum(678);
+         dyn_blocks->add_asnum(5042, 5101);
+      } else {
+         dyn_blocks->inherit_asnum();
+      }
+
+      if(include_rdi) {
+         dyn_blocks->add_rdi(1500, 5000);
+         dyn_blocks->add_rdi(33000, 60000);
+      } else {
+         dyn_blocks->inherit_rdi();
+      }
 
       auto [dyn_cert, dyn_ca] = make_and_sign_ca(std::move(dyn_blocks), inherit_ca, rng);
 
@@ -1329,35 +1277,17 @@ Test::Result test_x509_as_blocks_path_validation_extension_not_present() {
    using Botan::Cert_Extension::ASBlocks;
    auto rng = Test::new_rng(__func__);
 
-   // Subject cert
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range0 = ASBlocks::ASIdOrRange(120, 180);
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range1 = ASBlocks::ASIdOrRange(220, 240);
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range2 = ASBlocks::ASIdOrRange(260, 511);
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range3 = ASBlocks::ASIdOrRange(678);
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range4 = ASBlocks::ASIdOrRange(5043, 5100);
+   std::unique_ptr<ASBlocks> sub_blocks = std::make_unique<ASBlocks>();
+   sub_blocks->add_asnum(120, 180);
+   sub_blocks->add_asnum(220, 224);
+   sub_blocks->add_asnum(260, 511);
+   sub_blocks->add_asnum(678);
+   sub_blocks->add_asnum(5043, 5100);
 
-   ASBlocks::ASIdOrRange sub_rdi_id_or_range0 = ASBlocks::ASIdOrRange(1500, 2300);
-   ASBlocks::ASIdOrRange sub_rdi_id_or_range1 = ASBlocks::ASIdOrRange(2500, 4000);
-   ASBlocks::ASIdOrRange sub_rdi_id_or_range2 = ASBlocks::ASIdOrRange(1567);
-   ASBlocks::ASIdOrRange sub_rdi_id_or_range3 = ASBlocks::ASIdOrRange(33100, 40000);
-
-   std::vector<ASBlocks::ASIdOrRange> sub_as_ranges;
-   sub_as_ranges.push_back(sub_asnum_id_or_range0);
-   sub_as_ranges.push_back(sub_asnum_id_or_range1);
-   sub_as_ranges.push_back(sub_asnum_id_or_range2);
-   sub_as_ranges.push_back(sub_asnum_id_or_range3);
-   sub_as_ranges.push_back(sub_asnum_id_or_range4);
-
-   std::vector<ASBlocks::ASIdOrRange> sub_rdi_ranges;
-   sub_rdi_ranges.push_back(sub_rdi_id_or_range0);
-   sub_rdi_ranges.push_back(sub_rdi_id_or_range1);
-   sub_rdi_ranges.push_back(sub_rdi_id_or_range2);
-   sub_rdi_ranges.push_back(sub_rdi_id_or_range3);
-
-   ASBlocks::ASIdentifierChoice sub_asnum = ASBlocks::ASIdentifierChoice(sub_as_ranges);
-   ASBlocks::ASIdentifierChoice sub_rdi = ASBlocks::ASIdentifierChoice(sub_rdi_ranges);
-   ASBlocks::ASIdentifiers sub_ident = ASBlocks::ASIdentifiers(sub_asnum, sub_rdi);
-   std::unique_ptr<ASBlocks> sub_blocks = std::make_unique<ASBlocks>(sub_ident);
+   sub_blocks->add_rdi(1500, 2300);
+   sub_blocks->add_rdi(2500, 4000);
+   sub_blocks->add_rdi(1567);
+   sub_blocks->add_rdi(33100, 40000);
 
    // create a root ca that does not have any extension
    Botan::X509_Cert_Options root_opts = ca_opts();
@@ -1434,120 +1364,128 @@ Test::Result test_x509_as_blocks_path_validation_failure() {
       bool empty_issuer_non_empty_subject = (i == 20);
 
       // Root cert
-      std::vector<ASBlocks::ASIdOrRange> root_as_ranges;
-      std::vector<ASBlocks::ASIdOrRange> root_rdi_ranges;
+      std::unique_ptr<ASBlocks> root_blocks = std::make_unique<ASBlocks>();
 
-      // assign the root ranges
-      if(push_asnum_min_edge_ranges || push_asnum_max_edge_ranges) {
-         // 100-200 for 02,03,04
-         root_as_ranges.push_back(ASBlocks::ASIdOrRange(100, 200));
-      } else if(push_asnum_max_middle_ranges || push_asnum_min_middle_ranges) {
-         // 10-20,30-40,50-60 for 08,09,10
-         root_as_ranges.push_back(ASBlocks::ASIdOrRange(10, 20));
-         root_as_ranges.push_back(ASBlocks::ASIdOrRange(30, 40));
-         root_as_ranges.push_back(ASBlocks::ASIdOrRange(50, 60));
-      } else if(push_asnum_max_split_ranges || push_asnum_min_split_ranges) {
-         // 10-20,30-50,60-70 for 11,12,13
-         root_as_ranges.push_back(ASBlocks::ASIdOrRange(10, 20));
-         root_as_ranges.push_back(ASBlocks::ASIdOrRange(30, 50));
-         root_as_ranges.push_back(ASBlocks::ASIdOrRange(60, 70));
+      if(!inherit_all_asnums) {
+         if(push_asnum_min_edge_ranges || push_asnum_max_edge_ranges) {
+            // 100-200 for 02,03,04
+            root_blocks->add_asnum(100, 200);
+         } else if(push_asnum_max_middle_ranges || push_asnum_min_middle_ranges) {
+            // 10-20,30-40,50-60 for 08,09,10
+            root_blocks->add_asnum(10, 20);
+            root_blocks->add_asnum(30, 40);
+            root_blocks->add_asnum(50, 60);
+         } else if(push_asnum_max_split_ranges || push_asnum_min_split_ranges) {
+            // 10-20,30-50,60-70 for 11,12,13
+            root_blocks->add_asnum(10, 20);
+            root_blocks->add_asnum(30, 50);
+            root_blocks->add_asnum(60, 70);
+         }
+      } else {
+         root_blocks->inherit_asnum();
       }
 
       // same values but for rdis
-      if(push_rdi_min_edge_ranges || push_rdi_max_edge_ranges) {
-         root_rdi_ranges.push_back(ASBlocks::ASIdOrRange(100, 200));
-      } else if(push_rdi_max_middle_ranges || push_rdi_min_middle_ranges) {
-         root_rdi_ranges.push_back(ASBlocks::ASIdOrRange(10, 20));
-         root_rdi_ranges.push_back(ASBlocks::ASIdOrRange(30, 40));
-         root_rdi_ranges.push_back(ASBlocks::ASIdOrRange(50, 60));
-      } else if(push_rdi_max_split_ranges || push_rdi_min_split_ranges) {
-         root_rdi_ranges.push_back(ASBlocks::ASIdOrRange(10, 20));
-         root_rdi_ranges.push_back(ASBlocks::ASIdOrRange(30, 50));
-         root_rdi_ranges.push_back(ASBlocks::ASIdOrRange(60, 70));
+      if(!inherit_all_rdis) {
+         if(push_rdi_min_edge_ranges || push_rdi_max_edge_ranges) {
+            root_blocks->add_rdi(100, 200);
+         } else if(push_rdi_max_middle_ranges || push_rdi_min_middle_ranges) {
+            root_blocks->add_rdi(10, 20);
+            root_blocks->add_rdi(30, 40);
+            root_blocks->add_rdi(50, 60);
+         } else if(push_rdi_max_split_ranges || push_rdi_min_split_ranges) {
+            root_blocks->add_rdi(10, 20);
+            root_blocks->add_rdi(30, 50);
+            root_blocks->add_rdi(60, 70);
+         }
+      } else {
+         root_blocks->inherit_rdi();
+      }
+
+      if(empty_issuer_non_empty_subject) {
+         root_blocks->restrict_asnum();
+         root_blocks->restrict_rdi();
       }
 
       // Issuer cert
       // the issuer cert has the same ranges as the root cert
       // it is used to check that the 'inherit' check is bubbled up until the root cert is hit
-      std::vector<ASBlocks::ASIdOrRange> issu_as_ranges;
-      std::vector<ASBlocks::ASIdOrRange> issu_rdi_ranges;
+      auto issu_blocks = root_blocks->copy();
 
       // Subject cert
+      std::unique_ptr<ASBlocks> sub_blocks = std::make_unique<ASBlocks>();
+
       std::vector<ASBlocks::ASIdOrRange> sub_as_ranges;
       std::vector<ASBlocks::ASIdOrRange> sub_rdi_ranges;
 
-      // assign the subject asnum ranges
-      if(push_asnum_min_edge_ranges) {
-         // 99-200 for 02 (so overlapping to the left)
-         sub_as_ranges.push_back(ASBlocks::ASIdOrRange(99, 200));
-      } else if(push_asnum_max_edge_ranges) {
-         // 100-201 for 03 (so overlapping to the right)
-         sub_as_ranges.push_back(ASBlocks::ASIdOrRange(100, 201));
-      } else if(push_asnum_max_middle_ranges) {
-         // just change the range in the middle to overlap to the right for 08
-         sub_as_ranges = root_as_ranges;
-         sub_as_ranges[1] = ASBlocks::ASIdOrRange(30, 41);
-      } else if(push_asnum_max_split_ranges) {
-         // change the range in the middle to be cut at 45 for case 11
-         // the left range is 30-44
-         // the right range is 46-51 (overlapping the issuer range to the right)
-         sub_as_ranges = root_as_ranges;
-         sub_as_ranges[1] = ASBlocks::ASIdOrRange(30, 44);
-         // pushing the new range created by splitting to the back since they will be sorted anyway
-         sub_as_ranges.push_back(ASBlocks::ASIdOrRange(46, 51));
-      } else if(push_asnum_min_middle_ranges) {
-         // just change the test in the middle to overlap to the left for case 14
-         sub_as_ranges = root_as_ranges;
-         sub_as_ranges[1] = ASBlocks::ASIdOrRange(29, 40);
-      } else if(push_asnum_min_split_ranges) {
-         // again split the range in the middle at 45 for case 17
-         // creating two ranges 29-44 and 46-50 (so overlapping to the left)
-         sub_as_ranges = root_as_ranges;
-         sub_as_ranges[1] = ASBlocks::ASIdOrRange(29, 44);
-         sub_as_ranges.push_back(ASBlocks::ASIdOrRange(46, 50));
-      } else if(empty_issuer_non_empty_subject) {
-         sub_as_ranges.push_back(ASBlocks::ASIdOrRange(50));
+      if(!inherit_all_asnums) {
+         // assign the subject asnum ranges
+         if(push_asnum_min_edge_ranges) {
+            // 99-200 for 02 (so overlapping to the left)
+            sub_blocks->add_asnum(99, 200);
+         } else if(push_asnum_max_edge_ranges) {
+            // 100-201 for 03 (so overlapping to the right)
+            sub_blocks->add_asnum(100, 201);
+         } else if(push_asnum_max_middle_ranges) {
+            // same as root, but change the range in the middle to overlap to the right for 08
+            sub_blocks->add_asnum(10, 20);
+            sub_blocks->add_asnum(30, 41);
+            sub_blocks->add_asnum(50, 60);
+         } else if(push_asnum_max_split_ranges) {
+            // change the range in the middle to be cut at 45 for case 11
+            // the left range is 30-44
+            // the right range is 46-51 (overlapping the issuer range to the right)
+            sub_blocks->add_asnum(10, 20);
+            sub_blocks->add_asnum(30, 44);
+            sub_blocks->add_asnum(46, 51);
+            sub_blocks->add_asnum(60, 70);
+         } else if(push_asnum_min_middle_ranges) {
+            // just change the test in the middle to overlap to the left for case 14
+            sub_blocks->add_asnum(10, 20);
+            sub_blocks->add_asnum(29, 40);
+            sub_blocks->add_asnum(50, 60);
+         } else if(push_asnum_min_split_ranges) {
+            // again split the range in the middle at 45 for case 17
+            // creating two ranges 29-44 and 46-50 (so overlapping to the left)
+            sub_blocks->add_asnum(10, 20);
+            sub_blocks->add_asnum(29, 44);
+            sub_blocks->add_asnum(46, 50);
+            sub_blocks->add_asnum(60, 70);
+         } else if(empty_issuer_non_empty_subject) {
+            sub_blocks->add_asnum(50);
+         }
+      } else {
+         sub_blocks->inherit_asnum();
       }
 
-      // same values but for rdis
-      if(push_rdi_min_edge_ranges) {
-         sub_rdi_ranges.push_back(ASBlocks::ASIdOrRange(99, 200));
-      } else if(push_rdi_max_edge_ranges) {
-         sub_rdi_ranges.push_back(ASBlocks::ASIdOrRange(100, 201));
-      } else if(push_rdi_max_middle_ranges) {
-         sub_rdi_ranges = root_rdi_ranges;
-         sub_rdi_ranges[1] = ASBlocks::ASIdOrRange(30, 41);
-      } else if(push_rdi_max_split_ranges) {
-         sub_rdi_ranges = root_rdi_ranges;
-         sub_rdi_ranges[1] = ASBlocks::ASIdOrRange(30, 44);
-         sub_rdi_ranges.push_back(ASBlocks::ASIdOrRange(46, 51));
-      } else if(push_rdi_min_middle_ranges) {
-         sub_rdi_ranges = root_rdi_ranges;
-         sub_rdi_ranges[1] = ASBlocks::ASIdOrRange(29, 40);
-      } else if(push_rdi_min_split_ranges) {
-         sub_rdi_ranges = root_rdi_ranges;
-         sub_rdi_ranges[1] = ASBlocks::ASIdOrRange(29, 44);
-         sub_rdi_ranges.push_back(ASBlocks::ASIdOrRange(46, 50));
+      if(!inherit_all_rdis) {
+         // same values but for rdis
+         if(push_rdi_min_edge_ranges) {
+            sub_blocks->add_rdi(99, 200);
+         } else if(push_rdi_max_edge_ranges) {
+            sub_blocks->add_rdi(100, 201);
+         } else if(push_rdi_max_middle_ranges) {
+            sub_blocks->add_rdi(10, 20);
+            sub_blocks->add_rdi(30, 41);
+            sub_blocks->add_rdi(50, 60);
+         } else if(push_rdi_max_split_ranges) {
+            sub_blocks->add_rdi(10, 20);
+            sub_blocks->add_rdi(30, 44);
+            sub_blocks->add_rdi(46, 51);
+            sub_blocks->add_rdi(60, 70);
+         } else if(push_rdi_min_middle_ranges) {
+            sub_blocks->add_rdi(10, 20);
+            sub_blocks->add_rdi(29, 40);
+            sub_blocks->add_rdi(50, 60);
+         } else if(push_rdi_min_split_ranges) {
+            sub_blocks->add_rdi(10, 20);
+            sub_blocks->add_rdi(29, 44);
+            sub_blocks->add_rdi(46, 50);
+            sub_blocks->add_rdi(60, 70);
+         }
+      } else {
+         sub_blocks->inherit_rdi();
       }
-
-      // for cases 00 and 01, set all certs to inherit (so std::nullopt)
-      // in all other cases use the ranges created beforehand
-      ASBlocks::ASIdentifierChoice root_asnum =
-         ASBlocks::ASIdentifierChoice(inherit_all_asnums ? std::nullopt : std::optional(root_as_ranges));
-      ASBlocks::ASIdentifierChoice root_rdi =
-         ASBlocks::ASIdentifierChoice(inherit_all_rdis ? std::nullopt : std::optional(root_rdi_ranges));
-      ASBlocks::ASIdentifiers root_ident = ASBlocks::ASIdentifiers(root_asnum, root_rdi);
-      std::unique_ptr<ASBlocks> root_blocks = std::make_unique<ASBlocks>(root_ident);
-
-      ASBlocks::ASIdentifiers issu_ident = root_ident;
-      std::unique_ptr<ASBlocks> issu_blocks = std::make_unique<ASBlocks>(issu_ident);
-
-      ASBlocks::ASIdentifierChoice sub_asnum =
-         ASBlocks::ASIdentifierChoice(inherit_all_asnums ? std::nullopt : std::optional(sub_as_ranges));
-      ASBlocks::ASIdentifierChoice sub_rdi =
-         ASBlocks::ASIdentifierChoice(inherit_all_rdis ? std::nullopt : std::optional(sub_rdi_ranges));
-      ASBlocks::ASIdentifiers sub_ident = ASBlocks::ASIdentifiers(sub_asnum, sub_rdi);
-      std::unique_ptr<ASBlocks> sub_blocks = std::make_unique<ASBlocks>(sub_ident);
 
       Botan::X509_Cert_Options root_opts = ca_opts();
       root_opts.extensions.add(std::move(root_blocks));
