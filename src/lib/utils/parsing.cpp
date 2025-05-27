@@ -373,13 +373,13 @@ std::string check_and_canonicalize_dns_name(std::string_view name) {
       throw Decoding_Error("DNS name cannot be empty");
    }
 
-   if(name.starts_with(".")) {
-      throw Decoding_Error("DNS name cannot start with a dot");
+   if(name.starts_with(".") || name.ends_with(".")) {
+      throw Decoding_Error("DNS name cannot start or end with a dot");
    }
 
    /*
    * Table mapping uppercase to lowercase and only including values for valid DNS names
-   * namely A-Z, a-z, 0-9, hypen, and dot, plus '*' for wildcarding.
+   * namely A-Z, a-z, 0-9, hyphen, and dot, plus '*' for wildcarding. (RFC 1035)
    */
    // clang-format off
    constexpr uint8_t DNS_CHAR_MAPPING[128] = {
@@ -396,6 +396,9 @@ std::string check_and_canonicalize_dns_name(std::string_view name) {
    std::string canon;
    canon.reserve(name.size());
 
+   // RFC 1035: DNS labels must not exceed 63 characters
+   size_t current_label_length = 0;
+
    for(size_t i = 0; i != name.size(); ++i) {
       char c = name[i];
 
@@ -403,8 +406,16 @@ std::string check_and_canonicalize_dns_name(std::string_view name) {
          if(i > 0 && name[i - 1] == '.') {
             throw Decoding_Error("DNS name contains sequential period chars");
          }
-         if(i == name.size() - 1) {
-            throw Decoding_Error("DNS name cannot end in a period");
+
+         if(current_label_length == 0) {
+            throw Decoding_Error("DNS name contains empty label");
+         }
+         current_label_length = 0;  // Reset for next label
+      } else {
+         current_label_length++;
+
+         if(current_label_length > 63) {  // RFC 1035 Maximum DNS label length
+            throw Decoding_Error("DNS name label exceeds maximum length of 63 characters");
          }
       }
 
@@ -416,6 +427,7 @@ std::string check_and_canonicalize_dns_name(std::string_view name) {
       if(mapped == 0) {
          throw Decoding_Error("DNS name includes invalid character");
       }
+
       if(mapped == '-') {
          if(i == 0 || (i > 0 && name[i - 1] == '.')) {
             throw Decoding_Error("DNS name has label with leading hyphen");
@@ -423,10 +435,12 @@ std::string check_and_canonicalize_dns_name(std::string_view name) {
             throw Decoding_Error("DNS name has label with trailing hyphen");
          }
       }
-      // TODO check label lengths
       canon.push_back(static_cast<char>(mapped));
    }
 
+   if(current_label_length == 0) {
+      throw Decoding_Error("DNS name contains empty label");
+   }
    return canon;
 }
 
