@@ -754,9 +754,7 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
 
             ASIdOrRange() = default;
 
-            explicit ASIdOrRange(asnum_t id) : m_min(id), m_max(id) {}
-
-            ASIdOrRange(asnum_t min, asnum_t max) : m_min(min), m_max(max) {
+            explicit ASIdOrRange(asnum_t min, asnum_t max) : m_min(min), m_max(max) {
                if(max < min) {
                   throw Decoding_Error("AS range numbers must be sorted");
                }
@@ -772,13 +770,14 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
             void encode_into(DER_Encoder&) const override;
             void decode_from(BER_Decoder& from) override;
 
+            const std::optional<std::vector<ASIdOrRange>>& ranges() const { return m_as_ranges; }
+
+         private:
+            friend class ASBlocks;
             ASIdentifierChoice() = default;
 
             explicit ASIdentifierChoice(const std::optional<std::vector<ASIdOrRange>>& ranges);
 
-            const std::optional<std::vector<ASIdOrRange>>& ranges() const { return m_as_ranges; }
-
-         private:
             std::optional<std::vector<ASIdOrRange>> m_as_ranges;
       };
 
@@ -787,28 +786,27 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
             void encode_into(DER_Encoder&) const override;
             void decode_from(BER_Decoder& from) override;
 
+            const std::optional<ASIdentifierChoice>& asnum() const { return m_asnum; }
+
+            const std::optional<ASIdentifierChoice>& rdi() const { return m_rdi; }
+
+         private:
+            friend class ASBlocks;
             ASIdentifiers() = default;
 
-            ASIdentifiers(const std::optional<ASIdentifierChoice>& asnum,
-                          const std::optional<ASIdentifierChoice>& rdi) :
+            explicit ASIdentifiers(const std::optional<ASIdentifierChoice>& asnum,
+                                   const std::optional<ASIdentifierChoice>& rdi) :
                   m_asnum(asnum), m_rdi(rdi) {
                if(!m_asnum.has_value() && !m_rdi.has_value()) {
                   throw Decoding_Error("One of asnum, rdi must be present");
                }
             }
 
-            const std::optional<ASIdentifierChoice>& asnum() const { return m_asnum; }
-
-            const std::optional<ASIdentifierChoice>& rdi() const { return m_rdi; }
-
-         private:
             std::optional<ASIdentifierChoice> m_asnum;
             std::optional<ASIdentifierChoice> m_rdi;
       };
 
       ASBlocks() = default;
-
-      explicit ASBlocks(const ASIdentifiers& as_idents) : m_as_identifiers(as_idents) {}
 
       std::unique_ptr<Certificate_Extension> copy() const override { return std::make_unique<ASBlocks>(*this); }
 
@@ -822,6 +820,40 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
                     size_t pos) override;
 
+      /// Add a single asnum to this extension
+      void add_asnum(asnum_t asnum) { add_asnum(asnum, asnum); }
+
+      /// Add an asnum range to this extension
+      void add_asnum(asnum_t min, asnum_t max) {
+         m_as_identifiers = ASIdentifiers(add_new(m_as_identifiers.asnum(), min, max), m_as_identifiers.rdi());
+      }
+
+      /// Make the extension contain no allowed asnum's
+      void restrict_asnum() {
+         std::vector<ASIdOrRange> empty;
+         m_as_identifiers = ASIdentifiers(ASIdentifierChoice(empty), m_as_identifiers.rdi());
+      }
+
+      /// Mark the asnum entry as 'inherit'
+      void inherit_asnum() { m_as_identifiers = ASIdentifiers(ASIdentifierChoice(), m_as_identifiers.rdi()); }
+
+      /// Add a single rdi to this extension
+      void add_rdi(asnum_t rdi) { add_rdi(rdi, rdi); }
+
+      /// Add an rdi range to this extension
+      void add_rdi(asnum_t min, asnum_t max) {
+         m_as_identifiers = ASIdentifiers(m_as_identifiers.asnum(), add_new(m_as_identifiers.rdi(), min, max));
+      }
+
+      /// Make the extension contain no allowed rdi's
+      void restrict_rdi() {
+         std::vector<ASIdOrRange> empty;
+         m_as_identifiers = ASIdentifiers(m_as_identifiers.asnum(), ASIdentifierChoice(empty));
+      }
+
+      /// Mark the rdi entry as 'inherit'
+      void inherit_rdi() { m_as_identifiers = ASIdentifiers(m_as_identifiers.asnum(), ASIdentifierChoice()); }
+
       const ASIdentifiers& as_identifiers() const { return m_as_identifiers; }
 
    private:
@@ -830,6 +862,17 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
       std::string oid_name() const override { return "PKIX.AutonomousSysIds"; }
 
       bool should_encode() const override { return true; }
+
+      ASIdentifierChoice add_new(const std::optional<ASIdentifierChoice>& old, asnum_t min, asnum_t max) {
+         std::vector<ASIdOrRange> range;
+         if(!old.has_value() || !old.value().ranges().has_value()) {
+            range = {ASIdOrRange(min, max)};
+         } else {
+            range = old.value().ranges().value();
+            range.push_back(ASIdOrRange(min, max));
+         }
+         return ASIdentifierChoice(range);
+      }
 
       std::vector<uint8_t> encode_inner() const override;
       void decode_inner(const std::vector<uint8_t>&) override;
