@@ -13,10 +13,43 @@
    #include <botan/internal/os_utils.h>
 #endif
 
+/*
+* On macOS and OpenBSD ppc, use sysctl to detect AltiVec
+*/
+#if defined(BOTAN_TARGET_OS_IS_MACOS)
+  #include <sys/sysctl.h>
+#elif defined(BOTAN_TARGET_OS_IS_OPENBSD)
+  #include <sys/param.h>
+  #include <sys/sysctl.h>
+  #include <machine/cpu.h>
+#endif
+
 namespace Botan {
 
 uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
    uint32_t feat = 0;
+
+#if defined(BOTAN_TARGET_OS_IS_MACOS) || defined(BOTAN_TARGET_OS_IS_OPENBSD)
+   // On macOS and OpenBSD, use sysctl
+   int sels[2] = {
+   #if defined(BOTAN_TARGET_OS_IS_OPENBSD)
+      CTL_MACHDEP, CPU_ALTIVEC
+   #else
+      CTL_HW, HW_VECTORUNIT
+   #endif
+   };
+
+   int vector_type = 0;
+   size_t length = sizeof(vector_type);
+   int error = ::sysctl(sels, 2, &vector_type, &length, NULL, 0);
+
+   if(error == 0 && vector_type > 0) {
+      feat |= CPUFeature::Bit::ALTIVEC;
+   }
+
+   return feat;
+
+#else // defined(BOTAN_TARGET_OS_IS_MACOS) || defined(BOTAN_TARGET_OS_IS_OPENBSD)
 
 #if defined(BOTAN_HAS_OS_UTILS)
 
@@ -80,6 +113,8 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
 #endif
 
    return feat;
+
+#endif // defined(BOTAN_TARGET_OS_IS_MACOS) || defined(BOTAN_TARGET_OS_IS_OPENBSD)
 }
 
 }  // namespace Botan
