@@ -10,6 +10,12 @@
 #include <botan/rng.h>
 #include <unistd.h>
 
+// Some versions of macOS require sys/types.h to be included
+// prior to sys/random.h.
+#if __has_include(<sys/types.h>)
+   #include <sys/types.h>
+#endif
+
 // macOS and Android include it in sys/random.h instead
 #if __has_include(<sys/random.h>)
    #include <sys/random.h>
