@@ -229,7 +229,112 @@ class TLS_CBC_Tests final : public Text_Based_Test {
       }
 };
 
+class TLS_CBC_KAT_Tests final : public Text_Based_Test {
+   public:
+      TLS_CBC_KAT_Tests() :
+            Text_Based_Test(
+               "tls_cbc_kat.vec",
+               "BlockCipher,MAC,KeylenCipher,KeylenMAC,EncryptThenMAC,Protocol,Key,AssociatedData,Nonce,Plaintext,Ciphertext") {
+      }
+
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
+         Test::Result result("TLS CBC KAT");
+
+         run_kat<Botan::TLS::TLS_CBC_HMAC_AEAD_Encryption>(result, vars);
+         run_kat<Botan::TLS::TLS_CBC_HMAC_AEAD_Decryption>(result, vars);
+
+         return result;
+      }
+
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
+         try {
+            std::ignore = get_cipher_and_mac(vars);
+            return false;
+         } catch(const Botan::Lookup_Error&) {
+            return true;
+         }
+      }
+
+   private:
+      [[nodiscard]] static std::pair<std::unique_ptr<Botan::BlockCipher>,
+                                     std::unique_ptr<Botan::MessageAuthenticationCode>>
+      get_cipher_and_mac(const VarMap& vars) {
+         return {
+            Botan::BlockCipher::create_or_throw(vars.get_req_str("BlockCipher")),
+            Botan::MessageAuthenticationCode::create_or_throw(vars.get_req_str("MAC")),
+         };
+      }
+
+      template <typename T>
+         requires(std::same_as<T, Botan::TLS::TLS_CBC_HMAC_AEAD_Encryption> ||
+                  std::same_as<T, Botan::TLS::TLS_CBC_HMAC_AEAD_Decryption>)
+      static void run_kat(Test::Result& result, const VarMap& vars) {
+         constexpr bool encrypt = std::same_as<T, Botan::TLS::TLS_CBC_HMAC_AEAD_Encryption>;
+         constexpr auto direction = [] {
+            if constexpr(encrypt) {
+               return "encryption";
+            } else {
+               return "decryption";
+            }
+         }();
+
+         const auto keylen_cipher = vars.get_req_sz("KeylenCipher");
+         const auto keylen_mac = vars.get_req_sz("KeylenMAC");
+         const auto encrypt_then_mac = vars.get_req_bool("EncryptThenMAC");
+         const auto protocol = [&] {
+            const auto p = vars.get_req_str("Protocol");
+            if(p == "TLS") {
+               return Botan::TLS::Version_Code::TLS_V12;
+            } else if(p == "DTLS") {
+               return Botan::TLS::Version_Code::DTLS_V12;
+            } else {
+               throw Test_Error("unexpected protocol version");
+            }
+         }();
+
+         const auto key = vars.get_req_bin("Key");
+         const auto ad = vars.get_req_bin("AssociatedData");
+         const auto nonce = vars.get_req_bin("Nonce");
+         const auto pt = vars.get_req_bin("Plaintext");
+         const auto ct = vars.get_req_bin("Ciphertext");
+
+         auto [cipher, mac] = get_cipher_and_mac(vars);
+
+         auto tls_cbc = T(std::move(cipher), std::move(mac), keylen_cipher, keylen_mac, protocol, encrypt_then_mac);
+
+         tls_cbc.set_key(key);
+         tls_cbc.set_associated_data(ad);
+
+         std::vector<uint8_t> in(pt.begin(), pt.end());
+         std::vector<uint8_t> out(ct.begin(), ct.end());
+
+         if constexpr(!encrypt) {
+            std::swap(in, out);
+         }
+
+         // Test 1: process the entire message at once
+         std::vector<uint8_t> inout = in;
+         tls_cbc.start(nonce);
+         tls_cbc.finish(inout);  // in-place processing ('in' should now contain 'out')
+         result.test_eq(std::string("expected output of ") + direction, inout, out);
+
+         // Test 2: process the message in chunks
+         auto in_span = std::span{in};
+         tls_cbc.start(nonce);
+         constexpr size_t chunk_size = 7;
+         while(in_span.size() >= chunk_size && in_span.size() > tls_cbc.minimum_final_size() + chunk_size) {
+            tls_cbc.process(in_span.first(chunk_size));
+            in_span = in_span.subspan(chunk_size);
+         }
+
+         std::vector<uint8_t> chunked_out(in_span.begin(), in_span.end());
+         tls_cbc.finish(chunked_out);
+         result.test_eq(std::string("expected output with chunking of ") + direction, chunked_out, out);
+      }
+};
+
 BOTAN_REGISTER_TEST("tls", "tls_cbc", TLS_CBC_Tests);
+BOTAN_REGISTER_TEST("tls", "tls_cbc_kat", TLS_CBC_KAT_Tests);
 
    #endif
 
