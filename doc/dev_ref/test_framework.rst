@@ -14,7 +14,7 @@ Feel free to propose changes to the test system.
 
 When writing a new test, there are three key classes that are used,
 namely ``Test``, ``Test::Result``, and ``Text_Based_Test``. A ``Test``
-(or ``Test_Based_Test``) runs and returns one or more ``Test::Result``.
+(or ``Text_Based_Test``) runs and returns one or more ``Test::Result``.
 
 Namespaces in Test
 -------------------

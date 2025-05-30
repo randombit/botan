@@ -258,7 +258,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         flags += ['--with-debug-info']
 
     if target in ['coverage', 'sanitizer', 'fuzzers']:
-        flags += ['--unsafe-terminate-on-asserts']
+        flags += ['--unsafe-terminate-on-asserts', '--enable-modules=tls_null']
 
     if target in ['sde']:
         test_prefix = ['sde', '-future', '--']
