@@ -1510,6 +1510,10 @@ void ASBlocks::decode_inner(const std::vector<uint8_t>& in) {
 void ASBlocks::ASIdentifiers::encode_into(Botan::DER_Encoder& into) const {
    into.start_sequence();
 
+   if (!m_asnum.has_value() && !m_rdi.has_value()) {
+      throw Encoding_Error("One of asnum, rdi must be present");
+   }
+
    if(m_asnum.has_value()) {
       into.start_explicit(0);
       into.encode(m_asnum.value());
