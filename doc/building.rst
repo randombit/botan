@@ -833,6 +833,13 @@ Enable specific sanitizers. See ``src/build-data/cc`` for more information.
 
 Disable stack smashing protections. **not recommended**
 
+``--enable-stack-scrubbing``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable scrubbing of stack frames that were used for cryptographic calculations
+on potentially sensitive data. At the moment, this is supported exclusively on
+GCC 14 and newer.
+
 ``--with-coverage-info``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

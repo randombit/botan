@@ -360,6 +360,17 @@ all platforms, and currently there is no systematic check of the resulting
 binary function that it is compiled as expected. But, it is the best approach
 currently known and has been verified to work as expected on common platforms.
 
+Stack Scrubbing
+----------------------
+
+GCC 14 and newer can emit code that scrubs the stack frames of functions that
+handle sensitive information [GCCstrub] after they returned to the caller. This
+can reduce the time window for sniffing sensitive information from a process.
+
+Botan can apply this to certain core routines of fundamental algorithms. For now
+this feature is an opt-in. Configure with `--enable-stack-scrubbing` to benefit
+from this feature if you are using a compatible version of GCC.
+
 Memory allocation
 ----------------------
 
@@ -433,6 +444,9 @@ References
 [CoronDpa] Coron,
 "Resistance against Differential Power Analysis for Elliptic Curve Cryptosystems"
 (https://citeseerx.ist.psu.edu/document?doi=4d5d6dfdb582c0d695953e92c408f2377a6c9039)
+
+[GCCstrub] GCC Stack Scrubbing
+(https://gcc.gnu.org/onlinedocs/gcc-14.2.0/gcc/Common-Type-Attributes.html#index-strub-type-attribute)
 
 [GcdFree] Joye, Paillier "GCD-Free Algorithms for Computing Modular Inverses"
 (https://marcjoye.github.io/papers/JP03gcdfree.pdf)

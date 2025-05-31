@@ -294,6 +294,13 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         # need to find a way to run the wasm-compiled tests w/o a browser
         test_cmd = None
 
+    if target in ['sanitizer'] and target_cc in ['gcc']:
+        # Stack scrubbing is supported on GCC 14 and newer, only. This is newer
+        # than the current default compiler on GHA's Linux image (ubuntu 24.04).
+        # The CI setup has to ensure that we are configured to use a recent
+        # compiler for these targets, otherwise `./configure.py` will fail.
+        flags += ['--enable-stack-scrubbing']
+
     if is_cross_target:
         if target_os == 'ios':
             make_prefix = ['xcrun', '--sdk', 'iphoneos']
@@ -676,6 +683,9 @@ def main(args=None):
     if options.cc_bin is None:
         if options.cc == 'gcc':
             options.cc_bin = 'g++'
+        elif options.cc == 'gcc-14':
+            options.cc = 'gcc' # Hack: 'gcc-14' is not a valid compiler identifier for ``./configure.py --cc``
+            options.cc_bin = 'g++-14'
         elif options.cc == 'clang':
             options.cc_bin = 'clang++'
         elif options.cc == 'xcode':

@@ -45,6 +45,7 @@ prefetch.h
 rotate.h
 rounding.h
 scan_name.h
+stack_scrubbing.h
 stl_util.h
 time_utils.h
 </header:internal>

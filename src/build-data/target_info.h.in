@@ -47,6 +47,10 @@
 #define BOTAN_USE_GCC_INLINE_ASM
 %{endif}
 
+%{if compiler_assisted_stack_scrubbing}
+#define BOTAN_USE_COMPILER_ASSISTED_STACK_SCRUBBING
+%{endif}
+
 /*
 * External tool settings
 */

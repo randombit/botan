@@ -12,6 +12,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/sha2_32_f.h>
+#include <botan/internal/stack_scrubbing.h>
 #include <botan/internal/stl_util.h>
 
 #if defined(BOTAN_HAS_CPUID)
@@ -55,7 +56,9 @@ std::string sha256_provider() {
 /*
 * SHA-224 / SHA-256 compression function
 */
-void SHA_256::compress_digest(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
+void BOTAN_SCRUB_STACK_AFTER_RETURN SHA_256::compress_digest(digest_type& digest,
+                                                             std::span<const uint8_t> input,
+                                                             size_t blocks) {
 #if defined(BOTAN_HAS_SHA2_32_X86)
    if(CPUID::has(CPUID::Feature::SHA)) {
       return SHA_256::compress_digest_x86(digest, input, blocks);
