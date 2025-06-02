@@ -9,6 +9,7 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/mutex.h>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -19,8 +20,10 @@ class OID_Map final {
    public:
       void add_oid(const OID& oid, std::string_view str);
 
+      // TODO(Botan4) remove this function when oids.h is removed
       void add_str2oid(const OID& oid, std::string_view str);
 
+      // TODO(Botan4) remove this function when oids.h is removed
       void add_oid2str(const OID& oid, std::string_view str);
 
       std::string oid2str(const OID& oid);
@@ -30,6 +33,9 @@ class OID_Map final {
       static OID_Map& global_registry();
 
    private:
+      static std::optional<std::string_view> lookup_static_oid(const OID& oid);
+      static std::optional<OID> lookup_static_oid_name(std::string_view name);
+
       static std::unordered_map<OID, std::string> load_oid2str_map();
       static std::unordered_map<std::string, OID> load_str2oid_map();
 
