@@ -560,7 +560,7 @@ BOTAN_REGISTER_COMMAND("timing_test", Timing_Test_Command);
 class MARVIN_Test_Command final : public Command {
    public:
       MARVIN_Test_Command() :
-            Command("marvin_test key_file ctext_dir --runs=1000 --report-every=0 --output-nsec --expect-pt-len=0") {}
+            Command("marvin_test key_file ctext_dir --runs=1K --report-every=0 --output-nsec --expect-pt-len=0") {}
 
       std::string group() const override { return "testing"; }
 
@@ -572,10 +572,28 @@ class MARVIN_Test_Command final : public Command {
       static void marvin_sigint_handler(int /*signal*/) { g_sigint_recv = 1; }
    #endif
 
+      static size_t parse_runs_arg(const std::string& param) {
+         if(param.starts_with("-")) {
+            throw CLI_Usage_Error("Cannot have a negative run count");
+         }
+
+         if(param.ends_with("m") || param.ends_with("M")) {
+            return parse_runs_arg(param.substr(0, param.size() - 1)) * 1'000'000;
+         } else if(param.ends_with("k") || param.ends_with("K")) {
+            return parse_runs_arg(param.substr(0, param.size() - 1)) * 1'000;
+         } else {
+            try {
+               return static_cast<size_t>(std::stoul(param));
+            } catch(std::exception&) {
+               throw CLI_Usage_Error("Unexpected syntax for --runs option (try 1000, 1K, or 2M)");
+            }
+         }
+      }
+
       void go() override {
          const std::string key_file = get_arg("key_file");
          const std::string ctext_dir = get_arg("ctext_dir");
-         const size_t measurement_runs = get_arg_sz("runs");
+         const size_t measurement_runs = parse_runs_arg(get_arg("runs"));
          const size_t expect_pt_len = get_arg_sz("expect-pt-len");
          const size_t report_every = get_arg_sz("report-every");
          const bool output_nsec = flag_set("output-nsec");
