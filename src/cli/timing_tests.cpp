@@ -21,6 +21,7 @@
 
 #include <botan/hex.h>
 #include <botan/rng.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/filesystem.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
@@ -560,7 +561,7 @@ BOTAN_REGISTER_COMMAND("timing_test", Timing_Test_Command);
 class MARVIN_Test_Command final : public Command {
    public:
       MARVIN_Test_Command() :
-            Command("marvin_test key_file ctext_dir --runs=1000 --report-every=0 --output-nsec --expect-pt-len=0") {}
+            Command("marvin_test key_file ctext_dir --runs=1K --report-every=0 --output-nsec --expect-pt-len=0") {}
 
       std::string group() const override { return "testing"; }
 
@@ -575,7 +576,7 @@ class MARVIN_Test_Command final : public Command {
       void go() override {
          const std::string key_file = get_arg("key_file");
          const std::string ctext_dir = get_arg("ctext_dir");
-         const size_t measurement_runs = get_arg_sz("runs");
+         const size_t measurement_runs = parse_runs_arg(get_arg("runs"));
          const size_t expect_pt_len = get_arg_sz("expect-pt-len");
          const size_t report_every = get_arg_sz("report-every");
          const bool output_nsec = flag_set("output-nsec");
@@ -628,6 +629,10 @@ class MARVIN_Test_Command final : public Command {
             throw CLI_Usage_Error("Empty ciphertext directory for MARVIN test");
          }
 
+         auto& test_results_file = output();
+
+         const size_t testcases = names.size();
+
    #if defined(BOTAN_HAS_CHACHA_RNG)
          auto rng = Botan::ChaCha_RNG(Botan::system_rng());
    #else
@@ -637,17 +642,19 @@ class MARVIN_Test_Command final : public Command {
          Botan::PK_Decryptor_EME op(*key, rng, "PKCS1v15");
 
          std::vector<size_t> indexes;
-         for(size_t i = 0; i != names.size(); ++i) {
+         for(size_t i = 0; i != testcases; ++i) {
             indexes.push_back(i);
          }
 
-         std::vector<std::vector<uint64_t>> measurements(names.size());
+         std::vector<std::vector<uint64_t>> measurements(testcases);
          for(auto& m : measurements) {
             m.reserve(measurement_runs);
          }
 
          // This is only set differently if we exit early from the loop
          size_t runs_completed = measurement_runs;
+
+         std::vector<uint8_t> ciphertext(modulus_bytes);
 
          for(size_t r = 0; r != measurement_runs; ++r) {
             if(r > 0 && report_every > 0 && (r % report_every) == 0) {
@@ -656,12 +663,15 @@ class MARVIN_Test_Command final : public Command {
 
             shuffle(indexes, rng);
 
-            std::vector<uint8_t> ciphertext(modulus_bytes);
             for(size_t i = 0; i != indexes.size(); ++i) {
                const size_t testcase = indexes[i];
 
-               // FIXME should this load be constant time?
-               Botan::copy_mem(&ciphertext[0], &ciphertext_data[testcase * modulus_bytes], modulus_bytes);
+               // Load the test ciphertext in constant time to avoid cache pollution
+               for(size_t j = 0; j != testcases; ++j) {
+                  const auto j_eq_testcase = Botan::CT::Mask<size_t>::is_equal(j, testcase).as_choice();
+                  const auto* testcase_j = &ciphertext_data[j * modulus_bytes];
+                  Botan::CT::conditional_assign_mem(j_eq_testcase, &ciphertext[0], testcase_j, modulus_bytes);
+               }
 
                TimingTestTimer timer;
                op.decrypt_or_random(ciphertext.data(), modulus_bytes, expect_pt_len, rng);
@@ -680,29 +690,56 @@ class MARVIN_Test_Command final : public Command {
    #endif
          }
 
+         report_results(test_results_file, names, measurements, runs_completed, output_nsec);
+      }
+
+   private:
+      static void report_results(std::ostream& output,
+                                 std::span<const std::string> names,
+                                 std::span<const std::vector<uint64_t>> measurements,
+                                 size_t runs_completed,
+                                 bool output_nsec) {
          for(size_t t = 0; t != names.size(); ++t) {
             if(t > 0) {
-               output() << ",";
+               output << ",";
             }
-            output() << names[t];
+            output << names[t];
          }
-         output() << "\n";
+         output << "\n";
 
          for(size_t r = 0; r != runs_completed; ++r) {
             for(size_t t = 0; t != names.size(); ++t) {
                if(t > 0) {
-                  output() << ",";
+                  output << ",";
                }
 
                const uint64_t dur_nsec = measurements[t][r];
                if(output_nsec) {
-                  output() << dur_nsec;
+                  output << dur_nsec;
                } else {
                   const double dur_s = static_cast<double>(dur_nsec) / 1000000000.0;
-                  output() << dur_s;
+                  output << dur_s;
                }
             }
-            output() << "\n";
+            output << "\n";
+         }
+      }
+
+      static size_t parse_runs_arg(const std::string& param) {
+         if(param.starts_with("-")) {
+            throw CLI_Usage_Error("Cannot have a negative run count");
+         }
+
+         if(param.ends_with("m") || param.ends_with("M")) {
+            return parse_runs_arg(param.substr(0, param.size() - 1)) * 1'000'000;
+         } else if(param.ends_with("k") || param.ends_with("K")) {
+            return parse_runs_arg(param.substr(0, param.size() - 1)) * 1'000;
+         } else {
+            try {
+               return static_cast<size_t>(std::stoul(param));
+            } catch(std::exception&) {
+               throw CLI_Usage_Error("Unexpected syntax for --runs option (try 1000, 1K, or 2M)");
+            }
          }
       }
 
