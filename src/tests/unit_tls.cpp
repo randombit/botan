@@ -925,6 +925,10 @@ class TLS_Unit_Tests final : public Test {
 
    #endif
 
+   #if defined(BOTAN_HAS_TLS_NULL)
+         test_modern_versions("NULL PSK", results, client_ses, server_ses, creds, rng, "PSK", "NULL", "SHA-256");
+   #endif
+
          auto strict_policy = std::make_shared<Botan::TLS::Strict_Policy_Without_TLS13>();
          test_with_policy("Strict policy",
                           results,

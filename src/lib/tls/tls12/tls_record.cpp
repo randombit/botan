@@ -14,6 +14,7 @@
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_exceptn.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tls_seq_numbers.h>
 #include <botan/internal/tls_session_key.h>
@@ -21,6 +22,10 @@
 
 #if defined(BOTAN_HAS_TLS_CBC)
    #include <botan/internal/tls_cbc.h>
+#endif
+
+#if defined(BOTAN_HAS_TLS_NULL)
+   #include <botan/internal/tls_null.h>
 #endif
 
 namespace Botan::TLS {
@@ -43,7 +48,7 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
    if(nonce_format() == Nonce_Format::CBC_MODE) {
 #if defined(BOTAN_HAS_TLS_CBC)
       // legacy CBC+HMAC mode
-      auto mac = MessageAuthenticationCode::create_or_throw("HMAC(" + suite.mac_algo() + ")");
+      auto mac = MessageAuthenticationCode::create_or_throw(fmt("HMAC({})", suite.mac_algo()));
       auto cipher = BlockCipher::create_or_throw(suite.cipher_algo());
 
       if(our_side) {
@@ -66,6 +71,18 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
       BOTAN_UNUSED(uses_encrypt_then_mac);
       throw Internal_Error("Negotiated disabled TLS CBC+HMAC ciphersuite");
 #endif
+   } else if(nonce_format() == Nonce_Format::NULL_CIPHER) {
+#if defined(BOTAN_HAS_TLS_NULL)
+      auto mac = MessageAuthenticationCode::create_or_throw(fmt("HMAC({})", suite.mac_algo()));
+
+      if(our_side) {
+         m_aead = std::make_unique<TLS_NULL_HMAC_AEAD_Encryption>(std::move(mac), suite.mac_keylen());
+      } else {
+         m_aead = std::make_unique<TLS_NULL_HMAC_AEAD_Decryption>(std::move(mac), suite.mac_keylen());
+      }
+#else
+      throw Internal_Error("Negotiated disabled TLS NULL ciphersuite");
+#endif
    } else {
       m_aead =
          AEAD_Mode::create_or_throw(suite.cipher_algo(), our_side ? Cipher_Dir::Encryption : Cipher_Dir::Decryption);
@@ -76,6 +93,9 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
 
 std::vector<uint8_t> Connection_Cipher_State::aead_nonce(uint64_t seq, RandomNumberGenerator& rng) {
    switch(m_nonce_format) {
+      case Nonce_Format::NULL_CIPHER: {
+         return std::vector<uint8_t>{};
+      }
       case Nonce_Format::CBC_MODE: {
          if(!m_nonce.empty()) {
             std::vector<uint8_t> nonce;
@@ -106,6 +126,9 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(uint64_t seq, RandomNum
 
 std::vector<uint8_t> Connection_Cipher_State::aead_nonce(const uint8_t record[], size_t record_len, uint64_t seq) {
    switch(m_nonce_format) {
+      case Nonce_Format::NULL_CIPHER: {
+         return std::vector<uint8_t>{};
+      }
       case Nonce_Format::CBC_MODE: {
          if(nonce_bytes_from_record() == 0 && !m_nonce.empty()) {
             std::vector<uint8_t> nonce;

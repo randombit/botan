@@ -21,6 +21,10 @@
       #include <botan/internal/tls_cbc.h>
    #endif
 
+   #if defined(BOTAN_HAS_TLS_NULL)
+      #include <botan/internal/tls_null.h>
+   #endif
+
 #endif
 
 namespace Botan_Tests {
@@ -338,6 +342,102 @@ BOTAN_REGISTER_TEST("tls", "tls_cbc_kat", TLS_CBC_KAT_Tests);
 
    #endif
 
+   #if defined(BOTAN_HAS_TLS_NULL)
+
+class TLS_Null_Tests final : public Text_Based_Test {
+   public:
+      TLS_Null_Tests() : Text_Based_Test("tls_null.vec", "Hash,Key,AssociatedData,Message,Fragment") {}
+
+      void encryption_test(Test::Result& result,
+                           const std::string& hash,
+                           const std::vector<uint8_t>& key,
+                           const std::vector<uint8_t>& associated_data,
+                           const std::vector<uint8_t>& message,
+                           const std::vector<uint8_t>& expected_tls_fragment) {
+         auto mac = Botan::MessageAuthenticationCode::create_or_throw(Botan::fmt("HMAC({})", hash));
+
+         const auto mac_output_length = mac->output_length();
+         Botan::TLS::TLS_NULL_HMAC_AEAD_Encryption tls_null_encrypt(std::move(mac), mac_output_length);
+
+         tls_null_encrypt.set_key(key);
+         tls_null_encrypt.set_associated_data(associated_data);
+
+         Botan::secure_vector<uint8_t> buffer(message.begin(), message.end());
+         tls_null_encrypt.finish(buffer);
+
+         result.test_eq("Encrypted TLS fragment matches expectation", Botan::unlock(buffer), expected_tls_fragment);
+      }
+
+      void decryption_test(Test::Result& result,
+                           const std::string& hash,
+                           const std::vector<uint8_t>& key,
+                           const std::vector<uint8_t>& associated_data,
+                           const std::vector<uint8_t>& expected_message,
+                           const std::vector<uint8_t>& tls_fragment,
+                           const std::string& header) {
+         auto mac = Botan::MessageAuthenticationCode::create_or_throw(Botan::fmt("HMAC({})", hash));
+
+         const auto mac_output_length = mac->output_length();
+         Botan::TLS::TLS_NULL_HMAC_AEAD_Decryption tls_null_decrypt(std::move(mac), mac_output_length);
+
+         tls_null_decrypt.set_key(key);
+         tls_null_decrypt.set_associated_data(associated_data);
+
+         Botan::secure_vector<uint8_t> buffer(tls_fragment.begin(), tls_fragment.end());
+
+         if(header == "InvalidMAC") {
+            result.test_throws("TLS_NULL_HMAC_AEAD_Decryption::finish()", "Message authentication failure", [&]() {
+               tls_null_decrypt.finish(buffer, 0);
+            });
+         } else {
+            tls_null_decrypt.finish(buffer, 0);
+            result.test_eq("Decrypted TLS fragment matches expectation", Botan::unlock(buffer), expected_message);
+         }
+      }
+
+      void invalid_ad_length_test(Test::Result& result,
+                                  const std::string& hash,
+                                  const std::vector<uint8_t>& associated_data) {
+         auto mac = Botan::MessageAuthenticationCode::create_or_throw(Botan::fmt("HMAC({})", hash));
+
+         const auto mac_output_length = mac->output_length();
+         Botan::TLS::TLS_NULL_HMAC_AEAD_Decryption tls_null_decrypt(std::move(mac), mac_output_length);
+
+         result.test_throws<Botan::Invalid_Argument>("TLS_NULL_HMAC_AEAD_Decryption::set_associated_data()",
+                                                     [&]() { tls_null_decrypt.set_associated_data(associated_data); });
+         return;
+      }
+
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override {
+         Test::Result result("TLS Null Cipher");
+
+         const std::string hash = vars.get_req_str("Hash");
+         const std::vector<uint8_t> key = vars.get_req_bin("Key");
+         const std::vector<uint8_t> associated_data = vars.get_req_bin("AssociatedData");
+         const std::vector<uint8_t> expected_message = vars.get_req_bin("Message");
+         const std::vector<uint8_t> tls_fragment = vars.get_req_bin("Fragment");
+
+         if(header.empty()) {
+            encryption_test(result, hash, key, associated_data, expected_message, tls_fragment);
+            decryption_test(result, hash, key, associated_data, expected_message, tls_fragment, header);
+         }
+
+         if(header == "InvalidMAC") {
+            decryption_test(result, hash, key, associated_data, expected_message, tls_fragment, header);
+         }
+
+         if(header == "InvalidAssociatedDataLength") {
+            invalid_ad_length_test(result, hash, associated_data);
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "tls_null", TLS_Null_Tests);
+
+   #endif
+
 class Test_TLS_Alert_Strings : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -501,14 +601,19 @@ class Test_TLS_Ciphersuites : public Test {
             if(ciphersuite && ciphersuite->valid()) {
                result.test_eq("Valid Ciphersuite is not SCSV", Botan::TLS::Ciphersuite::is_scsv(csuite_id16), false);
 
-               if(ciphersuite->cbc_ciphersuite() == false) {
+               if(ciphersuite->cbc_ciphersuite() == false && ciphersuite->null_ciphersuite() == false) {
                   result.test_eq("Expected AEAD ciphersuite", ciphersuite->aead_ciphersuite(), true);
                   result.test_eq("Expected MAC name for AEAD ciphersuites", ciphersuite->mac_algo(), "AEAD");
                } else {
                   result.test_eq("Did not expect AEAD ciphersuite", ciphersuite->aead_ciphersuite(), false);
-                  result.test_eq(
-                     "MAC algo and PRF algo same for CBC suites", ciphersuite->prf_algo(), ciphersuite->mac_algo());
+                  result.test_eq("MAC algo and PRF algo same for CBC and NULL suites",
+                                 ciphersuite->prf_algo(),
+                                 ciphersuite->mac_algo());
                }
+
+               if(ciphersuite->null_ciphersuite()) {
+                  result.test_eq("Expected NULL ciphersuite", ciphersuite->cipher_algo(), "NULL");
+               };
 
                // TODO more tests here
             }

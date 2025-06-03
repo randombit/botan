@@ -72,14 +72,26 @@ Session_Keys::Session_Keys(const Handshake_State* state,
    copy_mem(&m_c_aead[0], key_data, mac_keylen);
    copy_mem(&m_s_aead[0], key_data + mac_keylen, mac_keylen);
 
-   copy_mem(&m_c_aead[mac_keylen], key_data + 2 * mac_keylen, cipher_keylen);
-   copy_mem(&m_s_aead[mac_keylen], key_data + 2 * mac_keylen + cipher_keylen, cipher_keylen);
+#if defined(BOTAN_HAS_TLS_NULL)
+   if(cipher_keylen > 0) {
+#endif
+      copy_mem(&m_c_aead[mac_keylen], key_data + 2 * mac_keylen, cipher_keylen);
+      copy_mem(&m_s_aead[mac_keylen], key_data + 2 * mac_keylen + cipher_keylen, cipher_keylen);
+#if defined(BOTAN_HAS_TLS_NULL)
+   }
+#endif
 
    m_c_nonce.resize(cipher_nonce_bytes);
    m_s_nonce.resize(cipher_nonce_bytes);
 
-   copy_mem(&m_c_nonce[0], key_data + 2 * (mac_keylen + cipher_keylen), cipher_nonce_bytes);
-   copy_mem(&m_s_nonce[0], key_data + 2 * (mac_keylen + cipher_keylen) + cipher_nonce_bytes, cipher_nonce_bytes);
+#if defined(BOTAN_HAS_TLS_NULL)
+   if(cipher_nonce_bytes > 0) {
+#endif
+      copy_mem(&m_c_nonce[0], key_data + 2 * (mac_keylen + cipher_keylen), cipher_nonce_bytes);
+      copy_mem(&m_s_nonce[0], key_data + 2 * (mac_keylen + cipher_keylen) + cipher_nonce_bytes, cipher_nonce_bytes);
+#if defined(BOTAN_HAS_TLS_NULL)
+   }
+#endif
 }
 
 }  // namespace Botan::TLS

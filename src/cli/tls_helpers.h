@@ -271,7 +271,8 @@ class TLS_All_Policy final : public Botan::TLS::Policy {
                                          "Camellia-256",
                                          "Camellia-128",
                                          "SEED",
-                                         "3DES"};
+                                         "3DES",
+                                         "NULL"};
       }
 
       std::vector<std::string> allowed_key_exchange_methods() const override {
