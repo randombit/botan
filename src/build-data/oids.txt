@@ -1,6 +1,7 @@
-# Regenerate with ./src/scripts/dev_tools/gen_oids.py oids > src/lib/asn1/oid_maps.cpp
-# AND             ./src/scripts/dev_tools/gen_oids.py dn_ub > src/lib/x509/x509_dn_ub.cpp
-# (if you modified something under [dn])
+# Static OID data
+#
+# If you modify this data you must run ./src/scripts/dev_tools/gen_oids.py
+# to regenerate the relevant source files
 
 # Public key types
 [pubkey]
