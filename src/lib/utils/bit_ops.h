@@ -200,6 +200,13 @@ BOTAN_FORCE_INLINE constexpr void swap_bits(T& x, T& y, T mask, size_t shift) {
    y ^= swap;
 }
 
+/**
+* Bitwise selection
+*
+* If mask is |1| returns a
+* If mask is |0| returns b
+* If mask is some other value returns a or b depending on the bit
+*/
 template <typename T>
 BOTAN_FORCE_INLINE constexpr T choose(T mask, T a, T b) {
    //return (mask & a) | (~mask & b);

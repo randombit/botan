@@ -729,29 +729,44 @@ class Option final {
       T m_value;
 };
 
+/**
+* Conditional memory copy (constant time)
+*
+* If mask is set, then sets dest to if_set, otherwise sets dest to if_unset
+*/
 template <typename T>
-constexpr inline Mask<T> conditional_copy_mem(Mask<T> mask, T* to, const T* from0, const T* from1, size_t elems) {
-   mask.select_n(to, from0, from1, elems);
+constexpr inline Mask<T> conditional_copy_mem(Mask<T> mask, T* dest, const T* if_set, const T* if_unset, size_t elems) {
+   mask.select_n(dest, if_set, if_unset, elems);
    return mask;
 }
 
 template <typename T>
-constexpr inline Mask<T> conditional_copy_mem(T cnd, T* to, const T* from0, const T* from1, size_t elems) {
+constexpr inline Mask<T> conditional_copy_mem(T cnd, T* dest, const T* if_set, const T* if_unset, size_t elems) {
    const auto mask = CT::Mask<T>::expand(cnd);
-   return CT::conditional_copy_mem(mask, to, from0, from1, elems);
+   return CT::conditional_copy_mem(mask, dest, if_set, if_unset, elems);
 }
 
+/**
+* Conditional memory assignment (constant time)
+*
+* If mask is set overwrites dest with src
+*/
 template <typename T>
-constexpr inline Mask<T> conditional_assign_mem(T cnd, T* sink, const T* src, size_t elems) {
+constexpr inline Mask<T> conditional_assign_mem(T cnd, T* dest, const T* src, size_t elems) {
    const auto mask = CT::Mask<T>::expand(cnd);
-   mask.select_n(sink, src, sink, elems);
+   mask.select_n(dest, src, dest, elems);
    return mask;
 }
 
+/**
+* Conditional memory assignment (constant time)
+*
+* If mask is set overwrites dest with src
+*/
 template <typename T>
-constexpr inline Mask<T> conditional_assign_mem(Choice cnd, T* sink, const T* src, size_t elems) {
+constexpr inline Mask<T> conditional_assign_mem(Choice cnd, T* dest, const T* src, size_t elems) {
    const auto mask = CT::Mask<T>::from_choice(cnd);
-   mask.select_n(sink, src, sink, elems);
+   mask.select_n(dest, src, dest, elems);
    return mask;
 }
 
