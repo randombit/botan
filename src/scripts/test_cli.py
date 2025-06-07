@@ -1343,18 +1343,18 @@ def cli_tls_online_pqc_hybrid_tests(tmp_dir):
         test_cfg += [
             TestConfig("test.openquantumsafe.org", "x25519/ML-KEM-768", port=oqsp['X25519MLKEM768'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "secp256r1/ML-KEM-768", port=oqsp['SecP256r1MLKEM768'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "ML-KEM-512", port=oqsp['mlkem512'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "ML-KEM-768", port=oqsp['mlkem768'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "ML-KEM-1024", port=oqsp['mlkem1024'], ca=oqs_test_ca),
 
-            # Currently oqs did not adopt the 0x0200, 0x0201 and 0x0202 code point defined in draft-connolly-tls-mlkem-key-agreement-05.
-            # Neither did they deploy a new server that re-assigns the respective Frodo code points that used those before.
-            # TODO: enable those tests once the code point are re-assigned by the OQS test server
-            # TestConfig("test.openquantumsafe.org", "ML-KEM-512", port=oqsp['mlkem512'], ca=oqs_test_ca),
-            # TestConfig("test.openquantumsafe.org", "ML-KEM-768", port=oqsp['mlkem768'], ca=oqs_test_ca),
-            # TestConfig("test.openquantumsafe.org", "ML-KEM-1024", port=oqsp['mlkem1024'], ca=oqs_test_ca),
-            # TestConfig("test.openquantumsafe.org", "eFrodoKEM-640-SHAKE", port=oqsp['frodo640shake'], ca=oqs_test_ca),
+            # We track OQS's code point allocations for FrodoKEM and hybrids thereof.
+            # All are defined in TLS's private code point section (0xFE00 - 0xFFFF)
+            # and may change in the future.
+            TestConfig("test.openquantumsafe.org", "eFrodoKEM-640-SHAKE", port=oqsp['frodo640shake'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "eFrodoKEM-976-SHAKE", port=oqsp['frodo976shake'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "eFrodoKEM-1344-SHAKE", port=oqsp['frodo1344shake'], ca=oqs_test_ca),
-            # TestConfig("test.openquantumsafe.org", "eFrodoKEM-640-AES", port=oqsp['frodo640aes'], ca=oqs_test_ca),
-            # TestConfig("test.openquantumsafe.org", "eFrodoKEM-976-AES", port=oqsp['frodo976aes'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "eFrodoKEM-640-AES", port=oqsp['frodo640aes'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "eFrodoKEM-976-AES", port=oqsp['frodo976aes'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "eFrodoKEM-1344-AES", port=oqsp['frodo1344aes'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "x25519/eFrodoKEM-640-SHAKE", port=oqsp['x25519_frodo640shake'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "x25519/eFrodoKEM-640-AES", port=oqsp['x25519_frodo640aes'], ca=oqs_test_ca),
