@@ -141,16 +141,4 @@
  * @}
  */
 
-/**
- * @addtogroup buildinfo_configuration
- * @{
- */
-
-/** Local/misc configuration options (if any) follow */
-%{local_config}
-
-/**
- * @}
- */
-
 #endif

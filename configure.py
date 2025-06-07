@@ -527,10 +527,6 @@ def process_command_line(args):
                            choices=link_methods,
                            help='choose how links to include headers are created (%s)' % ', '.join(link_methods))
 
-    build_group.add_option('--with-local-config',
-                           dest='local_config', metavar='FILE',
-                           help='include the contents of FILE into build.h')
-
     build_group.add_option('--distribution-info', metavar='STRING',
                            help='distribution specific version', default=None)
 
@@ -2235,7 +2231,6 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
                                               suffix=options.library_suffix),
 
         'command_line': configure_command_line(),
-        'local_config': read_textfile(options.local_config),
 
         'program_suffix': program_suffix,
 
@@ -3613,9 +3608,6 @@ botan
 
     if options.unsafe_terminate_on_asserts:
         logging.warning("Terminating on assertion failures is NOT SAFE FOR PRODUCTION")
-
-    if options.local_config is not None:
-        logging.warning("Use of --with-local-config is deprecated and will be removed in 3.9 (open an issue if this affects you)")
 
 def list_os_features(all_os_features, info_os):
     for feat in all_os_features:
