@@ -47,19 +47,8 @@ bool Ed25519_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*
 
    copy_mem(pkcopy, m_public.data(), 32);
    pkcopy[31] ^= (1 << 7);  // flip sign
-   ge_p3 point;
-   if(ge_frombytes_negate_vartime(&point, pkcopy) != 0) {
-      return false;
-   }
 
-   uint8_t result[32];
-   ge_double_scalarmult_vartime(result, modm_m, &point, zero);
-
-   if(!CT::is_equal(result, identity_element, 32).as_bool()) {
-      return false;
-   }
-
-   return true;
+   return signature_check(pkcopy, modm_m, identity_element, zero);
 }
 
 Ed25519_PublicKey::Ed25519_PublicKey(const uint8_t pub_key[], size_t pub_len) {

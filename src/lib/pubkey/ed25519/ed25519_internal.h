@@ -11,7 +11,6 @@
 #ifndef BOTAN_ED25519_INT_H_
 #define BOTAN_ED25519_INT_H_
 
-#include <botan/internal/ed25519_fe.h>
 #include <botan/internal/loadstor.h>
 
 namespace Botan {
@@ -65,28 +64,9 @@ inline void redc_mul(int64_t& s1, int64_t& s2, int64_t& s3, int64_t& s4, int64_t
    X = 0;
 }
 
-/*
-ge means group element.
+void ed25519_basepoint_mul(std::span<uint8_t, 32> out, const uint8_t in[32]);
 
-Here the group is the set of pairs (x,y) of field elements (see fe.h)
-satisfying -x^2 + y^2 = 1 + d x^2y^2
-where d = -121665/121666.
-
-Representations:
-  ge_p3 (extended): (X:Y:Z:T) satisfying x=X/Z, y=Y/Z, XY=ZT
-*/
-
-struct ge_p3 {
-      FE_25519 X;
-      FE_25519 Y;
-      FE_25519 Z;
-      FE_25519 T;
-};
-
-int ge_frombytes_negate_vartime(ge_p3* v, const uint8_t*);
-void ge_scalarmult_base(uint8_t out[32], const uint8_t in[32]);
-
-void ge_double_scalarmult_vartime(uint8_t out[32], const uint8_t a[], const ge_p3* A, const uint8_t b[]);
+bool signature_check(std::span<const uint8_t, 32> pk, const uint8_t h[32], const uint8_t r[32], const uint8_t s[32]);
 
 /*
 The set of scalars is \Z/l
