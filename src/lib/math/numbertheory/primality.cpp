@@ -7,15 +7,18 @@
 #include <botan/internal/primality.h>
 
 #include <botan/bigint.h>
-#include <botan/reducer.h>
+#include <botan/numthry.h>
 #include <botan/rng.h>
+#include <botan/internal/barrett.h>
 #include <botan/internal/monty.h>
 #include <botan/internal/monty_exp.h>
 #include <algorithm>
 
 namespace Botan {
 
-bool is_lucas_probable_prime(const BigInt& C, const Modular_Reducer& mod_C) {
+bool is_lucas_probable_prime(const BigInt& C, const Barrett_Reduction& mod_C) {
+   BOTAN_ARG_CHECK(C.is_positive(), "Argument should be a positive integer");
+
    if(C == 2 || C == 3 || C == 5 || C == 7 || C == 11 || C == 13) {
       return true;
    }
@@ -50,6 +53,10 @@ bool is_lucas_probable_prime(const BigInt& C, const Modular_Reducer& mod_C) {
       }
    }
 
+   if(D.is_negative()) {
+      D += C;
+   }
+
    const BigInt K = C + 1;
    const size_t K_bits = K.bits() - 1;
 
@@ -75,7 +82,7 @@ bool is_lucas_probable_prime(const BigInt& C, const Modular_Reducer& mod_C) {
       U2.ct_cond_add(U2.is_odd(), C);
       U2 >>= 1;
 
-      V2 = mod_C.reduce(Vt + Ut * D);
+      V2 = mod_C.reduce(Vt + mod_C.multiply(Ut, D));
       V2.ct_cond_add(V2.is_odd(), C);
       V2 >>= 1;
 
@@ -86,7 +93,7 @@ bool is_lucas_probable_prime(const BigInt& C, const Modular_Reducer& mod_C) {
    return (U == 0);
 }
 
-bool is_bailie_psw_probable_prime(const BigInt& n, const Modular_Reducer& mod_n) {
+bool is_bailie_psw_probable_prime(const BigInt& n, const Barrett_Reduction& mod_n) {
    if(n == 2) {
       return true;
    } else if(n <= 1 || n.is_even()) {
@@ -98,13 +105,8 @@ bool is_bailie_psw_probable_prime(const BigInt& n, const Modular_Reducer& mod_n)
    return passes_miller_rabin_test(n, mod_n, monty_n, base) && is_lucas_probable_prime(n, mod_n);
 }
 
-bool is_bailie_psw_probable_prime(const BigInt& n) {
-   Modular_Reducer mod_n(n);
-   return is_bailie_psw_probable_prime(n, mod_n);
-}
-
 bool passes_miller_rabin_test(const BigInt& n,
-                              const Modular_Reducer& mod_n,
+                              const Barrett_Reduction& mod_n,
                               const std::shared_ptr<Montgomery_Params>& monty_n,
                               const BigInt& a) {
    if(n < 3 || n.is_even()) {
@@ -122,7 +124,7 @@ bool passes_miller_rabin_test(const BigInt& n,
 
    auto powm_a_n = monty_precompute(monty_n, a, powm_window);
 
-   BigInt y = monty_execute(*powm_a_n, nm1_s, n_bits);
+   BigInt y = monty_execute(*powm_a_n, nm1_s, n_bits).value();
 
    if(y == 1 || y == n_minus_1) {
       return true;
@@ -148,7 +150,7 @@ bool passes_miller_rabin_test(const BigInt& n,
 }
 
 bool is_miller_rabin_probable_prime(const BigInt& n,
-                                    const Modular_Reducer& mod_n,
+                                    const Barrett_Reduction& mod_n,
                                     RandomNumberGenerator& rng,
                                     size_t test_iterations) {
    if(n < 3 || n.is_even()) {

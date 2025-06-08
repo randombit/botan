@@ -46,6 +46,11 @@ Random Number Generators
      no matter how many 'system' rng instances are created. Thus it is
      easy to use the RNG in a one-off way, with `botan.RandomNumberGenerator().get(32)`.
 
+     When Botan is configured with TPM 2.0 support, also 'tpm2' is allowed
+     to instantiate a TPM-backed RNG. Note that this requires passing
+     additional named arguments ``tpm2_context=`` with a ``TPM2Context`` and
+     (optionally) ``tpm2_sessions=`` with one or more ``TPM2Session`` objects.
+
    .. py:method:: get(length)
 
       Return some bytes
@@ -294,6 +299,21 @@ Public Key
      "sm2p256v1") and the public point as a pair of integers giving
      the affine coordinates.
 
+  .. py:classmethod:: load_ml_kem(mode, raw_encoding)
+
+     Load an ML-KEM public key giving the mode as a string (like
+     "ML-KEM-512") and the raw encoding of the public key.
+
+  .. py:classmethod:: load_ml_dsa(mode, raw_encoding)
+
+     Load an ML-DSA public key giving the mode as a string (like
+     "ML-DSA-4x4") and the raw encoding of the public key.
+
+  .. py:classmethod:: load_slh_dsa(mode, raw_encoding)
+
+     Load an SLH-DSA public key giving the mode as a string (like
+     "SLH-DSA-SHAKE-128f") and the raw encoding of the public key.
+
   .. py:method:: check_key(rng_obj, strong=True):
 
      Test the key for consistency. If ``strong`` is ``True`` then
@@ -313,11 +333,20 @@ Public Key
 
      Like ``self.export(True)``
 
+  .. py:method:: to_raw()
+
+     Exports the key in its canonical raw encoding. This might not be
+     available for all key types and raise an exception in that case.
+
   .. py:method:: get_field(field_name)
 
      Return an integer field related to the public key. The valid field names
      vary depending on the algorithm. For example RSA public modulus can be
      extracted with ``rsa_key.get_field("n")``.
+
+  .. py:method:: object_identifier()
+
+     Returns the associated OID
 
   .. py:method:: fingerprint(hash = 'SHA-256')
 
@@ -347,6 +376,10 @@ Private Key
      "secp256r1"). For "ecdh" there is also a special case for groups
      "curve25519" and "x448" (which are actually completely distinct key types
      with a non-standard encoding).
+
+  .. py:classmethod:: create_ec(algo, ec_group, rng)
+
+     Creates a new ec private key.
 
   .. py:classmethod:: load(val, passphrase="")
 
@@ -380,6 +413,18 @@ Private Key
 
      Return a private SM2 key
 
+  .. py:classmethod:: load_ml_kem(mode, raw_encoding)
+
+     Return a private ML-KEM key
+
+  .. py:classmethod:: load_ml_dsa(mode, raw_encoding)
+
+      Return a private ML-DSA key
+
+  .. py:classmethod:: load_slh_dsa(mode, raw_encoding)
+
+      Return a private SLH-DSA key
+
   .. py:method:: get_public_key()
 
      Return a public_key object
@@ -391,6 +436,11 @@ Private Key
   .. py:method:: to_der()
 
      Return the PEM encoded private key (unencrypted). Like ``self.export(False)``
+
+  .. py:method:: to_raw()
+
+     Exports the key in its canonical raw encoding. This might not be
+     available for all key types and raise an exception in that case.
 
   .. py:method:: check_key(rng_obj, strong=True):
 
@@ -419,6 +469,17 @@ Private Key
      vary depending on the algorithm. For example first RSA secret prime can be
      extracted with ``rsa_key.get_field("p")``. This function can also be
      used to extract the public parameters.
+
+  .. py:method:: object_identifier()
+
+     Returns the associated OID
+
+  .. py:method:: stateful_operation()
+     Return whether the key is stateful or not.
+
+  .. py:method:: remaining_operations()
+     If the key is stateful, return the number of remaining operations.
+     Raises an exception if the key is not stateful.
 
 Public Key Operations
 ----------------------------------------
@@ -461,6 +522,31 @@ Public Key Operations
 
     Returns a key derived by the KDF.
 
+TPM 2.0 Bindings
+-------------------------------------
+
+.. versionadded:: 3.6.0
+
+.. py:class:: TPM2Context(tcti_nameconf = None, tcti_conf = None)
+
+   Create a TPM 2.0 context optionally with a TCTI name and configuration,
+   separated by a colon, or as separate parameters.
+
+   .. py:method:: supports_botan_crypto_backend()
+
+   Returns True if the TPM adapter can use Botan-based crypto primitives
+   to communicate with the TPM
+
+   .. py:method:: enable_botan_crypto_backend(rng)
+
+   Enables the TPM adapter to use Botan-based crypto primitives. The passed
+   RNG must not depend on the TPM itself.
+
+.. py:class:: TPM2UnauthenticatedSession(ctx)
+
+   Creates a TPM 2.0 session that is not bound to any authentication credential
+   but provides basic parameter encryption between the TPM and the application.
+
 Multiple Precision Integers (MPI)
 -------------------------------------
 .. versionadded:: 2.8.0
@@ -494,6 +580,100 @@ Multiple Precision Integers (MPI)
    .. py:method:: gcd(other):
 
       Return the greatest common divisor of ``self`` and ``other``
+
+
+Object Identifiers (OID)
+-------------------------------------
+.. versionadded:: 3.8.0
+
+.. py:class:: OID(object)
+
+   .. py:classmethod:: from_string(value)
+
+      Create a new OID from dot notation or from a known name
+
+   .. py:method:: to_string()
+
+      Export the OID in dot notation
+
+   .. py:method:: to_name()
+
+      Export the OID as a name if it has one, else in dot notation
+
+   .. py:method:: register(name)
+
+      Register the OID so that it may later be retrieved by the given name
+
+
+EC Groups
+-------------------------------------
+.. versionadded:: 3.8.0
+
+.. py:class:: ECGroup(object)
+
+   .. py:classmethod:: supports_application_specific_group()
+
+      Returns true if in this build configuration it is possible to register an application specific elliptic curve
+
+   .. py:classmethod:: supports_named_group(name)
+
+      Returns true if in this build configuration ECGroup.from_name(name) will succeed
+
+   .. py:classmethod:: from_params(oid, p, a, b, base_x, base_y, order)
+
+      Creates a new ECGroup from ec parameters
+
+   .. py:classmethod:: from_ber(ber)
+
+      Creates a new ECGroup from a BER blob
+
+   .. py:classmethod:: from_pem(pem)
+
+      Creates a new ECGroup from a pem encoding
+
+   .. py:classmethod:: from_oid(oid)
+
+      Creates a new ECGroup from a group named by an OID
+
+   .. py:classmethod:: from_name(name)
+
+      Creates a new ECGroup from a common group name
+
+   .. py:method:: to_der()
+
+      Export the group in DER encoding
+
+   .. py:method:: to_pem()
+
+      Export the group in PEM encoding
+
+   .. py:method:: get_curve_oid()
+
+      Get the curve OID
+
+   .. py:method:: get_p()
+
+      Get the prime modulus of the field
+
+   .. py:method:: get_a()
+
+      Get the a parameter of the elliptic curve equation
+
+   .. py:method:: get_b()
+
+      Get the b parameter of the elliptic curve equation
+
+   .. py:method:: get_g_x()
+
+      Get the x coordinate of the base point
+
+   .. py:method:: get_g_y()
+
+      Get the y coordinate of the base point
+
+   .. py:method:: get_order()
+
+      Get the order of the base point
 
 
 Format Preserving Encryption (FE1 scheme)

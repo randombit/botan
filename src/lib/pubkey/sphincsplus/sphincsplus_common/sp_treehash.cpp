@@ -1,5 +1,5 @@
 /*
-* Sphincs+ treehash logic
+* SLH-DSA treehash logic
 * (C) 2023 Jack Lloyd
 *     2023 Fabian Albert, René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity
 *

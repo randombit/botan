@@ -9,32 +9,42 @@
 #include <botan/internal/sha2_32.h>
 
 #include <botan/internal/bit_ops.h>
-#include <botan/internal/cpuid.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/sha2_32_f.h>
+#include <botan/internal/stack_scrubbing.h>
 #include <botan/internal/stl_util.h>
+
+#if defined(BOTAN_HAS_CPUID)
+   #include <botan/internal/cpuid.h>
+#endif
 
 namespace Botan {
 
 namespace {
 
 std::string sha256_provider() {
-#if defined(BOTAN_HAS_SHA2_32_X86)
-   if(CPUID::has_intel_sha()) {
-      return "shani";
-   }
-#endif
-
-#if defined(BOTAN_HAS_SHA2_32_X86_BMI2)
-   if(CPUID::has_bmi2()) {
-      return "bmi2";
-   }
-#endif
-
 #if defined(BOTAN_HAS_SHA2_32_ARMV8)
-   if(CPUID::has_arm_sha2()) {
-      return "armv8";
+   if(auto feat = CPUID::check(CPUID::Feature::SHA2)) {
+      return *feat;
+   }
+#endif
+
+#if defined(BOTAN_HAS_SHA2_32_X86)
+   if(auto feat = CPUID::check(CPUID::Feature::SHA)) {
+      return *feat;
+   }
+#endif
+
+#if defined(BOTAN_HAS_SHA2_32_X86_AVX2)
+   if(auto feat = CPUID::check(CPUID::Feature::AVX2, CPUID::Feature::BMI)) {
+      return *feat;
+   }
+#endif
+
+#if defined(BOTAN_HAS_SHA2_32_SIMD)
+   if(auto feat = CPUID::check(CPUID::Feature::SIMD_4X32)) {
+      return *feat;
    }
 #endif
 
@@ -46,22 +56,30 @@ std::string sha256_provider() {
 /*
 * SHA-224 / SHA-256 compression function
 */
-void SHA_256::compress_digest(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
+void BOTAN_SCRUB_STACK_AFTER_RETURN SHA_256::compress_digest(digest_type& digest,
+                                                             std::span<const uint8_t> input,
+                                                             size_t blocks) {
 #if defined(BOTAN_HAS_SHA2_32_X86)
-   if(CPUID::has_intel_sha()) {
+   if(CPUID::has(CPUID::Feature::SHA)) {
       return SHA_256::compress_digest_x86(digest, input, blocks);
    }
 #endif
 
-#if defined(BOTAN_HAS_SHA2_32_X86_BMI2)
-   if(CPUID::has_bmi2()) {
-      return SHA_256::compress_digest_x86_bmi2(digest, input, blocks);
+#if defined(BOTAN_HAS_SHA2_32_ARMV8)
+   if(CPUID::has(CPUID::Feature::SHA2)) {
+      return SHA_256::compress_digest_armv8(digest, input, blocks);
    }
 #endif
 
-#if defined(BOTAN_HAS_SHA2_32_ARMV8)
-   if(CPUID::has_arm_sha2()) {
-      return SHA_256::compress_digest_armv8(digest, input, blocks);
+#if defined(BOTAN_HAS_SHA2_32_X86_AVX2)
+   if(CPUID::has(CPUID::Feature::AVX2, CPUID::Feature::BMI)) {
+      return SHA_256::compress_digest_x86_avx2(digest, input, blocks);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SHA2_32_SIMD)
+   if(CPUID::has(CPUID::Feature::SIMD_4X32)) {
+      return SHA_256::compress_digest_x86_simd(digest, input, blocks);
    }
 #endif
 

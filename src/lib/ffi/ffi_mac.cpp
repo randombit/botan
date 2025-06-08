@@ -69,12 +69,15 @@ int botan_mac_get_keyspec(botan_mac_t mac,
                           size_t* out_maximum_keylength,
                           size_t* out_keylength_modulo) {
    return BOTAN_FFI_VISIT(mac, [=](auto& m) {
-      if(out_minimum_keylength)
+      if(out_minimum_keylength) {
          *out_minimum_keylength = m.minimum_keylength();
-      if(out_maximum_keylength)
+      }
+      if(out_maximum_keylength) {
          *out_maximum_keylength = m.maximum_keylength();
-      if(out_keylength_modulo)
+      }
+      if(out_keylength_modulo) {
          *out_keylength_modulo = m.key_spec().keylength_multiple();
+      }
    });
 }
 }

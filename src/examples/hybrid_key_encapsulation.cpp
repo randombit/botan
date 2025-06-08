@@ -27,10 +27,16 @@ class Hybrid_PublicKey : public virtual Botan::Public_Key {
    public:
       explicit Hybrid_PublicKey(std::unique_ptr<Botan::Public_Key> kex, std::unique_ptr<Botan::Public_Key> kem) :
             m_kex_pk(std::move(kex)), m_kem_pk(std::move(kem)) {
-         BOTAN_ASSERT_NONNULL(m_kex_pk);
-         BOTAN_ASSERT_NONNULL(m_kem_pk);
-         BOTAN_ASSERT_NOMSG(m_kex_pk->supports_operation(Botan::PublicKeyOperation::KeyAgreement));
-         BOTAN_ASSERT_NOMSG(m_kem_pk->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation));
+         if(m_kem_pk == nullptr || m_kex_pk == nullptr) {
+            throw std::runtime_error("Null arguments not allowed");
+         }
+
+         if(m_kex_pk->supports_operation(Botan::PublicKeyOperation::KeyAgreement)) {
+            throw std::runtime_error("The kex key must support key agreement");
+         }
+         if(m_kex_pk->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation)) {
+            throw std::runtime_error("The kem key must support key encapsulation");
+         }
       }
 
       std::string algo_name() const override {
@@ -101,6 +107,9 @@ class Hybrid_PublicKey : public virtual Botan::Public_Key {
       std::unique_ptr<Botan::Public_Key> m_kem_pk;
 };
 
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 /**
  * This is the private key class for the custom public-key algorithm.
  */
@@ -147,6 +156,8 @@ class Hybrid_PrivateKey : public virtual Botan::Private_Key,
       std::unique_ptr<Botan::Private_Key> m_kem_sk;
 };
 
+BOTAN_DIAGNOSTIC_POP
+
 namespace {
 
 /**
@@ -160,9 +171,7 @@ class Hybrid_Encryption_Operation : public Botan::PK_Ops::KEM_Encryption {
       Hybrid_Encryption_Operation(const Hybrid_PublicKey& hybrid_pk, std::string_view kdf) :
             m_hybrid_pk(hybrid_pk),
             m_kem_encryptor(hybrid_pk.kem_public_key(), "Raw"),
-            m_kdf(Botan::KDF::create_or_throw(kdf)) {
-         BOTAN_ASSERT_NONNULL(m_kdf);
-      }
+            m_kdf(Botan::KDF::create_or_throw(kdf)) {}
 
       /**
        * This returns the length of the encapsulated key in bytes. For such a
@@ -196,9 +205,9 @@ class Hybrid_Encryption_Operation : public Botan::PK_Ops::KEM_Encryption {
          //      other party, resulting in a shared secret and its encapsulation,
          //   4. Concatenate the ephemeral public key and the encapsulation to
          //      form a "hybrid encapsulation" (to be sent to the other party),
-         //   5. Concatenate the shared secrets of both algorithms and pass the
-         //      result through a user-defined key derivation function to form a
-         //      "hybrid shared secret" (to be used by the application).
+         //   5. Concatenate the shared secrets and ciphertexts of both algorithms
+         //      and pass the result through a user-defined key derivation function
+         //      to form a "hybrid shared secret" (to be used by the application).
 
          // 1. KEX: Generate an ephemeral key pair with the same parameters as
          //         the provided key exchange public key.
@@ -231,17 +240,30 @@ class Hybrid_Encryption_Operation : public Botan::PK_Ops::KEM_Encryption {
 
          // 4. Hybrid: Concatenate the ephemeral public key and the KEM's
          //            encapsulation to form a combined "hybrid encapsulation".
-         BOTAN_ASSERT_NOMSG(out_encapsed_key.size() == kex_encapsed_key.size() + kem_encapsed_key.size());
+
+         if(out_encapsed_key.size() != kex_encapsed_key.size() + kem_encapsed_key.size()) {
+            throw std::runtime_error("The output span is not the expected size");
+         }
+
          std::copy(kex_encapsed_key.begin(), kex_encapsed_key.end(), out_encapsed_key.begin());
          std::copy(
             kem_encapsed_key.begin(), kem_encapsed_key.end(), out_encapsed_key.begin() + kex_encapsed_key.size());
 
-         // 5. Hybrid: Combine the shared secrets of both algorithms.
+         // 5. Hybrid: Combine the shared secrets and ciphertexts of both
+         //            algorithms. Note that there are various known ways for
+         //            such combination logic (see, for example, X-Wing,
+         //            CatKDF, etc.). Applications are encouraged to use a
+         //            well-known KEM-Combiner instead of this example.
          Botan::secure_vector<uint8_t> concat_shared_key;
+         concat_shared_key.insert(concat_shared_key.end(), kex_encapsed_key.begin(), kex_encapsed_key.end());
          concat_shared_key.insert(concat_shared_key.end(), kex_shared_key.begin(), kex_shared_key.end());
+         concat_shared_key.insert(concat_shared_key.end(), kem_encapsed_key.begin(), kem_encapsed_key.end());
          concat_shared_key.insert(concat_shared_key.end(), kem_shared_key.begin(), kem_shared_key.end());
 
-         BOTAN_ASSERT_NOMSG(out_shared_key.size() >= desired_shared_key_length);
+         if(out_shared_key.size() < desired_shared_key_length) {
+            throw std::runtime_error("The output span is smaller than the requested length");
+         }
+
          m_kdf->derive_key(out_shared_key.first(desired_shared_key_length), concat_shared_key, salt, {});
       }
 
@@ -265,9 +287,7 @@ class Hybrid_Decryption_Operation : public Botan::PK_Ops::KEM_Decryption {
             m_hybrid_sk(hybrid_sk),
             m_key_agreement(hybrid_sk.kex_private_key(), rng, "Raw"),
             m_kem_decryptor(hybrid_sk.kem_private_key(), rng, "Raw"),
-            m_kdf(Botan::KDF::create_or_throw(kdf)) {
-         BOTAN_ASSERT_NONNULL(m_kdf);
-      }
+            m_kdf(Botan::KDF::create_or_throw(kdf)) {}
 
       /**
        * This returns the length of the encapsulated key in bytes. For such a
@@ -292,7 +312,9 @@ class Hybrid_Decryption_Operation : public Botan::PK_Ops::KEM_Decryption {
                        std::span<const uint8_t> encapsulated_key,
                        size_t desired_shared_key_length,
                        std::span<const uint8_t> salt) override {
-         BOTAN_ASSERT_NOMSG(encapsulated_key.size() == encapsulated_key_length());
+         if(encapsulated_key.size() != encapsulated_key_length()) {
+            throw std::runtime_error("The provided encapsulated key is not of the expected length");
+         }
 
          // The basic idea of the hybrid operation:
          //  1. Extract the ephemeral public key and the KEM's encapsulation
@@ -301,9 +323,9 @@ class Hybrid_Decryption_Operation : public Botan::PK_Ops::KEM_Decryption {
          //     ephemeral public key (from the other party),
          //  3. Decapsulate a shared secret using the KEM's private key and
          //     the KEM's encapsulation (from the other party),
-         //  4. Concatenate the shared secrets of both algorithms and pass the
-         //     result through a user-defined key derivation function to form a
-         //     "hybrid shared secret" (to be used by the application).
+         //  4. Concatenate the shared secrets and ciphertexts of both algorithms
+         //     and pass the result through a user-defined key derivation function
+         //     to form a "hybrid shared secret" (to be used by the application).
 
          // 1. Hybrid: Extract the ephemeral public key and the encapsulation.
          const auto kex_encapsed_key =
@@ -318,12 +340,20 @@ class Hybrid_Decryption_Operation : public Botan::PK_Ops::KEM_Decryption {
          //         the encapsulation of the other party.
          const auto kem_shared_key = m_kem_decryptor.decrypt(kem_encapsed_key);
 
-         // 4. Hybrid: Combine the shared secrets of both algorithms.
+         // 5. Hybrid: Combine the shared secrets and ciphertexts of both
+         //            algorithms. Note that there are various known ways for
+         //            such combination logic (see, for example, X-Wing,
+         //            CatKDF, etc.). Applications are encouraged to use a
+         //            well-known KEM-Combiner instead of this example.
          Botan::secure_vector<uint8_t> concat_shared_key;
+         concat_shared_key.insert(concat_shared_key.end(), kex_encapsed_key.begin(), kex_encapsed_key.end());
          concat_shared_key.insert(concat_shared_key.end(), kex_shared_key.begin(), kex_shared_key.end());
+         concat_shared_key.insert(concat_shared_key.end(), kem_encapsed_key.begin(), kem_encapsed_key.end());
          concat_shared_key.insert(concat_shared_key.end(), kem_shared_key.begin(), kem_shared_key.end());
 
-         BOTAN_ASSERT_NOMSG(out_shared_key.size() >= desired_shared_key_length);
+         if(out_shared_key.size() < desired_shared_key_length) {
+            throw std::runtime_error("The output buffer is smaller than the requested key length");
+         }
          m_kdf->derive_key(out_shared_key.first(desired_shared_key_length), concat_shared_key, salt, {});
       }
 
@@ -355,12 +385,12 @@ int main() {
 
    // Alice generates two key pairs suitable for:
    //   1) key exchange (X25519), and
-   //   2) key encapsulation (Kyber).
+   //   2) key encapsulation (ML-KEM).
    //
    // She then combines them into a custom "hybrid" key pair that acts
    // like a key encapsulation mechanism (KEM).
    const auto private_key_of_alice = std::make_unique<Hybrid_PrivateKey>(
-      Botan::create_private_key("X25519", rng), Botan::create_private_key("Kyber", rng, "Kyber-768-r3"));
+      Botan::create_private_key("X25519", rng), Botan::create_private_key("ML-KEM", rng, "ML-KEM-768"));
    const auto public_key_of_alice = private_key_of_alice->public_key();
 
    // Bob uses Alice's public key to encapsulate a shared secret, and

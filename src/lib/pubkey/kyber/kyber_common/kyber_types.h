@@ -56,19 +56,30 @@ using KyberSharedSecret = Strong<secure_vector<uint8_t>, struct KyberSharedSecre
 /// Public key in serialized form (t || rho)
 using KyberSerializedPublicKey = Strong<std::vector<uint8_t>, struct KyberSerializedPublicKey_>;
 
-// Hash value of the serialized public key
+/// Hash value of the serialized public key
 using KyberHashedPublicKey = Strong<std::vector<uint8_t>, struct KyberHashedPublicKey_>;
 
-// Compressed and serialized ciphertext value
+/// Compressed and serialized ciphertext value
 using KyberCompressedCiphertext = Strong<std::vector<uint8_t>, struct KyberCompressedCiphertext_>;
 
-// Hash of the compressed and serialized ciphertext value
-// TODO: Remove this once Kyber-R3 is removed
+/// Hash of the compressed and serialized ciphertext value
+/// TODO: Remove this once Kyber-R3 is removed
 using KyberHashedCiphertext = Strong<std::vector<uint8_t>, struct KyberHashedCiphertext_>;
 
-// Variant value of either a KyberSeedSigma or a KyberEncryptionRandomness
+/// Variant value of either a KyberSeedSigma or a KyberEncryptionRandomness
 using KyberSigmaOrEncryptionRandomness =
    std::variant<StrongSpan<const KyberSeedSigma>, StrongSpan<const KyberEncryptionRandomness>>;
+
+using KyberInternalKeypair =
+   std::pair<std::shared_ptr<Kyber_PublicKeyInternal>, std::shared_ptr<Kyber_PrivateKeyInternal>>;
+
+/// NIST FIPS 203, Section 3
+///   The seed (𝑑,𝑧) generated in steps 1 and 2 of ML-KEM.KeyGen can be stored
+///   for later expansion using ML-KEM.KeyGen_internal.
+struct KyberPrivateKeySeed {
+      std::optional<KyberSeedRandomness> d;
+      KyberImplicitRejectionValue z;
+};
 
 }  // namespace Botan
 

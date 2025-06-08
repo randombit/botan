@@ -26,6 +26,10 @@
    #include <botan/der_enc.h>
 #endif
 
+#if defined(BOTAN_HAS_ENTROPY_SOURCE)
+   #include <botan/entropy_src.h>
+#endif
+
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
    #include <botan/pubkey.h>
 #endif
@@ -843,12 +847,12 @@ Test::Result test_rsa_sign_verify() {
 
    // single-part sign
    sign_and_verify("Raw", false);
-   sign_and_verify("EMSA3(SHA-256)", false);
-   sign_and_verify("EMSA4(SHA-256)", false);
+   sign_and_verify("PKCS1v15(SHA-256)", false);
+   sign_and_verify("PSS(SHA-256)", false);
 
    // multi-part sign
-   sign_and_verify("EMSA3(SHA-256)", true);
-   sign_and_verify("EMSA4(SHA-256)", true);
+   sign_and_verify("PKCS1v15(SHA-256)", true);
+   sign_and_verify("PSS(SHA-256)", true);
 
    keypair.first.destroy();
    keypair.second.destroy();
@@ -877,10 +881,10 @@ BOTAN_REGISTER_SERIALIZED_TEST("pkcs11", "pkcs11-rsa", PKCS11_RSA_Tests);
 
 /***************************** PKCS11 ECDSA *****************************/
 
-   #if defined(BOTAN_HAS_ECC_GROUP) && (defined(BOTAN_HAS_ECDSA) || defined(BOTAN_HAS_ECDH))
-std::vector<uint8_t> encode_ec_point_in_octet_str(const Botan::EC_Point& point) {
+   #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+std::vector<uint8_t> encode_ec_point_in_octet_str(const Botan::EC_PublicKey& pk) {
    std::vector<uint8_t> enc;
-   DER_Encoder(enc).encode(point.encode(EC_Point_Format::Uncompressed), ASN1_Type::OctetString);
+   DER_Encoder(enc).encode(pk._public_ec_point().serialize_uncompressed(), ASN1_Type::OctetString);
    return enc;
 }
    #endif
@@ -910,7 +914,7 @@ Test::Result test_ecdsa_privkey_import() {
 
    PKCS11_ECDSA_PrivateKey pk(test_session.session(), props);
    result.test_success("ECDSA private key import was successful");
-   pk.set_public_point(priv_key.public_point());
+   pk.set_public_point(priv_key._public_ec_point());
    result.confirm("P11 key self test OK", pk.check_key(*rng, false));
 
    pk.destroy();
@@ -940,7 +944,7 @@ Test::Result test_ecdsa_privkey_export() {
    props.set_label(label);
 
    PKCS11_ECDSA_PrivateKey pk(test_session.session(), props);
-   pk.set_public_point(priv_key.public_point());
+   pk.set_public_point(priv_key._public_ec_point());
    result.confirm("Check PK11 key", pk.check_key(*rng, false));
 
    ECDSA_PrivateKey exported = pk.export_key();
@@ -962,7 +966,7 @@ Test::Result test_ecdsa_pubkey_import() {
    // create ecdsa private key
    ECDSA_PrivateKey priv_key(*rng, EC_Group::from_name("secp256r1"));
 
-   const auto enc_point = encode_ec_point_in_octet_str(priv_key.public_point());
+   const auto enc_point = encode_ec_point_in_octet_str(priv_key);
 
    // import to card
    EC_PublicKeyImportProperties props(priv_key.DER_domain(), enc_point);
@@ -991,7 +995,7 @@ Test::Result test_ecdsa_pubkey_export() {
    // create public key from private key
    ECDSA_PrivateKey priv_key(*rng, EC_Group::from_name("secp256r1"));
 
-   const auto enc_point = encode_ec_point_in_octet_str(priv_key.public_point());
+   const auto enc_point = encode_ec_point_in_octet_str(priv_key);
 
    // import to card
    EC_PublicKeyImportProperties props(priv_key.DER_domain(), enc_point);
@@ -1230,7 +1234,7 @@ Test::Result test_ecdh_pubkey_import() {
    // create ECDH private key
    ECDH_PrivateKey priv_key(*rng, EC_Group::from_name("secp256r1"));
 
-   const auto enc_point = encode_ec_point_in_octet_str(priv_key.public_point());
+   const auto enc_point = encode_ec_point_in_octet_str(priv_key);
 
    // import to card
    EC_PublicKeyImportProperties props(priv_key.DER_domain(), enc_point);
@@ -1259,7 +1263,7 @@ Test::Result test_ecdh_pubkey_export() {
    // create public key from private key
    ECDH_PrivateKey priv_key(*rng, EC_Group::from_name("secp256r1"));
 
-   const auto enc_point = encode_ec_point_in_octet_str(priv_key.public_point());
+   const auto enc_point = encode_ec_point_in_octet_str(priv_key);
 
    // import to card
    EC_PublicKeyImportProperties props(priv_key.DER_domain(), enc_point);
@@ -1344,9 +1348,8 @@ Test::Result test_ecdh_derive() {
    Botan::PK_Key_Agreement ka(keypair.second, *rng, "Raw");
    Botan::PK_Key_Agreement kb(keypair2.second, *rng, "Raw");
 
-   Botan::SymmetricKey alice_key =
-      ka.derive_key(32, keypair2.first.public_point().encode(EC_Point_Format::Uncompressed));
-   Botan::SymmetricKey bob_key = kb.derive_key(32, keypair.first.public_point().encode(EC_Point_Format::Uncompressed));
+   Botan::SymmetricKey alice_key = ka.derive_key(32, keypair2.first.raw_public_key_bits());
+   Botan::SymmetricKey bob_key = kb.derive_key(32, keypair.first.raw_public_key_bits());
 
    bool eq = alice_key == bob_key;
    result.test_eq("same secret key derived", eq, true);
@@ -1405,9 +1408,11 @@ Test::Result test_rng_add_entropy() {
    p11_rng.clear();
    result.confirm("RNG ignores call to clear", p11_rng.is_seeded());
 
+   #if defined(BOTAN_HAS_ENTROPY_SOURCE)
    result.test_eq("RNG ignores calls to reseed",
                   p11_rng.reseed(Botan::Entropy_Sources::global_sources(), 256, std::chrono::milliseconds(300)),
                   0);
+   #endif
 
    auto rng = Test::new_rng(__func__);
    auto random = rng->random_vec(20);

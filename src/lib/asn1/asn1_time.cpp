@@ -7,6 +7,7 @@
 
 #include <botan/asn1_obj.h>
 
+#include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/exceptn.h>
@@ -250,8 +251,7 @@ std::chrono::system_clock::time_point ASN1_Time::to_std_timepoint() const {
 }
 
 uint64_t ASN1_Time::time_since_epoch() const {
-   auto tp = this->to_std_timepoint();
-   return std::chrono::duration_cast<std::chrono::seconds>(tp.time_since_epoch()).count();
+   return calendar_point(m_year, m_month, m_day, m_hour, m_minute, m_second).seconds_since_epoch();
 }
 
 /*

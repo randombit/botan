@@ -17,6 +17,19 @@ namespace Botan {
 
 namespace {
 
+/*
+* Constant time DES [with assumptions on the cache]
+*
+* Each SBOX lookup (in function spbox below) examines just a single 64 byte range of this table,
+* converting it to the appropriate value using a multiplication and AND. Typically these tables
+* are otherwise 256 bytes, and thus the lookups leak information about the data being processed.
+* In constrast lookups within a single 64 byte cache line do not leak information [*] and we
+* can use alignas to ensure that the table entries are cache line aligned.
+*
+* [*] Assuming that the cache lines are at least 64 bytes long, and that the machine does not
+* suffer from cache bank conflicts. This is true for all Intel processors after Sandy Bridge,
+* and many other modern processors.
+*/
 alignas(256) const uint8_t SPBOX_CATS[64 * 8] = {
    0x54, 0x00, 0x10, 0x55, 0x51, 0x15, 0x01, 0x10, 0x04, 0x54, 0x55, 0x04, 0x45, 0x51, 0x40, 0x01,
    0x05, 0x44, 0x44, 0x14, 0x14, 0x50, 0x50, 0x45, 0x11, 0x41, 0x41, 0x11, 0x00, 0x05, 0x15, 0x40,

@@ -23,6 +23,10 @@ class ECDH_KAT_Tests final : public PK_Key_Agreement_Test {
 
       std::string default_kdf(const VarMap& /*unused*/) const override { return "Raw"; }
 
+      bool skip_this_test(const std::string& group_id, const VarMap&) override {
+         return !Botan::EC_Group::supports_named_group(group_id);
+      }
+
       std::unique_ptr<Botan::Private_Key> load_our_key(const std::string& group_id, const VarMap& vars) override {
          const auto group = Botan::EC_Group::from_name(group_id);
          const Botan::BigInt secret = vars.get_req_bn("Secret");
@@ -47,8 +51,8 @@ class ECDH_Keygen_Tests final : public PK_Key_Generation_Test {
                                                              std::string_view /* provider */,
                                                              std::span<const uint8_t> raw_pk) const override {
          const auto group = Botan::EC_Group(keygen_params);
-         const auto public_point = group.OS2ECP(raw_pk);
-         return std::make_unique<Botan::ECDH_PublicKey>(group, public_point);
+         const auto public_key = Botan::EC_AffinePoint(group, raw_pk);
+         return std::make_unique<Botan::ECDH_PublicKey>(group, public_key);
       }
 };
 
@@ -66,6 +70,26 @@ class ECDH_AllGroups_Tests : public Test {
 
             try {
                const auto group = Botan::EC_Group::from_name(group_name);
+
+               // Regression test: prohibit loading an all-zero private key
+               result.test_throws<Botan::Invalid_Argument>("all-zero private key is unacceptable", [&] {
+                  const auto one = Botan::EC_Scalar::one(group);
+                  Botan::ECDH_PrivateKey(group, one - one);
+               });
+
+               // Regression test: prohibit loading a public point that is the identity (point at infinity)
+               result.test_throws<Botan::Invalid_Argument>("point at infinity isn't a valid public key", [&] {
+                  const auto infinity = Botan::EC_AffinePoint::identity(group);
+                  Botan::ECDH_PublicKey(group, infinity);
+               });
+
+               // Regression test: prohibit ECDH-agreement with all-zero public value
+               result.test_throws<Botan::Decoding_Error>("ECDH public value is point-at-infinity", [&] {
+                  const auto sk = Botan::ECDH_PrivateKey(rng(), group);
+                  Botan::PK_Key_Agreement ka(sk, rng(), kdf);
+                  const auto sec1_infinity = std::array{uint8_t(0x00)};
+                  const auto a_ss = ka.derive_key(0, sec1_infinity);
+               });
 
                for(size_t i = 0; i != 100; ++i) {
                   const Botan::ECDH_PrivateKey a_priv(rng(), group);

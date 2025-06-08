@@ -8,6 +8,7 @@
 
 #include <botan/certstor_flatfile.h>
 
+#include <botan/assert.h>
 #include <botan/data_src.h>
 #include <botan/pem.h>
 #include <botan/pkix_types.h>

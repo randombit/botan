@@ -1,0 +1,31 @@
+<defines>
+CLASSICMCELIECE -> 20231023
+</defines>
+
+<module_info>
+name -> "Classic McEliece"
+</module_info>
+
+<requires>
+bitvector
+shake
+shake_xof
+</requires>
+
+<header:internal>
+cmce_parameters.h
+cmce_poly.h
+cmce_matrix.h
+cmce_gf.h
+cmce_field_ordering.h
+cmce_encaps.h
+cmce_decaps.h
+cmce_keys_internal.h
+cmce_types.h
+</header:internal>
+
+<header:public>
+cmce.h
+cmce_parameter_set.h
+</header:public>
+

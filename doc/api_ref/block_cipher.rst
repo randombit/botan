@@ -154,11 +154,11 @@ AES
 
 Comes in three variants, AES-128, AES-192, and AES-256.
 
-The standard 128-bit block cipher. Many modern platforms offer hardware
-acceleration. However, on platforms without hardware support, AES
-implementations typically are vulnerable to side channel attacks. For x86
-systems with SSSE3 but without AES-NI, Botan has an implementation which avoids
-known side channels.
+The standard 128-bit block cipher.
+
+Several different implementations are included, depending on what is
+supported by the processor; all AES implementation used in Botan are
+immune to cache/timing based side channel attacks.
 
 Available if ``BOTAN_HAS_AES`` is defined.
 
@@ -281,7 +281,7 @@ Newer Russian national cipher, also known as GOST R 34.12-2015 or "Grasshopper".
 .. warning::
 
    The sbox of this cipher is supposedly random, but was found to have a
-   mathematical structure which is exceedingly unlikely to have occured by
+   mathematical structure which is exceedingly unlikely to have occurred by
    chance. This may indicate the existence of a backdoor or other issue. Avoid
    using this cipher unless strictly required.
 
@@ -351,9 +351,10 @@ Algorithm specification name: ``SHACAL2``
 SM4
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A 128-bit Chinese national cipher, required for use in certain commercial
-applications in China. Quite slow. Probably no reason to use it outside of legal
-requirements.
+A 128-bit Chinese national cipher, required for use in certain
+commercial applications in China. Quite slow unless hardware support
+(either ARMv8 crypto extensions or x86 GFNI instructions) is
+available. Probably no reason to use it outside of legal requirements.
 
 Available if ``BOTAN_HAS_SM4`` is defined.
 

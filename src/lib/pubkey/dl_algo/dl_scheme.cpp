@@ -80,7 +80,7 @@ DL_PrivateKey::DL_PrivateKey(const AlgorithmIdentifier& alg_id,
                              DL_Group_Format format) :
       m_group(alg_id.parameters(), format),
       m_private_key(check_dl_private_key_input(decode_single_bigint(key_bits), m_group)),
-      m_public_key(m_group.power_g_p(m_private_key, m_group.p_bits())) {}
+      m_public_key(m_group.power_g_p(m_private_key, m_private_key.bits())) {}
 
 secure_vector<uint8_t> DL_PrivateKey::DER_encode() const {
    return DER_Encoder().encode(m_private_key).get_contents();

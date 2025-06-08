@@ -1,5 +1,3 @@
-endian little
-wordsize 64
 
 family x86
 
@@ -21,7 +19,6 @@ rdseed
 sha
 sse2
 sse41
-sse42
 ssse3
 avx512
 vaes

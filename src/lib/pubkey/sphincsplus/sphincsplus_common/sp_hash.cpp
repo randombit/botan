@@ -1,5 +1,5 @@
 /*
- * SPHINCS+ Hashes
+ * SLH-DSA Hash Function Interface
  * (C) 2023 Jack Lloyd
  *     2023 Fabian Albert, René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity
  *
@@ -15,11 +15,11 @@
 #include <botan/hash.h>
 #include <botan/sp_parameters.h>
 
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+#if defined(BOTAN_HAS_SPHINCS_PLUS_SHAKE_BASE)
    #include <botan/internal/sp_hash_shake.h>
 #endif
 
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2)
+#if defined(BOTAN_HAS_SPHINCS_PLUS_SHA2_BASE)
    #include <botan/internal/sp_hash_sha2.h>
 #endif
 
@@ -35,21 +35,21 @@ std::unique_ptr<Sphincs_Hash_Functions> Sphincs_Hash_Functions::create(const Sph
                                                                        const SphincsPublicSeed& pub_seed) {
    switch(sphincs_params.hash_type()) {
       case Sphincs_Hash_Type::Sha256:
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2)
+#if defined(BOTAN_HAS_SPHINCS_PLUS_SHA2_BASE)
          return std::make_unique<Sphincs_Hash_Functions_Sha2>(sphincs_params, pub_seed);
 #else
-         throw Not_Implemented("SPHINCS+ with SHA-256 is not available in this build");
+         throw Not_Implemented("SLH-DSA (or SPHINCS+) with SHA-256 is not available in this build");
 #endif
 
       case Sphincs_Hash_Type::Shake256:
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+#if defined(BOTAN_HAS_SPHINCS_PLUS_SHAKE_BASE)
          return std::make_unique<Sphincs_Hash_Functions_Shake>(sphincs_params, pub_seed);
 #else
-         throw Not_Implemented("SPHINCS+ with SHAKE is not available in this build");
+         throw Not_Implemented("SLH-DSA (or SPHINCS+) with SHAKE is not available in this build");
 #endif
 
       case Sphincs_Hash_Type::Haraka:
-         throw Not_Implemented("Haraka is not yet implemented");
+         throw Not_Implemented("Haraka is not implemented");
    }
    BOTAN_ASSERT_UNREACHABLE();
 }
@@ -76,11 +76,11 @@ T from_first_n_bits(const uint32_t nbits, std::span<const uint8_t> bytes) {
 }  // namespace
 
 std::tuple<SphincsHashedMessage, XmssTreeIndexInLayer, TreeNodeIndex> Sphincs_Hash_Functions::H_msg(
-   StrongSpan<const SphincsMessageRandomness> r, const SphincsTreeNode& root, std::span<const uint8_t> message) {
+   StrongSpan<const SphincsMessageRandomness> r, const SphincsTreeNode& root, const SphincsMessageInternal& message) {
    const auto digest = H_msg_digest(r, root, message);
 
    // The following calculates the message digest and indices from the
-   // raw message digest. See Algorithm 20 (spx_sign) in SPHINCS+ 3.1
+   // raw message digest. See FIPS 205, Algorithm 19, Line 5-10.
    const auto& p = m_sphincs_params;
    BufferSlicer s(digest);
    auto msg_hash = s.copy<SphincsHashedMessage>(p.fors_message_bytes());

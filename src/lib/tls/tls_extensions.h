@@ -22,7 +22,6 @@
 #include <botan/tls_signature_scheme.h>
 #include <botan/tls_version.h>
 
-#include <algorithm>
 #include <memory>
 #include <optional>
 #include <set>
@@ -931,12 +930,7 @@ class BOTAN_UNSTABLE_API Extensions final {
 
       void add(Extension* extn) { add(std::unique_ptr<Extension>(extn)); }
 
-      Extension* get(Extension_Code type) const {
-         const auto i = std::find_if(
-            m_extensions.cbegin(), m_extensions.cend(), [type](const auto& ext) { return ext->type() == type; });
-
-         return (i != m_extensions.end()) ? i->get() : nullptr;
-      }
+      Extension* get(Extension_Code type) const;
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const;
 

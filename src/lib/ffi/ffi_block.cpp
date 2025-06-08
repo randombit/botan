@@ -89,12 +89,15 @@ int botan_block_cipher_get_keyspec(botan_block_cipher_t cipher,
                                    size_t* out_maximum_keylength,
                                    size_t* out_keylength_modulo) {
    return BOTAN_FFI_VISIT(cipher, [=](const auto& bc) {
-      if(out_minimum_keylength)
+      if(out_minimum_keylength) {
          *out_minimum_keylength = bc.minimum_keylength();
-      if(out_maximum_keylength)
+      }
+      if(out_maximum_keylength) {
          *out_maximum_keylength = bc.maximum_keylength();
-      if(out_keylength_modulo)
+      }
+      if(out_keylength_modulo) {
          *out_keylength_modulo = bc.key_spec().keylength_multiple();
+      }
    });
 }
 }

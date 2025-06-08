@@ -10,27 +10,23 @@
 
 #if defined(BOTAN_HAS_ECDSA)
 
+   #include <botan/p11_mechanism.h>
    #include <botan/pk_ops.h>
    #include <botan/rng.h>
    #include <botan/internal/keypair.h>
-   #include <botan/internal/p11_mechanism.h>
 
 namespace Botan::PKCS11 {
 
 ECDSA_PublicKey PKCS11_ECDSA_PublicKey::export_key() const {
-   return ECDSA_PublicKey(domain(), public_point());
+   return ECDSA_PublicKey(domain(), _public_ec_point());
 }
 
 bool PKCS11_ECDSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
-   if(!public_point().on_the_curve()) {
-      return false;
-   }
-
    if(!strong) {
       return true;
    }
 
-   ECDSA_PublicKey pubkey(domain(), public_point());
+   ECDSA_PublicKey pubkey(domain(), public_ec_point());
    return KeyPair::signature_consistency_check(rng, *this, pubkey, "SHA-256");
 }
 
@@ -46,7 +42,7 @@ secure_vector<uint8_t> PKCS11_ECDSA_PrivateKey::private_key_bits() const {
 }
 
 std::unique_ptr<Public_Key> PKCS11_ECDSA_PrivateKey::public_key() const {
-   return std::make_unique<ECDSA_PublicKey>(domain(), public_point());
+   return std::make_unique<ECDSA_PublicKey>(domain(), public_ec_point());
 }
 
 namespace {

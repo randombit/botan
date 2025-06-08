@@ -15,7 +15,7 @@ extern "C" {
 
 /*
 This header exports some of botan's functionality via a C89 interface. This API
-is uesd by the Python, OCaml, Rust, Ruby, and Haskell bindings via those languages
+is used by the Python, OCaml, Rust, Ruby, and Haskell bindings via those languages
 respective ctypes/FFI libraries.
 
 The API is intended to be as easy as possible to call from other
@@ -32,32 +32,42 @@ API follows a few simple rules:
 - Use simple types: size_t for lengths, const char* NULL terminated strings,
   uint8_t for binary.
 
-- No ownership of memory transfers across the API boundary. The API will
-  consume data from const pointers, and will produce output by writing to
-  buffers provided by (and allocated by) the caller.
+- No ownership of memory transfers across the API boundary. The API will consume
+  data from const pointers with specifed lengths. Outputs are either placed into
+  buffers provided by (and allocated by) the caller, or are returned via a
+  callback (what the FFI layer calls "view" functions).
 
-- If exporting a value (a string or a blob) the function takes a pointer to the
-  output array and a read/write pointer to the length. If the length is insufficient, an
-  error is returned. So passing nullptr/0 allows querying the final value.
+  When writing to an application-provided buffer, the function takes a pointer
+  to the output array and a read/write pointer to the length. The length field
+  is always set to the actual amount of data that would have been written. If
+  the input buffer's size was insufficient an error is returned.
 
-  Typically there is also a function which allows querying the expected output
-  length of a function, for example `botan_hash_output_length` allows knowing in
-  advance the expected size for `botan_hash_final`. Some of these are exact,
-  while others such as `botan_pk_op_decrypt_output_length` only provide an upper
-  bound.
+  In many situations the length of the output can be known in advance without
+  difficulty, in which case there will be a function which allows querying the
+  expected output length. For example `botan_hash_output_length` allows knowing
+  in advance the expected size for `botan_hash_final`. Some of these are exact,
+  while others such as `botan_pk_op_decrypt_output_length` can only provide an
+  upper bound for various technical reasons.
 
-  The big exception to this currently is the various functions which serialize
-  public and private keys, where there are currently no function that can
-  estimate the serialized size. Here view functions are used; see the handbook
-  for further details.
+  In some cases knowing the exact size is difficult or impossible. In these
+  situations view functions are used; see the handbook for further details.
 
- TODO:
- - Doxygen comments for all functions/params
- - TLS
+  TODO: Doxygen comments for all parameters
 */
 
 #include <stddef.h>
 #include <stdint.h>
+
+/**
+* The compile time API version. This matches the value of
+* botan_ffi_api_version. This can be used for compile-time checking if a
+* particular feature is available.
+*
+* Note this same value is also reflected in BOTAN_HAS_FFI in build.h, however
+* that declaration is not visible here since this header is intentionally
+* free-standing, depending only on a few C standard library headers.
+*/
+#define BOTAN_FFI_API_VERSION 20250506
 
 /**
 * BOTAN_FFI_EXPORT indicates public FFI functions.
@@ -79,7 +89,7 @@ API follows a few simple rules:
    #endif
 #endif
 
-#if !defined(BOTAN_NO_DEPRECATED_WARNINGS)
+#if !defined(BOTAN_NO_DEPRECATED_WARNINGS) && !defined(BOTAN_AMALGAMATION_H_) && !defined(BOTAN_IS_BEING_BUILT)
    #if defined(__has_attribute)
       #if __has_attribute(deprecated)
          #define BOTAN_FFI_DEPRECATED(msg) __attribute__((deprecated(msg)))
@@ -101,10 +111,12 @@ API follows a few simple rules:
 */
 enum BOTAN_FFI_ERROR {
    BOTAN_FFI_SUCCESS = 0,
+
    BOTAN_FFI_INVALID_VERIFIER = 1,
 
    BOTAN_FFI_ERROR_INVALID_INPUT = -1,
    BOTAN_FFI_ERROR_BAD_MAC = -2,
+   BOTAN_FFI_ERROR_NO_VALUE = -3,
 
    BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE = -10,
    BOTAN_FFI_ERROR_STRING_CONVERSION_ERROR = -11,
@@ -127,10 +139,14 @@ enum BOTAN_FFI_ERROR {
    BOTAN_FFI_ERROR_TLS_ERROR = -75,
    BOTAN_FFI_ERROR_HTTP_ERROR = -76,
    BOTAN_FFI_ERROR_ROUGHTIME_ERROR = -77,
+   BOTAN_FFI_ERROR_TPM_ERROR = -78,
 
    BOTAN_FFI_ERROR_UNKNOWN_ERROR = -100,
 };
 
+/**
+* The application provided context for a view function
+*/
 typedef void* botan_view_ctx;
 
 /**
@@ -200,8 +216,9 @@ BOTAN_FFI_EXPORT(2, 0) uint32_t botan_version_minor(void);
 BOTAN_FFI_EXPORT(2, 0) uint32_t botan_version_patch(void);
 
 /**
-* Return the date this version was released as
-* an integer, or 0 if an unreleased version
+* Return the date this version was released as an integer.
+*
+* Returns 0 if the library was not built from an official release
 */
 BOTAN_FFI_EXPORT(2, 0) uint32_t botan_version_datestamp(void);
 
@@ -222,6 +239,9 @@ BOTAN_FFI_EXPORT(2, 0) int botan_same_mem(const uint8_t* x, const uint8_t* y, si
 */
 BOTAN_FFI_EXPORT(2, 2) int botan_scrub_mem(void* mem, size_t bytes);
 
+/**
+* Flag that can be provided to botan_hex_encode to request lower case hex
+*/
 #define BOTAN_FFI_HEX_LOWER_CASE 1
 
 /**
@@ -246,6 +266,13 @@ BOTAN_FFI_EXPORT(2, 3) int botan_hex_decode(const char* hex_str, size_t in_len, 
 
 /**
 * Perform base64 encoding
+*
+* @param x the input data
+* @param len the length of x
+* @param out the output buffer
+* @param out_len the size of the output buffer on input, set to the number of bytes written
+* @return 0 on success, a negative value on failure
+
 */
 BOTAN_FFI_EXPORT(2, 3) int botan_base64_encode(const uint8_t* x, size_t len, char* out, size_t* out_len);
 
@@ -264,6 +291,8 @@ typedef struct botan_rng_struct* botan_rng_t;
 * @param rng rng object
 * @param rng_type type of the rng, possible values:
 *    "system": system RNG
+*    "esdm-full": ESDM RNG (fully seeded)
+*    "esdm-pr": ESDM RNG (w. prediction resistance)
 *    "user": userspace RNG
 *    "user-threadsafe": userspace RNG, with internal locking
 *    "rdrand": directly read RDRAND
@@ -290,6 +319,7 @@ int botan_rng_init_custom(botan_rng_t* rng_out,
 
 /**
 * Get random bytes from a random number generator
+*
 * @param rng rng object
 * @param out output buffer of size out_len
 * @param out_len number of requested bytes
@@ -299,6 +329,7 @@ BOTAN_FFI_EXPORT(2, 0) int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t o
 
 /**
 * Get random bytes from system random number generator
+*
 * @param out output buffer of size out_len
 * @param out_len number of requested bytes
 * @return 0 on success, negative on failure
@@ -343,7 +374,7 @@ BOTAN_FFI_EXPORT(2, 8) int botan_rng_add_entropy(botan_rng_t rng, const uint8_t*
 BOTAN_FFI_EXPORT(2, 0) int botan_rng_destroy(botan_rng_t rng);
 
 /*
-* Hash type
+* Opaque type of a hash function
 */
 typedef struct botan_hash_struct* botan_hash_t;
 
@@ -423,7 +454,7 @@ BOTAN_FFI_EXPORT(2, 0) int botan_hash_destroy(botan_hash_t hash);
 BOTAN_FFI_EXPORT(2, 8) int botan_hash_name(botan_hash_t hash, char* name, size_t* name_len);
 
 /*
-* Message Authentication type
+* Opaque type of a message authentication code
 */
 typedef struct botan_mac_struct* botan_mac_t;
 
@@ -519,7 +550,7 @@ int botan_mac_get_keyspec(botan_mac_t mac,
 BOTAN_FFI_EXPORT(2, 0) int botan_mac_destroy(botan_mac_t mac);
 
 /*
-* Cipher modes
+* Opaque type of a cipher mode
 */
 typedef struct botan_cipher_struct* botan_cipher_t;
 
@@ -1080,6 +1111,190 @@ int botan_bcrypt_generate(
 BOTAN_FFI_EXPORT(2, 0) int botan_bcrypt_is_valid(const char* pass, const char* hash);
 
 /*
+* OIDs
+*/
+
+typedef struct botan_asn1_oid_struct* botan_asn1_oid_t;
+
+/**
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_oid_destroy(botan_asn1_oid_t oid);
+
+/**
+* Create an OID from a string, either dot notation (e.g. '1.2.3.4') or a registered name (e.g. 'RSA')
+* @param oid hanlder to the resulting OID
+* @param oid_str the name of the OID to create
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_oid_from_string(botan_asn1_oid_t* oid, const char* oid_str);
+
+/**
+* Registers an OID so that it may later be retrieved by name
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_oid_register(botan_asn1_oid_t oid, const char* name);
+
+/**
+* View an OID in dot notation
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_oid_view_string(botan_asn1_oid_t oid, botan_view_ctx ctx, botan_view_str_fn view);
+
+/**
+* View an OIDs registered name if it exists, else its dot notation
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_oid_view_name(botan_asn1_oid_t oid, botan_view_ctx ctx, botan_view_str_fn view);
+
+/**
+* @returns 0 if a != b
+* @returns 1 if a == b
+* @returns negative number on error
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_oid_equal(botan_asn1_oid_t a, botan_asn1_oid_t b);
+
+/**
+* Sets @param result to comparison result:
+* -1 if a < b, 0 if a == b, 1 if a > b
+* @returns negative number on error or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_oid_cmp(int* result, botan_asn1_oid_t a, botan_asn1_oid_t b);
+
+/*
+* EC Groups
+*/
+
+typedef struct botan_ec_group_struct* botan_ec_group_t;
+
+/**
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_destroy(botan_ec_group_t ec_group);
+
+/**
+* Checks if in this build configuration it is possible to register an application specific elliptic curve and sets
+* @param out to 1 if so, 0 otherwise
+* @returns 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_supports_application_specific_group(int* out);
+
+/**
+* Checks if in this build configuration botan_ec_group_from_name(group_ptr, name) will succeed and sets
+* @param out to 1 if so, 0 otherwise.
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_supports_named_group(const char* name, int* out);
+
+/**
+* Create a new EC Group from parameters
+* @warning use only elliptic curve parameters that you trust
+*
+* @param ec_group the new object will be placed here
+* @param p the elliptic curve prime (at most 521 bits)
+* @param a the elliptic curve a param
+* @param b the elliptic curve b param
+* @param base_x the x coordinate of the group generator
+* @param base_y the y coordinate of the group generator
+* @param order the order of the group
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8)
+int botan_ec_group_from_params(botan_ec_group_t* ec_group,
+                               botan_asn1_oid_t oid,
+                               botan_mp_t p,
+                               botan_mp_t a,
+                               botan_mp_t b,
+                               botan_mp_t base_x,
+                               botan_mp_t base_y,
+                               botan_mp_t order);
+
+/**
+* Decode a BER encoded ECC domain parameter set
+* @param ec_group the new object will be placed here
+* @param ber encoding
+* @param ber_len size of the encoding in bytes
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_from_ber(botan_ec_group_t* ec_group, const uint8_t* ber, size_t ber_len);
+
+/**
+* Initialize an EC Group from the PEM/ASN.1 encoding
+* @param ec_group the new object will be placed here
+* @param pem encoding
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_from_pem(botan_ec_group_t* ec_group, const char* pem);
+
+/**
+* Initialize an EC Group from a group named by an object identifier
+* @param ec_group the new object will be placed here
+* @param oid a known OID
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_from_oid(botan_ec_group_t* ec_group, botan_asn1_oid_t oid);
+
+/**
+* Initialize an EC Group from a common group name (eg "secp256r1")
+* @param ec_group the new object will be placed here
+* @param name a known group name
+* @returns negative number on error, or zero on success
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_from_name(botan_ec_group_t* ec_group, const char* name);
+
+/**
+* View an EC Group in DER encoding
+*/
+BOTAN_FFI_EXPORT(3, 8)
+int botan_ec_group_view_der(botan_ec_group_t ec_group, botan_view_ctx ctx, botan_view_bin_fn view);
+
+/**
+* View an EC Group in PEM encoding
+*/
+BOTAN_FFI_EXPORT(3, 8)
+int botan_ec_group_view_pem(botan_ec_group_t ec_group, botan_view_ctx ctx, botan_view_str_fn view);
+
+/**
+* Get the curve OID of an EC Group
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_get_curve_oid(botan_asn1_oid_t* oid, botan_ec_group_t ec_group);
+
+/**
+* Get the prime modulus of the field
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_get_p(botan_mp_t* p, botan_ec_group_t ec_group);
+
+/**
+* Get the a parameter of the elliptic curve equation
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_get_a(botan_mp_t* a, botan_ec_group_t ec_group);
+
+/**
+* Get the b parameter of the elliptic curve equation
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_get_b(botan_mp_t* b, botan_ec_group_t ec_group);
+
+/**
+* Get the x coordinate of the base point
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_get_g_x(botan_mp_t* g_x, botan_ec_group_t ec_group);
+
+/**
+* Get the y coordinate of the base point
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_get_g_y(botan_mp_t* g_y, botan_ec_group_t ec_group);
+
+/**
+* Get the order of the base point
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_get_order(botan_mp_t* order, botan_ec_group_t ec_group);
+
+/**
+* @returns 0 if curve1 != curve2
+* @returns 1 if curve1 == curve2
+* @returns negative number on error
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_equal(botan_ec_group_t curve1, botan_ec_group_t curve2);
+
+/*
 * Public/private key creation, import, ...
 */
 typedef struct botan_privkey_struct* botan_privkey_t;
@@ -1094,6 +1309,16 @@ typedef struct botan_privkey_struct* botan_privkey_t;
 */
 BOTAN_FFI_EXPORT(2, 0)
 int botan_privkey_create(botan_privkey_t* key, const char* algo_name, const char* algo_params, botan_rng_t rng);
+
+/**
+* Create a new ec private key
+* @param key the new object will be placed here
+* @param algo_name something like "ECDSA" or "ECDH"
+* @param ec_group a (possibly application specific) elliptic curve
+* @param rng a random number generator
+*/
+BOTAN_FFI_EXPORT(3, 8)
+int botan_ec_privkey_create(botan_privkey_t* key, const char* algo_name, botan_ec_group_t ec_group, botan_rng_t rng);
 
 #define BOTAN_CHECK_KEY_EXPENSIVE_TESTS 1
 
@@ -1167,6 +1392,7 @@ BOTAN_FFI_EXPORT(2, 0) int botan_privkey_destroy(botan_privkey_t key);
 
 #define BOTAN_PRIVKEY_EXPORT_FLAG_DER 0
 #define BOTAN_PRIVKEY_EXPORT_FLAG_PEM 1
+#define BOTAN_PRIVKEY_EXPORT_FLAG_RAW 2
 
 /**
 * On input *out_len is number of bytes in out[]
@@ -1175,6 +1401,7 @@ BOTAN_FFI_EXPORT(2, 0) int botan_privkey_destroy(botan_privkey_t key);
 * Returns 0 on success and sets
 * If some other error occurs a negative integer is returned.
 */
+BOTAN_FFI_DEPRECATED("Use botan_privkey_view_{der,pem,raw}")
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_export(botan_privkey_t key, uint8_t out[], size_t* out_len, uint32_t flags);
 
 /**
@@ -1186,6 +1413,11 @@ BOTAN_FFI_EXPORT(3, 0) int botan_privkey_view_der(botan_privkey_t key, botan_vie
 * View the private key's PEM encoding
 */
 BOTAN_FFI_EXPORT(3, 0) int botan_privkey_view_pem(botan_privkey_t key, botan_view_ctx ctx, botan_view_str_fn view);
+
+/**
+* View the private key's raw encoding
+*/
+BOTAN_FFI_EXPORT(3, 6) int botan_privkey_view_raw(botan_privkey_t key, botan_view_ctx ctx, botan_view_bin_fn view);
 
 BOTAN_FFI_EXPORT(2, 8) int botan_privkey_algo_name(botan_privkey_t key, char out[], size_t* out_len);
 
@@ -1208,6 +1440,7 @@ int botan_privkey_export_encrypted(botan_privkey_t key,
 *
 * Note: starting in 3.0, the output iterations count is not provided
 */
+BOTAN_FFI_DEPRECATED("Use botan_privkey_view_encrypted_{der,pem}_timed")
 BOTAN_FFI_EXPORT(2, 0)
 int botan_privkey_export_encrypted_pbkdf_msec(botan_privkey_t key,
                                               uint8_t out[],
@@ -1223,6 +1456,7 @@ int botan_privkey_export_encrypted_pbkdf_msec(botan_privkey_t key,
 /**
 * Export a private key using the specified number of iterations.
 */
+BOTAN_FFI_DEPRECATED("Use botan_privkey_view_encrypted_{der,pem}")
 BOTAN_FFI_EXPORT(2, 0)
 int botan_privkey_export_encrypted_pbkdf_iter(botan_privkey_t key,
                                               uint8_t out[],
@@ -1302,6 +1536,7 @@ BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_load(botan_pubkey_t* key, const uint8_t 
 
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_export_pubkey(botan_pubkey_t* out, botan_privkey_t in);
 
+BOTAN_FFI_DEPRECATED("Use botan_pubkey_view_{der,pem,raw}")
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint32_t flags);
 
 /**
@@ -1313,6 +1548,11 @@ BOTAN_FFI_EXPORT(3, 0) int botan_pubkey_view_der(botan_pubkey_t key, botan_view_
 * View the public key's PEM encoding
 */
 BOTAN_FFI_EXPORT(3, 0) int botan_pubkey_view_pem(botan_pubkey_t key, botan_view_ctx ctx, botan_view_str_fn view);
+
+/**
+* View the public key's raw encoding
+*/
+BOTAN_FFI_EXPORT(3, 6) int botan_pubkey_view_raw(botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view);
 
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_algo_name(botan_pubkey_t key, char out[], size_t* out_len);
 
@@ -1337,6 +1577,29 @@ BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_destroy(botan_pubkey_t key);
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_get_field(botan_mp_t output, botan_pubkey_t key, const char* field_name);
 
 BOTAN_FFI_EXPORT(2, 0) int botan_privkey_get_field(botan_mp_t output, botan_privkey_t key, const char* field_name);
+
+/*
+* Get the OID from public or private keys
+*/
+BOTAN_FFI_EXPORT(3, 8)
+int botan_pubkey_oid(botan_asn1_oid_t* oid, botan_pubkey_t key);
+
+BOTAN_FFI_EXPORT(3, 8)
+int botan_privkey_oid(botan_asn1_oid_t* oid, botan_privkey_t key);
+
+/**
+* Checks whether a key is stateful and sets
+* @param out to 1 if it is, or 0 if the key is not stateful
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_privkey_stateful_operation(botan_privkey_t key, int* out);
+
+/**
+* Gets information on many operations a (stateful) key has remaining and sets
+* @param out to that value
+* @return 0 on success, a negative value on failure or if the key is not stateful
+*/
+BOTAN_FFI_EXPORT(3, 8) int botan_privkey_remaining_operations(botan_privkey_t key, uint64_t* out);
 
 /*
 * Algorithm specific key operations: RSA
@@ -1457,8 +1720,10 @@ BOTAN_FFI_EXPORT(2, 2) int botan_privkey_load_ed25519(botan_privkey_t* key, cons
 
 BOTAN_FFI_EXPORT(2, 2) int botan_pubkey_load_ed25519(botan_pubkey_t* key, const uint8_t pubkey[32]);
 
+BOTAN_FFI_DEPRECATED("Use botan_privkey_view_raw")
 BOTAN_FFI_EXPORT(2, 2) int botan_privkey_ed25519_get_privkey(botan_privkey_t key, uint8_t output[64]);
 
+BOTAN_FFI_DEPRECATED("Use botan_pubkey_view_raw")
 BOTAN_FFI_EXPORT(2, 2) int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key, uint8_t pubkey[32]);
 
 /*
@@ -1469,8 +1734,10 @@ BOTAN_FFI_EXPORT(3, 4) int botan_privkey_load_ed448(botan_privkey_t* key, const 
 
 BOTAN_FFI_EXPORT(3, 4) int botan_pubkey_load_ed448(botan_pubkey_t* key, const uint8_t pubkey[57]);
 
+BOTAN_FFI_DEPRECATED("Use botan_privkey_view_raw")
 BOTAN_FFI_EXPORT(3, 4) int botan_privkey_ed448_get_privkey(botan_privkey_t key, uint8_t output[57]);
 
+BOTAN_FFI_DEPRECATED("Use botan_pubkey_view_raw")
 BOTAN_FFI_EXPORT(3, 4) int botan_pubkey_ed448_get_pubkey(botan_pubkey_t key, uint8_t pubkey[57]);
 
 /*
@@ -1481,8 +1748,10 @@ BOTAN_FFI_EXPORT(2, 8) int botan_privkey_load_x25519(botan_privkey_t* key, const
 
 BOTAN_FFI_EXPORT(2, 8) int botan_pubkey_load_x25519(botan_pubkey_t* key, const uint8_t pubkey[32]);
 
+BOTAN_FFI_DEPRECATED("Use botan_privkey_view_raw")
 BOTAN_FFI_EXPORT(2, 8) int botan_privkey_x25519_get_privkey(botan_privkey_t key, uint8_t output[32]);
 
+BOTAN_FFI_DEPRECATED("Use botan_pubkey_view_raw")
 BOTAN_FFI_EXPORT(2, 8) int botan_pubkey_x25519_get_pubkey(botan_pubkey_t key, uint8_t pubkey[32]);
 
 /*
@@ -1493,23 +1762,89 @@ BOTAN_FFI_EXPORT(3, 4) int botan_privkey_load_x448(botan_privkey_t* key, const u
 
 BOTAN_FFI_EXPORT(3, 4) int botan_pubkey_load_x448(botan_pubkey_t* key, const uint8_t pubkey[56]);
 
+BOTAN_FFI_DEPRECATED("Use botan_privkey_view_raw")
 BOTAN_FFI_EXPORT(3, 4) int botan_privkey_x448_get_privkey(botan_privkey_t key, uint8_t output[56]);
 
+BOTAN_FFI_DEPRECATED("Use botan_pubkey_view_raw")
 BOTAN_FFI_EXPORT(3, 4) int botan_pubkey_x448_get_pubkey(botan_pubkey_t key, uint8_t pubkey[56]);
 
 /*
-* Algorithm specific key operations: Kyber
+* Algorithm specific key operations: ML-DSA
 */
 
+BOTAN_FFI_EXPORT(3, 6)
+int botan_privkey_load_ml_dsa(botan_privkey_t* key, const uint8_t privkey[], size_t key_len, const char* mldsa_mode);
+
+BOTAN_FFI_EXPORT(3, 6)
+int botan_pubkey_load_ml_dsa(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len, const char* mldsa_mode);
+
+/*
+* Algorithm specific key operations: Kyber R3
+*
+* Note that Kyber R3 support is somewhat deprecated and may be removed in a
+* future major release. Using the final ML-KEM is highly recommended in any new
+* system.
+*/
+
+BOTAN_FFI_DEPRECATED("Kyber R3 support is deprecated")
 BOTAN_FFI_EXPORT(3, 1) int botan_privkey_load_kyber(botan_privkey_t* key, const uint8_t privkey[], size_t key_len);
 
+BOTAN_FFI_DEPRECATED("Kyber R3 support is deprecated")
 BOTAN_FFI_EXPORT(3, 1) int botan_pubkey_load_kyber(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len);
 
+BOTAN_FFI_DEPRECATED("Use generic botan_privkey_view_raw")
 BOTAN_FFI_EXPORT(3, 1)
 int botan_privkey_view_kyber_raw_key(botan_privkey_t key, botan_view_ctx ctx, botan_view_bin_fn view);
 
+BOTAN_FFI_DEPRECATED("Use generic botan_pubkey_view_raw")
 BOTAN_FFI_EXPORT(3, 1)
 int botan_pubkey_view_kyber_raw_key(botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view);
+
+/**
+* Algorithm specific key operation: FrodoKEM
+*/
+
+BOTAN_FFI_EXPORT(3, 6)
+int botan_privkey_load_frodokem(botan_privkey_t* key, const uint8_t privkey[], size_t key_len, const char* frodo_mode);
+
+BOTAN_FFI_EXPORT(3, 6)
+int botan_pubkey_load_frodokem(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len, const char* frodo_mode);
+
+/**
+* Algorithm specific key operation: Classic McEliece
+*/
+
+BOTAN_FFI_EXPORT(3, 6)
+int botan_privkey_load_classic_mceliece(botan_privkey_t* key,
+                                        const uint8_t privkey[],
+                                        size_t key_len,
+                                        const char* cmce_mode);
+
+BOTAN_FFI_EXPORT(3, 6)
+int botan_pubkey_load_classic_mceliece(botan_pubkey_t* key,
+                                       const uint8_t pubkey[],
+                                       size_t key_len,
+                                       const char* cmce_mode);
+
+/*
+* Algorithm specific key operations: ML-KEM
+*/
+
+BOTAN_FFI_EXPORT(3, 6)
+int botan_privkey_load_ml_kem(botan_privkey_t* key, const uint8_t privkey[], size_t key_len, const char* mlkem_mode);
+
+BOTAN_FFI_EXPORT(3, 6)
+int botan_pubkey_load_ml_kem(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len, const char* mlkem_mode);
+
+/*
+* Algorithm specific key operations: SLH-DSA
+*/
+
+BOTAN_FFI_EXPORT(3, 6)
+int botan_privkey_load_slh_dsa(botan_privkey_t* key, const uint8_t privkey[], size_t key_len, const char* slhdsa_mode);
+
+BOTAN_FFI_EXPORT(3, 6)
+int botan_pubkey_load_slh_dsa(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len, const char* slhdsa_mode);
 
 /*
 * Algorithm specific key operations: ECDSA and ECDH
@@ -2189,6 +2524,134 @@ int botan_zfec_encode(size_t K, size_t N, const uint8_t* input, size_t size, uin
 BOTAN_FFI_EXPORT(3, 0)
 int botan_zfec_decode(
    size_t K, size_t N, const size_t* indexes, uint8_t* const* inputs, size_t shareSize, uint8_t** outputs);
+
+/**
+* TPM2 context
+*/
+typedef struct botan_tpm2_ctx_struct* botan_tpm2_ctx_t;
+
+/**
+* TPM2 session
+*/
+typedef struct botan_tpm2_session_struct* botan_tpm2_session_t;
+
+/**
+* TPM2 crypto backend state object
+*/
+typedef struct botan_tpm2_crypto_backend_state_struct* botan_tpm2_crypto_backend_state_t;
+
+struct ESYS_CONTEXT;
+
+/**
+* Checks if Botan's TSS2 crypto backend can be used in this build
+* @returns 1 if the crypto backend can be enabled
+*/
+BOTAN_FFI_EXPORT(3, 6)
+int botan_tpm2_supports_crypto_backend(void);
+
+/**
+* Initialize a TPM2 context
+* @param ctx_out output TPM2 context
+* @param tcti_nameconf TCTI config (may be nullptr)
+* @return 0 on success
+*/
+BOTAN_FFI_EXPORT(3, 6) int botan_tpm2_ctx_init(botan_tpm2_ctx_t* ctx_out, const char* tcti_nameconf);
+
+/**
+* Initialize a TPM2 context
+* @param ctx_out output TPM2 context
+* @param tcti_name TCTI name (may be nullptr)
+* @param tcti_conf TCTI config (may be nullptr)
+* @return 0 on success
+*/
+BOTAN_FFI_EXPORT(3, 6)
+int botan_tpm2_ctx_init_ex(botan_tpm2_ctx_t* ctx_out, const char* tcti_name, const char* tcti_conf);
+
+/**
+* Wrap an existing ESYS_CONTEXT for use in Botan.
+* Note that destroying the created botan_tpm2_ctx_t won't
+* finalize @p esys_ctx
+* @param ctx_out output TPM2 context
+* @param esys_ctx ESYS_CONTEXT to wrap
+* @return 0 on success
+*/
+BOTAN_FFI_EXPORT(3, 7)
+int botan_tpm2_ctx_from_esys(botan_tpm2_ctx_t* ctx_out, struct ESYS_CONTEXT* esys_ctx);
+
+/**
+* Enable Botan's TSS2 crypto backend that replaces the cryptographic functions
+* required for the communication with the TPM with implementations provided
+* by Botan instead of using TSS' defaults OpenSSL or mbedTLS.
+* Note that the provided @p rng should not be dependent on the TPM and the
+* caller must ensure that it remains usable for the lifetime of the @p ctx.
+* @param ctx TPM2 context
+* @param rng random number generator to be used by the crypto backend
+*/
+BOTAN_FFI_EXPORT(3, 6)
+int botan_tpm2_ctx_enable_crypto_backend(botan_tpm2_ctx_t ctx, botan_rng_t rng);
+
+/**
+* Frees all resouces of a TPM2 context
+* @param ctx TPM2 context
+* @return 0 on success
+*/
+BOTAN_FFI_EXPORT(3, 6) int botan_tpm2_ctx_destroy(botan_tpm2_ctx_t ctx);
+
+/**
+* Use this if you just need Botan's crypto backend but do not want to wrap any
+* other ESYS functionality using Botan's TPM2 wrapper.
+* A Crypto Backend State is created that the user needs to keep alive for as
+* long as the crypto backend is used and needs to be destroyed after.
+* Note that the provided @p rng should not be dependent on the TPM and the
+* caller must ensure that it remains usable for the lifetime of the @p esys_ctx.
+* @param cbs_out To be created Crypto Backend State
+* @param esys_ctx TPM2 context
+* @param rng random number generator to be used by the crypto backend
+*/
+BOTAN_FFI_EXPORT(3, 7)
+int botan_tpm2_enable_crypto_backend(botan_tpm2_crypto_backend_state_t* cbs_out,
+                                     struct ESYS_CONTEXT* esys_ctx,
+                                     botan_rng_t rng);
+
+/**
+* Frees all resouces of a TPM2 Crypto Callback State
+* Note that this does not attempt to de-register the crypto backend,
+* it just frees the resource pointed to by @p cbs. Use the ESAPI function
+* ``Esys_SetCryptoCallbacks(ctx, nullptr)`` to deregister manually.
+* @param cbs TPM2 Crypto Callback State
+* @return 0 on success
+*/
+BOTAN_FFI_EXPORT(3, 7) int botan_tpm2_crypto_backend_state_destroy(botan_tpm2_crypto_backend_state_t cbs);
+
+/**
+* Initialize a random number generator object via TPM2
+* @param rng_out rng object to create
+* @param ctx TPM2 context
+* @param s1 the first session to use (optional, may be nullptr)
+* @param s2 the second session to use (optional, may be nullptr)
+* @param s3 the third session to use (optional, may be nullptr)
+*/
+BOTAN_FFI_EXPORT(3, 6)
+int botan_tpm2_rng_init(botan_rng_t* rng_out,
+                        botan_tpm2_ctx_t ctx,
+                        botan_tpm2_session_t s1,
+                        botan_tpm2_session_t s2,
+                        botan_tpm2_session_t s3);
+
+/**
+* Create an unauthenticated session for use with TPM2
+* @param session_out the session object to create
+* @param ctx TPM2 context
+*/
+BOTAN_FFI_EXPORT(3, 6)
+int botan_tpm2_unauthenticated_session_init(botan_tpm2_session_t* session_out, botan_tpm2_ctx_t ctx);
+
+/**
+* Create an unauthenticated session for use with TPM2
+* @param session the session object to destroy
+*/
+BOTAN_FFI_EXPORT(3, 6)
+int botan_tpm2_session_destroy(botan_tpm2_session_t session);
 
 #ifdef __cplusplus
 }

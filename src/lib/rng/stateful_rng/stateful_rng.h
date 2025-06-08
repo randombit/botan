@@ -75,7 +75,7 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
       */
       void force_reseed();
 
-      void reseed_from_rng(RandomNumberGenerator& rng, size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS) final;
+      void reseed_from_rng(RandomNumberGenerator& rng, size_t poll_bits = RandomNumberGenerator::DefaultPollBits) final;
 
       /**
       * Poll provided sources for up to poll_bits bits of entropy
@@ -83,8 +83,8 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
       * of bits collected.
       */
       size_t reseed(Entropy_Sources& srcs,
-                    size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS,
-                    std::chrono::milliseconds poll_timeout = BOTAN_RNG_RESEED_DEFAULT_TIMEOUT) override;
+                    size_t poll_bits = RandomNumberGenerator::DefaultPollBits,
+                    std::chrono::milliseconds poll_timeout = RandomNumberGenerator::DefaultPollTimeout) override;
 
       /**
       * @return intended security level of this DRBG

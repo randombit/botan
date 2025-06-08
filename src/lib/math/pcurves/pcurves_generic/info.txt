@@ -1,0 +1,13 @@
+<defines>
+PCURVES_GENERIC -> 20250112
+</defines>
+
+<module_info>
+name -> "PCurve generic"
+</module_info>
+
+<requires>
+bigint
+numbertheory
+mp
+</requires>

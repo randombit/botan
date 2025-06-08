@@ -1,0 +1,35 @@
+<defines>
+TPM2 -> 20240610
+</defines>
+
+<module_info>
+name -> "TPM2"
+brief -> "Wrappers and Utilites to interact with TPM2"
+</module_info>
+
+load_on vendor
+
+<libs>
+all -> tss2-esys,tss2-rc,tss2-tctildr,tss2-mu
+</libs>
+
+<requires>
+rng
+pubkey
+</requires>
+
+<header:internal>
+tpm2_algo_mappings.h
+tpm2_hash.h
+tpm2_util.h
+tpm2_pkops.h
+</header:internal>
+
+<header:public>
+tpm2_context.h
+tpm2_error.h
+tpm2_key.h
+tpm2_object.h
+tpm2_rng.h
+tpm2_session.h
+</header:public>

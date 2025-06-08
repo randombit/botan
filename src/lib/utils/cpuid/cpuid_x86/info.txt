@@ -1,0 +1,13 @@
+<defines>
+CPUID_DETECTION -> 20250327
+</defines>
+
+<module_info>
+name -> "CPUID for x86"
+</module_info>
+
+<arch>
+x86_32
+x86_64
+x32
+</arch>

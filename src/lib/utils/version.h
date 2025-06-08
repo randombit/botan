@@ -9,6 +9,7 @@
 #define BOTAN_VERSION_H_
 
 #include <botan/types.h>
+#include <optional>
 #include <string>
 
 namespace Botan {
@@ -71,6 +72,24 @@ BOTAN_PUBLIC_API(2, 0) uint32_t version_minor();
 BOTAN_PUBLIC_API(2, 0) uint32_t version_patch();
 
 /**
+* Returns a string that is set to a revision identifier corresponding to the
+* source, or `nullopt` if this could not be determined. It is set for all
+* official releases, and for builds that originated from within a git checkout.
+*
+* @return VC revision
+*/
+BOTAN_PUBLIC_API(3, 8) std::optional<std::string> version_vc_revision();
+
+/**
+* Return any string that is set at build time using the `--distribution-info`
+* option. It allows a packager of the library to specify any distribution-specific
+* patches. If no value is given at build time, returns `nullopt`.
+*
+* @return distribution info
+*/
+BOTAN_PUBLIC_API(3, 8) std::optional<std::string> version_distribution_info();
+
+/**
 * Usable for checking that the DLL version loaded at runtime exactly matches the
 * compile-time version. Call using BOTAN_VERSION_* macro values, like so:
 *
@@ -83,6 +102,20 @@ BOTAN_PUBLIC_API(2, 0) uint32_t version_patch();
 * where it is possible to compile and run against different versions.
 */
 BOTAN_PUBLIC_API(2, 0) std::string runtime_version_check(uint32_t major, uint32_t minor, uint32_t patch);
+
+/**
+* Certain build-time options, used for testing, result in a binary which is not
+* safe for use in a production system. This function can be used to test for such
+* a configuration at runtime.
+*
+* Currently these unsafe conditions include:
+*
+* - Unsafe fuzzer mode (--unsafe-fuzzer-mode) which intentionally disables various
+*   checks in order to improve the effectiveness of fuzzing.
+* - Terminate on asserts (--unsafe-terminate-on-asserts) which intentionally aborts
+*   if any internal assertion failure occurs, rather than throwing an exception.
+*/
+BOTAN_PUBLIC_API(3, 8) bool unsafe_for_production_build();
 
 /*
 * Macros for compile-time version checks

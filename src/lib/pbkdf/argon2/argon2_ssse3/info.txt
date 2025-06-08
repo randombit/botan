@@ -15,3 +15,8 @@ ssse3
 <cc>
 !msvc
 </cc>
+
+<requires>
+cpuid
+simd_2x64
+</requires>

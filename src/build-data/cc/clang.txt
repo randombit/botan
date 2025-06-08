@@ -28,6 +28,10 @@ address   -> "-fsanitize=address"
 undefined -> "-fsanitize=undefined -fno-sanitize-recover=undefined"
 coverage  -> "-fsanitize=fuzzer-no-link"
 memory    -> "-fsanitize=memory"
+fuzzer    -> "-fsanitize=fuzzer"
+thread    -> "-fsanitize=thread"
+
+iterator  -> "-D_LIBCPP_DEBUG=1 -D_GLIBCXX_DEBUG"
 </sanitizers>
 
 shared_flags "-fPIC"
@@ -62,7 +66,6 @@ emscripten    -> "em++"
 sse2   -> "-msse2"
 ssse3  -> "-mssse3"
 sse41  -> "-msse4.1"
-sse42  -> "-msse4.2"
 avx2   -> "-mavx2"
 avx512  -> "-mavx512f -mavx512bw -mavx512dq -mavx512vbmi -mavx512vbmi2 -mavx512bitalg -mavx512vl -mavx512ifma"
 
@@ -86,6 +89,9 @@ ppc64:power9 -> "-mcpu=power9"
 arm64:armv8crypto -> "-march=armv8+crypto"
 arm64:armv8sha512 -> "-march=armv8.2-a+sha3"
 
+loongarch64:lsx -> "-mlsx"
+loongarch64:lasx -> "-mlasx"
+
 arm32:neon    -> "-mfpu=neon"
 arm64:neon    -> ""
 </isa_flags>
@@ -104,3 +110,7 @@ ppc64   -> "-m64"
 macos   -> "-stdlib=libc++"
 ios     -> "-stdlib=libc++"
 </mach_abi_linking>
+
+<ct_value_barrier>
+default -> asm
+</ct_value_barrier>

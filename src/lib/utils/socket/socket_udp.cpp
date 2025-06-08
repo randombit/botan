@@ -11,6 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/target_info.h>
 #include <botan/internal/uri.h>
 #include <chrono>
 
@@ -46,20 +47,19 @@ class Asio_SocketUDP final : public OS::SocketUDP {
    public:
       Asio_SocketUDP(std::string_view hostname, std::string_view service, std::chrono::microseconds timeout) :
             m_timeout(timeout), m_timer(m_io), m_udp(m_io) {
-         m_timer.expires_from_now(m_timeout);
+         m_timer.expires_after(m_timeout);
          check_timeout();
 
          boost::asio::ip::udp::resolver resolver(m_io);
-         boost::asio::ip::udp::resolver::query query(std::string{hostname}, std::string{service});
-         boost::asio::ip::udp::resolver::iterator dns_iter = resolver.resolve(query);
+         boost::asio::ip::udp::resolver::results_type dns_iter =
+            resolver.resolve(std::string{hostname}, std::string{service});
 
          boost::system::error_code ec = boost::asio::error::would_block;
 
-         auto connect_cb = [&ec](const boost::system::error_code& e, const boost::asio::ip::udp::resolver::iterator&) {
-            ec = e;
-         };
+         auto connect_cb = [&ec](const boost::system::error_code& e,
+                                 const boost::asio::ip::udp::resolver::results_type::iterator&) { ec = e; };
 
-         boost::asio::async_connect(m_udp, dns_iter, connect_cb);
+         boost::asio::async_connect(m_udp, dns_iter.begin(), dns_iter.end(), connect_cb);
 
          while(ec == boost::asio::error::would_block) {
             m_io.run_one();
@@ -74,7 +74,7 @@ class Asio_SocketUDP final : public OS::SocketUDP {
       }
 
       void write(const uint8_t buf[], size_t len) override {
-         m_timer.expires_from_now(m_timeout);
+         m_timer.expires_after(m_timeout);
 
          boost::system::error_code ec = boost::asio::error::would_block;
 
@@ -90,7 +90,7 @@ class Asio_SocketUDP final : public OS::SocketUDP {
       }
 
       size_t read(uint8_t buf[], size_t len) override {
-         m_timer.expires_from_now(m_timeout);
+         m_timer.expires_after(m_timeout);
 
          boost::system::error_code ec = boost::asio::error::would_block;
          size_t got = 0;
@@ -116,7 +116,7 @@ class Asio_SocketUDP final : public OS::SocketUDP {
 
    private:
       void check_timeout() {
-         if(m_udp.is_open() && m_timer.expires_at() < std::chrono::system_clock::now()) {
+         if(m_udp.is_open() && m_timer.expiry() < std::chrono::system_clock::now()) {
             boost::system::error_code err;
 
             // NOLINTNEXTLINE(bugprone-unused-return-value,cert-err33-c)
@@ -127,7 +127,7 @@ class Asio_SocketUDP final : public OS::SocketUDP {
       }
 
       const std::chrono::microseconds m_timeout;
-      boost::asio::io_service m_io;
+      boost::asio::io_context m_io;
       boost::asio::system_timer m_timer;
       boost::asio::ip::udp::socket m_udp;
 };
@@ -331,11 +331,11 @@ std::unique_ptr<OS::SocketUDP> OS::open_socket_udp(std::string_view hostname,
 }
 
 std::unique_ptr<OS::SocketUDP> OS::open_socket_udp(std::string_view uri_string, std::chrono::microseconds timeout) {
-   const auto uri = URI::fromAny(uri_string);
-   if(uri.port == 0) {
+   const auto uri = URI::from_any(uri_string);
+   if(uri.port() == 0) {
       throw Invalid_Argument("UDP port not specified");
    }
-   return open_socket_udp(uri.host, std::to_string(uri.port), timeout);
+   return open_socket_udp(uri.host(), std::to_string(uri.port()), timeout);
 }
 
 }  // namespace Botan

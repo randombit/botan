@@ -9,6 +9,7 @@
 #define BOTAN_SM4_H_
 
 #include <botan/block_cipher.h>
+#include <botan/secmem.h>
 
 namespace Botan {
 
@@ -36,6 +37,11 @@ class SM4 final : public Block_Cipher_Fixed_Params<16, 16> {
 #if defined(BOTAN_HAS_SM4_ARMV8)
       void sm4_armv8_encrypt(const uint8_t in[], uint8_t out[], size_t blocks) const;
       void sm4_armv8_decrypt(const uint8_t in[], uint8_t out[], size_t blocks) const;
+#endif
+
+#if defined(BOTAN_HAS_SM4_X86)
+      void sm4_x86_encrypt(const uint8_t in[], uint8_t out[], size_t blocks) const;
+      void sm4_x86_decrypt(const uint8_t in[], uint8_t out[], size_t blocks) const;
 #endif
 
 #if defined(BOTAN_HAS_SM4_GFNI)

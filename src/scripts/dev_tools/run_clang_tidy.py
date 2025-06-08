@@ -60,6 +60,7 @@ disabled_needs_work = [
     'misc-confusable-identifiers',
     'modernize-avoid-bind',
     'modernize-pass-by-value',
+    'modernize-use-ranges', # limited by compiler support currently
     'performance-avoid-endl',
     'readability-convert-member-functions-to-static',
     'readability-implicit-bool-conversion',
@@ -85,6 +86,7 @@ disabled_not_interested = [
     'bugprone-branch-clone', # doesn't interact well with feature macros
     'bugprone-easily-swappable-parameters',
     'bugprone-implicit-widening-of-multiplication-result',
+    'bugprone-suspicious-stringview-data-usage', # triggers on every use of string_view::data ??
     'cppcoreguidelines-avoid-do-while',
     'cppcoreguidelines-non-private-member-variables-in-classes', # pk split keys
     'cppcoreguidelines-pro-bounds-pointer-arithmetic',
@@ -101,6 +103,7 @@ disabled_not_interested = [
     'modernize-use-trailing-return-type', # fine, but we're not using it everywhere
     'modernize-return-braced-init-list', # thanks I hate it
     'modernize-use-default-member-init',
+    'modernize-use-designated-initializers',
     'modernize-use-nodiscard',
     'modernize-use-using', # fine not great
     'portability-simd-intrinsics',
@@ -109,9 +112,11 @@ disabled_not_interested = [
     'readability-function-cognitive-complexity',
     'readability-identifier-length', # lol, lmao
     'readability-isolate-declaration',
+    'readability-math-missing-parentheses',
     'readability-non-const-parameter',
     'readability-redundant-access-specifiers', # reneme likes doing this
     'readability-suspicious-call-argument',
+    'readability-use-std-min-max',
     'readability-use-anyofallof', # not more readable
 ]
 

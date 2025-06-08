@@ -56,7 +56,7 @@ class SRP6_KAT_Tests final : public Text_Based_Test {
             return result;
          }
 
-         Botan::DL_Group group(group_id);
+         auto group = Botan::DL_Group::from_name(group_id);
 
          const Botan::BigInt v = Botan::srp6_generate_verifier(username, password, salt, group_id, hash);
          result.test_eq("SRP verifier", v, exp_v);

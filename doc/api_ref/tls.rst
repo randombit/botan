@@ -700,14 +700,13 @@ policy settings from a file.
 
      Cipher names without an explicit mode refers to CBC+HMAC ciphersuites.
 
-     Default value: "ChaCha20Poly1305", "AES-256/GCM", "AES-128/GCM"
+     Default value: "AES-256/GCM", "AES-128/GCM", "ChaCha20Poly1305"
 
      Also allowed: "AES-256", "AES-128",
      "AES-256/CCM", "AES-128/CCM", "AES-256/CCM(8)", "AES-128/CCM(8)",
      "Camellia-256/GCM", "Camellia-128/GCM", "ARIA-256/GCM", "ARIA-128/GCM"
 
-     Also allowed (though currently experimental): "AES-128/OCB(12)",
-     "AES-256/OCB(12)"
+     Also allowed (though currently experimental): "AES-256/OCB(12)"
 
      In versions up to 2.8.0, the CBC and CCM ciphersuites "AES-256",
      "AES-128", "AES-256/CCM" and "AES-128/CCM" were enabled by default.
@@ -793,17 +792,22 @@ policy settings from a file.
  .. cpp:function:: std::vector<Group_Params> key_exchange_groups() const
 
      Return a list of ECC curve and DH group TLS identifiers we are willing to use, in order of preference.
-     The default ordering puts the best performing ECC first.
 
      Default:
-     Group_Params::X25519,
-     Group_Params::SECP256R1, Group_Params::BRAINPOOL256R1,
-     Group_Params::SECP384R1, Group_Params::BRAINPOOL384R1,
-     Group_Params::SECP521R1, Group_Params::BRAINPOOL512R1,
-     Group_Params::FFDHE_2048, Group_Params::FFDHE_3072, Group_Params::FFDHE_4096,
-     Group_Params::FFDHE_6144, Group_Params::FFDHE_8192
 
-     No other values are currently defined.
+     Group_Params::X25519,
+     Group_Params::SECP256R1,
+     Group_Params_Code::HYBRID_X25519_ML_KEM_768,
+     Group_Params_Code::HYBRID_SECP256R1_ML_KEM_768,
+     Group_Params_Code::HYBRID_SECP384R1_ML_KEM_1024,
+     Group_Params::X448,
+     Group_Params::SECP384R1,
+     Group_Params::SECP521R1,
+     Group_Params::BRAINPOOL256R1,
+     Group_Params::BRAINPOOL384R1,
+     Group_Params::BRAINPOOL512R1,
+     Group_Params::FFDHE_2048,
+     Group_Params::FFDHE_3072,
 
  .. cpp:function:: std::vector<Group_Param> key_exchange_groups_to_offer() const
 
@@ -1130,27 +1134,18 @@ groups. For text-based policy configurations use the identifiers in parenthesis.
 
 Currently, Botan supports the following post-quantum secure key exchanges:
 
-* used `in Open Quantum Safe <https://github.com/open-quantum-safe/oqs-provider/blob/main/oqs-template/oqs-kem-info.md>`_
-  (PQC algorithm without a classical algorithm)
+* ML-KEM plus ECC hybrid, as deployed by Google, Cloudflare, etc and likely
+  to be in the future standardized by IETF
 
-  * ``KYBER_512_R3`` ("Kyber-512-r3")
-  * ``KYBER_768_R3`` ("Kyber-768-r3")
-  * ``KYBER_1024_R3`` ("Kyber-1024-r3")
+  * ``HYBRID_SECP256R1_ML_KEM_768`` ("secp256r1/ML-KEM-768")
+  * ``HYBRID_SECP384R1_ML_KEM_1024`` ("secp384r1/ML-KEM-1024")
+  * ``HYBRID_X25519_ML_KEM_768`` ("x25519/ML-KEM-768")
 
-* used `in Open Quantum Safe <https://github.com/open-quantum-safe/oqs-provider/blob/main/oqs-template/oqs-kem-info.md>`_
-  (hybrid between Kyber and a classical ECDH algorithm)
+* Pure ML-KEM as documented in IETF draft ``draft-connolly-tls-mlkem-key-agreement``
 
-  * ``HYBRID_X25519_KYBER_512_R3_OQS`` ("x25519/Kyber-512-r3")
-  * ``HYBRID_X25519_KYBER_768_R3_OQS`` ("x25519/Kyber-768-r3")
-  * ``HYBRID_SECP256R1_KYBER_512_R3_OQS`` ("secp256r1/Kyber-512-r3")
-  * ``HYBRID_SECP384R1_KYBER_768_R3_OQS`` ("secp384r1/Kyber-768-r3")
-  * ``HYBRID_SECP521R1_KYBER_1024_R3_OQS`` ("secp521r1/Kyber-1024-r3")
-
-* used `by Cloudflare <https://blog.cloudflare.com/post-quantum-for-all/>`_
-  (hybrid between Kyber and the classical X25519 algorithm)
-
-  * ``HYBRID_X25519_KYBER_512_R3_CLOUDFLARE`` ("x25519/Kyber-512-r3/cloudflare")
-  * ``HYBRID_X25519_KYBER_768_R3_CLOUDFLARE`` ("x25519/Kyber-768-r3/cloudflare")
+  * ``ML_KEM_512``
+  * ``ML_KEM_768``
+  * ``ML_KEM_1024``
 
 .. _tls_hybrid_client_example:
 
@@ -1178,7 +1173,7 @@ To use custom curves with the Botan :cpp:class:`TLS::Client` or :cpp:class:`TLS:
 additional adjustments have to be implemented as shown in the following code examples.
 
 1. Registration of the custom curve
-2. Implementation TLS callbacks ``tls_generate_ephemeral_key`` and ``tls_ephemeral_key_agreement``
+2. Implementation of TLS callbacks ``tls_generate_ephemeral_key`` and ``tls_deserialize_peer_public_key``
 3. Adjustment of the TLS policy by allowing the custom curve
 
 Below is a code example for a TLS client using a custom curve.

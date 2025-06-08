@@ -4,4 +4,5 @@ CRC32 -> 20131128
 
 <module_info>
 name -> "CRC32"
+lifecycle -> "Deprecated"
 </module_info>

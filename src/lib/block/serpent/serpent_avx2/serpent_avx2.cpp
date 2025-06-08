@@ -11,7 +11,8 @@
 
 namespace Botan {
 
-#if defined(__GNUG__) && !defined(__clang__)
+// TODO(Botan4) if minimum GCC is increased we can remove this
+#if defined(__GNUG__) && !defined(__clang__) && (__GNUG__ < 13)
 
 // These macros are redundant with the versions in serpent_sbox.h
 // but unfortunately removing them seems to trigger a bug in GCC
@@ -47,8 +48,7 @@ namespace Botan {
 
 #endif
 
-BOTAN_AVX2_FN
-void Serpent::avx2_encrypt_8(const uint8_t in[128], uint8_t out[128]) const {
+void BOTAN_FN_ISA_AVX2 Serpent::avx2_encrypt_8(const uint8_t in[128], uint8_t out[128]) const {
    using namespace Botan::Serpent_F;
 
    SIMD_8x32::reset_registers();
@@ -171,8 +171,7 @@ void Serpent::avx2_encrypt_8(const uint8_t in[128], uint8_t out[128]) const {
    SIMD_8x32::zero_registers();
 }
 
-BOTAN_AVX2_FN
-void Serpent::avx2_decrypt_8(const uint8_t in[128], uint8_t out[128]) const {
+void BOTAN_FN_ISA_AVX2 Serpent::avx2_decrypt_8(const uint8_t in[128], uint8_t out[128]) const {
    using namespace Botan::Serpent_F;
 
    SIMD_8x32::reset_registers();

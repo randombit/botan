@@ -18,6 +18,8 @@ class Public_Key;
 * Certificate validation status code
 */
 enum class Certificate_Status_Code {
+   // TODO(Botan4) renumber this, e.g. Validation Errors -> IP_ADDR_BLOCKS_ERROR
+
    OK = 0,
    VERIFIED = 0,
 
@@ -67,6 +69,8 @@ enum class Certificate_Status_Code {
    CERT_CHAIN_TOO_LONG = 4002,
    CA_CERT_NOT_FOR_CERT_ISSUER = 4003,
    NAME_CONSTRAINT_ERROR = 4004,
+   IPADDR_BLOCKS_ERROR = 4011,
+   AS_BLOCKS_ERROR = 4012,
 
    // Revocation errors
    CA_CERT_NOT_FOR_CRL_ISSUER = 4005,
@@ -145,11 +149,16 @@ class BOTAN_PUBLIC_API(3, 0) Key_Constraints {
       Key_Constraints() : m_value(0) {}
 
       /**
-      * Return typical constraints for a CA certificate, namely
-      * KeyCertSign and CrlSign
+      * Return typical constraints for a CA certificate.
+      *
+      * The reasons for KeyCertSign and CrlSign should be obvious
+      *
+      * CAB baseline requirements are that DigitalSignature should be set
+      * if the certificate is used to sign OCSP responses.
       */
       static Key_Constraints ca_constraints() {
-         return Key_Constraints(Key_Constraints::KeyCertSign | Key_Constraints::CrlSign);
+         return Key_Constraints(Key_Constraints::KeyCertSign | Key_Constraints::CrlSign |
+                                Key_Constraints::DigitalSignature);
       }
 
       bool operator==(const Key_Constraints&) const = default;

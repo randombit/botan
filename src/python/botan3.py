@@ -6,27 +6,28 @@ https://botan.randombit.net
 
 (C) 2015,2017,2018,2019,2023 Jack Lloyd
 (C) 2015 Uri  Blumenthal (extensions and patches)
+(C) 2024 Amos Treiber, René Meusel - Rohde & Schwarz Cybersecurity
 
 Botan is released under the Simplified BSD License (see license.txt)
 
 This module uses the ctypes module and is usable by programs running
 under at least CPython 3.x, and PyPy
 
-It uses botan's ffi module, which exposes a C API. This version
-of the Python wrapper requires FFI version 20230403, which was
-introduced in Botan 3.0.0
-
+It uses botan's ffi module, which exposes a C API.
 """
 
 from ctypes import CDLL, CFUNCTYPE, POINTER, byref, create_string_buffer, \
     c_void_p, c_size_t, c_uint8, c_uint32, c_uint64, c_int, c_uint, c_char, c_char_p, addressof
+from typing import Callable
 
 from sys import platform
 from time import strptime, mktime, time as system_time
 from binascii import hexlify
 from datetime import datetime
+from collections.abc import Iterable
 
-BOTAN_FFI_VERSION = 20240408
+# This Python module requires the FFI API version introduced in Botan 3.8.0
+BOTAN_FFI_VERSION = 20250506
 
 #
 # Base exception for all exceptions raised from this module
@@ -69,7 +70,10 @@ def _load_botan_dll(expected_version):
     else:
         # assumed to be some Unix/Linux system
         possible_dll_names.append('libbotan-3.so')
-        possible_dll_names += ['libbotan-3.so.%d' % (v) for v in reversed(range(0, 16))]
+
+        min_minor = 8 # minimum supported FFI
+        max_minor = 32 # arbitrary but probably large enough
+        possible_dll_names += ['libbotan-3.so.%d' % (v) for v in reversed(range(min_minor, max_minor))]
 
     for dll_name in possible_dll_names:
         try:
@@ -128,7 +132,7 @@ def _set_prototypes(dll):
     dll.botan_error_last_exception_message.argtypes = []
     dll.botan_error_last_exception_message.restype = c_char_p
 
-    # These are generated using src/scripts/ffi_decls.py:
+    # These are generated using src/scripts/dev_tools/gen_ffi_decls.py:
     ffi_api(dll.botan_constant_time_compare, [c_void_p, c_void_p, c_size_t], [-1])
     ffi_api(dll.botan_scrub_mem, [c_void_p, c_size_t])
 
@@ -265,8 +269,39 @@ def _set_prototypes(dll):
             [c_char_p, POINTER(c_size_t), c_char_p, c_void_p, c_size_t, c_uint32])
     ffi_api(dll.botan_bcrypt_is_valid, [c_char_p, c_char_p])
 
+    # OID
+    ffi_api(dll.botan_oid_destroy, [c_void_p])
+    ffi_api(dll.botan_oid_from_string, [c_void_p, c_char_p])
+    ffi_api(dll.botan_oid_register, [c_void_p, c_char_p])
+    ffi_api(dll.botan_oid_view_string, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_oid_view_name, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_oid_equal, [c_void_p, c_void_p])
+    ffi_api(dll.botan_oid_cmp, [POINTER(c_int), c_void_p, c_void_p])
+
+    # EC Group
+    ffi_api(dll.botan_ec_group_destroy, [c_void_p])
+    ffi_api(dll.botan_ec_group_supports_application_specific_group, [POINTER(c_int)])
+    ffi_api(dll.botan_ec_group_supports_named_group, [c_char_p, POINTER(c_int)])
+    ffi_api(dll.botan_ec_group_from_params,
+            [c_void_p, c_void_p, c_void_p, c_void_p, c_void_p, c_void_p, c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_group_from_ber, [c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_ec_group_from_pem, [c_void_p, c_char_p])
+    ffi_api(dll.botan_ec_group_from_oid, [c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_group_from_name, [c_void_p, c_char_p])
+    ffi_api(dll.botan_ec_group_view_der, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_ec_group_view_pem, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_ec_group_get_curve_oid, [c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_group_get_p, [c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_group_get_a, [c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_group_get_b, [c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_group_get_g_x, [c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_group_get_g_y, [c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_group_get_order, [c_void_p, c_void_p])
+    ffi_api(dll.botan_ec_group_equal, [c_void_p, c_void_p])
+
     #  PUBKEY
     ffi_api(dll.botan_privkey_create, [c_void_p, c_char_p, c_char_p, c_void_p])
+    ffi_api(dll.botan_ec_privkey_create, [c_void_p, c_char_p, c_void_p, c_void_p])
     ffi_api(dll.botan_privkey_check_key, [c_void_p, c_void_p, c_uint32], [-1])
     ffi_api(dll.botan_privkey_create_rsa, [c_void_p, c_void_p, c_size_t])
     ffi_api(dll.botan_privkey_create_ecdsa, [c_void_p, c_void_p, c_char_p])
@@ -281,6 +316,7 @@ def _set_prototypes(dll):
 
     ffi_api(dll.botan_privkey_view_der, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_privkey_view_pem, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_privkey_view_raw, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
 
     ffi_api(dll.botan_privkey_algo_name, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_privkey_export_encrypted,
@@ -306,6 +342,7 @@ def _set_prototypes(dll):
 
     ffi_api(dll.botan_pubkey_view_der, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_pubkey_view_pem, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_pubkey_view_raw, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
 
     ffi_api(dll.botan_pubkey_algo_name, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_pubkey_check_key, [c_void_p, c_void_p, c_uint32], [-1])
@@ -314,6 +351,10 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_pubkey_destroy, [c_void_p])
     ffi_api(dll.botan_pubkey_get_field, [c_void_p, c_void_p, c_char_p])
     ffi_api(dll.botan_privkey_get_field, [c_void_p, c_void_p, c_char_p])
+    ffi_api(dll.botan_pubkey_oid, [c_void_p, c_void_p])
+    ffi_api(dll.botan_privkey_oid, [c_void_p, c_void_p])
+    ffi_api(dll.botan_privkey_stateful_operation, [c_void_p, POINTER(c_int)])
+    ffi_api(dll.botan_privkey_remaining_operations, [c_void_p, POINTER(c_uint64)])
     ffi_api(dll.botan_privkey_load_rsa, [c_void_p, c_void_p, c_void_p, c_void_p])
     ffi_api(dll.botan_privkey_load_rsa_pkcs1, [c_void_p, c_char_p, c_size_t])
     ffi_api(dll.botan_privkey_rsa_get_p, [c_void_p, c_void_p])
@@ -354,10 +395,20 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_pubkey_load_x448, [c_void_p, c_char_p])
     ffi_api(dll.botan_privkey_x448_get_privkey, [c_void_p, c_char_p])
     ffi_api(dll.botan_pubkey_x448_get_pubkey, [c_void_p, c_char_p])
+    ffi_api(dll.botan_privkey_load_ml_dsa, [c_void_p, c_void_p, c_int, c_char_p])
+    ffi_api(dll.botan_pubkey_load_ml_dsa, [c_void_p, c_void_p, c_int, c_char_p])
+    ffi_api(dll.botan_privkey_load_slh_dsa, [c_void_p, c_void_p, c_int, c_char_p])
+    ffi_api(dll.botan_pubkey_load_slh_dsa, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_privkey_load_kyber, [c_void_p, c_char_p, c_int])
     ffi_api(dll.botan_pubkey_load_kyber, [c_void_p, c_char_p, c_int])
     ffi_api(dll.botan_privkey_view_kyber_raw_key, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_pubkey_view_kyber_raw_key, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_privkey_load_ml_kem, [c_void_p, c_void_p, c_int, c_char_p])
+    ffi_api(dll.botan_pubkey_load_ml_kem, [c_void_p, c_void_p, c_int, c_char_p])
+    ffi_api(dll.botan_privkey_load_frodokem, [c_void_p, c_void_p, c_int, c_char_p])
+    ffi_api(dll.botan_pubkey_load_frodokem, [c_void_p, c_void_p, c_int, c_char_p])
+    ffi_api(dll.botan_privkey_load_classic_mceliece, [c_void_p, c_void_p, c_int, c_char_p])
+    ffi_api(dll.botan_pubkey_load_classic_mceliece, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_privkey_load_ecdsa, [c_void_p, c_void_p, c_char_p])
     ffi_api(dll.botan_pubkey_load_ecdsa, [c_void_p, c_void_p, c_void_p, c_char_p])
     ffi_api(dll.botan_pubkey_load_ecdh, [c_void_p, c_void_p, c_void_p, c_char_p])
@@ -502,6 +553,16 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_zfec_decode,
             [c_size_t, c_size_t, POINTER(c_size_t), POINTER(c_char_p), c_size_t, POINTER(c_char_p)])
 
+    # TPM2
+    ffi_api(dll.botan_tpm2_supports_crypto_backend, [])
+    ffi_api(dll.botan_tpm2_ctx_init, [c_void_p, c_char_p], [-40])
+    ffi_api(dll.botan_tpm2_ctx_init_ex, [c_void_p, c_char_p, c_char_p], [-40])
+    ffi_api(dll.botan_tpm2_ctx_enable_crypto_backend, [c_void_p, c_void_p])
+    ffi_api(dll.botan_tpm2_ctx_destroy, [c_void_p], [-40])
+    ffi_api(dll.botan_tpm2_rng_init, [c_void_p, c_void_p, c_void_p, c_void_p, c_void_p])
+    ffi_api(dll.botan_tpm2_unauthenticated_session_init, [c_void_p, c_void_p])
+    ffi_api(dll.botan_tpm2_session_destroy, [c_void_p])
+
     return dll
 
 #
@@ -632,13 +693,114 @@ def const_time_compare(x, y):
     return rc == 0
 
 #
+# TPM2
+#
+
+class TPM2Object:
+    def __init__(self, obj: c_void_p, destroyer: Callable[[c_void_p], None]):
+        self.__obj = obj
+        self.__destroyer = destroyer
+
+    def __del__(self):
+        if hasattr(self, '__obj') and hasattr(self, '__destroyer'):
+            self.__destroyer(self.__obj)
+
+    def handle_(self):
+        return self.__obj
+
+class TPM2Context(TPM2Object):
+    """TPM 2.0 Context object"""
+
+    def __init__(self, tcti_name_maybe_with_conf: str = None, tcti_conf: str = None):
+        """Construct a TPM2Context object with optional TCTI name and configuration."""
+
+        obj = c_void_p(0)
+        if tcti_conf is not None:
+            rc = _DLL.botan_tpm2_ctx_init_ex(byref(obj), _ctype_str(tcti_name_maybe_with_conf), _ctype_str(tcti_conf))
+        else:
+            rc = _DLL.botan_tpm2_ctx_init(byref(obj), _ctype_str(tcti_name_maybe_with_conf))
+        if rc == -40: # 'Not Implemented'
+            raise BotanException("TPM2 is not implemented in this build configuration", rc)
+        self.rng_ = None
+        super().__init__(obj, _DLL.botan_tpm2_ctx_destroy)
+
+    @staticmethod
+    def supports_botan_crypto_backend() -> bool:
+        """Returns True if the given build supports the Botan-based crypto backend."""
+        rc = _DLL.botan_tpm2_supports_crypto_backend()
+        return rc == 1
+
+    def enable_botan_crypto_backend(self, rng):
+        """Enables the Botan-based crypto backend.
+        The passed rng MUST NOT be dependent on the TPM."""
+        # By keeping a reference to the passed-in RNG object, we make sure
+        # that the underlying object lives at least as long as this context.
+        self.rng_ = rng
+        _DLL.botan_tpm2_ctx_enable_crypto_backend(self.handle_(), self.rng_.handle_())
+
+class TPM2Session(TPM2Object):
+    """Basic TPM 2.0 Session object, typically users will instantiate a derived class."""
+
+    def __init__(self, obj: c_void_p):
+        super().__init__(obj, _DLL.botan_tpm2_session_destroy)
+
+    @staticmethod
+    def session_bundle_(*args):
+        """Transforms a session bundle passed by the downstream user into a 3-tuple of session handles.
+        Users might pass a bare TPM2Session object or an iterable list of such objects."""
+        if len(args) == 1:
+            if isinstance(args[0], Iterable):
+                args = list(args[0])
+            elif args[0] is None:
+                args = []
+
+        if len(args) <= 3 and all(isinstance(s, TPM2Session) for s in args):
+            sessions = list(args)
+            while len(sessions) < 3:
+                sessions.append(None)
+            return (s.handle_() if isinstance(s, TPM2Session) else None for s in sessions)
+        else:
+            raise BotanException("session bundle arguments must be 0 to 3 TPM2Session objects")
+
+
+class TPM2UnauthenticatedSession(TPM2Session):
+    """Session object that is not bound to any authenication credential.
+    It provides basic parameter encryption between the application and the TPM."""
+    def __init__(self, ctx: TPM2Context):
+        obj = c_void_p(0)
+        _DLL.botan_tpm2_unauthenticated_session_init(byref(obj), ctx.handle_())
+        super().__init__(obj)
+
+#
 # RNG
 #
 class RandomNumberGenerator:
     # Can also use type "system"
-    def __init__(self, rng_type='system'):
+    def __init__(self, rng_type='system', **kwargs):
+        """Constructs a RandomNumberGenerator of type rng_type
+
+        Available RNG types are::
+
+        * 'system': Adapter to the operating system's RNG
+        * 'user':   Software-PRNG that is auto-seeded by the system RNG
+        * 'null':   Mock-RNG that fails if randomness is pulled from it
+        * 'hwrng':  Adapter to an available hardware RNG (platform dependent)
+        * 'tpm2':   Adapter to a TPM 2.0 RNG
+                    (needs additional named arguments tpm2_context= and, optionally, tpm2_sessions=)
+        """
         self.__obj = c_void_p(0)
-        _DLL.botan_rng_init(byref(self.__obj), _ctype_str(rng_type))
+        if rng_type == 'tpm2':
+            ctx = kwargs.pop("tpm2_context", None)
+            if not ctx or not isinstance(ctx, TPM2Context):
+                raise BotanException("Cannot instantiate a TPM2-based RNG without a TPM2 context, pass tpm2_context= argument?")
+            sessions = TPM2Session.session_bundle_(kwargs.pop("tpm2_sessions", None))
+            if kwargs:
+                raise BotanException("Unexpected arguments for TPM2 RNG: %s" % (", ".join(kwargs.keys())))
+            _DLL.botan_tpm2_rng_init(byref(self.__obj), ctx.handle_(), *sessions)
+        else:
+            if kwargs:
+                raise BotanException("Unexpected arguments for RNG type %s: %s" % (rng_type, ", ".join(kwargs.keys())))
+            _DLL.botan_rng_init(byref(self.__obj), _ctype_str(rng_type))
 
     def __del__(self):
         _DLL.botan_rng_destroy(self.__obj)
@@ -1038,83 +1200,114 @@ def kdf(algo, secret, out_len, salt, label):
 # Public key
 #
 class PublicKey: # pylint: disable=invalid-name
-
-    def __init__(self, obj=c_void_p(0)):
+    def __init__(self, obj=None):
+        if not obj:
+            obj = c_void_p(0)
         self.__obj = obj
 
     @classmethod
     def load(cls, val):
-        obj = c_void_p(0)
+        pub = PublicKey()
         bits = _ctype_bits(val)
-        _DLL.botan_pubkey_load(byref(obj), bits, len(bits))
-        return PublicKey(obj)
+        _DLL.botan_pubkey_load(byref(pub.handle_()), bits, len(bits))
+        return pub
 
     @classmethod
     def load_rsa(cls, n, e):
-        obj = c_void_p(0)
+        pub = PublicKey()
         n = MPI(n)
         e = MPI(e)
-        _DLL.botan_pubkey_load_rsa(byref(obj), n.handle_(), e.handle_())
-        return PublicKey(obj)
+        _DLL.botan_pubkey_load_rsa(byref(pub.handle_()), n.handle_(), e.handle_())
+        return pub
 
     @classmethod
     def load_dsa(cls, p, q, g, y):
-        obj = c_void_p(0)
+        pub = PublicKey()
         p = MPI(p)
         q = MPI(q)
         g = MPI(g)
         y = MPI(y)
-        _DLL.botan_pubkey_load_dsa(byref(obj), p.handle_(), q.handle_(), g.handle_(), y.handle_())
-        return PublicKey(obj)
+        _DLL.botan_pubkey_load_dsa(byref(pub.handle_()), p.handle_(), q.handle_(), g.handle_(), y.handle_())
+        return pub
 
     @classmethod
     def load_dh(cls, p, g, y):
-        obj = c_void_p(0)
+        pub = PublicKey()
         p = MPI(p)
         g = MPI(g)
         y = MPI(y)
-        _DLL.botan_pubkey_load_dh(byref(obj), p.handle_(), g.handle_(), y.handle_())
-        return PublicKey(obj)
+        _DLL.botan_pubkey_load_dh(byref(pub.handle_()), p.handle_(), g.handle_(), y.handle_())
+        return pub
 
     @classmethod
     def load_elgamal(cls, p, q, g, y):
-        obj = c_void_p(0)
+        pub = PublicKey()
         p = MPI(p)
         q = MPI(q)
         g = MPI(g)
         y = MPI(y)
-        _DLL.botan_pubkey_load_elgamal(byref(obj), p.handle_(), q.handle_(), g.handle_(), y.handle_())
-        return PublicKey(obj)
+        _DLL.botan_pubkey_load_elgamal(byref(pub.handle_()), p.handle_(), q.handle_(), g.handle_(), y.handle_())
+        return pub
 
     @classmethod
     def load_ecdsa(cls, curve, pub_x, pub_y):
-        obj = c_void_p(0)
+        pub = PublicKey()
         pub_x = MPI(pub_x)
         pub_y = MPI(pub_y)
-        _DLL.botan_pubkey_load_ecdsa(byref(obj), pub_x.handle_(), pub_y.handle_(), _ctype_str(curve))
-        return PublicKey(obj)
+        _DLL.botan_pubkey_load_ecdsa(byref(pub.handle_()), pub_x.handle_(), pub_y.handle_(), _ctype_str(curve))
+        return pub
 
     @classmethod
     def load_ecdh(cls, curve, pub_x, pub_y):
-        obj = c_void_p(0)
+        pub = PublicKey()
         pub_x = MPI(pub_x)
         pub_y = MPI(pub_y)
-        _DLL.botan_pubkey_load_ecdh(byref(obj), pub_x.handle_(), pub_y.handle_(), _ctype_str(curve))
-        return PublicKey(obj)
+        _DLL.botan_pubkey_load_ecdh(byref(pub.handle_()), pub_x.handle_(), pub_y.handle_(), _ctype_str(curve))
+        return pub
 
     @classmethod
     def load_sm2(cls, curve, pub_x, pub_y):
-        obj = c_void_p(0)
+        pub = PublicKey()
         pub_x = MPI(pub_x)
         pub_y = MPI(pub_y)
-        _DLL.botan_pubkey_load_sm2(byref(obj), pub_x.handle_(), pub_y.handle_(), _ctype_str(curve))
-        return PublicKey(obj)
+        _DLL.botan_pubkey_load_sm2(byref(pub.handle_()), pub_x.handle_(), pub_y.handle_(), _ctype_str(curve))
+        return pub
 
     @classmethod
     def load_kyber(cls, key):
-        obj = c_void_p(0)
-        _DLL.botan_pubkey_load_kyber(byref(obj), key, len(key))
-        return PublicKey(obj)
+        pub = PublicKey()
+        _DLL.botan_pubkey_load_kyber(byref(pub.handle_()), key, len(key))
+        return pub
+
+    @classmethod
+    def load_ml_kem(cls, mlkem_mode, key):
+        pub = PublicKey()
+        _DLL.botan_pubkey_load_ml_kem(byref(pub.handle_()), key, len(key), _ctype_str(mlkem_mode))
+        return pub
+
+    @classmethod
+    def load_ml_dsa(cls, mldsa_mode, key):
+        pub = PublicKey()
+        _DLL.botan_pubkey_load_ml_dsa(byref(pub.handle_()), key, len(key), _ctype_str(mldsa_mode))
+        return pub
+
+    @classmethod
+    def load_slh_dsa(cls, slhdsa_mode, key):
+        pub = PublicKey()
+        _DLL.botan_pubkey_load_slh_dsa(byref(pub.handle_()), key, len(key), _ctype_str(slhdsa_mode))
+        return pub
+
+    @classmethod
+    def load_frodokem(cls, frodo_mode, key):
+        pub = PublicKey()
+        _DLL.botan_pubkey_load_frodokem(byref(pub.handle_()), key, len(key), _ctype_str(frodo_mode))
+        return pub
+
+    @classmethod
+    def load_classic_mceliece(cls, cmce_mode, key):
+        pub = PublicKey()
+        _DLL.botan_pubkey_load_classic_mceliece(byref(pub.handle_()), key, len(key), _ctype_str(cmce_mode))
+        return pub
 
     def __del__(self):
         _DLL.botan_pubkey_destroy(self.__obj)
@@ -1147,7 +1340,11 @@ class PublicKey: # pylint: disable=invalid-name
     def to_pem(self):
         return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_pubkey_view_pem(self.__obj, vc, vfn))
 
+    def to_raw(self):
+        return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_pubkey_view_raw(self.__obj, vc, vfn))
+
     def view_kyber_raw_key(self):
+        """Deprecated: use to_raw() instead"""
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_pubkey_view_kyber_raw_key(self.__obj, vc, vfn))
 
     def fingerprint(self, hash_algorithm='SHA-256'):
@@ -1163,6 +1360,11 @@ class PublicKey: # pylint: disable=invalid-name
         _DLL.botan_pubkey_get_field(v.handle_(), self.__obj, _ctype_str(field_name))
         return int(v)
 
+    def object_identifier(self):
+        oid = OID()
+        _DLL.botan_pubkey_oid(byref(oid.handle_()), self.__obj)
+        return oid
+
     def get_public_point(self):
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_pubkey_view_ec_public_point(self.__obj, vc, vfn))
 
@@ -1170,17 +1372,18 @@ class PublicKey: # pylint: disable=invalid-name
 # Private Key
 #
 class PrivateKey:
-
-    def __init__(self, obj=c_void_p(0)):
+    def __init__(self, obj=None):
+        if not obj:
+            obj = c_void_p(0)
         self.__obj = obj
 
     @classmethod
     def load(cls, val, passphrase=""):
-        obj = c_void_p(0)
+        priv = PrivateKey()
         rng_obj = c_void_p(0) # unused in recent versions
         bits = _ctype_bits(val)
-        _DLL.botan_privkey_load(byref(obj), rng_obj, bits, len(bits), _ctype_str(passphrase))
-        return PrivateKey(obj)
+        _DLL.botan_privkey_load(byref(priv.handle_()), rng_obj, bits, len(bits), _ctype_str(passphrase))
+        return priv
 
     @classmethod
     def create(cls, algo, params, rng_obj):
@@ -1202,74 +1405,110 @@ class PrivateKey:
             algo = 'McEliece'
             params = "%d,%d" % (params[0], params[1])
 
+        priv = PrivateKey()
+        _DLL.botan_privkey_create(byref(priv.handle_()), _ctype_str(algo), _ctype_str(params), rng_obj.handle_())
+        return priv
+
+    @classmethod
+    def create_ec(cls, algo, ec_group, rng_obj):
         obj = c_void_p(0)
-        _DLL.botan_privkey_create(byref(obj), _ctype_str(algo), _ctype_str(params), rng_obj.handle_())
+        _DLL.botan_ec_privkey_create(byref(obj), _ctype_str(algo), ec_group.handle_(), rng_obj.handle_())
         return PrivateKey(obj)
 
     @classmethod
     def load_rsa(cls, p, q, e):
-        obj = c_void_p(0)
+        priv = PrivateKey()
         p = MPI(p)
         q = MPI(q)
         e = MPI(e)
-        _DLL.botan_privkey_load_rsa(byref(obj), p.handle_(), q.handle_(), e.handle_())
-        return PrivateKey(obj)
+        _DLL.botan_privkey_load_rsa(byref(priv.handle_()), p.handle_(), q.handle_(), e.handle_())
+        return priv
 
     @classmethod
     def load_dsa(cls, p, q, g, x):
-        obj = c_void_p(0)
+        priv = PrivateKey()
         p = MPI(p)
         q = MPI(q)
         g = MPI(g)
         x = MPI(x)
-        _DLL.botan_privkey_load_dsa(byref(obj), p.handle_(), q.handle_(), g.handle_(), x.handle_())
-        return PrivateKey(obj)
+        _DLL.botan_privkey_load_dsa(byref(priv.handle_()), p.handle_(), q.handle_(), g.handle_(), x.handle_())
+        return priv
 
     @classmethod
     def load_dh(cls, p, g, x):
-        obj = c_void_p(0)
+        priv = PrivateKey()
         p = MPI(p)
         g = MPI(g)
         x = MPI(x)
-        _DLL.botan_privkey_load_dh(byref(obj), p.handle_(), g.handle_(), x.handle_())
-        return PrivateKey(obj)
+        _DLL.botan_privkey_load_dh(byref(priv.handle_()), p.handle_(), g.handle_(), x.handle_())
+        return priv
 
     @classmethod
     def load_elgamal(cls, p, q, g, x):
-        obj = c_void_p(0)
+        priv = PrivateKey()
         p = MPI(p)
         q = MPI(q)
         g = MPI(g)
         x = MPI(x)
-        _DLL.botan_privkey_load_elgamal(byref(obj), p.handle_(), q.handle_(), g.handle_(), x.handle_())
-        return PrivateKey(obj)
+        _DLL.botan_privkey_load_elgamal(byref(priv.handle_()), p.handle_(), q.handle_(), g.handle_(), x.handle_())
+        return priv
 
     @classmethod
     def load_ecdsa(cls, curve, x):
-        obj = c_void_p(0)
+        priv = PrivateKey()
         x = MPI(x)
-        _DLL.botan_privkey_load_ecdsa(byref(obj), x.handle_(), _ctype_str(curve))
-        return PrivateKey(obj)
+        _DLL.botan_privkey_load_ecdsa(byref(priv.handle_()), x.handle_(), _ctype_str(curve))
+        return priv
 
     @classmethod
     def load_ecdh(cls, curve, x):
-        obj = c_void_p(0)
+        priv = PrivateKey()
         x = MPI(x)
-        _DLL.botan_privkey_load_ecdh(byref(obj), x.handle_(), _ctype_str(curve))
-        return PrivateKey(obj)
+        _DLL.botan_privkey_load_ecdh(byref(priv.handle_()), x.handle_(), _ctype_str(curve))
+        return priv
 
     @classmethod
     def load_sm2(cls, curve, x):
-        obj = c_void_p(0)
+        priv = PrivateKey()
         x = MPI(x)
-        _DLL.botan_privkey_load_sm2(byref(obj), x.handle_(), _ctype_str(curve))
-        return PrivateKey(obj)
+        _DLL.botan_privkey_load_sm2(byref(priv.handle_()), x.handle_(), _ctype_str(curve))
+        return priv
 
     @classmethod
     def load_kyber(cls, key):
-        obj = c_void_p(0)
-        _DLL.botan_privkey_load_kyber(byref(obj), key, len(key))
-        return PrivateKey(obj)
+        priv = PrivateKey()
+        _DLL.botan_privkey_load_kyber(byref(priv.handle_()), key, len(key))
+        return priv
+
+    @classmethod
+    def load_ml_kem(cls, mlkem_mode, key):
+        priv = PrivateKey()
+        _DLL.botan_privkey_load_ml_kem(byref(priv.handle_()), key, len(key), _ctype_str(mlkem_mode))
+        return priv
+
+    @classmethod
+    def load_ml_dsa(cls, mldsa_mode, key):
+        priv = PrivateKey()
+        _DLL.botan_privkey_load_ml_dsa(byref(priv.handle_()), key, len(key), _ctype_str(mldsa_mode))
+        return priv
+
+    @classmethod
+    def load_slh_dsa(cls, slh_dsa, key):
+        priv = PrivateKey()
+        _DLL.botan_privkey_load_slh_dsa(byref(priv.handle_()), key, len(key), _ctype_str(slh_dsa))
+        return priv
+
+    @classmethod
+    def load_frodokem(cls, frodo_mode, key):
+        priv = PrivateKey()
+        _DLL.botan_privkey_load_frodokem(byref(priv.handle_()), key, len(key), _ctype_str(frodo_mode))
+        return priv
+
+    @classmethod
+    def load_classic_mceliece(cls, cmce_mode, key):
+        priv = PrivateKey()
+        _DLL.botan_privkey_load_classic_mceliece(byref(priv.handle_()), key, len(key), _ctype_str(cmce_mode))
+        return priv
 
     def __del__(self):
         _DLL.botan_privkey_destroy(self.__obj)
@@ -1286,9 +1525,9 @@ class PrivateKey:
         return _call_fn_returning_str(32, lambda b, bl: _DLL.botan_privkey_algo_name(self.__obj, b, bl))
 
     def get_public_key(self):
-        pub = c_void_p(0)
-        _DLL.botan_privkey_export_pubkey(byref(pub), self.__obj)
-        return PublicKey(pub)
+        pub = PublicKey()
+        _DLL.botan_privkey_export_pubkey(byref(pub.handle_()), self.__obj)
+        return pub
 
     def to_der(self):
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_privkey_view_der(self.__obj, vc, vfn))
@@ -1296,7 +1535,11 @@ class PrivateKey:
     def to_pem(self):
         return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_privkey_view_pem(self.__obj, vc, vfn))
 
+    def to_raw(self):
+        return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_privkey_view_raw(self.__obj, vc, vfn))
+
     def view_kyber_raw_key(self):
+        """Deprecated: use to_raw() instead"""
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_privkey_view_kyber_raw_key(self.__obj, vc, vfn))
 
     def export(self, pem=False):
@@ -1321,6 +1564,23 @@ class PrivateKey:
         v = MPI()
         _DLL.botan_privkey_get_field(v.handle_(), self.__obj, _ctype_str(field_name))
         return int(v)
+
+    def object_identifier(self):
+        oid = OID()
+        _DLL.botan_privkey_oid(byref(oid.handle_()), self.__obj)
+        return oid
+
+    def stateful_operation(self):
+        r = c_int(0)
+        _DLL.botan_privkey_stateful_operation(self.__obj, byref(r))
+        if r.value == 0:
+            return False
+        return True
+
+    def remaining_operations(self):
+        r = c_uint64(0)
+        _DLL.botan_privkey_remaining_operations(self.__obj, byref(r))
+        return r.value
 
 class PKEncrypt:
     def __init__(self, key, padding):
@@ -1746,19 +2006,15 @@ class MPI:
 
     def __repr__(self):
         # Should have a better size estimate than this ...
-        out_len = c_size_t(self.bit_count() // 2)
+        bits = self.bit_count()
+        est_digits = 4 if bits < 3 else bits
+        out_len = c_size_t(est_digits)
         out = create_string_buffer(out_len.value)
 
         _DLL.botan_mp_to_str(self.__obj, c_uint8(10), out, byref(out_len))
 
-        out = out.raw[0:int(out_len.value)]
-        if out[-1] == '\x00':
-            out = out[:-1]
-            s = _ctype_to_str(out)
-        if s[0] == '0':
-            return s[1:]
-        else:
-            return s
+        out = out.raw[0:int(out_len.value - 1)]
+        return _ctype_to_str(out)
 
     def to_bytes(self):
         byte_count = self.byte_count()
@@ -1917,6 +2173,174 @@ class MPI:
 
     def set_bit(self, bit):
         _DLL.botan_mp_set_bit(self.__obj, c_size_t(bit))
+
+
+class OID:
+    def __init__(self, obj=None):
+        if not obj:
+            obj = c_void_p(0)
+        self.__obj = obj
+
+    def __del__(self):
+        _DLL.botan_oid_destroy(self.__obj)
+
+    def handle_(self):
+        return self.__obj
+
+    @classmethod
+    def from_string(cls, value):
+        oid = OID()
+        _DLL.botan_oid_from_string(byref(oid.handle_()), _ctype_str(value))
+        return oid
+
+    def to_string(self):
+        return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_oid_view_string(self.__obj, vc, vfn))
+
+    def to_name(self):
+        return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_oid_view_name(self.__obj, vc, vfn))
+
+    def register(self, name):
+        _DLL.botan_oid_register(self.__obj, _ctype_str(name))
+
+    def cmp(self, other):
+        r = c_int(0)
+        _DLL.botan_oid_cmp(byref(r), self.__obj, other.handle_())
+        return r.value
+
+    def __eq__(self, other):
+        return self.cmp(other) == 0
+
+    def __ne__(self, other):
+        return self.cmp(other) != 0
+
+    def __lt__(self, other):
+        return self.cmp(other) < 0
+
+    def __le__(self, other):
+        return self.cmp(other) <= 0
+
+    def __gt__(self, other):
+        return self.cmp(other) > 0
+
+    def __ge__(self, other):
+        return self.cmp(other) >= 0
+
+
+class ECGroup:
+    def __init__(self, obj=None):
+        if not obj:
+            obj = c_void_p(0)
+        self.__obj = obj
+
+    def handle_(self):
+        return self.__obj
+
+    def __del__(self):
+        _DLL.botan_ec_group_destroy(self.__obj)
+
+    @classmethod
+    def supports_application_specific_group(cls):
+        r = c_int(0)
+        _DLL.botan_ec_group_supports_application_specific_group(byref(r))
+        if r.value == 0:
+            return False
+        return True
+
+    @classmethod
+    def supports_named_group(cls, name):
+        r = c_int(0)
+        _DLL.botan_ec_group_supports_named_group(_ctype_str(name), byref(r))
+        if r.value == 0:
+            return False
+        return True
+
+    @classmethod
+    def from_params(cls, oid, p, a, b, base_x, base_y, order):
+        ec_group = ECGroup()
+        _DLL.botan_ec_group_from_params(
+            byref(ec_group.handle_()),
+            oid.handle_(),
+            p.handle_(),
+            a.handle_(),
+            b.handle_(),
+            base_x.handle_(),
+            base_y.handle_(),
+            order.handle_()
+        )
+        return ec_group
+
+    @classmethod
+    def from_ber(cls, ber):
+        ec_group = ECGroup()
+        _DLL.botan_ec_group_from_ber(byref(ec_group.handle_()), ber, len(ber))
+        return ec_group
+
+    @classmethod
+    def from_pem(cls, pem):
+        ec_group = ECGroup()
+        _DLL.botan_ec_group_from_pem(byref(ec_group.handle_()), _ctype_str(pem))
+        return ec_group
+
+    @classmethod
+    def from_oid(cls, oid):
+        ec_group = ECGroup()
+        _DLL.botan_ec_group_from_oid(byref(ec_group.handle_()), oid.handle_())
+        return ec_group
+
+    @classmethod
+    def from_name(cls, name):
+        ec_group = ECGroup()
+        _DLL.botan_ec_group_from_name(byref(ec_group.handle_()), _ctype_str(name))
+        return ec_group
+
+    def to_der(self):
+        return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_ec_group_view_der(self.__obj, vc, vfn))
+
+    def to_pem(self):
+        return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_ec_group_view_pem(self.__obj, vc, vfn))
+
+    def get_curve_oid(self):
+        oid = OID()
+        _DLL.botan_ec_group_get_curve_oid(byref(oid.handle_()), self.__obj)
+        return oid
+
+    def get_p(self):
+        p = MPI()
+        _DLL.botan_ec_group_get_p(byref(p.handle_()), self.__obj)
+        return p
+
+    def get_a(self):
+        a = MPI()
+        _DLL.botan_ec_group_get_a(byref(a.handle_()), self.__obj)
+        return a
+
+    def get_b(self):
+        b = MPI()
+        _DLL.botan_ec_group_get_b(byref(b.handle_()), self.__obj)
+        return b
+
+    def get_g_x(self):
+        g_x = MPI()
+        _DLL.botan_ec_group_get_g_x(byref(g_x.handle_()), self.__obj)
+        return g_x
+
+    def get_g_y(self):
+        g_y = MPI()
+        _DLL.botan_ec_group_get_g_y(byref(g_y.handle_()), self.__obj)
+        return g_y
+
+    def get_order(self):
+        order = MPI()
+        _DLL.botan_ec_group_get_order(byref(order.handle_()), self.__obj)
+        return order
+
+    def __eq__(self, other):
+        rc = _DLL.botan_ec_group_equal(self.__obj, other.handle_())
+        return rc == 1
+
+    def __ne__(self, other):
+        return not self == other
+
 
 class FormatPreservingEncryptionFE1:
 

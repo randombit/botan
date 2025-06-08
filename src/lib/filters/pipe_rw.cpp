@@ -59,7 +59,7 @@ void Pipe::write(uint8_t input) {
 * Write the contents of a DataSource into a Pipe
 */
 void Pipe::write(DataSource& source) {
-   secure_vector<uint8_t> buffer(BOTAN_DEFAULT_BUFFER_SIZE);
+   secure_vector<uint8_t> buffer(DefaultBufferSize);
    while(!source.end_of_data()) {
       size_t got = source.read(buffer.data(), buffer.size());
       write(buffer.data(), got);
@@ -103,7 +103,7 @@ secure_vector<uint8_t> Pipe::read_all(message_id msg) {
 */
 std::string Pipe::read_all_as_string(message_id msg) {
    msg = ((msg != DEFAULT_MESSAGE) ? msg : default_msg());
-   secure_vector<uint8_t> buffer(BOTAN_DEFAULT_BUFFER_SIZE);
+   secure_vector<uint8_t> buffer(DefaultBufferSize);
    std::string str;
    str.reserve(remaining(msg));
 

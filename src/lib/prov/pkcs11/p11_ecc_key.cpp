@@ -65,22 +65,16 @@ EC_PrivateKeyImportProperties::EC_PrivateKeyImportProperties(const std::vector<u
    add_binary(AttributeType::Value, m_value.serialize());
 }
 
-PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session, ObjectHandle handle) : Object(session, handle) {
-   secure_vector<uint8_t> ec_parameters = get_attribute_value(AttributeType::EcParams);
-   m_domain_params = EC_Group(unlock(ec_parameters));
-}
+PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session, ObjectHandle handle) :
+      Object(session, handle), m_domain_params(get_attribute_value(AttributeType::EcParams)) {}
 
 PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session, const EC_PrivateKeyImportProperties& props) :
-      Object(session, props) {
-   m_domain_params = EC_Group(props.ec_params());
-}
+      Object(session, props), m_domain_params(EC_Group(props.ec_params())) {}
 
 PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session,
                                            const std::vector<uint8_t>& ec_params,
                                            const EC_PrivateKeyGenerationProperties& props) :
-      Object(session) {
-   m_domain_params = EC_Group(ec_params);
-
+      Object(session), m_domain_params(ec_params) {
    EC_PublicKeyGenerationProperties pub_key_props(ec_params);
    pub_key_props.set_verify(true);
    pub_key_props.set_private(false);
@@ -102,7 +96,7 @@ PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session,
    Object public_key(session, pub_key_handle);
 
    auto pt_bytes = public_key.get_attribute_value(AttributeType::EcPoint);
-   m_public_key = decode_public_point(m_domain_params, pt_bytes).to_legacy_point();
+   m_public_key = decode_public_point(m_domain_params, pt_bytes);
 }
 
 size_t PKCS11_EC_PrivateKey::key_length() const {
@@ -110,11 +104,11 @@ size_t PKCS11_EC_PrivateKey::key_length() const {
 }
 
 std::vector<uint8_t> PKCS11_EC_PrivateKey::raw_public_key_bits() const {
-   return public_point().encode(EC_Point_Format::Compressed);
+   return public_ec_point().serialize_compressed();
 }
 
 std::vector<uint8_t> PKCS11_EC_PrivateKey::public_key_bits() const {
-   return public_point().encode(EC_Point_Format::Compressed);
+   return raw_public_key_bits();
 }
 
 size_t PKCS11_EC_PrivateKey::estimated_strength() const {
@@ -122,7 +116,7 @@ size_t PKCS11_EC_PrivateKey::estimated_strength() const {
 }
 
 bool PKCS11_EC_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
-   return m_public_key.on_the_curve();
+   return true;
 }
 
 AlgorithmIdentifier PKCS11_EC_PrivateKey::algorithm_identifier() const {

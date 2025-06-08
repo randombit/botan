@@ -114,7 +114,7 @@ size_t decode_length(DataSource* ber, size_t& field_size, size_t allow_indef) {
 * Find the EOC marker
 */
 size_t find_eoc(DataSource* ber, size_t allow_indef) {
-   secure_vector<uint8_t> buffer(BOTAN_DEFAULT_BUFFER_SIZE), data;
+   secure_vector<uint8_t> buffer(DefaultBufferSize), data;
 
    while(true) {
       const size_t got = ber->peek(buffer.data(), buffer.size(), data.size());

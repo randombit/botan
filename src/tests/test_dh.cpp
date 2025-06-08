@@ -32,12 +32,13 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test {
          const Botan::BigInt g = vars.get_req_bn("G");
          const Botan::BigInt x = vars.get_req_bn("X");
 
-         Botan::DL_Group group;
-         if(q == 0) {
-            group = Botan::DL_Group(p, g);
-         } else {
-            group = Botan::DL_Group(p, q, g);
-         }
+         auto group = [&]() {
+            if(q == 0) {
+               return Botan::DL_Group(p, g);
+            } else {
+               return Botan::DL_Group(p, q, g);
+            }
+         }();
 
          return std::make_unique<Botan::DH_PrivateKey>(group, x);
       }
@@ -48,12 +49,13 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test {
          const Botan::BigInt g = vars.get_req_bn("G");
          const Botan::BigInt y = vars.get_req_bn("Y");
 
-         Botan::DL_Group group;
-         if(q == 0) {
-            group = Botan::DL_Group(p, g);
-         } else {
-            group = Botan::DL_Group(p, q, g);
-         }
+         auto group = [&]() {
+            if(q == 0) {
+               return Botan::DL_Group(p, g);
+            } else {
+               return Botan::DL_Group(p, q, g);
+            }
+         }();
 
          Botan::DH_PublicKey key(group, y);
          return key.public_value();
@@ -116,7 +118,8 @@ class Diffie_Hellman_Keygen_Tests final : public PK_Key_Generation_Test {
       std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view keygen_params,
                                                              std::string_view /*provider*/,
                                                              std::span<const uint8_t> raw_key_bits) const override {
-         return std::make_unique<Botan::DH_PublicKey>(Botan::DL_Group(keygen_params), Botan::BigInt(raw_key_bits));
+         return std::make_unique<Botan::DH_PublicKey>(Botan::DL_Group::from_name(keygen_params),
+                                                      Botan::BigInt(raw_key_bits));
       }
 };
 

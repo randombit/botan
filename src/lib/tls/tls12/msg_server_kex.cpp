@@ -12,6 +12,7 @@
 #include <botan/pubkey.h>
 #include <botan/tls_extensions.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/target_info.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_reader.h>

@@ -1,2 +1,0 @@
-endian big
-wordsize 64

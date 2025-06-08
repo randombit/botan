@@ -1,0 +1,16 @@
+<defines>
+DILITHIUM_ROUND3 -> 20240916
+</defines>
+
+<module_info>
+name -> "Dilithium Round 3"
+type -> "Internal"
+</module_info>
+
+<requires>
+dilithium_common
+</requires>
+
+<header:internal>
+dilithium_round3_symmetric_primitives.h
+</header:internal>

@@ -56,6 +56,18 @@ All cipher mode implementations are are derived from the base class
     is authenticated, it will return some positive value (typically somewhere
     between 8 and 16).
 
+    .. note::
+
+       Usually, the ciphertext and tag are considered a bundle, and not split
+       apart except for internally during the decryption process. However a few
+       unfortunate libraries require you, the developer, to manually split the
+       ciphertext and the tag apart for decryption.
+
+       Should you encounter such an interface, it would be helpful to know that
+       in (almost all) cases the tag is appended at the end of the ciphertext.
+       The only exception to this at the moment is SIV, which prefixes the tag
+       instead - but SIV is rarely implemented by such libraries.
+
   .. cpp:function:: void clear()
 
     Clear all internal state. The object will act exactly like one which was
@@ -292,7 +304,7 @@ header). It is a subclass of :cpp:class:`Cipher_Mode`.
           During decryption, if the supplied authentication tag does not
           validate, finish will throw an instance of Invalid_Authentication_Tag
           (aka Integrity_Failure, which was the name for this exception in
-          versions before 2.10, a typedef is included for compatability).
+          versions before 2.10, a typedef is included for compatibility).
 
           If this occurs, all plaintext previously output via calls to update
           must be destroyed and not used in any way that an attacker could

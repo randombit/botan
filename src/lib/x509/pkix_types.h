@@ -12,9 +12,12 @@
 #define BOTAN_PKIX_TYPES_H_
 
 #include <botan/asn1_obj.h>
+
 #include <botan/pkix_enums.h>
+#include <initializer_list>
 #include <iosfwd>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <string_view>
@@ -38,6 +41,12 @@ inline std::string key_constraints_to_string(Key_Constraints c) {
 class BOTAN_PUBLIC_API(2, 0) X509_DN final : public ASN1_Object {
    public:
       X509_DN() = default;
+
+      explicit X509_DN(std::initializer_list<std::pair<std::string_view, std::string_view>> args) {
+         for(const auto& i : args) {
+            add_attribute(i.first, i.second);
+         }
+      }
 
       explicit X509_DN(const std::multimap<OID, std::string>& args) {
          for(const auto& i : args) {
@@ -607,7 +616,7 @@ class BOTAN_PUBLIC_API(2, 0) Extensions final : public ASN1_Object {
                                                                     bool critical,
                                                                     const std::vector<uint8_t>& body);
 
-      class Extensions_Info {
+      class BOTAN_UNSTABLE_API Extensions_Info {
          public:
             Extensions_Info(bool critical, std::unique_ptr<Certificate_Extension> ext) :
                   m_obj(std::move(ext)), m_bits(m_obj->encode_inner()), m_critical(critical) {}
@@ -621,10 +630,7 @@ class BOTAN_PUBLIC_API(2, 0) Extensions final : public ASN1_Object {
 
             const std::vector<uint8_t>& bits() const { return m_bits; }
 
-            const Certificate_Extension& obj() const {
-               BOTAN_ASSERT_NONNULL(m_obj.get());
-               return *m_obj;
-            }
+            const Certificate_Extension& obj() const;
 
          private:
             std::shared_ptr<Certificate_Extension> m_obj;

@@ -4,6 +4,8 @@ KECCAK -> 20131128
 
 <module_info>
 name -> "Keccak"
+brief -> "Pre-standard version of SHA-3 originally proposed during NIST competition"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>

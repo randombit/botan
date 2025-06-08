@@ -181,6 +181,20 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
 
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Extended_Key_Usage>()) {
       data->m_extended_key_usage = ext->object_identifiers();
+      /*
+      RFC 5280 section 4.2.1.12
+
+      "This extension indicates one or more purposes ..."
+
+      "If the extension is present, then the certificate MUST only be
+      used for one of the purposes indicated."
+
+      Thus we reject an EKU extension which is empty, since this indicates
+      the certificate cannot be used for any purpose.
+      */
+      if(data->m_extended_key_usage.empty()) {
+         throw Decoding_Error("Certificate has invalid empty EKU extension");
+      }
    }
 
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Basic_Constraints>()) {
@@ -691,10 +705,22 @@ std::string X509_Certificate::to_string() const {
    out << "Issued: " << this->not_before().readable_string() << "\n";
    out << "Expires: " << this->not_after().readable_string() << "\n";
 
+   try {
+      auto pubkey = this->subject_public_key();
+      out << "Public Key [" << pubkey->algo_name() << "-" << pubkey->key_length() << "]\n\n";
+      out << X509::PEM_encode(*pubkey) << "\n";
+   } catch(const Decoding_Error& ex) {
+      const AlgorithmIdentifier& alg_id = this->subject_public_key_algo();
+      out << "Public Key Invalid!\n"
+          << " OID: " << alg_id.oid().to_formatted_string() << "\n"
+          << " Error: " << ex.what() << "\n"
+          << " Hex: " << hex_encode(this->subject_public_key_bitstring()) << "\n";
+   }
+
    out << "Constraints:\n";
    Key_Constraints constraints = this->constraints();
    if(constraints.empty()) {
-      out << " None\n";
+      out << " No key constraints set\n";
    } else {
       if(constraints.includes(Key_Constraints::DigitalSignature)) {
          out << "   Digital Signature\n";
@@ -792,13 +818,8 @@ std::string X509_Certificate::to_string() const {
       out << "Subject keyid: " << hex_encode(this->subject_key_id()) << "\n";
    }
 
-   try {
-      auto pubkey = this->subject_public_key();
-      out << "Public Key [" << pubkey->algo_name() << "-" << pubkey->key_length() << "]\n\n";
-      out << X509::PEM_encode(*pubkey);
-   } catch(Decoding_Error&) {
-      const AlgorithmIdentifier& alg_id = this->subject_public_key_algo();
-      out << "Failed to decode key with oid " << alg_id.oid().to_string() << "\n";
+   if(this->is_self_signed()) {
+      out << "Certificate is self signed\n";
    }
 
    return out.str();

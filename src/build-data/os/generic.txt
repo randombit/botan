@@ -5,5 +5,6 @@ soname_suffix "so"
 atomics
 threads
 thread_local
+system_clock
 filesystem
 </target_features>

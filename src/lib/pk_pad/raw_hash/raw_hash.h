@@ -20,7 +20,7 @@ namespace Botan {
 *
 * This is exposed as the "Raw" padding scheme for signatures.
 */
-class RawHashFunction : public HashFunction {
+class RawHashFunction final : public HashFunction {
    public:
       RawHashFunction(std::unique_ptr<HashFunction> hash) : RawHashFunction(hash->name(), hash->output_length()) {}
 

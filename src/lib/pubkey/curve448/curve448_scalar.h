@@ -31,7 +31,7 @@ constexpr size_t words_for_bits(size_t x) {
  * L = 2^446 - 13818066809895115352007386748515426880336692474882178609894547503885
  * (RFC 7748 4.2)
  */
-class BOTAN_TEST_API Scalar448 {
+class BOTAN_TEST_API Scalar448 final {
    public:
       constexpr static size_t WORDS = words_for_bits(446);
       constexpr static size_t BYTES = ceil_tobytes(446);

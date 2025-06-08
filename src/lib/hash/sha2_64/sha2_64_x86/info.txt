@@ -1,0 +1,26 @@
+<defines>
+SHA2_64_X86 -> 20250310
+</defines>
+
+<module_info>
+name -> "SHA-512 SHA-NI"
+brief -> "SHA-512 using x86 instructions"
+</module_info>
+
+<isa>
+sha512
+</isa>
+
+<arch>
+x86_64
+</arch>
+
+<requires>
+cpuid
+</requires>
+
+<cc>
+gcc:14
+clang:17
+msvc
+</cc>

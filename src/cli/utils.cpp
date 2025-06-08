@@ -8,11 +8,14 @@
 #include "cli.h"
 
 #include <botan/version.h>
-#include <botan/internal/cpuid.h>
-#include <botan/internal/os_utils.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/target_info.h>
 #include <iomanip>
 #include <sstream>
+
+#if defined(BOTAN_HAS_CPUID)
+   #include <botan/internal/cpuid.h>
+#endif
 
 #if defined(BOTAN_HAS_HTTP_UTIL)
    #include <botan/internal/http_util.h>
@@ -20,6 +23,10 @@
 
 #if defined(BOTAN_HAS_UUID)
    #include <botan/uuid.h>
+#endif
+
+#if defined(BOTAN_HAS_OS_UTILS)
+   #include <botan/internal/os_utils.h>
 #endif
 
 namespace Botan_CLI {
@@ -188,6 +195,8 @@ class Version_Info final : public Command {
 
 BOTAN_REGISTER_COMMAND("version", Version_Info);
 
+#if defined(BOTAN_HAS_CPUID)
+
 class Print_Cpuid final : public Command {
    public:
       Print_Cpuid() : Command("cpuid") {}
@@ -202,6 +211,10 @@ class Print_Cpuid final : public Command {
 };
 
 BOTAN_REGISTER_COMMAND("cpuid", Print_Cpuid);
+
+#endif
+
+#if defined(BOTAN_HAS_OS_UTILS)
 
 class Cycle_Counter final : public Command {
    public:
@@ -261,6 +274,8 @@ class Cycle_Counter final : public Command {
 };
 
 BOTAN_REGISTER_COMMAND("cpu_clock", Cycle_Counter);
+
+#endif
 
 #if defined(BOTAN_HAS_UUID)
 

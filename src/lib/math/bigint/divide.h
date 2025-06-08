@@ -37,6 +37,20 @@ BOTAN_TEST_API
 void ct_divide(const BigInt& x, const BigInt& y, BigInt& q, BigInt& r);
 
 /**
+* BigInt division, const time variant, 2^k variant
+*
+* This runs with control flow independent of the value of y.
+* This function leaks the value of k and the length of y.
+* If k < bits(y) this returns zero
+*
+* @param k an integer
+* @param y a positive integer
+* @return q equal to 2**k / y
+*/
+BOTAN_TEST_API
+BigInt ct_divide_pow2k(size_t k, const BigInt& y);
+
+/**
 * BigInt division, const time variant
 *
 * This runs with control flow independent of the values of x/y.
@@ -53,7 +67,7 @@ inline BigInt ct_divide(const BigInt& x, const BigInt& y) {
 }
 
 /**
-* BigInt division, const time variant
+* Constant time division
 *
 * This runs with control flow independent of the values of x/y.
 * Warning: the loop bounds still leaks the size of x.
@@ -65,6 +79,31 @@ inline BigInt ct_divide(const BigInt& x, const BigInt& y) {
 */
 BOTAN_TEST_API
 void ct_divide_word(const BigInt& x, word y, BigInt& q, word& r);
+
+/**
+* Constant time division
+*
+* This runs with control flow independent of the values of x/y.
+* Warning: the loop bounds still leaks the size of x.
+*
+* @param x an integer
+* @param y a non-zero word
+* @return quotient floor(x / y)
+*/
+BigInt ct_divide_word(const BigInt& x, word y);
+
+/**
+* BigInt word modulo, const time variant
+*
+* This runs with control flow independent of the values of x/y.
+* Warning: the loop bounds still leaks the size of x.
+*
+* @param x a positive integer
+* @param y a non-zero word
+* @return r the remainder of x divided by y
+*/
+BOTAN_TEST_API
+word ct_mod_word(const BigInt& x, word y);
 
 /**
 * BigInt modulo, const time variant

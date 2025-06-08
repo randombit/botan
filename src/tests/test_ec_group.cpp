@@ -12,13 +12,12 @@
    #include <botan/bigint.h>
    #include <botan/data_src.h>
    #include <botan/ec_group.h>
-   #include <botan/ec_point.h>
    #include <botan/hex.h>
    #include <botan/numthry.h>
    #include <botan/pk_keys.h>
-   #include <botan/reducer.h>
    #include <botan/x509_key.h>
-   #include <botan/internal/curve_nistp.h>
+   #include <botan/internal/barrett.h>
+   #include <botan/internal/ec_inner_data.h>
 #endif
 
 namespace Botan_Tests {
@@ -26,6 +25,8 @@ namespace Botan_Tests {
 namespace {
 
 #if defined(BOTAN_HAS_ECC_GROUP)
+
+   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
 
 Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, const BigInt& max) {
    /*
@@ -60,6 +61,12 @@ Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, const
       }
    }
 
+   if(x == 0) {
+      // EC_Scalar rejects zero as an input, if we hit this case instead
+      // test with a completely randomized scalar
+      return BigInt::random_integer(rng, 1, max);
+   }
+
    if(max > 0) {
       while(x >= max) {
          const size_t b = x.bits() - 1;
@@ -73,7 +80,7 @@ Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, const
 
 Botan::EC_Point create_random_point(Botan::RandomNumberGenerator& rng, const Botan::EC_Group& group) {
    const Botan::BigInt& p = group.get_p();
-   const Botan::Modular_Reducer mod_p(p);
+   auto mod_p = Botan::Barrett_Reduction::for_public_modulus(p);
 
    for(;;) {
       const Botan::BigInt x = Botan::BigInt::random_integer(rng, 1, p);
@@ -110,8 +117,8 @@ std::vector<Test::Result> ECC_Randomized_Tests::run() {
       try {
          const size_t trials = (Test::run_long_tests() ? 10 : 3);
          for(size_t i = 0; i < trials; ++i) {
-            const Botan::BigInt a = group.random_scalar(rng());
-            const Botan::BigInt b = group.random_scalar(rng());
+            const Botan::BigInt a = test_integer(rng(), group.get_order_bits(), group.get_order());
+            const Botan::BigInt b = test_integer(rng(), group.get_order_bits(), group.get_order());
             const Botan::BigInt c = group.mod_order(a + b);
 
             const Botan::EC_Point P = pt * a;
@@ -160,77 +167,7 @@ std::vector<Test::Result> ECC_Randomized_Tests::run() {
 
 BOTAN_REGISTER_TEST("pubkey", "ecc_randomized", ECC_Randomized_Tests);
 
-class NIST_Curve_Reduction_Tests final : public Test {
-   public:
-      typedef std::function<void(Botan::BigInt&, Botan::secure_vector<Botan::word>&)> reducer_fn;
-
-      std::vector<Test::Result> run() override {
-         std::vector<Test::Result> results;
-
-         // Using lambdas here to avoid strange UbSan warning (#1370)
-
-         results.push_back(random_redc_test(
-            "P-384", Botan::prime_p384(), [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void {
-               Botan::redc_p384(p, ws);
-            }));
-         results.push_back(random_redc_test(
-            "P-256", Botan::prime_p256(), [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void {
-               Botan::redc_p256(p, ws);
-            }));
-         results.push_back(random_redc_test(
-            "P-224", Botan::prime_p224(), [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void {
-               Botan::redc_p224(p, ws);
-            }));
-         results.push_back(random_redc_test(
-            "P-192", Botan::prime_p192(), [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void {
-               Botan::redc_p192(p, ws);
-            }));
-         results.push_back(random_redc_test(
-            "P-521", Botan::prime_p521(), [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void {
-               Botan::redc_p521(p, ws);
-            }));
-
-         return results;
-      }
-
-      static Test::Result random_redc_test(const std::string& prime_name,
-                                           const Botan::BigInt& p,
-                                           const reducer_fn& redc_fn) {
-         const Botan::BigInt p2 = p * p;
-         const size_t p_bits = p.bits();
-
-         Botan::Modular_Reducer p_redc(p);
-         Botan::secure_vector<Botan::word> ws;
-
-         auto rng = Test::new_rng("random_redc " + prime_name);
-
-         Test::Result result("NIST " + prime_name + " reduction");
-         result.start_timer();
-
-         const size_t trials = (Test::run_long_tests() ? 128 : 16);
-
-         for(size_t i = 0; i <= trials; ++i) {
-            const Botan::BigInt x = test_integer(*rng, 2 * p_bits, p2);
-
-            // TODO: time and report all three approaches
-            const Botan::BigInt v1 = x % p;
-            const Botan::BigInt v2 = p_redc.reduce(x);
-
-            Botan::BigInt v3 = x;
-            redc_fn(v3, ws);
-
-            if(!result.test_eq("reference redc", v1, v2) || !result.test_eq("specialized redc", v2, v3)) {
-               result.test_note("failing input" + Botan::hex_encode(Botan::BigInt::encode(x)));
-            }
-         }
-
-         result.end_timer();
-
-         return result;
-      }
-};
-
-BOTAN_REGISTER_TEST("pubkey", "nist_redc", NIST_Curve_Reduction_Tests);
+   #endif
 
 class EC_Group_Tests : public Test {
    public:
@@ -282,9 +219,6 @@ class EC_Group_Tests : public Test {
             result.confirm("EC_Group via explicit DER is considered explict encoding",
                            group_via_explicit.used_explicit_encoding());
 
-            const auto pt_mult_by_order = group.get_base_point() * group.get_order();
-            result.confirm("Multiplying point by the order results in zero point", pt_mult_by_order.is_zero());
-
             if(group.a_is_minus_3()) {
                result.test_eq("Group A equals -3", group.get_a(), group.get_p() - 3);
             } else {
@@ -296,6 +230,10 @@ class EC_Group_Tests : public Test {
             } else {
                result.test_ne("Group " + group_name + " A does not equal zero", group.get_a(), BigInt(0));
             }
+
+   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
+            const auto pt_mult_by_order = group.get_base_point() * group.get_order();
+            result.confirm("Multiplying point by the order results in zero point", pt_mult_by_order.is_zero());
 
             // get a valid point
             Botan::EC_Point p = group.get_base_point() * this->rng().next_nonzero_byte();
@@ -318,6 +256,7 @@ class EC_Group_Tests : public Test {
             test_basic_math(result, group);
             test_point_swap(result, group);
             test_zeropoint(result, group);
+   #endif
 
             result.end_timer();
 
@@ -328,6 +267,8 @@ class EC_Group_Tests : public Test {
       }
 
    private:
+   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
+
       void test_ser_der(Test::Result& result, const Botan::EC_Group& group) {
          // generate point
          const Botan::EC_Point pt = create_random_point(this->rng(), group);
@@ -336,8 +277,17 @@ class EC_Group_Tests : public Test {
          for(auto scheme : {Botan::EC_Point_Format::Uncompressed,
                             Botan::EC_Point_Format::Compressed,
                             Botan::EC_Point_Format::Hybrid}) {
-            result.test_eq("encoded/decode rt works", group.OS2ECP(pt.encode(scheme)), pt);
-            result.test_eq("encoded/decode rt works", group.OS2ECP(zero.encode(scheme)), zero);
+            try {
+               result.test_eq("encoded/decode rt works", group.OS2ECP(pt.encode(scheme)), pt);
+            } catch(Botan::Exception& e) {
+               result.test_failure("Failed to round trip encode a random point", e.what());
+            }
+
+            try {
+               result.test_eq("encoded/decode rt works", group.OS2ECP(zero.encode(scheme)), zero);
+            } catch(Botan::Exception& e) {
+               result.test_failure("Failed to round trip encode a random point", e.what());
+            }
          }
       }
 
@@ -414,252 +364,47 @@ class EC_Group_Tests : public Test {
             result.test_eq("encoded/decode rt works", group.OS2ECP(v), zero);
          }
       }
+   #endif
 };
 
 BOTAN_REGISTER_TEST("pubkey", "ec_group", EC_Group_Tests);
 
 Test::Result test_decoding_with_seed() {
-   Test::Result result("ECC Unit");
-
-   const auto secp384r1_with_seed = Botan::EC_Group::from_PEM(Test::read_data_file("x509/ecc/secp384r1_seed.pem"));
-
-   result.confirm("decoding worked", secp384r1_with_seed.initialized());
-
-   const auto secp384r1 = Botan::EC_Group::from_name("secp384r1");
-
-   result.test_eq("P-384 prime", secp384r1_with_seed.get_p(), secp384r1.get_p());
-
-   return result;
-}
-
-Test::Result test_mixed_points() {
-   Test::Result result("ECC Unit");
-
-   const auto secp256r1 = Botan::EC_Group::from_name("secp256r1");
-   const auto secp384r1 = Botan::EC_Group::from_name("secp384r1");
-
-   const Botan::EC_Point& G256 = secp256r1.get_base_point();
-   const Botan::EC_Point& G384 = secp384r1.get_base_point();
-
-   result.test_throws("Mixing points from different groups", [&] { Botan::EC_Point p = G256 + G384; });
-   return result;
-}
-
-Test::Result test_basic_operations() {
-   Test::Result result("ECC Unit");
-
-   // precalculation
-   const auto secp160r1 = Botan::EC_Group::from_name("secp160r1");
-   const Botan::EC_Point& p_G = secp160r1.get_base_point();
-
-   const Botan::EC_Point& p0 = p_G;
-   const Botan::EC_Point p1 = p_G * 2;
-
-   result.test_eq("p1 affine x", p1.get_affine_x(), Botan::BigInt("16984103820118642236896513183038186009872590470"));
-   result.test_eq("p1 affine y", p1.get_affine_y(), Botan::BigInt("1373093393927139016463695321221277758035357890939"));
-
-   const Botan::EC_Point simplePlus = p1 + p0;
-   const Botan::EC_Point exp_simplePlus =
-      secp160r1.point(Botan::BigInt("704859595002530890444080436569091156047721708633"),
-                      Botan::BigInt("1147993098458695153857594941635310323215433166682"));
-
-   result.test_eq("point addition", simplePlus, exp_simplePlus);
-
-   const Botan::EC_Point simpleMinus = p1 - p0;
-   result.test_eq("point subtraction", simpleMinus, p_G);
-
-   const Botan::EC_Point simpleMult = p1 * 123456789;
-
-   result.test_eq("point mult affine x",
-                  simpleMult.get_affine_x(),
-                  Botan::BigInt("43638877777452195295055270548491599621118743290"));
-   result.test_eq("point mult affine y",
-                  simpleMult.get_affine_y(),
-                  Botan::BigInt("56841378500012376527163928510402662349220202981"));
-
-   return result;
-}
-
-Test::Result test_enc_dec_compressed_160() {
-   Test::Result result("ECC Unit");
-
-   // Test for compressed conversion (02/03) 160bit
-   const auto secp160r1 = Botan::EC_Group::from_name("secp160r1");
-   const std::vector<uint8_t> G_comp = Botan::hex_decode("024A96B5688EF573284664698968C38BB913CBFC82");
-   const Botan::EC_Point p = secp160r1.OS2ECP(G_comp);
-   const std::vector<uint8_t> sv_result = p.encode(Botan::EC_Point_Format::Compressed);
-
-   result.test_eq("result", sv_result, G_comp);
-   return result;
-}
-
-Test::Result test_enc_dec_compressed_256() {
-   Test::Result result("ECC Unit");
-
-   const auto group = Botan::EC_Group::from_name("secp256r1");
-
-   const std::string G_secp_comp = "036B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296";
-   const std::vector<uint8_t> sv_G_secp_comp = Botan::hex_decode(G_secp_comp);
-
-   Botan::EC_Point p_G = group.OS2ECP(sv_G_secp_comp);
-   std::vector<uint8_t> sv_result = p_G.encode(Botan::EC_Point_Format::Compressed);
-
-   result.test_eq("compressed_256", sv_result, sv_G_secp_comp);
-   return result;
-}
-
-Test::Result test_enc_dec_uncompressed_112() {
-   Test::Result result("ECC Unit");
-
-   // Test for uncompressed conversion (04) 112bit
-
-   // Curve is secp112r2
-
-   const Botan::BigInt p("0xdb7c2abf62e35e668076bead208b");
-   const Botan::BigInt a("0x6127C24C05F38A0AAAF65C0EF02C");
-   const Botan::BigInt b("0x51DEF1815DB5ED74FCC34C85D709");
-
-   const Botan::BigInt g_x("0x4BA30AB5E892B4E1649DD0928643");
-   const Botan::BigInt g_y("0xADCD46F5882E3747DEF36E956E97");
-
-   const Botan::BigInt order("0x36DF0AAFD8B8D7597CA10520D04B");
-   const Botan::BigInt cofactor("4");  // !
-
-   // This uses the deprecated constructor due to making use of cofactor > 1
-   const Botan::EC_Group group(p, a, b, g_x, g_y, order, cofactor);
-
-   const std::string G_secp_uncomp = "044BA30AB5E892B4E1649DD0928643ADCD46F5882E3747DEF36E956E97";
-   const std::vector<uint8_t> sv_G_secp_uncomp = Botan::hex_decode(G_secp_uncomp);
-
-   Botan::EC_Point p_G = group.OS2ECP(sv_G_secp_uncomp);
-   std::vector<uint8_t> sv_result = p_G.encode(Botan::EC_Point_Format::Uncompressed);
-
-   result.test_eq("uncompressed_112", sv_result, sv_G_secp_uncomp);
-   return result;
-}
-
-Test::Result test_enc_dec_uncompressed_521() {
-   Test::Result result("ECC Unit");
-
-   // Test for uncompressed conversion(04) with big values(521 bit)
-
-   const std::string G_secp_uncomp =
-      "0400C6858E06B70404E9CD9E3ECB662395B4429C648139053FB521F828AF606B4D3DBAA14B5E77EFE75928FE1DC127A2ffA8DE3348B3C1856A429BF97E7E31C2E5BD66011839296A789A3BC0045C8A5FB42C7D1BD998F54449579B446817AFBD17273E662C97EE72995EF42640C550B9013FAD0761353C7086A272C24088BE94769FD16650";
-
-   const std::vector<uint8_t> sv_G_secp_uncomp = Botan::hex_decode(G_secp_uncomp);
-
-   const auto group = Botan::EC_Group::from_name("secp521r1");
-
-   Botan::EC_Point p_G = group.OS2ECP(sv_G_secp_uncomp);
-
-   std::vector<uint8_t> sv_result = p_G.encode(Botan::EC_Point_Format::Uncompressed);
-
-   result.test_eq("expected", sv_result, sv_G_secp_uncomp);
-   return result;
-}
-
-Test::Result test_ecc_registration() {
-   Test::Result result("ECC registration");
-
-   // secp128r1
-   const Botan::BigInt p("0xfffffffdffffffffffffffffffffffff");
-   const Botan::BigInt a("0xfffffffdfffffffffffffffffffffffc");
-   const Botan::BigInt b("0xe87579c11079f43dd824993c2cee5ed3");
-
-   const Botan::BigInt g_x("0x161ff7528b899b2d0c28607ca52c5b86");
-   const Botan::BigInt g_y("0xcf5ac8395bafeb13c02da292dded7a83");
-   const Botan::BigInt order("0xfffffffe0000000075a30d1b9038a115");
-
-   const Botan::OID oid("1.3.132.0.28");
-
-   // Creating this object implicitly registers the curve for future use ...
-   Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
-
-   auto group = Botan::EC_Group::from_OID(oid);
-
-   result.test_eq("Group registration worked", group.get_p(), p);
-
-   return result;
-}
-
-Test::Result test_ec_group_from_params() {
-   Test::Result result("EC_Group from params");
-
-   Botan::EC_Group::clear_registered_curve_data();
-
-   // secp256r1
-   const Botan::BigInt p("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF");
-   const Botan::BigInt a("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC");
-   const Botan::BigInt b("0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B");
-
-   const Botan::BigInt g_x("0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296");
-   const Botan::BigInt g_y("0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5");
-   const Botan::BigInt order("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551");
-
-   const Botan::OID oid("1.2.840.10045.3.1.7");
-
-   // This uses the deprecated constructor to verify we dedup even without an OID
-   // This whole test can be removed once explicit curve support is removed
-   Botan::EC_Group reg_group(p, a, b, g_x, g_y, order, 1);
-   result.confirm("Group has correct OID", reg_group.get_curve_oid() == oid);
-
-   return result;
-}
-
-Test::Result test_ec_group_bad_registration() {
-   Test::Result result("EC_Group registering non-match");
-
-   Botan::EC_Group::clear_registered_curve_data();
-
-   // secp256r1 params except with a bad B param
-   const Botan::BigInt p("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF");
-   const Botan::BigInt a("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC");
-   const Botan::BigInt b("0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604C");
-
-   const Botan::BigInt g_x("0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296");
-   const Botan::BigInt g_y("0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5");
-   const Botan::BigInt order("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551");
-
-   const Botan::OID oid("1.2.840.10045.3.1.7");
+   Test::Result result("Decode EC_Group with seed");
 
    try {
-      Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
-      result.test_failure("Should have failed");
-   } catch(Botan::Invalid_Argument&) {
-      result.test_success("Got expected exception");
+      if(Botan::EC_Group::supports_named_group("secp384r1")) {
+         const auto secp384r1 = Botan::EC_Group::from_name("secp384r1");
+         const auto secp384r1_with_seed =
+            Botan::EC_Group::from_PEM(Test::read_data_file("x509/ecc/secp384r1_seed.pem"));
+         result.confirm("decoding worked", secp384r1_with_seed.initialized());
+         result.test_eq("P-384 prime", secp384r1_with_seed.get_p(), secp384r1.get_p());
+      }
+   } catch(Botan::Exception& e) {
+      result.test_failure(e.what());
    }
 
    return result;
 }
 
-Test::Result test_ec_group_duplicate_orders() {
-   Test::Result result("EC_Group with duplicate group order");
+Test::Result test_mixed_points() {
+   Test::Result result("Mixed Point Arithmetic");
 
-   Botan::EC_Group::clear_registered_curve_data();
+   if(Botan::EC_Group::supports_named_group("secp256r1") && Botan::EC_Group::supports_named_group("secp384r1")) {
+      const auto secp256r1 = Botan::EC_Group::from_name("secp256r1");
+      const auto secp384r1 = Botan::EC_Group::from_name("secp384r1");
 
-   // secp256r1
-   const Botan::BigInt p("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF");
-   const Botan::BigInt a("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC");
-   const Botan::BigInt b("0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B");
+   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
+      const Botan::EC_Point& G256 = secp256r1.get_base_point();
+      const Botan::EC_Point& G384 = secp384r1.get_base_point();
 
-   const Botan::BigInt g_x("0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296");
-   const Botan::BigInt g_y("0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5");
-   const Botan::BigInt order("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551");
+      result.test_throws("Mixing points from different groups", [&] { Botan::EC_Point p = G256 + G384; });
+   #endif
 
-   const Botan::OID oid("1.3.6.1.4.1.25258.100.0");  // some other random OID
-
-   Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
-   result.test_success("Registration success");
-   result.confirm("Group has correct OID", reg_group.get_curve_oid() == oid);
-
-   // We can now get it by OID:
-   const auto hc_group = Botan::EC_Group::from_OID(oid);
-   result.confirm("Group has correct OID", hc_group.get_curve_oid() == oid);
-
-   // Existing secp256r1 unmodified:
-   const Botan::OID secp160r1("1.2.840.10045.3.1.7");
-   const auto other_group = Botan::EC_Group::from_OID(secp160r1);
-   result.confirm("Group has correct OID", other_group.get_curve_oid() == secp160r1);
+      const auto p1 = Botan::EC_AffinePoint::generator(secp256r1);
+      const auto p2 = Botan::EC_AffinePoint::generator(secp384r1);
+      result.test_throws("Mixing points from different groups", [&] { auto p3 = p1.add(p2); });
+   }
 
    return result;
 }
@@ -671,21 +416,389 @@ class ECC_Unit_Tests final : public Test {
 
          results.push_back(test_decoding_with_seed());
          results.push_back(test_mixed_points());
-         results.push_back(test_basic_operations());
-         results.push_back(test_enc_dec_compressed_160());
-         results.push_back(test_enc_dec_compressed_256());
-         results.push_back(test_enc_dec_uncompressed_112());
-         results.push_back(test_enc_dec_uncompressed_521());
-         results.push_back(test_ecc_registration());
-         results.push_back(test_ec_group_from_params());
-         results.push_back(test_ec_group_bad_registration());
-         results.push_back(test_ec_group_duplicate_orders());
 
          return results;
       }
 };
 
-BOTAN_REGISTER_SERIALIZED_TEST("pubkey", "ecc_unit", ECC_Unit_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecc_unit", ECC_Unit_Tests);
+
+class EC_Group_Registration_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+
+         if(Botan::EC_Group::supports_application_specific_group()) {
+            results.push_back(test_ecc_registration());
+            results.push_back(test_ec_group_from_params());
+            results.push_back(test_ec_group_bad_registration());
+            results.push_back(test_ec_group_duplicate_orders());
+            results.push_back(test_ec_group_registration_with_custom_oid());
+         }
+
+         return results;
+      }
+
+   private:
+      Test::Result test_ecc_registration() {
+         Test::Result result("ECC registration");
+
+         // numsp256d1
+         const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF43");
+         const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF40");
+         const Botan::BigInt b("0x25581");
+         const Botan::BigInt order("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE43C8275EA265C6020AB20294751A825");
+
+         const Botan::BigInt g_x("0x01");
+         const Botan::BigInt g_y("0x696F1853C1E466D7FC82C96CCEEEDD6BD02C2F9375894EC10BF46306C2B56C77");
+
+         const Botan::OID oid("1.3.6.1.4.1.25258.4.1");
+
+         // Creating this object implicitly registers the curve for future use ...
+         Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
+
+         auto group = Botan::EC_Group::from_OID(oid);
+
+         result.test_eq("Group registration worked", group.get_p(), p);
+
+         // TODO(Botan4) this could change to == Generic
+         result.confirm("Group is not pcurve", group.engine() != Botan::EC_Group_Engine::Optimized);
+
+         return result;
+      }
+
+      Test::Result test_ec_group_from_params() {
+         Test::Result result("EC_Group from params");
+
+         Botan::EC_Group::clear_registered_curve_data();
+
+         // secp256r1
+         const Botan::BigInt p("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF");
+         const Botan::BigInt a("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC");
+         const Botan::BigInt b("0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B");
+
+         const Botan::BigInt g_x("0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296");
+         const Botan::BigInt g_y("0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5");
+         const Botan::BigInt order("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551");
+
+         const Botan::OID oid("1.2.840.10045.3.1.7");
+
+         // This uses the deprecated constructor to verify we dedup even without an OID
+         // This whole test can be removed once explicit curve support is removed
+         Botan::EC_Group reg_group(p, a, b, g_x, g_y, order, 1);
+         result.confirm("Group has correct OID", reg_group.get_curve_oid() == oid);
+
+         return result;
+      }
+
+      Test::Result test_ec_group_bad_registration() {
+         Test::Result result("EC_Group registering non-match");
+
+         Botan::EC_Group::clear_registered_curve_data();
+
+         // secp256r1 params except with a bad B param
+         const Botan::BigInt p("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF");
+         const Botan::BigInt a("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC");
+         const Botan::BigInt b("0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604C");
+
+         const Botan::BigInt g_x("0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296");
+         const Botan::BigInt g_y("0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5");
+         const Botan::BigInt order("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551");
+
+         const Botan::OID oid("1.2.840.10045.3.1.7");
+
+         try {
+            Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
+            result.test_failure("Should have failed");
+         } catch(Botan::Invalid_Argument&) {
+            result.test_success("Got expected exception");
+         }
+
+         return result;
+      }
+
+      Test::Result test_ec_group_duplicate_orders() {
+         Test::Result result("EC_Group with duplicate group order");
+
+         Botan::EC_Group::clear_registered_curve_data();
+
+         // secp256r1
+         const Botan::BigInt p("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF");
+         const Botan::BigInt a("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC");
+         const Botan::BigInt b("0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B");
+
+         const Botan::BigInt g_x("0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296");
+         const Botan::BigInt g_y("0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5");
+         const Botan::BigInt order("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551");
+
+         const Botan::OID oid("1.3.6.1.4.1.25258.100.0");  // some other random OID
+
+         Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
+         result.test_success("Registration success");
+         result.confirm("Group has correct OID", reg_group.get_curve_oid() == oid);
+
+         // We can now get it by OID:
+         const auto hc_group = Botan::EC_Group::from_OID(oid);
+         result.confirm("Group has correct OID", hc_group.get_curve_oid() == oid);
+
+         // Existing secp256r1 unmodified:
+         const Botan::OID secp160r1("1.2.840.10045.3.1.7");
+         const auto other_group = Botan::EC_Group::from_OID(secp160r1);
+         result.confirm("Group has correct OID", other_group.get_curve_oid() == secp160r1);
+
+         return result;
+      }
+
+      Test::Result test_ec_group_registration_with_custom_oid() {
+         Test::Result result("EC_Group registration of standard group with custom OID");
+
+         Botan::EC_Group::clear_registered_curve_data();
+
+         const Botan::OID secp256r1_oid("1.2.840.10045.3.1.7");
+         const auto secp256r1 = Botan::EC_Group::from_OID(secp256r1_oid);
+         result.confirm("Group has correct OID", secp256r1.get_curve_oid() == secp256r1_oid);
+
+         const Botan::OID custom_oid("1.3.6.1.4.1.25258.100.99");  // some other random OID
+
+         Botan::OID::register_oid(custom_oid, "secp256r1");
+
+         Botan::EC_Group reg_group(custom_oid,
+                                   secp256r1.get_p(),
+                                   secp256r1.get_a(),
+                                   secp256r1.get_b(),
+                                   secp256r1.get_g_x(),
+                                   secp256r1.get_g_y(),
+                                   secp256r1.get_order());
+
+         result.test_success("Registration success");
+         result.confirm("Group has correct OID", reg_group.get_curve_oid() == custom_oid);
+
+         // We can now get it by OID:
+         result.confirm("Group has correct OID", Botan::EC_Group::from_OID(custom_oid).get_curve_oid() == custom_oid);
+
+         // In the current data model of EC_Group there is a 1:1 OID:group, so these
+         // have distinct underlying data
+         result.confirm("Groups have different inner data pointers", reg_group._data() != secp256r1._data());
+
+   #if defined(BOTAN_HAS_PCURVES_SECP256R1)
+         // However we should have gotten a pcurves out of the deal *and* it
+         // should be the exact same shared_ptr as the official curve
+
+         result.confirm("Group is pcurves based", reg_group.engine() == Botan::EC_Group_Engine::Optimized);
+
+         try {
+            const auto& pcurve = reg_group._data()->pcurve();
+            result.confirm("Group with custom OID got the same pcurve pointer",
+                           &pcurve == &secp256r1._data()->pcurve());
+         } catch(...) {
+            result.test_failure("Group with custom OID did not get a pcurve pointer");
+         }
+   #endif
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_SERIALIZED_TEST("pubkey", "ec_group_registration", EC_Group_Registration_Tests);
+
+class EC_PointEnc_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+
+         auto& rng = Test::rng();
+
+         for(const auto& group_id : Botan::EC_Group::known_named_groups()) {
+            const auto group = Botan::EC_Group::from_name(group_id);
+
+            Result result("EC_AffinePoint encoding " + group_id);
+
+            result.start_timer();
+
+            for(size_t trial = 0; trial != 100; ++trial) {
+               const auto scalar = Botan::EC_Scalar::random(group, rng);
+               const auto pt = Botan::EC_AffinePoint::g_mul(scalar, rng);
+
+               const auto pt_u = pt.serialize_uncompressed();
+               result.test_eq("Expected uncompressed header", static_cast<size_t>(pt_u[0]), 0x04);
+               const size_t fe_bytes = (pt_u.size() - 1) / 2;
+               const auto pt_c = pt.serialize_compressed();
+
+               result.test_eq("Expected compressed size", pt_c.size(), 1 + fe_bytes);
+               const uint8_t expected_c_header = (pt_u[pt_u.size() - 1] % 2 == 0) ? 0x02 : 0x03;
+               result.confirm("Expected compressed header", pt_c[0] == expected_c_header);
+
+               result.test_eq(
+                  "Expected compressed x", std::span{pt_c}.subspan(1), std::span{pt_u}.subspan(1, fe_bytes));
+
+               if(auto d_pt_u = Botan::EC_AffinePoint::deserialize(group, pt_u)) {
+                  result.test_eq(
+                     "Deserializing uncompressed returned correct point", d_pt_u->serialize_uncompressed(), pt_u);
+               } else {
+                  result.test_failure("Failed to deserialize uncompressed point");
+               }
+
+               if(auto d_pt_c = Botan::EC_AffinePoint::deserialize(group, pt_c)) {
+                  result.test_eq(
+                     "Deserializing compressed returned correct point", d_pt_c->serialize_uncompressed(), pt_u);
+               } else {
+                  result.test_failure("Failed to deserialize compressed point");
+               }
+
+               const auto neg_pt_c = [&]() {
+                  auto x = pt_c;
+                  x[0] ^= 0x01;
+                  return x;
+               }();
+
+               if(auto d_neg_pt_c = Botan::EC_AffinePoint::deserialize(group, neg_pt_c)) {
+                  result.test_eq("Deserializing compressed with inverted header returned negated point",
+                                 d_neg_pt_c->serialize_uncompressed(),
+                                 pt.negate().serialize_uncompressed());
+               } else {
+                  result.test_failure("Failed to deserialize compressed point");
+               }
+            }
+
+            result.end_timer();
+
+            results.push_back(result);
+         }
+
+         return results;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "ec_point_enc", EC_PointEnc_Tests);
+
+class EC_Point_Arithmetic_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+
+         auto& rng = Test::rng();
+
+         for(const auto& group_id : Botan::EC_Group::known_named_groups()) {
+            const auto group = Botan::EC_Group::from_name(group_id);
+
+            Result result("EC_AffinePoint arithmetic " + group_id);
+
+            result.start_timer();
+
+            const auto one = Botan::EC_Scalar::one(group);
+            const auto zero = one - one;
+            const auto g = Botan::EC_AffinePoint::generator(group);
+            const auto g_bytes = g.serialize_uncompressed();
+
+            const auto id = Botan::EC_AffinePoint::g_mul(zero, rng);
+            result.confirm("g*zero is point at identity", id.is_identity());
+
+            const auto id2 = id.add(id);
+            result.confirm("identity plus itself is identity", id2.is_identity());
+
+            const auto g_one = Botan::EC_AffinePoint::g_mul(one, rng);
+            result.test_eq("g*one == generator", g_one.serialize_uncompressed(), g_bytes);
+
+            const auto g_plus_id = g_one.add(id);
+            result.test_eq("g + id == g", g_plus_id.serialize_uncompressed(), g_bytes);
+
+            const auto id_plus_g = id.add(g_one);
+            result.test_eq("id + g == g", id_plus_g.serialize_uncompressed(), g_bytes);
+
+            const auto g_neg_one = Botan::EC_AffinePoint::g_mul(one.negate(), rng);
+
+            const auto id_from_g = g_one.add(g_neg_one);
+            result.confirm("g - g is identity", id_from_g.is_identity());
+
+            const auto g_two = Botan::EC_AffinePoint::g_mul(one + one, rng);
+            const auto g_plus_g = g_one.add(g_one);
+            result.test_eq("2*g == g+g", g_two.serialize_uncompressed(), g_plus_g.serialize_uncompressed());
+
+            result.confirm("Scalar::zero is zero", zero.is_zero());
+            result.confirm("(zero+zero) is zero", (zero + zero).is_zero());
+            result.confirm("(zero*zero) is zero", (zero * zero).is_zero());
+            result.confirm("(zero-zero) is zero", (zero - zero).is_zero());
+
+            const auto neg_zero = zero.negate();
+            result.confirm("zero.negate() is zero", neg_zero.is_zero());
+
+            result.confirm("(zero+nz) is zero", (zero + neg_zero).is_zero());
+            result.confirm("(nz+nz) is zero", (neg_zero + neg_zero).is_zero());
+            result.confirm("(nz+zero) is zero", (neg_zero + zero).is_zero());
+
+            result.confirm("Scalar::one is not zero", !one.is_zero());
+            result.confirm("(one-one) is zero", (one - one).is_zero());
+            result.confirm("(one+one.negate()) is zero", (one + one.negate()).is_zero());
+            result.confirm("(one.negate()+one) is zero", (one.negate() + one).is_zero());
+
+            for(size_t i = 0; i != 16; ++i) {
+               const auto pt = Botan::EC_AffinePoint::g_mul(Botan::EC_Scalar::random(group, rng), rng);
+
+               const auto a = Botan::EC_Scalar::random(group, rng);
+               const auto b = Botan::EC_Scalar::random(group, rng);
+               const auto c = a + b;
+
+               const auto Pa = pt.mul(a, rng);
+               const auto Pb = pt.mul(b, rng);
+               const auto Pc = pt.mul(c, rng);
+
+               const auto Pc_bytes = Pc.serialize_uncompressed();
+
+               const auto Pab = Pa.add(Pb);
+               result.test_eq("Pa + Pb == Pc", Pab.serialize_uncompressed(), Pc_bytes);
+
+               const auto Pba = Pb.add(Pa);
+               result.test_eq("Pb + Pa == Pc", Pba.serialize_uncompressed(), Pc_bytes);
+            }
+
+            for(size_t i = 0; i != 64; ++i) {
+               auto h = [&]() {
+                  const auto s = [&]() {
+                     if(i == 0) {
+                        // Test the identity case
+                        return Botan::EC_Scalar(zero);
+                     } else if(i <= 32) {
+                        // Test cases where the two points have a linear relation
+                        std::vector<uint8_t> sbytes(group.get_order_bytes());
+                        sbytes[sbytes.size() - 1] = static_cast<uint8_t>((i + 1) / 2);
+                        auto si = Botan::EC_Scalar::deserialize(group, sbytes).value();
+                        if(i % 2 == 0) {
+                           return si;
+                        } else {
+                           return si.negate();
+                        }
+                     } else {
+                        return Botan::EC_Scalar::random(group, rng);
+                     }
+                  }();
+                  auto x = Botan::EC_AffinePoint::g_mul(s, rng);
+                  return x;
+               }();
+
+               const auto s1 = Botan::EC_Scalar::random(group, rng);
+               const auto s2 = Botan::EC_Scalar::random(group, rng);
+
+               const Botan::EC_Group::Mul2Table mul2_table(h);
+
+               const auto ref = Botan::EC_AffinePoint::g_mul(s1, rng).add(h.mul(s2, rng));
+
+               if(auto mul2pt = mul2_table.mul2_vartime(s1, s2)) {
+                  result.test_eq("ref == mul2t", ref.serialize_uncompressed(), mul2pt->serialize_uncompressed());
+               } else {
+                  result.confirm("ref is identity", ref.is_identity());
+               }
+            }
+
+            result.end_timer();
+
+            results.push_back(result);
+         }
+
+         return results;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "ec_point_arith", EC_Point_Arithmetic_Tests);
 
    #if defined(BOTAN_HAS_ECDSA)
 

@@ -49,16 +49,13 @@ class Params final : public EllipticCurveParameters<
 };
 
 // clang-format on
-#if BOTAN_MP_WORD_BITS == 64
-typedef EllipticCurve<Params, Secp256k1Rep> Secp256k1Base;
-#else
-typedef EllipticCurve<Params> Secp256k1Base;
-#endif
+using Secp256k1Base =
+   std::conditional_t<WordInfo<word>::bits >= 33, EllipticCurve<Params, Secp256k1Rep>, EllipticCurve<Params>>;
 
 class Curve final : public Secp256k1Base {
    public:
       // Return the square of the inverse of x
-      static FieldElement fe_invert2(const FieldElement& x) {
+      static constexpr FieldElement fe_invert2(const FieldElement& x) {
          auto z = x.square();
          z *= x;
          auto t0 = z;
@@ -99,7 +96,7 @@ class Curve final : public Secp256k1Base {
          return z;
       }
 
-      static Scalar scalar_invert(const Scalar& x) {
+      static constexpr Scalar scalar_invert(const Scalar& x) {
          auto z = x.square();
          auto t2 = x * z;
          auto t6 = t2 * z;

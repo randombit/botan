@@ -8,11 +8,11 @@
 #ifndef BOTAN_ENTROPY_H_
 #define BOTAN_ENTROPY_H_
 
-#include <botan/rng.h>
-#include <botan/secmem.h>
+#include <botan/api.h>
 #include <chrono>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace Botan {
@@ -60,6 +60,17 @@ class BOTAN_PUBLIC_API(2, 0) Entropy_Sources final {
 
       std::vector<std::string> enabled_sources() const;
 
+      /**
+      * Poll all sources to collect @p bits of entropy with a @p timeout.
+      * Entropy collection is aborted as soon as either the requested number of
+      * bits are obtained or the timeout runs out. If the target system does not
+      * provide a clock, the timeout is ignored.
+      *
+      * Note that the timeout is cooperative. If the poll() method of an entropy
+      * source blocks forever, this invocation will potentially also block.
+      *
+      * @returns the number of bits collected from the entropy sources
+      */
       size_t poll(RandomNumberGenerator& rng, size_t bits, std::chrono::milliseconds timeout);
 
       /**

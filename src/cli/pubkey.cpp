@@ -201,7 +201,7 @@ class PK_Sign final : public Command {
          auto format = Botan::Signature_Format::Standard;
 
          if(flag_set("der-format")) {
-            if(key->message_parts() == 1) {
+            if(!key->_signature_element_size_for_DER_encoding()) {
                throw CLI_Usage_Error("Key type " + key->algo_name() +
                                      " does not support DER formatting for signatures");
             }
@@ -308,10 +308,11 @@ class PKCS8_Tool final : public Command {
          const bool der_out = flag_set("der-out");
 
          if(flag_set("pub-out")) {
+            auto pk = key->public_key();
             if(der_out) {
-               write_output(Botan::X509::BER_encode(*key));
+               write_output(Botan::X509::BER_encode(*pk));
             } else {
-               output() << Botan::X509::PEM_encode(*key);
+               output() << Botan::X509::PEM_encode(*pk);
             }
          } else {
             const std::string pass_out = get_passphrase_arg("Passphrase to encrypt key", "pass-out");
@@ -365,7 +366,7 @@ class EC_Group_Info final : public Command {
          const auto ec_group = Botan::EC_Group::from_name(get_arg("name"));
 
          if(flag_set("pem")) {
-            output() << ec_group.PEM_encode();
+            output() << ec_group.PEM_encode(Botan::EC_Group_Encoding::NamedCurve);
          } else {
             output() << "P = " << std::hex << ec_group.get_p() << "\n"
                      << "A = " << std::hex << ec_group.get_a() << "\n"
@@ -393,7 +394,7 @@ class DL_Group_Info final : public Command {
       }
 
       void go() override {
-         Botan::DL_Group dl_group(get_arg("name"));
+         auto dl_group = Botan::DL_Group::from_name(get_arg("name"));
 
          if(flag_set("pem")) {
             output() << dl_group.PEM_encode(Botan::DL_Group_Format::ANSI_X9_42_DH_PARAMETERS);

@@ -9,16 +9,18 @@
 #define BOTAN_TESTS_H_
 
 #include <botan/hex.h>
+#include <botan/mem_ops.h>
 #include <botan/rng.h>
 #include <botan/symkey.h>
 #include <botan/types.h>
+#include <deque>
 #include <functional>
 #include <iosfwd>
 #include <map>
 #include <memory>
 #include <optional>
-#include <ranges>
 #include <set>
+#include <span>
 #include <sstream>
 #include <string>
 #include <typeindex>
@@ -32,7 +34,7 @@ namespace Botan {
 class BigInt;
 #endif
 
-#if defined(BOTAN_HAS_EC_CURVE_GFP)
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
 class EC_Point;
 #endif
 
@@ -65,6 +67,11 @@ class Test_Options {
                    const std::string& data_dir,
                    const std::string& pkcs11_lib,
                    const std::string& provider,
+                   const std::string& tpm2_tcti_name,
+                   const std::string& tpm2_tcti_conf,
+                   size_t tpm2_persistent_rsa_handle,
+                   size_t tpm2_persistent_ecc_handle,
+                   const std::string& tpm2_persistent_auth_value,
                    const std::string& drbg_seed,
                    const std::string& xml_results_dir,
                    const std::vector<std::string>& report_properties,
@@ -82,6 +89,11 @@ class Test_Options {
             m_data_dir(data_dir),
             m_pkcs11_lib(pkcs11_lib),
             m_provider(provider),
+            m_tpm2_tcti_name(tpm2_tcti_name),
+            m_tpm2_tcti_conf(tpm2_tcti_conf),
+            m_tpm2_persistent_rsa_handle(tpm2_persistent_rsa_handle),
+            m_tpm2_persistent_ecc_handle(tpm2_persistent_ecc_handle),
+            m_tpm2_persistent_auth_value(tpm2_persistent_auth_value),
             m_drbg_seed(drbg_seed),
             m_xml_results_dir(xml_results_dir),
             m_report_properties(report_properties),
@@ -104,6 +116,20 @@ class Test_Options {
       const std::string& pkcs11_lib() const { return m_pkcs11_lib; }
 
       const std::string& provider() const { return m_provider; }
+
+      const std::optional<std::string>& tpm2_tcti_name() const { return m_tpm2_tcti_name; }
+
+      const std::optional<std::string>& tpm2_tcti_conf() const { return m_tpm2_tcti_conf; }
+
+      uint32_t tpm2_persistent_rsa_handle() const { return static_cast<uint32_t>(m_tpm2_persistent_rsa_handle); }
+
+      uint32_t tpm2_persistent_ecc_handle() const { return static_cast<uint32_t>(m_tpm2_persistent_ecc_handle); }
+
+      std::vector<uint8_t> tpm2_persistent_auth_value() const {
+         std::span<const uint8_t> auth_value(Botan::cast_char_ptr_to_uint8(m_tpm2_persistent_auth_value.data()),
+                                             m_tpm2_persistent_auth_value.size());
+         return std::vector<uint8_t>(auth_value.begin(), auth_value.end());
+      }
 
       const std::string& drbg_seed() const { return m_drbg_seed; }
 
@@ -135,6 +161,11 @@ class Test_Options {
       std::string m_data_dir;
       std::string m_pkcs11_lib;
       std::string m_provider;
+      std::optional<std::string> m_tpm2_tcti_name;
+      std::optional<std::string> m_tpm2_tcti_conf;
+      size_t m_tpm2_persistent_rsa_handle;
+      size_t m_tpm2_persistent_ecc_handle;
+      std::string m_tpm2_persistent_auth_value;
       std::string m_drbg_seed;
       std::string m_xml_results_dir;
       std::vector<std::string> m_report_properties;
@@ -365,6 +396,20 @@ class Test {
                return test_eq(what, static_cast<size_t>(x), static_cast<size_t>(y));
             }
 
+            template <typename T>
+            bool test_eq(const std::string& what, const std::optional<T>& a, const std::optional<T>& b) {
+               if(a.has_value() != b.has_value()) {
+                  std::ostringstream err;
+                  err << m_who << " " << what << " only one of a/b was nullopt";
+                  return test_failure(err.str());
+               } else if(a.has_value() && b.has_value()) {
+                  return test_is_eq(what, a.value(), b.value());
+               } else {
+                  // both nullopt
+                  return test_success();
+               }
+            }
+
             bool test_lt(const std::string& what, size_t produced, size_t expected);
             bool test_lte(const std::string& what, size_t produced, size_t expected);
             bool test_gt(const std::string& what, size_t produced, size_t expected);
@@ -413,7 +458,7 @@ class Test {
             bool test_ne(const std::string& what, const BigInt& produced, const BigInt& expected);
 #endif
 
-#if defined(BOTAN_HAS_EC_CURVE_GFP)
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
             bool test_eq(const std::string& what, const Botan::EC_Point& a, const Botan::EC_Point& b);
 #endif
 
@@ -430,34 +475,28 @@ class Test {
                          const uint8_t expected[],
                          size_t expected_len);
 
-            template <typename Alloc1, typename Alloc2>
             bool test_eq(const std::string& what,
-                         const std::vector<uint8_t, Alloc1>& produced,
-                         const std::vector<uint8_t, Alloc2>& expected) {
+                         std::span<const uint8_t> produced,
+                         std::span<const uint8_t> expected) {
                return test_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
             }
 
-            template <typename Alloc1, typename Alloc2>
             bool test_eq(const std::string& producer,
                          const std::string& what,
-                         const std::vector<uint8_t, Alloc1>& produced,
-                         const std::vector<uint8_t, Alloc2>& expected) {
+                         std::span<const uint8_t> produced,
+                         std::span<const uint8_t> expected) {
                return test_eq(
                   producer.c_str(), what, produced.data(), produced.size(), expected.data(), expected.size());
             }
 
-            template <typename Alloc>
-            bool test_eq(const std::string& what,
-                         const std::vector<uint8_t, Alloc>& produced,
-                         const char* expected_hex) {
+            bool test_eq(const std::string& what, std::span<const uint8_t> produced, const char* expected_hex) {
                const std::vector<uint8_t> expected = Botan::hex_decode(expected_hex);
                return test_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
             }
 
-            template <typename Alloc1, typename Alloc2>
             bool test_ne(const std::string& what,
-                         const std::vector<uint8_t, Alloc1>& produced,
-                         const std::vector<uint8_t, Alloc2>& expected) {
+                         std::span<const uint8_t> produced,
+                         std::span<const uint8_t> expected) {
                return test_ne(what, produced.data(), produced.size(), expected.data(), expected.size());
             }
 
@@ -645,6 +684,7 @@ class Test {
       static std::shared_ptr<Botan::RandomNumberGenerator> new_shared_rng(std::string_view test_name);
 
       static std::string random_password(Botan::RandomNumberGenerator& rng);
+      static size_t random_index(Botan::RandomNumberGenerator& rng, size_t max);
       static uint64_t timestamp();  // nanoseconds arbitrary epoch
 
       static std::vector<Test::Result> flatten_result_lists(std::vector<std::vector<Test::Result>> result_lists);
@@ -851,7 +891,7 @@ class Text_Based_Test : public Test {
       std::unique_ptr<std::istream> m_cur;
       std::string m_cur_src_name;
       std::deque<std::string> m_srcs;
-      std::vector<uint64_t> m_cpu_flags;
+      std::vector<std::string> m_cpu_flags;
 };
 
 /**

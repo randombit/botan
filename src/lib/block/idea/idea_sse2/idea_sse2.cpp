@@ -8,13 +8,14 @@
 #include <botan/internal/idea.h>
 
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/isa_extn.h>
 #include <emmintrin.h>
 
 namespace Botan {
 
 namespace {
 
-BOTAN_FUNC_ISA("sse2") inline __m128i mul(__m128i X, uint16_t K_16) {
+BOTAN_FN_ISA_SSE2 inline __m128i mul(__m128i X, uint16_t K_16) {
    const __m128i zeros = _mm_set1_epi16(0);
    const __m128i ones = _mm_set1_epi16(1);
 
@@ -56,7 +57,7 @@ BOTAN_FUNC_ISA("sse2") inline __m128i mul(__m128i X, uint16_t K_16) {
 * that extra unpack could easily save 3-4 cycles per block, and would
 * also help a lot with register pressure on 32-bit x86
 */
-BOTAN_FUNC_ISA("sse2") void transpose_in(__m128i& B0, __m128i& B1, __m128i& B2, __m128i& B3) {
+BOTAN_FN_ISA_SSE2 void transpose_in(__m128i& B0, __m128i& B1, __m128i& B2, __m128i& B3) {
    __m128i T0 = _mm_unpackhi_epi32(B0, B1);
    __m128i T1 = _mm_unpacklo_epi32(B0, B1);
    __m128i T2 = _mm_unpackhi_epi32(B2, B3);
@@ -91,7 +92,7 @@ BOTAN_FUNC_ISA("sse2") void transpose_in(__m128i& B0, __m128i& B1, __m128i& B2, 
 /*
 * 4x8 matrix transpose (reverse)
 */
-BOTAN_FUNC_ISA("sse2") void transpose_out(__m128i& B0, __m128i& B1, __m128i& B2, __m128i& B3) {
+BOTAN_FN_ISA_SSE2 void transpose_out(__m128i& B0, __m128i& B1, __m128i& B2, __m128i& B3) {
    __m128i T0 = _mm_unpacklo_epi64(B0, B1);
    __m128i T1 = _mm_unpacklo_epi64(B2, B3);
    __m128i T2 = _mm_unpackhi_epi64(B0, B1);
@@ -123,7 +124,7 @@ BOTAN_FUNC_ISA("sse2") void transpose_out(__m128i& B0, __m128i& B1, __m128i& B2,
 /*
 * 8 wide IDEA encryption/decryption in SSE2
 */
-BOTAN_FUNC_ISA("sse2") void IDEA::sse2_idea_op_8(const uint8_t in[64], uint8_t out[64], const uint16_t EK[52]) {
+BOTAN_FN_ISA_SSE2 void IDEA::sse2_idea_op_8(const uint8_t in[64], uint8_t out[64], const uint16_t EK[52]) {
    CT::poison(in, 64);
    CT::poison(out, 64);
    CT::poison(EK, 52);

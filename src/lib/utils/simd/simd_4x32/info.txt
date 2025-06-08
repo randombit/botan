@@ -1,0 +1,34 @@
+<defines>
+SIMD_4X32 -> 20131128
+</defines>
+
+<module_info>
+name -> "SIMD 4x32"
+brief -> "Lightweight wrappers for SIMD 4x32"
+</module_info>
+
+<header:internal>
+simd_4x32.h
+</header:internal>
+
+<isa>
+x86_32:ssse3
+x86_64:ssse3
+x32:ssse3
+arm32:neon
+arm64:neon
+ppc32:altivec
+ppc64:altivec
+loongarch64:lsx
+</isa>
+
+<arch>
+x86_32
+x86_64
+x32
+arm32
+arm64
+ppc32
+ppc64
+loongarch64
+</arch>

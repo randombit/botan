@@ -1,9 +1,11 @@
 <defines>
 EMSA_PSSR -> 20131128
+PSS -> 20250130
 </defines>
 
 <module_info>
-name -> "PSSR"
+name -> "PSS"
+brief -> "PSS signature padding from PKCS1v2.0"
 </module_info>
 
 <requires>

@@ -43,13 +43,26 @@ class Kyber_Symmetric_Primitives {
          return get_H().process<KyberHashedPublicKey>(pk);
       }
 
-      std::pair<KyberSeedRho, KyberSeedSigma> G(StrongSpan<const KyberSeedRandomness> seed) const {
-         return G_split<KyberSeedRho, KyberSeedSigma>(seed);
+      std::pair<KyberSeedRho, KyberSeedSigma> G(StrongSpan<const KyberSeedRandomness> seed,
+                                                const KyberConstants& mode) const {
+         if(auto domsep = seed_expansion_domain_separator(mode)) {
+            return G_split<KyberSeedRho, KyberSeedSigma>(seed, *domsep);
+         } else {
+            return G_split<KyberSeedRho, KyberSeedSigma>(seed);
+         }
       }
 
       std::pair<KyberSharedSecret, KyberEncryptionRandomness> G(
          StrongSpan<const KyberMessage> msg, StrongSpan<const KyberHashedPublicKey> pubkey_hash) const {
          return G_split<KyberSharedSecret, KyberEncryptionRandomness>(msg, pubkey_hash);
+      }
+
+      KyberSharedSecret J(StrongSpan<const KyberImplicitRejectionValue> rejection_value,
+                          StrongSpan<const KyberCompressedCiphertext> ciphertext) const {
+         auto& j = get_J();
+         j.update(rejection_value);
+         j.update(ciphertext);
+         return j.final<KyberSharedSecret>();
       }
 
       // TODO: remove this once Kyber-R3 is removed
@@ -70,10 +83,6 @@ class Kyber_Symmetric_Primitives {
       }
 
       Botan::XOF& XOF(StrongSpan<const KyberSeedRho> seed, std::tuple<uint8_t, uint8_t> matrix_position) const {
-         // TODO: once we remove Kyber 90s, we should make `get_XOF()` return a
-         //       reference instead of a unique pointer (for consistency), and
-         //       call `get_XOF().copy_state()` here. The AES-CTR XOF doesn't
-         //       support this.
          return get_XOF(seed, matrix_position);
       }
 
@@ -95,8 +104,12 @@ class Kyber_Symmetric_Primitives {
       }
 
    protected:
+      virtual std::optional<std::array<uint8_t, 1>> seed_expansion_domain_separator(
+         const KyberConstants& mode) const = 0;
+
       virtual HashFunction& get_G() const = 0;
       virtual HashFunction& get_H() const = 0;
+      virtual HashFunction& get_J() const = 0;
       virtual HashFunction& get_KDF() const = 0;
       virtual Botan::XOF& get_PRF(std::span<const uint8_t> seed, uint8_t nonce) const = 0;
       virtual Botan::XOF& get_XOF(std::span<const uint8_t> seed,

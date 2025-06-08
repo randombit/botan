@@ -70,15 +70,20 @@ to calculate the CRT parameters. The GCD computation, LCM computations, modulo,
 and inversion of ``q`` modulo ``p`` are all done via constant time algorithms.
 An additional inversion, of ``e`` modulo ``phi(n)``, is also required. This one
 is somewhat more complicated because ``phi(n)`` is even and the primary constant
-time algorithm for inversions only works for odd moduli. This is worked around
-by a technique based on the CRT - ``phi(n)`` is factored to ``2**e * z`` for
-some ``e`` > 1 and some odd ``z``. Then ``e`` is inverted modulo ``2**e`` and
-also modulo ``z``. The inversion modulo ``2**e`` is done via a specialized
-constant-time algoirthm which only works for powers of 2. Then the two
-inversions are combined using the CRT. This process does leak the value of
-``e``; to avoid problems ``p`` and ``q`` are chosen so that ``e`` is always 1.
+time algorithm for inversions only works for odd moduli.
 
-See blinding.cpp and rsa.cpp.
+When ``e`` is equal to 65537, we use Arazi's inversion algorithm [GcdFree]
+which is fast and quite simple to run in constant time.
+
+For general ``e``, the inversion proceeds using a technique based on the CRT -
+``phi(n)`` is factored to ``2**k * o`` for some ``k`` > 1 and some odd
+``o``. Then ``e`` is inverted modulo ``2**k`` and also modulo ``o``. The
+inversion modulo ``2**k`` is done via a specialized constant-time algorithm
+which only works for powers of 2. Then the two inversions are combined using the
+CRT. This process does leak the value of ``k``; when generating keys Botan
+chooses ``p`` and ``q`` so that ``k`` is always 1.
+
+See blinding.cpp, rsa.cpp, and mod_inv.cpp
 
 Decryption of PKCS #1 v1.5 Ciphertexts
 ----------------------------------------
@@ -151,71 +156,62 @@ See eme_oaep.cpp.
 ECC point decoding
 ----------------------
 
-The API function OS2ECP, which is used to convert byte strings to ECC points,
-verifies that all points satisfy the ECC curve equation. Points that do not
-satisfy the equation are invalid, and can sometimes be used to break
-protocols ([InvalidCurve] [InvalidCurveTLS]). See ec_point.cpp.
+The API function EC_AffinePoint::deserialize, which is used to convert
+byte strings to ECC points, verifies that all points satisfy the ECC
+curve equation. Points that do not satisfy the equation are invalid,
+and can sometimes be used to break protocols ([InvalidCurve]
+[InvalidCurveTLS]).
 
-ECC scalar multiply
-----------------------
+The implementation is in the file pcurves_impl.h as
+AffineCurvePoint::deserialize
 
-There are several different implementations of ECC scalar multiplications which
-depend on the API invoked. This include ``EC_Point::operator*``,
-``EC_Group::blinded_base_point_multiply`` and
-``EC_Group::blinded_var_point_multiply``.
+ECC scalar multiplication
+--------------------------
 
-The ``EC_Point::operator*`` implementation uses the Montgomery ladder, which is
-fairly resistant to side channels. However it leaks the size of the scalar,
-because the loop iterations are bounded by the scalar size. It should not be
-used in cases when the scalar is a secret.
+Several elliptic curve scalar multiplication algorithms are implemented to
+accomodate different use cases. The implementations can be found in
+pcurves_impl.h as PrecomputedBaseMulTable, WindowedMulTable, and
+WindowedMul2Table.
 
-Both ``blinded_base_point_multiply`` and ``blinded_var_point_multiply`` apply
-side channel countermeasures. The scalar is masked by a multiple of the group
-order (this is commonly called Coron's first countermeasure [CoronDpa]),
-currently the mask is scaled to be half the bit length of the order of the group.
+WindowedMul2Table additionally implements a variable time scalar multiplication;
+this is used only for verifying signatures. In the public API this is invoked
+using the functions EC_Group::Mul2Table::mul2_vartime and
+EC_Group::Mul2Table::mul2_vartime_x_mod_order_eq
 
-Botan stores all ECC points in Jacobian representation. This form allows faster
-computation by representing points (x,y) as (X,Y,Z) where x=X/Z^2 and
-y=Y/Z^3. As the representation is redundant, for any randomly chosen non-zero r,
-(X*r^2,Y*r^3,Z*r) is an equivalent point. Changing the point values prevents an
-attacker from mounting attacks based on the input point remaining unchanged over
-multiple executions. This is commonly called Coron's third countermeasure, see
-again [CoronDpa].
+All other scalar multiplication algorithms are written to avoid timing and cache
+based side channels. Multiplication algorithms intended for use with secret
+inputs also use scalar blinding and point rerandomization techniques [CoronDpa]
+as additional precautions. See BlindedScalarBits in pcurves_impl.h
 
 The base point multiplication algorithm is a comb-like technique which
-precomputes ``P^i,(2*P)^i,(3*P)^i`` for all ``i`` in the range of valid scalars.
-This means the scalar multiplication involves only point additions and no
-doublings, which may help against attacks which rely on distinguishing between
-point doublings and point additions. The elements of the table are accessed by
-masked lookups, so as not to leak information about bits of the scalar via a
-cache side channel. However, whenever 3 sequential bits of the (masked) scalar
-are all 0, no operation is performed in that iteration of the loop. This exposes
-the scalar multiply to a cache-based side channel attack; scalar blinding is
-necessary to prevent this attack from leaking information about the scalar.
+precomputes successive powers of the base point. During the online phase,
+elements from this table are added together. The elements of the table are
+accessed by masked lookups, so as not to leak information about bits of the
+scalar via a cache side channel.
 
-The variable point multiplication algorithm uses a fixed-window algorithm. Since
-this is normally invoked using untrusted points (eg during ECDH key exchange) it
-randomizes all inputs to prevent attacks which are based on chosen input
-points. The table of precomputed multiples is accessed using a masked lookup
-which should not leak information about the secret scalar to an attacker who can
-mount a cache-based side channel attack.
+The variable point multiplication algorithms use a fixed-window double-and-add
+algorithm. The table of precomputed multiples is accessed using a masked lookup
+which should not leak information about the secret scalar to side channels.
 
-See ec_point.cpp and point_mul.cpp in src/lib/pubkey/ec_group
+For details see pcurves_impl.h in src/lib/math/pcurves/pcurves_impl
 
 ECDH
 ----------------------
 
-ECDH verifies (through its use of OS2ECP) that all input points received from
-the other party satisfy the curve equation. This prevents twist attacks. The
-same check is performed on the output point, which helps prevent fault attacks.
+ECDH verifies that all input points received from the other party satisfy the
+curve equation, preventing twist attacks.
 
 ECDSA
 ----------------------
 
 Inversion of the ECDSA nonce k must be done in constant time, as any leak of
 even a single bit of the nonce can be sufficient to allow recovering the private
-key. In Botan all inverses modulo an odd number are performed using a constant
-time algorithm due to Niels Möller.
+key. The inversion makes use of Fermat's little theorem.
+
+In addition to being constant time, the inversion and portions of the scalar
+arithmetic use blinding. The inverse of k is computed as ``(k*z)^-1 * z``, and
+the computation of ``s``, normally ``((x * r) + m)/k``, is computed instead as
+``((((x * z) * r) + (m * z)) / k) / z``, for a random z.
 
 x25519
 ----------------------
@@ -225,6 +221,9 @@ based on curve25519-donna-c64.c by Adam Langley. The code seems immune to cache
 based side channels. It does make use of integer multiplications; on some old
 CPUs these multiplications take variable time and might allow a side channel
 attack. This is not considered a problem on modern processors.
+
+The x25519 implementation does not currently include blinding or point
+rerandomization.
 
 TLS CBC ciphersuites
 ----------------------
@@ -355,14 +354,22 @@ The function secure_scrub_memory (in mem_ops.cpp) uses some system specific
 trick to zero out an array. If possible an OS provided routine (such as
 ``RtlSecureZeroMemory`` or ``explicit_bzero``) is used.
 
-On other platforms, by default the trick of referencing memset through a
+On other platforms, the trick of referencing memset through a
 volatile function pointer is used. This approach is not guaranteed to work on
 all platforms, and currently there is no systematic check of the resulting
 binary function that it is compiled as expected. But, it is the best approach
 currently known and has been verified to work as expected on common platforms.
 
-If BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO is set to 0 in build.h (not the default) a
-byte at a time loop through a volatile pointer is used to overwrite the array.
+Stack Scrubbing
+----------------------
+
+GCC 14 and newer can emit code that scrubs the stack frames of functions that
+handle sensitive information [GCCstrub] after they returned to the caller. This
+can reduce the time window for sniffing sensitive information from a process.
+
+Botan can apply this to certain core routines of fundamental algorithms. For now
+this feature is an opt-in. Configure with `--enable-stack-scrubbing` to benefit
+from this feature if you are using a compatible version of GCC.
 
 Memory allocation
 ----------------------
@@ -381,14 +388,16 @@ block of memory is allocated and locked, then the memory is scrubbed before
 freeing. This memory pool is used by secure_vector when available. It can be
 disabled at runtime setting the environment variable BOTAN_MLOCK_POOL_SIZE to 0.
 
-Automated Analysis
----------------------
+Side Channel Analysis Tools
+-----------------------------
 
 Currently the main tool used by the Botan developers for testing for side
 channels at runtime is valgrind; valgrind's runtime API is used to taint memory
 values, and any jumps or indexes using data derived from these values will cause
 a valgrind warning. This technique was first used by Adam Langley in ctgrind.
 See header ct_utils.h.
+
+There is a self-test of the constant time annotations in ``src/ct_selftest``.
 
 To check, install valgrind, configure the build with --with-valgrind, and run
 the tests.
@@ -401,10 +410,10 @@ detect simple timing differences. The output can be processed using the
 Mona timing report library (https://github.com/seecurity/mona-timing-report).
 To run a timing report (here for example pow_mod)::
 
-  $ ./botan timing_test pow_mod > pow_mod.raw
+  $ botan timing_test pow_mod > pow_mod.raw
 
-This must be run from a checkout of the source, or otherwise ``--test-data-dir=``
-must be used to point to the expected input files.
+This must be run from a checkout of the source, or otherwise the option
+``--test-data-dir=`` must be used to point to the expected input files.
 
 Build and run the Mona report as::
 
@@ -415,6 +424,13 @@ Build and run the Mona report as::
 
 This will produce plots and an HTML file in subdirectory starting with
 ``reports_`` followed by a representation of the current date and time.
+
+Finally there is a tool to perform timing tests of RSA decryption using the
+MARVIN toolkit (https://github.com/tomato42/marvin-toolkit)::
+
+  $ botan marvin_test marvin_key marvin_datadir --runs=100000
+
+Consult the documentation for MARVIN for more about how to run this.
 
 References
 ---------------
@@ -427,7 +443,13 @@ References
 
 [CoronDpa] Coron,
 "Resistance against Differential Power Analysis for Elliptic Curve Cryptosystems"
-(https://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.1.5695)
+(https://citeseerx.ist.psu.edu/document?doi=4d5d6dfdb582c0d695953e92c408f2377a6c9039)
+
+[GCCstrub] GCC Stack Scrubbing
+(https://gcc.gnu.org/onlinedocs/gcc-14.2.0/gcc/Common-Type-Attributes.html#index-strub-type-attribute)
+
+[GcdFree] Joye, Paillier "GCD-Free Algorithms for Computing Modular Inverses"
+(https://marcjoye.github.io/papers/JP03gcdfree.pdf)
 
 [InvalidCurve] Biehl, Meyer, Müller: Differential fault attacks on
 elliptic curve cryptosystems
@@ -445,7 +467,7 @@ elliptic-curve cryptography. (https://safecurves.cr.yp.to)
 
 [MillionMsg] Bleichenbacher "Chosen Ciphertext Attacks Against Protocols Based
 on the RSA Encryption Standard PKCS1"
-(https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.19.8543)
+(https://archiv.infsec.ethz.ch/education/fs08/secsem/bleichenbacher98.pdf)
 
 [MillionMsgTiming] Meyer, Somorovsky, Weiss, Schwenk, Schinzel, Tews: Revisiting
 SSL/TLS Implementations: New Bleichenbacher Side Channels and Attacks
@@ -457,7 +479,7 @@ Encryption Padding (OAEP) as Standardized in PKCS #1 v2.0"
 
 [RsaFault] Boneh, Demillo, Lipton
 "On the importance of checking cryptographic protocols for faults"
-(https://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.48.9764)
+(https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi=7622200b9459a8c0e25e74ce7316c2402862e919)
 
 [RandomMonty] Le, Tan, Tunstall "Randomizing the Montgomery Powering Ladder"
 (https://eprint.iacr.org/2015/657)

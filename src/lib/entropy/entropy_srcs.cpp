@@ -7,7 +7,9 @@
 
 #include <botan/entropy_src.h>
 
+#include <botan/assert.h>
 #include <botan/rng.h>
+#include <botan/internal/target_info.h>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    #include <botan/system_rng.h>
@@ -29,6 +31,10 @@
    #include <botan/internal/getentropy.h>
 #endif
 
+#if defined(BOTAN_HAS_JITTER_RNG)
+   #include <botan/jitter_rng.h>
+#endif
+
 namespace Botan {
 
 namespace {
@@ -38,7 +44,7 @@ namespace {
 class System_RNG_EntropySource final : public Entropy_Source {
    public:
       size_t poll(RandomNumberGenerator& rng) override {
-         const size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS;
+         const size_t poll_bits = RandomNumberGenerator::DefaultPollBits;
          rng.reseed_from_rng(system_rng(), poll_bits);
          return poll_bits;
       }
@@ -83,6 +89,23 @@ class Processor_RNG_EntropySource final : public Entropy_Source {
 
 #endif
 
+#if defined(BOTAN_HAS_JITTER_RNG)
+
+class Jitter_RNG_EntropySource final : public Entropy_Source {
+   public:
+      size_t poll(RandomNumberGenerator& rng) override {
+         rng.reseed_from_rng(m_rng);
+         return RandomNumberGenerator::DefaultPollBits;
+      }
+
+      std::string name() const override { return m_rng.name(); }
+
+   private:
+      Jitter_RNG m_rng;
+};
+
+#endif
+
 }  // namespace
 
 std::unique_ptr<Entropy_Source> Entropy_Source::create(std::string_view name) {
@@ -118,6 +141,12 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(std::string_view name) {
    }
 #endif
 
+#if defined(BOTAN_HAS_JITTER_RNG)
+   if(name == "jitter_rng") {
+      return std::make_unique<Jitter_RNG_EntropySource>();
+   }
+#endif
+
    BOTAN_UNUSED(name);
    return nullptr;
 }
@@ -138,16 +167,19 @@ std::vector<std::string> Entropy_Sources::enabled_sources() const {
 }
 
 size_t Entropy_Sources::poll(RandomNumberGenerator& rng, size_t poll_bits, std::chrono::milliseconds timeout) {
+#if defined(BOTAN_TARGET_OS_HAS_SYSTEM_CLOCK)
    typedef std::chrono::system_clock clock;
-
-   auto deadline = clock::now() + timeout;
+   auto timeout_expired = [to = clock::now() + timeout] { return clock::now() > to; };
+#else
+   auto timeout_expired = [] { return false; };
+#endif
 
    size_t bits_collected = 0;
 
    for(auto& src : m_srcs) {
       bits_collected += src->poll(rng);
 
-      if(bits_collected >= poll_bits || clock::now() > deadline) {
+      if(bits_collected >= poll_bits || timeout_expired()) {
          break;
       }
    }
@@ -172,7 +204,7 @@ Entropy_Sources::Entropy_Sources(const std::vector<std::string>& sources) {
 }
 
 Entropy_Sources& Entropy_Sources::global_sources() {
-   static Entropy_Sources global_entropy_sources(BOTAN_ENTROPY_DEFAULT_SOURCES);
+   static Entropy_Sources global_entropy_sources({"rdseed", "hwrng", "getentropy", "system_rng", "system_stats"});
 
    return global_entropy_sources;
 }

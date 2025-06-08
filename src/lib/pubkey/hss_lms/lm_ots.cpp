@@ -101,37 +101,37 @@ LMOTS_Params LMOTS_Params::create_or_throw(LMOTS_Algorithm_Type type) {
    auto [hash_name, w] = [](const LMOTS_Algorithm_Type& lmots_type) -> std::pair<std::string_view, uint8_t> {
       switch(lmots_type) {
          case LMOTS_Algorithm_Type::SHA256_N32_W1:
-            return {"SHA-256", 1};
+            return {"SHA-256", static_cast<uint8_t>(1)};
          case LMOTS_Algorithm_Type::SHA256_N32_W2:
-            return {"SHA-256", 2};
+            return {"SHA-256", static_cast<uint8_t>(2)};
          case LMOTS_Algorithm_Type::SHA256_N32_W4:
-            return {"SHA-256", 4};
+            return {"SHA-256", static_cast<uint8_t>(4)};
          case LMOTS_Algorithm_Type::SHA256_N32_W8:
-            return {"SHA-256", 8};
+            return {"SHA-256", static_cast<uint8_t>(8)};
          case LMOTS_Algorithm_Type::SHA256_N24_W1:
-            return {"Truncated(SHA-256,192)", 1};
+            return {"Truncated(SHA-256,192)", static_cast<uint8_t>(1)};
          case LMOTS_Algorithm_Type::SHA256_N24_W2:
-            return {"Truncated(SHA-256,192)", 2};
+            return {"Truncated(SHA-256,192)", static_cast<uint8_t>(2)};
          case LMOTS_Algorithm_Type::SHA256_N24_W4:
-            return {"Truncated(SHA-256,192)", 4};
+            return {"Truncated(SHA-256,192)", static_cast<uint8_t>(4)};
          case LMOTS_Algorithm_Type::SHA256_N24_W8:
-            return {"Truncated(SHA-256,192)", 8};
+            return {"Truncated(SHA-256,192)", static_cast<uint8_t>(8)};
          case LMOTS_Algorithm_Type::SHAKE_N32_W1:
-            return {"SHAKE-256(256)", 1};
+            return {"SHAKE-256(256)", static_cast<uint8_t>(1)};
          case LMOTS_Algorithm_Type::SHAKE_N32_W2:
-            return {"SHAKE-256(256)", 2};
+            return {"SHAKE-256(256)", static_cast<uint8_t>(2)};
          case LMOTS_Algorithm_Type::SHAKE_N32_W4:
-            return {"SHAKE-256(256)", 4};
+            return {"SHAKE-256(256)", static_cast<uint8_t>(4)};
          case LMOTS_Algorithm_Type::SHAKE_N32_W8:
-            return {"SHAKE-256(256)", 8};
+            return {"SHAKE-256(256)", static_cast<uint8_t>(8)};
          case LMOTS_Algorithm_Type::SHAKE_N24_W1:
-            return {"SHAKE-256(192)", 1};
+            return {"SHAKE-256(192)", static_cast<uint8_t>(1)};
          case LMOTS_Algorithm_Type::SHAKE_N24_W2:
-            return {"SHAKE-256(192)", 2};
+            return {"SHAKE-256(192)", static_cast<uint8_t>(2)};
          case LMOTS_Algorithm_Type::SHAKE_N24_W4:
-            return {"SHAKE-256(192)", 4};
+            return {"SHAKE-256(192)", static_cast<uint8_t>(4)};
          case LMOTS_Algorithm_Type::SHAKE_N24_W8:
-            return {"SHAKE-256(192)", 8};
+            return {"SHAKE-256(192)", static_cast<uint8_t>(8)};
          case LMOTS_Algorithm_Type::RESERVED:
             throw Decoding_Error("Unsupported LMS algorithm type");
       }

@@ -1,0 +1,16 @@
+<defines>
+DILITHIUM -> 20221018
+</defines>
+
+<module_info>
+name -> "Dilithium"
+brief -> "as specified in CRYSTALS-Dilithium 3.1"
+</module_info>
+
+<requires>
+dilithium_shake
+</requires>
+
+<header:internal>
+dilithium_round3.h
+</header:internal>

@@ -8,6 +8,7 @@
 #ifndef BOTAN_CLI_TLS_HELPERS_H_
 #define BOTAN_CLI_TLS_HELPERS_H_
 
+#include <botan/assert.h>
 #include <botan/credentials_manager.h>
 #include <botan/data_src.h>
 #include <botan/hex.h>
@@ -17,6 +18,7 @@
 #include <botan/x509self.h>
 #include <fstream>
 #include <memory>
+#include <utility>
 
 #include "cli_exceptions.h"
 
@@ -252,11 +254,10 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
 class TLS_All_Policy final : public Botan::TLS::Policy {
    public:
       std::vector<std::string> allowed_ciphers() const override {
-         return std::vector<std::string>{"ChaCha20Poly1305",
-                                         "AES-256/OCB(12)",
-                                         "AES-128/OCB(12)",
-                                         "AES-256/GCM",
+         return std::vector<std::string>{"AES-256/GCM",
                                          "AES-128/GCM",
+                                         "ChaCha20Poly1305",
+                                         "AES-256/OCB(12)",
                                          "AES-256/CCM",
                                          "AES-128/CCM",
                                          "AES-256/CCM(8)",
@@ -270,7 +271,8 @@ class TLS_All_Policy final : public Botan::TLS::Policy {
                                          "Camellia-256",
                                          "Camellia-128",
                                          "SEED",
-                                         "3DES"};
+                                         "3DES",
+                                         "NULL"};
       }
 
       std::vector<std::string> allowed_key_exchange_methods() const override {

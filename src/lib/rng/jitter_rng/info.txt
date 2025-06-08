@@ -1,0 +1,17 @@
+load_on dep
+
+<module_info>
+name -> "CPU Jitter Random Number Generator"
+</module_info>
+
+<defines>
+JITTER_RNG -> 20240901
+</defines>
+
+<header:public>
+jitter_rng.h
+</header:public>
+
+<libs>
+all -> jitterentropy
+</libs>

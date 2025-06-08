@@ -1,5 +1,6 @@
 /*
 * (C) 2019 Nuno Goncalves <nunojpg@gmail.com>
+*     2023,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -14,28 +15,35 @@
 
 namespace Botan {
 
-struct BOTAN_TEST_API URI {
+class BOTAN_TEST_API URI {
+   public:
       enum class Type : uint8_t {
-         NotSet,
          IPv4,
          IPv6,
          Domain,
       };
-      static URI fromAny(std::string_view uri);
-      static URI fromIPv4(std::string_view uri);
-      static URI fromIPv6(std::string_view uri);
-      static URI fromDomain(std::string_view uri);
-      URI() = default;
 
-      URI(Type xtype, std::string_view xhost, unsigned short xport) : type{xtype}, host{xhost}, port{xport} {}
+      static URI from_any(std::string_view uri);
+      static URI from_ipv4(std::string_view uri);
+      static URI from_ipv6(std::string_view uri);
+      static URI from_domain(std::string_view uri);
 
-      bool operator==(const URI& a) const { return type == a.type && host == a.host && port == a.port; }
+      URI(Type type, std::string_view host, uint16_t port) : m_type(type), m_host(host), m_port(port) {}
+
+      bool operator==(const URI& a) const { return m_type == a.m_type && m_host == a.m_host && m_port == a.m_port; }
 
       std::string to_string() const;
 
-      const Type type{Type::NotSet};
-      const std::string host{};
-      const uint16_t port{};
+      const std::string& host() const { return m_host; }
+
+      uint16_t port() const { return m_port; }
+
+      Type type() const { return m_type; }
+
+   private:
+      const Type m_type;
+      const std::string m_host;
+      const uint16_t m_port;
 };
 
 }  // namespace Botan

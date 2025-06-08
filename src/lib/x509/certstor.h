@@ -80,11 +80,13 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Store {
 */
 class BOTAN_PUBLIC_API(2, 0) Certificate_Store_In_Memory final : public Certificate_Store {
    public:
+#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
       /**
       * Attempt to parse all files in dir (including subdirectories)
       * as certificates. Ignores errors.
       */
       explicit Certificate_Store_In_Memory(std::string_view dir);
+#endif
 
       /**
       * Adds given certificate to the store.

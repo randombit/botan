@@ -42,15 +42,16 @@ class KyberPolyTraits final : public CRYSTALS::Trait_Base<KyberConstants, KyberP
 
    public:
       /**
-       * NIST FIPS 203 IPD, Algorithm 8 (NTT)
+       * NIST FIPS 203, Algorithm 9 (NTT)
        *
        * Produces the result of the NTT transformation without any montgomery
-       * factors in the coefficients.
+       * factors in the coefficients. Zetas are pre-computed and stored in the
+       * zetas array. The zeta values contain the montgomery factor 2^16 mod q.
        */
       constexpr static void ntt(std::span<T, N> p) {
-         for(size_t len = N / 2, k = 0; len >= 2; len /= 2) {
+         for(size_t len = N / 2, i = 0; len >= 2; len /= 2) {
             for(size_t start = 0, j = 0; start < N; start = j + len) {
-               const auto zeta = zetas[++k];
+               const auto zeta = zetas[++i];
                for(j = start; j < start + len; ++j) {
                   const auto t = fqmul(zeta, p[j + len]);
                   p[j + len] = p[j] - t;
@@ -63,7 +64,7 @@ class KyberPolyTraits final : public CRYSTALS::Trait_Base<KyberConstants, KyberP
       }
 
       /**
-       * NIST FIPS 203 IPD, Algorithm 9 (NTT^-1)
+       * NIST FIPS 203, Algorithm 10 (NTT^-1)
        *
        * The output is effectively multiplied by the montgomery parameter 2^16
        * mod q so that the input factors 2^(-16) mod q are eliminated. Note
@@ -74,9 +75,9 @@ class KyberPolyTraits final : public CRYSTALS::Trait_Base<KyberConstants, KyberP
        * factor of (2^16 mod q) added (!). See above.
        */
       static constexpr void inverse_ntt(std::span<T, N> p) {
-         for(size_t len = 2, k = 127; len <= N / 2; len *= 2) {
+         for(size_t len = 2, i = 127; len <= N / 2; len *= 2) {
             for(size_t start = 0, j = 0; start < N; start = j + len) {
-               const auto zeta = zetas[k--];
+               const auto zeta = zetas[i--];
                for(j = start; j < start + len; ++j) {
                   const auto t = p[j];
                   p[j] = barrett_reduce_coefficient(t + p[j + len]);
@@ -91,17 +92,20 @@ class KyberPolyTraits final : public CRYSTALS::Trait_Base<KyberConstants, KyberP
       }
 
       /**
-       * NIST FIPS 203 IPD, Algorithms 10 (MultiplyNTTs) and 11 (BaseCaseMultiply)
+       * NIST FIPS 203, Algorithms 11 (MultiplyNTTs) and 12 (BaseCaseMultiply)
+       *
+       * The result contains factors of 2^(-16) mod q (i.e. the inverse montgomery factor).
+       * This factor is eliminated by the inverse NTT transformation, see above.
        */
       static constexpr void poly_pointwise_montgomery(std::span<T, N> result,
                                                       std::span<const T, N> lhs,
                                                       std::span<const T, N> rhs) {
          /**
-          * NIST FIPS 203 IPD, Algorithm 11 (BaseCaseMultiply)
+          * NIST FIPS 203, Algorithm 12 (BaseCaseMultiply)
           */
-         auto basemul = [](const auto s, const auto t, const T zeta) -> std::tuple<T, T> {
-            return {static_cast<T>(fqmul(fqmul(s[1], t[1]), zeta) + fqmul(s[0], t[0])),
-                    static_cast<T>(fqmul(s[0], t[1]) + fqmul(s[1], t[0]))};
+         auto basemul = [](const auto a, const auto b, const T zeta) -> std::tuple<T, T> {
+            return {static_cast<T>(fqmul(a[0], b[0]) + fqmul(fqmul(a[1], b[1]), zeta)),
+                    static_cast<T>(fqmul(a[0], b[1]) + fqmul(a[1], b[0]))};
          };
 
          auto Tq_elem_count = [](auto p) { return p.size() / 2; };

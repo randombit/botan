@@ -6,10 +6,11 @@
 
 int main() {
    // You can change this to "PBKDF2(SHA-512)" or "Scrypt" or "Argon2id" or ...
-   const std::string pbkdf_algo = "Argon2i";
+   std::string_view pbkdf_algo = "Argon2i";
    auto pbkdf_runtime = std::chrono::milliseconds(300);
-   const size_t output_hash = 32;
-   const size_t max_pbkdf_mb = 128;
+   constexpr size_t output_hash = 32;
+   constexpr size_t salt_len = 32;
+   constexpr size_t max_pbkdf_mb = 128;
 
    auto pwd_fam = Botan::PasswordHashFamily::create_or_throw(pbkdf_algo);
 
@@ -17,10 +18,9 @@ int main() {
 
    std::cout << "Using params " << pwdhash->to_string() << '\n';
 
-   std::array<uint8_t, 32> salt;
-   Botan::system_rng().randomize(salt);
+   const auto salt = Botan::system_rng().random_array<salt_len>();
 
-   const std::string password = "tell no one";
+   std::string_view password = "tell no one";
 
    std::array<uint8_t, output_hash> key;
    pwdhash->hash(key, password, salt);

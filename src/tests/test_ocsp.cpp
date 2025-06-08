@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "botan/types.h"
+#include "tests.h"
 
 #if defined(BOTAN_HAS_OCSP)
    #include <botan/certstor.h>
@@ -14,8 +14,6 @@
    #include <botan/internal/calendar.h>
    #include <fstream>
 #endif
-
-#include "tests.h"
 
 namespace Botan_Tests {
 
@@ -120,6 +118,16 @@ class OCSP_Tests final : public Test {
          auto bdr_ocsp = load_test_OCSP_resp("x509/ocsp/bdr-ocsp-resp.der");
          auto bdr_responder = load_test_X509_cert("x509/ocsp/bdr-ocsp-responder.pem");
          auto bdr_ca = load_test_X509_cert("x509/ocsp/bdr-int.pem");
+
+         // The response in bdr_ocsp contains two certificates
+         if(result.test_eq("both certificates found", bdr_ocsp.certificates().size(), 2)) {
+            result.test_eq("first cert in response",
+                           bdr_ocsp.certificates()[0].subject_info("X520.CommonName").at(0),
+                           "D-TRUST OCSP 4 2-2 EV 2016");
+            result.test_eq("second cert in response",
+                           bdr_ocsp.certificates()[1].subject_info("X520.CommonName").at(0),
+                           "D-TRUST CA 2-2 EV 2016");
+         }
 
          // Dummy OCSP response is not signed at all
          auto dummy_ocsp = Botan::OCSP::Response(Botan::Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE);

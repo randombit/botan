@@ -4,8 +4,12 @@
 %{endif}
  * @defgroup %{identifier} %{title}
 %{if brief}
- * @brief %{brief}
+ * @brief `%{identifier}`: %{brief}
 %{endif}
+%{unless brief}
+ * @brief `%{identifier}`
+%{endif}
+ *
 %{if internal}
  * @note This module is not part of the library's public interface.
  *       Library users may not enable or disable it directly, neither via a

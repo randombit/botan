@@ -27,7 +27,9 @@ class BOTAN_PUBLIC_API(2, 0) X25519_PublicKey : public virtual Public_Key {
 
       std::vector<uint8_t> public_key_bits() const override;
 
-      std::vector<uint8_t> public_value() const { return m_public; }
+      BOTAN_DEPRECATED("Use raw_public_key_bits") std::vector<uint8_t> public_value() const {
+         return raw_public_key_bits();
+      }
 
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::KeyAgreement); }
 
@@ -75,9 +77,9 @@ class BOTAN_PUBLIC_API(2, 0) X25519_PrivateKey final : public X25519_PublicKey,
       * Construct a private key from the specified parameters.
       * @param secret_key the private key
       */
-      explicit X25519_PrivateKey(const secure_vector<uint8_t>& secret_key);
+      explicit X25519_PrivateKey(std::span<const uint8_t> secret_key);
 
-      std::vector<uint8_t> public_value() const override { return X25519_PublicKey::public_value(); }
+      std::vector<uint8_t> public_value() const override { return raw_public_key_bits(); }
 
       secure_vector<uint8_t> agree(const uint8_t w[], size_t w_len) const;
 

@@ -11,6 +11,10 @@ inputs:
   target:
     description: The ci_build.py target going to be built on this agent
     required: true
+  compiler:
+    description: The compiler used to build this target
+    required: false
+    default: unknown
   cache-key:
     description: The actions/cache key to be used for this runs, caching will be disabled when no key is provided
     required: false
@@ -23,11 +27,11 @@ runs:
   using: composite
   steps:
     - name: Setup Build Agent (Windows)
-      run: ${{ github.action_path }}/../../../src/scripts/ci/setup_gh_actions.ps1 "${{ inputs.target }}" "${{ inputs.arch }}"
+      run: ${{ github.action_path }}/../../../src/scripts/ci/setup_gh_actions.ps1 "${{ inputs.target }}" "${{ inputs.compiler }}" "${{ inputs.arch }}"
       shell: pwsh
       if: runner.os == 'Windows'
     - name: Setup Build Agent (Unix-like)
-      run: ${{ github.action_path }}/../../../src/scripts/ci/setup_gh_actions.sh "${{ inputs.target }}" "${{ inputs.arch }}"
+      run: ${{ github.action_path }}/../../../src/scripts/ci/setup_gh_actions.sh "${{ inputs.target }}" "${{ inputs.compiler }}" "${{ inputs.arch }}"
       shell: bash
       if: runner.os != 'Windows'
 
@@ -53,3 +57,12 @@ runs:
       run: ${{ github.action_path }}/../../../src/scripts/ci/setup_gh_actions_after_vcvars.ps1 ${{ inputs.target }}
       shell: pwsh
       if: runner.os == 'Windows'
+    - name: Install Build Dependencies # after setting up the compiler cache infrastructure
+      run: ${{ github.action_path }}/../../../src/scripts/ci/setup_gh_actions_after_ccache.sh ${{ inputs.target }}
+      shell: bash
+      if: runner.os != 'Windows'
+
+    - name: Start TPM 2.0 Simulator
+      run: ${{ github.action_path }}/../../../src/scripts/ci/start_tpm2_simulator.sh "${{ github.workspace }}/tpm2_simulator_state"
+      shell: bash
+      if: runner.os != 'Windows' && env.BOTAN_TPM2_ENABLED == 'test'

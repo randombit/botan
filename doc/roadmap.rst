@@ -5,39 +5,34 @@ Development Roadmap
 Near Term Plans
 ----------------------------------------
 
-Here is an outline for the development plans over the next 12-24 months,
-as of May 2024.
+Here is an outline of the development plans over the next ~12 months, as of
+February 2025.
 
-Botan 2
+Botan2
 ---------------
 
-Botan 2 is still supported, but no further feature work is planned.
-Only security issues and serious bugs will be addressed.
+As of 2025-01-01, Botan2 has reached end of life. No further releases are planned.
 
-Botan 3
+Botan3
 ---------------
 
-The following future work is currently planned for Botan 3:
-
-* BSI Project 481 [https://github.com/randombit/botan/issues/3108]
-  will add several new post-quantum algorithms including LMS signatures
-  and Classic McEliece.
+The following future work is currently planned for Botan3:
 
 * New ECC based password authenticated key exchanges, to replace SRP.
-  The most likely candidate algorithms are CPace and OPAQUE.
+  The most likely candidate algorithms are SPAKE2(+) and CPace.
 
 * Adding an implementation of BLS12-381 elliptic curve pairing.
 
-* Low level integer math and elliptic curve arithmetic optimizations.
+* HPKE (RFC 9180)
 
-Botan 4
+Botan4
 ---------------
 
-At this time there is no immediate plan for a new major version. When it occurs,
-it will remove functionality currently marked as deprecated, and adopt a new C++
-version. This is unlikely to occur before 2027, at the earliest.
+Botan4 is currently planned for release in 2027.
 
-One major change already planned for Botan 4 is that in this release, Public_Key
+See the current planning discussion in https://github.com/randombit/botan/issues/4666
+
+One notable change planned for Botan4 is that in that release, Public_Key
 will no longer derive from Private_Key. And similarly, specific private keys
 (for example RSA_PrivateKey) will no longer derive from their corresponding
 public key type.

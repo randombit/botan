@@ -1,4 +1,4 @@
-#test cpuid gfni armv8sm4
+#test cpuid intel_sm4 gfni armv8sm4
 
 [SM4]
 Key = 0123456789abcdeffedcba9876543210

@@ -8,6 +8,7 @@
 
 #include <botan/mem_ops.h>
 #include <botan/internal/int_utils.h>
+#include <botan/internal/target_info.h>
 #include <cstdlib>
 #include <new>
 

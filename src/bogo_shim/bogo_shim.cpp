@@ -28,6 +28,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/target_info.h>
 
 #include <ctime>
 #include <iostream>
@@ -133,8 +134,10 @@ std::string map_to_bogo_error(const std::string& e) {
       {"Client sent plaintext HTTP request instead of TLS handshake", ":HTTP_REQUEST:"},
       {"Client signalled fallback SCSV, possible attack", ":INAPPROPRIATE_FALLBACK:"},
       {"Client version TLS v1.1 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:"},
+      {"Concatenated public values have an unexpected length", ":BAD_ECPOINT:"},
       {"No shared TLS version based on supported versions extension", ":UNSUPPORTED_PROTOCOL:"},
       {"Client: No certificates sent by server", ":DECODE_ERROR:"},
+      {"Decoded polynomial coefficients out of range", ":BAD_ECPOINT:"},
       {"Non-PSK Client Hello did not contain supported_groups and signature_algorithms extensions",
        ":NO_SHARED_GROUP:"},
       {"No certificates sent by server", ":PEER_DID_NOT_RETURN_A_CERTIFICATE:"},
@@ -173,6 +176,10 @@ std::string map_to_bogo_error(const std::string& e) {
       {"Invalid SessionTicket: Extra bytes at end of message", ":DECODE_ERROR:"},
       {"Invalid authentication tag: ChaCha20Poly1305 tag check failed", ":DECRYPTION_FAILED_OR_BAD_RECORD_MAC:"},
       {"Invalid authentication tag: GCM tag check failed", ":DECRYPTION_FAILED_OR_BAD_RECORD_MAC:"},
+      {"Invalid encapsulated key length", ":BAD_ECPOINT:"},
+      {"Invalid hybrid KEM ciphertext", ":BAD_ECPOINT:"},
+      {"Invalid size 31 for X25519 public key", ":BAD_ECPOINT:"},
+      {"Invalid size 33 for X25519 public key", ":BAD_ECPOINT:"},
       {"Message authentication failure", ":DECRYPTION_FAILED_OR_BAD_RECORD_MAC:"},
       {"No content type found in encrypted record", ":DECRYPTION_FAILED_OR_BAD_RECORD_MAC:"},
       {"No shared DTLS version", ":UNSUPPORTED_PROTOCOL:"},
@@ -236,6 +243,7 @@ std::string map_to_bogo_error(const std::string& e) {
       {"Unexpected extension received", ":UNEXPECTED_EXTENSION:"},
       {"server hello must contain key exchange information", ":MISSING_KEY_SHARE:"},
       {"Peer sent duplicated extensions", ":DUPLICATE_EXTENSION:"},
+      {"Policy does not accept any hash function supported by client", ":NO_SHARED_CIPHER:"},
       {"Server sent bad values for secure renegotiation", ":RENEGOTIATION_MISMATCH:"},
       {"Server version DTLS v1.0 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:"},
       {"Server version TLS v1.0 is unacceptable by policy", ":UNSUPPORTED_PROTOCOL:"},
@@ -323,6 +331,7 @@ std::string map_to_bogo_error(const std::string& e) {
       {"Error alert not marked fatal", ":BAD_ALERT:"},
       {"Peer sent unknown signature scheme", ":WRONG_SIGNATURE_TYPE:"},
       {"We did not offer the usage of RSA_PSS_SHA256 as a signature scheme", ":WRONG_SIGNATURE_TYPE:"},
+      {"X25519 public point appears to be of low order", ":BAD_ECPOINT:"},
    };
 
    auto err_map_i = err_map.find(e);
@@ -987,15 +996,6 @@ class Shim_Policy final : public Botan::TLS::Policy {
             for(size_t pref : m_args.get_int_vec_opt("curves")) {
                const auto group = static_cast<Botan::TLS::Group_Params>(pref);
                if(std::find(supported_groups.cbegin(), supported_groups.cend(), group) != supported_groups.end()) {
-                  groups.push_back(group);
-               }
-
-               // Given that this is still a draft-standard, we didn't add the
-               // hybrid groups to the default policy, yet.
-               //
-               // TODO: once `TLS::Policy::key_exchange_groups()` contains it by
-               //       default, remove this explicit check.
-               if(group == Botan::TLS::Group_Params::HYBRID_X25519_KYBER_768_R3_OQS) {
                   groups.push_back(group);
                }
             }

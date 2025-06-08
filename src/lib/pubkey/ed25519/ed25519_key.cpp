@@ -1,9 +1,7 @@
 /*
 * Ed25519
 * (C) 2017 Ribose Inc
-*
-* Based on the public domain code from SUPERCOP ref10 by
-* Peter Schwabe, Daniel J. Bernstein, Niels Duif, Tanja Lange, Bo-Yin Yang
+*     2025 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -91,9 +89,9 @@ std::unique_ptr<Private_Key> Ed25519_PublicKey::generate_another(RandomNumberGen
    return std::make_unique<Ed25519_PrivateKey>(rng);
 }
 
-Ed25519_PrivateKey::Ed25519_PrivateKey(const secure_vector<uint8_t>& secret_key) {
+Ed25519_PrivateKey::Ed25519_PrivateKey(std::span<const uint8_t> secret_key) {
    if(secret_key.size() == 64) {
-      m_private = secret_key;
+      m_private.assign(secret_key.begin(), secret_key.end());
       m_public.assign(m_private.begin() + 32, m_private.end());
    } else if(secret_key.size() == 32) {
       m_public.resize(32);
@@ -102,6 +100,18 @@ Ed25519_PrivateKey::Ed25519_PrivateKey(const secure_vector<uint8_t>& secret_key)
    } else {
       throw Decoding_Error("Invalid size for Ed25519 private key");
    }
+}
+
+//static
+Ed25519_PrivateKey Ed25519_PrivateKey::from_seed(std::span<const uint8_t> seed) {
+   BOTAN_ARG_CHECK(seed.size() == 32, "Ed25519 seed must be exactly 32 bytes long");
+   return Ed25519_PrivateKey(seed);
+}
+
+//static
+Ed25519_PrivateKey Ed25519_PrivateKey::from_bytes(std::span<const uint8_t> bytes) {
+   BOTAN_ARG_CHECK(bytes.size() == 64, "Ed25519 private key must be exactly 64 bytes long");
+   return Ed25519_PrivateKey(bytes);
 }
 
 Ed25519_PrivateKey::Ed25519_PrivateKey(RandomNumberGenerator& rng) {

@@ -68,10 +68,10 @@ class DLIES_KAT_Tests final : public Text_Based_Test {
             cipher_key_len = enc->key_spec().maximum_keylength();
          }
 
-         Botan::DL_Group domain(group_name);
+         auto group = Botan::DL_Group::from_name(group_name);
 
-         Botan::DH_PrivateKey from(domain, x1);
-         Botan::DH_PrivateKey to(domain, x2);
+         Botan::DH_PrivateKey from(group, x1);
+         Botan::DH_PrivateKey to(group, x2);
 
          Botan::DLIES_Encryptor encryptor(
             from, this->rng(), kdf->new_object(), std::move(enc), cipher_key_len, mac->new_object(), mac_key_len);
@@ -109,8 +109,10 @@ Test::Result test_xor() {
 
    auto rng = Test::new_rng("dlies_xor");
 
-   Botan::DH_PrivateKey alice(*rng, Botan::DL_Group("modp/ietf/2048"));
-   Botan::DH_PrivateKey bob(*rng, Botan::DL_Group("modp/ietf/2048"));
+   auto group = Botan::DL_Group::from_name("modp/ietf/2048");
+
+   Botan::DH_PrivateKey alice(*rng, group);
+   Botan::DH_PrivateKey bob(*rng, group);
 
    for(const auto& kfunc : kdfs) {
       kdf = Botan::KDF::create(kfunc);

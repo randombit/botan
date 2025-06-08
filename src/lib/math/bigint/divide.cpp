@@ -27,7 +27,7 @@ void sign_fixup(const BigInt& x, const BigInt& y, BigInt& q, BigInt& r) {
    }
 }
 
-inline bool division_check(word q, word y2, word y1, word x3, word x2, word x1) {
+inline bool division_check_vartime(word q, word y2, word y1, word x3, word x2, word x1) {
    /*
    Compute (y3,y2,y1) = (y2,y1) * q
    and return true if (y3,y2,y1) > (x3,x2,x1)
@@ -37,10 +37,13 @@ inline bool division_check(word q, word y2, word y1, word x3, word x2, word x1) 
    y1 = word_madd2(q, y1, &y3);
    y2 = word_madd2(q, y2, &y3);
 
-   const word x[3] = {x1, x2, x3};
-   const word y[3] = {y1, y2, y3};
-
-   return bigint_ct_is_lt(x, 3, y, 3).as_bool();
+   if(x3 != y3) {
+      return (y3 > x3);
+   }
+   if(x2 != y2) {
+      return (y2 > x2);
+   }
+   return (y1 > x1);
 }
 
 }  // namespace
@@ -63,7 +66,7 @@ void ct_divide(const BigInt& x, const BigInt& y, BigInt& q_out, BigInt& r_out) {
       const size_t b = x_bits - 1 - i;
       const bool x_b = x.get_bit(b);
 
-      r *= 2;
+      r <<= 1;
       r.conditionally_set_bit(0, x_b);
 
       const bool r_gte_y = bigint_sub3(t.mutable_data(), r._data(), r.size(), y._data(), y_words) == 0;
@@ -75,6 +78,46 @@ void ct_divide(const BigInt& x, const BigInt& y, BigInt& q_out, BigInt& r_out) {
    sign_fixup(x, y, q, r);
    r_out = r;
    q_out = q;
+}
+
+BigInt ct_divide_pow2k(size_t k, const BigInt& y) {
+   BOTAN_ARG_CHECK(!y.is_zero(), "Cannot divide by zero");
+   BOTAN_ARG_CHECK(!y.is_negative(), "Negative divisor not supported");
+   BOTAN_ARG_CHECK(k > 1, "Invalid k");
+
+   const size_t x_bits = k + 1;
+   const size_t y_bits = y.bits();
+
+   if(x_bits < y_bits) {
+      return BigInt::zero();
+   }
+
+   BOTAN_ASSERT_NOMSG(y_bits >= 1);
+   const size_t x_words = (x_bits + WordInfo<word>::bits - 1) / WordInfo<word>::bits;
+   const size_t y_words = y.sig_words();
+
+   BigInt q = BigInt::with_capacity(x_words);
+   BigInt r = BigInt::with_capacity(y_words + 1);
+   BigInt t = BigInt::with_capacity(y_words + 1);  // a temporary
+
+   r.set_bit(y_bits - 1);
+   for(size_t i = y_bits - 1; i != x_bits; ++i) {
+      const size_t b = x_bits - 1 - i;
+
+      if(i >= y_bits) {
+         bigint_shl1(r.mutable_data(), r.size(), r.size(), 1);
+      }
+
+      const bool r_gte_y = bigint_sub3(t.mutable_data(), r._data(), r.size(), y._data(), y_words) == 0;
+
+      q.conditionally_set_bit(b, r_gte_y);
+
+      bigint_cnd_swap(static_cast<word>(r_gte_y), r.mutable_data(), t.mutable_data(), y_words + 1);
+   }
+
+   // No need for sign fixup
+
+   return q;
 }
 
 void ct_divide_word(const BigInt& x, word y, BigInt& q_out, word& r_out) {
@@ -94,7 +137,7 @@ void ct_divide_word(const BigInt& x, word y, BigInt& q_out, word& r_out) {
 
       const auto r_carry = CT::Mask<word>::expand_top_bit(r);
 
-      r *= 2;
+      r <<= 1;
       r += x_b;
 
       const auto r_gte_y = CT::Mask<word>::is_gte(r, y) | r_carry;
@@ -114,6 +157,38 @@ void ct_divide_word(const BigInt& x, word y, BigInt& q_out, word& r_out) {
    q_out = q;
 }
 
+BigInt ct_divide_word(const BigInt& x, word y) {
+   BigInt q;
+   word r;
+   ct_divide_word(x, y, q, r);
+   BOTAN_UNUSED(r);
+   return q;
+}
+
+word ct_mod_word(const BigInt& x, word y) {
+   BOTAN_ARG_CHECK(x.is_positive(), "The argument x must be positive");
+   BOTAN_ARG_CHECK(y != 0, "Cannot divide by zero");
+
+   const size_t x_bits = x.bits();
+
+   word r = 0;
+
+   for(size_t i = 0; i != x_bits; ++i) {
+      const size_t b = x_bits - 1 - i;
+      const bool x_b = x.get_bit(b);
+
+      const auto r_carry = CT::Mask<word>::expand_top_bit(r);
+
+      r <<= 1;
+      r += x_b;
+
+      const auto r_gte_y = CT::Mask<word>::is_gte(r, y) | r_carry;
+      r = r_gte_y.select(r - y, r);
+   }
+
+   return r;
+}
+
 BigInt ct_modulo(const BigInt& x, const BigInt& y) {
    if(y.is_negative() || y.is_zero()) {
       throw Invalid_Argument("ct_modulo requires y > 0");
@@ -130,7 +205,7 @@ BigInt ct_modulo(const BigInt& x, const BigInt& y) {
       const size_t b = x_bits - 1 - i;
       const bool x_b = x.get_bit(b);
 
-      r *= 2;
+      r <<= 1;
       r.conditionally_set_bit(0, x_b);
 
       const bool r_gte_y = bigint_sub3(t.mutable_data(), r._data(), r.size(), y._data(), y_words) == 0;
@@ -173,8 +248,10 @@ void vartime_divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt&
    // Calculate shifts needed to normalize y with high bit set
    const size_t shifts = y.top_bits_free();
 
-   y <<= shifts;
-   r <<= shifts;
+   if(shifts > 0) {
+      y <<= shifts;
+      r <<= shifts;
+   }
 
    // we know y has not changed size, since we only shifted up to set high bit
    const size_t t = y_words - 1;
@@ -186,41 +263,48 @@ void vartime_divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt&
 
    word* q_words = q.mutable_data();
 
-   BigInt shifted_y = y << (BOTAN_MP_WORD_BITS * (n - t));
+   BigInt shifted_y = y << (WordInfo<word>::bits * (n - t));
 
    // Set q_{n-t} to number of times r > shifted_y
    q_words[n - t] = r.reduce_below(shifted_y, ws);
 
    const word y_t0 = y.word_at(t);
    const word y_t1 = y.word_at(t - 1);
-   BOTAN_DEBUG_ASSERT((y_t0 >> (BOTAN_MP_WORD_BITS - 1)) == 1);
+   BOTAN_DEBUG_ASSERT((y_t0 >> (WordInfo<word>::bits - 1)) == 1);
 
    for(size_t j = n; j != t; --j) {
       const word x_j0 = r.word_at(j);
       const word x_j1 = r.word_at(j - 1);
       const word x_j2 = r.word_at(j - 2);
 
-      word qjt = bigint_divop_vartime(x_j0, x_j1, y_t0);
-
-      qjt = CT::Mask<word>::is_equal(x_j0, y_t0).select(WordInfo<word>::max, qjt);
+      word qjt = (x_j0 == y_t0) ? WordInfo<word>::max : bigint_divop_vartime(x_j0, x_j1, y_t0);
 
       // Per HAC 14.23, this operation is required at most twice
-      qjt -= division_check(qjt, y_t0, y_t1, x_j0, x_j1, x_j2);
-      qjt -= division_check(qjt, y_t0, y_t1, x_j0, x_j1, x_j2);
-      BOTAN_DEBUG_ASSERT(division_check(qjt, y_t0, y_t1, x_j0, x_j1, x_j2) == false);
+      for(size_t k = 0; k != 2; ++k) {
+         if(division_check_vartime(qjt, y_t0, y_t1, x_j0, x_j1, x_j2)) {
+            qjt--;
+         } else {
+            break;
+         }
+      }
 
-      shifted_y >>= BOTAN_MP_WORD_BITS;
-      // Now shifted_y == y << (BOTAN_MP_WORD_BITS * (j-t-1))
+      shifted_y >>= WordInfo<word>::bits;
+      // Now shifted_y == y << (WordInfo<word>::bits * (j-t-1))
 
       // TODO this sequence could be better
       r -= qjt * shifted_y;
-      qjt -= r.is_negative();
-      r += static_cast<word>(r.is_negative()) * shifted_y;
+      if(r.is_negative()) {
+         qjt--;
+         r += shifted_y;
+         BOTAN_DEBUG_ASSERT(r.is_positive());
+      }
 
       q_words[j - t - 1] = qjt;
    }
 
-   r >>= shifts;
+   if(shifts > 0) {
+      r >>= shifts;
+   }
 
    sign_fixup(x, y_arg, q, r);
 

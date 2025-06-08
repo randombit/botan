@@ -18,6 +18,10 @@
    #include <botan/x509path.h>
    #include <botan/x509self.h>
    #include <botan/internal/calendar.h>
+
+   #if defined(BOTAN_HAS_ECC_GROUP)
+      #include <botan/ec_group.h>
+   #endif
 #endif
 
 namespace Botan_Tests {
@@ -104,7 +108,12 @@ std::unique_ptr<Botan::Private_Key> make_a_private_key(const std::string& algo, 
          return "1024";
       }
       if(algo == "GOST-34.10") {
-         return "gost_256A";
+   #if defined(BOTAN_HAS_ECC_GROUP)
+         if(Botan::EC_Group::supports_named_group("gost_256A")) {
+            return "gost_256A";
+         }
+   #endif
+         return "secp256r1";
       }
       if(algo == "ECKCDSA" || algo == "ECGDSA") {
          return "brainpool256r1";
@@ -112,10 +121,17 @@ std::unique_ptr<Botan::Private_Key> make_a_private_key(const std::string& algo, 
       if(algo == "HSS-LMS") {
          return "SHA-256,HW(5,4),HW(5,4)";
       }
+      if(algo == "SLH-DSA") {
+         return "SLH-DSA-SHA2-128f";
+      }
       return "";  // default "" means choose acceptable algo-specific params
    }();
 
-   return Botan::create_private_key(algo, rng, params);
+   try {
+      return Botan::create_private_key(algo, rng, params);
+   } catch(Botan::Not_Implemented&) {
+      return {};
+   }
 }
 
 Test::Result test_cert_status_strings() {
@@ -157,6 +173,8 @@ Test::Result test_cert_status_strings() {
       Botan::Certificate_Status_Code::CERT_CHAIN_TOO_LONG,
       Botan::Certificate_Status_Code::CA_CERT_NOT_FOR_CERT_ISSUER,
       Botan::Certificate_Status_Code::NAME_CONSTRAINT_ERROR,
+      Botan::Certificate_Status_Code::IPADDR_BLOCKS_ERROR,
+      Botan::Certificate_Status_Code::AS_BLOCKS_ERROR,
       Botan::Certificate_Status_Code::CA_CERT_NOT_FOR_CRL_ISSUER,
       Botan::Certificate_Status_Code::OCSP_CERT_NOT_LISTED,
       Botan::Certificate_Status_Code::OCSP_BAD_STATUS,
@@ -402,6 +420,78 @@ Test::Result test_x509_dates() {
    return result;
 }
 
+Test::Result test_x509_encode_authority_info_access_extension() {
+   Test::Result result("X509 with encoded PKIX.AuthorityInformationAccess extension");
+
+   #if defined(BOTAN_HAS_RSA)
+   auto rng = Test::new_rng(__func__);
+
+   const std::string sig_algo{"RSA"};
+   const std::string hash_fn{"SHA-256"};
+   const std::string padding_method{"EMSA3(SHA-256)"};
+
+   // CA Issuer information
+   const std::vector<std::string> ca_issuers = {
+      "http://www.d-trust.net/cgi-bin/Bdrive_Test_CA_1-2_2017.crt",
+      "ldap://directory.d-trust.net/CN=Bdrive%20Test%20CA%201-2%202017,O=Bundesdruckerei%20GmbH,C=DE?cACertificate?base?"};
+
+   // OCSP
+   const std::string_view ocsp_uri{"http://staging.ocsp.d-trust.net"};
+
+   // create a CA
+   auto ca_key = make_a_private_key(sig_algo, *rng);
+   result.require("CA key", ca_key != nullptr);
+   const auto ca_cert = Botan::X509::create_self_signed_cert(ca_opts(), *ca_key, hash_fn, *rng);
+   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, padding_method, *rng);
+
+   // create a certificate with only caIssuer information
+   auto key = make_a_private_key(sig_algo, *rng);
+
+   Botan::X509_Cert_Options opts1 = req_opts1(sig_algo);
+   opts1.extensions.add(std::make_unique<Botan::Cert_Extension::Authority_Information_Access>("", ca_issuers));
+
+   Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts1, *key, hash_fn, *rng);
+
+   Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+
+   if(!result.test_eq("number of ca_issuers URIs", cert.ca_issuers().size(), 2)) {
+      return result;
+   }
+
+   for(const auto& ca_issuer : cert.ca_issuers()) {
+      result.confirm("CA issuer URI present in certificate",
+                     std::ranges::find(ca_issuers, ca_issuer) != ca_issuers.end());
+   }
+
+   result.confirm("no OCSP url available", cert.ocsp_responder().empty());
+
+   // create a certificate with only OCSP URI information
+   Botan::X509_Cert_Options opts2 = req_opts1(sig_algo);
+   opts2.extensions.add(std::make_unique<Botan::Cert_Extension::Authority_Information_Access>(ocsp_uri));
+
+   req = Botan::X509::create_cert_req(opts2, *key, hash_fn, *rng);
+
+   cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+
+   result.confirm("OCSP URI available", !cert.ocsp_responder().empty());
+   result.confirm("no CA Issuer URI available", cert.ca_issuers().empty());
+   result.test_eq("OCSP responder URI matches", cert.ocsp_responder(), std::string(ocsp_uri));
+
+   // create a certificate with OCSP URI and CA Issuer information
+   Botan::X509_Cert_Options opts3 = req_opts1(sig_algo);
+   opts3.extensions.add(std::make_unique<Botan::Cert_Extension::Authority_Information_Access>(ocsp_uri, ca_issuers));
+
+   req = Botan::X509::create_cert_req(opts3, *key, hash_fn, *rng);
+
+   cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+
+   result.confirm("OCSP URI available", !cert.ocsp_responder().empty());
+   result.confirm("CA Issuer URI available", !cert.ca_issuers().empty());
+   #endif
+
+   return result;
+}
+
    #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 Test::Result test_crl_dn_name() {
@@ -596,75 +686,6 @@ Test::Result test_x509_authority_info_access_extension() {
    return result;
 }
 
-Test::Result test_x509_encode_authority_info_access_extension() {
-   Test::Result result("X509 with encoded PKIX.AuthorityInformationAccess extension");
-
-   auto rng = Test::new_rng(__func__);
-
-   const std::string sig_algo{"RSA"};
-   const std::string hash_fn{"SHA-256"};
-   const std::string padding_method{"EMSA3(SHA-256)"};
-
-   // CA Issuer information
-   const std::vector<std::string> ca_issuers = {
-      "http://www.d-trust.net/cgi-bin/Bdrive_Test_CA_1-2_2017.crt",
-      "ldap://directory.d-trust.net/CN=Bdrive%20Test%20CA%201-2%202017,O=Bundesdruckerei%20GmbH,C=DE?cACertificate?base?"};
-
-   // OCSP
-   const std::string_view ocsp_uri{"http://staging.ocsp.d-trust.net"};
-
-   // create a CA
-   auto ca_key = make_a_private_key(sig_algo, *rng);
-   const auto ca_cert = Botan::X509::create_self_signed_cert(ca_opts(), *ca_key, hash_fn, *rng);
-   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, padding_method, *rng);
-
-   // create a certificate with only caIssuer information
-   auto key = make_a_private_key(sig_algo, *rng);
-
-   Botan::X509_Cert_Options opts1 = req_opts1(sig_algo);
-   opts1.extensions.add(std::make_unique<Botan::Cert_Extension::Authority_Information_Access>("", ca_issuers));
-
-   Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts1, *key, hash_fn, *rng);
-
-   Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
-
-   if(!result.test_eq("number of ca_issuers URIs", cert.ca_issuers().size(), 2)) {
-      return result;
-   }
-
-   for(const auto& ca_issuer : cert.ca_issuers()) {
-      result.confirm("CA issuer URI present in certificate",
-                     std::ranges::find(ca_issuers, ca_issuer) != ca_issuers.end());
-   }
-
-   result.confirm("no OCSP url available", cert.ocsp_responder().empty());
-
-   // create a certificate with only OCSP URI information
-   Botan::X509_Cert_Options opts2 = req_opts1(sig_algo);
-   opts2.extensions.add(std::make_unique<Botan::Cert_Extension::Authority_Information_Access>(ocsp_uri));
-
-   req = Botan::X509::create_cert_req(opts2, *key, hash_fn, *rng);
-
-   cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
-
-   result.confirm("OCSP URI available", !cert.ocsp_responder().empty());
-   result.confirm("no CA Issuer URI available", cert.ca_issuers().empty());
-   result.test_eq("OCSP responder URI matches", cert.ocsp_responder(), std::string(ocsp_uri));
-
-   // create a certificate with OCSP URI and CA Issuer information
-   Botan::X509_Cert_Options opts3 = req_opts1(sig_algo);
-   opts3.extensions.add(std::make_unique<Botan::Cert_Extension::Authority_Information_Access>(ocsp_uri, ca_issuers));
-
-   req = Botan::X509::create_cert_req(opts3, *key, hash_fn, *rng);
-
-   cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
-
-   result.confirm("OCSP URI available", !cert.ocsp_responder().empty());
-   result.confirm("CA Issuer URI available", !cert.ca_issuers().empty());
-
-   return result;
-}
-
 Test::Result test_parse_rsa_pss_cert() {
    Test::Result result("X509 RSA-PSS certificate");
 
@@ -685,17 +706,19 @@ Test::Result test_verify_gost2012_cert() {
 
       #if defined(BOTAN_HAS_GOST_34_10_2012) && defined(BOTAN_HAS_STREEBOG)
    try {
-      Botan::X509_Certificate root_cert(Test::data_file("x509/gost/gost_root.pem"));
-      Botan::X509_Certificate root_int(Test::data_file("x509/gost/gost_int.pem"));
+      if(Botan::EC_Group::supports_named_group("gost_256A")) {
+         Botan::X509_Certificate root_cert(Test::data_file("x509/gost/gost_root.pem"));
+         Botan::X509_Certificate root_int(Test::data_file("x509/gost/gost_int.pem"));
 
-      Botan::Certificate_Store_In_Memory trusted;
-      trusted.add_certificate(root_cert);
+         Botan::Certificate_Store_In_Memory trusted;
+         trusted.add_certificate(root_cert);
 
-      const Botan::Path_Validation_Restrictions restrictions(false, 128, false, {"Streebog-256"});
-      const Botan::Path_Validation_Result validation_result =
-         Botan::x509_path_validate(root_int, restrictions, trusted);
+         const Botan::Path_Validation_Restrictions restrictions(false, 128, false, {"Streebog-256"});
+         const Botan::Path_Validation_Result validation_result =
+            Botan::x509_path_validate(root_int, restrictions, trusted);
 
-      result.confirm("GOST certificate validates", validation_result.successful_validation());
+         result.confirm("GOST certificate validates", validation_result.successful_validation());
+      }
    } catch(const Botan::Decoding_Error& e) {
       result.test_failure(e.what());
    }
@@ -726,32 +749,32 @@ Test::Result test_padding_config() {
    Botan::X509_Certificate ca_cert_def = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", *rng);
    test_result.test_eq("CA certificate signature algorithm (default)",
                        ca_cert_def.signature_algorithm().oid().to_formatted_string(),
-                       "RSA/EMSA3(SHA-512)");
+                       "RSA/PKCS1v15(SHA-512)");
 
    // Create X509 CA certificate; RSA-PSS is explicitly set
    opt.set_padding_scheme("PSSR");
    Botan::X509_Certificate ca_cert_exp = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", *rng);
    test_result.test_eq("CA certificate signature algorithm (explicit)",
                        ca_cert_exp.signature_algorithm().oid().to_formatted_string(),
-                       "RSA/EMSA4");
+                       "RSA/PSS");
 
-         #if defined(BOTAN_HAS_EMSA2)
+         #if defined(BOTAN_HAS_EMSA_X931)
    // Try to set a padding scheme that is not supported for signing with the given key type
    opt.set_padding_scheme("EMSA2");
    try {
       Botan::X509_Certificate ca_cert_wrong = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", *rng);
-      test_result.test_failure("Could build CA cert with invalid encoding scheme EMSA1 for key type " +
+      test_result.test_failure("Could build CA cert with invalid encoding scheme X9.31 for key type " +
                                sk->algo_name());
    } catch(const Botan::Invalid_Argument& e) {
-      test_result.test_eq("Build CA certificate with invalid encoding scheme EMSA1 for key type " + sk->algo_name(),
+      test_result.test_eq("Build CA certificate with invalid encoding scheme X9.31 for key type " + sk->algo_name(),
                           e.what(),
-                          "Signatures using RSA/EMSA2(SHA-512) are not supported");
+                          "Signatures using RSA/X9.31(SHA-512) are not supported");
    }
          #endif
 
    test_result.test_eq("CA certificate signature algorithm (explicit)",
                        ca_cert_exp.signature_algorithm().oid().to_formatted_string(),
-                       "RSA/EMSA4");
+                       "RSA/PSS");
 
    const Botan::X509_Time not_before = from_date(-1, 1, 1);
    const Botan::X509_Time not_after = from_date(2, 1, 2);
@@ -760,9 +783,8 @@ Test::Result test_padding_config() {
    Botan::X509_Cert_Options req_opt("endpoint");
    req_opt.set_padding_scheme("EMSA4(SHA-512,MGF1,64)");
    Botan::PKCS10_Request end_req = Botan::X509::create_cert_req(req_opt, (*sk), "SHA-512", *rng);
-   test_result.test_eq("Certificate request signature algorithm",
-                       end_req.signature_algorithm().oid().to_formatted_string(),
-                       "RSA/EMSA4");
+   test_result.test_eq(
+      "Certificate request signature algorithm", end_req.signature_algorithm().oid().to_formatted_string(), "RSA/PSS");
 
    // Create X509 CA object: will fail as the chosen hash functions differ
    try {
@@ -780,25 +802,25 @@ Test::Result test_padding_config() {
    Botan::X509_Certificate end_cert_emsa3 = ca_def.sign_request(end_req, *rng, not_before, not_after);
    test_result.test_eq("End certificate signature algorithm",
                        end_cert_emsa3.signature_algorithm().oid().to_formatted_string(),
-                       "RSA/EMSA3(SHA-512)");
+                       "RSA/PKCS1v15(SHA-512)");
 
    // Create X509 CA object: its signer will use the explicitly configured padding scheme, which is different from the CA certificate's scheme
    Botan::X509_CA ca_diff(ca_cert_def, (*sk), "SHA-512", "EMSA-PSS", *rng);
    Botan::X509_Certificate end_cert_diff_emsa4 = ca_diff.sign_request(end_req, *rng, not_before, not_after);
    test_result.test_eq("End certificate signature algorithm",
                        end_cert_diff_emsa4.signature_algorithm().oid().to_formatted_string(),
-                       "RSA/EMSA4");
+                       "RSA/PSS");
 
    // Create X509 CA object: its signer will use the explicitly configured padding scheme, which is identical to the CA certificate's scheme
    Botan::X509_CA ca_exp(ca_cert_exp, (*sk), "SHA-512", "EMSA4(SHA-512,MGF1,64)", *rng);
    Botan::X509_Certificate end_cert_emsa4 = ca_exp.sign_request(end_req, *rng, not_before, not_after);
    test_result.test_eq("End certificate signature algorithm",
                        end_cert_emsa4.signature_algorithm().oid().to_formatted_string(),
-                       "RSA/EMSA4");
+                       "RSA/PSS");
 
    // Check CRL signature algorithm
    Botan::X509_CRL crl = ca_exp.new_crl(*rng);
-   test_result.test_eq("CRL signature algorithm", crl.signature_algorithm().oid().to_formatted_string(), "RSA/EMSA4");
+   test_result.test_eq("CRL signature algorithm", crl.signature_algorithm().oid().to_formatted_string(), "RSA/PSS");
 
    // sanity check for verification, the heavy lifting is done in the other unit tests
    const Botan::Certificate_Store_In_Memory trusted(ca_exp.ca_certificate());
@@ -902,6 +924,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    result.test_eq("User1 serial matches expected", user1_cert.serial_number().at(0), size_t(99));
 
    Botan::X509_Certificate user2_cert = ca.sign_request(user2_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+   result.test_eq("extended key usage is set", user2_cert.has_ex_constraint("PKIX.EmailProtection"), true);
 
    Botan::X509_Certificate user3_cert = ca.sign_request(user3_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
@@ -1194,7 +1217,7 @@ Test::Result test_valid_constraints(const Botan::Private_Key& key, const std::st
       result.test_eq("usage acceptable", key_agreement_decipher_only.compatible_with(key), true);
       result.test_eq("crl sign not permitted", crl_sign.compatible_with(key), false);
       result.test_eq("sign", sign_everything.compatible_with(key), false);
-   } else if(pk_algo == "Kyber" || pk_algo == "FrodoKEM") {
+   } else if(pk_algo == "Kyber" || pk_algo == "FrodoKEM" || pk_algo == "ML-KEM" || pk_algo == "ClassicMcEliece") {
       // KEMs can encrypt and agree
       result.test_eq("all constraints not permitted", all.compatible_with(key), false);
       result.test_eq("cert sign not permitted", ca.compatible_with(key), false);
@@ -1203,7 +1226,7 @@ Test::Result test_valid_constraints(const Botan::Private_Key& key, const std::st
       result.test_eq("crl sign not permitted", crl_sign.compatible_with(key), false);
       result.test_eq("sign", sign_everything.compatible_with(key), false);
       result.test_eq("key agreement not permitted", key_agreement.compatible_with(key), false);
-      result.test_eq("usage acceptable", data_encipherment.compatible_with(key), true);
+      result.test_eq("usage acceptable", data_encipherment.compatible_with(key), false);
       result.test_eq("usage acceptable", key_encipherment.compatible_with(key), true);
    } else if(pk_algo == "RSA") {
       // RSA can do everything except key agreement
@@ -1231,7 +1254,8 @@ Test::Result test_valid_constraints(const Botan::Private_Key& key, const std::st
       result.test_eq("crl sign not permitted", crl_sign.compatible_with(key), false);
       result.test_eq("sign", sign_everything.compatible_with(key), false);
    } else if(pk_algo == "DSA" || pk_algo == "ECDSA" || pk_algo == "ECGDSA" || pk_algo == "ECKCDSA" ||
-             pk_algo == "GOST-34.10" || pk_algo == "Dilithium" || pk_algo == "HSS-LMS") {
+             pk_algo == "GOST-34.10" || pk_algo == "Dilithium" || pk_algo == "ML-DSA" || pk_algo == "SLH-DSA" ||
+             pk_algo == "HSS-LMS") {
       // these are signature algorithms only
       result.test_eq("all constraints not permitted", all.compatible_with(key), false);
 
@@ -1514,6 +1538,8 @@ Test::Result test_hashes(const Botan::Private_Key& key, const std::string& hash_
    return result;
 }
 
+   #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+
 Test::Result test_x509_tn_auth_list_extension_decode() {
    /* cert with TNAuthList extension data was generated by asn1parse cfg:
 
@@ -1569,6 +1595,8 @@ Test::Result test_x509_tn_auth_list_extension_decode() {
    return result;
 }
 
+   #endif
+
 std::vector<std::string> get_sig_paddings(const std::string& sig_algo, const std::string& hash) {
    if(sig_algo == "RSA") {
       return {"EMSA3(" + hash + ")", "EMSA4(" + hash + ")"};
@@ -1577,7 +1605,7 @@ std::vector<std::string> get_sig_paddings(const std::string& sig_algo, const std
       return {hash};
    } else if(sig_algo == "Ed25519" || sig_algo == "Ed448") {
       return {"Pure"};
-   } else if(sig_algo == "Dilithium") {
+   } else if(sig_algo == "Dilithium" || sig_algo == "ML-DSA") {
       return {"Randomized"};
    } else if(sig_algo == "HSS-LMS") {
       return {""};
@@ -1593,8 +1621,18 @@ class X509_Cert_Unit_Tests final : public Test {
 
          auto& rng = this->rng();
 
-         const std::string sig_algos[]{
-            "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA", "GOST-34.10", "Ed25519", "Ed448", "Dilithium", "HSS-LMS"};
+         const std::string sig_algos[]{"RSA",
+                                       "DSA",
+                                       "ECDSA",
+                                       "ECGDSA",
+                                       "ECKCDSA",
+                                       "GOST-34.10",
+                                       "Ed25519",
+                                       "Ed448",
+                                       "Dilithium",
+                                       "ML-DSA",
+                                       "SLH-DSA",
+                                       "HSS-LMS"};
 
          for(const std::string& algo : sig_algos) {
    #if !defined(BOTAN_HAS_EMSA_PKCS1)
@@ -1610,7 +1648,7 @@ class X509_Cert_Unit_Tests final : public Test {
             if(algo == "Ed448") {
                hash = "SHAKE-256(912)";
             }
-            if(algo == "Dilithium") {
+            if(algo == "Dilithium" || algo == "ML-DSA") {
                hash = "SHAKE-256(512)";
             }
 
@@ -1678,7 +1716,8 @@ class X509_Cert_Unit_Tests final : public Test {
          /*
          These are algos which cannot sign but can be included in certs
          */
-         const std::vector<std::string> enc_algos = {"DH", "ECDH", "ElGamal", "Kyber", "FrodoKEM"};
+         const std::vector<std::string> enc_algos = {
+            "DH", "ECDH", "ElGamal", "Kyber", "ML-KEM", "FrodoKEM", "ClassicMcEliece"};
 
          for(const std::string& algo : enc_algos) {
             auto key = make_a_private_key(algo, rng);

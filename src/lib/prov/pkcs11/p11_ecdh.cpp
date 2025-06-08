@@ -11,14 +11,14 @@
 #if defined(BOTAN_HAS_ECDH)
 
    #include <botan/der_enc.h>
+   #include <botan/p11_mechanism.h>
    #include <botan/pk_ops.h>
    #include <botan/rng.h>
-   #include <botan/internal/p11_mechanism.h>
 
 namespace Botan::PKCS11 {
 
 ECDH_PublicKey PKCS11_ECDH_PublicKey::export_key() const {
-   return ECDH_PublicKey(domain(), public_point());
+   return ECDH_PublicKey(domain(), _public_ec_point());
 }
 
 ECDH_PrivateKey PKCS11_ECDH_PrivateKey::export_key() const {
@@ -29,7 +29,7 @@ ECDH_PrivateKey PKCS11_ECDH_PrivateKey::export_key() const {
 }
 
 std::unique_ptr<Public_Key> PKCS11_ECDH_PrivateKey::public_key() const {
-   return std::make_unique<ECDH_PublicKey>(domain(), public_point());
+   return std::make_unique<ECDH_PublicKey>(domain(), public_ec_point());
 }
 
 secure_vector<uint8_t> PKCS11_ECDH_PrivateKey::private_key_bits() const {

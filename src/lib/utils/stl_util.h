@@ -10,6 +10,11 @@
 #ifndef BOTAN_STL_UTIL_H_
 #define BOTAN_STL_UTIL_H_
 
+#include <botan/assert.h>
+#include <botan/concepts.h>
+#include <botan/secmem.h>
+#include <botan/strong_type.h>
+
 #include <algorithm>
 #include <functional>
 #include <optional>
@@ -18,10 +23,6 @@
 #include <tuple>
 #include <variant>
 #include <vector>
-
-#include <botan/concepts.h>
-#include <botan/secmem.h>
-#include <botan/strong_type.h>
 
 namespace Botan {
 
@@ -139,7 +140,7 @@ class BufferSlicer final {
  * The size of the final buffer must be known from the start, reallocations are
  * not performed.
  */
-class BufferStuffer {
+class BufferStuffer final {
    public:
       constexpr BufferStuffer(std::span<uint8_t> buffer) : m_buffer(buffer) {}
 
@@ -351,7 +352,7 @@ overloaded(Ts...) -> overloaded<Ts...>;
  * leaving the current scope.
  */
 template <std::invocable FunT>
-class scoped_cleanup {
+class scoped_cleanup final {
    public:
       explicit scoped_cleanup(FunT cleanup) : m_cleanup(std::move(cleanup)) {}
 
@@ -401,7 +402,7 @@ T assert_is_some(std::optional<T> v, const char* expr, const char* func, const c
  * @brief Helper class to pass literal strings to C++ templates
  */
 template <size_t N>
-class StringLiteral {
+class StringLiteral final {
    public:
       constexpr StringLiteral(const char (&str)[N]) { std::copy_n(str, N, value); }
 
@@ -413,6 +414,57 @@ template <typename T>
    requires std::is_enum_v<T>
 auto to_underlying(T e) noexcept {
    return static_cast<std::underlying_type_t<T>>(e);
+}
+
+// TODO: C++23 - use std::out_ptr
+template <typename T>
+[[nodiscard]] constexpr auto out_ptr(T& outptr) noexcept {
+   class out_ptr_t {
+      public:
+         constexpr ~out_ptr_t() noexcept {
+            m_ptr.reset(m_rawptr);
+            m_rawptr = nullptr;
+         }
+
+         constexpr out_ptr_t(T& outptr) noexcept : m_ptr(outptr), m_rawptr(nullptr) {}
+
+         out_ptr_t(const out_ptr_t&) = delete;
+         out_ptr_t(out_ptr_t&&) = delete;
+         out_ptr_t& operator=(const out_ptr_t&) = delete;
+         out_ptr_t& operator=(out_ptr_t&&) = delete;
+
+         [[nodiscard]] constexpr operator typename T::element_type **() && noexcept { return &m_rawptr; }
+
+      private:
+         T& m_ptr;
+         typename T::element_type* m_rawptr;
+   };
+
+   return out_ptr_t{outptr};
+}
+
+template <typename T>
+   requires std::is_default_constructible_v<T>
+[[nodiscard]] constexpr auto out_opt(std::optional<T>& outopt) noexcept {
+   class out_opt_t {
+      public:
+         constexpr ~out_opt_t() noexcept { m_opt = m_raw; }
+
+         constexpr out_opt_t(std::optional<T>& outopt) noexcept : m_opt(outopt) {}
+
+         out_opt_t(const out_opt_t&) = delete;
+         out_opt_t(out_opt_t&&) = delete;
+         out_opt_t& operator=(const out_opt_t&) = delete;
+         out_opt_t& operator=(out_opt_t&&) = delete;
+
+         [[nodiscard]] constexpr operator T*() && noexcept { return &m_raw; }
+
+      private:
+         std::optional<T>& m_opt;
+         T m_raw;
+   };
+
+   return out_opt_t{outopt};
 }
 
 }  // namespace Botan

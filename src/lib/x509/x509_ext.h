@@ -1,6 +1,7 @@
 /*
 * X.509 Certificate Extensions
 * (C) 1999-2007,2012 Jack Lloyd
+* (C) 2024 Anton Einax, Dominik Schricker
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,6 +10,8 @@
 #define BOTAN_X509_EXTENSIONS_H_
 
 #include <botan/pkix_types.h>
+
+#include <array>
 #include <set>
 
 namespace Botan {
@@ -34,7 +37,7 @@ class BOTAN_PUBLIC_API(2, 0) Basic_Constraints final : public Certificate_Extens
 
       size_t get_path_limit() const;
 
-      static OID static_oid() { return OID("2.5.29.19"); }
+      static OID static_oid() { return OID({2, 5, 29, 19}); }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -63,7 +66,7 @@ class BOTAN_PUBLIC_API(2, 0) Key_Usage final : public Certificate_Extension {
 
       Key_Constraints get_constraints() const { return m_constraints; }
 
-      static OID static_oid() { return OID("2.5.29.15"); }
+      static OID static_oid() { return OID({2, 5, 29, 15}); }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -95,7 +98,7 @@ class BOTAN_PUBLIC_API(2, 0) Subject_Key_ID final : public Certificate_Extension
 
       const std::vector<uint8_t>& get_key_id() const { return m_key_id; }
 
-      static OID static_oid() { return OID("2.5.29.14"); }
+      static OID static_oid() { return OID({2, 5, 29, 14}); }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -125,7 +128,7 @@ class BOTAN_PUBLIC_API(2, 0) Authority_Key_ID final : public Certificate_Extensi
 
       const std::vector<uint8_t>& get_key_id() const { return m_key_id; }
 
-      static OID static_oid() { return OID("2.5.29.35"); }
+      static OID static_oid() { return OID({2, 5, 29, 35}); }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -147,7 +150,7 @@ class BOTAN_PUBLIC_API(2, 4) Subject_Alternative_Name final : public Certificate
    public:
       const AlternativeName& get_alt_name() const { return m_alt_name; }
 
-      static OID static_oid() { return OID("2.5.29.17"); }
+      static OID static_oid() { return OID({2, 5, 29, 17}); }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -175,7 +178,7 @@ class BOTAN_PUBLIC_API(2, 0) Issuer_Alternative_Name final : public Certificate_
    public:
       const AlternativeName& get_alt_name() const { return m_alt_name; }
 
-      static OID static_oid() { return OID("2.5.29.18"); }
+      static OID static_oid() { return OID({2, 5, 29, 18}); }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -211,7 +214,7 @@ class BOTAN_PUBLIC_API(2, 0) Extended_Key_Usage final : public Certificate_Exten
 
       const std::vector<OID>& object_identifiers() const { return m_oids; }
 
-      static OID static_oid() { return OID("2.5.29.37"); }
+      static OID static_oid() { return OID({2, 5, 29, 37}); }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -247,7 +250,7 @@ class BOTAN_PUBLIC_API(2, 0) Name_Constraints final : public Certificate_Extensi
 
       const NameConstraints& get_name_constraints() const { return m_name_constraints; }
 
-      static OID static_oid() { return OID("2.5.29.30"); }
+      static OID static_oid() { return OID({2, 5, 29, 30}); }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -277,7 +280,7 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Policies final : public Certificate_Ext
 
       const std::vector<OID>& get_policy_oids() const { return m_oids; }
 
-      static OID static_oid() { return OID("2.5.29.32"); }
+      static OID static_oid() { return OID({2, 5, 29, 32}); }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -315,7 +318,7 @@ class BOTAN_PUBLIC_API(2, 0) Authority_Information_Access final : public Certifi
 
       std::string ocsp_responder() const { return m_ocsp_responder; }
 
-      static OID static_oid() { return OID("1.3.6.1.5.5.7.1.1"); }
+      static OID static_oid() { return OID({1, 3, 6, 1, 5, 5, 7, 1, 1}); }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -346,7 +349,7 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Number final : public Certificate_Extension {
 
       size_t get_crl_number() const;
 
-      static OID static_oid() { return OID("2.5.29.20"); }
+      static OID static_oid() { return OID({2, 5, 29, 20}); }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -375,7 +378,7 @@ class BOTAN_PUBLIC_API(2, 0) CRL_ReasonCode final : public Certificate_Extension
 
       CRL_Code get_reason() const { return m_reason; }
 
-      static OID static_oid() { return OID("2.5.29.21"); }
+      static OID static_oid() { return OID({2, 5, 29, 21}); }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -421,7 +424,7 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Distribution_Points final : public Certificate_
 
       const std::vector<std::string>& crl_distribution_urls() const { return m_crl_distribution_urls; }
 
-      static OID static_oid() { return OID("2.5.29.31"); }
+      static OID static_oid() { return OID({2, 5, 29, 31}); }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -454,7 +457,7 @@ class CRL_Issuing_Distribution_Point final : public Certificate_Extension {
 
       const AlternativeName& get_point() const { return m_distribution_point.point(); }
 
-      static OID static_oid() { return OID("2.5.29.28"); }
+      static OID static_oid() { return OID({2, 5, 29, 28}); }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -486,7 +489,7 @@ class OCSP_NoCheck final : public Certificate_Extension {
 
       std::unique_ptr<Certificate_Extension> copy() const override { return std::make_unique<OCSP_NoCheck>(); }
 
-      static OID static_oid() { return OID("1.3.6.1.5.5.7.48.1.5"); }
+      static OID static_oid() { return OID({1, 3, 6, 1, 5, 5, 7, 48, 1, 5}); }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -508,7 +511,7 @@ class OCSP_NoCheck final : public Certificate_Extension {
 */
 class BOTAN_PUBLIC_API(3, 5) TNAuthList final : public Certificate_Extension {
    public:
-      class Entry final : public ASN1_Object {
+      class BOTAN_PUBLIC_API(3, 5) Entry final : public ASN1_Object {
          public:
             /* TNEntry choice values
              * see: https://datatracker.ietf.org/doc/html/rfc8226#section-9 */
@@ -527,20 +530,11 @@ class BOTAN_PUBLIC_API(3, 5) TNAuthList final : public Certificate_Extension {
 
             Type type() const { return m_type; }
 
-            const std::string& service_provider_code() const {
-               BOTAN_STATE_CHECK(type() == Type::ServiceProviderCode);
-               return std::get<ASN1_String>(m_data).value();
-            }
+            const std::string& service_provider_code() const;
 
-            const RangeContainer& telephone_number_range() const {
-               BOTAN_STATE_CHECK(type() == Type::TelephoneNumberRange);
-               return std::get<RangeContainer>(m_data);
-            }
+            const RangeContainer& telephone_number_range() const;
 
-            const std::string& telephone_number() const {
-               BOTAN_STATE_CHECK(type() == Type::TelephoneNumber);
-               return std::get<ASN1_String>(m_data).value();
-            }
+            const std::string& telephone_number() const;
 
          private:
             Type m_type;
@@ -551,7 +545,7 @@ class BOTAN_PUBLIC_API(3, 5) TNAuthList final : public Certificate_Extension {
 
       std::unique_ptr<Certificate_Extension> copy() const override { return std::make_unique<TNAuthList>(*this); }
 
-      static OID static_oid() { return OID("1.3.6.1.5.5.7.1.26"); }
+      static OID static_oid() { return OID({1, 3, 6, 1, 5, 5, 7, 1, 26}); }
 
       OID oid_of() const override { return static_oid(); }
 
@@ -566,6 +560,275 @@ class BOTAN_PUBLIC_API(3, 5) TNAuthList final : public Certificate_Extension {
       void decode_inner(const std::vector<uint8_t>&) override;
 
       std::vector<Entry> m_tn_entries;
+};
+
+/**
+ * IP Address Blocks Extension
+ *
+ * RFC 3779 X.509 Extensions for IP Addr
+ *
+*/
+class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extension {
+   public:
+      enum class BOTAN_PUBLIC_API(3, 9) Version : uint8_t {
+         IPv4 = 4,
+         IPv6 = 16,
+      };
+
+      template <Version V>
+      class BOTAN_PUBLIC_API(3, 9) IPAddress final {
+            static constexpr size_t Length = static_cast<size_t>(V);
+
+         public:
+            IPAddress() = default;
+            IPAddress(std::span<uint8_t> v);
+
+            std::array<uint8_t, Length> value() const { return m_value; }
+
+            friend IPAddress<V> operator++(const IPAddress<V> v) {
+               std::array<uint8_t, Length> val = v.value();
+               for(auto it = val.rbegin(); it != val.rend(); it++) {
+                  // we increment the current octet
+                  (*it)++;
+                  // if it did not wrap around we are done, else look at the next octet
+                  if(*it != 0) {
+                     break;
+                  }
+               }
+               return IPAddress<V>(val);
+            }
+
+            friend IPAddress<V> operator+(IPAddress<V> lhs, size_t rhs) {
+               // we only really need to be able to compute +1, so this is fine
+               for(size_t i = 0; i < rhs; i++) {
+                  lhs = ++lhs;
+               }
+               return IPAddress<V>(lhs);
+            }
+
+            friend std::strong_ordering operator<=>(const IPAddress<V> lhs, const IPAddress<V>& rhs) {
+               for(size_t i = 0; i < Length; i++) {
+                  if(lhs.value()[i] < rhs.value()[i]) {
+                     return std::strong_ordering::less;
+                  } else if(lhs.value()[i] > rhs.value()[i]) {
+                     return std::strong_ordering::greater;
+                  }
+               }
+               return std::strong_ordering::equal;
+            }
+
+            friend bool operator==(const IPAddress<V>& lhs, const IPAddress<V>& rhs) {
+               return lhs.value() == rhs.value();
+            }
+
+         private:
+            std::array<uint8_t, Length> m_value;
+      };
+
+      template <Version V>
+      class BOTAN_PUBLIC_API(3, 9) IPAddressOrRange final : public ASN1_Object {
+         public:
+            void encode_into(DER_Encoder&) const override;
+            void decode_from(BER_Decoder& from) override;
+
+            IPAddressOrRange() = default;
+
+            IPAddressOrRange(const IPAddress<V>& addr) : m_min(addr), m_max(addr) {}
+
+            IPAddressOrRange(const IPAddress<V>& min, const IPAddress<V>& max) : m_min(min), m_max(max) {
+               if(max < min) {
+                  throw Decoding_Error("IP address ranges must be sorted");
+               }
+            }
+
+            IPAddress<V> min() const { return m_min; }
+
+            IPAddress<V> max() const { return m_max; }
+
+         private:
+            IPAddress<V> m_min;
+            IPAddress<V> m_max;
+      };
+
+      template <Version V>
+      class BOTAN_PUBLIC_API(3, 9) IPAddressChoice final : public ASN1_Object {
+         public:
+            void encode_into(DER_Encoder&) const override;
+            void decode_from(BER_Decoder& from) override;
+
+            const std::optional<std::vector<IPAddressOrRange<V>>>& ranges() const { return m_ip_addr_ranges; }
+
+            IPAddressChoice() = default;
+
+            IPAddressChoice(std::optional<std::span<const IPAddressOrRange<V>>> ranges);
+
+         private:
+            std::optional<std::vector<IPAddressOrRange<V>>> m_ip_addr_ranges;
+      };
+
+      class BOTAN_PUBLIC_API(3, 9) IPAddressFamily final : public ASN1_Object {
+         public:
+            typedef std::variant<IPAddressChoice<Version::IPv4>, IPAddressChoice<Version::IPv6>> AddrChoice;
+
+            void encode_into(DER_Encoder&) const override;
+            void decode_from(BER_Decoder& from) override;
+
+            IPAddressFamily() = default;
+
+            IPAddressFamily(const AddrChoice& choice, std::optional<uint8_t> safi = std::nullopt) :
+                  m_safi(safi), m_ip_addr_choice(choice) {
+               if(std::holds_alternative<IPAddressChoice<Version::IPv4>>(choice)) {
+                  m_afi = 1;
+               } else {
+                  m_afi = 2;
+               }
+            }
+
+            uint16_t afi() const { return m_afi; }
+
+            std::optional<uint8_t> safi() const { return m_safi; }
+
+            const AddrChoice& addr_choice() const { return m_ip_addr_choice; }
+
+         private:
+            uint16_t m_afi;
+            std::optional<uint8_t> m_safi;
+            AddrChoice m_ip_addr_choice;
+      };
+
+      IPAddressBlocks() = default;
+
+      IPAddressBlocks(const std::vector<IPAddressFamily>& blocks) : m_ip_addr_blocks(blocks) { this->sort_and_merge(); }
+
+      std::unique_ptr<Certificate_Extension> copy() const override { return std::make_unique<IPAddressBlocks>(*this); }
+
+      static OID static_oid() { return OID({1, 3, 6, 1, 5, 5, 7, 1, 7}); }
+
+      OID oid_of() const override { return static_oid(); }
+
+      void validate(const X509_Certificate& subject,
+                    const X509_Certificate& issuer,
+                    const std::vector<X509_Certificate>& cert_path,
+                    std::vector<std::set<Certificate_Status_Code>>& cert_status,
+                    size_t pos) override;
+
+      const std::vector<IPAddressFamily>& addr_blocks() const { return m_ip_addr_blocks; }
+
+   private:
+      std::string oid_name() const override { return "PKIX.IpAddrBlocks"; }
+
+      bool should_encode() const override { return true; }
+
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
+
+      std::vector<IPAddressFamily> m_ip_addr_blocks;
+
+      void sort_and_merge();
+      template <Version V>
+      IPAddressFamily merge(std::vector<IPAddressFamily>& blocks);
+};
+
+/**
+ * AS Blocks Extension
+ *
+ * RFC 3779 X.509 Extensions for AS ID
+ *
+*/
+class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
+   public:
+      typedef uint32_t asnum_t;
+
+      class BOTAN_PUBLIC_API(3, 9) ASIdOrRange final : public ASN1_Object {
+         public:
+            void encode_into(DER_Encoder&) const override;
+            void decode_from(BER_Decoder& from) override;
+
+            asnum_t min() const { return m_min; }
+
+            asnum_t max() const { return m_max; }
+
+            ASIdOrRange() = default;
+
+            ASIdOrRange(asnum_t id) : m_min(id), m_max(id) {}
+
+            ASIdOrRange(asnum_t min, asnum_t max) : m_min(min), m_max(max) {
+               if(max < min) {
+                  throw Decoding_Error("AS range numbers must be sorted");
+               }
+            }
+
+         private:
+            asnum_t m_min = 0;
+            asnum_t m_max = 0;
+      };
+
+      class BOTAN_PUBLIC_API(3, 9) ASIdentifierChoice final : public ASN1_Object {
+         public:
+            void encode_into(DER_Encoder&) const override;
+            void decode_from(BER_Decoder& from) override;
+
+            ASIdentifierChoice() = default;
+
+            ASIdentifierChoice(const std::optional<std::vector<ASIdOrRange>>& ranges);
+
+            const std::optional<std::vector<ASIdOrRange>>& ranges() const { return m_as_ranges; }
+
+         private:
+            std::optional<std::vector<ASIdOrRange>> m_as_ranges;
+      };
+
+      class BOTAN_PUBLIC_API(3, 9) ASIdentifiers final : public ASN1_Object {
+         public:
+            void encode_into(DER_Encoder&) const override;
+            void decode_from(BER_Decoder& from) override;
+
+            ASIdentifiers() = default;
+
+            ASIdentifiers(const std::optional<ASIdentifierChoice>& asnum,
+                          const std::optional<ASIdentifierChoice>& rdi) :
+                  m_asnum(asnum), m_rdi(rdi) {
+               if(!m_asnum.has_value() && !m_rdi.has_value()) {
+                  throw Decoding_Error("One of asnum, rdi must be present");
+               }
+            }
+
+            const std::optional<ASIdentifierChoice>& asnum() const { return m_asnum; }
+
+            const std::optional<ASIdentifierChoice>& rdi() const { return m_rdi; }
+
+         private:
+            std::optional<ASIdentifierChoice> m_asnum;
+            std::optional<ASIdentifierChoice> m_rdi;
+      };
+
+      ASBlocks() = default;
+
+      ASBlocks(const ASIdentifiers& as_idents) : m_as_identifiers(as_idents) {}
+
+      std::unique_ptr<Certificate_Extension> copy() const override { return std::make_unique<ASBlocks>(*this); }
+
+      static OID static_oid() { return OID({1, 3, 6, 1, 5, 5, 7, 1, 8}); }
+
+      OID oid_of() const override { return static_oid(); }
+
+      void validate(const X509_Certificate& subject,
+                    const X509_Certificate& issuer,
+                    const std::vector<X509_Certificate>& cert_path,
+                    std::vector<std::set<Certificate_Status_Code>>& cert_status,
+                    size_t pos) override;
+
+      const ASIdentifiers& as_identifiers() const { return m_as_identifiers; }
+
+   private:
+      ASIdentifiers m_as_identifiers;
+
+      std::string oid_name() const override { return "PKIX.AutonomousSysIds"; }
+
+      bool should_encode() const override { return true; }
+
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
 };
 
 /**

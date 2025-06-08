@@ -9,7 +9,7 @@
 
 #include <botan/concepts.h>
 #include <botan/types.h>
-
+#include <memory>
 #include <optional>
 #include <span>
 #include <vector>
@@ -25,7 +25,7 @@ class EC_Scalar_Data;
 /**
 * Represents an integer modulo the prime group order of an elliptic curve
 */
-class BOTAN_UNSTABLE_API EC_Scalar final {
+class BOTAN_PUBLIC_API(3, 6) EC_Scalar final {
    public:
       /**
       * Deserialize a scalar
@@ -60,7 +60,7 @@ class BOTAN_UNSTABLE_API EC_Scalar final {
       * This is similar to deserialize but instead of returning nullopt if the input
       * is invalid, it will throw an exception.
       */
-      EC_Scalar(const EC_Group& group, std::span<const uint8_t> bytes);
+      BOTAN_DEPRECATED("Use EC_Scalar::deserialize") EC_Scalar(const EC_Group& group, std::span<const uint8_t> bytes);
 
       /**
       * Deserialize a pair of scalars
@@ -92,10 +92,13 @@ class BOTAN_UNSTABLE_API EC_Scalar final {
       * Compute the elliptic curve scalar multiplication (g*k) where g is the
       * standard base point on the curve. Then extract the x coordinate of
       * the resulting point, and reduce it modulo the group order.
-      *
-      * Workspace argument is transitional
       */
-      static EC_Scalar gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws);
+      static EC_Scalar gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng);
+
+      BOTAN_DEPRECATED("Use version without workspace arg")
+      static EC_Scalar gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>&) {
+         return EC_Scalar::gk_x_mod_order(scalar, rng);
+      }
 
       /**
       * Return the byte size of this scalar
@@ -122,7 +125,7 @@ class BOTAN_UNSTABLE_API EC_Scalar final {
       /**
       * Write the fixed length serialization to bytes
       *
-      * The provided span must be exactly bytes() long
+      * The provided span must be exactly 2*bytes() long
       */
       static void serialize_pair_to(std::span<uint8_t> bytes, const EC_Scalar& r, const EC_Scalar& s);
 
@@ -147,6 +150,8 @@ class BOTAN_UNSTABLE_API EC_Scalar final {
       bool is_nonzero() const { return !is_zero(); }
 
       /**
+      * Constant time modular inversion
+      *
       * Return the modular inverse of this EC_Scalar
       *
       * If *this is zero, then invert() returns zero
@@ -154,21 +159,31 @@ class BOTAN_UNSTABLE_API EC_Scalar final {
       EC_Scalar invert() const;
 
       /**
+      * Variable time modular inversion
+      *
+      * Return the modular inverse of this EC_Scalar
+      *
+      * If *this is zero, then invert_vartime() returns zero
+      */
+      EC_Scalar invert_vartime() const;
+
+      /**
+      * Return the additive inverse of *this
       */
       EC_Scalar negate() const;
 
       /**
-      * Scalar addition (modulo p)
+      * Scalar addition (modulo group order)
       */
       EC_Scalar add(const EC_Scalar& x) const;
 
       /**
-      * Scalar subtraction (modulo p)
+      * Scalar subtraction (modulo group order)
       */
       EC_Scalar sub(const EC_Scalar& x) const;
 
       /**
-      * Scalar multiplication (modulo p)
+      * Scalar multiplication (modulo group order)
       */
       EC_Scalar mul(const EC_Scalar& x) const;
 
@@ -178,7 +193,7 @@ class BOTAN_UNSTABLE_API EC_Scalar final {
       void assign(const EC_Scalar& x);
 
       /**
-      * Set *this to its own square modulo p
+      * Set *this to its own square modulo the group order
       */
       void square_self();
 

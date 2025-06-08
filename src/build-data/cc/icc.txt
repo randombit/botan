@@ -15,7 +15,6 @@ supports_gcc_inline_asm yes
 sse2    -> "-msse2"
 ssse3   -> "-mssse3"
 sse41   -> "-msse4.1"
-sse42   -> "-msse4.2"
 avx2    -> "-march=core-avx2"
 aesni   -> "-march=corei7"
 rdrand  -> "-march=core-avx-i"
@@ -24,3 +23,9 @@ rdrand  -> "-march=core-avx-i"
 <so_link_commands>
 default -> "{cxx} -fPIC -shared -Wl,-soname,{soname_abi}"
 </so_link_commands>
+
+# Modern Intel C++ is based on Clang so we assume it can perform Clang-like
+# optimizations that harm constant time code
+<ct_value_barrier>
+default -> asm
+</ct_value_barrier>

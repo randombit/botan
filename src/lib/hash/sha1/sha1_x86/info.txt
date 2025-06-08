@@ -13,3 +13,8 @@ sse2
 ssse3
 sse41
 </isa>
+
+<requires>
+cpuid
+simd_4x32
+</requires>

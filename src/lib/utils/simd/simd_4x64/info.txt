@@ -1,0 +1,21 @@
+<defines>
+SIMD_4X64 -> 20250405
+</defines>
+
+<module_info>
+name -> "SIMD 4x64"
+brief -> "Lightweight wrappers for SIMD 4x64"
+</module_info>
+
+<header:internal>
+simd_4x64.h
+</header:internal>
+
+<isa>
+avx2
+</isa>
+
+<arch>
+x86_64
+x32
+</arch>

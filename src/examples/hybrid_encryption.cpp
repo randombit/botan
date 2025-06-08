@@ -1,5 +1,3 @@
-#include "botan/cipher_mode.h"
-#include "botan/hex.h"
 #include <botan/aead.h>
 #include <botan/auto_rng.h>
 #include <botan/pubkey.h>
@@ -20,7 +18,7 @@ std::unique_ptr<Botan::Private_Key> generate_keypair(const size_t bits, Botan::R
    return std::make_unique<Botan::RSA_PrivateKey>(rng, bits);
 }
 
-EncryptedData encrypt(const Botan::secure_vector<uint8_t>& data,
+EncryptedData encrypt(std::span<const uint8_t> data,
                       std::unique_ptr<Botan::Public_Key> pubkey,
                       Botan::RandomNumberGenerator& rng) {
    auto sym_cipher = Botan::AEAD_Mode::create_or_throw("AES-256/GCM", Botan::Cipher_Dir::Encryption);
@@ -30,7 +28,7 @@ EncryptedData encrypt(const Botan::secure_vector<uint8_t>& data,
    // prepare random key material for the symmetric encryption/authentication
    const auto key = rng.random_vec(sym_cipher->minimum_keylength());
    d.nonce = rng.random_vec<std::vector<uint8_t>>(sym_cipher->default_nonce_length());
-   d.ciphertext = data;
+   d.ciphertext.assign(data.begin(), data.end());
 
    // encrypt/authenticate the data symmetrically
    sym_cipher->set_key(key);
@@ -74,7 +72,7 @@ int main() {
 
    const auto privkey = generate_keypair(2048 /*  bits */, rng);
 
-   const std::string plaintext = "The quick brown fox jumps over the lazy dog.";
+   const std::string_view plaintext = "The quick brown fox jumps over the lazy dog.";
    const auto ciphertext = encrypt(as<Botan::secure_vector<uint8_t>>(plaintext), privkey->public_key(), rng);
    const auto new_plaintext = decrypt(ciphertext, *privkey, rng);
 

@@ -1,66 +1,114 @@
 <required>
-# block
+# For reference see BSI TR-02102-1 (2025-01):
+# https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf?__blob=publicationFile&v=9
+
+# === 2. Asymmetric Encryption Schemes and Key Agreement ===
+# Table 2.2: Recommended classical asymmetric encryption and key derivation schemes
+rsa
+# dlies (deprecated)
+ecies
+dh
+ecdh
+
+# Allowed KDF for ECIES (see 2.3.4)
+kdf1_iso18033
+
+# Table 2.4: Recommended formatting method for the RSA encryption algorithm
+eme_oaep
+
+# Table 2.5: Recommended parameters for FrodoKEM
+frodokem
+
+# Table 2.6: Recommended parameters for ClassicMcEliece-KEM.
+classic_mceliece
+
+# Table 2.7: Recommended parameters for ML-KEM
+ml_kem
+
+# === 3. Symmetric Encryption Schemes ===
+# Table 3.1: Recommended block ciphers
 aes
 
-# modes
+# Table 3.2: Recommended modes of operation for block ciphers
 ccm
 gcm
 cbc
-mode_pad
-
-# stream
 ctr
 
-# hash
+# Table 3.3: Recommended padding schemes for block ciphers
+mode_pad # contains various paddings
+
+# Section 3.3: Protection of Key Material
+nist_keywrap
+
+# === 4. Hash Functions ===
+# Table 4.1: Recommended hash functions
 sha2_32
 sha2_64
 sha3
 
-# mac
+# === 5. Data Authentication ===
+# Table 5.1: Recommended MAC schemes
 cmac
 hmac
+kmac
 gmac
 
-# kdf
-kdf1_iso18033
-sp800_108
-sp800_56c
-
-# pbkdf
-argon2
-argon2fmt
-
-# pk_pad
-eme_oaep
-emsa_pssr
-iso9796
-
-# pubkey
-dh
-#dilithium // not (yet) recommended
-#dilithium_aes // not (yet) recommended
-rsa
+# Table 5.3/5.5: Recommended signature algorithms.
+# rsa (already enabled above)
 dsa
 ecdsa
 ecgdsa
-ecies
 eckcdsa
-ecdh
-#kyber // not (yet) recommended
-#kyber_90s // not (yet) recommended
+ml_dsa
+slh_dsa_shake
+slh_dsa_sha2
 xmss
+hss_lms
 
-# rng
+# Table 5.4: Recommended padding schemes for the RSA signature algorithm.
+emsa_pssr
+iso9796 # DS 2 and 3
+
+# === 8. Random Number Generators ===
 auto_rng
 hmac_drbg
+
+# === Appendix and Others ===
+# Table B.1: Recommended method for key derivation
+sp800_56c # (Two-Step KDF)
+hkdf
+
+# B.1.2. Password-Based Key Derivation
+argon2
+argon2fmt
 </required>
 
 <if_available>
+# pcurves
+pcurves_brainpool256r1
+pcurves_brainpool384r1
+pcurves_brainpool512r1
+
+pcurves_secp192r1
+pcurves_secp224r1
+pcurves_secp256r1
+pcurves_secp384r1
+pcurves_secp521r1
+pcurves_secp256k1
+
+pcurves_frp256v1
+pcurves_numsp512d1
+pcurves_sm2p256v1
+
+pcurves_generic
+
 # block
 aes_ni
 aes_vperm
 aes_armv8
 aes_power8
+aes_vaes
 
 # modes
 ghash_cpu
@@ -69,8 +117,12 @@ ghash_vperm
 # hash
 sha2_32_x86
 sha2_32_armv8
-sha2_32_bmi2
-sha2_64_bmi2
+sha2_32_simd
+sha2_32_avx2
+sha2_64_x86
+sha2_64_armv8
+sha2_64_avx2
+sha2_64_avx512
 keccak_perm_bmi2
 
 # entropy sources
@@ -89,7 +141,6 @@ system_rng
 # utils
 http_util # needed by x509 for OCSP online checks
 locking_allocator
-simd
 </if_available>
 
 <prohibited>
@@ -138,12 +189,10 @@ salsa20
 #shake_cipher # not recommended, but needed for kyber
 
 # kdf
-#hkdf // needed for tls 1.3
 kdf1
 kdf2
 prf_x942
 sp800_56a
-xmd # disables h2c
 
 # pubkey
 x25519

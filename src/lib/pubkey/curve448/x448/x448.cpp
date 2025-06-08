@@ -10,6 +10,7 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/mem_ops.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/pk_ops_impl.h>
@@ -42,11 +43,11 @@ bool X448_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) 
 }
 
 std::vector<uint8_t> X448_PublicKey::raw_public_key_bits() const {
-   return public_value();
+   return {m_public.begin(), m_public.end()};
 }
 
 std::vector<uint8_t> X448_PublicKey::public_key_bits() const {
-   return public_value();
+   return raw_public_key_bits();
 }
 
 std::unique_ptr<Private_Key> X448_PublicKey::generate_another(RandomNumberGenerator& rng) const {
@@ -115,6 +116,20 @@ class X448_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
 
          auto shared_secret = encode_point(x448(k, u));
          CT::unpoison(shared_secret);
+
+         // RFC 7748 Section 6.2
+         //    As with X25519, both sides MAY check, without leaking extra
+         //    information about the value of K, whether the resulting shared K
+         //    is the all-zero value and abort if so.
+         //
+         // TODO: once the generic Key Agreement operation creation is equipped
+         //       with a more flexible parameterization, this check could be
+         //       made optional.
+         //       For instance: `sk->agree().with_optional_sanity_checks(true)`.
+         //       See also:     https://github.com/randombit/botan/pull/4318
+         if(CT::all_zeros(shared_secret.data(), shared_secret.size()).as_bool()) {
+            throw Invalid_Argument("X448 public point appears to be of low order");
+         }
 
          return shared_secret;
       }

@@ -15,3 +15,7 @@ bmi2
 <arch>
 x86_64
 </arch>
+
+<requires>
+cpuid
+</requires>

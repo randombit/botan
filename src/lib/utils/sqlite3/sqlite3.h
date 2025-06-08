@@ -10,6 +10,7 @@
 
 #include <botan/database.h>
 
+#include <memory>
 #include <optional>
 
 struct sqlite3;

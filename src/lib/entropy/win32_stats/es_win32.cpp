@@ -6,6 +6,8 @@
 
 #include <botan/internal/es_win32.h>
 
+#include <botan/rng.h>
+
 #define NOMINMAX 1
 #define _WINSOCKAPI_  // stop windows.h including winsock.h
 #include <windows.h>

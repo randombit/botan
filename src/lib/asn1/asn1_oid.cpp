@@ -152,6 +152,21 @@ bool OID::registered_oid() const {
    return !human_name_or_empty().empty();
 }
 
+bool OID::matches(std::initializer_list<uint32_t> other) const {
+   // TODO: once all target compilers support it, use std::ranges::equal
+   return std::equal(m_id.begin(), m_id.end(), other.begin(), other.end());
+}
+
+uint64_t OID::hash_code() const {
+   // If this is changed also update gen_oids.py to match
+   uint64_t hash = 0x621F302327D9A49A;
+   for(auto id : m_id) {
+      hash *= 193;
+      hash += id;
+   }
+   return hash;
+}
+
 /*
 * Compare two OIDs
 */

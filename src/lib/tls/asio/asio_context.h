@@ -41,7 +41,7 @@ struct fn_signature_helper<R (D::*)(Args...)> {
 /**
  * A helper class to initialize and configure Botan::TLS::Stream
  */
-class Context {
+class BOTAN_PUBLIC_API(2, 11) Context {
    public:
       // statically extract the function signature type from Callbacks::tls_verify_cert_chain
       // and reuse it as an std::function<> for the verify callback signature

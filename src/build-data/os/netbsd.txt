@@ -11,10 +11,10 @@ explicit_memset
 
 atomics
 sockets
+system_clock
 threads
 thread_local
 filesystem
-auxinfo
 </target_features>
 
 <feature_macros>

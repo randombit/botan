@@ -13,6 +13,7 @@ use_stack_protector no
 atomics
 filesystem
 dev_random
+system_clock
 posix1
 </target_features>
 

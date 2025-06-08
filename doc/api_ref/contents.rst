@@ -29,6 +29,7 @@ API Reference
    filters
    fpe
    tss
+   ec_group
    ecc
    compression
    providers
@@ -36,6 +37,7 @@ API Reference
    tpm
    otp
    roughtime
+   sodium
    zfec
    ffi
    env_vars

@@ -1,3 +1,5 @@
+.. _support_info:
+
 Support Information
 =======================
 
@@ -11,6 +13,11 @@ For Botan 3, the tier-1 supported platforms are
 * Linux aarch64, GCC 11.2 or later
 * Linux ppc64le, GCC 11.2 or later
 * Windows x86-64, Visual C++ 2022 or later
+
+.. warning::
+
+   Starting in Botan 3.8, the minimum required version of Clang will change
+   to Clang 17.
 
 These platforms are all tested by continuous integration, and the developers
 have access to hardware in order to test patches. Problems affecting these
@@ -66,7 +73,7 @@ Branch Support Status
 -------------------------
 
 Following table provides the support status for Botan branches, as of
-May 2024.
+January 2025.
 
 "Active development" refers to adding new features and optimizations. At the
 conclusion of the active development phase, only bugfixes are applied.
@@ -76,10 +83,9 @@ End of life dates may be extended as circumstances warrant.
 ============== ============== ========================== ============
 Branch         First Release  End of Active Development  End of Life
 ============== ============== ========================== ============
-Botan 1.8      2008-12-08     2010-08-31                 2016-02-13
-Botan 1.10     2011-06-20     2012-07-10                 2018-12-31
-Botan 2        2017-01-06     2020-11-05                 2024-12-31 or later
-Botan 3        2023-04-11     ?                          2027-12-31 or later
+Botan2         2017-01-06     2020-11-05                 2024-12-31
+Botan3         2023-04-11     2027                       2028-12-31 or later
+Botan4         2027           ?                          ?
 ============== ============== ========================== ============
 
 Getting Help

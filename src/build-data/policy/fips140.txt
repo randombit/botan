@@ -1,0 +1,202 @@
+<required>
+aes
+
+gcm
+ccm
+ctr
+cbc
+mode_pad
+
+# hash
+sha2_32
+sha2_64
+sha3
+
+# mac
+cmac
+hmac
+gmac
+
+# kdf
+sp800_108
+sp800_56a
+sp800_56c
+
+shake
+
+# pk_pad
+eme_oaep
+emsa_pssr
+
+# pubkey
+rsa
+ecdsa
+ecdh
+ml_kem
+ml_dsa
+slh_dsa_sha2
+slh_dsa_shake
+
+pcurves_secp256r1
+pcurves_secp384r1
+pcurves_secp521r1
+
+# rng
+auto_rng
+hmac_drbg
+
+# keywrap
+rfc3394
+</required>
+
+<if_available>
+# block
+aes_ni
+aes_vperm
+aes_armv8
+aes_power8
+aes_vaes
+
+# hash
+sha2_32_x86
+sha2_32_armv8
+sha2_32_simd
+sha2_32_avx2
+sha2_64_avx2
+keccak_perm_bmi2
+
+# modes
+ghash_cpu
+ghash_vperm
+
+# hash
+sha2_32_x86
+sha2_32_armv8
+
+# entropy sources
+rdseed
+win32_stats
+
+# rng
+system_rng
+
+# utils
+http_util # needed by x509 for OCSP online checks
+locking_allocator
+</if_available>
+
+<prohibited>
+# block
+aria
+blowfish
+camellia
+cascade
+cast128
+gost_28147
+idea
+idea_sse2
+kuznyechik
+lion
+noekeon
+noekeon_simd
+seed
+serpent
+serpent_simd
+serpent_avx2
+serpent_avx512
+sm4
+sm4_gfni
+shacal2
+shacal2_x86
+shacal2_simd
+shacal2_avx2
+threefish_512
+twofish
+
+# mac
+blake2mac
+poly1305
+
+# modes
+chacha20poly1305
+eax
+ocb
+siv
+cfb
+
+# stream
+chacha
+chacha_simd32
+chacha_avx2
+shake_cipher
+ofb
+rc4
+salsa20
+
+# kdf
+hkdf
+kdf1
+kdf2
+prf_x942
+
+# Brainpool and secp256k1 allowed per latest NIST guidance
+# so left as optional
+legacy_ec_point
+pcurves_secp192r1
+pcurves_numsp512d1
+pcurves_sm2p256v1
+pcurves_frp256v1
+
+# pubkey
+dsa
+ecgdsa
+eckcdsa
+elgamal
+gost_3410
+mce
+rfc6979
+dilithium_round3
+dilithium_aes
+kyber_round3
+kyber_90s
+frodokem
+frodokem_aes
+frodokem_common
+xmss
+sm2
+
+# pk_pad
+#eme_pkcs1 // needed for tls
+#emsa_pkcs1 // needed for tls
+emsa_raw
+emsa_x931
+
+# hash
+blake2
+comb4p
+gost_3411
+md5
+md4
+rmd160
+skein
+#sha1 // needed for x509
+sm3
+streebog
+whirlpool
+
+# rng
+chacha_rng
+
+# mac
+poly1305
+siphash
+x919_mac
+
+# misc
+bcrypt
+srp6
+
+# tls
+tls_cbc
+
+</prohibited>

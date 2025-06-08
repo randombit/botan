@@ -7,14 +7,5 @@ name -> "SPHINCS+ (SHA-256)"
 </module_info>
 
 <requires>
-sphincsplus_common
-sha2_32
-sha2_64
-mgf1
-hmac
-trunc_hash
+sphincsplus_sha2_base
 </requires>
-
-<header:internal>
-sp_hash_sha2.h
-</header:internal>

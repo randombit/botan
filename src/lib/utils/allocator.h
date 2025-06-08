@@ -12,6 +12,17 @@
 
 namespace Botan {
 
+/*
+* Define BOTAN_MALLOC_FN
+*/
+#if defined(__clang__) || defined(__GNUG__)
+   #define BOTAN_MALLOC_FN __attribute__((malloc))
+#elif defined(_MSC_VER)
+   #define BOTAN_MALLOC_FN __declspec(restrict)
+#else
+   #define BOTAN_MALLOC_FN
+#endif
+
 /**
 * Allocate a memory buffer by some method. This should only be used for
 * primitive types (uint8_t, uint32_t, etc).

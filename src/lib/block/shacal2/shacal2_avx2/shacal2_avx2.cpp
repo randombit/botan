@@ -10,31 +10,33 @@
 
 namespace Botan {
 
+namespace SHACAL2_AVX2_F {
+
 namespace {
 
-void BOTAN_FORCE_INLINE BOTAN_AVX2_FN SHACAL2_Fwd(const SIMD_8x32& A,
-                                                  const SIMD_8x32& B,
-                                                  const SIMD_8x32& C,
-                                                  SIMD_8x32& D,
-                                                  const SIMD_8x32& E,
-                                                  const SIMD_8x32& F,
-                                                  const SIMD_8x32& G,
-                                                  SIMD_8x32& H,
-                                                  uint32_t RK) {
+void BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 SHACAL2_Fwd(const SIMD_8x32& A,
+                                                      const SIMD_8x32& B,
+                                                      const SIMD_8x32& C,
+                                                      SIMD_8x32& D,
+                                                      const SIMD_8x32& E,
+                                                      const SIMD_8x32& F,
+                                                      const SIMD_8x32& G,
+                                                      SIMD_8x32& H,
+                                                      uint32_t RK) {
    H += E.sigma1() + SIMD_8x32::choose(E, F, G) + SIMD_8x32::splat(RK);
    D += H;
    H += A.sigma0() + SIMD_8x32::majority(A, B, C);
 }
 
-void BOTAN_FORCE_INLINE BOTAN_AVX2_FN SHACAL2_Rev(const SIMD_8x32& A,
-                                                  const SIMD_8x32& B,
-                                                  const SIMD_8x32& C,
-                                                  SIMD_8x32& D,
-                                                  const SIMD_8x32& E,
-                                                  const SIMD_8x32& F,
-                                                  const SIMD_8x32& G,
-                                                  SIMD_8x32& H,
-                                                  uint32_t RK) {
+void BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 SHACAL2_Rev(const SIMD_8x32& A,
+                                                      const SIMD_8x32& B,
+                                                      const SIMD_8x32& C,
+                                                      SIMD_8x32& D,
+                                                      const SIMD_8x32& E,
+                                                      const SIMD_8x32& F,
+                                                      const SIMD_8x32& G,
+                                                      SIMD_8x32& H,
+                                                      uint32_t RK) {
    H -= A.sigma0() + SIMD_8x32::majority(A, B, C);
    D -= H;
    H -= E.sigma1() + SIMD_8x32::choose(E, F, G) + SIMD_8x32::splat(RK);
@@ -42,7 +44,11 @@ void BOTAN_FORCE_INLINE BOTAN_AVX2_FN SHACAL2_Rev(const SIMD_8x32& A,
 
 }  // namespace
 
-void BOTAN_AVX2_FN SHACAL2::avx2_encrypt_8(const uint8_t in[], uint8_t out[]) const {
+}  // namespace SHACAL2_AVX2_F
+
+void BOTAN_FN_ISA_AVX2 SHACAL2::avx2_encrypt_8(const uint8_t in[], uint8_t out[]) const {
+   using namespace SHACAL2_AVX2_F;
+
    SIMD_8x32::reset_registers();
 
    SIMD_8x32 A = SIMD_8x32::load_be(in);
@@ -83,7 +89,9 @@ void BOTAN_AVX2_FN SHACAL2::avx2_encrypt_8(const uint8_t in[], uint8_t out[]) co
    SIMD_8x32::zero_registers();
 }
 
-BOTAN_AVX2_FN void SHACAL2::avx2_decrypt_8(const uint8_t in[], uint8_t out[]) const {
+void BOTAN_FN_ISA_AVX2 SHACAL2::avx2_decrypt_8(const uint8_t in[], uint8_t out[]) const {
+   using namespace SHACAL2_AVX2_F;
+
    SIMD_8x32::reset_registers();
 
    SIMD_8x32 A = SIMD_8x32::load_be(in);

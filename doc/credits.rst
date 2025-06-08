@@ -12,20 +12,35 @@ snail-mail address (S), and Bitcoin address (B).
 
 ::
 
+  N: Fabian Albert
+  E: fabian.albert@rohde-schwarz.com
+  W: https://www.rohde-schwarz.com/cybersecurity
+  D: SLH-DSA, Ed/X448, HSS/LMS, ML-KEM, ML-DSA, Classic McEliece, TLS-Anvil tests
+  S: Bochum, Germany
+
   N: Alexander Bluhm
   W: https://www.genua.de/
   P: 1E3B BEA4 6C20 EA00 2FFC  DE4D C5F4 83AD DEE8 6380
   D: improve support for OpenBSD
   S: Kirchheim, Germany
 
+  N: Michael Boric
+  E: michael.boric@rohde-schwarz.com
+  W: https://www.rohde-schwarz.com/cybersecurity
+  D: Kyber, Dilithium
+  S: Cologne, Germany
+
   N: Charles Brockman
   W: http://www.securitygenetics.com/
   D: documentation editing
   S: Oregon, USA
 
+  N: Erwan Chaussy
+  D: Base32, Base64 matching Base32 implementation
+  S: France
+
   N: Simon Cogliani
   E: simon.cogliani@tanker.io
-  W: https://www.tanker.io/
   P: EA73 D0AF 5A81 A61A 8931  C2CA C9AB F2E4 3820 4F25
   D: Getting keystream of ChaCha
   S: Paris, France
@@ -43,6 +58,12 @@ snail-mail address (S), and Bitcoin address (B).
   P: 39E0 D270 19A4 B356 05D0 29AE 1BD3 49CF 744A 02FF
   D: GMAC, Extended Hash-Based Signatures (XMSS)
   S: Bochum, Germany
+
+  N: Manuel Glaser
+  E: manuel.glaser@rohde-schwarz.com
+  W: https://www.rohde-schwarz.com/cybersecurity
+  D: Kyber, Dilithium
+  S: Cologne, Germany
 
   N: Matthew Gregan
   D: Binary file I/O support, allocator fixes
@@ -72,6 +93,11 @@ snail-mail address (S), and Bitcoin address (B).
   N: Justin Karneges
   D: Qt support modules (mutexes and types), X.509 API design
 
+  N: Rostyslav Khudolii
+  E: rhudoliy@gmail.com
+  D: SRP6 FFI
+  S: Ukraine/Denmark
+
   N: Vojtech Kral
   E: vojtech@kral.hk
   D: LZMA compression module
@@ -86,7 +112,7 @@ snail-mail address (S), and Bitcoin address (B).
   E: rene.fischer@rohde-schwarz.com
   W: https://www.rohde-schwarz.com/cybersecurity
   P: C196 FF9D 3DDC A5E7 F98C E745 9AD0 F9FA 587E 74D6
-  D: CI, ECGDSA, ECKCDSA
+  D: CI, Ninja build system, ECGDSA, ECKCDSA
   S: Bochum, Germany
 
   N: Adam Langley
@@ -97,9 +123,14 @@ snail-mail address (S), and Bitcoin address (B).
   E: jack@randombit.net
   W: https://www.randombit.net/
   P: 3F69 2E64 6D92 3BBE E7AE  9258 5C0F 96E8 4EC1 6D6B
-  B: 1DwxWb2J4vuX4vjsbzaCXW696rZfeamahz
   D: Original designer/author, maintainer 2001-current
   S: Vermont, USA
+
+  N: Philippe Lieser
+  E: philippe.lieser@rohde-schwarz.com
+  W: https://www.rohde-schwarz.com/cybersecurity
+  D: CI, BSI module policy, HSS/LMS, various minor contributions
+  S: Saarland, Germany
 
   N: Joel Low
   D: DLL symbol visibility and Windows DLL support in general
@@ -118,6 +149,17 @@ snail-mail address (S), and Bitcoin address (B).
   D: x86/amd64 assembler, BigInt optimizations, Win32 mutex module
   S: Italy
 
+  N: Hannes Rantzsch
+  W: https://www.nexenio.com
+  D: TLS 1.3, Kyber, Dilithium
+  S: Berlin, Germany
+
+  N: Amos Treiber
+  E: amos.treiber@rohde-schwarz.com
+  W: https://www.rohde-schwarz.com/cybersecurity
+  D: SLH-DSA, TPM 2.0, FrodoKEM, Classic McEliece, ML-KEM, ML-DSA
+  S: Cologne, Germany
+
   N: Daniel Seither
   E: post@tiwoc.de
   D: iOS support, improved Android support, improved MSVC support
@@ -128,9 +170,20 @@ snail-mail address (S), and Bitcoin address (B).
   D: McEliece, GF(p) arithmetic, CVC, Shanks-Tonelli algorithm
   S: Darmstadt, Germany
 
+  N: René Meusel
+  E: rene.meusel@rohde-schwarz.com
+  W: https://www.rohde-schwarz.com/cybersecurity
+  D: TLS 1.3, ML-KEM, ML-DSA, SLH-DSA, FrodoKEM, TPM 2.0, CI
+  S: Berlin, Germany
+
+  N: Daniel Neus
+  E: daniel.neus@rohde-schwarz.com
+  W: https://www.rohde-schwarz.com/cybersecurity
+  D: CI, PKCS#11, RdSeed, BSI module policy
+  S: Bochum, Germany
+
   N: Simon Warta
   E: simon@kullo.net
-  W: https://www.kullo.net
   D: Build system
   S: Germany
 
@@ -140,40 +193,7 @@ snail-mail address (S), and Bitcoin address (B).
   D: KDF1-18033, ECIES
   S: Saarland, Germany
 
-  N: Daniel Neus
-  E: daniel.neus@rohde-schwarz.com
-  W: https://www.rohde-schwarz.com/cybersecurity
-  D: CI, PKCS#11, RdSeed, BSI module policy
-  S: Bochum, Germany
-
-  N: Erwan Chaussy
-  D: Base32, Base64 matching Base32 implementation
-  S: France
-
   N: Daniel Wyatt (on behalf of Ribose Inc)
   E: daniel.wyatt@ribose.com
   W: https://www.ribose.com/
   D: SM3, Streebog, various minor contributions
-
-  N: Rostyslav Khudolii
-  E: rhudoliy@gmail.com
-  D: SRP6 FFI
-  S: Ukraine/Denmark
-
-  N: René Meusel
-  E: rene.meusel@rohde-schwarz.com
-  W: https://www.rohde-schwarz.com/cybersecurity
-  D: CI, TLS 1.3, Kyber, Dilithium, SPHINCS+, FrodoKEM
-  S: Berlin, Germany
-
-  N: Philippe Lieser
-  E: philippe.lieser@rohde-schwarz.com
-  W: https://www.rohde-schwarz.com/cybersecurity
-  D: CI, BSI module policy, HSS/LMS, various minor contributions
-  S: Saarland, Germany
-
-  N: Fabian Albert
-  E: fabian.albert@rohde-schwarz.com
-  W: https://www.rohde-schwarz.com/cybersecurity
-  D: SPHINCS+, HSS/LMS
-  S: Bochum, Germany

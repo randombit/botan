@@ -8,7 +8,6 @@
 #ifndef BOTAN_BLOCK_CIPHER_H_
 #define BOTAN_BLOCK_CIPHER_H_
 
-#include <botan/mem_ops.h>
 #include <botan/sym_algo.h>
 #include <memory>
 #include <string>
@@ -45,6 +44,14 @@ class BOTAN_PUBLIC_API(2, 0) BlockCipher : public SymmetricAlgorithm {
       static std::vector<std::string> providers(std::string_view algo_spec);
 
       /**
+      * Multiplier on a block cipher's native parallelism
+      *
+      * Usually notable performance gains come from further loop blocking,
+      * at least for 2 or 4x
+      */
+      static constexpr size_t ParallelismMult = 4;
+
+      /**
       * @return block size of this algorithm
       */
       virtual size_t block_size() const = 0;
@@ -57,7 +64,7 @@ class BOTAN_PUBLIC_API(2, 0) BlockCipher : public SymmetricAlgorithm {
       /**
       * @return prefererred parallelism of this cipher in bytes
       */
-      size_t parallel_bytes() const { return parallelism() * block_size() * BOTAN_BLOCK_CIPHER_PAR_MULT; }
+      size_t parallel_bytes() const { return parallelism() * block_size() * BlockCipher::ParallelismMult; }
 
       /**
       * @return provider information about this implementation. Default is "base",
@@ -149,18 +156,28 @@ class BOTAN_PUBLIC_API(2, 0) BlockCipher : public SymmetricAlgorithm {
       */
       virtual void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const = 0;
 
-      virtual void encrypt_n_xex(uint8_t data[], const uint8_t mask[], size_t blocks) const {
+      BOTAN_DEPRECATED("Deprecated no replacement")
+      void encrypt_n_xex(uint8_t data[], const uint8_t mask[], size_t blocks) const {
          const size_t BS = block_size();
-         xor_buf(data, mask, blocks * BS);
+         for(size_t i = 0; i != blocks * BS; ++i) {
+            data[i] ^= mask[i];
+         }
          encrypt_n(data, data, blocks);
-         xor_buf(data, mask, blocks * BS);
+         for(size_t i = 0; i != blocks * BS; ++i) {
+            data[i] ^= mask[i];
+         }
       }
 
-      virtual void decrypt_n_xex(uint8_t data[], const uint8_t mask[], size_t blocks) const {
+      BOTAN_DEPRECATED("Deprecated no replacement")
+      void decrypt_n_xex(uint8_t data[], const uint8_t mask[], size_t blocks) const {
          const size_t BS = block_size();
-         xor_buf(data, mask, blocks * BS);
+         for(size_t i = 0; i != blocks * BS; ++i) {
+            data[i] ^= mask[i];
+         }
          decrypt_n(data, data, blocks);
-         xor_buf(data, mask, blocks * BS);
+         for(size_t i = 0; i != blocks * BS; ++i) {
+            data[i] ^= mask[i];
+         }
       }
 
       /**

@@ -11,17 +11,27 @@
 #define BOTAN_ECC_DOMAIN_PARAMETERS_H_
 
 #include <botan/asn1_obj.h>
+#include <botan/bigint.h>
 #include <botan/ec_apoint.h>
-#include <botan/ec_point.h>
+#include <botan/ec_point_format.h>
 #include <botan/ec_scalar.h>
 #include <memory>
 #include <set>
 #include <span>
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+   #include <botan/ec_point.h>
+#endif
+
 namespace Botan {
 
 /**
-* This class represents elliptic curce domain parameters
+* This enum indicates the method used to encode the EC parameters
+*
+* @warning All support for explicit or implicit domain encodings
+* will be removed in Botan4. Only named curves will be supported.
+*
+* TODO(Botan4) remove this enum
 */
 enum class EC_Group_Encoding {
    Explicit,
@@ -33,9 +43,35 @@ enum class EC_Group_Encoding {
    EC_DOMPAR_ENC_OID = NamedCurve
 };
 
+/**
+* This enum indicates the source of the elliptic curve parameters
+* in use.
+*
+* Builtin means the curve is a known standard one which was compiled
+* in the library.
+*
+* ExternalSource means the curve parameters came from either an explicit
+* curve encoding or an application defined curve.
+*/
 enum class EC_Group_Source {
    Builtin,
    ExternalSource,
+};
+
+/**
+* Enum indicating the way the group in question is implemented
+*
+* This is returned by EC_Group::engine
+*/
+enum class EC_Group_Engine {
+   /// Using per curve implementation; fastest available
+   Optimized,
+   /// A generic implementation that handles many curves in one implementation
+   Generic,
+   /// The old implementation, used as a fallback if none of the other
+   /// implementations can be used
+   /// TODO(Botan4) remove this
+   Legacy,
 };
 
 class EC_Mul2Table_Data;
@@ -54,6 +90,11 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * Construct elliptic curve from the specified parameters
       *
       * This is used for example to create custom (application-specific) curves.
+      *
+      * Some build configurations do not support application specific curves, in
+      * which case this constructor will throw an exception. You can check for
+      * this situation beforehand using the function
+      * EC_Group::supports_application_specific_group()
       *
       * @param p the elliptic curve p
       * @param a the elliptic curve a param
@@ -89,19 +130,31 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       *
       * This is used for example to create custom (application-specific) curves.
       *
-      * Unlike the deprecated constructor, this constructor imposes
-      * additional restrictions on the parameters, namely:
+      * Some build configurations do not support application specific curves, in
+      * which case this constructor will throw an exception. You can check for
+      * this situation beforehand using the function
+      * EC_Group::supports_application_specific_group()
       *
-      *  - The prime must be at least 128 bits and at most 512 bits, and
-      *    a multiple of 32 bits.
-      *  - As an extension of the above restriction, the prime can
-      *    also be exactly the 521-bit Mersenne prime (2**521-1)
-      *  - The prime must be congruent to 3 modulo 4
-      *  - The group order must have the same bit length as the prime
-      *    (It is allowed for the order to be larger than p, but they
-      *    must have the same bit length)
+      * Unlike the deprecated constructor, this constructor imposes additional
+      * restrictions on the parameters, namely:
+      *
       *  - An object identifier must be provided
-      *  - There must be no cofactor
+      *
+      *  - The prime must be at least 192 bits and at most 512 bits, and a multiple
+      *    of 32 bits. Currently, as long as BOTAN_DISABLE_DEPRECATED_FEATURES is not
+      *    set, this constructor accepts primes as small as 128 bits - this lower
+      *    bound will be removed in the next major release.
+      *
+      *  - As an extension of the above restriction, the prime can also be exactly
+      *    the 521-bit Mersenne prime (2**521-1) or exactly the 239-bit prime used in
+      *    X9.62 239 bit groups (2**239 - 2**143 - 2**95 + 2**47 - 1)
+      *
+      *  - The prime must be congruent to 3 modulo 4
+      *
+      *  - The group order must have the same bit length as the prime. It is allowed
+      *    for the order to be larger than p, but they must have the same bit length.
+      *
+      *  - Only prime order curves (with cofactor == 1) are allowed
       *
       * @warning use only elliptic curve parameters that you trust
       *
@@ -168,7 +221,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       /**
       * Create an uninitialized EC_Group
       */
-      EC_Group();
+      BOTAN_DEPRECATED("Deprecated no replacement") EC_Group();
 
       ~EC_Group();
 
@@ -191,6 +244,24 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       EC_Group_Source source() const;
 
       /**
+      * Return true if in this build configuration it is possible to
+      * register an application specific elliptic curve.
+      */
+      static bool supports_application_specific_group();
+
+      /**
+      * Return true if in this build configuration it is possible to
+      * register an application specific elliptic curve with a cofactor
+      * larger than 1.
+      */
+      static bool supports_application_specific_group_with_cofactor();
+
+      /**
+      * Return true if in this build configuration EC_Group::from_name(name) will succeed
+      */
+      static bool supports_named_group(std::string_view name);
+
+      /**
       * Return true if this EC_Group was derived from an explicit encoding
       *
       * Explicit encoding of groups is deprecated; when support for explicit curves
@@ -199,7 +270,18 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       bool used_explicit_encoding() const { return m_explicit_encoding; }
 
       /**
+      * Return how this EC_Group is implemented under the hood
+      *
+      * This is mostly useful for diagnostic or debugging purposes
+      */
+      EC_Group_Engine engine() const;
+
+      /**
       * Return a set of known named EC groups
+      *
+      * This returns the set of groups for which from_name should succeed
+      * Note that the set of included groups can vary based on the
+      * build configuration.
       */
       static const std::set<std::string>& known_named_groups();
 
@@ -218,10 +300,15 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       std::vector<uint8_t> DER_encode() const;
 
       /**
-      * Return the PEM encoding (always in explicit form)
+      * Return the PEM encoding
       * @return string containing PEM data
+      *
+      * @warning In Botan4 the form parameter will be removed and only
+      * namedCurve will be supported
+      *
+      * TODO(Botan4) remove the argument
       */
-      std::string PEM_encode() const;
+      std::string PEM_encode(EC_Group_Encoding form = EC_Group_Encoding::Explicit) const;
 
       /**
       * Return the size of p in bits (same as get_p().bits())
@@ -229,7 +316,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       size_t get_p_bits() const;
 
       /**
-      * Return the size of p in bits (same as get_p().bytes())
+      * Return the size of p in bytes (same as get_p().bytes())
       */
       size_t get_p_bytes() const;
 
@@ -243,16 +330,8 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       */
       size_t get_order_bytes() const;
 
-      /**
-      * Check if y is a plausible point on the curve
-      *
-      * In particular, checks that it is a point on the curve, not infinity,
-      * and that it has order matching the group.
-      */
-      bool verify_public_element(const EC_Point& y) const;
-
       /// Table for computing g*x + h*y
-      class Mul2Table final {
+      class BOTAN_PUBLIC_API(3, 6) Mul2Table final {
          public:
             /**
             * Create a table for computing g*x + h*y
@@ -341,26 +420,35 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       /**
       * Return the cofactor
       * @result the cofactor
+      * TODO(Botan4): Remove this
       */
       const BigInt& get_cofactor() const;
 
       /**
       * Return true if the cofactor is > 1
+      * TODO(Botan4): Remove this
       */
       bool has_cofactor() const;
 
       /*
       * For internal use only
+      * TODO(Botan4): Move this to an internal header
       */
       static std::shared_ptr<EC_Group_Data> EC_group_info(const OID& oid);
 
       /*
       * For internal use only
+      *
+      * @warning this invalidates pointers and can cause memory corruption.
+      * This function exists only to be called in tests.
+      *
+      * TODO(Botan4): Move this to an internal header
       */
       static size_t clear_registered_curve_data();
 
       /*
       * For internal use only
+      * TODO(Botan4): Move this to an internal header
       */
       static OID EC_group_identity_from_order(const BigInt& order);
 
@@ -369,15 +457,25 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       */
       const std::shared_ptr<EC_Group_Data>& _data() const { return m_data; }
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+      /**
+      * Check if y is a plausible point on the curve
+      *
+      * In particular, checks that it is a point on the curve, not infinity,
+      * and that it has order matching the group.
+      */
+      bool verify_public_element(const EC_Point& y) const;
+
       /**
       * OS2ECP (Octet String To Elliptic Curve Point)
       *
       * Deserialize an encoded point. Verifies that the point is on the curve.
       */
-      EC_Point OS2ECP(const uint8_t bits[], size_t len) const {
+      BOTAN_DEPRECATED("Use EC_AffinePoint::deserialize") EC_Point OS2ECP(const uint8_t bits[], size_t len) const {
          return EC_AffinePoint(*this, std::span{bits, len}).to_legacy_point();
       }
 
+      BOTAN_DEPRECATED("Use EC_AffinePoint::deserialize")
       EC_Point OS2ECP(std::span<const uint8_t> encoded_point) const {
          return EC_AffinePoint(*this, encoded_point).to_legacy_point();
       }
@@ -386,7 +484,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * Return group base point
       * @result base point
       */
-      BOTAN_DEPRECATED("Deprecated no replacement") const EC_Point& get_base_point() const;
+      BOTAN_DEPRECATED("Use EC_AffinePoint::generator") const EC_Point& get_base_point() const;
 
       // Everything below here will be removed in a future release:
 
@@ -394,7 +492,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * Return the canonical group generator
       * @result standard generator of the curve
       */
-      BOTAN_DEPRECATED("Deprecated no replacement") const EC_Point& generator() const;
+      BOTAN_DEPRECATED("Use EC_AffinePoint::generator") const EC_Point& generator() const;
 
       /**
       * Multi exponentiate. Not constant time.
@@ -419,14 +517,12 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * Blinded point multiplication, attempts resistance to side channels
       * @param k_bn the scalar
       * @param rng a random number generator
-      * @param ws a temp workspace
       * @return base_point*k
       */
       BOTAN_DEPRECATED("Use EC_AffinePoint and EC_Scalar")
-      EC_Point
-         blinded_base_point_multiply(const BigInt& k_bn, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const {
+      EC_Point blinded_base_point_multiply(const BigInt& k_bn, RandomNumberGenerator& rng, std::vector<BigInt>&) const {
          auto k = EC_Scalar::from_bigint(*this, k_bn);
-         auto pt = EC_AffinePoint::g_mul(k, rng, ws);
+         auto pt = EC_AffinePoint::g_mul(k, rng);
          return pt.to_legacy_point();
       }
 
@@ -436,14 +532,12 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       *
       * @param k_bn the scalar
       * @param rng a random number generator
-      * @param ws a temp workspace
       * @return x coordinate of base_point*k
       */
       BOTAN_DEPRECATED("Use EC_AffinePoint and EC_Scalar")
-      BigInt
-         blinded_base_point_multiply_x(const BigInt& k_bn, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const {
+      BigInt blinded_base_point_multiply_x(const BigInt& k_bn, RandomNumberGenerator& rng, std::vector<BigInt>&) const {
          auto k = EC_Scalar::from_bigint(*this, k_bn);
-         return BigInt(EC_AffinePoint::g_mul(k, rng, ws).x_bytes());
+         return BigInt(EC_AffinePoint::g_mul(k, rng).x_bytes());
       }
 
       /**
@@ -451,17 +545,16 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @param point input point
       * @param k_bn the scalar
       * @param rng a random number generator
-      * @param ws a temp workspace
       * @return point*k
       */
       BOTAN_DEPRECATED("Use EC_AffinePoint and EC_Scalar")
       EC_Point blinded_var_point_multiply(const EC_Point& point,
                                           const BigInt& k_bn,
                                           RandomNumberGenerator& rng,
-                                          std::vector<BigInt>& ws) const {
+                                          std::vector<BigInt>&) const {
          auto k = EC_Scalar::from_bigint(*this, k_bn);
          auto pt = EC_AffinePoint(*this, point);
-         return pt.mul(k, rng, ws).to_legacy_point();
+         return pt.mul(k, rng).to_legacy_point();
       }
 
       /**
@@ -530,6 +623,25 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       }
 
       /**
+      * Return a point on this curve with the affine values x, y
+      */
+      BOTAN_DEPRECATED("Deprecated - use EC_AffinePoint") EC_Point point(const BigInt& x, const BigInt& y) const {
+         if(auto pt = EC_AffinePoint::from_bigint_xy(*this, x, y)) {
+            return pt->to_legacy_point();
+         } else {
+            throw Decoding_Error("Invalid x/y coordinates for elliptic curve point");
+         }
+      }
+
+      /**
+      * Return the zero (or infinite) point on this curve
+      */
+      BOTAN_DEPRECATED("Deprecated no replacement") EC_Point zero_point() const {
+         return EC_AffinePoint::identity(*this).to_legacy_point();
+      }
+#endif
+
+      /**
       * Return if a == -3 mod p
       */
       BOTAN_DEPRECATED("Deprecated no replacement") bool a_is_minus_3() const { return get_a() + 3 == get_p(); }
@@ -542,7 +654,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       /*
       * Reduce x modulo the order
       */
-      BOTAN_DEPRECATED("Deprecated no replacement") BigInt mod_order(const BigInt& x) const;
+      BOTAN_DEPRECATED("Use EC_Scalar") BigInt mod_order(const BigInt& x) const {
+         return EC_Scalar::from_bytes_mod_order(*this, x.serialize()).to_bigint();
+      }
 
       /*
       * Return inverse of x modulo the order
@@ -586,24 +700,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       BOTAN_DEPRECATED("Deprecated no replacement") BigInt cube_mod_order(const BigInt& x) const {
          auto xs = EC_Scalar::from_bigint(*this, x);
          return (xs * xs * xs).to_bigint();
-      }
-
-      /**
-      * Return a point on this curve with the affine values x, y
-      */
-      BOTAN_DEPRECATED("Deprecated - use EC_AffinePoint") EC_Point point(const BigInt& x, const BigInt& y) const {
-         if(auto pt = EC_AffinePoint::from_bigint_xy(*this, x, y)) {
-            return pt->to_legacy_point();
-         } else {
-            throw Decoding_Error("Invalid x/y coordinates for elliptic curve point");
-         }
-      }
-
-      /**
-      * Return the zero (or infinite) point on this curve
-      */
-      BOTAN_DEPRECATED("Deprecated no replacement") EC_Point zero_point() const {
-         return EC_AffinePoint::identity(*this).to_legacy_point();
       }
 
       BOTAN_DEPRECATED("Just serialize the point and check") size_t point_size(EC_Point_Format format) const {

@@ -60,10 +60,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Read Repository Configuration
+        uses: ./.github/actions/read-repo-config
+
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
+          compiler: msvc
           cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-${{ matrix.arch }}-${{ matrix.target }}
           arch: ${{ matrix.arch }}
 
@@ -91,10 +95,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Read Repository Configuration
+        uses: ./.github/actions/read-repo-config
+
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
+          compiler: ${{ matrix.compiler }}
           cache-key: linux-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
       - name: Build and Test Botan
@@ -125,10 +133,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Read Repository Configuration
+        uses: ./.github/actions/read-repo-config
+
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
+          compiler: ${{ matrix.compiler }}
           cache-key: macos-${{ matrix.compiler }}-${{ matrix.os }}-${{ matrix.target }}
 
       - name: Build and Test Botan
@@ -140,14 +152,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Read Repository Configuration
+        uses: ./.github/actions/read-repo-config
+
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
         with:
           target: clang-tidy
+          compiler: clang
           cache-key: linux-x86_64-clang-tidy
 
       - name: Configure Build
-        run: python3 ./configure.py --cc=clang --build-targets=shared,cli,tests,examples,bogo_shim --build-fuzzers=test --with-boost --with-sqlite --with-zlib --with-lzma --with-bzip2
+        run: python3 ./configure.py --cc=clang --build-targets=shared,cli,tests,examples,bogo_shim --build-fuzzers=test --with-boost --with-sqlite --with-zlib --with-lzma --with-bzip2 --with-tpm2
 
       - name: Run Clang Tidy
         run: |
@@ -169,14 +185,7 @@ jobs:
             compiler: gcc
             host_os: ubuntu-24.04
           - target: sanitizer
-            compiler: msvc
-            host_os: windows-2022
-            make_tool: ninja
-          - target: sanitizer
             compiler: clang
-            host_os: ubuntu-24.04
-          - target: sanitizer
-            compiler: gcc
             host_os: ubuntu-24.04
           - target: valgrind
             compiler: clang
@@ -204,11 +213,14 @@ jobs:
         with:
           path: ./source
 
+      - name: Read Repository Configuration
+        uses: ./source/.github/actions/read-repo-config
+
       - name: Fetch BoringSSL fork for BoGo tests
         uses: actions/checkout@v4
         with:
-          repository: randombit/boringssl
-          ref: rene/runner-20240524
+          repository: ${{ env.BORINGSSL_REPO }}
+          ref: ${{ env.BORINGSSL_BRANCH }}
           path: ./boringssl
         if: matrix.target == 'coverage' || matrix.target == 'sanitizer'
 
@@ -216,6 +228,7 @@ jobs:
         uses: ./source/.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
+          compiler: ${{ matrix.compiler }}
           cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
       - name: Build and Test Botan
@@ -234,7 +247,13 @@ jobs:
           - target: minimized
             compiler: gcc
             host_os: ubuntu-24.04
-          - target: bsi
+          - target: policy-bsi
+            compiler: gcc
+            host_os: ubuntu-24.04
+          - target: policy-fips140
+            compiler: gcc
+            host_os: ubuntu-24.04
+          - target: policy-modern
             compiler: gcc
             host_os: ubuntu-24.04
           - target: docs
@@ -251,10 +270,14 @@ jobs:
         with:
           path: ./source
 
+      - name: Read Repository Configuration
+        uses: ./source/.github/actions/read-repo-config
+
       - name: Setup Build Agent
         uses: ./source/.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
+          compiler: ${{ matrix.compiler }}
           cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
       - name: Build and Test Botan
@@ -270,16 +293,22 @@ jobs:
           - target: cross-i386
             compiler: gcc
             host_os: ubuntu-22.04
-          - target: cross-arm32
+          - target: shared
             compiler: gcc
-            host_os: ubuntu-24.04
-          - target: cross-arm64
+            host_os: ubuntu-24.04-arm
+          - target: amalgamation
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-24.04-arm
+          - target: shared
+            compiler: clang
+            host_os: ubuntu-24.04-arm
           - target: cross-ppc64
             compiler: gcc
             host_os: ubuntu-24.04
           - target: cross-mips64
+            compiler: gcc
+            host_os: ubuntu-24.04
+          - target: cross-loongarch64
             compiler: gcc
             host_os: ubuntu-24.04
           - target: cross-android-arm64
@@ -292,19 +321,23 @@ jobs:
           - target: cross-ios-arm64
             compiler: xcode
             host_os: macos-13
+          - target: cross-arm32-baremetal
+            compiler: gcc
+            host_os: ubuntu-24.04
 
     runs-on: ${{ matrix.host_os }}
 
-    env:
-      ANDROID_NDK: android-ndk-r26
-
     steps:
       - uses: actions/checkout@v4
+
+      - name: Read Repository Configuration
+        uses: ./.github/actions/read-repo-config
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
+          compiler: ${{ matrix.compiler }}
           cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-xcompile-${{ matrix.target }}
 
       - name: Build and Test Botan

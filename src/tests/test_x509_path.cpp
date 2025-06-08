@@ -19,6 +19,10 @@
    #include <botan/internal/fmt.h>
    #include <botan/internal/parsing.h>
 
+   #if defined(BOTAN_HAS_ECDSA)
+      #include <botan/ec_group.h>
+   #endif
+
    #include <algorithm>
    #include <fstream>
    #include <limits>
@@ -1227,6 +1231,30 @@ class CVE_2020_0601_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("CVE-2020-0601");
+
+         if(!Botan::EC_Group::supports_application_specific_group()) {
+            result.test_note("Skipping as application specific groups are not supported");
+            return {result};
+         }
+
+         if(!Botan::EC_Group::supports_named_group("secp384r1")) {
+            result.test_note("Skipping as secp384r1 is not supported");
+            return {result};
+         }
+
+         const auto& secp384r1 = Botan::EC_Group::from_name("secp384r1");
+         Botan::OID curveball_oid("1.3.6.1.4.1.25258.4.2020.0601");
+         Botan::EC_Group curveball(
+            curveball_oid,
+            secp384r1.get_p(),
+            secp384r1.get_a(),
+            secp384r1.get_b(),
+            BigInt(
+               "0xC711162A761D568EBEB96265D4C3CEB4F0C330EC8F6DD76E39BCC849ABABB8E34378D581065DEFC77D9FCED6B39075DE"),
+            BigInt(
+               "0x0CB090DE23BAC8D13E67E019A91B86311E5F342DEE17FD15FB7E278A32A1EAC98FC97E18CB2F3B2C487A7DA6F40107AC"),
+            secp384r1.get_order());
+
          auto ca_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/ca.pem"));
          auto fake_ca_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/fake_ca.pem"));
          auto ee_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/ee.pem"));
@@ -1286,6 +1314,66 @@ class CVE_2020_0601_Tests final : public Test {
 };
 
 BOTAN_REGISTER_TEST("x509", "x509_cve_2020_0601", CVE_2020_0601_Tests);
+
+class Path_Validation_With_Immortal_CRL final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         // RFC 5280 defines the nextUpdate field as "optional" (in line with
+         // the original X.509 standard), but then requires all conforming CAs
+         // to always define it. For best compatibility we must deal with both.
+         Test::Result result("Using a CRL without a nextUpdate field");
+
+         if(Botan::has_filesystem_impl() == false) {
+            result.test_note("Skipping due to missing filesystem access");
+            return {result};
+         }
+
+         Botan::X509_Certificate root(Test::data_file("x509/misc/crl_without_nextupdate/ca.pem"));
+         Botan::X509_Certificate revoked_subject(Test::data_file("x509/misc/crl_without_nextupdate/01.pem"));
+         Botan::X509_Certificate valid_subject(Test::data_file("x509/misc/crl_without_nextupdate/42.pem"));
+
+         // Check that a CRL without nextUpdate is parsable
+         auto crl = Botan::X509_CRL(Test::data_file("x509/misc/crl_without_nextupdate/valid_forever.crl"));
+         result.confirm("this update is set", crl.this_update().time_is_set());
+         result.confirm("next update is not set", !crl.next_update().time_is_set());
+         result.confirm("CRL is not empty", !crl.get_revoked().empty());
+
+         // Ensure that we support the used sig algo, otherwish stop here
+         if(!Botan::EC_Group::supports_named_group("brainpool512r1")) {
+            result.test_note("Cannot test path validation because signature algorithm is not support in this build");
+            return {result};
+         }
+
+         Botan::Certificate_Store_In_Memory trusted;
+         trusted.add_certificate(root);
+         trusted.add_crl(crl);
+
+         // Just before the CA and subject certificates expire
+         // (validity from 01 March 2025 to 24 Feburary 2026)
+         auto valid_time = Botan::calendar_point(2026, 2, 23, 0, 0, 0).to_std_timepoint();
+
+         Botan::Path_Validation_Restrictions restrictions(true /* require revocation info */);
+
+         // Validate a certificate that is not listed in the CRL
+         const auto valid = Botan::x509_path_validate(
+            valid_subject, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, valid_time);
+         if(!result.confirm("Valid certificate", valid.successful_validation())) {
+            result.test_note(valid.result_string());
+         }
+
+         // Ensure that a certificate listed in the CRL is recognized as revoked
+         const auto revoked = Botan::x509_path_validate(
+            revoked_subject, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, valid_time);
+         if(!result.confirm("No valid certificate", !revoked.successful_validation())) {
+            result.test_note(revoked.result_string());
+         }
+         result.test_is_eq("Certificate is revoked", revoked.result(), Botan::Certificate_Status_Code::CERT_IS_REVOKED);
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("x509", "x509_path_immortal_crl", Path_Validation_With_Immortal_CRL);
 
    #endif
 

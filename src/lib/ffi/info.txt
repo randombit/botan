@@ -1,5 +1,5 @@
 <defines>
-FFI -> 20240408
+FFI -> 20250506
 </defines>
 
 <module_info>
@@ -8,7 +8,9 @@ brief -> "C API for Botan's functionality"
 </module_info>
 
 <header:internal>
+ffi_ec.h
 ffi_mp.h
+ffi_oid.h
 ffi_pkey.h
 ffi_rng.h
 ffi_util.h

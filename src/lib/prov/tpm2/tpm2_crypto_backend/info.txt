@@ -1,0 +1,24 @@
+<defines>
+TPM2_CRYPTO_BACKEND -> 20240806
+</defines>
+
+<module_info>
+name -> "TPM2 Crypto Backend"
+brief -> "Implementation of the TPM2-TSS crypto callbacks"
+</module_info>
+
+<requires>
+hash
+hmac
+modes
+pk_pad
+eme_raw
+</requires>
+
+<header:internal>
+tpm2_crypto_backend_impl.h
+</header:internal>
+
+<header:public>
+tpm2_crypto_backend.h
+</header:public>

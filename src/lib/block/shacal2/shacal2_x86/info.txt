@@ -8,7 +8,7 @@ brief -> "SHACAL-2 using SSE instructions on x86"
 </module_info>
 
 <requires>
-shacal2
+cpuid
 </requires>
 
 <isa>

@@ -12,9 +12,12 @@
 
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
-#include <botan/internal/cpuid.h>
 #include <cstring>
 #include <vector>
+
+#if defined(BOTAN_HAS_CPUID)
+   #include <botan/internal/cpuid.h>
+#endif
 
 namespace Botan {
 
@@ -229,8 +232,8 @@ void create_inverted_vdm(uint8_t vdm[], size_t K) {
       return;
    }
 
-   if(K == 1) /* degenerate case, matrix must be p^0 = 1 */
-   {
+   if(K == 1) {
+      // degenerate case, matrix must be p^0 = 1
       vdm[0] = 1;
       return;
    }
@@ -297,7 +300,7 @@ void ZFEC::addmul(uint8_t z[], const uint8_t x[], uint8_t y, size_t size) {
    }
 
 #if defined(BOTAN_HAS_ZFEC_VPERM)
-   if(size >= 16 && CPUID::has_vperm()) {
+   if(size >= 16 && CPUID::has(CPUID::Feature::SIMD_4X32)) {
       const size_t consumed = addmul_vperm(z, x, y, size);
       z += consumed;
       x += consumed;
@@ -306,7 +309,7 @@ void ZFEC::addmul(uint8_t z[], const uint8_t x[], uint8_t y, size_t size) {
 #endif
 
 #if defined(BOTAN_HAS_ZFEC_SSE2)
-   if(size >= 64 && CPUID::has_sse2()) {
+   if(size >= 64 && CPUID::has(CPUID::Feature::SSE2)) {
       const size_t consumed = addmul_sse2(z, x, y, size);
       z += consumed;
       x += consumed;
@@ -494,8 +497,8 @@ void ZFEC::decode_shares(const std::map<size_t, const uint8_t*>& shares,
       if(share_id < m_K) {
          decoding_matrix[i * (m_K + 1)] = 1;
          output_cb(share_id, share_data, share_size);
-      } else  // will decode after inverting matrix
-      {
+      } else {
+         // will decode after inverting matrix
          std::memcpy(&decoding_matrix[i * m_K], &m_enc_matrix[share_id * m_K], m_K);
       }
 
@@ -527,14 +530,14 @@ void ZFEC::decode_shares(const std::map<size_t, const uint8_t*>& shares,
 
 std::string ZFEC::provider() const {
 #if defined(BOTAN_HAS_ZFEC_VPERM)
-   if(CPUID::has_vperm()) {
-      return "vperm";
+   if(auto feat = CPUID::check(CPUID::Feature::SIMD_4X32)) {
+      return *feat;
    }
 #endif
 
 #if defined(BOTAN_HAS_ZFEC_SSE2)
-   if(CPUID::has_sse2()) {
-      return "sse2";
+   if(auto feat = CPUID::check(CPUID::Feature::SSE2)) {
+      return *feat;
    }
 #endif
 

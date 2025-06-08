@@ -10,7 +10,7 @@
 #include <botan/internal/blowfish.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/timer.h>
+#include <botan/internal/time_utils.h>
 
 namespace Botan {
 
@@ -30,8 +30,6 @@ std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::tune(size_t output_length,
                                                         std::chrono::milliseconds msec,
                                                         size_t /*max_memory*/,
                                                         std::chrono::milliseconds tune_time) const {
-   Timer timer("Bcrypt_PBKDF");
-
    const size_t blocks = (output_length + 32 - 1) / 32;
 
    if(blocks == 0) {
@@ -42,16 +40,12 @@ std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::tune(size_t output_length,
 
    auto pwhash = this->from_iterations(starting_iter);
 
-   timer.run_until_elapsed(tune_time, [&]() {
+   auto tune_fn = [&]() {
       uint8_t output[32] = {0};
       pwhash->derive_key(output, sizeof(output), "test", 4, nullptr, 0);
-   });
+   };
 
-   if(timer.events() < blocks || timer.value() == 0) {
-      return default_params();
-   }
-
-   const uint64_t measured_time = timer.value() / (timer.events() / blocks);
+   const uint64_t measured_time = measure_cost(tune_time, tune_fn) / blocks;
 
    const uint64_t target_nsec = msec.count() * static_cast<uint64_t>(1000000);
 

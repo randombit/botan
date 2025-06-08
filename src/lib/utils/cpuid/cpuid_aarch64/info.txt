@@ -1,0 +1,11 @@
+<defines>
+CPUID_DETECTION -> 20250327
+</defines>
+
+<module_info>
+name -> "CPUID for Aarch64"
+</module_info>
+
+<arch>
+arm64
+</arch>

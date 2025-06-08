@@ -8,6 +8,8 @@
 #include "test_rng.h"
 #include "tests.h"
 
+#include <botan/internal/target_info.h>
+
 #if defined(BOTAN_HAS_STATEFUL_RNG)
    #include <botan/stateful_rng.h>
 #endif
@@ -146,6 +148,7 @@ class Stateful_RNG_Tests : public Test {
       Test::Result test_broken_entropy_input() {
          Test::Result result(rng_name() + " Broken Entropy Input");
 
+   #if defined(BOTAN_HAS_ENTROPY_SOURCE)
          class Broken_Entropy_Source final : public Botan::Entropy_Source {
             public:
                std::string name() const override { return "Broken Entropy Source"; }
@@ -161,6 +164,7 @@ class Stateful_RNG_Tests : public Test {
 
                size_t poll(Botan::RandomNumberGenerator& /*rng*/) override { return 0; }
          };
+   #endif
 
          // make sure no output is generated when the entropy input source is broken
 
@@ -170,6 +174,8 @@ class Stateful_RNG_Tests : public Test {
          auto rng_with_broken_rng = make_rng(broken_entropy_input_rng);
 
          result.test_throws("broken underlying rng", [&rng_with_broken_rng]() { rng_with_broken_rng->random_vec(16); });
+
+   #if defined(BOTAN_HAS_ENTROPY_SOURCE)
 
          // entropy_sources throw exception
          auto broken_entropy_source_1 = std::make_unique<Broken_Entropy_Source>();
@@ -209,6 +215,7 @@ class Stateful_RNG_Tests : public Test {
          result.test_throws("underlying rng and entropy sources broken", [&rng_with_broken_rng_and_broken_es]() {
             rng_with_broken_rng_and_broken_es->random_vec(16);
          });
+   #endif
 
          return result;
       }
@@ -495,8 +502,10 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests {
          std::vector<uint32_t> security_strengths{128, 192, 256, 256, 256, 256};
 
          for(size_t i = 0; i < approved_hash_fns.size(); ++i) {
-            std::string hash_fn = approved_hash_fns[i];
-            std::string mac_name = "HMAC(" + hash_fn + ")";
+            const auto& hash_fn = approved_hash_fns[i];
+            const size_t expected_security_level = security_strengths[i];
+
+            const std::string mac_name = "HMAC(" + hash_fn + ")";
             auto mac = Botan::MessageAuthenticationCode::create(mac_name);
             if(!mac) {
                result.note_missing(mac_name);
@@ -504,7 +513,7 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests {
             }
 
             Botan::HMAC_DRBG rng(std::move(mac));
-            result.test_eq(hash_fn + " security level", rng.security_level(), security_strengths[i]);
+            result.test_eq(hash_fn + " security level", rng.security_level(), expected_security_level);
          }
 
          return result;
@@ -678,10 +687,18 @@ class AutoSeeded_RNG_Tests final : public Test {
       static Test::Result auto_rng_tests() {
          Test::Result result("AutoSeeded_RNG");
 
-         Botan::Entropy_Sources no_entropy_for_you;
          Botan::Null_RNG null_rng;
 
          result.test_eq("Null_RNG is null", null_rng.is_seeded(), false);
+
+         try {
+            Botan::AutoSeeded_RNG rng(null_rng);
+         } catch(Botan::PRNG_Unseeded&) {
+            result.test_success("AutoSeeded_RNG rejected useless RNG");
+         }
+
+   #if defined(BOTAN_HAS_ENTROPY_SOURCE)
+         Botan::Entropy_Sources no_entropy_for_you;
 
          try {
             Botan::AutoSeeded_RNG rng(no_entropy_for_you);
@@ -691,16 +708,11 @@ class AutoSeeded_RNG_Tests final : public Test {
          }
 
          try {
-            Botan::AutoSeeded_RNG rng(null_rng);
-         } catch(Botan::PRNG_Unseeded&) {
-            result.test_success("AutoSeeded_RNG rejected useless RNG");
-         }
-
-         try {
             Botan::AutoSeeded_RNG rng(null_rng, no_entropy_for_you);
          } catch(Botan::PRNG_Unseeded&) {
             result.test_success("AutoSeeded_RNG rejected useless RNG+entropy sources");
          }
+   #endif
 
          Botan::AutoSeeded_RNG rng;
 
@@ -720,9 +732,11 @@ class AutoSeeded_RNG_Tests final : public Test {
          rng.clear();
          result.test_eq("AutoSeeded_RNG unseeded after calling clear", rng.is_seeded(), false);
 
+   #if defined(BOTAN_HAS_ENTROPY_SOURCE)
          const size_t no_entropy_bits = rng.reseed(no_entropy_for_you, 256, std::chrono::milliseconds(300));
          result.test_eq("AutoSeeded_RNG can't reseed from nothing", no_entropy_bits, 0);
          result.test_eq("AutoSeeded_RNG still unseeded", rng.is_seeded(), false);
+   #endif
 
          rng.random_vec(16);  // generate and discard output
          result.confirm("AutoSeeded_RNG can be reseeded", rng.is_seeded());
@@ -767,7 +781,9 @@ class System_RNG_Tests final : public Test {
          rng.clear();  // clear is a noop for system rng
          result.confirm("System RNG always seeded", rng.is_seeded());
 
+   #if defined(BOTAN_HAS_ENTROPY_SOURCE)
          rng.reseed(Botan::Entropy_Sources::global_sources(), 256, std::chrono::milliseconds(100));
+   #endif
 
          for(size_t i = 0; i != 128; ++i) {
             std::vector<uint8_t> out_buf(i);
@@ -813,8 +829,10 @@ class Processor_RNG_Tests final : public Test {
             rng.clear();  // clear is a noop for rdrand
             result.confirm("CPU RNG always seeded", rng.is_seeded());
 
+   #if defined(BOTAN_HAS_ENTROPY_SOURCE)
             size_t reseed_bits = rng.reseed(Botan::Entropy_Sources::global_sources(), 256, std::chrono::seconds(1));
             result.test_eq("CPU RNG cannot consume inputs", reseed_bits, size_t(0));
+   #endif
 
             /*
             Processor_RNG ignores add_entropy calls - confirm this by passing

@@ -1,5 +1,5 @@
 
-#test cpuid avx512 avx2 sse2
+#test cpuid avx512 avx2 sse2 neon altivec lsx
 
 [ChaCha(8)]
 

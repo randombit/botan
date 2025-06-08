@@ -128,7 +128,7 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
       *
       * @param session the session descriptor
       */
-      virtual void tls_session_established(const Session_Summary& session) { BOTAN_UNUSED(session); }
+      virtual void tls_session_established(const Session_Summary& session);
 
       /**
        * Optional callback: session activated
@@ -270,13 +270,11 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
        * indicates the revocation status of the server certificate. Return an
        * empty vector to indicate that no response is available, and thus
        * suppress the Certificate_Status message.
+       *
+       * Default implementation returns an empty vector, disabling certificate status
        */
       virtual std::vector<uint8_t> tls_provide_cert_status(const std::vector<X509_Certificate>& chain,
-                                                           const Certificate_Status_Request& csr) {
-         BOTAN_UNUSED(chain);
-         BOTAN_UNUSED(csr);
-         return std::vector<uint8_t>();
-      }
+                                                           const Certificate_Status_Request& csr);
 
       /**
        * Called by TLS 1.3 client or server whenever the peer indicated that
@@ -333,6 +331,26 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
                                       Signature_Format format,
                                       const std::vector<uint8_t>& msg,
                                       const std::vector<uint8_t>& sig);
+
+      /**
+       * Optional callback: deserialize a public key received from the peer
+       *
+       * Default implementation simply parses the public key using Botan's
+       * public keys. Override to provide a different approach, e.g. using an
+       * external device.
+       *
+       * If deserialization fails, the default implementation throws a
+       * Botan::Decoding_Error exception that will be translated into a
+       * TLS_Exception with an Alert::IllegalParamter.
+       *
+       * @param group the group identifier or (in case of TLS 1.2) an explicit
+       *              discrete-log group of the public key
+       * @param key_bits the serialized public key
+       *
+       * @return the deserialized and ready-to-use public key
+       */
+      virtual std::unique_ptr<Public_Key> tls_deserialize_peer_public_key(
+         const std::variant<TLS::Group_Params, DL_Group>& group, std::span<const uint8_t> key_bits);
 
       /**
        * Generate an ephemeral KEM key for a TLS 1.3 handshake
@@ -591,13 +609,13 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
        * Optional callback: error logging. (not currently called)
        * @param err An error message related to this connection.
        */
-      virtual void tls_log_error(const char* err) { BOTAN_UNUSED(err); }
+      virtual void tls_log_error(const char* err);
 
       /**
        * Optional callback: debug logging. (not currently called)
        * @param what Some hopefully informative string
        */
-      virtual void tls_log_debug(const char* what) { BOTAN_UNUSED(what); }
+      virtual void tls_log_debug(const char* what);
 
       /**
        * Optional callback: debug logging taking a buffer. (not currently called)
@@ -605,16 +623,14 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
        * @param val the bytes
        * @param val_len length of val
        */
-      virtual void tls_log_debug_bin(const char* descr, const uint8_t val[], size_t val_len) {
-         BOTAN_UNUSED(descr, val, val_len);
-      }
+      virtual void tls_log_debug_bin(const char* descr, const uint8_t val[], size_t val_len);
 
       /**
        * Optional callback: Allows access to a connection's secret data
        *
        * Useful to implement the SSLKEYLOGFILE for connection debugging as
        * specified in ietf.org/archive/id/draft-thomson-tls-keylogfile-00.html
-       * 
+       *
        * Invoked if Policy::allow_ssl_key_log_file returns true.
        *
        * Default implementation simply ignores the inputs.
@@ -627,9 +643,7 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
        */
       virtual void tls_ssl_key_log_data(std::string_view label,
                                         std::span<const uint8_t> client_random,
-                                        std::span<const uint8_t> secret) const {
-         BOTAN_UNUSED(label, client_random, secret);
-      }
+                                        std::span<const uint8_t> secret) const;
 };
 
 }  // namespace TLS

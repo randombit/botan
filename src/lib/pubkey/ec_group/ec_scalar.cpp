@@ -76,9 +76,9 @@ BigInt EC_Scalar::to_bigint() const {
    return BigInt::from_bytes(bytes);
 }
 
-EC_Scalar EC_Scalar::gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws) {
+EC_Scalar EC_Scalar::gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng) {
    const auto& group = scalar._inner().group();
-   return EC_Scalar(group->gk_x_mod_order(scalar.inner(), rng, ws));
+   return EC_Scalar(group->gk_x_mod_order(scalar.inner(), rng));
 }
 
 void EC_Scalar::serialize_to(std::span<uint8_t> bytes) const {
@@ -132,6 +132,10 @@ bool EC_Scalar::is_zero() const {
 
 EC_Scalar EC_Scalar::invert() const {
    return EC_Scalar(inner().invert());
+}
+
+EC_Scalar EC_Scalar::invert_vartime() const {
+   return EC_Scalar(inner().invert_vartime());
 }
 
 EC_Scalar EC_Scalar::negate() const {

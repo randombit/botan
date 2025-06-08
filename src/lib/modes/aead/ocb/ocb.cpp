@@ -9,6 +9,7 @@
 #include <botan/internal/ocb.h>
 
 #include <botan/block_cipher.h>
+#include <botan/mem_ops.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/poly_dbl.h>
@@ -345,7 +346,9 @@ void OCB_Encryption::encrypt(uint8_t buffer[], size_t blocks) {
 
       xor_buf(m_checksum.data(), buffer, proc_bytes);
 
-      m_cipher->encrypt_n_xex(buffer, offsets, proc_blocks);
+      xor_buf(buffer, offsets, proc_bytes);
+      m_cipher->encrypt_n(buffer, buffer, proc_blocks);
+      xor_buf(buffer, offsets, proc_bytes);
 
       buffer += proc_bytes;
       blocks -= proc_blocks;
@@ -425,7 +428,9 @@ void OCB_Decryption::decrypt(uint8_t buffer[], size_t blocks) {
 
       const uint8_t* offsets = m_L->compute_offsets(m_block_index, proc_blocks);
 
-      m_cipher->decrypt_n_xex(buffer, offsets, proc_blocks);
+      xor_buf(buffer, offsets, proc_bytes);
+      m_cipher->decrypt_n(buffer, buffer, proc_blocks);
+      xor_buf(buffer, offsets, proc_bytes);
 
       xor_buf(m_checksum.data(), buffer, proc_bytes);
 

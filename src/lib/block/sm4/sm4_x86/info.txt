@@ -1,0 +1,23 @@
+<defines>
+SM4_X86 -> 20250311
+</defines>
+
+<module_info>
+name -> "SM4 x86"
+brief -> "SM4 using Intel SM4 extension"
+</module_info>
+
+<requires>
+cpuid
+simd_avx2
+</requires>
+
+<isa>
+sm4
+</isa>
+
+<cc>
+gcc:14
+clang:17
+msvc
+</cc>

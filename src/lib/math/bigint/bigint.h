@@ -10,7 +10,6 @@
 #define BOTAN_BIGINT_H_
 
 #include <botan/exceptn.h>
-#include <botan/mem_ops.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <iosfwd>
@@ -28,10 +27,10 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       /**
        * Base enumerator for encoding and decoding
        */
-      enum BOTAN_DEPRECATED("All functions using this enum are deprecated") Base {
-         Decimal = 10,
-         Hexadecimal = 16,
-         Binary = 256
+      enum Base {
+         Decimal BOTAN_DEPRECATED("All functions using this enum are deprecated") = 10,
+         Hexadecimal BOTAN_DEPRECATED("All functions using this enum are deprecated") = 16,
+         Binary BOTAN_DEPRECATED("All functions using this enum are deprecated") = 256
       };
 
       /**
@@ -472,8 +471,8 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param set_it if the bit should be set
        */
       void conditionally_set_bit(size_t n, bool set_it) {
-         const size_t which = n / BOTAN_MP_WORD_BITS;
-         const word mask = static_cast<word>(set_it) << (n % BOTAN_MP_WORD_BITS);
+         const size_t which = n / (sizeof(word) * 8);
+         const word mask = static_cast<word>(set_it) << (n % (sizeof(word) * 8));
          m_data.set_word_at(which, word_at(which) | mask);
       }
 
@@ -487,14 +486,14 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * Clear all but the lowest n bits
        * @param n amount of bits to keep
        */
-      void mask_bits(size_t n) { m_data.mask_bits(n); }
+      BOTAN_DEPRECATED("Deprecated no replacement") void mask_bits(size_t n) { m_data.mask_bits(n); }
 
       /**
        * Return bit value at specified position
        * @param n the bit offset to test
        * @result true, if the bit at position n is set, false otherwise
        */
-      bool get_bit(size_t n) const { return ((word_at(n / BOTAN_MP_WORD_BITS) >> (n % BOTAN_MP_WORD_BITS)) & 1); }
+      bool get_bit(size_t n) const { return ((word_at(n / (sizeof(word) * 8)) >> (n % (sizeof(word) * 8))) & 1); }
 
       /**
        * Return (a maximum of) 32 bits of the complete value
@@ -510,7 +509,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * [0 ... 2**32-1], or otherwise throw an exception.
        * @result the value as a uint32_t if conversion is possible
        */
-      uint32_t to_u32bit() const;
+      BOTAN_DEPRECATED("Deprecated no replacement") uint32_t to_u32bit() const;
 
       /**
        * Convert this value to a decimal string.
@@ -584,7 +583,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       /**
        * Flip the sign of this BigInt
        */
-      void flip_sign() { set_sign(reverse_sign()); }
+      BOTAN_DEPRECATED("Deprecated no replacement") void flip_sign() { set_sign(reverse_sign()); }
 
       /**
        * Set sign of the integer
@@ -629,7 +628,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
 
       /**
        * Get the number of high bits unset in the top (allocated) word
-       * of this integer. Returns BOTAN_MP_WORD_BITS only iff *this is
+       * of this integer. Returns (sizeof(word) * 8) only iff *this is
        * zero. Ignores sign.
        */
       BOTAN_DEPRECATED("Deprecated no replacement") size_t top_bits_free() const;
@@ -777,24 +776,24 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * If predicate is true assign other to *this
        * Uses a masked operation to avoid side channels
        */
-      void ct_cond_assign(bool predicate, const BigInt& other);
+      BOTAN_DEPRECATED("Deprecated no replacement") void ct_cond_assign(bool predicate, const BigInt& other);
 
       /**
        * If predicate is true swap *this and other
        * Uses a masked operation to avoid side channels
        */
-      void ct_cond_swap(bool predicate, BigInt& other);
+      BOTAN_DEPRECATED("Deprecated no replacement") void ct_cond_swap(bool predicate, BigInt& other);
 
       /**
        * If predicate is true add value to *this
        */
-      void ct_cond_add(bool predicate, const BigInt& value);
+      BOTAN_DEPRECATED("Deprecated no replacement") void ct_cond_add(bool predicate, const BigInt& value);
 
       /**
        * Shift @p shift bits to the left, runtime is independent of
        * the value of @p shift.
        */
-      void ct_shift_left(size_t shift);
+      BOTAN_DEPRECATED("Deprecated no replacement") void ct_shift_left(size_t shift);
 
       /**
        * If predicate is true flip the sign of *this
@@ -804,15 +803,6 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       BOTAN_DEPRECATED("replaced by internal API") void const_time_poison() const { _const_time_poison(); }
 
       BOTAN_DEPRECATED("replaced by internal API") void const_time_unpoison() const { _const_time_unpoison(); }
-
-#if defined(BOTAN_CT_POISON_ENABLED)
-      void _const_time_poison() const;
-      void _const_time_unpoison() const;
-#else
-      constexpr void _const_time_poison() const {}
-
-      constexpr void _const_time_unpoison() const {}
-#endif
 
       /**
        * @param rng a random number generator
@@ -926,6 +916,16 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       static secure_vector<uint8_t> encode_fixed_length_int_pair(const BigInt& n1, const BigInt& n2, size_t bytes);
 
       /**
+       * Return a span over the register
+       *
+       * @warning this is an implementation detail which is not for
+       * public use and not covered by SemVer.
+       *
+       * @result span over the internal register
+       */
+      std::span<const word> _as_span() const { return m_data.const_span(); }
+
+      /**
        * Return a const pointer to the register
        *
        * @warning this is an implementation detail which is not for
@@ -946,6 +946,34 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        */
       void _assign_from_bytes(std::span<const uint8_t> bytes) { assign_from_bytes(bytes); }
 
+      /**
+       * Create a BigInt from a word vector
+       *
+       * @warning this is an implementation detail which is not for
+       * public use and not covered by SemVer.
+       */
+      static BigInt _from_words(secure_vector<word>&& words) {
+         BigInt bn;
+         bn.m_data.swap(words);
+         return bn;
+      }
+
+      /**
+       * Mark this BigInt as holding secret data
+       *
+       * @warning this is an implementation detail which is not for
+       * public use and not covered by SemVer.
+       */
+      void _const_time_poison() const;
+
+      /**
+       * Mark this BigInt as no longer holding secret data
+       *
+       * @warning this is an implementation detail which is not for
+       * public use and not covered by SemVer.
+       */
+      void _const_time_unpoison() const;
+
    private:
       /**
        * Read integer value from a byte vector (big endian)
@@ -961,6 +989,8 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
             }
 
             const word* const_data() const { return m_reg.data(); }
+
+            std::span<const word> const_span() const { return std::span{m_reg}; }
 
             secure_vector<word>& mutable_vector() {
                invalidate_sig_words();
@@ -992,36 +1022,9 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
                m_reg.assign(w, w + len);
             }
 
-            void set_to_zero() {
-               m_reg.resize(m_reg.capacity());
-               clear_mem(m_reg.data(), m_reg.size());
-               m_sig_words = 0;
-            }
+            void set_to_zero();
 
-            void set_size(size_t s) {
-               invalidate_sig_words();
-               clear_mem(m_reg.data(), m_reg.size());
-               m_reg.resize(s + (8 - (s % 8)));
-            }
-
-            void mask_bits(size_t n) {
-               if(n == 0) {
-                  return set_to_zero();
-               }
-
-               const size_t top_word = n / BOTAN_MP_WORD_BITS;
-
-               // if(top_word < sig_words()) ?
-               if(top_word < size()) {
-                  const word mask = (static_cast<word>(1) << (n % BOTAN_MP_WORD_BITS)) - 1;
-                  const size_t len = size() - (top_word + 1);
-                  if(len > 0) {
-                     clear_mem(&m_reg[top_word + 1], len);
-                  }
-                  m_reg[top_word] &= mask;
-                  invalidate_sig_words();
-               }
-            }
+            void mask_bits(size_t n);
 
             void grow_to(size_t n) const {
                if(n > size()) {
@@ -1057,8 +1060,6 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
             size_t sig_words() const {
                if(m_sig_words == sig_words_npos) {
                   m_sig_words = calc_sig_words();
-               } else {
-                  BOTAN_DEBUG_ASSERT(m_sig_words == calc_sig_words());
                }
                return m_sig_words;
             }

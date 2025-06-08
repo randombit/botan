@@ -9,7 +9,6 @@
 
 #include <botan/mac.h>
 #include <botan/numthry.h>
-#include <botan/reducer.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
@@ -27,8 +26,19 @@ const size_t MAX_N_BYTES = 128 / 8;
 * typical uses of FPE (typically, n is a power of 10)
 */
 void factor(BigInt n, BigInt& a, BigInt& b) {
+   BOTAN_ARG_CHECK(n >= 2, "Invalid FPE modulus");
+
    a = BigInt::one();
    b = BigInt::one();
+
+   /*
+   * This algorithm was poorly designed. It should have fully factored n (to the
+   * extent possible) and then built a/b starting from the largest factor first.
+   *
+   * This can't be fixed now without breaking existing users but if some
+   * incompatible change (or new flag, etc) is added in the future, consider
+   * fixing the factoring for those users.
+   */
 
    size_t n_low_zero = low_zero_bits(n);
 
@@ -82,8 +92,6 @@ FPE_FE1::FPE_FE1(const BigInt& n, size_t rounds, bool compat_mode, std::string_v
          std::swap(m_a, m_b);
       }
    }
-
-   mod_a = std::make_unique<Modular_Reducer>(m_a);
 }
 
 FPE_FE1::~FPE_FE1() = default;
@@ -147,7 +155,7 @@ BigInt FPE_FE1::encrypt(const BigInt& input, const uint8_t tweak[], size_t tweak
    for(size_t i = 0; i != m_rounds; ++i) {
       ct_divide(X, m_b, L, R);
       Fi = F(R, i, tweak_mac, tmp);
-      X = m_a * R + mod_a->reduce(L + Fi);
+      X = m_a * R + ct_modulo(L + Fi, m_a);
    }
 
    return X;
@@ -164,7 +172,7 @@ BigInt FPE_FE1::decrypt(const BigInt& input, const uint8_t tweak[], size_t tweak
       ct_divide(X, m_a, R, W);
 
       Fi = F(R, m_rounds - i - 1, tweak_mac, tmp);
-      X = m_b * mod_a->reduce(W - Fi) + R;
+      X = m_b * ct_modulo(W - Fi, m_a) + R;
    }
 
    return X;

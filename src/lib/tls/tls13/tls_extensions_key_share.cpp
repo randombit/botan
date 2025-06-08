@@ -18,8 +18,7 @@
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_reader.h>
 
-#include <functional>
-#include <iterator>
+#include <algorithm>
 #include <utility>
 
 #if defined(BOTAN_HAS_X25519)
@@ -119,22 +118,10 @@ class Key_Share_Entry {
                                          const Policy& policy,
                                          Callbacks& cb,
                                          RandomNumberGenerator& rng) {
+         auto scope = scoped_cleanup([&] { m_private_key.reset(); });
          BOTAN_ASSERT_NOMSG(m_group == received.m_group);
          BOTAN_STATE_CHECK(m_private_key != nullptr);
-
-         auto shared_secret = cb.tls_kem_decapsulate(m_group, *m_private_key, received.m_key_exchange, rng, policy);
-         m_private_key.reset();
-
-         // RFC 8422 - 5.11.
-         //   With X25519 and X448, a receiving party MUST check whether the
-         //   computed premaster secret is the all-zero value and abort the
-         //   handshake if so, as described in Section 6 of [RFC7748].
-         if((m_group == Named_Group::X25519 || m_group == Named_Group::X448) &&
-            CT::all_zeros(shared_secret.data(), shared_secret.size()).as_bool()) {
-            throw TLS_Exception(Alert::DecryptError, "Bad X25519 or X448 key exchange");
-         }
-
-         return shared_secret;
+         return cb.tls_kem_decapsulate(m_group, *m_private_key, received.m_key_exchange, rng, policy);
       }
 
    private:
@@ -416,11 +403,11 @@ class Key_Share::Key_Share_Impl {
 Key_Share::Key_Share(TLS_Data_Reader& reader, uint16_t extension_size, Handshake_Type message_type) {
    if(message_type == Handshake_Type::ClientHello) {
       m_impl = std::make_unique<Key_Share_Impl>(Key_Share_ClientHello(reader, extension_size));
-   } else if(message_type == Handshake_Type::HelloRetryRequest)  // Connection_Side::Server
-   {
+   } else if(message_type == Handshake_Type::HelloRetryRequest) {
+      // Connection_Side::Server
       m_impl = std::make_unique<Key_Share_Impl>(Key_Share_HelloRetryRequest(reader, extension_size));
-   } else if(message_type == Handshake_Type::ServerHello)  // Connection_Side::Server
-   {
+   } else if(message_type == Handshake_Type::ServerHello) {
+      // Connection_Side::Server
       m_impl = std::make_unique<Key_Share_Impl>(Key_Share_ServerHello(reader, extension_size));
    } else {
       throw Invalid_Argument(std::string("cannot create a Key_Share extension for message of type: ") +

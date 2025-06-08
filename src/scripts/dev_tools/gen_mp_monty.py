@@ -3,25 +3,40 @@
 import sys
 import datetime
 
-# (C) 2018,2023 Jack Lloyd
+# (C) 2018,2023,2025 Jack Lloyd
 # Botan is released under the Simplified BSD License (see license.txt)
 
 # Used to generate src/lib/math/mp/mp_monty_n.cpp
 
-def monty_redc_code(n):
+def monty_redc_code(n, p_dash1=False):
 
     lines = []
 
+    fn_name = "bigint_monty_redc_pdash1" if p_dash1 else "bigint_monty_redc"
+
+    if p_dash1:
+        hdr = "void bigint_monty_redc_pdash1_%d(word r[%d], const word z[%d], const word p[%d], word ws[%d]) {\n" % (n, n, 2*n, n, n)
+    else:
+        hdr = "void bigint_monty_redc_%d(word r[%d], const word z[%d], const word p[%d], word p_dash, word ws[%d]) {\n" % (n, n, 2*n, n, n)
+
+    ftr = "\n}\n"
+
     lines.append("word3<word> accum;")
     lines.append("accum.add(z[0]);")
-    lines.append("ws[0] = accum.monty_step(p[0], p_dash);")
+    if p_dash1:
+        lines.append("ws[0] = accum.monty_step_pdash1();")
+    else:
+        lines.append("ws[0] = accum.monty_step(p[0], p_dash);")
 
     for i in range(1, n):
         for j in range(0, i):
             lines.append("accum.mul(ws[%d], p[%d]);" % (j, i-j))
 
         lines.append("accum.add(z[%d]);" % (i))
-        lines.append("ws[%d] = accum.monty_step(p[0], p_dash);" % (i))
+        if p_dash1:
+            lines.append("ws[%d] = accum.monty_step_pdash1();" % (i))
+        else:
+            lines.append("ws[%d] = accum.monty_step(p[0], p_dash);" % (i))
 
     for i in range(0, n - 1):
         for j in range(i + 1, n):
@@ -35,19 +50,16 @@ def monty_redc_code(n):
     lines.append("ws[%d] = accum.extract();" % (n - 1))
     lines.append("word w1 = accum.extract();")
 
-    lines.append("bigint_monty_maybe_sub<%d>(z, w1, ws, p);" % (n))
+    lines.append("bigint_monty_maybe_sub<%d>(r, w1, ws, p);" % (n))
 
-    lines.append("clear_mem(z + %d, %d);" % (n, n))
-
-    for line in lines:
-        print("   %s" % (line))
+    return hdr + "\n".join(["   %s" % (l) for l in lines]) + ftr
 
 def main(args = None):
     if args is None:
         args = sys.argv
 
     if len(args) <= 1:
-        sizes = [4, 6, 8, 16, 24, 32]
+        sizes = [4, 6, 8, 12, 16, 24, 32]
     else:
         sizes = map(int, args[1:])
 
@@ -66,11 +78,7 @@ namespace Botan {
 """ % (sys.argv[0], datetime.date.today().strftime("%Y-%m-%d")))
 
     for n in sizes:
-        print("void bigint_monty_redc_%d(word z[%d], const word p[%d], word p_dash, word ws[]) {" % (n, 2*n, n))
-
-        monty_redc_code(n)
-
-        print("}\n")
+        print(monty_redc_code(n))
 
     print("}  // namespace Botan")
 

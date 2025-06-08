@@ -67,7 +67,6 @@ mingw   -> "{cxx} -shared -Wl,--out-implib,{shared_lib_name}.a"
 sse2    -> "-msse2"
 ssse3   -> "-mssse3"
 sse41   -> "-msse4.1"
-sse42   -> "-msse4.2"
 avx2    -> "-mavx2"
 avx512  -> "-mavx512f -mavx512bw -mavx512dq -mavx512vbmi -mavx512vbmi2 -mavx512bitalg -mavx512vl -mavx512ifma"
 
@@ -94,6 +93,9 @@ arm64:armv8sm4 -> "-march=armv8.2-a+sm4"
 arm64:armv8sha512 -> "-march=armv8.2-a+sha3"
 arm64:armv8sha3 -> "-march=armv8.2-a+sha3"
 
+loongarch64:lsx -> "-mlsx"
+loongarch64:lasx -> "-mlasx"
+
 # For Aarch32 -mfpu=neon is required
 # For Aarch64 NEON is enabled by default
 arm32:neon    -> "-mfpu=neon"
@@ -116,3 +118,10 @@ x32     -> "-mx32"
 qnx     -> "-fexceptions"
 cygwin  -> "-U__STRICT_ANSI__"
 </mach_abi_linking>
+
+<ct_value_barrier>
+default -> asm
+# Work around an ICE in GCC 13.2
+# see GH #4444
+superh -> volatile
+</ct_value_barrier>

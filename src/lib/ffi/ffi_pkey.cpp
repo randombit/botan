@@ -12,6 +12,8 @@
 #include <botan/pk_keys.h>
 #include <botan/pkcs8.h>
 #include <botan/x509_key.h>
+#include <botan/internal/ffi_ec.h>
+#include <botan/internal/ffi_oid.h>
 #include <botan/internal/ffi_pkey.h>
 #include <botan/internal/ffi_rng.h>
 #include <botan/internal/ffi_util.h>
@@ -41,6 +43,30 @@ int botan_privkey_create(botan_privkey_t* key_obj,
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
       std::unique_ptr<Botan::Private_Key> key(
          Botan::create_private_key(algo_name ? algo_name : "RSA", rng, algo_params ? algo_params : ""));
+
+      if(key) {
+         *key_obj = new botan_privkey_struct(std::move(key));
+         return BOTAN_FFI_SUCCESS;
+      } else {
+         return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+      }
+   });
+}
+
+int botan_ec_privkey_create(botan_privkey_t* key_obj,
+                            const char* algo_name,
+                            botan_ec_group_t ec_group_obj,
+                            botan_rng_t rng_obj) {
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      if(key_obj == nullptr) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+      *key_obj = nullptr;
+
+      Botan::EC_Group ec_group = safe_get(ec_group_obj);
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+      std::unique_ptr<Botan::Private_Key> key(
+         Botan::create_ec_private_key(algo_name ? algo_name : "ECDSA", ec_group, rng));
 
       if(key) {
          *key_obj = new botan_privkey_struct(std::move(key));
@@ -136,6 +162,8 @@ int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint
       return copy_view_bin(out, out_len, botan_pubkey_view_der, key);
    } else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM) {
       return copy_view_str(out, out_len, botan_pubkey_view_pem, key);
+   } else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_RAW) {
+      return copy_view_bin(out, out_len, botan_pubkey_view_raw, key);
    } else {
       return BOTAN_FFI_ERROR_BAD_FLAG;
    }
@@ -143,7 +171,7 @@ int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint
 
 int botan_pubkey_view_der(botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view) {
    return BOTAN_FFI_VISIT(
-      key, [=](const auto& k) -> int { return invoke_view_callback(view, ctx, Botan::X509::BER_encode(k)); });
+      key, [=](const auto& k) -> int { return invoke_view_callback(view, ctx, k.subject_public_key()); });
 }
 
 int botan_pubkey_view_pem(botan_pubkey_t key, botan_view_ctx ctx, botan_view_str_fn view) {
@@ -151,11 +179,18 @@ int botan_pubkey_view_pem(botan_pubkey_t key, botan_view_ctx ctx, botan_view_str
       key, [=](const auto& k) -> int { return invoke_view_callback(view, ctx, Botan::X509::PEM_encode(k)); });
 }
 
+int botan_pubkey_view_raw(botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view) {
+   return BOTAN_FFI_VISIT(
+      key, [=](const auto& k) -> int { return invoke_view_callback(view, ctx, k.raw_public_key_bits()); });
+}
+
 int botan_privkey_export(botan_privkey_t key, uint8_t out[], size_t* out_len, uint32_t flags) {
    if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER) {
       return copy_view_bin(out, out_len, botan_privkey_view_der, key);
    } else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM) {
       return copy_view_str(out, out_len, botan_privkey_view_pem, key);
+   } else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_RAW) {
+      return copy_view_bin(out, out_len, botan_privkey_view_raw, key);
    } else {
       return BOTAN_FFI_ERROR_BAD_FLAG;
    }
@@ -169,6 +204,11 @@ int botan_privkey_view_der(botan_privkey_t key, botan_view_ctx ctx, botan_view_b
 int botan_privkey_view_pem(botan_privkey_t key, botan_view_ctx ctx, botan_view_str_fn view) {
    return BOTAN_FFI_VISIT(
       key, [=](const auto& k) -> int { return invoke_view_callback(view, ctx, Botan::PKCS8::PEM_encode(k)); });
+}
+
+int botan_privkey_view_raw(botan_privkey_t key, botan_view_ctx ctx, botan_view_bin_fn view) {
+   return BOTAN_FFI_VISIT(
+      key, [=](const auto& k) -> int { return invoke_view_callback(view, ctx, k.raw_private_key_bits()); });
 }
 
 int botan_privkey_export_encrypted(botan_privkey_t key,
@@ -325,6 +365,62 @@ int botan_privkey_view_encrypted_pem(botan_privkey_t key,
       auto pkcs8 = Botan::PKCS8::PEM_encode_encrypted_pbkdf_iter(k, rng, passphrase, pbkdf_iter, cipher, pbkdf_algo);
 
       return invoke_view_callback(view, ctx, pkcs8);
+   });
+}
+
+int botan_pubkey_oid(botan_asn1_oid_t* oid, botan_pubkey_t key) {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      if(oid == nullptr) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      auto oid_ptr = std::make_unique<Botan::OID>(k.object_identifier());
+      *oid = new botan_asn1_oid_struct(std::move(oid_ptr));
+
+      return BOTAN_FFI_SUCCESS;
+   });
+}
+
+int botan_privkey_oid(botan_asn1_oid_t* oid, botan_privkey_t key) {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      if(oid == nullptr) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      auto oid_ptr = std::make_unique<Botan::OID>(k.object_identifier());
+      *oid = new botan_asn1_oid_struct(std::move(oid_ptr));
+
+      return BOTAN_FFI_SUCCESS;
+   });
+}
+
+int botan_privkey_stateful_operation(botan_privkey_t key, int* out) {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      if(out == nullptr) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      if(k.stateful_operation()) {
+         *out = 1;
+      } else {
+         *out = 0;
+      }
+      return BOTAN_FFI_SUCCESS;
+   });
+}
+
+int botan_privkey_remaining_operations(botan_privkey_t key, uint64_t* out) {
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      if(out == nullptr) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      if(auto remaining = k.remaining_operations()) {
+         *out = remaining.value();
+         return BOTAN_FFI_SUCCESS;
+      } else {
+         return BOTAN_FFI_ERROR_NO_VALUE;
+      }
    });
 }
 

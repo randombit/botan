@@ -8,12 +8,13 @@
 #include <botan/internal/pk_ops_impl.h>
 
 #include <botan/hash.h>
+#include <botan/kdf.h>
 #include <botan/rng.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/eme.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/scan_name.h>
-#include <sstream>
 
 #if defined(BOTAN_HAS_RAW_HASH_FN)
    #include <botan/internal/raw_hash.h>
@@ -27,18 +28,25 @@ AlgorithmIdentifier PK_Ops::Signature::algorithm_identifier() const {
 
 PK_Ops::Encryption_with_EME::Encryption_with_EME(std::string_view eme) : m_eme(EME::create(eme)) {}
 
+PK_Ops::Encryption_with_EME::~Encryption_with_EME() = default;
+
 size_t PK_Ops::Encryption_with_EME::max_input_bits() const {
    return 8 * m_eme->maximum_input_size(max_ptext_input_bits());
 }
 
 std::vector<uint8_t> PK_Ops::Encryption_with_EME::encrypt(std::span<const uint8_t> msg, RandomNumberGenerator& rng) {
-   const size_t max_raw = max_ptext_input_bits();
-   secure_vector<uint8_t> eme_output((max_raw + 7) / 8);
-   size_t written = m_eme->pad(eme_output, msg, max_raw, rng);
+   const size_t max_input_bits = max_ptext_input_bits();
+   const size_t max_input_bytes = (max_input_bits + 7) / 8;
+   BOTAN_ARG_CHECK(msg.size() <= max_input_bytes, "Plaintext too large");
+
+   secure_vector<uint8_t> eme_output(max_input_bits);
+   const size_t written = m_eme->pad(eme_output, msg, max_input_bits, rng);
    return raw_encrypt(std::span{eme_output}.first(written), rng);
 }
 
 PK_Ops::Decryption_with_EME::Decryption_with_EME(std::string_view eme) : m_eme(EME::create(eme)) {}
+
+PK_Ops::Decryption_with_EME::~Decryption_with_EME() = default;
 
 secure_vector<uint8_t> PK_Ops::Decryption_with_EME::decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) {
    const secure_vector<uint8_t> raw = raw_decrypt(ctext);
@@ -67,6 +75,8 @@ PK_Ops::Key_Agreement_with_KDF::Key_Agreement_with_KDF(std::string_view kdf) {
       m_kdf = KDF::create_or_throw(kdf);
    }
 }
+
+PK_Ops::Key_Agreement_with_KDF::~Key_Agreement_with_KDF() = default;
 
 secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
                                                              std::span<const uint8_t> other_key,
@@ -119,6 +129,8 @@ std::unique_ptr<HashFunction> create_signature_hash(std::string_view padding) {
 PK_Ops::Signature_with_Hash::Signature_with_Hash(std::string_view hash) :
       Signature(), m_hash(create_signature_hash(hash)) {}
 
+PK_Ops::Signature_with_Hash::~Signature_with_Hash() = default;
+
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
 std::string PK_Ops::Signature_with_Hash::rfc6979_hash_function() const {
    std::string hash = m_hash->name();
@@ -128,6 +140,10 @@ std::string PK_Ops::Signature_with_Hash::rfc6979_hash_function() const {
    return "SHA-512";
 }
 #endif
+
+std::string PK_Ops::Signature_with_Hash::hash_function() const {
+   return m_hash->name();
+}
 
 void PK_Ops::Signature_with_Hash::update(std::span<const uint8_t> msg) {
    m_hash->update(msg);
@@ -140,6 +156,12 @@ std::vector<uint8_t> PK_Ops::Signature_with_Hash::sign(RandomNumberGenerator& rn
 
 PK_Ops::Verification_with_Hash::Verification_with_Hash(std::string_view padding) :
       Verification(), m_hash(create_signature_hash(padding)) {}
+
+PK_Ops::Verification_with_Hash::~Verification_with_Hash() = default;
+
+std::string PK_Ops::Verification_with_Hash::hash_function() const {
+   return m_hash->name();
+}
 
 PK_Ops::Verification_with_Hash::Verification_with_Hash(const AlgorithmIdentifier& alg_id,
                                                        std::string_view pk_algo,
@@ -208,6 +230,8 @@ PK_Ops::KEM_Encryption_with_KDF::KEM_Encryption_with_KDF(std::string_view kdf) {
    }
 }
 
+PK_Ops::KEM_Encryption_with_KDF::~KEM_Encryption_with_KDF() = default;
+
 size_t PK_Ops::KEM_Decryption_with_KDF::shared_key_length(size_t desired_shared_key_len) const {
    if(m_kdf) {
       return desired_shared_key_len;
@@ -240,5 +264,7 @@ PK_Ops::KEM_Decryption_with_KDF::KEM_Decryption_with_KDF(std::string_view kdf) {
       m_kdf = KDF::create_or_throw(kdf);
    }
 }
+
+PK_Ops::KEM_Decryption_with_KDF::~KEM_Decryption_with_KDF() = default;
 
 }  // namespace Botan

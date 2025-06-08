@@ -8,6 +8,7 @@
 
 #include <botan/pkix_types.h>
 #include <botan/x509cert.h>
+#include <botan/internal/target_info.h>
 
 #if defined(BOTAN_HAS_CERTSTOR_MACOS)
    #include <botan/certstor_macos.h>

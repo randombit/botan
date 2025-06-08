@@ -9,6 +9,7 @@
 #define BOTAN_CAMELLIA_H_
 
 #include <botan/block_cipher.h>
+#include <botan/secmem.h>
 
 namespace Botan {
 
@@ -23,6 +24,8 @@ class Camellia_128 final : public Block_Cipher_Fixed_Params<16, 16> {
       void clear() override;
 
       std::string name() const override { return "Camellia-128"; }
+
+      std::string provider() const override;
 
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Camellia_128>(); }
 
@@ -46,6 +49,8 @@ class Camellia_192 final : public Block_Cipher_Fixed_Params<16, 24> {
 
       std::string name() const override { return "Camellia-192"; }
 
+      std::string provider() const override;
+
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Camellia_192>(); }
 
       bool has_keying_material() const override;
@@ -67,6 +72,8 @@ class Camellia_256 final : public Block_Cipher_Fixed_Params<16, 32> {
       void clear() override;
 
       std::string name() const override { return "Camellia-256"; }
+
+      std::string provider() const override;
 
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Camellia_256>(); }
 

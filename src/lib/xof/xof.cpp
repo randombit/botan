@@ -7,6 +7,8 @@
 */
 
 #include <botan/xof.h>
+
+#include <botan/assert.h>
 #include <botan/internal/scan_name.h>
 
 #if defined(BOTAN_HAS_SHAKE_XOF)

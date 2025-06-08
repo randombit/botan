@@ -25,3 +25,7 @@ default -> "false"
 <binary_link_commands>
 default -> "{cxx}"
 </binary_link_commands>
+
+<ct_value_barrier>
+default -> asm
+</ct_value_barrier>

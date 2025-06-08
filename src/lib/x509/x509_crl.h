@@ -11,6 +11,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/pkix_enums.h>
 #include <botan/x509_obj.h>
+#include <memory>
 #include <vector>
 
 namespace Botan {
@@ -100,6 +101,12 @@ class BOTAN_PUBLIC_API(2, 0) X509_CRL final : public X509_Object {
       const std::vector<CRL_Entry>& get_revoked() const;
 
       /**
+      * Get the X509 version of this CRL object
+      * @return X509 version
+      */
+      uint32_t x509_version() const;
+
+      /**
       * Get the issuer DN of this CRL.
       * @return CRLs issuer DN
       */
@@ -130,7 +137,14 @@ class BOTAN_PUBLIC_API(2, 0) X509_CRL final : public X509_Object {
 
       /**
       * Get the CRL's nextUpdate value.
-      * @return CRLs nextdUpdate
+      *
+      * Technically nextUpdate is optional in the X.509 spec and may be omitted,
+      * despite RFC 5280 requiring it. If the nextUpdate field is not set, this
+      * will return a time object with time_is_set() returning false.
+      *
+      * TODO(Botan4) return a `const std::optional<X509_Time>&` instead
+      *
+      * @return CRLs nextUpdate
       */
       const X509_Time& next_update() const;
 

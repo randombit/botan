@@ -39,3 +39,9 @@ default   -> address
 address   -> "-fsanitize=address"
 undefined -> "-fsanitize=undefined -fno-sanitize-recover=undefined"
 </sanitizers>
+
+# Modern XLC is based on Clang so we assume it can perform Clang-like
+# optimizations that harm constant time code
+<ct_value_barrier>
+default -> asm
+</ct_value_barrier>

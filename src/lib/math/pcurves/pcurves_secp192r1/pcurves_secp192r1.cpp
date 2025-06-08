@@ -57,10 +57,7 @@ class Secp192r1Rep final {
 
          BOTAN_DEBUG_ASSERT(S <= 3);
 
-         const auto correction = p192_mul_mod_192(S);
-         W borrow = bigint_sub2(r.data(), N, correction.data(), N);
-
-         bigint_cnd_add(borrow, r.data(), N, P.data(), N);
+         bigint_correct_redc<N>(r, P, p192_mul_mod_192(S));
 
          return r;
       }
@@ -108,7 +105,44 @@ class Params final : public EllipticCurveParameters<
 
 // clang-format on
 
-class Curve final : public EllipticCurve<Params, Secp192r1Rep> {};
+class Curve final : public EllipticCurve<Params, Secp192r1Rep> {
+   public:
+      // Return the square of the inverse of x
+      static constexpr FieldElement fe_invert2(const FieldElement& x) {
+         // Generated using https://github.com/mmcloughlin/addchain
+         auto z = x.square();
+         z *= x;
+         auto t0 = z.square();
+         t0 *= x;
+         auto t2 = t0.square();
+         auto t1 = t2.square();
+         auto t3 = t1;
+         t3.square_n(3);
+         t1 *= t3;
+         t3 = t1;
+         t3.square_n(2);
+         t2 *= t3;
+         t2.square_n(7);
+         t1 *= t2;
+         t2 = t1;
+         t2.square_n(15);
+         t1 *= t2;
+         t2 = t1;
+         t2.square_n(30);
+         t1 *= t2;
+         z *= t1;
+         t1 = z;
+         t1.square_n(3);
+         t2 = t1;
+         t2.square_n(62);
+         t1 *= t2;
+         t0 *= t1;
+         t0.square_n(63);
+         z *= t0;
+         z.square_n(2);
+         return z;
+      }
+};
 
 }  // namespace secp192r1
 

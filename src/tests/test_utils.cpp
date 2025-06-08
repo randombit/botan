@@ -11,15 +11,22 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/calendar.h>
 #include <botan/internal/charset.h>
-#include <botan/internal/cpuid.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/target_info.h>
+#include <botan/internal/version_info.h>
+
+#include <bit>
 #include <ctime>
 #include <functional>
+
+#if defined(BOTAN_HAS_CPUID)
+   #include <botan/internal/cpuid.h>
+#endif
 
 #if defined(BOTAN_HAS_POLY_DBL)
    #include <botan/internal/poly_dbl.h>
@@ -470,25 +477,25 @@ class Utility_Function_Tests final : public Test {
 
       template <std::unsigned_integral T>
       static T fb_load_be(std::array<const uint8_t, sizeof(T)> in) {
-         return Botan::detail::fallback_load_any<Botan::detail::Endianness::Big, T>(in);
+         return Botan::detail::fallback_load_any<std::endian::big, T>(in);
       }
 
       template <std::unsigned_integral T>
       static T fb_load_le(std::array<const uint8_t, sizeof(T)> in) {
-         return Botan::detail::fallback_load_any<Botan::detail::Endianness::Little, T>(in);
+         return Botan::detail::fallback_load_any<std::endian::little, T>(in);
       }
 
       template <std::unsigned_integral T>
       static decltype(auto) fb_store_be(const T in) {
          std::array<uint8_t, sizeof(T)> out;
-         Botan::detail::fallback_store_any<Botan::detail::Endianness::Big, T>(in, out);
+         Botan::detail::fallback_store_any<std::endian::big, T>(in, out);
          return out;
       }
 
       template <std::unsigned_integral T>
       static decltype(auto) fb_store_le(const T in) {
          std::array<uint8_t, sizeof(T)> out;
-         Botan::detail::fallback_store_any<Botan::detail::Endianness::Little, T>(in, out);
+         Botan::detail::fallback_store_any<std::endian::little, T>(in, out);
          return out;
       }
 
@@ -776,6 +783,8 @@ class BitOps_Tests final : public Test {
          results.push_back(test_power_of_2());
          results.push_back(test_ctz());
          results.push_back(test_sig_bytes());
+         results.push_back(test_popcount());
+         results.push_back(test_reverse_bits());
 
          return results;
       }
@@ -851,6 +860,76 @@ class BitOps_Tests final : public Test {
 
          return result;
       }
+
+      template <typename T>
+      auto pc(T val) -> decltype(Botan::ct_popcount(val)) {
+         return Botan::ct_popcount(val);
+      }
+
+      template <typename T>
+      auto random_pc(Test::Result& result) {
+         auto n = Botan::load_le<T>(Test::rng().random_array<sizeof(T)>());
+         result.test_is_eq<size_t>(Botan::fmt("popcount({}) == {}", n, std::popcount(n)), pc(n), std::popcount(n));
+      }
+
+      Test::Result test_popcount() {
+         Test::Result result("popcount");
+
+         result.test_is_eq<uint8_t>("popcount<uint8_t>(0)", pc<uint8_t>(0), 0);
+         result.test_is_eq<uint8_t>("popcount<uint16_t>(0)", pc<uint16_t>(0), 0);
+         result.test_is_eq<uint8_t>("popcount<uint32_t>(0)", pc<uint32_t>(0), 0);
+         result.test_is_eq<uint8_t>("popcount<uint64_t>(0)", pc<uint64_t>(0), 0);
+
+         result.test_is_eq<uint8_t>("popcount<uint8_t>(1)", pc<uint8_t>(1), 1);
+         result.test_is_eq<uint8_t>("popcount<uint16_t>(1)", pc<uint16_t>(1), 1);
+         result.test_is_eq<uint8_t>("popcount<uint32_t>(1)", pc<uint32_t>(1), 1);
+         result.test_is_eq<uint8_t>("popcount<uint64_t>(1)", pc<uint64_t>(1), 1);
+
+         result.test_is_eq<uint8_t>("popcount<uint8_t>(0xAA)", pc<uint8_t>(0xAA), 4);
+         result.test_is_eq<uint8_t>("popcount<uint16_t>(0xAAAA)", pc<uint16_t>(0xAAAA), 8);
+         result.test_is_eq<uint8_t>("popcount<uint32_t>(0xAAAA...)", pc<uint32_t>(0xAAAAAAAA), 16);
+         result.test_is_eq<uint8_t>("popcount<uint64_t>(0xAAAA...)", pc<uint64_t>(0xAAAAAAAAAAAAAAAA), 32);
+
+         result.test_is_eq<uint8_t>("popcount<uint8_t>(0xFF)", pc<uint8_t>(0xFF), 8);
+         result.test_is_eq<uint8_t>("popcount<uint16_t>(0xFFFF)", pc<uint16_t>(0xFFFF), 16);
+         result.test_is_eq<uint8_t>("popcount<uint32_t>(0xFFFF...)", pc<uint32_t>(0xFFFFFFFF), 32);
+         result.test_is_eq<uint8_t>("popcount<uint64_t>(0xFFFF...)", pc<uint64_t>(0xFFFFFFFFFFFFFFFF), 64);
+
+         random_pc<uint8_t>(result);
+         random_pc<uint16_t>(result);
+         random_pc<uint32_t>(result);
+         random_pc<uint64_t>(result);
+
+         return result;
+      }
+
+      Test::Result test_reverse_bits() {
+         Test::Result result("reverse_bits");
+
+         result.test_is_eq<uint8_t>("rev(0u8)", Botan::ct_reverse_bits<uint8_t>(0b00000000), 0b00000000);
+         result.test_is_eq<uint8_t>("rev(1u8)", Botan::ct_reverse_bits<uint8_t>(0b01010101), 0b10101010);
+         result.test_is_eq<uint8_t>("rev(2u8)", Botan::ct_reverse_bits<uint8_t>(0b01001011), 0b11010010);
+
+         result.test_is_eq<uint16_t>(
+            "rev(0u16)", Botan::ct_reverse_bits<uint16_t>(0b0000000000000000), 0b0000000000000000);
+         result.test_is_eq<uint16_t>(
+            "rev(1u16)", Botan::ct_reverse_bits<uint16_t>(0b0101010101010101), 0b1010101010101010);
+         result.test_is_eq<uint16_t>(
+            "rev(2u16)", Botan::ct_reverse_bits<uint16_t>(0b0100101101011010), 0b0101101011010010);
+
+         result.test_is_eq<uint32_t>("rev(0u32)", Botan::ct_reverse_bits<uint32_t>(0xFFFFFFFF), 0xFFFFFFFF);
+         result.test_is_eq<uint32_t>("rev(1u32)", Botan::ct_reverse_bits<uint32_t>(0x55555555), 0xAAAAAAAA);
+         result.test_is_eq<uint32_t>("rev(2u32)", Botan::ct_reverse_bits<uint32_t>(0x4B6A2C1D), 0xB83456D2);
+
+         result.test_is_eq<uint64_t>(
+            "rev(0u64)", Botan::ct_reverse_bits<uint64_t>(0xF0E0D0C005040302), 0x40C020A0030B070F);
+         result.test_is_eq<uint64_t>(
+            "rev(1u64)", Botan::ct_reverse_bits<uint64_t>(0x5555555555555555), 0xAAAAAAAAAAAAAAAA);
+         result.test_is_eq<uint64_t>(
+            "rev(2u64)", Botan::ct_reverse_bits<uint64_t>(0x4B6A2C1D5E7F8A90), 0x951FE7AB83456D2);
+
+         return result;
+      }
 };
 
 BOTAN_REGISTER_TEST("utils", "bit_ops", BitOps_Tests);
@@ -893,15 +972,11 @@ class Version_Tests final : public Test {
          std::string sversion_str = Botan::short_version_string();
          result.test_eq("Same short version string", sversion_str, std::string(sversion_cstr));
 
-         std::string expected_sversion = std::to_string(BOTAN_VERSION_MAJOR) + "." +
-                                         std::to_string(BOTAN_VERSION_MINOR) + "." +
-                                         std::to_string(BOTAN_VERSION_PATCH);
+         const auto expected_sversion =
+            Botan::fmt("{}.{}.{}", BOTAN_VERSION_MAJOR, BOTAN_VERSION_MINOR, BOTAN_VERSION_PATCH);
 
-#if defined(BOTAN_VERSION_SUFFIX)
-         expected_sversion += BOTAN_VERSION_SUFFIX_STR;
-#endif
-
-         result.test_eq("Short version string has expected format", sversion_str, expected_sversion);
+         // May have a suffix eg 4.0.0-rc2
+         result.confirm("Short version string has expected format", sversion_str.starts_with(expected_sversion));
 
          const std::string version_check_ok =
             Botan::runtime_version_check(BOTAN_VERSION_MAJOR, BOTAN_VERSION_MINOR, BOTAN_VERSION_PATCH);
@@ -1037,6 +1112,39 @@ class Hostname_Tests final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("utils", "hostname", Hostname_Tests);
 
+class DNS_Check_Tests final : public Text_Based_Test {
+   public:
+      DNS_Check_Tests() : Text_Based_Test("utils/dns.vec", "DNS") {}
+
+      Test::Result run_one_test(const std::string& type, const VarMap& vars) override {
+         Test::Result result("DNS name validation");
+
+         const std::string name = vars.get_req_str("DNS");
+         const bool valid = (type == "Invalid") ? false : true;
+
+         try {
+            const auto canonicalized = Botan::check_and_canonicalize_dns_name(name);
+            BOTAN_UNUSED(canonicalized);
+
+            if(valid) {
+               result.test_success("Accepted valid name");
+            } else {
+               result.test_failure("Accepted invalid name");
+            }
+         } catch(Botan::Decoding_Error&) {
+            if(valid) {
+               result.test_failure("Rejected valid name");
+            } else {
+               result.test_success("Rejected invalid name");
+            }
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("utils", "dns_check", DNS_Check_Tests);
+
 class IPv4_Parsing_Tests final : public Text_Based_Test {
    public:
       IPv4_Parsing_Tests() : Text_Based_Test("utils/ipv4.vec", "IPv4") {}
@@ -1127,42 +1235,61 @@ class ReadKV_Tests final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("utils", "util_read_kv", ReadKV_Tests);
 
+#if defined(BOTAN_HAS_CPUID)
+
 class CPUID_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("CPUID");
 
-         result.confirm("Endian is either little or big",
-                        Botan::CPUID::is_big_endian() || Botan::CPUID::is_little_endian());
-
-         if(Botan::CPUID::is_little_endian()) {
-            result.test_eq("If endian is little, it is not also big endian", Botan::CPUID::is_big_endian(), false);
-         } else {
-            result.test_eq("If endian is big, it is not also little endian", Botan::CPUID::is_little_endian(), false);
-         }
-
          const std::string cpuid_string = Botan::CPUID::to_string();
          result.test_success("CPUID::to_string doesn't crash");
 
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+         for(size_t b = 0; b != 32; ++b) {
+            try {
+               const auto bit = static_cast<uint32_t>(1) << b;
+               const auto feat = Botan::CPUID::Feature(static_cast<Botan::CPUID::Feature::Bit>(bit));
 
-         if(Botan::CPUID::has_sse2()) {
+               const std::string feat_str = feat.to_string();
+
+               result.confirm("Feature string is not empty", !feat_str.empty());
+
+               if(auto from_str = Botan::CPUID::Feature::from_string(feat_str)) {
+                  result.test_int_eq("Feature::from_string returns expected bit", from_str->as_u32(), bit);
+               } else {
+                  result.test_failure(
+                     Botan::fmt("Feature::from_string didn't recognize its own output ({})", feat_str));
+               }
+            } catch(Botan::Invalid_State&) {
+               // This will thrown if the bit is not a valid one
+            }
+         }
+
+   #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+
+         const auto bit = Botan::CPUID::Feature::SSE2;
+
+         if(Botan::CPUID::has(bit)) {
             result.confirm("Output string includes sse2", cpuid_string.find("sse2") != std::string::npos);
 
-            Botan::CPUID::clear_cpuid_bit(Botan::CPUID::CPUID_SSE2_BIT);
+            Botan::CPUID::clear_cpuid_bit(bit);
 
-            result.test_eq("After clearing cpuid bit, has_sse2 returns false", Botan::CPUID::has_sse2(), false);
+            result.test_eq(
+               "After clearing cpuid bit, CPUID::has for SSE2 returns false", Botan::CPUID::has(bit), false);
 
             Botan::CPUID::initialize();  // reset state
-            result.test_eq("After reinitializing, has_sse2 returns true", Botan::CPUID::has_sse2(), true);
+            result.test_eq(
+               "After reinitializing, CPUID::has for SSE2 returns true again", Botan::CPUID::has(bit), true);
          }
-#endif
+   #endif
 
          return {result};
       }
 };
 
 BOTAN_REGISTER_SERIALIZED_TEST("utils", "cpuid", CPUID_Tests);
+
+#endif
 
 #if defined(BOTAN_HAS_UUID)
 

@@ -7,6 +7,7 @@
 
 #include <botan/internal/commoncrypto.h>
 
+#include <botan/block_cipher.h>
 #include <botan/cipher_mode.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/commoncrypto_utils.h>
@@ -139,7 +140,7 @@ size_t CommonCrypto_Cipher_Mode::update_granularity() const {
 }
 
 size_t CommonCrypto_Cipher_Mode::ideal_granularity() const {
-   return m_opts.block_size * BOTAN_BLOCK_CIPHER_PAR_MULT;
+   return m_opts.block_size * BlockCipher::ParallelismMult;
 }
 
 size_t CommonCrypto_Cipher_Mode::minimum_final_size() const {

@@ -7,19 +7,19 @@
 #ifndef BOTAN_PCURVES_H_
 #define BOTAN_PCURVES_H_
 
-#include <botan/internal/pcurves_id.h>
-
 #include <botan/concepts.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <array>
+#include <functional>
+#include <memory>
 #include <optional>
 #include <span>
 #include <string_view>
-#include <vector>
 
 namespace Botan {
 
+class BigInt;
 class RandomNumberGenerator;
 
 }  // namespace Botan
@@ -29,27 +29,32 @@ namespace Botan::PCurve {
 /**
 * An elliptic curve without cofactor in Weierstrass form
 */
-class BOTAN_TEST_API PrimeOrderCurve {
+class PrimeOrderCurve {
    public:
       /// Somewhat arbitrary maximum size for a field or scalar
       ///
       /// Sized to fit at least P-521
-      static const size_t MaximumBitLength = 521;
+      static constexpr size_t MaximumBitLength = 521;
 
-      static const size_t MaximumByteLength = (MaximumBitLength + 7) / 8;
+      static constexpr size_t MaximumByteLength = (MaximumBitLength + 7) / 8;
 
       /// Number of words used to store MaximumByteLength
-      static const size_t StorageWords = (MaximumByteLength + sizeof(word) - 1) / sizeof(word);
+      static constexpr size_t StorageWords = (MaximumByteLength + sizeof(word) - 1) / sizeof(word);
 
-      static std::shared_ptr<const PrimeOrderCurve> from_name(std::string_view name) {
-         if(auto id = PrimeOrderCurveId::from_string(name)) {
-            return PrimeOrderCurve::from_id(id.value());
-         } else {
-            return {};
-         }
-      }
+      /// @returns nullptr if the curve specified is not available
+      static std::shared_ptr<const PrimeOrderCurve> for_named_curve(std::string_view name);
 
-      static std::shared_ptr<const PrimeOrderCurve> from_id(PrimeOrderCurveId id);
+      /// @returns nullptr if the parameters seem unsuitable for pcurves
+      /// for example if the prime is too large
+      ///
+      /// This function *should* accept the same subset of curves as
+      /// the EC_Group constructor that accepts BigInts.
+      static std::shared_ptr<const PrimeOrderCurve> from_params(const BigInt& p,
+                                                                const BigInt& a,
+                                                                const BigInt& b,
+                                                                const BigInt& base_x,
+                                                                const BigInt& base_y,
+                                                                const BigInt& order);
 
       typedef std::array<word, StorageWords> StorageUnit;
       typedef std::shared_ptr<const PrimeOrderCurve> CurvePtr;
@@ -65,63 +70,6 @@ class BOTAN_TEST_API PrimeOrderCurve {
             Scalar& operator=(const Scalar& other) = default;
             Scalar& operator=(Scalar&& other) = default;
             ~Scalar() = default;
-
-            /**
-            * Return the size of the byte encoding of Scalars
-            */
-            size_t bytes() const { return m_curve->scalar_bytes(); }
-
-            /**
-            * Return the fixed length serialization of this scalar
-            */
-            template <concepts::resizable_byte_buffer T = std::vector<uint8_t>>
-            T serialize() const {
-               T bytes(this->bytes());
-               m_curve->serialize_scalar(bytes, *this);
-               return bytes;
-            }
-
-            /**
-            * Perform integer multiplication modulo the group order
-            */
-            friend Scalar operator*(const Scalar& a, const Scalar& b) { return a.m_curve->scalar_mul(a, b); }
-
-            /**
-            * Perform integer addition modulo the group order
-            */
-            friend Scalar operator+(const Scalar& a, const Scalar& b) { return a.m_curve->scalar_add(a, b); }
-
-            /**
-            * Perform integer subtraction modulo the group order
-            */
-            friend Scalar operator-(const Scalar& a, const Scalar& b) { return a.m_curve->scalar_sub(a, b); }
-
-            /**
-            * Check for equality
-            */
-            friend bool operator==(const Scalar& a, const Scalar& b) { return a.m_curve->scalar_equal(a, b); }
-
-            /**
-            * Negate modulo the group order (ie return p - *this where p is the group order)
-            */
-            Scalar negate() const { return m_curve->scalar_negate(*this); }
-
-            /**
-            * Square modulo the group order
-            */
-            Scalar square() const { return m_curve->scalar_square(*this); }
-
-            /**
-            * Return the modular inverse of *this
-            *
-            * If *this is zero then returns zero.
-            */
-            Scalar invert() const { return m_curve->scalar_invert(*this); }
-
-            /**
-            * Returns true if this is equal to zero
-            */
-            bool is_zero() const { return m_curve->scalar_is_zero(*this); }
 
             const auto& _curve() const { return m_curve; }
 
@@ -150,51 +98,6 @@ class BOTAN_TEST_API PrimeOrderCurve {
             ~AffinePoint() = default;
 
             static AffinePoint generator(CurvePtr curve) { return curve->generator(); }
-
-            /**
-            * Return the size of the uncompressed encoding of points
-            */
-            size_t bytes() const { return 1 + 2 * m_curve->field_element_bytes(); }
-
-            /**
-            * Return the size of the compressed encoding of points
-            */
-            size_t compressed_bytes() const { return 1 + m_curve->field_element_bytes(); }
-
-            /**
-            * Return the serialization of the point in uncompressed form
-            */
-            template <concepts::resizable_byte_buffer T = std::vector<uint8_t>>
-            T serialize() const {
-               T bytes(this->bytes());
-               m_curve->serialize_point(bytes, *this);
-               return bytes;
-            }
-
-            /**
-            * Return the serialization of the point in compressed form
-            */
-            template <concepts::resizable_byte_buffer T = std::vector<uint8_t>>
-            T serialize_compressed() const {
-               T bytes(this->compressed_bytes());
-               m_curve->serialize_point_compressed(bytes, *this);
-               return bytes;
-            }
-
-            /**
-            * Return the serialization of the x coordinate
-            */
-            template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
-            T x_bytes() const {
-               secure_vector<uint8_t> bytes(m_curve->field_element_bytes());
-               m_curve->serialize_point_x(bytes, *this);
-               return bytes;
-            }
-
-            /**
-            * Return true if this is the curve identity element (aka the point at infinity)
-            */
-            bool is_identity() const { return m_curve->affine_point_is_identity(*this); }
 
             const auto& _curve() const { return m_curve; }
 
@@ -227,31 +130,6 @@ class BOTAN_TEST_API PrimeOrderCurve {
             ProjectivePoint& operator=(const ProjectivePoint& other) = default;
             ProjectivePoint& operator=(ProjectivePoint&& other) = default;
             ~ProjectivePoint() = default;
-
-            /**
-            * Convert a point from affine to projective form
-            */
-            static ProjectivePoint from_affine(const AffinePoint& pt) { return pt._curve()->point_to_projective(pt); }
-
-            /**
-            * Convert a point from projective to affine form
-            *
-            * This operation is expensive; perform it only when required for
-            * serialization
-            */
-            AffinePoint to_affine() const { return m_curve->point_to_affine(*this); }
-
-            ProjectivePoint dbl() const { return m_curve->point_double(*this); }
-
-            ProjectivePoint negate() const { return m_curve->point_negate(*this); }
-
-            friend ProjectivePoint operator+(const ProjectivePoint& x, const ProjectivePoint& y) {
-               return x.m_curve->point_add(x, y);
-            }
-
-            friend ProjectivePoint operator+(const ProjectivePoint& x, const AffinePoint& y) {
-               return x.m_curve->point_add_mixed(x, y);
-            }
 
             const auto& _curve() const { return m_curve; }
 
@@ -310,29 +188,46 @@ class BOTAN_TEST_API PrimeOrderCurve {
       /// Multiply an arbitrary point by a scalar
       virtual ProjectivePoint mul(const AffinePoint& pt, const Scalar& scalar, RandomNumberGenerator& rng) const = 0;
 
-      /// Setup a table for 2-ary multiplication
-      virtual std::unique_ptr<const PrecomputedMul2Table> mul2_setup(const AffinePoint& pt1,
-                                                                     const AffinePoint& pt2) const = 0;
+      /// Generic x-only point multiplication
+      ///
+      /// Multiply an arbitrary point by a scalar, returning only the x coordinate
+      virtual secure_vector<uint8_t> mul_x_only(const AffinePoint& pt,
+                                                const Scalar& scalar,
+                                                RandomNumberGenerator& rng) const = 0;
+
+      /// Setup a table for 2-ary multiplication where the first point is the generator
+      virtual std::unique_ptr<const PrecomputedMul2Table> mul2_setup_g(const AffinePoint& q) const = 0;
 
       /// Perform 2-ary multiplication (variable time)
       ///
-      /// Compute s1*pt1 + s2*pt2 in variable time
+      /// Compute p*x + q*y in variable time
       ///
       /// Returns nullopt if the produced point is the point at infinity
       virtual std::optional<ProjectivePoint> mul2_vartime(const PrecomputedMul2Table& table,
-                                                          const Scalar& s1,
-                                                          const Scalar& s2) const = 0;
+                                                          const Scalar& x,
+                                                          const Scalar& y) const = 0;
+
+      /// Perform 2-ary multiplication (constant time)
+      ///
+      /// Compute p*x + q*y
+      ///
+      /// Returns nullopt if the produced point is the point at infinity
+      virtual std::optional<ProjectivePoint> mul_px_qy(const AffinePoint& p,
+                                                       const Scalar& x,
+                                                       const AffinePoint& q,
+                                                       const Scalar& y,
+                                                       RandomNumberGenerator& rng) const = 0;
 
       /// Perform 2-ary multiplication (variable time), reducing x modulo order
       ///
-      /// Compute s1*pt1 + s2*pt2 in variable time, then extract the x
-      /// coordinate of the result, and reduce x modulo the group order. Compare
-      /// that value with v. If equal, returns true. Otherwise returns false,
-      /// including if the produced point is the point at infinity
+      /// Compute p*x + q*y in variable time, then extract the x coordinate of
+      /// the result, and reduce x modulo the group order. Compare that value
+      /// with v. If equal, returns true. Otherwise returns false, including if
+      /// the produced point is the point at infinity
       virtual bool mul2_vartime_x_mod_order_eq(const PrecomputedMul2Table& table,
                                                const Scalar& v,
-                                               const Scalar& s1,
-                                               const Scalar& s2) const = 0;
+                                               const Scalar& x,
+                                               const Scalar& y) const = 0;
 
       /// Return the standard generator
       virtual AffinePoint generator() const = 0;
@@ -344,11 +239,14 @@ class BOTAN_TEST_API PrimeOrderCurve {
       /// Note that the deprecated "hybrid" encoding is not supported here
       virtual std::optional<AffinePoint> deserialize_point(std::span<const uint8_t> bytes) const = 0;
 
-      /// Deserialize a scalar
+      /// Deserialize a scalar in [1,p)
       ///
       /// This function requires the input length be exactly scalar_bytes long;
       /// it does not accept inputs that are shorter, or with excess leading
       /// zero padding bytes.
+      ///
+      /// This function also rejects zero as an input, since in normal usage
+      /// scalars are integers in Z_p*
       virtual std::optional<Scalar> deserialize_scalar(std::span<const uint8_t> bytes) const = 0;
 
       /// Reduce an integer modulo the group order
@@ -359,48 +257,46 @@ class BOTAN_TEST_API PrimeOrderCurve {
 
       virtual AffinePoint point_to_affine(const ProjectivePoint& pt) const = 0;
 
-      virtual ProjectivePoint point_to_projective(const AffinePoint& pt) const = 0;
-
       virtual bool affine_point_is_identity(const AffinePoint& pt) const = 0;
 
-      virtual ProjectivePoint point_double(const ProjectivePoint& pt) const = 0;
+      virtual AffinePoint point_negate(const AffinePoint& pt) const = 0;
 
-      virtual ProjectivePoint point_negate(const ProjectivePoint& pt) const = 0;
-
-      virtual ProjectivePoint point_add(const ProjectivePoint& a, const ProjectivePoint& b) const = 0;
-
-      virtual ProjectivePoint point_add_mixed(const ProjectivePoint& a, const AffinePoint& b) const = 0;
+      virtual ProjectivePoint point_add(const AffinePoint& a, const AffinePoint& b) const = 0;
 
       virtual void serialize_point(std::span<uint8_t> bytes, const AffinePoint& pt) const = 0;
 
-      virtual void serialize_point_compressed(std::span<uint8_t> bytes, const AffinePoint& pt) const = 0;
-
-      virtual void serialize_point_x(std::span<uint8_t> bytes, const AffinePoint& pt) const = 0;
-
       virtual void serialize_scalar(std::span<uint8_t> bytes, const Scalar& scalar) const = 0;
-
-      /**
-      * Return the scalar zero
-      */
-      virtual Scalar scalar_zero() const = 0;
 
       /**
       * Return the scalar one
       */
       virtual Scalar scalar_one() const = 0;
 
-      /**
-      * Return a small scalar
-      */
-      virtual Scalar scalar_from_u32(uint32_t x) const = 0;
-
+      /// Scalar addition
       virtual Scalar scalar_add(const Scalar& a, const Scalar& b) const = 0;
+
+      /// Scalar subtraction
       virtual Scalar scalar_sub(const Scalar& a, const Scalar& b) const = 0;
+
+      /// Scalar multiplication
       virtual Scalar scalar_mul(const Scalar& a, const Scalar& b) const = 0;
+
+      /// Scalar squaring
       virtual Scalar scalar_square(const Scalar& s) const = 0;
+
+      /// Scalar inversion
       virtual Scalar scalar_invert(const Scalar& s) const = 0;
+
+      /// Scalar inversion (variable time)
+      virtual Scalar scalar_invert_vartime(const Scalar& s) const = 0;
+
+      /// Scalar negation
       virtual Scalar scalar_negate(const Scalar& s) const = 0;
+
+      /// Test if scalar is zero
       virtual bool scalar_is_zero(const Scalar& s) const = 0;
+
+      /// Test if two scalars are equal
       virtual bool scalar_equal(const Scalar& a, const Scalar& b) const = 0;
 
       /**
@@ -412,19 +308,25 @@ class BOTAN_TEST_API PrimeOrderCurve {
       * RFC 9380 hash to curve (NU variant)
       *
       * This is currently only supported for a few specific curves
+      *
+      * @param expand_message is a callback which must fill the provided output
+      * span with a sequence of uniform bytes, or if this is not possible due to
+      * length limitations or some other issue, throw an exception. It is
+      * invoked to produce the `uniform_bytes` value; see RFC 9380 section 5.2
       */
-      virtual AffinePoint hash_to_curve_nu(std::string_view hash,
-                                           std::span<const uint8_t> input,
-                                           std::span<const uint8_t> domain_sep) const = 0;
+      virtual AffinePoint hash_to_curve_nu(std::function<void(std::span<uint8_t>)> expand_message) const = 0;
 
       /**
       * RFC 9380 hash to curve (RO variant)
       *
       * This is currently only supported for a few specific curves
+      *
+      * @param expand_message is a callback which must fill the provided output
+      * span with a sequence of uniform bytes, or if this is not possible due to
+      * length limitations or some other issue, throw an exception. It is
+      * invoked to produce the `uniform_bytes` value; see RFC 9380 section 5.2
       */
-      virtual ProjectivePoint hash_to_curve_ro(std::string_view hash,
-                                               std::span<const uint8_t> input,
-                                               std::span<const uint8_t> domain_sep) const = 0;
+      virtual ProjectivePoint hash_to_curve_ro(std::function<void(std::span<uint8_t>)> expand_message) const = 0;
 };
 
 }  // namespace Botan::PCurve

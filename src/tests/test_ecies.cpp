@@ -48,7 +48,8 @@ void check_encrypt_decrypt(Test::Result& result,
                            Botan::RandomNumberGenerator& rng) {
    try {
       Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, rng);
-      ecies_enc.set_other_key(other_private_key.public_point());
+      ecies_enc.set_other_key(
+         Botan::EC_AffinePoint(other_private_key.domain(), other_private_key.raw_public_key_bits()));
       Botan::ECIES_Decryptor ecies_dec(other_private_key, ecies_params, rng);
       if(!iv.bits_of().empty()) {
          ecies_enc.set_initialization_vector(iv);
@@ -76,12 +77,12 @@ void check_encrypt_decrypt(Test::Result& result,
    }
 }
 
-void check_encrypt_decrypt(Test::Result& result,
-                           const Botan::ECDH_PrivateKey& private_key,
-                           const Botan::ECDH_PrivateKey& other_private_key,
-                           const Botan::ECIES_System_Params& ecies_params,
-                           size_t iv_length,
-                           Botan::RandomNumberGenerator& rng) {
+[[maybe_unused]] void check_encrypt_decrypt(Test::Result& result,
+                                            const Botan::ECDH_PrivateKey& private_key,
+                                            const Botan::ECDH_PrivateKey& other_private_key,
+                                            const Botan::ECIES_System_Params& ecies_params,
+                                            size_t iv_length,
+                                            Botan::RandomNumberGenerator& rng) {
    const std::vector<uint8_t> plaintext{1, 2, 3};
    check_encrypt_decrypt(result,
                          private_key,
@@ -101,6 +102,10 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
       ECIES_ISO_Tests() : Text_Based_Test("pubkey/ecies-18033.vec", "format,p,a,b,Order,Gx,Gy,Oid,hx,hy,x,r,C0,K") {}
 
       bool clear_between_callbacks() const override { return false; }
+
+      bool skip_this_test(const std::string&, const VarMap&) override {
+         return !Botan::EC_Group::supports_application_specific_group();
+      }
 
       Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
          Test::Result result("ECIES-ISO");
@@ -125,13 +130,12 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
 
          // keys of bob
          const Botan::ECDH_PrivateKey other_private_key(this->rng(), domain, x);
-         const Botan::EC_Point other_public_key_point = domain.point(hx, hy);
+         const auto other_public_key_point = Botan::EC_AffinePoint::from_bigint_xy(domain, hx, hy).value();
          const Botan::ECDH_PublicKey other_public_key(domain, other_public_key_point);
 
          // (ephemeral) keys of alice
          const Botan::ECDH_PrivateKey eph_private_key(this->rng(), domain, r);
-         const Botan::EC_Point eph_public_key_point = eph_private_key.public_point();
-         const std::vector<uint8_t> eph_public_key_bin = eph_public_key_point.encode(compression_type);
+         const auto eph_public_key_bin = eph_private_key.public_value(compression_type);
          result.test_eq("encoded (ephemeral) public key", eph_public_key_bin, c0);
 
          // test secret derivation: ISO 18033 test vectors use KDF1 from ISO 18033
@@ -143,6 +147,8 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
          result.test_eq("derived secret key", secret_key.bits_of(), k);
 
          // test encryption / decryption
+
+         // TODO(Botan4) clean this up after removing cofactor support
 
          for(auto comp_type : {Botan::EC_Point_Format::Uncompressed,
                                Botan::EC_Point_Format::Compressed,
@@ -198,7 +204,32 @@ class ECIES_Tests final : public Text_Based_Test {
             Text_Based_Test("pubkey/ecies.vec",
                             "Curve,PrivateKey,OtherPrivateKey,Kdf,Dem,DemKeyLen,Mac,MacKeyLen,Format,"
                             "CofactorMode,OldCofactorMode,CheckMode,SingleHashMode,Label,Plaintext,Ciphertext",
-                            "Iv") {}
+                            "Iv") {
+         // In order to test cofactor handling flags some of the tests use secp112r2 which has a cofactor of 4
+         // TODO(Botan4) kill it with fire
+         if(Botan::EC_Group::supports_application_specific_group_with_cofactor()) {
+            auto p = Botan::BigInt::from_string("0xDB7C2ABF62E35E668076BEAD208B");
+            auto a = Botan::BigInt::from_string("0x6127C24C05F38A0AAAF65C0EF02C");
+            auto b = Botan::BigInt::from_string("0x51DEF1815DB5ED74FCC34C85D709");
+
+            auto g_x = Botan::BigInt::from_string("0x4BA30AB5E892B4E1649DD0928643");
+            auto g_y = Botan::BigInt::from_string("0xADCD46F5882E3747DEF36E956E97");
+            auto order = Botan::BigInt::from_string("0x36DF0AAFD8B8D7597CA10520D04B");
+            auto cofactor = Botan::BigInt::from_u64(4);
+            m_secp112r2 = std::make_unique<Botan::EC_Group>(p, a, b, g_x, g_y, order, cofactor);
+         }
+      }
+
+      bool skip_this_test(const std::string&, const VarMap& vars) override {
+         const auto curve = vars.get_req_str("Curve");
+
+         // TODO(Botan4) remove this since cofactors no longer supported
+         if(curve == "secp112r2") {
+            return !Botan::EC_Group::supports_application_specific_group_with_cofactor();
+         } else {
+            return !Botan::EC_Group::supports_named_group(curve);
+         }
+      }
 
       Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
          Test::Result result("ECIES");
@@ -223,10 +254,16 @@ class ECIES_Tests final : public Text_Based_Test {
 
          const Flags flags = ecies_flags(cofactor_mode, old_cofactor_mode, check_mode, single_hash_mode);
 
-         // This test uses a mix of named curves plus PEM, so we use the deprecated constructor atm
-         const Botan::EC_Group domain(curve);
-         const Botan::ECDH_PrivateKey private_key(this->rng(), domain, private_key_value);
-         const Botan::ECDH_PrivateKey other_private_key(this->rng(), domain, other_private_key_value);
+         const auto group = [&]() {
+            if(curve == "secp112r2") {
+               return *m_secp112r2;
+            } else {
+               return Botan::EC_Group::from_name(curve);
+            }
+         }();
+
+         const Botan::ECDH_PrivateKey private_key(this->rng(), group, private_key_value);
+         const Botan::ECDH_PrivateKey other_private_key(this->rng(), group, other_private_key_value);
 
          const Botan::ECIES_System_Params ecies_params(
             private_key.domain(), kdf, dem, dem_key_len, mac, mac_key_len, compression_type, flags);
@@ -235,6 +272,9 @@ class ECIES_Tests final : public Text_Based_Test {
 
          return result;
       }
+
+   private:
+      std::unique_ptr<Botan::EC_Group> m_secp112r2;
 };
 
 BOTAN_REGISTER_TEST("pubkey", "ecies", ECIES_Tests);

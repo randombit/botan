@@ -1,8 +1,9 @@
 <defines>
 EME_PKCS1v15 -> 20131128
 EME_PKCS1 -> 20190426
+PKCSV15_ENCRYPTION_PADDING -> 20250126
 </defines>
 
 <module_info>
-name -> "EME PKCS #1 v1.5"
+name -> "PKCS #1 v1.5 encryption padding"
 </module_info>

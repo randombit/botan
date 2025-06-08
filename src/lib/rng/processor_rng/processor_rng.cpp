@@ -8,8 +8,9 @@
 
 #include <botan/internal/cpuid.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/target_info.h>
 
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY) && !defined(BOTAN_USE_GCC_INLINE_ASM)
    #include <immintrin.h>
 #endif
 
@@ -107,9 +108,9 @@ hwrng_output read_hwrng() {
 //static
 bool Processor_RNG::available() {
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-   return CPUID::has_rdrand();
+   return CPUID::has(CPUID::Feature::RDRAND);
 #elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
-   return CPUID::has_darn_rng();
+   return CPUID::has(CPUID::Feature::DARN);
 #else
    return false;
 #endif
@@ -135,8 +136,8 @@ void Processor_RNG::fill_bytes_with_input(std::span<uint8_t> out, std::span<cons
       out = out.subspan(sizeof(hwrng_output));
    }
 
-   if(!out.empty())  // at most sizeof(hwrng_output)-1
-   {
+   if(!out.empty()) {
+      // at most sizeof(hwrng_output)-1 bytes left
       const hwrng_output r = read_hwrng();
       uint8_t hwrng_bytes[sizeof(hwrng_output)];
       store_le(r, hwrng_bytes);

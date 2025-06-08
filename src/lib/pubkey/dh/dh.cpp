@@ -21,10 +21,6 @@ DH_PublicKey::DH_PublicKey(const DL_Group& group, const BigInt& y) {
    m_public_key = std::make_shared<DL_PublicKey>(group, y);
 }
 
-std::vector<uint8_t> DH_PublicKey::public_value() const {
-   return m_public_key->public_key_as_bytes();
-}
-
 size_t DH_PublicKey::estimated_strength() const {
    return m_public_key->estimated_strength();
 }
@@ -46,7 +42,7 @@ AlgorithmIdentifier DH_PublicKey::algorithm_identifier() const {
 }
 
 std::vector<uint8_t> DH_PublicKey::raw_public_key_bits() const {
-   return public_value();
+   return m_public_key->public_key_as_bytes();
 }
 
 std::vector<uint8_t> DH_PublicKey::public_key_bits() const {
@@ -81,7 +77,7 @@ std::unique_ptr<Public_Key> DH_PrivateKey::public_key() const {
 }
 
 std::vector<uint8_t> DH_PrivateKey::public_value() const {
-   return DH_PublicKey::public_value();
+   return raw_public_key_bits();
 }
 
 secure_vector<uint8_t> DH_PrivateKey::private_key_bits() const {
@@ -110,13 +106,10 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
             m_key(key),
             m_key_bits(m_key->private_key().bits()),
             m_blinder(
-               m_key->group().get_p(),
+               m_key->group()._reducer_mod_p(),
                rng,
                [](const BigInt& k) { return k; },
-               [this](const BigInt& k) {
-                  const BigInt inv_k = inverse_mod(k, group().get_p());
-                  return powermod_x_p(inv_k);
-               }) {}
+               [this](const BigInt& k) { return powermod_x_p(group().inverse_mod_p(k)); }) {}
 
       size_t agreed_value_size() const override { return group().p_bytes(); }
 
@@ -128,7 +121,6 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
       BigInt powermod_x_p(const BigInt& v) const { return group().power_b_p(v, m_key->private_key(), m_key_bits); }
 
       std::shared_ptr<const DL_PrivateKey> m_key;
-      std::shared_ptr<const Montgomery_Params> m_monty_p;
       const size_t m_key_bits;
       Blinder m_blinder;
 };

@@ -1,0 +1,11 @@
+<defines>
+SLH_DSA_WITH_SHAKE -> 20240808
+</defines>
+
+<module_info>
+name -> "SLH-DSA (SHAKE)"
+</module_info>
+
+<requires>
+sphincsplus_shake_base
+</requires>

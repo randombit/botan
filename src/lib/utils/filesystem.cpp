@@ -7,7 +7,9 @@
 
 #include <botan/exceptn.h>
 
+#include <botan/assert.h>
 #include <botan/internal/filesystem.h>
+#include <botan/internal/target_info.h>
 #include <algorithm>
 #include <deque>
 #include <memory>

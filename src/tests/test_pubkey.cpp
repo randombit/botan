@@ -121,7 +121,7 @@ Test::Result PK_Signature_Generation_Test::run_one_test(const std::string& pad_h
    result.confirm("private key claims to support signatures",
                   privkey->supports_operation(Botan::PublicKeyOperation::Signature));
 
-   auto pubkey = Botan::X509::load_key(Botan::X509::BER_encode(*privkey));
+   auto pubkey = Botan::X509::load_key(Botan::X509::BER_encode(*privkey->public_key()));
 
    result.confirm("public key claims to support signatures",
                   pubkey->supports_operation(Botan::PublicKeyOperation::Signature));
@@ -273,6 +273,10 @@ std::vector<Test::Result> PK_Sign_Verify_DER_Test::run() {
    const std::string padding = m_padding;
 
    auto privkey = key();
+   if(!privkey) {
+      return {};
+   }
+   auto pubkey = privkey->public_key();
 
    Test::Result result(algo_name() + "/" + padding + " signature sign/verify using DER format");
 
@@ -284,7 +288,7 @@ std::vector<Test::Result> PK_Sign_Verify_DER_Test::run() {
          signer = std::make_unique<Botan::PK_Signer>(
             *privkey, this->rng(), padding, Botan::Signature_Format::DerSequence, provider);
          verifier =
-            std::make_unique<Botan::PK_Verifier>(*privkey, padding, Botan::Signature_Format::DerSequence, provider);
+            std::make_unique<Botan::PK_Verifier>(*pubkey, padding, Botan::Signature_Format::DerSequence, provider);
       } catch(Botan::Lookup_Error& e) {
          result.test_note("Skipping sign/verify with " + provider, e.what());
       }
@@ -303,6 +307,31 @@ std::vector<Test::Result> PK_Sign_Verify_DER_Test::run() {
             result.test_failure("verification threw exception", e.what());
          }
       }
+   }
+
+   // Below follows a regression test for a bug introduced in #4592 that caused
+   // an assertion in PK_Signer when setting the output format explicitly using
+   // signer.set_output_format(Signature_Format::DerSequence)
+   try {
+      auto signer = Botan::PK_Signer(*privkey, this->rng(), padding /*, not setting DerSequence here */);
+      auto verifier = Botan::PK_Verifier(*pubkey, padding /*, not setting DerSequence here */);
+
+      // Setting the in/out formats explicitly, to ensure that PK_Signer/Verifier
+      // handle their internal state properly and not run into an assertion.
+      signer.set_output_format(Botan::Signature_Format::DerSequence);
+      verifier.set_input_format(Botan::Signature_Format::DerSequence);
+
+      const auto sig = signer.sign_message(message, this->rng());
+      const auto verified = verifier.verify_message(message, sig);
+
+      result.confirm("signature checks out", verified);
+      if(test_random_invalid_sigs()) {
+         check_invalid_signatures(result, verifier, message, sig, this->rng());
+      }
+   } catch(const Botan::Lookup_Error&) {
+      result.test_note("Skipping sign/verify regression test");
+   } catch(const std::exception& e) {
+      result.test_failure("regresstion test verification failed", e.what());
    }
 
    return {result};
@@ -326,9 +355,7 @@ Test::Result PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_
    result.confirm("private key claims to support encryption",
                   privkey->supports_operation(Botan::PublicKeyOperation::Encryption));
 
-   // instead slice the private key to work around elgamal test inputs
-   //auto pubkey = Botan::X509::load_key(Botan::X509::BER_encode(*privkey));
-   Botan::Public_Key* pubkey = privkey.get();
+   auto pubkey = privkey->public_key();
 
    std::vector<std::unique_ptr<Botan::PK_Decryptor>> decryptors;
 
@@ -440,13 +467,13 @@ Test::Result PK_KEM_Test::run_one_test(const std::string& /*header*/, const VarM
    result.confirm("private key claims to support KEM",
                   privkey->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation));
 
-   const Botan::Public_Key& pubkey = *privkey;
+   auto pubkey = privkey->public_key();
 
    const size_t desired_key_len = K.size();
 
    std::unique_ptr<Botan::PK_KEM_Encryptor> enc;
    try {
-      enc = std::make_unique<Botan::PK_KEM_Encryptor>(pubkey, kdf);
+      enc = std::make_unique<Botan::PK_KEM_Encryptor>(*pubkey, kdf);
    } catch(Botan::Lookup_Error&) {
       result.test_note("Skipping due to missing KDF: " + kdf);
       return result;
@@ -510,11 +537,15 @@ Test::Result PK_Key_Agreement_Test::run_one_test(const std::string& header, cons
       try {
          kas = std::make_unique<Botan::PK_Key_Agreement>(*privkey, this->rng(), kdf, provider);
 
-         auto derived_key = kas->derive_key(key_len, pubkey).bits_of();
-         result.test_eq(provider, "agreement", derived_key, shared);
+         if(agreement_should_fail(header, vars)) {
+            result.test_throws("key agreement fails", [&] { kas->derive_key(key_len, pubkey); });
+         } else {
+            auto derived_key = kas->derive_key(key_len, pubkey).bits_of();
+            result.test_eq(provider, "agreement", derived_key, shared);
 
-         if(key_len == 0 && kdf == "Raw") {
-            result.test_eq("Expected size", derived_key.size(), kas->agreed_value_size());
+            if(key_len == 0 && kdf == "Raw") {
+               result.test_eq("Expected size", derived_key.size(), kas->agreed_value_size());
+            }
          }
       } catch(Botan::Lookup_Error&) {
          //result.test_note("Skipping key agreement with with " + provider);
@@ -576,22 +607,22 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
    std::vector<Test::Result> results;
 
    for(const auto& param : keygen_params()) {
-      const std::string report_name = algo_name() + (param.empty() ? param : " " + param);
+      const auto algo = algo_name(param);
+      const std::string report_name = Botan::fmt("{}{}", algo, (param.empty() ? param : " " + param));
 
       Test::Result result(report_name + " keygen");
 
-      const std::vector<std::string> providers = possible_providers(algo_name());
+      const std::vector<std::string> providers = possible_providers(algo);
 
       if(providers.empty()) {
-         result.note_missing("provider key generation " + algo_name());
+         result.note_missing("provider key generation " + algo);
       }
 
       result.start_timer();
       for(auto&& prov : providers) {
-         auto key_p = Botan::create_private_key(algo_name(), this->rng(), param, prov);
+         auto key_p = Botan::create_private_key(algo, this->rng(), param, prov);
 
          if(key_p == nullptr) {
-            result.test_failure("create_private_key returned null, should throw instead");
             continue;
          }
 
@@ -611,8 +642,8 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
                            oid.value().to_string(),
                            key.object_identifier().to_string());
          } else {
-            const bool exception = name == "Kyber" || name == "FrodoKEM" || name == "SPHINCS+";
-
+            const bool exception = name == "Kyber" || name == "ML-KEM" || name == "ML-DSA" || name == "SLH-DSA" ||
+                                   name == "FrodoKEM" || name == "SPHINCS+" || name == "ClassicMcEliece";
             if(!exception) {
                result.test_failure("Keys name " + name + " does not map to an OID");
             }
@@ -677,7 +708,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
 
          // Test PEM public key round trips OK
          try {
-            Botan::DataSource_Memory data_src(Botan::X509::PEM_encode(key));
+            Botan::DataSource_Memory data_src(Botan::X509::PEM_encode(*public_key));
             auto loaded = Botan::X509::load_key(data_src);
 
             result.confirm("recovered public key from private", loaded != nullptr);
@@ -692,7 +723,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
 
          // Test DER public key round trips OK
          try {
-            const auto ber = key.subject_public_key();
+            const auto ber = public_key->subject_public_key();
             Botan::DataSource_Memory data_src(ber);
             auto loaded = Botan::X509::load_key(data_src);
 
@@ -805,8 +836,10 @@ Test::Result PK_Key_Generation_Stability_Test::run_one_test(const std::string&, 
 
       try {
          auto key = Botan::create_private_key(algo_name(), *rng, key_param);
-         const auto key_bits = key->private_key_info();
-         result.test_eq("Generated key matched expected value", key_bits, expected_key);
+         if(key) {
+            const auto key_bits = key->private_key_info();
+            result.test_eq("Generated key matched expected value", key_bits, expected_key);
+         }
       } catch(Botan::Exception& e) {
          result.test_note("failed to create key", e.what());
       }
@@ -843,20 +876,28 @@ class PK_API_Sign_Test : public Text_Based_Test {
          }
          Test::Result result(test_name.str());
 
-         auto privkey = Botan::create_private_key(algorithm, this->rng(), algo_params, provider);
+         auto privkey = [&]() -> std::unique_ptr<Botan::Private_Key> {
+            try {
+               return Botan::create_private_key(algorithm, this->rng(), algo_params, provider);
+            } catch(Botan::Not_Implemented&) {}
+
+            return nullptr;
+         }();
+
          if(!privkey) {
             result.test_note(Botan::fmt(
                "Skipping Sign/verify API tests for {}({}) with provider {}", algorithm, algo_params, provider));
             return result;
          }
-         auto pubkey = Botan::X509::load_key(Botan::X509::BER_encode(*privkey));
+
+         auto pubkey = Botan::X509::load_key(Botan::X509::BER_encode(*privkey->public_key()));
          result.confirm("Storing and loading public key works", pubkey != nullptr);
 
          result.confirm("private key claims to support signatures",
                         privkey->supports_operation(Botan::PublicKeyOperation::Signature));
          result.confirm("public key claims to support signatures",
                         pubkey->supports_operation(Botan::PublicKeyOperation::Signature));
-         result.test_gt("Public key length must be greater than 0", privkey->key_length(), 0);
+         result.test_gt("Public key length must be greater than 0", pubkey->key_length(), 0);
          if(privkey->stateful_operation()) {
             result.confirm("A stateful key reports the number of remaining operations",
                            privkey->remaining_operations().has_value());
@@ -889,9 +930,50 @@ class PK_API_Sign_Test : public Text_Based_Test {
 
          return result;
       }
+
+      bool skip_this_test([[maybe_unused]] const std::string& header, const VarMap&) override {
+   #if !defined(BOTAN_HAS_SLH_DSA_WITH_SHA2)
+         if(header == "SLH-DSA") {
+            return true;
+         }
+   #endif
+         return false;
+      }
 };
 
 BOTAN_REGISTER_TEST("pubkey", "pk_api_sign", PK_API_Sign_Test);
+
+/**
+ * @brief Testing PK key decoding
+ */
+class PK_Key_Decoding_Test : public Text_Based_Test {
+   public:
+      PK_Key_Decoding_Test() : Text_Based_Test("pubkey/key_encoding.vec", "Key") {}
+
+   protected:
+      Test::Result run_one_test(const std::string&, const VarMap& vars) final {
+         const auto key = vars.get_req_bin("Key");
+
+         Test::Result result("PK Key Decoding");
+
+         try {
+            auto k = Botan::PKCS8::load_key(key);
+            result.test_success("Was able to deserialize the key");
+         } catch(Botan::Not_Implemented&) {
+            result.test_note("Skipping test due to to algorithm being unavailable");
+         } catch(Botan::Exception& e) {
+            if(std::string(e.what()).starts_with("Unknown or unavailable public key algorithm")) {
+               result.test_note("Skipping test due to to algorithm being unavailable");
+            } else {
+               result.test_failure("Failed to deserialize key", e.what());
+            }
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "pk_key_decoding", PK_Key_Decoding_Test);
 
 }  // namespace Botan_Tests
 

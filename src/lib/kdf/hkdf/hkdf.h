@@ -28,14 +28,11 @@ class HKDF final : public KDF {
 
       std::string name() const override;
 
-      void kdf(uint8_t key[],
-               size_t key_len,
-               const uint8_t secret[],
-               size_t secret_len,
-               const uint8_t salt[],
-               size_t salt_len,
-               const uint8_t label[],
-               size_t label_len) const override;
+   private:
+      void perform_kdf(std::span<uint8_t> key,
+                       std::span<const uint8_t> secret,
+                       std::span<const uint8_t> salt,
+                       std::span<const uint8_t> label) const override;
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
@@ -55,14 +52,11 @@ class HKDF_Extract final : public KDF {
 
       std::string name() const override;
 
-      void kdf(uint8_t key[],
-               size_t key_len,
-               const uint8_t secret[],
-               size_t secret_len,
-               const uint8_t salt[],
-               size_t salt_len,
-               const uint8_t label[],
-               size_t label_len) const override;
+   private:
+      void perform_kdf(std::span<uint8_t> key,
+                       std::span<const uint8_t> secret,
+                       std::span<const uint8_t> salt,
+                       std::span<const uint8_t> label) const override;
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
@@ -82,14 +76,11 @@ class HKDF_Expand final : public KDF {
 
       std::string name() const override;
 
-      void kdf(uint8_t key[],
-               size_t key_len,
-               const uint8_t secret[],
-               size_t secret_len,
-               const uint8_t salt[],
-               size_t salt_len,
-               const uint8_t label[],
-               size_t label_len) const override;
+   private:
+      void perform_kdf(std::span<uint8_t> key,
+                       std::span<const uint8_t> secret,
+                       std::span<const uint8_t> salt,
+                       std::span<const uint8_t> label) const override;
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
@@ -99,19 +90,15 @@ class HKDF_Expand final : public KDF {
 * HKDF-Expand-Label from TLS 1.3/QUIC
 * @param hash_fn the hash to use
 * @param secret the secret bits
-* @param secret_len the length of secret
 * @param label the full label (no "TLS 1.3, " or "tls13 " prefix
 *  is applied)
 * @param hash_val the previous hash value (used for chaining, may be empty)
-* @param hash_val_len the length of hash_val
 * @param length the desired output length
 */
 secure_vector<uint8_t> BOTAN_TEST_API hkdf_expand_label(std::string_view hash_fn,
-                                                        const uint8_t secret[],
-                                                        size_t secret_len,
+                                                        std::span<const uint8_t> secret,
                                                         std::string_view label,
-                                                        const uint8_t hash_val[],
-                                                        size_t hash_val_len,
+                                                        std::span<const uint8_t> hash_val,
                                                         size_t length);
 
 }  // namespace Botan

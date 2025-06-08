@@ -1,9 +1,9 @@
 Release Process and Checklist
 ========================================
 
-Releases are done quarterly, normally on the second non-holiday Monday
-of January, April, July and October. A feature freeze goes into effect
-starting 9 days before the release.
+Releases are done quarterly, normally on the first non-holiday Tuesday
+of February, May, August, and November. A feature freeze goes into effect
+starting 8 days before the release (ie the Monday of the week prior).
 
 .. highlight:: shell
 
@@ -12,30 +12,27 @@ starting 9 days before the release.
    This information is only useful if you are a developer of botan who
    is creating a new release of the library.
 
-Pre Release Testing
+Pre Release Checks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Do maintainer-mode builds with Clang and GCC to catch any warnings
-that should be corrected.
+In the week prior to a release, after feature freeze goes into effect
 
-Other checks which are not in CI:
-
- - Native compile on FreeBSD x86-64
- - Native compile on at least one unusual platform (AIX, NetBSD, ...)
- - Build the website content to detect any Doxygen problems
- - Test many build configurations (using `src/scripts/test_all_configs.py`)
- - Build/test SoftHSM
-
-Confirm that the release notes in ``news.rst`` are accurate and
-complete and that the version number in ``version.txt`` is correct.
+- [ ] Check that the version number in ``src/build-data/version.txt`` is correct.
+- [ ] Confirm that the release notes in ``news.rst`` are accurate and complete.
+- [ ] Diff ffi.h vs the previous release; is a new FFI version required?
+- [ ] Do maintainer-mode builds with Clang and GCC to catch any warnings
+- [ ] Test build configurations using `src/scripts/test_all_configs.py`
+- [ ] Test a few builds on platforms not in CI (eg OpenBSD, FreeBSD, Solaris)
+- [ ] Update relevant third party test suites (eg Limbo and BoGo)
 
 Tag the Release
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Update the release date in the release notes and change the entry for
-the appropriate branch in ``readme.rst`` to point to the new release.
+At the time the release is created
 
-Now check in, and backport changes to the release branch::
+- [ ] Update the release date in ``news.rst``
+- [ ] Update ``readme.rst`` with the new release URL/date
+- [ ] Check in those changes then backport to the release branch::
 
   $ git commit readme.rst news.rst -m "Update for 3.8.2 release"
   $ git checkout release-3
@@ -45,40 +42,24 @@ Now check in, and backport changes to the release branch::
 Build The Release Tarballs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The release script is ``src/scripts/dist.py`` and must be run from a
-git workspace.
+- [ ] Run ``src/scripts/dist.py`` to create the tarball, with the tag as argument::
 
   $ src/scripts/dist.py 3.8.2
 
-One useful option is ``--output-dir``, which specifies where the
-output will be placed.
+- [ ] Do a final build/test of the generated tarball.
 
-Now do a final build/test of the released tarball.
+- [ ] Save the generated tarball to the release archive::
 
-The ``--pgp-key-id`` option is used to specify a PGP keyid. If set,
-the script assumes that it can execute GnuPG and will attempt to
-create signatures for the tarballs. The default value is ``EFBADFBC``,
-which is the official signing key. You can use ``--pgp-key-id=none``
-to avoid creating any signature, though official distributed releases
-*should not* be released without signatures.
-
-The releases served on the official site are taken from the contents
-in a git repository::
-
-  $ git checkout git@botan.randombit.net:/srv/git/botan-releases.git
-  $ src/scripts/dist.py 3.8.2 --output-dir=botan-releases
   $ cd botan-releases
-  $ sha256sum Botan-3.8.2.tgz >> sha256sums.txt
+  $ sha256sum Botan-3.8.2.tar.xz >> sha256sums.txt
   $ git add .
   $ git commit -m "Release version 3.8.2"
   $ git push origin master
 
-A cron job updates the live site every 10 minutes.
-
 Push to GitHub
 ^^^^^^^^^^^^^^^^^^
 
-Don't forget to also push tags::
+- [ ] Push the ``release-3`` and ``master`` branches, including the new tag::
 
   $ git push origin --tags release-3 master
 
@@ -95,9 +76,3 @@ The website is mirrored automatically from a git repository which must be update
   $ git add .
   $ git commit -m "Update for 3.8.2"
   $ git push origin master
-
-Announce The Release
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Send an email to the botan-announce and botan-devel mailing lists
-noting that a new release is available.

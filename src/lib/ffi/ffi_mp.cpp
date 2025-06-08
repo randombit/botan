@@ -8,11 +8,12 @@
 #include <botan/ffi.h>
 
 #include <botan/numthry.h>
-#include <botan/reducer.h>
+#include <botan/internal/barrett.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/ffi_mp.h>
 #include <botan/internal/ffi_rng.h>
 #include <botan/internal/ffi_util.h>
+#include <botan/internal/mod_inv.h>
 
 extern "C" {
 
@@ -45,12 +46,13 @@ int botan_mp_set_from_str(botan_mp_t mp, const char* str) {
 int botan_mp_set_from_radix_str(botan_mp_t mp, const char* str, size_t radix) {
    return BOTAN_FFI_VISIT(mp, [=](auto& bn) {
       Botan::BigInt::Base base;
-      if(radix == 10)
+      if(radix == 10) {
          base = Botan::BigInt::Decimal;
-      else if(radix == 16)
+      } else if(radix == 16) {
          base = Botan::BigInt::Hexadecimal;
-      else
+      } else {
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+      }
 
       const uint8_t* bytes = Botan::cast_char_ptr_to_uint8(str);
       const size_t len = strlen(str);
@@ -89,12 +91,13 @@ int botan_mp_to_hex(const botan_mp_t mp, char* out) {
 
 int botan_mp_to_str(const botan_mp_t mp, uint8_t digit_base, char* out, size_t* out_len) {
    return BOTAN_FFI_VISIT(mp, [=](const auto& bn) -> int {
-      if(digit_base == 0 || digit_base == 10)
+      if(digit_base == 0 || digit_base == 10) {
          return write_str_output(out, out_len, bn.to_dec_string());
-      else if(digit_base == 16)
+      } else if(digit_base == 16) {
          return write_str_output(out, out_len, bn.to_hex_string());
-      else
+      } else {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
    });
 }
 
@@ -115,46 +118,51 @@ int botan_mp_destroy(botan_mp_t mp) {
 
 int botan_mp_add(botan_mp_t result, const botan_mp_t x, const botan_mp_t y) {
    return BOTAN_FFI_VISIT(result, [=](auto& res) {
-      if(result == x)
+      if(result == x) {
          res += safe_get(y);
-      else
+      } else {
          res = safe_get(x) + safe_get(y);
+      }
    });
 }
 
 int botan_mp_sub(botan_mp_t result, const botan_mp_t x, const botan_mp_t y) {
    return BOTAN_FFI_VISIT(result, [=](auto& res) {
-      if(result == x)
+      if(result == x) {
          res -= safe_get(y);
-      else
+      } else {
          res = safe_get(x) - safe_get(y);
+      }
    });
 }
 
 int botan_mp_add_u32(botan_mp_t result, const botan_mp_t x, uint32_t y) {
    return BOTAN_FFI_VISIT(result, [=](auto& res) {
-      if(result == x)
+      if(result == x) {
          res += static_cast<Botan::word>(y);
-      else
+      } else {
          res = safe_get(x) + static_cast<Botan::word>(y);
+      }
    });
 }
 
 int botan_mp_sub_u32(botan_mp_t result, const botan_mp_t x, uint32_t y) {
    return BOTAN_FFI_VISIT(result, [=](auto& res) {
-      if(result == x)
+      if(result == x) {
          res -= static_cast<Botan::word>(y);
-      else
+      } else {
          res = safe_get(x) - static_cast<Botan::word>(y);
+      }
    });
 }
 
 int botan_mp_mul(botan_mp_t result, const botan_mp_t x, const botan_mp_t y) {
    return BOTAN_FFI_VISIT(result, [=](auto& res) {
-      if(result == x)
+      if(result == x) {
          res *= safe_get(y);
-      else
+      } else {
          res = safe_get(x) * safe_get(y);
+      }
    });
 }
 
@@ -205,12 +213,14 @@ int botan_mp_rshift(botan_mp_t out, const botan_mp_t in, size_t shift) {
 }
 
 int botan_mp_mod_inverse(botan_mp_t out, const botan_mp_t in, const botan_mp_t modulus) {
-   return BOTAN_FFI_VISIT(out, [=](auto& o) { o = Botan::inverse_mod(safe_get(in), safe_get(modulus)); });
+   return BOTAN_FFI_VISIT(out, [=](auto& o) {
+      o = Botan::inverse_mod_general(safe_get(in), safe_get(modulus)).value_or(Botan::BigInt::zero());
+   });
 }
 
 int botan_mp_mod_mul(botan_mp_t out, const botan_mp_t x, const botan_mp_t y, const botan_mp_t modulus) {
    return BOTAN_FFI_VISIT(out, [=](auto& o) {
-      Botan::Modular_Reducer reducer(safe_get(modulus));
+      auto reducer = Botan::Barrett_Reduction::for_secret_modulus(safe_get(modulus));
       o = reducer.multiply(safe_get(x), safe_get(y));
    });
 }

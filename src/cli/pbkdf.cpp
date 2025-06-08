@@ -8,6 +8,9 @@
 
 #if defined(BOTAN_HAS_PASSWORD_HASHING)
    #include <botan/pwdhash.h>
+#endif
+
+#if defined(BOTAN_HAS_OS_UTILS)
    #include <botan/internal/os_utils.h>
 #endif
 
@@ -59,6 +62,7 @@ class PBKDF_Tune final : public Command {
             }
 
             if(check_time) {
+   #if defined(BOTAN_HAS_OS_UTILS)
                std::vector<uint8_t> outbuf(output_len);
                const uint8_t salt[8] = {0};
 
@@ -68,6 +72,9 @@ class PBKDF_Tune final : public Command {
                const uint64_t dur_ns = end_ns - start_ns;
 
                output() << " took " << (dur_ns / 1000000.0) << " msec to compute";
+   #else
+               output() << "No system clock";
+   #endif
             }
 
             output() << "\n";

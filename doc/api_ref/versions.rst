@@ -13,7 +13,7 @@ the major version will be increased.
 
 The library has functions for checking compile-time and runtime versions.
 
-The build-time version information is defined in `botan/build.h`
+The build-time version information is defined in ``botan/build.h``
 
 .. c:macro:: BOTAN_VERSION_MAJOR
 
@@ -30,8 +30,13 @@ The build-time version information is defined in `botan/build.h`
 .. c:macro:: BOTAN_VERSION_DATESTAMP
 
    Expands to an integer of the form YYYYMMDD if this is an official
-   release, or 0 otherwise. For instance, 1.10.1, which was released
-   on July 11, 2011, has a `BOTAN_VERSION_DATESTAMP` of 20110711.
+   release, or 0 otherwise. For instance, 3.6.1, which was released
+   on October 26, 2024, has a ``BOTAN_VERSION_DATESTAMP`` of 20241026.
+
+   .. warning::
+
+      This macro is deprecated and will be removed in Botan4. Use
+      :cpp:func:`version_datestamp`
 
 .. c:macro:: BOTAN_DISTRIBUTION_INFO
 
@@ -42,17 +47,26 @@ The build-time version information is defined in `botan/build.h`
    to specify any distribution-specific patches. If no value is given
    at build time, the value is the string "unspecified".
 
+   .. warning::
+
+      This macro is deprecated and will be removed in Botan4. Use
+      :cpp:func:`version_distribution_info`
+
 .. c:macro:: BOTAN_VERSION_VC_REVISION
 
    .. versionadded:: 1.10.1
 
    A macro expanding to a string that is set to a revision identifier
    corresponding to the source, or "unknown" if this could not be
-   determined. It is set for all official releases, and for builds that
-   originated from within a git checkout.
+   determined. It is set for all official releases.
+
+   .. warning::
+
+      This macro is deprecated and will be removed in Botan4. Use
+      :cpp:func:`version_vc_revision`
 
 The runtime version information, and some helpers for compile time
-version checks, are included in `botan/version.h`
+version checks, are included in ``botan/version.h``
 
 .. cpp:function:: std::string version_string()
 
@@ -76,26 +90,31 @@ version checks, are included in `botan/version.h`
    Return the datestamp of the release (or 0 if the current version is
    not an official release).
 
-.. cpp:function:: std::string runtime_version_check(uint32_t major, uint32_t minor, uint32_t patch)
+.. cpp:function:: std::optional<std::string> version_vc_revision()
 
-   Call this function with the compile-time version being built against, eg::
+   .. versionadded:: 3.8
 
-      Botan::runtime_version_check(BOTAN_VERSION_MAJOR, BOTAN_VERSION_MINOR, BOTAN_VERSION_PATCH)
+   Returns a string that is set to a revision identifier corresponding to the
+   source, or ``nullopt`` if this could not be determined. It is set for all
+   official releases, and for builds that originated from within a git checkout.
 
-   It will return an empty string if the versions match, or otherwise
-   an error message indicating the discrepancy. This only is useful in
-   dynamic libraries, where it is possible to compile and run against
-   different versions.
+.. cpp:function:: std::optional<std::string> version_distribution_info()
+
+   .. versionadded:: 3.8
+
+   Return any string that is set at build time using the ``--distribution-info``
+   option. It allows a packager of the library to specify any distribution-specific
+   patches. If no value is given at build time, returns ``nullopt``.
 
 .. c:macro:: BOTAN_VERSION_CODE_FOR(maj,min,patch)
 
    Return a value that can be used to compare versions. The current
    (compile-time) version is available as the macro
-   `BOTAN_VERSION_CODE`. For instance, to choose one code path for
-   version 2.1.0 and later, and another code path for older releases::
+   ``BOTAN_VERSION_CODE``. For instance, to choose one code path for
+   version 3.4.0 and later, and another code path for older releases::
 
-      #if BOTAN_VERSION_CODE >= BOTAN_VERSION_CODE_FOR(2,1,0)
-         // 2.1+ code path
+      #if BOTAN_VERSION_CODE >= BOTAN_VERSION_CODE_FOR(3,4,0)
+         // 3.4+ code path
       #else
          // code path for older versions
       #endif

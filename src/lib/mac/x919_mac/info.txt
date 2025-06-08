@@ -4,6 +4,7 @@ ANSI_X919_MAC -> 20131128
 
 <module_info>
 name -> "ANSI X9.19 MAC"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>

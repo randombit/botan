@@ -1,12 +1,12 @@
 /*
- * Sphincs+ hypertree logic
+ * SLH-DSA's Hypertree Logic (FIPS 205, Section 7)
  * (C) 2023 Jack Lloyd
  *     2023 Fabian Albert, René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity
  *
  * Parts of this file have been adapted from https://github.com/sphincs/sphincsplus
  *
  * Botan is released under the Simplified BSD License (see license.txt)
- **/
+ */
 
 #ifndef BOTAN_SP_HYPERTREE_H_
 #define BOTAN_SP_HYPERTREE_H_
@@ -20,7 +20,9 @@ class Sphincs_Hash_Functions;
 class Sphincs_Parameters;
 
 /**
- * Creates a SPHINCS+ XMSS hypertree signature of @p message_to_sign. The signature is written
+ * @brief FIPS 205, Algorithm 12: ht_sign
+ *
+ * Creates a SLH-DSA XMSS hypertree signature of @p message_to_sign. The signature is written
  * into the buffer defined by @p out_sig. @p tree_index_in_layer and @p idx_leaf define which
  * XMSS tree of the hypertree and which leaf of this XMSS tree is used for signing.
  */
@@ -33,7 +35,9 @@ void ht_sign(StrongSpan<SphincsHypertreeSignature> out_sig,
              Sphincs_Hash_Functions& hashes);
 
 /**
- * Given a message @p signed_msg the SPHINCS+ XMSS hypertree is reconstructed
+ * @brief FIPS 205, Algorithm 13: ht_verify
+ *
+ * Given a message @p signed_msg the SLH-DSA XMSS hypertree is reconstructed
  * using a hypertree signature @p ht_sig. @p tree_index_in_layer and @p idx_leaf
  * define which XMSS tree of the hypertree and which leaf of this XMSS tree was
  * used for signing.

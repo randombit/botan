@@ -17,6 +17,9 @@ Currently systems such as VMS, OS/390, and OS/400 are not supported by the build
 system, primarily due to lack of access and interest.  Please contact the
 maintainer if you would like to build Botan on such a system.
 
+Botan is a C++20 code base, make sure to use an appropriate compiler and
+settings. See also :ref:`support_info`.
+
 Botan's build is controlled by configure.py, which is a `Python
 <https://www.python.org>`_ script. Python 3.x or later is required.
 
@@ -151,6 +154,12 @@ completely supported by the build system. To extend the example, we must tell
    For whatever reason, some distributions of MinGW lack support for
    threading or mutexes in the C++ standard library. You can work around
    this by disabling thread support using ``--without-os-feature=threads``
+
+.. warning::
+
+   Using ``--without-os-feature=threads`` disables *all* support for threads,
+   including any locking of internal data structures. In this configuration,
+   calling into the library from multiple threads will cause data races.
 
 You can also specify the alternate tools by setting the `CXX` and `AR`
 environment variables (instead of the `--cc-bin` and `--ar-command` options), as
@@ -309,19 +318,8 @@ targeting Android API 28::
   $ ./configure.py --os=android --cc=clang --cpu=arm64
   $ make
 
-If you are building for mobile development consider restricting the build
-to only what you need (see :ref:`minimized_builds`)
-
-Docker
-^^^^^^^^^^^
-
-To build android version, there is the possibility to use
-the docker way::
-
-  sudo ANDROID_SDK_VER=29 ANDROID_ARCH=aarch64 src/scripts/docker-android.sh
-
-This will produce the docker-builds/android folder containing
-each architecture compiled.
+If you are building for mobile development, consider restricting the build
+to only what you need (see :ref:`minimized_builds`) to minimize code size.
 
 Emscripten (WebAssembly)
 ---------------------------
@@ -420,7 +418,9 @@ by the user using
  - ``--with-sqlite3`` enables using sqlite3 databases in various contexts
    (TLS session cache, PSK database, etc).
 
- - ``--with-tpm`` adds support for using TPM hardware via the TrouSerS library.
+ - ``--with-tpm`` adds support for TPM 1.2 hardware via the TrouSerS library.
+
+ - ``--with-tpm2`` adds support for TPM 2.0 hardware via the TSS2 library.
 
  - ``--with-boost`` enables using some Boost libraries. In particular
    Boost.Filesystem is used for a few operations (but on most platforms, a
@@ -458,6 +458,10 @@ support this there is a flag to ``configure.py`` called
 inserted into ``build/build.h`` which is (indirectly) included
 into every Botan header and source file.
 
+.. warning::
+
+   This option is deprecated and is planned to be removed in 3.9.0
+
 Enabling or Disabling Use of Certain OS Features
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -485,28 +489,19 @@ will want to disable. There is no specific feature flag for this, but
 .. note:: Disabling ``dyn_load`` module will also disable the PKCS #11
           wrapper, which relies on dynamic loading.
 
-Configuration Parameters
+Feature Check Macros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-There are some configuration parameters which you may want to tweak
-before building the library. These can be found in ``build.h``. This
-file is overwritten every time the configure script is run (and does
-not exist until after you run the script for the first time).
+When ``build.h`` is created, a set of macros are defined which can be used for
+compile-time feature checks.
 
-Also included in ``build/build.h`` are macros which let applications
-check which features are included in the current version of the
-library. All of them begin with ``BOTAN_HAS_``. For example, if
-``BOTAN_HAS_RSA`` is defined, then an application knows that this
-version of the library has RSA available.
-
-``BOTAN_MP_WORD_BITS``: This macro controls the size of the words used for
-calculations with the MPI implementation in Botan.  It must be set to either 32
-or 64 bits. The default is chosen based on the target processor. There is
-normally no reason to change this.
-
-``BOTAN_DEFAULT_BUFFER_SIZE``: This constant is used as the size of
-buffers throughout Botan. The default should be fine for most
-purposes, reduce if you are very concerned about runtime memory usage.
+Each of these macros has the form ``BOTAN_HAS_FOO``, for example
+``BOTAN_HAS_RSA`` or ``BOTAN_HAS_TLS_13``. Each of these macros also has a
+value, which cooresponds to a YYYYMMDD date code integer. If a user-visible
+change is made to a module (for example adding a particular feature) the date
+code is set to a new value. This can be useful for applications if they need to
+check that both a feature is enabled in general and that it supports some
+specific feature that was added in a particular change.
 
 Building Applications
 ----------------------------------------
@@ -607,7 +602,7 @@ If you are building a TLS application, you may (or may not) want to include
 ``tls_cbc`` which enables support for CBC ciphersuites. If ``tls_cbc`` is
 disabled, then it will not be possible to negotiate TLS v1.0/v1.1. In general
 this should be considered a feature; only enable this if you need backward
-compatability with obsolete clients or servers.
+compatibility with obsolete clients or servers.
 
 For TLS another useful feature which is not enabled by default is the
 ChaCha20Poly1305 ciphersuites. To enable these, add ``chacha20poly1305``.
@@ -696,14 +691,6 @@ picks either MD or MDd depending on if debug mode is set.
 
 Specify a compiler cache (like ccache) to use for each compiler invocation.
 
-``--with-endian=ORDER``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The parameter should be either "little" or "big". If not used then if
-the target architecture has a default, that is used. Otherwise left
-unspecified, which causes less optimal codepaths to be used but will
-work on either little or big endian.
-
 ``--with-os-features=FEAT``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -714,6 +701,16 @@ Specify an OS feature to enable. See ``src/build-data/os`` and
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Specify an OS feature to disable.
+
+.. warning::
+
+   One operating system feature that can be disabled using this option is
+   ``threads``. Be warned that doing so will disable all support for threads
+   including any locking of internal data structures. Calling the library from
+   multiple threads in such a configuration will lead to data races.
+
+   This is intended for use only on targets which truly do not support threads,
+   for example certain baremetal configurations.
 
 ``--enable-experimental-features``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -835,6 +832,13 @@ Enable specific sanitizers. See ``src/build-data/cc`` for more information.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Disable stack smashing protections. **not recommended**
+
+``--enable-stack-scrubbing``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable scrubbing of stack frames that were used for cryptographic calculations
+on potentially sensitive data. At the moment, this is supported exclusively on
+GCC 14 and newer.
 
 ``--with-coverage-info``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1017,7 +1021,7 @@ disables modules prohibited by a text policy in ``src/build-data/policy``.
 Additional modules can be enabled if not prohibited by the policy.
 Currently available policies include ``bsi``, ``nist`` and ``modern``::
 
- $ ./configure.py --module-policy=bsi --enable-modules=tls,xts
+ $ ./configure.py --module-policy=bsi --enable-modules=tls13_pqc,xts
 
 ``--enable-modules=MODS``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1070,7 +1074,12 @@ Enable using sqlite3 for data storage
 ``--with-tpm``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Enable support for TPM
+Enable support for TPM 1.2
+
+``--with-tpm2``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable support for TPM 2.0
 
 ``--program-suffix=SUFFIX``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -7,10 +7,12 @@ name -> "ElGamal"
 </module_info>
 
 <requires>
+blinding
 dl_algo
 dl_group
 keypair
 numbertheory
+pk_pad
 </requires>
 
 <header:public>

@@ -1,5 +1,5 @@
 /*
-* (C) 2018 Jack Lloyd
+* (C) 2018,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,10 +10,11 @@
 #include <botan/bigint.h>
 
 #include <botan/internal/ct_utils.h>
+#include <memory>
 
 namespace Botan {
 
-class Modular_Reducer;
+class Barrett_Reduction;
 
 class Montgomery_Params;
 
@@ -47,6 +48,13 @@ class BOTAN_TEST_API Montgomery_Int final {
                      const word words[],
                      size_t len,
                      bool redc_needed = true);
+
+      static Montgomery_Int one(const std::shared_ptr<const Montgomery_Params>& params);
+
+      /**
+      * Wide reduction - input can be at most 2*bytes long
+      */
+      static Montgomery_Int from_wide_int(const std::shared_ptr<const Montgomery_Params>& params, const BigInt& x);
 
       bool operator==(const Montgomery_Int& other) const;
 
@@ -102,8 +110,6 @@ class BOTAN_TEST_API Montgomery_Int final {
 
       Montgomery_Int& square_this_n_times(secure_vector<word>& ws, size_t n);
 
-      Montgomery_Int multiplicative_inverse() const;
-
       Montgomery_Int additive_inverse() const;
 
       Montgomery_Int& mul_by_2(secure_vector<word>& ws);
@@ -117,6 +123,8 @@ class BOTAN_TEST_API Montgomery_Int final {
       void _const_time_poison() const { CT::poison(m_v); }
 
       void _const_time_unpoison() const { CT::unpoison(m_v); }
+
+      const std::shared_ptr<const Montgomery_Params>& _params() const { return m_params; }
 
    private:
       std::shared_ptr<const Montgomery_Params> m_params;
@@ -132,7 +140,7 @@ class BOTAN_TEST_API Montgomery_Params final {
       * Initialize a set of Montgomery reduction parameters. These values
       * can be shared by all values in a specific Montgomery domain.
       */
-      Montgomery_Params(const BigInt& p, const Modular_Reducer& mod_p);
+      Montgomery_Params(const BigInt& p, const Barrett_Reduction& mod_p);
 
       /**
       * Initialize a set of Montgomery reduction parameters. These values
@@ -154,19 +162,27 @@ class BOTAN_TEST_API Montgomery_Params final {
 
       BigInt redc(const BigInt& x, secure_vector<word>& ws) const;
 
+      void mul(BigInt& z, const BigInt& x, const BigInt& y, secure_vector<word>& ws) const;
+
+      void mul(BigInt& z, const BigInt& x, std::span<const word> y, secure_vector<word>& ws) const;
+
       BigInt mul(const BigInt& x, const BigInt& y, secure_vector<word>& ws) const;
 
-      BigInt mul(const BigInt& x, const secure_vector<word>& y, secure_vector<word>& ws) const;
+      BigInt mul(const BigInt& x, std::span<const word> y, secure_vector<word>& ws) const;
 
-      void mul_by(BigInt& x, const secure_vector<word>& y, secure_vector<word>& ws) const;
+      void mul_by(BigInt& x, std::span<const word> y, secure_vector<word>& ws) const;
 
       void mul_by(BigInt& x, const BigInt& y, secure_vector<word>& ws) const;
 
       BigInt sqr(const BigInt& x, secure_vector<word>& ws) const;
 
-      void square_this(BigInt& x, secure_vector<word>& ws) const;
+      BigInt sqr(std::span<const word> x, secure_vector<word>& ws) const;
 
-      BigInt inv_mod_p(const BigInt& x) const;
+      void sqr(BigInt& z, const BigInt& x, secure_vector<word>& ws) const;
+
+      void sqr(BigInt& z, std::span<const word> x, secure_vector<word>& ws) const;
+
+      void square_this(BigInt& x, secure_vector<word>& ws) const;
 
    private:
       BigInt m_p;

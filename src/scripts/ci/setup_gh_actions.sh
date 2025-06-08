@@ -12,114 +12,55 @@ command -v shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if
 set -ex
 
 TARGET="$1"
-ARCH="$2"
+COMPILER="$2"
+
+# shellcheck disable=SC2034
+ARCH="$3"
 
 SCRIPT_LOCATION=$(cd "$(dirname "$0")"; pwd)
 
+if [ "$GITHUB_ACTIONS" != "true" ]; then
+    echo "This script should only run in a Github Actions environment" >&2
+    exit 1
+fi
+
+if [ -z "$REPO_CONFIG_LOADED" ]; then
+    echo "Repository configuration not loaded" >&2
+    exit 1
+fi
+
 if type -p "apt-get"; then
 
-    if [ "$(lsb_release -sr)" = "22.04" ]; then
-        # Hack to deal with https://github.com/actions/runner-images/issues/8659
-        sudo rm -f /etc/apt/sources.list.d/ubuntu-toolchain-r-ubuntu-test-jammy.list
-        sudo apt-get update
-        sudo apt-get install -y --allow-downgrades libc6=2.35-* libc6-dev=2.35-* libstdc++6=12.3.0-* libgcc-s1=12.3.0-*
-    fi
+    sudo rm /var/lib/man-db/auto-update
 
-    # Normal workflow follows
-    #sudo apt-get -qq update
-    sudo apt-get -qq install ccache libbz2-dev liblzma-dev libsqlite3-dev
+    sudo apt-get -qq update
+    # shellcheck disable=SC2046
+    sudo apt-get -qq install $("${SCRIPT_LOCATION}"/gha_linux_packages.py "$TARGET" "$COMPILER")
 
-    if [ "$TARGET" = "valgrind" ] || [ "$TARGET" = "valgrind-full" ]; then
-        # (l)ist mode (avoiding https://github.com/actions/runner-images/issues/9996)
-        sudo NEEDRESTART_MODE=l apt-get -qq install valgrind
+    if [ "$TARGET" = "sde" ]; then
+        wget -nv "https://downloadmirror.intel.com/823664/${INTEL_SDE_VERSION}.tar.xz"
+        tar -xf "${INTEL_SDE_VERSION}.tar.xz"
+        echo "${INTEL_SDE_VERSION}" >> "$GITHUB_PATH"
 
-    elif [ "$TARGET" = "shared" ] || [ "$TARGET" = "examples" ] || [ "$TARGET" = "tlsanvil" ] || [ "$TARGET" = "clang-tidy" ] ; then
-        sudo apt-get -qq install libboost-dev
-
-    elif [ "$TARGET" = "clang" ]; then
-        sudo apt-get -qq install clang
-
-    elif [ "$TARGET" = "cross-i386" ]; then
-        sudo NEEDRESTART_MODE=l apt-get -qq install g++-multilib linux-libc-dev libc6-dev-i386
-
-    elif [ "$TARGET" = "cross-win64" ]; then
-        sudo apt-get -qq install wine-development g++-mingw-w64-x86-64
-
-    elif [ "$TARGET" = "cross-arm32" ]; then
-        sudo apt-get -qq install qemu-user g++-arm-linux-gnueabihf
-
-    elif [ "$TARGET" = "cross-arm64" ] || [ "$TARGET" = "cross-arm64-amalgamation" ]; then
-        sudo apt-get -qq install qemu-user g++-aarch64-linux-gnu
-
-    elif [ "$TARGET" = "cross-ppc32" ]; then
-        sudo apt-get -qq install qemu-user g++-powerpc-linux-gnu
-
-    elif [ "$TARGET" = "cross-ppc64" ]; then
-        sudo apt-get -qq install qemu-user g++-powerpc64le-linux-gnu
-
-    elif [ "$TARGET" = "cross-sh4" ]; then
-        sudo apt-get -qq install qemu-user g++-sh4-linux-gnu
-
-    elif [ "$TARGET" = "cross-sparc64" ]; then
-        sudo apt-get -qq install qemu-user g++-sparc64-linux-gnu
-
-    elif [ "$TARGET" = "cross-m68k" ]; then
-        sudo apt-get -qq install qemu-user g++-m68k-linux-gnu
-
-    elif [ "$TARGET" = "cross-riscv64" ]; then
-        sudo apt-get -qq install qemu-user g++-riscv64-linux-gnu
-
-    elif [ "$TARGET" = "cross-alpha" ]; then
-        sudo apt-get -qq install qemu-user g++-alpha-linux-gnu
-
-    elif [ "$TARGET" = "cross-arc" ]; then
-        sudo apt-get -qq install qemu-user g++-arc-linux-gnu
-
-    elif [ "$TARGET" = "cross-hppa64" ]; then
-        sudo apt-get -qq install qemu-user g++-hppa-linux-gnu
-
-    elif [ "$TARGET" = "cross-mips" ]; then
-        sudo apt-get -qq install qemu-user g++-mips-linux-gnu
-
-    elif [ "$TARGET" = "cross-mips64" ]; then
-        sudo apt-get -qq install qemu-user g++-mips64-linux-gnuabi64
-
-    elif [ "$TARGET" = "cross-s390x" ]; then
-        sudo apt-get -qq install qemu-user g++-s390x-linux-gnu
-
-    elif [ "$TARGET" = "sde" ]; then
-        SDE_VER=sde-external-9.38.0-2024-04-18-lin
-        wget https://downloadmirror.intel.com/823664/${SDE_VER}.tar.xz
-        tar -xvf ${SDE_VER}.tar.xz
-        echo ${SDE_VER} >> "$GITHUB_PATH"
+        echo "CXX=g++-14" >> "$GITHUB_ENV"
 
     elif [ "$TARGET" = "cross-android-arm32" ] || [ "$TARGET" = "cross-android-arm64" ] || [ "$TARGET" = "cross-android-arm64-amalgamation" ]; then
-        wget -nv https://dl.google.com/android/repository/"$ANDROID_NDK"-linux.zip
+        wget -nv "https://dl.google.com/android/repository/${ANDROID_NDK}-linux.zip"
         unzip -qq "$ANDROID_NDK"-linux.zip
 
     elif [ "$TARGET" = "cross-arm32-baremetal" ]; then
-        sudo apt-get -qq install gcc-arm-none-eabi libstdc++-arm-none-eabi-newlib
-
         echo 'extern "C" void __sync_synchronize() {}' >> "${SCRIPT_LOCATION}/../../tests/main.cpp"
         echo 'extern "C" void __sync_synchronize() {}' >> "${SCRIPT_LOCATION}/../../cli/main.cpp"
 
-    elif [ "$TARGET" = "emscripten" ]; then
-        sudo apt-get -qq install emscripten
-
-    elif [ "$TARGET" = "lint" ]; then
-        sudo apt-get -qq install pylint python3-matplotlib
-
     elif [ "$TARGET" = "limbo" ]; then
-        sudo apt-get -qq install python3-dateutil
-        wget -nv https://raw.githubusercontent.com/C2SP/x509-limbo/bd88042508ccfde351b2fee293aebda8971fbebb/limbo.json -O "${SCRIPT_LOCATION}/../../../limbo.json"
+        wget -nv "https://raw.githubusercontent.com/C2SP/x509-limbo/${LIMBO_TEST_SUITE_REVISION}/limbo.json" -O "${SCRIPT_LOCATION}/../../../limbo.json"
 
     elif [ "$TARGET" = "coverage" ] || [ "$TARGET" = "sanitizer" ]; then
         if [ "$TARGET" = "coverage" ]; then
-            sudo apt-get -qq install lcov python3-coverage
             curl -L https://coveralls.io/coveralls-linux.tar.gz | tar -xz -C /usr/local/bin
         fi
 
-        sudo apt-get -qq install softhsm2 libtspi-dev libboost-dev
+        echo "BOTAN_TPM2_ENABLED=test" >> "$GITHUB_ENV"
 
         echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
@@ -128,17 +69,13 @@ if type -p "apt-get"; then
 
         softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
         echo "PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so" >> "$GITHUB_ENV"
-
-    elif [ "$TARGET" = "docs" ]; then
-        sudo apt-get -qq install doxygen python3-docutils python3-sphinx
-
     fi
 else
     export HOMEBREW_NO_AUTO_UPDATE=1
     export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
     brew install ccache
 
-    if [ "$TARGET" = "shared" ]; then
+    if [ "$TARGET" = "shared" ]  || [ "$TARGET" = "amalgamation" ] ; then
         brew install boost
 
         # On Apple Silicon we need to specify the include directory
@@ -146,15 +83,11 @@ else
         boostincdir=$(brew --prefix boost)/include
         echo "BOOST_INCLUDEDIR=$boostincdir" >> "$GITHUB_ENV"
     elif [ "$TARGET" = "emscripten" ]; then
-        # Workaround: emscripten 3.1.63 is broken, install an older one...
-        brew tap-new botan/local-emscripten
-        brew tap --force homebrew/core
-        brew extract --version=3.1.61 emscripten botan/local-emscripten
-        brew install emscripten@3.1.61
+        brew install emscripten
     fi
 
-    if [ -d '/Applications/Xcode_15.3.app/Contents/Developer' ]; then
-        sudo xcrun xcode-select --switch '/Applications/Xcode_15.4.app/Contents/Developer'
+    if [ -d '/Applications/Xcode_16.1.app/Contents/Developer' ]; then
+        sudo xcrun xcode-select --switch '/Applications/Xcode_16.1.app/Contents/Developer'
     else
         sudo xcrun xcode-select --switch '/Applications/Xcode_15.2.app/Contents/Developer'
     fi
@@ -165,5 +98,3 @@ if type -p "ccache"; then
     cache_location="$( ccache --get-config cache_dir )"
     echo "COMPILER_CACHE_LOCATION=${cache_location}" >> "${GITHUB_ENV}"
 fi
-
-echo "CCACHE_MAXSIZE=200M" >> "${GITHUB_ENV}"

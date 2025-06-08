@@ -31,10 +31,10 @@ def hex_decode(buf):
 
 # pylint: disable=global-statement
 
-TEST_DATA_DIR = '.'
+ARGS = None
 
 def test_data(relpath):
-    return os.path.join(TEST_DATA_DIR, relpath)
+    return os.path.join(ARGS.test_data_dir, relpath)
 
 class BotanPythonTests(unittest.TestCase):
     def test_version(self):
@@ -170,11 +170,94 @@ class BotanPythonTests(unittest.TestCase):
         output3 = user_rng.get(1021)
         self.assertEqual(len(output3), 1021)
 
+        with self.assertRaisesRegex(botan.BotanException, r".*Unexpected arguments for RNG.*"):
+            botan.RandomNumberGenerator("user", unexpected="unexpected")
+
         system_rng = botan.RandomNumberGenerator('system')
 
         user_rng.reseed_from_rng(system_rng, 256)
 
         user_rng.add_entropy('seed material...')
+
+    def test_esdm_rng(self):
+        try:
+            esdm_rng = botan.RandomNumberGenerator("esdm-full")
+        except botan.BotanException as ex:
+            if ex.error_code() == -40: # Not Implemented
+                self.skipTest("No ESDM support in this build")
+            else:
+                raise ex
+
+        output1 = esdm_rng.get(32)
+        output2 = esdm_rng.get(32)
+
+        self.assertEqual(len(output1), 32)
+        self.assertEqual(len(output2), 32)
+        self.assertNotEqual(output1, output2)
+
+        esdm_rng = botan.RandomNumberGenerator("esdm-pr")
+
+        output1 = esdm_rng.get(32)
+        output2 = esdm_rng.get(32)
+
+        self.assertEqual(len(output1), 32)
+        self.assertEqual(len(output2), 32)
+        self.assertNotEqual(output1, output2)
+
+    def test_tpm2_rng(self):
+        if ARGS.tpm2_tcti_name is None or ARGS.tpm2_tcti_name == "disabled":
+            self.skipTest("TPM2 runtime tests are disabled")
+
+        try:
+            tpm2_ctx = botan.TPM2Context(ARGS.tpm2_tcti_name, ARGS.tpm2_tcti_conf)
+        except botan.BotanException as ex:
+            if ex.error_code() == -40: # Not Implemented
+                self.skipTest("No TPM2 support in this build")
+            else:
+                raise ex
+
+        if tpm2_ctx.supports_botan_crypto_backend():
+            user_rng = botan.RandomNumberGenerator("user")
+            tpm2_ctx.enable_botan_crypto_backend(user_rng)
+
+        session = botan.TPM2UnauthenticatedSession(tpm2_ctx)
+
+        # no TPM context provided
+        with self.assertRaisesRegex(botan.BotanException, r".*without a TPM2 context.*"):
+            botan.RandomNumberGenerator("tpm2")
+
+        # invalid session object provided
+        with self.assertRaisesRegex(botan.BotanException, r".*0 to 3 TPM2Session objects.*"):
+            botan.RandomNumberGenerator("tpm2", tpm2_context=tpm2_ctx,
+                                                tpm2_sessions=int(0))
+
+        # too many "sessions" provided
+        with self.assertRaisesRegex(botan.BotanException, r".*0 to 3 TPM2Session objects.*"):
+            botan.RandomNumberGenerator("tpm2", tpm2_context=tpm2_ctx,
+                                                tpm2_sessions=[session, None, None, None])
+
+        # unexpected kwarg provided
+        with self.assertRaisesRegex(botan.BotanException, r".*Unexpected arguments for TPM2.*"):
+            botan.RandomNumberGenerator("tpm2", tpm2_context=tpm2_ctx,
+                                                unexpected_arg="unexpected")
+
+        # session provided as a single session (not wrapped into an Iterable)
+        tpm2_rng = botan.RandomNumberGenerator("tpm2", tpm2_context=tpm2_ctx, tpm2_sessions=session)
+
+        output1 = tpm2_rng.get(32)
+        output2 = tpm2_rng.get(32)
+
+        self.assertEqual(len(output1), 32)
+        self.assertEqual(len(output2), 32)
+        self.assertNotEqual(output1, output2)
+        tpm2_rng.add_entropy('xkcd #221: 4 - chosen by fair dice roll')
+
+        # session provided wrapped into an Iterable
+        tpm2_rng2 = botan.RandomNumberGenerator("tpm2", tpm2_context=tpm2_ctx, tpm2_sessions=[session])
+        output3 = tpm2_rng2.get(32)
+
+        self.assertEqual(len(output3), 32)
+        self.assertNotEqual(output2, output3)
 
     def test_hash(self):
 
@@ -225,7 +308,7 @@ class BotanPythonTests(unittest.TestCase):
             elif mode == 'Serpent/GCM':
                 self.assertEqual(enc.algo_name(), 'Serpent/GCM(16)')
                 self.assertTrue(enc.is_authenticated())
-                self.assertEqual(enc.update_granularity(), 16)
+                self.assertEqual(enc.update_granularity(), 1)
                 self.assertGreater(enc.ideal_update_granularity(), 16)
             elif mode == 'ChaCha20Poly1305':
                 self.assertEqual(enc.algo_name(), 'ChaCha20Poly1305')
@@ -304,8 +387,16 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         self.assertEqual(rsapriv.to_pem(), rsa_priv_pem)
 
+        # RSA does not provide a dedicated raw encoding for its keys
+        with self.assertRaisesRegex(botan.BotanException, r".*Not implemented.*"):
+            rsapriv.to_raw()
+
         rsapub = rsapriv.get_public_key()
         self.assertEqual(rsapub.to_pem(), rsa_pub_pem)
+
+        # RSA does not provide a dedicated raw encoding for its keys
+        with self.assertRaisesRegex(botan.BotanException, r".*Not implemented.*"):
+            rsapub.to_raw()
 
         rsapub = botan.PublicKey.load(rsa_pub_pem)
         self.assertEqual(rsapub.to_pem(), rsa_pub_pem)
@@ -338,6 +429,22 @@ ofvkP1EDmpx50fHLawIDAQAB
             pem3 = priv.export_encrypted(passphrase, rng, is_pem, msec=10, cipher="AES-128/GCM", pbkdf="Scrypt")
             dec3 = botan.PrivateKey.load(pem3, passphrase)
             self.assertEqual(dec3.export(is_pem), ref_val)
+
+    def test_stateful_operations(self):
+        rng = botan.RandomNumberGenerator()
+        priv1 = botan.PrivateKey.create('RSA', '1024', rng)
+        self.assertEqual(priv1.stateful_operation(), False)
+
+        try:
+            remaining = priv1.remaining_operations()
+        except botan.BotanException as e:
+            self.assertEqual(str(e), "botan_privkey_remaining_operations failed: -3 (No value available)")
+
+        priv2 = botan.PrivateKey.create('XMSS', 'XMSS-SHA2_10_256', rng)
+        self.assertEqual(priv2.stateful_operation(), True)
+
+        remaining = priv2.remaining_operations()
+        self.assertEqual(remaining, 1024)
 
     def test_check_key(self):
         # valid (if rather small) RSA key
@@ -438,6 +545,10 @@ ofvkP1EDmpx50fHLawIDAQAB
         group = 'secp256r1'
         msg = 'test message'
 
+        if not botan.ECGroup.supports_named_group(group):
+            self.skipTest("No secp256r1 group support in this build")
+            return
+
         priv = botan.PrivateKey.create('ECDSA', group, rng)
         pub = priv.get_public_key()
         self.assertEqual(pub.get_field('public_x'), priv.get_field('public_x'))
@@ -478,6 +589,10 @@ ofvkP1EDmpx50fHLawIDAQAB
         group = 'sm2p256v1'
         msg = 'test message'
 
+        if not botan.ECGroup.supports_named_group(group):
+            self.skipTest("No sm2p256v1 group support in this build")
+            return
+
         priv = botan.PrivateKey.create('SM2', group, rng)
         pub = priv.get_public_key()
         self.assertEqual(pub.get_field('public_x'), priv.get_field('public_x'))
@@ -513,6 +628,9 @@ ofvkP1EDmpx50fHLawIDAQAB
         kdf = 'KDF2(SHA-384)'
 
         for grp in ['secp256r1', 'secp384r1', 'brainpool256r1']:
+            if not botan.ECGroup.supports_named_group(grp):
+                continue
+
             a_priv = botan.PrivateKey.create('ECDH', grp, a_rng)
             b_priv = botan.PrivateKey.create('ECDH', grp, b_rng)
 
@@ -524,9 +642,11 @@ ofvkP1EDmpx50fHLawIDAQAB
 
             a_pub_pt = a_priv.get_public_key().get_public_point()
             b_pub_pt = b_priv.get_public_key().get_public_point()
+            a_pub_raw = a_priv.get_public_key().to_raw()
 
             self.assertEqual(a_op.public_value(), a_pub_pt)
             self.assertEqual(b_op.public_value(), b_pub_pt)
+            self.assertEqual(a_pub_raw, a_pubv)
 
             salt = a_rng.get(8) + b_rng.get(8)
 
@@ -542,6 +662,9 @@ ofvkP1EDmpx50fHLawIDAQAB
             new_a = botan.PrivateKey.load_ecdh(grp, a_priv_x)
 
             self.assertEqual(a_pem, new_a.to_pem())
+
+            a_raw = hex_encode(a_priv.to_raw())
+            self.assertEqual(int(a_raw, base=16), a_priv_x)
 
     def test_rfc7748_kex(self):
         rng = botan.RandomNumberGenerator()
@@ -587,36 +710,33 @@ ofvkP1EDmpx50fHLawIDAQAB
             self.assertFalse(verifier.check_signature(signature))
 
     def test_certs(self):
-        cert = botan.X509Cert(filename=test_data("src/tests/data/x509/ecc/CSCA.CSCA.csca-germany.1.crt"))
+        cert = botan.X509Cert(filename=test_data("src/tests/data/x509/ecc/isrg-root-x2.pem"))
         pubkey = cert.subject_public_key()
 
-        self.assertEqual(len(cert.subject_public_key_bits()), 275)
+        self.assertEqual(len(cert.subject_public_key_bits()), 118)
 
         self.assertEqual(pubkey.algo_name(), 'ECDSA')
-        self.assertEqual(pubkey.estimated_strength(), 112)
+        self.assertEqual(pubkey.estimated_strength(), 192)
 
         self.assertEqual(cert.fingerprint("SHA-1"),
-                         "32:42:1C:C3:EC:54:D7:E9:43:EC:51:F0:19:23:BD:85:1D:F2:1B:B9")
+                         "BD:B1:B9:3C:D5:97:8D:45:C6:26:14:55:F8:DB:95:C7:5A:D1:53:AF")
 
-        self.assertEqual(hex_encode(cert.serial_number()), "01")
-        self.assertEqual(hex_encode(cert.authority_key_id()),
-                         "0096452de588f966c4ccdf161dd1f3f5341b71e7")
+        self.assertEqual(hex_encode(cert.serial_number()), "41d29dd172eaeea780c12c6ce92f8752")
+        self.assertEqual(hex_encode(cert.subject_key_id()),
+                         "7c4296aede4b483bfa92f89e8ccf6d8ba9723795")
 
-        self.assertEqual(cert.subject_dn('Name', 0), 'csca-germany')
-        self.assertEqual(cert.subject_dn('Email', 0), 'csca-germany@bsi.bund.de')
-        self.assertEqual(cert.subject_dn('Organization', 0), 'bund')
-        self.assertEqual(cert.subject_dn('Organizational Unit', 0), 'bsi')
-        self.assertEqual(cert.subject_dn('Country', 0), 'DE')
+        self.assertEqual(cert.subject_dn('Name', 0), 'ISRG Root X2')
+        self.assertEqual(cert.subject_dn('Organization', 0), 'Internet Security Research Group')
+        self.assertEqual(cert.subject_dn('Country', 0), 'US')
 
         self.assertTrue(cert.to_string().startswith("Version: 3"))
 
-        self.assertEqual(cert.issuer_dn('Name', 0), 'csca-germany')
-        self.assertEqual(cert.issuer_dn('Organization', 0), 'bund')
-        self.assertEqual(cert.issuer_dn('Organizational Unit', 0), 'bsi')
-        self.assertEqual(cert.issuer_dn('Country', 0), 'DE')
+        self.assertEqual(cert.issuer_dn('Name', 0), 'ISRG Root X2')
+        self.assertEqual(cert.issuer_dn('Organization', 0), 'Internet Security Research Group')
+        self.assertEqual(cert.issuer_dn('Country', 0), 'US')
 
-        self.assertEqual(cert.not_before(), 1184858838)
-        self.assertEqual(cert.not_after(), 1831907880)
+        self.assertEqual(cert.not_before(), 1599177600)
+        self.assertEqual(cert.not_after(), 2231510400)
 
         self.assertTrue(cert.allowed_usage(["CRL_SIGN", "KEY_CERT_SIGN"]))
         self.assertTrue(cert.allowed_usage(["KEY_CERT_SIGN"]))
@@ -852,15 +972,169 @@ ofvkP1EDmpx50fHLawIDAQAB
         b_priv = botan.PrivateKey.load_kyber(b_priv_bits) #2400
 
         privkey_read = b_priv.view_kyber_raw_key()
+        privkey_generic_raw = b_priv.to_raw()
         self.assertEqual(privkey_read, b_priv_bits)
+        self.assertEqual(privkey_generic_raw, b_priv_bits)
 
         b_pub = b_priv.get_public_key()
         pubkey_read = b_pub.view_kyber_raw_key()
+        pubkey_generic_raw = b_pub.to_raw()
         self.assertEqual(pubkey_read, b_pub_bits)
+        self.assertEqual(pubkey_generic_raw, b_pub_bits)
 
         a_pub = botan.PublicKey.load_kyber(a_pub_bits) #1184
         pubkey_read = a_pub.view_kyber_raw_key()
         self.assertEqual(pubkey_read, a_pub_bits)
+
+    def test_ml_kem_raw_keys(self):
+        mlkem_mode = "ML-KEM-512"
+        sk = botan.PrivateKey.create("ML-KEM", mlkem_mode, botan.RandomNumberGenerator("user"))
+        pk = sk.get_public_key()
+
+        sk_bits = sk.to_raw()
+        pk_bits = pk.to_raw()
+
+        sk_read = botan.PrivateKey.load_ml_kem(mlkem_mode, sk_bits)
+        pk_read = botan.PublicKey.load_ml_kem(mlkem_mode, pk_bits)
+
+        self.assertEqual(sk_read.to_raw(), sk_bits)
+        self.assertEqual(pk_read.to_raw(), pk_bits)
+
+    def test_ml_dsa_raw_keys(self):
+        mldsa_mode = "ML-DSA-4x4"
+        sk = botan.PrivateKey.create("ML-DSA", mldsa_mode, botan.RandomNumberGenerator("user"))
+        pk = sk.get_public_key()
+
+        sk_bits = sk.to_raw()
+        pk_bits = pk.to_raw()
+
+        sk_read = botan.PrivateKey.load_ml_dsa(mldsa_mode, sk_bits)
+        pk_read = botan.PublicKey.load_ml_dsa(mldsa_mode, pk_bits)
+
+        self.assertEqual(sk_read.to_raw(), sk_bits)
+        self.assertEqual(pk_read.to_raw(), pk_bits)
+
+    def test_slh_dsa_raw_keys(self):
+        slhdsa_mode = "SLH-DSA-SHAKE-128f"
+        sk = botan.PrivateKey.create("SLH-DSA", slhdsa_mode, botan.RandomNumberGenerator("user"))
+        pk = sk.get_public_key()
+
+        sk_bits = sk.to_raw()
+        pk_bits = pk.to_raw()
+
+        sk_read = botan.PrivateKey.load_slh_dsa(slhdsa_mode, sk_bits)
+        pk_read = botan.PublicKey.load_slh_dsa(slhdsa_mode, pk_bits)
+
+        self.assertEqual(sk_read.to_raw(), sk_bits)
+        self.assertEqual(pk_read.to_raw(), pk_bits)
+
+    def test_frodokem_raw_keys(self):
+        frodo_mode = "FrodoKEM-640-SHAKE"
+        sk = botan.PrivateKey.create("FrodoKEM", frodo_mode, botan.RandomNumberGenerator("user"))
+        pk = sk.get_public_key()
+
+        sk_bits = sk.to_raw()
+        pk_bits = pk.to_raw()
+
+        sk_read = botan.PrivateKey.load_frodokem(frodo_mode, sk_bits)
+        pk_read = botan.PublicKey.load_frodokem(frodo_mode, pk_bits)
+
+        self.assertEqual(sk_read.to_raw(), sk_bits)
+        self.assertEqual(pk_read.to_raw(), pk_bits)
+
+    def test_classic_mceliece_raw_keys(self):
+        cmce_mode = "348864f"
+        sk = botan.PrivateKey.create("ClassicMcEliece", cmce_mode, botan.RandomNumberGenerator("user"))
+        pk = sk.get_public_key()
+
+        sk_bits = sk.to_raw()
+        pk_bits = pk.to_raw()
+
+        sk_read = botan.PrivateKey.load_classic_mceliece(cmce_mode, sk_bits)
+        pk_read = botan.PublicKey.load_classic_mceliece(cmce_mode, pk_bits)
+
+        self.assertEqual(sk_read.to_raw(), sk_bits)
+        self.assertEqual(pk_read.to_raw(), pk_bits)
+
+    def test_oids(self):
+        oid = botan.OID.from_string("1.2.3.4.5")
+        self.assertEqual(oid.to_string(), "1.2.3.4.5")
+
+        new_oid = botan.OID.from_string("1.2.3.4.5.6.7.8")
+        new_oid.register("random-name-that-definitely-has-no-oid")
+        new_oid_from_string = botan.OID.from_string("random-name-that-definitely-has-no-oid")
+        self.assertEqual(new_oid, new_oid_from_string)
+        self.assertEqual(new_oid.to_string(), new_oid_from_string.to_string())
+        self.assertEqual(new_oid.to_name(), new_oid_from_string.to_name())
+
+        oid_rsa = botan.OID.from_string("RSA")
+        self.assertEqual(oid_rsa.to_string(), "1.2.840.113549.1.1.1")
+        self.assertEqual(oid_rsa.to_name(), "RSA")
+
+        oid_a = botan.OID.from_string("1.2.3.4.5.6")
+        oid_b = botan.OID.from_string("1.2.3.4.5.6")
+        oid_c = botan.OID.from_string("1.2.3.4")
+        self.assertEqual(oid_a, oid_b)
+        self.assertNotEqual(oid_a, oid_c)
+        self.assertTrue(oid_a > oid_c)
+        self.assertTrue(oid_a >= oid_c)
+        self.assertTrue(oid_c < oid_a)
+        self.assertTrue(oid_c <= oid_a)
+
+        rng = botan.RandomNumberGenerator()
+        priv = botan.PrivateKey.create("RSA", "1024", rng)
+        oid_rsa_priv = priv.object_identifier()
+        self.assertEqual(oid_rsa_priv, oid_rsa)
+        self.assertEqual(oid_rsa_priv.to_string(), oid_rsa.to_string())
+        self.assertEqual(oid_rsa_priv.to_name(), oid_rsa.to_name())
+
+        pub = priv.get_public_key()
+        oid_rsa_pub = pub.object_identifier()
+        self.assertEqual(oid_rsa_pub, oid_rsa)
+        self.assertEqual(oid_rsa_pub.to_string(), oid_rsa.to_string())
+        self.assertEqual(oid_rsa_pub.to_name(), oid_rsa_pub.to_name())
+
+    def test_ec_group(self):
+        if not botan.ECGroup.supports_named_group("secp256r1"):
+            self.skipTest("No secp256r1 group support in this build")
+            return
+
+        secp256r1_oid = botan.OID.from_string("1.2.840.10045.3.1.7")
+
+        group_from_name = botan.ECGroup.from_name("secp256r1")
+        group_from_oid = botan.ECGroup.from_oid(secp256r1_oid)
+
+        self.assertEqual(secp256r1_oid, group_from_name.get_curve_oid())
+        self.assertEqual(group_from_name, group_from_oid)
+
+        rng = botan.RandomNumberGenerator()
+        priv = botan.PrivateKey.create_ec("ECDSA", group_from_name, rng)
+        self.assertEqual(priv.algo_name(), "ECDSA")
+
+        self.assertEqual(group_from_name, botan.ECGroup.from_pem(group_from_name.to_pem()))
+        self.assertEqual(group_from_name, botan.ECGroup.from_ber(group_from_name.to_der()))
+
+        if botan.ECGroup.supports_application_specific_group():
+            secp256r1_new_oid = botan.OID.from_string("1.3.6.1.4.1.25258.100.0")
+            secp256r1_new_oid.register("secp256r1-but-manually-registered")
+
+            p = botan.MPI("FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF", 16)
+            a = botan.MPI("FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC", 16)
+            b = botan.MPI("5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B", 16)
+            g_x = botan.MPI("6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296", 16)
+            g_y = botan.MPI("4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5", 16)
+            order = botan.MPI("FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551", 16)
+
+            group_from_parameters = botan.ECGroup.from_params(secp256r1_new_oid, p, a, b, g_x, g_y, order)
+
+            self.assertEqual(group_from_name, group_from_parameters)
+
+            self.assertEqual(p, group_from_name.get_p())
+            self.assertEqual(a, group_from_name.get_a())
+            self.assertEqual(b, group_from_name.get_b())
+            self.assertEqual(g_x, group_from_name.get_g_x())
+            self.assertEqual(g_y, group_from_name.get_g_y())
+            self.assertEqual(order, group_from_name.get_order())
 
 
 class BotanPythonZfecTests(unittest.TestCase):
@@ -926,13 +1200,15 @@ class BotanPythonZfecTests(unittest.TestCase):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--test-data-dir', default='.')
+    parser.add_argument("--tpm2-tcti-name")
+    parser.add_argument("--tpm2-tcti-conf")
+
     parser.add_argument('unittest_args', nargs='*')
 
-    args = parser.parse_args()
-    global TEST_DATA_DIR
-    TEST_DATA_DIR = args.test_data_dir
+    global ARGS
+    ARGS = parser.parse_args()
 
-    sys.argv[1:] = args.unittest_args
+    sys.argv[1:] = ARGS.unittest_args
     unittest.main()
 
 if __name__ == '__main__':

@@ -1,5 +1,5 @@
 /*
-* (C) 2024 Jack Lloyd
+* (C) 2024,2025 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -66,6 +66,7 @@ inline constexpr auto monty_redc_pdash1(const std::array<W, 2 * N>& z, const std
    static_assert(N >= 1);
 
    std::array<W, N> ws;
+   std::array<W, N> r;
 
    word3<W> accum;
 
@@ -99,7 +100,6 @@ inline constexpr auto monty_redc_pdash1(const std::array<W, 2 * N>& z, const std
    // w1 is the final part, which is not stored in the workspace
    const W w1 = accum.extract();
 
-   std::array<W, N> r;
    bigint_monty_maybe_sub<N>(r.data(), w1, ws.data(), p.data());
 
    return r;
@@ -111,6 +111,27 @@ inline constexpr auto monty_redc(const std::array<W, 2 * N>& z, const std::array
    static_assert(N >= 1);
 
    std::array<W, N> ws;
+   std::array<W, N> r;
+
+   if(!std::is_constant_evaluated()) {
+      // This range ensures we cover fields of 256, 384 and 512 bits for both 32 and 64 bit words
+      if constexpr(N == 4) {
+         bigint_monty_redc_4(r.data(), z.data(), p.data(), p_dash, ws.data());
+         return r;
+      } else if constexpr(N == 6) {
+         bigint_monty_redc_6(r.data(), z.data(), p.data(), p_dash, ws.data());
+         return r;
+      } else if constexpr(N == 8) {
+         bigint_monty_redc_8(r.data(), z.data(), p.data(), p_dash, ws.data());
+         return r;
+      } else if constexpr(N == 12) {
+         bigint_monty_redc_12(r.data(), z.data(), p.data(), p_dash, ws.data());
+         return r;
+      } else if constexpr(N == 16) {
+         bigint_monty_redc_16(r.data(), z.data(), p.data(), p_dash, ws.data());
+         return r;
+      }
+   }
 
    word3<W> accum;
 
@@ -144,7 +165,6 @@ inline constexpr auto monty_redc(const std::array<W, 2 * N>& z, const std::array
    // w1 is the final part, which is not stored in the workspace
    const W w1 = accum.extract();
 
-   std::array<W, N> r;
    bigint_monty_maybe_sub<N>(r.data(), w1, ws.data(), p.data());
 
    return r;
@@ -227,7 +247,7 @@ consteval auto shanks_tonelli_c4(const std::array<W, N>& p_minus_1_over_2) -> Z 
 
    // This is a silly performance hack; the first non-quadratic root in P-224
    // is 11 so if we start the search there we save a little time.
-   auto z = Z::from_word(11);
+   auto z = Z::constant(11);
 
    for(;;) {
       auto c = z.pow_vartime(p_minus_1_over_2);
@@ -285,31 +305,6 @@ inline constexpr auto bytes_to_words(std::span<const uint8_t, L> bytes) {
    }
 
    return r;
-}
-
-// Extract a WindowBits sized window out of s, depending on offset.
-template <size_t WindowBits, typename W, size_t N>
-constexpr size_t read_window_bits(std::span<const W, N> words, size_t offset) {
-   static_assert(WindowBits >= 1 && WindowBits <= 7);
-
-   const uint8_t WindowMask = static_cast<uint8_t>(1 << WindowBits) - 1;
-
-   const size_t W_bits = sizeof(W) * 8;
-   const auto bit_shift = offset % W_bits;
-   const auto word_offset = words.size() - 1 - (offset / W_bits);
-
-   const bool single_byte_window = bit_shift <= (W_bits - WindowBits) || word_offset == 0;
-
-   const auto w0 = words[word_offset];
-
-   if(single_byte_window) {
-      return (w0 >> bit_shift) & WindowMask;
-   } else {
-      // Otherwise we must join two words and extract the result
-      const auto w1 = words[word_offset - 1];
-      const auto combined = ((w0 >> bit_shift) | (w1 << (W_bits - bit_shift)));
-      return combined & WindowMask;
-   }
 }
 
 }  // namespace

@@ -117,6 +117,15 @@ needed. If your diff is less than roughly 100 lines, it should probably be a
 single commit. Only split commits as needed to help with review/understanding of
 the change.
 
+Occasionally we apply and commit updated clang-format rules to the code base. To
+avoid cluttering the ``git blame`` output with these intrusive commits, we
+maintain a list of them in ``src/configs/git-blame-ignore-revs``. To use it,
+either manually add ``--ignore-revs-file=`` to your ``git blame`` command, or
+configure it to be used in your local checkout, like so::
+
+  git config --local blame.ignoreRevsFile src/configs/git-blame-ignore-revs
+  git config --local blame.markIgnoredLines true
+
 Python
 ----------------------------------------
 
@@ -155,6 +164,25 @@ On Linux if you have the ``lcov`` and ``gcov`` tools installed, then running
 run the tests, test the fuzzers against a corpus, and produce an HTML report
 of total coverage. This coverage build requires the development headers for
 zlib, bzip2, liblzma, TrouSerS (libtspi), and Sqlite3.
+
+Editor Integrations
+----------------------------------------
+
+The folder ``src/editors`` contains configuration files for a few editors.
+To make use of them, create symlinks of those into the root of your local
+Botan repository. For example, to enable integration with VSCode and configure
+the editor using editorconfig, you can do the following:
+
+.. code-block:: bash
+
+  cd /home/you/projects/botan
+  ln -s src/editors/vscode .vscode
+  ln -s src/editors/editorconfig .editorconfig
+
+  code .
+
+With the recommended extensions installed, you should now have a good starting
+point for working with Botan in VSCode.
 
 Copyright Notice
 ----------------------------------------
@@ -214,10 +242,11 @@ Use ``m_`` prefix on all member variables.
 
 ``clang-format`` is used for all C++ formatting. The configuration is
 in ``.clang-format`` in the root directory. You can rerun the
-formatter using ``make fmt`` or by invoking the script
-``src/scripts/dev_tools/run_clang_format.py``. If the output would be
-truly horrible, it is allowed to disable formatting for a specific
-area using ``// clang-format off`` annotations.
+formatter using ``make fmt``, by invoking the script
+``src/scripts/dev_tools/run_clang_format.py`` or using an appropriate editor
+configuration from ``src/editors``. If the output would be truly horrible, it is
+allowed to disable formatting for a specific area using ``// clang-format off``
+annotations.
 
 .. note::
 
@@ -290,11 +319,11 @@ need this functionality, and it can be done in the library for less than that,
 then it makes sense to just write the code. Yup.
 
 Currently the (optional) external dependencies of the library are several
-compression libraries (zlib, bzip2, lzma), sqlite3 database, Trousers (TPM
-integration), plus various operating system utilities like basic filesystem
-operations. These provide major pieces of functionality which seem worth the
-trouble of maintaining an integration with.
+compression libraries (zlib, bzip2, lzma), sqlite3 database, Trousers (TPM 1.2
+integration), TSS2 (TPM 2.0 integration) plus various operating system utilities
+like basic filesystem operations. These provide major pieces of functionality
+which seem worth the trouble of maintaining an integration with.
 
 At this point the most plausible examples of an appropriate new external
 dependency are all deeper integrations with system level cryptographic
-interfaces (CommonCrypto, CryptoAPI, /dev/crypto, iOS keychain, TPM 2.0, etc)
+interfaces (CommonCrypto, CryptoAPI, /dev/crypto, iOS keychain, etc)

@@ -1,3 +1,6 @@
 family loongarch
-endian little
-wordsize 64
+
+<isa_extensions>
+lsx
+lasx
+</isa_extensions>

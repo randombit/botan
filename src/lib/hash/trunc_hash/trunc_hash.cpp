@@ -8,8 +8,10 @@
 
 #include <botan/internal/trunc_hash.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
+#include <algorithm>
 
 namespace Botan {
 

@@ -32,7 +32,7 @@ constexpr size_t WORDS_448 = 7;
  * the value might be larger than the prime modulus. When calling the to_bytes() method, the
  * canonical representation is returned.
  */
-class Gf448Elem {
+class Gf448Elem final {
    public:
       /**
        * @brief Construct a GF element from a 448-bit integer gives as 56 bytes @p x in

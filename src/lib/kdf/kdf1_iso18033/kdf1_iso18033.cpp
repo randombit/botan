@@ -1,6 +1,7 @@
 /*
 * KDF1 from ISO 18033-2
 * (C) 2016 Philipp Weber
+* (C) 2024 René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,42 +9,43 @@
 #include <botan/internal/kdf1_iso18033.h>
 
 #include <botan/exceptn.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
-void KDF1_18033::kdf(uint8_t key[],
-                     size_t key_len,
-                     const uint8_t secret[],
-                     size_t secret_len,
-                     const uint8_t salt[],
-                     size_t salt_len,
-                     const uint8_t label[],
-                     size_t label_len) const {
-   if(key_len == 0) {
+void KDF1_18033::perform_kdf(std::span<uint8_t> key,
+                             std::span<const uint8_t> secret,
+                             std::span<const uint8_t> salt,
+                             std::span<const uint8_t> label) const {
+   if(key.empty()) {
       return;
    }
 
-   const size_t blocks_required = key_len / m_hash->output_length();
+   const auto hash_output_length = m_hash->output_length();
+   const auto blocks_required = ceil_division<uint64_t /* for 32bit systems */>(key.size(), hash_output_length);
 
-   if(blocks_required >= 0xFFFFFFFE) {
-      throw Invalid_Argument("KDF1-18033 maximum output length exceeeded");
-   }
+   // This KDF uses a 32-bit counter for the hash blocks, initialized at 0.
+   // It will wrap around after 2^32 iterations which limits the theoretically
+   // possible output to 2^32 blocks.
+   BOTAN_ARG_CHECK(blocks_required <= 0xFFFFFFFF, "KDF1-18033 maximum output length exceeeded");
 
-   uint32_t counter = 0;
-   secure_vector<uint8_t> h;
+   BufferStuffer k(key);
+   for(uint32_t counter = 0; !k.full(); ++counter) {
+      m_hash->update(secret);
+      m_hash->update_be(counter);
+      m_hash->update(label);
+      m_hash->update(salt);
 
-   size_t offset = 0;
-   while(offset != key_len) {
-      m_hash->update(secret, secret_len);
-      m_hash->update_be(counter++);
-      m_hash->update(label, label_len);
-      m_hash->update(salt, salt_len);
-      m_hash->final(h);
-
-      const size_t added = std::min(h.size(), key_len - offset);
-      copy_mem(&key[offset], h.data(), added);
-      offset += added;
+      // Write straight into the output buffer, except if the hash output needs
+      // a truncation in the final iteration.
+      if(k.remaining_capacity() >= hash_output_length) {
+         m_hash->final(k.next(hash_output_length));
+      } else {
+         const auto h = m_hash->final();
+         k.append(std::span{h}.first(k.remaining_capacity()));
+      }
    }
 }
 

@@ -1,35 +1,74 @@
 BigInt
 ========================================
 
-``BigInt`` is Botan's implementation of a multiple-precision integer. Thanks to
-C++'s operator overloading features, using ``BigInt`` is often quite similar to
-using a native integer type. The number of functions related to ``BigInt`` is
-quite large, and not all of them are documented here. You can find the complete
-declarations in ``botan/bigint.h`` and ``botan/numthry.h``.
+``BigInt``, in ``bigint.h``, is an implementation of a signed magnitude
+multiple-precision integer, which is used to implement certain older public key
+algorithms such as RSA. It also appears in other contexts, for example X.509
+certificate serial numbers are technically integer values and can be quite
+large, and so are represented using a ``BigInt``.
+
+A ``BigInt`` is a sequence of smaller integers of type ``word``; this type is
+defined to be either ``uint32_t`` or ``uint64_t``, depending on the word size of
+the processor.
+
+.. warning::
+
+   While it is possible to use the APIs provided by ``BigInt`` as a general
+   calculation facility, it is **extremely inadvisable** that you attempt to
+   implement a cryptographic scheme of any kind directly using ``BigInt``.
+   Botan internally has many facilities for fast and side channel safe
+   arithmetic which are not exposed to callers.
+
+   In general, as a library user, avoid doing anything with ``BigInt`` besides
+   serializing or deserializing them as required to call other interfaces.
+   Some of the general calculation facilities of ``BigInt`` may be made internal
+   to the library in a future major release.
 
 .. cpp:class:: BigInt
 
-   .. cpp:function:: BigInt()
+   .. cpp:function:: static BigInt BigInt::from_string(std::string_view str)
+
+      Create a BigInt from a string. By default decimal is expected. With an 0x
+      prefix, instead it is treated as hexadecimal. A ``-`` prefix to indicate
+      negative numbers is also accepted.
+
+   .. cpp:function:: static BigInt::from_bytes(std::span<const uint8_t> buf)
+
+      Create a BigInt from a binary array (big-endian encoding). The result of
+      this function will always be positive; there is no support for a sign bit,
+      2s complement encoding, or similar methods for indicating a negative value.
+
+   .. cpp:function:: void serialize_to(std::span<uint8_t> buf)
+
+      Encode this BigInt as a big-endian integer. The sign is ignored.
+
+      There must be sufficient space to encode the entire integer in ``buf``.
+      If ``buf`` is larger than required, sufficient zero bytes will be
+      prefixed.
+
+   .. cpp:function:: size_t bytes() const
+
+      Return number of bytes needed to represent value of ``*this``
+
+   .. cpp:function:: size_t bits() const
+
+      Return number of bits needed to represent value of ``*this``
+
+   .. cpp:function:: std::string to_dec_string() const
+
+      Encode the integer as a decimal string.
+
+   .. cpp:function:: std::string to_hex_string() const
+
+      Encode the integer as a hexadecimal string, with "0x" prefix
+
+   .. cpp:function:: BigInt::zero()
 
       Create a BigInt with value zero
 
    .. cpp:function:: BigInt::from_u64(uint64_t n)
 
       Create a BigInt with value *n*
-
-   .. cpp:function:: BigInt(std::string_view str)
-
-      Create a BigInt from a string. By default decimal is expected. With an 0x
-      prefix instead it is treated as hexadecimal. A ``-`` prefix to indicate
-      negative numbers is also accepted.
-
-   .. cpp:function:: BigInt(std::span<const uint8_t> buf)
-
-      Create a BigInt from a binary array (big-endian encoding).
-
-   .. cpp:function:: BigInt(RandomNumberGenerator& rng, size_t bits, bool set_high_bit = true)
-
-      Create a random BigInt of the specified size.
 
    .. cpp:function:: BigInt operator+(const BigInt& x, const BigInt& y)
 
@@ -147,13 +186,10 @@ declarations in ``botan/bigint.h`` and ``botan/numthry.h``.
 
       Set ``*this`` to zero
 
-   .. cpp:function:: size_t bytes() const
+   .. cpp:function:: uint32_t to_u32bit() const
 
-      Return number of bytes need to represent value of ``*this``
-
-   .. cpp:function:: size_t bits() const
-
-      Return number of bits need to represent value of ``*this``
+      Return value of ``*this`` as a 32-bit integer, if possible.
+      If the integer is negative or not in range, an exception is thrown.
 
    .. cpp:function:: bool is_even() const
 
@@ -171,103 +207,15 @@ declarations in ``botan/bigint.h`` and ``botan/numthry.h``.
 
       Return true if ``*this`` is zero
 
-   .. cpp:function:: void set_bit(size_t n)
-
-      Set bit *n* of ``*this``
-
-   .. cpp:function:: void clear_bit(size_t n)
-
-      Clear bit *n* of ``*this``
-
-   .. cpp:function:: bool get_bit(size_t n) const
-
-      Get bit *n* of ``*this``
-
-   .. cpp:function:: uint32_t to_u32bit() const
-
-      Return value of ``*this`` as a 32-bit integer, if possible.
-      If the integer is negative or not in range, an exception is thrown.
-
    .. cpp:function:: bool is_negative() const
 
-      Return true if ``*this`` is negative
+      Return true if ``*this`` is less than zero
 
    .. cpp:function:: bool is_positive() const
 
-      Return true if ``*this`` is negative
+      Return true if ``*this`` is greater than or equal to zero
 
    .. cpp:function:: BigInt abs() const
 
       Return absolute value of ``*this``
 
-   .. cpp:function:: void serialize_to(std::span<uint8_t> buf)
-
-      Encode this BigInt as a big-endian integer. The sign is ignored.
-
-      There must be sufficient space to encode the entire integer in ``buf``.
-      If ``buf`` is larger than required, sufficient zero bytes will be
-      prefixed.
-
-   .. cpp:function:: std::string to_dec_string() const
-
-      Encode the integer as a decimal string.
-
-   .. cpp:function:: std::string to_hex_string() const
-
-      Encode the integer as a hexadecimal string, with "0x" prefix
-
-Number Theory
-----------------------------------------
-
-Number theoretic functions available include:
-
-.. cpp:function:: BigInt gcd(BigInt x, BigInt y)
-
-  Returns the greatest common divisor of x and y
-
-.. cpp:function:: BigInt lcm(BigInt x, BigInt y)
-
-  Returns an integer z which is the smallest integer such that z % x
-  == 0 and z % y == 0
-
-.. cpp:function:: BigInt jacobi(BigInt a, BigInt n)
-
-  Return Jacobi symbol of (a|n).
-
-.. cpp:function:: BigInt inverse_mod(BigInt x, BigInt m)
-
-  Returns the modular inverse of x modulo m, that is, an integer
-  y such that (x*y) % m == 1. If no such y exists, returns zero.
-
-.. cpp:function:: BigInt power_mod(BigInt b, BigInt x, BigInt m)
-
-  Returns b to the xth power modulo m. If you are doing many
-  exponentiations with a single fixed modulus, it is faster to use a
-  ``Power_Mod`` implementation.
-
-.. cpp:function:: BigInt ressol(BigInt x, BigInt p)
-
-  Returns the square root modulo a prime, that is, returns a number y
-  such that (y*y) % p == x. Returns -1 if no such integer exists.
-
-.. cpp:function:: bool is_prime(BigInt n, RandomNumberGenerator& rng, \
-                                size_t prob = 56, double is_random = false)
-
-  Test *n* for primality using a probabilistic algorithm (Miller-Rabin).  With
-  this algorithm, there is some non-zero probability that true will be returned
-  even if *n* is actually composite. Modifying *prob* allows you to decrease the
-  chance of such a false positive, at the cost of increased runtime. Sufficient
-  tests will be run such that the chance *n* is composite is no more than 1 in
-  2\ :sup:`prob`. Set *is_random* to true if (and only if) *n* was randomly
-  chosen (ie, there is no danger it was chosen maliciously) as far fewer tests
-  are needed in that case.
-
-.. cpp:function:: BigInt random_prime(RandomNumberGenerator& rng, \
-                                      size_t bits, \
-                                      BigInt coprime = 1, \
-                                      size_t equiv = 1, \
-                                      size_t equiv_mod = 2)
-
-  Return a random prime number of ``bits`` bits long that is
-  relatively prime to ``coprime``, and equivalent to ``equiv`` modulo
-  ``equiv_mod``.

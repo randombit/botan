@@ -1,0 +1,25 @@
+
+# (C) 2024 Jack Lloyd
+# (C) 2024 René Meusel, Rohde & Schwarz Cybersecurity
+#
+# Botan is released under the Simplified BSD License (see license.txt)
+
+name: Read Repository Configuration
+description: Reads the repository configuration file and makes it available as environment variables
+
+runs:
+  using: composite
+  steps:
+    - name: Read Repository Configuration into Environment Variables
+      run: |
+        python3 ${{ github.action_path }}/../../../src/scripts/repo_config.py all >> $GITHUB_ENV
+        echo "REPO_CONFIG_LOADED=true" >> $GITHUB_ENV
+      shell: bash
+      if: runner.os != 'Windows'
+
+    - name: Read Repository Configuration into Environment Variables
+      run: |
+        python3 ${{ github.action_path }}/../../../src/scripts/repo_config.py all >> $GITHUB_ENV
+        echo "REPO_CONFIG_LOADED=true" >> $GITHUB_ENV
+      shell: pwsh
+      if: runner.os == 'Windows'

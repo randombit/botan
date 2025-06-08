@@ -40,13 +40,19 @@ class AEAD_Tests final : public Text_Based_Test {
          result.confirm("AEAD name is not empty", !enc->name().empty());
          result.confirm("AEAD default nonce size is accepted", enc->valid_nonce_length(enc->default_nonce_length()));
 
-         Botan::secure_vector<uint8_t> garbage = rng.random_vec(enc->update_granularity());
+         auto get_garbage = [&] { return rng.random_vec(enc->update_granularity()); };
 
          if(is_siv == false) {
-            result.test_throws("Unkeyed object throws for encrypt", [&]() { enc->update(garbage); });
+            result.test_throws("Unkeyed object throws for encrypt", [&]() {
+               auto garbage = get_garbage();
+               enc->update(garbage);
+            });
          }
 
-         result.test_throws("Unkeyed object throws for encrypt", [&]() { enc->finish(garbage); });
+         result.test_throws("Unkeyed object throws for encrypt", [&]() {
+            auto garbage = get_garbage();
+            enc->finish(garbage);
+         });
 
          if(enc->associated_data_requires_key()) {
             result.test_throws("Unkeyed object throws for set AD",
@@ -61,12 +67,20 @@ class AEAD_Tests final : public Text_Based_Test {
          result.test_eq("key is set", enc->has_keying_material(), true);
 
          if(is_siv == false) {
-            result.test_throws("Cannot process data until nonce is set (enc)", [&]() { enc->update(garbage); });
-            result.test_throws("Cannot process data until nonce is set (enc)", [&]() { enc->finish(garbage); });
+            result.test_throws("Cannot process data until nonce is set (enc)", [&]() {
+               auto garbage = get_garbage();
+               enc->update(garbage);
+            });
+            result.test_throws("Cannot process data until nonce is set (enc)", [&]() {
+               auto garbage = get_garbage();
+               enc->finish(garbage);
+            });
          }
 
          enc->set_associated_data(mutate_vec(ad, rng));
          enc->start(mutate_vec(nonce, rng));
+
+         auto garbage = get_garbage();
          enc->update(garbage);
 
          // reset message specific state
@@ -195,13 +209,19 @@ class AEAD_Tests final : public Text_Based_Test {
 
          result.test_eq("AEAD decrypt output_length is correct", dec->output_length(input.size()), expected.size());
 
-         Botan::secure_vector<uint8_t> garbage = rng.random_vec(dec->update_granularity());
+         auto get_garbage = [&] { return rng.random_vec(dec->update_granularity()); };
 
          if(is_siv == false) {
-            result.test_throws("Unkeyed object throws for decrypt", [&]() { dec->update(garbage); });
+            result.test_throws("Unkeyed object throws for decrypt", [&]() {
+               auto garbage = get_garbage();
+               dec->update(garbage);
+            });
          }
 
-         result.test_throws("Unkeyed object throws for decrypt", [&]() { dec->finish(garbage); });
+         result.test_throws("Unkeyed object throws for decrypt", [&]() {
+            auto garbage = get_garbage();
+            dec->finish(garbage);
+         });
 
          if(dec->associated_data_requires_key()) {
             result.test_throws("Unkeyed object throws for set AD",
@@ -216,12 +236,18 @@ class AEAD_Tests final : public Text_Based_Test {
          dec->set_associated_data(mutate_vec(ad, rng));
 
          if(is_siv == false) {
-            result.test_throws("Cannot process data until nonce is set (dec)", [&]() { dec->update(garbage); });
-            result.test_throws("Cannot process data until nonce is set (dec)", [&]() { dec->finish(garbage); });
+            result.test_throws("Cannot process data until nonce is set (dec)", [&]() {
+               auto garbage = get_garbage();
+               dec->update(garbage);
+            });
+            result.test_throws("Cannot process data until nonce is set (dec)", [&]() {
+               auto garbage = get_garbage();
+               dec->finish(garbage);
+            });
          }
 
          dec->start(mutate_vec(nonce, rng));
-
+         auto garbage = get_garbage();
          dec->update(garbage);
 
          // reset message specific state

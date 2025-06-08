@@ -1,0 +1,21 @@
+# This file is not picked up automatically. You'll have to either explicitly
+# reference it when running git blame using --ignore-revs-file <file> or
+# add it to your checkout's local git config like so:
+#
+#    git config --local blame.ignoreRevsFile src/configs/git-blame-ignore-revs
+#    git config --local blame.markIgnoredLines true
+
+# [clang-format] initial apply to the code base
+3f87e1eef7dbfe231d833ffbf06f7a85b070b600
+
+# [clang-format] upgrade v17
+fe7a2a1d850ae02934ea04d25fa214c825442535
+
+# [clang-format] Add DEPRECATED macros
+697fec3aa0de3b9c1683206c99683a13c115ff9f
+
+# [clang-format] AllowShortFunctionsOnASingleLine
+62eeefff1c59f8cc977027d9260c07cf518f6377
+
+# [clang-format] AllowShortBlocksOnASingleLine
+de48a2eb6d2d77e104044da84c2fb7df5c08d65a

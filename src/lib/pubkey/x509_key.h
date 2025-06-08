@@ -10,6 +10,7 @@
 
 #include <botan/data_src.h>
 #include <botan/pk_keys.h>
+#include <memory>
 #include <string>
 #include <vector>
 

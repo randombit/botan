@@ -11,9 +11,10 @@
 #include <botan/der_enc.h>
 #include <botan/numthry.h>
 #include <botan/pem.h>
-#include <botan/reducer.h>
+#include <botan/internal/barrett.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/mod_inv.h>
 #include <botan/internal/monty.h>
 #include <botan/internal/monty_exp.h>
 #include <botan/internal/primality.h>
@@ -28,12 +29,24 @@ class DL_Group_Data final {
             m_p(p),
             m_q(q),
             m_g(g),
-            m_mod_p(p),
-            m_mod_q(q),
+            m_mod_p(Barrett_Reduction::for_public_modulus(p)),
+            m_mod_q(Barrett_Reduction::for_public_modulus(q)),
             m_monty_params(std::make_shared<Montgomery_Params>(m_p, m_mod_p)),
             m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
             m_p_bits(p.bits()),
             m_q_bits(q.bits()),
+            m_estimated_strength(dl_work_factor(m_p_bits)),
+            m_exponent_bits(dl_exponent_size(m_p_bits)),
+            m_source(source) {}
+
+      DL_Group_Data(const BigInt& p, const BigInt& g, DL_Group_Source source) :
+            m_p(p),
+            m_g(g),
+            m_mod_p(Barrett_Reduction::for_public_modulus(p)),
+            m_monty_params(std::make_shared<Montgomery_Params>(m_p, m_mod_p)),
+            m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
+            m_p_bits(p.bits()),
+            m_q_bits(0),
             m_estimated_strength(dl_work_factor(m_p_bits)),
             m_exponent_bits(dl_exponent_size(m_p_bits)),
             m_source(source) {}
@@ -51,15 +64,12 @@ class DL_Group_Data final {
 
       const BigInt& g() const { return m_g; }
 
-      BigInt mod_p(const BigInt& x) const { return m_mod_p.reduce(x); }
+      const Barrett_Reduction& reducer_mod_p() const { return m_mod_p; }
 
-      BigInt multiply_mod_p(const BigInt& x, const BigInt& y) const { return m_mod_p.multiply(x, y); }
-
-      BigInt mod_q(const BigInt& x) const { return m_mod_q.reduce(x); }
-
-      BigInt multiply_mod_q(const BigInt& x, const BigInt& y) const { return m_mod_q.multiply(x, y); }
-
-      BigInt square_mod_q(const BigInt& x) const { return m_mod_q.square(x); }
+      const Barrett_Reduction& reducer_mod_q() const {
+         BOTAN_STATE_CHECK(m_mod_q);
+         return *m_mod_q;
+      }
 
       std::shared_ptr<const Montgomery_Params> monty_params_p() const { return m_monty_params; }
 
@@ -75,16 +85,18 @@ class DL_Group_Data final {
 
       size_t exponent_bits() const { return m_exponent_bits; }
 
-      BigInt power_g_p(const BigInt& k, size_t max_k_bits) const { return monty_execute(*m_monty, k, max_k_bits); }
+      BigInt power_g_p(const BigInt& k, size_t max_k_bits) const {
+         return monty_execute(*m_monty, k, max_k_bits).value();
+      }
 
-      BigInt power_g_p_vartime(const BigInt& k) const { return monty_execute_vartime(*m_monty, k); }
+      BigInt power_g_p_vartime(const BigInt& k) const { return monty_execute_vartime(*m_monty, k).value(); }
 
       BigInt power_b_p(const BigInt& b, const BigInt& k, size_t max_k_bits) const {
-         return monty_exp(m_monty_params, b, k, max_k_bits);
+         return monty_exp(m_monty_params, b, k, max_k_bits).value();
       }
 
       BigInt power_b_p_vartime(const BigInt& b, const BigInt& k) const {
-         return monty_exp_vartime(m_monty_params, b, k);
+         return monty_exp_vartime(m_monty_params, b, k).value();
       }
 
       bool q_is_set() const { return m_q_bits > 0; }
@@ -99,10 +111,10 @@ class DL_Group_Data final {
 
    private:
       BigInt m_p;
-      BigInt m_q;
+      BigInt m_q;  // zero if no q set
       BigInt m_g;
-      Modular_Reducer m_mod_p;
-      Modular_Reducer m_mod_q;
+      Barrett_Reduction m_mod_p;
+      std::optional<Barrett_Reduction> m_mod_q;
       std::shared_ptr<const Montgomery_Params> m_monty_params;
       std::shared_ptr<const Montgomery_Exponentation_State> m_monty;
       size_t m_p_bits;
@@ -117,23 +129,24 @@ std::shared_ptr<DL_Group_Data> DL_Group::BER_decode_DL_group(const uint8_t data[
                                                              size_t data_len,
                                                              DL_Group_Format format,
                                                              DL_Group_Source source) {
-   BigInt p, q, g;
-
    BER_Decoder decoder(data, data_len);
    BER_Decoder ber = decoder.start_sequence();
 
    if(format == DL_Group_Format::ANSI_X9_57) {
+      BigInt p, q, g;
       ber.decode(p).decode(q).decode(g).verify_end();
+      return std::make_shared<DL_Group_Data>(p, q, g, source);
    } else if(format == DL_Group_Format::ANSI_X9_42) {
+      BigInt p, g, q;
       ber.decode(p).decode(g).decode(q).discard_remaining();
+      return std::make_shared<DL_Group_Data>(p, q, g, source);
    } else if(format == DL_Group_Format::PKCS_3) {
-      // q is left as zero
+      BigInt p, g;
       ber.decode(p).decode(g).discard_remaining();
+      return std::make_shared<DL_Group_Data>(p, g, source);
    } else {
       throw Invalid_Argument("Unknown DL_Group encoding");
    }
-
-   return std::make_shared<DL_Group_Data>(p, q, g, source);
 }
 
 //static
@@ -142,7 +155,11 @@ std::shared_ptr<DL_Group_Data> DL_Group::load_DL_group_info(const char* p_str, c
    const BigInt q(q_str);
    const BigInt g(g_str);
 
-   return std::make_shared<DL_Group_Data>(p, q, g, DL_Group_Source::Builtin);
+   if(q.is_zero()) {
+      return std::make_shared<DL_Group_Data>(p, g, DL_Group_Source::Builtin);
+   } else {
+      return std::make_shared<DL_Group_Data>(p, q, g, DL_Group_Source::Builtin);
+   }
 }
 
 //static
@@ -192,6 +209,24 @@ DL_Group::DL_Group(std::string_view str) {
    }
 }
 
+DL_Group DL_Group::from_name(std::string_view name) {
+   auto data = DL_group_info(name);
+
+   if(!data) {
+      throw Invalid_Argument(fmt("DL_Group: Unknown group '{}'", name));
+   }
+
+   return DL_Group(data);
+}
+
+//static
+DL_Group DL_Group::from_PEM(std::string_view pem) {
+   std::string label;
+   const std::vector<uint8_t> ber = unlock(PEM_Code::decode(pem, label));
+   DL_Group_Format format = pem_label_to_dl_format(label);
+   return DL_Group(ber, format);
+}
+
 namespace {
 
 /*
@@ -205,9 +240,12 @@ BigInt make_dsa_generator(const BigInt& p, const BigInt& q) {
       throw Invalid_Argument("make_dsa_generator q does not divide p-1");
    }
 
+   // TODO we compute these, then throw them away and recompute in DL_Group_Data
+   auto reduce_mod = Barrett_Reduction::for_public_modulus(p);
+   auto monty_params = std::make_shared<Montgomery_Params>(p, reduce_mod);
+
    for(size_t i = 0; i != PRIME_TABLE_SIZE; ++i) {
-      // TODO precompute!
-      BigInt g = power_mod(BigInt::from_word(PRIMES[i]), e, p);
+      BigInt g = monty_exp_vartime(monty_params, BigInt::from_word(PRIMES[i]), e).value();
       if(g > 1) {
          return g;
       }
@@ -239,18 +277,15 @@ DL_Group::DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, siz
       const BigInt q = (p - 1) / 2;
 
       /*
-      Always choose a generator that is quadratic reside mod p,
-      this forces g to be a generator of the subgroup of size q.
+      Always choose a generator that is quadratic reside mod p, this forces g to
+      be a generator of the subgroup of size q.
+
+      We use 2 by default, but if 2 is not a quadratic reside then use 4 which
+      is always a quadratic reside, being the square of 2 (or p - 2)
       */
       BigInt g = BigInt::from_word(2);
       if(jacobi(g, p) != 1) {
-         // prime table does not contain 2
-         for(size_t i = 0; i < PRIME_TABLE_SIZE; ++i) {
-            g = BigInt::from_word(PRIMES[i]);
-            if(jacobi(g, p) == 1) {
-               break;
-            }
-         }
+         g = BigInt::from_word(4);
       }
 
       m_data = std::make_shared<DL_Group_Data>(p, q, g, DL_Group_Source::RandomlyGenerated);
@@ -260,12 +295,13 @@ DL_Group::DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, siz
       }
 
       const BigInt q = random_prime(rng, qbits);
-      Modular_Reducer mod_2q(2 * q);
+      const BigInt q2 = q * 2;
       BigInt X;
       BigInt p;
       while(p.bits() != pbits || !is_prime(p, rng, 128, true)) {
          X.randomize(rng, pbits);
-         p = X - mod_2q.reduce(X) + 1;
+         // Variable time division is OK here since DH groups are public anyway
+         p = X - (X % q2) + 1;
       }
 
       const BigInt g = make_dsa_generator(p, q);
@@ -303,14 +339,18 @@ DL_Group::DL_Group(RandomNumberGenerator& rng, const std::vector<uint8_t>& seed,
 * DL_Group Constructor
 */
 DL_Group::DL_Group(const BigInt& p, const BigInt& g) {
-   m_data = std::make_shared<DL_Group_Data>(p, BigInt::zero(), g, DL_Group_Source::ExternalSource);
+   m_data = std::make_shared<DL_Group_Data>(p, g, DL_Group_Source::ExternalSource);
 }
 
 /*
 * DL_Group Constructor
 */
 DL_Group::DL_Group(const BigInt& p, const BigInt& q, const BigInt& g) {
-   m_data = std::make_shared<DL_Group_Data>(p, q, g, DL_Group_Source::ExternalSource);
+   if(q.is_zero()) {
+      m_data = std::make_shared<DL_Group_Data>(p, g, DL_Group_Source::ExternalSource);
+   } else {
+      m_data = std::make_shared<DL_Group_Data>(p, q, g, DL_Group_Source::ExternalSource);
+   }
 }
 
 const DL_Group_Data& DL_Group::data() const {
@@ -360,7 +400,7 @@ bool DL_Group::verify_element_pair(const BigInt& y, const BigInt& x) const {
       return false;
    }
 
-   if(y != this->power_g_p(x)) {
+   if(y != this->power_g_p(x, x.bits())) {
       return false;
    }
 
@@ -477,49 +517,49 @@ size_t DL_Group::exponent_bits() const {
 
 BigInt DL_Group::inverse_mod_p(const BigInt& x) const {
    // precompute??
-   return inverse_mod(x, get_p());
+   return inverse_mod_public_prime(x, get_p());
 }
 
 BigInt DL_Group::mod_p(const BigInt& x) const {
-   return data().mod_p(x);
+   return data().reducer_mod_p().reduce(x);
 }
 
 BigInt DL_Group::multiply_mod_p(const BigInt& x, const BigInt& y) const {
-   return data().multiply_mod_p(x, y);
+   return data().reducer_mod_p().multiply(x, y);
+}
+
+const Barrett_Reduction& DL_Group::_reducer_mod_p() const {
+   return data().reducer_mod_p();
 }
 
 BigInt DL_Group::inverse_mod_q(const BigInt& x) const {
    data().assert_q_is_set("inverse_mod_q");
    // precompute??
-   return inverse_mod(x, get_q());
+   return inverse_mod_public_prime(x, get_q());
 }
 
 BigInt DL_Group::mod_q(const BigInt& x) const {
    data().assert_q_is_set("mod_q");
-   return data().mod_q(x);
+   return data().reducer_mod_q().reduce(x);
 }
 
 BigInt DL_Group::multiply_mod_q(const BigInt& x, const BigInt& y) const {
    data().assert_q_is_set("multiply_mod_q");
-   return data().multiply_mod_q(x, y);
+   return data().reducer_mod_q().multiply(x, y);
 }
 
 BigInt DL_Group::multiply_mod_q(const BigInt& x, const BigInt& y, const BigInt& z) const {
    data().assert_q_is_set("multiply_mod_q");
-   return data().multiply_mod_q(data().multiply_mod_q(x, y), z);
+   return this->multiply_mod_q(this->multiply_mod_q(x, y), z);
 }
 
 BigInt DL_Group::square_mod_q(const BigInt& x) const {
    data().assert_q_is_set("square_mod_q");
-   return data().square_mod_q(x);
+   return data().reducer_mod_q().square(x);
 }
 
 BigInt DL_Group::multi_exponentiate(const BigInt& x, const BigInt& y, const BigInt& z) const {
-   return monty_multi_exp(data().monty_params_p(), get_g(), x, y, z);
-}
-
-BigInt DL_Group::power_g_p(const BigInt& x) const {
-   return data().power_g_p(x, x.bits());
+   return monty_multi_exp(data().monty_params_p(), get_g(), x, y, z).value();
 }
 
 BigInt DL_Group::power_g_p(const BigInt& x, size_t max_x_bits) const {
@@ -581,18 +621,6 @@ std::string DL_Group::PEM_encode(DL_Group_Format format) const {
 
 DL_Group::DL_Group(const uint8_t ber[], size_t ber_len, DL_Group_Format format) {
    m_data = BER_decode_DL_group(ber, ber_len, format, DL_Group_Source::ExternalSource);
-}
-
-void DL_Group::BER_decode(const std::vector<uint8_t>& ber, DL_Group_Format format) {
-   m_data = BER_decode_DL_group(ber.data(), ber.size(), format, DL_Group_Source::ExternalSource);
-}
-
-//static
-DL_Group DL_Group::DL_Group_from_PEM(std::string_view pem) {
-   std::string label;
-   const std::vector<uint8_t> ber = unlock(PEM_Code::decode(pem, label));
-   DL_Group_Format format = pem_label_to_dl_format(label);
-   return DL_Group(ber, format);
 }
 
 }  // namespace Botan

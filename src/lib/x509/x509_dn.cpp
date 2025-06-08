@@ -406,7 +406,7 @@ std::string X509_DN::to_string() const {
 }
 
 std::ostream& operator<<(std::ostream& out, const X509_DN& dn) {
-   auto info = dn.dn_info();
+   const auto& info = dn.dn_info();
 
    for(size_t i = 0; i != info.size(); ++i) {
       out << to_short_form(info[i].first) << "=\"";

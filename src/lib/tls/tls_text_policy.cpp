@@ -8,6 +8,7 @@
 
 #include <botan/tls_policy.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/internal/parsing.h>
 #include <optional>
@@ -233,14 +234,9 @@ std::vector<Group_Params> Text_Policy::read_group_list(std::string_view group_st
    for(const auto& group_name : split_on(group_str, ' ')) {
       Group_Params group_id = Group_Params::from_string(group_name).value_or(Group_Params::NONE);
 
-#if !defined(BOTAN_HAS_X25519)
-      if(group_id == Group_Params::X25519)
+      if(!group_id.is_available()) {
          continue;
-#endif
-#if !defined(BOTAN_HAS_X448)
-      if(group_id == Group_Params::X448)
-         continue;
-#endif
+      }
 
       if(group_id == Group_Params::NONE) {
          try {

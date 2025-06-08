@@ -7,6 +7,7 @@
 #ifndef BOTAN_SERPENT_FUNCS_H_
 #define BOTAN_SERPENT_FUNCS_H_
 
+#include <botan/compiler.h>
 #include <botan/types.h>
 #include <botan/internal/rotate.h>
 

@@ -12,7 +12,10 @@
 #include <botan/ec_scalar.h>
 
 #include <botan/bigint.h>
-#include <botan/ec_point.h>
+
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+   #include <botan/ec_point.h>
+#endif
 
 namespace Botan {
 
@@ -20,32 +23,32 @@ class RandomNumberGenerator;
 
 class EC_PublicKey_Data final {
    public:
-      EC_PublicKey_Data(EC_Group group, EC_AffinePoint pt) :
-            m_group(std::move(group)), m_point(std::move(pt)), m_legacy_point(m_point.to_legacy_point()) {}
+      EC_PublicKey_Data(EC_Group group, EC_AffinePoint pt);
 
-      EC_PublicKey_Data(EC_Group group, std::span<const uint8_t> bytes);
+      EC_PublicKey_Data(const EC_Group& group, std::span<const uint8_t> bytes) :
+            EC_PublicKey_Data(group, EC_AffinePoint(group, bytes)) {}
 
       const EC_Group& group() const { return m_group; }
 
       const EC_AffinePoint& public_key() const { return m_point; }
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
       const EC_Point& legacy_point() const { return m_legacy_point; }
+#endif
 
    private:
       EC_Group m_group;
       EC_AffinePoint m_point;
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
       EC_Point m_legacy_point;
+#endif
 };
 
 class EC_PrivateKey_Data final {
    public:
-      EC_PrivateKey_Data(EC_Group group, RandomNumberGenerator& rng);
-
-      EC_PrivateKey_Data(EC_Group group, const BigInt& x);
-
       EC_PrivateKey_Data(EC_Group group, EC_Scalar x);
 
-      EC_PrivateKey_Data(EC_Group group, std::span<const uint8_t> bytes);
+      EC_PrivateKey_Data(const EC_Group& group, std::span<const uint8_t> bytes);
 
       std::shared_ptr<EC_PublicKey_Data> public_key(RandomNumberGenerator& rng, bool with_modular_inverse) const;
 

@@ -10,6 +10,7 @@
 #include <botan/eckcdsa.h>
 
 #include <botan/hash.h>
+#include <botan/mem_ops.h>
 #include <botan/rng.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/keypair.h>
@@ -21,7 +22,7 @@
 namespace Botan {
 
 std::unique_ptr<Public_Key> ECKCDSA_PrivateKey::public_key() const {
-   return std::make_unique<ECKCDSA_PublicKey>(domain(), public_point());
+   return std::make_unique<ECKCDSA_PublicKey>(domain(), _public_ec_point());
 }
 
 bool ECKCDSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
@@ -119,7 +120,7 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature {
             m_group(eckcdsa.domain()),
             m_x(eckcdsa._private_key()),
             m_hash(eckcdsa_signature_hash(padding)),
-            m_prefix(eckcdsa_prefix(eckcdsa._public_key(), m_hash->hash_block_size())),
+            m_prefix(eckcdsa_prefix(eckcdsa._public_ec_point(), m_hash->hash_block_size())),
             m_prefix_used(false) {}
 
       void update(std::span<const uint8_t> input) override {
@@ -150,7 +151,6 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature {
       const EC_Scalar m_x;
       std::unique_ptr<HashFunction> m_hash;
       std::vector<uint8_t> m_prefix;
-      std::vector<BigInt> m_ws;
       bool m_prefix_used;
 };
 
@@ -163,7 +163,9 @@ AlgorithmIdentifier ECKCDSA_Signature_Operation::algorithm_identifier() const {
 std::vector<uint8_t> ECKCDSA_Signature_Operation::raw_sign(std::span<const uint8_t> msg, RandomNumberGenerator& rng) {
    const auto k = EC_Scalar::random(m_group, rng);
 
-   m_hash->update(EC_AffinePoint::g_mul(k, rng, m_ws).x_bytes());
+   // We cannot use gk_x_mod_order because ECKCDSA, unlike ECDSA or ECGDSA, does
+   // not reduce the x coordinate modulo the group order.
+   m_hash->update(EC_AffinePoint::g_mul(k, rng).x_bytes());
    auto c = m_hash->final_stdvec();
    truncate_hash_if_needed(c, m_group.get_order_bytes());
 
@@ -187,16 +189,16 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification {
    public:
       ECKCDSA_Verification_Operation(const ECKCDSA_PublicKey& eckcdsa, std::string_view padding) :
             m_group(eckcdsa.domain()),
-            m_gy_mul(eckcdsa._public_key()),
+            m_gy_mul(eckcdsa._public_ec_point()),
             m_hash(eckcdsa_signature_hash(padding)),
-            m_prefix(eckcdsa_prefix(eckcdsa._public_key(), m_hash->hash_block_size())),
+            m_prefix(eckcdsa_prefix(eckcdsa._public_ec_point(), m_hash->hash_block_size())),
             m_prefix_used(false) {}
 
       ECKCDSA_Verification_Operation(const ECKCDSA_PublicKey& eckcdsa, const AlgorithmIdentifier& alg_id) :
             m_group(eckcdsa.domain()),
-            m_gy_mul(eckcdsa._public_key()),
+            m_gy_mul(eckcdsa._public_ec_point()),
             m_hash(eckcdsa_signature_hash(alg_id)),
-            m_prefix(eckcdsa_prefix(eckcdsa._public_key(), m_hash->hash_block_size())),
+            m_prefix(eckcdsa_prefix(eckcdsa._public_ec_point(), m_hash->hash_block_size())),
             m_prefix_used(false) {}
 
       void update(std::span<const uint8_t> msg) override;

@@ -1,21 +1,47 @@
-# Regenerate with ./src/scripts/dev_tools/gen_oids.py oids > src/lib/asn1/oid_maps.cpp
-# AND             ./src/scripts/dev_tools/gen_oids.py dn_ub > src/lib/x509/x509_dn_ub.cpp
-# (if you modified something under [dn]
+# Static OID data
+#
+# If you modify this data you must run ./src/scripts/dev_tools/gen_oids.py
+# to regenerate the relevant source files
 
 # Public key types
 [pubkey]
 1.2.840.113549.1.1.1 = RSA
-2.5.8.1.1 = RSA
 1.2.840.10040.4.1 = DSA
 1.2.840.10046.2.1 = DH
 1.3.6.1.4.1.3029.1.2.1 = ElGamal
 1.3.6.1.4.1.25258.1.3 = McEliece
-# Deprecated alias for X25519
-1.3.101.110 = Curve25519
 1.3.101.110 = X25519
 1.3.101.111 = X448
 1.3.101.112 = Ed25519
 1.3.101.113 = Ed448
+
+# Deprecated alternate RSA OID
+2.5.8.1.1 = RSA
+
+# Deprecated alias for X25519 TODO(Botan4) remove this
+1.3.101.110 = Curve25519
+
+# From NIST:
+2.16.840.1.101.3.4.4.1 = ML-KEM-512
+2.16.840.1.101.3.4.4.2 = ML-KEM-768
+2.16.840.1.101.3.4.4.3 = ML-KEM-1024
+
+2.16.840.1.101.3.4.3.17 = ML-DSA-4x4
+2.16.840.1.101.3.4.3.18 = ML-DSA-6x5
+2.16.840.1.101.3.4.3.19 = ML-DSA-8x7
+
+2.16.840.1.101.3.4.3.20 = SLH-DSA-SHA2-128s
+2.16.840.1.101.3.4.3.21 = SLH-DSA-SHA2-128f
+2.16.840.1.101.3.4.3.22 = SLH-DSA-SHA2-192s
+2.16.840.1.101.3.4.3.23 = SLH-DSA-SHA2-192f
+2.16.840.1.101.3.4.3.24 = SLH-DSA-SHA2-256s
+2.16.840.1.101.3.4.3.25 = SLH-DSA-SHA2-256f
+2.16.840.1.101.3.4.3.26 = SLH-DSA-SHAKE-128s
+2.16.840.1.101.3.4.3.27 = SLH-DSA-SHAKE-128f
+2.16.840.1.101.3.4.3.28 = SLH-DSA-SHAKE-192s
+2.16.840.1.101.3.4.3.29 = SLH-DSA-SHAKE-192f
+2.16.840.1.101.3.4.3.30 = SLH-DSA-SHAKE-256s
+2.16.840.1.101.3.4.3.31 = SLH-DSA-SHAKE-256f
 
 # FrodoKEM OIDs are currently in Botan's private arc
 1.3.6.1.4.1.25258.1.14.1 = FrodoKEM-640-SHAKE
@@ -32,6 +58,7 @@
 1.3.6.1.4.1.25258.1.17.3 = eFrodoKEM-1344-AES
 
 # Kyber OIDs are currently in Botan's private arc
+# as specified in CRYSTALS-Kyber 3.01 (NIST's PQC competition round 3)
 1.3.6.1.4.1.25258.1.7.1 = Kyber-512-r3
 1.3.6.1.4.1.25258.1.7.2 = Kyber-768-r3
 1.3.6.1.4.1.25258.1.7.3 = Kyber-1024-r3
@@ -75,6 +102,26 @@
 1.3.6.1.4.1.25258.1.12.3.5 = SphincsPlus-haraka-256s-r3.1
 1.3.6.1.4.1.25258.1.12.3.6 = SphincsPlus-haraka-256f-r3.1
 
+# Classic McEliece OID selection from IETF Hackathon/BouncyCastle for non PC instances
+1.3.6.1.4.1.22554.5.1.1 = ClassicMcEliece_348864
+1.3.6.1.4.1.22554.5.1.2 = ClassicMcEliece_348864f
+1.3.6.1.4.1.22554.5.1.3 = ClassicMcEliece_460896
+1.3.6.1.4.1.22554.5.1.4 = ClassicMcEliece_460896f
+1.3.6.1.4.1.22554.5.1.5 = ClassicMcEliece_6688128
+1.3.6.1.4.1.22554.5.1.6 = ClassicMcEliece_6688128f
+1.3.6.1.4.1.22554.5.1.7 = ClassicMcEliece_6960119
+1.3.6.1.4.1.22554.5.1.8 = ClassicMcEliece_6960119f
+1.3.6.1.4.1.22554.5.1.9 = ClassicMcEliece_8192128
+1.3.6.1.4.1.22554.5.1.10 = ClassicMcEliece_8192128f
+
+# Classic McEliece PC OIDs are currently in Botan's private arc
+1.3.6.1.4.1.25258.1.18.1 = ClassicMcEliece_6688128pc
+1.3.6.1.4.1.25258.1.18.2 = ClassicMcEliece_6688128pcf
+1.3.6.1.4.1.25258.1.18.3 = ClassicMcEliece_6960119pc
+1.3.6.1.4.1.25258.1.18.4 = ClassicMcEliece_6960119pcf
+1.3.6.1.4.1.25258.1.18.5 = ClassicMcEliece_8192128pc
+1.3.6.1.4.1.25258.1.18.6 = ClassicMcEliece_8192128pcf
+
 # XMSS
 1.3.6.1.4.1.25258.1.5 = XMSS-draft6
 1.3.6.1.4.1.25258.1.8 = XMSS-draft12
@@ -85,8 +132,8 @@
 1.2.840.10045.2.1 = ECDSA
 1.3.132.1.12 = ECDH
 
-1.2.156.10197.1.301.1 = SM2_Sig
 1.2.156.10197.1.301.1 = SM2
+1.2.156.10197.1.301.1 = SM2_Sig
 1.2.156.10197.1.301.2 = SM2_Kex
 1.2.156.10197.1.301.3 = SM2_Enc
 
@@ -217,6 +264,23 @@
 2.16.840.1.101.3.4.3.7   = DSA/SHA-3(384)
 2.16.840.1.101.3.4.3.8   = DSA/SHA-3(512)
 
+1.2.840.113549.1.1.2     = RSA/PKCS1v15(MD2)
+1.2.840.113549.1.1.4     = RSA/PKCS1v15(MD5)
+1.2.840.113549.1.1.5     = RSA/PKCS1v15(SHA-1)
+1.2.840.113549.1.1.11    = RSA/PKCS1v15(SHA-256)
+1.2.840.113549.1.1.12    = RSA/PKCS1v15(SHA-384)
+1.2.840.113549.1.1.13    = RSA/PKCS1v15(SHA-512)
+1.2.840.113549.1.1.14    = RSA/PKCS1v15(SHA-224)
+1.2.840.113549.1.1.16    = RSA/PKCS1v15(SHA-512-256)
+2.16.840.1.101.3.4.3.13  = RSA/PKCS1v15(SHA-3(224))
+2.16.840.1.101.3.4.3.14  = RSA/PKCS1v15(SHA-3(256))
+2.16.840.1.101.3.4.3.15  = RSA/PKCS1v15(SHA-3(384))
+2.16.840.1.101.3.4.3.16  = RSA/PKCS1v15(SHA-3(512))
+1.2.156.10197.1.504      = RSA/PKCS1v15(SM3)
+1.3.36.3.3.1.2           = RSA/PKCS1v15(RIPEMD-160)
+1.2.840.113549.1.1.10    = RSA/PSS
+
+# TODO(Botan4) remove these EMSA3/EMSA4 aliases
 1.2.840.113549.1.1.2     = RSA/EMSA3(MD2)
 1.2.840.113549.1.1.4     = RSA/EMSA3(MD5)
 1.2.840.113549.1.1.5     = RSA/EMSA3(SHA-1)
@@ -266,29 +330,27 @@
 1.2.840.113549.1.1.7 = RSA/OAEP
 1.2.840.113549.1.1.8 = MGF1
 
-# DN with upper bounds from RFC 5280, Appendix A
 [dn]
-2.5.4.3 = X520.CommonName = 64
-2.5.4.4 = X520.Surname = 40
-2.5.4.5 = X520.SerialNumber = 64
-2.5.4.6 = X520.Country = 3
-2.5.4.7 = X520.Locality = 128
-2.5.4.8 = X520.State = 128
-2.5.4.9 = X520.StreetAddress = 128
-2.5.4.10 = X520.Organization = 64
-2.5.4.11 = X520.OrganizationalUnit = 64
-2.5.4.12 = X520.Title = 64
-# the following three types are naming attributes of type "X520name" and inherit its bound
-2.5.4.42 = X520.GivenName = 32768
-2.5.4.43 = X520.Initials = 32768
-2.5.4.44 = X520.GenerationalQualifier = 32768
-2.5.4.46 = X520.DNQualifier = 64
-2.5.4.65 = X520.Pseudonym = 128
+2.5.4.3 = X520.CommonName
+2.5.4.4 = X520.Surname
+2.5.4.5 = X520.SerialNumber
+2.5.4.6 = X520.Country
+2.5.4.7 = X520.Locality
+2.5.4.8 = X520.State
+2.5.4.9 = X520.StreetAddress
+2.5.4.10 = X520.Organization
+2.5.4.11 = X520.OrganizationalUnit
+2.5.4.12 = X520.Title
+2.5.4.42 = X520.GivenName
+2.5.4.43 = X520.Initials
+2.5.4.44 = X520.GenerationalQualifier
+2.5.4.46 = X520.DNQualifier
+2.5.4.65 = X520.Pseudonym
 
 [pbe]
 1.2.840.113549.1.5.12 = PKCS5.PBKDF2
-1.2.840.113549.1.5.13 = PBES2
 1.2.840.113549.1.5.13 = PBE-PKCS5v20
+1.2.840.113549.1.5.13 = PBES2
 
 1.3.6.1.4.1.11591.4.11 = Scrypt
 
@@ -319,6 +381,9 @@
 2.5.29.36 = X509v3.PolicyConstraints
 2.5.29.37 = X509v3.ExtendedKeyUsage
 1.3.6.1.5.5.7.1.1 = PKIX.AuthorityInformationAccess
+# the following are taken from RFC 3779 https://www.rfc-editor.org/rfc/rfc3779.html
+1.3.6.1.5.5.7.1.7 = PKIX.IpAddrBlocks
+1.3.6.1.5.5.7.1.8 = PKIX.AutonomousSysIds
 1.3.6.1.5.5.7.1.26 = PKIX.TNAuthList
 
 2.5.29.32.0 = X509v3.AnyPolicy
@@ -362,6 +427,11 @@
 1.3.132.0.33 = secp224r1
 1.3.132.0.34 = secp384r1
 1.3.132.0.35 = secp521r1
+
+# TODO(Botan4) remove this OID assignment
+#
+# This was assigned by TU-Darmstadt to "primeCurve 38" which may or may not be
+# secp521r1. In any case this OID is not used by any other implementation.
 1.3.6.1.4.1.8301.3.1.2.9.0.38 = secp521r1
 
 1.2.840.10045.3.1.1 = secp192r1

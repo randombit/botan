@@ -10,6 +10,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/secmem.h>
+#include <memory>
 #include <string>
 
 namespace Botan {

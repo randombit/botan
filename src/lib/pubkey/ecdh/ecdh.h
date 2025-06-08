@@ -27,12 +27,21 @@ class BOTAN_PUBLIC_API(2, 0) ECDH_PublicKey : public virtual EC_PublicKey {
       ECDH_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
             EC_PublicKey(alg_id, key_bits) {}
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
       /**
       * Construct a public key from a given public point.
-      * @param dom_par the domain parameters associated with this key
+      * @param group the domain parameters associated with this key
       * @param public_point the public point defining this key
       */
-      ECDH_PublicKey(const EC_Group& dom_par, const EC_Point& public_point) : EC_PublicKey(dom_par, public_point) {}
+      ECDH_PublicKey(const EC_Group& group, const EC_Point& public_point) : EC_PublicKey(group, public_point) {}
+#endif
+
+      /**
+      * Construct a public key from a given public point.
+      * @param group the domain parameters associated with this key
+      * @param public_key the public point defining this key
+      */
+      ECDH_PublicKey(const EC_Group& group, const EC_AffinePoint& public_key) : EC_PublicKey(group, public_key) {}
 
       /**
       * Get this keys algorithm name.
@@ -43,12 +52,12 @@ class BOTAN_PUBLIC_API(2, 0) ECDH_PublicKey : public virtual EC_PublicKey {
       /**
       * @return public point value
       */
-      std::vector<uint8_t> public_value() const { return public_point().encode(EC_Point_Format::Uncompressed); }
+      std::vector<uint8_t> public_value() const { return this->public_value(EC_Point_Format::Uncompressed); }
 
       /**
       * @return public point value
       */
-      std::vector<uint8_t> public_value(EC_Point_Format format) const { return public_point().encode(format); }
+      std::vector<uint8_t> public_value(EC_Point_Format format) const;
 
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::KeyAgreement); }
 
@@ -78,13 +87,28 @@ class BOTAN_PUBLIC_API(2, 0) ECDH_PrivateKey final : public ECDH_PublicKey,
             EC_PrivateKey(alg_id, key_bits) {}
 
       /**
+      * Create a private key from a given secret @p x
+      * @param group curve parameters to bu used for this key
+      * @param x      the private key
+      */
+      ECDH_PrivateKey(EC_Group group, EC_Scalar x) : EC_PrivateKey(std::move(group), std::move(x)) {}
+
+      /**
+      * Create a new private key
+      * @param rng a random number generator
+      * @param group parameters to used for this key
+      */
+      ECDH_PrivateKey(RandomNumberGenerator& rng, EC_Group group) : EC_PrivateKey(rng, std::move(group)) {}
+
+      /**
       * Generate a new private key
       * @param rng a random number generator
-      * @param domain parameters to used for this key
+      * @param group parameters to used for this key
       * @param x the private key; if zero, a new random key is generated
       */
-      ECDH_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x = BigInt::zero()) :
-            EC_PrivateKey(rng, domain, x) {}
+      BOTAN_DEPRECATED("Use one of the other constructors")
+      ECDH_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, const BigInt& x) :
+            EC_PrivateKey(rng, group, x) {}
 
       std::unique_ptr<Public_Key> public_key() const override;
 

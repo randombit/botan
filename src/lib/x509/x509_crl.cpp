@@ -17,6 +17,7 @@ namespace Botan {
 
 struct CRL_Data {
       X509_DN m_issuer;
+      size_t m_version;
       X509_Time m_this_update;
       X509_Time m_next_update;
       std::vector<CRL_Entry> m_entries;
@@ -113,11 +114,11 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body, cons
 
    BER_Decoder tbs_crl(body);
 
-   size_t version;
-   tbs_crl.decode_optional(version, ASN1_Type::Integer, ASN1_Class::Universal);
+   tbs_crl.decode_optional(data->m_version, ASN1_Type::Integer, ASN1_Class::Universal);
+   data->m_version += 1;  // wire-format is 0-based
 
-   if(version != 0 && version != 1) {
-      throw Decoding_Error("Unknown X.509 CRL version " + std::to_string(version + 1));
+   if(data->m_version != 1 && data->m_version != 2) {
+      throw Decoding_Error("Unknown X.509 CRL version " + std::to_string(data->m_version));
    }
 
    AlgorithmIdentifier sig_algo_inner;
@@ -127,7 +128,18 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body, cons
       throw Decoding_Error("Algorithm identifier mismatch in CRL");
    }
 
-   tbs_crl.decode(data->m_issuer).decode(data->m_this_update).decode(data->m_next_update);
+   tbs_crl.decode(data->m_issuer).decode(data->m_this_update);
+
+   // According to RFC 5280 Section 5.1, nextUpdate is OPTIONAL and may be
+   // encoded as either a UTCTime or a GeneralizedTime. Section 5.1.2.5
+   // further states that "[c]onforming CRL issuers MUST include the nextUpdate
+   // field in all CRLs". Obviously, not everyone complies...
+   //
+   // See https://github.com/randombit/botan/issues/4722 for more details.
+   tbs_crl.decode_optional(data->m_next_update, ASN1_Type::UtcTime, ASN1_Class::Universal);
+   if(!data->m_next_update.time_is_set()) {
+      tbs_crl.decode_optional(data->m_next_update, ASN1_Type::GeneralizedTime, ASN1_Class::Universal);
+   }
 
    BER_Object next = tbs_crl.get_next_object();
 
@@ -190,6 +202,10 @@ const Extensions& X509_CRL::extensions() const {
 */
 const std::vector<CRL_Entry>& X509_CRL::get_revoked() const {
    return data().m_entries;
+}
+
+uint32_t X509_CRL::x509_version() const {
+   return static_cast<uint32_t>(data().m_version);
 }
 
 /*

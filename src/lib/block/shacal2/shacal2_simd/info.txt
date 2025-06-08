@@ -8,6 +8,6 @@ brief -> "SHACAL-2 using SIMD instructions"
 </module_info>
 
 <requires>
-shacal2
-simd
+cpuid
+simd_4x32
 </requires>

@@ -19,10 +19,19 @@ class BOTAN_PUBLIC_API(2, 0) ECGDSA_PublicKey : public virtual EC_PublicKey {
    public:
       /**
       * Construct a public key from a given public point.
-      * @param dom_par the domain parameters associated with this key
+      * @param group the domain parameters associated with this key
+      * @param public_key the public point defining this key
+      */
+      ECGDSA_PublicKey(const EC_Group& group, const EC_AffinePoint& public_key) : EC_PublicKey(group, public_key) {}
+
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+      /**
+      * Construct a public key from a given public point.
+      * @param group the domain parameters associated with this key
       * @param public_point the public point defining this key
       */
-      ECGDSA_PublicKey(const EC_Group& dom_par, const EC_Point& public_point) : EC_PublicKey(dom_par, public_point) {}
+      ECGDSA_PublicKey(const EC_Group& group, const EC_Point& public_point) : EC_PublicKey(group, public_point) {}
+#endif
 
       /**
       * Load a public key.
@@ -38,9 +47,9 @@ class BOTAN_PUBLIC_API(2, 0) ECGDSA_PublicKey : public virtual EC_PublicKey {
       */
       std::string algo_name() const override { return "ECGDSA"; }
 
-      size_t message_parts() const override { return 2; }
-
-      size_t message_part_size() const override { return domain().get_order_bytes(); }
+      std::optional<size_t> _signature_element_size_for_DER_encoding() const override {
+         return domain().get_order_bytes();
+      }
 
       std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
 
@@ -75,13 +84,28 @@ class BOTAN_PUBLIC_API(2, 0) ECGDSA_PrivateKey final : public ECGDSA_PublicKey,
             EC_PrivateKey(alg_id, key_bits, true) {}
 
       /**
+      * Create a private key from a given secret @p x
+      * @param group curve parameters to bu used for this key
+      * @param x      the private key
+      */
+      ECGDSA_PrivateKey(EC_Group group, EC_Scalar x) : EC_PrivateKey(std::move(group), std::move(x), true) {}
+
+      /**
+      * Create a new private key
+      * @param rng a random number generator
+      * @param group parameters to used for this key
+      */
+      ECGDSA_PrivateKey(RandomNumberGenerator& rng, EC_Group group) : EC_PrivateKey(rng, std::move(group), true) {}
+
+      /**
       * Generate a new private key.
       * @param rng a random number generator
-      * @param domain parameters to used for this key
+      * @param group parameters to used for this key
       * @param x the private key (if zero, generate a new random key)
       */
-      ECGDSA_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x = BigInt::zero()) :
-            EC_PrivateKey(rng, domain, x, true) {}
+      BOTAN_DEPRECATED("Use one of the other constructors")
+      ECGDSA_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, const BigInt& x) :
+            EC_PrivateKey(rng, group, x, true) {}
 
       std::unique_ptr<Public_Key> public_key() const override;
 

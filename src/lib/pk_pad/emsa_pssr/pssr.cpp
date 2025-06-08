@@ -12,6 +12,7 @@
 #include <botan/rng.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/mgf1.h>
 #include <botan/internal/stl_util.h>
 #include <array>
@@ -24,8 +25,8 @@ namespace {
 * PSSR Encode Operation
 */
 std::vector<uint8_t> pss_encode(HashFunction& hash,
-                                const std::vector<uint8_t>& msg,
-                                const std::vector<uint8_t>& salt,
+                                std::span<const uint8_t> msg,
+                                std::span<const uint8_t> salt,
                                 size_t output_bits) {
    const size_t HASH_SIZE = hash.output_length();
 
@@ -64,8 +65,8 @@ std::vector<uint8_t> pss_encode(HashFunction& hash,
 }
 
 bool pss_verify(HashFunction& hash,
-                const std::vector<uint8_t>& pss_repr,
-                const std::vector<uint8_t>& message_hash,
+                std::span<const uint8_t> pss_repr,
+                std::span<const uint8_t> message_hash,
                 size_t key_bits,
                 size_t* out_salt_size) {
    const size_t HASH_SIZE = hash.output_length();
@@ -87,17 +88,19 @@ bool pss_verify(HashFunction& hash,
       return false;
    }
 
-   std::vector<uint8_t> coded = pss_repr;
-   if(coded.size() < key_bytes) {
-      std::vector<uint8_t> temp(key_bytes);
-      BufferStuffer stuffer(temp);
-      stuffer.append(0x00, stuffer.remaining_capacity() - coded.size());
-      stuffer.append(coded);
-      coded = temp;
+   std::vector<uint8_t> coded;
+   if(pss_repr.size() < key_bytes) {
+      coded.resize(key_bytes);
+      BufferStuffer stuffer(coded);
+      stuffer.append(0x00, key_bytes - pss_repr.size());
+      stuffer.append(pss_repr);
+   } else {
+      coded.assign(pss_repr.begin(), pss_repr.end());
    }
 
-   const size_t TOP_BITS = 8 * ((key_bits + 7) / 8) - key_bits;
-   if(TOP_BITS > 8 - high_bit(coded[0])) {
+   // We have to check this after potential zero padding above
+   const size_t top_bits = 8 * ((key_bits + 7) / 8) - key_bits;
+   if(top_bits > 8 - high_bit(coded[0])) {
       return false;
    }
 
@@ -108,7 +111,7 @@ bool pss_verify(HashFunction& hash,
    const size_t H_size = HASH_SIZE;
 
    mgf1_mask(hash, H, H_size, DB, DB_size);
-   DB[0] &= 0xFF >> TOP_BITS;
+   DB[0] &= 0xFF >> top_bits;
 
    size_t salt_offset = 0;
    for(size_t j = 0; j != DB_size; ++j) {
@@ -164,9 +167,7 @@ std::vector<uint8_t> PSSR::raw_data() {
    return m_hash->final_stdvec();
 }
 
-std::vector<uint8_t> PSSR::encoding_of(const std::vector<uint8_t>& msg,
-                                       size_t output_bits,
-                                       RandomNumberGenerator& rng) {
+std::vector<uint8_t> PSSR::encoding_of(std::span<const uint8_t> msg, size_t output_bits, RandomNumberGenerator& rng) {
    const auto salt = rng.random_vec<std::vector<uint8_t>>(m_salt_size);
    return pss_encode(*m_hash, msg, salt, output_bits);
 }
@@ -174,7 +175,7 @@ std::vector<uint8_t> PSSR::encoding_of(const std::vector<uint8_t>& msg,
 /*
 * PSSR Decode/Verify Operation
 */
-bool PSSR::verify(const std::vector<uint8_t>& coded, const std::vector<uint8_t>& raw, size_t key_bits) {
+bool PSSR::verify(std::span<const uint8_t> coded, std::span<const uint8_t> raw, size_t key_bits) {
    size_t salt_size = 0;
    const bool ok = pss_verify(*m_hash, coded, raw, key_bits, &salt_size);
 
@@ -186,7 +187,7 @@ bool PSSR::verify(const std::vector<uint8_t>& coded, const std::vector<uint8_t>&
 }
 
 std::string PSSR::name() const {
-   return "EMSA4(" + m_hash->name() + ",MGF1," + std::to_string(m_salt_size) + ")";
+   return fmt("PSS({},MGF1,{})", m_hash->name(), m_salt_size);
 }
 
 PSSR_Raw::PSSR_Raw(std::unique_ptr<HashFunction> hash) :
@@ -216,7 +217,7 @@ std::vector<uint8_t> PSSR_Raw::raw_data() {
    return ret;
 }
 
-std::vector<uint8_t> PSSR_Raw::encoding_of(const std::vector<uint8_t>& msg,
+std::vector<uint8_t> PSSR_Raw::encoding_of(std::span<const uint8_t> msg,
                                            size_t output_bits,
                                            RandomNumberGenerator& rng) {
    const auto salt = rng.random_vec<std::vector<uint8_t>>(m_salt_size);
@@ -226,7 +227,7 @@ std::vector<uint8_t> PSSR_Raw::encoding_of(const std::vector<uint8_t>& msg,
 /*
 * PSSR_Raw Decode/Verify Operation
 */
-bool PSSR_Raw::verify(const std::vector<uint8_t>& coded, const std::vector<uint8_t>& raw, size_t key_bits) {
+bool PSSR_Raw::verify(std::span<const uint8_t> coded, std::span<const uint8_t> raw, size_t key_bits) {
    size_t salt_size = 0;
    const bool ok = pss_verify(*m_hash, coded, raw, key_bits, &salt_size);
 
@@ -238,7 +239,7 @@ bool PSSR_Raw::verify(const std::vector<uint8_t>& coded, const std::vector<uint8
 }
 
 std::string PSSR_Raw::name() const {
-   return "PSSR_Raw(" + m_hash->name() + ",MGF1," + std::to_string(m_salt_size) + ")";
+   return fmt("PSS_Raw({},MGF1,{})", m_hash->name(), m_salt_size);
 }
 
 }  // namespace Botan

@@ -53,6 +53,10 @@ class ECC_H2C_Tests final : public Text_Based_Test {
 
       bool clear_between_callbacks() const override { return false; }
 
+      bool skip_this_test(const std::string&, const VarMap& vars) override {
+         return !Botan::EC_Group::supports_named_group(vars.get_req_str("Group"));
+      }
+
       Test::Result run_one_test(const std::string& method, const VarMap& vars) override {
          const std::string group_id = vars.get_req_str("Group");
 

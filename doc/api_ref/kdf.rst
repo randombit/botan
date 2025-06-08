@@ -34,36 +34,32 @@ two contexts.
       Create a new KDF object. Throws an exception if the named key derivation
       function was not available
 
+  .. cpp:function:: void KDF::derive_key(std::span<uint8_t> key, \
+                                         std::span<const uint8_t> secret, \
+                                         std::span<const uint8_t> salt, \
+                                         std::span<const uint8_t> label) const
+
+      Performs a key derivation using ``secret`` as secret input, and ``salt``,
+      and ``label`` as deversifiers. The passed ``key`` buffer is fully filled
+      with key material derived from the inputs.
+
   .. cpp:function:: template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>> \
-      T derive_key(size_t key_len, \
-                   std::span<const uint8_t> secret, \
-                   std::span<const uint8_t> salt, \
-                   std::span<const uint8_t> label) const
+      T KDF::derive_key(size_t key_len, \
+                        std::span<const uint8_t> secret, \
+                        std::span<const uint8_t> salt, \
+                        std::span<const uint8_t> label) const
 
       This version is parameterized to the output buffer type, so it can be used
       to return a ``std::vector``, a ``secure_vector``, or anything else
       satisfying the ``resizable_byte_buffer`` concept.
 
-  .. cpp:function:: secure_vector<uint8_t> derive_key( \
-                                    const uint8_t secret[], \
-                                    size_t secret_len, \
-                                    const uint8_t salt[], \
-                                    size_t salt_len, \
-                                    const uint8_t label[], \
-                                    size_t label_len) const
+  .. cpp:function:: template<size_t key_len> \
+      std::array<uint8_t, key_len> KDF::derive_key(std::span<const uint8_t> secret, \
+                                                   std::span<const uint8_t> salt, \
+                                                   std::span<const uint8_t> label) const
 
-  .. cpp:function:: secure_vector<uint8_t> derive_key( \
-     size_t key_len, const std::vector<uint8_t>& secret, \
-     const std::vector<uint8_t>& salt, \
-     const std::vector<uint8_t>& label) const
-
-  .. cpp:function:: secure_vector<uint8_t> derive_key( \
-     size_t key_len, const std::vector<uint8_t>& secret, \
-     const uint8_t* salt, size_t salt_len) const
-
-  .. cpp:function:: secure_vector<uint8_t> derive_key( \
-     size_t key_len, const uint8_t* secret, size_t secret_len, \
-     const std::string& salt) const
+      This version returns the key material as a std::array<> of ``key_len``
+      bytes.
 
    All variations on the same theme. Deterministically creates a
    uniform random value from *secret*, *salt*, and *label*, whose
@@ -86,7 +82,7 @@ Available KDFs
 Botan includes many different KDFs simply because different protocols and.
 standards have created subtly different approaches to this problem. For new
 code, use HKDF which is conservative, well studied, widely implemented and NIST
-approved. There is no technical reason (besides compatability) to choose any
+approved. There is no technical reason (besides compatibility) to choose any
 other KDF.
 
 HKDF
@@ -189,18 +185,27 @@ SP800-108
 KDFs from NIST SP 800-108. Variants include "SP800-108-Counter",
 "SP800-108-Feedback" and "SP800-108-Pipeline".
 
+SP800-108 does not explicitly specify the encoding width of the internally used
+counter and output length values. As those values are incorporated into the key
+derivation, applications can optionally specify their encoding bit lengths as of
+Botan 3.7.0. Values of 8, 16, 24, and 32 are supported and Botan will always
+encode in big-endian byte order. If not otherwise specified, both fields are
+encoded using 32 bits.
+
 Available if ``BOTAN_HAS_SP800_108`` is defined.
 
 Algorithm specification names:
 
-- ``SP800-108-Counter(<MessageAuthenticationCode|HashFunction>)``,
-  e.g. ``SP800-108-Counter(HMAC(SHA-256))``
-- ``SP800-108-Feedback(<MessageAuthenticationCode|HashFunction>)``
-- ``SP800-108-Pipeline(<MessageAuthenticationCode|HashFunction>)``
+- ``SP800-108-Counter(<MessageAuthenticationCode|HashFunction>[,<counter bit length>[,<output length bit length>]])``,
+  e.g. ``SP800-108-Counter(HMAC(SHA-256),8,24)``
+- ``SP800-108-Feedback(<MessageAuthenticationCode|HashFunction>[,<counter bit length>[,<output length bit length>]])``
+- ``SP800-108-Pipeline(<MessageAuthenticationCode|HashFunction>[,<counter bit length>[,<output length bit length>]])``
 
 If a ``HashFunction`` is provided as an argument,
 it will create ``HMAC(HashFunction)`` as the ``MessageAuthenticationCode``.
-I.e. ``SP800-108-Counter(SHA-256)`` will result in ``SP800-108-Counter(HMAC(SHA-256))``.
+If no field encoding lengths are specified, both are defaulted to 32 bits.
+I.e. ``SP800-108-Counter(SHA-256)`` will result in
+``SP800-108-Counter(HMAC(SHA-256),32,32)``.
 
 TLS 1.2 PRF
 ~~~~~~~~~~~

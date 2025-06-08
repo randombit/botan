@@ -27,8 +27,6 @@ aead
 aes
 asn1
 dh
-ecdh
-ecdsa
 eme_pkcs1
 emsa_pkcs1
 gcm
@@ -36,8 +34,6 @@ hmac
 prf_tls
 rng
 rsa
-sha2_32
-sha2_64
 x509
 tls
 </requires>

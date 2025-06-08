@@ -12,19 +12,17 @@
  */
 class Callbacks : public Botan::TLS::Callbacks {
    public:
-      void tls_emit_data(std::span<const uint8_t> data) override {
-         BOTAN_UNUSED(data);
+      void tls_emit_data([[maybe_unused]] std::span<const uint8_t> data) override {
          // send data to tls server, e.g., using BSD sockets or boost asio
       }
 
-      void tls_record_received(uint64_t seq_no, std::span<const uint8_t> data) override {
-         BOTAN_UNUSED(seq_no, data);
+      void tls_record_received([[maybe_unused]] uint64_t seq_no,
+                               [[maybe_unused]] std::span<const uint8_t> data) override {
          // process full TLS record received by tls server, e.g.,
          // by passing it to the application
       }
 
-      void tls_alert(Botan::TLS::Alert alert) override {
-         BOTAN_UNUSED(alert);
+      void tls_alert([[maybe_unused]] Botan::TLS::Alert alert) override {
          // handle a tls alert received from the tls server
       }
 
@@ -38,26 +36,21 @@ class Callbacks : public Botan::TLS::Callbacks {
             return std::make_unique<Botan::ECDH_PrivateKey>(rng, ec_group);
          } else {
             // no custom curve used: up-call the default implementation
-            return tls_generate_ephemeral_key(group, rng);
+            return Botan::TLS::Callbacks::tls_generate_ephemeral_key(group, rng);
          }
       }
 
-      Botan::secure_vector<uint8_t> tls_ephemeral_key_agreement(
+      std::unique_ptr<Botan::Public_Key> tls_deserialize_peer_public_key(
          const std::variant<Botan::TLS::Group_Params, Botan::DL_Group>& group,
-         const Botan::PK_Key_Agreement_Key& private_key,
-         const std::vector<uint8_t>& public_value,
-         Botan::RandomNumberGenerator& rng,
-         const Botan::TLS::Policy& policy) override {
+         std::span<const uint8_t> public_value) override {
          if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
             std::get<Botan::TLS::Group_Params>(group) == Botan::TLS::Group_Params(0xFE00)) {
-            // perform a key agreement on my custom curve
+            // load the peer's public key of my custom curve
             const auto ec_group = Botan::EC_Group::from_name("numsp256d1");
-            Botan::ECDH_PublicKey peer_key(ec_group, ec_group.OS2ECP(public_value));
-            Botan::PK_Key_Agreement ka(private_key, rng, "Raw");
-            return ka.derive_key(0, peer_key.public_value()).bits_of();
+            return std::make_unique<Botan::ECDH_PublicKey>(ec_group, Botan::EC_AffinePoint(ec_group, public_value));
          } else {
             // no custom curve used: up-call the default implementation
-            return tls_ephemeral_key_agreement(group, private_key, public_value, rng, policy);
+            return Botan::TLS::Callbacks::tls_deserialize_peer_public_key(group, public_value);
          }
       }
 };
@@ -70,9 +63,8 @@ class Callbacks : public Botan::TLS::Callbacks {
  */
 class Client_Credentials : public Botan::Credentials_Manager {
    public:
-      std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(const std::string& type,
-                                                                             const std::string& context) override {
-         BOTAN_UNUSED(type, context);
+      std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(
+         [[maybe_unused]] const std::string& type, [[maybe_unused]] const std::string& context) override {
          // return a list of certificates of CAs we trust for tls server certificates,
          // e.g., all the certificates in the local directory "cas"
          return {&m_cert_store};
@@ -93,12 +85,13 @@ class Client_Policy : public Botan::TLS::Strict_Policy {
 };
 
 int main() {
+   if(!Botan::EC_Group::supports_application_specific_group()) {
+      // This build configuration does not support application specific EC groups
+      return 1;
+   }
+
    // prepare rng
    auto rng = std::make_shared<Botan::AutoSeeded_RNG>();
-
-   // prepare custom curve
-
-   // prepare curve parameters
 
    // In this case we will use numsp256d1 from https://datatracker.ietf.org/doc/html/draft-black-numscurves-02
 

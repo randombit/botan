@@ -36,6 +36,7 @@ std::unique_ptr<EMSA> EMSA::create(std::string_view algo_spec) {
    SCAN_Name req(algo_spec);
 
 #if defined(BOTAN_HAS_EMSA_PKCS1)
+   // TODO(Botan4) Remove all but "PKCS1v15"
    if(req.algo_name() == "EMSA_PKCS1" || req.algo_name() == "PKCS1v15" || req.algo_name() == "EMSA-PKCS1-v1_5" ||
       req.algo_name() == "EMSA3") {
       if(req.arg_count() == 2 && req.arg(0) == "Raw") {
@@ -53,6 +54,7 @@ std::unique_ptr<EMSA> EMSA::create(std::string_view algo_spec) {
 #endif
 
 #if defined(BOTAN_HAS_EMSA_PSSR)
+   // TODO(Botan4) Remove all but "PSS_Raw"
    if(req.algo_name() == "PSS_Raw" || req.algo_name() == "PSSR_Raw") {
       if(req.arg_count_between(1, 3) && req.arg(1, "MGF1") == "MGF1") {
          if(auto hash = HashFunction::create(req.arg(0))) {
@@ -66,6 +68,7 @@ std::unique_ptr<EMSA> EMSA::create(std::string_view algo_spec) {
       }
    }
 
+   // TODO(Botan4) Remove all but "PSS"
    if(req.algo_name() == "PSS" || req.algo_name() == "PSSR" || req.algo_name() == "EMSA-PSS" ||
       req.algo_name() == "PSS-MGF1" || req.algo_name() == "EMSA4") {
       if(req.arg_count_between(1, 3) && req.arg(1, "MGF1") == "MGF1") {
@@ -103,6 +106,7 @@ std::unique_ptr<EMSA> EMSA::create(std::string_view algo_spec) {
 #endif
 
 #if defined(BOTAN_HAS_EMSA_X931)
+   // TODO(Botan4) Remove all but "X9.31"
    if(req.algo_name() == "EMSA_X931" || req.algo_name() == "EMSA2" || req.algo_name() == "X9.31") {
       if(req.arg_count() == 1) {
          if(auto hash = HashFunction::create(req.arg(0))) {

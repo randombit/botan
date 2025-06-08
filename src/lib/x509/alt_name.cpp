@@ -140,7 +140,7 @@ void AlternativeName::decode_from(BER_Decoder& source) {
       } else if(obj.is_a(1, ASN1_Class::ContextSpecific)) {
          add_email(ASN1::to_string(obj));
       } else if(obj.is_a(2, ASN1_Class::ContextSpecific)) {
-         add_dns(ASN1::to_string(obj));
+         m_dns.insert(check_and_canonicalize_dns_name(ASN1::to_string(obj)));
       } else if(obj.is_a(4, ASN1_Class::ContextSpecific | ASN1_Class::Constructed)) {
          BER_Decoder dec(obj);
          X509_DN dn;

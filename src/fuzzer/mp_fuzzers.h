@@ -11,11 +11,13 @@
 
 #include <botan/internal/mp_core.h>
 
-#if BOTAN_MP_WORD_BITS == 64
-   #define WORD_FORMAT_STRING "%016lX"
-#else
-   #define WORD_FORMAT_STRING "%08X"
-#endif
+consteval const char* word_format_string() {
+   if(sizeof(Botan::word) == 8) {
+      return "%016lX";
+   } else {
+      return "%08X";
+   }
+}
 
 using Botan::word;
 
@@ -23,8 +25,9 @@ namespace {
 
 inline void dump_word_vec(const char* name, const word x[], size_t x_len) {
    fprintf(stderr, "%s = ", name);
+   constexpr auto fmt = word_format_string();
    for(size_t i = 0; i != x_len; ++i) {
-      fprintf(stderr, WORD_FORMAT_STRING, x[i]);
+      fprintf(stderr, fmt, x[i]);
       fprintf(stderr, " ");
    }
    fprintf(stderr, "\n");

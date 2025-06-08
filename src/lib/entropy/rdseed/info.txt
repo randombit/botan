@@ -15,3 +15,7 @@ sse2 # for mm_pause see #2139
 <header:internal>
 rdseed.h
 </header:internal>
+
+<requires>
+cpuid
+</requires>

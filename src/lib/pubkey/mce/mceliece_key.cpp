@@ -86,8 +86,8 @@ std::vector<uint8_t> McEliece_PublicKey::public_key_bits() const {
    DER_Encoder(output)
       .start_sequence()
       .start_sequence()
-      .encode(static_cast<size_t>(get_code_length()))
-      .encode(static_cast<size_t>(get_t()))
+      .encode(get_code_length())
+      .encode(get_t())
       .end_cons()
       .encode(m_public_matrix, ASN1_Type::OctetString)
       .end_cons();
@@ -121,8 +121,8 @@ secure_vector<uint8_t> McEliece_PrivateKey::private_key_bits() const {
    DER_Encoder enc;
    enc.start_sequence()
       .start_sequence()
-      .encode(static_cast<size_t>(get_code_length()))
-      .encode(static_cast<size_t>(get_t()))
+      .encode(get_code_length())
+      .encode(get_t())
       .end_cons()
       .encode(m_public_matrix, ASN1_Type::OctetString)
       .encode(m_g[0].encode(), ASN1_Type::OctetString);  // g as octet string

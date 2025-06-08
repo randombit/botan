@@ -15,9 +15,14 @@
    #include <botan/tls_policy.h>
    #include <botan/tls_session.h>
    #include <botan/tls_version.h>
+   #include <botan/internal/fmt.h>
 
    #if defined(BOTAN_HAS_TLS_CBC)
       #include <botan/internal/tls_cbc.h>
+   #endif
+
+   #if defined(BOTAN_HAS_TLS_NULL)
+      #include <botan/internal/tls_null.h>
    #endif
 
 #endif
@@ -228,7 +233,208 @@ class TLS_CBC_Tests final : public Text_Based_Test {
       }
 };
 
+class TLS_CBC_KAT_Tests final : public Text_Based_Test {
+   public:
+      TLS_CBC_KAT_Tests() :
+            Text_Based_Test(
+               "tls_cbc_kat.vec",
+               "BlockCipher,MAC,KeylenCipher,KeylenMAC,EncryptThenMAC,Protocol,Key,AssociatedData,Nonce,Plaintext,Ciphertext") {
+      }
+
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
+         Test::Result result("TLS CBC KAT");
+
+         run_kat<Botan::TLS::TLS_CBC_HMAC_AEAD_Encryption>(result, vars);
+         run_kat<Botan::TLS::TLS_CBC_HMAC_AEAD_Decryption>(result, vars);
+
+         return result;
+      }
+
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
+         try {
+            std::ignore = get_cipher_and_mac(vars);
+            return false;
+         } catch(const Botan::Lookup_Error&) {
+            return true;
+         }
+      }
+
+   private:
+      [[nodiscard]] static std::pair<std::unique_ptr<Botan::BlockCipher>,
+                                     std::unique_ptr<Botan::MessageAuthenticationCode>>
+      get_cipher_and_mac(const VarMap& vars) {
+         return {
+            Botan::BlockCipher::create_or_throw(vars.get_req_str("BlockCipher")),
+            Botan::MessageAuthenticationCode::create_or_throw(vars.get_req_str("MAC")),
+         };
+      }
+
+      template <typename T>
+         requires(std::same_as<T, Botan::TLS::TLS_CBC_HMAC_AEAD_Encryption> ||
+                  std::same_as<T, Botan::TLS::TLS_CBC_HMAC_AEAD_Decryption>)
+      static void run_kat(Test::Result& result, const VarMap& vars) {
+         constexpr bool encrypt = std::same_as<T, Botan::TLS::TLS_CBC_HMAC_AEAD_Encryption>;
+         constexpr auto direction = [] {
+            if constexpr(encrypt) {
+               return "encryption";
+            } else {
+               return "decryption";
+            }
+         }();
+
+         const auto keylen_cipher = vars.get_req_sz("KeylenCipher");
+         const auto keylen_mac = vars.get_req_sz("KeylenMAC");
+         const auto encrypt_then_mac = vars.get_req_bool("EncryptThenMAC");
+         const auto protocol = [&] {
+            const auto p = vars.get_req_str("Protocol");
+            if(p == "TLS") {
+               return Botan::TLS::Version_Code::TLS_V12;
+            } else if(p == "DTLS") {
+               return Botan::TLS::Version_Code::DTLS_V12;
+            } else {
+               throw Test_Error("unexpected protocol version");
+            }
+         }();
+
+         const auto key = vars.get_req_bin("Key");
+         const auto ad = vars.get_req_bin("AssociatedData");
+         const auto nonce = vars.get_req_bin("Nonce");
+         const auto pt = vars.get_req_bin("Plaintext");
+         const auto ct = vars.get_req_bin("Ciphertext");
+
+         auto [cipher, mac] = get_cipher_and_mac(vars);
+
+         auto tls_cbc = T(std::move(cipher), std::move(mac), keylen_cipher, keylen_mac, protocol, encrypt_then_mac);
+
+         tls_cbc.set_key(key);
+         tls_cbc.set_associated_data(ad);
+
+         std::vector<uint8_t> in(pt.begin(), pt.end());
+         std::vector<uint8_t> out(ct.begin(), ct.end());
+
+         if constexpr(!encrypt) {
+            std::swap(in, out);
+         }
+
+         // Test 1: process the entire message at once
+         std::vector<uint8_t> inout = in;
+         tls_cbc.start(nonce);
+         tls_cbc.finish(inout);  // in-place processing ('in' should now contain 'out')
+         result.test_eq(std::string("expected output of ") + direction, inout, out);
+
+         // Test 2: process the message in chunks
+         auto in_span = std::span{in};
+         tls_cbc.start(nonce);
+         constexpr size_t chunk_size = 7;
+         while(in_span.size() >= chunk_size && in_span.size() > tls_cbc.minimum_final_size() + chunk_size) {
+            tls_cbc.process(in_span.first(chunk_size));
+            in_span = in_span.subspan(chunk_size);
+         }
+
+         std::vector<uint8_t> chunked_out(in_span.begin(), in_span.end());
+         tls_cbc.finish(chunked_out);
+         result.test_eq(std::string("expected output with chunking of ") + direction, chunked_out, out);
+      }
+};
+
 BOTAN_REGISTER_TEST("tls", "tls_cbc", TLS_CBC_Tests);
+BOTAN_REGISTER_TEST("tls", "tls_cbc_kat", TLS_CBC_KAT_Tests);
+
+   #endif
+
+   #if defined(BOTAN_HAS_TLS_NULL)
+
+class TLS_Null_Tests final : public Text_Based_Test {
+   public:
+      TLS_Null_Tests() : Text_Based_Test("tls_null.vec", "Hash,Key,AssociatedData,Message,Fragment") {}
+
+      void encryption_test(Test::Result& result,
+                           const std::string& hash,
+                           const std::vector<uint8_t>& key,
+                           const std::vector<uint8_t>& associated_data,
+                           const std::vector<uint8_t>& message,
+                           const std::vector<uint8_t>& expected_tls_fragment) {
+         auto mac = Botan::MessageAuthenticationCode::create_or_throw(Botan::fmt("HMAC({})", hash));
+
+         const auto mac_output_length = mac->output_length();
+         Botan::TLS::TLS_NULL_HMAC_AEAD_Encryption tls_null_encrypt(std::move(mac), mac_output_length);
+
+         tls_null_encrypt.set_key(key);
+         tls_null_encrypt.set_associated_data(associated_data);
+
+         Botan::secure_vector<uint8_t> buffer(message.begin(), message.end());
+         tls_null_encrypt.finish(buffer);
+
+         result.test_eq("Encrypted TLS fragment matches expectation", Botan::unlock(buffer), expected_tls_fragment);
+      }
+
+      void decryption_test(Test::Result& result,
+                           const std::string& hash,
+                           const std::vector<uint8_t>& key,
+                           const std::vector<uint8_t>& associated_data,
+                           const std::vector<uint8_t>& expected_message,
+                           const std::vector<uint8_t>& tls_fragment,
+                           const std::string& header) {
+         auto mac = Botan::MessageAuthenticationCode::create_or_throw(Botan::fmt("HMAC({})", hash));
+
+         const auto mac_output_length = mac->output_length();
+         Botan::TLS::TLS_NULL_HMAC_AEAD_Decryption tls_null_decrypt(std::move(mac), mac_output_length);
+
+         tls_null_decrypt.set_key(key);
+         tls_null_decrypt.set_associated_data(associated_data);
+
+         Botan::secure_vector<uint8_t> buffer(tls_fragment.begin(), tls_fragment.end());
+
+         if(header == "InvalidMAC") {
+            result.test_throws("TLS_NULL_HMAC_AEAD_Decryption::finish()", "Message authentication failure", [&]() {
+               tls_null_decrypt.finish(buffer, 0);
+            });
+         } else {
+            tls_null_decrypt.finish(buffer, 0);
+            result.test_eq("Decrypted TLS fragment matches expectation", Botan::unlock(buffer), expected_message);
+         }
+      }
+
+      void invalid_ad_length_test(Test::Result& result,
+                                  const std::string& hash,
+                                  const std::vector<uint8_t>& associated_data) {
+         auto mac = Botan::MessageAuthenticationCode::create_or_throw(Botan::fmt("HMAC({})", hash));
+
+         const auto mac_output_length = mac->output_length();
+         Botan::TLS::TLS_NULL_HMAC_AEAD_Decryption tls_null_decrypt(std::move(mac), mac_output_length);
+
+         result.test_throws<Botan::Invalid_Argument>("TLS_NULL_HMAC_AEAD_Decryption::set_associated_data()",
+                                                     [&]() { tls_null_decrypt.set_associated_data(associated_data); });
+         return;
+      }
+
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override {
+         Test::Result result("TLS Null Cipher");
+
+         const std::string hash = vars.get_req_str("Hash");
+         const std::vector<uint8_t> key = vars.get_req_bin("Key");
+         const std::vector<uint8_t> associated_data = vars.get_req_bin("AssociatedData");
+         const std::vector<uint8_t> expected_message = vars.get_req_bin("Message");
+         const std::vector<uint8_t> tls_fragment = vars.get_req_bin("Fragment");
+
+         if(header.empty()) {
+            encryption_test(result, hash, key, associated_data, expected_message, tls_fragment);
+            decryption_test(result, hash, key, associated_data, expected_message, tls_fragment, header);
+         }
+
+         if(header == "InvalidMAC") {
+            decryption_test(result, hash, key, associated_data, expected_message, tls_fragment, header);
+         }
+
+         if(header == "InvalidAssociatedDataLength") {
+            invalid_ad_length_test(result, hash, associated_data);
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("tls", "tls_null", TLS_Null_Tests);
 
    #endif
 
@@ -291,6 +497,9 @@ class Test_TLS_Alert_Strings : public Test {
 
 BOTAN_REGISTER_TEST("tls", "tls_alert_strings", Test_TLS_Alert_Strings);
 
+   #if defined(BOTAN_HAS_TLS_13) && defined(BOTAN_HAS_TLS_13_PQC) && defined(BOTAN_HAS_X25519) && \
+      defined(BOTAN_HAS_X448)
+
 class Test_TLS_Policy_Text : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -300,20 +509,49 @@ class Test_TLS_Policy_Text : public Test {
 
          for(const std::string& policy : policies) {
             const std::string from_policy_obj = tls_policy_string(policy);
-            std::string from_file =
-   #if defined(BOTAN_HAS_TLS_13)
-               read_tls_policy(policy + (policy == "default" || policy == "strict" ? "_tls13" : ""));
-   #else
-               read_tls_policy(policy);
-   #endif
 
-            result.test_eq("Values for TLS " + policy + " policy", from_file, from_policy_obj);
+            const std::string policy_file = policy + (policy == "default" || policy == "strict" ? "_tls13" : "");
+
+            const std::string from_file = read_tls_policy(policy_file);
+
+            if(from_policy_obj != from_file) {
+               std::string d = diff(from_policy_obj, from_file);
+               result.test_failure(Botan::fmt("Values for TLS policy from {} don't match (diff {})", policy_file, d));
+            } else {
+               result.test_success("Values from TLS policy from " + policy_file + " match");
+            }
          }
 
          return {result};
       }
 
    private:
+      static std::string diff(const std::string& a_str, const std::string& b_str) {
+         std::istringstream a_ss(a_str);
+         std::istringstream b_ss(b_str);
+
+         std::ostringstream diff;
+
+         for(;;) {
+            if(!a_ss && !b_ss) {
+               break;  // done
+            }
+
+            std::string a_line;
+            std::getline(a_ss, a_line, '\n');
+
+            std::string b_line;
+            std::getline(b_ss, b_line, '\n');
+
+            if(a_line != b_line) {
+               diff << "- " << a_line << "\n"
+                    << "+ " << b_line << "\n";
+            }
+         }
+
+         return diff.str();
+      }
+
       static std::string read_tls_policy(const std::string& policy_str) {
          const std::string fspath = Test::data_file("tls-policy/" + policy_str + ".txt");
 
@@ -349,6 +587,7 @@ class Test_TLS_Policy_Text : public Test {
 };
 
 BOTAN_REGISTER_TEST("tls", "tls_policy_text", Test_TLS_Policy_Text);
+   #endif
 
 class Test_TLS_Ciphersuites : public Test {
    public:
@@ -362,14 +601,19 @@ class Test_TLS_Ciphersuites : public Test {
             if(ciphersuite && ciphersuite->valid()) {
                result.test_eq("Valid Ciphersuite is not SCSV", Botan::TLS::Ciphersuite::is_scsv(csuite_id16), false);
 
-               if(ciphersuite->cbc_ciphersuite() == false) {
+               if(ciphersuite->cbc_ciphersuite() == false && ciphersuite->null_ciphersuite() == false) {
                   result.test_eq("Expected AEAD ciphersuite", ciphersuite->aead_ciphersuite(), true);
                   result.test_eq("Expected MAC name for AEAD ciphersuites", ciphersuite->mac_algo(), "AEAD");
                } else {
                   result.test_eq("Did not expect AEAD ciphersuite", ciphersuite->aead_ciphersuite(), false);
-                  result.test_eq(
-                     "MAC algo and PRF algo same for CBC suites", ciphersuite->prf_algo(), ciphersuite->mac_algo());
+                  result.test_eq("MAC algo and PRF algo same for CBC and NULL suites",
+                                 ciphersuite->prf_algo(),
+                                 ciphersuite->mac_algo());
                }
+
+               if(ciphersuite->null_ciphersuite()) {
+                  result.test_eq("Expected NULL ciphersuite", ciphersuite->cipher_algo(), "NULL");
+               };
 
                // TODO more tests here
             }

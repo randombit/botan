@@ -384,7 +384,7 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
             status.insert(Certificate_Status_Code::CRL_NOT_YET_VALID);
          }
 
-         if(validation_time > crls[i]->next_update()) {
+         if(crls[i]->next_update().time_is_set() && validation_time > crls[i]->next_update()) {
             status.insert(Certificate_Status_Code::CRL_HAS_EXPIRED);
          }
 
@@ -650,8 +650,8 @@ Certificate_Status_Code PKIX::build_certificate_path(std::vector<X509_Certificat
 
       const std::string fprint = issuer->fingerprint("SHA-256");
 
-      if(certs_seen.contains(fprint))  // already seen?
-      {
+      if(certs_seen.contains(fprint)) {
+         // we already saw this certificate -> loop
          return Certificate_Status_Code::CERT_CHAIN_LOOP;
       }
 
@@ -839,10 +839,10 @@ void PKIX::merge_revocation_status(CertificatePathStatusCodes& chain_status,
 
       if(i < ocsp.size() && !ocsp[i].empty()) {
          for(auto&& code : ocsp[i]) {
+            // NO_REVOCATION_URL and OCSP_SERVER_NOT_AVAILABLE are softfail
             if(code == Certificate_Status_Code::OCSP_RESPONSE_GOOD ||
-               code == Certificate_Status_Code::OCSP_NO_REVOCATION_URL ||   // softfail
-               code == Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE)  // softfail
-            {
+               code == Certificate_Status_Code::OCSP_NO_REVOCATION_URL ||
+               code == Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE) {
                had_ocsp = true;
             }
 

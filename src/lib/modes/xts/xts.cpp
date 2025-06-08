@@ -8,6 +8,7 @@
 
 #include <botan/internal/xts.h>
 
+#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/poly_dbl.h>
 
@@ -118,10 +119,13 @@ size_t XTS_Encryption::process_msg(uint8_t buf[], size_t sz) {
 
    while(blocks) {
       const size_t to_proc = std::min(blocks, blocks_in_tweak);
+      const size_t proc_bytes = to_proc * BS;
 
-      cipher().encrypt_n_xex(buf, tweak(), to_proc);
+      xor_buf(buf, tweak(), proc_bytes);
+      cipher().encrypt_n(buf, buf, to_proc);
+      xor_buf(buf, tweak(), proc_bytes);
 
-      buf += to_proc * BS;
+      buf += proc_bytes;
       blocks -= to_proc;
 
       update_tweak(to_proc);
@@ -184,10 +188,13 @@ size_t XTS_Decryption::process_msg(uint8_t buf[], size_t sz) {
 
    while(blocks) {
       const size_t to_proc = std::min(blocks, blocks_in_tweak);
+      const size_t proc_bytes = to_proc * BS;
 
-      cipher().decrypt_n_xex(buf, tweak(), to_proc);
+      xor_buf(buf, tweak(), proc_bytes);
+      cipher().decrypt_n(buf, buf, to_proc);
+      xor_buf(buf, tweak(), proc_bytes);
 
-      buf += to_proc * BS;
+      buf += proc_bytes;
       blocks -= to_proc;
 
       update_tweak(to_proc);

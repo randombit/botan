@@ -59,7 +59,15 @@ class BOTAN_TEST_API calendar_point {
       calendar_point(const std::chrono::system_clock::time_point& time_point);
 
       /**
+      * Return seconds since epoch
+      */
+      uint64_t seconds_since_epoch() const;
+
+      /**
       * Returns an STL timepoint object
+      *
+      * Note this throws an exception if the time is not representable
+      * in the system time_t
       */
       std::chrono::system_clock::time_point to_std_timepoint() const;
 

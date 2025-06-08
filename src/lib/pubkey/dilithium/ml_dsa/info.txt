@@ -1,0 +1,21 @@
+<defines>
+ML_DSA -> 20240729
+</defines>
+
+<module_info>
+name -> "ML-DSA"
+brief -> "Module Lattice Digital Signature Algorithm (FIPS 204)"
+</module_info>
+
+<requires>
+dilithium_common
+dilithium_shake
+</requires>
+
+<header:internal>
+ml_dsa_impl.h
+</header:internal>
+
+<header:public>
+ml_dsa.h
+</header:public>

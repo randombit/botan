@@ -8,8 +8,10 @@
 #define BOTAN_EC_APOINT_H_
 
 #include <botan/concepts.h>
+#include <botan/ec_point_format.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
+#include <memory>
 #include <optional>
 #include <span>
 #include <string_view>
@@ -21,12 +23,17 @@ class BigInt;
 class RandomNumberGenerator;
 class EC_Group;
 class EC_Scalar;
+
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
 class EC_Point;
+#endif
 
 class EC_Group_Data;
 class EC_AffinePoint_Data;
 
-class BOTAN_UNSTABLE_API EC_AffinePoint final {
+/// Elliptic Curve Point in Affine Representation
+///
+class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
    public:
       /// Point deserialization. Throws if wrong length or not a valid point
       ///
@@ -45,9 +52,7 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
       static std::optional<EC_AffinePoint> from_bigint_xy(const EC_Group& group, const BigInt& x, const BigInt& y);
 
       /// Multiply by the group generator returning a complete point
-      ///
-      /// Workspace argument is transitional
-      static EC_AffinePoint g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws);
+      static EC_AffinePoint g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng);
 
       /// Return the identity element
       static EC_AffinePoint identity(const EC_Group& group);
@@ -72,9 +77,35 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
                                              std::span<const uint8_t> domain_sep);
 
       /// Multiply a point by a scalar returning a complete point
+      EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng) const;
+
+      /// Multiply a point by a scalar, returning the byte encoding of the x coordinate only
+      secure_vector<uint8_t> mul_x_only(const EC_Scalar& scalar, RandomNumberGenerator& rng) const;
+
+      /// Compute 2-ary multiscalar multiplication - p*x + q*y
       ///
-      /// Workspace argument is transitional
-      EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const;
+      /// This operation runs in constant time with respect to p, x, q, and y
+      ///
+      /// @returns p*x+q*y, or nullopt if the result was the point at infinity
+      static std::optional<EC_AffinePoint> mul_px_qy(const EC_AffinePoint& p,
+                                                     const EC_Scalar& x,
+                                                     const EC_AffinePoint& q,
+                                                     const EC_Scalar& y,
+                                                     RandomNumberGenerator& rng);
+
+      /// Point addition
+      ///
+      /// Note that this is quite slow since it converts the resulting
+      /// projective point immediately to affine coordinates, which requires a
+      /// field inversion. This can be sufficient when implementing protocols
+      /// that just need to perform a few additions.
+      ///
+      /// In the future a cooresponding EC_ProjectivePoint type may be added
+      /// which would avoid the expensive affine conversions
+      EC_AffinePoint add(const EC_AffinePoint& q) const;
+
+      /// Point negation
+      EC_AffinePoint negate() const;
 
       /// Return the number of bytes of a field element
       ///
@@ -169,12 +200,20 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
          return bytes;
       }
 
+      bool operator==(const EC_AffinePoint& other) const;
+
+      bool operator!=(const EC_AffinePoint& other) const { return !(*this == other); }
+
+      /// Return an encoding depending on the requested format
+      std::vector<uint8_t> serialize(EC_Point_Format format) const;
+
       EC_AffinePoint(const EC_AffinePoint& other);
       EC_AffinePoint(EC_AffinePoint&& other) noexcept;
 
       EC_AffinePoint& operator=(const EC_AffinePoint& other);
       EC_AffinePoint& operator=(EC_AffinePoint&& other) noexcept;
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
       /**
       * Deprecated conversion
       */
@@ -184,6 +223,24 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
       * Deprecated conversion
       */
       EC_Point to_legacy_point() const;
+#endif
+
+      BOTAN_DEPRECATED("Use version without workspace arg")
+      static EC_AffinePoint g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>&) {
+         return EC_AffinePoint::g_mul(scalar, rng);
+      }
+
+      BOTAN_DEPRECATED("Use version without workspace arg")
+      EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>&) const {
+         return this->mul(scalar, rng);
+      }
+
+      /// Multiply a point by a scalar, returning the byte encoding of the x coordinate only
+      secure_vector<uint8_t> mul_x_only(const EC_Scalar& scalar,
+                                        RandomNumberGenerator& rng,
+                                        std::vector<BigInt>&) const {
+         return this->mul_x_only(scalar, rng);
+      }
 
       ~EC_AffinePoint();
 

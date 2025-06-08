@@ -7,11 +7,16 @@
 
 #include <botan/pk_algs.h>
 
+#include <botan/assert.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 
 #if defined(BOTAN_HAS_RSA)
    #include <botan/rsa.h>
+#endif
+
+#if defined(BOTAN_HAS_CLASSICMCELIECE)
+   #include <botan/cmce.h>
 #endif
 
 #if defined(BOTAN_HAS_DSA)
@@ -82,6 +87,10 @@
    #include <botan/kyber.h>
 #endif
 
+#if defined(BOTAN_HAS_ML_KEM)
+   #include <botan/ml_kem.h>
+#endif
+
 #if defined(BOTAN_HAS_HSS_LMS)
    #include <botan/hss_lms.h>
 #endif
@@ -98,8 +107,16 @@
    #include <botan/dilithium.h>
 #endif
 
+#if defined(BOTAN_HAS_ML_DSA)
+   #include <botan/ml_dsa.h>
+#endif
+
 #if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
    #include <botan/sphincsplus.h>
+#endif
+
+#if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) || defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
+   #include <botan/slh_dsa.h>
 #endif
 
 namespace Botan {
@@ -143,6 +160,12 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
    if(alg_name == "Kyber" || alg_name.starts_with("Kyber-")) {
       return std::make_unique<Kyber_PublicKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_ML_KEM)
+   if(alg_name.starts_with("ML-KEM-")) {
+      return std::make_unique<ML_KEM_PublicKey>(alg_id, key_bits);
    }
 #endif
 
@@ -224,6 +247,12 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
+#if defined(BOTAN_HAS_ML_DSA)
+   if(alg_name.starts_with("ML-DSA-")) {
+      return std::make_unique<ML_DSA_PublicKey>(alg_id, key_bits);
+   }
+#endif
+
 #if defined(BOTAN_HAS_HSS_LMS)
    if(alg_name == "HSS-LMS") {
       return std::make_unique<HSS_LMS_PublicKey>(key_bits);
@@ -233,6 +262,18 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
    if(alg_name == "SPHINCS+" || alg_name.starts_with("SphincsPlus-")) {
       return std::make_unique<SphincsPlus_PublicKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) || defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
+   if(alg_name.starts_with("SLH-DSA-") || alg_name.starts_with("Hash-SLH-DSA-")) {
+      return std::make_unique<SLH_DSA_PublicKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_CLASSICMCELIECE)
+   if(alg_name.starts_with("ClassicMcEliece")) {
+      return std::make_unique<Classic_McEliece_PublicKey>(alg_id, key_bits);
    }
 #endif
 
@@ -299,6 +340,12 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
+#if defined(BOTAN_HAS_ML_KEM)
+   if(alg_name.starts_with("ML-KEM-")) {
+      return std::make_unique<ML_KEM_PrivateKey>(alg_id, key_bits);
+   }
+#endif
+
 #if defined(BOTAN_HAS_MCELIECE)
    if(alg_name == "McEliece") {
       return std::make_unique<McEliece_PrivateKey>(key_bits);
@@ -359,6 +406,12 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
+#if defined(BOTAN_HAS_ML_DSA)
+   if(alg_name.starts_with("ML-DSA-")) {
+      return std::make_unique<ML_DSA_PrivateKey>(alg_id, key_bits);
+   }
+#endif
+
 #if defined(BOTAN_HAS_HSS_LMS)
    if(alg_name == "HSS-LMS-Private-Key") {
       return std::make_unique<HSS_LMS_PrivateKey>(key_bits);
@@ -368,6 +421,18 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
    if(alg_name == "SPHINCS+" || alg_name.starts_with("SphincsPlus-")) {
       return std::make_unique<SphincsPlus_PrivateKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) || defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
+   if(alg_name.starts_with("SLH-DSA-") || alg_name.starts_with("Hash-SLH-DSA-")) {
+      return std::make_unique<SLH_DSA_PrivateKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_CLASSICMCELIECE)
+   if(alg_name.starts_with("ClassicMcEliece")) {
+      return std::make_unique<Classic_McEliece_PrivateKey>(alg_id, key_bits);
    }
 #endif
 
@@ -467,6 +532,13 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
       return std::make_unique<McEliece_PrivateKey>(rng, n, t);
    }
 #endif
+#if defined(BOTAN_HAS_CLASSICMCELIECE)
+   if(alg_name == "ClassicMcEliece") {
+      auto cmce_params_set = params.empty() ? Classic_McEliece_Parameter_Set::ClassicMcEliece_6960119f
+                                            : Classic_McEliece_Parameter_Set::from_string(params);
+      return std::make_unique<Classic_McEliece_PrivateKey>(rng, cmce_params_set);
+   }
+#endif
 
 #if defined(BOTAN_HAS_FRODOKEM)
    if(alg_name == "FrodoKEM") {
@@ -488,8 +560,21 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
    }
 #endif
 
+#if defined(BOTAN_HAS_ML_KEM)
+   if(alg_name == "ML-KEM") {
+      const auto mode = [&]() -> ML_KEM_Mode {
+         if(params.empty()) {
+            return ML_KEM_Mode::ML_KEM_768;
+         }
+         return ML_KEM_Mode(params);
+      }();
+
+      return std::make_unique<ML_KEM_PrivateKey>(rng, mode);
+   }
+#endif
+
 #if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
-   if(alg_name == "Dilithium" || alg_name == "Dilithium-") {
+   if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-")) {
       const auto mode = [&]() -> DilithiumMode {
          if(params.empty()) {
             return DilithiumMode::Dilithium6x5;
@@ -501,17 +586,45 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
    }
 #endif
 
+#if defined(BOTAN_HAS_ML_DSA)
+   if(alg_name == "ML-DSA") {
+      const auto mode = [&]() -> ML_DSA_Mode {
+         if(params.empty()) {
+            return ML_DSA_Mode::ML_DSA_6x5;
+         }
+         return ML_DSA_Mode(params);
+      }();
+
+      return std::make_unique<ML_DSA_PrivateKey>(rng, mode);
+   }
+#endif
+
 #if defined(BOTAN_HAS_HSS_LMS)
    if(alg_name == "HSS-LMS") {
-      return std::make_unique<HSS_LMS_PrivateKey>(rng, params);
+      const auto hss_params = [&]() -> std::string {
+         if(params.empty()) {
+            return "SHA-256,HW(10,1)";
+         } else {
+            return std::string(params);
+         }
+      }();
+      return std::make_unique<HSS_LMS_PrivateKey>(rng, hss_params);
    }
 #endif
 
 #if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
-   if(alg_name == "SPHINCS+" || alg_name == "SphincsPlus-") {
+   if(alg_name == "SPHINCS+" || alg_name == "SphincsPlus") {
       auto sphincs_params = Sphincs_Parameters::create(params);
 
       return std::make_unique<SphincsPlus_PrivateKey>(rng, sphincs_params);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) || defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
+   if(alg_name == "SLH-DSA") {
+      auto slh_dsa_params = SLH_DSA_Parameters::create(params);
+
+      return std::make_unique<SLH_DSA_PrivateKey>(rng, slh_dsa_params);
    }
 #endif
 
@@ -565,8 +678,12 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
          return "secp256r1";
       }();
 
-      auto ec_group = EC_Group::from_name(group_id);
-      return create_ec_private_key(alg_name, ec_group, rng);
+      if(EC_Group::supports_named_group(group_id)) {
+         auto ec_group = EC_Group::from_name(group_id);
+         return create_ec_private_key(alg_name, ec_group, rng);
+      } else {
+         return {};
+      }
    }
 #endif
 
@@ -583,7 +700,7 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
          return "modp/ietf/2048";
       }();
 
-      DL_Group modp_group(group_id);
+      auto modp_group = DL_Group::from_name(group_id);
 
    #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
       if(alg_name == "DH") {

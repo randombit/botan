@@ -8,6 +8,7 @@
 
 #include <botan/tls_session_manager_hybrid.h>
 
+#include <botan/assert.h>
 #include <botan/rng.h>
 
 #include <functional>
@@ -82,6 +83,14 @@ std::optional<Session> Session_Manager_Hybrid::retrieve(const Session_Handle& ha
 
 bool Session_Manager_Hybrid::emits_session_tickets() {
    return m_stateless.emits_session_tickets() || m_stateful->emits_session_tickets();
+}
+
+std::optional<Session> Session_Manager_Hybrid::retrieve_one(const Session_Handle&) {
+   BOTAN_ASSERT(false, "This should never be called");
+}
+
+std::vector<Session_with_Handle> Session_Manager_Hybrid::find_some(const Server_Information&, const size_t) {
+   BOTAN_ASSERT(false, "This should never be called");
 }
 
 }  // namespace Botan::TLS

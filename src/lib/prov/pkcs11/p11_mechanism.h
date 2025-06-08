@@ -11,7 +11,6 @@
 
 #include <botan/p11.h>
 
-#include <botan/mem_ops.h>
 #include <memory>
 #include <string>
 #include <utility>
@@ -23,7 +22,7 @@ namespace Botan::PKCS11 {
 * for RSA (encryption/decryption, signature/verification)
 * and EC (ECDSA signature/verification, ECDH key derivation).
 */
-class MechanismWrapper final {
+class BOTAN_PUBLIC_API(3, 7) MechanismWrapper final {
    public:
       /// @param mechanism_type the CK_MECHANISM_TYPE for the `mechanism` field of the CK_MECHANISM struct
       explicit MechanismWrapper(MechanismType mechanism_type);
@@ -87,7 +86,7 @@ class MechanismWrapper final {
 
       /// Holds the mechanism parameters for OAEP, PSS and ECDH
       union MechanismParameters {
-            MechanismParameters() { clear_mem(this, 1); }
+            MechanismParameters() { std::memset(this, 0, sizeof(MechanismParameters)); }
 
             RsaPkcsOaepParams oaep_params;
             RsaPkcsPssParams pss_params;

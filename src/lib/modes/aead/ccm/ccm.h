@@ -10,6 +10,8 @@
 #define BOTAN_AEAD_CCM_H_
 
 #include <botan/aead.h>
+
+#include <botan/assert.h>
 #include <botan/block_cipher.h>
 
 namespace Botan {

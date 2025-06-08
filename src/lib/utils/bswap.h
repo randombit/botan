@@ -14,6 +14,9 @@
 
 #include <botan/types.h>
 
+#include <botan/compiler.h>
+#include <concepts>
+
 namespace Botan {
 
 /**

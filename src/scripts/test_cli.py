@@ -322,12 +322,12 @@ def cli_version_tests(_tmp_dir):
 
     version_re = re.compile(r'[0-9]\.[0-9]+\.[0-9](\-[a-z]+[0-9]+)?')
     if not version_re.match(output):
-        logging.error("Unexpected version output %s", output)
+        logging.error("Unexpected short version output %s", output)
 
     output = test_cli("version", ["--full"], None, None)
-    version_full_re = re.compile(r'Botan [0-9]\.[0-9]+\.[0-9](\-[a-z]+[0-9]+)? \(.* revision .*, distribution .*\)$')
+    version_full_re = re.compile(r'Botan [0-9]\.[0-9]+\.[0-9](\-[a-z]+[0-9]+)?( UNSAFE .* BUILD)? \(.*\)$')
     if not version_full_re.match(output):
-        logging.error("Unexpected version output %s", output)
+        logging.error("Unexpected long version output %s", output)
 
 def cli_is_prime_tests(_tmp_dir):
     test_cli("is_prime", "5", "5 is probably prime")
@@ -385,7 +385,7 @@ def cli_factor_tests(_tmp_dir):
 
 def cli_mod_inverse_tests(_tmp_dir):
     test_cli("mod_inverse", "97 802", "339")
-    test_cli("mod_inverse", "98 802", "0")
+    test_cli("mod_inverse", "98 802", "No modular inverse exists")
 
 def cli_base64_tests(_tmp_dir):
     test_cli("base64_enc", "-", "YmVlcyE=", "bees!")
@@ -530,7 +530,7 @@ mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
 
     valid_sig = "nI4mI1ec14Y7nYUWs2edysAVvkob0TWpmGh5rrYWDA+/W9Fj0ZM21qJw8qa3/avAOIVBO6hoMEVmfJYXlS+ReA=="
 
-    test_cli("sign", "--provider=base %s %s" % (priv_key, pub_key), valid_sig)
+    test_cli("sign", "%s %s" % (priv_key, pub_key), valid_sig)
 
     test_cli("verify", [pub_key, pub_key, '-'],
              "Signature is valid", valid_sig)
@@ -705,7 +705,13 @@ def cli_rng_tests(_tmp_dir):
 
     hex_10 = re.compile('[A-F0-9]{20}')
 
-    for rng in ['system', 'auto', 'entropy']:
+    rngs = ['system', 'auto', 'entropy']
+    # execute ESDM tests only on Linux
+
+    if 'BOTAN_BUILD_WITH_ESDM' in os.environ:
+        rngs += ['esdm-full', 'esdm-pr']
+
+    for rng in rngs:
         output = test_cli("rng", ["10", '--%s' % (rng)], use_drbg=False)
         if output == "D80F88F6ADBE65ACB10C":
             logging.error('RNG produced DRBG output')
@@ -931,11 +937,7 @@ N = 0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551
 G = 0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296,0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5"""
 
     secp256r1_pem = """-----BEGIN EC PARAMETERS-----
-MIHgAgEBMCwGByqGSM49AQECIQD/////AAAAAQAAAAAAAAAAAAAAAP//////////
-/////zBEBCD/////AAAAAQAAAAAAAAAAAAAAAP///////////////AQgWsY12Ko6
-k+ez671VdpiGvGUdBrDMU7D2O848PifSYEsEQQRrF9Hy4SxCR/i85uVjpEDydwN9
-gS3rM6D0oTlF2JjClk/jQuL+Gn+bjufrSnwPnhYrzjNXazFezsu2QGg3v1H1AiEA
-/////wAAAAD//////////7zm+q2nF56E87nKwvxjJVECAQE=
+BggqhkjOPQMBBw==
 -----END EC PARAMETERS-----"""
 
     test_cli("ec_group_info", "secp256r1", secp256r1_info)
@@ -1113,6 +1115,7 @@ def cli_tls_socket_tests(tmp_dir):
 
     psk = "FEEDFACECAFEBEEF"
     psk_identity = "test-psk"
+    psk_prf = "SHA-384"
 
     class TestConfig:
         def __init__(self, name, protocol_version, policy, **kwargs):
@@ -1123,6 +1126,7 @@ def cli_tls_socket_tests(tmp_dir):
             self.expect_error = kwargs.get("expect_error", False)
             self.psk = kwargs.get("psk")
             self.psk_identity = kwargs.get("psk_identity")
+            self.psk_prf = kwargs.get("psk_prf")
 
     configs = [
         # Explicitly testing x448-based key exchange against ourselves, as Bogo test
@@ -1150,21 +1154,23 @@ def cli_tls_socket_tests(tmp_dir):
 
         TestConfig("PSK TLS 1.2", "1.2", "allow_tls12=true\nallow_tls13=false\nkey_exchange_methods=ECDHE_PSK\n",
                    psk=psk, psk_identity=psk_identity,
-                   stdout_regex=f'Handshake complete, TLS v1\\.2.*utilized PSK identity: {psk_identity}.*'),
-        TestConfig("PSK TLS 1.3", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_methods=ECDHE_PSK\n",
-                   psk=psk, psk_identity=psk_identity,
-                   stdout_regex=f'Handshake complete, TLS v1\\.3.*utilized PSK identity: {psk_identity}.*'),
+                   stdout_regex=f'Handshake complete, TLS v1\\.2.*\nUtilized PSK identity: {psk_identity}.*'),
 
-        TestConfig("Kyber KEM", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_groups=Kyber-512-r3"),
-        TestConfig("Hybrid PQ/T", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_groups=x25519/Kyber-512-r3"),
+        TestConfig("PSK TLS 1.3", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_methods=ECDHE_PSK\n",
+                   psk=psk, psk_identity=psk_identity, psk_prf=psk_prf,
+                   stdout_regex=f'Handshake complete, TLS v1\\.3.*\nUtilized PSK identity: {psk_identity}.*'),
+
+        TestConfig("Kyber KEM", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_groups=ML-KEM-768"),
+        TestConfig("Hybrid PQ/T", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_groups=x25519/ML-KEM-768"),
     ]
 
     class TestServer(AsyncTestProcess):
-        def __init__(self, tmp_dir, port, psk, psk_identity, clients=0):
+        def __init__(self, tmp_dir, port, psk, psk_identity, psk_prf, clients=0):
             super().__init__("Server")
             self.port = port
             self.psk = psk
             self.psk_identity = psk_identity
+            self.psk_prf = psk_prf
             self.clients = clients
 
             self.cert_suite = ServerCertificateSuite(tmp_dir, "secp256r1", "SHA-384")
@@ -1172,7 +1178,7 @@ def cli_tls_socket_tests(tmp_dir):
 
             with open(self.policy, 'w', encoding='utf8') as f:
                 f.write('key_exchange_methods = ECDH DH ECDHE_PSK\n')
-                f.write("key_exchange_groups = x25519 x448 secp256r1 ffdhe/ietf/2048 Kyber-512-r3 x25519/Kyber-512-r3")
+                f.write("key_exchange_groups = x25519 x448 secp256r1 ffdhe/ietf/2048 ML-KEM-768 x25519/ML-KEM-768")
 
         @property
         def ca_cert(self):
@@ -1182,6 +1188,7 @@ def cli_tls_socket_tests(tmp_dir):
             server_cmd = [CLI_PATH, "tls_server", f"--max-clients={self.clients}",
                           f"--port={self.port}", f"--policy={self.policy}",
                           f"--psk={self.psk}", f"--psk-identity={self.psk_identity}",
+                          f"--psk-prf={self.psk_prf}",
                           self.cert_suite.cert, self.cert_suite.private_key]
 
             await self._launch(server_cmd, b'Listening for new connections')
@@ -1237,6 +1244,8 @@ def cli_tls_socket_tests(tmp_dir):
                           f'--tls-version={self.config.protocol_version}', f'--policy={self.policy}']
             if self.config.psk:
                 client_cmd += [f'--psk={self.config.psk}', f'--psk-identity={self.config.psk_identity}']
+                if self.config.psk_prf:
+                    client_cmd += [f'--psk-prf={self.config.psk_prf}']
 
             await self._launch(client_cmd, b'Handshake complete' if not self.config.expect_error else None)
 
@@ -1246,7 +1255,7 @@ def cli_tls_socket_tests(tmp_dir):
             await self._finalize()
 
     async def run_async_test():
-        async with TestServer(tmp_dir, port_for('tls_server'), psk, psk_identity, len(configs)) as server:
+        async with TestServer(tmp_dir, port_for('tls_server'), psk, psk_identity, psk_prf, len(configs)) as server:
             errors = 0
             for tls_config in configs:
                 logging.debug("Running test for %s in TLS %s mode", tls_config.name, tls_config.protocol_version)
@@ -1323,16 +1332,8 @@ def cli_tls_online_pqc_hybrid_tests(tmp_dir):
         return get_oqs_resource("/CA.crt")
 
     test_cfg = [
-        TestConfig("pq.cloudflareresearch.com", "x25519/Kyber-512-r3/cloudflare"),
-        TestConfig("pq.cloudflareresearch.com", "x25519/Kyber-768-r3"),
-        TestConfig("google.com", "x25519/Kyber-768-r3"),
-
-        TestConfig("qsc.eu-de.kms.cloud.ibm.com", "secp256r1/Kyber-512-r3"),
-        TestConfig("qsc.eu-de.kms.cloud.ibm.com", "secp384r1/Kyber-768-r3"),
-        TestConfig("qsc.eu-de.kms.cloud.ibm.com", "secp521r1/Kyber-1024-r3"),
-        TestConfig("qsc.eu-de.kms.cloud.ibm.com", "Kyber-512-r3"),
-        TestConfig("qsc.eu-de.kms.cloud.ibm.com", "Kyber-768-r3"),
-        TestConfig("qsc.eu-de.kms.cloud.ibm.com", "Kyber-1024-r3"),
+        TestConfig("cloudflare.com", "x25519/ML-KEM-768"),
+        TestConfig("google.com", "x25519/ML-KEM-768"),
     ]
 
     oqsp = get_oqs_ports()
@@ -1340,16 +1341,15 @@ def cli_tls_online_pqc_hybrid_tests(tmp_dir):
     if oqsp and oqs_test_ca:
         # src/scripts/test_cli.py --run-online-tests ./botan pqc_hybrid_tests
         test_cfg += [
-            TestConfig("test.openquantumsafe.org", "x25519/Kyber-512-r3", port=oqsp['x25519_kyber512'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "x25519/Kyber-768-r3", port=oqsp['x25519_kyber768'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "x448/Kyber-768-r3", port=oqsp['x448_kyber768'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp256r1/Kyber-512-r3", port=oqsp['p256_kyber512'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp256r1/Kyber-768-r3", port=oqsp['p256_kyber768'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp384r1/Kyber-768-r3", port=oqsp['p384_kyber768'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp521r1/Kyber-1024-r3", port=oqsp['p521_kyber1024'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "Kyber-512-r3", port=oqsp['kyber512'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "Kyber-768-r3", port=oqsp['kyber768'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "Kyber-1024-r3", port=oqsp['kyber1024'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "x25519/ML-KEM-768", port=oqsp['X25519MLKEM768'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "secp256r1/ML-KEM-768", port=oqsp['SecP256r1MLKEM768'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "ML-KEM-512", port=oqsp['mlkem512'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "ML-KEM-768", port=oqsp['mlkem768'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "ML-KEM-1024", port=oqsp['mlkem1024'], ca=oqs_test_ca),
+
+            # We track OQS's code point allocations for FrodoKEM and hybrids thereof.
+            # All are defined in TLS's private code point section (0xFE00 - 0xFFFF)
+            # and may change in the future.
             TestConfig("test.openquantumsafe.org", "eFrodoKEM-640-SHAKE", port=oqsp['frodo640shake'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "eFrodoKEM-976-SHAKE", port=oqsp['frodo976shake'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "eFrodoKEM-1344-SHAKE", port=oqsp['frodo1344shake'], ca=oqs_test_ca),
@@ -1571,7 +1571,7 @@ def cli_pk_encrypt_tests(tmp_dir):
     rsa_priv_key = os.path.join(tmp_dir, 'rsa.priv')
     rsa_pub_key = os.path.join(tmp_dir, 'rsa.pub')
 
-    test_cli("keygen", ["--algo=RSA", "--provider=base", "--params=2048", "--output=%s" % (rsa_priv_key)], "")
+    test_cli("keygen", ["--algo=RSA", "--params=2048", "--output=%s" % (rsa_priv_key)], "")
 
     key_hash = "D1621B7D1272545F8CCC220BC7F6F5BAF0150303B19299F0C5B79C095B3CDFC0"
     test_cli("hash", ["--no-fsname", "--algo=SHA-256", rsa_priv_key], key_hash)
@@ -1623,9 +1623,8 @@ def cli_speed_pk_tests(_tmp_dir):
     msec = 1
 
     pk_algos = ["ECDSA", "ECDH", "SM2", "ECKCDSA", "ECGDSA", "GOST-34.10",
-                "DH", "DSA", "ElGamal", "Ed25519", "Ed448", "X25519", "X448", "McEliece",
-                "RSA", "RSA_keygen", "XMSS", "ec_h2c", "Kyber", "Dilithium",
-                "SPHINCS+"]
+                "DH", "DSA", "ElGamal", "Ed25519", "Ed448", "X25519", "X448",
+                "RSA", "RSA_keygen", "XMSS", "Kyber", "Dilithium", "SLH-DSA"]
 
     output = test_cli("speed", ["--msec=%d" % (msec)] + pk_algos, None).split('\n')
 
@@ -1649,13 +1648,13 @@ def cli_speed_pbkdf_tests(_tmp_dir):
 def cli_speed_table_tests(_tmp_dir):
     msec = 1
 
-    version_re = re.compile(r'^Botan 3\.[0-9]+\.[0-9](\-.*[0-9]+)? \(.*, revision .*, distribution .*\)')
+    version_re = re.compile(r'Botan [0-9]\.[0-9]+\.[0-9](\-[a-z]+[0-9]+)?( UNSAFE .* BUILD)? \(.*\)$')
     cpuid_re = re.compile(r'^CPUID: [a-z_0-9 ]*$')
-    format_re = re.compile(r'^AES-128 .* buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB\/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms\)')
+    format_re = re.compile(r'^.* buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB\/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms\)')
     tbl_hdr_re = re.compile(r'^algo +operation +1024 bytes$')
-    tbl_val_re = re.compile(r'^AES-128 +(encrypt|decrypt) +[0-9]+(\.[0-9]{2})$')
+    tbl_val_re = re.compile(r'^.* +(encrypt|decrypt) +[0-9]+(\.[0-9]{2})$')
 
-    output = test_cli("speed", ["--format=table", "--provider=base", "--msec=%d" % (msec), "AES-128"], None).split('\n')
+    output = test_cli("speed", ["--format=table", "--msec=%d" % (msec), "AES-128"], None).split('\n')
 
     if len(output) != 11:
         logging.error('Unexpected number of lines from table output')
@@ -1688,7 +1687,7 @@ def cli_speed_table_tests(_tmp_dir):
         logging.error("Unexpected trailing message got %s", output[10])
 
 def cli_speed_invalid_option_tests(_tmp_dir):
-    speed_usage = "Usage: speed --msec=500 --format=default --ecc-groups= --provider= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos"
+    speed_usage = "Usage: speed --msec=500 --format=default --time-unit=ms --ecc-groups= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos"
 
     test_cli("speed", ["--buf-size=0", "--msec=1", "AES-128"],
              expected_stderr="Usage error: Cannot have a zero-sized buffer\n%s" % (speed_usage))
@@ -1706,8 +1705,7 @@ def cli_speed_math_tests(_tmp_dir):
     msec = 1
     # these all have a common output format
     math_ops = ['mp_mul', 'mp_div', 'mp_div10', 'modexp', 'random_prime', 'inverse_mod',
-                'rfc3394', 'fpe_fe1', 'ecdsa_recovery', 'ecc_init', 'poly_dbl',
-                'bn_redc', 'nistp_redc', 'ecc_mult', 'os2ecp', 'primality_test']
+                'rfc3394', 'fpe_fe1', 'ecdsa_recovery', 'ecc', 'bn_redc', 'primality_test']
 
     format_re = re.compile(r'^.* [0-9]+ /sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+(\.[0-9]+)? ms\)')
     for op in math_ops:
@@ -1725,7 +1723,7 @@ def cli_speed_tests(_tmp_dir):
     if len(output) % 4 != 0:
         logging.error("Unexpected number of lines for AES-128 speed test")
 
-    format_re = re.compile(r'^AES-128 .* buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB\/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms\)')
+    format_re = re.compile(r'^.* .* buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB\/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms\)')
     for line in output:
         if format_re.match(line) is None:
             logging.error("Unexpected line %s", line)
@@ -1761,13 +1759,6 @@ def cli_speed_tests(_tmp_dir):
         if format_re.match(line) is None:
             logging.error("Unexpected line %s", line)
 
-    # Entropy source rdseed output 128 bytes estimated entropy 0 in 0.02168 ms total samples 32
-    output = test_cli("speed", ["--msec=%d" % (msec), "entropy"], None).split('\n')
-    format_re = re.compile(r'^Entropy source [_a-z0-9]+ output [0-9]+ bytes estimated entropy [0-9]+ in [0-9]+\.[0-9]+ ms .*total samples [0-9]+')
-    for line in output:
-        if format_re.match(line) is None:
-            logging.error("Unexpected line %s", line)
-
     output = test_cli("speed", ["--msec=%d" % (msec), "zfec"], None).split('\n')
     format_re = re.compile(r'^zfec [0-9]+/[0-9]+ (encode|decode) buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms')
     for line in output:
@@ -1780,7 +1771,10 @@ def cli_speed_tests(_tmp_dir):
     if len(json_blob) < 2:
         logging.error("Unexpected size for JSON output")
 
-    for b in json_blob:
+    if 'version' not in json_blob[0]:
+        logging.error("Didn't find version header in first JSON object")
+
+    for b in json_blob[1:]:
         for field in ['algo', 'op', 'events', 'bps', 'buf_size', 'nanos']:
             if field not in b:
                 logging.error('Missing field %s in JSON record %s', field, b)

@@ -11,10 +11,11 @@
    #include "test_rng.h"
    #include <botan/bigint.h>
    #include <botan/numthry.h>
-   #include <botan/reducer.h>
+   #include <botan/internal/barrett.h>
    #include <botan/internal/ct_utils.h>
    #include <botan/internal/divide.h>
    #include <botan/internal/fmt.h>
+   #include <botan/internal/mod_inv.h>
    #include <botan/internal/mp_core.h>
    #include <botan/internal/parsing.h>
    #include <botan/internal/primality.h>
@@ -400,6 +401,43 @@ class BigInt_Div_Test final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("math", "bn_div", BigInt_Div_Test);
 
+class BigInt_DivPow2k_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("BigInt ct_divide_pow2k");
+
+         for(size_t k = 2; k != 128; ++k) {
+            auto div1 = Botan::ct_divide_pow2k(k, 1);
+            result.test_eq("ct_divide_pow2k div 1", div1, Botan::BigInt::power_of_2(k));
+
+            auto div2 = Botan::ct_divide_pow2k(k, 2);
+            result.test_eq("ct_divide_pow2k div 2", div2, Botan::BigInt::power_of_2(k - 1));
+
+            auto div4 = Botan::ct_divide_pow2k(k, 4);
+            result.test_eq("ct_divide_pow2k div 4", div4, Botan::BigInt::power_of_2(k - 2));
+         }
+
+         for(size_t k = 4; k != 512; ++k) {
+            const BigInt pow2k = BigInt::power_of_2(k);
+
+            for(size_t y_bits = k / 2; y_bits <= (k + 2); ++y_bits) {
+               const BigInt y(rng(), y_bits, false);
+               if(y.is_zero()) {
+                  continue;
+               }
+               const BigInt ct_pow2k = ct_divide_pow2k(k, y);
+               const BigInt ref = BigInt::power_of_2(k) / y;
+
+               result.test_eq("ct_divide_pow2k matches Knuth division", ct_pow2k, ref);
+            }
+         }
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("math", "bn_div_pow2k", BigInt_DivPow2k_Test);
+
 class BigInt_Mod_Test final : public Text_Based_Test {
    public:
       BigInt_Mod_Test() : Text_Based_Test("bn/mod.vec", "In1,In2,Output") {}
@@ -417,8 +455,13 @@ class BigInt_Mod_Test final : public Text_Based_Test {
          e %= b;
          result.test_eq("a %= b", e, expected);
 
-         const Botan::Modular_Reducer mod_b(b);
-         result.test_eq("Barrett", mod_b.reduce(a), expected);
+         if(a.is_positive() && a < (b * b)) {
+            auto mod_b_pub = Botan::Barrett_Reduction::for_public_modulus(b);
+            result.test_eq("Barrett public", mod_b_pub.reduce(a), expected);
+
+            auto mod_b_sec = Botan::Barrett_Reduction::for_secret_modulus(b);
+            result.test_eq("Barrett secret", mod_b_sec.reduce(a), expected);
+         }
 
          // if b fits into a Botan::word test %= operator for words
          if(b.sig_words() == 1) {
@@ -445,6 +488,55 @@ class BigInt_Mod_Test final : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_TEST("math", "bn_mod", BigInt_Mod_Test);
+
+class Barrett_Redc_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("Barrett reduction");
+
+         for(size_t t = 0; t != 10000; ++t) {
+            const auto mod = [&]() {
+               if(t <= 16) {
+                  return BigInt::from_u64(t) + 1;
+               } else {
+                  const size_t bits = (t / 4) + 2;
+
+                  if(t % 4 == 0) {
+                     return BigInt::power_of_2(bits);
+                  } else if(t % 4 == 1) {
+                     return BigInt::power_of_2(bits) - 1;
+                  } else if(t % 4 == 2) {
+                     return BigInt::power_of_2(bits) + 1;
+                  } else {
+                     Botan::BigInt b;
+                     b.randomize(rng(), bits, true);
+                     return b;
+                  }
+               }
+            }();
+
+            const size_t mod_bits = mod.bits();
+            auto barrett = Botan::Barrett_Reduction::for_public_modulus(mod);
+
+            for(size_t i = 0; i != 10; ++i) {
+               const auto input = [&]() {
+                  Botan::BigInt b;
+                  b.randomize(rng(), 2 * mod_bits, false);
+                  return b;
+               }();
+
+               const auto reduced_ref = input % mod;
+               const auto reduced_barrett = barrett.reduce(input);
+
+               result.test_eq("Barrett reduction matches variable time division", reduced_barrett, reduced_ref);
+            }
+         }
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("math", "barrett_redc", Barrett_Redc_Test);
 
 class BigInt_GCD_Test final : public Text_Based_Test {
    public:
@@ -544,11 +636,17 @@ BOTAN_REGISTER_TEST("math", "bn_rshift", BigInt_Rshift_Test);
 
 Test::Result test_const_time_left_shift() {
    Test::Result result("BigInt const time shift");
-   const size_t bits = Test::run_long_tests() ? 2 * 4096 : 2048;
+   const size_t bits = Test::run_long_tests() ? 4096 : 2048;
+
+   auto rng = Test::new_rng("const_time_left_shift");
+
+   result.start_timer();
 
    Botan::BigInt a = Botan::BigInt::with_capacity(bits / sizeof(Botan::word));
    for(size_t i = 0; i < bits; ++i) {
-      a.set_bit(i);
+      if(rng->next_byte() & 1) {
+         a.set_bit(i);
+      }
    }
 
    for(size_t i = 0; i < bits; ++i) {
@@ -560,6 +658,8 @@ Test::Result test_const_time_left_shift() {
       chk <<= i;
       result.test_eq(Botan::fmt("ct << {}", i), ct, chk);
    }
+
+   result.end_timer();
 
    return result;
 }
@@ -658,19 +758,23 @@ class BigInt_InvMod_Test final : public Text_Based_Test {
          const Botan::BigInt mod = vars.get_req_bn("Modulus");
          const Botan::BigInt expected = vars.get_req_bn("Output");
 
-         const Botan::BigInt a_inv = Botan::inverse_mod(a, mod);
+         result.test_eq("inverse_mod", Botan::inverse_mod(a, mod), expected);
 
-         result.test_eq("inverse_mod", a_inv, expected);
-
-         if(a_inv > 1) {
-            result.test_eq("inverse ok", (a * a_inv) % mod, 1);
-         }
-         /*
-         else if((a % mod) > 0)
-            {
-            result.confirm("no inverse with gcd > 1", gcd(a, mod) > 1);
+         if(a < mod && a > 0 && a < mod) {
+            auto g = Botan::inverse_mod_general(a, mod);
+            if(g.has_value()) {
+               result.test_eq("inverse_mod_general", g.value(), expected);
+               result.test_eq("inverse works", ((g.value() * a) % mod), BigInt::one());
+            } else {
+               result.confirm("inverse_mod_general", expected.is_zero());
             }
-         */
+
+            if(Botan::is_prime(mod, rng()) && mod != 2) {
+               BOTAN_ASSERT_NOMSG(expected > 0);
+               result.test_eq("inverse_mod_secret_prime", Botan::inverse_mod_secret_prime(a, mod), expected);
+               result.test_eq("inverse_mod_public_prime", Botan::inverse_mod_public_prime(a, mod), expected);
+            }
+         }
 
          return result;
       }
@@ -704,7 +808,7 @@ BOTAN_REGISTER_TEST("math", "bn_rand", BigInt_Rand_Test);
 class Lucas_Primality_Test final : public Test {
    public:
       std::vector<Test::Result> run() override {
-         const uint32_t lucas_max = (Test::run_long_tests() ? 100000 : 6000);
+         const uint32_t lucas_max = (Test::run_long_tests() ? 100000 : 10000) + 1;
 
          // OEIS A217120
          std::set<uint32_t> lucas_pp{
@@ -717,7 +821,7 @@ class Lucas_Primality_Test final : public Test {
          Test::Result result("Lucas primality test");
 
          for(uint32_t i = 3; i <= lucas_max; i += 2) {
-            Botan::Modular_Reducer mod_i(i);
+            auto mod_i = Botan::Barrett_Reduction::for_public_modulus(i);
             const bool passes_lucas = Botan::is_lucas_probable_prime(i, mod_i);
             const bool is_prime = Botan::is_prime(i, this->rng());
 
@@ -735,6 +839,58 @@ class Lucas_Primality_Test final : public Test {
 };
 
 BOTAN_REGISTER_TEST("math", "bn_lucas", Lucas_Primality_Test);
+
+class RSA_Compute_Exp_Test : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         const size_t iter = 4000;
+
+         Test::Result result("RSA compute exponent");
+
+         const auto e = Botan::BigInt::from_u64(65537);
+
+         /*
+         * Rather than create a fresh p/q for each iteration this test creates
+         * a pool of primes then selects 2 at random as p/q
+         */
+
+         const auto random_primes = [&]() {
+            std::vector<Botan::BigInt> rp;
+            for(size_t i = 0; i != iter / 10; ++i) {
+               size_t bits = (128 + (i % 1024)) % 4096;
+               auto p = Botan::random_prime(rng(), bits);
+               if(gcd(p - 1, e) == 1) {
+                  rp.push_back(p);
+               }
+            }
+            return rp;
+         }();
+
+         for(size_t i = 0; i != iter; ++i) {
+            const size_t p_idx = random_index(rng(), random_primes.size());
+            const size_t q_idx = random_index(rng(), random_primes.size());
+
+            if(p_idx == q_idx) {
+               continue;
+            }
+
+            const auto& p = random_primes[p_idx];
+            const auto& q = random_primes[q_idx];
+
+            auto phi_n = lcm(p - 1, q - 1);
+
+            auto d = Botan::compute_rsa_secret_exponent(e, phi_n, p, q);
+
+            auto one = (e * d) % phi_n;
+
+            result.test_eq("compute_rsa_secret_exponent returned inverse", (e * d) % phi_n, Botan::BigInt::one());
+         }
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("math", "rsa_compute_d", RSA_Compute_Exp_Test);
 
 class DSA_ParamGen_Test final : public Text_Based_Test {
    public:

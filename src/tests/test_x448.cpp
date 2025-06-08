@@ -34,6 +34,16 @@ class X448_Agreement_Tests final : public PK_Key_Agreement_Test {
    public:
       X448_Agreement_Tests() : PK_Key_Agreement_Test("X448", "pubkey/x448.vec", "Secret,CounterKey,K") {}
 
+      bool agreement_should_fail(const std::string& /*unused*/, const VarMap& vars) const override {
+         for(const auto byte : vars.get_req_bin("K")) {
+            if(byte != 0) {
+               return false;
+            }
+         }
+
+         return true;
+      }
+
       std::string default_kdf(const VarMap& /*unused*/) const override { return "Raw"; }
 
       std::unique_ptr<Botan::Private_Key> load_our_key(const std::string& /*header*/, const VarMap& vars) override {

@@ -1,0 +1,16 @@
+#ifndef BOTAN_VERSION_INFO_H_
+#define BOTAN_VERSION_INFO_H_
+
+#define BOTAN_FULL_VERSION_STRING "%{full_version_string}"
+
+#define BOTAN_SHORT_VERSION_STRING "%{short_version_string}"
+
+%{if version_vc_rev}
+#define BOTAN_VC_REVISION "%{version_vc_rev}"
+%{endif}
+
+%{if distribution_info}
+#define BOTAN_DISTRIBUTION_INFO_STRING "%{distribution_info}"
+%{endif}
+
+#endif

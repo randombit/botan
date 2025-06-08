@@ -14,7 +14,7 @@
 namespace Botan {
 
 std::unique_ptr<Public_Key> ECGDSA_PrivateKey::public_key() const {
-   return std::make_unique<ECGDSA_PublicKey>(domain(), public_point());
+   return std::make_unique<ECGDSA_PublicKey>(domain(), _public_ec_point());
 }
 
 bool ECGDSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
@@ -48,7 +48,6 @@ class ECGDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
    private:
       const EC_Group m_group;
       const EC_Scalar m_x;
-      std::vector<BigInt> m_ws;
 };
 
 AlgorithmIdentifier ECGDSA_Signature_Operation::algorithm_identifier() const {
@@ -62,7 +61,7 @@ std::vector<uint8_t> ECGDSA_Signature_Operation::raw_sign(std::span<const uint8_
 
    const auto k = EC_Scalar::random(m_group, rng);
 
-   const auto r = EC_Scalar::gk_x_mod_order(k, rng, m_ws);
+   const auto r = EC_Scalar::gk_x_mod_order(k, rng);
 
    const auto s = m_x * ((k * r) - m);
 
@@ -80,12 +79,12 @@ std::vector<uint8_t> ECGDSA_Signature_Operation::raw_sign(std::span<const uint8_
 class ECGDSA_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
       ECGDSA_Verification_Operation(const ECGDSA_PublicKey& ecgdsa, std::string_view padding) :
-            PK_Ops::Verification_with_Hash(padding), m_group(ecgdsa.domain()), m_gy_mul(ecgdsa._public_key()) {}
+            PK_Ops::Verification_with_Hash(padding), m_group(ecgdsa.domain()), m_gy_mul(ecgdsa._public_ec_point()) {}
 
       ECGDSA_Verification_Operation(const ECGDSA_PublicKey& ecgdsa, const AlgorithmIdentifier& alg_id) :
             PK_Ops::Verification_with_Hash(alg_id, "ECGDSA"),
             m_group(ecgdsa.domain()),
-            m_gy_mul(ecgdsa._public_key()) {}
+            m_gy_mul(ecgdsa._public_ec_point()) {}
 
       bool verify(std::span<const uint8_t> msg, std::span<const uint8_t> sig) override;
 
@@ -101,7 +100,7 @@ bool ECGDSA_Verification_Operation::verify(std::span<const uint8_t> msg, std::sp
       if(r.is_nonzero() && s.is_nonzero()) {
          const auto m = EC_Scalar::from_bytes_with_trunc(m_group, msg);
 
-         const auto w = r.invert();
+         const auto w = r.invert_vartime();
 
          // Check if r == x_coord(g*w*m + y*w*s) % n
          return m_gy_mul.mul2_vartime_x_mod_order_eq(r, w, m, s);

@@ -75,7 +75,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_RSA_PublicKey : public Object,
       PKCS11_RSA_PublicKey(Session& session, const RSA_PublicKeyImportProperties& pubkey_props);
 
       /**
-       * @throws Not_Implemented
+       * @throws Not_Implemented as this operation is not possible in PKCS11
        */
       std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator&) const final {
          throw Not_Implemented("Cannot generate a new PKCS#11 RSA keypair from this public key");

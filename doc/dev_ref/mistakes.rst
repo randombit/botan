@@ -49,6 +49,8 @@ This was used in the public key interfaces and the hierarchy is a tangle.
 Public and private keys should be distinct classes, with a function on private
 keys that creates a new object corresponding to the public key.
 
+[This is planned to be fixed in Botan4]
+
 Cipher Interface
 ------------------
 

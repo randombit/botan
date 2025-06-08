@@ -10,3 +10,7 @@ brief -> "SM4 using ARMv8 crypto instructions"
 <isa>
 armv8sm4
 </isa>
+
+<requires>
+cpuid
+</requires>

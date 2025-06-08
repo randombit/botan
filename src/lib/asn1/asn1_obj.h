@@ -15,7 +15,6 @@
 #include <span>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 #include <vector>
 
 namespace Botan {
@@ -216,7 +215,7 @@ class BOTAN_PUBLIC_API(2, 0) BER_Bad_Tag final : public BER_Decoding_Error {
 class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
    public:
       /**
-      * Create an uninitialied OID object
+      * Create an uninitialised OID object
       */
       explicit OID() = default;
 
@@ -236,7 +235,7 @@ class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
       /**
       * Initialize an OID from a vector of integer values
       */
-      BOTAN_DEPRECATED("Use another contructor") explicit OID(std::vector<uint32_t>&& init);
+      explicit OID(std::vector<uint32_t>&& init);
 
       /**
       * Construct an OID from a string.
@@ -300,6 +299,19 @@ class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
       * @return true if they are equal, false otherwise
       */
       bool operator==(const OID& other) const { return m_id == other.m_id; }
+
+      /**
+      * Return a hash code for this OID
+      *
+      * This value is only meant as a std::unordered_map hash and
+      * can change value from release to release.
+      */
+      uint64_t hash_code() const;
+
+      /**
+      * Check if this OID matches the provided value
+      */
+      bool matches(std::initializer_list<uint32_t> other) const;
 
       /**
       * Get this OID as list (vector) of its components.
@@ -491,5 +503,11 @@ BOTAN_PUBLIC_API(2, 0) bool operator==(const AlgorithmIdentifier&, const Algorit
 BOTAN_PUBLIC_API(2, 0) bool operator!=(const AlgorithmIdentifier&, const AlgorithmIdentifier&);
 
 }  // namespace Botan
+
+template <>
+class std::hash<Botan::OID> {
+   public:
+      size_t operator()(const Botan::OID& oid) const noexcept { return static_cast<size_t>(oid.hash_code()); }
+};
 
 #endif

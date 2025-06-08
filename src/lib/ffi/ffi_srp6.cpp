@@ -51,7 +51,7 @@ int botan_srp6_group_size(const char* group_id, size_t* group_p_bytes) {
    }
 
    return ffi_guard_thunk(__func__, [=]() -> int {
-      Botan::DL_Group group(group_id);
+      auto group = Botan::DL_Group::from_name(group_id);
       *group_p_bytes = group.p_bytes();
       return BOTAN_FFI_SUCCESS;
    });

@@ -91,18 +91,11 @@ size_t Session_Manager_In_Memory::remove_internal(const Session_Handle& handle) 
                            // TODO: This is an O(n) operation. Typically, the Session_Manager will
                            //       not contain a plethora of sessions and this should be fine. If
                            //       it's not, we'll need to consider another index on tickets.
-                           //
-                           // TODO: C++20's std::erase_if should return the number of erased items
-                           //
-                           // Unfortunately, at the time of this writing Android NDK shipped with
-                           // a std::erase_if that returns void. Hence, the workaround.
-                           const auto before = m_sessions.size();
-                           std::erase_if(m_sessions, [&](const auto& item) {
+                           return std::erase_if(m_sessions, [&](const auto& item) {
                               const auto& [_unused1, session_and_handle] = item;
                               const auto& [_unused2, this_handle] = session_and_handle;
                               return this_handle.is_ticket() && this_handle.ticket().value() == ticket;
                            });
-                           return before - m_sessions.size();
                         },
                         [&](const Session_ID& id) -> size_t { return m_sessions.erase(id); },
                         [&](const Opaque_Session_Handle&) -> size_t {

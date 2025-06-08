@@ -18,6 +18,7 @@
 #include <botan/secmem.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/target_info.h>
 
 #include <optional>
 #include <span>
@@ -138,6 +139,25 @@ constexpr void unpoison(const T& x) {
    x._const_time_unpoison();
 }
 
+/**
+ * Poison an optional object if it has a value.
+ */
+template <typename T>
+   requires requires(const T& v) { ::Botan::CT::poison(v); }
+constexpr void poison(const std::optional<T>& x) {
+   if(x.has_value()) {
+      poison(x.value());
+   }
+}
+
+template <typename T>
+   requires requires(const T& v) { ::Botan::CT::unpoison(v); }
+constexpr void unpoison(const std::optional<T>& x) {
+   if(x.has_value()) {
+      unpoison(x.value());
+   }
+}
+
 /// @}
 
 /// @name Higher-level Constant Time Check Annotation Helpers
@@ -228,31 +248,50 @@ template <unpoisonable T>
 * This function returns its argument, but (if called in a non-constexpr context)
 * attempts to prevent the compiler from reasoning about the value or the possible
 * range of values. Such optimizations have a way of breaking constant time code.
+*
+* The method that is use is decided at configuration time based on the target
+* compiler and architecture (see `ct_value_barrier` blocks in `src/build-data/cc`).
+* The decision can be overridden by the user with the configure.py option
+* `--ct-value-barrier-type=`
+*
+* There are three options currently possible in the data files and with the
+* option:
+*
+*  * `asm`: Use an inline assembly expression which (currently) prevents Clang
+*    and GCC from optimizing based on the possible value of the input expression.
+*
+*  * `volatile`: Launder the input through a volatile variable. This is likely
+*    to cause significant performance regressions since the value must be
+*    actually stored and loaded back from memory each time.
+*
+*  * `none`: disable constant time barriers entirely. This is used
+*    with MSVC, which is not known to perform optimizations that break
+*    constant time code and which does not support GCC-style inline asm.
+*
 */
 template <typename T>
-constexpr inline T value_barrier(T x) {
-   if(!std::is_constant_evaluated()) {
+constexpr inline T value_barrier(T x)
+   requires std::unsigned_integral<T> && (!std::same_as<bool, T>)
+{
+   if(std::is_constant_evaluated()) {
+      return x;
+   } else {
+#if defined(BOTAN_CT_VALUE_BARRIER_USE_ASM)
       /*
-      * For compilers without inline asm, is there something else we can do?
-      *
-      * For instance we could potentially launder the value through a
-      * `volatile T` or `volatile T*`. This would require some experimentation.
-      *
-      * GCC has an attribute noipa which disables interprocedural analysis, which
-      * might be useful here. However Clang does not currently support this attribute.
-      *
       * We may want a "stronger" statement such as
       *     asm volatile("" : "+r,m"(x) : : "memory);
       * (see https://theunixzoo.co.uk/blog/2021-10-14-preventing-optimisations.html)
       * however the current approach seems sufficient with current compilers,
       * and is minimally damaging with regards to degrading code generation.
       */
-#if defined(BOTAN_USE_GCC_INLINE_ASM) && !defined(BOTAN_HAS_SANITIZER_MEMORY)
       asm("" : "+r"(x) : /* no input */);
+      return x;
+#elif defined(BOTAN_CT_VALUE_BARRIER_USE_VOLATILE)
+      volatile T vx = x;
+      return vx;
+#else
+      return x;
 #endif
-      return x;
-   } else {
-      return x;
    }
 }
 
@@ -552,6 +591,20 @@ class Mask final {
       }
 
       /**
+     * If this mask is set, swap x and y
+     */
+      template <typename U>
+      void conditional_swap(U& x, U& y) const
+         requires(sizeof(U) <= sizeof(T))
+      {
+         auto cnd = Mask<U>(*this);
+         U t0 = cnd.select(y, x);
+         U t1 = cnd.select(x, y);
+         x = t0;
+         y = t1;
+      }
+
+      /**
       * Return the value of the mask, unpoisoned
       */
       constexpr T unpoisoned_value() const {
@@ -600,7 +653,7 @@ class Mask final {
 * to access the inner value if the Choice is unset.
 */
 template <typename T>
-class Option {
+class Option final {
    public:
       /// Construct an Option which contains the specified value, and is set or not
       constexpr Option(T v, Choice valid) : m_has_value(valid), m_value(std::move(v)) {}
@@ -676,40 +729,51 @@ class Option {
       T m_value;
 };
 
+/**
+* Conditional memory copy (constant time)
+*
+* If mask is set, then sets dest to if_set, otherwise sets dest to if_unset
+*/
 template <typename T>
-constexpr inline Mask<T> conditional_copy_mem(Mask<T> mask, T* to, const T* from0, const T* from1, size_t elems) {
-   mask.select_n(to, from0, from1, elems);
+constexpr inline Mask<T> conditional_copy_mem(Mask<T> mask, T* dest, const T* if_set, const T* if_unset, size_t elems) {
+   mask.select_n(dest, if_set, if_unset, elems);
    return mask;
 }
 
 template <typename T>
-constexpr inline Mask<T> conditional_copy_mem(T cnd, T* to, const T* from0, const T* from1, size_t elems) {
+constexpr inline Mask<T> conditional_copy_mem(T cnd, T* dest, const T* if_set, const T* if_unset, size_t elems) {
    const auto mask = CT::Mask<T>::expand(cnd);
-   return CT::conditional_copy_mem(mask, to, from0, from1, elems);
+   return CT::conditional_copy_mem(mask, dest, if_set, if_unset, elems);
 }
 
+/**
+* Conditional memory assignment (constant time)
+*
+* If mask is set overwrites dest with src
+*/
 template <typename T>
-constexpr inline Mask<T> conditional_assign_mem(T cnd, T* sink, const T* src, size_t elems) {
+constexpr inline Mask<T> conditional_assign_mem(T cnd, T* dest, const T* src, size_t elems) {
    const auto mask = CT::Mask<T>::expand(cnd);
-   mask.select_n(sink, src, sink, elems);
+   mask.select_n(dest, src, dest, elems);
    return mask;
 }
 
+/**
+* Conditional memory assignment (constant time)
+*
+* If mask is set overwrites dest with src
+*/
 template <typename T>
-constexpr inline Mask<T> conditional_assign_mem(Choice cnd, T* sink, const T* src, size_t elems) {
+constexpr inline Mask<T> conditional_assign_mem(Choice cnd, T* dest, const T* src, size_t elems) {
    const auto mask = CT::Mask<T>::from_choice(cnd);
-   mask.select_n(sink, src, sink, elems);
+   mask.select_n(dest, src, dest, elems);
    return mask;
 }
 
 template <typename T>
 constexpr inline void conditional_swap(bool cnd, T& x, T& y) {
    const auto swap = CT::Mask<T>::expand(cnd);
-
-   T t0 = swap.select(y, x);
-   T t1 = swap.select(x, y);
-   x = t0;
-   y = t1;
+   swap.conditional_swap(x, y);
 }
 
 template <typename T>

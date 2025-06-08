@@ -144,8 +144,8 @@ void Stream_Decompression::process(secure_vector<uint8_t>& buf, size_t offset, u
       const bool stream_end = m_stream->run(flags);
 
       if(stream_end) {
-         if(m_stream->avail_in() == 0)  // all data consumed?
-         {
+         if(m_stream->avail_in() == 0) {
+            // all data consumed
             m_buffer.resize(m_buffer.size() - m_stream->avail_out());
             clear();
             break;

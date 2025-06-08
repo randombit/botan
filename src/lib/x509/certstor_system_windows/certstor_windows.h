@@ -54,7 +54,7 @@ class BOTAN_PUBLIC_API(2, 11) Certificate_Store_Windows final : public Certifica
       std::optional<X509_Certificate> find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const override;
 
       /**
-       * @throws Not_Implemented
+       * @throws Not_Implemented as this is not possible in the Windows system cert API
        */
       std::optional<X509_Certificate> find_cert_by_raw_subject_dn_sha256(
          const std::vector<uint8_t>& subject_hash) const override;

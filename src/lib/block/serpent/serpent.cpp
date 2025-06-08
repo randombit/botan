@@ -11,7 +11,7 @@
 #include <botan/internal/rotate.h>
 #include <botan/internal/serpent_sbox.h>
 
-#if defined(BOTAN_HAS_SERPENT_SIMD) || defined(BOTAN_HAS_SERPENT_AVX2) || defined(BOTAN_HAS_SERPENT_AVX512)
+#if defined(BOTAN_HAS_CPUID)
    #include <botan/internal/cpuid.h>
 #endif
 
@@ -26,7 +26,7 @@ void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_SERPENT_AVX512)
-   if(CPUID::has_avx512()) {
+   if(CPUID::has(CPUID::Feature::AVX512)) {
       while(blocks >= 16) {
          avx512_encrypt_16(in, out);
          in += 16 * BLOCK_SIZE;
@@ -37,7 +37,7 @@ void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 #endif
 
 #if defined(BOTAN_HAS_SERPENT_AVX2)
-   if(CPUID::has_avx2()) {
+   if(CPUID::has(CPUID::Feature::AVX2)) {
       while(blocks >= 8) {
          avx2_encrypt_8(in, out);
          in += 8 * BLOCK_SIZE;
@@ -48,7 +48,7 @@ void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 #endif
 
 #if defined(BOTAN_HAS_SERPENT_SIMD)
-   if(CPUID::has_simd_32()) {
+   if(CPUID::has(CPUID::Feature::SIMD_4X32)) {
       while(blocks >= 4) {
          simd_encrypt_4(in, out);
          in += 4 * BLOCK_SIZE;
@@ -174,7 +174,7 @@ void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_SERPENT_AVX512)
-   if(CPUID::has_avx512()) {
+   if(CPUID::has(CPUID::Feature::AVX512)) {
       while(blocks >= 16) {
          avx512_decrypt_16(in, out);
          in += 16 * BLOCK_SIZE;
@@ -185,7 +185,7 @@ void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 #endif
 
 #if defined(BOTAN_HAS_SERPENT_AVX2)
-   if(CPUID::has_avx2()) {
+   if(CPUID::has(CPUID::Feature::AVX2)) {
       while(blocks >= 8) {
          avx2_decrypt_8(in, out);
          in += 8 * BLOCK_SIZE;
@@ -196,7 +196,7 @@ void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 #endif
 
 #if defined(BOTAN_HAS_SERPENT_SIMD)
-   if(CPUID::has_simd_32()) {
+   if(CPUID::has(CPUID::Feature::SIMD_4X32)) {
       while(blocks >= 4) {
          simd_decrypt_4(in, out);
          in += 4 * BLOCK_SIZE;
@@ -387,20 +387,20 @@ void Serpent::clear() {
 
 std::string Serpent::provider() const {
 #if defined(BOTAN_HAS_SERPENT_AVX512)
-   if(CPUID::has_avx512()) {
-      return "avx512";
+   if(auto feat = CPUID::check(CPUID::Feature::AVX512)) {
+      return *feat;
    }
 #endif
 
 #if defined(BOTAN_HAS_SERPENT_AVX2)
-   if(CPUID::has_avx2()) {
-      return "avx2";
+   if(auto feat = CPUID::check(CPUID::Feature::AVX2)) {
+      return *feat;
    }
 #endif
 
 #if defined(BOTAN_HAS_SERPENT_SIMD)
-   if(CPUID::has_simd_32()) {
-      return "simd";
+   if(auto feat = CPUID::check(CPUID::Feature::SIMD_4X32)) {
+      return *feat;
    }
 #endif
 

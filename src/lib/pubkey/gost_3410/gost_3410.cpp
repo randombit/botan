@@ -17,8 +17,20 @@
 
 namespace Botan {
 
+namespace {
+
+EC_Group check_domain(EC_Group domain) {
+   const size_t p_bits = domain.get_p_bits();
+   if(p_bits != 256 && p_bits != 512) {
+      throw Decoding_Error(fmt("GOST-34.10-2012 is not defined for parameters of size {}", p_bits));
+   }
+   return domain;
+}
+
+}  // namespace
+
 std::vector<uint8_t> GOST_3410_PublicKey::public_key_bits() const {
-   auto bits = public_point().xy_bytes();
+   auto bits = _public_ec_point().xy_bytes();
 
    const size_t part_size = bits.size() / 2;
 
@@ -60,17 +72,12 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id, std:
    // The parameters also includes hash and cipher OIDs
    BER_Decoder(alg_id.parameters()).start_sequence().decode(ecc_param_id);
 
-   auto group = EC_Group::from_OID(ecc_param_id);
-
-   const size_t p_bits = group.get_p_bits();
-   if(p_bits != 256 && p_bits != 512) {
-      throw Decoding_Error(fmt("GOST-34.10-2012 is not defined for parameters of size {}", p_bits));
-   }
+   auto group = check_domain(EC_Group::from_OID(ecc_param_id));
 
    std::vector<uint8_t> bits;
    BER_Decoder(key_bits).decode(bits, ASN1_Type::OctetString);
 
-   if(bits.size() != 2 * (p_bits / 8)) {
+   if(bits.size() != 2 * (group.get_p_bits() / 8)) {
       throw Decoding_Error("GOST-34.10-2012 invalid encoding of public key");
    }
 
@@ -86,16 +93,17 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id, std:
    m_public_key = std::make_shared<EC_PublicKey_Data>(std::move(group), encoding);
 }
 
+GOST_3410_PrivateKey::GOST_3410_PrivateKey(const EC_Group& domain, const BigInt& x) :
+      EC_PrivateKey(check_domain(domain), EC_Scalar::from_bigint(domain, x)) {}
+
+GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng, EC_Group domain) :
+      EC_PrivateKey(rng, check_domain(std::move(domain))) {}
+
 GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x) :
-      EC_PrivateKey(rng, domain, x) {
-   const size_t p_bits = domain.get_p_bits();
-   if(p_bits != 256 && p_bits != 512) {
-      throw Decoding_Error(fmt("GOST-34.10-2012 is not defined for parameters of size {}", p_bits));
-   }
-}
+      EC_PrivateKey(rng, check_domain(domain), x) {}
 
 std::unique_ptr<Public_Key> GOST_3410_PrivateKey::public_key() const {
-   return std::make_unique<GOST_3410_PublicKey>(domain(), public_point());
+   return std::make_unique<GOST_3410_PublicKey>(domain(), _public_ec_point());
 }
 
 namespace {
@@ -128,7 +136,6 @@ class GOST_3410_Signature_Operation final : public PK_Ops::Signature_with_Hash {
    private:
       const EC_Group m_group;
       const EC_Scalar m_x;
-      std::vector<BigInt> m_ws;
 };
 
 AlgorithmIdentifier GOST_3410_Signature_Operation::algorithm_identifier() const {
@@ -158,7 +165,7 @@ std::vector<uint8_t> GOST_3410_Signature_Operation::raw_sign(std::span<const uin
    const auto e = gost_msg_to_scalar(m_group, msg);
 
    const auto k = EC_Scalar::random(m_group, rng);
-   const auto r = EC_Scalar::gk_x_mod_order(k, rng, m_ws);
+   const auto r = EC_Scalar::gk_x_mod_order(k, rng);
    const auto s = (r * m_x) + (k * e);
 
    if(r.is_zero() || s.is_zero()) {
@@ -196,12 +203,12 @@ std::string gost_hash_from_algid(const AlgorithmIdentifier& alg_id) {
 class GOST_3410_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
       GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, std::string_view padding) :
-            PK_Ops::Verification_with_Hash(padding), m_group(gost.domain()), m_gy_mul(gost._public_key()) {}
+            PK_Ops::Verification_with_Hash(padding), m_group(gost.domain()), m_gy_mul(gost._public_ec_point()) {}
 
       GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, const AlgorithmIdentifier& alg_id) :
             PK_Ops::Verification_with_Hash(gost_hash_from_algid(alg_id)),
             m_group(gost.domain()),
-            m_gy_mul(gost._public_key()) {}
+            m_gy_mul(gost._public_ec_point()) {}
 
       bool verify(std::span<const uint8_t> msg, std::span<const uint8_t> sig) override;
 
@@ -217,7 +224,7 @@ bool GOST_3410_Verification_Operation::verify(std::span<const uint8_t> msg, std:
       if(r.is_nonzero() && s.is_nonzero()) {
          const auto e = gost_msg_to_scalar(m_group, msg);
 
-         const auto v = e.invert();
+         const auto v = e.invert_vartime();
 
          // Check if r == x_coord(g*v*s - y*v*r) % n
          return m_gy_mul.mul2_vartime_x_mod_order_eq(r, v, s, r.negate());

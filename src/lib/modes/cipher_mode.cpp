@@ -61,6 +61,10 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(std::string_view algo,
    }
 #endif
 
+   if(provider != "base" && !provider.empty()) {
+      return nullptr;
+   }
+
 #if defined(BOTAN_HAS_STREAM_CIPHER)
    if(auto sc = StreamCipher::create(algo)) {
       return std::make_unique<Stream_Cipher_Mode>(std::move(sc));

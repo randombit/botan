@@ -29,11 +29,11 @@ class EMSA_PKCS1v15 final : public EMSA {
 
       std::vector<uint8_t> raw_data() override;
 
-      std::vector<uint8_t> encoding_of(const std::vector<uint8_t>&, size_t, RandomNumberGenerator& rng) override;
+      std::vector<uint8_t> encoding_of(std::span<const uint8_t>, size_t, RandomNumberGenerator& rng) override;
 
-      bool verify(const std::vector<uint8_t>&, const std::vector<uint8_t>&, size_t) override;
+      bool verify(std::span<const uint8_t>, std::span<const uint8_t>, size_t) override;
 
-      std::string name() const override { return "EMSA3(" + m_hash->name() + ")"; }
+      std::string name() const override;
 
       std::string hash_function() const override { return m_hash->name(); }
 
@@ -53,9 +53,9 @@ class EMSA_PKCS1v15_Raw final : public EMSA {
 
       std::vector<uint8_t> raw_data() override;
 
-      std::vector<uint8_t> encoding_of(const std::vector<uint8_t>&, size_t, RandomNumberGenerator& rng) override;
+      std::vector<uint8_t> encoding_of(std::span<const uint8_t>, size_t, RandomNumberGenerator& rng) override;
 
-      bool verify(const std::vector<uint8_t>&, const std::vector<uint8_t>&, size_t) override;
+      bool verify(std::span<const uint8_t>, std::span<const uint8_t>, size_t) override;
 
       EMSA_PKCS1v15_Raw();
 
@@ -67,13 +67,7 @@ class EMSA_PKCS1v15_Raw final : public EMSA {
 
       std::string hash_function() const override { return m_hash_name; }
 
-      std::string name() const override {
-         if(m_hash_name.empty()) {
-            return "EMSA3(Raw)";
-         } else {
-            return "EMSA3(Raw," + m_hash_name + ")";
-         }
-      }
+      std::string name() const override;
 
    private:
       size_t m_hash_output_len = 0;

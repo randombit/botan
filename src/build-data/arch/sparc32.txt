@@ -1,4 +1,3 @@
-endian big
 
 family sparc
 

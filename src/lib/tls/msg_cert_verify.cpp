@@ -15,6 +15,7 @@
 #include <botan/tls_algos.h>
 #include <botan/tls_extensions.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/target_info.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_reader.h>
@@ -169,7 +170,7 @@ Certificate_Verify_13::Certificate_Verify_13(const Certificate_13& certificate_m
 Certificate_Verify_13::Certificate_Verify_13(const std::vector<uint8_t>& buf, const Connection_Side side) :
       Certificate_Verify(buf), m_side(side) {
    if(!m_scheme.is_available()) {
-      throw TLS_Exception(Alert::HandshakeFailure, "Peer sent unknown signature scheme");
+      throw TLS_Exception(Alert::IllegalParameter, "Peer sent unknown signature scheme");
    }
 
    if(!m_scheme.is_compatible_with(Protocol_Version::TLS_V13)) {

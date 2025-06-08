@@ -1,0 +1,18 @@
+<defines>
+SHACAL2_AVX512 -> 20250516
+</defines>
+
+<module_info>
+name -> "SHACAL-2 AVX512"
+brief -> "SHACAL-2 using AVX512 instructions"
+</module_info>
+
+<isa>
+avx512
+</isa>
+
+<requires>
+cpuid
+simd_avx512
+simd_avx2
+</requires>

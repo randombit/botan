@@ -7,11 +7,12 @@
 #include "tests.h"
 
 #include <botan/hex.h>
-#include <botan/internal/cpuid.h>
 #include <botan/internal/filesystem.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/target_info.h>
 #include <fstream>
 #include <iomanip>
 #include <sstream>
@@ -20,7 +21,11 @@
    #include <botan/bigint.h>
 #endif
 
-#if defined(BOTAN_HAS_EC_CURVE_GFP)
+#if defined(BOTAN_HAS_CPUID)
+   #include <botan/internal/cpuid.h>
+#endif
+
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
    #include <botan/ec_point.h>
 #endif
 
@@ -335,7 +340,7 @@ bool Test::Result::test_ne(const std::string& what, const BigInt& produced, cons
 }
 #endif
 
-#if defined(BOTAN_HAS_EC_CURVE_GFP)
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
 bool Test::Result::test_eq(const std::string& what, const Botan::EC_Point& a, const Botan::EC_Point& b) {
    //return test_is_eq(what, a, b);
    if(a == b) {
@@ -842,6 +847,10 @@ std::string Test::random_password(Botan::RandomNumberGenerator& rng) {
    return Botan::hex_encode(rng.random_vec(len));
 }
 
+size_t Test::random_index(Botan::RandomNumberGenerator& rng, size_t max) {
+   return Botan::load_be(rng.random_array<8>()) % max;
+}
+
 std::vector<std::vector<uint8_t>> VarMap::get_req_bin_list(const std::string& key) const {
    auto i = m_vars.find(key);
    if(i == m_vars.end()) {
@@ -1056,11 +1065,13 @@ std::string Text_Based_Test::get_next_line() {
          m_cur = std::make_unique<std::ifstream>(m_srcs[0]);
          m_cur_src_name = m_srcs[0];
 
+#if defined(BOTAN_HAS_CPUID)
          // Reinit cpuid on new file if needed
          if(m_cpu_flags.empty() == false) {
             m_cpu_flags.clear();
             Botan::CPUID::initialize();
          }
+#endif
 
          if(!m_cur->good()) {
             throw Test_Error("Could not open input file '" + m_cur_src_name);
@@ -1078,7 +1089,7 @@ std::string Text_Based_Test::get_next_line() {
          }
 
          if(line[0] == '#') {
-            if(line.compare(0, 6, "#test ") == 0) {
+            if(line.starts_with("#test ")) {
                return line;
             } else {
                continue;
@@ -1106,12 +1117,18 @@ std::string strip_ws(const std::string& in) {
    return in.substr(first_c, last_c - first_c + 1);
 }
 
-std::vector<uint64_t> parse_cpuid_bits(const std::vector<std::string>& tok) {
-   std::vector<uint64_t> bits;
+std::vector<std::string> parse_cpuid_bits(const std::vector<std::string>& tok) {
+   std::vector<std::string> bits;
+
+#if defined(BOTAN_HAS_CPUID)
    for(size_t i = 1; i < tok.size(); ++i) {
-      const std::vector<Botan::CPUID::CPUID_bits> more = Botan::CPUID::bit_from_string(tok[i]);
-      bits.insert(bits.end(), more.begin(), more.end());
+      if(auto bit = Botan::CPUID::bit_from_string(tok[i])) {
+         bits.push_back(bit->to_string());
+      }
    }
+#else
+   BOTAN_UNUSED(tok);
+#endif
 
    return bits;
 }
@@ -1136,7 +1153,7 @@ std::vector<Test::Result> Text_Based_Test::run() {
          break;
       }
 
-      if(line.compare(0, 6, "#test ") == 0) {
+      if(line.starts_with("#test ")) {
          std::vector<std::string> pragma_tokens = Botan::split_on(line.substr(6), ' ');
 
          if(pragma_tokens.empty()) {
@@ -1204,17 +1221,20 @@ std::vector<Test::Result> Text_Based_Test::run() {
             uint64_t start = Test::timestamp();
 
             Test::Result result = run_one_test(header, vars);
+#if defined(BOTAN_HAS_CPUID)
             if(!m_cpu_flags.empty()) {
-               for(const auto& cpuid_u64 : m_cpu_flags) {
-                  Botan::CPUID::CPUID_bits cpuid_bit = static_cast<Botan::CPUID::CPUID_bits>(cpuid_u64);
-                  if(Botan::CPUID::has_cpuid_bit(cpuid_bit)) {
-                     Botan::CPUID::clear_cpuid_bit(cpuid_bit);
-                     // now re-run the test
-                     result.merge(run_one_test(header, vars));
+               for(const auto& cpuid_str : m_cpu_flags) {
+                  if(const auto bit = Botan::CPUID::Feature::from_string(cpuid_str)) {
+                     if(Botan::CPUID::has(*bit)) {
+                        Botan::CPUID::clear_cpuid_bit(*bit);
+                        // now re-run the test
+                        result.merge(run_one_test(header, vars));
+                     }
                   }
                }
                Botan::CPUID::initialize();
             }
+#endif
             result.set_ns_consumed(Test::timestamp() - start);
 
             if(result.tests_failed()) {

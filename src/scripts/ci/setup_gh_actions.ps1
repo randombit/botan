@@ -9,6 +9,7 @@
 param(
     [Parameter()]
     [String]$TARGET,
+    [String]$COMPILER,
     [String]$ARCH
 )
 
@@ -31,8 +32,6 @@ if($identifiers_for_64bit -contains $ARCH ) {
 } else {
     echo "VSENV_ARCH=$ARCH" >> $env:GITHUB_ENV
 }
-
-echo "SCCACHE_CACHE_SIZE=200M" >> $env:GITHUB_ENV
 
 # Remove standalone LLVM (and clang-cl) from PATH - we want to use the one shipped with VS.
 # https://github.com/actions/runner-images/issues/10001#issuecomment-2150541007

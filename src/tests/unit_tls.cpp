@@ -222,13 +222,6 @@ std::shared_ptr<Credentials_Manager_Test> create_creds(Botan::RandomNumberGenera
    Botan::X509_CRL rsa_crl = rsa_ca.new_crl(rng);
    Botan::X509_CRL ecdsa_crl = ecdsa_ca.new_crl(rng);
 
-   // dsa support is optional
-   std::unique_ptr<Botan::Private_Key> dsa_ca_key;
-   std::unique_ptr<Botan::Private_Key> dsa_srv_key;
-   std::unique_ptr<Botan::X509_CRL> dsa_crl;
-   std::unique_ptr<Botan::X509_Certificate> dsa_srv_cert;
-   std::unique_ptr<Botan::X509_Certificate> dsa_ca_cert;
-
    return std::make_shared<Credentials_Manager_Test>(with_client_certs,
                                                      rsa_srv_cert,
                                                      rsa_srv_key.release(),
@@ -452,7 +445,8 @@ class TLS_Handshake_Test final {
                if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
                   std::get<Botan::TLS::Group_Params>(group).wire_code() == 0xFEE1) {
                   const auto ec_group = Botan::EC_Group::from_name("numsp256d1");
-                  Botan::ECDH_PublicKey peer_key(ec_group, ec_group.OS2ECP(public_value));
+                  const auto ec_point = Botan::EC_AffinePoint(ec_group, public_value);
+                  Botan::ECDH_PublicKey peer_key(ec_group, ec_point);
                   Botan::PK_Key_Agreement ka(private_key, rng, "Raw");
                   return ka.derive_key(0, peer_key.public_value()).bits_of();
                }
@@ -931,6 +925,10 @@ class TLS_Unit_Tests final : public Test {
 
    #endif
 
+   #if defined(BOTAN_HAS_TLS_NULL)
+         test_modern_versions("NULL PSK", results, client_ses, server_ses, creds, rng, "PSK", "NULL", "SHA-256");
+   #endif
+
          auto strict_policy = std::make_shared<Botan::TLS::Strict_Policy_Without_TLS13>();
          test_with_policy("Strict policy",
                           results,
@@ -1090,34 +1088,36 @@ class TLS_Unit_Tests final : public Test {
 
          // Test with a custom curve
 
-         /*
-         * First register a curve, in this case numsp256d1
-         */
-         const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF43");
-         const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF40");
-         const Botan::BigInt b("0x25581");
-         const Botan::BigInt order("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE43C8275EA265C6020AB20294751A825");
+         if(Botan::EC_Group::supports_application_specific_group()) {
+            /*
+            * First register a curve, in this case numsp256d1
+            */
+            const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF43");
+            const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF40");
+            const Botan::BigInt b("0x25581");
+            const Botan::BigInt order("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE43C8275EA265C6020AB20294751A825");
 
-         const Botan::BigInt g_x("0x01");
-         const Botan::BigInt g_y("0x696F1853C1E466D7FC82C96CCEEEDD6BD02C2F9375894EC10BF46306C2B56C77");
+            const Botan::BigInt g_x("0x01");
+            const Botan::BigInt g_y("0x696F1853C1E466D7FC82C96CCEEEDD6BD02C2F9375894EC10BF46306C2B56C77");
 
-         const Botan::OID oid("1.3.6.1.4.1.25258.4.1");
+            const Botan::OID oid("1.3.6.1.4.1.25258.4.1");
 
-         Botan::OID::register_oid(oid, "numsp256d1");
+            Botan::OID::register_oid(oid, "numsp256d1");
 
-         // Creating this object implicitly registers the curve for future use ...
-         Botan::EC_Group reg_numsp256d1(oid, p, a, b, g_x, g_y, order);
+            // Creating this object implicitly registers the curve for future use ...
+            Botan::EC_Group reg_numsp256d1(oid, p, a, b, g_x, g_y, order);
 
-         test_modern_versions("AES-256/GCM numsp256d1",
-                              results,
-                              client_ses,
-                              server_ses,
-                              creds,
-                              rng,
-                              "ECDH",
-                              "AES-256/GCM",
-                              "AEAD",
-                              {{"groups", "0xFEE1"}, {"minimum_ecdh_group_size", "112"}});
+            test_modern_versions("AES-256/GCM numsp256d1",
+                                 results,
+                                 client_ses,
+                                 server_ses,
+                                 creds,
+                                 rng,
+                                 "ECDH",
+                                 "AES-256/GCM",
+                                 "AEAD",
+                                 {{"groups", "0xFEE1"}, {"minimum_ecdh_group_size", "112"}});
+         }
 
          // Test connection abort by the application
          // by throwing in Callbacks::tls_session_established()

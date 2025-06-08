@@ -10,6 +10,7 @@ brief -> "Various utility functions and types"
 load_on always
 
 <header:public>
+api.h
 assert.h
 allocator.h
 compiler.h
@@ -35,19 +36,16 @@ ct_utils.h
 donna128.h
 filesystem.h
 fmt.h
+isa_extn.h
 int_utils.h
 loadstor.h
 mul128.h
-os_utils.h
 parsing.h
 prefetch.h
 rotate.h
 rounding.h
 scan_name.h
+stack_scrubbing.h
 stl_util.h
-timer.h
+time_utils.h
 </header:internal>
-
-<requires>
-cpuid
-</requires>

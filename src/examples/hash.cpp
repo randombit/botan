@@ -14,9 +14,9 @@ int main() {
       std::cin.read(reinterpret_cast<char*>(buf.data()), buf.size());
       size_t readcount = std::cin.gcount();
       // update hash computations with read data
-      hash1->update(buf.data(), readcount);
-      hash2->update(buf.data(), readcount);
-      hash3->update(buf.data(), readcount);
+      hash1->update(std::span{buf}.first(readcount));
+      hash2->update(std::span{buf}.first(readcount));
+      hash3->update(std::span{buf}.first(readcount));
    }
    std::cout << "SHA-256: " << Botan::hex_encode(hash1->final()) << '\n';
    std::cout << "SHA-384: " << Botan::hex_encode(hash2->final()) << '\n';

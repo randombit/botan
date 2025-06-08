@@ -14,15 +14,15 @@
 #ifndef BOTAN_KYBER_COMMON_H_
 #define BOTAN_KYBER_COMMON_H_
 
-#include <botan/asn1_obj.h>
-#include <botan/der_enc.h>
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>
 
 #include <span>
 
-#if !defined(BOTAN_HAS_KYBER_90S) && !defined(BOTAN_HAS_KYBER)
-static_assert(false, "botan module 'kyber_common' is useful only when enabling modules 'kyber', 'kyber_90s' or both");
+#if !defined(BOTAN_HAS_KYBER_90S) && !defined(BOTAN_HAS_KYBER) && !defined(BOTAN_HAS_ML_KEM)
+static_assert(
+   false,
+   "botan module 'kyber_common' is useful only when enabling at least one of those modules: 'kyber', 'kyber_90s', 'ml_kem'");
 #endif
 
 namespace Botan {
@@ -40,6 +40,10 @@ class BOTAN_PUBLIC_API(3, 0) KyberMode {
          Kyber512 BOTAN_DEPRECATED("Use Kyber512_R3") = Kyber512_R3,
          Kyber768 BOTAN_DEPRECATED("Use Kyber768_R3") = Kyber768_R3,
          Kyber1024 BOTAN_DEPRECATED("Use Kyber1024_R3") = Kyber1024_R3,
+
+         ML_KEM_512,
+         ML_KEM_768,
+         ML_KEM_1024,
 
          Kyber512_90s BOTAN_DEPRECATED("Kyber 90s mode is deprecated"),
          Kyber768_90s BOTAN_DEPRECATED("Kyber 90s mode is deprecated"),
@@ -59,6 +63,8 @@ class BOTAN_PUBLIC_API(3, 0) KyberMode {
 
       BOTAN_DEPRECATED("Kyber 90s mode is deprecated") bool is_modern() const;
 
+      bool is_ml_kem() const;
+
       bool is_kyber_round3() const;
 
       bool is_available() const;
@@ -69,6 +75,17 @@ class BOTAN_PUBLIC_API(3, 0) KyberMode {
 
    private:
       Mode m_mode;
+};
+
+/// Byte encoding format of ML-KEM and ML-DSA the private key
+enum class MlPrivateKeyFormat {
+   /// Only supported for ML-KEM/ML-DSA keys:
+   /// - ML-KEM: 64-byte seed: d || z
+   /// - ML-DSA: 32-byte seed: xi (private_key_bits_with_format not yet
+   ///   yet supported for ML-DSA)
+   Seed,
+   /// The expanded format, i.e., the format specified in FIPS-203/204.
+   Expanded,
 };
 
 class Kyber_PublicKeyInternal;
@@ -100,7 +117,7 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key {
 
       std::vector<uint8_t> public_key_bits() const override;
 
-      bool check_key(RandomNumberGenerator&, bool) const override;
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
 
@@ -132,10 +149,28 @@ BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_PublicKey,
                                                       public virtual Private_Key {
    public:
+      /**
+       * Create a new private key. The private key will be encoded as the 64 byte
+       * seed.
+       */
       Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode mode);
 
+      /**
+       * Import a private key using its key bytes. Supported are key bytes as
+       * 64-byte seeds (not supported for Kyber Round 3 instances),
+       * as well as the expanded encoding specified by FIPS 203. Note that the
+       * encoding used in this constructor is reflected by the calls for
+       * private_key_bits, private_key_info, etc.
+       */
       Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode mode);
 
+      /**
+       * Import a private key using its key bytes. Supported are key bytes as
+       * 64-byte seeds (not supported for Kyber Round 3 instances),
+       * as well as the expanded encoding specified by FIPS 203. Note that the
+       * encoding used in this constructor is reflected by the calls for
+       * private_key_bits, private_key_info, etc.
+       */
       Kyber_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
 
       std::unique_ptr<Public_Key> public_key() const override;
@@ -144,9 +179,31 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
 
       secure_vector<uint8_t> raw_private_key_bits() const override;
 
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
+
       std::unique_ptr<PK_Ops::KEM_Decryption> create_kem_decryption_op(RandomNumberGenerator& rng,
                                                                        std::string_view params,
                                                                        std::string_view provider) const override;
+
+      /**
+       * The private key format from which the key was loaded. It is the format
+       * used for the private_key_bits(), raw_private_key_bits() andFIPS
+       * private_key_info() methods.
+       *
+       * Note that keys in Seed format can be serialized to Expanded format
+       * using the method private_key_bits_with_format but NOT the other way
+       * around.
+       */
+      MlPrivateKeyFormat private_key_format() const;
+
+      /**
+       * Encode the private key in the specified format. Note that the seed
+       * format is only available for new ML-KEM keys and those loaded from
+       * seeds.
+       * @throws Encoding_Error if the private key cannot be encoded in the
+       *         requested format.
+       */
+      secure_vector<uint8_t> private_key_bits_with_format(MlPrivateKeyFormat format) const;
 
    private:
       friend class Kyber_KEM_Decryptor;

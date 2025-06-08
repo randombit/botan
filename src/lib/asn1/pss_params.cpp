@@ -5,8 +5,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pss_params.h>
+#include <botan/pss_params.h>
 
+#include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/internal/fmt.h>
@@ -18,7 +19,7 @@ namespace Botan {
 PSS_Params PSS_Params::from_emsa_name(std::string_view emsa_name) {
    SCAN_Name scanner(emsa_name);
 
-   if((scanner.algo_name() != "EMSA4" && scanner.algo_name() != "PSSR") || scanner.arg_count() != 3) {
+   if((scanner.algo_name() != "PSS" && scanner.algo_name() != "PSS_Raw") || scanner.arg_count() != 3) {
       throw Invalid_Argument(fmt("PSS_Params::from_emsa_name unexpected param '{}'", emsa_name));
    }
 
@@ -34,8 +35,8 @@ PSS_Params::PSS_Params(std::string_view hash_fn, size_t salt_len) :
       m_mgf_hash(m_hash),
       m_salt_len(salt_len) {}
 
-PSS_Params::PSS_Params(const uint8_t der[], size_t der_len) {
-   BER_Decoder decoder(der, der_len);
+PSS_Params::PSS_Params(std::span<const uint8_t> der) {
+   BER_Decoder decoder(der);
    this->decode_from(decoder);
 }
 
@@ -46,8 +47,6 @@ std::vector<uint8_t> PSS_Params::serialize() const {
 }
 
 void PSS_Params::encode_into(DER_Encoder& to) const {
-   const size_t trailer_field = 1;
-
    to.start_sequence()
       .start_context_specific(0)
       .encode(m_hash)
@@ -57,9 +56,6 @@ void PSS_Params::encode_into(DER_Encoder& to) const {
       .end_cons()
       .start_context_specific(2)
       .encode(m_salt_len)
-      .end_cons()
-      .start_context_specific(3)
-      .encode(trailer_field)
       .end_cons()
       .end_cons();
 }

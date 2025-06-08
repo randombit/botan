@@ -8,7 +8,8 @@ brief -> "AES using AES-NI and SIMD instructions"
 </module_info>
 
 <requires>
-simd
+cpuid
+simd_4x32
 </requires>
 
 <isa>

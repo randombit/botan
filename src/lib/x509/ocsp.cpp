@@ -35,12 +35,15 @@ void decode_optional_list(BER_Decoder& ber, ASN1_Type tag, std::vector<X509_Cert
    }
 
    BER_Decoder list(obj);
-
-   while(list.more_items()) {
-      BER_Object certbits = list.get_next_object();
-      X509_Certificate cert(certbits.bits(), certbits.length());
-      output.push_back(std::move(cert));
+   auto seq = list.start_sequence();
+   while(seq.more_items()) {
+      output.push_back([&] {
+         X509_Certificate cert;
+         cert.decode_from(seq);
+         return cert;
+      }());
    }
+   seq.end_cons();
 }
 
 }  // namespace
@@ -98,7 +101,7 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
    if(response_outer.more_items()) {
       BER_Decoder response_bytes = response_outer.start_context_specific(0).start_sequence();
 
-      response_bytes.decode_and_check(OID("1.3.6.1.5.5.7.48.1.1"), "Unknown response type in OCSP response");
+      response_bytes.decode_and_check(OID({1, 3, 6, 1, 5, 5, 7, 48, 1, 1}), "Unknown response type in OCSP response");
 
       BER_Decoder basicresponse = BER_Decoder(response_bytes.get_next_octet_string()).start_sequence();
 

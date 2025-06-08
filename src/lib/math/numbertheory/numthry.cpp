@@ -8,8 +8,8 @@
 
 #include <botan/numthry.h>
 
-#include <botan/reducer.h>
 #include <botan/rng.h>
+#include <botan/internal/barrett.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/monty.h>
@@ -39,12 +39,12 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
       return BigInt::from_s32(-1);
    }
 
-   Modular_Reducer mod_p(p);
+   auto mod_p = Barrett_Reduction::for_public_modulus(p);
    auto monty_p = std::make_shared<Montgomery_Params>(p, mod_p);
 
    // If p == 3 (mod 4) there is a simple solution
    if(p % 4 == 3) {
-      return monty_exp_vartime(monty_p, a, ((p + 1) >> 2));
+      return monty_exp_vartime(monty_p, a, ((p + 1) >> 2)).value();
    }
 
    // Otherwise we have to use Shanks-Tonelli
@@ -54,7 +54,7 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
    q -= 1;
    q >>= 1;
 
-   BigInt r = monty_exp_vartime(monty_p, a, q);
+   BigInt r = monty_exp_vartime(monty_p, a, q).value();
    BigInt n = mod_p.multiply(a, mod_p.square(r));
    r = mod_p.multiply(r, a);
 
@@ -81,7 +81,7 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
       }
    }
 
-   BigInt c = monty_exp_vartime(monty_p, BigInt::from_word(z), (q << 1) + 1);
+   BigInt c = monty_exp_vartime(monty_p, BigInt::from_word(z), (q << 1) + 1).value();
 
    while(n > 1) {
       q = n;
@@ -97,7 +97,7 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
       }
 
       BOTAN_ASSERT_NOMSG(s >= (i + 1));  // No underflow!
-      c = monty_exp_vartime(monty_p, c, BigInt::power_of_2(s - i - 1));
+      c = monty_exp_vartime(monty_p, c, BigInt::power_of_2(s - i - 1)).value();
       r = mod_p.multiply(r, c);
       c = mod_p.square(c);
       n = mod_p.multiply(n, c);
@@ -293,13 +293,13 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod) {
       return BigInt::zero();
    }
 
-   Modular_Reducer reduce_mod(mod);
+   auto reduce_mod = Barrett_Reduction::for_secret_modulus(mod);
 
    const size_t exp_bits = exp.bits();
 
    if(mod.is_odd()) {
       auto monty_params = std::make_shared<Montgomery_Params>(mod, reduce_mod);
-      return monty_exp(monty_params, reduce_mod.reduce(base), exp, exp_bits);
+      return monty_exp(monty_params, ct_modulo(base, mod), exp, exp_bits).value();
    }
 
    /*
@@ -307,7 +307,7 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod) {
    cryptographically important, so this implementation is slow ...
    */
    BigInt accum = BigInt::one();
-   BigInt g = reduce_mod.reduce(base);
+   BigInt g = ct_modulo(base, mod);
    BigInt t;
 
    for(size_t i = 0; i != exp_bits; ++i) {
@@ -369,7 +369,7 @@ bool is_prime(const BigInt& n, RandomNumberGenerator& rng, size_t prob, bool is_
       return std::binary_search(PRIMES, PRIMES + PRIME_TABLE_SIZE, num);
    }
 
-   Modular_Reducer mod_n(n);
+   auto mod_n = Barrett_Reduction::for_secret_modulus(n);
 
    if(rng.is_seeded()) {
       const size_t t = miller_rabin_test_iterations(n_bits, prob, is_random);

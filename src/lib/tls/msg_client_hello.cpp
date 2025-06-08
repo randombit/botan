@@ -766,8 +766,8 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    m_data->m_random = make_hello_random(rng, cb, policy);
    m_data->m_suites = policy.ciphersuite_list(Protocol_Version::TLS_V13);
 
-   if(policy.allow_tls12())  // Note: DTLS 1.3 is NYI, hence dtls_12 is not checked
-   {
+   if(policy.allow_tls12()) {
+      // Note: DTLS 1.3 is NYI, hence dtls_12 is not checked
       const auto legacy_suites = policy.ciphersuite_list(Protocol_Version::TLS_V12);
       m_data->m_suites.insert(m_data->m_suites.end(), legacy_suites.cbegin(), legacy_suites.cend());
    }

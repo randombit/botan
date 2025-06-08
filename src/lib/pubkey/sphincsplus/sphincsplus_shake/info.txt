@@ -7,10 +7,5 @@ name -> "SPHINCS+ (SHAKE-256)"
 </module_info>
 
 <requires>
-sphincsplus_common
-shake
+sphincsplus_shake_base
 </requires>
-
-<header:internal>
-sp_hash_shake.h
-</header:internal>

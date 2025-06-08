@@ -10,6 +10,7 @@
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/rng.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/pk_ops_impl.h>
 
@@ -65,13 +66,13 @@ std::unique_ptr<Private_Key> X25519_PublicKey::generate_another(RandomNumberGene
    return std::make_unique<X25519_PrivateKey>(rng);
 }
 
-X25519_PrivateKey::X25519_PrivateKey(const secure_vector<uint8_t>& secret_key) {
+X25519_PrivateKey::X25519_PrivateKey(std::span<const uint8_t> secret_key) {
    if(secret_key.size() != 32) {
       throw Decoding_Error("Invalid size for X25519 private key");
    }
 
    m_public.resize(32);
-   m_private = secret_key;
+   m_private.assign(secret_key.begin(), secret_key.end());
    curve25519_basepoint(m_public.data(), m_private.data());
 }
 
@@ -120,7 +121,24 @@ class X25519_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
 
       size_t agreed_value_size() const override { return 32; }
 
-      secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override { return m_key.agree(w, w_len); }
+      secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override {
+         auto shared_key = m_key.agree(w, w_len);
+
+         // RFC 7748 Section 6.1
+         //    Both [parties] MAY check, without leaking extra information about
+         //    the value of K, whether K is the all-zero value and abort if so.
+         //
+         // TODO: once the generic Key Agreement operation creation is equipped
+         //       with a more flexible parameterization, this check could be
+         //       made optional.
+         //       For instance: `sk->agree().with_optional_sanity_checks(true)`.
+         //       See also:     https://github.com/randombit/botan/pull/4318
+         if(CT::all_zeros(shared_key.data(), shared_key.size()).as_bool()) {
+            throw Invalid_Argument("X25519 public point appears to be of low order");
+         }
+
+         return shared_key;
+      }
 
    private:
       const X25519_PrivateKey& m_key;

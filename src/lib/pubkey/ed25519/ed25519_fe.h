@@ -137,8 +137,6 @@ class FE_25519 {
       int32_t m_fe[10];
 };
 
-typedef FE_25519 fe;
-
 /*
 fe means field element.
 Here the field is
@@ -147,67 +145,67 @@ t[0]+2^26 t[1]+2^51 t[2]+2^77 t[3]+2^102 t[4]+...+2^230 t[9].
 Bounds on each t[i] vary depending on context.
 */
 
-inline void fe_frombytes(fe& x, const uint8_t* b) {
+inline void fe_frombytes(FE_25519& x, const uint8_t* b) {
    x.from_bytes(b);
 }
 
-inline void fe_tobytes(uint8_t* b, const fe& x) {
+inline void fe_tobytes(uint8_t* b, const FE_25519& x) {
    x.to_bytes(b);
 }
 
-inline void fe_copy(fe& a, const fe& b) {
+inline void fe_copy(FE_25519& a, const FE_25519& b) {
    a = b;
 }
 
-inline int fe_isnonzero(const fe& x) {
+inline int fe_isnonzero(const FE_25519& x) {
    return x.is_zero() ? 0 : 1;
 }
 
-inline int fe_isnegative(const fe& x) {
+inline int fe_isnegative(const FE_25519& x) {
    return x.is_negative();
 }
 
-inline void fe_0(fe& x) {
+inline void fe_0(FE_25519& x) {
    x = FE_25519();
 }
 
-inline void fe_1(fe& x) {
+inline void fe_1(FE_25519& x) {
    x = FE_25519(1);
 }
 
-inline void fe_add(fe& x, const fe& a, const fe& b) {
+inline void fe_add(FE_25519& x, const FE_25519& a, const FE_25519& b) {
    x = FE_25519::add(a, b);
 }
 
-inline void fe_sub(fe& x, const fe& a, const fe& b) {
+inline void fe_sub(FE_25519& x, const FE_25519& a, const FE_25519& b) {
    x = FE_25519::sub(a, b);
 }
 
-inline void fe_neg(fe& x, const fe& z) {
+inline void fe_neg(FE_25519& x, const FE_25519& z) {
    x = FE_25519::negate(z);
 }
 
-inline void fe_mul(fe& x, const fe& a, const fe& b) {
+inline void fe_mul(FE_25519& x, const FE_25519& a, const FE_25519& b) {
    x = FE_25519::mul(a, b);
 }
 
-inline void fe_sq(fe& x, const fe& z) {
+inline void fe_sq(FE_25519& x, const FE_25519& z) {
    x = FE_25519::sqr(z);
 }
 
-inline void fe_sq_iter(fe& x, const fe& z, size_t iter) {
+inline void fe_sq_iter(FE_25519& x, const FE_25519& z, size_t iter) {
    x = FE_25519::sqr_iter(z, iter);
 }
 
-inline void fe_sq2(fe& x, const fe& z) {
+inline void fe_sq2(FE_25519& x, const FE_25519& z) {
    x = FE_25519::sqr2(z);
 }
 
-inline void fe_invert(fe& x, const fe& z) {
+inline void fe_invert(FE_25519& x, const FE_25519& z) {
    x = FE_25519::invert(z);
 }
 
-inline void fe_pow22523(fe& x, const fe& y) {
+inline void fe_pow22523(FE_25519& x, const FE_25519& y) {
    x = FE_25519::pow_22523(y);
 }
 

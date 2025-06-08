@@ -1,7 +1,8 @@
 /*
 * ECIES
 * (C) 2016 Philipp Weber
-* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
+*     2016 Daniel Neus, Rohde & Schwarz Cybersecurity
+*     2025 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,11 +10,12 @@
 #include <botan/ecies.h>
 
 #include <botan/cipher_mode.h>
+#include <botan/ecdh.h>
+#include <botan/kdf.h>
 #include <botan/mac.h>
-#include <botan/numthry.h>
+#include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -56,6 +58,8 @@ BOTAN_DIAGNOSTIC_POP
 
 /**
 * Implements ECDH key agreement without using the cofactor mode
+*
+* TODO(Botan4) this can be removed once cofactor support is removed from ECDH
 */
 class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
    public:
@@ -67,7 +71,7 @@ class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override {
          const EC_Group& group = m_key.domain();
          if(auto input_point = EC_AffinePoint::deserialize(group, {w, w_len})) {
-            return input_point->mul(m_key._private_key(), m_rng, m_ws).x_bytes();
+            return input_point->mul(m_key._private_key(), m_rng).x_bytes();
          } else {
             throw Decoding_Error("ECIES - Invalid elliptic curve point");
          }
@@ -76,7 +80,6 @@ class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
    private:
       ECIES_PrivateKey m_key;
       RandomNumberGenerator& m_rng;
-      std::vector<BigInt> m_ws;
 };
 
 std::unique_ptr<PK_Ops::Key_Agreement> ECIES_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
@@ -93,6 +96,8 @@ std::unique_ptr<PK_Ops::Key_Agreement> ECIES_PrivateKey::create_key_agreement_op
 * @param ecies_params settings for ecies
 * @param for_encryption disable cofactor mode if the secret will be used for encryption
 * (according to ISO 18033 cofactor mode is only used during decryption)
+*
+* TODO(Botan4) this entire function can be removed once cofactor support is gone
 */
 PK_Key_Agreement create_key_agreement(const PK_Key_Agreement_Key& private_key,
                                       const ECIES_KA_Params& ecies_params,
@@ -124,6 +129,7 @@ ECIES_KA_Operation::ECIES_KA_Operation(const PK_Key_Agreement_Key& private_key,
                                        RandomNumberGenerator& rng) :
       m_ka(create_key_agreement(private_key, ecies_params, for_encryption, rng)), m_params(ecies_params) {}
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
 /**
 * ECIES secret derivation according to ISO 18033-2
 */
@@ -133,13 +139,14 @@ SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<uint8_t>& eph_p
       throw Invalid_Argument("ECIES: other public key point is zero");
    }
 
-   auto kdf = KDF::create_or_throw(m_params.kdf_spec());
+   auto kdf = KDF::create_or_throw(m_params.kdf());
 
    EC_Point other_point = other_public_key_point;
 
    // ISO 18033: step b
-   if(m_params.old_cofactor_mode()) {
-      other_point *= m_params.domain().get_cofactor();
+   // TODO(Botan4) remove when cofactor support is removed
+   if(m_params.old_cofactor_mode() && m_params.group().has_cofactor()) {
+      other_point *= m_params.group().get_cofactor();
    }
 
    secure_vector<uint8_t> derivation_input;
@@ -150,33 +157,89 @@ SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<uint8_t>& eph_p
    }
 
    // ISO 18033: encryption step f / decryption step h
-   std::vector<uint8_t> other_public_key_bin = other_point.encode(m_params.compression_type());
+   std::vector<uint8_t> other_public_key_bin = other_point.encode(m_params.point_format());
    // Note: the argument `m_params.secret_length()` passed for `key_len` will only be used by providers because
    // "Raw" is passed to the `PK_Key_Agreement` if the implementation of botan is used.
    const SymmetricKey peh =
-      m_ka.derive_key(m_params.domain().get_order_bytes(), other_public_key_bin.data(), other_public_key_bin.size());
+      m_ka.derive_key(m_params.group().get_order_bytes(), other_public_key_bin.data(), other_public_key_bin.size());
+   derivation_input.insert(derivation_input.end(), peh.begin(), peh.end());
+
+   // ISO 18033: encryption step g / decryption step i
+   return SymmetricKey(kdf->derive_key(m_params.secret_length(), derivation_input));
+}
+#endif
+
+/**
+* ECIES secret derivation according to ISO 18033-2
+*/
+SymmetricKey ECIES_KA_Operation::derive_secret(std::span<const uint8_t> eph_public_key_bin,
+                                               const EC_AffinePoint& other_public_key_point) const {
+   BOTAN_ARG_CHECK(!other_public_key_point.is_identity(), "ECIES: peer public key point is the identity element");
+
+   auto kdf = KDF::create_or_throw(m_params.kdf());
+
+   auto other_point = other_public_key_point;
+
+   const auto& group = m_params.group();
+
+   // ISO 18033: step b
+   // TODO(Botan4) remove when cofactor support is removed
+   if(m_params.old_cofactor_mode() && group.has_cofactor()) {
+      Null_RNG null_rng;
+      auto cofactor = EC_Scalar::from_bigint(group, group.get_cofactor());
+      other_point = other_point.mul(cofactor, null_rng);
+   }
+
+   secure_vector<uint8_t> derivation_input;
+
+   // ISO 18033: encryption step e / decryption step g
+   if(!m_params.single_hash_mode()) {
+      derivation_input.assign(eph_public_key_bin.begin(), eph_public_key_bin.end());
+   }
+
+   // ISO 18033: encryption step f / decryption step h
+   std::vector<uint8_t> other_public_key_bin = other_point.serialize(m_params.point_format());
+   // Note: the argument `m_params.secret_length()` passed for `key_len` will only be used by providers because
+   // "Raw" is passed to the `PK_Key_Agreement` if the implementation of botan is used.
+   const SymmetricKey peh =
+      m_ka.derive_key(m_params.group().get_order_bytes(), other_public_key_bin.data(), other_public_key_bin.size());
    derivation_input.insert(derivation_input.end(), peh.begin(), peh.end());
 
    // ISO 18033: encryption step g / decryption step i
    return SymmetricKey(kdf->derive_key(m_params.secret_length(), derivation_input));
 }
 
-ECIES_KA_Params::ECIES_KA_Params(const EC_Group& domain,
-                                 std::string_view kdf_spec,
-                                 size_t length,
-                                 EC_Point_Format compression_type,
-                                 ECIES_Flags flags) :
-      m_domain(domain), m_kdf_spec(kdf_spec), m_length(length), m_compression_mode(compression_type), m_flags(flags) {}
+ECIES_KA_Params::ECIES_KA_Params(
+   const EC_Group& group, std::string_view kdf, size_t length, EC_Point_Format point_format, ECIES_Flags flags) :
+      m_group(group),
+      m_kdf(kdf),
+      m_length(length),
+      m_point_format(point_format),
+      m_single_hash_mode((flags & ECIES_Flags::SingleHashMode) == ECIES_Flags::SingleHashMode),
+      m_check_mode((flags & ECIES_Flags::CheckMode) == ECIES_Flags::CheckMode),
+      m_cofactor_mode((flags & ECIES_Flags::CofactorMode) == ECIES_Flags::CofactorMode),
+      m_old_cofactor_mode((flags & ECIES_Flags::OldCofactorMode) == ECIES_Flags::OldCofactorMode) {}
 
-ECIES_System_Params::ECIES_System_Params(const EC_Group& domain,
-                                         std::string_view kdf_spec,
+ECIES_KA_Params::ECIES_KA_Params(
+   const EC_Group& group, std::string_view kdf, size_t length, EC_Point_Format point_format, bool single_hash_mode) :
+      m_group(group),
+      m_kdf(kdf),
+      m_length(length),
+      m_point_format(point_format),
+      m_single_hash_mode(single_hash_mode),
+      m_check_mode(true),
+      m_cofactor_mode(false),
+      m_old_cofactor_mode(false) {}
+
+ECIES_System_Params::ECIES_System_Params(const EC_Group& group,
+                                         std::string_view kdf,
                                          std::string_view dem_algo_spec,
                                          size_t dem_key_len,
                                          std::string_view mac_spec,
                                          size_t mac_key_len,
-                                         EC_Point_Format compression_type,
+                                         EC_Point_Format point_format,
                                          ECIES_Flags flags) :
-      ECIES_KA_Params(domain, kdf_spec, dem_key_len + mac_key_len, compression_type, flags),
+      ECIES_KA_Params(group, kdf, dem_key_len + mac_key_len, point_format, flags),
       m_dem_spec(dem_algo_spec),
       m_dem_keylen(dem_key_len),
       m_mac_spec(mac_spec),
@@ -187,20 +250,19 @@ ECIES_System_Params::ECIES_System_Params(const EC_Group& domain,
    }
 }
 
-ECIES_System_Params::ECIES_System_Params(const EC_Group& domain,
-                                         std::string_view kdf_spec,
+ECIES_System_Params::ECIES_System_Params(const EC_Group& group,
+                                         std::string_view kdf,
                                          std::string_view dem_algo_spec,
                                          size_t dem_key_len,
                                          std::string_view mac_spec,
-                                         size_t mac_key_len) :
-      ECIES_System_Params(domain,
-                          kdf_spec,
-                          dem_algo_spec,
-                          dem_key_len,
-                          mac_spec,
-                          mac_key_len,
-                          EC_Point_Format::Uncompressed,
-                          ECIES_Flags::None) {}
+                                         size_t mac_key_len,
+                                         EC_Point_Format point_format,
+                                         bool single_hash_mode) :
+      ECIES_KA_Params(group, kdf, dem_key_len + mac_key_len, point_format, single_hash_mode),
+      m_dem_spec(dem_algo_spec),
+      m_dem_keylen(dem_key_len),
+      m_mac_spec(mac_spec),
+      m_mac_keylen(mac_key_len) {}
 
 std::unique_ptr<MessageAuthenticationCode> ECIES_System_Params::create_mac() const {
    return MessageAuthenticationCode::create_or_throw(m_mac_spec);
@@ -222,10 +284,11 @@ ECIES_Encryptor::ECIES_Encryptor(const PK_Key_Agreement_Key& private_key,
       m_iv(),
       m_other_point(),
       m_label() {
-   if(ecies_params.compression_type() != EC_Point_Format::Uncompressed) {
+   if(ecies_params.point_format() != EC_Point_Format::Uncompressed) {
       // ISO 18033: step d
       // convert only if necessary; m_eph_public_key_bin has been initialized with the uncompressed format
-      m_eph_public_key_bin = m_params.domain().OS2ECP(m_eph_public_key_bin).encode(ecies_params.compression_type());
+      m_eph_public_key_bin =
+         EC_AffinePoint(m_params.group(), m_eph_public_key_bin).serialize(ecies_params.point_format());
    }
    m_mac = m_params.create_mac();
    m_cipher = m_params.create_cipher(Cipher_Dir::Encryption);
@@ -235,7 +298,7 @@ ECIES_Encryptor::ECIES_Encryptor(const PK_Key_Agreement_Key& private_key,
 * ECIES_Encryptor Constructor
 */
 ECIES_Encryptor::ECIES_Encryptor(RandomNumberGenerator& rng, const ECIES_System_Params& ecies_params) :
-      ECIES_Encryptor(ECDH_PrivateKey(rng, ecies_params.domain()), ecies_params, rng) {}
+      ECIES_Encryptor(ECDH_PrivateKey(rng, ecies_params.group()), ecies_params, rng) {}
 
 size_t ECIES_Encryptor::maximum_input_size() const {
    /*
@@ -255,11 +318,11 @@ size_t ECIES_Encryptor::ciphertext_length(size_t ptext_len) const {
 std::vector<uint8_t> ECIES_Encryptor::enc(const uint8_t data[],
                                           size_t length,
                                           RandomNumberGenerator& /*unused*/) const {
-   if(m_other_point.is_zero()) {
-      throw Invalid_State("ECIES: the other key is zero");
+   if(!m_other_point.has_value()) {
+      throw Invalid_State("ECIES_Encryptor: peer key invalid or not set");
    }
 
-   const SymmetricKey secret_key = m_ka.derive_secret(m_eph_public_key_bin, m_other_point);
+   const SymmetricKey secret_key = m_ka.derive_secret(m_eph_public_key_bin, m_other_point.value());
 
    // encryption
 
@@ -289,13 +352,18 @@ ECIES_Decryptor::ECIES_Decryptor(const PK_Key_Agreement_Key& key,
                                  const ECIES_System_Params& ecies_params,
                                  RandomNumberGenerator& rng) :
       m_ka(key, ecies_params, false, rng), m_params(ecies_params), m_iv(), m_label() {
-   // ISO 18033: "If v > 1 and CheckMode = 0, then we must have gcd(u, v) = 1." (v = index, u= order)
-   if(!ecies_params.check_mode()) {
-      const BigInt& cofactor = m_params.domain().get_cofactor();
-      if(cofactor > 1 && gcd(cofactor, m_params.domain().get_order()) != 1) {
-         throw Invalid_Argument("ECIES: gcd of cofactor and order must be 1 if check_mode is 0");
-      }
-   }
+   /*
+   ISO 18033: "If v > 1 and CheckMode = 0, then we must have gcd(u, v) = 1." (v = index, u= order)
+
+   We skip this check because even if CheckMode = 0 we actually do check that
+   the point is valid. In addition the check from ISO 18033 is pretty odd; u is
+   the _prime_ order subgroup, and v is the cofactor. For gcd(u, v) > 1 to occur
+   the cofactor would have to be a multiple of the group order, implying that
+   the overall group was at least the square of the group order. Such a curve
+   would also break our assumption that one can check for membership in the
+   prime order subgroup by multiplying by the group order and checking for the
+   identity.
+   */
 
    m_mac = m_params.create_mac();
    m_cipher = m_params.create_cipher(Cipher_Dir::Decryption);
@@ -315,7 +383,7 @@ size_t compute_point_size(const EC_Group& group, EC_Point_Format format) {
 }  // namespace
 
 size_t ECIES_Decryptor::plaintext_length(size_t ctext_len) const {
-   const size_t point_size = compute_point_size(m_params.domain(), m_params.compression_type());
+   const size_t point_size = compute_point_size(m_params.group(), m_params.point_format());
    const size_t overhead = point_size + m_mac->output_length();
 
    if(ctext_len < overhead) {
@@ -329,7 +397,7 @@ size_t ECIES_Decryptor::plaintext_length(size_t ctext_len) const {
 * ECIES Decryption according to ISO 18033-2
 */
 secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const uint8_t in[], size_t in_len) const {
-   const size_t point_size = compute_point_size(m_params.domain(), m_params.compression_type());
+   const size_t point_size = compute_point_size(m_params.group(), m_params.point_format());
 
    if(in_len < point_size + m_mac->output_length()) {
       throw Decoding_Error("ECIES decryption: ciphertext is too short");
@@ -341,12 +409,10 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
    const std::vector<uint8_t> mac_data(in + in_len - m_mac->output_length(), in + in_len);
 
    // ISO 18033: step a
-   EC_Point other_public_key = m_params.domain().OS2ECP(other_public_key_bin);
+   auto other_public_key = EC_AffinePoint(m_params.group(), other_public_key_bin);
 
-   // ISO 18033: step b
-   if(m_params.check_mode() && !other_public_key.on_the_curve()) {
-      throw Decoding_Error("ECIES decryption: received public key is not on the curve");
-   }
+   // ISO 18033: step b would check if other_public_key is on the curve iff check_mode is on
+   // but we ignore this and always check if the point is on the curve
 
    // ISO 18033: step e (and step f because get_affine_x (called by ECDH_KA_Operation::raw_agree)
    // throws Illegal_Transformation if the point is zero)

@@ -6,20 +6,9 @@
 
 #include <botan/internal/ec_inner_pc.h>
 
+#include <botan/mem_ops.h>
+
 namespace Botan {
-
-namespace {
-
-PCurve::PrimeOrderCurve::AffinePoint deserialize_pcurve_pt(const PCurve::PrimeOrderCurve& curve,
-                                                           std::span<const uint8_t> bytes) {
-   if(auto pt = curve.deserialize_point(bytes)) {
-      return *pt;
-   } else {
-      throw Decoding_Error("Invalid elliptic curve point encoding");
-   }
-}
-
-}  // namespace
 
 const EC_Scalar_Data_PC& EC_Scalar_Data_PC::checked_ref(const EC_Scalar_Data& data) {
    const auto* p = dynamic_cast<const EC_Scalar_Data_PC*>(&data);
@@ -42,11 +31,13 @@ std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_PC::clone() const {
 }
 
 bool EC_Scalar_Data_PC::is_zero() const {
-   return this->value().is_zero();
+   auto& pcurve = this->group()->pcurve();
+   return pcurve.scalar_is_zero(m_v);
 }
 
 bool EC_Scalar_Data_PC::is_eq(const EC_Scalar_Data& other) const {
-   return (value() == checked_ref(other).value());
+   auto& pcurve = group()->pcurve();
+   return pcurve.scalar_equal(m_v, checked_ref(other).m_v);
 }
 
 void EC_Scalar_Data_PC::assign(const EC_Scalar_Data& other) {
@@ -55,27 +46,31 @@ void EC_Scalar_Data_PC::assign(const EC_Scalar_Data& other) {
 
 void EC_Scalar_Data_PC::square_self() {
    // TODO square in place
-   m_v = m_v.square();
+   m_v = m_group->pcurve().scalar_square(m_v);
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_PC::negate() const {
-   return std::make_unique<EC_Scalar_Data_PC>(m_group, m_v.negate());
+   return std::make_unique<EC_Scalar_Data_PC>(m_group, m_group->pcurve().scalar_negate(m_v));
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_PC::invert() const {
-   return std::make_unique<EC_Scalar_Data_PC>(m_group, m_v.invert());
+   return std::make_unique<EC_Scalar_Data_PC>(m_group, m_group->pcurve().scalar_invert(m_v));
+}
+
+std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_PC::invert_vartime() const {
+   return std::make_unique<EC_Scalar_Data_PC>(m_group, m_group->pcurve().scalar_invert_vartime(m_v));
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_PC::add(const EC_Scalar_Data& other) const {
-   return std::make_unique<EC_Scalar_Data_PC>(m_group, m_v + checked_ref(other).value());
+   return std::make_unique<EC_Scalar_Data_PC>(m_group, group()->pcurve().scalar_add(m_v, checked_ref(other).m_v));
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_PC::sub(const EC_Scalar_Data& other) const {
-   return std::make_unique<EC_Scalar_Data_PC>(m_group, m_v - checked_ref(other).value());
+   return std::make_unique<EC_Scalar_Data_PC>(m_group, group()->pcurve().scalar_sub(m_v, checked_ref(other).m_v));
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_PC::mul(const EC_Scalar_Data& other) const {
-   return std::make_unique<EC_Scalar_Data_PC>(m_group, m_v * checked_ref(other).value());
+   return std::make_unique<EC_Scalar_Data_PC>(m_group, group()->pcurve().scalar_mul(m_v, checked_ref(other).m_v));
 }
 
 void EC_Scalar_Data_PC::serialize_to(std::span<uint8_t> bytes) const {
@@ -86,18 +81,11 @@ void EC_Scalar_Data_PC::serialize_to(std::span<uint8_t> bytes) const {
 EC_AffinePoint_Data_PC::EC_AffinePoint_Data_PC(std::shared_ptr<const EC_Group_Data> group,
                                                PCurve::PrimeOrderCurve::AffinePoint pt) :
       m_group(std::move(group)), m_pt(std::move(pt)) {
-   if(!m_pt.is_identity()) {
-      m_xy = m_pt.serialize<secure_vector<uint8_t>>();
-      BOTAN_ASSERT_NOMSG(m_xy.size() == 1 + 2 * field_element_bytes());
-   }
-}
+   auto& pcurve = m_group->pcurve();
 
-EC_AffinePoint_Data_PC::EC_AffinePoint_Data_PC(std::shared_ptr<const EC_Group_Data> group,
-                                               std::span<const uint8_t> bytes) :
-      m_group(std::move(group)), m_pt(deserialize_pcurve_pt(m_group->pcurve(), bytes)) {
-   if(!m_pt.is_identity()) {
-      m_xy = m_pt.serialize<secure_vector<uint8_t>>();
-      BOTAN_ASSERT_NOMSG(m_xy.size() == 1 + 2 * field_element_bytes());
+   if(!pcurve.affine_point_is_identity(m_pt)) {
+      m_xy.resize(1 + 2 * field_element_bytes());
+      pcurve.serialize_point(m_xy, m_pt);
    }
 }
 
@@ -118,14 +106,19 @@ const std::shared_ptr<const EC_Group_Data>& EC_AffinePoint_Data_PC::group() cons
 }
 
 std::unique_ptr<EC_AffinePoint_Data> EC_AffinePoint_Data_PC::mul(const EC_Scalar_Data& scalar,
-                                                                 RandomNumberGenerator& rng,
-                                                                 std::vector<BigInt>& ws) const {
-   BOTAN_UNUSED(ws);
-
+                                                                 RandomNumberGenerator& rng) const {
    BOTAN_ARG_CHECK(scalar.group() == m_group, "Curve mismatch");
    const auto& k = EC_Scalar_Data_PC::checked_ref(scalar).value();
-   auto pt = m_group->pcurve().mul(m_pt, k, rng).to_affine();
+   auto& pcurve = m_group->pcurve();
+   auto pt = pcurve.point_to_affine(pcurve.mul(m_pt, k, rng));
    return std::make_unique<EC_AffinePoint_Data_PC>(m_group, std::move(pt));
+}
+
+secure_vector<uint8_t> EC_AffinePoint_Data_PC::mul_x_only(const EC_Scalar_Data& scalar,
+                                                          RandomNumberGenerator& rng) const {
+   BOTAN_ARG_CHECK(scalar.group() == m_group, "Curve mismatch");
+   const auto& k = EC_Scalar_Data_PC::checked_ref(scalar).value();
+   return m_group->pcurve().mul_x_only(m_pt, k, rng);
 }
 
 size_t EC_AffinePoint_Data_PC::field_element_bytes() const {
@@ -175,6 +168,7 @@ void EC_AffinePoint_Data_PC::serialize_uncompressed_to(std::span<uint8_t> bytes)
    copy_mem(bytes, m_xy);
 }
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
 EC_Point EC_AffinePoint_Data_PC::to_legacy_point() const {
    if(this->is_identity()) {
       return EC_Point(m_group->curve());
@@ -185,15 +179,14 @@ EC_Point EC_AffinePoint_Data_PC::to_legacy_point() const {
                       BigInt::from_bytes(std::span{m_xy}.last(fe_bytes)));
    }
 }
+#endif
 
-EC_Mul2Table_Data_PC::EC_Mul2Table_Data_PC(const EC_AffinePoint_Data& g, const EC_AffinePoint_Data& h) :
-      m_group(g.group()) {
-   BOTAN_ARG_CHECK(h.group() == m_group, "Curve mismatch");
+EC_Mul2Table_Data_PC::EC_Mul2Table_Data_PC(const EC_AffinePoint_Data& q) : m_group(q.group()) {
+   BOTAN_ARG_CHECK(q.group() == m_group, "Curve mismatch");
 
-   const auto& pt_g = EC_AffinePoint_Data_PC::checked_ref(g);
-   const auto& pt_h = EC_AffinePoint_Data_PC::checked_ref(h);
+   const auto& pt_q = EC_AffinePoint_Data_PC::checked_ref(q);
 
-   m_tbl = m_group->pcurve().mul2_setup(pt_g.value(), pt_h.value());
+   m_tbl = m_group->pcurve().mul2_setup_g(pt_q.value());
 }
 
 std::unique_ptr<EC_AffinePoint_Data> EC_Mul2Table_Data_PC::mul2_vartime(const EC_Scalar_Data& xd,
@@ -203,8 +196,10 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Mul2Table_Data_PC::mul2_vartime(const EC
    const auto& x = EC_Scalar_Data_PC::checked_ref(xd);
    const auto& y = EC_Scalar_Data_PC::checked_ref(yd);
 
-   if(auto pt = m_group->pcurve().mul2_vartime(*m_tbl, x.value(), y.value())) {
-      return std::make_unique<EC_AffinePoint_Data_PC>(m_group, pt->to_affine());
+   auto& pcurve = m_group->pcurve();
+
+   if(auto pt = pcurve.mul2_vartime(*m_tbl, x.value(), y.value())) {
+      return std::make_unique<EC_AffinePoint_Data_PC>(m_group, pcurve.point_to_affine(*pt));
    } else {
       return nullptr;
    }

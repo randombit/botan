@@ -109,6 +109,16 @@ class Reporter {
       void next_test_run();
 
       /**
+       * @brief Announce waiting for a new set of test results
+       *
+       * This should be followed up by calls to record with the results
+       * of this test.
+       *
+       * This is used by the stdout printer
+      */
+      void waiting_for_next_results(const std::string& test_name);
+
+      /**
        * @brief Reports a single test result
        *
        * The default implementation records the result as `Testsuite` and

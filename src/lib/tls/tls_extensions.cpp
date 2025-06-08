@@ -19,6 +19,7 @@
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_reader.h>
 
+#include <algorithm>
 #include <iterator>
 
 namespace Botan::TLS {
@@ -106,6 +107,13 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
 }
 
 }  // namespace
+
+Extension* Extensions::get(Extension_Code type) const {
+   const auto i =
+      std::find_if(m_extensions.cbegin(), m_extensions.cend(), [type](const auto& ext) { return ext->type() == type; });
+
+   return (i != m_extensions.end()) ? i->get() : nullptr;
+}
 
 void Extensions::add(std::unique_ptr<Extension> extn) {
    if(has(extn->type())) {
@@ -248,12 +256,12 @@ Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader, uint16_t e
       uint8_t name_type = reader.get_byte();
       name_bytes--;
 
-      if(name_type == 0)  // DNS
-      {
+      if(name_type == 0) {
+         // DNS
          m_sni_host_name = reader.get_string(2, 1, 65535);
          name_bytes -= static_cast<uint16_t>(2 + m_sni_host_name.size());
-      } else  // some other unknown name type
-      {
+      } else {
+         // some other unknown name type, which we will ignore
          reader.discard_next(name_bytes);
          name_bytes = 0;
       }

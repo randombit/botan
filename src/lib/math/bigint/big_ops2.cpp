@@ -119,13 +119,7 @@ BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>&
       ws.resize(mod_sw);
    }
 
-   if(mod_sw == 4) {
-      bigint_mod_sub_n<4>(mutable_data(), s._data(), mod._data(), ws.data());
-   } else if(mod_sw == 6) {
-      bigint_mod_sub_n<6>(mutable_data(), s._data(), mod._data(), ws.data());
-   } else {
-      bigint_mod_sub(mutable_data(), s._data(), mod._data(), mod_sw, ws.data());
-   }
+   bigint_mod_sub(mutable_data(), s._data(), mod._data(), mod_sw, ws.data());
 
    return (*this);
 }
@@ -183,7 +177,9 @@ BigInt& BigInt::mul(const BigInt& y, secure_vector<word>& ws) {
       set_word_at(x_sw, carry);
    } else {
       const size_t new_size = x_sw + y_sw + 1;
-      ws.resize(new_size);
+      if(ws.size() < new_size) {
+         ws.resize(new_size);
+      }
       secure_vector<word> z_reg(new_size);
 
       bigint_mul(z_reg.data(), z_reg.size(), _data(), size(), x_sw, y._data(), y.size(), y_sw, ws.data(), ws.size());
@@ -273,7 +269,7 @@ word BigInt::operator%=(word mod) {
 */
 BigInt& BigInt::operator<<=(size_t shift) {
    const size_t sw = sig_words();
-   const size_t new_size = sw + (shift + BOTAN_MP_WORD_BITS - 1) / BOTAN_MP_WORD_BITS;
+   const size_t new_size = sw + (shift + WordInfo<word>::bits - 1) / WordInfo<word>::bits;
 
    m_data.grow_to(new_size);
 

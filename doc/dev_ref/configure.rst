@@ -358,6 +358,8 @@ Maps:
    flags.
  * ``so_link_commands`` maps from operating system to the command to
    use to build a shared object.
+ * ``ct_value_barrier`` chooses how the compiler should implement
+   constant-time value barriers, see ct_utils.h for details.
 
 Variables:
   * ``binary_name`` the default name of the compiler binary.

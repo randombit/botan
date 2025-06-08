@@ -1,9 +1,11 @@
 Alastair Houghton
-Alexander Bluhm (genua GmbH)
 Alex Gaynor
+Alexander Bluhm (genua GmbH)
 Alf-André Walla
 Allan L. Bazinet
 Alon Bar-Lev
+Amos Treiber (Rohde & Schwarz Cybersecurity)
+André Schomburg (Volkswagen AG)
 Andrew Moon
 Antonio Coratelli
 Atanas Filyanov
@@ -13,19 +15,21 @@ Bi11
 Bogdan Gusiev
 Chris Desjardins
 Christian Mainka (Hackmanit GmbH)
-Christopher Bläsius
 Christoph Ludwig
+Christopher Bläsius
 cryptosource GmbH
 cynecx
 Dan Brown
 Daniel Neus (Rohde & Schwarz Cybersecurity)
 Daniel Seither (Kullo GmbH)
 Daniel Wyatt
+Dirk Dobkowitz (Volkswagen AG)
 Elektrobit Automotive GmbH
 Eric Cornelius
 Erwan Chaussy
 etcimon
 Evgeny Pokhilko
+Fabian Albert (Rohde & Schwarz Cybersecurity)
 Fabian Weissberg
 Falko Strenzke (cryptosource GmbH)
 Felix Yan
@@ -53,6 +57,7 @@ Kai Michaelis (Rohde & Schwarz Cybersecurity)
 Kirill A. Korinsky
 Konstantinos Kolelis
 Krzysztof Kwiatkowski
+Lars Dürkop (CARIAD SE)
 Lauri Nurmi
 Luca Piccarreta
 Manuel Glaser (Rohde & Schwarz Cybersecurity)
@@ -62,9 +67,9 @@ Markus Wanner
 Martin Doering
 Matej Kenda (TopIT d.o.o.)
 Mathieu Souchaud
+Matt Johnston
 Matthew Gregan
 Matthias Gierlings (Hackmanit GmbH)
-Matt Johnston
 Michael Boric (Rohde & Schwarz Cybersecurity)
 Nathan Hourt
 neXenio GmbH
@@ -75,15 +80,16 @@ Patrick Sona
 Patrick Wildt
 Patrik Fiedler
 Peter J Jones
-Philippe Lieser (Rohde & Schwarz Cybersecurity)
 Philipp Weber (Rohde & Schwarz Cybersecurity)
+Philippe Lieser (Rohde & Schwarz Cybersecurity)
 Projet SECRET, INRIA, Rocquencourt
-René Korthaus (Rohde & Schwarz Cybersecurity)
-René Meusel
+René Fischer (formerly Korthaus) (Rohde & Schwarz Cybersecurity)
+René Meusel (Rohde & Schwarz Cybersecurity, formerly nexenio GmbH)
 Ribose Inc
 Robert Dailey
 Ryuhei Mori
 schregger
+Sebastian Ahrens (Volkswagen AG)
 Sergii Cherkavskyi
 seu
 Shlomi Fish

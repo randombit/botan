@@ -208,9 +208,14 @@ Algorithm specification name: ``Poly1305``
 SipHash
 ~~~~~~~~~~~~
 
-A modern and very fast PRF. Produces only a 64-bit output. Defaults to
-"SipHash(2,4)" which is the recommended configuration, using 2 rounds for each
-input block and 4 rounds for finalization.
+.. deprecated:: 3.8.0
+
+SipHash is primarily designed for hash table randomization and, while not
+known to be insecure for message authentication, is not advisable for this
+use due to the small output size (just 64 bits).
+
+Defaults to "SipHash(2,4)" which is the recommended configuration, using 2
+rounds for each input block and 4 rounds for finalization.
 
 Available if ``BOTAN_HAS_SIPHASH`` is defined.
 
@@ -223,6 +228,8 @@ Algorithm specification name:
 
 X9.19-MAC
 ~~~~~~~~~~~~
+
+.. deprecated:: 3.7.0
 
 A CBC-MAC variant sometimes used in finance. Always uses DES.
 Sometimes called the "DES retail MAC", also standardized in ISO 9797-1.

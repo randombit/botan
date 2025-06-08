@@ -1,0 +1,17 @@
+<defines>
+TPM2_RSA_ADAPTER -> 20240819
+</defines>
+
+<module_info>
+name -> "TPM2 RSA Adapter"
+brief -> "Support for RSA key pairs hosted on TPM 2.0"
+</module_info>
+
+<requires>
+rsa
+pk_pad
+</requires>
+
+<header:public>
+tpm2_rsa.h
+</header:public>

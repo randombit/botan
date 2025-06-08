@@ -8,26 +8,41 @@
 #include <botan/internal/sha2_64.h>
 
 #include <botan/internal/bit_ops.h>
-#include <botan/internal/cpuid.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/sha2_64_f.h>
 #include <botan/internal/stl_util.h>
+
+#if defined(BOTAN_HAS_CPUID)
+   #include <botan/internal/cpuid.h>
+#endif
 
 namespace Botan {
 
 namespace {
 
 std::string sha512_provider() {
-#if defined(BOTAN_HAS_SHA2_64_BMI2)
-   if(CPUID::has_bmi2()) {
-      return "bmi2";
+#if defined(BOTAN_HAS_SHA2_64_X86)
+   if(auto feat = CPUID::check(CPUID::Feature::SHA512)) {
+      return *feat;
    }
 #endif
 
 #if defined(BOTAN_HAS_SHA2_64_ARMV8)
-   if(CPUID::has_arm_sha2_512()) {
-      return "armv8";
+   if(auto feat = CPUID::check(CPUID::Feature::SHA2_512)) {
+      return *feat;
+   }
+#endif
+
+#if defined(BOTAN_HAS_SHA2_64_X86_AVX512)
+   if(auto feat = CPUID::check(CPUID::Feature::AVX512, CPUID::Feature::BMI)) {
+      return *feat;
+   }
+#endif
+
+#if defined(BOTAN_HAS_SHA2_64_X86_AVX2)
+   if(auto feat = CPUID::check(CPUID::Feature::AVX2, CPUID::Feature::BMI)) {
+      return *feat;
    }
 #endif
 
@@ -41,15 +56,27 @@ std::string sha512_provider() {
 */
 //static
 void SHA_512::compress_digest(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
-#if defined(BOTAN_HAS_SHA2_64_BMI2)
-   if(CPUID::has_bmi2()) {
-      return compress_digest_bmi2(digest, input, blocks);
+#if defined(BOTAN_HAS_SHA2_64_X86)
+   if(CPUID::has(CPUID::Feature::SHA512)) {
+      return compress_digest_x86(digest, input, blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_SHA2_64_ARMV8)
-   if(CPUID::has_arm_sha2_512()) {
+   if(CPUID::has(CPUID::Feature::SHA2_512)) {
       return compress_digest_armv8(digest, input, blocks);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SHA2_64_X86_AVX512)
+   if(CPUID::has(CPUID::Feature::AVX512, CPUID::Feature::BMI)) {
+      return compress_digest_x86_avx512(digest, input, blocks);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SHA2_64_X86_AVX2)
+   if(CPUID::has(CPUID::Feature::AVX2, CPUID::Feature::BMI)) {
+      return compress_digest_x86_avx2(digest, input, blocks);
    }
 #endif
 

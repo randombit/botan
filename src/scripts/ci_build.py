@@ -30,7 +30,6 @@ def get_concurrency():
 def known_targets():
     return [
         'amalgamation',
-        'bsi',
         'codeql',
         'coverage',
         'cross-alpha',
@@ -44,6 +43,7 @@ def known_targets():
         'cross-hppa64',
         'cross-i386',
         'cross-ios-arm64',
+        'cross-loongarch64',
         'cross-m68k',
         'cross-mips',
         'cross-mips64',
@@ -65,12 +65,17 @@ def known_targets():
         'minimized',
         'nist',
         'no_pcurves',
+        'policy-bsi',
+        'policy-fips140',
+        'policy-modern',
         'sanitizer',
         'sde',
         'shared',
         'static',
         'valgrind',
         'valgrind-full',
+        'valgrind-ct',
+        'valgrind-ct-full',
     ]
 
 def is_running_in_github_actions():
@@ -84,6 +89,7 @@ class LoggingGroup:
 
     def __init__(self, group_title):
         self.group_title = group_title
+        self.start_time = time.time()
 
     def __enter__(self):
         if is_running_in_github_actions():
@@ -92,16 +98,20 @@ class LoggingGroup:
             print("Running '%s' ..." % self.group_title)
 
         sys.stdout.flush()
-        return is_running_in_github_actions()
 
     def __exit__(self, exc_type, exc_value, exc_tb):
+        time_taken = int(time.time() - self.start_time)
+
         if is_running_in_github_actions():
             print("::endgroup::")
 
+        if time_taken > 10:
+            print("> Running '%s' took %d seconds" % (self.group_title, time_taken))
+
 def build_targets(target, target_os):
-    if target in ['shared', 'minimized', 'bsi', 'nist']:
+    if target in ['shared', 'minimized', 'examples'] or target.startswith('policy-'):
         yield 'shared'
-    elif target in ['static', 'examples', 'fuzzers', 'cross-arm32-baremetal', 'emscripten']:
+    elif target in ['static', 'fuzzers', 'cross-arm32-baremetal', 'emscripten']:
         yield 'static'
     elif target_os in ['windows']:
         yield 'shared'
@@ -121,14 +131,14 @@ def build_targets(target, target_os):
         yield 'bogo_shim'
     if target in ['sanitizer'] and target_os not in ['windows']:
         yield 'bogo_shim'
-    if target in ['examples']:
+    if target in ['examples', 'amalgamation']:
         yield 'examples'
-    if target in ['valgrind', 'valgrind-full']:
+    if target in ['valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full']:
         yield 'ct_selftest'
 
 def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                     root_dir, build_dir, test_results_dir, pkcs11_lib, use_gdb,
-                    disable_werror, extra_cxxflags, disabled_tests):
+                    disable_werror, extra_cxxflags, custom_optimization_flags, disabled_tests):
 
     """
     Return the configure.py flags as well as make/test running prefixes
@@ -137,7 +147,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
     if target_os not in ['linux', 'osx', 'windows', 'freebsd']:
         print('Error unknown OS %s' % (target_os))
-        return (None, None, None, None)
+        return (None, None, None)
 
     if is_cross_target:
         if target_os == 'osx':
@@ -158,7 +168,6 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
     make_prefix = []
     test_prefix = []
-    pretest_cmd = []
     test_cmd = [os.path.join(build_dir, 'botan-test'),
                 '--data-dir=%s' % os.path.join(root_dir, 'src', 'tests', 'data'),
                 '--run-memory-intensive-tests']
@@ -190,13 +199,18 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         flags += ['--prefix=%s' % (install_prefix)]
 
     if ccache is not None:
-        flags += ['--no-store-vc-rev', '--compiler-cache=%s' % (ccache)]
+        flags += ['--compiler-cache=%s' % (ccache)]
 
     if not disable_werror:
         flags += ['--werror-mode']
 
     if target_cpu is not None:
         flags += ['--cpu=%s' % (target_cpu)]
+
+    if custom_optimization_flags and any(flag for flag in custom_optimization_flags):
+        flags += ['--no-optimizations']
+        for flag in custom_optimization_flags:
+            flags += ['--extra-cxxflags=%s' % (flag)]
 
     for flag in extra_cxxflags:
         flags += ['--extra-cxxflags=%s' % (flag)]
@@ -214,12 +228,14 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if target in ['amalgamation', 'cross-arm64-amalgamation', 'cross-android-arm64-amalgamation']:
         flags += ['--amalgamation']
 
-    if target in ['bsi', 'nist']:
-        # tls is optional for bsi/nist but add it so verify tests work with these minimized configs
-        flags += ['--module-policy=%s' % (target), '--enable-modules=tls12', '--disable-deprecated-features']
+    if target.startswith('policy-'):
+        # tls is optional for bsi/fips140 but add it so verify tests work with these minimized configs
+        flags += ['--module-policy=%s' % (target.replace('policy-', '')), '--enable-modules=tls12,tls13', '--disable-deprecated-features']
 
     if target in ['docs']:
         flags += ['--with-doxygen', '--with-sphinx', '--with-rst2man']
+    else:
+        flags += ['--without-doc']
 
     if target in ['docs', 'codeql', 'hybrid-tls13-interop-test', 'limbo']:
         test_cmd = None
@@ -238,47 +254,19 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if target == 'coverage':
         flags += ['--with-coverage-info']
 
-    if target in ['coverage']:
+    if target in ['coverage', 'valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full']:
         flags += ['--with-debug-info']
 
     if target in ['coverage', 'sanitizer', 'fuzzers']:
-        flags += ['--unsafe-terminate-on-asserts']
+        flags += ['--unsafe-terminate-on-asserts', '--enable-modules=tls_null']
 
     if target in ['sde']:
         test_prefix = ['sde', '-future', '--']
 
-    if target in ['valgrind', 'valgrind-full']:
+    if target in ['valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full']:
         flags += ['--with-valgrind']
-
-        test_prefix = ['valgrind',
-                       '-v',
-                       '--error-exitcode=9',
-                       '--leak-check=full',
-                       '--show-reachable=yes',
-                       '--track-origins=yes']
-
-        pretest_cmd = ['python3', os.path.join(root_dir, 'src', 'ct_selftest', 'ct_selftest.py'), os.path.join(build_dir, 'botan_ct_selftest')]
-
-        # valgrind is single threaded anyway
-        test_cmd += ['--test-threads=1']
-
-        if target != 'valgrind-full':
-            # valgrind is slow, so some tests only run in the nightly check
-            slow_tests = [
-                'argon2', 'bcrypt', 'bcrypt_pbkdf', 'compression_tests', 'cryptobox',
-                'dh_invalid', 'dh_kat', 'dh_keygen', 'dl_group_gen', 'dlies',
-                'dsa_kat_verify', 'dsa_param', 'ecc_basemul', 'ecdsa_verify_wycheproof',
-                'ed25519_sign', 'elgamal_decrypt', 'elgamal_encrypt', 'elgamal_keygen',
-                'ffi_dh', 'ffi_dsa', 'ffi_elgamal', 'frodo_kat_tests', 'hash_nist_mc',
-                'hss_lms_keygen', 'hss_lms_sign', 'mce_keygen', 'passhash9', 'pbkdf',
-                'pcurves_arith', 'pwdhash', 'rsa_encrypt', 'rsa_pss', 'rsa_pss_raw', 'scrypt',
-                'sphincsplus', 'sphincsplus_fors', 'sphincsplus_keygen', 'srp6_kat',
-                'srp6_rt', 'unit_tls', 'x509_path_bsi', 'x509_path_rsa_pss',
-                'xmss_keygen', 'xmss_keygen_reference', 'xmss_sign', 'xmss_unit_tests',
-                'xmss_verify', 'xmss_verify_invalid',
-            ]
-
-            disabled_tests += slow_tests
+        # valgrind is run via a script setup later
+        test_cmd = None
 
     if target == 'examples':
         flags += ['--with-boost']
@@ -294,17 +282,24 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         flags += ['--with-debug-asserts']
 
         if target_cc in ['clang', 'gcc', 'xcode']:
-            flags += ['--enable-sanitizers=address,undefined']
+            flags += ['--enable-sanitizers=address,undefined,iterator']
         else:
-            flags += ['--enable-sanitizers=address']
+            flags += ['--enable-sanitizers=address,iterator']
 
-    if target in ['valgrind', 'valgrind-full', 'sanitizer', 'fuzzers']:
+    if target in ['valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full', 'sanitizer', 'fuzzers']:
         flags += ['--disable-modules=locking_allocator']
 
     if target == 'emscripten':
         flags += ['--cpu=wasm']
         # need to find a way to run the wasm-compiled tests w/o a browser
         test_cmd = None
+
+    if target in ['sanitizer'] and target_cc in ['gcc']:
+        # Stack scrubbing is supported on GCC 14 and newer, only. This is newer
+        # than the current default compiler on GHA's Linux image (ubuntu 24.04).
+        # The CI setup has to ensure that we are configured to use a recent
+        # compiler for these targets, otherwise `./configure.py` will fail.
+        flags += ['--enable-stack-scrubbing']
 
     if is_cross_target:
         if target_os == 'ios':
@@ -357,8 +352,6 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 flags += ['--cpu=armv7', '--extra-cxxflags=-D_FILE_OFFSET_BITS=64']
                 cc_bin = 'arm-linux-gnueabihf-g++'
                 test_prefix = ['qemu-arm', '-L', '/usr/arm-linux-gnueabihf/']
-                # disable a few tests that are exceptionally slow under arm32 qemu
-                disabled_tests += ['dh_invalid', 'dlies', 'frodo_kat_tests', 'xmss_sign']
             elif target in ['cross-arm64', 'cross-arm64-amalgamation']:
                 flags += ['--cpu=aarch64']
                 cc_bin = 'aarch64-linux-gnu-g++'
@@ -390,7 +383,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 test_prefix = ['qemu-ppc', '-L', '/usr/powerpc-linux-gnu/']
                 test_cmd = None # qemu crashes ...
             elif target == 'cross-ppc64':
-                flags += ['--cpu=ppc64', '--with-endian=little']
+                flags += ['--cpu=ppc64']
                 cc_bin = 'powerpc64le-linux-gnu-g++'
                 test_prefix = ['qemu-ppc64le', '-cpu', 'power10', '-L', '/usr/powerpc64le-linux-gnu/']
             elif target == 'cross-riscv64':
@@ -401,12 +394,16 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 flags += ['--cpu=s390x']
                 cc_bin = 's390x-linux-gnu-g++'
                 test_prefix = ['qemu-s390x', '-L', '/usr/s390x-linux-gnu/']
+            elif target == 'cross-loongarch64':
+                flags += ['--cpu=loongarch64']
+                cc_bin = 'loongarch64-linux-gnu-g++-14'
+                test_prefix = ['qemu-loongarch64', '-L', '/usr/loongarch64-linux-gnu/']
             elif target == 'cross-mips':
-                flags += ['--cpu=mips32', '--with-endian=big']
+                flags += ['--cpu=mips32']
                 cc_bin = 'mips-linux-gnu-g++'
                 test_prefix = ['qemu-mips', '-L', '/usr/mips-linux-gnu/']
             elif target == 'cross-mips64':
-                flags += ['--cpu=mips64', '--with-endian=big']
+                flags += ['--cpu=mips64']
                 cc_bin = 'mips64-linux-gnuabi64-g++'
                 test_prefix = ['qemu-mips64', '-L', '/usr/mips64-linux-gnuabi64/']
             elif target in ['cross-arm32-baremetal']:
@@ -425,10 +422,13 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
             flags += ['--with-commoncrypto']
 
         def add_boost_support(target, target_os):
-            if target in ['coverage', 'shared']:
+            if target in ['coverage', 'amalgamation']:
                 return True
 
             if target == 'sanitizer' and target_os == 'linux':
+                return True
+
+            if target == 'shared' and target_os != 'windows':
                 return True
 
             return False
@@ -452,6 +452,31 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         if target_os == 'linux':
             flags += ['--with-lzma']
 
+        if is_running_in_github_actions() and 'BOTAN_TPM2_ENABLED' in os.environ:
+            flags += ['--with-tpm2']
+
+            if os.environ.get('BOTAN_TPM2_ENABLED') == 'test':
+                # run the TPM2 tests
+                test_cmd += ["--tpm2-tcti-name=%s" % os.getenv('BOTAN_TPM2_TCTI_NAME'),
+                             "--tpm2-tcti-conf=%s" % os.getenv('BOTAN_TPM2_TCTI_CONF'),
+                             "--tpm2-persistent-rsa-handle=%s" % os.getenv('BOTAN_TPM2_PERSISTENT_RSA_KEY_HANDLE'),
+                             "--tpm2-persistent-ecc-handle=%s" % os.getenv('BOTAN_TPM2_PERSISTENT_ECC_KEY_HANDLE'),
+                             "--tpm2-persistent-auth-value=%s" % os.getenv('BOTAN_TPM2_PERSISTENT_KEY_AUTH_VALUE')]
+            elif os.environ.get('BOTAN_TPM2_ENABLED') == 'build':
+                # build the TPM2 module but don't run the tests
+                # TCTI name 'disabled' is a special value that disables the TPM2 tests
+                #
+                # TODO: This is a hack. It would be great if `./botan-test --skip-tests=`
+                #       would also work for test categories like `tpm2`. Currently it
+                #       only works for individual test names.
+                test_cmd += ["--tpm2-tcti-name=disabled"]
+
+        if is_running_in_github_actions():
+            if 'BOTAN_BUILD_WITH_JITTERENTROPY' in os.environ:
+                flags += ['--enable-modules=jitter_rng']
+            if 'BOTAN_BUILD_WITH_ESDM' in os.environ:
+                flags += ['--with-esdm_rng']
+
         if target in ['coverage']:
             flags += ['--with-tpm']
             test_cmd += ['--run-online-tests']
@@ -470,10 +495,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
             # slower tests to take as long as 5 minutes
             test_cmd.remove('--run-long-tests')
 
-    flags += ['--cc-bin=%s' % (cc_bin)]
-
-    if not pretest_cmd:
-        pretest_cmd = None
+    if os.getenv('CXX') is None:
+        flags += ['--cc-bin=%s' % (cc_bin)]
 
     if test_cmd is None:
         run_test_command = None
@@ -494,7 +517,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         else:
             run_test_command = test_prefix + test_cmd
 
-    return flags, pretest_cmd, run_test_command, make_prefix
+    return flags, run_test_command, make_prefix
 
 def run_cmd(cmd, root_dir, build_dir):
     """
@@ -502,8 +525,6 @@ def run_cmd(cmd, root_dir, build_dir):
     """
 
     with LoggingGroup(' '.join(cmd)):
-        start = time.time()
-
         cmd = [os.path.expandvars(elem) for elem in cmd]
         sub_env = os.environ.copy()
         sub_env['LD_LIBRARY_PATH'] = os.path.abspath(build_dir)
@@ -528,11 +549,6 @@ def run_cmd(cmd, root_dir, build_dir):
 
         proc = subprocess.Popen(cmd, cwd=cwd, close_fds=True, env=sub_env, stdout=redirect_stdout_fd)
         proc.communicate()
-
-        time_taken = int(time.time() - start)
-
-        if time_taken > 10:
-            print("Ran for %d seconds" % (time_taken))
 
         if proc.returncode != 0:
             print("Command '%s' failed with error code %d" % (' '.join(cmd), proc.returncode))
@@ -585,6 +601,8 @@ def parse_args(args):
 
     parser.add_option('--extra-cxxflags', metavar='FLAGS', default=[], action='append',
                       help='Specify extra build flags')
+    parser.add_option('--custom-optimization-flags', metavar='FLAGS', default=[], action='append',
+                      help='Specify custom optimization flags (disables all default optimizations)')
 
     parser.add_option('--disabled-tests', metavar='DISABLED_TESTS', default=[], action='append',
                       help='Comma separated list of tests that should not be run')
@@ -665,6 +683,9 @@ def main(args=None):
     if options.cc_bin is None:
         if options.cc == 'gcc':
             options.cc_bin = 'g++'
+        elif options.cc == 'gcc-14':
+            options.cc = 'gcc' # Hack: 'gcc-14' is not a valid compiler identifier for ``./configure.py --cc``
+            options.cc_bin = 'g++-14'
         elif options.cc == 'clang':
             options.cc_bin = 'clang++'
         elif options.cc == 'xcode':
@@ -724,12 +745,14 @@ def main(args=None):
             'src/scripts/dist.py',
             'src/scripts/cleanup.py',
             'src/scripts/check.py',
+            'src/scripts/compare_perf.py',
             'src/scripts/build_docs.py',
             'src/scripts/website.py',
             'src/scripts/bench.py',
             'src/scripts/test_python.py',
             'src/scripts/test_fuzzers.py',
             'src/scripts/test_cli.py',
+            'src/scripts/repo_config.py',
             'src/scripts/python_unittests.py',
             'src/scripts/python_unittests_unix.py',
             'src/scripts/dev_tools/run_clang_format.py',
@@ -754,11 +777,11 @@ def main(args=None):
         if options.test_results_dir:
             os.makedirs(options.test_results_dir)
 
-        config_flags, pretest_cmd, run_test_command, make_prefix = determine_flags(
+        config_flags, run_test_command, make_prefix = determine_flags(
             target, options.os, options.cpu, options.cc, options.cc_bin,
             options.compiler_cache, root_dir, build_dir, options.test_results_dir,
             options.pkcs11_lib, options.use_gdb, options.disable_werror,
-            options.extra_cxxflags, options.disabled_tests)
+            options.extra_cxxflags, options.custom_optimization_flags, options.disabled_tests)
 
         make_tool, make_opts = validate_make_tool(options.make_tool, options.build_jobs)
 
@@ -783,10 +806,10 @@ def main(args=None):
             if target in ['coverage', 'fuzzers']:
                 make_targets += ['fuzzer_corpus_zip', 'fuzzers']
 
-            if target in ['examples']:
+            if target in ['examples', 'amalgamation']:
                 make_targets += ['examples']
 
-            if target in ['valgrind', 'valgrind-full']:
+            if target in ['valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full']:
                 make_targets += ['ct_selftest']
 
             if target in ['coverage', 'sanitizer'] and options.os not in ['windows']:
@@ -794,14 +817,65 @@ def main(args=None):
 
             cmds.append(make_prefix + make_cmd + make_targets)
 
+            if target in ['examples'] and options.cc in ['clang', 'gcc']:
+                cmds.append([options.cc, '-Wall', '-Wextra', '-std=c89',
+                             '-I%s' % (os.path.join(build_dir, 'build/include/public')),
+                             os.path.join(root_dir, 'src/examples/ffi.c'),
+                             '-L%s' % (build_dir), '-lbotan-3', '-o',
+                             os.path.join(build_dir, 'build/examples/ffi')])
+
             if options.compiler_cache is not None:
                 cmds.append([options.compiler_cache, '--show-stats'])
 
-        if pretest_cmd is not None:
-            cmds.append(pretest_cmd)
-
         if run_test_command is not None:
             cmds.append(run_test_command)
+
+        if target in ['valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full']:
+
+            build_config = os.path.join(build_dir, 'build', 'build_config.json')
+            cmds.append([os.path.join(root_dir, 'src', 'ct_selftest', 'ct_selftest.py'),
+                         "--build-config-path=%s" % build_config,
+                         os.path.join(build_dir, 'botan_ct_selftest')])
+
+            valgrind_script_options = ['--test-binary=%s' % (os.path.join(build_dir, 'botan-test')),
+                                       '--verbose',
+                                       '--bunch',
+                                       '--track-origins']
+
+            # For finding memory bugs, we're enabling more features that add runtime
+            # overhead which we don't need for the secret-dependent execution checks
+            # that 'valgrind-ct' and 'valgrind-ct-full' are aiming for.
+            if target not in ['valgrind-ct', 'valgrind-ct-full']:
+                valgrind_script_options.append('--with-leak-check')
+
+            if target not in ['valgrind-full', 'valgrind-ct-full']:
+                # valgrind is slow, so some tests only run in the nightly check
+                slow_tests = [
+                    'argon2', 'bcrypt', 'bcrypt_pbkdf', 'compression_tests', 'cryptobox',
+                    'dh_invalid', 'dh_kat', 'dh_keygen', 'dl_group_gen', 'dlies',
+                    'dsa_kat_verify', 'dsa_param', 'ecc_basemul', 'ecdsa_verify_wycheproof',
+                    'ed25519_sign', 'elgamal_decrypt', 'elgamal_encrypt', 'elgamal_keygen',
+                    'ffi_dh', 'ffi_dsa', 'ffi_elgamal', 'frodo_kat_tests', 'hash_nist_mc',
+                    'hss_lms_keygen', 'hss_lms_sign', 'mce_keygen', 'passhash9', 'pbkdf',
+                    'pcurves_arith', 'pwdhash', 'rsa_encrypt', 'rsa_pss', 'rsa_pss_raw', 'scrypt',
+                    'sphincsplus', 'sphincsplus_fors', 'slh_dsa_keygen', 'slh_dsa', 'srp6_kat',
+                    'srp6_rt', 'unit_tls', 'x509_path_bsi', 'x509_path_rsa_pss',
+                    'xmss_keygen', 'xmss_keygen_reference', 'xmss_sign', 'xmss_unit_tests',
+                    'xmss_verify', 'xmss_verify_invalid',
+                ]
+                slow_tests += [f"dilithium_kat_{mode}_{rand}" for mode in ('6x5', '8x7', '6x5_AES', '8x7_AES') for rand in ('Deterministic', 'Randomized')]
+                slow_tests += [f"ml_dsa_kat_{mode}_{rand}" for mode in ('6x5', '8x7') for rand in ('Deterministic', 'Randomized')]
+
+                valgrind_script_options.append('--skip-tests=%s' % (','.join(slow_tests)))
+            elif target == 'valgrind-ct-full' and options.cc == 'clang' and '-Os' in options.custom_optimization_flags:
+                # Clang 18 (only) with -Os seems to have a problem with std::optional which flags certain
+                # uses as touching an unitialized stack variable. This affects the x509_rpki tests
+                # TODO(26.04) We can remove this once we have a new version of Clang to use
+                valgrind_script_options.append('--skip-tests=x509_rpki')
+
+            cmds.append(['indir:%s' % (root_dir),
+                         'src/scripts/run_tests_under_valgrind.py'] +
+                        valgrind_script_options)
 
         if target in ['coverage', 'sanitizer'] and options.os != 'windows':
             if not options.boringssl_dir:
@@ -846,6 +920,10 @@ def main(args=None):
         if root_dir != '.':
             python_tests.append('--test-data-dir=%s' % root_dir)
 
+        if is_running_in_github_actions() and os.environ.get('BOTAN_TPM2_ENABLED', 'no') == 'test':
+            python_tests.extend(["--tpm2-tcti-name=%s" % os.getenv('BOTAN_TPM2_TCTI_NAME'),
+                                 "--tpm2-tcti-conf=%s" % os.getenv('BOTAN_TPM2_TCTI_CONF')])
+
         if target in ['shared', 'coverage'] and not (options.os == 'windows' and options.cpu == 'x86'):
             cmds.append([py_interp, '-b'] + python_tests)
 
@@ -854,6 +932,7 @@ def main(args=None):
             build_config = os.path.join(build_dir, 'build', 'build_config.json')
             cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/ci_check_install.py'), build_config])
             cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/ci_check_headers.py'), build_config])
+            cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/ci_report_sizes.py'), build_config])
 
         if target in ['coverage']:
             if have_prog('coverage'):
@@ -872,7 +951,7 @@ def main(args=None):
 
             if have_prog('coveralls'):
                 # If coveralls command exists, assume we are in CI and report to coveralls.io
-                cmds.append(['coveralls', '--format=lcov', '--file=%s' % (cov_file)])
+                cmds.append(['coveralls', '--no-fail', '--format=lcov', '--file=%s' % (cov_file)])
             else:
                 # Otherwise generate a local HTML report
                 cmds.append(['genhtml', cov_file, '--output-directory', os.path.join(build_dir, 'lcov-out')])
@@ -880,11 +959,22 @@ def main(args=None):
         cmds.append(make_cmd + ['clean'])
         cmds.append(make_cmd + ['distclean'])
 
+    esdm_process = None
+    # start ESDM in background, if on Linux
+    if is_running_in_github_actions() and 'BOTAN_BUILD_WITH_ESDM' in os.environ:
+        print('Starting esdm-server for this target')
+        esdm_process = subprocess.Popen('sudo /usr/bin/esdm-server -f', shell=True)
+        assert esdm_process.poll() is None, f"esdm-server did not start for target {target}"
+
     for cmd in cmds:
         if options.dry_run:
             print('$ ' + ' '.join(cmd))
         else:
             run_cmd(cmd, root_dir, build_dir)
+
+    if esdm_process:
+        print('Stopping esdm-server')
+        esdm_process.kill()
 
     return 0
 

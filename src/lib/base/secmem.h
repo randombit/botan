@@ -11,9 +11,13 @@
 #include <botan/allocator.h>
 #include <botan/types.h>  // IWYU pragma: export
 #include <algorithm>
-#include <deque>
 #include <type_traits>
 #include <vector>  // IWYU pragma: export
+
+#if !defined(BOTAN_IS_BEING_BUILT) && !defined(BOTAN_DISABLE_DEPRECATED_FEATURES)
+   // TODO(Botan4) remove this
+   #include <deque>
+#endif
 
 namespace Botan {
 
@@ -26,7 +30,7 @@ template <typename T>
   * MSVC in debug mode uses non-integral proxy types in container types
   * like std::vector, thus we disable the check there.
  */
-   requires std::is_integral<T>::value
+   requires std::is_integral<T>::value || std::is_enum<T>::value
 #endif
 class secure_allocator {
 
@@ -59,8 +63,11 @@ inline bool operator!=(const secure_allocator<T>&, const secure_allocator<U>&) {
 
 template <typename T>
 using secure_vector = std::vector<T, secure_allocator<T>>;
+
+#if !defined(BOTAN_IS_BEING_BUILT) && !defined(BOTAN_DISABLE_DEPRECATED_FEATURES)
 template <typename T>
 using secure_deque = std::deque<T, secure_allocator<T>>;
+#endif
 
 // For better compatibility with 1.10 API
 template <typename T>
