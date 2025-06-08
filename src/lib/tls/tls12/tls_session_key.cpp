@@ -20,9 +20,12 @@ namespace Botan::TLS {
 Session_Keys::Session_Keys(const Handshake_State* state,
                            const secure_vector<uint8_t>& pre_master_secret,
                            bool resuming) {
-   const size_t cipher_keylen = state->ciphersuite().cipher_keylen();
-   const size_t mac_keylen = state->ciphersuite().mac_keylen();
-   const size_t cipher_nonce_bytes = state->ciphersuite().nonce_bytes_from_handshake();
+   const auto& suite = state->ciphersuite();
+   BOTAN_STATE_CHECK(suite.valid());
+
+   const size_t cipher_keylen = suite.cipher_keylen();
+   const size_t mac_keylen = suite.mac_keylen();
+   const size_t cipher_nonce_bytes = suite.nonce_bytes_from_handshake();
 
    const bool extended_master_secret = state->server_hello()->supports_extended_master_secret();
 
@@ -45,7 +48,7 @@ Session_Keys::Session_Keys(const Handshake_State* state,
       std::vector<uint8_t> label;
       if(extended_master_secret) {
          label.assign(EXT_MASTER_SECRET_MAGIC, EXT_MASTER_SECRET_MAGIC + sizeof(EXT_MASTER_SECRET_MAGIC));
-         salt += state->hash().final(state->ciphersuite().prf_algo());
+         salt += state->hash().final(suite.prf_algo());
       } else {
          label.assign(MASTER_SECRET_MAGIC, MASTER_SECRET_MAGIC + sizeof(MASTER_SECRET_MAGIC));
          salt += state->client_hello()->random();
@@ -72,26 +75,24 @@ Session_Keys::Session_Keys(const Handshake_State* state,
    copy_mem(&m_c_aead[0], key_data, mac_keylen);
    copy_mem(&m_s_aead[0], key_data + mac_keylen, mac_keylen);
 
-#if defined(BOTAN_HAS_TLS_NULL)
+   // Key is not used for NULL suites
    if(cipher_keylen > 0) {
-#endif
       copy_mem(&m_c_aead[mac_keylen], key_data + 2 * mac_keylen, cipher_keylen);
       copy_mem(&m_s_aead[mac_keylen], key_data + 2 * mac_keylen + cipher_keylen, cipher_keylen);
-#if defined(BOTAN_HAS_TLS_NULL)
+   } else {
+      BOTAN_STATE_CHECK(suite.null_ciphersuite());
    }
-#endif
 
-   m_c_nonce.resize(cipher_nonce_bytes);
-   m_s_nonce.resize(cipher_nonce_bytes);
-
-#if defined(BOTAN_HAS_TLS_NULL)
+   // Nonce is not used for NULL suites
    if(cipher_nonce_bytes > 0) {
-#endif
-      copy_mem(&m_c_nonce[0], key_data + 2 * (mac_keylen + cipher_keylen), cipher_nonce_bytes);
-      copy_mem(&m_s_nonce[0], key_data + 2 * (mac_keylen + cipher_keylen) + cipher_nonce_bytes, cipher_nonce_bytes);
-#if defined(BOTAN_HAS_TLS_NULL)
+      const uint8_t* c_nonce_bytes = key_data + 2 * (mac_keylen + cipher_keylen);
+      m_c_nonce.assign(c_nonce_bytes, c_nonce_bytes + cipher_nonce_bytes);
+
+      const uint8_t* s_nonce_bytes = key_data + 2 * (mac_keylen + cipher_keylen) + cipher_nonce_bytes;
+      m_s_nonce.assign(s_nonce_bytes, s_nonce_bytes + cipher_nonce_bytes);
+   } else {
+      BOTAN_STATE_CHECK(suite.null_ciphersuite());
    }
-#endif
 }
 
 }  // namespace Botan::TLS
