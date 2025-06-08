@@ -192,8 +192,8 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
             DER_Sequence(ASN1_Type, ASN1_Class);
 
             DER_Sequence(DER_Sequence&& seq) noexcept :
-                  m_type_tag(std::move(seq.m_type_tag)),
-                  m_class_tag(std::move(seq.m_class_tag)),
+                  m_type_tag(seq.m_type_tag),
+                  m_class_tag(seq.m_class_tag),
                   m_contents(std::move(seq.m_contents)),
                   m_set_contents(std::move(seq.m_set_contents)) {}
 
@@ -206,8 +206,8 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
             }
 
             DER_Sequence(const DER_Sequence& seq) = default;
-
             DER_Sequence& operator=(const DER_Sequence& seq) = default;
+            ~DER_Sequence() = default;
 
          private:
             ASN1_Type m_type_tag;

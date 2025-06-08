@@ -28,9 +28,9 @@ enum class DL_Group_Source {
 * The DL group encoding format variants.
 */
 enum class DL_Group_Format {
-   ANSI_X9_42,
-   ANSI_X9_57,
-   PKCS_3,
+   ANSI_X9_42 = 0,
+   ANSI_X9_57 = 1,
+   PKCS_3 = 2,
 
    DSA_PARAMETERS = ANSI_X9_57,
    DH_PARAMETERS = ANSI_X9_42,

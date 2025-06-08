@@ -359,9 +359,9 @@ class scoped_cleanup final {
       scoped_cleanup(const scoped_cleanup&) = delete;
       scoped_cleanup& operator=(const scoped_cleanup&) = delete;
 
-      scoped_cleanup(scoped_cleanup&& other) : m_cleanup(std::move(other.m_cleanup)) { other.disengage(); }
+      scoped_cleanup(scoped_cleanup&& other) noexcept : m_cleanup(std::move(other.m_cleanup)) { other.disengage(); }
 
-      scoped_cleanup& operator=(scoped_cleanup&& other) {
+      scoped_cleanup& operator=(scoped_cleanup&& other) noexcept {
          if(this != &other) {
             m_cleanup = std::move(other.m_cleanup);
             other.disengage();
@@ -378,7 +378,7 @@ class scoped_cleanup final {
       /**
        * Disengage the cleanup callback, i.e., prevent it from being called
        */
-      void disengage() { m_cleanup.reset(); }
+      void disengage() noexcept { m_cleanup.reset(); }
 
    private:
       std::optional<FunT> m_cleanup;
@@ -406,6 +406,7 @@ class StringLiteral final {
    public:
       constexpr StringLiteral(const char (&str)[N]) { std::copy_n(str, N, value); }
 
+      // NOLINTNEXTLINE(*non-private-member-variables-in-classes)
       char value[N];
 };
 

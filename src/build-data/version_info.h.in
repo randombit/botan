@@ -1,6 +1,8 @@
 #ifndef BOTAN_VERSION_INFO_H_
 #define BOTAN_VERSION_INFO_H_
 
+/* NOLINTBEGIN(*-macro-usage) */
+
 #define BOTAN_FULL_VERSION_STRING "%{full_version_string}"
 
 #define BOTAN_SHORT_VERSION_STRING "%{short_version_string}"
@@ -12,5 +14,7 @@
 %{if distribution_info}
 #define BOTAN_DISTRIBUTION_INFO_STRING "%{distribution_info}"
 %{endif}
+
+/* NOLINTEND(*-macro-usage) */
 
 #endif

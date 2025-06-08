@@ -25,7 +25,7 @@ class DER_Encoder;
 /**
 * ASN.1 Class Tags
 */
-enum class ASN1_Class : uint32_t {
+enum class ASN1_Class : uint32_t /* NOLINT(performance-enum-size) */ {
    Universal = 0b0000'0000,
    Application = 0b0100'0000,
    ContextSpecific = 0b1000'0000,
@@ -40,7 +40,7 @@ enum class ASN1_Class : uint32_t {
 /**
 * ASN.1 Type Tags
 */
-enum class ASN1_Type : uint32_t {
+enum class ASN1_Type : uint32_t /* NOLINT(performance-enum-size) */ {
    Eoc = 0x00,
    Boolean = 0x01,
    Integer = 0x02,
@@ -117,6 +117,8 @@ class BOTAN_PUBLIC_API(2, 0) ASN1_Object {
       ASN1_Object() = default;
       ASN1_Object(const ASN1_Object&) = default;
       ASN1_Object& operator=(const ASN1_Object&) = default;
+      ASN1_Object(ASN1_Object&&) = default;
+      ASN1_Object& operator=(ASN1_Object&&) = default;
       virtual ~ASN1_Object() = default;
 };
 
@@ -128,12 +130,10 @@ class BOTAN_PUBLIC_API(2, 0) BER_Object final {
       BER_Object() : m_type_tag(ASN1_Type::NoObject), m_class_tag(ASN1_Class::Universal) {}
 
       BER_Object(const BER_Object& other) = default;
-
-      BER_Object& operator=(const BER_Object& other) = default;
-
       BER_Object(BER_Object&& other) = default;
-
+      BER_Object& operator=(const BER_Object& other) = default;
       BER_Object& operator=(BER_Object&& other) = default;
+      ~BER_Object() = default;
 
       bool is_set() const { return m_type_tag != ASN1_Type::NoObject; }
 
@@ -460,7 +460,7 @@ class BOTAN_PUBLIC_API(2, 0) ASN1_String final : public ASN1_Object {
 */
 class BOTAN_PUBLIC_API(2, 0) AlgorithmIdentifier final : public ASN1_Object {
    public:
-      enum Encoding_Option { USE_NULL_PARAM, USE_EMPTY_PARAM };
+      enum Encoding_Option : uint8_t { USE_NULL_PARAM, USE_EMPTY_PARAM };
 
       void encode_into(DER_Encoder&) const override;
       void decode_from(BER_Decoder&) override;

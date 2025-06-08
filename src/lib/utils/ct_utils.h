@@ -356,6 +356,7 @@ class Choice final {
       constexpr Choice(Choice&& other) = default;
       constexpr Choice& operator=(const Choice& other) noexcept = default;
       constexpr Choice& operator=(Choice&& other) noexcept = default;
+      constexpr ~Choice() = default;
 
    private:
       constexpr explicit Choice(uint32_t v) : m_value(v) {}
@@ -379,11 +380,14 @@ concept ct_conditional_assignable = requires(T lhs, const T& rhs, Choice c) { lh
 template <typename T>
 class Mask final {
    public:
-      static_assert(std::is_unsigned<T>::value && !std::is_same<bool, T>::value,
+      static_assert(std::is_unsigned_v<T> && !std::is_same_v<bool, T>,
                     "Only unsigned integer types are supported by CT::Mask");
 
       Mask(const Mask<T>& other) = default;
+      Mask(Mask<T>&& other) = default;
       Mask<T>& operator=(const Mask<T>& other) = default;
+      Mask<T>& operator=(Mask<T>&& other) = default;
+      ~Mask() = default;
 
       /**
       * Derive a Mask from a Mask of a larger type

@@ -27,7 +27,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       /**
        * Base enumerator for encoding and decoding
        */
-      enum Base {
+      enum Base : uint16_t {
          Decimal BOTAN_DEPRECATED("All functions using this enum are deprecated") = 10,
          Hexadecimal BOTAN_DEPRECATED("All functions using this enum are deprecated") = 16,
          Binary BOTAN_DEPRECATED("All functions using this enum are deprecated") = 256
@@ -36,7 +36,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       /**
        * Sign symbol definitions for positive and negative numbers
        */
-      enum Sign { Negative = 0, Positive = 1 };
+      enum Sign : uint8_t { Negative = 0, Positive = 1 };
 
       /**
        * Create empty (zero) BigInt
@@ -164,14 +164,14 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       /**
        * Move constructor
        */
-      BigInt(BigInt&& other) { this->swap(other); }
+      BigInt(BigInt&& other) noexcept { this->swap(other); }
 
       ~BigInt() { _const_time_unpoison(); }
 
       /**
        * Move assignment
        */
-      BigInt& operator=(BigInt&& other) {
+      BigInt& operator=(BigInt&& other) noexcept {
          if(this != &other) {
             this->swap(other);
          }
@@ -188,12 +188,12 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * Swap this value with another
        * @param other BigInt to swap values with
        */
-      void swap(BigInt& other) {
+      void swap(BigInt& other) noexcept {
          m_data.swap(other.m_data);
          std::swap(m_signedness, other.m_signedness);
       }
 
-      friend void swap(BigInt& x, BigInt& y) { x.swap(y); }
+      friend void swap(BigInt& x, BigInt& y) noexcept { x.swap(y); }
 
       BOTAN_DEPRECATED("Deprecated no replacement") void swap_reg(secure_vector<word>& reg) {
          m_data.swap(reg);
@@ -952,7 +952,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @warning this is an implementation detail which is not for
        * public use and not covered by SemVer.
        */
-      static BigInt _from_words(secure_vector<word>&& words) {
+      static BigInt _from_words(secure_vector<word>& words) {
          BigInt bn;
          bn.m_data.swap(words);
          return bn;
@@ -1045,17 +1045,17 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
 
             void resize(size_t s) { m_reg.resize(s); }
 
-            void swap(Data& other) {
+            void swap(Data& other) noexcept {
                m_reg.swap(other.m_reg);
                std::swap(m_sig_words, other.m_sig_words);
             }
 
-            void swap(secure_vector<word>& reg) {
+            void swap(secure_vector<word>& reg) noexcept {
                m_reg.swap(reg);
                invalidate_sig_words();
             }
 
-            void invalidate_sig_words() const { m_sig_words = sig_words_npos; }
+            void invalidate_sig_words() const noexcept { m_sig_words = sig_words_npos; }
 
             size_t sig_words() const {
                if(m_sig_words == sig_words_npos) {

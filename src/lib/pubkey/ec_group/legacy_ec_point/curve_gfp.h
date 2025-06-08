@@ -62,7 +62,7 @@ class BOTAN_UNSTABLE_API CurveGFp final {
 
       CurveGFp& operator=(const CurveGFp&) = default;
 
-      void swap(CurveGFp& other) { std::swap(m_group, other.m_group); }
+      void swap(CurveGFp& other) noexcept { std::swap(m_group, other.m_group); }
 
       bool operator==(const CurveGFp& other) const { return (m_group == other.m_group); }
 

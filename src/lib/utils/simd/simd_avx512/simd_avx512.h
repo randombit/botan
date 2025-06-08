@@ -22,6 +22,8 @@ class SIMD_16x32 final {
       SIMD_16x32& operator=(SIMD_16x32&& other) = default;
       SIMD_16x32(SIMD_16x32&& other) = default;
 
+      ~SIMD_16x32() = default;
+
       BOTAN_FN_ISA_AVX512
       BOTAN_FORCE_INLINE SIMD_16x32() { m_avx512 = _mm512_setzero_si512(); }
 

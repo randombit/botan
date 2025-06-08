@@ -188,6 +188,12 @@ class BOTAN_PUBLIC_API(2, 0) BlockCipher : public SymmetricAlgorithm {
       BlockCipher* clone() const { return this->new_object().release(); }
 
       ~BlockCipher() override = default;
+
+      BlockCipher() = default;
+      BlockCipher(const BlockCipher& other) = default;
+      BlockCipher(BlockCipher&& other) = default;
+      BlockCipher& operator=(const BlockCipher& other) = default;
+      BlockCipher& operator=(BlockCipher&& other) = default;
 };
 
 /**
@@ -211,7 +217,7 @@ class BOTAN_PUBLIC_API(2, 8) Tweakable_Block_Cipher : public BlockCipher {
 template <size_t BS, size_t KMIN, size_t KMAX = 0, size_t KMOD = 1, typename BaseClass = BlockCipher>
 class Block_Cipher_Fixed_Params : public BaseClass {
    public:
-      enum { BLOCK_SIZE = BS };
+      enum { BLOCK_SIZE = BS }; /* NOLINT(*-enum-size) */
 
       size_t block_size() const final { return BS; }
 

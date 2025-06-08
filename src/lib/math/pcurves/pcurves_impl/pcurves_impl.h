@@ -40,8 +40,6 @@ inversions. See pcurves_secp256r1.cpp or pcurves_secp256k1.cpp for examples with
 the bells and whistles.
 */
 
-namespace {
-
 /**
 * Montomgomery Representation of Integers
 *
@@ -1689,7 +1687,7 @@ inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::
 */
 template <typename C, bool RO, std::invocable<std::span<uint8_t>> ExpandMsg>
    requires C::ValidForSswuHash
-inline auto hash_to_curve_sswu(ExpandMsg expand_message)
+inline auto hash_to_curve_sswu(const ExpandMsg& expand_message)
    -> std::conditional_t<RO, typename C::ProjectivePoint, typename C::AffinePoint> {
    constexpr size_t SecurityLevel = (C::OrderBits + 1) / 2;
    constexpr size_t L = (C::PrimeFieldBits + SecurityLevel + 7) / 8;
@@ -1710,8 +1708,6 @@ inline auto hash_to_curve_sswu(ExpandMsg expand_message)
       return map_to_curve_sswu<C>(u);
    }
 }
-
-}  // namespace
 
 }  // namespace Botan
 
