@@ -22,38 +22,38 @@ class MessageAuthenticationCode;
 /**
 * Base class for SIV encryption and decryption (@see RFC 5297)
 */
-class BOTAN_TEST_API SIV_Mode : public AEAD_Mode {
+class BOTAN_TEST_API SIV_Mode : public AEAD_Mode /* NOLINT(*-special-member-functions) */ {
    public:
       /**
       * Sets the nth element of the vector of associated data
       * @param n index into the AD vector
       * @param ad associated data
       */
-      void set_associated_data_n(size_t n, std::span<const uint8_t> ad) override final;
+      void set_associated_data_n(size_t n, std::span<const uint8_t> ad) final;
 
-      size_t maximum_associated_data_inputs() const override final;
+      size_t maximum_associated_data_inputs() const final;
 
-      std::string name() const override final;
+      std::string name() const final;
 
-      size_t update_granularity() const override final;
+      size_t update_granularity() const final;
 
-      size_t ideal_granularity() const override final;
+      size_t ideal_granularity() const final;
 
-      Key_Length_Specification key_spec() const override final;
+      Key_Length_Specification key_spec() const final;
 
-      bool valid_nonce_length(size_t) const override final;
+      bool valid_nonce_length(size_t) const final;
 
-      bool requires_entire_message() const override final;
+      bool requires_entire_message() const final;
 
-      void clear() override final;
+      void clear() final;
 
-      void reset() override final;
+      void reset() final;
 
-      size_t tag_size() const override final { return 16; }
+      size_t tag_size() const final { return 16; }
 
-      bool has_keying_material() const override final;
+      bool has_keying_material() const final;
 
-      ~SIV_Mode();
+      ~SIV_Mode() override;
 
    protected:
       explicit SIV_Mode(std::unique_ptr<BlockCipher> cipher);
@@ -69,10 +69,10 @@ class BOTAN_TEST_API SIV_Mode : public AEAD_Mode {
       secure_vector<uint8_t> S2V(const uint8_t text[], size_t text_len);
 
    private:
-      void start_msg(const uint8_t nonce[], size_t nonce_len) override final;
-      size_t process_msg(uint8_t buf[], size_t size) override final;
+      void start_msg(const uint8_t nonce[], size_t nonce_len) final;
+      size_t process_msg(uint8_t buf[], size_t size) final;
 
-      void key_schedule(std::span<const uint8_t> key) override final;
+      void key_schedule(std::span<const uint8_t> key) final;
 
       const std::string m_name;
       const size_t m_bs;

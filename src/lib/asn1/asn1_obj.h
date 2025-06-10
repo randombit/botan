@@ -68,7 +68,7 @@ enum class ASN1_Type : uint32_t /* NOLINT(performance-enum-size) */ {
 };
 
 inline bool intersects(ASN1_Class x, ASN1_Class y) {
-   return static_cast<uint32_t>(x) & static_cast<uint32_t>(y);
+   return (static_cast<uint32_t>(x) & static_cast<uint32_t>(y)) != 0;
 }
 
 inline ASN1_Type operator|(ASN1_Type x, ASN1_Type y) {

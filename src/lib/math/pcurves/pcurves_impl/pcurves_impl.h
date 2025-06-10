@@ -161,6 +161,7 @@ class IntMod final {
       IntMod(Self&& other) = default;
       IntMod& operator=(const Self& other) = default;
       IntMod& operator=(Self&& other) = default;
+      ~IntMod() = default;
 
       /**
       * Return integer zero
@@ -853,6 +854,7 @@ class AffineCurvePoint final {
       AffineCurvePoint(Self&& other) = default;
       AffineCurvePoint& operator=(const Self& other) = default;
       AffineCurvePoint& operator=(Self&& other) = default;
+      ~AffineCurvePoint() = default;
 
       constexpr Self negate() const { return Self(x(), y().negate()); }
 
@@ -1011,6 +1013,7 @@ class ProjectiveCurvePoint {
       ProjectiveCurvePoint(Self&& other) = default;
       ProjectiveCurvePoint& operator=(const Self& other) = default;
       ProjectiveCurvePoint& operator=(Self&& other) = default;
+      ~ProjectiveCurvePoint() = default;
 
       friend constexpr Self operator+(const Self& a, const Self& b) { return Self::add(a, b); }
 
@@ -1332,6 +1335,11 @@ class BlindedScalarBits final {
          secure_scrub_memory(m_bytes.data(), m_bytes.size());
          CT::unpoison(m_bytes.data(), m_bytes.size());
       }
+
+      BlindedScalarBits(const BlindedScalarBits& other) = delete;
+      BlindedScalarBits(BlindedScalarBits&& other) = delete;
+      BlindedScalarBits& operator=(const BlindedScalarBits& other) = delete;
+      BlindedScalarBits& operator=(BlindedScalarBits&& other) = delete;
 
    private:
       // TODO this could be a fixed size array

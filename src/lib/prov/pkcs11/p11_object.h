@@ -483,7 +483,10 @@ class BOTAN_PUBLIC_API(2, 0) Object {
       Object(Session& session, const ObjectProperties& obj_props);
 
       Object(const Object&) = default;
+      Object(Object&&) = default;
       Object& operator=(const Object&) = delete;
+      Object& operator=(Object&&) = delete;
+
       virtual ~Object() = default;
 
       /// Searches for all objects of the given type that match `search_template`

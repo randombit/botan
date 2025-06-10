@@ -406,7 +406,7 @@ class StringLiteral final {
    public:
       constexpr StringLiteral(const char (&str)[N]) { std::copy_n(str, N, value); }
 
-      // NOLINTNEXTLINE(*non-private-member-variables-in-classes)
+      // NOLINTNEXTLINE(*non-private-member-variable*)
       char value[N];
 };
 

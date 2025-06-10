@@ -19,7 +19,7 @@
 
 namespace Botan {
 
-class Kyber_Keypair_Codec {
+class Kyber_Keypair_Codec /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~Kyber_Keypair_Codec() = default;
       virtual secure_vector<uint8_t> encode_keypair(KyberInternalKeypair keypair) const = 0;
@@ -40,7 +40,7 @@ class Seed_Expanding_Keypair_Codec final : public Kyber_Keypair_Codec {
       secure_vector<uint8_t> encode_keypair(KyberInternalKeypair keypair) const override;
 };
 
-class Kyber_PublicKeyInternal {
+class Kyber_PublicKeyInternal final {
    public:
       Kyber_PublicKeyInternal(KyberConstants mode, KyberSerializedPublicKey public_key);
       Kyber_PublicKeyInternal(KyberConstants mode, KyberPolyVecNTT polynomials, KyberSeedRho seed);

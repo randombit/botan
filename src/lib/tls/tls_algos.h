@@ -253,7 +253,7 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
       Group_Params_Code m_code;
 };
 
-enum class Kex_Algo {
+enum class Kex_Algo : uint8_t {
    STATIC_RSA,
    DH,
    ECDH,

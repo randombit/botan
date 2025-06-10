@@ -111,13 +111,8 @@ namespace Botan {
 * Takes any number of arguments and marks all as unused, for instance
 * BOTAN_UNUSED(a); or BOTAN_UNUSED(x, y, z);
 */
-template <typename T>
-constexpr void ignore_param(T&&) {}
-
 template <typename... T>
-constexpr void ignore_params(T&&... args) {
-   (ignore_param(args), ...);
-}
+constexpr void ignore_params([[maybe_unused]] const T&... args) {}
 
 #define BOTAN_UNUSED Botan::ignore_params
 

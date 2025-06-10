@@ -54,7 +54,7 @@ class KyberConstants final {
 
       enum KyberDv : uint8_t { _4 = 4, _5 = 5 };
 
-      enum KyberStrength : uint32_t { _128 = 128, _192 = 192, _256 = 256 };
+      enum KyberStrength : uint16_t { _128 = 128, _192 = 192, _256 = 256 };
 
    public:
       KyberConstants(KyberMode mode);

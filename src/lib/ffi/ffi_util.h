@@ -39,6 +39,11 @@ struct botan_struct {
          m_obj.reset();
       }
 
+      botan_struct(const botan_struct& other) = delete;
+      botan_struct(botan_struct&& other) = delete;
+      botan_struct& operator=(const botan_struct& other) = delete;
+      botan_struct& operator=(botan_struct&& other) = delete;
+
       bool magic_ok() const { return (m_magic == MAGIC); }
 
       T* unsafe_get() const { return m_obj.get(); }

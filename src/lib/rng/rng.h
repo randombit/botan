@@ -55,6 +55,9 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       RandomNumberGenerator(const RandomNumberGenerator& rng) = delete;
       RandomNumberGenerator& operator=(const RandomNumberGenerator& rng) = delete;
 
+      RandomNumberGenerator(RandomNumberGenerator&& rng) = default;
+      RandomNumberGenerator& operator=(RandomNumberGenerator&& rng) = default;
+
       /**
       * Randomize a byte array.
       *

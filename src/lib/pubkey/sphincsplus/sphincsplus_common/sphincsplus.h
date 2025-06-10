@@ -36,6 +36,11 @@ class BOTAN_PUBLIC_API(3, 1) SphincsPlus_PublicKey : public virtual Public_Key {
 
       ~SphincsPlus_PublicKey() override;
 
+      SphincsPlus_PublicKey(const SphincsPlus_PublicKey& other) = default;
+      SphincsPlus_PublicKey(SphincsPlus_PublicKey&& other) = default;
+      SphincsPlus_PublicKey& operator=(const SphincsPlus_PublicKey& other) = default;
+      SphincsPlus_PublicKey& operator=(SphincsPlus_PublicKey&& other) = default;
+
       size_t key_length() const override;
 
       std::string algo_name() const override;
@@ -60,7 +65,7 @@ class BOTAN_PUBLIC_API(3, 1) SphincsPlus_PublicKey : public virtual Public_Key {
    protected:
       SphincsPlus_PublicKey() = default;
 
-      std::shared_ptr<SphincsPlus_PublicKeyInternal> m_public;
+      std::shared_ptr<SphincsPlus_PublicKeyInternal> m_public;  // NOLINT(*non-private-member-variable*)
 };
 
 BOTAN_DIAGNOSTIC_PUSH
@@ -97,6 +102,11 @@ class BOTAN_PUBLIC_API(3, 1) SphincsPlus_PrivateKey final : public virtual Sphin
       SphincsPlus_PrivateKey(RandomNumberGenerator& rng, Sphincs_Parameters params);
 
       ~SphincsPlus_PrivateKey() override;
+
+      SphincsPlus_PrivateKey(const SphincsPlus_PrivateKey& other) = default;
+      SphincsPlus_PrivateKey(SphincsPlus_PrivateKey&& other) = default;
+      SphincsPlus_PrivateKey& operator=(const SphincsPlus_PrivateKey& other) = delete;
+      SphincsPlus_PrivateKey& operator=(SphincsPlus_PrivateKey&& other) = delete;
 
       secure_vector<uint8_t> private_key_bits() const override;
       secure_vector<uint8_t> raw_private_key_bits() const override;

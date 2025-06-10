@@ -32,8 +32,12 @@ namespace Botan {
 * @return number of bytes written to output
 */
 template <class Base>
-size_t base_encode(
-   Base&& base, char output[], const uint8_t input[], size_t input_length, size_t& input_consumed, bool final_inputs) {
+size_t base_encode(const Base& base,
+                   char output[],
+                   const uint8_t input[],
+                   size_t input_length,
+                   size_t& input_consumed,
+                   bool final_inputs) {
    input_consumed = 0;
 
    // TODO(Botan4) Check if we can use just base. or Base:: here instead
@@ -77,7 +81,7 @@ size_t base_encode(
 }
 
 template <typename Base>
-std::string base_encode_to_string(Base&& base, const uint8_t input[], size_t input_length) {
+std::string base_encode_to_string(const Base& base, const uint8_t input[], size_t input_length) {
    const size_t output_length = base.encode_max_output(input_length);
    std::string output(output_length, 0);
 
@@ -111,7 +115,7 @@ std::string base_encode_to_string(Base&& base, const uint8_t input[], size_t inp
 * @return number of bytes written to output
 */
 template <typename Base>
-size_t base_decode(Base&& base,
+size_t base_decode(const Base& base,
                    uint8_t output[],
                    const char input[],
                    size_t input_length,
@@ -171,7 +175,7 @@ size_t base_decode(Base&& base,
 }
 
 template <typename Base>
-size_t base_decode_full(Base&& base, uint8_t output[], const char input[], size_t input_length, bool ignore_ws) {
+size_t base_decode_full(const Base& base, uint8_t output[], const char input[], size_t input_length, bool ignore_ws) {
    size_t consumed = 0;
    const size_t written = base_decode(base, output, input, input_length, consumed, true, ignore_ws);
 
@@ -183,7 +187,7 @@ size_t base_decode_full(Base&& base, uint8_t output[], const char input[], size_
 }
 
 template <typename Vector, typename Base>
-Vector base_decode_to_vec(Base&& base, const char input[], size_t input_length, bool ignore_ws) {
+Vector base_decode_to_vec(const Base& base, const char input[], size_t input_length, bool ignore_ws) {
    const size_t output_length = base.decode_max_output(input_length);
    Vector bin(output_length);
 

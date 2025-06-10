@@ -25,113 +25,113 @@ class BOTAN_PUBLIC_API(2, 0) X509_Cert_Options final {
       /**
       * the subject common name
       */
-      std::string common_name;
+      std::string common_name;  // NOLINT(*non-private-member-variable*)
 
       /**
       * the subject counry
       */
-      std::string country;
+      std::string country;  // NOLINT(*non-private-member-variable*)
 
       /**
       * the subject organization
       */
-      std::string organization;
+      std::string organization;  // NOLINT(*non-private-member-variable*)
 
       /**
       * the subject organizational unit
       */
-      std::string org_unit;
+      std::string org_unit;  // NOLINT(*non-private-member-variable*)
 
       /**
        * additional subject organizational units.
        */
-      std::vector<std::string> more_org_units;
+      std::vector<std::string> more_org_units;  // NOLINT(*non-private-member-variable*)
 
       /**
       * the subject locality
       */
-      std::string locality;
+      std::string locality;  // NOLINT(*non-private-member-variable*)
 
       /**
       * the subject state
       */
-      std::string state;
+      std::string state;  // NOLINT(*non-private-member-variable*)
 
       /**
       * the subject serial number
       */
-      std::string serial_number;
+      std::string serial_number;  // NOLINT(*non-private-member-variable*)
 
       /**
       * the subject email adress
       */
-      std::string email;
+      std::string email;  // NOLINT(*non-private-member-variable*)
 
       /**
       * the subject URI
       */
-      std::string uri;
+      std::string uri;  // NOLINT(*non-private-member-variable*)
 
       /**
       * the subject IPv4 address
       */
-      std::string ip;
+      std::string ip;  // NOLINT(*non-private-member-variable*)
 
       /**
       * the subject DNS
       */
-      std::string dns;
+      std::string dns;  // NOLINT(*non-private-member-variable*)
 
       /**
        * additional subject DNS entries.
        */
-      std::vector<std::string> more_dns;
+      std::vector<std::string> more_dns;  // NOLINT(*non-private-member-variable*)
 
       /**
       * the subject XMPP
       */
-      std::string xmpp;
+      std::string xmpp;  // NOLINT(*non-private-member-variable*)
 
       /**
       * the subject challenge password
       */
-      std::string challenge;
+      std::string challenge;  // NOLINT(*non-private-member-variable*)
 
       /**
       * the subject notBefore
       */
-      X509_Time start;
+      X509_Time start;  // NOLINT(*non-private-member-variable*)
       /**
       * the subject notAfter
       */
-      X509_Time end;
+      X509_Time end;  // NOLINT(*non-private-member-variable*)
 
       /**
       * Indicates whether the certificate request
       */
-      bool is_CA;
+      bool is_CA;  // NOLINT(*non-private-member-variable*)
 
       /**
       * Indicates the BasicConstraints path limit
       */
-      size_t path_limit;
+      size_t path_limit;  // NOLINT(*non-private-member-variable*)
 
-      std::string padding_scheme;
+      std::string padding_scheme;  // NOLINT(*non-private-member-variable*)
 
       /**
       * The key constraints for the subject public key
       */
-      Key_Constraints constraints;
+      Key_Constraints constraints;  // NOLINT(*non-private-member-variable*)
 
       /**
       * The key extended constraints for the subject public key
       */
-      std::vector<OID> ex_constraints;
+      std::vector<OID> ex_constraints;  // NOLINT(*non-private-member-variable*)
 
       /**
       * Additional X.509 extensions
       */
-      Extensions extensions;
+      Extensions extensions;  // NOLINT(*non-private-member-variable*)
 
       /**
       * Mark the certificate as a CA certificate and set the path limit.

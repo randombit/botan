@@ -16,6 +16,8 @@
 #include <string>
 #include <vector>
 
+// NOLINTBEGIN(*-macro-usage,*-macro-parentheses)
+
 #define CK_PTR *
 
 #if defined(_MSC_VER)
@@ -40,6 +42,8 @@
    #pragma pack(push, cryptoki, 1)
 #endif
 
+// NOLINTEND(*-macro-usage,*-macro-parentheses)
+
 #include "pkcs11.h"
 
 #if defined(_MSC_VER)
@@ -57,6 +61,8 @@ class Dynamically_Loaded_Library;
 namespace PKCS11 {
 
 using secure_string = secure_vector<uint8_t>;
+
+// NOLINTBEGIN(*-enum-size)
 
 enum class AttributeType : CK_ATTRIBUTE_TYPE {
    Class = CKA_CLASS,
@@ -802,6 +808,8 @@ enum class UserType : CK_USER_TYPE {
 
 enum class PublicPointEncoding : uint32_t { Raw, Der };
 
+// NOLINTEND(*-enum-size)
+
 using FunctionListPtr = CK_FUNCTION_LIST_PTR;
 using VoidPtr = CK_VOID_PTR;
 using C_InitializeArgs = CK_C_INITIALIZE_ARGS;
@@ -830,6 +838,7 @@ using RsaPkcsPssParams = CK_RSA_PKCS_PSS_PARAMS;
 using Ecdh1DeriveParams = CK_ECDH1_DERIVE_PARAMS;
 using Date = CK_DATE;
 
+// NOLINTNEXTLINE(*-avoid-non-const-global-variables) TODO can this be made const?
 BOTAN_PUBLIC_API(2, 0) extern ReturnValue* ThrowException;
 
 const Bbool True = CK_TRUE;
@@ -1551,6 +1560,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
                                ReturnValue* return_value = ThrowException) const {
          std::vector<Attribute> getter_template;
 
+         getter_template.reserve(attribute_values.size());
          for(const auto& entry : attribute_values) {
             getter_template.emplace_back(Attribute{static_cast<CK_ATTRIBUTE_TYPE>(entry.first), nullptr, 0});
          }
@@ -1628,6 +1638,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
                                ReturnValue* return_value = ThrowException) const {
          std::vector<Attribute> setter_template;
 
+         setter_template.reserve(attribute_values.size());
          for(auto& entry : attribute_values) {
             setter_template.emplace_back(Attribute{static_cast<CK_ATTRIBUTE_TYPE>(entry.first),
                                                    entry.second.data(),

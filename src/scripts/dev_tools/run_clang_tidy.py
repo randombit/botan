@@ -188,6 +188,7 @@ def run_clang_tidy(compile_commands_file,
         print("Checked", source_file)
         sys.stdout.flush()
     if stdout != "":
+        print("### Errors in", source_file)
         print(stdout)
         sys.stdout.flush()
         return False

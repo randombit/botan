@@ -70,19 +70,19 @@ class DilithiumConstants final {
       /// @}
 
    public:
-      enum DilithiumTau : uint32_t { _39 = 39, _49 = 49, _60 = 60 };
+      enum DilithiumTau : uint8_t { _39 = 39, _49 = 49, _60 = 60 };
 
-      enum DilithiumLambda : uint32_t { _128 = 128, _192 = 192, _256 = 256 };
+      enum DilithiumLambda : uint16_t { _128 = 128, _192 = 192, _256 = 256 };
 
       enum DilithiumGamma1 : uint32_t { ToThe17th = (1 << 17), ToThe19th = (1 << 19) };
 
       enum DilithiumGamma2 : uint32_t { Qminus1DevidedBy88 = (Q - 1) / 88, Qminus1DevidedBy32 = (Q - 1) / 32 };
 
-      enum DilithiumEta : uint32_t { _2 = 2, _4 = 4 };
+      enum DilithiumEta : uint8_t { _2 = 2, _4 = 4 };
 
-      enum DilithiumBeta : uint32_t { _78 = 78, _196 = 196, _120 = 120 };
+      enum DilithiumBeta : uint8_t { _78 = 78, _196 = 196, _120 = 120 };
 
-      enum DilithiumOmega : uint32_t { _80 = 80, _55 = 55, _75 = 75 };
+      enum DilithiumOmega : uint8_t { _80 = 80, _55 = 55, _75 = 75 };
 
       DilithiumConstants(DilithiumMode dimension);
       ~DilithiumConstants();

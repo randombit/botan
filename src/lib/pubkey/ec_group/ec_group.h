@@ -53,7 +53,7 @@ enum class EC_Group_Encoding : uint8_t {
 * ExternalSource means the curve parameters came from either an explicit
 * curve encoding or an application defined curve.
 */
-enum class EC_Group_Source {
+enum class EC_Group_Source : uint8_t {
    Builtin,
    ExternalSource,
 };
@@ -63,7 +63,7 @@ enum class EC_Group_Source {
 *
 * This is returned by EC_Group::engine
 */
-enum class EC_Group_Engine {
+enum class EC_Group_Engine : uint8_t {
    /// Using per curve implementation; fastest available
    Optimized,
    /// A generic implementation that handles many curves in one implementation
@@ -375,6 +375,10 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
                                              const EC_Scalar& y) const;
 
             ~Mul2Table();
+            Mul2Table(const Mul2Table& other) = delete;
+            Mul2Table(Mul2Table&& other) noexcept;
+            Mul2Table& operator=(const Mul2Table& other) = delete;
+            Mul2Table& operator=(Mul2Table&& other) noexcept;
 
          private:
             std::unique_ptr<EC_Mul2Table_Data> m_tbl;

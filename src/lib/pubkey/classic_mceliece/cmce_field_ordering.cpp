@@ -303,7 +303,7 @@ Classic_McEliece_Field_Ordering Classic_McEliece_Field_Ordering::create_from_con
    std::iota(pi.begin(), pi.end(), static_cast<uint16_t>(0));
    for(size_t i = 0; i < 2 * params.m() - 1; ++i) {
       const size_t gap = size_t(1) << std::min(i, 2 * params.m() - 2 - i);
-      for(size_t j = 0; j < size_t(n / 2); ++j) {
+      for(size_t j = 0; j < size_t(n) / 2; ++j) {
          const size_t pos = (j % gap) + 2 * gap * (j / gap);
          auto mask = CT::Mask<uint16_t>::expand(control_bits[i * n / 2 + j]);
          mask.conditional_swap(pi[pos], pi[pos + gap]);

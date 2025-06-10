@@ -128,8 +128,6 @@ class BOTAN_PUBLIC_API(2, 0) AEAD_Mode : public Cipher_Mode {
       * modes, and large enough that random collisions are unlikely)
       */
       size_t default_nonce_length() const override { return 12; }
-
-      ~AEAD_Mode() override = default;
 };
 
 /**

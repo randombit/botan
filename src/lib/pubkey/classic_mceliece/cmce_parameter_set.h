@@ -25,7 +25,7 @@ namespace Botan {
  */
 class BOTAN_PUBLIC_API(3, 4) Classic_McEliece_Parameter_Set {
    public:
-      enum class Code {
+      enum class Code : uint8_t {
          ClassicMcEliece_348864,   // NIST
          ClassicMcEliece_348864f,  // NIST
 

@@ -17,7 +17,7 @@
 
 namespace Botan {
 
-enum class Sphincs_Address_Type : uint32_t {
+enum class Sphincs_Address_Type : uint32_t /* NOLINT(*-enum-size) */ {
    WotsHash = 0,
    WotsPublicKeyCompression = 1,
    HashTree = 2,

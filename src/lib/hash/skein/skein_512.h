@@ -39,7 +39,7 @@ class Skein_512 final : public HashFunction {
       void clear() override;
 
    private:
-      enum type_code {
+      enum type_code : uint8_t {
          SKEIN_KEY = 0,
          SKEIN_CONFIG = 4,
          SKEIN_PERSONALIZATION = 8,

@@ -396,8 +396,7 @@ class Key_Share::Key_Share_Impl {
 
       Key_Share_Impl(Key_Share_Type ks) : key_share(std::move(ks)) {}
 
-      // NOLINTNEXTLINE(*-non-private-member-variables-in-classes)
-      Key_Share_Type key_share;
+      Key_Share_Type key_share;  // NOLINT(*-non-private-member-variable*)
 };
 
 Key_Share::Key_Share(TLS_Data_Reader& reader, uint16_t extension_size, Handshake_Type message_type) {

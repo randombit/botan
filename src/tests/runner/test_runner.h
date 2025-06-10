@@ -19,7 +19,7 @@ namespace Botan_Tests {
 class Test_Options;
 class Reporter;
 
-class Test_Runner final {
+class Test_Runner final /* NOLINT(*-special-member-functions) */ {
    public:
       Test_Runner(std::ostream& out);
       ~Test_Runner();

@@ -26,7 +26,7 @@ namespace Botan::TPM2 {
  * ESYS_CONTEXT pointer is valid.
  */
 struct CryptoCallbackState {
-      std::shared_ptr<Botan::RandomNumberGenerator> rng;  // NOLINT(misc-non-private-member-variables-in-classes)
+      std::shared_ptr<Botan::RandomNumberGenerator> rng;  // NOLINT(*-non-private-member-variable*)
 };
 
 /**

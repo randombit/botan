@@ -33,9 +33,6 @@ class HMAC final : public MessageAuthenticationCode {
       */
       explicit HMAC(std::unique_ptr<HashFunction> hash);
 
-      HMAC(const HMAC&) = delete;
-      HMAC& operator=(const HMAC&) = delete;
-
    private:
       void add_data(std::span<const uint8_t>) override;
       void final_result(std::span<uint8_t>) override;

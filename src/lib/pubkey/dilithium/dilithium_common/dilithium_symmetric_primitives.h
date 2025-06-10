@@ -28,7 +28,7 @@ class RandomNumberGenerator;
  *
  * Namely: mu = H(tr || M)
  */
-class DilithiumMessageHash {
+class DilithiumMessageHash /* NOLINT(*-special-member-functions) */ {
    public:
       DilithiumMessageHash(DilithiumHashedPublicKey tr) : m_tr(std::move(tr)) { clear(); }
 
@@ -86,7 +86,7 @@ class DilithiumMessageHash {
 * was not standardized in the FIPS 204; ML-DSA always uses SHAKE. Once we decide
 * to remove the AES variant, this can be removed.
 */
-class DilithiumXOF {
+class DilithiumXOF /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~DilithiumXOF() = default;
 
@@ -188,7 +188,7 @@ class Dilithium_Symmetric_Primitives_Base {
       virtual std::optional<std::array<uint8_t, 2>> seed_expansion_domain_separator() const = 0;
 
       template <concepts::resizable_byte_buffer OutT, ranges::spanable_range... InTs>
-      OutT H_256(size_t outbytes, InTs&&... ins) const {
+      OutT H_256(size_t outbytes, const InTs&... ins) const {
          scoped_cleanup clean([this]() { m_xof.clear(); });
          (m_xof.update(ins), ...);
          return m_xof.output<OutT>(outbytes);

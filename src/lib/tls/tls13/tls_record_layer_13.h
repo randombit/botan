@@ -25,9 +25,11 @@ namespace Botan::TLS {
  * minus the record protocol specifics and ossified bytes.
  */
 struct Record {
-      Record_Type type;
-      secure_vector<uint8_t> fragment;
-      std::optional<uint64_t> seq_no;  // unprotected records have no sequence number
+      Record_Type type;                 // NOLINT(*non-private-member-variable*)
+      secure_vector<uint8_t> fragment;  // NOLINT(*non-private-member-variable*)
+
+      // unprotected records have no sequence number
+      std::optional<uint64_t> seq_no;  // NOLINT(*non-private-member-variable*)
 
       Record(Record_Type record_type, secure_vector<uint8_t> frgmnt) :
             type(record_type), fragment(std::move(frgmnt)), seq_no(std::nullopt) {}

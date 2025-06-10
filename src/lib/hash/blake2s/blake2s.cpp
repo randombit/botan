@@ -148,9 +148,9 @@ void BLAKE2s::final_result(std::span<uint8_t> out) {
 
 std::unique_ptr<HashFunction> BLAKE2s::copy_state() const {
    std::unique_ptr<BLAKE2s> h = std::make_unique<BLAKE2s>(m_outlen << 3);
-   memcpy(h->m_b, m_b, sizeof(m_b));
-   memcpy(h->m_h, m_h, sizeof(m_h));
-   memcpy(h->m_t, m_t, sizeof(m_t));
+   std::memcpy(h->m_b, m_b, sizeof(m_b));
+   std::memcpy(h->m_h, m_h, sizeof(m_h));
+   std::memcpy(h->m_t, m_t, sizeof(m_t));
    h->m_c = m_c;
    return h;
 }

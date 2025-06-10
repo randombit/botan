@@ -23,42 +23,42 @@ class GHASH;
 /**
 * GCM Mode
 */
-class GCM_Mode : public AEAD_Mode {
+class GCM_Mode : public AEAD_Mode /* NOLINT(*-special-member-functions) */ {
    public:
-      void set_associated_data_n(size_t idx, std::span<const uint8_t> ad) override final;
+      void set_associated_data_n(size_t idx, std::span<const uint8_t> ad) final;
 
-      std::string name() const override final;
+      std::string name() const final;
 
-      size_t update_granularity() const override final;
+      size_t update_granularity() const final;
 
-      size_t ideal_granularity() const override final;
+      size_t ideal_granularity() const final;
 
-      Key_Length_Specification key_spec() const override final;
+      Key_Length_Specification key_spec() const final;
 
-      bool valid_nonce_length(size_t len) const override final;
+      bool valid_nonce_length(size_t len) const final;
 
-      size_t tag_size() const override final { return m_tag_size; }
+      size_t tag_size() const final { return m_tag_size; }
 
-      void clear() override final;
+      void clear() final;
 
-      void reset() override final;
+      void reset() final;
 
-      std::string provider() const override final;
+      std::string provider() const final;
 
-      bool has_keying_material() const override final;
+      bool has_keying_material() const final;
 
-      ~GCM_Mode();
+      ~GCM_Mode() override;
 
    protected:
       GCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size);
 
       static const size_t GCM_BS = 16;
 
-      const size_t m_tag_size;
-      const std::string m_cipher_name;
+      const size_t m_tag_size;          // NOLINT(*non-private-member-variable*)
+      const std::string m_cipher_name;  // NOLINT(*non-private-member-variable*)
 
-      std::unique_ptr<StreamCipher> m_ctr;
-      std::unique_ptr<GHASH> m_ghash;
+      std::unique_ptr<StreamCipher> m_ctr;  // NOLINT(*non-private-member-variable*)
+      std::unique_ptr<GHASH> m_ghash;       // NOLINT(*non-private-member-variable*)
 
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override;

@@ -42,7 +42,7 @@ class Policy;
 * recursive mutex (via Session_Manager::mutex()). Derived classes may simply
 * reuse this for their own locking.
 */
-class BOTAN_PUBLIC_API(3, 0) Session_Manager {
+class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-functions) */ {
    public:
       Session_Manager(const std::shared_ptr<RandomNumberGenerator>& rng);
 
@@ -272,7 +272,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager {
                                                        const Policy& policy);
 
    protected:
-      std::shared_ptr<RandomNumberGenerator> m_rng;
+      std::shared_ptr<RandomNumberGenerator> m_rng;  // NOLINT(*non-private-member-variable*)
 
    private:
       recursive_mutex_type m_mutex;

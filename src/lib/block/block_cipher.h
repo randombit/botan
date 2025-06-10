@@ -186,14 +186,6 @@ class BOTAN_PUBLIC_API(2, 0) BlockCipher : public SymmetricAlgorithm {
       virtual std::unique_ptr<BlockCipher> new_object() const = 0;
 
       BlockCipher* clone() const { return this->new_object().release(); }
-
-      ~BlockCipher() override = default;
-
-      BlockCipher() = default;
-      BlockCipher(const BlockCipher& other) = default;
-      BlockCipher(BlockCipher&& other) = default;
-      BlockCipher& operator=(const BlockCipher& other) = default;
-      BlockCipher& operator=(BlockCipher&& other) = default;
 };
 
 /**

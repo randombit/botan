@@ -35,6 +35,7 @@ class BOTAN_PUBLIC_API(2, 11) Flatfile_Certificate_Store final : public Certific
       Flatfile_Certificate_Store(Flatfile_Certificate_Store&&) = default;
       Flatfile_Certificate_Store& operator=(const Flatfile_Certificate_Store&) = default;
       Flatfile_Certificate_Store& operator=(Flatfile_Certificate_Store&&) = default;
+      ~Flatfile_Certificate_Store() override = default;
 
       /**
       * @return DNs for all certificates managed by the store

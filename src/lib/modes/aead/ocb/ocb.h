@@ -30,29 +30,29 @@ class L_computer;
 *      block ciphers with larger block sizes.
 * @see https://mailarchive.ietf.org/arch/msg/cfrg/qLTveWOdTJcLn4HP3ev-vrj05Vg/
 */
-class BOTAN_TEST_API OCB_Mode : public AEAD_Mode {
+class BOTAN_TEST_API OCB_Mode : public AEAD_Mode /* NOLINT(*-special-member-functions) */ {
    public:
-      void set_associated_data_n(size_t idx, std::span<const uint8_t> ad) override final;
+      void set_associated_data_n(size_t idx, std::span<const uint8_t> ad) final;
 
-      std::string name() const override final;
+      std::string name() const final;
 
-      size_t update_granularity() const override final;
+      size_t update_granularity() const final;
 
-      size_t ideal_granularity() const override final;
+      size_t ideal_granularity() const final;
 
-      Key_Length_Specification key_spec() const override final;
+      Key_Length_Specification key_spec() const final;
 
-      bool valid_nonce_length(size_t) const override final;
+      bool valid_nonce_length(size_t) const final;
 
-      size_t tag_size() const override final { return m_tag_size; }
+      size_t tag_size() const final { return m_tag_size; }
 
-      void clear() override final;
+      void clear() final;
 
-      void reset() override final;
+      void reset() final;
 
-      bool has_keying_material() const override final;
+      bool has_keying_material() const final;
 
-      ~OCB_Mode();
+      ~OCB_Mode() override;
 
    protected:
       /**
@@ -68,18 +68,18 @@ class BOTAN_TEST_API OCB_Mode : public AEAD_Mode {
       size_t par_bytes() const { return m_checksum.size(); }
 
       // fixme make these private
-      std::unique_ptr<BlockCipher> m_cipher;
-      std::unique_ptr<L_computer> m_L;
+      std::unique_ptr<BlockCipher> m_cipher;  // NOLINT(*non-private-member-variables*)
+      std::unique_ptr<L_computer> m_L;        // NOLINT(*non-private-member-variables*)
 
-      size_t m_block_index = 0;
+      size_t m_block_index = 0;  // NOLINT(*non-private-member-variables*)
 
-      secure_vector<uint8_t> m_checksum;
-      secure_vector<uint8_t> m_ad_hash;
+      secure_vector<uint8_t> m_checksum;  // NOLINT(*non-private-member-variables*)
+      secure_vector<uint8_t> m_ad_hash;   // NOLINT(*non-private-member-variables*)
 
    private:
-      void start_msg(const uint8_t nonce[], size_t nonce_len) override final;
+      void start_msg(const uint8_t nonce[], size_t nonce_len) final;
 
-      void key_schedule(std::span<const uint8_t> key) override final;
+      void key_schedule(std::span<const uint8_t> key) final;
 
       const secure_vector<uint8_t>& update_nonce(const uint8_t nonce[], size_t nonce_len);
 

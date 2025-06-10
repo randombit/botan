@@ -96,14 +96,9 @@ class BOTAN_PUBLIC_API(2, 0) X509_Object : public ASN1_Object {
       */
       std::string PEM_encode() const;
 
-      X509_Object(const X509_Object&) = default;
-      X509_Object& operator=(const X509_Object&) = default;
-
       virtual std::string PEM_label() const = 0;
 
       virtual std::vector<std::string> alternate_PEM_labels() const { return std::vector<std::string>(); }
-
-      ~X509_Object() override = default;
 
       /**
       * Choose and return a signature scheme appropriate for X.509 signing

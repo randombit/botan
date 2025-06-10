@@ -52,9 +52,9 @@ class CFB_Mode : public Cipher_Mode {
 
       size_t block_size() const { return m_block_size; }
 
-      secure_vector<uint8_t> m_state;
-      secure_vector<uint8_t> m_keystream;
-      size_t m_keystream_pos = 0;
+      secure_vector<uint8_t> m_state;      // NOLINT(*non-private-member-variable*)
+      secure_vector<uint8_t> m_keystream;  // NOLINT(*non-private-member-variable*)
+      size_t m_keystream_pos = 0;          // NOLINT(*non-private-member-variable*)
 
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override;

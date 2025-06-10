@@ -34,7 +34,7 @@ class PrimeOrderCurve;
 
 class EC_Group_Data;
 
-class EC_Scalar_Data {
+class EC_Scalar_Data /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~EC_Scalar_Data() = default;
 
@@ -67,7 +67,7 @@ class EC_Scalar_Data {
       virtual void serialize_to(std::span<uint8_t> bytes) const = 0;
 };
 
-class EC_AffinePoint_Data {
+class EC_AffinePoint_Data /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~EC_AffinePoint_Data() = default;
 
@@ -106,7 +106,7 @@ class EC_AffinePoint_Data {
 #endif
 };
 
-class EC_Mul2Table_Data {
+class EC_Mul2Table_Data /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~EC_Mul2Table_Data() = default;
 
@@ -135,6 +135,11 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
                                                    EC_Group_Source source);
 
       ~EC_Group_Data();
+
+      EC_Group_Data(const EC_Group_Data& other) = delete;
+      EC_Group_Data(EC_Group_Data&& other) = delete;
+      EC_Group_Data& operator=(const EC_Group_Data& other) = delete;
+      EC_Group_Data& operator=(EC_Group_Data&& other) = delete;
 
       bool params_match(const BigInt& p,
                         const BigInt& a,

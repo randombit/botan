@@ -26,7 +26,7 @@ namespace Botan::OS {
 /**
 * A wrapper around a simple blocking TCP socket
 */
-class BOTAN_TEST_API Socket {
+class BOTAN_TEST_API Socket /* NOLINT(*-special-member-functions) */ {
    public:
       /**
       * The socket will be closed upon destruction

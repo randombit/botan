@@ -61,8 +61,10 @@ class Handshake_State {
       Handshake_State(std::unique_ptr<Handshake_IO> io, Callbacks& callbacks);
       virtual ~Handshake_State();
 
-      Handshake_State(const Handshake_State&) = delete;
-      Handshake_State& operator=(const Handshake_State&) = delete;
+      Handshake_State(const Handshake_State& other) = delete;
+      Handshake_State(Handshake_State&& other) = delete;
+      Handshake_State& operator=(const Handshake_State& other) = delete;
+      Handshake_State& operator=(Handshake_State&& other) = delete;
 
       Handshake_IO& handshake_io() { return *m_handshake_io; }
 

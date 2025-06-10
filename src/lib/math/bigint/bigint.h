@@ -436,13 +436,13 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * Test if the integer has an even value
        * @result true if the integer is even, false otherwise
        */
-      bool is_even() const { return (get_bit(0) == 0); }
+      bool is_even() const { return !get_bit(0); }
 
       /**
        * Test if the integer has an odd value
        * @result true if the integer is odd, false otherwise
        */
-      bool is_odd() const { return (get_bit(0) == 1); }
+      bool is_odd() const { return get_bit(0); }
 
       /**
        * Test if the integer is not zero

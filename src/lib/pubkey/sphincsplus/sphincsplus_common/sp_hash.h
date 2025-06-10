@@ -20,7 +20,7 @@ namespace Botan {
  * A collection of pseudorandom hash functions required for SLH-DSA
  * computations. See FIPS 205, Section 11.2.1 and 11.2.2.
  **/
-class BOTAN_TEST_API Sphincs_Hash_Functions {
+class BOTAN_TEST_API Sphincs_Hash_Functions /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~Sphincs_Hash_Functions() = default;
 
@@ -54,16 +54,16 @@ class BOTAN_TEST_API Sphincs_Hash_Functions {
                            const SphincsMessageInternal& msg) = 0;
 
       template <typename... BufferTs>
-      void T(std::span<uint8_t> out, const Sphincs_Address& address, BufferTs&&... in) {
-         auto& hash = tweak_hash(address, (std::forward<BufferTs>(in).size() + ...));
-         (hash.update(std::forward<BufferTs>(in)), ...);
+      void T(std::span<uint8_t> out, const Sphincs_Address& address, const BufferTs&... in) {
+         auto& hash = tweak_hash(address, (in.size() + ...));
+         (hash.update(in), ...);
          hash.final(out);
       }
 
       template <typename OutT = std::vector<uint8_t>, typename... BufferTs>
-      OutT T(const Sphincs_Address& address, BufferTs&&... in) {
+      OutT T(const Sphincs_Address& address, const BufferTs&... in) {
          OutT t(m_sphincs_params.n());
-         T(t, address, std::forward<BufferTs>(in)...);
+         T(t, address, in...);
          return t;
       }
 
@@ -99,8 +99,8 @@ class BOTAN_TEST_API Sphincs_Hash_Functions {
                                                 const SphincsTreeNode& root,
                                                 const SphincsMessageInternal& message) = 0;
 
-      const Sphincs_Parameters& m_sphincs_params;
-      const SphincsPublicSeed& m_pub_seed;
+      const Sphincs_Parameters& m_sphincs_params;  // NOLINT(*non-private-member-variable*)
+      const SphincsPublicSeed& m_pub_seed;         // NOLINT(*non-private-member-variable*)
 };
 
 }  // namespace Botan
