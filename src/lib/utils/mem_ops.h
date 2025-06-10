@@ -132,7 +132,7 @@ inline constexpr void clear_mem(T* ptr, size_t n) {
 * @param mem a contiguous range of Ts to zero
 */
 template <ranges::contiguous_output_range R>
-inline constexpr void clear_mem(R&& mem)
+inline constexpr void clear_mem(R&& mem)  // NOLINT(*-missing-std-forward)
    requires std::is_trivially_copyable_v<std::ranges::range_value_t<R>>
 {
    clear_bytes(std::ranges::data(mem), ranges::size_bytes(mem));
@@ -162,7 +162,7 @@ inline constexpr void copy_mem(T* out, const T* in, size_t n) {
 template <ranges::contiguous_output_range OutR, ranges::contiguous_range InR>
    requires std::is_same_v<std::ranges::range_value_t<OutR>, std::ranges::range_value_t<InR>> &&
             std::is_trivially_copyable_v<std::ranges::range_value_t<InR>>
-inline constexpr void copy_mem(OutR&& out, InR&& in) {
+inline constexpr void copy_mem(OutR&& out /* NOLINT(*-std-forward) */, const InR& in) {
    ranges::assert_equal_byte_lengths(out, in);
    if(std::is_constant_evaluated()) {
       std::copy(std::ranges::begin(in), std::ranges::end(in), std::ranges::begin(out));
@@ -178,7 +178,7 @@ inline constexpr void copy_mem(OutR&& out, InR&& in) {
 template <ranges::contiguous_output_range ToR, ranges::contiguous_range FromR>
    requires std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>> &&
             std::is_trivially_copyable_v<std::ranges::range_value_t<ToR>>
-inline constexpr void typecast_copy(ToR&& out, FromR&& in) {
+inline constexpr void typecast_copy(ToR&& out /* NOLINT(*-std-forward) */, const FromR& in) {
    ranges::assert_equal_byte_lengths(out, in);
    std::memcpy(std::ranges::data(out), std::ranges::data(in), ranges::size_bytes(out));
 }
@@ -190,7 +190,7 @@ inline constexpr void typecast_copy(ToR&& out, FromR&& in) {
 template <typename ToT, ranges::contiguous_range FromR>
    requires std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>> && std::is_trivially_copyable_v<ToT> &&
             (!std::ranges::range<ToT>)
-inline constexpr void typecast_copy(ToT& out, FromR&& in) noexcept {
+inline constexpr void typecast_copy(ToT& out, const FromR& in) noexcept {
    typecast_copy(std::span<ToT, 1>(&out, 1), in);
 }
 
@@ -201,7 +201,7 @@ inline constexpr void typecast_copy(ToT& out, FromR&& in) noexcept {
 template <ranges::contiguous_output_range ToR, typename FromT>
    requires std::is_trivially_copyable_v<FromT> &&
             (!std::ranges::range<FromT>) && std::is_trivially_copyable_v<std::ranges::range_value_t<ToR>>
-inline constexpr void typecast_copy(ToR&& out, const FromT& in) {
+inline constexpr void typecast_copy(ToR&& out /* NOLINT(*-std-forward) */, const FromT& in) {
    typecast_copy(out, std::span<const FromT, 1>(&in, 1));
 }
 
@@ -212,7 +212,7 @@ inline constexpr void typecast_copy(ToR&& out, const FromT& in) {
 template <typename ToT, ranges::contiguous_range FromR>
    requires std::is_default_constructible_v<ToT> && std::is_trivially_copyable_v<ToT> &&
             std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>>
-inline constexpr ToT typecast_copy(FromR&& src) noexcept {
+inline constexpr ToT typecast_copy(const FromR& src) noexcept {
    ToT dst;
    typecast_copy(dst, src);
    return dst;
