@@ -93,16 +93,21 @@ inline bool poison_has_effect() {
 /// @name Constant Time Check Annotation Convenience overloads
 /// @{
 
+template <typename T>
+concept custom_poisonable = requires(const T& v) { v._const_time_poison(); };
+template <typename T>
+concept custom_unpoisonable = requires(const T& v) { v._const_time_unpoison(); };
+
 /**
  * Poison a single integral object
  */
 template <std::integral T>
-constexpr void poison(T& p) {
+constexpr void poison(const T& p) {
    poison(&p, 1);
 }
 
 template <std::integral T>
-constexpr void unpoison(T& p) {
+constexpr void unpoison(const T& p) {
    unpoison(&p, 1);
 }
 
@@ -110,15 +115,15 @@ constexpr void unpoison(T& p) {
  * Poison a contiguous buffer of trivial objects (e.g. integers and such)
  */
 template <ranges::spanable_range R>
-   requires std::is_trivially_copyable_v<std::ranges::range_value_t<R>>
-constexpr void poison(R&& r) {
+   requires std::is_trivially_copyable_v<std::ranges::range_value_t<R>> && (!custom_poisonable<R>)
+constexpr void poison(const R& r) {
    std::span s{r};
    poison(s.data(), s.size());
 }
 
 template <ranges::spanable_range R>
-   requires std::is_trivially_copyable_v<std::ranges::range_value_t<R>>
-constexpr void unpoison(R&& r) {
+   requires std::is_trivially_copyable_v<std::ranges::range_value_t<R>> && (!custom_unpoisonable<R>)
+constexpr void unpoison(const R& r) {
    std::span s{r};
    unpoison(s.data(), s.size());
 }
@@ -127,14 +132,12 @@ constexpr void unpoison(R&& r) {
  * Poison a class type that provides a public `_const_time_poison()` method
  * For instance: BigInt, CT::Mask<>, FrodoMatrix, ...
  */
-template <typename T>
-   requires requires(const T& x) { x._const_time_poison(); }
+template <custom_poisonable T>
 constexpr void poison(const T& x) {
    x._const_time_poison();
 }
 
-template <typename T>
-   requires requires(const T& x) { x._const_time_unpoison(); }
+template <custom_unpoisonable T>
 constexpr void unpoison(const T& x) {
    x._const_time_unpoison();
 }
@@ -173,7 +176,7 @@ concept unpoisonable = requires(const T& v) { ::Botan::CT::unpoison(v); };
  */
 template <std::ranges::range R>
    requires poisonable<std::ranges::range_value_t<R>>
-constexpr void poison_range(R&& r) {
+constexpr void poison_range(const R& r) {
    for(const auto& v : r) {
       poison(v);
    }
@@ -181,7 +184,7 @@ constexpr void poison_range(R&& r) {
 
 template <std::ranges::range R>
    requires unpoisonable<std::ranges::range_value_t<R>>
-constexpr void unpoison_range(R&& r) {
+constexpr void unpoison_range(const R& r) {
    for(const auto& v : r) {
       unpoison(v);
    }
@@ -193,13 +196,13 @@ constexpr void unpoison_range(R&& r) {
  */
 template <poisonable... Ts>
    requires(sizeof...(Ts) > 0)
-constexpr void poison_all(Ts&&... ts) {
+constexpr void poison_all(const Ts&... ts) {
    (poison(ts), ...);
 }
 
 template <unpoisonable... Ts>
    requires(sizeof...(Ts) > 0)
-constexpr void unpoison_all(Ts&&... ts) {
+constexpr void unpoison_all(const Ts&... ts) {
    (unpoison(ts), ...);
 }
 
