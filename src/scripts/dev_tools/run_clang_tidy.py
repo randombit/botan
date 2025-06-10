@@ -114,6 +114,7 @@ disabled_not_interested = [
     'readability-isolate-declaration',
     'readability-math-missing-parentheses',
     'readability-non-const-parameter',
+    'readability-redundant-inline-specifier', # Jack likes doing this
     'readability-redundant-access-specifiers', # reneme likes doing this
     'readability-suspicious-call-argument',
     'readability-use-std-min-max',
@@ -168,6 +169,9 @@ def run_clang_tidy(compile_commands_file,
                '-checks=%s' % (check_config),
                '-p', compile_commands_file]
 
+    if options.check_headers:
+        cmdline.append('-header-filter=.*')
+
     if options.fixit:
         cmdline.append('-fix')
 
@@ -214,6 +218,7 @@ def main(args = None): # pylint: disable=too-many-return-statements
     parser.add_option('--fast-checks-only', action='store_true', default=False)
     parser.add_option('--only-changed-files', action='store_true', default=False)
     parser.add_option('--only-matching', metavar='REGEX', default='.*')
+    parser.add_option('--check-headers', action='store_true', default=False)
     parser.add_option('--take-file-list-from-stdin', action='store_true', default=False)
     parser.add_option('--export-fixes-dir', default=None)
 

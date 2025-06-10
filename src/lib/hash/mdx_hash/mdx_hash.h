@@ -17,7 +17,7 @@
 
 namespace Botan {
 
-enum class MD_Endian {
+enum class MD_Endian : uint8_t {
    Little,
    Big,
 };

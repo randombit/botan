@@ -78,7 +78,12 @@ class BOTAN_PUBLIC_API(2, 0) Key_Length_Specification final {
 */
 class BOTAN_PUBLIC_API(2, 0) SymmetricAlgorithm {
    public:
+      SymmetricAlgorithm() = default;
       virtual ~SymmetricAlgorithm() = default;
+      SymmetricAlgorithm(const SymmetricAlgorithm& other) = default;
+      SymmetricAlgorithm(SymmetricAlgorithm&& other) = default;
+      SymmetricAlgorithm& operator=(const SymmetricAlgorithm& other) = default;
+      SymmetricAlgorithm& operator=(SymmetricAlgorithm&& other) = default;
 
       /**
       * Reset the internal state. This includes not just the key, but

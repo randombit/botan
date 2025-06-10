@@ -131,7 +131,7 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
       void decode_from(BER_Decoder&) override;
 
       /// Create an empty name
-      AlternativeName() {}
+      AlternativeName() = default;
 
       /// Add a URI to this AlternativeName
       void add_uri(std::string_view uri);

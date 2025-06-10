@@ -11,6 +11,8 @@
 #include <botan/api.h>
 #include <botan/build.h>
 
+// NOLINTBEGIN(*-macro-usage)
+
 BOTAN_FUTURE_INTERNAL_HEADER(compiler.h)
 
 /*
@@ -86,5 +88,7 @@ BOTAN_FUTURE_INTERNAL_HEADER(compiler.h)
    #endif
 
 #endif
+
+// NOLINTEND(*-macro-usage)
 
 #endif

@@ -45,6 +45,7 @@ class Strong_Base {
       Strong_Base(Strong_Base&&) noexcept = default;
       Strong_Base& operator=(const Strong_Base&) = default;
       Strong_Base& operator=(Strong_Base&&) noexcept = default;
+      ~Strong_Base() = default;
 
       constexpr explicit Strong_Base(T v) : m_value(std::move(v)) {}
 
@@ -663,11 +664,15 @@ class StrongSpan {
       //       a declaration of an ordinary copy constructor. The existance of a copy constructor
       //       is interpreted as "not cheap to copy", setting off the `performance-unnecessary-value-param` check.
       //       See also: https://github.com/randombit/botan/issues/3591
-      template <concepts::contiguous_strong_type T2,
-                typename = std::enable_if_t<std::is_same_v<T2, std::remove_const_t<T>>>>
-      StrongSpan(const StrongSpan<T2>& other) : m_span(other.get()) {}
+      template <concepts::contiguous_strong_type T2>
+      StrongSpan(const StrongSpan<T2>& other)
+         requires(std::is_same_v<T2, std::remove_const_t<T>>)
+            : m_span(other.get()) {}
 
       StrongSpan(const StrongSpan& other) = default;
+      StrongSpan(StrongSpan&& other) = default;
+      StrongSpan& operator=(const StrongSpan& other) = default;
+      StrongSpan& operator=(StrongSpan&& other) = default;
 
       ~StrongSpan() = default;
 

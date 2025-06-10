@@ -17,7 +17,7 @@ class Public_Key;
 /**
 * Certificate validation status code
 */
-enum class Certificate_Status_Code {
+enum class Certificate_Status_Code : uint16_t {
    // TODO(Botan4) renumber this, e.g. Validation Errors -> IP_ADDR_BLOCKS_ERROR
 
    OK = 0,
@@ -109,9 +109,9 @@ BOTAN_PUBLIC_API(2, 0) const char* to_string(Certificate_Status_Code code);
 * X.509v3 Key Constraints.
 * If updating update copy in ffi.h
 */
-class BOTAN_PUBLIC_API(3, 0) Key_Constraints {
+class BOTAN_PUBLIC_API(3, 0) Key_Constraints final {
    public:
-      enum Bits : uint32_t {
+      enum Bits : uint16_t {
          None = 0,
          DigitalSignature = 1 << 15,
          NonRepudiation = 1 << 14,
@@ -141,6 +141,7 @@ class BOTAN_PUBLIC_API(3, 0) Key_Constraints {
       Key_Constraints(Key_Constraints&& other) = default;
       Key_Constraints& operator=(const Key_Constraints& other) = default;
       Key_Constraints& operator=(Key_Constraints&& other) = default;
+      ~Key_Constraints() = default;
 
       Key_Constraints(Key_Constraints::Bits bits) : m_value(bits) {}
 
@@ -193,7 +194,7 @@ class BOTAN_PUBLIC_API(3, 0) Key_Constraints {
 /**
 * X.509v2 CRL Reason Code.
 */
-enum class CRL_Code : uint32_t {
+enum class CRL_Code : uint8_t {
    Unspecified = 0,
    KeyCompromise = 1,
    CaCompromise = 2,

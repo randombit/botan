@@ -127,7 +127,7 @@ class BOTAN_PUBLIC_API(2, 0) Keyed_Filter : public Filter {
       * @param iv the initialization vector to use
       */
       virtual void set_iv(const InitializationVector& iv) {
-         if(iv.length() != 0) {
+         if(!iv.empty()) {
             throw Invalid_IV_Length(name(), iv.length());
          }
       }
@@ -233,7 +233,7 @@ inline Keyed_Filter* get_cipher(std::string_view algo_spec,
                                 const InitializationVector& iv,
                                 Cipher_Dir direction) {
    Keyed_Filter* cipher = get_cipher(algo_spec, key, direction);
-   if(iv.length()) {
+   if(!iv.empty()) {
       cipher->set_iv(iv);
    }
    return cipher;

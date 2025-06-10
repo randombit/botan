@@ -20,6 +20,8 @@
 
 namespace Botan {
 
+// NOLINTBEGIN(*-macro-usage)
+
 #if defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_X86_64)
    #define BOTAN_MP_USE_X86_64_ASM
 #endif
@@ -620,6 +622,8 @@ class word3 final {
    #undef LINMUL_OP
    #undef MULADD_OP
 #endif
+
+// NOLINTEND(*-macro-usage)
 
 }  // namespace Botan
 

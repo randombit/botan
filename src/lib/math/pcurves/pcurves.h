@@ -97,7 +97,7 @@ class PrimeOrderCurve {
             AffinePoint& operator=(AffinePoint&& other) = default;
             ~AffinePoint() = default;
 
-            static AffinePoint generator(CurvePtr curve) { return curve->generator(); }
+            static AffinePoint generator(const CurvePtr& curve) { return curve->generator(); }
 
             const auto& _curve() const { return m_curve; }
 

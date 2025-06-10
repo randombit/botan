@@ -145,7 +145,7 @@ inline constexpr void clear_mem(R&& mem)
 * @param n the number of elements of in/out
 */
 template <typename T>
-   requires std::is_trivial<typename std::decay<T>::type>::value
+   requires std::is_trivial_v<std::decay_t<T>>
 inline constexpr void copy_mem(T* out, const T* in, size_t n) {
    BOTAN_ASSERT_IMPLICATION(n > 0, in != nullptr && out != nullptr, "If n > 0 then args are not null");
 
@@ -221,7 +221,7 @@ inline constexpr ToT typecast_copy(FromR&& src) noexcept {
 // TODO: deprecate and replace
 template <typename T>
 inline constexpr void typecast_copy(uint8_t out[], T in[], size_t N)
-   requires std::is_trivially_copyable<T>::value
+   requires std::is_trivially_copyable_v<T>
 {
    // asserts that *in and *out point to the correct amount of memory
    typecast_copy(std::span<uint8_t>(out, sizeof(T) * N), std::span<const T>(in, N));
@@ -230,7 +230,7 @@ inline constexpr void typecast_copy(uint8_t out[], T in[], size_t N)
 // TODO: deprecate and replace
 template <typename T>
 inline constexpr void typecast_copy(T out[], const uint8_t in[], size_t N)
-   requires std::is_trivial<T>::value
+   requires std::is_trivial_v<T>
 {
    // asserts that *in and *out point to the correct amount of memory
    typecast_copy(std::span<T>(out, N), std::span<const uint8_t>(in, N * sizeof(T)));
@@ -245,7 +245,7 @@ inline constexpr void typecast_copy(uint8_t out[], const T& in) {
 
 // TODO: deprecate and replace
 template <typename T>
-   requires std::is_trivial<typename std::decay<T>::type>::value
+   requires std::is_trivial_v<std::decay_t<T>>
 inline constexpr void typecast_copy(T& out, const uint8_t in[]) {
    // asserts that *in points to the correct amount of memory
    typecast_copy(out, std::span<const uint8_t, sizeof(T)>(in, sizeof(T)));
@@ -253,7 +253,7 @@ inline constexpr void typecast_copy(T& out, const uint8_t in[]) {
 
 // TODO: deprecate and replace
 template <typename To>
-   requires std::is_trivial<To>::value
+   requires std::is_trivial_v<To>
 inline constexpr To typecast_copy(const uint8_t src[]) noexcept {
    // asserts that *src points to the correct amount of memory
    return typecast_copy<To>(std::span<const uint8_t, sizeof(To)>(src, sizeof(To)));

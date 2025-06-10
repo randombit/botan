@@ -56,8 +56,10 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       BER_Decoder(BER_Object&& obj) : BER_Decoder(std::move(obj), nullptr) {}
 
       BER_Decoder(const BER_Decoder& other);
+      BER_Decoder(BER_Decoder&& other) = default;
 
       BER_Decoder& operator=(const BER_Decoder&) = delete;
+      BER_Decoder& operator=(BER_Decoder&&) = default;
 
       /**
       * Get the next object in the data stream.
@@ -149,7 +151,7 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       */
       template <typename T>
       BER_Decoder& get_next_value(T& out, ASN1_Type type_tag, ASN1_Class class_tag = ASN1_Class::ContextSpecific)
-         requires std::is_standard_layout<T>::value && std::is_trivial<T>::value
+         requires std::is_standard_layout_v<T> && std::is_trivial_v<T>
       {
          BER_Object obj = get_next_object();
          obj.assert_is_a(type_tag, class_tag);
@@ -313,6 +315,8 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
                                           ASN1_Class class_tag = ASN1_Class::ContextSpecific) {
          return decode_optional_string(out, real_type, static_cast<uint32_t>(expected_tag), class_tag);
       }
+
+      ~BER_Decoder() = default;
 
    private:
       BER_Decoder(BER_Object&& obj, BER_Decoder* parent);

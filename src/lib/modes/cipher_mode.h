@@ -23,9 +23,9 @@ namespace Botan {
 /**
 * The two possible directions a Cipher_Mode can operate in
 */
-enum class Cipher_Dir : int {
-   Encryption,
-   Decryption,
+enum class Cipher_Dir : uint8_t {
+   Encryption = 0,
+   Decryption = 1,
 
    ENCRYPTION BOTAN_DEPRECATED("Use Cipher_Dir::Encryption") = Encryption,
    DECRYPTION BOTAN_DEPRECATED("Use Cipher_Dir::Decryption") = Decryption,

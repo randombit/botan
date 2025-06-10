@@ -33,10 +33,10 @@ namespace Botan {
 *
 * TODO(Botan4) remove this enum
 */
-enum class EC_Group_Encoding {
-   Explicit,
-   ImplicitCA,
-   NamedCurve,
+enum class EC_Group_Encoding : uint8_t {
+   Explicit = 0,
+   ImplicitCA = 1,
+   NamedCurve = 2,
 
    EC_DOMPAR_ENC_EXPLICIT = Explicit,
    EC_DOMPAR_ENC_IMPLICITCA = ImplicitCA,

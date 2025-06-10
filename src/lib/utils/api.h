@@ -9,6 +9,8 @@
 
 #include <botan/build.h>
 
+// NOLINTBEGIN(*-macro-usage)
+
 /**
 * Used to annotate API exports which are public and supported.
 * These APIs will not be broken/removed unless strictly required for
@@ -107,5 +109,7 @@
    #define BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
    #define BOTAN_DIAGNOSTIC_POP
 #endif
+
+// NOLINTEND(*-macro-usage)
 
 #endif

@@ -50,6 +50,12 @@ class BOTAN_PUBLIC_API(2, 0) HashFunction : public Buffered_Computation {
 
       ~HashFunction() override = default;
 
+      HashFunction() = default;
+      HashFunction(const HashFunction& other) = default;
+      HashFunction(HashFunction&& other) = default;
+      HashFunction& operator=(const HashFunction& other) = default;
+      HashFunction& operator=(HashFunction&& other) = default;
+
       /**
       * Reset the state.
       */

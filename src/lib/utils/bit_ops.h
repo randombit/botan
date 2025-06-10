@@ -24,7 +24,7 @@ namespace Botan {
 */
 template <typename T>
 BOTAN_FORCE_INLINE constexpr T expand_top_bit(T a)
-   requires(std::is_integral<T>::value)
+   requires(std::is_integral_v<T>)
 {
    return static_cast<T>(0) - (a >> (sizeof(T) * 8 - 1));
 }
@@ -34,7 +34,7 @@ BOTAN_FORCE_INLINE constexpr T expand_top_bit(T a)
 */
 template <typename T>
 BOTAN_FORCE_INLINE constexpr T ct_is_zero(T x)
-   requires(std::is_integral<T>::value)
+   requires(std::is_integral_v<T>)
 {
    return expand_top_bit<T>(~x & (x - 1));
 }
@@ -46,7 +46,7 @@ BOTAN_FORCE_INLINE constexpr T ct_is_zero(T x)
 */
 template <typename T>
 BOTAN_FORCE_INLINE constexpr bool is_power_of_2(T arg)
-   requires(std::is_unsigned<T>::value)
+   requires(std::is_unsigned_v<T>)
 {
    return (arg != 0) && (arg != 1) && ((arg & static_cast<T>(arg - 1)) == 0);
 }
@@ -59,7 +59,7 @@ BOTAN_FORCE_INLINE constexpr bool is_power_of_2(T arg)
 */
 template <typename T>
 BOTAN_FORCE_INLINE constexpr size_t high_bit(T n)
-   requires(std::is_unsigned<T>::value)
+   requires(std::is_unsigned_v<T>)
 {
    size_t hb = 0;
 
@@ -81,7 +81,7 @@ BOTAN_FORCE_INLINE constexpr size_t high_bit(T n)
 */
 template <typename T>
 BOTAN_FORCE_INLINE constexpr size_t significant_bytes(T n)
-   requires(std::is_integral<T>::value)
+   requires(std::is_integral_v<T>)
 {
    size_t b = 0;
 
@@ -103,7 +103,7 @@ BOTAN_FORCE_INLINE constexpr size_t significant_bytes(T n)
 */
 template <typename T>
 BOTAN_FORCE_INLINE constexpr size_t ctz(T n)
-   requires(std::is_integral<T>::value)
+   requires(std::is_integral_v<T>)
 {
    /*
    * If n == 0 then this function will compute 8*sizeof(T)-1, so
@@ -123,7 +123,7 @@ BOTAN_FORCE_INLINE constexpr size_t ctz(T n)
 
 template <typename T>
 BOTAN_FORCE_INLINE constexpr T floor_log2(T n)
-   requires(std::is_unsigned<T>::value)
+   requires(std::is_unsigned_v<T>)
 {
    BOTAN_ARG_CHECK(n != 0, "log2(0) is not defined");
    return static_cast<T>(high_bit(n) - 1);
@@ -131,7 +131,7 @@ BOTAN_FORCE_INLINE constexpr T floor_log2(T n)
 
 template <typename T>
 constexpr uint8_t ceil_log2(T x)
-   requires(std::is_integral<T>::value && sizeof(T) < 32)
+   requires(std::is_integral_v<T> && sizeof(T) < 32)
 {
    if(x >> (sizeof(T) * 8 - 1)) {
       return sizeof(T) * 8;
@@ -166,7 +166,7 @@ BOTAN_FORCE_INLINE constexpr T ceil_division(T a, T b) {
  */
 template <typename T>
 BOTAN_FORCE_INLINE constexpr T ceil_tobytes(T bits)
-   requires(std::is_integral<T>::value)
+   requires(std::is_integral_v<T>)
 {
    return (bits + 7) / 8;
 }

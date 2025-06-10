@@ -17,60 +17,60 @@ namespace Botan {
 /**
 * Different types of errors that might occur
 */
-enum class ErrorType {
+enum class ErrorType : uint16_t {
    /** Some unknown error */
    Unknown = 1,
    /** An error while calling a system interface */
-   SystemError,
+   SystemError = 2,
    /** An operation seems valid, but not supported by the current version */
-   NotImplemented,
+   NotImplemented = 3,
    /** Memory allocation failure */
-   OutOfMemory,
+   OutOfMemory = 4,
    /** An internal error occurred */
-   InternalError,
+   InternalError = 5,
    /** An I/O error occurred */
-   IoError,
+   IoError = 6,
 
    /** Invalid object state */
    InvalidObjectState = 100,
    /** A key was not set on an object when this is required */
-   KeyNotSet,
+   KeyNotSet = 101,
    /** The application provided an argument which is invalid */
-   InvalidArgument,
+   InvalidArgument = 102,
    /** A key with invalid length was provided */
-   InvalidKeyLength,
+   InvalidKeyLength = 103,
    /** A nonce with invalid length was provided */
-   InvalidNonceLength,
+   InvalidNonceLength = 104,
    /** An object type was requested but cannot be found */
-   LookupError,
+   LookupError = 105,
    /** Encoding a message or datum failed */
-   EncodingFailure,
+   EncodingFailure = 106,
    /** Decoding a message or datum failed */
-   DecodingFailure,
+   DecodingFailure = 107,
    /** A TLS error (error_code will be the alert type) */
-   TLSError,
+   TLSError = 108,
    /** An error during an HTTP operation */
-   HttpError,
+   HttpError = 109,
    /** A message with an invalid authentication tag was detected */
-   InvalidTag,
+   InvalidTag = 110,
    /** An error during Roughtime validation */
-   RoughtimeError,
+   RoughtimeError = 111,
 
    /** An error when interacting with CommonCrypto API */
    CommonCryptoError = 201,
    /** An error when interacting with a PKCS11 device */
-   Pkcs11Error,
+   Pkcs11Error = 202,
    /** An error when interacting with a TPM device */
-   TPMError,
+   TPMError = 203,
    /** An error when interacting with a database */
-   DatabaseError,
+   DatabaseError = 204,
 
    /** An error when interacting with zlib */
    ZlibError = 300,
    /** An error when interacting with bzip2 */
-   Bzip2Error,
+   Bzip2Error = 301,
    /** An error when interacting with lzma */
-   LzmaError,
+   LzmaError = 302,
 
 };
 

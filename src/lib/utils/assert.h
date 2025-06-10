@@ -15,6 +15,8 @@ BOTAN_FUTURE_INTERNAL_HEADER(assert.h)
 
 namespace Botan {
 
+// NOLINTBEGIN(*-macro-usage)
+
 /**
 * Called when an assertion fails
 * Throws an Exception object
@@ -137,6 +139,8 @@ constexpr void ignore_params(T&&... args) {
 [[noreturn]] void BOTAN_UNSTABLE_API assert_unreachable(const char* file, int line);
 
 #define BOTAN_ASSERT_UNREACHABLE() Botan::assert_unreachable(__FILE__, __LINE__)
+
+// NOLINTEND(*-macro-usage)
 
 }  // namespace Botan
 

@@ -18,7 +18,7 @@
 
 namespace Botan::TLS {
 
-enum class Cipher_Algo {
+enum class Cipher_Algo : uint8_t {
    CHACHA20_POLY1305,
 
    AES_128_GCM,
@@ -46,7 +46,7 @@ enum class Cipher_Algo {
    DES_EDE_CBC_HMAC_SHA1,
 };
 
-enum class KDF_Algo {
+enum class KDF_Algo : uint8_t {
    SHA_1,
    SHA_256,
    SHA_384,
@@ -54,7 +54,7 @@ enum class KDF_Algo {
 
 std::string BOTAN_DLL kdf_algo_to_string(KDF_Algo algo);
 
-enum class Nonce_Format {
+enum class Nonce_Format : uint8_t {
    CBC_MODE,
    AEAD_IMPLICIT_4,
    AEAD_XOR_12,
@@ -63,12 +63,12 @@ enum class Nonce_Format {
 
 // TODO encoding should match signature_algorithms extension
 // TODO this should include hash etc as in TLS v1.3
-enum class Auth_Method {
-   RSA,
-   ECDSA,
+enum class Auth_Method : uint32_t {
+   RSA = 0,
+   ECDSA = 1,
 
    // To support TLS 1.3 ciphersuites, which do not determine the auth method
-   UNDEFINED,
+   UNDEFINED = 2,
 
    // These are placed outside the encodable range
    IMPLICIT = 0x10000
