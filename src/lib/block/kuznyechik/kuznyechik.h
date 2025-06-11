@@ -1,6 +1,7 @@
 /*
 * Kuznyechik
-* (C) 2012 Jack Lloyd
+* (C) 2023 Richard Huveneers
+*     2025 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,6 +10,7 @@
 #define BOTAN_KUZNYECHIK_H_
 
 #include <botan/block_cipher.h>
+#include <botan/secmem.h>
 
 namespace Botan {
 
@@ -27,13 +29,11 @@ class Kuznyechik final : public Botan::Block_Cipher_Fixed_Params<16, 32> {
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Kuznyechik>(); }
 
       bool has_keying_material() const override;
-      ~Kuznyechik() override;
 
    private:
       void key_schedule(std::span<const uint8_t> key) override;
-      uint64_t m_rke[10][2];
-      uint64_t m_rkd[10][2];
-      bool m_has_keying_material;
+      secure_vector<uint64_t> m_rke;
+      secure_vector<uint64_t> m_rkd;
 };
 
 }  // namespace Botan
