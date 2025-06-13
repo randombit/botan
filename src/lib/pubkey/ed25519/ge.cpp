@@ -1,6 +1,7 @@
 /*
 * Ed25519 group operations
 * (C) 2017 Ribose Inc
+*     2025 Jack Lloyd
 *
 * Based on the public domain code from SUPERCOP ref10 by
 * Peter Schwabe, Daniel J. Bernstein, Niels Duif, Tanja Lange, Bo-Yin Yang
@@ -10,369 +11,265 @@
 
 #include <botan/internal/ed25519_internal.h>
 
+#include <botan/internal/ed25519_fe.h>
+#include <array>
+#include <span>
+
 namespace Botan {
 
 namespace {
 
-/*
-Representations:
-  ge_p2 (projective): (X:Y:Z) satisfying x=X/Z, y=Y/Z
-  ge_p3 (extended): (X:Y:Z:T) satisfying x=X/Z, y=Y/Z, XY=ZT
-  ge_p1p1 (completed): ((X:Z),(Y:T)) satisfying x=X/Z, y=Y/T
-  ge_precomp (Duif): (y+x,y-x,2dxy)
+/**
+Here the group is the set of pairs (x,y) of field elements (see ed5519_fe.h)
+satisfying -x^2 + y^2 = 1 + d x^2y^2 where d = -121665/121666.
+
+Several different point representations are used in this implementation
 */
-struct ge_p2 {
-      FE_25519 X;
-      FE_25519 Y;
-      FE_25519 Z;
+
+/**
+* Ed25519_Point_Completed
+*
+* ((X:Z),(Y:T)) satisfying x=X/Z, y=Y/T
+*/
+class Ed25519_Point_Completed {
+   public:
+      Ed25519_FieldElement X;  // NOLINT(misc-non-private-member-variables-in-classes)
+      Ed25519_FieldElement Y;  // NOLINT(misc-non-private-member-variables-in-classes)
+      Ed25519_FieldElement Z;  // NOLINT(misc-non-private-member-variables-in-classes)
+      Ed25519_FieldElement T;  // NOLINT(misc-non-private-member-variables-in-classes)
 };
 
-struct ge_p1p1 {
-      FE_25519 X;
-      FE_25519 Y;
-      FE_25519 Z;
-      FE_25519 T;
+/**
+* Ed25519_Point_Projective
+*
+* (X:Y:Z) satisfying x=X/Z, y=Y/Z
+*/
+class Ed25519_Point_Projective {
+   public:
+      Ed25519_FieldElement X;  // NOLINT(misc-non-private-member-variables-in-classes)
+      Ed25519_FieldElement Y;  // NOLINT(misc-non-private-member-variables-in-classes)
+      Ed25519_FieldElement Z;  // NOLINT(misc-non-private-member-variables-in-classes)
+
+      /*
+      * Point conversion
+      */
+      static Ed25519_Point_Projective from(const Ed25519_Point_Completed& p) {
+         Ed25519_Point_Projective r;
+         r.X = p.X * p.T;
+         r.Y = p.Y * p.Z;
+         r.Z = p.Z * p.T;
+         return r;
+      }
+
+      static constexpr Ed25519_Point_Projective identity() {
+         Ed25519_Point_Projective h;
+         h.X = Ed25519_FieldElement::zero();
+         h.Y = Ed25519_FieldElement::one();
+         h.Z = Ed25519_FieldElement::one();
+         return h;
+      }
+
+      void serialize_to(std::span<uint8_t, 32> s) const {
+         auto recip = this->Z.invert();
+         auto x = this->X * recip;
+         auto y = this->Y * recip;
+         y.serialize_to(s);
+         s[31] ^= x.is_negative() ? 0x80 : 0x00;
+      }
+
+      Ed25519_Point_Completed dbl() const;
 };
 
-struct ge_precomp {
-      FE_25519 yplusx;
-      FE_25519 yminusx;
-      FE_25519 xy2d;
+Ed25519_Point_Completed Ed25519_Point_Projective::dbl() const {
+   Ed25519_Point_Completed r;
+   r.X = X.sqr();        // XX=X1^2
+   r.Z = Y.sqr();        // YY=Y1^2
+   r.T = Z.sqr2();       // B=2*Z1^2
+   r.Y = X + Y;          // A=X1+Y1
+   auto t0 = r.Y.sqr();  // AA=A^2
+   r.Y = r.Z + r.X;      // Y3=YY+XX
+   r.Z = r.Z - r.X;      // Z3=YY-XX
+   r.X = t0 - r.Y;       // X3=AA-Y3
+   r.T = r.T - r.Z;      // T3=B-Z3
+   return r;
+}
+
+/**
+* Ed25519_Point_Extended
+*
+* (X:Y:Z:T) satisfying x=X/Z, y=Y/Z, XY=ZT
+*/
+class Ed25519_Point_Extended {
+   public:
+      Ed25519_FieldElement X;  // NOLINT(misc-non-private-member-variables-in-classes)
+      Ed25519_FieldElement Y;  // NOLINT(misc-non-private-member-variables-in-classes)
+      Ed25519_FieldElement Z;  // NOLINT(misc-non-private-member-variables-in-classes)
+      Ed25519_FieldElement T;  // NOLINT(misc-non-private-member-variables-in-classes)
+
+      static constexpr Ed25519_Point_Extended identity() {
+         Ed25519_Point_Extended h;
+         h.X = Ed25519_FieldElement::zero();
+         h.Y = Ed25519_FieldElement::one();
+         h.Z = Ed25519_FieldElement::one();
+         h.T = Ed25519_FieldElement::zero();
+         return h;
+      }
+
+      Ed25519_Point_Completed dbl() const {
+         Ed25519_Point_Projective q;
+         q.X = X;
+         q.Y = Y;
+         q.Z = Z;
+         return q.dbl();
+      }
+
+      /**
+      * Point conversion
+      */
+      static Ed25519_Point_Extended from(const Ed25519_Point_Completed& p) {
+         Ed25519_Point_Extended r;
+         r.X = p.X * p.T;
+         r.Y = p.Y * p.Z;
+         r.Z = p.Z * p.T;
+         r.T = p.X * p.Y;
+         return r;
+      }
+
+      void serialize_to(std::span<uint8_t, 32> out) const {
+         auto recip = this->Z.invert();
+         auto x = this->X * recip;
+         auto y = this->Y * recip;
+         y.serialize_to(out);
+         out[31] ^= x.is_negative() ? 0x80 : 0x00;
+      }
 };
 
-struct ge_cached {
-      FE_25519 YplusX;
-      FE_25519 YminusX;
-      FE_25519 Z;
-      FE_25519 T2d;
+/**
+* Ed25519 Point in "Niels" coordinates
+*
+* y + x, y - x, 2d * x * y
+*
+* where d is the Edwards curve constant.
+*/
+class Ed25519_Point_Niels {
+   public:
+      Ed25519_FieldElement yplusx;   // NOLINT(misc-non-private-member-variables-in-classes)
+      Ed25519_FieldElement yminusx;  // NOLINT(misc-non-private-member-variables-in-classes)
+      Ed25519_FieldElement xy2d;     // NOLINT(misc-non-private-member-variables-in-classes)
+
+      static constexpr Ed25519_Point_Niels identity() {
+         Ed25519_Point_Niels h;
+         h.yplusx = Ed25519_FieldElement::one();
+         h.yminusx = Ed25519_FieldElement::one();
+         h.xy2d = Ed25519_FieldElement::zero();
+         return h;
+      }
+};
+
+class Ed25519_Point_Cached {
+   public:
+      Ed25519_FieldElement YplusX;   // NOLINT(misc-non-private-member-variables-in-classes)
+      Ed25519_FieldElement YminusX;  // NOLINT(misc-non-private-member-variables-in-classes)
+      Ed25519_FieldElement Z;        // NOLINT(misc-non-private-member-variables-in-classes)
+      Ed25519_FieldElement T2d;      // NOLINT(misc-non-private-member-variables-in-classes)
+
+      /**
+      * Point conversion
+      */
+      static Ed25519_Point_Cached from(const Ed25519_Point_Extended& p) {
+         static constexpr Ed25519_FieldElement d2 = {
+            -21827239, -5839606, -30745221, 13898782, 229458, 15978800, -12551817, -6495438, 29715968, 9444199};
+         Ed25519_Point_Cached r;
+         r.YplusX = p.Y + p.X;
+         r.YminusX = p.Y - p.X;
+         r.Z = p.Z;
+         r.T2d = p.T * d2;
+         return r;
+      }
+
+      /**
+      * Point conversion
+      */
+      static Ed25519_Point_Cached from(const Ed25519_Point_Completed& p) {
+         return Ed25519_Point_Cached::from(Ed25519_Point_Extended::from(p));
+      }
 };
 
 /*
-r = p + q
+* Point addition
 */
-
-void ge_add(ge_p1p1* r, const ge_p3* p, const ge_cached* q) {
-   FE_25519 t0;
-   /* qhasm: YpX1 = Y1+X1 */
-   /* asm 1: fe_add(>YpX1=fe#1,<Y1=fe#12,<X1=fe#11); */
-   /* asm 2: fe_add(>YpX1=r->X,<Y1=p->Y,<X1=p->X); */
-   fe_add(r->X, p->Y, p->X);
-
-   /* qhasm: YmX1 = Y1-X1 */
-   /* asm 1: fe_sub(>YmX1=fe#2,<Y1=fe#12,<X1=fe#11); */
-   /* asm 2: fe_sub(>YmX1=r->Y,<Y1=p->Y,<X1=p->X); */
-   fe_sub(r->Y, p->Y, p->X);
-
-   /* qhasm: A = YpX1*YpX2 */
-   /* asm 1: fe_mul(>A=fe#3,<YpX1=fe#1,<YpX2=fe#15); */
-   /* asm 2: fe_mul(>A=r->Z,<YpX1=r->X,<YpX2=q->YplusX); */
-   fe_mul(r->Z, r->X, q->YplusX);
-
-   /* qhasm: B = YmX1*YmX2 */
-   /* asm 1: fe_mul(>B=fe#2,<YmX1=fe#2,<YmX2=fe#16); */
-   /* asm 2: fe_mul(>B=r->Y,<YmX1=r->Y,<YmX2=q->YminusX); */
-   fe_mul(r->Y, r->Y, q->YminusX);
-
-   /* qhasm: C = T2d2*T1 */
-   /* asm 1: fe_mul(>C=fe#4,<T2d2=fe#18,<T1=fe#14); */
-   /* asm 2: fe_mul(>C=r->T,<T2d2=q->T2d,<T1=p->T); */
-   fe_mul(r->T, q->T2d, p->T);
-
-   /* qhasm: ZZ = Z1*Z2 */
-   /* asm 1: fe_mul(>ZZ=fe#1,<Z1=fe#13,<Z2=fe#17); */
-   /* asm 2: fe_mul(>ZZ=r->X,<Z1=p->Z,<Z2=q->Z); */
-   fe_mul(r->X, p->Z, q->Z);
-
-   /* qhasm: D = 2*ZZ */
-   /* asm 1: fe_add(>D=fe#5,<ZZ=fe#1,<ZZ=fe#1); */
-   /* asm 2: fe_add(>D=t0,<ZZ=r->X,<ZZ=r->X); */
-   fe_add(t0, r->X, r->X);
-
-   /* qhasm: X3 = A-B */
-   /* asm 1: fe_sub(>X3=fe#1,<A=fe#3,<B=fe#2); */
-   /* asm 2: fe_sub(>X3=r->X,<A=r->Z,<B=r->Y); */
-   fe_sub(r->X, r->Z, r->Y);
-
-   /* qhasm: Y3 = A+B */
-   /* asm 1: fe_add(>Y3=fe#2,<A=fe#3,<B=fe#2); */
-   /* asm 2: fe_add(>Y3=r->Y,<A=r->Z,<B=r->Y); */
-   fe_add(r->Y, r->Z, r->Y);
-
-   /* qhasm: Z3 = D+C */
-   /* asm 1: fe_add(>Z3=fe#3,<D=fe#5,<C=fe#4); */
-   /* asm 2: fe_add(>Z3=r->Z,<D=t0,<C=r->T); */
-   fe_add(r->Z, t0, r->T);
-
-   /* qhasm: T3 = D-C */
-   /* asm 1: fe_sub(>T3=fe#4,<D=fe#5,<C=fe#4); */
-   /* asm 2: fe_sub(>T3=r->T,<D=t0,<C=r->T); */
-   fe_sub(r->T, t0, r->T);
+inline Ed25519_Point_Completed operator+(const Ed25519_Point_Extended& p, const Ed25519_Point_Cached& q) {
+   Ed25519_Point_Completed r;
+   r.X = p.Y + p.X;        // YpX1 = Y1+X1
+   r.Y = p.Y - p.X;        // YmX1 = Y1-X1
+   r.Z = r.X * q.YplusX;   // A = YpX1*YpX2
+   r.Y = r.Y * q.YminusX;  // B = YmX1*YmX2
+   r.T = q.T2d * p.T;      // C = T2d2*T1
+   r.X = p.Z * q.Z;        // ZZ = Z1*Z2
+   auto t0 = r.X + r.X;    // D = 2*ZZ
+   r.X = r.Z - r.Y;        // X3 = A-B
+   r.Y = r.Z + r.Y;        // Y3 = A+B
+   r.Z = t0 + r.T;         // Z3 = D+C
+   r.T = t0 - r.T;         // T3 = D-C
+   return r;
 }
 
 /*
-r = p + q
+* Point addition
 */
-
-void ge_madd(ge_p1p1* r, const ge_p3* p, const ge_precomp* q) {
-   FE_25519 t0;
-   /* qhasm: YpX1 = Y1+X1 */
-   fe_add(r->X, p->Y, p->X);
-
-   /* qhasm: YmX1 = Y1-X1 */
-   fe_sub(r->Y, p->Y, p->X);
-
-   /* qhasm: A = YpX1*ypx2 */
-   fe_mul(r->Z, r->X, q->yplusx);
-
-   /* qhasm: B = YmX1*ymx2 */
-   fe_mul(r->Y, r->Y, q->yminusx);
-
-   /* qhasm: C = xy2d2*T1 */
-   fe_mul(r->T, q->xy2d, p->T);
-
-   /* qhasm: D = 2*Z1 */
-   fe_add(t0, p->Z, p->Z);
-
-   /* qhasm: X3 = A-B */
-   fe_sub(r->X, r->Z, r->Y);
-
-   /* qhasm: Y3 = A+B */
-   fe_add(r->Y, r->Z, r->Y);
-
-   /* qhasm: Z3 = D+C */
-   fe_add(r->Z, t0, r->T);
-
-   /* qhasm: T3 = D-C */
-   fe_sub(r->T, t0, r->T);
+inline Ed25519_Point_Completed operator+(const Ed25519_Point_Extended& p, const Ed25519_Point_Niels& q) {
+   Ed25519_Point_Completed r;
+   r.X = p.Y + p.X;        // YpX1 = Y1+X1
+   r.Y = p.Y - p.X;        // YmX1 = Y1-X1
+   r.Z = r.X * q.yplusx;   // A = YpX1*ypx2
+   r.Y = r.Y * q.yminusx;  // B = YmX1*ymx2
+   r.T = q.xy2d * p.T;     // C = xy2d2*T1
+   auto t0 = p.Z + p.Z;    // D = 2*Z1
+   r.X = r.Z - r.Y;        // X3 = A-B
+   r.Y = r.Z + r.Y;        // Y3 = A+B
+   r.Z = t0 + r.T;         // Z3 = D+C
+   r.T = t0 - r.T;         // T3 = D-C
+   return r;
 }
 
 /*
-r = p - q
+* Point subtraction
 */
-
-void ge_msub(ge_p1p1* r, const ge_p3* p, const ge_precomp* q) {
-   FE_25519 t0;
-
-   /* qhasm: YpX1 = Y1+X1 */
-   /* asm 1: fe_add(>YpX1=fe#1,<Y1=fe#12,<X1=fe#11); */
-   /* asm 2: fe_add(>YpX1=r->X,<Y1=p->Y,<X1=p->X); */
-   fe_add(r->X, p->Y, p->X);
-
-   /* qhasm: YmX1 = Y1-X1 */
-   /* asm 1: fe_sub(>YmX1=fe#2,<Y1=fe#12,<X1=fe#11); */
-   /* asm 2: fe_sub(>YmX1=r->Y,<Y1=p->Y,<X1=p->X); */
-   fe_sub(r->Y, p->Y, p->X);
-
-   /* qhasm: A = YpX1*ymx2 */
-   /* asm 1: fe_mul(>A=fe#3,<YpX1=fe#1,<ymx2=fe#16); */
-   /* asm 2: fe_mul(>A=r->Z,<YpX1=r->X,<ymx2=q->yminusx); */
-   fe_mul(r->Z, r->X, q->yminusx);
-
-   /* qhasm: B = YmX1*ypx2 */
-   /* asm 1: fe_mul(>B=fe#2,<YmX1=fe#2,<ypx2=fe#15); */
-   /* asm 2: fe_mul(>B=r->Y,<YmX1=r->Y,<ypx2=q->yplusx); */
-   fe_mul(r->Y, r->Y, q->yplusx);
-
-   /* qhasm: C = xy2d2*T1 */
-   /* asm 1: fe_mul(>C=fe#4,<xy2d2=fe#17,<T1=fe#14); */
-   /* asm 2: fe_mul(>C=r->T,<xy2d2=q->xy2d,<T1=p->T); */
-   fe_mul(r->T, q->xy2d, p->T);
-
-   /* qhasm: D = 2*Z1 */
-   /* asm 1: fe_add(>D=fe#5,<Z1=fe#13,<Z1=fe#13); */
-   /* asm 2: fe_add(>D=t0,<Z1=p->Z,<Z1=p->Z); */
-   fe_add(t0, p->Z, p->Z);
-
-   /* qhasm: X3 = A-B */
-   /* asm 1: fe_sub(>X3=fe#1,<A=fe#3,<B=fe#2); */
-   /* asm 2: fe_sub(>X3=r->X,<A=r->Z,<B=r->Y); */
-   fe_sub(r->X, r->Z, r->Y);
-
-   /* qhasm: Y3 = A+B */
-   /* asm 1: fe_add(>Y3=fe#2,<A=fe#3,<B=fe#2); */
-   /* asm 2: fe_add(>Y3=r->Y,<A=r->Z,<B=r->Y); */
-   fe_add(r->Y, r->Z, r->Y);
-
-   /* qhasm: Z3 = D-C */
-   /* asm 1: fe_sub(>Z3=fe#3,<D=fe#5,<C=fe#4); */
-   /* asm 2: fe_sub(>Z3=r->Z,<D=t0,<C=r->T); */
-   fe_sub(r->Z, t0, r->T);
-
-   /* qhasm: T3 = D+C */
-   /* asm 1: fe_add(>T3=fe#4,<D=fe#5,<C=fe#4); */
-   /* asm 2: fe_add(>T3=r->T,<D=t0,<C=r->T); */
-   fe_add(r->T, t0, r->T);
+inline Ed25519_Point_Completed operator-(const Ed25519_Point_Extended& p, const Ed25519_Point_Niels& q) {
+   Ed25519_Point_Completed r;
+   r.X = p.Y + p.X;        // YpX1 = Y1+X1
+   r.Y = p.Y - p.X;        // YmX1 = Y1-X1
+   r.Z = r.X * q.yminusx;  // A = YpX1*ymx2
+   r.Y = r.Y * q.yplusx;   // B = YmX1*ypx2
+   r.T = q.xy2d * p.T;     // C = xy2d2*T1
+   auto t0 = p.Z + p.Z;    // D = 2*Z1
+   r.X = r.Z - r.Y;        // X3 = A-B
+   r.Y = r.Z + r.Y;        // Y3 = A+B
+   r.Z = t0 - r.T;         // Z3 = D-C
+   r.T = t0 + r.T;         // T3 = D+C
+   return r;
 }
 
 /*
-r = p
+* Point subtraction
 */
-
-void ge_p1p1_to_p2(ge_p2* r, const ge_p1p1* p) {
-   fe_mul(r->X, p->X, p->T);
-   fe_mul(r->Y, p->Y, p->Z);
-   fe_mul(r->Z, p->Z, p->T);
+inline Ed25519_Point_Completed operator-(const Ed25519_Point_Extended& p, const Ed25519_Point_Cached& q) {
+   Ed25519_Point_Completed r;
+   r.X = p.Y + p.X;        // YpX1 = Y1+X1
+   r.Y = p.Y - p.X;        // YmX1 = Y1-X1
+   r.Z = r.X * q.YminusX;  // A = YpX1*YmX2
+   r.Y = r.Y * q.YplusX;   // B = YmX1*YpX2
+   r.T = q.T2d * p.T;      // C = T2d2*T1
+   r.X = p.Z * q.Z;        // ZZ = Z1*Z2
+   auto t0 = r.X + r.X;    // D = 2*ZZ
+   r.X = r.Z - r.Y;        // X3 = A-B
+   r.Y = r.Z + r.Y;        // Y3 = A+B
+   r.Z = t0 - r.T;         // Z3 = D-C
+   r.T = t0 + r.T;         // T3 = D+C
+   return r;
 }
 
-/*
-r = p
-*/
-
-void ge_p1p1_to_p3(ge_p3* r, const ge_p1p1* p) {
-   fe_mul(r->X, p->X, p->T);
-   fe_mul(r->Y, p->Y, p->Z);
-   fe_mul(r->Z, p->Z, p->T);
-   fe_mul(r->T, p->X, p->Y);
-}
-
-/*
-r = 2 * p
-*/
-
-void ge_p2_dbl(ge_p1p1* r, const ge_p2* p) {
-   FE_25519 t0;
-   /* qhasm: XX=X1^2 */
-   /* asm 1: fe_sq(>XX=fe#1,<X1=fe#11); */
-   /* asm 2: fe_sq(>XX=r->X,<X1=p->X); */
-   fe_sq(r->X, p->X);
-
-   /* qhasm: YY=Y1^2 */
-   /* asm 1: fe_sq(>YY=fe#3,<Y1=fe#12); */
-   /* asm 2: fe_sq(>YY=r->Z,<Y1=p->Y); */
-   fe_sq(r->Z, p->Y);
-
-   /* qhasm: B=2*Z1^2 */
-   /* asm 1: fe_sq2(>B=fe#4,<Z1=fe#13); */
-   /* asm 2: fe_sq2(>B=r->T,<Z1=p->Z); */
-   fe_sq2(r->T, p->Z);
-
-   /* qhasm: A=X1+Y1 */
-   /* asm 1: fe_add(>A=fe#2,<X1=fe#11,<Y1=fe#12); */
-   /* asm 2: fe_add(>A=r->Y,<X1=p->X,<Y1=p->Y); */
-   fe_add(r->Y, p->X, p->Y);
-
-   /* qhasm: AA=A^2 */
-   /* asm 1: fe_sq(>AA=fe#5,<A=fe#2); */
-   /* asm 2: fe_sq(>AA=t0,<A=r->Y); */
-   fe_sq(t0, r->Y);
-
-   /* qhasm: Y3=YY+XX */
-   /* asm 1: fe_add(>Y3=fe#2,<YY=fe#3,<XX=fe#1); */
-   /* asm 2: fe_add(>Y3=r->Y,<YY=r->Z,<XX=r->X); */
-   fe_add(r->Y, r->Z, r->X);
-
-   /* qhasm: Z3=YY-XX */
-   /* asm 1: fe_sub(>Z3=fe#3,<YY=fe#3,<XX=fe#1); */
-   /* asm 2: fe_sub(>Z3=r->Z,<YY=r->Z,<XX=r->X); */
-   fe_sub(r->Z, r->Z, r->X);
-
-   /* qhasm: X3=AA-Y3 */
-   /* asm 1: fe_sub(>X3=fe#1,<AA=fe#5,<Y3=fe#2); */
-   /* asm 2: fe_sub(>X3=r->X,<AA=t0,<Y3=r->Y); */
-   fe_sub(r->X, t0, r->Y);
-
-   /* qhasm: T3=B-Z3 */
-   /* asm 1: fe_sub(>T3=fe#4,<B=fe#4,<Z3=fe#3); */
-   /* asm 2: fe_sub(>T3=r->T,<B=r->T,<Z3=r->Z); */
-   fe_sub(r->T, r->T, r->Z);
-}
-
-void ge_p3_0(ge_p3* h) {
-   fe_0(h->X);
-   fe_1(h->Y);
-   fe_1(h->Z);
-   fe_0(h->T);
-}
-
-/*
-r = 2 * p
-*/
-
-void ge_p3_dbl(ge_p1p1* r, const ge_p3* p) {
-   ge_p2 q;
-   // Convert to p2 rep
-   q.X = p->X;
-   q.Y = p->Y;
-   q.Z = p->Z;
-   ge_p2_dbl(r, &q);
-}
-
-/*
-r = p
-*/
-
-void ge_p3_to_cached(ge_cached* r, const ge_p3* p) {
-   static const FE_25519 d2 = {
-      -21827239, -5839606, -30745221, 13898782, 229458, 15978800, -12551817, -6495438, 29715968, 9444199};
-   fe_add(r->YplusX, p->Y, p->X);
-   fe_sub(r->YminusX, p->Y, p->X);
-   fe_copy(r->Z, p->Z);
-   fe_mul(r->T2d, p->T, d2);
-}
-
-/*
-r = p - q
-*/
-
-void ge_sub(ge_p1p1* r, const ge_p3* p, const ge_cached* q) {
-   FE_25519 t0;
-   /* qhasm: YpX1 = Y1+X1 */
-   /* asm 1: fe_add(>YpX1=fe#1,<Y1=fe#12,<X1=fe#11); */
-   /* asm 2: fe_add(>YpX1=r->X,<Y1=p->Y,<X1=p->X); */
-   fe_add(r->X, p->Y, p->X);
-
-   /* qhasm: YmX1 = Y1-X1 */
-   /* asm 1: fe_sub(>YmX1=fe#2,<Y1=fe#12,<X1=fe#11); */
-   /* asm 2: fe_sub(>YmX1=r->Y,<Y1=p->Y,<X1=p->X); */
-   fe_sub(r->Y, p->Y, p->X);
-
-   /* qhasm: A = YpX1*YmX2 */
-   /* asm 1: fe_mul(>A=fe#3,<YpX1=fe#1,<YmX2=fe#16); */
-   /* asm 2: fe_mul(>A=r->Z,<YpX1=r->X,<YmX2=q->YminusX); */
-   fe_mul(r->Z, r->X, q->YminusX);
-
-   /* qhasm: B = YmX1*YpX2 */
-   /* asm 1: fe_mul(>B=fe#2,<YmX1=fe#2,<YpX2=fe#15); */
-   /* asm 2: fe_mul(>B=r->Y,<YmX1=r->Y,<YpX2=q->YplusX); */
-   fe_mul(r->Y, r->Y, q->YplusX);
-
-   /* qhasm: C = T2d2*T1 */
-   /* asm 1: fe_mul(>C=fe#4,<T2d2=fe#18,<T1=fe#14); */
-   /* asm 2: fe_mul(>C=r->T,<T2d2=q->T2d,<T1=p->T); */
-   fe_mul(r->T, q->T2d, p->T);
-
-   /* qhasm: ZZ = Z1*Z2 */
-   /* asm 1: fe_mul(>ZZ=fe#1,<Z1=fe#13,<Z2=fe#17); */
-   /* asm 2: fe_mul(>ZZ=r->X,<Z1=p->Z,<Z2=q->Z); */
-   fe_mul(r->X, p->Z, q->Z);
-
-   /* qhasm: D = 2*ZZ */
-   /* asm 1: fe_add(>D=fe#5,<ZZ=fe#1,<ZZ=fe#1); */
-   /* asm 2: fe_add(>D=t0,<ZZ=r->X,<ZZ=r->X); */
-   fe_add(t0, r->X, r->X);
-
-   /* qhasm: X3 = A-B */
-   /* asm 1: fe_sub(>X3=fe#1,<A=fe#3,<B=fe#2); */
-   /* asm 2: fe_sub(>X3=r->X,<A=r->Z,<B=r->Y); */
-   fe_sub(r->X, r->Z, r->Y);
-
-   /* qhasm: Y3 = A+B */
-   /* asm 1: fe_add(>Y3=fe#2,<A=fe#3,<B=fe#2); */
-   /* asm 2: fe_add(>Y3=r->Y,<A=r->Z,<B=r->Y); */
-   fe_add(r->Y, r->Z, r->Y);
-
-   /* qhasm: Z3 = D-C */
-   /* asm 1: fe_sub(>Z3=fe#3,<D=fe#5,<C=fe#4); */
-   /* asm 2: fe_sub(>Z3=r->Z,<D=t0,<C=r->T); */
-   fe_sub(r->Z, t0, r->T);
-
-   /* qhasm: T3 = D+C */
-   /* asm 1: fe_add(>T3=fe#4,<D=fe#5,<C=fe#4); */
-   /* asm 2: fe_add(>T3=r->T,<D=t0,<C=r->T); */
-   fe_add(r->T, t0, r->T);
-}
-
-void slide(int8_t* r, const uint8_t* a) {
+void slide(std::span<int8_t, 256> r, const uint8_t* a) {
    for(size_t i = 0; i < 256; ++i) {
       r[i] = 1 & (a[i >> 3] >> (i & 7));
    }
@@ -402,72 +299,46 @@ void slide(int8_t* r, const uint8_t* a) {
    }
 }
 
-void ge_tobytes(uint8_t* s, const ge_p2* h) {
-   FE_25519 recip;
-   FE_25519 x;
-   FE_25519 y;
-
-   fe_invert(recip, h->Z);
-   fe_mul(x, h->X, recip);
-   fe_mul(y, h->Y, recip);
-   fe_tobytes(s, y);
-   s[31] ^= fe_isnegative(x) << 7;
-}
-
-void ge_p2_0(ge_p2* h) {
-   fe_0(h->X);
-   fe_1(h->Y);
-   fe_1(h->Z);
-}
-
-}  // namespace
-
-int ge_frombytes_negate_vartime(ge_p3* h, const uint8_t* s) {
-   static const FE_25519 d = {
+std::optional<Ed25519_Point_Extended> frombytes_negate_vartime(std::span<const uint8_t, 32> s) {
+   static constexpr Ed25519_FieldElement d = {
       -10913610, 13857413, -15372611, 6949391, 114729, -8787816, -6275908, -3247719, -18696448, -12055116};
-   static const FE_25519 sqrtm1 = {
+   static constexpr Ed25519_FieldElement sqrtm1 = {
       -32595792, -7943725, 9377950, 3500415, 12389472, -272473, -25146209, -2005654, 326686, 11406482};
 
-   FE_25519 u;
-   FE_25519 v;
-   FE_25519 v3;
-   FE_25519 vxx;
-   FE_25519 check;
+   auto h = Ed25519_Point_Extended::identity();
+   h.Y = Ed25519_FieldElement::deserialize(s.data());
+   h.Z = Ed25519_FieldElement::one();
+   auto u = h.Y.sqr();
+   auto v = u * d;
+   u = u - h.Z; /* u = y^2-1 */
+   v = v + h.Z; /* v = dy^2+1 */
 
-   fe_frombytes(h->Y, s);
-   fe_1(h->Z);
-   fe_sq(u, h->Y);
-   fe_mul(v, u, d);
-   fe_sub(u, u, h->Z); /* u = y^2-1 */
-   fe_add(v, v, h->Z); /* v = dy^2+1 */
+   auto v3 = v.sqr() * v;
+   h.X = v3.sqr();
+   h.X = h.X * v;
+   h.X = h.X * u; /* x = uv^7 */
 
-   fe_sq(v3, v);
-   fe_mul(v3, v3, v); /* v3 = v^3 */
-   fe_sq(h->X, v3);
-   fe_mul(h->X, h->X, v);
-   fe_mul(h->X, h->X, u); /* x = uv^7 */
+   h.X = h.X.pow_22523();
+   h.X = h.X * v3;
+   h.X = h.X * u; /* x = uv^3(uv^7)^((q-5)/8) */
 
-   fe_pow22523(h->X, h->X); /* x = (uv^7)^((q-5)/8) */
-   fe_mul(h->X, h->X, v3);
-   fe_mul(h->X, h->X, u); /* x = uv^3(uv^7)^((q-5)/8) */
-
-   fe_sq(vxx, h->X);
-   fe_mul(vxx, vxx, v);
-   fe_sub(check, vxx, u); /* vx^2-u */
-   if(fe_isnonzero(check)) {
-      fe_add(check, vxx, u); /* vx^2+u */
-      if(fe_isnonzero(check)) {
-         return -1;
+   auto vxx = h.X.sqr();
+   vxx = vxx * v;
+   auto check = vxx - u; /* vx^2-u */
+   if(!check.is_zero()) {
+      check = vxx + u; /* vx^2+u */
+      if(!check.is_zero()) {
+         return {};
       }
-      fe_mul(h->X, h->X, sqrtm1);
+      h.X = h.X * sqrtm1;
    }
 
-   if(fe_isnegative(h->X) == (s[31] >> 7)) {
-      fe_neg(h->X, h->X);
+   if(h.X.is_negative() == bool(s[31] >> 7)) {
+      h.X = -h.X;
    }
 
-   fe_mul(h->T, h->X, h->Y);
-   return 0;
+   h.T = h.X * h.Y;
+   return h;
 }
 
 /*
@@ -477,8 +348,11 @@ and b = b[0]+256*b[1]+...+256^31 b[31].
 B is the Ed25519 base point (x,4/5) with x positive.
 */
 
-void ge_double_scalarmult_vartime(uint8_t out[32], const uint8_t* a, const ge_p3* A, const uint8_t* b) {
-   static const ge_precomp Bi[8] = {
+void ge_double_scalarmult_vartime(std::span<uint8_t, 32> out,
+                                  const uint8_t* a,
+                                  const Ed25519_Point_Extended& A,
+                                  const uint8_t* b) {
+   static constexpr Ed25519_Point_Niels Bi[8] = {
       {
          {25967493, -14356035, 29566456, 3660896, -12694345, 4014787, 27544626, -11754271, -6079156, 2047605},
          {-12545711, 934262, -2722910, 3049990, -727428, 9406986, 12720692, 5043384, 19500929, -15469378},
@@ -521,45 +395,23 @@ void ge_double_scalarmult_vartime(uint8_t out[32], const uint8_t* a, const ge_p3
       },
    };
 
-   int8_t aslide[256];
-   int8_t bslide[256];
-   ge_cached Ai[8]; /* A,3A,5A,7A,9A,11A,13A,15A */
-   ge_p1p1 t;
-   ge_p3 u;
-   ge_p3 A2;
-   ge_p2 r;
-   int i;
+   std::array<int8_t, 256> aslide;
+   std::array<int8_t, 256> bslide;
 
    slide(aslide, a);
    slide(bslide, b);
 
-   ge_p3_to_cached(&Ai[0], A);
-   ge_p3_dbl(&t, A);
-   ge_p1p1_to_p3(&A2, &t);
-   ge_add(&t, &A2, &Ai[0]);
-   ge_p1p1_to_p3(&u, &t);
-   ge_p3_to_cached(&Ai[1], &u);
-   ge_add(&t, &A2, &Ai[1]);
-   ge_p1p1_to_p3(&u, &t);
-   ge_p3_to_cached(&Ai[2], &u);
-   ge_add(&t, &A2, &Ai[2]);
-   ge_p1p1_to_p3(&u, &t);
-   ge_p3_to_cached(&Ai[3], &u);
-   ge_add(&t, &A2, &Ai[3]);
-   ge_p1p1_to_p3(&u, &t);
-   ge_p3_to_cached(&Ai[4], &u);
-   ge_add(&t, &A2, &Ai[4]);
-   ge_p1p1_to_p3(&u, &t);
-   ge_p3_to_cached(&Ai[5], &u);
-   ge_add(&t, &A2, &Ai[5]);
-   ge_p1p1_to_p3(&u, &t);
-   ge_p3_to_cached(&Ai[6], &u);
-   ge_add(&t, &A2, &Ai[6]);
-   ge_p1p1_to_p3(&u, &t);
-   ge_p3_to_cached(&Ai[7], &u);
+   Ed25519_Point_Cached Ai[8]; /* A,3A,5A,7A,9A,11A,13A,15A */
+   Ai[0] = Ed25519_Point_Cached::from(A);
+   const auto A2 = Ed25519_Point_Extended::from(A.dbl());
 
-   ge_p2_0(&r);
+   for(size_t i = 1; i != 8; ++i) {
+      Ai[i] = Ed25519_Point_Cached::from(A2 + Ai[i - 1]);
+   }
 
+   auto r = Ed25519_Point_Projective::identity();
+
+   int i;
    for(i = 255; i >= 0; --i) {
       if(aslide[i] || bslide[i]) {
          break;
@@ -567,32 +419,86 @@ void ge_double_scalarmult_vartime(uint8_t out[32], const uint8_t* a, const ge_p3
    }
 
    for(; i >= 0; --i) {
-      ge_p2_dbl(&t, &r);
+      auto t = r.dbl();
 
       if(aslide[i] > 0) {
-         ge_p1p1_to_p3(&u, &t);
-         ge_add(&t, &u, &Ai[aslide[i] >> 1]);
+         t = Ed25519_Point_Extended::from(t) + Ai[aslide[i] >> 1];
       } else if(aslide[i] < 0) {
-         ge_p1p1_to_p3(&u, &t);
-         ge_sub(&t, &u, &Ai[(-aslide[i]) >> 1]);
+         t = Ed25519_Point_Extended::from(t) - Ai[(-aslide[i]) >> 1];
       }
 
       if(bslide[i] > 0) {
-         ge_p1p1_to_p3(&u, &t);
-         ge_madd(&t, &u, &Bi[bslide[i] >> 1]);
+         t = Ed25519_Point_Extended::from(t) + Bi[bslide[i] >> 1];
       } else if(bslide[i] < 0) {
-         ge_p1p1_to_p3(&u, &t);
-         ge_msub(&t, &u, &Bi[(-bslide[i]) >> 1]);
+         t = Ed25519_Point_Extended::from(t) - Bi[(-bslide[i]) >> 1];
       }
 
-      ge_p1p1_to_p2(&r, &t);
+      r = Ed25519_Point_Projective::from(t);
    }
 
-   ge_tobytes(out, &r);
+   r.serialize_to(std::span<uint8_t, 32>{out});
+}
+
+inline uint32_t equal32(uint8_t b, uint8_t c) {
+   return CT::Mask<uint32_t>::is_equal(b, c).value();
+}
+
+inline uint8_t negative(int8_t b) {
+   return static_cast<uint8_t>(b) >> 7;
+}
+
+Ed25519_Point_Niels select(const Ed25519_Point_Niels base[8], int8_t b) {
+   const uint8_t bnegative = negative(b);
+   const uint8_t babs = b - ((-static_cast<int>(bnegative) & b) * 2);
+   const uint32_t neg_mask = equal32(bnegative, 1);
+
+   const uint32_t mask1 = equal32(babs, 1);
+   const uint32_t mask2 = equal32(babs, 2);
+   const uint32_t mask3 = equal32(babs, 3);
+   const uint32_t mask4 = equal32(babs, 4);
+   const uint32_t mask5 = equal32(babs, 5);
+   const uint32_t mask6 = equal32(babs, 6);
+   const uint32_t mask7 = equal32(babs, 7);
+   const uint32_t mask8 = equal32(babs, 8);
+
+   auto t = Ed25519_Point_Niels::identity();
+
+   for(size_t i = 0; i != 10; ++i) {
+      t.yplusx[i] = t.yplusx[i] ^ ((t.yplusx[i] ^ base[0].yplusx[i]) & mask1) ^
+                    ((t.yplusx[i] ^ base[1].yplusx[i]) & mask2) ^ ((t.yplusx[i] ^ base[2].yplusx[i]) & mask3) ^
+                    ((t.yplusx[i] ^ base[3].yplusx[i]) & mask4) ^ ((t.yplusx[i] ^ base[4].yplusx[i]) & mask5) ^
+                    ((t.yplusx[i] ^ base[5].yplusx[i]) & mask6) ^ ((t.yplusx[i] ^ base[6].yplusx[i]) & mask7) ^
+                    ((t.yplusx[i] ^ base[7].yplusx[i]) & mask8);
+
+      t.yminusx[i] = t.yminusx[i] ^ ((t.yminusx[i] ^ base[0].yminusx[i]) & mask1) ^
+                     ((t.yminusx[i] ^ base[1].yminusx[i]) & mask2) ^ ((t.yminusx[i] ^ base[2].yminusx[i]) & mask3) ^
+                     ((t.yminusx[i] ^ base[3].yminusx[i]) & mask4) ^ ((t.yminusx[i] ^ base[4].yminusx[i]) & mask5) ^
+                     ((t.yminusx[i] ^ base[5].yminusx[i]) & mask6) ^ ((t.yminusx[i] ^ base[6].yminusx[i]) & mask7) ^
+                     ((t.yminusx[i] ^ base[7].yminusx[i]) & mask8);
+
+      t.xy2d[i] = t.xy2d[i] ^ ((t.xy2d[i] ^ base[0].xy2d[i]) & mask1) ^ ((t.xy2d[i] ^ base[1].xy2d[i]) & mask2) ^
+                  ((t.xy2d[i] ^ base[2].xy2d[i]) & mask3) ^ ((t.xy2d[i] ^ base[3].xy2d[i]) & mask4) ^
+                  ((t.xy2d[i] ^ base[4].xy2d[i]) & mask5) ^ ((t.xy2d[i] ^ base[5].xy2d[i]) & mask6) ^
+                  ((t.xy2d[i] ^ base[6].xy2d[i]) & mask7) ^ ((t.xy2d[i] ^ base[7].xy2d[i]) & mask8);
+   }
+
+   auto minus_xy2d = -t.xy2d;
+
+   // If negative have to swap yminusx and yplusx
+   for(size_t i = 0; i != 10; ++i) {
+      int32_t t_yplusx = t.yplusx[i] ^ ((t.yplusx[i] ^ t.yminusx[i]) & neg_mask);
+      int32_t t_yminusx = t.yminusx[i] ^ ((t.yminusx[i] ^ t.yplusx[i]) & neg_mask);
+
+      t.yplusx[i] = t_yplusx;
+      t.yminusx[i] = t_yminusx;
+      t.xy2d[i] = t.xy2d[i] ^ ((t.xy2d[i] ^ minus_xy2d[i]) & neg_mask);
+   }
+
+   return t;
 }
 
 /* base[i][j] = (j+1)*256^i*B */
-static const ge_precomp B_precomp[32][8] = {
+constexpr Ed25519_Point_Niels B_precomp[32][8] = {
    {
       {
          {25967493, -14356035, 29566456, 3660896, -12694345, 4014787, 27544626, -11754271, -6079156, 2047605},
@@ -1939,96 +1845,6 @@ static const ge_precomp B_precomp[32][8] = {
    },
 };
 
-namespace {
-
-inline uint8_t equal(int8_t b, int8_t c) {
-   uint8_t ub = b;
-   uint8_t uc = c;
-   uint8_t x = ub ^ uc; /* 0: yes; 1..255: no */
-   uint32_t y = x;      /* 0: yes; 1..255: no */
-   y -= 1;              /* 4294967295: yes; 0..254: no */
-   y >>= 31;            /* 1: yes; 0: no */
-   return static_cast<uint8_t>(y);
-}
-
-inline int32_t equal32(int8_t b, int8_t c) {
-   return -static_cast<int32_t>(equal(b, c));
-}
-
-inline uint8_t negative(int8_t b) {
-   /* 18446744073709551361..18446744073709551615: yes; 0..255: no */
-   uint64_t x = b;  // NOLINT(bugprone-signed-char-misuse,cert-str34-c)
-   x >>= 63;        /* 1: yes; 0: no */
-   return static_cast<uint8_t>(x);
-}
-
-inline void ge_precomp_0(ge_precomp* h) {
-   fe_1(h->yplusx);
-   fe_1(h->yminusx);
-   fe_0(h->xy2d);
-}
-
-inline void select(ge_precomp* t, const ge_precomp* base, int8_t b) {
-   const uint8_t bnegative = negative(b);
-   const uint8_t babs = b - ((-static_cast<int>(bnegative) & b) * 2);
-   const int32_t neg_mask = equal32(bnegative, 1);
-
-   const int32_t mask1 = equal32(babs, 1);
-   const int32_t mask2 = equal32(babs, 2);
-   const int32_t mask3 = equal32(babs, 3);
-   const int32_t mask4 = equal32(babs, 4);
-   const int32_t mask5 = equal32(babs, 5);
-   const int32_t mask6 = equal32(babs, 6);
-   const int32_t mask7 = equal32(babs, 7);
-   const int32_t mask8 = equal32(babs, 8);
-
-   ge_precomp_0(t);
-
-   for(size_t i = 0; i != 10; ++i) {
-      t->yplusx[i] = t->yplusx[i] ^ ((t->yplusx[i] ^ base[0].yplusx[i]) & mask1) ^
-                     ((t->yplusx[i] ^ base[1].yplusx[i]) & mask2) ^ ((t->yplusx[i] ^ base[2].yplusx[i]) & mask3) ^
-                     ((t->yplusx[i] ^ base[3].yplusx[i]) & mask4) ^ ((t->yplusx[i] ^ base[4].yplusx[i]) & mask5) ^
-                     ((t->yplusx[i] ^ base[5].yplusx[i]) & mask6) ^ ((t->yplusx[i] ^ base[6].yplusx[i]) & mask7) ^
-                     ((t->yplusx[i] ^ base[7].yplusx[i]) & mask8);
-
-      t->yminusx[i] = t->yminusx[i] ^ ((t->yminusx[i] ^ base[0].yminusx[i]) & mask1) ^
-                      ((t->yminusx[i] ^ base[1].yminusx[i]) & mask2) ^ ((t->yminusx[i] ^ base[2].yminusx[i]) & mask3) ^
-                      ((t->yminusx[i] ^ base[3].yminusx[i]) & mask4) ^ ((t->yminusx[i] ^ base[4].yminusx[i]) & mask5) ^
-                      ((t->yminusx[i] ^ base[5].yminusx[i]) & mask6) ^ ((t->yminusx[i] ^ base[6].yminusx[i]) & mask7) ^
-                      ((t->yminusx[i] ^ base[7].yminusx[i]) & mask8);
-
-      t->xy2d[i] = t->xy2d[i] ^ ((t->xy2d[i] ^ base[0].xy2d[i]) & mask1) ^ ((t->xy2d[i] ^ base[1].xy2d[i]) & mask2) ^
-                   ((t->xy2d[i] ^ base[2].xy2d[i]) & mask3) ^ ((t->xy2d[i] ^ base[3].xy2d[i]) & mask4) ^
-                   ((t->xy2d[i] ^ base[4].xy2d[i]) & mask5) ^ ((t->xy2d[i] ^ base[5].xy2d[i]) & mask6) ^
-                   ((t->xy2d[i] ^ base[6].xy2d[i]) & mask7) ^ ((t->xy2d[i] ^ base[7].xy2d[i]) & mask8);
-   }
-
-   FE_25519 minus_xy2d;
-   fe_neg(minus_xy2d, t->xy2d);
-
-   // If negative have to swap yminusx and yplusx
-   for(size_t i = 0; i != 10; ++i) {
-      int32_t t_yplusx = t->yplusx[i] ^ ((t->yplusx[i] ^ t->yminusx[i]) & neg_mask);
-      int32_t t_yminusx = t->yminusx[i] ^ ((t->yminusx[i] ^ t->yplusx[i]) & neg_mask);
-
-      t->yplusx[i] = t_yplusx;
-      t->yminusx[i] = t_yminusx;
-      t->xy2d[i] = t->xy2d[i] ^ ((t->xy2d[i] ^ minus_xy2d[i]) & neg_mask);
-   }
-}
-
-void ge_p3_tobytes(uint8_t* s, const ge_p3* h) {
-   FE_25519 recip;
-   FE_25519 x;
-   FE_25519 y;
-
-   fe_invert(recip, h->Z);
-   fe_mul(x, h->X, recip);
-   fe_mul(y, h->Y, recip);
-   fe_tobytes(s, y);
-   s[31] ^= fe_isnegative(x) << 7;
-}
-
 }  // namespace
 
 /*
@@ -2039,25 +1855,19 @@ B is the Ed25519 base point (x,4/5) with x positive.
 Preconditions:
   a[31] <= 127
 */
+void ed25519_basepoint_mul(std::span<uint8_t, 32> out, const uint8_t a[32]) {
+   std::array<int8_t, 64> e;
 
-void ge_scalarmult_base(uint8_t out[32], const uint8_t a[32]) {
-   int8_t e[64];
-   int8_t carry;
-   ge_p1p1 r;
-   ge_p2 s;
-   ge_p3 h;
-   ge_precomp t;
-   int i;
+   CT::poison(a, 32);
 
-   for(i = 0; i < 32; ++i) {
-      e[2 * i + 0] = (a[i] >> 0) & 15;
-      e[2 * i + 1] = (a[i] >> 4) & 15;
+   // each e[i] is between 0 and 15 except e[63] which is between 0 and 7
+   for(size_t i = 0; i != 32; ++i) {
+      e[2 * i + 0] = (a[i] >> 0) & 0x0F;
+      e[2 * i + 1] = (a[i] >> 4) & 0x0F;
    }
-   /* each e[i] is between 0 and 15 */
-   /* e[63] is between 0 and 7 */
 
-   carry = 0;
-   for(i = 0; i < 63; ++i) {
+   int8_t carry = 0;
+   for(size_t i = 0; i < 63; ++i) {
       e[i] += carry;
       carry = e[i] + 8;
       carry >>= 4;
@@ -2066,29 +1876,33 @@ void ge_scalarmult_base(uint8_t out[32], const uint8_t a[32]) {
    e[63] += carry;
    /* each e[i] is between -8 and 8 */
 
-   ge_p3_0(&h);
-   for(i = 1; i < 64; i += 2) {
-      select(&t, B_precomp[i / 2], e[i]);
-      ge_madd(&r, &h, &t);
-      ge_p1p1_to_p3(&h, &r);
+   auto h = Ed25519_Point_Extended::identity();
+   for(size_t i = 1; i < 64; i += 2) {
+      h = Ed25519_Point_Extended::from(h + select(B_precomp[i / 2], e[i]));
    }
 
-   ge_p3_dbl(&r, &h);
-   ge_p1p1_to_p2(&s, &r);
-   ge_p2_dbl(&r, &s);
-   ge_p1p1_to_p2(&s, &r);
-   ge_p2_dbl(&r, &s);
-   ge_p1p1_to_p2(&s, &r);
-   ge_p2_dbl(&r, &s);
-   ge_p1p1_to_p3(&h, &r);
+   auto s = Ed25519_Point_Projective::from(h.dbl());
+   s = Ed25519_Point_Projective::from(s.dbl());
+   s = Ed25519_Point_Projective::from(s.dbl());
+   h = Ed25519_Point_Extended::from(s.dbl());
 
-   for(i = 0; i < 64; i += 2) {
-      select(&t, B_precomp[i / 2], e[i]);
-      ge_madd(&r, &h, &t);
-      ge_p1p1_to_p3(&h, &r);
+   for(size_t i = 0; i != 64; i += 2) {
+      h = Ed25519_Point_Extended::from(h + select(B_precomp[i / 2], e[i]));
    }
 
-   ge_p3_tobytes(out, &h);
+   h.serialize_to(out);
+
+   CT::unpoison(a, 32);
+   CT::unpoison(out);
+}
+
+bool signature_check(std::span<const uint8_t, 32> pk, const uint8_t h[32], const uint8_t r[32], const uint8_t s[32]) {
+   if(auto A = frombytes_negate_vartime(pk)) {
+      std::array<uint8_t, 32> rcheck;
+      ge_double_scalarmult_vartime(rcheck, h, *A, s);
+      return CT::is_equal(rcheck.data(), r, 32).as_bool();
+   }
+   return false;
 }
 
 }  // namespace Botan

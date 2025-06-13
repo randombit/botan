@@ -10,26 +10,25 @@
 
 #include <botan/ed25519.h>
 
+#include <botan/hash.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/ed25519_internal.h>
-#include <botan/internal/sha2_64.h>
 
 namespace Botan {
 
-void ed25519_gen_keypair(uint8_t* pk, uint8_t* sk, const uint8_t seed[32]) {
+void ed25519_gen_keypair(uint8_t pk[32], uint8_t sk[64], const uint8_t seed[32]) {
    uint8_t az[64];
 
-   SHA_512 sha;
-   sha.update(seed, 32);
-   sha.final(az);
+   auto sha512 = HashFunction::create_or_throw("SHA-512");
+   sha512->update(seed, 32);
+   sha512->final(az);
    az[0] &= 248;
    az[31] &= 63;
    az[31] |= 64;
 
-   ge_scalarmult_base(pk, az);
+   ed25519_basepoint_mul(std::span<uint8_t, 32>{pk, 32}, az);
 
-   // todo copy_mem
    copy_mem(sk, seed, 32);
    copy_mem(sk + 32, pk, 32);
 }
@@ -44,27 +43,27 @@ void ed25519_sign(uint8_t sig[64],
    uint8_t nonce[64];
    uint8_t hram[64];
 
-   SHA_512 sha;
+   auto sha512 = HashFunction::create_or_throw("SHA-512");
 
-   sha.update(sk, 32);
-   sha.final(az);
+   sha512->update(sk, 32);
+   sha512->final(az);
    az[0] &= 248;
    az[31] &= 63;
    az[31] |= 64;
 
-   sha.update(domain_sep, domain_sep_len);
-   sha.update(az + 32, 32);
-   sha.update(m, mlen);
-   sha.final(nonce);
+   sha512->update(domain_sep, domain_sep_len);
+   sha512->update(az + 32, 32);
+   sha512->update(m, mlen);
+   sha512->final(nonce);
 
    sc_reduce(nonce);
-   ge_scalarmult_base(sig, nonce);
+   ed25519_basepoint_mul(std::span<uint8_t, 32>{sig, 32}, nonce);
 
-   sha.update(domain_sep, domain_sep_len);
-   sha.update(sig, 32);
-   sha.update(sk + 32, 32);
-   sha.update(m, mlen);
-   sha.final(hram);
+   sha512->update(domain_sep, domain_sep_len);
+   sha512->update(sig, 32);
+   sha512->update(sk + 32, 32);
+   sha512->update(m, mlen);
+   sha512->final(hram);
 
    sc_reduce(hram);
    sc_muladd(sig + 32, hram, az, nonce);
@@ -76,15 +75,7 @@ bool ed25519_verify(const uint8_t* m,
                     const uint8_t* pk,
                     const uint8_t domain_sep[],
                     size_t domain_sep_len) {
-   uint8_t h[64];
-   uint8_t rcheck[32];
-   ge_p3 A;
-   SHA_512 sha;
-
    if(sig[63] & 224) {
-      return false;
-   }
-   if(ge_frombytes_negate_vartime(&A, pk) != 0) {
       return false;
    }
 
@@ -114,16 +105,17 @@ bool ed25519_verify(const uint8_t* m,
       }
    }
 
-   sha.update(domain_sep, domain_sep_len);
-   sha.update(sig, 32);
-   sha.update(pk, 32);
-   sha.update(m, mlen);
-   sha.final(h);
+   uint8_t h[64];
+   auto sha512 = HashFunction::create_or_throw("SHA-512");
+
+   sha512->update(domain_sep, domain_sep_len);
+   sha512->update(sig, 32);
+   sha512->update(pk, 32);
+   sha512->update(m, mlen);
+   sha512->final(h);
    sc_reduce(h);
 
-   ge_double_scalarmult_vartime(rcheck, h, &A, sig + 32);
-
-   return CT::is_equal(rcheck, sig, 32).as_bool();
+   return signature_check(std::span<const uint8_t, 32>{pk, 32}, h, sig, sig + 32);
 }
 
 }  // namespace Botan
