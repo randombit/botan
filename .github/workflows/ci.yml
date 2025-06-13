@@ -33,15 +33,27 @@ jobs:
           - target: shared
             arch: x86_64
             host_os: windows-2022
+            compiler: msvc
           - target: static
             arch: x86_64
             host_os: windows-2022
+            compiler: msvc
           - target: amalgamation
             arch: x86_64
             host_os: windows-2022
+            compiler: msvc
           - target: shared
             arch: x86
             host_os: windows-2022
+            compiler: msvc
+          - target: shared
+            arch: x86_64
+            host_os: windows-2022
+            compiler: clangcl
+          - target: static
+            arch: x86
+            host_os: windows-2022
+            compiler: clangcl
 
     runs-on: ${{ matrix.host_os }}
 
@@ -56,11 +68,11 @@ jobs:
         with:
           target: ${{ matrix.target }}
           compiler: msvc
-          cache-key: ${{ matrix.host_os }}-msvc-${{ matrix.arch }}-${{ matrix.target }}
+          cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-${{ matrix.arch }}-${{ matrix.target }}
           arch: ${{ matrix.arch }}
 
       - name: Build and Test Botan
-        run: python3 ./src/scripts/ci_build.py --cc='msvc' --make-tool='ninja' --cpu='${{ matrix.arch }}' --test-results-dir=junit_results ${{ matrix.target }}
+        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='ninja' --cpu='${{ matrix.arch }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   linux:
     name: "Linux"
