@@ -580,10 +580,12 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
             static constexpr size_t Length = static_cast<size_t>(V);
 
          public:
-            IPAddress() = default;
-            explicit IPAddress(std::span<uint8_t> v);
-
             std::array<uint8_t, Length> value() const { return m_value; }
+
+         private:
+            friend class IPAddressBlocks;
+            IPAddress() = default;
+            explicit IPAddress(std::span<const uint8_t> v);
 
             friend IPAddress<V> operator++(const IPAddress<V> v) {
                std::array<uint8_t, Length> val = v.value();
@@ -621,7 +623,6 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
                return lhs.value() == rhs.value();
             }
 
-         private:
             std::array<uint8_t, Length> m_value;
       };
 
@@ -632,9 +633,6 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
             void decode_from(BER_Decoder& from) override;
 
             IPAddressOrRange() = default;
-
-            // NOLINTNEXTLINE(*-explicit-conversions) FIXME
-            IPAddressOrRange(const IPAddress<V>& addr) : m_min(addr), m_max(addr) {}
 
             IPAddressOrRange(const IPAddress<V>& min, const IPAddress<V>& max) : m_min(min), m_max(max) {
                if(max < min) {
@@ -649,6 +647,8 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
          private:
             IPAddress<V> m_min;
             IPAddress<V> m_max;
+
+            void decode_single_address(std::vector<uint8_t>& decoded, bool min);
       };
 
       template <Version V>
@@ -661,10 +661,12 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
 
             IPAddressChoice() = default;
 
+         private:
+            friend class IPAddressBlocks;
+
             // NOLINTNEXTLINE(*-explicit-conversions) FIXME
             IPAddressChoice(std::optional<std::span<const IPAddressOrRange<V>>> ranges);
 
-         private:
             std::optional<std::vector<IPAddressOrRange<V>>> m_ip_addr_ranges;
       };
 
@@ -675,7 +677,16 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
             void encode_into(DER_Encoder&) const override;
             void decode_from(BER_Decoder& from) override;
 
+            uint16_t afi() const { return m_afi; }
+
+            std::optional<uint8_t> safi() const { return m_safi; }
+
+            const AddrChoice& addr_choice() const { return m_ip_addr_choice; }
+
             IPAddressFamily() = default;
+
+         private:
+            friend class IPAddressBlocks;
 
             explicit IPAddressFamily(const AddrChoice& choice, std::optional<uint8_t> safi = std::nullopt) :
                   m_safi(safi), m_ip_addr_choice(choice) {
@@ -686,23 +697,12 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
                }
             }
 
-            uint16_t afi() const { return m_afi; }
-
-            std::optional<uint8_t> safi() const { return m_safi; }
-
-            const AddrChoice& addr_choice() const { return m_ip_addr_choice; }
-
-         private:
             uint16_t m_afi;
             std::optional<uint8_t> m_safi;
             AddrChoice m_ip_addr_choice;
       };
 
       IPAddressBlocks() = default;
-
-      explicit IPAddressBlocks(const std::vector<IPAddressFamily>& blocks) : m_ip_addr_blocks(blocks) {
-         this->sort_and_merge();
-      }
 
       std::unique_ptr<Certificate_Extension> copy() const override { return std::make_unique<IPAddressBlocks>(*this); }
 
@@ -715,6 +715,34 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
                     const std::vector<X509_Certificate>& cert_path,
                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
                     size_t pos) override;
+
+      template <Version V>
+      void add_address(const std::array<uint8_t, static_cast<size_t>(V)>& address,
+                       std::optional<uint8_t> safi = std::nullopt) {
+         add_address<V>(address, address, safi);
+      }
+
+      template <Version V>
+      void add_address(const std::array<uint8_t, static_cast<std::size_t>(V)>& min,
+                       const std::array<uint8_t, static_cast<std::size_t>(V)>& max,
+                       std::optional<uint8_t> safi = std::nullopt) {
+         std::vector<IPAddressOrRange<V>> addresses = {IPAddressOrRange<V>(IPAddress<V>(min), IPAddress<V>(max))};
+         m_ip_addr_blocks.push_back(IPAddressFamily(IPAddressChoice<V>(addresses), safi));
+         sort_and_merge();
+      }
+
+      template <Version V>
+      void inherit(std::optional<uint8_t> safi = std::nullopt) {
+         m_ip_addr_blocks.push_back(IPAddressFamily(IPAddressChoice<V>(), safi));
+         sort_and_merge();
+      }
+
+      template <Version V>
+      void restrict(std::optional<uint8_t> safi = std::nullopt) {
+         std::vector<IPAddressOrRange<V>> addresses = {};
+         m_ip_addr_blocks.push_back(IPAddressFamily(IPAddressChoice<V>(addresses), safi));
+         sort_and_merge();
+      }
 
       const std::vector<IPAddressFamily>& addr_blocks() const { return m_ip_addr_blocks; }
 
