@@ -92,7 +92,7 @@ enum class Extension_Code : uint16_t {
 /**
 * Base class representing a TLS extension of some kind
 */
-class BOTAN_UNSTABLE_API Extension {
+class BOTAN_UNSTABLE_API Extension /* NOLINT(*-special-member-functions) */ {
    public:
       /**
       * @return code number of the extension
@@ -494,7 +494,7 @@ class Certificate_Status_Request_Internal;
 /**
 * Certificate Status Request (RFC 6066)
 */
-class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension {
+class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension /* NOLINT(*-special-member-functions) */ {
    public:
       static Extension_Code static_type() { return Extension_Code::CertificateStatusRequest; }
 
@@ -657,7 +657,7 @@ class BOTAN_UNSTABLE_API Certificate_Authorities final : public Extension {
 /**
  * Pre-Shared Key extension from RFC 8446 4.2.11
  */
-class BOTAN_UNSTABLE_API PSK final : public Extension {
+class BOTAN_UNSTABLE_API PSK final : public Extension /* NOLINT(*-special-member-functions) */ {
    public:
       static Extension_Code static_type() { return Extension_Code::PresharedKey; }
 
@@ -747,7 +747,7 @@ class BOTAN_UNSTABLE_API PSK final : public Extension {
        *
        * Note: This constructor is called internally in PSK::select_offered_psk().
        */
-      PSK(ExternalPSK psk, const uint16_t psk_index);
+      PSK(ExternalPSK psk, uint16_t psk_index);
 
    private:
       class PSK_Internal;
@@ -757,7 +757,7 @@ class BOTAN_UNSTABLE_API PSK final : public Extension {
 /**
 * Key_Share from RFC 8446 4.2.8
 */
-class BOTAN_UNSTABLE_API Key_Share final : public Extension {
+class BOTAN_UNSTABLE_API Key_Share final : public Extension /* NOLINT(*-special-member-functions) */ {
    public:
       static Extension_Code static_type() { return Extension_Code::KeyShare; }
 
@@ -871,7 +871,7 @@ class BOTAN_UNSTABLE_API EarlyDataIndication final : public Extension {
        * std::nullopt and results in an empty extension. (RFC 8446 4.2.10).
        */
       EarlyDataIndication(std::optional<uint32_t> max_early_data_size = std::nullopt) :
-            m_max_early_data_size(std::move(max_early_data_size)) {}
+            m_max_early_data_size(max_early_data_size) {}
 
    private:
       std::optional<uint32_t> m_max_early_data_size;
@@ -991,6 +991,7 @@ class BOTAN_UNSTABLE_API Extensions final {
       Extensions& operator=(const Extensions&) = delete;
       Extensions(Extensions&&) = default;
       Extensions& operator=(Extensions&&) = default;
+      ~Extensions();
 
       Extensions(TLS_Data_Reader& reader, Connection_Side side, Handshake_Type message_type) {
          deserialize(reader, side, message_type);

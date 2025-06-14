@@ -295,7 +295,7 @@ class XMSS_Address final {
       }
 
    protected:
-      secure_vector<uint8_t> m_data;
+      secure_vector<uint8_t> m_data;  // NOLINT(*non-private-member-variable*)
 
    private:
       static const size_t m_address_size = 32;

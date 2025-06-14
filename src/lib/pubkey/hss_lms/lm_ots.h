@@ -62,7 +62,7 @@ using LMS_Message = Strong<std::vector<uint8_t>, struct LMS_Message_>;
  * introduced in RFC 8554 Section 3.2. and their format specified in
  * Section 3.3.
  */
-enum class LMOTS_Algorithm_Type : uint32_t {
+enum class LMOTS_Algorithm_Type : uint32_t /* NOLINT(*-enum-size) */ {
    // --- RFC 8554 ---
    RESERVED = 0x00,
 

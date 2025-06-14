@@ -53,15 +53,15 @@ class EAX_Mode : public AEAD_Mode {
 
       size_t block_size() const { return m_cipher->block_size(); }
 
-      size_t m_tag_size;
+      size_t m_tag_size;  // NOLINT(*non-private-member-variable*)
 
-      std::unique_ptr<BlockCipher> m_cipher;
-      std::unique_ptr<StreamCipher> m_ctr;
-      std::unique_ptr<MessageAuthenticationCode> m_cmac;
+      std::unique_ptr<BlockCipher> m_cipher;              // NOLINT(*non-private-member-variable*)
+      std::unique_ptr<StreamCipher> m_ctr;                // NOLINT(*non-private-member-variable*)
+      std::unique_ptr<MessageAuthenticationCode> m_cmac;  // NOLINT(*non-private-member-variable*)
 
-      secure_vector<uint8_t> m_ad_mac;
+      secure_vector<uint8_t> m_ad_mac;  // NOLINT(*non-private-member-variable*)
 
-      secure_vector<uint8_t> m_nonce_mac;
+      secure_vector<uint8_t> m_nonce_mac;  // NOLINT(*non-private-member-variable*)
 
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) final;

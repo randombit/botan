@@ -293,8 +293,8 @@ class bitvector_base final {
             }
 
          protected:
-            BlockT& m_block;  // NOLINT(*-non-private-member-variables-in-classes)
-            BlockT m_mask;    // NOLINT(*-non-private-member-variables-in-classes)
+            BlockT& m_block;  // NOLINT(*-non-private-member-variable*)
+            BlockT m_mask;    // NOLINT(*-non-private-member-variable*)
       };
 
    public:
@@ -923,7 +923,7 @@ class bitvector_base final {
       auto ref(size_type pos) { return bitref<block_type>(m_blocks, pos); }
 
    private:
-      enum class BitRangeAlignment { byte_aligned, no_alignment };
+      enum class BitRangeAlignment : uint8_t { byte_aligned, no_alignment };
 
       /**
        * Helper construction to implement bit range operations on the bitvector.

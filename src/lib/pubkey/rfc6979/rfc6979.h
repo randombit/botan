@@ -33,6 +33,11 @@ class BOTAN_TEST_API RFC6979_Nonce_Generator final {
       EC_Scalar nonce_for(const EC_Group& group, const EC_Scalar& m);
 #endif
 
+      RFC6979_Nonce_Generator(const RFC6979_Nonce_Generator& other) = delete;
+      RFC6979_Nonce_Generator& operator=(const RFC6979_Nonce_Generator& other) = delete;
+
+      RFC6979_Nonce_Generator(RFC6979_Nonce_Generator&& other) noexcept;
+      RFC6979_Nonce_Generator& operator=(RFC6979_Nonce_Generator&& other) noexcept;
       ~RFC6979_Nonce_Generator();
 
    private:

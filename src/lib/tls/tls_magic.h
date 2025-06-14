@@ -21,7 +21,7 @@ namespace Botan::TLS {
 *
 * TODO: this should not be an enum
 */
-enum Size_Limits : size_t {
+enum Size_Limits : size_t /* NOLINT(*-enum-size) */ {
    TLS_HEADER_SIZE = 5,
    DTLS_HEADER_SIZE = TLS_HEADER_SIZE + 8,
 
@@ -40,7 +40,7 @@ enum Size_Limits : size_t {
    MAX_CIPHERTEXT_SIZE_TLS13 = MAX_PLAINTEXT_SIZE + MAX_AEAD_EXPANSION_SIZE_TLS13 + 1
 };
 
-enum class Connection_Side {
+enum class Connection_Side : uint8_t {
    Client = 1,
    Server = 2,
 
@@ -48,7 +48,7 @@ enum class Connection_Side {
    SERVER BOTAN_DEPRECATED("Use Connection_Side::Server") = Server,
 };
 
-enum class Handshake_Type {
+enum class Handshake_Type : uint8_t {
    HelloRequest = 0,
    ClientHello = 1,
    ServerHello = 2,

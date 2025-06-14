@@ -45,6 +45,11 @@ class Channel_Impl {
    public:
       virtual ~Channel_Impl() = default;
 
+      Channel_Impl(const Channel_Impl& other) = delete;
+      Channel_Impl(Channel_Impl&& other) = default;
+      Channel_Impl& operator=(const Channel_Impl& other) = delete;
+      Channel_Impl& operator=(Channel_Impl&& other) = delete;
+
       /**
       * Inject TLS traffic received from counterparty
       * @return a hint as the how many more bytes we need to q the
@@ -187,6 +192,8 @@ class Channel_Impl {
       virtual std::string application_protocol() const = 0;
 
    protected:
+      Channel_Impl() = default;
+
       /**
        * This struct collect all information required to perform a downgrade from TLS 1.3 to TLS 1.2.
        *
@@ -222,7 +229,7 @@ class Channel_Impl {
             bool will_downgrade;
       };
 
-      std::unique_ptr<Downgrade_Information> m_downgrade_info;
+      std::unique_ptr<Downgrade_Information> m_downgrade_info;  // NOLINT(*non-private-member-variable*)
 
       void preserve_peer_transcript(std::span<const uint8_t> input) {
          BOTAN_STATE_CHECK(m_downgrade_info);

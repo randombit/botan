@@ -29,7 +29,7 @@ namespace TLS {
 * TLS Policy Base Class
 * Inherit and overload as desired to suit local policy concerns
 */
-class BOTAN_PUBLIC_API(2, 0) Policy {
+class BOTAN_PUBLIC_API(2, 0) Policy /* NOLINT(*-special-member-functions) */ {
    public:
       /**
       * Allow ssl key log file

@@ -22,7 +22,7 @@ typedef uint16_t gf2m;
 
 class polyn_gf2m;
 
-class BOTAN_PUBLIC_API(2, 0) McEliece_PublicKey : public virtual Public_Key {
+class BOTAN_PUBLIC_API(2, 0) McEliece_PublicKey : public virtual Public_Key /* NOLINT(*-special-member-functions) */ {
    public:
       explicit McEliece_PublicKey(std::span<const uint8_t> key_bits);
 
@@ -71,9 +71,9 @@ class BOTAN_PUBLIC_API(2, 0) McEliece_PublicKey : public virtual Public_Key {
    protected:
       McEliece_PublicKey() : m_t(0), m_code_length(0) {}
 
-      std::vector<uint8_t> m_public_matrix;
-      size_t m_t;
-      size_t m_code_length;
+      std::vector<uint8_t> m_public_matrix;  // NOLINT(*non-private-member-variable*)
+      size_t m_t;                            // NOLINT(*non-private-member-variable*)
+      size_t m_code_length;                  // NOLINT(*non-private-member-variable*)
 };
 
 BOTAN_DIAGNOSTIC_PUSH

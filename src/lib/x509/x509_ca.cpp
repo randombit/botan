@@ -34,8 +34,8 @@ X509_CA::X509_CA(const X509_Certificate& cert,
    m_hash_fn = m_signer->hash_function();
 }
 
-X509_CA::X509_CA(X509_CA&&) = default;
-X509_CA& X509_CA::operator=(X509_CA&&) = default;
+X509_CA::X509_CA(X509_CA&&) noexcept = default;
+X509_CA& X509_CA::operator=(X509_CA&&) noexcept = default;
 
 X509_CA::~X509_CA() = default;
 

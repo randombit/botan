@@ -124,6 +124,11 @@ class BOTAN_PUBLIC_API(2, 0) Client final : public Channel {
 
       bool timeout_check() override;
 
+      Client(const Client& other) = delete;
+      Client(Client&& other) = default;
+      Client& operator=(const Client& other) = delete;
+      Client& operator=(Client&& other) = delete;
+
    private:
       size_t downgrade();
 

@@ -19,7 +19,7 @@ class Extensions;
 class AlternativeName;
 class NameConstraints;
 
-enum class Usage_Type {
+enum class Usage_Type : uint8_t {
    UNSPECIFIED,  // no restrictions
    TLS_SERVER_AUTH,
    TLS_CLIENT_AUTH,
@@ -410,8 +410,10 @@ class BOTAN_PUBLIC_API(2, 0) X509_Certificate : public X509_Object {
       X509_Certificate() = default;
 
       X509_Certificate(const X509_Certificate& other) = default;
-
+      X509_Certificate(X509_Certificate&& other) = default;
       X509_Certificate& operator=(const X509_Certificate& other) = default;
+      X509_Certificate& operator=(X509_Certificate&& other) = default;
+      ~X509_Certificate() override;
 
    private:
       std::string PEM_label() const override;

@@ -25,8 +25,9 @@ class mlock_allocator final {
       bool deallocate(void* p, size_t num_elems, size_t elem_size) noexcept;
 
       mlock_allocator(const mlock_allocator&) = delete;
-
+      mlock_allocator(mlock_allocator&&) = delete;
       mlock_allocator& operator=(const mlock_allocator&) = delete;
+      mlock_allocator& operator=(mlock_allocator&&) = delete;
 
       mlock_allocator();
 

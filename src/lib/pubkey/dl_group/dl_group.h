@@ -18,7 +18,7 @@ class Barrett_Reduction;
 class Montgomery_Params;
 class DL_Group_Data;
 
-enum class DL_Group_Source {
+enum class DL_Group_Source : uint8_t {
    Builtin,
    RandomlyGenerated,
    ExternalSource,
@@ -27,7 +27,7 @@ enum class DL_Group_Source {
 /**
 * The DL group encoding format variants.
 */
-enum class DL_Group_Format {
+enum class DL_Group_Format : uint8_t {
    ANSI_X9_42 = 0,
    ANSI_X9_57 = 1,
    PKCS_3 = 2,
@@ -48,7 +48,7 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       /**
       * Determine the prime creation for DL groups.
       */
-      enum PrimeType { Strong, Prime_Subgroup, DSA_Kosherizer };
+      enum PrimeType : uint8_t { Strong, Prime_Subgroup, DSA_Kosherizer };
 
       using Format = DL_Group_Format;
 

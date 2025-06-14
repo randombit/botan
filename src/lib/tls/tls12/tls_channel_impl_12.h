@@ -67,9 +67,10 @@ class Channel_Impl_12 : public Channel_Impl {
                                bool is_datagram,
                                size_t io_buf_sz = TLS::Channel::IO_BUF_DEFAULT_SIZE);
 
-      explicit Channel_Impl_12(const Channel_Impl_12&) = delete;
-
-      Channel_Impl_12& operator=(const Channel_Impl_12&) = delete;
+      Channel_Impl_12(const Channel_Impl_12& other) = delete;
+      Channel_Impl_12(Channel_Impl_12&& other) = delete;
+      Channel_Impl_12& operator=(const Channel_Impl_12& other) = delete;
+      Channel_Impl_12& operator=(Channel_Impl_12&& other) = delete;
 
       ~Channel_Impl_12() override;
 

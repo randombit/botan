@@ -16,12 +16,12 @@ namespace Botan {
 
 class cSHAKE_XOF;
 
-class KMAC : public MessageAuthenticationCode {
+class KMAC /* NOLINT(*-special-member-functions*) */ : public MessageAuthenticationCode {
    protected:
       KMAC(std::unique_ptr<cSHAKE_XOF> cshake, size_t output_bit_length);
 
    public:
-      virtual ~KMAC();
+      ~KMAC() override;
 
       KMAC(const KMAC&) = delete;
       KMAC& operator=(const KMAC&) = delete;

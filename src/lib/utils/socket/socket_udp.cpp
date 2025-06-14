@@ -169,7 +169,7 @@ class BSD_SocketUDP final : public OS::SocketUDP {
 
             set_nonblocking(m_socket);
             memcpy(&sa, res->ai_addr, res->ai_addrlen);
-            salen = static_cast<socklen_t>(res->ai_addrlen);
+            salen = static_cast<socklen_t>(res->ai_addrlen);  // NOLINT(*-redundant-casting)
          }
 
          ::freeaddrinfo(res);

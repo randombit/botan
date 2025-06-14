@@ -21,9 +21,6 @@ class BOTAN_PUBLIC_API(2, 11) Bcrypt_PBKDF final : public PasswordHash {
    public:
       Bcrypt_PBKDF(size_t iterations);
 
-      Bcrypt_PBKDF(const Bcrypt_PBKDF& other) = default;
-      Bcrypt_PBKDF& operator=(const Bcrypt_PBKDF&) = default;
-
       /**
       * Derive a new key under the current Bcrypt-PBKDF parameter set
       */

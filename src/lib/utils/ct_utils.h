@@ -790,8 +790,8 @@ constexpr inline void conditional_swap_ptr(bool cnd, T& x, T& y) {
 
    conditional_swap<uintptr_t>(cnd, xp, yp);
 
-   x = reinterpret_cast<T>(xp);
-   y = reinterpret_cast<T>(yp);
+   x = reinterpret_cast<T>(xp);  // NOLINT(*-no-int-to-ptr)
+   y = reinterpret_cast<T>(yp);  // NOLINT(*-no-int-to-ptr)
 }
 
 template <typename T>

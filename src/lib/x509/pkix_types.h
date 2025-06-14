@@ -259,7 +259,7 @@ class BOTAN_PUBLIC_API(2, 0) Attribute final : public ASN1_Object {
 */
 class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
    public:
-      enum MatchResult : int {
+      enum MatchResult : uint8_t {
          All,
          Some,
          None,
@@ -414,7 +414,7 @@ class BOTAN_PUBLIC_API(2, 0) NameConstraints final {
 /**
 * X.509 Certificate Extension
 */
-class BOTAN_PUBLIC_API(2, 0) Certificate_Extension {
+class BOTAN_PUBLIC_API(2, 0) Certificate_Extension /* NOLINT(*-special-member-functions) */ {
    public:
       /**
       * @return OID representing this extension
@@ -610,6 +610,8 @@ class BOTAN_PUBLIC_API(2, 0) Extensions final : public ASN1_Object {
 
       Extensions(Extensions&&) = default;
       Extensions& operator=(Extensions&&) = default;
+
+      ~Extensions() override = default;
 
    private:
       static std::unique_ptr<Certificate_Extension> create_extn_obj(const OID& oid,

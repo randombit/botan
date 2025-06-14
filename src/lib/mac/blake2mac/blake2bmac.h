@@ -21,9 +21,6 @@ class BLAKE2bMAC final : public MessageAuthenticationCode {
    public:
       explicit BLAKE2bMAC(size_t output_bits = 512);
 
-      BLAKE2bMAC(const BLAKE2bMAC&) = delete;
-      BLAKE2bMAC& operator=(const BLAKE2bMAC&) = delete;
-
       std::string name() const override { return m_blake.name(); }
 
       size_t output_length() const override { return m_blake.output_length(); }

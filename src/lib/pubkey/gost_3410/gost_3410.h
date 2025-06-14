@@ -117,7 +117,9 @@ class BOTAN_PUBLIC_API(2, 0) GOST_3410_PrivateKey final : public GOST_3410_Publi
 
       std::unique_ptr<Public_Key> public_key() const override;
 
-      AlgorithmIdentifier pkcs8_algorithm_identifier() const override { return EC_PublicKey::algorithm_identifier(); }
+      AlgorithmIdentifier pkcs8_algorithm_identifier() const override {
+         return EC_PublicKey::algorithm_identifier();  // NOLINT(bugprone-parent-virtual-call)
+      }
 
       std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
                                                              std::string_view params,

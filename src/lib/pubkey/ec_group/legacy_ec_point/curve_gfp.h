@@ -48,6 +48,9 @@ class BOTAN_UNSTABLE_API CurveGFp final {
       size_t get_p_words() const;
 
       CurveGFp(const CurveGFp&) = default;
+      CurveGFp(CurveGFp&&) = default;
+
+      ~CurveGFp() = default;
 
    private:
       friend class EC_Point;
@@ -61,6 +64,7 @@ class BOTAN_UNSTABLE_API CurveGFp final {
       CurveGFp(const EC_Group_Data* group);
 
       CurveGFp& operator=(const CurveGFp&) = default;
+      CurveGFp& operator=(CurveGFp&&) = default;
 
       void swap(CurveGFp& other) noexcept { std::swap(m_group, other.m_group); }
 

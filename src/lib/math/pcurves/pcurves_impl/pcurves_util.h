@@ -12,8 +12,6 @@
 
 namespace Botan {
 
-namespace {
-
 template <WordType W, size_t N, size_t XN>
 inline consteval std::array<W, N> reduce_mod(const std::array<W, XN>& x, const std::array<W, N>& p) {
    std::array<W, N + 1> r = {0};
@@ -306,8 +304,6 @@ inline constexpr auto bytes_to_words(std::span<const uint8_t, L> bytes) {
 
    return r;
 }
-
-}  // namespace
 
 }  // namespace Botan
 

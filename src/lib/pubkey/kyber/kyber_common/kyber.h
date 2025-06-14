@@ -29,25 +29,25 @@ namespace Botan {
 
 class BOTAN_PUBLIC_API(3, 0) KyberMode {
    public:
-      enum Mode {
+      enum Mode : uint8_t {
          // Kyber512 as proposed in round 3 of the NIST competition
-         Kyber512_R3,
+         Kyber512_R3 = 0,
          // Kyber768 as proposed in round 3 of the NIST competition
-         Kyber768_R3,
+         Kyber768_R3 = 1,
          // Kyber1024 as proposed in round 3 of the NIST competition
-         Kyber1024_R3,
+         Kyber1024_R3 = 2,
 
          Kyber512 BOTAN_DEPRECATED("Use Kyber512_R3") = Kyber512_R3,
          Kyber768 BOTAN_DEPRECATED("Use Kyber768_R3") = Kyber768_R3,
          Kyber1024 BOTAN_DEPRECATED("Use Kyber1024_R3") = Kyber1024_R3,
 
-         ML_KEM_512,
-         ML_KEM_768,
-         ML_KEM_1024,
+         ML_KEM_512 = 3,
+         ML_KEM_768 = 4,
+         ML_KEM_1024 = 5,
 
-         Kyber512_90s BOTAN_DEPRECATED("Kyber 90s mode is deprecated"),
-         Kyber768_90s BOTAN_DEPRECATED("Kyber 90s mode is deprecated"),
-         Kyber1024_90s BOTAN_DEPRECATED("Kyber 90s mode is deprecated"),
+         Kyber512_90s BOTAN_DEPRECATED("Kyber 90s mode is deprecated") = 6,
+         Kyber768_90s BOTAN_DEPRECATED("Kyber 90s mode is deprecated") = 7,
+         Kyber1024_90s BOTAN_DEPRECATED("Kyber 90s mode is deprecated") = 8,
       };
 
       KyberMode(Mode mode);
@@ -78,7 +78,7 @@ class BOTAN_PUBLIC_API(3, 0) KyberMode {
 };
 
 /// Byte encoding format of ML-KEM and ML-DSA the private key
-enum class MlPrivateKeyFormat {
+enum class MlPrivateKeyFormat : uint8_t {
    /// Only supported for ML-KEM/ML-DSA keys:
    /// - ML-KEM: 64-byte seed: d || z
    /// - ML-DSA: 32-byte seed: xi (private_key_bits_with_format not yet
@@ -98,8 +98,9 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key {
       Kyber_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
 
       Kyber_PublicKey(const Kyber_PublicKey& other);
-
       Kyber_PublicKey& operator=(const Kyber_PublicKey& other) = default;
+      Kyber_PublicKey(Kyber_PublicKey&& other) = default;
+      Kyber_PublicKey& operator=(Kyber_PublicKey&& other) = default;
 
       ~Kyber_PublicKey() override = default;
 
@@ -140,7 +141,7 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key {
       friend class Kyber_KEM_Encryptor;
       friend class Kyber_KEM_Decryptor;
 
-      std::shared_ptr<Kyber_PublicKeyInternal> m_public;
+      std::shared_ptr<Kyber_PublicKeyInternal> m_public;  // NOLINT(*non-private-member-variable*)
 };
 
 BOTAN_DIAGNOSTIC_PUSH

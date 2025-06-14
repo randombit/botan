@@ -214,7 +214,7 @@ constexpr bool is_optional_v = is_optional<T>::value;
  * A code location consisting of the source file path and a line
  */
 struct CodeLocation {
-      std::string path;
+      const char* path;
       unsigned int line;
 };
 
@@ -363,7 +363,7 @@ class Test {
             }
 
             template <typename T>
-            bool test_not_nullopt(const std::string& what, std::optional<T> val) {
+            bool test_not_nullopt(const std::string& what, const std::optional<T>& val) {
                if(val == std::nullopt) {
                   return test_failure(what + " was nullopt");
                } else {
@@ -565,7 +565,7 @@ class Test {
             void start_timer();
             void end_timer();
 
-            void set_code_location(CodeLocation where) { m_where = std::move(where); }
+            void set_code_location(CodeLocation where) { m_where = where; }
 
             const std::optional<CodeLocation>& code_location() const { return m_where; }
 
@@ -599,6 +599,13 @@ class Test {
       };
 
       virtual ~Test() = default;
+
+      Test() = default;
+      Test(const Test& other) = delete;
+      Test(Test&& other) = default;
+      Test& operator=(const Test& other) = delete;
+      Test& operator=(Test&& other) = delete;
+
       virtual std::vector<Test::Result> run() = 0;
 
       virtual std::vector<std::string> possible_providers(const std::string&);
@@ -791,7 +798,7 @@ class TestFnRegistration {
                          const std::string& name,
                          bool smoke_test,
                          bool needs_serialization,
-                         CodeLocation registration_location,
+                         const CodeLocation& registration_location,
                          TestFns... fn) {
          Test::register_test(category, name, smoke_test, needs_serialization, [=] {
             auto test = std::make_unique<FnTest>(fn...);

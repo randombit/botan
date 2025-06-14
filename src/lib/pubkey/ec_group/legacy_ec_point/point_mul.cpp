@@ -44,9 +44,9 @@ EC_Point_Base_Point_Precompute::EC_Point_Base_Point_Precompute(const EC_Point& b
 
    const size_t order_bits = mod_order.modulus_bits();
 
-   const size_t T_bits = round_up(order_bits + blinding_size(order_bits), WINDOW_BITS) / WINDOW_BITS;
+   const size_t T_bits = round_up(order_bits + blinding_size(order_bits), WindowBits) / WindowBits;
 
-   std::vector<EC_Point> T(WINDOW_SIZE * T_bits);
+   std::vector<EC_Point> T(WindowSize * T_bits);
 
    EC_Point g = base;
    EC_Point g2, g4;
@@ -110,7 +110,7 @@ EC_Point EC_Point_Base_Point_Precompute::mul(const BigInt& k,
       BOTAN_DEBUG_ASSERT(scalar.bits() == group_order.bits() + 1);
    }
 
-   const size_t windows = round_up(scalar.bits(), WINDOW_BITS) / WINDOW_BITS;
+   const size_t windows = round_up(scalar.bits(), WindowBits) / WindowBits;
 
    const size_t elem_size = 2 * m_p_words;
 
@@ -127,9 +127,9 @@ EC_Point EC_Point_Base_Point_Precompute::mul(const BigInt& k,
 
    for(size_t i = 0; i != windows; ++i) {
       const size_t window = windows - i - 1;
-      const size_t base_addr = (WINDOW_SIZE * window) * elem_size;
+      const size_t base_addr = (WindowSize * window) * elem_size;
 
-      const word w = scalar.get_substring(WINDOW_BITS * window, WINDOW_BITS);
+      const word w = scalar.get_substring(WindowBits * window, WindowBits);
 
       const auto w_is_1 = CT::Mask<word>::is_equal(w, 1);
       const auto w_is_2 = CT::Mask<word>::is_equal(w, 2);

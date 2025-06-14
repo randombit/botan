@@ -18,7 +18,7 @@ namespace Botan {
 /**
 * Interface for a compression algorithm.
 */
-class BOTAN_PUBLIC_API(2, 0) Compression_Algorithm {
+class BOTAN_PUBLIC_API(2, 0) Compression_Algorithm /* NOLINT(*-special-member-functions) */ {
    public:
       /**
       * Create an instance based on a name, or return null if the
@@ -90,7 +90,7 @@ class BOTAN_PUBLIC_API(2, 0) Compression_Algorithm {
 /*
 * Interface for a decompression algorithm.
 */
-class BOTAN_PUBLIC_API(2, 0) Decompression_Algorithm {
+class BOTAN_PUBLIC_API(2, 0) Decompression_Algorithm /* NOLINT(*-special-member-functions) */ {
    public:
       /**
       * Create an instance based on a name, or return null if the
@@ -187,7 +187,7 @@ class BOTAN_PUBLIC_API(2, 9) Compression_Error final : public Exception {
 /**
 * Adapts a zlib style API
 */
-class Compression_Stream {
+class Compression_Stream /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~Compression_Stream() = default;
 
@@ -229,7 +229,7 @@ class Stream_Compression : public Compression_Algorithm {
 };
 
 /**
-* FIXME add doc
+* Used to implement decompression using Compression_Stream
 */
 class Stream_Decompression : public Decompression_Algorithm {
    public:

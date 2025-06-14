@@ -13,7 +13,7 @@
 
 namespace Botan::TLS {
 
-class Connection_Sequence_Numbers {
+class Connection_Sequence_Numbers /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~Connection_Sequence_Numbers() = default;
 

@@ -38,8 +38,8 @@ class XMSS_WOTS_Base {
       const wots_keysig_t& key_data() const { return m_key_data; }
 
    protected:
-      XMSS_WOTS_Parameters m_params;
-      wots_keysig_t m_key_data;
+      XMSS_WOTS_Parameters m_params;  // NOLINT(*non-private-member-variable*)
+      wots_keysig_t m_key_data;       // NOLINT(*non-private-member-variable*)
 };
 
 /**

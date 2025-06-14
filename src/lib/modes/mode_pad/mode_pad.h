@@ -27,7 +27,7 @@ namespace Botan {
 * a padding mode for CBC, which happens to consume the last
 * two block (and requires use of the block cipher).
 */
-class BOTAN_TEST_API BlockCipherModePaddingMethod {
+class BOTAN_TEST_API BlockCipherModePaddingMethod /* NOLINT(*-special-member-functions) */ {
    public:
       /**
       * Get a block cipher padding mode by name (eg "NoPadding" or "PKCS7")

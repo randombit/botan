@@ -27,7 +27,7 @@ class Cipher_State;
  *
  * The class is split from the rest of the Channel_Impl_13 for mockability.
  */
-class Secret_Logger {
+class Secret_Logger /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~Secret_Logger() = default;
 
@@ -78,10 +78,10 @@ class Channel_Impl_13 : public Channel_Impl,
             bool contains_messages() const { return !m_message_buffer.empty(); }
 
          protected:
-            std::vector<uint8_t> m_message_buffer;
+            std::vector<uint8_t> m_message_buffer;  // NOLINT(*non-private-member-variable*)
 
-            Channel_Impl_13& m_channel;
-            Handshake_Layer& m_handshake_layer;
+            Channel_Impl_13& m_channel;          // NOLINT(*non-private-member-variable*)
+            Handshake_Layer& m_handshake_layer;  // NOLINT(*non-private-member-variable*)
       };
 
       /**
@@ -136,9 +136,10 @@ class Channel_Impl_13 : public Channel_Impl,
                                const std::shared_ptr<const Policy>& policy,
                                bool is_server);
 
-      explicit Channel_Impl_13(const Channel_Impl_13&) = delete;
-
-      Channel_Impl_13& operator=(const Channel_Impl_13&) = delete;
+      Channel_Impl_13(const Channel_Impl_13& other) = delete;
+      Channel_Impl_13(Channel_Impl_13&& other) = delete;
+      Channel_Impl_13& operator=(const Channel_Impl_13& other) = delete;
+      Channel_Impl_13& operator=(Channel_Impl_13&& other) = delete;
 
       ~Channel_Impl_13() override;
 
@@ -283,9 +284,9 @@ class Channel_Impl_13 : public Channel_Impl,
       void shutdown();
 
    protected:
-      const Connection_Side m_side;
-      Transcript_Hash_State m_transcript_hash;
-      std::unique_ptr<Cipher_State> m_cipher_state;
+      const Connection_Side m_side;                  // NOLINT(*non-private-member-variable*)
+      Transcript_Hash_State m_transcript_hash;       // NOLINT(*non-private-member-variable*)
+      std::unique_ptr<Cipher_State> m_cipher_state;  // NOLINT(*non-private-member-variable*)
 
       /**
        * Indicate that we have to expect a downgrade to TLS 1.2. In which case the current

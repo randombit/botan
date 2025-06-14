@@ -27,9 +27,11 @@ namespace Botan {
 * and iterated hashing to make brute force attacks harder.
 *
 * Starting in 2.8 this functionality is also offered by PasswordHash.
-* The PBKDF interface may be removed in a future release.
+*
+* @warning
+* This class will be removed in a future major release. Use PasswordHash
 */
-class BOTAN_PUBLIC_API(2, 0) PBKDF {
+class BOTAN_PUBLIC_API(2, 0) PBKDF /* NOLINT(*-special-member-functions) */ {
    public:
       /**
       * Create an instance based on a name

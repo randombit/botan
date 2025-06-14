@@ -57,7 +57,7 @@ class Private_Key;
 *
 * This is derived for both public and private keys
 */
-class BOTAN_PUBLIC_API(3, 0) Asymmetric_Key {
+class BOTAN_PUBLIC_API(3, 0) Asymmetric_Key /* NOLINT(*special-member-functions) */ {
    public:
       virtual ~Asymmetric_Key() = default;
 

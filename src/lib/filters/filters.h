@@ -37,7 +37,7 @@ namespace Botan {
 * Filter mixin that breaks input into blocks, useful for
 * cipher modes
 */
-class BOTAN_PUBLIC_API(2, 0) Buffered_Filter {
+class BOTAN_PUBLIC_API(2, 0) Buffered_Filter /* NOLINT(*-special-member-functions) */ {
    public:
       /**
       * Write bytes into the buffered filter, which will them emit them
@@ -436,6 +436,11 @@ class BOTAN_PUBLIC_API(2, 0) Compression_Filter final : public Filter {
 
       ~Compression_Filter() override;
 
+      Compression_Filter(const Compression_Filter& other) = delete;
+      Compression_Filter(Compression_Filter&& other) = delete;
+      Compression_Filter& operator=(const Compression_Filter& other) = delete;
+      Compression_Filter& operator=(Compression_Filter&& other) = delete;
+
    private:
       std::unique_ptr<Compression_Algorithm> m_comp;
       size_t m_buffersize, m_level;
@@ -456,6 +461,11 @@ class BOTAN_PUBLIC_API(2, 0) Decompression_Filter final : public Filter {
       Decompression_Filter(std::string_view type, size_t buffer_size = 4096);
 
       ~Decompression_Filter() override;
+
+      Decompression_Filter(const Decompression_Filter& other) = delete;
+      Decompression_Filter(Decompression_Filter&& other) = delete;
+      Decompression_Filter& operator=(const Decompression_Filter& other) = delete;
+      Decompression_Filter& operator=(Decompression_Filter&& other) = delete;
 
    private:
       std::unique_ptr<Decompression_Algorithm> m_comp;
@@ -543,7 +553,7 @@ class BOTAN_PUBLIC_API(2, 0) Hex_Encoder final : public Filter {
       /**
       * Whether to use uppercase or lowercase letters for the encoded string.
       */
-      enum Case { Uppercase, Lowercase };
+      enum Case : uint8_t { Uppercase, Lowercase };
 
       std::string name() const override { return "Hex_Encoder"; }
 
@@ -683,6 +693,11 @@ class BOTAN_PUBLIC_API(2, 0) Threaded_Fork final : public Fork {
       Threaded_Fork(Filter* filter_arr[], size_t length);
 
       ~Threaded_Fork() override;
+
+      Threaded_Fork(const Threaded_Fork& other) = delete;
+      Threaded_Fork(Threaded_Fork&& other) = delete;
+      Threaded_Fork& operator=(const Threaded_Fork& other) = delete;
+      Threaded_Fork& operator=(Threaded_Fork&& other) = delete;
 
    private:
       void set_next(Filter* f[], size_t n);

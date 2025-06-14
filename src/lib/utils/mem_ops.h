@@ -61,8 +61,6 @@ void secure_scrub_memory(ranges::contiguous_output_range auto&& data) {
    secure_scrub_memory(std::ranges::data(data), ranges::size_bytes(data));
 }
 
-#if !defined(BOTAN_IS_BEGIN_BUILT)
-
 /**
 * Memory comparison, input insensitive
 * @param x a pointer to an array
@@ -72,8 +70,6 @@ void secure_scrub_memory(ranges::contiguous_output_range auto&& data) {
 */
 BOTAN_DEPRECATED("This function is deprecated, use constant_time_compare()")
 BOTAN_PUBLIC_API(2, 9) uint8_t ct_compare_u8(const uint8_t x[], const uint8_t y[], size_t len);
-
-#endif
 
 /**
  * Memory comparison, input insensitive
@@ -190,7 +186,7 @@ inline constexpr void typecast_copy(ToR&& out /* NOLINT(*-std-forward) */, const
 template <typename ToT, ranges::contiguous_range FromR>
    requires std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>> && std::is_trivially_copyable_v<ToT> &&
             (!std::ranges::range<ToT>)
-inline constexpr void typecast_copy(ToT& out, const FromR& in) noexcept {
+inline constexpr void typecast_copy(ToT& out, const FromR& in) {
    typecast_copy(std::span<ToT, 1>(&out, 1), in);
 }
 
@@ -212,7 +208,7 @@ inline constexpr void typecast_copy(ToR&& out /* NOLINT(*-std-forward) */, const
 template <typename ToT, ranges::contiguous_range FromR>
    requires std::is_default_constructible_v<ToT> && std::is_trivially_copyable_v<ToT> &&
             std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>>
-inline constexpr ToT typecast_copy(const FromR& src) noexcept {
+inline constexpr ToT typecast_copy(const FromR& src) {
    ToT dst;
    typecast_copy(dst, src);
    return dst;
@@ -259,7 +255,7 @@ inline constexpr To typecast_copy(const uint8_t src[]) noexcept {
    return typecast_copy<To>(std::span<const uint8_t, sizeof(To)>(src, sizeof(To)));
 }
 
-#if !defined(BOTAN_IS_BEGIN_BUILT)
+#if !defined(BOTAN_IS_BEING_BUILT)
 /**
 * Set memory to a fixed value
 * @param ptr a pointer to an array of bytes

@@ -67,6 +67,11 @@ class BOTAN_PUBLIC_API(2, 5) FPE_FE1 final : public SymmetricAlgorithm {
 
       BigInt decrypt(const BigInt& x, uint64_t tweak) const;
 
+      FPE_FE1(const FPE_FE1& other) = delete;
+      FPE_FE1(FPE_FE1&& other) noexcept;
+      FPE_FE1& operator=(const FPE_FE1& other) = delete;
+      FPE_FE1& operator=(FPE_FE1&& other) = delete;
+
    private:
       void key_schedule(std::span<const uint8_t> key) override;
 

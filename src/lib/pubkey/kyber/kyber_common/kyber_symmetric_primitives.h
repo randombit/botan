@@ -27,7 +27,7 @@ namespace Botan {
  * Adapter class that uses polymorphy to distinguish
  * Kyber "modern" from Kyber "90s" modes.
  */
-class Kyber_Symmetric_Primitives {
+class Kyber_Symmetric_Primitives /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~Kyber_Symmetric_Primitives() = default;
 
@@ -90,7 +90,7 @@ class Kyber_Symmetric_Primitives {
       template <concepts::contiguous_strong_type T1,
                 concepts::contiguous_strong_type T2,
                 ranges::contiguous_range... InputTs>
-      std::pair<T1, T2> G_split(InputTs&&... inputs) const {
+      std::pair<T1, T2> G_split(const InputTs&... inputs) const {
          auto& g = get_G();
          (g.update(inputs), ...);
          auto s = g.final();

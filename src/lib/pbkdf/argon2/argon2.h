@@ -27,9 +27,6 @@ class BOTAN_PUBLIC_API(2, 11) Argon2 final : public PasswordHash {
    public:
       Argon2(uint8_t family, size_t M, size_t t, size_t p);
 
-      Argon2(const Argon2& other) = default;
-      Argon2& operator=(const Argon2&) = default;
-
       /**
       * Derive a new key under the current Argon2 parameter set
       */

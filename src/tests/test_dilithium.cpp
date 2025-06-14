@@ -30,6 +30,7 @@ namespace Botan_Tests {
 template <typename DerivedT>
 class Dilithium_KAT_Tests : public Text_Based_Test {
    public:
+      // NOLINTNEXTLINE(*crtp-constructor-accessibility)
       Dilithium_KAT_Tests() : Text_Based_Test(DerivedT::test_vector, "Seed,Msg,HashPk,HashSk,HashSig", "Sig") {}
 
       Test::Result run_one_test(const std::string& name, const VarMap& vars) override {

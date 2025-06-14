@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * Certificate Store Interface
 */
-class BOTAN_PUBLIC_API(2, 0) Certificate_Store {
+class BOTAN_PUBLIC_API(2, 0) Certificate_Store /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~Certificate_Store();
 

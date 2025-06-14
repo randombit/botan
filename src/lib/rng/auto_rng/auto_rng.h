@@ -85,6 +85,11 @@ class BOTAN_PUBLIC_API(2, 0) AutoSeeded_RNG final : public RandomNumberGenerator
                      Entropy_Sources& entropy_sources,
                      size_t reseed_interval = RandomNumberGenerator::DefaultReseedInterval);
 
+      AutoSeeded_RNG(const AutoSeeded_RNG& other) = delete;
+      AutoSeeded_RNG(AutoSeeded_RNG&& other) noexcept;
+      AutoSeeded_RNG& operator=(const AutoSeeded_RNG& other) = delete;
+      AutoSeeded_RNG& operator=(AutoSeeded_RNG&& other) = delete;
+
       ~AutoSeeded_RNG() override;
 
    private:

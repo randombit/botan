@@ -70,7 +70,7 @@ class PerfConfig final {
       Botan::RandomNumberGenerator& m_rng;
 };
 
-class PerfTest {
+class PerfTest /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~PerfTest() = default;
 

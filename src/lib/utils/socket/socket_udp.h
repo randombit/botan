@@ -26,7 +26,7 @@ namespace Botan::OS {
 /**
 * A wrapper around a simple blocking UDP socket
 */
-class BOTAN_TEST_API SocketUDP {
+class BOTAN_TEST_API SocketUDP /* NOLINT(*-special-member-functions) */ {
    public:
       /**
       * The socket will be closed upon destruction

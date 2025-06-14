@@ -43,6 +43,9 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_SQL : public Session_Manager {
 
       Session_Manager_SQL(const Session_Manager_SQL&) = delete;
       Session_Manager_SQL& operator=(const Session_Manager_SQL&) = delete;
+      Session_Manager_SQL(Session_Manager_SQL&&) = delete;
+      Session_Manager_SQL& operator=(Session_Manager_SQL&&) = delete;
+      ~Session_Manager_SQL() override = default;
 
       void store(const Session& session, const Session_Handle& handle) override;
       size_t remove(const Session_Handle& handle) override;

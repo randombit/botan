@@ -108,6 +108,8 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
 
 }  // namespace
 
+Extensions::~Extensions() = default;
+
 Extension* Extensions::get(Extension_Code type) const {
    const auto i =
       std::find_if(m_extensions.cbegin(), m_extensions.cend(), [type](const auto& ext) { return ext->type() == type; });

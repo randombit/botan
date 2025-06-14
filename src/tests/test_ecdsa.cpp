@@ -162,7 +162,7 @@ class ECDSA_Sign_Verify_DER_Test final : public PK_Sign_Verify_DER_Test {
 class ECDSA_Keygen_Tests final : public PK_Key_Generation_Test {
    public:
       std::vector<std::string> keygen_params() const override {
-         auto grp = Botan::EC_Group::known_named_groups();
+         const auto& grp = Botan::EC_Group::known_named_groups();
          return std::vector<std::string>(grp.begin(), grp.end());
       }
 

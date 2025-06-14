@@ -88,7 +88,7 @@ class BOTAN_PUBLIC_API(2, 0) RSA_PublicKey : public virtual Public_Key {
 
       void init(BigInt&& n, BigInt&& e);
 
-      std::shared_ptr<const RSA_Public_Data> m_public;
+      std::shared_ptr<const RSA_Public_Data> m_public;  // NOLINT(*non-private-member-variable*)
 };
 
 /**
