@@ -219,7 +219,7 @@ def main(args = None): # pylint: disable=too-many-return-statements
     parser.add_option('--fast-checks-only', action='store_true', default=False)
     parser.add_option('--only-changed-files', action='store_true', default=False)
     parser.add_option('--only-matching', metavar='REGEX', default='.*')
-    parser.add_option('--check-headers', action='store_true', default=False)
+    parser.add_option('--skip-headers', dest='check_headers', action='store_false', default=True)
     parser.add_option('--take-file-list-from-stdin', action='store_true', default=False)
     parser.add_option('--export-fixes-dir', default=None)
 
