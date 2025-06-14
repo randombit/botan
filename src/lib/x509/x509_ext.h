@@ -664,8 +664,7 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
          private:
             friend class IPAddressBlocks;
 
-            // NOLINTNEXTLINE(*-explicit-conversions) FIXME
-            IPAddressChoice(std::optional<std::span<const IPAddressOrRange<V>>> ranges);
+            explicit IPAddressChoice(std::optional<std::span<const IPAddressOrRange<V>>> ranges);
 
             std::optional<std::vector<IPAddressOrRange<V>>> m_ip_addr_ranges;
       };
