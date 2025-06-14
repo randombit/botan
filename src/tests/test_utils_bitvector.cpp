@@ -7,14 +7,12 @@
 
 #include "tests.h"
 
-#include <botan/internal/fmt.h>
-
 #if defined(BOTAN_HAS_BITVECTOR)
    #include <botan/internal/bitvector.h>
+   #include <botan/internal/fmt.h>
+   #include <algorithm>
+   #include <numeric>
 #endif
-
-#include <algorithm>
-#include <numeric>
 
 namespace Botan_Tests {
 
