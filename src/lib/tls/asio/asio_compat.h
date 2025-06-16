@@ -13,6 +13,8 @@
 
 #if defined(BOTAN_HAS_BOOST_ASIO)
 
+   // NOLINTBEGIN(*-macro-usage)
+
    #include <boost/version.hpp>
 
    /** @brief minimum supported boost version for the TLS ASIO wrapper
@@ -43,5 +45,8 @@
 
    #endif
 
+   // NOLINTEND(*-macro-usage)
+
 #endif
+
 #endif

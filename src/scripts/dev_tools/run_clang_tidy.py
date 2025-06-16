@@ -82,6 +82,7 @@ disabled_not_interested = [
     '*-use-auto', # not universally a good idea
     '*-use-emplace', # often less clear
     '*-deprecated-headers', # wrong for system headers like stdlib.h
+    'cert-dcl21-cpp', # invalid, and removed already in clang-tidy 19
     'bugprone-argument-comment',
     'bugprone-branch-clone', # doesn't interact well with feature macros
     'bugprone-easily-swappable-parameters',
@@ -167,10 +168,8 @@ def run_clang_tidy(compile_commands_file,
     cmdline = ['clang-tidy',
                '--quiet',
                '-checks=%s' % (check_config),
-               '-p', compile_commands_file]
-
-    if options.check_headers:
-        cmdline.append('-header-filter=.*')
+               '-p', compile_commands_file,
+               '-header-filter=.*']
 
     if options.fixit:
         cmdline.append('-fix')
@@ -187,6 +186,7 @@ def run_clang_tidy(compile_commands_file,
     if options.verbose:
         print("Checked", source_file)
         sys.stdout.flush()
+
     if stdout != "":
         print("### Errors in", source_file)
         print(stdout)
@@ -219,7 +219,6 @@ def main(args = None): # pylint: disable=too-many-return-statements
     parser.add_option('--fast-checks-only', action='store_true', default=False)
     parser.add_option('--only-changed-files', action='store_true', default=False)
     parser.add_option('--only-matching', metavar='REGEX', default='.*')
-    parser.add_option('--skip-headers', dest='check_headers', action='store_false', default=True)
     parser.add_option('--take-file-list-from-stdin', action='store_true', default=False)
     parser.add_option('--export-fixes-dir', default=None)
 
@@ -246,12 +245,19 @@ def main(args = None): # pylint: disable=too-many-return-statements
             print("No C++ files were modified vs master, skipping clang-tidy checks")
             return 0
     elif options.take_file_list_from_stdin:
+        scan_all = False
+
         for line in sys.stdin:
             file = os.path.basename(line.strip())
             if file.endswith('.cpp') or file.endswith('.h'):
                 files_to_check.append(file)
+            elif file in ['run_clang_tidy.py']:
+                scan_all = True
 
-        if len(files_to_check) == 0:
+        if scan_all:
+            # clear this to revert to disable filtering causing all files to be scanned
+            files_to_check = []
+        elif len(files_to_check) == 0:
             print("No C++ files were provided on stdin, skipping clang-tidy checks")
             return 0
 
@@ -292,6 +298,7 @@ def main(args = None): # pylint: disable=too-many-return-statements
             continue
 
         files_checked += 1
+
         results.append(pool.apply_async(
             run_clang_tidy,
             (compile_commands_file,

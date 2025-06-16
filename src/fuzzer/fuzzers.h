@@ -10,6 +10,7 @@
 #include <botan/chacha_rng.h>
 #include <botan/exceptn.h>
 #include <botan/internal/target_info.h>
+#include <fstream>
 #include <iostream>
 #include <stdint.h>
 #include <stdlib.h>  // for setenv
@@ -22,6 +23,7 @@ extern void fuzz(std::span<const uint8_t> in);
 extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv);
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t in[], size_t len);
 
+// NOLINTNEXTLINE(*-definitions-in-headers)
 extern "C" int LLVMFuzzerInitialize(int*, char***) {
    /*
    * This disables the mlock pool, as overwrites within the pool are
@@ -32,6 +34,7 @@ extern "C" int LLVMFuzzerInitialize(int*, char***) {
 }
 
 // Called by main() in libFuzzer or in main for AFL below
+// NOLINTNEXTLINE(*-definitions-in-headers)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t in[], size_t len) {
    if(len <= max_fuzzer_input_size) {
       fuzz(std::span<const uint8_t>(in, len));
@@ -51,19 +54,25 @@ inline Botan::RandomNumberGenerator& fuzzer_rng() {
    return *fuzzer_rng_as_shared();
 }
 
-#define FUZZER_WRITE_AND_CRASH(expr)                                             \
-   do {                                                                          \
-      std::cerr << expr << " @ Line " << __LINE__ << " in " << __FILE__ << "\n"; \
-      abort();                                                                   \
+// TODO(Botan4) use a constexpr function with std::source_location
+// NOLINTNEXTLINE(*-macro-usage)
+#define FUZZER_WRITE_AND_CRASH(expr)                                                                          \
+   do {                                                                                                       \
+      std::cerr << expr << " @ Line " << __LINE__ << " in " << __FILE__ << "\n"; /* NOLINT(*-macro-paren*) */ \
+      abort();                                                                                                \
    } while(0)
 
-#define FUZZER_ASSERT_EQUAL(x, y)                                                        \
-   do {                                                                                  \
-      if(x != y) {                                                                       \
-         FUZZER_WRITE_AND_CRASH(#x << " = " << x << " != " << #y << " = " << y << "\n"); \
-      }                                                                                  \
+// TODO(Botan4) use a constexpr function with std::source_location
+// NOLINTNEXTLINE(*-macro-usage)
+#define FUZZER_ASSERT_EQUAL(x, y)                                                            \
+   do {                                                                                      \
+      if((x) != (y)) {                                                                       \
+         FUZZER_WRITE_AND_CRASH(#x << " = " << (x) << " != " << #y << " = " << (y) << "\n"); \
+      }                                                                                      \
    } while(0)
 
+// TODO(Botan4) use a constexpr function with std::source_location
+// NOLINTNEXTLINE(*-macro-usage)
 #define FUZZER_ASSERT_TRUE(e)                                         \
    do {                                                               \
       if(!(e)) {                                                      \
@@ -71,21 +80,9 @@ inline Botan::RandomNumberGenerator& fuzzer_rng() {
       }                                                               \
    } while(0)
 
-#if defined(BOTAN_FUZZER_IS_AFL) || defined(BOTAN_FUZZER_IS_TEST)
+#if defined(BOTAN_FUZZER_IS_TEST)
 
-   /* Stub for AFL */
-
-   #if defined(BOTAN_FUZZER_IS_AFL) && !defined(__AFL_COMPILER)
-      #error "Build configured for AFL but not being compiled by AFL compiler"
-   #endif
-
-   #if defined(BOTAN_FUZZER_IS_TEST)
-
-      #include <fstream>
-
-namespace {
-
-int fuzz_files(char* files[]) {
+inline int fuzz_files(char* files[]) {
    for(size_t i = 0; files[i]; ++i) {
       std::ifstream in(files[i]);
 
@@ -103,10 +100,17 @@ int fuzz_files(char* files[]) {
    return 0;
 }
 
-}  // namespace
+#endif
 
+#if defined(BOTAN_FUZZER_IS_AFL) || defined(BOTAN_FUZZER_IS_TEST)
+
+   /* Stub for AFL */
+
+   #if defined(BOTAN_FUZZER_IS_AFL) && !defined(__AFL_COMPILER)
+      #error "Build configured for AFL but not being compiled by AFL compiler"
    #endif
 
+// NOLINTNEXTLINE(*-definitions-in-headers)
 int main(int argc, char* argv[]) {
    LLVMFuzzerInitialize(&argc, &argv);
 
@@ -135,6 +139,7 @@ int main(int argc, char* argv[]) {
 
    #include <klee/klee.h>
 
+// NOLINTNEXTLINE(*-definitions-in-headers)
 int main(int argc, char* argv[]) {
    LLVMFuzzerInitialize(&argc, &argv);
 

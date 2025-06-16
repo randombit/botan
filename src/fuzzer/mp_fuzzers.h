@@ -21,8 +21,6 @@ consteval const char* word_format_string() {
 
 using Botan::word;
 
-namespace {
-
 inline void dump_word_vec(const char* name, const word x[], size_t x_len) {
    fprintf(stderr, "%s = ", name);
    constexpr auto fmt = word_format_string();
@@ -60,7 +58,5 @@ inline void compare_word_vec(const word x[], size_t x_len, const word y[], size_
       }
    }
 }
-
-}  // namespace
 
 #endif

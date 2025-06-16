@@ -124,6 +124,17 @@ secure_vector<uint8_t> Session::tpm_nonce() const {
    return copy_into<secure_vector<uint8_t>>(*nonce);
 }
 
+detail::SessionHandle::SessionHandle(Session& session) :
+      m_session(session), m_original_attributes(session.attributes()) {}
+
+detail::SessionHandle::~SessionHandle() {
+   try {
+      if(m_session) {
+         m_session->get().set_attributes(m_original_attributes);
+      }
+   } catch(...) {}
+}
+
 [[nodiscard]] detail::SessionHandle::operator ESYS_TR() && noexcept {
    if(m_session) {
       return m_session->get().transient_handle();

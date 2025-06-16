@@ -14,8 +14,6 @@
 #include <botan/numthry.h>
 #include <botan/internal/barrett.h>
 
-namespace {
-
 inline std::ostream& operator<<(std::ostream& o, const Botan::EC_AffinePoint& point) {
    o << Botan::hex_encode(point.serialize_uncompressed()) << "\n";
    return o;
@@ -82,7 +80,5 @@ inline void check_ecc_math(const Botan::EC_Group& group, std::span<const uint8_t
    FUZZER_ASSERT_EQUAL(S2, R2);
    FUZZER_ASSERT_EQUAL(T2, R2);
 }
-
-}  // namespace
 
 #endif

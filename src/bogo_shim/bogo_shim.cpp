@@ -607,10 +607,10 @@ class Shim_Arguments final {
          if(!m_all_options.contains(key)) {
             throw Shim_Exception("Invalid option " + key);
          }
-         if(m_parsed_opts.find(key) != m_parsed_opts.end()) {
+         if(m_parsed_opts.contains(key)) {
             return true;
          }
-         if(m_parsed_int_vec_opts.find(key) != m_parsed_int_vec_opts.end()) {
+         if(m_parsed_int_vec_opts.contains(key)) {
             return true;
          }
          return false;
