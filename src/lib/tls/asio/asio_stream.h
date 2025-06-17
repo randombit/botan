@@ -425,7 +425,7 @@ class Stream {
       template <typename ConstBufferSequence, detail::basic_completion_token BufferedHandshakeHandler>
       auto async_handshake([[maybe_unused]] Connection_Side side,
                            [[maybe_unused]] const ConstBufferSequence& buffers,
-                           [[maybe_unused]] BufferedHandshakeHandler&& handler) {
+                           [[maybe_unused]] BufferedHandshakeHandler&& handler /* NOLINT(*missing-std-forward) */) {
          throw Not_Implemented("buffered async handshake is not implemented");
       }
 
