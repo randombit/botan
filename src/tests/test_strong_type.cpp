@@ -15,6 +15,7 @@
 
 #include <algorithm>
 #include <array>
+#include <ranges>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -157,8 +158,7 @@ std::vector<Test::Result> test_container_strong_type() {
 
                Test_Length_List hashes({Test_Length(3), Test_Length(1), Test_Length(4), Test_Length(2)});
 
-               // TODO: C++20 - std::ranges::sort
-               std::sort(hashes.begin(), hashes.end());
+               std::ranges::sort(hashes);
 
                result.test_eq("1", hashes.get().at(0).get(), size_t(1));
                result.test_eq("2", hashes.get().at(1).get(), size_t(2));
