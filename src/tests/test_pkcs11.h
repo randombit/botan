@@ -21,6 +21,7 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_PKCS11)
 
+   // NOLINTNEXTLINE(*-macro-usage)
    #define STRING_AND_FUNCTION(x) #x, x
 
 // PIN is expected to be set to "123456" prior to running the tests
