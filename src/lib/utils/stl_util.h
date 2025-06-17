@@ -313,7 +313,7 @@ constexpr bool is_generalizable_to(const std::variant<SpecialTs...>&) noexcept {
  * variants types.
  */
 template <typename GeneralVariantT, typename SpecialT>
-constexpr GeneralVariantT generalize_to(SpecialT&& specific) noexcept
+constexpr GeneralVariantT generalize_to(SpecialT&& specific)
    requires(std::is_constructible_v<GeneralVariantT, std::decay_t<SpecialT>>)
 {
    return std::forward<SpecialT>(specific);
@@ -327,7 +327,7 @@ constexpr GeneralVariantT generalize_to(SpecialT&& specific) noexcept
  * variants types.
  */
 template <typename GeneralVariantT, typename... SpecialTs>
-constexpr GeneralVariantT generalize_to(std::variant<SpecialTs...> specific) noexcept {
+constexpr GeneralVariantT generalize_to(std::variant<SpecialTs...> specific) {
    static_assert(
       is_generalizable_to<GeneralVariantT>(specific),
       "Desired general type must be implicitly constructible by all types of the specialized std::variant<>");
@@ -396,6 +396,7 @@ T assert_is_some(std::optional<T> v, const char* expr, const char* func, const c
    }
 }
 
+// NOLINTNEXTLINE(*-macro-usage)
 #define BOTAN_ASSERT_IS_SOME(v) assert_is_some(v, #v, __func__, __FILE__, __LINE__)
 
 /*

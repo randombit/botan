@@ -600,7 +600,9 @@ class bitvector_base final {
        */
       bitvector_base& set() {
          full_range_operation(
-            [](std::unsigned_integral auto block) -> decltype(block) { return static_cast<decltype(block)>(~0); },
+            [](std::unsigned_integral auto block) -> decltype(block) {
+               return static_cast<decltype(block)>(~static_cast<decltype(block)>(0));
+            },
             *this);
          zero_unused_bits();
          return *this;

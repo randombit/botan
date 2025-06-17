@@ -156,15 +156,6 @@ class BOTAN_PUBLIC_API(3, 6) Session {
       Object m_session;
 };
 
-inline detail::SessionHandle::~SessionHandle() {
-   if(m_session) {
-      m_session->get().set_attributes(m_original_attributes);
-   }
-}
-
-inline detail::SessionHandle::SessionHandle(Session& session) :
-      m_session(session), m_original_attributes(session.attributes()) {}
-
 /**
  * This bundles up to three sessions into a single object to be used in a
  * single TSS2 library function call to simplify passing the sessions around

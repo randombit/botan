@@ -52,6 +52,7 @@ Checks: >
     -*-use-auto,
     -*-use-emplace,
     -*-deprecated-headers,
+    -cert-dcl21-cpp,
     -bugprone-argument-comment,
     -bugprone-branch-clone,
     -bugprone-easily-swappable-parameters,
