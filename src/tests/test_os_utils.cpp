@@ -87,22 +87,25 @@ class OS_Utils_Tests final : public Test {
       }
 
       static Test::Result test_get_high_resolution_clock() {
-         const size_t max_trials = 1024;
-         const size_t max_repeats = 128;
-
          Test::Result result("OS::get_high_resolution_clock");
 
-         // TODO better tests
-         const uint64_t hr_ts1 = Botan::OS::get_high_resolution_clock();
-         result.confirm("high resolution timestamp value is never zero", hr_ts1 != 0);
+         // Basic functionality test
+         const uint64_t first_hrc = Botan::OS::get_high_resolution_clock();
+         result.confirm("High resolution timestamp value is never zero", first_hrc != 0);
 
-         size_t counts = 0;
-         while(counts < max_trials && (Botan::OS::get_high_resolution_clock() == hr_ts1)) {
-            ++counts;
+         // Non-decreasing check monotonic
+         std::array<uint64_t, 100 /* sample count */> timestamps{};
+         for(std::size_t i = 0; i < timestamps.size(); ++i) {
+            timestamps[i] = Botan::OS::get_high_resolution_clock();
+
+            if(i < timestamps.size() - 1) {  // No sleep last time
+               std::this_thread::sleep_for(std::chrono::microseconds(100));
+            }
          }
 
-         result.test_lt("high resolution clock eventually changes value", counts, max_repeats);
-
+         const bool is_monotonic = std::is_sorted(timestamps.begin(), timestamps.end());
+         result.confirm("Clock values are monotonic", is_monotonic);
+         result.confirm("Clock values show progression", timestamps.front() != timestamps.back());
          return result;
       }
 
@@ -117,19 +120,29 @@ class OS_Utils_Tests final : public Test {
       }
 
       static Test::Result test_get_system_timestamp() {
-         // TODO better tests
          Test::Result result("OS::get_system_timestamp_ns");
 
-         uint64_t sys_ts1 = Botan::OS::get_system_timestamp_ns();
-         result.confirm("System timestamp value is never zero", sys_ts1 != 0);
+         // Basic functionality test
+         const uint64_t first_timestamp = Botan::OS::get_system_timestamp_ns();
+         result.confirm("Timestamp is non-zero", first_timestamp != 0);
 
-         // do something that consumes a little time
-         Botan::OS::get_process_id();
+         // Sanity check
+         const auto epoch_2020 = std::chrono::sys_days{std::chrono::year{2020} / 1 / 1};
+         const auto epoch_2020_ns = duration_cast<std::chrono::nanoseconds>(epoch_2020.time_since_epoch()).count();
+         result.test_gte("Timestamp after Jan 1, 2020", first_timestamp, static_cast<uint64_t>(epoch_2020_ns));
 
-         uint64_t sys_ts2 = Botan::OS::get_system_timestamp_ns();
+         // Non-decreasing check
+         std::array<uint64_t, 100 /* sample_count */> timestamps{};
+         for(std::size_t i = 0; i < timestamps.size(); ++i) {
+            timestamps[i] = Botan::OS::get_system_timestamp_ns();
+            if(i < timestamps.size() - 1) {  // No sleep last time
+               std::this_thread::sleep_for(std::chrono::microseconds(100));
+            }
+         }
 
-         result.confirm("System time moves forward", sys_ts1 <= sys_ts2);
-
+         bool is_non_decreasing = std::is_sorted(timestamps.begin(), timestamps.end());
+         result.confirm("Clock values are monotonic", is_non_decreasing);
+         result.confirm("Clock values show progression", timestamps.front() != timestamps.back());
          return result;
       }
 
