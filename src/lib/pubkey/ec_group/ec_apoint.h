@@ -253,7 +253,7 @@ class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
    private:
       friend class EC_Mul2Table;
 
-      EC_AffinePoint(std::unique_ptr<EC_AffinePoint_Data> point);
+      explicit EC_AffinePoint(std::unique_ptr<EC_AffinePoint_Data> point);
 
       const EC_AffinePoint_Data& inner() const { return *m_point; }
 

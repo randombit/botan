@@ -593,7 +593,9 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
       * @param kem_param additional KEM parameters
       * @param provider the provider to use
       */
-      PK_KEM_Encryptor(const Public_Key& key, std::string_view kem_param = "", std::string_view provider = "");
+      BOTAN_FUTURE_EXPLICIT PK_KEM_Encryptor(const Public_Key& key,
+                                             std::string_view kem_param = "",
+                                             std::string_view provider = "");
 
       /**
       * Construct an instance.

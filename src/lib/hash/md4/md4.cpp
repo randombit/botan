@@ -79,7 +79,7 @@ void MD4::compress_n(digest_type& digest, std::span<const uint8_t> input, size_t
 
    BufferSlicer in(input);
 
-   std::array<uint32_t, 16> M;
+   std::array<uint32_t, 16> M{};
 
    for(size_t i = 0; i != blocks; ++i) {
       load_le(M, in.take<block_bytes>());

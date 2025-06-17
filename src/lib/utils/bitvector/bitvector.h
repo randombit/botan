@@ -279,6 +279,7 @@ class bitvector_base final {
             ~bitref_base() = default;
 
          public:
+            // NOLINTNEXTLINE(*-explicit-conversions) FIXME
             constexpr operator bool() const noexcept { return is_set(); }
 
             constexpr bool is_set() const noexcept { return (m_block & m_mask) > 0; }
@@ -373,7 +374,7 @@ class bitvector_base final {
    public:
       bitvector_base() : m_bits(0) {}
 
-      bitvector_base(size_type bits) : m_bits(bits), m_blocks(ceil_toblocks(bits)) {}
+      explicit bitvector_base(size_type bits) : m_bits(bits), m_blocks(ceil_toblocks(bits)) {}
 
       /**
        * Initialize the bitvector from a byte-array. Bits are taken byte-wise
@@ -388,7 +389,8 @@ class bitvector_base final {
        * @param bits  The number of bits to be loaded. This must not be more
        *              than the number of bytes in @p bytes.
        */
-      bitvector_base(std::span<const uint8_t> bytes, std::optional<size_type> bits = std::nullopt) {
+      bitvector_base(std::span<const uint8_t> bytes, /* NOLINT(*-explicit-conversions) FIXME */
+                     std::optional<size_type> bits = std::nullopt) {
          from_bytes(bytes, bits);
       }
 
@@ -962,7 +964,7 @@ class bitvector_base final {
                BOTAN_ASSERT(m_source.size() >= m_start_bitoffset + m_bitlength, "enough bytes in underlying source");
             }
 
-            BitRangeOperator(BitvectorT& source) : BitRangeOperator(source, 0, source.size()) {}
+            explicit BitRangeOperator(BitvectorT& source) : BitRangeOperator(source, 0, source.size()) {}
 
             static constexpr bool is_byte_aligned() { return alignment == BitRangeAlignment::byte_aligned; }
 

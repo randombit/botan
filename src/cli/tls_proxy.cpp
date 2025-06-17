@@ -42,6 +42,8 @@ namespace Botan_CLI {
 
 namespace {
 
+// NOLINTBEGIN(*-avoid-endl,*-avoid-bind)
+
 using boost::asio::ip::tcp;
 
 template <typename T>
@@ -83,7 +85,7 @@ void log_text_message(const char* where, const uint8_t buf[], size_t buf_len) {
 
 class ServerStatus {
    public:
-      ServerStatus(size_t max_clients) : m_max_clients(max_clients), m_clients_serviced(0) {}
+      explicit ServerStatus(size_t max_clients) : m_max_clients(max_clients), m_clients_serviced(0) {}
 
       bool should_exit() const {
          if(m_max_clients == 0) {
@@ -470,6 +472,8 @@ class TLS_Proxy final : public Command {
          }
       }
 };
+
+// NOLINTEND(*-avoid-endl,*-avoid-bind)
 
 BOTAN_REGISTER_COMMAND("tls_proxy", TLS_Proxy);
 

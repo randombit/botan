@@ -32,10 +32,10 @@ class BOTAN_PUBLIC_API(2, 13) Roughtime_Error final : public Decoding_Error {
 class BOTAN_PUBLIC_API(2, 13) Nonce final {
    public:
       Nonce() = default;
-      Nonce(const std::vector<uint8_t>& nonce);
-      Nonce(RandomNumberGenerator& rng);
+      explicit Nonce(const std::vector<uint8_t>& nonce);
+      explicit Nonce(RandomNumberGenerator& rng);
 
-      Nonce(const std::array<uint8_t, 64>& nonce) { m_nonce = nonce; }
+      explicit Nonce(const std::array<uint8_t, 64>& nonce) : m_nonce(nonce) {}
 
       bool operator==(const Nonce& rhs) const { return m_nonce == rhs.m_nonce; }
 
@@ -103,7 +103,7 @@ class BOTAN_PUBLIC_API(2, 13) Link final {
 class BOTAN_PUBLIC_API(2, 13) Chain final {
    public:
       Chain() = default;  //empty
-      Chain(std::string_view str);
+      explicit Chain(std::string_view str);
 
       const std::vector<Link>& links() const { return m_links; }
 

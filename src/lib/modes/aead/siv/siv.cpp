@@ -100,7 +100,7 @@ void SIV_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
       throw Invalid_IV_Length(name(), nonce_len);
    }
 
-   if(nonce_len) {
+   if(nonce_len > 0) {
       m_nonce = m_mac->process(nonce, nonce_len);
    } else {
       m_nonce.clear();

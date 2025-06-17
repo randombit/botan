@@ -12,7 +12,7 @@
 namespace Botan_Tests {
 
 StdoutReporter::StdoutReporter(const Test_Options& opts, std::ostream& output_stream) :
-      Reporter(opts), m_verbose(opts.verbose()), m_out(output_stream), m_tests_failed(0), m_tests_run(0) {}
+      Reporter(opts), m_verbose(opts.verbose()), m_out(output_stream) {}
 
 void StdoutReporter::next_run() {
    if(current_test_run() == 1) {

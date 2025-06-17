@@ -1009,9 +1009,7 @@ Botan::BigInt VarMap::get_req_bn(const std::string& key) const {
    }
 }
 
-Botan::BigInt VarMap::get_opt_bn(const std::string& key, const Botan::BigInt& def_value) const
-
-{
+Botan::BigInt VarMap::get_opt_bn(const std::string& key, const Botan::BigInt& def_value) const {
    auto i = m_vars.find(key);
    if(i == m_vars.end()) {
       return def_value;

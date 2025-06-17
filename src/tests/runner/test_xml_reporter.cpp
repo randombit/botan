@@ -42,7 +42,7 @@ std::string full_compiler_version_string() {
    std::ostringstream oss;
 
    oss << std::setfill('0') << std::setw(2) << major << "." << std::setw(2) << minor << "." << std::setw(5) << patch
-       << "." << std::setw(2) << build << std::endl;
+       << "." << std::setw(2) << build << "\n";
 
    return oss.str();
    #else

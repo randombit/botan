@@ -38,7 +38,7 @@ EC_AffinePoint recover_ecdsa_public_key(
    }
 
    const uint8_t y_odd = v % 2;
-   const uint8_t add_order = v >> 1;
+   const bool add_order = (v >> 1) == 0x01;
    const size_t p_bytes = group.get_p_bytes();
 
    BigInt x = r;

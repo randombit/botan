@@ -77,7 +77,7 @@ class GCM_Encryption final : public GCM_Mode {
       * @param cipher the 128 bit block cipher to use
       * @param tag_size is how big the auth tag will be
       */
-      GCM_Encryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16) :
+      explicit GCM_Encryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16) :
             GCM_Mode(std::move(cipher), tag_size) {}
 
       size_t output_length(size_t input_length) const override { return input_length + tag_size(); }
@@ -98,7 +98,7 @@ class GCM_Decryption final : public GCM_Mode {
       * @param cipher the 128 bit block cipher to use
       * @param tag_size is how big the auth tag will be
       */
-      GCM_Decryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16) :
+      explicit GCM_Decryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16) :
             GCM_Mode(std::move(cipher), tag_size) {}
 
       size_t output_length(size_t input_length) const override {

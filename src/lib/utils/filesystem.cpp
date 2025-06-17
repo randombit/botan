@@ -54,7 +54,7 @@ std::vector<std::string> impl_readdir(std::string_view dir_path) {
             full_path_sstr << cur_path << "/" << filename;
             const std::string full_path = full_path_sstr.str();
 
-            struct stat stat_buf;
+            struct stat stat_buf {};
 
             if(::stat(full_path.c_str(), &stat_buf) == -1) {
                continue;

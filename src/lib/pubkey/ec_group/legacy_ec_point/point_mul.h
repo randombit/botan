@@ -47,9 +47,10 @@ class EC_Point_Var_Point_Precompute final {
                    std::vector<BigInt>& ws) const;
 
    private:
+      static constexpr size_t WindowBits = 4;
+
       const CurveGFp m_curve;
       const size_t m_p_words;
-      const size_t m_window_bits;
 
       /*
       * Table of 2^window_bits * 3*2*p_word words

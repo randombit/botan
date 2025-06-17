@@ -209,7 +209,7 @@ template <typename ToT, ranges::contiguous_range FromR>
    requires std::is_default_constructible_v<ToT> && std::is_trivially_copyable_v<ToT> &&
             std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>>
 inline constexpr ToT typecast_copy(const FromR& src) {
-   ToT dst;
+   ToT dst;  // NOLINT(*-member-init)
    typecast_copy(dst, src);
    return dst;
 }

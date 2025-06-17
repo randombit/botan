@@ -380,7 +380,7 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       const Barrett_Reduction& _reducer_mod_p() const;
 
    private:
-      DL_Group(std::shared_ptr<DL_Group_Data> data) : m_data(std::move(data)) {}
+      explicit DL_Group(std::shared_ptr<DL_Group_Data> data) : m_data(std::move(data)) {}
 
       static std::shared_ptr<DL_Group_Data> load_DL_group_info(const char* p_str, const char* q_str, const char* g_str);
 

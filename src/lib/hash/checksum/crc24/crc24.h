@@ -28,14 +28,12 @@ class CRC24 final : public HashFunction {
 
       std::unique_ptr<HashFunction> copy_state() const override;
 
-      void clear() override { m_crc = 0XCE04B7L; }
-
-      CRC24() { clear(); }
+      void clear() override { m_crc = 0xCE04B7; }
 
    private:
       void add_data(std::span<const uint8_t>) override;
       void final_result(std::span<uint8_t>) override;
-      uint32_t m_crc;
+      uint32_t m_crc = 0xCE04B7;
 };
 
 }  // namespace Botan

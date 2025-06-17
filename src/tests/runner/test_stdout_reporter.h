@@ -33,8 +33,8 @@ class StdoutReporter : public Reporter {
       std::ostream& m_out;
 
       std::set<std::string> m_tests_failed_names;
-      size_t m_tests_failed;
-      size_t m_tests_run;
+      size_t m_tests_failed = 0;
+      size_t m_tests_run = 0;
 };
 
 }  // namespace Botan_Tests

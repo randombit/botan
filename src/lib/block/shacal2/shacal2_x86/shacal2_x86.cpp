@@ -68,7 +68,7 @@ void BOTAN_FN_ISA_SHANI SHACAL2::x86_encrypt_blocks(const uint8_t in[], uint8_t 
       out_mm += 4;
    }
 
-   while(blocks) {
+   while(blocks > 0) {
       __m128i B0 = _mm_loadu_si128(in_mm);
       __m128i B1 = _mm_loadu_si128(in_mm + 1);
 

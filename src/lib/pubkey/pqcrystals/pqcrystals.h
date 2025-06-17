@@ -398,7 +398,7 @@ class PolynomialVector {
       }
 
    public:
-      PolynomialVector(size_t vecsize) : m_polys_storage(vecsize * Trait::N) {
+      explicit PolynomialVector(size_t vecsize) : m_polys_storage(vecsize * Trait::N) {
          for(size_t i = 0; i < vecsize; ++i) {
             m_vec.emplace_back(
                Polynomial<Trait, D>(std::span{m_polys_storage}.subspan(i * Trait::N).template first<Trait::N>()));
@@ -500,7 +500,7 @@ class PolynomialMatrix {
       std::vector<PolynomialVector<Trait, Domain::NTT>> m_mat;
 
    public:
-      PolynomialMatrix(std::vector<PolynomialVector<Trait>> mat) : m_mat(std::move(mat)) {}
+      explicit PolynomialMatrix(std::vector<PolynomialVector<Trait>> mat) : m_mat(std::move(mat)) {}
 
       PolynomialMatrix(const ThisPolynomialMatrix& other) = delete;
       PolynomialMatrix(ThisPolynomialMatrix&& other) noexcept = default;

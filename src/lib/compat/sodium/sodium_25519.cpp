@@ -25,7 +25,7 @@ int Sodium::crypto_sign_ed25519_detached(
    uint8_t sig[], unsigned long long* sig_len, const uint8_t msg[], size_t msg_len, const uint8_t sk[32]) {
    ed25519_sign(sig, msg, msg_len, sk, nullptr, 0);
 
-   if(sig_len) {
+   if(sig_len != nullptr) {
       *sig_len = 64;
    }
    return 0;

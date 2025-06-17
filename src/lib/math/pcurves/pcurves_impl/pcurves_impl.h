@@ -92,7 +92,7 @@ class MontgomeryRep final {
       * Convert an integer into Montgomery representation
       */
       constexpr static std::array<W, N> to_rep(const std::array<W, N>& x) {
-         std::array<W, 2 * N> z;
+         std::array<W, 2 * N> z;  // NOLINT(*-member-init)
          comba_mul<N>(z.data(), x.data(), R2.data());
          return Self::redc(z);
       }
@@ -105,7 +105,7 @@ class MontgomeryRep final {
       */
       constexpr static std::array<W, N> wide_to_rep(const std::array<W, 2 * N>& x) {
          auto redc_x = Self::redc(x);
-         std::array<W, 2 * N> z;
+         std::array<W, 2 * N> z;  // NOLINT(*-member-init)
          comba_mul<N>(z.data(), redc_x.data(), R3.data());
          return Self::redc(z);
       }
@@ -242,14 +242,14 @@ class IntMod final {
       * Modular addition; return c = a + b
       */
       friend constexpr Self operator+(const Self& a, const Self& b) {
-         std::array<W, N> t;
+         std::array<W, N> t;  // NOLINT(*-member-init)
 
          W carry = 0;
          for(size_t i = 0; i != N; ++i) {
             t[i] = word_add(a.m_val[i], b.m_val[i], &carry);
          }
 
-         std::array<W, N> r;
+         std::array<W, N> r;  // NOLINT(*-member-init)
          bigint_monty_maybe_sub<N>(r.data(), carry, t.data(), P.data());
          return Self(r);
       }
@@ -258,7 +258,7 @@ class IntMod final {
       * Modular subtraction; return c = a - b
       */
       friend constexpr Self operator-(const Self& a, const Self& b) {
-         std::array<W, N> r;
+         std::array<W, N> r;  // NOLINT(*-member-init)
          W carry = 0;
          for(size_t i = 0; i != N; ++i) {
             r[i] = word_sub(a.m_val[i], b.m_val[i], &carry);
@@ -292,7 +292,7 @@ class IntMod final {
          std::array<W, N> t = value();
          W carry = shift_left<1>(t);
 
-         std::array<W, N> r;
+         std::array<W, N> r;  // NOLINT(*-member-init)
          bigint_monty_maybe_sub<N>(r.data(), carry, t.data(), P.data());
          return Self(r);
       }
@@ -310,7 +310,7 @@ class IntMod final {
       * Modular multiplication; return c = a * b
       */
       friend constexpr Self operator*(const Self& a, const Self& b) {
-         std::array<W, 2 * N> z;
+         std::array<W, 2 * N> z;  // NOLINT(*-member-init)
          comba_mul<N>(z.data(), a.data(), b.data());
          return Self(Rep::redc(z));
       }
@@ -319,7 +319,7 @@ class IntMod final {
       * Modular multiplication; set this to this * other
       */
       constexpr Self& operator*=(const Self& other) {
-         std::array<W, 2 * N> z;
+         std::array<W, 2 * N> z;  // NOLINT(*-member-init)
          comba_mul<N>(z.data(), data(), other.data());
          m_val = Rep::redc(z);
          return (*this);
@@ -390,7 +390,7 @@ class IntMod final {
       * Returns the square of this after modular reduction
       */
       constexpr Self square() const {
-         std::array<W, 2 * N> z;
+         std::array<W, 2 * N> z;  // NOLINT(*-member-init)
          comba_sqr<N>(z.data(), this->data());
          return Self(Rep::redc(z));
       }
@@ -403,7 +403,7 @@ class IntMod final {
       * (Alternate view, returns this raised to the 2^nth power)
       */
       constexpr void square_n(size_t n) {
-         std::array<W, 2 * N> z;
+         std::array<W, 2 * N> z;  // NOLINT(*-member-init)
          for(size_t i = 0; i != n; ++i) {
             comba_sqr<N>(z.data(), this->data());
             m_val = Rep::redc(z);
@@ -418,7 +418,7 @@ class IntMod final {
       constexpr Self negate() const {
          const W x_is_zero = ~CT::all_zeros(this->data(), N).value();
 
-         std::array<W, N> r;
+         std::array<W, N> r;  // NOLINT(*-member-init)
          W carry = 0;
          for(size_t i = 0; i != N; ++i) {
             r[i] = word_sub(P[i] & x_is_zero, m_val[i], &carry);
@@ -602,7 +602,7 @@ class IntMod final {
             * Compute r = b - a and check if it underflowed
             * If it did not then we are in the b > a path
             */
-            std::array<W, N> r;
+            std::array<W, N> r;  // NOLINT(*-member-init)
             word carry = bigint_sub3(r.data(), b.data(), N, a.data(), N);
 
             // Conditional ok: this function is variable time
@@ -817,7 +817,7 @@ class IntMod final {
       static Self random(RandomNumberGenerator& rng) {
          constexpr size_t MAX_ATTEMPTS = 1000;
 
-         std::array<uint8_t, Self::BYTES> buf;
+         std::array<uint8_t, Self::BYTES> buf{};
 
          for(size_t i = 0; i != MAX_ATTEMPTS; ++i) {
             rng.randomize(buf);
@@ -846,7 +846,7 @@ class IntMod final {
       * Notice this function is consteval, and so can only be called at compile time
       */
       static consteval Self constant(int8_t x) {
-         std::array<W, 1> v;
+         std::array<W, 1> v{};
          v[0] = (x >= 0) ? x : -x;
          auto s = Self::from_words(v);
          return (x >= 0) ? s : s.negate();
@@ -1314,7 +1314,7 @@ class BlindedScalarBits final {
                // bytes of the scalar together. At worst, it's equivalent to
                // omitting the blinding entirely.
 
-               std::array<uint8_t, C::Scalar::BYTES> sbytes;
+               std::array<uint8_t, C::Scalar::BYTES> sbytes = {};
                scalar.serialize_to(sbytes);
                for(size_t i = 0; i != sbytes.size(); ++i) {
                   maskb[i % mask_bytes] ^= sbytes[i];
@@ -1370,7 +1370,7 @@ class UnblindedScalarBits final {
    public:
       static constexpr size_t Bits = C::Scalar::BITS;
 
-      UnblindedScalarBits(const typename C::Scalar& scalar) { scalar.serialize_to(std::span{m_bytes}); }
+      explicit UnblindedScalarBits(const typename C::Scalar& scalar) { scalar.serialize_to(std::span{m_bytes}); }
 
       size_t get_window(size_t offset) const {
          // Extract a WindowBits sized window out of s, depending on offset.
@@ -1395,7 +1395,8 @@ class PrecomputedBaseMulTable final {
 
       static constexpr size_t Windows = (BlindedScalar::Bits + WindowBits - 1) / WindowBits;
 
-      PrecomputedBaseMulTable(const AffinePoint& p) : m_table(basemul_setup<C, WindowBits>(p, BlindedScalar::Bits)) {}
+      explicit PrecomputedBaseMulTable(const AffinePoint& p) :
+            m_table(basemul_setup<C, WindowBits>(p, BlindedScalar::Bits)) {}
 
       ProjectivePoint mul(const Scalar& s, RandomNumberGenerator& rng) const {
          const BlindedScalar scalar(s, rng);
@@ -1430,7 +1431,7 @@ class WindowedMulTable final {
       // 2^W elements, less the identity element
       static constexpr size_t TableSize = (1 << WindowBits) - 1;
 
-      WindowedMulTable(const AffinePoint& p) : m_table(varpoint_setup<C, TableSize>(p)) {}
+      explicit WindowedMulTable(const AffinePoint& p) : m_table(varpoint_setup<C, TableSize>(p)) {}
 
       ProjectivePoint mul(const Scalar& s, RandomNumberGenerator& rng) const {
          const BlindedScalar bits(s, rng);
@@ -1484,7 +1485,7 @@ class WindowedBoothMulTable final {
       // 2^W elements [1*P, 2*P, ..., 2^W*P]
       static constexpr size_t TableSize = 1 << TableBits;
 
-      WindowedBoothMulTable(const AffinePoint& p) : m_table(varpoint_setup<C, TableSize>(p)) {}
+      explicit WindowedBoothMulTable(const AffinePoint& p) : m_table(varpoint_setup<C, TableSize>(p)) {}
 
       ProjectivePoint mul(const Scalar& s, RandomNumberGenerator& rng) const {
          const BlindedScalar bits(s, rng);
@@ -1720,7 +1721,7 @@ inline auto hash_to_curve_sswu(const ExpandMsg& expand_message)
    constexpr size_t L = (C::PrimeFieldBits + SecurityLevel + 7) / 8;
    constexpr size_t Cnt = RO ? 2 : 1;
 
-   std::array<uint8_t, L * Cnt> uniform_bytes;
+   std::array<uint8_t, L * Cnt> uniform_bytes = {};
    expand_message(uniform_bytes);
 
    if constexpr(RO) {

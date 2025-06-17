@@ -122,7 +122,7 @@ class MerkleDamgard_Hash final {
 
    private:
       typename MD::digest_type m_digest;
-      uint64_t m_count;
+      uint64_t m_count = 0;
 
       AlignmentBuffer<uint8_t, MD::block_bytes> m_buffer;
 };

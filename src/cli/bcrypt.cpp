@@ -55,7 +55,7 @@ class Check_Bcrypt final : public Command {
 
          const bool ok = Botan::check_bcrypt(password, hash);
 
-         output() << "Password is " << (ok ? "valid" : "NOT valid") << std::endl;
+         output() << "Password is " << (ok ? "valid" : "NOT valid") << "\n";
 
          if(ok == false) {
             set_return_code(1);

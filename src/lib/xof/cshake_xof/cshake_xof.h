@@ -67,11 +67,11 @@ class BOTAN_TEST_API cSHAKE_XOF : public XOF {
  */
 class BOTAN_TEST_API cSHAKE_128_XOF final : public cSHAKE_XOF {
    public:
-      cSHAKE_128_XOF(std::vector<uint8_t> function_name) : cSHAKE_XOF(256, std::move(function_name)) {}
+      explicit cSHAKE_128_XOF(std::vector<uint8_t> function_name) : cSHAKE_XOF(256, std::move(function_name)) {}
 
-      cSHAKE_128_XOF(std::span<const uint8_t> function_name) : cSHAKE_XOF(256, function_name) {}
+      explicit cSHAKE_128_XOF(std::span<const uint8_t> function_name) : cSHAKE_XOF(256, function_name) {}
 
-      cSHAKE_128_XOF(std::string_view function_name) : cSHAKE_XOF(256, function_name) {}
+      explicit cSHAKE_128_XOF(std::string_view function_name) : cSHAKE_XOF(256, function_name) {}
 
       std::string name() const final { return "cSHAKE-128"; }
 
@@ -86,11 +86,11 @@ class BOTAN_TEST_API cSHAKE_128_XOF final : public cSHAKE_XOF {
  */
 class BOTAN_TEST_API cSHAKE_256_XOF final : public cSHAKE_XOF {
    public:
-      cSHAKE_256_XOF(std::vector<uint8_t> function_name) : cSHAKE_XOF(512, std::move(function_name)) {}
+      explicit cSHAKE_256_XOF(std::vector<uint8_t> function_name) : cSHAKE_XOF(512, std::move(function_name)) {}
 
-      cSHAKE_256_XOF(std::span<const uint8_t> function_name) : cSHAKE_XOF(512, function_name) {}
+      explicit cSHAKE_256_XOF(std::span<const uint8_t> function_name) : cSHAKE_XOF(512, function_name) {}
 
-      cSHAKE_256_XOF(std::string_view function_name) : cSHAKE_XOF(512, function_name) {}
+      explicit cSHAKE_256_XOF(std::string_view function_name) : cSHAKE_XOF(512, function_name) {}
 
       std::string name() const final { return "cSHAKE-256"; }
 

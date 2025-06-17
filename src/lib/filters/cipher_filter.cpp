@@ -69,7 +69,7 @@ void Cipher_Mode_Filter::start_msg() {
 }
 
 void Cipher_Mode_Filter::buffered_block(const uint8_t input[], size_t input_length) {
-   while(input_length) {
+   while(input_length > 0) {
       const size_t take = std::min(m_mode->ideal_granularity(), input_length);
 
       m_buffer.assign(input, input + take);

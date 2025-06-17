@@ -244,7 +244,7 @@ Nonce nonce_from_blind(const std::vector<uint8_t>& previous_response, const Nonc
    hash->update(blind_arr.data(), blind_arr.size());
    hash->final(ret.data());
 
-   return ret;
+   return Nonce(ret);
 }
 
 Chain::Chain(std::string_view str) {

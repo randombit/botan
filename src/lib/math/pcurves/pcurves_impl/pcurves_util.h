@@ -40,14 +40,14 @@ inline consteval std::array<W, N> reduce_mod(const std::array<W, XN>& x, const s
       }
    }
 
-   std::array<W, N> rs;
+   std::array<W, N> rs = {};
    copy_mem(rs, std::span{r}.template first<N>());
    return rs;
 }
 
 template <WordType W, size_t N>
 inline consteval std::array<W, N> montygomery_r(const std::array<W, N>& p) {
-   std::array<W, N + 1> x = {0};
+   std::array<W, N + 1> x = {};
    x[N] = 1;
    return reduce_mod(x, p);
 }
@@ -56,7 +56,7 @@ template <WordType W, size_t N>
 inline consteval std::array<W, N> mul_mod(const std::array<W, N>& x,
                                           const std::array<W, N>& y,
                                           const std::array<W, N>& p) {
-   std::array<W, 2 * N> z;
+   std::array<W, 2 * N> z = {};
    comba_mul<N>(z.data(), x.data(), y.data());
    return reduce_mod(z, p);
 }
@@ -65,8 +65,8 @@ template <WordType W, size_t N>
 inline constexpr auto monty_redc_pdash1(const std::array<W, 2 * N>& z, const std::array<W, N>& p) -> std::array<W, N> {
    static_assert(N >= 1);
 
-   std::array<W, N> ws;
-   std::array<W, N> r;
+   std::array<W, N> ws;  // NOLINT(*-member-init);
+   std::array<W, N> r;   // NOLINT(*-member-init)
 
    word3<W> accum;
 
@@ -110,8 +110,8 @@ inline constexpr auto monty_redc(const std::array<W, 2 * N>& z, const std::array
    -> std::array<W, N> {
    static_assert(N >= 1);
 
-   std::array<W, N> ws;
-   std::array<W, N> r;
+   std::array<W, N> ws;  // NOLINT(*-member-init)
+   std::array<W, N> r;   // NOLINT(*-member-init)
 
    // Conditional ok: the parameter size is public
    if(!std::is_constant_evaluated()) {
@@ -175,7 +175,7 @@ template <uint8_t X, WordType W, size_t N>
 inline consteval std::array<W, N> p_minus(const std::array<W, N>& p) {
    // TODO combine into p_plus_x_over_y<-1, 1>
    static_assert(X > 0);
-   std::array<W, N> r;
+   std::array<W, N> r{};
    W x = X;
    bigint_sub3(r.data(), p.data(), N, &x, 1);
    std::reverse(r.begin(), r.end());
@@ -185,7 +185,7 @@ inline consteval std::array<W, N> p_minus(const std::array<W, N>& p) {
 template <WordType W, size_t N>
 inline consteval std::array<W, N> p_plus_1_over_4(const std::array<W, N>& p) {
    const W one = 1;
-   std::array<W, N> r;
+   std::array<W, N> r{};
    bigint_add3_nc(r.data(), p.data(), N, &one, 1);
    shift_right<2>(r);
    std::reverse(r.begin(), r.end());
@@ -195,7 +195,7 @@ inline consteval std::array<W, N> p_plus_1_over_4(const std::array<W, N>& p) {
 template <WordType W, size_t N>
 inline consteval std::array<W, N> p_minus_1_over_2(const std::array<W, N>& p) {
    const W one = 1;
-   std::array<W, N> r;
+   std::array<W, N> r{};
    bigint_sub3(r.data(), p.data(), N, &one, 1);
    shift_right<1>(r);
    std::reverse(r.begin(), r.end());

@@ -303,7 +303,8 @@ DER_Encoder& DER_Encoder::encode(const BigInt& n, ASN1_Type type_tag, ASN1_Class
          content = ~content;
       }
       for(size_t i = contents.size(); i > 0; --i) {
-         if(++contents[i - 1]) {
+         contents[i - 1] += 1;
+         if(contents[i - 1] != 0) {
             break;
          }
       }

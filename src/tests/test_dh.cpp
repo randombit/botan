@@ -28,7 +28,7 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test {
 
       std::unique_ptr<Botan::Private_Key> load_our_key(const std::string& /*header*/, const VarMap& vars) override {
          const Botan::BigInt p = vars.get_req_bn("P");
-         const Botan::BigInt q = vars.get_opt_bn("Q", 0);
+         const Botan::BigInt q = vars.get_opt_bn("Q", Botan::BigInt::zero());
          const Botan::BigInt g = vars.get_req_bn("G");
          const Botan::BigInt x = vars.get_req_bn("X");
 
@@ -45,7 +45,7 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test {
 
       std::vector<uint8_t> load_their_key(const std::string& /*header*/, const VarMap& vars) override {
          const Botan::BigInt p = vars.get_req_bn("P");
-         const Botan::BigInt q = vars.get_opt_bn("Q", 0);
+         const Botan::BigInt q = vars.get_opt_bn("Q", Botan::BigInt::zero());
          const Botan::BigInt g = vars.get_req_bn("G");
          const Botan::BigInt y = vars.get_req_bn("Y");
 

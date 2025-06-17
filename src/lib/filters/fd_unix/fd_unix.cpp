@@ -17,10 +17,10 @@ namespace Botan {
 */
 int operator<<(int fd, Pipe& pipe) {
    secure_vector<uint8_t> buffer(DefaultBufferSize);
-   while(pipe.remaining()) {
+   while(pipe.remaining() > 0) {
       size_t got = pipe.read(buffer.data(), buffer.size());
       size_t position = 0;
-      while(got) {
+      while(got > 0) {
          ssize_t ret = ::write(fd, &buffer[position], got);
          if(ret < 0) {
             throw Stream_IO_Error("Pipe output operator (unixfd) has failed");

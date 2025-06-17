@@ -32,7 +32,7 @@ Buffered_Filter::Buffered_Filter(size_t b, size_t f) : m_main_block_mod(b), m_fi
 * Buffer input into blocks, trying to minimize copying
 */
 void Buffered_Filter::write(const uint8_t input[], size_t input_size) {
-   if(!input_size) {
+   if(input_size == 0) {
       return;
    }
 
@@ -61,7 +61,7 @@ void Buffered_Filter::write(const uint8_t input[], size_t input_size) {
       size_t full_blocks = (input_size - m_final_minimum) / m_main_block_mod;
       size_t to_copy = full_blocks * m_main_block_mod;
 
-      if(to_copy) {
+      if(to_copy > 0) {
          buffered_block(input, to_copy);
 
          input += to_copy;
@@ -83,7 +83,7 @@ void Buffered_Filter::end_msg() {
 
    size_t spare_blocks = (m_buffer_pos - m_final_minimum) / m_main_block_mod;
 
-   if(spare_blocks) {
+   if(spare_blocks > 0) {
       size_t spare_bytes = m_main_block_mod * spare_blocks;
       buffered_block(m_buffer.data(), spare_bytes);
       buffered_final(&m_buffer[spare_bytes], m_buffer_pos - spare_bytes);

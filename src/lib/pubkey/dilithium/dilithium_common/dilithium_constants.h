@@ -84,7 +84,7 @@ class DilithiumConstants final {
 
       enum DilithiumOmega : uint8_t { _80 = 80, _55 = 55, _75 = 75 };
 
-      DilithiumConstants(DilithiumMode dimension);
+      explicit DilithiumConstants(DilithiumMode dimension);
       ~DilithiumConstants();
 
       DilithiumConstants(const DilithiumConstants& other) : DilithiumConstants(other.m_mode) {}

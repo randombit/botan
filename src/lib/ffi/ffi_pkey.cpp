@@ -143,7 +143,7 @@ int botan_pubkey_algo_name(botan_pubkey_t key, char out[], size_t* out_len) {
 }
 
 int botan_pubkey_check_key(botan_pubkey_t key, botan_rng_t rng, uint32_t flags) {
-   const bool strong = (flags & BOTAN_CHECK_KEY_EXPENSIVE_TESTS);
+   const bool strong = (flags & BOTAN_CHECK_KEY_EXPENSIVE_TESTS) != 0;
 
    return BOTAN_FFI_VISIT(key, [=](const auto& k) {
       return (k.check_key(safe_get(rng), strong) == true) ? 0 : BOTAN_FFI_ERROR_INVALID_INPUT;
@@ -151,7 +151,7 @@ int botan_pubkey_check_key(botan_pubkey_t key, botan_rng_t rng, uint32_t flags) 
 }
 
 int botan_privkey_check_key(botan_privkey_t key, botan_rng_t rng, uint32_t flags) {
-   const bool strong = (flags & BOTAN_CHECK_KEY_EXPENSIVE_TESTS);
+   const bool strong = (flags & BOTAN_CHECK_KEY_EXPENSIVE_TESTS) != 0;
    return BOTAN_FFI_VISIT(key, [=](const auto& k) {
       return (k.check_key(safe_get(rng), strong) == true) ? 0 : BOTAN_FFI_ERROR_INVALID_INPUT;
    });
@@ -231,7 +231,7 @@ int botan_privkey_export_encrypted_pbkdf_msec(botan_privkey_t key,
                                               const char* cipher,
                                               const char* pbkdf_hash,
                                               uint32_t flags) {
-   if(pbkdf_iters_out) {
+   if(pbkdf_iters_out != nullptr) {
       *pbkdf_iters_out = 0;
    }
 

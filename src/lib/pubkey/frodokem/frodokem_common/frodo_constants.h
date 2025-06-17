@@ -24,7 +24,7 @@ class XOF;
 
 class BOTAN_TEST_API FrodoKEMConstants final {
    public:
-      FrodoKEMConstants(FrodoKEMMode mode);
+      explicit FrodoKEMConstants(FrodoKEMMode mode);
 
       ~FrodoKEMConstants();
 

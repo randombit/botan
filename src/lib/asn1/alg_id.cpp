@@ -27,8 +27,8 @@ AlgorithmIdentifier::AlgorithmIdentifier(std::string_view oid, const std::vector
 /*
 * Create an AlgorithmIdentifier
 */
-AlgorithmIdentifier::AlgorithmIdentifier(const OID& oid, Encoding_Option option) : m_oid(oid), m_parameters() {
-   const uint8_t DER_NULL[] = {0x05, 0x00};
+AlgorithmIdentifier::AlgorithmIdentifier(const OID& oid, Encoding_Option option) : m_oid(oid) {
+   constexpr uint8_t DER_NULL[] = {0x05, 0x00};
 
    if(option == USE_NULL_PARAM) {
       m_parameters.assign(DER_NULL, DER_NULL + 2);
@@ -38,9 +38,8 @@ AlgorithmIdentifier::AlgorithmIdentifier(const OID& oid, Encoding_Option option)
 /*
 * Create an AlgorithmIdentifier
 */
-AlgorithmIdentifier::AlgorithmIdentifier(std::string_view oid, Encoding_Option option) :
-      m_oid(OID::from_string(oid)), m_parameters() {
-   const uint8_t DER_NULL[] = {0x05, 0x00};
+AlgorithmIdentifier::AlgorithmIdentifier(std::string_view oid, Encoding_Option option) : m_oid(OID::from_string(oid)) {
+   constexpr uint8_t DER_NULL[2] = {0x05, 0x00};
 
    if(option == USE_NULL_PARAM) {
       m_parameters.assign(DER_NULL, DER_NULL + 2);

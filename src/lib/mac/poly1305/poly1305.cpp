@@ -82,7 +82,7 @@ void poly1305_blocks(secure_vector<uint64_t>& X, const uint8_t* m, size_t blocks
       h2 = d2 & M42;
 
       h0 += c2 * 5;
-      h1 += carry_shift(h0, 44);
+      h1 += h0 >> 44;
       h0 = h0 & M44;
 
       m += 16;

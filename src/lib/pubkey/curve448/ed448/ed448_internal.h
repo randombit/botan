@@ -36,6 +36,9 @@ class BOTAN_TEST_API Ed448Point final {
       /// Create a point from its coordinates x, y
       Ed448Point(const Gf448Elem& x, const Gf448Elem& y) : m_x(x), m_y(y), m_z(1) {}
 
+      /// Return the identity element
+      static Ed448Point identity() { return Ed448Point(Gf448Elem::zero(), Gf448Elem::one()); }
+
       /// Encode the point to its 57-byte representation (RFC 8032 5.2.2)
       std::array<uint8_t, ED448_LEN> encode() const;
 

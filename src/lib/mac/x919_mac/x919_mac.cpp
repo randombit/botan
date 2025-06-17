@@ -43,7 +43,7 @@ void ANSI_X919_MAC::add_data(std::span<const uint8_t> input) {
 * Finalize an ANSI X9.19 MAC Calculation
 */
 void ANSI_X919_MAC::final_result(std::span<uint8_t> mac) {
-   if(m_position) {
+   if(m_position > 0) {
       m_des1->encrypt(m_state);
    }
    m_des2->decrypt(m_state.data(), mac.data());
@@ -92,6 +92,6 @@ std::unique_ptr<MessageAuthenticationCode> ANSI_X919_MAC::new_object() const {
 /*
 * ANSI X9.19 MAC Constructor
 */
-ANSI_X919_MAC::ANSI_X919_MAC() : m_des1(BlockCipher::create("DES")), m_des2(m_des1->new_object()), m_position(0) {}
+ANSI_X919_MAC::ANSI_X919_MAC() : m_des1(BlockCipher::create_or_throw("DES")), m_des2(m_des1->new_object()) {}
 
 }  // namespace Botan

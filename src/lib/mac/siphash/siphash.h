@@ -14,7 +14,7 @@ namespace Botan {
 
 class SipHash final : public MessageAuthenticationCode {
    public:
-      SipHash(size_t c = 2, size_t d = 4) : m_C(c), m_D(d) {}
+      explicit SipHash(size_t c = 2, size_t d = 4) : m_C(c), m_D(d) {}
 
       void clear() override;
       std::string name() const override;

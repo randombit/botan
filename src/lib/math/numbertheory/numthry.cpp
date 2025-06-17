@@ -136,7 +136,7 @@ int32_t jacobi(const BigInt& a, const BigInt& n) {
 
       size_t shifts = low_zero_bits(x);
       x >>= shifts;
-      if(shifts % 2) {
+      if(shifts % 2 == 1) {
          word y_mod_8 = y % 8;
          if(y_mod_8 == 3 || y_mod_8 == 5) {
             J = -J;
@@ -213,8 +213,6 @@ BigInt gcd(const BigInt& a, const BigInt& b) {
    // shifting so many times, we'll have reached the result for sure.
    const size_t loop_cnt = u.bits() + v.bits();
 
-   using WordMask = CT::Mask<word>;
-
    // This temporary is big enough to hold all intermediate results of the
    // algorithm. No reallocation will happen during the loop.
    // Note however, that `ct_cond_assign()` will invalidate the 'sig_words'
@@ -222,16 +220,16 @@ BigInt gcd(const BigInt& a, const BigInt& b) {
    auto tmp = BigInt::with_capacity(sz);
    size_t factors_of_two = 0;
    for(size_t i = 0; i != loop_cnt; ++i) {
-      auto both_odd = WordMask::expand(u.is_odd()) & WordMask::expand(v.is_odd());
+      auto both_odd = CT::Mask<word>::expand(u.is_odd()) & CT::Mask<word>::expand(v.is_odd());
 
       // Subtract the smaller from the larger if both are odd
-      auto u_gt_v = WordMask::expand(bigint_cmp(u._data(), u.size(), v._data(), v.size()) > 0);
+      auto u_gt_v = CT::Mask<word>::expand(bigint_cmp(u._data(), u.size(), v._data(), v.size()) > 0);
       bigint_sub_abs(tmp.mutable_data(), u._data(), sz, v._data(), sz);
       u.ct_cond_assign((u_gt_v & both_odd).as_bool(), tmp);
       v.ct_cond_assign((~u_gt_v & both_odd).as_bool(), tmp);
 
-      const auto u_is_even = WordMask::expand(u.is_even());
-      const auto v_is_even = WordMask::expand(v.is_even());
+      const auto u_is_even = CT::Mask<word>::expand(u.is_even());
+      const auto v_is_even = CT::Mask<word>::expand(v.is_even());
       BOTAN_DEBUG_ASSERT((u_is_even | v_is_even).as_bool());
 
       // When both are even, we're going to eliminate a factor of 2.

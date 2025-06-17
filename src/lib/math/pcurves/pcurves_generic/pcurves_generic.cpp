@@ -28,7 +28,7 @@ constexpr std::optional<std::array<word, N>> bytes_to_words(std::span<const uint
       return std::nullopt;
    }
 
-   std::array<word, N> r = {};
+   std::array<word, N> r{};
 
    const size_t full_words = bytes.size() / WordInfo<word>::bytes;
    const size_t extra_bytes = bytes.size() % WordInfo<word>::bytes;
@@ -232,7 +232,7 @@ class GenericCurveParams final {
          const size_t n_words = n.sig_words();
          BOTAN_ASSERT_NOMSG(n_words <= PrimeOrderCurve::StorageWords);
 
-         std::array<word, PrimeOrderCurve::StorageWords> r = {};
+         std::array<word, PrimeOrderCurve::StorageWords> r{};
          copy_mem(std::span{r}.first(n_words), n._as_span().first(n_words));
          return r;
       }
@@ -269,11 +269,11 @@ class GenericCurveParams final {
       StorageUnit m_order_inv_2;
       word m_order_p_dash;
 
-      StorageUnit m_monty_curve_a;
-      StorageUnit m_monty_curve_b;
+      StorageUnit m_monty_curve_a{};
+      StorageUnit m_monty_curve_b{};
 
-      StorageUnit m_base_x;
-      StorageUnit m_base_y;
+      StorageUnit m_base_x{};
+      StorageUnit m_base_y{};
 
       bool m_a_is_minus_3;
       bool m_a_is_zero;
@@ -294,7 +294,7 @@ class GenericScalar final {
             return {};
          }
 
-         std::array<uint8_t, 2 * sizeof(word) * N> padded_bytes = {};
+         std::array<uint8_t, 2 * sizeof(word) * N> padded_bytes{};
          copy_mem(std::span{padded_bytes}.last(bytes.size()), bytes);
 
          auto words = bytes_to_words<2 * N>(std::span{padded_bytes});
@@ -329,7 +329,7 @@ class GenericScalar final {
       }
 
       static GenericScalar zero(const GenericPrimeOrderCurve* curve) {
-         StorageUnit zeros = {};
+         StorageUnit zeros{};
          return GenericScalar(curve, zeros);
       }
 
@@ -365,13 +365,13 @@ class GenericScalar final {
       }
 
       friend GenericScalar operator+(const GenericScalar& a, const GenericScalar& b) {
-         auto curve = check_curve(a, b);
+         const auto* curve = check_curve(a, b);
          const size_t words = curve->_params().words();
 
-         StorageUnit t = {};
+         StorageUnit t{};
          W carry = bigint_add3_nc(t.data(), a.data(), words, b.data(), words);
 
-         StorageUnit r = {};
+         StorageUnit r{};
          bigint_monty_maybe_sub(words, r.data(), carry, t.data(), curve->_params().order().data());
          return GenericScalar(curve, r);
       }
@@ -379,26 +379,26 @@ class GenericScalar final {
       friend GenericScalar operator-(const GenericScalar& a, const GenericScalar& b) { return a + b.negate(); }
 
       friend GenericScalar operator*(const GenericScalar& a, const GenericScalar& b) {
-         auto curve = check_curve(a, b);
+         const auto* curve = check_curve(a, b);
 
-         std::array<W, 2 * N> z;
+         std::array<W, 2 * N> z;  // NOLINT(*-member-init)
          curve->_params().mul(z, a.value(), b.value());
          return GenericScalar(curve, redc(curve, z));
       }
 
       GenericScalar& operator*=(const GenericScalar& other) {
-         auto curve = check_curve(*this, other);
+         const auto* curve = check_curve(*this, other);
 
-         std::array<W, 2 * N> z;
+         std::array<W, 2 * N> z;  // NOLINT(*-member-init)
          curve->_params().mul(z, value(), other.value());
          m_val = redc(curve, z);
          return (*this);
       }
 
       GenericScalar square() const {
-         auto curve = this->m_curve;
+         const auto* curve = this->m_curve;
 
-         std::array<W, 2 * N> z;
+         std::array<W, 2 * N> z;  // NOLINT(*-member-init)
          curve->_params().sqr(z, value());
          return GenericScalar(curve, redc(curve, z));
       }
@@ -561,28 +561,28 @@ class GenericScalar final {
       static StorageUnit redc(const GenericPrimeOrderCurve* curve, std::array<W, 2 * N> z) {
          const auto& mod = curve->_params().order();
          const size_t words = curve->_params().words();
-         StorageUnit r = {};
-         StorageUnit ws = {};
+         StorageUnit r{};
+         StorageUnit ws{};
          bigint_monty_redc(
             r.data(), z.data(), mod.data(), words, curve->_params().order_p_dash(), ws.data(), ws.size());
          return r;
       }
 
       static StorageUnit from_rep(const GenericPrimeOrderCurve* curve, StorageUnit z) {
-         std::array<W, 2 * N> ze = {};
+         std::array<W, 2 * N> ze{};
          copy_mem(std::span{ze}.template first<N>(), z);
          return redc(curve, ze);
       }
 
       static StorageUnit to_rep(const GenericPrimeOrderCurve* curve, StorageUnit x) {
-         std::array<W, 2 * N> z;
+         std::array<W, 2 * N> z;  // NOLINT(*-member-init)
          curve->_params().mul(z, x, curve->_params().order_monty_r2());
          return redc(curve, z);
       }
 
       static StorageUnit wide_to_rep(const GenericPrimeOrderCurve* curve, std::array<W, 2 * N> x) {
          auto redc_x = redc(curve, x);
-         std::array<W, 2 * N> z;
+         std::array<W, 2 * N> z;  // NOLINT(*-member-init)
          curve->_params().mul(z, redc_x, curve->_params().order_monty_r3());
          return redc(curve, z);
       }
@@ -624,7 +624,7 @@ class GenericField final {
       }
 
       static GenericField zero(const GenericPrimeOrderCurve* curve) {
-         StorageUnit zeros = {};
+         StorageUnit zeros{};
          return GenericField(curve, zeros);
       }
 
@@ -700,13 +700,13 @@ class GenericField final {
       GenericField mul8() const { return mul2().mul2().mul2(); }
 
       friend GenericField operator+(const GenericField& a, const GenericField& b) {
-         auto curve = check_curve(a, b);
+         const auto* curve = check_curve(a, b);
          const size_t words = curve->_params().words();
 
-         StorageUnit t = {};
+         StorageUnit t{};
          W carry = bigint_add3_nc(t.data(), a.data(), words, b.data(), words);
 
-         StorageUnit r = {};
+         StorageUnit r{};
          bigint_monty_maybe_sub(words, r.data(), carry, t.data(), curve->_params().field().data());
          return GenericField(curve, r);
       }
@@ -714,24 +714,24 @@ class GenericField final {
       friend GenericField operator-(const GenericField& a, const GenericField& b) { return a + b.negate(); }
 
       friend GenericField operator*(const GenericField& a, const GenericField& b) {
-         auto curve = check_curve(a, b);
+         const auto* curve = check_curve(a, b);
 
-         std::array<W, 2 * N> z;
+         std::array<W, 2 * N> z;  // NOLINT(*-memberinit)
          curve->_params().mul(z, a.value(), b.value());
          return GenericField(curve, redc(curve, z));
       }
 
       GenericField& operator*=(const GenericField& other) {
-         auto curve = check_curve(*this, other);
+         const auto* curve = check_curve(*this, other);
 
-         std::array<W, 2 * N> z;
+         std::array<W, 2 * N> z;  // NOLINT(*-memberinit)
          curve->_params().mul(z, value(), other.value());
          m_val = redc(curve, z);
          return (*this);
       }
 
       GenericField square() const {
-         std::array<W, 2 * N> z;
+         std::array<W, 2 * N> z;  // NOLINT(*-memberinit)
          m_curve->_params().sqr(z, value());
          return GenericField(m_curve, redc(m_curve, z));
       }
@@ -884,21 +884,21 @@ class GenericField final {
       static StorageUnit redc(const GenericPrimeOrderCurve* curve, std::array<W, 2 * N> z) {
          const auto& mod = curve->_params().field();
          const size_t words = curve->_params().words();
-         StorageUnit r = {};
-         StorageUnit ws = {};
+         StorageUnit r{};
+         StorageUnit ws{};
          bigint_monty_redc(
             r.data(), z.data(), mod.data(), words, curve->_params().field_p_dash(), ws.data(), ws.size());
          return r;
       }
 
       static StorageUnit from_rep(const GenericPrimeOrderCurve* curve, StorageUnit z) {
-         std::array<W, 2 * N> ze = {};
+         std::array<W, 2 * N> ze{};
          copy_mem(std::span{ze}.template first<N>(), z);
          return redc(curve, ze);
       }
 
       static StorageUnit to_rep(const GenericPrimeOrderCurve* curve, StorageUnit x) {
-         std::array<W, 2 * N> z;
+         std::array<W, 2 * N> z{};
          curve->_params().mul(z, x, curve->_params().field_monty_r2());
          return redc(curve, z);
       }
@@ -916,7 +916,7 @@ class GenericAffinePoint final {
    public:
       GenericAffinePoint(const GenericField& x, const GenericField& y) : m_x(x), m_y(y) {}
 
-      GenericAffinePoint(const GenericPrimeOrderCurve* curve) :
+      explicit GenericAffinePoint(const GenericPrimeOrderCurve* curve) :
             m_x(GenericField::zero(curve)), m_y(GenericField::zero(curve)) {}
 
       static GenericAffinePoint identity(const GenericPrimeOrderCurve* curve) {
@@ -1066,7 +1066,7 @@ class GenericProjectivePoint final {
       /**
       * Default constructor: the identity element
       */
-      GenericProjectivePoint(const GenericPrimeOrderCurve* curve) :
+      explicit GenericProjectivePoint(const GenericPrimeOrderCurve* curve) :
             m_x(GenericField::zero(curve)), m_y(GenericField::one(curve)), m_z(GenericField::zero(curve)) {}
 
       /**
@@ -1230,12 +1230,12 @@ class GenericBlindedScalarBits final {
             }
          }
 
-         std::array<word, PrimeOrderCurve::StorageWords> mask = {};
+         std::array<word, PrimeOrderCurve::StorageWords> mask{};
          load_le(mask.data(), maskb.data(), mask_words);
          mask[mask_words - 1] |= WordInfo<word>::top_bit;
          mask[0] |= 1;
 
-         std::array<word, 2 * PrimeOrderCurve::StorageWords> mask_n = {};
+         std::array<word, 2 * PrimeOrderCurve::StorageWords> mask_n{};
 
          const auto sw = scalar.to_words();
 
@@ -1287,7 +1287,8 @@ class GenericWindowedMul final {
       static constexpr size_t WindowBits = VarPointWindowBits;
       static constexpr size_t TableSize = (1 << WindowBits) - 1;
 
-      GenericWindowedMul(const GenericAffinePoint& pt) : m_table(varpoint_setup<GenericCurve, TableSize>(pt)) {}
+      explicit GenericWindowedMul(const GenericAffinePoint& pt) :
+            m_table(varpoint_setup<GenericCurve, TableSize>(pt)) {}
 
       GenericProjectivePoint mul(const GenericScalar& s, RandomNumberGenerator& rng) {
          GenericBlindedScalarBits bits(s, rng, WindowBits);
@@ -1305,7 +1306,7 @@ class GenericBaseMulTable final {
 
       static constexpr size_t WindowElements = (1 << WindowBits) - 1;
 
-      GenericBaseMulTable(const GenericAffinePoint& pt) :
+      explicit GenericBaseMulTable(const GenericAffinePoint& pt) :
             m_table(basemul_setup<GenericCurve, WindowBits>(pt, blinded_scalar_bits(*pt.curve()))) {}
 
       GenericProjectivePoint mul(const GenericScalar& s, RandomNumberGenerator& rng) {
@@ -1676,7 +1677,9 @@ std::shared_ptr<const PrimeOrderCurve> PCurveInstance::from_params(
    // exactly the primes for the 521 or 239 bit exceptions; this code
    // should work fine with any such prime and we are relying on the higher
    // levels to prevent creating such a group in the first place
-
+   //
+   // TODO(Botan4) increase the 128 here to 192 when the cooresponding EC_Group constructor is changed
+   //
    if(p_bits != 521 && p_bits != 239 && (p_bits < 128 || p_bits > 512 || p_bits % 32 != 0)) {
       return {};
    }

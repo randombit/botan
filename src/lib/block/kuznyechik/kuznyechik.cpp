@@ -59,7 +59,7 @@ constexpr uint8_t poly_mul(uint8_t x, uint8_t y) {
 
    uint8_t r = 0;
    while(x > 0 && y > 0) {
-      if(y & 1) {
+      if((y & 1) != 0) {
          r ^= x;
       }
       x = (x << 1) ^ ((x >> 7) * poly);
@@ -75,7 +75,7 @@ constexpr uint64_t poly_mul(uint64_t x, uint8_t y) {
 
    uint64_t r = 0;
    while(x > 0 && y > 0) {
-      if(y & 1) {
+      if((y & 1) != 0) {
          r ^= x;
       }
       x = ((x & mask) << 1) ^ (((x >> 7) & lo_bit) * poly);
@@ -117,9 +117,7 @@ consteval std::array<uint8_t, 256> L_table(bool forward) {
    return L;
 }
 
-consteval std::array<uint64_t, 16 * 256 * 2> T_table(std::span<const uint8_t> L, bool forward) {
-   const auto SB = forward ? S : IS;
-
+consteval std::array<uint64_t, 16 * 256 * 2> T_table(std::span<const uint8_t> L, std::span<const uint8_t, 256> SB) {
    std::array<uint64_t, 16 * 256 * 2> T = {};
 
    for(size_t i = 0; i != 16; ++i) {
@@ -147,8 +145,8 @@ consteval std::array<uint64_t, 16 * 256 * 2> T_table(std::span<const uint8_t> L,
 // Check if it's possible to remove this.
 constexpr auto L = Kuznyechik_T::L_table(true);
 constexpr auto IL = Kuznyechik_T::L_table(false);
-const constinit auto T = Kuznyechik_T::T_table(L, true);
-const constinit auto IT = Kuznyechik_T::T_table(IL, false);
+const constinit auto T = Kuznyechik_T::T_table(L, S);
+const constinit auto IT = Kuznyechik_T::T_table(IL, IS);
 
 const uint64_t C[32][2] = {{0xb87a486c7276a26e, 0x019484dd10bd275d}, {0xb3f490d8e4ec87dc, 0x02ebcb7920b94eba},
                            {0x0b8ed8b4969a25b2, 0x037f4fa4300469e7}, {0xa52be3730b1bcd7b, 0x041555f240b19cb7},
@@ -289,7 +287,7 @@ void Kuznyechik::key_schedule(std::span<const uint8_t> key) {
 
 void Kuznyechik::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();
-   while(blocks) {
+   while(blocks > 0) {
       uint64_t x1 = load_le<uint64_t>(in, 0);
       uint64_t x2 = load_le<uint64_t>(in, 1);
 
@@ -342,7 +340,7 @@ void Kuznyechik::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) con
 
 void Kuznyechik::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();
-   while(blocks) {
+   while(blocks > 0) {
       uint64_t x1 = load_le<uint64_t>(in, 0);
       uint64_t x2 = load_le<uint64_t>(in, 1);
 

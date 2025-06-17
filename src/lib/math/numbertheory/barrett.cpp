@@ -132,7 +132,7 @@ BigInt barrett_reduce(
    ws[mod_words + 1] = word_sub(static_cast<word>(1), r[mod_words + 1], &borrow);
 
    // If relative_size > 0 then assign r to 2^(k+1) - r
-   CT::Mask<word>::expand(relative_size > 0).select_n(r.data(), ws.data(), r.data(), mod_words + 2);
+   CT::Mask<word>::is_equal(static_cast<word>(relative_size), 1).select_n(r.data(), ws.data(), r.data(), mod_words + 2);
 
    /*
    * Per HAC Note 14.44 (ii) "step 4 is repeated at most twice since 0 ≤ r < 3m"

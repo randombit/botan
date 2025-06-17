@@ -12,7 +12,7 @@ namespace Botan {
 
 const EC_Scalar_Data_PC& EC_Scalar_Data_PC::checked_ref(const EC_Scalar_Data& data) {
    const auto* p = dynamic_cast<const EC_Scalar_Data_PC*>(&data);
-   if(!p) {
+   if(p == nullptr) {
       throw Invalid_State("Failed conversion to EC_Scalar_Data_PC");
    }
    return *p;
@@ -31,12 +31,12 @@ std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_PC::clone() const {
 }
 
 bool EC_Scalar_Data_PC::is_zero() const {
-   auto& pcurve = this->group()->pcurve();
+   const auto& pcurve = this->group()->pcurve();
    return pcurve.scalar_is_zero(m_v);
 }
 
 bool EC_Scalar_Data_PC::is_eq(const EC_Scalar_Data& other) const {
-   auto& pcurve = group()->pcurve();
+   const auto& pcurve = group()->pcurve();
    return pcurve.scalar_equal(m_v, checked_ref(other).m_v);
 }
 
@@ -81,7 +81,7 @@ void EC_Scalar_Data_PC::serialize_to(std::span<uint8_t> bytes) const {
 EC_AffinePoint_Data_PC::EC_AffinePoint_Data_PC(std::shared_ptr<const EC_Group_Data> group,
                                                PCurve::PrimeOrderCurve::AffinePoint pt) :
       m_group(std::move(group)), m_pt(std::move(pt)) {
-   auto& pcurve = m_group->pcurve();
+   const auto& pcurve = m_group->pcurve();
 
    if(!pcurve.affine_point_is_identity(m_pt)) {
       m_xy.resize(1 + 2 * field_element_bytes());
@@ -91,7 +91,7 @@ EC_AffinePoint_Data_PC::EC_AffinePoint_Data_PC(std::shared_ptr<const EC_Group_Da
 
 const EC_AffinePoint_Data_PC& EC_AffinePoint_Data_PC::checked_ref(const EC_AffinePoint_Data& data) {
    const auto* p = dynamic_cast<const EC_AffinePoint_Data_PC*>(&data);
-   if(!p) {
+   if(p == nullptr) {
       throw Invalid_State("Failed conversion to EC_AffinePoint_Data_PC");
    }
    return *p;
@@ -109,7 +109,7 @@ std::unique_ptr<EC_AffinePoint_Data> EC_AffinePoint_Data_PC::mul(const EC_Scalar
                                                                  RandomNumberGenerator& rng) const {
    BOTAN_ARG_CHECK(scalar.group() == m_group, "Curve mismatch");
    const auto& k = EC_Scalar_Data_PC::checked_ref(scalar).value();
-   auto& pcurve = m_group->pcurve();
+   const auto& pcurve = m_group->pcurve();
    auto pt = pcurve.point_to_affine(pcurve.mul(m_pt, k, rng));
    return std::make_unique<EC_AffinePoint_Data_PC>(m_group, std::move(pt));
 }
@@ -196,7 +196,7 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Mul2Table_Data_PC::mul2_vartime(const EC
    const auto& x = EC_Scalar_Data_PC::checked_ref(xd);
    const auto& y = EC_Scalar_Data_PC::checked_ref(yd);
 
-   auto& pcurve = m_group->pcurve();
+   const auto& pcurve = m_group->pcurve();
 
    if(auto pt = pcurve.mul2_vartime(*m_tbl, x.value(), y.value())) {
       return std::make_unique<EC_AffinePoint_Data_PC>(m_group, pcurve.point_to_affine(*pt));
