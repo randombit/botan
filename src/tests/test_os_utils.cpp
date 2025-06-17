@@ -87,22 +87,25 @@ class OS_Utils_Tests final : public Test {
       }
 
       static Test::Result test_get_high_resolution_clock() {
-         const size_t max_trials = 1024;
-         const size_t max_repeats = 128;
-
          Test::Result result("OS::get_high_resolution_clock");
 
-         // TODO better tests
-         const uint64_t hr_ts1 = Botan::OS::get_high_resolution_clock();
-         result.confirm("high resolution timestamp value is never zero", hr_ts1 != 0);
+         // Basic functionality test
+         const uint64_t first_hrc = Botan::OS::get_high_resolution_clock();
+         result.confirm("High resolution timestamp value is never zero", first_hrc != 0);
 
-         size_t counts = 0;
-         while(counts < max_trials && (Botan::OS::get_high_resolution_clock() == hr_ts1)) {
-            ++counts;
+         // Non-decreasing check monotonic
+         std::array<uint64_t, 100 /* sample count */> timestamps{};
+         for(std::size_t i = 0; i < timestamps.size(); ++i) {
+            timestamps[i] = Botan::OS::get_high_resolution_clock();
+
+            if(i < timestamps.size() - 1) {  // No sleep last time
+               std::this_thread::sleep_for(std::chrono::microseconds(100));
+            }
          }
 
-         result.test_lt("high resolution clock eventually changes value", counts, max_repeats);
-
+         const bool is_monotonic = std::is_sorted(timestamps.begin(), timestamps.end());
+         result.confirm("Clock values are monotonic", is_monotonic);
+         result.confirm("Clock values show progression", timestamps.front() != timestamps.back());
          return result;
       }
 
@@ -117,27 +120,110 @@ class OS_Utils_Tests final : public Test {
       }
 
       static Test::Result test_get_system_timestamp() {
-         // TODO better tests
          Test::Result result("OS::get_system_timestamp_ns");
 
-         uint64_t sys_ts1 = Botan::OS::get_system_timestamp_ns();
-         result.confirm("System timestamp value is never zero", sys_ts1 != 0);
+         // Basic functionality test
+         const uint64_t first_timestamp = Botan::OS::get_system_timestamp_ns();
+         result.confirm("Timestamp is non-zero", first_timestamp != 0);
 
-         // do something that consumes a little time
-         Botan::OS::get_process_id();
+         // Sanity check
+         const auto epoch_2020 = std::chrono::sys_days{std::chrono::year{2020} / 1 / 1};
+         const auto epoch_2020_ns = duration_cast<std::chrono::nanoseconds>(epoch_2020.time_since_epoch()).count();
+         result.test_gte("Timestamp after Jan 1, 2020", first_timestamp, epoch_2020_ns);
 
-         uint64_t sys_ts2 = Botan::OS::get_system_timestamp_ns();
+         // Non-decreasing check
+         std::array<uint64_t, 100 /* sample_count */> timestamps{};
+         for(std::size_t i = 0; i < timestamps.size(); ++i) {
+            timestamps[i] = Botan::OS::get_system_timestamp_ns();
+            if(i < timestamps.size() - 1) {  // No sleep last time
+               std::this_thread::sleep_for(std::chrono::microseconds(100));
+            }
+         }
 
-         result.confirm("System time moves forward", sys_ts1 <= sys_ts2);
-
+         bool is_non_decreasing = std::is_sorted(timestamps.begin(), timestamps.end());
+         result.confirm("Clock values are monotonic", is_non_decreasing);
+         result.confirm("Clock values show progression", timestamps.front() != timestamps.back());
          return result;
       }
 
       static Test::Result test_memory_locking() {
-         Test::Result result("OS memory locked pages");
+         Test::Result result("OS::test_memory_locking");
 
-         // TODO any tests...
+         // Basic functionality test
+         const std::size_t page_count = 4;
+         std::vector<void*> pages = Botan::OS::allocate_locked_pages(page_count);
+         if(pages.empty()) {
+            result.test_note("Locked pages not available on this platform");
+            return result;
+         }
 
+         // RAII cleanup
+         struct PageGuard {
+            public:
+               explicit PageGuard(std::vector<void*> p) : m_pages(std::move(p)) {}
+
+               ~PageGuard() {
+                  if(!m_pages.empty()) {
+                     Botan::OS::free_locked_pages(m_pages);
+                  }
+               }
+
+               PageGuard(const PageGuard&) = delete;
+               PageGuard& operator=(const PageGuard&) = delete;
+               PageGuard(PageGuard&&) = delete;
+               PageGuard& operator=(PageGuard&&) = delete;
+
+               const std::vector<void*>& pages() const { return m_pages; }
+
+            private:
+               std::vector<void*> m_pages;
+         } guard(std::move(pages));
+
+         const auto& guarded_pages = guard.pages();
+
+         result.test_gte("Pages allocated successfully", guarded_pages.size(), 1);
+         result.test_lte("Not more pages than requested", guarded_pages.size(), page_count);
+
+         // In the current implementation, nullptr should not be returned, but we check for block box testing
+         bool has_nullptr =
+            std::any_of(guarded_pages.begin(), guarded_pages.end(), [](const void* p) { return p == nullptr; });
+         if(has_nullptr) {
+            result.test_failure("Allocated pages contain nullptr");
+            return result;
+         }
+
+         // Test distinct address validation
+         if(guarded_pages.size() > 1) {
+            std::set<void*> unique_addrs(guarded_pages.begin(), guarded_pages.end());
+            result.test_eq("All allocated pages have unique addresses", unique_addrs.size(), guarded_pages.size());
+         }
+
+         // Get the size of a system page (Platform dependent)
+         const std::size_t page_size = Botan::OS::system_page_size();
+
+         // Test page alignment and validity
+         for(void* page : guarded_pages) {
+            const std::uintptr_t page_addr = std::bit_cast<std::uintptr_t>(page);
+            result.test_eq("Page is aligned", page_addr % page_size, std::size_t(0));
+         }
+
+         // Test memory read/write operations
+         bool rw_success = true;
+         const std::uint8_t test_value = 0xAB;
+         for(void* page : guarded_pages) {
+            std::uint8_t* page_ptr = static_cast<std::uint8_t*>(page);
+
+            std::fill_n(page_ptr, page_size, test_value);
+            if(!std::all_of(page_ptr, page_ptr + page_size, [](std::uint8_t byte) { return byte == test_value; })) {
+               rw_success = false;
+               break;
+            }
+         }
+         result.confirm("Memory read/write operations successful", rw_success);
+
+         // Test edge case
+         std::vector<void*> empty_pages = Botan::OS::allocate_locked_pages(0);
+         result.confirm("Allocating zero pages returns empty vector", empty_pages.empty());
          return result;
       }
 
