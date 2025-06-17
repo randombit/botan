@@ -68,24 +68,27 @@ void shim_log(const std::string& s) {
 
       // NOLINTNEXTLINE(*-avoid-non-const-global-variables)
       static FILE* g_log = std::fopen("/tmp/bogo_shim.log", "w");
-      struct timeval tv;
-      ::gettimeofday(&tv, nullptr);
-      static_cast<void>(std::fprintf(g_log,
-                                     "%lld.%lu: %s\n",
-                                     static_cast<unsigned long long>(tv.tv_sec),
-                                     static_cast<unsigned long>(tv.tv_usec),
-                                     s.c_str()));
-      static_cast<void>(std::fflush(g_log));
+
+      if(g_log) {
+         struct timeval tv;
+         ::gettimeofday(&tv, nullptr);
+         static_cast<void>(std::fprintf(g_log,
+                                        "%lld.%lu: %s\n",
+                                        static_cast<unsigned long long>(tv.tv_sec),
+                                        static_cast<unsigned long>(tv.tv_usec),
+                                        s.c_str()));
+         static_cast<void>(std::fflush(g_log));
+      }
    }
 }
 
-[[noreturn]] void shim_exit_with_error(const std::string& s, int rc = 1) {
+[[noreturn]] void shim_exit_with_error(const std::string& s, int rc = 1) noexcept {
    shim_log("Exiting with " + s);
    std::cerr << s << "\n";
    std::exit(rc);
 }
 
-std::string map_to_bogo_error(const std::string& e) {
+std::string map_to_bogo_error(const std::string& e) noexcept {
    shim_log("Original error " + e);
 
    static const std::unordered_map<std::string, std::string> err_map{
