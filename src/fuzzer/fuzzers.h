@@ -37,7 +37,15 @@ extern "C" int LLVMFuzzerInitialize(int*, char***) {
 // NOLINTNEXTLINE(*-definitions-in-headers)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t in[], size_t len) {
    if(len <= max_fuzzer_input_size) {
-      fuzz(std::span<const uint8_t>(in, len));
+      try {
+         fuzz(std::span<const uint8_t>(in, len));
+      } catch(std::exception& e) {
+         std::cerr << "Uncaught exception from fuzzer driver " << e.what() << "\n";
+         abort();
+      } catch(...) {
+         std::cerr << "Uncaught exception from fuzzer driver (unknown type)\n";
+         abort();
+      }
    }
    return 0;
 }
