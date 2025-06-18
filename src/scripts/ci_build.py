@@ -424,7 +424,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 cc_bin = 'mips64-linux-gnuabi64-g++'
                 test_prefix = ['qemu-mips64', '-L', '/usr/mips64-linux-gnuabi64/']
             elif target in ['cross-arm32-baremetal']:
-                flags += ['--cpu=arm32', '--disable-neon', '--without-stack-protector', '--ldflags=-specs=nosys.specs']
+                flags += ['--cpu=arm32', '--without-stack-protector', '--ldflags=-specs=nosys.specs', '--disable-modules=simd_4x32']
                 cc_bin = 'arm-none-eabi-c++'
                 test_cmd = None
             else:

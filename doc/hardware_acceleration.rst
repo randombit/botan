@@ -191,43 +191,10 @@ On loongarch64, the LSX extensions are used.
 Configuring Acceleration
 ------------------------------
 
-Hardware acceleration can be disabled at during configuring the build
-by passing certain ``--disable-*`` options to ``configure.py``.
-This will cause the base software implementation to be used instead
-of the hardware accelerated one. The following options are currently supported:
+If it is desirable to avoid using some form of acceleration, this can be accomplished
+*at build time* by using ``--disable-modules=``. For instance, to remove support
+of ARMv8 intrinsics for AES, use ``--disable-modules=aes_armv8``.
 
-``--disable-sse2``
-   disable SSE2 intrinsics
-``--disable-ssse3``
-   disable SSSE3 intrinsics
-``--disable-sse4.1``
-   disable SSE4.1 intrinsics
-``--disable-sse4.2``
-   disable SSE4.2 intrinsics
-``--disable-avx2``
-   disable AVX2 intrinsics
-``--disable-bmi2``
-   disable BMI2 intrinsics
-``--disable-rdrand``
-   disable RDRAND intrinsics
-``--disable-rdseed``
-   disable RDSEED intrinsics
-``--disable-aes-ni``
-   disable AES-NI intrinsics
-``--disable-sha-ni``
-   disable SHA-NI intrinsics
-``--disable-altivec``
-   disable AltiVec intrinsics
-``--disable-neon``
-   disable NEON intrinsics
-``--disable-armv8crypto``
-   disable ARMv8 Crypto intrinsics
-``--disable-powercrypto``
-   disable POWER Crypto intrinsics
-
-Additionally, ``--disable-modules=MODS`` can be used to remove a certain module,
-if desirable.
-
-Last but not least, the ``BOTAN_CLEAR_CPUID`` :doc:`environment variable <api_ref/env_vars>`
-can be set to a non-empty value *at runtime* to cause Botan to clear the CPUID bits for the CPU
-extensions it uses.
+It is also possible to disable acceleration *at runtime* using
+``BOTAN_CLEAR_CPUID`` :doc:`environment variable <api_ref/env_vars>`. This is the preferred
+mode of disabling acceleration.

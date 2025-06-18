@@ -441,20 +441,6 @@ def process_command_line(args):
 
     add_with_without_pair(target_group, 'compilation-database', True, 'disable compile_commands.json')
 
-    isa_extensions = [
-        'SSE2', 'SSSE3', 'SSE4.1', 'SSE4.2', 'AVX2', 'BMI2', 'RDRAND', 'RDSEED',
-        'AES-NI', 'SHA-NI',
-        'AltiVec', 'NEON', 'ARMv8 Crypto', 'POWER Crypto']
-
-    for isa_extn_name in isa_extensions:
-        isa_extn = isa_extn_name.lower().replace(' ', '')
-
-        target_group.add_option('--disable-%s' % (isa_extn),
-                                help='disable %s intrinsics' % (isa_extn_name),
-                                action='append_const',
-                                const=isa_extn.replace('-', '').replace('.', '').replace(' ', ''),
-                                dest='disable_intrinsics')
-
     build_group = optparse.OptionGroup(parser, 'Build options')
 
     build_group.add_option('--system-cert-bundle', metavar='PATH', default=None,
@@ -706,8 +692,6 @@ def process_command_line(args):
 
     options.with_os_features = parse_multiple_enable(options.with_os_features)
     options.without_os_features = parse_multiple_enable(options.without_os_features)
-
-    options.disable_intrinsics = parse_multiple_enable(options.disable_intrinsics)
 
     return options
 
@@ -1044,9 +1028,6 @@ class ModuleInfo(InfoObject):
                 if arch != arch_name:
                     continue
 
-            if isa in options.disable_intrinsics:
-                return False # explicitly disabled
-
             if isa not in archinfo.isa_extensions:
                 return False
 
@@ -1229,13 +1210,12 @@ class ArchInfo(InfoObject):
             if alphanumeric.match(isa) is None:
                 logging.error('Invalid name for ISA extension "%s"', isa)
 
-    def supported_isa_extensions(self, cc, options):
+    def supported_isa_extensions(self, cc):
         isas = []
 
         for isa in self.isa_extensions:
-            if isa not in options.disable_intrinsics:
-                if cc.isa_flags_for(isa, self.basename) is not None:
-                    isas.append(isa)
+            if cc.isa_flags_for(isa, self.basename) is not None:
+                isas.append(isa)
 
         return sorted(isas)
 
@@ -1372,13 +1352,12 @@ class CompilerInfo(InfoObject):
 
         return None
 
-    def get_isa_specific_flags(self, isas, arch, options):
+    def get_isa_specific_flags(self, isas, arch):
         flags = set()
 
         def simd32_impl():
             for simd_isa in ['ssse3', 'altivec', 'neon']:
                 if simd_isa in arch.isa_extensions and \
-                   simd_isa not in options.disable_intrinsics and \
                    self.isa_flags_for(simd_isa, arch.basename):
                     return simd_isa
             return None
@@ -1980,7 +1959,7 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
 
     def _isa_specific_flags(src):
         if os.path.basename(src) == 'test_simd.cpp':
-            return cc.get_isa_specific_flags(['simd'], arch, options)
+            return cc.get_isa_specific_flags(['simd'], arch)
 
         if src in module_that_owns:
             module = module_that_owns[src]
@@ -1988,7 +1967,7 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
             if 'simd_4x32' in module.dependencies(osinfo, arch):
                 isas.append('simd')
 
-            return cc.get_isa_specific_flags(isas, arch, options)
+            return cc.get_isa_specific_flags(isas, arch)
 
         return ''
 
@@ -2353,7 +2332,7 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'os_features': osinfo.enabled_features_internal(options),
         'os_features_public': osinfo.enabled_features_public(options),
         'os_name': osinfo.basename,
-        'cpu_features': arch.supported_isa_extensions(cc, options),
+        'cpu_features': arch.supported_isa_extensions(cc),
         'system_cert_bundle': options.system_cert_bundle,
 
         'enable_experimental_features': options.enable_experimental_features,
