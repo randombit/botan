@@ -299,9 +299,6 @@ class CacheDatabase:
             cur.execute("DELETE FROM clang_tidy_clean WHERE key = ?", (cache_key[0], ))
         self.db.commit()
 
-# 100K entries with our current schema is about 15 Mb
-MAX_DB_ENTRIES = 100000
-
 def main(args = None): # pylint: disable=too-many-return-statements
     if args is None:
         args = sys.argv
@@ -323,6 +320,9 @@ def main(args = None): # pylint: disable=too-many-return-statements
     parser.add_option('--cache-db', metavar='DB',
                       help='Path to sqlite3 database file for caching',
                       default=os.getenv("BOTAN_CLANG_TIDY_CACHE"))
+
+    # 100K entries with our current schema is about 15 Mb
+    max_db_entries = int(os.getenv("BOTAN_CLANG_TIDY_CACHE_MAX_SIZE") or 100_000)
 
     (options, args) = parser.parse_args(args)
 
@@ -458,8 +458,8 @@ def main(args = None): # pylint: disable=too-many-return-statements
 
     print("Checked %d files in %d seconds" % (files_checked, time_consumed))
 
-    if cache is not None:
-        cache.cleanup(MAX_DB_ENTRIES)
+    if cache is not None and max_db_entries > 0:
+        cache.cleanup(max_db_entries)
 
     if fail_cnt == 0:
         return 0
