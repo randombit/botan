@@ -109,7 +109,7 @@ class LoggingGroup:
             print("> Running '%s' took %d seconds" % (self.group_title, time_taken))
 
 def build_targets(target, target_os):
-    if target in ['shared', 'minimized', 'examples'] or target.startswith('policy-'):
+    if target in ['shared', 'minimized', 'examples', 'limbo'] or target.startswith('policy-'):
         yield 'shared'
     elif target in ['static', 'fuzzers', 'cross-arm32-baremetal', 'emscripten']:
         yield 'static'
@@ -121,10 +121,10 @@ def build_targets(target, target_os):
         yield 'shared'
         yield 'static'
 
-    if target not in ['examples']:
+    if target not in ['examples', 'limbo']:
         yield 'cli'
 
-    if target not in ['examples', 'limbo']:
+    if target not in ['examples', 'limbo', 'hybrid-tls13-interop-test']:
         yield 'tests'
 
     if target in ['coverage']:
