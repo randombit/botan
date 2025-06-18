@@ -136,6 +136,16 @@ def build_targets(target, target_os):
     if target in ['valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full']:
         yield 'ct_selftest'
 
+def make_targets(target, target_os):
+    # The result of build_targets() is for ./configure.py --build-targets='...'.
+    # make_targets() go into `make/ninja ...` and they are mostly equal. Except
+    # for 'libs' which is an umbrella target for 'static' and 'shared'.
+    tgts = [tgt if tgt not in ['static', 'shared'] else 'libs' for tgt in build_targets(target, target_os)]
+    if target in ['coverage', 'fuzzers']:
+        # These are special targets not found in ./configure.py --build-targets=
+        tgts += ['fuzzers', 'fuzzer_corpus_zip']
+    return list(set(tgts))
+
 def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                     root_dir, build_dir, test_results_dir, pkcs11_lib, use_gdb,
                     disable_werror, extra_cxxflags, custom_optimization_flags, disabled_tests):
@@ -799,21 +809,7 @@ def main(args=None):
             if options.compiler_cache is not None:
                 cmds.append([options.compiler_cache, '--show-stats'])
 
-            make_targets = ['libs', 'tests', 'cli']
-
-            if target in ['coverage', 'fuzzers']:
-                make_targets += ['fuzzer_corpus_zip', 'fuzzers']
-
-            if target in ['examples', 'amalgamation']:
-                make_targets += ['examples']
-
-            if target in ['valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full']:
-                make_targets += ['ct_selftest']
-
-            if target in ['coverage', 'sanitizer'] and options.os not in ['windows']:
-                make_targets += ['bogo_shim']
-
-            cmds.append(make_prefix + make_cmd + make_targets)
+            cmds.append(make_prefix + make_cmd + make_targets(target, options.os))
 
             if target in ['examples'] and options.cc in ['clang', 'gcc']:
                 cmds.append([options.cc, '-Wall', '-Wextra', '-std=c89',
