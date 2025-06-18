@@ -256,6 +256,9 @@ jobs:
           - target: no_pcurves
             compiler: gcc
             host_os: ubuntu-24.04
+          - target: strubbing
+            compiler: gcc-14
+            host_os: ubuntu-24.04
 
     runs-on: ${{ matrix.host_os }}
 

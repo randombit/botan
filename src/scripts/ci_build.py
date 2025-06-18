@@ -72,6 +72,7 @@ def known_targets():
         'sde',
         'shared',
         'static',
+        'strubbing',
         'valgrind',
         'valgrind-full',
         'valgrind-ct',
@@ -111,7 +112,7 @@ class LoggingGroup:
 def build_targets(target, target_os):
     if target in ['shared', 'minimized', 'examples', 'limbo'] or target.startswith('policy-'):
         yield 'shared'
-    elif target in ['static', 'fuzzers', 'cross-arm32-baremetal', 'emscripten']:
+    elif target in ['static', 'fuzzers', 'cross-arm32-baremetal', 'emscripten', 'strubbing']:
         yield 'static'
     elif target_os in ['windows']:
         yield 'shared'
@@ -124,7 +125,7 @@ def build_targets(target, target_os):
     if target not in ['examples', 'limbo']:
         yield 'cli'
 
-    if target not in ['examples', 'limbo', 'hybrid-tls13-interop-test']:
+    if target not in ['examples', 'limbo', 'hybrid-tls13-interop-test', 'strubbing']:
         yield 'tests'
 
     if target in ['coverage']:
@@ -267,6 +268,12 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if target in ['coverage', 'valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full']:
         flags += ['--with-debug-info']
 
+    if target in ['strubbing']:
+        # Stack scrubbing tests are based on scripted gdb runs and won't work on
+        # an optimized build unfortunately.
+        flags += ['--debug-mode']
+        test_cmd = None
+
     if target in ['coverage', 'sanitizer', 'fuzzers']:
         flags += ['--unsafe-terminate-on-asserts', '--enable-modules=tls_null']
 
@@ -304,7 +311,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         # need to find a way to run the wasm-compiled tests w/o a browser
         test_cmd = None
 
-    if target in ['sanitizer'] and target_cc in ['gcc']:
+    if target in ['sanitizer', 'strubbing'] and target_cc in ['gcc']:
         # Stack scrubbing is supported on GCC 14 and newer, only. This is newer
         # than the current default compiler on GHA's Linux image (ubuntu 24.04).
         # The CI setup has to ensure that we are configured to use a recent
@@ -908,6 +915,10 @@ def main(args=None):
                 test_data_arg = []
                 cmds.append([py_interp, os.path.join(root_dir, 'src/scripts', script)] +
                             args + test_data_arg + [botan_exe])
+
+        if target in ['strubbing']:
+            cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/test_strubbed_symbols.py'),
+                         '--botan-cli', os.path.join(build_dir, 'botan')])
 
         if target in ['hybrid-tls13-interop-test']:
             cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/test_cli.py'),
