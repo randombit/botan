@@ -759,6 +759,7 @@ def main(args=None):
             'src/scripts/website.py',
             'src/scripts/bench.py',
             'src/scripts/test_python.py',
+            'src/scripts/test_strubbed_symbols.py',
             'src/scripts/test_fuzzers.py',
             'src/scripts/test_cli.py',
             'src/scripts/repo_config.py',
