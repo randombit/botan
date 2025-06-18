@@ -739,6 +739,7 @@ def main(args=None):
 
         pylint_rc = '--rcfile=%s' % (os.path.join(root_dir, 'src/configs/pylint.rc'))
         pylint_flags = [pylint_rc, '--reports=no']
+        pylint_flags += ['--ignored-modules=gdb'] # 'import gdb' is not available outside gdb...
 
         if is_running_in_github_actions():
             pylint_flags += ["--msg-template='::warning file={path},line={line},endLine={end_line}::Pylint ({category}): {msg_id} {msg} ({symbol})'"]
@@ -765,6 +766,7 @@ def main(args=None):
             'src/scripts/python_unittests_unix.py',
             'src/scripts/dev_tools/run_clang_format.py',
             'src/scripts/dev_tools/run_clang_tidy.py',
+            'src/scripts/gdb/strubtest.py',
             'src/editors/vscode/scripts/bogo.py',
             'src/editors/vscode/scripts/common.py',
             'src/editors/vscode/scripts/test.py',
