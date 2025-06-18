@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
 
 """
-(C) 2022,2023 Jack Lloyd
+(C) 2022,2023,2025 Jack Lloyd
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
-import subprocess
-import sys
+import hashlib
 import json
+import multiprocessing
+from multiprocessing.pool import ThreadPool
 import optparse # pylint: disable=deprecated-module
 import os
+import random
 import re
-import multiprocessing
+import shlex
+import sqlite3
+import subprocess
+import sys
 import time
 import uuid
-from multiprocessing.pool import ThreadPool
 
 quick_checks = [
     '-clang-analyzer*', # has to be explicitly disabled
@@ -183,10 +187,6 @@ def run_clang_tidy(compile_commands_file,
 
     stdout = run_command(cmdline)
 
-    if options.verbose:
-        print("Checked", source_file)
-        sys.stdout.flush()
-
     if stdout != "":
         print("### Errors in", source_file)
         print(stdout)
@@ -204,13 +204,112 @@ def file_matches(file, args):
             return True
     return False
 
+def preproc_file(compile_commands):
+    cmd = shlex.split(compile_commands['command'])
+
+    dash_o = cmd.index("-o")
+    if dash_o >= 0:
+        cmd.pop(dash_o + 1) # remove object file name
+        cmd.pop(dash_o)     # remove -o
+
+    if "-c" in cmd:
+        cmd.remove("-c")
+    cmd.append("-E")
+
+    result = subprocess.run(
+        cmd,
+        check=True,
+        stdout=subprocess.PIPE,
+        universal_newlines=True)
+
+    return hashlib.sha256(result.stdout.encode('utf-8')).hexdigest()
+
+def hash_args(**kwargs):
+    outer_hash = hashlib.sha256()
+
+    for key in sorted(kwargs.keys()):
+        value = kwargs[key]
+        outer_hash.update(hashlib.sha256(key.encode('utf-8')).digest())
+        outer_hash.update(hashlib.sha256(value.encode('utf-8')).digest())
+
+    return outer_hash.hexdigest()
+
+class CacheDatabase:
+    """
+    Caches SUCCESSFUL clang-tidy runs on source files to speed up whole-tree
+    runs of clang-tidy. The cache key is calculated as the hash of the source file
+    and a set of meta information such as 'clang-tidy --version' and the check configuration.
+    """
+    CACHE_DEBUG = False
+
+    def __init__(self, db_path):
+        self.db = sqlite3.connect(db_path)
+        cur = self.db.cursor()
+        cur.execute("CREATE TABLE IF NOT EXISTS clang_tidy_clean(key UNIQUE)")
+        self.db.commit()
+
+    def hit(self, **kwargs):
+        cache_key = hash_args(**kwargs)
+
+        cur = self.db.cursor()
+        cur.execute("SELECT key from clang_tidy_clean where key = ?", (cache_key, ))
+        res = cur.fetchall()
+
+        if len(res) > 0:
+            if self.CACHE_DEBUG:
+                print("Cache hit for", cache_key)
+            return True
+        else:
+            if self.CACHE_DEBUG:
+                print("Cache miss for", cache_key)
+            return False
+
+    def record(self, **kwargs):
+        cache_key = hash_args(**kwargs)
+
+        cur = self.db.cursor()
+        if self.CACHE_DEBUG:
+            print("Cache save for", cache_key)
+        cur.execute("INSERT OR IGNORE INTO clang_tidy_clean values(?)", (cache_key, ))
+        self.db.commit()
+
+    def count(self):
+        cur = self.db.cursor()
+        cur.execute("SELECT count(*) FROM clang_tidy_clean")
+        entries = cur.fetchall()
+        return int(entries[0][0])
+
+    def cleanup(self, limit):
+        cur = self.db.cursor()
+
+        cur.execute("SELECT key FROM clang_tidy_clean")
+        entries = cur.fetchall()
+
+        if len(entries) <= limit:
+            return
+
+        to_prune = len(entries) - limit
+
+        # Randomly evict entries if cache has grown too large
+        random.shuffle(entries)
+
+        for cache_key in entries[:to_prune]:
+            if self.CACHE_DEBUG:
+                print("Pruning", cache_key[0])
+            cur.execute("DELETE FROM clang_tidy_clean WHERE key = ?", (cache_key[0], ))
+        self.db.commit()
+
+# 100K entries with our current schema is about 15 Mb
+MAX_DB_ENTRIES = 100000
+
 def main(args = None): # pylint: disable=too-many-return-statements
     if args is None:
         args = sys.argv
 
     parser = optparse.OptionParser()
 
-    parser.add_option('-j', '--jobs', action='store', type='int', default=0)
+    parser.add_option('-j', '--jobs', action='store', type='int', default=multiprocessing.cpu_count() + 1,
+                      help='set number of jobs to run (default %default)')
     parser.add_option('--verbose', action='store_true', default=False)
     parser.add_option('--fixit', action='store_true', default=False)
     parser.add_option('--build-dir', default='build')
@@ -221,6 +320,9 @@ def main(args = None): # pylint: disable=too-many-return-statements
     parser.add_option('--only-matching', metavar='REGEX', default='.*')
     parser.add_option('--take-file-list-from-stdin', action='store_true', default=False)
     parser.add_option('--export-fixes-dir', default=None)
+    parser.add_option('--cache-db', metavar='DB',
+                      help='Path to sqlite3 database file for caching',
+                      default=os.getenv("BOTAN_CLANG_TIDY_CACHE"))
 
     (options, args) = parser.parse_args(args)
 
@@ -261,10 +363,6 @@ def main(args = None): # pylint: disable=too-many-return-statements
             print("No C++ files were provided on stdin, skipping clang-tidy checks")
             return 0
 
-    jobs = options.jobs
-    if jobs == 0:
-        jobs = multiprocessing.cpu_count() + 1
-
     (compile_commands_file, compile_commands) = load_compile_commands(options.build_dir)
 
     if options.fast_checks_only:
@@ -280,12 +378,38 @@ def main(args = None): # pylint: disable=too-many-return-statements
         render_clang_tidy_file('src', enabled_checks, disabled_checks)
         return 0
 
-    pool = ThreadPool(jobs)
+    pool = ThreadPool(options.jobs)
+
+    cache = CacheDatabase(options.cache_db) if options.cache_db else None
 
     start_time = time.time()
     files_checked = 0
 
     file_matcher = re.compile(options.only_matching)
+
+    clang_tidy_version = None
+
+    if cache is not None:
+        if options.verbose:
+            print("Using cache at %s with %d entries" % (options.cache_db, cache.count()))
+
+        results = []
+
+        clang_tidy_version = subprocess.run(['clang-tidy', '--version'],
+                                            check=True,
+                                            stdout=subprocess.PIPE).stdout.decode('utf-8')
+
+        for info in compile_commands:
+            results.append(pool.apply_async(preproc_file, (info, )))
+
+        assert(len(results) == len(compile_commands))
+        for (i, result) in enumerate(results):
+            compile_commands[i]['preproc'] = result.get()
+
+        if options.verbose:
+            print("Preprocessing/hashing %d files took %.02f sec" % (len(results), time.time() - start_time))
+
+        start_time = time.time()
 
     results = []
     for info in compile_commands:
@@ -299,21 +423,43 @@ def main(args = None): # pylint: disable=too-many-return-statements
 
         files_checked += 1
 
-        results.append(pool.apply_async(
-            run_clang_tidy,
-            (compile_commands_file,
-             check_config,
-             file,
-             options)))
+        cache_hit = False
+        if cache is not None:
+            if cache.hit(config=check_config, source_file=info['preproc'], clang_tidy=clang_tidy_version):
+                cache_hit = True
+
+        if cache_hit and options.verbose:
+            print("Checked", info["file"], " (cached)")
+            sys.stdout.flush()
+
+        if not cache_hit:
+            results.append((info, pool.apply_async(
+                run_clang_tidy,
+                (compile_commands_file,
+                 check_config,
+                 file,
+                 options))))
 
     fail_cnt = 0
-    for result in results:
-        if not result.get():
+    for (info, result) in results:
+        success = result.get()
+
+        if options.verbose:
+            print("Checked", info['file'])
+            sys.stdout.flush()
+
+        if success and cache is not None:
+            cache.record(config=check_config, source_file=info['preproc'], clang_tidy=clang_tidy_version)
+
+        if not success:
             fail_cnt += 1
 
     time_consumed = time.time() - start_time
 
     print("Checked %d files in %d seconds" % (files_checked, time_consumed))
+
+    if cache is not None:
+        cache.cleanup(MAX_DB_ENTRIES)
 
     if fail_cnt == 0:
         return 0

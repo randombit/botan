@@ -42,7 +42,9 @@ runs:
     - uses: actions/cache@v4
       if: env.COMPILER_CACHE_LOCATION != '' && inputs.cache-key != ''
       with:
-          path: ${{ env.COMPILER_CACHE_LOCATION }}
+          path: |
+             ${{ env.COMPILER_CACHE_LOCATION }}
+             ${{ env.BOTAN_CLANG_TIDY_CACHE }}
           key: ${{ inputs.cache-key }}-${{ github.run_id }}
           restore-keys: ${{ inputs.cache-key }}
           save-always: true

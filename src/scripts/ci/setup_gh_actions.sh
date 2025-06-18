@@ -98,3 +98,5 @@ if type -p "ccache"; then
     cache_location="$( ccache --get-config cache_dir )"
     echo "COMPILER_CACHE_LOCATION=${cache_location}" >> "${GITHUB_ENV}"
 fi
+
+echo "BOTAN_CLANG_TIDY_CACHE=$HOME/botan_clang_tidy.db" >> "${GITHUB_ENV}"
