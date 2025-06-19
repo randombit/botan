@@ -8,8 +8,11 @@ brief -> "Wrapper around the system-provided standard RNG"
 </module_info>
 
 <os_features>
+# Any one of these feature sets is sufficient
 dev_random,posix1
+ccrandom
 arc4random
+getrandom
 rtlgenrandom
 crypto_ng
 </os_features>
