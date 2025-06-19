@@ -313,7 +313,7 @@ constexpr bool is_generalizable_to(const std::variant<SpecialTs...>&) noexcept {
  * variants types.
  */
 template <typename GeneralVariantT, typename SpecialT>
-constexpr GeneralVariantT generalize_to(SpecialT&& specific) noexcept
+constexpr GeneralVariantT generalize_to(SpecialT&& specific)
    requires(std::is_constructible_v<GeneralVariantT, std::decay_t<SpecialT>>)
 {
    return std::forward<SpecialT>(specific);
@@ -327,7 +327,7 @@ constexpr GeneralVariantT generalize_to(SpecialT&& specific) noexcept
  * variants types.
  */
 template <typename GeneralVariantT, typename... SpecialTs>
-constexpr GeneralVariantT generalize_to(std::variant<SpecialTs...> specific) noexcept {
+constexpr GeneralVariantT generalize_to(std::variant<SpecialTs...> specific) {
    static_assert(
       is_generalizable_to<GeneralVariantT>(specific),
       "Desired general type must be implicitly constructible by all types of the specialized std::variant<>");
@@ -359,9 +359,9 @@ class scoped_cleanup final {
       scoped_cleanup(const scoped_cleanup&) = delete;
       scoped_cleanup& operator=(const scoped_cleanup&) = delete;
 
-      scoped_cleanup(scoped_cleanup&& other) : m_cleanup(std::move(other.m_cleanup)) { other.disengage(); }
+      scoped_cleanup(scoped_cleanup&& other) noexcept : m_cleanup(std::move(other.m_cleanup)) { other.disengage(); }
 
-      scoped_cleanup& operator=(scoped_cleanup&& other) {
+      scoped_cleanup& operator=(scoped_cleanup&& other) noexcept {
          if(this != &other) {
             m_cleanup = std::move(other.m_cleanup);
             other.disengage();
@@ -378,7 +378,7 @@ class scoped_cleanup final {
       /**
        * Disengage the cleanup callback, i.e., prevent it from being called
        */
-      void disengage() { m_cleanup.reset(); }
+      void disengage() noexcept { m_cleanup.reset(); }
 
    private:
       std::optional<FunT> m_cleanup;
@@ -396,6 +396,7 @@ T assert_is_some(std::optional<T> v, const char* expr, const char* func, const c
    }
 }
 
+// NOLINTNEXTLINE(*-macro-usage)
 #define BOTAN_ASSERT_IS_SOME(v) assert_is_some(v, #v, __func__, __FILE__, __LINE__)
 
 /*
@@ -406,6 +407,7 @@ class StringLiteral final {
    public:
       constexpr StringLiteral(const char (&str)[N]) { std::copy_n(str, N, value); }
 
+      // NOLINTNEXTLINE(*non-private-member-variable*)
       char value[N];
 };
 

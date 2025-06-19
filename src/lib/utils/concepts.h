@@ -12,7 +12,6 @@
 #include <botan/exceptn.h>
 
 #include <concepts>
-#include <cstdint>
 #include <iosfwd>
 #include <ranges>
 #include <span>
@@ -92,7 +91,7 @@ concept statically_spanable_range = spanable_range<T> &&
 /**
  * Find the length in bytes of a given contiguous range @p r.
  */
-inline constexpr size_t size_bytes(spanable_range auto&& r) {
+inline constexpr size_t size_bytes(const spanable_range auto& r) {
    return std::span{r}.size_bytes();
 }
 
@@ -105,7 +104,7 @@ inline constexpr size_t size_bytes(spanable_range auto&& r) {
  *                           feature the expected byte length.
  */
 template <size_t expected, spanable_range R>
-inline constexpr void assert_exact_byte_length(R&& r) {
+inline constexpr void assert_exact_byte_length(const R& r) {
    const std::span s{r};
    if constexpr(statically_spanable_range<R>) {
       static_assert(s.size_bytes() == expected, "memory region does not have expected byte lengths");
@@ -126,7 +125,7 @@ inline constexpr void assert_exact_byte_length(R&& r) {
  *                           ranges feature the same byte length.
  */
 template <spanable_range R0, spanable_range... Rs>
-inline constexpr void assert_equal_byte_lengths(R0&& r0, Rs&&... rs)
+inline constexpr void assert_equal_byte_lengths(const R0& r0, const Rs&... rs)
    requires(sizeof...(Rs) > 0)
 {
    const std::span s0{r0};

@@ -31,7 +31,7 @@ class Argument_Parser;
 std::shared_ptr<Botan::RandomNumberGenerator> cli_make_rng(const std::string& type = "",
                                                            const std::string& hex_drbg_seed = "");
 
-class Command {
+class Command /* NOLINT(*special-member-functions) */ {
    public:
       /**
       * Get a registered command
@@ -218,6 +218,7 @@ class Command {
       };
 };
 
+// NOLINTNEXTLINE(*-macro-usage)
 #define BOTAN_REGISTER_COMMAND(name, CLI_Class)                \
    const Botan_CLI::Command::Registration reg_cmd_##CLI_Class( \
       name, []() -> std::unique_ptr<Botan_CLI::Command> { return std::make_unique<CLI_Class>(); })

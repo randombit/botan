@@ -179,7 +179,7 @@ Response http_sync(const http_exch_fn& http_transact,
 
    std::getline(response_stream, status_message);
 
-   if(!response_stream || http_version.substr(0, 5) != "HTTP/") {
+   if(!response_stream || !http_version.starts_with("HTTP/")) {
       throw HTTP_Error("Not an HTTP response");
    }
 

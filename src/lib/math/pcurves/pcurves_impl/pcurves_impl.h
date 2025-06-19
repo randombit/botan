@@ -40,8 +40,6 @@ inversions. See pcurves_secp256r1.cpp or pcurves_secp256k1.cpp for examples with
 the bells and whistles.
 */
 
-namespace {
-
 /**
 * Montomgomery Representation of Integers
 *
@@ -163,6 +161,7 @@ class IntMod final {
       IntMod(Self&& other) = default;
       IntMod& operator=(const Self& other) = default;
       IntMod& operator=(Self&& other) = default;
+      ~IntMod() = default;
 
       /**
       * Return integer zero
@@ -855,6 +854,7 @@ class AffineCurvePoint final {
       AffineCurvePoint(Self&& other) = default;
       AffineCurvePoint& operator=(const Self& other) = default;
       AffineCurvePoint& operator=(Self&& other) = default;
+      ~AffineCurvePoint() = default;
 
       constexpr Self negate() const { return Self(x(), y().negate()); }
 
@@ -1013,6 +1013,7 @@ class ProjectiveCurvePoint {
       ProjectiveCurvePoint(Self&& other) = default;
       ProjectiveCurvePoint& operator=(const Self& other) = default;
       ProjectiveCurvePoint& operator=(Self&& other) = default;
+      ~ProjectiveCurvePoint() = default;
 
       friend constexpr Self operator+(const Self& a, const Self& b) { return Self::add(a, b); }
 
@@ -1334,6 +1335,11 @@ class BlindedScalarBits final {
          secure_scrub_memory(m_bytes.data(), m_bytes.size());
          CT::unpoison(m_bytes.data(), m_bytes.size());
       }
+
+      BlindedScalarBits(const BlindedScalarBits& other) = delete;
+      BlindedScalarBits(BlindedScalarBits&& other) = delete;
+      BlindedScalarBits& operator=(const BlindedScalarBits& other) = delete;
+      BlindedScalarBits& operator=(BlindedScalarBits&& other) = delete;
 
    private:
       // TODO this could be a fixed size array
@@ -1689,7 +1695,7 @@ inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::
 */
 template <typename C, bool RO, std::invocable<std::span<uint8_t>> ExpandMsg>
    requires C::ValidForSswuHash
-inline auto hash_to_curve_sswu(ExpandMsg expand_message)
+inline auto hash_to_curve_sswu(const ExpandMsg& expand_message)
    -> std::conditional_t<RO, typename C::ProjectivePoint, typename C::AffinePoint> {
    constexpr size_t SecurityLevel = (C::OrderBits + 1) / 2;
    constexpr size_t L = (C::PrimeFieldBits + SecurityLevel + 7) / 8;
@@ -1710,8 +1716,6 @@ inline auto hash_to_curve_sswu(ExpandMsg expand_message)
       return map_to_curve_sswu<C>(u);
    }
 }
-
-}  // namespace
 
 }  // namespace Botan
 

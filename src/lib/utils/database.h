@@ -17,7 +17,7 @@
 
 namespace Botan {
 
-class BOTAN_PUBLIC_API(2, 0) SQL_Database {
+class BOTAN_PUBLIC_API(2, 0) SQL_Database /* NOLINT(*-special-member-functions) */ {
    public:
       class BOTAN_PUBLIC_API(2, 0) SQL_DB_Error final : public Exception {
          public:
@@ -33,7 +33,7 @@ class BOTAN_PUBLIC_API(2, 0) SQL_Database {
             int m_rc;
       };
 
-      class BOTAN_PUBLIC_API(2, 0) Statement {
+      class BOTAN_PUBLIC_API(2, 0) Statement /* NOLINT(*-special-member-functions) */ {
          public:
             /* Bind statement parameters */
             virtual void bind(int column, std::string_view str) = 0;

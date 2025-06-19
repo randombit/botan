@@ -68,6 +68,8 @@ struct X509_Certificate_Data {
       bool m_subject_alt_name_exists = false;
 };
 
+X509_Certificate::~X509_Certificate() = default;
+
 std::string X509_Certificate::PEM_label() const {
    return "CERTIFICATE";
 }

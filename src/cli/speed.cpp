@@ -429,7 +429,7 @@ class Speed final : public Command {
          if(ecc_groups.empty()) {
             ecc_groups = {"secp256r1", "secp384r1", "secp521r1", "brainpool256r1", "brainpool384r1", "brainpool512r1"};
          } else if(ecc_groups.size() == 1 && ecc_groups[0] == "all") {
-            auto all = Botan::EC_Group::known_named_groups();
+            const auto& all = Botan::EC_Group::known_named_groups();
             ecc_groups.assign(all.begin(), all.end());
          }
 #endif

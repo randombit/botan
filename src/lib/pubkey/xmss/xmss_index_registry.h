@@ -23,7 +23,10 @@ namespace Botan {
 class XMSS_Index_Registry final {
    public:
       XMSS_Index_Registry(const XMSS_Index_Registry&) = delete;
+      XMSS_Index_Registry(XMSS_Index_Registry&&) = delete;
       XMSS_Index_Registry& operator=(const XMSS_Index_Registry&) = delete;
+      XMSS_Index_Registry& operator=(XMSS_Index_Registry&&) = delete;
+      ~XMSS_Index_Registry() = default;
 
       /**
        * Retrieves a handle to the process-wide unique XMSS index registry.

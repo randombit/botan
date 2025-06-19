@@ -65,10 +65,10 @@ class BOTAN_PUBLIC_API(2, 11) Context {
               std::shared_ptr<Session_Manager> session_manager,
               std::shared_ptr<const Policy> policy,
               Server_Information server_info = Server_Information()) :
-            m_credentials_manager(credentials_manager),
-            m_rng(rng),
-            m_session_manager(session_manager),
-            m_policy(policy),
+            m_credentials_manager(std::move(credentials_manager)),
+            m_rng(std::move(rng)),
+            m_session_manager(std::move(session_manager)),
+            m_policy(std::move(policy)),
             m_server_info(std::move(server_info)) {}
 
       virtual ~Context() = default;
@@ -99,6 +99,7 @@ class BOTAN_PUBLIC_API(2, 11) Context {
       template <class S, class C>
       friend class Stream;
 
+      // NOLINTBEGIN(*-non-private-member-variable*)
       std::shared_ptr<Credentials_Manager> m_credentials_manager;
       std::shared_ptr<RandomNumberGenerator> m_rng;
       std::shared_ptr<Session_Manager> m_session_manager;
@@ -106,6 +107,7 @@ class BOTAN_PUBLIC_API(2, 11) Context {
 
       Server_Information m_server_info;
       Verify_Callback m_verify_callback;
+      // NOLINTEND(*-non-private-member-variable*)
 };
 
 }  // namespace Botan::TLS

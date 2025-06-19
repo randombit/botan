@@ -33,7 +33,7 @@ namespace Botan_Tests {
 class PK_PQC_KEM_KAT_Test : public PK_Test {
    protected:
       /// Type of a KAT vector entry that can be recomputed using the seed
-      enum class VarType { SharedSecret, PublicKey, PrivateKey, Ciphertext };
+      enum class VarType : uint8_t { SharedSecret, PublicKey, PrivateKey, Ciphertext };
 
       PK_PQC_KEM_KAT_Test(const std::string& algo_name,
                           const std::string& input_file,

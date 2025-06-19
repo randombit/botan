@@ -349,12 +349,12 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks {
       }
 
    public:
-      bool session_activated_called;                           // NOLINT(*-non-private-member-variables-in-classes)
-      std::vector<Botan::X509_Certificate> certificate_chain;  // NOLINT(*-non-private-member-variables-in-classes)
-      std::unique_ptr<Botan::Public_Key> raw_public_key;       // NOLINT(*-non-private-member-variables-in-classes)
-      std::string negotiated_psk_identity;                     // NOLINT(*-non-private-member-variables-in-classes)
+      bool session_activated_called;                           // NOLINT(*-non-private-member-variable*)
+      std::vector<Botan::X509_Certificate> certificate_chain;  // NOLINT(*-non-private-member-variable*)
+      std::unique_ptr<Botan::Public_Key> raw_public_key;       // NOLINT(*-non-private-member-variable*)
+      std::string negotiated_psk_identity;                     // NOLINT(*-non-private-member-variable*)
       std::map<std::string, std::vector<std::vector<uint8_t>>>
-         serialized_messages;  // NOLINT(*-non-private-member-variables-in-classes)
+         serialized_messages;  // NOLINT(*-non-private-member-variable*)
 
    private:
       std::vector<uint8_t> send_buffer;
@@ -700,12 +700,12 @@ class TLS_Context {
       virtual void send(const std::vector<uint8_t>& data) = 0;
 
    protected:
-      std::shared_ptr<Test_TLS_13_Callbacks> m_callbacks;  // NOLINT(*-non-private-member-variables-in-classes)
-      std::shared_ptr<Test_Credentials> m_creds;           // NOLINT(*-non-private-member-variables-in-classes)
+      std::shared_ptr<Test_TLS_13_Callbacks> m_callbacks;  // NOLINT(*-non-private-member-variable*)
+      std::shared_ptr<Test_Credentials> m_creds;           // NOLINT(*-non-private-member-variable*)
 
-      std::shared_ptr<Botan::RandomNumberGenerator> m_rng;     // NOLINT(*-non-private-member-variables-in-classes)
-      std::shared_ptr<RFC8448_Session_Manager> m_session_mgr;  // NOLINT(*-non-private-member-variables-in-classes)
-      std::shared_ptr<const RFC8448_Text_Policy> m_policy;     // NOLINT(*-non-private-member-variables-in-classes)
+      std::shared_ptr<Botan::RandomNumberGenerator> m_rng;     // NOLINT(*-non-private-member-variable*)
+      std::shared_ptr<RFC8448_Session_Manager> m_session_mgr;  // NOLINT(*-non-private-member-variable*)
+      std::shared_ptr<const RFC8448_Text_Policy> m_policy;     // NOLINT(*-non-private-member-variable*)
 };
 
 class Client_Context : public TLS_Context {
@@ -735,7 +735,7 @@ class Client_Context : public TLS_Context {
 
       void send(const std::vector<uint8_t>& data) override { client.send(data.data(), data.size()); }
 
-      Botan::TLS::Client client;  // NOLINT(*-non-private-member-variables-in-classes)
+      Botan::TLS::Client client;  // NOLINT(*-non-private-member-variable*)
 };
 
 class Server_Context : public TLS_Context {
@@ -760,7 +760,7 @@ class Server_Context : public TLS_Context {
 
       void send(const std::vector<uint8_t>& data) override { server.send(data.data(), data.size()); }
 
-      Botan::TLS::Server server;  // NOLINT(*-non-private-member-variables-in-classes)
+      Botan::TLS::Server server;  // NOLINT(*-non-private-member-variable*)
 };
 
 void sort_extensions(Botan::TLS::Extensions& exts, const std::vector<Botan::TLS::Extension_Code>& expected_order) {

@@ -147,13 +147,15 @@ class BOTAN_TEST_API Handshake_State_13 : public Internal::Handshake_State_13_Ba
          requires(is_generalizable_to<Outbound_Message_T>(message))
       {
          return std::visit(
-            [&](auto msg) -> as_wrapped_references_t<std::variant<MsgTs...>> { return sending(std::move(msg)); },
+            [&](auto msg) -> detail::as_wrapped_references_t<std::variant<MsgTs...>> {
+               return sending(std::move(msg));
+            },
             std::move(message));
       }
 
       decltype(auto) received(Handshake_Message_13 message) {
          return std::visit(
-            [&](auto msg) -> as_wrapped_references_t<Inbound_Message_T> {
+            [&](auto msg) -> detail::as_wrapped_references_t<Inbound_Message_T> {
                if constexpr(std::is_constructible_v<Inbound_Message_T, decltype(msg)>) {
                   return std::reference_wrapper<decltype(msg)>(store(std::move(msg), true));
                } else {

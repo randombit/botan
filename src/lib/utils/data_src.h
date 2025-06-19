@@ -91,8 +91,10 @@ class BOTAN_PUBLIC_API(2, 0) DataSource {
 
       DataSource() = default;
       virtual ~DataSource() = default;
-      DataSource& operator=(const DataSource&) = delete;
       DataSource(const DataSource&) = delete;
+      DataSource(DataSource&&) = default;
+      DataSource& operator=(const DataSource&) = delete;
+      DataSource& operator=(DataSource&&) = default;
 };
 
 /**
@@ -166,8 +168,9 @@ class BOTAN_PUBLIC_API(2, 0) DataSource_Stream final : public DataSource {
 #endif
 
       DataSource_Stream(const DataSource_Stream&) = delete;
-
+      DataSource_Stream(DataSource_Stream&&) = delete;
       DataSource_Stream& operator=(const DataSource_Stream&) = delete;
+      DataSource_Stream& operator=(DataSource_Stream&&) = delete;
 
       ~DataSource_Stream() override;
 

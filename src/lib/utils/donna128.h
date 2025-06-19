@@ -21,9 +21,6 @@ class donna128 final {
          h = hh;
       }
 
-      donna128(const donna128&) = default;
-      donna128& operator=(const donna128&) = default;
-
       template <typename T>
       constexpr friend donna128 operator>>(const donna128& x, T shift) {
          donna128 z = x;

@@ -293,8 +293,8 @@ class bitvector_base final {
             }
 
          protected:
-            BlockT& m_block;  // NOLINT(*-non-private-member-variables-in-classes)
-            BlockT m_mask;    // NOLINT(*-non-private-member-variables-in-classes)
+            BlockT& m_block;  // NOLINT(*-non-private-member-variable*)
+            BlockT m_mask;    // NOLINT(*-non-private-member-variable*)
       };
 
    public:
@@ -600,7 +600,9 @@ class bitvector_base final {
        */
       bitvector_base& set() {
          full_range_operation(
-            [](std::unsigned_integral auto block) -> decltype(block) { return static_cast<decltype(block)>(~0); },
+            [](std::unsigned_integral auto block) -> decltype(block) {
+               return static_cast<decltype(block)>(~static_cast<decltype(block)>(0));
+            },
             *this);
          zero_unused_bits();
          return *this;
@@ -923,7 +925,7 @@ class bitvector_base final {
       auto ref(size_type pos) { return bitref<block_type>(m_blocks, pos); }
 
    private:
-      enum class BitRangeAlignment { byte_aligned, no_alignment };
+      enum class BitRangeAlignment : uint8_t { byte_aligned, no_alignment };
 
       /**
        * Helper construction to implement bit range operations on the bitvector.

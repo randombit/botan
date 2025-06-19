@@ -245,20 +245,20 @@ void XmlReporter::render_testsuite(std::ostream& out, const Testsuite& suite) co
 
 void XmlReporter::render_testcase(std::ostream& out, const TestSummary& test) const {
    out << "<testcase"
-       << " name=\"" << escape(test.name) << "\""
-       << " assertions=\"" << test.assertions << "\""
-       << " timestamp=\"" << format(test.timestamp) << "\"";
+       << " name=\"" << escape(test.name()) << "\""
+       << " assertions=\"" << test.assertions() << "\""
+       << " timestamp=\"" << format(test.timestamp()) << "\"";
 
-   if(test.elapsed_time.has_value()) {
-      out << " time=\"" << format(test.elapsed_time.value()) << "\"";
+   if(test.elapsed_time().has_value()) {
+      out << " time=\"" << format(test.elapsed_time().value()) << "\"";
    }
 
-   if(test.code_location.has_value()) {
-      out << " file=\"" << escape(test.code_location->path) << "\""
-          << " line=\"" << test.code_location->line << "\"";
+   if(test.code_location().has_value()) {
+      out << " file=\"" << escape(test.code_location()->path) << "\""
+          << " line=\"" << test.code_location()->line << "\"";
    }
 
-   if(test.failures.empty() && test.notes.empty()) {
+   if(test.passed() && test.notes().empty()) {
       out << " />\n";
    } else {
       out << ">\n";
@@ -268,7 +268,7 @@ void XmlReporter::render_testcase(std::ostream& out, const TestSummary& test) co
 }
 
 void XmlReporter::render_failures_and_stdout(std::ostream& out, const TestSummary& test) const {
-   for(const auto& failure : test.failures) {
+   for(const auto& failure : test.failures()) {
       out << "<failure>\n"
           << format_cdata(failure) << "\n"
           << "</failure>\n";
@@ -276,9 +276,9 @@ void XmlReporter::render_failures_and_stdout(std::ostream& out, const TestSummar
 
    // xUnit format does not have a special tag for test notes, hence we
    // render it into the freetext 'system-out'
-   if(!test.notes.empty()) {
+   if(!test.notes().empty()) {
       out << "<system-out>\n";
-      for(const auto& note : test.notes) {
+      for(const auto& note : test.notes()) {
          out << format_cdata(note) << '\n';
       }
       out << "</system-out>\n";

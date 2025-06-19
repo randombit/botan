@@ -36,8 +36,6 @@ class RC4 final : public StreamCipher {
       */
       explicit RC4(size_t skip = 0);
 
-      ~RC4() override { clear(); }
-
    private:
       void key_schedule(std::span<const uint8_t> key) override;
       void cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) override;

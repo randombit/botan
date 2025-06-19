@@ -39,6 +39,11 @@ struct botan_struct {
          m_obj.reset();
       }
 
+      botan_struct(const botan_struct& other) = delete;
+      botan_struct(botan_struct&& other) = delete;
+      botan_struct& operator=(const botan_struct& other) = delete;
+      botan_struct& operator=(botan_struct&& other) = delete;
+
       bool magic_ok() const { return (m_magic == MAGIC); }
 
       T* unsafe_get() const { return m_obj.get(); }
@@ -48,6 +53,8 @@ struct botan_struct {
       std::unique_ptr<T> m_obj;
 };
 
+// NOLINTBEGIN(*-macro-usage)
+
 #define BOTAN_FFI_DECLARE_STRUCT(NAME, TYPE, MAGIC)                             \
    struct NAME final : public Botan_FFI::botan_struct<TYPE, MAGIC> {            \
          explicit NAME(std::unique_ptr<TYPE> x) : botan_struct(std::move(x)) {} \
@@ -55,6 +62,8 @@ struct botan_struct {
 
 #define BOTAN_FFI_DECLARE_DUMMY_STRUCT(NAME, MAGIC) \
    struct NAME final : public Botan_FFI::botan_struct<int, MAGIC> {}
+
+// NOLINTEND(*-macro-usage)
 
 // Declared in ffi.cpp
 void ffi_clear_last_exception();
@@ -142,6 +151,7 @@ int botan_ffi_visit(botan_struct<T, M>* o, F func, const char* func_name) {
 //         }
 //      // [...]
 //      }
+// NOLINTNEXTLINE(*-macro-usage)
 #define BOTAN_FFI_VISIT(obj, lambda) botan_ffi_visit(obj, lambda, __func__)
 
 template <typename T, uint32_t M>
@@ -161,6 +171,7 @@ int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name) {
    });
 }
 
+// NOLINTNEXTLINE(*-macro-usage)
 #define BOTAN_FFI_CHECKED_DELETE(o) ffi_delete_object(o, __func__)
 
 inline int invoke_view_callback(botan_view_bin_fn view, botan_view_ctx ctx, std::span<const uint8_t> buf) {

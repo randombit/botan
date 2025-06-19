@@ -150,7 +150,7 @@ BigInt barrett_reduce(
    CT::unpoison(ws);
    CT::unpoison(x_words);
 
-   return BigInt::_from_words(std::move(r));
+   return BigInt::_from_words(r);
 }
 
 CT::Choice acceptable_barrett_input(const BigInt& x, const BigInt& modulus) {

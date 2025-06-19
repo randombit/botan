@@ -141,7 +141,7 @@ class BOTAN_UNSTABLE_API Client_Hello : public Handshake_Message {
       const std::vector<uint8_t>& compression_methods() const;
 
    protected:
-      std::unique_ptr<Client_Hello_Internal> m_data;
+      std::unique_ptr<Client_Hello_Internal> m_data;  // NOLINT(*non-private-member-variable*)
 };
 
 class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello {
@@ -301,7 +301,7 @@ class BOTAN_UNSTABLE_API Server_Hello : public Handshake_Message {
       Protocol_Version legacy_version() const;
 
    protected:
-      std::unique_ptr<Server_Hello_Internal> m_data;
+      std::unique_ptr<Server_Hello_Internal> m_data;  // NOLINT(*non-private-member-variable*)
 };
 
 class BOTAN_UNSTABLE_API Server_Hello_12 final : public Server_Hello {
@@ -550,7 +550,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
    public:
       class Certificate_Entry {
          public:
-            Certificate_Entry(TLS_Data_Reader& reader, const Connection_Side side, const Certificate_Type cert_type);
+            Certificate_Entry(TLS_Data_Reader& reader, Connection_Side side, Certificate_Type cert_type);
             Certificate_Entry(X509_Certificate cert);
             Certificate_Entry(std::shared_ptr<Public_Key> raw_public_key);
 
@@ -767,8 +767,8 @@ class BOTAN_UNSTABLE_API Certificate_Verify : public Handshake_Message {
       std::vector<uint8_t> serialize() const override;
 
    protected:
-      std::vector<uint8_t> m_signature;
-      Signature_Scheme m_scheme;
+      std::vector<uint8_t> m_signature;  // NOLINT(*non-private-member-variable*)
+      Signature_Scheme m_scheme;         // NOLINT(*non-private-member-variable*)
 };
 
 /**
@@ -840,7 +840,7 @@ class BOTAN_UNSTABLE_API Finished : public Handshake_Message {
 
    protected:
       using Handshake_Message::Handshake_Message;
-      std::vector<uint8_t> m_verification_data;
+      std::vector<uint8_t> m_verification_data;  // NOLINT(*non-private-member-variable*)
 };
 
 class BOTAN_UNSTABLE_API Finished_12 final : public Finished {
@@ -1038,7 +1038,7 @@ class BOTAN_UNSTABLE_API Key_Update final : public Handshake_Message {
       bool m_update_requested;
 };
 
-namespace {
+namespace detail {
 template <typename T>
 struct as_wrapped_references {};
 
@@ -1049,7 +1049,7 @@ struct as_wrapped_references<std::variant<AlternativeTs...>> {
 
 template <typename T>
 using as_wrapped_references_t = typename as_wrapped_references<T>::type;
-}  // namespace
+}  // namespace detail
 
 // Handshake message types from RFC 8446 4.
 using Handshake_Message_13 = std::variant<Client_Hello_13,
@@ -1063,7 +1063,7 @@ using Handshake_Message_13 = std::variant<Client_Hello_13,
                                           Certificate_Request_13,
                                           Certificate_Verify_13,
                                           Finished_13>;
-using Handshake_Message_13_Ref = as_wrapped_references_t<Handshake_Message_13>;
+using Handshake_Message_13_Ref = detail::as_wrapped_references_t<Handshake_Message_13>;
 
 using Post_Handshake_Message_13 = std::variant<New_Session_Ticket_13, Key_Update>;
 
@@ -1081,14 +1081,14 @@ using Server_Handshake_13_Message = std::variant<Server_Hello_13,
                                                  Certificate_Request_13,
                                                  Certificate_Verify_13,
                                                  Finished_13>;
-using Server_Handshake_13_Message_Ref = as_wrapped_references_t<Server_Handshake_13_Message>;
+using Server_Handshake_13_Message_Ref = detail::as_wrapped_references_t<Server_Handshake_13_Message>;
 
 using Client_Handshake_13_Message = std::variant<Client_Hello_13,
                                                  Client_Hello_12,  // indicates a TLS peer that does not offer TLS 1.3
                                                  Certificate_13,
                                                  Certificate_Verify_13,
                                                  Finished_13>;
-using Client_Handshake_13_Message_Ref = as_wrapped_references_t<Client_Handshake_13_Message>;
+using Client_Handshake_13_Message_Ref = detail::as_wrapped_references_t<Client_Handshake_13_Message>;
 
 #endif  // BOTAN_HAS_TLS_13
 

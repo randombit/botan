@@ -6,6 +6,8 @@
 * @brief Build configuration for Botan %{version}
 */
 
+/* NOLINTBEGIN(*-macro-usage,*-macro-to-enum) */
+
 /**
  * @defgroup buildinfo Build Information
  */
@@ -140,5 +142,7 @@
 /**
  * @}
  */
+
+/* NOLINTEND(*-macro-usage,*-macro-to-enum) */
 
 #endif

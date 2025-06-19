@@ -18,7 +18,7 @@ namespace Botan::TLS {
 *
 * The enumeration value matches the wire encoding
 */
-enum class AlertType {
+enum class AlertType : uint16_t {
    CloseNotify = 0,
    UnexpectedMessage = 10,
    BadRecordMac = 20,

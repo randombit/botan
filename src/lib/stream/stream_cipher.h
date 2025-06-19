@@ -23,8 +23,6 @@ namespace Botan {
 */
 class BOTAN_PUBLIC_API(2, 0) StreamCipher : public SymmetricAlgorithm {
    public:
-      ~StreamCipher() override = default;
-
       /**
       * Create an instance based on a name
       * If provider is empty then best available is chosen.

@@ -132,9 +132,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
 
       EC_PublicKey() = default;
 
-      std::shared_ptr<const EC_PublicKey_Data> m_public_key;
-      EC_Group_Encoding m_domain_encoding = EC_Group_Encoding::NamedCurve;
-      EC_Point_Format m_point_encoding = EC_Point_Format::Uncompressed;
+      std::shared_ptr<const EC_PublicKey_Data> m_public_key;                // NOLINT(*non-private-member-variable*)
+      EC_Group_Encoding m_domain_encoding = EC_Group_Encoding::NamedCurve;  // NOLINT(*non-private-member-variable*)
+      EC_Point_Format m_point_encoding = EC_Point_Format::Uncompressed;     // NOLINT(*non-private-member-variable*)
 };
 
 /**
@@ -216,7 +216,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_PrivateKey : public virtual EC_PublicKey,
 
       EC_PrivateKey() = default;
 
-      std::shared_ptr<const EC_PrivateKey_Data> m_private_key;
+      std::shared_ptr<const EC_PrivateKey_Data> m_private_key;  // NOLINT(*non-private-member-variable*)
 };
 
 BOTAN_DIAGNOSTIC_POP

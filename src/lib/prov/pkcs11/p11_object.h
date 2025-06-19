@@ -93,7 +93,7 @@ class BOTAN_PUBLIC_API(2, 0) AttributeContainer {
       * @param value numeric value to add
       */
       template <typename T>
-         requires std::is_integral<T>::value
+         requires std::is_integral_v<T>
       void add_numeric(AttributeType attribute, T value) {
          m_numerics.push_back(static_cast<uint64_t>(value));
          add_attribute(attribute, reinterpret_cast<uint8_t*>(&m_numerics.back()), sizeof(T));
@@ -483,7 +483,10 @@ class BOTAN_PUBLIC_API(2, 0) Object {
       Object(Session& session, const ObjectProperties& obj_props);
 
       Object(const Object&) = default;
+      Object(Object&&) = default;
       Object& operator=(const Object&) = delete;
+      Object& operator=(Object&&) = delete;
+
       virtual ~Object() = default;
 
       /// Searches for all objects of the given type that match `search_template`

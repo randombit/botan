@@ -20,6 +20,8 @@ class EME;
 
 namespace Botan::PK_Ops {
 
+// NOLINTBEGIN(*-special-member-functions)
+
 class Encryption_with_EME : public Encryption {
    public:
       ~Encryption_with_EME() override;
@@ -166,6 +168,8 @@ class KEM_Decryption_with_KDF : public KEM_Decryption {
    private:
       std::unique_ptr<KDF> m_kdf;
 };
+
+// NOLINTEND(*-special-member-functions)
 
 }  // namespace Botan::PK_Ops
 

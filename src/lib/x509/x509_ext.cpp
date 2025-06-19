@@ -186,7 +186,7 @@ void Extensions::replace(std::unique_ptr<Certificate_Extension> extn, bool criti
 }
 
 bool Extensions::extension_set(const OID& oid) const {
-   return (m_extension_info.find(oid) != m_extension_info.end());
+   return m_extension_info.contains(oid);
 }
 
 bool Extensions::critical_extension_set(const OID& oid) const {

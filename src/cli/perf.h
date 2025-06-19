@@ -70,7 +70,7 @@ class PerfConfig final {
       Botan::RandomNumberGenerator& m_rng;
 };
 
-class PerfTest {
+class PerfTest /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~PerfTest() = default;
 
@@ -94,6 +94,7 @@ class PerfTest {
       static std::map<std::string, pt_maker_fn>& global_registry();
 };
 
+// NOLINTNEXTLINE(*-macro-usage)
 #define BOTAN_REGISTER_PERF_TEST(name, Perf_Class)                \
    const Botan_CLI::PerfTest::Registration reg_perf_##Perf_Class( \
       name, []() -> std::unique_ptr<Botan_CLI::PerfTest> { return std::make_unique<Perf_Class>(); })

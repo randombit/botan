@@ -20,7 +20,7 @@ class RandomNumberGenerator;
 /**
 * Encoding Method for Encryption
 */
-class BOTAN_TEST_API EME {
+class BOTAN_TEST_API EME /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~EME();
 

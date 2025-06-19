@@ -34,9 +34,6 @@ class CMAC final : public MessageAuthenticationCode {
       */
       explicit CMAC(std::unique_ptr<BlockCipher> cipher);
 
-      CMAC(const CMAC&) = delete;
-      CMAC& operator=(const CMAC&) = delete;
-
    private:
       void add_data(std::span<const uint8_t>) override;
       void final_result(std::span<uint8_t>) override;

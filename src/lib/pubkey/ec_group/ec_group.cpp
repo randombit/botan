@@ -404,7 +404,7 @@ EC_Group::EC_Group(std::string_view str) {
    } catch(...) {}
 
    if(m_data == nullptr) {
-      if(str.size() > 30 && str.substr(0, 29) == "-----BEGIN EC PARAMETERS-----") {
+      if(str.size() > 30 && str.starts_with("-----BEGIN EC PARAMETERS-----")) {
          // OK try it as PEM ...
          const auto ber = PEM_Code::decode_check_label(str, "EC PARAMETERS");
 
@@ -757,6 +757,10 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
 
    return true;
 }
+
+EC_Group::Mul2Table::Mul2Table(EC_Group::Mul2Table&& other) noexcept = default;
+
+EC_Group::Mul2Table& EC_Group::Mul2Table::operator=(EC_Group::Mul2Table&& other) noexcept = default;
 
 EC_Group::Mul2Table::Mul2Table(const EC_AffinePoint& h) : m_tbl(h._group()->make_mul2_table(h._inner())) {}
 

@@ -264,8 +264,8 @@ Certificate_13::Certificate_13(const Client_Hello_13& client_hello,
 }
 
 Certificate_13::Certificate_Entry::Certificate_Entry(TLS_Data_Reader& reader,
-                                                     const Connection_Side side,
-                                                     const Certificate_Type cert_type) {
+                                                     Connection_Side side,
+                                                     Certificate_Type cert_type) {
    switch(cert_type) {
       case Certificate_Type::X509:
          // RFC 8446 4.2.2

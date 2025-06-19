@@ -37,9 +37,9 @@ class Diagnostic:
 
     def __map_file_path(self, file_path, base_path): # pylint: disable=unused-argument
         if file_path.endswith(".h"):
-            raise RuntimeError(f"Header file {file_path} cannot be handled")
-        # TODO: try to map include files (residing in build/include) onto their
-        #       origin path in src/lib etc.
+            # This only works for symlink builds, which is sufficient for CI reporting
+            return os.path.realpath(file_path)
+
         return file_path
 
 

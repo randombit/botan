@@ -49,14 +49,14 @@ class ChaCha20Poly1305_Mode : public AEAD_Mode {
       bool has_keying_material() const final;
 
    protected:
-      std::unique_ptr<StreamCipher> m_chacha;
-      std::unique_ptr<MessageAuthenticationCode> m_poly1305;
+      std::unique_ptr<StreamCipher> m_chacha;                 // NOLINT(*non-private-member-variable*)
+      std::unique_ptr<MessageAuthenticationCode> m_poly1305;  // NOLINT(*non-private-member-variable*)
 
       ChaCha20Poly1305_Mode();
 
-      secure_vector<uint8_t> m_ad;
-      size_t m_nonce_len = 0;
-      size_t m_ctext_len = 0;
+      secure_vector<uint8_t> m_ad;  // NOLINT(*non-private-member-variable*)
+      size_t m_nonce_len = 0;       // NOLINT(*non-private-member-variable*)
+      size_t m_ctext_len = 0;       // NOLINT(*non-private-member-variable*)
 
       bool cfrg_version() const { return m_nonce_len == 12 || m_nonce_len == 24; }
 

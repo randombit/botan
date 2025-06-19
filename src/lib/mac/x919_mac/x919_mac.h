@@ -31,9 +31,6 @@ class ANSI_X919_MAC final : public MessageAuthenticationCode {
 
       ANSI_X919_MAC();
 
-      ANSI_X919_MAC(const ANSI_X919_MAC&) = delete;
-      ANSI_X919_MAC& operator=(const ANSI_X919_MAC&) = delete;
-
    private:
       void add_data(std::span<const uint8_t>) override;
       void final_result(std::span<uint8_t>) override;

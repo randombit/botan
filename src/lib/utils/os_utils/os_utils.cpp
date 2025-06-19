@@ -335,9 +335,13 @@ std::string OS::format_time(time_t time, const std::string& format) {
    std::tm tm;
 
 #if defined(BOTAN_TARGET_OS_HAS_WIN32)
-   localtime_s(&tm, &time);
+   if(::localtime_s(&tm, &time) != 0) {
+      throw Encoding_Error("Could not convert time_t to localtime");
+   }
 #elif defined(BOTAN_TARGET_OS_HAS_POSIX1)
-   localtime_r(&time, &tm);
+   if(!::localtime_r(&time, &tm)) {
+      throw Encoding_Error("Could not convert time_t to localtime");
+   }
 #else
    if(auto tmp = std::localtime(&time)) {
       tm = *tmp;

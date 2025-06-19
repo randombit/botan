@@ -61,7 +61,7 @@ bool XMSS_Verification_Operation::verify(const XMSS_Signature& sig,
                                          const XMSS_PublicKey& public_key) {
    XMSS_Address adrs;
    secure_vector<uint8_t> index_bytes;
-   XMSS_Tools::concat(index_bytes, sig.unused_leaf_index(), m_pub_key.xmss_parameters().element_size());
+   xmss_concat(index_bytes, sig.unused_leaf_index(), m_pub_key.xmss_parameters().element_size());
    secure_vector<uint8_t> msg_digest = m_hash.h_msg(sig.randomness(), public_key.root(), index_bytes, msg);
 
    secure_vector<uint8_t> node = root_from_signature(sig, msg_digest, adrs, public_key.public_seed());

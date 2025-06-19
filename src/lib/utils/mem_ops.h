@@ -61,8 +61,6 @@ void secure_scrub_memory(ranges::contiguous_output_range auto&& data) {
    secure_scrub_memory(std::ranges::data(data), ranges::size_bytes(data));
 }
 
-#if !defined(BOTAN_IS_BEGIN_BUILT)
-
 /**
 * Memory comparison, input insensitive
 * @param x a pointer to an array
@@ -72,8 +70,6 @@ void secure_scrub_memory(ranges::contiguous_output_range auto&& data) {
 */
 BOTAN_DEPRECATED("This function is deprecated, use constant_time_compare()")
 BOTAN_PUBLIC_API(2, 9) uint8_t ct_compare_u8(const uint8_t x[], const uint8_t y[], size_t len);
-
-#endif
 
 /**
  * Memory comparison, input insensitive
@@ -132,7 +128,7 @@ inline constexpr void clear_mem(T* ptr, size_t n) {
 * @param mem a contiguous range of Ts to zero
 */
 template <ranges::contiguous_output_range R>
-inline constexpr void clear_mem(R&& mem)
+inline constexpr void clear_mem(R&& mem)  // NOLINT(*-missing-std-forward)
    requires std::is_trivially_copyable_v<std::ranges::range_value_t<R>>
 {
    clear_bytes(std::ranges::data(mem), ranges::size_bytes(mem));
@@ -145,7 +141,7 @@ inline constexpr void clear_mem(R&& mem)
 * @param n the number of elements of in/out
 */
 template <typename T>
-   requires std::is_trivial<typename std::decay<T>::type>::value
+   requires std::is_trivial_v<std::decay_t<T>>
 inline constexpr void copy_mem(T* out, const T* in, size_t n) {
    BOTAN_ASSERT_IMPLICATION(n > 0, in != nullptr && out != nullptr, "If n > 0 then args are not null");
 
@@ -162,7 +158,7 @@ inline constexpr void copy_mem(T* out, const T* in, size_t n) {
 template <ranges::contiguous_output_range OutR, ranges::contiguous_range InR>
    requires std::is_same_v<std::ranges::range_value_t<OutR>, std::ranges::range_value_t<InR>> &&
             std::is_trivially_copyable_v<std::ranges::range_value_t<InR>>
-inline constexpr void copy_mem(OutR&& out, InR&& in) {
+inline constexpr void copy_mem(OutR&& out /* NOLINT(*-std-forward) */, const InR& in) {
    ranges::assert_equal_byte_lengths(out, in);
    if(std::is_constant_evaluated()) {
       std::copy(std::ranges::begin(in), std::ranges::end(in), std::ranges::begin(out));
@@ -178,7 +174,7 @@ inline constexpr void copy_mem(OutR&& out, InR&& in) {
 template <ranges::contiguous_output_range ToR, ranges::contiguous_range FromR>
    requires std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>> &&
             std::is_trivially_copyable_v<std::ranges::range_value_t<ToR>>
-inline constexpr void typecast_copy(ToR&& out, FromR&& in) {
+inline constexpr void typecast_copy(ToR&& out /* NOLINT(*-std-forward) */, const FromR& in) {
    ranges::assert_equal_byte_lengths(out, in);
    std::memcpy(std::ranges::data(out), std::ranges::data(in), ranges::size_bytes(out));
 }
@@ -190,7 +186,7 @@ inline constexpr void typecast_copy(ToR&& out, FromR&& in) {
 template <typename ToT, ranges::contiguous_range FromR>
    requires std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>> && std::is_trivially_copyable_v<ToT> &&
             (!std::ranges::range<ToT>)
-inline constexpr void typecast_copy(ToT& out, FromR&& in) noexcept {
+inline constexpr void typecast_copy(ToT& out, const FromR& in) {
    typecast_copy(std::span<ToT, 1>(&out, 1), in);
 }
 
@@ -201,7 +197,7 @@ inline constexpr void typecast_copy(ToT& out, FromR&& in) noexcept {
 template <ranges::contiguous_output_range ToR, typename FromT>
    requires std::is_trivially_copyable_v<FromT> &&
             (!std::ranges::range<FromT>) && std::is_trivially_copyable_v<std::ranges::range_value_t<ToR>>
-inline constexpr void typecast_copy(ToR&& out, const FromT& in) {
+inline constexpr void typecast_copy(ToR&& out /* NOLINT(*-std-forward) */, const FromT& in) {
    typecast_copy(out, std::span<const FromT, 1>(&in, 1));
 }
 
@@ -212,7 +208,7 @@ inline constexpr void typecast_copy(ToR&& out, const FromT& in) {
 template <typename ToT, ranges::contiguous_range FromR>
    requires std::is_default_constructible_v<ToT> && std::is_trivially_copyable_v<ToT> &&
             std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>>
-inline constexpr ToT typecast_copy(FromR&& src) noexcept {
+inline constexpr ToT typecast_copy(const FromR& src) {
    ToT dst;
    typecast_copy(dst, src);
    return dst;
@@ -221,7 +217,7 @@ inline constexpr ToT typecast_copy(FromR&& src) noexcept {
 // TODO: deprecate and replace
 template <typename T>
 inline constexpr void typecast_copy(uint8_t out[], T in[], size_t N)
-   requires std::is_trivially_copyable<T>::value
+   requires std::is_trivially_copyable_v<T>
 {
    // asserts that *in and *out point to the correct amount of memory
    typecast_copy(std::span<uint8_t>(out, sizeof(T) * N), std::span<const T>(in, N));
@@ -230,7 +226,7 @@ inline constexpr void typecast_copy(uint8_t out[], T in[], size_t N)
 // TODO: deprecate and replace
 template <typename T>
 inline constexpr void typecast_copy(T out[], const uint8_t in[], size_t N)
-   requires std::is_trivial<T>::value
+   requires std::is_trivial_v<T>
 {
    // asserts that *in and *out point to the correct amount of memory
    typecast_copy(std::span<T>(out, N), std::span<const uint8_t>(in, N * sizeof(T)));
@@ -245,7 +241,7 @@ inline constexpr void typecast_copy(uint8_t out[], const T& in) {
 
 // TODO: deprecate and replace
 template <typename T>
-   requires std::is_trivial<typename std::decay<T>::type>::value
+   requires std::is_trivial_v<std::decay_t<T>>
 inline constexpr void typecast_copy(T& out, const uint8_t in[]) {
    // asserts that *in points to the correct amount of memory
    typecast_copy(out, std::span<const uint8_t, sizeof(T)>(in, sizeof(T)));
@@ -253,13 +249,13 @@ inline constexpr void typecast_copy(T& out, const uint8_t in[]) {
 
 // TODO: deprecate and replace
 template <typename To>
-   requires std::is_trivial<To>::value
+   requires std::is_trivial_v<To>
 inline constexpr To typecast_copy(const uint8_t src[]) noexcept {
    // asserts that *src points to the correct amount of memory
    return typecast_copy<To>(std::span<const uint8_t, sizeof(To)>(src, sizeof(To)));
 }
 
-#if !defined(BOTAN_IS_BEGIN_BUILT)
+#if !defined(BOTAN_IS_BEING_BUILT)
 /**
 * Set memory to a fixed value
 * @param ptr a pointer to an array of bytes

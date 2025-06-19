@@ -15,66 +15,57 @@
 namespace Botan {
 
 //static
-FE_25519 FE_25519::invert(const FE_25519& z) {
-   FE_25519 t0;
-   FE_25519 t1;
-   FE_25519 t2;
-   FE_25519 t3;
+Ed25519_FieldElement Ed25519_FieldElement::invert() const {
+   auto t0 = this->sqr();
+   auto t1 = t0.sqr_iter(2);
+   t1 = *this * t1;
+   t0 = t0 * t1;
+   auto t2 = t0.sqr();
+   t1 = t1 * t2;
+   t2 = t1.sqr_iter(5);
+   t1 = t2 * t1;
+   t2 = t1.sqr_iter(10);
+   t2 = t2 * t1;
+   auto t3 = t2.sqr_iter(20);
+   t2 = t3 * t2;
+   t2 = t2.sqr_iter(10);
+   t1 = t2 * t1;
+   t2 = t1.sqr_iter(50);
+   t2 = t2 * t1;
+   t3 = t2.sqr_iter(100);
+   t2 = t3 * t2;
+   t2 = t2.sqr_iter(50);
+   t1 = t2 * t1;
+   t1 = t1.sqr_iter(5);
 
-   fe_sq(t0, z);
-   fe_sq_iter(t1, t0, 2);
-   fe_mul(t1, z, t1);
-   fe_mul(t0, t0, t1);
-   fe_sq(t2, t0);
-   fe_mul(t1, t1, t2);
-   fe_sq_iter(t2, t1, 5);
-   fe_mul(t1, t2, t1);
-   fe_sq_iter(t2, t1, 10);
-   fe_mul(t2, t2, t1);
-   fe_sq_iter(t3, t2, 20);
-   fe_mul(t2, t3, t2);
-   fe_sq_iter(t2, t2, 10);
-   fe_mul(t1, t2, t1);
-   fe_sq_iter(t2, t1, 50);
-   fe_mul(t2, t2, t1);
-   fe_sq_iter(t3, t2, 100);
-   fe_mul(t2, t3, t2);
-   fe_sq_iter(t2, t2, 50);
-   fe_mul(t1, t2, t1);
-   fe_sq_iter(t1, t1, 5);
-
-   fe_mul(t0, t1, t0);
+   t0 = t1 * t0;
    return t0;
 }
 
-FE_25519 FE_25519::pow_22523(const FE_25519& z) {
-   FE_25519 t0;
-   FE_25519 t1;
-   FE_25519 t2;
+Ed25519_FieldElement Ed25519_FieldElement::pow_22523() const {
+   auto t0 = this->sqr();
+   auto t1 = t0.sqr_iter(2);
+   t1 = (*this) * t1;
+   t0 = t0 * t1;
+   t0 = t0.sqr();
+   t0 = t1 * t0;
+   t1 = t0.sqr_iter(5);
+   t0 = t1 * t0;
+   t1 = t0.sqr_iter(10);
+   t1 = t1 * t0;
+   auto t2 = t1.sqr_iter(20);
+   t1 = t2 * t1;
+   t1 = t1.sqr_iter(10);
+   t0 = t1 * t0;
+   t1 = t0.sqr_iter(50);
+   t1 = t1 * t0;
+   t2 = t1.sqr_iter(100);
+   t1 = t2 * t1;
+   t1 = t1.sqr_iter(50);
+   t0 = t1 * t0;
+   t0 = t0.sqr_iter(2);
 
-   fe_sq(t0, z);
-   fe_sq_iter(t1, t0, 2);
-   fe_mul(t1, z, t1);
-   fe_mul(t0, t0, t1);
-   fe_sq(t0, t0);
-   fe_mul(t0, t1, t0);
-   fe_sq_iter(t1, t0, 5);
-   fe_mul(t0, t1, t0);
-   fe_sq_iter(t1, t0, 10);
-   fe_mul(t1, t1, t0);
-   fe_sq_iter(t2, t1, 20);
-   fe_mul(t1, t2, t1);
-   fe_sq_iter(t1, t1, 10);
-   fe_mul(t0, t1, t0);
-   fe_sq_iter(t1, t0, 50);
-   fe_mul(t1, t1, t0);
-   fe_sq_iter(t2, t1, 100);
-   fe_mul(t1, t2, t1);
-   fe_sq_iter(t1, t1, 50);
-   fe_mul(t0, t1, t0);
-   fe_sq_iter(t0, t0, 2);
-
-   fe_mul(t0, t0, z);
+   t0 = t0 * (*this);
    return t0;
 }
 
@@ -111,28 +102,28 @@ With tighter constraints on inputs can squeeze carries into int32.
 */
 
 //static
-FE_25519 FE_25519::mul(const FE_25519& f, const FE_25519& g) {
-   const int32_t f0 = f[0];
-   const int32_t f1 = f[1];
-   const int32_t f2 = f[2];
-   const int32_t f3 = f[3];
-   const int32_t f4 = f[4];
-   const int32_t f5 = f[5];
-   const int32_t f6 = f[6];
-   const int32_t f7 = f[7];
-   const int32_t f8 = f[8];
-   const int32_t f9 = f[9];
+Ed25519_FieldElement Ed25519_FieldElement::mul(const Ed25519_FieldElement& f, const Ed25519_FieldElement& g) {
+   const int32_t f0 = f.m_fe[0];
+   const int32_t f1 = f.m_fe[1];
+   const int32_t f2 = f.m_fe[2];
+   const int32_t f3 = f.m_fe[3];
+   const int32_t f4 = f.m_fe[4];
+   const int32_t f5 = f.m_fe[5];
+   const int32_t f6 = f.m_fe[6];
+   const int32_t f7 = f.m_fe[7];
+   const int32_t f8 = f.m_fe[8];
+   const int32_t f9 = f.m_fe[9];
 
-   const int32_t g0 = g[0];
-   const int32_t g1 = g[1];
-   const int32_t g2 = g[2];
-   const int32_t g3 = g[3];
-   const int32_t g4 = g[4];
-   const int32_t g5 = g[5];
-   const int32_t g6 = g[6];
-   const int32_t g7 = g[7];
-   const int32_t g8 = g[8];
-   const int32_t g9 = g[9];
+   const int32_t g0 = g.m_fe[0];
+   const int32_t g1 = g.m_fe[1];
+   const int32_t g2 = g.m_fe[2];
+   const int32_t g3 = g.m_fe[3];
+   const int32_t g4 = g.m_fe[4];
+   const int32_t g5 = g.m_fe[5];
+   const int32_t g6 = g.m_fe[6];
+   const int32_t g7 = g.m_fe[7];
+   const int32_t g8 = g.m_fe[8];
+   const int32_t g9 = g.m_fe[9];
 
    const int32_t g1_19 = 19 * g1; /* 1.959375*2^29 */
    const int32_t g2_19 = 19 * g2; /* 1.959375*2^30; still ok */
@@ -313,7 +304,7 @@ FE_25519 FE_25519::mul(const FE_25519& f, const FE_25519& g) {
    /* |h0| <= 2^25; from now on fits into int32 unchanged */
    /* |h1| <= 1.01*2^24 */
 
-   return FE_25519(h0, h1, h2, h3, h4, h5, h6, h7, h8, h9);
+   return Ed25519_FieldElement(h0, h1, h2, h3, h4, h5, h6, h7, h8, h9);
 }
 
 /*
@@ -332,17 +323,17 @@ See fe_mul.c for discussion of implementation strategy.
 */
 
 //static
-FE_25519 FE_25519::sqr_iter(const FE_25519& f, size_t iter) {
-   int32_t f0 = f[0];
-   int32_t f1 = f[1];
-   int32_t f2 = f[2];
-   int32_t f3 = f[3];
-   int32_t f4 = f[4];
-   int32_t f5 = f[5];
-   int32_t f6 = f[6];
-   int32_t f7 = f[7];
-   int32_t f8 = f[8];
-   int32_t f9 = f[9];
+Ed25519_FieldElement Ed25519_FieldElement::sqr_iter(size_t iter) const {
+   int32_t f0 = m_fe[0];
+   int32_t f1 = m_fe[1];
+   int32_t f2 = m_fe[2];
+   int32_t f3 = m_fe[3];
+   int32_t f4 = m_fe[4];
+   int32_t f5 = m_fe[5];
+   int32_t f6 = m_fe[6];
+   int32_t f7 = m_fe[7];
+   int32_t f8 = m_fe[8];
+   int32_t f9 = m_fe[9];
 
    for(size_t i = 0; i != iter; ++i) {
       const int32_t f0_2 = 2 * f0;
@@ -453,7 +444,7 @@ FE_25519 FE_25519::sqr_iter(const FE_25519& f, size_t iter) {
       f9 = static_cast<int32_t>(h9);
    }
 
-   return FE_25519(f0, f1, f2, f3, f4, f5, f6, f7, f8, f9);
+   return Ed25519_FieldElement(f0, f1, f2, f3, f4, f5, f6, f7, f8, f9);
 }
 
 /*
@@ -472,17 +463,18 @@ See fe_mul.c for discussion of implementation strategy.
 */
 
 //static
-FE_25519 FE_25519::sqr2(const FE_25519& f) {
-   const int32_t f0 = f[0];
-   const int32_t f1 = f[1];
-   const int32_t f2 = f[2];
-   const int32_t f3 = f[3];
-   const int32_t f4 = f[4];
-   const int32_t f5 = f[5];
-   const int32_t f6 = f[6];
-   const int32_t f7 = f[7];
-   const int32_t f8 = f[8];
-   const int32_t f9 = f[9];
+Ed25519_FieldElement Ed25519_FieldElement::sqr2() const {
+   const int32_t f0 = m_fe[0];
+   const int32_t f1 = m_fe[1];
+   const int32_t f2 = m_fe[2];
+   const int32_t f3 = m_fe[3];
+   const int32_t f4 = m_fe[4];
+   const int32_t f5 = m_fe[5];
+   const int32_t f6 = m_fe[6];
+   const int32_t f7 = m_fe[7];
+   const int32_t f8 = m_fe[8];
+   const int32_t f9 = m_fe[9];
+
    const int32_t f0_2 = 2 * f0;
    const int32_t f1_2 = 2 * f1;
    const int32_t f2_2 = 2 * f2;
@@ -590,14 +582,13 @@ FE_25519 FE_25519::sqr2(const FE_25519& f) {
    carry<25, 19>(h9, h0);
    carry<26>(h0, h1);
 
-   return FE_25519(h0, h1, h2, h3, h4, h5, h6, h7, h8, h9);
+   return Ed25519_FieldElement(h0, h1, h2, h3, h4, h5, h6, h7, h8, h9);
 }
 
 /*
 Ignores top bit of h.
 */
-
-void FE_25519::from_bytes(const uint8_t s[32]) {
+Ed25519_FieldElement Ed25519_FieldElement::deserialize(const uint8_t s[32]) {
    int64_t h0 = load_4(s);
    int64_t h1 = load_3(s + 4) << 6;
    int64_t h2 = load_3(s + 7) << 5;
@@ -621,16 +612,7 @@ void FE_25519::from_bytes(const uint8_t s[32]) {
    carry<26>(h6, h7);
    carry<26>(h8, h9);
 
-   m_fe[0] = static_cast<int32_t>(h0);
-   m_fe[1] = static_cast<int32_t>(h1);
-   m_fe[2] = static_cast<int32_t>(h2);
-   m_fe[3] = static_cast<int32_t>(h3);
-   m_fe[4] = static_cast<int32_t>(h4);
-   m_fe[5] = static_cast<int32_t>(h5);
-   m_fe[6] = static_cast<int32_t>(h6);
-   m_fe[7] = static_cast<int32_t>(h7);
-   m_fe[8] = static_cast<int32_t>(h8);
-   m_fe[9] = static_cast<int32_t>(h9);
+   return Ed25519_FieldElement(h0, h1, h2, h3, h4, h5, h6, h7, h8, h9);
 }
 
 /*
@@ -658,7 +640,7 @@ Have q+2^(-255)x = 2^(-255)(h + 19 2^(-25) h9 + 2^(-1))
 so floor(2^(-255)(h + 19 2^(-25) h9 + 2^(-1))) = q.
 */
 
-void FE_25519::to_bytes(uint8_t s[32]) const {
+void Ed25519_FieldElement::serialize_to(std::span<uint8_t, 32> s) const {
    const int64_t X25 = (1 << 25);
 
    int32_t h0 = m_fe[0];

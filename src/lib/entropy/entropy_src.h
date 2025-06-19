@@ -48,6 +48,7 @@ class BOTAN_PUBLIC_API(2, 0) Entropy_Source {
       Entropy_Source(const Entropy_Source& other) = delete;
       Entropy_Source(Entropy_Source&& other) = delete;
       Entropy_Source& operator=(const Entropy_Source& other) = delete;
+      Entropy_Source& operator=(Entropy_Source&& other) = delete;
 
       virtual ~Entropy_Source() = default;
 };
@@ -84,6 +85,8 @@ class BOTAN_PUBLIC_API(2, 0) Entropy_Sources final {
       Entropy_Sources(const Entropy_Sources& other) = delete;
       Entropy_Sources(Entropy_Sources&& other) = delete;
       Entropy_Sources& operator=(const Entropy_Sources& other) = delete;
+      Entropy_Sources& operator=(Entropy_Sources&& other) = delete;
+      ~Entropy_Sources() = default;
 
    private:
       std::vector<std::unique_ptr<Entropy_Source>> m_srcs;

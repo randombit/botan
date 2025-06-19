@@ -63,8 +63,8 @@ class BOTAN_TEST_API Thread_Pool final {
       void queue_thunk(const std::function<void()>&);
 
       template <class F, class... Args>
-      auto run(F&& f, Args&&... args) -> std::future<typename std::invoke_result<F, Args...>::type> {
-         using return_type = typename std::invoke_result<F, Args...>::type;
+      auto run(F&& f, Args&&... args) -> std::future<std::invoke_result_t<F, Args...>> {
+         using return_type = std::invoke_result_t<F, Args...>;
 
          auto future_work = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
          auto task = std::make_shared<std::packaged_task<return_type()>>(future_work);

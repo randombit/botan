@@ -18,7 +18,7 @@
 
 namespace Botan {
 
-enum class EC_Point_Format {
+enum class EC_Point_Format : uint8_t {
    Uncompressed = 0,
    Compressed = 1,
 

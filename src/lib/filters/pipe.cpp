@@ -29,6 +29,8 @@ class Null_Filter final : public Filter {
 
 }  // namespace
 
+Pipe::Pipe(Pipe&&) noexcept = default;
+
 Pipe::Invalid_Message_Number::Invalid_Message_Number(std::string_view where, message_id msg) :
       Invalid_Argument(fmt("Pipe::{}: Invalid message number {}", where, msg)) {}
 

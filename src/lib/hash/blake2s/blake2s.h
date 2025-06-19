@@ -15,7 +15,7 @@ namespace Botan {
 /**
  * BLAKE2s
  */
-class BLAKE2s final : public HashFunction {
+class BLAKE2s final : public HashFunction /* NOLINT(*-special-member-functions) */ {
    public:
       explicit BLAKE2s(size_t output_bits = 256);
       ~BLAKE2s() override;
@@ -38,6 +38,7 @@ class BLAKE2s final : public HashFunction {
       void state_init(size_t outlen, const uint8_t* key, size_t keylen);
       void compress(bool last);
 
+      // TODO use secure_vector here
       uint8_t m_b[64];  // input buffer
       uint32_t m_h[8];  // chained state
       uint32_t m_t[2];  // total number of bytes

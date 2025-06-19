@@ -15,13 +15,13 @@
 
 namespace Botan {
 
-enum class Sphincs_Hash_Type {
+enum class Sphincs_Hash_Type : uint8_t {
    Shake256,
    Sha256,
    Haraka BOTAN_DEPRECATED("Haraka is not and will not be supported"),  ///< Haraka is currently not supported
 };
 
-enum class Sphincs_Parameter_Set {
+enum class Sphincs_Parameter_Set : uint8_t {
    Sphincs128Small,
    Sphincs128Fast,
    Sphincs192Small,

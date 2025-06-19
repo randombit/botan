@@ -114,7 +114,7 @@ class AsioStream : public Botan::TLS::Stream<TestStream, MockChannel> {
    public:
       template <typename... Args>
       AsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) :
-            Stream(context, std::forward<Args>(args)...) {
+            Stream(std::move(context), std::forward<Args>(args)...) {
          m_native_handle = std::make_unique<MockChannel>(m_core);
       }
 };
@@ -123,7 +123,7 @@ class ThrowingAsioStream : public Botan::TLS::Stream<TestStream, ThrowingMockCha
    public:
       template <typename... Args>
       ThrowingAsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) :
-            Stream(context, std::forward<Args>(args)...) {
+            Stream(std::move(context), std::forward<Args>(args)...) {
          m_native_handle = std::make_unique<ThrowingMockChannel>(m_core);
       }
 };
@@ -132,7 +132,7 @@ class CancellingAsioStream : public Botan::TLS::Stream<TestStream, CancellingMoc
    public:
       template <typename... Args>
       CancellingAsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) :
-            Stream(context, std::forward<Args>(args)...) {
+            Stream(std::move(context), std::forward<Args>(args)...) {
          m_native_handle = std::make_unique<CancellingMockChannel>(m_core);
       }
 };

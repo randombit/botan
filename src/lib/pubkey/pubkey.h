@@ -566,7 +566,8 @@ class KEM_Encapsulation final {
       /**
        * @returns the pair (encapsulated key, key) extracted from @p kem
        */
-      static std::pair<std::vector<uint8_t>, secure_vector<uint8_t>> destructure(KEM_Encapsulation&& kem) {
+      static std::pair<std::vector<uint8_t>, secure_vector<uint8_t>> destructure(
+         KEM_Encapsulation&& kem) /* NOLINT(*param-not-moved*) */ {
          return std::make_pair(std::exchange(kem.m_encapsulated_shared_key, {}), std::exchange(kem.m_shared_key, {}));
       }
 

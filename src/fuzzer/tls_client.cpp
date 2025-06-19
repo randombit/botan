@@ -45,7 +45,7 @@ class Fuzzer_TLS_Policy : public Botan::TLS::Policy {
          std::vector<uint16_t> ciphersuites;
 
          for(auto&& suite : Botan::TLS::Ciphersuite::all_known_ciphersuites()) {
-            if(suite.valid() == false) {
+            if(suite.valid()) {
                ciphersuites.push_back(suite.ciphersuite_code());
             }
          }

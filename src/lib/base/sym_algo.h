@@ -35,7 +35,7 @@ class BOTAN_PUBLIC_API(2, 0) Key_Length_Specification final {
       * @param k_mod the number of bytes the key must be a multiple of
       */
       Key_Length_Specification(size_t min_k, size_t max_k, size_t k_mod = 1) :
-            m_min_keylen(min_k), m_max_keylen(max_k ? max_k : min_k), m_keylen_mod(k_mod) {}
+            m_min_keylen(min_k), m_max_keylen(max_k > 0 ? max_k : min_k), m_keylen_mod(k_mod) {}
 
       /**
       * @param length is a key length in bytes
@@ -78,7 +78,12 @@ class BOTAN_PUBLIC_API(2, 0) Key_Length_Specification final {
 */
 class BOTAN_PUBLIC_API(2, 0) SymmetricAlgorithm {
    public:
+      SymmetricAlgorithm() = default;
       virtual ~SymmetricAlgorithm() = default;
+      SymmetricAlgorithm(const SymmetricAlgorithm& other) = default;
+      SymmetricAlgorithm(SymmetricAlgorithm&& other) = default;
+      SymmetricAlgorithm& operator=(const SymmetricAlgorithm& other) = default;
+      SymmetricAlgorithm& operator=(SymmetricAlgorithm&& other) = default;
 
       /**
       * Reset the internal state. This includes not just the key, but

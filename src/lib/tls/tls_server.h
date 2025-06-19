@@ -118,6 +118,11 @@ class BOTAN_PUBLIC_API(2, 0) Server final : public Channel {
 
       bool timeout_check() override;
 
+      Server(const Server& other) = delete;
+      Server(Server&& other) = default;
+      Server& operator=(const Server& other) = delete;
+      Server& operator=(Server&& other) = delete;
+
    private:
       std::unique_ptr<Channel_Impl> m_impl;
 };

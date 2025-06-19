@@ -21,13 +21,6 @@ class ISO_9796_DS2 final : public EMSA {
       /**
        * @param hash function to use
        * @param implicit whether or not the trailer is implicit
-       */
-      explicit ISO_9796_DS2(std::unique_ptr<HashFunction> hash, bool implicit = false) :
-            m_hash(std::move(hash)), m_implicit(implicit), m_salt_len(hash->output_length()) {}
-
-      /**
-       * @param hash function to use
-       * @param implicit whether or not the trailer is implicit
        * @param salt_size size of the salt to use in bytes
        */
       ISO_9796_DS2(std::unique_ptr<HashFunction> hash, bool implicit, size_t salt_size) :

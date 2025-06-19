@@ -135,7 +135,7 @@ class PSK::PSK_Internal {
 
       PSK_Internal(std::vector<Client_PSK> clt_psks) : psk(std::move(clt_psks)) {}
 
-      // NOLINTNEXTLINE(*-non-private-member-variables-in-classes)
+      // NOLINTNEXTLINE(*-non-private-member-variable*)
       std::variant<std::vector<Client_PSK>, Server_PSK> psk;
 };
 
@@ -206,10 +206,10 @@ PSK::PSK(std::optional<Session_with_Handle>& session_to_resume, std::vector<Exte
    m_impl = std::make_unique<PSK_Internal>(std::move(cpsk));
 }
 
-PSK::PSK(Session session_to_resume, const uint16_t psk_index) :
+PSK::PSK(Session session_to_resume, uint16_t psk_index) :
       m_impl(std::make_unique<PSK_Internal>(Server_PSK(psk_index, std::move(session_to_resume)))) {}
 
-PSK::PSK(ExternalPSK psk, const uint16_t psk_index) :
+PSK::PSK(ExternalPSK psk, uint16_t psk_index) :
       m_impl(std::make_unique<PSK_Internal>(Server_PSK(psk_index, std::move(psk)))) {}
 
 PSK::~PSK() = default;

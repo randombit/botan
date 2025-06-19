@@ -293,7 +293,7 @@ class TLS_Server final : public Command {
 
             if(sent == -1) {
                error_output() << "Error writing to socket - " << err_to_string(errno) << std::endl;
-            } else if(sent != static_cast<ssize_t>(buf.size())) {
+            } else if(sent >= 0 && static_cast<size_t>(sent) != buf.size()) {
                error_output() << "Packet of length " << buf.size() << " truncated to " << sent << std::endl;
             }
          } else {

@@ -117,6 +117,8 @@ BOTAN_PUBLIC_API(2, 0) std::string runtime_version_check(uint32_t major, uint32_
 */
 BOTAN_PUBLIC_API(3, 8) bool unsafe_for_production_build();
 
+// NOLINTBEGIN(*-macro-usage)
+
 /*
 * Macros for compile-time version checks
 *
@@ -133,7 +135,7 @@ BOTAN_PUBLIC_API(3, 8) bool unsafe_for_production_build();
 * #endif
 * ```
 */
-#define BOTAN_VERSION_CODE_FOR(a, b, c) ((a << 16) | (b << 8) | (c))
+#define BOTAN_VERSION_CODE_FOR(a, b, c) (((a) << 16) | ((b) << 8) | (c))
 
 /**
 * Compare using BOTAN_VERSION_CODE_FOR, as in
@@ -142,6 +144,8 @@ BOTAN_PUBLIC_API(3, 8) bool unsafe_for_production_build();
 *  # endif
 */
 #define BOTAN_VERSION_CODE BOTAN_VERSION_CODE_FOR(BOTAN_VERSION_MAJOR, BOTAN_VERSION_MINOR, BOTAN_VERSION_PATCH)
+
+// NOLINTEND(*-macro-usage)
 
 }  // namespace Botan
 

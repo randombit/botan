@@ -181,7 +181,7 @@ namespace {
 
 template <typename T = void>
 struct Poisonable {
-      mutable bool poisoned = false;  // NOLINT(misc-non-private-member-variables-in-classes)
+      mutable bool poisoned = false;  // NOLINT(*non-private-member-variable*)
 
       void _const_time_poison() const { poisoned = true; }
 

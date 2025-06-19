@@ -29,7 +29,7 @@ class Journaling_Secret_Logger : public Secret_Logger {
       }
 
    public:
-      mutable std::map<std::string, std::vector<uint8_t>> secrets;  // NOLINT(*-non-private-member-variables-in-classes)
+      mutable std::map<std::string, std::vector<uint8_t>> secrets;  // NOLINT(*-non-private-member-variable*)
 };
 
 decltype(auto) make_CHECK_both(Cipher_State* cs_client,

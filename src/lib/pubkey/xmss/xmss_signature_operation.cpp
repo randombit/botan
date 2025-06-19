@@ -90,10 +90,10 @@ void XMSS_Signature_Operation::initialize() {
    m_leaf_idx = static_cast<uint32_t>(m_priv_key.reserve_unused_leaf_index());
 
    // write prefix for message hashing into buffer.
-   XMSS_Tools::concat(index_bytes, m_leaf_idx, 32);
+   xmss_concat(index_bytes, m_leaf_idx, 32);
    m_hash.prf(m_randomness, m_priv_key.prf_value(), index_bytes);
    index_bytes.clear();
-   XMSS_Tools::concat(index_bytes, m_leaf_idx, m_priv_key.xmss_parameters().element_size());
+   xmss_concat(index_bytes, m_leaf_idx, m_priv_key.xmss_parameters().element_size());
    m_hash.h_msg_init(m_randomness, m_priv_key.root(), index_bytes);
    m_is_initialized = true;
 }

@@ -214,7 +214,7 @@ constexpr bool is_optional_v = is_optional<T>::value;
  * A code location consisting of the source file path and a line
  */
 struct CodeLocation {
-      std::string path;
+      const char* path;
       unsigned int line;
 };
 
@@ -363,7 +363,7 @@ class Test {
             }
 
             template <typename T>
-            bool test_not_nullopt(const std::string& what, std::optional<T> val) {
+            bool test_not_nullopt(const std::string& what, const std::optional<T>& val) {
                if(val == std::nullopt) {
                   return test_failure(what + " was nullopt");
                } else {
@@ -417,7 +417,7 @@ class Test {
 
             template <typename T>
             bool test_rc_ok(const std::string& func, T rc) {
-               static_assert(std::is_integral<T>::value, "Integer required.");
+               static_assert(std::is_integral_v<T>, "Integer required.");
 
                if(rc != 0) {
                   std::ostringstream err;
@@ -432,7 +432,7 @@ class Test {
 
             template <typename T>
             bool test_rc_fail(const std::string& func, const std::string& why, T rc) {
-               static_assert(std::is_integral<T>::value, "Integer required.");
+               static_assert(std::is_integral_v<T>, "Integer required.");
 
                if(rc == 0) {
                   std::ostringstream err;
@@ -565,7 +565,7 @@ class Test {
             void start_timer();
             void end_timer();
 
-            void set_code_location(CodeLocation where) { m_where = std::move(where); }
+            void set_code_location(CodeLocation where) { m_where = where; }
 
             const std::optional<CodeLocation>& code_location() const { return m_where; }
 
@@ -599,6 +599,13 @@ class Test {
       };
 
       virtual ~Test() = default;
+
+      Test() = default;
+      Test(const Test& other) = delete;
+      Test(Test&& other) = default;
+      Test& operator=(const Test& other) = delete;
+      Test& operator=(Test&& other) = delete;
+
       virtual std::vector<Test::Result> run() = 0;
 
       virtual std::vector<std::string> possible_providers(const std::string&);
@@ -711,7 +718,7 @@ class TestClassRegistration {
                             const std::string& name,
                             bool smoke_test,
                             bool needs_serialization,
-                            CodeLocation registration_location) {
+                            const CodeLocation& registration_location) {
          Test::register_test(category, name, smoke_test, needs_serialization, [=] {
             auto test = std::make_unique<Test_Class>();
             test->initialize(name, registration_location);
@@ -719,6 +726,8 @@ class TestClassRegistration {
          });
       }
 };
+
+// NOLINTBEGIN(*-macro-usage)
 
 #define BOTAN_REGISTER_TEST(category, name, Test_Class) \
    const TestClassRegistration<Test_Class> reg_##Test_Class##_tests(category, name, false, false, {__FILE__, __LINE__})
@@ -728,6 +737,8 @@ class TestClassRegistration {
    const TestClassRegistration<Test_Class> reg_##Test_Class##_tests(category, name, true, false, {__FILE__, __LINE__})
 #define BOTAN_REGISTER_SERIALIZED_SMOKE_TEST(category, name, Test_Class) \
    const TestClassRegistration<Test_Class> reg_##Test_Class##_tests(category, name, true, true, {__FILE__, __LINE__})
+
+// NOLINTEND(*-macro-usage)
 
 typedef Test::Result (*test_fn)();
 typedef std::vector<Test::Result> (*test_fn_vec)();
@@ -787,7 +798,7 @@ class TestFnRegistration {
                          const std::string& name,
                          bool smoke_test,
                          bool needs_serialization,
-                         CodeLocation registration_location,
+                         const CodeLocation& registration_location,
                          TestFns... fn) {
          Test::register_test(category, name, smoke_test, needs_serialization, [=] {
             auto test = std::make_unique<FnTest>(fn...);
@@ -796,6 +807,8 @@ class TestFnRegistration {
          });
       }
 };
+
+// NOLINTBEGIN(*-macro-usage)
 
 #define BOTAN_REGISTER_TEST_FN_IMPL(category, name, smoke_test, needs_serialization, fn0, ...) \
    static const TestFnRegistration register_##fn0(                                             \
@@ -809,6 +822,8 @@ class TestFnRegistration {
    BOTAN_REGISTER_TEST_FN_IMPL(category, name, false, true, __VA_ARGS__)
 #define BOTAN_REGISTER_SERIALIZED_SMOKE_TEST_FN(category, name, ...) \
    BOTAN_REGISTER_TEST_FN_IMPL(category, name, true, true, __VA_ARGS__)
+
+// NOLINTEND(*-macro-usage)
 
 class VarMap {
    public:

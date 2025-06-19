@@ -35,9 +35,6 @@ class BOTAN_UNSTABLE_API UUID final {
       */
       UUID(const std::vector<uint8_t>& blob);
 
-      UUID& operator=(const UUID& other) = default;
-      UUID(const UUID& other) = default;
-
       /**
       * Decode a UUID string
       */

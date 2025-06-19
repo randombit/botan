@@ -110,7 +110,7 @@ class BOTAN_PUBLIC_API(2, 0) Request final {
 *
 * see https://tools.ietf.org/html/rfc6960#section-4.2.1
 */
-enum class Response_Status_Code {
+enum class Response_Status_Code : uint8_t {
    Successful = 0,
    Malformed_Request = 1,
    Internal_Error = 2,

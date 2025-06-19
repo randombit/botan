@@ -211,7 +211,7 @@ constexpr auto wrap_strong_type_or_enum(T t) {
  * This is only used at compile time.
  */
 template <std::endian endianness, std::unsigned_integral OutT, ranges::contiguous_range<uint8_t> InR>
-inline constexpr OutT fallback_load_any(InR&& in_range) {
+inline constexpr OutT fallback_load_any(const InR& in_range) {
    std::span in{in_range};
    // clang-format off
    if constexpr(endianness == std::endian::big) {
@@ -233,7 +233,7 @@ inline constexpr OutT fallback_load_any(InR&& in_range) {
  * This will be used only at compile time.
  */
 template <std::endian endianness, std::unsigned_integral InT, ranges::contiguous_output_range<uint8_t> OutR>
-inline constexpr void fallback_store_any(InT in, OutR&& out_range) {
+inline constexpr void fallback_store_any(InT in, OutR&& out_range /* NOLINT(*-std-forward) */) {
    std::span out{out_range};
    // clang-format off
    if constexpr(endianness == std::endian::big) {
@@ -310,7 +310,7 @@ inline constexpr WrappedOutT load_any(InR&& in_range) {
  */
 template <std::endian endianness, unsigned_integralish WrappedOutT, ranges::contiguous_range<uint8_t> InR>
    requires(custom_loadable<strong_type_wrapped_type<WrappedOutT>>)
-inline constexpr WrappedOutT load_any(InR&& in_range) {
+inline constexpr WrappedOutT load_any(const InR& in_range) {
    using OutT = detail::wrapped_type<WrappedOutT>;
    ranges::assert_exact_byte_length<sizeof(OutT)>(in_range);
    std::span<const uint8_t, sizeof(OutT)> ins{in_range};
@@ -329,7 +329,7 @@ inline constexpr WrappedOutT load_any(InR&& in_range) {
 template <std::endian endianness, typename OutT, ranges::contiguous_range<uint8_t> InR, unsigned_integralish... Ts>
    requires(sizeof...(Ts) > 0) && ((std::same_as<AutoDetect, OutT> && all_same_v<Ts...>) ||
                                    (unsigned_integralish<OutT> && all_same_v<OutT, Ts...>))
-inline constexpr void load_any(InR&& in, Ts&... outs) {
+inline constexpr void load_any(const InR& in, Ts&... outs) {
    ranges::assert_exact_byte_length<(sizeof(Ts) + ...)>(in);
    auto load_one = [off = 0]<typename T>(auto i, T& o) mutable {
       o = load_any<endianness, T>(i.subspan(off).template first<sizeof(T)>());
@@ -352,7 +352,7 @@ template <std::endian endianness,
           ranges::contiguous_range<uint8_t> InR>
    requires(unsigned_integralish<std::ranges::range_value_t<OutR>> &&
             (std::same_as<AutoDetect, OutT> || std::same_as<OutT, std::ranges::range_value_t<OutR>>))
-inline constexpr void load_any(OutR&& out, InR&& in) {
+inline constexpr void load_any(OutR&& out /* NOLINT(*-std-forward) */, const InR& in) {
    ranges::assert_equal_byte_lengths(out, in);
    using element_type = std::ranges::range_value_t<OutR>;
 
@@ -556,7 +556,7 @@ inline constexpr void store_any(WrappedInT wrapped_in, OutR&& out_range) {
  */
 template <std::endian endianness, unsigned_integralish WrappedInT, ranges::contiguous_output_range<uint8_t> OutR>
    requires(custom_storable<strong_type_wrapped_type<WrappedInT>>)
-inline constexpr void store_any(WrappedInT wrapped_in, OutR&& out_range) {
+inline constexpr void store_any(WrappedInT wrapped_in, const OutR& out_range) {
    const auto in = detail::unwrap_strong_type_or_enum(wrapped_in);
    using InT = decltype(in);
    ranges::assert_exact_byte_length<sizeof(in)>(out_range);
@@ -579,7 +579,7 @@ template <std::endian endianness,
           unsigned_integralish... Ts>
    requires(sizeof...(Ts) > 0) && ((std::same_as<AutoDetect, InT> && all_same_v<Ts...>) ||
                                    (unsigned_integralish<InT> && all_same_v<InT, Ts...>))
-inline constexpr void store_any(OutR&& out, Ts... ins) {
+inline constexpr void store_any(OutR&& out /* NOLINT(*-std-forward) */, Ts... ins) {
    ranges::assert_exact_byte_length<(sizeof(Ts) + ...)>(out);
    auto store_one = [off = 0]<typename T>(auto o, T i) mutable {
       store_any<endianness, T>(i, o.subspan(off).template first<sizeof(T)>());
@@ -600,7 +600,7 @@ template <std::endian endianness,
           ranges::contiguous_output_range<uint8_t> OutR,
           ranges::spanable_range InR>
    requires(std::same_as<AutoDetect, InT> || std::same_as<InT, std::ranges::range_value_t<InR>>)
-inline constexpr void store_any(OutR&& out, InR&& in) {
+inline constexpr void store_any(OutR&& out /* NOLINT(*-std-forward) */, const InR& in) {
    ranges::assert_equal_byte_lengths(out, in);
    using element_type = std::ranges::range_value_t<InR>;
 
@@ -770,7 +770,7 @@ inline size_t copy_out_any_word_aligned_portion(std::span<uint8_t>& out, std::sp
  * byte order.
  */
 template <ranges::spanable_range InR>
-inline void copy_out_be(std::span<uint8_t> out, InR&& in) {
+inline void copy_out_be(std::span<uint8_t> out, const InR& in) {
    using T = std::ranges::range_value_t<InR>;
    std::span<const T> in_s{in};
    const auto remaining_bytes = detail::copy_out_any_word_aligned_portion<std::endian::big>(out, in_s);
@@ -786,7 +786,7 @@ inline void copy_out_be(std::span<uint8_t> out, InR&& in) {
  * byte order.
  */
 template <ranges::spanable_range InR>
-inline void copy_out_le(std::span<uint8_t> out, InR&& in) {
+inline void copy_out_le(std::span<uint8_t> out, const InR& in) {
    using T = std::ranges::range_value_t<InR>;
    std::span<const T> in_s{in};
    const auto remaining_bytes = detail::copy_out_any_word_aligned_portion<std::endian::little>(out, in_s);

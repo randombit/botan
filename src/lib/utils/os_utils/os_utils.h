@@ -192,7 +192,7 @@ int BOTAN_TEST_API run_cpu_instruction_probe(const std::function<int()>& probe_f
 /**
 * Represents a terminal state
 */
-class BOTAN_UNSTABLE_API Echo_Suppression {
+class BOTAN_UNSTABLE_API Echo_Suppression /* NOLINT(*special-member-functions) */ {
    public:
       /**
       * Reenable echo on this terminal. Can be safely called

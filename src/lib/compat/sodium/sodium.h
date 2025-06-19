@@ -16,7 +16,7 @@
 namespace Botan::Sodium {
 
 // sodium/randombytes.h
-enum Sodium_Constants : size_t {
+enum Sodium_Constants : uint32_t {
    SODIUM_SIZE_MAX = 0xFFFFFFFF,
 
    crypto_aead_chacha20poly1305_ABYTES = 16,

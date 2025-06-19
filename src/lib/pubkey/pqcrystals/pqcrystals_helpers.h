@@ -188,8 +188,8 @@ class Bounded_XOF final {
                 typename PredicateFnT = decltype(default_predicate<bytes, MappedValueT<bytes, MapFnT>>)>
          requires std::invocable<MapFnT, std::array<uint8_t, bytes>> &&
                   std::invocable<PredicateFnT, MappedValueT<bytes, MapFnT>>
-      constexpr auto next(MapFnT&& transformer = default_transformer<bytes>,
-                          PredicateFnT&& predicate = default_predicate<bytes, MappedValueT<bytes, MapFnT>>) {
+      constexpr auto next(const MapFnT& transformer = default_transformer<bytes>,
+                          const PredicateFnT& predicate = default_predicate<bytes, MappedValueT<bytes, MapFnT>>) {
          while(true) {
             auto output = transformer(take<bytes>());
             if(predicate(output)) {

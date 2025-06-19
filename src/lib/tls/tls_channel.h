@@ -33,7 +33,14 @@ class BOTAN_PUBLIC_API(2, 0) Channel {
 
       virtual ~Channel() = default;
 
+      Channel(const Channel& other) = delete;
+      Channel(Channel&& other) = default;
+      Channel& operator=(const Channel& other) = delete;
+      Channel& operator=(Channel&& other) = delete;
+
    protected:
+      Channel() = default;
+
       virtual size_t from_peer(std::span<const uint8_t> data) = 0;
       virtual void to_peer(std::span<const uint8_t> data) = 0;
 

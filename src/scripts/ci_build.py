@@ -72,6 +72,7 @@ def known_targets():
         'sde',
         'shared',
         'static',
+        'strubbing',
         'valgrind',
         'valgrind-full',
         'valgrind-ct',
@@ -109,9 +110,9 @@ class LoggingGroup:
             print("> Running '%s' took %d seconds" % (self.group_title, time_taken))
 
 def build_targets(target, target_os):
-    if target in ['shared', 'minimized', 'examples'] or target.startswith('policy-'):
+    if target in ['shared', 'minimized', 'examples', 'limbo'] or target.startswith('policy-'):
         yield 'shared'
-    elif target in ['static', 'fuzzers', 'cross-arm32-baremetal', 'emscripten']:
+    elif target in ['static', 'fuzzers', 'cross-arm32-baremetal', 'emscripten', 'strubbing']:
         yield 'static'
     elif target_os in ['windows']:
         yield 'shared'
@@ -121,10 +122,10 @@ def build_targets(target, target_os):
         yield 'shared'
         yield 'static'
 
-    if target not in ['examples']:
+    if target not in ['examples', 'limbo']:
         yield 'cli'
 
-    if target not in ['examples', 'limbo']:
+    if target not in ['examples', 'limbo', 'hybrid-tls13-interop-test', 'strubbing']:
         yield 'tests'
 
     if target in ['coverage']:
@@ -135,6 +136,16 @@ def build_targets(target, target_os):
         yield 'examples'
     if target in ['valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full']:
         yield 'ct_selftest'
+
+def make_targets(target, target_os):
+    # The result of build_targets() is for ./configure.py --build-targets='...'.
+    # make_targets() go into `make/ninja ...` and they are mostly equal. Except
+    # for 'libs' which is an umbrella target for 'static' and 'shared'.
+    tgts = [tgt if tgt not in ['static', 'shared'] else 'libs' for tgt in build_targets(target, target_os)]
+    if target in ['coverage', 'fuzzers']:
+        # These are special targets not found in ./configure.py --build-targets=
+        tgts += ['fuzzers', 'fuzzer_corpus_zip']
+    return list(set(tgts))
 
 def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                     root_dir, build_dir, test_results_dir, pkcs11_lib, use_gdb,
@@ -257,6 +268,12 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if target in ['coverage', 'valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full']:
         flags += ['--with-debug-info']
 
+    if target in ['strubbing']:
+        # Stack scrubbing tests are based on scripted gdb runs and won't work on
+        # an optimized build unfortunately.
+        flags += ['--debug-mode']
+        test_cmd = None
+
     if target in ['coverage', 'sanitizer', 'fuzzers']:
         flags += ['--unsafe-terminate-on-asserts', '--enable-modules=tls_null']
 
@@ -294,7 +311,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         # need to find a way to run the wasm-compiled tests w/o a browser
         test_cmd = None
 
-    if target in ['sanitizer'] and target_cc in ['gcc']:
+    if target in ['sanitizer', 'strubbing'] and target_cc in ['gcc']:
         # Stack scrubbing is supported on GCC 14 and newer, only. This is newer
         # than the current default compiler on GHA's Linux image (ubuntu 24.04).
         # The CI setup has to ensure that we are configured to use a recent
@@ -731,6 +748,7 @@ def main(args=None):
 
         pylint_rc = '--rcfile=%s' % (os.path.join(root_dir, 'src/configs/pylint.rc'))
         pylint_flags = [pylint_rc, '--reports=no']
+        pylint_flags += ['--ignored-modules=gdb'] # 'import gdb' is not available outside gdb...
 
         if is_running_in_github_actions():
             pylint_flags += ["--msg-template='::warning file={path},line={line},endLine={end_line}::Pylint ({category}): {msg_id} {msg} ({symbol})'"]
@@ -750,6 +768,7 @@ def main(args=None):
             'src/scripts/website.py',
             'src/scripts/bench.py',
             'src/scripts/test_python.py',
+            'src/scripts/test_strubbed_symbols.py',
             'src/scripts/test_fuzzers.py',
             'src/scripts/test_cli.py',
             'src/scripts/repo_config.py',
@@ -757,6 +776,7 @@ def main(args=None):
             'src/scripts/python_unittests_unix.py',
             'src/scripts/dev_tools/run_clang_format.py',
             'src/scripts/dev_tools/run_clang_tidy.py',
+            'src/scripts/gdb/strubtest.py',
             'src/editors/vscode/scripts/bogo.py',
             'src/editors/vscode/scripts/common.py',
             'src/editors/vscode/scripts/test.py',
@@ -801,21 +821,7 @@ def main(args=None):
             if options.compiler_cache is not None:
                 cmds.append([options.compiler_cache, '--show-stats'])
 
-            make_targets = ['libs', 'tests', 'cli']
-
-            if target in ['coverage', 'fuzzers']:
-                make_targets += ['fuzzer_corpus_zip', 'fuzzers']
-
-            if target in ['examples', 'amalgamation']:
-                make_targets += ['examples']
-
-            if target in ['valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full']:
-                make_targets += ['ct_selftest']
-
-            if target in ['coverage', 'sanitizer'] and options.os not in ['windows']:
-                make_targets += ['bogo_shim']
-
-            cmds.append(make_prefix + make_cmd + make_targets)
+            cmds.append(make_prefix + make_cmd + make_targets(target, options.os))
 
             if target in ['examples'] and options.cc in ['clang', 'gcc']:
                 cmds.append([options.cc, '-Wall', '-Wextra', '-std=c89',
@@ -911,6 +917,10 @@ def main(args=None):
                 test_data_arg = []
                 cmds.append([py_interp, os.path.join(root_dir, 'src/scripts', script)] +
                             args + test_data_arg + [botan_exe])
+
+        if target in ['strubbing']:
+            cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/test_strubbed_symbols.py'),
+                         '--botan-cli', os.path.join(build_dir, 'botan')])
 
         if target in ['hybrid-tls13-interop-test']:
             cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/test_cli.py'),

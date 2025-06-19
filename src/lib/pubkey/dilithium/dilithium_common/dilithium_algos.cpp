@@ -501,7 +501,7 @@ std::optional<std::tuple<DilithiumCommitmentHash, DilithiumPolyVec, DilithiumPol
    for(auto& p : response) {
       poly_unpack_gamma1(p, slicer, mode);
    }
-   BOTAN_ASSERT_NOMSG(slicer.remaining() == mode.omega() + mode.k());
+   BOTAN_ASSERT_NOMSG(slicer.remaining() == size_t(mode.omega()) + mode.k());
 
    auto hint = hint_unpack(slicer, mode);
    BOTAN_ASSERT_NOMSG(slicer.empty());

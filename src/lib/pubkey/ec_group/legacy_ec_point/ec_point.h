@@ -39,7 +39,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       typedef EC_Point_Format Compression_Type;
       using enum EC_Point_Format;
 
-      enum { WORKSPACE_SIZE = 8 };
+      enum : uint8_t { WORKSPACE_SIZE = 8 };
 
       /**
       * Construct an uninitialized EC_Point
@@ -60,7 +60,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       /**
       * Move Constructor
       */
-      EC_Point(EC_Point&& other) { this->swap(other); }
+      EC_Point(EC_Point&& other) noexcept { this->swap(other); }
 
       /**
       * Standard Assignment
@@ -70,12 +70,14 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       /**
       * Move Assignment
       */
-      EC_Point& operator=(EC_Point&& other) {
+      EC_Point& operator=(EC_Point&& other) noexcept {
          if(this != &other) {
             this->swap(other);
          }
          return (*this);
       }
+
+      ~EC_Point() = default;
 
       /**
       * Point multiplication operator
@@ -258,7 +260,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
          m_z.swap(new_z);
       }
 
-      friend void swap(EC_Point& x, EC_Point& y) { x.swap(y); }
+      friend void swap(EC_Point& x, EC_Point& y) noexcept { x.swap(y); }
 
       /**
       * Randomize the point representation

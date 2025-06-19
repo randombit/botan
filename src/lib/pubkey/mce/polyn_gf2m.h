@@ -35,6 +35,8 @@ class polyn_gf2m {
 
       polyn_gf2m(const secure_vector<uint8_t>& encoded, const std::shared_ptr<GF2m_Field>& sp_field);
 
+      ~polyn_gf2m() = default;
+
       polyn_gf2m& operator=(const polyn_gf2m&) = default;
 
       /**

@@ -64,7 +64,7 @@ class BOTAN_PUBLIC_API(3, 4) Ed448_PublicKey : public virtual Public_Key {
 
    protected:
       Ed448_PublicKey() = default;
-      std::array<uint8_t, 57> m_public;
+      std::array<uint8_t, 57> m_public;  // NOLINT(*non-private-member-variable*)
 };
 
 BOTAN_DIAGNOSTIC_PUSH

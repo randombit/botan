@@ -31,6 +31,11 @@ class BOTAN_PUBLIC_API(2, 0) Sqlite3_Database final : public SQL_Database {
 
       ~Sqlite3_Database() override;
 
+      Sqlite3_Database(const Sqlite3_Database& other) = delete;
+      Sqlite3_Database(Sqlite3_Database&& other) = delete;
+      Sqlite3_Database& operator=(const Sqlite3_Database& other) = delete;
+      Sqlite3_Database& operator=(Sqlite3_Database&& other) = delete;
+
       size_t row_count(std::string_view table_name) override;
 
       void create_table(std::string_view table_schema) override;
@@ -59,6 +64,11 @@ class BOTAN_PUBLIC_API(2, 0) Sqlite3_Database final : public SQL_Database {
 
             Sqlite3_Statement(sqlite3* db, std::string_view base_sql);
             ~Sqlite3_Statement() override;
+
+            Sqlite3_Statement(const Sqlite3_Statement& other) = delete;
+            Sqlite3_Statement(Sqlite3_Statement&& other) = delete;
+            Sqlite3_Statement& operator=(const Sqlite3_Statement& other) = delete;
+            Sqlite3_Statement& operator=(Sqlite3_Statement&& other) = delete;
 
          private:
             sqlite3_stmt* m_stmt;

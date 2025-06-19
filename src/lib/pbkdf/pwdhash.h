@@ -22,7 +22,7 @@ namespace Botan {
 * Converts a password into a key using a salt and iterated hashing to
 * make brute force attacks harder.
 */
-class BOTAN_PUBLIC_API(2, 8) PasswordHash {
+class BOTAN_PUBLIC_API(2, 8) PasswordHash /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~PasswordHash() = default;
 
@@ -171,7 +171,7 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash {
                               size_t key_len) const;
 };
 
-class BOTAN_PUBLIC_API(2, 8) PasswordHashFamily {
+class BOTAN_PUBLIC_API(2, 8) PasswordHashFamily /* NOLINT(*-special-member-functions) */ {
    public:
       /**
       * Create an instance based on a name

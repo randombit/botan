@@ -25,7 +25,7 @@
 
 namespace Botan::CRYSTALS {
 
-enum class Domain { Normal, NTT };
+enum class Domain : uint8_t { Normal, NTT };
 
 template <typename T>
 concept crystals_constants =
@@ -75,6 +75,8 @@ class Trait_Base {
       /// @}
 
    protected:
+      Trait_Base() = default;  // NOLINT(*crtp-constructor-accessibility)
+
       /// @returns the number of polynomials in the polynomial vector @p polyvec.
       static constexpr size_t polys_in_polyvec(std::span<const T> polyvec) {
          BOTAN_DEBUG_ASSERT(polyvec.size() % N == 0);
@@ -232,7 +234,7 @@ class Polynomial {
        */
       template <Domain OtherD>
          requires(D != OtherD)
-      explicit Polynomial(Polynomial<Trait, OtherD>&& other) noexcept :
+      explicit Polynomial(Polynomial<Trait, OtherD>&& other) noexcept :  // NOLINT(*-rvalue-reference-param-not-moved)
             m_coeffs_storage(std::move(other.m_coeffs_storage)),
             m_coeffs(owns_storage() ? std::span<T, Trait::N>(m_coeffs_storage) : other.m_coeffs) {}
 
@@ -372,7 +374,8 @@ class PolynomialVector {
        */
       template <Domain OtherD>
          requires(D != OtherD)
-      explicit PolynomialVector(PolynomialVector<Trait, OtherD>&& other) noexcept :
+      /* NOLINTNEXTLINE(*rvalue-reference-param-not-moved) */ explicit PolynomialVector(
+         PolynomialVector<Trait, OtherD>&& other) noexcept :
             m_polys_storage(std::move(other.m_polys_storage)) {
          BOTAN_DEBUG_ASSERT(m_polys_storage.size() % Trait::N == 0);
          const size_t vecsize = m_polys_storage.size() / Trait::N;

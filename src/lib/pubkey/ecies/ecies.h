@@ -41,7 +41,7 @@ class RandomNumberGenerator;
 *
 * TODO(Botan4) remove this enum
 */
-enum class ECIES_Flags : uint32_t {
+enum class ECIES_Flags : uint8_t {
    None = 0,
    /// if set: prefix the input of the (ecdh) key agreement with the encoded (ephemeral) public key
    SingleHashMode = 1,
@@ -110,7 +110,9 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_KA_Params {
                       ECIES_Flags flags);
 
       ECIES_KA_Params(const ECIES_KA_Params&) = default;
+      ECIES_KA_Params(ECIES_KA_Params&&) = default;
       ECIES_KA_Params& operator=(const ECIES_KA_Params&) = delete;
+      ECIES_KA_Params& operator=(ECIES_KA_Params&&) = delete;
 
       virtual ~ECIES_KA_Params() = default;
 
@@ -196,7 +198,9 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_System_Params final : public ECIES_KA_Params 
                           ECIES_Flags flags);
 
       ECIES_System_Params(const ECIES_System_Params&) = default;
+      ECIES_System_Params(ECIES_System_Params&&) = default;
       ECIES_System_Params& operator=(const ECIES_System_Params&) = delete;
+      ECIES_System_Params& operator=(ECIES_System_Params&&) = delete;
       ~ECIES_System_Params() override = default;
 
       /// creates an instance of the message authentication code

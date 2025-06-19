@@ -247,7 +247,7 @@ MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(std::string_view pa
    RSA_SignMechanism mechanism_info = mechanism_info_it->second;
 
    MechanismWrapper mech(mechanism_info.type());
-   if(PssOptions.find(mechanism_info.type()) != PssOptions.end()) {
+   if(PssOptions.contains(mechanism_info.type())) {
       mech.m_parameters = std::make_shared<MechanismParameters>();
       mech.m_parameters->pss_params.hashAlg = static_cast<CK_MECHANISM_TYPE>(mechanism_info.hash());
       mech.m_parameters->pss_params.mgf = static_cast<CK_RSA_PKCS_MGF_TYPE>(mechanism_info.mgf());

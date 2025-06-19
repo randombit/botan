@@ -27,9 +27,6 @@ class Timer final {
 
       Timer(std::string_view name, size_t buf_size) : Timer(name, "", "", buf_size, buf_size, 0.0, 0) {}
 
-      Timer(const Timer& other) = default;
-      Timer& operator=(const Timer& other) = default;
-
       void start();
 
       void stop();
@@ -45,6 +42,11 @@ class Timer final {
                   m_timer.stop();
                } catch(...) {}
             }
+
+            Timer_Scope(const Timer_Scope& other) = delete;
+            Timer_Scope(Timer_Scope&& other) = delete;
+            Timer_Scope& operator=(const Timer_Scope& other) = delete;
+            Timer_Scope& operator=(Timer_Scope&& other) = delete;
 
          private:
             Timer& m_timer;

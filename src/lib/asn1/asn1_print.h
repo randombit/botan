@@ -20,7 +20,7 @@ class BER_Decoder;
 /**
 * Format ASN.1 data and call a virtual to format
 */
-class BOTAN_PUBLIC_API(2, 4) ASN1_Formatter {
+class BOTAN_PUBLIC_API(2, 4) ASN1_Formatter /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~ASN1_Formatter() = default;
 

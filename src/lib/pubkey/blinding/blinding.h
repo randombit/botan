@@ -74,8 +74,10 @@ class Blinder final {
               std::function<BigInt(const BigInt&)> inv_func);
 
       Blinder(const Blinder&) = delete;
-
+      Blinder(Blinder&&) = default;
       Blinder& operator=(const Blinder&) = delete;
+      Blinder& operator=(Blinder&&) = delete;
+      ~Blinder() = default;
 
       RandomNumberGenerator& rng() const { return m_rng; }
 

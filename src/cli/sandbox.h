@@ -16,6 +16,11 @@ class Sandbox {
       explicit Sandbox();
       virtual ~Sandbox();
 
+      Sandbox(const Sandbox& other) = delete;
+      Sandbox(Sandbox&& other) = delete;
+      Sandbox& operator=(const Sandbox& other) = delete;
+      Sandbox& operator=(Sandbox&& other) = delete;
+
       static bool init();
 
       const std::string& name() const { return m_name; }

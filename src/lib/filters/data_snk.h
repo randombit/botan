@@ -21,12 +21,6 @@ namespace Botan {
 class BOTAN_PUBLIC_API(2, 0) DataSink : public Filter {
    public:
       bool attachable() override { return false; }
-
-      DataSink() = default;
-      ~DataSink() override = default;
-
-      DataSink& operator=(const DataSink&) = delete;
-      DataSink(const DataSink&) = delete;
 };
 
 /**
@@ -51,6 +45,11 @@ class BOTAN_PUBLIC_API(2, 0) DataSink_Stream final : public DataSink {
       */
       DataSink_Stream(std::string_view pathname, bool use_binary = false);
 #endif
+
+      DataSink_Stream(const DataSink_Stream& other) = delete;
+      DataSink_Stream(DataSink_Stream&& other) = delete;
+      DataSink_Stream& operator=(const DataSink_Stream& other) = delete;
+      DataSink_Stream& operator=(DataSink_Stream&& other) = delete;
 
       std::string name() const override { return m_identifier; }
 

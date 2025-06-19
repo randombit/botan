@@ -61,13 +61,18 @@ class Secret_Logger;
  */
 class BOTAN_TEST_API Cipher_State {
    public:
-      enum class PSK_Type {
+      enum class PSK_Type : uint8_t {
          Resumption,
          External,  // currently not implemented
       };
 
    public:
       ~Cipher_State();
+
+      Cipher_State(const Cipher_State& other) = delete;
+      Cipher_State(Cipher_State&& other) = delete;
+      Cipher_State& operator=(const Cipher_State& other) = delete;
+      Cipher_State& operator=(Cipher_State&& other) = delete;
 
       /**
        * Construct a Cipher_State from a Pre-Shared-Key.
@@ -295,7 +300,7 @@ class BOTAN_TEST_API Cipher_State {
       std::vector<uint8_t> empty_hash() const;
 
    private:
-      enum class State {
+      enum class State : uint8_t {
          Uninitialized,
          PskBinder,
          EarlyTraffic,

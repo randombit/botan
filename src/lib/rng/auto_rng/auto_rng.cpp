@@ -39,6 +39,8 @@ std::unique_ptr<MessageAuthenticationCode> auto_rng_hmac() {
 
 }  // namespace
 
+AutoSeeded_RNG::AutoSeeded_RNG(AutoSeeded_RNG&& other) noexcept = default;
+
 AutoSeeded_RNG::~AutoSeeded_RNG() = default;
 
 AutoSeeded_RNG::AutoSeeded_RNG(RandomNumberGenerator& underlying_rng, size_t reseed_interval) {

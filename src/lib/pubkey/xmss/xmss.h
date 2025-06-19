@@ -120,11 +120,11 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PublicKey : public virtual Public_Key {
       const XMSS_Parameters& xmss_parameters() const { return m_xmss_params; }
 
    protected:
-      std::vector<uint8_t> m_raw_key;
-      XMSS_Parameters m_xmss_params;
-      XMSS_WOTS_Parameters m_wots_params;
-      secure_vector<uint8_t> m_root;
-      secure_vector<uint8_t> m_public_seed;
+      std::vector<uint8_t> m_raw_key;        // NOLINT(*non-private-member-variable*)
+      XMSS_Parameters m_xmss_params;         // NOLINT(*non-private-member-variable*)
+      XMSS_WOTS_Parameters m_wots_params;    // NOLINT(*non-private-member-variable*)
+      secure_vector<uint8_t> m_root;         // NOLINT(*non-private-member-variable*)
+      secure_vector<uint8_t> m_public_seed;  // NOLINT(*non-private-member-variable*)
 };
 
 template <typename>
@@ -135,7 +135,7 @@ class XMSS_Index_Registry;
 /**
  * Determines how WOTS+ private keys are derived from the XMSS private key
  */
-enum class WOTS_Derivation_Method {
+enum class WOTS_Derivation_Method : uint8_t {
    /// This roughly followed the suggestions in RFC 8391 but is vulnerable
    /// to a multi-target attack. For new private keys, we recommend using
    /// the derivation as suggested in NIST SP.800-208.

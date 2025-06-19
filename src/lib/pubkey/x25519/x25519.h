@@ -50,7 +50,7 @@ class BOTAN_PUBLIC_API(2, 0) X25519_PublicKey : public virtual Public_Key {
 
    protected:
       X25519_PublicKey() = default;
-      std::vector<uint8_t> m_public;
+      std::vector<uint8_t> m_public;  // NOLINT(*non-private-member-variable*)
 };
 
 BOTAN_DIAGNOSTIC_PUSH

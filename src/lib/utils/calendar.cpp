@@ -19,17 +19,21 @@ namespace Botan {
 
 namespace {
 
+// TODO replace this with https://howardhinnant.github.io/date_algorithms.html#civil_from_days
 std::tm do_gmtime(std::time_t time_val) {
    std::tm tm;
 
 #if defined(BOTAN_TARGET_OS_HAS_WIN32)
    ::gmtime_s(&tm, &time_val);  // Windows
 #elif defined(BOTAN_TARGET_OS_HAS_POSIX1)
-   ::gmtime_r(&time_val, &tm);  // Unix/SUSv2
+   if(!::gmtime_r(&time_val, &tm)) {
+      throw Encoding_Error("do_gmtime could not convert");
+   }
 #else
    std::tm* tm_p = std::gmtime(&time_val);
-   if(tm_p == nullptr)
-      throw Encoding_Error("time_t_to_tm could not convert");
+   if(tm_p == nullptr) {
+      throw Encoding_Error("do_gmtime could not convert");
+   }
    tm = *tm_p;
 #endif
 

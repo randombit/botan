@@ -129,7 +129,10 @@ class BOTAN_TEST_API CPUID final {
             CPUID_Data();
 
             CPUID_Data(const CPUID_Data& other) = default;
+            CPUID_Data(CPUID_Data&& other) = default;
             CPUID_Data& operator=(const CPUID_Data& other) = default;
+            CPUID_Data& operator=(CPUID_Data&& other) = default;
+            ~CPUID_Data() = default;
 
             void clear_cpuid_bit(uint32_t bit) { m_processor_features &= ~bit; }
 

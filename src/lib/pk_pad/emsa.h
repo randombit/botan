@@ -23,7 +23,7 @@ class RandomNumberGenerator;
 *
 * Any way of encoding/padding signatures
 */
-class BOTAN_TEST_API EMSA {
+class BOTAN_TEST_API EMSA /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~EMSA() = default;
 

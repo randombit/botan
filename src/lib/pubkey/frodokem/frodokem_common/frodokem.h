@@ -73,7 +73,7 @@ class BOTAN_PUBLIC_API(3, 3) FrodoKEM_PublicKey : public virtual Public_Key {
       FrodoKEM_PublicKey() = default;
 
    protected:
-      std::shared_ptr<FrodoKEM_PublicKeyInternal> m_public;  // NOLINT(misc-non-private-member-variables-in-classes)
+      std::shared_ptr<FrodoKEM_PublicKeyInternal> m_public;  // NOLINT(*-non-private-member-variable*)
 };
 
 BOTAN_DIAGNOSTIC_PUSH

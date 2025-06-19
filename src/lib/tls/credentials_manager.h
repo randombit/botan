@@ -31,7 +31,7 @@ class BigInt;
 * and "tls-server". Context represents a hostname, email address,
 * username, or other identifier.
 */
-class BOTAN_PUBLIC_API(2, 0) Credentials_Manager {
+class BOTAN_PUBLIC_API(2, 0) Credentials_Manager /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~Credentials_Manager() = default;
 

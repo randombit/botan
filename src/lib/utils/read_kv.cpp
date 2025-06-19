@@ -37,7 +37,7 @@ std::map<std::string, std::string> read_kv(std::string_view kv) {
             throw Invalid_Argument("Bad KV spec empty key");
          }
 
-         if(m.find(cur_key) != m.end()) {
+         if(m.contains(cur_key)) {
             throw Invalid_Argument("Bad KV spec duplicated key");
          }
          m[cur_key] = cur_val;
@@ -64,7 +64,7 @@ std::map<std::string, std::string> read_kv(std::string_view kv) {
 
    if(!cur_key.empty()) {
       if(reading_key == false) {
-         if(m.find(cur_key) != m.end()) {
+         if(m.contains(cur_key)) {
             throw Invalid_Argument("Bad KV spec duplicated key");
          }
          m[cur_key] = cur_val;

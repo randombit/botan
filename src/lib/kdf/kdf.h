@@ -22,7 +22,7 @@ namespace Botan {
 /**
 * Key Derivation Function
 */
-class BOTAN_PUBLIC_API(2, 0) KDF {
+class BOTAN_PUBLIC_API(2, 0) KDF /* NOLINT(*-special-member-functions*) */ {
    public:
       virtual ~KDF() = default;
 

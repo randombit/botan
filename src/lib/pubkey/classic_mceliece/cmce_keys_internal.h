@@ -187,8 +187,8 @@ class BOTAN_TEST_API Classic_McEliece_PrivateKeyInternal {
  * @brief Representation of a Classic McEliece key pair.
  */
 struct BOTAN_TEST_API Classic_McEliece_KeyPair_Internal {
-      std::shared_ptr<Classic_McEliece_PrivateKeyInternal> private_key;
-      std::shared_ptr<Classic_McEliece_PublicKeyInternal> public_key;
+      std::shared_ptr<Classic_McEliece_PrivateKeyInternal> private_key;  // NOLINT(*non-private-member-variable*)
+      std::shared_ptr<Classic_McEliece_PublicKeyInternal> public_key;    // NOLINT(*non-private-member-variable*)
 
       /**
        * @brief Generate a Classic McEliece key pair using the algorithm described

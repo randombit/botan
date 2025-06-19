@@ -15,6 +15,8 @@ BOTAN_FUTURE_INTERNAL_HEADER(assert.h)
 
 namespace Botan {
 
+// NOLINTBEGIN(*-macro-usage)
+
 /**
 * Called when an assertion fails
 * Throws an Exception object
@@ -109,13 +111,8 @@ namespace Botan {
 * Takes any number of arguments and marks all as unused, for instance
 * BOTAN_UNUSED(a); or BOTAN_UNUSED(x, y, z);
 */
-template <typename T>
-constexpr void ignore_param(T&&) {}
-
 template <typename... T>
-constexpr void ignore_params(T&&... args) {
-   (ignore_param(args), ...);
-}
+constexpr void ignore_params([[maybe_unused]] const T&... args) {}
 
 #define BOTAN_UNUSED Botan::ignore_params
 
@@ -137,6 +134,8 @@ constexpr void ignore_params(T&&... args) {
 [[noreturn]] void BOTAN_UNSTABLE_API assert_unreachable(const char* file, int line);
 
 #define BOTAN_ASSERT_UNREACHABLE() Botan::assert_unreachable(__FILE__, __LINE__)
+
+// NOLINTEND(*-macro-usage)
 
 }  // namespace Botan
 

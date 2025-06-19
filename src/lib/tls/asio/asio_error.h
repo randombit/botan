@@ -26,14 +26,29 @@
  */
 
 namespace Botan {
+
+/**
+* Generic base class wrapping boost::system::error_category and
+* adding a (bizarrely missing) virtual destructor.
+*/
+class BoostErrorCategory : public boost::system::error_category {
+   public:
+      virtual ~BoostErrorCategory() = default;
+
+      BoostErrorCategory() = default;
+      BoostErrorCategory(const BoostErrorCategory& other) = delete;
+      BoostErrorCategory(BoostErrorCategory&& other) = delete;
+      BoostErrorCategory& operator=(const BoostErrorCategory& other) = delete;
+      BoostErrorCategory& operator=(BoostErrorCategory&& other) = delete;
+};
+
 namespace TLS {
 
-enum StreamError { StreamTruncated = 1 };
+enum StreamError : uint8_t { StreamTruncated = 1 };
 
 //! @brief An error category for errors from the TLS::Stream
-struct StreamCategory : public boost::system::error_category {
-      virtual ~StreamCategory() = default;
-
+class StreamCategory final : public BoostErrorCategory {
+   public:
       const char* name() const noexcept override { return "Botan TLS Stream"; }
 
       std::string message(int value) const override {
@@ -55,9 +70,8 @@ inline boost::system::error_code make_error_code(Botan::TLS::StreamError e) {
 }
 
 //! @brief An error category for TLS alerts
-struct BotanAlertCategory : boost::system::error_category {
-      virtual ~BotanAlertCategory() = default;
-
+class BotanAlertCategory final : public BoostErrorCategory {
+   public:
       const char* name() const noexcept override { return "Botan TLS Alert"; }
 
       std::string message(int ev) const override {
@@ -78,9 +92,8 @@ inline boost::system::error_code make_error_code(Botan::TLS::Alert::Type c) {
 }  // namespace TLS
 
 //! @brief An error category for errors from Botan (other than TLS alerts)
-struct BotanErrorCategory : boost::system::error_category {
-      virtual ~BotanErrorCategory() = default;
-
+class BotanErrorCategory : public BoostErrorCategory {
+   public:
       const char* name() const noexcept override { return "Botan"; }
 
       std::string message(int ev) const override { return Botan::to_string(static_cast<Botan::ErrorType>(ev)); }

@@ -30,7 +30,7 @@ namespace Botan {
  **/
 class BOTAN_PUBLIC_API(2, 0) XMSS_WOTS_Parameters final {
    public:
-      enum ots_algorithm_t {
+      enum ots_algorithm_t : uint32_t /* NOLINT(*-enum-size) */ {
          // from RFC 8391
          WOTSP_SHA2_256 = 0x00000001,
 
@@ -128,7 +128,7 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_WOTS_Parameters final {
  **/
 class BOTAN_PUBLIC_API(2, 0) XMSS_Parameters {
    public:
-      enum xmss_algorithm_t {
+      enum xmss_algorithm_t : uint32_t /* NOLINT(*-enum-size) */ {
          // from RFC 8391
          XMSS_SHA2_10_256 = 0x00000001,
          XMSS_SHA2_16_256 = 0x00000002,

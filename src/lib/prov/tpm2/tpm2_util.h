@@ -258,7 +258,7 @@ template <std::unsigned_integral UnderlyingT,
 class AttributeWrapper {
    private:
       template <std::invocable<const PropMap<bool AttributeWrapperT::*, UnderlyingT>&> FnT>
-      static constexpr void for_all(FnT&& fn) {
+      static constexpr void for_all(const FnT& fn) {
          (fn(props), ...);
       }
 

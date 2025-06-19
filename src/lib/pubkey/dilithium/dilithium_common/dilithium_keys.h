@@ -20,7 +20,7 @@
 
 namespace Botan {
 
-class Dilithium_Keypair_Codec {
+class Dilithium_Keypair_Codec /* NOLINT(*-special-member-functions) */ {
    public:
       static std::unique_ptr<Dilithium_Keypair_Codec> create(DilithiumMode mode);
 

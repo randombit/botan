@@ -29,9 +29,9 @@ class RandomNumberGenerator;
 * This is mostly used for requesting DER encoding of ECDSA signatures;
 * most other algorithms only support "standard".
 */
-enum class Signature_Format {
-   Standard,
-   DerSequence,
+enum class Signature_Format : uint8_t {
+   Standard = 0,
+   DerSequence = 1,
 
    IEEE_1363 BOTAN_DEPRECATED("Use Standard") = Standard,
    DER_SEQUENCE BOTAN_DEPRECATED("Use DerSequence") = DerSequence,
@@ -43,7 +43,7 @@ enum class Signature_Format {
 * It is possible to query if a key supports a particular operation
 * type using Asymmetric_Key::supports_operation()
 */
-enum class PublicKeyOperation {
+enum class PublicKeyOperation : uint8_t {
    Encryption,
    Signature,
    KeyEncapsulation,
@@ -57,7 +57,7 @@ class Private_Key;
 *
 * This is derived for both public and private keys
 */
-class BOTAN_PUBLIC_API(3, 0) Asymmetric_Key {
+class BOTAN_PUBLIC_API(3, 0) Asymmetric_Key /* NOLINT(*special-member-functions) */ {
    public:
       virtual ~Asymmetric_Key() = default;
 
@@ -225,7 +225,8 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       /*
       * Return the format normally used by this algorithm for X.509 signatures
       */
-      BOTAN_DEPRECATED("Deprecated no replacement") Signature_Format default_x509_signature_format() const {
+      BOTAN_DEPRECATED("Deprecated no replacement")
+      Signature_Format default_x509_signature_format() const /* NOLINT(bugprone-virtual-near-miss) */ {
          return _default_x509_signature_format();
       }
 

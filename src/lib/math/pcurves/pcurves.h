@@ -29,7 +29,7 @@ namespace Botan::PCurve {
 /**
 * An elliptic curve without cofactor in Weierstrass form
 */
-class PrimeOrderCurve {
+class PrimeOrderCurve /* NOLINT(*-special-member-functions) */ {
    public:
       /// Somewhat arbitrary maximum size for a field or scalar
       ///
@@ -97,7 +97,7 @@ class PrimeOrderCurve {
             AffinePoint& operator=(AffinePoint&& other) = default;
             ~AffinePoint() = default;
 
-            static AffinePoint generator(CurvePtr curve) { return curve->generator(); }
+            static AffinePoint generator(const CurvePtr& curve) { return curve->generator(); }
 
             const auto& _curve() const { return m_curve; }
 
@@ -153,7 +153,7 @@ class PrimeOrderCurve {
             StorageUnit m_z;
       };
 
-      class PrecomputedMul2Table {
+      class PrecomputedMul2Table /* NOLINT(*-special-member-functions) */ {
          public:
             virtual ~PrecomputedMul2Table() = default;
       };

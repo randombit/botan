@@ -94,6 +94,8 @@ FPE_FE1::FPE_FE1(const BigInt& n, size_t rounds, bool compat_mode, std::string_v
    }
 }
 
+FPE_FE1::FPE_FE1(FPE_FE1&& other) noexcept = default;
+
 FPE_FE1::~FPE_FE1() = default;
 
 void FPE_FE1::clear() {

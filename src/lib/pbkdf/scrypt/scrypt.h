@@ -22,9 +22,6 @@ class BOTAN_PUBLIC_API(2, 8) Scrypt final : public PasswordHash {
    public:
       Scrypt(size_t N, size_t r, size_t p);
 
-      Scrypt(const Scrypt& other) = default;
-      Scrypt& operator=(const Scrypt&) = default;
-
       /**
       * Derive a new key under the current Scrypt parameter set
       */

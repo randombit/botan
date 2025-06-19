@@ -16,6 +16,7 @@
 
 // ML-DSA does encode the private key only by its random seeds.
 #if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
+   // NOLINTNEXTLINE(*-macro-usage)
    #define BOTAN_NEEDS_DILITHIUM_PRIVATE_KEY_ENCODING 1
 #endif
 

@@ -40,8 +40,10 @@ class GMAC final : public MessageAuthenticationCode {
       */
       explicit GMAC(std::unique_ptr<BlockCipher> cipher);
 
-      GMAC(const GMAC&) = delete;
-      GMAC& operator=(const GMAC&) = delete;
+      GMAC(const GMAC& other) = delete;
+      GMAC(GMAC&& other) = default;
+      GMAC& operator=(const GMAC& other) = delete;
+      GMAC& operator=(GMAC&& other) = default;
 
       ~GMAC() override;
 

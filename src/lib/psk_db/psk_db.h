@@ -23,7 +23,7 @@ class MessageAuthenticationCode;
 * It might be implemented as a plaintext storage or via some mechanism
 * that encrypts the keys and/or values.
 */
-class BOTAN_PUBLIC_API(2, 4) PSK_Database {
+class BOTAN_PUBLIC_API(2, 4) PSK_Database /* NOLINT(*-special-member-functions) */ {
    public:
       /**
       * @returns the set of names for which get() will return a value.
@@ -89,7 +89,7 @@ class BOTAN_PUBLIC_API(2, 4) PSK_Database {
 * Subclasses must implement the virtual calls to handle storing and getting raw
 * (base64 encoded) values.
 */
-class BOTAN_PUBLIC_API(2, 4) Encrypted_PSK_Database : public PSK_Database {
+class BOTAN_PUBLIC_API(2, 4) Encrypted_PSK_Database : public PSK_Database /* NOLINT(*-special-member-functions) */ {
    public:
       /**
       * Initializes or opens a PSK database. The @p master_key is used to secure
@@ -170,6 +170,11 @@ class BOTAN_PUBLIC_API(2, 4) Encrypted_PSK_Database_SQL : public Encrypted_PSK_D
                                  std::string_view table_name);
 
       ~Encrypted_PSK_Database_SQL() override;
+
+      Encrypted_PSK_Database_SQL(const Encrypted_PSK_Database_SQL& other) = delete;
+      Encrypted_PSK_Database_SQL(Encrypted_PSK_Database_SQL&& other) = delete;
+      Encrypted_PSK_Database_SQL& operator=(const Encrypted_PSK_Database_SQL& other) = delete;
+      Encrypted_PSK_Database_SQL& operator=(Encrypted_PSK_Database_SQL&& other) = delete;
 
    private:
       void kv_set(std::string_view index, std::string_view value) override;
