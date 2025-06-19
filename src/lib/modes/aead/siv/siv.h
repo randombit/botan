@@ -24,6 +24,8 @@ class MessageAuthenticationCode;
 */
 class BOTAN_TEST_API SIV_Mode : public AEAD_Mode /* NOLINT(*-special-member-functions) */ {
    public:
+      constexpr static size_t tag_length = 16;
+
       /**
       * Sets the nth element of the vector of associated data
       * @param n index into the AD vector
@@ -62,11 +64,13 @@ class BOTAN_TEST_API SIV_Mode : public AEAD_Mode /* NOLINT(*-special-member-func
 
       StreamCipher& ctr() { return *m_ctr; }
 
-      void set_ctr_iv(secure_vector<uint8_t> V);
+      void set_ctr_iv(std::array<uint8_t, tag_length> V);
 
       secure_vector<uint8_t>& msg_buf() { return m_msg_buf; }
 
-      secure_vector<uint8_t> S2V(const uint8_t text[], size_t text_len);
+      const secure_vector<uint8_t>& msg_buf() const { return m_msg_buf; }
+
+      std::array<uint8_t, tag_length> S2V(std::span<const uint8_t> text);
 
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) final;
@@ -95,10 +99,14 @@ class BOTAN_TEST_API SIV_Encryption final : public SIV_Mode {
 
       size_t output_length(size_t input_length) const override { return input_length + tag_size(); }
 
+      size_t bytes_needed_for_finalization(size_t final_input_length) const override {
+         return output_length(msg_buf().size() + final_input_length);
+      }
+
       size_t minimum_final_size() const override { return 0; }
 
    private:
-      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+      size_t finish_msg(std::span<uint8_t> final_block, size_t input_bytes) override;
 };
 
 /**
@@ -116,10 +124,14 @@ class BOTAN_TEST_API SIV_Decryption final : public SIV_Mode {
          return input_length - tag_size();
       }
 
+      size_t bytes_needed_for_finalization(size_t final_input_length) const override {
+         return msg_buf().size() + final_input_length;
+      }
+
       size_t minimum_final_size() const override { return tag_size(); }
 
    private:
-      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+      size_t finish_msg(std::span<uint8_t> final_block, size_t input_bytes) override;
 };
 
 }  // namespace Botan
