@@ -6,6 +6,9 @@ Environment Variables
 Certain environment variables can affect or tune the behavior of the
 library. The variables and their behavior are described here.
 
+These values can be set in the environment before the program starts, or using
+``setenv`` somewhere at the start of ``main``, before Botan has been invoked.
+
 * ``BOTAN_THREAD_POOL_SIZE`` controls the number of threads which will be
   created for a thread pool used for some purposes within the library. If not
   set, or set to 0, then it defaults to the number of CPUs available on the
