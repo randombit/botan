@@ -119,9 +119,11 @@ def gha_linux_packages(target, compiler):
         packages.append('gdb')
 
     if target in ['coverage', 'sanitizer', 'clang-tidy']:
-        packages.append('softhsm2')
         packages.append('libtspi-dev')     # TPM 1 development library [TODO(Botan4) remove this]
         packages.append('libtss2-dev')     # TPM 2 development library
+
+    if target in ['coverage', 'sanitizer']:
+        packages.append('softhsm2')
 
         # Following are only available on Ubuntu 24.04
         # If we wanted to test building of TPM2 on 22.04 we'd need to restrict these
