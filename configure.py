@@ -3090,15 +3090,23 @@ def set_defaults_for_unset_options(options, info_arch, info_cc, info_os):
             return os_name_variant # not found
         options.os = find_canonical_os_name(options.os)
 
-    def deduce_compiler_type_from_cc_bin(cc_bin):
+    def deduce_compiler_type_from_cc_bin(options):
+        cc_bin = options.compiler_binary
         if cc_bin.find('clang') != -1 or cc_bin in ['emcc', 'em++']:
             return 'clang'
-        if cc_bin.find('-g++') != -1 or cc_bin.find('g++') != -1:
+        if cc_bin.find('g++') != -1:
             return 'gcc'
+
+        vers = run_compiler(options, None, '', ['--version'])
+        if vers.find('clang') != -1:
+            return 'clang'
+        if vers.find('Free Software Foundation') != -1:
+            return 'gcc'
+
         return None
 
     if options.compiler is None and options.compiler_binary is not None:
-        options.compiler = deduce_compiler_type_from_cc_bin(options.compiler_binary)
+        options.compiler = deduce_compiler_type_from_cc_bin(options)
 
         if options.compiler is None:
             logging.error("Could not figure out what compiler type '%s' is, use --cc to set",
