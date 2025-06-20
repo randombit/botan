@@ -146,10 +146,6 @@ inline constexpr ProjectivePoint point_add(const ProjectivePoint& a, const Proje
    const auto a_is_identity = a.is_identity();
    const auto b_is_identity = b.is_identity();
 
-   if((a_is_identity && b_is_identity).as_bool()) {
-      return a;
-   }
-
    const auto Z1Z1 = a.z().square();
    const auto Z2Z2 = b.z().square();
    const auto U1 = a.x() * Z2Z2;
@@ -162,7 +158,7 @@ inline constexpr ProjectivePoint point_add(const ProjectivePoint& a, const Proje
    // If a == -b then H == 0 && r != 0, in which case
    // at the end we'll set z = a.z * b.z * H = 0, resulting
    // in the correct output (point at infinity)
-   if((r.is_zero() && H.is_zero()).as_bool()) {
+   if((r.is_zero() && H.is_zero() && !(a_is_identity && b_is_identity)).as_bool()) {
       return a.dbl();
    }
 
@@ -195,9 +191,6 @@ inline constexpr ProjectivePoint point_add_mixed(const ProjectivePoint& a,
                                                  const FieldElement& one) {
    const auto a_is_identity = a.is_identity();
    const auto b_is_identity = b.is_identity();
-   if((a_is_identity && b_is_identity).as_bool()) {
-      return a;
-   }
 
    /*
    https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
@@ -214,7 +207,7 @@ inline constexpr ProjectivePoint point_add_mixed(const ProjectivePoint& a,
    // If r == H == 0 then we are in the doubling case
    // For a == -b we compute the correct result because
    // H will be zero, leading to Z3 being zero also
-   if((r.is_zero() && H.is_zero()).as_bool()) {
+   if((r.is_zero() && H.is_zero() && !(a_is_identity && b_is_identity)).as_bool()) {
       return a.dbl();
    }
 
@@ -247,9 +240,6 @@ inline constexpr ProjectivePoint point_add_or_sub_mixed(const ProjectivePoint& a
                                                         const FieldElement& one) {
    const auto a_is_identity = a.is_identity();
    const auto b_is_identity = b.is_identity();
-   if((a_is_identity && b_is_identity).as_bool()) {
-      return a;
-   }
 
    /*
    https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
@@ -269,7 +259,7 @@ inline constexpr ProjectivePoint point_add_or_sub_mixed(const ProjectivePoint& a
    // If r == H == 0 then we are in the doubling case
    // For a == -b we compute the correct result because
    // H will be zero, leading to Z3 being zero also
-   if((r.is_zero() && H.is_zero()).as_bool()) {
+   if((r.is_zero() && H.is_zero() && !(a_is_identity && b_is_identity)).as_bool()) {
       return a.dbl();
    }
 
