@@ -27,12 +27,14 @@ inline consteval std::array<W, N> reduce_mod(const std::array<W, XN>& x, const s
       const bool x_b = (x[b_word] >> b_bit) & 1;
 
       shift_left<1>(r);
+      // Conditional ok: this function is consteval
       if(x_b) {
          r[0] += 1;
       }
 
       const W carry = bigint_sub3(t.data(), r.data(), N + 1, p.data(), N);
 
+      // Conditional ok: this function is consteval
       if(carry == 0) {
          std::swap(r, t);
       }
@@ -111,6 +113,7 @@ inline constexpr auto monty_redc(const std::array<W, 2 * N>& z, const std::array
    std::array<W, N> ws;
    std::array<W, N> r;
 
+   // Conditional ok: the parameter size is public
    if(!std::is_constant_evaluated()) {
       // This range ensures we cover fields of 256, 384 and 512 bits for both 32 and 64 bit words
       if constexpr(N == 4) {
@@ -219,6 +222,7 @@ inline consteval std::pair<size_t, std::array<W, N>> shanks_tonelli_c1c2(const s
 
    for(;;) {
       // If we found another one bit past the first, stop
+      // Conditional ok: this function is consteval
       if(c2[0] % 2 == 1) {
          break;
       }
@@ -252,6 +256,7 @@ consteval auto shanks_tonelli_c4(const std::array<W, N>& p_minus_1_over_2) -> Z 
 
       auto is_square = c.is_zero() || c.is_one();
 
+      // Conditional ok: this function is consteval
       if(!is_square.as_bool()) {
          return z;
       }
@@ -270,6 +275,7 @@ inline consteval size_t count_bits(const std::array<W, N>& p) {
 
    size_t b = WordInfo<W>::bits * N;
 
+   // Conditional ok: this function is consteval
    while(get_bit(b - 1) == 0) {
       b -= 1;
    }

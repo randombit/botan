@@ -716,6 +716,17 @@ class GenericField final {
 
       void _const_time_unpoison() const { CT::unpoison(m_val); }
 
+      static void conditional_swap(CT::Choice cond, GenericField& x, GenericField& y) {
+         const W mask = CT::Mask<W>::from_choice(cond).value();
+
+         for(size_t i = 0; i != N; ++i) {
+            auto nx = choose(mask, y.m_val[i], x.m_val[i]);
+            auto ny = choose(mask, x.m_val[i], y.m_val[i]);
+            x.m_val[i] = nx;
+            y.m_val[i] = ny;
+         }
+      }
+
       void conditional_assign(CT::Choice cond, const GenericField& nx) {
          const W mask = CT::Mask<W>::from_choice(cond).value();
 
@@ -948,11 +959,13 @@ class GenericProjectivePoint final {
       * Convert a point from affine to projective form
       */
       static Self from_affine(const GenericAffinePoint& pt) {
-         if(pt.is_identity().as_bool()) {
-            return Self::identity(pt.curve());
-         } else {
-            return GenericProjectivePoint(pt.x(), pt.y());
-         }
+         auto x = pt.x();
+         auto y = pt.y();
+         auto z = GenericField::one(x.curve());
+
+         // If pt is identity (0,0) swap y/z to convert (0,0,1) into (0,1,0)
+         GenericField::conditional_swap(pt.is_identity(), y, z);
+         return GenericProjectivePoint(x, y, z);
       }
 
       /**
