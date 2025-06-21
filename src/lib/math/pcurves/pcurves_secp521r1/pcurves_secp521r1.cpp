@@ -136,6 +136,12 @@ class Curve final : public EllipticCurve<Params, P521Rep> {
          return r;
       }
 
+      static constexpr FieldElement fe_sqrt(const FieldElement& x) {
+         auto z = x;
+         z.square_n(519);
+         return z;
+      }
+
       static constexpr Scalar scalar_invert(const Scalar& x) {
          // Generated using https://github.com/mmcloughlin/addchain
 

@@ -17,7 +17,7 @@ namespace Botan {
 /**
 * Field inversion concept
 *
-* This concept checks if the FieldElement supports fe_invert2
+* This concept checks if the curve class supports fe_invert2
 */
 template <typename C>
 concept curve_supports_fe_invert2 = requires(const typename C::FieldElement& fe) {
@@ -36,6 +36,36 @@ inline constexpr auto invert_field_element(const typename C::FieldElement& fe) {
       return C::fe_invert2(fe) * fe;
    } else {
       return fe.invert();
+   }
+}
+
+/**
+* Field square root
+*
+* This concept checks if the curve class supports fe_sqrt
+*/
+template <typename C>
+concept curve_supports_fe_sqrt = requires(const typename C::FieldElement& fe) {
+   { C::fe_sqrt(fe) } -> std::same_as<typename C::FieldElement>;
+};
+
+/**
+* Field square root
+*
+* Uses the specialized fe_sqrt if available, or otherwise the standard
+* square root
+*/
+template <typename C>
+inline constexpr std::pair<typename C::FieldElement, CT::Choice> sqrt_field_element(
+   const typename C::FieldElement& fe) {
+   if constexpr(curve_supports_fe_sqrt<C>) {
+      auto z = C::fe_sqrt(fe);
+      // Zero out the return value if it would otherwise be incorrect
+      const CT::Choice correct = (z.square() == fe);
+      z.conditional_assign(!correct, C::FieldElement::zero());
+      return {z, correct};
+   } else {
+      return fe.sqrt();
    }
 }
 

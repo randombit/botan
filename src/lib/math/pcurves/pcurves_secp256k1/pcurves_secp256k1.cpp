@@ -96,6 +96,45 @@ class Curve final : public Secp256k1Base {
          return z;
       }
 
+      static constexpr FieldElement fe_sqrt(const FieldElement& x) {
+         auto z = x.square();
+         z *= x;
+         auto t0 = z;
+         t0.square_n(2);
+         t0 *= z;
+         auto t1 = t0.square();
+         auto t2 = t1 * x;
+         t1 = t2;
+         t1.square_n(2);
+         t1 *= z;
+         auto t3 = t1;
+         t3.square_n(4);
+         t0 *= t3;
+         t3 = t0;
+         t3.square_n(11);
+         t0 *= t3;
+         t3 = t0;
+         t3.square_n(5);
+         t2 *= t3;
+         t3 = t2;
+         t3.square_n(27);
+         t2 *= t3;
+         t3 = t2;
+         t3.square_n(54);
+         t2 *= t3;
+         t3 = t2;
+         t3.square_n(108);
+         t2 *= t3;
+         t2.square_n(7);
+         t1 *= t2;
+         t1.square_n(23);
+         t0 *= t1;
+         t0.square_n(6);
+         z *= t0;
+         z.square_n(2);
+         return z;
+      }
+
       static constexpr Scalar scalar_invert(const Scalar& x) {
          auto z = x.square();
          auto t2 = x * z;
