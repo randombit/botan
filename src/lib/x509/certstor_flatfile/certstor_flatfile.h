@@ -10,6 +10,7 @@
 #define BOTAN_CERT_STORE_FLATFILE_H_
 
 #include <botan/certstor.h>
+#include <botan/pkix_types.h>
 
 #include <map>
 #include <memory>
