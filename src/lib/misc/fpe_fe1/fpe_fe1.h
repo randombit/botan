@@ -32,10 +32,10 @@ class BOTAN_PUBLIC_API(2, 5) FPE_FE1 final : public SymmetricAlgorithm {
       *        values for a and b. Set compat_mode to true to select this version.
       * @param mac_algo the PRF to use as the encryption function
       */
-      FPE_FE1(const BigInt& n,
-              size_t rounds = 5,
-              bool compat_mode = false,
-              std::string_view mac_algo = "HMAC(SHA-256)");
+      explicit FPE_FE1(const BigInt& n,
+                       size_t rounds = 5,
+                       bool compat_mode = false,
+                       std::string_view mac_algo = "HMAC(SHA-256)");
 
       ~FPE_FE1() override;
 

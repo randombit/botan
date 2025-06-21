@@ -78,13 +78,13 @@ SecureQueue::SecureQueue() {
 /*
 * Copy a SecureQueue
 */
-SecureQueue::SecureQueue(const SecureQueue& input) : Fanout_Filter(), DataSource() {
+SecureQueue::SecureQueue(const SecureQueue& input) : Fanout_Filter() {
    m_bytes_read = 0;
    set_next(nullptr, 0);
 
    m_head = m_tail = new SecureQueueNode;
    SecureQueueNode* temp = input.m_head;
-   while(temp) {
+   while(temp != nullptr) {
       write(&temp->m_buffer[temp->m_start], temp->m_end - temp->m_start);
       temp = temp->m_next;
    }
@@ -95,7 +95,7 @@ SecureQueue::SecureQueue(const SecureQueue& input) : Fanout_Filter(), DataSource
 */
 void SecureQueue::destroy() {
    SecureQueueNode* temp = m_head;
-   while(temp) {
+   while(temp != nullptr) {
       SecureQueueNode* holder = temp->m_next;
       delete temp;
       temp = holder;
@@ -115,7 +115,7 @@ SecureQueue& SecureQueue::operator=(const SecureQueue& input) {
    m_bytes_read = input.get_bytes_read();
    m_head = m_tail = new SecureQueueNode;
    SecureQueueNode* temp = input.m_head;
-   while(temp) {
+   while(temp != nullptr) {
       write(&temp->m_buffer[temp->m_start], temp->m_end - temp->m_start);
       temp = temp->m_next;
    }
@@ -126,14 +126,14 @@ SecureQueue& SecureQueue::operator=(const SecureQueue& input) {
 * Add some bytes to the queue
 */
 void SecureQueue::write(const uint8_t input[], size_t length) {
-   if(!m_head) {
+   if(m_head == nullptr) {
       m_head = m_tail = new SecureQueueNode;
    }
-   while(length) {
+   while(length > 0) {
       const size_t n = m_tail->write(input, length);
       input += n;
       length -= n;
-      if(length) {
+      if(length > 0) {
          m_tail->m_next = new SecureQueueNode;
          m_tail = m_tail->m_next;
       }
@@ -145,7 +145,7 @@ void SecureQueue::write(const uint8_t input[], size_t length) {
 */
 size_t SecureQueue::read(uint8_t output[], size_t length) {
    size_t got = 0;
-   while(length && m_head) {
+   while(length > 0 && m_head != nullptr) {
       const size_t n = m_head->read(output, length);
       output += n;
       got += n;
@@ -166,7 +166,7 @@ size_t SecureQueue::read(uint8_t output[], size_t length) {
 size_t SecureQueue::peek(uint8_t output[], size_t length, size_t offset) const {
    SecureQueueNode* current = m_head;
 
-   while(offset && current) {
+   while(offset > 0 && current != nullptr) {
       if(offset >= current->size()) {
          offset -= current->size();
          current = current->m_next;
@@ -176,7 +176,7 @@ size_t SecureQueue::peek(uint8_t output[], size_t length, size_t offset) const {
    }
 
    size_t got = 0;
-   while(length && current) {
+   while(length > 0 && current != nullptr) {
       const size_t n = current->peek(output, length, offset);
       offset = 0;
       output += n;
@@ -201,7 +201,7 @@ size_t SecureQueue::size() const {
    SecureQueueNode* current = m_head;
    size_t count = 0;
 
-   while(current) {
+   while(current != nullptr) {
       count += current->size();
       current = current->m_next;
    }

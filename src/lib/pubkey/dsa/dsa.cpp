@@ -129,7 +129,7 @@ class DSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
                               std::string_view emsa,
                               RandomNumberGenerator& rng) :
             PK_Ops::Signature_with_Hash(emsa), m_key(key) {
-         m_b = BigInt::random_integer(rng, 2, m_key->group().get_q());
+         m_b = BigInt::random_integer(rng, BigInt::from_s32(2), m_key->group().get_q());
          m_b_inv = m_key->group().inverse_mod_q(m_b);
       }
 

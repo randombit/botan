@@ -34,7 +34,9 @@ class BOTAN_PUBLIC_API(3, 3) FrodoKEMMode {
          eFrodoKEM1344_AES
       };
 
+      // NOLINTNEXTLINE(*-explicit-conversions)
       FrodoKEMMode(Mode mode);
+
       explicit FrodoKEMMode(const OID& oid);
       explicit FrodoKEMMode(std::string_view str);
 

@@ -21,7 +21,7 @@ class Reporter;
 
 class Test_Runner final /* NOLINT(*-special-member-functions) */ {
    public:
-      Test_Runner(std::ostream& out);
+      explicit Test_Runner(std::ostream& out);
       ~Test_Runner();
 
       /// @return true iff all tests have passed

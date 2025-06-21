@@ -156,7 +156,7 @@ class BOTAN_PUBLIC_API(2, 0) DataSource_Stream final : public DataSource {
       bool end_of_data() const override;
       std::string id() const override;
 
-      DataSource_Stream(std::istream&, std::string_view id = "<std::istream>");
+      explicit DataSource_Stream(std::istream&, std::string_view id = "<std::istream>");
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
       /**
@@ -164,7 +164,7 @@ class BOTAN_PUBLIC_API(2, 0) DataSource_Stream final : public DataSource {
       * @param filename the path to the file
       * @param use_binary whether to treat the file as binary or not
       */
-      DataSource_Stream(std::string_view filename, bool use_binary = false);
+      explicit DataSource_Stream(std::string_view filename, bool use_binary = false);
 #endif
 
       DataSource_Stream(const DataSource_Stream&) = delete;

@@ -59,11 +59,9 @@ uint64_t cc_derank(uint64_t cc_number) {
 }
 
 uint64_t encrypt_cc_number(uint64_t cc_number, const Botan::SymmetricKey& key, const std::vector<uint8_t>& tweak) {
-   const Botan::BigInt n = 1000000000000000;
+   const Botan::BigInt n(1000000000000000);
 
-   const uint64_t cc_ranked = cc_rank(cc_number);
-
-   const Botan::BigInt c = Botan::FPE::fe1_encrypt(n, cc_ranked, key, tweak);
+   const Botan::BigInt c = Botan::FPE::fe1_encrypt(n, Botan::BigInt::from_u64(cc_rank(cc_number)), key, tweak);
 
    if(c.bits() > 50) {
       throw Botan::Internal_Error("FPE produced a number too large");
@@ -77,11 +75,9 @@ uint64_t encrypt_cc_number(uint64_t cc_number, const Botan::SymmetricKey& key, c
 }
 
 uint64_t decrypt_cc_number(uint64_t enc_cc, const Botan::SymmetricKey& key, const std::vector<uint8_t>& tweak) {
-   const Botan::BigInt n = 1000000000000000;
+   const Botan::BigInt n(1000000000000000);
 
-   const uint64_t cc_ranked = cc_rank(enc_cc);
-
-   const Botan::BigInt c = Botan::FPE::fe1_decrypt(n, cc_ranked, key, tweak);
+   const Botan::BigInt c = Botan::FPE::fe1_decrypt(n, Botan::BigInt::from_u64(cc_rank(enc_cc)), key, tweak);
 
    if(c.bits() > 50) {
       throw CLI_Error("FPE produced a number too large");

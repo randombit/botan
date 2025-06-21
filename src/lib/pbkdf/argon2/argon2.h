@@ -99,7 +99,7 @@ class BOTAN_PUBLIC_API(2, 11) Argon2 final : public PasswordHash {
 
 class BOTAN_PUBLIC_API(2, 11) Argon2_Family final : public PasswordHashFamily {
    public:
-      Argon2_Family(uint8_t family);
+      explicit Argon2_Family(uint8_t family);
 
       std::string name() const override;
 

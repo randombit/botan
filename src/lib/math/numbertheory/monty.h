@@ -26,7 +26,7 @@ class BOTAN_TEST_API Montgomery_Int final {
       /**
       * Create a zero-initialized Montgomery_Int
       */
-      Montgomery_Int(std::shared_ptr<const Montgomery_Params> params) : m_params(std::move(params)) {}
+      explicit Montgomery_Int(std::shared_ptr<const Montgomery_Params> params) : m_params(std::move(params)) {}
 
       /**
       * Create a Montgomery_Int
@@ -146,7 +146,7 @@ class BOTAN_TEST_API Montgomery_Params final {
       * Initialize a set of Montgomery reduction parameters. These values
       * can be shared by all values in a specific Montgomery domain.
       */
-      Montgomery_Params(const BigInt& p);
+      explicit Montgomery_Params(const BigInt& p);
 
       const BigInt& p() const { return m_p; }
 

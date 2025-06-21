@@ -117,7 +117,7 @@ std::pair<CT::Mask<uint8_t>, CmceErrorVector> Classic_McEliece_Decryptor::decode
       syndromes_are_eq &= GF_Mask::is_equal(syndrome.coef_at(i), syndrome_from_e.coef_at(i));
    }
 
-   decode_success &= syndromes_are_eq.elem_mask();
+   decode_success &= CT::Mask<uint8_t>(syndromes_are_eq.elem_mask());
 
    return {decode_success, std::move(e)};
 }

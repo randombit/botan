@@ -56,7 +56,7 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator {
        * Provide a non-fixed RNG as fallback to be used once the Fixed_Output_RNG runs out of bytes.
        * If more bytes are provided after that, those will be preferred over the fallback again.
        */
-      Fixed_Output_RNG(RandomNumberGenerator& fallback_rng) : m_fallback(&fallback_rng) {}
+      explicit Fixed_Output_RNG(RandomNumberGenerator& fallback_rng) : m_fallback(&fallback_rng) {}
 
       Fixed_Output_RNG() = default;
 
@@ -165,8 +165,6 @@ class SeedCapturing_RNG final : public Botan::RandomNumberGenerator {
 */
 class Request_Counting_RNG final : public Botan::RandomNumberGenerator {
    public:
-      Request_Counting_RNG() : m_randomize_count(0) {}
-
       size_t randomize_count() const { return m_randomize_count; }
 
       bool accepts_input() const override { return false; }
@@ -192,7 +190,7 @@ class Request_Counting_RNG final : public Botan::RandomNumberGenerator {
       }
 
    private:
-      size_t m_randomize_count;
+      size_t m_randomize_count = 0;
 };
 
 #if defined(BOTAN_HAS_AES)
@@ -210,7 +208,7 @@ class CTR_DRBG_AES256 final : public Botan::RandomNumberGenerator {
 
       bool is_seeded() const override { return true; }
 
-      CTR_DRBG_AES256(std::span<const uint8_t> seed);
+      explicit CTR_DRBG_AES256(std::span<const uint8_t> seed);
 
    private:
       void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override;

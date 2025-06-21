@@ -34,19 +34,19 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
       * DER encode, writing to @param vec
       * If this constructor is used, get_contents* may not be called.
       */
-      DER_Encoder(secure_vector<uint8_t>& vec);
+      explicit DER_Encoder(secure_vector<uint8_t>& vec);
 
       /**
       * DER encode, writing to @param vec
       * If this constructor is used, get_contents* may not be called.
       */
-      DER_Encoder(std::vector<uint8_t>& vec);
+      explicit DER_Encoder(std::vector<uint8_t>& vec);
 
       /**
       * DER encode, calling append to write output
       * If this constructor is used, get_contents* may not be called.
       */
-      DER_Encoder(append_fn append) : m_append_output(std::move(append)) {}
+      explicit DER_Encoder(append_fn append) : m_append_output(std::move(append)) {}
 
       secure_vector<uint8_t> get_contents();
 

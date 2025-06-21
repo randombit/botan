@@ -150,7 +150,7 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base) {
       BigInt r;
       secure_vector<uint8_t> binary;
 
-      if(length % 2) {
+      if(length % 2 == 1) {
          // Handle lack of leading 0
          const char buf0_with_leading_0[2] = {'0', static_cast<char>(buf[0])};
 

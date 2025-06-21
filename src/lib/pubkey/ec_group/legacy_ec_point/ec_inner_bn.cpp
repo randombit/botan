@@ -13,7 +13,7 @@ namespace Botan {
 
 const EC_Scalar_Data_BN& EC_Scalar_Data_BN::checked_ref(const EC_Scalar_Data& data) {
    const auto* p = dynamic_cast<const EC_Scalar_Data_BN*>(&data);
-   if(!p) {
+   if(p == nullptr) {
       throw Invalid_State("Failed conversion to EC_Scalar_Data_BN");
    }
    return *p;

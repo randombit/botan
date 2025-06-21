@@ -22,7 +22,8 @@ namespace Botan {
 */
 class RawHashFunction final : public HashFunction {
    public:
-      RawHashFunction(std::unique_ptr<HashFunction> hash) : RawHashFunction(hash->name(), hash->output_length()) {}
+      explicit RawHashFunction(std::unique_ptr<HashFunction> hash) :
+            RawHashFunction(hash->name(), hash->output_length()) {}
 
       RawHashFunction(std::string_view name, size_t output_length) : m_name(name), m_output_length(output_length) {}
 

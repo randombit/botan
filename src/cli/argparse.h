@@ -17,9 +17,9 @@ namespace Botan_CLI {
 
 class Argument_Parser final {
    public:
-      Argument_Parser(const std::string& spec,
-                      const std::vector<std::string>& extra_flags = {},
-                      const std::vector<std::string>& extra_opts = {});
+      explicit Argument_Parser(const std::string& spec,
+                               const std::vector<std::string>& extra_flags = {},
+                               const std::vector<std::string>& extra_opts = {});
 
       void parse_args(const std::vector<std::string>& params);
 

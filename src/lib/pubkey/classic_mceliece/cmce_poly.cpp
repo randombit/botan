@@ -38,7 +38,7 @@ Classic_McEliece_Polynomial Classic_McEliece_Polynomial_Ring::multiply(const Cla
    }
 
    for(size_t i = (m_t - 1) * 2; i >= m_t; --i) {
-      for(auto& [idx, coef] : m_position_map) {
+      for(const auto& [idx, coef] : m_position_map) {
          prod.at(i - m_t + idx) += coef * prod.at(i);
       }
    }

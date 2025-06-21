@@ -32,7 +32,7 @@ class BOTAN_UNSTABLE_API FFI_Error final : public Botan::Exception {
 template <typename T, uint32_t MAGIC>
 struct botan_struct {
    public:
-      botan_struct(std::unique_ptr<T> obj) : m_magic(MAGIC), m_obj(std::move(obj)) {}
+      explicit botan_struct(std::unique_ptr<T> obj) : m_magic(MAGIC), m_obj(std::move(obj)) {}
 
       virtual ~botan_struct() {
          m_magic = 0;
@@ -198,9 +198,7 @@ int botan_view_str_bounce_fn(botan_view_ctx ctx, const char* str, size_t len);
 
 template <typename Fn, typename... Args>
 int copy_view_bin(uint8_t out[], size_t* out_len, Fn fn, Args... args) {
-   botan_view_bounce_struct ctx;
-   ctx.out_ptr = out;
-   ctx.out_len = out_len;
+   botan_view_bounce_struct ctx{out, out_len};
    return fn(args..., &ctx, botan_view_bin_bounce_fn);
 }
 
@@ -209,9 +207,7 @@ int copy_view_str(uint8_t out[], size_t* out_len, Fn fn, Args... args) {
    if(fn == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
-   botan_view_bounce_struct ctx;
-   ctx.out_ptr = out;
-   ctx.out_len = out_len;
+   botan_view_bounce_struct ctx{out, out_len};
    return fn(args..., &ctx, botan_view_str_bounce_fn);
 }
 

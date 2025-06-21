@@ -27,7 +27,7 @@ bool all_printable_chars(const uint8_t bits[], size_t bits_len) {
          return false;
       }
 
-      if((std::isalnum(c) || c == '.' || c == ':' || c == '/' || c == '-') == false) {
+      if(((std::isalnum(c) != 0) || c == '.' || c == ':' || c == '/' || c == '-') == false) {
          return false;
       }
    }

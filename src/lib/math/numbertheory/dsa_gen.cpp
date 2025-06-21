@@ -80,7 +80,8 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
 
          Seed& operator++() {
             for(size_t j = m_seed.size(); j > 0; --j) {
-               if(++m_seed[j - 1]) {
+               m_seed[j - 1] += 1;
+               if(m_seed[j - 1] != 0) {
                   break;
                }
             }

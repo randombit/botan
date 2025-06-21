@@ -25,7 +25,7 @@ class BOTAN_TEST_API CPUFeature {
          SIMD_4X32 = LSX,
       };
 
-      CPUFeature(Bit b) : m_bit(b) {}
+      CPUFeature(Bit b) : m_bit(b) {}  // NOLINT(*-explicit-conversions)
 
       uint32_t as_u32() const { return static_cast<uint32_t>(m_bit); }
 

@@ -155,10 +155,10 @@ BigInt& BigInt::mul(const BigInt& y, secure_vector<word>& ws) {
    if(x_sw == 0 || y_sw == 0) {
       clear();
       set_sign(Positive);
-   } else if(x_sw == 1 && y_sw) {
+   } else if(x_sw == 1 && y_sw > 0) {
       grow_to(y_sw + 1);
       bigint_linmul3(mutable_data(), y._data(), y_sw, word_at(0));
-   } else if(y_sw == 1 && x_sw) {
+   } else if(y_sw == 1 && x_sw > 0) {
       word carry = bigint_linmul2(mutable_data(), x_sw, y.word_at(0));
       set_word_at(x_sw, carry);
    } else {
@@ -240,7 +240,7 @@ word BigInt::operator%=(word mod) {
       }
    }
 
-   if(remainder && sign() == BigInt::Negative) {
+   if(remainder != 0 && sign() == BigInt::Negative) {
       remainder = mod - remainder;
    }
 

@@ -78,7 +78,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        *
        * Prefer BigInt::from_u64
        */
-      BigInt(uint64_t n);
+      BigInt(uint64_t n);  // NOLINT(*-explicit-conversions) TODO(Botan4) make this explicit
 
       /**
        * Copy Constructor
@@ -493,7 +493,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param n the bit offset to test
        * @result true, if the bit at position n is set, false otherwise
        */
-      bool get_bit(size_t n) const { return ((word_at(n / (sizeof(word) * 8)) >> (n % (sizeof(word) * 8))) & 1); }
+      bool get_bit(size_t n) const { return ((word_at(n / (sizeof(word) * 8)) >> (n % (sizeof(word) * 8))) & 1) == 1; }
 
       /**
        * Return (a maximum of) 32 bits of the complete value

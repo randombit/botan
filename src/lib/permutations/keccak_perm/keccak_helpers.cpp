@@ -24,14 +24,15 @@ size_t int_encoding_size(uint64_t x) {
 
 uint8_t encode(std::span<uint8_t> out, uint64_t x) {
    const auto bytes_needed = int_encoding_size(x);
+   BOTAN_ASSERT_NOMSG(sizeof(x) >= bytes_needed);
    BOTAN_ASSERT_NOMSG(out.size() >= bytes_needed);
 
-   std::array<uint8_t, sizeof(x)> bigendian_x;
+   const size_t leading_zeros = sizeof(x) - bytes_needed;
+
+   std::array<uint8_t, sizeof(x)> bigendian_x{};
    store_be(x, bigendian_x.data());
 
-   auto begin = bigendian_x.begin();
-   std::advance(begin, sizeof(x) - bytes_needed);
-   std::copy(begin, bigendian_x.end(), out.begin());
+   std::copy(bigendian_x.begin() + leading_zeros, bigendian_x.end(), out.begin());
 
    return static_cast<uint8_t>(bytes_needed);
 }

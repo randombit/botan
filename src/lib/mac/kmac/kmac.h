@@ -52,7 +52,7 @@ class KMAC /* NOLINT(*-special-member-functions*) */ : public MessageAuthenticat
 */
 class KMAC128 final : public KMAC {
    public:
-      KMAC128(size_t output_bit_length);
+      explicit KMAC128(size_t output_bit_length);
       std::string name() const override;
       std::unique_ptr<MessageAuthenticationCode> new_object() const override;
 };
@@ -62,7 +62,7 @@ class KMAC128 final : public KMAC {
 */
 class KMAC256 final : public KMAC {
    public:
-      KMAC256(size_t output_bit_length);
+      explicit KMAC256(size_t output_bit_length);
       std::string name() const override;
       std::unique_ptr<MessageAuthenticationCode> new_object() const override;
 };

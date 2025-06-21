@@ -56,7 +56,7 @@ class ISO_9796_DS3 final : public EMSA {
        * @param hash function to use
        * @param implicit whether or not the trailer is implicit
        */
-      ISO_9796_DS3(std::unique_ptr<HashFunction> hash, bool implicit = false) :
+      explicit ISO_9796_DS3(std::unique_ptr<HashFunction> hash, bool implicit = false) :
             m_hash(std::move(hash)), m_implicit(implicit) {}
 
       std::string name() const override;

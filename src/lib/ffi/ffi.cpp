@@ -119,7 +119,7 @@ int botan_view_bin_bounce_fn(botan_view_ctx vctx, const uint8_t* buf, size_t len
    *ctx->out_len = len;
 
    if(avail < len || ctx->out_ptr == nullptr) {
-      if(ctx->out_ptr) {
+      if(ctx->out_ptr != nullptr) {
          Botan::clear_mem(ctx->out_ptr, avail);
       }
       return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;

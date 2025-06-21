@@ -49,11 +49,11 @@ BigInt operator*(const BigInt& x, const BigInt& y) {
 
    BigInt z = BigInt::with_capacity(x.size() + y.size());
 
-   if(x_sw == 1 && y_sw) {
+   if(x_sw == 1 && y_sw > 0) {
       bigint_linmul3(z.mutable_data(), y._data(), y_sw, x.word_at(0));
-   } else if(y_sw == 1 && x_sw) {
+   } else if(y_sw == 1 && x_sw > 0) {
       bigint_linmul3(z.mutable_data(), x._data(), x_sw, y.word_at(0));
-   } else if(x_sw && y_sw) {
+   } else if(x_sw > 0 && y_sw > 0) {
       secure_vector<word> workspace(z.size());
 
       bigint_mul(z.mutable_data(),
@@ -81,7 +81,7 @@ BigInt operator*(const BigInt& x, word y) {
 
    BigInt z = BigInt::with_capacity(x_sw + 1);
 
-   if(x_sw && y) {
+   if(x_sw > 0 && y > 0) {
       bigint_linmul3(z.mutable_data(), x._data(), x_sw, y);
       z.set_sign(x.sign());
    }
@@ -162,7 +162,7 @@ word operator%(const BigInt& n, word mod) {
       }
    }
 
-   if(remainder && n.sign() == BigInt::Negative) {
+   if(remainder != 0 && n.sign() == BigInt::Negative) {
       return mod - remainder;
    }
    return remainder;

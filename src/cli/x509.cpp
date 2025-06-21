@@ -163,14 +163,14 @@ class Cert_Info final : public Command {
                Botan::X509_Certificate cert(in);
 
                try {
-                  output() << cert.to_string() << std::endl;
+                  output() << cert.to_string() << "\n";
                } catch(Botan::Exception& e) {
                   // to_string failed - report the exception and continue
                   output() << "X509_Certificate::to_string failed: " << e.what() << "\n";
                }
 
                if(flag_set("fingerprint")) {
-                  output() << "Fingerprint: " << cert.fingerprint("SHA-256") << std::endl;
+                  output() << "Fingerprint: " << cert.fingerprint("SHA-256") << "\n";
                }
             } catch(Botan::Exception& e) {
                if(!in.end_of_data()) {

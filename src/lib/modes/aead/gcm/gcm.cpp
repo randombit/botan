@@ -158,7 +158,7 @@ void GCM_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    const size_t remaining = sz - tag_size();
 
    // handle any final input before the tag
-   if(remaining) {
+   if(remaining > 0) {
       m_ghash->update({buf, remaining});
       m_ctr->cipher(buf, buf, remaining);
    }

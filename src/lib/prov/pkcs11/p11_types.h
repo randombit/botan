@@ -32,9 +32,9 @@ class BOTAN_PUBLIC_API(2, 0) Module final {
       * @param file_path the path to the PKCS#11 shared library
       * @param init_args flags to use for `C_Initialize`
       */
-      Module(std::string_view file_path,
-             C_InitializeArgs init_args = {
-                nullptr, nullptr, nullptr, nullptr, static_cast<CK_FLAGS>(Flag::OsLockingOk), nullptr});
+      explicit Module(std::string_view file_path,
+                      C_InitializeArgs init_args = {
+                         nullptr, nullptr, nullptr, nullptr, static_cast<CK_FLAGS>(Flag::OsLockingOk), nullptr});
 
       Module(Module&& other) noexcept;
       Module& operator=(Module&& other) = delete;

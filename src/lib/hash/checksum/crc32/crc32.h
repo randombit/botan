@@ -27,12 +27,10 @@ class CRC32 final : public HashFunction {
 
       void clear() override { m_crc = 0xFFFFFFFF; }
 
-      CRC32() { clear(); }
-
    private:
       void add_data(std::span<const uint8_t>) override;
       void final_result(std::span<uint8_t>) override;
-      uint32_t m_crc;
+      uint32_t m_crc = 0xFFFFFFFF;
 };
 
 }  // namespace Botan

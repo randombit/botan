@@ -230,7 +230,7 @@ void CAST_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       in += 2 * BLOCK_SIZE;
    }
 
-   if(blocks) {
+   if(blocks > 0) {
       uint32_t L, R;
       load_be(in, L, R);
 
@@ -305,7 +305,7 @@ void CAST_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       in += 2 * BLOCK_SIZE;
    }
 
-   if(blocks) {
+   if(blocks > 0) {
       uint32_t L, R;
       load_be(in, L, R);
 

@@ -53,7 +53,7 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
       * @param ignore_trusted_root_time_range if true, validity checks on the
       *        time range of the trusted root certificate only produce warnings
       */
-      Path_Validation_Restrictions(
+      explicit Path_Validation_Restrictions(
          bool require_rev = false,
          size_t minimum_key_strength = 110,
          bool ocsp_all_intermediates = false,

@@ -31,13 +31,13 @@ void Filter::send(std::span<const uint8_t> in, size_t length) {
 * Send data to all ports
 */
 void Filter::send(const uint8_t input[], size_t length) {
-   if(!length) {
+   if(length == 0) {
       return;
    }
 
    bool nothing_attached = true;
    for(size_t j = 0; j != total_ports(); ++j) {
-      if(m_next[j]) {
+      if(m_next[j] != nullptr) {
          if(!m_write_queue.empty()) {
             m_next[j]->write(m_write_queue.data(), m_write_queue.size());
          }
@@ -59,7 +59,7 @@ void Filter::send(const uint8_t input[], size_t length) {
 void Filter::new_msg() {
    start_msg();
    for(size_t j = 0; j != total_ports(); ++j) {
-      if(m_next[j]) {
+      if(m_next[j] != nullptr) {
          m_next[j]->new_msg();
       }
    }
@@ -71,7 +71,7 @@ void Filter::new_msg() {
 void Filter::finish_msg() {
    end_msg();
    for(size_t j = 0; j != total_ports(); ++j) {
-      if(m_next[j]) {
+      if(m_next[j] != nullptr) {
          m_next[j]->finish_msg();
       }
    }
@@ -81,9 +81,9 @@ void Filter::finish_msg() {
 * Attach a filter to the current port
 */
 void Filter::attach(Filter* new_filter) {
-   if(new_filter) {
+   if(new_filter != nullptr) {
       Filter* last = this;
-      while(last->get_next()) {
+      while(last->get_next() != nullptr) {
          last = last->get_next();
       }
       last->m_next[last->current_port()] = new_filter;
@@ -119,11 +119,11 @@ void Filter::set_next(Filter* filters[], size_t size) {
    m_port_num = 0;
    m_filter_owns = 0;
 
-   while(size && filters && (filters[size - 1] == nullptr)) {
+   while(size > 0 && filters != nullptr && (filters[size - 1] == nullptr)) {
       --size;
    }
 
-   if(filters && size) {
+   if(filters != nullptr && size > 0) {
       m_next.assign(filters, filters + size);
    }
 }

@@ -38,7 +38,7 @@ class ANSI_X919_MAC final : public MessageAuthenticationCode {
 
       std::unique_ptr<BlockCipher> m_des1, m_des2;
       secure_vector<uint8_t> m_state;
-      size_t m_position;
+      size_t m_position = 0;
 };
 
 }  // namespace Botan

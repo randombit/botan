@@ -31,7 +31,7 @@ class Ed25519_FieldElement final {
       /**
       * Default zero initialization
       */
-      constexpr Ed25519_FieldElement() { clear_mem(m_fe, 10); }
+      constexpr Ed25519_FieldElement() : m_fe{} {}
 
       constexpr static Ed25519_FieldElement zero() { return Ed25519_FieldElement(); }
 
@@ -41,7 +41,7 @@ class Ed25519_FieldElement final {
          return o;
       }
 
-      constexpr Ed25519_FieldElement(std::span<int32_t, 10> fe) { copy_mem(m_fe, fe.data(), 10); }
+      constexpr explicit Ed25519_FieldElement(std::span<int32_t, 10> fe) { copy_mem(m_fe.data(), fe.data(), 10); }
 
       constexpr Ed25519_FieldElement(int64_t h0,
                                      int64_t h1,
@@ -70,7 +70,7 @@ class Ed25519_FieldElement final {
       void serialize_to(std::span<uint8_t, 32> b) const;
 
       bool is_zero() const {
-         std::array<uint8_t, 32> value;
+         std::array<uint8_t, 32> value = {};
          this->serialize_to(value);
          return CT::all_zeros(value.data(), value.size()).as_bool();
       }
@@ -81,9 +81,9 @@ class Ed25519_FieldElement final {
       */
       bool is_negative() const {
          // TODO could avoid most of the serialize computation here
-         std::array<uint8_t, 32> s;
+         std::array<uint8_t, 32> s = {};
          this->serialize_to(s);
-         return s[0] & 1;
+         return (s[0] & 0x01) == 0x01;
       }
 
       static Ed25519_FieldElement add(const Ed25519_FieldElement& a, const Ed25519_FieldElement& b) {
@@ -129,7 +129,7 @@ class Ed25519_FieldElement final {
       int32_t& operator[](size_t i) { return m_fe[i]; }
 
    private:
-      int32_t m_fe[10];
+      std::array<int32_t, 10> m_fe;
 };
 
 inline Ed25519_FieldElement operator+(const Ed25519_FieldElement& x, const Ed25519_FieldElement& y) {

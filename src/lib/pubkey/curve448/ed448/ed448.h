@@ -54,7 +54,7 @@ class BOTAN_PUBLIC_API(3, 4) Ed448_PublicKey : public virtual Public_Key {
       /**
       * Create a Ed448 Public Key from bytes (57 Bytes).
       */
-      Ed448_PublicKey(std::span<const uint8_t> key_bits);
+      explicit Ed448_PublicKey(std::span<const uint8_t> key_bits);
 
       std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
                                                                    std::string_view provider) const override;
@@ -64,7 +64,7 @@ class BOTAN_PUBLIC_API(3, 4) Ed448_PublicKey : public virtual Public_Key {
 
    protected:
       Ed448_PublicKey() = default;
-      std::array<uint8_t, 57> m_public;  // NOLINT(*non-private-member-variable*)
+      std::array<uint8_t, 57> m_public{};  // NOLINT(*non-private-member-variable*)
 };
 
 BOTAN_DIAGNOSTIC_PUSH
@@ -95,7 +95,7 @@ class BOTAN_PUBLIC_API(3, 4) Ed448_PrivateKey final : public Ed448_PublicKey,
       *
       * @param key_bits private key bytes (57 Bytes)
       */
-      Ed448_PrivateKey(std::span<const uint8_t> key_bits);
+      explicit Ed448_PrivateKey(std::span<const uint8_t> key_bits);
 
       /**
       * Generate a new private key.

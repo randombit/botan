@@ -37,7 +37,7 @@ class BOTAN_TEST_API Scalar448 final {
       constexpr static size_t BYTES = ceil_tobytes(446);
 
       /// @brief Construct a new scalar from (max. 114) bytes. Little endian.
-      Scalar448(std::span<const uint8_t> x);
+      explicit Scalar448(std::span<const uint8_t> x);
 
       /// @brief Convert the scalar to bytes in little endian.
       template <size_t S = BYTES>
@@ -62,7 +62,7 @@ class BOTAN_TEST_API Scalar448 final {
       static bool bytes_are_reduced(std::span<const uint8_t> x);
 
    private:
-      Scalar448(std::span<const word, WORDS> scalar_words) { copy_mem(m_scalar_words, scalar_words); }
+      explicit Scalar448(std::span<const word, WORDS> scalar_words) { copy_mem(m_scalar_words, scalar_words); }
 
       std::array<word, WORDS> m_scalar_words;
 };

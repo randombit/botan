@@ -63,7 +63,7 @@ class BOTAN_PUBLIC_API(2, 0) ElGamal_PublicKey : public virtual Public_Key {
 
       ElGamal_PublicKey() = default;
 
-      ElGamal_PublicKey(std::shared_ptr<const DL_PublicKey> key) : m_public_key(std::move(key)) {}
+      explicit ElGamal_PublicKey(std::shared_ptr<const DL_PublicKey> key) : m_public_key(std::move(key)) {}
 
       std::shared_ptr<const DL_PublicKey> m_public_key;
 };

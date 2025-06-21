@@ -113,11 +113,11 @@ inline void fscalar_product(uint64_t out[5], const uint64_t in[5], const uint64_
 * On return, out[i] < 2**52
 */
 inline void fmul(uint64_t out[5], const uint64_t in[5], const uint64_t in2[5]) {
-   const uint128_t s0 = in2[0];
-   const uint128_t s1 = in2[1];
-   const uint128_t s2 = in2[2];
-   const uint128_t s3 = in2[3];
-   const uint128_t s4 = in2[4];
+   const auto s0 = uint128_t(in2[0]);
+   const auto s1 = uint128_t(in2[1]);
+   const auto s2 = uint128_t(in2[2]);
+   const auto s3 = uint128_t(in2[3]);
+   const auto s4 = uint128_t(in2[4]);
 
    uint64_t r0 = in[0];
    uint64_t r1 = in[1];
@@ -227,11 +227,11 @@ inline void fexpand(uint64_t* out, const uint8_t* in) {
 * little-endian, 32-byte array
 */
 inline void fcontract(uint8_t* out, const uint64_t input[5]) {
-   uint128_t t0 = input[0];
-   uint128_t t1 = input[1];
-   uint128_t t2 = input[2];
-   uint128_t t3 = input[3];
-   uint128_t t4 = input[4];
+   auto t0 = uint128_t(input[0]);
+   auto t1 = uint128_t(input[1]);
+   auto t2 = uint128_t(input[2]);
+   auto t3 = uint128_t(input[3]);
+   auto t4 = uint128_t(input[4]);
 
    for(size_t i = 0; i != 2; ++i) {
       t1 += t0 >> 51;

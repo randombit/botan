@@ -30,7 +30,7 @@ class PseudorandomKeyGeneration final {
       /**
        * @brief Create a PseudorandomKeyGeneration instance for a fixed @p identifier
        */
-      PseudorandomKeyGeneration(std::span<const uint8_t> identifier);
+      explicit PseudorandomKeyGeneration(std::span<const uint8_t> identifier);
 
       /**
        * @brief Specify the value for the u32str(q) hash input field

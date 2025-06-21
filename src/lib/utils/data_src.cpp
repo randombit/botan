@@ -41,7 +41,7 @@ size_t DataSource::discard_next(size_t n) {
    uint8_t buf[64] = {0};
    size_t discarded = 0;
 
-   while(n) {
+   while(n > 0) {
       const size_t got = this->read(buf, std::min(n, sizeof(buf)));
       discarded += got;
       n -= got;
@@ -127,7 +127,7 @@ size_t DataSource_Stream::peek(uint8_t out[], size_t length, size_t offset) cons
 
    size_t got = 0;
 
-   if(offset) {
+   if(offset > 0) {
       secure_vector<uint8_t> buf(offset);
       m_source.read(cast_uint8_ptr_to_char(buf.data()), buf.size());
       if(m_source.bad()) {

@@ -38,19 +38,29 @@ class Gf448Elem final {
        * @brief Construct a GF element from a 448-bit integer gives as 56 bytes @p x in
        * little-endian order.
        */
-      Gf448Elem(std::span<const uint8_t, BYTES_448> x);
+      explicit Gf448Elem(std::span<const uint8_t, BYTES_448> x);
 
       /**
        * @brief Construct a GF element from a 448-bit integer gives as 7 uint64_t words @p x in
        * little-endian order.
        */
-      Gf448Elem(std::span<const uint64_t, WORDS_448> data) { copy_mem(m_x, data); }
+      explicit Gf448Elem(std::span<const uint64_t, WORDS_448> data) { copy_mem(m_x, data); }
 
       /**
        * @brief Construct a GF element by passing the least significant 64 bits as a word.
        * All other become zero.
        */
-      Gf448Elem(uint64_t least_sig_word);
+      explicit Gf448Elem(uint64_t least_sig_word);
+
+      /**
+      * Return the constant value zero
+      */
+      static Gf448Elem zero() { return Gf448Elem(0); }
+
+      /**
+      * Return the constant value one
+      */
+      static Gf448Elem one() { return Gf448Elem(1); }
 
       /**
        * @brief Store the canonical representation of the GF element as 56 bytes in little-endian

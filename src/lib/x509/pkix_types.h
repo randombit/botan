@@ -42,7 +42,7 @@ class BOTAN_PUBLIC_API(2, 0) X509_DN final : public ASN1_Object {
    public:
       X509_DN() = default;
 
-      explicit X509_DN(std::initializer_list<std::pair<std::string_view, std::string_view>> args) {
+      X509_DN(std::initializer_list<std::pair<std::string_view, std::string_view>> args) {
          for(const auto& i : args) {
             add_attribute(i.first, i.second);
          }
@@ -208,10 +208,10 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
       BOTAN_DEPRECATED("Use AlternativeName::directory_names") X509_DN dn() const;
 
       BOTAN_DEPRECATED("Use plain constructor plus add_{uri,dns,email,ipv4_address}")
-      AlternativeName(std::string_view email_addr,
-                      std::string_view uri = "",
-                      std::string_view dns = "",
-                      std::string_view ip_address = "");
+      explicit AlternativeName(std::string_view email_addr,
+                               std::string_view uri = "",
+                               std::string_view dns = "",
+                               std::string_view ip_address = "");
 
    private:
       std::set<std::string> m_dns;
@@ -317,7 +317,7 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
       static constexpr size_t DN_IDX = 3;
       static constexpr size_t IPV4_IDX = 4;
 
-      NameType m_type;
+      NameType m_type = NameType::Unknown;
       std::variant<std::string, std::string, std::string, X509_DN, std::pair<uint32_t, uint32_t>> m_name;
 
       static bool matches_dns(std::string_view name, std::string_view constraint);
@@ -369,7 +369,7 @@ class BOTAN_PUBLIC_API(2, 0) NameConstraints final {
       /**
       * Creates an empty name NameConstraints.
       */
-      NameConstraints() : m_permitted_subtrees(), m_excluded_subtrees() {}
+      NameConstraints() = default;
 
       /**
       * Creates NameConstraints from a list of permitted and excluded subtrees.
@@ -447,8 +447,8 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Extension /* NOLINT(*-special-member-fu
       *
       * @param subject Subject certificate that contains this extension
       * @param issuer Issuer certificate
-      * @param status Certificate validation status codes for subject certificate
       * @param cert_path Certificate path which is currently validated
+      * @param cert_status Certificate validation status codes for subject certificate
       * @param pos Position of subject certificate in cert_path
       */
       virtual void validate(const X509_Certificate& subject,

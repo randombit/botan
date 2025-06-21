@@ -54,7 +54,7 @@ BOTAN_FORCE_INLINE void i_transform(T& B0, T& B1, T& B2, T& B3) {
 
 class Key_Inserter final {
    public:
-      Key_Inserter(const uint32_t* RK) : m_RK(RK) {}
+      explicit Key_Inserter(const uint32_t* RK) : m_RK(RK) {}
 
       template <typename T>
       inline void operator()(size_t R, T& B0, T& B1, T& B2, T& B3) const {

@@ -230,7 +230,7 @@ class BOTAN_PUBLIC_API(3, 6) EC_Scalar final {
    private:
       friend class EC_AffinePoint;
 
-      EC_Scalar(std::unique_ptr<EC_Scalar_Data> scalar);
+      explicit EC_Scalar(std::unique_ptr<EC_Scalar_Data> scalar);
 
       const EC_Scalar_Data& inner() const { return *m_scalar; }
 

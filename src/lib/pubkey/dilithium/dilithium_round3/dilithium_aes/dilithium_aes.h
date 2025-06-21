@@ -15,7 +15,7 @@ namespace Botan {
 
 class Dilithium_AES_Symmetric_Primitives final : public Dilithium_Round3_Symmetric_Primitives {
    public:
-      Dilithium_AES_Symmetric_Primitives(const DilithiumConstants& mode);
+      explicit Dilithium_AES_Symmetric_Primitives(const DilithiumConstants& mode);
 };
 
 }  // namespace Botan

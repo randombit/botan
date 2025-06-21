@@ -324,7 +324,7 @@ class BOTAN_PUBLIC_API(2, 0) Hash_Filter final : public Filter {
       * hash. Otherwise, specify a smaller value here so that the
       * output of the hash algorithm will be cut off.
       */
-      Hash_Filter(HashFunction* hash, size_t len = 0) : m_hash(hash), m_out_len(len) {}
+      explicit Hash_Filter(HashFunction* hash, size_t len = 0) : m_hash(hash), m_out_len(len) {}
 
       /**
       * Construct a hash filter.
@@ -334,7 +334,7 @@ class BOTAN_PUBLIC_API(2, 0) Hash_Filter final : public Filter {
       * hash. Otherwise, specify a smaller value here so that the
       * output of the hash algorithm will be cut off.
       */
-      Hash_Filter(std::string_view request, size_t len = 0);
+      explicit Hash_Filter(std::string_view request, size_t len = 0);
 
    private:
       std::unique_ptr<HashFunction> m_hash;
@@ -371,7 +371,7 @@ class BOTAN_PUBLIC_API(2, 0) MAC_Filter final : public Keyed_Filter {
       * MAC. Otherwise, specify a smaller value here so that the
       * output of the MAC will be cut off.
       */
-      MAC_Filter(MessageAuthenticationCode* mac, size_t out_len = 0) : m_mac(mac), m_out_len(out_len) {}
+      explicit MAC_Filter(MessageAuthenticationCode* mac, size_t out_len = 0) : m_mac(mac), m_out_len(out_len) {}
 
       /**
       * Construct a MAC filter.
@@ -395,7 +395,7 @@ class BOTAN_PUBLIC_API(2, 0) MAC_Filter final : public Keyed_Filter {
       * MAC. Otherwise, specify a smaller value here so that the
       * output of the MAC will be cut off.
       */
-      MAC_Filter(std::string_view mac, size_t len = 0);
+      explicit MAC_Filter(std::string_view mac, size_t len = 0);
 
       /**
       * Construct a MAC filter.
@@ -458,7 +458,7 @@ class BOTAN_PUBLIC_API(2, 0) Decompression_Filter final : public Filter {
 
       std::string name() const override;
 
-      Decompression_Filter(std::string_view type, size_t buffer_size = 4096);
+      explicit Decompression_Filter(std::string_view type, size_t buffer_size = 4096);
 
       ~Decompression_Filter() override;
 
@@ -500,7 +500,7 @@ class BOTAN_PUBLIC_API(2, 0) Base64_Encoder final : public Filter {
       * @param line_length the length of the lines of the output
       * @param trailing_newline whether to use a trailing newline
       */
-      Base64_Encoder(bool line_breaks = false, size_t line_length = 72, bool trailing_newline = false);
+      explicit Base64_Encoder(bool line_breaks = false, size_t line_length = 72, bool trailing_newline = false);
 
    private:
       void encode_and_send(const uint8_t input[], size_t length, bool final_inputs = false);
@@ -509,7 +509,8 @@ class BOTAN_PUBLIC_API(2, 0) Base64_Encoder final : public Filter {
       const size_t m_line_length;
       const bool m_trailing_newline;
       std::vector<uint8_t> m_in, m_out;
-      size_t m_position, m_out_position;
+      size_t m_position = 0;
+      size_t m_out_position = 0;
 };
 
 /**
@@ -540,8 +541,9 @@ class BOTAN_PUBLIC_API(2, 0) Base64_Decoder final : public Filter {
 
    private:
       const Decoder_Checking m_checking;
-      std::vector<uint8_t> m_in, m_out;
-      size_t m_position;
+      std::vector<uint8_t> m_in;
+      std::vector<uint8_t> m_out;
+      size_t m_position = 0;
 };
 
 /**
@@ -572,7 +574,7 @@ class BOTAN_PUBLIC_API(2, 0) Hex_Encoder final : public Filter {
       * @param line_length if newlines are used, how long are lines
       * @param the_case the case to use in the encoded strings
       */
-      Hex_Encoder(bool newlines = false, size_t line_length = 72, Case the_case = Uppercase);
+      explicit Hex_Encoder(bool newlines = false, size_t line_length = 72, Case the_case = Uppercase);
 
    private:
       void encode_and_send(const uint8_t[], size_t);
@@ -633,7 +635,7 @@ class BOTAN_PUBLIC_API(2, 0) Chain final : public Fanout_Filter {
       * Construct a chain of up to four filters. The filters are set
       * up in the same order as the arguments.
       */
-      Chain(Filter* = nullptr, Filter* = nullptr, Filter* = nullptr, Filter* = nullptr);
+      explicit Chain(Filter* = nullptr, Filter* = nullptr, Filter* = nullptr, Filter* = nullptr);
 
       /**
       * Construct a chain from range of filters

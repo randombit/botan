@@ -313,13 +313,13 @@ class BOTAN_PUBLIC_API(2, 0) Pipe final : public DataSource {
       * Construct a Pipe of up to four filters. The filters are set up
       * in the same order as the arguments.
       */
-      Pipe(Filter* = nullptr, Filter* = nullptr, Filter* = nullptr, Filter* = nullptr);
+      explicit Pipe(Filter* = nullptr, Filter* = nullptr, Filter* = nullptr, Filter* = nullptr);
 
       /**
       * Construct a Pipe from a list of filters
       * @param filters the set of filters to use
       */
-      explicit Pipe(std::initializer_list<Filter*> filters);
+      Pipe(std::initializer_list<Filter*> filters);
 
       Pipe(const Pipe&) = delete;
       Pipe(Pipe&&) noexcept;

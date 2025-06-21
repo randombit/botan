@@ -20,7 +20,7 @@ class BOTAN_PUBLIC_API(2, 0) TLS_Exception : public Exception {
    public:
       Alert::Type type() const { return m_alert_type; }
 
-      TLS_Exception(Alert::Type type, std::string_view err_msg = "Unknown error") :
+      explicit TLS_Exception(Alert::Type type, std::string_view err_msg = "Unknown error") :
             Exception(err_msg), m_alert_type(type) {}
 
       int error_code() const noexcept override { return static_cast<int>(m_alert_type); }

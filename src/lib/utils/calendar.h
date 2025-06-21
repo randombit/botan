@@ -56,7 +56,7 @@ class BOTAN_TEST_API calendar_point {
       * Convert a time_point to a calendar_point
       * @param time_point a time point from the system clock
       */
-      calendar_point(const std::chrono::system_clock::time_point& time_point);
+      explicit calendar_point(const std::chrono::system_clock::time_point& time_point);
 
       /**
       * Return seconds since epoch

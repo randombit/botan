@@ -126,7 +126,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
             */
             const auto z2 = pt.z().square();
 
-            std::array<uint8_t, C::Scalar::BYTES> v_bytes;
+            std::array<uint8_t, C::Scalar::BYTES> v_bytes{};
             from_stash(v).serialize_to(v_bytes);
 
             if(const auto fe_v = C::FieldElement::deserialize(v_bytes)) {
@@ -178,7 +178,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
 
       Scalar base_point_mul_x_mod_order(const Scalar& scalar, RandomNumberGenerator& rng) const override {
          auto pt = m_mul_by_g.mul(from_stash(scalar), rng);
-         std::array<uint8_t, C::FieldElement::BYTES> x_bytes;
+         std::array<uint8_t, C::FieldElement::BYTES> x_bytes{};
          to_affine_x<C>(pt).serialize_to(std::span{x_bytes});
          // Reduction might be required (if unlikely)
          return stash(C::Scalar::from_wide_bytes(std::span<const uint8_t, C::FieldElement::BYTES>{x_bytes}));
