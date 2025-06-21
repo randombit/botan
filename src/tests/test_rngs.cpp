@@ -87,7 +87,7 @@ void CTR_DRBG_AES256::update(std::span<const uint8_t> provided_data) {
       }
    }
 
-   m_cipher->set_key(temp.data(), 32);  // TODO: adapt after GH #3297
+   m_cipher->set_key(std::span(temp).first(32));
 
    m_V0 = Botan::load_be<uint64_t>(temp.data() + 32, 0);
    m_V1 = Botan::load_be<uint64_t>(temp.data() + 32, 1);
