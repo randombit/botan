@@ -8,17 +8,46 @@ Version 3.9.0, Not Yet Released
 
 * Add Camellia implementation using GFNI/AVX2 (GH #4848)
 
-* Modify `BOTAN_CLEAR_CPUID` so that clearing `ssse3` also disables AVX2/AVX512
+* Add SHACAL2 implementation using AVX512 (GH #4878)
+
+* The eFrodoKEM TLS 1.3 ciphersuites have changed the suite code to match changes
+  in OQS. (GH #4900)
+
+* Add support for TLS 1.2 NULL cipher suites. These suites are disabled in the
+  build by default, enable ``tls_null`` module to use. (GH #4776)
+
+* Add support for X.509 extensions from RFC 3779 (GH #4699 #4883 #4884 #4886)
+
+* Elliptic curve improvements (GH #4841 4935)
+
+* Modify the OID lookup system to use a static switch for builtin OIDs. (GH #4896 #4888)
+
+* Modify ``BOTAN_CLEAR_CPUID`` so that clearing ``ssse3`` also disables AVX2/AVX512
   (GH #4853)
+
+* Enable support for GCC's "strub" stack clearing. This is disabled by default, use
+  the ``--enable-stack-scrubbing`` option to turn on. (GH #4882 #4925)
+
+* Use ``std::span`` in the internal block cipher padding mode interfaces (GH #4873)
+
+* Properly check DNS label length restrictions when checking wildcards. (GH #4876 #4881)
 
 * Work around a GCC 13/14 miscompilation when LTO is used (GH #4863 #4862)
 
-* Add support for TLS 1.2 null ciphers (GH #4776)
+* Fix various warnings from ``clang-tidy`` (GH #4907 #4908 #4910 #4912 #4913 #4919)
+
+* Fix a bug preventing building ``System_RNG`` with only ``getrandom`` enabled. (GH #4932 #4930)
+
+* Remove ``configure.py`` options to disable specific CPU instructions. (GH #4927)
+
+* Remove ``configure.py`` option ``--with-local-config`` (GH #4905)
+
+* CI improvements (GH #4920 #4294 #4926 #4929)
 
 Version 3.8.1, 2025-05-07
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Fix a bug that prevented building using the `fips140` or `modern` module
+* Fix a bug that prevented building using the ``fips140`` or ``modern`` module
   policies. (GH #4854 #4856)
 
 * Fix a missing include that caused compilation failures with libc++20
@@ -182,7 +211,7 @@ Version 3.7.0, 2025-02-04
   all elliptic curves. This is no longer the case. You can re-enable support for
   specific named curves by adding a ``pcurves`` module, for example
   ``pcurves_secp256r1`` or ``pcurves_brainpool384r1``. Also in 3.7.0, the old
-  BigInt based EC arithemtic implementation was moved to ``legacy_ec_point``,
+  BigInt based EC arithmetic implementation was moved to ``legacy_ec_point``,
   which is marked as deprecated. Disabling this module will disable support for
   certain (also deprecated) elliptic curves such as "x962_p239v1" and
   "secp224k1". It will also disable support for application specific
@@ -349,7 +378,7 @@ Version 3.6.0, 2024-10-21
 * Fix certificate validation when the trust root is a self-signed MD2 cert.
   (GH #4247 #4248)
 
-* Internal "strong types" improvments (GH #4170)
+* Internal "strong types" improvements (GH #4170)
 
 * Refactor the ``speed`` cli utility (GH #4364 #4367 #4369)
 
