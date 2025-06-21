@@ -351,6 +351,22 @@ class IntMod final {
       }
 
       /**
+      * Conditional swap
+      *
+      * If `cond` is true, swaps the values of `x` and `y`
+      */
+      static constexpr void conditional_swap(CT::Choice cond, Self& x, Self& y) {
+         const W mask = CT::Mask<W>::from_choice(cond).value();
+
+         for(size_t i = 0; i != N; ++i) {
+            auto nx = choose(mask, y.m_val[i], x.m_val[i]);
+            auto ny = choose(mask, x.m_val[i], y.m_val[i]);
+            x.m_val[i] = nx;
+            y.m_val[i] = ny;
+         }
+      }
+
+      /**
       * Modular squaring
       *
       * Returns the square of this after modular reduction
@@ -423,6 +439,7 @@ class IntMod final {
          tbl[0] = (*this);
 
          for(size_t i = 1; i != WindowElements; ++i) {
+            // Conditional ok: table indexes are public here
             if(i % 2 == 1) {
                tbl[i] = tbl[i / 2].square();
             } else {
@@ -434,6 +451,7 @@ class IntMod final {
 
          const size_t w0 = read_window_bits<WindowBits>(std::span{exp}, (Windows - 1) * WindowBits);
 
+         // Conditional ok: this function is variable time
          if(w0 > 0) {
             r = tbl[w0 - 1];
          }
@@ -443,6 +461,7 @@ class IntMod final {
 
             const size_t w = read_window_bits<WindowBits>(std::span{exp}, (Windows - i - 1) * WindowBits);
 
+            // Conditional ok: this function is variable time
             if(w > 0) {
                r *= tbl[w - 1];
             }
@@ -476,11 +495,13 @@ class IntMod final {
       static constexpr void _invert_vartime_div2_helper(Self& a, Self& x) {
          constexpr auto INV_2 = p_div_2_plus_1(Rep::P);
 
+         // Conditional ok: this function is variable time
          while((a.m_val[0] & 1) != 1) {
             shift_right<1>(a.m_val);
 
             W borrow = shift_right<1>(x.m_val);
 
+            // Conditional ok: this function is variable time
             if(borrow) {
                bigint_add2_nc(x.m_val.data(), N, INV_2.data(), N);
             }
@@ -523,6 +544,7 @@ class IntMod final {
       * a/y resp.
       */
       constexpr Self invert_vartime() const {
+         // Conditional ok: this function is variable time
          if(this->is_zero().as_bool()) {
             return Self::zero();
          }
@@ -541,6 +563,7 @@ class IntMod final {
          Self::_invert_vartime_div2_helper(a, y);
 
          for(;;) {
+            // Conditional ok: this function is variable time
             if(a.m_val == b.m_val) {
                // At this point it should be that a == b == 1
                auto r = y.negate();
@@ -564,6 +587,7 @@ class IntMod final {
             std::array<W, N> r;
             word carry = bigint_sub3(r.data(), b.data(), N, a.data(), N);
 
+            // Conditional ok: this function is variable time
             if(carry == 0) {
                // b > a
                b.m_val = r;
@@ -714,12 +738,14 @@ class IntMod final {
       * also rejected.
       */
       static std::optional<Self> deserialize(std::span<const uint8_t> bytes) {
+         // Conditional ok: input length is public
          if(bytes.size() != Self::BYTES) {
             return {};
          }
 
          const auto words = bytes_to_words<W, N, BYTES>(bytes.first<Self::BYTES>());
 
+         // Conditional acceptable: std::optional is implicitly not constant time
          if(!bigint_ct_is_lt(words.data(), N, P.data(), N).as_bool()) {
             return {};
          }
@@ -749,6 +775,7 @@ class IntMod final {
       * modular reduces it.
       */
       static constexpr std::optional<Self> from_wide_bytes_varlen(std::span<const uint8_t> bytes) {
+         // Conditional ok: input length is public
          if(bytes.size() > 2 * Self::BYTES) {
             return {};
          }
@@ -784,6 +811,7 @@ class IntMod final {
                buf[0] &= mask;
             }
 
+            // Conditionals ok: rejection sampling reveals only values we didn't use
             if(auto s = Self::deserialize(buf)) {
                if(s.value().is_nonzero().as_bool()) {
                   return s.value();
@@ -979,11 +1007,22 @@ class ProjectiveCurvePoint {
       * Convert a point from affine to projective form
       */
       static constexpr Self from_affine(const AffinePoint& pt) {
-         if(pt.is_identity().as_bool()) {
-            return Self::identity();
-         } else {
-            return ProjectiveCurvePoint(pt.x(), pt.y());
-         }
+         /*
+         * If the point is the identity element (x=0, y=0) then instead of
+         * creating (x, y, 1) = (0, 0, 1) we want our projective identity
+         * encoding of (0, 1, 0)
+         *
+         * Which we can achieve by a conditional swap of y and z if the
+         * affine point is the identity.
+         */
+
+         auto x = pt.x();
+         auto y = pt.y();
+         auto z = FieldElement::one();
+
+         FieldElement::conditional_swap(pt.is_identity(), y, z);
+
+         return ProjectiveCurvePoint(x, y, z);
       }
 
       /**
@@ -1097,6 +1136,7 @@ class ProjectiveCurvePoint {
          // In certain contexts we may be called with a Null_RNG; in that case the
          // caller is accepting that randomization will not occur
 
+         // Conditional ok: caller's RNG state (seeded vs not) is presumed public
          if(rng.is_seeded()) {
             auto r = FieldElement::random(rng);
 
@@ -1248,6 +1288,9 @@ class BlindedScalarBits final {
       //
       // This can return any value between 0 and the scalar bit length, as long
       // as it is a multiple of the word size.
+      //
+      // TODO(Botan4) this function should be consteval but cannot currently to a bug
+      // in older versions of Clang. Change to consteval when minimum Clang is bumped.
       static constexpr size_t blinding_bits(size_t sb) {
          constexpr size_t wb = WordInfo<W>::bits;
 
@@ -1479,6 +1522,7 @@ class WindowedBoothMulTable final {
             const size_t w_i = bits.get_window(idx);
             const auto [tidx, tneg] = booth_recode<WindowBits>(w_i);
 
+            // Conditional ok: loop iteration count is public
             if(i == 0) {
                accum = ProjectivePoint::from_affine(m_table.ct_select(tidx));
                accum.conditional_assign(tneg, accum.negate());
@@ -1488,6 +1532,7 @@ class WindowedBoothMulTable final {
 
             accum = accum.dbl_n(WindowBits);
 
+            // Conditional ok: loop iteration count is public
             if(i <= 3) {
                accum.randomize_rep(rng);
             }
@@ -1578,6 +1623,7 @@ class VartimeMul2Table final {
          bool s1_is_zero = s1.is_zero().as_bool();
          bool s2_is_zero = s2.is_zero().as_bool();
 
+         // Conditional ok: this function is variable time
          if(s1_is_zero && s2_is_zero) {
             return ProjectivePoint::identity();
          }
@@ -1587,6 +1633,7 @@ class VartimeMul2Table final {
                const size_t w_1 = bits1.get_window((Windows - i - 1) * WindowBits);
                const size_t w_2 = bits2.get_window((Windows - i - 1) * WindowBits);
                const size_t window = w_1 + (w_2 << WindowBits);
+               // Conditional ok: this function is variable time
                if(window > 0) {
                   return std::make_pair(window, i);
                }
@@ -1606,6 +1653,7 @@ class VartimeMul2Table final {
 
             const size_t window = w_1 + (w_2 << WindowBits);
 
+            // Conditional ok: this function is variable time
             if(window > 0) {
                accum += m_table[window - 1];
             }

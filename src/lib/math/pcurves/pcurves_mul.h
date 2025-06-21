@@ -157,6 +157,7 @@ std::vector<typename C::AffinePoint> basemul_setup(const typename C::AffinePoint
       table.push_back(accum);
 
       for(size_t j = 1; j != WindowElements; ++j) {
+         // Conditional ok: loop iteration count is public
          if(j % 2 == 1) {
             table.emplace_back(table[i + j / 2].dbl());
          } else {
@@ -201,6 +202,7 @@ typename C::ProjectivePoint basemul_exec(std::span<const typename C::AffinePoint
       */
       accum += C::AffinePoint::ct_select(tbl_i, w_i);
 
+      // Conditional ok: loop iteration count is public
       if(i <= 3) {
          accum.randomize_rep(rng);
       }
@@ -222,6 +224,7 @@ AffinePointTable<C> varpoint_setup(const typename C::AffinePoint& p) {
    table.push_back(C::ProjectivePoint::from_affine(p));
 
    for(size_t i = 1; i != TableSize; ++i) {
+      // Conditional ok: loop iteration count is public
       if(i % 2 == 1) {
          table.push_back(table[i / 2].dbl());
       } else {
@@ -278,6 +281,7 @@ typename C::ProjectivePoint varpoint_exec(const AffinePointTable<C>& table,
 
       accum += table.ct_select(w_i);
 
+      // Conditional ok: loop iteration count is public
       if(i <= 3) {
          accum.randomize_rep(rng);
       }
@@ -324,6 +328,8 @@ std::vector<typename C::ProjectivePoint> mul2_setup(const typename C::AffinePoin
       const size_t t_i = (i + 1);
       const size_t p_i = t_i % WindowSize;
       const size_t q_i = (t_i >> WindowBits) % WindowSize;
+
+      // Conditionals ok: all based on t_i/p_i/q_i which in turn are derived from public i
 
       // Returns x_i * x + y_i * y
       auto next_tbl_e = [&]() {
@@ -393,6 +399,7 @@ typename C::ProjectivePoint mul2_exec(const AffinePointTable<C>& table,
       const size_t window = w_1 + (w_2 << WindowBits);
       accum += table.ct_select(window);
 
+      // Conditional ok: loop iteration count is public
       if(i <= 3) {
          accum.randomize_rep(rng);
       }
