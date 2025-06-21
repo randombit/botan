@@ -197,19 +197,49 @@ that the Botan libraries were installed into.
 On macOS
 --------------
 
-A build on macOS works much like that on any other Unix-like system.
+A standard build on macOS works much like that on any other Unix-like system.
 
-To build a universal binary for macOS, for older macOs releases,
-you need to set some additional build flags.
-Do this with the `configure.py` flag `--cc-abi-flags`::
+One notable difference with macOS is the common usage of "universal binaries",
+which is effectively a multiarch binary. This was used first for the PowerPC to
+x86 transition, and more recently for the x86 to Aarch64 transition.
 
-  --cc-abi-flags="-force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc"
+Building a universal binary is a bit trickier for Botan compared with a standard
+application, as the library makes use of many architecture specific extensions,
+for example AES-NI and AVX2 on x86, and NEON and the ARMv8 crypto extensions on
+Aarch64. Botan's build system also assumes that it is knowable at setup time
+which files are to be compiled.
 
+Typically (for software with no architecture dependent code) a universal binary
+is built by adding additional compilation flags that look something like
+``-force_cpusubtype_ALL -arch x86_64 -arch arm64``. This effectively causes XCode
+to compile each file twice, once for x86_64 and again for Aarch64. For most source
+files this works fine, but for architecture-specific files it will result in errors
+when code specific to one architecture is encountered when compiling for a different
+architecture, resulting in errors like::
 
-for mac M1 on arm64, you can build the x86_64 arch version via Rosetta separately.
-Do this with with `arch -x86_64 configure.py --library-suffix=-x86_64`
-Then using lipo to create a fat binary.
-`lipo -create libbotan-arm64.dylib libbotan-x86_64.dylib -o libbotan.dylib`
+  $ make
+  ...
+  error: unknown target CPU 'armv8.2-a+sha3'
+  note: valid target CPU values are: ...
+
+There are currently two ways of proceeding.
+
+The first is to use ``--cpu=generic``. This disables all architecture specific
+code, which has performance implications, especially for algorithms with
+dedicated hardware support like AES. This can be alleviated somewhat by making
+sure the CommonCrypto provider (module ``commoncrypto``) is built, since then
+Botan offloads many of these specific operations to CommonCrypto, which will be
+able to use the CPU instructions.
+
+The second, and recommended, approach is to build twice and use ``lipo`` to
+combine the two binaries. This looks something like::
+
+  $ ./configure.py --build-dir=botan_x86_64 --cpu=x86_64 --extra-cxxflags='-arch x86_64' --library-suffix=-x86_64
+  $ make -j8 -f botan_x86_64/Makefile
+  $ ./configure.py --build-dir=botan_aarch64 --cpu=aarch64 --extra-cxxflags='-arch armv8' --library-suffix=-aarch64
+  $ make -j8 -f botan_aarch64/Makefile
+  # Now combine the two binaries with lipo
+  $ lipo -create botan_aarch64/libbotan-aarch64.dylib botan_x86_64/libbotan-x86_64.dylib -o libbotan.dylib
 
 On Windows
 --------------
