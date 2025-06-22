@@ -1064,7 +1064,7 @@ Test::Result test_ecdsa_generate_keypair() {
    curves.push_back("secp256r1");
    curves.push_back("brainpool512r1");
 
-   for(auto& curve : curves) {
+   for(const auto& curve : curves) {
       PKCS11_ECDSA_KeyPair keypair = generate_ecdsa_keypair(test_session, curve, EC_Group_Encoding::NamedCurve);
 
       keypair.first.destroy();
@@ -1089,7 +1089,7 @@ Test::Result test_ecdsa_sign_verify_core(EC_Group_Encoding enc, const std::strin
 
    auto rng = Test::new_rng(__func__);
 
-   for(auto& curve : curves) {
+   for(const auto& curve : curves) {
       // generate key pair
       PKCS11_ECDSA_KeyPair keypair = generate_ecdsa_keypair(test_session, curve, enc);
 

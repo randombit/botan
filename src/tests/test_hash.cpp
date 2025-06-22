@@ -193,8 +193,6 @@ class Hash_NIST_MonteCarlo_Tests final : public Text_Based_Test {
             input.push_back(seed);
             input.push_back(seed);
 
-            std::vector<uint8_t> buf(hash->output_length());
-
             for(size_t j = 0; j <= count; ++j) {
                for(size_t i = 3; i != 1003; ++i) {
                   hash->update(input[0]);

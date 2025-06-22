@@ -386,8 +386,8 @@ Test::Result test_c_init_token() {
    RAII_LowLevel p11_low_level;
    std::vector<SlotId> slot_vec = p11_low_level.get_slots(true);
 
-   const std::string label = "Botan PKCS#11 tests";
-   std::string_view label_view(label);
+   const std::string token_label = "Botan PKCS#11 tests";
+   std::string_view label_view(token_label);
 
    auto sec_vec_binder = std::bind(
       static_cast<bool (LowLevel::*)(SlotId, const secure_vector<uint8_t>&, std::string_view, ReturnValue*) const>(

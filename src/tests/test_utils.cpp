@@ -1327,9 +1327,7 @@ class UUID_Tests : public Test {
                explicit AllSame_RNG(uint8_t b) : m_val(b) {}
 
                void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /* ignored */) override {
-                  for(auto& byte : output) {
-                     byte = m_val;
-                  }
+                  std::fill(output.begin(), output.end(), m_val);
                }
 
                std::string name() const override { return "zeros"; }

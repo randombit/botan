@@ -40,17 +40,19 @@ class URI_Tests final : public Test {
       static Test::Result test_uri_parsing() {
          Test::Result result("URI parsing");
 
-         struct {
+         struct URITestCase {
                std::string uri;
                std::string host;
                Botan::URI::Type type;
                uint16_t port;
-         } tests[]{
-            {"localhost:80", "localhost", Botan::URI::Type::Domain, 80},
-            {"www.example.com", "www.example.com", Botan::URI::Type::Domain, 0},
-            {"192.168.1.1", "192.168.1.1", Botan::URI::Type::IPv4, 0},
-            {"192.168.1.1:34567", "192.168.1.1", Botan::URI::Type::IPv4, 34567},
-            {"[::1]:61234", "::1", Botan::URI::Type::IPv6, 61234},
+         };
+
+         const std::array tests{
+            URITestCase{"localhost:80", "localhost", Botan::URI::Type::Domain, 80},
+            URITestCase{"www.example.com", "www.example.com", Botan::URI::Type::Domain, 0},
+            URITestCase{"192.168.1.1", "192.168.1.1", Botan::URI::Type::IPv4, 0},
+            URITestCase{"192.168.1.1:34567", "192.168.1.1", Botan::URI::Type::IPv4, 34567},
+            URITestCase{"[::1]:61234", "::1", Botan::URI::Type::IPv6, 61234},
          };
 
          for(const auto& t : tests) {
