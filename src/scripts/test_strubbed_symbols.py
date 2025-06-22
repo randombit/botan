@@ -57,7 +57,7 @@ class StrubTest:
             return self._fail("nonzero error code", proc_result=proc)
 
         if "Error: " in proc.stderr.decode("utf-8"):
-            return self._fail("fail", proc_result=proc)
+            return self._fail("fail", proc_result=proc, may_be_expected=True)
 
         if "Success: " in proc.stdout.decode("utf-8"):
             return self._succeed(proc_result=proc)
@@ -81,13 +81,14 @@ class StrubTest:
                 print("    stderr:")
                 print(indent(proc_result.stderr.decode("utf-8"), " " * 6))
 
-    def _fail(self, errmsg, proc_result = None, exception = None):
-        if self.expect_fail:
+    def _fail(self, errmsg, proc_result = None, exception = None, may_be_expected = False):
+        if may_be_expected and self.expect_fail:
             print(f"{errmsg} (expected)")
+            return True
         else:
             print(errmsg)
             self._print_debug_report(proc_result=proc_result, exception=exception)
-        return self.expect_fail
+            return False
 
     def _succeed(self, proc_result = None):
         if not self.expect_fail:
