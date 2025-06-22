@@ -234,12 +234,11 @@ able to use the CPU instructions.
 The second, and recommended, approach is to build twice and use ``lipo`` to
 combine the two binaries. This looks something like::
 
-  $ ./configure.py --build-dir=botan_x86_64 --cpu=x86_64 --extra-cxxflags='-arch x86_64' --library-suffix=-x86_64
-  $ make -j8 -f botan_x86_64/Makefile
-  $ ./configure.py --build-dir=botan_aarch64 --cpu=aarch64 --extra-cxxflags='-arch armv8' --library-suffix=-aarch64
-  $ make -j8 -f botan_aarch64/Makefile
-  # Now combine the two binaries with lipo
-  $ lipo -create botan_aarch64/libbotan-aarch64.dylib botan_x86_64/libbotan-x86_64.dylib -o libbotan.dylib
+$ ./configure.py --with-build-dir=botan_x86_64 --disable-cc-tests --build-targets=shared  --cpu=x86_64 --extra-cxxflags='-arch x86_64' --ldflags='-arch x86_64' --library-suffix=-x86_64
+$ make -j8 -f botan_x86_64/Makefile
+$ ./configure.py --with-build-dir=botan_aarch64 --disable-cc-tests --build-targets=shared  --cpu=aarch64 --extra-cxxflags='-arch arm64' --ldflags='-arch arm64' --library-suffix=-aarch64
+$ make -j8 -f botan_aarch64/Makefile
+$ lipo -create botan_aarch64/libbotan-3-aarch64.dylib botan_x86_64/libbotan-3-x86_64.dylib -o libbotan-3.dylib
 
 On Windows
 --------------
