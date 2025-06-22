@@ -259,6 +259,9 @@ jobs:
           - target: strubbing
             compiler: gcc-14
             host_os: ubuntu-24.04
+          - target: strubbing
+            compiler: gcc-14
+            host_os: ubuntu-24.04-arm
 
     runs-on: ${{ matrix.host_os }}
 
