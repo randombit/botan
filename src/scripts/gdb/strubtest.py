@@ -55,7 +55,9 @@ class PostStrubLocation(gdb.FinishBreakpoint):
         return all(b'\x00' == b for b in self.stackframe_memory())
 
     def stop(self):
-        if not self.is_stackframe_scrubbed():
+        if self.stackframe_size() == 0:
+            report_error(f"{self.function_name} has an empty stackframe, cannot validate")
+        elif not self.is_stackframe_scrubbed():
             report_error(f"{self.function_name} didn't get its stack frame scrubbed after usage")
         else:
             report_status(f"Success: stackframe of {self.function_name} contains {self.stackframe_size()} zero bytes after invcoation")
