@@ -112,9 +112,8 @@ std::vector<Test::Result> ECC_Randomized_Tests::run() {
 
       const Botan::EC_Point pt = create_random_point(this->rng(), group);
 
-      std::vector<Botan::BigInt> blind_ws;
-
       try {
+         std::vector<Botan::BigInt> blind_ws;
          const size_t trials = (Test::run_long_tests() ? 10 : 3);
          for(size_t i = 0; i < trials; ++i) {
             const Botan::BigInt a = test_integer(rng(), group.get_order_bits(), group.get_order());

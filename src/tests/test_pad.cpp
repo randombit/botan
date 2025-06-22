@@ -30,7 +30,7 @@ class Cipher_Mode_Padding_Tests final : public Text_Based_Test {
             if(algo.substr(underscore + 1, std::string::npos) != "Invalid") {
                throw Test_Error("Unexpected padding header " + header);
             }
-            algo = algo.substr(0, underscore);
+            algo.resize(underscore);  // Use just the part before the underscore
          }
 
          Test::Result result(algo);
