@@ -26,6 +26,12 @@ def stack_pointer(frame):
 def frame_pointer(frame):
     return frame.read_register('fp')
 
+def current_stackframe_memory_span(frame):
+    start, end = stack_pointer(frame), frame_pointer(frame)
+    if frame.architecture().name() == "aarch64" and end < start:
+        start, end = end, start # On aarch64, the stack grows downwards!
+    return (start, end - start)
+
 def report_error(error):
     gdb.write(f"Error: {error}\n", gdb.STDERR)
 
@@ -39,11 +45,10 @@ class PostStrubLocation(gdb.FinishBreakpoint):
     it validates that the this stackframe indeed contains zero bytes only.
     """
 
-    def __init__(self, caller_frame, target_frame, function_name):
+    def __init__(self, caller_frame, stackframe, function_name):
         super().__init__(caller_frame, internal=True)
         self.function_name = function_name
-        self.payload_stack_memory = (stack_pointer(target_frame),
-                                     frame_pointer(target_frame) - stack_pointer(target_frame))
+        self.payload_stack_memory = stackframe
 
     def stackframe_memory(self):
         return gdb.selected_inferior().read_memory(*self.payload_stack_memory)
@@ -61,6 +66,43 @@ class PostStrubLocation(gdb.FinishBreakpoint):
             report_error(f"{self.function_name} didn't get its stack frame scrubbed after usage")
         else:
             report_status(f"Success: stackframe of {self.function_name} contains {self.stackframe_size()} zero bytes after invcoation")
+
+class TargetReturnLocation(gdb.Breakpoint):
+    """
+    This special breakpoint finds one or more return instructions in the target
+    frame and registers itself at those instruction addresses. When hit, it will
+    obtain the stackframe size just before the function returns and set a
+    PostStrubLocation breakpoint at the caller frame.
+    """
+
+    @staticmethod
+    def find_and_register_in(frame, function_name):
+        arch = frame.architecture()
+        assert arch.name() == "aarch64", "TargetReturnLocation is meant for aarch64"
+        disass = arch.disassemble(frame.block().start, frame.block().end)
+        addrs = [f"0x{instr['addr']:x}" for instr in disass if instr['asm'] == 'ret']
+        if not addrs:
+            report_error(f"no ret instructions found in {function_name}")
+        else:
+            for ret_address in addrs:
+                TargetReturnLocation(ret_address, function_name)
+
+    def __init__(self, address, function_name):
+        super().__init__(f"*{address}", internal=True, temporary=True)
+        self.function_name = function_name
+
+        # Workaround: gdb.Breakpoint has a temporary= param in its constructor,
+        # that is meant to delete the breakpoint after it has been hit. Though,
+        # it didn't work for some reason.
+        self.hit = False
+
+    def stop(self):
+        if not self.hit:
+            target_frame = gdb.newest_frame()
+            caller_frame = target_frame.older()
+            stackframe = current_stackframe_memory_span(target_frame)
+            PostStrubLocation(caller_frame, stackframe, self.function_name)
+            self.hit = True
 
 class StrubTarget(gdb.Breakpoint):
     """
@@ -89,9 +131,17 @@ class StrubTarget(gdb.Breakpoint):
             if wrapper_address == target_frame.pc():
                 return False
 
-        # Set a temporary breakpoint after the "virtual wrapper" (caller_frame)
-        # has returned. This is just after the stack scrubbing was performed.
-        PostStrubLocation(caller_frame, target_frame, self.function_name)
+        if target_frame.architecture().name() == "aarch64":
+            # On aarch64, the stackframe size is not available at the beginning
+            # of the function, so we set breakpoints at the return instructions
+            # of the current frame and obtain the stackframe size there.
+            TargetReturnLocation.find_and_register_in(target_frame, self.function_name)
+        else:
+            # On other platforms (e.g. x86_64), we can directly obtain the
+            # stackframe size at the beginning of the function and set the
+            # PostStrubLocation breakpoint immediately.
+            stackframe = current_stackframe_memory_span(target_frame)
+            PostStrubLocation(caller_frame, stackframe, self.function_name)
 
         # Don't stop for interactive inspection at this location
         return False
