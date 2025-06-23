@@ -16,26 +16,23 @@
 
 #include <botan/compiler.h>
 #include <botan/internal/bswap.h>
+#include <concepts>
 
 namespace Botan {
 
 /**
 * If top bit of arg is set, return ~0. Otherwise return 0.
 */
-template <typename T>
-BOTAN_FORCE_INLINE constexpr T expand_top_bit(T a)
-   requires(std::is_integral_v<T>)
-{
+template <std::unsigned_integral T>
+BOTAN_FORCE_INLINE constexpr T expand_top_bit(T a) {
    return static_cast<T>(0) - (a >> (sizeof(T) * 8 - 1));
 }
 
 /**
 * If arg is zero, return ~0. Otherwise return 0
 */
-template <typename T>
-BOTAN_FORCE_INLINE constexpr T ct_is_zero(T x)
-   requires(std::is_integral_v<T>)
-{
+template <std::unsigned_integral T>
+BOTAN_FORCE_INLINE constexpr T ct_is_zero(T x) {
    return expand_top_bit<T>(~x & (x - 1));
 }
 
@@ -44,10 +41,8 @@ BOTAN_FORCE_INLINE constexpr T ct_is_zero(T x)
 * @param arg an integer value
 * @return true iff arg is 2^n for some n > 0
 */
-template <typename T>
-BOTAN_FORCE_INLINE constexpr bool is_power_of_2(T arg)
-   requires(std::is_unsigned_v<T>)
-{
+template <std::unsigned_integral T>
+BOTAN_FORCE_INLINE constexpr bool is_power_of_2(T arg) {
    return (arg != 0) && (arg != 1) && ((arg & static_cast<T>(arg - 1)) == 0);
 }
 
@@ -57,14 +52,12 @@ BOTAN_FORCE_INLINE constexpr bool is_power_of_2(T arg)
 * @param n an integer value
 * @return index of the highest set bit in n
 */
-template <typename T>
-BOTAN_FORCE_INLINE constexpr size_t high_bit(T n)
-   requires(std::is_unsigned_v<T>)
-{
+template <std::unsigned_integral T>
+BOTAN_FORCE_INLINE constexpr size_t high_bit(T n) {
    size_t hb = 0;
 
    for(size_t s = 8 * sizeof(T) / 2; s > 0; s /= 2) {
-      const size_t z = s * ((~ct_is_zero(n >> s)) & 1);
+      const size_t z = s * ((~ct_is_zero<T>(n >> s)) & 1);
       hb += z;
       n >>= z;
    }
@@ -79,13 +72,11 @@ BOTAN_FORCE_INLINE constexpr size_t high_bit(T n)
 * @param n an integer value
 * @return number of significant bytes in n
 */
-template <typename T>
-BOTAN_FORCE_INLINE constexpr size_t significant_bytes(T n)
-   requires(std::is_integral_v<T>)
-{
+template <std::unsigned_integral T>
+BOTAN_FORCE_INLINE constexpr size_t significant_bytes(T n) {
    size_t b = 0;
 
-   for(size_t s = 8 * sizeof(n) / 2; s >= 8; s /= 2) {
+   for(size_t s = 8 * sizeof(T) / 2; s >= 8; s /= 2) {
       const size_t z = s * (~ct_is_zero(n >> s) & 1);
       b += z / 8;
       n >>= z;
@@ -101,10 +92,8 @@ BOTAN_FORCE_INLINE constexpr size_t significant_bytes(T n)
 * @param n an integer value
 * @return maximum x st 2^x divides n
 */
-template <typename T>
-BOTAN_FORCE_INLINE constexpr size_t ctz(T n)
-   requires(std::is_integral_v<T>)
-{
+template <std::unsigned_integral T>
+BOTAN_FORCE_INLINE constexpr size_t ctz(T n) {
    /*
    * If n == 0 then this function will compute 8*sizeof(T)-1, so
    * initialize lb to 1 if n == 0 to produce the expected result.
@@ -121,17 +110,15 @@ BOTAN_FORCE_INLINE constexpr size_t ctz(T n)
    return lb;
 }
 
-template <typename T>
-BOTAN_FORCE_INLINE constexpr T floor_log2(T n)
-   requires(std::is_unsigned_v<T>)
-{
+template <std::unsigned_integral T>
+BOTAN_FORCE_INLINE constexpr T floor_log2(T n) {
    BOTAN_ARG_CHECK(n != 0, "log2(0) is not defined");
    return static_cast<T>(high_bit(n) - 1);
 }
 
-template <typename T>
+template <std::unsigned_integral T>
 constexpr uint8_t ceil_log2(T x)
-   requires(std::is_integral_v<T> && sizeof(T) < 32)
+   requires(sizeof(T) < 32)
 {
    if(x >> (sizeof(T) * 8 - 1)) {
       return sizeof(T) * 8;
@@ -164,10 +151,8 @@ BOTAN_FORCE_INLINE constexpr T ceil_division(T a, T b) {
 /**
  * Return the number of bytes necessary to contain @p bits bits.
  */
-template <typename T>
-BOTAN_FORCE_INLINE constexpr T ceil_tobytes(T bits)
-   requires(std::is_integral_v<T>)
-{
+template <std::unsigned_integral T>
+BOTAN_FORCE_INLINE constexpr T ceil_tobytes(T bits) {
    return (bits + 7) / 8;
 }
 
@@ -183,7 +168,7 @@ BOTAN_FORCE_INLINE constexpr size_t var_ctz32(uint32_t n) {
 #endif
 }
 
-template <typename T>
+template <std::unsigned_integral T>
 BOTAN_FORCE_INLINE constexpr T bit_permute_step(T x, T mask, size_t shift) {
    /*
    See https://reflectionsonsecurity.wordpress.com/2014/05/11/efficient-bit-permutation-using-delta-swaps/
@@ -193,7 +178,7 @@ BOTAN_FORCE_INLINE constexpr T bit_permute_step(T x, T mask, size_t shift) {
    return (x ^ swap) ^ (swap << shift);
 }
 
-template <typename T>
+template <std::unsigned_integral T>
 BOTAN_FORCE_INLINE constexpr void swap_bits(T& x, T& y, T mask, size_t shift) {
    const T swap = ((x >> shift) ^ y) & mask;
    x ^= swap << shift;
@@ -207,13 +192,13 @@ BOTAN_FORCE_INLINE constexpr void swap_bits(T& x, T& y, T mask, size_t shift) {
 * If mask is |0| returns b
 * If mask is some other value returns a or b depending on the bit
 */
-template <typename T>
+template <std::unsigned_integral T>
 BOTAN_FORCE_INLINE constexpr T choose(T mask, T a, T b) {
    //return (mask & a) | (~mask & b);
    return (b ^ (mask & (a ^ b)));
 }
 
-template <typename T>
+template <std::unsigned_integral T>
 BOTAN_FORCE_INLINE constexpr T majority(T a, T b, T c) {
    /*
    Considering each bit of a, b, c individually
