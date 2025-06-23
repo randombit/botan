@@ -15,6 +15,7 @@ ffi_oid.h
 ffi_pkey.h
 ffi_rng.h
 ffi_util.h
+ffi_x509_rpki.h
 </header:internal>
 
 <header:public>
