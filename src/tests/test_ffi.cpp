@@ -755,8 +755,29 @@ class FFI_Cert_Creation_Test final : public FFI_Test {
                const char* dns_names[] = {"botan.randombit.net", "randombit.net"};
                TEST_FFI_OK(botan_x509_cert_opts_more_dns, (ca_opts, dns_names, 2));
 
+               botan_x509_ext_ip_addr_blocks_t ca_ip_addr_blocks;
+               TEST_FFI_OK(botan_x509_ext_create_ip_addr_blocks, (&ca_ip_addr_blocks));
+               std::vector<uint8_t> ip_addr = {192, 168, 2, 1};
+               TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_add_ip_addr,
+                           (ca_ip_addr_blocks, ip_addr.data(), ip_addr.data(), 0, nullptr));
+
+               size_t v4_count;
+               size_t v6_count;
+
+               TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_get_counts, (ca_ip_addr_blocks, &v4_count, &v6_count));
+               result.test_eq("ext has v4 addresses", v4_count, 1);
+               result.test_eq("ext has no v6 addresses", v6_count, 0);
+
+               TEST_FFI_OK(botan_x509_cert_opts_add_ext_ip_addr_blocks, (ca_opts, ca_ip_addr_blocks));
+               TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_destroy, (ca_ip_addr_blocks));
+
                botan_x509_cert_t ca_cert;
                TEST_FFI_OK(botan_x509_create_self_signed_cert, (&ca_cert, ca_key, ca_opts, hash_fn.c_str(), "", rng));
+
+               botan_x509_ext_ip_addr_blocks_t ca_ip_addr_blocks_from_cert;
+               TEST_FFI_OK(botan_x509_ext_create_ip_addr_blocks_from_cert, (ca_cert, &ca_ip_addr_blocks_from_cert));
+
+               TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_destroy, (ca_ip_addr_blocks_from_cert));
 
                botan_x509_ca_t ca;
                TEST_FFI_OK(botan_x509_create_ca, (&ca, ca_cert, ca_key, hash_fn.c_str(), padding_method.c_str(), rng));
