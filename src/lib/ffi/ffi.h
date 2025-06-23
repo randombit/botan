@@ -2210,11 +2210,17 @@ int botan_x509_cert_verify(int* validation_result,
 BOTAN_FFI_EXPORT(2, 8) const char* botan_x509_cert_validation_status(int code);
 
 typedef struct botan_x509_cert_opts_struct* botan_x509_cert_opts_t;
+typedef struct botan_x509_ext_as_blocks_struct* botan_x509_ext_as_blocks_t;
+typedef struct botan_x509_ext_ip_addr_blocks_struct* botan_x509_ext_ip_addr_blocks_t;
 typedef struct botan_x509_ca_struct* botan_x509_ca_t;
 typedef struct botan_x509_pkcs10_req_struct* botan_x509_pkcs10_req_t;
 typedef struct botan_x509_time_struct* botan_x509_time_t;
 
 BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_destroy(botan_x509_cert_opts_t opts);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_ext_ip_addr_blocks_destroy(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_ext_as_blocks_destroy(botan_x509_ext_as_blocks_t as_blocks);
 
 BOTAN_FFI_EXPORT(3, 9) int botan_x509_ca_destroy(botan_x509_ca_t ca);
 
@@ -2268,6 +2274,83 @@ BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_not_after(botan_x509_cert_opts_t
 BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_add_constraints(botan_x509_cert_opts_t opts, uint32_t usage);
 
 BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_add_ex_constraint(botan_x509_cert_opts_t opts, botan_asn1_oid_t oid);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_opts_add_ext_ip_addr_blocks(botan_x509_cert_opts_t opts,
+                                                botan_x509_ext_ip_addr_blocks_t ip_addr_blocks);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_opts_add_ext_as_blocks(botan_x509_cert_opts_t opts, botan_x509_ext_as_blocks_t as_blocks);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_ext_create_ip_addr_blocks(botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_ext_create_ip_addr_blocks_from_cert(botan_x509_cert_t cert,
+                                                   botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_ext_ip_addr_blocks_add_ip_addr(
+   botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, const uint8_t* min, const uint8_t* max, int ipv6, uint8_t* safi);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_ext_ip_addr_blocks_restrict(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, int ipv6, uint8_t* safi);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_ext_ip_addr_blocks_inherit(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, int ipv6, uint8_t* safi);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_ext_ip_addr_blocks_get_counts(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
+                                             size_t* v4_count,
+                                             size_t* v6_count);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_ext_ip_addr_blocks_get_family(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
+                                             int ipv6,
+                                             size_t i,
+                                             int* has_safi,
+                                             uint8_t* safi,
+                                             int* present,
+                                             int* count);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_ext_ip_addr_blocks_get_address(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
+                                              int ipv6,
+                                              size_t i,
+                                              size_t entry,
+                                              uint8_t min_out[],
+                                              uint8_t max_out[],
+                                              size_t* out_len);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_ext_create_as_blocks(botan_x509_ext_as_blocks_t* as_blocks);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_ext_create_as_blocks_from_cert(botan_x509_cert_t cert, botan_x509_ext_as_blocks_t* as_blocks);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_ext_as_blocks_add_asnum(botan_x509_ext_as_blocks_t as_blocks, uint32_t min, uint32_t max);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_ext_as_blocks_restrict_asnum(botan_x509_ext_as_blocks_t as_blocks);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_ext_as_blocks_inherit_asnum(botan_x509_ext_as_blocks_t as_blocks);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_ext_as_blocks_add_rdi(botan_x509_ext_as_blocks_t as_blocks, uint32_t min, uint32_t max);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_ext_as_blocks_restrict_rdi(botan_x509_ext_as_blocks_t as_blocks);
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_ext_as_blocks_inherit_rdi(botan_x509_ext_as_blocks_t as_blocks);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_ext_as_blocks_get_asnum(botan_x509_ext_as_blocks_t as_blocks, int* present, size_t* count);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_ext_as_blocks_get_asnum_at(botan_x509_ext_as_blocks_t as_blocks, size_t i, uint32_t* min, uint32_t* max);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_ext_as_blocks_get_rdi(botan_x509_ext_as_blocks_t as_blocks, int* present, size_t* count);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_ext_as_blocks_get_rdi_at(botan_x509_ext_as_blocks_t as_blocks, size_t i, uint32_t* min, uint32_t* max);
 
 BOTAN_FFI_EXPORT(3, 9)
 int botan_x509_create_self_signed_cert(botan_x509_cert_t* cert_obj,

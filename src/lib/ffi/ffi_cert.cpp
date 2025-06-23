@@ -12,6 +12,7 @@
 #include <botan/internal/ffi_pkey.h>
 #include <botan/internal/ffi_rng.h>
 #include <botan/internal/ffi_util.h>
+#include <botan/internal/ffi_x509_rpki.h>
 #include <memory>
 
 extern "C" {
@@ -167,7 +168,7 @@ int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage
 }
 
 int botan_x509_get_basic_constraints(botan_x509_cert_t cert, int* is_ca, size_t* limit) {
-   if(!is_ca || !limit) {
+   if(is_ca == nullptr || limit == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -189,7 +190,7 @@ int botan_x509_get_basic_constraints(botan_x509_cert_t cert, int* is_ca, size_t*
 }
 
 int botan_x509_get_key_constraints(botan_x509_cert_t cert, uint32_t* usage) {
-   if(!usage) {
+   if(usage == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -215,7 +216,7 @@ int botan_x509_get_ocsp_responder(botan_x509_cert_t cert, botan_view_ctx ctx, bo
 }
 
 int botan_x509_is_self_signed(botan_x509_cert_t cert, int* out) {
-   if(!out) {
+   if(out == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -595,7 +596,7 @@ int botan_x509_time_destroy(botan_x509_time_t time) {
 }
 
 int botan_x509_create_cert_opts(botan_x509_cert_opts_t* opts_obj, const char* opts, uint32_t* expire_time) {
-   if(!opts_obj || !opts) {
+   if(opts_obj == nullptr || opts == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -621,7 +622,7 @@ int botan_x509_create_cert_opts(botan_x509_cert_opts_t* opts_obj, const char* op
    // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
    #define X509_GET_CERT_OPTS_STRING(FIELD_NAME)                                              \
       int botan_x509_cert_opts_##FIELD_NAME(botan_x509_cert_opts_t opts, const char* value) { \
-         if(!value) {                                                                         \
+         if(value == nullptr) {                                                               \
             return BOTAN_FFI_ERROR_NULL_POINTER;                                              \
          }                                                                                    \
          return ffi_guard_thunk(__func__, [=]() -> int {                                      \
@@ -633,7 +634,7 @@ int botan_x509_create_cert_opts(botan_x509_cert_opts_t* opts_obj, const char* op
    // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
    #define X509_GET_CERT_OPTS_STRING(FIELD_NAME)                                              \
       int botan_x509_cert_opts_##FIELD_NAME(botan_x509_cert_opts_t opts, const char* value) { \
-         if(!value) {                                                                         \
+         if(value == nullptr) {                                                               \
             return BOTAN_FFI_ERROR_NULL_POINTER;                                              \
          }                                                                                    \
          BOTAN_UNUSED(opts);                                                                  \
@@ -659,13 +660,13 @@ X509_GET_CERT_OPTS_STRING(challenge)
    // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
    #define X509_GET_CERT_OPTS_VEC(FIELD_NAME)                                                              \
       int botan_x509_cert_opts_##FIELD_NAME(botan_x509_cert_opts_t opts, const char** value, size_t cnt) { \
-         if(!value) {                                                                                      \
+         if(value == nullptr) {                                                                            \
             return BOTAN_FFI_ERROR_NULL_POINTER;                                                           \
          }                                                                                                 \
          return ffi_guard_thunk(__func__, [=]() -> int {                                                   \
             std::vector<std::string> val;                                                                  \
             for(size_t i = 0; i < cnt; i++) {                                                              \
-               if(!value[i]) {                                                                             \
+               if(value[i] == nullptr) {                                                                   \
                   return BOTAN_FFI_ERROR_NULL_POINTER;                                                     \
                }                                                                                           \
                val.push_back(value[i]);                                                                    \
@@ -678,7 +679,7 @@ X509_GET_CERT_OPTS_STRING(challenge)
    // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
    #define X509_GET_CERT_OPTS_VEC(FIELD_NAME)                                                              \
       int botan_x509_cert_opts_##FIELD_NAME(botan_x509_cert_opts_t opts, const char** value, size_t cnt) { \
-         if(!value) {                                                                                      \
+         if(value == nullptr) {                                                                            \
             return BOTAN_FFI_ERROR_NULL_POINTER;                                                           \
          }                                                                                                 \
          BOTAN_UNUSED(opts, cnt);                                                                          \
@@ -699,7 +700,7 @@ int botan_x509_cert_opts_ca_key(botan_x509_cert_opts_t opts, size_t limit) {
 }
 
 int botan_x509_cert_opts_set_padding_scheme(botan_x509_cert_opts_t opts, const char* scheme) {
-   if(!scheme) {
+   if(scheme == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -759,13 +760,38 @@ int botan_x509_cert_opts_add_ex_constraint(botan_x509_cert_opts_t opts, botan_as
 #endif
 }
 
+int botan_x509_cert_opts_add_ext_ip_addr_blocks(botan_x509_cert_opts_t opts,
+                                                botan_x509_ext_ip_addr_blocks_t ip_addr_blocks) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      safe_get(opts).extensions.add(safe_get(ip_addr_blocks).copy());
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(opts, as_blocks);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_opts_add_ext_as_blocks(botan_x509_cert_opts_t opts, botan_x509_ext_as_blocks_t as_blocks) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      safe_get(opts).extensions.add(safe_get(as_blocks).copy());
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(opts, as_blocks);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 int botan_x509_create_self_signed_cert(botan_x509_cert_t* cert_obj,
                                        botan_privkey_t key,
                                        botan_x509_cert_opts_t opts,
                                        const char* hash_fn,
                                        const char* sig_padding,
                                        botan_rng_t rng) {
-   if(!cert_obj || !hash_fn || !sig_padding) {
+   if(cert_obj == nullptr || hash_fn == nullptr || sig_padding == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
@@ -787,7 +813,7 @@ int botan_x509_create_ca(botan_x509_ca_t* ca_obj,
                          const char* hash_fn,
                          const char* sig_padding,
                          botan_rng_t rng) {
-   if(!ca_obj || !hash_fn || !sig_padding) {
+   if(ca_obj == nullptr || hash_fn == nullptr || sig_padding == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
@@ -807,7 +833,7 @@ int botan_x509_create_pkcs10_req(botan_x509_pkcs10_req_t* req_obj,
                                  botan_privkey_t key,
                                  const char* hash_fn,
                                  botan_rng_t rng) {
-   if(!req_obj || !hash_fn) {
+   if(req_obj == nullptr || hash_fn == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
@@ -829,7 +855,7 @@ int botan_x509_sign_req(botan_x509_cert_t* cert_obj,
                         botan_rng_t rng,
                         botan_x509_time_t not_before,
                         botan_x509_time_t not_after) {
-   if(!cert_obj) {
+   if(cert_obj == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
@@ -846,7 +872,7 @@ int botan_x509_sign_req(botan_x509_cert_t* cert_obj,
 }
 
 int botan_x509_create_time(botan_x509_time_t* time_obj, uint64_t time_since_epoch) {
-   if(!time_obj) {
+   if(time_obj == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
