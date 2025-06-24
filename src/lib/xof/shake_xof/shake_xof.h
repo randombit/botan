@@ -27,7 +27,7 @@ class SHAKE_XOF : public XOF {
        *
        * @param capacity  either 256 or 512
        */
-      SHAKE_XOF(size_t capacity);
+      explicit SHAKE_XOF(size_t capacity);
 
    public:
       std::string provider() const final { return m_keccak.provider(); }

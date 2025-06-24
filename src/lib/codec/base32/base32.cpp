@@ -58,7 +58,9 @@ class Base32 final {
          out_ptr[4] = (decode_buf[6] << 5) | decode_buf[7];
       }
 
-      static size_t bytes_to_remove(size_t final_truncate) { return final_truncate ? (final_truncate / 2) + 1 : 0; }
+      static size_t bytes_to_remove(size_t final_truncate) {
+         return (final_truncate > 0) ? (final_truncate / 2) + 1 : 0;
+      }
 
    private:
       static constexpr size_t m_encoding_bits = 5;

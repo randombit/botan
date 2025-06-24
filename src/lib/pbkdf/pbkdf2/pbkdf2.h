@@ -70,7 +70,7 @@ class BOTAN_PUBLIC_API(2, 8) PBKDF2 final : public PasswordHash {
 */
 class BOTAN_PUBLIC_API(2, 8) PBKDF2_Family final : public PasswordHashFamily {
    public:
-      PBKDF2_Family(std::unique_ptr<MessageAuthenticationCode> prf) : m_prf(std::move(prf)) {}
+      explicit PBKDF2_Family(std::unique_ptr<MessageAuthenticationCode> prf) : m_prf(std::move(prf)) {}
 
       std::string name() const override;
 

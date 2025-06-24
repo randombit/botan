@@ -336,7 +336,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
             /**
             * Create a table for computing g*x + h*y
             */
-            Mul2Table(const EC_AffinePoint& h);
+            explicit Mul2Table(const EC_AffinePoint& h);
 
             /**
             * Return the elliptic curve point g*x + h*y
@@ -718,7 +718,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
    private:
       static EC_Group_Data_Map& ec_group_data();
 
-      EC_Group(std::shared_ptr<EC_Group_Data>&& data);
+      explicit EC_Group(std::shared_ptr<EC_Group_Data>&& data);
 
       static std::pair<std::shared_ptr<EC_Group_Data>, bool> BER_decode_EC_group(std::span<const uint8_t> ber,
                                                                                  EC_Group_Source source);

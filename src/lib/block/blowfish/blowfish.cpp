@@ -196,7 +196,7 @@ void Blowfish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       blocks -= 4;
    }
 
-   while(blocks) {
+   while(blocks > 0) {
       uint32_t L, R;
       load_be(in, L, R);
 
@@ -266,7 +266,7 @@ void Blowfish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       blocks -= 4;
    }
 
-   while(blocks) {
+   while(blocks > 0) {
       uint32_t L, R;
       load_be(in, L, R);
 

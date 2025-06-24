@@ -28,7 +28,7 @@ BOTAN_FFI_DECLARE_STRUCT(botan_x509_cert_struct, Botan::X509_Certificate, 0x8F62
 #endif
 
 int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* cert_path) {
-   if(!cert_obj || !cert_path) {
+   if(cert_obj == nullptr || cert_path == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -46,7 +46,7 @@ int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* cert_path
 }
 
 int botan_x509_cert_dup(botan_x509_cert_t* cert_obj, botan_x509_cert_t cert) {
-   if(!cert_obj) {
+   if(cert_obj == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -65,7 +65,7 @@ int botan_x509_cert_dup(botan_x509_cert_t* cert_obj, botan_x509_cert_t cert) {
 }
 
 int botan_x509_cert_load(botan_x509_cert_t* cert_obj, const uint8_t cert_bits[], size_t cert_bits_len) {
-   if(!cert_obj || !cert_bits) {
+   if(cert_obj == nullptr || cert_bits == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -360,7 +360,7 @@ BOTAN_FFI_DECLARE_STRUCT(botan_x509_crl_struct, Botan::X509_CRL, 0x2C628910);
 #endif
 
 int botan_x509_crl_load_file(botan_x509_crl_t* crl_obj, const char* crl_path) {
-   if(!crl_obj || !crl_path) {
+   if(crl_obj == nullptr || crl_path == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -378,7 +378,7 @@ int botan_x509_crl_load_file(botan_x509_crl_t* crl_obj, const char* crl_path) {
 }
 
 int botan_x509_crl_load(botan_x509_crl_t* crl_obj, const uint8_t crl_bits[], size_t crl_bits_len) {
-   if(!crl_obj || !crl_bits) {
+   if(crl_obj == nullptr || crl_bits == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 

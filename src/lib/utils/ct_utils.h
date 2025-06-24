@@ -396,7 +396,7 @@ class Mask final {
       * Derive a Mask from a Mask of a larger type
       */
       template <typename U>
-      constexpr Mask(Mask<U> o) : m_mask(static_cast<T>(o.value())) {
+      constexpr explicit Mask(Mask<U> o) : m_mask(static_cast<T>(o.value())) {
          static_assert(sizeof(U) > sizeof(T), "sizes ok");
       }
 
@@ -647,7 +647,7 @@ class Mask final {
       constexpr void _const_time_unpoison() const { CT::unpoison(m_mask); }
 
    private:
-      constexpr Mask(T m) : m_mask(m) {}
+      constexpr explicit Mask(T m) : m_mask(m) {}
 
       T m_mask;
 };
@@ -666,7 +666,7 @@ class Option final {
       constexpr Option(T v, Choice valid) : m_has_value(valid), m_value(std::move(v)) {}
 
       /// Construct a set option with the provided value
-      constexpr Option(T v) : Option(std::move(v), Choice::yes()) {}
+      constexpr explicit Option(T v) : Option(std::move(v), Choice::yes()) {}
 
       /// Construct an unset option with a default inner value
       constexpr Option()

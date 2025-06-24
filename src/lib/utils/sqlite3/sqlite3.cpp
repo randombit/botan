@@ -21,7 +21,7 @@ Sqlite3_Database::Sqlite3_Database(std::string_view db_filename, std::optional<i
       sqlite_open_flags.value_or(SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
    int rc = ::sqlite3_open_v2(std::string(db_filename).c_str(), &m_db, open_flags, nullptr);
 
-   if(rc) [[unlikely]] {
+   if(rc != 0) [[unlikely]] {
       const std::string err_msg = ::sqlite3_errmsg(m_db);
       ::sqlite3_close(m_db);
       m_db = nullptr;
@@ -30,7 +30,7 @@ Sqlite3_Database::Sqlite3_Database(std::string_view db_filename, std::optional<i
 }
 
 Sqlite3_Database::~Sqlite3_Database() {
-   if(m_db) [[likely]] {
+   if(m_db != nullptr) [[likely]] {
       ::sqlite3_close(m_db);
    }
    m_db = nullptr;
@@ -87,7 +87,7 @@ bool Sqlite3_Database::is_threadsafe() const {
    return flag >= 1;
 }
 
-Sqlite3_Database::Sqlite3_Statement::Sqlite3_Statement(sqlite3* db, std::string_view base_sql) {
+Sqlite3_Database::Sqlite3_Statement::Sqlite3_Statement(sqlite3* db, std::string_view base_sql) : m_stmt{} {
    int rc = ::sqlite3_prepare_v2(db, base_sql.data(), static_cast<int>(base_sql.size()), &m_stmt, nullptr);
 
    if(rc != SQLITE_OK) {

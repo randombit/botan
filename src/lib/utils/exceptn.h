@@ -303,7 +303,7 @@ class BOTAN_PUBLIC_API(2, 0) Stream_IO_Error final : public Exception {
 */
 class BOTAN_PUBLIC_API(2, 9) System_Error : public Exception {
    public:
-      System_Error(std::string_view msg) : Exception(msg), m_error_code(0) {}
+      explicit System_Error(std::string_view msg) : Exception(msg), m_error_code(0) {}
 
       System_Error(std::string_view msg, int err_code);
 

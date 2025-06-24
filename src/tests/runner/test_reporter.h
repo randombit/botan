@@ -17,7 +17,7 @@ namespace Botan_Tests {
  */
 class TestSummary final {
    public:
-      TestSummary(const Test::Result& result);
+      explicit TestSummary(const Test::Result& result);
 
       bool passed() const { return m_failures.empty(); }
 
@@ -54,7 +54,7 @@ class TestSummary final {
  */
 class Testsuite final {
    public:
-      Testsuite(std::string name);
+      explicit Testsuite(std::string name);
 
       void record(const Test::Result& result);
 

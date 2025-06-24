@@ -18,7 +18,7 @@ namespace Botan {
 */
 size_t Output_Buffers::read(uint8_t output[], size_t length, Pipe::message_id msg) {
    SecureQueue* q = get(msg);
-   if(q) {
+   if(q != nullptr) {
       return q->read(output, length);
    }
    return 0;
@@ -29,7 +29,7 @@ size_t Output_Buffers::read(uint8_t output[], size_t length, Pipe::message_id ms
 */
 size_t Output_Buffers::peek(uint8_t output[], size_t length, size_t stream_offset, Pipe::message_id msg) const {
    SecureQueue* q = get(msg);
-   if(q) {
+   if(q != nullptr) {
       return q->peek(output, length, stream_offset);
    }
    return 0;
@@ -40,7 +40,7 @@ size_t Output_Buffers::peek(uint8_t output[], size_t length, size_t stream_offse
 */
 size_t Output_Buffers::remaining(Pipe::message_id msg) const {
    SecureQueue* q = get(msg);
-   if(q) {
+   if(q != nullptr) {
       return q->size();
    }
    return 0;
@@ -51,7 +51,7 @@ size_t Output_Buffers::remaining(Pipe::message_id msg) const {
 */
 size_t Output_Buffers::get_bytes_read(Pipe::message_id msg) const {
    SecureQueue* q = get(msg);
-   if(q) {
+   if(q != nullptr) {
       return q->get_bytes_read();
    }
    return 0;

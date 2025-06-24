@@ -43,7 +43,7 @@ void hex_encode(char output[], const uint8_t input[], size_t input_length, bool 
 std::string hex_encode(const uint8_t input[], size_t input_length, bool uppercase) {
    std::string output(2 * input_length, 0);
 
-   if(input_length) {
+   if(input_length > 0) {
       hex_encode(&output.front(), input, input_length, uppercase);
    }
 

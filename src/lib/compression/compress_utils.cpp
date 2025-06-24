@@ -35,7 +35,7 @@ void* Compression_Alloc_Info::do_malloc(size_t n, size_t size) {
    * send upwards to the compression wrappers.
    */
 
-   if(ptr) {
+   if(ptr != nullptr) {
       m_current_allocs[ptr] = n * size;
    }
 
@@ -43,7 +43,7 @@ void* Compression_Alloc_Info::do_malloc(size_t n, size_t size) {
 }
 
 void Compression_Alloc_Info::do_free(void* ptr) {
-   if(ptr) {
+   if(ptr != nullptr) {
       auto i = m_current_allocs.find(ptr);
 
       if(i == m_current_allocs.end()) {
@@ -176,7 +176,7 @@ void Stream_Decompression::update(secure_vector<uint8_t>& buf, size_t offset) {
 }
 
 void Stream_Decompression::finish(secure_vector<uint8_t>& buf, size_t offset) {
-   if(buf.size() != offset || m_stream.get()) {
+   if(buf.size() != offset || m_stream != nullptr) {
       process(buf, offset, m_stream->finish_flag());
    }
 

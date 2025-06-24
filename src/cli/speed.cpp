@@ -507,7 +507,7 @@ class Speed final : public Command {
          if(m_json) {
             m_json->add(t);
          } else {
-            output() << format_timer(t, m_time_unit) << std::endl;
+            output() << format_timer(t, m_time_unit) << "\n";
 
             if(m_summary) {
                m_summary->add(t);

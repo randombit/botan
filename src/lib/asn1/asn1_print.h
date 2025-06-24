@@ -84,12 +84,12 @@ class BOTAN_PUBLIC_API(2, 4) ASN1_Pretty_Printer final : public ASN1_Formatter {
       * @param max_depth do not recurse more than this many times. If zero, recursion
       *        is unbounded.
       */
-      ASN1_Pretty_Printer(size_t print_limit = 4096,
-                          size_t print_binary_limit = 2048,
-                          bool print_context_specific = true,
-                          size_t initial_level = 0,
-                          size_t value_column = 60,
-                          size_t max_depth = 64) :
+      explicit ASN1_Pretty_Printer(size_t print_limit = 4096,
+                                   size_t print_binary_limit = 2048,
+                                   bool print_context_specific = true,
+                                   size_t initial_level = 0,
+                                   size_t value_column = 60,
+                                   size_t max_depth = 64) :
             ASN1_Formatter(print_context_specific, max_depth),
             m_print_limit(print_limit),
             m_print_binary_limit(print_binary_limit),

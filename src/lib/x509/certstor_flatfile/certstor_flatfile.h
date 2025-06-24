@@ -29,7 +29,7 @@ class BOTAN_PUBLIC_API(2, 11) Flatfile_Certificate_Store final : public Certific
       * @param ignore_non_ca if true, certs that are not self-signed CA certs will
       * be ignored. Otherwise (if false), an exception will be thrown instead.
       */
-      Flatfile_Certificate_Store(std::string_view file, bool ignore_non_ca = false);
+      explicit Flatfile_Certificate_Store(std::string_view file, bool ignore_non_ca = false);
 
       Flatfile_Certificate_Store(const Flatfile_Certificate_Store&) = default;
       Flatfile_Certificate_Store(Flatfile_Certificate_Store&&) = default;

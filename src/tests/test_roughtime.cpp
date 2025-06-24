@@ -29,7 +29,7 @@ class Roughtime_Request_Tests final : public Text_Based_Test {
       Test::Result run_one_test(const std::string& type, const VarMap& vars) override {
          Test::Result result("Roughtime request");
 
-         const auto nonce = vars.get_req_bin("Nonce");
+         const auto nonce = Botan::Roughtime::Nonce(vars.get_req_bin("Nonce"));
          const auto request_v = vars.get_req_bin("Request");
 
          const auto request = Botan::Roughtime::encode_request(nonce);
@@ -94,8 +94,8 @@ class Roughtime_nonce_from_blind_Tests final : public Text_Based_Test {
          Test::Result result("roughtime nonce_from_blind");
 
          const auto response = vars.get_req_bin("Response");
-         const auto blind = vars.get_req_bin("Blind");
-         const auto nonce = vars.get_req_bin("Nonce");
+         const auto blind = Botan::Roughtime::Nonce(vars.get_req_bin("Blind"));
+         const auto nonce = Botan::Roughtime::Nonce(vars.get_req_bin("Nonce"));
 
          result.test_eq(
             "fail_validation", Botan::Roughtime::nonce_from_blind(response, blind) == nonce, type == "Valid");

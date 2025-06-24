@@ -169,15 +169,15 @@ class Test_Options {
       std::string m_drbg_seed;
       std::string m_xml_results_dir;
       std::vector<std::string> m_report_properties;
-      size_t m_test_runs;
-      size_t m_test_threads;
-      bool m_verbose;
-      bool m_log_success;
-      bool m_run_online_tests;
-      bool m_run_long_tests;
-      bool m_run_memory_intensive_tests;
-      bool m_abort_on_first_fail;
-      bool m_no_stdout;
+      size_t m_test_runs = 0;
+      size_t m_test_threads = 0;
+      bool m_verbose = false;
+      bool m_log_success = false;
+      bool m_run_online_tests = false;
+      bool m_run_long_tests = false;
+      bool m_run_memory_intensive_tests = false;
+      bool m_abort_on_first_fail = false;
+      bool m_no_stdout = false;
 };
 
 namespace detail {
@@ -503,8 +503,7 @@ class Test {
          private:
             class ThrowExpectations {
                public:
-                  ThrowExpectations(std::function<void()> fn) :
-                        m_fn(std::move(fn)), m_expect_success(false), m_consumed(false) {}
+                  explicit ThrowExpectations(std::function<void()> fn) : m_fn(std::move(fn)) {}
 
                   ThrowExpectations(const ThrowExpectations&) = delete;
                   ThrowExpectations& operator=(const ThrowExpectations&) = delete;
@@ -536,10 +535,10 @@ class Test {
 
                private:
                   std::function<void()> m_fn;
-                  bool m_expect_success;
                   std::optional<std::string> m_expected_message;
                   std::optional<std::type_index> m_expected_exception_type;
-                  bool m_consumed;
+                  bool m_expect_success = false;
+                  bool m_consumed = false;
             };
 
          public:
@@ -765,7 +764,7 @@ class FnTest : public Test {
 
    public:
       template <typename... TestFns>
-      FnTest(TestFns... fns) : m_fns(make_variant_vector(fns...)) {}
+      explicit FnTest(TestFns... fns) : m_fns(make_variant_vector(fns...)) {}
 
       std::vector<Test::Result> run() override {
          std::vector<Test::Result> result;

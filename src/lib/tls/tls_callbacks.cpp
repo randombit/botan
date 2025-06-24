@@ -313,7 +313,7 @@ secure_vector<uint8_t> TLS::Callbacks::tls_kem_decapsulate(TLS::Group_Params gro
    }
 
    try {
-      auto& key_agreement_key = dynamic_cast<const PK_Key_Agreement_Key&>(private_key);
+      const auto& key_agreement_key = dynamic_cast<const PK_Key_Agreement_Key&>(private_key);
       return tls_ephemeral_key_agreement(group, key_agreement_key, encapsulated_bytes, rng, policy);
    } catch(const std::bad_cast&) {
       throw Invalid_Argument("provided ephemeral key is not a PK_Key_Agreement_Key");

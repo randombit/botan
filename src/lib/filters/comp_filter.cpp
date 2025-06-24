@@ -38,7 +38,7 @@ void Compression_Filter::start_msg() {
 }
 
 void Compression_Filter::write(const uint8_t input[], size_t input_length) {
-   while(input_length) {
+   while(input_length > 0) {
       const size_t take = std::min(m_buffersize, input_length);
       BOTAN_ASSERT(take > 0, "Consumed something");
 
@@ -82,7 +82,7 @@ void Decompression_Filter::start_msg() {
 }
 
 void Decompression_Filter::write(const uint8_t input[], size_t input_length) {
-   while(input_length) {
+   while(input_length > 0) {
       const size_t take = std::min(m_buffersize, input_length);
       BOTAN_ASSERT(take > 0, "Consumed something");
 

@@ -130,13 +130,14 @@ class BOTAN_PUBLIC_API(2, 0) Response final {
       * Create a fake OCSP response from a given status code.
       * @param status the status code the check functions will return
       */
-      Response(Certificate_Status_Code status);
+      explicit Response(Certificate_Status_Code status);
 
       /**
       * Parses an OCSP response.
       * @param response_bits response bits received
       */
-      Response(const std::vector<uint8_t>& response_bits) : Response(response_bits.data(), response_bits.size()) {}
+      explicit Response(const std::vector<uint8_t>& response_bits) :
+            Response(response_bits.data(), response_bits.size()) {}
 
       /**
       * Parses an OCSP response.

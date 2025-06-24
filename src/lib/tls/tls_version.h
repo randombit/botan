@@ -64,7 +64,8 @@ class BOTAN_PUBLIC_API(2, 0) Protocol_Version final {
       /**
       * @param named_version a specific named version of the protocol
       */
-      Protocol_Version(Version_Code named_version) : Protocol_Version(static_cast<uint16_t>(named_version)) {}
+      Protocol_Version(Version_Code named_version) :  // NOLINT(*-explicit-conversions)
+            Protocol_Version(static_cast<uint16_t>(named_version)) {}
 
       /**
       * @param major the major version

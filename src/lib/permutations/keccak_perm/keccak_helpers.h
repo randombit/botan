@@ -92,7 +92,7 @@ size_t keccak_absorb_padded_strings_encoding(T& sink, size_t padding_mod, Ts... 
    BOTAN_ASSERT_NOMSG(padding_mod > 0);
 
    // used as temporary storage for all integer encodings in this function
-   std::array<uint8_t, keccak_max_int_encoding_size()> int_encoding_buffer;
+   std::array<uint8_t, keccak_max_int_encoding_size()> int_encoding_buffer{};
 
    // absorbs byte strings and counts the number of absorbed bytes
    size_t bytes_absorbed = 0;

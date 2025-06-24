@@ -78,7 +78,7 @@ void X942_PRF::perform_kdf(std::span<uint8_t> key,
       if(k.remaining_capacity() >= sha1_output_bytes) {
          hash->final(k.next(sha1_output_bytes));
       } else {
-         std::array<uint8_t, sha1_output_bytes> h;
+         std::array<uint8_t, sha1_output_bytes> h{};
          hash->final(h);
          k.append(std::span{h}.first(k.remaining_capacity()));
       }

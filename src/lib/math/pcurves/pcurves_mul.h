@@ -43,7 +43,7 @@ class AffinePointTable final {
 
       static constexpr bool WholeRangeSearch = (R == 0);
 
-      AffinePointTable(std::span<const ProjectivePoint> pts) {
+      explicit AffinePointTable(std::span<const ProjectivePoint> pts) {
          BOTAN_ASSERT_NOMSG(pts.size() > 1);
 
          if constexpr(R > 0) {

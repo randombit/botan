@@ -36,7 +36,7 @@ class BOTAN_TEST_API Classic_McEliece_Polynomial {
        *
        * @param coef The coefficients of the polynomial. The first element is the coefficient of the lowest monomial.
        */
-      Classic_McEliece_Polynomial(std::vector<Classic_McEliece_GF> coef) : m_coef(std::move(coef)) {}
+      explicit Classic_McEliece_Polynomial(std::vector<Classic_McEliece_GF> coef) : m_coef(std::move(coef)) {}
 
       /**
        * @brief Evaluate the polynomial P(x) at a given point a, i.e., compute P(a).
@@ -80,7 +80,7 @@ class BOTAN_TEST_API Classic_McEliece_Polynomial {
  */
 class BOTAN_TEST_API Classic_McEliece_Minimal_Polynomial : public Classic_McEliece_Polynomial {
    public:
-      Classic_McEliece_Minimal_Polynomial(std::vector<Classic_McEliece_GF> coef) :
+      explicit Classic_McEliece_Minimal_Polynomial(std::vector<Classic_McEliece_GF> coef) :
             Classic_McEliece_Polynomial(std::move(coef)) {}
 
       /**

@@ -81,7 +81,7 @@ inline uint32_t SM3_E(uint32_t W0, uint32_t W7, uint32_t W13, uint32_t W3, uint3
 void SM3::compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
    uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3], E = digest[4], F = digest[5], G = digest[6],
             H = digest[7];
-   std::array<uint32_t, 16> W;
+   std::array<uint32_t, 16> W{};
 
    BufferSlicer in(input);
 

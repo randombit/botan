@@ -64,7 +64,7 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Entry final : public ASN1_Object {
       * @param cert the certificate to revoke
       * @param reason the reason code to set in the entry
       */
-      CRL_Entry(const X509_Certificate& cert, CRL_Code reason = CRL_Code::Unspecified);
+      explicit CRL_Entry(const X509_Certificate& cert, CRL_Code reason = CRL_Code::Unspecified);
 
    private:
       friend class X509_CRL;
@@ -170,21 +170,21 @@ class BOTAN_PUBLIC_API(2, 0) X509_CRL final : public X509_Object {
       * Construct a CRL from a data source.
       * @param source the data source providing the DER or PEM encoded CRL.
       */
-      X509_CRL(DataSource& source);
+      explicit X509_CRL(DataSource& source);
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
       /**
       * Construct a CRL from a file containing the DER or PEM encoded CRL.
       * @param filename the name of the CRL file
       */
-      X509_CRL(std::string_view filename);
+      explicit X509_CRL(std::string_view filename);
 #endif
 
       /**
       * Construct a CRL from a binary vector
       * @param vec the binary (DER) representation of the CRL
       */
-      X509_CRL(const std::vector<uint8_t>& vec);
+      explicit X509_CRL(const std::vector<uint8_t>& vec);
 
       /**
       * Construct a CRL

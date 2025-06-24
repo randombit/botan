@@ -63,7 +63,7 @@ class EMSA_PKCS1v15_Raw final : public EMSA {
       * @param hash_algo the digest id for that hash is included in
       * the signature.
       */
-      EMSA_PKCS1v15_Raw(std::string_view hash_algo);
+      explicit EMSA_PKCS1v15_Raw(std::string_view hash_algo);
 
       std::string hash_function() const override { return m_hash_name; }
 

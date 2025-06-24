@@ -103,7 +103,7 @@ class BOTAN_PUBLIC_API(2, 8) RFC4880_S2K final : public PasswordHash {
 
 class BOTAN_PUBLIC_API(2, 8) RFC4880_S2K_Family final : public PasswordHashFamily {
    public:
-      RFC4880_S2K_Family(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash)) {}
+      explicit RFC4880_S2K_Family(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash)) {}
 
       std::string name() const override;
 

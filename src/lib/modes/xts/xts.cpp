@@ -117,7 +117,7 @@ size_t XTS_Encryption::process_msg(uint8_t buf[], size_t sz) {
 
    const size_t blocks_in_tweak = tweak_blocks();
 
-   while(blocks) {
+   while(blocks > 0) {
       const size_t to_proc = std::min(blocks, blocks_in_tweak);
       const size_t proc_bytes = to_proc * BS;
 
@@ -186,7 +186,7 @@ size_t XTS_Decryption::process_msg(uint8_t buf[], size_t sz) {
 
    const size_t blocks_in_tweak = tweak_blocks();
 
-   while(blocks) {
+   while(blocks > 0) {
       const size_t to_proc = std::min(blocks, blocks_in_tweak);
       const size_t proc_bytes = to_proc * BS;
 

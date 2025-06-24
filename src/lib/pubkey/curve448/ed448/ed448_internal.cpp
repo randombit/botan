@@ -97,8 +97,8 @@ Ed448Point Ed448Point::decode(std::span<const uint8_t, ED448_LEN> enc) {
    //                      (p+1)/4    3            (p-3)/4
    //             x = (u/v)        = u  v (u^5 v^3)         (mod p)
    const auto d = -Gf448Elem(MINUS_D);
-   const auto u = square(Gf448Elem(y)) - 1;
-   const auto v = d * square(Gf448Elem(y)) - 1;
+   const auto u = square(Gf448Elem(y)) - Gf448Elem::one();
+   const auto v = d * square(Gf448Elem(y)) - Gf448Elem::one();
    const auto maybe_x = (u * square(u)) * v * root((square(square(u)) * u) * square(v) * v);
 
    // 3. If v * x^2 = u, the recovered x-coordinate is x.  Otherwise, no
@@ -188,7 +188,7 @@ Ed448Point Ed448Point::double_point() const {
 }
 
 Ed448Point Ed448Point::scalar_mul(const Scalar448& s) const {
-   Ed448Point res(0, 1);
+   auto res = Ed448Point::identity();
 
    // Square and multiply (double and add) in constant time.
    // TODO: Optimization potential. E.g. for a = *this precompute

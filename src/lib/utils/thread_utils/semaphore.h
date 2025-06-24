@@ -15,7 +15,7 @@ namespace Botan {
 
 class Semaphore final {
    public:
-      explicit Semaphore(int value = 0) : m_value(value), m_wakeups(0) {}
+      explicit Semaphore(int value = 0) : m_value(value) {}
 
       void acquire();
 
@@ -23,7 +23,7 @@ class Semaphore final {
 
    private:
       int m_value;
-      int m_wakeups;
+      int m_wakeups = 0;
       std::mutex m_mutex;
       std::condition_variable m_cond;
 };

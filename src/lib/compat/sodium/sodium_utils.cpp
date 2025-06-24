@@ -93,7 +93,7 @@ void Sodium::sodium_increment(uint8_t b[], size_t len) {
    uint8_t carry = 1;
    for(size_t i = 0; i != len; ++i) {
       b[i] += carry;
-      carry &= (b[i] == 0);
+      carry &= CT::Mask<uint8_t>::is_zero(b[i]).if_set_return(1);
    }
 }
 
@@ -101,7 +101,7 @@ void Sodium::sodium_add(uint8_t a[], const uint8_t b[], size_t len) {
    uint8_t carry = 0;
    for(size_t i = 0; i != len; ++i) {
       a[i] += b[i] + carry;
-      carry = (a[i] < b[i]);
+      carry = CT::Mask<uint8_t>::is_lt(a[i], b[i]).if_set_return(1);
    }
 }
 

@@ -35,7 +35,7 @@ class BOTAN_PUBLIC_API(3, 7) PSS_Params final : public ASN1_Object {
       /**
       * Decode an encoded RSASSA-PSS-params
       */
-      PSS_Params(std::span<const uint8_t> der);
+      explicit PSS_Params(std::span<const uint8_t> der);
 
       const AlgorithmIdentifier& hash_algid() const { return m_hash; }
 

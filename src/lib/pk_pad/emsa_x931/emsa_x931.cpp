@@ -91,7 +91,7 @@ EMSA_X931::EMSA_X931(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash
 
    m_hash_id = ieee1363_hash_id(m_hash->name());
 
-   if(!m_hash_id) {
+   if(m_hash_id == 0) {
       throw Encoding_Error("EMSA_X931 no hash identifier for " + m_hash->name());
    }
 }

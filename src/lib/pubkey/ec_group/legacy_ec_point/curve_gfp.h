@@ -61,7 +61,7 @@ class BOTAN_UNSTABLE_API CurveGFp final {
       */
       CurveGFp() = default;
 
-      CurveGFp(const EC_Group_Data* group);
+      explicit CurveGFp(const EC_Group_Data* group);
 
       CurveGFp& operator=(const CurveGFp&) = default;
       CurveGFp& operator=(CurveGFp&&) = default;

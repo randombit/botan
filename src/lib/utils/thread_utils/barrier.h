@@ -23,7 +23,7 @@ previously sleeping threads have not awoken.)
 */
 class Barrier final {
    public:
-      explicit Barrier(int value = 0) : m_value(value), m_syncs(0) {}
+      explicit Barrier(int value = 0) : m_value(value) {}
 
       void wait(size_t delta);
 
@@ -31,7 +31,7 @@ class Barrier final {
 
    private:
       size_t m_value;
-      size_t m_syncs;
+      size_t m_syncs = 0;
       std::mutex m_mutex;
       std::condition_variable m_cond;
 };

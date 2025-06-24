@@ -30,12 +30,11 @@ class Adler32 final : public HashFunction {
          m_S2 = 0;
       }
 
-      Adler32() { clear(); }
-
    private:
       void add_data(std::span<const uint8_t>) override;
       void final_result(std::span<uint8_t>) override;
-      uint16_t m_S1, m_S2;
+      uint16_t m_S1 = 1;
+      uint16_t m_S2 = 0;
 };
 
 }  // namespace Botan

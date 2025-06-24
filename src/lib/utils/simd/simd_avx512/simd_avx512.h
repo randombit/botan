@@ -167,7 +167,7 @@ class SIMD_16x32 final {
 
       template <uint8_t TBL>
       BOTAN_FN_ISA_AVX512 static SIMD_16x32 ternary_fn(const SIMD_16x32& a, const SIMD_16x32& b, const SIMD_16x32& c) {
-         return _mm512_ternarylogic_epi32(a.raw(), b.raw(), c.raw(), TBL);
+         return SIMD_16x32(_mm512_ternarylogic_epi32(a.raw(), b.raw(), c.raw(), TBL));
       }
 
       BOTAN_FN_ISA_AVX512
@@ -302,7 +302,7 @@ class SIMD_16x32 final {
       __m512i BOTAN_FN_ISA_AVX512 raw() const { return m_avx512; }
 
       BOTAN_FN_ISA_AVX512
-      SIMD_16x32(__m512i x) : m_avx512(x) {}
+      explicit SIMD_16x32(__m512i x) noexcept : m_avx512(x) {}
 
    private:
       __m512i m_avx512;

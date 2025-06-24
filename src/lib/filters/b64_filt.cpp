@@ -21,15 +21,13 @@ Base64_Encoder::Base64_Encoder(bool line_breaks, size_t line_length, bool traili
       m_line_length(line_breaks ? line_length : 0),
       m_trailing_newline(trailing_newline && line_breaks),
       m_in(48),
-      m_out(64),
-      m_position(0),
-      m_out_position(0) {}
+      m_out(64) {}
 
 /*
 * Encode and send a block
 */
 void Base64_Encoder::encode_and_send(const uint8_t input[], size_t length, bool final_inputs) {
-   while(length) {
+   while(length > 0) {
       const size_t proc = std::min(length, m_in.size());
 
       size_t consumed = 0;
@@ -51,7 +49,7 @@ void Base64_Encoder::do_output(const uint8_t input[], size_t length) {
       send(input, length);
    } else {
       size_t remaining = length, offset = 0;
-      while(remaining) {
+      while(remaining > 0) {
          size_t sent = std::min(m_line_length - m_out_position, remaining);
          send(input + offset, sent);
          m_out_position += sent;
@@ -93,7 +91,7 @@ void Base64_Encoder::write(const uint8_t input[], size_t length) {
 void Base64_Encoder::end_msg() {
    encode_and_send(m_in.data(), m_position, true);
 
-   if(m_trailing_newline || (m_out_position && m_line_length)) {
+   if(m_trailing_newline || (m_out_position > 0 && m_line_length > 0)) {
       send('\n');
    }
 
@@ -103,13 +101,13 @@ void Base64_Encoder::end_msg() {
 /*
 * Base64_Decoder Constructor
 */
-Base64_Decoder::Base64_Decoder(Decoder_Checking c) : m_checking(c), m_in(64), m_out(48), m_position(0) {}
+Base64_Decoder::Base64_Decoder(Decoder_Checking c) : m_checking(c), m_in(64), m_out(48) {}
 
 /*
 * Convert some data from Base64
 */
 void Base64_Decoder::write(const uint8_t input[], size_t length) {
-   while(length) {
+   while(length > 0) {
       size_t to_copy = std::min<size_t>(length, m_in.size() - m_position);
       if(to_copy == 0) {
          m_in.resize(m_in.size() * 2);

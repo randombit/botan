@@ -127,7 +127,7 @@ class BOTAN_PUBLIC_API(2, 0) ASN1_Object {
 */
 class BOTAN_PUBLIC_API(2, 0) BER_Object final {
    public:
-      BER_Object() : m_type_tag(ASN1_Type::NoObject), m_class_tag(ASN1_Class::Universal) {}
+      BER_Object() = default;
 
       BER_Object(const BER_Object& other) = default;
       BER_Object(BER_Object&& other) = default;
@@ -160,8 +160,8 @@ class BOTAN_PUBLIC_API(2, 0) BER_Object final {
       bool is_a(int type_tag, ASN1_Class class_tag) const;
 
    private:
-      ASN1_Type m_type_tag;
-      ASN1_Class m_class_tag;
+      ASN1_Type m_type_tag = ASN1_Type::NoObject;
+      ASN1_Class m_class_tag = ASN1_Class::Universal;
       secure_vector<uint8_t> m_value;
 
       friend class BER_Decoder;
@@ -230,7 +230,7 @@ class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
       /**
       * Initialize an OID from a sequence of integer values
       */
-      explicit OID(std::initializer_list<uint32_t> init);
+      OID(std::initializer_list<uint32_t> init);
 
       /**
       * Initialize an OID from a vector of integer values
@@ -384,7 +384,7 @@ class BOTAN_PUBLIC_API(2, 0) ASN1_Time final : public ASN1_Object {
       explicit ASN1_Time(const std::chrono::system_clock::time_point& time);
 
       /// Create an ASN1_Time from string
-      ASN1_Time(std::string_view t_spec);
+      explicit ASN1_Time(std::string_view t_spec);
 
       /// Create an ASN1_Time from string and a specified tagging (Utc or Generalized)
       ASN1_Time(std::string_view t_spec, ASN1_Type tag);

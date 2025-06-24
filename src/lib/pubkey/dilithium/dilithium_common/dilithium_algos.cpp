@@ -366,7 +366,7 @@ std::pair<DilithiumSeedRho, DilithiumPolyVec> decode_public_key(StrongSpan<const
  * NIST FIPS 204, Algorithm 24 (skEncode)
  */
 DilithiumSerializedPrivateKey encode_keypair(const DilithiumInternalKeypair& keypair) {
-   auto& [pk, sk] = keypair;
+   const auto& [pk, sk] = keypair;
    BOTAN_ASSERT_NONNULL(pk);
    BOTAN_ASSERT_NONNULL(sk);
    const auto& mode = sk->mode();

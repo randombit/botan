@@ -236,6 +236,8 @@ Test::Result test_low_level_ctor() {
    return result;
 }
 
+// NOLINTBEGIN(*-avoid-bind)
+
 Test::Result test_c_get_function_list() {
    Dynamically_Loaded_Library pkcs11_module(Test::pkcs11_lib());
    FunctionListPtr func_list = nullptr;
@@ -829,6 +831,8 @@ Test::Result test_c_copy_object() {
 
    return result;
 }
+
+// NOLINTEND(*-avoid-bind)
 
 class LowLevelTests final : public Test {
    public:

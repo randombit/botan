@@ -83,7 +83,7 @@ void SHA_512::compress_digest(digest_type& digest, std::span<const uint8_t> inpu
    uint64_t A = digest[0], B = digest[1], C = digest[2], D = digest[3], E = digest[4], F = digest[5], G = digest[6],
             H = digest[7];
 
-   std::array<uint64_t, 16> W;
+   std::array<uint64_t, 16> W{};
 
    BufferSlicer in(input);
 

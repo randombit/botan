@@ -28,7 +28,7 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       /**
       * Set up to BER decode the data in buf of length len
       */
-      BER_Decoder(std::span<const uint8_t> buf) : BER_Decoder(buf.data(), buf.size()) {}
+      explicit BER_Decoder(std::span<const uint8_t> buf) : BER_Decoder(buf.data(), buf.size()) {}
 
       /**
       * Set up to BER decode the data in vec
@@ -48,12 +48,12 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       /**
       * Set up to BER decode the data in obj
       */
-      BER_Decoder(const BER_Object& obj) : BER_Decoder(obj.bits(), obj.length()) {}
+      explicit BER_Decoder(const BER_Object& obj) : BER_Decoder(obj.bits(), obj.length()) {}
 
       /**
       * Set up to BER decode the data in obj
       */
-      BER_Decoder(BER_Object&& obj) : BER_Decoder(std::move(obj), nullptr) {}
+      explicit BER_Decoder(BER_Object&& obj) : BER_Decoder(std::move(obj), nullptr) {}
 
       BER_Decoder(const BER_Decoder& other);
       BER_Decoder(BER_Decoder&& other) = default;

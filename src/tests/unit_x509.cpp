@@ -914,7 +914,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    /* Create the CA object */
    Botan::X509_CA ca(ca_cert, ca_key, hash_fn, sig_padding, rng);
 
-   const BigInt user1_serial = 99;
+   const BigInt user1_serial(99);
 
    /* Sign the requests to create the certs */
    Botan::X509_Certificate user1_cert =
@@ -1007,7 +1007,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
 
    std::vector<Botan::CRL_Entry> revoked;
    revoked.push_back(Botan::CRL_Entry(user1_cert, Botan::CRL_Code::CessationOfOperation));
-   revoked.push_back(user2_cert);
+   revoked.push_back(Botan::CRL_Entry(user2_cert));
 
    const Botan::X509_CRL crl2 = ca.update_crl(crl1, revoked, rng);
 

@@ -24,13 +24,13 @@ void BigInt::randomize(RandomNumberGenerator& rng, size_t bitsize, bool set_high
       secure_vector<uint8_t> array = rng.random_vec(round_up(bitsize, 8) / 8);
 
       // Always cut unwanted bits
-      if(bitsize % 8) {
+      if(bitsize % 8 > 0) {
          array[0] &= 0xFF >> (8 - (bitsize % 8));
       }
 
       // Set the highest bit if wanted
       if(set_high_bit) {
-         array[0] |= 0x80 >> ((bitsize % 8) ? (8 - bitsize % 8) : 0);
+         array[0] |= 0x80 >> ((bitsize % 8) > 0 ? (8 - bitsize % 8) : 0);
       }
 
       assign_from_bytes(array);

@@ -93,7 +93,7 @@ void Twofish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
       in += 2 * BLOCK_SIZE;
    }
 
-   if(blocks) {
+   if(blocks > 0) {
       uint32_t A, B, C, D;
       load_le(in, A, B, C, D);
 
@@ -160,7 +160,7 @@ void Twofish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
       in += 2 * BLOCK_SIZE;
    }
 
-   if(blocks) {
+   if(blocks > 0) {
       uint32_t A, B, C, D;
       load_le(in, A, B, C, D);
 
@@ -200,7 +200,7 @@ void Twofish::key_schedule(std::span<const uint8_t> key) {
       /*
       * Do one column of the RS matrix multiplcation
       */
-      if(key[i]) {
+      if(key[i] != 0) {
          uint8_t X = POLY_TO_EXP[key[i] - 1];
 
          uint8_t RS1 = RS[(4 * i) % 32];

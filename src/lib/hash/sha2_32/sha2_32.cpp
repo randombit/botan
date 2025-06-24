@@ -86,7 +86,7 @@ void BOTAN_SCRUB_STACK_AFTER_RETURN SHA_256::compress_digest(digest_type& digest
    uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3], E = digest[4], F = digest[5], G = digest[6],
             H = digest[7];
 
-   std::array<uint32_t, 16> W;
+   std::array<uint32_t, 16> W{};
 
    BufferSlicer in(input);
 

@@ -50,7 +50,7 @@ void SHA_1::compress_n(digest_type& digest, std::span<const uint8_t> input, size
 #endif
 
    uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3], E = digest[4];
-   std::array<uint32_t, 80> W;
+   std::array<uint32_t, 80> W{};
    auto W_in = std::span{W}.first<block_bytes / sizeof(uint32_t)>();
 
    BufferSlicer in(input);

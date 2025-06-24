@@ -76,7 +76,7 @@ inline void F5(uint32_t& A, uint32_t B, uint32_t& C, uint32_t D, uint32_t E, uin
 void RIPEMD_160::compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
    const uint32_t MAGIC2 = 0x5A827999, MAGIC3 = 0x6ED9EBA1, MAGIC4 = 0x8F1BBCDC, MAGIC5 = 0xA953FD4E,
                   MAGIC6 = 0x50A28BE6, MAGIC7 = 0x5C4DD124, MAGIC8 = 0x6D703EF3, MAGIC9 = 0x7A6D76E9;
-   std::array<uint32_t, 16> M;
+   std::array<uint32_t, 16> M{};
 
    BufferSlicer in(input);
 
