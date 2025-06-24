@@ -17,7 +17,7 @@
 
 namespace Botan {
 
-constexpr size_t BYTES_448 = ceil_tobytes(448);
+constexpr size_t BYTES_448 = ceil_tobytes<size_t>(448);
 /* uint64_t words to store a 448 bit value */
 constexpr size_t WORDS_448 = 7;
 

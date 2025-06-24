@@ -34,7 +34,7 @@ constexpr size_t words_for_bits(size_t x) {
 class BOTAN_TEST_API Scalar448 final {
    public:
       constexpr static size_t WORDS = words_for_bits(446);
-      constexpr static size_t BYTES = ceil_tobytes(446);
+      constexpr static size_t BYTES = ceil_tobytes<size_t>(446);
 
       /// @brief Construct a new scalar from (max. 114) bytes. Little endian.
       Scalar448(std::span<const uint8_t> x);
