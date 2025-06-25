@@ -15,7 +15,7 @@
 
 namespace Botan::Serpent_F {
 
-template <typename T>
+template <BitsliceT T>
 BOTAN_FORCE_INLINE void SBoxE0(T& a, T& b, T& c, T& d) {
    d ^= a;
    T t0 = b;
@@ -40,7 +40,7 @@ BOTAN_FORCE_INLINE void SBoxE0(T& a, T& b, T& c, T& d) {
    b = t0;
 }
 
-template <typename T>
+template <BitsliceT T>
 BOTAN_FORCE_INLINE void SBoxE1(T& a, T& b, T& c, T& d) {
    a = ~a;
    c = ~c;
@@ -66,7 +66,7 @@ BOTAN_FORCE_INLINE void SBoxE1(T& a, T& b, T& c, T& d) {
    b = t0;
 }
 
-template <typename T>
+template <BitsliceT T>
 BOTAN_FORCE_INLINE void SBoxE2(T& a, T& b, T& c, T& d) {
    T t0 = a;
    a &= c;
@@ -89,7 +89,7 @@ BOTAN_FORCE_INLINE void SBoxE2(T& a, T& b, T& c, T& d) {
    d = ~t0;
 }
 
-template <typename T>
+template <BitsliceT T>
 BOTAN_FORCE_INLINE void SBoxE3(T& a, T& b, T& c, T& d) {
    T t0 = a;
    a |= d;
@@ -115,7 +115,7 @@ BOTAN_FORCE_INLINE void SBoxE3(T& a, T& b, T& c, T& d) {
    d = t0;
 }
 
-template <typename T>
+template <BitsliceT T>
 BOTAN_FORCE_INLINE void SBoxE4(T& a, T& b, T& c, T& d) {
    b ^= d;
    d = ~d;
@@ -142,7 +142,7 @@ BOTAN_FORCE_INLINE void SBoxE4(T& a, T& b, T& c, T& d) {
    b = t0;
 }
 
-template <typename T>
+template <BitsliceT T>
 BOTAN_FORCE_INLINE void SBoxE5(T& a, T& b, T& c, T& d) {
    a ^= b;
    b ^= d;
@@ -169,7 +169,7 @@ BOTAN_FORCE_INLINE void SBoxE5(T& a, T& b, T& c, T& d) {
    d = t0;
 }
 
-template <typename T>
+template <BitsliceT T>
 BOTAN_FORCE_INLINE void SBoxE6(T& a, T& b, T& c, T& d) {
    c = ~c;
    T t0 = d;
@@ -192,7 +192,7 @@ BOTAN_FORCE_INLINE void SBoxE6(T& a, T& b, T& c, T& d) {
    c = t0;
 }
 
-template <typename T>
+template <BitsliceT T>
 BOTAN_FORCE_INLINE void SBoxE7(T& a, T& b, T& c, T& d) {
    T t0 = b;
    b |= c;
@@ -220,7 +220,7 @@ BOTAN_FORCE_INLINE void SBoxE7(T& a, T& b, T& c, T& d) {
    a = t0;
 }
 
-template <typename T>
+template <BitsliceT T>
 BOTAN_FORCE_INLINE void SBoxD0(T& a, T& b, T& c, T& d) {
    c = ~c;
    T t0 = b;
@@ -245,7 +245,7 @@ BOTAN_FORCE_INLINE void SBoxD0(T& a, T& b, T& c, T& d) {
    b = t0;
 }
 
-template <typename T>
+template <BitsliceT T>
 BOTAN_FORCE_INLINE void SBoxD1(T& a, T& b, T& c, T& d) {
    T t0 = b;
    b ^= d;
@@ -273,7 +273,7 @@ BOTAN_FORCE_INLINE void SBoxD1(T& a, T& b, T& c, T& d) {
    d = t0;
 }
 
-template <typename T>
+template <BitsliceT T>
 BOTAN_FORCE_INLINE void SBoxD2(T& a, T& b, T& c, T& d) {
    c ^= d;
    d ^= a;
@@ -298,7 +298,7 @@ BOTAN_FORCE_INLINE void SBoxD2(T& a, T& b, T& c, T& d) {
    b = t0;
 }
 
-template <typename T>
+template <BitsliceT T>
 BOTAN_FORCE_INLINE void SBoxD3(T& a, T& b, T& c, T& d) {
    T t0 = c;
    c ^= b;
@@ -324,7 +324,7 @@ BOTAN_FORCE_INLINE void SBoxD3(T& a, T& b, T& c, T& d) {
    d = t0;
 }
 
-template <typename T>
+template <BitsliceT T>
 BOTAN_FORCE_INLINE void SBoxD4(T& a, T& b, T& c, T& d) {
    T t0 = c;
    c &= d;
@@ -350,7 +350,7 @@ BOTAN_FORCE_INLINE void SBoxD4(T& a, T& b, T& c, T& d) {
    d = t0;
 }
 
-template <typename T>
+template <BitsliceT T>
 BOTAN_FORCE_INLINE void SBoxD5(T& a, T& b, T& c, T& d) {
    b = ~b;
    T t0 = d;
@@ -378,7 +378,7 @@ BOTAN_FORCE_INLINE void SBoxD5(T& a, T& b, T& c, T& d) {
    c = t0;
 }
 
-template <typename T>
+template <BitsliceT T>
 BOTAN_FORCE_INLINE void SBoxD6(T& a, T& b, T& c, T& d) {
    a ^= c;
    T t0 = c;
@@ -402,7 +402,7 @@ BOTAN_FORCE_INLINE void SBoxD6(T& a, T& b, T& c, T& d) {
    c = t0;
 }
 
-template <typename T>
+template <BitsliceT T>
 BOTAN_FORCE_INLINE void SBoxD7(T& a, T& b, T& c, T& d) {
    T t0 = c;
    c ^= a;

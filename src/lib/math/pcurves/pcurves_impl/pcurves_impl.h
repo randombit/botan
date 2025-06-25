@@ -14,6 +14,7 @@
 #include <botan/internal/pcurves_mul.h>
 #include <botan/internal/pcurves_util.h>
 #include <botan/internal/stl_util.h>
+#include <concepts>
 #include <vector>
 
 namespace Botan {
@@ -1548,7 +1549,7 @@ class WindowedBoothMulTable final {
       }
 
    private:
-      template <size_t B, typename T>
+      template <size_t B, std::unsigned_integral T>
       static constexpr std::pair<size_t, CT::Choice> booth_recode(T x) {
          static_assert(B < sizeof(T) * 8 - 2, "Invalid B");
 
