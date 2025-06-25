@@ -416,7 +416,7 @@ inline void xor_buf(uint8_t out[], const uint8_t in[], const uint8_t in2[], size
    xor_buf(std::span{out, length}, std::span{in, length}, std::span{in2, length});
 }
 
-// TODO: deprecate and replace, use .subspan()
+BOTAN_DEPRECATED("This function is deprecated, use range-based version instead")
 inline void xor_buf(std::span<uint8_t> out, std::span<const uint8_t> in, size_t n) {
    BOTAN_ARG_CHECK(out.size() >= n, "output span is too small");
    BOTAN_ARG_CHECK(in.size() >= n, "input span is too small");
