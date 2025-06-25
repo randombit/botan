@@ -283,7 +283,7 @@ class bitvector_base final {
 
             constexpr bool is_set() const noexcept { return (m_block & m_mask) > 0; }
 
-            template <std::integral T>
+            template <std::unsigned_integral T>
             constexpr T as() const noexcept {
                return static_cast<T>(is_set());
             }

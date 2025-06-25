@@ -10,6 +10,7 @@
 
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/mul128.h>
+#include <concepts>
 #include <type_traits>
 
 namespace Botan {
@@ -21,7 +22,7 @@ class donna128 final {
          h = hh;
       }
 
-      template <typename T>
+      template <std::unsigned_integral T>
       constexpr friend donna128 operator>>(const donna128& x, T shift) {
          donna128 z = x;
 
@@ -41,7 +42,7 @@ class donna128 final {
          return z;
       }
 
-      template <typename T>
+      template <std::unsigned_integral T>
       constexpr friend donna128 operator<<(const donna128& x, T shift) {
          donna128 z = x;
          if(shift > 64) {

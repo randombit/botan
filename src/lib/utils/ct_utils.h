@@ -272,10 +272,9 @@ template <unpoisonable T>
 *    constant time code and which does not support GCC-style inline asm.
 *
 */
-template <typename T>
-constexpr inline T value_barrier(T x)
-   requires std::unsigned_integral<T> && (!std::same_as<bool, T>)
-{
+template <std::unsigned_integral T>
+   requires(!std::same_as<bool, T>)
+constexpr inline T value_barrier(T x) {
    if(std::is_constant_evaluated()) {
       return x;
    } else {

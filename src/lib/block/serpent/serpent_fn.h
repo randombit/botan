@@ -10,8 +10,18 @@
 #include <botan/compiler.h>
 #include <botan/types.h>
 #include <botan/internal/rotate.h>
+#include <concepts>
 
 namespace Botan::Serpent_F {
+
+// Concept for types that support bitwise operations (unsigned integers or SIMD types)
+template <typename T>
+concept BitsliceT = requires(T& a, const T& b) {
+   a ^= b;
+   a &= b;
+   a |= b;
+   ~a;
+};
 
 template <size_t S>
 BOTAN_FORCE_INLINE uint32_t shl(uint32_t v) {
@@ -21,7 +31,7 @@ BOTAN_FORCE_INLINE uint32_t shl(uint32_t v) {
 /*
 * Serpent's Linear Transform
 */
-template <typename T>
+template <BitsliceT T>
 BOTAN_FORCE_INLINE void transform(T& B0, T& B1, T& B2, T& B3) {
    B0 = rotl<13>(B0);
    B2 = rotl<3>(B2);
@@ -38,7 +48,7 @@ BOTAN_FORCE_INLINE void transform(T& B0, T& B1, T& B2, T& B3) {
 /*
 * Serpent's Inverse Linear Transform
 */
-template <typename T>
+template <BitsliceT T>
 BOTAN_FORCE_INLINE void i_transform(T& B0, T& B1, T& B2, T& B3) {
    B2 = rotr<22>(B2);
    B0 = rotr<5>(B0);
@@ -56,7 +66,7 @@ class Key_Inserter final {
    public:
       Key_Inserter(const uint32_t* RK) : m_RK(RK) {}
 
-      template <typename T>
+      template <BitsliceT T>
       inline void operator()(size_t R, T& B0, T& B1, T& B2, T& B3) const {
          B0 ^= m_RK[4 * R];
          B1 ^= m_RK[4 * R + 1];

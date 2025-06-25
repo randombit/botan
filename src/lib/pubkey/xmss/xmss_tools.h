@@ -24,7 +24,7 @@ namespace Botan {
 *               integral value to.
 * @param src integral value to concatenate.
 **/
-template <std::integral T>
+template <std::unsigned_integral T>
 void xmss_concat(secure_vector<uint8_t>& target, const T& src) {
    const uint8_t* src_bytes = reinterpret_cast<const uint8_t*>(&src);
    if constexpr(std::endian::native == std::endian::little) {
@@ -44,7 +44,7 @@ void xmss_concat(secure_vector<uint8_t>& target, const T& src) {
 * @param len number of bytes to concatenate. This value must be smaller
 *            or equal to the size of type T.
 **/
-template <std::integral T>
+template <std::unsigned_integral T>
 void xmss_concat(secure_vector<uint8_t>& target, const T& src, size_t len) {
    size_t c = static_cast<size_t>(std::min(len, sizeof(src)));
    if(len > sizeof(src)) {
