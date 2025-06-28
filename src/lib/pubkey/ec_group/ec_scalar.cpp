@@ -9,6 +9,10 @@
 #include <botan/ec_group.h>
 #include <botan/internal/ec_inner_data.h>
 
+#if defined(BOTAN_HAS_XMD)
+   #include <botan/internal/xmd.h>
+#endif
+
 namespace Botan {
 
 EC_Scalar EC_Scalar::_from_inner(std::unique_ptr<EC_Scalar_Data> inner) {
@@ -164,6 +168,32 @@ void EC_Scalar::assign(const EC_Scalar& x) {
 
 bool EC_Scalar::is_eq(const EC_Scalar& x) const {
    return inner().is_eq(x.inner());
+}
+
+//static
+EC_Scalar EC_Scalar::hash(const EC_Group& group,
+                          std::string_view hash_fn,
+                          std::span<const uint8_t> input,
+                          std::span<const uint8_t> domain_sep) {
+#if defined(BOTAN_HAS_XMD)
+
+   /*
+   * This could be extended to support expand_message_xof or a MHF like Argon2
+   */
+   if(hash_fn.starts_with("SHAKE")) {
+      throw Not_Implemented("Hash to scalar currently does not support expand_message_xof");
+   }
+
+   const size_t scalar_bits = group.get_order_bits();
+   const size_t security_level = (scalar_bits + 1) / 2;
+   secure_vector<uint8_t> uniform_bytes((scalar_bits + security_level + 7) / 8);
+   expand_message_xmd(hash_fn, uniform_bytes, input, domain_sep);
+
+   return EC_Scalar::from_bytes_mod_order(group, uniform_bytes);
+#else
+   BOTAN_UNUSED(group, hash_fn, input, domain_sep);
+   throw Not_Implemented("EC_Scalar::hash not available due to missing XMD");
+#endif
 }
 
 }  // namespace Botan

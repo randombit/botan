@@ -55,6 +55,16 @@ class BOTAN_PUBLIC_API(3, 6) EC_Scalar final {
       static EC_Scalar from_bytes_mod_order(const EC_Group& group, std::span<const uint8_t> bytes);
 
       /**
+      * Hash to scalar following RFC 9380
+      *
+      * This requires XMD. Unlike hash2curve, any group is supported
+      */
+      static EC_Scalar hash(const EC_Group& group,
+                            std::string_view hash_fn,
+                            std::span<const uint8_t> input,
+                            std::span<const uint8_t> domain_sep);
+
+      /**
       * Convert a bytestring to an EC_Scalar
       *
       * This is similar to deserialize but instead of returning nullopt if the input
