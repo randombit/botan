@@ -325,6 +325,11 @@ class Choice final {
          return Choice(ct_is_zero<uint32_t>(static_cast<uint32_t>(v_is_0)));
       }
 
+      /**
+      * Create a Choice directly from a mask value - this assumes v is either |0| or |1|
+      */
+      constexpr static Choice from_mask(uint32_t v) { return Choice(v); }
+
       constexpr static Choice yes() { return Choice(static_cast<uint32_t>(-1)); }
 
       constexpr static Choice no() { return Choice(0); }
@@ -634,7 +639,13 @@ class Mask final {
       /**
       * Return a Choice based on this mask
       */
-      constexpr CT::Choice as_choice() const { return CT::Choice::from_int(unpoisoned_value()); }
+      constexpr CT::Choice as_choice() const {
+         if constexpr(sizeof(T) >= sizeof(uint32_t)) {
+            return CT::Choice::from_mask(static_cast<uint32_t>(unpoisoned_value()));
+         } else {
+            return CT::Choice::from_int(unpoisoned_value());
+         }
+      }
 
       /**
       * Return the underlying value of the mask
