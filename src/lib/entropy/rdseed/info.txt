@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 ENTROPY_SRC_RDSEED -> 20151218
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "RDSEED"

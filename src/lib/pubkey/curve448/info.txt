@@ -1,10 +1,6 @@
-<defines>
-CURVE_448_UTILS -> 20240301
-</defines>
-
 <module_info>
-name -> "Curve_448_Utils"
-brief -> "Utils for x448 and Ed448"
+name -> "Curve448 Arithmetic"
+brief -> "x448 and Ed448 Arithmetic"
 type -> "Internal"
 </module_info>
 

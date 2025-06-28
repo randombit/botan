@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SIMD_4X32 -> 20131128
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "SIMD 4x32"

@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 PCURVES_FRP256V1 -> 20240608
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "PCurve frp256v1"

@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 MEM_POOL -> 20180309
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Memory Pool"

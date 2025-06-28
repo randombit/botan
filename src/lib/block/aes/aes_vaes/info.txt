@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 AES_VAES -> 20240803
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "AES-VAES"

@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SERPENT_AVX512 -> 20230101
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Serpent AVX512"

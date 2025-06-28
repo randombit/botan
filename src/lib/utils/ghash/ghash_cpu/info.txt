@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 GHASH_CLMUL_CPU -> 20201002
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "GHASH SIMD"

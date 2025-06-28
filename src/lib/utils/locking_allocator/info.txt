@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 LOCKING_ALLOCATOR -> 20131128
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Locking Allocator"

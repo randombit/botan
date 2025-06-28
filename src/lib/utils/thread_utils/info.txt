@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 THREAD_UTILS -> 20190922
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Thread Utilities"

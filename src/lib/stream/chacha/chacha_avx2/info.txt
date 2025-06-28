@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 CHACHA_AVX2 -> 20180418
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "ChaCha20 AVX2"

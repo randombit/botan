@@ -6,7 +6,7 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_KDF_BASE)
+#if defined(BOTAN_HAS_KDF)
    #include <botan/kdf.h>
 #endif
 
@@ -19,7 +19,7 @@ namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_KDF_BASE)
+#if defined(BOTAN_HAS_KDF)
 class KDF_KAT_Tests final : public Text_Based_Test {
    public:
       KDF_KAT_Tests() : Text_Based_Test("kdf", "Secret,Output", "Salt,Label,IKM,XTS") {}

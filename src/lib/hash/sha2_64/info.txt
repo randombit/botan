@@ -1,8 +1,10 @@
 <defines>
-SHA2_64 -> 20131128
 SHA_384 -> 20250130
 SHA_512 -> 20250130
 SHA_512_256 -> 20250130
+
+# TODO(Botan4) remove this macro
+SHA2_64 -> 20131128
 </defines>
 
 <module_info>

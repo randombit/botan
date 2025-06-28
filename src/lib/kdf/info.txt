@@ -1,4 +1,7 @@
 <defines>
+KDF -> 20250528
+
+# TODO(Botan4) remove this macro
 KDF_BASE -> 20131128
 </defines>
 

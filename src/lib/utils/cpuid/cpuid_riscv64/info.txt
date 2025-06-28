@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 CPUID_DETECTION -> 20250327
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "CPUID for RISCV64"

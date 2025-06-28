@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 PCURVES_GENERIC -> 20250112
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "PCurve generic"

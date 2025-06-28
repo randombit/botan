@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SHA2_64_X86 -> 20250310
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "SHA-512 SHA-NI"

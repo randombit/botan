@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 PCURVES_IMPL -> 20240714
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Prime Order Curves Implementation Helpers"

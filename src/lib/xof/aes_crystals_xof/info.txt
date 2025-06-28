@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 AES_CRYSTALS_XOF -> 20230816
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "CRYSTALS XOF"

@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SHA2_64_ARMV8 -> 20231220
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "SHA-512 ARMv8"

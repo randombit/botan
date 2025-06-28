@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 BOOST_ASIO -> 20131228
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Boost"

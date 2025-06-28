@@ -1,7 +1,3 @@
-<defines>
-PUBLIC_KEY_BLINDING -> 20250125
-</defines>
-
 <module_info>
 name -> "Public Key Blinding"
 brief -> "Helper for BigInt blinding"

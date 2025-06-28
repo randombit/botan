@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SHA1_AVX2 -> 20250505
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "SHA-1 AVX2/BMI2"

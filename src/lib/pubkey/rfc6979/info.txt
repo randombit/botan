@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 RFC6979_GENERATOR -> 20140321
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "RFC 6979"

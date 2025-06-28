@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SHACAL2_ARMV8 -> 20201221
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "SHACAL-2 ARMv8"

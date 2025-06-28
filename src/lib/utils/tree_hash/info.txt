@@ -1,7 +1,3 @@
-<defines>
-TREE_HASH -> 20231006
-</defines>
-
 <module_info>
 name -> "Tree Hash"
 brief -> "Generic implementation of Merkle Tree Hashing"

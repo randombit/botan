@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 KECCAK_PERM_BMI2 -> 20230612
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "KECCAK-permutation BMI2"

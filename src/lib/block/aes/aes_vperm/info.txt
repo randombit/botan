@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 AES_VPERM -> 20190901
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "AES Vector Permutation"

@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 CPUID -> 20170917
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "CPUID"

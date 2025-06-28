@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 PQCRYSTALS -> 20240228
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "CRYSTALS"

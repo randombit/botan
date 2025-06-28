@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SHA1_ARMV8 -> 20170117
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "SHA-1 ARMv8"

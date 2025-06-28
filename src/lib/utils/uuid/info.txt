@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 UUID -> 20180930
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "UUID"

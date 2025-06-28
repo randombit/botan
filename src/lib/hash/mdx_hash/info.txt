@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 MDX_HASH_FUNCTION -> 20131128
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Merkle-Damgård Helper"

@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 CAMELLIA_GFNI -> 20250502
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Camellia using GFNI"

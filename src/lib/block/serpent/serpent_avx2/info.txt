@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SERPENT_AVX2 -> 20180824
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Serpent AVX2"

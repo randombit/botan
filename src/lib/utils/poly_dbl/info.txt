@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 POLY_DBL -> 20170927
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Polynomial Doubling"

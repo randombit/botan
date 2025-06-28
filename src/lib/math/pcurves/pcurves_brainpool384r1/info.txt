@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 PCURVES_BRAINPOOL384R1 -> 20240608
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "PCurve brainpool384r1"
