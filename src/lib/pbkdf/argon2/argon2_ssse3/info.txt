@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 ARGON2_SSSE3 -> 20220303
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Argon2 SSSE3"

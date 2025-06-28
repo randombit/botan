@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 ZFEC_VPERM -> 20211211
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "ZFEC Vector Permutation"

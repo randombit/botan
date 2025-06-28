@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 CHACHA_AVX512 -> 20230101
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "ChaCha20 AVX512"

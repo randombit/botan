@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 KECCAK_PERM -> 20230613
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Keccak-permutation"

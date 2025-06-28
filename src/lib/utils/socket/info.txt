@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SOCKETS -> 20171216
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Socket"

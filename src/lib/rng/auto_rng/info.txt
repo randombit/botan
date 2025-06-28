@@ -1,6 +1,8 @@
 <defines>
-AUTO_SEEDING_RNG -> 20160821
 AUTO_RNG -> 20161126
+
+# TODO(Botan4) remove this
+AUTO_SEEDING_RNG -> 20160821
 </defines>
 
 <module_info>

@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 AES_NI -> 20131128
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "AES-NI"

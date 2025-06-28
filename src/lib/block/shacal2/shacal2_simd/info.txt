@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SHACAL2_SIMD -> 20170813
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "SHACAL-2 SIMD"

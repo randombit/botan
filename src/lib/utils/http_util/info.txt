@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 HTTP_UTIL -> 20171003
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "HTTP"

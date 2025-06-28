@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SHA2_64_X86_AVX512 -> 20250427
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "SHA-512 AVX512/BMI2"

@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SHACAL2_AVX2 -> 20180826
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "SHACAL-2 AVX2"

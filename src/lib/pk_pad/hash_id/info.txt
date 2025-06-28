@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 HASH_ID -> 20131128
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Hash Function Identification"

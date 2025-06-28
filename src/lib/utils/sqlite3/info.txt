@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SQLITE3 -> 20171118
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "SQLite 3"

@@ -139,6 +139,17 @@
 #define BOTAN_HAS_%{i}
 %{endfor}
 
+/*
+* Internal module feature definitions
+*
+* These macros have been in the past visible in build.h as feature macros
+* but in the future these will be only visible in an internal header.
+* Applications should not rely on or check for these macros.
+*/
+%{for module_internal_defines}
+#define BOTAN_HAS_%{i}
+%{endfor}
+
 /**
  * @}
  */

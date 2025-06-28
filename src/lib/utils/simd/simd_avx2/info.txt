@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SIMD_AVX2 -> 20180824
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "AVX2"

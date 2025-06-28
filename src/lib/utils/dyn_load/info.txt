@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 DYNAMIC_LOADER -> 20160310
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Dynamic Loader"

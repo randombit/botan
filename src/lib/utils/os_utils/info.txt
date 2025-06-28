@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 OS_UTILS -> 20241202
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Operating System Utils"

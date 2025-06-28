@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SHA2_32_SIMD -> 20250402
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "SHA-256 using SIMD"

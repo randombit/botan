@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 PCURVES_SECP224R1 -> 20240716
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "PCurve secp224r1"

@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 PCURVES -> 20240404
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Prime Order Curves"

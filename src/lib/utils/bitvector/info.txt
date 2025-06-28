@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 BITVECTOR -> 20241202
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Bitvector utility"

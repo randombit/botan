@@ -841,7 +841,7 @@ class ModuleInfo(InfoObject):
             infofile,
             ['header:internal', 'header:public', 'header:external', 'requires',
              'os_features', 'arch', 'isa', 'cc', 'comment', 'warning'],
-            ['defines', 'libs', 'frameworks', 'module_info'],
+            ['defines', 'internal_defines', 'libs', 'frameworks', 'module_info'],
             {
                 'load_on': 'auto',
             })
@@ -890,6 +890,8 @@ class ModuleInfo(InfoObject):
         self.comment = combine_lines(lex.comment)
         self._defines = lex.defines
         self._validate_defines_content(self._defines)
+        self._internal_defines = lex.internal_defines
+        self._validate_defines_content(self._internal_defines)
         self.frameworks = convert_lib_list(lex.frameworks)
         self.libs = convert_lib_list(lex.libs)
         self.load_on = lex.load_on
@@ -1016,6 +1018,9 @@ class ModuleInfo(InfoObject):
 
     def defines(self):
         return [(key + ' ' + value) for key, value in self._defines.items()]
+
+    def internal_defines(self):
+        return [(key + ' ' + value) for key, value in self._internal_defines.items()]
 
     def compatible_cpu(self, archinfo, options):
         arch_name = archinfo.basename
@@ -2322,6 +2327,7 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'internal_include_flags': build_paths.format_internal_include_flags(cc),
         'external_include_flags': build_paths.format_external_include_flags(cc, options.with_external_includedir),
         'module_defines': sorted(flatten([m.defines() for m in modules])),
+        'module_internal_defines': sorted(flatten([m.internal_defines() for m in modules])),
 
         'build_bogo_shim': bool('bogo_shim' in options.build_targets),
         'bogo_shim_src': os.path.join(source_paths.src_dir, 'bogo_shim', 'bogo_shim.cpp'),

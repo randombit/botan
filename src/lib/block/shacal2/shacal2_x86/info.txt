@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SHACAL2_X86 -> 20170814
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "SHACAL-2 X86"

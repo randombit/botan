@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 ENTROPY_SRC_GETENTROPY -> 20170327
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "getentropy"

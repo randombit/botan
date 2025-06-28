@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 NOEKEON_SIMD -> 20160903
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Noekeon SIMD"

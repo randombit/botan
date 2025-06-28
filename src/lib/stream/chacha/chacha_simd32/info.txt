@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 CHACHA_SIMD32 -> 20181104
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "ChaCha20 SIMD"

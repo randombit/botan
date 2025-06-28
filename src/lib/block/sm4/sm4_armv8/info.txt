@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SM4_ARMV8 -> 20180709
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "SM4 ARMv8"

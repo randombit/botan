@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SIMD_AVX512 -> 20230101
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "AVX512"

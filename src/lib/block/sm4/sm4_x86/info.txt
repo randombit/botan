@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SM4_X86 -> 20250311
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "SM4 x86"

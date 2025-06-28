@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 BIGINT_MP -> 20151225
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "Big Integer (Low-Level)"

@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SHA1_X86_SHA_NI -> 20170518
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "SHA-1 SIMD"

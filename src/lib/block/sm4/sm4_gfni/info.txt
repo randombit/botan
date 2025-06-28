@@ -1,6 +1,6 @@
-<defines>
+<internal_defines>
 SM4_GFNI -> 20240803
-</defines>
+</internal_defines>
 
 <module_info>
 name -> "SM4 GFNI"
