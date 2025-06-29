@@ -16,6 +16,7 @@
 #include <botan/tls_policy.h>
 #include <botan/x509_key.h>
 #include <botan/x509self.h>
+#include <algorithm>
 #include <fstream>
 #include <memory>
 #include <utility>
@@ -161,9 +162,15 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
                   continue;
                }
 
-               if(std::find(cert_signature_schemes.begin(),
-                            cert_signature_schemes.end(),
-                            i.certs[0].subject_public_key_algo()) == cert_signature_schemes.end()) {
+               Botan::OID cert_oid = i.certs[0].subject_public_key_algo().oid();
+               bool compatible =
+                  std::ranges::any_of(cert_signature_schemes, [&cert_oid](const Botan::AlgorithmIdentifier& scheme) {
+                     return scheme.oid() == cert_oid ||
+                            (scheme.parameters_are_null_or_empty() &&
+                             scheme.oid().to_formatted_string().starts_with(cert_oid.to_formatted_string()));
+                  });
+
+               if(!compatible) {
                   continue;
                }
 
