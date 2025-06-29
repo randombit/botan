@@ -18,7 +18,9 @@ Version 3.9.0, Not Yet Released
 
 * Add support for X.509 extensions from RFC 3779 (GH #4699 #4883 #4884 #4886)
 
-* Elliptic curve improvements (GH #4841 4935)
+* Elliptic curve improvements (GH #4841 #4935 #4937 #4949)
+
+* Add ``EC_Scalar::hash`` following RFC 9380's hash_to_field (GH #4950)
 
 * Modify the OID lookup system to use a static switch for builtin OIDs. (GH #4896 #4888)
 
@@ -146,8 +148,6 @@ Version 3.8.0, 2025-05-06
 * The ``Ed25519_PrivateKey`` constructor had behavior that varied based on the
   input length. Add explicit ``from_seed`` and ``from_bytes`` functions which
   make the two options explicit. (GH #4701 #4702)
-
-* Add some examples of using format preserving encryption (GH #4758)
 
 * Add a new cleaner interface for handling ECIES flags (GH #4691)
 
