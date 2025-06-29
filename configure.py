@@ -2241,6 +2241,10 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'makefile_path': os.path.join(build_paths.build_dir, '..', 'Makefile'),
         'ninja_build_path': os.path.join(build_paths.build_dir, '..', 'build.ninja'),
 
+        # Use response files for the archive command on windows
+        # Note: macOS (and perhaps other OSes) do not support this
+        'build_static_lib_using_cmdline_args': options.build_static_lib and osinfo.basename != 'windows',
+        'build_static_lib_using_response_file': options.build_static_lib and osinfo.basename == 'windows',
         'build_static_lib': options.build_static_lib,
         'build_shared_lib': options.build_shared_lib,
 
