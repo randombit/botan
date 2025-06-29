@@ -857,17 +857,12 @@ class IntMod final {
 template <typename FieldElement, typename Params>
 class AffineCurvePoint final {
    public:
-      // We can't pass a FieldElement directly because FieldElement is
-      // not "structural" due to having private members, so instead
-      // recreate it here from the words.
-      static constexpr FieldElement A = FieldElement::from_words(Params::AW);
-      static constexpr FieldElement B = FieldElement::from_words(Params::BW);
-
       static constexpr size_t BYTES = 1 + 2 * FieldElement::BYTES;
-      static constexpr size_t COMPRESSED_BYTES = 1 + FieldElement::BYTES;
 
       using Self = AffineCurvePoint<FieldElement, Params>;
 
+      // Note this constructor does not check the validity of the x/y pair
+      // This must be verified prior to this constructor being called
       constexpr AffineCurvePoint(const FieldElement& x, const FieldElement& y) : m_x(x), m_y(y) {}
 
       constexpr AffineCurvePoint() : m_x(FieldElement::zero()), m_y(FieldElement::zero()) {}
@@ -915,48 +910,6 @@ class AffineCurvePoint final {
          }
 
          return result;
-      }
-
-      /**
-      * Return (x^3 + A*x + B) mod p
-      */
-      static constexpr FieldElement x3_ax_b(const FieldElement& x) { return (x.square() + Self::A) * x + Self::B; }
-
-      /**
-      * Point deserialization
-      *
-      * This accepts compressed or uncompressed formats.
-      */
-      static std::optional<Self> deserialize(std::span<const uint8_t> bytes) {
-         if(bytes.size() == Self::BYTES && bytes[0] == 0x04) {
-            auto x = FieldElement::deserialize(bytes.subspan(1, FieldElement::BYTES));
-            auto y = FieldElement::deserialize(bytes.subspan(1 + FieldElement::BYTES, FieldElement::BYTES));
-
-            if(x && y) {
-               const auto lhs = (*y).square();
-               const auto rhs = Self::x3_ax_b(*x);
-               if((lhs == rhs).as_bool()) {
-                  return Self(*x, *y);
-               }
-            }
-         } else if(bytes.size() == Self::COMPRESSED_BYTES && (bytes[0] == 0x02 || bytes[0] == 0x03)) {
-            const CT::Choice y_is_even = CT::Mask<uint8_t>::is_equal(bytes[0], 0x02).as_choice();
-
-            if(auto x = FieldElement::deserialize(bytes.subspan(1, FieldElement::BYTES))) {
-               auto [y, is_square] = x3_ax_b(*x).sqrt();
-
-               if(is_square.as_bool()) {
-                  const auto flip_y = y_is_even != y.is_even();
-                  y.conditional_assign(flip_y, y.negate());
-                  return Self(*x, y);
-               }
-            }
-         } else if(bytes.size() == 1 && bytes[0] == 0x00) {
-            // See SEC1 section 2.3.4
-            return Self::identity();
-         }
-
-         return {};
       }
 
       /**
@@ -1262,6 +1215,11 @@ class EllipticCurve {
          (Params::Z != 0 && A.is_nonzero().as_bool() && B.is_nonzero().as_bool() && FieldElement::P_MOD_4 == 3);
 
       static constexpr bool OrderIsLessThanField = bigint_cmp(NW.data(), Words, PW.data(), Words) == -1;
+
+      /**
+      * Return (x^3 + A*x + B) mod p
+      */
+      static constexpr FieldElement x3_ax_b(const FieldElement& x) { return (x.square() + A) * x + B; }
 };
 
 /**
@@ -1709,17 +1667,17 @@ inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::
    const auto tv1 = invert_field_element<C>(z2_u4 + z_u2);
    auto x1 = SSWU_C1<C>() * (C::FieldElement::one() + tv1);
    x1.conditional_assign(tv1.is_zero(), SSWU_C2<C>());
-   const auto gx1 = C::AffinePoint::x3_ax_b(x1);
+   const auto gx1 = C::x3_ax_b(x1);
 
    const auto x2 = z_u2 * x1;
-   const auto gx2 = C::AffinePoint::x3_ax_b(x2);
+   const auto gx2 = C::x3_ax_b(x2);
 
    // Will be zero if gx1 is not a square
-   const auto [gx1_sqrt, gx1_is_square] = gx1.sqrt();
+   const auto [gx1_sqrt, gx1_is_square] = sqrt_field_element<C>(gx1);
 
    auto x = x2;
    // By design one of gx1 and gx2 must be a quadratic residue
-   auto y = gx2.sqrt().first;
+   auto y = sqrt_field_element<C>(gx2).first;
 
    C::FieldElement::conditional_assign(x, y, gx1_is_square, x1, gx1_sqrt);
 
