@@ -54,16 +54,24 @@ default all
 
 # Library targets
 
-%{if build_static_lib}
+%{if build_static_lib_using_response_file}
 
 rule link_static
   rspfile = %{response_file_dir}/static.txt
   rspfile_content = $in
   command = %{ar_command} %{ar_options} %{ar_output_to}$out @%{response_file_dir}/static.txt
 
-build %{out_dir}/%{static_lib_name}: link_static %{join lib_objs}
+%{endif}
+%{if build_static_lib_using_cmdline_args}
+
+rule link_static
+  command = %{ar_command} %{ar_options} %{ar_output_to}$out $in
 
 %{endif}
+%{if build_static_lib}
+build %{out_dir}/%{static_lib_name}: link_static %{join lib_objs}
+%{endif}
+
 %{if build_shared_lib}
 
 rule link_shared

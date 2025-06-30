@@ -109,9 +109,11 @@ jobs:
           - target: amalgamation
             compiler: xcode
             os: macos-13
+            make_tool: ninja
           - target: shared
             compiler: xcode
             os: macos-14 # uses Apple Silicon
+            make_tool: ninja
           - target: amalgamation
             compiler: xcode
             os: macos-14 # uses Apple Silicon
@@ -132,7 +134,7 @@ jobs:
           cache-key: macos-${{ matrix.compiler }}-${{ matrix.os }}-${{ matrix.target }}
 
       - name: Build and Test Botan
-        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
+        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   clang-tidy:
     name: "Clang Tidy"
