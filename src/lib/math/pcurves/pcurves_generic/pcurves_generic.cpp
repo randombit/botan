@@ -117,7 +117,7 @@ class GenericCurveParams final {
             m_field_monty_r1(bn_to_fixed(m_monty_field.R1())),
             m_field_monty_r2(bn_to_fixed(m_monty_field.R2())),
             m_field_p_plus_1_over_4(bn_to_fixed_rev((p + 1) / 4)),
-            m_field_p_over_2_plus_1(bn_to_fixed((p / 2) + 1)),
+            m_field_inv_2(bn_to_fixed((p / 2) + 1)),
             m_field_p_dash(m_monty_field.p_dash()),
 
             m_order(bn_to_fixed(order)),
@@ -125,6 +125,7 @@ class GenericCurveParams final {
             m_order_monty_r1(bn_to_fixed(m_monty_order.R1())),
             m_order_monty_r2(bn_to_fixed(m_monty_order.R2())),
             m_order_monty_r3(bn_to_fixed(m_monty_order.R3())),
+            m_order_inv_2(bn_to_fixed((order / 2) + 1)),
             m_order_p_dash(m_monty_order.p_dash()),
 
             m_a_is_minus_3(a + 3 == p),
@@ -162,7 +163,7 @@ class GenericCurveParams final {
 
       const StorageUnit& field_p_plus_1_over_4() const { return m_field_p_plus_1_over_4; }
 
-      const StorageUnit& field_p_over_2_plus_1() const { return m_field_p_over_2_plus_1; }
+      const StorageUnit& field_inv_2() const { return m_field_inv_2; }
 
       word field_p_dash() const { return m_field_p_dash; }
 
@@ -175,6 +176,8 @@ class GenericCurveParams final {
       const StorageUnit& order_monty_r2() const { return m_order_monty_r2; }
 
       const StorageUnit& order_monty_r3() const { return m_order_monty_r3; }
+
+      const StorageUnit& order_inv_2() const { return m_order_inv_2; }
 
       word order_p_dash() const { return m_order_p_dash; }
 
@@ -255,7 +258,7 @@ class GenericCurveParams final {
       StorageUnit m_field_monty_r1;
       StorageUnit m_field_monty_r2;
       StorageUnit m_field_p_plus_1_over_4;
-      StorageUnit m_field_p_over_2_plus_1;
+      StorageUnit m_field_inv_2;
       word m_field_p_dash;
 
       StorageUnit m_order;
@@ -263,6 +266,7 @@ class GenericCurveParams final {
       StorageUnit m_order_monty_r1;
       StorageUnit m_order_monty_r2;
       StorageUnit m_order_monty_r3;
+      StorageUnit m_order_inv_2;
       word m_order_p_dash;
 
       StorageUnit m_monty_curve_a;
@@ -416,6 +420,90 @@ class GenericScalar final {
       }
 
       GenericScalar invert() const { return pow_vartime(m_curve->_params().order_minus_2()); }
+
+      /**
+      * Helper for variable time BEEA
+      *
+      * Note this function assumes that its arguments are in the standard
+      * domain, not the Montgomery domain. invert_vartime converts its argument
+      * out of Montgomery, and then back to Montgomery when returning the result.
+      */
+      static void _invert_vartime_div2_helper(GenericScalar& a, GenericScalar& x) {
+         const auto& inv_2 = a.curve()->_params().order_inv_2();
+
+         // Conditional ok: this function is variable time
+         while((a.m_val[0] & 1) != 1) {
+            shift_right<1>(a.m_val);
+
+            W borrow = shift_right<1>(x.m_val);
+
+            // Conditional ok: this function is variable time
+            if(borrow) {
+               bigint_add2_nc(x.m_val.data(), N, inv_2.data(), N);
+            }
+         }
+      }
+
+      /*
+      * See the comments on invert_vartime in pcurves_impl.h for background
+      */
+      GenericScalar invert_vartime() const {
+         if(this->is_zero().as_bool()) {
+            return (*this);
+         }
+
+         auto x = GenericScalar(m_curve, std::array<W, N>{1});
+         auto b = GenericScalar(m_curve, from_rep(m_curve, m_val));
+
+         // First loop iteration
+         GenericScalar::_invert_vartime_div2_helper(b, x);
+
+         auto a = b.negate();
+         // y += x but y is zero at the outset
+         auto y = x;
+
+         // First half of second loop iteration
+         GenericScalar::_invert_vartime_div2_helper(a, y);
+
+         for(;;) {
+            // Conditional ok: this function is variable time
+            if(a.m_val == b.m_val) {
+               // At this point it should be that a == b == 1
+               auto r = y.negate();
+
+               // Convert back to Montgomery
+               return GenericScalar(curve(), to_rep(curve(), r.m_val));
+            }
+
+            auto nx = x + y;
+
+            /*
+            * Otherwise either b > a or a > b
+            *
+            * If b > a we want to set b to b - a
+            * Otherwise we want to set a to a - b
+            *
+            * Compute r = b - a and check if it underflowed
+            * If it did not then we are in the b > a path
+            */
+            std::array<W, N> r;
+            word carry = bigint_sub3(r.data(), b.data(), N, a.data(), N);
+
+            // Conditional ok: this function is variable time
+            if(carry == 0) {
+               // b > a
+               b.m_val = r;
+               x = nx;
+               GenericScalar::_invert_vartime_div2_helper(b, x);
+            } else {
+               // We know this can't underflow because a > b
+               bigint_sub3(r.data(), a.data(), N, b.data(), N);
+               a.m_val = r;
+               y = nx;
+               GenericScalar::_invert_vartime_div2_helper(a, y);
+            }
+         }
+      }
 
       template <concepts::resizable_byte_buffer T>
       T serialize() const {
@@ -587,7 +675,7 @@ class GenericField final {
          W borrow = shift_right<1>(t);
 
          // If value was odd, add (P/2)+1
-         bigint_cnd_add(borrow, t.data(), N, m_curve->_params().field_p_over_2_plus_1().data(), N);
+         bigint_cnd_add(borrow, t.data(), N, m_curve->_params().field_inv_2().data(), N);
 
          return GenericField(m_curve, t);
       }
@@ -1500,8 +1588,7 @@ PrimeOrderCurve::Scalar GenericPrimeOrderCurve::scalar_invert(const Scalar& s) c
 }
 
 PrimeOrderCurve::Scalar GenericPrimeOrderCurve::scalar_invert_vartime(const Scalar& s) const {
-   // TODO support BEEA for this
-   return stash(from_stash(s).invert());
+   return stash(from_stash(s).invert_vartime());
 }
 
 PrimeOrderCurve::Scalar GenericPrimeOrderCurve::scalar_negate(const Scalar& s) const {
