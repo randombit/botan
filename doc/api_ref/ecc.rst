@@ -66,6 +66,18 @@ side channels) unless otherwise documented. Usually this is denoted by including
        If ``k`` is zero (resulting in the scalar multiplication
        producing the identity element) then this function returns zero.
 
+   .. cpp:function:: static EC_Scalar hash(const EC_Group& group, \
+                                           std::string_view hash_fn, \
+                                           std::span<const uint8_t> input, \
+                                           std::span<const uint8_t> domain_sep)
+
+      Hash to scalar following RFC 9380.
+
+      This deterministically and portably hashes the provided input and domain
+      separator into an integer modulo the group order.
+
+      This function is supported for all groups.
+
    .. cpp:function:: size_t bytes() const
 
        Return the byte length of the scalar
