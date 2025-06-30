@@ -160,6 +160,31 @@ class Curve final : public EllipticCurve<Params, Secp256r1Rep> {
          return z;
       }
 
+      // Return the square root of x
+      static constexpr FieldElement fe_sqrt(const FieldElement& x) {
+         // Generated using addchain
+         auto z = x.square();
+         z *= x;
+         auto t0 = z;
+         t0.square_n(2);
+         z *= t0;
+         t0 = z;
+         t0.square_n(4);
+         z *= t0;
+         t0 = z;
+         t0.square_n(8);
+         z *= t0;
+         t0 = z;
+         t0.square_n(16);
+         z *= t0;
+         z.square_n(32);
+         z *= x;
+         z.square_n(96);
+         z *= x;
+         z.square_n(94);
+         return z;
+      }
+
       static constexpr Scalar scalar_invert(const Scalar& x) {
          auto t1 = x.square();
          auto t5 = t1.square();

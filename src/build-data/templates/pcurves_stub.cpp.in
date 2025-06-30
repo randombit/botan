@@ -54,6 +54,14 @@ class Curve final : public EllipticCurve<Params{% if crandall > 0 %}, {{ curve["
          {{ addchain_fe2 }}
       }
 
+      {% if addchain_fe_sqrt != None -%}
+      // Return the square root of this field element (if it is a quadratic residue)
+      static constexpr FieldElement fe_sqrt(const FieldElement& x) {
+         // Generated using https://github.com/mmcloughlin/addchain
+         {{ addchain_fe_sqrt }}
+      }
+      {%- endif %}
+
       // Return the inverse of an integer modulo the order
       static constexpr Scalar scalar_invert(const Scalar& x) {
          // Generated using https://github.com/mmcloughlin/addchain

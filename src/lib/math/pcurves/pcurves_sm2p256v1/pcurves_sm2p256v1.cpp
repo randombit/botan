@@ -154,6 +154,42 @@ class Curve final : public EllipticCurve<Params, Sm2p256v1Rep> {
          z.square_n(2);
          return z;
       }
+
+      static constexpr FieldElement fe_sqrt(const FieldElement& x) {
+         auto z = x.square();
+         z *= x;
+         z = z.square();
+         auto t0 = x * z;
+         z = t0.square();
+         z *= x;
+         auto t2 = z.square();
+         auto t3 = t2.square();
+         auto t1 = t3.square();
+         auto t4 = t1;
+         t4.square_n(3);
+         t3 *= t4;
+         t3.square_n(5);
+         t1 *= t3;
+         t3 = t1;
+         t3.square_n(2);
+         t2 *= t3;
+         t2.square_n(14);
+         t1 *= t2;
+         t0 *= t1;
+         t0.square_n(4);
+         t1 = t0;
+         t1.square_n(31);
+         t0 *= t1;
+         t1.square_n(32);
+         t1 *= t0;
+         t1.square_n(62);
+         t0 *= t1;
+         z *= t0;
+         z.square_n(32);
+         z *= x;
+         z.square_n(62);
+         return z;
+      }
 };
 
 }  // namespace sm2p256v1
