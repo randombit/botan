@@ -61,7 +61,6 @@ disabled_needs_work = [
     'misc-redundant-expression', # BigInt seems to confuse clang-tidy
     'misc-misplaced-const',
     'misc-confusable-identifiers',
-    'modernize-avoid-bind',
     'modernize-pass-by-value',
     'modernize-use-ranges', # limited by compiler support currently
     'performance-avoid-endl',
