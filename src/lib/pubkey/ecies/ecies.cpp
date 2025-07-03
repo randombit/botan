@@ -23,6 +23,8 @@ namespace {
 
 /**
 * Private key type for ECIES_ECDH_KA_Operation
+*
+* TODO(Botan4) this can be removed once cofactor support is removed from ECDH
 */
 
 BOTAN_DIAGNOSTIC_PUSH
@@ -32,6 +34,7 @@ class ECIES_PrivateKey final : public EC_PrivateKey,
                                public PK_Key_Agreement_Key {
    public:
       explicit ECIES_PrivateKey(const ECDH_PrivateKey& private_key) :
+            // NOLINTNEXTLINE(*-slicing)
             EC_PublicKey(private_key), EC_PrivateKey(private_key), PK_Key_Agreement_Key(), m_key(private_key) {}
 
       std::vector<uint8_t> public_value() const override { return m_key.public_value(); }

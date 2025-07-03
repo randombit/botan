@@ -345,7 +345,8 @@ LMS_Signature LMS_Signature::from_bytes_or_throw(BufferSlicer& slicer) {
    return LMS_Signature(q, std::move(lmots_sig), lms_type, std::move(auth_path));
 }
 
-LMS_PublicKey::LMS_PublicKey(const LMS_PrivateKey& sk) : LMS_Instance(sk), m_lms_root(sk.lms_params().m()) {
+LMS_PublicKey::LMS_PublicKey(const LMS_PrivateKey& sk) :
+      /* NOLINT(*-slicing) */ LMS_Instance(sk), m_lms_root(sk.lms_params().m()) {
    lms_treehash(StrongSpan<LMS_Tree_Node>(m_lms_root), std::nullopt, std::nullopt, sk);
 }
 
