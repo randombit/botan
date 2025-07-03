@@ -25,7 +25,6 @@ Checks: >
     -cppcoreguidelines-init-variables,
     -cppcoreguidelines-owning-memory,
     -cppcoreguidelines-prefer-member-initializer,
-    -cppcoreguidelines-slicing,
     -hicpp-explicit-conversions,
     -misc-const-correctness,
     -misc-include-cleaner,

@@ -275,7 +275,7 @@ std::vector<Test::Result> xmss_legacy_private_key() {
       "A5E22C249FA9D1E7DA08DB351709C4");
 
    Botan::XMSS_PrivateKey legacy_secret_key = Botan::XMSS_PrivateKey(legacy_xmss_private_key);
-   Botan::XMSS_PublicKey public_key_from_secret_key(legacy_secret_key);
+   auto public_key_from_secret_key = legacy_secret_key.public_key();
    Botan::XMSS_PublicKey legacy_public_key = Botan::XMSS_PublicKey(legacy_xmss_public_key);
 
    const auto message = Botan::hex_decode("deadcafe");
@@ -289,14 +289,14 @@ std::vector<Test::Result> xmss_legacy_private_key() {
                Botan::PK_Signer signer(legacy_secret_key, *rng, algo_name);
                auto signature = signer.sign_message(message, *rng);
 
-               Botan::PK_Verifier verifier(public_key_from_secret_key, algo_name);
+               Botan::PK_Verifier verifier(*public_key_from_secret_key, algo_name);
                result.confirm("legacy private key generates signatures that are still verifiable",
                               verifier.verify_message(message, signature));
             }),
 
       CHECK("Verify a legacy signature",
             [&](auto& result) {
-               Botan::PK_Verifier verifier(public_key_from_secret_key, algo_name);
+               Botan::PK_Verifier verifier(*public_key_from_secret_key, algo_name);
                result.confirm("legacy private key generates signatures that are still verifiable",
                               verifier.verify_message(message, legacy_signature));
             }),

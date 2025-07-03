@@ -307,7 +307,7 @@ void LMOTS_Private_Key::derive_random_C(std::span<uint8_t> out, HashFunction& ha
    gen.gen(out, hash, m_seed);
 }
 
-LMOTS_Public_Key::LMOTS_Public_Key(const LMOTS_Private_Key& lmots_sk) : OTS_Instance(lmots_sk) {
+LMOTS_Public_Key::LMOTS_Public_Key(const LMOTS_Private_Key& lmots_sk) : /* NOLINT(*-slicing) */ OTS_Instance(lmots_sk) {
    const auto pk_hash = lmots_sk.params().hash();
    pk_hash->update(lmots_sk.identifier());
    pk_hash->update(store_be(lmots_sk.q()));
