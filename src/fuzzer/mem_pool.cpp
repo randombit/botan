@@ -26,7 +26,7 @@ size_t compute_expected_alignment(size_t plen) {
 
 struct RawPage {
    public:
-      RawPage(void* p) : m_p(p) {}
+      explicit RawPage(void* p) : m_p(p) {}
 
       ~RawPage() {
          // NOLINTNEXTLINE(*-no-malloc)

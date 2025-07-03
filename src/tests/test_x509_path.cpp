@@ -775,7 +775,7 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run() {
                   return s;
                }
 
-               random_bit_generator(Botan::RandomNumberGenerator& rng) : m_rng(rng) {}
+               explicit random_bit_generator(Botan::RandomNumberGenerator& rng) : m_rng(rng) {}
 
             private:
                Botan::RandomNumberGenerator& m_rng;

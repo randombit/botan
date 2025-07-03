@@ -26,7 +26,7 @@ class Session;
 class BOTAN_PUBLIC_API(2, 0) EC_PublicKeyGenerationProperties final : public PublicKeyProperties {
    public:
       /// @param ec_params DER-encoding of an ANSI X9.62 Parameters value
-      EC_PublicKeyGenerationProperties(const std::vector<uint8_t>& ec_params);
+      BOTAN_FUTURE_EXPLICIT EC_PublicKeyGenerationProperties(const std::vector<uint8_t>& ec_params);
 
       /// @return the DER-encoding of the ec parameters according to ANSI X9.62
       inline const std::vector<uint8_t>& ec_params() const { return m_ec_params; }

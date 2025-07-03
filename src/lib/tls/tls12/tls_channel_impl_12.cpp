@@ -449,7 +449,7 @@ void Channel_Impl_12::process_alert(const secure_vector<uint8_t>& record) {
       if(auto active = active_state()) {
          const auto& session_id = active->server_hello()->session_id();
          if(!session_id.empty()) {
-            session_manager().remove(session_id);
+            session_manager().remove(Session_Handle(session_id));
          }
       }
    }
@@ -538,7 +538,7 @@ void Channel_Impl_12::send_alert(const Alert& alert) {
       if(auto active = active_state()) {
          const auto& session_id = active->server_hello()->session_id();
          if(!session_id.empty()) {
-            session_manager().remove(Session_ID(session_id));
+            session_manager().remove(Session_Handle(Session_ID(session_id)));
          }
       }
       reset_state();

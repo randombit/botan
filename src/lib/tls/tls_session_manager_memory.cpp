@@ -100,14 +100,14 @@ size_t Session_Manager_In_Memory::remove_internal(const Session_Handle& handle) 
                         [&](const Session_ID& id) -> size_t { return m_sessions.erase(id); },
                         [&](const Opaque_Session_Handle&) -> size_t {
                            if(auto id = handle.id()) {
-                              auto removed = remove_internal(id.value());
+                              auto removed = remove_internal(Session_Handle(id.value()));
                               if(removed > 0) {
                                  return removed;
                               }
                            }
 
                            if(auto ticket = handle.ticket()) {
-                              return remove_internal(ticket.value());
+                              return remove_internal(Session_Handle(ticket.value()));
                            }
 
                            return 0;

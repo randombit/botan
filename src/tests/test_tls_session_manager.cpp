@@ -774,7 +774,8 @@ class Temporary_Database_File {
       std::string m_temp_file;
 
    public:
-      Temporary_Database_File(const std::string& db_file) : m_temp_file(Test::data_file_as_temporary_copy(db_file)) {
+      explicit Temporary_Database_File(const std::string& db_file) :
+            m_temp_file(Test::data_file_as_temporary_copy(db_file)) {
          if(m_temp_file.empty()) {
             throw Test_Error("Failed to create temporary database file");
          }

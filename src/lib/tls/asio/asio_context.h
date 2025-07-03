@@ -57,7 +57,7 @@ class BOTAN_PUBLIC_API(2, 11) Context {
        *
        * @param server_info  Basic information about the host to connect to (SNI)
        */
-      Context(Server_Information server_info = Server_Information());
+      BOTAN_FUTURE_EXPLICIT Context(Server_Information server_info = Server_Information());
    #endif
 
       Context(std::shared_ptr<Credentials_Manager> credentials_manager,

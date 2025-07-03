@@ -65,7 +65,7 @@ class Client_Hello_Internal {
    public:
       Client_Hello_Internal() : m_comp_methods({0}) {}
 
-      Client_Hello_Internal(const std::vector<uint8_t>& buf) {
+      explicit Client_Hello_Internal(const std::vector<uint8_t>& buf) {
          if(buf.size() < 41) {
             throw Decoding_Error("Client_Hello: Packet corrupted");
          }
@@ -342,9 +342,9 @@ std::optional<Session_Handle> Client_Hello_12::session_handle() const {
    //    to use the Session ID in the ClientHello for stateful session
    //    resumption.
    if(auto ticket = session_ticket(); !ticket.empty()) {
-      return ticket;
+      return Session_Handle(ticket);
    } else if(const auto& id = session_id(); !id.empty()) {
-      return id;
+      return Session_Handle(id);
    } else {
       return std::nullopt;
    }

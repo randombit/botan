@@ -68,7 +68,7 @@ class BOTAN_TEST_API Handshake_State_13_Base {
       const Finished_13& client_finished() const { return get(m_client_finished); }
 
    protected:
-      Handshake_State_13_Base(Connection_Side whoami) : m_side(whoami) {}
+      explicit Handshake_State_13_Base(Connection_Side whoami) : m_side(whoami) {}
 
       Client_Hello_13& store(Client_Hello_13 client_hello, bool from_peer);
       Client_Hello_12& store(Client_Hello_12 client_hello, bool from_peer);

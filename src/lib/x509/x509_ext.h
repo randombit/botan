@@ -31,7 +31,7 @@ class BOTAN_PUBLIC_API(2, 0) Basic_Constraints final : public Certificate_Extens
          return std::make_unique<Basic_Constraints>(m_is_ca, m_path_limit);
       }
 
-      Basic_Constraints(bool ca = false, size_t limit = 0) : m_is_ca(ca), m_path_limit(limit) {}
+      BOTAN_FUTURE_EXPLICIT Basic_Constraints(bool ca = false, size_t limit = 0) : m_is_ca(ca), m_path_limit(limit) {}
 
       bool get_is_ca() const { return m_is_ca; }
 
@@ -240,7 +240,7 @@ class BOTAN_PUBLIC_API(2, 0) Name_Constraints final : public Certificate_Extensi
 
       Name_Constraints() = default;
 
-      Name_Constraints(const NameConstraints& nc) : m_name_constraints(nc) {}
+      BOTAN_FUTURE_EXPLICIT Name_Constraints(const NameConstraints& nc) : m_name_constraints(nc) {}
 
       void validate(const X509_Certificate& subject,
                     const X509_Certificate& issuer,
@@ -345,7 +345,7 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Number final : public Certificate_Extension {
 
       CRL_Number() : m_has_value(false), m_crl_number(0) {}
 
-      CRL_Number(size_t n) : m_has_value(true), m_crl_number(n) {}
+      BOTAN_FUTURE_EXPLICIT CRL_Number(size_t n) : m_has_value(true), m_crl_number(n) {}
 
       size_t get_crl_number() const;
 
@@ -581,7 +581,7 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
 
          public:
             IPAddress() = default;
-            IPAddress(std::span<uint8_t> v);
+            explicit IPAddress(std::span<uint8_t> v);
 
             std::array<uint8_t, Length> value() const { return m_value; }
 
@@ -633,6 +633,7 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
 
             IPAddressOrRange() = default;
 
+            // NOLINTNEXTLINE(*-explicit-conversions) FIXME
             IPAddressOrRange(const IPAddress<V>& addr) : m_min(addr), m_max(addr) {}
 
             IPAddressOrRange(const IPAddress<V>& min, const IPAddress<V>& max) : m_min(min), m_max(max) {
@@ -660,6 +661,7 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
 
             IPAddressChoice() = default;
 
+            // NOLINTNEXTLINE(*-explicit-conversions) FIXME
             IPAddressChoice(std::optional<std::span<const IPAddressOrRange<V>>> ranges);
 
          private:
@@ -675,7 +677,7 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
 
             IPAddressFamily() = default;
 
-            IPAddressFamily(const AddrChoice& choice, std::optional<uint8_t> safi = std::nullopt) :
+            explicit IPAddressFamily(const AddrChoice& choice, std::optional<uint8_t> safi = std::nullopt) :
                   m_safi(safi), m_ip_addr_choice(choice) {
                if(std::holds_alternative<IPAddressChoice<Version::IPv4>>(choice)) {
                   m_afi = 1;
@@ -698,7 +700,9 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
 
       IPAddressBlocks() = default;
 
-      IPAddressBlocks(const std::vector<IPAddressFamily>& blocks) : m_ip_addr_blocks(blocks) { this->sort_and_merge(); }
+      explicit IPAddressBlocks(const std::vector<IPAddressFamily>& blocks) : m_ip_addr_blocks(blocks) {
+         this->sort_and_merge();
+      }
 
       std::unique_ptr<Certificate_Extension> copy() const override { return std::make_unique<IPAddressBlocks>(*this); }
 
@@ -750,7 +754,7 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
 
             ASIdOrRange() = default;
 
-            ASIdOrRange(asnum_t id) : m_min(id), m_max(id) {}
+            explicit ASIdOrRange(asnum_t id) : m_min(id), m_max(id) {}
 
             ASIdOrRange(asnum_t min, asnum_t max) : m_min(min), m_max(max) {
                if(max < min) {
@@ -770,7 +774,7 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
 
             ASIdentifierChoice() = default;
 
-            ASIdentifierChoice(const std::optional<std::vector<ASIdOrRange>>& ranges);
+            explicit ASIdentifierChoice(const std::optional<std::vector<ASIdOrRange>>& ranges);
 
             const std::optional<std::vector<ASIdOrRange>>& ranges() const { return m_as_ranges; }
 
@@ -804,7 +808,7 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
 
       ASBlocks() = default;
 
-      ASBlocks(const ASIdentifiers& as_idents) : m_as_identifiers(as_idents) {}
+      explicit ASBlocks(const ASIdentifiers& as_idents) : m_as_identifiers(as_idents) {}
 
       std::unique_ptr<Certificate_Extension> copy() const override { return std::make_unique<ASBlocks>(*this); }
 

@@ -221,9 +221,9 @@ std::vector<Session_with_Handle> Session_Manager_SQL::find_some(const Server_Inf
       auto handle = [&]() -> Session_Handle {
          auto ticket_blob = stmt->get_blob(1);
          if(ticket_blob.second > 0) {
-            return Session_Ticket(std::span(ticket_blob.first, ticket_blob.second));
+            return Session_Handle(Session_Ticket(std::span(ticket_blob.first, ticket_blob.second)));
          } else {
-            return Session_ID(Botan::hex_decode(stmt->get_str(0)));
+            return Session_Handle(Session_ID(Botan::hex_decode(stmt->get_str(0))));
          }
       }();
 

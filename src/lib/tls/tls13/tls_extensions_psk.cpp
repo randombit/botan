@@ -46,7 +46,7 @@ class Client_PSK {
                        Cipher_State::PSK_Type::Resumption) {}
 
       // NOLINTNEXTLINE(*-rvalue-reference-param-not-moved)
-      Client_PSK(ExternalPSK&& psk) :
+      explicit Client_PSK(ExternalPSK&& psk) :
             Client_PSK(PskIdentity(PresharedKeyID(psk.identity())),
                        psk.prf_algo(),
                        psk.extract_master_secret(),
@@ -106,7 +106,7 @@ class Client_PSK {
 
 class Server_PSK {
    public:
-      Server_PSK(uint16_t id) : m_selected_identity(id), m_session_to_resume_or_psk(std::monostate()) {}
+      explicit Server_PSK(uint16_t id) : m_selected_identity(id), m_session_to_resume_or_psk(std::monostate()) {}
 
       Server_PSK(uint16_t id, Session session) :
             m_selected_identity(id), m_session_to_resume_or_psk(std::move(session)) {}
@@ -131,9 +131,9 @@ class Server_PSK {
 
 class PSK::PSK_Internal {
    public:
-      PSK_Internal(Server_PSK srv_psk) : psk(std::move(srv_psk)) {}
+      explicit PSK_Internal(Server_PSK srv_psk) : psk(std::move(srv_psk)) {}
 
-      PSK_Internal(std::vector<Client_PSK> clt_psks) : psk(std::move(clt_psks)) {}
+      explicit PSK_Internal(std::vector<Client_PSK> clt_psks) : psk(std::move(clt_psks)) {}
 
       // NOLINTNEXTLINE(*-non-private-member-variable*)
       std::variant<std::vector<Client_PSK>, Server_PSK> psk;

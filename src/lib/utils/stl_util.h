@@ -429,6 +429,7 @@ template <typename T>
             m_rawptr = nullptr;
          }
 
+         // NOLINTNEXTLINE(*-explicit-conversions) FIXME
          constexpr out_ptr_t(T& outptr) noexcept : m_ptr(outptr), m_rawptr(nullptr) {}
 
          out_ptr_t(const out_ptr_t&) = delete;
@@ -436,6 +437,7 @@ template <typename T>
          out_ptr_t& operator=(const out_ptr_t&) = delete;
          out_ptr_t& operator=(out_ptr_t&&) = delete;
 
+         // NOLINTNEXTLINE(*-explicit-conversions) FIXME
          [[nodiscard]] constexpr operator typename T::element_type **() && noexcept { return &m_rawptr; }
 
       private:
@@ -453,6 +455,7 @@ template <typename T>
       public:
          constexpr ~out_opt_t() noexcept { m_opt = m_raw; }
 
+         // NOLINTNEXTLINE(*-explicit-conversions) FIXME
          constexpr out_opt_t(std::optional<T>& outopt) noexcept : m_opt(outopt) {}
 
          out_opt_t(const out_opt_t&) = delete;
@@ -460,6 +463,7 @@ template <typename T>
          out_opt_t& operator=(const out_opt_t&) = delete;
          out_opt_t& operator=(out_opt_t&&) = delete;
 
+         // NOLINTNEXTLINE(*-explicit-conversions) FIXME
          [[nodiscard]] constexpr operator T*() && noexcept { return &m_raw; }
 
       private:

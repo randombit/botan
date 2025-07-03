@@ -181,7 +181,7 @@ class Peer {
 
 class Result_Wrapper {
    public:
-      Result_Wrapper(std::string name) : m_result(std::move(name)) {}
+      explicit Result_Wrapper(std::string name) : m_result(std::move(name)) {}
 
       Test::Result& result() { return m_result; }
 

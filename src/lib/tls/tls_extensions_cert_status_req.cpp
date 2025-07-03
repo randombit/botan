@@ -21,7 +21,7 @@ class RFC6066_Empty_Certificate_Status_Request {
    public:
       RFC6066_Empty_Certificate_Status_Request() = default;
 
-      RFC6066_Empty_Certificate_Status_Request(uint16_t extension_size) {
+      explicit RFC6066_Empty_Certificate_Status_Request(uint16_t extension_size) {
          if(extension_size != 0) {
             throw Decoding_Error("Received an unexpectedly non-empty Certificate_Status_Request");
          }
@@ -78,7 +78,7 @@ class Certificate_Status_Request_Internal {
          std::variant<RFC6066_Empty_Certificate_Status_Request, RFC6066_Certificate_Status_Request, Certificate_Status>;
 
    public:
-      Certificate_Status_Request_Internal(Contents c) : content(std::move(c)) {}
+      explicit Certificate_Status_Request_Internal(Contents c) : content(std::move(c)) {}
 
       Contents content;  // NOLINT(*-non-private-member-variable*)
 };

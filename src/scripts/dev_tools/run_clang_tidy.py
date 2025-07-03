@@ -55,7 +55,6 @@ disabled_needs_work = [
     'cppcoreguidelines-init-variables',
     'cppcoreguidelines-owning-memory',
     'cppcoreguidelines-prefer-member-initializer',
-    'hicpp-explicit-conversions',
     'misc-const-correctness', # pretty noisy
     'misc-include-cleaner',
     'misc-redundant-expression', # BigInt seems to confuse clang-tidy

@@ -101,6 +101,7 @@ class BOTAN_PUBLIC_API(3, 6) Context final : public std::enable_shared_from_this
       /// @return an ESYS_CONTEXT* for use in other TPM2 functions.
       ESYS_CONTEXT* esys_context() noexcept;
 
+      // NOLINTNEXTLINE(*-explicit-conversions) FIXME
       operator ESYS_CONTEXT*() noexcept { return esys_context(); }
 
       /// @return the Vendor of the TPM2

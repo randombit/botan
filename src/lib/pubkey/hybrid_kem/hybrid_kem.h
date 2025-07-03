@@ -110,7 +110,7 @@ class BOTAN_TEST_API Hybrid_PrivateKey : virtual public Private_Key {
        * To use KEX algorithms use the KEX_to_KEM_Adapter_PrivateKey.
        * @param private_keys List of private keys to combine
        */
-      Hybrid_PrivateKey(std::vector<std::unique_ptr<Private_Key>> private_keys);
+      explicit Hybrid_PrivateKey(std::vector<std::unique_ptr<Private_Key>> private_keys);
 
       /// Disabled by default
       secure_vector<uint8_t> private_key_bits() const override;

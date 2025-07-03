@@ -51,7 +51,7 @@ namespace {
 
 class Callbacks : public Botan::TLS::Callbacks {
    public:
-      Callbacks(TLS_Server& server_command) : m_server_command(server_command) {}
+      explicit Callbacks(TLS_Server& server_command) : m_server_command(server_command) {}
 
       std::ostream& output();
       void send(std::span<const uint8_t> buffer);

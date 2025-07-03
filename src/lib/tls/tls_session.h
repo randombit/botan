@@ -62,6 +62,8 @@ inline auto operator<(const Session_ID& id1, const Session_ID& id2) {
  */
 class BOTAN_PUBLIC_API(3, 0) Session_Handle {
    public:
+      // NOLINTBEGIN(*-explicit-conversions)
+
       /**
        * Constructs a Session_Handle from a session ID which is an
        * arbitrary byte vector that must be 32 bytes long at most.
@@ -86,6 +88,8 @@ class BOTAN_PUBLIC_API(3, 0) Session_Handle {
        * to figure out what it actually is.
        */
       Session_Handle(Opaque_Session_Handle ticket) : m_handle(std::move(ticket)) { validate_constraints(); }
+
+      // NOLINTEND(*-explicit-conversions)
 
       bool is_id() const { return std::holds_alternative<Session_ID>(m_handle); }
 
@@ -386,7 +390,7 @@ class BOTAN_PUBLIC_API(3, 0) Session final : public Session_Base {
       * Load a session from DER representation (created by DER_encode)
       * @param ber_data DER representation buffer
       */
-      Session(std::span<const uint8_t> ber_data);
+      BOTAN_FUTURE_EXPLICIT Session(std::span<const uint8_t> ber_data);
 
       /**
       * Load a session from PEM representation (created by PEM_encode)

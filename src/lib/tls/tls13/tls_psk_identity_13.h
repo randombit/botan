@@ -43,7 +43,7 @@ class BOTAN_PUBLIC_API(3, 1) PskIdentity {
       /**
        * Construct from an externally provided PSK in the client
        */
-      PskIdentity(PresharedKeyID identity);
+      BOTAN_FUTURE_EXPLICIT PskIdentity(PresharedKeyID identity);
 
       const std::vector<uint8_t>& identity() const { return m_identity; }
 

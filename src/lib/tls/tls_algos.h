@@ -143,8 +143,10 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
 
       constexpr Group_Params() : m_code(Group_Params_Code::NONE) {}
 
+      // NOLINTNEXTLINE(*-explicit-conversions)
       constexpr Group_Params(Group_Params_Code code) : m_code(code) {}
 
+      // NOLINTNEXTLINE(*-explicit-conversions)
       constexpr Group_Params(uint16_t code) : m_code(static_cast<Group_Params_Code>(code)) {}
 
       /**

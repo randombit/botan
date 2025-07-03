@@ -215,7 +215,7 @@ class BOTAN_UNSTABLE_API Certificate_Type_Base : public Extension {
       /**
        * Called by the client to advertise support for a number of cert types.
        */
-      Certificate_Type_Base(std::vector<Certificate_Type> supported_cert_types);
+      explicit Certificate_Type_Base(std::vector<Certificate_Type> supported_cert_types);
 
    protected:
       /**
@@ -516,7 +516,7 @@ class BOTAN_UNSTABLE_API Certificate_Status_Request final : public Extension /* 
                                  std::vector<std::vector<uint8_t>> ocsp_key_ids);
 
       // TLS 1.3 version
-      Certificate_Status_Request(std::vector<uint8_t> response);
+      explicit Certificate_Status_Request(std::vector<uint8_t> response);
 
       Certificate_Status_Request(TLS_Data_Reader& reader,
                                  uint16_t extension_size,
@@ -544,7 +544,7 @@ class BOTAN_UNSTABLE_API Supported_Versions final : public Extension {
 
       Supported_Versions(Protocol_Version version, const Policy& policy);
 
-      Supported_Versions(Protocol_Version version) { m_versions.push_back(version); }
+      explicit Supported_Versions(Protocol_Version version) { m_versions.push_back(version); }
 
       Supported_Versions(TLS_Data_Reader& reader, uint16_t extension_size, Connection_Side from);
 
@@ -870,7 +870,7 @@ class BOTAN_UNSTABLE_API EarlyDataIndication final : public Extension {
        * this extension in the NewSessionTicket message! Otherwise it stays
        * std::nullopt and results in an empty extension. (RFC 8446 4.2.10).
        */
-      EarlyDataIndication(std::optional<uint32_t> max_early_data_size = std::nullopt) :
+      explicit EarlyDataIndication(std::optional<uint32_t> max_early_data_size = std::nullopt) :
             m_max_early_data_size(max_early_data_size) {}
 
    private:

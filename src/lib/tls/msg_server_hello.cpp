@@ -78,7 +78,7 @@ class Server_Hello_Internal {
       /**
        * Deserialize a Server Hello message
        */
-      Server_Hello_Internal(const std::vector<uint8_t>& buf) {
+      explicit Server_Hello_Internal(const std::vector<uint8_t>& buf) {
          if(buf.size() < 38) {
             throw Decoding_Error("Server_Hello: Packet corrupted");
          }

@@ -29,7 +29,7 @@ class BOTAN_PUBLIC_API(2, 0) X509_CertificateProperties final : public Certifica
       */
       X509_CertificateProperties(const std::vector<uint8_t>& subject, const std::vector<uint8_t>& value);
 
-      X509_CertificateProperties(const X509_Certificate& cert) :
+      BOTAN_FUTURE_EXPLICIT X509_CertificateProperties(const X509_Certificate& cert) :
             X509_CertificateProperties(cert.raw_subject_dn(), cert.BER_encode()) {}
 
       /// @param id key identifier for public/private key pair

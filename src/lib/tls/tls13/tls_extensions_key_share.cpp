@@ -39,7 +39,7 @@ namespace {
 
 class Key_Share_Entry {
    public:
-      Key_Share_Entry(TLS_Data_Reader& reader) {
+      explicit Key_Share_Entry(TLS_Data_Reader& reader) {
          // TODO check that the group actually exists before casting...
          m_group = static_cast<Named_Group>(reader.get_uint16_t());
          m_key_exchange = reader.get_tls_length_value(2);
@@ -47,7 +47,7 @@ class Key_Share_Entry {
 
       // Create an empty Key_Share_Entry with the selected group
       // but don't pre-generate a keypair, yet.
-      Key_Share_Entry(const TLS::Group_Params group) : m_group(group) {}
+      explicit Key_Share_Entry(const TLS::Group_Params group) : m_group(group) {}
 
       Key_Share_Entry(const TLS::Group_Params group, Callbacks& cb, RandomNumberGenerator& rng) :
             m_group(group), m_private_key(cb.tls_kem_generate_key(group, rng)) {
@@ -361,7 +361,7 @@ class Key_Share_HelloRetryRequest {
          m_selected_group = static_cast<Named_Group>(reader.get_uint16_t());
       }
 
-      Key_Share_HelloRetryRequest(Named_Group selected_group) : m_selected_group(selected_group) {}
+      explicit Key_Share_HelloRetryRequest(Named_Group selected_group) : m_selected_group(selected_group) {}
 
       ~Key_Share_HelloRetryRequest() = default;
 
@@ -394,7 +394,7 @@ class Key_Share::Key_Share_Impl {
    public:
       using Key_Share_Type = std::variant<Key_Share_ClientHello, Key_Share_ServerHello, Key_Share_HelloRetryRequest>;
 
-      Key_Share_Impl(Key_Share_Type ks) : key_share(std::move(ks)) {}
+      explicit Key_Share_Impl(Key_Share_Type ks) : key_share(std::move(ks)) {}
 
       Key_Share_Type key_share;  // NOLINT(*-non-private-member-variable*)
 };

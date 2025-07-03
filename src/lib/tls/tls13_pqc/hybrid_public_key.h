@@ -76,7 +76,7 @@ class BOTAN_TEST_API Hybrid_KEM_PrivateKey final : public Hybrid_KEM_PublicKey,
       static std::unique_ptr<Hybrid_KEM_PrivateKey> generate_from_group(Group_Params group, RandomNumberGenerator& rng);
 
    public:
-      Hybrid_KEM_PrivateKey(std::vector<std::unique_ptr<Private_Key>> private_keys);
+      explicit Hybrid_KEM_PrivateKey(std::vector<std::unique_ptr<Private_Key>> private_keys);
 
       std::unique_ptr<Public_Key> public_key() const override {
          return std::make_unique<Hybrid_KEM_PublicKey>(extract_public_keys(private_keys()));

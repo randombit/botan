@@ -99,6 +99,7 @@ class TR {
          }
       }
 
+      // NOLINTNEXTLINE(*-explicit-conversions) FIXME
       constexpr operator ESYS_TR() const { return m_handle; }
 };
 

@@ -27,7 +27,7 @@ class Transcript_Hash_State;
  */
 class BOTAN_TEST_API Handshake_Layer {
    public:
-      Handshake_Layer(Connection_Side whoami) :
+      explicit Handshake_Layer(Connection_Side whoami) :
             m_peer(whoami == Connection_Side::Server ? Connection_Side::Client : Connection_Side::Server)
             // RFC 8446 4.4.2
             //    If the corresponding certificate type extension

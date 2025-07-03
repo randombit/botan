@@ -57,7 +57,7 @@ class KyberConstants final {
       enum KyberStrength : uint16_t { _128 = 128, _192 = 192, _256 = 256 };
 
    public:
-      KyberConstants(KyberMode mode);
+      /* NOLINT(*-explicit-conversions) */ KyberConstants(KyberMode mode);
 
       ~KyberConstants();
 

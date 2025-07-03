@@ -613,7 +613,7 @@ void TLS::Client_Impl_13::handle(const New_Session_Ticket_13& new_session_ticket
                    callbacks().tls_current_timestamp());
 
    if(callbacks().tls_should_persist_resumption_information(session)) {
-      session_manager().store(session, new_session_ticket.handle());
+      session_manager().store(session, Session_Handle(new_session_ticket.handle()));
    }
 }
 

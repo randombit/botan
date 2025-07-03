@@ -16,8 +16,6 @@ namespace Botan_CLI {
 
 class PSK_Tool_Base : public Command {
    public:
-      PSK_Tool_Base(const std::string& spec) : Command(spec) {}
-
       std::string group() const override { return "psk"; }
 
       void go() override {
@@ -30,6 +28,9 @@ class PSK_Tool_Base : public Command {
 
          psk_operation(psk);
       }
+
+   protected:
+      explicit PSK_Tool_Base(const std::string& spec) : Command(spec) {}
 
    private:
       virtual void psk_operation(Botan::PSK_Database& db) = 0;
