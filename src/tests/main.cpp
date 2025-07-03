@@ -121,9 +121,9 @@ int main(int argc, char* argv[]) {
 
       return tests.run(opts) ? 0 : 1;
    } catch(std::exception& e) {
-      std::cerr << "Exiting with error: " << e.what() << std::endl;
+      std::cerr << "Exiting with error: " << e.what() << "\n";
    } catch(...) {
-      std::cerr << "Exiting with unknown exception" << std::endl;
+      std::cerr << "Exiting with unknown exception\n";
    }
    return 2;
 }

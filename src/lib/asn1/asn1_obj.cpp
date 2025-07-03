@@ -191,7 +191,7 @@ std::string to_string(const BER_Object& obj) {
 */
 bool maybe_BER(DataSource& source) {
    uint8_t first_u8;
-   if(!source.peek_byte(first_u8)) {
+   if(source.peek_byte(first_u8) == 0) {
       BOTAN_ASSERT_EQUAL(source.read_byte(first_u8), 0, "Expected EOF");
       throw Stream_IO_Error("ASN1::maybe_BER: Source was empty");
    }

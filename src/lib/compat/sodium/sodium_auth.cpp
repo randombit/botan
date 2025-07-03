@@ -48,7 +48,7 @@ int Sodium::crypto_onetimeauth_poly1305_verify(const uint8_t mac[],
                                                const uint8_t key[]) {
    secure_vector<uint8_t> computed(crypto_onetimeauth_poly1305_BYTES);
    crypto_onetimeauth_poly1305(computed.data(), in, in_len, key);
-   return crypto_verify_16(computed.data(), mac) ? 0 : -1;
+   return sodium_memcmp(computed.data(), mac, computed.size());
 }
 
 int Sodium::crypto_auth_hmacsha512(uint8_t out[], const uint8_t in[], size_t in_len, const uint8_t key[]) {
@@ -62,7 +62,7 @@ int Sodium::crypto_auth_hmacsha512(uint8_t out[], const uint8_t in[], size_t in_
 int Sodium::crypto_auth_hmacsha512_verify(const uint8_t mac[], const uint8_t in[], size_t in_len, const uint8_t key[]) {
    secure_vector<uint8_t> computed(crypto_auth_hmacsha512_BYTES);
    crypto_auth_hmacsha512(computed.data(), in, in_len, key);
-   return crypto_verify_64(computed.data(), mac) ? 0 : -1;
+   return sodium_memcmp(computed.data(), mac, computed.size());
 }
 
 int Sodium::crypto_auth_hmacsha512256(uint8_t out[], const uint8_t in[], size_t in_len, const uint8_t key[]) {
@@ -83,7 +83,7 @@ int Sodium::crypto_auth_hmacsha512256_verify(const uint8_t mac[],
                                              const uint8_t key[]) {
    secure_vector<uint8_t> computed(crypto_auth_hmacsha512256_BYTES);
    crypto_auth_hmacsha512256(computed.data(), in, in_len, key);
-   return crypto_verify_32(computed.data(), mac) ? 0 : -1;
+   return sodium_memcmp(computed.data(), mac, computed.size());
 }
 
 int Sodium::crypto_auth_hmacsha256(uint8_t out[], const uint8_t in[], size_t in_len, const uint8_t key[]) {
@@ -97,7 +97,7 @@ int Sodium::crypto_auth_hmacsha256(uint8_t out[], const uint8_t in[], size_t in_
 int Sodium::crypto_auth_hmacsha256_verify(const uint8_t mac[], const uint8_t in[], size_t in_len, const uint8_t key[]) {
    secure_vector<uint8_t> computed(crypto_auth_hmacsha256_BYTES);
    crypto_auth_hmacsha256(computed.data(), in, in_len, key);
-   return crypto_verify_32(computed.data(), mac) ? 0 : -1;
+   return sodium_memcmp(computed.data(), mac, computed.size());
 }
 
 }  // namespace Botan

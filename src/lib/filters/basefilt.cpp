@@ -12,19 +12,19 @@ namespace Botan {
 * Chain Constructor
 */
 Chain::Chain(Filter* f1, Filter* f2, Filter* f3, Filter* f4) {
-   if(f1) {
+   if(f1 != nullptr) {
       attach(f1);
       incr_owns();
    }
-   if(f2) {
+   if(f2 != nullptr) {
       attach(f2);
       incr_owns();
    }
-   if(f3) {
+   if(f3 != nullptr) {
       attach(f3);
       incr_owns();
    }
-   if(f4) {
+   if(f4 != nullptr) {
       attach(f4);
       incr_owns();
    }
@@ -35,7 +35,7 @@ Chain::Chain(Filter* f1, Filter* f2, Filter* f3, Filter* f4) {
 */
 Chain::Chain(Filter* filters[], size_t count) {
    for(size_t j = 0; j != count; ++j) {
-      if(filters[j]) {
+      if(filters[j] != nullptr) {
          attach(filters[j]);
          incr_owns();
       }

@@ -718,7 +718,7 @@ class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KD
       void raw_kem_encrypt(std::span<uint8_t> out_encapsulated_key,
                            std::span<uint8_t> raw_shared_key,
                            RandomNumberGenerator& rng) override {
-         const BigInt r = BigInt::random_integer(rng, 1, get_n());
+         const BigInt r = BigInt::random_integer(rng, BigInt::one(), get_n());
          const BigInt c = public_op(r);
 
          c.serialize_to(out_encapsulated_key);

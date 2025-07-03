@@ -27,7 +27,7 @@ class OAEP final : public EME {
       * @param hash function to use for hashing (takes ownership)
       * @param P an optional label. Normally empty.
       */
-      OAEP(std::unique_ptr<HashFunction> hash, std::string_view P = "");
+      explicit OAEP(std::unique_ptr<HashFunction> hash, std::string_view P = "");
 
       /**
       * @param hash function to use for hashing (takes ownership)

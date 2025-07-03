@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_ASN1)
    #include <botan/asn1_print.h>
    #include <botan/ber_dec.h>
+   #include <botan/bigint.h>
    #include <botan/der_enc.h>
    #include <botan/internal/fmt.h>
 #endif
@@ -239,6 +240,25 @@ Test::Result test_asn1_tag_underlying_type() {
    return result;
 }
 
+Test::Result test_asn1_negative_int_encoding() {
+   Test::Result result("DER encode/decode of negative integers");
+
+   BigInt n(32);
+
+   for(size_t i = 0; i != 2048; ++i) {
+      n--;
+
+      const auto enc = Botan::DER_Encoder().encode(n).get_contents_unlocked();
+
+      BigInt n_dec;
+      Botan::BER_Decoder(enc).decode(n_dec);
+
+      result.test_eq("DER encoding round trips negative integers", n_dec, n);
+   }
+
+   return result;
+}
+
 }  // namespace
 
 class ASN1_Tests final : public Test {
@@ -255,6 +275,7 @@ class ASN1_Tests final : public Test {
          results.push_back(test_asn1_ascii_encoding());
          results.push_back(test_asn1_utf8_encoding());
          results.push_back(test_asn1_tag_underlying_type());
+         results.push_back(test_asn1_negative_int_encoding());
 
          return results;
       }

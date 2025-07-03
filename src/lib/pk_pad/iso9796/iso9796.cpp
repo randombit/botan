@@ -80,7 +80,7 @@ std::vector<uint8_t> iso9796_encoding(std::span<const uint8_t> msg,
       stuffer.append(0xBC);
    } else {
       const uint8_t hash_id = ieee1363_hash_id(hash->name());
-      if(!hash_id) {
+      if(hash_id == 0) {
          throw Encoding_Error("ISO-9796: no hash identifier for " + hash->name());
       }
       stuffer.append(hash_id);
@@ -92,7 +92,7 @@ std::vector<uint8_t> iso9796_encoding(std::span<const uint8_t> msg,
    return EM;
 }
 
-bool iso9796_verification(std::span<const uint8_t> const_coded,
+bool iso9796_verification(std::span<const uint8_t> repr,
                           std::span<const uint8_t> raw,
                           size_t key_bits,
                           std::unique_ptr<HashFunction>& hash,
@@ -100,23 +100,30 @@ bool iso9796_verification(std::span<const uint8_t> const_coded,
    const size_t hash_len = hash->output_length();
    const size_t KEY_BYTES = (key_bits + 7) / 8;
 
-   if(const_coded.size() != KEY_BYTES) {
+   if(repr.size() != KEY_BYTES) {
       return false;
    }
    //get trailer length
    size_t trailer_len;
-   if(const_coded[const_coded.size() - 1] == 0xBC) {
+   if(repr[repr.size() - 1] == 0xBC) {
       trailer_len = 1;
    } else {
-      uint8_t hash_id = ieee1363_hash_id(hash->name());
-      if((!const_coded[const_coded.size() - 2]) || (const_coded[const_coded.size() - 2] != hash_id) ||
-         (const_coded[const_coded.size() - 1] != 0xCC)) {
-         return false;  //in case of wrong ISO trailer.
-      }
       trailer_len = 2;
+
+      uint8_t hash_id = ieee1363_hash_id(hash->name());
+      if(hash_id == 0) {
+         throw Decoding_Error("ISO-9796: no hash identifier for " + hash->name());
+      }
+
+      const uint8_t trailer_0 = repr[repr.size() - 2];
+      const uint8_t trailer_1 = repr[repr.size() - 1];
+
+      if(trailer_0 != hash_id || trailer_1 != 0xCC) {
+         return false;
+      }
    }
 
-   std::vector<uint8_t> coded(const_coded.begin(), const_coded.end());
+   std::vector<uint8_t> coded(repr.begin(), repr.end());
 
    CT::poison(coded.data(), coded.size());
    //remove mask
@@ -149,7 +156,9 @@ bool iso9796_verification(std::span<const uint8_t> const_coded,
 
    //invalid, if delimiter 0x01 was not found or msg1_offset is too big
    bad_input |= waiting_for_delim;
-   bad_input |= CT::Mask<size_t>::is_lt(coded.size(), trailer_len + hash_len + msg1_offset + salt_len);
+
+   const auto bad_offset = CT::Mask<size_t>::is_lt(coded.size(), trailer_len + hash_len + msg1_offset + salt_len);
+   bad_input |= CT::Mask<uint8_t>(bad_offset);
 
    //in case that msg1_offset is too big, just continue with offset = 0.
    msg1_offset = CT::Mask<size_t>::expand(bad_input.value()).if_not_set_return(msg1_offset);
@@ -225,8 +234,8 @@ std::vector<uint8_t> ISO_9796_DS2::encoding_of(std::span<const uint8_t> msg,
 /*
  * ISO-9796-2 scheme 2 verify operation
  */
-bool ISO_9796_DS2::verify(std::span<const uint8_t> const_coded, std::span<const uint8_t> raw, size_t key_bits) {
-   return iso9796_verification(const_coded, raw, key_bits, m_hash, m_salt_len);
+bool ISO_9796_DS2::verify(std::span<const uint8_t> repr, std::span<const uint8_t> raw, size_t key_bits) {
+   return iso9796_verification(repr, raw, key_bits, m_hash, m_salt_len);
 }
 
 /*
@@ -266,8 +275,8 @@ std::vector<uint8_t> ISO_9796_DS3::encoding_of(std::span<const uint8_t> msg,
 /*
  * ISO-9796-2 scheme 3 verify operation
  */
-bool ISO_9796_DS3::verify(std::span<const uint8_t> const_coded, std::span<const uint8_t> raw, size_t key_bits) {
-   return iso9796_verification(const_coded, raw, key_bits, m_hash, 0);
+bool ISO_9796_DS3::verify(std::span<const uint8_t> repr, std::span<const uint8_t> raw, size_t key_bits) {
+   return iso9796_verification(repr, raw, key_bits, m_hash, 0);
 }
 
 /*

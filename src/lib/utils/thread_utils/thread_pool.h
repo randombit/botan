@@ -36,14 +36,14 @@ class BOTAN_TEST_API Thread_Pool final {
       *        is nullopt then the thread pool is disabled; all
       *        work is executed immediately when queued.
       */
-      Thread_Pool(std::optional<size_t> pool_size);
+      explicit Thread_Pool(std::optional<size_t> pool_size);
 
       /**
       * Initialize a thread pool with some number of threads
       * @param pool_size number of threads in the pool, if 0
       *        then some default value is chosen.
       */
-      Thread_Pool(size_t pool_size = 0) : Thread_Pool(std::optional<size_t>(pool_size)) {}
+      explicit Thread_Pool(size_t pool_size = 0) : Thread_Pool(std::optional<size_t>(pool_size)) {}
 
       ~Thread_Pool() { shutdown(); }
 
@@ -66,7 +66,7 @@ class BOTAN_TEST_API Thread_Pool final {
       auto run(F&& f, Args&&... args) -> std::future<std::invoke_result_t<F, Args...>> {
          using return_type = std::invoke_result_t<F, Args...>;
 
-         auto future_work = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
+         auto future_work = std::bind(std::forward<F>(f), std::forward<Args>(args)...);  // NOLINT(*-avoid-bind)
          auto task = std::make_shared<std::packaged_task<return_type()>>(future_work);
          auto future_result = task->get_future();
          queue_thunk([task]() { (*task)(); });

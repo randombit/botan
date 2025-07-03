@@ -162,7 +162,7 @@ void EAX_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    const size_t remaining = sz - tag_size();
 
-   if(remaining) {
+   if(remaining > 0) {
       m_cmac->update(buf, remaining);
       m_ctr->cipher(buf, buf, remaining);
    }

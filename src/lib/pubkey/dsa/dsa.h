@@ -70,7 +70,7 @@ class BOTAN_PUBLIC_API(2, 0) DSA_PublicKey : public virtual Public_Key {
 
       DSA_PublicKey() = default;
 
-      DSA_PublicKey(std::shared_ptr<const DL_PublicKey> key) : m_public_key(std::move(key)) {}
+      explicit DSA_PublicKey(std::shared_ptr<const DL_PublicKey> key) : m_public_key(std::move(key)) {}
 
       std::shared_ptr<const DL_PublicKey> m_public_key;
 };

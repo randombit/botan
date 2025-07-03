@@ -47,7 +47,7 @@ class secure_allocator {
       ~secure_allocator() noexcept = default;
 
       template <typename U>
-      secure_allocator(const secure_allocator<U>&) noexcept {}
+      explicit secure_allocator(const secure_allocator<U>&) noexcept {}
 
       T* allocate(std::size_t n) { return static_cast<T*>(allocate_memory(n, sizeof(T))); }
 

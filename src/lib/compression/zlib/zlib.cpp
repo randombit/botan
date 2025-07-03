@@ -78,7 +78,7 @@ class Zlib_Compression_Stream : public Zlib_Stream {
 
 class Zlib_Decompression_Stream : public Zlib_Stream {
    public:
-      Zlib_Decompression_Stream(int wbits, int wbits_offset = 0) {
+      explicit Zlib_Decompression_Stream(int wbits, int wbits_offset = 0) {
          int rc = ::inflateInit2(streamp(), compute_window_bits(wbits, wbits_offset));
 
          if(rc != Z_OK) {
@@ -129,7 +129,7 @@ class Gzip_Compression_Stream final : public Zlib_Compression_Stream {
       }
 
    private:
-      ::gz_header m_header;
+      ::gz_header m_header{};
 };
 
 class Gzip_Decompression_Stream final : public Zlib_Decompression_Stream {

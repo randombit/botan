@@ -28,8 +28,6 @@ namespace Botan {
  */
 class BOTAN_PUBLIC_API(3, 2) XOF /* NOLINT(*special-member-functions) */ {
    public:
-      XOF() : m_xof_started(false) {}
-
       virtual ~XOF() = default;
 
       /**
@@ -163,7 +161,7 @@ class BOTAN_PUBLIC_API(3, 2) XOF /* NOLINT(*special-member-functions) */ {
        */
       template <size_t count>
       std::array<uint8_t, count> output() {
-         std::array<uint8_t, count> out;
+         std::array<uint8_t, count> out;  // NOLINT(*-member-init)
          generate_bytes(out);
          return out;
       }
@@ -232,7 +230,7 @@ class BOTAN_PUBLIC_API(3, 2) XOF /* NOLINT(*special-member-functions) */ {
       virtual void reset() = 0;
 
    private:
-      bool m_xof_started;
+      bool m_xof_started = false;
 };
 
 }  // namespace Botan

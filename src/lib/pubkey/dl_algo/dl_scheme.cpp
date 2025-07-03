@@ -22,7 +22,7 @@ BigInt decode_single_bigint(std::span<const uint8_t> key_bits) {
 
 BigInt generate_private_dl_key(const DL_Group& group, RandomNumberGenerator& rng) {
    if(group.has_q() && group.q_bits() >= 160 && group.q_bits() <= 384) {
-      return BigInt::random_integer(rng, 2, group.get_q());
+      return BigInt::random_integer(rng, BigInt::from_s32(2), group.get_q());
    } else {
       return BigInt(rng, group.exponent_bits());
    }

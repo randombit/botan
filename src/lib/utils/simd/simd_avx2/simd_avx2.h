@@ -289,7 +289,7 @@ class SIMD_8x32 final {
       BOTAN_FN_ISA_AVX2
       static SIMD_8x32 choose(const SIMD_8x32& mask, const SIMD_8x32& a, const SIMD_8x32& b) noexcept {
 #if defined(__AVX512VL__)
-         return _mm256_ternarylogic_epi32(mask.raw(), a.raw(), b.raw(), 0xca);
+         return SIMD_8x32(_mm256_ternarylogic_epi32(mask.raw(), a.raw(), b.raw(), 0xca));
 #else
          return (mask & a) ^ mask.andc(b);
 #endif
@@ -298,7 +298,7 @@ class SIMD_8x32 final {
       BOTAN_FN_ISA_AVX2
       static SIMD_8x32 majority(const SIMD_8x32& x, const SIMD_8x32& y, const SIMD_8x32& z) noexcept {
 #if defined(__AVX512VL__)
-         return _mm256_ternarylogic_epi32(x.raw(), y.raw(), z.raw(), 0xe8);
+         return SIMD_8x32(_mm256_ternarylogic_epi32(x.raw(), y.raw(), z.raw(), 0xe8));
 #else
          return SIMD_8x32::choose(x ^ y, z, y);
 #endif
@@ -317,13 +317,13 @@ class SIMD_8x32 final {
       __m256i BOTAN_FN_ISA_AVX2 raw() const noexcept { return m_avx2; }
 
       BOTAN_FN_ISA_AVX2
-      SIMD_8x32(__m256i x) noexcept : m_avx2(x) {}
+      explicit SIMD_8x32(__m256i x) noexcept : m_avx2(x) {}
 
    private:
       BOTAN_FN_ISA_AVX2
       static void swap_tops(SIMD_8x32& A, SIMD_8x32& B) {
-         SIMD_8x32 T0 = _mm256_permute2x128_si256(A.raw(), B.raw(), 0 + (2 << 4));
-         SIMD_8x32 T1 = _mm256_permute2x128_si256(A.raw(), B.raw(), 1 + (3 << 4));
+         auto T0 = SIMD_8x32(_mm256_permute2x128_si256(A.raw(), B.raw(), 0 + (2 << 4)));
+         auto T1 = SIMD_8x32(_mm256_permute2x128_si256(A.raw(), B.raw(), 1 + (3 << 4)));
          A = T0;
          B = T1;
       }

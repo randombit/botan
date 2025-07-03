@@ -55,7 +55,7 @@ void SipHash::add_data(std::span<const uint8_t> input) {
 
    BufferSlicer in(input);
 
-   if(m_mbuf_pos) {
+   if(m_mbuf_pos > 0) {
       while(!in.empty() && m_mbuf_pos != 8) {
          m_mbuf = (m_mbuf >> 8) | (static_cast<uint64_t>(in.take_byte()) << 56);
          ++m_mbuf_pos;

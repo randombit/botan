@@ -30,7 +30,7 @@ class RandomNumberGenerator;
  */
 class DilithiumMessageHash /* NOLINT(*-special-member-functions) */ {
    public:
-      DilithiumMessageHash(DilithiumHashedPublicKey tr) : m_tr(std::move(tr)) { clear(); }
+      explicit DilithiumMessageHash(DilithiumHashedPublicKey tr) : m_tr(std::move(tr)) {}
 
       virtual ~DilithiumMessageHash() = default;
 
@@ -76,7 +76,7 @@ class DilithiumMessageHash /* NOLINT(*-special-member-functions) */ {
 
    private:
       DilithiumHashedPublicKey m_tr;
-      bool m_was_started;
+      bool m_was_started = false;
       SHAKE_256_XOF m_shake;
 };
 

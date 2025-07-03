@@ -98,7 +98,7 @@ class BOTAN_TEST_API OCB_Encryption final : public OCB_Mode {
       * @param cipher the block cipher to use
       * @param tag_size is how big the auth tag will be
       */
-      OCB_Encryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16) :
+      explicit OCB_Encryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16) :
             OCB_Mode(std::move(cipher), tag_size) {}
 
       size_t output_length(size_t input_length) const override { return input_length + tag_size(); }
@@ -117,7 +117,7 @@ class BOTAN_TEST_API OCB_Decryption final : public OCB_Mode {
       * @param cipher the block cipher to use
       * @param tag_size is how big the auth tag will be
       */
-      OCB_Decryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16) :
+      explicit OCB_Decryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16) :
             OCB_Mode(std::move(cipher), tag_size) {}
 
       size_t output_length(size_t input_length) const override {

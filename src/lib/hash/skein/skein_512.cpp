@@ -99,7 +99,7 @@ void Skein_512::ubi_512(const uint8_t msg[], size_t msg_len) {
 
       load_le(M.data(), msg, to_proc / 8);
 
-      if(to_proc % 8) {
+      if(to_proc % 8 > 0) {
          for(size_t j = 0; j != to_proc % 8; ++j) {
             M[to_proc / 8] |= static_cast<uint64_t>(msg[8 * (to_proc / 8) + j]) << (8 * j);
          }
@@ -112,7 +112,7 @@ void Skein_512::ubi_512(const uint8_t msg[], size_t msg_len) {
 
       msg_len -= to_proc;
       msg += to_proc;
-   } while(msg_len);
+   } while(msg_len > 0);
 }
 
 void Skein_512::add_data(std::span<const uint8_t> input) {

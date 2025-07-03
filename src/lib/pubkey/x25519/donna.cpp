@@ -113,11 +113,11 @@ inline void fscalar_product(uint64_t out[5], const uint64_t in[5], const uint64_
 * On return, out[i] < 2**52
 */
 inline void fmul(uint64_t out[5], const uint64_t in[5], const uint64_t in2[5]) {
-   const uint128_t s0 = in2[0];
-   const uint128_t s1 = in2[1];
-   const uint128_t s2 = in2[2];
-   const uint128_t s3 = in2[3];
-   const uint128_t s4 = in2[4];
+   const auto s0 = uint128_t(in2[0]);
+   const auto s1 = uint128_t(in2[1]);
+   const auto s2 = uint128_t(in2[2]);
+   const auto s3 = uint128_t(in2[3]);
+   const auto s4 = uint128_t(in2[4]);
 
    uint64_t r0 = in[0];
    uint64_t r1 = in[1];
@@ -153,10 +153,10 @@ inline void fmul(uint64_t out[5], const uint64_t in[5], const uint64_t in2[5]) {
    uint64_t c = carry_shift(t4, 51);
 
    r0 += c * 19;
-   c = r0 >> 51;
+   c = r0 >> 51U;
    r0 = r0 & MASK_63;
    r1 += c;
-   c = r1 >> 51;
+   c = r1 >> 51U;
    r1 = r1 & MASK_63;
    r2 += c;
 
@@ -199,10 +199,10 @@ inline void fsquare(uint64_t out[5], const uint64_t in[5], size_t count = 1) {
       uint64_t c = carry_shift(t4, 51);
 
       r0 += c * 19;
-      c = r0 >> 51;
+      c = r0 >> 51U;
       r0 = r0 & MASK_63;
       r1 += c;
-      c = r1 >> 51;
+      c = r1 >> 51U;
       r1 = r1 & MASK_63;
       r2 += c;
    }
@@ -227,22 +227,22 @@ inline void fexpand(uint64_t* out, const uint8_t* in) {
 * little-endian, 32-byte array
 */
 inline void fcontract(uint8_t* out, const uint64_t input[5]) {
-   uint128_t t0 = input[0];
-   uint128_t t1 = input[1];
-   uint128_t t2 = input[2];
-   uint128_t t3 = input[3];
-   uint128_t t4 = input[4];
+   auto t0 = uint128_t(input[0]);
+   auto t1 = uint128_t(input[1]);
+   auto t2 = uint128_t(input[2]);
+   auto t3 = uint128_t(input[3]);
+   auto t4 = uint128_t(input[4]);
 
    for(size_t i = 0; i != 2; ++i) {
-      t1 += t0 >> 51;
+      t1 += t0 >> 51U;
       t0 &= MASK_63;
-      t2 += t1 >> 51;
+      t2 += t1 >> 51U;
       t1 &= MASK_63;
-      t3 += t2 >> 51;
+      t3 += t2 >> 51U;
       t2 &= MASK_63;
-      t4 += t3 >> 51;
+      t4 += t3 >> 51U;
       t3 &= MASK_63;
-      t0 += (t4 >> 51) * 19;
+      t0 += (t4 >> 51U) * 19;
       t4 &= MASK_63;
    }
 
@@ -251,15 +251,15 @@ inline void fcontract(uint8_t* out, const uint64_t input[5]) {
 
    t0 += 19;
 
-   t1 += t0 >> 51;
+   t1 += t0 >> 51U;
    t0 &= MASK_63;
-   t2 += t1 >> 51;
+   t2 += t1 >> 51U;
    t1 &= MASK_63;
-   t3 += t2 >> 51;
+   t3 += t2 >> 51U;
    t2 &= MASK_63;
-   t4 += t3 >> 51;
+   t4 += t3 >> 51U;
    t3 &= MASK_63;
-   t0 += (t4 >> 51) * 19;
+   t0 += (t4 >> 51U) * 19;
    t4 &= MASK_63;
 
    /* now between 19 and 2^255-1 in both cases, and offset by 19. */
@@ -272,13 +272,13 @@ inline void fcontract(uint8_t* out, const uint64_t input[5]) {
 
    /* now between 2^255 and 2^256-20, and offset by 2^255. */
 
-   t1 += t0 >> 51;
+   t1 += t0 >> 51U;
    t0 &= MASK_63;
-   t2 += t1 >> 51;
+   t2 += t1 >> 51U;
    t1 &= MASK_63;
-   t3 += t2 >> 51;
+   t3 += t2 >> 51U;
    t2 &= MASK_63;
-   t4 += t3 >> 51;
+   t4 += t3 >> 51U;
    t3 &= MASK_63;
    t4 &= MASK_63;
 

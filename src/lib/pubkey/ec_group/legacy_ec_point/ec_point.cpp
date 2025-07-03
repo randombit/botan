@@ -135,7 +135,7 @@ void EC_Point::randomize_repr(RandomNumberGenerator& rng, secure_vector<word>& w
 
    const auto& group = m_curve.group();
 
-   const BigInt mask = BigInt::random_integer(rng, 2, group.p());
+   const BigInt mask = BigInt::random_integer(rng, BigInt::from_s32(2), group.p());
 
    /*
    * No reason to convert this to Montgomery representation first,

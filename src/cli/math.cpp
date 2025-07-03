@@ -119,7 +119,7 @@ class Factor final : public Command {
                break;
             }
 
-            Botan::BigInt a_factor = 0;
+            Botan::BigInt a_factor;
             while(a_factor == 0) {
                a_factor = rho(n, rng);
             }
@@ -144,7 +144,9 @@ class Factor final : public Command {
 
          const Botan::Montgomery_Int one(monty_n, monty_n->R1(), false);
 
-         Botan::Montgomery_Int x(monty_n, Botan::BigInt::random_integer(rng, 2, n - 3), false);
+         const auto two = Botan::BigInt::from_s32(2);
+         const auto three = Botan::BigInt::from_s32(3);
+         Botan::Montgomery_Int x(monty_n, Botan::BigInt::random_integer(rng, two, n - three), false);
          Botan::Montgomery_Int y = x;
          Botan::Montgomery_Int z = one;
          Botan::Montgomery_Int t(monty_n);
@@ -191,7 +193,7 @@ class Factor final : public Command {
          }
 
          // failed
-         return 0;
+         return Botan::BigInt::zero();
       }
 
       // Remove (and return) any small (< 2^16) factors
@@ -199,12 +201,12 @@ class Factor final : public Command {
          std::vector<Botan::BigInt> factors;
 
          while(n.is_even()) {
-            factors.push_back(2);
-            n /= 2;
+            factors.push_back(Botan::BigInt::from_s32(2));
+            n >>= 1;
          }
 
          for(size_t j = 0; j != Botan::PRIME_TABLE_SIZE; j++) {
-            uint16_t prime = Botan::PRIMES[j];
+            auto prime = Botan::BigInt::from_s32(Botan::PRIMES[j]);
             if(n < prime) {
                break;
             }

@@ -652,6 +652,7 @@ class StrongSpan {
 
       explicit StrongSpan(underlying_span span) : m_span(span) {}
 
+      // NOLINTNEXTLINE(*-explicit-conversions)
       StrongSpan(T& strong) : m_span(strong) {}
 
       // Allows implicit conversion from `StrongSpan<T>` to `StrongSpan<const T>`.
@@ -665,6 +666,7 @@ class StrongSpan {
       //       is interpreted as "not cheap to copy", setting off the `performance-unnecessary-value-param` check.
       //       See also: https://github.com/randombit/botan/issues/3591
       template <concepts::contiguous_strong_type T2>
+      // NOLINTNEXTLINE(*-explicit-conversions)
       StrongSpan(const StrongSpan<T2>& other)
          requires(std::is_same_v<T2, std::remove_const_t<T>>)
             : m_span(other.get()) {}

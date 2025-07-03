@@ -47,7 +47,7 @@ void Hex_Encoder::encode_and_send(const uint8_t block[], size_t length) {
       send(m_out, 2 * length);
    } else {
       size_t remaining = 2 * length, offset = 0;
-      while(remaining) {
+      while(remaining > 0) {
          size_t sent = std::min(m_line_length - m_counter, remaining);
          send(&m_out[offset], sent);
          m_counter += sent;
@@ -107,7 +107,7 @@ Hex_Decoder::Hex_Decoder(Decoder_Checking c) : m_checking(c) {
 * Convert some data from hex format
 */
 void Hex_Decoder::write(const uint8_t input[], size_t length) {
-   while(length) {
+   while(length > 0) {
       size_t to_copy = std::min<size_t>(length, m_in.size() - m_position);
       copy_mem(&m_in[m_position], input, to_copy);
       m_position += to_copy;
