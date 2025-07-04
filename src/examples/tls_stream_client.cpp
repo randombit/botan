@@ -44,7 +44,7 @@ class client {
                                                         std::make_shared<Botan::AutoSeeded_RNG>(),
                                                         std::make_shared<Botan::TLS::Session_Manager_Noop>(),
                                                         std::make_shared<Botan::TLS::Policy>(),
-                                                        host)),
+                                                        Botan::TLS::Server_Information(host))),
             m_stream(io_context, m_ctx) {
          boost::asio::async_connect(m_stream.lowest_layer(),
                                     endpoints.begin(),

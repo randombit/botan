@@ -35,7 +35,7 @@ std::optional<Session_Handle> Session_Manager_Stateless::establish(const Session
       return std::nullopt;
    }
 
-   return Session_Ticket{session.encrypt(key.value(), *m_rng)};
+   return Session_Handle(Session_Ticket{session.encrypt(key.value(), *m_rng)});
 }
 
 void Session_Manager_Stateless::store(const Session&, const Session_Handle&) {

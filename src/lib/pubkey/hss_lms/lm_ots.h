@@ -309,7 +309,7 @@ class BOTAN_TEST_API LMOTS_Public_Key final : public OTS_Instance {
        * @brief Derivivation of an LMOTS public key using an LMOTS_Private_Key as defined
        * in RFC 8554 4.3
        */
-      LMOTS_Public_Key(const LMOTS_Private_Key& lmots_sk);
+      explicit LMOTS_Public_Key(const LMOTS_Private_Key& lmots_sk);
 
       /**
        * @brief Construct a new LMOTS public key object using the bytes.

@@ -37,7 +37,7 @@ static_assert(sizeof(TEST_DATA) == TEST_DATA_SIZE, "size of TEST_DATA must match
  */
 class MockChannel {
    public:
-      MockChannel(std::shared_ptr<Botan::TLS::Callbacks> core) :
+      explicit MockChannel(std::shared_ptr<Botan::TLS::Callbacks> core) :
             m_callbacks(std::move(core)),
             m_bytes_till_complete_record(TEST_DATA_SIZE),
             m_active(false),
@@ -82,7 +82,7 @@ class ThrowingMockChannel : public MockChannel {
    public:
       static boost::system::error_code expected_ec() { return Botan::TLS::Alert::UnexpectedMessage; }
 
-      ThrowingMockChannel(std::shared_ptr<Botan::TLS::Callbacks> core) : MockChannel(std::move(core)) {}
+      explicit ThrowingMockChannel(std::shared_ptr<Botan::TLS::Callbacks> core) : MockChannel(std::move(core)) {}
 
       std::size_t received_data(std::span<const uint8_t>) { throw Botan::TLS::Unexpected_Message("test_error"); }
 
@@ -91,7 +91,7 @@ class ThrowingMockChannel : public MockChannel {
 
 class CancellingMockChannel : public MockChannel {
    public:
-      CancellingMockChannel(std::shared_ptr<Botan::TLS::Callbacks> core) : MockChannel(std::move(core)) {}
+      explicit CancellingMockChannel(std::shared_ptr<Botan::TLS::Callbacks> core) : MockChannel(std::move(core)) {}
 
       std::size_t received_data(std::span<const uint8_t>) {
          received_close_notify();
@@ -113,7 +113,7 @@ using FailCount = boost::beast::test::fail_count;
 class AsioStream : public Botan::TLS::Stream<TestStream, MockChannel> {
    public:
       template <typename... Args>
-      AsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) :
+      explicit AsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) :
             Stream(std::move(context), std::forward<Args>(args)...) {
          m_native_handle = std::make_unique<MockChannel>(m_core);
       }
@@ -122,7 +122,7 @@ class AsioStream : public Botan::TLS::Stream<TestStream, MockChannel> {
 class ThrowingAsioStream : public Botan::TLS::Stream<TestStream, ThrowingMockChannel> {
    public:
       template <typename... Args>
-      ThrowingAsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) :
+      explicit ThrowingAsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) :
             Stream(std::move(context), std::forward<Args>(args)...) {
          m_native_handle = std::make_unique<ThrowingMockChannel>(m_core);
       }
@@ -131,7 +131,7 @@ class ThrowingAsioStream : public Botan::TLS::Stream<TestStream, ThrowingMockCha
 class CancellingAsioStream : public Botan::TLS::Stream<TestStream, CancellingMockChannel> {
    public:
       template <typename... Args>
-      CancellingAsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) :
+      explicit CancellingAsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) :
             Stream(std::move(context), std::forward<Args>(args)...) {
          m_native_handle = std::make_unique<CancellingMockChannel>(m_core);
       }

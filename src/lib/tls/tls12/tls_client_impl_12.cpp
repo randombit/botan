@@ -687,9 +687,9 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
       //    discards any Session ID that was sent in the ServerHello.
       const auto handle = [&]() -> std::optional<Session_Handle> {
          if(const auto& session_ticket = state.session_ticket(); !session_ticket.empty()) {
-            return session_ticket;
+            return Session_Handle(session_ticket);
          } else if(const auto& session_id = state.server_hello()->session_id(); !session_id.empty()) {
-            return session_id;
+            return Session_Handle(session_id);
          } else {
             return std::nullopt;
          }
@@ -720,7 +720,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
             should_save) {
             // renew the session ticket by removing the one we used to establish
             // this connection and replace it with the one we just received
-            session_manager().remove(state.client_hello()->session_ticket());
+            session_manager().remove(Session_Handle(state.client_hello()->session_ticket()));
             session_manager().store(session_info, handle.value());
          }
 

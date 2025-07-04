@@ -42,7 +42,7 @@ namespace {
 
 class Callbacks : public Botan::TLS::Callbacks {
    public:
-      Callbacks(TLS_Client& client_command) : m_client_command(client_command), m_peer_closed(false) {}
+      explicit Callbacks(TLS_Client& client_command) : m_client_command(client_command), m_peer_closed(false) {}
 
       std::ostream& output();
       bool flag_set(const std::string& flag_name) const;

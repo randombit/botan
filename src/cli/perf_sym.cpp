@@ -40,7 +40,7 @@ namespace Botan_CLI {
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
 class PerfTest_BlockCipher final : public PerfTest {
    public:
-      PerfTest_BlockCipher(std::string_view alg) : m_alg(alg) {}
+      explicit PerfTest_BlockCipher(std::string_view alg) : m_alg(alg) {}
 
       void go(const PerfConfig& config) override {
          for(const auto& provider : Botan::BlockCipher::providers(m_alg)) {
@@ -104,7 +104,7 @@ class PerfTest_BlockCipher final : public PerfTest {
 #if defined(BOTAN_HAS_CIPHER_MODES)
 class PerfTest_CipherMode final : public PerfTest {
    public:
-      PerfTest_CipherMode(std::string_view alg) : m_alg(alg) {}
+      explicit PerfTest_CipherMode(std::string_view alg) : m_alg(alg) {}
 
       void go(const PerfConfig& config) override {
          for(const auto& provider : Botan::Cipher_Mode::providers(m_alg)) {
@@ -184,7 +184,7 @@ class PerfTest_CipherMode final : public PerfTest {
 #if defined(BOTAN_HAS_STREAM_CIPHER)
 class PerfTest_StreamCipher final : public PerfTest {
    public:
-      PerfTest_StreamCipher(std::string_view alg) : m_alg(alg) {}
+      explicit PerfTest_StreamCipher(std::string_view alg) : m_alg(alg) {}
 
       void go(const PerfConfig& config) override {
          for(const auto& provider : Botan::StreamCipher::providers(m_alg)) {
@@ -247,7 +247,7 @@ class PerfTest_StreamCipher final : public PerfTest {
 #if defined(BOTAN_HAS_HASH)
 class PerfTest_HashFunction final : public PerfTest {
    public:
-      PerfTest_HashFunction(std::string_view alg) : m_alg(alg) {}
+      explicit PerfTest_HashFunction(std::string_view alg) : m_alg(alg) {}
 
       void go(const PerfConfig& config) override {
          for(const auto& provider : Botan::HashFunction::providers(m_alg)) {
@@ -288,7 +288,7 @@ class PerfTest_HashFunction final : public PerfTest {
 #if defined(BOTAN_HAS_MAC)
 class PerfTest_MessageAuthenticationCode final : public PerfTest {
    public:
-      PerfTest_MessageAuthenticationCode(std::string_view alg) : m_alg(alg) {}
+      explicit PerfTest_MessageAuthenticationCode(std::string_view alg) : m_alg(alg) {}
 
       void go(const PerfConfig& config) override {
          for(const auto& provider : Botan::MessageAuthenticationCode::providers(m_alg)) {
@@ -339,7 +339,7 @@ class PerfTest_MessageAuthenticationCode final : public PerfTest {
 #if defined(BOTAN_HAS_XOF)
 class PerfTest_XOF final : public PerfTest {
    public:
-      PerfTest_XOF(std::string_view alg) : m_alg(alg) {}
+      explicit PerfTest_XOF(std::string_view alg) : m_alg(alg) {}
 
       void go(const PerfConfig& config) override {
          for(const auto& provider : Botan::XOF::providers(m_alg)) {

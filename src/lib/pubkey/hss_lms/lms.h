@@ -241,7 +241,7 @@ class BOTAN_TEST_API LMS_PublicKey final : public LMS_Instance {
       /**
        * @brief Construct a new public key from a given LMS private key (RFC 8554 5.3).
        */
-      LMS_PublicKey(const LMS_PrivateKey& sk);
+      explicit LMS_PublicKey(const LMS_PrivateKey& sk);
 
       /**
        * @brief Bytes of the full lms public key according to 8554 5.3

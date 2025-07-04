@@ -27,7 +27,7 @@ namespace Botan {
  **/
 class XMSS_Signature_Operation final : public virtual PK_Ops::Signature {
    public:
-      XMSS_Signature_Operation(const XMSS_PrivateKey& private_key);
+      explicit XMSS_Signature_Operation(const XMSS_PrivateKey& private_key);
 
       /**
        * Creates an XMSS signature for the message provided through call to

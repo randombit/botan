@@ -23,7 +23,7 @@ class Timer final {
             double clock_cycle_ratio,
             uint64_t clock_speed);
 
-      Timer(std::string_view name) : Timer(name, "", "", 1, 0, 0.0, 0) {}
+      explicit Timer(std::string_view name) : Timer(name, "", "", 1, 0, 0.0, 0) {}
 
       Timer(std::string_view name, size_t buf_size) : Timer(name, "", "", buf_size, buf_size, 0.0, 0) {}
 

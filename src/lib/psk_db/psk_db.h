@@ -113,7 +113,7 @@ class BOTAN_PUBLIC_API(2, 4) Encrypted_PSK_Database : public PSK_Database /* NOL
       * using a password, it is recommended to use Argon2id to derive the database
       * master key.
       */
-      Encrypted_PSK_Database(const secure_vector<uint8_t>& master_key);
+      BOTAN_FUTURE_EXPLICIT Encrypted_PSK_Database(const secure_vector<uint8_t>& master_key);
 
       ~Encrypted_PSK_Database() override;
 

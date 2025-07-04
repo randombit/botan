@@ -347,7 +347,7 @@ std::string map_to_bogo_error(const std::string& e) noexcept {
 
 class Shim_Exception final : public std::exception {
    public:
-      Shim_Exception(std::string_view msg, int rc = 1) : m_msg(msg), m_rc(rc) {}
+      explicit Shim_Exception(std::string_view msg, int rc = 1) : m_msg(msg), m_rc(rc) {}
 
       const char* what() const noexcept override { return m_msg.c_str(); }
 
@@ -866,7 +866,7 @@ std::unique_ptr<Shim_Arguments> parse_options(char* argv[]) {
 
 class Shim_Policy final : public Botan::TLS::Policy {
    public:
-      Shim_Policy(const Shim_Arguments& args) : m_args(args), m_sessions(0) {}
+      explicit Shim_Policy(const Shim_Arguments& args) : m_args(args), m_sessions(0) {}
 
       void incr_session_established() { m_sessions += 1; }
 
@@ -1244,7 +1244,7 @@ std::vector<uint16_t> Shim_Policy::ciphersuite_list(Botan::TLS::Protocol_Version
 
 class Shim_Credentials final : public Botan::Credentials_Manager {
    public:
-      Shim_Credentials(const Shim_Arguments& args) : m_args(args) {
+      explicit Shim_Credentials(const Shim_Arguments& args) : m_args(args) {
          const auto psk_identity = m_args.get_string_opt_or_else("psk-identity", "");
          const auto psk_str = m_args.get_string_opt_or_else("psk", "");
 

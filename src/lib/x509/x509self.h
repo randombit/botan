@@ -180,7 +180,7 @@ class BOTAN_PUBLIC_API(2, 0) X509_Cert_Options final {
       * parameter would be "common_name/country/organization/organizational_unit".
       * @param expire_time the expiration time (from the current clock in seconds)
       */
-      X509_Cert_Options(std::string_view opts = "", uint32_t expire_time = 365 * 24 * 60 * 60);
+      BOTAN_FUTURE_EXPLICIT X509_Cert_Options(std::string_view opts = "", uint32_t expire_time = 365 * 24 * 60 * 60);
 };
 
 namespace X509 {

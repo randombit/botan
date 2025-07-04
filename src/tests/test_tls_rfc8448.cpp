@@ -487,7 +487,7 @@ class RFC8448_Text_Policy : public Botan::TLS::Text_Policy {
       }
 
    public:
-      RFC8448_Text_Policy(const std::string& policy_file, bool rfc8448 = true) :
+      explicit RFC8448_Text_Policy(const std::string& policy_file, bool rfc8448 = true) :
             Botan::TLS::Text_Policy(read_policy(policy_file)), m_rfc8448(rfc8448) {}
 
       std::vector<Botan::TLS::Signature_Scheme> allowed_signature_schemes() const override {
@@ -641,7 +641,7 @@ class TLS_Context {
             m_policy(std::move(policy)) {
          if(session_and_ticket.has_value()) {
             m_session_mgr->store(std::get<Session>(session_and_ticket.value()),
-                                 std::get<Session_Ticket>(session_and_ticket.value()));
+                                 Botan::TLS::Session_Handle(std::get<Session_Ticket>(session_and_ticket.value())));
          }
       }
 

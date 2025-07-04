@@ -36,7 +36,7 @@ class BOTAN_PUBLIC_API(3, 5) HSS_LMS_PublicKey : public virtual Public_Key {
       /**
        * @brief Load an existing public key using its bytes.
        */
-      HSS_LMS_PublicKey(std::span<const uint8_t> pub_key_bytes);
+      BOTAN_FUTURE_EXPLICIT HSS_LMS_PublicKey(std::span<const uint8_t> pub_key_bytes);
 
       ~HSS_LMS_PublicKey() override;
       HSS_LMS_PublicKey(const HSS_LMS_PublicKey& other) = default;
@@ -123,7 +123,7 @@ class BOTAN_PUBLIC_API(3, 5) HSS_LMS_PrivateKey final : public virtual HSS_LMS_P
       /**
        * @brief Load an existing LMS private key using its bytes
        */
-      HSS_LMS_PrivateKey(std::span<const uint8_t> private_key_bytes);
+      BOTAN_FUTURE_EXPLICIT HSS_LMS_PrivateKey(std::span<const uint8_t> private_key_bytes);
 
       /**
        * @brief Construct a new hss lms privatekey object.
@@ -159,7 +159,7 @@ class BOTAN_PUBLIC_API(3, 5) HSS_LMS_PrivateKey final : public virtual HSS_LMS_P
                                                              std::string_view provider) const override;
 
    private:
-      HSS_LMS_PrivateKey(std::shared_ptr<HSS_LMS_PrivateKeyInternal> sk);
+      explicit HSS_LMS_PrivateKey(std::shared_ptr<HSS_LMS_PrivateKeyInternal> sk);
 
       std::shared_ptr<HSS_LMS_PrivateKeyInternal> m_private;
 };

@@ -23,7 +23,7 @@ namespace {
 
 class Test_Buf_Comp final : public Botan::Buffered_Computation {
    public:
-      Test_Buf_Comp(Test::Result& res) : m_result(res), m_counter(0) {}
+      explicit Test_Buf_Comp(Test::Result& res) : m_result(res), m_counter(0) {}
 
       size_t output_length() const override { return sizeof(m_counter); }
 

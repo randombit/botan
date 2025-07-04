@@ -182,7 +182,7 @@ struct ObjectHandles {
  */
 class ObjectSetter {
    public:
-      constexpr ObjectSetter(Object& object, bool persistent = false) :
+      constexpr explicit ObjectSetter(Object& object, bool persistent = false) :
             m_object(object), m_persistent(persistent), m_handle(persistent ? 0 : ESYS_TR_NONE) {}
 
       constexpr ~ObjectSetter() noexcept {
@@ -202,6 +202,7 @@ class ObjectSetter {
       ObjectSetter& operator=(const ObjectSetter&) = delete;
       ObjectSetter& operator=(ObjectSetter&&) = delete;
 
+      // NOLINTNEXTLINE(*-explicit-conversions) FIXME
       [[nodiscard]] constexpr operator uint32_t*() && noexcept { return &m_handle; }
 
    private:

@@ -60,7 +60,7 @@ std::vector<uint8_t> HSS_LMS_PublicKey::public_key_bits() const {
 
 class HSS_LMS_Verification_Operation final : public PK_Ops::Verification {
    public:
-      HSS_LMS_Verification_Operation(std::shared_ptr<HSS_LMS_PublicKeyInternal> pub_key) :
+      explicit HSS_LMS_Verification_Operation(std::shared_ptr<HSS_LMS_PublicKeyInternal> pub_key) :
             m_public(std::move(pub_key)) {}
 
       void update(std::span<const uint8_t> msg) override {

@@ -284,7 +284,7 @@ namespace {
 
 class DeterministicXOF : public Botan::XOF {
    public:
-      DeterministicXOF(std::span<const uint8_t> data) : m_data(data) {}
+      explicit DeterministicXOF(std::span<const uint8_t> data) : m_data(data) {}
 
       std::string name() const override { return "DeterministicXOF"; }
 

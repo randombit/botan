@@ -44,7 +44,7 @@ class Policy;
 */
 class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-functions) */ {
    public:
-      Session_Manager(const std::shared_ptr<RandomNumberGenerator>& rng);
+      BOTAN_FUTURE_EXPLICIT Session_Manager(const std::shared_ptr<RandomNumberGenerator>& rng);
 
       /**
        * @brief Save a new Session and assign a Session_Handle (TLS Server)

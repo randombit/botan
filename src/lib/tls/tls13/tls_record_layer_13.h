@@ -47,7 +47,7 @@ class Cipher_State;
  */
 class BOTAN_TEST_API Record_Layer {
    public:
-      Record_Layer(Connection_Side side);
+      explicit Record_Layer(Connection_Side side);
 
       template <typename ResT>
       using ReadResult = std::variant<BytesNeeded, ResT>;

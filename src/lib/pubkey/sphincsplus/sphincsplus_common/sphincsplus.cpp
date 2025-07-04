@@ -180,7 +180,7 @@ std::unique_ptr<Private_Key> SphincsPlus_PublicKey::generate_another(RandomNumbe
 
 class SphincsPlus_Verification_Operation final : public PK_Ops::Verification {
    public:
-      SphincsPlus_Verification_Operation(std::shared_ptr<SphincsPlus_PublicKeyInternal> pub_key) :
+      explicit SphincsPlus_Verification_Operation(std::shared_ptr<SphincsPlus_PublicKeyInternal> pub_key) :
             m_public(std::move(pub_key)),
             m_hashes(Botan::Sphincs_Hash_Functions::create(m_public->parameters(), m_public->seed())),
             m_context(/* TODO: Add API */ {}) {

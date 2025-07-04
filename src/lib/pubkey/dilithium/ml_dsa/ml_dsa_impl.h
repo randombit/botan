@@ -61,7 +61,7 @@ class ML_DSA_Symmetric_Primitives final : public Dilithium_Symmetric_Primitives_
       }
 
    public:
-      ML_DSA_Symmetric_Primitives(const DilithiumConstants& mode) :
+      explicit ML_DSA_Symmetric_Primitives(const DilithiumConstants& mode) :
             Dilithium_Symmetric_Primitives_Base(mode, std::make_unique<DilithiumShakeXOF>()),
             m_seed_expansion_domain_separator({mode.k(), mode.l()}) {}
 

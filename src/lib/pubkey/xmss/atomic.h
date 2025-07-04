@@ -27,7 +27,7 @@ class Atomic final {
 
       Atomic(const Atomic& data) : m_data(data.m_data.load()) {}
 
-      Atomic(const std::atomic<T>& data) : m_data(data.load()) {}
+      explicit Atomic(const std::atomic<T>& data) : m_data(data.load()) {}
 
       ~Atomic() = default;
 
@@ -46,8 +46,9 @@ class Atomic final {
          return *this;
       }
 
-      operator std::atomic<T>&() { return m_data; }
+      explicit operator std::atomic<T>&() { return m_data; }
 
+      // NOLINTNEXTLINE(*-explicit-conversions) FIXME
       operator T() { return m_data.load(); }
 
    private:

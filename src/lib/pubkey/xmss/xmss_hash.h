@@ -22,7 +22,7 @@ class XMSS_Parameters;
  **/
 class XMSS_Hash final {
    public:
-      XMSS_Hash(const XMSS_Parameters& params);
+      explicit XMSS_Hash(const XMSS_Parameters& params);
 
       XMSS_Hash(const XMSS_Hash& hash);
       XMSS_Hash(XMSS_Hash&& hash) = default;

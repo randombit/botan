@@ -113,7 +113,7 @@ class Prehashed_Ed448_Message final : public Ed448_Message {
 
       std::vector<uint8_t> get_and_clear() override { return m_hash->final_stdvec(); }
 
-      Prehashed_Ed448_Message(std::string_view hash) : m_hash(HashFunction::create_or_throw(hash)) {}
+      explicit Prehashed_Ed448_Message(std::string_view hash) : m_hash(HashFunction::create_or_throw(hash)) {}
 
    private:
       std::unique_ptr<HashFunction> m_hash;

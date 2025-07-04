@@ -111,7 +111,7 @@ class BotanTLSCallbacksProxy : public Botan::TLS::Callbacks {
       Botan::TLS::Callbacks& parent;
 
    public:
-      BotanTLSCallbacksProxy(Botan::TLS::Callbacks& callbacks) : parent(callbacks) {}
+      explicit BotanTLSCallbacksProxy(Botan::TLS::Callbacks& callbacks) : parent(callbacks) {}
 
       void tls_emit_data(std::span<const uint8_t> data) override { parent.tls_emit_data(data); }
 

@@ -20,7 +20,7 @@ namespace Botan {
  **/
 class XMSS_Verification_Operation final : public virtual PK_Ops::Verification {
    public:
-      XMSS_Verification_Operation(const XMSS_PublicKey& public_key);
+      explicit XMSS_Verification_Operation(const XMSS_PublicKey& public_key);
 
       bool is_valid_signature(std::span<const uint8_t> sign) override;
 

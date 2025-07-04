@@ -6,7 +6,7 @@
 
 class Dictionary {
    public:
-      Dictionary(const std::string& filename) {
+      explicit Dictionary(const std::string& filename) {
          std::ifstream in(filename);
 
          while(in.good()) {

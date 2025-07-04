@@ -30,7 +30,7 @@ namespace Botan_Tests {
  */
 class SPHINCS_Plus_Test_Base : public Text_Based_Test {
    public:
-      SPHINCS_Plus_Test_Base(std::string_view kat_path) :
+      explicit SPHINCS_Plus_Test_Base(std::string_view kat_path) :
             Text_Based_Test(std::string(kat_path), "SphincsParameterSet,seed,pk,sk,msg,HashSigRand", "HashSigDet") {}
 
       bool skip_this_test(const std::string&, const VarMap& vars) override {

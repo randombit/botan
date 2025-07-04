@@ -17,7 +17,7 @@ namespace Botan {
 
 class Kyber_KEM_Operation_Base {
    protected:
-      Kyber_KEM_Operation_Base(const Kyber_PublicKeyInternal& pk) :
+      explicit Kyber_KEM_Operation_Base(const Kyber_PublicKeyInternal& pk) :
             m_At(Kyber_Algos::sample_matrix(pk.rho(), true /* transposed */, pk.mode())) {}
 
       const KyberPolyMat& precomputed_matrix_At() const { return m_At; }

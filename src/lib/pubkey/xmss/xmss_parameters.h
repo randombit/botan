@@ -47,7 +47,8 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_WOTS_Parameters final {
       };
 
       explicit XMSS_WOTS_Parameters(std::string_view algo_name);
-      XMSS_WOTS_Parameters(ots_algorithm_t ots_spec);
+
+      BOTAN_FUTURE_EXPLICIT XMSS_WOTS_Parameters(ots_algorithm_t ots_spec);
 
       static ots_algorithm_t xmss_wots_id_from_string(std::string_view param_set);
 

@@ -61,9 +61,9 @@ class BOTAN_PUBLIC_API(3, 0) Signature_Scheme {
       */
       Signature_Scheme();
 
-      Signature_Scheme(uint16_t wire_code);
+      /* NOLINT(*-explicit-conversions) */ Signature_Scheme(uint16_t wire_code);
 
-      Signature_Scheme(Signature_Scheme::Code wire_code);
+      /* NOLINT(*-explicit-conversions) */ Signature_Scheme(Signature_Scheme::Code wire_code);
 
       Signature_Scheme::Code wire_code() const noexcept { return m_code; }
 

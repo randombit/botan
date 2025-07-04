@@ -57,7 +57,7 @@ Test::Result test_hello_verify_request() {
 
 class Test_Callbacks : public Botan::TLS::Callbacks {
    public:
-      Test_Callbacks(Test::Result& result) : m_result(result) {}
+      explicit Test_Callbacks(Test::Result& result) : m_result(result) {}
 
    public:
       void tls_emit_data(std::span<const uint8_t>) override {

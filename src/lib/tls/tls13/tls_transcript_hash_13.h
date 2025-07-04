@@ -28,7 +28,7 @@ namespace Botan::TLS {
 class BOTAN_TEST_API Transcript_Hash_State {
    public:
       Transcript_Hash_State() = default;
-      Transcript_Hash_State(std::string_view algo_spec);
+      explicit Transcript_Hash_State(std::string_view algo_spec);
       ~Transcript_Hash_State() = default;
 
       /**

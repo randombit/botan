@@ -23,7 +23,7 @@ namespace Botan {
  */
 class BOTAN_TEST_API KEX_to_KEM_Adapter_PublicKey : public virtual Public_Key {
    public:
-      KEX_to_KEM_Adapter_PublicKey(std::unique_ptr<Public_Key> public_key);
+      explicit KEX_to_KEM_Adapter_PublicKey(std::unique_ptr<Public_Key> public_key);
 
       std::string algo_name() const override;
       size_t estimated_strength() const override;
@@ -68,7 +68,7 @@ BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 class BOTAN_TEST_API KEX_to_KEM_Adapter_PrivateKey final : public KEX_to_KEM_Adapter_PublicKey,
                                                            public virtual Private_Key {
    public:
-      KEX_to_KEM_Adapter_PrivateKey(std::unique_ptr<Private_Key> private_key);
+      explicit KEX_to_KEM_Adapter_PrivateKey(std::unique_ptr<Private_Key> private_key);
 
       secure_vector<uint8_t> private_key_bits() const override;
 

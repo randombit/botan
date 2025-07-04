@@ -148,7 +148,7 @@ class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello {
    public:
       class Settings final {
          public:
-            Settings(const Protocol_Version version, std::string_view hostname = "") :
+            explicit Settings(const Protocol_Version version, std::string_view hostname = "") :
                   m_new_session_version(version), m_hostname(hostname) {}
 
             Protocol_Version protocol_version() const { return m_new_session_version; }
@@ -183,7 +183,7 @@ class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello {
 
    protected:
       friend class Client_Hello_13;  // to allow construction by Client_Hello_13::parse()
-      Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data);
+      explicit Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data);
 
    public:
       using Client_Hello::compression_methods;
@@ -252,7 +252,7 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello {
       void validate_updates(const Client_Hello_13& new_ch);
 
    private:
-      Client_Hello_13(std::unique_ptr<Client_Hello_Internal> data);
+      explicit Client_Hello_13(std::unique_ptr<Client_Hello_Internal> data);
 
       /**
        * If the Client Hello contains a PSK extensions with identities this will
@@ -551,8 +551,8 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
       class Certificate_Entry {
          public:
             Certificate_Entry(TLS_Data_Reader& reader, Connection_Side side, Certificate_Type cert_type);
-            Certificate_Entry(X509_Certificate cert);
-            Certificate_Entry(std::shared_ptr<Public_Key> raw_public_key);
+            explicit Certificate_Entry(X509_Certificate cert);
+            explicit Certificate_Entry(std::shared_ptr<Public_Key> raw_public_key);
 
             bool has_certificate() const { return m_certificate.has_value(); }
 
@@ -684,7 +684,7 @@ class BOTAN_UNSTABLE_API Certificate_Status final : public Handshake_Message {
        */
       Certificate_Status(Handshake_IO& io, Handshake_Hash& hash, std::vector<uint8_t> raw_response_bytes);
 
-      Certificate_Status(std::vector<uint8_t> raw_response_bytes);
+      explicit Certificate_Status(std::vector<uint8_t> raw_response_bytes);
 
       std::vector<uint8_t> serialize() const override;
 
@@ -761,7 +761,7 @@ class BOTAN_UNSTABLE_API Certificate_Verify : public Handshake_Message {
 
       Signature_Scheme signature_scheme() const { return m_scheme; }
 
-      Certificate_Verify(const std::vector<uint8_t>& buf);
+      explicit Certificate_Verify(const std::vector<uint8_t>& buf);
       Certificate_Verify() = default;
 
       std::vector<uint8_t> serialize() const override;

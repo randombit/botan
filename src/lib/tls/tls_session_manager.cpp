@@ -208,7 +208,7 @@ std::optional<std::pair<Session, uint16_t>> Session_Manager::choose_from_offered
    // reused. As a result, no locking is required on this level.
 
    for(uint16_t i = 0; const auto& ticket : tickets) {
-      auto session = retrieve(Opaque_Session_Handle(ticket.identity()), callbacks, policy);
+      auto session = retrieve(Session_Handle(Opaque_Session_Handle(ticket.identity())), callbacks, policy);
       if(session.has_value() && session->ciphersuite().prf_algo() == hash_function &&
          session->version().is_tls_13_or_later()) {
          return std::pair{std::move(session.value()), i};
