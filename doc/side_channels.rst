@@ -1,3 +1,6 @@
+
+.. _side_channels:
+
 Side Channels
 =========================
 
