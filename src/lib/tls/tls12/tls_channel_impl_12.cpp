@@ -136,14 +136,20 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
 
    std::unique_ptr<Handshake_IO> io;
    if(version.is_datagram_protocol()) {
-      io =
-         std::make_unique<Datagram_Handshake_IO>(std::bind(&Channel_Impl_12::send_record_under_epoch, this, _1, _2, _3),
-                                                 sequence_numbers(),
-                                                 static_cast<uint16_t>(policy().dtls_default_mtu()),
-                                                 policy().dtls_initial_timeout(),
-                                                 policy().dtls_maximum_timeout());
+      const uint16_t mtu = static_cast<uint16_t>(policy().dtls_default_mtu());
+      const size_t initial_timeout_ms = policy().dtls_initial_timeout();
+      const size_t max_timeout_ms = policy().dtls_maximum_timeout();
+
+      auto send_record_f = [this](uint16_t epoch, Record_Type record_type, const std::vector<uint8_t>& record) {
+         send_record_under_epoch(epoch, record_type, record);
+      };
+      io = std::make_unique<Datagram_Handshake_IO>(
+         send_record_f, sequence_numbers(), mtu, initial_timeout_ms, max_timeout_ms);
    } else {
-      io = std::make_unique<Stream_Handshake_IO>(std::bind(&Channel_Impl_12::send_record, this, _1, _2));
+      auto send_record_f = [this](Record_Type rec_type, const std::vector<uint8_t>& record) {
+         send_record(rec_type, record);
+      };
+      io = std::make_unique<Stream_Handshake_IO>(send_record_f);
    }
 
    m_pending_state = new_handshake_state(std::move(io));

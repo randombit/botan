@@ -38,10 +38,12 @@ decltype(auto) make_CHECK_both(Cipher_State* cs_client,
                                Journaling_Secret_Logger* sl_server) {
    using namespace std::placeholders;
    return [=](const std::string& name, auto lambda) -> std::vector<Test::Result> {
+      // NOLINTBEGIN(*-avoid-bind)
       return {CHECK(std::string(name + " (client)").c_str(),
                     std::bind(lambda, cs_client, sl_client, Connection_Side::Client, _1)),
               CHECK(std::string(name + " (server)").c_str(),
                     std::bind(lambda, cs_server, sl_server, Connection_Side::Server, _1))};
+      // NOLINTEND(*-avoid-bind)
    };
 }
 

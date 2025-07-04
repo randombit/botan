@@ -193,9 +193,10 @@ std::optional<X509_Certificate> Response::find_signing_certificate(
    }
 
    // Then try to find a delegated responder certificate in the stapled certs
-   auto match = std::find_if(m_certs.begin(), m_certs.end(), std::bind(&Response::is_issued_by, this, _1));
-   if(match != m_certs.end()) {
-      return *match;
+   for(const auto& cert : m_certs) {
+      if(this->is_issued_by(cert)) {
+         return cert;
+      }
    }
 
    // Last resort: check the additionally provides trusted OCSP responders

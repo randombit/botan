@@ -700,7 +700,7 @@ std::vector<Test::Result> test_session_manager_hybrid() {
          };
 
          auto nm = Botan::fmt("{} ({})", name, stateful_manager_name);
-         auto fn = std::bind(lambda, make_manager, _1);
+         auto fn = std::bind(lambda, make_manager, _1);  // NOLINT(*-avoid-bind)
          results.push_back(CHECK(nm.c_str(), fn));
       }
       return results;
@@ -1019,7 +1019,7 @@ std::vector<Test::Result> tls_session_manager_expiry() {
       using namespace std::placeholders;
       for(auto& [sub_name, factory] : stateful_manager_factories) {
          auto nm = Botan::fmt("{} ({})", name, sub_name);
-         auto fn = std::bind(lambda, sub_name, factory, _1);
+         auto fn = std::bind(lambda, sub_name, factory, _1);  // NOLINT(*-avoid-bind)
          results.push_back(CHECK(nm.c_str(), fn));
       }
       return results;

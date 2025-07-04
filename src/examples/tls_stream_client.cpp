@@ -12,7 +12,6 @@
    #include <boost/asio.hpp>
    #include <boost/beast.hpp>
    #include <boost/bind.hpp>
-   #include <utility>
 
 namespace http = boost::beast::http;
 namespace ap = boost::asio::placeholders;
@@ -30,6 +29,8 @@ class Credentials_Manager : public Botan::Credentials_Manager {
    private:
       Botan::System_Certificate_Store m_cert_store;
 };
+
+// NOLINTBEGIN(*-avoid-bind)
 
 // a simple https client based on TLS::Stream
 class client {
@@ -95,6 +96,8 @@ class client {
       std::shared_ptr<Botan::TLS::Context> m_ctx;
       Botan::TLS::Stream<boost::asio::ip::tcp::socket> m_stream;
 };
+
+// NOLINTEND(*-avoid-bind)
 
 int main(int argc, char* argv[]) {
    if(argc != 4) {

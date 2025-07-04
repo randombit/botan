@@ -37,6 +37,9 @@
 namespace Botan_Tests {
 
 #if defined(BOTAN_TEST_TLS_STREAM_INTEGRATION)
+
+// NOLINTBEGIN(*-avoid-bind)
+
 namespace {
 
 namespace net = boost::asio;
@@ -941,6 +944,8 @@ class Tls_Stream_Integration_Tests final : public Test {
 BOTAN_REGISTER_TEST("tls", "tls_stream_integration", Tls_Stream_Integration_Tests);
 
 }  // namespace
+
+// NOLINTEND(*-avoid-bind)
 
 #endif
 

@@ -31,7 +31,6 @@ Checks: >
     -misc-redundant-expression,
     -misc-misplaced-const,
     -misc-confusable-identifiers,
-    -modernize-avoid-bind,
     -modernize-pass-by-value,
     -modernize-use-ranges,
     -performance-avoid-endl,
