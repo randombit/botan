@@ -13,12 +13,47 @@
    #include <botan/internal/os_utils.h>
 #endif
 
+/*
+* On macOS and OpenBSD ppc, use sysctl to detect AltiVec
+*/
+#if defined(BOTAN_TARGET_OS_IS_MACOS)
+   #include <sys/sysctl.h>
+#elif defined(BOTAN_TARGET_OS_IS_OPENBSD)
+   #include <machine/cpu.h>
+   #include <sys/param.h>
+   #include <sys/sysctl.h>
+#endif
+
 namespace Botan {
 
 uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
    uint32_t feat = 0;
 
-#if defined(BOTAN_HAS_OS_UTILS)
+#if defined(BOTAN_TARGET_OS_IS_MACOS) || defined(BOTAN_TARGET_OS_IS_OPENBSD)
+   // On macOS and OpenBSD, use sysctl
+   int sels[2] = {
+   #if defined(BOTAN_TARGET_OS_IS_OPENBSD)
+      CTL_MACHDEP,
+      CPU_ALTIVEC
+   #else
+      CTL_HW,
+      HW_VECTORUNIT
+   #endif
+   };
+
+   int vector_type = 0;
+   size_t length = sizeof(vector_type);
+   int error = ::sysctl(sels, 2, &vector_type, &length, NULL, 0);
+
+   if(error == 0 && vector_type > 0) {
+      feat |= CPUFeature::Bit::ALTIVEC;
+   }
+
+   return feat;
+
+#else  // defined(BOTAN_TARGET_OS_IS_MACOS) || defined(BOTAN_TARGET_OS_IS_OPENBSD)
+
+   #if defined(BOTAN_HAS_OS_UTILS)
 
    if(auto auxval = OS::get_auxval_hwcap()) {
       const auto [hwcap_altivec, hwcap_crypto] = *auxval;
@@ -31,18 +66,18 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
 
       feat |= if_set(hwcap_altivec, PPC_hwcap_bit::ALTIVEC_bit, CPUFeature::Bit::ALTIVEC, allowed);
 
-   #if defined(BOTAN_TARGET_ARCH_IS_PPC64)
+      #if defined(BOTAN_TARGET_ARCH_IS_PPC64)
       if(feat & CPUFeature::Bit::ALTIVEC) {
          feat |= if_set(hwcap_crypto, PPC_hwcap_bit::CRYPTO_bit, CPUFeature::Bit::POWER_CRYPTO, allowed);
          feat |= if_set(hwcap_crypto, PPC_hwcap_bit::DARN_bit, CPUFeature::Bit::DARN, allowed);
       }
-   #endif
+      #endif
 
       return feat;
    }
-#endif
+   #endif
 
-#if defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_HAS_OS_UTILS)
+   #if defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_HAS_OS_UTILS)
    auto vmx_probe = []() noexcept -> int {
       asm("vor 0, 0, 0");
       return 1;
@@ -53,7 +88,7 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
          feat |= CPUFeature::Bit::ALTIVEC;
       }
 
-   #if defined(BOTAN_TARGET_CPU_IS_PPC64)
+      #if defined(BOTAN_TARGET_CPU_IS_PPC64)
       auto vcipher_probe = []() noexcept -> int {
          asm("vcipher 0, 0, 0");
          return 1;
@@ -74,12 +109,14 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
             feat |= CPUFeature::Bit::DARN & allowed;
          }
       }
-   #endif
+      #endif
    }
 
-#endif
+   #endif
 
    return feat;
+
+#endif  // defined(BOTAN_TARGET_OS_IS_MACOS) || defined(BOTAN_TARGET_OS_IS_OPENBSD)
 }
 
 }  // namespace Botan
