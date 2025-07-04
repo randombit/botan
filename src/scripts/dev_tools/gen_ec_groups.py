@@ -180,9 +180,9 @@ def main():
 
         with open(info_path, 'w', encoding='utf8') as info_file:
             info_file.write(dedent(f"""\
-                <defines>
+                <internal_defines>
                 {module_define} -> {datestamp()}
-                </defines>
+                </internal_defines>
 
                 <module_info>
                 name -> "PCurve {curve}"
