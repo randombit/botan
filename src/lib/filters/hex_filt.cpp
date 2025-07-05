@@ -88,7 +88,7 @@ void Hex_Encoder::write(const uint8_t input[], size_t length) {
 */
 void Hex_Encoder::end_msg() {
    encode_and_send(m_in.data(), m_position);
-   if(m_counter && m_line_length) {
+   if(m_counter > 0 && m_line_length > 0) {
       send('\n');
    }
    m_counter = m_position = 0;

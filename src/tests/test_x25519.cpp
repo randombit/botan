@@ -99,7 +99,7 @@ class X25519_Roundtrip_Test final : public Test {
             Botan::X25519_PublicKey* a_pub_key = dynamic_cast<Botan::X25519_PublicKey*>(a_pub.get());
             Botan::X25519_PublicKey* b_pub_key = dynamic_cast<Botan::X25519_PublicKey*>(b_pub.get());
 
-            if(a_pub_key && b_pub_key) {
+            if(a_pub_key != nullptr && b_pub_key != nullptr) {
                Botan::PK_Key_Agreement a_ka(*a_priv, this->rng(), "Raw");
                Botan::PK_Key_Agreement b_ka(*b_priv, this->rng(), "Raw");
 

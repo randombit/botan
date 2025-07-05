@@ -12,11 +12,11 @@ RWLock::RWLock() : m_state(0) {}
 
 void RWLock::lock() {
    std::unique_lock<std::mutex> lock(m_mutex);
-   while(m_state & is_writing) {
+   while((m_state & is_writing) == is_writing) {
       m_gate1.wait(lock);
    }
    m_state |= is_writing;
-   while(m_state & readers_mask) {
+   while((m_state & readers_mask) > 0) {
       m_gate2.wait(lock);
    }
 }
@@ -29,7 +29,7 @@ void RWLock::unlock() {
 
 void RWLock::lock_shared() {
    std::unique_lock<std::mutex> lock(m_mutex);
-   while((m_state & is_writing) || (m_state & readers_mask) == readers_mask) {
+   while(((m_state & is_writing) == is_writing) || ((m_state & readers_mask) == readers_mask)) {
       m_gate1.wait(lock);
    }
    const uint32_t num_readers = (m_state & readers_mask) + 1;
@@ -42,7 +42,7 @@ void RWLock::unlock_shared() {
    const uint32_t num_readers = (m_state & readers_mask) - 1;
    m_state &= ~readers_mask;
    m_state |= num_readers;
-   if(m_state & is_writing) {
+   if((m_state & is_writing) == is_writing) {
       if(num_readers == 0) {
          m_gate2.notify_one();
       }

@@ -95,7 +95,7 @@ void Threaded_Fork::send(const uint8_t input[], size_t length) {
 
    bool nothing_attached = true;
    for(size_t j = 0; j != total_ports(); ++j) {
-      if(m_next[j]) {
+      if(m_next[j] != nullptr) {
          nothing_attached = false;
       }
    }
@@ -128,7 +128,7 @@ void Threaded_Fork::thread_entry(Filter* filter) {
    while(true) {
       m_thread_data->m_input_ready_semaphore.acquire();
 
-      if(!m_thread_data->m_input) {
+      if(m_thread_data->m_input == nullptr) {
          break;
       }
 

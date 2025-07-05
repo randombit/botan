@@ -292,7 +292,7 @@ void ZFEC::addmul(uint8_t z[], const uint8_t x[], uint8_t y, size_t size) {
    const uint8_t* GF_MUL_Y = GF_MUL_TABLE(y);
 
    // first align z to 16 bytes
-   while(size > 0 && reinterpret_cast<uintptr_t>(z) % 16) {
+   while(size > 0 && reinterpret_cast<uintptr_t>(z) % 16 > 0) {
       z[0] ^= GF_MUL_Y[x[0]];
       ++z;
       ++x;

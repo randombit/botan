@@ -644,7 +644,7 @@ Test::Result test_const_time_left_shift() {
 
    Botan::BigInt a = Botan::BigInt::with_capacity(bits / sizeof(Botan::word));
    for(size_t i = 0; i < bits; ++i) {
-      if(rng->next_byte() & 1) {
+      if(rng->next_byte() % 2 == 1) {
          a.set_bit(i);
       }
    }

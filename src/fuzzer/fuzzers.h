@@ -91,7 +91,7 @@ inline Botan::RandomNumberGenerator& fuzzer_rng() {
 #if defined(BOTAN_FUZZER_IS_TEST)
 
 inline int fuzz_files(char* files[]) {
-   for(size_t i = 0; files[i]; ++i) {
+   for(size_t i = 0; files[i] != nullptr; ++i) {
       std::ifstream in(files[i]);
 
       if(in.good()) {

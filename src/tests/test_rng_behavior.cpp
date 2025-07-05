@@ -413,11 +413,11 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests {
          std::unique_ptr<Botan::MessageAuthenticationCode> mac =
             Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
 
-         if(underlying_rng && underlying_es) {
+         if(underlying_rng != nullptr && underlying_es != nullptr) {
             return std::make_unique<Botan::HMAC_DRBG>(std::move(mac), *underlying_rng, *underlying_es, reseed_interval);
-         } else if(underlying_rng) {
+         } else if(underlying_rng != nullptr) {
             return std::make_unique<Botan::HMAC_DRBG>(std::move(mac), *underlying_rng, reseed_interval);
-         } else if(underlying_es) {
+         } else if(underlying_es != nullptr) {
             return std::make_unique<Botan::HMAC_DRBG>(std::move(mac), *underlying_es, reseed_interval);
          } else if(reseed_interval == 0) {
             return std::make_unique<Botan::HMAC_DRBG>(std::move(mac));
@@ -617,11 +617,11 @@ class ChaCha_RNG_Unit_Tests final : public Stateful_RNG_Tests {
       std::unique_ptr<Botan::Stateful_RNG> create_rng(Botan::RandomNumberGenerator* underlying_rng,
                                                       Botan::Entropy_Sources* underlying_es,
                                                       size_t reseed_interval) override {
-         if(underlying_rng && underlying_es) {
+         if(underlying_rng != nullptr && underlying_es != nullptr) {
             return std::make_unique<Botan::ChaCha_RNG>(*underlying_rng, *underlying_es, reseed_interval);
-         } else if(underlying_rng) {
+         } else if(underlying_rng != nullptr) {
             return std::make_unique<Botan::ChaCha_RNG>(*underlying_rng, reseed_interval);
-         } else if(underlying_es) {
+         } else if(underlying_es != nullptr) {
             return std::make_unique<Botan::ChaCha_RNG>(*underlying_es, reseed_interval);
          } else if(reseed_interval == 0) {
             return std::make_unique<Botan::ChaCha_RNG>();

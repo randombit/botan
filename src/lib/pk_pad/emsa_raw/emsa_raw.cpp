@@ -32,7 +32,7 @@ void EMSA_Raw::update(const uint8_t input[], size_t length) {
 * Return the raw (unencoded) data
 */
 std::vector<uint8_t> EMSA_Raw::raw_data() {
-   if(m_expected_size && m_message.size() != m_expected_size) {
+   if(m_expected_size > 0 && m_message.size() != m_expected_size) {
       throw Invalid_Argument(
          fmt("EMSA_Raw was configured to use a {} byte hash but instead was used for a {} byte hash",
              m_expected_size,
@@ -50,7 +50,7 @@ std::vector<uint8_t> EMSA_Raw::raw_data() {
 std::vector<uint8_t> EMSA_Raw::encoding_of(std::span<const uint8_t> msg,
                                            size_t /*output_bits*/,
                                            RandomNumberGenerator& /*rng*/) {
-   if(m_expected_size && msg.size() != m_expected_size) {
+   if(m_expected_size > 0 && msg.size() != m_expected_size) {
       throw Invalid_Argument(
          fmt("EMSA_Raw was configured to use a {} byte hash but instead was used for a {} byte hash",
              m_expected_size,
@@ -64,7 +64,7 @@ std::vector<uint8_t> EMSA_Raw::encoding_of(std::span<const uint8_t> msg,
 * EMSA-Raw Verify Operation
 */
 bool EMSA_Raw::verify(std::span<const uint8_t> coded, std::span<const uint8_t> raw, size_t /*key_bits*/) {
-   if(m_expected_size && raw.size() != m_expected_size) {
+   if(m_expected_size > 0 && raw.size() != m_expected_size) {
       return false;
    }
 

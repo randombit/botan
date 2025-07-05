@@ -32,13 +32,13 @@ void assertion_failure(const char* expr_str, const char* assertion_made, const c
 
    format << "False assertion ";
 
-   if(assertion_made && assertion_made[0] != 0) {
+   if(assertion_made != nullptr && assertion_made[0] != 0) {
       format << "'" << assertion_made << "' (expression " << expr_str << ") ";
    } else {
       format << expr_str << " ";
    }
 
-   if(func) {
+   if(func != nullptr) {
       format << "in " << func << " ";
    }
 

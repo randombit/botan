@@ -144,7 +144,7 @@ secure_vector<uint8_t> ocb_hash(const L_computer& L, const BlockCipher& cipher, 
       sum ^= buf;
    }
 
-   if(ad_remainder) {
+   if(ad_remainder > 0) {
       offset ^= L.star();
       buf = offset;
       xor_buf(buf.data(), &ad[BS * ad_blocks], ad_remainder);
@@ -338,7 +338,7 @@ void OCB_Encryption::encrypt(uint8_t buffer[], size_t blocks) {
 
    const size_t BS = block_size();
 
-   while(blocks) {
+   while(blocks > 0) {
       const size_t proc_blocks = std::min(blocks, par_blocks());
       const size_t proc_bytes = proc_blocks * BS;
 
@@ -374,14 +374,14 @@ void OCB_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    secure_vector<uint8_t> mac(BS);
 
-   if(sz) {
+   if(sz > 0) {
       const size_t final_full_blocks = sz / BS;
       const size_t remainder_bytes = sz - (final_full_blocks * BS);
 
       encrypt(buf, final_full_blocks);
       mac = m_L->offset();
 
-      if(remainder_bytes) {
+      if(remainder_bytes > 0) {
          BOTAN_ASSERT(remainder_bytes < BS, "Only a partial block left");
          uint8_t* remainder = &buf[sz - remainder_bytes];
 
@@ -422,7 +422,7 @@ void OCB_Decryption::decrypt(uint8_t buffer[], size_t blocks) {
 
    const size_t BS = block_size();
 
-   while(blocks) {
+   while(blocks > 0) {
       const size_t proc_blocks = std::min(blocks, par_blocks());
       const size_t proc_bytes = proc_blocks * BS;
 
@@ -462,14 +462,14 @@ void OCB_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    secure_vector<uint8_t> mac(BS);
 
-   if(remaining) {
+   if(remaining > 0) {
       const size_t final_full_blocks = remaining / BS;
       const size_t final_bytes = remaining - (final_full_blocks * BS);
 
       decrypt(buf, final_full_blocks);
       mac ^= m_L->offset();
 
-      if(final_bytes) {
+      if(final_bytes > 0) {
          BOTAN_ASSERT(final_bytes < BS, "Only a partial block left");
 
          uint8_t* remainder = &buf[remaining - final_bytes];

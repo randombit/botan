@@ -86,7 +86,7 @@ void ChaCha20Poly1305_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
    m_poly1305->update(m_ad);
 
    if(cfrg_version()) {
-      if(m_ad.size() % 16) {
+      if(m_ad.size() % 16 != 0) {
          const uint8_t zeros[16] = {0};
          m_poly1305->update(zeros, 16 - m_ad.size() % 16);
       }
@@ -105,7 +105,7 @@ size_t ChaCha20Poly1305_Encryption::process_msg(uint8_t buf[], size_t sz) {
 void ChaCha20Poly1305_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    update(buffer, offset);
    if(cfrg_version()) {
-      if(m_ctext_len % 16) {
+      if(m_ctext_len % 16 != 0) {
          const uint8_t zeros[16] = {0};
          m_poly1305->update(zeros, 16 - m_ctext_len % 16);
       }
@@ -135,14 +135,14 @@ void ChaCha20Poly1305_Decryption::finish_msg(secure_vector<uint8_t>& buffer, siz
 
    const size_t remaining = sz - tag_size();
 
-   if(remaining) {
+   if(remaining > 0) {
       m_poly1305->update(buf, remaining);  // poly1305 of ciphertext
       m_chacha->cipher1(buf, remaining);
       m_ctext_len += remaining;
    }
 
    if(cfrg_version()) {
-      if(m_ctext_len % 16) {
+      if(m_ctext_len % 16 != 0) {
          const uint8_t zeros[16] = {0};
          m_poly1305->update(zeros, 16 - m_ctext_len % 16);
       }

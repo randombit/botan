@@ -120,11 +120,11 @@ BigInt random_prime(
       }
 
       if(bits == 2) {
-         return BigInt::from_word(((rng.next_byte() % 2) ? 2 : 3));
+         return BigInt::from_word(((rng.next_byte() % 2) == 0 ? 2 : 3));
       } else if(bits == 3) {
-         return BigInt::from_word(((rng.next_byte() % 2) ? 5 : 7));
+         return BigInt::from_word(((rng.next_byte() % 2) == 0 ? 5 : 7));
       } else if(bits == 4) {
-         return BigInt::from_word(((rng.next_byte() % 2) ? 11 : 13));
+         return BigInt::from_word(((rng.next_byte() % 2) == 0 ? 11 : 13));
       } else {
          for(;;) {
             // This is slightly biased, but for small primes it does not seem to matter

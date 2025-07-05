@@ -583,7 +583,7 @@ CertificatePathStatusCodes PKIX::check_crl_online(const std::vector<X509_Certifi
 
    auto crl_status = PKIX::check_crl(cert_path, crls, ref_time);
 
-   if(crl_store) {
+   if(crl_store != nullptr) {
       for(size_t i = 0; i != crl_status.size(); ++i) {
          if(crl_status[i].contains(Certificate_Status_Code::VALID_CRL_CHECKED)) {
             // better be non-null, we supposedly validated it

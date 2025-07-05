@@ -41,7 +41,7 @@ BOTAN_FN_ISA_SSE2 size_t ZFEC::addmul_sse2(uint8_t z[], const uint8_t x[], uint8
       SIMD_4x32 z_3 = SIMD_4x32::load_le(z + 32);
       SIMD_4x32 z_4 = SIMD_4x32::load_le(z + 48);
 
-      if(y & 0x01) {
+      if((y & 0x01) == 0x01) {
          z_1 ^= x_1;
          z_2 ^= x_2;
          z_3 ^= x_3;
@@ -70,7 +70,7 @@ BOTAN_FN_ISA_SSE2 size_t ZFEC::addmul_sse2(uint8_t z[], const uint8_t x[], uint8
          x_3 ^= mask_3 & polynomial;
          x_4 ^= mask_4 & polynomial;
 
-         if((y >> j) & 1) {
+         if(((y >> j) & 0x01) == 0x01) {
             z_1 ^= x_1;
             z_2 ^= x_2;
             z_3 ^= x_3;

@@ -33,8 +33,8 @@ class BOTAN_TEST_API RWLock final {
       uint32_t m_state;
 
       // 2**31 concurrent readers should be enough for anyone
-      static const uint32_t is_writing = static_cast<uint32_t>(1) << 31;
-      static const uint32_t readers_mask = ~is_writing;
+      static constexpr uint32_t is_writing = static_cast<uint32_t>(1) << 31;
+      static constexpr uint32_t readers_mask = ~is_writing;
 };
 
 }  // namespace Botan

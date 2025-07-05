@@ -78,7 +78,7 @@ const size_t KARATSUBA_SQUARE_THRESHOLD = 32;
 * Karatsuba Multiplication Operation
 */
 void karatsuba_mul(word z[], const word x[], const word y[], size_t N, word workspace[]) {
-   if(N < KARATSUBA_MULTIPLY_THRESHOLD || N % 2) {
+   if(N < KARATSUBA_MULTIPLY_THRESHOLD || N % 2 != 0) {
       switch(N) {
          case 6:
             return bigint_comba_mul6(z, x, y);
@@ -146,7 +146,7 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N, word work
 * Karatsuba Squaring Operation
 */
 void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[]) {
-   if(N < KARATSUBA_SQUARE_THRESHOLD || N % 2) {
+   if(N < KARATSUBA_SQUARE_THRESHOLD || N % 2 != 0) {
       switch(N) {
          case 6:
             return bigint_comba_sqr6(z, x);
@@ -204,7 +204,7 @@ size_t karatsuba_size(size_t z_size, size_t x_size, size_t x_sw, size_t y_size, 
       return 0;
    }
 
-   if(((x_size == x_sw) && (x_size % 2)) || ((y_size == y_sw) && (y_size % 2))) {
+   if(((x_size == x_sw) && (x_size % 2 != 0)) || ((y_size == y_sw) && (y_size % 2 != 0))) {
       return 0;
    }
 
@@ -212,14 +212,14 @@ size_t karatsuba_size(size_t z_size, size_t x_size, size_t x_sw, size_t y_size, 
    const size_t end = (x_size < y_size) ? x_size : y_size;
 
    if(start == end) {
-      if(start % 2) {
+      if(start % 2 != 0) {
          return 0;
       }
       return start;
    }
 
    for(size_t j = start; j <= end; ++j) {
-      if(j % 2) {
+      if(j % 2 != 0) {
          continue;
       }
 
@@ -243,14 +243,14 @@ size_t karatsuba_size(size_t z_size, size_t x_size, size_t x_sw, size_t y_size, 
 */
 size_t karatsuba_size(size_t z_size, size_t x_size, size_t x_sw) {
    if(x_sw == x_size) {
-      if(x_sw % 2) {
+      if(x_sw % 2 != 0) {
          return 0;
       }
       return x_sw;
    }
 
    for(size_t j = x_sw; j <= x_size; ++j) {
-      if(j % 2) {
+      if(j % 2 != 0) {
          continue;
       }
 
@@ -307,12 +307,12 @@ void bigint_mul(word z[],
       bigint_comba_mul16(z, x, y);
    } else if(sized_for_comba_mul<24>(x_sw, x_size, y_sw, y_size, z_size)) {
       bigint_comba_mul24(z, x, y);
-   } else if(x_sw < KARATSUBA_MULTIPLY_THRESHOLD || y_sw < KARATSUBA_MULTIPLY_THRESHOLD || !workspace) {
+   } else if(x_sw < KARATSUBA_MULTIPLY_THRESHOLD || y_sw < KARATSUBA_MULTIPLY_THRESHOLD || workspace == nullptr) {
       basecase_mul(z, z_size, x, x_sw, y, y_sw);
    } else {
       const size_t N = karatsuba_size(z_size, x_size, x_sw, y_size, y_sw);
 
-      if(N && z_size >= 2 * N && ws_size >= 2 * N) {
+      if(N > 0 && z_size >= 2 * N && ws_size >= 2 * N) {
          karatsuba_mul(z, x, y, N, workspace);
       } else {
          basecase_mul(z, z_size, x, x_sw, y, y_sw);
@@ -342,12 +342,12 @@ void bigint_sqr(word z[], size_t z_size, const word x[], size_t x_size, size_t x
       bigint_comba_sqr16(z, x);
    } else if(sized_for_comba_sqr<24>(x_sw, x_size, z_size)) {
       bigint_comba_sqr24(z, x);
-   } else if(x_size < KARATSUBA_SQUARE_THRESHOLD || !workspace) {
+   } else if(x_size < KARATSUBA_SQUARE_THRESHOLD || workspace == nullptr) {
       basecase_sqr(z, z_size, x, x_sw);
    } else {
       const size_t N = karatsuba_size(z_size, x_size, x_sw);
 
-      if(N && z_size >= 2 * N && ws_size >= 2 * N) {
+      if(N > 0 && z_size >= 2 * N && ws_size >= 2 * N) {
          karatsuba_sqr(z, x, N, workspace);
       } else {
          basecase_sqr(z, z_size, x, x_sw);

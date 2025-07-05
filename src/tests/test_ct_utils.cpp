@@ -53,7 +53,7 @@ class CT_Mask_Tests final : public Test {
 
                   auto written = Botan::CT::copy_output(accept, output, input, offset);
 
-                  if(bad_input) {
+                  if(bad_input > 0) {
                      result.confirm("If bad input, no output", !written.has_value().as_bool());
                   } else {
                      if(offset > input_length) {

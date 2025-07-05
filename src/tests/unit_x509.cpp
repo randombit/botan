@@ -657,7 +657,7 @@ Test::Result test_x509_authority_info_access_extension() {
    const auto ca_issuers = aia_cert.ca_issuers();
 
    result.test_eq("number of ca_issuers URLs", ca_issuers.size(), 1);
-   if(result.tests_failed()) {
+   if(result.tests_failed() > 0) {
       return result;
    }
 
@@ -671,7 +671,7 @@ Test::Result test_x509_authority_info_access_extension() {
    const auto ca_issuers2 = aia_cert_2ca.ca_issuers();
 
    result.test_eq("number of ca_issuers URLs", ca_issuers2.size(), 2);
-   if(result.tests_failed()) {
+   if(result.tests_failed() > 0) {
       return result;
    }
 

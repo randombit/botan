@@ -112,11 +112,11 @@ void Stateful_RNG::reseed_check() {
       m_reseed_counter = 0;
       m_last_pid = cur_pid;
 
-      if(m_underlying_rng) {
+      if(m_underlying_rng != nullptr) {
          reseed_from_rng(*m_underlying_rng, security_level());
       }
 
-      if(m_entropy_sources) {
+      if(m_entropy_sources != nullptr) {
          reseed(*m_entropy_sources, security_level());
       }
 

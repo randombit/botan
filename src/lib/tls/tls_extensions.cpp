@@ -254,7 +254,7 @@ Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader, uint16_t e
       throw Decoding_Error("Bad encoding of SNI extension");
    }
 
-   while(name_bytes) {
+   while(name_bytes > 0) {
       uint8_t name_type = reader.get_byte();
       name_bytes--;
 
@@ -323,7 +323,7 @@ Application_Layer_Protocol_Notification::Application_Layer_Protocol_Notification
       throw Decoding_Error("Bad encoding of ALPN extension, bad length field");
    }
 
-   while(bytes_remaining) {
+   while(bytes_remaining > 0) {
       const std::string p = reader.get_string(1, 0, 255);
 
       if(bytes_remaining < p.size() + 1) {
@@ -637,7 +637,7 @@ std::vector<Signature_Scheme> parse_signature_algorithms(TLS_Data_Reader& reader
 
    std::vector<Signature_Scheme> schemes;
    schemes.reserve(len / 2);
-   while(len) {
+   while(len > 0) {
       schemes.emplace_back(reader.get_uint16_t());
       len -= 2;
    }

@@ -203,7 +203,7 @@ class DtlsConnection : public Botan::TLS::Callbacks {
       void set_activated_callback(std::function<void()> callback) { activated_callback = std::move(callback); }
 
       void close() const {
-         if(fd) {
+         if(fd >= 0) {
 #if defined(HAS_BSD_SOCKETS)
             shutdown(fd, SHUT_RDWR);
             ::close(fd);

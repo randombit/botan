@@ -384,7 +384,7 @@ class TLS_Handshake_Test final {
                } else {
                   Botan::TLS::Unknown_Extension* unknown_ext = dynamic_cast<Botan::TLS::Unknown_Extension*>(test_extn);
 
-                  if(unknown_ext) {
+                  if(unknown_ext != nullptr) {
                      const std::vector<uint8_t> val = unknown_ext->value();
 
                      if(m_results.test_eq("Expected size for test extn", val.size(), 7)) {

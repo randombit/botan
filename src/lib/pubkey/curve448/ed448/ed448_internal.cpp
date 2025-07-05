@@ -114,8 +114,8 @@ Ed448Point Ed448Point::decode(std::span<const uint8_t, ED448_LEN> enc) {
    }
    bool maybe_x_parity = maybe_x.is_odd();
    std::array<uint64_t, WORDS_448> x_data;
-   CT::Mask<uint64_t>::expand(maybe_x_parity == x_distinguisher)
-      .select_n(x_data.data(), maybe_x.words().data(), (-maybe_x).words().data(), 7);
+   CT::Mask<uint64_t>::expand_bool(maybe_x_parity == x_distinguisher)
+      .select_n(x_data.data(), maybe_x.words().data(), (-maybe_x).words().data(), WORDS_448);
 
    return {Gf448Elem(x_data), y};
 }

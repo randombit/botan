@@ -109,7 +109,7 @@ void pbkdf2(MessageAuthenticationCode& prf,
    secure_vector<uint8_t> U(prf_sz);
 
    uint32_t counter = 1;
-   while(out_len) {
+   while(out_len > 0) {
       const size_t prf_output = std::min<size_t>(prf_sz, out_len);
 
       prf.update(salt, salt_len);
