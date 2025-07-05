@@ -17,7 +17,6 @@ Checks: >
     readability-*,
     -*-named-parameter,
     -*-member-init,
-    -bugprone-lambda-function-name,
     -bugprone-unchecked-optional-access,
     -bugprone-empty-catch,
     -cert-err58-cpp,
