@@ -22,7 +22,6 @@ Checks: >
     -bugprone-empty-catch,
     -cert-err58-cpp,
     -cppcoreguidelines-avoid-const-or-ref-data-members,
-    -cppcoreguidelines-init-variables,
     -cppcoreguidelines-owning-memory,
     -cppcoreguidelines-prefer-member-initializer,
     -misc-const-correctness,

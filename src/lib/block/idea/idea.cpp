@@ -68,7 +68,7 @@ void idea_op(const uint8_t in[], uint8_t out[], size_t blocks, const uint16_t K[
    CT::poison(K, 52);
 
    for(size_t i = 0; i < blocks; ++i) {
-      uint16_t X1, X2, X3, X4;
+      uint16_t X1 = 0, X2 = 0, X3 = 0, X4 = 0;
       load_be(in + BLOCK_SIZE * i, X1, X2, X3, X4);
 
       for(size_t j = 0; j != 8; ++j) {

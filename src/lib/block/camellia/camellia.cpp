@@ -146,8 +146,8 @@ void encrypt(const uint8_t in[], uint8_t out[], size_t blocks, const secure_vect
    prefetch_arrays(SBOX1, SBOX2, SBOX3, SBOX4);
 
    for(size_t i = 0; i < blocks; ++i) {
-      uint64_t D1, D2;
-      load_be(in + 16 * i, D1, D2);
+      uint64_t D1 = load_be<uint64_t>(in, 2 * i + 0);
+      uint64_t D2 = load_be<uint64_t>(in, 2 * i + 1);
 
       const uint64_t* K = SK.data();
 
@@ -184,8 +184,8 @@ void decrypt(const uint8_t in[], uint8_t out[], size_t blocks, const secure_vect
    prefetch_arrays(SBOX1, SBOX2, SBOX3, SBOX4);
 
    for(size_t i = 0; i < blocks; ++i) {
-      uint64_t D1, D2;
-      load_be(in + 16 * i, D1, D2);
+      uint64_t D1 = load_be<uint64_t>(in, 2 * i + 0);
+      uint64_t D2 = load_be<uint64_t>(in, 2 * i + 1);
 
       const uint64_t* K = &SK[SK.size() - 1];
 

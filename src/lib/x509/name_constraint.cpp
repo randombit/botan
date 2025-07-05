@@ -269,7 +269,7 @@ void GeneralSubtree::encode_into(DER_Encoder& /*to*/) const {
 }
 
 void GeneralSubtree::decode_from(BER_Decoder& ber) {
-   size_t minimum;
+   size_t minimum = 0;
 
    ber.start_sequence()
       .decode(m_base)

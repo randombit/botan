@@ -27,25 +27,27 @@ const size_t ALLOWED_EOC_NESTINGS = 16;
 * BER decode an ASN.1 type tag
 */
 size_t decode_tag(DataSource* ber, ASN1_Type& type_tag, ASN1_Class& class_tag) {
-   uint8_t b;
-   if(ber->read_byte(b) == 0) {
+   auto b = ber->read_byte();
+
+   if(!b) {
       type_tag = ASN1_Type::NoObject;
       class_tag = ASN1_Class::NoObject;
       return 0;
    }
 
-   if((b & 0x1F) != 0x1F) {
-      type_tag = ASN1_Type(b & 0x1F);
-      class_tag = ASN1_Class(b & 0xE0);
+   if((*b & 0x1F) != 0x1F) {
+      type_tag = ASN1_Type(*b & 0x1F);
+      class_tag = ASN1_Class(*b & 0xE0);
       return 1;
    }
 
    size_t tag_bytes = 1;
-   class_tag = ASN1_Class(b & 0xE0);
+   class_tag = ASN1_Class(*b & 0xE0);
 
    size_t tag_buf = 0;
    while(true) {
-      if(ber->read_byte(b) == 0) {
+      b = ber->read_byte();
+      if(!b) {
          throw BER_Decoding_Error("Long-form tag truncated");
       }
       if((tag_buf >> 24) != 0) {
@@ -56,8 +58,8 @@ size_t decode_tag(DataSource* ber, ASN1_Type& type_tag, ASN1_Class& class_tag) {
          throw BER_Decoding_Error("Long form tag with leading zero");
       }
       ++tag_bytes;
-      tag_buf = (tag_buf << 7) | (b & 0x7F);
-      if((b & 0x80) == 0) {
+      tag_buf = (tag_buf << 7) | (*b & 0x7F);
+      if((*b & 0x80) == 0) {
          break;
       }
    }
@@ -74,7 +76,7 @@ size_t find_eoc(DataSource* src, size_t allow_indef);
 * BER decode an ASN.1 length field
 */
 size_t decode_length(DataSource* ber, size_t& field_size, size_t allow_indef) {
-   uint8_t b;
+   uint8_t b = 0;
    if(ber->read_byte(b) == 0) {
       throw BER_Decoding_Error("Length field not found");
    }
@@ -130,8 +132,8 @@ size_t find_eoc(DataSource* ber, size_t allow_indef) {
 
    size_t length = 0;
    while(true) {
-      ASN1_Type type_tag;
-      ASN1_Class class_tag;
+      ASN1_Type type_tag = ASN1_Type::NoObject;
+      ASN1_Class class_tag = ASN1_Class::NoObject;
       const size_t tag_size = decode_tag(&source, type_tag, class_tag);
       if(type_tag == ASN1_Type::NoObject) {
          break;
@@ -226,7 +228,7 @@ BER_Decoder& BER_Decoder::verify_end(std::string_view err) {
 * Discard all the bytes remaining in the source
 */
 BER_Decoder& BER_Decoder::discard_remaining() {
-   uint8_t buf;
+   uint8_t buf = 0;
    while(m_source->read_byte(buf) != 0) {}
    return (*this);
 }
@@ -251,15 +253,15 @@ BER_Object BER_Decoder::get_next_object() {
    }
 
    for(;;) {
-      ASN1_Type type_tag;
-      ASN1_Class class_tag;
+      ASN1_Type type_tag = ASN1_Type::NoObject;
+      ASN1_Class class_tag = ASN1_Class::NoObject;
       decode_tag(m_source, type_tag, class_tag);
       next.set_tagging(type_tag, class_tag);
       if(next.is_set() == false) {  // no more objects
          return next;
       }
 
-      size_t field_size;
+      size_t field_size = 0;
       const size_t length = decode_length(m_source, field_size, ALLOWED_EOC_NESTINGS);
       if(!m_source->check_available(length)) {
          throw BER_Decoding_Error("Value truncated");

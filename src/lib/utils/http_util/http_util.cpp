@@ -172,7 +172,7 @@ Response http_sync(const http_exch_fn& http_transact,
 
    std::stringstream response_stream(line1);
    std::string http_version;
-   unsigned int status_code;
+   unsigned int status_code = 0;
    std::string status_message;
 
    response_stream >> http_version >> status_code;

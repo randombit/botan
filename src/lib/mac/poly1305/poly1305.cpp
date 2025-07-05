@@ -102,8 +102,7 @@ void poly1305_finish(secure_vector<uint64_t>& X, uint8_t mac[16]) {
    uint64_t h1 = X[3 + 1];
    uint64_t h2 = X[3 + 2];
 
-   uint64_t c;
-   c = (h1 >> 44);
+   uint64_t c = (h1 >> 44);
    h1 &= M44;
    h2 += c;
    c = (h2 >> 42);

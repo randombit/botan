@@ -770,7 +770,7 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run() {
                static constexpr result_type max() { return std::numeric_limits<size_t>::max(); }
 
                result_type operator()() {
-                  size_t s;
+                  size_t s = 0;
                   m_rng.randomize(reinterpret_cast<uint8_t*>(&s), sizeof(s));
                   return s;
                }

@@ -83,10 +83,8 @@ void SEED::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
       uint32_t B3 = load_be<uint32_t>(in, 3);
 
       for(size_t j = 0; j != 16; j += 2) {
-         uint32_t T0, T1;
-
-         T0 = B2 ^ m_K[2 * j];
-         T1 = SEED_G(B2 ^ B3 ^ m_K[2 * j + 1]);
+         uint32_t T0 = B2 ^ m_K[2 * j];
+         uint32_t T1 = SEED_G(B2 ^ B3 ^ m_K[2 * j + 1]);
          T0 = SEED_G(T1 + T0);
          T1 = SEED_G(T1 + T0);
          B1 ^= T1;
@@ -122,10 +120,8 @@ void SEED::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
       uint32_t B3 = load_be<uint32_t>(in, 3);
 
       for(size_t j = 0; j != 16; j += 2) {
-         uint32_t T0, T1;
-
-         T0 = B2 ^ m_K[30 - 2 * j];
-         T1 = SEED_G(B2 ^ B3 ^ m_K[31 - 2 * j]);
+         uint32_t T0 = B2 ^ m_K[30 - 2 * j];
+         uint32_t T1 = SEED_G(B2 ^ B3 ^ m_K[31 - 2 * j]);
          T0 = SEED_G(T1 + T0);
          T1 = SEED_G(T1 + T0);
          B1 ^= T1;

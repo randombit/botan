@@ -243,7 +243,7 @@ class Sodium_API_Tests : public Test {
                                                                                           key.data()));
 
          ctext.resize(in.size() + mac.size());
-         unsigned long long ctext_len;
+         unsigned long long ctext_len = 0;
          result.test_rc_ok("encrypt",
                            Botan::Sodium::crypto_aead_chacha20poly1305_encrypt(ctext.data(),
                                                                                &ctext_len,
@@ -333,7 +333,7 @@ class Sodium_API_Tests : public Test {
                                                                                                key.data()));
 
          ctext.resize(in.size() + mac.size());
-         unsigned long long ctext_len;
+         unsigned long long ctext_len = 0;
          result.test_rc_ok("encrypt",
                            Botan::Sodium::crypto_aead_chacha20poly1305_ietf_encrypt(ctext.data(),
                                                                                     &ctext_len,
@@ -423,7 +423,7 @@ class Sodium_API_Tests : public Test {
                                                                                                 key.data()));
 
          ctext.resize(in.size() + mac.size());
-         unsigned long long ctext_len;
+         unsigned long long ctext_len = 0;
          result.test_rc_ok("encrypt",
                            Botan::Sodium::crypto_aead_xchacha20poly1305_ietf_encrypt(ctext.data(),
                                                                                      &ctext_len,
