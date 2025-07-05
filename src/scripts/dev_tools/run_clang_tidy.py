@@ -52,7 +52,6 @@ disabled_needs_work = [
     'bugprone-empty-catch',
     'cert-err58-cpp', # many false positives eg __m128i
     'cppcoreguidelines-avoid-const-or-ref-data-members',
-    'cppcoreguidelines-init-variables',
     'cppcoreguidelines-owning-memory',
     'cppcoreguidelines-prefer-member-initializer',
     'misc-const-correctness', # pretty noisy

@@ -384,7 +384,7 @@ class BigInt_Div_Test final : public Text_Based_Test {
             result.test_eq("bw ok", Botan::BigInt::from_word(bw), b);
 
             Botan::BigInt ct_q;
-            Botan::word ct_r;
+            Botan::word ct_r = 0;
             Botan::ct_divide_word(a, bw, ct_q, ct_r);
             result.test_eq("ct_divide_word q", ct_q, c);
             result.test_eq("ct_divide_word r", ct_q * b + ct_r, a);
@@ -474,7 +474,7 @@ class BigInt_Mod_Test final : public Text_Based_Test {
             result.test_eq("a % b (as word)", a % b_word, expected);
 
             Botan::BigInt ct_q;
-            Botan::word ct_r;
+            Botan::word ct_r = 0;
             Botan::ct_divide_word(a, b.word_at(0), ct_q, ct_r);
             result.test_eq("ct_divide_u8 r", ct_r, expected);
          }

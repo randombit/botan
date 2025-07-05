@@ -182,7 +182,7 @@ Test::Result test_function(const std::string& name,
    }
 
    // test ReturnValue variant
-   ReturnValue rv;
+   ReturnValue rv = ReturnValue::OK;
    success = test_func(&rv);
    result.test_eq(name, success, !expect_failure);
    if(!expect_failure) {
@@ -646,7 +646,7 @@ const std::array<Attribute, 4> data_template = {
      static_cast<CK_ULONG>(data.size())}}};
 
 ObjectHandle create_simple_data_object(const RAII_LowLevel& p11_low_level) {
-   ObjectHandle object_handle;
+   ObjectHandle object_handle = {};
 
    auto dtemplate = data_template;
    p11_low_level.get()->C_CreateObject(

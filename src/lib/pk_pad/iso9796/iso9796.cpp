@@ -104,12 +104,16 @@ bool iso9796_verification(std::span<const uint8_t> repr,
       return false;
    }
    //get trailer length
-   size_t trailer_len;
-   if(repr[repr.size() - 1] == 0xBC) {
-      trailer_len = 1;
-   } else {
-      trailer_len = 2;
 
+   const uint8_t last = repr[repr.size() - 1];
+
+   if(last != 0xBC && last != 0xCC) {
+      return false;
+   }
+
+   const size_t trailer_len = last == 0xBC ? 1 : 2;
+
+   if(trailer_len == 2) {
       uint8_t hash_id = ieee1363_hash_id(hash->name());
       if(hash_id == 0) {
          throw Decoding_Error("ISO-9796: no hash identifier for " + hash->name());

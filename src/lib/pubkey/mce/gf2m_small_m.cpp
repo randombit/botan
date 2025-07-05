@@ -99,8 +99,7 @@ uint32_t encode_gf2m(gf2m to_enc, uint8_t* mem) {
 }
 
 gf2m decode_gf2m(const uint8_t* mem) {
-   gf2m result;
-   result = mem[0] << 8;
+   gf2m result = mem[0] << 8;
    result |= mem[1];
    return result;
 }

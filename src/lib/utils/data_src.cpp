@@ -28,6 +28,18 @@ size_t DataSource::read_byte(uint8_t& out) {
 }
 
 /*
+* Read a single byte from the DataSource
+*/
+std::optional<uint8_t> DataSource::read_byte() {
+   uint8_t b = 0;
+   if(this->read(&b, 1) == 1) {
+      return b;
+   } else {
+      return {};
+   }
+}
+
+/*
 * Peek a single byte from the DataSource
 */
 size_t DataSource::peek_byte(uint8_t& out) const {

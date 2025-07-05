@@ -170,7 +170,7 @@ void Object::destroy() const {
 }
 
 ObjectHandle Object::copy(const AttributeContainer& modified_attributes) const {
-   ObjectHandle copied_handle;
+   ObjectHandle copied_handle = {};
    module()->C_CopyObject(m_session.get().handle(),
                           m_handle,
                           modified_attributes.data(),

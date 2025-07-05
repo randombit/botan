@@ -172,7 +172,7 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       template <typename Alloc>
       BER_Decoder& raw_bytes(std::vector<uint8_t, Alloc>& out) {
          out.clear();
-         uint8_t buf;
+         uint8_t buf = 0;
          while(m_source->read_byte(buf)) {
             out.push_back(buf);
          }

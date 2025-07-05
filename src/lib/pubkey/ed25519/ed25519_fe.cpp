@@ -653,9 +653,8 @@ void Ed25519_FieldElement::serialize_to(std::span<uint8_t, 32> s) const {
    int32_t h7 = m_fe[7];
    int32_t h8 = m_fe[8];
    int32_t h9 = m_fe[9];
-   int32_t q;
 
-   q = (19 * h9 + ((static_cast<int32_t>(1) << 24))) >> 25;
+   int32_t q = (19 * h9 + ((static_cast<int32_t>(1) << 24))) >> 25;
    q = (h0 + q) >> 26;
    q = (h1 + q) >> 25;
    q = (h2 + q) >> 26;

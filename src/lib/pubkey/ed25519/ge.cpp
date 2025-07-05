@@ -411,12 +411,17 @@ void ge_double_scalarmult_vartime(std::span<uint8_t, 32> out,
 
    auto r = Ed25519_Point_Projective::identity();
 
-   int i;
-   for(i = 255; i >= 0; --i) {
-      if(aslide[i] || bslide[i]) {
-         break;
+   int i = [&]() -> int {
+      int w = 255;
+      while(w >= 0) {
+         if(aslide[w] != 0 || bslide[w] != 0) {
+            return w;
+         } else {
+            w--;
+         }
       }
-   }
+      return 0;
+   }();
 
    for(; i >= 0; --i) {
       auto t = r.dbl();

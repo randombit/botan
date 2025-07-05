@@ -187,7 +187,7 @@ void CAST_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    assert_key_material_set();
 
    while(blocks >= 2) {
-      uint32_t L0, R0, L1, R1;
+      uint32_t L0 = 0, R0 = 0, L1 = 0, R1 = 0;
       load_be(in, L0, R0, L1, R1);
 
       L0 ^= F1(R0, m_MK[0], m_RK[0]);
@@ -231,7 +231,7 @@ void CAST_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    }
 
    if(blocks > 0) {
-      uint32_t L, R;
+      uint32_t L = 0, R = 0;
       load_be(in, L, R);
 
       L ^= F1(R, m_MK[0], m_RK[0]);
@@ -262,7 +262,7 @@ void CAST_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    assert_key_material_set();
 
    while(blocks >= 2) {
-      uint32_t L0, R0, L1, R1;
+      uint32_t L0 = 0, R0 = 0, L1 = 0, R1 = 0;
       load_be(in, L0, R0, L1, R1);
 
       L0 ^= F1(R0, m_MK[15], m_RK[15]);
@@ -306,7 +306,7 @@ void CAST_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    }
 
    if(blocks > 0) {
-      uint32_t L, R;
+      uint32_t L = 0, R = 0;
       load_be(in, L, R);
 
       L ^= F1(R, m_MK[15], m_RK[15]);

@@ -66,7 +66,7 @@ inline uint64_t u64_sub_with_borrow(uint64_t a, uint64_t b, bool* borrow) {
  */
 void reduce_after_add(std::span<uint64_t, WORDS_448> h_3, std::span<const uint64_t, 8> h_1) {
    std::array<uint64_t, 8> h_2;
-   bool carry;
+   bool carry = false;
 
    // Line 27+ (of the paper's algorithm 1)
    h_2[0] = u64_add(h_1[0], h_1[7], &carry);
@@ -107,7 +107,7 @@ void reduce_after_mul(std::span<uint64_t, WORDS_448> out, std::span<const uint64
    std::array<uint64_t, 8> t_0;
    std::array<uint64_t, 8> h_1;
 
-   bool carry;
+   bool carry = false;
 
    // Line 4 (of the paper's algorithm 1)
    r[0] = u64_add(in[0], in[7], &carry);

@@ -98,7 +98,7 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body) {
 
    BER_Decoder cert_req_info(body);
 
-   size_t version;
+   size_t version = 0;
    cert_req_info.decode(version);
    if(version != 0) {
       throw Decoding_Error("Unknown version code in PKCS #10 request: " + std::to_string(version));

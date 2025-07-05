@@ -430,7 +430,7 @@ std::istream& operator>>(std::istream& in, X509_DN& dn) {
    do {
       std::string key;
       std::string val;
-      char c;
+      char c = 0;
 
       while(in.good()) {
          in >> c;

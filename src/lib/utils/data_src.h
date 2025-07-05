@@ -12,6 +12,7 @@
 #include <botan/secmem.h>
 #include <iosfwd>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -68,6 +69,13 @@ class BOTAN_PUBLIC_API(2, 0) DataSource {
       * into out
       */
       size_t read_byte(uint8_t& out);
+
+      /**
+      * Read one byte.
+      *
+      * Returns nullopt if no further bytes are available
+      */
+      std::optional<uint8_t> read_byte();
 
       /**
       * Peek at one byte.

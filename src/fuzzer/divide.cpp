@@ -48,7 +48,7 @@ void fuzz(std::span<const uint8_t> in) {
    z = q * y + r;
    FUZZER_ASSERT_EQUAL(z, x);
 
-   Botan::word rw;
+   Botan::word rw = 0;
    Botan::ct_divide_word(x, y.word_at(0), ct_q, rw);
    FUZZER_ASSERT_EQUAL(ct_q, q);
    FUZZER_ASSERT_EQUAL(rw, r.word_at(0));

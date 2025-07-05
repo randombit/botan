@@ -144,7 +144,7 @@ void ASN1_Formatter::decode(std::ostream& output, BER_Decoder& decoder, size_t l
 
          output << format(type_tag, class_tag, level, length, format_bn(number));
       } else if(type_tag == ASN1_Type::Boolean) {
-         bool boolean;
+         bool boolean = false;
          data.decode(boolean);
          output << format(type_tag, class_tag, level, length, (boolean ? "true" : "false"));
       } else if(type_tag == ASN1_Type::Null) {

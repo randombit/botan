@@ -159,7 +159,7 @@ void ct_divide_word(const BigInt& x, word y, BigInt& q_out, word& r_out) {
 
 BigInt ct_divide_word(const BigInt& x, word y) {
    BigInt q;
-   word r;
+   word r = 0;
    ct_divide_word(x, y, q, r);
    BOTAN_UNUSED(r);
    return q;

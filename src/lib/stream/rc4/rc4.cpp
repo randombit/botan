@@ -51,11 +51,10 @@ void RC4::set_iv_bytes(const uint8_t* /*iv*/, size_t length) {
 * Generate cipher stream
 */
 void RC4::generate() {
-   uint8_t SX, SY;
    for(size_t i = 0; i != m_buffer.size(); i += 4) {
-      SX = m_state[m_X + 1];
+      uint8_t SX = m_state[m_X + 1];
       m_Y = (m_Y + SX) % 256;
-      SY = m_state[m_Y];
+      uint8_t SY = m_state[m_Y];
       m_state[m_X + 1] = SY;
       m_state[m_Y] = SX;
       m_buffer[i] = m_state[(SX + SY) % 256];

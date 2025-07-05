@@ -71,9 +71,9 @@ class Filter_Tests final : public Test {
             result.test_eq("size of SecureQueue is correct", queue_a.size(), test_data.size());
             result.test_eq("0 bytes read so far from SecureQueue", queue_a.get_bytes_read(), 0);
 
-            uint8_t b;
             result.test_eq("check_available", queue_a.check_available(1), true);
             result.test_eq("check_available", queue_a.check_available(50), false);
+            uint8_t b = 0;
             size_t bytes_read = queue_a.read_byte(b);
             result.test_eq("1 byte read", bytes_read, 1);
 
@@ -239,7 +239,7 @@ class Filter_Tests final : public Test {
          });
 
          result.test_throws("pipe error", "Pipe::read: Invalid message number 100", [&]() {
-            uint8_t b;
+            uint8_t b = 0;
             size_t got = pipe.read(&b, 1, 100);
             BOTAN_UNUSED(got);
          });

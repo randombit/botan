@@ -200,7 +200,7 @@ void Threefish_512::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
    const Key_Inserter key(m_K.data(), m_T.data());
 
    for(size_t i = 0; i < blocks; ++i) {
-      uint64_t X0, X1, X2, X3, X4, X5, X6, X7;
+      uint64_t X0 = 0, X1 = 0, X2 = 0, X3 = 0, X4 = 0, X5 = 0, X6 = 0, X7 = 0;
       load_le(in + BLOCK_SIZE * i, X0, X1, X2, X3, X4, X5, X6, X7);
 
       key.e_add(0, X0, X1, X2, X3, X4, X5, X6, X7);
@@ -227,7 +227,7 @@ void Threefish_512::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
    const Key_Inserter key(m_K.data(), m_T.data());
 
    for(size_t i = 0; i < blocks; ++i) {
-      uint64_t X0, X1, X2, X3, X4, X5, X6, X7;
+      uint64_t X0 = 0, X1 = 0, X2 = 0, X3 = 0, X4 = 0, X5 = 0, X6 = 0, X7 = 0;
       load_le(in + BLOCK_SIZE * i, X0, X1, X2, X3, X4, X5, X6, X7);
 
       key.d_add(18, X0, X1, X2, X3, X4, X5, X6, X7);
