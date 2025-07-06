@@ -206,7 +206,7 @@ class BSD_Socket final : public OS::Socket {
          clear_mem(&hints, 1);
          hints.ai_family = AF_UNSPEC;
          hints.ai_socktype = SOCK_STREAM;
-         addrinfo* res;
+         addrinfo* res = nullptr;
 
          const std::string hostname_str(hostname);
          const std::string service_str(service);

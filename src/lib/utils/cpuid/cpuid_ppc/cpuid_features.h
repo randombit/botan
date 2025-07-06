@@ -17,7 +17,7 @@ namespace Botan {
 
 class BOTAN_TEST_API CPUFeature {
    public:
-      enum Bit : uint32_t {
+      enum Bit : uint32_t /* NOLINT(performance-enum-size) */ {
          ALTIVEC = (1U << 0),
          POWER_CRYPTO = (1U << 1),
          DARN = (1U << 2),

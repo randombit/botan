@@ -141,7 +141,7 @@ class BSD_SocketUDP final : public OS::SocketUDP {
 
          m_socket = invalid_socket();
 
-         addrinfo* res;
+         addrinfo* res = nullptr;
          addrinfo hints;
          clear_mem(&hints, 1);
          hints.ai_family = AF_UNSPEC;
