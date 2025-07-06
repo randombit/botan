@@ -345,15 +345,10 @@ TPM2_HANDLE Context::persist(TPM2::PrivateKey& key,
 
    // 1. Decide on the location to persist the key to.
    //    This uses either the handle provided by the caller or a free handle.
-   const TPMI_DH_PERSISTENT new_persistent_handle = [&] {
-      if(persistent_handle.has_value()) {
-         return persistent_handle.value();
-      } else {
-         const auto free_persistent_handle = find_free_persistent_handle();
-         BOTAN_STATE_CHECK(free_persistent_handle.has_value());
-         return free_persistent_handle.value();
-      }
-   }();
+   const std::optional<TPMI_DH_PERSISTENT> new_persistent_handle =
+      persistent_handle.has_value() ? persistent_handle : find_free_persistent_handle();
+
+   BOTAN_STATE_CHECK(new_persistent_handle.has_value());
 
    // 2. Persist the transient key in the TPM's NV storage
    //    This will flush the transient key handle and replace it with a new
@@ -365,7 +360,7 @@ TPM2_HANDLE Context::persist(TPM2::PrivateKey& key,
                               sessions[0],
                               sessions[1],
                               sessions[2],
-                              new_persistent_handle,
+                              *new_persistent_handle,
                               out_transient_handle(handles)));
    BOTAN_ASSERT_NOMSG(handles.has_transient_handle());
 
@@ -384,9 +379,9 @@ TPM2_HANDLE Context::persist(TPM2::PrivateKey& key,
             Esys_TR_GetTpmHandle(m_impl->m_ctx, handles.transient_handle(), out_persistent_handle(handles)));
 
    BOTAN_ASSERT_NOMSG(handles.has_persistent_handle());
-   BOTAN_ASSERT_EQUAL(new_persistent_handle, handles.persistent_handle(), "key was persisted at the correct location");
+   BOTAN_ASSERT_EQUAL(*new_persistent_handle, handles.persistent_handle(), "key was persisted at the correct location");
 
-   return new_persistent_handle;
+   return *new_persistent_handle;
 }
 
 void Context::evict(std::unique_ptr<TPM2::PrivateKey> key, const SessionBundle& sessions) {
