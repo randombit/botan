@@ -243,12 +243,10 @@ void Kuznyechik::key_schedule(std::span<const uint8_t> key) {
 
    for(size_t i = 0; i != 4; ++i) {
       for(size_t r = 0; r != 8; r += 2) {
-         uint64_t t0, t1, t2, t3;
-
-         t0 = k0 ^ C[8 * i + r][0];
-         t1 = k1 ^ C[8 * i + r][1];
-         t2 = k0;
-         t3 = k1;
+         uint64_t t0 = k0 ^ C[8 * i + r][0];
+         uint64_t t1 = k1 ^ C[8 * i + r][1];
+         uint64_t t2 = k0;
+         uint64_t t3 = k1;
          LS(t0, t1);
          t0 ^= k2;
          t1 ^= k3;

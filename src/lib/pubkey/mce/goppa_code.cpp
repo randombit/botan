@@ -41,7 +41,6 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m& syndrom_polyn,
                                  const std::vector<polyn_gf2m>& sqrtmod,
                                  const std::vector<gf2m>& Linv) {
    const size_t code_length = Linv.size();
-   gf2m a;
    uint32_t t = g.get_degree();
 
    std::shared_ptr<GF2m_Field> sp_field = g.get_sp_field();
@@ -49,7 +48,7 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m& syndrom_polyn,
    std::pair<polyn_gf2m, polyn_gf2m> h_aux = polyn_gf2m::eea_with_coefficients(syndrom_polyn, g, 1);
    polyn_gf2m& h = h_aux.first;
    polyn_gf2m& aux = h_aux.second;
-   a = sp_field->gf_inv(aux.get_coef(0));
+   gf2m a = sp_field->gf_inv(aux.get_coef(0));
    gf2m log_a = sp_field->gf_log(a);
    for(int i = 0; i <= h.get_degree(); ++i) {
       h.set_coef(i, sp_field->gf_mul_zrz(log_a, h.get_coef(i)));
@@ -100,8 +99,7 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m& syndrom_polyn,
    for(uint32_t i = 0; i < d; ++i) {
       gf2m current = res[i];
 
-      gf2m tmp;
-      tmp = gray_to_lex(current);
+      gf2m tmp = gray_to_lex(current);
       /// XXX double assignment, possible bug?
       if(tmp >= code_length) /* invalid root */
       {

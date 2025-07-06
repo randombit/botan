@@ -384,7 +384,7 @@ class Shim_Socket final {
          // TODO: C++23 will introduce std::out_ptr() that should replace the
          //       temporary variable for the call to ::getaddrinfo() and
          //       std::unique_ptr<>::reset().
-         unique_addrinfo_t::pointer res_tmp;
+         unique_addrinfo_t::pointer res_tmp = nullptr;
          int rc = ::getaddrinfo(hostname.c_str(), service.c_str(), &hints, &res_tmp);
          unique_addrinfo_t res(res_tmp, &::freeaddrinfo);
 
@@ -1831,7 +1831,7 @@ int main(int /*argc*/, char* argv[]) {
 
             for(;;) {
                if(is_datagram) {
-                  uint8_t opcode;
+                  uint8_t opcode = 0;
                   size_t got = socket.read(&opcode, 1);
                   if(got == 0) {
                      shim_log("EOF on socket");

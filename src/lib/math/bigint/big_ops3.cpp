@@ -111,7 +111,7 @@ BigInt operator/(const BigInt& x, word y) {
    }
 
    BigInt q;
-   word r;
+   word r = 0;
    ct_divide_word(x, y, q, r);
    return q;
 }

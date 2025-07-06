@@ -52,12 +52,8 @@ secure_vector<uint8_t> PKCS8_decode(DataSource& source,
             key_data = PKCS8_extract(source, pbe_alg_id);
          } else {
             // todo read more efficiently
-            while(!source.end_of_data()) {
-               uint8_t b;
-               size_t read = source.read_byte(b);
-               if(read) {
-                  key_data.push_back(b);
-               }
+            while(auto b = source.read_byte()) {
+               key_data.push_back(*b);
             }
          }
       } else {

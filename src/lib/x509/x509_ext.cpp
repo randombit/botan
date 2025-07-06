@@ -271,7 +271,7 @@ void Extensions::decode_from(BER_Decoder& from_source) {
 
    while(sequence.more_items()) {
       OID oid;
-      bool critical;
+      bool critical = false;
       std::vector<uint8_t> bits;
 
       sequence.start_sequence()
@@ -1613,8 +1613,8 @@ void ASBlocks::ASIdOrRange::encode_into(Botan::DER_Encoder& into) const {
 void ASBlocks::ASIdOrRange::decode_from(BER_Decoder& from) {
    const ASN1_Type next_tag = from.peek_next_object().type_tag();
 
-   size_t min;
-   size_t max;
+   size_t min = 0;
+   size_t max = 0;
 
    if(next_tag == ASN1_Type::Integer) {
       from.decode(min);

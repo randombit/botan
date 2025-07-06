@@ -105,7 +105,7 @@ Session::Session(Object session, SessionAttributes attributes) : m_session(std::
 }
 
 SessionAttributes Session::attributes() const {
-   TPMA_SESSION attrs;
+   TPMA_SESSION attrs = 0;
    check_rc("Esys_TRSess_GetAttributes",
             Esys_TRSess_GetAttributes(*m_session.context(), m_session.transient_handle(), &attrs));
    return SessionAttributes::read(attrs);

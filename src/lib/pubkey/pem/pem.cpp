@@ -69,11 +69,12 @@ secure_vector<uint8_t> decode(DataSource& source, std::string& label) {
    size_t position = 0;
 
    while(position != PEM_HEADER1.length()) {
-      uint8_t b;
-      if(!source.read_byte(b)) {
+      auto b = source.read_byte();
+
+      if(!b) {
          throw Decoding_Error("PEM: No PEM header found");
       }
-      if(static_cast<char>(b) == PEM_HEADER1[position]) {
+      if(static_cast<char>(*b) == PEM_HEADER1[position]) {
          ++position;
       } else if(position >= RANDOM_CHAR_LIMIT) {
          throw Decoding_Error("PEM: Malformed PEM header");
@@ -83,18 +84,19 @@ secure_vector<uint8_t> decode(DataSource& source, std::string& label) {
    }
    position = 0;
    while(position != PEM_HEADER2.length()) {
-      uint8_t b;
-      if(!source.read_byte(b)) {
+      auto b = source.read_byte();
+
+      if(!b) {
          throw Decoding_Error("PEM: No PEM header found");
       }
-      if(static_cast<char>(b) == PEM_HEADER2[position]) {
+      if(static_cast<char>(*b) == PEM_HEADER2[position]) {
          ++position;
       } else if(position) {
          throw Decoding_Error("PEM: Malformed PEM header");
       }
 
       if(position == 0) {
-         label += static_cast<char>(b);
+         label += static_cast<char>(*b);
       }
    }
 
@@ -103,18 +105,19 @@ secure_vector<uint8_t> decode(DataSource& source, std::string& label) {
    const std::string PEM_TRAILER = fmt("-----END {}-----", label);
    position = 0;
    while(position != PEM_TRAILER.length()) {
-      uint8_t b;
-      if(!source.read_byte(b)) {
+      auto b = source.read_byte();
+
+      if(!b) {
          throw Decoding_Error("PEM: No PEM trailer found");
       }
-      if(static_cast<char>(b) == PEM_TRAILER[position]) {
+      if(static_cast<char>(*b) == PEM_TRAILER[position]) {
          ++position;
       } else if(position) {
          throw Decoding_Error("PEM: Malformed PEM trailer");
       }
 
       if(position == 0) {
-         b64.push_back(b);
+         b64.push_back(*b);
       }
    }
 

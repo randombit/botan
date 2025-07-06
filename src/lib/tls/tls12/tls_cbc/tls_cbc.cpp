@@ -323,15 +323,10 @@ size_t TLS_CBC_HMAC_AEAD_Decryption::output_length(size_t /*input_length*/) cons
 *
 */
 void TLS_CBC_HMAC_AEAD_Decryption::perform_additional_compressions(size_t plen, size_t padlen) {
-   uint16_t block_size;
-   uint16_t max_bytes_in_first_block;
-   if(mac().name() == "HMAC(SHA-384)") {
-      block_size = 128;
-      max_bytes_in_first_block = 111;
-   } else {
-      block_size = 64;
-      max_bytes_in_first_block = 55;
-   }
+   const bool is_sha384 = mac().name() == "HMAC(SHA-384)";
+   const uint16_t block_size = is_sha384 ? 128 : 64;
+   const uint16_t max_bytes_in_first_block = is_sha384 ? 111 : 55;
+
    // number of maximum MACed bytes
    const uint16_t L1 = static_cast<uint16_t>(13 + plen - tag_size());
    // number of current MACed bytes (L1 - padlen)

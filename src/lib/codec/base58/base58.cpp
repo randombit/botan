@@ -66,7 +66,7 @@ std::string base58_encode(BigInt v, size_t leading_zeros) {
    BigInt q;
 
    while(v.is_nonzero()) {
-      word r;
+      word r = 0;
       ct_divide_word(v, radix, q, r);
       result.push_back(lookup_base58_char(static_cast<uint8_t>(r)));
       v.swap(q);

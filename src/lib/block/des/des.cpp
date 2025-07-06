@@ -213,9 +213,8 @@ inline void des_decrypt_x2(uint32_t& L0r, uint32_t& R0r, uint32_t& L1r, uint32_t
 
 inline void des_IP(uint32_t& L, uint32_t& R) {
    // IP sequence by Wei Dai, taken from public domain Crypto++
-   uint32_t T;
    R = rotl<4>(R);
-   T = (L ^ R) & 0xF0F0F0F0;
+   uint32_t T = (L ^ R) & 0xF0F0F0F0;
    L ^= T;
    R = rotr<20>(R ^ T);
    T = (L ^ R) & 0xFFFF0000;
@@ -234,10 +233,9 @@ inline void des_IP(uint32_t& L, uint32_t& R) {
 
 inline void des_FP(uint32_t& L, uint32_t& R) {
    // FP sequence by Wei Dai, taken from public domain Crypto++
-   uint32_t T;
 
    R = rotr<1>(R);
-   T = (L ^ R) & 0xAAAAAAAA;
+   uint32_t T = (L ^ R) & 0xAAAAAAAA;
    R ^= T;
    L = rotr<9>(L ^ T);
    T = (L ^ R) & 0x00FF00FF;

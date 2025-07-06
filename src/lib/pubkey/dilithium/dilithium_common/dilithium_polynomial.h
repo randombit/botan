@@ -48,7 +48,7 @@ class DilithiumPolyTraits final : public CRYSTALS::Trait_Base<DilithiumConstants
        * factors in the coefficients.
        */
       static constexpr void ntt(std::span<T, N> coeffs) {
-         size_t j;
+         size_t j = 0;
          size_t k = 0;
 
          for(size_t len = N / 2; len > 0; len >>= 1) {
@@ -76,7 +76,7 @@ class DilithiumPolyTraits final : public CRYSTALS::Trait_Base<DilithiumConstants
        * factor of (2^32 mod q) added (!). See above.
        */
       static constexpr void inverse_ntt(std::span<T, N> coeffs) {
-         size_t j;
+         size_t j = 0;
          size_t k = N;
          for(size_t len = 1; len < N; len <<= 1) {
             for(size_t start = 0; start < N; start = j + len) {

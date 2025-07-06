@@ -184,7 +184,7 @@ class BOTAN_PUBLIC_API(3, 2) XOF /* NOLINT(*special-member-functions) */ {
        * @return the next single output byte
        */
       uint8_t output_next_byte() {
-         uint8_t out;
+         uint8_t out = 0;
          generate_bytes({&out, 1});
          return out;
       }

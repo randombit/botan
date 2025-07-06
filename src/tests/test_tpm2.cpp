@@ -122,8 +122,8 @@ auto get_external_tpm2_context() -> std::unique_ptr<ESYS_CONTEXT, esys_context_l
       return nullptr;
    }
 
-   TSS2_RC rc;
-   TSS2_TCTI_CONTEXT* tcti_ctx;
+   TSS2_RC rc = 0;
+   TSS2_TCTI_CONTEXT* tcti_ctx = nullptr;
    std::unique_ptr<ESYS_CONTEXT, esys_context_liberator> esys_ctx;
 
    rc = Tss2_TctiLdr_Initialize_Ex(tcti_name->c_str(), tcti_conf->c_str(), &tcti_ctx);
@@ -277,7 +277,7 @@ std::vector<Test::Result> test_external_tpm2_context() {
          .keyBits = {.sym = 256},
          .mode = {.sym = TPM2_ALG_CFB},
       };
-      ESYS_TR session;
+      ESYS_TR session = 0;
 
       auto rc = Esys_StartAuthSession(esys_ctx,
                                       ESYS_TR_NONE,

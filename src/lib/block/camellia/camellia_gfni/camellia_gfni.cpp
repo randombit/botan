@@ -136,8 +136,8 @@ BOTAN_FN_ISA_AVX2_GFNI void camellia_gfni_encrypt9(const uint8_t in[],
    using namespace Camellia_GFNI;
 
    for(size_t i = 0; i < blocks; ++i) {
-      uint64_t D1, D2;
-      load_be(in + 16 * i, D1, D2);
+      uint64_t D1 = load_be<uint64_t>(in, 2 * i + 0);
+      uint64_t D2 = load_be<uint64_t>(in, 2 * i + 1);
 
       D1 ^= SK[0];
       D2 ^= SK[1];
@@ -183,8 +183,8 @@ BOTAN_FN_ISA_AVX2_GFNI void camellia_gfni_decrypt9(const uint8_t in[],
    using namespace Camellia_GFNI;
 
    for(size_t i = 0; i < blocks; ++i) {
-      uint64_t D1, D2;
-      load_be(in + 16 * i, D1, D2);
+      uint64_t D1 = load_be<uint64_t>(in, 2 * i + 0);
+      uint64_t D2 = load_be<uint64_t>(in, 2 * i + 1);
 
       D2 ^= SK[25];
       D1 ^= SK[24];
@@ -232,8 +232,8 @@ BOTAN_FN_ISA_AVX2_GFNI void camellia_gfni_encrypt12(const uint8_t in[],
    using namespace Camellia_GFNI;
 
    for(size_t i = 0; i < blocks; ++i) {
-      uint64_t D1, D2;
-      load_be(in + 16 * i, D1, D2);
+      uint64_t D1 = load_be<uint64_t>(in, 2 * i + 0);
+      uint64_t D2 = load_be<uint64_t>(in, 2 * i + 1);
 
       D1 ^= SK[0];
       D2 ^= SK[1];
@@ -289,8 +289,8 @@ BOTAN_FN_ISA_AVX2_GFNI void camellia_gfni_decrypt12(const uint8_t in[],
    using namespace Camellia_GFNI;
 
    for(size_t i = 0; i < blocks; ++i) {
-      uint64_t D1, D2;
-      load_be(in + 16 * i, D1, D2);
+      uint64_t D1 = load_be<uint64_t>(in, 2 * i + 0);
+      uint64_t D2 = load_be<uint64_t>(in, 2 * i + 1);
 
       D2 ^= SK[33];
       D1 ^= SK[32];

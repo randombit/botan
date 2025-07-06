@@ -9,6 +9,7 @@
 #include <botan/mem_ops.h>
 #include <botan/internal/target_info.h>
 #include <algorithm>
+#include <optional>
 
 #if defined(BOTAN_HAS_VALGRIND) || defined(BOTAN_ENABLE_DEBUG_ASSERTS)
    /**
@@ -180,7 +181,7 @@ class BitMap final {
          }
       }
 
-      bool find_free(size_t* bit);
+      std::optional<size_t> find_free();
 
       void free(size_t bit) {
          BOTAN_ASSERT_NOMSG(bit <= m_len);
@@ -215,7 +216,7 @@ class BitMap final {
       std::vector<bitmask_type> m_bits;
 };
 
-bool BitMap::find_free(size_t* bit) {
+std::optional<size_t> BitMap::find_free() {
    for(size_t i = 0; i != m_bits.size(); ++i) {
       const bitmask_type mask = (i == m_bits.size() - 1) ? m_last_mask : m_main_mask;
       if((m_bits[i] & mask) != mask) {
@@ -223,12 +224,11 @@ bool BitMap::find_free(size_t* bit) {
          const bitmask_type bmask = static_cast<bitmask_type>(1) << (free_bit % BITMASK_BITS);
          BOTAN_ASSERT_NOMSG((m_bits[i] & bmask) == 0);
          m_bits[i] |= bmask;
-         *bit = BITMASK_BITS * i + free_bit;
-         return true;
+         return BITMASK_BITS * i + free_bit;
       }
    }
 
-   return false;
+   return {};
 }
 
 }  // namespace
@@ -248,15 +248,15 @@ class Bucket final {
             return nullptr;
          }
 
-         size_t offset;
-         if(!m_bitmap.find_free(&offset)) {
+         auto offset = m_bitmap.find_free();
+         if(!offset) {
             // I just found out I am full
             m_is_full = true;
             return nullptr;
+         } else {
+            BOTAN_ASSERT(*offset * m_item_size < m_page_size, "Offset is in range");
+            return m_range + m_item_size * (*offset);
          }
-
-         BOTAN_ASSERT(offset * m_item_size < m_page_size, "Offset is in range");
-         return m_range + m_item_size * offset;
       }
 
       bool free(void* p) {

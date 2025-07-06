@@ -29,7 +29,7 @@ uint32_t Sodium::randombytes_uniform(uint32_t upper_bound) {
    }
 
    // Not completely uniform
-   uint64_t x;
+   uint64_t x = 0;
    randombytes_buf(&x, sizeof(x));
    return x % upper_bound;
 }

@@ -391,15 +391,16 @@ class TLS_Client final : public Command {
          std::memset(&hints, 0, sizeof(hints));
          hints.ai_family = AF_UNSPEC;
          hints.ai_socktype = tcp ? SOCK_STREAM : SOCK_DGRAM;
-         addrinfo *res, *rp = nullptr;
+         addrinfo* res = nullptr;
 
          if(::getaddrinfo(host.c_str(), std::to_string(port).c_str(), &hints, &res) != 0) {
             throw CLI_Error("getaddrinfo failed for " + host);
          }
 
          socket_type fd = 0;
+         bool success = false;
 
-         for(rp = res; rp != nullptr; rp = rp->ai_next) {
+         for(addrinfo* rp = res; rp != nullptr; rp = rp->ai_next) {
             fd = ::socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 
             if(fd == invalid_socket()) {
@@ -411,14 +412,15 @@ class TLS_Client final : public Command {
                continue;
             }
 
+            success = true;
             break;
          }
 
          ::freeaddrinfo(res);
 
-         if(rp == nullptr)  // no address succeeded
-         {
-            throw CLI_Error("connect failed");
+         if(!success) {
+            // no address succeeded
+            throw CLI_Error("Connecting to host failed");
          }
 
          return fd;

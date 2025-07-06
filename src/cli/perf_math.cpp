@@ -118,7 +118,7 @@ class PerfTest_MpDiv10 final : public PerfTest {
 
             const auto ten = Botan::BigInt::from_word(10);
             Botan::BigInt q1, r1, q2;
-            Botan::word r2;
+            Botan::word r2 = 0;
 
             while(ct_div_timer->under(runtime_per_size)) {
                x.randomize(config.rng(), n_bits);
