@@ -57,7 +57,7 @@ std::vector<uint8_t> make_server_hello_random(RandomNumberGenerator& rng,
    if(offered_version.is_pre_tls_13() && policy.allow_tls13()) {
       constexpr size_t downgrade_signal_length = sizeof(DOWNGRADE_TLS12);
       BOTAN_ASSERT_NOMSG(random.size() >= downgrade_signal_length);
-      auto lastbytes = random.data() + random.size() - downgrade_signal_length;
+      auto* lastbytes = random.data() + random.size() - downgrade_signal_length;
       store_be(DOWNGRADE_TLS12, lastbytes);
    }
 
@@ -388,7 +388,7 @@ bool Server_Hello_12::supports_session_ticket() const {
 }
 
 uint16_t Server_Hello_12::srtp_profile() const {
-   if(auto srtp = m_data->extensions().get<SRTP_Protection_Profiles>()) {
+   if(auto* srtp = m_data->extensions().get<SRTP_Protection_Profiles>()) {
       auto prof = srtp->profiles();
       if(prof.size() != 1 || prof[0] == 0) {
          throw Decoding_Error("Server sent malformed DTLS-SRTP extension");
@@ -400,14 +400,14 @@ uint16_t Server_Hello_12::srtp_profile() const {
 }
 
 std::string Server_Hello_12::next_protocol() const {
-   if(auto alpn = m_data->extensions().get<Application_Layer_Protocol_Notification>()) {
+   if(auto* alpn = m_data->extensions().get<Application_Layer_Protocol_Notification>()) {
       return alpn->single_protocol();
    }
    return "";
 }
 
 bool Server_Hello_12::prefers_compressed_ec_points() const {
-   if(auto ecc_formats = m_data->extensions().get<Supported_Point_Formats>()) {
+   if(auto* ecc_formats = m_data->extensions().get<Supported_Point_Formats>()) {
       return ecc_formats->prefers_compressed();
    }
    return false;
@@ -730,7 +730,7 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
          key_exchange_group.value(), *ch.extensions().get<Key_Share>(), policy, cb, rng));
    }
 
-   auto& ch_exts = ch.extensions();
+   const auto& ch_exts = ch.extensions();
 
    if(ch_exts.has<PSK>()) {
       const auto cs = Ciphersuite::by_id(m_data->ciphersuite());
@@ -741,7 +741,7 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
       //    offers a "pre_shared_key" extension.
       //
       // Note: Client_Hello_13 constructor already performed a graceful check.
-      const auto psk_modes = ch_exts.get<PSK_Key_Exchange_Modes>();
+      auto* const psk_modes = ch_exts.get<PSK_Key_Exchange_Modes>();
       BOTAN_ASSERT_NONNULL(psk_modes);
 
       // TODO: also support PSK_Key_Exchange_Mode::PSK_KE
@@ -773,7 +773,7 @@ std::optional<Protocol_Version> Server_Hello_13::random_signals_downgrade() cons
 }
 
 Protocol_Version Server_Hello_13::selected_version() const {
-   const auto versions_ext = m_data->extensions().get<Supported_Versions>();
+   auto* const versions_ext = m_data->extensions().get<Supported_Versions>();
    BOTAN_ASSERT_NOMSG(versions_ext);
    const auto& versions = versions_ext->versions();
    BOTAN_ASSERT_NOMSG(versions.size() == 1);

@@ -163,7 +163,7 @@ std::vector<std::unique_ptr<Private_Key>> convert_kex_to_kem_sks(std::vector<std
       BOTAN_ARG_CHECK(key != nullptr, "Private key list contains a nullptr");
       if(key->supports_operation(PublicKeyOperation::KeyAgreement) &&
          !key->supports_operation(PublicKeyOperation::KeyEncapsulation)) {
-         auto ka_key = dynamic_cast<PK_Key_Agreement_Key*>(key.get());
+         auto* ka_key = dynamic_cast<PK_Key_Agreement_Key*>(key.get());
          BOTAN_ASSERT_NONNULL(ka_key);
          (void)key.release();
          return std::make_unique<KEX_to_KEM_Adapter_PrivateKey>(std::unique_ptr<PK_Key_Agreement_Key>(ka_key));

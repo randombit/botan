@@ -107,9 +107,9 @@ int main(int argc, char* argv[]) {
       return 1;
    }
 
-   const auto host = argv[1];
-   const auto port = argv[2];
-   const auto target = argv[3];
+   auto* const host = argv[1];
+   auto* const port = argv[2];
+   auto* const target = argv[3];
 
    try {
       boost::asio::io_context io_context;

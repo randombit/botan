@@ -700,7 +700,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
       callbacks().tls_session_established([&, this] {
          Session_Summary summary(session_info, state.is_a_resumption(), external_psk_identity());
          summary.set_session_id(state.server_hello()->session_id());
-         if(auto nst = state.new_session_ticket()) {
+         if(const auto* nst = state.new_session_ticket()) {
             summary.set_session_ticket(nst->ticket());
          }
          return summary;

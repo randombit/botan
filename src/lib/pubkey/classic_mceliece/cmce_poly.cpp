@@ -126,12 +126,12 @@ std::optional<Classic_McEliece_Minimal_Polynomial> Classic_McEliece_Polynomial_R
 
 secure_vector<uint8_t> Classic_McEliece_Minimal_Polynomial::serialize() const {
    BOTAN_ASSERT_NOMSG(!coef().empty());
-   auto& all_coeffs = coef();
+   const auto& all_coeffs = coef();
    // Store all except coef for monomial x^t since polynomial is monic (ISO Spec Section 9.2.9)
    auto coeffs_to_store = std::span(all_coeffs).first(all_coeffs.size() - 1);
    secure_vector<uint8_t> bytes(sizeof(uint16_t) * coeffs_to_store.size());
    BufferStuffer bytes_stuf(bytes);
-   for(auto& coef : coeffs_to_store) {
+   for(const auto& coef : coeffs_to_store) {
       store_le(bytes_stuf.next<sizeof(CmceGfElem)>(), coef.elem().get());
    }
    BOTAN_ASSERT_NOMSG(bytes_stuf.full());

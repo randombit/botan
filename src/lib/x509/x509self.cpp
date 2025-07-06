@@ -49,7 +49,7 @@ auto create_alt_name_ext(const X509_Cert_Options& opts, const Extensions& extens
    If the extension was already created in opts.extension we need to
    merge the values provied in opts with the values set in the extension.
    */
-   if(auto ext = extensions.get_extension_object_as<Cert_Extension::Subject_Alternative_Name>()) {
+   if(const auto* ext = extensions.get_extension_object_as<Cert_Extension::Subject_Alternative_Name>()) {
       subject_alt = ext->get_alt_name();
    }
 

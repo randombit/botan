@@ -303,7 +303,7 @@ void Client_Impl_13::handle(const Server_Hello_13& sh) {
       throw TLS_Exception(Alert::IllegalParameter, "Server Hello did not contain a key share extension");
    }
 
-   auto my_keyshare = ch.extensions().get<Key_Share>();
+   auto* my_keyshare = ch.extensions().get<Key_Share>();
    auto shared_secret = my_keyshare->decapsulate(*sh.extensions().get<Key_Share>(), policy(), callbacks(), rng());
 
    m_transcript_hash.set_algorithm(cipher.value().prf_algo());
@@ -398,8 +398,8 @@ void Client_Impl_13::handle(const Encrypted_Extensions& encrypted_extensions_msg
       //
       // Hence, the "outgoing" limit is what the server requested and the
       // "incoming" limit is what we requested in the Client Hello.
-      const auto outgoing_limit = exts.get<Record_Size_Limit>();
-      const auto incoming_limit = m_handshake_state.client_hello().extensions().get<Record_Size_Limit>();
+      auto* const outgoing_limit = exts.get<Record_Size_Limit>();
+      auto* const incoming_limit = m_handshake_state.client_hello().extensions().get<Record_Size_Limit>();
       set_record_size_limits(outgoing_limit->limit(), incoming_limit->limit());
    }
 

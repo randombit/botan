@@ -118,7 +118,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          }
 
          if(curve_id.is_ecdh_named_curve()) {
-            auto ecdh_key = dynamic_cast<ECDH_PublicKey*>(private_key.get());
+            auto* ecdh_key = dynamic_cast<ECDH_PublicKey*>(private_key.get());
             if(!ecdh_key) {
                throw TLS_Exception(Alert::InternalError, "Application did not provide a ECDH_PublicKey");
             }
@@ -146,7 +146,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          throw Internal_Error("No server public key for RSA exchange");
       }
 
-      if(auto rsa_pub = dynamic_cast<const RSA_PublicKey*>(server_public_key)) {
+      if(const auto* rsa_pub = dynamic_cast<const RSA_PublicKey*>(server_public_key)) {
          const Protocol_Version offered_version = state.client_hello()->legacy_version();
 
          rng.random_vec(m_pre_master, 48);

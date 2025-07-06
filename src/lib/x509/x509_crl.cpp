@@ -167,13 +167,13 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body, cons
    tbs_crl.verify_end();
 
    // Now cache some fields from the extensions
-   if(auto ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_Number>()) {
+   if(const auto* ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_Number>()) {
       data->m_crl_number = ext->get_crl_number();
    }
-   if(auto ext = data->m_extensions.get_extension_object_as<Cert_Extension::Authority_Key_ID>()) {
+   if(const auto* ext = data->m_extensions.get_extension_object_as<Cert_Extension::Authority_Key_ID>()) {
       data->m_auth_key_id = ext->get_key_id();
    }
-   if(auto ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_Issuing_Distribution_Point>()) {
+   if(const auto* ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_Issuing_Distribution_Point>()) {
       data->m_idp_urls = ext->get_point().get_attribute("URL");
    }
 

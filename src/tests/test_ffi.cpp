@@ -3455,7 +3455,7 @@ class FFI_KEM_Roundtrip_Test : public FFI_Test {
 
    public:
       void ffi_test(Test::Result& result, botan_rng_t rng) override {
-         for(auto mode : modes()) {
+         for(const auto* mode : modes()) {
             // generate a key pair
             botan_privkey_t priv;
             botan_pubkey_t pub;
@@ -3604,7 +3604,7 @@ class FFI_Signature_Roundtrip_Test : public FFI_Test {
          const std::vector<uint8_t> message1 = {'H', 'e', 'l', 'l', 'o', ' '};
          const std::vector<uint8_t> message2 = {'W', 'o', 'r', 'l', 'd', '!'};
 
-         for(auto mode : modes()) {
+         for(const auto* mode : modes()) {
             // generate a key pair
             botan_privkey_t priv;
             botan_pubkey_t pub;

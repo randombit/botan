@@ -149,7 +149,7 @@ Certificate_Verify_13::Certificate_Verify_13(const Certificate_13& certificate_m
       m_side(whoami) {
    BOTAN_ASSERT_NOMSG(!certificate_msg.empty());
 
-   const auto op_type = (m_side == Connection_Side::Client) ? "tls-client" : "tls-server";
+   const std::string op_type((m_side == Connection_Side::Client) ? "tls-client" : "tls-server");
    const auto context = std::string(hostname);
 
    const auto private_key = (certificate_msg.has_certificate_chain())

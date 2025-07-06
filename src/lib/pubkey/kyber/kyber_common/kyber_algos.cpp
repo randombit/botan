@@ -183,7 +183,7 @@ void sample_poly_cbd<KyberConstants::KyberEta::_3>(KyberPoly& poly,
 
 void encode_polynomial_vector(std::span<uint8_t> out, const KyberPolyVecNTT& vec) {
    BufferStuffer bs(out);
-   for(auto& v : vec) {
+   for(const auto& v : vec) {
       byte_encode(bs, v);
    }
    BOTAN_ASSERT_NOMSG(bs.full());

@@ -1202,7 +1202,7 @@ std::vector<Test::Result> Text_Based_Test::run() {
 
       if(key == m_output_key) {
          try {
-            for(auto& req_key : m_required_keys) {
+            for(const auto& req_key : m_required_keys) {
                if(!vars.has_key(req_key)) {
                   auto r =
                      Test::Result::Failure(header_or_name, Botan::fmt("{} missing required key {}", test_id, req_key));

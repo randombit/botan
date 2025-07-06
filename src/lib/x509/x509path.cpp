@@ -203,7 +203,7 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
       if(subject.x509_version() < 3 && !extensions_vec.empty()) {
          status.insert(Certificate_Status_Code::EXT_IN_V1_V2_CERT);
       }
-      for(auto& extension : extensions_vec) {
+      for(const auto& extension : extensions_vec) {
          extension.first->validate(subject, issuer, cert_path, cert_status, i);
       }
       if(extensions_vec.size() != extensions.get_extension_oids().size()) {
@@ -444,7 +444,7 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
    std::vector<std::optional<X509_CRL>> crls(cert_path.size());
 
    for(size_t i = 0; i != cert_path.size(); ++i) {
-      for(auto certstore : certstores) {
+      for(auto* certstore : certstores) {
          crls[i] = certstore->find_crl_for(cert_path[i]);
          if(crls[i]) {
             break;
@@ -536,7 +536,7 @@ CertificatePathStatusCodes PKIX::check_crl_online(const std::vector<X509_Certifi
 
    for(size_t i = 0; i != cert_path.size(); ++i) {
       const std::optional<X509_Certificate>& cert = cert_path.at(i);
-      for(auto certstore : certstores) {
+      for(auto* certstore : certstores) {
          crls[i] = certstore->find_crl_for(*cert);
          if(crls[i].has_value()) {
             break;

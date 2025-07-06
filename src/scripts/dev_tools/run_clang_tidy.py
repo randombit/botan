@@ -45,6 +45,8 @@ enabled_checks = [
 # these are ones that we might want to be clean for in the future,
 # but currently are not
 disabled_needs_work = [
+    'readability-qualified-auto', # almost cleared except test_x509_rpki.cpp
+
     '*-named-parameter',
     '*-member-init', # should definitely fix this one
     'bugprone-unchecked-optional-access', # clang-tidy seems buggy (many false positives)
@@ -64,7 +66,6 @@ disabled_needs_work = [
     'readability-convert-member-functions-to-static',
     'readability-implicit-bool-conversion',
     'readability-inconsistent-declaration-parameter-name', # should fix this, blocked by https://github.com/llvm/llvm-project/issues/60845
-    'readability-qualified-auto',
     'readability-simplify-boolean-expr', # sometimes ok
     'readability-static-accessed-through-instance',
 ]

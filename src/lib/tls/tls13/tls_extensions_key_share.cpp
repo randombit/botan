@@ -58,7 +58,7 @@ class Key_Share_Entry {
          if(group.is_kem()) {
             m_key_exchange = m_private_key->public_key_bits();
          } else if(group.is_ecdh_named_curve()) {
-            auto pkey = dynamic_cast<ECDH_PublicKey*>(m_private_key.get());
+            auto* pkey = dynamic_cast<ECDH_PublicKey*>(m_private_key.get());
             if(!pkey) {
                throw TLS_Exception(Alert::InternalError, "Application did not provide a ECDH_PublicKey");
             }
@@ -73,7 +73,7 @@ class Key_Share_Entry {
             // ClientHello::prefers_compressed_ec_points() into account here.
             m_key_exchange = pkey->public_value(EC_Point_Format::Uncompressed);
          } else {
-            auto pkey = dynamic_cast<PK_Key_Agreement_Key*>(m_private_key.get());
+            auto* pkey = dynamic_cast<PK_Key_Agreement_Key*>(m_private_key.get());
             if(!pkey) {
                throw TLS_Exception(Alert::InternalError, "Application did not provide a key-agreement key");
             }

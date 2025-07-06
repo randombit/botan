@@ -477,9 +477,9 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
 
        CHECK_both("key update",
                   [&](Cipher_State* cs, Journaling_Secret_Logger* sl, Connection_Side side, Test::Result& result) {
-                     const auto read_label =
+                     const auto* const read_label =
                         side == Connection_Side::Client ? "SERVER_TRAFFIC_SECRET_1" : "CLIENT_TRAFFIC_SECRET_1";
-                     const auto write_label =
+                     const auto* const write_label =
                         side == Connection_Side::Client ? "CLIENT_TRAFFIC_SECRET_1" : "SERVER_TRAFFIC_SECRET_1";
 
                      cs->update_read_keys(*sl);

@@ -34,7 +34,7 @@ Server_Impl_13::Server_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
 std::string Server_Impl_13::application_protocol() const {
    if(is_handshake_complete()) {
       const auto& eee = m_handshake_state.encrypted_extensions().extensions();
-      if(const auto alpn = eee.get<Application_Layer_Protocol_Notification>()) {
+      if(auto* const alpn = eee.get<Application_Layer_Protocol_Notification>()) {
          return alpn->single_protocol();
       }
    }
@@ -230,7 +230,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
 
    std::unique_ptr<Cipher_State> psk_cipher_state;
    if(uses_psk) {
-      auto psk_extension = server_hello.extensions().get<PSK>();
+      auto* psk_extension = server_hello.extensions().get<PSK>();
 
       psk_cipher_state =
          std::visit(overloaded{[&, this](Session session) {
@@ -288,7 +288,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
    // Setup encryption for all the remaining handshake messages
    m_cipher_state = [&] {
       // Currently, PSK without DHE is not implemented...
-      const auto my_keyshare = m_handshake_state.server_hello().extensions().get<Key_Share>();
+      auto* const my_keyshare = m_handshake_state.server_hello().extensions().get<Key_Share>();
       BOTAN_ASSERT_NONNULL(my_keyshare);
 
       if(uses_psk) {
@@ -326,7 +326,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
       //
       // Note: TLS 1.3 carries this extension in the Encrypted Extensions
       //       message instead of the Server Hello.
-      if(auto client_cert_type = enc_exts.get<Client_Certificate_Type>()) {
+      if(auto* client_cert_type = enc_exts.get<Client_Certificate_Type>()) {
          set_selected_certificate_type(client_cert_type->selected_certificate_type());
       }
 
@@ -336,7 +336,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
       //    was negotiated, then each CertificateEntry contains a DER-encoded
       //    X.509 certificate.
       const auto cert_type = [&] {
-         if(auto server_cert_type = enc_exts.get<Server_Certificate_Type>()) {
+         if(auto* server_cert_type = enc_exts.get<Server_Certificate_Type>()) {
             return server_cert_type->selected_certificate_type();
          } else {
             return Certificate_Type::X509;
@@ -374,8 +374,8 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
       //
       // Hence, the "outgoing" limit is what the client requested and the
       // "incoming" limit is what we will request in the Encrypted Extensions.
-      const auto outgoing_limit = client_hello.extensions().get<Record_Size_Limit>();
-      const auto incoming_limit = m_handshake_state.encrypted_extensions().extensions().get<Record_Size_Limit>();
+      auto* const outgoing_limit = client_hello.extensions().get<Record_Size_Limit>();
+      auto* const incoming_limit = m_handshake_state.encrypted_extensions().extensions().get<Record_Size_Limit>();
       set_record_size_limits(outgoing_limit->limit(), incoming_limit->limit());
    }
 

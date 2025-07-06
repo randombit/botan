@@ -115,14 +115,14 @@ std::vector<std::string> split_on(std::string_view str, char delim) {
    }
 
    std::string substr;
-   for(auto i = str.begin(); i != str.end(); ++i) {
-      if(*i == delim) {
+   for(char c : str) {
+      if(c == delim) {
          if(!substr.empty()) {
             elems.push_back(substr);
          }
          substr.clear();
       } else {
-         substr += *i;
+         substr += c;
       }
    }
 

@@ -79,7 +79,7 @@ class Server_Credential : public Botan::Credentials_Manager {
          std::vector<Botan::X509_Certificate> certs;
          for(auto& cert : certificates) {
             std::string algorithm = cert.subject_public_key()->algo_name();
-            for(auto& key : cert_key_types) {
+            for(const auto& key : cert_key_types) {
                if(algorithm == key) {
                   certs.push_back(cert);
                }
