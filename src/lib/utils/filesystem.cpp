@@ -41,7 +41,7 @@ std::vector<std::string> impl_readdir(std::string_view dir_path) {
       const std::string cur_path = dir_list[0];
       dir_list.pop_front();
 
-      std::unique_ptr<DIR, std::function<int(DIR*)>> dir(::opendir(cur_path.c_str()), ::closedir);
+      const std::unique_ptr<DIR, std::function<int(DIR*)>> dir(::opendir(cur_path.c_str()), ::closedir);
 
       if(dir) {
          while(struct dirent* dirent = ::readdir(dir.get())) {

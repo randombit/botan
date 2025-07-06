@@ -86,7 +86,7 @@ SphincsTreeNode fors_sign_and_pkgen(StrongSpan<ForsSignature> sig_out,
    // and the trees' root and append the signature respectively
    BOTAN_ASSERT_NOMSG(indices.size() == params.k());
    for(uint32_t i = 0; i < params.k(); ++i) {
-      uint32_t idx_offset = i * (1 << params.a());
+      const uint32_t idx_offset = i * (1 << params.a());
 
       // Compute the secret leaf given by the chunk of the message and append it to the signature
       fors_tree_addr.set_type(Sphincs_Address_Type::ForsKeyGeneration)
@@ -98,7 +98,8 @@ SphincsTreeNode fors_sign_and_pkgen(StrongSpan<ForsSignature> sig_out,
       // Compute the authentication path and root for this leaf node
       fors_tree_addr.set_type(Sphincs_Address_Type::ForsTree);
 
-      GenerateLeafFunction fors_gen_leaf = [&](StrongSpan<SphincsTreeNode> out_root, TreeNodeIndex address_index) {
+      const GenerateLeafFunction fors_gen_leaf = [&](StrongSpan<SphincsTreeNode> out_root,
+                                                     TreeNodeIndex address_index) {
          fors_tree_addr.set_tree_index(address_index);
          fors_tree_addr.set_type(Sphincs_Address_Type::ForsKeyGeneration);
 
@@ -145,7 +146,7 @@ SphincsTreeNode fors_public_key_from_signature(const SphincsHashedMessage& hashe
    // leaf and the authentication path offered in the FORS signature.
    BOTAN_ASSERT_NOMSG(indices.size() == params.k());
    for(uint32_t i = 0; i < params.k(); ++i) {
-      uint32_t idx_offset = i * (1 << params.a());
+      const uint32_t idx_offset = i * (1 << params.a());
 
       // Compute the FORS leaf by using the secret leaf contained in the signature
       fors_tree_addr.set_tree_height(TreeLayerIndex(0)).set_tree_index(indices[i] + idx_offset);

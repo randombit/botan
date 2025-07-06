@@ -51,7 +51,7 @@ class Asio_SocketUDP final : public OS::SocketUDP {
          check_timeout();
 
          boost::asio::ip::udp::resolver resolver(m_io);
-         boost::asio::ip::udp::resolver::results_type dns_iter =
+         const boost::asio::ip::udp::resolver::results_type dns_iter =
             resolver.resolve(std::string{hostname}, std::string{service});
 
          boost::system::error_code ec = boost::asio::error::would_block;
@@ -150,7 +150,7 @@ class BSD_SocketUDP final : public OS::SocketUDP {
          const std::string hostname_str(hostname);
          const std::string service_str(service);
 
-         int rc = ::getaddrinfo(hostname_str.c_str(), service_str.c_str(), &hints, &res);
+         const int rc = ::getaddrinfo(hostname_str.c_str(), service_str.c_str(), &hints, &res);
 
          if(rc != 0) {
             throw System_Error(fmt("Name resolution failed for {}", hostname), rc);
@@ -200,19 +200,19 @@ class BSD_SocketUDP final : public OS::SocketUDP {
          size_t sent_so_far = 0;
          while(sent_so_far != len) {
             struct timeval timeout = make_timeout_tv();
-            int active = ::select(static_cast<int>(m_socket + 1), nullptr, &write_set, nullptr, &timeout);
+            const int active = ::select(static_cast<int>(m_socket + 1), nullptr, &write_set, nullptr, &timeout);
 
             if(active == 0) {
                throw System_Error("Timeout during socket write");
             }
 
             const size_t left = len - sent_so_far;
-            socket_op_ret_type sent = ::sendto(m_socket,
-                                               cast_uint8_ptr_to_char(buf + sent_so_far),
-                                               static_cast<sendrecv_len_type>(left),
-                                               0,
-                                               reinterpret_cast<sockaddr*>(&sa),
-                                               salen);
+            const socket_op_ret_type sent = ::sendto(m_socket,
+                                                     cast_uint8_ptr_to_char(buf + sent_so_far),
+                                                     static_cast<sendrecv_len_type>(left),
+                                                     0,
+                                                     reinterpret_cast<sockaddr*>(&sa),
+                                                     salen);
             if(sent < 0) {
                throw System_Error("Socket write failed", errno);
             } else {
@@ -227,13 +227,13 @@ class BSD_SocketUDP final : public OS::SocketUDP {
          FD_SET(m_socket, &read_set);
 
          struct timeval timeout = make_timeout_tv();
-         int active = ::select(static_cast<int>(m_socket + 1), &read_set, nullptr, nullptr, &timeout);
+         const int active = ::select(static_cast<int>(m_socket + 1), &read_set, nullptr, nullptr, &timeout);
 
          if(active == 0) {
             throw System_Error("Timeout during socket read");
          }
 
-         socket_op_ret_type got =
+         const socket_op_ret_type got =
             ::recvfrom(m_socket, cast_uint8_ptr_to_char(buf), static_cast<sendrecv_len_type>(len), 0, nullptr, nullptr);
 
          if(got < 0) {

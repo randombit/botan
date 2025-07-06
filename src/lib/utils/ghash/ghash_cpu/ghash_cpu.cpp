@@ -56,8 +56,8 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_CLMUL SIMD_4x32 clmul(const SIMD_4x32& H, const 
    const SIMD_4x32 mask_lo = SIMD_4x32(0, 0, 0xFFFFFFFF, 0xFFFFFFFF);
    constexpr uint8_t flip = (std::endian::native == std::endian::big) ? 0x11 : 0x00;
 
-   SIMD_4x32 i1 = x;
-   SIMD_4x32 i2 = H;
+   SIMD_4x32 i1 = x;  // NOLINT(*-const-correctness) clang-tidy bug
+   SIMD_4x32 i2 = H;  // NOLINT(*-const-correctness) clang-tidy bug
 
    if constexpr(std::endian::native == std::endian::big) {
       i1 = reverse_vector(i1).bswap();
@@ -98,7 +98,7 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_CLMUL SIMD_4x32 clmul(const SIMD_4x32& H, const 
 inline SIMD_4x32 BOTAN_FN_ISA_CLMUL gcm_reduce(const SIMD_4x32& B0, const SIMD_4x32& B1) {
    SIMD_4x32 X0 = B1.shr<31>();
    SIMD_4x32 X1 = B1.shl<1>();
-   SIMD_4x32 X2 = B0.shr<31>();
+   const SIMD_4x32 X2 = B0.shr<31>();
    SIMD_4x32 X3 = B0.shl<1>();
 
    X3 |= X0.shift_elems_right<3>();
@@ -115,16 +115,11 @@ inline SIMD_4x32 BOTAN_FN_ISA_CLMUL gcm_reduce(const SIMD_4x32& B0, const SIMD_4
 }
 
 inline SIMD_4x32 BOTAN_FN_ISA_CLMUL gcm_multiply(const SIMD_4x32& H, const SIMD_4x32& x) {
-   SIMD_4x32 T0 = clmul<0x11>(H, x);
-   SIMD_4x32 T1 = clmul<0x10>(H, x);
-   SIMD_4x32 T2 = clmul<0x01>(H, x);
-   SIMD_4x32 T3 = clmul<0x00>(H, x);
+   const SIMD_4x32 T0 = clmul<0x11>(H, x);
+   const SIMD_4x32 T1 = clmul<0x10>(H, x) ^ clmul<0x01>(H, x);
+   const SIMD_4x32 T2 = clmul<0x00>(H, x);
 
-   T1 ^= T2;
-   T0 ^= T1.shift_elems_right<2>();
-   T3 ^= T1.shift_elems_left<2>();
-
-   return gcm_reduce(T0, T3);
+   return gcm_reduce(T0 ^ T1.shift_elems_right<2>(), T2 ^ T1.shift_elems_left<2>());
 }
 
 inline SIMD_4x32 BOTAN_FN_ISA_CLMUL gcm_multiply_x4(const SIMD_4x32& H1,

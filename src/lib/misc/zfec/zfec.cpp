@@ -102,7 +102,7 @@ const uint8_t* GF_MUL_TABLE(uint8_t y) {
          std::vector<uint8_t> m_table;
    };
 
-   static GF_Table table;
+   static const GF_Table table;
    return table.ptr(y);
 }
 

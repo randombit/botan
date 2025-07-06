@@ -468,8 +468,8 @@ SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 aes_schedule_round(SIMD_4x32 input1, SIMD_4x32 
 
    Bl ^= Bh;
 
-   SIMD_4x32 t5 = Bl ^ masked_shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
-   SIMD_4x32 t6 = Bh ^ masked_shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bl));
+   const SIMD_4x32 t5 = Bl ^ masked_shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bh));
+   const SIMD_4x32 t6 = Bh ^ masked_shuffle(k_inv1, t2 ^ shuffle(k_inv1, Bl));
 
    return smeared ^ masked_shuffle(sb1u, t5) ^ masked_shuffle(sb1t, t6);
 }

@@ -40,7 +40,7 @@ CmceGfMod determine_poly_f(Classic_McEliece_Parameter_Set param_set) {
 }
 
 Classic_McEliece_Polynomial_Ring determine_poly_ring(Classic_McEliece_Parameter_Set param_set) {
-   CmceGfMod poly_f = determine_poly_f(param_set);
+   const CmceGfMod poly_f = determine_poly_f(param_set);
 
    switch(param_set.code()) {
       case Classic_McEliece_Parameter_Set::ClassicMcEliece_348864:

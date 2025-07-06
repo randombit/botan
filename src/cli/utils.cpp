@@ -288,7 +288,7 @@ class Print_UUID final : public Command {
       std::string description() const override { return "Print a random UUID"; }
 
       void go() override {
-         Botan::UUID uuid(rng());
+         const Botan::UUID uuid(rng());
          output() << uuid.to_string() << "\n";
       }
 };

@@ -35,7 +35,7 @@ size_t tune_pbkdf2(MessageAuthenticationCode& prf,
 
    const size_t prf_sz = prf.output_length();
    BOTAN_ASSERT_NOMSG(prf_sz > 0);
-   secure_vector<uint8_t> U(prf_sz);
+   const secure_vector<uint8_t> U(prf_sz);
 
    const size_t trial_iterations = 2000;
 
@@ -80,7 +80,7 @@ size_t pbkdf2(MessageAuthenticationCode& prf,
       iterations = tune_pbkdf2(prf, out_len, msec);
    }
 
-   PBKDF2 pbkdf2(prf, iterations);
+   PBKDF2 const pbkdf2(prf, iterations);
 
    pbkdf2.derive_key(out, out_len, password.data(), password.size(), salt, salt_len);
 
@@ -141,7 +141,7 @@ size_t PKCS5_PBKDF2::pbkdf(uint8_t key[],
       iterations = tune_pbkdf2(*m_mac, key_len, msec);
    }
 
-   PBKDF2 pbkdf2(*m_mac, iterations);
+   PBKDF2 const pbkdf2(*m_mac, iterations);
 
    pbkdf2.derive_key(key, key_len, password.data(), password.size(), salt, salt_len);
 

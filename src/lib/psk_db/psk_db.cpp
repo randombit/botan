@@ -45,7 +45,7 @@ std::set<std::string> Encrypted_PSK_Database::list_names() const {
          const secure_vector<uint8_t> raw_name = base64_decode(enc_name);
          const secure_vector<uint8_t> name_bits = nist_key_unwrap_padded(raw_name.data(), raw_name.size(), *m_cipher);
 
-         std::string pt_name(cast_uint8_ptr_to_char(name_bits.data()), name_bits.size());
+         const std::string pt_name(cast_uint8_ptr_to_char(name_bits.data()), name_bits.size());
          names.insert(pt_name);
       } catch(Invalid_Authentication_Tag&) {}
    }

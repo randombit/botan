@@ -14,7 +14,7 @@
 namespace Botan {
 
 Classic_McEliece_Parameter_Set Classic_McEliece_Parameter_Set::from_string(std::string_view nm) {
-   Code code = [&] {
+   const Code code = [&] {
       if(nm == "ClassicMcEliece_348864" || nm == "348864") {
          return ClassicMcEliece_348864;
       }

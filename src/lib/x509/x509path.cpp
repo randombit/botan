@@ -44,7 +44,7 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
 
    const bool self_signed_ee_cert = (cert_path.size() == 1);
 
-   X509_Time validation_time(ref_time);
+   const X509_Time validation_time(ref_time);
 
    CertificatePathStatusCodes cert_status(cert_path.size());
 
@@ -487,7 +487,7 @@ CertificatePathStatusCodes PKIX::check_ocsp_online(const std::vector<X509_Certif
          }));
       } else {
          ocsp_response_futures.emplace_back(std::async(std::launch::async, [&]() -> std::optional<OCSP::Response> {
-            OCSP::Request req(issuer, BigInt::from_bytes(subject.serial_number()));
+            OCSP::Request const req(issuer, BigInt::from_bytes(subject.serial_number()));
 
             HTTP::Response http;
             try {
@@ -735,7 +735,7 @@ Certificate_Status_Code PKIX::build_all_certificate_paths(std::vector<std::vecto
       // found a deletion marker that guides the DFS, backtracing
       if(last == std::nullopt) {
          stack.pop_back();
-         std::string fprint = path_so_far.back().fingerprint("SHA-256");
+         const std::string fprint = path_so_far.back().fingerprint("SHA-256");
          certs_seen.erase(fprint);
          path_so_far.pop_back();
       }
@@ -779,7 +779,7 @@ Certificate_Status_Code PKIX::build_all_certificate_paths(std::vector<std::vecto
          }
 
          // search the supplemental certs
-         std::vector<X509_Certificate> misc_issuers = ee_extras.find_all_certs(issuer_dn, auth_key_id);
+         const std::vector<X509_Certificate> misc_issuers = ee_extras.find_all_certs(issuer_dn, auth_key_id);
 
          // if we could not find any issuers, the current path ends here
          if(trusted_issuers.empty() && misc_issuers.empty()) {
@@ -898,7 +898,7 @@ Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& e
    }
 
    std::vector<std::vector<X509_Certificate>> cert_paths;
-   Certificate_Status_Code path_building_result =
+   const Certificate_Status_Code path_building_result =
       PKIX::build_all_certificate_paths(cert_paths, trusted_roots, end_entity, end_entity_extra);
 
    // If we cannot successfully build a chain to a trusted self-signed root, stop now
@@ -911,7 +911,7 @@ Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& e
    for(auto cert_path : cert_paths) {
       CertificatePathStatusCodes status = PKIX::check_chain(cert_path, ref_time, hostname, usage, restrictions);
 
-      CertificatePathStatusCodes crl_status = PKIX::check_crl(cert_path, trusted_roots, ref_time);
+      const CertificatePathStatusCodes crl_status = PKIX::check_crl(cert_path, trusted_roots, ref_time);
 
       CertificatePathStatusCodes ocsp_status;
 

@@ -47,7 +47,7 @@ Certificate_12::Certificate_12(const std::vector<uint8_t>& buf, const Policy& po
 
    const uint8_t* certs = buf.data() + 3;
 
-   while(size_t remaining_bytes = buf.data() + buf.size() - certs) {
+   while(const size_t remaining_bytes = buf.data() + buf.size() - certs) {
       if(remaining_bytes < 3) {
          throw Decoding_Error("Certificate: Message malformed");
       }

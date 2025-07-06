@@ -26,7 +26,7 @@ std::vector<Test::Result> test_sphincsplus_address() {
    return {
       CHECK("default address",
             [&](Test::Result& result) {
-               Botan::Sphincs_Address a({0, 0, 0, 0, 0, 0, 0, 0});
+               const Botan::Sphincs_Address a({0, 0, 0, 0, 0, 0, 0, 0});
                result.test_is_eq("SHA-256(32*0x00)",
                                  sha256(a),
                                  Botan::hex_decode("66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"));

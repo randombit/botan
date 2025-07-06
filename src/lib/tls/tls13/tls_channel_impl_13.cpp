@@ -349,7 +349,7 @@ void Channel_Impl_13::send_record(Record_Type type, const std::vector<uint8_t>& 
 }
 
 void Channel_Impl_13::process_alert(const secure_vector<uint8_t>& record) {
-   Alert alert(record);
+   const Alert alert(record);
 
    if(is_close_notify_alert(alert)) {
       m_can_read = false;

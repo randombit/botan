@@ -43,7 +43,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
    const Kex_Algo kex_algo = state.ciphersuite().kex_method();
 
    if(kex_algo == Kex_Algo::PSK || kex_algo == Kex_Algo::ECDHE_PSK) {
-      std::string identity_hint = creds.psk_identity_hint("tls-server", hostname);
+      const std::string identity_hint = creds.psk_identity_hint("tls-server", hostname);
 
       append_tls_length_value(m_params, identity_hint, 2);
    }
@@ -139,7 +139,8 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
    if(state.ciphersuite().signature_used()) {
       BOTAN_ASSERT(signing_key, "Signing key was set");
 
-      std::pair<std::string, Signature_Format> format = state.choose_sig_format(*signing_key, m_scheme, false, policy);
+      const std::pair<std::string, Signature_Format> format =
+         state.choose_sig_format(*signing_key, m_scheme, false, policy);
 
       std::vector<uint8_t> buf = state.client_hello()->random();
 
@@ -222,7 +223,7 @@ bool Server_Key_Exchange::verify(const Public_Key& server_key,
                                  const Policy& policy) const {
    policy.check_peer_key_acceptable(server_key);
 
-   std::pair<std::string, Signature_Format> format =
+   const std::pair<std::string, Signature_Format> format =
       state.parse_sig_format(server_key, m_scheme, state.client_hello()->signature_schemes(), false, policy);
 
    std::vector<uint8_t> buf = state.client_hello()->random();

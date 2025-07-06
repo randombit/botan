@@ -159,7 +159,7 @@ namespace {
 
 inline void xor_copy(uint8_t buf[], uint8_t key_buf[], size_t len) {
    for(size_t i = 0; i != len; ++i) {
-      uint8_t k = key_buf[i];
+      const uint8_t k = key_buf[i];
       key_buf[i] = buf[i];
       buf[i] ^= k;
    }

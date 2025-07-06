@@ -57,7 +57,7 @@ class DilithiumMessageHash /* NOLINT(*-special-member-functions) */ {
 
       DilithiumMessageRepresentative final() {
          ensure_started();
-         scoped_cleanup clean([this]() { clear(); });
+         const scoped_cleanup clean([this]() { clear(); });
          return m_shake.output<DilithiumMessageRepresentative>(DilithiumConstants::MESSAGE_HASH_BYTES);
       }
 
@@ -189,7 +189,7 @@ class Dilithium_Symmetric_Primitives_Base {
 
       template <concepts::resizable_byte_buffer OutT, ranges::spanable_range... InTs>
       OutT H_256(size_t outbytes, const InTs&... ins) const {
-         scoped_cleanup clean([this]() { m_xof.clear(); });
+         const scoped_cleanup clean([this]() { m_xof.clear(); });
          (m_xof.update(ins), ...);
          return m_xof.output<OutT>(outbytes);
       }

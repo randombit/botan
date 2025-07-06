@@ -237,9 +237,9 @@ Test::Result test_certstor_sqlite3_find_all_certs_test(const std::vector<Certifi
          }
       }
 
-      Botan::X509_Certificate same_dn_1 =
+      const Botan::X509_Certificate same_dn_1 =
          Botan::X509_Certificate(Test::data_file("x509/bsi/common_14/common_14_sub_ca.ca.pem.crt"));
-      Botan::X509_Certificate same_dn_2 =
+      const Botan::X509_Certificate same_dn_2 =
          Botan::X509_Certificate(Test::data_file("x509/bsi/common_14/common_14_wrong_sub_ca.ca.pem.crt"));
 
       store.insert_cert(same_dn_1);
@@ -312,12 +312,12 @@ Test::Result test_certstor_load_allcert() {
    try {
       result.test_note("load certs from dir: " + test_dir_bundled);
       // Certificate_Store_In_Memory constructor loads every cert of every files of the dir.
-      Botan::Certificate_Store_In_Memory store(test_dir_bundled);
+      const Botan::Certificate_Store_In_Memory store(test_dir_bundled);
 
       // X509_Certificate constructor loads only the first certificate found in the file.
-      Botan::X509_Certificate root_cert(Test::data_file("x509/x509test/root.pem"));
-      Botan::X509_Certificate valid_cert(Test::data_file("x509/x509test/ValidCert.pem"));
-      std::vector<uint8_t> key_id;
+      const Botan::X509_Certificate root_cert(Test::data_file("x509/x509test/root.pem"));
+      const Botan::X509_Certificate valid_cert(Test::data_file("x509/x509test/ValidCert.pem"));
+      const std::vector<uint8_t> key_id;
       result.confirm("Root cert found", store.find_cert(root_cert.subject_dn(), key_id) != std::nullopt);
       result.confirm("ValidCert found", store.find_cert(valid_cert.subject_dn(), key_id) != std::nullopt);
       return result;
@@ -350,7 +350,7 @@ class Certstor_Tests final : public Test {
 
             const auto test_key = Test::data_file("x509/certstor/" + keypath);
             Botan::DataSource_Stream key_stream(test_key);
-            std::shared_ptr<Botan::Private_Key> private_key = Botan::PKCS8::load_key(key_stream);
+            const std::shared_ptr<Botan::Private_Key> private_key = Botan::PKCS8::load_key(key_stream);
 
             if(!private_key) {
                Test::Result result("Certificate Store");

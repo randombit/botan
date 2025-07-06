@@ -93,7 +93,7 @@ PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session,
                                        &priv_key_handle);
 
    this->reset_handle(priv_key_handle);
-   Object public_key(session, pub_key_handle);
+   const Object public_key(session, pub_key_handle);
 
    auto pt_bytes = public_key.get_attribute_value(AttributeType::EcPoint);
    m_public_key = decode_public_point(m_domain_params, pt_bytes);

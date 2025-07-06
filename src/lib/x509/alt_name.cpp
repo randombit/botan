@@ -82,12 +82,12 @@ void AlternativeName::encode_into(DER_Encoder& der) const {
    }
 
    for(const auto& name : m_email) {
-      ASN1_String str(name, ASN1_Type::Ia5String);
+      const ASN1_String str(name, ASN1_Type::Ia5String);
       der.add_object(ASN1_Type(1), ASN1_Class::ContextSpecific, str.value());
    }
 
    for(const auto& name : m_dns) {
-      ASN1_String str(name, ASN1_Type::Ia5String);
+      const ASN1_String str(name, ASN1_Type::Ia5String);
       der.add_object(ASN1_Type(2), ASN1_Class::ContextSpecific, str.value());
    }
 
@@ -96,11 +96,11 @@ void AlternativeName::encode_into(DER_Encoder& der) const {
    }
 
    for(const auto& name : m_uri) {
-      ASN1_String str(name, ASN1_Type::Ia5String);
+      const ASN1_String str(name, ASN1_Type::Ia5String);
       der.add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, str.value());
    }
 
-   for(uint32_t ip : m_ipv4_addr) {
+   for(const uint32_t ip : m_ipv4_addr) {
       auto ip_buf = store_be(ip);
       // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
       der.add_object(ASN1_Type(7), ASN1_Class::ContextSpecific, ip_buf.data(), 4);
@@ -113,7 +113,7 @@ void AlternativeName::decode_from(BER_Decoder& source) {
    BER_Decoder names = source.start_sequence();
 
    while(names.more_items()) {
-      BER_Object obj = names.get_next_object();
+      const BER_Object obj = names.get_next_object();
 
       if(obj.is_a(0, ASN1_Class::ExplicitContextSpecific)) {
          BER_Decoder othername(obj);
@@ -121,7 +121,7 @@ void AlternativeName::decode_from(BER_Decoder& source) {
          OID oid;
          othername.decode(oid);
          if(othername.more_items()) {
-            BER_Object othername_value_outer = othername.get_next_object();
+            const BER_Object othername_value_outer = othername.get_next_object();
             othername.verify_end();
 
             if(!othername_value_outer.is_a(0, ASN1_Class::ExplicitContextSpecific)) {
@@ -130,7 +130,7 @@ void AlternativeName::decode_from(BER_Decoder& source) {
 
             BER_Decoder othername_value_inner(othername_value_outer);
 
-            BER_Object value = othername_value_inner.get_next_object();
+            const BER_Object value = othername_value_inner.get_next_object();
             othername_value_inner.verify_end();
 
             if(ASN1_String::is_string_type(value.type()) && value.get_class() == ASN1_Class::Universal) {

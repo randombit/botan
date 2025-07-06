@@ -117,14 +117,14 @@ constexpr void unpoison(const T& p) {
 template <ranges::spanable_range R>
    requires std::is_trivially_copyable_v<std::ranges::range_value_t<R>> && (!custom_poisonable<R>)
 constexpr void poison(const R& r) {
-   std::span s{r};
+   const std::span s{r};
    poison(s.data(), s.size());
 }
 
 template <ranges::spanable_range R>
    requires std::is_trivially_copyable_v<std::ranges::range_value_t<R>> && (!custom_unpoisonable<R>)
 constexpr void unpoison(const R& r) {
-   std::span s{r};
+   const std::span s{r};
    unpoison(s.data(), s.size());
 }
 

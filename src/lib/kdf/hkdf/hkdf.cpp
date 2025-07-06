@@ -28,8 +28,8 @@ void HKDF::perform_kdf(std::span<uint8_t> key,
                        std::span<const uint8_t> secret,
                        std::span<const uint8_t> salt,
                        std::span<const uint8_t> label) const {
-   HKDF_Extract extract(m_prf->new_object());
-   HKDF_Expand expand(m_prf->new_object());
+   const HKDF_Extract extract(m_prf->new_object());
+   const HKDF_Expand expand(m_prf->new_object());
    secure_vector<uint8_t> prk(m_prf->output_length());
 
    extract.derive_key(prk, secret, salt, {});
@@ -124,7 +124,7 @@ secure_vector<uint8_t> hkdf_expand_label(std::string_view hash_fn,
    BOTAN_ARG_CHECK(label.size() <= 0xFF, "HKDF-Expand-Label label too long");
    BOTAN_ARG_CHECK(hash_val.size() <= 0xFF, "HKDF-Expand-Label hash too long");
 
-   HKDF_Expand hkdf(MessageAuthenticationCode::create_or_throw(fmt("HMAC({})", hash_fn)));
+   const HKDF_Expand hkdf(MessageAuthenticationCode::create_or_throw(fmt("HMAC({})", hash_fn)));
 
    const auto prefix = concat<std::vector<uint8_t>>(store_be(static_cast<uint16_t>(length)),
                                                     store_be(static_cast<uint8_t>(label.size())),

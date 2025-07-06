@@ -75,7 +75,7 @@ struct BitPackingTrait final {
       constexpr static size_t bits_per_pack = [] {
          // Ensure that the bit-packing is byte-aligned and scale it
          // to utilize the collector's bit-width as much as possible.
-         size_t smallest_aligned_pack = std::lcm(bits_per_coeff, size_t(8));
+         const size_t smallest_aligned_pack = std::lcm(bits_per_coeff, size_t(8));
          return (smallest_aligned_pack < bits_in_collector)
                    ? (bits_in_collector / smallest_aligned_pack) * smallest_aligned_pack
                    : smallest_aligned_pack;

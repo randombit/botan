@@ -60,7 +60,7 @@ inline void gamma(uint32_t& A0, uint32_t& A1, uint32_t& A2, uint32_t& A3) {
    A1 ^= ~(A2 | A3);
    A0 ^= A2 & A1;
 
-   uint32_t T = A3;
+   const uint32_t T = A3;
    A3 = A0;
    A0 = T;
 

@@ -212,7 +212,7 @@ constexpr auto wrap_strong_type_or_enum(T t) {
  */
 template <std::endian endianness, std::unsigned_integral OutT, ranges::contiguous_range<uint8_t> InR>
 inline constexpr OutT fallback_load_any(const InR& in_range) {
-   std::span in{in_range};
+   const std::span in{in_range};
    // clang-format off
    if constexpr(endianness == std::endian::big) {
       return [&]<size_t... i>(std::index_sequence<i...>) {
@@ -286,7 +286,7 @@ inline constexpr WrappedOutT load_any(InR&& in_range) {
       if(std::is_constant_evaluated()) /* TODO: C++23: if consteval {} */ {
          return fallback_load_any<endianness, OutT>(std::forward<InR>(in_range));
       } else {
-         std::span in{in_range};
+         const std::span in{in_range};
          if constexpr(sizeof(OutT) == 1) {
             return static_cast<OutT>(in[0]);
          } else if constexpr(endianness == std::endian::native) {
@@ -313,7 +313,7 @@ template <std::endian endianness, unsigned_integralish WrappedOutT, ranges::cont
 inline constexpr WrappedOutT load_any(const InR& in_range) {
    using OutT = detail::wrapped_type<WrappedOutT>;
    ranges::assert_exact_byte_length<sizeof(OutT)>(in_range);
-   std::span<const uint8_t, sizeof(OutT)> ins{in_range};
+   const std::span<const uint8_t, sizeof(OutT)> ins{in_range};
    if constexpr(endianness == std::endian::big) {
       return wrap_strong_type<WrappedOutT>(OutT::load_be(ins));
    } else {
@@ -526,7 +526,7 @@ inline constexpr void store_any(WrappedInT wrapped_in, OutR&& out_range) {
    const auto in = detail::unwrap_strong_type_or_enum(wrapped_in);
    using InT = decltype(in);
    ranges::assert_exact_byte_length<sizeof(in)>(out_range);
-   std::span out{out_range};
+   const std::span out{out_range};
 
    // At compile time we cannot use `typecast_copy` as it uses `std::memcpy`
    // internally to copy ranges on a byte-by-byte basis, which is not allowed
@@ -560,7 +560,7 @@ inline constexpr void store_any(WrappedInT wrapped_in, const OutR& out_range) {
    const auto in = detail::unwrap_strong_type_or_enum(wrapped_in);
    using InT = decltype(in);
    ranges::assert_exact_byte_length<sizeof(in)>(out_range);
-   std::span<uint8_t, sizeof(InT)> outs{out_range};
+   const std::span<uint8_t, sizeof(InT)> outs{out_range};
    if constexpr(endianness == std::endian::big) {
       in.store_be(outs);
    } else {

@@ -51,21 +51,22 @@ class TLS_Data_Reader final {
 
       uint32_t get_uint32_t() {
          assert_at_least(4);
-         uint32_t result = make_uint32(m_buf[m_offset], m_buf[m_offset + 1], m_buf[m_offset + 2], m_buf[m_offset + 3]);
+         const uint32_t result =
+            make_uint32(m_buf[m_offset], m_buf[m_offset + 1], m_buf[m_offset + 2], m_buf[m_offset + 3]);
          m_offset += 4;
          return result;
       }
 
       uint32_t get_uint24_t() {
          assert_at_least(3);
-         uint32_t result = make_uint32(0, m_buf[m_offset], m_buf[m_offset + 1], m_buf[m_offset + 2]);
+         const uint32_t result = make_uint32(0, m_buf[m_offset], m_buf[m_offset + 1], m_buf[m_offset + 2]);
          m_offset += 3;
          return result;
       }
 
       uint16_t get_uint16_t() {
          assert_at_least(2);
-         uint16_t result = make_uint16(m_buf[m_offset], m_buf[m_offset + 1]);
+         const uint16_t result = make_uint16(m_buf[m_offset], m_buf[m_offset + 1]);
          m_offset += 2;
          return result;
       }
@@ -77,7 +78,7 @@ class TLS_Data_Reader final {
 
       uint8_t get_byte() {
          assert_at_least(1);
-         uint8_t result = m_buf[m_offset];
+         const uint8_t result = m_buf[m_offset];
          m_offset += 1;
          return result;
       }

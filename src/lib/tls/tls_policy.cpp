@@ -27,7 +27,7 @@ bool Policy::allow_ssl_key_log_file() const {
 std::vector<Signature_Scheme> Policy::allowed_signature_schemes() const {
    std::vector<Signature_Scheme> schemes;
 
-   for(Signature_Scheme scheme : Signature_Scheme::all_available_schemes()) {
+   for(const Signature_Scheme scheme : Signature_Scheme::all_available_schemes()) {
       const bool sig_allowed = allowed_signature_method(scheme.algorithm_name());
       const bool hash_allowed = allowed_signature_hash(scheme.hash_function_name());
 
@@ -608,7 +608,7 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version) const {
       throw Invalid_State("Policy does not allow any available cipher suite");
    }
 
-   Ciphersuite_Preference_Ordering order(ciphers, macs, kex, sigs);
+   const Ciphersuite_Preference_Ordering order(ciphers, macs, kex, sigs);
    std::sort(ciphersuites.begin(), ciphersuites.end(), order);
 
    std::vector<uint16_t> ciphersuite_codes;

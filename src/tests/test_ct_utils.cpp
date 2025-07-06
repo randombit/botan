@@ -192,7 +192,7 @@ std::vector<Test::Result> test_higher_level_ct_poison() {
    return {
       CHECK("custom poisonable object",
             [](Test::Result& result) {
-               Poisonable p;
+               Poisonable const p;
                result.confirm("not poisoned", p.poisoned == false);
                Botan::CT::poison(p);
                result.confirm("poisoned", p.poisoned == true);
@@ -204,9 +204,9 @@ std::vector<Test::Result> test_higher_level_ct_poison() {
             [](Test::Result& result) {
                // template is useless, but p1, p2, and p3 are different types and we
                // want to make sure that poison_all/unpoison_all can deal with that.
-               Poisonable<int> p1;
-               Poisonable<double> p2;
-               Poisonable<std::string> p3;
+               Poisonable<int> const p1;
+               Poisonable<double> const p2;
+               Poisonable<std::string> const p3;
 
                result.confirm("all not poisoned", !p1.poisoned && !p2.poisoned && !p3.poisoned);
                Botan::CT::poison_all(p1, p2, p3);
@@ -219,9 +219,9 @@ std::vector<Test::Result> test_higher_level_ct_poison() {
             [](Test::Result& result) {
                // template is useless, but p1, p2, and p3 are different types and we
                // want to make sure that poison_all/unpoison_all can deal with that.
-               Poisonable<int> p1;
-               Poisonable<double> p2;
-               Poisonable<std::string> p3;
+               Poisonable<int> const p1;
+               Poisonable<double> const p2;
+               Poisonable<std::string> const p3;
 
                result.confirm("not poisoned", !p1.poisoned && !p2.poisoned, !p3.poisoned);
 
@@ -254,7 +254,7 @@ std::vector<Test::Result> test_higher_level_ct_poison() {
                Poisonable p_poisoned =
                   Botan::CT::driveby_poison(std::move(p));  // NOLINT(hicpp-move-const-arg,performance-move-const-arg)
                result.confirm("poisoned", p_poisoned.poisoned == true);
-               Poisonable p_unpoisoned = Botan::CT::driveby_unpoison(
+               Poisonable const p_unpoisoned = Botan::CT::driveby_unpoison(
                   std::move(p_poisoned));  // NOLINT(hicpp-move-const-arg,performance-move-const-arg)
                result.confirm("unpoisoned", p_unpoisoned.poisoned == false);
             }),

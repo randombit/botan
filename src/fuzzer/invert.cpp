@@ -77,7 +77,7 @@ void fuzz(std::span<const uint8_t> in) {
    }
 
    const Botan::BigInt x = Botan::BigInt::from_bytes(in.subspan(0, in.size() / 2));
-   Botan::BigInt mod = Botan::BigInt::from_bytes(in.subspan(in.size() / 2, in.size() - in.size() / 2));
+   const Botan::BigInt mod = Botan::BigInt::from_bytes(in.subspan(in.size() / 2, in.size() - in.size() / 2));
 
    if(mod < 2) {
       return;

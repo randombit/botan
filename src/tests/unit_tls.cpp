@@ -207,8 +207,8 @@ std::shared_ptr<Credentials_Manager_Test> create_creds(Botan::RandomNumberGenera
    const Botan::PKCS10_Request rsa_req = Botan::X509::create_cert_req(server_opts, *rsa_srv_key, "SHA-256", rng);
    const Botan::PKCS10_Request ecdsa_req = Botan::X509::create_cert_req(server_opts, *ecdsa_srv_key, "SHA-256", rng);
 
-   Botan::X509_CA rsa_ca(rsa_ca_cert, *rsa_ca_key, "SHA-256", rng);
-   Botan::X509_CA ecdsa_ca(ecdsa_ca_cert, *ecdsa_ca_key, "SHA-256", rng);
+   const Botan::X509_CA rsa_ca(rsa_ca_cert, *rsa_ca_key, "SHA-256", rng);
+   const Botan::X509_CA ecdsa_ca(ecdsa_ca_cert, *ecdsa_ca_key, "SHA-256", rng);
 
    typedef std::chrono::duration<int, std::ratio<31556926>> years;
    auto now = std::chrono::system_clock::now();
@@ -219,8 +219,8 @@ std::shared_ptr<Credentials_Manager_Test> create_creds(Botan::RandomNumberGenera
    const Botan::X509_Certificate rsa_srv_cert = rsa_ca.sign_request(rsa_req, rng, start_time, end_time);
    const Botan::X509_Certificate ecdsa_srv_cert = ecdsa_ca.sign_request(ecdsa_req, rng, start_time, end_time);
 
-   Botan::X509_CRL rsa_crl = rsa_ca.new_crl(rng);
-   Botan::X509_CRL ecdsa_crl = ecdsa_ca.new_crl(rng);
+   const Botan::X509_CRL rsa_crl = rsa_ca.new_crl(rng);
+   const Botan::X509_CRL ecdsa_crl = ecdsa_ca.new_crl(rng);
 
    return std::make_shared<Credentials_Manager_Test>(with_client_certs,
                                                      rsa_srv_cert,
@@ -254,7 +254,7 @@ class TLS_Handshake_Test final {
          m_server_cb = std::make_shared<Test_Callbacks>(m_results, offer_version, m_s2c, m_server_recv);
          m_client_cb = std::make_shared<Test_Callbacks>(m_results, offer_version, m_c2s, m_client_recv);
 
-         bool is_dtls = offer_version.is_datagram_protocol();
+         const bool is_dtls = offer_version.is_datagram_protocol();
 
          m_server =
             std::make_unique<Botan::TLS::Server>(m_server_cb, server_sessions, m_creds, server_policy, m_rng, is_dtls);
@@ -446,8 +446,8 @@ class TLS_Handshake_Test final {
                   std::get<Botan::TLS::Group_Params>(group).wire_code() == 0xFEE1) {
                   const auto ec_group = Botan::EC_Group::from_name("numsp256d1");
                   const auto ec_point = Botan::EC_AffinePoint(ec_group, public_value);
-                  Botan::ECDH_PublicKey peer_key(ec_group, ec_point);
-                  Botan::PK_Key_Agreement ka(private_key, rng, "Raw");
+                  const Botan::ECDH_PublicKey peer_key(ec_group, ec_point);
+                  const Botan::PK_Key_Agreement ka(private_key, rng, "Raw");
                   return ka.derive_key(0, peer_key.public_value()).bits_of();
                }
 
@@ -579,7 +579,7 @@ void TLS_Handshake_Test::go() {
          std::swap(m_c2s, input);
 
          try {
-            size_t needed = m_server->received_data(input.data(), input.size());
+            const size_t needed = m_server->received_data(input.data(), input.size());
             m_results.test_eq("full packet received", needed, 0);
          } catch(...) { /* ignore exceptions */
          }
@@ -592,7 +592,7 @@ void TLS_Handshake_Test::go() {
          std::swap(m_s2c, input);
 
          try {
-            size_t needed = client->received_data(input.data(), input.size());
+            const size_t needed = client->received_data(input.data(), input.size());
             m_results.test_eq("full packet received", needed, 0);
          } catch(...) { /* ignore exceptions */
          }
@@ -613,11 +613,11 @@ void TLS_Handshake_Test::go() {
       }
 
       if(m_server->is_active()) {
-         std::vector<Botan::X509_Certificate> certs = m_server->peer_cert_chain();
+         const std::vector<Botan::X509_Certificate> certs = m_server->peer_cert_chain();
          if(m_client_auth) {
             m_results.test_eq("got client certs", certs.size(), 2);
 
-            std::vector<Botan::X509_DN> acceptable_CAs = m_creds->get_acceptable_cas();
+            const std::vector<Botan::X509_DN> acceptable_CAs = m_creds->get_acceptable_cas();
 
             m_results.test_eq("client got CA list", acceptable_CAs.size(), 2);  // RSA + ECDSA
 
@@ -630,8 +630,8 @@ void TLS_Handshake_Test::go() {
       }
 
       if(!m_server_recv.empty() && !m_client_recv.empty()) {
-         Botan::SymmetricKey client_key = client->key_material_export("label", "context", 32);
-         Botan::SymmetricKey server_key = m_server->key_material_export("label", "context", 32);
+         const Botan::SymmetricKey client_key = client->key_material_export("label", "context", 32);
+         const Botan::SymmetricKey server_key = m_server->key_material_export("label", "context", 32);
 
          m_results.test_eq("TLS key material export", client_key.bits_of(), server_key.bits_of());
 
@@ -730,8 +730,8 @@ class TLS_Unit_Tests final : public Test {
             policy->set("signature_methods", "IMPLICIT");
          }
 
-         std::vector<Botan::TLS::Protocol_Version> versions = {Botan::TLS::Protocol_Version::TLS_V12,
-                                                               Botan::TLS::Protocol_Version::DTLS_V12};
+         const std::vector<Botan::TLS::Protocol_Version> versions = {Botan::TLS::Protocol_Version::TLS_V12,
+                                                                     Botan::TLS::Protocol_Version::DTLS_V12};
 
          return test_with_policy(
             test_descr, results, client_ses, server_ses, creds, versions, policy, rng, client_auth);
@@ -747,7 +747,7 @@ class TLS_Unit_Tests final : public Test {
                                        const std::string& cipher_policy,
                                        const std::string& mac_policy = "AEAD",
                                        bool client_auth = false) {
-         std::map<std::string, std::string> no_extra_policies;
+         const std::map<std::string, std::string> no_extra_policies;
          return test_modern_versions(test_descr,
                                      results,
                                      client_ses,
@@ -787,8 +787,8 @@ class TLS_Unit_Tests final : public Test {
             policy->set(kv.first, kv.second);
          }
 
-         std::vector<Botan::TLS::Protocol_Version> versions = {Botan::TLS::Protocol_Version::TLS_V12,
-                                                               Botan::TLS::Protocol_Version::DTLS_V12};
+         const std::vector<Botan::TLS::Protocol_Version> versions = {Botan::TLS::Protocol_Version::TLS_V12,
+                                                                     Botan::TLS::Protocol_Version::DTLS_V12};
 
          return test_with_policy(
             test_descr, results, client_ses, server_ses, creds, versions, policy, rng, client_auth);
@@ -888,7 +888,7 @@ class TLS_Unit_Tests final : public Test {
          auto creds = create_creds(*rng);
 
    #if defined(BOTAN_HAS_TLS_CBC)
-         for(std::string etm_setting : {"false", "true"}) {
+         for(const std::string etm_setting : {"false", "true"}) {
             test_all_versions("AES-128 RSA",
                               results,
                               client_ses,
@@ -1105,7 +1105,7 @@ class TLS_Unit_Tests final : public Test {
             Botan::OID::register_oid(oid, "numsp256d1");
 
             // Creating this object implicitly registers the curve for future use ...
-            Botan::EC_Group reg_numsp256d1(oid, p, a, b, g_x, g_y, order);
+            const Botan::EC_Group reg_numsp256d1(oid, p, a, b, g_x, g_y, order);
 
             test_modern_versions("AES-256/GCM numsp256d1",
                                  results,
@@ -1223,7 +1223,7 @@ class DTLS_Reconnection_Test : public Test {
                                     Botan::TLS::Protocol_Version::latest_dtls_version());
 
          bool c1_to_server_sent = false;
-         bool server_to_c1_sent = false;
+         const bool server_to_c1_sent = false;
 
          const std::vector<uint8_t> c1_to_server_magic(16, 0xC1);
          const std::vector<uint8_t> server_to_c1_magic(16, 0x42);
@@ -1285,7 +1285,7 @@ class DTLS_Reconnection_Test : public Test {
                                     Botan::TLS::Protocol_Version::latest_dtls_version());
 
          bool c2_to_server_sent = false;
-         bool server_to_c2_sent = false;
+         const bool server_to_c2_sent = false;
 
          const std::vector<uint8_t> c2_to_server_magic(16, 0xC2);
          const std::vector<uint8_t> server_to_c2_magic(16, 0x66);

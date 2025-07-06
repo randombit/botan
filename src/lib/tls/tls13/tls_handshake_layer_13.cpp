@@ -64,7 +64,7 @@ std::optional<Msg_Type> parse_message(TLS::TLS_Data_Reader& reader,
       return std::nullopt;
    }
 
-   Handshake_Type type = handshake_type_from_byte<Msg_Type>(reader.get_byte());
+   const Handshake_Type type = handshake_type_from_byte<Msg_Type>(reader.get_byte());
 
    // make sure we have received the full message
    const size_t msg_len = reader.get_uint24_t();

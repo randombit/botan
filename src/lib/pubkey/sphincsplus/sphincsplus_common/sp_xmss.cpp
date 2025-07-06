@@ -43,7 +43,7 @@ SphincsTreeNode xmss_sign_and_pkgen(StrongSpan<SphincsXmssSignature> out_sig,
 
    pk_addr.set_type(Sphincs_Address_Type::WotsPublicKeyCompression);
 
-   GenerateLeafFunction xmss_gen_leaf = [&](StrongSpan<SphincsTreeNode> out_root, TreeNodeIndex address_index) {
+   const GenerateLeafFunction xmss_gen_leaf = [&](StrongSpan<SphincsTreeNode> out_root, TreeNodeIndex address_index) {
       wots_sign_and_pkgen(
          wots_bytes_s, out_root, secret_seed, address_index, idx_leaf, steps, leaf_addr, pk_addr, params, hashes);
    };
@@ -62,7 +62,7 @@ SphincsTreeNode xmss_gen_root(const Sphincs_Parameters& params,
    // code to have just one treehash routine that computes both root and path
    // in one function.
    SphincsXmssSignature dummy_sig(params.xmss_tree_height() * params.n() + params.wots_bytes());
-   SphincsTreeNode dummy_root(params.n());
+   const SphincsTreeNode dummy_root(params.n());
 
    Sphincs_Address top_tree_addr(Sphincs_Address_Type::HashTree);
    Sphincs_Address wots_addr(Sphincs_Address_Type::WotsPublicKeyCompression);

@@ -55,8 +55,8 @@ std::vector<Test::Result> finished_message_handling() {
                Botan::TLS::Finished_13 client_finished(client_finished_message);
 
                [[maybe_unused]]  // just making sure that the return type of .sending is correct
-               std::reference_wrapper<Botan::TLS::Finished_13>
-                  client_fin = state.sending(std::move(client_finished));
+               std::reference_wrapper<Botan::TLS::Finished_13> const client_fin =
+                  state.sending(std::move(client_finished));
                result.test_throws("not stored as server Finished", [&] { state.server_finished(); });
                result.test_eq(
                   "correct client Finished stored", state.client_finished().serialize(), client_finished_message);
@@ -84,8 +84,8 @@ std::vector<Test::Result> handshake_message_filtering() {
                   std::get<Botan::TLS::Client_Hello_13>(Botan::TLS::Client_Hello_13::parse(client_hello_message));
 
                [[maybe_unused]]  // just making sure that the return type of .sending is correct
-               std::reference_wrapper<Botan::TLS::Client_Hello_13>
-                  filtered = state.sending(std::move(client_hello));
+               std::reference_wrapper<Botan::TLS::Client_Hello_13> const filtered =
+                  state.sending(std::move(client_hello));
                result.test_eq("correct client hello stored", state.client_hello().serialize(), client_hello_message);
 
                result.template test_throws<Botan::TLS::TLS_Exception>(

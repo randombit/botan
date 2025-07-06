@@ -201,12 +201,12 @@ void Twofish::key_schedule(std::span<const uint8_t> key) {
       * Do one column of the RS matrix multiplcation
       */
       if(key[i] != 0) {
-         uint8_t X = POLY_TO_EXP[key[i] - 1];
+         const uint8_t X = POLY_TO_EXP[key[i] - 1];
 
-         uint8_t RS1 = RS[(4 * i) % 32];
-         uint8_t RS2 = RS[(4 * i + 1) % 32];
-         uint8_t RS3 = RS[(4 * i + 2) % 32];
-         uint8_t RS4 = RS[(4 * i + 3) % 32];
+         const uint8_t RS1 = RS[(4 * i) % 32];
+         const uint8_t RS2 = RS[(4 * i + 1) % 32];
+         const uint8_t RS3 = RS[(4 * i + 2) % 32];
+         const uint8_t RS4 = RS[(4 * i + 3) % 32];
 
          S[4 * (i / 8)] ^= EXP_TO_POLY[(X + POLY_TO_EXP[RS1 - 1]) % 255];
          S[4 * (i / 8) + 1] ^= EXP_TO_POLY[(X + POLY_TO_EXP[RS2 - 1]) % 255];

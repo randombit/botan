@@ -10,6 +10,6 @@
 
 void fuzz(std::span<const uint8_t> in) {
    try {
-      Botan::OCSP::Response response(in.data(), in.size());
+      const Botan::OCSP::Response response(in.data(), in.size());
    } catch(Botan::Exception& e) {}
 }

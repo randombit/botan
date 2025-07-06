@@ -84,7 +84,7 @@ int main() {
    auto policy = std::make_shared<Botan::TLS::Strict_Policy>();
 
    // accept tls connection from client
-   Botan::TLS::Server server(callbacks, session_mgr, creds, policy, rng);
+   const Botan::TLS::Server server(callbacks, session_mgr, creds, policy, rng);
 
    // read data received from the tls client, e.g., using BSD sockets or boost asio
    // and pass it to server.received_data().

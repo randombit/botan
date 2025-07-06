@@ -39,7 +39,7 @@ struct CA_Creation_Result {
 Botan::X509_Time from_date(const int y, const int m, const int d) {
    const size_t this_year = Botan::calendar_point(std::chrono::system_clock::now()).year();
 
-   Botan::calendar_point t(static_cast<uint32_t>(this_year + y), m, d, 0, 0, 0);
+   const Botan::calendar_point t(static_cast<uint32_t>(this_year + y), m, d, 0, 0, 0);
    return Botan::X509_Time(t.to_std_timepoint());
 }
 
@@ -135,9 +135,9 @@ std::pair<Botan::X509_Certificate, Botan::X509_CA> make_and_sign_ca(
    Botan::X509_Cert_Options opts = ca_opts();
    opts.extensions.add(std::move(ext));
 
-   std::unique_ptr<Botan::Private_Key> key = generate_key(sig_algo, *rng);
+   const std::unique_ptr<Botan::Private_Key> key = generate_key(sig_algo, *rng);
 
-   Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *key, hash_fn, *rng);
+   const Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *key, hash_fn, *rng);
    Botan::X509_Certificate cert = parent_ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
    Botan::X509_CA ca(cert, *key, hash_fn, padding_method, *rng);
 
@@ -154,7 +154,7 @@ Test::Result test_x509_ip_addr_blocks_extension_decode() {
    result.start_timer();
    const std::string filename("IPAddrBlocksAll.pem");
 
-   Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
+   const Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
 
    using Botan::Cert_Extension::IPAddressBlocks;
 
@@ -211,7 +211,7 @@ Test::Result test_x509_as_blocks_extension_decode() {
 
    {
       const std::string filename("ASNumberCert.pem");
-      Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
+      const Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
 
       auto as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
 
@@ -231,7 +231,7 @@ Test::Result test_x509_as_blocks_extension_decode() {
    }
    {
       const std::string filename("ASNumberOnly.pem");
-      Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
+      const Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
 
       auto as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
 
@@ -247,7 +247,7 @@ Test::Result test_x509_as_blocks_extension_decode() {
    }
    {
       const std::string filename("ASRdiOnly.pem");
-      Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
+      const Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
 
       auto as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
 
@@ -263,7 +263,7 @@ Test::Result test_x509_as_blocks_extension_decode() {
    }
    {
       const std::string filename("ASNumberInherit.pem");
-      Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
+      const Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
 
       auto as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
 
@@ -295,12 +295,12 @@ Test::Result test_x509_ip_addr_blocks_extension_encode() {
    auto [ca_cert, ca, sub_key, sig_algo, hash_fn] = make_ca(rng);
 
    for(size_t i = 0; i < 64; i++) {
-      bool push_ipv4_ranges = i & 1;
-      bool push_ipv6_ranges = i >> 1 & 1;
-      bool inherit_ipv4 = i >> 2 & 1;
-      bool inherit_ipv6 = i >> 3 & 1;
-      bool push_ipv4_family = i >> 4 & 1;
-      bool push_ipv6_family = i >> 5 & 1;
+      const bool push_ipv4_ranges = i & 1;
+      const bool push_ipv6_ranges = i >> 1 & 1;
+      const bool inherit_ipv4 = i >> 2 & 1;
+      const bool inherit_ipv6 = i >> 3 & 1;
+      const bool push_ipv4_family = i >> 4 & 1;
+      const bool push_ipv6_family = i >> 5 & 1;
 
       Botan::X509_Cert_Options opts = req_opts(sig_algo);
 
@@ -390,8 +390,8 @@ Test::Result test_x509_ip_addr_blocks_extension_encode() {
 
       opts.extensions.add(std::move(blocks));
 
-      Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
-      Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+      const Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
+      const Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
       {
          auto ip_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
          result.confirm("cert has IPAddrBlocks extension", ip_blocks != nullptr, true);
@@ -473,8 +473,8 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_edge_cases() {
 
    for(size_t i = 0; i < edge_values.size(); i++) {
       for(size_t j = 0; j < 4; j++) {
-         bool modify_min = j & 1;
-         bool modify_max = (j >> 1) & 1;
+         const bool modify_min = j & 1;
+         const bool modify_max = (j >> 1) & 1;
 
          for(size_t k = 0; k < 18; k++) {
             if(!modify_min && !modify_max && (k > 0 || i > 0)) {
@@ -514,8 +514,9 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_edge_cases() {
 
             opts.extensions.add(std::move(blocks));
 
-            Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
-            Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+            const Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
+            const Botan::X509_Certificate cert =
+               ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
             {
                auto ip_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
                result.confirm("cert has IPAddrBlocks extension", ip_blocks != nullptr, true);
@@ -547,7 +548,7 @@ Test::Result test_x509_ip_addr_blocks_range_merge() {
    auto [ca_cert, ca, sub_key, sig_algo, hash_fn] = make_ca(rng);
    Botan::X509_Cert_Options opts = req_opts(sig_algo);
 
-   std::vector<std::vector<std::vector<uint8_t>>> addresses = {
+   const std::vector<std::vector<std::vector<uint8_t>>> addresses = {
       {{11, 0, 0, 0}, {{11, 0, 0, 0}}},
       {{123, 123, 123, 123}, {123, 123, 123, 123}},
       {{10, 4, 5, 9}, {{10, 255, 0, 0}}},
@@ -577,8 +578,8 @@ Test::Result test_x509_ip_addr_blocks_range_merge() {
 
    opts.extensions.add(std::move(blocks));
 
-   Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
-   Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+   const Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
+   const Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
    {
       auto ip_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
       result.confirm("cert has IPAddrBlocks extension", ip_blocks != nullptr, true);
@@ -621,20 +622,20 @@ Test::Result test_x509_ip_addr_blocks_family_merge() {
    IPAddressBlocks::IPAddressChoice<IPv4> v4_choice_dupl({{{{v4_addr_1}, {v4_addr_1}}}});
    result.confirm(
       "IPAddressChoice v4 merges ranges already in constructor", v4_choice_dupl.ranges().value().size() == 1, true);
-   IPAddressBlocks::IPAddressFamily v4_fam_dupl(v4_choice_dupl, 0);
+   const IPAddressBlocks::IPAddressFamily v4_fam_dupl(v4_choice_dupl, 0);
 
    uint8_t v6_bytes_1[16] = {123, 123, 123, 123, 123, 123, 123, 123, 123, 123, 123, 123, 123, 123, 123, 123};
    IPAddressBlocks::IPAddress<IPv6> v6_addr_1(v6_bytes_1);
    IPAddressBlocks::IPAddressChoice<IPv6> v6_choice_dupl({{{{v6_addr_1}, {v6_addr_1}}}});
    result.confirm(
       "IPAddressChoice v6 merges already in constructor", v6_choice_dupl.ranges().value().size() == 1, true);
-   IPAddressBlocks::IPAddressFamily v6_fam_dupl(v6_choice_dupl, 0);
+   const IPAddressBlocks::IPAddressFamily v6_fam_dupl(v6_choice_dupl, 0);
 
-   IPAddressBlocks::IPAddressFamily v4_empty_fam(v4_empty_choice);
-   IPAddressBlocks::IPAddressFamily v6_empty_fam(v6_empty_choice);
+   const IPAddressBlocks::IPAddressFamily v4_empty_fam(v4_empty_choice);
+   const IPAddressBlocks::IPAddressFamily v6_empty_fam(v6_empty_choice);
 
-   IPAddressBlocks::IPAddressFamily v4_empty_fam_safi(v4_empty_choice, 2);
-   IPAddressBlocks::IPAddressFamily v6_empty_fam_safi(v6_empty_choice, 2);
+   const IPAddressBlocks::IPAddressFamily v4_empty_fam_safi(v4_empty_choice, 2);
+   const IPAddressBlocks::IPAddressFamily v6_empty_fam_safi(v6_empty_choice, 2);
 
    /*
    considering the push order, the resulting order should be
@@ -659,8 +660,8 @@ Test::Result test_x509_ip_addr_blocks_family_merge() {
 
    opts.extensions.add(std::move(blocks));
 
-   Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
-   Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+   const Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
+   const Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
    auto ip_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
    result.confirm("cert has IPAddrBlocks extension", ip_blocks != nullptr, true);
@@ -905,8 +906,8 @@ Test::Result test_x509_ip_addr_blocks_path_validation_success() {
    trusted.add_certificate(root_cert);
 
    for(size_t i = 0; i < 4; i++) {
-      bool include_v4 = i & 1;
-      bool include_v6 = (i >> 1) & 1;
+      const bool include_v4 = i & 1;
+      const bool include_v6 = (i >> 1) & 1;
 
       auto dyn_ipv4_choice =
          IPAddressBlocks::IPAddressChoice<IPv4>(include_v4 ? std::optional(dyn_ipv4_ranges) : std::nullopt);
@@ -921,14 +922,14 @@ Test::Result test_x509_ip_addr_blocks_path_validation_success() {
 
       auto [dyn_cert, dyn_ca] = make_and_sign_ca(std::move(dyn_blocks), inherit_ca, rng);
 
-      Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
-      Botan::X509_Certificate sub_cert =
+      const Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
+      const Botan::X509_Certificate sub_cert =
          dyn_ca.sign_request(sub_req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
       const Botan::Path_Validation_Restrictions restrictions(false, 80);
-      std::vector<Botan::X509_Certificate> certs = {sub_cert, dyn_cert, inherit_cert};
+      const std::vector<Botan::X509_Certificate> certs = {sub_cert, dyn_cert, inherit_cert};
 
-      Botan::Path_Validation_Result path_result = Botan::x509_path_validate(certs, restrictions, trusted);
+      const Botan::Path_Validation_Result path_result = Botan::x509_path_validate(certs, restrictions, trusted);
       result.require("path validation succeeds", path_result.successful_validation());
    }
 
@@ -944,13 +945,13 @@ Test::Result test_x509_ip_addr_blocks_path_validation_failure() {
    auto rng = Test::new_rng(__func__);
 
    for(size_t i = 0; i < 7; i++) {
-      bool all_inherit = (i == 0);
-      bool different_safi = (i == 1);
-      bool too_small_subrange = (i == 2);
-      bool too_large_subrange = (i == 3);
-      bool no_more_issuer_ranges = (i == 4);
-      bool empty_issuer_ranges = (i == 5);
-      bool nullptr_extensions = (i == 6);
+      const bool all_inherit = (i == 0);
+      const bool different_safi = (i == 1);
+      const bool too_small_subrange = (i == 2);
+      const bool too_large_subrange = (i == 3);
+      const bool no_more_issuer_ranges = (i == 4);
+      const bool empty_issuer_ranges = (i == 5);
+      const bool nullptr_extensions = (i == 6);
 
       // Root cert
       std::vector<uint8_t> a = {120, 0, 0, 1};
@@ -1021,17 +1022,17 @@ Test::Result test_x509_ip_addr_blocks_path_validation_failure() {
       Botan::X509_Cert_Options sub_opts = req_opts(sig_algo);
       sub_opts.extensions.add(std::move(sub_blocks));
 
-      Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
-      Botan::X509_Certificate sub_cert =
+      const Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
+      const Botan::X509_Certificate sub_cert =
          iss_ca.sign_request(sub_req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
       const Botan::Path_Validation_Restrictions restrictions(false, 80);
-      std::vector<Botan::X509_Certificate> certs = {sub_cert, iss_cert};
+      const std::vector<Botan::X509_Certificate> certs = {sub_cert, iss_cert};
 
       Botan::Certificate_Store_In_Memory trusted;
       trusted.add_certificate(root_cert);
 
-      Botan::Path_Validation_Result path_result = Botan::x509_path_validate(certs, restrictions, trusted);
+      const Botan::Path_Validation_Result path_result = Botan::x509_path_validate(certs, restrictions, trusted);
       result.require("path validation fails", !path_result.successful_validation());
    }
 
@@ -1050,21 +1051,21 @@ Test::Result test_x509_as_blocks_extension_encode() {
    auto [ca_cert, ca, sub_key, sig_algo, hash_fn] = make_ca(rng);
 
    for(size_t i = 0; i < 16; i++) {
-      bool push_asnum = i & 1;
-      bool push_rdi = (i >> 1) & 1;
-      bool include_asnum = (i >> 2) & 1;
-      bool include_rdi = (i >> 3) & 1;
+      const bool push_asnum = i & 1;
+      const bool push_rdi = (i >> 1) & 1;
+      const bool include_asnum = (i >> 2) & 1;
+      const bool include_rdi = (i >> 3) & 1;
       if(!include_asnum && !include_rdi) {
          continue;
       }
 
-      ASBlocks::ASIdOrRange asnum_id_or_range0 = ASBlocks::ASIdOrRange(0, 999);
-      ASBlocks::ASIdOrRange asnum_id_or_range1 = ASBlocks::ASIdOrRange(5042);
-      ASBlocks::ASIdOrRange asnum_id_or_range2 = ASBlocks::ASIdOrRange(5043, 4294967295);
+      const ASBlocks::ASIdOrRange asnum_id_or_range0 = ASBlocks::ASIdOrRange(0, 999);
+      const ASBlocks::ASIdOrRange asnum_id_or_range1 = ASBlocks::ASIdOrRange(5042);
+      const ASBlocks::ASIdOrRange asnum_id_or_range2 = ASBlocks::ASIdOrRange(5043, 4294967295);
 
-      ASBlocks::ASIdOrRange rdi_id_or_range0 = ASBlocks::ASIdOrRange(1234, 5678);
-      ASBlocks::ASIdOrRange rdi_id_or_range1 = ASBlocks::ASIdOrRange(32768);
-      ASBlocks::ASIdOrRange rdi_id_or_range2 = ASBlocks::ASIdOrRange(32769, 4294967295);
+      const ASBlocks::ASIdOrRange rdi_id_or_range0 = ASBlocks::ASIdOrRange(1234, 5678);
+      const ASBlocks::ASIdOrRange rdi_id_or_range1 = ASBlocks::ASIdOrRange(32768);
+      const ASBlocks::ASIdOrRange rdi_id_or_range2 = ASBlocks::ASIdOrRange(32769, 4294967295);
 
       std::vector<ASBlocks::ASIdOrRange> as_ranges;
       if(push_asnum) {
@@ -1083,16 +1084,16 @@ Test::Result test_x509_as_blocks_extension_encode() {
       ASBlocks::ASIdentifierChoice asnum = ASBlocks::ASIdentifierChoice(as_ranges);
       ASBlocks::ASIdentifierChoice rdi = ASBlocks::ASIdentifierChoice(rdi_ranges);
 
-      ASBlocks::ASIdentifiers ident = ASBlocks::ASIdentifiers(include_asnum ? std::optional(asnum) : std::nullopt,
-                                                              include_rdi ? std::optional(rdi) : std::nullopt);
+      const ASBlocks::ASIdentifiers ident = ASBlocks::ASIdentifiers(include_asnum ? std::optional(asnum) : std::nullopt,
+                                                                    include_rdi ? std::optional(rdi) : std::nullopt);
 
       std::unique_ptr<ASBlocks> blocks = std::make_unique<ASBlocks>(ident);
 
       Botan::X509_Cert_Options opts = req_opts(sig_algo);
       opts.extensions.add(std::move(blocks));
 
-      Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
-      Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+      const Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
+      const Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
       {
          auto as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
@@ -1149,7 +1150,7 @@ Test::Result test_x509_as_blocks_range_merge() {
    auto [ca_cert, ca, sub_key, sig_algo, hash_fn] = make_ca(rng);
    Botan::X509_Cert_Options opts = req_opts(sig_algo);
 
-   std::vector<std::vector<uint16_t>> ranges = {
+   const std::vector<std::vector<uint16_t>> ranges = {
       {2005, 37005},
       {60, 70},
       {22, 50},
@@ -1167,14 +1168,14 @@ Test::Result test_x509_as_blocks_range_merge() {
 
    ASBlocks::ASIdentifierChoice asnum = ASBlocks::ASIdentifierChoice(as_ranges);
 
-   ASBlocks::ASIdentifiers ident = ASBlocks::ASIdentifiers(std::optional(asnum), std::nullopt);
+   const ASBlocks::ASIdentifiers ident = ASBlocks::ASIdentifiers(std::optional(asnum), std::nullopt);
 
    std::unique_ptr<ASBlocks> blocks = std::make_unique<ASBlocks>(ident);
 
    opts.extensions.add(std::move(blocks));
 
-   Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
-   Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+   const Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
+   const Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
    {
       auto as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
       result.confirm("cert has ASBlock extension", as_blocks != nullptr, true);
@@ -1208,13 +1209,13 @@ Test::Result test_x509_as_blocks_path_validation_success() {
    */
 
    // Root Cert, both as and rdi
-   ASBlocks::ASIdOrRange root_asnum_id_or_range0 = ASBlocks::ASIdOrRange(0, 999);
-   ASBlocks::ASIdOrRange root_asnum_id_or_range1 = ASBlocks::ASIdOrRange(5042);
-   ASBlocks::ASIdOrRange root_asnum_id_or_range2 = ASBlocks::ASIdOrRange(5043, 4294967295);
+   const ASBlocks::ASIdOrRange root_asnum_id_or_range0 = ASBlocks::ASIdOrRange(0, 999);
+   const ASBlocks::ASIdOrRange root_asnum_id_or_range1 = ASBlocks::ASIdOrRange(5042);
+   const ASBlocks::ASIdOrRange root_asnum_id_or_range2 = ASBlocks::ASIdOrRange(5043, 4294967295);
 
-   ASBlocks::ASIdOrRange root_rdi_id_or_range0 = ASBlocks::ASIdOrRange(1234, 5678);
-   ASBlocks::ASIdOrRange root_rdi_id_or_range1 = ASBlocks::ASIdOrRange(32768);
-   ASBlocks::ASIdOrRange root_rdi_id_or_range2 = ASBlocks::ASIdOrRange(32769, 4294967295);
+   const ASBlocks::ASIdOrRange root_rdi_id_or_range0 = ASBlocks::ASIdOrRange(1234, 5678);
+   const ASBlocks::ASIdOrRange root_rdi_id_or_range1 = ASBlocks::ASIdOrRange(32768);
+   const ASBlocks::ASIdOrRange root_rdi_id_or_range2 = ASBlocks::ASIdOrRange(32769, 4294967295);
 
    std::vector<ASBlocks::ASIdOrRange> root_as_ranges;
    root_as_ranges.push_back(root_asnum_id_or_range0);
@@ -1228,22 +1229,22 @@ Test::Result test_x509_as_blocks_path_validation_success() {
 
    ASBlocks::ASIdentifierChoice root_asnum = ASBlocks::ASIdentifierChoice(root_as_ranges);
    ASBlocks::ASIdentifierChoice root_rdi = ASBlocks::ASIdentifierChoice(root_rdi_ranges);
-   ASBlocks::ASIdentifiers root_ident = ASBlocks::ASIdentifiers(root_asnum, root_rdi);
+   const ASBlocks::ASIdentifiers root_ident = ASBlocks::ASIdentifiers(root_asnum, root_rdi);
    std::unique_ptr<ASBlocks> root_blocks = std::make_unique<ASBlocks>(root_ident);
 
    // Inherit cert, both as 'inherit'
    ASBlocks::ASIdentifierChoice inherit_asnum = ASBlocks::ASIdentifierChoice();
    ASBlocks::ASIdentifierChoice inherit_rdi = ASBlocks::ASIdentifierChoice();
-   ASBlocks::ASIdentifiers inherit_ident = ASBlocks::ASIdentifiers(inherit_asnum, inherit_rdi);
+   const ASBlocks::ASIdentifiers inherit_ident = ASBlocks::ASIdentifiers(inherit_asnum, inherit_rdi);
    std::unique_ptr<ASBlocks> inherit_blocks = std::make_unique<ASBlocks>(inherit_ident);
 
    // Dynamic cert
-   ASBlocks::ASIdOrRange dyn_asnum_id_or_range0 = ASBlocks::ASIdOrRange(100, 600);
-   ASBlocks::ASIdOrRange dyn_asnum_id_or_range1 = ASBlocks::ASIdOrRange(678);
-   ASBlocks::ASIdOrRange dyn_asnum_id_or_range2 = ASBlocks::ASIdOrRange(5042, 5101);
+   const ASBlocks::ASIdOrRange dyn_asnum_id_or_range0 = ASBlocks::ASIdOrRange(100, 600);
+   const ASBlocks::ASIdOrRange dyn_asnum_id_or_range1 = ASBlocks::ASIdOrRange(678);
+   const ASBlocks::ASIdOrRange dyn_asnum_id_or_range2 = ASBlocks::ASIdOrRange(5042, 5101);
 
-   ASBlocks::ASIdOrRange dyn_rdi_id_or_range0 = ASBlocks::ASIdOrRange(1500, 5000);
-   ASBlocks::ASIdOrRange dyn_rdi_id_or_range1 = ASBlocks::ASIdOrRange(33000, 60000);
+   const ASBlocks::ASIdOrRange dyn_rdi_id_or_range0 = ASBlocks::ASIdOrRange(1500, 5000);
+   const ASBlocks::ASIdOrRange dyn_rdi_id_or_range1 = ASBlocks::ASIdOrRange(33000, 60000);
 
    std::vector<ASBlocks::ASIdOrRange> dyn_as_ranges;
    dyn_as_ranges.push_back(dyn_asnum_id_or_range0);
@@ -1255,16 +1256,16 @@ Test::Result test_x509_as_blocks_path_validation_success() {
    dyn_rdi_ranges.push_back(dyn_rdi_id_or_range1);
 
    // Subject cert
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range0 = ASBlocks::ASIdOrRange(120, 180);
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range1 = ASBlocks::ASIdOrRange(220, 240);
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range2 = ASBlocks::ASIdOrRange(260, 511);
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range3 = ASBlocks::ASIdOrRange(678);
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range4 = ASBlocks::ASIdOrRange(5043, 5100);
+   const ASBlocks::ASIdOrRange sub_asnum_id_or_range0 = ASBlocks::ASIdOrRange(120, 180);
+   const ASBlocks::ASIdOrRange sub_asnum_id_or_range1 = ASBlocks::ASIdOrRange(220, 240);
+   const ASBlocks::ASIdOrRange sub_asnum_id_or_range2 = ASBlocks::ASIdOrRange(260, 511);
+   const ASBlocks::ASIdOrRange sub_asnum_id_or_range3 = ASBlocks::ASIdOrRange(678);
+   const ASBlocks::ASIdOrRange sub_asnum_id_or_range4 = ASBlocks::ASIdOrRange(5043, 5100);
 
-   ASBlocks::ASIdOrRange sub_rdi_id_or_range0 = ASBlocks::ASIdOrRange(1500, 2300);
-   ASBlocks::ASIdOrRange sub_rdi_id_or_range1 = ASBlocks::ASIdOrRange(2500, 4000);
-   ASBlocks::ASIdOrRange sub_rdi_id_or_range2 = ASBlocks::ASIdOrRange(1567);
-   ASBlocks::ASIdOrRange sub_rdi_id_or_range3 = ASBlocks::ASIdOrRange(33100, 40000);
+   const ASBlocks::ASIdOrRange sub_rdi_id_or_range0 = ASBlocks::ASIdOrRange(1500, 2300);
+   const ASBlocks::ASIdOrRange sub_rdi_id_or_range1 = ASBlocks::ASIdOrRange(2500, 4000);
+   const ASBlocks::ASIdOrRange sub_rdi_id_or_range2 = ASBlocks::ASIdOrRange(1567);
+   const ASBlocks::ASIdOrRange sub_rdi_id_or_range3 = ASBlocks::ASIdOrRange(33100, 40000);
 
    std::vector<ASBlocks::ASIdOrRange> sub_as_ranges;
    sub_as_ranges.push_back(sub_asnum_id_or_range0);
@@ -1281,7 +1282,7 @@ Test::Result test_x509_as_blocks_path_validation_success() {
 
    ASBlocks::ASIdentifierChoice sub_asnum = ASBlocks::ASIdentifierChoice(sub_as_ranges);
    ASBlocks::ASIdentifierChoice sub_rdi = ASBlocks::ASIdentifierChoice(sub_rdi_ranges);
-   ASBlocks::ASIdentifiers sub_ident = ASBlocks::ASIdentifiers(sub_asnum, sub_rdi);
+   const ASBlocks::ASIdentifiers sub_ident = ASBlocks::ASIdentifiers(sub_asnum, sub_rdi);
    std::unique_ptr<ASBlocks> sub_blocks = std::make_unique<ASBlocks>(sub_ident);
 
    Botan::X509_Cert_Options root_opts = ca_opts();
@@ -1295,26 +1296,26 @@ Test::Result test_x509_as_blocks_path_validation_success() {
    trusted.add_certificate(root_cert);
 
    for(size_t i = 0; i < 4; i++) {
-      bool include_asnum = i & 1;
-      bool include_rdi = (i >> 1) & 1;
+      const bool include_asnum = i & 1;
+      const bool include_rdi = (i >> 1) & 1;
 
       ASBlocks::ASIdentifierChoice dyn_asnum =
          ASBlocks::ASIdentifierChoice(include_asnum ? std::optional(dyn_as_ranges) : std::nullopt);
       ASBlocks::ASIdentifierChoice dyn_rdi =
          ASBlocks::ASIdentifierChoice(include_rdi ? std::optional(dyn_rdi_ranges) : std::nullopt);
-      ASBlocks::ASIdentifiers dyn_ident = ASBlocks::ASIdentifiers(dyn_asnum, dyn_rdi);
+      const ASBlocks::ASIdentifiers dyn_ident = ASBlocks::ASIdentifiers(dyn_asnum, dyn_rdi);
       std::unique_ptr<ASBlocks> dyn_blocks = std::make_unique<ASBlocks>(dyn_ident);
 
       auto [dyn_cert, dyn_ca] = make_and_sign_ca(std::move(dyn_blocks), inherit_ca, rng);
 
-      Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
-      Botan::X509_Certificate sub_cert =
+      const Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
+      const Botan::X509_Certificate sub_cert =
          dyn_ca.sign_request(sub_req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
       const Botan::Path_Validation_Restrictions restrictions(false, 80);
-      std::vector<Botan::X509_Certificate> certs = {sub_cert, dyn_cert, inherit_cert};
+      const std::vector<Botan::X509_Certificate> certs = {sub_cert, dyn_cert, inherit_cert};
 
-      Botan::Path_Validation_Result path_result = Botan::x509_path_validate(certs, restrictions, trusted);
+      const Botan::Path_Validation_Result path_result = Botan::x509_path_validate(certs, restrictions, trusted);
       result.require("path validation succeeds", path_result.successful_validation());
    }
 
@@ -1330,16 +1331,16 @@ Test::Result test_x509_as_blocks_path_validation_extension_not_present() {
    auto rng = Test::new_rng(__func__);
 
    // Subject cert
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range0 = ASBlocks::ASIdOrRange(120, 180);
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range1 = ASBlocks::ASIdOrRange(220, 240);
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range2 = ASBlocks::ASIdOrRange(260, 511);
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range3 = ASBlocks::ASIdOrRange(678);
-   ASBlocks::ASIdOrRange sub_asnum_id_or_range4 = ASBlocks::ASIdOrRange(5043, 5100);
+   const ASBlocks::ASIdOrRange sub_asnum_id_or_range0 = ASBlocks::ASIdOrRange(120, 180);
+   const ASBlocks::ASIdOrRange sub_asnum_id_or_range1 = ASBlocks::ASIdOrRange(220, 240);
+   const ASBlocks::ASIdOrRange sub_asnum_id_or_range2 = ASBlocks::ASIdOrRange(260, 511);
+   const ASBlocks::ASIdOrRange sub_asnum_id_or_range3 = ASBlocks::ASIdOrRange(678);
+   const ASBlocks::ASIdOrRange sub_asnum_id_or_range4 = ASBlocks::ASIdOrRange(5043, 5100);
 
-   ASBlocks::ASIdOrRange sub_rdi_id_or_range0 = ASBlocks::ASIdOrRange(1500, 2300);
-   ASBlocks::ASIdOrRange sub_rdi_id_or_range1 = ASBlocks::ASIdOrRange(2500, 4000);
-   ASBlocks::ASIdOrRange sub_rdi_id_or_range2 = ASBlocks::ASIdOrRange(1567);
-   ASBlocks::ASIdOrRange sub_rdi_id_or_range3 = ASBlocks::ASIdOrRange(33100, 40000);
+   const ASBlocks::ASIdOrRange sub_rdi_id_or_range0 = ASBlocks::ASIdOrRange(1500, 2300);
+   const ASBlocks::ASIdOrRange sub_rdi_id_or_range1 = ASBlocks::ASIdOrRange(2500, 4000);
+   const ASBlocks::ASIdOrRange sub_rdi_id_or_range2 = ASBlocks::ASIdOrRange(1567);
+   const ASBlocks::ASIdOrRange sub_rdi_id_or_range3 = ASBlocks::ASIdOrRange(33100, 40000);
 
    std::vector<ASBlocks::ASIdOrRange> sub_as_ranges;
    sub_as_ranges.push_back(sub_asnum_id_or_range0);
@@ -1356,16 +1357,17 @@ Test::Result test_x509_as_blocks_path_validation_extension_not_present() {
 
    ASBlocks::ASIdentifierChoice sub_asnum = ASBlocks::ASIdentifierChoice(sub_as_ranges);
    ASBlocks::ASIdentifierChoice sub_rdi = ASBlocks::ASIdentifierChoice(sub_rdi_ranges);
-   ASBlocks::ASIdentifiers sub_ident = ASBlocks::ASIdentifiers(sub_asnum, sub_rdi);
+   const ASBlocks::ASIdentifiers sub_ident = ASBlocks::ASIdentifiers(sub_asnum, sub_rdi);
    std::unique_ptr<ASBlocks> sub_blocks = std::make_unique<ASBlocks>(sub_ident);
 
    // create a root ca that does not have any extension
-   Botan::X509_Cert_Options root_opts = ca_opts();
+   const Botan::X509_Cert_Options root_opts = ca_opts();
    auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] = make_ca(rng, root_opts);
    Botan::X509_Cert_Options sub_opts = req_opts(sig_algo);
    sub_opts.extensions.add(std::move(sub_blocks));
-   Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
-   Botan::X509_Certificate sub_cert = root_ca.sign_request(sub_req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+   const Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
+   const Botan::X509_Certificate sub_cert =
+      root_ca.sign_request(sub_req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
    Botan::Certificate_Store_In_Memory trusted;
    trusted.add_certificate(root_cert);
@@ -1373,7 +1375,7 @@ Test::Result test_x509_as_blocks_path_validation_extension_not_present() {
    const Botan::Path_Validation_Restrictions restrictions(false, 80);
    const std::vector<Botan::X509_Certificate> certs = {sub_cert};
 
-   Botan::Path_Validation_Result path_result = Botan::x509_path_validate(certs, restrictions, trusted);
+   const Botan::Path_Validation_Result path_result = Botan::x509_path_validate(certs, restrictions, trusted);
    result.require("path validation fails", !path_result.successful_validation());
 
    result.end_timer();
@@ -1417,21 +1419,21 @@ Test::Result test_x509_as_blocks_path_validation_failure() {
    */
    for(size_t i = 0; i < 21; i++) {
       // enable / disable all the different edge cases
-      bool inherit_all_asnums = (i == 0);
-      bool inherit_all_rdis = (i == 1);
-      bool push_asnum_min_edge_ranges = (i == 2) || (i == 4);
-      bool push_rdi_min_edge_ranges = (i == 3) || (i == 4);
-      bool push_asnum_max_edge_ranges = (i == 5) || (i == 7);
-      bool push_rdi_max_edge_ranges = (i == 6) || (i == 7);
-      bool push_asnum_max_middle_ranges = (i == 8) || (i == 10);
-      bool push_rdi_max_middle_ranges = (i == 9) || (i == 10);
-      bool push_asnum_max_split_ranges = (i == 11) || (i == 13);
-      bool push_rdi_max_split_ranges = (i == 12) || (i == 13);
-      bool push_asnum_min_middle_ranges = (i == 14) || (i == 16);
-      bool push_rdi_min_middle_ranges = (i == 15) || (i == 16);
-      bool push_asnum_min_split_ranges = (i == 17) || (i == 19);
-      bool push_rdi_min_split_ranges = (i == 18) || (i == 19);
-      bool empty_issuer_non_empty_subject = (i == 20);
+      const bool inherit_all_asnums = (i == 0);
+      const bool inherit_all_rdis = (i == 1);
+      const bool push_asnum_min_edge_ranges = (i == 2) || (i == 4);
+      const bool push_rdi_min_edge_ranges = (i == 3) || (i == 4);
+      const bool push_asnum_max_edge_ranges = (i == 5) || (i == 7);
+      const bool push_rdi_max_edge_ranges = (i == 6) || (i == 7);
+      const bool push_asnum_max_middle_ranges = (i == 8) || (i == 10);
+      const bool push_rdi_max_middle_ranges = (i == 9) || (i == 10);
+      const bool push_asnum_max_split_ranges = (i == 11) || (i == 13);
+      const bool push_rdi_max_split_ranges = (i == 12) || (i == 13);
+      const bool push_asnum_min_middle_ranges = (i == 14) || (i == 16);
+      const bool push_rdi_min_middle_ranges = (i == 15) || (i == 16);
+      const bool push_asnum_min_split_ranges = (i == 17) || (i == 19);
+      const bool push_rdi_min_split_ranges = (i == 18) || (i == 19);
+      const bool empty_issuer_non_empty_subject = (i == 20);
 
       // Root cert
       std::vector<ASBlocks::ASIdOrRange> root_as_ranges;
@@ -1469,8 +1471,8 @@ Test::Result test_x509_as_blocks_path_validation_failure() {
       // Issuer cert
       // the issuer cert has the same ranges as the root cert
       // it is used to check that the 'inherit' check is bubbled up until the root cert is hit
-      std::vector<ASBlocks::ASIdOrRange> issu_as_ranges;
-      std::vector<ASBlocks::ASIdOrRange> issu_rdi_ranges;
+      const std::vector<ASBlocks::ASIdOrRange> issu_as_ranges;
+      const std::vector<ASBlocks::ASIdOrRange> issu_rdi_ranges;
 
       // Subject cert
       std::vector<ASBlocks::ASIdOrRange> sub_as_ranges;
@@ -1536,17 +1538,17 @@ Test::Result test_x509_as_blocks_path_validation_failure() {
          ASBlocks::ASIdentifierChoice(inherit_all_asnums ? std::nullopt : std::optional(root_as_ranges));
       ASBlocks::ASIdentifierChoice root_rdi =
          ASBlocks::ASIdentifierChoice(inherit_all_rdis ? std::nullopt : std::optional(root_rdi_ranges));
-      ASBlocks::ASIdentifiers root_ident = ASBlocks::ASIdentifiers(root_asnum, root_rdi);
+      const ASBlocks::ASIdentifiers root_ident = ASBlocks::ASIdentifiers(root_asnum, root_rdi);
       std::unique_ptr<ASBlocks> root_blocks = std::make_unique<ASBlocks>(root_ident);
 
-      ASBlocks::ASIdentifiers issu_ident = root_ident;
+      const ASBlocks::ASIdentifiers& issu_ident = root_ident;
       std::unique_ptr<ASBlocks> issu_blocks = std::make_unique<ASBlocks>(issu_ident);
 
       ASBlocks::ASIdentifierChoice sub_asnum =
          ASBlocks::ASIdentifierChoice(inherit_all_asnums ? std::nullopt : std::optional(sub_as_ranges));
       ASBlocks::ASIdentifierChoice sub_rdi =
          ASBlocks::ASIdentifierChoice(inherit_all_rdis ? std::nullopt : std::optional(sub_rdi_ranges));
-      ASBlocks::ASIdentifiers sub_ident = ASBlocks::ASIdentifiers(sub_asnum, sub_rdi);
+      const ASBlocks::ASIdentifiers sub_ident = ASBlocks::ASIdentifiers(sub_asnum, sub_rdi);
       std::unique_ptr<ASBlocks> sub_blocks = std::make_unique<ASBlocks>(sub_ident);
 
       Botan::X509_Cert_Options root_opts = ca_opts();
@@ -1556,8 +1558,8 @@ Test::Result test_x509_as_blocks_path_validation_failure() {
 
       Botan::X509_Cert_Options sub_opts = req_opts(sig_algo);
       sub_opts.extensions.add(std::move(sub_blocks));
-      Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
-      Botan::X509_Certificate sub_cert =
+      const Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
+      const Botan::X509_Certificate sub_cert =
          issu_ca.sign_request(sub_req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
       Botan::Certificate_Store_In_Memory trusted;
@@ -1566,7 +1568,7 @@ Test::Result test_x509_as_blocks_path_validation_failure() {
       const Botan::Path_Validation_Restrictions restrictions(false, 80);
       const std::vector<Botan::X509_Certificate> certs = {sub_cert, issu_cert};
 
-      Botan::Path_Validation_Result path_result = Botan::x509_path_validate(certs, restrictions, trusted);
+      const Botan::Path_Validation_Result path_result = Botan::x509_path_validate(certs, restrictions, trusted);
       // in all cases, the validation should fail, since we are creating invalid scenarios
       result.confirm("path validation fails at iteration " + std::to_string(i), !path_result.successful_validation());
    }

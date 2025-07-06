@@ -38,8 +38,8 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha256_permute_state(SIMD_4x32& S0, S
    S0 = SIMD_4x32(_mm_shuffle_epi32(S0.raw(), 0b10110001));  // CDAB
    S1 = SIMD_4x32(_mm_shuffle_epi32(S1.raw(), 0b00011011));  // EFGH
 
-   __m128i tmp = _mm_alignr_epi8(S0.raw(), S1.raw(), 8);       // ABEF
-   S1 = SIMD_4x32(_mm_blend_epi16(S1.raw(), S0.raw(), 0xF0));  // CDGH
+   const __m128i tmp = _mm_alignr_epi8(S0.raw(), S1.raw(), 8);  // ABEF
+   S1 = SIMD_4x32(_mm_blend_epi16(S1.raw(), S0.raw(), 0xF0));   // CDGH
    S0 = SIMD_4x32(tmp);
 }
 

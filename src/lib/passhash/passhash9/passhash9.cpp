@@ -55,7 +55,7 @@ std::string generate_passhash9(std::string_view pass,
       throw Invalid_Argument("Passhash9: Algorithm id " + std::to_string(alg_id) + " is not defined");
    }
 
-   PKCS5_PBKDF2 kdf(std::move(prf));
+   PKCS5_PBKDF2 const kdf(std::move(prf));
 
    secure_vector<uint8_t> salt(SALT_BYTES);
    rng.randomize(salt.data(), salt.size());
@@ -93,7 +93,7 @@ bool check_passhash9(std::string_view pass, std::string_view hash) {
       return false;
    }
 
-   uint8_t alg_id = bin[0];
+   const uint8_t alg_id = bin[0];
 
    const size_t work_factor = load_be<uint16_t>(&bin[ALGID_BYTES], 0);
 
@@ -114,7 +114,7 @@ bool check_passhash9(std::string_view pass, std::string_view hash) {
       return false;  // unknown algorithm, reject
    }
 
-   PKCS5_PBKDF2 kdf(std::move(pbkdf_prf));
+   PKCS5_PBKDF2 const kdf(std::move(pbkdf_prf));
 
    secure_vector<uint8_t> cmp =
       kdf.derive_key(PASSHASH9_PBKDF_OUTPUT_LEN, pass, &bin[ALGID_BYTES + WORKFACTOR_BYTES], SALT_BYTES, kdf_iterations)

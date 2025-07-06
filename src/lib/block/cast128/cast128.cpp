@@ -503,7 +503,7 @@ void CAST_128::cast_ks(secure_vector<uint32_t>& K, secure_vector<uint32_t>& X) {
    };
 
    secure_vector<uint32_t> Z(4);
-   ByteReader x(X.data()), z(Z.data());
+   const ByteReader x(X.data()), z(Z.data());
 
    Z[0] = X[0] ^ S5[x(13)] ^ S6[x(15)] ^ S7[x(12)] ^ S8[x(14)] ^ S7[x(8)];
    Z[1] = X[2] ^ S5[z(0)] ^ S6[z(2)] ^ S7[z(1)] ^ S8[z(3)] ^ S8[x(10)];

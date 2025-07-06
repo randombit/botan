@@ -198,7 +198,7 @@ DL_Group::DL_Group(std::string_view str) {
       try {
          std::string label;
          const std::vector<uint8_t> ber = unlock(PEM_Code::decode(str, label));
-         DL_Group_Format format = pem_label_to_dl_format(label);
+         const DL_Group_Format format = pem_label_to_dl_format(label);
 
          m_data = BER_decode_DL_group(ber.data(), ber.size(), format, DL_Group_Source::ExternalSource);
       } catch(...) {}
@@ -223,7 +223,7 @@ DL_Group DL_Group::from_name(std::string_view name) {
 DL_Group DL_Group::from_PEM(std::string_view pem) {
    std::string label;
    const std::vector<uint8_t> ber = unlock(PEM_Code::decode(pem, label));
-   DL_Group_Format format = pem_label_to_dl_format(label);
+   const DL_Group_Format format = pem_label_to_dl_format(label);
    return DL_Group(ber, format);
 }
 
@@ -330,7 +330,7 @@ DL_Group::DL_Group(RandomNumberGenerator& rng, const std::vector<uint8_t>& seed,
       throw Invalid_Argument("DL_Group: The seed given does not generate a DSA group");
    }
 
-   BigInt g = make_dsa_generator(p, q);
+   const BigInt g = make_dsa_generator(p, q);
 
    m_data = std::make_shared<DL_Group_Data>(p, q, g, DL_Group_Source::RandomlyGenerated);
 }

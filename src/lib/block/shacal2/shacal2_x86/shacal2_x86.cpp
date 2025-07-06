@@ -72,7 +72,7 @@ void BOTAN_FN_ISA_SHANI SHACAL2::x86_encrypt_blocks(const uint8_t in[], uint8_t 
       __m128i B0 = _mm_loadu_si128(in_mm);
       __m128i B1 = _mm_loadu_si128(in_mm + 1);
 
-      __m128i TMP = _mm_shuffle_epi8(_mm_unpacklo_epi64(B0, B1), MASK2);
+      const __m128i TMP = _mm_shuffle_epi8(_mm_unpacklo_epi64(B0, B1), MASK2);
       B1 = _mm_shuffle_epi8(_mm_unpackhi_epi64(B0, B1), MASK2);
       B0 = TMP;
 

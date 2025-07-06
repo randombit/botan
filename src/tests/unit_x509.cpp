@@ -33,7 +33,7 @@ namespace {
 Botan::X509_Time from_date(const int y, const int m, const int d) {
    const size_t this_year = Botan::calendar_point(std::chrono::system_clock::now()).year();
 
-   Botan::calendar_point t(static_cast<uint32_t>(this_year + y), m, d, 0, 0, 0);
+   const Botan::calendar_point t(static_cast<uint32_t>(this_year + y), m, d, 0, 0, 0);
    return Botan::X509_Time(t.to_std_timepoint());
 }
 
@@ -398,23 +398,23 @@ Test::Result test_x509_dates() {
    };
 
    for(const auto& v : valid_but_unsup) {
-      result.test_throws("valid but unsupported", [v]() { Botan::X509_Time t(v, Botan::ASN1_Type::UtcTime); });
+      result.test_throws("valid but unsupported", [v]() { const Botan::X509_Time t(v, Botan::ASN1_Type::UtcTime); });
    }
 
    for(const auto& v : valid_utc) {
-      Botan::X509_Time t(v, Botan::ASN1_Type::UtcTime);
+      const Botan::X509_Time t(v, Botan::ASN1_Type::UtcTime);
    }
 
    for(const auto& v : valid_generalized_time) {
-      Botan::X509_Time t(v, Botan::ASN1_Type::GeneralizedTime);
+      const Botan::X509_Time t(v, Botan::ASN1_Type::GeneralizedTime);
    }
 
    for(const auto& v : invalid_utc) {
-      result.test_throws("invalid", [v]() { Botan::X509_Time t(v, Botan::ASN1_Type::UtcTime); });
+      result.test_throws("invalid", [v]() { const Botan::X509_Time t(v, Botan::ASN1_Type::UtcTime); });
    }
 
    for(const auto& v : invalid_generalized) {
-      result.test_throws("invalid", [v]() { Botan::X509_Time t(v, Botan::ASN1_Type::GeneralizedTime); });
+      result.test_throws("invalid", [v]() { const Botan::X509_Time t(v, Botan::ASN1_Type::GeneralizedTime); });
    }
 
    return result;
@@ -442,7 +442,7 @@ Test::Result test_x509_encode_authority_info_access_extension() {
    auto ca_key = make_a_private_key(sig_algo, *rng);
    result.require("CA key", ca_key != nullptr);
    const auto ca_cert = Botan::X509::create_self_signed_cert(ca_opts(), *ca_key, hash_fn, *rng);
-   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, padding_method, *rng);
+   const Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, padding_method, *rng);
 
    // create a certificate with only caIssuer information
    auto key = make_a_private_key(sig_algo, *rng);
@@ -504,13 +504,13 @@ Test::Result test_crl_dn_name() {
 
    const Botan::OID dc_oid("0.9.2342.19200300.100.1.25");
 
-   Botan::X509_Certificate cert(Test::data_file("x509/misc/opcuactt_ca.der"));
+   const Botan::X509_Certificate cert(Test::data_file("x509/misc/opcuactt_ca.der"));
 
    Botan::DataSource_Stream key_input(Test::data_file("x509/misc/opcuactt_ca.pem"));
    auto key = Botan::PKCS8::load_key(key_input);
-   Botan::X509_CA ca(cert, *key, "SHA-256", *rng);
+   const Botan::X509_CA ca(cert, *key, "SHA-256", *rng);
 
-   Botan::X509_CRL crl = ca.new_crl(*rng);
+   const Botan::X509_CRL crl = ca.new_crl(*rng);
 
    result.confirm("matches issuer cert", crl.issuer_dn() == cert.subject_dn());
 
@@ -525,7 +525,7 @@ Test::Result test_rdn_multielement_set_name() {
 
    // GH #2611
 
-   Botan::X509_Certificate cert(Test::data_file("x509/misc/rdn_set.crt"));
+   const Botan::X509_Certificate cert(Test::data_file("x509/misc/rdn_set.crt"));
 
    result.confirm("issuer DN contains expected name components", cert.issuer_dn().get_attributes().size() == 4);
    result.confirm("subject DN contains expected name components", cert.subject_dn().get_attributes().size() == 4);
@@ -537,7 +537,7 @@ Test::Result test_rsa_oaep() {
    Test::Result result("RSA OAEP decoding");
 
       #if defined(BOTAN_HAS_RSA)
-   Botan::X509_Certificate cert(Test::data_file("x509/misc/rsa_oaep.pem"));
+   const Botan::X509_Certificate cert(Test::data_file("x509/misc/rsa_oaep.pem"));
 
    auto public_key = cert.subject_public_key();
    result.test_not_null("Decoding RSA-OAEP worked", public_key.get());
@@ -570,7 +570,7 @@ Test::Result test_x509_utf8() {
    Test::Result result("X509 with UTF-8 encoded fields");
 
    try {
-      Botan::X509_Certificate utf8_cert(Test::data_file("x509/misc/contains_utf8string.pem"));
+      const Botan::X509_Certificate utf8_cert(Test::data_file("x509/misc/contains_utf8string.pem"));
 
       // UTF-8 encoded fields of test certificate (contains cyrillic letters)
       const std::string organization =
@@ -601,7 +601,7 @@ Test::Result test_x509_bmpstring() {
    Test::Result result("X509 with UCS-2 (BMPString) encoded fields");
 
    try {
-      Botan::X509_Certificate ucs2_cert(Test::data_file("x509/misc/contains_bmpstring.pem"));
+      const Botan::X509_Certificate ucs2_cert(Test::data_file("x509/misc/contains_bmpstring.pem"));
 
       // UTF-8 encoded fields of test certificate (contains cyrillic and greek letters)
       const std::string organization = "\x6E\x65\xCF\x87\xCF\xB5\x6E\x69\xCF\x89";
@@ -627,7 +627,7 @@ Test::Result test_x509_teletex() {
    Test::Result result("X509 with TeletexString encoded fields");
 
    try {
-      Botan::X509_Certificate teletex_cert(Test::data_file("x509/misc/teletex_dn.der"));
+      const Botan::X509_Certificate teletex_cert(Test::data_file("x509/misc/teletex_dn.der"));
 
       const Botan::X509_DN& issuer_dn = teletex_cert.issuer_dn();
 
@@ -646,13 +646,13 @@ Test::Result test_x509_authority_info_access_extension() {
    Test::Result result("X509 with PKIX.AuthorityInformationAccess extension");
 
    // contains no AIA extension
-   Botan::X509_Certificate no_aia_cert(Test::data_file("x509/misc/contains_utf8string.pem"));
+   const Botan::X509_Certificate no_aia_cert(Test::data_file("x509/misc/contains_utf8string.pem"));
 
    result.test_eq("number of ca_issuers URLs", no_aia_cert.ca_issuers().size(), 0);
    result.test_eq("CA issuer URL matches", no_aia_cert.ocsp_responder(), "");
 
    // contains AIA extension with 1 CA issuer URL and 1 OCSP responder
-   Botan::X509_Certificate aia_cert(Test::data_file("x509/misc/contains_authority_info_access.pem"));
+   const Botan::X509_Certificate aia_cert(Test::data_file("x509/misc/contains_authority_info_access.pem"));
 
    const auto ca_issuers = aia_cert.ca_issuers();
 
@@ -665,7 +665,7 @@ Test::Result test_x509_authority_info_access_extension() {
    result.test_eq("OCSP responder URL matches", aia_cert.ocsp_responder(), "http://gp.symcd.com");
 
    // contains AIA extension with 2 CA issuer URL and 1 OCSP responder
-   Botan::X509_Certificate aia_cert_2ca(
+   const Botan::X509_Certificate aia_cert_2ca(
       Test::data_file("x509/misc/contains_authority_info_access_with_two_ca_issuers.pem"));
 
    const auto ca_issuers2 = aia_cert_2ca.ca_issuers();
@@ -692,7 +692,7 @@ Test::Result test_parse_rsa_pss_cert() {
    // See https://github.com/randombit/botan/issues/3019 for background
 
    try {
-      Botan::X509_Certificate rsa_pss(Test::data_file("x509/misc/rsa_pss.pem"));
+      const Botan::X509_Certificate rsa_pss(Test::data_file("x509/misc/rsa_pss.pem"));
       result.test_success("Was able to parse RSA-PSS certificate signed with ECDSA");
    } catch(Botan::Exception& e) {
       result.test_failure("Parsing failed", e.what());
@@ -707,8 +707,8 @@ Test::Result test_verify_gost2012_cert() {
       #if defined(BOTAN_HAS_GOST_34_10_2012) && defined(BOTAN_HAS_STREEBOG)
    try {
       if(Botan::EC_Group::supports_named_group("gost_256A")) {
-         Botan::X509_Certificate root_cert(Test::data_file("x509/gost/gost_root.pem"));
-         Botan::X509_Certificate root_int(Test::data_file("x509/gost/gost_int.pem"));
+         const Botan::X509_Certificate root_cert(Test::data_file("x509/gost/gost_root.pem"));
+         const Botan::X509_Certificate root_int(Test::data_file("x509/gost/gost_int.pem"));
 
          Botan::Certificate_Store_In_Memory trusted;
          trusted.add_certificate(root_cert);
@@ -746,14 +746,14 @@ Test::Result test_padding_config() {
    Botan::X509_Cert_Options opt("TESTCA");
    opt.CA_key();
 
-   Botan::X509_Certificate ca_cert_def = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", *rng);
+   const Botan::X509_Certificate ca_cert_def = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", *rng);
    test_result.test_eq("CA certificate signature algorithm (default)",
                        ca_cert_def.signature_algorithm().oid().to_formatted_string(),
                        "RSA/PKCS1v15(SHA-512)");
 
    // Create X509 CA certificate; RSA-PSS is explicitly set
    opt.set_padding_scheme("PSSR");
-   Botan::X509_Certificate ca_cert_exp = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", *rng);
+   const Botan::X509_Certificate ca_cert_exp = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", *rng);
    test_result.test_eq("CA certificate signature algorithm (explicit)",
                        ca_cert_exp.signature_algorithm().oid().to_formatted_string(),
                        "RSA/PSS");
@@ -762,7 +762,7 @@ Test::Result test_padding_config() {
    // Try to set a padding scheme that is not supported for signing with the given key type
    opt.set_padding_scheme("EMSA2");
    try {
-      Botan::X509_Certificate ca_cert_wrong = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", *rng);
+      const Botan::X509_Certificate ca_cert_wrong = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", *rng);
       test_result.test_failure("Could build CA cert with invalid encoding scheme X9.31 for key type " +
                                sk->algo_name());
    } catch(const Botan::Invalid_Argument& e) {
@@ -782,13 +782,13 @@ Test::Result test_padding_config() {
    // Prepare a signing request for the end certificate
    Botan::X509_Cert_Options req_opt("endpoint");
    req_opt.set_padding_scheme("EMSA4(SHA-512,MGF1,64)");
-   Botan::PKCS10_Request end_req = Botan::X509::create_cert_req(req_opt, (*sk), "SHA-512", *rng);
+   const Botan::PKCS10_Request end_req = Botan::X509::create_cert_req(req_opt, (*sk), "SHA-512", *rng);
    test_result.test_eq(
       "Certificate request signature algorithm", end_req.signature_algorithm().oid().to_formatted_string(), "RSA/PSS");
 
    // Create X509 CA object: will fail as the chosen hash functions differ
    try {
-      Botan::X509_CA ca_fail(ca_cert_exp, (*sk), "SHA-512", "EMSA4(SHA-256)", *rng);
+      const Botan::X509_CA ca_fail(ca_cert_exp, (*sk), "SHA-512", "EMSA4(SHA-256)", *rng);
       test_result.test_failure("Configured conflicting hash functions for CA");
    } catch(const Botan::Invalid_Argument& e) {
       test_result.test_eq(
@@ -798,28 +798,28 @@ Test::Result test_padding_config() {
    }
 
    // Create X509 CA object: its signer will use the padding scheme from the CA certificate, i.e. EMSA3
-   Botan::X509_CA ca_def(ca_cert_def, (*sk), "SHA-512", *rng);
-   Botan::X509_Certificate end_cert_emsa3 = ca_def.sign_request(end_req, *rng, not_before, not_after);
+   const Botan::X509_CA ca_def(ca_cert_def, (*sk), "SHA-512", *rng);
+   const Botan::X509_Certificate end_cert_emsa3 = ca_def.sign_request(end_req, *rng, not_before, not_after);
    test_result.test_eq("End certificate signature algorithm",
                        end_cert_emsa3.signature_algorithm().oid().to_formatted_string(),
                        "RSA/PKCS1v15(SHA-512)");
 
    // Create X509 CA object: its signer will use the explicitly configured padding scheme, which is different from the CA certificate's scheme
-   Botan::X509_CA ca_diff(ca_cert_def, (*sk), "SHA-512", "EMSA-PSS", *rng);
-   Botan::X509_Certificate end_cert_diff_emsa4 = ca_diff.sign_request(end_req, *rng, not_before, not_after);
+   const Botan::X509_CA ca_diff(ca_cert_def, (*sk), "SHA-512", "EMSA-PSS", *rng);
+   const Botan::X509_Certificate end_cert_diff_emsa4 = ca_diff.sign_request(end_req, *rng, not_before, not_after);
    test_result.test_eq("End certificate signature algorithm",
                        end_cert_diff_emsa4.signature_algorithm().oid().to_formatted_string(),
                        "RSA/PSS");
 
    // Create X509 CA object: its signer will use the explicitly configured padding scheme, which is identical to the CA certificate's scheme
-   Botan::X509_CA ca_exp(ca_cert_exp, (*sk), "SHA-512", "EMSA4(SHA-512,MGF1,64)", *rng);
-   Botan::X509_Certificate end_cert_emsa4 = ca_exp.sign_request(end_req, *rng, not_before, not_after);
+   const Botan::X509_CA ca_exp(ca_cert_exp, (*sk), "SHA-512", "EMSA4(SHA-512,MGF1,64)", *rng);
+   const Botan::X509_Certificate end_cert_emsa4 = ca_exp.sign_request(end_req, *rng, not_before, not_after);
    test_result.test_eq("End certificate signature algorithm",
                        end_cert_emsa4.signature_algorithm().oid().to_formatted_string(),
                        "RSA/PSS");
 
    // Check CRL signature algorithm
-   Botan::X509_CRL crl = ca_exp.new_crl(*rng);
+   const Botan::X509_CRL crl = ca_exp.new_crl(*rng);
    test_result.test_eq("CRL signature algorithm", crl.signature_algorithm().oid().to_formatted_string(), "RSA/PSS");
 
    // sanity check for verification, the heavy lifting is done in the other unit tests
@@ -896,7 +896,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    /* Create user #1's key and cert request */
    auto user1_key = make_a_private_key(sig_algo, rng);
 
-   Botan::PKCS10_Request user1_req =
+   const Botan::PKCS10_Request user1_req =
       Botan::X509::create_cert_req(req_opts1(sig_algo, sig_padding), *user1_key, hash_fn, rng);
 
    result.test_eq("PKCS10 challenge password parsed", user1_req.challenge_password(), "zoom");
@@ -904,29 +904,33 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    /* Create user #2's key and cert request */
    auto user2_key = make_a_private_key(sig_algo, rng);
 
-   Botan::PKCS10_Request user2_req = Botan::X509::create_cert_req(req_opts2(sig_padding), *user2_key, hash_fn, rng);
+   const Botan::PKCS10_Request user2_req =
+      Botan::X509::create_cert_req(req_opts2(sig_padding), *user2_key, hash_fn, rng);
 
    // /* Create user #3's key and cert request */
    auto user3_key = make_a_private_key(sig_algo, rng);
 
-   Botan::PKCS10_Request user3_req = Botan::X509::create_cert_req(req_opts3(sig_padding), *user3_key, hash_fn, rng);
+   const Botan::PKCS10_Request user3_req =
+      Botan::X509::create_cert_req(req_opts3(sig_padding), *user3_key, hash_fn, rng);
 
    /* Create the CA object */
-   Botan::X509_CA ca(ca_cert, ca_key, hash_fn, sig_padding, rng);
+   const Botan::X509_CA ca(ca_cert, ca_key, hash_fn, sig_padding, rng);
 
    const BigInt user1_serial(99);
 
    /* Sign the requests to create the certs */
-   Botan::X509_Certificate user1_cert =
+   const Botan::X509_Certificate user1_cert =
       ca.sign_request(user1_req, rng, user1_serial, from_date(-1, 01, 01), from_date(2, 01, 01));
 
    result.test_eq("User1 serial size matches expected", user1_cert.serial_number().size(), 1);
    result.test_eq("User1 serial matches expected", user1_cert.serial_number().at(0), size_t(99));
 
-   Botan::X509_Certificate user2_cert = ca.sign_request(user2_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+   const Botan::X509_Certificate user2_cert =
+      ca.sign_request(user2_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
    result.test_eq("extended key usage is set", user2_cert.has_ex_constraint("PKIX.EmailProtection"), true);
 
-   Botan::X509_Certificate user3_cert = ca.sign_request(user3_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+   const Botan::X509_Certificate user3_cert =
+      ca.sign_request(user3_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
    // user#1 creates a self-signed cert on the side
    const auto user1_ss_cert =
@@ -944,7 +948,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    user1_cert_copy = user2_cert;
    result.test_eq("certificate assignment", user2_cert == user1_cert_copy, true);
 
-   Botan::X509_Certificate user1_cert_differ =
+   const Botan::X509_Certificate user1_cert_differ =
       ca.sign_request(user1_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
    result.test_eq("certificate differs", user1_cert == user1_cert_differ, false);
@@ -978,11 +982,11 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    const Botan::X509_CRL crl1 = ca.new_crl(rng);
 
    /* Verify the certs */
-   Botan::Path_Validation_Restrictions restrictions(false, 80);
+   const Botan::Path_Validation_Restrictions restrictions(false, 80);
    Botan::Certificate_Store_In_Memory store;
 
    // First try with an empty store
-   Botan::Path_Validation_Result result_no_issuer = Botan::x509_path_validate(user1_cert, restrictions, store);
+   const Botan::Path_Validation_Result result_no_issuer = Botan::x509_path_validate(user1_cert, restrictions, store);
    result.test_eq("user 1 issuer not found",
                   result_no_issuer.result_string(),
                   Botan::Path_Validation_Result::status_string(Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND));
@@ -999,7 +1003,8 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
       result.test_note("user 2 validation result was " + result_u2.result_string());
    }
 
-   Botan::Path_Validation_Result result_self_signed = Botan::x509_path_validate(user1_ss_cert, restrictions, store);
+   const Botan::Path_Validation_Result result_self_signed =
+      Botan::x509_path_validate(user1_ss_cert, restrictions, store);
    result.test_eq("user 1 issuer not found",
                   result_no_issuer.result_string(),
                   Botan::Path_Validation_Result::status_string(Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND));
@@ -1024,7 +1029,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
 
    revoked.clear();
    revoked.push_back(Botan::CRL_Entry(user1_cert, Botan::CRL_Code::RemoveFromCrl));
-   Botan::X509_CRL crl3 = ca.update_crl(crl2, revoked, rng);
+   const Botan::X509_CRL crl3 = ca.update_crl(crl2, revoked, rng);
 
    store.add_crl(crl3);
 
@@ -1319,10 +1324,11 @@ Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
    Test::Result result("X509 Custom DN");
 
    /* Create the self-signed cert */
-   Botan::X509_Certificate ca_cert = Botan::X509::create_self_signed_cert(ca_opts(sig_padding), ca_key, hash_fn, rng);
+   const Botan::X509_Certificate ca_cert =
+      Botan::X509::create_self_signed_cert(ca_opts(sig_padding), ca_key, hash_fn, rng);
 
    /* Create the CA object */
-   Botan::X509_CA ca(ca_cert, ca_key, hash_fn, sig_padding, rng);
+   const Botan::X509_CA ca(ca_cert, ca_key, hash_fn, sig_padding, rng);
 
    auto user_key = make_a_private_key(sig_algo, rng);
 
@@ -1336,24 +1342,24 @@ Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
    subject_dn.add_attribute(attr1, val1);
    subject_dn.add_attribute(attr2, val2);
 
-   Botan::Extensions extensions;
+   const Botan::Extensions extensions;
 
-   Botan::PKCS10_Request req =
+   const Botan::PKCS10_Request req =
       Botan::PKCS10_Request::create(*user_key, subject_dn, extensions, hash_fn, rng, sig_padding);
 
    const Botan::X509_DN& req_dn = req.subject_dn();
 
    result.test_eq("Expected number of DN entries", req_dn.dn_info().size(), 2);
 
-   Botan::ASN1_String req_val1 = req_dn.get_first_attribute(attr1);
-   Botan::ASN1_String req_val2 = req_dn.get_first_attribute(attr2);
+   const Botan::ASN1_String req_val1 = req_dn.get_first_attribute(attr1);
+   const Botan::ASN1_String req_val2 = req_dn.get_first_attribute(attr2);
    result.confirm("Attr1 matches encoded", req_val1 == val1);
    result.confirm("Attr2 matches encoded", req_val2 == val2);
    result.confirm("Attr1 tag matches encoded", req_val1.tagging() == val1.tagging());
    result.confirm("Attr2 tag matches encoded", req_val2.tagging() == val2.tagging());
 
-   Botan::X509_Time not_before("100301123001Z", Botan::ASN1_Type::UtcTime);
-   Botan::X509_Time not_after("300301123001Z", Botan::ASN1_Type::UtcTime);
+   const Botan::X509_Time not_before("100301123001Z", Botan::ASN1_Type::UtcTime);
+   const Botan::X509_Time not_after("300301123001Z", Botan::ASN1_Type::UtcTime);
 
    auto cert = ca.sign_request(req, rng, not_before, not_after);
 
@@ -1361,8 +1367,8 @@ Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
 
    result.test_eq("Expected number of DN entries", cert_dn.dn_info().size(), 2);
 
-   Botan::ASN1_String cert_val1 = cert_dn.get_first_attribute(attr1);
-   Botan::ASN1_String cert_val2 = cert_dn.get_first_attribute(attr2);
+   const Botan::ASN1_String cert_val1 = cert_dn.get_first_attribute(attr1);
+   const Botan::ASN1_String cert_val2 = cert_dn.get_first_attribute(attr2);
    result.confirm("Attr1 matches encoded", cert_val1 == val1);
    result.confirm("Attr2 matches encoded", cert_val2 == val2);
    result.confirm("Attr1 tag matches encoded", cert_val1.tagging() == val1.tagging());
@@ -1381,10 +1387,11 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    Test::Result result("X509 Extensions");
 
    /* Create the self-signed cert */
-   Botan::X509_Certificate ca_cert = Botan::X509::create_self_signed_cert(ca_opts(sig_padding), ca_key, hash_fn, rng);
+   const Botan::X509_Certificate ca_cert =
+      Botan::X509::create_self_signed_cert(ca_opts(sig_padding), ca_key, hash_fn, rng);
 
    /* Create the CA object */
-   Botan::X509_CA ca(ca_cert, ca_key, hash_fn, sig_padding, rng);
+   const Botan::X509_CA ca(ca_cert, ca_key, hash_fn, sig_padding, rng);
 
    /* Prepare CDP extension */
    std::vector<std::string> cdp_urls = {
@@ -1396,7 +1403,7 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    for(const auto& uri : cdp_urls) {
       Botan::AlternativeName cdp_alt_name;
       cdp_alt_name.add_uri(uri);
-      Botan::Cert_Extension::CRL_Distribution_Points::Distribution_Point dp(cdp_alt_name);
+      const Botan::Cert_Extension::CRL_Distribution_Points::Distribution_Point dp(cdp_alt_name);
 
       dps.emplace_back(dp);
    }
@@ -1560,7 +1567,7 @@ Test::Result test_x509_tn_auth_list_extension_decode() {
    Test::Result result("X509 TNAuthList decode");
    result.start_timer();
 
-   Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
+   const Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
 
    using Botan::Cert_Extension::TNAuthList;
 

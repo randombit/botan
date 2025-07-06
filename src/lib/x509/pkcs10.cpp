@@ -106,14 +106,14 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body) {
 
    cert_req_info.decode(data->m_subject_dn);
 
-   BER_Object public_key = cert_req_info.get_next_object();
+   const BER_Object public_key = cert_req_info.get_next_object();
    if(public_key.is_a(ASN1_Type::Sequence, ASN1_Class::Constructed) == false) {
       throw BER_Bad_Tag("PKCS10_Request: Unexpected tag for public key", public_key.tagging());
    }
 
    data->m_public_key_bits = ASN1::put_in_sequence(public_key.bits(), public_key.length());
 
-   BER_Object attr_bits = cert_req_info.get_next_object();
+   const BER_Object attr_bits = cert_req_info.get_next_object();
 
    std::set<std::string> pkcs9_email;
 
@@ -257,7 +257,8 @@ bool PKCS10_Request::is_CA() const {
 */
 size_t PKCS10_Request::path_limit() const {
    if(auto ext = extensions().get(OID::from_string("X509v3.BasicConstraints"))) {
-      Cert_Extension::Basic_Constraints& basic_constraints = dynamic_cast<Cert_Extension::Basic_Constraints&>(*ext);
+      const Cert_Extension::Basic_Constraints& basic_constraints =
+         dynamic_cast<Cert_Extension::Basic_Constraints&>(*ext);
       if(basic_constraints.get_is_ca()) {
          return basic_constraints.get_path_limit();
       }

@@ -114,7 +114,7 @@ void Keccak_Permutation::squeeze(std::span<uint8_t> output) {
 
 void Keccak_Permutation::finish() {
    // append the first bit of the final padding after the custom padding
-   uint8_t init_pad = static_cast<uint8_t>(m_custom_padding | uint64_t(1) << m_custom_padding_bit_len);
+   const uint8_t init_pad = static_cast<uint8_t>(m_custom_padding | uint64_t(1) << m_custom_padding_bit_len);
    m_S[m_S_inpos / 8] ^= static_cast<uint64_t>(init_pad) << (8 * (m_S_inpos % 8));
 
    // final bit of the padding of the last block

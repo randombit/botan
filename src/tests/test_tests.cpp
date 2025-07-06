@@ -77,14 +77,16 @@ class Test_Tests final : public Test {
 
          {
             Test::Result test_result(testcase_name);
-            size_t x = 5, y = 6;
+            const size_t x = 5;
+            const size_t y = 6;
             test_result.test_eq("test ints equal", x, y);
             verify_failure("test ints equal", result, test_result);
          }
 
          {
             Test::Result test_result(testcase_name);
-            size_t x = 5, y = 5;
+            const size_t x = 5;
+            const size_t y = 5;
             test_result.test_ne("test ints not equal", x, y);
             verify_failure("test ints not equal", result, test_result);
          }

@@ -23,12 +23,12 @@ int main() {
    const auto key = rng.random_vec(32);  // 256 bit random key
 
    // "Message" != "Mussage" so tags will also not match
-   std::string tag1 = compute_mac("Message", key);
-   std::string tag2 = compute_mac("Mussage", key);
+   const std::string tag1 = compute_mac("Message", key);
+   const std::string tag2 = compute_mac("Mussage", key);
    assert(tag1 != tag2);
 
    // Recomputing with original input message results in identical tag
-   std::string tag3 = compute_mac("Message", key);
+   const std::string tag3 = compute_mac("Message", key);
    assert(tag1 == tag3);
 
    return 0;

@@ -23,7 +23,7 @@ class PSK_Tool_Base : public Command {
          const Botan::secure_vector<uint8_t> db_key =
             Botan::hex_decode_locked(get_passphrase_arg("Database key", "db_key"));
 
-         std::shared_ptr<Botan::SQL_Database> db = std::make_shared<Botan::Sqlite3_Database>(db_filename);
+         const auto db = std::make_shared<Botan::Sqlite3_Database>(db_filename);
          Botan::Encrypted_PSK_Database_SQL psk(db_key, db, "psk");
 
          psk_operation(psk);
@@ -45,7 +45,7 @@ class PSK_Tool_Set final : public PSK_Tool_Base {
    private:
       void psk_operation(Botan::PSK_Database& db) override {
          const std::string name = get_arg("name");
-         const Botan::secure_vector<uint8_t> psk = Botan::hex_decode_locked(get_passphrase_arg("PSK", "psk"));
+         const auto psk = Botan::hex_decode_locked(get_passphrase_arg("PSK", "psk"));
          db.set_vec(name, psk);
       }
 };

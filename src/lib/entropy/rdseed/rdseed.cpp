@@ -36,6 +36,8 @@ BOTAN_FUNC_ISA("rdseed") bool read_rdseed(secure_vector<uint32_t>& seed) {
    */
    const size_t RDSEED_RETRIES = 1024;
 
+   // NOLINTBEGIN(*-const-correctness) clang-tidy doesn't understand inline asm
+
    for(size_t i = 0; i != RDSEED_RETRIES; ++i) {
       uint32_t r = 0;
       int cf = 0;
@@ -58,6 +60,8 @@ BOTAN_FUNC_ISA("rdseed") bool read_rdseed(secure_vector<uint32_t>& seed) {
       _mm_pause();
 #endif
    }
+
+   // NOLINTEND(*-const-correctness)
 
    return false;  // failed to produce an output after many attempts
 }

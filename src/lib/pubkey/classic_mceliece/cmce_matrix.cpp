@@ -32,9 +32,9 @@ CT::Mask<uint64_t> bit_at_mask(uint64_t val, size_t pos) {
 
 /// Swaps bit i with bit j in val
 void swap_bits(uint64_t& val, size_t i, size_t j) {
-   uint64_t bit_i = (val >> i) & CT::value_barrier<uint64_t>(1);
-   uint64_t bit_j = (val >> j) & CT::value_barrier<uint64_t>(1);
-   uint64_t xor_sum = bit_i ^ bit_j;
+   const uint64_t bit_i = (val >> i) & CT::value_barrier<uint64_t>(1);
+   const uint64_t bit_j = (val >> j) & CT::value_barrier<uint64_t>(1);
+   const uint64_t xor_sum = bit_i ^ bit_j;
    val ^= (xor_sum << i);
    val ^= (xor_sum << j);
 }
@@ -126,7 +126,7 @@ std::optional<CmceColumnSelection> move_columns(CmceMatrix& mat, const Classic_M
       // Using the row accumulator we can predict the index of the pivot
       // bit for the current row, i.e., the first index where we can set
       // the bit to one row by adding any subsequent row
-      size_t current_pivot_idx = count_lsb_zeros(row_acc);
+      const size_t current_pivot_idx = count_lsb_zeros(row_acc);
       pivot_indices.at(row_idx) = current_pivot_idx;
 
       // Add subsequent rows to the current row, until the pivot
@@ -185,7 +185,7 @@ std::optional<CmceColumnSelection> apply_gauss(const Classic_McEliece_Parameters
    for(size_t diag_pos = 0; diag_pos < params.pk_no_rows(); ++diag_pos) {
       if(params.is_f() && diag_pos == params.pk_no_rows() - params.mu()) {
          auto ret_pivots = move_columns(mat, params);
-         bool move_columns_failed = !ret_pivots.has_value();
+         const bool move_columns_failed = !ret_pivots.has_value();
          CT::unpoison(move_columns_failed);
          if(move_columns_failed) {
             return std::nullopt;
@@ -204,7 +204,7 @@ std::optional<CmceColumnSelection> apply_gauss(const Classic_McEliece_Parameters
 
       // If the current bit on the diagonal is not set at this point
       // the matrix is not systematic. We abort the computation in this case.
-      bool diag_bit_zero = !mat[diag_pos].at(diag_pos);
+      const bool diag_bit_zero = !mat[diag_pos].at(diag_pos);
       CT::unpoison(diag_bit_zero);
       if(diag_bit_zero) {
          return std::nullopt;
@@ -263,7 +263,7 @@ Classic_McEliece_Matrix::create_matrix_and_apply_pivots(const Classic_McEliece_P
                                                         const Classic_McEliece_Minimal_Polynomial& g) {
    auto pk_matrix_and_pivots = create_matrix(params, field_ordering, g);
 
-   bool matrix_creation_failed = !pk_matrix_and_pivots.has_value();
+   const bool matrix_creation_failed = !pk_matrix_and_pivots.has_value();
    CT::unpoison(matrix_creation_failed);
    if(matrix_creation_failed) {
       return std::nullopt;

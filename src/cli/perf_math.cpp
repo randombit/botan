@@ -29,9 +29,9 @@ namespace Botan_CLI {
 class PerfTest_MpMul final : public PerfTest {
    public:
       void go(const PerfConfig& config) override {
-         std::chrono::milliseconds runtime_per_size = config.runtime();
+         const std::chrono::milliseconds runtime_per_size = config.runtime();
 
-         for(size_t bits : {256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096}) {
+         for(const size_t bits : {256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096}) {
             auto mul_timer = config.make_timer("BigInt mul " + std::to_string(bits));
             auto sqr_timer = config.make_timer("BigInt sqr " + std::to_string(bits));
 
@@ -63,9 +63,9 @@ BOTAN_REGISTER_PERF_TEST("mp_mul", PerfTest_MpMul);
 class PerfTest_MpDiv final : public PerfTest {
    public:
       void go(const PerfConfig& config) override {
-         std::chrono::milliseconds runtime_per_size = config.runtime();
+         const std::chrono::milliseconds runtime_per_size = config.runtime();
 
-         for(size_t n_bits : {256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096}) {
+         for(const size_t n_bits : {256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096}) {
             const size_t q_bits = n_bits / 2;
             const std::string bit_descr = std::to_string(n_bits) + "/" + std::to_string(q_bits);
 
@@ -74,7 +74,7 @@ class PerfTest_MpDiv final : public PerfTest {
 
             Botan::BigInt y;
             Botan::BigInt x;
-            Botan::secure_vector<Botan::word> ws;
+            const Botan::secure_vector<Botan::word> ws;
 
             Botan::BigInt q1, r1, q2, r2;
 
@@ -105,16 +105,16 @@ BOTAN_REGISTER_PERF_TEST("mp_div", PerfTest_MpDiv);
 class PerfTest_MpDiv10 final : public PerfTest {
    public:
       void go(const PerfConfig& config) override {
-         std::chrono::milliseconds runtime_per_size = config.runtime();
+         const std::chrono::milliseconds runtime_per_size = config.runtime();
 
-         for(size_t n_bits : {256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096}) {
+         for(const size_t n_bits : {256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096}) {
             const std::string bit_descr = std::to_string(n_bits) + "/10";
 
             auto div_timer = config.make_timer("BigInt div " + bit_descr);
             auto ct_div_timer = config.make_timer("BigInt ct_div " + bit_descr);
 
             Botan::BigInt x;
-            Botan::secure_vector<Botan::word> ws;
+            const Botan::secure_vector<Botan::word> ws;
 
             const auto ten = Botan::BigInt::from_word(10);
             Botan::BigInt q1, r1, q2;
@@ -152,10 +152,10 @@ class PerfTest_BnRedc final : public PerfTest {
       void go(const PerfConfig& config) override {
          const auto runtime = config.runtime();
 
-         for(size_t bitsize : {512, 1024, 2048, 4096}) {
+         for(const size_t bitsize : {512, 1024, 2048, 4096}) {
             Botan::BigInt p(config.rng(), bitsize);
 
-            std::string bit_str = std::to_string(bitsize) + " bit ";
+            const std::string bit_str = std::to_string(bitsize) + " bit ";
             auto barrett_setup_pub_timer = config.make_timer(bit_str + "Barrett setup public");
             auto barrett_setup_sec_timer = config.make_timer(bit_str + "Barrett setup secret");
 
@@ -198,7 +198,7 @@ class PerfTest_InvMod final : public PerfTest {
       void go(const PerfConfig& config) override {
          const auto runtime = config.runtime();
 
-         for(size_t bits : {256, 384, 512, 1024, 2048}) {
+         for(const size_t bits : {256, 384, 512, 1024, 2048}) {
             const std::string bit_str = std::to_string(bits);
 
             auto timer = config.make_timer("inverse_mod-" + bit_str);
@@ -234,7 +234,7 @@ class PerfTest_IsPrime final : public PerfTest {
       void go(const PerfConfig& config) override {
          const auto runtime = config.runtime();
 
-         for(size_t bits : {256, 512, 1024}) {
+         for(const size_t bits : {256, 512, 1024}) {
             auto mr_timer = config.make_timer("Miller-Rabin-" + std::to_string(bits));
             auto bpsw_timer = config.make_timer("Bailie-PSW-" + std::to_string(bits));
             auto lucas_timer = config.make_timer("Lucas-" + std::to_string(bits));
@@ -314,7 +314,7 @@ BOTAN_REGISTER_PERF_TEST("random_prime", PerfTest_RandomPrime);
 class PerfTest_ModExp final : public PerfTest {
    public:
       void go(const PerfConfig& config) override {
-         for(size_t group_bits : {1024, 1536, 2048, 3072, 4096, 6144, 8192}) {
+         for(const size_t group_bits : {1024, 1536, 2048, 3072, 4096, 6144, 8192}) {
             const std::string group_name = "modp/ietf/" + std::to_string(group_bits);
             auto group = Botan::DL_Group::from_name(group_name);
 

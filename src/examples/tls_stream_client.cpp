@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
       boost::asio::io_context io_context;
 
       boost::asio::ip::tcp::resolver resolver(io_context);
-      boost::asio::ip::tcp::resolver::results_type endpoints = resolver.resolve(host, port);
+      const boost::asio::ip::tcp::resolver::results_type endpoints = resolver.resolve(host, port);
 
       http::request<http::string_body> req;
       req.version(11);
@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
       req.set(http::field::host, host);
       req.set(http::field::user_agent, Botan::version_string());
 
-      client c(io_context, endpoints, host, req);
+      const client c(io_context, endpoints, host, req);
 
       io_context.run();
    } catch(std::exception& e) {

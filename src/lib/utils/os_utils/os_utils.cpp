@@ -176,16 +176,20 @@ uint64_t OS::get_cpu_cycle_counter() {
 
 #elif defined(BOTAN_USE_GCC_INLINE_ASM)
 
+   // NOLINTBEGIN(*-const-correctness) clang-tidy doesn't understand inline asm
+
    #if defined(BOTAN_TARGET_ARCH_IS_X86_64)
 
-   uint32_t rtc_low = 0, rtc_high = 0;
+   uint32_t rtc_low = 0;
+   uint32_t rtc_high = 0;
    asm volatile("rdtsc" : "=d"(rtc_high), "=a"(rtc_low));
    rtc = (static_cast<uint64_t>(rtc_high) << 32) | rtc_low;
 
    #elif defined(BOTAN_TARGET_CPU_IS_X86_FAMILY) && defined(BOTAN_HAS_CPUID)
 
    if(CPUID::has(CPUID::Feature::RDTSC)) {
-      uint32_t rtc_low = 0, rtc_high = 0;
+      uint32_t rtc_low = 0;
+      uint32_t rtc_high = 0;
       asm volatile("rdtsc" : "=d"(rtc_high), "=a"(rtc_low));
       rtc = (static_cast<uint64_t>(rtc_high) << 32) | rtc_low;
    }
@@ -193,7 +197,9 @@ uint64_t OS::get_cpu_cycle_counter() {
    #elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
 
    for(;;) {
-      uint32_t rtc_low = 0, rtc_high = 0, rtc_high2 = 0;
+      uint32_t rtc_low = 0;
+      uint32_t rtc_high = 0;
+      uint32_t rtc_high2 = 0;
       asm volatile("mftbu %0" : "=r"(rtc_high));
       asm volatile("mftb %0" : "=r"(rtc_low));
       asm volatile("mftbu %0" : "=r"(rtc_high2));
@@ -223,6 +229,8 @@ uint64_t OS::get_cpu_cycle_counter() {
    #else
       //#warning "OS::get_cpu_cycle_counter not implemented"
    #endif
+
+   // NOLINTEND(*-const-correctness)
 
 #endif
 
@@ -262,7 +270,7 @@ size_t OS::get_cpu_available() {
 }
 
 uint64_t OS::get_high_resolution_clock() {
-   if(uint64_t cpu_clock = OS::get_cpu_cycle_counter()) {
+   if(const uint64_t cpu_clock = OS::get_cpu_cycle_counter()) {
       return cpu_clock;
    }
 
@@ -298,7 +306,7 @@ uint64_t OS::get_high_resolution_clock() {
    #endif
    };
 
-   for(clockid_t clock : clock_types) {
+   for(const clockid_t clock : clock_types) {
       struct timespec ts;
       if(::clock_gettime(clock, &ts) == 0) {
          return (static_cast<uint64_t>(ts.tv_sec) * 1000000000) + static_cast<uint64_t>(ts.tv_nsec);
@@ -359,7 +367,7 @@ size_t OS::system_page_size() {
    const size_t default_page_size = 4096;
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
-   long p = ::sysconf(_SC_PAGESIZE);
+   const long p = ::sysconf(_SC_PAGESIZE);
    if(p > 1) {
       return static_cast<size_t>(p);
    } else {
@@ -542,7 +550,7 @@ std::vector<void*> OS::allocate_locked_pages(size_t count) {
       mmap_flags |= MAP_NOCORE;
       #endif
 
-      int mmap_prot = PROT_READ | PROT_WRITE;
+      const int mmap_prot = PROT_READ | PROT_WRITE;
 
       #if defined(PROT_MAX)
       mmap_prot |= PROT_MAX(mmap_prot);
@@ -653,7 +661,7 @@ void OS::free_locked_pages(const std::vector<void*>& pages) {
 void OS::page_named(void* page, size_t size) {
 #if defined(BOTAN_TARGET_OS_HAS_PRCTL) && defined(PR_SET_VMA) && defined(PR_SET_VMA_ANON_NAME)
    static constexpr char name[] = "Botan mlock pool";
-   int r = prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, reinterpret_cast<uintptr_t>(page), size, name);
+   const int r = prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, reinterpret_cast<uintptr_t>(page), size, name);
    BOTAN_UNUSED(r);
 #else
    BOTAN_UNUSED(page, size);

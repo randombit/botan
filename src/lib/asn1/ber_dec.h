@@ -153,7 +153,7 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       BER_Decoder& get_next_value(T& out, ASN1_Type type_tag, ASN1_Class class_tag = ASN1_Class::ContextSpecific)
          requires std::is_standard_layout_v<T> && std::is_trivial_v<T>
       {
-         BER_Object obj = get_next_object();
+         const BER_Object obj = get_next_object();
          obj.assert_is_a(type_tag, class_tag);
 
          if(obj.length() != sizeof(T)) {
@@ -291,7 +291,7 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
                                           ASN1_Class class_tag = ASN1_Class::ContextSpecific) {
          BER_Object obj = get_next_object();
 
-         ASN1_Type type_tag = static_cast<ASN1_Type>(expected_tag);
+         const ASN1_Type type_tag = static_cast<ASN1_Type>(expected_tag);
 
          if(obj.is_a(type_tag, class_tag)) {
             if(class_tag == ASN1_Class::ExplicitContextSpecific) {

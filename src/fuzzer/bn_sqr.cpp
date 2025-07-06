@@ -14,10 +14,10 @@ void fuzz(std::span<const uint8_t> in) {
       return;
    }
 
-   Botan::BigInt x = Botan::BigInt::from_bytes(in);
+   const Botan::BigInt x = Botan::BigInt::from_bytes(in);
 
-   Botan::BigInt x_sqr = square(x);
-   Botan::BigInt x_mul = x * x;
+   const Botan::BigInt x_sqr = square(x);
+   const Botan::BigInt x_mul = x * x;
 
    FUZZER_ASSERT_EQUAL(x_sqr, x_mul);
 }

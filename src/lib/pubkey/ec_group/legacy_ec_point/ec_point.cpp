@@ -472,7 +472,7 @@ EC_Point& EC_Point::operator+=(const EC_Point& rhs) {
 }
 
 EC_Point& EC_Point::operator-=(const EC_Point& rhs) {
-   EC_Point minus_rhs = EC_Point(rhs).negate();
+   const EC_Point minus_rhs = EC_Point(rhs).negate();
 
    if(is_zero()) {
       *this = minus_rhs;

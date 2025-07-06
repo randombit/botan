@@ -146,7 +146,7 @@ class AEAD_Tests final : public Text_Based_Test {
             }
 
             // additionally test process() if possible
-            size_t min_final_bytes = enc->minimum_final_size();
+            const size_t min_final_bytes = enc->minimum_final_size();
             if(input.size() > (update_granularity + min_final_bytes)) {
                // again reset state first
                enc->reset();

@@ -99,7 +99,7 @@ std::unique_ptr<HashFunction> create_signature_hash(std::string_view padding) {
       return hash;
    }
 
-   SCAN_Name req(padding);
+   const SCAN_Name req(padding);
 
    if(req.algo_name() == "EMSA1" && req.arg_count() == 1) {
       if(auto hash = HashFunction::create(req.arg(0))) {

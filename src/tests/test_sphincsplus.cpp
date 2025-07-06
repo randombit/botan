@@ -116,7 +116,7 @@ class SPHINCS_Plus_Test_Base : public Text_Based_Test {
          fixed_rng.add_entropy(entropy_for_signing);
 
          // Generate Keypair
-         Botan::SphincsPlus_PrivateKey priv_key(fixed_rng, params);
+         const Botan::SphincsPlus_PrivateKey priv_key(fixed_rng, params);
 
          result.test_is_eq("public key bits", priv_key.public_key_bits(), pk_ref);
          result.test_is_eq("private key bits", unlock(priv_key.private_key_bits()), sk_ref);
@@ -128,7 +128,7 @@ class SPHINCS_Plus_Test_Base : public Text_Based_Test {
          result.test_is_eq("signature creation randomized", unlock(hash->process(signature_rand)), sig_rand_hash);
 
          Botan::PK_Verifier verifier(*priv_key.public_key(), params.algorithm_identifier());
-         bool verify_success =
+         const bool verify_success =
             verifier.verify_message(msg_ref.data(), msg_ref.size(), signature_rand.data(), signature_rand.size());
          result.confirm("verification of valid randomized signature", verify_success);
 
@@ -154,8 +154,8 @@ class SPHINCS_Plus_Test_Base : public Text_Based_Test {
          if(params.parameter_set() == Botan::Sphincs_Parameter_Set::Sphincs128Fast ||
             params.parameter_set() == Botan::Sphincs_Parameter_Set::SLHDSA128Fast) {
             // Deserialization of Keypair from test vector
-            Botan::SphincsPlus_PrivateKey deserialized_priv_key(sk_ref, params);
-            Botan::SphincsPlus_PublicKey deserialized_pub_key(pk_ref, params);
+            const Botan::SphincsPlus_PrivateKey deserialized_priv_key(sk_ref, params);
+            const Botan::SphincsPlus_PublicKey deserialized_pub_key(pk_ref, params);
 
             // Signature with deserialized Keypair
             auto deserialized_signer = Botan::PK_Signer(deserialized_priv_key, fixed_rng, "Randomized");
@@ -167,17 +167,17 @@ class SPHINCS_Plus_Test_Base : public Text_Based_Test {
 
             // Verification with deserialized Keypair
             Botan::PK_Verifier deserialized_verifier(deserialized_pub_key, params.algorithm_identifier());
-            bool verify_success_deserialized = deserialized_verifier.verify_message(
+            const bool verify_success_deserialized = deserialized_verifier.verify_message(
                msg_ref.data(), msg_ref.size(), signature_rand.data(), signature_rand.size());
             result.confirm("verification of valid signature after deserialization", verify_success_deserialized);
 
             // Verification of invalid signature
             auto broken_sig = Test::mutate_vec(deserialized_signature, this->rng());
-            bool verify_fail = deserialized_verifier.verify_message(
+            const bool verify_fail = deserialized_verifier.verify_message(
                msg_ref.data(), msg_ref.size(), broken_sig.data(), broken_sig.size());
             result.confirm("verification of invalid signature", !verify_fail);
 
-            bool verify_success_after_fail = deserialized_verifier.verify_message(
+            const bool verify_success_after_fail = deserialized_verifier.verify_message(
                msg_ref.data(), msg_ref.size(), signature_rand.data(), signature_rand.size());
             result.confirm("verification of valid signature after broken signature", verify_success_after_fail);
          }

@@ -141,7 +141,7 @@ std::pair<std::string, std::string> choose_pbe_params(std::string_view pbe_algo,
       return std::make_pair("AES-256/CBC", "SHA-256");
    }
 
-   SCAN_Name request(pbe_algo);
+   const SCAN_Name request(pbe_algo);
 
    if(request.arg_count() != 2 || (request.algo_name() != "PBE-PKCS5v20" && request.algo_name() != "PBES2")) {
       throw Invalid_Argument(fmt("Unsupported PBE '{}'", pbe_algo));

@@ -125,7 +125,7 @@ uint8_t base58_value_of(char input) {
 }  // namespace
 
 std::string base58_encode(const uint8_t input[], size_t input_length) {
-   BigInt v(input, input_length);
+   const BigInt v(input, input_length);
    return base58_encode(v, count_leading_zeros(input, input_length, 0));
 }
 

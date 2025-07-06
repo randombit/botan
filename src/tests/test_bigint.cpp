@@ -48,7 +48,7 @@ class BigInt_Unit_Tests final : public Test {
       static Test::Result test_bigint_sizes() {
          Test::Result result("BigInt size functions");
 
-         for(size_t bit : {1, 8, 16, 31, 32, 64, 97, 128, 179, 192, 512, 521}) {
+         for(const size_t bit : {1, 8, 16, 31, 32, 64, 97, 128, 179, 192, 512, 521}) {
             BigInt a;
 
             a.set_bit(bit);
@@ -212,7 +212,7 @@ class BigInt_Unit_Tests final : public Test {
          check_bigint_formatting(Botan::BigInt(5), "5", "0x05", "-5", "-0x05");
 
          result.test_throws("octal output not supported", [&]() {
-            Botan::BigInt n(5);
+            const Botan::BigInt n(5);
             std::ostringstream oss;
             oss << std::oct << n;
          });
@@ -795,7 +795,7 @@ class BigInt_Rand_Test final : public Text_Based_Test {
          const Botan::BigInt expected = vars.get_req_bn("Output");
 
          Fixed_Output_RNG rng(seed);
-         Botan::BigInt generated = BigInt::random_integer(rng, min, max);
+         const Botan::BigInt generated = BigInt::random_integer(rng, min, max);
 
          result.test_eq("random_integer KAT", generated, expected);
 
@@ -811,7 +811,7 @@ class Lucas_Primality_Test final : public Test {
          const uint32_t lucas_max = (Test::run_long_tests() ? 100000 : 10000) + 1;
 
          // OEIS A217120
-         std::set<uint32_t> lucas_pp{
+         const std::set<uint32_t> lucas_pp{
             323,   377,   1159,  1829,  3827,  5459,  5777,  9071,  9179,  10877, 11419, 11663, 13919, 14839, 16109,
             16211, 18407, 18971, 19043, 22499, 23407, 24569, 25199, 25877, 26069, 27323, 32759, 34943, 35207, 39059,
             39203, 39689, 40309, 44099, 46979, 47879, 50183, 51983, 53663, 56279, 58519, 60377, 63881, 69509, 72389,
@@ -857,7 +857,7 @@ class RSA_Compute_Exp_Test : public Test {
          const auto random_primes = [&]() {
             std::vector<Botan::BigInt> rp;
             for(size_t i = 0; i != iter / 10; ++i) {
-               size_t bits = (128 + (i % 1024)) % 4096;
+               size_t const bits = (128 + (i % 1024)) % 4096;
                auto p = Botan::random_prime(rng(), bits);
                if(gcd(p - 1, e) == 1) {
                   rp.push_back(p);
@@ -948,7 +948,7 @@ std::vector<Test::Result> test_bigint_serialization() {
 
       CHECK("BigInt truncated/padded binary serialization",
             [&](Test::Result& res) {
-               Botan::BigInt a(0xFEDCBA9876543210);
+               const Botan::BigInt a(0xFEDCBA9876543210);
 
                std::vector<uint8_t> enc1(a.bytes() - 1);
                a.binary_encode(enc1.data(), enc1.size());
@@ -968,7 +968,7 @@ std::vector<Test::Result> test_bigint_serialization() {
                a.binary_encode(enc4.data(), enc4.size());
                res.test_eq("BigInt::binary_encode", enc4, Botan::hex_decode("000000FEDCBA9876543210"));
 
-               Botan::BigInt b(Botan::hex_decode("FEDCBA9876543210BAADC0FFEE"));
+               const Botan::BigInt b(Botan::hex_decode("FEDCBA9876543210BAADC0FFEE"));
 
                std::vector<uint8_t> enc5(b.bytes() + 12);
                rng->randomize(enc5);

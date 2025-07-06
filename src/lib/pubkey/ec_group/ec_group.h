@@ -504,11 +504,11 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       */
       BOTAN_DEPRECATED("Use EC_Group::Mul2Table")
       EC_Point point_multiply(const BigInt& x_bn, const EC_Point& h_pt, const BigInt& y_bn) const {
-         auto x = EC_Scalar::from_bigint(*this, x_bn);
-         auto y = EC_Scalar::from_bigint(*this, y_bn);
-         auto h = EC_AffinePoint(*this, h_pt);
+         const auto x = EC_Scalar::from_bigint(*this, x_bn);
+         const auto y = EC_Scalar::from_bigint(*this, y_bn);
+         const auto h = EC_AffinePoint(*this, h_pt);
 
-         Mul2Table gh_mul(h);
+         const Mul2Table gh_mul(h);
 
          if(auto r = gh_mul.mul2_vartime(x, y)) {
             return r->to_legacy_point();

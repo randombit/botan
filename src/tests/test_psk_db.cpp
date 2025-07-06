@@ -147,7 +147,7 @@ class PSK_DB_Tests final : public Test {
                       const std::string& expected_value) {
          auto stmt = db.new_statement("select psk_value from " + table + " where psk_name='" + expected_name + "'");
 
-         bool got_it = stmt->step();
+         const bool got_it = stmt->step();
          result.confirm("Had expected name", got_it);
 
          if(got_it) {
@@ -162,7 +162,7 @@ class PSK_DB_Tests final : public Test {
          const Botan::secure_vector<uint8_t> not_zeros = this->rng().random_vec(32);
 
          const std::string table_name = "bobby";
-         std::shared_ptr<Botan::SQL_Database> sqldb = std::make_shared<Botan::Sqlite3_Database>(":memory:");
+         const auto sqldb = std::make_shared<Botan::Sqlite3_Database>(":memory:");
 
          Botan::Encrypted_PSK_Database_SQL db(zeros, sqldb, table_name);
          db.set_str("name", "value");

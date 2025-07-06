@@ -29,14 +29,10 @@ BOTAN_FORCE_INLINE void SHA2_32_F(uint32_t A,
                                   uint32_t M3,
                                   uint32_t M4,
                                   uint32_t magic) {
-   uint32_t A_rho = rho<2, 13, 22>(A);
-   uint32_t E_rho = rho<6, 11, 25>(E);
-   uint32_t M2_sigma = sigma<17, 19, 10>(M2);
-   uint32_t M4_sigma = sigma<7, 18, 3>(M4);
-   H += magic + E_rho + choose(E, F, G) + M1;
+   H += magic + rho<6, 11, 25>(E) + choose(E, F, G) + M1;
    D += H;
-   H += A_rho + majority(A, B, C);
-   M1 += M2_sigma + M3 + M4_sigma;
+   H += rho<2, 13, 22>(A) + majority(A, B, C);
+   M1 += sigma<17, 19, 10>(M2) + M3 + sigma<7, 18, 3>(M4);
 }
 
 /*
@@ -44,11 +40,9 @@ BOTAN_FORCE_INLINE void SHA2_32_F(uint32_t A,
 */
 BOTAN_FORCE_INLINE void SHA2_32_F(
    uint32_t A, uint32_t B, uint32_t C, uint32_t& D, uint32_t E, uint32_t F, uint32_t G, uint32_t& H, uint32_t M) {
-   uint32_t A_rho = rho<2, 13, 22>(A);
-   uint32_t E_rho = rho<6, 11, 25>(E);
-   H += E_rho + choose(E, F, G) + M;
+   H += rho<6, 11, 25>(E) + choose(E, F, G) + M;
    D += H;
-   H += A_rho + majority(A, B, C);
+   H += rho<2, 13, 22>(A) + majority(A, B, C);
 }
 
 }  // namespace Botan

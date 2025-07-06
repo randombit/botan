@@ -89,7 +89,7 @@ int botan_key_wrap3394(const uint8_t key[],
                        size_t kek_len,
                        uint8_t wrapped_key[],
                        size_t* wrapped_key_len) {
-   std::string cipher_name = "AES-" + std::to_string(8 * kek_len);
+   const std::string cipher_name = "AES-" + std::to_string(8 * kek_len);
 
    return botan_nist_kw_enc(cipher_name.c_str(), 0, key, key_len, kek, kek_len, wrapped_key, wrapped_key_len);
 }
@@ -100,7 +100,7 @@ int botan_key_unwrap3394(const uint8_t wrapped_key[],
                          size_t kek_len,
                          uint8_t key[],
                          size_t* key_len) {
-   std::string cipher_name = "AES-" + std::to_string(8 * kek_len);
+   const std::string cipher_name = "AES-" + std::to_string(8 * kek_len);
 
    return botan_nist_kw_dec(cipher_name.c_str(), 0, wrapped_key, wrapped_key_len, kek, kek_len, key, key_len);
 }

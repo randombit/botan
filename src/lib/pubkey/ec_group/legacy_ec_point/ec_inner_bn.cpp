@@ -99,7 +99,7 @@ std::unique_ptr<EC_AffinePoint_Data> EC_AffinePoint_Data_BN::mul(const EC_Scalar
    const auto& bn = EC_Scalar_Data_BN::checked_ref(scalar);
 
    std::vector<BigInt> ws;
-   EC_Point_Var_Point_Precompute mul(m_pt, rng, ws);
+   const EC_Point_Var_Point_Precompute mul(m_pt, rng, ws);
 
    // We pass order*cofactor here to "correctly" handle the case where the
    // point is on the curve but not in the prime order subgroup. This only
@@ -117,7 +117,7 @@ secure_vector<uint8_t> EC_AffinePoint_Data_BN::mul_x_only(const EC_Scalar_Data& 
    const auto& bn = EC_Scalar_Data_BN::checked_ref(scalar);
 
    std::vector<BigInt> ws;
-   EC_Point_Var_Point_Precompute mul(m_pt, rng, ws);
+   const EC_Point_Var_Point_Precompute mul(m_pt, rng, ws);
 
    // We pass order*cofactor here to "correctly" handle the case where the
    // point is on the curve but not in the prime order subgroup. This only

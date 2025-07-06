@@ -145,7 +145,7 @@ std::shared_ptr<const Montgomery_Exponentation_State> monty_precompute(const Mon
 std::shared_ptr<const Montgomery_Exponentation_State> monty_precompute(
    const std::shared_ptr<const Montgomery_Params>& params, const BigInt& g, size_t window_bits, bool const_time) {
    BOTAN_ARG_CHECK(g < params->p(), "Montgomery base too big");
-   Montgomery_Int monty_g(params, g);
+   const Montgomery_Int monty_g(params, g);
    return monty_precompute(monty_g, window_bits, const_time);
 }
 

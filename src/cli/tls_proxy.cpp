@@ -369,7 +369,7 @@ class tls_proxy_server final {
       }
 
       void serve_one_session() {
-         session::pointer new_session = make_session();
+         const session::pointer new_session = make_session();
 
          m_acceptor.async_accept(
             new_session->client_socket(),
@@ -410,11 +410,11 @@ class TLS_Proxy final : public Command {
       std::string description() const override { return "Proxies requests between a TLS client and a TLS server"; }
 
       size_t thread_count() const {
-         if(size_t t = get_arg_sz("threads")) {
+         if(const size_t t = get_arg_sz("threads")) {
             return t;
          }
    #if defined(BOTAN_HAS_OS_UTILS)
-         if(size_t t = Botan::OS::get_cpu_available()) {
+         if(const size_t t = Botan::OS::get_cpu_available()) {
             return t;
          }
    #endif
@@ -456,7 +456,8 @@ class TLS_Proxy final : public Command {
             session_mgr = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng_as_shared());
          }
 
-         tls_proxy_server server(io, listen_port, server_endpoint_iterator, creds, policy, session_mgr, max_clients);
+         const tls_proxy_server server(
+            io, listen_port, server_endpoint_iterator, creds, policy, session_mgr, max_clients);
 
          std::vector<std::shared_ptr<std::thread>> threads;
 

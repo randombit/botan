@@ -126,8 +126,8 @@ int main() {
    // Note: For simplicity we omit the authentication of any associated data.
    //       If your use case would benefit from it, you should add it. Perhaps
    //       to both the password hashing and the AEAD.
-   std::string_view password = "geheimnis";
-   std::string_view message = "Attack at dawn!";
+   const std::string_view password = "geheimnis";
+   const std::string_view message = "Attack at dawn!";
 
    try {
       const auto ciphertext = encrypt_by_password(password, rng, as<Botan::secure_vector<uint8_t>>(message));

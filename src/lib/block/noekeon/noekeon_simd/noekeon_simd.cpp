@@ -47,7 +47,7 @@ inline void gamma(SIMD_4x32& A0, SIMD_4x32& A1, SIMD_4x32& A2, SIMD_4x32& A3) {
    A1 ^= ~(A2 | A3);
    A0 ^= A2 & A1;
 
-   SIMD_4x32 T = A3;
+   const SIMD_4x32 T = A3;
    A3 = A0;
    A0 = T;
 

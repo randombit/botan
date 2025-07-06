@@ -54,7 +54,7 @@ class TLS_Policy_Unit_Tests final : public Test {
          Test::Result result("TLS Policy RSA key verification");
    #if defined(BOTAN_HAS_RSA)
          auto rsa_key_1024 = std::make_unique<Botan::RSA_PrivateKey>(rng, 1024);
-         Botan::TLS::Policy policy;
+         const Botan::TLS::Policy policy;
 
          try {
             policy.check_peer_key_acceptable(*rsa_key_1024);
@@ -74,7 +74,7 @@ class TLS_Policy_Unit_Tests final : public Test {
          Test::Result result("TLS Policy ECDH key verification");
    #if defined(BOTAN_HAS_ECDH)
 
-         Botan::TLS::Policy policy;
+         const Botan::TLS::Policy policy;
 
          if(Botan::EC_Group::supports_named_group("secp192r1")) {
             const auto group_192 = Botan::EC_Group::from_name("secp192r1");
@@ -101,7 +101,7 @@ class TLS_Policy_Unit_Tests final : public Test {
       static Test::Result test_peer_key_acceptable_ecdsa(Botan::RandomNumberGenerator& rng) {
          Test::Result result("TLS Policy ECDSA key verification");
    #if defined(BOTAN_HAS_ECDSA)
-         Botan::TLS::Policy policy;
+         const Botan::TLS::Policy policy;
 
          if(Botan::EC_Group::supports_named_group("secp192r1")) {
             const auto group_192 = Botan::EC_Group::from_name("secp192r1");
@@ -134,7 +134,7 @@ class TLS_Policy_Unit_Tests final : public Test {
          const Botan::BigInt x("46205663093589612668746163860870963912226379131190812163519349848291472898748");
          auto dhkey = std::make_unique<Botan::DH_PrivateKey>(grp, x);
 
-         Botan::TLS::Policy policy;
+         const Botan::TLS::Policy policy;
          try {
             policy.check_peer_key_acceptable(*dhkey);
             result.test_failure("Incorrectly accepting short bit DH keys");
@@ -148,7 +148,7 @@ class TLS_Policy_Unit_Tests final : public Test {
       static Test::Result test_key_exchange_groups_to_offer() {
          Test::Result result("TLS Policy key share offering");
 
-         Botan::TLS::Policy default_policy;
+         const Botan::TLS::Policy default_policy;
          result.test_eq(
             "default TLS Policy offers exactly one", default_policy.key_exchange_groups_to_offer().size(), 1);
          result.confirm(

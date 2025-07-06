@@ -91,7 +91,7 @@ std::string bcrypt_base64_encode(const uint8_t input[], size_t length) {
 std::vector<uint8_t> bcrypt_base64_decode(std::string_view input) {
    std::string translated;
    for(size_t i = 0; i != input.size(); ++i) {
-      char c = bcrypt_encoding_to_base64(static_cast<uint8_t>(input[i]));
+      const char c = bcrypt_encoding_to_base64(static_cast<uint8_t>(input[i]));
       translated.push_back(c);
    }
 
@@ -126,7 +126,7 @@ std::string make_bcrypt(std::string_view pass, const std::vector<uint8_t>& salt,
       blowfish.encrypt_n(ctext.data(), ctext.data(), 3);
    }
 
-   std::string salt_b64 = bcrypt_base64_encode(salt.data(), salt.size());
+   const std::string salt_b64 = bcrypt_base64_encode(salt.data(), salt.size());
 
    std::string work_factor_str = std::to_string(work_factor);
    if(work_factor_str.length() == 1) {

@@ -17,7 +17,7 @@ namespace Botan {
 
 //static
 PSS_Params PSS_Params::from_emsa_name(std::string_view emsa_name) {
-   SCAN_Name scanner(emsa_name);
+   const SCAN_Name scanner(emsa_name);
 
    if((scanner.algo_name() != "PSS" && scanner.algo_name() != "PSS_Raw") || scanner.arg_count() != 3) {
       throw Invalid_Argument(fmt("PSS_Params::from_emsa_name unexpected param '{}'", emsa_name));

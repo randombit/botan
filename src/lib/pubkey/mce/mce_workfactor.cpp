@@ -92,7 +92,7 @@ size_t mceliece_work_factor(size_t n, size_t t) {
 
    double min = cout_total(n, k, t, 0, 0);  // correspond a p=1
    for(size_t p = 0; p != t / 2; ++p) {
-      double lwf = best_wf(n, k + 1, t, p);
+      const double lwf = best_wf(n, k + 1, t, p);
       if(lwf < 0) {
          break;
       }

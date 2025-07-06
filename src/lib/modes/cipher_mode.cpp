@@ -79,7 +79,7 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(std::string_view algo,
 
    if(algo.find('/') != std::string::npos) {
       const std::vector<std::string> algo_parts = split_on(algo, '/');
-      std::string_view cipher_name = algo_parts[0];
+      const std::string_view cipher_name = algo_parts[0];
       const std::vector<std::string> mode_info = parse_algorithm_name(algo_parts[1]);
 
       if(mode_info.empty()) {
@@ -102,7 +102,7 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(std::string_view algo,
 
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
 
-   SCAN_Name spec(algo);
+   const SCAN_Name spec(algo);
 
    if(spec.arg_count() == 0) {
       return std::unique_ptr<Cipher_Mode>();

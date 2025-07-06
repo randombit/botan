@@ -167,7 +167,7 @@ void fuzz(std::span<const uint8_t> in) {
 
    auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
    auto policy = std::make_shared<Fuzzer_TLS_Policy>();
-   Botan::TLS::Server_Information info("server.name", 443);
+   const Botan::TLS::Server_Information info("server.name", 443);
    auto creds = std::make_shared<Fuzzer_TLS_Server_Creds>();
    auto callbacks = std::make_shared<Fuzzer_TLS_Server_Callbacks>();
 

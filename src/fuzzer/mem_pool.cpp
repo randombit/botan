@@ -58,7 +58,7 @@ std::vector<RawPage> allocate_raw_pages(size_t count, size_t page_size) {
    for(size_t i = 0; i != count; ++i) {
       void* ptr = nullptr;
 
-      int rc = ::posix_memalign(&ptr, page_size, page_size);
+      const int rc = ::posix_memalign(&ptr, page_size, page_size);
       FUZZER_ASSERT_EQUAL(rc, 0);
 
       if(ptr != nullptr) {

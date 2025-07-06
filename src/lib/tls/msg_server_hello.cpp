@@ -323,7 +323,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
    }
 
    if(client_hello.supports_encrypt_then_mac() && policy.negotiate_encrypt_then_mac()) {
-      Ciphersuite c = resumed_session.ciphersuite();
+      const Ciphersuite c = resumed_session.ciphersuite();
       if(c.cbc_ciphersuite()) {
          m_data->extensions().add(new Encrypt_then_MAC);
       }

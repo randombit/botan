@@ -30,7 +30,7 @@ bool is_lucas_probable_prime(const BigInt& C, const Barrett_Reduction& mod_C) {
    BigInt D = BigInt::from_word(5);
 
    for(;;) {
-      int32_t j = jacobi(D, C);
+      const int32_t j = jacobi(D, C);
       if(j == 0) {
          return false;
       }

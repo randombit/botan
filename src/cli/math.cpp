@@ -73,7 +73,7 @@ class Is_Prime final : public Command {
       std::string description() const override { return "Test if the integer n is composite or prime"; }
 
       void go() override {
-         Botan::BigInt n(get_arg("n"));
+         const Botan::BigInt n(get_arg("n"));
          const size_t prob = get_arg_sz("prob");
          const bool prime = Botan::is_prime(n, rng(), prob);
 
@@ -96,7 +96,7 @@ class Factor final : public Command {
       std::string description() const override { return "Factor a given integer"; }
 
       void go() override {
-         Botan::BigInt n(get_arg("n"));
+         const Botan::BigInt n(get_arg("n"));
 
          std::vector<Botan::BigInt> factors = factorize(n, rng());
          std::sort(factors.begin(), factors.end());

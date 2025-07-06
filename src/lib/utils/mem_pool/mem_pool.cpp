@@ -333,7 +333,7 @@ void* Memory_Pool::allocate(size_t n) {
    const size_t n_bucket = choose_bucket(n);
 
    if(n_bucket > 0) {
-      lock_guard_type<mutex_type> lock(m_mutex);
+      const lock_guard_type<mutex_type> lock(m_mutex);
 
       std::deque<Bucket>& buckets = m_buckets_for[n_bucket];
 
@@ -380,7 +380,7 @@ bool Memory_Pool::deallocate(void* p, size_t len) noexcept {
 
    if(n_bucket != 0) {
       try {
-         lock_guard_type<mutex_type> lock(m_mutex);
+         const lock_guard_type<mutex_type> lock(m_mutex);
 
          std::deque<Bucket>& buckets = m_buckets_for[n_bucket];
 

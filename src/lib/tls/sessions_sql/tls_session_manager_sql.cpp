@@ -123,7 +123,7 @@ void Session_Manager_SQL::initialize_existing_database(std::string_view passphra
       throw Internal_Error("Failed to initialize TLS session database");
    }
 
-   std::pair<const uint8_t*, size_t> salt = stmt->get_blob(0);
+   const std::pair<const uint8_t*, size_t> salt = stmt->get_blob(0);
    const size_t iterations = stmt->get_size_t(1);
    const size_t check_val_db = stmt->get_size_t(2);
    const std::string pbkdf_name = stmt->get_str(3);
@@ -188,7 +188,7 @@ std::optional<Session> Session_Manager_SQL::retrieve_one(const Session_Handle& h
       stmt->bind(1, hex_encode(session_id->get()));
 
       while(stmt->step()) {
-         std::pair<const uint8_t*, size_t> blob = stmt->get_blob(0);
+         const std::pair<const uint8_t*, size_t> blob = stmt->get_blob(0);
 
          try {
             return Session::decrypt(blob.first, blob.second, m_session_key);
@@ -227,7 +227,7 @@ std::vector<Session_with_Handle> Session_Manager_SQL::find_some(const Server_Inf
          }
       }();
 
-      std::pair<const uint8_t*, size_t> blob = stmt->get_blob(2);
+      const std::pair<const uint8_t*, size_t> blob = stmt->get_blob(2);
 
       try {
          found_sessions.emplace_back(
@@ -241,7 +241,7 @@ std::vector<Session_with_Handle> Session_Manager_SQL::find_some(const Server_Inf
 size_t Session_Manager_SQL::remove(const Session_Handle& handle) {
    // The number of deleted rows is taken globally from the database connection,
    // therefore we need to serialize this implementation.
-   lock_guard_type<recursive_mutex_type> lk(mutex());
+   const lock_guard_type<recursive_mutex_type> lk(mutex());
 
    if(const auto id = handle.id()) {
       auto stmt = m_db->new_statement("DELETE FROM tls_sessions WHERE session_id = ?1");
@@ -262,7 +262,7 @@ size_t Session_Manager_SQL::remove(const Session_Handle& handle) {
 size_t Session_Manager_SQL::remove_all() {
    // The number of deleted rows is taken globally from the database connection,
    // therefore we need to serialize this implementation.
-   lock_guard_type<recursive_mutex_type> lk(mutex());
+   const lock_guard_type<recursive_mutex_type> lk(mutex());
 
    m_db->exec("DELETE FROM tls_sessions");
    return m_db->rows_changed_by_last_statement();

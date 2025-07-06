@@ -181,7 +181,7 @@ inline void fsquare(uint64_t out[5], const uint64_t in[5], size_t count = 1) {
       const uint64_t d419 = r4 * 19;
       const uint64_t d4 = d419 * 2;
 
-      uint128_t t0 = uint128_t(r0) * r0 + uint128_t(d4) * r1 + uint128_t(d2) * (r3);
+      const uint128_t t0 = uint128_t(r0) * r0 + uint128_t(d4) * r1 + uint128_t(d2) * (r3);
       uint128_t t1 = uint128_t(d0) * r1 + uint128_t(d4) * r2 + uint128_t(r3) * (r3 * 19);
       uint128_t t2 = uint128_t(d0) * r2 + uint128_t(r1) * r1 + uint128_t(d4) * (r3);
       uint128_t t3 = uint128_t(d0) * r3 + uint128_t(d1) * r2 + uint128_t(r4) * (d419);

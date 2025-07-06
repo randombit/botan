@@ -63,10 +63,10 @@ BOTAN_FN_ISA_SSE2 void transpose_in(__m128i& B0, __m128i& B1, __m128i& B2, __m12
    __m128i T2 = _mm_unpackhi_epi32(B2, B3);
    __m128i T3 = _mm_unpacklo_epi32(B2, B3);
 
-   __m128i T4 = _mm_unpacklo_epi32(T0, T1);
-   __m128i T5 = _mm_unpackhi_epi32(T0, T1);
-   __m128i T6 = _mm_unpacklo_epi32(T2, T3);
-   __m128i T7 = _mm_unpackhi_epi32(T2, T3);
+   const __m128i T4 = _mm_unpacklo_epi32(T0, T1);
+   const __m128i T5 = _mm_unpackhi_epi32(T0, T1);
+   const __m128i T6 = _mm_unpacklo_epi32(T2, T3);
+   const __m128i T7 = _mm_unpackhi_epi32(T2, T3);
 
    T0 = _mm_shufflehi_epi16(T4, _MM_SHUFFLE(1, 3, 0, 2));
    T1 = _mm_shufflehi_epi16(T5, _MM_SHUFFLE(1, 3, 0, 2));
@@ -150,11 +150,11 @@ BOTAN_FN_ISA_SSE2 void IDEA::sse2_idea_op_8(const uint8_t in[64], uint8_t out[64
       B2 = _mm_add_epi16(B2, _mm_set1_epi16(EK[6 * i + 2]));
       B3 = mul(B3, EK[6 * i + 3]);
 
-      __m128i T0 = B2;
+      const __m128i T0 = B2;
       B2 = _mm_xor_si128(B2, B0);
       B2 = mul(B2, EK[6 * i + 4]);
 
-      __m128i T1 = B1;
+      const __m128i T1 = B1;
 
       B1 = _mm_xor_si128(B1, B3);
       B1 = _mm_add_epi16(B1, B2);

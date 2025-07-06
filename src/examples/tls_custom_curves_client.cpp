@@ -108,7 +108,7 @@ int main() {
    const Botan::OID oid("1.3.6.1.4.1.25258.4.1");
 
    // create EC_Group object to register the curve
-   Botan::EC_Group numsp256d1(oid, p, a, b, g_x, g_y, n);
+   const Botan::EC_Group numsp256d1(oid, p, a, b, g_x, g_y, n);
 
    if(!numsp256d1.verify_group(*rng)) {
       return 1;
@@ -125,13 +125,13 @@ int main() {
    auto policy = std::make_shared<Botan::TLS::Strict_Policy>();
 
    // open the tls connection
-   Botan::TLS::Client client(callbacks,
-                             session_mgr,
-                             creds,
-                             policy,
-                             rng,
-                             Botan::TLS::Server_Information("botan.randombit.net", 443),
-                             Botan::TLS::Protocol_Version::TLS_V12);
+   const Botan::TLS::Client client(callbacks,
+                                   session_mgr,
+                                   creds,
+                                   policy,
+                                   rng,
+                                   Botan::TLS::Server_Information("botan.randombit.net", 443),
+                                   Botan::TLS::Protocol_Version::TLS_V12);
 
    while(!client.is_closed()) {
       // read data received from the tls server, e.g., using BSD sockets or boost asio

@@ -55,7 +55,7 @@ class SIMD_4X32_Tests final : public Test {
 
          const Botan::SIMD_4x32 input(pat1, pat2, pat3, pat4);
 
-         Botan::SIMD_4x32 rol = input.rotl<3>();
+         const Botan::SIMD_4x32 rol = input.rotl<3>();
 
          test_eq(result,
                  "rotl",
@@ -65,7 +65,7 @@ class SIMD_4X32_Tests final : public Test {
                  Botan::rotl<3>(pat3),
                  Botan::rotl<3>(pat4));
 
-         Botan::SIMD_4x32 ror = input.rotr<9>();
+         const Botan::SIMD_4x32 ror = input.rotr<9>();
 
          test_eq(result,
                  "rotr",

@@ -226,7 +226,7 @@ class Stateful_RNG_Tests : public Test {
          // make sure the nonce has at least security_strength bits
          auto rng = create_rng(nullptr, nullptr, 0);
 
-         for(size_t nonce_size : {0, 4, 8, 16, 31, 32, 34, 64}) {
+         for(const size_t nonce_size : {0, 4, 8, 16, 31, 32, 34, 64}) {
             rng->clear();
             result.test_eq("not seeded", rng->is_seeded(), false);
 
@@ -281,12 +281,12 @@ class Stateful_RNG_Tests : public Test {
          size_t count = counting_rng.randomize_count();
          Botan::secure_vector<uint8_t> parent_bytes(16), child_bytes(16);
          int fd[2];
-         int rc = ::pipe(fd);
+         const int rc = ::pipe(fd);
          if(rc != 0) {
             result.test_failure("failed to create pipe");
          }
 
-         pid_t pid = ::fork();
+         const pid_t pid = ::fork();
          if(pid == -1) {
       #if defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
             result.test_note("failed to fork process");
@@ -433,14 +433,15 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests {
 
          Request_Counting_RNG counting_rng;
 
-         result.test_throws(
-            "HMAC_DRBG does not accept 0 for max_number_of_bytes_per_request", [&mac_string, &counting_rng]() {
-               Botan::HMAC_DRBG failing_rng(Botan::MessageAuthenticationCode::create(mac_string), counting_rng, 2, 0);
-            });
+         result.test_throws("HMAC_DRBG does not accept 0 for max_number_of_bytes_per_request",
+                            [&mac_string, &counting_rng]() {
+                               const Botan::HMAC_DRBG failing_rng(
+                                  Botan::MessageAuthenticationCode::create(mac_string), counting_rng, 2, 0);
+                            });
 
          result.test_throws("HMAC_DRBG does not accept values higher than 64KB for max_number_of_bytes_per_request",
                             [&mac_string, &counting_rng]() {
-                               Botan::HMAC_DRBG failing_rng(
+                               const Botan::HMAC_DRBG failing_rng(
                                   Botan::MessageAuthenticationCode::create(mac_string), counting_rng, 2, 64 * 1024 + 1);
                             });
 
@@ -482,14 +483,14 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests {
          Request_Counting_RNG counting_rng;
 
          result.test_throws("HMAC_DRBG does not accept 0 for reseed_interval", [&mac_string, &counting_rng]() {
-            Botan::HMAC_DRBG failing_rng(Botan::MessageAuthenticationCode::create(mac_string), counting_rng, 0);
+            const Botan::HMAC_DRBG failing_rng(Botan::MessageAuthenticationCode::create(mac_string), counting_rng, 0);
          });
 
          result.test_throws("HMAC_DRBG does not accept values higher than 2^24 for reseed_interval",
                             [&mac_string, &counting_rng]() {
-                               Botan::HMAC_DRBG failing_rng(Botan::MessageAuthenticationCode::create(mac_string),
-                                                            counting_rng,
-                                                            (static_cast<size_t>(1) << 24) + 1);
+                               const Botan::HMAC_DRBG failing_rng(Botan::MessageAuthenticationCode::create(mac_string),
+                                                                  counting_rng,
+                                                                  (static_cast<size_t>(1) << 24) + 1);
                             });
 
          return result;
@@ -512,7 +513,7 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests {
                continue;
             }
 
-            Botan::HMAC_DRBG rng(std::move(mac));
+            const Botan::HMAC_DRBG rng(std::move(mac));
             result.test_eq(hash_fn + " security level", rng.security_level(), expected_security_level);
          }
 
@@ -592,7 +593,7 @@ std::vector<Test::Result> hmac_drbg_multiple_requests() {
               rng1->randomize_with_input(bulk, seed);
 
               std::vector<uint8_t> split(3 * rng_max_output);
-              std::span<uint8_t> split_span(split);
+              std::span<uint8_t> const split_span(split);
               rng2->randomize_with_input(split_span.subspan(0, rng_max_output), seed);
               rng2->randomize_with_input(split_span.subspan(rng_max_output, rng_max_output), {});
               rng2->randomize_with_input(split_span.subspan(2 * rng_max_output), {});
@@ -632,7 +633,7 @@ class ChaCha_RNG_Unit_Tests final : public Stateful_RNG_Tests {
 
       Test::Result test_security_level() override {
          Test::Result result("ChaCha_RNG Security Level");
-         Botan::ChaCha_RNG rng;
+         const Botan::ChaCha_RNG rng;
          result.test_eq("Expected security level", rng.security_level(), size_t(256));
          return result;
       }
@@ -692,7 +693,7 @@ class AutoSeeded_RNG_Tests final : public Test {
          result.test_eq("Null_RNG is null", null_rng.is_seeded(), false);
 
          try {
-            Botan::AutoSeeded_RNG rng(null_rng);
+            const Botan::AutoSeeded_RNG rng(null_rng);
          } catch(Botan::PRNG_Unseeded&) {
             result.test_success("AutoSeeded_RNG rejected useless RNG");
          }
@@ -701,14 +702,14 @@ class AutoSeeded_RNG_Tests final : public Test {
          Botan::Entropy_Sources no_entropy_for_you;
 
          try {
-            Botan::AutoSeeded_RNG rng(no_entropy_for_you);
+            const Botan::AutoSeeded_RNG rng(no_entropy_for_you);
             result.test_failure("AutoSeeded_RNG should have rejected useless entropy source");
          } catch(Botan::PRNG_Unseeded&) {
             result.test_success("AutoSeeded_RNG rejected empty entropy source");
          }
 
          try {
-            Botan::AutoSeeded_RNG rng(null_rng, no_entropy_for_you);
+            const Botan::AutoSeeded_RNG rng(null_rng, no_entropy_for_you);
          } catch(Botan::PRNG_Unseeded&) {
             result.test_success("AutoSeeded_RNG rejected useless RNG+entropy sources");
          }
@@ -830,7 +831,8 @@ class Processor_RNG_Tests final : public Test {
             result.confirm("CPU RNG always seeded", rng.is_seeded());
 
    #if defined(BOTAN_HAS_ENTROPY_SOURCE)
-            size_t reseed_bits = rng.reseed(Botan::Entropy_Sources::global_sources(), 256, std::chrono::seconds(1));
+            const size_t reseed_bits =
+               rng.reseed(Botan::Entropy_Sources::global_sources(), 256, std::chrono::seconds(1));
             result.test_eq("CPU RNG cannot consume inputs", reseed_bits, size_t(0));
    #endif
 
@@ -849,7 +851,8 @@ class Processor_RNG_Tests final : public Test {
                rng.randomize(out_buf.data(), out_buf.size());
             }
          } else {
-            result.test_throws("Processor_RNG throws if instruction not available", []() { Botan::Processor_RNG rng; });
+            result.test_throws("Processor_RNG throws if instruction not available",
+                               []() { const Botan::Processor_RNG rng; });
          }
 
          return std::vector<Test::Result>{result};

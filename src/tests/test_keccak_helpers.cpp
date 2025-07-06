@@ -144,7 +144,7 @@ std::vector<Test::Result> keccak_helpers() {
          CHECK(
             "keccak_absorb_padded_strings_encoding() with one byte string",
             [](Test::Result& result) {
-               std::vector<uint8_t> out(32);
+               std::vector<uint8_t> const out(32);
                const auto xof = Botan::XOF::create_or_throw("SHAKE-256");
                const auto padmod = xof->block_size();
 
@@ -162,7 +162,7 @@ std::vector<Test::Result> keccak_helpers() {
             }),
 
          CHECK("keccak_absorb_padded_strings_encoding() with two byte strings", [](Test::Result& result) {
-            std::vector<uint8_t> out(32);
+            std::vector<uint8_t> const out(32);
             const auto xof = Botan::XOF::create_or_throw("SHAKE-256");
             const auto padmod = xof->block_size();
 

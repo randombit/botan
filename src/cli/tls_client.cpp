@@ -61,14 +61,14 @@ class Callbacks : public Botan::TLS::Callbacks {
             throw Botan::Invalid_Argument("Certificate chain was empty");
          }
 
-         Botan::Path_Validation_Restrictions restrictions(policy.require_cert_revocation_info(),
-                                                          policy.minimum_signature_strength());
+         const Botan::Path_Validation_Restrictions restrictions(policy.require_cert_revocation_info(),
+                                                                policy.minimum_signature_strength());
 
          auto ocsp_timeout = std::chrono::milliseconds(1000);
 
          const std::string checked_name = flag_set("skip-hostname-check") ? "" : std::string(hostname);
 
-         Botan::Path_Validation_Result result = Botan::x509_path_validate(
+         const Botan::Path_Validation_Result result = Botan::x509_path_validate(
             cert_chain, restrictions, trusted_roots, checked_name, usage, tls_current_timestamp(), ocsp_timeout, ocsp);
 
          if(result.successful_validation()) {
@@ -292,7 +292,7 @@ class TLS_Client final : public Command {
             if(client.is_active()) {
                FD_SET(STDIN_FILENO, &readfds);
                if(first_active && !protocols_to_offer.empty()) {
-                  std::string app = client.application_protocol();
+                  const std::string app = client.application_protocol();
                   if(!app.empty()) {
                      output() << "Server choose protocol: " << client.application_protocol() << "\n";
                   }
@@ -307,7 +307,7 @@ class TLS_Client final : public Command {
             if(FD_ISSET(m_sockfd, &readfds)) {
                uint8_t buf[4 * 1024] = {0};
 
-               ssize_t got = ::read(m_sockfd, buf, sizeof(buf));
+               const ssize_t got = ::read(m_sockfd, buf, sizeof(buf));
 
                if(got == 0) {
                   output() << "EOF on socket\n";
@@ -326,7 +326,7 @@ class TLS_Client final : public Command {
 
             if(FD_ISSET(STDIN_FILENO, &readfds)) {
                uint8_t buf[1024] = {0};
-               ssize_t got = read(STDIN_FILENO, buf, sizeof(buf));
+               const ssize_t got = read(STDIN_FILENO, buf, sizeof(buf));
 
                if(got == 0) {
                   output() << "EOF on stdin\n";
@@ -339,7 +339,7 @@ class TLS_Client final : public Command {
                }
 
                if(got == 2 && buf[1] == '\n') {
-                  char cmd = buf[0];
+                  const char cmd = buf[0];
 
                   if(cmd == 'R' || cmd == 'r') {
                      output() << "Client initiated renegotiation\n";

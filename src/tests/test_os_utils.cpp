@@ -48,8 +48,8 @@ class OS_Utils_Tests final : public Test {
       static Test::Result test_get_process_id() {
          Test::Result result("OS::get_process_id");
 
-         uint32_t pid1 = Botan::OS::get_process_id();
-         uint32_t pid2 = Botan::OS::get_process_id();
+         const uint32_t pid1 = Botan::OS::get_process_id();
+         const uint32_t pid2 = Botan::OS::get_process_id();
 
          result.test_eq("PID same across calls", static_cast<size_t>(pid1), static_cast<size_t>(pid2));
 
@@ -120,13 +120,13 @@ class OS_Utils_Tests final : public Test {
          // TODO better tests
          Test::Result result("OS::get_system_timestamp_ns");
 
-         uint64_t sys_ts1 = Botan::OS::get_system_timestamp_ns();
+         const uint64_t sys_ts1 = Botan::OS::get_system_timestamp_ns();
          result.confirm("System timestamp value is never zero", sys_ts1 != 0);
 
          // do something that consumes a little time
          Botan::OS::get_process_id();
 
-         uint64_t sys_ts2 = Botan::OS::get_system_timestamp_ns();
+         const uint64_t sys_ts2 = Botan::OS::get_system_timestamp_ns();
 
          result.confirm("System time moves forward", sys_ts1 <= sys_ts2);
 
@@ -146,7 +146,7 @@ class OS_Utils_Tests final : public Test {
 
          // OS::run_cpu_instruction_probe only implemented for Unix signals or Windows SEH
 
-         std::function<int()> ok_fn = []() noexcept -> int { return 5; };
+         const std::function<int()> ok_fn = []() noexcept -> int { return 5; };
          const int run_rc = Botan::OS::run_cpu_instruction_probe(ok_fn);
 
          if(run_rc == -3) {

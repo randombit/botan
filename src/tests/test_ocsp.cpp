@@ -39,7 +39,7 @@ class OCSP_Tests final : public Test {
 
          for(const std::string& ocsp_input_path : ocsp_input_paths) {
             try {
-               Botan::OCSP::Response resp(Test::read_binary_data_file(ocsp_input_path));
+               const Botan::OCSP::Response resp(Test::read_binary_data_file(ocsp_input_path));
                result.confirm("parsing was successful", resp.status() == Botan::OCSP::Response_Status_Code::Successful);
                result.test_success("Parsed input " + ocsp_input_path);
             } catch(Botan::Exception& e) {
@@ -47,7 +47,7 @@ class OCSP_Tests final : public Test {
             }
          }
 
-         Botan::OCSP::Response resp(
+         const Botan::OCSP::Response resp(
             Test::read_binary_data_file("x509/ocsp/patrickschmidt_ocsp_try_later_wrong_sig.der"));
          result.confirm("parsing exposes correct status code",
                         resp.status() == Botan::OCSP::Response_Status_Code::Try_Later);
@@ -59,7 +59,7 @@ class OCSP_Tests final : public Test {
          Test::Result result("OCSP response certificate access");
 
          try {
-            Botan::OCSP::Response resp1(Test::read_binary_data_file("x509/ocsp/resp1.der"));
+            const Botan::OCSP::Response resp1(Test::read_binary_data_file("x509/ocsp/resp1.der"));
             const auto& certs1 = resp1.certificates();
             if(result.test_eq("Expected count of certificates", certs1.size(), 1)) {
                const auto& cert = certs1.front();
@@ -69,7 +69,7 @@ class OCSP_Tests final : public Test {
                result.test_eq("CN matches expected", matches, true);
             }
 
-            Botan::OCSP::Response resp2(Test::read_binary_data_file("x509/ocsp/resp2.der"));
+            const Botan::OCSP::Response resp2(Test::read_binary_data_file("x509/ocsp/resp2.der"));
             const auto& certs2 = resp2.certificates();
             result.test_eq("Expect no certificates", certs2.size(), 0);
          } catch(Botan::Exception& e) {
@@ -220,7 +220,7 @@ class OCSP_Tests final : public Test {
 
          auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
                                const Botan::Certificate_Status_Code expected) {
-            Botan::Path_Validation_Restrictions pvr(false, 110, false, max_age);
+            const Botan::Path_Validation_Restrictions pvr(false, 110, false, max_age);
             const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, {ocsp}, {&certstore}, valid_time, pvr);
 
             return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
@@ -260,7 +260,7 @@ class OCSP_Tests final : public Test {
 
          auto check_ocsp = [&](const std::chrono::system_clock::time_point valid_time,
                                const Botan::Certificate_Status_Code expected) {
-            Botan::Path_Validation_Restrictions pvr(false, 110, false, max_age);
+            const Botan::Path_Validation_Restrictions pvr(false, 110, false, max_age);
             const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, {ocsp}, {&certstore}, valid_time, pvr);
 
             return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
@@ -383,7 +383,7 @@ class OCSP_Tests final : public Test {
          auto responder = load_test_X509_cert("x509/ocsp/randombit_ocsp_forged_responder.pem");
          auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
 
-         std::optional<Botan::X509_Certificate> nullopt_cert;
+         const std::optional<Botan::X509_Certificate> nullopt_cert;
 
          Botan::Certificate_Store_In_Memory trusted_responders;
 

@@ -122,7 +122,7 @@ std::vector<Group_Params> Text_Policy::key_exchange_groups() const {
 }
 
 std::vector<Group_Params> Text_Policy::key_exchange_groups_to_offer() const {
-   std::string group_str = get_str("key_exchange_groups_to_offer", "notset");
+   const std::string group_str = get_str("key_exchange_groups_to_offer", "notset");
 
    if(group_str.empty() || group_str == "notset") {
       // policy was not set, fall back to default behaviour
@@ -241,7 +241,7 @@ std::vector<Group_Params> Text_Policy::read_group_list(std::string_view group_st
       if(group_id == Group_Params::NONE) {
          try {
             size_t consumed = 0;
-            unsigned long ll_id = std::stoul(group_name, &consumed, 0);
+            const unsigned long ll_id = std::stoul(group_name, &consumed, 0);
             if(consumed != group_name.size()) {
                continue;  // some other cruft
             }

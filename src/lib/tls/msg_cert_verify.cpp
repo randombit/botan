@@ -32,7 +32,7 @@ Certificate_Verify_12::Certificate_Verify_12(Handshake_IO& io,
                                              const Private_Key* priv_key) {
    BOTAN_ASSERT_NONNULL(priv_key);
 
-   std::pair<std::string, Signature_Format> format = state.choose_sig_format(*priv_key, m_scheme, true, policy);
+   const std::pair<std::string, Signature_Format> format = state.choose_sig_format(*priv_key, m_scheme, true, policy);
 
    m_signature =
       state.callbacks().tls_sign_message(*priv_key, rng, format.first, format.second, state.hash().get_contents());
@@ -86,7 +86,7 @@ bool Certificate_Verify_12::verify(const X509_Certificate& cert,
 
    policy.check_peer_key_acceptable(*key);
 
-   std::pair<std::string, Signature_Format> format =
+   const std::pair<std::string, Signature_Format> format =
       state.parse_sig_format(*key, m_scheme, state.client_hello()->signature_schemes(), true, policy);
 
    const bool signature_valid =

@@ -161,7 +161,7 @@ LMS_Params LMS_Params::create_or_throw(LMS_Algorithm_Type type) {
 }
 
 LMS_Params LMS_Params::create_or_throw(std::string_view hash_name, uint8_t height) {
-   LMS_Algorithm_Type type = [](std::string_view hash, uint8_t h) -> LMS_Algorithm_Type {
+   const LMS_Algorithm_Type type = [](std::string_view hash, uint8_t h) -> LMS_Algorithm_Type {
       if(hash == "SHA-256") {
          switch(h) {
             case 5:
@@ -253,7 +253,7 @@ LMS_PublicKey LMS_PrivateKey::sign_and_get_pk(StrongSpan<LMS_Signature_Bytes> ou
 
    BOTAN_ASSERT_NOMSG(sig_stuffer.full());
 
-   TreeAddress lms_tree_address(lms_params().h());
+   const TreeAddress lms_tree_address(lms_params().h());
    LMS_Tree_Node pk_buffer(lms_params().m());
    lms_treehash(StrongSpan<LMS_Tree_Node>(pk_buffer.get()), auth_path_buffer, q, *this);
 
@@ -262,7 +262,7 @@ LMS_PublicKey LMS_PrivateKey::sign_and_get_pk(StrongSpan<LMS_Signature_Bytes> ou
 }
 
 LMS_PublicKey LMS_PublicKey::from_bytes_or_throw(BufferSlicer& slicer) {
-   size_t total_remaining_bytes = slicer.remaining();
+   const size_t total_remaining_bytes = slicer.remaining();
    // Alg. 6. 1. (4 bytes are sufficient until the next check)
    if(total_remaining_bytes < sizeof(LMS_Algorithm_Type)) {
       throw Decoding_Error("Too few bytes while parsing LMS public key.");
@@ -315,7 +315,7 @@ size_t LMS_PublicKey::size(const LMS_Params& lms_params) {
 }
 
 LMS_Signature LMS_Signature::from_bytes_or_throw(BufferSlicer& slicer) {
-   size_t total_remaining_bytes = slicer.remaining();
+   const size_t total_remaining_bytes = slicer.remaining();
    // Alg. 6a 1. (next 4 bytes are checked in LMOTS_Signature::from_bytes_or_throw)
    if(total_remaining_bytes < sizeof(LMS_Tree_Node_Idx)) {
       throw Decoding_Error("Too few signature bytes while parsing LMS signature.");
@@ -325,7 +325,7 @@ LMS_Signature LMS_Signature::from_bytes_or_throw(BufferSlicer& slicer) {
 
    // Alg. 6a 2.b.-e.
    auto lmots_sig = LMOTS_Signature::from_bytes_or_throw(slicer);
-   LMOTS_Params lmots_params = LMOTS_Params::create_or_throw(lmots_sig.algorithm_type());
+   const LMOTS_Params lmots_params = LMOTS_Params::create_or_throw(lmots_sig.algorithm_type());
 
    if(slicer.remaining() < sizeof(LMS_Algorithm_Type)) {
       throw Decoding_Error("Too few signature bytes while parsing LMS signature.");
@@ -333,7 +333,7 @@ LMS_Signature LMS_Signature::from_bytes_or_throw(BufferSlicer& slicer) {
    // Alg. 6a 2.f.
    auto lms_type = load_be<LMS_Algorithm_Type>(slicer.take<sizeof(LMS_Algorithm_Type)>());
    // Alg. 6a 2.h.
-   LMS_Params lms_params = LMS_Params::create_or_throw(lms_type);
+   const LMS_Params lms_params = LMS_Params::create_or_throw(lms_type);
    // Alg. 6a 2.i. (signature is not exactly [...] bytes long)
    if(total_remaining_bytes < size(lms_params, lmots_params)) {
       throw Decoding_Error("Too few signature bytes while parsing LMS signature.");
@@ -396,7 +396,7 @@ std::optional<LMS_Tree_Node> LMS_PublicKey::lms_compute_root_from_sig(const LMS_
       auto lms_address = TreeAddress(lms_params.h());
       lms_address.set_address(LMS_TreeLayerIndex(0), LMS_Tree_Node_Idx(sig.q().get()));
 
-      LMOTS_Public_Key pk_candidate(lmots_params, identifier(), sig.q(), Kc);
+      const LMOTS_Public_Key pk_candidate(lmots_params, identifier(), sig.q(), Kc);
       LMS_Tree_Node tmp(lms_params.m());
       lms_gen_leaf(tmp, pk_candidate, lms_address, *hash);
 

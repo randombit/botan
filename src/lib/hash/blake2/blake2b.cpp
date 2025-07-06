@@ -192,7 +192,7 @@ void BLAKE2b::key_schedule(std::span<const uint8_t> key) {
    m_padded_key_buffer.resize(m_buffer.size());
 
    if(m_padded_key_buffer.size() > m_key_size) {
-      size_t padding = m_padded_key_buffer.size() - m_key_size;
+      const size_t padding = m_padded_key_buffer.size() - m_key_size;
       clear_mem(m_padded_key_buffer.data() + m_key_size, padding);
    }
 

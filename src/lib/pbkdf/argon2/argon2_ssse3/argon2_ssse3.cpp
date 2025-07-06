@@ -101,11 +101,9 @@ void Argon2::blamka_ssse3(uint64_t N[128], uint64_t T[128]) {
    for(size_t i = 0; i != 128 / 4; ++i) {
       SIMD_2x64 n0 = SIMD_2x64::load_le(&N[4 * i]);
       SIMD_2x64 n1 = SIMD_2x64::load_le(&N[4 * i + 2]);
-      SIMD_2x64 t0 = SIMD_2x64::load_le(&T[4 * i]);
-      SIMD_2x64 t1 = SIMD_2x64::load_le(&T[4 * i + 2]);
 
-      n0 ^= t0;
-      n1 ^= t1;
+      n0 ^= SIMD_2x64::load_le(&T[4 * i]);
+      n1 ^= SIMD_2x64::load_le(&T[4 * i + 2]);
       n0.store_le(&N[4 * i]);
       n1.store_le(&N[4 * i + 2]);
    }

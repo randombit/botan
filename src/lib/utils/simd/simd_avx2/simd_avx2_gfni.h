@@ -21,7 +21,7 @@ consteval uint64_t gfni_matrix(std::string_view s) {
    size_t bit_cnt = 0;
    uint8_t row = 0;
 
-   for(char c : s) {
+   for(const char c : s) {
       if(c == ' ' || c == '\n') {
          continue;
       }

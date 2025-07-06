@@ -40,7 +40,7 @@ std::unique_ptr<EME> EME::create(std::string_view algo_spec) {
 #endif
 
 #if defined(BOTAN_HAS_EME_OAEP)
-   SCAN_Name req(algo_spec);
+   const SCAN_Name req(algo_spec);
 
    // TODO(Botan4) Remove all but "OAEP"
    if(req.algo_name() == "OAEP" || req.algo_name() == "EME-OAEP" || req.algo_name() == "EME1") {

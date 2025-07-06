@@ -78,7 +78,7 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator {
             }
          }
 
-         uint8_t out = m_buf.front();
+         const uint8_t out = m_buf.front();
          m_buf.pop_front();
          return out;
       }

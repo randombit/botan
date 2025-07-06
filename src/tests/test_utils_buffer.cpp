@@ -173,22 +173,22 @@ std::vector<Test::Result> test_buffer_stuffer() {
                   s.append(some_bytes);
                });
 
-               std::string final_string(Botan::cast_uint8_ptr_to_char(sink.data()), sink.size());
+               std::string const final_string(Botan::cast_uint8_ptr_to_char(sink.data()), sink.size());
                result.test_eq("final buffer is as expected", final_string, "hello world !");
             }),
    };
 }
 
 std::vector<Test::Result> test_alignment_buffer() {
-   std::array<uint8_t, 32> data = {1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16,
-                                   17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
-   std::array<uint8_t, 16> first_half_data = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
-   std::array<uint8_t, 16> second_half_data = {17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
+   const std::array<uint8_t, 32> data = {1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16,
+                                         17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
+   const std::array<uint8_t, 16> first_half_data = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+   const std::array<uint8_t, 16> second_half_data = {17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};
 
    return {
       CHECK("Fresh Alignment Buffer",
             [](auto& result) {
-               Botan::AlignmentBuffer<uint8_t, 32> b;
+               Botan::AlignmentBuffer<uint8_t, 32> const b;
                result.test_eq("size()", b.size(), 32);
                result.test_eq("elements_in_buffer()", b.elements_in_buffer(), 0);
                result.test_eq("elements_until_alignment()", b.elements_until_alignment(), 32);
@@ -427,7 +427,7 @@ std::vector<Test::Result> test_alignment_buffer() {
 
       CHECK("Aligned data passthrough (no block-defer)",
             [=](auto& result) {
-               Botan::AlignmentBuffer<uint8_t, 32> b;
+               Botan::AlignmentBuffer<uint8_t, 32> const b;
                result.require("buffer is in alignment", b.in_alignment());
 
                Botan::BufferSlicer half_block(first_half_data);
@@ -455,7 +455,7 @@ std::vector<Test::Result> test_alignment_buffer() {
 
       CHECK("Aligned data blockwise (no block-defer)",
             [=](auto& result) {
-               Botan::AlignmentBuffer<uint8_t, 32> b;
+               Botan::AlignmentBuffer<uint8_t, 32> const b;
                result.require("buffer is in alignment", b.in_alignment());
 
                Botan::BufferSlicer half_block(first_half_data);
@@ -488,7 +488,7 @@ std::vector<Test::Result> test_alignment_buffer() {
 
       CHECK("Aligned data passthrough (with block-defer)",
             [=](auto& result) {
-               Botan::AlignmentBuffer<uint8_t, 32, Botan::AlignmentBufferFinalBlock::must_be_deferred> b;
+               Botan::AlignmentBuffer<uint8_t, 32, Botan::AlignmentBufferFinalBlock::must_be_deferred> const b;
                result.require("buffer is in alignment", b.in_alignment());
 
                Botan::BufferSlicer half_block(first_half_data);
@@ -516,7 +516,7 @@ std::vector<Test::Result> test_alignment_buffer() {
 
       CHECK("Aligned data blockwise (with block-defer)",
             [=](auto& result) {
-               Botan::AlignmentBuffer<uint8_t, 32, Botan::AlignmentBufferFinalBlock::must_be_deferred> b;
+               Botan::AlignmentBuffer<uint8_t, 32, Botan::AlignmentBufferFinalBlock::must_be_deferred> const b;
                result.require("buffer is in alignment", b.in_alignment());
 
                Botan::BufferSlicer half_block(first_half_data);

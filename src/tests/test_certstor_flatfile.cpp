@@ -32,7 +32,7 @@ Test::Result open_certificate_store() {
 
    try {
       result.start_timer();
-      Botan::Flatfile_Certificate_Store unused(get_valid_ca_bundle_path());
+      const Botan::Flatfile_Certificate_Store unused(get_valid_ca_bundle_path());
       result.end_timer();
       result.test_gt("found some certificates", unused.all_subjects().size(), 0);
    } catch(std::exception& e) {
@@ -49,7 +49,7 @@ Test::Result find_certificate_by_pubkey_sha1() {
 
    try {
       result.start_timer();
-      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
+      const Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       auto cert = certstore.find_cert_by_pubkey_sha1(get_key_id());
       result.end_timer();
 
@@ -63,7 +63,7 @@ Test::Result find_certificate_by_pubkey_sha1() {
    }
 
    result.test_throws("on invalid SHA1 hash data", [&] {
-      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
+      const Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       certstore.find_cert_by_pubkey_sha1({});
    });
 
@@ -77,7 +77,7 @@ Test::Result find_cert_by_subject_dn() {
       auto dn = get_dn();
 
       result.start_timer();
-      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
+      const Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       auto cert = certstore.find_cert(dn, std::vector<uint8_t>());
       result.end_timer();
 
@@ -100,7 +100,7 @@ Test::Result find_cert_by_utf8_subject_dn() {
       auto dn = get_utf8_dn();
 
       result.start_timer();
-      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
+      const Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       auto cert = certstore.find_cert(dn, std::vector<uint8_t>());
 
       result.end_timer();
@@ -124,7 +124,7 @@ Test::Result find_cert_by_subject_dn_and_key_id() {
       auto dn = get_dn();
 
       result.start_timer();
-      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
+      const Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       auto cert = certstore.find_cert(dn, get_key_id());
       result.end_timer();
 
@@ -147,7 +147,7 @@ Test::Result find_certs_by_subject_dn_and_key_id() {
       auto dn = get_dn();
 
       result.start_timer();
-      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
+      const Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       auto certs = certstore.find_all_certs(dn, get_key_id());
       result.end_timer();
 
@@ -169,7 +169,7 @@ Test::Result find_all_subjects() {
 
    try {
       result.start_timer();
-      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
+      const Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
       auto subjects = certstore.all_subjects();
       result.end_timer();
 
@@ -197,7 +197,7 @@ Test::Result no_certificate_matches() {
       auto kid = get_unknown_key_id();
 
       result.start_timer();
-      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
+      const Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
 
       auto certs = certstore.find_all_certs(dn, kid);
       auto cert = certstore.find_cert(dn, kid);
@@ -219,7 +219,7 @@ Test::Result certstore_contains_user_certificate() {
 
    try {
       result.start_timer();
-      Botan::Flatfile_Certificate_Store certstore(get_ca_bundle_containing_user_cert());
+      const Botan::Flatfile_Certificate_Store certstore(get_ca_bundle_containing_user_cert());
       result.test_failure("CA bundle with non-CA certs should be rejected");
    } catch(Botan::Invalid_Argument&) {
       result.test_success();

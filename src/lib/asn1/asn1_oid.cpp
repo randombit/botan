@@ -38,7 +38,7 @@ std::vector<uint32_t> parse_oid_str(std::string_view oid) {
       std::string elem;
       std::vector<uint32_t> oid_elems;
 
-      for(char c : oid) {
+      for(const char c : oid) {
          if(c == '.') {
             if(elem.empty()) {
                return std::vector<uint32_t>();
@@ -189,7 +189,7 @@ void OID::encode_into(DER_Encoder& der) const {
       if(z <= 0x7F) {
          encoding.push_back(static_cast<uint8_t>(z));
       } else {
-         size_t z7 = (high_bit(z) + 7 - 1) / 7;
+         size_t const z7 = (high_bit(z) + 7 - 1) / 7;
 
          for(size_t j = 0; j != z7; ++j) {
             uint8_t zp = static_cast<uint8_t>(z >> (7 * (z7 - j - 1)) & 0x7F);
@@ -220,7 +220,7 @@ void OID::encode_into(DER_Encoder& der) const {
 * Decode a BER encoded OBJECT IDENTIFIER
 */
 void OID::decode_from(BER_Decoder& decoder) {
-   BER_Object obj = decoder.get_next_object();
+   const BER_Object obj = decoder.get_next_object();
    if(obj.tagging() != (ASN1_Class::Universal | ASN1_Type::ObjectId)) {
       throw BER_Bad_Tag("Error decoding OID, unknown tag", obj.tagging());
    }

@@ -180,7 +180,7 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
                size_t buf_len = buf.size();
 
                while(buf_len > 0) {
-                  size_t next = std::min<size_t>(buf_len, this->rng().next_byte());
+                  const size_t next = std::min<size_t>(buf_len, this->rng().next_byte());
                   cipher->write_keystream(buf_ptr, next);
                   buf_ptr += next;
                   buf_len -= next;

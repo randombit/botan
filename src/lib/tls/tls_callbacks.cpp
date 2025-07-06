@@ -93,17 +93,17 @@ void TLS::Callbacks::tls_verify_cert_chain(const std::vector<X509_Certificate>& 
       throw Invalid_Argument("Certificate chain was empty");
    }
 
-   Path_Validation_Restrictions restrictions(policy.require_cert_revocation_info(),
-                                             policy.minimum_signature_strength());
+   const Path_Validation_Restrictions restrictions(policy.require_cert_revocation_info(),
+                                                   policy.minimum_signature_strength());
 
-   Path_Validation_Result result = x509_path_validate(cert_chain,
-                                                      restrictions,
-                                                      trusted_roots,
-                                                      hostname,
-                                                      usage,
-                                                      tls_current_timestamp(),
-                                                      tls_verify_cert_chain_ocsp_timeout(),
-                                                      ocsp_responses);
+   const Path_Validation_Result result = x509_path_validate(cert_chain,
+                                                            restrictions,
+                                                            trusted_roots,
+                                                            hostname,
+                                                            usage,
+                                                            tls_current_timestamp(),
+                                                            tls_verify_cert_chain_ocsp_timeout(),
+                                                            ocsp_responses);
 
    if(!result.successful_validation()) {
       throw TLS_Exception(Alert::BadCertificate, "Certificate validation failure: " + result.result_string());
@@ -381,7 +381,7 @@ secure_vector<uint8_t> TLS::Callbacks::tls_ephemeral_key_agreement(
    // This is done within the key agreement operation and throws
    // an Invalid_Argument exception if the shared secret is all-zero.
    try {
-      PK_Key_Agreement ka(private_key, rng, "Raw");
+      const PK_Key_Agreement ka(private_key, rng, "Raw");
       return ka.derive_key(0, kex_pub_key->raw_public_key_bits()).bits_of();
    } catch(const Invalid_Argument& ex) {
       throw TLS_Exception(Alert::IllegalParameter, ex.what());

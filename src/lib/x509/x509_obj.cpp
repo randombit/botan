@@ -32,7 +32,7 @@ void X509_Object::load_data(DataSource& in) {
 
          if(got_label != PEM_label()) {
             bool is_alternate = false;
-            for(std::string_view alt_label : alternate_PEM_labels()) {
+            for(const std::string_view alt_label : alternate_PEM_labels()) {
                if(got_label == alt_label) {
                   is_alternate = true;
                   break;

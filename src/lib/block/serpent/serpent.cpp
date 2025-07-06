@@ -333,7 +333,7 @@ void Serpent::key_schedule(std::span<const uint8_t> key) {
    W[key.size() / 4] |= uint32_t(1) << ((key.size() % 4) * 8);
 
    for(size_t i = 8; i != 140; ++i) {
-      uint32_t wi = W[i - 8] ^ W[i - 5] ^ W[i - 3] ^ W[i - 1] ^ PHI ^ uint32_t(i - 8);
+      const uint32_t wi = W[i - 8] ^ W[i - 5] ^ W[i - 3] ^ W[i - 1] ^ PHI ^ uint32_t(i - 8);
       W[i] = rotl<11>(wi);
    }
 

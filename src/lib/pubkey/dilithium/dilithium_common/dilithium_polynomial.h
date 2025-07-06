@@ -56,7 +56,7 @@ class DilithiumPolyTraits final : public CRYSTALS::Trait_Base<DilithiumConstants
                const T zeta = zetas[++k];
                for(j = start; j < start + len; ++j) {
                   // Zetas contain the montgomery parameter 2^32 mod q
-                  T t = fqmul(zeta, coeffs[j + len]);
+                  const T t = fqmul(zeta, coeffs[j + len]);
                   coeffs[j + len] = coeffs[j] - t;
                   coeffs[j] = coeffs[j] + t;
                }
@@ -82,7 +82,7 @@ class DilithiumPolyTraits final : public CRYSTALS::Trait_Base<DilithiumConstants
             for(size_t start = 0; start < N; start = j + len) {
                const T zeta = -zetas[--k];
                for(j = start; j < start + len; ++j) {
-                  T t = coeffs[j];
+                  const T t = coeffs[j];
                   coeffs[j] = t + coeffs[j + len];
                   coeffs[j + len] = t - coeffs[j + len];
                   // Zetas contain the montgomery parameter 2^32 mod q

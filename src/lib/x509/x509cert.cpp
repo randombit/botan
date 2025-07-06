@@ -574,7 +574,7 @@ std::vector<std::string> get_cert_user_info(std::string_view req, const X509_DN&
       return set_to_vector(alt_name.uris());
    } else if(req == "IP") {
       std::vector<std::string> ip_str;
-      for(uint32_t ipv4 : alt_name.ipv4_address()) {
+      for(const uint32_t ipv4 : alt_name.ipv4_address()) {
          ip_str.push_back(ipv4_to_string(ipv4));
       }
       return ip_str;
@@ -720,7 +720,7 @@ std::string X509_Certificate::to_string() const {
    }
 
    out << "Constraints:\n";
-   Key_Constraints constraints = this->constraints();
+   const Key_Constraints constraints = this->constraints();
    if(constraints.empty()) {
       out << " No key constraints set\n";
    } else {

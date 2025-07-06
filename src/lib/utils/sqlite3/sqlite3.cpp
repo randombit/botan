@@ -19,7 +19,7 @@ Sqlite3_Database::Sqlite3_Database(std::string_view db_filename, std::optional<i
    // concurrently from multiple threads.
    const int open_flags =
       sqlite_open_flags.value_or(SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
-   int rc = ::sqlite3_open_v2(std::string(db_filename).c_str(), &m_db, open_flags, nullptr);
+   const int rc = ::sqlite3_open_v2(std::string(db_filename).c_str(), &m_db, open_flags, nullptr);
 
    if(rc != 0) [[unlikely]] {
       const std::string err_msg = ::sqlite3_errmsg(m_db);
@@ -52,7 +52,7 @@ size_t Sqlite3_Database::row_count(std::string_view table_name) {
 
 void Sqlite3_Database::create_table(std::string_view table_schema) {
    char* errmsg = nullptr;
-   int rc = ::sqlite3_exec(m_db, std::string(table_schema).c_str(), nullptr, nullptr, &errmsg);
+   const int rc = ::sqlite3_exec(m_db, std::string(table_schema).c_str(), nullptr, nullptr, &errmsg);
 
    if(rc != SQLITE_OK) {
       const std::string err_msg = errmsg;
@@ -88,7 +88,7 @@ bool Sqlite3_Database::is_threadsafe() const {
 }
 
 Sqlite3_Database::Sqlite3_Statement::Sqlite3_Statement(sqlite3* db, std::string_view base_sql) : m_stmt{} {
-   int rc = ::sqlite3_prepare_v2(db, base_sql.data(), static_cast<int>(base_sql.size()), &m_stmt, nullptr);
+   const int rc = ::sqlite3_prepare_v2(db, base_sql.data(), static_cast<int>(base_sql.size()), &m_stmt, nullptr);
 
    if(rc != SQLITE_OK) {
       throw SQL_DB_Error(fmt("sqlite3_prepare failed on '{}' with err {}", base_sql, rc), rc);
@@ -96,14 +96,14 @@ Sqlite3_Database::Sqlite3_Statement::Sqlite3_Statement(sqlite3* db, std::string_
 }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, std::string_view val) {
-   int rc = ::sqlite3_bind_text64(m_stmt, column, val.data(), val.size(), SQLITE_TRANSIENT, SQLITE_UTF8);
+   const int rc = ::sqlite3_bind_text64(m_stmt, column, val.data(), val.size(), SQLITE_TRANSIENT, SQLITE_UTF8);
    if(rc != SQLITE_OK) {
       throw SQL_DB_Error("sqlite3_bind_text failed", rc);
    }
 }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, size_t val) {
-   int rc = ::sqlite3_bind_int64(m_stmt, column, val);
+   const int rc = ::sqlite3_bind_int64(m_stmt, column, val);
    if(rc != SQLITE_OK) {
       throw SQL_DB_Error("sqlite3_bind_int failed", rc);
    }
@@ -115,14 +115,14 @@ void Sqlite3_Database::Sqlite3_Statement::bind(int column, std::chrono::system_c
 }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, const std::vector<uint8_t>& val) {
-   int rc = ::sqlite3_bind_blob64(m_stmt, column, val.data(), val.size(), SQLITE_TRANSIENT);
+   const int rc = ::sqlite3_bind_blob64(m_stmt, column, val.data(), val.size(), SQLITE_TRANSIENT);
    if(rc != SQLITE_OK) {
       throw SQL_DB_Error("sqlite3_bind_text failed", rc);
    }
 }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, const uint8_t* p, size_t len) {
-   int rc = ::sqlite3_bind_blob64(m_stmt, column, p, len, SQLITE_TRANSIENT);
+   const int rc = ::sqlite3_bind_blob64(m_stmt, column, p, len, SQLITE_TRANSIENT);
    if(rc != SQLITE_OK) {
       throw SQL_DB_Error("sqlite3_bind_text failed", rc);
    }

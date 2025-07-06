@@ -269,7 +269,7 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
       bool is_valid_signature(std::span<const uint8_t> sig) override {
          const auto& mode = m_pub_key->mode();
          const auto& sympri = mode.symmetric_primitives();
-         StrongSpan<const DilithiumSerializedSignature> sig_bytes(sig);
+         const StrongSpan<const DilithiumSerializedSignature> sig_bytes(sig);
 
          const auto mu = m_h->final();
 

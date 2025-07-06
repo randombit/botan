@@ -411,7 +411,7 @@ class Stream {
                boost::system::error_code ec;
                setup_native_handle(connection_side, ec);
 
-               detail::AsyncHandshakeOperation<completion_handler_t, Stream> op{
+               const detail::AsyncHandshakeOperation<completion_handler_t, Stream> op{
                   std::forward<completion_handler_t>(completion_handler), *this, ec};
             },
             completion_token,
@@ -514,7 +514,7 @@ class Stream {
 
                using write_handler_t = Wrapper<completion_handler_t, typename Stream::executor_type>;
 
-               TLS::detail::AsyncWriteOperation<write_handler_t, Stream> op{
+               const TLS::detail::AsyncWriteOperation<write_handler_t, Stream> op{
                   write_handler_t{std::forward<completion_handler_t>(completion_handler), get_executor()},
                   *this,
                   boost::asio::buffer_size(send_buffer()),
@@ -647,7 +647,7 @@ class Stream {
                   m_core->send_buffer().consume(m_core->send_buffer().size());
                }
 
-               detail::AsyncWriteOperation<completion_handler_t, Stream> op{
+               const detail::AsyncWriteOperation<completion_handler_t, Stream> op{
                   std::forward<completion_handler_t>(completion_handler),
                   *this,
                   ec ? 0 : boost::asio::buffer_size(bufs),
@@ -675,7 +675,7 @@ class Stream {
             [this](auto&& completion_handler, const auto& bufs) {
                using completion_handler_t = std::decay_t<decltype(completion_handler)>;
 
-               detail::AsyncReadOperation<completion_handler_t, Stream, MutableBufferSequence> op{
+               const detail::AsyncReadOperation<completion_handler_t, Stream, MutableBufferSequence> op{
                   std::forward<completion_handler_t>(completion_handler), *this, bufs};
             },
             completion_token,
@@ -839,7 +839,7 @@ class Stream {
          // the peer and report any sort of network error. TLS related errors do
          // not immediately cause an abort, they are checked in the invocation
          // via `error_from_us()`.
-         boost::asio::const_buffer read_buffer{input_buffer().data(), m_nextLayer.read_some(input_buffer(), ec)};
+         const boost::asio::const_buffer read_buffer{input_buffer().data(), m_nextLayer.read_some(input_buffer(), ec)};
          if(!ec) {
             process_encrypted_data(read_buffer);
          } else if(ec == boost::asio::error::eof) {

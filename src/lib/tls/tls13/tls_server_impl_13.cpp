@@ -551,7 +551,7 @@ void Server_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
 
    BOTAN_ASSERT_NOMSG(m_handshake_state.has_client_certificate_msg() &&
                       !m_handshake_state.client_certificate().empty());
-   bool sig_valid = certificate_verify_msg.verify(
+   const bool sig_valid = certificate_verify_msg.verify(
       *m_handshake_state.client_certificate().public_key(), callbacks(), m_transcript_hash.previous());
 
    // RFC 8446 4.4.3

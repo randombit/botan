@@ -143,7 +143,7 @@ void wots_sign_and_pkgen(StrongSpan<WotsSignature> sig_out,
    BOTAN_ASSERT_NOMSG(!sign_leaf_idx.has_value() || wots_steps.size() == params.wots_len());
    BOTAN_ASSERT_NOMSG(pk_addr.get_type() == Sphincs_Address_Type::WotsPublicKeyCompression);
 
-   secure_vector<uint8_t> wots_sig;
+   const secure_vector<uint8_t> wots_sig;
    WotsPublicKey wots_pk_buffer(params.wots_bytes());
 
    BufferStuffer wots_pk(wots_pk_buffer);

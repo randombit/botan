@@ -114,7 +114,7 @@ Client_Impl_12::Client_Impl_12(const Channel_Impl::Downgrade_Information& downgr
    if(!downgrade_info.client_hello_message.empty()) {
       // Downgrade detected after receiving a TLS 1.2 server hello. We need to
       // recreate the state as if this implementation issued the client hello.
-      std::vector<uint8_t> client_hello_msg(
+      const std::vector<uint8_t> client_hello_msg(
          downgrade_info.client_hello_message.begin() + 4 /* handshake header length */,
          downgrade_info.client_hello_message.end());
 
@@ -211,7 +211,7 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
 
    if(!state.client_hello()) {
       // not resuming
-      Client_Hello_12::Settings client_settings(version, m_info.hostname());
+      const Client_Hello_12::Settings client_settings(version, m_info.hostname());
       state.client_hello(std::make_unique<Client_Hello_12>(state.handshake_io(),
                                                            state.hash(),
                                                            policy(),
@@ -254,7 +254,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
    Client_Handshake_State_12& state = dynamic_cast<Client_Handshake_State_12&>(state_base);
 
    if(type == Handshake_Type::HelloRequest && active_state) {
-      Hello_Request hello_request(contents);
+      const Hello_Request hello_request(contents);
 
       if(state.client_hello()) {
          throw TLS_Exception(Alert::HandshakeFailure, "Cannot renegotiate during a handshake");
@@ -290,7 +290,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
       state.set_expected_next(Handshake_Type::ServerHello);
       state.set_expected_next(Handshake_Type::HelloVerifyRequest);  // might get it again
 
-      Hello_Verify_Request hello_verify_request(contents);
+      const Hello_Verify_Request hello_verify_request(contents);
       state.hello_verify_request(hello_verify_request);
    } else if(type == Handshake_Type::ServerHello) {
       state.server_hello(std::make_unique<Server_Hello_12>(contents));
@@ -362,7 +362,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          throw TLS_Exception(Alert::UnsupportedExtension, msg.str());
       }
 
-      if(uint16_t srtp = state.server_hello()->srtp_profile()) {
+      if(const uint16_t srtp = state.server_hello()->srtp_profile()) {
          if(!value_exists(state.client_hello()->srtp_profiles(), srtp)) {
             throw TLS_Exception(Alert::HandshakeFailure, "Server replied with DTLS-SRTP alg we did not send");
          }
@@ -490,10 +490,10 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
       in case an OCSP response was also available
       */
 
-      X509_Certificate server_cert = server_certs[0];
+      const X509_Certificate server_cert = server_certs[0];
 
       if(active_state && active_state->server_certs()) {
-         X509_Certificate current_cert = active_state->server_certs()->cert_chain().at(0);
+         const X509_Certificate current_cert = active_state->server_certs()->cert_chain().at(0);
 
          if(current_cert != server_cert) {
             throw TLS_Exception(Alert::BadCertificate, "Server certificate changed during renegotiation");
@@ -596,7 +596,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
       if(state.received_handshake_msg(Handshake_Type::CertificateRequest)) {
          const auto& types = state.cert_req()->acceptable_cert_types();
 
-         std::vector<X509_Certificate> client_certs =
+         const std::vector<X509_Certificate> client_certs =
             m_creds->find_cert_chain(types, {}, state.cert_req()->acceptable_CAs(), "tls-client", m_info.hostname());
 
          state.client_certs(std::make_unique<Certificate_12>(state.handshake_io(), state.hash(), client_certs));

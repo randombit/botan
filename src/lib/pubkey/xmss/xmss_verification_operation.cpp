@@ -29,8 +29,8 @@ secure_vector<uint8_t> XMSS_Verification_Operation::root_from_signature(const XM
    adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
    adrs.set_ots_address(next_index);
 
-   XMSS_WOTS_Parameters wots_params(params.ots_oid());
-   XMSS_WOTS_PublicKey pub_key_ots(wots_params, seed, sig.tree().ots_signature, msg, adrs, m_hash);
+   const XMSS_WOTS_Parameters wots_params(params.ots_oid());
+   const XMSS_WOTS_PublicKey pub_key_ots(wots_params, seed, sig.tree().ots_signature, msg, adrs, m_hash);
 
    adrs.set_type(XMSS_Address::Type::LTree_Address);
    adrs.set_ltree_address(next_index);
@@ -63,9 +63,9 @@ bool XMSS_Verification_Operation::verify(const XMSS_Signature& sig,
    XMSS_Address adrs;
    secure_vector<uint8_t> index_bytes;
    xmss_concat(index_bytes, sig.unused_leaf_index(), m_pub_key.xmss_parameters().element_size());
-   secure_vector<uint8_t> msg_digest = m_hash.h_msg(sig.randomness(), public_key.root(), index_bytes, msg);
+   const secure_vector<uint8_t> msg_digest = m_hash.h_msg(sig.randomness(), public_key.root(), index_bytes, msg);
 
-   secure_vector<uint8_t> node = root_from_signature(sig, msg_digest, adrs, public_key.public_seed());
+   const secure_vector<uint8_t> node = root_from_signature(sig, msg_digest, adrs, public_key.public_seed());
 
    return (node == public_key.root());
 }
@@ -83,8 +83,8 @@ void XMSS_Verification_Operation::update(std::span<const uint8_t> input) {
 
 bool XMSS_Verification_Operation::is_valid_signature(std::span<const uint8_t> sig) {
    try {
-      XMSS_Signature signature(m_pub_key.xmss_parameters().oid(), sig);
-      bool result = verify(signature, m_msg_buf, m_pub_key);
+      const XMSS_Signature signature(m_pub_key.xmss_parameters().oid(), sig);
+      const bool result = verify(signature, m_msg_buf, m_pub_key);
       m_msg_buf.clear();
       return result;
    } catch(...) {

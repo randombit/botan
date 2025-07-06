@@ -109,7 +109,7 @@ CT::Option<size_t> oaep_find_delim(std::span<const uint8_t> input, std::span<con
    CT::Mask<uint8_t> waiting_for_delim = CT::Mask<uint8_t>::set();
    CT::Mask<uint8_t> bad_input_m = CT::Mask<uint8_t>::cleared();
 
-   for(uint8_t ib : input.subspan(2 * phash.size())) {
+   for(const uint8_t ib : input.subspan(2 * phash.size())) {
       const auto zero_m = CT::Mask<uint8_t>::is_zero(ib);
       const auto one_m = CT::Mask<uint8_t>::is_equal(ib, 1);
 

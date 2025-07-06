@@ -51,7 +51,7 @@ class Zlib_Compression_Stream : public Zlib_Stream {
             level = 6;
          }
 
-         int rc = ::deflateInit2(streamp(), static_cast<int>(level), Z_DEFLATED, wbits, 8, Z_DEFAULT_STRATEGY);
+         const int rc = ::deflateInit2(streamp(), static_cast<int>(level), Z_DEFLATED, wbits, 8, Z_DEFAULT_STRATEGY);
 
          if(rc != Z_OK) {
             throw Compression_Error("deflateInit2", ErrorType::ZlibError, rc);
@@ -66,7 +66,7 @@ class Zlib_Compression_Stream : public Zlib_Stream {
       Zlib_Compression_Stream& operator=(Zlib_Compression_Stream&& other) = delete;
 
       bool run(uint32_t flags) override {
-         int rc = ::deflate(streamp(), flags);
+         const int rc = ::deflate(streamp(), flags);
 
          if(rc != Z_OK && rc != Z_STREAM_END && rc != Z_BUF_ERROR) {
             throw Compression_Error("zlib deflate", ErrorType::ZlibError, rc);
@@ -79,7 +79,7 @@ class Zlib_Compression_Stream : public Zlib_Stream {
 class Zlib_Decompression_Stream : public Zlib_Stream {
    public:
       explicit Zlib_Decompression_Stream(int wbits, int wbits_offset = 0) {
-         int rc = ::inflateInit2(streamp(), compute_window_bits(wbits, wbits_offset));
+         const int rc = ::inflateInit2(streamp(), compute_window_bits(wbits, wbits_offset));
 
          if(rc != Z_OK) {
             throw Compression_Error("inflateInit2", ErrorType::ZlibError, rc);
@@ -94,7 +94,7 @@ class Zlib_Decompression_Stream : public Zlib_Stream {
       Zlib_Decompression_Stream& operator=(Zlib_Decompression_Stream&& other) = delete;
 
       bool run(uint32_t flags) override {
-         int rc = ::inflate(streamp(), flags);
+         const int rc = ::inflate(streamp(), flags);
 
          if(rc != Z_OK && rc != Z_STREAM_END && rc != Z_BUF_ERROR) {
             throw Compression_Error("zlib inflate", ErrorType::ZlibError, rc);
@@ -122,7 +122,7 @@ class Gzip_Compression_Stream final : public Zlib_Compression_Stream {
          m_header.os = os_code;
          m_header.time = static_cast<uLong>(hdr_time);
 
-         int rc = deflateSetHeader(streamp(), &m_header);
+         const int rc = deflateSetHeader(streamp(), &m_header);
          if(rc != Z_OK) {
             throw Compression_Error("deflateSetHeader", ErrorType::ZlibError, rc);
          }

@@ -41,7 +41,7 @@ void bigint_monty_redc_4(word r[4], const word z[8], const word p[4], word p_das
    ws[2] = accum.extract();
    accum.add(z[7]);
    ws[3] = accum.extract();
-   word w1 = accum.extract();
+   const word w1 = accum.extract();
    bigint_monty_maybe_sub<4>(r, w1, ws, p);
 }
 
@@ -101,7 +101,7 @@ void bigint_monty_redc_6(word r[6], const word z[12], const word p[6], word p_da
    ws[4] = accum.extract();
    accum.add(z[11]);
    ws[5] = accum.extract();
-   word w1 = accum.extract();
+   const word w1 = accum.extract();
    bigint_monty_maybe_sub<6>(r, w1, ws, p);
 }
 
@@ -195,7 +195,7 @@ void bigint_monty_redc_8(word r[8], const word z[16], const word p[8], word p_da
    ws[6] = accum.extract();
    accum.add(z[15]);
    ws[7] = accum.extract();
-   word w1 = accum.extract();
+   const word w1 = accum.extract();
    bigint_monty_maybe_sub<8>(r, w1, ws, p);
 }
 
@@ -381,7 +381,7 @@ void bigint_monty_redc_12(word r[12], const word z[24], const word p[12], word p
    ws[10] = accum.extract();
    accum.add(z[23]);
    ws[11] = accum.extract();
-   word w1 = accum.extract();
+   const word w1 = accum.extract();
    bigint_monty_maybe_sub<12>(r, w1, ws, p);
 }
 
@@ -691,7 +691,7 @@ void bigint_monty_redc_16(word r[16], const word z[32], const word p[16], word p
    ws[14] = accum.extract();
    accum.add(z[31]);
    ws[15] = accum.extract();
-   word w1 = accum.extract();
+   const word w1 = accum.extract();
    bigint_monty_maybe_sub<16>(r, w1, ws, p);
 }
 
@@ -1345,7 +1345,7 @@ void bigint_monty_redc_24(word r[24], const word z[48], const word p[24], word p
    ws[22] = accum.extract();
    accum.add(z[47]);
    ws[23] = accum.extract();
-   word w1 = accum.extract();
+   const word w1 = accum.extract();
    bigint_monty_maybe_sub<24>(r, w1, ws, p);
 }
 
@@ -2471,7 +2471,7 @@ void bigint_monty_redc_32(word r[32], const word z[64], const word p[32], word p
    ws[30] = accum.extract();
    accum.add(z[63]);
    ws[31] = accum.extract();
-   word w1 = accum.extract();
+   const word w1 = accum.extract();
    bigint_monty_maybe_sub<32>(r, w1, ws, p);
 }
 

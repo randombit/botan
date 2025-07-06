@@ -59,10 +59,10 @@ class FEC_Share final {
             }
          }
 
-         size_t share_id = bits[4];
-         size_t k = bits[5];
-         size_t n = bits[6];
-         size_t padding = bits[7];
+         const size_t share_id = bits[4];
+         const size_t k = bits[5];
+         const size_t n = bits[6];
+         const size_t padding = bits[7];
 
          if(share_id >= n || k >= n || padding >= k) {
             throw CLI_Error("FEC share has invalid k/n/padding fields");
@@ -128,7 +128,7 @@ class FEC_Encode final : public Command {
          const std::string input = get_arg("input");
          const std::string output_dir = get_arg("output-dir");
 
-         Botan::ZFEC fec(k, n);  // checks k/n for validity
+         const Botan::ZFEC fec(k, n);  // checks k/n for validity
 
          auto hash = Botan::HashFunction::create_or_throw(FEC_SHARE_HASH);
 
@@ -167,7 +167,7 @@ class FEC_Encode final : public Command {
 
             std::ofstream output(output_fsname.str(), std::ios::binary);
 
-            FEC_Share fec_share(share, k, n, padding, bits, len);
+            FEC_Share const fec_share(share, k, n, padding, bits, len);
             fec_share.serialize_to(*hash, output);
          };
 
@@ -234,7 +234,7 @@ class FEC_Decode final : public Command {
             return;
          }
 
-         Botan::ZFEC fec(k, n);
+         const Botan::ZFEC fec(k, n);
 
          std::vector<uint8_t> decoded(share_size * k);
 

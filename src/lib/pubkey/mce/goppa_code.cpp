@@ -41,15 +41,15 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m& syndrom_polyn,
                                  const std::vector<polyn_gf2m>& sqrtmod,
                                  const std::vector<gf2m>& Linv) {
    const size_t code_length = Linv.size();
-   uint32_t t = g.get_degree();
+   const uint32_t t = g.get_degree();
 
-   std::shared_ptr<GF2m_Field> sp_field = g.get_sp_field();
+   const std::shared_ptr<GF2m_Field> sp_field = g.get_sp_field();
 
    std::pair<polyn_gf2m, polyn_gf2m> h_aux = polyn_gf2m::eea_with_coefficients(syndrom_polyn, g, 1);
    polyn_gf2m& h = h_aux.first;
-   polyn_gf2m& aux = h_aux.second;
+   const polyn_gf2m& aux = h_aux.second;
    gf2m a = sp_field->gf_inv(aux.get_coef(0));
-   gf2m log_a = sp_field->gf_log(a);
+   const gf2m log_a = sp_field->gf_log(a);
    for(int i = 0; i <= h.get_degree(); ++i) {
       h.set_coef(i, sp_field->gf_mul_zrz(log_a, h.get_coef(i)));
    }
@@ -73,9 +73,9 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m& syndrom_polyn,
 
    S.get_degree();
 
-   std::pair<polyn_gf2m, polyn_gf2m> v_u = polyn_gf2m::eea_with_coefficients(S, g, t / 2 + 1);
-   polyn_gf2m& u = v_u.second;
-   polyn_gf2m& v = v_u.first;
+   const std::pair<polyn_gf2m, polyn_gf2m> v_u = polyn_gf2m::eea_with_coefficients(S, g, t / 2 + 1);
+   const polyn_gf2m& u = v_u.second;
+   const polyn_gf2m& v = v_u.first;
 
    // sigma = u^2+z*v^2
    polyn_gf2m sigma(t, g.get_sp_field());
@@ -93,13 +93,13 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m& syndrom_polyn,
    }
 
    secure_vector<gf2m> res = find_roots_gf2m_decomp(sigma, code_length);
-   size_t d = res.size();
+   const size_t d = res.size();
 
    secure_vector<gf2m> result(d);
    for(uint32_t i = 0; i < d; ++i) {
-      gf2m current = res[i];
+      const gf2m current = res[i];
 
-      gf2m tmp = gray_to_lex(current);
+      const gf2m tmp = gray_to_lex(current);
       /// XXX double assignment, possible bug?
       if(tmp >= code_length) /* invalid root */
       {
@@ -189,7 +189,7 @@ secure_vector<uint8_t> mceliece_decrypt(secure_vector<gf2m>& error_pos,
    copy_mem(cleartext.data(), ciphertext, cleartext_len);
 
    for(size_t i = 0; i < nb_err; i++) {
-      gf2m current = error_pos[i];
+      const gf2m current = error_pos[i];
 
       if(current >= cleartext_len * 8) {
          // an invalid position, this shouldn't happen

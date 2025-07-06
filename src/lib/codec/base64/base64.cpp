@@ -133,7 +133,7 @@ uint8_t Base64::lookup_binary_value(char input) noexcept {
    // This is the offset added to x to get the value
    const uint64_t val_v = 0xbfb904 ^ (0xFF000000 - (x << 24));
 
-   uint8_t z = x + static_cast<uint8_t>(val_v >> (8 * index_of_first_set_byte(v_mask)));
+   const uint8_t z = x + static_cast<uint8_t>(val_v >> (8 * index_of_first_set_byte(v_mask)));
 
    // Valid base64 special characters, and some whitespace chars
    constexpr uint64_t specials_i = make_uint64(0, '+', '/', '=', ' ', '\n', '\t', '\r');

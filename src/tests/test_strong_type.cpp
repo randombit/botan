@@ -38,6 +38,8 @@ std::string foo(Test_Length) {
 using Test_Nonce = Botan::Strong<std::vector<uint8_t>, struct Test_Nonce_>;
 using Test_Hash_Name = Botan::Strong<std::string, struct Test_Hash_Name_>;
 
+// NOLINTBEGIN(*-const-correctness) Strong_Type seems to confuse clang-tidy
+
 std::vector<Test::Result> test_strong_type() {
    return {
       CHECK("strong type initialization",
@@ -618,6 +620,8 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
             }),
    };
 }
+
+// NOLINTEND(*-const-correctness)
 
 }  // namespace
 

@@ -52,7 +52,7 @@ class PK_Keygen final : public Command {
          const std::string params = get_arg("params");
          const std::string provider = get_arg("provider");
 
-         std::unique_ptr<Botan::Private_Key> key = Botan::create_private_key(algo, rng(), params, provider);
+         const std::unique_ptr<Botan::Private_Key> key = Botan::create_private_key(algo, rng(), params, provider);
 
          if(!key) {
             throw CLI_Error_Unsupported("keygen", algo);
@@ -452,13 +452,13 @@ class Gen_DL_Group final : public Command {
             if(!seed_str.empty()) {
                throw CLI_Usage_Error("Seed only supported for DSA param gen");
             }
-            Botan::DL_Group grp(rng(), Botan::DL_Group::Strong, pbits);
+            const Botan::DL_Group grp(rng(), Botan::DL_Group::Strong, pbits);
             output() << grp.PEM_encode(Botan::DL_Group_Format::ANSI_X9_42);
          } else if(type == "subgroup") {
             if(!seed_str.empty()) {
                throw CLI_Usage_Error("Seed only supported for DSA param gen");
             }
-            Botan::DL_Group grp(rng(), Botan::DL_Group::Prime_Subgroup, pbits, qbits);
+            const Botan::DL_Group grp(rng(), Botan::DL_Group::Prime_Subgroup, pbits, qbits);
             output() << grp.PEM_encode(Botan::DL_Group_Format::ANSI_X9_42);
          } else if(type == "dsa") {
             size_t dsa_qbits = qbits;
@@ -473,11 +473,11 @@ class Gen_DL_Group final : public Command {
             }
 
             if(seed_str.empty()) {
-               Botan::DL_Group grp(rng(), Botan::DL_Group::DSA_Kosherizer, pbits, dsa_qbits);
+               const Botan::DL_Group grp(rng(), Botan::DL_Group::DSA_Kosherizer, pbits, dsa_qbits);
                output() << grp.PEM_encode(Botan::DL_Group_Format::ANSI_X9_57);
             } else {
                const std::vector<uint8_t> seed = Botan::hex_decode(seed_str);
-               Botan::DL_Group grp(rng(), seed, pbits, dsa_qbits);
+               const Botan::DL_Group grp(rng(), seed, pbits, dsa_qbits);
                output() << grp.PEM_encode(Botan::DL_Group_Format::ANSI_X9_57);
             }
 

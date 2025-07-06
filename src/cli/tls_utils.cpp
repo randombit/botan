@@ -51,7 +51,7 @@ class TLS_Ciphersuites final : public Command {
             return;
          }
 
-         for(uint16_t suite_id : policy->ciphersuite_list(version)) {
+         for(const uint16_t suite_id : policy->ciphersuite_list(version)) {
             const auto s = Botan::TLS::Ciphersuite::by_id(suite_id);
             output() << ((s) ? s->to_string() : "unknown cipher suite") << "\n";
          }
@@ -138,7 +138,7 @@ class TLS_Client_Hello_Reader final : public Command {
          if(!hello_base->session_id().empty()) {
             oss << "SessionID: " << Botan::hex_encode(hello_base->session_id().get()) << "\n";
          }
-         for(uint16_t csuite_id : hello_base->ciphersuites()) {
+         for(const uint16_t csuite_id : hello_base->ciphersuites()) {
             const auto csuite = Botan::TLS::Ciphersuite::by_id(csuite_id);
             if(csuite && csuite->valid()) {
                oss << "Cipher: " << csuite->to_string() << "\n";
@@ -154,7 +154,7 @@ class TLS_Client_Hello_Reader final : public Command {
          if(hello_base->signature_schemes().empty()) {
             oss << "Did not send signature_algorithms extension\n";
          } else {
-            for(Botan::TLS::Signature_Scheme scheme : hello_base->signature_schemes()) {
+            for(const Botan::TLS::Signature_Scheme scheme : hello_base->signature_schemes()) {
                try {
                   auto s = scheme.to_string();
                   oss << s << " ";

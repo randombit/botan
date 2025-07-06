@@ -26,7 +26,7 @@ Certificate_Status::Certificate_Status(const std::vector<uint8_t>& buf, const Co
       throw Decoding_Error("Unexpected Certificate_Status message: unexpected response type");
    }
 
-   size_t len = make_uint32(0, buf[1], buf[2], buf[3]);
+   const size_t len = make_uint32(0, buf[1], buf[2], buf[3]);
 
    // Verify the redundant length field...
    if(buf.size() != len + 4) {

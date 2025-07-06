@@ -40,7 +40,7 @@ UUID::UUID(std::string_view uuid_str) {
    }
 
    std::string just_hex;
-   for(char c : uuid_str) {
+   for(const char c : uuid_str) {
       if(c == '-') {
          continue;
       }

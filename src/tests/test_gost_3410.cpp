@@ -36,7 +36,7 @@ class GOST_3410_2001_Verification_Tests final : public PK_Signature_Verification
          const BigInt order = vars.get_req_bn("Order");
          const Botan::OID oid(vars.get_req_str("Oid"));
 
-         Botan::EC_Group group(p, a, b, Gx, Gy, order, BigInt::one(), oid);
+         const Botan::EC_Group group(p, a, b, Gx, Gy, order, BigInt::one(), oid);
 
          const BigInt Px = vars.get_req_bn("Px");
          const BigInt Py = vars.get_req_bn("Py");
@@ -68,7 +68,7 @@ class GOST_3410_2001_Signature_Tests final : public PK_Signature_Generation_Test
          const BigInt order = vars.get_req_bn("Order");
          const Botan::OID oid(vars.get_req_str("Oid"));
 
-         Botan::EC_Group group(p, a, b, Gx, Gy, order, BigInt::one(), oid);
+         const Botan::EC_Group group(p, a, b, Gx, Gy, order, BigInt::one(), oid);
 
          const BigInt x = vars.get_req_bn("X");
 

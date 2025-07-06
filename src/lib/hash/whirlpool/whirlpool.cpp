@@ -149,14 +149,14 @@ void Whirlpool::compress_n(digest_type& digest, std::span<const uint8_t> input, 
       uint64_t B7 = M[7] ^ K[7];
 
       for(size_t r = 1; r != 11; ++r) {
-         uint64_t T0 = whirl(B0, B7, B6, B5, B4, B3, B2, B1) ^ K[8 * r + 0];
-         uint64_t T1 = whirl(B1, B0, B7, B6, B5, B4, B3, B2) ^ K[8 * r + 1];
-         uint64_t T2 = whirl(B2, B1, B0, B7, B6, B5, B4, B3) ^ K[8 * r + 2];
-         uint64_t T3 = whirl(B3, B2, B1, B0, B7, B6, B5, B4) ^ K[8 * r + 3];
-         uint64_t T4 = whirl(B4, B3, B2, B1, B0, B7, B6, B5) ^ K[8 * r + 4];
-         uint64_t T5 = whirl(B5, B4, B3, B2, B1, B0, B7, B6) ^ K[8 * r + 5];
-         uint64_t T6 = whirl(B6, B5, B4, B3, B2, B1, B0, B7) ^ K[8 * r + 6];
-         uint64_t T7 = whirl(B7, B6, B5, B4, B3, B2, B1, B0) ^ K[8 * r + 7];
+         const uint64_t T0 = whirl(B0, B7, B6, B5, B4, B3, B2, B1) ^ K[8 * r + 0];
+         const uint64_t T1 = whirl(B1, B0, B7, B6, B5, B4, B3, B2) ^ K[8 * r + 1];
+         const uint64_t T2 = whirl(B2, B1, B0, B7, B6, B5, B4, B3) ^ K[8 * r + 2];
+         const uint64_t T3 = whirl(B3, B2, B1, B0, B7, B6, B5, B4) ^ K[8 * r + 3];
+         const uint64_t T4 = whirl(B4, B3, B2, B1, B0, B7, B6, B5) ^ K[8 * r + 4];
+         const uint64_t T5 = whirl(B5, B4, B3, B2, B1, B0, B7, B6) ^ K[8 * r + 5];
+         const uint64_t T6 = whirl(B6, B5, B4, B3, B2, B1, B0, B7) ^ K[8 * r + 6];
+         const uint64_t T7 = whirl(B7, B6, B5, B4, B3, B2, B1, B0) ^ K[8 * r + 7];
 
          B0 = T0;
          B1 = T1;

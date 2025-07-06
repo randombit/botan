@@ -68,7 +68,7 @@ std::vector<std::string> parse_algorithm_name(std::string_view namex) {
    name = name.substr(name.find('('));
 
    for(auto i = name.begin(); i != name.end(); ++i) {
-      char c = *i;
+      const char c = *i;
 
       if(c == '(') {
          ++level;
@@ -169,7 +169,7 @@ std::optional<uint32_t> string_to_ipv4(std::string_view str) {
    // # of digits pushed to accum since last dot
    size_t cur_digits = 0;
 
-   for(char c : str) {
+   for(const char c : str) {
       if(c == '.') {
          // . without preceding digit is invalid
          if(cur_digits == 0) {
@@ -400,7 +400,7 @@ std::string check_and_canonicalize_dns_name(std::string_view name) {
    size_t current_label_length = 0;
 
    for(size_t i = 0; i != name.size(); ++i) {
-      char c = name[i];
+      const char c = name[i];
 
       if(c == '.') {
          if(i > 0 && name[i - 1] == '.') {

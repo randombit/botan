@@ -49,7 +49,7 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_GFNI SIMD_8x32 sm4_sbox(const SIMD_8x32& x)
 }
 
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_GFNI SIMD_8x32 sm4_f(const SIMD_8x32& x) {
-   SIMD_8x32 sx = sm4_sbox(x);
+   const SIMD_8x32 sx = sm4_sbox(x);
    return sx ^ sx.rotl<2>() ^ sx.rotl<10>() ^ sx.rotl<18>() ^ sx.rotl<24>();
 }
 

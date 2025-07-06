@@ -134,10 +134,10 @@ int32_t jacobi(const BigInt& a, const BigInt& n) {
          return 0;
       }
 
-      size_t shifts = low_zero_bits(x);
+      const size_t shifts = low_zero_bits(x);
       x >>= shifts;
       if(shifts % 2 == 1) {
-         word y_mod_8 = y % 8;
+         const word y_mod_8 = y % 8;
          if(y_mod_8 == 3 || y_mod_8 == 5) {
             J = -J;
          }

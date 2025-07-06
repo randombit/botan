@@ -31,7 +31,7 @@ void Base64_Encoder::encode_and_send(const uint8_t input[], size_t length, bool 
       const size_t proc = std::min(length, m_in.size());
 
       size_t consumed = 0;
-      size_t produced = base64_encode(cast_uint8_ptr_to_char(m_out.data()), input, proc, consumed, final_inputs);
+      const size_t produced = base64_encode(cast_uint8_ptr_to_char(m_out.data()), input, proc, consumed, final_inputs);
 
       do_output(m_out.data(), produced);
 
@@ -50,7 +50,7 @@ void Base64_Encoder::do_output(const uint8_t input[], size_t length) {
    } else {
       size_t remaining = length, offset = 0;
       while(remaining > 0) {
-         size_t sent = std::min(m_line_length - m_out_position, remaining);
+         const size_t sent = std::min(m_line_length - m_out_position, remaining);
          send(input + offset, sent);
          m_out_position += sent;
          remaining -= sent;
@@ -108,7 +108,7 @@ Base64_Decoder::Base64_Decoder(Decoder_Checking c) : m_checking(c), m_in(64), m_
 */
 void Base64_Decoder::write(const uint8_t input[], size_t length) {
    while(length > 0) {
-      size_t to_copy = std::min<size_t>(length, m_in.size() - m_position);
+      const size_t to_copy = std::min<size_t>(length, m_in.size() - m_position);
       if(to_copy == 0) {
          m_in.resize(m_in.size() * 2);
          m_out.resize(m_out.size() * 2);
@@ -117,7 +117,7 @@ void Base64_Decoder::write(const uint8_t input[], size_t length) {
       m_position += to_copy;
 
       size_t consumed = 0;
-      size_t written = base64_decode(
+      const size_t written = base64_decode(
          m_out.data(), cast_uint8_ptr_to_char(m_in.data()), m_position, consumed, false, m_checking != FULL_CHECK);
 
       send(m_out, written);
@@ -139,7 +139,7 @@ void Base64_Decoder::write(const uint8_t input[], size_t length) {
 */
 void Base64_Decoder::end_msg() {
    size_t consumed = 0;
-   size_t written = base64_decode(
+   const size_t written = base64_decode(
       m_out.data(), cast_uint8_ptr_to_char(m_in.data()), m_position, consumed, true, m_checking != FULL_CHECK);
 
    send(m_out, written);

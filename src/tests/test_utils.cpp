@@ -148,8 +148,8 @@ class Utility_Function_Tests final : public Test {
          };
          // clang-format on
 
-         for(size_t i : inputs) {
-            for(size_t m : alignments) {
+         for(const size_t i : inputs) {
+            for(const size_t m : alignments) {
                try {
                   const size_t z = Botan::round_up(i, m);
 
@@ -388,11 +388,11 @@ class Utility_Function_Tests final : public Test {
 #endif
 
          // Test store of entire ranges
-         std::array<uint16_t, 2> in16_array = {0x0A0B, 0x0C0D};
+         const std::array<uint16_t, 2> in16_array = {0x0A0B, 0x0C0D};
          result.test_is_eq(Botan::store_be<std::vector<uint8_t>>(in16_array), Botan::hex_decode("0A0B0C0D"));
          result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(in16_array), Botan::hex_decode("0B0A0D0C"));
 
-         std::vector<uint16_t> in16_vector = {0x0A0B, 0x0C0D};
+         const std::vector<uint16_t> in16_vector = {0x0A0B, 0x0C0D};
          result.test_is_eq(Botan::store_be<std::vector<uint8_t>>(in16_vector), Botan::hex_decode("0A0B0C0D"));
          result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(in16_vector), Botan::hex_decode("0B0A0D0C"));
 
@@ -439,7 +439,7 @@ class Utility_Function_Tests final : public Test {
          result.test_is_eq(Botan::load_be<TestInt32>(Botan::hex_decode("ABCDEF01")), in32_strong);
          result.test_is_eq(Botan::load_le<TestInt32>(Botan::hex_decode("01EFCDAB")), in32_strong);
 
-         std::vector<TestInt64> some_in64_strongs{TestInt64{0xABCDEF0123456789}, TestInt64{0x0123456789ABCDEF}};
+         const std::vector<TestInt64> some_in64_strongs{TestInt64{0xABCDEF0123456789}, TestInt64{0x0123456789ABCDEF}};
          result.test_is_eq(Botan::store_be<std::vector<uint8_t>>(some_in64_strongs),
                            Botan::hex_decode("ABCDEF01234567890123456789ABCDEF"));
          result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(some_in64_strongs),
@@ -965,11 +965,11 @@ class Version_Tests final : public Test {
          result.confirm("Version datestamp matches macro", Botan::version_datestamp() == BOTAN_VERSION_DATESTAMP);
 
          const char* version_cstr = Botan::version_cstr();
-         std::string version_str = Botan::version_string();
+         const std::string version_str = Botan::version_string();
          result.test_eq("Same version string", version_str, std::string(version_cstr));
 
          const char* sversion_cstr = Botan::short_version_cstr();
-         std::string sversion_str = Botan::short_version_string();
+         const std::string sversion_str = Botan::short_version_string();
          result.test_eq("Same short version string", sversion_str, std::string(sversion_cstr));
 
          const auto expected_sversion =
@@ -1021,7 +1021,7 @@ class Date_Format_Tests final : public Text_Based_Test {
          const std::vector<uint32_t> d = parse_date(date_str);
 
          if(type == "valid" || type == "valid.not_std" || type == "valid.64_bit_time_t") {
-            Botan::calendar_point c(d[0], d[1], d[2], d[3], d[4], d[5]);
+            const Botan::calendar_point c(d[0], d[1], d[2], d[3], d[4], d[5]);
             result.test_is_eq(date_str + " year", c.year(), d[0]);
             result.test_is_eq(date_str + " month", c.month(), d[1]);
             result.test_is_eq(date_str + " day", c.day(), d[2]);
@@ -1033,7 +1033,7 @@ class Date_Format_Tests final : public Text_Based_Test {
                (type == "valid.64_bit_time_t" && c.year() > 2037 && sizeof(std::time_t) == 4)) {
                result.test_throws("valid but out of std::timepoint range", [c]() { c.to_std_timepoint(); });
             } else {
-               Botan::calendar_point c2(c.to_std_timepoint());
+               const Botan::calendar_point c2(c.to_std_timepoint());
                result.test_is_eq(date_str + " year", c2.year(), d[0]);
                result.test_is_eq(date_str + " month", c2.month(), d[1]);
                result.test_is_eq(date_str + " day", c2.day(), d[2]);
@@ -1042,7 +1042,8 @@ class Date_Format_Tests final : public Text_Based_Test {
                result.test_is_eq(date_str + " second", c2.seconds(), d[5]);
             }
          } else if(type == "invalid") {
-            result.test_throws("invalid date", [d]() { Botan::calendar_point c(d[0], d[1], d[2], d[3], d[4], d[5]); });
+            result.test_throws("invalid date",
+                               [d]() { const Botan::calendar_point c(d[0], d[1], d[2], d[3], d[4], d[5]); });
          } else {
             throw Test_Error("Unexpected header '" + type + "' in date format tests");
          }
@@ -1052,7 +1053,7 @@ class Date_Format_Tests final : public Text_Based_Test {
 
       std::vector<Test::Result> run_final_tests() override {
          Test::Result result("calendar_point::to_string");
-         Botan::calendar_point d(2008, 5, 15, 9, 30, 33);
+         const Botan::calendar_point d(2008, 5, 15, 9, 30, 33);
          // desired format: <YYYY>-<MM>-<dd>T<HH>:<mm>:<ss>
          result.test_eq("calendar_point::to_string", d.to_string(), "2008-05-15T09:30:33");
          return {result};
@@ -1306,7 +1307,8 @@ class UUID_Tests : public Test {
          const Botan::UUID random_uuid2(this->rng());
          const Botan::UUID loaded_uuid(std::vector<uint8_t>(16, 4));
 
-         result.test_throws("Cannot load wrong number of bytes", []() { Botan::UUID u(std::vector<uint8_t>(15)); });
+         result.test_throws("Cannot load wrong number of bytes",
+                            []() { const Botan::UUID u(std::vector<uint8_t>(15)); });
 
          result.test_eq("Empty UUID is empty", empty_uuid.is_valid(), false);
          result.confirm("Empty UUID equals another empty UUID", empty_uuid == Botan::UUID());

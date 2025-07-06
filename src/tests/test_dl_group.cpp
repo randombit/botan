@@ -32,7 +32,7 @@ class DL_Group_Tests final : public Test {
       static Test::Result test_dl_errors() {
          Test::Result result("DL_Group errors");
          result.test_throws("Uninitialized", "DL_Group uninitialized", []() {
-            Botan::DL_Group dl;
+            const Botan::DL_Group dl;
             dl.get_p();
          });
 
@@ -81,27 +81,27 @@ class DL_Generate_Group_Tests final : public Test {
 
          auto& rng = this->rng();
 
-         Botan::DL_Group dh1050(rng, Botan::DL_Group::Prime_Subgroup, 1050, 175);
+         const Botan::DL_Group dh1050(rng, Botan::DL_Group::Prime_Subgroup, 1050, 175);
          result.test_eq("DH p size", dh1050.get_p().bits(), 1050);
          result.test_eq("DH q size", dh1050.get_q().bits(), 175);
          result.test_lte("DH g size", dh1050.get_g().bits(), 1050);
          result.test_eq("DH group verifies", dh1050.verify_group(rng, false), true);
 
-         Botan::DL_Group dh_implicit_q(rng, Botan::DL_Group::Prime_Subgroup, 1040);
+         const Botan::DL_Group dh_implicit_q(rng, Botan::DL_Group::Prime_Subgroup, 1040);
          result.test_eq("DH p size", dh_implicit_q.get_p().bits(), 1040);
          result.test_eq("DH q size", dh_implicit_q.get_q().bits(), Botan::dl_exponent_size(1040));
          result.test_lte("DH g size", dh_implicit_q.get_g().bits(), 1040);
          result.test_eq("DH group verifies", dh_implicit_q.verify_group(rng, false), true);
 
          if(Test::run_long_tests()) {
-            Botan::DL_Group dh_strong(rng, Botan::DL_Group::Strong, 1025);
+            const Botan::DL_Group dh_strong(rng, Botan::DL_Group::Strong, 1025);
             result.test_eq("DH p size", dh_strong.get_p().bits(), 1025);
             result.test_eq("DH q size", dh_strong.get_q().bits(), 1024);
             result.test_eq("DH group verifies", dh_strong.verify_group(rng, false), true);
          }
 
    #if defined(BOTAN_HAS_SHA1)
-         Botan::DL_Group dsa1024(rng, Botan::DL_Group::DSA_Kosherizer, 1024);
+         const Botan::DL_Group dsa1024(rng, Botan::DL_Group::DSA_Kosherizer, 1024);
          result.test_eq("DSA p size", dsa1024.get_p().bits(), 1024);
          result.test_eq("DSA q size", dsa1024.get_q().bits(), 160);
          result.test_lte("DSA g size", dsa1024.get_g().bits(), 1024);
@@ -113,21 +113,21 @@ class DL_Generate_Group_Tests final : public Test {
 
          result.test_throws("DSA seed does not generate group",
                             "DL_Group: The seed given does not generate a DSA group",
-                            [&rng, &invalid_seed]() { Botan::DL_Group dsa(rng, invalid_seed, 1024, 160); });
+                            [&rng, &invalid_seed]() { const Botan::DL_Group dsa(rng, invalid_seed, 1024, 160); });
 
          result.test_throws(
             "DSA seed is too short",
             "Generating a DSA parameter set with a 160 bit long q requires a seed at least as many bits long",
-            [&rng, &short_seed]() { Botan::DL_Group dsa(rng, short_seed, 1024, 160); });
+            [&rng, &short_seed]() { const Botan::DL_Group dsa(rng, short_seed, 1024, 160); });
 
          // From FIPS 186-3 test data
          const std::vector<uint8_t> seed = Botan::hex_decode("1F5DA0AF598EEADEE6E6665BF880E63D8B609BA2");
 
-         result.test_throws("invalid params", [&]() { Botan::DL_Group invalid(rng, seed, 1024, 224); });
-         result.test_throws("invalid params", [&]() { Botan::DL_Group invalid(rng, seed, 3072, 224); });
-         result.test_throws("invalid params", [&]() { Botan::DL_Group invalid(rng, seed, 2048, 256); });
+         result.test_throws("invalid params", [&]() { const Botan::DL_Group invalid(rng, seed, 1024, 224); });
+         result.test_throws("invalid params", [&]() { const Botan::DL_Group invalid(rng, seed, 3072, 224); });
+         result.test_throws("invalid params", [&]() { const Botan::DL_Group invalid(rng, seed, 2048, 256); });
 
-         Botan::DL_Group dsa_from_seed(rng, seed, 1024, 160);
+         const Botan::DL_Group dsa_from_seed(rng, seed, 1024, 160);
 
          result.test_eq(
             "DSA q from seed", dsa_from_seed.get_q(), Botan::BigInt("0xAB1A788BCE3C557A965A5BFA6908FAA665FDEB7D"));

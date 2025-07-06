@@ -376,7 +376,7 @@ class Speed final : public Command {
       std::string description() const override { return "Measures the speed of algorithms"; }
 
       void go() override {
-         std::chrono::milliseconds msec(get_arg_sz("msec"));
+         const std::chrono::milliseconds msec(get_arg_sz("msec"));
          std::vector<std::string> ecc_groups = Command::split_on(get_arg("ecc-groups"), ',');
          const std::string format = get_arg("format");
          const std::string clock_ratio = get_arg("cpu-clock-ratio");
@@ -434,7 +434,7 @@ class Speed final : public Command {
          } else if(ecc_groups.size() == 1 && ecc_groups[0] == "generic") {
             ecc_groups.clear();
             for(const auto& group_name : Botan::EC_Group::known_named_groups()) {
-               Botan::EC_Group group(group_name);
+               const Botan::EC_Group group(group_name);
                if(group.engine() == Botan::EC_Group_Engine::Generic) {
                   ecc_groups.push_back(group_name);
                }
@@ -470,14 +470,14 @@ class Speed final : public Command {
             algos = default_benchmark_list();
          }
 
-         PerfConfig perf_config([&](const Timer& t) { this->record_result(t); },
-                                clock_speed,
-                                clock_cycle_ratio,
-                                msec,
-                                ecc_groups,
-                                buf_sizes,
-                                this->error_output(),
-                                this->rng());
+         const PerfConfig perf_config([&](const Timer& t) { this->record_result(t); },
+                                      clock_speed,
+                                      clock_cycle_ratio,
+                                      msec,
+                                      ecc_groups,
+                                      buf_sizes,
+                                      this->error_output(),
+                                      this->rng());
 
          for(const auto& algo : algos) {
             if(auto perf = PerfTest::get(algo)) {

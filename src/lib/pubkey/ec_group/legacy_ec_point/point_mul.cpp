@@ -33,7 +33,7 @@ BigInt blinding_mask(const BigInt& group_order, RandomNumberGenerator& rng) {
 }  // namespace
 
 EC_Point multi_exponentiate(const EC_Point& x, const BigInt& z1, const EC_Point& y, const BigInt& z2) {
-   EC_Point_Multi_Point_Precompute xy_mul(x, y);
+   const EC_Point_Multi_Point_Precompute xy_mul(x, y);
    return xy_mul.multi_exp(z1, z2);
 }
 

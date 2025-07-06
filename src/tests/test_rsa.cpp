@@ -168,7 +168,7 @@ class RSA_Keygen_Bad_RNG_Test final : public Test {
          Request_Counting_RNG rng;
 
          try {
-            Botan::RSA_PrivateKey rsa(rng, 1024);
+            const Botan::RSA_PrivateKey rsa(rng, 1024);
             result.test_failure("Generated a key with a bad RNG");
          } catch(Botan::Internal_Error& e) {
             result.test_success("Key generation with bad RNG failed");
@@ -191,7 +191,7 @@ class RSA_Blinding_Tests final : public Test {
          }
 
    #if defined(BOTAN_HAS_EMSA_RAW) || defined(BOTAN_HAS_EME_RAW)
-         Botan::RSA_PrivateKey rsa(this->rng(), 1024);
+         const Botan::RSA_PrivateKey rsa(this->rng(), 1024);
          Botan::Null_RNG null_rng;
    #endif
 
@@ -311,10 +311,10 @@ class RSA_DecryptOrRandom_Tests : public Test {
          auto public_key = private_key.public_key();
          const auto msg = rng.random_vec(pt_len);
 
-         Botan::PK_Encryptor_EME enc(*public_key, rng, padding);
+         const Botan::PK_Encryptor_EME enc(*public_key, rng, padding);
          const auto ctext = enc.encrypt(msg, rng);
 
-         Botan::PK_Decryptor_EME dec(private_key, rng, padding);
+         const Botan::PK_Decryptor_EME dec(private_key, rng, padding);
 
          const BigInt modulus = public_key->get_int_field("n");
 
@@ -334,7 +334,7 @@ class RSA_DecryptOrRandom_Tests : public Test {
             std::vector<uint8_t> required_offsets(req_bytes);
 
             for(size_t j = 0; j != req_bytes; ++j) {
-               uint8_t idx = rng.next_byte() % pt_len;
+               const uint8_t idx = rng.next_byte() % pt_len;
                required_contents[j] = msg[idx];
                required_offsets[j] = idx;
             }
@@ -352,11 +352,11 @@ class RSA_DecryptOrRandom_Tests : public Test {
             std::vector<uint8_t> required_contents(req_bytes);
             std::vector<uint8_t> required_offsets(req_bytes);
 
-            size_t corrupted = Test::random_index(rng, req_bytes);
-            uint8_t corruption = rng.next_nonzero_byte();
+            const size_t corrupted = Test::random_index(rng, req_bytes);
+            const uint8_t corruption = rng.next_nonzero_byte();
 
             for(size_t j = 0; j != req_bytes; ++j) {
-               uint8_t idx = rng.next_byte() % pt_len;
+               const uint8_t idx = rng.next_byte() % pt_len;
                required_offsets[j] = idx;
 
                if(idx == corrupted) {

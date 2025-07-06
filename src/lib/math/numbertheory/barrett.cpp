@@ -23,7 +23,7 @@ Barrett_Reduction Barrett_Reduction::for_secret_modulus(const BigInt& mod) {
    BOTAN_ARG_CHECK(!mod.is_zero(), "Modulus cannot be zero");
    BOTAN_ARG_CHECK(!mod.is_negative(), "Modulus cannot be negative");
 
-   size_t mod_words = mod.sig_words();
+   const size_t mod_words = mod.sig_words();
 
    // Compute mu = floor(2^{2k} / m)
    const size_t mu_bits = 2 * WordInfo<word>::bits * mod_words;
@@ -34,7 +34,7 @@ Barrett_Reduction Barrett_Reduction::for_public_modulus(const BigInt& mod) {
    BOTAN_ARG_CHECK(!mod.is_zero(), "Modulus cannot be zero");
    BOTAN_ARG_CHECK(!mod.is_negative(), "Modulus cannot be negative");
 
-   size_t mod_words = mod.sig_words();
+   const size_t mod_words = mod.sig_words();
 
    // Compute mu = floor(2^{2k} / m)
    const size_t mu_bits = 2 * WordInfo<word>::bits * mod_words;

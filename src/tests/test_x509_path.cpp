@@ -88,7 +88,7 @@ class X509test_Path_Validation_Tests final : public Test {
          // Current tests use SHA-1
          const Botan::Path_Validation_Restrictions restrictions(false, 80);
 
-         Botan::X509_Certificate root(Test::data_file("x509/x509test/root.pem"));
+         const Botan::X509_Certificate root(Test::data_file("x509/x509test/root.pem"));
          Botan::Certificate_Store_In_Memory trusted;
          trusted.add_certificate(root);
 
@@ -98,7 +98,8 @@ class X509test_Path_Validation_Tests final : public Test {
             Test::Result result("X509test path validation");
             result.start_timer();
 
-            std::vector<Botan::X509_Certificate> certs = load_cert_file(Test::data_file("x509/x509test/" + filename));
+            const std::vector<Botan::X509_Certificate> certs =
+               load_cert_file(Test::data_file("x509/x509test/" + filename));
 
             if(certs.empty()) {
                throw Test_Error("Failed to read certs from " + filename);
@@ -125,7 +126,8 @@ class X509test_Path_Validation_Tests final : public Test {
 
             // this certificate must not have a OCSP URL
             const std::string filename = "ValidAltName.pem";
-            std::vector<Botan::X509_Certificate> certs = load_cert_file(Test::data_file("x509/x509test/" + filename));
+            const std::vector<Botan::X509_Certificate> certs =
+               load_cert_file(Test::data_file("x509/x509test/" + filename));
             if(certs.empty()) {
                throw Test_Error("Failed to read certs from " + filename);
             }
@@ -228,17 +230,17 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run() {
                store.add_certificate(Botan::X509_Certificate(file));
             } else if(file.ends_with(".crl")) {
                Botan::DataSource_Stream in(file, true);
-               Botan::X509_CRL crl(in);
+               const Botan::X509_CRL crl(in);
                store.add_crl(crl);
             }
          }
 
-         Botan::X509_Certificate end_user(Test::data_file("x509/nist/" + test_name + "/end.crt"));
+         const Botan::X509_Certificate end_user(Test::data_file("x509/nist/" + test_name + "/end.crt"));
 
          // 1024 bit root cert
-         Botan::Path_Validation_Restrictions restrictions(true, 80);
+         const Botan::Path_Validation_Restrictions restrictions(true, 80);
 
-         Botan::Path_Validation_Result validation_result = Botan::x509_path_validate(
+         const Botan::Path_Validation_Result validation_result = Botan::x509_path_validate(
             end_user, restrictions, store, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
          result.test_eq(test_name + " path validation result", validation_result.result_string(), expected_result);
@@ -283,10 +285,10 @@ std::vector<Test::Result> Extended_Path_Validation_Tests::run() {
          }
       }
 
-      Botan::X509_Certificate end_user(Test::data_file("x509/extended/" + test_name + "/end.crt"));
+      const Botan::X509_Certificate end_user(Test::data_file("x509/extended/" + test_name + "/end.crt"));
 
-      Botan::Path_Validation_Restrictions restrictions;
-      Botan::Path_Validation_Result validation_result =
+      const Botan::Path_Validation_Restrictions restrictions;
+      const Botan::Path_Validation_Result validation_result =
          Botan::x509_path_validate(end_user, restrictions, store, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
       result.test_eq(test_name + " path validation result", validation_result.result_string(), expected_result);
@@ -360,9 +362,9 @@ std::vector<Test::Result> PSS_Path_Validation_Tests::run() {
       } else if(end && root)  // CRT chain tests
       {
          // sha-1 is used
-         Botan::Path_Validation_Restrictions restrictions(false, 80);
+         const Botan::Path_Validation_Restrictions restrictions(false, 80);
 
-         Botan::Path_Validation_Result validation_result =
+         const Botan::Path_Validation_Result validation_result =
             Botan::x509_path_validate(*end, restrictions, store, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
          result.test_eq(test_name + " path validation result", validation_result.result_string(), expected_result);
@@ -395,7 +397,7 @@ std::vector<Test::Result> Validate_V1Cert_Test::run() {
       return {Test::Result::Note("BSI path validation", "Skipping due to missing filesystem access")};
    }
 
-   std::vector<Test::Result> results;
+   const std::vector<Test::Result> results;
 
    const std::string root_crt = Test::data_file("x509/misc/v1ca/root.pem");
    const std::string int_crt = Test::data_file("x509/misc/v1ca/int.pem");
@@ -403,27 +405,27 @@ std::vector<Test::Result> Validate_V1Cert_Test::run() {
 
    auto validation_time = Botan::calendar_point(2019, 4, 19, 23, 0, 0).to_std_timepoint();
 
-   Botan::X509_Certificate root(root_crt);
-   Botan::X509_Certificate intermediate(int_crt);
-   Botan::X509_Certificate ee_cert(ee_crt);
+   const Botan::X509_Certificate root(root_crt);
+   const Botan::X509_Certificate intermediate(int_crt);
+   const Botan::X509_Certificate ee_cert(ee_crt);
 
    Botan::Certificate_Store_In_Memory trusted;
    trusted.add_certificate(root);
 
-   std::vector<Botan::X509_Certificate> chain = {ee_cert, intermediate};
+   const std::vector<Botan::X509_Certificate> chain = {ee_cert, intermediate};
 
-   Botan::Path_Validation_Restrictions restrictions;
-   Botan::Path_Validation_Result validation_result =
+   const Botan::Path_Validation_Restrictions restrictions;
+   const Botan::Path_Validation_Result validation_result =
       Botan::x509_path_validate(chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
    Test::Result result("Verifying using v1 certificate");
    result.test_eq("Path validation result", validation_result.result_string(), "Verified");
 
-   Botan::Certificate_Store_In_Memory empty;
+   const Botan::Certificate_Store_In_Memory empty;
 
-   std::vector<Botan::X509_Certificate> new_chain = {ee_cert, intermediate, root};
+   const std::vector<Botan::X509_Certificate> new_chain = {ee_cert, intermediate, root};
 
-   Botan::Path_Validation_Result validation_result2 =
+   const Botan::Path_Validation_Result validation_result2 =
       Botan::x509_path_validate(new_chain, restrictions, empty, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
    result.test_eq("Path validation result", validation_result2.result_string(), "Cannot establish trust");
@@ -443,7 +445,7 @@ std::vector<Test::Result> Validate_V2Uid_in_V1_Test::run() {
       return {Test::Result::Note("Path validation", "Skipping due to missing filesystem access")};
    }
 
-   std::vector<Test::Result> results;
+   const std::vector<Test::Result> results;
 
    const std::string root_crt = Test::data_file("x509/v2-in-v1/root.pem");
    const std::string int_crt = Test::data_file("x509/v2-in-v1/int.pem");
@@ -451,17 +453,17 @@ std::vector<Test::Result> Validate_V2Uid_in_V1_Test::run() {
 
    auto validation_time = Botan::calendar_point(2020, 1, 1, 1, 0, 0).to_std_timepoint();
 
-   Botan::X509_Certificate root(root_crt);
-   Botan::X509_Certificate intermediate(int_crt);
-   Botan::X509_Certificate ee_cert(ee_crt);
+   const Botan::X509_Certificate root(root_crt);
+   const Botan::X509_Certificate intermediate(int_crt);
+   const Botan::X509_Certificate ee_cert(ee_crt);
 
    Botan::Certificate_Store_In_Memory trusted;
    trusted.add_certificate(root);
 
-   std::vector<Botan::X509_Certificate> chain = {ee_cert, intermediate};
+   const std::vector<Botan::X509_Certificate> chain = {ee_cert, intermediate};
 
-   Botan::Path_Validation_Restrictions restrictions;
-   Botan::Path_Validation_Result validation_result =
+   const Botan::Path_Validation_Restrictions restrictions;
+   const Botan::Path_Validation_Result validation_result =
       Botan::x509_path_validate(chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
    Test::Result result("Verifying v1 certificate using v2 uid fields");
@@ -484,7 +486,7 @@ std::vector<Test::Result> Validate_Name_Constraint_SAN_Test::run() {
       return {Test::Result::Note("Path validation", "Skipping due to missing filesystem access")};
    }
 
-   std::vector<Test::Result> results;
+   const std::vector<Test::Result> results;
 
    const std::string root_crt = Test::data_file("x509/name_constraint_san/root.pem");
    const std::string int_crt = Test::data_file("x509/name_constraint_san/int.pem");
@@ -492,17 +494,17 @@ std::vector<Test::Result> Validate_Name_Constraint_SAN_Test::run() {
 
    auto validation_time = Botan::calendar_point(2020, 1, 1, 1, 0, 0).to_std_timepoint();
 
-   Botan::X509_Certificate root(root_crt);
-   Botan::X509_Certificate intermediate(int_crt);
-   Botan::X509_Certificate ee_cert(ee_crt);
+   const Botan::X509_Certificate root(root_crt);
+   const Botan::X509_Certificate intermediate(int_crt);
+   const Botan::X509_Certificate ee_cert(ee_crt);
 
    Botan::Certificate_Store_In_Memory trusted;
    trusted.add_certificate(root);
 
-   std::vector<Botan::X509_Certificate> chain = {ee_cert, intermediate};
+   const std::vector<Botan::X509_Certificate> chain = {ee_cert, intermediate};
 
-   Botan::Path_Validation_Restrictions restrictions;
-   Botan::Path_Validation_Result validation_result =
+   const Botan::Path_Validation_Restrictions restrictions;
+   const Botan::Path_Validation_Result validation_result =
       Botan::x509_path_validate(chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
    Test::Result result("Verifying certificate with alternative SAN violating name constraint");
@@ -525,7 +527,7 @@ std::vector<Test::Result> Validate_Name_Constraint_CaseInsensitive::run() {
       return {Test::Result::Note("Path validation", "Skipping due to missing filesystem access")};
    }
 
-   std::vector<Test::Result> results;
+   const std::vector<Test::Result> results;
 
    const std::string root_crt = Test::data_file("x509/misc/name_constraint_ci/root.pem");
    const std::string int_crt = Test::data_file("x509/misc/name_constraint_ci/int.pem");
@@ -533,17 +535,17 @@ std::vector<Test::Result> Validate_Name_Constraint_CaseInsensitive::run() {
 
    auto validation_time = Botan::calendar_point(2021, 5, 8, 1, 0, 0).to_std_timepoint();
 
-   Botan::X509_Certificate root(root_crt);
-   Botan::X509_Certificate intermediate(int_crt);
-   Botan::X509_Certificate ee_cert(ee_crt);
+   const Botan::X509_Certificate root(root_crt);
+   const Botan::X509_Certificate intermediate(int_crt);
+   const Botan::X509_Certificate ee_cert(ee_crt);
 
    Botan::Certificate_Store_In_Memory trusted;
    trusted.add_certificate(root);
 
-   std::vector<Botan::X509_Certificate> chain = {ee_cert, intermediate};
+   const std::vector<Botan::X509_Certificate> chain = {ee_cert, intermediate};
 
-   Botan::Path_Validation_Restrictions restrictions;
-   Botan::Path_Validation_Result validation_result =
+   const Botan::Path_Validation_Restrictions restrictions;
+   const Botan::Path_Validation_Result validation_result =
       Botan::x509_path_validate(chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
    Test::Result result("DNS name constraints are case insensitive");
@@ -564,7 +566,7 @@ std::vector<Test::Result> Validate_Name_Constraint_NoCheckSelf::run() {
       return {Test::Result::Note("Path validation", "Skipping due to missing filesystem access")};
    }
 
-   std::vector<Test::Result> results;
+   const std::vector<Test::Result> results;
 
    const std::string root_crt = Test::data_file("x509/misc/nc_skip_self/root.pem");
    const std::string int_crt = Test::data_file("x509/misc/nc_skip_self/int.pem");
@@ -572,17 +574,17 @@ std::vector<Test::Result> Validate_Name_Constraint_NoCheckSelf::run() {
 
    auto validation_time = Botan::calendar_point(2021, 5, 8, 1, 0, 0).to_std_timepoint();
 
-   Botan::X509_Certificate root(root_crt);
-   Botan::X509_Certificate intermediate(int_crt);
-   Botan::X509_Certificate ee_cert(ee_crt);
+   const Botan::X509_Certificate root(root_crt);
+   const Botan::X509_Certificate intermediate(int_crt);
+   const Botan::X509_Certificate ee_cert(ee_crt);
 
    Botan::Certificate_Store_In_Memory trusted;
    trusted.add_certificate(root);
 
-   std::vector<Botan::X509_Certificate> chain = {ee_cert, intermediate};
+   const std::vector<Botan::X509_Certificate> chain = {ee_cert, intermediate};
 
-   Botan::Path_Validation_Restrictions restrictions;
-   Botan::Path_Validation_Result validation_result =
+   const Botan::Path_Validation_Restrictions restrictions;
+   const Botan::Path_Validation_Result validation_result =
       Botan::x509_path_validate(chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
    Test::Result result("Name constraints do not apply to the certificate which includes them");
@@ -751,7 +753,7 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run() {
             }
          }
 
-         Botan::Path_Validation_Restrictions restrictions(use_crl, 79, use_crl);
+         const Botan::Path_Validation_Restrictions restrictions(use_crl, 79, use_crl);
 
          /*
           * Following the test document, the test are executed 16 times with
@@ -784,16 +786,16 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run() {
          for(size_t r = 0; r < 16; r++) {
             std::shuffle(++(certs.begin()), certs.end(), rbg);
 
-            Botan::Path_Validation_Result validation_result = Botan::x509_path_validate(
+            const Botan::Path_Validation_Result validation_result = Botan::x509_path_validate(
                certs, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
             // We expect to be warned
             if(expected_result.starts_with("Warning: ")) {
-               std::string stripped = expected_result.substr(std::string("Warning: ").size());
+               const std::string stripped = expected_result.substr(std::string("Warning: ").size());
                bool found_warning = false;
                for(const auto& warning_set : validation_result.warnings()) {
                   for(const auto& warning : warning_set) {
-                     std::string warning_str(Botan::to_string(warning));
+                     const std::string warning_str(Botan::to_string(warning));
                      if(stripped == warning_str) {
                         result.test_eq(test_name + " path validation result", warning_str, stripped);
                         found_warning = true;
@@ -1243,8 +1245,8 @@ class CVE_2020_0601_Tests final : public Test {
          }
 
          const auto& secp384r1 = Botan::EC_Group::from_name("secp384r1");
-         Botan::OID curveball_oid("1.3.6.1.4.1.25258.4.2020.0601");
-         Botan::EC_Group curveball(
+         const Botan::OID curveball_oid("1.3.6.1.4.1.25258.4.2020.0601");
+         const Botan::EC_Group curveball(
             curveball_oid,
             secp384r1.get_p(),
             secp384r1.get_a(),
@@ -1328,9 +1330,9 @@ class Path_Validation_With_Immortal_CRL final : public Test {
             return {result};
          }
 
-         Botan::X509_Certificate root(Test::data_file("x509/misc/crl_without_nextupdate/ca.pem"));
-         Botan::X509_Certificate revoked_subject(Test::data_file("x509/misc/crl_without_nextupdate/01.pem"));
-         Botan::X509_Certificate valid_subject(Test::data_file("x509/misc/crl_without_nextupdate/42.pem"));
+         const Botan::X509_Certificate root(Test::data_file("x509/misc/crl_without_nextupdate/ca.pem"));
+         const Botan::X509_Certificate revoked_subject(Test::data_file("x509/misc/crl_without_nextupdate/01.pem"));
+         const Botan::X509_Certificate valid_subject(Test::data_file("x509/misc/crl_without_nextupdate/42.pem"));
 
          // Check that a CRL without nextUpdate is parsable
          auto crl = Botan::X509_CRL(Test::data_file("x509/misc/crl_without_nextupdate/valid_forever.crl"));
@@ -1352,7 +1354,7 @@ class Path_Validation_With_Immortal_CRL final : public Test {
          // (validity from 01 March 2025 to 24 Feburary 2026)
          auto valid_time = Botan::calendar_point(2026, 2, 23, 0, 0, 0).to_std_timepoint();
 
-         Botan::Path_Validation_Restrictions restrictions(true /* require revocation info */);
+         const Botan::Path_Validation_Restrictions restrictions(true /* require revocation info */);
 
          // Validate a certificate that is not listed in the CRL
          const auto valid = Botan::x509_path_validate(
@@ -1384,7 +1386,7 @@ class XMSS_Path_Validation_Tests final : public Test {
       static Test::Result validate_self_signed(const std::string& name, const std::string& file) {
          Test::Result result(name);
 
-         Botan::Path_Validation_Restrictions restrictions;
+         const Botan::Path_Validation_Restrictions restrictions;
          auto self_signed = Botan::X509_Certificate(Test::data_file("x509/xmss/" + file));
 
          auto cert_path = std::vector<Botan::X509_Certificate>{self_signed};

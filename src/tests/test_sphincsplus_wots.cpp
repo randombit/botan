@@ -107,7 +107,7 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test {
          result.test_is_eq("WOTS+ public key generation", hashed_pk_out, hashed_pk_ref);
 
          // Test: Create PK from signature (Verification)
-         Botan::WotsPublicKey wots_pk_from_sig =
+         const Botan::WotsPublicKey wots_pk_from_sig =
             Botan::wots_public_key_from_signature(root_to_sign, sig_out, address, params, *hashes);
 
          // The WOTS+ PK is hashed like for creating a leaf.

@@ -263,14 +263,14 @@ secure_vector<uint8_t> RTSS_Share::reconstruct(const std::vector<RTSS_Share>& sh
                continue;
             }
 
-            uint8_t share_k = shares[k].share_id();
-            uint8_t share_l = shares[l].share_id();
+            const uint8_t share_k = shares[k].share_id();
+            const uint8_t share_l = shares[l].share_id();
 
             if(share_k == share_l) {
                throw Decoding_Error("Duplicate shares found in RTSS recovery");
             }
 
-            uint8_t div = RTSS_EXP[(255 + RTSS_LOG[share_l] - RTSS_LOG[share_k ^ share_l]) % 255];
+            const uint8_t div = RTSS_EXP[(255 + RTSS_LOG[share_l] - RTSS_LOG[share_k ^ share_l]) % 255];
 
             r2 = gfp_mul(r2, div);
          }

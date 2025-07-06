@@ -218,7 +218,7 @@ class Hybrid_Encryption_Operation : public Botan::PK_Ops::KEM_Encryption {
          //
          // TODO: fix this upstream by harmonizing the constructors of the
          //       PK_Key_Agreement and PK_KEM_Encryptor classes.
-         Botan::PK_Key_Agreement kex(*ephemeral_keypair, rng, "Raw");
+         const Botan::PK_Key_Agreement kex(*ephemeral_keypair, rng, "Raw");
 
          // 2. KEX: Agree on a shared secret using the public key of the other
          //         party and our ephemeral private key. The ephemeral public

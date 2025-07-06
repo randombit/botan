@@ -188,7 +188,7 @@ Certificate_Store_In_Memory::Certificate_Store_In_Memory(std::string_view dir) {
          DataSource_Stream src(cert_file, true);
          while(!src.end_of_data()) {
             try {
-               X509_Certificate cert(src);
+               const X509_Certificate cert(src);
                m_certs.push_back(cert);
             } catch(std::exception&) {
                // stop searching for other certificate at first exception

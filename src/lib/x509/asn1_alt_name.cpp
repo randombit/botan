@@ -97,7 +97,7 @@ std::multimap<std::string, std::string> AlternativeName::contents() const {
       names.emplace("URI", nm);
    }
 
-   for(uint32_t ipv4 : this->ipv4_address()) {
+   for(const uint32_t ipv4 : this->ipv4_address()) {
       names.emplace("IP", ipv4_to_string(ipv4));
    }
 
@@ -155,7 +155,7 @@ std::vector<std::string> AlternativeName::get_attribute(std::string_view attr) c
       return ret;
    } else if(attr == "IP") {
       std::vector<std::string> ip_str;
-      for(uint32_t ipv4 : this->ipv4_address()) {
+      for(const uint32_t ipv4 : this->ipv4_address()) {
          ip_str.push_back(ipv4_to_string(ipv4));
       }
       return ip_str;

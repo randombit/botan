@@ -128,7 +128,7 @@ void poly1305_finish(secure_vector<uint64_t>& X, uint8_t mac[16]) {
    uint64_t g1 = h1 + c;
    c = (g1 >> 44);
    g1 &= M44;
-   uint64_t g2 = h2 + c - (static_cast<uint64_t>(1) << 42);
+   const uint64_t g2 = h2 + c - (static_cast<uint64_t>(1) << 42);
 
    /* select h if h < p, or h + -p if h >= p */
    const auto c_mask = CT::Mask<uint64_t>::expand(c);

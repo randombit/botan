@@ -27,7 +27,7 @@ namespace {
 
 // TODO: should this be in a header somewhere?
 void decode_optional_list(BER_Decoder& ber, ASN1_Type tag, std::vector<X509_Certificate>& output) {
-   BER_Object obj = ber.get_next_object();
+   const BER_Object obj = ber.get_next_object();
 
    if(obj.is_a(tag, ASN1_Class::ContextSpecific | ASN1_Class::Constructed) == false) {
       ber.push_back(obj);
@@ -229,7 +229,7 @@ Certificate_Status_Code Response::status_for(const X509_Certificate& issuer,
 
    for(const auto& response : m_responses) {
       if(response.certid().is_id_for(issuer, subject)) {
-         X509_Time x509_ref_time(ref_time);
+         const X509_Time x509_ref_time(ref_time);
 
          if(response.cert_status() == 1) {
             return Certificate_Status_Code::CERT_IS_REVOKED;
@@ -269,7 +269,7 @@ Response online_check(const X509_Certificate& issuer,
       throw Invalid_Argument("No OCSP responder specified");
    }
 
-   OCSP::Request req(issuer, subject_serial);
+   const OCSP::Request req(issuer, subject_serial);
 
    auto http = HTTP::POST_sync(ocsp_responder, "application/ocsp-request", req.BER_encode(), 1, timeout);
 

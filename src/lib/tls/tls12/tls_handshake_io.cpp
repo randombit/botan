@@ -64,13 +64,13 @@ std::pair<Handshake_Type, std::vector<uint8_t>> Stream_Handshake_IO::get_next_re
       const size_t length = 4 + make_uint32(0, m_queue[1], m_queue[2], m_queue[3]);
 
       if(m_queue.size() >= length) {
-         Handshake_Type type = static_cast<Handshake_Type>(m_queue[0]);
+         const Handshake_Type type = static_cast<Handshake_Type>(m_queue[0]);
 
          if(type == Handshake_Type::None) {
             throw Decoding_Error("Invalid handshake message type");
          }
 
-         std::vector<uint8_t> contents(m_queue.begin() + 4, m_queue.begin() + length);
+         const std::vector<uint8_t> contents(m_queue.begin() + 4, m_queue.begin() + length);
 
          m_queue.erase(m_queue.begin(), m_queue.begin() + length);
 
@@ -135,7 +135,7 @@ void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx) {
 
       if(msg.epoch != epoch) {
          // Epoch gap: insert the CCS
-         std::vector<uint8_t> ccs(1, 1);
+         const std::vector<uint8_t> ccs(1, 1);
          m_send_hs(epoch, Record_Type::ChangeCipherSpec, ccs);
       }
 

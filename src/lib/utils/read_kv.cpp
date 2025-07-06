@@ -29,7 +29,7 @@ std::map<std::string, std::string> read_kv(std::string_view kv) {
    std::string cur_key;
    std::string cur_val;
 
-   for(char c : kv) {
+   for(const char c : kv) {
       if(c == '\\' && !escaped) {
          escaped = true;
       } else if(c == ',' && !escaped) {

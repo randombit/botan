@@ -126,7 +126,7 @@ class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_EME {
 
 std::vector<uint8_t> ElGamal_Encryption_Operation::raw_encrypt(std::span<const uint8_t> ptext,
                                                                RandomNumberGenerator& rng) {
-   BigInt m(ptext);
+   const BigInt m(ptext);
 
    const auto& group = m_key->group();
 

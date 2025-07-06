@@ -53,7 +53,6 @@ disabled_needs_work = [
     'cppcoreguidelines-avoid-const-or-ref-data-members',
     'cppcoreguidelines-owning-memory',
     'cppcoreguidelines-prefer-member-initializer',
-    'misc-const-correctness', # pretty noisy
     'misc-include-cleaner',
     'misc-redundant-expression', # BigInt seems to confuse clang-tidy
     'misc-misplaced-const',

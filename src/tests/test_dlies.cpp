@@ -70,8 +70,8 @@ class DLIES_KAT_Tests final : public Text_Based_Test {
 
          auto group = Botan::DL_Group::from_name(group_name);
 
-         Botan::DH_PrivateKey from(group, x1);
-         Botan::DH_PrivateKey to(group, x2);
+         const Botan::DH_PrivateKey from(group, x1);
+         const Botan::DH_PrivateKey to(group, x2);
 
          Botan::DLIES_Encryptor encryptor(
             from, this->rng(), kdf->new_object(), std::move(enc), cipher_key_len, mac->new_object(), mac_key_len);
@@ -99,8 +99,8 @@ BOTAN_REGISTER_TEST("pubkey", "dlies", DLIES_KAT_Tests);
 Test::Result test_xor() {
    Test::Result result("DLIES XOR");
 
-   std::vector<std::string> kdfs = {"KDF2(SHA-512)", "KDF1-18033(SHA-512)"};
-   std::vector<std::string> macs = {"HMAC(SHA-512)", "CMAC(AES-128)"};
+   const std::vector<std::string> kdfs = {"KDF2(SHA-512)", "KDF1-18033(SHA-512)"};
+   const std::vector<std::string> macs = {"HMAC(SHA-512)", "CMAC(AES-128)"};
 
    const size_t mac_key_len = 16;
 
@@ -111,8 +111,8 @@ Test::Result test_xor() {
 
    auto group = Botan::DL_Group::from_name("modp/ietf/2048");
 
-   Botan::DH_PrivateKey alice(*rng, group);
-   Botan::DH_PrivateKey bob(*rng, group);
+   const Botan::DH_PrivateKey alice(*rng, group);
+   const Botan::DH_PrivateKey bob(*rng, group);
 
    for(const auto& kfunc : kdfs) {
       kdf = Botan::KDF::create(kfunc);

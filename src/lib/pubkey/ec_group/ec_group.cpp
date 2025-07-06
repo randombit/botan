@@ -29,14 +29,14 @@ class EC_Group_Data_Map final {
       EC_Group_Data_Map() = default;
 
       size_t clear() {
-         lock_guard_type<mutex_type> lock(m_mutex);
-         size_t count = m_registered_curves.size();
+         const lock_guard_type<mutex_type> lock(m_mutex);
+         const size_t count = m_registered_curves.size();
          m_registered_curves.clear();
          return count;
       }
 
       std::shared_ptr<EC_Group_Data> lookup(const OID& oid) {
-         lock_guard_type<mutex_type> lock(m_mutex);
+         const lock_guard_type<mutex_type> lock(m_mutex);
 
          for(auto i : m_registered_curves) {
             if(i->oid() == oid) {
@@ -67,7 +67,7 @@ class EC_Group_Data_Map final {
                                                       EC_Group_Source source) {
          BOTAN_ASSERT_NOMSG(oid.has_value());
 
-         lock_guard_type<mutex_type> lock(m_mutex);
+         const lock_guard_type<mutex_type> lock(m_mutex);
 
          for(auto i : m_registered_curves) {
             if(i->oid() == oid) {
@@ -133,7 +133,7 @@ class EC_Group_Data_Map final {
                                                                   const BigInt& order,
                                                                   const BigInt& cofactor,
                                                                   EC_Group_Source source) {
-         lock_guard_type<mutex_type> lock(m_mutex);
+         const lock_guard_type<mutex_type> lock(m_mutex);
 
          for(auto i : m_registered_curves) {
             if(i->params_match(p, a, b, g_x, g_y, order, cofactor)) {
@@ -178,7 +178,7 @@ EC_Group_Data_Map& EC_Group::ec_group_data() {
    * which ensures that its destructor runs after ~g_ec_data is complete.
    */
 
-   static Allocator_Initializer g_init_allocator;
+   static const Allocator_Initializer g_init_allocator;
    static EC_Group_Data_Map g_ec_data;
    return g_ec_data;
 }
@@ -290,15 +290,15 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
          const uint8_t hdr = base_pt[0];
 
          if(hdr == 0x04 && base_pt.size() == 1 + 2 * p_bytes) {
-            BigInt x = BigInt::decode(&base_pt[1], p_bytes);
-            BigInt y = BigInt::decode(&base_pt[p_bytes + 1], p_bytes);
+            BigInt const x = BigInt::decode(&base_pt[1], p_bytes);
+            BigInt const y = BigInt::decode(&base_pt[p_bytes + 1], p_bytes);
 
             if(x < p && y < p) {
                return std::make_pair(x, y);
             }
          } else if((hdr == 0x02 || hdr == 0x03) && base_pt.size() == 1 + p_bytes) {
             // TODO(Botan4) remove this branch; we won't support compressed points
-            BigInt x = BigInt::decode(&base_pt[1], p_bytes);
+            BigInt const x = BigInt::decode(&base_pt[1], p_bytes);
             BigInt y = sqrt_modulo_prime(((x * x + a) * x + b) % p, p);
 
             if(x < p && y >= 0) {
@@ -508,7 +508,7 @@ EC_Group::EC_Group(const OID& oid,
    auto x3_ax_b = mod_p.reduce(mod_p.cube(base_x) + mod_p.multiply(a, base_x) + b);
    BOTAN_ARG_CHECK(y2 == x3_ax_b, "EC_Group generator is not on the curve");
 
-   BigInt cofactor(1);
+   const BigInt cofactor(1);
 
    m_data =
       ec_group_data().lookup_or_create(p, a, b, base_x, base_y, order, cofactor, oid, EC_Group_Source::ExternalSource);

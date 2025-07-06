@@ -86,7 +86,7 @@ void ASN1_String::encode_into(DER_Encoder& encoder) const {
 * Decode a BER encoded ASN1_String
 */
 void ASN1_String::decode_from(BER_Decoder& source) {
-   BER_Object obj = source.get_next_object();
+   const BER_Object obj = source.get_next_object();
 
    if(!is_asn1_string_type(obj.type())) {
       auto typ = static_cast<uint32_t>(obj.type());

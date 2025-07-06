@@ -23,13 +23,13 @@ void fuzz(std::span<const uint8_t> in) {
       return;
    }
 
-   static Botan::EC_Group p192 = Botan::EC_Group::from_name("secp192r1");
-   static Botan::EC_Group p224 = Botan::EC_Group::from_name("secp224r1");
-   static Botan::EC_Group p256 = Botan::EC_Group::from_name("secp256r1");
-   static Botan::EC_Group p384 = Botan::EC_Group::from_name("secp384r1");
-   static Botan::EC_Group p521 = Botan::EC_Group::from_name("secp521r1");
-   static Botan::EC_Group bp256 = Botan::EC_Group::from_name("brainpool256r1");
-   static Botan::EC_Group bp512 = Botan::EC_Group::from_name("brainpool512r1");
+   static const Botan::EC_Group p192 = Botan::EC_Group::from_name("secp192r1");
+   static const Botan::EC_Group p224 = Botan::EC_Group::from_name("secp224r1");
+   static const Botan::EC_Group p256 = Botan::EC_Group::from_name("secp256r1");
+   static const Botan::EC_Group p384 = Botan::EC_Group::from_name("secp384r1");
+   static const Botan::EC_Group p521 = Botan::EC_Group::from_name("secp521r1");
+   static const Botan::EC_Group bp256 = Botan::EC_Group::from_name("brainpool256r1");
+   static const Botan::EC_Group bp512 = Botan::EC_Group::from_name("brainpool512r1");
 
    check_os2ecp(p192, in);
    check_os2ecp(p224, in);

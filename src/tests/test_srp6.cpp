@@ -95,7 +95,7 @@ class SRP6_RT_Tests final : public Test {
          const std::string password = "Awellchosen1_to_be_sure_";
          const std::string hash_id = "SHA-256";
 
-         for(size_t b : {1024, 1536, 2048, 3072, 4096, 6144, 8192}) {
+         for(const size_t b : {1024, 1536, 2048, 3072, 4096, 6144, 8192}) {
             if(b >= 4096 && !Test::run_long_tests()) {
                continue;
             }

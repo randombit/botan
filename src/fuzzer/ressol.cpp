@@ -22,7 +22,7 @@ void fuzz(std::span<const uint8_t> in) {
 
    try {
       const Botan::BigInt a = Botan::BigInt::from_bytes(in);
-      Botan::BigInt a_sqrt = Botan::sqrt_modulo_prime(a, p);
+      const Botan::BigInt a_sqrt = Botan::sqrt_modulo_prime(a, p);
 
       if(a_sqrt > 0) {
          const Botan::BigInt a_redc = mod_p.reduce(a);

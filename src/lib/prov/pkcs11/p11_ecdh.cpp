@@ -75,7 +75,7 @@ class PKCS11_ECDH_KA_Operation final : public PK_Ops::Key_Agreement {
                                      static_cast<Ulong>(attributes.count()),
                                      &secret_handle);
 
-         Object secret_object(m_key.session(), secret_handle);
+         const Object secret_object(m_key.session(), secret_handle);
          secure_vector<uint8_t> secret = secret_object.get_attribute_value(AttributeType::Value);
          if(secret.size() < key_len) {
             throw PKCS11_Error("ECDH key derivation secret length is too short");

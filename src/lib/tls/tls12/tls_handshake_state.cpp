@@ -269,7 +269,7 @@ std::pair<std::string, Signature_Format> Handshake_State::choose_sig_format(cons
    std::vector<Signature_Scheme> requested =
       (for_client_auth) ? cert_req()->signature_schemes() : client_hello()->signature_schemes();
 
-   for(Signature_Scheme scheme : allowed) {
+   for(const Signature_Scheme scheme : allowed) {
       if(!scheme.is_available()) {
          continue;
       }
@@ -300,7 +300,7 @@ namespace {
 bool supported_algos_include(const std::vector<Signature_Scheme>& schemes,
                              std::string_view key_type,
                              std::string_view hash_type) {
-   for(Signature_Scheme scheme : schemes) {
+   for(const Signature_Scheme scheme : schemes) {
       if(scheme.is_available() && hash_type == scheme.hash_function_name() && key_type == scheme.algorithm_name()) {
          return true;
       }

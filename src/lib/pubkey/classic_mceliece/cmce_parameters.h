@@ -135,7 +135,7 @@ class BOTAN_TEST_API Classic_McEliece_Parameters final {
       size_t tau() const {
          // Section 8.4 of ISO:
          // The integer tau is defined as t if n=q; as 2t if q/2<=n<q; as 4t if q/4<=n<q/2; etc
-         size_t tau_fact = size_t(1) << (m() - floor_log2(n()));
+         const size_t tau_fact = size_t(1) << (m() - floor_log2(n()));
          return tau_fact * t();
       }
 

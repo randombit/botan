@@ -44,7 +44,7 @@ Test::Result test_OID_to_string() {
    call to std::to_string with something else that ignores locale.
    */
 
-   Botan::OID oid{1, 2, 1000, 1001, 1002000};
+   const Botan::OID oid{1, 2, 1000, 1001, 1002000};
 
    Test::Result result("OID::to_string");
 

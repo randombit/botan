@@ -680,7 +680,7 @@ void Ed25519_FieldElement::serialize_to(std::span<uint8_t, 32> s) const {
    carry0<25>(h7, h8);
    carry0<26>(h8, h9);
 
-   int32_t carry9 = h9 >> 25;
+   const int32_t carry9 = h9 >> 25;
    h9 -= carry9 * X25;
    /* h10 = carry9 */
 

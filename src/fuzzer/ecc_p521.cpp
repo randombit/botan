@@ -11,6 +11,6 @@ void fuzz(std::span<const uint8_t> in) {
    if(in.size() > 2 * (521 + 7) / 8) {
       return;
    }
-   static Botan::EC_Group p521("secp521r1");
+   static const Botan::EC_Group p521("secp521r1");
    return check_ecc_math(p521, in);
 }

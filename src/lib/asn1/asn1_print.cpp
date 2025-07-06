@@ -22,7 +22,7 @@ namespace {
 
 bool all_printable_chars(const uint8_t bits[], size_t bits_len) {
    for(size_t i = 0; i != bits_len; ++i) {
-      int c = bits[i];
+      const int c = bits[i];
       if(c > 127) {
          return false;
       }

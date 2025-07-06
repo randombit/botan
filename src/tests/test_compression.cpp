@@ -58,7 +58,7 @@ class Compression_Tests final : public Test {
          std::vector<Test::Result> results;
          const size_t text_len = std::strlen(COMPRESSION_TEST_TEXT);
 
-         for(std::string algo : {"zlib", "deflate", "gzip", "bz2", "lzma"}) {
+         for(const std::string algo : {"zlib", "deflate", "gzip", "bz2", "lzma"}) {
             try {
                Test::Result result(algo + " compression");
 
@@ -128,7 +128,7 @@ class Compression_Tests final : public Test {
                              const Botan::secure_vector<uint8_t>& msg) {
          Botan::secure_vector<uint8_t> compressed(2 * msg.size());
 
-         for(bool with_flush : {true, false}) {
+         for(const bool with_flush : {true, false}) {
             try {
                compressed = msg;
 
@@ -171,7 +171,7 @@ class CompressionCreate_Tests final : public Test {
       std::vector<Test::Result> run() override {
          std::vector<Test::Result> results;
 
-         for(std::string algo : {"zlib", "deflate", "gzip", "bz2", "lzma"}) {
+         for(const std::string algo : {"zlib", "deflate", "gzip", "bz2", "lzma"}) {
             try {
                Test::Result result(algo + " create compression");
 

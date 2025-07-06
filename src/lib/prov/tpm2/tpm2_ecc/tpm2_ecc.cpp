@@ -71,7 +71,7 @@ std::unique_ptr<TPM2::PrivateKey> EC_PrivateKey::create_unrestricted_transient(c
       throw Invalid_Argument("Unsupported ECC curve");
    }
 
-   TPM2B_SENSITIVE_CREATE sensitive_data = {
+   const TPM2B_SENSITIVE_CREATE sensitive_data = {
       .size = 0,  // ignored
       .sensitive =
          {
@@ -84,7 +84,7 @@ std::unique_ptr<TPM2::PrivateKey> EC_PrivateKey::create_unrestricted_transient(c
          },
    };
 
-   TPMT_PUBLIC key_template = {
+   const TPMT_PUBLIC key_template = {
       .type = TPM2_ALG_ECC,
 
       // This is the algorithm for fingerprinting the newly created public key.

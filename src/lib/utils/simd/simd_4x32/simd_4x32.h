@@ -93,7 +93,7 @@ class SIMD_4x32 final {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          m_simd = _mm_set_epi32(B3, B2, B1, B0);
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-         __vector unsigned int val = {B0, B1, B2, B3};
+         const __vector unsigned int val = {B0, B1, B2, B3};
          m_simd = val;
 #elif defined(BOTAN_SIMD_USE_NEON)
          // Better way to do this?
@@ -144,11 +144,11 @@ class SIMD_4x32 final {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_4x32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(in)));
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-         uint32_t R0 = Botan::load_le<uint32_t>(reinterpret_cast<const uint8_t*>(in), 0);
-         uint32_t R1 = Botan::load_le<uint32_t>(reinterpret_cast<const uint8_t*>(in), 1);
-         uint32_t R2 = Botan::load_le<uint32_t>(reinterpret_cast<const uint8_t*>(in), 2);
-         uint32_t R3 = Botan::load_le<uint32_t>(reinterpret_cast<const uint8_t*>(in), 3);
-         __vector unsigned int val = {R0, R1, R2, R3};
+         const uint32_t R0 = Botan::load_le<uint32_t>(reinterpret_cast<const uint8_t*>(in), 0);
+         const uint32_t R1 = Botan::load_le<uint32_t>(reinterpret_cast<const uint8_t*>(in), 1);
+         const uint32_t R2 = Botan::load_le<uint32_t>(reinterpret_cast<const uint8_t*>(in), 2);
+         const uint32_t R3 = Botan::load_le<uint32_t>(reinterpret_cast<const uint8_t*>(in), 3);
+         const __vector unsigned int val = {R0, R1, R2, R3};
          return SIMD_4x32(val);
 #elif defined(BOTAN_SIMD_USE_NEON)
          SIMD_4x32 l(vld1q_u32(static_cast<const uint32_t*>(in)));
@@ -170,11 +170,11 @@ class SIMD_4x32 final {
          return load_le(in).bswap();
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-         uint32_t R0 = Botan::load_be<uint32_t>(reinterpret_cast<const uint8_t*>(in), 0);
-         uint32_t R1 = Botan::load_be<uint32_t>(reinterpret_cast<const uint8_t*>(in), 1);
-         uint32_t R2 = Botan::load_be<uint32_t>(reinterpret_cast<const uint8_t*>(in), 2);
-         uint32_t R3 = Botan::load_be<uint32_t>(reinterpret_cast<const uint8_t*>(in), 3);
-         __vector unsigned int val = {R0, R1, R2, R3};
+         const uint32_t R0 = Botan::load_be<uint32_t>(reinterpret_cast<const uint8_t*>(in), 0);
+         const uint32_t R1 = Botan::load_be<uint32_t>(reinterpret_cast<const uint8_t*>(in), 1);
+         const uint32_t R2 = Botan::load_be<uint32_t>(reinterpret_cast<const uint8_t*>(in), 2);
+         const uint32_t R3 = Botan::load_be<uint32_t>(reinterpret_cast<const uint8_t*>(in), 3);
+         const __vector unsigned int val = {R0, R1, R2, R3};
          return SIMD_4x32(val);
 
 #elif defined(BOTAN_SIMD_USE_NEON)
@@ -314,7 +314,7 @@ class SIMD_4x32 final {
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
 
          const unsigned int r = static_cast<unsigned int>(ROT);
-         __vector unsigned int rot = {r, r, r, r};
+         const __vector unsigned int rot = {r, r, r, r};
          return SIMD_4x32(vec_rl(m_simd, rot));
 
 #elif defined(BOTAN_SIMD_USE_NEON)

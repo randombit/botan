@@ -99,7 +99,7 @@ int botan_srp6_server_session_step2(
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
       try {
-         Botan::BigInt a_bn = Botan::BigInt::from_bytes({a, a_len});
+         const Botan::BigInt a_bn = Botan::BigInt::from_bytes({a, a_len});
          auto key_sk = s.step2(a_bn);
          return write_vec_output(key, key_len, key_sk.bits_of());
       } catch(Botan::Decoding_Error&) {
@@ -126,7 +126,7 @@ int botan_srp6_generate_verifier(const char* username,
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
       try {
-         std::vector<uint8_t> salt_vec(salt, salt + salt_len);
+         std::vector<uint8_t> const salt_vec(salt, salt + salt_len);
          auto verifier_bn = Botan::srp6_generate_verifier(username, password, salt_vec, group_id, hash_id);
          return write_vec_output(verifier, verifier_len, verifier_bn.serialize());
       } catch(Botan::Lookup_Error&) {
@@ -159,7 +159,7 @@ int botan_srp6_client_agree(const char* identity,
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
       try {
-         std::vector<uint8_t> saltv(salt, salt + salt_len);
+         std::vector<uint8_t> const saltv(salt, salt + salt_len);
          Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
          auto b_bn = Botan::BigInt::from_bytes({b, b_len});
          auto [A_bn, K_sk] = Botan::srp6_client_agree(identity, password, group_id, hash_id, saltv, b_bn, rng);

@@ -106,7 +106,7 @@ bool LowLevel::C_GetSlotList(bool token_present, std::vector<SlotId>& slot_ids, 
    // first get available slots
    Ulong number_slots = 0;
 
-   bool success = C_GetSlotList(static_cast<Bbool>(token_present), nullptr, &number_slots, return_value);
+   const bool success = C_GetSlotList(static_cast<Bbool>(token_present), nullptr, &number_slots, return_value);
 
    if(!success || number_slots == 0) {
       return success;
@@ -146,7 +146,7 @@ bool LowLevel::C_GetMechanismList(SlotId slot_id,
    // first get number of mechanisms
    Ulong number_mechanisms = 0;
 
-   bool success = C_GetMechanismList(slot_id, nullptr, &number_mechanisms, return_value);
+   const bool success = C_GetMechanismList(slot_id, nullptr, &number_mechanisms, return_value);
 
    if(!success || number_mechanisms == 0) {
       return success;

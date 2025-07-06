@@ -55,7 +55,7 @@ class MP_Unit_Tests final : public Test {
          Result result("bigint_cnd_sub");
 
          Botan::word a = 2;
-         Botan::word b = 3;
+         const Botan::word b = 3;
          Botan::word c = Botan::bigint_cnd_sub<Botan::word>(0, &a, &b, 1);
 
          result.test_int_eq(a, 2, "No op");

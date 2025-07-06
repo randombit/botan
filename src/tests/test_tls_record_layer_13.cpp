@@ -65,7 +65,7 @@ std::unique_ptr<TLS::Cipher_State> rfc8448_rtt1_handshake_traffic(
       "8b d4 05 4f b5 5b 9d 63 fd fb ac f9 f0 4b 9f 0d"
       "35 e6 d6 3f 53 75 63 ef d4 62 72 90 0f 89 49 2d");
    auto cipher = TLS::Ciphersuite::from_name("AES_128_GCM_SHA256").value();
-   Mocked_Secret_Logger logger;
+   const Mocked_Secret_Logger logger;
    return TLS::Cipher_State::init_with_server_hello(side, std::move(shared_secret), cipher, transcript_hash, logger);
 }
 
@@ -185,7 +185,7 @@ std::vector<Test::Result> basic_sanitization_parse_records(TLS::Connection_Side 
 
            CHECK("incomplete header asks for more data",
                  [&](auto& result) {
-                    std::vector<uint8_t> partial_header{'\x23', '\x03', '\x03'};
+                    std::vector<uint8_t> const partial_header{'\x23', '\x03', '\x03'};
                     auto read = parse_records(partial_header);
                     result.require("returned 'bytes needed'", std::holds_alternative<TLS::BytesNeeded>(read));
 
@@ -196,7 +196,7 @@ std::vector<Test::Result> basic_sanitization_parse_records(TLS::Connection_Side 
 
            CHECK("complete header asks for enough data to finish processing the record",
                  [&](auto& result) {
-                    std::vector<uint8_t> full_header{'\x17', '\x03', '\x03', '\x00', '\x42'};
+                    std::vector<uint8_t> const full_header{'\x17', '\x03', '\x03', '\x00', '\x42'};
                     auto read = parse_records(full_header);
                     result.require("returned 'bytes needed'", std::holds_alternative<TLS::BytesNeeded>(read));
 
@@ -205,7 +205,7 @@ std::vector<Test::Result> basic_sanitization_parse_records(TLS::Connection_Side 
 
            CHECK("received an empty record (that is not application data)",
                  [&](auto& result) {
-                    std::vector<uint8_t> empty_record{'\x16', '\x03', '\x03', '\x00', '\x00'};
+                    std::vector<uint8_t> const empty_record{'\x16', '\x03', '\x03', '\x00', '\x00'};
                     result.test_throws("record empty", "empty record received", [&] { parse_records(empty_record); });
                  }),
 
@@ -252,7 +252,7 @@ std::vector<Test::Result> basic_sanitization_parse_records(TLS::Connection_Side 
 
            CHECK("invalid record type",
                  [&](auto& result) {
-                    std::vector<uint8_t> invalid_record_type{'\x42', '\x03', '\x03', '\x41', '\x01'};
+                    std::vector<uint8_t> const invalid_record_type{'\x42', '\x03', '\x03', '\x41', '\x01'};
                     result.test_throws("invalid record type", "TLS record type had unexpected value", [&] {
                        parse_records(invalid_record_type);
                     });
@@ -260,7 +260,7 @@ std::vector<Test::Result> basic_sanitization_parse_records(TLS::Connection_Side 
 
            CHECK("invalid record version",
                  [&](auto& result) {
-                    std::vector<uint8_t> invalid_record_version{'\x17', '\x13', '\x37', '\x00', '\x01', '\x42'};
+                    std::vector<uint8_t> const invalid_record_version{'\x17', '\x13', '\x37', '\x00', '\x01', '\x42'};
                     result.test_throws("invalid record version", "Received unexpected record version", [&] {
                        parse_records(invalid_record_version);
                     });
@@ -292,7 +292,7 @@ std::vector<Test::Result> basic_sanitization_parse_records(TLS::Connection_Side 
 
            CHECK("malformed change cipher spec",
                  [&](auto& result) {
-                    std::vector<uint8_t> invalid_ccs_record{'\x14', '\x03', '\x03', '\x00', '\x01', '\x02'};
+                    std::vector<uint8_t> const invalid_ccs_record{'\x14', '\x03', '\x03', '\x00', '\x01', '\x02'};
                     result.test_throws("invalid CCS record", "malformed change cipher spec record received", [&] {
                        parse_records(invalid_ccs_record);
                     });
@@ -323,7 +323,7 @@ std::vector<Test::Result> read_fragmented_records() {
 
    return {CHECK("change cipher spec in many small pieces",
                  [&](auto& result) {
-                    std::vector<uint8_t> ccs_record{'\x14', '\x03', '\x03', '\x00', '\x01', '\x01'};
+                    std::vector<uint8_t> const ccs_record{'\x14', '\x03', '\x03', '\x00', '\x01', '\x01'};
 
                     wait_for_more_bytes(4, rl, {'\x14'}, result);
                     wait_for_more_bytes(3, rl, {'\x03'}, result);
@@ -650,7 +650,7 @@ std::vector<Test::Result> read_encrypted_records() {
 
                auto cs = rfc8448_rtt1_handshake_traffic();
                // advance with arbitrary hashes that were used to produce the input data
-               Mocked_Secret_Logger logger;
+               Mocked_Secret_Logger const logger;
                cs->advance_with_server_finished(
                   Botan::hex_decode("e1935a480babfc4403b2517f0ad414bed0ca51fa671e2061804afa78fd71d55c"), logger);
                cs->advance_with_client_finished(

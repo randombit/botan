@@ -72,7 +72,7 @@ class SPHINCS_Plus_FORS_Test final : public Text_Based_Test {
          }
 
          auto hashes = Botan::Sphincs_Hash_Functions::create(params, public_seed);
-         Botan::Sphincs_Address address = read_address(vars.get_req_bin("Address"));
+         const Botan::Sphincs_Address address = read_address(vars.get_req_bin("Address"));
 
          Botan::ForsSignature sig(params.fors_signature_bytes());
 

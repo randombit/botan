@@ -12,7 +12,7 @@ int main() {
 
    const auto salt = rng.random_array<16>();
 
-   Botan::ML_KEM_PrivateKey priv_key(rng, Botan::ML_KEM_Mode::ML_KEM_768);
+   const Botan::ML_KEM_PrivateKey priv_key(rng, Botan::ML_KEM_Mode::ML_KEM_768);
    auto pub_key = priv_key.public_key();
 
    Botan::PK_KEM_Encryptor enc(*pub_key, kdf);

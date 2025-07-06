@@ -130,8 +130,8 @@ FrodoMatrix FrodoMatrix::mul_add_as_plus_e(const FrodoKEMConstants& constants,
    std::vector<uint16_t> a_row_data(4 * constants.n(), 0);
    // TODO: maybe use std::as_bytes() instead
    //       (take extra care, as it produces a std::span<std::byte>)
-   std::span<uint8_t> a_row_data_bytes(reinterpret_cast<uint8_t*>(a_row_data.data()),
-                                       sizeof(uint16_t) * a_row_data.size());
+   const std::span<uint8_t> a_row_data_bytes(reinterpret_cast<uint8_t*>(a_row_data.data()),
+                                             sizeof(uint16_t) * a_row_data.size());
 
    for(size_t i = 0; i < constants.n(); i += 4) {
       auto a_row = BufferStuffer(a_row_data_bytes);
@@ -189,8 +189,8 @@ FrodoMatrix FrodoMatrix::mul_add_sa_plus_e(const FrodoKEMConstants& constants,
    */
    std::vector<uint16_t> a_row_data(8 * constants.n(), 0);
    // TODO: maybe use std::as_bytes()
-   std::span<uint8_t> a_row_data_bytes(reinterpret_cast<uint8_t*>(a_row_data.data()),
-                                       sizeof(uint16_t) * a_row_data.size());
+   const std::span<uint8_t> a_row_data_bytes(reinterpret_cast<uint8_t*>(a_row_data.data()),
+                                             sizeof(uint16_t) * a_row_data.size());
 
    // Start matrix multiplication
    for(size_t i = 0; i < constants.n(); i += 8) {
@@ -318,7 +318,7 @@ CT::Mask<uint8_t> FrodoMatrix::constant_time_compare(const FrodoMatrix& other) c
 }
 
 FrodoMatrix FrodoMatrix::mul_bs(const FrodoKEMConstants& constants, const FrodoMatrix& b, const FrodoMatrix& s) {
-   Dimensions dimensions = {constants.n_bar(), constants.n_bar()};
+   const Dimensions dimensions = {constants.n_bar(), constants.n_bar()};
    auto elements = make_elements_vector(dimensions);
 
    for(size_t i = 0; i < constants.n_bar(); ++i) {
@@ -453,7 +453,7 @@ FrodoMatrix FrodoMatrix::unpack(const FrodoKEMConstants& constants,
       while(b < lsb) {
          const uint8_t nbits = std::min(static_cast<uint8_t>(lsb - b), bits);
          const uint16_t mask = static_cast<uint16_t>(1 << nbits) - 1;
-         uint8_t t = (w >> (bits - nbits)) & mask;  // the bits to copy from w to out
+         const uint8_t t = (w >> (bits - nbits)) & mask;  // the bits to copy from w to out
 
          elements.at(i) = elements.at(i) + static_cast<uint16_t>(t << (lsb - b - nbits));
          b += nbits;

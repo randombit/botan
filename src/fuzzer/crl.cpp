@@ -12,6 +12,6 @@
 void fuzz(std::span<const uint8_t> in) {
    try {
       Botan::DataSource_Memory input(in);
-      Botan::X509_CRL crl(input);
+      Botan::X509_CRL const crl(input);
    } catch(Botan::Exception& e) {}
 }

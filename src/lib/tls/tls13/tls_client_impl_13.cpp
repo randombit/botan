@@ -481,7 +481,7 @@ void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
                              " as a signature scheme");
    }
 
-   bool sig_valid = certificate_verify_msg.verify(
+   const bool sig_valid = certificate_verify_msg.verify(
       *m_handshake_state.server_certificate().public_key(), callbacks(), m_transcript_hash.previous());
 
    if(!sig_valid) {
@@ -600,17 +600,17 @@ void TLS::Client_Impl_13::handle(const New_Session_Ticket_13& new_session_ticket
    callbacks().tls_examine_extensions(
       new_session_ticket.extensions(), Connection_Side::Server, Handshake_Type::NewSessionTicket);
 
-   Session session(m_cipher_state->psk(new_session_ticket.nonce()),
-                   new_session_ticket.early_data_byte_limit(),
-                   new_session_ticket.ticket_age_add(),
-                   new_session_ticket.lifetime_hint(),
-                   m_handshake_state.server_hello().selected_version(),
-                   m_handshake_state.server_hello().ciphersuite(),
-                   Connection_Side::Client,
-                   peer_cert_chain(),
-                   peer_raw_public_key(),
-                   m_info,
-                   callbacks().tls_current_timestamp());
+   const Session session(m_cipher_state->psk(new_session_ticket.nonce()),
+                         new_session_ticket.early_data_byte_limit(),
+                         new_session_ticket.ticket_age_add(),
+                         new_session_ticket.lifetime_hint(),
+                         m_handshake_state.server_hello().selected_version(),
+                         m_handshake_state.server_hello().ciphersuite(),
+                         Connection_Side::Client,
+                         peer_cert_chain(),
+                         peer_raw_public_key(),
+                         m_info,
+                         callbacks().tls_current_timestamp());
 
    if(callbacks().tls_should_persist_resumption_information(session)) {
       session_manager().store(session, Session_Handle(new_session_ticket.handle()));

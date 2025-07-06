@@ -126,8 +126,8 @@ class Test_Options {
       uint32_t tpm2_persistent_ecc_handle() const { return static_cast<uint32_t>(m_tpm2_persistent_ecc_handle); }
 
       std::vector<uint8_t> tpm2_persistent_auth_value() const {
-         std::span<const uint8_t> auth_value(Botan::cast_char_ptr_to_uint8(m_tpm2_persistent_auth_value.data()),
-                                             m_tpm2_persistent_auth_value.size());
+         const std::span<const uint8_t> auth_value(Botan::cast_char_ptr_to_uint8(m_tpm2_persistent_auth_value.data()),
+                                                   m_tpm2_persistent_auth_value.size());
          return std::vector<uint8_t>(auth_value.begin(), auth_value.end());
       }
 

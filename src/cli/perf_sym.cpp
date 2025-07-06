@@ -65,7 +65,7 @@ class PerfTest_BlockCipher final : public PerfTest {
 
          const size_t bs = cipher.block_size();
          std::set<size_t> buf_sizes_in_blocks;
-         for(size_t buf_size : config.buffer_sizes()) {
+         for(const size_t buf_size : config.buffer_sizes()) {
             if(buf_size % bs == 0) {
                buf_sizes_in_blocks.insert(buf_size);
             } else {
@@ -73,7 +73,7 @@ class PerfTest_BlockCipher final : public PerfTest {
             }
          }
 
-         for(size_t buf_size : buf_sizes_in_blocks) {
+         for(const size_t buf_size : buf_sizes_in_blocks) {
             std::vector<uint8_t> buffer(buf_size);
             const size_t mult = std::max<size_t>(1, 65536 / buf_size);
             const size_t blocks = buf_size / bs;
@@ -356,7 +356,7 @@ class PerfTest_XOF final : public PerfTest {
          const auto runtime = config.runtime();
          const auto provider = xof.provider();
 
-         for(size_t buf_size : config.buffer_sizes()) {
+         for(const size_t buf_size : config.buffer_sizes()) {
             auto in = config.rng().random_vec(buf_size);
             Botan::secure_vector<uint8_t> out(buf_size);
 

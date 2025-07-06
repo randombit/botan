@@ -142,7 +142,7 @@ class ECDSA_KAT_Verification_Tests final : public PK_Signature_Verification_Test
          const BigInt x = vars.get_req_bn("X");
          const auto group = Botan::EC_Group::from_name(group_id);
 
-         Botan::ECDSA_PrivateKey priv_key(this->rng(), group, x);
+         const Botan::ECDSA_PrivateKey priv_key(this->rng(), group, x);
 
          return priv_key.public_key();
       }
@@ -205,7 +205,7 @@ class ECDSA_Key_Recovery_Tests final : public Text_Based_Test {
          const auto expected_pubkey = vars.get_req_bin("Pubkey");
 
          try {
-            Botan::ECDSA_PublicKey pubkey(group, msg, R, S, V);
+            const Botan::ECDSA_PublicKey pubkey(group, msg, R, S, V);
             result.test_eq("Pubkey X coordinate", pubkey.public_key_bits(), expected_pubkey);
 
             const uint8_t computed_V = pubkey.recovery_param(msg, R, S);

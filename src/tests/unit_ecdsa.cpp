@@ -35,7 +35,7 @@ Test::Result test_decode_ecdsa_X509() {
 
    if(Botan::EC_Group::supports_application_specific_group()) {
       try {
-         Botan::X509_Certificate cert(Test::data_file("x509/ecc/CSCA.CSCA.csca-germany.1.crt"));
+         const Botan::X509_Certificate cert(Test::data_file("x509/ecc/CSCA.CSCA.csca-germany.1.crt"));
 
          result.test_eq(
             "correct signature oid", cert.signature_algorithm().oid().to_formatted_string(), "ECDSA/SHA-224");
@@ -62,8 +62,8 @@ Test::Result test_decode_ver_link_SHA256() {
 
    if(Botan::EC_Group::supports_application_specific_group()) {
       try {
-         Botan::X509_Certificate root_cert(Test::data_file("x509/ecc/root2_SHA256.cer"));
-         Botan::X509_Certificate link_cert(Test::data_file("x509/ecc/link_SHA256.cer"));
+         const Botan::X509_Certificate root_cert(Test::data_file("x509/ecc/root2_SHA256.cer"));
+         const Botan::X509_Certificate link_cert(Test::data_file("x509/ecc/link_SHA256.cer"));
 
          auto pubkey = root_cert.subject_public_key();
          result.confirm("verified self-signed signature", link_cert.check_signature(*pubkey));
@@ -80,8 +80,8 @@ Test::Result test_decode_ver_link_SHA1() {
 
    if(Botan::EC_Group::supports_application_specific_group()) {
       try {
-         Botan::X509_Certificate root_cert(Test::data_file("x509/ecc/root_SHA1.163.crt"));
-         Botan::X509_Certificate link_cert(Test::data_file("x509/ecc/link_SHA1.166.crt"));
+         const Botan::X509_Certificate root_cert(Test::data_file("x509/ecc/root_SHA1.163.crt"));
+         const Botan::X509_Certificate link_cert(Test::data_file("x509/ecc/link_SHA1.166.crt"));
 
          auto pubkey = root_cert.subject_public_key();
 
@@ -122,7 +122,7 @@ Test::Result test_encoding_options() {
 
          const std::vector<uint8_t> enc_compressed = key.public_key_bits();
          result.test_lt("Compressed points are smaller", enc_compressed.size(), enc_uncompressed.size());
-         size_t size_diff = enc_uncompressed.size() - enc_compressed.size();
+         const size_t size_diff = enc_uncompressed.size() - enc_compressed.size();
          result.test_gte("Compressed points smaller by group size", size_diff, group.get_p_bytes());
          key.set_point_encoding(Botan::EC_Point_Format::Hybrid);
          result.confirm("set_point_encoding works", key.point_encoding() == Botan::EC_Point_Format::Hybrid);

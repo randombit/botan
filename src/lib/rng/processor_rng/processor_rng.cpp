@@ -49,8 +49,10 @@ typedef uint64_t hwrng_output;
 #endif
 
 hwrng_output read_hwrng(bool& success) {
-   hwrng_output output = 0;
    success = false;
+
+   // NOLINTBEGIN(*-const-correctness) clang-tidy doesn't understand inline asm
+   hwrng_output output = 0;
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
    int cf = 0;
@@ -83,6 +85,8 @@ hwrng_output read_hwrng(bool& success) {
 
 #endif
 
+   // NOLINTEND(*-const-correctness)
+
    if(success) {
       return output;
    }
@@ -93,7 +97,7 @@ hwrng_output read_hwrng(bool& success) {
 hwrng_output read_hwrng() {
    for(size_t i = 0; i < HWRNG_RETRIES; ++i) {
       bool success = false;
-      hwrng_output output = read_hwrng(success);
+      const hwrng_output output = read_hwrng(success);
 
       if(success) {
          return output;

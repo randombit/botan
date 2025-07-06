@@ -27,7 +27,7 @@ class ML_DSA_Verify_KAT_Tests final : public PK_Signature_Verification_Test {
       std::string default_padding(const VarMap& /*unused*/) const override { return "Pure"; }
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
-         Botan::ML_DSA_Mode mode(vars.get_req_str("Mode"));
+         const Botan::ML_DSA_Mode mode(vars.get_req_str("Mode"));
          return std::make_unique<Botan::ML_DSA_PublicKey>(vars.get_req_bin("Key"), mode);
       }
 };

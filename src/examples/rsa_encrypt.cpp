@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
    if(argc != 2) {
       return 1;
    }
-   std::string_view plaintext(
+   const std::string_view plaintext(
       "Your great-grandfather gave this watch to your granddad for good luck. "
       "Unfortunately, Dane's luck wasn't as good as his old man's.");
    const Botan::secure_vector<uint8_t> pt(plaintext.data(), plaintext.data() + plaintext.length());
@@ -22,11 +22,11 @@ int main(int argc, char* argv[]) {
    auto kp = Botan::PKCS8::load_key(in);
 
    // encrypt with pk
-   Botan::PK_Encryptor_EME enc(*kp, rng, "OAEP(SHA-256)");
+   const Botan::PK_Encryptor_EME enc(*kp, rng, "OAEP(SHA-256)");
    const auto ct = enc.encrypt(pt, rng);
 
    // decrypt with sk
-   Botan::PK_Decryptor_EME dec(*kp, rng, "OAEP(SHA-256)");
+   const Botan::PK_Decryptor_EME dec(*kp, rng, "OAEP(SHA-256)");
    const auto pt2 = dec.decrypt(ct);
 
    std::cout << "\nenc: " << Botan::hex_encode(ct) << "\ndec: " << Botan::hex_encode(pt2);

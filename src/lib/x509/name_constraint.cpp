@@ -66,7 +66,7 @@ void GeneralName::encode_into(DER_Encoder& /*to*/) const {
 }
 
 void GeneralName::decode_from(BER_Decoder& ber) {
-   BER_Object obj = ber.get_next_object();
+   const BER_Object obj = ber.get_next_object();
 
    if(obj.is_a(0, ASN1_Class::ExplicitContextSpecific)) {
       m_type = NameType::Other;
@@ -194,13 +194,13 @@ GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) cons
          // Check CN instead...
          for(const std::string& cn : dn.get_attribute("CN")) {
             if(auto ipv4 = string_to_ipv4(cn)) {
-               bool match = (ipv4.value() & mask) == net;
+               const bool match = (ipv4.value() & mask) == net;
                score.add(match);
             }
          }
       } else {
-         for(uint32_t ipv4 : alt_name.ipv4_address()) {
-            bool match = (ipv4 & mask) == net;
+         for(const uint32_t ipv4 : alt_name.ipv4_address()) {
+            const bool match = (ipv4 & mask) == net;
             score.add(match);
          }
       }
@@ -227,7 +227,7 @@ bool GeneralName::matches_dns(std::string_view name, std::string_view constraint
          return true;
       }
 
-      std::string_view substr = name.substr(name.size() - constraint.size(), constraint.size());
+      const std::string_view substr = name.substr(name.size() - constraint.size(), constraint.size());
 
       if(constraint.front() == '.') {
          return substr == constraint;

@@ -92,33 +92,33 @@ auto pubkeys(KeyTs... keys) {
 
 template <typename... Ts>
 size_t length_of_hybrid_shared_key(Ts... kex_kem_fn) {
-   Botan::overloaded f{[](const Botan::PK_Key_Agreement_Key& kex_key) {
-                          Botan::PK_Key_Agreement ka(kex_key, global_test_rng(), "Raw");
-                          return ka.agreed_value_size();
-                       },
-                       [](const Botan::Private_Key& kem_key) {
-                          Botan::PK_KEM_Encryptor enc(kem_key, "Raw");
-                          return enc.shared_key_length(0);
-                       }};
+   const Botan::overloaded f{[](const Botan::PK_Key_Agreement_Key& kex_key) {
+                                const Botan::PK_Key_Agreement ka(kex_key, global_test_rng(), "Raw");
+                                return ka.agreed_value_size();
+                             },
+                             [](const Botan::Private_Key& kem_key) {
+                                const Botan::PK_KEM_Encryptor enc(kem_key, "Raw");
+                                return enc.shared_key_length(0);
+                             }};
 
    return (f(*kex_kem_fn()) + ...);
 }
 
 template <typename... Ts>
 size_t length_of_hybrid_ciphertext(Ts... kex_kem_fn) {
-   Botan::overloaded f{[](const Botan::PK_Key_Agreement_Key& kex_key) { return kex_key.public_value().size(); },
-                       [](const Botan::Private_Key& kem_key) {
-                          Botan::PK_KEM_Encryptor enc(kem_key, "Raw");
-                          return enc.encapsulated_key_length();
-                       }};
+   const Botan::overloaded f{[](const Botan::PK_Key_Agreement_Key& kex_key) { return kex_key.public_value().size(); },
+                             [](const Botan::Private_Key& kem_key) {
+                                const Botan::PK_KEM_Encryptor enc(kem_key, "Raw");
+                                return enc.encapsulated_key_length();
+                             }};
 
    return (f(*kex_kem_fn()) + ...);
 }
 
 template <typename... Ts>
 size_t length_of_hybrid_public_value(Ts... kex_kem_fn) {
-   Botan::overloaded f{[](const Botan::PK_Key_Agreement_Key& kex_key) { return kex_key.public_value().size(); },
-                       [](const Botan::Private_Key& kem_key) { return kem_key.public_key_bits().size(); }};
+   const Botan::overloaded f{[](const Botan::PK_Key_Agreement_Key& kex_key) { return kex_key.public_value().size(); },
+                             [](const Botan::Private_Key& kem_key) { return kem_key.public_key_bits().size(); }};
 
    return (f(*kex_kem_fn()) + ...);
 }
@@ -138,8 +138,8 @@ size_t estimated_strength_of_hybrid_public_key(Ts... kex_kem_fn) {
 
 template <typename... Ts>
 void roundtrip_test(Test::Result& result, Ts... kex_kem_fn) {
-   Botan::TLS::Hybrid_KEM_PrivateKey hybrid_key(keys(kex_kem_fn()...));
-   Botan::TLS::Hybrid_KEM_PublicKey hybrid_public_key(pubkeys(kex_kem_fn()...));
+   const Botan::TLS::Hybrid_KEM_PrivateKey hybrid_key(keys(kex_kem_fn()...));
+   const Botan::TLS::Hybrid_KEM_PublicKey hybrid_public_key(pubkeys(kex_kem_fn()...));
 
    auto& rng = global_test_rng();
 
@@ -238,8 +238,8 @@ std::vector<Test::Result> hybrid_kem_keypair() {
 
 void kex_to_kem_roundtrip(Test::Result& result,
                           const std::function<std::unique_ptr<Botan::PK_Key_Agreement_Key>()>& kex_fn) {
-   Botan::KEX_to_KEM_Adapter_PrivateKey kexkem_key(kex_fn());
-   Botan::KEX_to_KEM_Adapter_PublicKey kexkem_public_key(kex_fn());
+   const Botan::KEX_to_KEM_Adapter_PrivateKey kexkem_key(kex_fn());
+   const Botan::KEX_to_KEM_Adapter_PublicKey kexkem_public_key(kex_fn());
 
    auto& rng = global_test_rng();
 

@@ -33,7 +33,7 @@
 namespace Botan {
 
 std::unique_ptr<EMSA> EMSA::create(std::string_view algo_spec) {
-   SCAN_Name req(algo_spec);
+   const SCAN_Name req(algo_spec);
 
 #if defined(BOTAN_HAS_EMSA_PKCS1)
    // TODO(Botan4) Remove all but "PKCS1v15"

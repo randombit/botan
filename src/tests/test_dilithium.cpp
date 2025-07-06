@@ -48,7 +48,7 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
 
          auto dilithium_test_rng = std::make_unique<CTR_DRBG_AES256>(ref_seed);
 
-         Botan::Dilithium_PrivateKey priv_key(*dilithium_test_rng, DerivedT::mode);
+         const Botan::Dilithium_PrivateKey priv_key(*dilithium_test_rng, DerivedT::mode);
 
          result.test_eq(
             "generated expected private key hash", sha3_256->process(priv_key.private_key_bits()), ref_sk_hash);
@@ -64,7 +64,7 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
             result.test_eq("generated expected signature", signature, ref_sig);
          }
 
-         Botan::Dilithium_PublicKey pub_key(priv_key.public_key_bits(), DerivedT::mode);
+         const Botan::Dilithium_PublicKey pub_key(priv_key.public_key_bits(), DerivedT::mode);
          auto verifier = Botan::PK_Verifier(pub_key, "");
          verifier.update(ref_msg.data(), ref_msg.size());
          result.confirm("signature verifies", verifier.check_signature(signature.data(), signature.size()));
@@ -155,7 +155,7 @@ class DilithiumRoundtripTests final : public Test {
          const std::string msg = "The quick brown fox jumps over the lazy dog.";
          const std::vector<uint8_t> msgvec(msg.data(), msg.data() + msg.size());
 
-         Botan::Dilithium_PrivateKey priv_key(*rng, mode);
+         const Botan::Dilithium_PrivateKey priv_key(*rng, mode);
          const Botan::Dilithium_PublicKey& pub_key = priv_key;
 
          result.test_eq("key strength", priv_key.estimated_strength(), strength);
@@ -168,8 +168,8 @@ class DilithiumRoundtripTests final : public Test {
          const auto priv_key_encoded = priv_key.private_key_bits();
          const auto pub_key_encoded = priv_key.public_key_bits();
 
-         Botan::Dilithium_PrivateKey priv_key_decoded(priv_key_encoded, mode);
-         Botan::Dilithium_PublicKey pub_key_decoded(pub_key_encoded, mode);
+         const Botan::Dilithium_PrivateKey priv_key_decoded(priv_key_encoded, mode);
+         const Botan::Dilithium_PublicKey pub_key_decoded(pub_key_encoded, mode);
 
          const auto sig_after_codec = sign(priv_key_decoded, msgvec);
 

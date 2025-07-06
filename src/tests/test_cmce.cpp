@@ -103,7 +103,7 @@ class CMCE_Utility_Tests final : public Test {
             "543e2791fd98dbc1"    // first 8 bytes
             "d332a7c40776ca01");  // last 8 bytes
 
-         size_t byte_length =
+         const size_t byte_length =
             (params.n() + params.sigma2() * params.q() + params.sigma1() * params.t() + params.ell()) / 8;
 
          auto rand = params.prg(seed)->output_stdvec(byte_length);

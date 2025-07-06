@@ -44,12 +44,12 @@ class Name_Constraint_Tests final : public Test {
          std::vector<Test::Result> results;
          const Botan::Path_Validation_Restrictions restrictions(false, 80);
 
-         std::chrono::system_clock::time_point validation_time =
+         const std::chrono::system_clock::time_point validation_time =
             Botan::calendar_point(2016, 10, 21, 4, 20, 0).to_std_timepoint();
 
          for(const auto& t : test_cases) {
-            Botan::X509_Certificate root(Test::data_file("x509/name_constraint/" + std::get<0>(t)));
-            Botan::X509_Certificate sub(Test::data_file("x509/name_constraint/" + std::get<1>(t)));
+            const Botan::X509_Certificate root(Test::data_file("x509/name_constraint/" + std::get<0>(t)));
+            const Botan::X509_Certificate sub(Test::data_file("x509/name_constraint/" + std::get<1>(t)));
             Botan::Certificate_Store_In_Memory trusted;
             Test::Result result("X509v3 Name Constraints: " + std::get<1>(t));
 
