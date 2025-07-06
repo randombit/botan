@@ -39,6 +39,7 @@ std::string CPUID::to_string() {
    for(size_t i = 0; i != 32; ++i) {
       const uint32_t b = static_cast<uint32_t>(1) << i;
       if((bitset & b) == b) {
+         // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
          flags.push_back(CPUFeature(static_cast<CPUFeature::Bit>(b)).to_string());
       }
    }

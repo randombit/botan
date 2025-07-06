@@ -23,7 +23,7 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
    if(auto auxval = OS::get_auxval_hwcap()) {
       const auto [hwcap_altivec, hwcap_crypto] = *auxval;
 
-      enum class PPC_hwcap_bit : uint64_t {
+      enum class PPC_hwcap_bit : uint64_t /* NOLINT(performance-enum-size) */ {
          ALTIVEC_bit = (1 << 28),
          CRYPTO_bit = (1 << 25),
          DARN_bit = (1 << 21),
