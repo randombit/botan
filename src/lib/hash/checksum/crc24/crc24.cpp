@@ -178,7 +178,7 @@ void CRC24::add_data(std::span<const uint8_t> input) {
    static const uint8_t WA = sizeof(size_t) - 1;
 
    // Ensure input is word aligned before processing in parallel
-   for(; !input.empty() && (reinterpret_cast<uintptr_t>(input.data()) & WA); input = input.last(input.size() - 1)) {
+   for(; !input.empty() && (reinterpret_cast<uintptr_t>(input.data()) & WA) > 0; input = input.last(input.size() - 1)) {
       tmp = process8(tmp, input.front());
    }
 

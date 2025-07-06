@@ -328,7 +328,7 @@ int botan_privkey_create_dsa(botan_privkey_t* key, botan_rng_t rng_obj, size_t p
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
-   if((pbits % 64) || (qbits % 8) || (pbits < 1024) || (pbits > 3072) || (qbits < 160) || (qbits > 256)) {
+   if((pbits % 64 != 0) || (qbits % 8 != 0) || (pbits < 1024) || (pbits > 3072) || (qbits < 160) || (qbits > 256)) {
       return BOTAN_FFI_ERROR_BAD_PARAMETER;
    }
 

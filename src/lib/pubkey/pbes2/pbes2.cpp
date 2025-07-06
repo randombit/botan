@@ -110,7 +110,7 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
 
       std::unique_ptr<PasswordHash> pwhash;
 
-      if(msec_in_iterations_out) {
+      if(msec_in_iterations_out != nullptr) {
          const std::chrono::milliseconds msec(*msec_in_iterations_out);
          pwhash = pwhash_fam->tune(key_length, msec);
       } else {
@@ -124,7 +124,7 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
       const size_t r = pwhash->iterations();
       const size_t p = pwhash->parallelism();
 
-      if(msec_in_iterations_out) {
+      if(msec_in_iterations_out != nullptr) {
          *msec_in_iterations_out = 0;
       }
 
@@ -151,7 +151,7 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
 
       std::unique_ptr<PasswordHash> pwhash;
 
-      if(msec_in_iterations_out) {
+      if(msec_in_iterations_out != nullptr) {
          const std::chrono::milliseconds msec(*msec_in_iterations_out);
          pwhash = pwhash_fam->tune(key_length, msec);
       } else {
@@ -165,7 +165,7 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
 
       const size_t iterations = pwhash->iterations();
 
-      if(msec_in_iterations_out) {
+      if(msec_in_iterations_out != nullptr) {
          *msec_in_iterations_out = iterations;
       }
 
@@ -261,7 +261,7 @@ std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbes2_encrypt_msec(std::spa
 
    auto ret = pbes2_encrypt_shared(key_bits, passphrase, &msec_in_iterations_out, 0, cipher, digest, rng);
 
-   if(out_iterations_if_nonnull) {
+   if(out_iterations_if_nonnull != nullptr) {
       *out_iterations_if_nonnull = msec_in_iterations_out;
    }
 

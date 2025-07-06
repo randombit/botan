@@ -162,7 +162,7 @@ class Config_Info final : public Command {
          } else if(arg == "cflags") {
             output() << "-I" << BOTAN_INSTALL_PREFIX << "/" << BOTAN_INSTALL_HEADER_DIR << "\n";
          } else if(arg == "ldflags") {
-            if(*BOTAN_LINK_FLAGS) {
+            if(*BOTAN_LINK_FLAGS != 0) {
                output() << BOTAN_LINK_FLAGS << ' ';
             }
             output() << "-L" << BOTAN_INSTALL_LIB_DIR << "\n";

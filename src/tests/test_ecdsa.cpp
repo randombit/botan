@@ -329,7 +329,7 @@ class ECDSA_ExplicitCurveKey_Test : public Text_Based_Test {
 
             auto key = Botan::PKCS8::load_key(key_bytes);
             auto ecdsa = dynamic_cast<const Botan::ECDSA_PrivateKey*>(key.get());
-            if(ecdsa) {
+            if(ecdsa != nullptr) {
                result.test_success("Returned key was ECDSA");
             } else {
                result.test_failure("Returned key was some other type");

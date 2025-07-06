@@ -79,7 +79,7 @@ void CBC_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
    * as the new IV, as unfortunately some protocols require this. If
    * this is the first message then we use an IV of all zeros.
    */
-   if(nonce_len) {
+   if(nonce_len > 0) {
       m_state.assign(nonce, nonce + nonce_len);
    } else if(m_state.empty()) {
       m_state.resize(m_cipher->block_size());
@@ -203,7 +203,7 @@ size_t CBC_Decryption::process_msg(uint8_t buf[], size_t sz) {
    BOTAN_ARG_CHECK(sz % BS == 0, "Input is not full blocks");
    size_t blocks = sz / BS;
 
-   while(blocks) {
+   while(blocks > 0) {
       const size_t to_proc = std::min(BS * blocks, m_tempbuf.size());
 
       cipher().decrypt_n(buf, m_tempbuf.data(), to_proc / BS);
@@ -228,7 +228,7 @@ void CBC_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    const size_t BS = block_size();
 
-   if(sz == 0 || sz % BS) {
+   if(sz == 0 || sz % BS != 0) {
       throw Decoding_Error(name() + ": Ciphertext not a multiple of block size");
    }
 

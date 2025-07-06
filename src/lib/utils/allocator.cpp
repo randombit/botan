@@ -39,7 +39,7 @@ BOTAN_MALLOC_FN void* allocate_memory(size_t elems, size_t elem_size) {
 #else
    void* ptr = std::calloc(elems, elem_size);  // NOLINT(*-no-malloc)
 #endif
-   if(!ptr) {
+   if(ptr == nullptr) {
       [[unlikely]] throw std::bad_alloc();
    }
    return ptr;

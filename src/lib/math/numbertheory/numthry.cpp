@@ -220,7 +220,7 @@ BigInt gcd(const BigInt& a, const BigInt& b) {
    auto tmp = BigInt::with_capacity(sz);
    size_t factors_of_two = 0;
    for(size_t i = 0; i != loop_cnt; ++i) {
-      auto both_odd = CT::Mask<word>::expand(u.is_odd()) & CT::Mask<word>::expand(v.is_odd());
+      auto both_odd = CT::Mask<word>::expand_bool(u.is_odd()) & CT::Mask<word>::expand_bool(v.is_odd());
 
       // Subtract the smaller from the larger if both are odd
       auto u_gt_v = CT::Mask<word>::expand(bigint_cmp(u._data(), u.size(), v._data(), v.size()) > 0);
@@ -228,8 +228,8 @@ BigInt gcd(const BigInt& a, const BigInt& b) {
       u.ct_cond_assign((u_gt_v & both_odd).as_bool(), tmp);
       v.ct_cond_assign((~u_gt_v & both_odd).as_bool(), tmp);
 
-      const auto u_is_even = CT::Mask<word>::expand(u.is_even());
-      const auto v_is_even = CT::Mask<word>::expand(v.is_even());
+      const auto u_is_even = CT::Mask<word>::expand_bool(u.is_even());
+      const auto v_is_even = CT::Mask<word>::expand_bool(v.is_even());
       BOTAN_DEBUG_ASSERT((u_is_even | v_is_even).as_bool());
 
       // When both are even, we're going to eliminate a factor of 2.

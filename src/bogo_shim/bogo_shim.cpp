@@ -58,7 +58,7 @@ int shim_output(const std::string& s, int rc = 0) {
 }
 
 void shim_log(const std::string& s) {
-   if(::getenv("BOTAN_BOGO_SHIM_LOG")) {
+   if(::getenv("BOTAN_BOGO_SHIM_LOG") != nullptr) {
       /*
       FIXMEs:
        - Rewrite this to use a std::ostream instead
@@ -69,7 +69,7 @@ void shim_log(const std::string& s) {
       // NOLINTNEXTLINE(*-avoid-non-const-global-variables)
       static FILE* g_log = std::fopen("/tmp/bogo_shim.log", "w");
 
-      if(g_log) {
+      if(g_log != nullptr) {
          struct timeval tv;
          ::gettimeofday(&tv, nullptr);
          static_cast<void>(std::fprintf(g_log,
@@ -1623,8 +1623,8 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
 
       void tls_session_established(const Botan::TLS::Session_Summary& session) override {
          shim_log("Session established: " + Botan::hex_encode(session.session_id().get()) + " version " +
-                  session.version().to_string() + " cipher " + session.ciphersuite().to_string() + " EMS " +
-                  std::to_string(session.supports_extended_master_secret()));
+                  session.version().to_string() + " cipher " + session.ciphersuite().to_string() + " " +
+                  std::string((session.supports_extended_master_secret() ? "with EMS" : "without EMS")));
          // probably need tests here?
 
          m_policy.incr_session_established();

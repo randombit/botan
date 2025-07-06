@@ -438,7 +438,7 @@ class GenericScalar final {
             W borrow = shift_right<1>(x.m_val);
 
             // Conditional ok: this function is variable time
-            if(borrow) {
+            if(borrow > 0) {
                bigint_add2_nc(x.m_val.data(), N, inv_2.data(), N);
             }
          }

@@ -109,8 +109,8 @@ namespace Botan {
 namespace {
 
 size_t choose_bucket(size_t n) {
-   const size_t MINIMUM_ALLOCATION = 16;
-   const size_t MAXIMUM_ALLOCATION = 256;
+   constexpr size_t MINIMUM_ALLOCATION = 16;
+   constexpr size_t MAXIMUM_ALLOCATION = 256;
 
    if(n < MINIMUM_ALLOCATION || n > MAXIMUM_ALLOCATION) {
       return 0;
@@ -118,7 +118,7 @@ size_t choose_bucket(size_t n) {
 
    // Need to tune these
 
-   const size_t buckets[] = {
+   constexpr size_t buckets[] = {
       16,
       24,
       32,
@@ -134,7 +134,7 @@ size_t choose_bucket(size_t n) {
       0,
    };
 
-   for(size_t i = 0; buckets[i]; ++i) {
+   for(size_t i = 0; buckets[i] != 0; ++i) {
       if(n <= buckets[i]) {
          return buckets[i];
       }

@@ -106,15 +106,15 @@ bool LowLevel::C_GetSlotList(bool token_present, std::vector<SlotId>& slot_ids, 
    // first get available slots
    Ulong number_slots = 0;
 
-   bool success = C_GetSlotList(token_present, nullptr, &number_slots, return_value);
+   bool success = C_GetSlotList(static_cast<Bbool>(token_present), nullptr, &number_slots, return_value);
 
-   if(!success || !number_slots) {
+   if(!success || number_slots == 0) {
       return success;
    }
 
    // get actual slot ids
    slot_ids.resize(number_slots);
-   return C_GetSlotList(token_present, slot_ids.data(), &number_slots, return_value);
+   return C_GetSlotList(static_cast<Bbool>(token_present), slot_ids.data(), &number_slots, return_value);
 }
 
 bool LowLevel::C_GetSlotInfo(SlotId slot_id, SlotInfo* info_ptr, ReturnValue* return_value) const {
@@ -148,7 +148,7 @@ bool LowLevel::C_GetMechanismList(SlotId slot_id,
 
    bool success = C_GetMechanismList(slot_id, nullptr, &number_mechanisms, return_value);
 
-   if(!success || !number_mechanisms) {
+   if(!success || number_mechanisms == 0) {
       return success;
    }
 

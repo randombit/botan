@@ -350,7 +350,7 @@ size_t BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws) {
 
    for(;;) {
       word borrow = bigint_sub3(ws.data(), _data(), p_words + 1, p._data(), p_words);
-      if(borrow) {
+      if(borrow > 0) {
          break;
       }
 
@@ -503,7 +503,7 @@ void BigInt::ct_cond_swap(bool predicate, BigInt& other) {
 void BigInt::cond_flip_sign(bool predicate) {
    // This code is assuming Negative == 0, Positive == 1
 
-   const auto mask = CT::Mask<uint8_t>::expand(predicate);
+   const auto mask = CT::Mask<uint8_t>::expand_bool(predicate);
 
    const uint8_t current_sign = static_cast<uint8_t>(sign());
 
@@ -522,7 +522,7 @@ void BigInt::ct_cond_assign(bool predicate, const BigInt& other) {
 
    const size_t r_words = std::max(t_words, o_words);
 
-   const auto mask = CT::Mask<word>::expand(predicate);
+   const auto mask = CT::Mask<word>::expand_bool(predicate);
 
    for(size_t i = 0; i != r_words; ++i) {
       const word o_word = other.word_at(i);

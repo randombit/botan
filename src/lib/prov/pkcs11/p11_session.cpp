@@ -31,7 +31,7 @@ Session::Session(Slot& slot, SessionHandle handle) : m_slot(slot), m_handle(hand
 
 Session::~Session() noexcept {
    try {
-      if(m_handle) {
+      if(m_handle != 0) {
          if(m_logged_in) {
             module()->C_Logout(m_handle, nullptr);
          }

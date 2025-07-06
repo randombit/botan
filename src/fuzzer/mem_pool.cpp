@@ -61,7 +61,7 @@ std::vector<RawPage> allocate_raw_pages(size_t count, size_t page_size) {
       int rc = ::posix_memalign(&ptr, page_size, page_size);
       FUZZER_ASSERT_EQUAL(rc, 0);
 
-      if(ptr) {
+      if(ptr != nullptr) {
          pages.push_back(RawPage(ptr));
       }
    }
@@ -105,7 +105,7 @@ void fuzz(std::span<const uint8_t> in) {
          const size_t plen = idx + 1;  // ensure non-zero
          uint8_t* p = static_cast<uint8_t*>(pool.allocate(plen));
 
-         if(p) {
+         if(p != nullptr) {
             const size_t expected_alignment = compute_expected_alignment(plen);
             const size_t alignment = reinterpret_cast<uintptr_t>(p) % expected_alignment;
             if(alignment != 0) {

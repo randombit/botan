@@ -420,6 +420,11 @@ class Mask final {
       static constexpr Mask<T> expand(T v) { return ~Mask<T>::is_zero(value_barrier<T>(v)); }
 
       /**
+      * Return a Mask<T> which is set if v is true
+      */
+      static constexpr Mask<T> expand_bool(bool v) { return Mask<T>::expand(static_cast<T>(v)); }
+
+      /**
       * Return a Mask<T> which is set if choice is set
       */
       static constexpr Mask<T> from_choice(Choice c) {

@@ -10,7 +10,7 @@
 #include <botan/mem_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/stl_util.h>
-#include <limits>
+#include <span>
 
 namespace Botan {
 
@@ -155,14 +155,14 @@ secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
    secure_vector<uint8_t> calculated_tag = m_mac->process(ciphertext);
 
    // calculated tag == received tag ?
-   secure_vector<uint8_t> tag(msg + m_pub_key_size + ciphertext_len,
-                              msg + m_pub_key_size + ciphertext_len + m_mac->output_length());
+
+   std::span<const uint8_t> tag(msg + m_pub_key_size + ciphertext_len, m_mac->output_length());
 
    valid_mask = CT::is_equal(tag.data(), calculated_tag.data(), tag.size()).value();
 
    // decrypt
    if(m_cipher) {
-      if(valid_mask) {
+      if(valid_mask == 0xFF) {
          SymmetricKey dec_key(secret_keys.data(), cipher_key_len);
          m_cipher->set_key(dec_key);
 

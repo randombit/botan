@@ -23,8 +23,6 @@
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_session_key.h>
 
-#include <array>
-
 namespace Botan::TLS {
 
 namespace {
@@ -289,7 +287,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
             }
          }
 
-         if(shared) {
+         if(shared != 0) {
             m_data->extensions().add(new SRTP_Protection_Profiles(shared));
          }
       }

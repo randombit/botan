@@ -58,7 +58,7 @@ void Keccak_Permutation::absorb(std::span<const uint8_t> input) {
       BufferSlicer input_this_round(input_slicer.take(to_take_this_round));
 
       // If necessary, try to get aligned with the sponge state's 64-bit integer array
-      for(; !input_this_round.empty() && m_S_inpos % 8; ++m_S_inpos) {
+      for(; !input_this_round.empty() && m_S_inpos % 8 > 0; ++m_S_inpos) {
          m_S[m_S_inpos / 8] ^= static_cast<uint64_t>(input_this_round.take_byte()) << (8 * (m_S_inpos % 8));
       }
 

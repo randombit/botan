@@ -138,7 +138,7 @@ void ct_divide_word(const BigInt& x, word y, BigInt& q_out, word& r_out) {
       const auto r_carry = CT::Mask<word>::expand_top_bit(r);
 
       r <<= 1;
-      r += x_b;
+      r += static_cast<word>(x_b);
 
       const auto r_gte_y = CT::Mask<word>::is_gte(r, y) | r_carry;
       q.conditionally_set_bit(b, r_gte_y.as_bool());
@@ -180,7 +180,7 @@ word ct_mod_word(const BigInt& x, word y) {
       const auto r_carry = CT::Mask<word>::expand_top_bit(r);
 
       r <<= 1;
-      r += x_b;
+      r += static_cast<word>(x_b);
 
       const auto r_gte_y = CT::Mask<word>::is_gte(r, y) | r_carry;
       r = r_gte_y.select(r - y, r);

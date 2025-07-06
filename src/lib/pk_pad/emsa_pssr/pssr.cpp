@@ -119,7 +119,7 @@ bool pss_verify(HashFunction& hash,
          salt_offset = j + 1;
          break;
       }
-      if(DB[j]) {
+      if(DB[j] != 0x00) {
          return false;
       }
    }
@@ -138,7 +138,7 @@ bool pss_verify(HashFunction& hash,
 
    const bool ok = CT::is_equal(H, H2.data(), HASH_SIZE).as_bool();
 
-   if(out_salt_size && ok) {
+   if(ok && out_salt_size != nullptr) {
       *out_salt_size = salt_size;
    }
 

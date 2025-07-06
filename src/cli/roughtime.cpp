@@ -110,7 +110,7 @@ class Roughtime final : public Command {
             return;
          }
          const auto tolerance = get_arg_sz("check-local-clock");
-         if(tolerance) {
+         if(tolerance > 0) {
             const auto now = std::chrono::system_clock::now();
             const auto diff_abs =
                now >= response.utc_midpoint() ? now - response.utc_midpoint() : response.utc_midpoint() - now;

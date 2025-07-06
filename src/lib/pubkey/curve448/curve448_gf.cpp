@@ -12,8 +12,6 @@
 #include <botan/internal/mp_asmi.h>
 #include <botan/internal/mp_core.h>
 
-#include <algorithm>
-
 namespace Botan {
 
 namespace {

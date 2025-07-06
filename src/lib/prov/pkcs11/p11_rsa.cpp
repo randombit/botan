@@ -143,7 +143,7 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
          const size_t modulus_bytes = (m_key.get_n().bits() + 7) / 8;
 
          // blind for RSA/RAW decryption
-         const bool use_blinding = !m_mechanism.padding_size();
+         const bool use_blinding = m_mechanism.padding_size() == 0;
 
          if(use_blinding) {
             const BigInt blinded = m_blinder.blind(BigInt::from_bytes(encrypted_data));

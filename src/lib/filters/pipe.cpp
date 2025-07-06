@@ -73,9 +73,14 @@ void Pipe::reset() {
 * Destroy the Pipe
 */
 void Pipe::destruct(Filter* to_kill) {
-   if(!to_kill || dynamic_cast<SecureQueue*>(to_kill)) {
+   if(to_kill == nullptr) {
       return;
    }
+
+   if(dynamic_cast<SecureQueue*>(to_kill) != nullptr) {
+      return;
+   }
+
    for(size_t j = 0; j != to_kill->total_ports(); ++j) {
       destruct(to_kill->m_next[j]);
    }
@@ -159,7 +164,7 @@ void Pipe::end_msg() {
    }
    m_pipe->finish_msg();
    clear_endpoints(m_pipe);
-   if(dynamic_cast<Null_Filter*>(m_pipe)) {
+   if(dynamic_cast<Null_Filter*>(m_pipe) != nullptr) {
       delete m_pipe;
       m_pipe = nullptr;
    }
@@ -173,7 +178,7 @@ void Pipe::end_msg() {
 */
 void Pipe::find_endpoints(Filter* f) {
    for(size_t j = 0; j != f->total_ports(); ++j) {
-      if(f->m_next[j] && !dynamic_cast<SecureQueue*>(f->m_next[j])) {
+      if(f->m_next[j] != nullptr && dynamic_cast<SecureQueue*>(f->m_next[j]) == nullptr) {
          find_endpoints(f->m_next[j]);
       } else {
          SecureQueue* q = new SecureQueue;

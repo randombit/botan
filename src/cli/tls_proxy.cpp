@@ -270,7 +270,7 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
          }
 
          try {
-            if(bytes_transferred) {
+            if(bytes_transferred > 0) {
                log_text_message("Server to client", &m_s2p[0], m_s2p.size());
                log_binary_message("Server to client", &m_s2p[0], m_s2p.size());
                m_tls->send(&m_s2p[0], bytes_transferred);

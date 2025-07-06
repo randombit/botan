@@ -168,7 +168,7 @@ void Streebog::compress_64(const uint64_t M[], bool last_block) {
 
          m_S[i] = force_le(t);
          if(t != m) {
-            carry = (t < m);
+            carry = (t < m) ? 1 : 0;
          }
       }
    }

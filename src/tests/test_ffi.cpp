@@ -321,7 +321,7 @@ class FFI_RNG_Test final : public FFI_Test {
             TEST_FFI_OK(botan_rng_reseed, (rng, 256));
 
             TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE, botan_rng_reseed_from_rng, (rng, null_rng, 256));
-            if(hwrng_rng) {
+            if(hwrng_rng != nullptr) {
                TEST_FFI_OK(botan_rng_reseed_from_rng, (rng, hwrng_rng, 256));
             }
             TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE, botan_rng_get, (null_rng, outbuf.data(), outbuf.size()));
@@ -4289,12 +4289,12 @@ class FFI_EC_Group_Test final : public FFI_Test {
          TEST_FFI_OK(botan_ec_group_supports_application_specific_group, (&appl_spec_groups));
          TEST_FFI_OK(botan_ec_group_supports_named_group, ("secp256r1", &named_group));
          result.confirm("application specific groups support matches build",
-                        appl_spec_groups,
+                        appl_spec_groups == 1,
                         Botan::EC_Group::supports_application_specific_group());
          result.confirm(
             "named group support matches build", named_group, Botan::EC_Group::supports_named_group("secp256r1"));
 
-         if(named_group) {
+         if(named_group == 1) {
             botan_ec_group_t group_from_name;
             botan_asn1_oid_t oid_from_name;
             botan_mp_t p_from_name;
@@ -4345,7 +4345,7 @@ class FFI_EC_Group_Test final : public FFI_Test {
             TEST_FFI_RC(1, botan_oid_equal, (group_oid, oid_from_oid));
             TEST_FFI_RC(1, botan_oid_equal, (oid_from_name, oid_from_oid));
 
-            if(appl_spec_groups) {
+            if(appl_spec_groups == 1) {
                botan_asn1_oid_t group_parameter_oid;
                botan_mp_t p_parameter;
                botan_mp_t a_parameter;
