@@ -25,7 +25,7 @@ class DilithiumPolyTraits final : public CRYSTALS::Trait_Base<DilithiumConstants
 
       static constexpr T montgomery_reduce_coefficient(T2 a) {
          const T2 t = static_cast<T>(static_cast<T2>(static_cast<T>(a)) * Q_inverse);
-         return (a - static_cast<T2>(t) * Q) >> (sizeof(T) * 8);
+         return static_cast<T>((a - static_cast<T2>(t) * Q) >> (sizeof(T) * 8));
       }
 
       static constexpr T barrett_reduce_coefficient(T a) {

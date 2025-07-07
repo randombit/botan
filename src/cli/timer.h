@@ -31,7 +31,10 @@ class Timer final {
 
       void stop();
 
-      bool under(std::chrono::milliseconds msec) const { return (milliseconds() < msec.count()); }
+      bool under(std::chrono::milliseconds msec) const {
+         auto nano = std::chrono::duration_cast<std::chrono::nanoseconds>(msec);
+         return (nano.count() >= 0) ? (value() < static_cast<size_t>(nano.count())) : true;
+      }
 
       class Timer_Scope final {
          public:
@@ -67,19 +70,17 @@ class Timer final {
 
       uint64_t value() const { return m_time_used; }
 
-      double seconds() const { return value() / 1000000000.0; }
+      double seconds() const { return nanoseconds() / 1000000000.0; }
 
-      double milliseconds() const { return value() / 1000000.0; }
+      double milliseconds() const { return nanoseconds() / 1000000.0; }
 
-      double microseconds() const { return value() / 1000.0; }
+      double microseconds() const { return nanoseconds() / 1000.0; }
 
       double nanoseconds() const { return static_cast<double>(value()); }
 
-      double ms_per_event() const { return milliseconds() / events(); }
-
       uint64_t cycles_consumed() const {
          if(m_clock_speed != 0) {
-            return static_cast<uint64_t>((m_clock_speed * value()) / 1000.0);
+            return (m_clock_speed * value()) / 1000;
          }
          return m_cpu_cycles_used;
       }
@@ -92,11 +93,23 @@ class Timer final {
 
       size_t buf_size() const { return m_buf_size; }
 
-      double bytes_per_second() const { return seconds() > 0.0 ? events() / seconds() : 0.0; }
+      double bytes_per_second() const { return events_per_second(); }
 
-      double events_per_second() const { return seconds() > 0.0 ? events() / seconds() : 0.0; }
+      double events_per_second() const {
+         if(seconds() > 0.0 && events() > 0) {
+            return static_cast<double>(events()) / seconds();
+         } else {
+            return 0.0;
+         }
+      }
 
-      double seconds_per_event() const { return events() > 0 ? seconds() / events() : 0.0; }
+      double seconds_per_event() const {
+         if(seconds() > 0.0 && events() > 0) {
+            return seconds() / static_cast<double>(events());
+         } else {
+            return 0.0;
+         }
+      }
 
       bool operator<(const Timer& other) const;
 

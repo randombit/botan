@@ -71,7 +71,7 @@ class PBKDF_Tune final : public Command {
                const uint64_t end_ns = Botan::OS::get_system_timestamp_ns();
                const uint64_t dur_ns = end_ns - start_ns;
 
-               output() << " took " << (dur_ns / 1000000.0) << " msec to compute";
+               output() << " took " << (static_cast<double>(dur_ns) / 1000000.0) << " msec to compute";
    #else
                output() << "No system clock";
    #endif

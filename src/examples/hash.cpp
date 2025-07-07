@@ -11,7 +11,7 @@ int main() {
 
    while(std::cin.good()) {
       // read STDIN to buffer
-      std::cin.read(reinterpret_cast<char*>(buf.data()), buf.size());
+      std::cin.read(reinterpret_cast<char*>(buf.data()), static_cast<std::streamsize>(buf.size()));
       size_t readcount = std::cin.gcount();
       // update hash computations with read data
       hash1->update(std::span{buf}.first(readcount));

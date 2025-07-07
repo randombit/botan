@@ -27,7 +27,7 @@ class KyberPolyTraits final : public CRYSTALS::Trait_Base<KyberConstants, KyberP
       friend class CRYSTALS::Trait_Base<KyberConstants, KyberPolyTraits>;
 
       constexpr static T montgomery_reduce_coefficient(T2 a) {
-         const T u = static_cast<T>(a) * Q_inverse;
+         const T u = static_cast<T>(static_cast<T>(a) * Q_inverse);
          auto t = static_cast<T2>(u) * Q;
          t = a - t;
          t >>= sizeof(T) * 8;
@@ -36,8 +36,8 @@ class KyberPolyTraits final : public CRYSTALS::Trait_Base<KyberConstants, KyberP
 
       constexpr static T barrett_reduce_coefficient(T a) {
          constexpr T2 v = ((1U << 26) + Q / 2) / Q;
-         const T t = (v * a >> 26) * Q;
-         return a - t;
+         const T t = static_cast<T>(((v * a) >> 26) * Q);
+         return static_cast<T>(a - t);
       }
 
    public:
@@ -54,8 +54,8 @@ class KyberPolyTraits final : public CRYSTALS::Trait_Base<KyberConstants, KyberP
                const auto zeta = zetas[++i];
                for(j = start; j < start + len; ++j) {
                   const auto t = fqmul(zeta, p[j + len]);
-                  p[j + len] = p[j] - t;
-                  p[j] = p[j] + t;
+                  p[j + len] = static_cast<T>(p[j] - t);
+                  p[j] = static_cast<T>(p[j] + t);
                }
             }
          }
@@ -80,8 +80,8 @@ class KyberPolyTraits final : public CRYSTALS::Trait_Base<KyberConstants, KyberP
                const auto zeta = zetas[i--];
                for(j = start; j < start + len; ++j) {
                   const auto t = p[j];
-                  p[j] = barrett_reduce_coefficient(t + p[j + len]);
-                  p[j + len] = fqmul(zeta, p[j + len] - t);
+                  p[j] = barrett_reduce_coefficient(static_cast<T>(t + p[j + len]));
+                  p[j + len] = fqmul(zeta, static_cast<T>(p[j + len] - t));
                }
             }
          }
@@ -119,9 +119,10 @@ class KyberPolyTraits final : public CRYSTALS::Trait_Base<KyberConstants, KyberP
          };
 
          for(size_t i = 0; i < Tq_elem_count(result) / 2; ++i) {
-            const auto zeta = zetas[64 + i];
+            const T zeta = zetas[64 + i];
+            const T nzeta = static_cast<T>(-zeta);
             Tq_elem(result, 2 * i) = basemul(Tq_elem(lhs, 2 * i), Tq_elem(rhs, 2 * i), zeta);
-            Tq_elem(result, 2 * i + 1) = basemul(Tq_elem(lhs, 2 * i + 1), Tq_elem(rhs, 2 * i + 1), -zeta);
+            Tq_elem(result, 2 * i + 1) = basemul(Tq_elem(lhs, 2 * i + 1), Tq_elem(rhs, 2 * i + 1), nzeta);
          }
       }
 };
