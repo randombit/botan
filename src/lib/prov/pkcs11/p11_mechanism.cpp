@@ -114,7 +114,8 @@ const std::map<std::string, RSA_SignMechanism> SignMechanisms = {
    {"PSS(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss)},
    {"PSS(SHA-512,MGF1,64)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss)},
 
-   // ISO 9796 (TODO is this DS1, DS2, or DS3?)
+   // ISO 9796 - this is the obsolete and insecure DS1 scheme, not the PSS-based DS2/DS3
+   // TODO(Botan4) remove this
    {"ISO9796", RSA_SignMechanism(MechanismType::Rsa9796)},
 
    // Deprecated aliases

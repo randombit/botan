@@ -21,6 +21,18 @@ namespace Botan {
 
 namespace {
 
+std::vector<uint8_t> iso9796_hash(HashFunction& hash,
+                                  std::span<const uint8_t> msg1,
+                                  std::span<const uint8_t> hmsg2,
+                                  std::span<const uint8_t> salt) {
+   // Compute H(C || msg1 || H(msg2) || S) as described in the ISO text
+   hash.update_be(static_cast<uint64_t>(msg1.size()) * 8);
+   hash.update(msg1);
+   hash.update(hmsg2);
+   hash.update(salt);
+   return hash.final_stdvec();
+}
+
 std::vector<uint8_t> iso9796_encoding(std::span<const uint8_t> msg,
                                       size_t output_bits,
                                       std::unique_ptr<HashFunction>& hash,
@@ -41,22 +53,15 @@ std::vector<uint8_t> iso9796_encoding(std::span<const uint8_t> msg,
    //calculate message capacity
    const size_t capacity = output_length - hash_len - salt_len - trailer_len - 1;
 
-   //msg1 is the recoverable and hmsg2 is the hash of the unrecoverable message part.
-   std::span<const uint8_t> msg1;
+   // msg1 is the recoverable part and hmsg2 is the hash of the unrecoverable message part.
    const size_t msg1_len = std::min(capacity, msg.size());
-   const size_t msg2_len = msg.size() - msg1_len;  // possibly zero
-   msg1 = msg.first(msg1_len);
+   const auto msg1 = msg.first(msg1_len);    // the first capacity bytes
+   const auto msg2 = msg.subspan(msg1_len);  // the rest; possibly empty
 
-   hash->update(msg.subspan(msg1_len, msg2_len));  // possibly empty
-   const std::vector<uint8_t> hmsg2 = hash->final_stdvec();
-
-   //compute H(C||msg1 ||H(msg2)||S)
+   const auto hmsg2 = hash->process<std::vector<uint8_t>>(msg2);
    const auto salt = rng.random_vec<std::vector<uint8_t>>(salt_len);
-   hash->update_be(static_cast<uint64_t>(msg1_len) * 8);
-   hash->update(msg1);
-   hash->update(hmsg2);
-   hash->update(salt);
-   const std::vector<uint8_t> H = hash->final_stdvec();
+
+   const auto H = iso9796_hash(*hash, msg1, hmsg2, salt);
 
    std::vector<uint8_t> EM(output_length);
 
@@ -97,10 +102,7 @@ bool iso9796_verification(std::span<const uint8_t> repr,
                           size_t key_bits,
                           std::unique_ptr<HashFunction>& hash,
                           size_t salt_len) {
-   const size_t hash_len = hash->output_length();
-   const size_t KEY_BYTES = (key_bits + 7) / 8;
-
-   if(repr.size() != KEY_BYTES) {
+   if(repr.size() != (key_bits + 7) / 8) {
       return false;
    }
    //get trailer length
@@ -125,6 +127,12 @@ bool iso9796_verification(std::span<const uint8_t> repr,
       if(trailer_0 != hash_id || trailer_1 != 0xCC) {
          return false;
       }
+   }
+
+   const size_t hash_len = hash->output_length();
+
+   if(repr.size() < hash_len + trailer_len + salt_len) {
+      return false;
    }
 
    std::vector<uint8_t> coded(repr.begin(), repr.end());
@@ -170,37 +178,31 @@ bool iso9796_verification(std::span<const uint8_t> repr,
    CT::unpoison(coded.data(), coded.size());
    CT::unpoison(msg1_offset);
 
-   std::vector<uint8_t> msg1(coded.begin() + msg1_offset, coded.end() - trailer_len - hash_len - salt_len);
-   std::vector<uint8_t> salt(coded.begin() + msg1_offset + msg1.size(), coded.end() - trailer_len - hash_len);
+   const size_t msg1_len = coded.size() - (trailer_len + hash_len + msg1_offset + salt_len);
+
+   const auto msg1 = std::span(coded).subspan(msg1_offset, msg1_len);
+   const auto salt = std::span(coded).subspan(msg1_offset + msg1.size(), salt_len);
 
    //compute H2(C||msg1||H(msg2)||S*). * indicates a recovered value
    const size_t capacity = (key_bits - 2 + 7) / 8 - hash_len - salt_len - trailer_len - 1;
-   std::vector<uint8_t> msg1raw;
-   if(raw.size() > capacity) {
-      msg1raw = std::vector<uint8_t>(raw.begin(), raw.begin() + capacity);
-      hash->update(std::span(raw).subspan(capacity));
-   } else {
-      msg1raw.assign(raw.begin(), raw.end());
+
+   std::span<const uint8_t> msg1raw = raw;
+   if(msg1raw.size() > capacity) {
+      hash->update(msg1raw.subspan(capacity));
+      msg1raw = msg1raw.first(capacity);
    }
-   const std::vector<uint8_t> hmsg2 = hash->final_stdvec();
 
-   const uint64_t msg1rawLength = msg1raw.size();
-   hash->update_be(msg1rawLength * 8);
-   hash->update(msg1raw);
-   hash->update(hmsg2);
-   hash->update(salt);
-   std::vector<uint8_t> H3 = hash->final_stdvec();
+   const auto hmsg2 = hash->final_stdvec();
 
-   //compute H3(C*||msg1*||H(msg2)||S*) * indicates a recovered value
-   const uint64_t msg1_len = msg1.size();
-   hash->update_be(msg1_len * 8);
-   hash->update(msg1);
-   hash->update(hmsg2);
-   hash->update(salt);
-   std::vector<uint8_t> H2 = hash->final_stdvec();
+   // Compute H(C*||msg1*||H(msg2)||S*) where '*' indicates a recovered value
+   const auto H2 = iso9796_hash(*hash, msg1, hmsg2, salt);
 
-   //check if H3 == H2
-   bad_input |= CT::is_not_equal(H3.data(), H2.data(), hash_len);
+   // Check if H == H2
+   bad_input |= CT::is_not_equal(H, H2.data(), hash_len);
+
+   // Check that msg after MGF1 matches msg in the original
+   bad_input |= ~CT::Mask<uint8_t>(CT::Mask<size_t>::is_equal(msg1.size(), msg1raw.size()));
+   bad_input |= ~CT::is_equal(msg1.data(), msg1raw.data(), std::min(msg1.size(), msg1raw.size()));
 
    CT::unpoison(bad_input);
    return (bad_input.as_bool() == false);
