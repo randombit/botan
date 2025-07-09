@@ -231,7 +231,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         flags += ['--extra-cxxflags=/D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR']
 
     if target in ['minimized']:
-        flags += ['--minimized-build', '--enable-modules=system_rng,sha2_32,sha2_64,aes']
+        flags += ['--minimized-build', '--enable-modules=system_rng,sha2*,aes']
 
     if target in ['no_pcurves']:
         flags += ['--disable-modules=pcurves_impl']

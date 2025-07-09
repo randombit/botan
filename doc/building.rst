@@ -608,8 +608,11 @@ Minimized Builds
 Many developers wish to configure a minimized build which contains only the
 specific features their application will use. In general this is straighforward:
 use ``--minimized-build`` plus ``--enable-modules=`` to enable the specific modules
-you wish to use. Any such configurations should build and pass the tests; if you
-encounter a case where it doesn't please file an issue.
+you wish to use. It is possible to use an asterisk (``*``) as a wildcard for
+related modules. For instance to enable all available AES implementations, use
+``--enable-modules='aes*'`` which will enable ``aes_ni``, ``aes_power8``, etc.
+Any such configurations should build and pass the tests; if you encounter a case
+where it doesn't please file an issue.
 
 The only trick is knowing which features you want to enable. The most common
 difficulty comes with entropy sources. By default, none are enabled, which means
