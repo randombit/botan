@@ -359,7 +359,7 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks {
    private:
       std::vector<uint8_t> send_buffer;
       std::vector<uint8_t> receive_buffer;
-      uint64_t received_seq_no;
+      uint64_t received_seq_no = 0;
       Modify_Exts_Fn m_modify_exts;
       std::vector<MockSignature> m_mock_signatures;
       std::chrono::system_clock::time_point m_timestamp;

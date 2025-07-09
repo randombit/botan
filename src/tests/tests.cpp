@@ -412,13 +412,13 @@ std::vector<std::string> Test::possible_providers(const std::string& /*unused*/)
 }
 
 //static
-std::string Test::format_time(uint64_t ns) {
+std::string Test::format_time(uint64_t nanoseconds) {
    std::ostringstream o;
 
-   if(ns > 1000000000) {
-      o << std::setprecision(2) << std::fixed << ns / 1000000000.0 << " sec";
+   if(nanoseconds > 1000000000) {
+      o << std::setprecision(2) << std::fixed << nanoseconds / 1000000000.0 << " sec";
    } else {
-      o << std::setprecision(2) << std::fixed << ns / 1000000.0 << " msec";
+      o << std::setprecision(2) << std::fixed << nanoseconds / 1000000.0 << " msec";
    }
 
    return o.str();
@@ -830,11 +830,11 @@ std::string Test::data_file_as_temporary_copy(const std::string& what) {
 }
 
 //static
-std::vector<std::string> Test::provider_filter(const std::vector<std::string>& in) {
+std::vector<std::string> Test::provider_filter(const std::vector<std::string>& providers) {
    if(m_opts.provider().empty()) {
-      return in;
+      return providers;
    }
-   for(auto&& provider : in) {
+   for(auto&& provider : providers) {
       if(provider == m_opts.provider()) {
          return std::vector<std::string>{provider};
       }
