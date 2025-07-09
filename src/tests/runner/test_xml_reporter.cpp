@@ -75,7 +75,7 @@ std::string format(const std::chrono::system_clock::time_point& tp) {
 }
 
 std::string format(const std::chrono::nanoseconds& dur) {
-   const float secs = static_cast<float>(dur.count()) / 1000000000;
+   const double secs = static_cast<double>(dur.count()) / 1000000000.0;
 
    std::ostringstream out;
    out.precision(3);

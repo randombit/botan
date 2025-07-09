@@ -19,7 +19,7 @@ namespace {
 
 size_t nfs_workfactor(size_t bits, double log2_k) {
    // approximates natural logarithm of an integer of given bitsize
-   const double log_p = bits / std::numbers::log2e;
+   const double log_p = static_cast<double>(bits) / std::numbers::log2e;
 
    const double log_log_p = std::log(log_p);
 

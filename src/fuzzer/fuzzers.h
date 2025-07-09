@@ -16,7 +16,7 @@
 #include <stdlib.h>  // for setenv
 #include <vector>
 
-static const size_t max_fuzzer_input_size = 8192;
+static constexpr size_t max_fuzzer_input_size = 8192;
 
 extern void fuzz(std::span<const uint8_t> in);
 
@@ -96,7 +96,7 @@ inline int fuzz_files(char* files[]) {
 
       if(in.good()) {
          std::vector<uint8_t> buf(max_fuzzer_input_size);
-         in.read(reinterpret_cast<char*>(buf.data()), buf.size());
+         in.read(reinterpret_cast<char*>(buf.data()), static_cast<std::streamsize>(buf.size()));
          const size_t got = in.gcount();
          buf.resize(got);
          buf.shrink_to_fit();
@@ -133,7 +133,7 @@ int main(int argc, char* argv[]) {
    #endif
    {
       std::vector<uint8_t> buf(max_fuzzer_input_size);
-      std::cin.read(reinterpret_cast<char*>(buf.data()), buf.size());
+      std::cin.read(reinterpret_cast<char*>(buf.data()), static_cast<std::streamsize>(buf.size()));
       const size_t got = std::cin.gcount();
 
       buf.resize(got);

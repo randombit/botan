@@ -70,7 +70,7 @@ class JSON_Output final {
             }
 
             if(t.buf_size() > 0) {
-               out << "\"bps\": " << static_cast<uint64_t>(t.events() / (t.value() / 1000000000.0)) << ", ";
+               out << "\"bps\": " << static_cast<uint64_t>(t.events() / (t.nanoseconds() / 1000000000.0)) << ", ";
                out << "\"buf_size\": " << t.buf_size() << ", ";
             }
 

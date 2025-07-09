@@ -641,7 +641,7 @@ so floor(2^(-255)(h + 19 2^(-25) h9 + 2^(-1))) = q.
 */
 
 void Ed25519_FieldElement::serialize_to(std::span<uint8_t, 32> s) const {
-   const int64_t X25 = (1 << 25);
+   const int32_t X25 = (1 << 25);
 
    int32_t h0 = m_fe[0];
    int32_t h1 = m_fe[1];

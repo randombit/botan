@@ -38,10 +38,14 @@ class TLS_Data_Reader final {
 
       bool has_remaining() const { return (remaining_bytes() > 0); }
 
-      std::vector<uint8_t> get_remaining() { return std::vector<uint8_t>(m_buf.begin() + m_offset, m_buf.end()); }
+      std::vector<uint8_t> get_remaining() {
+         std::span rest = m_buf.subspan(m_offset);
+         return std::vector<uint8_t>(rest.begin(), rest.end());
+      }
 
       std::vector<uint8_t> get_data_read_so_far() {
-         return std::vector<uint8_t>(m_buf.begin(), m_buf.begin() + m_offset);
+         std::span first = m_buf.first(m_offset);
+         return std::vector<uint8_t>(first.begin(), first.end());
       }
 
       void discard_next(size_t bytes) {
