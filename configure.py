@@ -2442,6 +2442,8 @@ class ModulesChooser:
         self._not_using_because = collections.defaultdict(set)
 
         ModulesChooser._validate_dependencies_exist(self._modules)
+        self._options.enabled_modules = ModulesChooser._expand_wildcards_in_user_selection(self._modules, self._options.enabled_modules)
+        self._options.disabled_modules = ModulesChooser._expand_wildcards_in_user_selection(self._modules, self._options.disabled_modules)
         ModulesChooser._validate_user_selection(
             self._modules, self._options.enabled_modules, self._options.disabled_modules)
 
@@ -2518,6 +2520,21 @@ class ModulesChooser:
     def _validate_dependencies_exist(modules):
         for module in modules.values():
             module.dependencies_exist(modules)
+
+    @staticmethod
+    def _expand_wildcards_in_user_selection(modules, user_selected_modules):
+        valid_module_name_with_wildcard = re.compile(r'^[a-z0-9_*]+$')
+        public_modules = [modname for modname, modinfo in modules.items() if modinfo.is_public()]
+        def expand(user_selected_module):
+            if not valid_module_name_with_wildcard.match(user_selected_module):
+                logging.error("Invalid module name with wildcard: %s", user_selected_module)
+                return []
+            regex_from_wildcards = re.compile("^%s$" % user_selected_module.replace('*', '[a-z0-9_]+'))
+            matching_modules = [mod for mod in public_modules if regex_from_wildcards.match(mod)]
+            if not matching_modules:
+                logging.warning("Wildcard '%s' did not match any modules", user_selected_module)
+            return matching_modules
+        return flatten([expand(mod) if '*' in mod else [mod] for mod in user_selected_modules])
 
     @staticmethod
     def _validate_user_selection(modules, enabled_modules, disabled_modules):
