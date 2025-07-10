@@ -807,8 +807,6 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
             const std::optional<std::vector<ASIdOrRange>>& ranges() const { return m_as_ranges; }
 
          private:
-            friend class ASBlocks;
-
             std::optional<std::vector<ASIdOrRange>> m_as_ranges;
       };
 

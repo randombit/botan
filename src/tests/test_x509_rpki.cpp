@@ -1490,7 +1490,7 @@ Test::Result test_x509_as_blocks_rfc3779_example() {
    auto as_idents = cert.v3_extensions().get_extension_object_as<ASBlocks>()->as_identifiers();
    auto as_ids = as_idents.asnum().value().ranges().value();
 
-   result.confirm("", as_ids[0].min() == 135);
+   result.confirm("extension has correct data", as_ids[0].min() == 135);
 
    result.end_timer();
    return result;
