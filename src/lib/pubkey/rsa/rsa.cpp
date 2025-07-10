@@ -20,6 +20,7 @@
 #include <botan/internal/mod_inv.h>
 #include <botan/internal/monty.h>
 #include <botan/internal/monty_exp.h>
+#include <botan/internal/mp_core.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/target_info.h>
@@ -445,6 +446,57 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
 
 namespace {
 
+/*
+* To recover the final value from the CRT representation (j1,j2)
+* we use Garner's algorithm:
+* c = q^-1 mod p (this is precomputed)
+* h = c*(j1-j2) mod p
+* r = h*q + j2
+*/
+BigInt crt_recombine(const Montgomery_Int& j1,
+                     const Montgomery_Int& j2_p,
+                     const BigInt& j2,
+                     const Montgomery_Int& c_monty,
+                     const BigInt& p,
+                     const BigInt& q) {
+   // We skip CRT entirely if the primes are not balanced (same bitlength) so q is also of this size
+   const size_t p_words = p.sig_words();
+   BOTAN_ASSERT_NOMSG(p_words == q.sig_words());
+
+   const size_t n_words = 2 * p_words;
+
+   // Ensure sufficient storage
+   BOTAN_ASSERT_NOMSG(j1.repr().size() >= p_words);
+   BOTAN_ASSERT_NOMSG(j2_p.repr().size() >= p_words);
+   BOTAN_ASSERT_NOMSG(j2.size() >= p_words);
+
+   /*
+   * Compute h = (j1 - j2) * c mod p
+   *
+   * This doesn't quite match up with the "Smooth-CRT" proposal; there we would
+   * multiply by a precomputed c * R2, which would have the effect of both
+   * multiplying by c and immediately converting from Montgomery to standard form.
+   */
+   const Montgomery_Int h_monty = (j1 - j2_p) * c_monty;
+
+   const BigInt h = h_monty.value();
+   // Montgomery_Int always returns values sized to the modulus
+   BOTAN_ASSERT_NOMSG(h.size() >= p_words);
+   BOTAN_DEBUG_ASSERT(h.sig_words() <= p_words);
+
+   // Compute r = h * q
+   secure_vector<word> r(2 * p_words);
+   secure_vector<word> ws(2 * p_words);
+
+   bigint_mul(r.data(), r.size(), h._data(), h.size(), p_words, q._data(), q.size(), p_words, ws.data(), ws.size());
+
+   // r += j2
+   const word carry = bigint_add2_nc(r.data(), n_words, j2._data(), p_words);
+   BOTAN_ASSERT_NOMSG(carry == 0);  // should not be possible since it would imply r > the public modulus
+
+   return BigInt::_from_words(r);
+}
+
 /**
 * RSA private (decrypt/sign) operation
 */
@@ -530,23 +582,10 @@ class RSA_Private_Operation {
          auto j1 = future_j1.get();
 #endif
 
-         /*
-         * To recover the final value from the CRT representation (j1,j2)
-         * we use Garner's algorithm:
-         * c = q^-1 mod p (this is precomputed)
-         * h = c*(j1-j2) mod p
-         * m = j2 + h*q
-         */
-
+         // Reduce j2 modulo p
          const auto j2_p = Montgomery_Int::from_wide_int(m_private->monty_p(), j2);
 
-         /**
-         * This doesn't quite match up with the "Smooth-CRT" proposal; there we
-         * would multiply by c * R2 so would have the effect of both multiplying
-         * by c and immediately converting from Montgomery to standard form.
-         */
-         j1 = (j1 - j2_p) * m_private->get_c_monty();
-         return j1.value() * m_private->get_q() + j2;
+         return crt_recombine(j1, j2_p, j2, m_private->get_c_monty(), m_private->get_p(), m_private->get_q());
       }
 
       std::shared_ptr<const RSA_Public_Data> m_public;
