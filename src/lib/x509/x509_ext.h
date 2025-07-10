@@ -716,12 +716,14 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
                     size_t pos) override;
 
+      /// Add a single IP address to this extension (for the specified SAFI, if any)
       template <Version V>
       void add_address(const std::array<uint8_t, static_cast<size_t>(V)>& address,
                        std::optional<uint8_t> safi = std::nullopt) {
          add_address<V>(address, address, safi);
       }
 
+      /// Add an IP address range to this extension (for the specified SAFI, if any)
       template <Version V>
       void add_address(const std::array<uint8_t, static_cast<std::size_t>(V)>& min,
                        const std::array<uint8_t, static_cast<std::size_t>(V)>& max,
@@ -731,16 +733,18 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
          sort_and_merge();
       }
 
-      template <Version V>
-      void inherit(std::optional<uint8_t> safi = std::nullopt) {
-         m_ip_addr_blocks.push_back(IPAddressFamily(IPAddressChoice<V>(), safi));
-         sort_and_merge();
-      }
-
+      /// Make the extension contain no allowed IP addresses for the specified IP version (and SAFI, if any)
       template <Version V>
       void restrict(std::optional<uint8_t> safi = std::nullopt) {
          std::vector<IPAddressOrRange<V>> addresses = {};
          m_ip_addr_blocks.push_back(IPAddressFamily(IPAddressChoice<V>(addresses), safi));
+         sort_and_merge();
+      }
+
+      /// Mark the specified IP version as 'inherit' (for the specified SAFI, if any)
+      template <Version V>
+      void inherit(std::optional<uint8_t> safi = std::nullopt) {
+         m_ip_addr_blocks.push_back(IPAddressFamily(IPAddressChoice<V>(), safi));
          sort_and_merge();
       }
 
