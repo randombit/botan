@@ -55,6 +55,8 @@ std::string full_compiler_name_string() {
    return "xcode";
    #elif defined(BOTAN_BUILD_COMPILER_IS_CLANG)
    return "clang";
+   #elif defined(BOTAN_BUILD_COMPILER_IS_CLANGCL)
+   return "clangcl";
    #elif defined(BOTAN_BUILD_COMPILER_IS_GCC)
    return "gcc";
    #elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
