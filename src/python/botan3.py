@@ -539,7 +539,7 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_ext_ip_addr_blocks_inherit, [c_void_p, c_int, POINTER(c_uint8)])
     ffi_api(dll.botan_x509_ext_ip_addr_blocks_get_counts, [c_void_p, POINTER(c_size_t), POINTER(c_size_t)])
     ffi_api(dll.botan_x509_ext_ip_addr_blocks_get_family,
-            [c_void_p, c_size_t, c_int, POINTER(c_int), POINTER(c_uint8), POINTER(c_int), POINTER(c_int)])
+            [c_void_p, c_int, c_size_t, POINTER(c_int), POINTER(c_uint8), POINTER(c_int), POINTER(c_int)])
     ffi_api(dll.botan_x509_ext_ip_addr_blocks_get_address,
             [c_void_p, c_int, c_size_t, c_size_t, c_char_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_ext_create_as_blocks, [c_void_p])
@@ -2033,7 +2033,7 @@ class X509ExtIPAddrBlocks:
                 safi = c_uint8(0)
                 present = c_int(0)
                 count = c_int(0)
-                _DLL.botan_x509_ext_ip_addr_blocks_get_family(self.__obj, c_size_t(i), c_int(ipv6), byref(has_safi), byref(safi), byref(present), byref(count))
+                _DLL.botan_x509_ext_ip_addr_blocks_get_family(self.__obj, c_int(ipv6), c_size_t(i), byref(has_safi), byref(safi), byref(present), byref(count))
                 ranges = None
                 if present.value == 1:
                     ranges = []
