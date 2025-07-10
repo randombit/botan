@@ -1295,12 +1295,9 @@ void IPAddressBlocks::IPAddressOrRange<V>::decode_from(Botan::BER_Decoder& from)
       std::vector<uint8_t> prefix_max(prefix_min);
 
       // min address gets filled with 0's
-      decode_single_address(prefix_min, true);
-      m_min = IPAddress<V>(prefix_min);
-
+      m_min = decode_single_address(prefix_min, true);
       // max address with 1's
-      decode_single_address(prefix_max, false);
-      m_max = IPAddress<V>(prefix_max);
+      m_max = decode_single_address(prefix_max, false);
    } else if(next_tag == ASN1_Type::Sequence) {
       // this is a range
 
@@ -1312,11 +1309,8 @@ void IPAddressBlocks::IPAddressOrRange<V>::decode_from(Botan::BER_Decoder& from)
          .decode(addr_max, ASN1_Type::OctetString, ASN1_Type::BitString, ASN1_Class::Universal)
          .end_cons();
 
-      decode_single_address(addr_min, true);
-      m_min = IPAddress<V>(addr_min);
-
-      decode_single_address(addr_max, false);
-      m_max = IPAddress<V>(addr_max);
+      m_min = decode_single_address(addr_min, true);
+      m_max = decode_single_address(addr_max, false);
 
       if(m_min > m_max) {
          throw Decoding_Error("IP address ranges must be sorted.");
@@ -1327,7 +1321,8 @@ void IPAddressBlocks::IPAddressOrRange<V>::decode_from(Botan::BER_Decoder& from)
 }
 
 template <IPAddressBlocks::Version V>
-void IPAddressBlocks::IPAddressOrRange<V>::decode_single_address(std::vector<uint8_t>& decoded, bool min) {
+IPAddressBlocks::IPAddress<V> IPAddressBlocks::IPAddressOrRange<V>::decode_single_address(std::vector<uint8_t>& decoded,
+                                                                                          bool min) {
    const size_t version_octets = static_cast<size_t>(V);
 
    // decode a single address according to https://datatracker.ietf.org/doc/html/rfc3779#section-2.1.1 and following
@@ -1366,6 +1361,8 @@ void IPAddressBlocks::IPAddressOrRange<V>::decode_single_address(std::vector<uin
          decoded[version_octets - 1 - discarded_octets] |= (1 << i);
       }
    }
+
+   return IPAddressBlocks::IPAddress<V>(decoded);
 }
 
 template <IPAddressBlocks::Version V>

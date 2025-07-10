@@ -580,16 +580,16 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
             static constexpr size_t Length = static_cast<size_t>(V);
 
          public:
+            explicit IPAddress(std::span<const uint8_t> v);
+
             std::array<uint8_t, Length> value() const { return m_value; }
 
          private:
             friend class IPAddressBlocks;
             IPAddress() = default;
-            explicit IPAddress(std::span<const uint8_t> v);
 
-            friend IPAddress<V> operator++(const IPAddress<V> v) {
-               std::array<uint8_t, Length> val = v.value();
-               for(auto it = val.rbegin(); it != val.rend(); it++) {
+            void next() {
+               for(auto it = m_value.rbegin(); it != m_value.rend(); it++) {
                   // we increment the current octet
                   (*it)++;
                   // if it did not wrap around we are done, else look at the next octet
@@ -597,13 +597,12 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
                      break;
                   }
                }
-               return IPAddress<V>(val);
             }
 
             friend IPAddress<V> operator+(IPAddress<V> lhs, size_t rhs) {
                // we only really need to be able to compute +1, so this is fine
                for(size_t i = 0; i < rhs; i++) {
-                  lhs = ++lhs;
+                  lhs.next();
                }
                return IPAddress<V>(lhs);
             }
@@ -634,6 +633,8 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
 
             IPAddressOrRange() = default;
 
+            explicit IPAddressOrRange(const IPAddress<V>& addr) : m_min(addr), m_max(addr) {}
+
             IPAddressOrRange(const IPAddress<V>& min, const IPAddress<V>& max) : m_min(min), m_max(max) {
                if(max < min) {
                   throw Decoding_Error("IP address ranges must be sorted");
@@ -648,7 +649,7 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
             IPAddress<V> m_min;
             IPAddress<V> m_max;
 
-            void decode_single_address(std::vector<uint8_t>& decoded, bool min);
+            IPAddress<V> decode_single_address(std::vector<uint8_t>& decoded, bool min);
       };
 
       template <Version V>
@@ -661,11 +662,9 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
 
             IPAddressChoice() = default;
 
-         private:
-            friend class IPAddressBlocks;
-
             explicit IPAddressChoice(std::optional<std::span<const IPAddressOrRange<V>>> ranges);
 
+         private:
             std::optional<std::vector<IPAddressOrRange<V>>> m_ip_addr_ranges;
       };
 
@@ -676,16 +675,7 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
             void encode_into(DER_Encoder&) const override;
             void decode_from(BER_Decoder& from) override;
 
-            uint16_t afi() const { return m_afi; }
-
-            std::optional<uint8_t> safi() const { return m_safi; }
-
-            const AddrChoice& addr_choice() const { return m_ip_addr_choice; }
-
             IPAddressFamily() = default;
-
-         private:
-            friend class IPAddressBlocks;
 
             explicit IPAddressFamily(const AddrChoice& choice, std::optional<uint8_t> safi = std::nullopt) :
                   m_safi(safi), m_ip_addr_choice(choice) {
@@ -696,12 +686,23 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
                }
             }
 
+            uint16_t afi() const { return m_afi; }
+
+            std::optional<uint8_t> safi() const { return m_safi; }
+
+            const AddrChoice& addr_choice() const { return m_ip_addr_choice; }
+
+         private:
             uint16_t m_afi;
             std::optional<uint8_t> m_safi;
             AddrChoice m_ip_addr_choice;
       };
 
       IPAddressBlocks() = default;
+
+      explicit IPAddressBlocks(const std::vector<IPAddressFamily>& blocks) : m_ip_addr_blocks(blocks) {
+         this->sort_and_merge();
+      }
 
       std::unique_ptr<Certificate_Extension> copy() const override { return std::make_unique<IPAddressBlocks>(*this); }
 
@@ -781,7 +782,9 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
 
             ASIdOrRange() = default;
 
-            explicit ASIdOrRange(asnum_t min, asnum_t max) : m_min(min), m_max(max) {
+            explicit ASIdOrRange(asnum_t id) : m_min(id), m_max(id) {}
+
+            ASIdOrRange(asnum_t min, asnum_t max) : m_min(min), m_max(max) {
                if(max < min) {
                   throw Decoding_Error("AS range numbers must be sorted");
                }
@@ -797,13 +800,14 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
             void encode_into(DER_Encoder&) const override;
             void decode_from(BER_Decoder& from) override;
 
+            ASIdentifierChoice() = default;
+
+            explicit ASIdentifierChoice(const std::optional<std::vector<ASIdOrRange>>& ranges);
+
             const std::optional<std::vector<ASIdOrRange>>& ranges() const { return m_as_ranges; }
 
          private:
             friend class ASBlocks;
-            ASIdentifierChoice() = default;
-
-            explicit ASIdentifierChoice(const std::optional<std::vector<ASIdOrRange>>& ranges);
 
             std::optional<std::vector<ASIdOrRange>> m_as_ranges;
       };
@@ -813,14 +817,6 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
             void encode_into(DER_Encoder&) const override;
             void decode_from(BER_Decoder& from) override;
 
-            const std::optional<ASIdentifierChoice>& asnum() const { return m_asnum; }
-
-            const std::optional<ASIdentifierChoice>& rdi() const { return m_rdi; }
-
-         private:
-            friend class ASBlocks;
-            ASIdentifiers() = default;
-
             explicit ASIdentifiers(const std::optional<ASIdentifierChoice>& asnum,
                                    const std::optional<ASIdentifierChoice>& rdi) :
                   m_asnum(asnum), m_rdi(rdi) {
@@ -829,11 +825,21 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
                }
             }
 
+            const std::optional<ASIdentifierChoice>& asnum() const { return m_asnum; }
+
+            const std::optional<ASIdentifierChoice>& rdi() const { return m_rdi; }
+
+         private:
+            friend class ASBlocks;
+            ASIdentifiers() = default;
+
             std::optional<ASIdentifierChoice> m_asnum;
             std::optional<ASIdentifierChoice> m_rdi;
       };
 
       ASBlocks() = default;
+
+      explicit ASBlocks(const ASIdentifiers& as_idents) : m_as_identifiers(as_idents) {}
 
       std::unique_ptr<Certificate_Extension> copy() const override { return std::make_unique<ASBlocks>(*this); }
 
