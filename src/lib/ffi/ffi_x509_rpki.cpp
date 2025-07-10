@@ -237,8 +237,8 @@ int botan_x509_ext_ip_addr_blocks_get_counts(botan_x509_ext_ip_addr_blocks_t ip_
 }
 
 int botan_x509_ext_ip_addr_blocks_get_family(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
-                                             size_t i,
                                              int ipv6,
+                                             size_t i,
                                              int* has_safi,
                                              uint8_t* safi,
                                              int* present,
