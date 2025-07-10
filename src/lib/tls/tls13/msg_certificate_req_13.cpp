@@ -108,7 +108,7 @@ std::optional<Certificate_Request_13> Certificate_Request_13::maybe_create(const
    const auto trusted_CAs = cred_mgr.trusted_certificate_authorities("tls-server", client_hello.sni_hostname());
 
    std::vector<X509_DN> client_auth_CAs;
-   for(const auto store : trusted_CAs) {
+   for(auto* const store : trusted_CAs) {
       const auto subjects = store->all_subjects();
       client_auth_CAs.insert(client_auth_CAs.end(), subjects.begin(), subjects.end());
    }
@@ -140,7 +140,7 @@ const std::vector<Signature_Scheme>& Certificate_Request_13::certificate_signatu
    //   If no "signature_algorithms_cert" extension is present, then the
    //   "signature_algorithms" extension also applies to signatures appearing
    //   in certificates.
-   if(auto sig_schemes_cert = m_extensions.get<Signature_Algorithms_Cert>()) {
+   if(auto* sig_schemes_cert = m_extensions.get<Signature_Algorithms_Cert>()) {
       return sig_schemes_cert->supported_schemes();
    } else {
       return signature_schemes();

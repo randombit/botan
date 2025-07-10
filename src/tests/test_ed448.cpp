@@ -129,7 +129,7 @@ class Ed448_Utils_Test final : public Test {
          const std::vector<std::array<uint8_t, 114>> test_vectors = {
             full, std::array<uint8_t, 114>{0x42}, std::array<uint8_t, 114>{0}};
 
-         for(auto& t : test_vectors) {
+         for(const auto& t : test_vectors) {
             const auto ref = reduce_mod_L_ref(t);
             std::array<uint8_t, 56> res;
             result.test_no_throw("Reduce mod L does not throw", [&] { res = Botan::Scalar448(t).to_bytes<56>(); });

@@ -93,7 +93,7 @@ void Session_Manager_SQL::create_with_latest_schema(std::string_view passphrase,
 
    secure_vector<uint8_t> derived_key(32 + 2);
 
-   const auto pbkdf_name = "PBKDF2(SHA-512)";
+   const std::string pbkdf_name = "PBKDF2(SHA-512)";
    auto pbkdf_fam = PasswordHashFamily::create_or_throw(pbkdf_name);
 
    auto desired_runtime = std::chrono::milliseconds(100);

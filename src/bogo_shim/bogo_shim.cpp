@@ -1512,7 +1512,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
          }
 
          if(!cert_chain.empty() && cert_chain.front().is_self_signed()) {
-            for(const auto roots : trusted_roots) {
+            for(auto* const roots : trusted_roots) {
                if(roots->certificate_known(cert_chain.front())) {
                   shim_log("Trusting self-signed certificate");
                   return;

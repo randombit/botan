@@ -279,7 +279,7 @@ std::vector<Test::Result> xmss_legacy_private_key() {
    Botan::XMSS_PublicKey legacy_public_key = Botan::XMSS_PublicKey(legacy_xmss_public_key);
 
    const auto message = Botan::hex_decode("deadcafe");
-   const auto algo_name = "SHA2_10_256";
+   const auto* const algo_name = "SHA2_10_256";
 
    auto rng = Test::new_rng(__func__);
 

@@ -34,8 +34,9 @@ bool is_space(char c) {
 * X.500 String Comparison
 */
 bool x500_name_cmp(std::string_view name1, std::string_view name2) {
-   auto p1 = name1.begin();
-   auto p2 = name2.begin();
+   // MSVC uses an actual iterator type for string_view, so we must use plain `auto` here
+   auto p1 = name1.begin();  // NOLINT(readability-qualified-auto)
+   auto p2 = name2.begin();  // NOLINT(readability-qualified-auto)
 
    while((p1 != name1.end()) && is_space(*p1)) {
       ++p1;
@@ -112,7 +113,7 @@ void X509_DN::add_attribute(const OID& oid, const ASN1_String& str) {
 std::multimap<OID, std::string> X509_DN::get_attributes() const {
    std::multimap<OID, std::string> retval;
 
-   for(auto& i : m_rdn) {
+   for(const auto& i : m_rdn) {
       retval.emplace(i.first, i.second.value());
    }
    return retval;
@@ -124,7 +125,7 @@ std::multimap<OID, std::string> X509_DN::get_attributes() const {
 std::multimap<std::string, std::string> X509_DN::contents() const {
    std::multimap<std::string, std::string> retval;
 
-   for(auto& i : m_rdn) {
+   for(const auto& i : m_rdn) {
       retval.emplace(i.first.to_formatted_string(), i.second.value());
    }
    return retval;
@@ -142,7 +143,7 @@ bool X509_DN::has_field(std::string_view attr) const {
 }
 
 bool X509_DN::has_field(const OID& oid) const {
-   for(auto& i : m_rdn) {
+   for(const auto& i : m_rdn) {
       if(i.first == oid) {
          return true;
       }
@@ -157,7 +158,7 @@ std::string X509_DN::get_first_attribute(std::string_view attr) const {
 }
 
 ASN1_String X509_DN::get_first_attribute(const OID& oid) const {
-   for(auto& i : m_rdn) {
+   for(const auto& i : m_rdn) {
       if(i.first == oid) {
          return i.second;
       }
@@ -174,7 +175,7 @@ std::vector<std::string> X509_DN::get_attribute(std::string_view attr) const {
 
    std::vector<std::string> values;
 
-   for(auto& i : m_rdn) {
+   for(const auto& i : m_rdn) {
       if(i.first == oid) {
          values.push_back(i.second.value());
       }

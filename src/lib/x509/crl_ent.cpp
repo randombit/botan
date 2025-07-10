@@ -112,7 +112,7 @@ void CRL_Entry::decode_from(BER_Decoder& source) {
 
    if(entry.more_items()) {
       entry.decode(data->m_extensions);
-      if(auto ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_ReasonCode>()) {
+      if(const auto* ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_ReasonCode>()) {
          data->m_reason = ext->get_reason();
       } else {
          data->m_reason = CRL_Code::Unspecified;

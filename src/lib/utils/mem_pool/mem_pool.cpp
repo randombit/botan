@@ -296,7 +296,7 @@ Memory_Pool::Memory_Pool(const std::vector<void*>& pages, size_t page_size) : m_
    m_min_page_ptr = ~static_cast<uintptr_t>(0);
    m_max_page_ptr = 0;
 
-   for(auto page : pages) {
+   for(auto* page : pages) {
       const uintptr_t p = reinterpret_cast<uintptr_t>(page);
 
       m_min_page_ptr = std::min(p, m_min_page_ptr);

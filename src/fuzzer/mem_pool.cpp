@@ -88,7 +88,7 @@ void fuzz(std::span<const uint8_t> in) {
    std::map<uint8_t*, size_t> ptrs;
 
    size_t in_len = in.size();
-   auto x = in.data();
+   const auto* x = in.data();
    while(in_len > 0) {
       const uint8_t op = in[0] % 2;
       size_t idx = (in[0] >> 1);

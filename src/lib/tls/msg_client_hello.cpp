@@ -371,7 +371,7 @@ bool Client_Hello::sent_signature_algorithms() const {
 }
 
 std::vector<std::string> Client_Hello::next_protocols() const {
-   if(auto alpn = m_data->extensions().get<Application_Layer_Protocol_Notification>()) {
+   if(auto* alpn = m_data->extensions().get<Application_Layer_Protocol_Notification>()) {
       return alpn->protocols();
    }
    return {};
@@ -700,7 +700,7 @@ Client_Hello_13::Client_Hello_13(std::unique_ptr<Client_Hello_Internal> data) : 
    }
 
    if(exts.has<Key_Share>()) {
-      const auto supported_ext = exts.get<Supported_Groups>();
+      auto* const supported_ext = exts.get<Supported_Groups>();
       BOTAN_ASSERT_NONNULL(supported_ext);
       const auto supports = supported_ext->groups();
       const auto offers = exts.get<Key_Share>()->offered_groups();
@@ -881,7 +881,7 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
    BOTAN_STATE_CHECK(m_data->extensions().has<Supported_Groups>());
    BOTAN_STATE_CHECK(m_data->extensions().has<Key_Share>());
 
-   auto hrr_ks = hrr.extensions().get<Key_Share>();
+   auto* hrr_ks = hrr.extensions().get<Key_Share>();
    const auto& supported_groups = m_data->extensions().get<Supported_Groups>()->groups();
 
    if(hrr.extensions().has<Key_Share>()) {
@@ -907,7 +907,7 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
    //       that the user keeps and detects this state themselves.
    cb.tls_modify_extensions(m_data->extensions(), Connection_Side::Client, type());
 
-   auto psk = m_data->extensions().get<PSK>();
+   auto* psk = m_data->extensions().get<PSK>();
    if(psk) {
       // Cipher suite should always be a known suite as this is checked upstream
       const auto cipher = Ciphersuite::by_id(hrr.ciphersuite());
@@ -944,7 +944,7 @@ void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch) {
    // Check that extension omissions are justified
    for(const auto oldext : oldexts) {
       if(!newexts.contains(oldext)) {
-         const auto ext = extensions().get(oldext);
+         auto* const ext = extensions().get(oldext);
 
          // We don't make any assumptions about unimplemented extensions.
          if(!ext->is_implemented()) {
@@ -973,7 +973,7 @@ void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch) {
    // Check that extension additions are justified
    for(const auto newext : newexts) {
       if(!oldexts.contains(newext)) {
-         const auto ext = new_ch.extensions().get(newext);
+         auto* const ext = new_ch.extensions().get(newext);
 
          // We don't make any assumptions about unimplemented extensions.
          if(!ext->is_implemented()) {
@@ -1023,7 +1023,7 @@ void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch) {
 }
 
 void Client_Hello_13::calculate_psk_binders(Transcript_Hash_State ths) {
-   auto psk = m_data->extensions().get<PSK>();
+   auto* psk = m_data->extensions().get<PSK>();
    if(!psk || psk->empty()) {
       return;
    }
@@ -1047,7 +1047,7 @@ std::optional<Protocol_Version> Client_Hello_13::highest_supported_version(const
    //    which versions of TLS it supports and by the server to indicate which
    //    version it is using. The extension contains a list of supported
    //    versions in preference order, with the most preferred version first.
-   const auto supvers = m_data->extensions().get<Supported_Versions>();
+   auto* const supvers = m_data->extensions().get<Supported_Versions>();
    BOTAN_ASSERT_NONNULL(supvers);
 
    std::optional<Protocol_Version> result;

@@ -89,7 +89,7 @@ std::unique_ptr<PK_Key_Agreement_Key> generate_key_agreement_private_key(const P
 
    auto new_kex_key = [&] {
       auto new_private_key = kex_public_key.generate_another(rng);
-      const auto kex_key = dynamic_cast<PK_Key_Agreement_Key*>(new_private_key.get());
+      auto* const kex_key = dynamic_cast<PK_Key_Agreement_Key*>(new_private_key.get());
       if(kex_key) [[likely]] {
          // Intentionally leak new_private_key since we hold an alias of it in kex_key,
          // which is captured in a unique_ptr below
@@ -224,8 +224,8 @@ bool KEX_to_KEM_Adapter_PublicKey::supports_operation(PublicKeyOperation op) con
 namespace {
 
 std::unique_ptr<PK_Key_Agreement_Key> capture_as_ka_key(std::unique_ptr<Private_Key> private_key) {
-   auto raw_ptr = private_key.release();
-   if(auto sk = dynamic_cast<PK_Key_Agreement_Key*>(raw_ptr)) {
+   auto* raw_ptr = private_key.release();
+   if(auto* sk = dynamic_cast<PK_Key_Agreement_Key*>(raw_ptr)) {
       return std::unique_ptr<PK_Key_Agreement_Key>(sk);
    } else {
       delete raw_ptr;

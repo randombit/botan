@@ -94,7 +94,7 @@ template <typename T>
       return std::nullopt;
    }
 
-   auto ccs = reinterpret_cast<Botan::TPM2::CryptoCallbackState*>(userdata);
+   auto* ccs = reinterpret_cast<Botan::TPM2::CryptoCallbackState*>(userdata);
    if(!ccs) {
       return std::nullopt;
    }

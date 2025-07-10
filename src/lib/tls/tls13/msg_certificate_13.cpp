@@ -192,7 +192,7 @@ Certificate_13::Certificate_13(const Certificate_Request_13& cert_request,
                                Certificate_Type cert_type) :
       m_request_context(cert_request.context()), m_side(Connection_Side::Client) {
    const auto key_types = filter_signature_schemes(cert_request.signature_schemes());
-   const auto op_type = "tls-client";
+   const std::string op_type = "tls-client";
 
    if(cert_type == Certificate_Type::X509) {
       setup_entries(
@@ -233,8 +233,8 @@ Certificate_13::Certificate_13(const Client_Hello_13& client_hello,
    BOTAN_ASSERT_NOMSG(client_hello.extensions().has<Signature_Algorithms>());
 
    const auto key_types = filter_signature_schemes(client_hello.signature_schemes());
-   const auto op_type = "tls-server";
-   const auto context = client_hello.sni_hostname();
+   const std::string op_type = "tls-server";
+   const std::string context = client_hello.sni_hostname();
 
    if(cert_type == Certificate_Type::X509) {
       auto cert_chain = credentials_manager.find_cert_chain(

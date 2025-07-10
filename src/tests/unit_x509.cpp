@@ -1437,7 +1437,7 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    }
 
    // check if CDPs are present in the self-signed cert
-   auto cert_cdps =
+   const auto* cert_cdps =
       self_signed_cert.v3_extensions().get_extension_object_as<Botan::Cert_Extension::CRL_Distribution_Points>();
 
    if(result.confirm("CRL Distribution Points extension present in self-signed certificate",
@@ -1564,9 +1564,9 @@ Test::Result test_x509_tn_auth_list_extension_decode() {
 
    using Botan::Cert_Extension::TNAuthList;
 
-   auto tn_auth_list = cert.v3_extensions().get_extension_object_as<TNAuthList>();
+   const auto* tn_auth_list = cert.v3_extensions().get_extension_object_as<TNAuthList>();
 
-   auto& tn_entries = tn_auth_list->entries();
+   const auto& tn_entries = tn_auth_list->entries();
 
    result.confirm("cert has TNAuthList extension", tn_auth_list != nullptr, true);
 
@@ -1581,7 +1581,7 @@ Test::Result test_x509_tn_auth_list_extension_decode() {
    result.test_eq("spc entry data", tn_entries[0].service_provider_code(), "1001");
 
    result.test_eq("range entry type", tn_entries[1].type() == TNAuthList::Entry::TelephoneNumberRange, true);
-   auto& range = tn_entries[1].telephone_number_range();
+   const auto& range = tn_entries[1].telephone_number_range();
    result.test_eq("range entries count", range.size(), 2);
    result.test_eq("range entry 0 start data", range[0].start.value(), "111");
    result.test_eq("range entry 0 count data", range[0].count, 128);

@@ -145,7 +145,7 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body) {
 
    cert_req_info.verify_end();
 
-   if(auto ext = data->m_extensions.get_extension_object_as<Cert_Extension::Subject_Alternative_Name>()) {
+   if(const auto* ext = data->m_extensions.get_extension_object_as<Cert_Extension::Subject_Alternative_Name>()) {
       data->m_alt_name = ext->get_alt_name();
    }
 

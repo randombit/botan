@@ -126,11 +126,11 @@ class TLS_Client_Hello_Reader final : public Command {
          const auto* hello_base =
             std::visit([](const auto& ch) -> const Botan::TLS::Client_Hello* { return &ch; }, hello);
 
-         const auto version = std::visit(Botan::overloaded{
-                                            [](const Botan::TLS::Client_Hello_12&) { return "1.2"; },
-                                            [](const Botan::TLS::Client_Hello_13&) { return "1.3"; },
-                                         },
-                                         hello);
+         const std::string version = std::visit(Botan::overloaded{
+                                                   [](const Botan::TLS::Client_Hello_12&) { return "1.2"; },
+                                                   [](const Botan::TLS::Client_Hello_13&) { return "1.3"; },
+                                                },
+                                                hello);
 
          oss << "Version: " << version << "\n"
              << "Random: " << Botan::hex_encode(hello_base->random()) << "\n";
@@ -165,7 +165,7 @@ class TLS_Client_Hello_Reader final : public Command {
             oss << "\n";
          }
 
-         if(auto sg = hello_base->extensions().get<Botan::TLS::Supported_Groups>()) {
+         if(auto* sg = hello_base->extensions().get<Botan::TLS::Supported_Groups>()) {
             oss << "Supported Groups: ";
             for(const auto group : sg->groups()) {
                oss << group.to_string().value_or(Botan::fmt("Unknown group: {}", group.wire_code())) << " ";
@@ -183,7 +183,7 @@ class TLS_Client_Hello_Reader final : public Command {
                           hello_flags["Session Ticket"] = ch12.supports_session_ticket();
                        },
                        [&](const Botan::TLS::Client_Hello_13& ch13) {
-                          if(auto ks = ch13.extensions().get<Botan::TLS::Key_Share>()) {
+                          if(auto* ks = ch13.extensions().get<Botan::TLS::Key_Share>()) {
                              oss << "Key Shares: ";
                              for(const auto group : ks->offered_groups()) {
                                 oss << group.to_string().value_or(Botan::fmt("Unknown group: {}", group.wire_code()))
