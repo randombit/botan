@@ -31,22 +31,22 @@ Test_Runner::Test_Runner(std::ostream& out) : m_output(out) {}
 
 Test_Runner::~Test_Runner() = default;
 
-bool Test_Runner::run(const Test_Options& opts) {
-   if(!opts.no_stdout()) {
-      m_reporters.emplace_back(std::make_unique<StdoutReporter>(opts, output()));
+bool Test_Runner::run(const Test_Options& options) {
+   if(!options.no_stdout()) {
+      m_reporters.emplace_back(std::make_unique<StdoutReporter>(options, output()));
    }
-   if(!opts.xml_results_dir().empty()) {
+   if(!options.xml_results_dir().empty()) {
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
-      m_reporters.emplace_back(std::make_unique<XmlReporter>(opts, opts.xml_results_dir()));
+      m_reporters.emplace_back(std::make_unique<XmlReporter>(options, options.xml_results_dir()));
 #else
       output() << "Generating test report files is not supported on this platform\n";
 #endif
    }
 
-   auto req = Botan_Tests::Test::filter_registered_tests(opts.requested_tests(), opts.skip_tests());
+   auto req = Botan_Tests::Test::filter_registered_tests(options.requested_tests(), options.skip_tests());
 
    // TODO: Test runner should not be aware of certain test's environmental requirements.
-   if(opts.pkcs11_lib().empty()) {
+   if(options.pkcs11_lib().empty()) {
       // do not run pkcs11 tests by default unless pkcs11-lib set
       for(auto iter = req.begin(); iter != req.end();) {
          if((*iter).find("pkcs11") != std::string::npos) {
@@ -61,7 +61,7 @@ bool Test_Runner::run(const Test_Options& opts) {
       throw Test_Error("No tests to run");
    }
 
-   std::vector<uint8_t> seed = Botan::hex_decode(opts.drbg_seed());
+   std::vector<uint8_t> seed = Botan::hex_decode(options.drbg_seed());
    if(seed.empty()) {
       const uint64_t ts = Botan_Tests::Test::timestamp();
       seed.resize(8);
@@ -76,20 +76,20 @@ bool Test_Runner::run(const Test_Options& opts) {
       }
 #endif
 
-      if(!opts.pkcs11_lib().empty()) {
-         reporter->set_property("pkcs11 library", opts.pkcs11_lib());
+      if(!options.pkcs11_lib().empty()) {
+         reporter->set_property("pkcs11 library", options.pkcs11_lib());
       }
 
-      if(!opts.provider().empty()) {
-         reporter->set_property("provider", opts.provider());
+      if(!options.provider().empty()) {
+         reporter->set_property("provider", options.provider());
       }
 
       reporter->set_property("drbg_seed", Botan::hex_encode(seed));
    }
 
-   Botan_Tests::Test::set_test_options(opts);
+   Botan_Tests::Test::set_test_options(options);
 
-   for(size_t i = 0; i != opts.test_runs(); ++i) {
+   for(size_t i = 0; i != options.test_runs(); ++i) {
       Botan_Tests::Test::set_test_rng_seed(seed, i);
 
       for(const auto& reporter : m_reporters) {
@@ -97,7 +97,7 @@ bool Test_Runner::run(const Test_Options& opts) {
       }
 
       const bool passed =
-         (opts.test_threads() == 1) ? run_tests(req) : run_tests_multithreaded(req, opts.test_threads());
+         (options.test_threads() == 1) ? run_tests(req) : run_tests_multithreaded(req, options.test_threads());
 
       for(const auto& reporter : m_reporters) {
          reporter->render();

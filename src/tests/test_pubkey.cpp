@@ -337,9 +337,9 @@ std::vector<Test::Result> PK_Sign_Verify_DER_Test::run() {
    return {result};
 }
 
-std::vector<std::string> PK_Sign_Verify_DER_Test::possible_providers(const std::string& algo) {
+std::vector<std::string> PK_Sign_Verify_DER_Test::possible_providers(const std::string& algo_name) {
    std::vector<std::string> pk_provider =
-      Botan::probe_provider_private_key(algo, {"base", "commoncrypto", "openssl", "tpm"});
+      Botan::probe_provider_private_key(algo_name, {"base", "commoncrypto", "openssl", "tpm"});
    return Test::provider_filter(pk_provider);
 }
 
@@ -379,6 +379,7 @@ Test::Result PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_
 
       result.test_eq(dec_provider, "decryption of KAT", decrypted, plaintext);
       check_invalid_ciphertexts(result, *decryptor, plaintext, ciphertext, this->rng());
+      decryptors.push_back(std::move(decryptor));
    }
 
    for(const auto& enc_provider : possible_providers(algo_name())) {
@@ -555,9 +556,9 @@ Test::Result PK_Key_Agreement_Test::run_one_test(const std::string& header, cons
    return result;
 }
 
-std::vector<std::string> PK_Key_Generation_Test::possible_providers(const std::string& algo) {
+std::vector<std::string> PK_Key_Generation_Test::possible_providers(const std::string& algo_name) {
    std::vector<std::string> pk_provider =
-      Botan::probe_provider_private_key(algo, {"base", "commoncrypto", "openssl", "tpm"});
+      Botan::probe_provider_private_key(algo_name, {"base", "commoncrypto", "openssl", "tpm"});
    return Test::provider_filter(pk_provider);
 }
 
@@ -607,20 +608,20 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
    std::vector<Test::Result> results;
 
    for(const auto& param : keygen_params()) {
-      const auto algo = algo_name(param);
-      const std::string report_name = Botan::fmt("{}{}", algo, (param.empty() ? param : " " + param));
+      const auto algorithm_name = algo_name(param);
+      const std::string report_name = Botan::fmt("{}{}", algorithm_name, (param.empty() ? param : " " + param));
 
       Test::Result result(report_name + " keygen");
 
-      const std::vector<std::string> providers = possible_providers(algo);
+      const std::vector<std::string> providers = possible_providers(algorithm_name);
 
       if(providers.empty()) {
-         result.note_missing("provider key generation " + algo);
+         result.note_missing("provider key generation " + algorithm_name);
       }
 
       result.start_timer();
       for(auto&& prov : providers) {
-         auto key_p = Botan::create_private_key(algo, this->rng(), param, prov);
+         auto key_p = Botan::create_private_key(algorithm_name, this->rng(), param, prov);
 
          if(key_p == nullptr) {
             continue;

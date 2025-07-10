@@ -28,7 +28,7 @@ class PK_Test : public Text_Based_Test {
       std::string algo_name() const { return m_algo; }
 
    protected:
-      std::vector<std::string> possible_providers(const std::string& params) override;
+      std::vector<std::string> possible_providers(const std::string& algo_name) override;
 
       virtual std::string default_padding(const VarMap&) const {
          throw Test_Error("No default padding scheme set for " + algo_name());
@@ -73,7 +73,7 @@ class PK_Signature_Verification_Test : public PK_Test {
       virtual std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) = 0;
 
    private:
-      Test::Result run_one_test(const std::string& header, const VarMap& vars) final;
+      Test::Result run_one_test(const std::string& pad_hdr, const VarMap& vars) final;
 };
 
 class PK_Signature_NonVerification_Test : public PK_Test {
@@ -89,7 +89,7 @@ class PK_Signature_NonVerification_Test : public PK_Test {
       virtual std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) = 0;
 
    private:
-      Test::Result run_one_test(const std::string& header, const VarMap& vars) final;
+      Test::Result run_one_test(const std::string& pad_hdr, const VarMap& vars) final;
 };
 
 class PK_Sign_Verify_DER_Test : public Test {
@@ -105,7 +105,7 @@ class PK_Sign_Verify_DER_Test : public Test {
 
       virtual bool test_random_invalid_sigs() const { return true; }
 
-      std::vector<std::string> possible_providers(const std::string& params) override;
+      std::vector<std::string> possible_providers(const std::string& algo_name) override;
 
    private:
       std::string m_algo;
@@ -129,7 +129,7 @@ class PK_Encryption_Decryption_Test : public PK_Test {
       }
 
    private:
-      Test::Result run_one_test(const std::string& header, const VarMap& vars) final;
+      Test::Result run_one_test(const std::string& pad_hdr, const VarMap& vars) final;
 };
 
 class PK_Decryption_Test : public PK_Test {
@@ -145,7 +145,7 @@ class PK_Decryption_Test : public PK_Test {
       std::string default_padding(const VarMap&) const override { return "Raw"; }
 
    private:
-      Test::Result run_one_test(const std::string& header, const VarMap& vars) final;
+      Test::Result run_one_test(const std::string& pad_hdr, const VarMap& vars) final;
 };
 
 class PK_Key_Agreement_Test : public PK_Test {
@@ -207,7 +207,7 @@ class PK_Key_Generation_Test : public Test {
                                                                      std::string_view provider,
                                                                      std::span<const uint8_t> raw_key_bits) const = 0;
 
-      std::vector<std::string> possible_providers(const std::string& params) override;
+      std::vector<std::string> possible_providers(const std::string& algo_name) override;
 };
 
 class PK_Key_Generation_Stability_Test : public PK_Test {

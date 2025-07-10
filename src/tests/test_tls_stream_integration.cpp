@@ -179,7 +179,7 @@ class Peer {
       net::system_timer m_timeout_timer;
       std::function<void(const std::string&)> m_on_timeout;
 
-      char m_data[MAX_MSG_LENGTH];
+      char m_data[MAX_MSG_LENGTH]{};
 };
 
 class Result_Wrapper {

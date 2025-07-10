@@ -154,7 +154,7 @@ class Reporter {
        *
        * Note that this merges test results with the same name
        */
-      void record(const std::string& test_name, const std::vector<Botan_Tests::Test::Result>& results);
+      void record(const std::string& testsuite_name, const std::vector<Botan_Tests::Test::Result>& results);
 
       /**
        * Called once all test results have been reported for a single run.

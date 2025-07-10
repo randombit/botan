@@ -163,8 +163,8 @@ class Test_Options {
       std::string m_provider;
       std::optional<std::string> m_tpm2_tcti_name;
       std::optional<std::string> m_tpm2_tcti_conf;
-      size_t m_tpm2_persistent_rsa_handle;
-      size_t m_tpm2_persistent_ecc_handle;
+      size_t m_tpm2_persistent_rsa_handle = 0;
+      size_t m_tpm2_persistent_ecc_handle = 0;
       std::string m_tpm2_persistent_auth_value;
       std::string m_drbg_seed;
       std::string m_xml_results_dir;
@@ -304,7 +304,7 @@ class Test {
                return test_note(who, hex.c_str());
             }
 
-            void note_missing(const std::string& thing);
+            void note_missing(const std::string& whatever);
 
             bool test_success(const std::string& note = "");
 
@@ -465,9 +465,9 @@ class Test {
             bool test_eq(const char* producer,
                          const std::string& what,
                          const uint8_t produced[],
-                         size_t produced_len,
+                         size_t produced_size,
                          const uint8_t expected[],
-                         size_t expected_len);
+                         size_t expected_size);
 
             bool test_ne(const std::string& what,
                          const uint8_t produced[],
@@ -634,7 +634,7 @@ class Test {
 
       static std::string data_dir(const std::string& subdir);
       static std::vector<std::string> files_in_data_dir(const std::string& subdir);
-      static std::string data_file(const std::string& what);
+      static std::string data_file(const std::string& file);
       static std::string data_file_as_temporary_copy(const std::string& what);
 
       static std::string format_time(uint64_t nanoseconds);
@@ -878,9 +878,9 @@ class VarMap {
 */
 class Text_Based_Test : public Test {
    public:
-      Text_Based_Test(const std::string& input_file,
-                      const std::string& required_keys,
-                      const std::string& optional_keys = "");
+      Text_Based_Test(const std::string& data_src,
+                      const std::string& required_keys_str,
+                      const std::string& optional_keys_str = "");
 
       virtual bool clear_between_callbacks() const { return true; }
 

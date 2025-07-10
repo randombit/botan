@@ -181,9 +181,7 @@ class Request_Counting_RNG final : public Botan::RandomNumberGenerator {
          The HMAC_DRBG and ChaCha reseed KATs assume this RNG type
          outputs all 0x80
          */
-         for(auto& out : output) {
-            out = 0x80;
-         }
+         std::ranges::fill(output, 0x80);
          if(!output.empty()) {
             m_randomize_count++;
          }
@@ -217,7 +215,7 @@ class CTR_DRBG_AES256 final : public Botan::RandomNumberGenerator {
 
       void update(std::span<const uint8_t> provided_data);
 
-      uint64_t m_V0, m_V1;
+      uint64_t m_V0 = 0, m_V1 = 0;
       std::unique_ptr<Botan::BlockCipher> m_cipher;
 };
 

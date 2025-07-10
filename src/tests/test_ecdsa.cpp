@@ -331,15 +331,13 @@ class ECDSA_ExplicitCurveKey_Test : public Text_Based_Test {
             const auto* ecdsa = dynamic_cast<const Botan::ECDSA_PrivateKey*>(key.get());
             if(ecdsa != nullptr) {
                result.test_success("Returned key was ECDSA");
+
+               const auto& group = ecdsa->domain();
+               result.test_eq("Key is marked as explicit encoding", group.used_explicit_encoding(), true);
+               result.confirm("Group has expected OID", group.get_curve_oid() == expected_oid);
             } else {
                result.test_failure("Returned key was some other type");
             }
-
-            const auto& group = ecdsa->domain();
-            result.test_eq("Key is marked as explicit encoding", group.used_explicit_encoding(), true);
-
-            result.confirm("Group has expected OID", group.get_curve_oid() == expected_oid);
-
          } catch(Botan::Exception& e) {
             result.test_failure("Failed to parse key", e.what());
          }

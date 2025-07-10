@@ -54,8 +54,8 @@ void CTR_DRBG_AES256::fill_bytes_with_input(std::span<uint8_t> output, std::span
    }
 }
 
-CTR_DRBG_AES256::CTR_DRBG_AES256(std::span<const uint8_t> seed) {
-   m_cipher = Botan::BlockCipher::create_or_throw("AES-256");
+CTR_DRBG_AES256::CTR_DRBG_AES256(std::span<const uint8_t> seed) :
+      m_cipher(Botan::BlockCipher::create_or_throw("AES-256")) {
    add_entropy(seed);
 }
 
