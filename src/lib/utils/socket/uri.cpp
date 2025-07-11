@@ -38,13 +38,13 @@ bool is_domain_name(std::string_view domain) {
 
 bool is_ipv4(std::string_view ip) {
    std::string ip_str(ip);
-   sockaddr_storage inaddr;
+   sockaddr_storage inaddr{};
    return !!inet_pton(AF_INET, ip_str.c_str(), &inaddr);
 }
 
 bool is_ipv6(std::string_view ip) {
    std::string ip_str(ip);
-   sockaddr_storage in6addr;
+   sockaddr_storage in6addr{};
    return !!inet_pton(AF_INET6, ip_str.c_str(), &in6addr);
 }
 

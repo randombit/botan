@@ -86,8 +86,8 @@ class Roughtime final : public Command {
                  const size_t max_chain_size,
                  const std::string& address,
                  const Botan::Ed25519_PublicKey& public_key) {
-         Botan::Roughtime::Nonce nonce;
-         Botan::Roughtime::Nonce blind;
+         Botan::Roughtime::Nonce nonce{};
+         Botan::Roughtime::Nonce blind{};
          if(chain) {
             blind = Botan::Roughtime::Nonce(rng());
             nonce = chain->next_nonce(blind);

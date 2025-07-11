@@ -51,7 +51,7 @@ class LZMA_Stream : public Zlib_Style_Stream<lzma_stream, uint8_t> {
       uint32_t finish_flag() const override { return LZMA_FINISH; }
 
    private:
-      ::lzma_allocator m_allocator;
+      ::lzma_allocator m_allocator{};
 };
 
 class LZMA_Compression_Stream final : public LZMA_Stream {

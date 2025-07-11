@@ -390,7 +390,8 @@ class bitvector_base final {
        *              than the number of bytes in @p bytes.
        */
       bitvector_base(std::span<const uint8_t> bytes, /* NOLINT(*-explicit-conversions) FIXME */
-                     std::optional<size_type> bits = std::nullopt) {
+                     std::optional<size_type> bits = std::nullopt) :
+            m_bits() {
          from_bytes(bytes, bits);
       }
 

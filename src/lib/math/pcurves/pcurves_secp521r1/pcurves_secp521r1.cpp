@@ -30,7 +30,7 @@ class P521Rep final {
          /*
          * Extract the high part of z (z >> 521)
          */
-         std::array<W, N> t;
+         std::array<W, N> t;  // NOLINT(*-member-init)
 
          for(size_t i = 0; i != N; ++i) {
             t[i] = z[(N - 1) + i] >> 9;

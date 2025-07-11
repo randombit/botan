@@ -196,7 +196,7 @@ class BOTAN_PUBLIC_API(2, 0) KDF /* NOLINT(*-special-member-functions*) */ {
       std::array<uint8_t, key_len> derive_key(std::span<const uint8_t> secret,
                                               std::span<const uint8_t> salt = {},
                                               std::span<const uint8_t> label = {}) {
-         std::array<uint8_t, key_len> key;
+         std::array<uint8_t, key_len> key{};
          perform_kdf(key, secret, salt, label);
          return key;
       }

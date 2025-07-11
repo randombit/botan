@@ -79,8 +79,8 @@ class BOTAN_TEST_API Hybrid_PublicKey : public virtual Public_Key {
    private:
       std::vector<std::unique_ptr<Public_Key>> m_pks;
 
-      size_t m_key_length;
-      size_t m_estimated_strength;
+      size_t m_key_length = 0;
+      size_t m_estimated_strength = 0;
 };
 
 BOTAN_DIAGNOSTIC_PUSH

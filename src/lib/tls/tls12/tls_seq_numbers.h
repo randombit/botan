@@ -34,7 +34,7 @@ class Connection_Sequence_Numbers /* NOLINT(*-special-member-functions) */ {
 
 class Stream_Sequence_Numbers final : public Connection_Sequence_Numbers {
    public:
-      Stream_Sequence_Numbers() { Stream_Sequence_Numbers::reset(); }
+      Stream_Sequence_Numbers() : m_write_seq_no(0), m_read_seq_no(0), m_read_epoch(0), m_write_epoch(0) {}
 
       void reset() override {
          m_write_seq_no = 0;

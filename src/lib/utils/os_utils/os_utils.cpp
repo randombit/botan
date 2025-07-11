@@ -299,7 +299,8 @@ uint64_t OS::get_high_resolution_clock() {
    };
 
    for(clockid_t clock : clock_types) {
-      struct timespec ts;
+      struct timespec ts {};
+
       if(::clock_gettime(clock, &ts) == 0) {
          return (static_cast<uint64_t>(ts.tv_sec) * 1000000000) + static_cast<uint64_t>(ts.tv_nsec);
       }
@@ -317,7 +318,8 @@ uint64_t OS::get_high_resolution_clock() {
 
 uint64_t OS::get_system_timestamp_ns() {
 #if defined(BOTAN_TARGET_OS_HAS_CLOCK_GETTIME)
-   struct timespec ts;
+   struct timespec ts {};
+
    if(::clock_gettime(CLOCK_REALTIME, &ts) == 0) {
       return (static_cast<uint64_t>(ts.tv_sec) * 1000000000) + static_cast<uint64_t>(ts.tv_nsec);
    }
@@ -332,7 +334,7 @@ uint64_t OS::get_system_timestamp_ns() {
 }
 
 std::string OS::format_time(time_t time, const std::string& format) {
-   std::tm tm;
+   std::tm tm{};
 
 #if defined(BOTAN_TARGET_OS_HAS_WIN32)
    if(::localtime_s(&tm, &time) != 0) {
@@ -395,7 +397,7 @@ size_t OS::get_memory_locking_limit() {
       std::min<size_t>(read_env_variable_sz("BOTAN_MLOCK_POOL_SIZE", max_locked_kb), max_locked_kb);
 
    if(mlock_requested > 0) {
-      struct ::rlimit limits;
+      struct ::rlimit limits {};
 
       ::getrlimit(RLIMIT_MEMLOCK, &limits);
 
@@ -715,8 +717,9 @@ int OS::run_cpu_instruction_probe(const std::function<int()>& probe_fn) {
    volatile int probe_result = -3;
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && !defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
-   struct sigaction old_sigaction;
-   struct sigaction sigaction;
+   struct sigaction old_sigaction {};
+
+   struct sigaction sigaction {};
 
    sigaction.sa_handler = botan_sigill_handler;
    sigemptyset(&sigaction.sa_mask);
@@ -755,7 +758,7 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal() {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    class POSIX_Echo_Suppression : public Echo_Suppression {
       public:
-         POSIX_Echo_Suppression() {
+         POSIX_Echo_Suppression() : m_old_termios{} {
             m_stdin_fd = fileno(stdin);
             if(::tcgetattr(m_stdin_fd, &m_old_termios) != 0) {
                throw System_Error("Getting terminal status failed", errno);

@@ -70,7 +70,8 @@ void shim_log(const std::string& s) {
       static FILE* g_log = std::fopen("/tmp/bogo_shim.log", "w");
 
       if(g_log != nullptr) {
-         struct timeval tv;
+         timeval tv{};
+
          ::gettimeofday(&tv, nullptr);
          // NOLINTNEXTLINE(hicpp-vararg)
          static_cast<void>(std::fprintf(g_log,
@@ -374,7 +375,7 @@ class Shim_Socket final {
 
    public:
       Shim_Socket(const std::string& hostname, int port, const bool ipv6) : m_socket(-1) {
-         addrinfo hints;
+         addrinfo hints{};
          std::memset(&hints, 0, sizeof(hints));
          hints.ai_family = AF_UNSPEC;
          hints.ai_socktype = SOCK_STREAM;
@@ -1795,7 +1796,7 @@ int main(int /*argc*/, char* argv[]) {
             // *before* any test data is transferred
             // See: https://github.com/google/boringssl/commit/50ee09552cde1c2019bef24520848d041920cfd4
             shim_log("Sending ShimID: " + std::to_string(args->get_int_opt("shim-id")));
-            std::array<uint8_t, 8> shim_id;
+            std::array<uint8_t, 8> shim_id{};
             Botan::store_le(static_cast<uint64_t>(args->get_int_opt("shim-id")), shim_id.data());
             socket.write(shim_id.data(), shim_id.size());
 

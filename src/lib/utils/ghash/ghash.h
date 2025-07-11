@@ -70,8 +70,9 @@ class GHASH final : public SymmetricAlgorithm {
    private:
       AlignmentBuffer<uint8_t, GCM_BS> m_buffer;
 
-      std::array<uint8_t, GCM_BS> m_H_ad;   /// cache of hash state after consuming the AD, reused for multiple messages
-      std::array<uint8_t, GCM_BS> m_ghash;  /// hash state used for update() or update_associated_data()
+      std::array<uint8_t, GCM_BS>
+         m_H_ad{};  /// cache of hash state after consuming the AD, reused for multiple messages
+      std::array<uint8_t, GCM_BS> m_ghash{};  /// hash state used for update() or update_associated_data()
       secure_vector<uint64_t> m_HM;
       secure_vector<uint64_t> m_H_pow;
 

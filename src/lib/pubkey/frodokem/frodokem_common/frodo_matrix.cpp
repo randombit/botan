@@ -211,7 +211,7 @@ FrodoMatrix FrodoMatrix::mul_add_sa_plus_e(const FrodoKEMConstants& constants,
 
       for(size_t j = 0; j < constants.n_bar(); ++j) {
          uint16_t sum = 0;
-         std::array<uint32_t /* to avoid integral promotion */, 8> sp;
+         std::array<uint32_t /* to avoid integral promotion */, 8> sp{};
          for(size_t p = 0; p < 8; ++p) {
             sp[p] = s.elements_at(j * constants.n() + i + p);
          }

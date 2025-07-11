@@ -606,7 +606,7 @@ class Asio_Stream_Tests final : public Test {
          error_code ec;
 
          // this should be Botan::TLS::MAX_PLAINTEXT_SIZE + 1024 + 1
-         std::array<uint8_t, 17 * 1024 + 1> random_data;
+         std::array<uint8_t, 17 * 1024 + 1> random_data{};
          random_data.fill('4');  // chosen by fair dice roll
          random_data.back() = '5';
 
@@ -702,7 +702,7 @@ class Asio_Stream_Tests final : public Test {
          ssl.next_layer().connect(remote);
 
          // this should be Botan::TLS::MAX_PLAINTEXT_SIZE + 1024 + 1
-         std::array<uint8_t, 17 * 1024 + 1> random_data;
+         std::array<uint8_t, 17 * 1024 + 1> random_data{};
          random_data.fill('4');  // chosen by fair dice roll
          random_data.back() = '5';
 

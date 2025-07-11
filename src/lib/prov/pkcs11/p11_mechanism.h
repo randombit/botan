@@ -85,8 +85,11 @@ class BOTAN_PUBLIC_API(3, 7) MechanismWrapper final {
       inline size_t padding_size() const { return m_padding_size; }
 
       /// Holds the mechanism parameters for OAEP, PSS and ECDH
+      ///
+      /// TODO(Botan4) use a std::variant here
+      /// TODO(Botan4) make this union decl private
       union MechanismParameters {
-            MechanismParameters() { std::memset(this, 0, sizeof(MechanismParameters)); }
+            MechanismParameters() /* NOLINT(*-member-init) */ { std::memset(this, 0, sizeof(MechanismParameters)); }
 
             RsaPkcsOaepParams oaep_params;
             RsaPkcsPssParams pss_params;

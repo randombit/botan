@@ -84,7 +84,7 @@ secure_vector<uint8_t> X448_PrivateKey::private_key_bits() const {
 }
 
 bool X448_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
-   std::array<uint8_t, X448_LEN> public_point;
+   std::array<uint8_t, X448_LEN> public_point{};
    BOTAN_ASSERT_NOMSG(m_private.size() == X448_LEN);
    auto scope = CT::scoped_poison(m_private);
    x448_basepoint_from_data(public_point, std::span(m_private).first<X448_LEN>());

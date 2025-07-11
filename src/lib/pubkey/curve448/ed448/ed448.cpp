@@ -136,9 +136,7 @@ class Ed448_Verify_Operation final : public PK_Ops::Verification {
    public:
       explicit Ed448_Verify_Operation(const Ed448_PublicKey& key,
                                       std::optional<std::string> prehash_function = std::nullopt) :
-            m_prehash_function(std::move(prehash_function)) {
-         const auto pk_bits = key.public_key_bits();
-         copy_mem(m_pk, std::span(pk_bits).first<ED448_LEN>());
+            m_pk(key.raw_public_key_bits()), m_prehash_function(std::move(prehash_function)) {
          if(m_prehash_function) {
             m_message = std::make_unique<Prehashed_Ed448_Message>(*m_prehash_function);
          } else {
@@ -151,7 +149,7 @@ class Ed448_Verify_Operation final : public PK_Ops::Verification {
       bool is_valid_signature(std::span<const uint8_t> sig) override {
          const auto msg = m_message->get_and_clear();
          try {
-            return verify_signature(m_pk, m_prehash_function.has_value(), {}, sig, msg);
+            return verify_signature(std::span(m_pk).first<ED448_LEN>(), m_prehash_function.has_value(), {}, sig, msg);
          } catch(Decoding_Error&) {
             return false;
          }
@@ -160,7 +158,7 @@ class Ed448_Verify_Operation final : public PK_Ops::Verification {
       std::string hash_function() const override { return m_prehash_function.value_or("SHAKE-256(912)"); }
 
    private:
-      std::array<uint8_t, ED448_LEN> m_pk;
+      std::vector<uint8_t> m_pk;
       std::unique_ptr<Ed448_Message> m_message;
       std::optional<std::string> m_prehash_function;
 };
@@ -172,12 +170,9 @@ class Ed448_Sign_Operation final : public PK_Ops::Signature {
    public:
       explicit Ed448_Sign_Operation(const Ed448_PrivateKey& key,
                                     std::optional<std::string> prehash_function = std::nullopt) :
+            m_pk(key.raw_public_key_bits()),
+            m_sk(key.raw_private_key_bits()),
             m_prehash_function(std::move(prehash_function)) {
-         const auto pk_bits = key.public_key_bits();
-         copy_mem(m_pk, std::span(pk_bits).first<ED448_LEN>());
-         const auto sk_bits = key.raw_private_key_bits();
-         BOTAN_ASSERT_NOMSG(sk_bits.size() == ED448_LEN);
-         m_sk.assign(sk_bits.begin(), sk_bits.end());
          if(m_prehash_function) {
             m_message = std::make_unique<Prehashed_Ed448_Message>(*m_prehash_function);
          } else {
@@ -190,8 +185,11 @@ class Ed448_Sign_Operation final : public PK_Ops::Signature {
       std::vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override {
          BOTAN_ASSERT_NOMSG(m_sk.size() == ED448_LEN);
          auto scope = CT::scoped_poison(m_sk);
-         const auto sig = sign_message(
-            std::span(m_sk).first<ED448_LEN>(), m_pk, m_prehash_function.has_value(), {}, m_message->get_and_clear());
+         const auto sig = sign_message(std::span(m_sk).first<ED448_LEN>(),
+                                       std::span(m_pk).first<ED448_LEN>(),
+                                       m_prehash_function.has_value(),
+                                       {},
+                                       m_message->get_and_clear());
          CT::unpoison(sig);
          return {sig.begin(), sig.end()};
       }
@@ -203,7 +201,7 @@ class Ed448_Sign_Operation final : public PK_Ops::Signature {
       std::string hash_function() const override { return m_prehash_function.value_or("SHAKE-256(912)"); }
 
    private:
-      std::array<uint8_t, ED448_LEN> m_pk;
+      std::vector<uint8_t> m_pk;
       secure_vector<uint8_t> m_sk;
       std::unique_ptr<Ed448_Message> m_message;
       std::optional<std::string> m_prehash_function;

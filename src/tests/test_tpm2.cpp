@@ -74,8 +74,8 @@ std::shared_ptr<Botan::TPM2::Context> get_tpm2_context(std::string_view rng_tag)
 /// RAII helper to manage raw transient resources (ESYS_TR) handles
 class TR {
    private:
-      ESYS_CONTEXT* m_esys_ctx;
-      ESYS_TR m_handle;
+      ESYS_CONTEXT* m_esys_ctx{};
+      ESYS_TR m_handle{};
 
    public:
       TR(ESYS_CONTEXT* esys_ctx, ESYS_TR handle) : m_esys_ctx(esys_ctx), m_handle(handle) {}

@@ -75,7 +75,7 @@ Test::Result test_buffered_computation_convenience_api() {
 
    Botan::secure_vector<uint8_t> out_sv;
    std::vector<uint8_t> out_vec;
-   std::array<uint8_t, sizeof(std::size_t)> out_arr;
+   std::array<uint8_t, sizeof(std::size_t)> out_arr{};
    TestSecureVector out_strong_type;
 
    // update with basic string-ish types

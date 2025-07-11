@@ -132,7 +132,7 @@ class BotanTLSCallbacksProxy : public Botan::TLS::Callbacks {
 class DtlsConnection : public Botan::TLS::Callbacks {
       int fd;
 #if defined(HAS_BSD_SOCKETS)
-      sockaddr_in remote_addr;
+      sockaddr_in remote_addr{};
 #endif
       std::unique_ptr<Botan::TLS::Channel> dtls_channel;
       std::function<void()> activated_callback;
@@ -225,14 +225,14 @@ void server_proc(const std::function<void(std::shared_ptr<DtlsConnection> conn)>
    if(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, static_cast<void*>(&true_opt), sizeof(true_opt)) == -1) {
       return;
    }
-   sockaddr_in addr;
+   sockaddr_in addr{};
    addr.sin_family = AF_INET;
    addr.sin_port = htons(SERVER_PORT);
    inet_aton("127.0.0.1", &addr.sin_addr);
    if(bind(fd, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in)) == -1) {
       return;
    }
-   sockaddr_in fromaddr;
+   sockaddr_in fromaddr{};
    fromaddr.sin_family = AF_INET;
    socklen_t len = sizeof(sockaddr_in);
 #else
@@ -271,14 +271,14 @@ void client_proc(const std::function<void(std::shared_ptr<DtlsConnection> conn)>
    if(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, static_cast<void*>(&true_opt), sizeof(true_opt)) == -1) {
       return;
    }
-   sockaddr_in addr;
+   sockaddr_in addr{};
    addr.sin_family = AF_INET;
    addr.sin_port = htons(CLIENT_PORT);
    inet_aton("127.0.0.1", &addr.sin_addr);
    if(bind(fd, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in)) == -1) {
       return;
    }
-   sockaddr_in fromaddr;
+   sockaddr_in fromaddr{};
    fromaddr.sin_family = AF_INET;
    socklen_t len = sizeof(sockaddr_in);
 #else

@@ -30,10 +30,10 @@ class CounterParams {
                          "SP.800-108 output length encoding may be one of {8, 16, 24, 32} only");
       }
 
-      constexpr static CounterParams create_or_throw(size_t output_bytes,
-                                                     size_t output_length_bits,
-                                                     size_t counter_bits,
-                                                     size_t prf_output_bytes) {
+      static CounterParams create_or_throw(size_t output_bytes,
+                                           size_t output_length_bits,
+                                           size_t counter_bits,
+                                           size_t prf_output_bytes) {
          // The maximum legal output bit length is limited by the requested encoding
          // bit length of the "L" field.
          BOTAN_ARG_CHECK(static_cast<uint64_t>(output_bytes) * 8 <= std::numeric_limits<uint32_t>::max(),
@@ -52,12 +52,8 @@ class CounterParams {
          const auto max_blocks = (uint64_t(1) << counter_bits) - 1;
          BOTAN_ARG_CHECK(blocks_required < max_blocks, "SP.800-108 output size too large");
 
-         CounterParams out;
-         out.m_output_length_bits = output_bits;
-         out.m_output_length_encoding_bytes = output_length_bits / 8;
-         out.m_counter_bytes = counter_bits / 8;
-         out.m_blocks_required = static_cast<uint32_t>(blocks_required);
-         return out;
+         return CounterParams(
+            output_bits, output_length_bits / 8, counter_bits / 8, static_cast<uint32_t>(blocks_required));
       }
 
       template <std::invocable<std::span<const uint8_t>, std::span<const uint8_t>> Fn>
@@ -71,7 +67,14 @@ class CounterParams {
       }
 
    private:
-      constexpr CounterParams() = default;
+      CounterParams(uint32_t output_length_bits,
+                    size_t output_length_encoding_bytes,
+                    size_t counter_bytes,
+                    uint32_t blocks_required) :
+            m_output_length_bits(output_length_bits),
+            m_output_length_encoding_bytes(output_length_encoding_bytes),
+            m_counter_bytes(counter_bytes),
+            m_blocks_required(blocks_required) {}
 
    private:
       uint32_t m_output_length_bits;

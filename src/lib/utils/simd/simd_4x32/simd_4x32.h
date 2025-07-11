@@ -210,7 +210,7 @@ class SIMD_4x32 final {
          union {
                __vector unsigned int V;
                uint32_t R[4];
-         } vec;
+         } vec{};
 
          // NOLINTNEXTLINE(*-union-access)
          vec.V = raw();
@@ -241,7 +241,7 @@ class SIMD_4x32 final {
          union {
                __vector unsigned int V;
                uint32_t R[4];
-         } vec;
+         } vec{};
 
          // NOLINTNEXTLINE(*-union-access)
          vec.V = m_simd;

@@ -44,7 +44,7 @@ class Gf448Elem final {
        * @brief Construct a GF element from a 448-bit integer gives as 7 uint64_t words @p x in
        * little-endian order.
        */
-      explicit Gf448Elem(std::span<const uint64_t, WORDS_448> data) { copy_mem(m_x, data); }
+      explicit Gf448Elem(std::span<const uint64_t, WORDS_448> data) /* NOLINT(*-member-init) */ { copy_mem(m_x, data); }
 
       /**
        * @brief Construct a GF element by passing the least significant 64 bits as a word.

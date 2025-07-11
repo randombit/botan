@@ -76,7 +76,7 @@ class Ed448_General_Test final : public Text_Based_Test {
       template <size_t S>
       std::array<uint8_t, S> to_array(std::span<const uint8_t> sp) {
          BOTAN_ASSERT_NOMSG(sp.size() == S);
-         std::array<uint8_t, S> arr;
+         std::array<uint8_t, S> arr{};
          Botan::copy_mem(arr.data(), sp.data(), S);
          return arr;
       }
@@ -131,7 +131,7 @@ class Ed448_Utils_Test final : public Test {
 
          for(const auto& t : test_vectors) {
             const auto ref = reduce_mod_L_ref(t);
-            std::array<uint8_t, 56> res;
+            std::array<uint8_t, 56> res{};
             result.test_no_throw("Reduce mod L does not throw", [&] { res = Botan::Scalar448(t).to_bytes<56>(); });
             result.test_is_eq("Reduce mod L result", res, ref);
          }

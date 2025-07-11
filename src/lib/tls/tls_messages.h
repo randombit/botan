@@ -956,7 +956,7 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_12 final : public Handshake_Message 
       std::vector<uint8_t> serialize() const override;
 
    private:
-      std::chrono::seconds m_ticket_lifetime_hint;
+      std::chrono::seconds m_ticket_lifetime_hint{};
       Session_Ticket m_ticket;
 };
 
@@ -1002,7 +1002,7 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_13 final : public Handshake_Message 
       //    of time than what is stated in the ticket_lifetime.
       //
       // ... hence we call it 'lifetime hint'.
-      std::chrono::seconds m_ticket_lifetime_hint;
+      std::chrono::seconds m_ticket_lifetime_hint{};
       uint32_t m_ticket_age_add;
       Ticket_Nonce m_ticket_nonce;
       Opaque_Session_Handle m_handle;

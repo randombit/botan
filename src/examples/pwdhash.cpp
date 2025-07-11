@@ -22,7 +22,7 @@ int main() {
 
    std::string_view password = "tell no one";
 
-   std::array<uint8_t, output_hash> key;
+   std::array<uint8_t, output_hash> key{};
    pwdhash->hash(key, password, salt);
 
    std::cout << Botan::hex_encode(key) << '\n';
