@@ -649,7 +649,7 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
             IPAddress<V> m_min;
             IPAddress<V> m_max;
 
-            IPAddress<V> decode_single_address(std::vector<uint8_t>& decoded, bool min);
+            IPAddress<V> decode_single_address(std::vector<uint8_t> decoded, bool min);
       };
 
       template <Version V>

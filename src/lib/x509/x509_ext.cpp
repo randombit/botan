@@ -1295,9 +1295,9 @@ void IPAddressBlocks::IPAddressOrRange<V>::decode_from(Botan::BER_Decoder& from)
       std::vector<uint8_t> prefix_max(prefix_min);
 
       // min address gets filled with 0's
-      m_min = decode_single_address(prefix_min, true);
+      m_min = decode_single_address(std::move(prefix_min), true);
       // max address with 1's
-      m_max = decode_single_address(prefix_max, false);
+      m_max = decode_single_address(std::move(prefix_max), false);
    } else if(next_tag == ASN1_Type::Sequence) {
       // this is a range
 
@@ -1309,8 +1309,8 @@ void IPAddressBlocks::IPAddressOrRange<V>::decode_from(Botan::BER_Decoder& from)
          .decode(addr_max, ASN1_Type::OctetString, ASN1_Type::BitString, ASN1_Class::Universal)
          .end_cons();
 
-      m_min = decode_single_address(addr_min, true);
-      m_max = decode_single_address(addr_max, false);
+      m_min = decode_single_address(std::move(addr_min), true);
+      m_max = decode_single_address(std::move(addr_max), false);
 
       if(m_min > m_max) {
          throw Decoding_Error("IP address ranges must be sorted.");
@@ -1321,7 +1321,7 @@ void IPAddressBlocks::IPAddressOrRange<V>::decode_from(Botan::BER_Decoder& from)
 }
 
 template <IPAddressBlocks::Version V>
-IPAddressBlocks::IPAddress<V> IPAddressBlocks::IPAddressOrRange<V>::decode_single_address(std::vector<uint8_t>& decoded,
+IPAddressBlocks::IPAddress<V> IPAddressBlocks::IPAddressOrRange<V>::decode_single_address(std::vector<uint8_t> decoded,
                                                                                           bool min) {
    const size_t version_octets = static_cast<size_t>(V);
 
