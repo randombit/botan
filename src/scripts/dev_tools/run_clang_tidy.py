@@ -96,7 +96,6 @@ disabled_not_interested = [
     'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
     'cppcoreguidelines-pro-type-vararg', # idiocy
     'hicpp-no-assembler',
-    'hicpp-vararg', # idiocy
     'hicpp-signed-bitwise', # impossible to avoid in C/C++, int promotion rules :/
     'misc-no-recursion',
     'modernize-loop-convert', # sometimes very ugly

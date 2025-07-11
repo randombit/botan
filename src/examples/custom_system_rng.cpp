@@ -80,12 +80,8 @@ class MySoC_RandomNumberGenerator final : public Botan::Hardware_RNG {
       */
 };
 
-#include <stdio.h>
-
 int main() {
    MySoC_RandomNumberGenerator my_rng;
 
-   printf("%d\n", my_rng.next_byte());
-
-   return 0;
+   return my_rng.next_byte();
 }
