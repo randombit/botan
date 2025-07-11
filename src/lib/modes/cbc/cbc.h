@@ -28,6 +28,7 @@ class CBC_Mode : public Cipher_Mode {
       size_t ideal_granularity() const final;
 
       size_t bytes_needed_for_finalization(size_t final_input_length) const final {
+         BOTAN_ARG_CHECK(final_input_length >= minimum_final_size(), "Sufficient input");
          return output_length(final_input_length);
       }
 

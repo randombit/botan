@@ -125,6 +125,7 @@ class BOTAN_TEST_API SIV_Decryption final : public SIV_Mode {
       }
 
       size_t bytes_needed_for_finalization(size_t final_input_length) const override {
+         BOTAN_ARG_CHECK(final_input_length >= tag_size(), "Sufficient input");
          return msg_buf().size() + final_input_length;
       }
 

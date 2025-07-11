@@ -203,15 +203,7 @@ class BOTAN_PUBLIC_API(2, 0) Cipher_Mode : public SymmetricAlgorithm {
       */
       template <concepts::resizable_byte_buffer T>
       void finish(T& final_block, size_t offset = 0) {
-         if(offset > final_block.size()) {
-            throw Invalid_Argument("invalid offset");
-         }
-
-         const auto final_input_bytes = final_block.size() - offset;
-         if(final_input_bytes < minimum_final_size()) {
-            throw Invalid_Argument("final input message is too small");
-         }
-
+         const auto final_input_bytes = calculate_final_input_bytes(final_block.size(), offset);
          const auto final_buffer_bytes = bytes_needed_for_finalization(final_input_bytes);
 
          // Make room for additional overhead to be produced during finalization
@@ -303,6 +295,9 @@ class BOTAN_PUBLIC_API(2, 0) Cipher_Mode : public SymmetricAlgorithm {
       * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
       */
       virtual std::string provider() const { return "base"; }
+
+   private:
+      size_t calculate_final_input_bytes(size_t final_block_length, size_t offset) const;
 };
 
 /**

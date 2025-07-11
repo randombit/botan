@@ -7,6 +7,7 @@
 
 #include <botan/cipher_mode.h>
 
+#include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/scan_name.h>
 #include <botan/internal/stream_mode.h>
@@ -175,6 +176,16 @@ std::vector<std::string> Cipher_Mode::providers(std::string_view algo_spec) {
       }
    }
    return providers;
+}
+
+size_t Cipher_Mode::calculate_final_input_bytes(size_t final_block_length, size_t offset) const {
+   if(offset > final_block_length) {
+      throw Invalid_Argument(Botan::fmt("invalid offset in finalization of {}", name()));
+   }
+
+   const size_t final_input_bytes = final_block_length - offset;
+   BOTAN_DEBUG_ASSERT(final_input_bytes >= minimum_final_size());
+   return final_input_bytes;
 }
 
 }  // namespace Botan

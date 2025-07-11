@@ -157,6 +157,7 @@ size_t CommonCrypto_Cipher_Mode::minimum_final_size() const {
 
 size_t CommonCrypto_Cipher_Mode::bytes_needed_for_finalization(size_t final_input_length) const {
    assert_key_material_set();
+   BOTAN_ARG_CHECK(final_input_length >= minimum_final_size(), "Sufficient input");
    const auto expected_output_length = CCCryptorGetOutputLength(m_cipher, final_input_length, true);
 
    // Ensure that the finalization sees all input bytes or is large enough to

@@ -77,7 +77,7 @@ size_t XTS_Mode::output_length(size_t input_length) const {
 }
 
 size_t XTS_Mode::bytes_needed_for_finalization(size_t final_input_length) const {
-   BOTAN_ASSERT_NOMSG(final_input_length >= minimum_final_size());
+   BOTAN_ARG_CHECK(final_input_length >= minimum_final_size(), "Sufficient input");
    return final_input_length;
 }
 
