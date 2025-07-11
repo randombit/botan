@@ -301,7 +301,7 @@ Session::Session(secure_vector<uint8_t>&& session_psk,
 
 Session::Session(std::string_view pem) : Session(PEM_Code::decode_check_label(pem, "TLS SESSION")) {}
 
-Session::Session(std::span<const uint8_t> ber_data) {
+Session::Session(std::span<const uint8_t> ber_data) /* NOLINT(*-member-init) */ {
    uint8_t side_code = 0;
 
    std::vector<uint8_t> raw_pubkey_or_empty;

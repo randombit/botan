@@ -995,15 +995,15 @@ class FFI_GCM_Test final : public FFI_Test {
          botan_cipher_t cipher_encrypt, cipher_decrypt;
 
          if(TEST_FFI_INIT(botan_cipher_init, (&cipher_encrypt, "AES-128/GCM", BOTAN_CIPHER_INIT_FLAG_ENCRYPT))) {
-            char namebuf[18];
+            std::array<char, 18> namebuf{};
             size_t name_len = 15;
-            TEST_FFI_FAIL("output buffer too short", botan_cipher_name, (cipher_encrypt, namebuf, &name_len));
+            TEST_FFI_FAIL("output buffer too short", botan_cipher_name, (cipher_encrypt, namebuf.data(), &name_len));
             result.test_eq("name len", name_len, 16);
 
-            name_len = sizeof(namebuf);
-            if(TEST_FFI_OK(botan_cipher_name, (cipher_encrypt, namebuf, &name_len))) {
+            name_len = namebuf.size();
+            if(TEST_FFI_OK(botan_cipher_name, (cipher_encrypt, namebuf.data(), &name_len))) {
                result.test_eq("name len", name_len, 16);
-               result.test_eq("name", std::string(namebuf), "AES-128/GCM(16)");
+               result.test_eq("name", namebuf.data(), "AES-128/GCM(16)");
             }
 
             size_t min_keylen = 0;
@@ -1132,7 +1132,7 @@ class FFI_ChaCha20Poly1305_Test final : public FFI_Test {
          botan_cipher_t cipher_encrypt, cipher_decrypt;
 
          if(TEST_FFI_INIT(botan_cipher_init, (&cipher_encrypt, "ChaCha20Poly1305", BOTAN_CIPHER_INIT_FLAG_ENCRYPT))) {
-            std::array<char, 17> namebuf;
+            std::array<char, 17> namebuf{};
             size_t name_len = 15;
             TEST_FFI_FAIL("output buffer too short", botan_cipher_name, (cipher_encrypt, namebuf.data(), &name_len));
             result.test_eq("name len", name_len, 17);
@@ -1667,15 +1667,15 @@ class FFI_HashFunction_Test final : public FFI_Test {
          TEST_FFI_FAIL("invalid flags", botan_hash_init, (&hash, "SHA-256", 1));
 
          if(TEST_FFI_INIT(botan_hash_init, (&hash, "SHA-256", 0))) {
-            char namebuf[10];
+            std::array<char, 10> namebuf{};
             size_t name_len = 7;
-            TEST_FFI_FAIL("output buffer too short", botan_hash_name, (hash, namebuf, &name_len));
+            TEST_FFI_FAIL("output buffer too short", botan_hash_name, (hash, namebuf.data(), &name_len));
             result.test_eq("name len", name_len, 8);
 
-            name_len = sizeof(namebuf);
-            if(TEST_FFI_OK(botan_hash_name, (hash, namebuf, &name_len))) {
+            name_len = namebuf.size();
+            if(TEST_FFI_OK(botan_hash_name, (hash, namebuf.data(), &name_len))) {
                result.test_eq("name len", name_len, 8);
-               result.test_eq("name", std::string(namebuf), "SHA-256");
+               result.test_eq("name", namebuf.data(), "SHA-256");
             }
 
             size_t block_size;
@@ -1744,15 +1744,15 @@ class FFI_MAC_Test final : public FFI_Test {
          TEST_FFI_FAIL("bad name", botan_mac_init, (&mac, "HMAC(SHA-259)", 0));
 
          if(TEST_FFI_INIT(botan_mac_init, (&mac, "HMAC(SHA-256)", 0))) {
-            char namebuf[16];
+            std::array<char, 16> namebuf{};
             size_t name_len = 13;
-            TEST_FFI_FAIL("output buffer too short", botan_mac_name, (mac, namebuf, &name_len));
+            TEST_FFI_FAIL("output buffer too short", botan_mac_name, (mac, namebuf.data(), &name_len));
             result.test_eq("name len", name_len, 14);
 
-            name_len = sizeof(namebuf);
-            if(TEST_FFI_OK(botan_mac_name, (mac, namebuf, &name_len))) {
+            name_len = namebuf.size();
+            if(TEST_FFI_OK(botan_mac_name, (mac, namebuf.data(), &name_len))) {
                result.test_eq("name len", name_len, 14);
-               result.test_eq("name", std::string(namebuf), "HMAC(SHA-256)");
+               result.test_eq("name", namebuf.data(), "HMAC(SHA-256)");
             }
 
             size_t min_keylen = 0, max_keylen = 0, mod_keylen = 0;
@@ -1910,15 +1910,15 @@ class FFI_Blockcipher_Test final : public FFI_Test {
          botan_block_cipher_t cipher;
 
          if(TEST_FFI_INIT(botan_block_cipher_init, (&cipher, "AES-128"))) {
-            char namebuf[10];
+            std::array<char, 10> namebuf{};
             size_t name_len = 7;
-            TEST_FFI_FAIL("output buffer too short", botan_block_cipher_name, (cipher, namebuf, &name_len));
+            TEST_FFI_FAIL("output buffer too short", botan_block_cipher_name, (cipher, namebuf.data(), &name_len));
             result.test_eq("name len", name_len, 8);
 
-            name_len = sizeof(namebuf);
-            if(TEST_FFI_OK(botan_block_cipher_name, (cipher, namebuf, &name_len))) {
+            name_len = namebuf.size();
+            if(TEST_FFI_OK(botan_block_cipher_name, (cipher, namebuf.data(), &name_len))) {
                result.test_eq("name len", name_len, 8);
-               result.test_eq("name", std::string(namebuf), "AES-128");
+               result.test_eq("name", namebuf.data(), "AES-128");
             }
 
             const std::vector<uint8_t> zero16(16, 0);
@@ -2552,15 +2552,15 @@ class FFI_RSA_Test final : public FFI_Test {
             TEST_FFI_OK(botan_privkey_rsa_get_privkey,
                         (loaded_privkey, pkcs1.data(), &pkcs1_len, BOTAN_PRIVKEY_EXPORT_FLAG_PEM));
 
-            char namebuf[32] = {0};
-            size_t name_len = sizeof(namebuf);
-            if(TEST_FFI_OK(botan_pubkey_algo_name, (loaded_pubkey, namebuf, &name_len))) {
-               result.test_eq("algo name", std::string(namebuf), "RSA");
+            std::array<char, 32> namebuf{};
+            size_t name_len = namebuf.size();
+            if(TEST_FFI_OK(botan_pubkey_algo_name, (loaded_pubkey, namebuf.data(), &name_len))) {
+               result.test_eq("algo name", namebuf.data(), "RSA");
             }
 
-            name_len = sizeof(namebuf);
-            if(TEST_FFI_OK(botan_privkey_algo_name, (loaded_privkey, namebuf, &name_len))) {
-               result.test_eq("algo name", std::string(namebuf), "RSA");
+            name_len = namebuf.size();
+            if(TEST_FFI_OK(botan_privkey_algo_name, (loaded_privkey, namebuf.data(), &name_len))) {
+               result.test_eq("algo name", namebuf.data(), "RSA");
             }
 
             botan_pk_op_encrypt_t encrypt;
@@ -2762,11 +2762,11 @@ class FFI_ECDSA_Test final : public FFI_Test {
          TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey, rng, 0));
          TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey, rng, 0));
 
-         char namebuf[32] = {0};
-         size_t name_len = sizeof(namebuf);
+         std::array<char, 32> namebuf{};
+         size_t name_len = namebuf.size();
 
          TEST_FFI_OK(botan_pubkey_algo_name, (pub, &namebuf[0], &name_len));
-         result.test_eq(namebuf, namebuf, "ECDSA");
+         result.test_eq("Algo name is expected", namebuf.data(), "ECDSA");
 
          std::vector<uint8_t> message(1280), signature;
          TEST_FFI_OK(botan_rng_get, (rng, message.data(), message.size()));
@@ -2869,11 +2869,11 @@ class FFI_SM2_Sig_Test final : public FFI_Test {
          TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey, rng, 0));
          TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey, rng, 0));
 
-         char namebuf[32] = {0};
-         size_t name_len = sizeof(namebuf);
+         std::array<char, 32> namebuf{};
+         size_t name_len = namebuf.size();
 
          TEST_FFI_OK(botan_pubkey_algo_name, (pub, &namebuf[0], &name_len));
-         result.test_eq(namebuf, namebuf, "SM2");
+         result.test_eq("Algo name is expected", namebuf.data(), "SM2");
 
          std::vector<uint8_t> message(1280), signature;
          TEST_FFI_OK(botan_rng_get, (rng, message.data(), message.size()));
@@ -2968,11 +2968,11 @@ class FFI_SM2_Enc_Test final : public FFI_Test {
          TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey, rng, 0));
          TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey, rng, 0));
 
-         char namebuf[32] = {0};
-         size_t name_len = sizeof(namebuf);
+         std::array<char, 32> namebuf{};
+         size_t name_len = namebuf.size();
 
          TEST_FFI_OK(botan_pubkey_algo_name, (pub, &namebuf[0], &name_len));
-         result.test_eq(namebuf, namebuf, "SM2");
+         result.test_eq("Algo name is expected", namebuf.data(), "SM2");
 
          std::vector<uint8_t> message(32);
 
@@ -3120,10 +3120,10 @@ class FFI_McEliece_Test final : public FFI_Test {
 
             ffi_test_pubkey_export(result, pub, priv, rng);
 
-            char namebuf[32] = {0};
-            size_t name_len = sizeof(namebuf);
-            if(TEST_FFI_OK(botan_pubkey_algo_name, (pub, namebuf, &name_len))) {
-               result.test_eq("algo name", std::string(namebuf), "McEliece");
+            std::array<char, 32> namebuf{};
+            size_t name_len = namebuf.size();
+            if(TEST_FFI_OK(botan_pubkey_algo_name, (pub, namebuf.data(), &name_len))) {
+               result.test_eq("algo name", namebuf.data(), "McEliece");
             }
 
             // TODO test KEM
@@ -4493,11 +4493,11 @@ class FFI_EC_Group_Test final : public FFI_Test {
 
             botan_privkey_t priv;
             TEST_FFI_OK(botan_ec_privkey_create, (&priv, "ECDSA", secp384r1, rng));
-            char namebuf[32] = {0};
-            size_t name_len = sizeof(namebuf);
+            std::array<char, 32> namebuf{};
+            size_t name_len = namebuf.size();
 
             TEST_FFI_OK(botan_privkey_algo_name, (priv, &namebuf[0], &name_len));
-            result.test_eq("Key name is expected value", namebuf, "ECDSA");
+            result.test_eq("Key name is expected value", namebuf.data(), "ECDSA");
 
             botan_privkey_destroy(priv);
 

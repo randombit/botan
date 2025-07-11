@@ -916,7 +916,7 @@ std::vector<Test::Result> test_bitvector_binary_operators(Botan::RandomNumberGen
 std::vector<Test::Result> test_bitvector_serialization(Botan::RandomNumberGenerator&) {
    constexpr uint8_t outlen = 64;
    const auto bytearray = [] {
-      std::array<uint8_t, outlen> out;
+      std::array<uint8_t, outlen> out{};
       for(uint8_t i = 0; i < outlen; ++i) {
          out[i] = i;
       }
@@ -972,7 +972,7 @@ std::vector<Test::Result> test_bitvector_serialization(Botan::RandomNumberGenera
 
       CHECK("load all bits from byte-array (unaligned blocks)",
             [&](auto& result) {
-               std::array<uint8_t, 63> unaligned_bytearray;
+               std::array<uint8_t, 63> unaligned_bytearray{};
                Botan::copy_mem(unaligned_bytearray, std::span{bytearray}.first<unaligned_bytearray.size()>());
 
                Botan::bitvector bv(unaligned_bytearray);
@@ -995,7 +995,7 @@ std::vector<Test::Result> test_bitvector_serialization(Botan::RandomNumberGenera
                }
 
                const auto rbv = bv.to_bytes();
-               std::array<uint8_t, bytes_to_load> expected_bytes;
+               std::array<uint8_t, bytes_to_load> expected_bytes{};
                Botan::copy_mem(expected_bytes, std::span{bytearray}.first<bytes_to_load>());
                expected_bytes.back() &= (uint8_t(1) << (bits_to_load % 8)) - 1;
                result.confirm("uint8_t rendered correctly", std::ranges::equal(expected_bytes, rbv));

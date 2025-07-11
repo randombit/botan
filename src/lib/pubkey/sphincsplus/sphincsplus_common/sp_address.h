@@ -46,12 +46,9 @@ class BOTAN_TEST_API Sphincs_Address final {
    public:
       using enum Sphincs_Address_Type;
 
-      explicit Sphincs_Address(Sphincs_Address_Type type) {
-         m_address.fill(0);
-         set_type(type);
-      }
+      explicit Sphincs_Address(Sphincs_Address_Type type) : m_address{} { set_type(type); }
 
-      explicit Sphincs_Address(std::array<uint32_t, 8> address) {
+      explicit Sphincs_Address(std::array<uint32_t, 8> address) : m_address{} {
          std::copy(address.begin(), address.end(), m_address.begin());
       }
 

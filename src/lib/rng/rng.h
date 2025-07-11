@@ -233,7 +233,7 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
        */
       template <size_t bytes>
       std::array<uint8_t, bytes> random_array() {
-         std::array<uint8_t, bytes> result;
+         std::array<uint8_t, bytes> result{};
          random_vec(result);
          return result;
       }

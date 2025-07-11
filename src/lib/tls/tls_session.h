@@ -229,13 +229,13 @@ class BOTAN_PUBLIC_API(3, 0) Session_Base {
    protected:
       std::chrono::system_clock::time_point m_start_time;  // NOLINT(*non-private-member-variable*)
 
-      Protocol_Version m_version;         // NOLINT(*non-private-member-variable*)
-      uint16_t m_ciphersuite;             // NOLINT(*non-private-member-variable*)
-      Connection_Side m_connection_side;  // NOLINT(*non-private-member-variable*)
-      uint16_t m_srtp_profile;            // NOLINT(*non-private-member-variable*)
+      Protocol_Version m_version{};         // NOLINT(*non-private-member-variable*)
+      uint16_t m_ciphersuite = 0;           // NOLINT(*non-private-member-variable*)
+      Connection_Side m_connection_side{};  // NOLINT(*non-private-member-variable*)
+      uint16_t m_srtp_profile = 0;          // NOLINT(*non-private-member-variable*)
 
-      bool m_extended_master_secret;  // NOLINT(*non-private-member-variable*)
-      bool m_encrypt_then_mac;        // NOLINT(*non-private-member-variable*)
+      bool m_extended_master_secret = false;  // NOLINT(*non-private-member-variable*)
+      bool m_encrypt_then_mac = false;        // NOLINT(*non-private-member-variable*)
 
       std::vector<X509_Certificate> m_peer_certs;               // NOLINT(*non-private-member-variable*)
       std::shared_ptr<const Public_Key> m_peer_raw_public_key;  // NOLINT(*non-private-member-variable*)

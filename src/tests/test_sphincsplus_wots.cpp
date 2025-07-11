@@ -27,7 +27,7 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test {
          std::span<const uint8_t> address_buffer) {
          BOTAN_ASSERT_NOMSG(address_buffer.size() == 32);
 
-         std::array<uint32_t, 8> adrs;
+         std::array<uint32_t, 8> adrs{};
          for(size_t i = 0; i < 8; ++i) {
             adrs[i] = Botan::load_be<uint32_t>(address_buffer.data(), i);
          }

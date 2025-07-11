@@ -130,7 +130,7 @@ class Trait_Base {
                                                              std::span<const T> u,
                                                              std::span<const T> v) {
          clear_mem(w);
-         std::array<T, N> t;
+         std::array<T, N> t{};
          for(size_t i = 0; i < polys_in_polyvec(u); ++i) {
             DerivedT::poly_pointwise_montgomery(t, poly_in_polyvec(u, i), poly_in_polyvec(v, i));
             poly_add(w, w, t);

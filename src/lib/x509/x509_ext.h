@@ -519,7 +519,7 @@ class BOTAN_PUBLIC_API(3, 5) TNAuthList final : public Certificate_Extension {
 
             struct TelephoneNumberRangeData {
                   ASN1_String start;  //TelephoneNumber (IA5String)
-                  size_t count;       //2..MAX
+                  size_t count{};     //2..MAX
             };
 
             using RangeContainer = std::vector<TelephoneNumberRangeData>;
@@ -537,7 +537,7 @@ class BOTAN_PUBLIC_API(3, 5) TNAuthList final : public Certificate_Extension {
             const std::string& telephone_number() const;
 
          private:
-            Type m_type;
+            Type m_type{};
             DataContainer m_data;
       };
 
@@ -647,8 +647,8 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
             IPAddress<V> max() const { return m_max; }
 
          private:
-            IPAddress<V> m_min;
-            IPAddress<V> m_max;
+            IPAddress<V> m_min{};
+            IPAddress<V> m_max{};
       };
 
       template <Version V>
@@ -693,7 +693,7 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
             const AddrChoice& addr_choice() const { return m_ip_addr_choice; }
 
          private:
-            uint16_t m_afi;
+            uint16_t m_afi = 0;
             std::optional<uint8_t> m_safi;
             AddrChoice m_ip_addr_choice;
       };

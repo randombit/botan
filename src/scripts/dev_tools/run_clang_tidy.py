@@ -48,7 +48,8 @@ disabled_needs_work = [
     'readability-qualified-auto', # almost cleared except test_x509_rpki.cpp
 
     '*-named-parameter',
-    '*-member-init', # should definitely fix this one
+    'readability-redundant-member-init',
+    'cppcoreguidelines-use-default-member-init',
     'bugprone-unchecked-optional-access', # clang-tidy seems buggy (many false positives)
     'bugprone-empty-catch',
     'cert-err58-cpp', # many false positives eg __m128i

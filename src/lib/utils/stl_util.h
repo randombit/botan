@@ -205,7 +205,7 @@ template <ranges::spanable_range OutR, ranges::spanable_range... Rs>
 constexpr OutR concatenate(Rs&&... ranges)
    requires(concepts::reservable_container<OutR> || ranges::statically_spanable_range<OutR>)
 {
-   OutR result;
+   OutR result{};
 
    // Prepare and validate the output range and construct a lambda that does the
    // actual filling of the result buffer.

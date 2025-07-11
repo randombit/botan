@@ -17,7 +17,7 @@ namespace Botan {
 
 struct CRL_Data {
       X509_DN m_issuer;
-      size_t m_version;
+      size_t m_version{};
       X509_Time m_this_update;
       X509_Time m_next_update;
       std::vector<CRL_Entry> m_entries;

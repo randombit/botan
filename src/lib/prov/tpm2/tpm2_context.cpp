@@ -36,8 +36,8 @@ constexpr TPM2_HANDLE storage_root_key_handle = TPM2_HR_PERSISTENT + 1;
 }  // namespace
 
 struct Context::Impl {
-      ESYS_CONTEXT* m_ctx;  /// m_ctx may be owned by the library user (see m_external)
-      bool m_external;
+      ESYS_CONTEXT* m_ctx{};  /// m_ctx may be owned by the library user (see m_external)
+      bool m_external{};
 
 #if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
       std::unique_ptr<CryptoCallbackState> m_crypto_callback_state;

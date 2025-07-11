@@ -78,7 +78,7 @@ void wots_checksum(std::span<WotsHashIndex> output,
    // Convert checksum to base_w.
    csum = csum << ((8 - ((params.wots_len_2() * params.log_w()) % 8)) % 8);
 
-   std::array<uint8_t, 4> csum_bytes;
+   std::array<uint8_t, 4> csum_bytes{};
    store_be(csum, csum_bytes.data());
 
    const size_t csum_bytes_size = params.wots_checksum_bytes();

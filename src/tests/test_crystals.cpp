@@ -319,7 +319,7 @@ void random_encoding_roundtrips(Test::Result& res, Botan::RandomNumberGenerator&
 
    auto random_poly = [&rng]() -> Poly {
       Poly p;
-      std::array<uint8_t, sizeof(T)> buf;
+      std::array<uint8_t, sizeof(T)> buf{};
       for(auto& coeff : p) {
          rng.randomize(buf);
          coeff = static_cast<T>((Botan::load_be(buf) % (range + 1)));
@@ -511,7 +511,7 @@ class MockedXOF {
 
       template <size_t bytes>
       auto output() {
-         std::array<uint8_t, bytes> result;
+         std::array<uint8_t, bytes> result{};
          for(uint8_t& byte : result) {
             byte = static_cast<uint8_t>(m_counter++);
          }

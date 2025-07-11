@@ -63,7 +63,7 @@ inline uint64_t u64_sub_with_borrow(uint64_t a, uint64_t b, bool* borrow) {
  * @param h_1 Input
  */
 void reduce_after_add(std::span<uint64_t, WORDS_448> h_3, std::span<const uint64_t, 8> h_1) {
-   std::array<uint64_t, 8> h_2;
+   std::array<uint64_t, 8> h_2; /* NOLINT(*-member-init) */
    bool carry = false;
 
    // Line 27+ (of the paper's algorithm 1)
@@ -100,10 +100,10 @@ void reduce_after_add(std::span<uint64_t, WORDS_448> h_3, std::span<const uint64
  * Algorithm 1 of paper "Reduction Modulo 2^448 - 2^224 - 1".
  */
 void reduce_after_mul(std::span<uint64_t, WORDS_448> out, std::span<const uint64_t, 14> in) {
-   std::array<uint64_t, 8> r;
-   std::array<uint64_t, 8> s;
-   std::array<uint64_t, 8> t_0;
-   std::array<uint64_t, 8> h_1;
+   std::array<uint64_t, 8> r;    // NOLINT(*-member-init)
+   std::array<uint64_t, 8> s;    // NOLINT(*-member-init)
+   std::array<uint64_t, 8> t_0;  // NOLINT(*-member-init)
+   std::array<uint64_t, 8> h_1;  // NOLINT(*-member-init)
 
    bool carry = false;
 
@@ -149,13 +149,13 @@ void reduce_after_mul(std::span<uint64_t, WORDS_448> out, std::span<const uint64
 void gf_mul(std::span<uint64_t, WORDS_448> out,
             std::span<const uint64_t, WORDS_448> a,
             std::span<const uint64_t, WORDS_448> b) {
-   std::array<uint64_t, 14> ws;
+   std::array<uint64_t, 14> ws;  // NOLINT(*-member-init)
    comba_mul<7>(ws.data(), a.data(), b.data());
    reduce_after_mul(out, ws);
 }
 
 void gf_square(std::span<uint64_t, WORDS_448> out, std::span<const uint64_t, WORDS_448> a) {
-   std::array<uint64_t, 14> ws;
+   std::array<uint64_t, 14> ws;  // NOLINT(*-member-init)
    comba_sqr<7>(ws.data(), a.data());
    reduce_after_mul(out, ws);
 }
@@ -163,9 +163,7 @@ void gf_square(std::span<uint64_t, WORDS_448> out, std::span<const uint64_t, WOR
 void gf_add(std::span<uint64_t, WORDS_448> out,
             std::span<const uint64_t, WORDS_448> a,
             std::span<const uint64_t, WORDS_448> b) {
-   std::array<uint64_t, WORDS_448 + 1> ws;
-   copy_mem(std::span(ws).first<WORDS_448>(), a);
-   ws[WORDS_448] = 0;
+   std::array<uint64_t, WORDS_448 + 1> ws;  // NOLINT(*-member-init)
 
    bool carry = false;
    for(size_t i = 0; i < WORDS_448; ++i) {
@@ -184,8 +182,8 @@ void gf_add(std::span<uint64_t, WORDS_448> out,
 void gf_sub(std::span<uint64_t, WORDS_448> out,
             std::span<const uint64_t, WORDS_448> a,
             std::span<const uint64_t, WORDS_448> b) {
-   std::array<uint64_t, WORDS_448> h_0;
-   std::array<uint64_t, WORDS_448> h_1;
+   std::array<uint64_t, WORDS_448> h_0;  // NOLINT(*-member-init)
+   std::array<uint64_t, WORDS_448> h_1;  // NOLINT(*-member-init)
 
    bool borrow = false;
    for(size_t i = 0; i < WORDS_448; ++i) {
@@ -248,23 +246,23 @@ std::array<uint64_t, WORDS_448> to_canonical(std::span<const uint64_t, WORDS_448
                                               0xffffffffffffffff,
                                               0xffffffffffffffff};
 
-   std::array<uint64_t, WORDS_448> in_minus_p;
+   std::array<uint64_t, WORDS_448> in_minus_p;  // NOLINT(*-member-init)
    bool borrow = false;
    for(size_t i = 0; i < WORDS_448; ++i) {
       in_minus_p[i] = u64_sub_with_borrow(in[i], p[i], &borrow);
    }
-   std::array<uint64_t, WORDS_448> out;
+   std::array<uint64_t, WORDS_448> out;  // NOLINT(*-member-init)
    CT::Mask<uint64_t>::expand(borrow).select_n(out.data(), in.data(), in_minus_p.data(), WORDS_448);
    return out;
 }
 
 }  // namespace
 
-Gf448Elem::Gf448Elem(std::span<const uint8_t, BYTES_448> x) {
+Gf448Elem::Gf448Elem(std::span<const uint8_t, BYTES_448> x) /* NOLINT(*-member-init) */ {
    load_le(m_x, x);
 }
 
-Gf448Elem::Gf448Elem(uint64_t least_sig_word) {
+Gf448Elem::Gf448Elem(uint64_t least_sig_word) /* NOLINT(*-member-init) */ {
    clear_mem(m_x);
    m_x[0] = least_sig_word;
 }
@@ -274,7 +272,7 @@ void Gf448Elem::to_bytes(std::span<uint8_t, BYTES_448> out) const {
 }
 
 std::array<uint8_t, BYTES_448> Gf448Elem::to_bytes() const {
-   std::array<uint8_t, BYTES_448> bytes;
+   std::array<uint8_t, BYTES_448> bytes{};
    to_bytes(bytes);
    return bytes;
 }

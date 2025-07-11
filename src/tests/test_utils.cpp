@@ -282,7 +282,7 @@ class Utility_Function_Tests final : public Test {
             result.test_is_eq<uint8_t>(out[7], 0xAB);
          }
 
-         std::array<uint8_t, 8> outarr;
+         std::array<uint8_t, 8> outarr{};
          uint16_t i0 = 0, i1 = 0, i2 = 0, i3 = 0;
          Botan::store_be(in64, outarr);
 
@@ -396,7 +396,7 @@ class Utility_Function_Tests final : public Test {
          result.test_is_eq(Botan::store_be<std::vector<uint8_t>>(in16_vector), Botan::hex_decode("0A0B0C0D"));
          result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(in16_vector), Botan::hex_decode("0B0A0D0C"));
 
-         std::array<uint8_t, 4> out_array;
+         std::array<uint8_t, 4> out_array{};
          Botan::store_be(out_array, in16_array);
          result.test_is_eq(out_array, std::array<uint8_t, 4>{0x0A, 0x0B, 0x0C, 0x0D});
          Botan::store_le(out_array, in16_array);
@@ -487,14 +487,14 @@ class Utility_Function_Tests final : public Test {
 
       template <std::unsigned_integral T>
       static decltype(auto) fb_store_be(const T in) {
-         std::array<uint8_t, sizeof(T)> out;
+         std::array<uint8_t, sizeof(T)> out{};
          Botan::detail::fallback_store_any<std::endian::big, T>(in, out);
          return out;
       }
 
       template <std::unsigned_integral T>
       static decltype(auto) fb_store_le(const T in) {
-         std::array<uint8_t, sizeof(T)> out;
+         std::array<uint8_t, sizeof(T)> out{};
          Botan::detail::fallback_store_any<std::endian::little, T>(in, out);
          return out;
       }

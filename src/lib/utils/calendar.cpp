@@ -21,7 +21,7 @@ namespace {
 
 // TODO replace this with https://howardhinnant.github.io/date_algorithms.html#civil_from_days
 std::tm do_gmtime(std::time_t time_val) {
-   std::tm tm;
+   std::tm tm{};
 
 #if defined(BOTAN_TARGET_OS_HAS_WIN32)
    ::gmtime_s(&tm, &time_val);  // Windows

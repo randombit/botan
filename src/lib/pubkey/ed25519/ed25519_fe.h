@@ -41,8 +41,10 @@ class Ed25519_FieldElement final {
          return o;
       }
 
+      // NOLINTNEXTLINE(*-member-init)
       constexpr explicit Ed25519_FieldElement(std::span<int32_t, 10> fe) { copy_mem(m_fe.data(), fe.data(), 10); }
 
+      // NOLINTNEXTLINE(*-member-init)
       constexpr Ed25519_FieldElement(int64_t h0,
                                      int64_t h1,
                                      int64_t h2,

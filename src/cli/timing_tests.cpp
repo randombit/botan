@@ -584,7 +584,7 @@ class MARVIN_Test_Command final : public Command {
    #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
          ::setenv("BOTAN_THREAD_POOL_SIZE", "none", /*overwrite?*/ 1);
 
-         struct sigaction sigaction;
+         struct sigaction sigaction {};
 
          sigaction.sa_handler = marvin_sigint_handler;
          sigemptyset(&sigaction.sa_mask);

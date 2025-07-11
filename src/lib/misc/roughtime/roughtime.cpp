@@ -155,16 +155,14 @@ std::array<uint8_t, N> vector_to_array(std::vector<uint8_t, T> vec) {
 
 namespace Roughtime {
 
-Nonce::Nonce(const std::vector<uint8_t>& nonce) {
+Nonce::Nonce(const std::vector<uint8_t>& nonce) : m_nonce{} {
    if(nonce.size() != 64) {
       throw Invalid_Argument("Roughtime nonce must be 64 bytes long");
    }
    m_nonce = typecast_copy<std::array<uint8_t, 64>>(nonce.data());
 }
 
-Nonce::Nonce(RandomNumberGenerator& rng) {
-   rng.randomize(m_nonce.data(), m_nonce.size());
-}
+Nonce::Nonce(RandomNumberGenerator& rng) : m_nonce(rng.random_array<64>()) {}
 
 std::array<uint8_t, request_min_size> encode_request(const Nonce& nonce) {
    std::array<uint8_t, request_min_size> buf = {{2, 0, 0, 0, 64, 0, 0, 0, 'N', 'O', 'N', 'C', 'P', 'A', 'D', 0xff}};

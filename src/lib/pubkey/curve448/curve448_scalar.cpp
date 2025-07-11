@@ -24,12 +24,12 @@ auto div_mod_2_446(std::span<const word, S> x) {
       copy_mem(std::span(r).template first<S>(), x);
       return std::make_pair(std::array<word, 1>({0}), r);
    } else {
-      std::array<word, Scalar448::WORDS> r;
+      std::array<word, Scalar448::WORDS> r;  // NOLINT(*-member-init)
       copy_mem(r, std::span(x).template first<Scalar448::WORDS>());
       // Clear the two most significant bits
       r[Scalar448::WORDS - 1] &= ~(word(0b11) << (sizeof(word) * 8 - 2));
 
-      std::array<word, S - Scalar448::WORDS + 1> q;
+      std::array<word, S - Scalar448::WORDS + 1> q;  // NOLINT(*-member-init)
       bigint_shr2(q.data(), x.data(), x.size(), 446);
 
       return std::make_pair(q, r);
@@ -56,8 +56,8 @@ consteval std::array<word, Scalar448::WORDS> big_l_words() {
 /// @return c*x, with c = 0x8335dc163bb124b65129c96fde933d8d723a70aadc873d6d54a7bb0d
 template <size_t S>
 std::array<word, S + WORDS_C> mul_c(std::span<const word, S> x) {
-   std::array<word, S + WORDS_C> res;
-   std::array<word, S + WORDS_C> ws;
+   std::array<word, S + WORDS_C> res;  // NOLINT(*-member-init)
+   std::array<word, S + WORDS_C> ws;   // NOLINT(*-member-init)
    constexpr std::array<word, WORDS_C> c = c_words();
    bigint_mul(res.data(), res.size(), x.data(), x.size(), x.size(), c.data(), c.size(), c.size(), ws.data(), ws.size());
 
@@ -69,7 +69,7 @@ std::array<word, S + WORDS_C> mul_c(std::span<const word, S> x) {
  */
 std::array<word, Scalar448::WORDS> add(std::span<const word, Scalar448::WORDS> x,
                                        std::span<const word, Scalar448::WORDS> y) {
-   std::array<word, Scalar448::WORDS> res;
+   std::array<word, Scalar448::WORDS> res;  // NOLINT(*-member-init)
    copy_mem(res, x);
    const word carry = bigint_add2_nc(res.data(), res.size(), y.data(), y.size());
    CT::unpoison(carry);
@@ -83,7 +83,7 @@ std::array<word, Scalar448::WORDS> add(std::span<const word, Scalar448::WORDS> x
  * @return true iff a reduction was performed
  */
 bool ct_subtract_L_if_bigger(std::span<word, Scalar448::WORDS> x) {
-   std::array<word, Scalar448::WORDS> tmp;
+   std::array<word, Scalar448::WORDS> tmp;  // NOLINT(*-member-init)
    copy_mem(tmp, x);
    constexpr auto big_l = big_l_words();
 
@@ -97,7 +97,7 @@ bool ct_subtract_L_if_bigger(std::span<word, Scalar448::WORDS> x) {
 template <size_t S>
 std::array<word, words_for_bits(S * 8)> bytes_to_words(std::span<const uint8_t, S> x) {
    constexpr size_t words = words_for_bits(S * 8);
-   std::array<uint8_t, words * sizeof(word)> x_word_bytes = {0};
+   std::array<uint8_t, words * sizeof(word)> x_word_bytes{};
    copy_mem(std::span(x_word_bytes).template first<S>(), x);
    return load_le<std::array<word, words>>(x_word_bytes);
 }
@@ -144,6 +144,7 @@ std::array<word, Scalar448::WORDS> ct_reduce_mod_L(const std::array<word, WORDS_
 
 }  // namespace
 
+// NOLINTNEXTLINE(*-member-init)
 Scalar448::Scalar448(std::span<const uint8_t> in_bytes) {
    BOTAN_ARG_CHECK(in_bytes.size() <= 114, "Input must be at most 114 bytes long");
    std::array<uint8_t, 114> max_bytes = {0};

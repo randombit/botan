@@ -132,7 +132,7 @@ class polyn_gf2m {
       static polyn_gf2m gcd_aux(polyn_gf2m& p1, polyn_gf2m& p2);
 
    private:
-      int m_deg;
+      int m_deg = -1;
       secure_vector<gf2m> m_coeff;
       std::shared_ptr<GF2m_Field> m_sp_field;
 };

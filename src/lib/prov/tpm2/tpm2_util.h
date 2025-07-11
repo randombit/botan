@@ -123,7 +123,7 @@ constexpr void copy_into(T& dest, std::span<const uint8_t> data) {
 /// provided @p data is not larger than the capacity of the buffer type.
 template <tpm2_buffer T>
 constexpr T copy_into(std::span<const uint8_t> data) {
-   T result;
+   T result{};
    copy_into(result, data);
    return result;
 }
@@ -141,7 +141,7 @@ constexpr OutT copy_into(const tpm2_buffer auto& data) {
 /// Create a TPM2 buffer of a given type and @p length.
 template <tpm2_buffer T>
 constexpr T init_with_size(size_t length) {
-   T result;
+   T result{};
    BOTAN_ASSERT_NOMSG(length <= sizeof(result.buffer));
    result.size = static_cast<decltype(result.size)>(length);
    clear_bytes(result.buffer, length);

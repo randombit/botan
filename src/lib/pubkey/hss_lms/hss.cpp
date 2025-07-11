@@ -80,7 +80,7 @@ HSS_LMS_Params::HSS_LMS_Params(std::vector<LMS_LMOTS_Params_Pair> lm_lmots_param
                    "Invalid number of levels");
 }
 
-HSS_LMS_Params::HSS_LMS_Params(std::string_view algo_params) {
+HSS_LMS_Params::HSS_LMS_Params(std::string_view algo_params) : m_max_sig_count(0) {
    const auto wrap_in_hss_lms = [&]() {
       if(algo_params.starts_with("HSS-LMS(")) {
          return std::string(algo_params);

@@ -97,7 +97,7 @@ std::optional<CmceColumnSelection> move_columns(CmceMatrix& mat, const Classic_M
 
    // To find which columns need to be swapped to allow for a systematic matrix form, we need to
    // investigate how a gauss algorithm affects the last mu rows of the swap area.
-   std::array<uint64_t, Classic_McEliece_Parameters::mu()> sub_mat;
+   std::array<uint64_t, Classic_McEliece_Parameters::mu()> sub_mat;  // NOLINT(*-member-init)
 
    // Extract the bottom mu x nu matrix at offset pos_offset
    for(size_t i = 0; i < Classic_McEliece_Parameters::mu(); i++) {
