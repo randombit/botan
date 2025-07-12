@@ -43,20 +43,20 @@ class AEAD_Tests final : public Text_Based_Test {
          auto get_garbage = [&] { return rng.random_vec(enc->update_granularity()); };
 
          if(is_siv == false) {
-            result.test_throws("Unkeyed object throws for encrypt", [&]() {
+            result.test_throws<Botan::Invalid_State>("Unkeyed object throws for encrypt", [&]() {
                auto garbage = get_garbage();
                enc->update(garbage);
             });
          }
 
-         result.test_throws("Unkeyed object throws for encrypt", [&]() {
+         result.test_throws<Botan::Invalid_State>("Unkeyed object throws for encrypt", [&]() {
             auto garbage = get_garbage();
             enc->finish(garbage);
          });
 
          if(enc->associated_data_requires_key()) {
-            result.test_throws("Unkeyed object throws for set AD",
-                               [&]() { enc->set_associated_data(ad.data(), ad.size()); });
+            result.test_throws<Botan::Invalid_State>("Unkeyed object throws for set AD",
+                                                     [&]() { enc->set_associated_data(ad.data(), ad.size()); });
          }
 
          result.test_eq("key is not set", enc->has_keying_material(), false);
@@ -67,11 +67,11 @@ class AEAD_Tests final : public Text_Based_Test {
          result.test_eq("key is set", enc->has_keying_material(), true);
 
          if(is_siv == false) {
-            result.test_throws("Cannot process data until nonce is set (enc)", [&]() {
+            result.test_throws<Botan::Invalid_State>("Cannot process data until nonce is set (enc)", [&]() {
                auto garbage = get_garbage();
                enc->update(garbage);
             });
-            result.test_throws("Cannot process data until nonce is set (enc)", [&]() {
+            result.test_throws<Botan::Invalid_State>("Cannot process data until nonce is set (enc)", [&]() {
                auto garbage = get_garbage();
                enc->finish(garbage);
             });
@@ -184,11 +184,12 @@ class AEAD_Tests final : public Text_Based_Test {
          enc->clear();
          result.test_eq("key is not set", enc->has_keying_material(), false);
 
-         result.test_throws("Unkeyed object throws for encrypt after clear", [&]() { enc->finish(buf); });
+         result.test_throws<Botan::Invalid_State>("Unkeyed object throws for encrypt after clear",
+                                                  [&]() { enc->finish(buf); });
 
          if(enc->associated_data_requires_key()) {
-            result.test_throws("Unkeyed object throws for set AD after clear",
-                               [&]() { enc->set_associated_data(ad.data(), ad.size()); });
+            result.test_throws<Botan::Invalid_State>("Unkeyed object throws for set AD after clear",
+                                                     [&]() { enc->set_associated_data(ad.data(), ad.size()); });
          }
 
          return result;
@@ -210,22 +211,23 @@ class AEAD_Tests final : public Text_Based_Test {
          result.test_eq("AEAD decrypt output_length is correct", dec->output_length(input.size()), expected.size());
 
          auto get_garbage = [&] { return rng.random_vec(dec->update_granularity()); };
+         auto get_ultimate_garbage = [&] { return rng.random_vec(dec->minimum_final_size()); };
 
          if(is_siv == false) {
-            result.test_throws("Unkeyed object throws for decrypt", [&]() {
+            result.test_throws<Botan::Invalid_State>("Unkeyed object throws for decrypt", [&]() {
                auto garbage = get_garbage();
                dec->update(garbage);
             });
          }
 
-         result.test_throws("Unkeyed object throws for decrypt", [&]() {
-            auto garbage = get_garbage();
+         result.test_throws<Botan::Invalid_State>("Unkeyed object throws for decrypt", [&]() {
+            auto garbage = get_ultimate_garbage();
             dec->finish(garbage);
          });
 
          if(dec->associated_data_requires_key()) {
-            result.test_throws("Unkeyed object throws for set AD",
-                               [&]() { dec->set_associated_data(ad.data(), ad.size()); });
+            result.test_throws<Botan::Invalid_State>("Unkeyed object throws for set AD",
+                                                     [&]() { dec->set_associated_data(ad.data(), ad.size()); });
          }
 
          // First some tests for reset() to make sure it resets what we need it to
@@ -236,12 +238,12 @@ class AEAD_Tests final : public Text_Based_Test {
          dec->set_associated_data(mutate_vec(ad, rng));
 
          if(is_siv == false) {
-            result.test_throws("Cannot process data until nonce is set (dec)", [&]() {
+            result.test_throws<Botan::Invalid_State>("Cannot process data until nonce is set (dec)", [&]() {
                auto garbage = get_garbage();
                dec->update(garbage);
             });
-            result.test_throws("Cannot process data until nonce is set (dec)", [&]() {
-               auto garbage = get_garbage();
+            result.test_throws<Botan::Invalid_State>("Cannot process data until nonce is set (dec)", [&]() {
+               auto garbage = get_ultimate_garbage();
                dec->finish(garbage);
             });
          }
@@ -400,11 +402,11 @@ class AEAD_Tests final : public Text_Based_Test {
          dec->clear();
          result.test_eq("key is not set", dec->has_keying_material(), false);
 
-         result.test_throws("Unkeyed object throws for decrypt", [&]() { dec->finish(buf); });
+         result.test_throws<Botan::Invalid_State>("Unkeyed object throws for decrypt", [&]() { dec->finish(buf); });
 
          if(dec->associated_data_requires_key()) {
-            result.test_throws("Unkeyed object throws for set AD",
-                               [&]() { dec->set_associated_data(ad.data(), ad.size()); });
+            result.test_throws<Botan::Invalid_State>("Unkeyed object throws for set AD",
+                                                     [&]() { dec->set_associated_data(ad.data(), ad.size()); });
          }
 
          return result;
