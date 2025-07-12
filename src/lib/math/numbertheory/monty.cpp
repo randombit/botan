@@ -135,7 +135,7 @@ void Montgomery_Params::mul_by(BigInt& x, std::span<const word> y, secure_vector
       ws.resize(2 * output_size);
    }
 
-   word* z_data = &ws[0];
+   word* z_data = ws.data();
    word* ws_data = &ws[output_size];
 
    BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
@@ -166,7 +166,7 @@ void Montgomery_Params::mul_by(BigInt& x, const BigInt& y, secure_vector<word>& 
       ws.resize(2 * output_size);
    }
 
-   word* z_data = &ws[0];
+   word* z_data = ws.data();
    word* ws_data = &ws[output_size];
 
    BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
@@ -228,7 +228,7 @@ void Montgomery_Params::square_this(BigInt& x, secure_vector<word>& ws) const {
       ws.resize(2 * output_size);
    }
 
-   word* z_data = &ws[0];
+   word* z_data = ws.data();
    word* ws_data = &ws[output_size];
 
    BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);

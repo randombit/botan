@@ -367,7 +367,7 @@ ZFEC::ZFEC(size_t K, size_t N) : m_K(K), m_N(N), m_enc_matrix(N * K) {
    * K*K Vandermonde matrix, multiply right the bottom n-K rows
    * by the inverse, and construct the identity matrix at the top.
    */
-   create_inverted_vdm(&temp_matrix[0], m_K);
+   create_inverted_vdm(temp_matrix.data(), m_K);
 
    for(size_t i = m_K * m_K; i != temp_matrix.size(); ++i) {
       temp_matrix[i] = GF_EXP[((i / m_K) * (i % m_K)) % 255];
@@ -432,10 +432,10 @@ void ZFEC::encode_shares(const std::vector<const uint8_t*>& shares,
       clear_mem(fec_buf.data(), fec_buf.size());
 
       for(size_t j = 0; j != m_K; ++j) {
-         addmul(&fec_buf[0], shares[j], m_enc_matrix[i * m_K + j], share_size);
+         addmul(fec_buf.data(), shares[j], m_enc_matrix[i * m_K + j], share_size);
       }
 
-      output_cb(i, &fec_buf[0], fec_buf.size());
+      output_cb(i, fec_buf.data(), fec_buf.size());
    }
 }
 
@@ -515,15 +515,15 @@ void ZFEC::decode_shares(const std::map<size_t, const uint8_t*>& shares,
       return;
    }
 
-   invert_matrix(&decoding_matrix[0], m_K);
+   invert_matrix(decoding_matrix.data(), m_K);
 
    for(size_t i = 0; i != indexes.size(); ++i) {
       if(indexes[i] >= m_K) {
          std::vector<uint8_t> buf(share_size);
          for(size_t col = 0; col != m_K; ++col) {
-            addmul(&buf[0], sharesv[col], decoding_matrix[i * m_K + col], share_size);
+            addmul(buf.data(), sharesv[col], decoding_matrix[i * m_K + col], share_size);
          }
-         output_cb(i, &buf[0], share_size);
+         output_cb(i, buf.data(), share_size);
       }
    }
 }

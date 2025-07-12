@@ -177,16 +177,16 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
 
          try {
             if(!m_tls->is_active()) {
-               log_binary_message("From client", &m_c2p[0], bytes_transferred);
+               log_binary_message("From client", m_c2p.data(), bytes_transferred);
             }
-            m_tls->received_data(&m_c2p[0], bytes_transferred);
+            m_tls->received_data(m_c2p.data(), bytes_transferred);
          } catch(Botan::Exception& e) {
             log_exception("TLS connection failed", e);
             stop();
             return;
          }
 
-         m_client_socket.async_read_some(boost::asio::buffer(&m_c2p[0], m_c2p.size()),
+         m_client_socket.async_read_some(boost::asio::buffer(m_c2p.data(), m_c2p.size()),
                                          m_strand.wrap(boost::bind(&tls_proxy_session::client_read,
                                                                    shared_from_this(),
                                                                    boost::asio::placeholders::error,
@@ -233,10 +233,10 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
          if(m_p2c.empty() && !m_p2c_pending.empty()) {
             std::swap(m_p2c_pending, m_p2c);
 
-            log_binary_message("To Client", &m_p2c[0], m_p2c.size());
+            log_binary_message("To Client", m_p2c.data(), m_p2c.size());
 
             boost::asio::async_write(m_client_socket,
-                                     boost::asio::buffer(&m_p2c[0], m_p2c.size()),
+                                     boost::asio::buffer(m_p2c.data(), m_p2c.size()),
                                      m_strand.wrap(boost::bind(&tls_proxy_session::handle_client_write_completion,
                                                                shared_from_this(),
                                                                boost::asio::placeholders::error)));
@@ -252,10 +252,10 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
          if(m_p2s.empty() && !m_p2s_pending.empty()) {
             std::swap(m_p2s_pending, m_p2s);
 
-            log_text_message("To Server", &m_p2s[0], m_p2s.size());
+            log_text_message("To Server", m_p2s.data(), m_p2s.size());
 
             boost::asio::async_write(m_server_socket,
-                                     boost::asio::buffer(&m_p2s[0], m_p2s.size()),
+                                     boost::asio::buffer(m_p2s.data(), m_p2s.size()),
                                      m_strand.wrap(boost::bind(&tls_proxy_session::handle_server_write_completion,
                                                                shared_from_this(),
                                                                boost::asio::placeholders::error)));
@@ -271,9 +271,9 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
 
          try {
             if(bytes_transferred > 0) {
-               log_text_message("Server to client", &m_s2p[0], m_s2p.size());
-               log_binary_message("Server to client", &m_s2p[0], m_s2p.size());
-               m_tls->send(&m_s2p[0], bytes_transferred);
+               log_text_message("Server to client", m_s2p.data(), m_s2p.size());
+               log_binary_message("Server to client", m_s2p.data(), m_s2p.size());
+               m_tls->send(m_s2p.data(), bytes_transferred);
             }
          } catch(Botan::Exception& e) {
             log_exception("TLS connection failed", e);
@@ -283,7 +283,7 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
 
          m_s2p.resize(readbuf_size);
 
-         m_server_socket.async_read_some(boost::asio::buffer(&m_s2p[0], m_s2p.size()),
+         m_server_socket.async_read_some(boost::asio::buffer(m_s2p.data(), m_s2p.size()),
                                          m_strand.wrap(boost::bind(&tls_proxy_session::server_read,
                                                                    shared_from_this(),
                                                                    boost::asio::placeholders::error,

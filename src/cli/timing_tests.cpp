@@ -670,7 +670,7 @@ class MARVIN_Test_Command final : public Command {
                for(size_t j = 0; j != testcases; ++j) {
                   const auto j_eq_testcase = Botan::CT::Mask<size_t>::is_equal(j, testcase).as_choice();
                   const auto* testcase_j = &ciphertext_data[j * modulus_bytes];
-                  Botan::CT::conditional_assign_mem(j_eq_testcase, &ciphertext[0], testcase_j, modulus_bytes);
+                  Botan::CT::conditional_assign_mem(j_eq_testcase, ciphertext.data(), testcase_j, modulus_bytes);
                }
 
                TimingTestTimer timer;
