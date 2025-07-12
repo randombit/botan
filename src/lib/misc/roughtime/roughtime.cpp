@@ -13,6 +13,7 @@
 #include <botan/pubkey.h>
 #include <botan/rng.h>
 #include <botan/internal/socket_udp.h>
+#include <botan/internal/stl_util.h>
 
 #include <cmath>
 #include <map>
@@ -47,7 +48,8 @@ template <typename T>
 T copy(const uint8_t* t)
    requires(is_array<T>::value)
 {
-   return typecast_copy<T>(t);  //arrays are endianess independent, so we do a memcpy
+   //arrays are endianess independent, so we do a memcpy
+   return typecast_copy<T>(std::span<const uint8_t, sizeof(T)>(t, sizeof(T)));
 }
 
 template <typename T>
@@ -146,10 +148,7 @@ void hashNode(std::array<uint8_t, 64>& hash, const std::array<uint8_t, 64>& node
 
 template <size_t N, typename T>
 std::array<uint8_t, N> vector_to_array(std::vector<uint8_t, T> vec) {
-   if(vec.size() != N) {
-      throw std::logic_error("Invalid vector size");
-   }
-   return typecast_copy<std::array<uint8_t, N>>(vec.data());
+   return typecast_copy<std::array<uint8_t, N>>(vec);
 }
 }  // namespace
 
@@ -159,7 +158,7 @@ Nonce::Nonce(const std::vector<uint8_t>& nonce) : m_nonce{} {
    if(nonce.size() != 64) {
       throw Invalid_Argument("Roughtime nonce must be 64 bytes long");
    }
-   m_nonce = typecast_copy<std::array<uint8_t, 64>>(nonce.data());
+   m_nonce = typecast_copy<std::array<uint8_t, 64>>(nonce);
 }
 
 Nonce::Nonce(RandomNumberGenerator& rng) : m_nonce(rng.random_array<64>()) {}
@@ -201,10 +200,10 @@ Response Response::from_bits(const std::vector<uint8_t>& response, const Nonce& 
 
    auto hash = hashLeaf(nonce.get_nonce());
    auto index = indx;
-   size_t level = 0;
-   while(level < levels) {
-      hashNode(hash, typecast_copy<std::array<uint8_t, 64>>(path.data() + level * 64), index & 1);
-      ++level;
+
+   BufferSlicer slicer(path);
+   for(size_t level = 0; level < levels; ++level) {
+      hashNode(hash, typecast_copy<std::array<uint8_t, 64>>(slicer.take<64>()), index & 1);
       index >>= 1;
    }
 
