@@ -62,26 +62,29 @@ inline Botan::RandomNumberGenerator& fuzzer_rng() {
    return *fuzzer_rng_as_shared();
 }
 
-// TODO(Botan4) use a constexpr function with std::source_location
+// TODO use a constexpr function with std::source_location
 // NOLINTNEXTLINE(*-macro-usage)
 #define FUZZER_WRITE_AND_CRASH(expr)                                                                          \
+   /* NOLINTNEXTLINE(*-avoid-do-while) */                                                                     \
    do {                                                                                                       \
       std::cerr << expr << " @ Line " << __LINE__ << " in " << __FILE__ << "\n"; /* NOLINT(*-macro-paren*) */ \
       abort();                                                                                                \
    } while(0)
 
-// TODO(Botan4) use a constexpr function with std::source_location
+// TODO use a constexpr function with std::source_location
 // NOLINTNEXTLINE(*-macro-usage)
 #define FUZZER_ASSERT_EQUAL(x, y)                                                            \
+   /* NOLINTNEXTLINE(*-avoid-do-while) */                                                    \
    do {                                                                                      \
       if((x) != (y)) {                                                                       \
          FUZZER_WRITE_AND_CRASH(#x << " = " << (x) << " != " << #y << " = " << (y) << "\n"); \
       }                                                                                      \
    } while(0)
 
-// TODO(Botan4) use a constexpr function with std::source_location
+// TODO use a constexpr function with std::source_location
 // NOLINTNEXTLINE(*-macro-usage)
 #define FUZZER_ASSERT_TRUE(e)                                         \
+   /* NOLINTNEXTLINE(*-avoid-do-while) */                             \
    do {                                                               \
       if(!(e)) {                                                      \
          FUZZER_WRITE_AND_CRASH("Expression " << #e << " was false"); \

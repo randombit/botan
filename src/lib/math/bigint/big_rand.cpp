@@ -63,13 +63,13 @@ BigInt BigInt::random_integer(RandomNumberGenerator& rng, const BigInt& min, con
 
    const size_t bits = max.bits();
 
-   BigInt r;
-
-   do {
+   for(;;) {
+      BigInt r;
       r.randomize(rng, bits, false);
-   } while(r < min || r >= max);
-
-   return r;
+      if(r >= min && r < max) {
+         return r;
+      }
+   }
 }
 
 }  // namespace Botan

@@ -93,6 +93,7 @@ void Skein_512::initial_block() {
 void Skein_512::ubi_512(const uint8_t msg[], size_t msg_len) {
    secure_vector<uint64_t> M(8);
 
+   /* NOLINTNEXTLINE(*-avoid-do-while) */
    do {
       const size_t to_proc = std::min<size_t>(msg_len, 64);
       m_T[0] += to_proc;

@@ -165,6 +165,7 @@ class XMSS_PrivateKey_Internal {
             std::atomic<size_t>& index = static_cast<std::atomic<size_t>&>(*recover_global_leaf_index());
             size_t current = 0;
 
+            // NOLINTNEXTLINE(*-avoid-do-while)
             do {
                current = index.load();
                if(current > idx) {

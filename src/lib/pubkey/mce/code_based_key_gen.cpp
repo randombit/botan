@@ -202,6 +202,7 @@ McEliece_PrivateKey generate_mceliece_key(RandomNumberGenerator& rng, size_t ext
    bool success = false;
    std::unique_ptr<binary_matrix> R;
 
+   // NOLINTNEXTLINE(*-avoid-do-while)
    do {
       // create a random irreducible polynomial
       g = polyn_gf2m(t, rng, sp_field);
