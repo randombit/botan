@@ -21,10 +21,10 @@ void fuzz(const std::span<const uint8_t> in) {
    Botan::BigInt x = Botan::BigInt::from_bytes(in.subspan(1, x_len));
    Botan::BigInt y = Botan::BigInt::from_bytes(in.subspan(1 + x_len, in.size() - x_len - 1));
 
-   if(signs & 1) {
+   if((signs & 1) != 0) {
       x.flip_sign();
    }
-   if(signs & 2) {
+   if((signs & 2) != 0) {
       y.flip_sign();
    }
 

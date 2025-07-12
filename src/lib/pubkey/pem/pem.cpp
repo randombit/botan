@@ -91,7 +91,7 @@ secure_vector<uint8_t> decode(DataSource& source, std::string& label) {
       }
       if(static_cast<char>(*b) == PEM_HEADER2[position]) {
          ++position;
-      } else if(position) {
+      } else if(position > 0) {
          throw Decoding_Error("PEM: Malformed PEM header");
       }
 
@@ -112,7 +112,7 @@ secure_vector<uint8_t> decode(DataSource& source, std::string& label) {
       }
       if(static_cast<char>(*b) == PEM_TRAILER[position]) {
          ++position;
-      } else if(position) {
+      } else if(position > 0) {
          throw Decoding_Error("PEM: Malformed PEM trailer");
       }
 

@@ -108,7 +108,7 @@ std::string handshake_mask_to_string(uint32_t mask, char combiner) {
    bool empty = true;
 
    for(auto&& t : types) {
-      if(mask & bitmask_for_handshake_type(t)) {
+      if((mask & bitmask_for_handshake_type(t)) != 0) {
          if(!empty) {
             o << combiner;
          }

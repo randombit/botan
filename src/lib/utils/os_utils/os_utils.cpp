@@ -341,7 +341,7 @@ std::string OS::format_time(time_t time, const std::string& format) {
       throw Encoding_Error("Could not convert time_t to localtime");
    }
 #elif defined(BOTAN_TARGET_OS_HAS_POSIX1)
-   if(!::localtime_r(&time, &tm)) {
+   if(::localtime_r(&time, &tm) == nullptr) {
       throw Encoding_Error("Could not convert time_t to localtime");
    }
 #else

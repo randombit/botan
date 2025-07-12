@@ -21,7 +21,7 @@ uint8_t luhn_checksum(uint64_t cc_number) {
    uint8_t sum = 0;
 
    bool alt = false;
-   while(cc_number) {
+   while(cc_number > 0) {
       uint8_t digit = cc_number % 10;
       if(alt) {
          digit *= 2;
