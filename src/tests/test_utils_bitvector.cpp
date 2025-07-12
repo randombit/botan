@@ -1144,6 +1144,7 @@ std::vector<Test::Result> test_bitvector_iterators(Botan::RandomNumberGenerator&
 
                i = 6;
                auto ritr = bv.end();
+               // NOLINTNEXTLINE(*-avoid-do-while)
                do {
                   --ritr;
                   --i;

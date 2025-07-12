@@ -89,7 +89,6 @@ disabled_not_interested = [
     'bugprone-easily-swappable-parameters',
     'bugprone-implicit-widening-of-multiplication-result',
     'bugprone-suspicious-stringview-data-usage', # triggers on every use of string_view::data ??
-    'cppcoreguidelines-avoid-do-while',
     'cppcoreguidelines-non-private-member-variables-in-classes', # pk split keys
     'cppcoreguidelines-pro-bounds-pointer-arithmetic',
     'cppcoreguidelines-pro-bounds-constant-array-index',

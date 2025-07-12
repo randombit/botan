@@ -54,7 +54,6 @@ Checks: >
     -bugprone-easily-swappable-parameters,
     -bugprone-implicit-widening-of-multiplication-result,
     -bugprone-suspicious-stringview-data-usage,
-    -cppcoreguidelines-avoid-do-while,
     -cppcoreguidelines-non-private-member-variables-in-classes,
     -cppcoreguidelines-pro-bounds-pointer-arithmetic,
     -cppcoreguidelines-pro-bounds-constant-array-index,
