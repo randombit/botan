@@ -73,7 +73,7 @@ void shim_log(const std::string& s) {
          timeval tv{};
 
          ::gettimeofday(&tv, nullptr);
-         // NOLINTNEXTLINE(hicpp-vararg)
+         // NOLINTNEXTLINE(*-vararg)
          static_cast<void>(std::fprintf(g_log,
                                         "%lld.%lu: %s\n",
                                         static_cast<unsigned long long>(tv.tv_sec),

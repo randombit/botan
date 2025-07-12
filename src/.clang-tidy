@@ -59,7 +59,6 @@ Checks: >
     -cppcoreguidelines-pro-bounds-constant-array-index,
     -cppcoreguidelines-pro-type-const-cast,
     -cppcoreguidelines-pro-type-reinterpret-cast,
-    -cppcoreguidelines-pro-type-vararg,
     -hicpp-no-assembler,
     -hicpp-signed-bitwise,
     -misc-no-recursion,

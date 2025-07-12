@@ -94,7 +94,6 @@ disabled_not_interested = [
     'cppcoreguidelines-pro-bounds-constant-array-index',
     'cppcoreguidelines-pro-type-const-cast', # see above
     'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
-    'cppcoreguidelines-pro-type-vararg', # idiocy
     'hicpp-no-assembler',
     'hicpp-signed-bitwise', # impossible to avoid in C/C++, int promotion rules :/
     'misc-no-recursion',

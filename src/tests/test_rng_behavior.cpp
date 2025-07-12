@@ -331,7 +331,7 @@ class Stateful_RNG_Tests : public Test {
             try {
                rng->randomize(child_bytes.data(), child_bytes.size());
             } catch(std::exception& e) {
-               static_cast<void>(fprintf(stderr, "%s", e.what()));  // NOLINT(hicpp-vararg)
+               static_cast<void>(fprintf(stderr, "%s", e.what()));  // NOLINT(*-vararg)
             }
             written = ::write(fd[1], child_bytes.data(), child_bytes.size());
             BOTAN_UNUSED(written);
@@ -342,7 +342,7 @@ class Stateful_RNG_Tests : public Test {
             * We can't call _exit because it makes valgrind think we leaked memory.
             * So instead we execute something that will return 0 for us.
             */
-            ::execl("/bin/true", "true", NULL);  // NOLINT(hicpp-vararg)
+            ::execl("/bin/true", "true", NULL);  // NOLINT(*-vararg)
             ::_exit(0);                          // just in case /bin/true isn't available (sandbox?)
          }
    #endif

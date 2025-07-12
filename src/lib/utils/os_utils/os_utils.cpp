@@ -655,7 +655,7 @@ void OS::free_locked_pages(const std::vector<void*>& pages) {
 void OS::page_named(void* page, size_t size) {
 #if defined(BOTAN_TARGET_OS_HAS_PRCTL) && defined(PR_SET_VMA) && defined(PR_SET_VMA_ANON_NAME)
    static constexpr char name[] = "Botan mlock pool";
-   // NOLINTNEXTLINE(hicpp-vararg)
+   // NOLINTNEXTLINE(*-vararg)
    int r = prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, reinterpret_cast<uintptr_t>(page), size, name);
    BOTAN_UNUSED(r);
 #else
