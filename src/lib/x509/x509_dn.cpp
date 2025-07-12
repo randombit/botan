@@ -428,6 +428,7 @@ std::ostream& operator<<(std::ostream& out, const X509_DN& dn) {
 
 std::istream& operator>>(std::istream& in, X509_DN& dn) {
    in >> std::noskipws;
+   // NOLINTNEXTLINE(*-avoid-do-while)
    do {
       std::string key;
       std::string val;

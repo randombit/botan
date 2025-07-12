@@ -237,6 +237,7 @@ std::vector<uint8_t> Record_Layer::prepare_records(const Record_Type type,
    // even if the plaintext size is zero. This happens only for Application
    // Data types.
    BOTAN_ASSERT_NOMSG(to_process != 0 || protect);
+   // NOLINTNEXTLINE(*-avoid-do-while)
    do {
       const size_t pt_size = std::min<size_t>(to_process, max_plaintext_size);
       const size_t ct_size =

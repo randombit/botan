@@ -38,14 +38,18 @@ BigInt RFC6979_Nonce_Generator::nonce_for(const BigInt& order, const BigInt& m) 
 
    BigInt k;
 
-   do {
+   for(;;) {
       m_hmac_drbg->randomize(m_rng_out);
       k._assign_from_bytes(m_rng_out);
 
       if(shift > 0) {
          k >>= shift;
       }
-   } while(k == 0 || k >= order);
+
+      if(k > 0 && k < order) {
+         break;
+      }
+   }
 
    return k;
 }
