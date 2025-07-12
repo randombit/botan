@@ -491,6 +491,8 @@ SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 aes_schedule_192_smear(SIMD_4x32 x, SIMD_4x32 y
 
 }  // namespace
 
+// NOLINTBEGIN(readability-container-data-pointer)
+
 void AES_128::vperm_key_schedule(const uint8_t keyb[], size_t /*unused*/) {
    m_EK.resize(11 * 4);
    m_DK.resize(11 * 4);
@@ -595,5 +597,7 @@ void AES_256::vperm_key_schedule(const uint8_t keyb[], size_t /*unused*/) {
    aes_schedule_mangle_last(key2, 2).store_le(&m_EK[4 * 14]);
    aes_schedule_mangle_last_dec(key2).store_le(&m_DK[0]);
 }
+
+// NOLINTEND(readability-container-data-pointer)
 
 }  // namespace Botan

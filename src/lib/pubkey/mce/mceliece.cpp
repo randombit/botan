@@ -30,10 +30,10 @@ secure_vector<uint8_t> concat_vectors(const secure_vector<uint8_t>& a,
 
    if(final_bits == 0) {
       const size_t dim_bytes = bit_size_to_byte_size(dimension);
-      copy_mem(&x[0], a.data(), dim_bytes);
+      copy_mem(&x[0], a.data(), dim_bytes);  // NOLINT(*container-data-pointer)
       copy_mem(&x[dim_bytes], b.data(), bit_size_to_byte_size(codimension));
    } else {
-      copy_mem(&x[0], a.data(), (dimension / 8));
+      copy_mem(&x[0], a.data(), (dimension / 8));  // NOLINT(*container-data-pointer)
       size_t l = dimension / 8;
       x[l] = static_cast<uint8_t>(a[l] & ((1 << final_bits) - 1));
 

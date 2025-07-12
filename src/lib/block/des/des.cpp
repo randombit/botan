@@ -12,6 +12,7 @@
 
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+#include <span>
 
 namespace Botan {
 
@@ -93,7 +94,7 @@ const uint32_t SPBOX_CAT_7_MASK = 0x10041040;
 /*
 * DES Key Schedule
 */
-void des_key_schedule(uint32_t round_key[32], const uint8_t key[8]) {
+void des_key_schedule(std::span<uint32_t, 32> round_key, const uint8_t key[8]) {
    static const uint8_t ROT[16] = {1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1};
 
    uint32_t C = ((key[7] & 0x80) << 20) | ((key[6] & 0x80) << 19) | ((key[5] & 0x80) << 18) | ((key[4] & 0x80) << 17) |
@@ -145,7 +146,7 @@ inline uint32_t spbox(uint32_t T0, uint32_t T1) {
 /*
 * DES Encryption
 */
-inline void des_encrypt(uint32_t& Lr, uint32_t& Rr, const uint32_t round_key[32]) {
+inline void des_encrypt(uint32_t& Lr, uint32_t& Rr, std::span<const uint32_t, 32> round_key) {
    uint32_t L = Lr;
    uint32_t R = Rr;
    for(size_t i = 0; i != 16; i += 2) {
@@ -157,7 +158,8 @@ inline void des_encrypt(uint32_t& Lr, uint32_t& Rr, const uint32_t round_key[32]
    Rr = R;
 }
 
-inline void des_encrypt_x2(uint32_t& L0r, uint32_t& R0r, uint32_t& L1r, uint32_t& R1r, const uint32_t round_key[32]) {
+inline void des_encrypt_x2(
+   uint32_t& L0r, uint32_t& R0r, uint32_t& L1r, uint32_t& R1r, std::span<const uint32_t, 32> round_key) {
    uint32_t L0 = L0r;
    uint32_t R0 = R0r;
    uint32_t L1 = L1r;
@@ -180,7 +182,7 @@ inline void des_encrypt_x2(uint32_t& L0r, uint32_t& R0r, uint32_t& L1r, uint32_t
 /*
 * DES Decryption
 */
-inline void des_decrypt(uint32_t& Lr, uint32_t& Rr, const uint32_t round_key[32]) {
+inline void des_decrypt(uint32_t& Lr, uint32_t& Rr, std::span<const uint32_t, 32> round_key) {
    uint32_t L = Lr;
    uint32_t R = Rr;
    for(size_t i = 16; i != 0; i -= 2) {
@@ -191,7 +193,8 @@ inline void des_decrypt(uint32_t& Lr, uint32_t& Rr, const uint32_t round_key[32]
    Rr = R;
 }
 
-inline void des_decrypt_x2(uint32_t& L0r, uint32_t& R0r, uint32_t& L1r, uint32_t& R1r, const uint32_t round_key[32]) {
+inline void des_decrypt_x2(
+   uint32_t& L0r, uint32_t& R0r, uint32_t& L1r, uint32_t& R1r, std::span<const uint32_t, 32> round_key) {
    uint32_t L0 = L0r;
    uint32_t R0 = R0r;
    uint32_t L1 = L1r;
@@ -269,7 +272,7 @@ void DES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
       des_IP(L0, R0);
       des_IP(L1, R1);
 
-      des_encrypt_x2(L0, R0, L1, R1, m_round_key.data());
+      des_encrypt_x2(L0, R0, L1, R1, std::span<const uint32_t, 32>{m_round_key});
 
       des_FP(L0, R0);
       des_FP(L1, R1);
@@ -285,7 +288,7 @@ void DES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
       uint32_t L0 = load_be<uint32_t>(in, 0);
       uint32_t R0 = load_be<uint32_t>(in, 1);
       des_IP(L0, R0);
-      des_encrypt(L0, R0, m_round_key.data());
+      des_encrypt(L0, R0, std::span<const uint32_t, 32>{m_round_key});
       des_FP(L0, R0);
       store_be(out, R0, L0);
 
@@ -301,6 +304,8 @@ void DES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
 void DES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();
 
+   const auto KS = std::span<const uint32_t, 32>{m_round_key};
+
    while(blocks >= 2) {
       uint32_t L0 = load_be<uint32_t>(in, 0);
       uint32_t R0 = load_be<uint32_t>(in, 1);
@@ -310,7 +315,7 @@ void DES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
       des_IP(L0, R0);
       des_IP(L1, R1);
 
-      des_decrypt_x2(L0, R0, L1, R1, m_round_key.data());
+      des_decrypt_x2(L0, R0, L1, R1, KS);
 
       des_FP(L0, R0);
       des_FP(L1, R1);
@@ -326,7 +331,7 @@ void DES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
       uint32_t L0 = load_be<uint32_t>(in, 0);
       uint32_t R0 = load_be<uint32_t>(in, 1);
       des_IP(L0, R0);
-      des_decrypt(L0, R0, m_round_key.data());
+      des_decrypt(L0, R0, KS);
       des_FP(L0, R0);
       store_be(out, R0, L0);
 
@@ -345,7 +350,8 @@ bool DES::has_keying_material() const {
 */
 void DES::key_schedule(std::span<const uint8_t> key) {
    m_round_key.resize(32);
-   des_key_schedule(m_round_key.data(), key.data());
+   const auto KS = std::span<uint32_t, 32>{m_round_key};
+   des_key_schedule(KS, key.data());
 }
 
 void DES::clear() {
@@ -358,6 +364,11 @@ void DES::clear() {
 void TripleDES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();
 
+   const auto KS = std::span<const uint32_t, 3 * 32>{m_round_key};
+   const auto K1 = KS.subspan<0, 32>();
+   const auto K2 = KS.subspan<32, 32>();
+   const auto K3 = KS.subspan<64, 32>();
+
    while(blocks >= 2) {
       uint32_t L0 = load_be<uint32_t>(in, 0);
       uint32_t R0 = load_be<uint32_t>(in, 1);
@@ -367,9 +378,9 @@ void TripleDES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
       des_IP(L0, R0);
       des_IP(L1, R1);
 
-      des_encrypt_x2(L0, R0, L1, R1, &m_round_key[0]);
-      des_decrypt_x2(R0, L0, R1, L1, &m_round_key[32]);
-      des_encrypt_x2(L0, R0, L1, R1, &m_round_key[64]);
+      des_encrypt_x2(L0, R0, L1, R1, K1);
+      des_decrypt_x2(R0, L0, R1, L1, K2);
+      des_encrypt_x2(L0, R0, L1, R1, K3);
 
       des_FP(L0, R0);
       des_FP(L1, R1);
@@ -386,9 +397,9 @@ void TripleDES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
       uint32_t R0 = load_be<uint32_t>(in, 1);
 
       des_IP(L0, R0);
-      des_encrypt(L0, R0, &m_round_key[0]);
-      des_decrypt(R0, L0, &m_round_key[32]);
-      des_encrypt(L0, R0, &m_round_key[64]);
+      des_encrypt(L0, R0, K1);
+      des_decrypt(R0, L0, K2);
+      des_encrypt(L0, R0, K3);
       des_FP(L0, R0);
 
       store_be(out, R0, L0);
@@ -405,6 +416,11 @@ void TripleDES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
 void TripleDES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();
 
+   const auto KS = std::span<const uint32_t, 3 * 32>{m_round_key};
+   const auto K1 = KS.subspan<0, 32>();
+   const auto K2 = KS.subspan<32, 32>();
+   const auto K3 = KS.subspan<64, 32>();
+
    while(blocks >= 2) {
       uint32_t L0 = load_be<uint32_t>(in, 0);
       uint32_t R0 = load_be<uint32_t>(in, 1);
@@ -414,9 +430,9 @@ void TripleDES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
       des_IP(L0, R0);
       des_IP(L1, R1);
 
-      des_decrypt_x2(L0, R0, L1, R1, &m_round_key[64]);
-      des_encrypt_x2(R0, L0, R1, L1, &m_round_key[32]);
-      des_decrypt_x2(L0, R0, L1, R1, &m_round_key[0]);
+      des_decrypt_x2(L0, R0, L1, R1, K3);
+      des_encrypt_x2(R0, L0, R1, L1, K2);
+      des_decrypt_x2(L0, R0, L1, R1, K1);
 
       des_FP(L0, R0);
       des_FP(L1, R1);
@@ -433,9 +449,9 @@ void TripleDES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
       uint32_t R0 = load_be<uint32_t>(in, 1);
 
       des_IP(L0, R0);
-      des_decrypt(L0, R0, &m_round_key[64]);
-      des_encrypt(R0, L0, &m_round_key[32]);
-      des_decrypt(L0, R0, &m_round_key[0]);
+      des_decrypt(L0, R0, K3);
+      des_encrypt(R0, L0, K2);
+      des_decrypt(L0, R0, K1);
       des_FP(L0, R0);
 
       store_be(out, R0, L0);
@@ -455,13 +471,19 @@ bool TripleDES::has_keying_material() const {
 */
 void TripleDES::key_schedule(std::span<const uint8_t> key) {
    m_round_key.resize(3 * 32);
-   des_key_schedule(&m_round_key[0], key.first(8).data());
-   des_key_schedule(&m_round_key[32], key.subspan(8, 8).data());
+
+   auto KS = std::span<uint32_t, 3 * 32>{m_round_key};
+   auto K1 = KS.subspan<0, 32>();
+   auto K2 = KS.subspan<32, 32>();
+   auto K3 = KS.subspan<64, 32>();
+
+   des_key_schedule(K1, key.first(8).data());
+   des_key_schedule(K2, key.subspan(8, 8).data());
 
    if(key.size() == 24) {
-      des_key_schedule(&m_round_key[64], key.last(8).data());
+      des_key_schedule(K3, key.last(8).data());
    } else {
-      copy_mem(&m_round_key[64], &m_round_key[0], 32);
+      copy_mem(&m_round_key[64], K1.data(), 32);
    }
 }
 

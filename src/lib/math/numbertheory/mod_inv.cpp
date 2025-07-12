@@ -47,7 +47,7 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod) {
 
    secure_vector<word> tmp_mem(5 * mod_words);
 
-   word* v_w = &tmp_mem[0];
+   word* v_w = &tmp_mem[0];  // NOLINT(readability-container-data-pointer)
    word* u_w = &tmp_mem[1 * mod_words];
    word* b_w = &tmp_mem[2 * mod_words];
    word* a_w = &tmp_mem[3 * mod_words];

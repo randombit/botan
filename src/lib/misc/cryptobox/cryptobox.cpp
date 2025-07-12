@@ -156,7 +156,7 @@ secure_vector<uint8_t> decrypt_bin(std::string_view input, std::string_view pass
 std::string decrypt(const uint8_t input[], size_t input_len, std::string_view passphrase) {
    const secure_vector<uint8_t> bin = decrypt_bin(input, input_len, passphrase);
 
-   return std::string(cast_uint8_ptr_to_char(&bin[0]), bin.size());
+   return std::string(cast_uint8_ptr_to_char(bin.data()), bin.size());
 }
 
 std::string decrypt(std::string_view input, std::string_view passphrase) {

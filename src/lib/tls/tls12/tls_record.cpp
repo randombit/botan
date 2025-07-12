@@ -115,7 +115,7 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(uint64_t seq, RandomNum
       case Nonce_Format::AEAD_IMPLICIT_4: {
          BOTAN_ASSERT_NOMSG(m_nonce.size() == 4);
          std::vector<uint8_t> nonce(12);
-         copy_mem(&nonce[0], m_nonce.data(), 4);
+         copy_mem(&nonce[0], m_nonce.data(), 4);  // NOLINT(*container-data-pointer)
          store_be(seq, &nonce[nonce_bytes_from_handshake()]);
          return nonce;
       }
@@ -153,7 +153,7 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(const uint8_t record[],
             throw Decoding_Error("Invalid AEAD packet too short to be valid");
          }
          std::vector<uint8_t> nonce(12);
-         copy_mem(&nonce[0], m_nonce.data(), 4);
+         copy_mem(&nonce[0], m_nonce.data(), 4);  // NOLINT(*container-data-pointer)
          copy_mem(&nonce[nonce_bytes_from_handshake()], record, nonce_bytes_from_record());
          return nonce;
       }
@@ -168,7 +168,7 @@ std::vector<uint8_t> Connection_Cipher_State::format_ad(uint64_t msg_sequence,
                                                         uint16_t msg_length) {
    std::vector<uint8_t> ad(13);
 
-   store_be(msg_sequence, &ad[0]);
+   store_be(msg_sequence, &ad[0]);  // NOLINT(*container-data-pointer)
    ad[8] = static_cast<uint8_t>(msg_type);
    ad[9] = version.major_version();
    ad[10] = version.minor_version();

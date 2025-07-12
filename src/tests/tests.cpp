@@ -657,7 +657,7 @@ std::string Test::temp_file_name(const std::string& basename) {
    // POSIX only calls for 6 'X' chars but OpenBSD allows arbitrary amount
    std::string mkstemp_basename = "/tmp/" + basename + ".XXXXXXXXXX";
 
-   int fd = ::mkstemp(&mkstemp_basename[0]);
+   int fd = ::mkstemp(mkstemp_basename.data());
 
    // error
    if(fd < 0) {

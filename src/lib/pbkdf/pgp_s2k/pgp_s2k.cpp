@@ -32,7 +32,7 @@ void pgp_s2k(HashFunction& hash,
 
    secure_vector<uint8_t> input_buf(salt_len + password_size);
    if(salt_len > 0) {
-      copy_mem(&input_buf[0], salt, salt_len);
+      copy_mem(input_buf.data(), salt, salt_len);
    }
    if(password_size > 0) {
       copy_mem(&input_buf[salt_len], cast_char_ptr_to_uint8(password), password_size);

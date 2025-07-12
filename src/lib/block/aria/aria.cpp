@@ -317,7 +317,7 @@ void key_schedule(secure_vector<uint32_t>& ERK, secure_vector<uint32_t>& DRK, st
       ERK.resize(4 * 17);
    }
 
-   ARIA_ROL128<19>(w0, w1, &ERK[0]);
+   ARIA_ROL128<19>(w0, w1, &ERK[0]);  // NOLINT(*-container-data-pointer)
    ARIA_ROL128<19>(w1, w2, &ERK[4]);
    ARIA_ROL128<19>(w2, w3, &ERK[8]);
    ARIA_ROL128<19>(w3, w0, &ERK[12]);
