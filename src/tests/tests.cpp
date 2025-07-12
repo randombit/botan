@@ -80,7 +80,7 @@ void Test::Result::test_note(const std::string& note, const char* extra) {
    if(!note.empty()) {
       std::ostringstream out;
       out << who() << " " << note;
-      if(extra) {
+      if(extra != nullptr) {
          out << ": " << extra;
       }
       m_log.push_back(out.str());
@@ -195,7 +195,7 @@ bool Test::Result::test_eq(const char* producer,
 
    err << who();
 
-   if(producer) {
+   if(producer != nullptr) {
       err << " producer '" << producer << "'";
    }
 
@@ -210,7 +210,9 @@ bool Test::Result::test_eq(const char* producer,
 
    for(size_t i = 0; i != xor_diff.size(); ++i) {
       xor_diff[i] = produced[i] ^ expected[i];
-      bytes_different += (xor_diff[i] > 0);
+      if(xor_diff[i] > 0) {
+         bytes_different++;
+      }
    }
 
    err << "\nProduced: " << Botan::hex_encode(produced, produced_size)
@@ -1235,7 +1237,7 @@ std::vector<Test::Result> Text_Based_Test::run() {
 #endif
             result.set_ns_consumed(Test::timestamp() - start);
 
-            if(result.tests_failed()) {
+            if(result.tests_failed() > 0) {
                std::ostringstream oss;
                oss << "Test # " << test_cnt << " ";
                if(!header.empty()) {

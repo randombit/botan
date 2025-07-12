@@ -49,7 +49,7 @@ class Callbacks : public Botan::TLS::Callbacks {
       std::string get_arg(const std::string& arg_name) const;
       void send(std::span<const uint8_t> buffer);
 
-      int peer_closed() const { return m_peer_closed; }
+      bool peer_closed() const { return m_peer_closed; }
 
       void tls_verify_cert_chain(const std::vector<Botan::X509_Certificate>& cert_chain,
                                  const std::vector<std::optional<Botan::OCSP::Response>>& ocsp,
