@@ -63,6 +63,8 @@ class CCM_Mode : public AEAD_Mode {
 
       secure_vector<uint8_t>& msg_buf() { return m_msg_buf; }
 
+      const secure_vector<uint8_t>& msg_buf() const { return m_msg_buf; }
+
       secure_vector<uint8_t> format_b0(size_t msg_size);
       secure_vector<uint8_t> format_c0();
 
@@ -96,10 +98,14 @@ class CCM_Encryption final : public CCM_Mode {
 
       size_t output_length(size_t input_length) const override { return input_length + tag_size(); }
 
+      size_t bytes_needed_for_finalization(size_t final_input_length) const override {
+         return output_length(msg_buf().size() + final_input_length);
+      }
+
       size_t minimum_final_size() const override { return 0; }
 
    private:
-      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+      size_t finish_msg(std::span<uint8_t> final_block, size_t input_bytes) override;
 };
 
 /**
@@ -122,10 +128,15 @@ class CCM_Decryption final : public CCM_Mode {
          return input_length - tag_size();
       }
 
+      size_t bytes_needed_for_finalization(size_t final_input_length) const override {
+         BOTAN_ARG_CHECK(final_input_length >= tag_size(), "Sufficient input");
+         return msg_buf().size() + final_input_length;
+      }
+
       size_t minimum_final_size() const override { return tag_size(); }
 
    private:
-      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+      size_t finish_msg(std::span<uint8_t> final_block, size_t input_bytes) override;
 };
 
 }  // namespace Botan

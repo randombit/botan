@@ -148,35 +148,30 @@ void TLS_CBC_HMAC_AEAD_Encryption::set_associated_data_n(size_t idx, std::span<c
    }
 }
 
-void TLS_CBC_HMAC_AEAD_Encryption::cbc_encrypt_record(secure_vector<uint8_t>& buffer,
-                                                      size_t offset,
-                                                      size_t padding_length) {
+void TLS_CBC_HMAC_AEAD_Encryption::cbc_encrypt_record(std::span<uint8_t> buffer, size_t padding_length) {
+   const auto BS = block_size();
+
    // We always do short padding:
    BOTAN_ASSERT_NOMSG(padding_length <= 16);
-
-   buffer.resize(buffer.size() + padding_length);
+   BOTAN_ASSERT_NOMSG(buffer.size() >= padding_length);
+   BOTAN_DEBUG_ASSERT(buffer.size() % BS == 0);
 
    const uint8_t padding_val = static_cast<uint8_t>(padding_length - 1);
 
-   CT::poison(&padding_val, 1);
-   CT::poison(&padding_length, 1);
-   CT::poison(buffer.data(), buffer.size());
+   const auto last_block = buffer.last(BS);
 
-   const size_t last_block_starts = buffer.size() - block_size();
-   const size_t padding_starts = buffer.size() - padding_length;
-   for(size_t i = last_block_starts; i != buffer.size(); ++i) {
-      auto add_padding = CT::Mask<uint8_t>(CT::Mask<size_t>::is_gte(i, padding_starts));
-      buffer[i] = add_padding.select(padding_val, buffer[i]);
+   {
+      auto poison = CT::scoped_poison(padding_val, padding_length, last_block);
+      const size_t padding_starts = last_block.size() - padding_length;
+      for(size_t i = 0; i != last_block.size(); ++i) {
+         auto add_padding = CT::Mask<uint8_t>(CT::Mask<size_t>::is_gte(i, padding_starts));
+         last_block[i] = add_padding.select(padding_val, last_block[i]);
+      }
    }
 
-   CT::unpoison(padding_val);
-   CT::unpoison(padding_length);
-   CT::unpoison(buffer.data(), buffer.size());
-
    cbc().start(cbc_state());
-   cbc().process(&buffer[offset], buffer.size() - offset);
-
-   cbc_state().assign(buffer.data() + (buffer.size() - block_size()), buffer.data() + buffer.size());
+   cbc().process(buffer);
+   cbc_state().assign(last_block.begin(), last_block.end());
 }
 
 size_t TLS_CBC_HMAC_AEAD_Encryption::output_length(size_t input_length) const {
@@ -184,43 +179,57 @@ size_t TLS_CBC_HMAC_AEAD_Encryption::output_length(size_t input_length) const {
           (use_encrypt_then_mac() ? tag_size() : 0);
 }
 
-void TLS_CBC_HMAC_AEAD_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
-   update(buffer, offset);
+size_t TLS_CBC_HMAC_AEAD_Encryption::bytes_needed_for_finalization(size_t final_input_length) const {
+   return output_length(msg().size() + final_input_length);
+}
 
-   const size_t msg_size = msg().size();
+size_t TLS_CBC_HMAC_AEAD_Encryption::finish_msg(std::span<uint8_t> buffer, size_t input_bytes) {
+   const auto tag_length = tag_size();
+   const auto BS = block_size();
 
-   const size_t input_size = msg_size + 1 + (use_encrypt_then_mac() ? 0 : tag_size());
-   const size_t enc_size = round_up(input_size, block_size());
-   BOTAN_DEBUG_ASSERT(enc_size % block_size() == 0);
+   const auto& buffered_msg = msg();
+   BOTAN_ASSERT_NOMSG(buffer.size() > buffered_msg.size() + input_bytes);
+   const auto full_msg = buffer.first(buffered_msg.size() + input_bytes);
+
+   // If we had previously buffered data that came in via `process()`, we have
+   // to prepend this buffer to the final bytes passed into `finish()`.
+   if(!buffered_msg.empty()) {
+      copy_mem(full_msg.last(input_bytes), full_msg.first(input_bytes));
+      copy_mem(full_msg.first(buffered_msg.size()), buffered_msg);
+   }
+
+   const size_t input_size = full_msg.size() + 1 + (use_encrypt_then_mac() ? 0 : tag_length);
+   const size_t enc_size = round_up(input_size, BS);
+   BOTAN_DEBUG_ASSERT(enc_size % BS == 0);
 
    const uint8_t padding_val = static_cast<uint8_t>(enc_size - input_size);
    const size_t padding_length = static_cast<size_t>(padding_val) + 1;
 
-   buffer.reserve(offset + msg_size + padding_length + tag_size());
-   buffer.resize(offset + msg_size);
-   if(msg_size > 0) {
-      copy_mem(&buffer[offset], msg().data(), msg_size);
-   }
-
    mac().update(assoc_data());
-
    if(use_encrypt_then_mac()) {
+      BOTAN_ASSERT_NOMSG(buffer.size() == enc_size + tag_length);
+      const auto payload_and_padding = buffer.first(enc_size);
+      const auto tag = buffer.last(tag_length);
+
       if(iv_size() > 0) {
          mac().update(cbc_state());
       }
 
-      cbc_encrypt_record(buffer, offset, padding_length);
-      mac().update(&buffer[offset], enc_size);
-      buffer.resize(buffer.size() + tag_size());
-      mac().final(&buffer[buffer.size() - tag_size()]);
+      cbc_encrypt_record(payload_and_padding, padding_length);
+      mac().update(payload_and_padding);
+      mac().final(tag);
    } else {
-      if(msg_size > 0) {
-         mac().update(&buffer[offset], msg_size);
+      BOTAN_ASSERT_NOMSG(buffer.size() == enc_size);
+      const auto tag = buffer.subspan(full_msg.size(), tag_length);
+
+      if(!full_msg.empty()) {
+         mac().update(full_msg);
       }
-      buffer.resize(buffer.size() + tag_size());
-      mac().final(&buffer[buffer.size() - tag_size()]);
-      cbc_encrypt_record(buffer, offset, padding_length);
+      mac().final(tag);
+      cbc_encrypt_record(buffer, padding_length);
    }
+
+   return buffer.size();
 }
 
 /*
@@ -234,20 +243,20 @@ void TLS_CBC_HMAC_AEAD_Encryption::finish_msg(secure_vector<uint8_t>& buffer, si
 * Returning 0 in the error case should ensure the MAC check will fail.
 * This approach is suggested in section 6.2.3.2 of RFC 5246.
 */
-uint16_t check_tls_cbc_padding(const uint8_t record[], size_t record_len) {
-   if(record_len == 0 || record_len > 0xFFFF) {
+uint16_t check_tls_cbc_padding(std::span<const uint8_t> record) {
+   if(record.empty() || record.size() > 0xFFFF) {
       return 0;
    }
 
-   const uint16_t rec16 = static_cast<uint16_t>(record_len);
+   const uint16_t rec16 = static_cast<uint16_t>(record.size());
 
    /*
    * TLS v1.0 and up require all the padding bytes be the same value
    * and allows up to 255 bytes.
    */
 
-   const uint16_t to_check = std::min<uint16_t>(256, static_cast<uint16_t>(record_len));
-   const uint8_t pad_byte = record[record_len - 1];
+   const uint16_t to_check = std::min<uint16_t>(256, static_cast<uint16_t>(record.size()));
+   const uint8_t pad_byte = record.back();
    const uint16_t pad_bytes = 1 + pad_byte;
 
    auto pad_invalid = CT::Mask<uint16_t>::is_lt(rec16, pad_bytes);
@@ -262,15 +271,19 @@ uint16_t check_tls_cbc_padding(const uint8_t record[], size_t record_len) {
    return pad_invalid.if_not_set_return(pad_bytes);
 }
 
-void TLS_CBC_HMAC_AEAD_Decryption::cbc_decrypt_record(uint8_t record_contents[], size_t record_len) {
-   if(record_len == 0 || record_len % block_size() != 0) {
+void TLS_CBC_HMAC_AEAD_Decryption::cbc_decrypt_record(std::span<uint8_t> record) {
+   const auto BS = block_size();
+
+   if(record.empty() || record.size() % BS != 0) {
       throw Decoding_Error("Received TLS CBC ciphertext with invalid length");
    }
 
-   cbc().start(cbc_state());
-   cbc_state().assign(record_contents + record_len - block_size(), record_contents + record_len);
+   const auto final_block = record.last(BS);
 
-   cbc().process(record_contents, record_len);
+   cbc().start(cbc_state());
+   cbc_state().assign(final_block.begin(), final_block.end());
+
+   cbc().process(record);
 }
 
 size_t TLS_CBC_HMAC_AEAD_Decryption::output_length(size_t /*input_length*/) const {
@@ -278,6 +291,11 @@ size_t TLS_CBC_HMAC_AEAD_Decryption::output_length(size_t /*input_length*/) cons
    * We don't know this because the padding is arbitrary
    */
    return 0;
+}
+
+size_t TLS_CBC_HMAC_AEAD_Decryption::bytes_needed_for_finalization(size_t final_input_length) const {
+   BOTAN_ARG_CHECK(final_input_length >= tag_size(), "Sufficient input");
+   return msg().size() + final_input_length;
 }
 
 /*
@@ -350,21 +368,30 @@ void TLS_CBC_HMAC_AEAD_Decryption::perform_additional_compressions(size_t plen, 
    // we do not need to clear the MAC since the connection is broken anyway
 }
 
-void TLS_CBC_HMAC_AEAD_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
-   update(buffer, offset);
-   buffer.resize(offset);
+size_t TLS_CBC_HMAC_AEAD_Decryption::finish_msg(std::span<uint8_t> buffer, size_t input_bytes) {
+   const auto tag_length = tag_size();
+   const auto BS = block_size();
 
-   const size_t record_len = msg().size();
-   uint8_t* record_contents = msg().data();
+   const auto& buffered_msg = msg();
+   BOTAN_ASSERT_NOMSG(buffer.size() == buffered_msg.size() + input_bytes);
+   const auto record = buffer.first(buffered_msg.size() + input_bytes);
+
+   // If we had previously buffered data that came in via `process()`, we have
+   // to prepend this buffer to the final bytes passed into `finish()`.
+   if(!buffered_msg.empty()) {
+      copy_mem(record.last(input_bytes), record.first(input_bytes));
+      copy_mem(record.first(buffered_msg.size()), buffered_msg);
+   }
 
    // This early exit does not leak info because all the values compared are public
-   if(record_len < tag_size() || (record_len - (use_encrypt_then_mac() ? tag_size() : 0)) % block_size() != 0) {
+   if(record.size() < tag_length || (record.size() - (use_encrypt_then_mac() ? tag_length : 0)) % BS != 0) {
       throw TLS_Exception(Alert::BadRecordMac, "Message authentication failure");
    }
 
    if(use_encrypt_then_mac()) {
-      const size_t enc_size = record_len - tag_size();
-      const size_t enc_iv_size = enc_size + iv_size();
+      const auto payload_and_padding = record.first(record.size() - tag_length);
+      const auto tag = record.last(tag_length);
+      const size_t enc_iv_size = payload_and_padding.size() + iv_size();
 
       BOTAN_ASSERT_NOMSG(enc_iv_size <= 0xFFFF);
 
@@ -372,40 +399,35 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish_msg(secure_vector<uint8_t>& buffer, si
       if(iv_size() > 0) {
          mac().update(cbc_state());
       }
-      mac().update(record_contents, enc_size);
+      mac().update(payload_and_padding);
 
-      std::vector<uint8_t> mac_buf(tag_size());
-      mac().final(mac_buf.data());
+      const auto mac_buf = mac().final<std::vector<uint8_t>>();
+      BOTAN_DEBUG_ASSERT(mac_buf.size() == tag_length);
 
-      const size_t mac_offset = enc_size;
-
-      const auto mac_ok = CT::is_equal(&record_contents[mac_offset], mac_buf.data(), tag_size());
+      const auto mac_ok = CT::is_equal(tag.data(), mac_buf.data(), tag_length);
 
       if(!mac_ok.as_bool()) {
          throw TLS_Exception(Alert::BadRecordMac, "Message authentication failure");
       }
 
-      cbc_decrypt_record(record_contents, enc_size);
+      cbc_decrypt_record(payload_and_padding);
 
       // 0 if padding was invalid, otherwise 1 + padding_bytes
-      const uint16_t pad_size = check_tls_cbc_padding(record_contents, enc_size);
+      const uint16_t pad_size = check_tls_cbc_padding(payload_and_padding);
 
       // No oracle here, whoever sent us this had the key since MAC check passed
       if(pad_size == 0) {
          throw TLS_Exception(Alert::BadRecordMac, "Message authentication failure");
       }
 
-      const uint8_t* plaintext_block = &record_contents[0];
-      const size_t plaintext_length = enc_size - pad_size;
-
-      buffer.insert(buffer.end(), plaintext_block, plaintext_block + plaintext_length);
+      BOTAN_DEBUG_ASSERT(payload_and_padding.size() >= pad_size);
+      return payload_and_padding.size() - pad_size;
    } else {
-      cbc_decrypt_record(record_contents, record_len);
-
-      CT::poison(record_contents, record_len);
+      cbc_decrypt_record(record);
+      CT::poison(record);
 
       // 0 if padding was invalid, otherwise 1 + padding_bytes
-      uint16_t pad_size = check_tls_cbc_padding(record_contents, record_len);
+      uint16_t pad_size = check_tls_cbc_padding(record);
 
       /*
       This mask is zero if there is not enough room in the packet to get a valid MAC.
@@ -417,39 +439,30 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish_msg(secure_vector<uint8_t>& buffer, si
 
       // We know the cast cannot overflow as pad_size <= 256 && tag_size <= 32
       const auto size_ok_mask =
-         CT::Mask<uint16_t>::is_lte(static_cast<uint16_t>(tag_size() + pad_size), static_cast<uint16_t>(record_len));
-
-      pad_size = size_ok_mask.if_set_return(pad_size);
-
-      CT::unpoison(record_contents, record_len);
+         CT::Mask<uint16_t>::is_lte(static_cast<uint16_t>(tag_length + pad_size), static_cast<uint16_t>(record.size()));
 
       /*
       This is unpoisoned sooner than it should. The pad_size leaks to plaintext_length and
       then to the timing channel in the MAC computation described in the Lucky 13 paper.
       */
-      CT::unpoison(pad_size);
+      pad_size = CT::driveby_unpoison(size_ok_mask.if_set_return(pad_size));
+      CT::unpoison(record);
 
-      const uint8_t* plaintext_block = &record_contents[0];
-      const uint16_t plaintext_length = static_cast<uint16_t>(record_len - tag_size() - pad_size);
+      BOTAN_DEBUG_ASSERT(record.size() >= tag_length + pad_size);
+      const auto payload = record.first(record.size() - tag_length - pad_size);
+      const auto tag = record.subspan(payload.size(), tag_length);
 
-      mac().update(assoc_data_with_len(plaintext_length));
-      mac().update(plaintext_block, plaintext_length);
+      mac().update(assoc_data_with_len(static_cast<uint16_t>(payload.size())));
+      mac().update(payload);
 
-      std::vector<uint8_t> mac_buf(tag_size());
-      mac().final(mac_buf.data());
+      const auto mac_buf = mac().final<std::vector<uint8_t>>();
+      const auto mac_ok = CT::is_equal(tag.data(), mac_buf.data(), tag_length);
 
-      const size_t mac_offset = record_len - (tag_size() + pad_size);
+      const auto ok_mask =
+         CT::driveby_unpoison(size_ok_mask & CT::Mask<uint16_t>::expand(mac_ok) & CT::Mask<uint16_t>::expand(pad_size));
 
-      const auto mac_ok = CT::is_equal(&record_contents[mac_offset], mac_buf.data(), tag_size());
-
-      const auto ok_mask = size_ok_mask & CT::Mask<uint16_t>::expand(mac_ok) & CT::Mask<uint16_t>::expand(pad_size);
-
-      CT::unpoison(ok_mask);
-
-      if(ok_mask.as_bool()) {
-         buffer.insert(buffer.end(), plaintext_block, plaintext_block + plaintext_length);
-      } else {
-         perform_additional_compressions(record_len, pad_size);
+      if(!ok_mask.as_bool()) {
+         perform_additional_compressions(record.size(), pad_size);
 
          /*
          * In DTLS case we have to finish computing the MAC since we require the
@@ -457,11 +470,15 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish_msg(secure_vector<uint8_t>& buffer, si
          * be exploitable in a Lucky13 variant.
          */
          if(is_datagram_protocol()) {
-            mac().final(mac_buf);
+            std::ignore = mac().final();
          }
          throw TLS_Exception(Alert::BadRecordMac, "Message authentication failure");
       }
+
+      return payload.size();
    }
+
+   BOTAN_ASSERT_UNREACHABLE();
 }
 
 }  // namespace Botan::TLS
