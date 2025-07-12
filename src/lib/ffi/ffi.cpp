@@ -93,7 +93,7 @@ int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc) {
 #if defined(BOTAN_HAS_OS_UTILS)
    std::string val;
    if(Botan::OS::read_env_variable(val, "BOTAN_FFI_PRINT_EXCEPTIONS") == true && !val.empty()) {
-      // NOLINTNEXTLINE(hicpp-vararg)
+      // NOLINTNEXTLINE(*-vararg)
       static_cast<void>(std::fprintf(stderr, "in %s exception '%s' returning %d\n", func_name, exn, rc));
    }
 #endif
