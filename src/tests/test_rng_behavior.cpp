@@ -308,7 +308,7 @@ class Stateful_RNG_Tests : public Test {
             }
 
             parent_bytes = rng->random_vec(16);
-            got = ::read(fd[0], &child_bytes[0], child_bytes.size());
+            got = ::read(fd[0], child_bytes.data(), child_bytes.size());
 
             if(got > 0) {
                result.test_eq("expected bytes from child", got, child_bytes.size());
@@ -324,16 +324,16 @@ class Stateful_RNG_Tests : public Test {
          } else {
             // child process, send randomize_count and first output sequence back to parent
             ::close(fd[0]);  // close read end in child
-            rng->randomize(&child_bytes[0], child_bytes.size());
+            rng->randomize(child_bytes.data(), child_bytes.size());
             count = counting_rng.randomize_count();
             ssize_t written = ::write(fd[1], &count, sizeof(count));
             BOTAN_UNUSED(written);
             try {
-               rng->randomize(&child_bytes[0], child_bytes.size());
+               rng->randomize(child_bytes.data(), child_bytes.size());
             } catch(std::exception& e) {
                static_cast<void>(fprintf(stderr, "%s", e.what()));  // NOLINT(hicpp-vararg)
             }
-            written = ::write(fd[1], &child_bytes[0], child_bytes.size());
+            written = ::write(fd[1], child_bytes.data(), child_bytes.size());
             BOTAN_UNUSED(written);
             ::close(fd[1]);  // close write end in child
 

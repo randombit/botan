@@ -159,7 +159,7 @@ polyn_gf2m::polyn_gf2m(int degree,
 }
 
 void polyn_gf2m::set_to_zero() {
-   clear_mem(&this->m_coeff[0], this->m_coeff.size());
+   clear_mem(this->m_coeff.data(), this->m_coeff.size());
    this->m_deg = -1;
 }
 
@@ -189,7 +189,7 @@ gf2m eval_aux(const gf2m* /*restrict*/ coeff, gf2m a, int d, const std::shared_p
 }  // namespace
 
 gf2m polyn_gf2m::eval(gf2m a) {
-   return eval_aux(&this->m_coeff[0], a, this->m_deg, this->m_sp_field);
+   return eval_aux(this->m_coeff.data(), a, this->m_deg, this->m_sp_field);
 }
 
 // p will contain it's remainder modulo g
@@ -240,8 +240,8 @@ std::vector<polyn_gf2m> polyn_gf2m::sqmod_init(const polyn_gf2m& g) {
    }
 
    for(; i < d; ++i) {
-      clear_mem(&sq[i].m_coeff[0], 2);
-      copy_mem(&sq[i].m_coeff[0] + 2, &sq[i - 1].m_coeff[0], d);
+      clear_mem(sq[i].m_coeff.data(), 2);
+      copy_mem(sq[i].m_coeff.data() + 2, sq[i - 1].m_coeff.data(), d);
       sq[i].set_degree(sq[i - 1].get_degree() + 2);
       polyn_gf2m::remainder(sq[i], g);
    }

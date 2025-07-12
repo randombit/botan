@@ -78,7 +78,7 @@ class Entropy final : public Command {
             if(sample.size() <= truncate_sample) {
                output() << Botan::hex_encode(sample) << "\n";
             } else if(truncate_sample > 0) {
-               output() << Botan::hex_encode(&sample[0], truncate_sample) << "...\n";
+               output() << Botan::hex_encode(sample.data(), truncate_sample) << "...\n";
             }
          }
       }

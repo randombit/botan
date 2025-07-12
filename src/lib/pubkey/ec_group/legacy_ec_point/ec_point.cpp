@@ -615,7 +615,7 @@ secure_vector<uint8_t> EC_Point::xy_bytes() const {
    const auto& group = m_curve.group();
    const size_t p_bytes = group.p_bytes();
    secure_vector<uint8_t> b(2 * p_bytes);
-   BigInt::encode_1363(&b[0], p_bytes, this->get_affine_x());
+   BigInt::encode_1363(&b[0], p_bytes, this->get_affine_x());  // NOLINT(*container-data-pointer)
    BigInt::encode_1363(&b[p_bytes], p_bytes, this->get_affine_y());
    return b;
 }

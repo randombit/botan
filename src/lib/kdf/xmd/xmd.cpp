@@ -60,7 +60,7 @@ void expand_message_xmd(std::string_view hash_fn,
    for(;;) {
       const size_t produced = std::min(output.size(), hash_output_size);
 
-      copy_mem(&output[0], b_i.data(), produced);
+      copy_mem(output.data(), b_i.data(), produced);
       output = output.subspan(produced);
 
       if(output.empty()) {

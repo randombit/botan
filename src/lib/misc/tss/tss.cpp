@@ -156,7 +156,7 @@ std::vector<RTSS_Share> RTSS_Share::split(uint8_t M,
    const uint16_t share_len = static_cast<uint16_t>(secret.size() + 1);
 
    secure_vector<uint8_t> share_header(RTSS_HEADER_SIZE);
-   copy_mem(&share_header[0], identifier.data(), identifier.size());
+   copy_mem(share_header.data(), identifier.data(), identifier.size());
    share_header[16] = hash_id;
    share_header[17] = M;
    share_header[18] = get_byte<0>(share_len);
@@ -216,7 +216,7 @@ secure_vector<uint8_t> RTSS_Share::reconstruct(const std::vector<RTSS_Share>& sh
             throw Decoding_Error("Different sized RTSS shares detected");
          }
 
-         if(!CT::is_equal(&shares[0].m_contents[0], &shares[i].m_contents[0], RTSS_HEADER_SIZE).as_bool()) {
+         if(!CT::is_equal(shares[0].m_contents.data(), shares[i].m_contents.data(), RTSS_HEADER_SIZE).as_bool()) {
             throw Decoding_Error("Different RTSS headers detected");
          }
       }

@@ -60,7 +60,7 @@ void BOTAN_FN_ISA_SHANI SHA_1::sha1_compress_x86(digest_type& digest,
                                                  size_t blocks) {
    const uint8_t* input = input_span.data();
 
-   SIMD_4x32 ABCD = rev_words(SIMD_4x32::load_le(&digest[0]));
+   SIMD_4x32 ABCD = rev_words(SIMD_4x32::load_le(&digest[0]));  // NOLINT(*-container-data-pointer)
    SIMD_4x32 E0 = SIMD_4x32(0, 0, 0, digest[4]);
 
    while(blocks > 0) {
@@ -124,7 +124,7 @@ void BOTAN_FN_ISA_SHANI SHA_1::sha1_compress_x86(digest_type& digest,
       blocks--;
    }
 
-   rev_words(ABCD).store_le(&digest[0]);
+   rev_words(ABCD).store_le(&digest[0]);  // NOLINT(*-container-data-pointer)
    digest[4] = _mm_extract_epi32(E0.raw(), 3);
 }
 

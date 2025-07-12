@@ -84,7 +84,7 @@ std::string CTR_BE::name() const {
 void CTR_BE::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) {
    assert_key_material_set();
 
-   const uint8_t* pad_bits = &m_pad[0];
+   const uint8_t* pad_bits = m_pad.data();
    const size_t pad_size = m_pad.size();
 
    if(m_pad_pos > 0) {
@@ -141,7 +141,7 @@ void CTR_BE::generate_keystream(uint8_t out[], size_t length) {
       m_pad_pos = 0;
    }
 
-   copy_mem(out, &m_pad[0], length);
+   copy_mem(out, m_pad.data(), length);
    m_pad_pos += length;
    BOTAN_ASSERT_NOMSG(m_pad_pos < m_pad.size());
 }
@@ -153,7 +153,7 @@ void CTR_BE::set_iv_bytes(const uint8_t iv[], size_t iv_len) {
 
    m_iv.resize(m_block_size);
    zeroise(m_iv);
-   copy_mem(&m_iv[0], iv, iv_len);
+   copy_mem(m_iv.data(), iv, iv_len);
 
    seek(0);
 }
@@ -212,7 +212,7 @@ void CTR_BE::seek(uint64_t offset) {
 
    zeroise(m_counter);
    BOTAN_ASSERT_NOMSG(m_counter.size() >= m_iv.size());
-   copy_mem(&m_counter[0], &m_iv[0], m_iv.size());
+   copy_mem(m_counter.data(), m_iv.data(), m_iv.size());
 
    const size_t BS = m_block_size;
 
@@ -224,12 +224,12 @@ void CTR_BE::seek(uint64_t offset) {
       if(m_ctr_blocks >= 4 && is_power_of_2(m_ctr_blocks)) {
          size_t written = 1;
          while(written < m_ctr_blocks) {
-            copy_mem(&m_counter[written * BS], &m_counter[0], BS * written);
+            copy_mem(&m_counter[written * BS], &m_counter[0], BS * written);  // NOLINT(*container-data-pointer)
             written *= 2;
          }
       } else {
          for(size_t i = 1; i != m_ctr_blocks; ++i) {
-            copy_mem(&m_counter[i * BS], &m_counter[0], BS - 4);
+            copy_mem(&m_counter[i * BS], &m_counter[0], BS - 4);  // NOLINT(*container-data-pointer)
          }
       }
 

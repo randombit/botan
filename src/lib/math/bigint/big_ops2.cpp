@@ -71,6 +71,8 @@ BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>&
       ws.resize(3 * mod_sw);
    }
 
+   // NOLINTBEGIN(readability-container-data-pointer)
+
    word borrow = bigint_sub3(&ws[0], mod._data(), mod_sw, s._data(), mod_sw);
    BOTAN_DEBUG_ASSERT(borrow == 0);
    BOTAN_UNUSED(borrow);
@@ -83,6 +85,8 @@ BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>&
 
    CT::conditional_copy_mem(borrow, &ws[0], &ws[mod_sw * 2], &ws[mod_sw], mod_sw);
    set_words(&ws[0], mod_sw);
+
+   // NOLINTEND(readability-container-data-pointer)
 
    return (*this);
 }
