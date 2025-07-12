@@ -339,10 +339,8 @@ void Blowfish::salted_set_key(
    const uint8_t key[], size_t length, const uint8_t salt[], size_t salt_length, size_t workfactor, bool salt_first) {
    BOTAN_ARG_CHECK(salt_length > 0 && salt_length % 4 == 0, "Invalid salt length for Blowfish salted key schedule");
 
-   if(length > 72) {
-      // Truncate longer passwords to the 72 char bcrypt limit
-      length = 72;
-   }
+   // Truncate longer passwords to the 72 char bcrypt limit
+   length = std::min<size_t>(length, 72);
 
    m_P.resize(18);
    copy_mem(m_P.data(), P_INIT, 18);
