@@ -453,7 +453,7 @@ std::vector<uint8_t> Session::encrypt(const SymmetricKey& key, RandomNumberGener
    std::vector<uint8_t> buf;
    buf.reserve(TLS_SESSION_CRYPT_OVERHEAD + bits.size());
    buf.resize(TLS_SESSION_CRYPT_MAGIC_LEN);
-   store_be(TLS_SESSION_CRYPT_MAGIC, &buf[0]);
+   store_be(TLS_SESSION_CRYPT_MAGIC, &buf[0]);  // NOLINT(*container-data-pointer)
    buf += key_name;
    buf += key_seed;
    buf += aead_nonce;

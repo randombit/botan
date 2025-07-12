@@ -274,10 +274,10 @@ class FFI_Utils_Test final : public FFI_Test {
          std::vector<uint8_t> outbuf;
 
          outstr.resize(2 * bin.size());
-         TEST_FFI_OK(botan_hex_encode, (bin.data(), bin.size(), &outstr[0], 0));
+         TEST_FFI_OK(botan_hex_encode, (bin.data(), bin.size(), outstr.data(), 0));
          result.test_eq("uppercase hex", outstr, "AADE01");
 
-         TEST_FFI_OK(botan_hex_encode, (bin.data(), bin.size(), &outstr[0], BOTAN_FFI_HEX_LOWER_CASE));
+         TEST_FFI_OK(botan_hex_encode, (bin.data(), bin.size(), outstr.data(), BOTAN_FFI_HEX_LOWER_CASE));
          result.test_eq("lowercase hex", outstr, "aade01");
       }
 };
@@ -743,7 +743,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
                BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_time_starts, (cert, nullptr, &date_len));
 
             std::string date(date_len - 1, '0');
-            TEST_FFI_OK(botan_x509_cert_get_time_starts, (cert, &date[0], &date_len));
+            TEST_FFI_OK(botan_x509_cert_get_time_starts, (cert, date.data(), &date_len));
             result.test_eq("cert valid from", date, "200904000000Z");
 
             date_len = 0;
@@ -751,7 +751,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
                BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_time_expires, (cert, nullptr, &date_len));
 
             date.resize(date_len - 1);
-            TEST_FFI_OK(botan_x509_cert_get_time_expires, (cert, &date[0], &date_len));
+            TEST_FFI_OK(botan_x509_cert_get_time_expires, (cert, date.data(), &date_len));
             result.test_eq("cert valid until", date, "400917160000Z");
 
             uint64_t not_before = 0;
@@ -841,7 +841,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
                BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_to_string, (cert, nullptr, &printable_len));
 
             std::string printable(printable_len - 1, '0');
-            TEST_FFI_OK(botan_x509_cert_to_string, (cert, &printable[0], &printable_len));
+            TEST_FFI_OK(botan_x509_cert_to_string, (cert, printable.data(), &printable_len));
 
             TEST_FFI_RC(0, botan_x509_cert_allowed_usage, (cert, KEY_CERT_SIGN));
             TEST_FFI_RC(0, botan_x509_cert_allowed_usage, (cert, CRL_SIGN));
@@ -1891,7 +1891,7 @@ class FFI_KDF_Test final : public FFI_Test {
          outstr.resize(out_len);
 
          int rc =
-            botan_bcrypt_generate(reinterpret_cast<uint8_t*>(&outstr[0]), &out_len, passphrase.c_str(), rng, 4, 0);
+            botan_bcrypt_generate(reinterpret_cast<uint8_t*>(outstr.data()), &out_len, passphrase.c_str(), rng, 4, 0);
 
          if(rc == 0) {
             result.test_eq("bcrypt output size", out_len, 61);
@@ -2765,7 +2765,7 @@ class FFI_ECDSA_Test final : public FFI_Test {
          std::array<char, 32> namebuf{};
          size_t name_len = namebuf.size();
 
-         TEST_FFI_OK(botan_pubkey_algo_name, (pub, &namebuf[0], &name_len));
+         TEST_FFI_OK(botan_pubkey_algo_name, (pub, namebuf.data(), &name_len));
          result.test_eq("Algo name is expected", namebuf.data(), "ECDSA");
 
          std::vector<uint8_t> message(1280), signature;
@@ -2872,7 +2872,7 @@ class FFI_SM2_Sig_Test final : public FFI_Test {
          std::array<char, 32> namebuf{};
          size_t name_len = namebuf.size();
 
-         TEST_FFI_OK(botan_pubkey_algo_name, (pub, &namebuf[0], &name_len));
+         TEST_FFI_OK(botan_pubkey_algo_name, (pub, namebuf.data(), &name_len));
          result.test_eq("Algo name is expected", namebuf.data(), "SM2");
 
          std::vector<uint8_t> message(1280), signature;
@@ -2971,7 +2971,7 @@ class FFI_SM2_Enc_Test final : public FFI_Test {
          std::array<char, 32> namebuf{};
          size_t name_len = namebuf.size();
 
-         TEST_FFI_OK(botan_pubkey_algo_name, (pub, &namebuf[0], &name_len));
+         TEST_FFI_OK(botan_pubkey_algo_name, (pub, namebuf.data(), &name_len));
          result.test_eq("Algo name is expected", namebuf.data(), "SM2");
 
          std::vector<uint8_t> message(32);
@@ -4496,7 +4496,7 @@ class FFI_EC_Group_Test final : public FFI_Test {
             std::array<char, 32> namebuf{};
             size_t name_len = namebuf.size();
 
-            TEST_FFI_OK(botan_privkey_algo_name, (priv, &namebuf[0], &name_len));
+            TEST_FFI_OK(botan_privkey_algo_name, (priv, namebuf.data(), &name_len));
             result.test_eq("Key name is expected value", namebuf.data(), "ECDSA");
 
             botan_privkey_destroy(priv);

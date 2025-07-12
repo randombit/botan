@@ -73,7 +73,6 @@ Checks: >
     -modernize-use-using,
     -portability-simd-intrinsics,
     -readability-avoid-return-with-void-value,
-    -readability-container-data-pointer,
     -readability-function-cognitive-complexity,
     -readability-identifier-length,
     -readability-isolate-declaration,

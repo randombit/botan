@@ -83,14 +83,14 @@ class PerfTest_BlockCipher final : public PerfTest {
 
             encrypt_timer->run_until_elapsed(runtime, [&]() {
                for(size_t i = 0; i != mult; ++i) {
-                  cipher.encrypt_n(&buffer[0], &buffer[0], blocks);
+                  cipher.encrypt_n(buffer.data(), buffer.data(), blocks);
                }
             });
             config.record_result(*encrypt_timer);
 
             decrypt_timer->run_until_elapsed(runtime, [&]() {
                for(size_t i = 0; i != mult; ++i) {
-                  cipher.decrypt_n(&buffer[0], &buffer[0], blocks);
+                  cipher.decrypt_n(buffer.data(), buffer.data(), blocks);
                }
             });
             config.record_result(*decrypt_timer);

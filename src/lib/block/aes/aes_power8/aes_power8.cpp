@@ -20,6 +20,8 @@
 
 namespace Botan {
 
+// NOLINTBEGIN(readability-container-data-pointer)
+
 typedef __vector unsigned long long Altivec64x2;
 typedef __vector unsigned int Altivec32x4;
 typedef __vector unsigned char Altivec8x16;
@@ -530,5 +532,7 @@ BOTAN_FN_ISA_AES void AES_256::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[
       in += 16;
    }
 }
+
+// NOLINTEND(readability-container-data-pointer)
 
 }  // namespace Botan

@@ -61,7 +61,7 @@ void BOTAN_FN_ISA_SHANI BOTAN_SCRUB_STACK_AFTER_RETURN SHA_256::compress_digest_
 
    const uint8_t* input = input_span.data();
 
-   SIMD_4x32 S0 = SIMD_4x32::load_le(&digest[0]);
+   SIMD_4x32 S0 = SIMD_4x32::load_le(&digest[0]);  // NOLINT(*container-data-pointer)
    SIMD_4x32 S1 = SIMD_4x32::load_le(&digest[4]);
 
    sha256_permute_state(S0, S1);
@@ -107,7 +107,7 @@ void BOTAN_FN_ISA_SHANI BOTAN_SCRUB_STACK_AFTER_RETURN SHA_256::compress_digest_
 
    sha256_permute_state(S1, S0);
 
-   S0.store_le(&digest[0]);
+   S0.store_le(&digest[0]);  // NOLINT(*container-data-pointer)
    S1.store_le(&digest[4]);
 }
 

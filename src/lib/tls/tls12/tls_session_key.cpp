@@ -72,8 +72,10 @@ Session_Keys::Session_Keys(const Handshake_State* state,
    m_c_aead.resize(mac_keylen + cipher_keylen);
    m_s_aead.resize(mac_keylen + cipher_keylen);
 
+   // NOLINTBEGIN(readability-container-data-pointer)
    copy_mem(&m_c_aead[0], key_data, mac_keylen);
    copy_mem(&m_s_aead[0], key_data + mac_keylen, mac_keylen);
+   // NOLINTEND(readability-container-data-pointer)
 
    // Key is not used for NULL suites
    if(cipher_keylen > 0) {

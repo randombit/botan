@@ -209,16 +209,16 @@ class OCB_Wide_Long_KAT_Tests final : public Text_Based_Test {
                S[j] = static_cast<uint8_t>(0x50 + j);
             }
 
-            Botan::store_be(static_cast<uint16_t>(3 * i + 1), &N[0]);
+            Botan::store_be(static_cast<uint16_t>(3 * i + 1), N.data());
 
             ocb_encrypt(result, C, enc, N, S, S);
-            Botan::store_be(static_cast<uint16_t>(3 * i + 2), &N[0]);
+            Botan::store_be(static_cast<uint16_t>(3 * i + 2), N.data());
             ocb_encrypt(result, C, enc, N, S, empty);
-            Botan::store_be(static_cast<uint16_t>(3 * i + 3), &N[0]);
+            Botan::store_be(static_cast<uint16_t>(3 * i + 3), N.data());
             ocb_encrypt(result, C, enc, N, empty, S);
          }
 
-         Botan::store_be(static_cast<uint16_t>(385), &N[0]);
+         Botan::store_be(static_cast<uint16_t>(385), N.data());
          std::vector<uint8_t> final_result;
          ocb_encrypt(result, final_result, enc, N, empty, C);
 

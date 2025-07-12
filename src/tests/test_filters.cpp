@@ -304,7 +304,7 @@ class Filter_Tests final : public Test {
 
          result.test_eq("Bytes read", pipe.get_bytes_read(0), 0);
          result.test_eq("More to read", pipe.end_of_data(), false);
-         result.test_eq("Expected read count", pipe.read(&out[0], 5), 5);
+         result.test_eq("Expected read count", pipe.read(out.data(), 5), 5);
          result.test_eq("Bytes read", pipe.get_bytes_read(0), 5);
          result.test_eq("Peek read", pipe.peek(last16.data(), 18, 11), 16);
          result.test_eq("Expected read count", pipe.read(&out[5], 17), 17);
@@ -312,7 +312,7 @@ class Filter_Tests final : public Test {
          result.test_eq("Remaining", pipe.remaining(), 10);
          result.test_eq("Remaining", pipe.remaining(), 10);
          result.test_eq("Expected read count", pipe.read(&out[22], 12), 10);
-         result.test_eq("Expected read count", pipe.read(&out[0], 1), 0);  // no more output
+         result.test_eq("Expected read count", pipe.read(out.data(), 1), 0);  // no more output
          result.test_eq("Bytes read", pipe.get_bytes_read(0), 32);
          result.test_eq("No more to read", pipe.end_of_data(), true);
 
