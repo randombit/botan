@@ -20,5 +20,6 @@ Contents
    abi
    packaging
    security
+   threat_model
    side_channels
    dev_ref/contents
