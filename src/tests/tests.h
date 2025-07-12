@@ -513,7 +513,7 @@ class Test {
                   ~ThrowExpectations() { BOTAN_ASSERT_NOMSG(m_consumed); }
 
                   ThrowExpectations& expect_success() {
-                     BOTAN_ASSERT_NOMSG(!m_expected_message && !m_expected_exception_type);
+                     BOTAN_ASSERT_NOMSG(!m_expected_message && !m_expected_exception_check_fn);
                      m_expect_success = true;
                      return *this;
                   }
@@ -527,7 +527,18 @@ class Test {
                   template <typename ExT>
                   ThrowExpectations& expect_exception_type() {
                      BOTAN_ASSERT_NOMSG(!m_expect_success);
-                     m_expected_exception_type = typeid(ExT);
+                     m_expected_exception_check_fn = [](const std::exception_ptr& e) {
+                        try {
+                           if(e) {
+                              std::rethrow_exception(e);
+                           }
+                        } catch(const ExT&) {
+                           return true;
+                        } catch(...) {
+                           return false;
+                        }
+                        return false;
+                     };
                      return *this;
                   }
 
@@ -536,7 +547,7 @@ class Test {
                private:
                   std::function<void()> m_fn;
                   std::optional<std::string> m_expected_message;
-                  std::optional<std::type_index> m_expected_exception_type;
+                  std::function<bool(std::exception_ptr)> m_expected_exception_check_fn;
                   bool m_expect_success = false;
                   bool m_consumed = false;
             };

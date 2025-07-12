@@ -115,8 +115,8 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
 
          result.test_eq("key not set", mode.has_keying_material(), false);
 
-         result.test_throws("Unkeyed object throws", [&]() {
-            Botan::secure_vector<uint8_t> bad(update_granularity);
+         result.test_throws<Botan::Invalid_State>("Unkeyed object throws", [&]() {
+            Botan::secure_vector<uint8_t> bad(min_final_bytes);
             mode.finish(bad);
          });
 
@@ -138,26 +138,31 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
          // Test that disallowed nonce sizes result in an exception
          static constexpr size_t large_nonce_size = 65000;
          result.test_eq("Large nonce not allowed", mode.valid_nonce_length(large_nonce_size), false);
-         result.test_throws("Large nonce causes exception", [&mode]() { mode.start(nullptr, large_nonce_size); });
+         result.test_throws<Botan::Invalid_Argument>("Large nonce causes exception",
+                                                     [&mode]() { mode.start(nullptr, large_nonce_size); });
 
          Botan::secure_vector<uint8_t> garbage = rng.random_vec(update_granularity);
+         Botan::secure_vector<uint8_t> ultimate_garbage = rng.random_vec(min_final_bytes);
 
          // Test to make sure reset() resets what we need it to
-         result.test_throws("Cannot process data (update) until key is set", [&]() { mode.update(garbage); });
-         result.test_throws("Cannot process data (finish) until key is set", [&]() { mode.finish(garbage); });
+         result.test_throws<Botan::Invalid_State>("Cannot process data (update) until key is set",
+                                                  [&]() { mode.update(garbage); });
+         result.test_throws<Botan::Invalid_State>("Cannot process data (finish) until key is set",
+                                                  [&]() { mode.finish(ultimate_garbage); });
 
          mode.set_key(mutate_vec(key, rng));
 
          if(is_ctr == false) {
-            result.test_throws("Cannot process data until nonce is set", [&]() { mode.update(garbage); });
+            result.test_throws<Botan::Invalid_State>("Cannot process data until nonce is set",
+                                                     [&]() { mode.update(garbage); });
          }
 
          mode.start(mutate_vec(nonce, rng));
          mode.reset();
 
          if(is_ctr == false) {
-            result.test_throws("Cannot process data until nonce is set (after start/reset)",
-                               [&]() { mode.update(garbage); });
+            result.test_throws<Botan::Invalid_State>("Cannot process data until nonce is set (after start/reset)",
+                                                     [&]() { mode.update(garbage); });
          }
 
          mode.start(mutate_vec(nonce, rng));
@@ -227,8 +232,8 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
          mode.clear();
          result.test_eq("key is not set", mode.has_keying_material(), false);
 
-         result.test_throws("Unkeyed object throws after clear", [&]() {
-            Botan::secure_vector<uint8_t> bad(update_granularity);
+         result.test_throws<Botan::Invalid_State>("Unkeyed object throws after clear", [&]() {
+            Botan::secure_vector<uint8_t> bad(min_final_bytes);
             mode.finish(bad);
          });
       }

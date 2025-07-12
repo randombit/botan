@@ -68,11 +68,12 @@ CommonCrypto_Cipher_Mode::~CommonCrypto_Cipher_Mode() {
 }
 
 void CommonCrypto_Cipher_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
-   assert_key_material_set();
-
    if(!valid_nonce_length(nonce_len)) {
       throw Invalid_IV_Length(name(), nonce_len);
    }
+
+   assert_key_material_set();
+
    if(nonce_len) {
       CCCryptorStatus status = CCCryptorReset(m_cipher, nonce);
       if(status != kCCSuccess) {
