@@ -27,7 +27,6 @@ Checks: >
     -cppcoreguidelines-prefer-member-initializer,
     -misc-const-correctness,
     -misc-include-cleaner,
-    -misc-redundant-expression,
     -misc-misplaced-const,
     -misc-confusable-identifiers,
     -modernize-pass-by-value,

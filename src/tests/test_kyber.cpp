@@ -16,7 +16,6 @@
 #include "test_rng.h"
 #include "tests.h"
 
-#include <cmath>
 #include <iterator>
 #include <memory>
 
@@ -379,6 +378,7 @@ void test_compress_roundtrip(Test::Result& result) {
 
    result.start_timer();
 
+   // NOLINTNEXTLINE(*-redundant-expression)
    for(uint16_t x = 0; x < q && x < (1 << d); ++x) {
       const uint16_t c = Kyber_Algos::compress<d>(Kyber_Algos::decompress<d>(x));
       if(x != c) {
