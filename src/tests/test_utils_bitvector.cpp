@@ -655,8 +655,8 @@ std::vector<Test::Result> test_bitvector_global_modifiers_and_predicates(Botan::
 
                // check that unused bits aren't flipped
                bv.resize(8);
-               for(size_t i = 0; i < bv.size(); ++i) {
-                  result.confirm("all bits are false", !bv[i]);
+               for(auto&& b : bv) {
+                  result.confirm("all bits are false", !b);
                }
                bv.resize(1);
 
@@ -694,8 +694,8 @@ std::vector<Test::Result> test_bitvector_global_modifiers_and_predicates(Botan::
                }
 
                bv.unset();
-               for(size_t i = 0; i < bv.size(); ++i) {
-                  result.confirm("bit is not set", !bv[i]);
+               for(auto&& b : bv) {
+                  result.confirm("bit is not set", !b);
                }
             }),
 
@@ -1152,8 +1152,8 @@ std::vector<Test::Result> test_bitvector_iterators(Botan::RandomNumberGenerator&
                   result.test_eq(Botan::fmt("reverse bit {} is as expected", i), *ritr, expected);
                } while(ritr != bv.begin());
 
-               for(auto itr = bv.begin(); itr != bv.end(); ++itr) {
-                  itr->flip();
+               for(auto& itr : bv) {
+                  itr.flip();
                }
 
                i = 0;

@@ -81,8 +81,8 @@ std::string bcrypt_base64_encode(const uint8_t input[], size_t length) {
       b64.pop_back();
    }
 
-   for(size_t i = 0; i != b64.size(); ++i) {
-      b64[i] = static_cast<char>(base64_to_bcrypt_encoding(static_cast<uint8_t>(b64[i])));
+   for(char& c : b64) {
+      c = static_cast<char>(base64_to_bcrypt_encoding(static_cast<uint8_t>(c)));
    }
 
    return b64;
@@ -90,9 +90,8 @@ std::string bcrypt_base64_encode(const uint8_t input[], size_t length) {
 
 std::vector<uint8_t> bcrypt_base64_decode(std::string_view input) {
    std::string translated;
-   for(size_t i = 0; i != input.size(); ++i) {
-      char c = bcrypt_encoding_to_base64(static_cast<uint8_t>(input[i]));
-      translated.push_back(c);
+   for(const char c : input) {
+      translated.push_back(bcrypt_encoding_to_base64(static_cast<uint8_t>(c)));
    }
 
    return unlock(base64_decode(translated));

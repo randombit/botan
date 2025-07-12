@@ -135,16 +135,16 @@ class McEliece_Tests final : public Test {
 
          std::vector<Test::Result> results;
 
-         for(size_t i = 0; i < sizeof(param_sets) / sizeof(param_sets[0]); ++i) {
-            if(Test::run_long_tests() == false && param_sets[i].code_length >= 2048) {
+         for(const auto& params : param_sets) {
+            if(Test::run_long_tests() == false && params.code_length >= 2048) {
                continue;
             }
 
-            for(size_t t = param_sets[i].t_min; t <= param_sets[i].t_max; ++t) {
+            for(size_t t = params.t_min; t <= params.t_max; ++t) {
                Test::Result result("McEliece keygen");
                result.start_timer();
 
-               Botan::McEliece_PrivateKey sk1(this->rng(), param_sets[i].code_length, t);
+               Botan::McEliece_PrivateKey sk1(this->rng(), params.code_length, t);
                const Botan::McEliece_PublicKey& pk1 = sk1;
 
                const std::vector<uint8_t> pk_enc = pk1.public_key_bits();

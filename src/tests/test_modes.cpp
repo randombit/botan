@@ -391,8 +391,8 @@ class Cipher_Mode_IV_Carry_Tests final : public Test {
 
             dec->finish(msg);
 
-            for(size_t j = 0; j != msg.size(); ++j) {
-               result.test_eq("Plaintext zeros", static_cast<size_t>(msg[j]), 0);
+            for(uint8_t b : msg) {
+               result.test_eq("Plaintext zeros", static_cast<size_t>(b), 0);
             }
          }
    #endif

@@ -88,8 +88,8 @@ std::string BigInt::to_dec_string() const {
    }
 
    // Reverse and convert to textual digits
-   for(auto i = digits.rbegin(); i != digits.rend(); ++i) {
-      s.push_back(*i + '0');  // assumes ASCII
+   for(uint8_t b : std::ranges::reverse_view(digits)) {
+      s.push_back(static_cast<char>(b) + '0');  // assumes ASCII
    }
 
    if(s.empty()) {

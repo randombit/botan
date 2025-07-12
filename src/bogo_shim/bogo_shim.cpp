@@ -1228,9 +1228,7 @@ std::vector<uint16_t> Shim_Policy::ciphersuite_list(Botan::TLS::Protocol_Version
    } else {
       // Hack: go in reverse order to avoid preferring 3DES
       auto ciphersuites = Botan::TLS::Ciphersuite::all_known_ciphersuites();
-      for(auto i = ciphersuites.rbegin(); i != ciphersuites.rend(); ++i) {
-         const auto suite = *i;
-
+      for(const auto& suite : std::ranges::reverse_view(ciphersuites)) {
          // Can we use it?
          if(suite.valid() == false || !suite.usable_in_version(version) ||
             !Botan::value_exists(allowed_ciphers(), suite.cipher_algo())) {

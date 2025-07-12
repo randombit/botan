@@ -152,8 +152,8 @@ secure_vector<uint8_t> XMSS_WOTS_Parameters::base_w(size_t value) const {
 void XMSS_WOTS_Parameters::append_checksum(secure_vector<uint8_t>& data) const {
    size_t csum = 0;
 
-   for(size_t i = 0; i < data.size(); i++) {
-      csum += wots_parameter() - 1 - data[i];
+   for(uint8_t b : data) {
+      csum += wots_parameter() - 1 - b;
    }
 
    secure_vector<uint8_t> csum_bytes = base_w(csum);

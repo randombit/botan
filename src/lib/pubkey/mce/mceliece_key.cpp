@@ -128,8 +128,8 @@ secure_vector<uint8_t> McEliece_PrivateKey::private_key_bits() const {
       .encode(m_public_matrix, ASN1_Type::OctetString)
       .encode(m_g[0].encode(), ASN1_Type::OctetString);  // g as octet string
    enc.start_sequence();
-   for(size_t i = 0; i < m_sqrtmod.size(); i++) {
-      enc.encode(m_sqrtmod[i].encode(), ASN1_Type::OctetString);
+   for(const auto& x : m_sqrtmod) {
+      enc.encode(x.encode(), ASN1_Type::OctetString);
    }
    enc.end_cons();
    secure_vector<uint8_t> enc_support;

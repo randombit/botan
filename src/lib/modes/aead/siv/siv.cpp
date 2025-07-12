@@ -120,9 +120,9 @@ secure_vector<uint8_t> SIV_Mode::S2V(const uint8_t* text, size_t text_len) {
 
    secure_vector<uint8_t> V = m_mac->process(zeros.data(), zeros.size());
 
-   for(size_t i = 0; i != m_ad_macs.size(); ++i) {
+   for(const auto& ad_mac : m_ad_macs) {
       poly_double_n(V.data(), V.size());
-      V ^= m_ad_macs[i];
+      V ^= ad_mac;
    }
 
    if(!m_nonce.empty()) {

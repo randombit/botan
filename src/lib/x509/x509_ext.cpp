@@ -951,9 +951,9 @@ void IPAddressBlocks::sort_and_merge() {
    }
 
    std::vector<IPAddressFamily> merged_blocks;
-   for(auto it = afam_map.begin(); it != afam_map.end(); it++) {
+   for(auto& it : afam_map) {
       // fams consists of families with the same afi/safi combination
-      std::vector<IPAddressFamily>& fams = it->second;
+      std::vector<IPAddressFamily>& fams = it.second;
       // since at least 1 block has to belong to a afi/safi combination for it to appear in the map,
       // fams cannot be empty
       BOTAN_ASSERT_NOMSG(!fams.empty());

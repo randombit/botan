@@ -214,8 +214,8 @@ class Test_Tests final : public Test {
             histogram[rng->next_byte()] += 1;
          }
 
-         for(size_t i = 0; i != 256; ++i) {
-            if(histogram[i] < RUNS / 2 || histogram[i] > RUNS * 2) {
+         for(size_t count : histogram) {
+            if(count < RUNS / 2 || count > RUNS * 2) {
                result.test_failure("Testsuite_RNG produced non-uniform output");
             } else {
                result.test_success("Testsuite_RNG seemed roughly uniform");

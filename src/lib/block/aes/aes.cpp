@@ -699,8 +699,9 @@ void aes_key_schedule(const uint8_t key[],
 
    CT::poison(key, length);
 
-   EK.resize(length + 28);
-   DK.resize(length + 28);
+   const size_t KS_len = length + 28;
+   EK.resize(KS_len);
+   DK.resize(KS_len);
 
    for(size_t i = 0; i != X; ++i) {
       EK[i] = load_be<uint32_t>(key, i);
@@ -733,10 +734,8 @@ void aes_key_schedule(const uint8_t key[],
 
    if(bswap_keys) {
       // HW AES on little endian needs the subkeys to be byte reversed
-      for(size_t i = 0; i != EK.size(); ++i) {
+      for(size_t i = 0; i != KS_len; ++i) {
          EK[i] = reverse_bytes(EK[i]);
-      }
-      for(size_t i = 0; i != DK.size(); ++i) {
          DK[i] = reverse_bytes(DK[i]);
       }
    }

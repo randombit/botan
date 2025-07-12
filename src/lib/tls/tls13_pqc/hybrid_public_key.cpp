@@ -183,8 +183,8 @@ void concat_secret_combiner(KEM_Operation& op,
                    "Invalid output buffer size");
 
    BufferStuffer shared_secret_stuffer(out_shared_secret);
-   for(size_t idx = 0; idx < shared_secrets.size(); idx++) {
-      shared_secret_stuffer.append(shared_secrets.at(idx));
+   for(const auto& ss : shared_secrets) {
+      shared_secret_stuffer.append(ss);
    }
    BOTAN_ASSERT_NOMSG(shared_secret_stuffer.full());
 }

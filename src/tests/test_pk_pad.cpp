@@ -46,8 +46,8 @@ class EME_PKCS1v15_Decoding_Tests final : public Text_Based_Test {
             result.test_eq("EME decoded plaintext correct", decoded, plaintext);
          } else {
             bool all_zeros = true;
-            for(size_t i = 0; i != decoded.size(); ++i) {
-               if(decoded[i] != 0) {
+            for(uint8_t b : decoded) {
+               if(b != 0) {
                   all_zeros = false;
                }
             }

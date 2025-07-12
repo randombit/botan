@@ -509,8 +509,8 @@ void ZFEC::decode_shares(const std::map<size_t, const uint8_t*>& shares,
    // If we had the original data shares then no need to perform
    // a matrix inversion, return immediately.
    if(!missing_primary_share) {
-      for(size_t i = 0; i != indexes.size(); ++i) {
-         BOTAN_ASSERT_NOMSG(indexes[i] < m_K);
+      for(size_t index : indexes) {
+         BOTAN_ASSERT_NOMSG(index < m_K);
       }
       return;
    }

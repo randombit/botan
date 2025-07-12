@@ -50,31 +50,31 @@ alignas(256) const uint32_t CRC32_T0[256] = {
 * Update a CRC32 Checksum
 */
 void CRC32::add_data(std::span<const uint8_t> input) {
-   uint32_t tmp = m_crc;
+   uint32_t crc = m_crc;
    for(; input.size() >= 16; input = input.last(input.size() - 16)) {
-      tmp = CRC32_T0[(tmp ^ input[0]) & 0xFF] ^ (tmp >> 8);
-      tmp = CRC32_T0[(tmp ^ input[1]) & 0xFF] ^ (tmp >> 8);
-      tmp = CRC32_T0[(tmp ^ input[2]) & 0xFF] ^ (tmp >> 8);
-      tmp = CRC32_T0[(tmp ^ input[3]) & 0xFF] ^ (tmp >> 8);
-      tmp = CRC32_T0[(tmp ^ input[4]) & 0xFF] ^ (tmp >> 8);
-      tmp = CRC32_T0[(tmp ^ input[5]) & 0xFF] ^ (tmp >> 8);
-      tmp = CRC32_T0[(tmp ^ input[6]) & 0xFF] ^ (tmp >> 8);
-      tmp = CRC32_T0[(tmp ^ input[7]) & 0xFF] ^ (tmp >> 8);
-      tmp = CRC32_T0[(tmp ^ input[8]) & 0xFF] ^ (tmp >> 8);
-      tmp = CRC32_T0[(tmp ^ input[9]) & 0xFF] ^ (tmp >> 8);
-      tmp = CRC32_T0[(tmp ^ input[10]) & 0xFF] ^ (tmp >> 8);
-      tmp = CRC32_T0[(tmp ^ input[11]) & 0xFF] ^ (tmp >> 8);
-      tmp = CRC32_T0[(tmp ^ input[12]) & 0xFF] ^ (tmp >> 8);
-      tmp = CRC32_T0[(tmp ^ input[13]) & 0xFF] ^ (tmp >> 8);
-      tmp = CRC32_T0[(tmp ^ input[14]) & 0xFF] ^ (tmp >> 8);
-      tmp = CRC32_T0[(tmp ^ input[15]) & 0xFF] ^ (tmp >> 8);
+      crc = CRC32_T0[(crc ^ input[0]) & 0xFF] ^ (crc >> 8);
+      crc = CRC32_T0[(crc ^ input[1]) & 0xFF] ^ (crc >> 8);
+      crc = CRC32_T0[(crc ^ input[2]) & 0xFF] ^ (crc >> 8);
+      crc = CRC32_T0[(crc ^ input[3]) & 0xFF] ^ (crc >> 8);
+      crc = CRC32_T0[(crc ^ input[4]) & 0xFF] ^ (crc >> 8);
+      crc = CRC32_T0[(crc ^ input[5]) & 0xFF] ^ (crc >> 8);
+      crc = CRC32_T0[(crc ^ input[6]) & 0xFF] ^ (crc >> 8);
+      crc = CRC32_T0[(crc ^ input[7]) & 0xFF] ^ (crc >> 8);
+      crc = CRC32_T0[(crc ^ input[8]) & 0xFF] ^ (crc >> 8);
+      crc = CRC32_T0[(crc ^ input[9]) & 0xFF] ^ (crc >> 8);
+      crc = CRC32_T0[(crc ^ input[10]) & 0xFF] ^ (crc >> 8);
+      crc = CRC32_T0[(crc ^ input[11]) & 0xFF] ^ (crc >> 8);
+      crc = CRC32_T0[(crc ^ input[12]) & 0xFF] ^ (crc >> 8);
+      crc = CRC32_T0[(crc ^ input[13]) & 0xFF] ^ (crc >> 8);
+      crc = CRC32_T0[(crc ^ input[14]) & 0xFF] ^ (crc >> 8);
+      crc = CRC32_T0[(crc ^ input[15]) & 0xFF] ^ (crc >> 8);
    }
 
-   for(size_t i = 0; i != input.size(); ++i) {
-      tmp = CRC32_T0[(tmp ^ input[i]) & 0xFF] ^ (tmp >> 8);
+   for(uint8_t b : input) {
+      crc = CRC32_T0[(crc ^ b) & 0xFF] ^ (crc >> 8);
    }
 
-   m_crc = tmp;
+   m_crc = crc;
 }
 
 /*

@@ -252,7 +252,7 @@ BOTAN_FN_ISA_AVX512_BMI2 void SHA_512::compress_digest_x86_avx512(digest_type& d
       H = (digest[7] += H);
 
       // Block 2,3,4 of SHA-512 compression, with pre-expanded messages
-      for(size_t b = 0; b != 3; ++b) {
+      for(size_t b = 0; b != 3; ++b) {  // NOLINT(*-loop-convert)
          for(size_t r = 0; r != 80; r += 16) {
             SHA2_64_F(A, B, C, D, E, F, G, H, WN[b][r + 0]);
             SHA2_64_F(H, A, B, C, D, E, F, G, WN[b][r + 1]);

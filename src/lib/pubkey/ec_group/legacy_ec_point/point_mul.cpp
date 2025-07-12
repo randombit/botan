@@ -74,10 +74,10 @@ EC_Point_Base_Point_Precompute::EC_Point_Base_Point_Precompute(const EC_Point& b
    m_W.resize(T.size() * 2 * m_p_words);
 
    word* p = m_W.data();
-   for(size_t i = 0; i != T.size(); ++i) {
-      T[i].get_x().encode_words(p, m_p_words);
+   for(const auto& pt : T) {
+      pt.get_x().encode_words(p, m_p_words);
       p += m_p_words;
-      T[i].get_y().encode_words(p, m_p_words);
+      pt.get_y().encode_words(p, m_p_words);
       p += m_p_words;
    }
 }
@@ -200,10 +200,10 @@ EC_Point_Var_Point_Precompute::EC_Point_Var_Point_Precompute(const EC_Point& ipo
    m_T.resize(U.size() * 3 * m_p_words);
 
    word* p = m_T.data();
-   for(size_t i = 0; i != U.size(); ++i) {
-      U[i].get_x().encode_words(p, m_p_words);
-      U[i].get_y().encode_words(p + m_p_words, m_p_words);
-      U[i].get_z().encode_words(p + 2 * m_p_words, m_p_words);
+   for(const auto& pt : U) {
+      pt.get_x().encode_words(p, m_p_words);
+      pt.get_y().encode_words(p + m_p_words, m_p_words);
+      pt.get_z().encode_words(p + 2 * m_p_words, m_p_words);
       p += 3 * m_p_words;
    }
 }

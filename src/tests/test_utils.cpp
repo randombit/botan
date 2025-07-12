@@ -1199,12 +1199,12 @@ class ReadKV_Tests final : public Text_Based_Test {
          }
 
          std::string substr;
-         for(auto i = str.begin(); i != str.end(); ++i) {
-            if(*i == '|') {
+         for(char c : str) {
+            if(c == '|') {
                elems.push_back(substr);
                substr.clear();
             } else {
-               substr += *i;
+               substr += c;
             }
          }
 
