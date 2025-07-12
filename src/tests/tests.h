@@ -23,7 +23,6 @@
 #include <span>
 #include <sstream>
 #include <string>
-#include <typeindex>
 #include <unordered_map>
 #include <variant>
 #include <vector>
@@ -780,7 +779,9 @@ class FnTest : public Test {
       std::vector<Test::Result> run() override {
          std::vector<Test::Result> result;
 
-         for(auto afn : std::ranges::reverse_view(m_fns)) {
+         // TODO(Botan4) use std::ranges::reverse_view here once available (need newer Clang)
+         // NOLINTNEXTLINE(modernize-loop-convert)
+         for(auto fn_variant = m_fns.crbegin(); fn_variant != m_fns.crend(); ++fn_variant) {
             std::visit(
                [&](auto&& fn) {
                   using T = std::decay_t<decltype(fn)>;
@@ -791,7 +792,7 @@ class FnTest : public Test {
                      result.insert(result.end(), results.begin(), results.end());
                   }
                },
-               afn);
+               *fn_variant);
          }
 
          return result;
