@@ -108,7 +108,7 @@ bool Test::Result::ThrowExpectations::check(const std::string& test_name, Test::
       if(m_expect_success) {
          return result.test_failure(test_name + " threw unexpected exception: " + ex.what());
       }
-      if(m_expected_exception_type.has_value() && m_expected_exception_type.value() != typeid(ex)) {
+      if(m_expected_exception_check_fn && !m_expected_exception_check_fn(std::current_exception())) {
          return result.test_failure(test_name + " threw unexpected exception: " + ex.what());
       }
       if(m_expected_message.has_value() && m_expected_message.value() != ex.what()) {
@@ -116,7 +116,7 @@ bool Test::Result::ThrowExpectations::check(const std::string& test_name, Test::
                                     m_expected_message.value() + "', got: '" + ex.what() + "')");
       }
    } catch(...) {
-      if(m_expect_success || m_expected_exception_type.has_value() || m_expected_message.has_value()) {
+      if(m_expect_success || m_expected_exception_check_fn || m_expected_message.has_value()) {
          return result.test_failure(test_name + " threw unexpected unknown exception");
       }
    }
