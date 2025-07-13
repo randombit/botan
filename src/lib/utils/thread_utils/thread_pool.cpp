@@ -9,6 +9,7 @@
 #include <botan/exceptn.h>
 #include <botan/internal/os_utils.h>
 #include <botan/internal/target_info.h>
+#include <algorithm>
 #include <thread>
 
 namespace Botan {
@@ -69,20 +70,12 @@ Thread_Pool::Thread_Pool(std::optional<size_t> opt_pool_size) {
    size_t pool_size = opt_pool_size.value();
 
    if(pool_size == 0) {
-      pool_size = OS::get_cpu_available();
-
-      // Unclear if this can happen, but be defensive
-      if(pool_size == 0) {
-         pool_size = 2;
-      }
-
       /*
       * For large machines don't create too many threads, unless
       * explicitly asked to by the caller.
       */
-      if(pool_size > 16) {
-         pool_size = 16;
-      }
+      const size_t cores = OS::get_cpu_available();
+      pool_size = std::clamp<size_t>(cores, 2, 16);
    }
 
    m_workers.resize(pool_size);
