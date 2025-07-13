@@ -22,12 +22,12 @@ class LMS_Test final : public Text_Based_Test {
    public:
       LMS_Test() : Text_Based_Test("pubkey/lms.vec", "Seed,Msg,q,PublicKey,HashSig") {}
 
-      bool skip_this_test(const std::string&, const VarMap& vars) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
          BOTAN_UNUSED(vars);
          return false;
       }
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) final {
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) final {
          Test::Result result("LMS");
 
          const auto seed = Botan::LMS_Seed(vars.get_req_bin("Seed"));

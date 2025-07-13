@@ -8,6 +8,7 @@
 #ifndef BOTAN_TLS_SEQ_NUMBERS_H_
 #define BOTAN_TLS_SEQ_NUMBERS_H_
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <map>
 
@@ -57,7 +58,7 @@ class Stream_Sequence_Numbers final : public Connection_Sequence_Numbers {
 
       uint16_t current_write_epoch() const override { return m_write_epoch; }
 
-      uint64_t next_write_sequence(uint16_t) override { return m_write_seq_no++; }
+      uint64_t next_write_sequence(uint16_t /*epoch*/) override { return m_write_seq_no++; }
 
       uint64_t next_read_sequence() override { return m_read_seq_no; }
 

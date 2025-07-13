@@ -71,7 +71,7 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Store_In_SQL : public Certificate_Store
       bool remove_cert(const X509_Certificate& cert);
 
       /// Returns the private key for "cert" or an empty shared_ptr if none was found.
-      std::shared_ptr<const Private_Key> find_key(const X509_Certificate&) const;
+      std::shared_ptr<const Private_Key> find_key(const X509_Certificate& cert) const;
 
       /// Returns all certificates for private key "key".
       std::vector<X509_Certificate> find_certs_for_key(const Private_Key& key) const;
@@ -86,10 +86,10 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Store_In_SQL : public Certificate_Store
       void remove_key(const Private_Key& key);
 
       /// Marks "cert" as revoked starting from "time".
-      void revoke_cert(const X509_Certificate&, CRL_Code, const X509_Time& time = X509_Time());
+      void revoke_cert(const X509_Certificate& cert, CRL_Code reason, const X509_Time& time = X509_Time());
 
-      /// Reverses the revokation for "cert".
-      void affirm_cert(const X509_Certificate&);
+      /// Reverses the revocation for "cert".
+      void affirm_cert(const X509_Certificate& cert);
 
       /**
       * Generates Certificate Revocation Lists for all certificates marked as revoked.

@@ -297,7 +297,9 @@ class Classic_McEliece_KAT_Tests final : public Botan_Tests::PK_PQC_KEM_KAT_Test
 
       bool is_available(const std::string& alg_name) const final { return !skip_cmce_test(alg_name); }
 
-      std::vector<uint8_t> map_value(const std::string&, std::span<const uint8_t> value, VarType var_type) const final {
+      std::vector<uint8_t> map_value(const std::string& /*params*/,
+                                     std::span<const uint8_t> value,
+                                     VarType var_type) const final {
          if(var_type == VarType::Ciphertext || var_type == VarType::SharedSecret) {
             return {value.begin(), value.end()};
          }
@@ -305,7 +307,7 @@ class Classic_McEliece_KAT_Tests final : public Botan_Tests::PK_PQC_KEM_KAT_Test
          return hash->process<std::vector<uint8_t>>(value);
       }
 
-      Fixed_Output_RNG rng_for_keygen(const std::string&, Botan::RandomNumberGenerator& rng) const final {
+      Fixed_Output_RNG rng_for_keygen(const std::string& /*params*/, Botan::RandomNumberGenerator& rng) const final {
          const auto seed = rng.random_vec(Botan::Classic_McEliece_Parameters::seed_len());
          return Fixed_Output_RNG(seed);
       }
@@ -328,7 +330,7 @@ class Classic_McEliece_KAT_Tests final : public Botan_Tests::PK_PQC_KEM_KAT_Test
          return Fixed_Output_RNG(rand_buffer);
       }
 
-      void inspect_rng_after_encaps(const std::string&, const Fixed_Output_RNG&, Test::Result&) const final {
+      void inspect_rng_after_encaps(const std::string& /*params*/, const Fixed_Output_RNG&, Test::Result&) const final {
          // Encaps uses any number of random bytes, so we cannot check the RNG
       }
 };

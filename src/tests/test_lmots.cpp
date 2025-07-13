@@ -22,12 +22,12 @@ class LMOTS_Test final : public Text_Based_Test {
    public:
       LMOTS_Test() : Text_Based_Test("pubkey/lmots.vec", "TypeId,Seed,I,q,Msg,PublicKey,HashSig") {}
 
-      bool skip_this_test(const std::string&, const VarMap& vars) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
          BOTAN_UNUSED(vars);
          return false;
       }
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) final {
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) final {
          Test::Result result("LMOTS");
 
          const auto lmots_type_id = vars.get_req_u32("TypeId");

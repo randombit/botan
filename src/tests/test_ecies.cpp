@@ -103,7 +103,7 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
 
       bool clear_between_callbacks() const override { return false; }
 
-      bool skip_this_test(const std::string&, const VarMap&) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& /*vars*/) override {
          return !Botan::EC_Group::supports_application_specific_group();
       }
 
@@ -220,7 +220,7 @@ class ECIES_Tests final : public Text_Based_Test {
          }
       }
 
-      bool skip_this_test(const std::string&, const VarMap& vars) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
          const auto curve = vars.get_req_str("Curve");
 
          // TODO(Botan4) remove this since cofactors no longer supported

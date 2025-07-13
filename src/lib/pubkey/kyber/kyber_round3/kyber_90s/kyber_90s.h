@@ -28,7 +28,8 @@ class Kyber_90s_Symmetric_Primitives final : public Kyber_Symmetric_Primitives {
             m_aes256_xof(std::make_unique<AES_256_CTR_XOF>()) {}
 
    protected:
-      std::optional<std::array<uint8_t, 1>> seed_expansion_domain_separator(const KyberConstants&) const override {
+      std::optional<std::array<uint8_t, 1>> seed_expansion_domain_separator(
+         const KyberConstants& /*constants*/) const override {
          return {};
       }
 

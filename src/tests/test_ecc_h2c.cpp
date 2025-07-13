@@ -53,7 +53,7 @@ class ECC_H2S_Tests final : public Text_Based_Test {
 
       bool clear_between_callbacks() const override { return false; }
 
-      bool skip_this_test(const std::string& group_id, const VarMap&) override {
+      bool skip_this_test(const std::string& group_id, const VarMap& /*vars*/) override {
          return !Botan::EC_Group::supports_named_group(group_id);
       }
 
@@ -93,7 +93,7 @@ class ECC_H2C_Tests final : public Text_Based_Test {
 
       bool clear_between_callbacks() const override { return false; }
 
-      bool skip_this_test(const std::string&, const VarMap& vars) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
          return !Botan::EC_Group::supports_named_group(vars.get_req_str("Group"));
       }
 

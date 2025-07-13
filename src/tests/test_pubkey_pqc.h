@@ -76,7 +76,7 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
       }
 
    private:
-      bool skip_this_test(const std::string& params, const VarMap&) final {
+      bool skip_this_test(const std::string& params, const VarMap& /*vars*/) final {
    #if !defined(BOTAN_HAS_AES)
          BOTAN_UNUSED(params);
          return true;
@@ -192,7 +192,7 @@ class PK_PQC_KEM_ACVP_KAT_KeyGen_Test : public PK_Test {
       }
 
    private:
-      bool skip_this_test(const std::string& params, const VarMap&) final { return !is_available(params); }
+      bool skip_this_test(const std::string& params, const VarMap& /*vars*/) final { return !is_available(params); }
 
       Test::Result run_one_test(const std::string& params, const VarMap& vars) final {
          Test::Result result(Botan::fmt("PQC ACVP KAT for {} KeyGen with parameters {}", algo_name(), params));
@@ -240,7 +240,7 @@ class PK_PQC_KEM_ACVP_KAT_Encap_Test : public PK_Test {
       virtual bool is_available(const std::string& params) const = 0;
 
    private:
-      bool skip_this_test(const std::string& params, const VarMap&) final { return !is_available(params); }
+      bool skip_this_test(const std::string& params, const VarMap& /*vars*/) final { return !is_available(params); }
 
       std::vector<uint8_t> compress_value(std::span<const uint8_t> value) {
          // We always use SHAKE-256(128) for ML-KEM
@@ -278,7 +278,7 @@ class PK_PQC_KEM_ACVP_KAT_Decap_Test : public PK_Test {
       virtual bool is_available(const std::string& params) const = 0;
 
    private:
-      bool skip_this_test(const std::string& params, const VarMap&) final { return !is_available(params); }
+      bool skip_this_test(const std::string& params, const VarMap& /*vars*/) final { return !is_available(params); }
 
       Test::Result run_one_test(const std::string& params, const VarMap& vars) final {
          Test::Result result(Botan::fmt("PQC ACVP KAT for {} Decap with parameters {}", algo_name(), params));

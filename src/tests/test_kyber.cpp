@@ -160,7 +160,8 @@ class Kyber_KAT_Tests : public PK_PQC_KEM_KAT_Test {
          }
       }
 
-      Fixed_Output_RNG rng_for_encapsulation(const std::string&, Botan::RandomNumberGenerator& rng) const final {
+      Fixed_Output_RNG rng_for_encapsulation(const std::string& /*mode*/,
+                                             Botan::RandomNumberGenerator& rng) const final {
          return Fixed_Output_RNG(rng.random_vec(32));
       }
 };

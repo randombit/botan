@@ -585,7 +585,8 @@ void Server_Hello_13::basic_validation() const {
    }
 }
 
-Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data, Server_Hello_13::Server_Hello_Tag) :
+Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
+                                 Server_Hello_13::Server_Hello_Tag /*tag*/) :
       Server_Hello(std::move(data)) {
    BOTAN_ASSERT_NOMSG(!m_data->is_hello_retry_request());
    basic_validation();
@@ -623,7 +624,7 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data, Se
 }
 
 Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
-                                 Server_Hello_13::Hello_Retry_Request_Tag) :
+                                 Server_Hello_13::Hello_Retry_Request_Tag /*tag*/) :
       Server_Hello(std::move(data)) {
    BOTAN_ASSERT_NOMSG(m_data->is_hello_retry_request());
    basic_validation();
@@ -656,7 +657,8 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
    }
 }
 
-Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data, Hello_Retry_Request_Creation_Tag) :
+Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
+                                 Hello_Retry_Request_Creation_Tag /*tag*/) :
       Server_Hello(std::move(data)) {}
 
 namespace {

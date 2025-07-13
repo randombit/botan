@@ -209,7 +209,7 @@ size_t Kyber_PublicKey::key_length() const {
    return m_public->mode().canonical_parameter_set_identifier();
 }
 
-bool Kyber_PublicKey::check_key(RandomNumberGenerator&, bool) const {
+bool Kyber_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
    // The length checks described in FIPS 203, Section 7.2 are already performed
    // while decoding the public key. See constructor of Kyber_PublicKeyInternal.
    // The decoding function KyberAlgos::byte_decode() also checks the range of

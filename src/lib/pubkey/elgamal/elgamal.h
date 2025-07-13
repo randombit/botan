@@ -99,7 +99,7 @@ class BOTAN_PUBLIC_API(2, 0) ElGamal_PrivateKey final : public ElGamal_PublicKey
       */
       ElGamal_PrivateKey(const DL_Group& group, const BigInt& private_key);
 
-      bool check_key(RandomNumberGenerator& rng, bool) const override;
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       std::unique_ptr<Public_Key> public_key() const override;
 

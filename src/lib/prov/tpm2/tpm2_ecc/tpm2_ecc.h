@@ -59,7 +59,7 @@ class BOTAN_PUBLIC_API(3, 6) EC_PrivateKey final : public virtual Botan::TPM2::P
          return "ECDSA";
       }
 
-      std::unique_ptr<Private_Key> generate_another(Botan::RandomNumberGenerator&) const override {
+      std::unique_ptr<Private_Key> generate_another(Botan::RandomNumberGenerator& /*rng*/) const override {
          throw Not_Implemented("Cannot generate a new TPM-based keypair from this asymmetric key");
       }
 

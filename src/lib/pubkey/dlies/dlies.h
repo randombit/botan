@@ -69,7 +69,7 @@ class BOTAN_PUBLIC_API(2, 0) DLIES_Encryptor final : public PK_Encryptor {
       inline void set_initialization_vector(const InitializationVector& iv) { m_iv = iv; }
 
    private:
-      std::vector<uint8_t> enc(const uint8_t[], size_t, RandomNumberGenerator&) const override;
+      std::vector<uint8_t> enc(const uint8_t in[], size_t length, RandomNumberGenerator& rng) const override;
 
       size_t maximum_input_size() const override;
 

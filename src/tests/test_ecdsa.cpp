@@ -30,7 +30,7 @@ class ECDSA_Verification_Tests final : public PK_Signature_Verification_Test {
 
       bool clear_between_callbacks() const override { return false; }
 
-      bool skip_this_test(const std::string&, const VarMap& vars) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
          return !Botan::EC_Group::supports_named_group(vars.get_req_str("Group"));
       }
 
@@ -60,7 +60,7 @@ class ECDSA_Wycheproof_Verification_Tests final : public PK_Signature_Verificati
 
       bool test_random_invalid_sigs() const override { return false; }
 
-      bool skip_this_test(const std::string&, const VarMap& vars) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
          return !Botan::EC_Group::supports_named_group(vars.get_req_str("Group"));
       }
 
@@ -94,7 +94,7 @@ class ECDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test {
 
       bool clear_between_callbacks() const override { return false; }
 
-      bool skip_this_test(const std::string&, const VarMap& vars) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
          return !Botan::EC_Group::supports_named_group(vars.get_req_str("Group"));
       }
 
@@ -133,7 +133,7 @@ class ECDSA_KAT_Verification_Tests final : public PK_Signature_Verification_Test
 
       bool clear_between_callbacks() const override { return false; }
 
-      bool skip_this_test(const std::string&, const VarMap& vars) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
          return !Botan::EC_Group::supports_named_group(vars.get_req_str("Group"));
       }
 
@@ -188,7 +188,7 @@ class ECDSA_Key_Recovery_Tests final : public Text_Based_Test {
    public:
       ECDSA_Key_Recovery_Tests() : Text_Based_Test("pubkey/ecdsa_key_recovery.vec", "Group,Msg,R,S,V,Pubkey") {}
 
-      bool skip_this_test(const std::string&, const VarMap& vars) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
          return !Botan::EC_Group::supports_named_group(vars.get_req_str("Group"));
       }
 
@@ -234,7 +234,7 @@ class ECDSA_Invalid_Key_Tests final : public Text_Based_Test {
 
       bool clear_between_callbacks() const override { return false; }
 
-      bool skip_this_test(const std::string&, const VarMap& vars) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
          return !Botan::EC_Group::supports_named_group(vars.get_req_str("Group"));
       }
 
@@ -315,7 +315,7 @@ class ECDSA_ExplicitCurveKey_Test : public Text_Based_Test {
 
       bool clear_between_callbacks() const override { return false; }
 
-      bool skip_this_test(const std::string& group, const VarMap&) override {
+      bool skip_this_test(const std::string& group, const VarMap& /*vars*/) override {
          return !Botan::EC_Group::supports_named_group(group);
       }
 

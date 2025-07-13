@@ -82,9 +82,9 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_Hybrid final : public Session_Manag
       // The Hybrid_Session_Manager just delegates to its underlying managers
       // via the public retrieval API. Its own "storage interface" is therefore
       // never called.
-      std::optional<Session> retrieve_one(const Session_Handle&) override;
+      std::optional<Session> retrieve_one(const Session_Handle& handle) override;
 
-      std::vector<Session_with_Handle> find_some(const Server_Information&, size_t) override;
+      std::vector<Session_with_Handle> find_some(const Server_Information& info, size_t max_sessions_hint) override;
 
    private:
       std::unique_ptr<Session_Manager> m_stateful;

@@ -57,7 +57,9 @@ class Ed448_Signature_Tests final : public PK_Signature_Generation_Test {
          return sk;
       }
 
-      bool skip_this_test(const std::string&, const VarMap& vars) override { return vars.get_req_sz("Valid") != 1; }
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
+         return vars.get_req_sz("Valid") != 1;
+      }
 };
 
 class Ed448_Verification_Tests : public PK_Signature_Verification_Test {
@@ -84,7 +86,7 @@ class Ed448_General_Test final : public Text_Based_Test {
    public:
       Ed448_General_Test() : Text_Based_Test("pubkey/ed448.vec", "Msg,PrivateKey,PublicKey,Valid,Signature") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) final {
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) final {
          Test::Result result("Ed448 general tests");
 
          const auto pub_key_ref = to_array<57>(vars.get_req_bin("PublicKey"));
@@ -104,7 +106,9 @@ class Ed448_General_Test final : public Text_Based_Test {
          return result;
       }
 
-      bool skip_this_test(const std::string&, const VarMap& vars) override { return vars.get_req_sz("Valid") != 1; }
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
+         return vars.get_req_sz("Valid") != 1;
+      }
 };
 
 class Ed448_Utils_Test final : public Test {
