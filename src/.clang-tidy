@@ -15,7 +15,6 @@ Checks: >
     performance-*,
     portability-*,
     readability-*,
-    -readability-qualified-auto,
     -*-named-parameter,
     -readability-redundant-member-init,
     -cppcoreguidelines-use-default-member-init,

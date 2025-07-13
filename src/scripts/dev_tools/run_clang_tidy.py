@@ -45,8 +45,6 @@ enabled_checks = [
 # these are ones that we might want to be clean for in the future,
 # but currently are not
 disabled_needs_work = [
-    'readability-qualified-auto', # almost cleared except test_x509_rpki.cpp
-
     '*-named-parameter',
     'readability-redundant-member-init',
     'cppcoreguidelines-use-default-member-init',

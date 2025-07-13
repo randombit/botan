@@ -166,7 +166,7 @@ Test::Result test_x509_ip_addr_blocks_extension_decode() {
    {
       const std::string filename("IPAddrBlocksAll.pem");
       Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
-      auto ip_addr_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
+      const auto* ip_addr_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
 
       const auto& addr_blocks = ip_addr_blocks->addr_blocks();
       result.confirm("cert has IPAddrBlocks extension", ip_addr_blocks != nullptr, true);
@@ -175,7 +175,7 @@ Test::Result test_x509_ip_addr_blocks_extension_decode() {
       const auto& ipv4block = std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(addr_blocks[0].addr_choice());
       const auto& ipv6block = std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(addr_blocks[1].addr_choice());
 
-      auto& v4_blocks = ipv4block.ranges().value();
+      const auto& v4_blocks = ipv4block.ranges().value();
 
       // cert contains (in this order)
       // 192.168.0.0 - 192.168.127.255 (192.168.0.0/17)
@@ -194,7 +194,7 @@ Test::Result test_x509_ip_addr_blocks_extension_decode() {
       result.test_eq("ipv4 block 3 min", v4_blocks[3].min().value(), {196, 168, 0, 1});
       result.test_eq("ipv4 block 3 max", v4_blocks[3].max().value(), {196, 168, 0, 1});
 
-      auto& v6_blocks = ipv6block.ranges().value();
+      const auto& v6_blocks = ipv6block.ranges().value();
 
       // cert contains (in this order)
       // fa80::/65
@@ -230,7 +230,7 @@ Test::Result test_x509_ip_addr_blocks_extension_decode() {
    {
       const std::string filename("IPAddrBlocksUnsorted.pem");
       Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
-      auto ip_addr_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
+      const auto* ip_addr_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
 
       // cert contains (in this order)
       // IPv6 (1) inherit
@@ -288,7 +288,7 @@ Test::Result test_x509_ip_addr_blocks_extension_decode() {
 
       result.confirm("extension is present", cert.v3_extensions().extension_set(IPAddressBlocks::static_oid()));
 
-      auto ext = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
+      const auto* ext = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
       result.confirm("extension is not decoded", ext == nullptr);
    }
 
@@ -305,7 +305,7 @@ Test::Result test_x509_as_blocks_extension_decode() {
       const std::string filename("ASNumberCert.pem");
       Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
 
-      auto as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
+      const auto* as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
 
       const auto& identifier = as_blocks->as_identifiers();
       result.confirm("cert has ASBlock extension", as_blocks != nullptr, true);
@@ -325,7 +325,7 @@ Test::Result test_x509_as_blocks_extension_decode() {
       const std::string filename("ASNumberOnly.pem");
       Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
 
-      auto as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
+      const auto* as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
 
       const auto& identifier = as_blocks->as_identifiers();
       result.confirm("cert has ASBlock extension", as_blocks != nullptr, true);
@@ -341,7 +341,7 @@ Test::Result test_x509_as_blocks_extension_decode() {
       const std::string filename("ASRdiOnly.pem");
       Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
 
-      auto as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
+      const auto* as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
 
       const auto& identifier = as_blocks->as_identifiers();
       result.confirm("cert has ASBlock extension", as_blocks != nullptr, true);
@@ -357,7 +357,7 @@ Test::Result test_x509_as_blocks_extension_decode() {
       const std::string filename("ASNumberInherit.pem");
       Botan::X509_Certificate cert(Test::data_file("x509/x509test/" + filename));
 
-      auto as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
+      const auto* as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
 
       const auto& identifier = as_blocks->as_identifiers();
       result.confirm("cert has ASBlock extension", as_blocks != nullptr, true);
@@ -405,7 +405,7 @@ Test::Result test_x509_ip_addr_blocks_rfc3779_example() {
       bits_1,
       "3035302B040300010130240304040A00200304000A00400303000A01300C0304040A02300304000A02400303000A033006040200020500");
 
-   auto ext_1 = cert_1.v3_extensions().get_extension_object_as<IPAddressBlocks>();
+   const auto* ext_1 = cert_1.v3_extensions().get_extension_object_as<IPAddressBlocks>();
 
    auto ext_1_addr_fam_1 = ext_1->addr_blocks()[0];
    result.test_eq("extension 1 ipv4 safi", ext_1_addr_fam_1.safi(), std::optional<uint8_t>(1));
@@ -452,7 +452,7 @@ Test::Result test_x509_ip_addr_blocks_rfc3779_example() {
                   bits_2,
                   "302C3010040300010130090302000A030304AC10300704030001020500300F040200023009030700200100000002");
 
-   auto ext_2 = cert_2.v3_extensions().get_extension_object_as<IPAddressBlocks>();
+   const auto* ext_2 = cert_2.v3_extensions().get_extension_object_as<IPAddressBlocks>();
 
    auto ext_2_addr_fam_1 = ext_2->addr_blocks()[0];
    result.test_eq("extension 2 ipv4 1 safi", ext_2_addr_fam_1.safi(), std::optional<uint8_t>(1));
@@ -632,7 +632,7 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_ctor() {
       Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
       Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
       {
-         auto ip_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
+         const auto* ip_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
          result.confirm("cert has IPAddrBlocks extension", ip_blocks != nullptr, true);
 
          const auto& dec_addr_blocks = ip_blocks->addr_blocks();
@@ -756,7 +756,7 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_edge_cases_ctor() {
             Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
             Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
             {
-               auto ip_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
+               const auto* ip_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
                result.confirm("cert has IPAddrBlocks extension", ip_blocks != nullptr, true);
                const auto& dec_addr_blocks = ip_blocks->addr_blocks();
                auto family = dec_addr_blocks[0];
@@ -819,7 +819,7 @@ Test::Result test_x509_ip_addr_blocks_range_merge() {
    Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
    Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
    {
-      auto ip_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
+      const auto* ip_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
       result.confirm("cert has IPAddrBlocks extension", ip_blocks != nullptr, true);
       const auto& dec_addr_blocks = ip_blocks->addr_blocks();
       auto family = dec_addr_blocks[0];
@@ -907,7 +907,7 @@ Test::Result test_x509_ip_addr_blocks_family_merge() {
    Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
    Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
-   auto ip_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
+   const auto* ip_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
    result.confirm("cert has IPAddrBlocks extension", ip_blocks != nullptr, true);
    const auto& dec_blocks = ip_blocks->addr_blocks();
 
@@ -1583,7 +1583,7 @@ Test::Result test_x509_as_blocks_extension_encode_ctor() {
       Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
       {
-         auto as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
+         const auto* as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
          result.confirm("cert has ASBlock extension", as_blocks != nullptr, true);
 
          const auto& identifier = as_blocks->as_identifiers();
@@ -1664,7 +1664,7 @@ Test::Result test_x509_as_blocks_range_merge() {
    Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
    Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
    {
-      auto as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
+      const auto* as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
       result.confirm("cert has ASBlock extension", as_blocks != nullptr, true);
 
       const auto& identifier = as_blocks->as_identifiers();
