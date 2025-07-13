@@ -685,7 +685,7 @@ class EC_Point_Arithmetic_Tests final : public Test {
             result.start_timer();
 
             const auto one = Botan::EC_Scalar::one(group);
-            const auto zero = one - one;
+            const auto zero = one - one;  // NOLINT(*-redundant-expression)
             const auto g = Botan::EC_AffinePoint::generator(group);
             const auto g_bytes = g.serialize_uncompressed();
 
@@ -716,7 +716,7 @@ class EC_Point_Arithmetic_Tests final : public Test {
             result.confirm("Scalar::zero is zero", zero.is_zero());
             result.confirm("(zero+zero) is zero", (zero + zero).is_zero());
             result.confirm("(zero*zero) is zero", (zero * zero).is_zero());
-            result.confirm("(zero-zero) is zero", (zero - zero).is_zero());
+            result.confirm("(zero-zero) is zero", (zero - zero).is_zero());  // NOLINT(*-redundant-expression)
 
             const auto neg_zero = zero.negate();
             result.confirm("zero.negate() is zero", neg_zero.is_zero());
@@ -726,7 +726,7 @@ class EC_Point_Arithmetic_Tests final : public Test {
             result.confirm("(nz+zero) is zero", (neg_zero + zero).is_zero());
 
             result.confirm("Scalar::one is not zero", !one.is_zero());
-            result.confirm("(one-one) is zero", (one - one).is_zero());
+            result.confirm("(one-one) is zero", (one - one).is_zero());  // NOLINT(*-redundant-expression)
             result.confirm("(one+one.negate()) is zero", (one + one.negate()).is_zero());
             result.confirm("(one.negate()+one) is zero", (one.negate() + one).is_zero());
 

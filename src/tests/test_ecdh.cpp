@@ -74,7 +74,8 @@ class ECDH_AllGroups_Tests : public Test {
                // Regression test: prohibit loading an all-zero private key
                result.test_throws<Botan::Invalid_Argument>("all-zero private key is unacceptable", [&] {
                   const auto one = Botan::EC_Scalar::one(group);
-                  Botan::ECDH_PrivateKey(group, one - one);
+                  const auto zero = one - one;  // NOLINT(*-redundant-expression)
+                  Botan::ECDH_PrivateKey(group, zero);
                });
 
                // Regression test: prohibit loading a public point that is the identity (point at infinity)

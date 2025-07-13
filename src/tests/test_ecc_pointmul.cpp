@@ -186,7 +186,7 @@ class ECC_Mul2_Inf_Tests final : public Test {
             const auto neg_r = r.negate();
             const auto neg_r2 = neg_r + neg_r;
 
-            const auto zero = r - r;
+            const auto zero = r - r;  // NOLINT(*-redundant-expression)
             result.confirm("Computed EC_Scalar is zero", zero.is_zero());
 
             const auto g2 = g.add(g);
@@ -280,7 +280,7 @@ class ECC_Scalar_Arithmetic_Tests final : public Test {
                              const Botan::EC_Group& group,
                              Botan::RandomNumberGenerator& rng) const {
          const auto one = Botan::EC_Scalar::one(group);
-         const auto zero = one - one;
+         const auto zero = one - one;  // NOLINT(*-redundant-expression)
          const auto two = one + one;
 
          const size_t order_bytes = group.get_order_bytes();
