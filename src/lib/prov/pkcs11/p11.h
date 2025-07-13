@@ -51,6 +51,7 @@
 #endif
 
 static_assert(
+   // NOLINTNEXTLINE(misc-redundant-expression) clang-tidy doesn't realize there are macros involved here
    CRYPTOKI_VERSION_MAJOR == 2 && CRYPTOKI_VERSION_MINOR == 40,
    "The Botan PKCS#11 module was implemented against PKCS#11 v2.40. Please use the correct PKCS#11 headers.");
 
