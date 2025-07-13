@@ -908,18 +908,18 @@ std::vector<Test::Result> record_size_limits() {
                auto csc = rfc8448_rtt1_handshake_traffic(Botan::TLS::Connection_Side::Client);
                auto rlc = record_layer_client(true);
 
-               const auto r1 = rlc.prepare_records(
+               const auto rec1 = rlc.prepare_records(
                   TLS::Record_Type::ApplicationData, std::vector<uint8_t>(Botan::TLS::MAX_PLAINTEXT_SIZE), csc.get());
-               result.test_eq("one record generated", count_records(r1), 1);
+               result.test_eq("one record generated", count_records(rec1), 1);
 
-               const auto r2 = rlc.prepare_records(TLS::Record_Type::ApplicationData,
-                                                   std::vector<uint8_t>(Botan::TLS::MAX_PLAINTEXT_SIZE + 1),
-                                                   csc.get());
-               result.test_eq("two records generated", count_records(r2), 2);
+               const auto rec2 = rlc.prepare_records(TLS::Record_Type::ApplicationData,
+                                                     std::vector<uint8_t>(Botan::TLS::MAX_PLAINTEXT_SIZE + 1),
+                                                     csc.get());
+               result.test_eq("two records generated", count_records(rec2), 2);
 
                auto css = rfc8448_rtt1_handshake_traffic(Botan::TLS::Connection_Side::Server);
                auto rls = record_layer_server(true);
-               rls.copy_data(r1);
+               rls.copy_data(rec1);
 
                result.test_eq("correct length record",
                               record_length(result, rls.next_record(css.get())),
@@ -933,13 +933,13 @@ std::vector<Test::Result> record_size_limits() {
 
                rl.set_record_size_limits(127 + 1 /* content type byte */, Botan::TLS::MAX_PLAINTEXT_SIZE + 1);
 
-               const auto r1 =
+               const auto rec1 =
                   rl.prepare_records(TLS::Record_Type::ApplicationData, std::vector<uint8_t>(127), cs.get());
-               result.test_eq("one record generated", count_records(r1), 1);
+               result.test_eq("one record generated", count_records(rec1), 1);
 
-               const auto r2 =
+               const auto rec2 =
                   rl.prepare_records(TLS::Record_Type::ApplicationData, std::vector<uint8_t>(128), cs.get());
-               result.test_eq("two records generated", count_records(r2), 2);
+               result.test_eq("two records generated", count_records(rec2), 2);
             }),
 
       CHECK(
@@ -948,13 +948,13 @@ std::vector<Test::Result> record_size_limits() {
             auto cs = rfc8448_rtt1_handshake_traffic();
             auto rl = record_layer_client(true);
 
-            const auto r1 = rl.prepare_records(
+            const auto rec1 = rl.prepare_records(
                TLS::Record_Type::ApplicationData, std::vector<uint8_t>(Botan::TLS::MAX_PLAINTEXT_SIZE), cs.get());
-            result.test_eq("one record generated", count_records(r1), 1);
+            result.test_eq("one record generated", count_records(rec1), 1);
 
-            const auto r2 = rl.prepare_records(
+            const auto rec2 = rl.prepare_records(
                TLS::Record_Type::ApplicationData, std::vector<uint8_t>(Botan::TLS::MAX_PLAINTEXT_SIZE + 1), cs.get());
-            result.test_eq("two records generated", count_records(r2), 2);
+            result.test_eq("two records generated", count_records(rec2), 2);
 
             rl.set_record_size_limits(127 + 1 /* content type byte */, Botan::TLS::MAX_PLAINTEXT_SIZE + 1);
 
@@ -971,13 +971,13 @@ std::vector<Test::Result> record_size_limits() {
 
                rl.set_record_size_limits(127 + 1 /* content type byte */, Botan::TLS::MAX_PLAINTEXT_SIZE + 1);
 
-               const auto r1 =
+               const auto rec1 =
                   rl.prepare_records(TLS::Record_Type::Handshake, std::vector<uint8_t>(Botan::TLS::MAX_PLAINTEXT_SIZE));
-               result.test_eq("one record generated", count_records(r1), 1);
+               result.test_eq("one record generated", count_records(rec1), 1);
 
-               const auto r2 = rl.prepare_records(TLS::Record_Type::Handshake,
-                                                  std::vector<uint8_t>(Botan::TLS::MAX_PLAINTEXT_SIZE + 1));
-               result.test_eq("two records generated", count_records(r2), 2);
+               const auto rec2 = rl.prepare_records(TLS::Record_Type::Handshake,
+                                                    std::vector<uint8_t>(Botan::TLS::MAX_PLAINTEXT_SIZE + 1));
+               result.test_eq("two records generated", count_records(rec2), 2);
             }),
 
       CHECK("incoming limit is not checked on unprotected records",

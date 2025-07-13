@@ -27,7 +27,6 @@ Checks: >
     -misc-const-correctness,
     -misc-include-cleaner,
     -misc-misplaced-const,
-    -misc-confusable-identifiers,
     -modernize-pass-by-value,
     -modernize-use-ranges,
     -performance-avoid-endl,
