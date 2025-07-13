@@ -33,7 +33,9 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator {
 
       bool accepts_input() const override { return true; }
 
-      size_t reseed(Botan::Entropy_Sources&, size_t, std::chrono::milliseconds) override { return 0; }
+      size_t reseed(Botan::Entropy_Sources& /*src*/, size_t /*bits*/, std::chrono::milliseconds /*timeout*/) override {
+         return 0;
+      }
 
       std::string name() const override { return "Fixed_Output_RNG"; }
 

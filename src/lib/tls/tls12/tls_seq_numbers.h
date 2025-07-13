@@ -61,9 +61,9 @@ class Stream_Sequence_Numbers final : public Connection_Sequence_Numbers {
 
       uint64_t next_read_sequence() override { return m_read_seq_no; }
 
-      bool already_seen(uint64_t) const override { return false; }
+      bool already_seen(uint64_t /*seq*/) const override { return false; }
 
-      void read_accept(uint64_t) override { m_read_seq_no++; }
+      void read_accept(uint64_t /*seq*/) override { m_read_seq_no++; }
 
    private:
       uint64_t m_write_seq_no;

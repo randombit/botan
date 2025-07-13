@@ -22,10 +22,10 @@ class BOTAN_TEST_API SecureQueue final : public Fanout_Filter,
    public:
       std::string name() const override { return "Queue"; }
 
-      void write(const uint8_t[], size_t) override;
+      void write(const uint8_t input[], size_t length) override;
 
-      size_t read(uint8_t[], size_t) override;
-      size_t peek(uint8_t[], size_t, size_t = 0) const override;
+      size_t read(uint8_t output[], size_t length) override;
+      size_t peek(uint8_t output[], size_t length, size_t offset = 0) const override;
       size_t get_bytes_read() const override;
 
       bool end_of_data() const override;

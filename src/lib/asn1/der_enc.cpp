@@ -124,7 +124,8 @@ uint32_t DER_Encoder::DER_Sequence::tag_of() const {
 /*
 * DER_Sequence Constructor
 */
-DER_Encoder::DER_Sequence::DER_Sequence(ASN1_Type t1, ASN1_Class t2) : m_type_tag(t1), m_class_tag(t2) {}
+DER_Encoder::DER_Sequence::DER_Sequence(ASN1_Type type_tag, ASN1_Class class_tag) :
+      m_type_tag(type_tag), m_class_tag(class_tag) {}
 
 /*
 * Return the encoded contents

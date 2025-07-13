@@ -158,7 +158,7 @@ class Bounded_XOF final {
       }
 
       template <size_t bytes, typename T>
-      constexpr static bool default_predicate(T) {
+      constexpr static bool default_predicate(T /*v*/) {
          return true;
       }
 

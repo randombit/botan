@@ -36,7 +36,7 @@ class CCM_Mode : public AEAD_Mode {
 
       Key_Length_Specification key_spec() const final;
 
-      bool valid_nonce_length(size_t) const final;
+      bool valid_nonce_length(size_t length) const final;
 
       size_t default_nonce_length() const final;
 

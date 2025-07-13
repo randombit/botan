@@ -35,9 +35,9 @@ class KMAC /* NOLINT(*-special-member-functions*) */ : public MessageAuthenticat
 
    private:
       void start_msg(std::span<const uint8_t> nonce) final;
-      void add_data(std::span<const uint8_t>) final;
-      void final_result(std::span<uint8_t>) final;
-      void key_schedule(std::span<const uint8_t>) final;
+      void add_data(std::span<const uint8_t> input) final;
+      void final_result(std::span<uint8_t> output) final;
+      void key_schedule(std::span<const uint8_t> key) final;
 
    private:
       size_t m_output_bit_length;

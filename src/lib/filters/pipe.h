@@ -313,7 +313,10 @@ class BOTAN_PUBLIC_API(2, 0) Pipe final : public DataSource {
       * Construct a Pipe of up to four filters. The filters are set up
       * in the same order as the arguments.
       */
-      BOTAN_FUTURE_EXPLICIT Pipe(Filter* = nullptr, Filter* = nullptr, Filter* = nullptr, Filter* = nullptr);
+      BOTAN_FUTURE_EXPLICIT Pipe(Filter* f1 = nullptr,
+                                 Filter* f2 = nullptr,
+                                 Filter* f3 = nullptr,
+                                 Filter* f4 = nullptr);
 
       /**
       * Construct a Pipe from a list of filters
@@ -329,13 +332,13 @@ class BOTAN_PUBLIC_API(2, 0) Pipe final : public DataSource {
       ~Pipe() override;
 
    private:
-      void destruct(Filter*);
+      void destruct(Filter* filt);
       void do_append(Filter* filt);
       void do_prepend(Filter* filt);
-      void find_endpoints(Filter*);
-      void clear_endpoints(Filter*);
+      void find_endpoints(Filter* filt);
+      void clear_endpoints(Filter* filt);
 
-      message_id get_message_no(std::string_view, message_id) const;
+      message_id get_message_no(std::string_view func_name, message_id msg) const;
 
       Filter* m_pipe;
       std::unique_ptr<Output_Buffers> m_outputs;

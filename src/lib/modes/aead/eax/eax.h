@@ -34,7 +34,7 @@ class EAX_Mode : public AEAD_Mode {
       Key_Length_Specification key_spec() const final;
 
       // EAX supports arbitrary nonce lengths
-      bool valid_nonce_length(size_t) const final { return true; }
+      bool valid_nonce_length(size_t /*length*/) const final { return true; }
 
       size_t tag_size() const final { return m_tag_size; }
 

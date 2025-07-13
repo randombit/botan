@@ -226,19 +226,19 @@ class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
 #endif
 
       BOTAN_DEPRECATED("Use version without workspace arg")
-      static EC_AffinePoint g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>&) {
+      static EC_AffinePoint g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& /*ws*/) {
          return EC_AffinePoint::g_mul(scalar, rng);
       }
 
       BOTAN_DEPRECATED("Use version without workspace arg")
-      EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>&) const {
+      EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& /*ws*/) const {
          return this->mul(scalar, rng);
       }
 
       /// Multiply a point by a scalar, returning the byte encoding of the x coordinate only
       secure_vector<uint8_t> mul_x_only(const EC_Scalar& scalar,
                                         RandomNumberGenerator& rng,
-                                        std::vector<BigInt>&) const {
+                                        std::vector<BigInt>& /*ws*/) const {
          return this->mul_x_only(scalar, rng);
       }
 

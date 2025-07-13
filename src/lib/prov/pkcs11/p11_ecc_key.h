@@ -209,7 +209,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_EC_PrivateKey : public virtual Private_Key,
 
       std::size_t estimated_strength() const override;
 
-      bool check_key(RandomNumberGenerator&, bool) const override;
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       AlgorithmIdentifier algorithm_identifier() const override;
 

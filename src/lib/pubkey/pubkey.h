@@ -507,7 +507,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Encryptor_EME final : public PK_Encryptor {
       size_t ciphertext_length(size_t ptext_len) const override;
 
    private:
-      std::vector<uint8_t> enc(const uint8_t[], size_t, RandomNumberGenerator& rng) const override;
+      std::vector<uint8_t> enc(const uint8_t ptext[], size_t len, RandomNumberGenerator& rng) const override;
 
       std::unique_ptr<PK_Ops::Encryption> m_op;
 };

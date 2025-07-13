@@ -618,13 +618,13 @@ BOTAN_FFI_EXPORT(3, 0) int botan_cipher_get_ideal_update_granularity(botan_ciphe
 * Get information about the key lengths. Prefer botan_cipher_get_keyspec
 */
 BOTAN_FFI_EXPORT(2, 0)
-int botan_cipher_query_keylen(botan_cipher_t, size_t* out_minimum_keylength, size_t* out_maximum_keylength);
+int botan_cipher_query_keylen(botan_cipher_t cipher, size_t* out_minimum_keylength, size_t* out_maximum_keylength);
 
 /**
 * Get information about the supported key lengths.
 */
 BOTAN_FFI_EXPORT(2, 8)
-int botan_cipher_get_keyspec(botan_cipher_t, size_t* min_keylen, size_t* max_keylen, size_t* mod_keylen);
+int botan_cipher_get_keyspec(botan_cipher_t cipher, size_t* min_keylen, size_t* max_keylen, size_t* mod_keylen);
 
 /**
 * Set the key for this cipher object

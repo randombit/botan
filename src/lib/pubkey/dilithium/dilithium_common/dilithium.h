@@ -81,7 +81,7 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PublicKey : public virtual Public_Key {
 
       std::vector<uint8_t> public_key_bits() const override;
 
-      bool check_key(RandomNumberGenerator&, bool) const override;
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::Signature); }
 
@@ -138,7 +138,7 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PrivateKey final : public virtual Dilithi
        * with "Randomized" or "Deterministic" rhoprime. Pass either of those
        * strings as @p params. Default (i.e. empty @p params is "Randomized").
        */
-      std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator&,
+      std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
                                                              std::string_view params,
                                                              std::string_view provider) const override;
 

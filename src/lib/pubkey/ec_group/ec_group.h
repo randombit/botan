@@ -524,7 +524,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @return base_point*k
       */
       BOTAN_DEPRECATED("Use EC_AffinePoint and EC_Scalar")
-      EC_Point blinded_base_point_multiply(const BigInt& k_bn, RandomNumberGenerator& rng, std::vector<BigInt>&) const {
+      EC_Point blinded_base_point_multiply(const BigInt& k_bn,
+                                           RandomNumberGenerator& rng,
+                                           std::vector<BigInt>& /*ws*/) const {
          auto k = EC_Scalar::from_bigint(*this, k_bn);
          auto pt = EC_AffinePoint::g_mul(k, rng);
          return pt.to_legacy_point();
@@ -539,7 +541,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @return x coordinate of base_point*k
       */
       BOTAN_DEPRECATED("Use EC_AffinePoint and EC_Scalar")
-      BigInt blinded_base_point_multiply_x(const BigInt& k_bn, RandomNumberGenerator& rng, std::vector<BigInt>&) const {
+      BigInt blinded_base_point_multiply_x(const BigInt& k_bn,
+                                           RandomNumberGenerator& rng,
+                                           std::vector<BigInt>& /*ws*/) const {
          auto k = EC_Scalar::from_bigint(*this, k_bn);
          return BigInt(EC_AffinePoint::g_mul(k, rng).x_bytes());
       }
@@ -555,7 +559,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       EC_Point blinded_var_point_multiply(const EC_Point& point,
                                           const BigInt& k_bn,
                                           RandomNumberGenerator& rng,
-                                          std::vector<BigInt>&) const {
+                                          std::vector<BigInt>& /*ws*/) const {
          auto k = EC_Scalar::from_bigint(*this, k_bn);
          auto pt = EC_AffinePoint(*this, point);
          return pt.mul(k, rng).to_legacy_point();

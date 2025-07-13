@@ -54,7 +54,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_ECDSA_PublicKey final : public PKCS11_EC_Pub
       /**
        * @throws Not_Implemented as this operation is not possible in PKCS11
        */
-      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator&) const final {
+      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& /*rng*/) const final {
          throw Not_Implemented("Cannot generate a new PKCS#11 ECDSA keypair from this public key");
       }
 

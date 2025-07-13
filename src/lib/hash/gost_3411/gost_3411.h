@@ -36,8 +36,8 @@ class GOST_34_11 final : public HashFunction {
    private:
       void compress_n(const uint8_t input[], size_t blocks);
 
-      void add_data(std::span<const uint8_t>) override;
-      void final_result(std::span<uint8_t>) override;
+      void add_data(std::span<const uint8_t> input) override;
+      void final_result(std::span<uint8_t> output) override;
 
       GOST_28147_89 m_cipher;
       AlignmentBuffer<uint8_t, 32> m_buffer;

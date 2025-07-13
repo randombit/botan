@@ -198,7 +198,7 @@ bool maybe_BER(DataSource& src);
 */
 class BOTAN_PUBLIC_API(2, 0) BER_Decoding_Error : public Decoding_Error {
    public:
-      explicit BER_Decoding_Error(std::string_view);
+      explicit BER_Decoding_Error(std::string_view err);
 };
 
 /**
@@ -255,8 +255,8 @@ class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
       */
       static void register_oid(const OID& oid, std::string_view name);
 
-      void encode_into(DER_Encoder&) const override;
-      void decode_from(BER_Decoder&) override;
+      void encode_into(DER_Encoder& to) const override;
+      void decode_from(BER_Decoder& from) override;
 
       /**
       * Find out whether this OID is empty
@@ -360,10 +360,10 @@ BOTAN_PUBLIC_API(2, 0) bool operator<(const OID& a, const OID& b);
 class BOTAN_PUBLIC_API(2, 0) ASN1_Time final : public ASN1_Object {
    public:
       /// DER encode a ASN1_Time
-      void encode_into(DER_Encoder&) const override;
+      void encode_into(DER_Encoder& to) const override;
 
       // Decode a BER encoded ASN1_Time
-      void decode_from(BER_Decoder&) override;
+      void decode_from(BER_Decoder& from) override;
 
       /// Return an internal string representation of the time
       std::string to_string() const;
@@ -411,12 +411,12 @@ class BOTAN_PUBLIC_API(2, 0) ASN1_Time final : public ASN1_Object {
 /*
 * Comparison Operations
 */
-BOTAN_PUBLIC_API(2, 0) bool operator==(const ASN1_Time&, const ASN1_Time&);
-BOTAN_PUBLIC_API(2, 0) bool operator!=(const ASN1_Time&, const ASN1_Time&);
-BOTAN_PUBLIC_API(2, 0) bool operator<=(const ASN1_Time&, const ASN1_Time&);
-BOTAN_PUBLIC_API(2, 0) bool operator>=(const ASN1_Time&, const ASN1_Time&);
-BOTAN_PUBLIC_API(2, 0) bool operator<(const ASN1_Time&, const ASN1_Time&);
-BOTAN_PUBLIC_API(2, 0) bool operator>(const ASN1_Time&, const ASN1_Time&);
+BOTAN_PUBLIC_API(2, 0) bool operator==(const ASN1_Time& x, const ASN1_Time& y);
+BOTAN_PUBLIC_API(2, 0) bool operator!=(const ASN1_Time& x, const ASN1_Time& y);
+BOTAN_PUBLIC_API(2, 0) bool operator<=(const ASN1_Time& x, const ASN1_Time& y);
+BOTAN_PUBLIC_API(2, 0) bool operator>=(const ASN1_Time& x, const ASN1_Time& y);
+BOTAN_PUBLIC_API(2, 0) bool operator<(const ASN1_Time& x, const ASN1_Time& y);
+BOTAN_PUBLIC_API(2, 0) bool operator>(const ASN1_Time& x, const ASN1_Time& y);
 
 typedef ASN1_Time X509_Time;
 
@@ -426,8 +426,8 @@ typedef ASN1_Time X509_Time;
 */
 class BOTAN_PUBLIC_API(2, 0) ASN1_String final : public ASN1_Object {
    public:
-      void encode_into(DER_Encoder&) const override;
-      void decode_from(BER_Decoder&) override;
+      void encode_into(DER_Encoder& to) const override;
+      void decode_from(BER_Decoder& from) override;
 
       ASN1_Type tagging() const { return m_tag; }
 
@@ -462,8 +462,8 @@ class BOTAN_PUBLIC_API(2, 0) AlgorithmIdentifier final : public ASN1_Object {
    public:
       enum Encoding_Option : uint8_t { USE_NULL_PARAM, USE_EMPTY_PARAM };
 
-      void encode_into(DER_Encoder&) const override;
-      void decode_from(BER_Decoder&) override;
+      void encode_into(DER_Encoder& to) const override;
+      void decode_from(BER_Decoder& from) override;
 
       AlgorithmIdentifier() = default;
 
@@ -499,8 +499,8 @@ class BOTAN_PUBLIC_API(2, 0) AlgorithmIdentifier final : public ASN1_Object {
 /*
 * Comparison Operations
 */
-BOTAN_PUBLIC_API(2, 0) bool operator==(const AlgorithmIdentifier&, const AlgorithmIdentifier&);
-BOTAN_PUBLIC_API(2, 0) bool operator!=(const AlgorithmIdentifier&, const AlgorithmIdentifier&);
+BOTAN_PUBLIC_API(2, 0) bool operator==(const AlgorithmIdentifier& x, const AlgorithmIdentifier& y);
+BOTAN_PUBLIC_API(2, 0) bool operator!=(const AlgorithmIdentifier& x, const AlgorithmIdentifier& y);
 
 }  // namespace Botan
 

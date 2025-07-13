@@ -35,9 +35,9 @@ class CMAC final : public MessageAuthenticationCode {
       explicit CMAC(std::unique_ptr<BlockCipher> cipher);
 
    private:
-      void add_data(std::span<const uint8_t>) override;
-      void final_result(std::span<uint8_t>) override;
-      void key_schedule(std::span<const uint8_t>) override;
+      void add_data(std::span<const uint8_t> input) override;
+      void final_result(std::span<uint8_t> output) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
       std::unique_ptr<BlockCipher> m_cipher;
       secure_vector<uint8_t> m_buffer, m_state, m_B, m_P;

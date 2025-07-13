@@ -581,7 +581,7 @@ class BOTAN_PUBLIC_API(2, 0) Hex_Encoder final : public Filter {
       BOTAN_FUTURE_EXPLICIT Hex_Encoder(bool newlines = false, size_t line_length = 72, Case the_case = Uppercase);
 
    private:
-      void encode_and_send(const uint8_t[], size_t);
+      void encode_and_send(const uint8_t input[], size_t length);
 
       const Case m_casing;
       const size_t m_line_length;
@@ -598,7 +598,7 @@ class BOTAN_PUBLIC_API(2, 0) Hex_Decoder final : public Filter {
    public:
       std::string name() const override { return "Hex_Decoder"; }
 
-      void write(const uint8_t[], size_t) override;
+      void write(const uint8_t input[], size_t length) override;
       void end_msg() override;
 
       /**
@@ -619,7 +619,7 @@ class BOTAN_PUBLIC_API(2, 0) Hex_Decoder final : public Filter {
 */
 class BOTAN_PUBLIC_API(2, 0) BitBucket final : public Filter {
    public:
-      void write(const uint8_t[], size_t) override { /* discard */
+      void write(const uint8_t /*input*/[], size_t /*length*/) override { /* discard */
       }
 
       std::string name() const override { return "BitBucket"; }
@@ -641,7 +641,10 @@ class BOTAN_PUBLIC_API(2, 0) Chain final : public Fanout_Filter {
       * Construct a chain of up to four filters. The filters are set
       * up in the same order as the arguments.
       */
-      BOTAN_FUTURE_EXPLICIT Chain(Filter* = nullptr, Filter* = nullptr, Filter* = nullptr, Filter* = nullptr);
+      BOTAN_FUTURE_EXPLICIT Chain(Filter* f1 = nullptr,
+                                  Filter* f2 = nullptr,
+                                  Filter* f3 = nullptr,
+                                  Filter* f4 = nullptr);
 
       /**
       * Construct a chain from range of filters
@@ -667,7 +670,7 @@ class BOTAN_PUBLIC_API(2, 0) Fork : public Fanout_Filter {
       /**
       * Construct a Fork filter with up to four forks.
       */
-      Fork(Filter*, Filter*, Filter* = nullptr, Filter* = nullptr);
+      Fork(Filter* f1, Filter* f2, Filter* f3 = nullptr, Filter* f4 = nullptr);
 
       /**
       * Construct a Fork from range of filters
@@ -691,7 +694,7 @@ class BOTAN_PUBLIC_API(2, 0) Threaded_Fork final : public Fork {
       /**
       * Construct a Threaded_Fork filter with up to four forks.
       */
-      Threaded_Fork(Filter*, Filter*, Filter* = nullptr, Filter* = nullptr);
+      Threaded_Fork(Filter* f1, Filter* f2, Filter* f3 = nullptr, Filter* f4 = nullptr);
 
       /**
       * Construct a Threaded_Fork from range of filters

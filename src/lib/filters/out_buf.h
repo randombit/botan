@@ -22,12 +22,12 @@ class SecureQueue;
 */
 class Output_Buffers final {
    public:
-      size_t read(uint8_t[], size_t, Pipe::message_id);
-      size_t peek(uint8_t[], size_t, size_t, Pipe::message_id) const;
-      size_t get_bytes_read(Pipe::message_id) const;
-      size_t remaining(Pipe::message_id) const;
+      size_t read(uint8_t output[], size_t length, Pipe::message_id msg);
+      size_t peek(uint8_t output[], size_t length, size_t stream_offset, Pipe::message_id msg) const;
+      size_t get_bytes_read(Pipe::message_id msg) const;
+      size_t remaining(Pipe::message_id msg) const;
 
-      void add(SecureQueue*);
+      void add(SecureQueue* queue);
       void retire();
 
       Pipe::message_id message_count() const;
@@ -35,7 +35,7 @@ class Output_Buffers final {
       Output_Buffers() = default;
 
    private:
-      class SecureQueue* get(Pipe::message_id) const;
+      SecureQueue* get(Pipe::message_id msg) const;
 
       std::deque<std::unique_ptr<SecureQueue>> m_buffers;
       Pipe::message_id m_offset = 0;

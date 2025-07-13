@@ -47,7 +47,7 @@ class secure_allocator {
       ~secure_allocator() noexcept = default;
 
       template <typename U>
-      explicit secure_allocator(const secure_allocator<U>&) noexcept {}
+      explicit secure_allocator(const secure_allocator<U>& /*other*/) noexcept {}
 
       T* allocate(std::size_t n) { return static_cast<T*>(allocate_memory(n, sizeof(T))); }
 
@@ -55,12 +55,12 @@ class secure_allocator {
 };
 
 template <typename T, typename U>
-inline bool operator==(const secure_allocator<T>&, const secure_allocator<U>&) {
+inline bool operator==(const secure_allocator<T>& /*a*/, const secure_allocator<U>& /*b*/) {
    return true;
 }
 
 template <typename T, typename U>
-inline bool operator!=(const secure_allocator<T>&, const secure_allocator<U>&) {
+inline bool operator!=(const secure_allocator<T>& /*a*/, const secure_allocator<U>& /*b*/) {
    return false;
 }
 

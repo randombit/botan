@@ -46,7 +46,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_ECDH_PublicKey : public PKCS11_EC_PublicKey 
       /**
        * @throws Not_Implemented as this operation is not possible in PKCS11
        */
-      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator&) const final {
+      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& /*rng*/) const final {
          throw Not_Implemented("Cannot generate a new PKCS#11 ECDH keypair from this public key");
       }
 
@@ -105,7 +105,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_ECDH_PrivateKey final : public virtual PKCS1
       /**
        * @throws Not_Implemented as this operation is not possible in PKCS11
        */
-      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator&) const override {
+      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& /*rng*/) const override {
          throw Not_Implemented("Cannot generate a new PKCS#11 ECDH keypair from this private key");
       }
 
