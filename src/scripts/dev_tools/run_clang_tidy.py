@@ -58,7 +58,6 @@ disabled_needs_work = [
     'misc-const-correctness', # pretty noisy
     'misc-include-cleaner',
     'misc-misplaced-const',
-    'misc-confusable-identifiers',
     'modernize-pass-by-value',
     'modernize-use-ranges', # limited by compiler support currently
     'performance-avoid-endl',

@@ -305,7 +305,7 @@ void AES_INV_SBOX(uint32_t V[8]) {
    const uint32_t d3 = tinv12 ^ tinv13;
    const uint32_t sd1 = d1 ^ d3;
    const uint32_t sd0 = d0 ^ d2;
-   const uint32_t dl = d0 ^ d1;
+   const uint32_t dl = d0 ^ d1;  // NOLINT(misc-confusable-identifiers)
    const uint32_t dh = d2 ^ d3;
    const uint32_t dd = sd0 ^ sd1;
    const uint32_t abcd3 = dh & bh;
