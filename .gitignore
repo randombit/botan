@@ -27,6 +27,12 @@ vgcore.*
 \#*\#
 .\#*
 
+# Benchmark output in top level
+/*.json
+
+# Misc dev scripts in top level
+/*.sh
+
 # Editor configuration files (top level)
 /*.sublime-project
 /*.sublime-workspace
