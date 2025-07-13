@@ -99,12 +99,11 @@ int botan_rng_init_custom(botan_rng_t* rng_out,
                        int (*get_cb)(void* context, uint8_t* out, size_t out_len),
                        int (*add_entropy_cb)(void* context, const uint8_t input[], size_t length),
                        void (*destroy_cb)(void* context)) :
-                  m_name(name) {
-               m_context = context;
-               m_get_cb = get_cb;
-               m_add_entropy_cb = add_entropy_cb;
-               m_destroy_cb = destroy_cb;
-            }
+                  m_name(name),
+                  m_context(context),
+                  m_get_cb(get_cb),
+                  m_add_entropy_cb(add_entropy_cb),
+                  m_destroy_cb(destroy_cb) {}
 
             ~Custom_RNG() override {
                if(m_destroy_cb) {

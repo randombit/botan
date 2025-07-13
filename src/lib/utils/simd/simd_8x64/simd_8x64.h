@@ -26,7 +26,7 @@ class SIMD_8x64 final {
       ~SIMD_8x64() = default;
 
       // zero initialized
-      BOTAN_FN_ISA_SIMD_8X64 SIMD_8x64() { m_simd = _mm512_setzero_si512(); }
+      BOTAN_FN_ISA_SIMD_8X64 SIMD_8x64() : m_simd(_mm512_setzero_si512()) {}
 
       // Load two halves at different addresses
       static BOTAN_FN_ISA_SIMD_8X64 SIMD_8x64 load_le4(const void* in0,

@@ -32,13 +32,13 @@ class Output_Buffers final {
 
       Pipe::message_id message_count() const;
 
-      Output_Buffers();
+      Output_Buffers() = default;
 
    private:
       class SecureQueue* get(Pipe::message_id) const;
 
       std::deque<std::unique_ptr<SecureQueue>> m_buffers;
-      Pipe::message_id m_offset;
+      Pipe::message_id m_offset = 0;
 };
 
 }  // namespace Botan

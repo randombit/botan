@@ -52,6 +52,8 @@ using native_simd_type = __vector unsigned int;
 using native_simd_type = uint32x4_t;
 #endif
 
+// NOLINTBEGIN(portability-simd-intrinsics)
+
 /**
 * 4x32 bit SIMD register
 *
@@ -70,6 +72,8 @@ class SIMD_4x32 final {
       SIMD_4x32(SIMD_4x32&& other) = default;
 
       ~SIMD_4x32() = default;
+
+      /* NOLINTBEGIN(*-prefer-member-initializer) */
 
       /**
       * Zero initialize SIMD register with 4 32-bit elements
@@ -105,6 +109,8 @@ class SIMD_4x32 final {
          m_simd = __lsx_vld(B, 0);
 #endif
       }
+
+      /* NOLINTEND(*-prefer-member-initializer) */
 
       /**
       * Load SIMD register with one 32-bit element repeated
@@ -766,6 +772,8 @@ class SIMD_4x32 final {
    private:
       native_simd_type m_simd;
 };
+
+// NOLINTEND(portability-simd-intrinsics)
 
 template <size_t R>
 inline SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 rotl(SIMD_4x32 input) {

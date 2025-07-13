@@ -23,7 +23,6 @@ Checks: >
     -bugprone-empty-catch,
     -cert-err58-cpp,
     -cppcoreguidelines-avoid-const-or-ref-data-members,
-    -cppcoreguidelines-prefer-member-initializer,
     -misc-const-correctness,
     -misc-include-cleaner,
     -misc-misplaced-const,

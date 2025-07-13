@@ -585,8 +585,10 @@ class BOTAN_PUBLIC_API(2, 0) Hex_Encoder final : public Filter {
 
       const Case m_casing;
       const size_t m_line_length;
-      std::vector<uint8_t> m_in, m_out;
-      size_t m_position, m_counter;
+      std::vector<uint8_t> m_in;
+      std::vector<uint8_t> m_out;
+      size_t m_position = 0;
+      size_t m_counter = 0;
 };
 
 /**
@@ -609,7 +611,7 @@ class BOTAN_PUBLIC_API(2, 0) Hex_Decoder final : public Filter {
    private:
       const Decoder_Checking m_checking;
       std::vector<uint8_t> m_in, m_out;
-      size_t m_position;
+      size_t m_position = 0;
 };
 
 /**

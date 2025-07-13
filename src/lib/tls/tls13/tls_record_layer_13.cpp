@@ -52,10 +52,12 @@ Record_Type read_record_type(const uint8_t type_byte) {
 class TLSPlaintext_Header final {
    public:
       TLSPlaintext_Header(std::vector<uint8_t> hdr, const bool check_tls13_version) {
+         // NOLINTBEGIN(*-prefer-member-initializer)
          m_type = read_record_type(hdr[0]);
          m_legacy_version = Protocol_Version(make_uint16(hdr[1], hdr[2]));
          m_fragment_length = make_uint16(hdr[3], hdr[4]);
          m_serialized = std::move(hdr);
+         // NOLINTEND(*-prefer-member-initializer)
 
          // If no full version check is requested, we just verify the practically
          // ossified major version number.

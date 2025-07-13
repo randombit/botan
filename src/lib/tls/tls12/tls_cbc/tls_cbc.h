@@ -83,18 +83,18 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode {
 
       void key_schedule(std::span<const uint8_t> key) final;
 
+      std::unique_ptr<Cipher_Mode> m_cbc;
+      std::unique_ptr<MessageAuthenticationCode> m_mac;
+
       const std::string m_cipher_name;
       const std::string m_mac_name;
       size_t m_cipher_keylen;
-      size_t m_mac_keylen;
-      size_t m_iv_size;
-      size_t m_tag_size;
       size_t m_block_size;
+      size_t m_iv_size;
+      size_t m_mac_keylen;
+      size_t m_tag_size;
       bool m_use_encrypt_then_mac;
       bool m_is_datagram;
-
-      std::unique_ptr<Cipher_Mode> m_cbc;
-      std::unique_ptr<MessageAuthenticationCode> m_mac;
 
       secure_vector<uint8_t> m_cbc_state;
       std::vector<uint8_t> m_ad;

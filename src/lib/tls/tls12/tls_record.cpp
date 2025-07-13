@@ -36,12 +36,14 @@ Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
                                                  const Ciphersuite& suite,
                                                  const Session_Keys& keys,
                                                  bool uses_encrypt_then_mac) {
+   // NOLINTBEGIN(*-prefer-member-initializer)
    m_nonce_format = suite.nonce_format();
    m_nonce_bytes_from_record = suite.nonce_bytes_from_record(version);
    m_nonce_bytes_from_handshake = suite.nonce_bytes_from_handshake();
 
    const secure_vector<uint8_t>& aead_key = keys.aead_key(side);
    m_nonce = keys.nonce(side);
+   // NOLINTEND(*-prefer-member-initializer)
 
    BOTAN_ASSERT_NOMSG(m_nonce.size() == m_nonce_bytes_from_handshake);
 

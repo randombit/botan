@@ -467,7 +467,7 @@ class word3 final {
 #if defined(__BITINT_MAXWIDTH__) && (__BITINT_MAXWIDTH__ >= 3 * 64)
 
    public:
-      constexpr word3() { m_w = 0; }
+      constexpr word3() : m_w(0) {}
 
       inline constexpr void mul(W x, W y) { m_w += static_cast<W3>(x) * y; }
 
@@ -502,11 +502,7 @@ class word3 final {
 #else
 
    public:
-      constexpr word3() {
-         m_w2 = 0;
-         m_w1 = 0;
-         m_w0 = 0;
-      }
+      constexpr word3() : m_w0(0), m_w1(0), m_w2(0) {}
 
       inline constexpr void mul(W x, W y) {
    #if defined(BOTAN_MP_USE_X86_64_ASM)
@@ -609,7 +605,9 @@ class word3 final {
       }
 
    private:
-      W m_w0, m_w1, m_w2;
+      W m_w0;
+      W m_w1;
+      W m_w2;
 #endif
 };
 

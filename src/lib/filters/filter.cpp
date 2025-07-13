@@ -17,9 +17,6 @@ namespace Botan {
 */
 Filter::Filter() {
    m_next.resize(1);
-   m_port_num = 0;
-   m_filter_owns = 0;
-   m_owned = false;
 }
 
 void Filter::send(std::span<const uint8_t> in, size_t length) {

@@ -68,7 +68,8 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager {
             m_rsa_key(rsa_key),
             m_ecdsa_cert(ecdsa_cert),
             m_ecdsa_ca(ecdsa_ca),
-            m_ecdsa_key(ecdsa_key) {
+            m_ecdsa_key(ecdsa_key),
+            m_provides_client_certs(with_client_certs) {
          auto store = std::make_unique<Botan::Certificate_Store_In_Memory>();
          store->add_certificate(m_rsa_ca);
          store->add_certificate(m_ecdsa_ca);
@@ -76,7 +77,6 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager {
          store->add_crl(ecdsa_crl);
 
          m_stores.push_back(std::move(store));
-         m_provides_client_certs = with_client_certs;
       }
 
       std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(const std::string& /*type*/,

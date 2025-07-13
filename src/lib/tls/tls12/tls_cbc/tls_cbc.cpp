@@ -30,19 +30,18 @@ TLS_CBC_HMAC_AEAD_Mode::TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir dir,
                                                size_t mac_keylen,
                                                Protocol_Version version,
                                                bool use_encrypt_then_mac) :
+      m_mac(std::move(mac)),
       m_cipher_name(cipher->name()),
-      m_mac_name(mac->name()),
+      m_mac_name(m_mac->name()),
       m_cipher_keylen(cipher_keylen),
+      m_block_size(cipher->block_size()),
+      m_iv_size(m_block_size),
       m_mac_keylen(mac_keylen),
-      m_use_encrypt_then_mac(use_encrypt_then_mac) {
-   m_tag_size = mac->output_length();
-   m_block_size = cipher->block_size();
-
-   m_iv_size = m_block_size;
-
-   m_is_datagram = version.is_datagram_protocol();
-
-   m_mac = std::move(mac);
+      m_tag_size(m_mac->output_length()),
+      m_use_encrypt_then_mac(use_encrypt_then_mac),
+      m_is_datagram(version.is_datagram_protocol()) {
+   BOTAN_ASSERT_NOMSG(m_mac->valid_keylength(m_mac_keylen));
+   BOTAN_ASSERT_NOMSG(cipher->valid_keylength(m_cipher_keylen));
 
    auto null_padding = std::make_unique<Null_Padding>();
    if(dir == Cipher_Dir::Encryption) {

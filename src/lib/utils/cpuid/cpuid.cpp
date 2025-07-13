@@ -78,11 +78,13 @@ uint32_t cleared_cpuid_bits() {
 #endif
 
 CPUID::CPUID_Data::CPUID_Data() {
+   // NOLINTBEGIN(*-prefer-member-initializer)
 #if defined(BOTAN_HAS_CPUID_DETECTION)
    m_processor_features = detect_cpu_features(~cleared_cpuid_bits());
 #else
    m_processor_features = 0;
 #endif
+   // NOLINTEND(*-prefer-member-initializer)
 }
 
 std::optional<CPUFeature> CPUID::bit_from_string(std::string_view tok) {

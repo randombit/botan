@@ -18,10 +18,7 @@ namespace Botan {
 */
 class SecureQueueNode final {
    public:
-      SecureQueueNode() : m_buffer(DefaultBufferSize) {
-         m_next = nullptr;
-         m_start = m_end = 0;
-      }
+      SecureQueueNode() : m_next(nullptr), m_buffer(DefaultBufferSize), m_start(0), m_end(0) {}
 
       ~SecureQueueNode() {
          m_next = nullptr;
@@ -69,8 +66,7 @@ class SecureQueueNode final {
 /*
 * Create a SecureQueue
 */
-SecureQueue::SecureQueue() {
-   m_bytes_read = 0;
+SecureQueue::SecureQueue() : m_bytes_read(0) {
    set_next(nullptr, 0);
    m_head = m_tail = new SecureQueueNode;  // NOLINT(*-owning-memory)
 }
@@ -78,8 +74,7 @@ SecureQueue::SecureQueue() {
 /*
 * Copy a SecureQueue
 */
-SecureQueue::SecureQueue(const SecureQueue& input) : Fanout_Filter() {
-   m_bytes_read = 0;
+SecureQueue::SecureQueue(const SecureQueue& input) : Fanout_Filter(), m_bytes_read(0) {
    set_next(nullptr, 0);
 
    m_head = m_tail = new SecureQueueNode;  // NOLINT(*-owning-memory)

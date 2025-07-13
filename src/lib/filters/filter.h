@@ -134,10 +134,11 @@ class BOTAN_PUBLIC_API(2, 0) Filter {
 
       secure_vector<uint8_t> m_write_queue;
       std::vector<Filter*> m_next;  // not owned
-      size_t m_port_num, m_filter_owns;
+      size_t m_port_num = 0;
+      size_t m_filter_owns = 0;
 
       // true if filter belongs to a pipe --> prohibit filter sharing!
-      bool m_owned;
+      bool m_owned = false;
 };
 
 /**

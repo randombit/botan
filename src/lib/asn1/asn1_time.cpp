@@ -28,6 +28,7 @@ ASN1_Time::ASN1_Time(const std::chrono::system_clock::time_point& time) {
    m_minute = cal.minutes();
    m_second = cal.seconds();
 
+   // NOLINTNEXTLINE(*-prefer-member-initializer)
    m_tag = (m_year >= 2050) ? ASN1_Type::GeneralizedTime : ASN1_Type::UtcTime;
 }
 

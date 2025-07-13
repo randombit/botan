@@ -14,6 +14,8 @@
 
 namespace Botan {
 
+// NOLINTBEGIN(portability-simd-intrinsics)
+
 class SIMD_8x32 final {
    public:
       SIMD_8x32& operator=(const SIMD_8x32& other) = default;
@@ -25,10 +27,11 @@ class SIMD_8x32 final {
       ~SIMD_8x32() = default;
 
       BOTAN_FN_ISA_AVX2
-      BOTAN_FORCE_INLINE SIMD_8x32() noexcept { m_avx2 = _mm256_setzero_si256(); }
+      BOTAN_FORCE_INLINE SIMD_8x32() noexcept : m_avx2(_mm256_setzero_si256()) {}
 
       BOTAN_FN_ISA_AVX2
       explicit SIMD_8x32(const uint32_t B[8]) noexcept {
+         // NOLINTNEXTLINE(*-prefer-member-initializer)
          m_avx2 = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(B));
       }
 
@@ -41,11 +44,13 @@ class SIMD_8x32 final {
                          uint32_t B5,
                          uint32_t B6,
                          uint32_t B7) noexcept {
+         // NOLINTNEXTLINE(*-prefer-member-initializer)
          m_avx2 = _mm256_set_epi32(B7, B6, B5, B4, B3, B2, B1, B0);
       }
 
       BOTAN_FN_ISA_AVX2
       explicit SIMD_8x32(uint32_t B0, uint32_t B1, uint32_t B2, uint32_t B3) noexcept {
+         // NOLINTNEXTLINE(*-prefer-member-initializer)
          m_avx2 = _mm256_set_epi32(B3, B2, B1, B0, B3, B2, B1, B0);
       }
 
@@ -330,6 +335,8 @@ class SIMD_8x32 final {
 
       __m256i m_avx2;
 };
+
+// NOLINTEND(portability-simd-intrinsics)
 
 template <size_t R>
 inline SIMD_8x32 rotl(SIMD_8x32 input) {

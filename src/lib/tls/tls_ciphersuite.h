@@ -160,9 +160,8 @@ class BOTAN_PUBLIC_API(2, 0) Ciphersuite final {
             m_cipher_algo(cipher_algo),
             m_mac_algo(mac_algo),
             m_cipher_keylen(cipher_keylen),
-            m_mac_keylen(mac_keylen) {
-         m_usable = is_usable();
-      }
+            m_mac_keylen(mac_keylen),
+            m_usable(is_usable()) {}
 
       uint16_t m_ciphersuite_code = 0;
 

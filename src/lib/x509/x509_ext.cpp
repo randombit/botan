@@ -1131,6 +1131,7 @@ std::pair<IPValidationMap<IPv4>, IPValidationMap<IPv6>> create_validation_map(
 template <IPAddressBlocks::Version V>
 IPAddressBlocks::IPAddressChoice<V>::IPAddressChoice(
    std::optional<std::span<const IPAddressBlocks::IPAddressOrRange<V>>> ranges) {
+   // NOLINTNEXTLINE(*-prefer-member-initializer)
    m_ip_addr_ranges = sort_and_merge_ranges<IPAddressOrRange<V>>(ranges);
 }
 

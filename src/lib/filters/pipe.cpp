@@ -42,11 +42,8 @@ Pipe::Pipe(Filter* f1, Filter* f2, Filter* f3, Filter* f4) : Pipe({f1, f2, f3, f
 /*
 * Pipe Constructor
 */
-Pipe::Pipe(std::initializer_list<Filter*> args) {
+Pipe::Pipe(std::initializer_list<Filter*> args) : m_pipe(nullptr), m_default_read(0), m_inside_msg(false) {
    m_outputs = std::make_unique<Output_Buffers>();
-   m_pipe = nullptr;
-   m_default_read = 0;
-   m_inside_msg = false;
 
    for(auto* arg : args) {
       do_append(arg);
