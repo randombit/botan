@@ -29,7 +29,7 @@ struct RawPage {
       explicit RawPage(void* p) : m_p(p) {}
 
       ~RawPage() {
-         // NOLINTNEXTLINE(*-no-malloc)
+         // NOLINTNEXTLINE(*-no-malloc,*-owning-memory)
          std::free(m_p);
       }
 

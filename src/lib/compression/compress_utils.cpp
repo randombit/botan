@@ -25,7 +25,7 @@ void* Compression_Alloc_Info::do_malloc(size_t n, size_t size) {
       return nullptr;
    }
 
-   void* ptr = std::calloc(n, size);  // NOLINT(*-no-malloc)
+   void* ptr = std::calloc(n, size);  // NOLINT(*-no-malloc,*-owning-memory)
 
    /*
    * Return null rather than throwing here as we are being called by a
@@ -51,7 +51,7 @@ void Compression_Alloc_Info::do_free(void* ptr) {
       }
 
       secure_scrub_memory(ptr, i->second);
-      std::free(ptr);  // NOLINT(*-no-malloc)
+      std::free(ptr);  // NOLINT(*-no-malloc,*-owning-memory)
       m_current_allocs.erase(i);
    }
 }

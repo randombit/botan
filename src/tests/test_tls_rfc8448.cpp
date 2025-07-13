@@ -814,11 +814,11 @@ void sort_rfc8448_extensions(Botan::TLS::Extensions& exts,
 void add_renegotiation_extension(Botan::TLS::Extensions& exts) {
    // Renegotiation is not possible in TLS 1.3. Nevertheless, RFC 8448 requires
    // to add this to the Client Hello for reasons.
-   exts.add(new Renegotiation_Extension());
+   exts.add(new Renegotiation_Extension());  // NOLINT(*-owning-memory)
 }
 
 void add_early_data_indication(Botan::TLS::Extensions& exts) {
-   exts.add(new Botan::TLS::EarlyDataIndication());
+   exts.add(new Botan::TLS::EarlyDataIndication());  // NOLINT(*-owning-memory)
 }
 
 std::vector<uint8_t> strip_message_header(const std::vector<uint8_t>& msg) {
@@ -976,7 +976,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                // For some reason, presumably checking compatibility, the RFC 8448 Client
                // Hello includes a (TLS 1.2) Session_Ticket extension. We don't normally add
                // this obsoleted extension in a TLS 1.3 client.
-               exts.add(new Botan::TLS::Session_Ticket_Extension());
+               exts.add(new Botan::TLS::Session_Ticket_Extension());  // NOLINT(*-owning-memory)
 
                add_renegotiation_extension(exts);
                sort_rfc8448_extensions(exts, side);
@@ -1132,7 +1132,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                            Botan::TLS::Connection_Side side,
                                            Botan::TLS::Handshake_Type which_message) {
             if(which_message == Handshake_Type::ClientHello) {
-               exts.add(new Padding(87));
+               exts.add(new Padding(87));  // NOLINT(*-owning-memory)
 
                add_renegotiation_extension(exts);
 
@@ -1193,7 +1193,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                // For some reason RFC8448 decided to require this (fairly obscure) extension
                // in the second flight of the Client_Hello.
                if(flights == 2) {
-                  exts.add(new Padding(175));
+                  exts.add(new Padding(175));  // NOLINT(*-owning-memory)
                }
 
                sort_rfc8448_extensions(exts, side);
@@ -1802,7 +1802,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                         Botan::TLS::Connection_Side side,
                                                         Botan::TLS::Handshake_Type type) {
                         if(type == Handshake_Type::NewSessionTicket) {
-                           exts.add(new EarlyDataIndication(1024));
+                           exts.add(new EarlyDataIndication(1024));  // NOLINT(*-owning-memory)
                         }
                         sort_rfc8448_extensions(exts, side, type);
                      };
@@ -1973,7 +1973,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                     Botan::TLS::Connection_Side side,
                                                     Botan::TLS::Handshake_Type type) {
                         if(type == Handshake_Type::EncryptedExtensions) {
-                           exts.add(new EarlyDataIndication());
+                           exts.add(new EarlyDataIndication());  // NOLINT(*-owning-memory)
                         }
                         sort_rfc8448_extensions(exts, side, type);
                      };
@@ -2059,7 +2059,8 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                     Botan::TLS::Handshake_Type type) {
                         if(type == Handshake_Type::HelloRetryRequest) {
                            // This cookie needs to be mocked into the HRR since RFC 8448 contains it.
-                           exts.add(new Cookie(vars.get_opt_bin("HelloRetryRequest_Cookie")));
+                           exts.add(
+                              new Cookie(vars.get_opt_bin("HelloRetryRequest_Cookie")));  // NOLINT(*-owning-memory)
                         }
                         sort_rfc8448_extensions(exts, side, type);
                      };

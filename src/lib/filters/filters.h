@@ -200,6 +200,7 @@ class BOTAN_PUBLIC_API(2, 0) Cipher_Mode_Filter final : public Keyed_Filter,
 */
 inline Keyed_Filter* get_cipher(std::string_view algo_spec, Cipher_Dir direction) {
    auto c = Cipher_Mode::create_or_throw(algo_spec, direction);
+   // NOLINTNEXTLINE(*-owning-memory)
    return new Cipher_Mode_Filter(c.release());
 }
 

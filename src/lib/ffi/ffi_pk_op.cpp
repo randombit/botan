@@ -38,8 +38,7 @@ int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op, botan_pubkey_t key_obj
       *op = nullptr;
 
       auto pk = std::make_unique<Botan::PK_Encryptor_EME>(safe_get(key_obj), Botan::system_rng(), padding);
-      *op = new botan_pk_op_encrypt_struct(std::move(pk));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(op, std::move(pk));
    });
 }
 
@@ -84,8 +83,7 @@ int botan_pk_op_decrypt_create(botan_pk_op_decrypt_t* op,
       *op = nullptr;
 
       auto pk = std::make_unique<Botan::PK_Decryptor_EME>(safe_get(key_obj), Botan::system_rng(), padding);
-      *op = new botan_pk_op_decrypt_struct(std::move(pk));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(op, std::move(pk));
    });
 }
 
@@ -125,8 +123,7 @@ int botan_pk_op_sign_create(botan_pk_op_sign_t* op, botan_privkey_t key_obj, con
                                                                 : Botan::Signature_Format::Standard;
 
       auto pk = std::make_unique<Botan::PK_Signer>(safe_get(key_obj), Botan::system_rng(), hash, format);
-      *op = new botan_pk_op_sign_struct(std::move(pk));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(op, std::move(pk));
    });
 }
 
@@ -164,8 +161,7 @@ int botan_pk_op_verify_create(botan_pk_op_verify_t* op, botan_pubkey_t key_obj, 
       auto format = (flags & BOTAN_PUBKEY_DER_FORMAT_SIGNATURE) ? Botan::Signature_Format::DerSequence
                                                                 : Botan::Signature_Format::Standard;
       auto pk = std::make_unique<Botan::PK_Verifier>(safe_get(key_obj), hash, format);
-      *op = new botan_pk_op_verify_struct(std::move(pk));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(op, std::move(pk));
    });
 }
 
@@ -201,8 +197,7 @@ int botan_pk_op_key_agreement_create(botan_pk_op_ka_t* op, botan_privkey_t key_o
    return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
       auto pk = std::make_unique<Botan::PK_Key_Agreement>(safe_get(key_obj), Botan::system_rng(), kdf);
-      *op = new botan_pk_op_ka_struct(std::move(pk));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(op, std::move(pk));
    });
 }
 
@@ -254,8 +249,7 @@ int botan_pk_op_kem_encrypt_create(botan_pk_op_kem_encrypt_t* op, botan_pubkey_t
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto pk = std::make_unique<Botan::PK_KEM_Encryptor>(safe_get(key_obj), padding);
-      *op = new botan_pk_op_kem_encrypt_struct(std::move(pk));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(op, std::move(pk));
    });
 }
 
@@ -317,8 +311,7 @@ int botan_pk_op_kem_decrypt_create(botan_pk_op_kem_decrypt_t* op, botan_privkey_
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto pk = std::make_unique<Botan::PK_KEM_Decryptor>(safe_get(key_obj), Botan::system_rng(), padding);
-      *op = new botan_pk_op_kem_decrypt_struct(std::move(pk));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(op, std::move(pk));
    });
 }
 

@@ -66,7 +66,7 @@ void shim_log(const std::string& s) {
        - Avoid rechecking the env variable with each call (!)
       */
 
-      // NOLINTNEXTLINE(*-avoid-non-const-global-variables)
+      // NOLINTNEXTLINE(*-avoid-non-const-global-variables,*-owning-memory)
       static FILE* g_log = std::fopen("/tmp/bogo_shim.log", "w");
 
       if(g_log != nullptr) {

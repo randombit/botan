@@ -31,6 +31,8 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_FILTERS)
 
+// NOLINTBEGIN(*-owning-memory)
+
 class Filter_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -740,6 +742,8 @@ class Filter_Tests final : public Test {
          return result;
       }
 };
+
+// NOLINTEND(*-owning-memory)
 
 BOTAN_REGISTER_TEST("filters", "filter", Filter_Tests);
 

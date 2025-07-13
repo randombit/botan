@@ -44,8 +44,7 @@ int botan_fpe_fe1_init(
 
       fpe_obj->set_key(key, key_len);
 
-      *fpe = new botan_fpe_struct(std::move(fpe_obj));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(fpe, std::move(fpe_obj));
    });
 #else
    BOTAN_UNUSED(fpe, n, key, key_len, rounds, flags);

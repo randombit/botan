@@ -45,8 +45,7 @@ int botan_privkey_create(botan_privkey_t* key_obj,
          Botan::create_private_key(algo_name ? algo_name : "RSA", rng, algo_params ? algo_params : ""));
 
       if(key) {
-         *key_obj = new botan_privkey_struct(std::move(key));
-         return BOTAN_FFI_SUCCESS;
+         return ffi_new_object(key_obj, std::move(key));
       } else {
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
       }
@@ -69,8 +68,7 @@ int botan_ec_privkey_create(botan_privkey_t* key_obj,
          Botan::create_ec_private_key(algo_name ? algo_name : "ECDSA", ec_group, rng));
 
       if(key) {
-         *key_obj = new botan_privkey_struct(std::move(key));
-         return BOTAN_FFI_SUCCESS;
+         return ffi_new_object(key_obj, std::move(key));
       } else {
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
       }
@@ -95,7 +93,7 @@ int botan_privkey_load(
       }
 
       if(pkcs8) {
-         *key = new botan_privkey_struct(std::move(pkcs8));
+         ffi_new_object(key, std::move(pkcs8));
          return BOTAN_FFI_SUCCESS;
       }
       return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
@@ -117,7 +115,7 @@ int botan_pubkey_load(botan_pubkey_t* key, const uint8_t bits[], size_t bits_len
          return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
       }
 
-      *key = new botan_pubkey_struct(std::move(pubkey));
+      ffi_new_object(key, std::move(pubkey));
       return BOTAN_FFI_SUCCESS;
    });
 }
@@ -129,7 +127,7 @@ int botan_pubkey_destroy(botan_pubkey_t key) {
 int botan_privkey_export_pubkey(botan_pubkey_t* pubout, botan_privkey_t key_obj) {
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto public_key = safe_get(key_obj).public_key();
-      *pubout = new botan_pubkey_struct(std::move(public_key));
+      ffi_new_object(pubout, std::move(public_key));
       return BOTAN_FFI_SUCCESS;
    });
 }
@@ -375,7 +373,7 @@ int botan_pubkey_oid(botan_asn1_oid_t* oid, botan_pubkey_t key) {
       }
 
       auto oid_ptr = std::make_unique<Botan::OID>(k.object_identifier());
-      *oid = new botan_asn1_oid_struct(std::move(oid_ptr));
+      ffi_new_object(oid, std::move(oid_ptr));
 
       return BOTAN_FFI_SUCCESS;
    });
@@ -388,7 +386,7 @@ int botan_privkey_oid(botan_asn1_oid_t* oid, botan_privkey_t key) {
       }
 
       auto oid_ptr = std::make_unique<Botan::OID>(k.object_identifier());
-      *oid = new botan_asn1_oid_struct(std::move(oid_ptr));
+      ffi_new_object(oid, std::move(oid_ptr));
 
       return BOTAN_FFI_SUCCESS;
    });

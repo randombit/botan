@@ -360,7 +360,7 @@ class TLS_Handshake_Test final {
             void tls_modify_extensions(Botan::TLS::Extensions& extn,
                                        Botan::TLS::Connection_Side which_side,
                                        Botan::TLS::Handshake_Type /* unused */) override {
-               extn.add(new Test_Extension(which_side));
+               extn.add(new Test_Extension(which_side));  // NOLINT(*-owning-memory)
 
                // Insert an unsupported signature scheme as highest prio, to ensure we are tolerant of this
                if(auto sig_algs = extn.take<Botan::TLS::Signature_Algorithms>()) {
@@ -368,7 +368,7 @@ class TLS_Handshake_Test final {
                   // 0x0301 is RSA PKCS1/SHA-224, which is not supported anymore
                   schemes.insert(schemes.begin(), 0x0301);
                   // This replaces the previous extension value
-                  extn.add(new Botan::TLS::Signature_Algorithms(schemes));
+                  extn.add(new Botan::TLS::Signature_Algorithms(schemes));  // NOLINT(*-owning-memory)
                }
             }
 

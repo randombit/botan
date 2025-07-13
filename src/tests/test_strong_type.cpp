@@ -454,6 +454,7 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
                // implicit conversion from a raw pointer of its wrapped type.
                auto rval_ptr = std::make_unique<std::string>("rvalue creation from ptr");
                auto stt_implicit_ptr =
+                  // NOLINTNEXTLINE(*-owning-memory)
                   Botan::wrap_strong_type<Strong_Unique>(new std::string("implicit creation from ptr"));
                auto stt_rvalue_ptr = Botan::wrap_strong_type<Strong_Unique>(std::move(rval_ptr));
 
