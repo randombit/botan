@@ -28,8 +28,8 @@ struct CRL_Data;
 */
 class BOTAN_PUBLIC_API(2, 0) CRL_Entry final : public ASN1_Object {
    public:
-      void encode_into(DER_Encoder&) const override;
-      void decode_from(BER_Decoder&) override;
+      void encode_into(DER_Encoder& to) const override;
+      void decode_from(BER_Decoder& from) override;
 
       /**
       * Get the serial number of the certificate associated with this entry.
@@ -77,12 +77,12 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Entry final : public ASN1_Object {
 /**
 * Test two CRL entries for equality in all fields.
 */
-BOTAN_PUBLIC_API(2, 0) bool operator==(const CRL_Entry&, const CRL_Entry&);
+BOTAN_PUBLIC_API(2, 0) bool operator==(const CRL_Entry& lhs, const CRL_Entry& rhs);
 
 /**
 * Test two CRL entries for inequality in at least one field.
 */
-BOTAN_PUBLIC_API(2, 0) bool operator!=(const CRL_Entry&, const CRL_Entry&);
+BOTAN_PUBLIC_API(2, 0) bool operator!=(const CRL_Entry& lhs, const CRL_Entry& rhs);
 
 /**
 * This class represents X.509 Certificate Revocation Lists (CRLs).

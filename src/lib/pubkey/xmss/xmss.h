@@ -75,7 +75,7 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PublicKey : public virtual Public_Key {
          return AlgorithmIdentifier(object_identifier(), AlgorithmIdentifier::USE_EMPTY_PARAM);
       }
 
-      bool check_key(RandomNumberGenerator&, bool) const override { return true; }
+      bool check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const override { return true; }
 
       size_t estimated_strength() const override { return m_xmss_params.estimated_strength(); }
 
@@ -232,8 +232,8 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
 
       std::optional<uint64_t> remaining_operations() const override;
 
-      std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator&,
-                                                             std::string_view,
+      std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
+                                                             std::string_view params,
                                                              std::string_view provider) const override;
 
       secure_vector<uint8_t> private_key_bits() const override;

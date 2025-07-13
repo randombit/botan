@@ -105,7 +105,7 @@ void Thread_Pool::shutdown() {
    m_workers.clear();
 }
 
-void Thread_Pool::queue_thunk(const std::function<void()>& fn) {
+void Thread_Pool::queue_thunk(const std::function<void()>& work) {
    std::unique_lock<std::mutex> lock(m_mutex);
 
    if(m_shutdown) {
@@ -113,10 +113,10 @@ void Thread_Pool::queue_thunk(const std::function<void()>& fn) {
    }
 
    if(m_workers.empty()) {
-      return fn();
+      return work();
    }
 
-   m_tasks.push_back(fn);
+   m_tasks.push_back(work);
    m_more_tasks.notify_one();
 }
 

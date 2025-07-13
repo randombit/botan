@@ -60,8 +60,8 @@ class BOTAN_PUBLIC_API(2, 0) X509_DN final : public ASN1_Object {
          }
       }
 
-      void encode_into(DER_Encoder&) const override;
-      void decode_from(BER_Decoder&) override;
+      void encode_into(DER_Encoder& to) const override;
+      void decode_from(BER_Decoder& from) override;
 
       bool has_field(const OID& oid) const;
       ASN1_String get_first_attribute(const OID& oid) const;
@@ -127,8 +127,8 @@ BOTAN_PUBLIC_API(2, 0) std::istream& operator>>(std::istream& in, X509_DN& dn);
 */
 class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
    public:
-      void encode_into(DER_Encoder&) const override;
-      void decode_from(BER_Decoder&) override;
+      void encode_into(DER_Encoder& to) const override;
+      void decode_from(BER_Decoder& from) override;
 
       /// Create an empty name
       AlternativeName() = default;
@@ -280,9 +280,9 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
       BOTAN_DEPRECATED("Deprecated use NameConstraints") GeneralName() = default;
 
       // Encoding is not implemented
-      void encode_into(DER_Encoder&) const override;
+      void encode_into(DER_Encoder& to) const override;
 
-      void decode_from(BER_Decoder&) override;
+      void decode_from(BER_Decoder& from) override;
 
       /**
       * @return Type of the name expressed in this restriction
@@ -344,9 +344,9 @@ class BOTAN_PUBLIC_API(2, 0) GeneralSubtree final : public ASN1_Object {
       */
       BOTAN_DEPRECATED("Deprecated use NameConstraints") GeneralSubtree();
 
-      void encode_into(DER_Encoder&) const override;
+      void encode_into(DER_Encoder& to) const override;
 
-      void decode_from(BER_Decoder&) override;
+      void decode_from(BER_Decoder& from) override;
 
       /**
       * @return name
@@ -520,8 +520,8 @@ class BOTAN_PUBLIC_API(2, 0) Extensions final : public ASN1_Object {
       */
       std::vector<uint8_t> get_extension_bits(const OID& oid) const;
 
-      void encode_into(DER_Encoder&) const override;
-      void decode_from(BER_Decoder&) override;
+      void encode_into(DER_Encoder& to) const override;
+      void decode_from(BER_Decoder& from) override;
 
       /**
       * Adds a new extension to the list.

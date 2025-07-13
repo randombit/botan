@@ -50,8 +50,8 @@ std::string CCM_Mode::name() const {
    return fmt("{}/CCM({},{})", m_cipher->name(), tag_size(), L());
 }
 
-bool CCM_Mode::valid_nonce_length(size_t n) const {
-   return (n == (15 - L()));
+bool CCM_Mode::valid_nonce_length(size_t length) const {
+   return (length == (15 - L()));
 }
 
 size_t CCM_Mode::default_nonce_length() const {

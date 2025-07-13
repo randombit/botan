@@ -887,7 +887,9 @@ class AffineCurvePoint final {
       static constexpr Self identity() { return Self(FieldElement::zero(), FieldElement::zero()); }
 
       // Helper for ct_select of pcurves_generic
-      static constexpr Self identity(const Self&) { return Self(FieldElement::zero(), FieldElement::zero()); }
+      static constexpr Self identity(const Self& /*unused*/) {
+         return Self(FieldElement::zero(), FieldElement::zero());
+      }
 
       constexpr CT::Choice is_identity() const { return x().is_zero() && y().is_zero(); }
 

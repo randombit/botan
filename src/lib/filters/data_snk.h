@@ -53,7 +53,7 @@ class BOTAN_PUBLIC_API(2, 0) DataSink_Stream final : public DataSink {
 
       std::string name() const override { return m_identifier; }
 
-      void write(const uint8_t[], size_t) override;
+      void write(const uint8_t buf[], size_t len) override;
 
       void end_msg() override;
 

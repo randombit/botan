@@ -30,7 +30,7 @@ class EMSA_X931 final : public EMSA {
       std::string hash_function() const override { return m_hash->name(); }
 
    private:
-      void update(const uint8_t[], size_t) override;
+      void update(const uint8_t input[], size_t length) override;
       std::vector<uint8_t> raw_data() override;
 
       std::vector<uint8_t> encoding_of(std::span<const uint8_t> raw,

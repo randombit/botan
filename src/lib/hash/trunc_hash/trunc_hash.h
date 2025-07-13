@@ -36,8 +36,8 @@ class Truncated_Hash final : public HashFunction {
       Truncated_Hash(std::unique_ptr<HashFunction> hash, size_t length);
 
    private:
-      void add_data(std::span<const uint8_t>) override;
-      void final_result(std::span<uint8_t>) override;
+      void add_data(std::span<const uint8_t> input) override;
+      void final_result(std::span<uint8_t> output) override;
 
       std::unique_ptr<HashFunction> m_hash;
       size_t m_output_bits;

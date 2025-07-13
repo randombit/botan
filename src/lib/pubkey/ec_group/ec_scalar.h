@@ -106,7 +106,8 @@ class BOTAN_PUBLIC_API(3, 6) EC_Scalar final {
       static EC_Scalar gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng);
 
       BOTAN_DEPRECATED("Use version without workspace arg")
-      static EC_Scalar gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>&) {
+      static EC_Scalar
+         gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& /*ws*/) {
          return EC_Scalar::gk_x_mod_order(scalar, rng);
       }
 

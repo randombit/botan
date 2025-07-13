@@ -31,8 +31,8 @@ class CRC24 final : public HashFunction {
       void clear() override { m_crc = 0xCE04B7; }
 
    private:
-      void add_data(std::span<const uint8_t>) override;
-      void final_result(std::span<uint8_t>) override;
+      void add_data(std::span<const uint8_t> input) override;
+      void final_result(std::span<uint8_t> output) override;
       uint32_t m_crc = 0xCE04B7;
 };
 

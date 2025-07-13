@@ -46,7 +46,7 @@ std::string SIV_Mode::name() const {
    return m_name;
 }
 
-bool SIV_Mode::valid_nonce_length(size_t /*nonce_len*/) const {
+bool SIV_Mode::valid_nonce_length(size_t /*length*/) const {
    return true;
 }
 

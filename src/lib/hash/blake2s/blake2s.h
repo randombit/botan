@@ -33,8 +33,8 @@ class BLAKE2s final : public HashFunction /* NOLINT(*-special-member-functions) 
       void clear() override;
 
    private:
-      void add_data(std::span<const uint8_t>) override;
-      void final_result(std::span<uint8_t>) override;
+      void add_data(std::span<const uint8_t> input) override;
+      void final_result(std::span<uint8_t> output) override;
       void state_init(size_t outlen, const uint8_t* key, size_t keylen);
       void compress(bool last);
 

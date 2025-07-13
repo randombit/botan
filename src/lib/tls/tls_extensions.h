@@ -303,7 +303,7 @@ class BOTAN_UNSTABLE_API Session_Ticket_Extension final : public Extension {
       */
       Session_Ticket_Extension(TLS_Data_Reader& reader, uint16_t extension_size);
 
-      std::vector<uint8_t> serialize(Connection_Side) const override { return m_ticket.get(); }
+      std::vector<uint8_t> serialize(Connection_Side /*whoami*/) const override { return m_ticket.get(); }
 
       bool empty() const override { return false; }
 

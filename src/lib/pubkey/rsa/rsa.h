@@ -40,7 +40,7 @@ class BOTAN_PUBLIC_API(2, 0) RSA_PublicKey : public virtual Public_Key {
 
       std::string algo_name() const override { return "RSA"; }
 
-      bool check_key(RandomNumberGenerator& rng, bool) const override;
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
@@ -135,7 +135,7 @@ class BOTAN_PUBLIC_API(2, 0) RSA_PrivateKey final : public Private_Key,
 
       std::unique_ptr<Public_Key> public_key() const override;
 
-      bool check_key(RandomNumberGenerator& rng, bool) const override;
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       const BigInt& get_int_field(std::string_view field) const override;
 

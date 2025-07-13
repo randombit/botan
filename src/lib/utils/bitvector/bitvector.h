@@ -66,7 +66,7 @@ using first_t = typename first_type<Ts...>::type;
 // TODO: C++26 will bring Parameter Pack indexing:
 //       auto first = s...[0];
 template <typename T0, typename... Ts>
-constexpr static first_t<T0, Ts...> first(T0&& t, Ts&&...) {
+constexpr static first_t<T0, Ts...> first(T0&& t, Ts&&... /*rest*/) {
    return std::forward<T0>(t);
 }
 
@@ -1310,7 +1310,7 @@ namespace detail {
  * prefer it. Otherwise, the allocator of @p lhs will be used as a default.
  */
 template <bitvectorish T1, bitvectorish T2>
-constexpr auto copy_lhs_allocator_aware(const T1& lhs, const T2&) {
+constexpr auto copy_lhs_allocator_aware(const T1& lhs, const T2& /*rhs*/) {
    constexpr bool needs_secure_allocator =
       strong_type_wrapped_type<T1>::uses_secure_allocator || strong_type_wrapped_type<T2>::uses_secure_allocator;
 

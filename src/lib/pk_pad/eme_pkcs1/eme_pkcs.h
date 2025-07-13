@@ -17,7 +17,7 @@ namespace Botan {
 */
 class BOTAN_FUZZER_API EME_PKCS1v15 final : public EME {
    private:
-      size_t maximum_input_size(size_t) const override;
+      size_t maximum_input_size(size_t keybits) const override;
 
       size_t pad(std::span<uint8_t> output,
                  std::span<const uint8_t> input,

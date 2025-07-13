@@ -45,7 +45,7 @@ class BOTAN_PUBLIC_API(2, 0) Basic_Constraints final : public Certificate_Extens
       std::string oid_name() const override { return "X509v3.BasicConstraints"; }
 
       std::vector<uint8_t> encode_inner() const override;
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 
       bool m_is_ca;
       size_t m_path_limit;
@@ -76,7 +76,7 @@ class BOTAN_PUBLIC_API(2, 0) Key_Usage final : public Certificate_Extension {
       bool should_encode() const override { return !m_constraints.empty(); }
 
       std::vector<uint8_t> encode_inner() const override;
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 
       Key_Constraints m_constraints;
 };
@@ -108,7 +108,7 @@ class BOTAN_PUBLIC_API(2, 0) Subject_Key_ID final : public Certificate_Extension
       bool should_encode() const override { return (!m_key_id.empty()); }
 
       std::vector<uint8_t> encode_inner() const override;
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 
       std::vector<uint8_t> m_key_id;
 };
@@ -138,7 +138,7 @@ class BOTAN_PUBLIC_API(2, 0) Authority_Key_ID final : public Certificate_Extensi
       bool should_encode() const override { return (!m_key_id.empty()); }
 
       std::vector<uint8_t> encode_inner() const override;
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 
       std::vector<uint8_t> m_key_id;
 };
@@ -166,7 +166,7 @@ class BOTAN_PUBLIC_API(2, 4) Subject_Alternative_Name final : public Certificate
       bool should_encode() const override { return m_alt_name.has_items(); }
 
       std::vector<uint8_t> encode_inner() const override;
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 
       AlternativeName m_alt_name;
 };
@@ -194,7 +194,7 @@ class BOTAN_PUBLIC_API(2, 0) Issuer_Alternative_Name final : public Certificate_
       bool should_encode() const override { return m_alt_name.has_items(); }
 
       std::vector<uint8_t> encode_inner() const override;
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 
       AlternativeName m_alt_name;
 };
@@ -224,7 +224,7 @@ class BOTAN_PUBLIC_API(2, 0) Extended_Key_Usage final : public Certificate_Exten
       bool should_encode() const override { return (!m_oids.empty()); }
 
       std::vector<uint8_t> encode_inner() const override;
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 
       std::vector<OID> m_oids;
 };
@@ -260,7 +260,7 @@ class BOTAN_PUBLIC_API(2, 0) Name_Constraints final : public Certificate_Extensi
       bool should_encode() const override { return true; }
 
       std::vector<uint8_t> encode_inner() const override;
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 
       NameConstraints m_name_constraints;
 };
@@ -296,7 +296,7 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Policies final : public Certificate_Ext
       bool should_encode() const override { return (!m_oids.empty()); }
 
       std::vector<uint8_t> encode_inner() const override;
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 
       std::vector<OID> m_oids;
 };
@@ -330,7 +330,7 @@ class BOTAN_PUBLIC_API(2, 0) Authority_Information_Access final : public Certifi
       bool should_encode() const override { return (!m_ocsp_responder.empty() || !m_ca_issuers.empty()); }
 
       std::vector<uint8_t> encode_inner() const override;
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 
       std::string m_ocsp_responder;
       std::vector<std::string> m_ca_issuers;
@@ -359,7 +359,7 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Number final : public Certificate_Extension {
       bool should_encode() const override { return m_has_value; }
 
       std::vector<uint8_t> encode_inner() const override;
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 
       bool m_has_value;
       size_t m_crl_number;
@@ -388,7 +388,7 @@ class BOTAN_PUBLIC_API(2, 0) CRL_ReasonCode final : public Certificate_Extension
       bool should_encode() const override { return (m_reason != CRL_Code::Unspecified); }
 
       std::vector<uint8_t> encode_inner() const override;
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 
       CRL_Code m_reason;
 };
@@ -401,8 +401,8 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Distribution_Points final : public Certificate_
    public:
       class BOTAN_PUBLIC_API(2, 0) Distribution_Point final : public ASN1_Object {
          public:
-            void encode_into(DER_Encoder&) const override;
-            void decode_from(BER_Decoder&) override;
+            void encode_into(DER_Encoder& to) const override;
+            void decode_from(BER_Decoder& from) override;
 
             explicit Distribution_Point(const AlternativeName& name = AlternativeName()) : m_point(name) {}
 
@@ -434,7 +434,7 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Distribution_Points final : public Certificate_
       bool should_encode() const override { return !m_distribution_points.empty(); }
 
       std::vector<uint8_t> encode_inner() const override;
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 
       std::vector<Distribution_Point> m_distribution_points;
       std::vector<std::string> m_crl_distribution_urls;
@@ -467,7 +467,7 @@ class CRL_Issuing_Distribution_Point final : public Certificate_Extension {
       bool should_encode() const override { return true; }
 
       std::vector<uint8_t> encode_inner() const override;
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 
       CRL_Distribution_Points::Distribution_Point m_distribution_point;
 };
@@ -500,7 +500,7 @@ class OCSP_NoCheck final : public Certificate_Extension {
 
       std::vector<uint8_t> encode_inner() const override { return {}; }
 
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 };
 
 /**
@@ -525,7 +525,7 @@ class BOTAN_PUBLIC_API(3, 5) TNAuthList final : public Certificate_Extension {
             using RangeContainer = std::vector<TelephoneNumberRangeData>;
             using DataContainer = std::variant<ASN1_String, RangeContainer>;
 
-            void encode_into(DER_Encoder&) const override;
+            void encode_into(DER_Encoder& to) const override;
             void decode_from(class BER_Decoder& from) override;
 
             Type type() const { return m_type; }
@@ -557,7 +557,7 @@ class BOTAN_PUBLIC_API(3, 5) TNAuthList final : public Certificate_Extension {
       bool should_encode() const override { return true; }
 
       std::vector<uint8_t> encode_inner() const override;
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 
       std::vector<Entry> m_tn_entries;
 };
@@ -628,7 +628,7 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
       template <Version V>
       class BOTAN_PUBLIC_API(3, 9) IPAddressOrRange final : public ASN1_Object {
          public:
-            void encode_into(DER_Encoder&) const override;
+            void encode_into(DER_Encoder& to) const override;
             void decode_from(BER_Decoder& from) override;
 
             IPAddressOrRange() = default;
@@ -655,7 +655,7 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
       template <Version V>
       class BOTAN_PUBLIC_API(3, 9) IPAddressChoice final : public ASN1_Object {
          public:
-            void encode_into(DER_Encoder&) const override;
+            void encode_into(DER_Encoder& to) const override;
             void decode_from(BER_Decoder& from) override;
 
             const std::optional<std::vector<IPAddressOrRange<V>>>& ranges() const { return m_ip_addr_ranges; }
@@ -672,7 +672,7 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
          public:
             typedef std::variant<IPAddressChoice<Version::IPv4>, IPAddressChoice<Version::IPv6>> AddrChoice;
 
-            void encode_into(DER_Encoder&) const override;
+            void encode_into(DER_Encoder& to) const override;
             void decode_from(BER_Decoder& from) override;
 
             IPAddressFamily() = default;
@@ -756,7 +756,7 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
       bool should_encode() const override { return true; }
 
       std::vector<uint8_t> encode_inner() const override;
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 
       std::vector<IPAddressFamily> m_ip_addr_blocks;
 
@@ -777,7 +777,7 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
 
       class BOTAN_PUBLIC_API(3, 9) ASIdOrRange final : public ASN1_Object {
          public:
-            void encode_into(DER_Encoder&) const override;
+            void encode_into(DER_Encoder& to) const override;
             void decode_from(BER_Decoder& from) override;
 
             asnum_t min() const { return m_min; }
@@ -801,7 +801,7 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
 
       class BOTAN_PUBLIC_API(3, 9) ASIdentifierChoice final : public ASN1_Object {
          public:
-            void encode_into(DER_Encoder&) const override;
+            void encode_into(DER_Encoder& to) const override;
             void decode_from(BER_Decoder& from) override;
 
             ASIdentifierChoice() = default;
@@ -816,7 +816,7 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
 
       class BOTAN_PUBLIC_API(3, 9) ASIdentifiers final : public ASN1_Object {
          public:
-            void encode_into(DER_Encoder&) const override;
+            void encode_into(DER_Encoder& to) const override;
             void decode_from(BER_Decoder& from) override;
 
             explicit ASIdentifiers(const std::optional<ASIdentifierChoice>& asnum,
@@ -910,7 +910,7 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
       }
 
       std::vector<uint8_t> encode_inner() const override;
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 };
 
 /**
@@ -942,9 +942,9 @@ class BOTAN_PUBLIC_API(2, 4) Unknown_Extension final : public Certificate_Extens
       */
       bool is_critical_extension() const { return m_critical; }
 
-      void validate(const X509_Certificate&,
-                    const X509_Certificate&,
-                    const std::vector<X509_Certificate>&,
+      void validate(const X509_Certificate& /*subject*/,
+                    const X509_Certificate& /*issuer*/,
+                    const std::vector<X509_Certificate>& /*cert_path*/,
                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
                     size_t pos) override {
          if(m_critical) {
@@ -958,7 +958,7 @@ class BOTAN_PUBLIC_API(2, 4) Unknown_Extension final : public Certificate_Extens
       bool should_encode() const override { return true; }
 
       std::vector<uint8_t> encode_inner() const override;
-      void decode_inner(const std::vector<uint8_t>&) override;
+      void decode_inner(const std::vector<uint8_t>& in) override;
 
       OID m_oid;
       bool m_critical;

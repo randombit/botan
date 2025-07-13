@@ -56,7 +56,7 @@ class BOTAN_TEST_API AES_256_CTR_XOF final : public XOF /* NOLINT(*-special-memb
       /**
        * @throws Not_Implemented, use XOF::start() instead of XOF::update()
        */
-      void add_data(std::span<const uint8_t>) override;
+      void add_data(std::span<const uint8_t> input) override;
 
       void generate_bytes(std::span<uint8_t> output) override;
 

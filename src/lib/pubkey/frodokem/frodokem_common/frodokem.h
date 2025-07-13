@@ -58,7 +58,7 @@ class BOTAN_PUBLIC_API(3, 3) FrodoKEM_PublicKey : public virtual Public_Key {
 
       std::vector<uint8_t> public_key_bits() const override;
 
-      bool check_key(RandomNumberGenerator&, bool) const override;
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       bool supports_operation(PublicKeyOperation op) const override {
          return (op == PublicKeyOperation::KeyEncapsulation);

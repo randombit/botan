@@ -31,7 +31,9 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_RNG final : public Hardware_RNG {
       bool is_seeded() const override { return true; }
 
       /// No operation - always returns 0
-      size_t reseed(Entropy_Sources&, size_t, std::chrono::milliseconds) override { return 0; }
+      size_t reseed(Entropy_Sources& /*srcs*/, size_t /*bits*/, std::chrono::milliseconds /*timeout*/) override {
+         return 0;
+      }
 
       /// @return the module used by this RNG
       inline Module& module() const { return m_session.get().module(); }

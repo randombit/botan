@@ -161,20 +161,22 @@ class BOTAN_FUZZER_API ESP_Padding final : public BlockCipherModePaddingMethod {
 */
 class Null_Padding final : public BlockCipherModePaddingMethod {
    public:
-      void add_padding(std::span<uint8_t>, size_t, size_t) const override {
+      void add_padding(std::span<uint8_t> /*buffer*/,
+                       size_t /*final_block_bytes*/,
+                       size_t /*block_size*/) const override {
          // no padding
       }
 
       size_t remove_padding(std::span<const uint8_t> last_block) const override { return last_block.size(); }
 
-      bool valid_blocksize(size_t) const override { return true; }
+      bool valid_blocksize(size_t /*block_size*/) const override { return true; }
 
-      size_t output_length(size_t input_length, size_t) const override { return input_length; }
+      size_t output_length(size_t input_length, size_t /*block_size*/) const override { return input_length; }
 
       std::string name() const override { return "NoPadding"; }
 
    private:
-      void apply_padding(std::span<uint8_t>, size_t) const override {
+      void apply_padding(std::span<uint8_t> /*last_block*/, size_t /*padding_start_pos*/) const override {
          // This class overrides add_padding() as a NOOP, so this customization
          // point can never be called by anyone.
          BOTAN_ASSERT_UNREACHABLE();

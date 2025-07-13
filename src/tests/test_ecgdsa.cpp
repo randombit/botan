@@ -26,7 +26,7 @@ class ECGDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test {
 
       bool clear_between_callbacks() const override { return false; }
 
-      bool skip_this_test(const std::string&, const VarMap& vars) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
          return !Botan::EC_Group::supports_named_group(vars.get_req_str("Group"));
       }
 

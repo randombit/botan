@@ -62,7 +62,7 @@ class BOTAN_PUBLIC_API(2, 0) Modular_Reducer final {
       *
       * ws is an (ignored) a temporary workspace.
       */
-      void reduce(BigInt& out, const BigInt& x, secure_vector<word>&) const { out = reduce(x); }
+      void reduce(BigInt& out, const BigInt& x, secure_vector<word>& /*ws*/) const { out = reduce(x); }
 
       bool initialized() const { return (m_mod_words != 0); }
 

@@ -21,7 +21,7 @@ namespace Botan {
 */
 class OAEP final : public EME {
    public:
-      size_t maximum_input_size(size_t) const override;
+      size_t maximum_input_size(size_t keybits) const override;
 
       /**
       * @param hash function to use for hashing (takes ownership)

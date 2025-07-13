@@ -123,7 +123,7 @@ class BOTAN_PUBLIC_API(2, 0) ECDSA_PrivateKey final : public ECDSA_PublicKey,
       ECDSA_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, const BigInt& x) :
             EC_PrivateKey(rng, group, x) {}
 
-      bool check_key(RandomNumberGenerator& rng, bool) const override;
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       std::unique_ptr<Public_Key> public_key() const override;
 

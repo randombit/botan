@@ -785,7 +785,7 @@ void CRL_Issuing_Distribution_Point::decode_inner(const std::vector<uint8_t>& bu
    BER_Decoder(buf).decode(m_distribution_point).verify_end();
 }
 
-void TNAuthList::Entry::encode_into(DER_Encoder&) const {
+void TNAuthList::Entry::encode_into(DER_Encoder& /*to*/) const {
    throw Not_Implemented("TNAuthList extension entry serialization is not supported");
 }
 

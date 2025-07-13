@@ -41,7 +41,7 @@ class BOTAN_TEST_API SIV_Mode : public AEAD_Mode /* NOLINT(*-special-member-func
 
       Key_Length_Specification key_spec() const final;
 
-      bool valid_nonce_length(size_t) const final;
+      bool valid_nonce_length(size_t length) const final;
 
       bool requires_entire_message() const final;
 

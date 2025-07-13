@@ -34,9 +34,9 @@ class HMAC final : public MessageAuthenticationCode {
       explicit HMAC(std::unique_ptr<HashFunction> hash);
 
    private:
-      void add_data(std::span<const uint8_t>) override;
-      void final_result(std::span<uint8_t>) override;
-      void key_schedule(std::span<const uint8_t>) override;
+      void add_data(std::span<const uint8_t> input) override;
+      void final_result(std::span<uint8_t> output) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
       std::unique_ptr<HashFunction> m_hash;
       secure_vector<uint8_t> m_ikey, m_okey;

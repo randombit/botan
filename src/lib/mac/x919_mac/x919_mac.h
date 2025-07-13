@@ -32,9 +32,9 @@ class ANSI_X919_MAC final : public MessageAuthenticationCode {
       ANSI_X919_MAC();
 
    private:
-      void add_data(std::span<const uint8_t>) override;
-      void final_result(std::span<uint8_t>) override;
-      void key_schedule(std::span<const uint8_t>) override;
+      void add_data(std::span<const uint8_t> input) override;
+      void final_result(std::span<uint8_t> output) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
       std::unique_ptr<BlockCipher> m_des1, m_des2;
       secure_vector<uint8_t> m_state;

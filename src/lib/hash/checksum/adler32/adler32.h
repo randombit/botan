@@ -31,8 +31,8 @@ class Adler32 final : public HashFunction {
       }
 
    private:
-      void add_data(std::span<const uint8_t>) override;
-      void final_result(std::span<uint8_t>) override;
+      void add_data(std::span<const uint8_t> input) override;
+      void final_result(std::span<uint8_t> output) override;
       uint16_t m_S1 = 1;
       uint16_t m_S2 = 0;
 };

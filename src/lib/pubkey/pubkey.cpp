@@ -110,8 +110,8 @@ size_t PK_Encryptor_EME::ciphertext_length(size_t ptext_len) const {
    return m_op->ciphertext_length(ptext_len);
 }
 
-std::vector<uint8_t> PK_Encryptor_EME::enc(const uint8_t in[], size_t length, RandomNumberGenerator& rng) const {
-   return m_op->encrypt(std::span{in, length}, rng);
+std::vector<uint8_t> PK_Encryptor_EME::enc(const uint8_t ptext[], size_t len, RandomNumberGenerator& rng) const {
+   return m_op->encrypt(std::span{ptext, len}, rng);
 }
 
 size_t PK_Encryptor_EME::maximum_input_size() const {

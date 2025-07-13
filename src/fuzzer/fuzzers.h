@@ -20,11 +20,12 @@ static constexpr size_t max_fuzzer_input_size = 8192;
 
 extern void fuzz(std::span<const uint8_t> in);
 
+// Need to declare these before defining them;
 extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv);
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t in[], size_t len);
 
 // NOLINTNEXTLINE(*-definitions-in-headers)
-extern "C" int LLVMFuzzerInitialize(int*, char***) {
+extern "C" int LLVMFuzzerInitialize(int* /*argc*/, char*** /*argv*/) {
    /*
    * This disables the mlock pool, as overwrites within the pool are
    * opaque to ASan or other instrumentation.

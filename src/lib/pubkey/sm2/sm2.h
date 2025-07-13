@@ -108,7 +108,7 @@ class BOTAN_PUBLIC_API(2, 2) SM2_PrivateKey final : public SM2_PublicKey,
       BOTAN_DEPRECATED("Use one of the other constructors")
       SM2_PrivateKey(RandomNumberGenerator& rng, EC_Group group, const BigInt& x);
 
-      bool check_key(RandomNumberGenerator& rng, bool) const override;
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       std::unique_ptr<Public_Key> public_key() const override;
 

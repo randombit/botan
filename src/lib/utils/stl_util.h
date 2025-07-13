@@ -296,12 +296,12 @@ constexpr bool holds_any_of(const std::variant<Ts...>& v) noexcept {
 }
 
 template <typename GeneralVariantT, typename SpecialT>
-constexpr bool is_generalizable_to(const SpecialT&) noexcept {
+constexpr bool is_generalizable_to(const SpecialT& /*unnamed*/) noexcept {
    return std::is_constructible_v<GeneralVariantT, SpecialT>;
 }
 
 template <typename GeneralVariantT, typename... SpecialTs>
-constexpr bool is_generalizable_to(const std::variant<SpecialTs...>&) noexcept {
+constexpr bool is_generalizable_to(const std::variant<SpecialTs...>& /*unnamed*/) noexcept {
    return (std::is_constructible_v<GeneralVariantT, SpecialTs> && ...);
 }
 

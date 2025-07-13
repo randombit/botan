@@ -409,7 +409,7 @@ Botan::RandomNumberGenerator& Test::rng() const {
    return *m_test_rng;
 }
 
-std::vector<std::string> Test::possible_providers(const std::string& /*unused*/) {
+std::vector<std::string> Test::possible_providers(const std::string& /*alg*/) {
    return Test::provider_filter({"base"});
 }
 

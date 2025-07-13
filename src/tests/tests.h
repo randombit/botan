@@ -624,7 +624,7 @@ class Test {
 
       virtual std::vector<Test::Result> run() = 0;
 
-      virtual std::vector<std::string> possible_providers(const std::string&);
+      virtual std::vector<std::string> possible_providers(const std::string& alg);
 
       void initialize(std::string test_name, CodeLocation location);
 

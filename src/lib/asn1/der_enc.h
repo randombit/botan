@@ -189,7 +189,7 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
 
             void add_bytes(const uint8_t hdr[], size_t hdr_len, const uint8_t val[], size_t val_len);
 
-            DER_Sequence(ASN1_Type, ASN1_Class);
+            DER_Sequence(ASN1_Type type_tag, ASN1_Class class_tag);
 
             DER_Sequence(DER_Sequence&& seq) noexcept :
                   m_type_tag(seq.m_type_tag),
