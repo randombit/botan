@@ -22,6 +22,7 @@
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_session_key.h>
+#include <array>
 
 namespace Botan::TLS {
 
@@ -31,7 +32,7 @@ const uint64_t DOWNGRADE_TLS11 = 0x444F574E47524400;
 const uint64_t DOWNGRADE_TLS12 = 0x444F574E47524401;
 
 // SHA-256("HelloRetryRequest")
-const std::vector<uint8_t> HELLO_RETRY_REQUEST_MARKER = {
+const std::array<uint8_t, 32> HELLO_RETRY_REQUEST_MARKER = {
    0xCF, 0x21, 0xAD, 0x74, 0xE5, 0x9A, 0x61, 0x11, 0xBE, 0x1D, 0x8C, 0x02, 0x1E, 0x65, 0xB8, 0x91,
    0xC2, 0xA2, 0x11, 0x16, 0x7A, 0xBB, 0x8C, 0x5E, 0x07, 0x9E, 0x09, 0xE2, 0xC8, 0xA8, 0x33, 0x9C};
 
@@ -791,13 +792,14 @@ Hello_Retry_Request::Hello_Retry_Request(const Client_Hello_13& ch,
                                          Named_Group selected_group,
                                          const Policy& policy,
                                          Callbacks& cb) :
-      Server_Hello_13(std::make_unique<Server_Hello_Internal>(Protocol_Version::TLS_V12 /* legacy_version */,
-                                                              ch.session_id(),
-                                                              HELLO_RETRY_REQUEST_MARKER,
-                                                              choose_ciphersuite(ch, policy),
-                                                              uint8_t(0) /* compression method */,
-                                                              true /* is Hello Retry Request */
-                                                              ),
+      Server_Hello_13(std::make_unique<Server_Hello_Internal>(
+                         Protocol_Version::TLS_V12 /* legacy_version */,
+                         ch.session_id(),
+                         std::vector<uint8_t>(HELLO_RETRY_REQUEST_MARKER.begin(), HELLO_RETRY_REQUEST_MARKER.end()),
+                         choose_ciphersuite(ch, policy),
+                         uint8_t(0) /* compression method */,
+                         true /* is Hello Retry Request */
+                         ),
                       as_new_hello_retry_request) {
    // RFC 8446 4.1.4
    //     As with the ServerHello, a HelloRetryRequest MUST NOT contain any

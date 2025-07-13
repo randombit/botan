@@ -84,7 +84,7 @@ constexpr uint64_t poly_mul(uint64_t x, uint8_t y) {
    return r;
 }
 
-consteval std::array<uint8_t, 256> L_table(bool forward) {
+consteval std::array<uint8_t, 256> L_table(bool forward) noexcept {
    std::array<uint8_t, 256> L = {};
 
    for(size_t i = 0; i != 16; ++i) {
@@ -117,7 +117,8 @@ consteval std::array<uint8_t, 256> L_table(bool forward) {
    return L;
 }
 
-consteval std::array<uint64_t, 16 * 256 * 2> T_table(std::span<const uint8_t> L, std::span<const uint8_t, 256> SB) {
+consteval std::array<uint64_t, 16 * 256 * 2> T_table(std::span<const uint8_t> L,
+                                                     std::span<const uint8_t, 256> SB) noexcept {
    std::array<uint64_t, 16 * 256 * 2> T = {};
 
    for(size_t i = 0; i != 16; ++i) {

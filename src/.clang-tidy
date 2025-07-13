@@ -20,7 +20,6 @@ Checks: >
     -cppcoreguidelines-use-default-member-init,
     -bugprone-unchecked-optional-access,
     -bugprone-empty-catch,
-    -cert-err58-cpp,
     -cppcoreguidelines-avoid-const-or-ref-data-members,
     -misc-const-correctness,
     -misc-include-cleaner,

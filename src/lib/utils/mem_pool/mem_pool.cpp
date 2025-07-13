@@ -290,7 +290,7 @@ class Bucket final {
       bool m_is_full;
 };
 
-Memory_Pool::Memory_Pool(const std::vector<void*>& pages, size_t page_size) : m_page_size(page_size) {
+Memory_Pool::Memory_Pool(const std::vector<void*>& pages, size_t page_size) noexcept : m_page_size(page_size) {
    for(auto* page : pages) {
       const uintptr_t p = reinterpret_cast<uintptr_t>(page);
 
@@ -311,7 +311,7 @@ Memory_Pool::Memory_Pool(const std::vector<void*>& pages, size_t page_size) : m_
    m_max_page_ptr += page_size;
 }
 
-Memory_Pool::~Memory_Pool()  // NOLINT(*-use-equals-default)
+Memory_Pool::~Memory_Pool() noexcept  // NOLINT(*-use-equals-default)
 {
 #if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
    for(size_t i = 0; i != m_free_pages.size(); ++i) {

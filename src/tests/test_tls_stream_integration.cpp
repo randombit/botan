@@ -49,8 +49,10 @@ using error_code = boost::system::error_code;
 using ssl_stream = Botan::TLS::Stream<net::ip::tcp::socket>;
 using namespace std::placeholders;
 
+// NOLINTBEGIN(cert-err58-cpp)
 const auto k_timeout = std::chrono::seconds(30);
 const auto k_endpoints = std::vector<tcp::endpoint>{tcp::endpoint{net::ip::make_address("127.0.0.1"), 8082}};
+// NOLINTEND(cert-err58-cpp)
 
 constexpr size_t MAX_MSG_LENGTH = 512;
 
@@ -209,6 +211,8 @@ class Result_Wrapper {
       Test::Result m_result;
 };
 
+// NOLINTBEGIN(cert-err58-cpp)
+
 // Control messages
 // The messages below can be used by the test clients in order to configure the server's behavior during a test
 // case.
@@ -217,6 +221,8 @@ class Result_Wrapper {
 const std::string EXPECT_SHORT_READ_MESSAGE = "SHORT_READ";
 // Prepare the server for the test case "Shutdown No Response"
 const std::string PREPARE_SHUTDOWN_NO_RESPONSE_MESSAGE = "SHUTDOWN_NOW";
+
+// NOLINTEND(cert-err58-cpp)
 
 class Server : public Peer,
                public std::enable_shared_from_this<Server> {

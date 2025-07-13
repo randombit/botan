@@ -55,8 +55,6 @@ class XMSS_Index_Registry final {
    private:
       XMSS_Index_Registry() = default;
 
-      static const std::string m_index_hash_function;
-
       /**
        * Creates a unique 64-bit id for an XMSS_Private key, by interpreting
        * the first 64-bit of HASH(PRIVATE_SEED || PRF) as 64 bit integer

@@ -220,6 +220,7 @@ class Command /* NOLINT(*special-member-functions) */ {
 
 // NOLINTNEXTLINE(*-macro-usage)
 #define BOTAN_REGISTER_COMMAND(name, CLI_Class)                \
+   /* NOLINTNEXTLINE(cert-err58-cpp) */                        \
    const Botan_CLI::Command::Registration reg_cmd_##CLI_Class( \
       name, []() -> std::unique_ptr<Botan_CLI::Command> { return std::make_unique<CLI_Class>(); })
 

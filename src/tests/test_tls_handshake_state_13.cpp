@@ -18,7 +18,8 @@ namespace {
 
 #if defined(BOTAN_HAS_TLS_13)
 
-const auto client_hello_message = Botan::hex_decode(  // from RFC 8448
+// From RFC 8448
+const auto client_hello_message_hex =
    "03 03 cb"
    "34 ec b1 e7 81 63 ba 1c 38 c6 da cb 19 6a 6d ff a2 1a 8d 99 12"
    "ec 18 a2 ef 62 83 02 4d ec e7 00 00 06 13 01 13 03 13 02 01 00"
@@ -28,29 +29,32 @@ const auto client_hello_message = Botan::hex_decode(  // from RFC 8448
    "e5 60 e4 bd 43 d2 3d 8e 43 5a 7d ba fe b3 c0 6e 51 c1 3c ae 4d"
    "54 13 69 1e 52 9a af 2c 00 2b 00 03 02 03 04 00 0d 00 20 00 1e"
    "04 03 05 03 06 03 02 03 08 04 08 05 08 06 04 01 05 01 06 01 02"
-   "01 04 02 05 02 06 02 02 02 00 2d 00 02 01 01 00 1c 00 02 40 01");
+   "01 04 02 05 02 06 02 02 02 00 2d 00 02 01 01 00 1c 00 02 40 01";
 
-const auto server_hello_message = Botan::hex_decode(
+const auto server_hello_message_hex =
    "03 03 a6"
    "af 06 a4 12 18 60 dc 5e 6e 60 24 9c d3 4c 95 93 0c 8a c5 cb 14"
    "34 da c1 55 77 2e d3 e2 69 28 00 13 01 00 00 2e 00 33 00 24 00"
    "1d 00 20 c9 82 88 76 11 20 95 fe 66 76 2b db f7 c6 72 e1 56 d6"
-   "cc 25 3b 83 3d f1 dd 69 b1 b0 4e 75 1f 0f 00 2b 00 02 03 04");
+   "cc 25 3b 83 3d f1 dd 69 b1 b0 4e 75 1f 0f 00 2b 00 02 03 04";
 
-const auto server_finished_message = Botan::hex_decode(
+const auto server_finished_message_hex =
    "9b 9b 14 1d 90 63 37 fb"
    "d2 cb dc e7 1d f4 de da 4a b4 2c 30"
-   "95 72 cb 7f ff ee 54 54 b7 8f 07 18");
+   "95 72 cb 7f ff ee 54 54 b7 8f 07 18";
 
-const auto client_finished_message = Botan::hex_decode(
+const auto client_finished_message_hex =
    "a8 ec 43 6d 67 76 34 ae 52 5a c1"
-   "fc eb e1 1a 03 9e c1 76 94 fa c6 e9 85 27 b6 42 f2 ed d5 ce 61");
+   "fc eb e1 1a 03 9e c1 76 94 fa c6 e9 85 27 b6 42 f2 ed d5 ce 61";
 
 std::vector<Test::Result> finished_message_handling() {
    return {
       CHECK("Client sends and receives Finished messages",
             [&](auto& result) {
                Botan::TLS::Client_Handshake_State_13 state;
+
+               const auto client_finished_message = Botan::hex_decode(client_finished_message_hex);
+               const auto server_finished_message = Botan::hex_decode(server_finished_message_hex);
 
                Botan::TLS::Finished_13 client_finished(client_finished_message);
 
@@ -80,6 +84,8 @@ std::vector<Test::Result> handshake_message_filtering() {
             [&](auto& result) {
                Botan::TLS::Client_Handshake_State_13 state;
 
+               const auto client_hello_message = Botan::hex_decode(client_hello_message_hex);
+
                auto client_hello =
                   std::get<Botan::TLS::Client_Hello_13>(Botan::TLS::Client_Hello_13::parse(client_hello_message));
 
@@ -98,6 +104,8 @@ std::vector<Test::Result> handshake_message_filtering() {
       CHECK("Client with server hello",
             [&](auto& result) {
                Botan::TLS::Client_Handshake_State_13 state;
+
+               const auto server_hello_message = Botan::hex_decode(server_hello_message_hex);
 
                auto server_hello =
                   std::get<Botan::TLS::Server_Hello_13>(Botan::TLS::Server_Hello_13::parse(server_hello_message));

@@ -36,6 +36,7 @@ const Handshake_Message_13& get_message(Test::Result& test_result,
    return std::get<T>(read_result.value());
 }
 
+// NOLINTBEGIN(cert-err58-cpp)
 const auto client_hello_message = Botan::hex_decode_locked(  // from RFC 8448
    "01 00 00 c0 03 03 cb"
    "34 ec b1 e7 81 63 ba 1c 38 c6 da cb 19 6a 6d ff a2 1a 8d 99 12"
@@ -139,6 +140,8 @@ const std::vector<Botan::secure_vector<uint8_t>> tls_12_only_messages{
    {static_cast<uint8_t>(Handshake_Type::ClientKeyExchange), 0x00, 0x00, 0x02, 0x42, 0x42},
    {static_cast<uint8_t>(Handshake_Type::CertificateUrl), 0x00, 0x00, 0x02, 0x42, 0x42},
    {static_cast<uint8_t>(Handshake_Type::CertificateStatus), 0x00, 0x00, 0x02, 0x42, 0x42}};
+
+// NOLINTEND(cert-err58-cpp)
 
 void check_transcript_hash_empty(Test::Result& result, const Transcript_Hash_State& transcript_hash) {
    result.test_throws<Botan::Invalid_State>("empty transcript_hash throws", [&] { transcript_hash.current(); });

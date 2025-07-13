@@ -50,7 +50,6 @@ disabled_needs_work = [
     'cppcoreguidelines-use-default-member-init',
     'bugprone-unchecked-optional-access', # clang-tidy seems buggy (many false positives)
     'bugprone-empty-catch',
-    'cert-err58-cpp', # many false positives eg __m128i
     'cppcoreguidelines-avoid-const-or-ref-data-members',
     'misc-const-correctness', # pretty noisy
     'misc-include-cleaner',
