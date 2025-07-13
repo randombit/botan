@@ -128,11 +128,11 @@ Response http_sync(const http_exch_fn& http_transact,
    std::string hostname, loc, service;
 
    if(host_loc_sep == std::string::npos) {
-      hostname = url.substr(protocol_host_sep + 3, std::string::npos);
+      hostname = url.substr(protocol_host_sep + 3);
       loc = "/";
    } else {
       hostname = url.substr(protocol_host_sep + 3, host_loc_sep - protocol_host_sep - 3);
-      loc = url.substr(host_loc_sep, std::string::npos);
+      loc = url.substr(host_loc_sep);
    }
 
    const auto port_sep = hostname.find(':');

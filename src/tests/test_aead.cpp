@@ -459,6 +459,7 @@ class AEAD_Tests final : public Text_Based_Test {
          result.merge(test_enc(key, nonce, input, expected, ad, algo, this->rng()));
 
          // test dec
+         // NOLINTNEXTLINE(*-suspicious-call-argument) Yes we are swapping ptext and ctext arguments here
          result.merge(test_dec(key, nonce, expected, input, ad, algo, this->rng()));
 
          return result;

@@ -75,6 +75,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
             }
 
             try {
+               // NOLINTNEXTLINE(*-suspicious-call-argument) intentionally swapping ptext and ctext arguments here
                test_mode(result, algo, provider_ask, "decryption", *dec, key, nonce, expected, input, this->rng());
             } catch(Botan::Exception& e) {
                result.test_failure("Decryption tests failed", e.what());

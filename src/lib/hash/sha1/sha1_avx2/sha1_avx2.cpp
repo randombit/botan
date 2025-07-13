@@ -178,6 +178,8 @@ void BOTAN_FN_ISA_AVX2_BMI2 SHA_1::avx2_compress_n(digest_type& digest, std::spa
       SIMD_8x32 P2 = XW2 + SIMD_8x32::splat(K1);
       SIMD_8x32 P3 = XW3 + SIMD_8x32::splat(K1);
 
+      // NOLINTBEGIN(readability-suspicious-call-argument) XW rotation
+
       P0.store_le128(PT, &W2[0]);
       P0 = sha1_avx2_next_w(XW0, XW1, XW2, XW3) + SIMD_8x32::splat(K1);
       F1(A, B, C, D, E, PT[0]);
@@ -313,6 +315,8 @@ void BOTAN_FN_ISA_AVX2_BMI2 SHA_1::avx2_compress_n(digest_type& digest, std::spa
       F4(D, E, A, B, C, PT[1]);
       F4(C, D, E, A, B, PT[2]);
       F4(B, C, D, E, A, PT[3]);
+
+      // NOLINTEND(readability-suspicious-call-argument)
 
       A = (digest[0] += A);
       B = (digest[1] += B);
