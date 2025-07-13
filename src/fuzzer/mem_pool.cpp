@@ -80,8 +80,8 @@ void fuzz(std::span<const uint8_t> in) {
 
    std::vector<void*> mem_pages;
    mem_pages.reserve(raw_mem.size());
-   for(size_t i = 0; i != raw_mem.size(); ++i) {
-      mem_pages.push_back(raw_mem[i].ptr());
+   for(const auto& rm : raw_mem) {
+      mem_pages.push_back(rm.ptr());
    }
 
    Botan::Memory_Pool pool(mem_pages, page_size);

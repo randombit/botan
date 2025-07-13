@@ -20,6 +20,7 @@
    #include <botan/p11.h>
    #include <botan/p11_object.h>
    #include <botan/p11_randomgenerator.h>
+   #include <botan/internal/fmt.h>
 #endif
 
 #if defined(BOTAN_HAS_ASN1)
@@ -70,17 +71,17 @@ std::vector<Test::Result> run_pkcs11_tests(const std::string& name,
                                            std::vector<std::pair<std::string, std::function<Test::Result()>>>& fns) {
    std::vector<Test::Result> results;
 
-   for(size_t i = 0; i != fns.size(); ++i) {
+   for(const auto& [fn_name, fn] : fns) {
       try {
-         results.push_back(fns[i].second());
+         results.push_back(fn());
       } catch(Botan::PKCS11::PKCS11_ReturnError& e) {
-         results.push_back(Test::Result::Failure(name + " test " + fns[i].first, e.what()));
+         results.push_back(Test::Result::Failure(Botan::fmt("{} test {}", name, fn_name), e.what()));
 
          if(e.get_return_value() == Botan::PKCS11::ReturnValue::PinIncorrect) {
             break;  // Do not continue to not potentially lock the token
          }
       } catch(std::exception& e) {
-         results.push_back(Test::Result::Failure(name + " test " + fns[i].first, e.what()));
+         results.push_back(Test::Result::Failure(Botan::fmt("{} test {}", name, fn_name), e.what()));
       }
    }
 

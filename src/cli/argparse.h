@@ -58,14 +58,14 @@ inline std::vector<std::string> Argument_Parser::split_on(const std::string& str
    }
 
    std::string substr;
-   for(auto i = str.begin(); i != str.end(); ++i) {
-      if(*i == delim) {
+   for(char c : str) {
+      if(c == delim) {
          if(!substr.empty()) {
             elems.push_back(substr);
          }
          substr.clear();
       } else {
-         substr += *i;
+         substr += c;
       }
    }
 

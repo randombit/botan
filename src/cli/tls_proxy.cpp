@@ -467,8 +467,8 @@ class TLS_Proxy final : public Command {
 
          io.run();
 
-         for(size_t i = 0; i < threads.size(); ++i) {
-            threads[i]->join();
+         for(auto& thread : threads) {
+            thread->join();
          }
       }
 };

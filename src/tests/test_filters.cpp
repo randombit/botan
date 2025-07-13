@@ -716,8 +716,8 @@ class Filter_Tests final : public Test {
 
          const size_t filter_count = 5;
          Botan::Filter* filters[filter_count];
-         for(size_t i = 0; i != filter_count; ++i) {
-            filters[i] = new Botan::Hash_Filter("SHA-256");
+         for(auto& filter : filters) {
+            filter = new Botan::Hash_Filter("SHA-256");
          }
 
          pipe.append(new Botan::Threaded_Fork(filters, filter_count));

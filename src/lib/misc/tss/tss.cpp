@@ -175,18 +175,18 @@ std::vector<RTSS_Share> RTSS_Share::split(uint8_t M,
       shares[i].m_contents.push_back(i + 1);
    }
 
-   for(size_t i = 0; i != secret.size(); ++i) {
+   for(const uint8_t secret_byte : secret) {
       std::vector<uint8_t> coefficients(M - 1);
       rng.randomize(coefficients.data(), coefficients.size());
 
       for(uint8_t j = 0; j != N; ++j) {
          const uint8_t X = j + 1;
 
-         uint8_t sum = secret[i];
+         uint8_t sum = secret_byte;
          uint8_t X_i = X;
 
-         for(size_t k = 0; k != coefficients.size(); ++k) {
-            sum ^= gfp_mul(X_i, coefficients[k]);
+         for(const uint8_t cb : coefficients) {
+            sum ^= gfp_mul(X_i, cb);
             X_i = gfp_mul(X_i, X);
          }
 

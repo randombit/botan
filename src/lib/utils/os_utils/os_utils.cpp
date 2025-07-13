@@ -633,9 +633,7 @@ void OS::page_prohibit_access(void* page) {
 void OS::free_locked_pages(const std::vector<void*>& pages) {
    const size_t page_size = OS::system_page_size();
 
-   for(size_t i = 0; i != pages.size(); ++i) {
-      void* ptr = pages[i];
-
+   for(void* ptr : pages) {
       secure_scrub_memory(ptr, page_size);
 
       // ptr points to the data page, guard pages are before and after

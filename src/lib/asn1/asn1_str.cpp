@@ -23,8 +23,8 @@ namespace {
 ASN1_Type choose_encoding(std::string_view str) {
    auto all_printable = CT::Mask<uint8_t>::set();
 
-   for(size_t i = 0; i != str.size(); ++i) {
-      const uint8_t c = static_cast<uint8_t>(str[i]);
+   for(char cs : str) {
+      const uint8_t c = static_cast<uint8_t>(cs);
 
       auto is_alpha_lower = CT::Mask<uint8_t>::is_within_range(c, 'a', 'z');
       auto is_alpha_upper = CT::Mask<uint8_t>::is_within_range(c, 'A', 'Z');

@@ -77,8 +77,8 @@ class Callbacks : public Botan::TLS::Callbacks {
       }
 
       void tls_record_received(uint64_t /*seq_no*/, std::span<const uint8_t> input) override {
-         for(size_t i = 0; i != input.size(); ++i) {
-            const char c = static_cast<char>(input[i]);
+         for(auto uc : input) {
+            const char c = static_cast<char>(uc);
             m_line_buf += c;
             if(c == '\n') {
                push_pending_output(std::exchange(m_line_buf, {}));

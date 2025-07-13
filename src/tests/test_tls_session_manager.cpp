@@ -341,8 +341,8 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                   mgr->establish(default_session(Botan::TLS::Connection_Side::Server, cbs), random_id(*rng)).value());
             }
 
-            for(size_t i = 0; i < handles.size(); ++i) {
-               result.confirm("session still there", mgr->retrieve(handles[i], cbs, plcy).has_value());
+            for(const auto& handle : handles) {
+               result.confirm("session still there", mgr->retrieve(handle, cbs, plcy).has_value());
             }
 
             // add one more session (causing a first purge to happen)

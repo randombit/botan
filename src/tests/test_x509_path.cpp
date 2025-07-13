@@ -207,15 +207,11 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run() {
 
    const auto validation_time = Botan::calendar_point(2018, 4, 1, 9, 30, 33).to_std_timepoint();
 
-   for(auto i = expected.begin(); i != expected.end(); ++i) {
+   for(const auto& [test_name, expected_result] : expected) {
       Test::Result result("NIST path validation");
       result.start_timer();
 
-      const std::string test_name = i->first;
-
       try {
-         const std::string expected_result = i->second;
-
          const auto all_files = Test::files_in_data_dir("x509/nist/" + test_name);
 
          Botan::Certificate_Store_In_Memory store;

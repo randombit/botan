@@ -1228,6 +1228,8 @@ std::vector<uint16_t> Shim_Policy::ciphersuite_list(Botan::TLS::Protocol_Version
    } else {
       // Hack: go in reverse order to avoid preferring 3DES
       auto ciphersuites = Botan::TLS::Ciphersuite::all_known_ciphersuites();
+      // TODO(Botan4) use std::ranges::reverse_view here once available (need newer Clang)
+      // NOLINTNEXTLINE(modernize-loop-convert)
       for(auto i = ciphersuites.rbegin(); i != ciphersuites.rend(); ++i) {
          const auto suite = *i;
 

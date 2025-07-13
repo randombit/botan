@@ -663,9 +663,7 @@ class MARVIN_Test_Command final : public Command {
 
             shuffle(indexes, rng);
 
-            for(size_t i = 0; i != indexes.size(); ++i) {
-               const size_t testcase = indexes[i];
-
+            for(const size_t testcase : indexes) {
                // Load the test ciphertext in constant time to avoid cache pollution
                for(size_t j = 0; j != testcases; ++j) {
                   const auto j_eq_testcase = Botan::CT::Mask<size_t>::is_equal(j, testcase).as_choice();

@@ -88,6 +88,8 @@ std::string BigInt::to_dec_string() const {
    }
 
    // Reverse and convert to textual digits
+   // TODO(Botan4) use std::ranges::reverse_view here once available (need newer Clang)
+   // NOLINTNEXTLINE(modernize-loop-convert)
    for(auto i = digits.rbegin(); i != digits.rend(); ++i) {
       s.push_back(*i + '0');  // assumes ASCII
    }

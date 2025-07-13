@@ -19,6 +19,8 @@ Classic_McEliece_GF Classic_McEliece_Polynomial::operator()(Classic_McEliece_GF 
    BOTAN_DEBUG_ASSERT(a.modulus() == coef_at(0).modulus());
 
    Classic_McEliece_GF r(CmceGfElem(0), a.modulus());
+   // TODO(Botan4) use std::ranges::reverse_view here once available (need newer Clang)
+   // NOLINTNEXTLINE(modernize-loop-convert)
    for(auto it = m_coef.rbegin(); it != m_coef.rend(); ++it) {
       r *= a;
       r += *it;

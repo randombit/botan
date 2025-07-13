@@ -84,8 +84,8 @@ CT::Option<size_t> CT::copy_output(CT::Choice accept,
 size_t CT::count_leading_zero_bytes(std::span<const uint8_t> input) {
    size_t leading_zeros = 0;
    auto only_zeros = Mask<uint8_t>::set();
-   for(size_t i = 0; i != input.size(); ++i) {
-      only_zeros &= CT::Mask<uint8_t>::is_zero(input[i]);
+   for(uint8_t b : input) {
+      only_zeros &= CT::Mask<uint8_t>::is_zero(b);
       leading_zeros += only_zeros.if_set_return(1);
    }
    return leading_zeros;

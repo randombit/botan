@@ -114,9 +114,7 @@ void HMAC_DRBG::clear_state() {
       m_T.resize(output_length);
    }
 
-   for(size_t i = 0; i != m_V.size(); ++i) {
-      m_V[i] = 0x01;
-   }
+   std::fill(m_V.begin(), m_V.end(), 0x01);
    m_mac->set_key(std::vector<uint8_t>(m_V.size(), 0x00));
 }
 
