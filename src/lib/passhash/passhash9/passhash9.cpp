@@ -17,7 +17,7 @@ namespace Botan {
 
 namespace {
 
-const std::string MAGIC_PREFIX = "$9$";
+const std::string_view MAGIC_PREFIX = "$9$";
 
 const size_t WORKFACTOR_BYTES = 2;
 const size_t ALGID_BYTES = 1;
@@ -69,7 +69,7 @@ std::string generate_passhash9(std::string_view pass,
    blob += salt;
    blob += kdf.derive_key(PASSHASH9_PBKDF_OUTPUT_LEN, pass, salt.data(), salt.size(), kdf_iterations).bits_of();
 
-   return MAGIC_PREFIX + base64_encode(blob);
+   return std::string(MAGIC_PREFIX) + base64_encode(blob);
 }
 
 bool check_passhash9(std::string_view pass, std::string_view hash) {

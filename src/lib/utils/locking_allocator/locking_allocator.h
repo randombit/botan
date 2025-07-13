@@ -18,7 +18,7 @@ class Memory_Pool;
 
 class mlock_allocator final {
    public:
-      static mlock_allocator& instance();
+      static mlock_allocator& instance() noexcept;
 
       void* allocate(size_t num_elems, size_t elem_size);
 
@@ -29,7 +29,7 @@ class mlock_allocator final {
       mlock_allocator& operator=(const mlock_allocator&) = delete;
       mlock_allocator& operator=(mlock_allocator&&) = delete;
 
-      mlock_allocator();
+      mlock_allocator() noexcept;
 
       ~mlock_allocator();
 

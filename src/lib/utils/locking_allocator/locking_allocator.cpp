@@ -43,7 +43,7 @@ bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size) no
    }
 }
 
-mlock_allocator::mlock_allocator() {
+mlock_allocator::mlock_allocator() noexcept {
    const size_t mem_to_lock = OS::get_memory_locking_limit();
    const size_t page_size = OS::system_page_size();
 
@@ -71,7 +71,7 @@ BOTAN_EARLY_INIT(101) mlock_allocator g_mlock_allocator;
 
 }  // namespace
 
-mlock_allocator& mlock_allocator::instance() {
+mlock_allocator& mlock_allocator::instance() noexcept {
    return g_mlock_allocator;
 }
 
