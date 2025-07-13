@@ -107,7 +107,7 @@ disabled_not_interested = [
     'readability-use-anyofallof', # not more readable
 ]
 
-disabled_checks = disabled_needs_work + disabled_not_interested
+disabled_checks = sorted(disabled_needs_work + disabled_not_interested)
 
 def create_check_option(enabled, disabled):
     return ','.join(enabled) + ',' + ','.join(['-' + d for d in disabled])
@@ -124,8 +124,8 @@ def render_clang_tidy_file(target_dir, enabled, disabled):
             '# then regenerate this configuration file.\n',
             '\n',
             'Checks: >\n'] +
-            [ f'    {check},\n' for check in enabled ] +
-            [ f'    -{check},\n' for check in disabled] +
+            [ f'    {check},\n' for check in sorted(enabled)] +
+            [ f'    -{check},\n' for check in sorted(disabled)] +
             ['---\n'])
 
 def load_compile_commands(build_dir):
