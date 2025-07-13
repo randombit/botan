@@ -818,8 +818,8 @@ Certificate_Status_Code PKIX::build_all_certificate_paths(std::vector<std::vecto
 }
 
 void PKIX::merge_revocation_status(CertificatePathStatusCodes& chain_status,
-                                   const CertificatePathStatusCodes& crl,
-                                   const CertificatePathStatusCodes& ocsp,
+                                   const CertificatePathStatusCodes& crl_status,
+                                   const CertificatePathStatusCodes& ocsp_status,
                                    const Path_Validation_Restrictions& restrictions) {
    if(chain_status.empty()) {
       throw Invalid_Argument("PKIX::merge_revocation_status chain_status was empty");
@@ -828,8 +828,8 @@ void PKIX::merge_revocation_status(CertificatePathStatusCodes& chain_status,
    for(size_t i = 0; i != chain_status.size() - 1; ++i) {
       bool had_crl = false, had_ocsp = false;
 
-      if(i < crl.size() && !crl[i].empty()) {
-         for(auto&& code : crl[i]) {
+      if(i < crl_status.size() && !crl_status[i].empty()) {
+         for(auto&& code : crl_status[i]) {
             if(code == Certificate_Status_Code::VALID_CRL_CHECKED) {
                had_crl = true;
             }
@@ -837,8 +837,8 @@ void PKIX::merge_revocation_status(CertificatePathStatusCodes& chain_status,
          }
       }
 
-      if(i < ocsp.size() && !ocsp[i].empty()) {
-         for(auto&& code : ocsp[i]) {
+      if(i < ocsp_status.size() && !ocsp_status[i].empty()) {
+         for(auto&& code : ocsp_status[i]) {
             // NO_REVOCATION_URL and OCSP_SERVER_NOT_AVAILABLE are softfail
             if(code == Certificate_Status_Code::OCSP_RESPONSE_GOOD ||
                code == Certificate_Status_Code::OCSP_NO_REVOCATION_URL ||

@@ -789,7 +789,7 @@ Test::Result PK_Key_Validity_Test::run_one_test(const std::string& header, const
 
    const bool tested_valid = pubkey->check_key(this->rng(), true);
 
-   result.test_eq("Expected validation result", expected_valid, tested_valid);
+   result.test_eq("Expected validation result", tested_valid, expected_valid);
 
    return result;
 }

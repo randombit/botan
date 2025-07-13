@@ -76,7 +76,6 @@ Checks: >
     -readability-non-const-parameter,
     -readability-redundant-inline-specifier,
     -readability-redundant-access-specifiers,
-    -readability-suspicious-call-argument,
     -readability-use-std-min-max,
     -readability-use-anyofallof,
 ---

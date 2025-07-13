@@ -111,7 +111,6 @@ disabled_not_interested = [
     'readability-non-const-parameter',
     'readability-redundant-inline-specifier', # Jack likes doing this
     'readability-redundant-access-specifiers', # reneme likes doing this
-    'readability-suspicious-call-argument',
     'readability-use-std-min-max',
     'readability-use-anyofallof', # not more readable
 ]
