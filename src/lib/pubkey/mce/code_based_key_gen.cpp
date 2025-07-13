@@ -54,10 +54,7 @@ class binary_matrix final {
       std::vector<uint32_t> m_elem;
 };
 
-binary_matrix::binary_matrix(size_t rown, size_t coln) {
-   m_coln = coln;
-   m_rown = rown;
-   m_rwdcnt = 1 + ((m_coln - 1) / 32);
+binary_matrix::binary_matrix(size_t rown, size_t coln) : m_rown(rown), m_coln(coln), m_rwdcnt(1 + ((m_coln - 1) / 32)) {
    m_elem = std::vector<uint32_t>(m_rown * m_rwdcnt);
 }
 

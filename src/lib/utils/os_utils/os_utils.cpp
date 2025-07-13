@@ -756,8 +756,7 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal() {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    class POSIX_Echo_Suppression : public Echo_Suppression {
       public:
-         POSIX_Echo_Suppression() : m_old_termios{} {
-            m_stdin_fd = fileno(stdin);
+         POSIX_Echo_Suppression() : m_stdin_fd(fileno(stdin)), m_old_termios{} {
             if(::tcgetattr(m_stdin_fd, &m_old_termios) != 0) {
                throw System_Error("Getting terminal status failed", errno);
             }

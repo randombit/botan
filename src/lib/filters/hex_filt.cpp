@@ -25,7 +25,6 @@ const size_t HEX_CODEC_BUFFER_SIZE = 256;
 Hex_Encoder::Hex_Encoder(bool breaks, size_t length, Case c) : m_casing(c), m_line_length(breaks ? length : 0) {
    m_in.resize(HEX_CODEC_BUFFER_SIZE);
    m_out.resize(2 * m_in.size());
-   m_counter = m_position = 0;
 }
 
 /*
@@ -34,7 +33,6 @@ Hex_Encoder::Hex_Encoder(bool breaks, size_t length, Case c) : m_casing(c), m_li
 Hex_Encoder::Hex_Encoder(Case c) : m_casing(c), m_line_length(0) {
    m_in.resize(HEX_CODEC_BUFFER_SIZE);
    m_out.resize(2 * m_in.size());
-   m_counter = m_position = 0;
 }
 
 /*
@@ -100,7 +98,6 @@ void Hex_Encoder::end_msg() {
 Hex_Decoder::Hex_Decoder(Decoder_Checking c) : m_checking(c) {
    m_in.resize(HEX_CODEC_BUFFER_SIZE);
    m_out.resize(m_in.size() / 2);
-   m_position = 0;
 }
 
 /*

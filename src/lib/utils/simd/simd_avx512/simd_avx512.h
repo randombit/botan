@@ -14,6 +14,8 @@
 
 namespace Botan {
 
+// NOLINTBEGIN(portability-simd-intrinsics)
+
 class SIMD_16x32 final {
    public:
       SIMD_16x32& operator=(const SIMD_16x32& other) = default;
@@ -25,10 +27,13 @@ class SIMD_16x32 final {
       ~SIMD_16x32() = default;
 
       BOTAN_FN_ISA_AVX512
-      BOTAN_FORCE_INLINE SIMD_16x32() { m_avx512 = _mm512_setzero_si512(); }
+      BOTAN_FORCE_INLINE SIMD_16x32() : m_avx512(_mm512_setzero_si512()) {}
 
       BOTAN_FN_ISA_AVX512
-      explicit SIMD_16x32(const uint32_t B[16]) { m_avx512 = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(B)); }
+      explicit SIMD_16x32(const uint32_t B[16]) {
+         // NOLINTNEXTLINE(*-prefer-member-initializer)
+         m_avx512 = _mm512_loadu_si512(reinterpret_cast<const __m512i*>(B));
+      }
 
       BOTAN_FN_ISA_AVX512
       explicit SIMD_16x32(uint32_t B0,
@@ -47,6 +52,7 @@ class SIMD_16x32 final {
                           uint32_t BD,
                           uint32_t BE,
                           uint32_t BF) {
+         // NOLINTNEXTLINE(*-prefer-member-initializer)
          m_avx512 = _mm512_set_epi32(BF, BE, BD, BC, BB, BA, B9, B8, B7, B6, B5, B4, B3, B2, B1, B0);
       }
 
@@ -307,6 +313,8 @@ class SIMD_16x32 final {
    private:
       __m512i m_avx512;
 };
+
+// NOLINTEND(portability-simd-intrinsics)
 
 template <size_t R>
 inline SIMD_16x32 rotl(SIMD_16x32 input) {

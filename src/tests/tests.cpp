@@ -759,9 +759,7 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator {
          }
       }
 
-      Testsuite_RNG(std::string_view seed, std::string_view test_name) {
-         m_x = 0;
-
+      Testsuite_RNG(std::string_view seed, std::string_view test_name) : m_x(0) {
          for(char c : seed) {
             this->mix(static_cast<uint8_t>(c));
          }

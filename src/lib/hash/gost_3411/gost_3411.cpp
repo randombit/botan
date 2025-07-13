@@ -15,9 +15,7 @@ namespace Botan {
 /**
 * GOST 34.11 Constructor
 */
-GOST_34_11::GOST_34_11() : m_cipher(GOST_28147_89_Params("R3411_CryptoPro")), m_sum(32), m_hash(32) {
-   m_count = 0;
-}
+GOST_34_11::GOST_34_11() : m_cipher(GOST_28147_89_Params("R3411_CryptoPro")), m_sum(32), m_hash(32), m_count(0) {}
 
 void GOST_34_11::clear() {
    m_cipher.clear();

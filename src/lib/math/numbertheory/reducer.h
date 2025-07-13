@@ -66,7 +66,7 @@ class BOTAN_PUBLIC_API(2, 0) Modular_Reducer final {
 
       bool initialized() const { return (m_mod_words != 0); }
 
-      BOTAN_DEPRECATED("Use for_public_modulus or for_secret_modulus") Modular_Reducer() { m_mod_words = 0; }
+      BOTAN_DEPRECATED("Use for_public_modulus or for_secret_modulus") Modular_Reducer() : m_mod_words(0) {}
 
       /**
       * Accepts m == 0 and leaves the Modular_Reducer in an uninitialized state

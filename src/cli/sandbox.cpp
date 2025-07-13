@@ -30,17 +30,23 @@ struct SandboxPrivDelete {
 };
 #endif
 
-Sandbox::Sandbox() {
+namespace {
+
+std::string sandbox_impl_name() {
 #if defined(BOTAN_TARGET_OS_HAS_CAP_ENTER)
-   m_name = "capsicum";
+   return "capsicum";
 #elif defined(BOTAN_TARGET_OS_HAS_SETPPRIV)
-   m_name = "privilege";
+   return "privilege";
 #elif defined(BOTAN_TARGET_OS_HAS_SANDBOX_PROC)
-   m_name = "sandbox";
+   return "sandbox";
 #else
-   m_name = "<none>";
+   return "<none>";
 #endif
 }
+
+}  // namespace
+
+Sandbox::Sandbox() : m_name(sandbox_impl_name()) {}
 
 bool Sandbox::init() {
    Botan::initialize_allocator();

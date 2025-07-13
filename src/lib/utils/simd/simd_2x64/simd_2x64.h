@@ -20,6 +20,8 @@
 
 namespace Botan {
 
+// NOLINTBEGIN(portability-simd-intrinsics)
+
 class SIMD_2x64 final {
    public:
       SIMD_2x64& operator=(const SIMD_2x64& other) = default;
@@ -31,7 +33,7 @@ class SIMD_2x64 final {
       ~SIMD_2x64() = default;
 
       // zero initialized
-      SIMD_2x64() { m_simd = _mm_setzero_si128(); }
+      SIMD_2x64() : m_simd(_mm_setzero_si128()) {}
 
       static SIMD_2x64 load_le(const void* in) {
          return SIMD_2x64(_mm_loadu_si128(reinterpret_cast<const __m128i*>(in)));
@@ -149,6 +151,8 @@ class SIMD_2x64 final {
    private:
       __m128i m_simd;
 };
+
+// NOLINTEND(portability-simd-intrinsics)
 
 }  // namespace Botan
 

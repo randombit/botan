@@ -86,7 +86,7 @@ namespace {
 
 class TimingTestTimer {
    public:
-      TimingTestTimer() { m_start = get_high_resolution_clock(); }
+      TimingTestTimer() : m_start(get_high_resolution_clock()) {}
 
       uint64_t complete() const { return get_high_resolution_clock() - m_start; }
 

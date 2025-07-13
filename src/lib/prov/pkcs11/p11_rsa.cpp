@@ -120,6 +120,7 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
             m_mechanism(MechanismWrapper::create_rsa_crypt_mechanism(padding)),
             m_mod_n(Barrett_Reduction::for_public_modulus(m_key.get_n())),
             m_monty_n(std::make_shared<Montgomery_Params>(m_key.get_n(), m_mod_n)),
+            m_bits(m_key.get_n().bits() - 1),
             m_blinder(
                m_mod_n,
                rng,
@@ -128,9 +129,7 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
                   auto powm_m_n = monty_precompute(m_monty_n, k, powm_window, false);
                   return monty_execute_vartime(*powm_m_n, m_key.get_e()).value();
                },
-               [this](const BigInt& k) { return inverse_mod_rsa_public_modulus(k, m_key.get_n()); }) {
-         m_bits = m_key.get_n().bits() - 1;
-      }
+               [this](const BigInt& k) { return inverse_mod_rsa_public_modulus(k, m_key.get_n()); }) {}
 
       size_t plaintext_length(size_t /*ctext_len*/) const override { return m_key.get_n().bytes(); }
 
@@ -170,7 +169,7 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
       MechanismWrapper m_mechanism;
       Barrett_Reduction m_mod_n;
       std::shared_ptr<const Montgomery_Params> m_monty_n;
-      size_t m_bits = 0;
+      size_t m_bits;
       Blinder m_blinder;
 };
 
@@ -198,9 +197,9 @@ class PKCS11_RSA_Decryption_Operation_Software_EME final : public PK_Ops::Decryp
 class PKCS11_RSA_Encryption_Operation final : public PK_Ops::Encryption {
    public:
       PKCS11_RSA_Encryption_Operation(const PKCS11_RSA_PublicKey& key, std::string_view padding) :
-            m_key(key), m_mechanism(MechanismWrapper::create_rsa_crypt_mechanism(padding)) {
-         m_bits = 8 * (key.get_n().bytes() - m_mechanism.padding_size()) - 1;
-      }
+            m_key(key),
+            m_mechanism(MechanismWrapper::create_rsa_crypt_mechanism(padding)),
+            m_bits(8 * (key.get_n().bytes() - m_mechanism.padding_size()) - 1) {}
 
       size_t ciphertext_length(size_t /*ptext_len*/) const override { return m_key.get_n().bytes(); }
 
@@ -218,7 +217,7 @@ class PKCS11_RSA_Encryption_Operation final : public PK_Ops::Encryption {
    private:
       const PKCS11_RSA_PublicKey& m_key;
       MechanismWrapper m_mechanism;
-      size_t m_bits = 0;
+      size_t m_bits;
 };
 
 class PKCS11_RSA_Signature_Operation final : public PK_Ops::Signature {

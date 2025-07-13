@@ -14,7 +14,7 @@
 
 namespace Botan::OCSP {
 
-CertID::CertID(const X509_Certificate& issuer, const BigInt& subject_serial) {
+CertID::CertID(const X509_Certificate& issuer, const BigInt& subject_serial) : m_subject_serial(subject_serial) {
    /*
    In practice it seems some responders, including, notably,
    ocsp.verisign.com, will reject anything but SHA-1 here
@@ -24,7 +24,6 @@ CertID::CertID(const X509_Certificate& issuer, const BigInt& subject_serial) {
    m_hash_id = AlgorithmIdentifier(hash->name(), AlgorithmIdentifier::USE_NULL_PARAM);
    m_issuer_key_hash = unlock(hash->process(issuer.subject_public_key_bitstring()));
    m_issuer_dn_hash = unlock(hash->process(issuer.raw_subject_dn()));
-   m_subject_serial = subject_serial;
 }
 
 bool CertID::is_id_for(const X509_Certificate& issuer, const X509_Certificate& subject) const {

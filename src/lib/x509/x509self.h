@@ -109,13 +109,16 @@ class BOTAN_PUBLIC_API(2, 0) X509_Cert_Options final {
       /**
       * Indicates whether the certificate request
       */
-      bool is_CA;  // NOLINT(*non-private-member-variable*)
+      bool is_CA = false;  // NOLINT(*non-private-member-variable*)
 
       /**
       * Indicates the BasicConstraints path limit
       */
-      size_t path_limit;  // NOLINT(*non-private-member-variable*)
+      size_t path_limit = 0;  // NOLINT(*non-private-member-variable*)
 
+      /**
+      * Padding scheme to use. If empty uses a default
+      */
       std::string padding_scheme;  // NOLINT(*non-private-member-variable*)
 
       /**

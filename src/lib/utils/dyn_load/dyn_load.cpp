@@ -24,7 +24,7 @@ namespace Botan {
 
 namespace {
 
-void raise_runtime_loader_exception(std::string_view lib_name, const char* msg) {
+[[noreturn]] void raise_runtime_loader_exception(std::string_view lib_name, const char* msg) {
    std::ostringstream err;
    err << "Failed to load " << lib_name << ": ";
    if(msg != nullptr) {
@@ -36,28 +36,33 @@ void raise_runtime_loader_exception(std::string_view lib_name, const char* msg) 
    throw System_Error(err.str(), 0);
 }
 
-}  // namespace
-
-Dynamically_Loaded_Library::Dynamically_Loaded_Library(std::string_view library) : m_lib_name(library), m_lib(nullptr) {
+void* open_shared_library(const std::string& library) {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
-   m_lib = ::dlopen(m_lib_name.c_str(), RTLD_LAZY);
+   void* lib = ::dlopen(library.c_str(), RTLD_LAZY);
 
-   if(m_lib == nullptr) {
-      raise_runtime_loader_exception(m_lib_name, ::dlerror());
+   if(lib != nullptr) {
+      return lib;
+   } else {
+      raise_runtime_loader_exception(library, ::dlerror());
    }
 
 #elif defined(BOTAN_TARGET_OS_HAS_WIN32)
-   m_lib = ::LoadLibraryA(m_lib_name.c_str());
+   void* lib = ::LoadLibraryA(library.c_str());
 
-   if(m_lib == nullptr) {
-      raise_runtime_loader_exception(m_lib_name, "LoadLibrary failed");
+   if(lib != nullptr) {
+      return lib;
+   } else {
+      raise_runtime_loader_exception(library, "LoadLibrary failed");
    }
+#else
+   raise_runtime_loader_exception(library, "Dynamic loading not supported");
 #endif
-
-   if(m_lib == nullptr) {
-      raise_runtime_loader_exception(m_lib_name, "Dynamic load not supported");
-   }
 }
+
+}  // namespace
+
+Dynamically_Loaded_Library::Dynamically_Loaded_Library(std::string_view library) :
+      m_lib_name(library), m_lib(open_shared_library(m_lib_name)) {}
 
 Dynamically_Loaded_Library::~Dynamically_Loaded_Library() {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)

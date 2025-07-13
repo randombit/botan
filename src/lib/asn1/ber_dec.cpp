@@ -318,18 +318,15 @@ BER_Decoder& BER_Decoder::end_cons() {
    return (*m_parent);
 }
 
-BER_Decoder::BER_Decoder(BER_Object&& obj, BER_Decoder* parent) {
+BER_Decoder::BER_Decoder(BER_Object&& obj, BER_Decoder* parent) : m_parent(parent) {
    m_data_src = std::make_unique<DataSource_BERObject>(std::move(obj));
    m_source = m_data_src.get();
-   m_parent = parent;
 }
 
 /*
 * BER_Decoder Constructor
 */
-BER_Decoder::BER_Decoder(DataSource& src) {
-   m_source = &src;
-}
+BER_Decoder::BER_Decoder(DataSource& src) : m_source(&src) {}
 
 /*
 * BER_Decoder Constructor
@@ -358,12 +355,9 @@ BER_Decoder::BER_Decoder(const std::vector<uint8_t>& data) {
 /*
 * BER_Decoder Copy Constructor
 */
-BER_Decoder::BER_Decoder(const BER_Decoder& other) {
-   m_source = other.m_source;
-
-   // take ownership
+BER_Decoder::BER_Decoder(const BER_Decoder& other) : m_parent(other.m_parent), m_source(other.m_source) {
+   // take ownership of other's data source
    std::swap(m_data_src, other.m_data_src);
-   m_parent = other.m_parent;
 }
 
 /*

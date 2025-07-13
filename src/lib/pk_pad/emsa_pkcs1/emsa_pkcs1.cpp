@@ -87,8 +87,7 @@ std::string EMSA_PKCS1v15_Raw::name() const {
    }
 }
 
-EMSA_PKCS1v15_Raw::EMSA_PKCS1v15_Raw() {
-   m_hash_output_len = 0;
+EMSA_PKCS1v15_Raw::EMSA_PKCS1v15_Raw() : m_hash_output_len(0) {
    // m_hash_id, m_hash_name left empty
 }
 

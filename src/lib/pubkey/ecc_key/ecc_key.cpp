@@ -47,18 +47,18 @@ EC_Group_Encoding default_encoding_for(const EC_Group& group) {
 EC_PublicKey::EC_PublicKey(EC_Group group, const EC_Point& pub_point) {
    auto pt = EC_AffinePoint(group, pub_point);
    m_public_key = std::make_shared<const EC_PublicKey_Data>(std::move(group), std::move(pt));
-   m_domain_encoding = default_encoding_for(domain());
+   m_domain_encoding = default_encoding_for(domain());  // NOLINT(*-prefer-member-initializer)
 }
 #endif
 
 EC_PublicKey::EC_PublicKey(EC_Group group, EC_AffinePoint pub_point) {
    m_public_key = std::make_shared<const EC_PublicKey_Data>(std::move(group), std::move(pub_point));
-   m_domain_encoding = default_encoding_for(domain());
+   m_domain_encoding = default_encoding_for(domain());  // NOLINT(*-prefer-member-initializer)
 }
 
 EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
    m_public_key = std::make_shared<const EC_PublicKey_Data>(EC_Group(alg_id.parameters()), key_bits);
-   m_domain_encoding = default_encoding_for(domain());
+   m_domain_encoding = default_encoding_for(domain());  // NOLINT(*-prefer-member-initializer)
 }
 
 const EC_Group& EC_PublicKey::domain() const {
