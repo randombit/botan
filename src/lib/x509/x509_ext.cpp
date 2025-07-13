@@ -871,6 +871,7 @@ std::vector<uint8_t> IPAddressBlocks::encode_inner() const {
 
 void IPAddressBlocks::decode_inner(const std::vector<uint8_t>& in) {
    BER_Decoder(in).decode_list(m_ip_addr_blocks).verify_end();
+   sort_and_merge();
 }
 
 void IPAddressBlocks::IPAddressFamily::encode_into(Botan::DER_Encoder& into) const {
@@ -934,19 +935,16 @@ void IPAddressBlocks::sort_and_merge() {
    //
    // see: https://www.rfc-editor.org/rfc/rfc3779.html#section-2.2.3.3
    //
-   // families with no safis are ordered before families with safis,
-   // v4 families are ordered before v6 families (i.e. they are sorted by afis)
+   // v4 families are ordered before v6 families (i.e. they are sorted by afis, primarily),
+   // families with no safis are ordered before families with safis
    //
    // families with the same afi/safi combination are then merged
 
-   // std::map is ordered, so a uint32_t of [afi,safi] will be in the right order
-   std::map<uint32_t, std::vector<IPAddressFamily>> afam_map;
+   // std::map is ordered, so using a pair (afi, optional(safi)) here works - std::nullopt is sorted before any actual values
+   std::map<std::pair<uint16_t, std::optional<uint8_t>>, std::vector<IPAddressFamily>> afam_map;
    for(const IPAddressFamily& block : m_ip_addr_blocks) {
-      uint32_t afam = block.afi();
-      if(block.safi().has_value()) {
-         afam = static_cast<uint32_t>(afam << 8) | block.safi().value();
-      }
-      std::vector<IPAddressFamily>& fams = afam_map[afam];
+      auto key = std::make_pair(block.afi(), block.safi());
+      std::vector<IPAddressFamily>& fams = afam_map[key];
       fams.push_back(block);
    }
 
@@ -1155,7 +1153,7 @@ void IPAddressBlocks::IPAddressChoice<V>::decode_from(Botan::BER_Decoder& from) 
    } else if(next_tag == ASN1_Type::Sequence) {
       std::vector<IPAddressOrRange<V>> ip_ranges;
       from.decode_list(ip_ranges);
-      m_ip_addr_ranges = ip_ranges;
+      m_ip_addr_ranges = sort_and_merge_ranges<IPAddressOrRange<V>>(ip_ranges);
    } else {
       throw Decoding_Error(fmt("Unexpected type for IPAddressChoice {}", static_cast<uint32_t>(next_tag)));
    }
@@ -1216,22 +1214,23 @@ void IPAddressBlocks::IPAddressOrRange<V>::encode_into(Botan::DER_Encoder& into)
    const uint8_t unused_bits = host % 8;
 
    bool octets_match = true;
-   for(size_t i = 0; i < static_cast<uint8_t>(version_octets - discarded_octets); i++) {
-      if(min[i] != max[i]) {
-         octets_match = false;
-         break;
-      }
-   }
-
-   // we only partially use this octet, and the used part has to match for prefix encoding
    bool used_bits_match = true;
-   // if all octets match we don't need to check this
-   if(!octets_match) {
-      // we have at least one non-matching, actually used octet
-      BOTAN_ASSERT_NOMSG(discarded_octets < version_octets);
-      const uint8_t shifted_min = (min[version_octets - 1 - discarded_octets] >> unused_bits);
-      const uint8_t shifted_max = (max[version_octets - 1 - discarded_octets] >> unused_bits);
-      used_bits_match = (shifted_min == shifted_max);
+
+   // we have octets to check
+   if(discarded_octets < version_octets) {
+      // check all but the last octet
+      for(size_t i = 0; i < static_cast<uint8_t>(version_octets - discarded_octets - 1); i++) {
+         if(min[i] != max[i]) {
+            octets_match = false;
+            break;
+         }
+      }
+      // check the last significant octet if we have matched so far
+      if(octets_match) {
+         const uint8_t shifted_min = (min[version_octets - 1 - discarded_octets] >> unused_bits);
+         const uint8_t shifted_max = (max[version_octets - 1 - discarded_octets] >> unused_bits);
+         used_bits_match = (shifted_min == shifted_max);
+      }
    }
 
    // both the full octets and the partially used one match
@@ -1282,48 +1281,22 @@ void IPAddressBlocks::IPAddressOrRange<V>::encode_into(Botan::DER_Encoder& into)
 
 template <IPAddressBlocks::Version V>
 void IPAddressBlocks::IPAddressOrRange<V>::decode_from(Botan::BER_Decoder& from) {
-   const size_t version_octets = static_cast<size_t>(V);
-
    const ASN1_Type next_tag = from.peek_next_object().type_tag();
 
    // this can either be a prefix or a single address
    if(next_tag == ASN1_Type::BitString) {
       // construct a min and a max address from the prefix
 
-      std::vector<uint8_t> prefix;
-      from.decode(prefix, ASN1_Type::OctetString, ASN1_Type::BitString, ASN1_Class::Universal);
+      std::vector<uint8_t> prefix_min;
+      from.decode(prefix_min, ASN1_Type::OctetString, ASN1_Type::BitString, ASN1_Class::Universal);
 
-      // we have to account for the octet at the beginning that specifies how many bits are unused in the last octet
-      if(prefix.empty() || prefix.size() > version_octets + 1) {
-         throw Decoding_Error(
-            fmt("IP address range entries must have a length between 2 and {} bits.", version_octets));
-      }
+      // copy because we modify the address in `decode_single_address`, but we need it twice for min and max
+      std::vector<uint8_t> prefix_max(prefix_min);
 
-      const uint8_t unused = prefix.front();
-      const uint8_t discarded_octets = version_octets - (static_cast<uint8_t>(prefix.size()) - 1);
-
-      prefix.erase(prefix.begin());
-
-      if(prefix.empty() && unused != 0) {
-         throw Decoding_Error("IP address range entry specified unused bits, but did not provide any octets.");
-      }
-
-      for(size_t i = 0; i < discarded_octets; i++) {
-         prefix.push_back(0);
-      }
-
-      m_min = IPAddress<V>(prefix);
-
-      for(size_t i = version_octets - discarded_octets; i < version_octets; i++) {
-         prefix[i] = 0xff;
-      }
-
-      // set all unused bits to 1
-      for(size_t i = 0; i < unused; i++) {
-         prefix[version_octets - 1 - discarded_octets] |= (1 << i);
-      }
-
-      m_max = IPAddress<V>(prefix);
+      // min address gets filled with 0's
+      m_min = decode_single_address(std::move(prefix_min), true);
+      // max address with 1's
+      m_max = decode_single_address(std::move(prefix_max), false);
    } else if(next_tag == ASN1_Type::Sequence) {
       // this is a range
 
@@ -1335,58 +1308,8 @@ void IPAddressBlocks::IPAddressOrRange<V>::decode_from(Botan::BER_Decoder& from)
          .decode(addr_max, ASN1_Type::OctetString, ASN1_Type::BitString, ASN1_Class::Universal)
          .end_cons();
 
-      // address 1 (min)
-
-      // again accounting for the 'unused' octet at the beginning
-      if(addr_min.empty() || addr_min.size() > version_octets + 1) {
-         throw Decoding_Error(
-            fmt("IP address range entries must have a length between 1 and {} bytes.", version_octets));
-      }
-
-      // we don't technically need the unused bits, as per the encoding they are already zero, but we check just in case
-      const uint8_t unused_min = addr_min.front();
-      addr_min.erase(addr_min.begin());
-
-      if(addr_min.empty() && unused_min != 0) {
-         throw Decoding_Error("IP address range entry specified unused bits, but did not provide any octets.");
-      }
-
-      // restore trailing zeros
-      const size_t addr_len_min = addr_min.size();
-      for(size_t i = 0; i < version_octets - addr_len_min; i++) {
-         addr_min.push_back(0);
-      }
-
-      m_min = IPAddress<V>(addr_min);
-
-      // address 2 (max)
-
-      if(addr_max.empty() || addr_max.size() > version_octets + 1) {
-         throw Decoding_Error(
-            fmt("IP address range entries must have a length between 1 and {} bytes.", version_octets));
-      }
-
-      // here we need the unused bits to restore the least significant 1s correctly
-      const uint8_t unused_max = addr_max.front();
-      addr_max.erase(addr_max.begin());
-
-      // we were given 0 actual address octets, but the unused octet claims there are unused bits - this doesn't make sense!
-      if(addr_max.empty() && unused_max != 0) {
-         throw Decoding_Error("IP address range entry specified unused bits, but did not provide any octets.");
-      }
-
-      // restore trailing ones
-      const size_t addr_len_max = addr_max.size();
-      for(size_t i = 0; i < version_octets - addr_len_max; i++) {
-         addr_max.push_back(0xff);
-      }
-
-      // restore ones stored in 'unused' octet (which is the last octet before trailing ones)
-      for(size_t i = 0; i < unused_max; i++) {
-         addr_max[addr_len_max - 1] |= (1 << i);
-      }
-
-      m_max = IPAddress<V>(addr_max);
+      m_min = decode_single_address(std::move(addr_min), true);
+      m_max = decode_single_address(std::move(addr_max), false);
 
       if(m_min > m_max) {
          throw Decoding_Error("IP address ranges must be sorted.");
@@ -1397,7 +1320,52 @@ void IPAddressBlocks::IPAddressOrRange<V>::decode_from(Botan::BER_Decoder& from)
 }
 
 template <IPAddressBlocks::Version V>
-IPAddressBlocks::IPAddress<V>::IPAddress(std::span<uint8_t> v) {
+IPAddressBlocks::IPAddress<V> IPAddressBlocks::IPAddressOrRange<V>::decode_single_address(std::vector<uint8_t> decoded,
+                                                                                          bool min) {
+   const size_t version_octets = static_cast<size_t>(V);
+
+   // decode a single address according to https://datatracker.ietf.org/doc/html/rfc3779#section-2.1.1 and following
+
+   // we have to account for the octet at the beginning that specifies how many bits are unused in the last octet
+   if(decoded.empty() || decoded.size() > version_octets + 1) {
+      throw Decoding_Error(fmt("IP address range entries must have a length between 1 and {} bytes.", version_octets));
+   }
+
+   const uint8_t unused = decoded.front();
+   const uint8_t discarded_octets = version_octets - (static_cast<uint8_t>(decoded.size()) - 1);
+
+   decoded.erase(decoded.begin());
+
+   if(decoded.empty() && unused != 0) {
+      throw Decoding_Error("IP address range entry specified unused bits, but did not provide any octets.");
+   }
+
+   // if they were 8, the entire octet should have been discarded
+   if(unused > 7) {
+      throw Decoding_Error("IP address range entry specified invalid number of unused bits.");
+   }
+
+   // pad to version length with 0's for min addresses, 255's (0xff) for max addresses
+   uint8_t fill_discarded = min ? 0 : 0xff;
+   for(size_t i = 0; i < discarded_octets; i++) {
+      decoded.push_back(fill_discarded);
+   }
+
+   // for min addresses they should already be 0, but we set them to zero regardless
+   // for max addresses this turns the unused bits to 1
+   for(size_t i = 0; i < unused; i++) {
+      if(min) {
+         decoded[version_octets - 1 - discarded_octets] &= ~(1 << i);
+      } else {
+         decoded[version_octets - 1 - discarded_octets] |= (1 << i);
+      }
+   }
+
+   return IPAddressBlocks::IPAddress<V>(decoded);
+}
+
+template <IPAddressBlocks::Version V>
+IPAddressBlocks::IPAddress<V>::IPAddress(std::span<const uint8_t> v) {
    if(v.size() != Length) {
       throw Decoding_Error("number of bytes does not match IP version used");
    }
@@ -1508,6 +1476,10 @@ void ASBlocks::decode_inner(const std::vector<uint8_t>& in) {
 
 void ASBlocks::ASIdentifiers::encode_into(Botan::DER_Encoder& into) const {
    into.start_sequence();
+
+   if(!m_asnum.has_value() && !m_rdi.has_value()) {
+      throw Encoding_Error("One of asnum, rdi must be present");
+   }
 
    if(m_asnum.has_value()) {
       into.start_explicit(0);

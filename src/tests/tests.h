@@ -493,6 +493,13 @@ class Test {
                return test_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
             }
 
+            template <std::size_t N>
+            bool test_eq(const std::string& what,
+                         const std::array<uint8_t, N>& produced,
+                         const std::array<uint8_t, N>& expected) {
+               return test_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
+            }
+
             bool test_ne(const std::string& what,
                          std::span<const uint8_t> produced,
                          std::span<const uint8_t> expected) {
