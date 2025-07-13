@@ -37,7 +37,7 @@ BOTAN_MALLOC_FN void* allocate_memory(size_t elems, size_t elem_size) {
 #if defined(BOTAN_TARGET_OS_HAS_ALLOC_CONCEAL)
    void* ptr = ::calloc_conceal(elems, elem_size);
 #else
-   void* ptr = std::calloc(elems, elem_size);  // NOLINT(*-no-malloc)
+   void* ptr = std::calloc(elems, elem_size);  // NOLINT(*-no-malloc,*-owning-memory)
 #endif
    if(ptr == nullptr) {
       [[unlikely]] throw std::bad_alloc();
@@ -58,7 +58,7 @@ void deallocate_memory(void* p, size_t elems, size_t elem_size) {
    }
 #endif
 
-   std::free(p);  // NOLINT(*-no-malloc)
+   std::free(p);  // NOLINT(*-no-malloc,*-owning-memory)
 }
 
 void initialize_allocator() {

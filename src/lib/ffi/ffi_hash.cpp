@@ -29,7 +29,7 @@ int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags) {
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
       }
 
-      *hash = new botan_hash_struct(std::move(h));
+      ffi_new_object(hash, std::move(h));
       return BOTAN_FFI_SUCCESS;
    });
 }
@@ -76,7 +76,7 @@ int botan_hash_final(botan_hash_t hash, uint8_t out[]) {
 }
 
 int botan_hash_copy_state(botan_hash_t* dest, const botan_hash_t source) {
-   return BOTAN_FFI_VISIT(source, [=](const auto& src) { *dest = new botan_hash_struct(src.copy_state()); });
+   return BOTAN_FFI_VISIT(source, [=](const auto& src) { return ffi_new_object(dest, src.copy_state()); });
 }
 
 int botan_hash_name(botan_hash_t hash, char* name, size_t* name_len) {

@@ -166,9 +166,16 @@ int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name) {
          return BOTAN_FFI_ERROR_INVALID_OBJECT;
       }
 
-      delete obj;
+      delete obj;  // NOLINT(*-owning-memory)
       return BOTAN_FFI_SUCCESS;
    });
+}
+
+template <typename T, typename... Args>
+BOTAN_FFI_ERROR ffi_new_object(T* obj, Args&&... args) {
+   // NOLINTNEXTLINE(*-owning-memory)
+   *obj = new std::remove_pointer_t<T>(std::forward<Args>(args)...);
+   return BOTAN_FFI_SUCCESS;
 }
 
 // NOLINTNEXTLINE(*-macro-usage)

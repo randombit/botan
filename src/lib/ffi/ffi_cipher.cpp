@@ -106,8 +106,7 @@ int botan_cipher_init(botan_cipher_t* cipher, const char* cipher_name, uint32_t 
       const size_t update_size = ffi_choose_update_size(*mode);
       const size_t ideal_update_size = std::max(mode->ideal_granularity(), update_size);
 
-      *cipher = new botan_cipher_struct(std::move(mode), update_size, ideal_update_size);
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(cipher, std::move(mode), update_size, ideal_update_size);
    });
 }
 

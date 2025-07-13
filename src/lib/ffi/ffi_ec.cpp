@@ -64,9 +64,7 @@ int botan_ec_group_from_params(botan_ec_group_t* ec_group,
          safe_get(oid), safe_get(p), safe_get(a), safe_get(b), safe_get(base_x), safe_get(base_y), safe_get(order));
 
       auto group_ptr = std::make_unique<Botan::EC_Group>(std::move(group));
-      *ec_group = new botan_ec_group_struct(std::move(group_ptr));
-
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(ec_group, std::move(group_ptr));
    });
 }
 
@@ -79,9 +77,7 @@ int botan_ec_group_from_ber(botan_ec_group_t* ec_group, const uint8_t* ber, size
       Botan::EC_Group group(ber, ber_len);
 
       auto group_ptr = std::make_unique<Botan::EC_Group>(std::move(group));
-      *ec_group = new botan_ec_group_struct(std::move(group_ptr));
-
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(ec_group, std::move(group_ptr));
    });
 }
 
@@ -94,9 +90,7 @@ int botan_ec_group_from_pem(botan_ec_group_t* ec_group, const char* pem) {
       Botan::EC_Group group = Botan::EC_Group::from_PEM(pem);
 
       auto group_ptr = std::make_unique<Botan::EC_Group>(std::move(group));
-      *ec_group = new botan_ec_group_struct(std::move(group_ptr));
-
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(ec_group, std::move(group_ptr));
    });
 }
 
@@ -109,9 +103,7 @@ int botan_ec_group_from_oid(botan_ec_group_t* ec_group, botan_asn1_oid_t oid) {
       Botan::EC_Group group = Botan::EC_Group::from_OID(safe_get(oid));
 
       auto group_ptr = std::make_unique<Botan::EC_Group>(std::move(group));
-      *ec_group = new botan_ec_group_struct(std::move(group_ptr));
-
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(ec_group, std::move(group_ptr));
    });
 }
 
@@ -124,9 +116,7 @@ int botan_ec_group_from_name(botan_ec_group_t* ec_group, const char* name) {
       Botan::EC_Group group = Botan::EC_Group::from_name(name);
 
       auto group_ptr = std::make_unique<Botan::EC_Group>(std::move(group));
-      *ec_group = new botan_ec_group_struct(std::move(group_ptr));
-
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(ec_group, std::move(group_ptr));
    });
 }
 
@@ -147,9 +137,7 @@ int botan_ec_group_get_curve_oid(botan_asn1_oid_t* oid, botan_ec_group_t ec_grou
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
       auto oid_ptr = std::make_unique<Botan::OID>(g.get_curve_oid());
-      *oid = new botan_asn1_oid_struct(std::move(oid_ptr));
-
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(oid, std::move(oid_ptr));
    });
 }
 
@@ -162,8 +150,7 @@ int botan_ec_group_get_component(botan_mp_t* out,
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
       auto val = std::make_unique<Botan::BigInt>(getter(g));
-      *out = new botan_mp_struct(std::move(val));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(out, std::move(val));
    });
 }
 }  // namespace

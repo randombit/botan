@@ -69,8 +69,7 @@ int botan_rng_init(botan_rng_t* rng_out, const char* rng_type) {
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
       }
 
-      *rng_out = new botan_rng_struct(std::move(rng));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(rng_out, std::move(rng));
    });
 }
 
@@ -154,8 +153,7 @@ int botan_rng_init_custom(botan_rng_t* rng_out,
 
       auto rng = std::make_unique<Custom_RNG>(rng_name, context, get_cb, add_entropy_cb, destroy_cb);
 
-      *rng_out = new botan_rng_struct(std::move(rng));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(rng_out, std::move(rng));
    });
 }
 

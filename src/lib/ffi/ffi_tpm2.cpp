@@ -88,8 +88,7 @@ int botan_tpm2_ctx_init(botan_tpm2_ctx_t* ctx_out, const char* tcti_nameconf) {
       }();
 
       ctx->ctx = Botan::TPM2::Context::create(std::move(tcti));
-      *ctx_out = new botan_tpm2_ctx_struct(std::move(ctx));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(ctx_out, std::move(ctx));
    });
 #else
    BOTAN_UNUSED(ctx_out, tcti_nameconf);
@@ -122,8 +121,7 @@ int botan_tpm2_ctx_init_ex(botan_tpm2_ctx_t* ctx_out, const char* tcti_name, con
       }();
 
       ctx->ctx = Botan::TPM2::Context::create(std::move(tcti_name_str), std::move(tcti_conf_str));
-      *ctx_out = new botan_tpm2_ctx_struct(std::move(ctx));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(ctx_out, std::move(ctx));
    });
 #else
    BOTAN_UNUSED(ctx_out, tcti_name, tcti_conf);
@@ -140,8 +138,7 @@ int botan_tpm2_ctx_from_esys(botan_tpm2_ctx_t* ctx_out, ESYS_CONTEXT* esys_ctx) 
 
       auto ctx = std::make_unique<botan_tpm2_ctx_wrapper>();
       ctx->ctx = Botan::TPM2::Context::create(esys_ctx);
-      *ctx_out = new botan_tpm2_ctx_struct(std::move(ctx));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(ctx_out, std::move(ctx));
    });
 #else
    BOTAN_UNUSED(ctx_out, esys_ctx);
@@ -195,8 +192,7 @@ int botan_tpm2_enable_crypto_backend(botan_tpm2_crypto_backend_state_t* cbs_out,
       // Here, we just need to trust the user that they keep the passed-in RNG
       // instance intact for the lifetime of the context.
       std::shared_ptr<Botan::RandomNumberGenerator> rng_ptr(&rng_ref, [](auto*) {});
-      *cbs_out = new botan_tpm2_crypto_backend_state_struct(Botan::TPM2::use_botan_crypto_backend(esys_ctx, rng_ptr));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(cbs_out, Botan::TPM2::use_botan_crypto_backend(esys_ctx, rng_ptr));
    });
 #else
    BOTAN_UNUSED(cbs_out, esys_ctx, rng);
@@ -224,9 +220,8 @@ int botan_tpm2_rng_init(botan_rng_t* rng_out,
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
 
-      *rng_out = new botan_rng_struct(
-         std::make_unique<Botan::TPM2::RandomNumberGenerator>(ctx_wrapper.ctx, sessions(s1, s2, s3)));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(
+         rng_out, std::make_unique<Botan::TPM2::RandomNumberGenerator>(ctx_wrapper.ctx, sessions(s1, s2, s3)));
    });
 #else
    BOTAN_UNUSED(rng_out, ctx, s1, s2, s3);
@@ -243,8 +238,7 @@ int botan_tpm2_unauthenticated_session_init(botan_tpm2_session_t* session_out, b
 
       auto session = std::make_unique<botan_tpm2_session_wrapper>();
       session->session = Botan::TPM2::Session::unauthenticated_session(ctx_wrapper.ctx);
-      *session_out = new botan_tpm2_session_struct(std::move(session));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(session_out, std::move(session));
    });
 #else
    BOTAN_UNUSED(session_out, ctx);

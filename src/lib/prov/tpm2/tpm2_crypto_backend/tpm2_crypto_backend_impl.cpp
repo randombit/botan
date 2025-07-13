@@ -222,7 +222,7 @@ TSS2_RC hash_start(ESYS_CRYPTO_CONTEXT_BLOB** context, TPM2_ALG_ID hash_alg, voi
       }
 
       // Will be deleted in hash_abort() or hash_finish()
-      *context = new DigestCallbackState{std::move(hash)};
+      *context = new DigestCallbackState{std::move(hash)};  // NOLINT(*-owning-memory)
       return TSS2_RC_SUCCESS;
    });
 }
@@ -285,7 +285,8 @@ TSS2_RC hash_finish(ESYS_CRYPTO_CONTEXT_BLOB** context, uint8_t* buffer, size_t*
          *size = digest_size;
       }
 
-      delete *context;  // allocated in hash_start()
+      // allocated in hash_start()
+      delete *context;  // NOLINT(*-owning-memory)
       *context = nullptr;
       return TSS2_RC_SUCCESS;
    });
@@ -300,7 +301,8 @@ TSS2_RC hash_finish(ESYS_CRYPTO_CONTEXT_BLOB** context, uint8_t* buffer, size_t*
 void hash_abort(ESYS_CRYPTO_CONTEXT_BLOB** context, void* userdata) {
    BOTAN_UNUSED(userdata);
    if(context) {
-      delete *context;  // allocated in hash_start()
+      // allocated in hash_start()
+      delete *context;  // NOLINT(*-owning-memory)
       *context = nullptr;
    }
 }
@@ -338,7 +340,7 @@ TSS2_RC hmac_start(
       hmac->set_key(std::span{key, size});
 
       // Will be deleted in hmac_abort() or hmac_finish()
-      *context = new DigestCallbackState{std::move(hmac)};
+      *context = new DigestCallbackState{std::move(hmac)};  // NOLINT(*-owning-memory)
       return TSS2_RC_SUCCESS;
    });
 }
@@ -401,7 +403,8 @@ TSS2_RC hmac_finish(ESYS_CRYPTO_CONTEXT_BLOB** context, uint8_t* buffer, size_t*
          *size = digest_size;
       }
 
-      delete *context;  // allocated in hmac_start()
+      // allocated in hmac_start()
+      delete *context;  // NOLINT(*-owning-memory)
       *context = nullptr;
       return TSS2_RC_SUCCESS;
    });
@@ -416,7 +419,8 @@ TSS2_RC hmac_finish(ESYS_CRYPTO_CONTEXT_BLOB** context, uint8_t* buffer, size_t*
 void hmac_abort(ESYS_CRYPTO_CONTEXT_BLOB** context, void* userdata) {
    BOTAN_UNUSED(userdata);
    if(context) {
-      delete *context;  // allocated in hmac_start()
+      // allocated in hmac_start()
+      delete *context;  // NOLINT(*-owning-memory)
       *context = nullptr;
    }
 }

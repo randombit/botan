@@ -161,7 +161,7 @@ void Certificate_13::setup_entries(std::vector<X509_Certificate> cert_chain,
    for(size_t i = 0; i < cert_chain.size(); ++i) {
       auto& entry = m_entries.emplace_back(cert_chain[i]);
       if(!ocsp_responses[i].empty()) {
-         entry.extensions().add(new Certificate_Status_Request(ocsp_responses[i]));
+         entry.extensions().add(new Certificate_Status_Request(ocsp_responses[i]));  // NOLINT(*-owning-memory)
       }
 
       // This will call the modification callback multiple times. Once for

@@ -241,6 +241,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
          make_server_hello_random(rng, server_settings.protocol_version(), cb, policy),
          server_settings.ciphersuite(),
          uint8_t(0))) {
+   // NOLINTBEGIN(*-owning-memory)
    if(client_hello.supports_extended_master_secret()) {
       m_data->extensions().add(new Extended_Master_Secret);
    }
@@ -292,6 +293,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
          }
       }
    }
+   // NOLINTEND(*-owning-memory)
 
    cb.tls_modify_extensions(m_data->extensions(), Connection_Side::Server, type());
 
@@ -314,6 +316,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
                                                            make_hello_random(rng, cb, policy),
                                                            resumed_session.ciphersuite_code(),
                                                            uint8_t(0))) {
+   // NOLINTBEGIN(*-owning-memory)
    if(client_hello.supports_extended_master_secret()) {
       m_data->extensions().add(new Extended_Master_Secret);
    }
@@ -341,6 +344,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
    if(client_hello.supports_session_ticket() && offer_session_ticket) {
       m_data->extensions().add(new Session_Ticket_Extension());
    }
+   // NOLINTEND(*-owning-memory)
 
    cb.tls_modify_extensions(m_data->extensions(), Connection_Side::Server, type());
 
@@ -722,7 +726,7 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
    //
    // Note that the legacy version (TLS 1.2) is set in this constructor's
    // initializer list, accordingly.
-   m_data->extensions().add(new Supported_Versions(Protocol_Version::TLS_V13));
+   m_data->extensions().add(new Supported_Versions(Protocol_Version::TLS_V13));  // NOLINT(*-owning-memory)
 
    if(key_exchange_group.has_value()) {
       BOTAN_ASSERT_NOMSG(ch.extensions().has<Key_Share>());
@@ -816,9 +820,11 @@ Hello_Retry_Request::Hello_Retry_Request(const Client_Hello_13& ch,
    //
    // Note that the legacy version (TLS 1.2) is set in this constructor's
    // initializer list, accordingly.
+   // NOLINTBEGIN(*-owning-memory)
    m_data->extensions().add(new Supported_Versions(Protocol_Version::TLS_V13));
 
    m_data->extensions().add(new Key_Share(selected_group));
+   // NOLINTEND(*-owning-memory)
 
    cb.tls_modify_extensions(m_data->extensions(), Connection_Side::Server, type());
 }

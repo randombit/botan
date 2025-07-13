@@ -36,8 +36,7 @@ int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* cert_path
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto c = std::make_unique<Botan::X509_Certificate>(cert_path);
-      *cert_obj = new botan_x509_cert_struct(std::move(c));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(cert_obj, std::move(c));
    });
 
 #else
@@ -54,8 +53,7 @@ int botan_x509_cert_dup(botan_x509_cert_t* cert_obj, botan_x509_cert_t cert) {
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto c = std::make_unique<Botan::X509_Certificate>(safe_get(cert));
-      *cert_obj = new botan_x509_cert_struct(std::move(c));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(cert_obj, std::move(c));
    });
 
 #else
@@ -73,8 +71,7 @@ int botan_x509_cert_load(botan_x509_cert_t* cert_obj, const uint8_t cert_bits[],
    return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::DataSource_Memory bits(cert_bits, cert_bits_len);
       auto c = std::make_unique<Botan::X509_Certificate>(bits);
-      *cert_obj = new botan_x509_cert_struct(std::move(c));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(cert_obj, std::move(c));
    });
 #else
    BOTAN_UNUSED(cert_bits_len);
@@ -92,8 +89,7 @@ int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key) 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto public_key = safe_get(cert).subject_public_key();
-      *key = new botan_pubkey_struct(std::move(public_key));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(key, std::move(public_key));
    });
 #else
    BOTAN_UNUSED(cert);
@@ -368,8 +364,7 @@ int botan_x509_crl_load_file(botan_x509_crl_t* crl_obj, const char* crl_path) {
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto c = std::make_unique<Botan::X509_CRL>(crl_path);
-      *crl_obj = new botan_x509_crl_struct(std::move(c));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(crl_obj, std::move(c));
    });
 
 #else
@@ -386,8 +381,7 @@ int botan_x509_crl_load(botan_x509_crl_t* crl_obj, const uint8_t crl_bits[], siz
    return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::DataSource_Memory bits(crl_bits, crl_bits_len);
       auto c = std::make_unique<Botan::X509_CRL>(bits);
-      *crl_obj = new botan_x509_crl_struct(std::move(c));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(crl_obj, std::move(c));
    });
 #else
    BOTAN_UNUSED(crl_bits_len);

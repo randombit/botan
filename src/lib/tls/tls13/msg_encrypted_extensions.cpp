@@ -17,6 +17,8 @@ namespace Botan::TLS {
 Encrypted_Extensions::Encrypted_Extensions(const Client_Hello_13& client_hello, const Policy& policy, Callbacks& cb) {
    const auto& exts = client_hello.extensions();
 
+   // NOLINTBEGIN(*-owning-memory)
+
    // RFC 8446 4.2.7
    //    As of TLS 1.3, servers are permitted to send the "supported_groups"
    //    extension to the client.  Clients [...] MAY use the information
@@ -82,6 +84,8 @@ Encrypted_Extensions::Encrypted_Extensions(const Client_Hello_13& client_hello, 
          m_extensions.add(new Application_Layer_Protocol_Notification(next_protocol));
       }
    }
+
+   // NOLINTEND(*-owning-memory)
 
    // TODO: Implement handling for (at least)
    //       * SRTP

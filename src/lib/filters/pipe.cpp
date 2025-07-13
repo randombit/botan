@@ -84,7 +84,7 @@ void Pipe::destruct(Filter* to_kill) {
    for(size_t j = 0; j != to_kill->total_ports(); ++j) {
       destruct(to_kill->m_next[j]);
    }
-   delete to_kill;
+   delete to_kill;  // NOLINT(*owning-memory)
 }
 
 /*
@@ -148,7 +148,7 @@ void Pipe::start_msg() {
       throw Invalid_State("Pipe::start_msg: Message was already started");
    }
    if(m_pipe == nullptr) {
-      m_pipe = new Null_Filter;
+      m_pipe = new Null_Filter;  // NOLINT(*-owning-memory)
    }
    find_endpoints(m_pipe);
    m_pipe->new_msg();
@@ -181,7 +181,7 @@ void Pipe::find_endpoints(Filter* f) {
       if(f->m_next[j] != nullptr && dynamic_cast<SecureQueue*>(f->m_next[j]) == nullptr) {
          find_endpoints(f->m_next[j]);
       } else {
-         SecureQueue* q = new SecureQueue;
+         SecureQueue* q = new SecureQueue;  // NOLINT(*-owning-memory)
          f->m_next[j] = q;
          m_outputs->add(q);
       }

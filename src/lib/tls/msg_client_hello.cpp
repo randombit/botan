@@ -426,6 +426,7 @@ void Client_Hello_12::add_tls12_supported_groups_extensions(const Policy& policy
    auto supported_groups = std::make_unique<Supported_Groups>(std::move(compatible_kex_groups));
 
    if(!supported_groups->ec_groups().empty()) {
+      // NOLINTNEXTLINE(*-owning-memory)
       m_data->extensions().add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
    }
 
@@ -442,7 +443,7 @@ Client_Hello_12::Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data) : 
          }
       } else {
          // add fake extension
-         m_data->extensions().add(new Renegotiation_Extension());
+         m_data->extensions().add(new Renegotiation_Extension());  // NOLINT(*-owning-memory)
       }
    }
 }
@@ -499,7 +500,10 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    * which reject hellos when the last extension in the list is empty.
    */
 
+   // NOLINTBEGIN(*-owning-memory)
+
    // EMS must always be used with TLS 1.2, regardless of the policy used.
+
    m_data->extensions().add(new Extended_Master_Secret);
 
    if(policy.negotiate_encrypt_then_mac()) {
@@ -538,6 +542,8 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    if(m_data->legacy_version().is_datagram_protocol()) {
       m_data->extensions().add(new SRTP_Protection_Profiles(policy.srtp_profiles()));
    }
+
+   // NOLINTEND(*-owning-memory)
 
    cb.tls_modify_extensions(m_data->extensions(), Connection_Side::Client, type());
 
@@ -581,6 +587,7 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    * RFC it should reject our resume attempt and upgrade us to a new session
    * with the EMS protection.
    */
+   // NOLINTBEGIN(*-owning-memory)
    m_data->extensions().add(new Extended_Master_Secret);
 
    if(session.session.supports_encrypt_then_mac()) {
@@ -617,6 +624,7 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    if(reneg_info.empty() && !next_protocols.empty()) {
       m_data->extensions().add(new Application_Layer_Protocol_Notification(next_protocols));
    }
+   // NOLINTEND(*-owning-memory)
 
    cb.tls_modify_extensions(m_data->extensions(), Connection_Side::Client, type());
 
@@ -783,6 +791,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
       m_data->m_session_id = Session_ID(make_hello_random(rng, cb, policy));
    }
 
+   // NOLINTBEGIN(*-owning-memory)
    if(hostname_acceptable_for_sni(hostname)) {
       m_data->extensions().add(new Server_Name_Indicator(hostname));
    }
@@ -848,6 +857,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    if(session.has_value() || !psks.empty()) {
       m_data->extensions().add(new PSK(session, std::move(psks), cb));
    }
+   // NOLINTEND(*-owning-memory)
 
    cb.tls_modify_extensions(m_data->extensions(), Connection_Side::Client, type());
 
@@ -898,7 +908,7 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
    //    connections.
    if(hrr.extensions().has<Cookie>()) {
       BOTAN_STATE_CHECK(!m_data->extensions().has<Cookie>());
-      m_data->extensions().add(new Cookie(hrr.extensions().get<Cookie>()->get_cookie()));
+      m_data->extensions().add(new Cookie(hrr.extensions().get<Cookie>()->get_cookie()));  // NOLINT(*-owning-memory)
    }
 
    // Note: the consumer of the TLS implementation won't be able to distinguish

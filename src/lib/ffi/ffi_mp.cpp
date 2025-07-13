@@ -26,8 +26,7 @@ int botan_mp_init(botan_mp_t* mp_out) {
       }
 
       auto mp = std::make_unique<Botan::BigInt>();
-      *mp_out = new botan_mp_struct(std::move(mp));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(mp_out, std::move(mp));
    });
 }
 

@@ -28,8 +28,7 @@ int botan_block_cipher_init(botan_block_cipher_t* bc, const char* bc_name) {
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
       }
 
-      *bc = new botan_block_cipher_struct(std::move(cipher));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(bc, std::move(cipher));
    });
 }
 

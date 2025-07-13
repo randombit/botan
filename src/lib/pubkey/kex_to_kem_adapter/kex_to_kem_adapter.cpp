@@ -228,7 +228,7 @@ std::unique_ptr<PK_Key_Agreement_Key> capture_as_ka_key(std::unique_ptr<Private_
    if(auto* sk = dynamic_cast<PK_Key_Agreement_Key*>(raw_ptr)) {
       return std::unique_ptr<PK_Key_Agreement_Key>(sk);
    } else {
-      delete raw_ptr;
+      delete raw_ptr;  // NOLINT(*-owning-memory)
       throw_invalid_argument(
          "Private key must implement PK_Key_Agreement_Key", "KEX_to_KEM_Adapter_PrivateKey", __FILE__);
    }
