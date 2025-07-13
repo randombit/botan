@@ -21,14 +21,6 @@ import sys
 import time
 import uuid
 
-quick_checks = [
-    '-clang-analyzer*', # has to be explicitly disabled
-    'modernize-use-nullptr',
-    'readability-braces-around-statements',
-    'performance-unnecessary-value-param',
-    '*-non-private-member-variables-in-classes',
-]
-
 enabled_checks = [
     'bugprone-*',
     'cert-*',
@@ -293,7 +285,6 @@ def main(args = None): # pylint: disable=too-many-return-statements
     parser.add_option('--build-dir', default='build')
     parser.add_option('--list-checks', action='store_true', default=False)
     parser.add_option('--regenerate-inline-config-file', action='store_true', default=False)
-    parser.add_option('--fast-checks-only', action='store_true', default=False)
     parser.add_option('--only-changed-files', action='store_true', default=False)
     parser.add_option('--only-matching', metavar='REGEX', default='.*')
     parser.add_option('--take-file-list-from-stdin', action='store_true', default=False)
@@ -346,10 +337,7 @@ def main(args = None): # pylint: disable=too-many-return-statements
 
     (compile_commands_file, compile_commands) = load_compile_commands(options.build_dir)
 
-    if options.fast_checks_only:
-        check_config = ','.join(quick_checks)
-    else:
-        check_config = create_check_option(enabled_checks, disabled_checks)
+    check_config = create_check_option(enabled_checks, disabled_checks)
 
     if options.list_checks:
         print(run_command(['clang-tidy', '-list-checks', '-checks', check_config]), end='')
