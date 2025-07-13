@@ -47,22 +47,22 @@ class JSON_Output final {
          out << "[\n";
 
          out << "{"
-             << "\"arch\": \"" << BOTAN_TARGET_ARCH << "\", "
-             << "\"version\": \"" << Botan::short_version_cstr() << "\", ";
+             << R"("arch": ")" << BOTAN_TARGET_ARCH << "\", "
+             << R"("version": ")" << Botan::short_version_cstr() << "\", ";
 
          if(auto vc_revision = Botan::version_vc_revision()) {
-            out << "\"git\": \"" << *vc_revision << "\", ";
+            out << R"("git": ")" << *vc_revision << "\", ";
          }
 
-         out << "\"compiler\": \"" << BOTAN_COMPILER_INVOCATION_STRING << "\""
+         out << R"("compiler": ")" << BOTAN_COMPILER_INVOCATION_STRING << "\""
              << "},\n";
 
          for(size_t i = 0; i != m_results.size(); ++i) {
             const Timer& t = m_results[i];
 
             out << "{"
-                << "\"algo\": \"" << t.get_name() << "\", "
-                << "\"op\": \"" << t.doing() << "\", "
+                << R"("algo": ")" << t.get_name() << "\", "
+                << R"("op": ")" << t.doing() << "\", "
                 << "\"events\": " << t.events() << ", ";
 
             if(t.cycles_consumed() > 0) {

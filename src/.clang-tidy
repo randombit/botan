@@ -62,7 +62,6 @@ Checks: >
     -hicpp-signed-bitwise,
     -misc-no-recursion,
     -modernize-loop-convert,
-    -modernize-raw-string-literal,
     -modernize-use-trailing-return-type,
     -modernize-return-braced-init-list,
     -modernize-use-default-member-init,

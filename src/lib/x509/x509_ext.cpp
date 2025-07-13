@@ -996,8 +996,7 @@ IPAddressBlocks::IPAddressFamily IPAddressBlocks::merge(std::vector<IPAddressFam
 
    // some are inherit, and some have values - no sensible way to merge them
    if(!all_inherit && !none_inherit) {
-      throw Decoding_Error(
-         "Invalid IPAddressBlocks: Only one of \"inherit\" / \"don't inherit\" is allowed per family");
+      throw Decoding_Error("Invalid IPAddressBlocks: Only one of 'inherit' or 'do not inherit' is allowed per family");
    }
 
    std::vector<IPAddressOrRange<V>> merged_ranges;

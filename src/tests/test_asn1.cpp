@@ -175,7 +175,7 @@ Test::Result test_asn1_ascii_encoding() {
 
    try {
       // UTF-8 encoded (ASCII chars only) word 'Moscow'
-      const std::string moscow = "\x4D\x6F\x73\x63\x6F\x77";
+      const std::string moscow = "Moscow";
       Botan::ASN1_String str(moscow);
 
       Botan::DER_Encoder enc;

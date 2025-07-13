@@ -97,7 +97,6 @@ disabled_not_interested = [
     'hicpp-signed-bitwise', # impossible to avoid in C/C++, int promotion rules :/
     'misc-no-recursion',
     'modernize-loop-convert', # sometimes very ugly
-    'modernize-raw-string-literal', # usually less readable
     'modernize-use-trailing-return-type', # fine, but we're not using it everywhere
     'modernize-return-braced-init-list', # thanks I hate it
     'modernize-use-default-member-init',
