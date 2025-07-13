@@ -18,7 +18,7 @@ Version 3.9.0, Not Yet Released
 
 * Add support for X.509 extensions from RFC 3779 (GH #4699 #4883 #4884 #4886)
 
-* Elliptic curve improvements (GH #4841 #4935 #4937 #4949)
+* Elliptic curve improvements (GH #4841 #4934 #4935 #4937 #4949 $4953)
 
 * Add ``EC_Scalar::hash`` following RFC 9380's hash_to_field (GH #4950)
 
@@ -40,9 +40,15 @@ Version 3.9.0, Not Yet Released
 
 * Fix a bug preventing building ``System_RNG`` with only ``getrandom`` enabled. (GH #4932 #4930)
 
+* Document the specific threat model the library uses (GH #4955)
+
 * Remove ``configure.py`` options to disable specific CPU instructions. (GH #4927)
 
 * Remove ``configure.py`` option ``--with-local-config`` (GH #4905)
+
+* Resolve many warnings from ``clang-tidy`` (GH #4910 #4912 #4913 #4919 #4920 #4923 #4924 #4931
+  #4956 #4957 #4958 #4959 #4960 #4961 #4962 #4963 #4964 #4968 #4969 #4971 #4972 #4973 #4974 #4975
+  #4976 #4977 #4978 #4979 #4980 #4981 #4983 #4984)
 
 * CI improvements (GH #4920 #4294 #4926 #4929)
 
