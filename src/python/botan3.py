@@ -2030,15 +2030,12 @@ class X509ExtIPAddrBlocks:
                 if present.value == 1:
                     ranges = []
                     for entry in range(count.value):
-                        ipv6_ = c_int(ipv6)
-                        i_ = c_size_t(i)
-                        entry_ = c_size_t(entry)
                         min_, max_ = _call_fn_returning_vec_pair(
-                            size, size, lambda mi, _, ma, l: _DLL.botan_x509_ext_ip_addr_blocks_get_address(
+                            size, size, lambda mi, _, ma, l, ipv6=ipv6, i=i, entry=entry: _DLL.botan_x509_ext_ip_addr_blocks_get_address(
                                 self.__obj,
-                                ipv6_,
-                                i_,
-                                entry_,
+                                c_int(ipv6),
+                                c_size_t(i),
+                                c_size_t(entry),
                                 mi,
                                 ma,
                                 l))

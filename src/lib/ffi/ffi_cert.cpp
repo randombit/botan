@@ -227,6 +227,7 @@ int botan_x509_is_self_signed(botan_x509_cert_t cert, int* out) {
       } else {
          *out = 0;
       }
+      return BOTAN_FFI_SUCCESS;
    });
 #else
    BOTAN_UNUSED(cert, out)

@@ -814,6 +814,12 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertFalse(cert.is_self_signed())
         self.assertEqual(cert.key_constraints(), ["NO_CONSTRAINTS"])
 
+        with self.assertRaisesRegex(botan.BotanException, r".*No value available.*"):
+            _ = cert.ext_ip_addr_blocks()
+
+        with self.assertRaisesRegex(botan.BotanException, r".*No value available.*"):
+            _ = cert.ext_as_blocks()
+
         self.assertEqual(cert.verify(None, [ca_cert]), 0)
 
     def test_x509_rpki(self):
