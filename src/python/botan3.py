@@ -7,6 +7,7 @@ https://botan.randombit.net
 (C) 2015,2017,2018,2019,2023 Jack Lloyd
 (C) 2015 Uri  Blumenthal (extensions and patches)
 (C) 2024 Amos Treiber, René Meusel - Rohde & Schwarz Cybersecurity
+(C) 2025 Dominik Schricker
 
 Botan is released under the Simplified BSD License (see license.txt)
 
@@ -1985,14 +1986,14 @@ class X509ExtIPAddrBlocks:
     def add_ip(self, ip, safi=None):
         self.add_ip_range(ip, ip, safi)
 
-    def add_ip_range(self, min, max, safi=None):
-        min_len = len(min)
-        if (min_len != 4 and min_len != 16) or len(max) != min_len:
+    def add_ip_range(self, min_, max_, safi=None):
+        min_len = len(min_)
+        if min_len not in (4, 16) or len(max_) != min_len:
             raise BotanException("Address must be 4 or 16 bytes long")
 
         ipv6 = 1 if min_len == 16 else 0
         safi = byref(c_uint8(safi)) if safi is not None else None
-        _DLL.botan_x509_ext_ip_addr_blocks_add_ip_addr(self.__obj, bytes(min), bytes(max), c_int(ipv6), safi)
+        _DLL.botan_x509_ext_ip_addr_blocks_add_ip_addr(self.__obj, bytes(min_), bytes(max_), c_int(ipv6), safi)
 
     def restrict(self, ipv6, safi=None):
         ipv6 = 1 if ipv6 else 0
@@ -2029,12 +2030,15 @@ class X509ExtIPAddrBlocks:
                 if present.value == 1:
                     ranges = []
                     for entry in range(count.value):
+                        ipv6_ = c_int(ipv6)
+                        i_ = c_size_t(i)
+                        entry_ = c_size_t(entry)
                         min_, max_ = _call_fn_returning_vec_pair(
                             size, size, lambda mi, _, ma, l: _DLL.botan_x509_ext_ip_addr_blocks_get_address(
                                 self.__obj,
-                                c_int(ipv6),
-                                c_size_t(i),
-                                c_size_t(entry),
+                                ipv6_,
+                                i_,
+                                entry_,
                                 mi,
                                 ma,
                                 l))
@@ -2070,8 +2074,8 @@ class X509ExtASBlocks:
     def add_asnum(self, asnum):
         self.add_asnum_range(asnum, asnum)
 
-    def add_asnum_range(self, min, max):
-        _DLL.botan_x509_ext_as_blocks_add_asnum(self.__obj, c_uint32(min), c_uint32(max))
+    def add_asnum_range(self, min_, max_):
+        _DLL.botan_x509_ext_as_blocks_add_asnum(self.__obj, c_uint32(min_), c_uint32(max_))
 
     def restrict_asnum(self):
         _DLL.botan_x509_ext_as_blocks_restrict_asnum(self.__obj)
@@ -2082,8 +2086,8 @@ class X509ExtASBlocks:
     def add_rdi(self, rdi):
         self.add_rdi_range(rdi, rdi)
 
-    def add_rdi_range(self, min, max):
-        _DLL.botan_x509_ext_as_blocks_add_rdi(self.__obj, c_uint32(min), c_uint32(max))
+    def add_rdi_range(self, min_, max_):
+        _DLL.botan_x509_ext_as_blocks_add_rdi(self.__obj, c_uint32(min_), c_uint32(max_))
 
     def restrict_rdi(self):
         _DLL.botan_x509_ext_as_blocks_restrict_rdi(self.__obj)

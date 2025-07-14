@@ -20,8 +20,8 @@ void ip_addr_blocks_ext_add_address(Botan::Cert_Extension::IPAddressBlocks& ext,
                                     std::optional<uint8_t> safi) {
    const size_t version_octets = static_cast<size_t>(V);
 
-   std::array<uint8_t, version_octets> min_;
-   std::array<uint8_t, version_octets> max_;
+   std::array<uint8_t, version_octets> min_{};
+   std::array<uint8_t, version_octets> max_{};
    std::copy(min, min + version_octets, min_.begin());
    std::copy(max, max + version_octets, max_.begin());
    ext.add_address<V>(min_, max_, safi);
@@ -100,8 +100,7 @@ int botan_x509_ext_create_ip_addr_blocks(botan_x509_ext_ip_addr_blocks_t* ip_add
 #if defined BOTAN_HAS_X509_CERTIFICATES
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto ext = std::make_unique<Botan::Cert_Extension::IPAddressBlocks>();
-      *ip_addr_blocks = new botan_x509_ext_ip_addr_blocks_struct(std::move(ext), true);
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(ip_addr_blocks, std::move(ext), true);
    });
 #else
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
@@ -115,17 +114,16 @@ int botan_x509_ext_create_ip_addr_blocks_from_cert(botan_x509_cert_t cert,
    }
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(__func__, [=]() -> int {
-      auto ext = safe_get(cert).v3_extensions().get_extension_object_as<Botan::Cert_Extension::IPAddressBlocks>();
+      const auto* const ext =
+         safe_get(cert).v3_extensions().get_extension_object_as<Botan::Cert_Extension::IPAddressBlocks>();
 
       if(ext == nullptr) {
          return BOTAN_FFI_ERROR_NO_VALUE;
       }
-
-      *ip_addr_blocks = new botan_x509_ext_ip_addr_blocks_struct(
-         std::unique_ptr<Botan::Cert_Extension::IPAddressBlocks>(
-            dynamic_cast<Botan::Cert_Extension::IPAddressBlocks*>(ext->copy().release())),
-         false);
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(ip_addr_blocks,
+                            std::unique_ptr<Botan::Cert_Extension::IPAddressBlocks>(
+                               dynamic_cast<Botan::Cert_Extension::IPAddressBlocks*>(ext->copy().release())),
+                            false);
    });
 #else
    BOTAN_UNUSED(cert);
@@ -344,8 +342,7 @@ int botan_x509_ext_create_as_blocks(botan_x509_ext_as_blocks_t* as_blocks) {
 #if defined BOTAN_HAS_X509_CERTIFICATES
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto ext = std::make_unique<Botan::Cert_Extension::ASBlocks>();
-      *as_blocks = new botan_x509_ext_as_blocks_struct(std::move(ext), true);
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(as_blocks, std::move(ext), true);
    });
 #else
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
@@ -358,17 +355,15 @@ int botan_x509_ext_create_as_blocks_from_cert(botan_x509_cert_t cert, botan_x509
    }
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(__func__, [=]() -> int {
-      auto ext = safe_get(cert).v3_extensions().get_extension_object_as<Botan::Cert_Extension::ASBlocks>();
+      const auto* const ext = safe_get(cert).v3_extensions().get_extension_object_as<Botan::Cert_Extension::ASBlocks>();
 
       if(ext == nullptr) {
          return BOTAN_FFI_ERROR_NO_VALUE;
       }
-
-      *as_blocks =
-         new botan_x509_ext_as_blocks_struct(std::unique_ptr<Botan::Cert_Extension::ASBlocks>(
-                                                dynamic_cast<Botan::Cert_Extension::ASBlocks*>(ext->copy().release())),
-                                             false);
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(as_blocks,
+                            std::unique_ptr<Botan::Cert_Extension::ASBlocks>(
+                               dynamic_cast<Botan::Cert_Extension::ASBlocks*>(ext->copy().release())),
+                            false);
    });
 #else
    BOTAN_UNUSED(cert);
