@@ -861,11 +861,14 @@ ofvkP1EDmpx50fHLawIDAQAB
             ]
         })
 
+        with self.assertRaisesRegex(botan.BotanException, r".*Invalid object state.*"):
+            ca_ip_addr_blocks.add_ip([123, 0, 0, 1])
+
         ca_as_blocks = ca_cert.ext_as_blocks()
         self.assertEqual(ca_as_blocks.asnum(), [(30, 30), (3000, 4999)])
         self.assertEqual(ca_as_blocks.rdi(), [])
 
-        with self.assertRaisesRegex(botan.BotanException, r".*read-only.*"):
+        with self.assertRaisesRegex(botan.BotanException, r".*Invalid object state.*"):
             ca_as_blocks.add_asnum(999)
 
         ca = botan.X509Ca(ca_cert, ca_key, rng, hash_fn)
