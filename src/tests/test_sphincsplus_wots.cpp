@@ -40,12 +40,12 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test {
             Text_Based_Test("pubkey/sphincsplus_wots.vec",
                             "SphincsParameterSet,Address,SecretSeed,PublicSeed,HashedWotsPk,Msg,HashedWotsSig") {}
 
-      bool skip_this_test(const std::string&, const VarMap& vars) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
          [[maybe_unused]] auto params = Botan::Sphincs_Parameters::create(vars.get_req_str("SphincsParameterSet"));
          return !params.is_available();
       }
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) final {
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) final {
          Test::Result result("SLH-DSA's WOTS+");
 
          auto params = Botan::Sphincs_Parameters::create(vars.get_req_str("SphincsParameterSet"));

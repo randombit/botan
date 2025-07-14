@@ -139,7 +139,7 @@ class OID_Encoding_Tests : public Text_Based_Test {
    public:
       OID_Encoding_Tests() : Text_Based_Test("asn1_oid.vec", "OID,DER") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override {
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
          const auto oid_str = vars.get_req_str("OID");
          const auto expected_der = vars.get_req_bin("DER");
 
@@ -176,7 +176,7 @@ class OID_Invalid_Encoding_Tests : public Text_Based_Test {
    public:
       OID_Invalid_Encoding_Tests() : Text_Based_Test("asn1_oid_invalid.vec", "DER") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) override {
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
          const auto test_der = vars.get_req_bin("DER");
 
          Test::Result result("OID DER decode invalid");

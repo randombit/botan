@@ -33,7 +33,7 @@ class SPHINCS_Plus_Test_Base : public Text_Based_Test {
       explicit SPHINCS_Plus_Test_Base(std::string_view kat_path) :
             Text_Based_Test(std::string(kat_path), "SphincsParameterSet,seed,pk,sk,msg,HashSigRand", "HashSigDet") {}
 
-      bool skip_this_test(const std::string&, const VarMap& vars) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
          auto params = Botan::Sphincs_Parameters::create(vars.get_req_str("SphincsParameterSet"));
 
          if(!params.is_available()) {
@@ -67,7 +67,7 @@ class SPHINCS_Plus_Test_Base : public Text_Based_Test {
          BOTAN_ASSERT_UNREACHABLE();
       }
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) final {
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) final {
          auto params = Botan::Sphincs_Parameters::create(vars.get_req_str("SphincsParameterSet"));
          Test::Result result(params.is_slh_dsa() ? "SLH-DSA" : "SPHINCS+");
 
@@ -263,7 +263,7 @@ class Generic_SlhDsa_Signature_Tests final : public PK_Signature_Generation_Test
          return vars.has_key("Nonce") ? "Randomized" : "Deterministic";
       }
 
-      bool skip_this_test(const std::string&, const VarMap& vars) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
          return !Botan::Sphincs_Parameters::create(vars.get_req_str("Instance")).is_available();
       }
 };
@@ -283,9 +283,9 @@ class Generic_SlhDsa_Verification_Tests final : public PK_Signature_Verification
          return std::make_unique<Botan::SphincsPlus_PublicKey>(pubkey, Botan::Sphincs_Parameters::create(instance));
       }
 
-      std::string default_padding(const VarMap&) const override { return ""; }
+      std::string default_padding(const VarMap& /*vars*/) const override { return ""; }
 
-      bool skip_this_test(const std::string&, const VarMap& vars) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
          return !Botan::Sphincs_Parameters::create(vars.get_req_str("Instance")).is_available();
       }
 };

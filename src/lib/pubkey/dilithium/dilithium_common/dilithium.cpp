@@ -365,7 +365,7 @@ std::vector<uint8_t> Dilithium_PublicKey::public_key_bits() const {
    return raw_public_key_bits();
 }
 
-bool Dilithium_PublicKey::check_key(RandomNumberGenerator&, bool) const {
+bool Dilithium_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
    return true;  // ???
 }
 

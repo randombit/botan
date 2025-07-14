@@ -59,13 +59,17 @@ class Empty_Credentials_Manager : public Botan::Credentials_Manager {};
 
 class Session_Manager_Callbacks : public Botan::TLS::Callbacks {
    public:
-      void tls_emit_data(std::span<const uint8_t>) override { BOTAN_ASSERT_NOMSG(false); }
+      void tls_emit_data(std::span<const uint8_t> /*data*/) override { BOTAN_ASSERT_NOMSG(false); }
 
-      void tls_record_received(uint64_t, std::span<const uint8_t>) override { BOTAN_ASSERT_NOMSG(false); }
+      void tls_record_received(uint64_t /*record*/, std::span<const uint8_t> /*data*/) override {
+         BOTAN_ASSERT_NOMSG(false);
+      }
 
-      void tls_alert(Botan::TLS::Alert) override { BOTAN_ASSERT_NOMSG(false); }
+      void tls_alert(Botan::TLS::Alert /*alert*/) override { BOTAN_ASSERT_NOMSG(false); }
 
-      void tls_session_established(const Botan::TLS::Session_Summary&) override { BOTAN_ASSERT_NOMSG(false); }
+      void tls_session_established(const Botan::TLS::Session_Summary& /*summary*/) override {
+         BOTAN_ASSERT_NOMSG(false);
+      }
 
       std::chrono::system_clock::time_point tls_current_timestamp() override {
          return std::chrono::system_clock::now() + std::chrono::hours(m_ticks);

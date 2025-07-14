@@ -798,7 +798,7 @@ PK_Key_Generation_Stability_Test::PK_Key_Generation_Stability_Test(const std::st
                                                                    const std::string& test_src) :
       PK_Test(algo, test_src, "Rng,RngSeed,Key", "KeyParams,RngParams") {}
 
-Test::Result PK_Key_Generation_Stability_Test::run_one_test(const std::string&, const VarMap& vars) {
+Test::Result PK_Key_Generation_Stability_Test::run_one_test(const std::string& /*header*/, const VarMap& vars) {
    const std::string key_param = vars.get_opt_str("KeyParams", "");
    const std::string rng_algo = vars.get_req_str("Rng");
    const std::string rng_params = vars.get_opt_str("RngParams", "");
@@ -932,7 +932,7 @@ class PK_API_Sign_Test : public Text_Based_Test {
          return result;
       }
 
-      bool skip_this_test([[maybe_unused]] const std::string& header, const VarMap&) override {
+      bool skip_this_test([[maybe_unused]] const std::string& header, const VarMap& /*vars*/) override {
    #if !defined(BOTAN_HAS_SLH_DSA_WITH_SHA2)
          if(header == "SLH-DSA") {
             return true;
@@ -952,7 +952,7 @@ class PK_Key_Decoding_Test : public Text_Based_Test {
       PK_Key_Decoding_Test() : Text_Based_Test("pubkey/key_encoding.vec", "Key") {}
 
    protected:
-      Test::Result run_one_test(const std::string&, const VarMap& vars) final {
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) final {
          const auto key = vars.get_req_bin("Key");
 
          Test::Result result("PK Key Decoding");

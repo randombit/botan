@@ -109,7 +109,7 @@ class XMSS_Keygen_Reference_Test final : public Text_Based_Test {
             Text_Based_Test("pubkey/xmss_keygen_reference.vec",
                             "Params,SecretSeed,PublicSeed,SecretPrf,PublicKey,PrivateKey") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) final {
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) final {
          Test::Result result(vars.get_req_str("Params"));
 
          Fixed_Output_RNG fixed_rng;

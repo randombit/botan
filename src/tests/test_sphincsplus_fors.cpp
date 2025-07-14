@@ -39,12 +39,12 @@ class SPHINCS_Plus_FORS_Test final : public Text_Based_Test {
             Text_Based_Test("pubkey/sphincsplus_fors.vec",
                             "SphincsParameterSet,Address,SecretSeed,PublicSeed,PublicKey,Msg,HashSig") {}
 
-      bool skip_this_test(const std::string&, const VarMap& vars) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
          auto params = Botan::Sphincs_Parameters::create(vars.get_req_str("SphincsParameterSet"));
          return !params.is_available();
       }
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) final {
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) final {
          Test::Result result("SLH-DSA's FORS");
 
          auto params = Botan::Sphincs_Parameters::create(vars.get_req_str("SphincsParameterSet"));

@@ -222,7 +222,7 @@ std::vector<Test::Result> test_bitvector_bitwise_accessors(Botan::RandomNumberGe
    };
 }
 
-std::vector<Test::Result> test_bitvector_capacity(Botan::RandomNumberGenerator&) {
+std::vector<Test::Result> test_bitvector_capacity(Botan::RandomNumberGenerator& /*rng*/) {
    return {
       CHECK("default constructed bitvector",
             [](auto& result) {
@@ -331,7 +331,7 @@ std::vector<Test::Result> test_bitvector_capacity(Botan::RandomNumberGenerator&)
    };
 }
 
-std::vector<Test::Result> test_bitvector_subvector(Botan::RandomNumberGenerator&) {
+std::vector<Test::Result> test_bitvector_subvector(Botan::RandomNumberGenerator& /*rng*/) {
    auto make_bitpattern = [&]<typename T>(T& bitvector, size_t pattern_offset = 0) {
       auto next = pattern_generator<3>(pattern_offset);
 
@@ -622,7 +622,7 @@ std::vector<Test::Result> test_bitvector_subvector(Botan::RandomNumberGenerator&
    };
 }
 
-std::vector<Test::Result> test_bitvector_global_modifiers_and_predicates(Botan::RandomNumberGenerator&) {
+std::vector<Test::Result> test_bitvector_global_modifiers_and_predicates(Botan::RandomNumberGenerator& /*rng*/) {
    auto make_bitpattern = [](auto& bitvector) {
       auto next = pattern_generator<5>();
       for(auto& i : bitvector) {
@@ -786,7 +786,7 @@ std::vector<Test::Result> test_bitvector_global_modifiers_and_predicates(Botan::
    };
 }
 
-std::vector<Test::Result> test_bitvector_binary_operators(Botan::RandomNumberGenerator&) {
+std::vector<Test::Result> test_bitvector_binary_operators(Botan::RandomNumberGenerator& /*rng*/) {
    auto check_set = [](auto& result, auto bits, std::vector<size_t> set_bits) {
       for(size_t i = 0; i < bits.size(); ++i) {
          const auto should_be_set = std::find(set_bits.begin(), set_bits.end(), i) != set_bits.end();
@@ -913,7 +913,7 @@ std::vector<Test::Result> test_bitvector_binary_operators(Botan::RandomNumberGen
    };
 }
 
-std::vector<Test::Result> test_bitvector_serialization(Botan::RandomNumberGenerator&) {
+std::vector<Test::Result> test_bitvector_serialization(Botan::RandomNumberGenerator& /*rng*/) {
    constexpr uint8_t outlen = 64;
    const auto bytearray = [] {
       std::array<uint8_t, outlen> out{};
@@ -1017,7 +1017,7 @@ std::vector<Test::Result> test_bitvector_serialization(Botan::RandomNumberGenera
    };
 }
 
-std::vector<Test::Result> test_bitvector_constant_time_operations(Botan::RandomNumberGenerator&) {
+std::vector<Test::Result> test_bitvector_constant_time_operations(Botan::RandomNumberGenerator& /*rng*/) {
    constexpr Botan::CT::Choice yes = Botan::CT::Choice::yes();
    constexpr Botan::CT::Choice no = Botan::CT::Choice::no();
 
@@ -1071,7 +1071,7 @@ std::vector<Test::Result> test_bitvector_constant_time_operations(Botan::RandomN
    };
 }
 
-std::vector<Test::Result> test_bitvector_conditional_xor_workload(Botan::RandomNumberGenerator&) {
+std::vector<Test::Result> test_bitvector_conditional_xor_workload(Botan::RandomNumberGenerator& /*rng*/) {
    Test::Result res("Conditional XOR, Gauss Workload");
 
    auto rng = Test::new_rng("Conditional XOR, Gauss Workload");
@@ -1099,7 +1099,7 @@ std::vector<Test::Result> test_bitvector_conditional_xor_workload(Botan::RandomN
    return {res};
 }
 
-std::vector<Test::Result> test_bitvector_iterators(Botan::RandomNumberGenerator&) {
+std::vector<Test::Result> test_bitvector_iterators(Botan::RandomNumberGenerator& /*rng*/) {
    return {
       CHECK("Iterators: range-based for loop",
             [](auto& result) {
@@ -1221,7 +1221,7 @@ using TestBitvector = Botan::Strong<Botan::bitvector, struct TestBitvector_>;
 using TestSecureBitvector = Botan::Strong<Botan::secure_bitvector, struct TestBitvector_>;
 using TestUInt32 = Botan::Strong<uint32_t, struct TestUInt32_>;
 
-std::vector<Test::Result> test_bitvector_strongtype_adapter(Botan::RandomNumberGenerator&) {
+std::vector<Test::Result> test_bitvector_strongtype_adapter(Botan::RandomNumberGenerator& /*rng*/) {
    Test::Result result("Bitvector in strong type");
 
    TestBitvector bv1(33);

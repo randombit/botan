@@ -186,7 +186,7 @@ void Channel_Impl_12::renegotiate(bool force_full_renegotiation) {
    }
 }
 
-void Channel_Impl_12::update_traffic_keys(bool) {
+void Channel_Impl_12::update_traffic_keys(bool /*update_requested*/) {
    throw Invalid_Argument("cannot update traffic keys on a TLS 1.2 channel");
 }
 

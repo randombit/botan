@@ -159,7 +159,7 @@ OID SphincsPlus_PublicKey::object_identifier() const {
    return m_public->parameters().object_identifier();
 }
 
-bool SphincsPlus_PublicKey::check_key(RandomNumberGenerator&, bool) const {
+bool SphincsPlus_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
    // Nothing to check. It's literally just hashes. :-)
    return true;
 }

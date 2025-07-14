@@ -166,7 +166,7 @@ const std::vector<uint8_t>& Certificate_Status_Request::get_ocsp_response() cons
    return std::get<Certificate_Status>(m_impl->content).response();
 }
 
-std::vector<uint8_t> Certificate_Status_Request::serialize(Connection_Side) const {
+std::vector<uint8_t> Certificate_Status_Request::serialize(Connection_Side /*side*/) const {
    BOTAN_ASSERT_NONNULL(m_impl);
    return std::visit([](const auto& c) { return c.serialize(); }, m_impl->content);
 }

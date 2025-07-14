@@ -300,7 +300,7 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_Encryptor final : public PK_Encryptor {
       void set_label(std::string_view label) { m_label.assign(label.begin(), label.end()); }
 
    private:
-      std::vector<uint8_t> enc(const uint8_t data[], size_t length, RandomNumberGenerator&) const override;
+      std::vector<uint8_t> enc(const uint8_t data[], size_t length, RandomNumberGenerator& rng) const override;
 
       size_t maximum_input_size() const override;
 

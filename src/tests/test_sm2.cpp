@@ -41,7 +41,7 @@ class SM2_Signature_KAT_Tests final : public PK_Signature_Generation_Test {
             PK_Signature_Generation_Test(
                "SM2", "pubkey/sm2_sig.vec", "P,A,B,xG,yG,Order,Oid,Ident,Msg,x,Nonce,Signature", "Hash") {}
 
-      bool skip_this_test(const std::string&, const VarMap&) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& /*vars*/) override {
          return !Botan::EC_Group::supports_application_specific_group();
       }
 
@@ -68,7 +68,7 @@ class SM2_Encryption_KAT_Tests final : public PK_Encryption_Decryption_Test {
             PK_Encryption_Decryption_Test(
                "SM2", "pubkey/sm2_enc.vec", "P,A,B,xG,yG,Order,Oid,Msg,x,Nonce,Ciphertext", "Hash") {}
 
-      bool skip_this_test(const std::string&, const VarMap&) override {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& /*vars*/) override {
          return !Botan::EC_Group::supports_application_specific_group();
       }
 

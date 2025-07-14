@@ -88,7 +88,7 @@ class Bzip2_Decompression_Stream final : public Bzip2_Stream {
 
       ~Bzip2_Decompression_Stream() override { BZ2_bzDecompressEnd(streamp()); }
 
-      bool run(uint32_t) override {
+      bool run(uint32_t /*flags*/) override {
          int rc = BZ2_bzDecompress(streamp());
 
          if(rc != BZ_OK && rc != BZ_STREAM_END) {

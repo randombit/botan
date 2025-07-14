@@ -40,7 +40,9 @@ class Frodo_KAT_Tests final : public PK_PQC_KEM_KAT_Test {
 
       bool is_available(const std::string& mode) const final { return get_mode(mode).is_available(); }
 
-      std::vector<uint8_t> map_value(const std::string&, std::span<const uint8_t> value, VarType var_type) const final {
+      std::vector<uint8_t> map_value(const std::string& /*params*/,
+                                     std::span<const uint8_t> value,
+                                     VarType var_type) const final {
          if(var_type == VarType::SharedSecret) {
             return {value.begin(), value.end()};
          }

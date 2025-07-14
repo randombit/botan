@@ -63,7 +63,7 @@ class StreamCallbacks : public Callbacks {
                                                        boost::asio::buffer(data.data(), data.size())));
       }
 
-      void tls_record_received(uint64_t, std::span<const uint8_t> data) final {
+      void tls_record_received(uint64_t /*record_number*/, std::span<const uint8_t> data) final {
          m_receive_buffer.commit(boost::asio::buffer_copy(m_receive_buffer.prepare(data.size()),
                                                           boost::asio::const_buffer(data.data(), data.size())));
       }
@@ -475,7 +475,7 @@ class Stream {
        */
       template <typename Handler, typename Executor>
       struct Wrapper {
-            void operator()(boost::system::error_code ec, std::size_t) { handler(ec); }
+            void operator()(boost::system::error_code ec, std::size_t /*unused*/) { handler(ec); }
 
             using executor_type = boost::asio::associated_executor_t<Handler, Executor>;
 

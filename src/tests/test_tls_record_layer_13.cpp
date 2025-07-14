@@ -53,7 +53,7 @@ TLS::Record_Layer record_layer_server(const bool skip_client_hello = false) {
 
 class Mocked_Secret_Logger : public Botan::TLS::Secret_Logger {
    public:
-      void maybe_log_secret(std::string_view, std::span<const uint8_t>) const override {}
+      void maybe_log_secret(std::string_view /*label*/, std::span<const uint8_t> /*secret*/) const override {}
 };
 
 std::unique_ptr<TLS::Cipher_State> rfc8448_rtt1_handshake_traffic(

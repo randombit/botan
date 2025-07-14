@@ -1434,8 +1434,8 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
          }
       }
 
-      std::vector<uint8_t> tls_provide_cert_status(const std::vector<Botan::X509_Certificate>&,
-                                                   const Botan::TLS::Certificate_Status_Request&) override {
+      std::vector<uint8_t> tls_provide_cert_status(const std::vector<Botan::X509_Certificate>& /*certs*/,
+                                                   const Botan::TLS::Certificate_Status_Request& /*status*/) override {
          if(m_args.flag_set("use-ocsp-callback") && m_args.flag_set("fail-ocsp-callback")) {
             throw std::runtime_error("Simulating failure from OCSP response callback");
          }

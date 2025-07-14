@@ -23,7 +23,7 @@ class ECDH_KAT_Tests final : public PK_Key_Agreement_Test {
 
       std::string default_kdf(const VarMap& /*unused*/) const override { return "Raw"; }
 
-      bool skip_this_test(const std::string& group_id, const VarMap&) override {
+      bool skip_this_test(const std::string& group_id, const VarMap& /*vars*/) override {
          return !Botan::EC_Group::supports_named_group(group_id);
       }
 

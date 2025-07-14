@@ -352,7 +352,7 @@ class OCB_Null_Cipher final : public Botan::BlockCipher {
 
       bool has_keying_material() const override { return m_has_key; }
 
-      void key_schedule(std::span<const uint8_t>) override { m_has_key = true; }
+      void key_schedule(std::span<const uint8_t> /*key*/) override { m_has_key = true; }
 
       Botan::Key_Length_Specification key_spec() const override { return Botan::Key_Length_Specification(m_bs); }
 

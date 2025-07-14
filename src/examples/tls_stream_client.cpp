@@ -21,8 +21,8 @@ class Credentials_Manager : public Botan::Credentials_Manager {
    public:
       Credentials_Manager() = default;
 
-      std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(const std::string&,
-                                                                             const std::string&) override {
+      std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(const std::string& /*type*/,
+                                                                             const std::string& /*context*/) override {
          return {&m_cert_store};
       }
 
@@ -70,7 +70,7 @@ class client {
             m_stream, m_request, boost::bind(&client::handle_write, this, ap::error, ap::bytes_transferred));
       }
 
-      void handle_write(const boost::system::error_code& error, size_t) {
+      void handle_write(const boost::system::error_code& error, size_t /*unused*/) {
          if(error) {
             std::cout << "Write failed: " << error.message() << '\n';
             return;
@@ -79,7 +79,7 @@ class client {
             m_stream, m_reply, m_response, boost::bind(&client::handle_read, this, ap::error, ap::bytes_transferred));
       }
 
-      void handle_read(const boost::system::error_code& error, size_t) {
+      void handle_read(const boost::system::error_code& error, size_t /*unused*/) {
          if(!error) {
             std::cout << "Reply: ";
             std::cout << m_response.body() << '\n';

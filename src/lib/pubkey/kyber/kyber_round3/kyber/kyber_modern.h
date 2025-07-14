@@ -30,7 +30,8 @@ class Kyber_Modern_Symmetric_Primitives final : public Kyber_Symmetric_Primitive
             m_shake256(Botan::XOF::create_or_throw("SHAKE-256")) {}
 
    protected:
-      std::optional<std::array<uint8_t, 1>> seed_expansion_domain_separator(const KyberConstants&) const override {
+      std::optional<std::array<uint8_t, 1>> seed_expansion_domain_separator(
+         const KyberConstants& /*constants*/) const override {
          return {};
       }
 

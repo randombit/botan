@@ -62,12 +62,12 @@ std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::default_params() const {
    return this->from_iterations(32);  // About 100 ms on fast machine
 }
 
-std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::from_iterations(size_t iter) const {
-   return std::make_unique<Bcrypt_PBKDF>(iter);
+std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::from_iterations(size_t iterations) const {
+   return std::make_unique<Bcrypt_PBKDF>(iterations);
 }
 
-std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::from_params(size_t iter, size_t /*t*/, size_t /*p*/) const {
-   return this->from_iterations(iter);
+std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::from_params(size_t iterations, size_t /*t*/, size_t /*p*/) const {
+   return this->from_iterations(iterations);
 }
 
 namespace {

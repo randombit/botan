@@ -34,7 +34,8 @@ class Default_Credentials_Manager : public Credentials_Manager {
          }
       }
 
-      std::vector<Certificate_Store*> trusted_certificate_authorities(const std::string&, const std::string&) override {
+      std::vector<Certificate_Store*> trusted_certificate_authorities(const std::string& /*type*/,
+                                                                      const std::string& /*context*/) override {
          if(m_cert_store) {
             return {m_cert_store.get()};
          } else {

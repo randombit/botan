@@ -370,12 +370,13 @@ class Server : public Peer,
 };
 
 class Client : public Peer {
-      static void accept_all(const std::vector<Botan::X509_Certificate>&,
-                             const std::vector<std::optional<Botan::OCSP::Response>>&,
-                             const std::vector<Botan::Certificate_Store*>&,
-                             Botan::Usage_Type,
-                             std::string_view,
-                             const Botan::TLS::Policy&) {}
+   private:
+      static void accept_all(const std::vector<Botan::X509_Certificate>& /*cert*/,
+                             const std::vector<std::optional<Botan::OCSP::Response>>& /*ocsp*/,
+                             const std::vector<Botan::Certificate_Store*>& /*trusted*/,
+                             Botan::Usage_Type /*usage*/,
+                             std::string_view /*hostname*/,
+                             const Botan::TLS::Policy& /*policy*/) {}
 
    public:
       Client(const std::shared_ptr<const Botan::TLS::Policy>& policy, net::io_context& ioc) : Peer(policy, ioc) {
@@ -453,7 +454,7 @@ class Synchronous_Test : public TestBase {
 
       void finishAsynchronousWork() override { m_client_thread.join(); }
 
-      void run(const error_code&) {
+      void run(const error_code& /*err*/) {
          m_client_thread = std::thread([this] {
             try {
                this->run_synchronous_client();

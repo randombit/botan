@@ -10,7 +10,7 @@
 
 namespace Botan::TLS::Internal {
 
-Client_Hello_13& Handshake_State_13_Base::store(Client_Hello_13 client_hello, const bool) {
+Client_Hello_13& Handshake_State_13_Base::store(Client_Hello_13 client_hello, const bool /*from_peer*/) {
    if(m_client_hello) {
       // Make sure that the updated Client Hello is compatible to the initial one.
       BOTAN_STATE_CHECK(has_hello_retry_request());
@@ -21,32 +21,34 @@ Client_Hello_13& Handshake_State_13_Base::store(Client_Hello_13 client_hello, co
    return m_client_hello.value();
 }
 
-Client_Hello_12& Handshake_State_13_Base::store(Client_Hello_12 client_hello, const bool) {
+Client_Hello_12& Handshake_State_13_Base::store(Client_Hello_12 client_hello, const bool /*from_peer*/) {
    m_client_hello_12 = std::move(client_hello);
    return m_client_hello_12.value();
 }
 
-Server_Hello_13& Handshake_State_13_Base::store(Server_Hello_13 server_hello, const bool) {
+Server_Hello_13& Handshake_State_13_Base::store(Server_Hello_13 server_hello, const bool /*from_peer*/) {
    m_server_hello = std::move(server_hello);
    return m_server_hello.value();
 }
 
-Server_Hello_12& Handshake_State_13_Base::store(Server_Hello_12 server_hello, const bool) {
+Server_Hello_12& Handshake_State_13_Base::store(Server_Hello_12 server_hello, const bool /*from_peer*/) {
    m_server_hello_12 = std::move(server_hello);
    return m_server_hello_12.value();
 }
 
-Hello_Retry_Request& Handshake_State_13_Base::store(Hello_Retry_Request hello_retry_request, const bool) {
+Hello_Retry_Request& Handshake_State_13_Base::store(Hello_Retry_Request hello_retry_request, const bool /*from_peer*/) {
    m_hello_retry_request = std::move(hello_retry_request);
    return m_hello_retry_request.value();
 }
 
-Encrypted_Extensions& Handshake_State_13_Base::store(Encrypted_Extensions encrypted_extensions, const bool) {
+Encrypted_Extensions& Handshake_State_13_Base::store(Encrypted_Extensions encrypted_extensions,
+                                                     const bool /*from_peer*/) {
    m_encrypted_extensions = std::move(encrypted_extensions);
    return m_encrypted_extensions.value();
 }
 
-Certificate_Request_13& Handshake_State_13_Base::store(Certificate_Request_13 certificate_request, const bool) {
+Certificate_Request_13& Handshake_State_13_Base::store(Certificate_Request_13 certificate_request,
+                                                       const bool /*from_peer*/) {
    m_certificate_request = std::move(certificate_request);
    return m_certificate_request.value();
 }

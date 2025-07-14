@@ -296,7 +296,7 @@ std::vector<uint8_t> FrodoKEM_PublicKey::public_key_bits() const {
    return raw_public_key_bits();
 }
 
-bool FrodoKEM_PublicKey::check_key(RandomNumberGenerator&, bool) const {
+bool FrodoKEM_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
    return true;
 }
 

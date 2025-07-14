@@ -43,7 +43,7 @@ OID HSS_LMS_PublicKey::object_identifier() const {
    return m_public->object_identifier();
 }
 
-bool HSS_LMS_PublicKey::check_key(RandomNumberGenerator&, bool) const {
+bool HSS_LMS_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
    // Nothing to check. Only useful checks are already done during parsing.
    return true;
 }
@@ -108,7 +108,7 @@ bool HSS_LMS_PublicKey::supports_operation(PublicKeyOperation op) const {
    return op == PublicKeyOperation::Signature;
 }
 
-std::unique_ptr<Private_Key> HSS_LMS_PublicKey::generate_another(RandomNumberGenerator&) const {
+std::unique_ptr<Private_Key> HSS_LMS_PublicKey::generate_another(RandomNumberGenerator& /*rng*/) const {
    // For this key type we cannot derive all required parameters from just
    // the public key. It is however possible to call HSS_LMS_PrivateKey::generate_another().
    throw Not_Implemented("Cannot generate a new HSS/LMS keypair from a public key");
@@ -177,7 +177,7 @@ class HSS_LMS_Signature_Operation final : public PK_Ops::Signature {
          m_msg_buffer.insert(m_msg_buffer.end(), msg.begin(), msg.end());
       }
 
-      std::vector<uint8_t> sign(RandomNumberGenerator&) override {
+      std::vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override {
          std::vector<uint8_t> message_to_sign = std::exchange(m_msg_buffer, {});
          auto scope = CT::scoped_poison(*m_private);
          return CT::driveby_unpoison(m_private->sign(message_to_sign));
