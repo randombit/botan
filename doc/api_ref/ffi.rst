@@ -1882,24 +1882,24 @@ X.509 Certificates
 
    Mark the certificate for CA usage.
 
-.. cpp:function::int botan_x509_cert_opts_set_padding_scheme(botan_x509_cert_opts_t opts, const char* scheme)
+.. cpp:function::int botan_x509_cert_opts_padding_scheme(botan_x509_cert_opts_t opts, const char* scheme)
 
 .. cpp:function::int botan_x509_cert_opts_not_before(botan_x509_cert_opts_t opts, botan_x509_time_t not_before)
 
 .. cpp:function::int botan_x509_cert_opts_not_after(botan_x509_cert_opts_t opts, botan_x509_time_t not_after)
 
-.. cpp:function::int botan_x509_cert_opts_add_constraints(botan_x509_cert_opts_t opts, uint32_t usage)
+.. cpp:function::int botan_x509_cert_opts_constraints(botan_x509_cert_opts_t opts, uint32_t usage)
 
-.. cpp:function::int botan_x509_cert_opts_add_ex_constraint(botan_x509_cert_opts_t opts, botan_asn1_oid_t oid)
+.. cpp:function::int botan_x509_cert_opts_ex_constraint(botan_x509_cert_opts_t opts, botan_asn1_oid_t oid)
 
 .. cpp:function::int botan_x509_create_time(botan_x509_time_t* time_obj, uint64_t time_since_epoch)
 
    Create a new time object.
 
-.. cpp:function::int int botan_x509_cert_opts_add_ext_ip_addr_blocks(botan_x509_cert_opts_t opts, \
+.. cpp:function::int int botan_x509_cert_opts_ext_ip_addr_blocks(botan_x509_cert_opts_t opts, \
                   botan_x509_ext_ip_addr_blocks_t ip_addr_blocks)
 
-.. cpp:function::int int botan_x509_cert_opts_add_ext_as_blocks(botan_x509_cert_opts_t opts, botan_x509_ext_as_blocks_t as_blocks)
+.. cpp:function::int int botan_x509_cert_opts_ext_as_blocks(botan_x509_cert_opts_t opts, botan_x509_ext_as_blocks_t as_blocks)
 
 .. cpp:function::int botan_x509_ext_create_ip_addr_blocks(botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks)
 

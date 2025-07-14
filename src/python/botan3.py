@@ -525,13 +525,13 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_cert_opts_more_org_units, [c_void_p, POINTER(c_char_p), c_size_t])
     ffi_api(dll.botan_x509_cert_opts_more_dns, [c_void_p, POINTER(c_char_p), c_size_t])
     ffi_api(dll.botan_x509_cert_opts_ca_key, [c_void_p, c_size_t])
-    ffi_api(dll.botan_x509_cert_opts_set_padding_scheme, [c_void_p, c_char_p])
+    ffi_api(dll.botan_x509_cert_opts_padding_scheme, [c_void_p, c_char_p])
     ffi_api(dll.botan_x509_cert_opts_not_before, [c_void_p, c_void_p])
     ffi_api(dll.botan_x509_cert_opts_not_after, [c_void_p, c_void_p])
-    ffi_api(dll.botan_x509_cert_opts_add_constraints, [c_void_p, c_uint32])
-    ffi_api(dll.botan_x509_cert_opts_add_ex_constraint, [c_void_p, c_void_p])
-    ffi_api(dll.botan_x509_cert_opts_add_ext_ip_addr_blocks, [c_void_p, c_void_p])
-    ffi_api(dll.botan_x509_cert_opts_add_ext_as_blocks, [c_void_p, c_void_p])
+    ffi_api(dll.botan_x509_cert_opts_constraints, [c_void_p, c_uint32])
+    ffi_api(dll.botan_x509_cert_opts_ex_constraint, [c_void_p, c_void_p])
+    ffi_api(dll.botan_x509_cert_opts_ext_ip_addr_blocks, [c_void_p, c_void_p])
+    ffi_api(dll.botan_x509_cert_opts_ext_as_blocks, [c_void_p, c_void_p])
     ffi_api(dll.botan_x509_create_time, [c_void_p, c_uint64])
     ffi_api(dll.botan_x509_ext_create_ip_addr_blocks, [c_void_p])
     ffi_api(dll.botan_x509_ext_create_ip_addr_blocks_from_cert, [c_void_p, c_void_p])
@@ -1927,7 +1927,7 @@ class X509Opts:
         _DLL.botan_x509_cert_opts_ca_key(self.__obj, c_size_t(limit))
 
     def set_padding_scheme(self, scheme):
-        _DLL.botan_x509_cert_opts_set_padding_scheme(self.__obj, _ctype_str(scheme))
+        _DLL.botan_x509_cert_opts_padding_scheme(self.__obj, _ctype_str(scheme))
 
     def set_not_before(self, not_before):
         _DLL.botan_x509_cert_opts_not_before(self.__obj, not_before.handle_())
@@ -1952,10 +1952,10 @@ class X509Opts:
             if u not in usage_values:
                 pass
             usage += usage_values[u]
-        _DLL.botan_x509_cert_opts_add_constraints(self.__obj, c_uint32(usage))
+        _DLL.botan_x509_cert_opts_constraints(self.__obj, c_uint32(usage))
 
     def add_ex_constraints(self, oid):
-        _DLL.botan_x509_cert_opts_add_ex_constraint(self.__obj, oid.handle_())
+        _DLL.botan_x509_cert_opts_ex_constraint(self.__obj, oid.handle_())
 
     def create_req(self, key, hash_fn, rng):
         req = PKCS10Req()
@@ -1963,10 +1963,10 @@ class X509Opts:
         return req
 
     def add_ext_ip_addr_blocks(self, ip_addr_blocks):
-        _DLL.botan_x509_cert_opts_add_ext_ip_addr_blocks(self.__obj, ip_addr_blocks.handle_())
+        _DLL.botan_x509_cert_opts_ext_ip_addr_blocks(self.__obj, ip_addr_blocks.handle_())
 
     def add_ext_as_blocks(self, as_blocks):
-        _DLL.botan_x509_cert_opts_add_ext_as_blocks(self.__obj, as_blocks.handle_())
+        _DLL.botan_x509_cert_opts_ext_as_blocks(self.__obj, as_blocks.handle_())
 
 
 class X509ExtIPAddrBlocks:

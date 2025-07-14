@@ -919,7 +919,7 @@ class FFI_X509_RPKI_Test final : public FFI_Test {
                result.confirm("index 1 has a value", present == 1);
                result.confirm("index 1 has entries", count == 0);
 
-               TEST_FFI_OK(botan_x509_cert_opts_add_ext_ip_addr_blocks, (ca_opts, ca_ip_addr_blocks));
+               TEST_FFI_OK(botan_x509_cert_opts_ext_ip_addr_blocks, (ca_opts, ca_ip_addr_blocks));
                TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_destroy, (ca_ip_addr_blocks));
 
                botan_x509_ext_as_blocks_t ca_as_blocks;
@@ -953,7 +953,7 @@ class FFI_X509_RPKI_Test final : public FFI_Test {
                            botan_x509_ext_as_blocks_get_rdi_at,
                            (ca_as_blocks, 0, &min_out_, &max_out_));
 
-               TEST_FFI_OK(botan_x509_cert_opts_add_ext_as_blocks, (ca_opts, ca_as_blocks));
+               TEST_FFI_OK(botan_x509_cert_opts_ext_as_blocks, (ca_opts, ca_as_blocks));
                TEST_FFI_OK(botan_x509_ext_as_blocks_destroy, (ca_as_blocks));
 
                botan_x509_cert_t ca_cert;
@@ -969,14 +969,14 @@ class FFI_X509_RPKI_Test final : public FFI_Test {
                TEST_FFI_OK(botan_x509_ext_create_ip_addr_blocks, (&req_ip_addr_blocks));
                TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_inherit, (req_ip_addr_blocks, 0, nullptr));
 
-               TEST_FFI_OK(botan_x509_cert_opts_add_ext_ip_addr_blocks, (req_opts, req_ip_addr_blocks));
+               TEST_FFI_OK(botan_x509_cert_opts_ext_ip_addr_blocks, (req_opts, req_ip_addr_blocks));
                TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_destroy, (req_ip_addr_blocks));
 
                botan_x509_ext_as_blocks_t req_as_blocks;
                TEST_FFI_OK(botan_x509_ext_create_as_blocks, (&req_as_blocks));
                TEST_FFI_OK(botan_x509_ext_as_blocks_inherit_asnum, (req_as_blocks));
 
-               TEST_FFI_OK(botan_x509_cert_opts_add_ext_as_blocks, (req_opts, req_as_blocks));
+               TEST_FFI_OK(botan_x509_cert_opts_ext_as_blocks, (req_opts, req_as_blocks));
                TEST_FFI_OK(botan_x509_ext_as_blocks_destroy, (req_as_blocks));
 
                botan_x509_pkcs10_req_t req;

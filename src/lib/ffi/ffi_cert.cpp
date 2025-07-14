@@ -698,7 +698,7 @@ int botan_x509_cert_opts_ca_key(botan_x509_cert_opts_t opts, size_t limit) {
 #endif
 }
 
-int botan_x509_cert_opts_set_padding_scheme(botan_x509_cert_opts_t opts, const char* scheme) {
+int botan_x509_cert_opts_padding_scheme(botan_x509_cert_opts_t opts, const char* scheme) {
    if(scheme == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
@@ -738,7 +738,7 @@ int botan_x509_cert_opts_not_after(botan_x509_cert_opts_t opts, botan_x509_time_
 #endif
 }
 
-int botan_x509_cert_opts_add_constraints(botan_x509_cert_opts_t opts, uint32_t usage) {
+int botan_x509_cert_opts_constraints(botan_x509_cert_opts_t opts, uint32_t usage) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_VISIT(opts, [=](auto& o) { o.add_constraints(Botan::Key_Constraints(usage)); });
 #else
@@ -747,7 +747,7 @@ int botan_x509_cert_opts_add_constraints(botan_x509_cert_opts_t opts, uint32_t u
 #endif
 }
 
-int botan_x509_cert_opts_add_ex_constraint(botan_x509_cert_opts_t opts, botan_asn1_oid_t oid) {
+int botan_x509_cert_opts_ex_constraint(botan_x509_cert_opts_t opts, botan_asn1_oid_t oid) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(__func__, [=]() -> int {
       safe_get(opts).add_ex_constraint(safe_get(oid));
@@ -775,8 +775,8 @@ int botan_x509_create_time(botan_x509_time_t* time_obj, uint64_t time_since_epoc
 #endif
 }
 
-int botan_x509_cert_opts_add_ext_ip_addr_blocks(botan_x509_cert_opts_t opts,
-                                                botan_x509_ext_ip_addr_blocks_t ip_addr_blocks) {
+int botan_x509_cert_opts_ext_ip_addr_blocks(botan_x509_cert_opts_t opts,
+                                            botan_x509_ext_ip_addr_blocks_t ip_addr_blocks) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(__func__, [=]() -> int {
       safe_get(opts).extensions.add(safe_get(ip_addr_blocks).copy());
@@ -788,7 +788,7 @@ int botan_x509_cert_opts_add_ext_ip_addr_blocks(botan_x509_cert_opts_t opts,
 #endif
 }
 
-int botan_x509_cert_opts_add_ext_as_blocks(botan_x509_cert_opts_t opts, botan_x509_ext_as_blocks_t as_blocks) {
+int botan_x509_cert_opts_ext_as_blocks(botan_x509_cert_opts_t opts, botan_x509_ext_as_blocks_t as_blocks) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(__func__, [=]() -> int {
       safe_get(opts).extensions.add(safe_get(as_blocks).copy());
