@@ -7,6 +7,7 @@ https://botan.randombit.net
 (C) 2015,2017,2018,2019,2023 Jack Lloyd
 (C) 2015 Uri  Blumenthal (extensions and patches)
 (C) 2024 Amos Treiber, René Meusel - Rohde & Schwarz Cybersecurity
+(C) 2025 Dominik Schricker
 
 Botan is released under the Simplified BSD License (see license.txt)
 
@@ -524,13 +525,14 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_cert_opts_more_org_units, [c_void_p, POINTER(c_char_p), c_size_t])
     ffi_api(dll.botan_x509_cert_opts_more_dns, [c_void_p, POINTER(c_char_p), c_size_t])
     ffi_api(dll.botan_x509_cert_opts_ca_key, [c_void_p, c_size_t])
-    ffi_api(dll.botan_x509_cert_opts_set_padding_scheme, [c_void_p, c_char_p])
+    ffi_api(dll.botan_x509_cert_opts_padding_scheme, [c_void_p, c_char_p])
     ffi_api(dll.botan_x509_cert_opts_not_before, [c_void_p, c_void_p])
     ffi_api(dll.botan_x509_cert_opts_not_after, [c_void_p, c_void_p])
-    ffi_api(dll.botan_x509_cert_opts_add_constraints, [c_void_p, c_uint32])
-    ffi_api(dll.botan_x509_cert_opts_add_ex_constraint, [c_void_p, c_void_p])
-    ffi_api(dll.botan_x509_cert_opts_add_ext_ip_addr_blocks, [c_void_p, c_void_p])
-    ffi_api(dll.botan_x509_cert_opts_add_ext_as_blocks, [c_void_p, c_void_p])
+    ffi_api(dll.botan_x509_cert_opts_constraints, [c_void_p, c_uint32])
+    ffi_api(dll.botan_x509_cert_opts_ex_constraint, [c_void_p, c_void_p])
+    ffi_api(dll.botan_x509_cert_opts_ext_ip_addr_blocks, [c_void_p, c_void_p])
+    ffi_api(dll.botan_x509_cert_opts_ext_as_blocks, [c_void_p, c_void_p])
+    ffi_api(dll.botan_x509_create_time, [c_void_p, c_uint64])
     ffi_api(dll.botan_x509_ext_create_ip_addr_blocks, [c_void_p])
     ffi_api(dll.botan_x509_ext_create_ip_addr_blocks_from_cert, [c_void_p, c_void_p])
     ffi_api(dll.botan_x509_ext_ip_addr_blocks_add_ip_addr,
@@ -539,7 +541,7 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_ext_ip_addr_blocks_inherit, [c_void_p, c_int, POINTER(c_uint8)])
     ffi_api(dll.botan_x509_ext_ip_addr_blocks_get_counts, [c_void_p, POINTER(c_size_t), POINTER(c_size_t)])
     ffi_api(dll.botan_x509_ext_ip_addr_blocks_get_family,
-            [c_void_p, c_int, c_size_t, POINTER(c_int), POINTER(c_uint8), POINTER(c_int), POINTER(c_int)])
+            [c_void_p, c_int, c_size_t, POINTER(c_int), POINTER(c_uint8), POINTER(c_int), POINTER(c_size_t)])
     ffi_api(dll.botan_x509_ext_ip_addr_blocks_get_address,
             [c_void_p, c_int, c_size_t, c_size_t, c_char_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_ext_create_as_blocks, [c_void_p])
@@ -562,7 +564,6 @@ def _set_prototypes(dll):
             [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p])
     ffi_api(dll.botan_x509_sign_req,
             [c_void_p, c_void_p, c_void_p, c_void_p, c_void_p, c_void_p])
-    ffi_api(dll.botan_x509_create_time, [c_void_p, c_uint64])
 
     dll.botan_x509_cert_validation_status.argtypes = [c_int]
     dll.botan_x509_cert_validation_status.restype = c_char_p
@@ -1926,7 +1927,7 @@ class X509Opts:
         _DLL.botan_x509_cert_opts_ca_key(self.__obj, c_size_t(limit))
 
     def set_padding_scheme(self, scheme):
-        _DLL.botan_x509_cert_opts_set_padding_scheme(self.__obj, _ctype_str(scheme))
+        _DLL.botan_x509_cert_opts_padding_scheme(self.__obj, _ctype_str(scheme))
 
     def set_not_before(self, not_before):
         _DLL.botan_x509_cert_opts_not_before(self.__obj, not_before.handle_())
@@ -1951,10 +1952,10 @@ class X509Opts:
             if u not in usage_values:
                 pass
             usage += usage_values[u]
-        _DLL.botan_x509_cert_opts_add_constraints(self.__obj, c_uint32(usage))
+        _DLL.botan_x509_cert_opts_constraints(self.__obj, c_uint32(usage))
 
     def add_ex_constraints(self, oid):
-        _DLL.botan_x509_cert_opts_add_ex_constraint(self.__obj, oid.handle_())
+        _DLL.botan_x509_cert_opts_ex_constraint(self.__obj, oid.handle_())
 
     def create_req(self, key, hash_fn, rng):
         req = PKCS10Req()
@@ -1962,18 +1963,17 @@ class X509Opts:
         return req
 
     def add_ext_ip_addr_blocks(self, ip_addr_blocks):
-        _DLL.botan_x509_cert_opts_add_ext_ip_addr_blocks(self.__obj, ip_addr_blocks.handle_())
+        _DLL.botan_x509_cert_opts_ext_ip_addr_blocks(self.__obj, ip_addr_blocks.handle_())
 
     def add_ext_as_blocks(self, as_blocks):
-        _DLL.botan_x509_cert_opts_add_ext_as_blocks(self.__obj, as_blocks.handle_())
+        _DLL.botan_x509_cert_opts_ext_as_blocks(self.__obj, as_blocks.handle_())
 
 
 class X509ExtIPAddrBlocks:
     def __init__(self, cert=None):
         self.__obj = c_void_p(0)
-        self.__writable = cert is None
         if cert:
-            _DLL.botan_x509_ext_create_ip_addr_blocks_from_cert(cert.handle_(), byref(self.__obj))
+            _DLL.botan_x509_ext_create_ip_addr_blocks_from_cert(byref(self.__obj), cert.handle_())
         else:
             _DLL.botan_x509_ext_create_ip_addr_blocks(byref(self.__obj))
 
@@ -1986,29 +1986,21 @@ class X509ExtIPAddrBlocks:
     def add_ip(self, ip, safi=None):
         self.add_ip_range(ip, ip, safi)
 
-    def add_ip_range(self, min, max, safi=None):
-        if not self.__writable:
-            raise BotanException("Extension is read-only")
-        min_len = len(min)
-        if (min_len != 4 and min_len != 16) or len(max) != min_len:
+    def add_ip_range(self, min_, max_, safi=None):
+        min_len = len(min_)
+        if min_len not in (4, 16) or len(max_) != min_len:
             raise BotanException("Address must be 4 or 16 bytes long")
 
         ipv6 = 1 if min_len == 16 else 0
         safi = byref(c_uint8(safi)) if safi is not None else None
-        _DLL.botan_x509_ext_ip_addr_blocks_add_ip_addr(self.__obj, bytes(min), bytes(max), c_int(ipv6), safi)
+        _DLL.botan_x509_ext_ip_addr_blocks_add_ip_addr(self.__obj, bytes(min_), bytes(max_), c_int(ipv6), safi)
 
     def restrict(self, ipv6, safi=None):
-        if not self.__writable:
-            raise BotanException("Extension is read-only")
-
         ipv6 = 1 if ipv6 else 0
         safi = byref(c_uint8(safi)) if safi is not None else None
         _DLL.botan_x509_ext_ip_addr_blocks_restrict(self.__obj, c_int(ipv6), safi)
 
     def inherit(self, ipv6, safi=None):
-        if not self.__writable:
-            raise BotanException("Extension is read-only")
-
         ipv6 = 1 if ipv6 else 0
         safi = byref(c_uint8(safi)) if safi is not None else None
         _DLL.botan_x509_ext_ip_addr_blocks_inherit(self.__obj, c_int(ipv6), safi)
@@ -2032,14 +2024,14 @@ class X509ExtIPAddrBlocks:
                 has_safi = c_int(0)
                 safi = c_uint8(0)
                 present = c_int(0)
-                count = c_int(0)
+                count = c_size_t(0)
                 _DLL.botan_x509_ext_ip_addr_blocks_get_family(self.__obj, c_int(ipv6), c_size_t(i), byref(has_safi), byref(safi), byref(present), byref(count))
                 ranges = None
                 if present.value == 1:
                     ranges = []
                     for entry in range(count.value):
                         min_, max_ = _call_fn_returning_vec_pair(
-                            size, size, lambda mi, _, ma, l: _DLL.botan_x509_ext_ip_addr_blocks_get_address(
+                            size, size, lambda mi, _, ma, l, ipv6=ipv6, i=i, entry=entry: _DLL.botan_x509_ext_ip_addr_blocks_get_address(
                                 self.__obj,
                                 c_int(ipv6),
                                 c_size_t(i),
@@ -2056,18 +2048,14 @@ class X509ExtIPAddrBlocks:
                 else:
                     v6.append((safi, ranges))
 
-        return {
-            4: v4,
-            6: v6
-        }
+        return (v4, v6)
 
 
 class X509ExtASBlocks:
     def __init__(self, cert=None):
         self.__obj = c_void_p(0)
-        self.__writable = cert is None
         if cert:
-            _DLL.botan_x509_ext_create_as_blocks_from_cert(cert.handle_(), byref(self.__obj))
+            _DLL.botan_x509_ext_create_as_blocks_from_cert(byref(self.__obj), cert.handle_())
         else:
             _DLL.botan_x509_ext_create_as_blocks(byref(self.__obj))
 
@@ -2080,37 +2068,25 @@ class X509ExtASBlocks:
     def add_asnum(self, asnum):
         self.add_asnum_range(asnum, asnum)
 
-    def add_asnum_range(self, min, max):
-        if not self.__writable:
-            raise BotanException("Extension is read-only")
-        _DLL.botan_x509_ext_as_blocks_add_asnum(self.__obj, c_uint32(min), c_uint32(max))
+    def add_asnum_range(self, min_, max_):
+        _DLL.botan_x509_ext_as_blocks_add_asnum(self.__obj, c_uint32(min_), c_uint32(max_))
 
     def restrict_asnum(self):
-        if not self.__writable:
-            raise BotanException("Extension is read-only")
         _DLL.botan_x509_ext_as_blocks_restrict_asnum(self.__obj)
 
     def inherit_asnum(self):
-        if not self.__writable:
-            raise BotanException("Extension is read-only")
         _DLL.botan_x509_ext_as_blocks_inherit_asnum(self.__obj)
 
     def add_rdi(self, rdi):
         self.add_rdi_range(rdi, rdi)
 
-    def add_rdi_range(self, min, max):
-        if not self.__writable:
-            raise BotanException("Extension is read-only")
-        _DLL.botan_x509_ext_as_blocks_add_rdi(self.__obj, c_uint32(min), c_uint32(max))
+    def add_rdi_range(self, min_, max_):
+        _DLL.botan_x509_ext_as_blocks_add_rdi(self.__obj, c_uint32(min_), c_uint32(max_))
 
     def restrict_rdi(self):
-        if not self.__writable:
-            raise BotanException("Extension is read-only")
         _DLL.botan_x509_ext_as_blocks_restrict_rdi(self.__obj)
 
     def inherit_rdi(self):
-        if not self.__writable:
-            raise BotanException("Extension is read-only")
         _DLL.botan_x509_ext_as_blocks_inherit_rdi(self.__obj)
 
     def asnum(self):
