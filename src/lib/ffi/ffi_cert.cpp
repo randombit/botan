@@ -227,6 +227,7 @@ int botan_x509_is_self_signed(botan_x509_cert_t cert, int* out) {
       } else {
          *out = 0;
       }
+      return BOTAN_FFI_SUCCESS;
    });
 #else
    BOTAN_UNUSED(cert, out)
@@ -608,9 +609,7 @@ int botan_x509_create_cert_opts(botan_x509_cert_opts_t* opts_obj, const char* op
       } else {
          co = std::make_unique<Botan::X509_Cert_Options>(opts);
       }
-
-      *opts_obj = new botan_x509_cert_opts_struct(std::move(co));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(opts_obj, std::move(co));
    });
 #else
    BOTAN_UNUSED(expire_time);
@@ -699,7 +698,7 @@ int botan_x509_cert_opts_ca_key(botan_x509_cert_opts_t opts, size_t limit) {
 #endif
 }
 
-int botan_x509_cert_opts_set_padding_scheme(botan_x509_cert_opts_t opts, const char* scheme) {
+int botan_x509_cert_opts_padding_scheme(botan_x509_cert_opts_t opts, const char* scheme) {
    if(scheme == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
@@ -739,7 +738,7 @@ int botan_x509_cert_opts_not_after(botan_x509_cert_opts_t opts, botan_x509_time_
 #endif
 }
 
-int botan_x509_cert_opts_add_constraints(botan_x509_cert_opts_t opts, uint32_t usage) {
+int botan_x509_cert_opts_constraints(botan_x509_cert_opts_t opts, uint32_t usage) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_VISIT(opts, [=](auto& o) { o.add_constraints(Botan::Key_Constraints(usage)); });
 #else
@@ -748,7 +747,7 @@ int botan_x509_cert_opts_add_constraints(botan_x509_cert_opts_t opts, uint32_t u
 #endif
 }
 
-int botan_x509_cert_opts_add_ex_constraint(botan_x509_cert_opts_t opts, botan_asn1_oid_t oid) {
+int botan_x509_cert_opts_ex_constraint(botan_x509_cert_opts_t opts, botan_asn1_oid_t oid) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(__func__, [=]() -> int {
       safe_get(opts).add_ex_constraint(safe_get(oid));
@@ -760,8 +759,24 @@ int botan_x509_cert_opts_add_ex_constraint(botan_x509_cert_opts_t opts, botan_as
 #endif
 }
 
-int botan_x509_cert_opts_add_ext_ip_addr_blocks(botan_x509_cert_opts_t opts,
-                                                botan_x509_ext_ip_addr_blocks_t ip_addr_blocks) {
+int botan_x509_create_time(botan_x509_time_t* time_obj, uint64_t time_since_epoch) {
+   if(time_obj == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto tp = std::chrono::system_clock::time_point(std::chrono::seconds(time_since_epoch));
+      auto time = std::make_unique<Botan::X509_Time>(tp);
+      return ffi_new_object(time_obj, std::move(time));
+   });
+#else
+   BOTAN_UNUSED(time_since_epoch);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_opts_ext_ip_addr_blocks(botan_x509_cert_opts_t opts,
+                                            botan_x509_ext_ip_addr_blocks_t ip_addr_blocks) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(__func__, [=]() -> int {
       safe_get(opts).extensions.add(safe_get(ip_addr_blocks).copy());
@@ -773,7 +788,7 @@ int botan_x509_cert_opts_add_ext_ip_addr_blocks(botan_x509_cert_opts_t opts,
 #endif
 }
 
-int botan_x509_cert_opts_add_ext_as_blocks(botan_x509_cert_opts_t opts, botan_x509_ext_as_blocks_t as_blocks) {
+int botan_x509_cert_opts_ext_as_blocks(botan_x509_cert_opts_t opts, botan_x509_ext_as_blocks_t as_blocks) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(__func__, [=]() -> int {
       safe_get(opts).extensions.add(safe_get(as_blocks).copy());
@@ -798,8 +813,7 @@ int botan_x509_create_self_signed_cert(botan_x509_cert_t* cert_obj,
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto ca_cert = std::make_unique<Botan::X509_Certificate>(
          Botan::X509::create_self_signed_cert(safe_get(opts), safe_get(key), hash_fn, safe_get(rng)));
-      *cert_obj = new botan_x509_cert_struct(std::move(ca_cert));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(cert_obj, std::move(ca_cert));
    });
 #else
    BOTAN_UNUSED(key, opts, rng);
@@ -819,8 +833,7 @@ int botan_x509_create_ca(botan_x509_ca_t* ca_obj,
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto ca = std::make_unique<Botan::X509_CA>(safe_get(ca_cert), safe_get(key), hash_fn, sig_padding, safe_get(rng));
-      *ca_obj = new botan_x509_ca_struct(std::move(ca));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(ca_obj, std::move(ca));
    });
 #else
    BOTAN_UNUSED(ca_cert, key, rng);
@@ -840,8 +853,7 @@ int botan_x509_create_pkcs10_req(botan_x509_pkcs10_req_t* req_obj,
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto req = std::make_unique<Botan::PKCS10_Request>(
          Botan::X509::create_cert_req(safe_get(opts), safe_get(key), hash_fn, safe_get(rng)));
-      *req_obj = new botan_x509_pkcs10_req_struct(std::move(req));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(req_obj, std::move(req));
    });
 #else
    BOTAN_UNUSED(opts, key, rng);
@@ -862,28 +874,10 @@ int botan_x509_sign_req(botan_x509_cert_t* cert_obj,
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto cert = std::make_unique<Botan::X509_Certificate>(safe_get<Botan::X509_CA>(ca).sign_request(
          safe_get(req), safe_get(rng), safe_get(not_before), safe_get(not_after)));
-      *cert_obj = new botan_x509_cert_struct(std::move(cert));
-      return BOTAN_FFI_SUCCESS;
+      return ffi_new_object(cert_obj, std::move(cert));
    });
 #else
    BOTAN_UNUSED(ca, req, rng, not_before, not_after);
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
-int botan_x509_create_time(botan_x509_time_t* time_obj, uint64_t time_since_epoch) {
-   if(time_obj == nullptr) {
-      return BOTAN_FFI_ERROR_NULL_POINTER;
-   }
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return ffi_guard_thunk(__func__, [=]() -> int {
-      auto tp = std::chrono::system_clock::time_point(std::chrono::seconds(time_since_epoch));
-      auto time = std::make_unique<Botan::X509_Time>(tp);
-      *time_obj = new botan_x509_time_struct(std::move(time));
-      return BOTAN_FFI_SUCCESS;
-   });
-#else
-   BOTAN_UNUSED(time_since_epoch);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
