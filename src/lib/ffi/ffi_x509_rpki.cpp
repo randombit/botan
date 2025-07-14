@@ -107,8 +107,8 @@ int botan_x509_ext_create_ip_addr_blocks(botan_x509_ext_ip_addr_blocks_t* ip_add
 #endif
 }
 
-int botan_x509_ext_create_ip_addr_blocks_from_cert(botan_x509_cert_t cert,
-                                                   botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks) {
+int botan_x509_ext_create_ip_addr_blocks_from_cert(botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks,
+                                                   botan_x509_cert_t cert) {
    if(ip_addr_blocks == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
@@ -349,7 +349,7 @@ int botan_x509_ext_create_as_blocks(botan_x509_ext_as_blocks_t* as_blocks) {
 #endif
 }
 
-int botan_x509_ext_create_as_blocks_from_cert(botan_x509_cert_t cert, botan_x509_ext_as_blocks_t* as_blocks) {
+int botan_x509_ext_create_as_blocks_from_cert(botan_x509_ext_as_blocks_t* as_blocks, botan_x509_cert_t cert) {
    if(as_blocks == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }

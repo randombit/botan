@@ -986,7 +986,7 @@ class FFI_X509_RPKI_Test final : public FFI_Test {
                TEST_FFI_OK(botan_x509_sign_req, (&cert, ca, req, rng, not_before, not_after));
 
                botan_x509_ext_ip_addr_blocks_t req_ip_addr_blocks_from_cert;
-               TEST_FFI_OK(botan_x509_ext_create_ip_addr_blocks_from_cert, (cert, &req_ip_addr_blocks_from_cert));
+               TEST_FFI_OK(botan_x509_ext_create_ip_addr_blocks_from_cert, (&req_ip_addr_blocks_from_cert, cert));
 
                TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_get_counts,
                            (req_ip_addr_blocks_from_cert, &v4_count, &v6_count));
@@ -1015,7 +1015,7 @@ class FFI_X509_RPKI_Test final : public FFI_Test {
                TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_destroy, (req_ip_addr_blocks_from_cert));
 
                botan_x509_ext_as_blocks_t req_as_blocks_from_cert;
-               TEST_FFI_OK(botan_x509_ext_create_as_blocks_from_cert, (cert, &req_as_blocks_from_cert));
+               TEST_FFI_OK(botan_x509_ext_create_as_blocks_from_cert, (&req_as_blocks_from_cert, cert));
 
                TEST_FFI_OK(botan_x509_ext_as_blocks_get_asnum, (req_as_blocks_from_cert, &present, &count));
                result.confirm("ext inherits asnum", present == 0);

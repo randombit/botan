@@ -853,19 +853,19 @@ ofvkP1EDmpx50fHLawIDAQAB
         ca_cert = botan.X509Cert.create_self_signed(ca_key, ca_opts, hash_fn, padding_method, rng)
 
         ca_ip_addr_blocks = ca_cert.ext_ip_addr_blocks()
-        self.assertEqual(ca_ip_addr_blocks.addresses(), {
-            4: [
+        self.assertEqual(ca_ip_addr_blocks.addresses(), (
+            [
                 (None, (([10, 0, 0, 1], [10, 0, 255, 255]), ([192, 168, 2, 1], [192, 168, 2, 1]))),
                 (42, ())
             ],
-            6: [
+            [
                 (None, ((
                     [0xab, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
                     [0xab, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01]
                 ), )),
                 (234, ())
             ]
-        })
+        ))
 
         with self.assertRaisesRegex(botan.BotanException, r".*Invalid object state.*"):
             ca_ip_addr_blocks.add_ip([123, 0, 0, 1])
@@ -900,16 +900,16 @@ ofvkP1EDmpx50fHLawIDAQAB
         cert = ca.sign(req, rng, botan.X509Time(int(time.time())), botan.X509Time(int(time.time()) + 60))
 
         req_ip_addr_blocks = cert.ext_ip_addr_blocks()
-        self.assertEqual(req_ip_addr_blocks.addresses(), {
-            4: [
+        self.assertEqual(req_ip_addr_blocks.addresses(), (
+            [
                 (None, (([10, 0, 5, 5], [10, 0, 7, 7]), ([192, 168, 2, 1], [192, 168, 2, 1]))),
                 (42, ())
             ],
-            6: [
+            [
                 (None, None),
                 (234, None)
             ]
-        })
+        ))
 
         req_as_blocks = cert.ext_as_blocks()
         self.assertEqual(req_as_blocks.asnum(), [(3100, 4000)])

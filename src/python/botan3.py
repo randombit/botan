@@ -1973,7 +1973,7 @@ class X509ExtIPAddrBlocks:
     def __init__(self, cert=None):
         self.__obj = c_void_p(0)
         if cert:
-            _DLL.botan_x509_ext_create_ip_addr_blocks_from_cert(cert.handle_(), byref(self.__obj))
+            _DLL.botan_x509_ext_create_ip_addr_blocks_from_cert(byref(self.__obj), cert.handle_())
         else:
             _DLL.botan_x509_ext_create_ip_addr_blocks(byref(self.__obj))
 
@@ -2048,17 +2048,14 @@ class X509ExtIPAddrBlocks:
                 else:
                     v6.append((safi, ranges))
 
-        return {
-            4: v4,
-            6: v6
-        }
+        return (v4, v6)
 
 
 class X509ExtASBlocks:
     def __init__(self, cert=None):
         self.__obj = c_void_p(0)
         if cert:
-            _DLL.botan_x509_ext_create_as_blocks_from_cert(cert.handle_(), byref(self.__obj))
+            _DLL.botan_x509_ext_create_as_blocks_from_cert(byref(self.__obj), cert.handle_())
         else:
             _DLL.botan_x509_ext_create_as_blocks(byref(self.__obj))
 

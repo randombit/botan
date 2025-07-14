@@ -2275,8 +2275,6 @@ BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_constraints(botan_x509_cert_opts
 
 BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_ex_constraint(botan_x509_cert_opts_t opts, botan_asn1_oid_t oid);
 
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_create_time(botan_x509_time_t* time_obj, uint64_t time_since_epoch);
-
 BOTAN_FFI_EXPORT(3, 9)
 int botan_x509_cert_opts_ext_ip_addr_blocks(botan_x509_cert_opts_t opts,
                                             botan_x509_ext_ip_addr_blocks_t ip_addr_blocks);
@@ -2284,11 +2282,13 @@ int botan_x509_cert_opts_ext_ip_addr_blocks(botan_x509_cert_opts_t opts,
 BOTAN_FFI_EXPORT(3, 9)
 int botan_x509_cert_opts_ext_as_blocks(botan_x509_cert_opts_t opts, botan_x509_ext_as_blocks_t as_blocks);
 
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_create_time(botan_x509_time_t* time_obj, uint64_t time_since_epoch);
+
 BOTAN_FFI_EXPORT(3, 9) int botan_x509_ext_create_ip_addr_blocks(botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks);
 
 BOTAN_FFI_EXPORT(3, 9)
-int botan_x509_ext_create_ip_addr_blocks_from_cert(botan_x509_cert_t cert,
-                                                   botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks);
+int botan_x509_ext_create_ip_addr_blocks_from_cert(botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks,
+                                                   botan_x509_cert_t cert);
 
 BOTAN_FFI_EXPORT(3, 9)
 int botan_x509_ext_ip_addr_blocks_add_ip_addr(
@@ -2326,7 +2326,7 @@ int botan_x509_ext_ip_addr_blocks_get_address(botan_x509_ext_ip_addr_blocks_t ip
 BOTAN_FFI_EXPORT(3, 9) int botan_x509_ext_create_as_blocks(botan_x509_ext_as_blocks_t* as_blocks);
 
 BOTAN_FFI_EXPORT(3, 9)
-int botan_x509_ext_create_as_blocks_from_cert(botan_x509_cert_t cert, botan_x509_ext_as_blocks_t* as_blocks);
+int botan_x509_ext_create_as_blocks_from_cert(botan_x509_ext_as_blocks_t* as_blocks, botan_x509_cert_t cert);
 
 BOTAN_FFI_EXPORT(3, 9)
 int botan_x509_ext_as_blocks_add_asnum(botan_x509_ext_as_blocks_t as_blocks, uint32_t min, uint32_t max);
