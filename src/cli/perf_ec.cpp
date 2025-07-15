@@ -50,7 +50,7 @@ class PerfTest_EllipticCurve final : public PerfTest {
 
             const bool h2c_supported = [&]() {
                try {
-                  Botan::EC_AffinePoint::hash_to_curve_nu(group, "SHA-256", {}, {});
+                  Botan::EC_AffinePoint::hash_to_curve_nu(group, "SHA-256", {}, "");
                } catch(Botan::Not_Implemented&) {
                   return false;
                }
@@ -81,8 +81,8 @@ class PerfTest_EllipticCurve final : public PerfTest {
                auto pt2 = mul2_ct_timer->run([&]() { return Botan::EC_AffinePoint::mul_px_qy(g, k, r1, k2, rng); });
 
                if(h2c_supported) {
-                  h2c_nu_timer->run([&]() { Botan::EC_AffinePoint::hash_to_curve_nu(group, "SHA-256", r1_bytes, {}); });
-                  h2c_ro_timer->run([&]() { Botan::EC_AffinePoint::hash_to_curve_ro(group, "SHA-256", r1_bytes, {}); });
+                  h2c_nu_timer->run([&]() { Botan::EC_AffinePoint::hash_to_curve_nu(group, "SHA-256", r1_bytes, ""); });
+                  h2c_ro_timer->run([&]() { Botan::EC_AffinePoint::hash_to_curve_ro(group, "SHA-256", r1_bytes, ""); });
                }
             }
 

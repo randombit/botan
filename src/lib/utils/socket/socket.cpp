@@ -72,12 +72,14 @@ class Asio_Socket final : public OS::Socket {
          }
       }
 
-      void write(const uint8_t buf[], size_t len) override {
+      void write(std::span<const uint8_t> buf) override {
          m_timer.expires_after(m_timeout);
 
          boost::system::error_code ec = boost::asio::error::would_block;
 
-         m_tcp.async_send(boost::asio::buffer(buf, len), [&ec](boost::system::error_code e, size_t) { ec = e; });
+         // Some versions of asio don't know about span...
+         m_tcp.async_send(boost::asio::buffer(buf.data(), buf.size()),
+                          [&ec](boost::system::error_code e, size_t) { ec = e; });
 
          while(ec == boost::asio::error::would_block) {
             m_io.run_one();
@@ -286,10 +288,12 @@ class BSD_Socket final : public OS::Socket {
       BSD_Socket& operator=(const BSD_Socket& other) = delete;
       BSD_Socket& operator=(BSD_Socket&& other) = delete;
 
-      void write(const uint8_t buf[], size_t len) override {
+      void write(std::span<const uint8_t> buf) override {
          fd_set write_set;
          FD_ZERO(&write_set);
          FD_SET(m_socket, &write_set);
+
+         size_t len = buf.size();
 
          size_t sent_so_far = 0;
          while(sent_so_far != len) {

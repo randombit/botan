@@ -11,6 +11,7 @@
 #endif
 
 #if defined(BOTAN_HAS_XMD)
+   #include <botan/internal/mem_utils.h>
    #include <botan/internal/xmd.h>
 #endif
 
@@ -34,7 +35,7 @@ class ECC_H2C_XMD_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> expected = vars.get_req_bin("Output");
 
          std::vector<uint8_t> output(expected.size());
-         Botan::expand_message_xmd(hash, output, input, domain);
+         Botan::expand_message_xmd(hash, output, Botan::as_span_of_bytes(input), Botan::as_span_of_bytes(domain));
 
          result.test_eq("XMD output", output, expected);
          return result;

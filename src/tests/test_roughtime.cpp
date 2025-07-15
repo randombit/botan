@@ -15,6 +15,7 @@
    #include <botan/base64.h>
    #include <botan/ed25519.h>
    #include <botan/hex.h>
+   #include <botan/mem_ops.h>
    #include <botan/roughtime.h>
 #endif
 

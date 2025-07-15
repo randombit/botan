@@ -10,6 +10,7 @@
 
 #include <botan/filter.h>
 #include <botan/mem_ops.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/out_buf.h>
 
 namespace Botan {
@@ -31,6 +32,10 @@ Pipe::message_id Pipe::get_message_no(std::string_view func_name, message_id msg
    return msg;
 }
 
+void Pipe::write(std::span<const uint8_t> input) {
+   this->write(input.data(), input.size());
+}
+
 /*
 * Write into a Pipe
 */
@@ -45,7 +50,7 @@ void Pipe::write(const uint8_t input[], size_t length) {
 * Write a string into a Pipe
 */
 void Pipe::write(std::string_view str) {
-   write(cast_char_ptr_to_uint8(str.data()), str.size());
+   write(as_span_of_bytes(str));
 }
 
 /*

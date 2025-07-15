@@ -13,6 +13,7 @@
 #include <botan/internal/ffi_mp.h>
 #include <botan/internal/ffi_rng.h>
 #include <botan/internal/ffi_util.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/mod_inv.h>
 
 extern "C" {
@@ -53,10 +54,7 @@ int botan_mp_set_from_radix_str(botan_mp_t mp, const char* str, size_t radix) {
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
       }
 
-      const uint8_t* bytes = Botan::cast_char_ptr_to_uint8(str);
-      const size_t len = strlen(str);
-
-      bn = Botan::BigInt(bytes, len, base);
+      bn = Botan::BigInt::decode(Botan::cstr_as_span_of_bytes(str), base);
       return BOTAN_FFI_SUCCESS;
    });
 }

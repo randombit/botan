@@ -303,7 +303,10 @@ int botan_privkey_rsa_get_privkey(botan_privkey_t rsa_key, uint8_t out[], size_t
          if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER) {
             return write_vec_output(out, out_len, rsa->private_key_bits());
          } else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM) {
-            return write_str_output(out, out_len, Botan::PEM_Code::encode(rsa->private_key_bits(), "RSA PRIVATE KEY"));
+            // TODO define new generic functions for this
+            return write_str_output(reinterpret_cast<char*>(out),
+                                    out_len,
+                                    Botan::PEM_Code::encode(rsa->private_key_bits(), "RSA PRIVATE KEY"));
          } else {
             return BOTAN_FFI_ERROR_BAD_FLAG;
          }

@@ -12,6 +12,7 @@
 #include <botan/secmem.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/mem_utils.h>
 #include <span>
 #include <string>
 #include <vector>
@@ -121,8 +122,7 @@ class TLS_Data_Reader final {
 
       std::string get_string(size_t len_bytes, size_t min_bytes, size_t max_bytes) {
          std::vector<uint8_t> v = get_range_vector<uint8_t>(len_bytes, min_bytes, max_bytes);
-
-         return std::string(cast_uint8_ptr_to_char(v.data()), v.size());
+         return bytes_to_string(v);
       }
 
       template <typename T>
@@ -181,7 +181,10 @@ class TLS_Data_Reader final {
 * Helper function for encoding length-tagged vectors
 */
 template <typename T, typename Alloc>
-void append_tls_length_value(std::vector<uint8_t, Alloc>& buf, const T* vals, size_t vals_size, size_t tag_size) {
+inline void append_tls_length_value(std::vector<uint8_t, Alloc>& buf,
+                                    const T* vals,
+                                    size_t vals_size,
+                                    size_t tag_size) {
    const size_t T_size = sizeof(T);
    const size_t val_bytes = T_size * vals_size;
 
@@ -205,14 +208,21 @@ void append_tls_length_value(std::vector<uint8_t, Alloc>& buf, const T* vals, si
    }
 }
 
-template <typename T, typename Alloc, typename Alloc2>
-void append_tls_length_value(std::vector<uint8_t, Alloc>& buf, const std::vector<T, Alloc2>& vals, size_t tag_size) {
+template <typename T, typename Alloc>
+inline void append_tls_length_value(std::vector<uint8_t, Alloc>& buf, std::span<const T> vals, size_t tag_size) {
    append_tls_length_value(buf, vals.data(), vals.size(), tag_size);
 }
 
+template <typename T, typename Alloc, typename Alloc2>
+inline void append_tls_length_value(std::vector<uint8_t, Alloc>& buf,
+                                    const std::vector<T, Alloc2>& vals,
+                                    size_t tag_size) {
+   append_tls_length_value(buf, std::span{vals}, tag_size);
+}
+
 template <typename Alloc>
-void append_tls_length_value(std::vector<uint8_t, Alloc>& buf, std::string_view str, size_t tag_size) {
-   append_tls_length_value(buf, cast_char_ptr_to_uint8(str.data()), str.size(), tag_size);
+inline void append_tls_length_value(std::vector<uint8_t, Alloc>& buf, std::string_view str, size_t tag_size) {
+   append_tls_length_value(buf, as_span_of_bytes(str), tag_size);
 }
 
 }  // namespace Botan::TLS

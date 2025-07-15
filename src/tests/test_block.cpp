@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
    #include <botan/block_cipher.h>
+   #include <botan/mem_ops.h>
    #include <botan/internal/fmt.h>
 #endif
 

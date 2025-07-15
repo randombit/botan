@@ -10,6 +10,7 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/mp_core.h>
 #include <botan/internal/rounding.h>
 
@@ -70,7 +71,7 @@ BigInt::BigInt(std::string_view str) {
       base = Hexadecimal;
    }
 
-   *this = decode(cast_char_ptr_to_uint8(str.data()) + markers, str.length() - markers, base);
+   *this = decode(as_span_of_bytes(str).subspan(markers), base);
 
    if(negative) {
       set_sign(Negative);

@@ -8,7 +8,7 @@
 
 #include <botan/tls_psk_identity_13.h>
 
-#include <botan/internal/stl_util.h>
+#include <botan/internal/mem_utils.h>
 
 namespace Botan::TLS {
 
@@ -21,6 +21,10 @@ uint32_t obfuscate_ticket_age(const uint64_t in, const uint64_t ticket_age_add) 
    //    milliseconds and adding the "ticket_age_add" value that was included
    //    with the ticket, modulo 2^32.
    return static_cast<uint32_t>(in + ticket_age_add);
+}
+
+inline std::vector<uint8_t> to_byte_vector(std::string_view s) {
+   return std::vector<uint8_t>(s.cbegin(), s.cend());
 }
 
 }  // namespace
@@ -43,7 +47,7 @@ std::chrono::milliseconds PskIdentity::age(const uint32_t ticket_age_add) const 
 }
 
 std::string PskIdentity::identity_as_string() const {
-   return Botan::to_string(m_identity);
+   return bytes_to_string(m_identity);
 }
 
 }  // namespace Botan::TLS

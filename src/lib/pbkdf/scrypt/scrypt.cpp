@@ -12,6 +12,7 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/salsa20.h>
 #include <botan/internal/time_utils.h>
 
@@ -210,7 +211,7 @@ void Scrypt::derive_key(uint8_t output[],
    auto hmac_sha256 = MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
 
    try {
-      hmac_sha256->set_key(cast_char_ptr_to_uint8(password), password_len);
+      hmac_sha256->set_key(as_span_of_bytes(password, password_len));
    } catch(Invalid_Key_Length&) {
       throw Invalid_Argument("Scrypt cannot accept passphrases of the provided length");
    }

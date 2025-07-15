@@ -177,7 +177,8 @@ int botan_bcrypt_generate(
 
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
       const std::string bcrypt = Botan::generate_bcrypt(pass, rng, static_cast<uint16_t>(wf));
-      return write_str_output(out, out_len, bcrypt);
+      // TODO(Botan4) change the type of out and remove this cast
+      return write_str_output(reinterpret_cast<char*>(out), out_len, bcrypt);
    });
 #else
    BOTAN_UNUSED(out, out_len, pass, rng_obj, wf, flags);

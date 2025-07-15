@@ -621,12 +621,11 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
                              std::string_view domain_sep,
                              bool random_oracle = true) const {
          auto inp = std::span{input, input_len};
-         auto dst = std::span{reinterpret_cast<const uint8_t*>(domain_sep.data()), domain_sep.size()};
 
          if(random_oracle) {
-            return EC_AffinePoint::hash_to_curve_ro(*this, hash_fn, inp, dst).to_legacy_point();
+            return EC_AffinePoint::hash_to_curve_ro(*this, hash_fn, inp, domain_sep).to_legacy_point();
          } else {
-            return EC_AffinePoint::hash_to_curve_nu(*this, hash_fn, inp, dst).to_legacy_point();
+            return EC_AffinePoint::hash_to_curve_nu(*this, hash_fn, inp, domain_sep).to_legacy_point();
          }
       }
 

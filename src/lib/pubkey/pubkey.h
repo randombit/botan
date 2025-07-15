@@ -420,12 +420,22 @@ class BOTAN_PUBLIC_API(2, 0) PK_Key_Agreement final {
       * Perform Key Agreement Operation
       * @param key_len the desired key output size (ignored if "Raw" KDF is used)
       * @param peer_key the other parties key
+      * @param salt extra derivation salt
+      */
+      SymmetricKey derive_key(size_t key_len, std::span<const uint8_t> peer_key, std::span<const uint8_t> salt) const;
+
+      /**
+      * Perform Key Agreement Operation
+      * @param key_len the desired key output size (ignored if "Raw" KDF is used)
+      * @param peer_key the other parties key
       * @param peer_key_len the length of peer_key in bytes
       * @param salt extra derivation salt
       * @param salt_len the length of salt in bytes
       */
       SymmetricKey derive_key(
-         size_t key_len, const uint8_t peer_key[], size_t peer_key_len, const uint8_t salt[], size_t salt_len) const;
+         size_t key_len, const uint8_t peer_key[], size_t peer_key_len, const uint8_t salt[], size_t salt_len) const {
+         return this->derive_key(key_len, {peer_key, peer_key_len}, {salt, salt_len});
+      }
 
       /**
       * Perform Key Agreement Operation

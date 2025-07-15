@@ -10,9 +10,9 @@
 #if defined(BOTAN_HAS_KECCAK_PERM)
 
    #include <botan/hex.h>
-   #include <botan/mem_ops.h>
    #include <botan/internal/keccak_helpers.h>
    #include <botan/internal/keccak_perm.h>
+   #include <botan/internal/mem_utils.h>
 
    #if defined(BOTAN_HAS_SHAKE_XOF)
       #include <botan/xof.h>
@@ -123,9 +123,8 @@ std::vector<Test::Result> keccak_helpers() {
                const std::vector<uint8_t> n{'K', 'M', 'A', 'C'};
                const std::string str =
                   "This is a long salt, that is longer than 128 bytes in order to fill up the first round of the Keccak permutation. That should do it.";
-               const std::vector<uint8_t> s{Botan::cast_char_ptr_to_uint8(str.data()),
-                                            Botan::cast_char_ptr_to_uint8(str.data()) + str.size()};
-               const auto bytes_generated = Botan::keccak_absorb_padded_strings_encoding(out, padmod, n, s);
+               const auto bytes_generated =
+                  Botan::keccak_absorb_padded_strings_encoding(out, padmod, n, Botan::as_span_of_bytes(str));
                result.test_eq("padded bytes", bytes_generated, padmod * 2);
 
                result.test_is_eq(
@@ -169,9 +168,8 @@ std::vector<Test::Result> keccak_helpers() {
             const std::vector<uint8_t> n{'K', 'M', 'A', 'C'};
             const std::string str =
                "This is a long salt, that is longer than 128 bytes in order to fill up the first round of the Keccak permutation. That should do it.";
-            const std::vector<uint8_t> s{Botan::cast_char_ptr_to_uint8(str.data()),
-                                         Botan::cast_char_ptr_to_uint8(str.data()) + str.size()};
-            const auto bytes_generated = Botan::keccak_absorb_padded_strings_encoding(*xof, padmod, n, s);
+            const auto bytes_generated =
+               Botan::keccak_absorb_padded_strings_encoding(*xof, padmod, n, Botan::as_span_of_bytes(str));
             result.test_eq("padded bytes", bytes_generated, padmod * 2);
 
             result.test_is_eq(

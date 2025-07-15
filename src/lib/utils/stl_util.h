@@ -26,15 +26,6 @@
 
 namespace Botan {
 
-template <concepts::contiguous_container T = std::vector<uint8_t>>
-inline T to_byte_vector(std::string_view s) {
-   return T(s.cbegin(), s.cend());
-}
-
-inline std::string to_string(std::span<const uint8_t> bytes) {
-   return std::string(bytes.begin(), bytes.end());
-}
-
 /**
  * Reduce the values of @p keys into an accumulator initialized with @p acc using
  * the reducer function @p reducer.

@@ -844,6 +844,21 @@ constexpr inline CT::Mask<T> is_equal(const T x[], const T y[], size_t len) {
 }
 
 /**
+* Compare two spans and return a Mask which is set iff they were identical.
+*
+* If the spans are of different length then the function returns early without
+* looking at either span
+*/
+template <typename T>
+constexpr inline CT::Mask<T> is_equal(std::span<const T> x, std::span<const T> y) {
+   if(x.size() != y.size()) {
+      return CT::Mask<T>::cleared();
+   }
+
+   return is_equal(x.data(), y.data(), x.size());
+}
+
+/**
 * Compare two arrays of equal size and return a Mask indicating if
 * they are equal or not. The mask is set if they differ.
 */

@@ -10,18 +10,18 @@
 #include <botan/block_cipher.h>
 #include <botan/exceptn.h>
 #include <botan/mac.h>
-#include <botan/mem_ops.h>
 #include <botan/nist_keywrap.h>
+#include <botan/internal/mem_utils.h>
 
 namespace Botan {
 
 std::string PSK_Database::get_str(std::string_view name) const {
-   secure_vector<uint8_t> psk = this->get(name);
-   return std::string(cast_uint8_ptr_to_char(psk.data()), psk.size());
+   return bytes_to_string(this->get(name));
 }
 
 void PSK_Database::set_str(std::string_view name, std::string_view psk) {
-   this->set(name, cast_char_ptr_to_uint8(psk.data()), psk.size());
+   auto pskb = as_span_of_bytes(psk);
+   this->set(name, pskb.data(), pskb.size());
 }
 
 Encrypted_PSK_Database::Encrypted_PSK_Database(const secure_vector<uint8_t>& master_key) {
@@ -45,7 +45,7 @@ std::set<std::string> Encrypted_PSK_Database::list_names() const {
          const secure_vector<uint8_t> raw_name = base64_decode(enc_name);
          const secure_vector<uint8_t> name_bits = nist_key_unwrap_padded(raw_name.data(), raw_name.size(), *m_cipher);
 
-         std::string pt_name(cast_uint8_ptr_to_char(name_bits.data()), name_bits.size());
+         const auto pt_name = bytes_to_string(name_bits);
          names.insert(pt_name);
       } catch(Invalid_Authentication_Tag&) {}
    }
@@ -54,15 +54,13 @@ std::set<std::string> Encrypted_PSK_Database::list_names() const {
 }
 
 void Encrypted_PSK_Database::remove(std::string_view name) {
-   const std::vector<uint8_t> wrapped_name =
-      nist_key_wrap_padded(cast_char_ptr_to_uint8(name.data()), name.size(), *m_cipher);
+   const auto wrapped_name = nist_key_wrap_padded(as_span_of_bytes(name), *m_cipher);
 
    this->kv_del(base64_encode(wrapped_name));
 }
 
 secure_vector<uint8_t> Encrypted_PSK_Database::get(std::string_view name) const {
-   const std::vector<uint8_t> wrapped_name =
-      nist_key_wrap_padded(cast_char_ptr_to_uint8(name.data()), name.size(), *m_cipher);
+   const auto wrapped_name = nist_key_wrap_padded(as_span_of_bytes(name), *m_cipher);
 
    const std::string val_base64 = kv_get(base64_encode(wrapped_name));
 
@@ -84,8 +82,7 @@ void Encrypted_PSK_Database::set(std::string_view name, const uint8_t val[], siz
    * cut-and-paste attacks against the database, each PSK is encrypted with a
    * distinct key which is derived by hashing the wrapped key name with HMAC.
    */
-   const std::vector<uint8_t> wrapped_name =
-      nist_key_wrap_padded(cast_char_ptr_to_uint8(name.data()), name.size(), *m_cipher);
+   const auto wrapped_name = nist_key_wrap_padded(as_span_of_bytes(name), *m_cipher);
 
    auto wrap_cipher = m_cipher->new_object();
    wrap_cipher->set_key(m_hmac->process(wrapped_name));

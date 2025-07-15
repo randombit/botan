@@ -13,6 +13,7 @@
 #include <botan/mem_ops.h>
 #include <botan/internal/keccak_helpers.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/mem_utils.h>
 
 namespace Botan {
 
@@ -25,9 +26,7 @@ cSHAKE_XOF::cSHAKE_XOF(size_t capacity, std::span<const uint8_t> function_name) 
       cSHAKE_XOF(capacity, std::vector<uint8_t>{function_name.begin(), function_name.end()}) {}
 
 cSHAKE_XOF::cSHAKE_XOF(size_t capacity, std::string_view function_name) :
-      cSHAKE_XOF(capacity,
-                 std::vector<uint8_t>{cast_char_ptr_to_uint8(function_name.data()),
-                                      cast_char_ptr_to_uint8(function_name.data()) + function_name.size()}) {}
+      cSHAKE_XOF(capacity, as_span_of_bytes(function_name)) {}
 
 void cSHAKE_XOF::reset() {
    m_keccak.clear();

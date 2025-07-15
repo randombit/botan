@@ -10,12 +10,12 @@
 #include <botan/cipher_mode.h>
 #include <botan/data_src.h>
 #include <botan/mac.h>
-#include <botan/mem_ops.h>
 #include <botan/pem.h>
 #include <botan/pwdhash.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/mem_utils.h>
 
 namespace Botan::CryptoBox {
 
@@ -149,18 +149,28 @@ secure_vector<uint8_t> decrypt_bin(const uint8_t input[], size_t input_len, std:
 BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
 
+namespace {
+
+secure_vector<uint8_t> decrypt_bin(std::span<const uint8_t> input, std::string_view passphrase) {
+   return CryptoBox::decrypt_bin(input.data(), input.size(), passphrase);
+}
+
+std::string decrypt(std::span<const uint8_t> input, std::string_view passphrase) {
+   return CryptoBox::decrypt(input.data(), input.size(), passphrase);
+}
+
+}  // namespace
+
 secure_vector<uint8_t> decrypt_bin(std::string_view input, std::string_view passphrase) {
-   return decrypt_bin(cast_char_ptr_to_uint8(input.data()), input.size(), passphrase);
+   return decrypt_bin(as_span_of_bytes(input), passphrase);
 }
 
 std::string decrypt(const uint8_t input[], size_t input_len, std::string_view passphrase) {
-   const secure_vector<uint8_t> bin = decrypt_bin(input, input_len, passphrase);
-
-   return std::string(cast_uint8_ptr_to_char(bin.data()), bin.size());
+   return bytes_to_string(decrypt_bin(input, input_len, passphrase));
 }
 
 std::string decrypt(std::string_view input, std::string_view passphrase) {
-   return decrypt(cast_char_ptr_to_uint8(input.data()), input.size(), passphrase);
+   return decrypt(as_span_of_bytes(input), passphrase);
 }
 
 BOTAN_DIAGNOSTIC_POP
