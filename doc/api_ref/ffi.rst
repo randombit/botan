@@ -1804,12 +1804,12 @@ X.509 Certificates
 
    Create a new IP Address Blocks object.
 
-.. cpp:function::int int botan_x509_ext_create_ip_addr_blocks_from_cert(botan_x509_cert_t cert, \
+.. cpp:function::int botan_x509_ext_create_ip_addr_blocks_from_cert(botan_x509_cert_t cert, \
                   botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks)
 
    Get an IP Address Blocks object from a certificate. Cannot be mutated.
 
-.. cpp:function::int int botan_x509_ext_ip_addr_blocks_add_ip_addr(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, \
+.. cpp:function::int botan_x509_ext_ip_addr_blocks_add_ip_addr(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, \
                   const uint8_t* min, \
                   const uint8_t* max, \
                   int ipv6, \
@@ -1818,23 +1818,23 @@ X.509 Certificates
    Add a new IP Address to the extension. Set ``ipv6`` to 0 if the address is v4, 1 if it is v6.
    ``safi`` may be NULL.
 
-.. cpp:function::int int botan_x509_ext_ip_addr_blocks_restrict(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, int ipv6, uint8_t* safi)
+.. cpp:function::int botan_x509_ext_ip_addr_blocks_restrict(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, int ipv6, uint8_t* safi)
 
    Make the extension contain no allowed IP addresses for the specified IP version.
    Set ``ipv6`` to 0 for v4, 1 for v6. ``safi`` may be NULL.
 
-.. cpp:function::int int botan_x509_ext_ip_addr_blocks_inherit(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, int ipv6, uint8_t* safi)
+.. cpp:function::int botan_x509_ext_ip_addr_blocks_inherit(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, int ipv6, uint8_t* safi)
 
    Mark the specified IP version as "inherit". Set ``ipv6`` to 0 for v4, 1 for v6. ``safi`` may be NULL.
 
-.. cpp:function::int int botan_x509_ext_ip_addr_blocks_get_counts(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, \
+.. cpp:function::int botan_x509_ext_ip_addr_blocks_get_counts(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, \
                   size_t* v4_count, \
                   size_t* v6_count)
 
    Retrieve the counts of v4/v6 entries in the extension.
    v4 entries always precede v6 entries.
 
-.. cpp:function::int int botan_x509_ext_ip_addr_blocks_get_family(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
+.. cpp:function::int botan_x509_ext_ip_addr_blocks_get_family(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
                   int ipv6, \
                   size_t i, \
                   int* has_safi, \
@@ -1851,7 +1851,7 @@ X.509 Certificates
    ``present`` will be set to one to indicate a value, 0 otherwise (inherit).
    ``count`` will be set to the number of address pairs present for the entry if present.
 
-.. cpp:function::int int botan_x509_ext_ip_addr_blocks_get_address(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
+.. cpp:function::int botan_x509_ext_ip_addr_blocks_get_address(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
                   int ipv6, \
                   size_t i, \
                   size_t entry, \
@@ -1880,11 +1880,11 @@ X.509 Certificates
 
    Create a new AS Blocks object.
 
-.. cpp:function::int int botan_x509_ext_create_as_blocks_from_cert(botan_x509_cert_t cert, botan_x509_ext_as_blocks_t* as_blocks)
+.. cpp:function::int botan_x509_ext_create_as_blocks_from_cert(botan_x509_cert_t cert, botan_x509_ext_as_blocks_t* as_blocks)
 
    Get an AS Blocks object from a certificate. Cannot be mutated.
 
-.. cpp:function::int int botan_x509_ext_as_blocks_add_asnum(botan_x509_ext_as_blocks_t as_blocks, uint32_t min, uint32_t max)
+.. cpp:function::int botan_x509_ext_as_blocks_add_asnum(botan_x509_ext_as_blocks_t as_blocks, uint32_t min, uint32_t max)
 
    Add an asnum to the extension.
 
@@ -1896,24 +1896,24 @@ X.509 Certificates
 
    Mark the asnum entry as "inherit".
 
-.. cpp:function::int int botan_x509_ext_as_blocks_add_rdi(botan_x509_ext_as_blocks_t as_blocks, uint32_t min, uint32_t max)
+.. cpp:function::int botan_x509_ext_as_blocks_add_rdi(botan_x509_ext_as_blocks_t as_blocks, uint32_t min, uint32_t max)
 
 .. cpp:function::int botan_x509_ext_as_blocks_restrict_rdi(botan_x509_ext_as_blocks_t as_blocks)
 
 .. cpp:function::int botan_x509_ext_as_blocks_inherit_rdi(botan_x509_ext_as_blocks_t as_blocks)
 
-.. cpp:function::int int botan_x509_ext_as_blocks_get_asnum(botan_x509_ext_as_blocks_t as_blocks, int* present, size_t* count)
+.. cpp:function::int botan_x509_ext_as_blocks_get_asnum(botan_x509_ext_as_blocks_t as_blocks, int* present, size_t* count)
 
    If the extension has an asnum entry, ``present`` will be set to 1, otherwise 0 (inherit).
    If an entry is present ``count`` will be set to the number of elements.
 
-.. cpp:function::int int botan_x509_ext_as_blocks_get_asnum_at(botan_x509_ext_as_blocks_t as_blocks, size_t i, uint32_t* min, uint32_t* max)
+.. cpp:function::int botan_x509_ext_as_blocks_get_asnum_at(botan_x509_ext_as_blocks_t as_blocks, size_t i, uint32_t* min, uint32_t* max)
 
    Retrieve information on a single asnum entry.
 
-.. cpp:function::int int botan_x509_ext_as_blocks_get_rdi(botan_x509_ext_as_blocks_t as_blocks, int* present, size_t* count)
+.. cpp:function::int botan_x509_ext_as_blocks_get_rdi(botan_x509_ext_as_blocks_t as_blocks, int* present, size_t* count)
 
-.. cpp:function::int int botan_x509_ext_as_blocks_get_rdi_at(botan_x509_ext_as_blocks_t as_blocks, size_t i, uint32_t* min, uint32_t* max)
+.. cpp:function::int botan_x509_ext_as_blocks_get_rdi_at(botan_x509_ext_as_blocks_t as_blocks, size_t i, uint32_t* min, uint32_t* max)
 
 .. cpp:type:: opaque* botan_x509_cert_params_builder_t
 
@@ -1974,7 +1974,7 @@ X.509 Certificates
 .. cpp:function::int botan_x509_cert_params_builder_add_ext_as_blocks(botan_x509_cert_params_builder_t builder, \
                   botan_x509_ext_as_blocks_t as_blocks);
 
-.. cpp:function::int int botan_x509_create_self_signed_cert(botan_x509_cert_t* cert_obj, \
+.. cpp:function::int botan_x509_create_self_signed_cert(botan_x509_cert_t* cert_obj, \
                   botan_privkey_t key, \
                   botan_x509_cert_opts_t opts, \
                   const char* hash_fn, \
@@ -1992,7 +1992,7 @@ X.509 Certificates
 
    Destroy the PKCS #10 certificate request object.
 
-.. cpp:function::int int botan_x509_create_pkcs10_req(botan_x509_pkcs10_req_t* req_obj, \
+.. cpp:function::int botan_x509_create_pkcs10_req(botan_x509_pkcs10_req_t* req_obj, \
                   botan_x509_cert_opts_t opts, \
                   botan_privkey_t key, \
                   const char* hash_fn, \
@@ -2000,7 +2000,9 @@ X.509 Certificates
 
    Create a PCKS #10 certificate request.
 
-.. cpp:function::int int botan_x509_sign_req(botan_x509_cert_t* subject_cert, \
+.. cpp:function::int botan_x509_pkcs10_req_view_pem(botan_x509_pkcs10_req_t req, botan_view_ctx ctx, botan_view_str_fn view)
+
+.. cpp:function::int botan_x509_sign_req(botan_x509_cert_t* subject_cert, \
                   botan_x509_pkcs10_req_t subject_req, \
                   botan_x509_cert_t issuing_cert, \
                   botan_privkey_t issuing_key, \

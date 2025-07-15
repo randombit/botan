@@ -827,6 +827,15 @@ int botan_x509_create_pkcs10_req(botan_x509_pkcs10_req_t* req_obj,
 #endif
 }
 
+int botan_x509_pkcs10_req_view_pem(botan_x509_pkcs10_req_t req, botan_view_ctx ctx, botan_view_str_fn view) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(req, [=](const auto& r) -> int { return invoke_view_callback(view, ctx, r.PEM_encode()); });
+#else
+   BOTAN_UNUSED(req, ctx, view);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 int botan_x509_sign_req(botan_x509_cert_t* subject_cert,
                         botan_x509_pkcs10_req_t subject_req,
                         botan_x509_cert_t issuing_cert,

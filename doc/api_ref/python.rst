@@ -843,6 +843,8 @@ PKCS10Req
 
       ``not_before`` and ``not_after`` are expected to be the time since the UNIX epoch, in seconds.
 
+   .. py:method:: to_pem()
+
 X509Cert
 -----------------------------------------
 

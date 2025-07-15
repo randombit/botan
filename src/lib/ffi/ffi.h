@@ -2388,6 +2388,9 @@ int botan_x509_create_pkcs10_req(botan_x509_pkcs10_req_t* req_obj,
                                  botan_rng_t rng);
 
 BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_pkcs10_req_view_pem(botan_x509_pkcs10_req_t req, botan_view_ctx ctx, botan_view_str_fn view);
+
+BOTAN_FFI_EXPORT(3, 9)
 int botan_x509_sign_req(botan_x509_cert_t* subject_cert,
                         botan_x509_pkcs10_req_t subject_req,
                         botan_x509_cert_t issuing_cert,

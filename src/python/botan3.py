@@ -554,6 +554,7 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_pkcs10_req_destroy, [c_void_p])
     ffi_api(dll.botan_x509_create_pkcs10_req,
             [c_void_p, c_void_p, c_void_p, c_char_p, c_void_p])
+    ffi_api(dll.botan_x509_pkcs10_req_view_pem, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
     ffi_api(dll.botan_x509_sign_req,
             [c_void_p, c_void_p, c_void_p, c_void_p, c_void_p, c_uint64, c_uint64, c_char_p, c_char_p])
 
@@ -2105,6 +2106,9 @@ class PKCS10Req:
             _ctype_str(padding)
         )
         return cert
+
+    def to_pem(self):
+        return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_x509_pkcs10_req_view_pem(self.__obj, vc, vfn))
 
 
 class X509Cert: # pylint: disable=invalid-name
