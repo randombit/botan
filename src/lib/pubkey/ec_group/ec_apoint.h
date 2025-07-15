@@ -68,6 +68,14 @@ class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
                                              std::span<const uint8_t> input,
                                              std::span<const uint8_t> domain_sep);
 
+      /// Hash to curve (RFC 9380), random oracle variant
+      ///
+      /// Only supported for specific groups
+      static EC_AffinePoint hash_to_curve_ro(const EC_Group& group,
+                                             std::string_view hash_fn,
+                                             std::span<const uint8_t> input,
+                                             std::string_view domain_sep);
+
       /// Hash to curve (RFC 9380), non uniform variant
       ///
       /// Only supported for specific groups
@@ -75,6 +83,14 @@ class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
                                              std::string_view hash_fn,
                                              std::span<const uint8_t> input,
                                              std::span<const uint8_t> domain_sep);
+
+      /// Hash to curve (RFC 9380), non uniform variant
+      ///
+      /// Only supported for specific groups
+      static EC_AffinePoint hash_to_curve_nu(const EC_Group& group,
+                                             std::string_view hash_fn,
+                                             std::span<const uint8_t> input,
+                                             std::string_view domain_sep);
 
       /// Multiply a point by a scalar returning a complete point
       EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng) const;

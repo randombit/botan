@@ -11,6 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/time_utils.h>
 
 namespace Botan {
@@ -19,7 +20,7 @@ namespace {
 
 void pbkdf2_set_key(MessageAuthenticationCode& prf, const char* password, size_t password_len) {
    try {
-      prf.set_key(cast_char_ptr_to_uint8(password), password_len);
+      prf.set_key(as_span_of_bytes(password, password_len));
    } catch(Invalid_Key_Length&) {
       throw Invalid_Argument("PBKDF2 cannot accept passphrase of the given size");
    }

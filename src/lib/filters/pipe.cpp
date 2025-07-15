@@ -9,6 +9,7 @@
 
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/out_buf.h>
 #include <botan/internal/secqueue.h>
 #include <memory>
@@ -110,22 +111,26 @@ void Pipe::process_msg(const uint8_t input[], size_t length) {
    end_msg();
 }
 
+void Pipe::process_msg(std::span<const uint8_t> input) {
+   this->process_msg(input.data(), input.size());
+}
+
 /*
 * Process a full message at once
 */
 void Pipe::process_msg(const secure_vector<uint8_t>& input) {
-   process_msg(input.data(), input.size());
+   this->process_msg(std::span{input});
 }
 
 void Pipe::process_msg(const std::vector<uint8_t>& input) {
-   process_msg(input.data(), input.size());
+   this->process_msg(std::span{input});
 }
 
 /*
 * Process a full message at once
 */
 void Pipe::process_msg(std::string_view input) {
-   process_msg(cast_char_ptr_to_uint8(input.data()), input.length());
+   process_msg(as_span_of_bytes(input));
 }
 
 /*

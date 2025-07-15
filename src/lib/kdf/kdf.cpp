@@ -12,6 +12,7 @@
 #include <botan/hash.h>
 #include <botan/mac.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/scan_name.h>
 
 #if defined(BOTAN_HAS_HKDF)
@@ -209,6 +210,11 @@ std::unique_ptr<KDF> KDF::create_or_throw(std::string_view algo, std::string_vie
 
 std::vector<std::string> KDF::providers(std::string_view algo_spec) {
    return probe_providers_of<KDF>(algo_spec);
+}
+
+//static
+std::span<const uint8_t> KDF::_as_span(std::string_view s) {
+   return as_span_of_bytes(s);
 }
 
 }  // namespace Botan

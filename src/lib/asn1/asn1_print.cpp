@@ -10,8 +10,8 @@
 #include <botan/bigint.h>
 #include <botan/der_enc.h>
 #include <botan/hex.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/mem_utils.h>
 #include <cctype>
 #include <iomanip>
 #include <sstream>
@@ -102,8 +102,7 @@ void ASN1_Formatter::decode(std::ostream& output, BER_Decoder& decoder, size_t l
          if(m_print_context_specific) {
             try {
                if(possibly_a_general_name(bits.data(), bits.size())) {
-                  output << format(
-                     type_tag, class_tag, level, level, std::string(cast_uint8_ptr_to_char(&bits[2]), bits.size() - 2));
+                  output << format(type_tag, class_tag, level, level, bytes_to_string(std::span{bits}.subspan(2)));
                   success_parsing_cs = true;
                } else if(recurse_deeper) {
                   std::vector<uint8_t> inner_bits;
@@ -254,7 +253,7 @@ std::string ASN1_Pretty_Printer::format_bin(ASN1_Type /*type_tag*/,
                                             ASN1_Class /*class_tag*/,
                                             const std::vector<uint8_t>& vec) const {
    if(all_printable_chars(vec.data(), vec.size())) {
-      return std::string(cast_uint8_ptr_to_char(vec.data()), vec.size());
+      return bytes_to_string(vec);
    } else {
       return hex_encode(vec);
    }

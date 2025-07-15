@@ -12,6 +12,7 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/mem_utils.h>
 #include <algorithm>
 
 namespace Botan {
@@ -342,16 +343,14 @@ DER_Encoder& DER_Encoder::encode(const ASN1_Object& obj) {
 * Write the encoding of the byte(s)
 */
 DER_Encoder& DER_Encoder::add_object(ASN1_Type type_tag, ASN1_Class class_tag, std::string_view rep_str) {
-   const uint8_t* rep = cast_char_ptr_to_uint8(rep_str.data());
-   const size_t rep_len = rep_str.size();
-   return add_object(type_tag, class_tag, rep, rep_len);
+   return add_object(type_tag, class_tag, as_span_of_bytes(rep_str));
 }
 
 /*
 * Write the encoding of the byte
 */
 DER_Encoder& DER_Encoder::add_object(ASN1_Type type_tag, ASN1_Class class_tag, uint8_t rep) {
-   return add_object(type_tag, class_tag, &rep, 1);
+   return add_object(type_tag, class_tag, std::span<const uint8_t>{&rep, 1});
 }
 
 }  // namespace Botan

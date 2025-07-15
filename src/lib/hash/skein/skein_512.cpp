@@ -10,7 +10,7 @@
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/stl_util.h>
+#include <botan/internal/mem_utils.h>
 #include <algorithm>
 
 namespace Botan {
@@ -70,7 +70,7 @@ void Skein_512::initial_block() {
    store_le(uint32_t(m_output_bits), config_str + 8);
 
    reset_tweak(SKEIN_CONFIG, true);
-   ubi_512(config_str, sizeof(config_str));
+   ubi_512(std::span{config_str});
 
    if(!m_personalization.empty()) {
       /*
@@ -82,23 +82,22 @@ void Skein_512::initial_block() {
          throw Invalid_Argument("Skein personalization must be less than 64 bytes");
       }
 
-      const uint8_t* bits = cast_char_ptr_to_uint8(m_personalization.data());
       reset_tweak(SKEIN_PERSONALIZATION, true);
-      ubi_512(bits, m_personalization.length());
+      ubi_512(as_span_of_bytes(m_personalization));
    }
 
    reset_tweak(SKEIN_MSG, false);
 }
 
-void Skein_512::ubi_512(const uint8_t msg[], size_t msg_len) {
+void Skein_512::ubi_512(std::span<const uint8_t> msg) {
    secure_vector<uint64_t> M(8);
 
    /* NOLINTNEXTLINE(*-avoid-do-while) */
    do {
-      const size_t to_proc = std::min<size_t>(msg_len, 64);
+      const size_t to_proc = std::min<size_t>(msg.size(), 64);
       m_T[0] += to_proc;
 
-      load_le(M.data(), msg, to_proc / 8);
+      load_le(M.data(), msg.data(), to_proc / 8);
 
       if(to_proc % 8 > 0) {
          for(size_t j = 0; j != to_proc % 8; ++j) {
@@ -111,9 +110,8 @@ void Skein_512::ubi_512(const uint8_t msg[], size_t msg_len) {
       // clear first flag if set
       m_T[1] &= ~(static_cast<uint64_t>(1) << 62);
 
-      msg_len -= to_proc;
-      msg += to_proc;
-   } while(msg_len > 0);
+      msg = msg.subspan(to_proc);
+   } while(!msg.empty());
 }
 
 void Skein_512::add_data(std::span<const uint8_t> input) {
@@ -140,10 +138,10 @@ void Skein_512::final_result(std::span<uint8_t> out) {
    m_buffer.fill_up_with_zeros();
    ubi_512(m_buffer.consume().data(), pos);
 
-   const uint8_t counter[8] = {0};
+   std::array<uint8_t, 8> counter{};  // all zero
 
    reset_tweak(SKEIN_OUTPUT, true);
-   ubi_512(counter, sizeof(counter));
+   ubi_512(counter);
 
    copy_out_le(out.first(m_output_bits / 8), m_threefish->m_K);
 

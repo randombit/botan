@@ -195,8 +195,8 @@ int botan_privkey_export(botan_privkey_t key, uint8_t out[], size_t* out_len, ui
 }
 
 int botan_privkey_view_der(botan_privkey_t key, botan_view_ctx ctx, botan_view_bin_fn view) {
-   return BOTAN_FFI_VISIT(
-      key, [=](const auto& k) -> int { return invoke_view_callback(view, ctx, Botan::PKCS8::BER_encode(k)); });
+   return BOTAN_FFI_VISIT(key,
+                          [=](const auto& k) -> int { return invoke_view_callback(view, ctx, k.private_key_info()); });
 }
 
 int botan_privkey_view_pem(botan_privkey_t key, botan_view_ctx ctx, botan_view_str_fn view) {

@@ -7,11 +7,12 @@
 #include <botan/buf_comp.h>
 
 #include <botan/internal/loadstor.h>
+#include <botan/internal/mem_utils.h>
 
 namespace Botan {
 
 void Buffered_Computation::update(std::string_view str) {
-   add_data({cast_char_ptr_to_uint8(str.data()), str.size()});
+   add_data(as_span_of_bytes(str));
 }
 
 void Buffered_Computation::update_be(uint16_t val) {

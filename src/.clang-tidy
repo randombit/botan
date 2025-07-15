@@ -30,7 +30,6 @@ Checks: >
     -bugprone-easily-swappable-parameters,
     -bugprone-empty-catch,
     -bugprone-implicit-widening-of-multiplication-result,
-    -bugprone-suspicious-stringview-data-usage,
     -bugprone-unchecked-optional-access,
     -cert-dcl21-cpp,
     -cppcoreguidelines-avoid-const-or-ref-data-members,

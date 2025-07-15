@@ -11,6 +11,7 @@
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/rotate.h>
 #include <limits>
 
@@ -53,7 +54,7 @@ void argon2_H0(uint8_t H0[64],
    blake2b.update_le(static_cast<uint32_t>(y));
 
    blake2b.update_le(static_cast<uint32_t>(password_len));
-   blake2b.update(cast_char_ptr_to_uint8(password), password_len);
+   blake2b.update(as_span_of_bytes(password, password_len));
 
    blake2b.update_le(static_cast<uint32_t>(salt_len));
    blake2b.update(salt, salt_len);

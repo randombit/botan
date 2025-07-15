@@ -8,6 +8,7 @@
 #define BOTAN_NIST_KEY_WRAP_H_
 
 #include <botan/secmem.h>
+#include <span>
 
 namespace Botan {
 
@@ -24,6 +25,16 @@ std::vector<uint8_t> BOTAN_PUBLIC_API(2, 4)
    nist_key_wrap(const uint8_t input[], size_t input_len, const BlockCipher& bc);
 
 /**
+* Key wrap. See RFC 3394 and NIST SP800-38F
+* @param input the value to be encrypted
+* @param bc a keyed 128-bit block cipher that will be used to encrypt input
+* @return input encrypted under NIST key wrap algorithm
+*/
+inline std::vector<uint8_t> nist_key_wrap(std::span<const uint8_t> input, const BlockCipher& bc) {
+   return nist_key_wrap(input.data(), input.size(), bc);
+}
+
+/**
 * @param input the value to be decrypted, output of nist_key_wrap
 * @param input_len length of input
 * @param bc a keyed 128-bit block cipher that will be used to decrypt input
@@ -32,6 +43,16 @@ std::vector<uint8_t> BOTAN_PUBLIC_API(2, 4)
 */
 secure_vector<uint8_t> BOTAN_PUBLIC_API(2, 4)
    nist_key_unwrap(const uint8_t input[], size_t input_len, const BlockCipher& bc);
+
+/**
+* @param input the value to be decrypted, output of nist_key_wrap
+* @param bc a keyed 128-bit block cipher that will be used to decrypt input
+* @return input decrypted under NIST key wrap algorithm
+* Throws an exception if decryption fails.
+*/
+inline secure_vector<uint8_t> nist_key_unwrap(std::span<const uint8_t> input, const BlockCipher& bc) {
+   return nist_key_unwrap(input.data(), input.size(), bc);
+}
 
 /**
 * KWP (key wrap with padding). See RFC 5649 and NIST SP800-38F
@@ -44,6 +65,16 @@ std::vector<uint8_t> BOTAN_PUBLIC_API(2, 4)
    nist_key_wrap_padded(const uint8_t input[], size_t input_len, const BlockCipher& bc);
 
 /**
+* KWP (key wrap with padding). See RFC 5649 and NIST SP800-38F
+* @param input the value to be encrypted
+* @param bc a keyed 128-bit block cipher that will be used to encrypt input
+* @return input encrypted under NIST key wrap algorithm
+*/
+inline std::vector<uint8_t> nist_key_wrap_padded(std::span<const uint8_t> input, const BlockCipher& bc) {
+   return nist_key_wrap_padded(input.data(), input.size(), bc);
+}
+
+/**
 * @param input the value to be decrypted, output of nist_key_wrap
 * @param input_len length of input
 * @param bc a keyed 128-bit block cipher that will be used to decrypt input
@@ -52,6 +83,16 @@ std::vector<uint8_t> BOTAN_PUBLIC_API(2, 4)
 */
 secure_vector<uint8_t> BOTAN_PUBLIC_API(2, 4)
    nist_key_unwrap_padded(const uint8_t input[], size_t input_len, const BlockCipher& bc);
+
+/**
+* @param input the value to be decrypted, output of nist_key_wrap
+* @param bc a keyed 128-bit block cipher that will be used to decrypt input
+* @return input decrypted under NIST key wrap algorithm
+* Throws an exception if decryption fails.
+*/
+inline secure_vector<uint8_t> nist_key_unwrap_padded(std::span<const uint8_t> input, const BlockCipher& bc) {
+   return nist_key_unwrap_padded(input.data(), input.size(), bc);
+}
 
 }  // namespace Botan
 

@@ -9,8 +9,8 @@
 
 #include <botan/data_src.h>
 #include <botan/der_enc.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/stl_util.h>
 #include <sstream>
 
@@ -183,7 +183,7 @@ std::vector<uint8_t> put_in_sequence(const uint8_t bits[], size_t len) {
 * Convert a BER object into a string object
 */
 std::string to_string(const BER_Object& obj) {
-   return std::string(cast_uint8_ptr_to_char(obj.bits()), obj.length());
+   return bytes_to_string(obj.data());
 }
 
 /*

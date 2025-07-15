@@ -46,7 +46,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
       m_psk_identity = creds.psk_identity("tls-client", std::string(hostname), identity_hint);
 
-      append_tls_length_value(m_key_material, to_byte_vector(m_psk_identity.value()), 2);
+      append_tls_length_value(m_key_material, as_span_of_bytes(m_psk_identity.value()), 2);
 
       SymmetricKey psk = creds.psk("tls-client", std::string(hostname), m_psk_identity.value());
 
@@ -64,7 +64,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
          m_psk_identity = creds.psk_identity("tls-client", std::string(hostname), identity_hint);
 
-         append_tls_length_value(m_key_material, to_byte_vector(m_psk_identity.value()), 2);
+         append_tls_length_value(m_key_material, as_span_of_bytes(m_psk_identity.value()), 2);
 
          psk = creds.psk("tls-client", std::string(hostname), m_psk_identity.value());
       }

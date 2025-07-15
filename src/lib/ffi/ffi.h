@@ -1095,8 +1095,10 @@ BOTAN_FFI_EXPORT(2, 1) int botan_mp_clear_bit(botan_mp_t n, size_t bit);
 * @param flags should be 0 in current API revision, all other uses are reserved
 *       and return BOTAN_FFI_ERROR_BAD_FLAG
 * @return 0 on success, a negative value on failure
-
+*
 * Output is formatted bcrypt $2a$...
+*
+* TOD(Botan4) this should use char for the type of `out`
 */
 BOTAN_FFI_EXPORT(2, 0)
 int botan_bcrypt_generate(
@@ -2121,6 +2123,7 @@ BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_time_expires(botan_x509_cert_t ce
 BOTAN_FFI_EXPORT(2, 8) int botan_x509_cert_not_before(botan_x509_cert_t cert, uint64_t* time_since_epoch);
 BOTAN_FFI_EXPORT(2, 8) int botan_x509_cert_not_after(botan_x509_cert_t cert, uint64_t* time_since_epoch);
 
+/* TODO(Botan4) this should use char for the out param */
 BOTAN_FFI_EXPORT(2, 0)
 int botan_x509_cert_get_fingerprint(botan_x509_cert_t cert, const char* hash, uint8_t out[], size_t* out_len);
 
@@ -2135,10 +2138,12 @@ int botan_x509_cert_view_public_key_bits(botan_x509_cert_t cert, botan_view_ctx 
 
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key);
 
+/* TODO(Botan4) this should use char for the out param */
 BOTAN_FFI_EXPORT(2, 0)
 int botan_x509_cert_get_issuer_dn(
    botan_x509_cert_t cert, const char* key, size_t index, uint8_t out[], size_t* out_len);
 
+/* TODO(Botan4) this should use char for the out param */
 BOTAN_FFI_EXPORT(2, 0)
 int botan_x509_cert_get_subject_dn(
    botan_x509_cert_t cert, const char* key, size_t index, uint8_t out[], size_t* out_len);

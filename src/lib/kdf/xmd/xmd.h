@@ -24,17 +24,6 @@ void BOTAN_TEST_API expand_message_xmd(std::string_view hash_fn,
                                        std::span<const uint8_t> input,
                                        std::span<const uint8_t> domain_sep);
 
-inline void expand_message_xmd(std::string_view hash_fn,
-                               std::span<uint8_t> output,
-                               std::string_view input_str,
-                               std::string_view domain_sep_str) {
-   std::span<const uint8_t> input(reinterpret_cast<const uint8_t*>(input_str.data()), input_str.size());
-
-   std::span<const uint8_t> domain_sep(reinterpret_cast<const uint8_t*>(domain_sep_str.data()), domain_sep_str.size());
-
-   expand_message_xmd(hash_fn, output, input, domain_sep);
-}
-
 }  // namespace Botan
 
 #endif

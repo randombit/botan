@@ -8,12 +8,13 @@
 
 #include <botan/internal/http_util.h>
 
-#include <botan/hex.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/socket.h>
 #include <botan/internal/stl_util.h>
+#include <iomanip>
 #include <sstream>
 
 namespace Botan::HTTP {
@@ -42,7 +43,7 @@ std::string http_transact(std::string_view hostname,
    }
 
    // Blocks until entire message has been written
-   socket->write(cast_char_ptr_to_uint8(message.data()), message.size());
+   socket->write(as_span_of_bytes(message));
 
    if(std::chrono::system_clock::now() - start_time > timeout) {
       throw HTTP_Error("Timeout during writing message body");
@@ -89,7 +90,8 @@ std::string url_encode(std::string_view in) {
 
    for(auto c : in) {
       if(needs_url_encoding(c)) {
-         out << '%' << hex_encode(cast_char_ptr_to_uint8(&c), 1);
+         out << '%' << std::uppercase << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(c);
+         out << std::dec << std::nouppercase;  // reset flags
       } else {
          out << c;
       }

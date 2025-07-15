@@ -115,10 +115,10 @@ const std::vector<uint8_t>& get_v(const std::map<std::string, std::vector<uint8_
 bool verify_signature(const std::array<uint8_t, 32>& pk,
                       const std::vector<uint8_t>& payload,
                       const std::array<uint8_t, 64>& signature) {
-   const char context[] = "RoughTime v1 response signature";
+   constexpr std::string_view context("RoughTime v1 response signature\0", 32);
    Ed25519_PublicKey key(std::vector<uint8_t>(pk.data(), pk.data() + pk.size()));
    PK_Verifier verifier(key, "Pure");
-   verifier.update(cast_char_ptr_to_uint8(context), sizeof(context));  //add context including \0
+   verifier.update(context);
    verifier.update(payload);
    return verifier.check_signature(signature.data(), signature.size());
 }
@@ -226,9 +226,9 @@ Response Response::from_bits(const std::vector<uint8_t>& response, const Nonce& 
 }
 
 bool Response::validate(const Ed25519_PublicKey& pk) const {
-   const char context[] = "RoughTime v1 delegation signature--";
+   constexpr std::string_view context("RoughTime v1 delegation signature--\0", 36);
    PK_Verifier verifier(pk, "Pure");
-   verifier.update(cast_char_ptr_to_uint8(context), sizeof(context));  //add context including \0
+   verifier.update(context);
    verifier.update(m_cert_dele.data(), m_cert_dele.size());
    return verifier.check_signature(m_cert_sig.data(), m_cert_sig.size());
 }

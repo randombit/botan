@@ -13,6 +13,7 @@
 #include <botan/tls_policy.h>
 #include <botan/x509cert.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_record.h>
@@ -649,10 +650,10 @@ SymmetricKey Channel_Impl_12::key_material_export(std::string_view label,
          }
          salt.push_back(get_byte<0>(static_cast<uint16_t>(context_size)));
          salt.push_back(get_byte<1>(static_cast<uint16_t>(context_size)));
-         salt += to_byte_vector(context);
+         salt += as_span_of_bytes(context);
       }
 
-      return SymmetricKey(prf->derive_key(length, master_secret, salt, to_byte_vector(label)));
+      return SymmetricKey(prf->derive_key(length, master_secret, salt, as_span_of_bytes(label)));
    } else {
       throw Invalid_State("Channel_Impl_12::key_material_export connection not active");
    }

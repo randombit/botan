@@ -259,9 +259,7 @@ class BOTAN_PUBLIC_API(2, 0) KDF /* NOLINT(*-special-member-functions*) */ {
                                std::span<const uint8_t> label) const = 0;
 
    private:
-      static std::span<const uint8_t> _as_span(std::string_view s) {
-         return {reinterpret_cast<const uint8_t*>(s.data()), s.size()};
-      }
+      static std::span<const uint8_t> _as_span(std::string_view s);
 };
 
 /**

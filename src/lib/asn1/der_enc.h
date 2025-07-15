@@ -166,12 +166,16 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
 
       DER_Encoder& add_object(ASN1_Type type_tag, ASN1_Class class_tag, const uint8_t rep[], size_t length);
 
-      DER_Encoder& add_object(ASN1_Type type_tag, ASN1_Class class_tag, const std::vector<uint8_t>& rep) {
+      DER_Encoder& add_object(ASN1_Type type_tag, ASN1_Class class_tag, std::span<const uint8_t> rep) {
          return add_object(type_tag, class_tag, rep.data(), rep.size());
       }
 
+      DER_Encoder& add_object(ASN1_Type type_tag, ASN1_Class class_tag, const std::vector<uint8_t>& rep) {
+         return add_object(type_tag, class_tag, std::span{rep});
+      }
+
       DER_Encoder& add_object(ASN1_Type type_tag, ASN1_Class class_tag, const secure_vector<uint8_t>& rep) {
-         return add_object(type_tag, class_tag, rep.data(), rep.size());
+         return add_object(type_tag, class_tag, std::span{rep});
       }
 
       DER_Encoder& add_object(ASN1_Type type_tag, ASN1_Class class_tag, std::string_view str);

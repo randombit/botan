@@ -9,6 +9,7 @@
 
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/stl_util.h>
 
 #if defined(BOTAN_HAS_TPM2)
@@ -544,7 +545,7 @@ std::vector<Test::Result> test_tpm2_rsa() {
    auto session = Botan::TPM2::Session::unauthenticated_session(ctx);
 
    const auto persistent_key_id = Test::options().tpm2_persistent_rsa_handle();
-   const auto password = Test::options().tpm2_persistent_auth_value();
+   const auto password = Botan::as_span_of_bytes(Test::options().tpm2_persistent_auth_value());
 
    return {
       CHECK("RSA and its helpers are supported",
@@ -932,7 +933,7 @@ std::vector<Test::Result> test_tpm2_ecc() {
    auto session = Botan::TPM2::Session::unauthenticated_session(ctx);
 
    const auto persistent_key_id = Test::options().tpm2_persistent_ecc_handle();
-   const auto password = Test::options().tpm2_persistent_auth_value();
+   const auto password = Botan::as_span_of_bytes(Test::options().tpm2_persistent_auth_value());
 
    return {
       CHECK("ECC and its helpers are supported",

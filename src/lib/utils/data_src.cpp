@@ -11,6 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/mem_utils.h>
 #include <algorithm>
 #include <istream>
 
@@ -104,8 +105,7 @@ bool DataSource_Memory::end_of_data() const {
 /*
 * DataSource_Memory Constructor
 */
-DataSource_Memory::DataSource_Memory(std::string_view in) :
-      m_source(cast_char_ptr_to_uint8(in.data()), cast_char_ptr_to_uint8(in.data()) + in.length()), m_offset(0) {}
+DataSource_Memory::DataSource_Memory(std::string_view in) : DataSource_Memory(as_span_of_bytes(in)) {}
 
 /*
 * Read from a stream
