@@ -44,6 +44,10 @@ void EC_Scalar_Data_PC::assign(const EC_Scalar_Data& other) {
    m_v = checked_ref(other).value();
 }
 
+void EC_Scalar_Data_PC::zeroize() {
+   m_v._zeroize();
+}
+
 void EC_Scalar_Data_PC::square_self() {
    // TODO square in place
    m_v = m_group->pcurve().scalar_square(m_v);

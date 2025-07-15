@@ -31,6 +31,8 @@ class EC_Scalar_Data_BN final : public EC_Scalar_Data {
 
       void assign(const EC_Scalar_Data& y) override;
 
+      void zeroize() override;
+
       void square_self() override;
 
       std::unique_ptr<EC_Scalar_Data> negate() const override;

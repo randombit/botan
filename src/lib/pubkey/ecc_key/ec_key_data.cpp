@@ -61,6 +61,10 @@ EC_Scalar decode_ec_secret_key_scalar(const EC_Group& group, std::span<const uin
 EC_PrivateKey_Data::EC_PrivateKey_Data(const EC_Group& group, std::span<const uint8_t> bytes) :
       Botan::EC_PrivateKey_Data(group, decode_ec_secret_key_scalar(group, bytes)) {}
 
+EC_PrivateKey_Data::~EC_PrivateKey_Data() {
+   m_scalar.zeroize();
+}
+
 std::shared_ptr<EC_PublicKey_Data> EC_PrivateKey_Data::public_key(RandomNumberGenerator& rng,
                                                                   bool with_modular_inverse) const {
    auto public_point = [&] {

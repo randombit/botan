@@ -43,6 +43,13 @@ void EC_Scalar_Data_BN::assign(const EC_Scalar_Data& other) {
    m_v = checked_ref(other).value();
 }
 
+void EC_Scalar_Data_BN::zeroize() {
+   // BigInt stores its value in a secure_vector, after swapping the existing
+   // value will go out of scope (inside `zero`) and be wiped properly.
+   BigInt zero;
+   std::swap(m_v, zero);
+}
+
 void EC_Scalar_Data_BN::square_self() {
    m_group->mod_order().square(m_v);
 }

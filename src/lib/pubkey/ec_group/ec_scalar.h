@@ -204,6 +204,13 @@ class BOTAN_PUBLIC_API(3, 6) EC_Scalar final {
       void assign(const EC_Scalar& x);
 
       /**
+      * Equivalent to assigning a zero value, but also does so in a way that
+      * attempts to ensure the write always occurs even if a compiler can deduce
+      * the assignment is otherwise unnecessary.
+      */
+      void zeroize();
+
+      /**
       * Set *this to its own square modulo the group order
       */
       void square_self();

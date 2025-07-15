@@ -50,6 +50,8 @@ class EC_Scalar_Data /* NOLINT(*-special-member-functions) */ {
 
       virtual void assign(const EC_Scalar_Data& y) = 0;
 
+      virtual void zeroize() = 0;
+
       virtual void square_self() = 0;
 
       virtual std::unique_ptr<EC_Scalar_Data> negate() const = 0;
