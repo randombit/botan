@@ -1940,10 +1940,10 @@ class X509ExtIPAddrBlocks:
     def handle_(self):
         return self.__obj
 
-    def add_ip(self, ip, safi=None):
-        self.add_ip_range(ip, ip, safi)
+    def add_addr(self, ip, safi=None):
+        self.add_range(ip, ip, safi)
 
-    def add_ip_range(self, min_, max_, safi=None):
+    def add_range(self, min_, max_, safi=None):
         min_len = len(min_)
         if min_len not in (4, 16) or len(max_) != min_len:
             raise BotanException("Address must be 4 or 16 bytes long")
@@ -1996,10 +1996,10 @@ class X509ExtIPAddrBlocks:
                                 mi,
                                 ma,
                                 l))
-                        ranges.append((list(min_), list(max_)))
+                        ranges.append((tuple(min_), tuple(max_)))
 
                 safi = safi.value if has_safi.value == 1 else None
-                ranges = tuple(ranges) if ranges is not None else None
+                ranges = ranges if ranges is not None else None
                 if ipv6 == 0:
                     v4.append((safi, ranges))
                 else:
