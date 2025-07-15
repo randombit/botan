@@ -75,15 +75,6 @@ extern "C" {
 
 using namespace Botan_FFI;
 
-int botan_x509_ext_as_blocks_destroy(botan_x509_ext_as_blocks_t as_blocks) {
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_CHECKED_DELETE(as_blocks);
-#else
-   BOTAN_UNUSED(opts);
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
 int botan_x509_ext_ip_addr_blocks_destroy(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_CHECKED_DELETE(ip_addr_blocks);
@@ -331,6 +322,15 @@ int botan_x509_ext_ip_addr_blocks_get_address(botan_x509_ext_ip_addr_blocks_t ip
    });
 #else
    BOTAN_UNUSED(ip_addr_blocks, ipv6, i, entry, min_out, max_out);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_ext_as_blocks_destroy(botan_x509_ext_as_blocks_t as_blocks) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_CHECKED_DELETE(as_blocks);
+#else
+   BOTAN_UNUSED(opts);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
