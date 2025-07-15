@@ -809,8 +809,7 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal() {
 
    class Win32_Echo_Suppression : public Echo_Suppression {
       public:
-         Win32_Echo_Suppression() {
-            m_input_handle = ::GetStdHandle(STD_INPUT_HANDLE);
+         Win32_Echo_Suppression() : m_input_handle(::GetStdHandle(STD_INPUT_HANDLE)) {
             if(::GetConsoleMode(m_input_handle, &m_console_state) == 0)
                throw System_Error("Getting console mode failed", ::GetLastError());
 
