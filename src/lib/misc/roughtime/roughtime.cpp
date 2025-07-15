@@ -13,6 +13,7 @@
 #include <botan/pubkey.h>
 #include <botan/rng.h>
 #include <botan/internal/socket_udp.h>
+#include <botan/internal/stl_util.h>
 
 #include <cmath>
 #include <map>
@@ -131,7 +132,7 @@ std::array<uint8_t, 64> hashLeaf(const std::array<uint8_t, 64>& leaf) {
    return ret;
 }
 
-void hashNode(std::array<uint8_t, 64>& hash, const std::array<uint8_t, 64>& node, bool reverse) {
+void hashNode(std::span<uint8_t, 64> hash, std::span<const uint8_t, 64> node, bool reverse) {
    auto h = HashFunction::create_or_throw("SHA-512");
    h->update(1);
    if(reverse) {
@@ -199,12 +200,11 @@ Response Response::from_bits(const std::vector<uint8_t>& response, const Nonce& 
       throw Roughtime_Error("Merkle tree path is too short");
    }
 
+   BufferSlicer slicer(path);
    auto hash = hashLeaf(nonce.get_nonce());
    auto index = indx;
-   size_t level = 0;
-   while(level < levels) {
-      hashNode(hash, typecast_copy<std::array<uint8_t, 64>>(path.data() + level * 64), index & 1);
-      ++level;
+   for(std::size_t level = 0; level < levels; ++level) {
+      hashNode(hash, slicer.take<64>(), index & 1);
       index >>= 1;
    }
 
