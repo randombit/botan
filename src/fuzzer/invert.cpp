@@ -16,8 +16,12 @@ Botan::BigInt ref_inverse_mod(const Botan::BigInt& n, const Botan::BigInt& mod) 
    if(n.is_even() && mod.is_even()) {
       return 0;
    }
-   Botan::BigInt u = mod, v = n;
-   Botan::BigInt A = 1, B = 0, C = 0, D = 1;
+   Botan::BigInt u = mod;
+   Botan::BigInt v = n;
+   Botan::BigInt A = 1;
+   Botan::BigInt B = 0;
+   Botan::BigInt C = 0;
+   Botan::BigInt D = 1;
 
    while(u.is_nonzero()) {
       const size_t u_zero_bits = Botan::low_zero_bits(u);

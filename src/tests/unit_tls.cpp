@@ -1208,11 +1208,13 @@ class DTLS_Reconnection_Test : public Test {
          auto server_sessions = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
          auto client_sessions = std::make_shared<Botan::TLS::Session_Manager_Noop>();
 
-         std::vector<uint8_t> s2c, server_recv;
+         std::vector<uint8_t> s2c;
+         std::vector<uint8_t> server_recv;
          auto server_callbacks = std::make_shared<Test_Callbacks>(result, s2c, server_recv);
          Botan::TLS::Server server(server_callbacks, server_sessions, creds, server_policy, rng, true);
 
-         std::vector<uint8_t> c1_c2s, client1_recv;
+         std::vector<uint8_t> c1_c2s;
+         std::vector<uint8_t> client1_recv;
          auto client1_callbacks = std::make_shared<Test_Callbacks>(result, c1_c2s, client1_recv);
          Botan::TLS::Client client1(client1_callbacks,
                                     client_sessions,
@@ -1274,7 +1276,8 @@ class DTLS_Reconnection_Test : public Test {
          server_recv.clear();
          s2c.clear();
 
-         std::vector<uint8_t> c2_c2s, client2_recv;
+         std::vector<uint8_t> c2_c2s;
+         std::vector<uint8_t> client2_recv;
          auto client2_callbacks = std::make_shared<Test_Callbacks>(result, c2_c2s, client2_recv);
          Botan::TLS::Client client2(client2_callbacks,
                                     client_sessions,

@@ -153,7 +153,9 @@ BigInt FPE_FE1::encrypt(const BigInt& input, const uint8_t tweak[], size_t tweak
 
    secure_vector<uint8_t> tmp;
 
-   BigInt L, R, Fi;
+   BigInt L;
+   BigInt R;
+   BigInt Fi;
    for(size_t i = 0; i != m_rounds; ++i) {
       ct_divide(X, m_b, L, R);
       Fi = F(R, i, tweak_mac, tmp);
@@ -169,7 +171,9 @@ BigInt FPE_FE1::decrypt(const BigInt& input, const uint8_t tweak[], size_t tweak
    BigInt X = input;
    secure_vector<uint8_t> tmp;
 
-   BigInt W, R, Fi;
+   BigInt W;
+   BigInt R;
+   BigInt Fi;
    for(size_t i = 0; i != m_rounds; ++i) {
       ct_divide(X, m_a, R, W);
 

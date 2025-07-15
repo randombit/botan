@@ -17,7 +17,10 @@ namespace Botan {
 namespace {
 
 void SipRounds(uint64_t M, secure_vector<uint64_t>& V, size_t r) {
-   uint64_t V0 = V[0], V1 = V[1], V2 = V[2], V3 = V[3];
+   uint64_t V0 = V[0];
+   uint64_t V1 = V[1];
+   uint64_t V2 = V[2];
+   uint64_t V3 = V[3];
 
    V3 ^= M;
    for(size_t i = 0; i != r; ++i) {

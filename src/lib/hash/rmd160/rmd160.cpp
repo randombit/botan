@@ -74,8 +74,15 @@ inline void F5(uint32_t& A, uint32_t B, uint32_t& C, uint32_t D, uint32_t E, uin
 * RIPEMD-160 Compression Function
 */
 void RIPEMD_160::compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
-   const uint32_t MAGIC2 = 0x5A827999, MAGIC3 = 0x6ED9EBA1, MAGIC4 = 0x8F1BBCDC, MAGIC5 = 0xA953FD4E,
-                  MAGIC6 = 0x50A28BE6, MAGIC7 = 0x5C4DD124, MAGIC8 = 0x6D703EF3, MAGIC9 = 0x7A6D76E9;
+   constexpr uint32_t MAGIC2 = 0x5A827999;
+   constexpr uint32_t MAGIC3 = 0x6ED9EBA1;
+   constexpr uint32_t MAGIC4 = 0x8F1BBCDC;
+   constexpr uint32_t MAGIC5 = 0xA953FD4E;
+   constexpr uint32_t MAGIC6 = 0x50A28BE6;
+   constexpr uint32_t MAGIC7 = 0x5C4DD124;
+   constexpr uint32_t MAGIC8 = 0x6D703EF3;
+   constexpr uint32_t MAGIC9 = 0x7A6D76E9;
+
    std::array<uint32_t, 16> M{};
 
    BufferSlicer in(input);
@@ -83,8 +90,17 @@ void RIPEMD_160::compress_n(digest_type& digest, std::span<const uint8_t> input,
    for(size_t i = 0; i != blocks; ++i) {
       load_le(M, in.take<block_bytes>());
 
-      uint32_t A1 = digest[0], A2 = A1, B1 = digest[1], B2 = B1, C1 = digest[2], C2 = C1, D1 = digest[3], D2 = D1,
-               E1 = digest[4], E2 = E1;
+      uint32_t A1 = digest[0];
+      uint32_t B1 = digest[1];
+      uint32_t C1 = digest[2];
+      uint32_t D1 = digest[3];
+      uint32_t E1 = digest[4];
+
+      uint32_t A2 = A1;
+      uint32_t B2 = B1;
+      uint32_t C2 = C1;
+      uint32_t D2 = D1;
+      uint32_t E2 = E1;
 
       // clang-format off
 

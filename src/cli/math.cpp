@@ -154,7 +154,8 @@ class Factor final : public Command {
 
          Botan::secure_vector<Botan::word> ws;
 
-         size_t i = 1, k = 2;
+         size_t i = 1;
+         size_t k = 2;
 
          while(true) {
             i++;

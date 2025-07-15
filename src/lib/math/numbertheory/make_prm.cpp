@@ -298,7 +298,8 @@ BigInt random_safe_prime(RandomNumberGenerator& rng, size_t bits) {
 
    const size_t error_bound = 128;
 
-   BigInt q, p;
+   BigInt q;
+   BigInt p;
    for(;;) {
       /*
       Generate q == 2 (mod 3), since otherwise [in the case of q == 1 (mod 3)],

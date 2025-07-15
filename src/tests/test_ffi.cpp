@@ -879,7 +879,8 @@ class FFI_CBC_Cipher_Test final : public FFI_Test {
       std::string name() const override { return "FFI CBC cipher"; }
 
       void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
-         botan_cipher_t cipher_encrypt, cipher_decrypt;
+         botan_cipher_t cipher_encrypt;
+         botan_cipher_t cipher_decrypt;
 
          if(TEST_FFI_INIT(botan_cipher_init, (&cipher_encrypt, "AES-128/CBC/PKCS7", BOTAN_CIPHER_INIT_FLAG_ENCRYPT))) {
             size_t min_keylen = 0;
@@ -992,7 +993,8 @@ class FFI_GCM_Test final : public FFI_Test {
       std::string name() const override { return "FFI GCM"; }
 
       void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
-         botan_cipher_t cipher_encrypt, cipher_decrypt;
+         botan_cipher_t cipher_encrypt;
+         botan_cipher_t cipher_decrypt;
 
          if(TEST_FFI_INIT(botan_cipher_init, (&cipher_encrypt, "AES-128/GCM", BOTAN_CIPHER_INIT_FLAG_ENCRYPT))) {
             std::array<char, 18> namebuf{};
@@ -1129,7 +1131,8 @@ class FFI_ChaCha20Poly1305_Test final : public FFI_Test {
       std::string name() const override { return "FFI ChaCha20Poly1305"; }
 
       void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
-         botan_cipher_t cipher_encrypt, cipher_decrypt;
+         botan_cipher_t cipher_encrypt;
+         botan_cipher_t cipher_decrypt;
 
          if(TEST_FFI_INIT(botan_cipher_init, (&cipher_encrypt, "ChaCha20Poly1305", BOTAN_CIPHER_INIT_FLAG_ENCRYPT))) {
             std::array<char, 17> namebuf{};
@@ -1261,7 +1264,8 @@ class FFI_EAX_Test final : public FFI_Test {
       std::string name() const override { return "FFI EAX"; }
 
       void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
-         botan_cipher_t cipher_encrypt, cipher_decrypt;
+         botan_cipher_t cipher_encrypt;
+         botan_cipher_t cipher_decrypt;
 
          if(TEST_FFI_INIT(botan_cipher_init, (&cipher_encrypt, "AES-128/EAX", BOTAN_CIPHER_INIT_FLAG_ENCRYPT))) {
             size_t min_keylen = 0;
@@ -1381,7 +1385,8 @@ class FFI_AEAD_Test final : public FFI_Test {
       std::string name() const override { return "FFI AEAD"; }
 
       void ffi_test(Test::Result& merged_result, botan_rng_t rng) override {
-         botan_cipher_t cipher_encrypt, cipher_decrypt;
+         botan_cipher_t cipher_encrypt;
+         botan_cipher_t cipher_decrypt;
 
          std::array<std::string, 5> aeads = {
             "AES-128/GCM", "ChaCha20Poly1305", "AES-128/EAX", "AES-256/SIV", "AES-128/CCM"};
@@ -1755,7 +1760,9 @@ class FFI_MAC_Test final : public FFI_Test {
                result.test_eq("name", namebuf.data(), "HMAC(SHA-256)");
             }
 
-            size_t min_keylen = 0, max_keylen = 0, mod_keylen = 0;
+            size_t min_keylen = 0;
+            size_t max_keylen = 0;
+            size_t mod_keylen = 0;
             TEST_FFI_RC(0, botan_mac_get_keyspec, (mac, nullptr, nullptr, nullptr));
             TEST_FFI_RC(0, botan_mac_get_keyspec, (mac, &min_keylen, nullptr, nullptr));
             TEST_FFI_RC(0, botan_mac_get_keyspec, (mac, nullptr, &max_keylen, nullptr));
@@ -1806,7 +1813,9 @@ class FFI_Scrypt_Test final : public FFI_Test {
          if(TEST_FFI_INIT(botan_scrypt, (output.data(), output.size(), pass, salt, sizeof(salt), 8, 1, 1))) {
             result.test_eq("scrypt output", output, "4B9B888D695288E002CC4F9D90808A4D296A45CE4471AFBB");
 
-            size_t N, r, p;
+            size_t N;
+            size_t r;
+            size_t p;
             TEST_FFI_OK(botan_pwdhash_timed,
                         ("Scrypt", 50, &r, &p, &N, output.data(), output.size(), "bunny", 5, salt, sizeof(salt)));
 
@@ -1843,7 +1852,8 @@ class FFI_KDF_Test final : public FFI_Test {
                            pbkdf_iterations))) {
             result.test_eq("PBKDF output", outbuf, "027AFADD48F4BE8DCC4F");
 
-            size_t iters_10ms, iters_100ms;
+            size_t iters_10ms;
+            size_t iters_100ms;
 
             TEST_FFI_OK(botan_pbkdf_timed,
                         ("PBKDF2(SHA-1)",
@@ -1936,7 +1946,9 @@ class FFI_Blockcipher_Test final : public FFI_Test {
 
             TEST_FFI_RC(16, botan_block_cipher_block_size, (cipher));
 
-            size_t min_keylen = 0, max_keylen = 0, mod_keylen = 0;
+            size_t min_keylen = 0;
+            size_t max_keylen = 0;
+            size_t mod_keylen = 0;
             TEST_FFI_RC(0, botan_block_cipher_get_keyspec, (cipher, nullptr, nullptr, nullptr));
             TEST_FFI_RC(0, botan_block_cipher_get_keyspec, (cipher, &min_keylen, nullptr, nullptr));
             TEST_FFI_RC(0, botan_block_cipher_get_keyspec, (cipher, nullptr, &max_keylen, nullptr));
@@ -2468,7 +2480,11 @@ class FFI_RSA_Test final : public FFI_Test {
 
             ffi_test_pubkey_export(result, pub, priv, rng);
 
-            botan_mp_t p, q, d, n, e;
+            botan_mp_t p;
+            botan_mp_t q;
+            botan_mp_t d;
+            botan_mp_t n;
+            botan_mp_t e;
             botan_mp_init(&p);
             botan_mp_init(&q);
             botan_mp_init(&d);
@@ -2486,7 +2502,8 @@ class FFI_RSA_Test final : public FFI_Test {
 
             // Confirm same (e,n) values in public key
             {
-               botan_mp_t pub_e, pub_n;
+               botan_mp_t pub_e;
+               botan_mp_t pub_n;
                botan_mp_init(&pub_e);
                botan_mp_init(&pub_n);
                TEST_FFI_OK(botan_pubkey_rsa_get_e, (pub_e, pub));
@@ -2628,7 +2645,11 @@ class FFI_DSA_Test final : public FFI_Test {
 
          ffi_test_pubkey_export(result, pub, priv, rng);
 
-         botan_mp_t p, q, g, x, y;
+         botan_mp_t p;
+         botan_mp_t q;
+         botan_mp_t g;
+         botan_mp_t x;
+         botan_mp_t y;
          botan_mp_init(&p);
          botan_mp_init(&q);
          botan_mp_init(&g);
@@ -2743,7 +2764,9 @@ class FFI_ECDSA_Test final : public FFI_Test {
          ffi_test_pubkey_export(result, pub, priv, rng);
 
          // Check key load functions
-         botan_mp_t private_scalar, public_x, public_y;
+         botan_mp_t private_scalar;
+         botan_mp_t public_x;
+         botan_mp_t public_y;
          botan_mp_init(&private_scalar);
          botan_mp_init(&public_x);
          botan_mp_init(&public_y);
@@ -2768,7 +2791,8 @@ class FFI_ECDSA_Test final : public FFI_Test {
          TEST_FFI_OK(botan_pubkey_algo_name, (pub, namebuf.data(), &name_len));
          result.test_eq("Algo name is expected", namebuf.data(), "ECDSA");
 
-         std::vector<uint8_t> message(1280), signature;
+         std::vector<uint8_t> message(1280);
+         std::vector<uint8_t> signature;
          TEST_FFI_OK(botan_rng_get, (rng, message.data(), message.size()));
 
          for(uint32_t flags = 0; flags <= 1; ++flags) {
@@ -2856,7 +2880,9 @@ class FFI_SM2_Sig_Test final : public FFI_Test {
          TEST_FFI_OK(botan_pubkey_sm2_compute_za, (za, &sizeof_za, "Ident", "SM3", pub));
 
          // Check key load functions
-         botan_mp_t private_scalar, public_x, public_y;
+         botan_mp_t private_scalar;
+         botan_mp_t public_x;
+         botan_mp_t public_y;
          botan_mp_init(&private_scalar);
          botan_mp_init(&public_x);
          botan_mp_init(&public_y);
@@ -2875,7 +2901,8 @@ class FFI_SM2_Sig_Test final : public FFI_Test {
          TEST_FFI_OK(botan_pubkey_algo_name, (pub, namebuf.data(), &name_len));
          result.test_eq("Algo name is expected", namebuf.data(), "SM2");
 
-         std::vector<uint8_t> message(1280), signature;
+         std::vector<uint8_t> message(1280);
+         std::vector<uint8_t> signature;
          TEST_FFI_OK(botan_rng_get, (rng, message.data(), message.size()));
          botan_pk_op_sign_t signer;
          if(TEST_FFI_OK(botan_pk_op_sign_create, (&signer, loaded_privkey, sm2_ident.c_str(), 0))) {
@@ -2955,7 +2982,9 @@ class FFI_SM2_Enc_Test final : public FFI_Test {
          TEST_FFI_OK(botan_pubkey_sm2_compute_za, (za, &sizeof_za, "Ident", "SM3", pub));
 
          // Check key load functions
-         botan_mp_t private_scalar, public_x, public_y;
+         botan_mp_t private_scalar;
+         botan_mp_t public_x;
+         botan_mp_t public_y;
          botan_mp_init(&private_scalar);
          botan_mp_init(&public_x);
          botan_mp_init(&public_y);
@@ -3031,7 +3060,9 @@ class FFI_ECDH_Test final : public FFI_Test {
          REQUIRE_FFI_OK(botan_privkey_export_pubkey, (&pub2, priv2));
 
          /* Reload key-pair1 in order to test functions for key loading */
-         botan_mp_t private_scalar, public_x, public_y;
+         botan_mp_t private_scalar;
+         botan_mp_t public_x;
+         botan_mp_t public_y;
          botan_mp_init(&private_scalar);
          botan_mp_init(&public_x);
          botan_mp_init(&public_y);
@@ -3997,7 +4028,10 @@ class FFI_ElGamal_Test final : public FFI_Test {
          TEST_FFI_OK(botan_pubkey_check_key, (pub, rng, 0));
 
          ffi_test_pubkey_export(result, pub, priv, rng);
-         botan_mp_t p = nullptr, g = nullptr, x = nullptr, y = nullptr;
+         botan_mp_t p = nullptr;
+         botan_mp_t g = nullptr;
+         botan_mp_t x = nullptr;
+         botan_mp_t y = nullptr;
          botan_mp_init(&p);
          botan_mp_init(&g);
          botan_mp_init(&x);
@@ -4085,7 +4119,10 @@ class FFI_DH_Test final : public FFI_Test {
          REQUIRE_FFI_OK(botan_privkey_export_pubkey, (&pub2, priv2));
 
          // Reload key-pair1 in order to test functions for key loading
-         botan_mp_t private_x, public_g, public_p, public_y;
+         botan_mp_t private_x;
+         botan_mp_t public_g;
+         botan_mp_t public_p;
+         botan_mp_t public_y;
 
          botan_mp_init(&private_x);
          botan_mp_init(&public_g);
@@ -4105,7 +4142,9 @@ class FFI_DH_Test final : public FFI_Test {
          TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey1, rng, 0));
          TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey1, rng, 0));
 
-         botan_mp_t loaded_public_g, loaded_public_p, loaded_public_y;
+         botan_mp_t loaded_public_g;
+         botan_mp_t loaded_public_p;
+         botan_mp_t loaded_public_y;
          botan_mp_init(&loaded_public_g);
          botan_mp_init(&loaded_public_p);
          botan_mp_init(&loaded_public_y);

@@ -327,7 +327,8 @@ void Blowfish::key_expansion(const uint8_t key[], size_t length, const uint8_t s
 
    const size_t P_salt_offset = (salt_length > 0) ? 18 % (salt_length / 4) : 0;
 
-   uint32_t L = 0, R = 0;
+   uint32_t L = 0;
+   uint32_t R = 0;
    generate_sbox(m_P, L, R, salt, salt_length, 0);
    generate_sbox(m_S, L, R, salt, salt_length, P_salt_offset);
 }

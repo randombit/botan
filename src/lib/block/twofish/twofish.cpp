@@ -56,8 +56,14 @@ void Twofish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    assert_key_material_set();
 
    while(blocks >= 2) {
-      uint32_t A0 = 0, B0 = 0, C0 = 0, D0 = 0;
-      uint32_t A1 = 0, B1 = 0, C1 = 0, D1 = 0;
+      uint32_t A0 = 0;
+      uint32_t B0 = 0;
+      uint32_t C0 = 0;
+      uint32_t D0 = 0;
+      uint32_t A1 = 0;
+      uint32_t B1 = 0;
+      uint32_t C1 = 0;
+      uint32_t D1 = 0;
       load_le(in, A0, B0, C0, D0, A1, B1, C1, D1);
 
       A0 ^= m_RK[0];
@@ -94,7 +100,10 @@ void Twofish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    }
 
    if(blocks > 0) {
-      uint32_t A = 0, B = 0, C = 0, D = 0;
+      uint32_t A = 0;
+      uint32_t B = 0;
+      uint32_t C = 0;
+      uint32_t D = 0;
       load_le(in, A, B, C, D);
 
       A ^= m_RK[0];
@@ -123,8 +132,14 @@ void Twofish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    assert_key_material_set();
 
    while(blocks >= 2) {
-      uint32_t A0 = 0, B0 = 0, C0 = 0, D0 = 0;
-      uint32_t A1 = 0, B1 = 0, C1 = 0, D1 = 0;
+      uint32_t A0 = 0;
+      uint32_t B0 = 0;
+      uint32_t C0 = 0;
+      uint32_t D0 = 0;
+      uint32_t A1 = 0;
+      uint32_t B1 = 0;
+      uint32_t C1 = 0;
+      uint32_t D1 = 0;
       load_le(in, A0, B0, C0, D0, A1, B1, C1, D1);
 
       A0 ^= m_RK[4];
@@ -161,7 +176,10 @@ void Twofish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    }
 
    if(blocks > 0) {
-      uint32_t A = 0, B = 0, C = 0, D = 0;
+      uint32_t A = 0;
+      uint32_t B = 0;
+      uint32_t C = 0;
+      uint32_t D = 0;
       load_le(in, A, B, C, D);
 
       A ^= m_RK[4];

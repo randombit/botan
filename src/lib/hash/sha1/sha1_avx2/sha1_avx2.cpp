@@ -155,7 +155,11 @@ void BOTAN_FN_ISA_AVX2_BMI2 SHA_1::avx2_compress_n(digest_type& digest, std::spa
    const SIMD_8x32 K12(K1, K1, K1, K1, K2, K2, K2, K2);
    const SIMD_8x32 K34(K3, K3, K3, K3, K4, K4, K4, K4);
 
-   uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3], E = digest[4];
+   uint32_t A = digest[0];
+   uint32_t B = digest[1];
+   uint32_t C = digest[2];
+   uint32_t D = digest[3];
+   uint32_t E = digest[4];
 
    BufferSlicer in(input);
 

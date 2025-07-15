@@ -64,7 +64,8 @@ void check_invalid_ciphertexts(Test::Result& result,
                                Botan::RandomNumberGenerator& rng) {
    const size_t tests_to_run = (Test::run_long_tests() ? 20 : 5);
 
-   size_t ciphertext_accepted = 0, ciphertext_rejected = 0;
+   size_t ciphertext_accepted = 0;
+   size_t ciphertext_rejected = 0;
 
    for(size_t i = 0; i < tests_to_run; ++i) {
       const std::vector<uint8_t> bad_ctext = Test::mutate_vec(ciphertext, rng);

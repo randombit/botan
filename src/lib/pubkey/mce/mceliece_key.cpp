@@ -301,7 +301,8 @@ class MCE_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF {
                            RandomNumberGenerator& rng) override {
          secure_vector<uint8_t> plaintext = m_key.random_plaintext_element(rng);
 
-         secure_vector<uint8_t> ciphertext, error_mask;
+         secure_vector<uint8_t> ciphertext;
+         secure_vector<uint8_t> error_mask;
          mceliece_encrypt(ciphertext, error_mask, plaintext, m_key, rng);
 
          // TODO: Perhaps avoid the copies below
@@ -332,7 +333,8 @@ class MCE_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF {
       size_t encapsulated_key_length() const override { return (m_key.get_code_length() + 7) / 8; }
 
       void raw_kem_decrypt(std::span<uint8_t> out_shared_key, std::span<const uint8_t> encapsulated_key) override {
-         secure_vector<uint8_t> plaintext, error_mask;
+         secure_vector<uint8_t> plaintext;
+         secure_vector<uint8_t> error_mask;
          mceliece_decrypt(plaintext, error_mask, encapsulated_key.data(), encapsulated_key.size(), m_key);
 
          // TODO: perhaps avoid the copies below

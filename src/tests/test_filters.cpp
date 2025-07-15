@@ -302,7 +302,8 @@ class Filter_Tests final : public Test {
          result.test_eq("Message count", pipe.message_count(), 1);
          result.test_eq("Message size", pipe.remaining(), 32);
 
-         std::vector<uint8_t> out(32), last16(16);
+         std::vector<uint8_t> out(32);
+         std::vector<uint8_t> last16(16);
 
          result.test_eq("Bytes read", pipe.get_bytes_read(0), 0);
          result.test_eq("More to read", pipe.end_of_data(), false);

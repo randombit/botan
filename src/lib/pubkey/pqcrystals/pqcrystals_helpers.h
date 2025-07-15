@@ -71,7 +71,10 @@ consteval eea_result<T> extended_euclidean_algorithm(T a, T b) {
       std::swap(a, b);
    }
 
-   T u1 = 0, v1 = 1, u2 = 1, v2 = 0;
+   T u1 = 0;
+   T v1 = 1;
+   T u2 = 1;
+   T v2 = 0;
 
    if(a != b) {
       while(a != 0) {

@@ -83,7 +83,11 @@ void BOTAN_FN_ISA_SIMD_4X32 SHA_1::simd_compress_n(digest_type& digest, std::spa
    const SIMD_4x32 K40_59 = SIMD_4x32::splat(K3);
    const SIMD_4x32 K60_79 = SIMD_4x32::splat(K4);
 
-   uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3], E = digest[4];
+   uint32_t A = digest[0];
+   uint32_t B = digest[1];
+   uint32_t C = digest[2];
+   uint32_t D = digest[3];
+   uint32_t E = digest[4];
 
    BufferSlicer in(input);
 
