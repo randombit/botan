@@ -569,7 +569,7 @@ class Filter_Tests final : public Test {
 
          pipe.reset();
          pipe.append(new Botan::Hex_Decoder);
-         pipe.append(new Botan::Base64_Encoder(/*break_lines=*/true,
+         pipe.append(new Botan::Base64_Encoder(/*line_breaks=*/true,
                                                /*line_length=*/4,
                                                /*trailing_newline=*/true));
 

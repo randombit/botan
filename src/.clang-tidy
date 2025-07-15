@@ -26,7 +26,6 @@ Checks: >
     -*-no-array-decay,
     -*-use-auto,
     -*-use-emplace,
-    -bugprone-argument-comment,
     -bugprone-branch-clone,
     -bugprone-easily-swappable-parameters,
     -bugprone-empty-catch,
