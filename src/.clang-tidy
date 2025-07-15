@@ -67,7 +67,6 @@ Checks: >
     -readability-non-const-parameter,
     -readability-redundant-access-specifiers,
     -readability-redundant-inline-specifier,
-    -readability-redundant-member-init,
     -readability-simplify-boolean-expr,
     -readability-static-accessed-through-instance,
     -readability-use-anyofallof,

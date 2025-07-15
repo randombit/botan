@@ -283,10 +283,7 @@ ECIES_Encryptor::ECIES_Encryptor(const PK_Key_Agreement_Key& private_key,
                                  RandomNumberGenerator& rng) :
       m_ka(private_key, ecies_params, true, rng),
       m_params(ecies_params),
-      m_eph_public_key_bin(private_key.public_value()),  // returns the uncompressed public key, see conversion below
-      m_iv(),
-      m_other_point(),
-      m_label() {
+      m_eph_public_key_bin(private_key.public_value()) {
    if(ecies_params.point_format() != EC_Point_Format::Uncompressed) {
       // ISO 18033: step d
       // convert only if necessary; m_eph_public_key_bin has been initialized with the uncompressed format
@@ -354,7 +351,7 @@ std::vector<uint8_t> ECIES_Encryptor::enc(const uint8_t data[],
 ECIES_Decryptor::ECIES_Decryptor(const PK_Key_Agreement_Key& key,
                                  const ECIES_System_Params& ecies_params,
                                  RandomNumberGenerator& rng) :
-      m_ka(key, ecies_params, false, rng), m_params(ecies_params), m_iv(), m_label() {
+      m_ka(key, ecies_params, false, rng), m_params(ecies_params) {
    /*
    ISO 18033: "If v > 1 and CheckMode = 0, then we must have gcd(u, v) = 1." (v = index, u= order)
 

@@ -55,7 +55,7 @@ std::string make_arg(const std::vector<std::pair<size_t, std::string>>& name, si
 
 SCAN_Name::SCAN_Name(const char* algo_spec) : SCAN_Name(std::string(algo_spec)) {}
 
-SCAN_Name::SCAN_Name(std::string_view algo_spec) : m_orig_algo_spec(algo_spec), m_alg_name(), m_args(), m_mode_info() {
+SCAN_Name::SCAN_Name(std::string_view algo_spec) : m_orig_algo_spec(algo_spec) {
    if(algo_spec.empty()) {
       throw Invalid_Argument("Expected algorithm name, got empty string");
    }

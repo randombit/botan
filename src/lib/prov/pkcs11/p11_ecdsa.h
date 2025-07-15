@@ -35,8 +35,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_ECDSA_PublicKey final : public PKCS11_EC_Pub
       * @param session the session to use
       * @param handle the handle of the ECDSA public key
       */
-      PKCS11_ECDSA_PublicKey(Session& session, ObjectHandle handle) :
-            EC_PublicKey(), PKCS11_EC_PublicKey(session, handle) {}
+      PKCS11_ECDSA_PublicKey(Session& session, ObjectHandle handle) : PKCS11_EC_PublicKey(session, handle) {}
 
       /**
       * Imports an ECDSA public key
@@ -44,7 +43,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_ECDSA_PublicKey final : public PKCS11_EC_Pub
       * @param props the attributes of the public key
       */
       PKCS11_ECDSA_PublicKey(Session& session, const EC_PublicKeyImportProperties& props) :
-            EC_PublicKey(), PKCS11_EC_PublicKey(session, props) {}
+            PKCS11_EC_PublicKey(session, props) {}
 
       inline std::string algo_name() const override { return "ECDSA"; }
 

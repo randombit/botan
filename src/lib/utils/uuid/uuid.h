@@ -23,7 +23,7 @@ class BOTAN_UNSTABLE_API UUID final {
       /**
       * Create an uninitialized UUID object
       */
-      UUID() : m_uuid() {}
+      UUID() = default;
 
       /**
       * Create a random UUID
