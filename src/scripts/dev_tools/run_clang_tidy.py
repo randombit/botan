@@ -69,7 +69,6 @@ disabled_not_interested = [
     '*-use-emplace', # often less clear
     '*-deprecated-headers', # wrong for system headers like stdlib.h
     'cert-dcl21-cpp', # invalid, and removed already in clang-tidy 19
-    'bugprone-argument-comment',
     'bugprone-branch-clone', # doesn't interact well with feature macros
     'bugprone-easily-swappable-parameters',
     'bugprone-implicit-widening-of-multiplication-result',
