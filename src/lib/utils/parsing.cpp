@@ -429,7 +429,7 @@ std::string check_and_canonicalize_dns_name(std::string_view name) {
       }
 
       if(mapped == '-') {
-         if(i == 0 || (i > 0 && name[i - 1] == '.')) {
+         if(i == 0 || name[i - 1] == '.') {
             throw Decoding_Error("DNS name has label with leading hyphen");
          } else if(i == name.size() - 1 || (i < name.size() - 1 && name[i + 1] == '.')) {
             throw Decoding_Error("DNS name has label with trailing hyphen");

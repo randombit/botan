@@ -143,7 +143,7 @@ Response http_sync(const http_exch_fn& http_transact,
       // hostname not modified
    } else {
       service = hostname.substr(port_sep + 1, std::string::npos);
-      hostname = hostname.substr(0, port_sep);
+      hostname.resize(port_sep);  // Keep only hostname part, remove port number
    }
 
    std::ostringstream outbuf;
