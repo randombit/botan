@@ -791,10 +791,10 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         rng = botan.RandomNumberGenerator()
         ca_key = botan.PrivateKey.create("ECDSA", group, rng)
-        ca_opts = botan.X509Opts("Test CA/US/Botan Project/Testing")
-        ca_opts.set_ca_key(1)
-        ca_opts.set_constraints(["DIGITAL_SIGNATURE"])
-        ca_cert = botan.X509Cert.create_self_signed(ca_key, ca_opts, hash_fn, padding_method, rng)
+        ca_builder = botan.X509CertificateBuilder("Test CA/US/Botan Project/Testing")
+        ca_builder.mark_as_ca_key(1)
+        ca_builder.add_constraints(["DIGITAL_SIGNATURE"])
+        ca_cert = botan.X509Cert.create_self_signed(ca_key, ca_builder, hash_fn, padding_method, rng)
         constraints = ca_cert.key_constraints()
         self.assertEqual(len(constraints), 3)
         for item in ["DIGITAL_SIGNATURE", "KEY_CERT_SIGN", "CRL_SIGN"]:
@@ -802,15 +802,15 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         self.assertTrue(ca_cert.is_self_signed())
         self.assertEqual(ca_cert.key_constraints(), ["DIGITAL_SIGNATURE", "KEY_CERT_SIGN", "CRL_SIGN"])
-        ca = botan.X509Ca(ca_cert, ca_key, rng, hash_fn)
 
         cert_key = botan.PrivateKey.create("ECDSA", group, rng)
-        req_opts = botan.X509Opts("Test CA/US/Botan Project/Testing")
-        req_opts.set_uri("https://botan.randombit.net")
-        req_opts.set_more_dns(["botan.randombit.net", "randombit.net"])
-        req = req_opts.create_req(cert_key, hash_fn, rng)
+        req_builder = botan.X509CertificateBuilder("Test CA/US/Botan Project/Testing")
+        req_builder.add_uri("https://botan.randombit.net")
+        for item in ["imaginary.botan.randombit.net", "botan.randombit.net", "randombit.net"]:
+            req_builder.add_dns(item)
+        req = req_builder.create_req(cert_key, hash_fn, rng)
 
-        cert = ca.sign(req, rng, botan.X509Time(int(time.time())), botan.X509Time(int(time.time()) + 60))
+        cert = req.sign(ca_cert, ca_key, rng, int(time.time()), int(time.time()) + 60, hash_fn, padding_method)
         self.assertFalse(cert.is_self_signed())
         self.assertEqual(cert.key_constraints(), ["NO_CONSTRAINTS"])
 
@@ -829,17 +829,17 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         rng = botan.RandomNumberGenerator()
         ca_key = botan.PrivateKey.create("ECDSA", group, rng)
-        ca_opts = botan.X509Opts("Test CA/US/Botan Project/Testing")
-        ca_opts.set_ca_key(1)
-        ca_opts.set_constraints(["DIGITAL_SIGNATURE"])
+        ca_builder = botan.X509CertificateBuilder("Test CA/US/Botan Project/Testing")
+        ca_builder.mark_as_ca_key(1)
+        ca_builder.add_constraints(["DIGITAL_SIGNATURE"])
 
         ca_ip_addr_blocks = botan.X509ExtIPAddrBlocks()
 
-        ca_ip_addr_blocks.add_ip([192, 168, 2, 1])
-        ca_ip_addr_blocks.add_ip_range([10, 0, 0, 1], [10, 0, 255, 255])
+        ca_ip_addr_blocks.add_addr([192, 168, 2, 1])
+        ca_ip_addr_blocks.add_range([10, 0, 0, 1], [10, 0, 255, 255])
         ca_ip_addr_blocks.restrict(False, 42)
 
-        ca_ip_addr_blocks.add_ip([0xab, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01])
+        ca_ip_addr_blocks.add_addr([0xab, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01])
         ca_ip_addr_blocks.restrict(True, 234)
 
         ca_as_blocks = botan.X509ExtASBlocks()
@@ -847,28 +847,34 @@ ofvkP1EDmpx50fHLawIDAQAB
         ca_as_blocks.add_asnum_range(3000, 4999)
         ca_as_blocks.restrict_rdi()
 
-        ca_opts.add_ext_ip_addr_blocks(ca_ip_addr_blocks)
-        ca_opts.add_ext_as_blocks(ca_as_blocks)
+        ca_builder.add_ext_ip_addr_blocks(ca_ip_addr_blocks)
+        ca_builder.add_ext_as_blocks(ca_as_blocks)
 
-        ca_cert = botan.X509Cert.create_self_signed(ca_key, ca_opts, hash_fn, padding_method, rng)
+        with self.assertRaisesRegex(botan.BotanException, r".*Invalid object state.*"):
+            ca_builder.add_ext_ip_addr_blocks(ca_ip_addr_blocks)
+
+        with self.assertRaisesRegex(botan.BotanException, r".*Invalid object state.*"):
+            ca_builder.add_ext_as_blocks(ca_as_blocks)
+
+        ca_cert = botan.X509Cert.create_self_signed(ca_key, ca_builder, hash_fn, padding_method, rng)
 
         ca_ip_addr_blocks = ca_cert.ext_ip_addr_blocks()
         self.assertEqual(ca_ip_addr_blocks.addresses(), (
             [
-                (None, (([10, 0, 0, 1], [10, 0, 255, 255]), ([192, 168, 2, 1], [192, 168, 2, 1]))),
-                (42, ())
+                (None, [((10, 0, 0, 1), (10, 0, 255, 255)), ((192, 168, 2, 1), (192, 168, 2, 1))]),
+                (42, [])
             ],
             [
-                (None, ((
-                    [0xab, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01],
-                    [0xab, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01]
-                ), )),
-                (234, ())
+                (None, [(
+                    (0xab, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01),
+                    (0xab, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01)
+                )], ),
+                (234, [])
             ]
         ))
 
         with self.assertRaisesRegex(botan.BotanException, r".*Invalid object state.*"):
-            ca_ip_addr_blocks.add_ip([123, 0, 0, 1])
+            ca_ip_addr_blocks.add_addr([123, 0, 0, 1])
 
         ca_as_blocks = ca_cert.ext_as_blocks()
         self.assertEqual(ca_as_blocks.asnum(), [(30, 30), (3000, 4999)])
@@ -877,14 +883,12 @@ ofvkP1EDmpx50fHLawIDAQAB
         with self.assertRaisesRegex(botan.BotanException, r".*Invalid object state.*"):
             ca_as_blocks.add_asnum(999)
 
-        ca = botan.X509Ca(ca_cert, ca_key, rng, hash_fn)
-
         cert_key = botan.PrivateKey.create("ECDSA", group, rng)
-        req_opts = botan.X509Opts("Test CA/US/Botan Project/Testing")
+        req_builder = botan.X509CertificateBuilder("Test CA/US/Botan Project/Testing")
 
         req_ip_addr_blocks = botan.X509ExtIPAddrBlocks()
-        req_ip_addr_blocks.add_ip([192, 168, 2, 1])
-        req_ip_addr_blocks.add_ip_range([10, 0, 5, 5], [10, 0, 7, 7])
+        req_ip_addr_blocks.add_addr([192, 168, 2, 1])
+        req_ip_addr_blocks.add_range([10, 0, 5, 5], [10, 0, 7, 7])
         req_ip_addr_blocks.restrict(False, 42)
         req_ip_addr_blocks.inherit(True)
         req_ip_addr_blocks.inherit(True, 234)
@@ -893,17 +897,17 @@ ofvkP1EDmpx50fHLawIDAQAB
         req_as_blocks.add_asnum_range(3100, 4000)
         req_as_blocks.inherit_rdi()
 
-        req_opts.add_ext_ip_addr_blocks(req_ip_addr_blocks)
-        req_opts.add_ext_as_blocks(req_as_blocks)
-        req = req_opts.create_req(cert_key, hash_fn, rng)
+        req_builder.add_ext_ip_addr_blocks(req_ip_addr_blocks)
+        req_builder.add_ext_as_blocks(req_as_blocks)
+        req = req_builder.create_req(cert_key, hash_fn, rng)
 
-        cert = ca.sign(req, rng, botan.X509Time(int(time.time())), botan.X509Time(int(time.time()) + 60))
+        cert = req.sign(ca_cert, ca_key, rng, int(time.time()), int(time.time()) + 60, hash_fn, padding_method)
 
         req_ip_addr_blocks = cert.ext_ip_addr_blocks()
         self.assertEqual(req_ip_addr_blocks.addresses(), (
             [
-                (None, (([10, 0, 5, 5], [10, 0, 7, 7]), ([192, 168, 2, 1], [192, 168, 2, 1]))),
-                (42, ())
+                (None, [((10, 0, 5, 5), (10, 0, 7, 7)), ((192, 168, 2, 1), (192, 168, 2, 1))]),
+                (42, [])
             ],
             [
                 (None, None),

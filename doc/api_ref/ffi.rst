@@ -1791,148 +1791,50 @@ X.509 Certificates
    Return a (statically allocated) string associated with the verification
    result, or NULL if the code is not known.
 
-.. cpp:type:: opaque* botan_x509_cert_opts_t
-
-   An opaque data type for X.509 certificate options. Don't mess with it.
-
-.. cpp:type:: opaque* botan_x509_time_t
-
-   An opaque data type for an X.509 time. Don't mess with it.
-
-.. cpp:type:: opaque* botan_x509_ext_as_blocks_t
-
-   An opaque data type for an X.509 AS Blocks extension (RFC 3779). Don't mess with it.
 
 .. cpp:type:: opaque* botan_x509_ext_ip_addr_blocks_t
 
    An opaque data type for an X.509 IP Address Blocks extension (RFC 3779). Don't mess with it.
 
-.. cpp:type:: opaque* botan_x509_ca_t
-
-   An opaque data type for an X.509 CA. Don't mess with it.
-
-.. cpp:type:: opaque* botan_x509_pkcs10_req_t
-
-   An opaque data type for a PKCS #10 certificate request. Don't mess with it.
-
-.. cpp:function::int botan_x509_cert_opts_destroy(botan_x509_cert_opts_t opts)
-
-   Destroy the options object.
-
-.. cpp:function::int botan_x509_time_destroy(botan_x509_time_t time)
-
-   Destroy the time object.
-
 .. cpp:function::int botan_x509_ext_ip_addr_blocks_destroy(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks)
 
    Destroy the IP Address Blocks object.
-
-.. cpp:function::int botan_x509_ext_as_blocks_destroy(botan_x509_ext_as_blocks_t as_blocks)
-
-   Destroy the AS Blocks object.
-
-.. cpp:function::int botan_x509_ca_destroy(botan_x509_ca_t ca)
-
-   Destroy the CA object.
-
-.. cpp:function::int botan_x509_pkcs10_req_destroy(botan_x509_pkcs10_req_t req)
-
-   Destroy the PKCS #10 certificate request object.
-
-.. cpp:function::int int botan_x509_create_cert_opts(botan_x509_cert_opts_t* opts_obj, const char* opts, uint32_t* expire_time)
-
-   Creates a new options object. ``opts`` defines the common name (e.g. `common_name/country/organization/organizational_unit`), ``expire_time`` if given
-   is the expiration time from current clock in seconds.
-
-.. cpp:function::int botan_x509_cert_opts_common_name(botan_x509_cert_opts_t opts, const char* name)
-
-   Set the common name for the object.
-
-.. cpp:function::int botan_x509_cert_opts_country(botan_x509_cert_opts_t opts, const char* country)
-
-   Set the country for the objects.
-
-.. cpp:function::int botan_x509_cert_opts_organization(botan_x509_cert_opts_t opts, const char* organization)
-
-.. cpp:function::int botan_x509_cert_opts_org_unit(botan_x509_cert_opts_t opts, const char* org_unit)
-
-.. cpp:function::int botan_x509_cert_opts_locality(botan_x509_cert_opts_t opts, const char* locality)
-
-.. cpp:function::int botan_x509_cert_opts_state(botan_x509_cert_opts_t opts, const char* state)
-
-.. cpp:function::int botan_x509_cert_opts_serial_number(botan_x509_cert_opts_t opts, const char* serial_number)
-
-.. cpp:function::int botan_x509_cert_opts_email(botan_x509_cert_opts_t opts, const char* email)
-
-.. cpp:function::int botan_x509_cert_opts_uri(botan_x509_cert_opts_t opts, const char* uri)
-
-.. cpp:function::int botan_x509_cert_opts_ip(botan_x509_cert_opts_t opts, const char* ip)
-
-.. cpp:function::int botan_x509_cert_opts_dns(botan_x509_cert_opts_t opts, const char* dns)
-
-.. cpp:function::int botan_x509_cert_opts_xmpp(botan_x509_cert_opts_t opts, const char* xmpp)
-
-.. cpp:function::int botan_x509_cert_opts_challenge(botan_x509_cert_opts_t opts, const char* challenge)
-
-.. cpp:function::int int botan_x509_cert_opts_more_org_units(botan_x509_cert_opts_t opts, const char** more_org_units, size_t cnt)
-
-.. cpp:function::int int botan_x509_cert_opts_more_dns(botan_x509_cert_opts_t opts, const char** more_dns, size_t cnt)
-
-.. cpp:function::int botan_x509_cert_opts_ca_key(botan_x509_cert_opts_t opts, size_t limit)
-
-   Mark the certificate for CA usage.
-
-.. cpp:function::int botan_x509_cert_opts_padding_scheme(botan_x509_cert_opts_t opts, const char* scheme)
-
-.. cpp:function::int botan_x509_cert_opts_not_before(botan_x509_cert_opts_t opts, botan_x509_time_t not_before)
-
-.. cpp:function::int botan_x509_cert_opts_not_after(botan_x509_cert_opts_t opts, botan_x509_time_t not_after)
-
-.. cpp:function::int botan_x509_cert_opts_constraints(botan_x509_cert_opts_t opts, uint32_t usage)
-
-.. cpp:function::int botan_x509_cert_opts_ex_constraint(botan_x509_cert_opts_t opts, botan_asn1_oid_t oid)
-
-.. cpp:function::int botan_x509_create_time(botan_x509_time_t* time_obj, uint64_t time_since_epoch)
-
-   Create a new time object.
-
-.. cpp:function::int int botan_x509_cert_opts_ext_ip_addr_blocks(botan_x509_cert_opts_t opts, \
-                  botan_x509_ext_ip_addr_blocks_t ip_addr_blocks)
-
-.. cpp:function::int int botan_x509_cert_opts_ext_as_blocks(botan_x509_cert_opts_t opts, botan_x509_ext_as_blocks_t as_blocks)
 
 .. cpp:function::int botan_x509_ext_create_ip_addr_blocks(botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks)
 
    Create a new IP Address Blocks object.
 
-.. cpp:function::int int botan_x509_ext_create_ip_addr_blocks_from_cert(botan_x509_cert_t cert, \
+.. cpp:function::int botan_x509_ext_create_ip_addr_blocks_from_cert(botan_x509_cert_t cert, \
                   botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks)
 
    Get an IP Address Blocks object from a certificate. Cannot be mutated.
 
-.. cpp:function::int int botan_x509_ext_ip_addr_blocks_add_ip_addr(
-   botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, const uint8_t* min, const uint8_t* max, int ipv6, uint8_t* safi)
+.. cpp:function::int botan_x509_ext_ip_addr_blocks_add_ip_addr(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, \
+                  const uint8_t* min, \
+                  const uint8_t* max, \
+                  int ipv6, \
+                  uint8_t* safi)
 
    Add a new IP Address to the extension. Set ``ipv6`` to 0 if the address is v4, 1 if it is v6.
    ``safi`` may be NULL.
 
-.. cpp:function::int int botan_x509_ext_ip_addr_blocks_restrict(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, int ipv6, uint8_t* safi)
+.. cpp:function::int botan_x509_ext_ip_addr_blocks_restrict(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, int ipv6, uint8_t* safi)
 
    Make the extension contain no allowed IP addresses for the specified IP version.
    Set ``ipv6`` to 0 for v4, 1 for v6. ``safi`` may be NULL.
 
-.. cpp:function::int int botan_x509_ext_ip_addr_blocks_inherit(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, int ipv6, uint8_t* safi)
+.. cpp:function::int botan_x509_ext_ip_addr_blocks_inherit(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, int ipv6, uint8_t* safi)
 
    Mark the specified IP version as "inherit". Set ``ipv6`` to 0 for v4, 1 for v6. ``safi`` may be NULL.
 
-.. cpp:function::int int botan_x509_ext_ip_addr_blocks_get_counts(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, \
+.. cpp:function::int botan_x509_ext_ip_addr_blocks_get_counts(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, \
                   size_t* v4_count, \
                   size_t* v6_count)
 
    Retrieve the counts of v4/v6 entries in the extension.
    v4 entries always precede v6 entries.
 
-.. cpp:function::int int botan_x509_ext_ip_addr_blocks_get_family(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
+.. cpp:function::int botan_x509_ext_ip_addr_blocks_get_family(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
                   int ipv6, \
                   size_t i, \
                   int* has_safi, \
@@ -1949,7 +1851,7 @@ X.509 Certificates
    ``present`` will be set to one to indicate a value, 0 otherwise (inherit).
    ``count`` will be set to the number of address pairs present for the entry if present.
 
-.. cpp:function::int int botan_x509_ext_ip_addr_blocks_get_address(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
+.. cpp:function::int botan_x509_ext_ip_addr_blocks_get_address(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
                   int ipv6, \
                   size_t i, \
                   size_t entry, \
@@ -1966,15 +1868,23 @@ X.509 Certificates
    ``min_out`` and ``max_out`` will be set to the minimum and maximum of the IP range.
    You must provide 4 / 16 bytes of buffer space for each for IP v4 / v6 respectively.
 
+.. cpp:type:: opaque* botan_x509_ext_as_blocks_t
+
+   An opaque data type for an X.509 AS Blocks extension (RFC 3779). Don't mess with it.
+
+.. cpp:function::int botan_x509_ext_as_blocks_destroy(botan_x509_ext_as_blocks_t as_blocks)
+
+   Destroy the AS Blocks object.
+
 .. cpp:function::int botan_x509_ext_create_as_blocks(botan_x509_ext_as_blocks_t* as_blocks)
 
    Create a new AS Blocks object.
 
-.. cpp:function::int int botan_x509_ext_create_as_blocks_from_cert(botan_x509_cert_t cert, botan_x509_ext_as_blocks_t* as_blocks)
+.. cpp:function::int botan_x509_ext_create_as_blocks_from_cert(botan_x509_cert_t cert, botan_x509_ext_as_blocks_t* as_blocks)
 
    Get an AS Blocks object from a certificate. Cannot be mutated.
 
-.. cpp:function::int int botan_x509_ext_as_blocks_add_asnum(botan_x509_ext_as_blocks_t as_blocks, uint32_t min, uint32_t max)
+.. cpp:function::int botan_x509_ext_as_blocks_add_asnum(botan_x509_ext_as_blocks_t as_blocks, uint32_t min, uint32_t max)
 
    Add an asnum to the extension.
 
@@ -1986,44 +1896,103 @@ X.509 Certificates
 
    Mark the asnum entry as "inherit".
 
-.. cpp:function::int int botan_x509_ext_as_blocks_add_rdi(botan_x509_ext_as_blocks_t as_blocks, uint32_t min, uint32_t max)
+.. cpp:function::int botan_x509_ext_as_blocks_add_rdi(botan_x509_ext_as_blocks_t as_blocks, uint32_t min, uint32_t max)
 
 .. cpp:function::int botan_x509_ext_as_blocks_restrict_rdi(botan_x509_ext_as_blocks_t as_blocks)
 
 .. cpp:function::int botan_x509_ext_as_blocks_inherit_rdi(botan_x509_ext_as_blocks_t as_blocks)
 
-.. cpp:function::int int botan_x509_ext_as_blocks_get_asnum(botan_x509_ext_as_blocks_t as_blocks, int* present, size_t* count)
+.. cpp:function::int botan_x509_ext_as_blocks_get_asnum(botan_x509_ext_as_blocks_t as_blocks, int* present, size_t* count)
 
    If the extension has an asnum entry, ``present`` will be set to 1, otherwise 0 (inherit).
    If an entry is present ``count`` will be set to the number of elements.
 
-.. cpp:function::int int botan_x509_ext_as_blocks_get_asnum_at(botan_x509_ext_as_blocks_t as_blocks, size_t i, uint32_t* min, uint32_t* max)
+.. cpp:function::int botan_x509_ext_as_blocks_get_asnum_at(botan_x509_ext_as_blocks_t as_blocks, size_t i, uint32_t* min, uint32_t* max)
 
    Retrieve information on a single asnum entry.
 
-.. cpp:function::int int botan_x509_ext_as_blocks_get_rdi(botan_x509_ext_as_blocks_t as_blocks, int* present, size_t* count)
+.. cpp:function::int botan_x509_ext_as_blocks_get_rdi(botan_x509_ext_as_blocks_t as_blocks, int* present, size_t* count)
 
-.. cpp:function::int int botan_x509_ext_as_blocks_get_rdi_at(botan_x509_ext_as_blocks_t as_blocks, size_t i, uint32_t* min, uint32_t* max)
+.. cpp:function::int botan_x509_ext_as_blocks_get_rdi_at(botan_x509_ext_as_blocks_t as_blocks, size_t i, uint32_t* min, uint32_t* max)
 
-.. cpp:function::int int botan_x509_create_self_signed_cert(botan_x509_cert_t* cert_obj, \
+.. cpp:type:: opaque* botan_x509_cert_params_builder_t
+
+.. cpp:function::int botan_x509_cert_opts_destroy(botan_x509_cert_opts_t opts)
+
+   Destroy the options object.
+
+.. cpp:function::int botan_x509_create_cert_params_builder(botan_x509_cert_params_builder_t* builder_obj, \
+                  const char* opts, \
+                  uint32_t* expire_time);
+
+   Create a new certificate builder object. ``opts`` defines the common name (e.g. `common_name/country/organization/organizational_unit`).
+   ``expire_time`` if given is the expiration time from current clock in seconds.
+
+.. cpp:function::int botan_x509_cert_params_builder_add_common_name(botan_x509_cert_params_builder_t builder, const char* name);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_country(botan_x509_cert_params_builder_t builder, const char* country);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_organization(botan_x509_cert_params_builder_t builder, const char* organization);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_org_unit(botan_x509_cert_params_builder_t builder, const char* org_unit);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_locality(botan_x509_cert_params_builder_t builder, const char* locality);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_state(botan_x509_cert_params_builder_t builder, const char* state);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_serial_number(botan_x509_cert_params_builder_t builder, const char* serial_number);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_email(botan_x509_cert_params_builder_t builder, const char* email);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_uri(botan_x509_cert_params_builder_t builder, const char* uri);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_ip(botan_x509_cert_params_builder_t builder, const char* ip);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_dns(botan_x509_cert_params_builder_t builder, const char* dns);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_xmpp(botan_x509_cert_params_builder_t builder, const char* xmpp);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_challenge(botan_x509_cert_params_builder_t builder, const char* challenge);
+
+.. cpp:function::int botan_x509_cert_params_builder_mark_as_ca_key(botan_x509_cert_params_builder_t builder, size_t limit);
+
+   Mark the certificate for CA usage.
+
+.. cpp:function::int botan_x509_cert_params_builder_add_not_before(botan_x509_cert_params_builder_t builder, uint64_t time_since_epoch);
+
+   ``time_since_epoch`` is expected to be in seconds.
+
+.. cpp:function::int botan_x509_cert_params_builder_add_not_after(botan_x509_cert_params_builder_t builder, uint64_t time_since_epoch);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_constraints(botan_x509_cert_params_builder_t builder, uint32_t usage);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_ex_constraint(botan_x509_cert_params_builder_t builder, botan_asn1_oid_t oid);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_ext_ip_addr_blocks(botan_x509_cert_params_builder_t builder, \
+                  botan_x509_ext_ip_addr_blocks_t ip_addr_blocks);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_ext_as_blocks(botan_x509_cert_params_builder_t builder, \
+                  botan_x509_ext_as_blocks_t as_blocks);
+
+.. cpp:function::int botan_x509_create_self_signed_cert(botan_x509_cert_t* cert_obj, \
                   botan_privkey_t key, \
                   botan_x509_cert_opts_t opts, \
                   const char* hash_fn, \
-                  const char* sig_padding, \
+                  const char* padding, \
                   botan_rng_t rng)
+
 
    Create a new self-signed X.509 certificate.
 
-.. cpp:function::int int botan_x509_create_ca(botan_x509_ca_t* ca_obj, \
-                  botan_x509_cert_t ca_cert, \
-                  botan_privkey_t key, \
-                  const char* hash_fn, \
-                  const char* sig_padding, \
-                  botan_rng_t rng)
+.. cpp:type:: opaque* botan_x509_pkcs10_req_t
 
-   Create a CA object capable of signing other certificates.
+   An opaque data type for a PKCS #10 certificate request. Don't mess with it.
 
-.. cpp:function::int int botan_x509_create_pkcs10_req(botan_x509_pkcs10_req_t* req_obj, \
+.. cpp:function::int botan_x509_pkcs10_req_destroy(botan_x509_pkcs10_req_t req)
+
+   Destroy the PKCS #10 certificate request object.
+
+.. cpp:function::int botan_x509_create_pkcs10_req(botan_x509_pkcs10_req_t* req_obj, \
                   botan_x509_cert_opts_t opts, \
                   botan_privkey_t key, \
                   const char* hash_fn, \
@@ -2031,14 +2000,19 @@ X.509 Certificates
 
    Create a PCKS #10 certificate request.
 
-.. cpp:function::int int botan_x509_sign_req(botan_x509_cert_t* cert_obj, \
-                  botan_x509_ca_t ca, \
-                  botan_x509_pkcs10_req_t req, \
-                  botan_rng_t rng, \
-                  botan_x509_time_t not_before, \
-                  botan_x509_time_t not_after)
+.. cpp:function::int botan_x509_pkcs10_req_view_pem(botan_x509_pkcs10_req_t req, botan_view_ctx ctx, botan_view_str_fn view)
 
-   Sign a PKCS #10 certificate request
+.. cpp:function::int botan_x509_sign_req(botan_x509_cert_t* subject_cert, \
+                  botan_x509_pkcs10_req_t subject_req, \
+                  botan_x509_cert_t issuing_cert, \
+                  botan_privkey_t issuing_key, \
+                  botan_rng_t rng, \
+                  uint64_t not_before, \
+                  uint64_t not_after, \
+                  const char* hash_fn, \
+                  const char* padding)
+
+   Sign a PKCS #10 certificate request. ``not_before`` and ``not_after`` are expected to be the time since the UNIX epoch, in seconds.
 
 X.509 Certificate Revocation Lists
 ----------------------------------------

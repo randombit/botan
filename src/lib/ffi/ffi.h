@@ -2209,80 +2209,12 @@ int botan_x509_cert_verify(int* validation_result,
 */
 BOTAN_FFI_EXPORT(2, 8) const char* botan_x509_cert_validation_status(int code);
 
-typedef struct botan_x509_cert_opts_struct* botan_x509_cert_opts_t;
-typedef struct botan_x509_time_struct* botan_x509_time_t;
-typedef struct botan_x509_ext_as_blocks_struct* botan_x509_ext_as_blocks_t;
+/*
+* X.509 extensions
+*/
 typedef struct botan_x509_ext_ip_addr_blocks_struct* botan_x509_ext_ip_addr_blocks_t;
-typedef struct botan_x509_ca_struct* botan_x509_ca_t;
-typedef struct botan_x509_pkcs10_req_struct* botan_x509_pkcs10_req_t;
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_destroy(botan_x509_cert_opts_t opts);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_time_destroy(botan_x509_time_t time);
 
 BOTAN_FFI_EXPORT(3, 9) int botan_x509_ext_ip_addr_blocks_destroy(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_ext_as_blocks_destroy(botan_x509_ext_as_blocks_t as_blocks);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_ca_destroy(botan_x509_ca_t ca);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_pkcs10_req_destroy(botan_x509_pkcs10_req_t req);
-
-BOTAN_FFI_EXPORT(3, 9)
-int botan_x509_create_cert_opts(botan_x509_cert_opts_t* opts_obj, const char* opts, uint32_t* expire_time);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_common_name(botan_x509_cert_opts_t opts, const char* name);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_country(botan_x509_cert_opts_t opts, const char* country);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_organization(botan_x509_cert_opts_t opts, const char* organization);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_org_unit(botan_x509_cert_opts_t opts, const char* org_unit);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_locality(botan_x509_cert_opts_t opts, const char* locality);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_state(botan_x509_cert_opts_t opts, const char* state);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_serial_number(botan_x509_cert_opts_t opts, const char* serial_number);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_email(botan_x509_cert_opts_t opts, const char* email);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_uri(botan_x509_cert_opts_t opts, const char* uri);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_ip(botan_x509_cert_opts_t opts, const char* ip);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_dns(botan_x509_cert_opts_t opts, const char* dns);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_xmpp(botan_x509_cert_opts_t opts, const char* xmpp);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_challenge(botan_x509_cert_opts_t opts, const char* challenge);
-
-BOTAN_FFI_EXPORT(3, 9)
-int botan_x509_cert_opts_more_org_units(botan_x509_cert_opts_t opts, const char** more_org_units, size_t cnt);
-
-BOTAN_FFI_EXPORT(3, 9)
-int botan_x509_cert_opts_more_dns(botan_x509_cert_opts_t opts, const char** more_dns, size_t cnt);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_ca_key(botan_x509_cert_opts_t opts, size_t limit);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_padding_scheme(botan_x509_cert_opts_t opts, const char* scheme);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_not_before(botan_x509_cert_opts_t opts, botan_x509_time_t not_before);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_not_after(botan_x509_cert_opts_t opts, botan_x509_time_t not_after);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_constraints(botan_x509_cert_opts_t opts, uint32_t usage);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_opts_ex_constraint(botan_x509_cert_opts_t opts, botan_asn1_oid_t oid);
-
-BOTAN_FFI_EXPORT(3, 9)
-int botan_x509_cert_opts_ext_ip_addr_blocks(botan_x509_cert_opts_t opts,
-                                            botan_x509_ext_ip_addr_blocks_t ip_addr_blocks);
-
-BOTAN_FFI_EXPORT(3, 9)
-int botan_x509_cert_opts_ext_as_blocks(botan_x509_cert_opts_t opts, botan_x509_ext_as_blocks_t as_blocks);
-
-BOTAN_FFI_EXPORT(3, 9) int botan_x509_create_time(botan_x509_time_t* time_obj, uint64_t time_since_epoch);
 
 BOTAN_FFI_EXPORT(3, 9) int botan_x509_ext_create_ip_addr_blocks(botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks);
 
@@ -2323,6 +2255,10 @@ int botan_x509_ext_ip_addr_blocks_get_address(botan_x509_ext_ip_addr_blocks_t ip
                                               uint8_t max_out[],
                                               size_t* out_len);
 
+typedef struct botan_x509_ext_as_blocks_struct* botan_x509_ext_as_blocks_t;
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_ext_as_blocks_destroy(botan_x509_ext_as_blocks_t as_blocks);
+
 BOTAN_FFI_EXPORT(3, 9) int botan_x509_ext_create_as_blocks(botan_x509_ext_as_blocks_t* as_blocks);
 
 BOTAN_FFI_EXPORT(3, 9)
@@ -2354,36 +2290,116 @@ int botan_x509_ext_as_blocks_get_rdi(botan_x509_ext_as_blocks_t as_blocks, int* 
 BOTAN_FFI_EXPORT(3, 9)
 int botan_x509_ext_as_blocks_get_rdi_at(botan_x509_ext_as_blocks_t as_blocks, size_t i, uint32_t* min, uint32_t* max);
 
+/*
+* X.509 cert param builder
+*/
+typedef struct botan_x509_cert_params_builder_struct* botan_x509_cert_params_builder_t;
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_cert_params_builder_destroy(botan_x509_cert_params_builder_t builder);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_create_cert_params_builder(botan_x509_cert_params_builder_t* builder_obj,
+                                          const char* opts,
+                                          uint32_t* expire_time);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_common_name(botan_x509_cert_params_builder_t builder, const char* name);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_country(botan_x509_cert_params_builder_t builder, const char* country);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_organization(botan_x509_cert_params_builder_t builder, const char* organization);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_org_unit(botan_x509_cert_params_builder_t builder, const char* org_unit);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_locality(botan_x509_cert_params_builder_t builder, const char* locality);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_state(botan_x509_cert_params_builder_t builder, const char* state);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_serial_number(botan_x509_cert_params_builder_t builder,
+                                                     const char* serial_number);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_email(botan_x509_cert_params_builder_t builder, const char* email);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_uri(botan_x509_cert_params_builder_t builder, const char* uri);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_ip(botan_x509_cert_params_builder_t builder, const char* ip);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_dns(botan_x509_cert_params_builder_t builder, const char* dns);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_xmpp(botan_x509_cert_params_builder_t builder, const char* xmpp);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_challenge(botan_x509_cert_params_builder_t builder, const char* challenge);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_mark_as_ca_key(botan_x509_cert_params_builder_t builder, size_t limit);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_not_before(botan_x509_cert_params_builder_t builder, uint64_t time_since_epoch);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_not_after(botan_x509_cert_params_builder_t builder, uint64_t time_since_epoch);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_constraints(botan_x509_cert_params_builder_t builder, uint32_t usage);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_ex_constraint(botan_x509_cert_params_builder_t builder, botan_asn1_oid_t oid);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_ext_ip_addr_blocks(botan_x509_cert_params_builder_t builder,
+                                                          botan_x509_ext_ip_addr_blocks_t ip_addr_blocks);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_cert_params_builder_add_ext_as_blocks(botan_x509_cert_params_builder_t builder,
+                                                     botan_x509_ext_as_blocks_t as_blocks);
+
+/*
+* X.509 cert creation
+*/
 BOTAN_FFI_EXPORT(3, 9)
 int botan_x509_create_self_signed_cert(botan_x509_cert_t* cert_obj,
                                        botan_privkey_t key,
-                                       botan_x509_cert_opts_t opts,
+                                       botan_x509_cert_params_builder_t builder,
                                        const char* hash_fn,
-                                       const char* sig_padding,
+                                       const char* padding,
                                        botan_rng_t rng);
 
-BOTAN_FFI_EXPORT(3, 9)
-int botan_x509_create_ca(botan_x509_ca_t* ca_obj,
-                         botan_x509_cert_t ca_cert,
-                         botan_privkey_t key,
-                         const char* hash_fn,
-                         const char* sig_padding,
-                         botan_rng_t rng);
+typedef struct botan_x509_pkcs10_req_struct* botan_x509_pkcs10_req_t;
+
+BOTAN_FFI_EXPORT(3, 9) int botan_x509_pkcs10_req_destroy(botan_x509_pkcs10_req_t req);
 
 BOTAN_FFI_EXPORT(3, 9)
 int botan_x509_create_pkcs10_req(botan_x509_pkcs10_req_t* req_obj,
-                                 botan_x509_cert_opts_t opts,
+                                 botan_x509_cert_params_builder_t builder,
                                  botan_privkey_t key,
                                  const char* hash_fn,
                                  botan_rng_t rng);
 
 BOTAN_FFI_EXPORT(3, 9)
-int botan_x509_sign_req(botan_x509_cert_t* cert_obj,
-                        botan_x509_ca_t ca,
-                        botan_x509_pkcs10_req_t req,
+int botan_x509_pkcs10_req_view_pem(botan_x509_pkcs10_req_t req, botan_view_ctx ctx, botan_view_str_fn view);
+
+BOTAN_FFI_EXPORT(3, 9)
+int botan_x509_sign_req(botan_x509_cert_t* subject_cert,
+                        botan_x509_pkcs10_req_t subject_req,
+                        botan_x509_cert_t issuing_cert,
+                        botan_privkey_t issuing_key,
                         botan_rng_t rng,
-                        botan_x509_time_t not_before,
-                        botan_x509_time_t not_after);
+                        uint64_t not_before,
+                        uint64_t not_after,
+                        const char* hash_fn,
+                        const char* padding);
 
 /*
 * X.509 CRL

@@ -23,12 +23,10 @@
 extern "C" {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 
+BOTAN_FFI_DECLARE_STRUCT(botan_x509_cert_params_builder_struct, Botan::X509_Cert_Options, 0x92597C7D);
+BOTAN_FFI_DECLARE_STRUCT(botan_x509_pkcs10_req_struct, Botan::PKCS10_Request, 0x87F0690A);
 BOTAN_FFI_DECLARE_STRUCT(botan_x509_cert_struct, Botan::X509_Certificate, 0x8F628937);
 BOTAN_FFI_DECLARE_STRUCT(botan_x509_crl_struct, Botan::X509_CRL, 0x2C628910);
-BOTAN_FFI_DECLARE_STRUCT(botan_x509_cert_opts_struct, Botan::X509_Cert_Options, 0x92597C7D);
-BOTAN_FFI_DECLARE_STRUCT(botan_x509_time_struct, Botan::X509_Time, 0x739396FA);
-BOTAN_FFI_DECLARE_STRUCT(botan_x509_ca_struct, Botan::X509_CA, 0x8BE2A8F1);
-BOTAN_FFI_DECLARE_STRUCT(botan_x509_pkcs10_req_struct, Botan::PKCS10_Request, 0x87F0690A);
 
 #endif
 }
