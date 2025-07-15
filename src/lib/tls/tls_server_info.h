@@ -21,7 +21,7 @@ class BOTAN_PUBLIC_API(2, 0) Server_Information final {
       /**
       * An empty server info - nothing known
       */
-      Server_Information() : m_hostname(), m_service(), m_port(0) {}
+      Server_Information() = default;
 
       /**
       * @param hostname the host's DNS name, if known
@@ -29,7 +29,7 @@ class BOTAN_PUBLIC_API(2, 0) Server_Information final {
       *        TCP/UDP). Zero represents unknown.
       */
       BOTAN_FUTURE_EXPLICIT Server_Information(std::string_view hostname, uint16_t port = 0) :
-            m_hostname(hostname), m_service(), m_port(port) {}
+            m_hostname(hostname), m_port(port) {}
 
       /**
       * @param hostname the host's DNS name, if known
@@ -63,8 +63,9 @@ class BOTAN_PUBLIC_API(2, 0) Server_Information final {
       bool empty() const { return m_hostname.empty(); }
 
    private:
-      std::string m_hostname, m_service;
-      uint16_t m_port;
+      std::string m_hostname;
+      std::string m_service;
+      uint16_t m_port = 0;
 };
 
 inline bool operator==(const Server_Information& a, const Server_Information& b) {

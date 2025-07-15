@@ -229,7 +229,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Base {
    protected:
       std::chrono::system_clock::time_point m_start_time;  // NOLINT(*non-private-member-variable*)
 
-      Protocol_Version m_version{};         // NOLINT(*non-private-member-variable*)
+      Protocol_Version m_version;           // NOLINT(*non-private-member-variable*)
       uint16_t m_ciphersuite = 0;           // NOLINT(*non-private-member-variable*)
       Connection_Side m_connection_side{};  // NOLINT(*non-private-member-variable*)
       uint16_t m_srtp_profile = 0;          // NOLINT(*non-private-member-variable*)

@@ -24,7 +24,7 @@ const char* const FEC_SHARE_HASH = "SHA-512-256";
 
 class FEC_Share final {
    public:
-      FEC_Share() : m_share(0), m_k(0), m_n(0), m_padding(0), m_bits() {}
+      FEC_Share() : m_share(0), m_k(0), m_n(0), m_padding(0) {}
 
       FEC_Share(size_t share, size_t k, size_t n, size_t padding, const uint8_t bits[], size_t len) :
             m_share(share), m_k(k), m_n(n), m_padding(padding), m_bits(bits, bits + len) {}

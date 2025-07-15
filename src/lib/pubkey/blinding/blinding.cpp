@@ -18,8 +18,6 @@ Blinder::Blinder(const Barrett_Reduction& reducer,
       m_fwd_fn(std::move(fwd)),
       m_inv_fn(std::move(inv)),
       m_modulus_bits(reducer.modulus_bits()),
-      m_e{},
-      m_d{},
       m_counter{} {
    const BigInt k = blinding_nonce();
    m_e = m_fwd_fn(k);

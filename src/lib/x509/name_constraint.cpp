@@ -262,7 +262,7 @@ std::ostream& operator<<(std::ostream& os, const GeneralName& gn) {
    return os;
 }
 
-GeneralSubtree::GeneralSubtree() : m_base() {}
+GeneralSubtree::GeneralSubtree() = default;
 
 void GeneralSubtree::encode_into(DER_Encoder& /*to*/) const {
    throw Not_Implemented("GeneralSubtree encoding");

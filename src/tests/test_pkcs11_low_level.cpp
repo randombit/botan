@@ -36,7 +36,6 @@ class RAII_LowLevel {
       RAII_LowLevel() :
             m_module(Test::pkcs11_lib()),
             m_func_list(nullptr),
-            m_low_level(),
             m_session_handle(0),
             m_is_session_open(false),
             m_is_logged_in(false) {

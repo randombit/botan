@@ -227,9 +227,9 @@ Certificate_13::Certificate_13(const Client_Hello_13& client_hello,
                                Callbacks& callbacks,
                                Certificate_Type cert_type) :
       // RFC 8446 4.4.2:
-      //    [In the case of server authentication], this field
+      //    [In the case of server authentication], the request context
       //    SHALL be zero length
-      m_request_context(), m_side(Connection_Side::Server) {
+      m_request_context(/* NOLINT(*-redundant-member-init) */), m_side(Connection_Side::Server) {
    BOTAN_ASSERT_NOMSG(client_hello.extensions().has<Signature_Algorithms>());
 
    const auto key_types = filter_signature_schemes(client_hello.signature_schemes());

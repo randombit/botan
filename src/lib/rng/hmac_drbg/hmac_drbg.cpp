@@ -91,7 +91,6 @@ HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
 }
 
 HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf) :
-      Stateful_RNG(),
       m_mac(std::move(prf)),
       m_max_number_of_bytes_per_request(64 * 1024),
       m_security_level(hmac_drbg_security_level(m_mac->output_length())) {
@@ -100,7 +99,6 @@ HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf) :
 }
 
 HMAC_DRBG::HMAC_DRBG(std::string_view hmac_hash) :
-      Stateful_RNG(),
       m_mac(MessageAuthenticationCode::create_or_throw(fmt("HMAC({})", hmac_hash))),
       m_max_number_of_bytes_per_request(64 * 1024),
       m_security_level(hmac_drbg_security_level(m_mac->output_length())) {

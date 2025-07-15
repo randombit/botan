@@ -60,7 +60,7 @@ PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session, const RSA_Private
 PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session,
                                              uint32_t bits,
                                              const RSA_PrivateKeyGenerationProperties& priv_key_props) :
-      Object(session), RSA_PublicKey() {
+      Object(session) {
    RSA_PublicKeyGenerationProperties pub_key_props(bits);
    pub_key_props.set_encrypt(true);
    pub_key_props.set_verify(true);

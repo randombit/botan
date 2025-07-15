@@ -56,8 +56,7 @@ X509_CRL::X509_CRL(std::string_view fsname) {
 X509_CRL::X509_CRL(const X509_DN& issuer,
                    const X509_Time& this_update,
                    const X509_Time& next_update,
-                   const std::vector<CRL_Entry>& revoked) :
-      X509_Object() {
+                   const std::vector<CRL_Entry>& revoked) {
    m_data = std::make_shared<CRL_Data>();
    m_data->m_issuer = issuer;
    m_data->m_this_update = this_update;

@@ -38,7 +38,6 @@ enabled_checks = [
 # but currently are not
 disabled_needs_work = [
     '*-named-parameter',
-    'readability-redundant-member-init',
     'cppcoreguidelines-use-default-member-init',
     'bugprone-unchecked-optional-access', # clang-tidy seems buggy (many false positives)
     'bugprone-empty-catch',
@@ -375,6 +374,7 @@ def main(args = None): # pylint: disable=too-many-return-statements
 
         if options.verbose:
             print("Preprocessing/hashing %d files took %.02f sec" % (len(results), time.time() - start_time))
+            sys.stdout.flush()
 
         start_time = time.time()
 

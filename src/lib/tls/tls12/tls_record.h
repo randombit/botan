@@ -72,8 +72,7 @@ class Record_Header final {
       Record_Header(uint64_t sequence, Protocol_Version version, Record_Type type) :
             m_needed(0), m_sequence(sequence), m_version(version), m_type(type) {}
 
-      explicit Record_Header(size_t needed) :
-            m_needed(needed), m_sequence(0), m_version(Protocol_Version()), m_type(Record_Type::Invalid) {}
+      explicit Record_Header(size_t needed) : m_needed(needed), m_sequence(0), m_type(Record_Type::Invalid) {}
 
       size_t needed() const { return m_needed; }
 
