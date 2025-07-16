@@ -155,9 +155,9 @@ void XTS_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
       buffer.resize(full_blocks + offset);
       update(buffer, offset);
 
-      xor_buf(last, tweak(), BS);
+      xor_buf(std::span(last).first(BS), std::span(tweak(), BS));
       cipher().encrypt(last);
-      xor_buf(last, tweak(), BS);
+      xor_buf(std::span(last).first(BS), std::span(tweak(), BS));
 
       for(size_t i = 0; i != final_bytes - BS; ++i) {
          last[i] ^= last[i + BS];
@@ -165,9 +165,9 @@ void XTS_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
          last[i] ^= last[i + BS];
       }
 
-      xor_buf(last, tweak() + BS, BS);
+      xor_buf(std::span(last).first(BS), std::span(tweak() + BS, BS));
       cipher().encrypt(last);
-      xor_buf(last, tweak() + BS, BS);
+      xor_buf(std::span(last).first(BS), std::span(tweak() + BS, BS));
 
       buffer += last;
    }
@@ -190,9 +190,9 @@ size_t XTS_Decryption::process_msg(uint8_t buf[], size_t sz) {
       const size_t to_proc = std::min(blocks, blocks_in_tweak);
       const size_t proc_bytes = to_proc * BS;
 
-      xor_buf(buf, tweak(), proc_bytes);
+      xor_buf(std::span(buf, proc_bytes), std::span(tweak(), proc_bytes));
       cipher().decrypt_n(buf, buf, to_proc);
-      xor_buf(buf, tweak(), proc_bytes);
+      xor_buf(std::span(buf, proc_bytes), std::span(tweak(), proc_bytes));
 
       buf += proc_bytes;
       blocks -= to_proc;
@@ -224,9 +224,9 @@ void XTS_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
       buffer.resize(full_blocks + offset);
       update(buffer, offset);
 
-      xor_buf(last, tweak() + BS, BS);
+      xor_buf(std::span(last).first(BS), std::span(tweak() + BS, BS));
       cipher().decrypt(last);
-      xor_buf(last, tweak() + BS, BS);
+      xor_buf(std::span(last).first(BS), std::span(tweak() + BS, BS));
 
       for(size_t i = 0; i != final_bytes - BS; ++i) {
          last[i] ^= last[i + BS];
@@ -234,9 +234,9 @@ void XTS_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
          last[i] ^= last[i + BS];
       }
 
-      xor_buf(last, tweak(), BS);
+      xor_buf(std::span(last).first(BS), std::span(tweak(), BS));
       cipher().decrypt(last);
-      xor_buf(last, tweak(), BS);
+      xor_buf(std::span(last).first(BS), std::span(tweak(), BS));
 
       buffer += last;
    }
