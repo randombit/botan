@@ -1917,13 +1917,11 @@ X.509 Certificates
 
 .. cpp:type:: opaque* botan_x509_cert_params_builder_t
 
-.. cpp:function::int botan_x509_cert_opts_destroy(botan_x509_cert_opts_t opts)
+.. cpp:function::int botan_x509_cert_params_builder_destroy(botan_x509_cert_params_builder_t builder)
 
    Destroy the options object.
 
-.. cpp:function::int botan_x509_create_cert_params_builder(botan_x509_cert_params_builder_t* builder_obj, \
-                  const char* opts, \
-                  uint32_t* expire_time);
+.. cpp:function::int botan_x509_create_cert_params_builder(botan_x509_cert_params_builder_t* builder_obj);
 
    Create a new certificate builder object. ``opts`` defines the common name (e.g. `common_name/country/organization/organizational_unit`).
    ``expire_time`` if given is the expiration time from current clock in seconds.
@@ -1932,57 +1930,50 @@ X.509 Certificates
 
 .. cpp:function::int botan_x509_cert_params_builder_add_country(botan_x509_cert_params_builder_t builder, const char* country);
 
-.. cpp:function::int botan_x509_cert_params_builder_add_organization(botan_x509_cert_params_builder_t builder, const char* organization);
-
-.. cpp:function::int botan_x509_cert_params_builder_add_org_unit(botan_x509_cert_params_builder_t builder, const char* org_unit);
+.. cpp:function::int botan_x509_cert_params_builder_add_state(botan_x509_cert_params_builder_t builder, const char* state);
 
 .. cpp:function::int botan_x509_cert_params_builder_add_locality(botan_x509_cert_params_builder_t builder, const char* locality);
 
-.. cpp:function::int botan_x509_cert_params_builder_add_state(botan_x509_cert_params_builder_t builder, const char* state);
-
 .. cpp:function::int botan_x509_cert_params_builder_add_serial_number(botan_x509_cert_params_builder_t builder, const char* serial_number);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_organization(botan_x509_cert_params_builder_t builder, const char* organization);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_organizational_unit(botan_x509_cert_params_builder_t builder, const char* org_unit);
 
 .. cpp:function::int botan_x509_cert_params_builder_add_email(botan_x509_cert_params_builder_t builder, const char* email);
 
-.. cpp:function::int botan_x509_cert_params_builder_add_uri(botan_x509_cert_params_builder_t builder, const char* uri);
-
-.. cpp:function::int botan_x509_cert_params_builder_add_ip(botan_x509_cert_params_builder_t builder, const char* ip);
-
 .. cpp:function::int botan_x509_cert_params_builder_add_dns(botan_x509_cert_params_builder_t builder, const char* dns);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_uri(botan_x509_cert_params_builder_t builder, const char* uri);
 
 .. cpp:function::int botan_x509_cert_params_builder_add_xmpp(botan_x509_cert_params_builder_t builder, const char* xmpp);
 
-.. cpp:function::int botan_x509_cert_params_builder_add_challenge(botan_x509_cert_params_builder_t builder, const char* challenge);
+.. cpp:function::int botan_x509_cert_params_builder_add_ip(botan_x509_cert_params_builder_t builder, uint32_t ipv4);
 
-.. cpp:function::int botan_x509_cert_params_builder_mark_as_ca_key(botan_x509_cert_params_builder_t builder, size_t limit);
+.. cpp:function::int botan_x509_cert_params_builder_add_allowed_usage(botan_x509_cert_params_builder_t builder, uint32_t usage);
+
+.. cpp:function::int botan_x509_cert_params_builder_add_allowed_extended_usage(botan_x509_cert_params_builder_t builder, botan_asn1_oid_t oid);
+
+.. cpp:function::int botan_x509_cert_params_builder_set_as_ca_certificate(botan_x509_cert_params_builder_t builder, size_t limit);
 
    Mark the certificate for CA usage.
 
-.. cpp:function::int botan_x509_cert_params_builder_add_not_before(botan_x509_cert_params_builder_t builder, uint64_t time_since_epoch);
-
-   ``time_since_epoch`` is expected to be in seconds.
-
-.. cpp:function::int botan_x509_cert_params_builder_add_not_after(botan_x509_cert_params_builder_t builder, uint64_t time_since_epoch);
-
-.. cpp:function::int botan_x509_cert_params_builder_add_constraints(botan_x509_cert_params_builder_t builder, uint32_t usage);
-
-.. cpp:function::int botan_x509_cert_params_builder_add_ex_constraint(botan_x509_cert_params_builder_t builder, botan_asn1_oid_t oid);
-
 .. cpp:function::int botan_x509_cert_params_builder_add_ext_ip_addr_blocks(botan_x509_cert_params_builder_t builder, \
-                  botan_x509_ext_ip_addr_blocks_t ip_addr_blocks);
+                  botan_x509_ext_ip_addr_blocks_t ip_addr_blocks, int is_critical);
 
 .. cpp:function::int botan_x509_cert_params_builder_add_ext_as_blocks(botan_x509_cert_params_builder_t builder, \
-                  botan_x509_ext_as_blocks_t as_blocks);
+                  botan_x509_ext_as_blocks_t as_blocks, int is_critical);
 
 .. cpp:function::int botan_x509_create_self_signed_cert(botan_x509_cert_t* cert_obj, \
                   botan_privkey_t key, \
-                  botan_x509_cert_opts_t opts, \
+                  botan_x509_cert_params_builder_t builder, \
+                  botan_rng_t rng, \
+                  uint64_t not_before, \
+                  uint64_t not_after, \
                   const char* hash_fn, \
-                  const char* padding, \
-                  botan_rng_t rng)
+                  const char* padding)
 
-
-   Create a new self-signed X.509 certificate.
+   Create a new self-signed X.509 certificate. ``not_before`` and ``not_after`` are expected to be the time since the UNIX epoch, in seconds.
 
 .. cpp:type:: opaque* botan_x509_pkcs10_req_t
 
@@ -1993,12 +1984,14 @@ X.509 Certificates
    Destroy the PKCS #10 certificate request object.
 
 .. cpp:function::int botan_x509_create_pkcs10_req(botan_x509_pkcs10_req_t* req_obj, \
-                  botan_x509_cert_opts_t opts, \
                   botan_privkey_t key, \
+                  botan_x509_cert_params_builder_t builder, \
+                  botan_rng_t rng, \
                   const char* hash_fn, \
-                  botan_rng_t rng)
+                  const char* padding, \
+                  const char* challenge_password)
 
-   Create a PCKS #10 certificate request.
+   Create a PCKS #10 certificate request. ``challenge_password``, ``hash_fn`` and ``padding`` may be NULL.
 
 .. cpp:function::int botan_x509_pkcs10_req_view_pem(botan_x509_pkcs10_req_t req, botan_view_ctx ctx, botan_view_str_fn view)
 

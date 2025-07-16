@@ -733,21 +733,25 @@ class FFI_Cert_Creation_Test final : public FFI_Test {
 
       void ffi_test(Test::Result& result, botan_rng_t rng) override {
          const std::string hash_fn{"SHA-256"};
+         const std::string group{"secp256r1"};
 
          botan_privkey_t ca_key;
          botan_privkey_t cert_key;
 
-         if(TEST_FFI_INIT(botan_privkey_create_rsa, (&ca_key, rng, 4096))) {
-            TEST_FFI_OK(botan_privkey_create_rsa, (&cert_key, rng, 4096));
+         if(TEST_FFI_INIT(botan_privkey_create, (&ca_key, "ECDSA", group.c_str(), rng))) {
+            TEST_FFI_OK(botan_privkey_create, (&cert_key, "ECDSA", group.c_str(), rng));
 
             uint64_t now =
                std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch())
                   .count();
 
             botan_x509_cert_params_builder_t ca_builder;
-            if(TEST_FFI_INIT(botan_x509_create_cert_params_builder,
-                             (&ca_builder, "Test CA/US/Botan Project/Testing", nullptr))) {
-               TEST_FFI_OK(botan_x509_cert_params_builder_mark_as_ca_key, (ca_builder, 1));
+            if(TEST_FFI_INIT(botan_x509_create_cert_params_builder, (&ca_builder))) {
+               TEST_FFI_OK(botan_x509_cert_params_builder_add_common_name, (ca_builder, "Test CA"));
+               TEST_FFI_OK(botan_x509_cert_params_builder_add_country, (ca_builder, "US"));
+               TEST_FFI_OK(botan_x509_cert_params_builder_add_organization, (ca_builder, "Botan Project"));
+               TEST_FFI_OK(botan_x509_cert_params_builder_add_organizational_unit, (ca_builder, "Testing"));
+               TEST_FFI_OK(botan_x509_cert_params_builder_set_as_ca_certificate, (ca_builder, 1));
                TEST_FFI_OK(botan_x509_cert_params_builder_add_uri, (ca_builder, "https://botan.randombit.net"));
                for(const auto* dns : {"imaginary.botan.randombit.net", "botan.randombit.net", "randombit.net"}) {
                   TEST_FFI_OK(botan_x509_cert_params_builder_add_dns, (ca_builder, dns));
@@ -755,14 +759,14 @@ class FFI_Cert_Creation_Test final : public FFI_Test {
 
                botan_x509_cert_t ca_cert;
                TEST_FFI_OK(botan_x509_create_self_signed_cert,
-                           (&ca_cert, ca_key, ca_builder, hash_fn.c_str(), "", rng));
+                           (&ca_cert, ca_key, ca_builder, rng, now, now + 60, hash_fn.c_str(), ""));
 
-               botan_x509_cert_params_builder_t req_opts;
-               TEST_FFI_OK(botan_x509_create_cert_params_builder,
-                           (&req_opts, "Test CA/US/Botan Project/Testing", nullptr));
+               botan_x509_cert_params_builder_t req_builder;
+               TEST_FFI_OK(botan_x509_create_cert_params_builder, (&req_builder));
 
                botan_x509_pkcs10_req_t req;
-               TEST_FFI_OK(botan_x509_create_pkcs10_req, (&req, req_opts, cert_key, hash_fn.c_str(), rng));
+               TEST_FFI_OK(botan_x509_create_pkcs10_req,
+                           (&req, cert_key, req_builder, rng, hash_fn.c_str(), nullptr, nullptr));
 
                botan_x509_cert_t cert;
                TEST_FFI_OK(botan_x509_sign_req, (&cert, req, ca_cert, ca_key, rng, now, now + 60, hash_fn.c_str(), ""));
@@ -771,7 +775,7 @@ class FFI_Cert_Creation_Test final : public FFI_Test {
                TEST_FFI_RC(0, botan_x509_cert_verify, (&rc, cert, nullptr, 0, &ca_cert, 1, nullptr, 0, nullptr, 0));
 
                TEST_FFI_OK(botan_x509_cert_params_builder_destroy, (ca_builder));
-               TEST_FFI_OK(botan_x509_cert_params_builder_destroy, (req_opts));
+               TEST_FFI_OK(botan_x509_cert_params_builder_destroy, (req_builder));
                TEST_FFI_OK(botan_x509_pkcs10_req_destroy, (req));
                TEST_FFI_OK(botan_x509_cert_destroy, (ca_cert));
                TEST_FFI_OK(botan_x509_cert_destroy, (cert));
@@ -789,23 +793,21 @@ class FFI_X509_RPKI_Test final : public FFI_Test {
 
       void ffi_test(Test::Result& result, botan_rng_t rng) override {
          const std::string hash_fn{"SHA-256"};
-         const std::string padding_method{"EMSA3(SHA-256)"};
+         const std::string group{"secp256r1"};
 
          botan_privkey_t ca_key;
          botan_privkey_t cert_key;
 
-         if(TEST_FFI_INIT(botan_privkey_create_rsa, (&ca_key, rng, 4096))) {
-            TEST_FFI_OK(botan_privkey_create_rsa, (&cert_key, rng, 4096));
+         if(TEST_FFI_INIT(botan_privkey_create, (&ca_key, "ECDSA", group.c_str(), rng))) {
+            TEST_FFI_OK(botan_privkey_create, (&cert_key, "ECDSA", group.c_str(), rng));
 
             uint64_t now =
                std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch())
                   .count();
 
-            // now + 60 * 60
             botan_x509_cert_params_builder_t ca_builder;
-            if(TEST_FFI_INIT(botan_x509_create_cert_params_builder,
-                             (&ca_builder, "Test CA/US/Botan Project/Testing", nullptr))) {
-               TEST_FFI_OK(botan_x509_cert_params_builder_mark_as_ca_key, (ca_builder, 1));
+            if(TEST_FFI_INIT(botan_x509_create_cert_params_builder, (&ca_builder))) {
+               TEST_FFI_OK(botan_x509_cert_params_builder_set_as_ca_certificate, (ca_builder, 1));
 
                botan_x509_ext_ip_addr_blocks_t ca_ip_addr_blocks;
                TEST_FFI_OK(botan_x509_ext_create_ip_addr_blocks, (&ca_ip_addr_blocks));
@@ -906,10 +908,10 @@ class FFI_X509_RPKI_Test final : public FFI_Test {
                result.confirm("index 1 has a value", present == 1);
                result.confirm("index 1 has entries", count == 0);
 
-               TEST_FFI_OK(botan_x509_cert_params_builder_add_ext_ip_addr_blocks, (ca_builder, ca_ip_addr_blocks));
+               TEST_FFI_OK(botan_x509_cert_params_builder_add_ext_ip_addr_blocks, (ca_builder, ca_ip_addr_blocks, 1));
                TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE,
                            botan_x509_cert_params_builder_add_ext_ip_addr_blocks,
-                           (ca_builder, ca_ip_addr_blocks));
+                           (ca_builder, ca_ip_addr_blocks, 1));
                TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_destroy, (ca_ip_addr_blocks));
 
                botan_x509_ext_as_blocks_t ca_as_blocks;
@@ -943,40 +945,42 @@ class FFI_X509_RPKI_Test final : public FFI_Test {
                            botan_x509_ext_as_blocks_get_rdi_at,
                            (ca_as_blocks, 0, &min_out_, &max_out_));
 
-               TEST_FFI_OK(botan_x509_cert_params_builder_add_ext_as_blocks, (ca_builder, ca_as_blocks));
+               TEST_FFI_OK(botan_x509_cert_params_builder_add_ext_as_blocks, (ca_builder, ca_as_blocks, 1));
                TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE,
                            botan_x509_cert_params_builder_add_ext_as_blocks,
-                           (ca_builder, ca_as_blocks));
+                           (ca_builder, ca_as_blocks, 1));
                TEST_FFI_OK(botan_x509_ext_as_blocks_destroy, (ca_as_blocks));
 
                botan_x509_cert_t ca_cert;
                TEST_FFI_OK(botan_x509_create_self_signed_cert,
-                           (&ca_cert, ca_key, ca_builder, hash_fn.c_str(), "", rng));
+                           (&ca_cert, ca_key, ca_builder, rng, now, now + 60, hash_fn.c_str(), nullptr));
 
                botan_x509_cert_params_builder_t req_builder;
-               TEST_FFI_OK(botan_x509_create_cert_params_builder,
-                           (&req_builder, "Test CA/US/Botan Project/Testing", nullptr));
+               TEST_FFI_OK(botan_x509_create_cert_params_builder, (&req_builder));
 
                botan_x509_ext_ip_addr_blocks_t req_ip_addr_blocks;
                TEST_FFI_OK(botan_x509_ext_create_ip_addr_blocks, (&req_ip_addr_blocks));
                TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_inherit, (req_ip_addr_blocks, 0, nullptr));
 
-               TEST_FFI_OK(botan_x509_cert_params_builder_add_ext_ip_addr_blocks, (req_builder, req_ip_addr_blocks));
+               TEST_FFI_OK(botan_x509_cert_params_builder_add_ext_ip_addr_blocks, (req_builder, req_ip_addr_blocks, 1));
                TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_destroy, (req_ip_addr_blocks));
 
                botan_x509_ext_as_blocks_t req_as_blocks;
                TEST_FFI_OK(botan_x509_ext_create_as_blocks, (&req_as_blocks));
                TEST_FFI_OK(botan_x509_ext_as_blocks_inherit_asnum, (req_as_blocks));
 
-               TEST_FFI_OK(botan_x509_cert_params_builder_add_ext_as_blocks, (req_builder, req_as_blocks));
+               TEST_FFI_OK(botan_x509_cert_params_builder_add_ext_as_blocks, (req_builder, req_as_blocks, 1));
                TEST_FFI_OK(botan_x509_ext_as_blocks_destroy, (req_as_blocks));
 
                botan_x509_pkcs10_req_t req;
-               TEST_FFI_OK(botan_x509_create_pkcs10_req, (&req, req_builder, cert_key, hash_fn.c_str(), rng));
+               TEST_FFI_OK(botan_x509_create_pkcs10_req,
+                           (&req, cert_key, req_builder, rng, hash_fn.c_str(), nullptr, nullptr));
 
                botan_x509_cert_t cert;
-               TEST_FFI_OK(botan_x509_sign_req,
-                           (&cert, req, ca_cert, ca_key, rng, now, now + 60, hash_fn.c_str(), padding_method.c_str()));
+               TEST_FFI_OK(botan_x509_sign_req, (&cert, req, ca_cert, ca_key, rng, now, now + 60, hash_fn.c_str(), ""));
+
+               uint64_t test = 0;
+               TEST_FFI_OK(botan_x509_cert_not_after, (cert, &test));
 
                botan_x509_ext_ip_addr_blocks_t req_ip_addr_blocks_from_cert;
                TEST_FFI_OK(botan_x509_ext_create_ip_addr_blocks_from_cert, (&req_ip_addr_blocks_from_cert, cert));
