@@ -725,45 +725,42 @@ X509CertificateBuilder
 
    .. py:method:: add_country(country)
 
-   .. py:method:: add_organization(organization)
-
-   .. py:method:: add_org_unit(org_unit)
+   .. py:method:: add_state(state)
 
    .. py:method:: add_locality(locality)
 
-   .. py:method:: add_state(state)
-
    .. py:method:: add_serial_number(serial_number)
+
+   .. py:method:: add_organization(organization)
+
+   .. py:method:: add_organizational_unit(org_unit)
 
    .. py:method:: add_email(email)
 
-   .. py:method:: add_uri(uri)
-
-   .. py:method:: add_ip(ip)
-
    .. py:method:: add_dns(dns)
+
+   .. py:method:: add_uri(uri)
 
    .. py:method:: add_xmpp(xmpp)
 
-   .. py:method:: add_challenge(challenge)
+   .. py:method:: add_ipv4(ipv4)
 
-   .. py:method:: mark_as_ca_key(limit)
+   .. py:method:: add_allowed_usage(usage_list)
 
-   .. py:method:: add_not_before(time_since_epoch)
+   .. py:method:: add_allowed_extended_usage(oid)
 
-      ``time_since_epoch`` is expected to be in seconds.
+   .. py:method:: set_as_ca_certificate(limit)
 
-   .. py:method:: add_not_after(time_since_epoch)
+   .. py:method:: add_ext_ip_addr_blocks(ip_addr_blocks, is_critical)
 
-   .. py:method:: add_constraints(usage_list)
+   .. py:method:: add_ext_as_blocks(as_blocks, is_critical)
 
-   .. py:method:: add_ex_constraints(oid)
+   .. py:method:: create_self_signed(key, rng, not_before, not_after, hash_fn=None, padding=None)
 
-   .. py:method:: add_ext_ip_addr_blocks(ip_addr_blocks)
+      Create a self-signed certificate from the given certificate options.
+      ``not_before`` and ``not_after`` are expected to be the time since the UNIX epoch, in seconds.
 
-   .. py:method:: add_ext_as_blocks(as_blocks)
-
-   .. py:method:: create_req(key, hash_fn, rng)
+   .. py:method:: create_req(key, rng, hash_fn=None, padding=None, challenge_password=None)
 
       Create a PKCS #10 certificate request that can later be signed.
 
@@ -839,7 +836,7 @@ PKCS10Req
 
 .. py:class:: PKCS10Req()
 
-   .. py:method:: sign(issuing_cert, issuing_key, rng, not_before, not_after, hash_fn, padding)
+   .. py:method:: sign(issuing_cert, issuing_key, rng, not_before, not_after, hash_fn=None, padding=None)
 
       ``not_before`` and ``not_after`` are expected to be the time since the UNIX epoch, in seconds.
 
@@ -849,10 +846,6 @@ X509Cert
 -----------------------------------------
 
 .. py:class:: X509Cert(filename=None, buf=None)
-
-   .. py:classmethod:: create_self_signed(key, opts, hash_fn, sig_padding, rng)
-
-      Create a self-signed certificate from the given certificate options.
 
    .. py:method:: time_starts()
 
