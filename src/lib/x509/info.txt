@@ -1,6 +1,6 @@
 <defines>
 X509_CERTIFICATES -> 20201106
-X509 -> 20201106
+X509 -> 20250716
 OCSP -> 20201106
 </defines>
 
@@ -22,6 +22,7 @@ ocsp.h
 pkcs10.h
 pkix_enums.h
 pkix_types.h
+x509_builder.h
 x509_ca.h
 x509_crl.h
 x509_ext.h
