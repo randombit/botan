@@ -50,6 +50,12 @@ class EC_PrivateKey_Data final {
 
       EC_PrivateKey_Data(const EC_Group& group, std::span<const uint8_t> bytes);
 
+      EC_PrivateKey_Data(const EC_PrivateKey_Data&) = default;
+      EC_PrivateKey_Data(EC_PrivateKey_Data&&) = default;
+      EC_PrivateKey_Data& operator=(const EC_PrivateKey_Data&) = default;
+      EC_PrivateKey_Data& operator=(EC_PrivateKey_Data&&) = default;
+      ~EC_PrivateKey_Data();
+
       std::shared_ptr<EC_PublicKey_Data> public_key(RandomNumberGenerator& rng, bool with_modular_inverse) const;
 
       std::shared_ptr<EC_PublicKey_Data> public_key(bool with_modular_inverse) const;

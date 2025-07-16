@@ -201,6 +201,12 @@ class ECC_Mul2_Inf_Tests final : public Test {
             check_px_qy("r*g + r*-g", g, r, g.negate(), r);
             check_px_qy("r*g2 + -r2*g", g2, r, g, neg_r2);
 
+            // Test 'zeroization' (explicit erasure of the scalar content)
+            auto r2 = Botan::EC_Scalar::random(group, rng());
+            result.confirm("random value is not zero", !r2.is_zero());
+            r2.zeroize();
+            result.confirm("value is zero", r2.is_zero());
+
             results.push_back(result);
          }
 

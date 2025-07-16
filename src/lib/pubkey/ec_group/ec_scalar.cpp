@@ -166,6 +166,10 @@ void EC_Scalar::assign(const EC_Scalar& x) {
    m_scalar->assign(x.inner());
 }
 
+void EC_Scalar::zeroize() {
+   m_scalar->zeroize();
+}
+
 bool EC_Scalar::is_eq(const EC_Scalar& x) const {
    return inner().is_eq(x.inner());
 }
