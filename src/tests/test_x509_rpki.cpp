@@ -10,15 +10,19 @@
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    #include <botan/ber_dec.h>
    #include <botan/certstor.h>
+   #include <botan/dns_name.h>
    #include <botan/hex.h>
    #include <botan/pk_algs.h>
    #include <botan/pubkey.h>
    #include <botan/rng.h>
+   #include <botan/x509_builder.h>
    #include <botan/x509_ca.h>
    #include <botan/x509_ext.h>
    #include <botan/x509path.h>
-   #include <botan/x509self.h>
    #include <botan/internal/calendar.h>
+   #if defined(BOTAN_HAS_ECC_GROUP)
+      #include <botan/ec_group.h>
+   #endif
 #endif
 
 namespace Botan_Tests {
@@ -43,96 +47,109 @@ Botan::X509_Time from_date(const int y, const int m, const int d) {
    return Botan::X509_Time(t.to_std_timepoint());
 }
 
-Botan::X509_Cert_Options ca_opts(const std::string& sig_padding = "") {
-   Botan::X509_Cert_Options opts("Test CA/US/Botan Project/Testing");
+std::unique_ptr<Botan::Private_Key> generate_key(const std::string& algo, Botan::RandomNumberGenerator& rng) {
+   std::string params;
+   if(algo == "ECDSA") {
+      params = "secp256r1";
 
-   opts.uri = "https://botan.randombit.net";
-   opts.dns = "botan.randombit.net";
-   opts.email = "testing@randombit.net";
-   opts.set_padding_scheme(sig_padding);
-
-   opts.CA_key(1);
-
-   return opts;
-}
-
-Botan::X509_Cert_Options req_opts(const std::string& algo, const std::string& sig_padding = "") {
-   Botan::X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
-
-   opts.uri = "https://botan.randombit.net";
-   opts.dns = "botan.randombit.net";
-   opts.email = "testing@randombit.net";
-   opts.set_padding_scheme(sig_padding);
-
-   opts.not_before("160101200000Z");
-   opts.not_after("300101200000Z");
-
-   opts.challenge = "zoom";
-
-   if(algo == "RSA") {
-      opts.constraints = Botan::Key_Constraints::KeyEncipherment;
-   } else if(algo == "DSA" || algo == "ECDSA" || algo == "ECGDSA" || algo == "ECKCDSA") {
-      opts.constraints = Botan::Key_Constraints::DigitalSignature;
-   }
-
-   return opts;
-}
-
-std::tuple<std::string, std::string, std::string, std::unique_ptr<Botan::Private_Key>>
-get_sig_algo_padding_and_generate_key(Botan::RandomNumberGenerator& rng) {
-   const auto generate_key = [&](const std::string& alg_name, const std::string& params = "") {
-      auto key = Botan::create_private_key(alg_name, rng, params);
-      if(!key) {
-         throw Test_Error("Could not generate key for algorithm " + alg_name);
+   #if defined(BOTAN_HAS_ECC_GROUP)
+      if(Botan::EC_Group::supports_named_group("secp192r1")) {
+         params = "secp192r1";
       }
-      return key;
-   };
-
-   #if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_SHA2_32)
-   // Try to find a group that is supported in this build
-   const auto group_name = Test::supported_ec_group_name();
-   if(group_name) {
-      return {"ECDSA", "", "SHA-256", generate_key("ECDSA", *group_name)};
+   #endif
+   } else if(algo == "Ed25519") {
+      params = "";
+   } else if(algo == "RSA") {
+      params = "1024";
    }
-   #endif
 
-   #if defined(BOTAN_HAS_ED25519)
-   return {"Ed25519", "", "SHA-512", generate_key("Ed25519")};
-   #elif defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1)
-   return {"RSA", "PKCS1v15(SHA-256)", "SHA-256", generate_key("RSA", "1536")};
-   #else
-   throw Test_Error("No suitable signature algorithm available in this build");
-   #endif
+   return Botan::create_private_key(algo, rng, params);
 }
 
-Botan::X509_Certificate make_self_signed(std::unique_ptr<Botan::RandomNumberGenerator>& rng,
-                                         const Botan::X509_Cert_Options& opts = std::move(ca_opts())) {
-   auto [sig_algo, padding_method, hash_fn, key] = get_sig_algo_padding_and_generate_key(*rng);
-   return Botan::X509::create_self_signed_cert(opts, *key, hash_fn, *rng);
+Botan::CertificateParametersBuilder ca_params() {
+   Botan::CertificateParametersBuilder builder;
+
+   builder.add_common_name("RPKI Test CA")
+      .add_country("US")
+      .add_organization("Botan")
+      .add_dns(Botan::DNSName::from_string("botan.randombit.net").value())
+      .set_as_ca_certificate(1);
+
+   return builder;
 }
 
-CA_Creation_Result make_ca(std::unique_ptr<Botan::RandomNumberGenerator>& rng,
-                           const Botan::X509_Cert_Options& opts = std::move(ca_opts())) {
-   auto [sig_algo, padding_method, hash_fn, ca_key] = get_sig_algo_padding_and_generate_key(*rng);
-   const auto ca_cert = Botan::X509::create_self_signed_cert(opts, *ca_key, hash_fn, *rng);
-   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, padding_method, *rng);
-   auto sub_key = ca_key->generate_another(*rng);
+Botan::CertificateParametersBuilder user_params() {
+   Botan::CertificateParametersBuilder builder;
+
+   builder.add_common_name("RPKI Test User")
+      .add_country("US")
+      .add_organization("Botan")
+      .add_allowed_usage(Botan::Key_Constraints::DigitalSignature);
+
+   return builder;
+}
+
+std::pair<std::string, std::string> get_sig_algo() {
+   #if defined(BOTAN_HAS_ECDSA)
+   const std::string sig_algo{"ECDSA"};
+   const std::string hash_fn{"SHA-256"};
+   #elif defined(BOTAN_HAS_ED25519)
+   const std::string sig_algo{"Ed25519"};
+   const std::string hash_fn{"SHA-512"};
+   #elif defined(BOTAN_HAS_RSA)
+   const std::string sig_algo{"RSA"};
+   const std::string hash_fn{"SHA-256"};
+   #endif
+
+   return std::make_pair(sig_algo, hash_fn);
+}
+
+Botan::X509_Certificate make_self_signed(Botan::RandomNumberGenerator& rng,
+                                         const Botan::CertificateParametersBuilder& params) {
+   auto [sig_algo, hash_fn] = get_sig_algo();
+   auto key = generate_key(sig_algo, rng);
+
+   const auto now = Botan::ASN1_Time::current_time();
+   const auto not_before = Botan::ASN1_Time::from_seconds_since_epoch(now.time_since_epoch() - 180);
+   const auto not_after = Botan::ASN1_Time::from_seconds_since_epoch(now.time_since_epoch() + 86400);
+
+   return params.into_self_signed_cert(not_before, not_after, *key, rng, hash_fn);
+}
+
+CA_Creation_Result make_ca(Botan::RandomNumberGenerator& rng, const Botan::CertificateParametersBuilder& params) {
+   auto [sig_algo, hash_fn] = get_sig_algo();
+   auto ca_key = generate_key(sig_algo, rng);
+
+   const auto now = Botan::ASN1_Time::current_time();
+   const auto not_before = Botan::ASN1_Time::from_seconds_since_epoch(now.time_since_epoch() - 180);
+   const auto not_after = Botan::ASN1_Time::from_seconds_since_epoch(now.time_since_epoch() + 86400);
+
+   const auto ca_cert = params.into_self_signed_cert(not_before, not_after, *ca_key, rng, hash_fn);
+
+   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, rng);
+   auto sub_key = generate_key(sig_algo, rng);
 
    return CA_Creation_Result{ca_cert, std::move(ca), std::move(sub_key), sig_algo, hash_fn};
 }
 
-std::pair<Botan::X509_Certificate, Botan::X509_CA> make_and_sign_ca(
-   std::unique_ptr<Botan::Certificate_Extension> ext,
-   const Botan::X509_CA& parent_ca,
-   std::unique_ptr<Botan::RandomNumberGenerator>& rng) {
-   auto [sig_algo, padding_method, hash_fn, key] = get_sig_algo_padding_and_generate_key(*rng);
+CA_Creation_Result make_ca(Botan::RandomNumberGenerator& rng) {
+   return make_ca(rng, ca_params());
+}
 
-   Botan::X509_Cert_Options opts = ca_opts();
-   opts.extensions.add(std::move(ext));
+std::pair<Botan::X509_Certificate, Botan::X509_CA> make_and_sign_ca(std::unique_ptr<Botan::Certificate_Extension> ext,
+                                                                    const Botan::X509_CA& parent_ca,
+                                                                    Botan::RandomNumberGenerator& rng) {
+   auto [sig_algo, hash_fn] = get_sig_algo();
 
-   const Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *key, hash_fn, *rng);
-   Botan::X509_Certificate cert = parent_ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
-   Botan::X509_CA ca(cert, *key, hash_fn, padding_method, *rng);
+   auto params = ca_params();
+   params.add_extension(std::move(ext));
+
+   const std::unique_ptr<Botan::Private_Key> key = generate_key(sig_algo, rng);
+
+   const Botan::PKCS10_Request req = params.into_pkcs10_request(*key, rng, hash_fn);
+
+   Botan::X509_Certificate cert = parent_ca.sign_request(req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+   Botan::X509_CA ca(cert, *key, hash_fn, rng);
 
    return std::make_pair(std::move(cert), std::move(ca));
 }
@@ -573,10 +590,7 @@ Test::Result test_x509_ip_addr_blocks_rfc3779_example() {
    blocks_1->add_address(v4({10, 3, 0, 0}), v4({10, 3, 255, 255}), 1);
    blocks_1->inherit<IPv6>();
 
-   Botan::X509_Cert_Options opts_1 = ca_opts();
-   opts_1.extensions.add(std::move(blocks_1));
-
-   const auto cert_1 = make_self_signed(rng, opts_1);
+   const auto cert_1 = make_self_signed(*rng, ca_params().add_extension(std::move(blocks_1)));
 
    auto bits_1 = cert_1.v3_extensions().get_extension_bits(IPAddressBlocks::static_oid());
 
@@ -620,10 +634,7 @@ Test::Result test_x509_ip_addr_blocks_rfc3779_example() {
    blocks_2->add_address(v4({172, 16, 0, 0}), v4({172, 31, 255, 255}), 1);
    blocks_2->inherit<IPv4>(2);
 
-   Botan::X509_Cert_Options opts_2 = ca_opts();
-   opts_2.extensions.add(std::move(blocks_2));
-
-   const auto cert_2 = make_self_signed(rng, opts_2);
+   const auto cert_2 = make_self_signed(*rng, ca_params().add_extension(std::move(blocks_2)));
 
    auto bits_2 = cert_2.v3_extensions().get_extension_bits(IPAddressBlocks::static_oid());
 
@@ -687,10 +698,7 @@ Test::Result test_x509_ip_addr_blocks_encode_builder() {
 
    blocks->add_address(v4({123, 123, 2, 1}));
 
-   Botan::X509_Cert_Options opts = ca_opts();
-   opts.extensions.add(std::move(blocks));
-
-   const auto cert = make_self_signed(rng, opts);
+   const auto cert = make_self_signed(*rng, ca_params().add_extension(std::move(blocks)));
    auto bits = cert.v3_extensions().get_extension_bits(IPAddressBlocks::static_oid());
 
    // hand validated with https://lapo.it/asn1js/
@@ -724,7 +732,7 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_ctor() {
 
    auto rng = Test::new_rng(__func__);
 
-   auto [ca_cert, ca, sub_key, sig_algo, hash_fn] = make_ca(rng);
+   auto [ca_cert, ca, sub_key, sig_algo, hash_fn] = make_ca(*rng);
 
    for(size_t i = 0; i < 64; i++) {
       const bool push_ipv4_ranges = bit_set<0>(i);
@@ -733,8 +741,6 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_ctor() {
       const bool inherit_ipv6 = bit_set<3>(i);
       const bool push_ipv4_family = bit_set<4>(i);
       const bool push_ipv6_family = bit_set<5>(i);
-
-      Botan::X509_Cert_Options opts = req_opts(sig_algo);
 
       std::vector<uint8_t> a = {123, 123, 2, 1};
       const auto ipv4_1 = rpki_v4(a);
@@ -820,9 +826,7 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_ctor() {
 
       std::unique_ptr<IPAddressBlocks> blocks = std::make_unique<IPAddressBlocks>(addr_blocks);
 
-      opts.extensions.add(std::move(blocks));
-
-      const Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
+      auto req = user_params().add_extension(std::move(blocks)).into_pkcs10_request(*sub_key, *rng, hash_fn);
       const Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
       {
          const auto* ip_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
@@ -901,7 +905,7 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_edge_cases_ctor() {
    std::vector<uint8_t> edge_values = {0,  2,  4,  8,   16,  32, 64, 128, 1,   3,  7,
                                        15, 31, 63, 127, 255, 12, 46, 123, 160, 234};
 
-   auto [ca_cert, ca, sub_key, sig_algo, hash_fn] = make_ca(rng);
+   auto [ca_cert, ca, sub_key, sig_algo, hash_fn] = make_ca(*rng);
 
    for(size_t i = 0; i < edge_values.size(); i++) {
       for(size_t j = 0; j < 4; j++) {
@@ -914,8 +918,6 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_edge_cases_ctor() {
                // so we only need to do this once
                break;
             }
-
-            Botan::X509_Cert_Options opts = req_opts(sig_algo);
 
             std::vector<uint8_t> min_bytes(16, 0x00);
             std::vector<uint8_t> max_bytes(16, 0xFF);
@@ -944,9 +946,7 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_edge_cases_ctor() {
 
             std::unique_ptr<IPAddressBlocks> blocks = std::make_unique<IPAddressBlocks>(addr_blocks);
 
-            opts.extensions.add(std::move(blocks));
-
-            const Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
+            auto req = user_params().add_extension(std::move(blocks)).into_pkcs10_request(*sub_key, *rng, hash_fn);
             const Botan::X509_Certificate cert =
                ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
             {
@@ -977,8 +977,7 @@ Test::Result test_x509_ip_addr_blocks_range_merge() {
 
    auto rng = Test::new_rng(__func__);
 
-   auto [ca_cert, ca, sub_key, sig_algo, hash_fn] = make_ca(rng);
-   Botan::X509_Cert_Options opts = req_opts(sig_algo);
+   auto [ca_cert, ca, sub_key, sig_algo, hash_fn] = make_ca(*rng);
 
    const std::vector<std::vector<std::vector<uint8_t>>> addresses = {
       {{11, 0, 0, 0}, {{11, 0, 0, 0}}},
@@ -1008,10 +1007,8 @@ Test::Result test_x509_ip_addr_blocks_range_merge() {
 
    std::unique_ptr<IPAddressBlocks> blocks = std::make_unique<IPAddressBlocks>(addr_blocks);
 
-   opts.extensions.add(std::move(blocks));
-
-   const Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
-   const Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+   auto req = user_params().add_extension(std::move(blocks)).into_pkcs10_request(*sub_key, *rng, hash_fn);
+   Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
    {
       const auto* ip_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
       result.test_not_null("cert has IPAddrBlocks extension", ip_blocks);
@@ -1040,8 +1037,7 @@ Test::Result test_x509_ip_addr_blocks_family_merge() {
 
    auto rng = Test::new_rng(__func__);
 
-   auto [ca_cert, ca, sub_key, sig_algo, hash_fn] = make_ca(rng);
-   Botan::X509_Cert_Options opts = req_opts(sig_algo);
+   auto [ca_cert, ca, sub_key, sig_algo, hash_fn] = make_ca(*rng);
 
    std::vector<IPAddressBlocks::IPAddressFamily> addr_blocks;
 
@@ -1095,9 +1091,7 @@ Test::Result test_x509_ip_addr_blocks_family_merge() {
 
    std::unique_ptr<IPAddressBlocks> blocks = std::make_unique<IPAddressBlocks>(addr_blocks);
 
-   opts.extensions.add(std::move(blocks));
-
-   const Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
+   auto req = user_params().add_extension(std::move(blocks)).into_pkcs10_request(*sub_key, *rng, hash_fn);
    const Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
    const auto* ip_blocks = cert.v3_extensions().get_extension_object_as<IPAddressBlocks>();
@@ -1263,12 +1257,9 @@ Test::Result test_x509_ip_addr_blocks_path_validation_success_builder() {
       v6({0x00, 0x00, 0x00, 0xAB, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}),
       v6({0x0D, 0x00, 0x00, 0xAB, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}));
 
-   Botan::X509_Cert_Options root_opts = ca_opts();
-   root_opts.extensions.add(std::move(root_blocks));
-   auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] = make_ca(rng, root_opts);
-   Botan::X509_Cert_Options sub_opts = req_opts(sig_algo);
-   sub_opts.extensions.add(std::move(sub_blocks));
-   auto [inherit_cert, inherit_ca] = make_and_sign_ca(std::move(inherit_blocks), root_ca, rng);
+   auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] =
+      make_ca(*rng, ca_params().add_extension(std::move(root_blocks)));
+   auto [inherit_cert, inherit_ca] = make_and_sign_ca(std::move(inherit_blocks), root_ca, *rng);
 
    Botan::Certificate_Store_In_Memory trusted;
    trusted.add_certificate(root_cert);
@@ -1294,11 +1285,11 @@ Test::Result test_x509_ip_addr_blocks_path_validation_success_builder() {
          dyn_blocks->inherit<IPv6>();
       }
 
-      auto [dyn_cert, dyn_ca] = make_and_sign_ca(std::move(dyn_blocks), inherit_ca, rng);
+      auto [dyn_cert, dyn_ca] = make_and_sign_ca(std::move(dyn_blocks), inherit_ca, *rng);
 
-      const Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
-      const Botan::X509_Certificate sub_cert =
-         dyn_ca.sign_request(sub_req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+      const auto sub_req = user_params().add_extension(sub_blocks->copy()).into_pkcs10_request(*sub_key, *rng, hash_fn);
+
+      const auto sub_cert = dyn_ca.sign_request(sub_req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
       const Botan::Path_Validation_Restrictions restrictions(false, 80);
       const std::vector<Botan::X509_Certificate> certs = {sub_cert, dyn_cert, inherit_cert};
@@ -1428,12 +1419,9 @@ Test::Result test_x509_ip_addr_blocks_path_validation_success_ctor() {
    const auto sub_addr_blocks = {sub_ipv4_family, sub_ipv6_family};
    std::unique_ptr<IPAddressBlocks> sub_blocks = std::make_unique<IPAddressBlocks>(sub_addr_blocks);
 
-   Botan::X509_Cert_Options root_opts = ca_opts();
-   root_opts.extensions.add(std::move(root_blocks));
-   auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] = make_ca(rng, root_opts);
-   Botan::X509_Cert_Options sub_opts = req_opts(sig_algo);
-   sub_opts.extensions.add(std::move(sub_blocks));
-   auto [inherit_cert, inherit_ca] = make_and_sign_ca(std::move(inherit_blocks), root_ca, rng);
+   auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] =
+      make_ca(*rng, ca_params().add_extension(std::move(root_blocks)));
+   auto [inherit_cert, inherit_ca] = make_and_sign_ca(std::move(inherit_blocks), root_ca, *rng);
 
    Botan::Certificate_Store_In_Memory trusted;
    trusted.add_certificate(root_cert);
@@ -1453,11 +1441,10 @@ Test::Result test_x509_ip_addr_blocks_path_validation_success_ctor() {
       const auto dyn_addr_blocks = {dyn_ipv4_family, dyn_ipv6_family};
       std::unique_ptr<IPAddressBlocks> dyn_blocks = std::make_unique<IPAddressBlocks>(dyn_addr_blocks);
 
-      auto [dyn_cert, dyn_ca] = make_and_sign_ca(std::move(dyn_blocks), inherit_ca, rng);
+      auto [dyn_cert, dyn_ca] = make_and_sign_ca(std::move(dyn_blocks), inherit_ca, *rng);
 
-      const Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
-      const Botan::X509_Certificate sub_cert =
-         dyn_ca.sign_request(sub_req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+      const auto sub_req = user_params().add_extension(sub_blocks->copy()).into_pkcs10_request(*sub_key, *rng, hash_fn);
+      const auto sub_cert = dyn_ca.sign_request(sub_req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
       const Botan::Path_Validation_Restrictions restrictions(false, 80);
       const std::vector<Botan::X509_Certificate> certs = {sub_cert, dyn_cert, inherit_cert};
@@ -1494,11 +1481,11 @@ Test::Result test_x509_ip_addr_blocks_path_validation_failure_builder() {
          root_blocks->inherit<IPv4>(42);
       }
 
-      Botan::X509_Cert_Options root_opts = ca_opts();
+      auto root_params = ca_params();
       if(!nullptr_extensions) {
-         root_opts.extensions.add(std::move(root_blocks));
+         root_params.add_extension(std::move(root_blocks));
       }
-      auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] = make_ca(rng, root_opts);
+      auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] = make_ca(*rng, root_params);
 
       // Issuer Cert
       std::unique_ptr<IPAddressBlocks> iss_blocks = std::make_unique<IPAddressBlocks>();
@@ -1512,7 +1499,7 @@ Test::Result test_x509_ip_addr_blocks_path_validation_failure_builder() {
          iss_blocks->inherit<IPv4>(42);
       }
 
-      auto [iss_cert, iss_ca] = make_and_sign_ca(std::move(iss_blocks), root_ca, rng);
+      auto [iss_cert, iss_ca] = make_and_sign_ca(std::move(iss_blocks), root_ca, *rng);
 
       // Subject cert
       std::unique_ptr<IPAddressBlocks> sub_blocks = std::make_unique<IPAddressBlocks>();
@@ -1533,10 +1520,7 @@ Test::Result test_x509_ip_addr_blocks_path_validation_failure_builder() {
          sub_blocks->inherit<IPv4>(safi);
       }
 
-      Botan::X509_Cert_Options sub_opts = req_opts(sig_algo);
-      sub_opts.extensions.add(std::move(sub_blocks));
-
-      const Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
+      auto sub_req = user_params().add_extension(std::move(sub_blocks)).into_pkcs10_request(*sub_key, *rng, hash_fn);
       const Botan::X509_Certificate sub_cert =
          iss_ca.sign_request(sub_req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
@@ -1584,11 +1568,11 @@ Test::Result test_x509_ip_addr_blocks_path_validation_failure_ctor() {
       const auto root_addr_blocks = {root_family};
       std::unique_ptr<IPAddressBlocks> root_blocks = std::make_unique<IPAddressBlocks>(root_addr_blocks);
 
-      Botan::X509_Cert_Options root_opts = ca_opts();
+      auto root_params = ca_params();
       if(!nullptr_extensions) {
-         root_opts.extensions.add(std::move(root_blocks));
+         root_params.add_extension(std::move(root_blocks));
       }
-      auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] = make_ca(rng, root_opts);
+      auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] = make_ca(*rng, root_params);
 
       // Issuer Cert
       a = {122, 0, 0, 255};
@@ -1607,7 +1591,7 @@ Test::Result test_x509_ip_addr_blocks_path_validation_failure_ctor() {
       const auto iss_family = IPAddressBlocks::IPAddressFamily(iss_choice, 42);
       const auto iss_addr_blocks = {iss_family};
       std::unique_ptr<IPAddressBlocks> iss_blocks = std::make_unique<IPAddressBlocks>(iss_addr_blocks);
-      auto [iss_cert, iss_ca] = make_and_sign_ca(std::move(iss_blocks), root_ca, rng);
+      auto [iss_cert, iss_ca] = make_and_sign_ca(std::move(iss_blocks), root_ca, *rng);
 
       // Subject cert
       if(too_small_subrange) {
@@ -1636,10 +1620,7 @@ Test::Result test_x509_ip_addr_blocks_path_validation_failure_ctor() {
       const auto sub_addr_blocks = {sub_family};
       std::unique_ptr<IPAddressBlocks> sub_blocks = std::make_unique<IPAddressBlocks>(sub_addr_blocks);
 
-      Botan::X509_Cert_Options sub_opts = req_opts(sig_algo);
-      sub_opts.extensions.add(std::move(sub_blocks));
-
-      const Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
+      auto sub_req = user_params().add_extension(std::move(sub_blocks)).into_pkcs10_request(*sub_key, *rng, hash_fn);
       const Botan::X509_Certificate sub_cert =
          iss_ca.sign_request(sub_req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
@@ -1671,10 +1652,7 @@ Test::Result test_x509_as_blocks_rfc3779_example() {
    blocks->add_asnum(5001);
    blocks->inherit_rdi();
 
-   Botan::X509_Cert_Options opts = ca_opts();
-   opts.extensions.add(std::move(blocks));
-
-   const auto cert = make_self_signed(rng, opts);
+   const auto cert = make_self_signed(*rng, ca_params().add_extension(std::move(blocks)));
    auto bits = cert.v3_extensions().get_extension_bits(ASBlocks::static_oid());
 
    result.test_bin_eq(
@@ -1708,10 +1686,7 @@ Test::Result test_x509_as_blocks_encode_builder() {
    // this overwrites the previous two
    blocks->restrict_asnum();
 
-   Botan::X509_Cert_Options opts = ca_opts();
-   opts.extensions.add(std::move(blocks));
-
-   const auto cert = make_self_signed(rng, opts);
+   const auto cert = make_self_signed(*rng, ca_params().add_extension(std::move(blocks)));
    auto bits = cert.v3_extensions().get_extension_bits(ASBlocks::static_oid());
 
    result.test_bin_eq("extension is encoded as specified", bits, "3011A0023000A10B300930070201090202012D");
@@ -1728,7 +1703,7 @@ Test::Result test_x509_as_blocks_extension_encode_ctor() {
 
    auto rng = Test::new_rng(__func__);
 
-   auto [ca_cert, ca, sub_key, sig_algo, hash_fn] = make_ca(rng);
+   auto [ca_cert, ca, sub_key, sig_algo, hash_fn] = make_ca(*rng);
 
    for(size_t i = 0; i < 16; i++) {
       const bool push_asnum = bit_set<0>(i);
@@ -1769,10 +1744,7 @@ Test::Result test_x509_as_blocks_extension_encode_ctor() {
 
       std::unique_ptr<ASBlocks> blocks = std::make_unique<ASBlocks>(ident);
 
-      Botan::X509_Cert_Options opts = req_opts(sig_algo);
-      opts.extensions.add(std::move(blocks));
-
-      const Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
+      auto req = user_params().add_extension(std::move(blocks)).into_pkcs10_request(*sub_key, *rng, hash_fn);
       const Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
       {
@@ -1827,8 +1799,7 @@ Test::Result test_x509_as_blocks_range_merge() {
 
    auto rng = Test::new_rng(__func__);
 
-   auto [ca_cert, ca, sub_key, sig_algo, hash_fn] = make_ca(rng);
-   Botan::X509_Cert_Options opts = req_opts(sig_algo);
+   auto [ca_cert, ca, sub_key, sig_algo, hash_fn] = make_ca(*rng);
 
    const std::vector<std::vector<uint16_t>> ranges = {
       {2005, 37005},
@@ -1852,9 +1823,7 @@ Test::Result test_x509_as_blocks_range_merge() {
 
    std::unique_ptr<ASBlocks> blocks = std::make_unique<ASBlocks>(ident);
 
-   opts.extensions.add(std::move(blocks));
-
-   const Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *sub_key, hash_fn, *rng);
+   const auto req = user_params().add_extension(std::move(blocks)).into_pkcs10_request(*sub_key, *rng, hash_fn);
    const Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
    {
       const auto* as_blocks = cert.v3_extensions().get_extension_object_as<ASBlocks>();
@@ -1920,12 +1889,9 @@ Test::Result test_x509_as_blocks_path_validation_success_builder() {
    sub_blocks->add_rdi(1567);
    sub_blocks->add_rdi(33100, 40000);
 
-   Botan::X509_Cert_Options root_opts = ca_opts();
-   root_opts.extensions.add(std::move(root_blocks));
-   auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] = make_ca(rng, root_opts);
-   Botan::X509_Cert_Options sub_opts = req_opts(sig_algo);
-   sub_opts.extensions.add(std::move(sub_blocks));
-   auto [inherit_cert, inherit_ca] = make_and_sign_ca(std::move(inherit_blocks), root_ca, rng);
+   auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] =
+      make_ca(*rng, ca_params().add_extension(std::move(root_blocks)));
+   auto [inherit_cert, inherit_ca] = make_and_sign_ca(std::move(inherit_blocks), root_ca, *rng);
 
    Botan::Certificate_Store_In_Memory trusted;
    trusted.add_certificate(root_cert);
@@ -1950,9 +1916,9 @@ Test::Result test_x509_as_blocks_path_validation_success_builder() {
          dyn_blocks->inherit_rdi();
       }
 
-      auto [dyn_cert, dyn_ca] = make_and_sign_ca(std::move(dyn_blocks), inherit_ca, rng);
+      auto [dyn_cert, dyn_ca] = make_and_sign_ca(std::move(dyn_blocks), inherit_ca, *rng);
 
-      const Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
+      const auto sub_req = user_params().add_extension(sub_blocks->copy()).into_pkcs10_request(*sub_key, *rng, hash_fn);
       const Botan::X509_Certificate sub_cert =
          dyn_ca.sign_request(sub_req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
@@ -2059,12 +2025,9 @@ Test::Result test_x509_as_blocks_path_validation_success_ctor() {
    const ASBlocks::ASIdentifiers sub_ident = ASBlocks::ASIdentifiers(sub_asnum, sub_rdi);
    std::unique_ptr<ASBlocks> sub_blocks = std::make_unique<ASBlocks>(sub_ident);
 
-   Botan::X509_Cert_Options root_opts = ca_opts();
-   root_opts.extensions.add(std::move(root_blocks));
-   auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] = make_ca(rng, root_opts);
-   Botan::X509_Cert_Options sub_opts = req_opts(sig_algo);
-   sub_opts.extensions.add(std::move(sub_blocks));
-   auto [inherit_cert, inherit_ca] = make_and_sign_ca(std::move(inherit_blocks), root_ca, rng);
+   auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] =
+      make_ca(*rng, ca_params().add_extension(std::move(root_blocks)));
+   auto [inherit_cert, inherit_ca] = make_and_sign_ca(std::move(inherit_blocks), root_ca, *rng);
 
    Botan::Certificate_Store_In_Memory trusted;
    trusted.add_certificate(root_cert);
@@ -2080,9 +2043,9 @@ Test::Result test_x509_as_blocks_path_validation_success_ctor() {
       const ASBlocks::ASIdentifiers dyn_ident = ASBlocks::ASIdentifiers(dyn_asnum, dyn_rdi);
       std::unique_ptr<ASBlocks> dyn_blocks = std::make_unique<ASBlocks>(dyn_ident);
 
-      auto [dyn_cert, dyn_ca] = make_and_sign_ca(std::move(dyn_blocks), inherit_ca, rng);
+      auto [dyn_cert, dyn_ca] = make_and_sign_ca(std::move(dyn_blocks), inherit_ca, *rng);
 
-      const Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
+      const auto sub_req = user_params().add_extension(sub_blocks->copy()).into_pkcs10_request(*sub_key, *rng, hash_fn);
       const Botan::X509_Certificate sub_cert =
          dyn_ca.sign_request(sub_req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
@@ -2117,11 +2080,8 @@ Test::Result test_x509_as_blocks_path_validation_extension_not_present_builder()
    sub_blocks->add_rdi(33100, 40000);
 
    // create a root ca that does not have any extension
-   const Botan::X509_Cert_Options root_opts = ca_opts();
-   auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] = make_ca(rng, root_opts);
-   Botan::X509_Cert_Options sub_opts = req_opts(sig_algo);
-   sub_opts.extensions.add(std::move(sub_blocks));
-   const Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
+   auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] = make_ca(*rng, ca_params());
+   auto sub_req = user_params().add_extension(std::move(sub_blocks)).into_pkcs10_request(*sub_key, *rng, hash_fn);
    const Botan::X509_Certificate sub_cert =
       root_ca.sign_request(sub_req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
@@ -2176,11 +2136,8 @@ Test::Result test_x509_as_blocks_path_validation_extension_not_present_ctor() {
    std::unique_ptr<ASBlocks> sub_blocks = std::make_unique<ASBlocks>(sub_ident);
 
    // create a root ca that does not have any extension
-   const Botan::X509_Cert_Options root_opts = ca_opts();
-   auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] = make_ca(rng, root_opts);
-   Botan::X509_Cert_Options sub_opts = req_opts(sig_algo);
-   sub_opts.extensions.add(std::move(sub_blocks));
-   const Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
+   auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] = make_ca(*rng, ca_params());
+   const auto sub_req = user_params().add_extension(std::move(sub_blocks)).into_pkcs10_request(*sub_key, *rng, hash_fn);
    const Botan::X509_Certificate sub_cert =
       root_ca.sign_request(sub_req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
@@ -2370,14 +2327,12 @@ Test::Result test_x509_as_blocks_path_validation_failure_builder() {
          sub_blocks->inherit_rdi();
       }
 
-      Botan::X509_Cert_Options root_opts = ca_opts();
-      root_opts.extensions.add(std::move(root_blocks));
-      auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] = make_ca(rng, root_opts);
-      auto [issu_cert, issu_ca] = make_and_sign_ca(std::move(issu_blocks), root_ca, rng);
+      auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] =
+         make_ca(*rng, ca_params().add_extension(std::move(root_blocks)));
+      auto [issu_cert, issu_ca] = make_and_sign_ca(std::move(issu_blocks), root_ca, *rng);
 
-      Botan::X509_Cert_Options sub_opts = req_opts(sig_algo);
-      sub_opts.extensions.add(std::move(sub_blocks));
-      const Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
+      const auto sub_req =
+         user_params().add_extension(std::move(sub_blocks)).into_pkcs10_request(*sub_key, *rng, hash_fn);
       const Botan::X509_Certificate sub_cert =
          issu_ca.sign_request(sub_req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
@@ -2566,14 +2521,12 @@ Test::Result test_x509_as_blocks_path_validation_failure_ctor() {
       const ASBlocks::ASIdentifiers sub_ident = ASBlocks::ASIdentifiers(sub_asnum, sub_rdi);
       std::unique_ptr<ASBlocks> sub_blocks = std::make_unique<ASBlocks>(sub_ident);
 
-      Botan::X509_Cert_Options root_opts = ca_opts();
-      root_opts.extensions.add(std::move(root_blocks));
-      auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] = make_ca(rng, root_opts);
-      auto [issu_cert, issu_ca] = make_and_sign_ca(std::move(issu_blocks), root_ca, rng);
+      auto [root_cert, root_ca, sub_key, sig_algo, hash_fn] =
+         make_ca(*rng, ca_params().add_extension(std::move(root_blocks)));
+      auto [issu_cert, issu_ca] = make_and_sign_ca(std::move(issu_blocks), root_ca, *rng);
 
-      Botan::X509_Cert_Options sub_opts = req_opts(sig_algo);
-      sub_opts.extensions.add(std::move(sub_blocks));
-      const Botan::PKCS10_Request sub_req = Botan::X509::create_cert_req(sub_opts, *sub_key, hash_fn, *rng);
+      const auto sub_req =
+         user_params().add_extension(std::move(sub_blocks)).into_pkcs10_request(*sub_key, *rng, hash_fn);
       const Botan::X509_Certificate sub_cert =
          issu_ca.sign_request(sub_req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
