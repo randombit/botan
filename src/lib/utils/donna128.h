@@ -95,7 +95,8 @@ template <std::integral T>
 constexpr inline donna128 operator*(const donna128& x, T y) {
    BOTAN_ARG_CHECK(x.hi() == 0, "High 64 bits of donna128 set to zero during multiply");
 
-   uint64_t lo = 0, hi = 0;
+   uint64_t lo = 0;
+   uint64_t hi = 0;
    mul64x64_128(x.lo(), static_cast<uint64_t>(y), &lo, &hi);
    return donna128(lo, hi);
 }

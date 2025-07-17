@@ -13,7 +13,13 @@ void fuzz(std::span<const uint8_t> in) {
    }
 
    // Save on allocations by making these static
-   static Botan::BigInt x, y, q, r, ct_q, ct_r, z;
+   static Botan::BigInt x;
+   static Botan::BigInt y;
+   static Botan::BigInt q;
+   static Botan::BigInt r;
+   static Botan::BigInt ct_q;
+   static Botan::BigInt ct_r;
+   static Botan::BigInt z;
 
    x = Botan::BigInt::from_bytes(in.subspan(0, in.size() / 2));
    y = Botan::BigInt::from_bytes(in.subspan(in.size() / 2, in.size() - in.size() / 2));

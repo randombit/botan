@@ -60,7 +60,10 @@ inline void II(uint32_t& A, uint32_t B, uint32_t C, uint32_t D, uint32_t M) {
 * MD5 Compression Function
 */
 void MD5::compress_n(MD5::digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
-   uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3];
+   uint32_t A = digest[0];
+   uint32_t B = digest[1];
+   uint32_t C = digest[2];
+   uint32_t D = digest[3];
    std::array<uint32_t, 16> M{};
 
    BufferSlicer in(input);

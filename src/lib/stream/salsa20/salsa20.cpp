@@ -29,9 +29,22 @@ inline void salsa20_quarter_round(uint32_t& x1, uint32_t& x2, uint32_t& x3, uint
 */
 //static
 void Salsa20::hsalsa20(uint32_t output[8], const uint32_t input[16]) {
-   uint32_t x00 = input[0], x01 = input[1], x02 = input[2], x03 = input[3], x04 = input[4], x05 = input[5],
-            x06 = input[6], x07 = input[7], x08 = input[8], x09 = input[9], x10 = input[10], x11 = input[11],
-            x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
+   uint32_t x00 = input[0];
+   uint32_t x01 = input[1];
+   uint32_t x02 = input[2];
+   uint32_t x03 = input[3];
+   uint32_t x04 = input[4];
+   uint32_t x05 = input[5];
+   uint32_t x06 = input[6];
+   uint32_t x07 = input[7];
+   uint32_t x08 = input[8];
+   uint32_t x09 = input[9];
+   uint32_t x10 = input[10];
+   uint32_t x11 = input[11];
+   uint32_t x12 = input[12];
+   uint32_t x13 = input[13];
+   uint32_t x14 = input[14];
+   uint32_t x15 = input[15];
 
    for(size_t i = 0; i != 10; ++i) {
       salsa20_quarter_round(x00, x04, x08, x12);
@@ -62,9 +75,22 @@ void Salsa20::hsalsa20(uint32_t output[8], const uint32_t input[16]) {
 void Salsa20::salsa_core(uint8_t output[64], const uint32_t input[16], size_t rounds) {
    BOTAN_ASSERT_NOMSG(rounds % 2 == 0);
 
-   uint32_t x00 = input[0], x01 = input[1], x02 = input[2], x03 = input[3], x04 = input[4], x05 = input[5],
-            x06 = input[6], x07 = input[7], x08 = input[8], x09 = input[9], x10 = input[10], x11 = input[11],
-            x12 = input[12], x13 = input[13], x14 = input[14], x15 = input[15];
+   uint32_t x00 = input[0];
+   uint32_t x01 = input[1];
+   uint32_t x02 = input[2];
+   uint32_t x03 = input[3];
+   uint32_t x04 = input[4];
+   uint32_t x05 = input[5];
+   uint32_t x06 = input[6];
+   uint32_t x07 = input[7];
+   uint32_t x08 = input[8];
+   uint32_t x09 = input[9];
+   uint32_t x10 = input[10];
+   uint32_t x11 = input[11];
+   uint32_t x12 = input[12];
+   uint32_t x13 = input[13];
+   uint32_t x14 = input[14];
+   uint32_t x15 = input[15];
 
    for(size_t i = 0; i != rounds / 2; ++i) {
       salsa20_quarter_round(x00, x04, x08, x12);

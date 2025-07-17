@@ -76,7 +76,10 @@ class PerfTest_MpDiv final : public PerfTest {
             Botan::BigInt x;
             Botan::secure_vector<Botan::word> ws;
 
-            Botan::BigInt q1, r1, q2, r2;
+            Botan::BigInt q1;
+            Botan::BigInt r1;
+            Botan::BigInt q2;
+            Botan::BigInt r2;
 
             while(ct_div_timer->under(runtime_per_size)) {
                x.randomize(config.rng(), n_bits);
@@ -117,7 +120,9 @@ class PerfTest_MpDiv10 final : public PerfTest {
             Botan::secure_vector<Botan::word> ws;
 
             const auto ten = Botan::BigInt::from_word(10);
-            Botan::BigInt q1, r1, q2;
+            Botan::BigInt q1;
+            Botan::BigInt r1;
+            Botan::BigInt q2;
             Botan::word r2 = 0;
 
             while(ct_div_timer->under(runtime_per_size)) {

@@ -390,7 +390,8 @@ class BigInt_Div_Test final : public Text_Based_Test {
             result.test_eq("ct_divide_word r", ct_q * b + ct_r, a);
          }
 
-         Botan::BigInt ct_q, ct_r;
+         Botan::BigInt ct_q;
+         Botan::BigInt ct_r;
          Botan::ct_divide(a, b, ct_q, ct_r);
          result.test_eq("ct_divide q", ct_q, c);
          result.test_eq("ct_divide r", ct_q * b + ct_r, a);
@@ -479,7 +480,8 @@ class BigInt_Mod_Test final : public Text_Based_Test {
             result.test_eq("ct_divide_u8 r", ct_r, expected);
          }
 
-         Botan::BigInt ct_q, ct_r;
+         Botan::BigInt ct_q;
+         Botan::BigInt ct_r;
          Botan::ct_divide(a, b, ct_q, ct_r);
          result.test_eq("ct_divide r", ct_r, expected);
 
@@ -915,7 +917,8 @@ class DSA_ParamGen_Test final : public Text_Based_Test {
          Test::Result result("DSA Parameter Generation");
 
          try {
-            Botan::BigInt gen_P, gen_Q;
+            Botan::BigInt gen_P;
+            Botan::BigInt gen_Q;
             if(Botan::generate_dsa_primes(this->rng(), gen_P, gen_Q, p_bits, q_bits, seed, offset)) {
                result.test_eq("P", gen_P, exp_P);
                result.test_eq("Q", gen_Q, exp_Q);

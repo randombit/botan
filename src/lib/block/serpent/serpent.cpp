@@ -61,7 +61,10 @@ void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    const Key_Inserter key_xor(m_round_key.data());
 
    for(size_t i = 0; i < blocks; ++i) {
-      uint32_t B0 = 0, B1 = 0, B2 = 0, B3 = 0;
+      uint32_t B0 = 0;
+      uint32_t B1 = 0;
+      uint32_t B2 = 0;
+      uint32_t B3 = 0;
       load_le(in + 16 * i, B0, B1, B2, B3);
 
       key_xor(0, B0, B1, B2, B3);
@@ -209,7 +212,10 @@ void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    const Key_Inserter key_xor(m_round_key.data());
 
    for(size_t i = 0; i < blocks; ++i) {
-      uint32_t B0 = 0, B1 = 0, B2 = 0, B3 = 0;
+      uint32_t B0 = 0;
+      uint32_t B1 = 0;
+      uint32_t B2 = 0;
+      uint32_t B3 = 0;
       load_le(in + 16 * i, B0, B1, B2, B3);
 
       key_xor(32, B0, B1, B2, B3);

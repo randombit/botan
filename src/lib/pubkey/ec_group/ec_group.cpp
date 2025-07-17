@@ -227,7 +227,11 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
 
       return std::make_pair(data, false);
    } else if(next_obj_type == ASN1_Type::Sequence) {
-      BigInt p, a, b, order, cofactor;
+      BigInt p;
+      BigInt a;
+      BigInt b;
+      BigInt order;
+      BigInt cofactor;
       std::vector<uint8_t> base_pt;
       std::vector<uint8_t> seed;
 

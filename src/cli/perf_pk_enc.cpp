@@ -40,7 +40,8 @@ class PerfTest_PKEnc : public PerfTest {
          auto& rng = config.rng();
          const auto msec = config.runtime();
 
-         std::vector<uint8_t> plaintext, ciphertext;
+         std::vector<uint8_t> plaintext;
+         std::vector<uint8_t> ciphertext;
 
          auto keygen_timer = config.make_timer(nm, 1, "keygen");
 

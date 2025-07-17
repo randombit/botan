@@ -61,7 +61,8 @@ BigInt ct_divide_pow2k(size_t k, const BigInt& y);
 * @return x/y with remainder discarded
 */
 inline BigInt ct_divide(const BigInt& x, const BigInt& y) {
-   BigInt q, r;
+   BigInt q;
+   BigInt r;
    ct_divide(x, y, q, r);
    return q;
 }

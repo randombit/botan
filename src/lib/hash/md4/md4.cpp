@@ -75,7 +75,10 @@ inline void HH4(uint32_t& A, uint32_t& B, uint32_t& C, uint32_t& D, uint32_t M0,
 * MD4 Compression Function
 */
 void MD4::compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
-   uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3];
+   uint32_t A = digest[0];
+   uint32_t B = digest[1];
+   uint32_t C = digest[2];
+   uint32_t D = digest[3];
 
    BufferSlicer in(input);
 

@@ -106,7 +106,8 @@ class MP_Unit_Tests final : public Test {
          Botan::bigint_cnd_swap<Botan::word>(0, nullptr, nullptr, 0);
          Botan::bigint_cnd_swap<Botan::word>(1, nullptr, nullptr, 0);
 
-         Botan::word x1 = 5, y1 = 9;
+         Botan::word x1 = 5;
+         Botan::word y1 = 9;
 
          Botan::bigint_cnd_swap<Botan::word>(0, &x1, &y1, 1);
          result.test_int_eq(x1, 5, "No swap");

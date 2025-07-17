@@ -30,7 +30,8 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
                                   size_t default_key_size) {
    if(kdf_algo.oid() == OID::from_string("PKCS5.PBKDF2")) {
       secure_vector<uint8_t> salt;
-      size_t iterations = 0, key_length = 0;
+      size_t iterations = 0;
+      size_t key_length = 0;
 
       AlgorithmIdentifier prf_algo;
       BER_Decoder(kdf_algo.parameters())
@@ -65,7 +66,9 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
       return derived_key;
    } else if(kdf_algo.oid() == OID::from_string("Scrypt")) {
       secure_vector<uint8_t> salt;
-      size_t N = 0, r = 0, p = 0;
+      size_t N = 0;
+      size_t r = 0;
+      size_t p = 0;
       size_t key_length = 0;
 
       AlgorithmIdentifier prf_algo;
@@ -280,7 +283,8 @@ std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbes2_encrypt_iter(std::spa
 secure_vector<uint8_t> pbes2_decrypt(std::span<const uint8_t> key_bits,
                                      std::string_view passphrase,
                                      const std::vector<uint8_t>& params) {
-   AlgorithmIdentifier kdf_algo, enc_algo;
+   AlgorithmIdentifier kdf_algo;
+   AlgorithmIdentifier enc_algo;
 
    BER_Decoder(params).start_sequence().decode(kdf_algo).decode(enc_algo).end_cons();
 

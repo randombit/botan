@@ -102,7 +102,8 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
       return false;
    }
 
-   const size_t n = (pbits - 1) / (HASH_SIZE * 8), b = (pbits - 1) % (HASH_SIZE * 8);
+   const size_t n = (pbits - 1) / (HASH_SIZE * 8);
+   const size_t b = (pbits - 1) % (HASH_SIZE * 8);
 
    BigInt X;
    std::vector<uint8_t> V(HASH_SIZE * (n + 1));

@@ -157,7 +157,8 @@ void RSA_PublicKey::init(BigInt&& n, BigInt&& e) {
 }
 
 RSA_PublicKey::RSA_PublicKey(const AlgorithmIdentifier& /*unused*/, std::span<const uint8_t> key_bits) {
-   BigInt n, e;
+   BigInt n;
+   BigInt e;
    BER_Decoder(key_bits).start_sequence().decode(n).decode(e).end_cons();
 
    init(std::move(n), std::move(e));
@@ -258,7 +259,14 @@ void RSA_PrivateKey::init(BigInt&& d, BigInt&& p, BigInt&& q, BigInt&& d1, BigIn
 }
 
 RSA_PrivateKey::RSA_PrivateKey(const AlgorithmIdentifier& /*unused*/, std::span<const uint8_t> key_bits) {
-   BigInt n, e, d, p, q, d1, d2, c;
+   BigInt n;
+   BigInt e;
+   BigInt d;
+   BigInt p;
+   BigInt q;
+   BigInt d1;
+   BigInt d2;
+   BigInt c;
 
    BER_Decoder(key_bits)
       .start_sequence()
@@ -323,7 +331,9 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng, size_t bits, size_t e
    const size_t p_bits = (bits + 1) / 2;
    const size_t q_bits = bits - p_bits;
 
-   BigInt p, q, n;
+   BigInt p;
+   BigInt q;
+   BigInt n;
    BigInt e = BigInt::from_u64(exp);
 
    for(size_t attempt = 0;; ++attempt) {

@@ -550,7 +550,9 @@ void EC_Point::force_all_affine(std::span<EC_Point> points, secure_vector<word>&
 
    BigInt s_inv = invert_element(group, c[c.size() - 1], ws);
 
-   BigInt z_inv, z2_inv, z3_inv;
+   BigInt z_inv;
+   BigInt z2_inv;
+   BigInt z3_inv;
 
    for(size_t i = points.size() - 1; i != 0; i--) {
       EC_Point& point = points[i];
@@ -735,7 +737,8 @@ bool EC_Point::_is_x_eq_to_v_mod_order(const BigInt& v) const {
    secure_vector<word> ws;
    BigInt vr = v;
    to_rep(group, vr, ws);
-   BigInt z2, v_z2;
+   BigInt z2;
+   BigInt v_z2;
    fe_sqr(group, z2, this->get_z(), ws);
    fe_mul(group, v_z2, vr, z2, ws);
 
@@ -872,7 +875,8 @@ std::pair<BigInt, BigInt> OS2ECP(const uint8_t pt[], size_t pt_len, const BigInt
    const uint8_t pc = pt[0];
    const size_t p_bytes = p.bytes();
 
-   BigInt x, y;
+   BigInt x;
+   BigInt y;
 
    if(pc == 2 || pc == 3) {
       if(pt_len != 1 + p_bytes) {

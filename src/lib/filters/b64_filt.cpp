@@ -48,7 +48,8 @@ void Base64_Encoder::do_output(const uint8_t input[], size_t length) {
    if(m_line_length == 0) {
       send(input, length);
    } else {
-      size_t remaining = length, offset = 0;
+      size_t remaining = length;
+      size_t offset = 0;
       while(remaining > 0) {
          size_t sent = std::min(m_line_length - m_out_position, remaining);
          send(input + offset, sent);

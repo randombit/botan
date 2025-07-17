@@ -283,7 +283,10 @@ class Utility_Function_Tests final : public Test {
          }
 
          std::array<uint8_t, 8> outarr{};
-         uint16_t i0 = 0, i1 = 0, i2 = 0, i3 = 0;
+         uint16_t i0 = 0;
+         uint16_t i1 = 0;
+         uint16_t i2 = 0;
+         uint16_t i3 = 0;
          Botan::store_be(in64, outarr);
 
          Botan::load_be(outarr, i0, i1, i2, i3);

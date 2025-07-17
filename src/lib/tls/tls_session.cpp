@@ -310,7 +310,8 @@ Session::Session(std::span<const uint8_t> ber_data) /* NOLINT(*-member-init) */ 
    ASN1_String server_service;
    size_t server_port = 0;
 
-   uint8_t major_version = 0, minor_version = 0;
+   uint8_t major_version = 0;
+   uint8_t minor_version = 0;
 
    size_t start_time = 0;
    size_t srtp_profile = 0;

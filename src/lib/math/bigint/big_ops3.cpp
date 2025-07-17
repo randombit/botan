@@ -97,7 +97,8 @@ BigInt operator/(const BigInt& x, const BigInt& y) {
       return x / y.word_at(0);
    }
 
-   BigInt q, r;
+   BigInt q;
+   BigInt r;
    vartime_divide(x, y, q, r);
    return q;
 }
@@ -134,7 +135,8 @@ BigInt operator%(const BigInt& n, const BigInt& mod) {
       return BigInt::from_word(n % mod.word_at(0));
    }
 
-   BigInt q, r;
+   BigInt q;
+   BigInt r;
    vartime_divide(n, mod, q, r);
    return r;
 }

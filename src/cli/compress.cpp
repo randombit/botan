@@ -106,7 +106,8 @@ class Decompress final : public Command {
       void go() override {
          const size_t buf_size = get_arg_sz("buf-size");
          const std::string in_file = get_arg("file");
-         std::string out_file, suffix;
+         std::string out_file;
+         std::string suffix;
          parse_extension(in_file, out_file, suffix);
 
          std::ifstream in(in_file, std::ios::binary);

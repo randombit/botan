@@ -80,8 +80,14 @@ void SHA_512::compress_digest(digest_type& digest, std::span<const uint8_t> inpu
    }
 #endif
 
-   uint64_t A = digest[0], B = digest[1], C = digest[2], D = digest[3], E = digest[4], F = digest[5], G = digest[6],
-            H = digest[7];
+   uint64_t A = digest[0];
+   uint64_t B = digest[1];
+   uint64_t C = digest[2];
+   uint64_t D = digest[3];
+   uint64_t E = digest[4];
+   uint64_t F = digest[5];
+   uint64_t G = digest[6];
+   uint64_t H = digest[7];
 
    std::array<uint64_t, 16> W{};
 

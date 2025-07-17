@@ -252,7 +252,8 @@ std::unique_ptr<Private_Key> SM2_PublicKey::generate_another(RandomNumberGenerat
 std::unique_ptr<PK_Ops::Verification> SM2_PublicKey::create_verification_op(std::string_view params,
                                                                             std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
-      std::string userid, hash;
+      std::string userid;
+      std::string hash;
       parse_sm2_param_string(params, userid, hash);
       return std::make_unique<SM2_Verification_Operation>(*this, userid, hash);
    }
@@ -264,7 +265,8 @@ std::unique_ptr<PK_Ops::Signature> SM2_PrivateKey::create_signature_op(RandomNum
                                                                        std::string_view params,
                                                                        std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
-      std::string userid, hash;
+      std::string userid;
+      std::string hash;
       parse_sm2_param_string(params, userid, hash);
       return std::make_unique<SM2_Signature_Operation>(*this, userid, hash);
    }

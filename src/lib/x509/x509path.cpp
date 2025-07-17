@@ -826,7 +826,8 @@ void PKIX::merge_revocation_status(CertificatePathStatusCodes& chain_status,
    }
 
    for(size_t i = 0; i != chain_status.size() - 1; ++i) {
-      bool had_crl = false, had_ocsp = false;
+      bool had_crl = false;
+      bool had_ocsp = false;
 
       if(i < crl_status.size() && !crl_status[i].empty()) {
          for(auto&& code : crl_status[i]) {

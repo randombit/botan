@@ -57,7 +57,9 @@ class PerfTest_PKSig : public PerfTest {
 
             auto pk = sk->public_key();
 
-            std::vector<uint8_t> message, signature, bad_signature;
+            std::vector<uint8_t> message;
+            std::vector<uint8_t> signature;
+            std::vector<uint8_t> bad_signature;
 
             Botan::PK_Signer sig(*sk, rng, padding, Botan::Signature_Format::Standard, provider);
             Botan::PK_Verifier ver(*pk, padding, Botan::Signature_Format::Standard, provider);

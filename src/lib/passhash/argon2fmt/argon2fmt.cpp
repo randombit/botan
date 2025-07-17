@@ -103,7 +103,9 @@ bool argon2_check_pwhash(const char* password, size_t password_len, std::string_
       return false;
    }
 
-   size_t M = 0, t = 0, p = 0;
+   size_t M = 0;
+   size_t t = 0;
+   size_t p = 0;
 
    for(const auto& param_str : params) {
       const std::vector<std::string> param = split_on(param_str, '=');

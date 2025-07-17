@@ -170,7 +170,10 @@ void transform(const uint8_t in[], uint8_t out[], size_t blocks, const secure_ve
    const size_t ROUNDS = (KS.size() / 4) - 1;
 
    for(size_t i = 0; i != blocks; ++i) {
-      uint32_t t0 = 0, t1 = 0, t2 = 0, t3 = 0;
+      uint32_t t0 = 0;
+      uint32_t t1 = 0;
+      uint32_t t2 = 0;
+      uint32_t t3 = 0;
       load_be(in + 16 * i, t0, t1, t2, t3);
 
       for(size_t r = 0; r < ROUNDS; r += 2) {
