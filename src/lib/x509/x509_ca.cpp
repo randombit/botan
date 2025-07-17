@@ -51,7 +51,8 @@ Extensions X509_CA::choose_extensions(const PKCS10_Request& req,
 
    Extensions extensions = req.extensions();
 
-   extensions.replace(std::make_unique<Cert_Extension::Basic_Constraints>(req.is_CA(), req.path_limit()), true);
+   extensions.replace(std::make_unique<Cert_Extension::Basic_Constraints>(req.is_CA(), req.path_length_constraint()),
+                      true);
 
    if(!constraints.empty()) {
       extensions.replace(std::make_unique<Cert_Extension::Key_Usage>(constraints), true);

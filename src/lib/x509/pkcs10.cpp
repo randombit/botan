@@ -245,25 +245,24 @@ std::vector<OID> PKCS10_Request::ex_constraints() const {
 * Return is a CA certificate is requested
 */
 bool PKCS10_Request::is_CA() const {
-   if(auto ext = extensions().get(OID::from_string("X509v3.BasicConstraints"))) {
-      return dynamic_cast<Cert_Extension::Basic_Constraints&>(*ext).get_is_ca();
+   if(const auto* ext = extensions().get_extension_object_as<Cert_Extension::Basic_Constraints>()) {
+      return ext->is_ca();
+   } else {
+      return false;
    }
-
-   return false;
 }
 
 /*
-* Return the desired path limit (if any)
+* Return the requested path limit
 */
-size_t PKCS10_Request::path_limit() const {
-   if(auto ext = extensions().get(OID::from_string("X509v3.BasicConstraints"))) {
-      Cert_Extension::Basic_Constraints& basic_constraints = dynamic_cast<Cert_Extension::Basic_Constraints&>(*ext);
-      if(basic_constraints.get_is_ca()) {
-         return basic_constraints.get_path_limit();
+std::optional<size_t> PKCS10_Request::path_length_constraint() const {
+   if(const auto* ext = extensions().get_extension_object_as<Cert_Extension::Basic_Constraints>()) {
+      if(ext->is_ca()) {
+         return ext->path_length_constraint();
       }
    }
 
-   return 0;
+   return std::nullopt;
 }
 
 }  // namespace Botan

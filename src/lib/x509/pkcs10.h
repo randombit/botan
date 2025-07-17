@@ -71,11 +71,22 @@ class BOTAN_PUBLIC_API(2, 0) PKCS10_Request final : public X509_Object {
       bool is_CA() const;
 
       /**
-      * Return the constraint on the path length defined
-      * in the BasicConstraints extension.
+      * Return the constraint on the path length defined in the BasicConstraints extension.
+      *
+      * Note this returns 0 if the extension is not set
+      *
       * @return path limit
       */
-      size_t path_limit() const;
+      BOTAN_DEPRECATED("Use path_length_constraint") size_t path_limit() const {
+         return path_length_constraint().value_or(0);
+      }
+
+      /**
+      * Return the constraint on the path length defined in the BasicConstraints extension.
+      *
+      * @return path limit (or nullopt if not set)
+      */
+      std::optional<size_t> path_length_constraint() const;
 
       /**
       * Get the challenge password for this request

@@ -60,7 +60,7 @@ struct X509_Certificate_Data {
       NameConstraints m_name_constraints;
 
       size_t m_version = 0;
-      size_t m_path_len_constraint = 0;
+      std::optional<size_t> m_path_len_constraint;
       Key_Constraints m_key_constraints;
       bool m_self_signed = false;
       bool m_is_ca_certificate = false;
@@ -200,7 +200,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    }
 
    if(const auto* ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Basic_Constraints>()) {
-      if(ext->get_is_ca() == true) {
+      if(ext->is_ca() == true) {
          /*
          * RFC 5280 section 4.2.1.3 requires that CAs include KeyUsage in all
          * intermediate CA certificates they issue. Currently we accept it being
@@ -239,7 +239,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
 
          if(allowed_by_ku && allowed_by_ext_ku) {
             data->m_is_ca_certificate = true;
-            data->m_path_len_constraint = ext->get_path_limit();
+            data->m_path_len_constraint = ext->path_length_constraint();
          }
       }
    }
@@ -433,7 +433,11 @@ uint32_t X509_Certificate::path_limit() const {
       return 32;  // in theory infinite, but this is more than enough
    }
 
-   return static_cast<uint32_t>(data().m_path_len_constraint);
+   return static_cast<uint32_t>(data().m_path_len_constraint.value_or(Cert_Extension::NO_CERT_PATH_LIMIT));
+}
+
+std::optional<size_t> X509_Certificate::path_length_constraint() const {
+   return data().m_path_len_constraint;
 }
 
 Key_Constraints X509_Certificate::constraints() const {

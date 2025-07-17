@@ -12,7 +12,12 @@
 #include <botan/pkix_types.h>
 
 #include <array>
+#include <memory>
+#include <optional>
 #include <set>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace Botan {
 
@@ -28,14 +33,24 @@ static const size_t NO_CERT_PATH_LIMIT = 0xFFFFFFF0;
 class BOTAN_PUBLIC_API(2, 0) Basic_Constraints final : public Certificate_Extension {
    public:
       std::unique_ptr<Certificate_Extension> copy() const override {
-         return std::make_unique<Basic_Constraints>(m_is_ca, m_path_limit);
+         return std::make_unique<Basic_Constraints>(m_is_ca, m_path_length_constraint);
       }
 
-      BOTAN_FUTURE_EXPLICIT Basic_Constraints(bool ca = false, size_t limit = 0) : m_is_ca(ca), m_path_limit(limit) {}
+      BOTAN_FUTURE_EXPLICIT Basic_Constraints(bool is_ca = false, size_t path_length_constraint = 0);
 
-      bool get_is_ca() const { return m_is_ca; }
+      Basic_Constraints(bool is_ca, std::optional<size_t> path_length_constraint);
 
-      size_t get_path_limit() const;
+      BOTAN_DEPRECATED("Use is_ca") bool get_is_ca() const { return m_is_ca; }
+
+      /**
+      * Note that this function returns NO_CERT_PATH_LIMIT if the value was not set
+      * in the extension.
+      */
+      BOTAN_DEPRECATED("Use path_length_constraint") size_t get_path_limit() const;
+
+      bool is_ca() const { return m_is_ca; }
+
+      std::optional<size_t> path_length_constraint() const { return m_path_length_constraint; }
 
       static OID static_oid() { return OID({2, 5, 29, 19}); }
 
@@ -48,7 +63,7 @@ class BOTAN_PUBLIC_API(2, 0) Basic_Constraints final : public Certificate_Extens
       void decode_inner(const std::vector<uint8_t>& in) override;
 
       bool m_is_ca;
-      size_t m_path_limit;
+      std::optional<size_t> m_path_length_constraint;
 };
 
 /**
