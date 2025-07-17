@@ -252,11 +252,27 @@ class BOTAN_PUBLIC_API(2, 0) X509_Certificate : public X509_Object {
       bool has_ex_constraint(const OID& ex_constraint) const;
 
       /**
-      * Get the path limit as defined in the BasicConstraints extension of
-      * this certificate.
+      * Get the path length constraint as defined in the BasicConstraints extension.
+      *
+      * This returns an arbitrary value if the extension is not set (either 32 for v1
+      * self-signed certificates, or else Cert_Extension::NO_CERT_PATH_LIMIT for v3
+      * certificates without the extension)
+      *
+      * Prefer path_length_constraint
+      *
       * @return path limit
       */
-      uint32_t path_limit() const;
+      BOTAN_DEPRECATED("Use X509_Certificate::path_length_constraint") uint32_t path_limit() const;
+
+      /**
+      * Get the path length constraint as defined in the BasicConstraints extension.
+      *
+      * Returns nullopt if either the extension is not set in the certificate,
+      * or if the pathLenConstraint field was absent from the extension.
+      *
+      * @return path limit
+      */
+      std::optional<size_t> path_length_constraint() const;
 
       /**
       * Check whenever a given X509 Extension is marked critical in this

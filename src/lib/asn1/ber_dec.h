@@ -10,6 +10,7 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/data_src.h>
+#include <optional>
 
 namespace Botan {
 
@@ -249,7 +250,15 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       }
 
       template <typename T>
-      BER_Decoder& decode_optional(T& out, ASN1_Type type_tag, ASN1_Class class_tag, const T& default_value = T());
+      BER_Decoder& decode_optional(T& out, ASN1_Type type_tag, ASN1_Class class_tag, const T& default_value = T()) {
+         std::optional<T> optval;
+         this->decode_optional(optval, type_tag, class_tag);
+         out = optval ? *optval : default_value;
+         return (*this);
+      }
+
+      template <typename T>
+      BER_Decoder& decode_optional(std::optional<T>& out, ASN1_Type type_tag, ASN1_Class class_tag);
 
       template <typename T>
       BER_Decoder& decode_optional_implicit(T& out,
@@ -332,19 +341,21 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
 * Decode an OPTIONAL or DEFAULT element
 */
 template <typename T>
-BER_Decoder& BER_Decoder::decode_optional(T& out, ASN1_Type type_tag, ASN1_Class class_tag, const T& default_value) {
+BER_Decoder& BER_Decoder::decode_optional(std::optional<T>& optval, ASN1_Type type_tag, ASN1_Class class_tag) {
    BER_Object obj = get_next_object();
 
    if(obj.is_a(type_tag, class_tag)) {
+      T out{};
       if(class_tag == ASN1_Class::ExplicitContextSpecific) {
          BER_Decoder(std::move(obj)).decode(out).verify_end();
       } else {
-         push_back(std::move(obj));
-         decode(out, type_tag, class_tag);
+         this->push_back(std::move(obj));
+         this->decode(out, type_tag, class_tag);
       }
+      optval = std::move(out);
    } else {
-      out = default_value;
-      push_back(std::move(obj));
+      this->push_back(std::move(obj));
+      optval = std::nullopt;
    }
 
    return (*this);

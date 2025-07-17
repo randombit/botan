@@ -223,7 +223,7 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
       */
       if(subject.subject_dn() != subject.issuer_dn()) {
          if(max_path_length > 0) {
-            --max_path_length;
+            max_path_length -= 1;
          } else {
             status.insert(Certificate_Status_Code::CERT_CHAIN_TOO_LONG);
          }
@@ -233,8 +233,8 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
       * If pathLenConstraint is present in the certificate and is less than max_path_length,
       * set max_path_length to the value of pathLenConstraint.
       */
-      if(subject.path_limit() != Cert_Extension::NO_CERT_PATH_LIMIT && subject.path_limit() < max_path_length) {
-         max_path_length = subject.path_limit();
+      if(auto path_len_constraint = subject.path_length_constraint()) {
+         max_path_length = std::min(max_path_length, *path_len_constraint);
       }
    }
 

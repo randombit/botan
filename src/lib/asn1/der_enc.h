@@ -10,6 +10,7 @@
 
 #include <botan/asn1_obj.h>
 #include <functional>
+#include <optional>
 #include <vector>
 
 namespace Botan {
@@ -120,9 +121,18 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
       }
 
       template <typename T>
+      BOTAN_DEPRECATED("Use the version that takes a std::optional")
       DER_Encoder& encode_optional(const T& value, const T& default_value) {
          if(value != default_value) {
             encode(value);
+         }
+         return (*this);
+      }
+
+      template <typename T>
+      DER_Encoder& encode_optional(const std::optional<T>& value) {
+         if(value) {
+            encode(*value);
          }
          return (*this);
       }
