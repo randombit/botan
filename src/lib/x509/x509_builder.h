@@ -158,7 +158,8 @@ class BOTAN_PUBLIC_API(3, 9) CertificateParametersBuilder final {
       /**
       * Add an arbitrary certificate extension
       *
-      * The extension
+      * An extension can be added at most once. If the same extension is added a second
+      * time (even with identical contents) an exception will be thrown.
       */
       CertificateParametersBuilder& add_extension(std::unique_ptr<Certificate_Extension> extn,
                                                   bool is_critical = false);
