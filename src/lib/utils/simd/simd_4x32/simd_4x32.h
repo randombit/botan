@@ -14,12 +14,12 @@
 #include <botan/internal/target_info.h>
 #include <span>
 
-#if defined(BOTAN_TARGET_CPU_SUPPORTS_SSSE3)
+#if defined(BOTAN_TARGET_ARCH_SUPPORTS_SSSE3)
    #include <emmintrin.h>
    #include <tmmintrin.h>
    #define BOTAN_SIMD_USE_SSSE3
 
-#elif defined(BOTAN_TARGET_CPU_SUPPORTS_ALTIVEC)
+#elif defined(BOTAN_TARGET_ARCH_SUPPORTS_ALTIVEC)
    #include <botan/internal/loadstor.h>
    #include <altivec.h>
    #undef vector
@@ -29,12 +29,12 @@
       #define BOTAN_SIMD_USE_VSX
    #endif
 
-#elif defined(BOTAN_TARGET_CPU_SUPPORTS_NEON)
+#elif defined(BOTAN_TARGET_ARCH_SUPPORTS_NEON)
    #include <arm_neon.h>
    #include <bit>
    #define BOTAN_SIMD_USE_NEON
 
-#elif defined(BOTAN_TARGET_CPU_SUPPORTS_LSX)
+#elif defined(BOTAN_TARGET_ARCH_SUPPORTS_LSX)
    #include <lsxintrin.h>
    #define BOTAN_SIMD_USE_LSX
 

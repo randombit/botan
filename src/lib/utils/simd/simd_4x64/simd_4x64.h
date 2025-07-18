@@ -12,7 +12,7 @@
 #include <botan/internal/isa_extn.h>
 #include <botan/internal/target_info.h>
 
-#if defined(BOTAN_TARGET_CPU_SUPPORTS_AVX2)
+#if defined(BOTAN_TARGET_ARCH_SUPPORTS_AVX2)
    #include <immintrin.h>
 #endif
 

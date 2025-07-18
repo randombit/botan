@@ -160,13 +160,13 @@ class OS_Utils_Tests final : public Test {
 
    #if defined(BOTAN_USE_GCC_INLINE_ASM)
 
-      #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+      #if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
          crash_probe = []() noexcept -> int {
             asm volatile("ud2");
             return 3;
          };
 
-      #elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
+      #elif defined(BOTAN_TARGET_ARCH_IS_ARM_FAMILY)
          //ARM: asm volatile (".word 0xf7f0a000\n");
          // illegal instruction in both ARM and Thumb modes
          crash_probe = []() noexcept -> int {

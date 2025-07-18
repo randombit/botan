@@ -17,7 +17,7 @@
 * This file consolidates the actual definition of such target attributes
 */
 
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+#if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
 
    #define BOTAN_FN_ISA_SIMD_4X32 BOTAN_FUNC_ISA("ssse3")
    #define BOTAN_FN_ISA_SIMD_2X64 BOTAN_FUNC_ISA("ssse3")
@@ -53,7 +53,7 @@
    #define BOTAN_FN_ISA_SIMD_4X32 BOTAN_FUNC_ISA("fpu=neon")
 #endif
 
-#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
+#if defined(BOTAN_TARGET_ARCH_IS_PPC_FAMILY)
 
    #define BOTAN_FN_ISA_SIMD_4X32 BOTAN_FUNC_ISA("altivec")
    #define BOTAN_FN_ISA_CLMUL BOTAN_FUNC_ISA("vsx,crypto")

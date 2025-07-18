@@ -10,7 +10,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/target_info.h>
 
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY) && !defined(BOTAN_USE_GCC_INLINE_ASM)
+#if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY) && !defined(BOTAN_USE_GCC_INLINE_ASM)
    #include <immintrin.h>
 #endif
 
@@ -18,14 +18,14 @@ namespace Botan {
 
 namespace {
 
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+#if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
 /*
    * According to Intel, RDRAND is guaranteed to generate a random
    * number within 10 retries on a working CPU
    */
 const size_t HWRNG_RETRIES = 10;
 
-#elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
+#elif defined(BOTAN_TARGET_ARCH_IS_PPC_FAMILY)
 /**
     * PowerISA 3.0 p.78:
     *    When the error value is obtained, software is expected to repeat the
@@ -52,7 +52,7 @@ hwrng_output read_hwrng(bool& success) {
    hwrng_output output = 0;
    success = false;
 
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+#if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
    int cf = 0;
    #if defined(BOTAN_USE_GCC_INLINE_ASM)
    // same asm seq works for 32 and 64 bit
@@ -64,7 +64,7 @@ hwrng_output read_hwrng(bool& success) {
    #endif
    success = (1 == cf);
 
-#elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
+#elif defined(BOTAN_TARGET_ARCH_IS_PPC_FAMILY)
 
    /*
    DARN indicates error by returning 0xFF..FF, ie is biased. Which is crazy.
@@ -107,9 +107,9 @@ hwrng_output read_hwrng() {
 
 //static
 bool Processor_RNG::available() {
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+#if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
    return CPUID::has(CPUID::Feature::RDRAND);
-#elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
+#elif defined(BOTAN_TARGET_ARCH_IS_PPC_FAMILY)
    return CPUID::has(CPUID::Feature::DARN);
 #else
    return false;
@@ -117,9 +117,9 @@ bool Processor_RNG::available() {
 }
 
 std::string Processor_RNG::name() const {
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+#if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
    return "rdrand";
-#elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
+#elif defined(BOTAN_TARGET_ARCH_IS_PPC_FAMILY)
    return "darn";
 #else
    return "hwrng";
