@@ -18,6 +18,10 @@
 
 namespace Botan {
 
+ASN1_Time ASN1_Time::from_seconds_since_epoch(uint64_t time_since_epoch) {
+   return ASN1_Time(std::chrono::system_clock::time_point(std::chrono::seconds(time_since_epoch)));
+}
+
 ASN1_Time::ASN1_Time(const std::chrono::system_clock::time_point& time) {
    calendar_point cal(time);
 

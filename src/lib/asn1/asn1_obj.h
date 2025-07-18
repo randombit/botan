@@ -383,6 +383,9 @@ class BOTAN_PUBLIC_API(2, 0) ASN1_Time final : public ASN1_Object {
       /// Create a ASN1_Time from a time point
       explicit ASN1_Time(const std::chrono::system_clock::time_point& time);
 
+      /// Create an ASN1_Time from seconds since epoch
+      static ASN1_Time from_seconds_since_epoch(uint64_t seconds);
+
       /// Create an ASN1_Time from string
       BOTAN_FUTURE_EXPLICIT ASN1_Time(std::string_view t_spec);
 
