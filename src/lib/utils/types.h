@@ -86,7 +86,7 @@ namespace Botan {
 *        TLS::Client, TLS::Server, TLS::Policy, TLS::Protocol_Version, TLS::Callbacks, TLS::Ciphersuite,
 *        TLS::Session, TLS::Session_Summary, TLS::Session_Manager, Credentials_Manager
 * <dt>X.509<dd>
-*        X509_Certificate, X509_CRL, X509_CA, Certificate_Extension, PKCS10_Request, X509_Cert_Options,
+*        X509_Certificate, X509_CRL, X509_CA, Certificate_Extension, PKCS10_Request, CertificateParametersBuilder,
 *        Certificate_Store, Certificate_Store_In_SQL, Certificate_Store_In_SQLite
 * <dt>eXtendable Output Functions<dd>
 *        @ref SHAKE_XOF "SHAKE"
