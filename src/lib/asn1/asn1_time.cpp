@@ -118,7 +118,9 @@ int32_t ASN1_Time::cmp(const ASN1_Time& other) const {
       throw Invalid_State("ASN1_Time::cmp: Cannot compare empty times");
    }
 
-   const int32_t EARLIER = -1, LATER = 1, SAME_TIME = 0;
+   constexpr int32_t EARLIER = -1;
+   constexpr int32_t LATER = 1;
+   constexpr int32_t SAME_TIME = 0;
 
    if(m_year < other.m_year) {
       return EARLIER;

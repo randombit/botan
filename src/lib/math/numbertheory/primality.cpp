@@ -63,7 +63,10 @@ bool is_lucas_probable_prime(const BigInt& C, const Barrett_Reduction& mod_C) {
    BigInt U = BigInt::one();
    BigInt V = BigInt::one();
 
-   BigInt Ut, Vt, U2, V2;
+   BigInt Ut;
+   BigInt Vt;
+   BigInt U2;
+   BigInt V2;
 
    for(size_t i = 0; i != K_bits; ++i) {
       const bool k_bit = K.get_bit(K_bits - 1 - i);

@@ -133,15 +133,20 @@ std::shared_ptr<DL_Group_Data> DL_Group::BER_decode_DL_group(const uint8_t data[
    BER_Decoder ber = decoder.start_sequence();
 
    if(format == DL_Group_Format::ANSI_X9_57) {
-      BigInt p, q, g;
+      BigInt p;
+      BigInt q;
+      BigInt g;
       ber.decode(p).decode(q).decode(g).verify_end();
       return std::make_shared<DL_Group_Data>(p, q, g, source);
    } else if(format == DL_Group_Format::ANSI_X9_42) {
-      BigInt p, g, q;
+      BigInt p;
+      BigInt g;
+      BigInt q;
       ber.decode(p).decode(g).decode(q).discard_remaining();
       return std::make_shared<DL_Group_Data>(p, q, g, source);
    } else if(format == DL_Group_Format::PKCS_3) {
-      BigInt p, g;
+      BigInt p;
+      BigInt g;
       ber.decode(p).decode(g).discard_remaining();
       return std::make_shared<DL_Group_Data>(p, g, source);
    } else {
@@ -233,7 +238,8 @@ namespace {
 * Create generator of the q-sized subgroup (DSA style generator)
 */
 BigInt make_dsa_generator(const BigInt& p, const BigInt& q) {
-   BigInt e, r;
+   BigInt e;
+   BigInt r;
    vartime_divide(p - 1, q, e, r);
 
    if(e == 0 || r > 0) {
@@ -311,7 +317,8 @@ DL_Group::DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, siz
          qbits = ((pbits <= 1024) ? 160 : 256);
       }
 
-      BigInt p, q;
+      BigInt p;
+      BigInt q;
       generate_dsa_primes(rng, p, q, pbits, qbits);
       const BigInt g = make_dsa_generator(p, q);
       m_data = std::make_shared<DL_Group_Data>(p, q, g, DL_Group_Source::RandomlyGenerated);
@@ -324,7 +331,8 @@ DL_Group::DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, siz
 * DL_Group Constructor
 */
 DL_Group::DL_Group(RandomNumberGenerator& rng, const std::vector<uint8_t>& seed, size_t pbits, size_t qbits) {
-   BigInt p, q;
+   BigInt p;
+   BigInt q;
 
    if(!generate_dsa_primes(rng, p, q, pbits, qbits, seed)) {
       throw Invalid_Argument("DL_Group: The seed given does not generate a DSA group");

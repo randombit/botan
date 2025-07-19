@@ -279,7 +279,8 @@ class Stateful_RNG_Tests : public Test {
 
          // fork and request from parent and child, both should output different sequences
          size_t count = counting_rng.randomize_count();
-         Botan::secure_vector<uint8_t> parent_bytes(16), child_bytes(16);
+         Botan::secure_vector<uint8_t> parent_bytes(16);
+         Botan::secure_vector<uint8_t> child_bytes(16);
          int fd[2];
          int rc = ::pipe(fd);
          if(rc != 0) {

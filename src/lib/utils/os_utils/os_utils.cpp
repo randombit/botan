@@ -178,14 +178,16 @@ uint64_t OS::get_cpu_cycle_counter() {
 
    #if defined(BOTAN_TARGET_ARCH_IS_X86_64)
 
-   uint32_t rtc_low = 0, rtc_high = 0;
+   uint32_t rtc_low = 0;
+   uint32_t rtc_high = 0;
    asm volatile("rdtsc" : "=d"(rtc_high), "=a"(rtc_low));
    rtc = (static_cast<uint64_t>(rtc_high) << 32) | rtc_low;
 
    #elif defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY) && defined(BOTAN_HAS_CPUID)
 
    if(CPUID::has(CPUID::Feature::RDTSC)) {
-      uint32_t rtc_low = 0, rtc_high = 0;
+      uint32_t rtc_low = 0;
+      uint32_t rtc_high = 0;
       asm volatile("rdtsc" : "=d"(rtc_high), "=a"(rtc_low));
       rtc = (static_cast<uint64_t>(rtc_high) << 32) | rtc_low;
    }
@@ -193,7 +195,9 @@ uint64_t OS::get_cpu_cycle_counter() {
    #elif defined(BOTAN_TARGET_ARCH_IS_PPC64)
 
    for(;;) {
-      uint32_t rtc_low = 0, rtc_high = 0, rtc_high2 = 0;
+      uint32_t rtc_low = 0;
+      uint32_t rtc_high = 0;
+      uint32_t rtc_high2 = 0;
       asm volatile("mftbu %0" : "=r"(rtc_high));
       asm volatile("mftb %0" : "=r"(rtc_low));
       asm volatile("mftbu %0" : "=r"(rtc_high2));

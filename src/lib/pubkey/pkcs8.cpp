@@ -44,7 +44,8 @@ secure_vector<uint8_t> PKCS8_decode(DataSource& source,
                                     AlgorithmIdentifier& pk_alg_id,
                                     bool is_encrypted) {
    AlgorithmIdentifier pbe_alg_id;
-   secure_vector<uint8_t> key_data, key;
+   secure_vector<uint8_t> key_data;
+   secure_vector<uint8_t> key;
 
    try {
       if(ASN1::maybe_BER(source) && !PEM_Code::matches(source)) {

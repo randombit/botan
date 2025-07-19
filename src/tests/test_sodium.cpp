@@ -141,12 +141,14 @@ class Sodium_API_Tests : public Test {
 
          const std::vector<uint8_t> seed(32);
 
-         std::vector<uint8_t> pk1(32), sk1(32);
+         std::vector<uint8_t> pk1(32);
+         std::vector<uint8_t> sk1(32);
          result.test_rc_ok("seed_keypair", Botan::Sodium::crypto_box_seed_keypair(pk1.data(), sk1.data(), seed.data()));
          result.test_eq("pk1", pk1, "5BF55C73B82EBE22BE80F3430667AF570FAE2556A6415E6B30D4065300AA947D");
          result.test_eq("sk1", sk1, "5046ADC1DBA838867B2BBBFDD0C3423E58B57970B5267A90F57960924A87F196");
 
-         std::vector<uint8_t> pk2(32), sk2(32);
+         std::vector<uint8_t> pk2(32);
+         std::vector<uint8_t> sk2(32);
          result.test_rc_ok("seed_keypair", Botan::Sodium::crypto_box_seed_keypair(pk2.data(), sk2.data(), sk1.data()));
          result.test_eq("pk2", pk2, "E0CFC9C6B2FE5BF85F48671691225C03D763F2305206FE3D3B0ED7B76153684A");
          result.test_eq("sk2", sk2, "58E2E4C71F138FBC97F9341735B4581746761F9A104540007FE12CFC4D9FDA15");
@@ -627,7 +629,8 @@ class Sodium_API_Tests : public Test {
          Test::Result result("crypto_sign_ed25519");
 
          const std::vector<uint8_t> seed(32);
-         std::vector<uint8_t> pk(32), sk(64);
+         std::vector<uint8_t> pk(32);
+         std::vector<uint8_t> sk(64);
 
          result.test_rc_ok("seed_keypair",
                            Botan::Sodium::crypto_sign_ed25519_seed_keypair(pk.data(), sk.data(), seed.data()));

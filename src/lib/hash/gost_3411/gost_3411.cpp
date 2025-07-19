@@ -64,7 +64,8 @@ void GOST_34_11::compress_n(const uint8_t input[], size_t blocks) {
 
       uint8_t S[32] = {0};
 
-      uint64_t U[4], V[4];
+      uint64_t U[4];
+      uint64_t V[4];
       load_be(U, m_hash.data(), 4);
       load_be(V, input + 32 * i, 4);
 

@@ -83,8 +83,14 @@ void BOTAN_SCRUB_STACK_AFTER_RETURN SHA_256::compress_digest(digest_type& digest
    }
 #endif
 
-   uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3], E = digest[4], F = digest[5], G = digest[6],
-            H = digest[7];
+   uint32_t A = digest[0];
+   uint32_t B = digest[1];
+   uint32_t C = digest[2];
+   uint32_t D = digest[3];
+   uint32_t E = digest[4];
+   uint32_t F = digest[5];
+   uint32_t G = digest[6];
+   uint32_t H = digest[7];
 
    std::array<uint32_t, 16> W{};
 

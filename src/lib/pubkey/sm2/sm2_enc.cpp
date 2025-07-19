@@ -119,8 +119,10 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
             return secure_vector<uint8_t>();
          }
 
-         BigInt x1, y1;
-         secure_vector<uint8_t> C3, masked_msg;
+         BigInt x1;
+         BigInt y1;
+         secure_vector<uint8_t> C3;
+         secure_vector<uint8_t> masked_msg;
 
          BER_Decoder(ctext)
             .start_sequence()

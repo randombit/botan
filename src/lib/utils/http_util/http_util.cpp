@@ -127,7 +127,9 @@ Response http_sync(const http_exch_fn& http_transact,
 
    const auto host_loc_sep = url.find('/', protocol_host_sep + 3);
 
-   std::string hostname, loc, service;
+   std::string hostname;
+   std::string loc;
+   std::string service;
 
    if(host_loc_sep == std::string::npos) {
       hostname = url.substr(protocol_host_sep + 3);

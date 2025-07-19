@@ -39,7 +39,8 @@ void fuzz(std::span<const uint8_t> in) {
 
    std::vector<uint8_t> lib_result;
    std::vector<uint8_t> ref_result;
-   bool lib_rejected = false, ref_rejected = false;
+   bool lib_rejected = false;
+   bool ref_rejected = false;
 
    try {
       lib_result.resize(in.size());

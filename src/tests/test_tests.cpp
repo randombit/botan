@@ -56,35 +56,40 @@ class Test_Tests final : public Test {
 
          {
             Test::Result test_result(testcase_name);
-            std::vector<uint8_t> vec1(5), vec2(3, 9);
+            std::vector<uint8_t> vec1(5);
+            std::vector<uint8_t> vec2(3, 9);
             test_result.test_eq("test vectors equal", vec1, vec2);
             verify_failure("test vectors equal", result, test_result);
          }
 
          {
             Test::Result test_result(testcase_name);
-            std::vector<uint8_t> vec1(5), vec2(5);
+            std::vector<uint8_t> vec1(5);
+            std::vector<uint8_t> vec2(5);
             test_result.test_ne("test vectors not equal", vec1, vec2);
             verify_failure("test vectors equal", result, test_result);
          }
 
          {
             Test::Result test_result(testcase_name);
-            std::vector<uint8_t> vec1(5), vec2(5);
+            std::vector<uint8_t> vec1(5);
+            std::vector<uint8_t> vec2(5);
             test_result.test_ne("test arrays not equal", vec1.data(), vec1.size(), vec2.data(), vec2.size());
             verify_failure("test vectors equal", result, test_result);
          }
 
          {
             Test::Result test_result(testcase_name);
-            size_t x = 5, y = 6;
+            size_t x = 5;
+            size_t y = 6;
             test_result.test_eq("test ints equal", x, y);
             verify_failure("test ints equal", result, test_result);
          }
 
          {
             Test::Result test_result(testcase_name);
-            size_t x = 5, y = 5;
+            size_t x = 5;
+            size_t y = 5;
             test_result.test_ne("test ints not equal", x, y);
             verify_failure("test ints not equal", result, test_result);
          }

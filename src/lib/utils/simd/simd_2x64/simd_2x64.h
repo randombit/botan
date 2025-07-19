@@ -104,10 +104,8 @@ class SIMD_2x64 final {
 
       // Argon2 specific operation
       static void twist(SIMD_2x64& B0, SIMD_2x64& B1, SIMD_2x64& C0, SIMD_2x64& C1, SIMD_2x64& D0, SIMD_2x64& D1) {
-         SIMD_2x64 T0, T1;
-
-         T0 = SIMD_2x64::alignr8(B1, B0);
-         T1 = SIMD_2x64::alignr8(B0, B1);
+         auto T0 = SIMD_2x64::alignr8(B1, B0);
+         auto T1 = SIMD_2x64::alignr8(B0, B1);
          B0 = T0;
          B1 = T1;
 
@@ -123,10 +121,8 @@ class SIMD_2x64 final {
 
       // Argon2 specific operation
       static void untwist(SIMD_2x64& B0, SIMD_2x64& B1, SIMD_2x64& C0, SIMD_2x64& C1, SIMD_2x64& D0, SIMD_2x64& D1) {
-         SIMD_2x64 T0, T1;
-
-         T0 = SIMD_2x64::alignr8(B0, B1);
-         T1 = SIMD_2x64::alignr8(B1, B0);
+         auto T0 = SIMD_2x64::alignr8(B0, B1);
+         auto T1 = SIMD_2x64::alignr8(B1, B0);
          B0 = T0;
          B1 = T1;
 

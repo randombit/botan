@@ -249,7 +249,8 @@ Chain::Chain(std::string_view str) {
    std::istringstream ss{std::string(str)};  // FIXME C++23 avoid copy
    const std::string ERROR_MESSAGE = "Line does not have 4 space separated fields";
    for(std::string s; std::getline(ss, s);) {
-      size_t start = 0, end = 0;
+      size_t start = 0;
+      size_t end = 0;
       end = s.find(' ', start);
       if(end == std::string::npos) {
          throw Decoding_Error(ERROR_MESSAGE);
@@ -382,7 +383,8 @@ std::vector<Server_Information> servers_from_str(std::string_view str) {
 
    const std::string ERROR_MESSAGE = "Line does not have at least 5 space separated fields";
    for(std::string s; std::getline(ss, s);) {
-      size_t start = 0, end = 0;
+      size_t start = 0;
+      size_t end = 0;
       end = s.find(' ', start);
       if(end == std::string::npos) {
          throw Decoding_Error(ERROR_MESSAGE);

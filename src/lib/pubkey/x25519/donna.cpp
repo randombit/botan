@@ -455,7 +455,10 @@ void curve25519_donna(uint8_t mypublic[32], const uint8_t secret[32], const uint
    CT::poison(secret, 32);
    CT::poison(basepoint, 32);
 
-   uint64_t bp[5], x[5], z[5], zmone[5];
+   uint64_t bp[5];
+   uint64_t x[5];
+   uint64_t z[5];
+   uint64_t zmone[5];
    uint8_t e[32];
 
    copy_mem(e, secret, 32);

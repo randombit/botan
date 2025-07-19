@@ -44,7 +44,8 @@ void Hex_Encoder::encode_and_send(const uint8_t block[], size_t length) {
    if(m_line_length == 0) {
       send(m_out, 2 * length);
    } else {
-      size_t remaining = 2 * length, offset = 0;
+      size_t remaining = 2 * length;
+      size_t offset = 0;
       while(remaining > 0) {
          size_t sent = std::min(m_line_length - m_counter, remaining);
          send(&m_out[offset], sent);
