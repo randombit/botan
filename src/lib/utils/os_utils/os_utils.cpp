@@ -182,7 +182,7 @@ uint64_t OS::get_cpu_cycle_counter() {
    asm volatile("rdtsc" : "=d"(rtc_high), "=a"(rtc_low));
    rtc = (static_cast<uint64_t>(rtc_high) << 32) | rtc_low;
 
-   #elif defined(BOTAN_TARGET_CPU_IS_X86_FAMILY) && defined(BOTAN_HAS_CPUID)
+   #elif defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY) && defined(BOTAN_HAS_CPUID)
 
    if(CPUID::has(CPUID::Feature::RDTSC)) {
       uint32_t rtc_low = 0, rtc_high = 0;

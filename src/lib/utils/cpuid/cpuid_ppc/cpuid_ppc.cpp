@@ -53,7 +53,7 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
          feat |= CPUFeature::Bit::ALTIVEC;
       }
 
-   #if defined(BOTAN_TARGET_CPU_IS_PPC64)
+   #if defined(BOTAN_TARGET_ARCH_IS_PPC64)
       auto vcipher_probe = []() noexcept -> int {
          asm("vcipher 0, 0, 0");
          return 1;

@@ -1266,7 +1266,7 @@ class CPUID_Tests final : public Test {
             }
          }
 
-   #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+   #if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
 
          const auto bit = Botan::CPUID::Feature::SSE2;
 

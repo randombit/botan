@@ -12,7 +12,7 @@
 #include <botan/internal/isa_extn.h>
 #include <botan/internal/target_info.h>
 
-#if defined(BOTAN_TARGET_CPU_SUPPORTS_SSSE3)
+#if defined(BOTAN_TARGET_ARCH_SUPPORTS_SSSE3)
    #include <emmintrin.h>
    #include <tmmintrin.h>
    #define BOTAN_SIMD_USE_SSSE3
