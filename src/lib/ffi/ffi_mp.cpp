@@ -59,6 +59,8 @@ int botan_mp_set_from_radix_str(botan_mp_t mp, const char* str, size_t radix) {
    });
 }
 
+// NOLINTBEGIN(misc-misplaced-const)
+
 int botan_mp_set_from_mp(botan_mp_t dest, const botan_mp_t source) {
    return BOTAN_FFI_VISIT(dest, [=](auto& bn) { bn = safe_get(source); });
 }
@@ -258,4 +260,6 @@ int botan_mp_num_bits(const botan_mp_t mp, size_t* bits) {
 int botan_mp_num_bytes(const botan_mp_t mp, size_t* bytes) {
    return BOTAN_FFI_VISIT(mp, [=](const auto& n) { *bytes = n.bytes(); });
 }
+
+// NOLINTEND(misc-misplaced-const)
 }

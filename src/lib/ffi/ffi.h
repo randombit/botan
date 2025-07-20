@@ -58,7 +58,7 @@ API follows a few simple rules:
 #include <stddef.h>
 #include <stdint.h>
 
-/* NOLINTBEGIN(*-macro-usage) */
+/* NOLINTBEGIN(*-macro-usage,*-misplaced-const) */
 
 /**
 * The compile time API version. This matches the value of
@@ -2660,7 +2660,7 @@ int botan_tpm2_unauthenticated_session_init(botan_tpm2_session_t* session_out, b
 BOTAN_FFI_EXPORT(3, 6)
 int botan_tpm2_session_destroy(botan_tpm2_session_t session);
 
-/* NOLINTEND(*-macro-usage) */
+/* NOLINTEND(*-macro-usage,*-misplaced-const) */
 
 #ifdef __cplusplus
 }
