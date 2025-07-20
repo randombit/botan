@@ -206,8 +206,6 @@ const char* botan_error_description(int err) {
          return "HTTP error";
 
       case BOTAN_FFI_ERROR_UNKNOWN_ERROR:
-         return "Unknown error";
-
       default:
          return "Unknown error";
    }

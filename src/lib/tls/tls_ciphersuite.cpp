@@ -45,7 +45,6 @@ size_t Ciphersuite::nonce_bytes_from_record(Protocol_Version version) const {
       case Nonce_Format::AEAD_IMPLICIT_4:
          return 8;
       case Nonce_Format::AEAD_XOR_12:
-         return 0;
       case Nonce_Format::NULL_CIPHER:
          return 0;
    }
@@ -132,6 +131,8 @@ bool have_cipher(std::string_view cipher) {
 }  // namespace
 
 bool Ciphersuite::is_usable() const {
+   // NOLINTBEGIN(bugprone-branch-clone) this function needs help
+
    if(((cipher_algo() != "NULL") && (m_cipher_keylen == 0)) ||
       ((cipher_algo() == "NULL") && (m_cipher_keylen != 0))) {  // invalid keylen state
       return false;
@@ -217,6 +218,8 @@ bool Ciphersuite::is_usable() const {
       return false;
 #endif
    }
+
+   // NOLINTEND(bugprone-branch-clone)
 
    return true;
 }

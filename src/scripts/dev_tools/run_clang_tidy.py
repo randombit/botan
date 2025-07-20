@@ -57,7 +57,7 @@ disabled_needs_work = [
 # these we are probably not interested in ever being clang-tidy clean for
 disabled_not_interested = [
     '*-array-to-pointer-decay',
-    '*-avoid-c-arrays',
+    '*-avoid-c-arrays', # triggers also on foo(T x[], size_t len) decls
     '*-else-after-return',
     '*-function-size',
     '*-magic-numbers', # can't stop the magic
@@ -67,7 +67,6 @@ disabled_not_interested = [
     '*-use-emplace', # often less clear
     '*-deprecated-headers', # wrong for system headers like stdlib.h
     'cert-dcl21-cpp', # invalid, and removed already in clang-tidy 19
-    'bugprone-branch-clone', # doesn't interact well with feature macros
     'bugprone-easily-swappable-parameters',
     'bugprone-implicit-widening-of-multiplication-result',
     'cppcoreguidelines-pro-bounds-pointer-arithmetic',
@@ -87,7 +86,6 @@ disabled_not_interested = [
     'readability-avoid-return-with-void-value', # Jack likes doing this
     'readability-function-cognitive-complexity',
     'readability-identifier-length', # lol, lmao
-#    'readability-isolate-declaration',
     'readability-math-missing-parentheses',
     'readability-non-const-parameter',
     'readability-redundant-inline-specifier', # Jack likes doing this
