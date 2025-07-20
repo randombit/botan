@@ -298,7 +298,7 @@ inline std::shared_ptr<Botan::TLS::Policy> load_tls_policy(const std::string& po
    } else if(policy_type == "bsi") {
       return std::make_shared<Botan::TLS::BSI_TR_02102_2>();
    } else if(policy_type == "datagram") {
-      return std::make_shared<Botan::TLS::Strict_Policy>();
+      return std::make_shared<Botan::TLS::Datagram_Policy>();
    } else if(policy_type == "all" || policy_type == "everything") {
       return std::make_shared<TLS_All_Policy>();
    }

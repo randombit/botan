@@ -17,6 +17,8 @@ size_t X509_DN::lookup_ub(const OID& oid) {
    /*
    * See RFC 5280 Appendix A.1 starting with comment "-- Upper Bounds"
    */
+
+   // NOLINTBEGIN(*-branch-clone)
    if(auto iso_dn = is_sub_element_of(oid, {2, 5, 4})) {
       switch(*iso_dn) {
          case 3:
@@ -68,6 +70,8 @@ size_t X509_DN::lookup_ub(const OID& oid) {
             return 0;
       }
    }
+
+   // NOLINTEND(*-branch-clone)
 
    return 0;
 }

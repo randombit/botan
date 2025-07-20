@@ -115,26 +115,22 @@ std::vector<size_t> public_key_lengths_for_group(Group_Params group) {
          return {97, 1568};
 
       case Group_Params::HYBRID_X25519_eFRODOKEM_640_SHAKE_OQS:
-         return {32, 9616};
       case Group_Params::HYBRID_X25519_eFRODOKEM_640_AES_OQS:
          return {32, 9616};
+
       case Group_Params::HYBRID_X448_eFRODOKEM_976_SHAKE_OQS:
-         return {56, 15632};
       case Group_Params::HYBRID_X448_eFRODOKEM_976_AES_OQS:
          return {56, 15632};
 
       case Group_Params::HYBRID_SECP256R1_eFRODOKEM_640_SHAKE_OQS:
-         return {65, 9616};
       case Group_Params::HYBRID_SECP256R1_eFRODOKEM_640_AES_OQS:
          return {65, 9616};
 
       case Group_Params::HYBRID_SECP384R1_eFRODOKEM_976_SHAKE_OQS:
-         return {97, 15632};
       case Group_Params::HYBRID_SECP384R1_eFRODOKEM_976_AES_OQS:
          return {97, 15632};
 
       case Group_Params::HYBRID_SECP521R1_eFRODOKEM_1344_SHAKE_OQS:
-         return {133, 21520};
       case Group_Params::HYBRID_SECP521R1_eFRODOKEM_1344_AES_OQS:
          return {133, 21520};
 

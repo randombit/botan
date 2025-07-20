@@ -157,7 +157,6 @@ std::string Signature_Scheme::padding_string() const noexcept {
          return "PSS(SHA-512,MGF1,64)";
 
       case EDDSA_25519:
-         return "Pure";
       case EDDSA_448:
          return "Pure";
 
