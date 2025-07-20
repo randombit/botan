@@ -90,7 +90,6 @@ disabled_not_interested = [
     'readability-identifier-length', # lol, lmao
 #    'readability-isolate-declaration',
     'readability-math-missing-parentheses',
-    'readability-non-const-parameter',
     'readability-redundant-inline-specifier', # Jack likes doing this
     'readability-redundant-access-specifiers', # reneme likes doing this
     'readability-use-anyofallof', # not more readable

@@ -234,7 +234,7 @@ inline constexpr void typecast_copy(T out[], const uint8_t in[], size_t N)
 
 // TODO: deprecate and replace
 template <typename T>
-inline constexpr void typecast_copy(uint8_t out[], const T& in) {
+inline constexpr void typecast_copy(const uint8_t out[], const T& in) {
    // asserts that *out points to the correct amount of memory
    typecast_copy(std::span<uint8_t, sizeof(T)>(out, sizeof(T)), in);
 }

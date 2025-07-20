@@ -98,7 +98,7 @@ int botan_mp_to_str(const botan_mp_t mp, uint8_t digit_base, char* out, size_t* 
    });
 }
 
-int botan_mp_to_bin(const botan_mp_t mp, uint8_t vec[]) {
+int botan_mp_to_bin(const botan_mp_t mp, uint8_t vec[]) {  // NOLINT(*-non-const-parameters)
    return BOTAN_FFI_VISIT(mp, [=](const auto& bn) { bn.serialize_to(std::span{vec, bn.bytes()}); });
 }
 

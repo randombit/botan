@@ -708,7 +708,7 @@ inline constexpr auto store_any(Ts... ins) {
  */
 template <std::endian endianness, typename InT, unsigned_integralish T>
    requires(std::same_as<AutoDetect, InT> || std::same_as<T, InT>)
-inline constexpr void store_any(T in, uint8_t out[]) {
+inline constexpr void store_any(T in, uint8_t out[]) {  // NOLINT(*-non-const-parameter)
    // asserts that *out points to enough bytes to write into
    store_any<endianness, InT>(in, std::span<uint8_t, sizeof(T)>(out, sizeof(T)));
 }
@@ -720,7 +720,7 @@ inline constexpr void store_any(T in, uint8_t out[]) {
  */
 template <std::endian endianness, typename InT, unsigned_integralish T0, unsigned_integralish... Ts>
    requires(std::same_as<AutoDetect, InT> || std::same_as<T0, InT>) && all_same_v<T0, Ts...>
-inline constexpr void store_any(uint8_t out[], T0 in0, Ts... ins) {
+inline constexpr void store_any(uint8_t out[], T0 in0, Ts... ins) {  // NOLINT(*-non-const-parameter)
    constexpr auto bytes = sizeof(in0) + (sizeof(ins) + ... + 0);
    // asserts that *out points to the correct amount of memory
    store_any<endianness, T0>(std::span<uint8_t, bytes>(out, bytes), in0, ins...);
