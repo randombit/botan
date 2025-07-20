@@ -8,19 +8,16 @@
 
 #include <botan/tls_messages.h>
 
-#include <botan/rng.h>
-#include <botan/tls_extensions.h>
-
 #include <botan/credentials_manager.h>
+#include <botan/ecdh.h>
+#include <botan/rng.h>
+#include <botan/rsa.h>
+#include <botan/tls_extensions.h>
 #include <botan/internal/ct_utils.h>
-#include <botan/internal/stl_util.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_state.h>
 #include <botan/internal/tls_reader.h>
-
-#include <botan/ecdh.h>
-#include <botan/rsa.h>
 
 namespace Botan::TLS {
 

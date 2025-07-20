@@ -10,28 +10,14 @@
 
 #include <botan/tls_extensions.h>
 
-#include <botan/rng.h>
+#include <botan/ecdh.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
-#include <botan/internal/ct_utils.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_reader.h>
-
 #include <algorithm>
 #include <utility>
-
-#if defined(BOTAN_HAS_X25519)
-   #include <botan/x25519.h>
-#endif
-
-#if defined(BOTAN_HAS_X448)
-   #include <botan/x448.h>
-#endif
-
-#include <botan/dh.h>
-#include <botan/dl_group.h>
-#include <botan/ecdh.h>
 
 namespace Botan::TLS {
 
