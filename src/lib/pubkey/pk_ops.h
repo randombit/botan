@@ -30,9 +30,6 @@
 namespace Botan {
 
 class RandomNumberGenerator;
-class EME;
-class KDF;
-class EMSA;
 
 }  // namespace Botan
 

@@ -9,13 +9,12 @@
 #include <botan/internal/iso9796.h>
 
 #include <botan/exceptn.h>
+#include <botan/hash.h>
 #include <botan/rng.h>
-#include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/hash_id.h>
 #include <botan/internal/mgf1.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -244,6 +243,10 @@ bool ISO_9796_DS2::verify(std::span<const uint8_t> repr, std::span<const uint8_t
    return iso9796_verification(repr, raw, key_bits, m_hash, m_salt_len);
 }
 
+std::string ISO_9796_DS2::hash_function() const {
+   return m_hash->name();
+}
+
 /*
  * Return the SCAN name
  */
@@ -283,6 +286,10 @@ std::vector<uint8_t> ISO_9796_DS3::encoding_of(std::span<const uint8_t> msg,
  */
 bool ISO_9796_DS3::verify(std::span<const uint8_t> repr, std::span<const uint8_t> raw, size_t key_bits) {
    return iso9796_verification(repr, raw, key_bits, m_hash, 0);
+}
+
+std::string ISO_9796_DS3::hash_function() const {
+   return m_hash->name();
 }
 
 /*

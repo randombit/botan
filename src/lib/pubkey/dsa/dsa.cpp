@@ -126,9 +126,9 @@ namespace {
 class DSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
    public:
       DSA_Signature_Operation(const std::shared_ptr<const DL_PrivateKey>& key,
-                              std::string_view emsa,
+                              std::string_view hash_fn,
                               RandomNumberGenerator& rng) :
-            PK_Ops::Signature_with_Hash(emsa), m_key(key) {
+            PK_Ops::Signature_with_Hash(hash_fn), m_key(key) {
          m_b = BigInt::random_integer(rng, BigInt::from_s32(2), m_key->group().get_q());
          m_b_inv = m_key->group().inverse_mod_q(m_b);
       }
@@ -204,8 +204,8 @@ std::vector<uint8_t> DSA_Signature_Operation::raw_sign(std::span<const uint8_t> 
 */
 class DSA_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
-      DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key, std::string_view emsa) :
-            PK_Ops::Verification_with_Hash(emsa), m_key(key) {}
+      DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key, std::string_view hash_fn) :
+            PK_Ops::Verification_with_Hash(hash_fn), m_key(key) {}
 
       DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key, const AlgorithmIdentifier& alg_id) :
             PK_Ops::Verification_with_Hash(alg_id, "DSA"), m_key(key) {}

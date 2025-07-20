@@ -8,15 +8,19 @@
 #ifndef BOTAN_ISO9796_H_
 #define BOTAN_ISO9796_H_
 
-#include <botan/hash.h>
-#include <botan/internal/emsa.h>
+#include <botan/internal/sig_padding.h>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace Botan {
+
+class HashFunction;
 
 /**
 * ISO-9796-2 - Digital signature scheme 2 (probabilistic)
 */
-class ISO_9796_DS2 final : public EMSA {
+class ISO_9796_DS2 final : public SignaturePaddingScheme {
    public:
       /**
        * @param hash function to use
@@ -26,7 +30,7 @@ class ISO_9796_DS2 final : public EMSA {
       ISO_9796_DS2(std::unique_ptr<HashFunction> hash, bool implicit, size_t salt_size) :
             m_hash(std::move(hash)), m_implicit(implicit), m_salt_len(salt_size) {}
 
-      std::string hash_function() const override { return m_hash->name(); }
+      std::string hash_function() const override;
 
       std::string name() const override;
 
@@ -50,7 +54,7 @@ class ISO_9796_DS2 final : public EMSA {
 /**
 * ISO-9796-2 - Digital signature scheme 3 (deterministic)
 */
-class ISO_9796_DS3 final : public EMSA {
+class ISO_9796_DS3 final : public SignaturePaddingScheme {
    public:
       /**
        * @param hash function to use
@@ -61,7 +65,7 @@ class ISO_9796_DS3 final : public EMSA {
 
       std::string name() const override;
 
-      std::string hash_function() const override { return m_hash->name(); }
+      std::string hash_function() const override;
 
    private:
       void update(const uint8_t input[], size_t length) override;

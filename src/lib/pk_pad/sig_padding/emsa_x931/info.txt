@@ -1,5 +1,6 @@
 <defines>
 EMSA_X931 -> 20140118
+X931_SIGNATURE_PADDING -> 20250720
 </defines>
 
 <module_info>

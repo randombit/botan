@@ -8,15 +8,20 @@
 #ifndef BOTAN_PSSR_H_
 #define BOTAN_PSSR_H_
 
-#include <botan/hash.h>
-#include <botan/internal/emsa.h>
+#include <botan/internal/sig_padding.h>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace Botan {
+
+class RandomNumberGenerator;
+class HashFunction;
 
 /**
 * PSSR (called EMSA4 in IEEE 1363 and in old versions of the library)
 */
-class PSSR final : public EMSA {
+class PSSR final : public SignaturePaddingScheme {
    public:
       /**
       * @param hash the hash function to use
@@ -31,7 +36,7 @@ class PSSR final : public EMSA {
 
       std::string name() const override;
 
-      std::string hash_function() const override { return m_hash->name(); }
+      std::string hash_function() const override;
 
    private:
       void update(const uint8_t input[], size_t length) override;
@@ -50,23 +55,23 @@ class PSSR final : public EMSA {
 };
 
 /**
-* PSSR_Raw
+* PSS_Raw
 * This accepts a pre-hashed buffer
 */
-class PSSR_Raw final : public EMSA {
+class PSS_Raw final : public SignaturePaddingScheme {
    public:
       /**
       * @param hash the hash function to use
       */
-      explicit PSSR_Raw(std::unique_ptr<HashFunction> hash);
+      explicit PSS_Raw(std::unique_ptr<HashFunction> hash);
 
       /**
       * @param hash the hash function to use
       * @param salt_size the size of the salt to use in bytes
       */
-      PSSR_Raw(std::unique_ptr<HashFunction> hash, size_t salt_size);
+      PSS_Raw(std::unique_ptr<HashFunction> hash, size_t salt_size);
 
-      std::string hash_function() const override { return m_hash->name(); }
+      std::string hash_function() const override;
 
       std::string name() const override;
 

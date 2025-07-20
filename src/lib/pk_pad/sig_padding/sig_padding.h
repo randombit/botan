@@ -1,12 +1,11 @@
 /*
-* EMSA Classes
 * (C) 1999-2007 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_PUBKEY_EMSA_H_
-#define BOTAN_PUBKEY_EMSA_H_
+#ifndef BOTAN_SIGNATURE_PADDING_SCHEME_H_
+#define BOTAN_SIGNATURE_PADDING_SCHEME_H_
 
 #include <botan/types.h>
 #include <memory>
@@ -19,29 +18,29 @@ namespace Botan {
 class RandomNumberGenerator;
 
 /**
-* EMSA, from IEEE 1363s Encoding Method for Signatures, Appendix
+* RSA Signature Padding Scheme
 *
-* Any way of encoding/padding signatures
+* Previously called 'EMSA' from IEEE 1363's "Encoding Method for Signatures, Appendix"
 */
-class BOTAN_TEST_API EMSA /* NOLINT(*-special-member-functions) */ {
+class BOTAN_TEST_API SignaturePaddingScheme /* NOLINT(*-special-member-functions) */ {
    public:
-      virtual ~EMSA() = default;
+      virtual ~SignaturePaddingScheme() = default;
 
       /**
-      * Factory method for EMSA (message-encoding methods for signatures
+      * Factory method for SignaturePaddingScheme (message-encoding methods for signatures
       * with appendix) objects
-      * @param algo_spec the name of the EMSA to create
+      * @param algo_spec the name of the SignaturePaddingScheme to create
       * @return pointer to newly allocated object of that type, or nullptr
       */
-      static std::unique_ptr<EMSA> create(std::string_view algo_spec);
+      static std::unique_ptr<SignaturePaddingScheme> create(std::string_view algo_spec);
 
       /**
-      * Factory method for EMSA (message-encoding methods for signatures
+      * Factory method for SignaturePaddingScheme (message-encoding methods for signatures
       * with appendix) objects
-      * @param algo_spec the name of the EMSA to create
+      * @param algo_spec the name of the SignaturePaddingScheme to create
       * @return pointer to newly allocated object of that type, or throws
       */
-      static std::unique_ptr<EMSA> create_or_throw(std::string_view algo_spec);
+      static std::unique_ptr<SignaturePaddingScheme> create_or_throw(std::string_view algo_spec);
 
       /**
       * Add more data to the signature computation

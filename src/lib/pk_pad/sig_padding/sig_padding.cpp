@@ -4,26 +4,26 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/emsa.h>
+#include <botan/internal/sig_padding.h>
 
 #include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/internal/scan_name.h>
 
-#if defined(BOTAN_HAS_EMSA_X931)
-   #include <botan/internal/emsa_x931.h>
+#if defined(BOTAN_HAS_X931_SIGNATURE_PADDING)
+   #include <botan/internal/x931_sig_padding.h>
 #endif
 
-#if defined(BOTAN_HAS_EMSA_PKCS1)
-   #include <botan/internal/emsa_pkcs1.h>
+#if defined(BOTAN_HAS_PKCSV15_SIGNATURE_PADDING)
+   #include <botan/internal/pkcs1_sig_padding.h>
 #endif
 
-#if defined(BOTAN_HAS_EMSA_PSSR)
+#if defined(BOTAN_HAS_PSS)
    #include <botan/internal/pssr.h>
 #endif
 
-#if defined(BOTAN_HAS_EMSA_RAW)
-   #include <botan/internal/emsa_raw.h>
+#if defined(BOTAN_HAS_RAW_SIGNATURE_PADDING)
+   #include <botan/internal/raw_sig_padding.h>
 #endif
 
 #if defined(BOTAN_HAS_ISO_9796)
@@ -32,7 +32,7 @@
 
 namespace Botan {
 
-std::unique_ptr<EMSA> EMSA::create(std::string_view algo_spec) {
+std::unique_ptr<SignaturePaddingScheme> SignaturePaddingScheme::create(std::string_view algo_spec) {
    SCAN_Name req(algo_spec);
 
 #if defined(BOTAN_HAS_EMSA_PKCS1)
@@ -40,13 +40,13 @@ std::unique_ptr<EMSA> EMSA::create(std::string_view algo_spec) {
    if(req.algo_name() == "EMSA_PKCS1" || req.algo_name() == "PKCS1v15" || req.algo_name() == "EMSA-PKCS1-v1_5" ||
       req.algo_name() == "EMSA3") {
       if(req.arg_count() == 2 && req.arg(0) == "Raw") {
-         return std::make_unique<EMSA_PKCS1v15_Raw>(req.arg(1));
+         return std::make_unique<PKCS1v15_Raw_SignaturePaddingScheme>(req.arg(1));
       } else if(req.arg_count() == 1) {
          if(req.arg(0) == "Raw") {
-            return std::make_unique<EMSA_PKCS1v15_Raw>();
+            return std::make_unique<PKCS1v15_Raw_SignaturePaddingScheme>();
          } else {
             if(auto hash = HashFunction::create(req.arg(0))) {
-               return std::make_unique<EMSA_PKCS1v15>(std::move(hash));
+               return std::make_unique<PKCS1v15_SignaturePaddingScheme>(std::move(hash));
             }
          }
       }
@@ -60,9 +60,9 @@ std::unique_ptr<EMSA> EMSA::create(std::string_view algo_spec) {
          if(auto hash = HashFunction::create(req.arg(0))) {
             if(req.arg_count() == 3) {
                const size_t salt_size = req.arg_as_integer(2, 0);
-               return std::make_unique<PSSR_Raw>(std::move(hash), salt_size);
+               return std::make_unique<PSS_Raw>(std::move(hash), salt_size);
             } else {
-               return std::make_unique<PSSR_Raw>(std::move(hash));
+               return std::make_unique<PSS_Raw>(std::move(hash));
             }
          }
       }
@@ -105,25 +105,25 @@ std::unique_ptr<EMSA> EMSA::create(std::string_view algo_spec) {
    }
 #endif
 
-#if defined(BOTAN_HAS_EMSA_X931)
+#if defined(BOTAN_HAS_X931_SIGNATURE_PADDING)
    // TODO(Botan4) Remove all but "X9.31"
    if(req.algo_name() == "EMSA_X931" || req.algo_name() == "EMSA2" || req.algo_name() == "X9.31") {
       if(req.arg_count() == 1) {
          if(auto hash = HashFunction::create(req.arg(0))) {
-            return std::make_unique<EMSA_X931>(std::move(hash));
+            return std::make_unique<X931_SignaturePadding>(std::move(hash));
          }
       }
    }
 #endif
 
-#if defined(BOTAN_HAS_EMSA_RAW)
+#if defined(BOTAN_HAS_RAW_SIGNATURE_PADDING)
    if(req.algo_name() == "Raw") {
       if(req.arg_count() == 0) {
-         return std::make_unique<EMSA_Raw>();
+         return std::make_unique<SignRawBytes>();
       } else {
          auto hash = HashFunction::create(req.arg(0));
          if(hash) {
-            return std::make_unique<EMSA_Raw>(hash->output_length());
+            return std::make_unique<SignRawBytes>(hash->output_length());
          }
       }
    }
@@ -132,8 +132,8 @@ std::unique_ptr<EMSA> EMSA::create(std::string_view algo_spec) {
    return nullptr;
 }
 
-std::unique_ptr<EMSA> EMSA::create_or_throw(std::string_view algo_spec) {
-   auto emsa = EMSA::create(algo_spec);
+std::unique_ptr<SignaturePaddingScheme> SignaturePaddingScheme::create_or_throw(std::string_view algo_spec) {
+   auto emsa = SignaturePaddingScheme::create(algo_spec);
    if(emsa) {
       return emsa;
    }

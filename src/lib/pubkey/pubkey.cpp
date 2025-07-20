@@ -252,7 +252,7 @@ SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
 
 PK_Signer::PK_Signer(const Private_Key& key,
                      RandomNumberGenerator& rng,
-                     std::string_view emsa,
+                     std::string_view padding,
                      Signature_Format format,
                      std::string_view provider) :
       m_sig_format(format), m_sig_element_size(key._signature_element_size_for_DER_encoding()) {
@@ -260,7 +260,7 @@ PK_Signer::PK_Signer(const Private_Key& key,
       BOTAN_ARG_CHECK(m_sig_element_size.has_value(), "This key does not support DER signatures");
    }
 
-   m_op = key.create_signature_op(rng, emsa, provider);
+   m_op = key.create_signature_op(rng, padding, provider);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support signature generation", key.algo_name()));
    }
@@ -366,10 +366,10 @@ std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng) {
 }
 
 PK_Verifier::PK_Verifier(const Public_Key& key,
-                         std::string_view emsa,
+                         std::string_view padding,
                          Signature_Format format,
                          std::string_view provider) {
-   m_op = key.create_verification_op(emsa, provider);
+   m_op = key.create_verification_op(padding, provider);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support signature verification", key.algo_name()));
    }
