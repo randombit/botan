@@ -424,6 +424,8 @@ int botan_pubkey_ecc_key_used_explicit_encoding(botan_pubkey_t key) {
 #endif
 }
 
+// NOLINTBEGIN(misc-misplaced-const)
+
 int botan_pubkey_load_ecdsa(botan_pubkey_t* key,
                             const botan_mp_t public_x,
                             const botan_mp_t public_y,
@@ -1363,6 +1365,8 @@ int botan_pubkey_view_ec_public_point(const botan_pubkey_t key, botan_view_ctx c
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
+
+// NOLINTEND(misc-misplaced-const)
 
 int botan_privkey_create_mceliece(botan_privkey_t* key_obj, botan_rng_t rng_obj, size_t n, size_t t) {
    const std::string mce_params = std::to_string(n) + "," + std::to_string(t);

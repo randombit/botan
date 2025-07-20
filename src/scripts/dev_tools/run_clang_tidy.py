@@ -44,7 +44,6 @@ disabled_needs_work = [
     'cppcoreguidelines-avoid-const-or-ref-data-members',
     'misc-const-correctness', # pretty noisy
     'misc-include-cleaner',
-    'misc-misplaced-const',
     'modernize-pass-by-value',
     'modernize-use-ranges', # limited by compiler support currently
     'performance-avoid-endl',
