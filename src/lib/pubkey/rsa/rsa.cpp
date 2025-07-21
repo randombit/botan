@@ -487,7 +487,9 @@ BigInt crt_recombine(const Montgomery_Int& j1,
    * multiply by a precomputed c * R2, which would have the effect of both
    * multiplying by c and immediately converting from Montgomery to standard form.
    */
-   const Montgomery_Int h_monty = (j1 - j2_p) * c_monty;
+   secure_vector<word> ws(2 * p_words);
+
+   const Montgomery_Int h_monty = (j1 - j2_p).mul(c_monty, ws);
 
    const BigInt h = h_monty.value();
    // Montgomery_Int always returns values sized to the modulus
@@ -496,7 +498,6 @@ BigInt crt_recombine(const Montgomery_Int& j1,
 
    // Compute r = h * q
    secure_vector<word> r(2 * p_words);
-   secure_vector<word> ws(2 * p_words);
 
    bigint_mul(r.data(), r.size(), h._data(), h.size(), p_words, q._data(), q.size(), p_words, ws.data(), ws.size());
 

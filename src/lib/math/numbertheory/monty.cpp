@@ -1,5 +1,5 @@
 /*
-* (C) 2018,2024 Jack Lloyd
+* (C) 2018,2024,2025 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,10 +9,17 @@
 #include <botan/numthry.h>
 #include <botan/internal/barrett.h>
 #include <botan/internal/mp_core.h>
-
-#include <utility>
+#include <array>
 
 namespace Botan {
+
+namespace {
+
+// If the modulus is at most this many words, then use the stack instead
+// of a heap variable for some temporary values
+constexpr size_t MontgomeryUseStackLimit = 32;
+
+}  // namespace
 
 Montgomery_Params::Montgomery_Params(const BigInt& p, const Barrett_Reduction& mod_p) {
    if(p.is_even() || p < 3) {
@@ -28,6 +35,11 @@ Montgomery_Params::Montgomery_Params(const BigInt& p, const Barrett_Reduction& m
    m_r1 = mod_p.reduce(r);
    m_r2 = mod_p.square(m_r1);
    m_r3 = mod_p.multiply(m_r1, m_r2);
+
+   // Barrett should be at least zero prefixing up to modulus size
+   BOTAN_ASSERT_NOMSG(m_r1.size() >= m_p_words);
+   BOTAN_ASSERT_NOMSG(m_r2.size() >= m_p_words);
+   BOTAN_ASSERT_NOMSG(m_r3.size() >= m_p_words);
 }
 
 Montgomery_Params::Montgomery_Params(const BigInt& p) :
@@ -107,37 +119,6 @@ void Montgomery_Params::mul(BigInt& z, const BigInt& x, std::span<const word> y,
    bigint_monty_redc_inplace(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
 }
 
-void Montgomery_Params::mul_by(BigInt& x, std::span<const word> y, secure_vector<word>& ws) const {
-   const size_t output_size = 2 * m_p_words;
-
-   if(ws.size() < 2 * output_size) {
-      ws.resize(2 * output_size);
-   }
-
-   word* z_data = ws.data();
-   word* ws_data = &ws[output_size];
-
-   BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
-
-   bigint_mul(z_data,
-              output_size,
-              x._data(),
-              x.size(),
-              std::min(m_p_words, x.size()),
-              y.data(),
-              y.size(),
-              std::min(m_p_words, y.size()),
-              ws_data,
-              output_size);
-
-   bigint_monty_redc_inplace(z_data, m_p._data(), m_p_words, m_p_dash, ws_data, output_size);
-
-   if(x.size() < output_size) {
-      x.grow_to(output_size);
-   }
-   copy_mem(x.mutable_data(), z_data, output_size);
-}
-
 void Montgomery_Params::mul_by(BigInt& x, const BigInt& y, secure_vector<word>& ws) const {
    const size_t output_size = 2 * m_p_words;
 
@@ -200,26 +181,9 @@ void Montgomery_Params::sqr(BigInt& z, std::span<const word> x, secure_vector<wo
    bigint_monty_redc_inplace(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
 }
 
-void Montgomery_Params::square_this(BigInt& x, secure_vector<word>& ws) const {
-   const size_t output_size = 2 * m_p_words;
-
-   if(ws.size() < 2 * output_size) {
-      ws.resize(2 * output_size);
-   }
-
-   word* z_data = ws.data();
-   word* ws_data = &ws[output_size];
-
-   BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
-
-   bigint_sqr(z_data, output_size, x._data(), x.size(), std::min(m_p_words, x.size()), ws_data, output_size);
-
-   bigint_monty_redc_inplace(z_data, m_p._data(), m_p_words, m_p_dash, ws_data, output_size);
-
-   if(x.size() < output_size) {
-      x.grow_to(output_size);
-   }
-   copy_mem(x.mutable_data(), z_data, output_size);
+Montgomery_Int::Montgomery_Int(std::shared_ptr<const Montgomery_Params> params, secure_vector<word> words) :
+      m_params(std::move(params)), m_v(std::move(words)) {
+   BOTAN_ASSERT_NOMSG(m_v.size() == m_params->p_words());
 }
 
 Montgomery_Int Montgomery_Int::one(const std::shared_ptr<const Montgomery_Params>& params) {
@@ -237,38 +201,31 @@ Montgomery_Int Montgomery_Int::from_wide_int(const std::shared_ptr<const Montgom
 Montgomery_Int::Montgomery_Int(const std::shared_ptr<const Montgomery_Params>& params,
                                const BigInt& v,
                                bool redc_needed) :
-      m_params(params) {
-   if(redc_needed == false) {
-      m_v = v;
-   } else {
-      BOTAN_ASSERT_NOMSG(m_v < m_params->p());
-      secure_vector<word> ws;
-      m_v = m_params->mul(v, m_params->R2(), ws);
-   }
-}
+      m_params(params), m_v(m_params->p_words()) {
+   BOTAN_ASSERT_NOMSG(v < m_params->p());
 
-Montgomery_Int::Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
-                               const word words[],
-                               size_t len,
-                               bool redc_needed) :
-      m_params(std::move(params)) {
-   m_v.set_words(words, len);
+   const size_t p_size = m_params->p_words();
+
+   auto v_span = v._as_span();
+
+   if(v_span.size() > p_size) {
+      // Safe to truncate the span since we already checked v < p
+      v_span = v_span.first(p_size);
+   }
+
+   BOTAN_ASSERT_NOMSG(m_v.size() >= v_span.size());
+
+   copy_mem(std::span{m_v}.first(v_span.size()), v_span);
 
    if(redc_needed) {
-      BOTAN_ASSERT_NOMSG(m_v < m_params->p());
       secure_vector<word> ws;
-      m_v = m_params->mul(m_v, m_params->R2(), ws);
+      this->mul_by(m_params->R2()._as_span().first(p_size), ws);
    }
 }
 
-void Montgomery_Int::fix_size() {
-   const size_t p_words = m_params->p_words();
-   BOTAN_DEBUG_ASSERT(m_v.sig_words() <= p_words);
-   m_v.grow_to(p_words);
-}
-
-bool Montgomery_Int::operator==(const Montgomery_Int& other) const {
-   return m_v == other.m_v && m_params->p() == other.m_params->p();
+Montgomery_Int::Montgomery_Int(std::shared_ptr<const Montgomery_Params> params, std::span<const word> words) :
+      m_params(std::move(params)), m_v(words.begin(), words.end()) {
+   BOTAN_ARG_CHECK(m_v.size() == m_params->p_words(), "Invalid input span");
 }
 
 std::vector<uint8_t> Montgomery_Int::serialize() const {
@@ -276,57 +233,137 @@ std::vector<uint8_t> Montgomery_Int::serialize() const {
 }
 
 BigInt Montgomery_Int::value() const {
-   secure_vector<word> ws;
-   return m_params->redc(m_v, ws);
+   secure_vector<word> ws(m_params->p_words());
+
+   secure_vector<word> z = m_v;
+   z.resize(2 * m_params->p_words());  // zero extend
+
+   bigint_monty_redc_inplace(
+      z.data(), m_params->p()._data(), m_params->p_words(), m_params->p_dash(), ws.data(), ws.size());
+
+   return BigInt::_from_words(z);
 }
 
 Montgomery_Int Montgomery_Int::operator+(const Montgomery_Int& other) const {
    BOTAN_STATE_CHECK(other.m_params == m_params);
-   secure_vector<word> ws;
-   BigInt z = m_v;
-   z.mod_add(other.m_v, m_params->p(), ws);
-   return Montgomery_Int(m_params, z, false);
+
+   const size_t p_size = m_params->p_words();
+   BOTAN_ASSERT_NOMSG(m_v.size() == p_size && other.m_v.size() == p_size);
+
+   secure_vector<word> z(2 * p_size);
+
+   word* r = std::span{z}.first(p_size).data();
+   word* t = std::span{z}.last(p_size).data();
+
+   // t = this + other
+   const word carry = bigint_add3_nc(t, m_v.data(), p_size, other.m_v.data(), p_size);
+
+   // Conditionally subtract r = t - p
+   bigint_monty_maybe_sub(p_size, r, carry, t, m_params->p()._data());
+
+   z.resize(p_size);  // truncate leaving only r
+   return Montgomery_Int(m_params, std::move(z));
 }
 
 Montgomery_Int Montgomery_Int::operator-(const Montgomery_Int& other) const {
    BOTAN_STATE_CHECK(other.m_params == m_params);
-   secure_vector<word> ws;
-   BigInt z = m_v;
-   z.mod_sub(other.m_v, m_params->p(), ws);
-   return Montgomery_Int(m_params, z, false);
-}
 
-Montgomery_Int Montgomery_Int::operator*(const Montgomery_Int& other) const {
-   BOTAN_STATE_CHECK(other.m_params == m_params);
-   secure_vector<word> ws;
-   return Montgomery_Int(m_params, m_params->mul(m_v, other.m_v, ws), false);
+   const size_t p_size = m_params->p_words();
+   BOTAN_ASSERT_NOMSG(m_v.size() == p_size && other.m_v.size() == p_size);
+
+   secure_vector<word> t(p_size);
+   const word borrow = bigint_sub3(t.data(), m_v.data(), p_size, other.m_v.data(), p_size);
+
+   bigint_cnd_add(borrow, t.data(), p_size, m_params->p()._data(), p_size);
+
+   return Montgomery_Int(m_params, std::move(t));
 }
 
 Montgomery_Int Montgomery_Int::mul(const Montgomery_Int& other, secure_vector<word>& ws) const {
    BOTAN_STATE_CHECK(other.m_params == m_params);
-   return Montgomery_Int(m_params, m_params->mul(m_v, other.m_v, ws), false);
+
+   const size_t p_size = m_params->p_words();
+   BOTAN_ASSERT_NOMSG(m_v.size() == p_size && other.m_v.size() == p_size);
+
+   if(ws.size() < 2 * p_size) {
+      ws.resize(2 * p_size);
+   }
+
+   secure_vector<word> z(2 * p_size);
+
+   bigint_mul(z.data(), z.size(), m_v.data(), p_size, p_size, other.m_v.data(), p_size, p_size, ws.data(), ws.size());
+
+   bigint_monty_redc_inplace(z.data(), m_params->p()._data(), p_size, m_params->p_dash(), ws.data(), ws.size());
+   z.resize(p_size);  // truncate off high zero words
+
+   return Montgomery_Int(m_params, std::move(z));
 }
 
 Montgomery_Int& Montgomery_Int::mul_by(const Montgomery_Int& other, secure_vector<word>& ws) {
    BOTAN_STATE_CHECK(other.m_params == m_params);
-   m_params->mul_by(m_v, other.m_v, ws);
-   return (*this);
+   return this->mul_by(std::span{other.m_v}, ws);
 }
 
-Montgomery_Int& Montgomery_Int::mul_by(const secure_vector<word>& other, secure_vector<word>& ws) {
-   m_params->mul_by(m_v, other, ws);
+Montgomery_Int& Montgomery_Int::mul_by(std::span<const word> other, secure_vector<word>& ws) {
+   const size_t p_size = m_params->p_words();
+   BOTAN_ASSERT_NOMSG(m_v.size() == p_size && other.size() == p_size);
+
+   if(ws.size() < 2 * p_size) {
+      ws.resize(2 * p_size);
+   }
+
+   auto do_mul_by = [&](std::span<word> z) {
+      bigint_mul(z.data(), z.size(), m_v.data(), p_size, p_size, other.data(), p_size, p_size, ws.data(), ws.size());
+
+      bigint_monty_redc_inplace(z.data(), m_params->p()._data(), p_size, m_params->p_dash(), ws.data(), ws.size());
+
+      copy_mem(m_v, z.first(p_size));
+   };
+
+   if(p_size <= MontgomeryUseStackLimit) {
+      std::array<word, 2 * MontgomeryUseStackLimit> z{};
+      do_mul_by(z);
+   } else {
+      secure_vector<word> z(2 * p_size);
+      do_mul_by(z);
+   }
+
    return (*this);
 }
 
 Montgomery_Int& Montgomery_Int::square_this_n_times(secure_vector<word>& ws, size_t n) {
-   for(size_t i = 0; i != n; ++i) {
-      m_params->square_this(m_v, ws);
+   const size_t p_size = m_params->p_words();
+   BOTAN_ASSERT_NOMSG(m_v.size() == p_size);
+
+   if(ws.size() < 2 * p_size) {
+      ws.resize(2 * p_size);
    }
+
+   auto do_sqr_n = [&](std::span<word> z) {
+      for(size_t i = 0; i != n; ++i) {
+         bigint_sqr(z.data(), 2 * p_size, m_v.data(), p_size, p_size, ws.data(), ws.size());
+
+         bigint_monty_redc_inplace(z.data(), m_params->p()._data(), p_size, m_params->p_dash(), ws.data(), ws.size());
+
+         copy_mem(m_v, std::span{z}.first(p_size));
+      }
+   };
+
+   if(p_size <= MontgomeryUseStackLimit) {
+      std::array<word, 2 * MontgomeryUseStackLimit> z{};
+      do_sqr_n(z);
+   } else {
+      secure_vector<word> z(2 * p_size);
+      do_sqr_n(z);
+   }
+
    return (*this);
 }
 
 Montgomery_Int Montgomery_Int::square(secure_vector<word>& ws) const {
-   return Montgomery_Int(m_params, m_params->sqr(m_v, ws), false);
+   auto z = (*this);
+   z.square_this_n_times(ws, 1);
+   return z;
 }
 
 }  // namespace Botan

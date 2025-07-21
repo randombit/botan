@@ -295,6 +295,8 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       /**
       * Multi-exponentiate
       * Return (g^x * y^z) % p
+      *
+      * @warning this function is variable time and should not be used with secret inputs
       */
       BigInt multi_exponentiate(const BigInt& x, const BigInt& y, const BigInt& z) const;
 

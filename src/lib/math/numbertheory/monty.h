@@ -11,6 +11,7 @@
 
 #include <botan/internal/ct_utils.h>
 #include <memory>
+#include <span>
 
 namespace Botan {
 
@@ -29,31 +30,29 @@ class BOTAN_TEST_API Montgomery_Int final {
       explicit Montgomery_Int(std::shared_ptr<const Montgomery_Params> params) : m_params(std::move(params)) {}
 
       /**
-      * Create a Montgomery_Int
+      * Create a Montgomery_Int from a BigInt
       */
       Montgomery_Int(const std::shared_ptr<const Montgomery_Params>& params, const BigInt& v, bool redc_needed = true);
 
       /**
       * Create a Montgomery_Int
+      *
+      * The span must be exactly p_words long and encoding a value less than p already
+      * in Montgomery form
       */
-      Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
-                     const word words[],
-                     size_t len,
-                     bool redc_needed = true);
+      Montgomery_Int(std::shared_ptr<const Montgomery_Params> params, std::span<const word> words);
 
+      /**
+      * Return the value 1 in Montgomery form
+      */
       static Montgomery_Int one(const std::shared_ptr<const Montgomery_Params>& params);
 
       /**
       * Wide reduction - input can be at most 2*bytes long
       */
       static Montgomery_Int from_wide_int(const std::shared_ptr<const Montgomery_Params>& params, const BigInt& x);
-      bool operator==(const Montgomery_Int& other) const;
-
-      bool operator!=(const Montgomery_Int& other) const { return (m_v != other.m_v); }
 
       std::vector<uint8_t> serialize() const;
-
-      void fix_size();
 
       /**
       * Return the value to normal mod-p space
@@ -63,23 +62,19 @@ class BOTAN_TEST_API Montgomery_Int final {
       /**
       * Return the Montgomery representation
       */
-      const BigInt& repr() const { return m_v; }
+      const secure_vector<word>& repr() const { return m_v; }
 
       Montgomery_Int operator+(const Montgomery_Int& other) const;
 
       Montgomery_Int operator-(const Montgomery_Int& other) const;
 
-      Montgomery_Int operator*(const Montgomery_Int& other) const;
-
       Montgomery_Int mul(const Montgomery_Int& other, secure_vector<word>& ws) const;
 
       Montgomery_Int& mul_by(const Montgomery_Int& other, secure_vector<word>& ws);
 
-      Montgomery_Int& mul_by(const secure_vector<word>& other, secure_vector<word>& ws);
+      Montgomery_Int& mul_by(std::span<const word> other, secure_vector<word>& ws);
 
       Montgomery_Int square(secure_vector<word>& ws) const;
-
-      Montgomery_Int& square_this(secure_vector<word>& ws) { return this->square_this_n_times(ws, 1); }
 
       Montgomery_Int& square_this_n_times(secure_vector<word>& ws, size_t n);
 
@@ -90,8 +85,10 @@ class BOTAN_TEST_API Montgomery_Int final {
       const std::shared_ptr<const Montgomery_Params>& _params() const { return m_params; }
 
    private:
+      Montgomery_Int(std::shared_ptr<const Montgomery_Params> params, secure_vector<word> words);
+
       std::shared_ptr<const Montgomery_Params> m_params;
-      BigInt m_v;
+      secure_vector<word> m_v;
 };
 
 /**
@@ -131,8 +128,6 @@ class BOTAN_TEST_API Montgomery_Params final {
 
       BigInt mul(const BigInt& x, const BigInt& y, secure_vector<word>& ws) const;
 
-      void mul_by(BigInt& x, std::span<const word> y, secure_vector<word>& ws) const;
-
       void mul_by(BigInt& x, const BigInt& y, secure_vector<word>& ws) const;
 
       BigInt sqr(const BigInt& x, secure_vector<word>& ws) const;
@@ -140,8 +135,6 @@ class BOTAN_TEST_API Montgomery_Params final {
       void sqr(BigInt& z, const BigInt& x, secure_vector<word>& ws) const;
 
       void sqr(BigInt& z, std::span<const word> x, secure_vector<word>& ws) const;
-
-      void square_this(BigInt& x, secure_vector<word>& ws) const;
 
    private:
       BigInt sqr(std::span<const word> x, secure_vector<word>& ws) const;
