@@ -71,14 +71,21 @@ jobs:
         include:
           - compiler: gcc
             target: shared
+            os: ubuntu-22.04
           - compiler: gcc
             target: amalgamation
+            os: ubuntu-22.04
+          - compiler: gcc
+            target: amalgamation
+            os: ubuntu-24.04
           - compiler: gcc
             target: static
+            os: ubuntu-22.04
           - compiler: clang
             target: shared
+            os: ubuntu-22.04
 
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
@@ -91,7 +98,7 @@ jobs:
         with:
           target: ${{ matrix.target }}
           compiler: ${{ matrix.compiler }}
-          cache-key: linux-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
+          cache-key: linux-${{ matrix.compiler }}-${{ matrix.os }}-x86_64-${{ matrix.target }}
 
       - name: Build and Test Botan
         run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
