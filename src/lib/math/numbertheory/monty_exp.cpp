@@ -172,8 +172,7 @@ Montgomery_Int monty_multi_exp(const std::shared_ptr<const Montgomery_Params>& p
 
    secure_vector<word> ws;
 
-   const Montgomery_Int one(params_p, params_p->R1(), false);
-   //const Montgomery_Int one(params_p, 1);
+   const Montgomery_Int one = Montgomery_Int::one(params_p);
 
    const Montgomery_Int x1(params_p, x_bn);
    const Montgomery_Int x2 = x1.square(ws);
