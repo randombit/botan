@@ -30,23 +30,8 @@ Montgomery_Params::Montgomery_Params(const BigInt& p, const Barrett_Reduction& m
    m_r3 = mod_p.multiply(m_r1, m_r2);
 }
 
-Montgomery_Params::Montgomery_Params(const BigInt& p) {
-   if(p.is_even() || p < 3) {
-      throw Invalid_Argument("Montgomery_Params invalid modulus");
-   }
-
-   m_p = p;
-   m_p_words = m_p.sig_words();
-   m_p_dash = monty_inverse(m_p.word_at(0));
-
-   const BigInt r = BigInt::power_of_2(m_p_words * WordInfo<word>::bits);
-
-   auto mod_p = Barrett_Reduction::for_secret_modulus(p);
-
-   m_r1 = mod_p.reduce(r);
-   m_r2 = mod_p.square(m_r1);
-   m_r3 = mod_p.multiply(m_r1, m_r2);
-}
+Montgomery_Params::Montgomery_Params(const BigInt& p) :
+      Montgomery_Params(p, Barrett_Reduction::for_secret_modulus(p)) {}
 
 BigInt Montgomery_Params::redc(const BigInt& x, secure_vector<word>& ws) const {
    const size_t output_size = m_p_words + 1;
@@ -95,12 +80,6 @@ void Montgomery_Params::mul(BigInt& z, const BigInt& x, const BigInt& y, secure_
               ws.size());
 
    bigint_monty_redc_inplace(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
-}
-
-BigInt Montgomery_Params::mul(const BigInt& x, std::span<const word> y, secure_vector<word>& ws) const {
-   BigInt z = BigInt::with_capacity(2 * m_p_words);
-   this->mul(z, x, y, ws);
-   return z;
 }
 
 void Montgomery_Params::mul(BigInt& z, const BigInt& x, std::span<const word> y, secure_vector<word>& ws) const {
@@ -268,18 +247,6 @@ Montgomery_Int::Montgomery_Int(const std::shared_ptr<const Montgomery_Params>& p
    }
 }
 
-Montgomery_Int::Montgomery_Int(const std::shared_ptr<const Montgomery_Params>& params,
-                               const uint8_t bits[],
-                               size_t len,
-                               bool redc_needed) :
-      m_params(params), m_v(bits, len) {
-   if(redc_needed) {
-      BOTAN_ASSERT_NOMSG(m_v < m_params->p());
-      secure_vector<word> ws;
-      m_v = m_params->mul(m_v, m_params->R2(), ws);
-   }
-}
-
 Montgomery_Int::Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
                                const word words[],
                                size_t len,
@@ -308,18 +275,6 @@ std::vector<uint8_t> Montgomery_Int::serialize() const {
    return value().serialize();
 }
 
-size_t Montgomery_Int::size() const {
-   return m_params->p().bytes();
-}
-
-bool Montgomery_Int::is_one() const {
-   return m_v == m_params->R1();
-}
-
-bool Montgomery_Int::is_zero() const {
-   return m_v.is_zero();
-}
-
 BigInt Montgomery_Int::value() const {
    secure_vector<word> ws;
    return m_params->redc(m_v, ws);
@@ -339,30 +294,6 @@ Montgomery_Int Montgomery_Int::operator-(const Montgomery_Int& other) const {
    BigInt z = m_v;
    z.mod_sub(other.m_v, m_params->p(), ws);
    return Montgomery_Int(m_params, z, false);
-}
-
-Montgomery_Int& Montgomery_Int::operator+=(const Montgomery_Int& other) {
-   BOTAN_STATE_CHECK(other.m_params == m_params);
-   secure_vector<word> ws;
-   return this->add(other, ws);
-}
-
-Montgomery_Int& Montgomery_Int::add(const Montgomery_Int& other, secure_vector<word>& ws) {
-   BOTAN_STATE_CHECK(other.m_params == m_params);
-   m_v.mod_add(other.m_v, m_params->p(), ws);
-   return (*this);
-}
-
-Montgomery_Int& Montgomery_Int::operator-=(const Montgomery_Int& other) {
-   BOTAN_STATE_CHECK(other.m_params == m_params);
-   secure_vector<word> ws;
-   return this->sub(other, ws);
-}
-
-Montgomery_Int& Montgomery_Int::sub(const Montgomery_Int& other, secure_vector<word>& ws) {
-   BOTAN_STATE_CHECK(other.m_params == m_params);
-   m_v.mod_sub(other.m_v, m_params->p(), ws);
-   return (*this);
 }
 
 Montgomery_Int Montgomery_Int::operator*(const Montgomery_Int& other) const {
@@ -387,17 +318,6 @@ Montgomery_Int& Montgomery_Int::mul_by(const secure_vector<word>& other, secure_
    return (*this);
 }
 
-Montgomery_Int& Montgomery_Int::operator*=(const Montgomery_Int& other) {
-   BOTAN_STATE_CHECK(other.m_params == m_params);
-   secure_vector<word> ws;
-   return mul_by(other, ws);
-}
-
-Montgomery_Int& Montgomery_Int::operator*=(const secure_vector<word>& other) {
-   secure_vector<word> ws;
-   return mul_by(other, ws);
-}
-
 Montgomery_Int& Montgomery_Int::square_this_n_times(secure_vector<word>& ws, size_t n) {
    for(size_t i = 0; i != n; ++i) {
       m_params->square_this(m_v, ws);
@@ -405,41 +325,8 @@ Montgomery_Int& Montgomery_Int::square_this_n_times(secure_vector<word>& ws, siz
    return (*this);
 }
 
-Montgomery_Int& Montgomery_Int::square_this(secure_vector<word>& ws) {
-   m_params->square_this(m_v, ws);
-   return (*this);
-}
-
 Montgomery_Int Montgomery_Int::square(secure_vector<word>& ws) const {
    return Montgomery_Int(m_params, m_params->sqr(m_v, ws), false);
-}
-
-Montgomery_Int Montgomery_Int::cube(secure_vector<word>& ws) const {
-   return Montgomery_Int(m_params, m_params->sqr(m_v, ws), false);
-}
-
-Montgomery_Int Montgomery_Int::additive_inverse() const {
-   return Montgomery_Int(m_params, m_params->p()) - (*this);
-}
-
-Montgomery_Int& Montgomery_Int::mul_by_2(secure_vector<word>& ws) {
-   m_v.mod_mul(2, m_params->p(), ws);
-   return (*this);
-}
-
-Montgomery_Int& Montgomery_Int::mul_by_3(secure_vector<word>& ws) {
-   m_v.mod_mul(3, m_params->p(), ws);
-   return (*this);
-}
-
-Montgomery_Int& Montgomery_Int::mul_by_4(secure_vector<word>& ws) {
-   m_v.mod_mul(4, m_params->p(), ws);
-   return (*this);
-}
-
-Montgomery_Int& Montgomery_Int::mul_by_8(secure_vector<word>& ws) {
-   m_v.mod_mul(8, m_params->p(), ws);
-   return (*this);
 }
 
 }  // namespace Botan

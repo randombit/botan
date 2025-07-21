@@ -142,7 +142,7 @@ class Factor final : public Command {
       static Botan::BigInt rho(const Botan::BigInt& n, Botan::RandomNumberGenerator& rng) {
          auto monty_n = std::make_shared<Botan::Montgomery_Params>(n);
 
-         const Botan::Montgomery_Int one(monty_n, monty_n->R1(), false);
+         const auto one = Botan::Montgomery_Int::one(monty_n);
 
          const auto two = Botan::BigInt::from_s32(2);
          const auto three = Botan::BigInt::from_s32(3);
@@ -166,10 +166,9 @@ class Factor final : public Command {
             }
 
             x.square_this(ws);  // x = x^2
-            x.add(one, ws);
+            x = x + one;
 
-            t = y;
-            t.sub(x, ws);
+            t = y - x;
 
             z.mul_by(t, ws);
 
