@@ -1,0 +1,13 @@
+<defines>
+RSA_SIGNATURE_PADDING -> 20250720
+</defines>
+
+<module_info>
+name -> "RSA signature padding schemes"
+brief -> "Implementations of public key signature padding schemes"
+</module_info>
+
+<requires>
+hash
+rng
+</requires>

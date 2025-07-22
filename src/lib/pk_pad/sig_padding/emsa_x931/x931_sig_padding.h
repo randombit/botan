@@ -1,33 +1,36 @@
 /*
-* X9.31 EMSA
 * (C) 1999-2007 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_EMSA_X931_H_
-#define BOTAN_EMSA_X931_H_
+#ifndef BOTAN_X931_SIGNATURE_PADDING_SCHEME_H_
+#define BOTAN_X931_SIGNATURE_PADDING_SCHEME_H_
 
-#include <botan/hash.h>
-#include <botan/internal/emsa.h>
+#include <botan/internal/sig_padding.h>
 
 namespace Botan {
 
+class HashFunction;
+
 /**
-* EMSA from X9.31 (EMSA2 in IEEE 1363)
-* Useful for Rabin-Williams, also sometimes used with RSA in
-* odd protocols.
+* Padding scheme from X9.31 (aka EMSA2 in IEEE 1363)
+*
+* Historically used for signature padding with Rabin-Williams,
+* which is not implemented by Botan anymore.
+*
+* Sometimes used with RSA in odd protocols.
 */
-class EMSA_X931 final : public EMSA {
+class X931_SignaturePadding final : public SignaturePaddingScheme {
    public:
       /**
       * @param hash the hash function to use
       */
-      explicit EMSA_X931(std::unique_ptr<HashFunction> hash);
+      explicit X931_SignaturePadding(std::unique_ptr<HashFunction> hash);
 
       std::string name() const override;
 
-      std::string hash_function() const override { return m_hash->name(); }
+      std::string hash_function() const override;
 
    private:
       void update(const uint8_t input[], size_t length) override;

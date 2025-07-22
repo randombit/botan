@@ -1,5 +1,6 @@
 <defines>
 EMSA_RAW -> 20131128
+RAW_SIGNATURE_PADDING -> 20250720
 </defines>
 
 <module_info>

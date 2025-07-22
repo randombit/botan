@@ -10,6 +10,7 @@ name -> "RSA"
 blinding
 keypair
 numbertheory
+sig_padding
 pk_pad
 </requires>
 

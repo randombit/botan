@@ -8,13 +8,11 @@
 #include <botan/internal/pssr.h>
 
 #include <botan/exceptn.h>
-#include <botan/mem_ops.h>
+#include <botan/hash.h>
 #include <botan/rng.h>
-#include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/mgf1.h>
-#include <botan/internal/stl_util.h>
 #include <array>
 
 namespace Botan {
@@ -186,48 +184,52 @@ bool PSSR::verify(std::span<const uint8_t> coded, std::span<const uint8_t> raw, 
    return ok;
 }
 
+std::string PSSR::hash_function() const {
+   return m_hash->name();
+}
+
 std::string PSSR::name() const {
    return fmt("PSS({},MGF1,{})", m_hash->name(), m_salt_size);
 }
 
-PSSR_Raw::PSSR_Raw(std::unique_ptr<HashFunction> hash) :
+PSS_Raw::PSS_Raw(std::unique_ptr<HashFunction> hash) :
       m_hash(std::move(hash)), m_salt_size(m_hash->output_length()), m_required_salt_len(false) {}
 
-PSSR_Raw::PSSR_Raw(std::unique_ptr<HashFunction> hash, size_t salt_size) :
+PSS_Raw::PSS_Raw(std::unique_ptr<HashFunction> hash, size_t salt_size) :
       m_hash(std::move(hash)), m_salt_size(salt_size), m_required_salt_len(true) {}
 
 /*
-* PSSR_Raw Update Operation
+* PSS_Raw Update Operation
 */
-void PSSR_Raw::update(const uint8_t input[], size_t length) {
+void PSS_Raw::update(const uint8_t input[], size_t length) {
    m_msg.insert(m_msg.end(), input, input + length);
 }
 
 /*
 * Return the raw (unencoded) data
 */
-std::vector<uint8_t> PSSR_Raw::raw_data() {
+std::vector<uint8_t> PSS_Raw::raw_data() {
    std::vector<uint8_t> ret;
    std::swap(ret, m_msg);
 
    if(ret.size() != m_hash->output_length()) {
-      throw Encoding_Error("PSSR_Raw Bad input length, did not match hash");
+      throw Encoding_Error("PSS_Raw Bad input length, did not match hash");
    }
 
    return ret;
 }
 
-std::vector<uint8_t> PSSR_Raw::encoding_of(std::span<const uint8_t> msg,
-                                           size_t output_bits,
-                                           RandomNumberGenerator& rng) {
+std::vector<uint8_t> PSS_Raw::encoding_of(std::span<const uint8_t> msg,
+                                          size_t output_bits,
+                                          RandomNumberGenerator& rng) {
    const auto salt = rng.random_vec<std::vector<uint8_t>>(m_salt_size);
    return pss_encode(*m_hash, msg, salt, output_bits);
 }
 
 /*
-* PSSR_Raw Decode/Verify Operation
+* PSS_Raw Decode/Verify Operation
 */
-bool PSSR_Raw::verify(std::span<const uint8_t> coded, std::span<const uint8_t> raw, size_t key_bits) {
+bool PSS_Raw::verify(std::span<const uint8_t> coded, std::span<const uint8_t> raw, size_t key_bits) {
    size_t salt_size = 0;
    const bool ok = pss_verify(*m_hash, coded, raw, key_bits, &salt_size);
 
@@ -238,7 +240,11 @@ bool PSSR_Raw::verify(std::span<const uint8_t> coded, std::span<const uint8_t> r
    return ok;
 }
 
-std::string PSSR_Raw::name() const {
+std::string PSS_Raw::hash_function() const {
+   return m_hash->name();
+}
+
+std::string PSS_Raw::name() const {
    return fmt("PSS_Raw({},MGF1,{})", m_hash->name(), m_salt_size);
 }
 

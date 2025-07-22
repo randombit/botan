@@ -9,7 +9,7 @@ brief -> "Support for RSA key pairs hosted on TPM 2.0"
 
 <requires>
 rsa
-pk_pad
+sig_padding
 </requires>
 
 <header:public>

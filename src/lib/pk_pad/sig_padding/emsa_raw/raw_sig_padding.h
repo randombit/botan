@@ -1,24 +1,28 @@
 /*
-* EMSA-Raw
 * (C) 1999-2007 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_EMSA_RAW_H_
-#define BOTAN_EMSA_RAW_H_
+#ifndef BOTAN_SIGN_RAW_BYTES_H_
+#define BOTAN_SIGN_RAW_BYTES_H_
 
-#include <botan/internal/emsa.h>
+#include <botan/internal/sig_padding.h>
+#include <string>
+#include <vector>
 
 namespace Botan {
 
+class RandomNumberGenerator;
+
 /**
-* EMSA-Raw - sign inputs directly
-* Don't use this unless you know what you are doing.
+* This class sign inputs directly with no intermediate hashing or padding.
+*
+* This is insecure unless used very carefully.
 */
-class EMSA_Raw final : public EMSA {
+class SignRawBytes final : public SignaturePaddingScheme {
    public:
-      explicit EMSA_Raw(size_t expected_hash_size = 0) : m_expected_size(expected_hash_size) {}
+      explicit SignRawBytes(size_t expected_hash_size = 0) : m_expected_size(expected_hash_size) {}
 
       std::string hash_function() const override { return "Raw"; }
 

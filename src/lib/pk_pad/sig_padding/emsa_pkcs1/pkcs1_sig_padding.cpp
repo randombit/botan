@@ -5,10 +5,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/emsa_pkcs1.h>
+#include <botan/internal/pkcs1_sig_padding.h>
 
 #include <botan/exceptn.h>
+#include <botan/hash.h>
 #include <botan/mem_ops.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/hash_id.h>
 #include <botan/internal/stl_util.h>
 
@@ -40,25 +42,27 @@ std::vector<uint8_t> pkcs1v15_sig_encoding(std::span<const uint8_t> msg,
 
 }  // namespace
 
-void EMSA_PKCS1v15::update(const uint8_t input[], size_t length) {
+void PKCS1v15_SignaturePaddingScheme::update(const uint8_t input[], size_t length) {
    m_hash->update(input, length);
 }
 
-std::vector<uint8_t> EMSA_PKCS1v15::raw_data() {
+std::vector<uint8_t> PKCS1v15_SignaturePaddingScheme::raw_data() {
    return m_hash->final_stdvec();
 }
 
-std::vector<uint8_t> EMSA_PKCS1v15::encoding_of(std::span<const uint8_t> msg,
-                                                size_t output_bits,
-                                                RandomNumberGenerator& /*rng*/) {
+std::vector<uint8_t> PKCS1v15_SignaturePaddingScheme::encoding_of(std::span<const uint8_t> msg,
+                                                                  size_t output_bits,
+                                                                  RandomNumberGenerator& /*rng*/) {
    if(msg.size() != m_hash->output_length()) {
-      throw Encoding_Error("EMSA_PKCS1v15::encoding_of: Bad input length");
+      throw Encoding_Error("PKCS1v15_SignaturePaddingScheme::encoding_of: Bad input length");
    }
 
    return pkcs1v15_sig_encoding(msg, output_bits, m_hash_id);
 }
 
-bool EMSA_PKCS1v15::verify(std::span<const uint8_t> coded, std::span<const uint8_t> raw, size_t key_bits) {
+bool PKCS1v15_SignaturePaddingScheme::verify(std::span<const uint8_t> coded,
+                                             std::span<const uint8_t> raw,
+                                             size_t key_bits) {
    if(raw.size() != m_hash->output_length()) {
       return false;
    }
@@ -71,55 +75,62 @@ bool EMSA_PKCS1v15::verify(std::span<const uint8_t> coded, std::span<const uint8
    }
 }
 
-EMSA_PKCS1v15::EMSA_PKCS1v15(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash)) {
+PKCS1v15_SignaturePaddingScheme::PKCS1v15_SignaturePaddingScheme(std::unique_ptr<HashFunction> hash) :
+      m_hash(std::move(hash)) {
    m_hash_id = pkcs_hash_id(m_hash->name());
 }
 
-std::string EMSA_PKCS1v15::name() const {
-   return "PKCS1v15(" + m_hash->name() + ")";
+std::string PKCS1v15_SignaturePaddingScheme::hash_function() const {
+   return m_hash->name();
 }
 
-std::string EMSA_PKCS1v15_Raw::name() const {
+std::string PKCS1v15_SignaturePaddingScheme::name() const {
+   return fmt("PKCS1v15({})", m_hash->name());
+}
+
+std::string PKCS1v15_Raw_SignaturePaddingScheme::name() const {
    if(m_hash_name.empty()) {
       return "PKCS1v15(Raw)";
    } else {
-      return "PKCS1v15(Raw," + m_hash_name + ")";
+      return fmt("PKCS1v15(Raw,{})", m_hash_name);
    }
 }
 
-EMSA_PKCS1v15_Raw::EMSA_PKCS1v15_Raw() : m_hash_output_len(0) {
+PKCS1v15_Raw_SignaturePaddingScheme::PKCS1v15_Raw_SignaturePaddingScheme() : m_hash_output_len(0) {
    // m_hash_id, m_hash_name left empty
 }
 
-EMSA_PKCS1v15_Raw::EMSA_PKCS1v15_Raw(std::string_view hash_algo) {
+PKCS1v15_Raw_SignaturePaddingScheme::PKCS1v15_Raw_SignaturePaddingScheme(std::string_view hash_algo) {
    std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_algo));
    m_hash_id = pkcs_hash_id(hash_algo);
    m_hash_name = hash->name();
    m_hash_output_len = hash->output_length();
 }
 
-void EMSA_PKCS1v15_Raw::update(const uint8_t input[], size_t length) {
+void PKCS1v15_Raw_SignaturePaddingScheme::update(const uint8_t input[], size_t length) {
    m_message += std::make_pair(input, length);
 }
 
-std::vector<uint8_t> EMSA_PKCS1v15_Raw::raw_data() {
+std::vector<uint8_t> PKCS1v15_Raw_SignaturePaddingScheme::raw_data() {
    std::vector<uint8_t> ret;
    std::swap(ret, m_message);
 
    if(m_hash_output_len > 0 && ret.size() != m_hash_output_len) {
-      throw Encoding_Error("EMSA_PKCS1v15_Raw::encoding_of: Bad input length");
+      throw Encoding_Error("PKCS1v15_Raw_SignaturePaddingScheme::encoding_of: Bad input length");
    }
 
    return ret;
 }
 
-std::vector<uint8_t> EMSA_PKCS1v15_Raw::encoding_of(std::span<const uint8_t> msg,
-                                                    size_t output_bits,
-                                                    RandomNumberGenerator& /*rng*/) {
+std::vector<uint8_t> PKCS1v15_Raw_SignaturePaddingScheme::encoding_of(std::span<const uint8_t> msg,
+                                                                      size_t output_bits,
+                                                                      RandomNumberGenerator& /*rng*/) {
    return pkcs1v15_sig_encoding(msg, output_bits, m_hash_id);
 }
 
-bool EMSA_PKCS1v15_Raw::verify(std::span<const uint8_t> coded, std::span<const uint8_t> raw, size_t key_bits) {
+bool PKCS1v15_Raw_SignaturePaddingScheme::verify(std::span<const uint8_t> coded,
+                                                 std::span<const uint8_t> raw,
+                                                 size_t key_bits) {
    if(m_hash_output_len > 0 && raw.size() != m_hash_output_len) {
       return false;
    }

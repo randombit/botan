@@ -14,7 +14,6 @@
 #include <botan/internal/barrett.h>
 #include <botan/internal/blinding.h>
 #include <botan/internal/divide.h>
-#include <botan/internal/emsa.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/mod_inv.h>
@@ -23,6 +22,7 @@
 #include <botan/internal/mp_core.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/sig_padding.h>
 #include <botan/internal/target_info.h>
 #include <botan/internal/workfactor.h>
 
@@ -612,12 +612,12 @@ class RSA_Private_Operation {
 class RSA_Signature_Operation final : public PK_Ops::Signature,
                                       private RSA_Private_Operation {
    public:
-      void update(std::span<const uint8_t> msg) override { m_emsa->update(msg.data(), msg.size()); }
+      void update(std::span<const uint8_t> msg) override { m_padding->update(msg.data(), msg.size()); }
 
       std::vector<uint8_t> sign(RandomNumberGenerator& rng) override {
          const size_t max_input_bits = public_modulus_bits() - 1;
-         const auto msg = m_emsa->raw_data();
-         const auto padded = m_emsa->encoding_of(msg, max_input_bits, rng);
+         const auto msg = m_padding->raw_data();
+         const auto padded = m_padding->encoding_of(msg, max_input_bits, rng);
 
          std::vector<uint8_t> out(public_modulus_bytes());
          raw_op(out, padded);
@@ -628,30 +628,30 @@ class RSA_Signature_Operation final : public PK_Ops::Signature,
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
-      std::string hash_function() const override { return m_emsa->hash_function(); }
+      std::string hash_function() const override { return m_padding->hash_function(); }
 
       RSA_Signature_Operation(const RSA_PrivateKey& rsa, std::string_view padding, RandomNumberGenerator& rng) :
-            RSA_Private_Operation(rsa, rng), m_emsa(EMSA::create_or_throw(padding)) {}
+            RSA_Private_Operation(rsa, rng), m_padding(SignaturePaddingScheme::create_or_throw(padding)) {}
 
    private:
-      std::unique_ptr<EMSA> m_emsa;
+      std::unique_ptr<SignaturePaddingScheme> m_padding;
 };
 
 AlgorithmIdentifier RSA_Signature_Operation::algorithm_identifier() const {
-   const std::string emsa_name = m_emsa->name();
+   const std::string padding_name = m_padding->name();
 
    try {
-      const std::string full_name = "RSA/" + emsa_name;
+      const std::string full_name = "RSA/" + padding_name;
       const OID oid = OID::from_string(full_name);
       return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
    } catch(Lookup_Error&) {}
 
-   if(emsa_name.starts_with("PSS(")) {
-      auto parameters = PSS_Params::from_emsa_name(m_emsa->name()).serialize();
+   if(padding_name.starts_with("PSS(")) {
+      auto parameters = PSS_Params::from_padding_name(m_padding->name()).serialize();
       return AlgorithmIdentifier("RSA/PSS", parameters);
    }
 
-   throw Invalid_Argument(fmt("Signatures using RSA/{} are not supported", emsa_name));
+   throw Invalid_Argument(fmt("Signatures using RSA/{} are not supported", padding_name));
 }
 
 class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_EME,
@@ -729,18 +729,18 @@ class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_EME,
 class RSA_Verify_Operation final : public PK_Ops::Verification,
                                    private RSA_Public_Operation {
    public:
-      void update(std::span<const uint8_t> msg) override { m_emsa->update(msg.data(), msg.size()); }
+      void update(std::span<const uint8_t> msg) override { m_padding->update(msg.data(), msg.size()); }
 
       bool is_valid_signature(std::span<const uint8_t> sig) override {
-         const auto msg = m_emsa->raw_data();
+         const auto msg = m_padding->raw_data();
          const auto message_repr = recover_message_repr(sig.data(), sig.size());
-         return m_emsa->verify(message_repr, msg, public_modulus_bits() - 1);
+         return m_padding->verify(message_repr, msg, public_modulus_bits() - 1);
       }
 
       RSA_Verify_Operation(const RSA_PublicKey& rsa, std::string_view padding) :
-            RSA_Public_Operation(rsa), m_emsa(EMSA::create_or_throw(padding)) {}
+            RSA_Public_Operation(rsa), m_padding(SignaturePaddingScheme::create_or_throw(padding)) {}
 
-      std::string hash_function() const override { return m_emsa->hash_function(); }
+      std::string hash_function() const override { return m_padding->hash_function(); }
 
    private:
       std::vector<uint8_t> recover_message_repr(const uint8_t input[], size_t input_len) {
@@ -751,7 +751,7 @@ class RSA_Verify_Operation final : public PK_Ops::Verification,
          return public_op(input_bn).serialize();
       }
 
-      std::unique_ptr<EMSA> m_emsa;
+      std::unique_ptr<SignaturePaddingScheme> m_padding;
 };
 
 class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KDF,

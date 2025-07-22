@@ -493,13 +493,13 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         self.assertEqual(ptext, symkey)
 
-        signer = botan.PKSign(rsapriv, 'EMSA4(SHA-384)')
+        signer = botan.PKSign(rsapriv, 'PSS(SHA-384)')
 
         signer.update('messa')
         signer.update('ge')
         sig = signer.finish(botan.RandomNumberGenerator())
 
-        verify = botan.PKVerify(rsapub, 'EMSA4(SHA-384)')
+        verify = botan.PKVerify(rsapub, 'PSS(SHA-384)')
 
         verify.update('mess')
         verify.update('age')

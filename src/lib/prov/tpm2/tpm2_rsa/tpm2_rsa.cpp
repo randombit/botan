@@ -13,9 +13,9 @@
 #include <botan/rsa.h>
 
 #include <botan/internal/ct_utils.h>
-#include <botan/internal/emsa.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/scan_name.h>
+#include <botan/internal/sig_padding.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tpm2_algo_mappings.h>
 #include <botan/internal/tpm2_hash.h>
@@ -181,21 +181,20 @@ class RSA_Signature_Operation final : public Signature_Operation {
          //
          // TODO: This is a hack, and we should clean this up.
          BOTAN_STATE_CHECK(padding().has_value());
-         const auto emsa = EMSA::create_or_throw(padding().value());
-         const std::string emsa_name = emsa->name();
+         const std::string padding_name = SignaturePaddingScheme::create_or_throw(padding().value())->name();
 
          try {
-            const std::string full_name = "RSA/" + emsa_name;
+            const std::string full_name = "RSA/" + padding_name;
             const OID oid = OID::from_string(full_name);
             return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
          } catch(Lookup_Error&) {}
 
-         if(emsa_name.starts_with("PSS(")) {
-            auto parameters = PSS_Params::from_emsa_name(emsa_name).serialize();
+         if(padding_name.starts_with("PSS(")) {
+            auto parameters = PSS_Params::from_padding_name(padding_name).serialize();
             return AlgorithmIdentifier("RSA/PSS", parameters);
          }
 
-         throw Invalid_Argument(fmt("Signatures using RSA/{} are not supported", emsa_name));
+         throw Invalid_Argument(fmt("Signatures using RSA/{} are not supported", padding_name));
       }
 
    private:

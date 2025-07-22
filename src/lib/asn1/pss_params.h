@@ -25,10 +25,20 @@ class BOTAN_PUBLIC_API(3, 7) PSS_Params final : public ASN1_Object {
    public:
       /**
       * Note that the only valid strings you can pass to this function
-      * are values returned by EMSA::name() and these may change in a
-      * minor release.
+      * are values returned by SignaturePaddingScheme::name() and
+      * these may change in a minor release.
       */
-      static PSS_Params from_emsa_name(std::string_view emsa_name);
+      static PSS_Params from_padding_name(std::string_view padding_name);
+
+      /**
+      * Note that the only valid strings you can pass to this function
+      * are values returned by SignaturePaddingScheme::name() and
+      * these may change in a minor release.
+      */
+      BOTAN_DEPRECATED("Use PSS_Params::from_padding_name")
+      static PSS_Params from_emsa_name(std::string_view padding_name) {
+         return PSS_Params::from_padding_name(padding_name);
+      }
 
       PSS_Params(std::string_view hash_fn, size_t salt_len);
 
