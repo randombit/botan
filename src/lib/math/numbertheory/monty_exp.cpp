@@ -24,7 +24,7 @@ class Montgomery_Exponentation_State final {
       Montgomery_Int exponentiation_vartime(const BigInt& k) const;
 
    private:
-      std::shared_ptr<const Montgomery_Params> m_params;
+      Montgomery_Params m_params;
       std::vector<Montgomery_Int> m_g;
       size_t m_window_bits;
 };
@@ -45,7 +45,7 @@ Montgomery_Exponentation_State::Montgomery_Exponentation_State(const Montgomery_
 
    m_g.push_back(g);
 
-   secure_vector<word> ws(2 * m_params->p_words());
+   secure_vector<word> ws(2 * m_params.p_words());
 
    for(size_t i = 2; i != window_size; ++i) {
       m_g.push_back(m_g[1].mul(m_g[i - 1], ws));
@@ -93,8 +93,8 @@ Montgomery_Int Montgomery_Exponentation_State::exponentiation(const BigInt& scal
       return Montgomery_Int::one(m_params);
    }
 
-   secure_vector<word> e_bits(m_params->p_words());
-   secure_vector<word> ws(2 * m_params->p_words());
+   secure_vector<word> e_bits(m_params.p_words());
+   secure_vector<word> ws(2 * m_params.p_words());
 
    const_time_lookup(e_bits, m_g, scalar.get_substring(m_window_bits * (exp_nibbles - 1), m_window_bits));
    Montgomery_Int x(m_params, std::span{e_bits});
@@ -112,7 +112,7 @@ Montgomery_Int Montgomery_Exponentation_State::exponentiation(const BigInt& scal
 Montgomery_Int Montgomery_Exponentation_State::exponentiation_vartime(const BigInt& scalar) const {
    const size_t exp_nibbles = (scalar.bits() + m_window_bits - 1) / m_window_bits;
 
-   secure_vector<word> ws(2 * m_params->p_words());
+   secure_vector<word> ws(2 * m_params.p_words());
 
    if(exp_nibbles == 0) {
       return Montgomery_Int::one(m_params);
@@ -139,9 +139,11 @@ std::shared_ptr<const Montgomery_Exponentation_State> monty_precompute(const Mon
    return std::make_shared<const Montgomery_Exponentation_State>(g, window_bits, const_time);
 }
 
-std::shared_ptr<const Montgomery_Exponentation_State> monty_precompute(
-   const std::shared_ptr<const Montgomery_Params>& params, const BigInt& g, size_t window_bits, bool const_time) {
-   BOTAN_ARG_CHECK(g < params->p(), "Montgomery base too big");
+std::shared_ptr<const Montgomery_Exponentation_State> monty_precompute(const Montgomery_Params& params,
+                                                                       const BigInt& g,
+                                                                       size_t window_bits,
+                                                                       bool const_time) {
+   BOTAN_ARG_CHECK(g < params.p(), "Montgomery base too big");
    Montgomery_Int monty_g(params, g);
    return monty_precompute(monty_g, window_bits, const_time);
 }
@@ -156,18 +158,15 @@ Montgomery_Int monty_execute_vartime(const Montgomery_Exponentation_State& preco
    return precomputed_state.exponentiation_vartime(k);
 }
 
-Montgomery_Int monty_multi_exp(const std::shared_ptr<const Montgomery_Params>& params_p,
-                               const BigInt& x_bn,
-                               const BigInt& z1,
-                               const BigInt& y_bn,
-                               const BigInt& z2) {
+Montgomery_Int monty_multi_exp(
+   const Montgomery_Params& params_p, const BigInt& x_bn, const BigInt& z1, const BigInt& y_bn, const BigInt& z2) {
    if(z1.is_negative() || z2.is_negative()) {
       throw Invalid_Argument("multi_exponentiate exponents must be positive");
    }
 
    const size_t z_bits = round_up(std::max(z1.bits(), z2.bits()), 2);
 
-   secure_vector<word> ws(2 * params_p->p_words());
+   secure_vector<word> ws(2 * params_p.p_words());
 
    const Montgomery_Int one = Montgomery_Int::one(params_p);
 

@@ -30,7 +30,7 @@ class Montgomery_Integer_Tests : public Test {
             const size_t p_bits = (3 * i + 5);
             auto p = Botan::random_prime(*rng, p_bits);
 
-            auto params = std::make_shared<Botan::Montgomery_Params>(p);
+            const Botan::Montgomery_Params params(p);
 
             auto x = Botan::BigInt::random_integer(*rng, 1, p);
             auto y = Botan::BigInt::random_integer(*rng, 1, p);

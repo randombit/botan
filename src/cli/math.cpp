@@ -140,7 +140,7 @@ class Factor final : public Command {
       * Uses Brent's cycle finding
       */
       static Botan::BigInt rho(const Botan::BigInt& n, Botan::RandomNumberGenerator& rng) {
-         auto monty_n = std::make_shared<Botan::Montgomery_Params>(n);
+         const Botan::Montgomery_Params monty_n(n);
 
          const auto one = Botan::Montgomery_Int::one(monty_n);
 
