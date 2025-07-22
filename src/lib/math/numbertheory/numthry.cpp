@@ -40,7 +40,7 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
    }
 
    auto mod_p = Barrett_Reduction::for_public_modulus(p);
-   auto monty_p = std::make_shared<Montgomery_Params>(p, mod_p);
+   const Montgomery_Params monty_p(p, mod_p);
 
    // If p == 3 (mod 4) there is a simple solution
    if(p % 4 == 3) {
@@ -296,7 +296,7 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod) {
    const size_t exp_bits = exp.bits();
 
    if(mod.is_odd()) {
-      auto monty_params = std::make_shared<Montgomery_Params>(mod, reduce_mod);
+      const Montgomery_Params monty_params(mod, reduce_mod);
       return monty_exp(monty_params, ct_modulo(base, mod), exp, exp_bits).value();
    }
 

@@ -38,7 +38,7 @@ class RSA_Public_Data final {
             m_n(std::move(n)),
             m_e(std::move(e)),
             m_mod_n(Barrett_Reduction::for_public_modulus(m_n)),
-            m_monty_n(std::make_shared<Montgomery_Params>(m_n, m_mod_n)),
+            m_monty_n(m_n, m_mod_n),
             m_public_modulus_bits(m_n.bits()),
             m_public_modulus_bytes(m_n.bytes()) {}
 
@@ -56,7 +56,7 @@ class RSA_Public_Data final {
 
       size_t public_modulus_bytes() const { return m_public_modulus_bytes; }
 
-      const std::shared_ptr<const Montgomery_Params>& monty_n() const { return m_monty_n; }
+      const Montgomery_Params& monty_n() const { return m_monty_n; }
 
       const Barrett_Reduction& reducer_mod_n() const { return m_mod_n; }
 
@@ -64,7 +64,7 @@ class RSA_Public_Data final {
       BigInt m_n;
       BigInt m_e;
       Barrett_Reduction m_mod_n;
-      std::shared_ptr<const Montgomery_Params> m_monty_n;
+      const Montgomery_Params m_monty_n;
       size_t m_public_modulus_bits;
       size_t m_public_modulus_bytes;
 };
@@ -78,8 +78,8 @@ class RSA_Private_Data final {
             m_d1(std::move(d1)),
             m_d2(std::move(d2)),
             m_c(std::move(c)),
-            m_monty_p(std::make_shared<Montgomery_Params>(m_p)),
-            m_monty_q(std::make_shared<Montgomery_Params>(m_q)),
+            m_monty_p(m_p),
+            m_monty_q(m_q),
             m_c_monty(m_monty_p, m_c),
             m_p_bits(m_p.bits()),
             m_q_bits(m_q.bits()) {}
@@ -98,9 +98,9 @@ class RSA_Private_Data final {
 
       const Montgomery_Int& get_c_monty() const { return m_c_monty; }
 
-      const std::shared_ptr<const Montgomery_Params>& monty_p() const { return m_monty_p; }
+      const Montgomery_Params& monty_p() const { return m_monty_p; }
 
-      const std::shared_ptr<const Montgomery_Params>& monty_q() const { return m_monty_q; }
+      const Montgomery_Params& monty_q() const { return m_monty_q; }
 
       size_t p_bits() const { return m_p_bits; }
 
@@ -116,8 +116,8 @@ class RSA_Private_Data final {
       BigInt m_d2;
       BigInt m_c;
 
-      std::shared_ptr<const Montgomery_Params> m_monty_p;
-      std::shared_ptr<const Montgomery_Params> m_monty_q;
+      const Montgomery_Params m_monty_p;
+      const Montgomery_Params m_monty_q;
       Montgomery_Int m_c_monty;
       size_t m_p_bits;
       size_t m_q_bits;

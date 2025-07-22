@@ -110,7 +110,7 @@ class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_EME {
       ElGamal_Encryption_Operation(const std::shared_ptr<const DL_PublicKey>& key, std::string_view eme) :
             PK_Ops::Encryption_with_EME(eme), m_key(key) {
          const size_t powm_window = 4;
-         m_monty_y_p = monty_precompute(m_key->group().monty_params_p(), m_key->public_key(), powm_window);
+         m_monty_y_p = monty_precompute(m_key->group()._monty_params_p(), m_key->public_key(), powm_window);
       }
 
       size_t ciphertext_length(size_t /*ptext_len*/) const override { return 2 * m_key->group().p_bytes(); }

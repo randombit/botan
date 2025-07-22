@@ -31,7 +31,7 @@ class DL_Group_Data final {
             m_g(g),
             m_mod_p(Barrett_Reduction::for_public_modulus(p)),
             m_mod_q(Barrett_Reduction::for_public_modulus(q)),
-            m_monty_params(std::make_shared<Montgomery_Params>(m_p, m_mod_p)),
+            m_monty_params(m_p, m_mod_p),
             m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
             m_p_bits(p.bits()),
             m_q_bits(q.bits()),
@@ -43,7 +43,7 @@ class DL_Group_Data final {
             m_p(p),
             m_g(g),
             m_mod_p(Barrett_Reduction::for_public_modulus(p)),
-            m_monty_params(std::make_shared<Montgomery_Params>(m_p, m_mod_p)),
+            m_monty_params(m_p, m_mod_p),
             m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
             m_p_bits(p.bits()),
             m_q_bits(0),
@@ -71,7 +71,7 @@ class DL_Group_Data final {
          return *m_mod_q;
       }
 
-      std::shared_ptr<const Montgomery_Params> monty_params_p() const { return m_monty_params; }
+      const Montgomery_Params& monty_params_p() const { return m_monty_params; }
 
       size_t p_bits() const { return m_p_bits; }
 
@@ -115,7 +115,7 @@ class DL_Group_Data final {
       BigInt m_g;
       Barrett_Reduction m_mod_p;
       std::optional<Barrett_Reduction> m_mod_q;
-      std::shared_ptr<const Montgomery_Params> m_monty_params;
+      Montgomery_Params m_monty_params;
       std::shared_ptr<const Montgomery_Exponentation_State> m_monty;
       size_t m_p_bits;
       size_t m_q_bits;
@@ -247,11 +247,11 @@ BigInt make_dsa_generator(const BigInt& p, const BigInt& q) {
    }
 
    // TODO we compute these, then throw them away and recompute in DL_Group_Data
-   auto reduce_mod = Barrett_Reduction::for_public_modulus(p);
-   auto monty_params = std::make_shared<Montgomery_Params>(p, reduce_mod);
+   auto mod_p = Barrett_Reduction::for_public_modulus(p);
+   Montgomery_Params params(p, mod_p);
 
    for(size_t i = 0; i != PRIME_TABLE_SIZE; ++i) {
-      BigInt g = monty_exp_vartime(monty_params, BigInt::from_word(PRIMES[i]), e).value();
+      BigInt g = monty_exp_vartime(params, BigInt::from_word(PRIMES[i]), e).value();
       if(g > 1) {
          return g;
       }
@@ -489,7 +489,7 @@ const BigInt& DL_Group::get_q() const {
    return data().q();
 }
 
-std::shared_ptr<const Montgomery_Params> DL_Group::monty_params_p() const {
+const Montgomery_Params& DL_Group::_monty_params_p() const {
    return data().monty_params_p();
 }
 
