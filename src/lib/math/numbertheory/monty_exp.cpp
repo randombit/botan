@@ -45,13 +45,10 @@ Montgomery_Exponentation_State::Montgomery_Exponentation_State(const Montgomery_
 
    m_g.push_back(g);
 
-   for(size_t i = 2; i != window_size; ++i) {
-      m_g.push_back(m_g[1] * m_g[i - 1]);
-   }
+   secure_vector<word> ws(2 * m_params->p_words());
 
-   // Resize each element to exactly p words
-   for(auto& x : m_g) {
-      x.fix_size();
+   for(size_t i = 2; i != window_size; ++i) {
+      m_g.push_back(m_g[1].mul(m_g[i - 1], ws));
    }
 
    if(const_time) {
@@ -69,8 +66,8 @@ void const_time_lookup(secure_vector<word>& output, const std::vector<Montgomery
    clear_mem(output.data(), output.size());
 
    for(size_t i = 0; i != g.size(); i += 2) {
-      const secure_vector<word>& vec_0 = g[i].repr().get_word_vector();
-      const secure_vector<word>& vec_1 = g[i + 1].repr().get_word_vector();
+      const secure_vector<word>& vec_0 = g[i].repr();
+      const secure_vector<word>& vec_1 = g[i + 1].repr();
 
       BOTAN_ASSERT_NOMSG(vec_0.size() >= words && vec_1.size() >= words);
 
@@ -97,10 +94,10 @@ Montgomery_Int Montgomery_Exponentation_State::exponentiation(const BigInt& scal
    }
 
    secure_vector<word> e_bits(m_params->p_words());
-   secure_vector<word> ws;
+   secure_vector<word> ws(2 * m_params->p_words());
 
    const_time_lookup(e_bits, m_g, scalar.get_substring(m_window_bits * (exp_nibbles - 1), m_window_bits));
-   Montgomery_Int x(m_params, e_bits.data(), e_bits.size(), false);
+   Montgomery_Int x(m_params, std::span{e_bits});
 
    for(size_t i = exp_nibbles - 1; i > 0; --i) {
       x.square_this_n_times(ws, m_window_bits);
@@ -115,7 +112,7 @@ Montgomery_Int Montgomery_Exponentation_State::exponentiation(const BigInt& scal
 Montgomery_Int Montgomery_Exponentation_State::exponentiation_vartime(const BigInt& scalar) const {
    const size_t exp_nibbles = (scalar.bits() + m_window_bits - 1) / m_window_bits;
 
-   secure_vector<word> ws;
+   secure_vector<word> ws(2 * m_params->p_words());
 
    if(exp_nibbles == 0) {
       return Montgomery_Int::one(m_params);
@@ -170,7 +167,7 @@ Montgomery_Int monty_multi_exp(const std::shared_ptr<const Montgomery_Params>& p
 
    const size_t z_bits = round_up(std::max(z1.bits(), z2.bits()), 2);
 
-   secure_vector<word> ws;
+   secure_vector<word> ws(2 * params_p->p_words());
 
    const Montgomery_Int one = Montgomery_Int::one(params_p);
 
@@ -215,8 +212,7 @@ Montgomery_Int monty_multi_exp(const std::shared_ptr<const Montgomery_Params>& p
 
    for(size_t i = 0; i != z_bits; i += 2) {
       if(i > 0) {
-         H.square_this(ws);
-         H.square_this(ws);
+         H.square_this_n_times(ws, 2);
       }
 
       const uint32_t z1_b = z1.get_substring(z_bits - i - 2, 2);
@@ -224,7 +220,9 @@ Montgomery_Int monty_multi_exp(const std::shared_ptr<const Montgomery_Params>& p
 
       const uint32_t z12 = (4 * z2_b) + z1_b;
 
-      H.mul_by(*M[z12], ws);
+      if(z12 > 0) {
+         H.mul_by(*M[z12], ws);
+      }
    }
 
    return H;

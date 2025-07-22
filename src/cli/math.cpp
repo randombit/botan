@@ -165,7 +165,7 @@ class Factor final : public Command {
                break;
             }
 
-            x.square_this(ws);  // x = x^2
+            x.square_this_n_times(ws, 1);  // x = x^2
             x = x + one;
 
             t = y - x;
