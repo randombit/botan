@@ -16,23 +16,33 @@
 namespace Botan {
 
 //static
-BigInt BigInt::add2(const BigInt& x, const word y[], size_t y_words, BigInt::Sign y_sign) {
+BigInt BigInt::add2(const BigInt& x, const word y[], size_t y_size, BigInt::Sign y_sign) {
    const size_t x_sw = x.sig_words();
 
-   BigInt z = BigInt::with_capacity(std::max(x_sw, y_words) + 1);
+   BigInt z = BigInt::with_capacity(std::max(x_sw, y_size) + 1);
 
    if(x.sign() == y_sign) {
-      bigint_add3(z.mutable_data(), x._data(), x_sw, y, y_words);
+      word carry = bigint_add3(z.mutable_data(), x._data(), x_sw, y, y_size);
+      z.mutable_data()[std::max(x_sw, y_size)] += carry;
       z.set_sign(x.sign());
    } else {
-      const int32_t relative_size = bigint_sub_abs(z.mutable_data(), x._data(), x_sw, y, y_words);
+      const int32_t relative_size = bigint_cmp(x.data(), x_sw, y, y_size);
 
-      //z.sign_fixup(relative_size, y_sign);
       if(relative_size < 0) {
+         // x < y so z = abs(y - x)
+         // NOLINTNEXTLINE(*-suspicious-call-argument) intentionally swapping x and y here
+         bigint_sub3(z.mutable_data(), y, y_size, x.data(), x_sw);
          z.set_sign(y_sign);
       } else if(relative_size == 0) {
-         z.set_sign(BigInt::Positive);
+         // Positive zero (nothing to do in this case)
       } else {
+         /*
+         * We know at this point that x >= y so if y_size is larger than
+         * x_sw, we are guaranteed they are just leading zeros which can
+         * be ignored
+         */
+         y_size = std::min(x_sw, y_size);
+         bigint_sub3(z.mutable_data(), x.data(), x_sw, y, y_size);
          z.set_sign(x.sign());
       }
    }

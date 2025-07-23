@@ -502,7 +502,7 @@ BigInt crt_recombine(const Montgomery_Int& j1,
    bigint_mul(r.data(), r.size(), h._data(), h.size(), p_words, q._data(), q.size(), p_words, ws.data(), ws.size());
 
    // r += j2
-   const word carry = bigint_add2_nc(r.data(), n_words, j2._data(), p_words);
+   const word carry = bigint_add2(r.data(), n_words, j2._data(), p_words);
    BOTAN_ASSERT_NOMSG(carry == 0);  // should not be possible since it would imply r > the public modulus
 
    return BigInt::_from_words(r);

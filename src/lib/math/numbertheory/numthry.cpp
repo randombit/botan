@@ -218,13 +218,14 @@ BigInt gcd(const BigInt& a, const BigInt& b) {
    // Note however, that `ct_cond_assign()` will invalidate the 'sig_words'
    // cache, which _does not_ shrink the capacity of the underlying buffer.
    auto tmp = BigInt::with_capacity(sz);
+   secure_vector<word> ws(sz * 2);
    size_t factors_of_two = 0;
    for(size_t i = 0; i != loop_cnt; ++i) {
       auto both_odd = CT::Mask<word>::expand_bool(u.is_odd()) & CT::Mask<word>::expand_bool(v.is_odd());
 
       // Subtract the smaller from the larger if both are odd
       auto u_gt_v = CT::Mask<word>::expand(bigint_cmp(u._data(), u.size(), v._data(), v.size()) > 0);
-      bigint_sub_abs(tmp.mutable_data(), u._data(), sz, v._data(), sz);
+      bigint_sub_abs(tmp.mutable_data(), u._data(), v._data(), sz, ws.data());
       u.ct_cond_assign((u_gt_v & both_odd).as_bool(), tmp);
       v.ct_cond_assign((~u_gt_v & both_odd).as_bool(), tmp);
 

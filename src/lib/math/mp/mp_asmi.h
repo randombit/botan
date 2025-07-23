@@ -325,32 +325,6 @@ inline constexpr auto word8_sub2(W x[8], const W y[8], W carry) -> W {
 }
 
 /*
-* Eight Word Block Subtraction, Two Argument
-*/
-template <WordType W>
-inline constexpr auto word8_sub2_rev(W x[8], const W y[8], W carry) -> W {
-#if defined(BOTAN_MP_USE_X86_64_ASM)
-   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
-      asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "sbbq"))
-          : [carry] "=r"(carry)
-          : [x] "r"(y), [y] "r"(x), [z] "r"(x), "0"(carry)
-          : "cc", "memory");
-      return carry;
-   }
-#endif
-
-   x[0] = word_sub(y[0], x[0], &carry);
-   x[1] = word_sub(y[1], x[1], &carry);
-   x[2] = word_sub(y[2], x[2], &carry);
-   x[3] = word_sub(y[3], x[3], &carry);
-   x[4] = word_sub(y[4], x[4], &carry);
-   x[5] = word_sub(y[5], x[5], &carry);
-   x[6] = word_sub(y[6], x[6], &carry);
-   x[7] = word_sub(y[7], x[7], &carry);
-   return carry;
-}
-
-/*
 * Eight Word Block Subtraction, Three Argument
 */
 template <WordType W>
@@ -373,32 +347,6 @@ inline constexpr auto word8_sub3(W z[8], const W x[8], const W y[8], W carry) ->
    z[5] = word_sub(x[5], y[5], &carry);
    z[6] = word_sub(x[6], y[6], &carry);
    z[7] = word_sub(x[7], y[7], &carry);
-   return carry;
-}
-
-/*
-* Eight Word Block Linear Multiplication
-*/
-template <WordType W>
-inline constexpr auto word8_linmul2(W x[8], W y, W carry) -> W {
-#if defined(BOTAN_MP_USE_X86_64_ASM)
-   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
-      asm(DO_8_TIMES(LINMUL_OP, "x")
-          : [carry] "=r"(carry)
-          : [x] "r"(x), [y] "rm"(y), "0"(carry)
-          : "cc", "%rax", "%rdx");
-      return carry;
-   }
-#endif
-
-   x[0] = word_madd2(x[0], y, &carry);
-   x[1] = word_madd2(x[1], y, &carry);
-   x[2] = word_madd2(x[2], y, &carry);
-   x[3] = word_madd2(x[3], y, &carry);
-   x[4] = word_madd2(x[4], y, &carry);
-   x[5] = word_madd2(x[5], y, &carry);
-   x[6] = word_madd2(x[6], y, &carry);
-   x[7] = word_madd2(x[7], y, &carry);
    return carry;
 }
 

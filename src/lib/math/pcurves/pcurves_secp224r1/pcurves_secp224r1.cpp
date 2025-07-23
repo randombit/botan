@@ -61,7 +61,7 @@ class Secp224r1Rep final {
 
          BOTAN_DEBUG_ASSERT(S <= 2);
 
-         bigint_correct_redc<N>(r, P, p224_mul_mod_224(S));
+         solinas_correct_redc<N>(r, P, p224_mul_mod_224(S));
 
          return r;
       }

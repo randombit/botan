@@ -369,7 +369,7 @@ class GenericScalar final {
          const size_t words = curve->_params().words();
 
          StorageUnit t{};
-         W carry = bigint_add3_nc(t.data(), a.data(), words, b.data(), words);
+         W carry = bigint_add3(t.data(), a.data(), words, b.data(), words);
 
          StorageUnit r{};
          bigint_monty_maybe_sub(words, r.data(), carry, t.data(), curve->_params().order().data());
@@ -439,7 +439,7 @@ class GenericScalar final {
 
             // Conditional ok: this function is variable time
             if(borrow > 0) {
-               bigint_add2_nc(x.m_val.data(), N, inv_2.data(), N);
+               bigint_add2(x.m_val.data(), N, inv_2.data(), N);
             }
          }
       }
@@ -675,7 +675,7 @@ class GenericField final {
          W borrow = shift_right<1>(t);
 
          // If value was odd, add (P/2)+1
-         bigint_cnd_add(borrow, t.data(), N, m_curve->_params().field_inv_2().data(), N);
+         bigint_cnd_add(borrow, t.data(), m_curve->_params().field_inv_2().data(), N);
 
          return GenericField(m_curve, t);
       }
@@ -704,7 +704,7 @@ class GenericField final {
          const size_t words = curve->_params().words();
 
          StorageUnit t{};
-         W carry = bigint_add3_nc(t.data(), a.data(), words, b.data(), words);
+         W carry = bigint_add3(t.data(), a.data(), words, b.data(), words);
 
          StorageUnit r{};
          bigint_monty_maybe_sub(words, r.data(), carry, t.data(), curve->_params().field().data());
@@ -1241,7 +1241,7 @@ class GenericBlindedScalarBits final {
 
          // Compute masked scalar s + k*n
          params.mul(mask_n, mask, params.order());
-         bigint_add2_nc(mask_n.data(), 2 * words, sw.data(), words);
+         bigint_add2(mask_n.data(), 2 * words, sw.data(), words);
 
          std::reverse(mask_n.begin(), mask_n.end());
          m_bytes = store_be<std::vector<uint8_t>>(mask_n);

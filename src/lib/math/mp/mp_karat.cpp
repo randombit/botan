@@ -131,15 +131,16 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N, word work
    // Compute X_hi * Y_hi
    karatsuba_mul(z1, x1, y1, N2, ws1);
 
-   const word ws_carry = bigint_add3_nc(ws1, z0, N, z1, N);
-   word z_carry = bigint_add2_nc(z + N2, N, ws1, N);
+   const word ws_carry = bigint_add3(ws1, z0, N, z1, N);
+   word z_carry = bigint_add2(z + N2, N, ws1, N);
 
-   z_carry += bigint_add2_nc(z + N + N2, N2, &ws_carry, 1);
-   bigint_add2_nc(z + N + N2, N2, &z_carry, 1);
+   z_carry += bigint_add2(z + N + N2, N2, &ws_carry, 1);
+   bigint_add2(z + N + N2, N2, &z_carry, 1);
 
    clear_mem(workspace + N, N2);
 
-   bigint_cnd_add_or_sub(neg_mask, z + N2, workspace, 2 * N - N2);
+   bigint_cnd_add(neg_mask.value(), z + N2, workspace, 2 * N - N2);
+   bigint_cnd_sub((~neg_mask).value(), z + N2, workspace, 2 * N - N2);
 }
 
 /*
@@ -182,11 +183,11 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[]) {
    karatsuba_sqr(z0, x0, N2, ws1);
    karatsuba_sqr(z1, x1, N2, ws1);
 
-   const word ws_carry = bigint_add3_nc(ws1, z0, N, z1, N);
-   word z_carry = bigint_add2_nc(z + N2, N, ws1, N);
+   const word ws_carry = bigint_add3(ws1, z0, N, z1, N);
+   word z_carry = bigint_add2(z + N2, N, ws1, N);
 
-   z_carry += bigint_add2_nc(z + N + N2, N2, &ws_carry, 1);
-   bigint_add2_nc(z + N + N2, N2, &z_carry, 1);
+   z_carry += bigint_add2(z + N + N2, N2, &ws_carry, 1);
+   bigint_add2(z + N + N2, N2, &z_carry, 1);
 
    /*
    * This is only actually required if cmp (result of bigint_sub_abs) is != 0,

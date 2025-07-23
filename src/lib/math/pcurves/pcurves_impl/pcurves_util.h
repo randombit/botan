@@ -186,7 +186,7 @@ template <WordType W, size_t N>
 inline consteval std::array<W, N> p_plus_1_over_4(const std::array<W, N>& p) {
    const W one = 1;
    std::array<W, N> r{};
-   bigint_add3_nc(r.data(), p.data(), N, &one, 1);
+   bigint_add3(r.data(), p.data(), N, &one, 1);
    shift_right<2>(r);
    std::reverse(r.begin(), r.end());
    return r;
@@ -207,7 +207,7 @@ inline consteval std::array<W, N> p_div_2_plus_1(const std::array<W, N>& p) {
    const W one = 1;
    std::array<W, N> r = p;
    shift_right<1>(r);
-   bigint_add2_nc(r.data(), N, &one, 1);
+   bigint_add2(r.data(), N, &one, 1);
    return r;
 }
 

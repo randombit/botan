@@ -266,7 +266,7 @@ Montgomery_Int Montgomery_Int::operator+(const Montgomery_Int& other) const {
    word* t = std::span{z}.last(p_size).data();
 
    // t = this + other
-   const word carry = bigint_add3_nc(t, m_v.data(), p_size, other.m_v.data(), p_size);
+   const word carry = bigint_add3(t, m_v.data(), p_size, other.m_v.data(), p_size);
 
    // Conditionally subtract r = t - p
    bigint_monty_maybe_sub(p_size, r, carry, t, m_params.p()._data());
@@ -284,7 +284,7 @@ Montgomery_Int Montgomery_Int::operator-(const Montgomery_Int& other) const {
    secure_vector<word> t(p_size);
    const word borrow = bigint_sub3(t.data(), m_v.data(), p_size, other.m_v.data(), p_size);
 
-   bigint_cnd_add(borrow, t.data(), p_size, m_params.p()._data(), p_size);
+   bigint_cnd_add(borrow, t.data(), m_params.p()._data(), p_size);
 
    return Montgomery_Int(m_params, std::move(t));
 }

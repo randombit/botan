@@ -264,7 +264,7 @@ class IntMod final {
             r[i] = word_sub(a.m_val[i], b.m_val[i], &carry);
          }
 
-         bigint_cnd_add(carry, r.data(), N, P.data(), N);
+         bigint_cnd_add(carry, r.data(), P.data(), N);
          return Self(r);
       }
 
@@ -282,7 +282,7 @@ class IntMod final {
          W borrow = shift_right<1>(t);
 
          // If value was odd, add (P/2)+1
-         bigint_cnd_add(borrow, t.data(), N, INV_2.data(), N);
+         bigint_cnd_add(borrow, t.data(), INV_2.data(), N);
 
          return Self(t);
       }
@@ -521,7 +521,7 @@ class IntMod final {
 
             // Conditional ok: this function is variable time
             if(borrow) {
-               bigint_add2_nc(x.m_val.data(), N, INV_2.data(), N);
+               bigint_add2(x.m_val.data(), N, INV_2.data(), N);
             }
          }
       }
@@ -1334,7 +1334,7 @@ class BlindedScalarBits final {
 
             // Compute masked scalar s + k*n
             comba_mul<n_words>(mask_n, mask, C::NW.data());
-            bigint_add2_nc(mask_n, 2 * n_words, sw.data(), sw.size());
+            bigint_add2(mask_n, 2 * n_words, sw.data(), sw.size());
 
             std::reverse(mask_n, mask_n + 2 * n_words);
             m_bytes = store_be<std::vector<uint8_t>>(mask_n);

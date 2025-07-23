@@ -80,7 +80,7 @@ class Secp384r1Rep final {
 
          BOTAN_DEBUG_ASSERT(S <= 4);
 
-         bigint_correct_redc<N>(r, P, p384_mul_mod_384(S));
+         solinas_correct_redc<N>(r, P, p384_mul_mod_384(S));
 
          return r;
       }

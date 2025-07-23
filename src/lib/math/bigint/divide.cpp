@@ -296,7 +296,7 @@ void vartime_divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt&
       if(r.is_negative()) {
          qjt--;
          r += shifted_y;
-         BOTAN_DEBUG_ASSERT(r.is_positive());
+         BOTAN_ASSERT_NOMSG(r.is_positive());
       }
 
       q_words[j - t - 1] = qjt;
