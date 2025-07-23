@@ -54,6 +54,10 @@ namespace {
 BigInt barrett_reduce(
    size_t mod_words, const BigInt& modulus, const BigInt& mu, std::span<const word> x_words, secure_vector<word>& ws) {
    BOTAN_ASSERT_NOMSG(modulus.sig_words() == mod_words);
+
+   // Caller must expand input to be at least this size
+   BOTAN_ASSERT_NOMSG(x_words.size() >= 2 * mod_words);
+
    // Normally mod_words + 1 but can be + 2 if the modulus is a power of 2
    const size_t mu_words = mu.sig_words();
    BOTAN_ASSERT_NOMSG(mu_words <= mod_words + 2);
@@ -77,11 +81,7 @@ BigInt barrett_reduce(
    // 2 * mod_words + 1 is sufficient, extra is to enable Karatsuba
    secure_vector<word> r(2 * mu_words + 2);
 
-   const size_t usable_words = std::min(x_words.size(), 2 * mod_words);
-
-   if(usable_words >= mod_words - 1) {
-      copy_mem(r.data(), x_words.data() + (mod_words - 1), usable_words - (mod_words - 1));
-   }
+   copy_mem(r.data(), x_words.data() + (mod_words - 1), mod_words + 1);
 
    // Now compute q2 = q1 * μ
 
@@ -113,12 +113,10 @@ BigInt barrett_reduce(
 
    // Compute r = r1 - r2
 
-   clear_mem(ws.data(), ws.size());
+   // The return value of bigint_sub_abs isn't quite right for what we need here so first compare
+   const int32_t relative_size = bigint_cmp(r.data(), mod_words + 1, x_words.data(), mod_words + 1);
 
-   const int32_t relative_size =
-      bigint_sub_abs(ws.data(), r.data(), mod_words + 1, x_words.data(), std::min(x_words.size(), mod_words + 1));
-
-   r.swap(ws);
+   bigint_sub_abs(r.data(), r.data(), x_words.data(), mod_words + 1, ws.data());
 
    /*
    If r is negative then we have to set r to r + 2^(k+1)
@@ -198,6 +196,8 @@ BigInt Barrett_Reduction::reduce(const BigInt& x) const {
 
    const size_t x_sw = x.sig_words();
    BOTAN_ARG_CHECK(x_sw <= 2 * m_mod_words, "Argument is too large for Barrett reduction");
+
+   x.grow_to(2 * m_mod_words);
 
    secure_vector<word> ws;
    return barrett_reduce(m_mod_words, m_modulus, m_mu, x._as_span(), ws);
