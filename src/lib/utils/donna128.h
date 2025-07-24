@@ -9,6 +9,7 @@
 #define BOTAN_CURVE25519_DONNA128_H_
 
 #include <botan/mul128.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -61,7 +62,7 @@ class donna128 final
          l += x.l;
          h += x.h;
 
-         const uint64_t carry = (l < x.l);
+         const uint64_t carry = CT::Mask<uint64_t>::is_lt(l, x.l).if_set_return(1);
          h += carry;
          return *this;
          }
@@ -69,7 +70,7 @@ class donna128 final
       donna128& operator+=(uint64_t x)
          {
          l += x;
-         const uint64_t carry = (l < x);
+         const uint64_t carry = CT::Mask<uint64_t>::is_lt(l, x).if_set_return(1);
          h += carry;
          return *this;
          }
