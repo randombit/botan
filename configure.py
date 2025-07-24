@@ -1544,10 +1544,10 @@ class OsInfo(InfoObject): # pylint: disable=too-many-instance-attributes
         self.program_suffix = lex.program_suffix
         self.static_suffix = lex.static_suffix
         self.target_features = lex.target_features
-        self.use_stack_protector = (lex.use_stack_protector == "true")
-        self.shared_lib_uses_symlinks = (lex.shared_lib_symlinks == 'yes')
+        self.use_stack_protector = lex.use_stack_protector == "true"
+        self.shared_lib_uses_symlinks = lex.shared_lib_symlinks == 'yes'
         self.default_compiler = lex.default_compiler
-        self.uses_pkg_config = (lex.uses_pkg_config == 'yes')
+        self.uses_pkg_config = lex.uses_pkg_config == 'yes'
         self.feature_macros = lex.feature_macros
 
     def matches_name(self, nm):

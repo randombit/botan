@@ -15,7 +15,7 @@ TARGET=$1
 
 if type -p "apt-get"; then
     sudo apt-get -qq update
-    sudo apt-get -qq install ccache
+    sudo apt-get -qq install ccache libbz2-dev liblzma-dev
 
     if [ "$TARGET" = "valgrind" ]; then
         sudo apt-get -qq install valgrind
@@ -24,7 +24,7 @@ if type -p "apt-get"; then
         sudo apt-get -qq install clang
 
     elif [ "$TARGET" = "gcc4.8" ]; then
-        # GCC 4.8 is not available on Ubuntu 20.04
+        # GCC 4.8 is not available on Ubuntu 24.04
         # We install it from older deb packages
         mkdir gcc4.8
         pushd gcc4.8
@@ -64,7 +64,7 @@ if type -p "apt-get"; then
         sudo apt-get -qq install pylint
 
     elif [ "$TARGET" = "coverage" ]; then
-        sudo apt-get -qq install g++-8 softhsm2 libtspi-dev lcov python-coverage libboost-all-dev gdb
+        sudo apt-get -qq install softhsm2 libtspi-dev lcov libboost-all-dev gdb
         pip install --user codecov
         echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 

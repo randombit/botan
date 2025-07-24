@@ -24,55 +24,52 @@ jobs:
         include:
           - target: coverage
             compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-24.04
           - target: shared
             compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-24.04
           - target: gcc4.8
             compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-24.04
           - target: shared
             compiler: clang
-            host_os: ubuntu-20.04
+            host_os: ubuntu-24.04
           - target: valgrind
             compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-24.04
           - target: fuzzers
             compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-24.04
           - target: cross-i386
             compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-24.04
           - target: cross-arm64
             compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-24.04
           - target: cross-ppc64
             compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-24.04
           - target: cross-android-arm32
             compiler: clang
-            host_os: ubuntu-20.04
+            host_os: ubuntu-24.04
           - target: cross-android-arm64
             compiler: clang
-            host_os: ubuntu-20.04
-          - target: cross-win64
-            compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-24.04
           - target: amalgamation
             compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-24.04
           - target: baremetal
             compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-24.04
           - target: minimized
             compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-24.04
           - target: bsi
             compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-24.04
           - target: lint
             compiler: gcc
-            host_os: ubuntu-20.04
+            host_os: ubuntu-24.04
           - target: shared
             compiler: clang
             host_os: macos-latest
@@ -81,8 +78,8 @@ jobs:
             host_os: macos-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v2
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         with:
             path: |
               ~/.ccache
