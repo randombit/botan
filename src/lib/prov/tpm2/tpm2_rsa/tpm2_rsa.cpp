@@ -160,7 +160,7 @@ SignatureAlgorithmSelection select_signature_algorithms(std::string_view padding
    };
 }
 
-size_t signature_length_for_key_handle(const SessionBundle& sessions, const Object& key_handle) {
+size_t signature_length_for_rsa_key_handle(const SessionBundle& sessions, const Object& key_handle) {
    return key_handle._public_info(sessions, TPM2_ALG_RSA).pub->publicArea.parameters.rsaDetail.keyBits / 8;
 }
 
@@ -169,7 +169,7 @@ class RSA_Signature_Operation final : public Signature_Operation {
       RSA_Signature_Operation(const Object& object, const SessionBundle& sessions, std::string_view padding) :
             Signature_Operation(object, sessions, select_signature_algorithms(padding)) {}
 
-      size_t signature_length() const override { return signature_length_for_key_handle(sessions(), key_handle()); }
+      size_t signature_length() const override { return signature_length_for_rsa_key_handle(sessions(), key_handle()); }
 
       AlgorithmIdentifier algorithm_identifier() const override {
          // TODO: This is essentially a copy of the ::algorithm_identifier()
@@ -220,7 +220,7 @@ class RSA_Verification_Operation final : public Verification_Operation {
 
    private:
       TPMT_SIGNATURE unmarshal_signature(std::span<const uint8_t> signature) const override {
-         BOTAN_ARG_CHECK(signature.size() == signature_length_for_key_handle(sessions(), key_handle()),
+         BOTAN_ARG_CHECK(signature.size() == signature_length_for_rsa_key_handle(sessions(), key_handle()),
                          "Unexpected signature byte length");
 
          TPMT_SIGNATURE sig;

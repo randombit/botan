@@ -171,7 +171,7 @@ SignatureAlgorithmSelection make_signature_scheme(std::string_view hash_name) {
    };
 }
 
-size_t signature_length_for_key_handle(const SessionBundle& sessions, const Object& object) {
+size_t signature_length_for_ecdsa_key_handle(const SessionBundle& sessions, const Object& object) {
    const auto curve_id = object._public_info(sessions, TPM2_ALG_ECDSA).pub->publicArea.parameters.eccDetail.curveID;
 
    const auto order_bytes = curve_id_order_byte_size(curve_id);
@@ -186,7 +186,9 @@ class EC_Signature_Operation final : public Signature_Operation {
       EC_Signature_Operation(const Object& object, const SessionBundle& sessions, std::string_view hash) :
             Signature_Operation(object, sessions, make_signature_scheme(hash)) {}
 
-      size_t signature_length() const override { return signature_length_for_key_handle(sessions(), key_handle()); }
+      size_t signature_length() const override {
+         return signature_length_for_ecdsa_key_handle(sessions(), key_handle());
+      }
 
       AlgorithmIdentifier algorithm_identifier() const override {
          // Copied from ECDSA
@@ -201,7 +203,7 @@ class EC_Signature_Operation final : public Signature_Operation {
 
          const auto r = as_span(signature.signature.ecdsa.signatureR);
          const auto s = as_span(signature.signature.ecdsa.signatureS);
-         const auto sig_len = signature_length_for_key_handle(sessions(), key_handle());
+         const auto sig_len = signature_length_for_ecdsa_key_handle(sessions(), key_handle());
          BOTAN_ASSERT_NOMSG(sig_len % 2 == 0);
          BOTAN_ASSERT_NOMSG(r.size() == sig_len / 2 && s.size() == sig_len / 2);
 
@@ -218,7 +220,7 @@ class EC_Verification_Operation final : public Verification_Operation {
       TPMT_SIGNATURE unmarshal_signature(std::span<const uint8_t> sig_data) const override {
          BOTAN_STATE_CHECK(scheme().scheme == TPM2_ALG_ECDSA);
 
-         const auto sig_len = signature_length_for_key_handle(sessions(), key_handle());
+         const auto sig_len = signature_length_for_ecdsa_key_handle(sessions(), key_handle());
          BOTAN_ARG_CHECK(sig_data.size() == sig_len, "Invalid signature length");
          BOTAN_ASSERT_NOMSG(sig_len % 2 == 0);
 
