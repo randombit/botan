@@ -1531,11 +1531,11 @@ class MPI(object): # pylint: disable=too-many-public-methods
         out = out.raw[0:int(out_len.value)]
         if out[-1] == '\x00':
             out = out[:-1]
-            s = _ctype_to_str(out)
-        if s[0] == '0':
-            return s[1:]
+            out = _ctype_to_str(out)
+        if out[0] == '0':
+            return out[1:]
         else:
-            return s
+            return out
 
     def to_bytes(self):
         byte_count = self.byte_count()

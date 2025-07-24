@@ -209,7 +209,7 @@ def rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, 
 
         if not snapshot_branch:
             for req_var in ["major", "minor", "patch", "suffix"]:
-                if req_var not in version_info.keys():
+                if req_var not in version_info:
                     raise Exception('Missing version field for %s in version file' % (req_var))
 
             marked_version = "%d.%d.%d%s" % (version_info["major"],
@@ -355,7 +355,7 @@ def main(args=None):
     elif len(args) == 1:
         try:
             logging.info('Creating release for version %s' % (target_version))
-        except ValueError as e:
+        except ValueError:
             logging.error('Invalid version number %s' % (target_version))
 
     rev_id = revision_of(target_version)
