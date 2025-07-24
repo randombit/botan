@@ -35,4 +35,7 @@ sha2_32
 #tls
 system_rng
 auto_rng
+
+# TODO this should be made optional
+ec_group
 </requires>
