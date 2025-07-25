@@ -461,6 +461,8 @@ std::vector<Test::Result> test_encoding() {
                for(size_t i = 0; i < p3.size(); ++i) {
                   res.test_is_eq<size_t>("decoded 10-bit coefficient with mapping", p3[i], i);
                }
+   #else
+               BOTAN_UNUSED(res);
    #endif
             }),
 

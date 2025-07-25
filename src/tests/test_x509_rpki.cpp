@@ -26,7 +26,8 @@ namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
+#if defined(BOTAN_HAS_X509_CERTIFICATES) && \
+   (defined(BOTAN_HAS_ECDSA) || defined(BOTAN_HAS_RSA) || defined(BOTAN_HAS_ED25519))
 
 struct CA_Creation_Result {
       Botan::X509_Certificate ca_cert;

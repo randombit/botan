@@ -15,7 +15,7 @@
 
 namespace Botan {
 
-uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
+uint32_t CPUID::CPUID_Data::detect_cpu_features([[maybe_unused]] uint32_t allowed) {
    uint32_t feat = 0;
 
 #if defined(BOTAN_HAS_OS_UTILS)
