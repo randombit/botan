@@ -77,6 +77,25 @@ class SolinasAccum final {
       size_t m_idx = 0;
 };
 
+/**
+* Set r to r - C. Then if r < 0, add P to r
+*/
+template <size_t N, WordType W>
+constexpr inline void solinas_correct_redc(std::array<W, N>& r, const std::array<W, N>& P, const std::array<W, N>& C) {
+   W borrow = 0;
+   for(size_t i = 0; i != N; ++i) {
+      r[i] = word_sub(r[i], C[i], &borrow);
+   }
+
+   const auto mask = CT::Mask<W>::expand(borrow).value();
+
+   W carry = 0;
+
+   for(size_t i = 0; i != N; ++i) {
+      r[i] = word_add(r[i], P[i] & mask, &carry);
+   }
+}
+
 }  // namespace Botan
 
 #endif

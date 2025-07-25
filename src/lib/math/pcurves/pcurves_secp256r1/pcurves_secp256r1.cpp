@@ -69,7 +69,7 @@ class Secp256r1Rep final {
 
          BOTAN_DEBUG_ASSERT(S <= 8);
 
-         bigint_correct_redc<N>(r, P, p256_mul_mod_256(S));
+         solinas_correct_redc<N>(r, P, p256_mul_mod_256(S));
 
          return r;
       }

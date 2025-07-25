@@ -63,7 +63,7 @@ class Sm2p256v1Rep final {
          sum.accum(S7);
          const auto S = sum.final_carry(0);
 
-         bigint_correct_redc<N>(r, P, sm2_mul_mod_256(S));
+         solinas_correct_redc<N>(r, P, sm2_mul_mod_256(S));
 
          return r;
       }

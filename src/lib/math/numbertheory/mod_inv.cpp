@@ -64,7 +64,7 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod) {
    // (mod / 2) + 1
    copy_mem(mp1o2, mod._data(), std::min(mod.size(), mod_words));
    bigint_shr1(mp1o2, mod_words, 1);
-   word carry = bigint_add2_nc(mp1o2, mod_words, u_w, 1);
+   word carry = bigint_add2(mp1o2, mod_words, u_w, 1);
    BOTAN_ASSERT_NOMSG(carry == 0);
 
    // Only n.bits() + mod.bits() iterations are required, but avoid leaking the size of n

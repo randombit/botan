@@ -57,7 +57,7 @@ class Secp192r1Rep final {
 
          BOTAN_DEBUG_ASSERT(S <= 3);
 
-         bigint_correct_redc<N>(r, P, p192_mul_mod_192(S));
+         solinas_correct_redc<N>(r, P, p192_mul_mod_192(S));
 
          return r;
       }
