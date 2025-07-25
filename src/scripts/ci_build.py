@@ -709,6 +709,8 @@ def main(args=None):
             options.cc_bin = 'clang++'
         elif options.cc == 'msvc':
             options.cc_bin = 'cl'
+        elif options.cc == 'clangcl':
+            options.cc_bin = 'clang-cl'
         elif options.cc == "emcc":
             options.cc_bin = "em++"
         else:

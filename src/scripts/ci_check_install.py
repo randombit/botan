@@ -27,7 +27,7 @@ def verify_library(build_config):
 
     major_version = int(build_config["version_major"])
 
-    if build_config['compiler'] == 'msvc':
+    if build_config['compiler'] in ['msvc', 'clangcl']:
         expected_lib_format = r'^botan-%d\.(dll|lib)$' % (major_version)
     elif build_config['os'] == 'macos':
         expected_lib_format = r'^libbotan-%d\.(a|dylib)$' % (major_version)

@@ -585,7 +585,7 @@ class BOTAN_PUBLIC_API(3, 5) TNAuthList final : public Certificate_Extension {
 */
 class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extension {
    public:
-      enum class BOTAN_PUBLIC_API(3, 9) Version : uint8_t {
+      enum class Version : uint8_t {
          IPv4 = 4,
          IPv6 = 16,
       };
