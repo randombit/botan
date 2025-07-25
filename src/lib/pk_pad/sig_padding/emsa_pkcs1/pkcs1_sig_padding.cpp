@@ -100,11 +100,16 @@ PKCS1v15_Raw_SignaturePaddingScheme::PKCS1v15_Raw_SignaturePaddingScheme() : m_h
    // m_hash_id, m_hash_name left empty
 }
 
-PKCS1v15_Raw_SignaturePaddingScheme::PKCS1v15_Raw_SignaturePaddingScheme(std::string_view hash_algo) {
-   std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_algo));
-   m_hash_id = pkcs_hash_id(hash_algo);
-   m_hash_name = hash->name();
-   m_hash_output_len = hash->output_length();
+PKCS1v15_Raw_SignaturePaddingScheme::PKCS1v15_Raw_SignaturePaddingScheme(const std::optional<std::string>& hash_algo) {
+   if(hash_algo) {
+      std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_algo.value()));
+      m_hash_id = pkcs_hash_id(hash->name());
+      m_hash_name = hash->name();
+      m_hash_output_len = hash->output_length();
+   } else {
+      m_hash_output_len = 0;
+      // m_hash_id, m_hash_name left empty
+   }
 }
 
 void PKCS1v15_Raw_SignaturePaddingScheme::update(const uint8_t input[], size_t length) {
