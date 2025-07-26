@@ -569,34 +569,37 @@ namespace {
       (defined(BOTAN_HAS_SHA2_32) || defined(BOTAN_HAS_SCRYPT))
 void test_pbe_roundtrip(Test::Result& result,
                         const Botan::Private_Key& key,
-                        const std::string& pbe_algo,
+                        const std::string& cipher,
+                        const std::string& pwhash,
                         Botan::RandomNumberGenerator& rng) {
-   const auto pkcs8 = key.private_key_info();
+   const auto raw_pkcs8 = key.private_key_info();
 
    auto passphrase = Test::random_password(rng);
 
+   auto options = Botan::PKCS8::KeyEncryptionOptions(cipher, pwhash, std::chrono::milliseconds(1));
+
+   auto pkcs8 = Botan::PKCS8::encrypt_private_key(key, passphrase, rng, options);
+
    try {
-      Botan::DataSource_Memory data_src(
-         Botan::PKCS8::PEM_encode(key, rng, passphrase, std::chrono::milliseconds(1), pbe_algo));
+      Botan::DataSource_Memory data_src(pkcs8.as_pem());
 
       auto loaded = Botan::PKCS8::load_key(data_src, passphrase);
 
       result.confirm("recovered private key from encrypted blob", loaded != nullptr);
       result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
-      result.test_eq("reloaded key has same encoding", loaded->private_key_info(), pkcs8);
+      result.test_eq("reloaded key has same encoding", loaded->private_key_info(), raw_pkcs8);
    } catch(std::exception& e) {
       result.test_failure("roundtrip encrypted PEM private key", e.what());
    }
 
    try {
-      Botan::DataSource_Memory data_src(
-         Botan::PKCS8::BER_encode(key, rng, passphrase, std::chrono::milliseconds(1), pbe_algo));
+      Botan::DataSource_Memory data_src(pkcs8.as_bytes());
 
       auto loaded = Botan::PKCS8::load_key(data_src, passphrase);
 
       result.confirm("recovered private key from BER blob", loaded != nullptr);
       result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
-      result.test_eq("reloaded key has same encoding", loaded->private_key_info(), pkcs8);
+      result.test_eq("reloaded key has same encoding", loaded->private_key_info(), raw_pkcs8);
    } catch(std::exception& e) {
       result.test_failure("roundtrip encrypted BER private key", e.what());
    }
@@ -761,12 +764,12 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
 
    #if defined(BOTAN_HAS_PKCS5_PBES2) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_SHA2_32)
 
-         test_pbe_roundtrip(result, key, "PBE-PKCS5v20(AES-128/CBC,SHA-256)", this->rng());
+         test_pbe_roundtrip(result, key, "AES-128/CBC", "SHA-256", this->rng());
    #endif
 
    #if defined(BOTAN_HAS_PKCS5_PBES2) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_SCRYPT)
 
-         test_pbe_roundtrip(result, key, "PBES2(AES-128/CBC,Scrypt)", this->rng());
+         test_pbe_roundtrip(result, key, "AES-128/CBC", "Scrypt", this->rng());
    #endif
       }
 
