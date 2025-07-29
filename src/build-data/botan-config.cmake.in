@@ -19,10 +19,17 @@
 #
 # This module defines :prop_tgt:`IMPORTED` targets:
 #
-# ``Botan::Botan``
+# ``botan::botan``
 #   The botan shared library, if found.
-# ``Botan::Botan-static``
+# ``botan::botan-static``
 #   The botan static library, if found.
+#
+# Previous versions of this CMake module defined the targets in uppercase,
+# such as ``Botan::Botan``, for backward-compatibility we define those as
+# aliases:
+#
+# ``Botan::Botan`` as an alias for ``botan::botan``
+# ``Botan::Botan-static`` as an alias for ``botan::botan-static``
 #
 # Result variables
 # ^^^^^^^^^^^^^^^^
@@ -87,14 +94,17 @@ if(NOT DEFINED _Botan_INCLUDE_DIR OR NOT DEFINED _Botan_LIB_PREFIX)
 endif()
 
 %{if build_static_lib}
-if(NOT TARGET Botan::Botan-static)
-  add_library(Botan::Botan-static STATIC IMPORTED)
-  set_target_properties(Botan::Botan-static
+if(NOT TARGET botan::botan-static)
+  add_library(botan::botan-static STATIC IMPORTED)
+  set_target_properties(botan::botan-static
     PROPERTIES
       IMPORTED_LOCATION                 "${_Botan_LIB_PREFIX}/%{static_lib_name}"
       INTERFACE_INCLUDE_DIRECTORIES     "${_Botan_INCLUDE_DIR}"
       IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
       INTERFACE_LINK_OPTIONS            "SHELL:%{cxx_abi_flags}")
+
+  # TODO(Botan4): Remove this alias
+  add_library(Botan::Botan-static ALIAS botan::botan-static)
 endif()
 %{endif}
 
@@ -107,24 +117,27 @@ set(_Botan_implib "")
 %{endif}
 
 %{if build_shared_lib}
-if(NOT TARGET Botan::Botan)
+if(NOT TARGET botan::botan)
   if(NOT DEFINED _Botan_shared_lib)
     set(_Botan_shared_lib "${_Botan_LIB_PREFIX}/%{shared_lib_name}")
   endif()
 
-  add_library(Botan::Botan SHARED IMPORTED)
-  set_target_properties(Botan::Botan
+  add_library(botan::botan SHARED IMPORTED)
+  set_target_properties(botan::botan
     PROPERTIES
       IMPORTED_LOCATION             "${_Botan_shared_lib}"
       IMPORTED_IMPLIB               "${_Botan_implib}"
       INTERFACE_INCLUDE_DIRECTORIES "${_Botan_INCLUDE_DIR}"
       INTERFACE_LINK_OPTIONS        "SHELL:%{cxx_abi_flags}")
-  set_property(TARGET Botan::Botan APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
-  set_target_properties(Botan::Botan
+  set_property(TARGET botan::botan APPEND PROPERTY IMPORTED_CONFIGURATIONS NOCONFIG)
+  set_target_properties(botan::botan
     PROPERTIES
       IMPORTED_LOCATION_NOCONFIG "${_Botan_LIB_PREFIX}/%{shared_lib_name}"
       IMPORTED_SONAME_NOCONFIG   "%{shared_lib_name}"
       IMPORTED_IMPLIB_NOCONFIG   "${_Botan_implib}")
+
+  # TODO(Botan4): Remove this alias
+  add_library(Botan::Botan ALIAS botan::botan)
 endif()
 %{endif}
 
