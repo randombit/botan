@@ -54,8 +54,7 @@ class BOTAN_PUBLIC_API(3, 1) SphincsPlus_PublicKey : public virtual Public_Key {
 
       std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
 
-      std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
-                                                                   std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Verification> _create_verification_op(const PK_Signature_Options& options) const override;
 
       std::unique_ptr<PK_Ops::Verification> create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
                                                                         std::string_view provider) const override;
@@ -112,9 +111,8 @@ class BOTAN_PUBLIC_API(3, 1) SphincsPlus_PrivateKey final : public virtual Sphin
       secure_vector<uint8_t> raw_private_key_bits() const override;
       std::unique_ptr<Public_Key> public_key() const override;
 
-      std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
-                                                             std::string_view params,
-                                                             std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
+                                                              const PK_Signature_Options& options) const override;
 
    private:
       std::shared_ptr<SphincsPlus_PrivateKeyInternal> m_private;

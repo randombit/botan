@@ -8,6 +8,7 @@
 #ifndef BOTAN_TPM2_RSA_H_
 #define BOTAN_TPM2_RSA_H_
 
+#include "botan/pk_keys.h"
 #include <botan/rsa.h>
 #include <botan/tpm2_key.h>
 
@@ -30,8 +31,7 @@ class BOTAN_PUBLIC_API(3, 6) RSA_PublicKey final : public virtual Botan::TPM2::P
          return op == PublicKeyOperation::Encryption || op == PublicKeyOperation::Signature;
       }
 
-      std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
-                                                                   std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Verification> _create_verification_op(const PK_Signature_Options& options) const override;
 
       std::unique_ptr<PK_Ops::Encryption> create_encryption_op(Botan::RandomNumberGenerator& rng,
                                                                std::string_view params,
@@ -95,9 +95,8 @@ class BOTAN_PUBLIC_API(3, 6) RSA_PrivateKey final : public virtual Botan::TPM2::
          return op == PublicKeyOperation::Encryption || op == PublicKeyOperation::Signature;
       }
 
-      std::unique_ptr<PK_Ops::Signature> create_signature_op(Botan::RandomNumberGenerator& rng,
-                                                             std::string_view params,
-                                                             std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Signature> _create_signature_op(Botan::RandomNumberGenerator& rng,
+                                                              const PK_Signature_Options& options) const override;
 
       std::unique_ptr<PK_Ops::Decryption> create_decryption_op(Botan::RandomNumberGenerator& rng,
                                                                std::string_view params,

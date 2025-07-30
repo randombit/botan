@@ -94,25 +94,30 @@ secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
 
 namespace {
 
-std::unique_ptr<HashFunction> create_signature_hash(std::string_view padding) {
-   if(auto hash = HashFunction::create(padding)) {
-      return hash;
-   }
+std::unique_ptr<HashFunction> validate_options_returning_hash(const PK_Signature_Options& options) {
+   BOTAN_ARG_CHECK(!options.hash_function_name().empty(), "This algorithm requires a hash function for signing");
+   BOTAN_ARG_CHECK(!options.using_padding(), "This algorithm does not support padding modes");
+   BOTAN_ARG_CHECK(!options.using_salt_size(), "This algorithm does not support a salt");
 
-   SCAN_Name req(padding);
+   BOTAN_ARG_CHECK(!options.using_explicit_trailer_field(), "This algorithm does not support a padding trailer field");
 
-   if(req.algo_name() == "EMSA1" && req.arg_count() == 1) {
-      if(auto hash = HashFunction::create(req.arg(0))) {
-         return hash;
+   /*
+   * In a sense ECDSA/DSA are *always* in prehashing mode, so we accept the case
+   * where prehashing is requested as long as the prehash hash matches the signature hash.
+   */
+   if(options.prehash_fn().has_value()) {
+      if(options.prehash_fn().value() != options.hash_function_name()) {
+         throw Invalid_Argument("This algorithm does not support prehashing with a different hash");
       }
    }
 
 #if defined(BOTAN_HAS_RAW_HASH_FN)
-   if(req.algo_name() == "Raw") {
-      if(req.arg_count() == 0) {
+   if(options.hash_function_name().starts_with("Raw")) {
+      if(options.hash_function_name() == "Raw") {
          return std::make_unique<RawHashFunction>("Raw", 0);
       }
 
+      SCAN_Name req(options.hash_function_name());
       if(req.arg_count() == 1) {
          if(auto hash = HashFunction::create(req.arg(0))) {
             return std::make_unique<RawHashFunction>(std::move(hash));
@@ -121,13 +126,13 @@ std::unique_ptr<HashFunction> create_signature_hash(std::string_view padding) {
    }
 #endif
 
-   throw Algorithm_Not_Found(padding);
+   return HashFunction::create_or_throw(options.hash_function_name());
 }
 
 }  // namespace
 
-PK_Ops::Signature_with_Hash::Signature_with_Hash(std::string_view hash) :
-      Signature(), m_hash(create_signature_hash(hash)) {}
+PK_Ops::Signature_with_Hash::Signature_with_Hash(const PK_Signature_Options& options) :
+      Signature(), m_hash(validate_options_returning_hash(options)) {}
 
 PK_Ops::Signature_with_Hash::~Signature_with_Hash() = default;
 
@@ -154,8 +159,8 @@ std::vector<uint8_t> PK_Ops::Signature_with_Hash::sign(RandomNumberGenerator& rn
    return raw_sign(msg, rng);
 }
 
-PK_Ops::Verification_with_Hash::Verification_with_Hash(std::string_view padding) :
-      Verification(), m_hash(create_signature_hash(padding)) {}
+PK_Ops::Verification_with_Hash::Verification_with_Hash(const PK_Signature_Options& options) :
+      Verification(), m_hash(validate_options_returning_hash(options)) {}
 
 PK_Ops::Verification_with_Hash::~Verification_with_Hash() = default;
 

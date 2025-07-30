@@ -7,16 +7,22 @@
 
 #include <botan/pk_keys.h>
 
+#include <botan/assert.h>
 #include <botan/der_enc.h>
 #include <botan/hash.h>
 #include <botan/hex.h>
 #include <botan/pk_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
 const BigInt& Asymmetric_Key::get_int_field(std::string_view field) const {
    throw Unknown_PK_Field_Name(algo_name(), field);
+}
+
+bool Asymmetric_Key::supports_context_data() const {
+   return false;
 }
 
 OID Asymmetric_Key::object_identifier() const {
@@ -106,8 +112,8 @@ std::unique_ptr<PK_Ops::KEM_Encryption> Public_Key::create_kem_encryption_op(std
    throw Lookup_Error(fmt("{} does not support KEM encryption", algo_name()));
 }
 
-std::unique_ptr<PK_Ops::Verification> Public_Key::create_verification_op(std::string_view /*params*/,
-                                                                         std::string_view /*provider*/) const {
+std::unique_ptr<PK_Ops::Verification> Public_Key::_create_verification_op(const PK_Signature_Options& options) const {
+   BOTAN_UNUSED(options);
    throw Lookup_Error(fmt("{} does not support verification", algo_name()));
 }
 
@@ -128,9 +134,9 @@ std::unique_ptr<PK_Ops::KEM_Decryption> Private_Key::create_kem_decryption_op(Ra
    throw Lookup_Error(fmt("{} does not support KEM decryption", algo_name()));
 }
 
-std::unique_ptr<PK_Ops::Signature> Private_Key::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                                                    std::string_view /*params*/,
-                                                                    std::string_view /*provider*/) const {
+std::unique_ptr<PK_Ops::Signature> Private_Key::_create_signature_op(RandomNumberGenerator& rng,
+                                                                     const PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng, options);
    throw Lookup_Error(fmt("{} does not support signatures", algo_name()));
 }
 
@@ -138,6 +144,19 @@ std::unique_ptr<PK_Ops::Key_Agreement> Private_Key::create_key_agreement_op(Rand
                                                                             std::string_view /*params*/,
                                                                             std::string_view /*provider*/) const {
    throw Lookup_Error(fmt("{} does not support key agreement", algo_name()));
+}
+
+// Forwarding functions for compat
+
+std::unique_ptr<PK_Ops::Verification> Public_Key::create_verification_op(std::string_view params,
+                                                                         std::string_view provider) const {
+   return this->_create_verification_op(parse_legacy_sig_options(*this, params).with_provider(provider));
+}
+
+std::unique_ptr<PK_Ops::Signature> Private_Key::create_signature_op(RandomNumberGenerator& rng,
+                                                                    std::string_view params,
+                                                                    std::string_view provider) const {
+   return this->_create_signature_op(rng, parse_legacy_sig_options(*this, params).with_provider(provider));
 }
 
 }  // namespace Botan

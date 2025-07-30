@@ -37,8 +37,7 @@ class BOTAN_PUBLIC_API(3, 6) EC_PublicKey final : public virtual Botan::TPM2::Pu
          return op == PublicKeyOperation::Signature;
       }
 
-      std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
-                                                                   std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Verification> _create_verification_op(const PK_Signature_Options& options) const override;
 
    protected:
       friend class TPM2::PublicKey;
@@ -96,9 +95,8 @@ class BOTAN_PUBLIC_API(3, 6) EC_PrivateKey final : public virtual Botan::TPM2::P
 
       bool supports_operation(PublicKeyOperation op) const override { return op == PublicKeyOperation::Signature; }
 
-      std::unique_ptr<PK_Ops::Signature> create_signature_op(Botan::RandomNumberGenerator& rng,
-                                                             std::string_view params,
-                                                             std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Signature> _create_signature_op(Botan::RandomNumberGenerator& rng,
+                                                              const PK_Signature_Options& options) const override;
 
    protected:
       friend class TPM2::PrivateKey;

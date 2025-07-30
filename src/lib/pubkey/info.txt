@@ -1,5 +1,5 @@
 <defines>
-PUBLIC_KEY_CRYPTO -> 20131128
+PUBLIC_KEY_CRYPTO -> 20240817
 </defines>
 
 <module_info>
@@ -18,7 +18,11 @@ x509_key.h
 </header:public>
 
 <header:internal>
+# Will be public eventually
+pk_options.h
+
 pk_ops_impl.h
+pk_options_impl.h
 workfactor.h
 </header:internal>
 

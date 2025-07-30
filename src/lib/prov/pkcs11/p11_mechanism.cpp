@@ -10,6 +10,7 @@
 
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
+#include <botan/internal/pk_options.h>
 #include <botan/internal/scan_name.h>
 #include <tuple>
 
@@ -154,7 +155,7 @@ MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(std::string_view p
    return mech;
 }
 
-MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(std::string_view padding) {
+MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(const PK_Signature_Options& options) {
    // note: when updating this map, update the documentation for `MechanismWrapper::create_rsa_sign_mechanism`
    static const std::map<std::string_view, RSA_SignMechanism> SignMechanisms = {
       {"Raw", RSA_SignMechanism(MechanismType::RsaX509)},
@@ -226,6 +227,22 @@ MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(std::string_view pa
       {"EMSA4(SHA-512,MGF1,64)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss)},
       {"PSSR(SHA-512,MGF1,64)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss)},
    };
+
+   const std::string padding = [&]() {
+      if(options.using_hash() && options.using_padding()) {
+         return fmt("{}({})", options.padding().value(), options.hash_function_name());
+      }
+
+      if(options.using_padding()) {
+         return options.padding().value();
+      }
+
+      if(options.using_hash()) {
+         return options.hash_function_name();
+      }
+
+      throw Invalid_Argument("RSA signature requires a padding scheme");
+   }();
 
    auto mechanism_info_it = SignMechanisms.find(padding);
    if(mechanism_info_it == SignMechanisms.end()) {

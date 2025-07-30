@@ -2,7 +2,7 @@
 
 #include <botan/build.h>
 
-#if defined(BOTAN_HAS_TPM2)
+#if defined(BOTAN_HAS_TPM2) && defined(BOTAN_HAS_TPM2_RSA)
 
    #include <botan/auto_rng.h>
    #include <botan/hex.h>
