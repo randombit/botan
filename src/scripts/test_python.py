@@ -541,7 +541,7 @@ ofvkP1EDmpx50fHLawIDAQAB
     def test_ecdsa(self):
         rng = botan.RandomNumberGenerator()
 
-        hash_fn = 'EMSA1(SHA-256)'
+        hash_fn = 'SHA-256'
         group = 'secp256r1'
         msg = 'test message'
 
@@ -585,7 +585,7 @@ ofvkP1EDmpx50fHLawIDAQAB
     def test_sm2(self):
         rng = botan.RandomNumberGenerator()
 
-        hash_fn = 'EMSA1(SM3)'
+        hash_fn = 'SM3'
         group = 'sm2p256v1'
         msg = 'test message'
 

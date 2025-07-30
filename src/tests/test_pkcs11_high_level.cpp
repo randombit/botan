@@ -823,8 +823,8 @@ Test::Result test_rsa_sign_verify() {
    std::vector<uint8_t> plaintext(256);
    std::iota(std::begin(plaintext), std::end(plaintext), static_cast<uint8_t>(0));
 
-   auto sign_and_verify = [&](const std::string& emsa, bool multipart) {
-      Botan::PK_Signer signer(keypair.second, *rng, emsa, Botan::Signature_Format::Standard);
+   auto sign_and_verify = [&](const std::string& padding, bool multipart) {
+      Botan::PK_Signer signer(keypair.second, *rng, padding, Botan::Signature_Format::Standard);
       std::vector<uint8_t> signature;
       if(multipart) {
          signer.update(plaintext.data(), plaintext.size() / 2);
@@ -833,7 +833,7 @@ Test::Result test_rsa_sign_verify() {
          signature = signer.sign_message(plaintext, *rng);
       }
 
-      Botan::PK_Verifier verifier(keypair.first, emsa, Botan::Signature_Format::Standard);
+      Botan::PK_Verifier verifier(keypair.first, padding, Botan::Signature_Format::Standard);
       bool rsa_ok = false;
       if(multipart) {
          verifier.update(plaintext.data(), plaintext.size() / 2);
@@ -843,7 +843,7 @@ Test::Result test_rsa_sign_verify() {
          rsa_ok = verifier.verify_message(plaintext, signature);
       }
 
-      result.test_eq("RSA PKCS11 sign and verify: " + emsa, rsa_ok, true);
+      result.test_eq("RSA PKCS11 sign and verify: " + padding, rsa_ok, true);
    };
 
    // single-part sign
@@ -1096,21 +1096,21 @@ Test::Result test_ecdsa_sign_verify_core(EC_Group_Encoding enc, const std::strin
 
       std::vector<uint8_t> plaintext(20, 0x01);
 
-      auto sign_and_verify = [&](const std::string& emsa, const Botan::Signature_Format format, bool check_soft) {
-         Botan::PK_Signer signer(keypair.second, *rng, emsa, format);
+      auto sign_and_verify = [&](const std::string& padding, const Botan::Signature_Format format, bool check_soft) {
+         Botan::PK_Signer signer(keypair.second, *rng, padding, format);
          auto signature = signer.sign_message(plaintext, *rng);
 
-         Botan::PK_Verifier token_verifier(keypair.first, emsa, format);
+         Botan::PK_Verifier token_verifier(keypair.first, padding, format);
          bool ecdsa_ok = token_verifier.verify_message(plaintext, signature);
 
-         result.test_eq("ECDSA PKCS11 sign and verify: " + emsa, ecdsa_ok, true);
+         result.test_eq("ECDSA PKCS11 sign and verify: " + padding, ecdsa_ok, true);
 
          // test against software implementation if available
          if(check_soft) {
-            Botan::PK_Verifier soft_verifier(keypair.first, emsa, format);
+            Botan::PK_Verifier soft_verifier(keypair.first, padding, format);
             bool soft_ecdsa_ok = soft_verifier.verify_message(plaintext, signature);
 
-            result.test_eq("ECDSA PKCS11 verify (in software): " + emsa, soft_ecdsa_ok, true);
+            result.test_eq("ECDSA PKCS11 verify (in software): " + padding, soft_ecdsa_ok, true);
          }
       };
 

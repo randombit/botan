@@ -428,7 +428,7 @@ Test::Result test_x509_encode_authority_info_access_extension() {
 
    const std::string sig_algo{"RSA"};
    const std::string hash_fn{"SHA-256"};
-   const std::string padding_method{"EMSA3(SHA-256)"};
+   const std::string padding_method{"PKCS1v15(SHA-256)"};
 
    // CA Issuer information
    const std::vector<std::string> ca_issuers = {
@@ -727,14 +727,13 @@ Test::Result test_verify_gost2012_cert() {
    return result;
 }
 
-      /*
- * @brief checks the configurability of the EMSA4(RSA-PSS) signature scheme
+   /*
+ * @brief checks the configurability of the RSA-PSS signature scheme
  *
  * For the other algorithms than RSA, only one padding is supported right now.
  */
       #if defined(BOTAN_HAS_EMSA_PKCS1) && defined(BOTAN_HAS_EMSA_PSSR) && defined(BOTAN_HAS_RSA)
 Test::Result test_padding_config() {
-   // Throughout the test, some synonyms for EMSA4 are used, e.g. PSSR, EMSA-PSS
    Test::Result test_result("X509 Padding Config");
 
    auto rng = Test::new_rng(__func__);
@@ -742,7 +741,7 @@ Test::Result test_padding_config() {
    Botan::DataSource_Stream key_stream(Test::data_file("x509/misc/rsa_key.pem"));
    auto sk = Botan::PKCS8::load_key(key_stream);
 
-   // Create X509 CA certificate; EMSA3 is used for signing by default
+   // Create X509 CA certificate; PKCS1v15 is used for signing by default
    Botan::X509_Cert_Options opt("TESTCA");
    opt.CA_key();
 
@@ -760,7 +759,7 @@ Test::Result test_padding_config() {
 
          #if defined(BOTAN_HAS_EMSA_X931)
    // Try to set a padding scheme that is not supported for signing with the given key type
-   opt.set_padding_scheme("EMSA2");
+   opt.set_padding_scheme("X9.31");
    try {
       Botan::X509_Certificate ca_cert_wrong = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", *rng);
       test_result.test_failure("Could build CA cert with invalid encoding scheme X9.31 for key type " +
@@ -781,42 +780,41 @@ Test::Result test_padding_config() {
 
    // Prepare a signing request for the end certificate
    Botan::X509_Cert_Options req_opt("endpoint");
-   req_opt.set_padding_scheme("EMSA4(SHA-512,MGF1,64)");
+   req_opt.set_padding_scheme("PSS(SHA-512,MGF1,64)");
    Botan::PKCS10_Request end_req = Botan::X509::create_cert_req(req_opt, (*sk), "SHA-512", *rng);
    test_result.test_eq(
       "Certificate request signature algorithm", end_req.signature_algorithm().oid().to_formatted_string(), "RSA/PSS");
 
    // Create X509 CA object: will fail as the chosen hash functions differ
    try {
-      Botan::X509_CA ca_fail(ca_cert_exp, (*sk), "SHA-512", "EMSA4(SHA-256)", *rng);
+      Botan::X509_CA ca_fail(ca_cert_exp, (*sk), "SHA-512", "PSS(SHA-256)", *rng);
       test_result.test_failure("Configured conflicting hash functions for CA");
    } catch(const Botan::Invalid_Argument& e) {
       test_result.test_eq(
          "Configured conflicting hash functions for CA",
          e.what(),
-         "Specified hash function SHA-512 is incompatible with RSA chose hash function SHA-256 with user specified padding EMSA4(SHA-256)");
+         "Specified hash function SHA-512 is incompatible with RSA chose hash function SHA-256 with user specified padding PSS(SHA-256)");
    }
 
-   // Create X509 CA object: its signer will use the padding scheme from the CA certificate, i.e. EMSA3
+   // Create X509 CA object: its signer will use the padding scheme from the CA certificate, i.e. PKCS1v15
    Botan::X509_CA ca_def(ca_cert_def, (*sk), "SHA-512", *rng);
-   Botan::X509_Certificate end_cert_emsa3 = ca_def.sign_request(end_req, *rng, not_before, not_after);
+   Botan::X509_Certificate end_cert_pkcs1 = ca_def.sign_request(end_req, *rng, not_before, not_after);
    test_result.test_eq("End certificate signature algorithm",
-                       end_cert_emsa3.signature_algorithm().oid().to_formatted_string(),
+                       end_cert_pkcs1.signature_algorithm().oid().to_formatted_string(),
                        "RSA/PKCS1v15(SHA-512)");
 
    // Create X509 CA object: its signer will use the explicitly configured padding scheme, which is different from the CA certificate's scheme
-   Botan::X509_CA ca_diff(ca_cert_def, (*sk), "SHA-512", "EMSA-PSS", *rng);
-   Botan::X509_Certificate end_cert_diff_emsa4 = ca_diff.sign_request(end_req, *rng, not_before, not_after);
+   Botan::X509_CA ca_diff(ca_cert_def, (*sk), "SHA-512", "PSS", *rng);
+   Botan::X509_Certificate end_cert_diff_pss = ca_diff.sign_request(end_req, *rng, not_before, not_after);
    test_result.test_eq("End certificate signature algorithm",
-                       end_cert_diff_emsa4.signature_algorithm().oid().to_formatted_string(),
+                       end_cert_diff_pss.signature_algorithm().oid().to_formatted_string(),
                        "RSA/PSS");
 
    // Create X509 CA object: its signer will use the explicitly configured padding scheme, which is identical to the CA certificate's scheme
-   Botan::X509_CA ca_exp(ca_cert_exp, (*sk), "SHA-512", "EMSA4(SHA-512,MGF1,64)", *rng);
-   Botan::X509_Certificate end_cert_emsa4 = ca_exp.sign_request(end_req, *rng, not_before, not_after);
-   test_result.test_eq("End certificate signature algorithm",
-                       end_cert_emsa4.signature_algorithm().oid().to_formatted_string(),
-                       "RSA/PSS");
+   Botan::X509_CA ca_exp(ca_cert_exp, (*sk), "SHA-512", "PSS(SHA-512,MGF1,64)", *rng);
+   Botan::X509_Certificate end_cert_pss = ca_exp.sign_request(end_req, *rng, not_before, not_after);
+   test_result.test_eq(
+      "End certificate signature algorithm", end_cert_pss.signature_algorithm().oid().to_formatted_string(), "RSA/PSS");
 
    // Check CRL signature algorithm
    Botan::X509_CRL crl = ca_exp.new_crl(*rng);
@@ -826,8 +824,8 @@ Test::Result test_padding_config() {
    const Botan::Certificate_Store_In_Memory trusted(ca_exp.ca_certificate());
    const Botan::Path_Validation_Restrictions restrictions(false, 80);
    const Botan::Path_Validation_Result validation_result =
-      Botan::x509_path_validate(end_cert_emsa4, restrictions, trusted);
-   test_result.confirm("EMSA4-signed certificate validates", validation_result.successful_validation());
+      Botan::x509_path_validate(end_cert_pss, restrictions, trusted);
+   test_result.confirm("PSS signed certificate validates", validation_result.successful_validation());
 
    return test_result;
 }
@@ -1599,7 +1597,7 @@ Test::Result test_x509_tn_auth_list_extension_decode() {
 
 std::vector<std::string> get_sig_paddings(const std::string& sig_algo, const std::string& hash) {
    if(sig_algo == "RSA") {
-      return {"EMSA3(" + hash + ")", "EMSA4(" + hash + ")"};
+      return {"PKCS1v15(" + hash + ")", "PSS(" + hash + ")"};
    } else if(sig_algo == "DSA" || sig_algo == "ECDSA" || sig_algo == "ECGDSA" || sig_algo == "ECKCDSA" ||
              sig_algo == "GOST-34.10") {
       return {hash};

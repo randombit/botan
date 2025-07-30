@@ -173,33 +173,34 @@ Public Key Cryptography
 X.509
 ----------------------------------------------
 
-``gen_pkcs10 key CN --country= --organization= --ca --path-limit=1 --email= --dns= --ext-ku= --key-pass= --hash=SHA-256  --emsa=``
+``gen_pkcs10 key CN --country= --organization= --ca --path-limit=1 --email= --dns= --ext-ku= --key-pass= --hash=SHA-256 --padding=``
   Generate a PKCS #10 certificate signing request (CSR) using the passed PKCS #8
   private key *key*. If the private key is encrypted, the decryption passphrase
-  *key-pass* has to be passed.*emsa* specifies the padding scheme to be used
-  when calculating the signature.
+  *key-pass* has to be passed.
 
-    - For RSA keys EMSA4 (RSA-PSS) is the default scheme.
-    - For ECDSA, DSA, ECGDSA, ECKCDSA and GOST-34.10 keys *emsa* defaults to EMSA1.
+  The *padding* option specifies the padding scheme to be used when calculating
+  the signature. This is only used for RSA; for such keys PSS is used by default.
 
-``gen_self_signed key CN --country= --dns= --organization= --email= --path-limit=1 --days=365 --key-pass= --ca --hash=SHA-256 --emsa= --der``
+``gen_self_signed key CN --country= --dns= --organization= --email= --path-limit=1 --days=365 --key-pass= --ca --hash=SHA-256 --padding= --der``
   Generate a self signed X.509 certificate using the PKCS #8 private key
   *key*. If the private key is encrypted, the decryption passphrase *key-pass*
   has to be passed. If *ca* is passed, the certificate is marked for certificate
-  authority (CA) usage. *emsa* specifies the padding scheme to be used when
-  calculating the signature.
+  authority (CA) usage.
 
-    - For RSA keys EMSA4 (RSA-PSS) is the default scheme.
-    - For ECDSA, DSA, ECGDSA, ECKCDSA and GOST-34.10 keys *emsa* defaults to EMSA1.
+  The *padding* option specifies the padding scheme to be used when calculating
+  the signature. This is only used for RSA; for such keys PSS is used by default.
 
-``sign_cert --ca-key-pass= --hash=SHA-256 --duration=365 --emsa= ca_cert ca_key pkcs10_req``
+``sign_cert --ca-key-pass= --hash=SHA-256 --duration=365 --padding= ca_cert ca_key pkcs10_req``
   Create a CA signed X.509 certificate from the information contained in the
   PKCS #10 CSR *pkcs10_req*. The CA certificate is passed as *ca_cert* and the
   respective PKCS #8 private key as *ca_key*. If the private key is encrypted,
   the decryption passphrase *ca-key-pass* has to be passed. The created
-  certificate has a validity period of *duration* days. *emsa* specifies the
-  padding scheme to be used when calculating the signature. *emsa* defaults to
-  the padding scheme used in the CA certificate.
+  certificate has a validity period of *duration* days.
+
+  The *padding* argument specifies the padding scheme to be used when
+  calculating the signature; this is only used for RSA. If not set then it will
+  defaults to the padding scheme used in the CA certificate, or otherwise
+  some suitable default.
 
 ``ocsp_check --timeout=3000 subject issuer``
   Verify an X.509 certificate against the issuers OCSP responder. Pass the

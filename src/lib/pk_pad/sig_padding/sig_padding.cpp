@@ -133,11 +133,11 @@ std::unique_ptr<SignaturePaddingScheme> SignaturePaddingScheme::create(std::stri
 }
 
 std::unique_ptr<SignaturePaddingScheme> SignaturePaddingScheme::create_or_throw(std::string_view algo_spec) {
-   auto emsa = SignaturePaddingScheme::create(algo_spec);
-   if(emsa) {
-      return emsa;
+   if(auto padding = SignaturePaddingScheme::create(algo_spec)) {
+      return padding;
+   } else {
+      throw Algorithm_Not_Found(algo_spec);
    }
-   throw Algorithm_Not_Found(algo_spec);
 }
 
 }  // namespace Botan

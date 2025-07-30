@@ -109,7 +109,7 @@ std::tuple<std::string, std::string, std::string> get_sig_algo_padding() {
    const std::string hash_fn{"SHA-512"};
    #elif defined(BOTAN_HAS_RSA)
    const std::string sig_algo{"RSA"};
-   const std::string padding_method{"EMSA3(SHA-256)"};
+   const std::string padding_method{"PKCS1v15(SHA-256)"};
    const std::string hash_fn{"SHA-256"};
    #endif
 

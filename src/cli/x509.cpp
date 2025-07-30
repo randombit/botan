@@ -106,9 +106,7 @@ BOTAN_REGISTER_COMMAND("trust_roots", Trust_Root_Info);
 class Sign_Cert final : public Command {
    public:
       Sign_Cert() :
-            Command(
-               "sign_cert --ca-key-pass= --hash= "
-               "--duration=365 --emsa= ca_cert ca_key pkcs10_req") {}
+            Command("sign_cert --ca-key-pass= --hash= --padding= --emsa= --duration=365 ca_cert ca_key pkcs10_req") {}
 
       std::string group() const override { return "x509"; }
 
@@ -119,12 +117,25 @@ class Sign_Cert final : public Command {
 
          const std::string key_file = get_arg("ca_key");
          const std::string pass = get_passphrase_arg("Password for " + key_file, "ca-key-pass");
-         const std::string emsa = get_arg("emsa");
+
+         // TODO(Botan4) remove --emsa option and this logic
+         const std::string padding = [&]() {
+            auto p = get_arg("padding");
+            auto e = get_arg("emsa");
+            if(e.empty() || p == e) {
+               return p;
+            } else if(p.empty()) {
+               return e;
+            } else {
+               throw CLI_Usage_Error("Use either --padding or --emsa not both");
+            }
+         }();
+
          const std::string hash = get_arg("hash");
 
          auto key = load_private_key(key_file, pass);
 
-         Botan::X509_CA ca(ca_cert, *key, hash, emsa, rng());
+         Botan::X509_CA ca(ca_cert, *key, hash, padding, rng());
 
          Botan::PKCS10_Request req(get_arg("pkcs10_req"));
 
@@ -255,7 +266,8 @@ class Gen_Self_Signed final : public Command {
       Gen_Self_Signed() :
             Command(
                "gen_self_signed key CN --country= --dns= "
-               "--organization= --email= --path-limit=1 --days=365 --key-pass= --ca --hash= --emsa= --der") {}
+               "--organization= --email= --path-limit=1 --days=365 --key-pass= --ca --hash= --padding= --emsa= --der") {
+      }
 
       std::string group() const override { return "x509"; }
 
@@ -277,10 +289,21 @@ class Gen_Self_Signed final : public Command {
          opts.more_dns = Command::split_on(get_arg("dns"), ',');
          const bool der_format = flag_set("der");
 
-         std::string emsa = get_arg("emsa");
+         // TODO(Botan4) remove --emsa option and this logic
+         const std::string padding = [&]() {
+            auto p = get_arg("padding");
+            auto e = get_arg("emsa");
+            if(e.empty() || p == e) {
+               return p;
+            } else if(p.empty()) {
+               return e;
+            } else {
+               throw CLI_Usage_Error("Use either --padding or --emsa not both");
+            }
+         }();
 
-         if(emsa.empty() == false) {
-            opts.set_padding_scheme(emsa);
+         if(padding.empty() == false) {
+            opts.set_padding_scheme(padding);
          }
 
          if(flag_set("ca")) {
@@ -306,7 +329,7 @@ class Generate_PKCS10 final : public Command {
       Generate_PKCS10() :
             Command(
                "gen_pkcs10 key CN --country= --organization= "
-               "--ca --path-limit=1 --email= --dns= --ext-ku= --key-pass= --hash= --emsa=") {}
+               "--ca --path-limit=1 --email= --dns= --ext-ku= --key-pass= --hash= --padding= --emsa=") {}
 
       std::string group() const override { return "x509"; }
 
@@ -334,10 +357,21 @@ class Generate_PKCS10 final : public Command {
             opts.add_ex_constraint(ext_ku);
          }
 
-         std::string emsa = get_arg("emsa");
+         // TODO(Botan4) remove --emsa option and this logic
+         const std::string padding = [&]() {
+            auto p = get_arg("padding");
+            auto e = get_arg("emsa");
+            if(e.empty() || p == e) {
+               return p;
+            } else if(p.empty()) {
+               return e;
+            } else {
+               throw CLI_Usage_Error("Use either --padding or --emsa not both");
+            }
+         }();
 
-         if(emsa.empty() == false) {
-            opts.set_padding_scheme(emsa);
+         if(padding.empty() == false) {
+            opts.set_padding_scheme(padding);
          }
 
          Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *key, get_arg("hash"), rng());
