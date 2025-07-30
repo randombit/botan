@@ -1006,7 +1006,7 @@ Signatures are verified using
 
 Botan implements the following signature algorithms:
 
-1. RSA. Requires a :ref:`padding scheme <emsa>` as parameter.
+1. RSA. Requires a :ref:`padding scheme <rsa_padding>` as parameter.
 #. DSA. Requires a :ref:`hash function <sig_with_hash>` as parameter.
 #. ECDSA. Requires a :ref:`hash function <sig_with_hash>` as parameter.
 #. ECGDSA. Requires a :ref:`hash function <sig_with_hash>` as parameter.
@@ -1041,7 +1041,7 @@ signature is validated.
 .. literalinclude:: /../src/examples/ecdsa.cpp
    :language: cpp
 
-.. _emsa:
+.. _rsa_padding:
 
 RSA signature padding schemes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1080,10 +1080,10 @@ PKCS #1 v1.5 Type 1 (signature) padding, aka EMSA3 in IEEE 1363.
   ``PKCS1v15(Raw)``,
   ``PKCS1v15(Raw,MD5)``,
 
-EMSA-PSS
-""""""""
+Probabilistic signature scheme (PSS)
+"""""""""""""""""""""""""""""""""""""""
 
-Probabilistic signature scheme (PSS) (called EMSA4 in IEEE 1363).
+Called EMSA4 in IEEE 1363.
 
 - Name: ``PSS``
 - Deprecated aliases: ``EMSA-PSS``, ``PSSR``, ``PSS-MGF1``, ``EMSA4``
@@ -1143,11 +1143,11 @@ i.e. DS2 without a salt.
 X9.31
 """""
 
+Padding scheme from ANSI X9.31. Called EMSA2 in IEEE 1363.
+
 .. deprecated:: 3.7.0
 
    X9.31 signatures are obsolete, and support for it is deprecated
-
-EMSA from X9.31 (EMSA2 in IEEE 1363).
 
 - Name: ``X9.31``
 - Deprecated aliases: ``EMSA2``, ``EMSA_X931``
@@ -1155,16 +1155,16 @@ EMSA from X9.31 (EMSA2 in IEEE 1363).
   ``(<HashFunction>)``
 - Example: ``X9.31(SHA-256)``
 
-Raw EMSA
+Raw
 """"""""
 
 Sign inputs directly with no hashing or padding
 
 .. warning::
 
-   This exists as an escape hatch allowing an application to define
-   some protocol-specific padding scheme. Don't use this unless you
-   know what you are doing.
+   This exists as an escape hatch allowing an application to define some
+   protocol-specific padding scheme, and using it in a naive way is completely
+   insecure. Don't use this unless you know what you are doing.
 
 - Name: ``Raw``
 - Parameters specification:
@@ -1181,10 +1181,12 @@ Signature with Hash
 For many signature schemes including ECDSA and DSA,
 simply naming a hash function like ``SHA-256`` is all that is required.
 
-Previous versions of Botan required using a hash specifier
-like ``EMSA1(SHA-256)`` when generating or verifying ECDSA/DSA signatures,
-with the specified hash.
-The ``EMSA1`` was a reference to a now obsolete IEEE standard.
+.. note::
+
+   Previous versions of Botan required using a hash specifier like
+   ``EMSA1(SHA-256)`` when generating or verifying ECDSA/DSA signatures, with
+   the specified hash. The ``EMSA1`` was a reference to a now obsolete IEEE
+   standard.
 
 Parameters specification:
 
