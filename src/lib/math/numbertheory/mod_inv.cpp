@@ -280,7 +280,7 @@ std::optional<BigInt> inverse_mod_general(const BigInt& x, const BigInt& mod) {
 BigInt inverse_mod_secret_prime(const BigInt& x, const BigInt& p) {
    BOTAN_ARG_CHECK(x.is_positive() && p.is_positive(), "Parameters must be positive");
    BOTAN_ARG_CHECK(x < p, "x must be less than p");
-   BOTAN_ARG_CHECK(p.is_odd() and p > 1, "Primes are odd integers greater than 1");
+   BOTAN_ARG_CHECK(p.is_odd() && p > 1, "Primes are odd integers greater than 1");
 
    // TODO possibly use FLT, or the algorithm presented for this case in
    // Handbook of Elliptic and Hyperelliptic Curve Cryptography
