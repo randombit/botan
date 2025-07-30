@@ -44,7 +44,9 @@ Version 3.9.0, Not Yet Released
 
 * Remove ``configure.py`` option ``--with-local-config`` (GH #4905)
 
-* Internal cleanups relating to multiprecision integers (GH #5009 #5010 #5012 #5014)
+* Add a better interface for encoding optional ASN.1 elements using ``std::optional`` (GH #5001)
+
+* Internal cleanups relating to multiprecision integers (GH #5009 #5010 #5012 #5014 #5017)
 
 * Resolve many warnings from ``clang-tidy`` (GH #4907 #4908 #4910 #4912 #4913 #4919 #4920 #4923
   #4924 #4931 #4956 #4957 #4958 #4959 #4960 #4961 #4962 #4963 #4964 #4968 #4969 #4971 #4972 #4973
