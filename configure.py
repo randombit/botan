@@ -2366,11 +2366,21 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         variables['includedir'],
         'botan-%d' % (Version.major()), 'botan')
 
-    if cc.basename == 'msvc' and variables['cxx_abi_flags'] != '':
-        # MSVC linker doesn't support/need the ABI options,
-        # just transfer them over to just the compiler invocations
+    # On MSVC, the "ABI flags" should be passed to the compiler only, on other platforms, the
+    # ABI flags are passed to both the compiler and the linker and the compiler flags are also
+    # passed to the linker(?)
+    #
+    # TODO: Extend the build-data/cc/xxx.txt format to allow specifying different CFLAGS for
+    # different configurations, then /MD etc could be specified there rather than hijacking the ABI
+    # flags for it and having to special-case their exclusion from the linker command line.
+
+    if cc.basename in ('msvc', 'clangcl'):
+        # Move the "ABI flags" (/MD etc) into the compiler flags to exclude it from linker invocations
         variables['cc_compile_flags'] = '%s %s' % (variables['cxx_abi_flags'], variables['cc_compile_flags'])
         variables['cxx_abi_flags'] = ''
+    else:
+        # Append the compiler flags to the linker flags
+        variables['ldflags'] = '%s %s' % (variables['ldflags'], variables['cc_compile_flags'])
 
     variables['lib_flags'] = cc.gen_lib_flags(options, variables)
 
@@ -3357,11 +3367,11 @@ def validate_options(options, info_os, info_cc, cc_version, available_module_pol
         raise UserError('Your compiler does not support stack scrubbing. Only GCC 14 and newer support this at the moment.')
 
     # Warnings
-    if options.os == 'windows' and options.compiler != 'msvc':
+    if options.os == 'windows' and options.compiler not in ('msvc', 'clangcl'):
         logging.warning('The windows target is oriented towards MSVC; maybe you want --os=cygwin or --os=mingw')
 
     if options.msvc_runtime:
-        if options.compiler != 'msvc':
+        if options.compiler not in ('msvc', 'clangcl'):
             raise UserError("Makes no sense to specify MSVC runtime for %s" % (options.compiler))
 
         if options.msvc_runtime not in ['MT', 'MD', 'MTd', 'MDd']:
@@ -3386,6 +3396,7 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
         'msvc': r'^ *MSVC ([0-9]{2})([0-9]{2})$',
         'gcc': r'^ *GCC ([0-9]+) ([0-9]+)$',
         'clang': r'^ *CLANG ([0-9]+) ([0-9]+)$',
+        'clangcl': r'^ *CLANG ([0-9]+) ([0-9]+)$',
         'xcode': r'^ *XCODE ([0-9]+) ([0-9]+)$',
         'xlc': r'^ *XLC ([0-9]+) ([0-9]+)$',
         'emcc': r'^ *EMCC ([0-9]+) ([0-9]+)$',
