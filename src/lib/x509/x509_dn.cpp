@@ -73,16 +73,22 @@ bool x500_name_cmp(std::string_view name1, std::string_view name2) {
       ++p2;
    }
 
+   // Accept/ignore trailing spaces
    while((p1 != name1.end()) && is_space(*p1)) {
       ++p1;
    }
+   if(p1 != name1.end()) {
+      return false;
+   }
+
    while((p2 != name2.end()) && is_space(*p2)) {
       ++p2;
    }
-
-   if((p1 != name1.end()) || (p2 != name2.end())) {
+   if(p2 != name2.end()) {
       return false;
    }
+
+   // accept:
    return true;
 }
 

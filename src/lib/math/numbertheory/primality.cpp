@@ -180,7 +180,7 @@ size_t miller_rabin_test_iterations(size_t n_bits, size_t prob, bool random) {
    * If the candidate prime was maliciously constructed, we can't rely
    * on arguments based on p being random.
    */
-   if(random == false) {
+   if(!random) {
       return base;
    }
 

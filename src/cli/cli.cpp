@@ -255,7 +255,7 @@ bool echo_suppression_supported() {
 }  // namespace
 
 std::string Command::get_passphrase(const std::string& prompt) {
-   if(echo_suppression_supported() == false) {
+   if(!echo_suppression_supported()) {
       error_output() << "Warning: terminal echo suppression not enabled for this platform\n";
    }
 

@@ -45,7 +45,7 @@ class ASN1_Printer final : public Command {
          const std::string input = get_arg("file");
          const size_t print_limit = get_arg_sz("print-limit");
          const size_t bin_limit = get_arg_sz("bin-limit");
-         const bool print_context_specific = flag_set("skip-context-specific") == false;
+         const bool print_context_specific = !flag_set("skip-context-specific");
          const size_t max_depth = get_arg_sz("max-depth");
 
          const size_t value_column = 60;

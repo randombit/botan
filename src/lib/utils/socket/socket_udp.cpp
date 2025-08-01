@@ -68,7 +68,7 @@ class Asio_SocketUDP final : public OS::SocketUDP {
          if(ec) {
             throw boost::system::system_error(ec);
          }
-         if(m_udp.is_open() == false) {
+         if(!m_udp.is_open()) {
             throw System_Error(fmt("Connection to host {} failed", hostname));
          }
       }

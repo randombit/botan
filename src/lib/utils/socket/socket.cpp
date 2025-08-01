@@ -67,7 +67,7 @@ class Asio_Socket final : public OS::Socket {
          if(ec) {
             throw boost::system::system_error(ec);
          }
-         if(m_tcp.is_open() == false) {
+         if(!m_tcp.is_open()) {
             throw System_Error(fmt("Connection to host {} failed", hostname));
          }
       }

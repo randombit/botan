@@ -546,7 +546,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          state.set_expected_next(Handshake_Type::ServerHelloDone);
       }
    } else if(type == Handshake_Type::ServerKeyExchange) {
-      if(state.ciphersuite().psk_ciphersuite() == false) {
+      if(!state.ciphersuite().psk_ciphersuite()) {
          state.set_expected_next(Handshake_Type::CertificateRequest);  // optional
       }
       state.set_expected_next(Handshake_Type::ServerHelloDone);

@@ -28,7 +28,7 @@ class SIMD_4X32_Tests final : public Test {
          Test::Result result("SIMD_4x32");
 
    #if defined(BOTAN_HAS_CPUID)
-         if(Botan::CPUID::has(Botan::CPUID::Feature::SIMD_4X32) == false) {
+         if(!Botan::CPUID::has(Botan::CPUID::Feature::SIMD_4X32)) {
             result.test_note("Skipping SIMD_4x32 tests due to missing CPU support at runtime");
             return {result};
          }

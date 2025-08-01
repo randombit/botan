@@ -74,7 +74,7 @@ void GMAC::final_result(std::span<uint8_t> mac) {
    // This ensures the GMAC computation has been initialized with a fresh
    // nonce. The aim of this check is to prevent developers from re-using
    // nonces (and potential nonce-reuse attacks).
-   if(m_initialized == false) {
+   if(!m_initialized) {
       throw Invalid_State("GMAC was not used with a fresh nonce");
    }
 

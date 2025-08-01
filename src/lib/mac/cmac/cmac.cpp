@@ -110,7 +110,7 @@ std::unique_ptr<MessageAuthenticationCode> CMAC::new_object() const {
 * CMAC Constructor
 */
 CMAC::CMAC(std::unique_ptr<BlockCipher> cipher) : m_cipher(std::move(cipher)), m_block_size(m_cipher->block_size()) {
-   if(poly_double_supported_size(m_block_size) == false) {
+   if(!poly_double_supported_size(m_block_size)) {
       throw Invalid_Argument(fmt("CMAC cannot use the {} bit cipher {}", m_block_size * 8, m_cipher->name()));
    }
 

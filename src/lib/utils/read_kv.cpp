@@ -45,7 +45,7 @@ std::map<std::string, std::string> read_kv(std::string_view kv) {
          cur_val = "";
          reading_key = true;
       } else if(c == '=' && !escaped) {
-         if(reading_key == false) {
+         if(!reading_key) {
             throw Invalid_Argument("Bad KV spec unexpected equals sign");
          }
          reading_key = false;
@@ -63,7 +63,7 @@ std::map<std::string, std::string> read_kv(std::string_view kv) {
    }
 
    if(!cur_key.empty()) {
-      if(reading_key == false) {
+      if(!reading_key) {
          if(m.contains(cur_key)) {
             throw Invalid_Argument("Bad KV spec duplicated key");
          }

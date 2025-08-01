@@ -178,7 +178,7 @@ BigInt random_prime(
             First do a single M-R iteration to quickly elimate most non-primes,
             before doing the coprimality check which is expensive
             */
-            if(is_miller_rabin_probable_prime(p, mod_p, rng, 1) == false) {
+            if(!is_miller_rabin_probable_prime(p, mod_p, rng, 1)) {
                continue;
             }
 
@@ -195,7 +195,7 @@ BigInt random_prime(
             break;
          }
 
-         if(is_miller_rabin_probable_prime(p, mod_p, rng, mr_trials) == false) {
+         if(!is_miller_rabin_probable_prime(p, mod_p, rng, mr_trials)) {
             continue;
          }
 
@@ -266,7 +266,7 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
          * currently a single Miller-Rabin test is faster than computing gcd,
          * and this eliminates almost all wasted gcd computations.
          */
-         if(is_miller_rabin_probable_prime(p, mod_p, prime_test_rng, 1) == false) {
+         if(!is_miller_rabin_probable_prime(p, mod_p, prime_test_rng, 1)) {
             continue;
          }
 
@@ -281,7 +281,7 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
             break;
          }
 
-         if(is_miller_rabin_probable_prime(p, mod_p, prime_test_rng, mr_trials) == true) {
+         if(is_miller_rabin_probable_prime(p, mod_p, prime_test_rng, mr_trials)) {
             return p;
          }
       }

@@ -56,7 +56,7 @@ UUID::UUID(std::string_view uuid_str) {
 }
 
 std::string UUID::to_string() const {
-   if(is_valid() == false) {
+   if(!is_valid()) {
       throw Invalid_State("UUID object is empty cannot convert to string");
    }
 

@@ -46,7 +46,7 @@ class TLS_Ciphersuites final : public Command {
 
          auto policy = load_tls_policy(policy_type);
 
-         if(policy->acceptable_protocol_version(version) == false) {
+         if(!policy->acceptable_protocol_version(version)) {
             error_output() << "Error: the policy specified does not allow the given TLS version\n";
             return;
          }

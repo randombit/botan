@@ -87,6 +87,7 @@ inline Botan::RandomNumberGenerator& fuzzer_rng() {
 #define FUZZER_ASSERT_TRUE(e)                                         \
    /* NOLINTNEXTLINE(*-avoid-do-while) */                             \
    do {                                                               \
+      /* NOLINTNEXTLINE(*-simplify-boolean-expr) */                   \
       if(!(e)) {                                                      \
          FUZZER_WRITE_AND_CRASH("Expression " << #e << " was false"); \
       }                                                               \

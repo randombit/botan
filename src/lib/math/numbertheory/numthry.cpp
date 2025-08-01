@@ -373,7 +373,7 @@ bool is_prime(const BigInt& n, RandomNumberGenerator& rng, size_t prob, bool is_
    if(rng.is_seeded()) {
       const size_t t = miller_rabin_test_iterations(n_bits, prob, is_random);
 
-      if(is_miller_rabin_probable_prime(n, mod_n, rng, t) == false) {
+      if(!is_miller_rabin_probable_prime(n, mod_n, rng, t)) {
          return false;
       }
 

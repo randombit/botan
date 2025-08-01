@@ -50,7 +50,7 @@ class HMAC final : public Command {
                read_file(fsname, update_hmac, buf_size);
                output() << Botan::hex_encode(hmac->final());
 
-               if(no_fsname == false) {
+               if(!no_fsname) {
                   output() << " " << fsname;
                }
 

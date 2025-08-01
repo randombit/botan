@@ -528,15 +528,15 @@ void TLS_Handshake_Test::go() {
          break;
       }
 
-      if(client_handshake_completed == false && client->is_active()) {
+      if(!client_handshake_completed && client->is_active()) {
          client_handshake_completed = true;
       }
 
-      if(server_handshake_completed == false && m_server->is_active()) {
+      if(!server_handshake_completed && m_server->is_active()) {
          server_handshake_completed = true;
       }
 
-      if(client->is_active() && client_has_written == false) {
+      if(client->is_active() && !client_has_written) {
          m_results.test_eq("client ALPN protocol", client->application_protocol(), "test/3");
 
          size_t sent_so_far = 0;
@@ -552,7 +552,7 @@ void TLS_Handshake_Test::go() {
          client_has_written = true;
       }
 
-      if(m_server->is_active() && server_has_written == false) {
+      if(m_server->is_active() && !server_has_written) {
          m_results.test_eq("server ALPN protocol", m_server->application_protocol(), "test/3");
 
          size_t sent_so_far = 0;

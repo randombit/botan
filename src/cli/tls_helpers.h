@@ -90,7 +90,7 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
             //    the Hash algorithm MUST be set when the PSK is established or
             //    default to SHA-256 if no such algorithm is defined.
             m_psk_prf(psk_prf.value_or("SHA-256")) {
-         if(ca_path.empty() == false) {
+         if(!ca_path.empty()) {
             m_certstores.push_back(std::make_shared<Botan::Certificate_Store_In_Memory>(ca_path));
          }
 

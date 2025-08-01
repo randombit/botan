@@ -52,7 +52,7 @@ void pgp_s2k(HashFunction& hash,
       hash.update(zero_padding);
 
       // The input is always fully processed even if iterations is very small
-      if(input_buf.empty() == false) {
+      if(!input_buf.empty()) {
          size_t left = std::max(iterations, input_buf.size());
          while(left > 0) {
             const size_t input_to_take = std::min(left, input_buf.size());

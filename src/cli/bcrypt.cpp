@@ -57,7 +57,7 @@ class Check_Bcrypt final : public Command {
 
          output() << "Password is " << (ok ? "valid" : "NOT valid") << "\n";
 
-         if(ok == false) {
+         if(!ok) {
             set_return_code(1);
          }
       }

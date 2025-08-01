@@ -1039,13 +1039,7 @@ class Shim_Policy final : public Botan::TLS::Policy {
                 require_client_certificate_authentication();
       }
 
-      bool allow_insecure_renegotiation() const override {
-         if(m_args.flag_set("expect-no-secure-renegotiation")) {
-            return true;
-         } else {
-            return false;
-         }
-      }
+      bool allow_insecure_renegotiation() const override { return m_args.flag_set("expect-no-secure-renegotiation"); }
 
       //bool include_time_in_hello_random() const override;
 
@@ -1168,11 +1162,7 @@ class Shim_Policy final : public Botan::TLS::Policy {
       //size_t dtls_maximum_timeout() const override;
 
       bool abort_connection_on_undesired_renegotiation() const override {
-         if(m_args.flag_set("renegotiate-ignore")) {
-            return false;
-         } else {
-            return true;
-         }
+         return !m_args.flag_set("renegotiate-ignore");
       }
 
       size_t maximum_certificate_chain_size() const override { return m_args.get_int_opt_or_else("max-cert-list", 0); }
@@ -1191,11 +1181,7 @@ class Shim_Policy final : public Botan::TLS::Policy {
             "MinimumVersion-Client-TLS13-TLS12-TLS",
             "MinimumVersion-Client2-TLS13-TLS12-TLS",
          };
-         if(Botan::value_exists(alert_after_server_hello, m_args.test_name())) {
-            return false;
-         }
-
-         return true;
+         return !Botan::value_exists(alert_after_server_hello, m_args.test_name());
       }
 
    private:
@@ -1233,13 +1219,12 @@ std::vector<uint16_t> Shim_Policy::ciphersuite_list(Botan::TLS::Protocol_Version
       for(auto i = ciphersuites.rbegin(); i != ciphersuites.rend(); ++i) {
          const auto suite = *i;
 
-         // Can we use it?
-         if(suite.valid() == false || !suite.usable_in_version(version) ||
-            !Botan::value_exists(allowed_ciphers(), suite.cipher_algo())) {
-            continue;
-         }
+         const bool usable = suite.valid() && suite.usable_in_version(version) &&
+                             Botan::value_exists(allowed_ciphers(), suite.cipher_algo());
 
-         ciphersuite_codes.push_back(suite.ciphersuite_code());
+         if(usable) {
+            ciphersuite_codes.push_back(suite.ciphersuite_code());
+         }
       }
    }
 
@@ -1615,7 +1600,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
          }
 
          if(alert.type() == Botan::TLS::Alert::CloseNotify) {
-            if(m_got_close == false && !m_args.flag_set("shim-shuts-down")) {
+            if(!m_got_close && !m_args.flag_set("shim-shuts-down")) {
                shim_log("Sending return close notify");
                m_channel->send_alert(alert);
             }
@@ -1650,17 +1635,17 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
          }
 
          if(m_args.flag_set("expect-secure-renegotiation")) {
-            if(m_channel->secure_renegotiation_supported() == false) {
+            if(!m_channel->secure_renegotiation_supported()) {
                shim_exit_with_error("Expected secure renegotiation");
             }
          } else if(m_args.flag_set("expect-no-secure-renegotiation")) {
-            if(m_channel->secure_renegotiation_supported() == true) {
+            if(m_channel->secure_renegotiation_supported()) {
                shim_exit_with_error("Expected no secure renegotation");
             }
          }
 
          if(m_args.flag_set("expect-extended-master-secret")) {
-            if(session.supports_extended_master_secret() == false) {
+            if(!session.supports_extended_master_secret()) {
                shim_exit_with_error("Expected extended maseter secret");
             }
          }

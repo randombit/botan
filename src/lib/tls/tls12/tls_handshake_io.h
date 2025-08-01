@@ -89,7 +89,7 @@ class Stream_Handshake_IO final : public Handshake_IO {
 
       bool timeout_check() override { return false; }
 
-      bool have_more_data() const override { return m_queue.empty() == false; }
+      bool have_more_data() const override { return !m_queue.empty(); }
 
       std::vector<uint8_t> send(const Handshake_Message& msg) override;
 

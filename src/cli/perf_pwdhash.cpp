@@ -49,7 +49,7 @@ class PerfTest_Passhash9 final : public PerfTest {
          const std::string password = "not a very good password";
 
          for(uint8_t alg = 0; alg <= 4; ++alg) {
-            if(Botan::is_passhash9_alg_supported(alg) == false) {
+            if(!Botan::is_passhash9_alg_supported(alg)) {
                continue;
             }
 

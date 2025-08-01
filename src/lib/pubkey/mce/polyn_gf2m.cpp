@@ -667,10 +667,7 @@ void polyn_gf2m::swap(polyn_gf2m& other) noexcept {
 }
 
 bool polyn_gf2m::operator==(const polyn_gf2m& other) const {
-   if(m_deg != other.m_deg || m_coeff != other.m_coeff) {
-      return false;
-   }
-   return true;
+   return m_deg == other.m_deg && m_coeff == other.m_coeff;
 }
 
 }  // namespace Botan

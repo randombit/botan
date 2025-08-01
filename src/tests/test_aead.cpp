@@ -42,7 +42,7 @@ class AEAD_Tests final : public Text_Based_Test {
 
          auto get_garbage = [&] { return rng.random_vec(enc->update_granularity()); };
 
-         if(is_siv == false) {
+         if(!is_siv) {
             result.test_throws<Botan::Invalid_State>("Unkeyed object throws for encrypt", [&]() {
                auto garbage = get_garbage();
                enc->update(garbage);
@@ -66,7 +66,7 @@ class AEAD_Tests final : public Text_Based_Test {
          enc->set_key(key);
          result.test_eq("key is set", enc->has_keying_material(), true);
 
-         if(is_siv == false) {
+         if(!is_siv) {
             result.test_throws<Botan::Invalid_State>("Cannot process data until nonce is set (enc)", [&]() {
                auto garbage = get_garbage();
                enc->update(garbage);
@@ -213,7 +213,7 @@ class AEAD_Tests final : public Text_Based_Test {
          auto get_garbage = [&] { return rng.random_vec(dec->update_granularity()); };
          auto get_ultimate_garbage = [&] { return rng.random_vec(dec->minimum_final_size()); };
 
-         if(is_siv == false) {
+         if(!is_siv) {
             result.test_throws<Botan::Invalid_State>("Unkeyed object throws for decrypt", [&]() {
                auto garbage = get_garbage();
                dec->update(garbage);
@@ -237,7 +237,7 @@ class AEAD_Tests final : public Text_Based_Test {
          result.test_eq("key is set", dec->has_keying_material(), true);
          dec->set_associated_data(mutate_vec(ad, rng));
 
-         if(is_siv == false) {
+         if(!is_siv) {
             result.test_throws<Botan::Invalid_State>("Cannot process data until nonce is set (dec)", [&]() {
                auto garbage = get_garbage();
                dec->update(garbage);
