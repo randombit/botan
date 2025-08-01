@@ -76,7 +76,7 @@ ObjectFinder::ObjectFinder(Session& session, const std::vector<Attribute>& searc
 
 ObjectFinder::~ObjectFinder() noexcept {
    try {
-      if(m_search_terminated == false) {
+      if(!m_search_terminated) {
          module()->C_FindObjectsFinal(m_session.get().handle(), nullptr);
       }
    } catch(...) {

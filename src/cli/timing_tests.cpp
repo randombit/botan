@@ -468,7 +468,7 @@ class Timing_Test_Command final : public Command {
       static std::vector<std::string> read_testdata(const std::string& filename) {
          std::vector<std::string> lines;
          std::ifstream infile(filename);
-         if(infile.good() == false) {
+         if(!infile.good()) {
             throw CLI_Error("Error reading test data from '" + filename + "'");
          }
          std::string line;

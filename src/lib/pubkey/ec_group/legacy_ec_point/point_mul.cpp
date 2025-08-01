@@ -279,7 +279,7 @@ EC_Point EC_Point_Var_Point_Precompute::mul(const BigInt& k,
 }
 
 EC_Point_Multi_Point_Precompute::EC_Point_Multi_Point_Precompute(const EC_Point& x, const EC_Point& y) {
-   if(x.on_the_curve() == false || y.on_the_curve() == false) {
+   if(!x.on_the_curve() || !y.on_the_curve()) {
       m_M.push_back(x.zero());
       return;
    }

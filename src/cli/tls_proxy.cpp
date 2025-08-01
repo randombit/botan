@@ -133,7 +133,7 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
       }
 
       void stop() {
-         if(m_is_closed == false) {
+         if(!m_is_closed) {
             /*
             Don't need to talk to the server anymore
             Client socket is closed during write callback

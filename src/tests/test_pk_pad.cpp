@@ -35,7 +35,7 @@ class EME_PKCS1v15_Decoding_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> ciphertext = vars.get_req_bin("RawCiphertext");
          const std::vector<uint8_t> plaintext = vars.get_opt_bin("Plaintext");
 
-         if(is_valid == false) {
+         if(!is_valid) {
             result.test_eq("Plaintext value should be empty for invalid EME inputs", plaintext.size(), 0);
          }
 

@@ -19,7 +19,7 @@ XTS_Mode::XTS_Mode(std::unique_ptr<BlockCipher> cipher) :
       m_cipher_block_size(m_cipher->block_size()),
       m_cipher_parallelism(m_cipher->parallel_bytes()),
       m_tweak_blocks(m_cipher_parallelism / m_cipher_block_size) {
-   if(poly_double_supported_size(m_cipher_block_size) == false) {
+   if(!poly_double_supported_size(m_cipher_block_size)) {
       throw Invalid_Argument(fmt("Cannot use {} with XTS", m_cipher->name()));
    }
 

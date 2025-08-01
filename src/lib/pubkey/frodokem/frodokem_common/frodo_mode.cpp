@@ -76,6 +76,26 @@ OID FrodoKEMMode::object_identifier() const {
    return OID::from_string(to_string());
 }
 
+bool FrodoKEMMode::is_available() const {
+   if(is_aes()) {
+#if defined(BOTAN_HAS_FRODOKEM_AES)
+      return true;
+#else
+      return false;
+#endif
+   }
+
+   if(is_shake()) {
+#if defined(BOTAN_HAS_FRODOKEM_SHAKE)
+      return true;
+#else
+      return false;
+#endif
+   }
+
+   return false;
+}
+
 std::string FrodoKEMMode::to_string() const {
    switch(m_mode) {
       case FrodoKEM640_SHAKE:

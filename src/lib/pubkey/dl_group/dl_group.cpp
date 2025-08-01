@@ -102,7 +102,7 @@ class DL_Group_Data final {
       bool q_is_set() const { return m_q_bits > 0; }
 
       void assert_q_is_set(std::string_view function) const {
-         if(q_is_set() == false) {
+         if(!q_is_set()) {
             throw Invalid_State(fmt("DL_Group::{}: q is not set for this group", function));
          }
       }
@@ -377,7 +377,7 @@ bool DL_Group::verify_public_element(const BigInt& y) const {
       return false;
    }
 
-   if(q.is_zero() == false) {
+   if(!q.is_zero()) {
       if(data().power_b_p_vartime(y, q) != 1) {
          return false;
       }

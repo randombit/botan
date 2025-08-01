@@ -155,7 +155,7 @@ class PK_Decrypt final : public Command {
             return set_return_code(1);
          }
 
-         if(oaep_hash_id.parameters().empty() == false) {
+         if(!oaep_hash_id.parameters().empty()) {
             error_output() << "Unknown OAEP parameters used\n";
             return set_return_code(1);
          }

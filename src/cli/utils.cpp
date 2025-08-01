@@ -130,7 +130,7 @@ class Has_Command final : public Command {
             output() << "Command '" << cmd << "' is " << (exists ? "" : "not ") << "available\n";
          }
 
-         if(exists == false) {
+         if(!exists) {
             this->set_return_code(1);
          }
       }

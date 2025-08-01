@@ -70,7 +70,7 @@ PKCS10_Request PKCS10_Request::create(const Private_Key& key,
       .raw_bytes(key.subject_public_key())
       .start_explicit(0);
 
-   if(challenge.empty() == false) {
+   if(!challenge.empty()) {
       std::vector<uint8_t> value;
       DER_Encoder(value).encode(ASN1_String(challenge));
       tbs_req.encode(Attribute("PKCS9.ChallengePassword", value));
@@ -107,7 +107,7 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body) {
    cert_req_info.decode(data->m_subject_dn);
 
    BER_Object public_key = cert_req_info.get_next_object();
-   if(public_key.is_a(ASN1_Type::Sequence, ASN1_Class::Constructed) == false) {
+   if(!public_key.is_a(ASN1_Type::Sequence, ASN1_Class::Constructed)) {
       throw BER_Bad_Tag("PKCS10_Request: Unexpected tag for public key", public_key.tagging());
    }
 

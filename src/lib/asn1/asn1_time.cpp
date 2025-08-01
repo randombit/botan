@@ -63,7 +63,7 @@ void ASN1_Time::decode_from(BER_Decoder& source) {
 }
 
 std::string ASN1_Time::to_string() const {
-   if(time_is_set() == false) {
+   if(!time_is_set()) {
       throw Invalid_State("ASN1_Time::to_string: No time set");
    }
 
@@ -96,7 +96,7 @@ std::string ASN1_Time::to_string() const {
 }
 
 std::string ASN1_Time::readable_string() const {
-   if(time_is_set() == false) {
+   if(!time_is_set()) {
       throw Invalid_State("ASN1_Time::readable_string: No time set");
    }
 

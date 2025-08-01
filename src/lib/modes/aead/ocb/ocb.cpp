@@ -46,7 +46,7 @@ class L_computer final {
 
       void init(const secure_vector<uint8_t>& offset) { m_offset = offset; }
 
-      bool initialized() const { return m_offset.empty() == false; }
+      bool initialized() const { return !m_offset.empty(); }
 
       const secure_vector<uint8_t>& star() const { return m_L_star; }
 

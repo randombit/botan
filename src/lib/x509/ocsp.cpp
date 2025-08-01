@@ -29,7 +29,7 @@ namespace {
 void decode_optional_list(BER_Decoder& ber, ASN1_Type tag, std::vector<X509_Certificate>& output) {
    BER_Object obj = ber.get_next_object();
 
-   if(obj.is_a(tag, ASN1_Class::ContextSpecific | ASN1_Class::Constructed) == false) {
+   if(!obj.is_a(tag, ASN1_Class::ContextSpecific | ASN1_Class::Constructed)) {
       ber.push_back(obj);
       return;
    }

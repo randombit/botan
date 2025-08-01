@@ -205,7 +205,7 @@ class TLS_Client final : public Command {
          const uint16_t port = get_arg_u16("port");
          const std::string transport = get_arg("type");
          const std::string next_protos = get_arg("next-protocols");
-         const bool use_system_cert_store = flag_set("skip-system-cert-store") == false;
+         const bool use_system_cert_store = !flag_set("skip-system-cert-store");
          const std::string trusted_CAs = get_arg("trusted-cas");
          const auto tls_version = get_arg("tls-version");
 

@@ -118,7 +118,7 @@ std::vector<Test::Result> run_a_test(const std::string& test_name) {
 
    try {
 #if defined(BOTAN_HAS_CPUID) && defined(BOTAN_HAS_SIMD_4X32)
-      if(test_name == "simd_4x32" && Botan::CPUID::has(Botan::CPUID::Feature::SIMD_4X32) == false) {
+      if(test_name == "simd_4x32" && !Botan::CPUID::has(Botan::CPUID::Feature::SIMD_4X32)) {
          results.push_back(Test::Result::Note(test_name, "SIMD 4x32 not available on this platform"));
          return results;
       }

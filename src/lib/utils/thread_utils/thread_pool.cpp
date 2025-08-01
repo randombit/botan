@@ -89,7 +89,7 @@ void Thread_Pool::shutdown() {
    {
       std::unique_lock<std::mutex> lock(m_mutex);
 
-      if(m_shutdown == true) {
+      if(m_shutdown) {
          return;
       }
 

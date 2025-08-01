@@ -77,7 +77,7 @@ T& safe_get(botan_struct<T, M>* p) {
    if(!p) {
       throw FFI_Error("Null pointer argument", BOTAN_FFI_ERROR_NULL_POINTER);
    }
-   if(p->magic_ok() == false) {
+   if(!p->magic_ok()) {
       throw FFI_Error("Bad magic in ffi object", BOTAN_FFI_ERROR_INVALID_OBJECT);
    }
 
@@ -117,7 +117,7 @@ int botan_ffi_visit(botan_struct<T, M>* o, F func, const char* func_name) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
-   if(o->magic_ok() == false) {
+   if(!o->magic_ok()) {
       return BOTAN_FFI_ERROR_INVALID_OBJECT;
    }
 
@@ -162,7 +162,7 @@ int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name) {
          return BOTAN_FFI_SUCCESS;
       }
 
-      if(obj->magic_ok() == false) {
+      if(!obj->magic_ok()) {
          return BOTAN_FFI_ERROR_INVALID_OBJECT;
       }
 

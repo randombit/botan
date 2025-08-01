@@ -44,7 +44,7 @@ class XTS_Mode : public Cipher_Mode {
 
       const uint8_t* tweak() const { return m_tweak.data(); }
 
-      bool tweak_set() const { return m_tweak.empty() == false; }
+      bool tweak_set() const { return !m_tweak.empty(); }
 
       size_t tweak_blocks() const { return m_tweak_blocks; }
 

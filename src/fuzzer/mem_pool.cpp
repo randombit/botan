@@ -126,7 +126,7 @@ void fuzz(std::span<const uint8_t> in) {
             std::memset(p, static_cast<int>(idx), plen);
 
             auto insert = ptrs.insert(std::make_pair(p, plen));
-            if(insert.second == false) {
+            if(!insert.second) {
                FUZZER_WRITE_AND_CRASH("Pointer " << static_cast<void*>(p) << " already existed\n");
             }
 

@@ -177,7 +177,7 @@ void Channel_Impl_12::renegotiate(bool force_full_renegotiation) {
    }
 
    if(const auto* active = active_state()) {
-      if(force_full_renegotiation == false) {
+      if(!force_full_renegotiation) {
          force_full_renegotiation = !policy().allow_resumption_for_renegotiation();
       }
 

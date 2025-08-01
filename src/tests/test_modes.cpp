@@ -153,7 +153,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
 
          mode.set_key(mutate_vec(key, rng));
 
-         if(is_ctr == false) {
+         if(!is_ctr) {
             result.test_throws<Botan::Invalid_State>("Cannot process data until nonce is set",
                                                      [&]() { mode.update(garbage); });
          }
@@ -161,7 +161,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
          mode.start(mutate_vec(nonce, rng));
          mode.reset();
 
-         if(is_ctr == false) {
+         if(!is_ctr) {
             result.test_throws<Botan::Invalid_State>("Cannot process data until nonce is set (after start/reset)",
                                                      [&]() { mode.update(garbage); });
          }
