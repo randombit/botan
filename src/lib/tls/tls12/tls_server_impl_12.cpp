@@ -218,7 +218,7 @@ std::map<std::string, std::vector<X509_Certificate>> get_server_certs(
 
    std::map<std::string, std::vector<X509_Certificate>> cert_chains;
 
-   for(size_t i = 0; cert_types[i]; ++i) {
+   for(size_t i = 0; cert_types[i] != nullptr; ++i) {
       const std::vector<X509_Certificate> certs = creds.cert_chain_single_type(
          cert_types[i], to_algorithm_identifiers(cert_sig_schemes), "tls-server", std::string(hostname));
 
@@ -265,7 +265,7 @@ std::vector<X509_Certificate> Server_Impl_12::get_peer_cert_chain(const Handshak
       return state.resume_peer_certs();
    }
 
-   if(state.client_certs()) {
+   if(state.client_certs() != nullptr) {
       return state.client_certs()->cert_chain();
    }
    return std::vector<X509_Certificate>();
@@ -344,7 +344,7 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
                                               bool epoch0_restart) {
    BOTAN_ASSERT_IMPLICATION(epoch0_restart, active_state != nullptr, "Can't restart with a dead connection");
 
-   const bool initial_handshake = epoch0_restart || !active_state;
+   const bool initial_handshake = epoch0_restart || active_state == nullptr;
 
    if(initial_handshake == false && policy().allow_client_initiated_renegotiation() == false) {
       if(policy().abort_connection_on_undesired_renegotiation()) {
@@ -394,7 +394,7 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
    const Protocol_Version negotiated_version =
       select_version(policy(),
                      client_offer,
-                     active_state ? active_state->version() : Protocol_Version(),
+                     active_state != nullptr ? active_state->version() : Protocol_Version(),
                      pending_state.client_hello()->supported_versions());
 
    pending_state.set_version(negotiated_version);
@@ -561,7 +561,7 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
       throw TLS_Exception(Alert::DecryptError, "Finished message didn't verify");
    }
 
-   if(!pending_state.server_finished()) {
+   if(pending_state.server_finished() == nullptr) {
       // already sent finished if resuming, so this is a new session
 
       pending_state.hash().update(pending_state.handshake_io().format(contents, type));
@@ -599,7 +599,7 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
          }
       }
 
-      if(!pending_state.new_session_ticket() && pending_state.server_hello()->supports_session_ticket()) {
+      if(pending_state.new_session_ticket() == nullptr && pending_state.server_hello()->supports_session_ticket()) {
          pending_state.new_session_ticket(
             std::make_unique<New_Session_Ticket_12>(pending_state.handshake_io(), pending_state.hash()));
       }

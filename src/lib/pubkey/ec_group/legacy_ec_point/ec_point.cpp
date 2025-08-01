@@ -502,7 +502,7 @@ EC_Point EC_Point::mul(const BigInt& scalar) const {
    EC_Point R[2] = {this->zero(), *this};
 
    for(size_t i = scalar_bits; i > 0; i--) {
-      const size_t b = scalar.get_bit(i - 1);
+      const size_t b = scalar.get_bit(i - 1) ? 1 : 0;
       R[b ^ 1].add(R[b], ws);
       R[b].mult2(ws);
    }

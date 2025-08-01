@@ -224,7 +224,7 @@ BigInt gcd(const BigInt& a, const BigInt& b) {
       auto both_odd = CT::Mask<word>::expand_bool(u.is_odd()) & CT::Mask<word>::expand_bool(v.is_odd());
 
       // Subtract the smaller from the larger if both are odd
-      auto u_gt_v = CT::Mask<word>::expand(bigint_cmp(u._data(), u.size(), v._data(), v.size()) > 0);
+      auto u_gt_v = CT::Mask<word>::expand_bool(bigint_cmp(u._data(), u.size(), v._data(), v.size()) > 0);
       bigint_sub_abs(tmp.mutable_data(), u._data(), v._data(), sz, ws.data());
       u.ct_cond_assign((u_gt_v & both_odd).as_bool(), tmp);
       v.ct_cond_assign((~u_gt_v & both_odd).as_bool(), tmp);

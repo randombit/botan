@@ -354,9 +354,9 @@ std::vector<uint8_t> Key_Usage::encode_inner() const {
    der.push_back(static_cast<uint8_t>(ASN1_Type::BitString));
    der.push_back(2 + ((unused_bits < 8) ? 1 : 0));
    der.push_back(unused_bits % 8);
-   der.push_back((constraint_bits >> 8) & 0xFF);
-   if(constraint_bits & 0xFF) {
-      der.push_back(constraint_bits & 0xFF);
+   der.push_back(static_cast<uint8_t>((constraint_bits >> 8) & 0xFF));
+   if((constraint_bits & 0xFF) != 0) {
+      der.push_back(static_cast<uint8_t>(constraint_bits & 0xFF));
    }
 
    return der;

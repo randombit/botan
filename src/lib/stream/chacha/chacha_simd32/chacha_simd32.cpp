@@ -17,6 +17,8 @@ void ChaCha::chacha_simd32_x4(uint8_t output[64 * 4], uint32_t state[16], size_t
    const SIMD_4x32 CTR0 = SIMD_4x32(0, 1, 2, 3);
 
    const uint32_t C = 0xFFFFFFFF - state[12];
+
+   // NOLINTNEXTLINE(*-implicit-bool-conversion)
    const SIMD_4x32 CTR1 = SIMD_4x32(0, C < 1, C < 2, C < 3);
 
    SIMD_4x32 R00 = SIMD_4x32::splat(state[0]);

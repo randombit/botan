@@ -17,8 +17,12 @@ void BOTAN_FN_ISA_AVX512 ChaCha::chacha_avx512_x16(uint8_t output[64 * 16], uint
    const SIMD_16x32 CTR0 = SIMD_16x32(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
 
    const uint32_t C = 0xFFFFFFFF - state[12];
+
+   // clang-format off
    const SIMD_16x32 CTR1 = SIMD_16x32(
+      // NOLINTNEXTLINE(*-implicit-bool-conversion)
       0, C < 1, C < 2, C < 3, C < 4, C < 5, C < 6, C < 7, C < 8, C < 9, C < 10, C < 11, C < 12, C < 13, C < 14, C < 15);
+   // clang-format on
 
    SIMD_16x32 R00 = SIMD_16x32::splat(state[0]);
    SIMD_16x32 R01 = SIMD_16x32::splat(state[1]);

@@ -79,10 +79,12 @@ std::vector<uint8_t> decode_serial_number(const BER_Object& obj) {
 
    if(!obj.data().empty() && obj.data()[0] == 0x00) {
       return std::vector<uint8_t>(obj.data().begin() + 1, obj.data().end());
-   } else if(!obj.data().empty() && obj.data()[0] & 0x80) {
+   } else if(!obj.data().empty() && ((obj.data()[0] & 0x80) == 0x80)) {
       std::vector<uint8_t> vec(obj.data().begin(), obj.data().end());
       for(size_t i = vec.size(); i > 0; --i) {
-         if(vec[i - 1]--) {
+         bool gt0 = vec[i - 1] > 0;
+         vec[i - 1] -= 1;
+         if(gt0) {
             break;
          }
       }

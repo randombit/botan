@@ -55,7 +55,7 @@ Encrypted_Extensions::Encrypted_Extensions(const Client_Hello_13& client_hello, 
    //    then the client_certificate_type payload in the server hello MUST be
    //    omitted.
    if(auto* ch_client_cert_types = exts.get<Client_Certificate_Type>();
-      ch_client_cert_types && policy.request_client_certificate_authentication()) {
+      ch_client_cert_types != nullptr && policy.request_client_certificate_authentication()) {
       m_extensions.add(new Client_Certificate_Type(*ch_client_cert_types, policy));
    }
 

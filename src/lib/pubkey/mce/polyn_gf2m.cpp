@@ -20,6 +20,8 @@
 
 namespace Botan {
 
+// NOLINTBEGIN(*-implicit-bool-conversion)
+
 namespace {
 
 gf2m generate_gf2m_mask(gf2m a) {
@@ -669,5 +671,7 @@ void polyn_gf2m::swap(polyn_gf2m& other) noexcept {
 bool polyn_gf2m::operator==(const polyn_gf2m& other) const {
    return m_deg == other.m_deg && m_coeff == other.m_coeff;
 }
+
+// NOLINTEND(*-implicit-bool-conversion)
 
 }  // namespace Botan

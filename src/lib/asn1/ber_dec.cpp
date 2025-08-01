@@ -469,7 +469,9 @@ BER_Decoder& BER_Decoder::decode(BigInt& out, ASN1_Type type_tag, ASN1_Class cla
       if(negative) {
          secure_vector<uint8_t> vec(obj.bits(), obj.bits() + obj.length());
          for(size_t i = obj.length(); i > 0; --i) {
-            if(vec[i - 1]--) {
+            const bool gt0 = (vec[i - 1] > 0);
+            vec[i - 1] -= 1;
+            if(gt0) {
                break;
             }
          }

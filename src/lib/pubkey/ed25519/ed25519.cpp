@@ -75,7 +75,7 @@ bool ed25519_verify(const uint8_t* m,
                     const uint8_t* pk,
                     const uint8_t domain_sep[],
                     size_t domain_sep_len) {
-   if(sig[63] & 224) {
+   if((sig[63] & 0xE0) != 0x00) {
       return false;
    }
 

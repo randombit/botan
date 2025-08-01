@@ -1398,7 +1398,7 @@ class FFI_AEAD_Test final : public FFI_Test {
                continue;
             }
 
-            if(!botan_cipher_is_authenticated(cipher_encrypt)) {
+            if(botan_cipher_is_authenticated(cipher_encrypt) == 0) {
                result.test_failure("Cipher " + aead + " claims is not authenticated");
                botan_cipher_destroy(cipher_encrypt);
                continue;
@@ -1436,7 +1436,7 @@ class FFI_AEAD_Test final : public FFI_Test {
             TEST_FFI_OK(botan_rng_get, (rng, dummy_buffer.data(), dummy_buffer.size()));
             std::vector<uint8_t> dummy_buffer_reference = dummy_buffer;
 
-            const bool requires_entire_message = botan_cipher_requires_entire_message(cipher_encrypt);
+            const bool requires_entire_message = botan_cipher_requires_entire_message(cipher_encrypt) == 1;
             result.test_eq(
                "requires entire message", requires_entire_message, (aead == "AES-256/SIV" || aead == "AES-128/CCM"));
 
@@ -1999,7 +1999,7 @@ class FFI_ErrorHandling_Test final : public FFI_Test {
             const char* err = botan_error_description(i);
             result.confirm("Never a null pointer", err != nullptr);
 
-            if(err) {
+            if(err != nullptr) {
                std::string s(err);
 
                if(s != "Unknown error") {
@@ -2446,7 +2446,7 @@ class FFI_XMSS_Test final : public FFI_Test {
 
             int stateful;
             TEST_FFI_OK(botan_privkey_stateful_operation, (priv, &stateful));
-            result.confirm("key is stateful", stateful, true);
+            result.confirm("key is stateful", stateful == 1, true);
 
             uint64_t remaining;
             TEST_FFI_OK(botan_privkey_remaining_operations, (priv, &remaining));
@@ -2469,7 +2469,7 @@ class FFI_RSA_Test final : public FFI_Test {
 
             int stateful;
             TEST_FFI_OK(botan_privkey_stateful_operation, (priv, &stateful));
-            result.confirm("key is not stateful", stateful, false);
+            result.confirm("key is not stateful", stateful == 1, false);
 
             uint64_t remaining;
             TEST_FFI_FAIL("key is not stateful", botan_privkey_remaining_operations, (priv, &remaining));
@@ -3428,7 +3428,7 @@ class ViewBytesSink final {
 
    private:
       static int write_fn(void* ctx, const uint8_t buf[], size_t len) {
-         if(!ctx || !buf) {
+         if(ctx == nullptr || buf == nullptr) {
             return BOTAN_FFI_ERROR_NULL_POINTER;
          }
 
@@ -3455,7 +3455,7 @@ class ViewStringSink final {
 
    private:
       static int write_fn(void* ctx, const char* str, size_t len) {
-         if(!ctx || !str) {
+         if(ctx == nullptr || str == nullptr) {
             return BOTAN_FFI_ERROR_NULL_POINTER;
          }
 
@@ -4331,7 +4331,7 @@ class FFI_EC_Group_Test final : public FFI_Test {
                         appl_spec_groups == 1,
                         Botan::EC_Group::supports_application_specific_group());
          result.confirm(
-            "named group support matches build", named_group, Botan::EC_Group::supports_named_group("secp256r1"));
+            "named group support matches build", named_group == 1, Botan::EC_Group::supports_named_group("secp256r1"));
 
          if(named_group == 1) {
             botan_ec_group_t group_from_name;

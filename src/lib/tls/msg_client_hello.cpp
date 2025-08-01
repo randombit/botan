@@ -918,7 +918,7 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
    cb.tls_modify_extensions(m_data->extensions(), Connection_Side::Client, type());
 
    auto* psk = m_data->extensions().get<PSK>();
-   if(psk) {
+   if(psk != nullptr) {
       // Cipher suite should always be a known suite as this is checked upstream
       const auto cipher = Ciphersuite::by_id(hrr.ciphersuite());
       BOTAN_ASSERT_NOMSG(cipher.has_value());
@@ -1034,7 +1034,7 @@ void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch) {
 
 void Client_Hello_13::calculate_psk_binders(Transcript_Hash_State ths) {
    auto* psk = m_data->extensions().get<PSK>();
-   if(!psk || psk->empty()) {
+   if(psk == nullptr || psk->empty()) {
       return;
    }
 

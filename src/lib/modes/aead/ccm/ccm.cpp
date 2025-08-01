@@ -132,7 +132,9 @@ void CCM_Mode::encode_length(uint64_t len, uint8_t out[]) {
 
 void CCM_Mode::inc(secure_vector<uint8_t>& C) {
    for(size_t i = 0; i != C.size(); ++i) {
-      if(++C[C.size() - i - 1]) {
+      uint8_t& b = C[C.size() - i - 1];
+      b += 1;
+      if(b > 0) {
          break;
       }
    }

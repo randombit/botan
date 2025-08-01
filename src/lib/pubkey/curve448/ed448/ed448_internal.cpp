@@ -205,8 +205,8 @@ Ed448Point Ed448Point::scalar_mul(const Scalar448& s) const {
 
 bool Ed448Point::operator==(const Ed448Point& other) const {
    // Note that the operator== of of Gf448Elem is constant time
-   const auto mask_x = CT::Mask<uint8_t>::expand(x() == other.x());
-   const auto mask_y = CT::Mask<uint8_t>::expand(y() == other.y());
+   const auto mask_x = CT::Mask<uint8_t>::expand_bool(x() == other.x());
+   const auto mask_y = CT::Mask<uint8_t>::expand_bool(y() == other.y());
 
    return (mask_x & mask_y).as_bool();
 }

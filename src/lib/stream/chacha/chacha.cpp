@@ -223,7 +223,9 @@ void ChaCha::chacha(uint8_t output[], size_t output_blocks, uint32_t state[16], 
       store_le(x15, output + 64 * i + 4 * 15);
 
       state[12]++;
-      state[13] += (state[12] == 0);
+      if(state[12] == 0) {
+         state[13] += 1;
+      }
    }
 }
 

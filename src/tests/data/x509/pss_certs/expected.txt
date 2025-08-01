@@ -79,21 +79,21 @@
 79:Verified
 80:Verified
 81:Verified
-82:1
-83:1
-84:1
-85:1
-86:1
-87:1
-88:1
-89:1
-90:1
-91:1
-92:1
-93:1
-94:1
-95:1
-96:1
+82:Verified
+83:Verified
+84:Verified
+85:Verified
+86:Verified
+87:Verified
+88:Verified
+89:Verified
+90:Verified
+91:Verified
+92:Verified
+93:Verified
+94:Verified
+95:Verified
+96:Verified
 97:Certificate signature has invalid parameters
 98:Signature error
 99:Signature error
@@ -104,15 +104,15 @@
 104:Verified
 105:Verified
 106:Verified
-107:1
+107:Verified
 108:Verified
 109:CRL bad signature
 110:Verified
 111:Verified
 112:Verified
 113:Verified
-114:1
-115:1
-116:1
-117:1
-118:1
+114:Verified
+115:Verified
+116:Verified
+117:Verified
+118:Verified
