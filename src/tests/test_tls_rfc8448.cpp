@@ -175,8 +175,8 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks {
       }
 
       void tls_session_established(const Botan::TLS::Session_Summary& summary) override {
-         if(summary.psk_used()) {
-            negotiated_psk_identity = summary.external_psk_identity().value();
+         if(const auto& psk_id = summary.external_psk_identity()) {
+            negotiated_psk_identity = *psk_id;
          }
          count_callback_invocation("tls_session_established");
       }

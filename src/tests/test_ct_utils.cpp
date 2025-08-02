@@ -168,8 +168,10 @@ class CT_Option_Tests final : public Test {
          result.test_eq("Set does have value", set.has_value().as_bool(), true);
          result.confirm("Set Option has the expected value", set.value() == value);
          result.confirm("Set Option returns original with value_or", set.value_or(value2) == value);
+
+         auto as_opt = set.as_optional_vartime();
          result.confirm("Set Option returns something for as_optional_vartime",
-                        set.as_optional_vartime().value() == value);
+                        as_opt.has_value() && as_opt.value() == value);
 
          result.confirm("Set Option transform returns set", set.transform(next).value() == next(value));
       }

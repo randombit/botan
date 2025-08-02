@@ -83,9 +83,9 @@ EC_AffinePoint EC_AffinePoint::identity(const EC_Group& group) {
 
 EC_AffinePoint EC_AffinePoint::generator(const EC_Group& group) {
    // TODO it would be nice to improve this (pcurves supports returning generator directly)
-   try {
-      return EC_AffinePoint::from_bigint_xy(group, group.get_g_x(), group.get_g_y()).value();
-   } catch(...) {
+   if(auto g = EC_AffinePoint::from_bigint_xy(group, group.get_g_x(), group.get_g_y())) {
+      return *g;
+   } else {
       throw Internal_Error("EC_AffinePoint::generator curve rejected generator");
    }
 }
