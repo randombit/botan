@@ -39,7 +39,7 @@ enabled_checks = [
 disabled_needs_work = [
     '*-named-parameter',
     'cppcoreguidelines-use-default-member-init',
-    'bugprone-unchecked-optional-access', # clang-tidy seems buggy (many false positives)
+    'bugprone-unchecked-optional-access',
     'bugprone-empty-catch',
     'cppcoreguidelines-avoid-const-or-ref-data-members',
     'misc-const-correctness', # pretty noisy

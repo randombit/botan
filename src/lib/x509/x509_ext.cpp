@@ -1486,6 +1486,17 @@ void ASBlocks::decode_inner(const std::vector<uint8_t>& in) {
    BER_Decoder(in).decode(m_as_identifiers).verify_end();
 }
 
+ASBlocks::ASIdentifierChoice ASBlocks::add_new(const std::optional<ASIdentifierChoice>& old, asnum_t min, asnum_t max) {
+   std::vector<ASIdOrRange> range;
+   if(!old.has_value() || !old.value().ranges().has_value()) {
+      range = {ASIdOrRange(min, max)};
+   } else {
+      range = old.value().ranges().value();
+      range.push_back(ASIdOrRange(min, max));
+   }
+   return ASIdentifierChoice(range);
+}
+
 void ASBlocks::ASIdentifiers::encode_into(Botan::DER_Encoder& into) const {
    into.start_sequence();
 
