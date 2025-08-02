@@ -167,6 +167,8 @@ class BOTAN_PUBLIC_API(3, 0) Key_Constraints final {
 
       void operator|=(Key_Constraints::Bits other) { m_value |= other; }
 
+      void operator|=(Key_Constraints other) { m_value |= other.m_value; }
+
       // Return true if all bits in mask are set
       bool includes(Key_Constraints::Bits other) const { return (m_value & other) == other; }
 
