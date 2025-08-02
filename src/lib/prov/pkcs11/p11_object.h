@@ -279,7 +279,8 @@ class BOTAN_PUBLIC_API(2, 0) KeyProperties : public StorageObjectProperties {
       * Not implemented
       * TODO(Botan4) remove this
       */
-      inline void set_allowed_mechanisms(const std::vector<MechanismType>& /*mechanisms*/) {
+      inline void set_allowed_mechanisms(
+         const std::vector<MechanismType>& /*mechanisms*/) {  // NOLINT(*-convert-member-functions-to-static)
          throw Not_Implemented("KeyProperties::set_allowed_mechanisms");
       }
 
@@ -324,7 +325,8 @@ class BOTAN_PUBLIC_API(2, 0) PublicKeyProperties : public KeyProperties {
       * Not implemented
       * TODO(Botan4) remove this function
       */
-      inline void set_wrap_template(const AttributeContainer& /*unused*/) {
+      inline void set_wrap_template(
+         const AttributeContainer& /*unused*/) {  // NOLINT(*-convert-member-functions-to-static)
          throw Not_Implemented("PublicKeyProperties::set_wrap_template");
       }
 
@@ -374,7 +376,8 @@ class BOTAN_PUBLIC_API(2, 0) PrivateKeyProperties : public KeyProperties {
       * Not implemented
       * TODO(Botan4) remove this function
       */
-      inline void set_unwrap_template(const AttributeContainer& /*unused*/) {
+      inline void set_unwrap_template(
+         const AttributeContainer& /*unused*/) {  // NOLINT(*-convert-member-functions-to-static)
          throw Not_Implemented("PrivateKeyProperties::set_unwrap_template");
       }
 
@@ -438,7 +441,8 @@ class BOTAN_PUBLIC_API(2, 0) SecretKeyProperties final : public KeyProperties {
       * Not implemented
       * TOOD(Botan4) remove this function
       */
-      inline void set_wrap_template(const AttributeContainer& /*unused*/) {
+      inline void set_wrap_template(
+         const AttributeContainer& /*unused*/) {  // NOLINT(*-convert-member-functions-to-static)
          throw Not_Implemented("SecretKeyProperties::set_wrap_template");
       }
 
@@ -449,7 +453,8 @@ class BOTAN_PUBLIC_API(2, 0) SecretKeyProperties final : public KeyProperties {
       * Not Implemented
       * TOOD(Botan4) remove this function
       */
-      inline void set_unwrap_template(const AttributeContainer& /*unused*/) {
+      inline void set_unwrap_template(
+         const AttributeContainer& /*unused*/) {  // NOLINT(*-convert-member-functions-to-static)
          throw Not_Implemented("SecretKeyProperties::set_unwrap_template");
       }
 };

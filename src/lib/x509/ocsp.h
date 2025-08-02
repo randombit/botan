@@ -95,8 +95,11 @@ class BOTAN_PUBLIC_API(2, 0) Request final {
 
       /**
       * @return subject certificate
+      * TODO(Botan4) remove this function
       */
-      const X509_Certificate& subject() const { throw Not_Implemented("Method have been deprecated"); }
+      const X509_Certificate& subject() const {  // NOLINT(*-convert-member-functions-to-static)
+         throw Not_Implemented("Method have been deprecated");
+      }
 
       const std::vector<uint8_t>& issuer_key_hash() const { return m_certid.issuer_key_hash(); }
 

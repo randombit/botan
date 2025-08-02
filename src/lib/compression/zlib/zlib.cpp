@@ -31,7 +31,7 @@ class Zlib_Stream : public Zlib_Style_Stream<z_stream, Bytef, unsigned int> {
 
       uint32_t finish_flag() const override { return Z_FINISH; }
 
-      int compute_window_bits(int wbits, int wbits_offset) const {
+      static int compute_window_bits(int wbits, int wbits_offset) {
          if(wbits_offset == -1) {
             return -wbits;
          } else {

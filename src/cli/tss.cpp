@@ -73,7 +73,7 @@ class TSS_Split final : public Command {
       }
 
    private:
-      Botan::secure_vector<uint8_t> slurp_file_lvec(const std::string& input_file) {
+      static Botan::secure_vector<uint8_t> slurp_file_lvec(const std::string& input_file) {
          Botan::secure_vector<uint8_t> buf;
          auto insert_fn = [&](const uint8_t b[], size_t l) { buf.insert(buf.end(), b, b + l); };
          Command::read_file(input_file, insert_fn, 4096);

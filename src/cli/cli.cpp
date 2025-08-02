@@ -176,14 +176,16 @@ std::ostream& Command::error_output() {
    return std::cerr;
 }
 
-std::vector<uint8_t> Command::slurp_file(const std::string& input_file, size_t buf_size) const {
+//static
+std::vector<uint8_t> Command::slurp_file(const std::string& input_file, size_t buf_size) {
    std::vector<uint8_t> buf;
    auto insert_fn = [&](const uint8_t b[], size_t l) { buf.insert(buf.end(), b, b + l); };
    Command::read_file(input_file, insert_fn, buf_size);
    return buf;
 }
 
-std::string Command::slurp_file_as_str(const std::string& input_file, size_t buf_size) const {
+//static
+std::string Command::slurp_file_as_str(const std::string& input_file, size_t buf_size) {
    std::string str;
    auto insert_fn = [&](const uint8_t b[], size_t l) { str.append(reinterpret_cast<const char*>(b), l); };
    Command::read_file(input_file, insert_fn, buf_size);

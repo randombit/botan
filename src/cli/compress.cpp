@@ -19,7 +19,7 @@ class Compress final : public Command {
    public:
       Compress() : Command("compress --type=gzip --level=6 --buf-size=8192 file") {}
 
-      std::string output_filename(const std::string& input_fsname, const std::string& comp_type) {
+      static std::string output_filename(const std::string& input_fsname, const std::string& comp_type) {
          const std::map<std::string, std::string> suffixes = {
             {"zlib", "zlib"},
             {"gzip", "gz"},
@@ -89,7 +89,7 @@ class Decompress final : public Command {
    public:
       Decompress() : Command("decompress --buf-size=8192 file") {}
 
-      void parse_extension(const std::string& in_file, std::string& out_file, std::string& suffix) {
+      static void parse_extension(const std::string& in_file, std::string& out_file, std::string& suffix) {
          auto last_dot = in_file.find_last_of('.');
          if(last_dot == std::string::npos || last_dot == 0) {
             throw CLI_Error("No extension detected in filename '" + in_file + "'");
