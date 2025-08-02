@@ -171,7 +171,7 @@ void fuzz(std::span<const uint8_t> in) {
    auto creds = std::make_shared<Fuzzer_TLS_Server_Creds>();
    auto callbacks = std::make_shared<Fuzzer_TLS_Server_Callbacks>();
 
-   const bool is_datagram = in[0] & 1;
+   const bool is_datagram = (in[0] & 1) == 1;
 
    Botan::TLS::Server server(callbacks, session_manager, creds, policy, fuzzer_rng_as_shared(), is_datagram);
 

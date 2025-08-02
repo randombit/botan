@@ -200,7 +200,7 @@ std::optional<X509_Certificate> Response::find_signing_certificate(
    }
 
    // Last resort: check the additionally provides trusted OCSP responders
-   if(trusted_ocsp_responders) {
+   if(trusted_ocsp_responders != nullptr) {
       if(!m_key_hash.empty()) {
          auto signing_cert = trusted_ocsp_responders->find_cert_by_pubkey_sha1(m_key_hash);
          if(signing_cert) {

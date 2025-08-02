@@ -276,16 +276,16 @@ std::array<int8_t, 256> slide(const uint8_t* a) {
    }
 
    for(size_t i = 0; i < 256; ++i) {
-      if(r[i]) {
+      if(r[i] != 0) {
          for(size_t b = 1; b <= 6 && i + b < 256; ++b) {
-            if(r[i + b]) {
+            if(r[i + b] != 0) {
                if(r[i] + (r[i + b] << b) <= 15) {
                   r[i] += r[i + b] << b;
                   r[i + b] = 0;
                } else if(r[i] - (r[i + b] << b) >= -15) {
                   r[i] -= r[i + b] << b;
                   for(size_t k = i + b; k < 256; ++k) {
-                     if(!r[k]) {
+                     if(r[k] == 0) {
                         r[k] = 1;
                         break;
                      }

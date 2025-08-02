@@ -455,7 +455,7 @@ std::string Test::Result::result_string() const {
       report << " in " << format_time(m_ns_taken);
    }
 
-   if(tests_failed()) {
+   if(tests_failed() > 0) {
       report << " " << tests_failed() << " FAILED";
    } else {
       report << " all ok";

@@ -117,7 +117,7 @@ PK_Key_Agreement create_key_agreement(const PK_Key_Agreement_Key& private_key,
       throw Invalid_Argument("ECIES: cofactor, old cofactor and check mode are only supported for ECDH_PrivateKey");
    }
 
-   if(ecdh_key && (for_encryption || !ecies_params.cofactor_mode())) {
+   if(ecdh_key != nullptr && (for_encryption || !ecies_params.cofactor_mode())) {
       // ECDH_KA_Operation uses cofactor mode: use own key agreement method if cofactor should not be used.
       return PK_Key_Agreement(ECIES_PrivateKey(*ecdh_key), rng, "Raw");
    }
@@ -427,7 +427,7 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
    const secure_vector<uint8_t> calculated_mac = m_mac->final();
    valid_mask = CT::is_equal(mac_data.data(), calculated_mac.data(), mac_data.size()).value();
 
-   if(valid_mask) {
+   if(valid_mask == 0xFF) {
       // decrypt data
 
       m_cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));

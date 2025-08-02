@@ -861,7 +861,7 @@ DilithiumPolyVec make_hint(const DilithiumPolyVec& z, const DilithiumPolyVec& r,
 
    for(size_t i = 0; i < r.size(); ++i) {
       for(size_t j = 0; j < r[i].size(); ++j) {
-         hint[i][j] = make_hint(z[i][j], r[i][j]).as_bool();
+         hint[i][j] = static_cast<int>(make_hint(z[i][j], r[i][j]).as_bool());
       }
    }
 

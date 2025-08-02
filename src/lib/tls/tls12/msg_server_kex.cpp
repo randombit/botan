@@ -77,7 +77,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       // DL_Group>`, allowing it to define arbitrary groups.
       m_kex_key = state.callbacks().tls_generate_ephemeral_key(m_shared_group.value(), rng);
       auto* dh = dynamic_cast<DH_PrivateKey*>(m_kex_key.get());
-      if(!dh) {
+      if(dh == nullptr) {
          throw TLS_Exception(Alert::InternalError, "Application did not provide a Diffie-Hellman key");
       }
 
@@ -108,7 +108,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       } else {
          m_kex_key = state.callbacks().tls_generate_ephemeral_key(m_shared_group.value(), rng);
          auto* ecdh = dynamic_cast<ECDH_PrivateKey*>(m_kex_key.get());
-         if(!ecdh) {
+         if(ecdh == nullptr) {
             throw TLS_Exception(Alert::InternalError, "Application did not provide a EC-Diffie-Hellman key");
          }
 

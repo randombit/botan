@@ -395,7 +395,7 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
    uint16_t epoch = 0;
 
    uint64_t sequence = 0;
-   if(sequence_numbers) {
+   if(sequence_numbers != nullptr) {
       sequence = sequence_numbers->next_read_sequence();
       epoch = sequence_numbers->current_read_epoch();
    } else {
@@ -417,7 +417,7 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
 
    decrypt_record(recbuf, &readbuf[TLS_HEADER_SIZE], record_size, sequence, version, type, *cs);
 
-   if(sequence_numbers) {
+   if(sequence_numbers != nullptr) {
       sequence_numbers->read_accept(sequence);
    }
 
@@ -435,7 +435,7 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
                                bool allow_epoch0_restart) {
    if(readbuf.size() < DTLS_HEADER_SIZE) {
       // header incomplete
-      if(fill_buffer_to(readbuf, input, input_len, consumed, DTLS_HEADER_SIZE)) {
+      if(fill_buffer_to(readbuf, input, input_len, consumed, DTLS_HEADER_SIZE) != 0) {
          readbuf.clear();
          return Record_Header(0);
       }
@@ -458,7 +458,7 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
       return Record_Header(0);
    }
 
-   if(fill_buffer_to(readbuf, input, input_len, consumed, DTLS_HEADER_SIZE + record_size)) {
+   if(fill_buffer_to(readbuf, input, input_len, consumed, DTLS_HEADER_SIZE + record_size) != 0) {
       // Truncated packet?
       readbuf.clear();
       return Record_Header(0);
@@ -471,7 +471,7 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
    const uint64_t sequence = load_be<uint64_t>(&readbuf[3], 0);
    const uint16_t epoch = (sequence >> 48);
 
-   const bool already_seen = sequence_numbers && sequence_numbers->already_seen(sequence);
+   const bool already_seen = sequence_numbers != nullptr && sequence_numbers->already_seen(sequence);
 
    if(already_seen && !(epoch == 0 && allow_epoch0_restart)) {
       readbuf.clear();
@@ -482,7 +482,7 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
       // Unencrypted initial handshake
       recbuf.assign(readbuf.begin() + DTLS_HEADER_SIZE, readbuf.begin() + DTLS_HEADER_SIZE + record_size);
       readbuf.clear();
-      if(sequence_numbers) {
+      if(sequence_numbers != nullptr) {
          sequence_numbers->read_accept(sequence);
       }
       return Record_Header(sequence, version, type);
@@ -500,7 +500,7 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
       return Record_Header(0);
    }
 
-   if(sequence_numbers) {
+   if(sequence_numbers != nullptr) {
       sequence_numbers->read_accept(sequence);
    }
 

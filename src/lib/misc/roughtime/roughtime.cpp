@@ -193,7 +193,7 @@ Response Response::from_bits(const std::vector<uint8_t>& response, const Nonce& 
    const size_t size = path.size();
    const size_t levels = size / 64;
 
-   if(size % 64) {
+   if(size % 64 != 0) {
       throw Roughtime_Error("Merkle tree path size must be multiple of 64 bytes");
    }
    if(indx >= (1U << levels)) {
@@ -204,7 +204,7 @@ Response Response::from_bits(const std::vector<uint8_t>& response, const Nonce& 
    auto hash = hashLeaf(nonce.get_nonce());
    auto index = indx;
    for(std::size_t level = 0; level < levels; ++level) {
-      hashNode(hash, slicer.take<64>(), index & 1);
+      hashNode(hash, slicer.take<64>(), index % 2 == 1);
       index >>= 1;
    }
 
@@ -291,9 +291,9 @@ Chain::Chain(std::string_view str) {
 
 std::vector<Response> Chain::responses() const {
    std::vector<Response> responses;
-   for(unsigned i = 0; i < m_links.size(); ++i) {
+   for(size_t i = 0; i < m_links.size(); ++i) {
       const auto& l = m_links[i];
-      const auto nonce = i ? nonce_from_blind(m_links[i - 1].response(), l.nonce_or_blind()) : l.nonce_or_blind();
+      const auto nonce = i > 0 ? nonce_from_blind(m_links[i - 1].response(), l.nonce_or_blind()) : l.nonce_or_blind();
       const auto response = Response::from_bits(l.response(), nonce);
       if(!response.validate(l.public_key())) {
          throw Roughtime_Error("Invalid signature or public key");
@@ -365,7 +365,7 @@ std::vector<uint8_t> online_request(std::string_view uri, const Nonce& nonce, st
                                       //add one additional byte to be able to differentiate if datagram got truncated
    const auto n = socket->read(buffer.data(), buffer.size());
 
-   if(!n || std::chrono::system_clock::now() - start_time > timeout) {
+   if(n == 0 || std::chrono::system_clock::now() - start_time > timeout) {
       throw System_Error("Timeout waiting for response");
    }
 

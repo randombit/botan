@@ -11,6 +11,7 @@
 #include <botan/internal/gf2m_small_m.h>
 
 #include <botan/exceptn.h>
+#include <botan/internal/ct_utils.h>
 #include <string>
 
 namespace Botan {
@@ -113,8 +114,8 @@ GF2m_Field::GF2m_Field(size_t extdeg) :
 gf2m GF2m_Field::gf_div(gf2m x, gf2m y) const {
    const int32_t sub_res = static_cast<int32_t>(gf_log(x) - static_cast<int32_t>(gf_log(y)));
    const gf2m modq_res = _gf_modq_1(sub_res);
-   const int32_t div_res = static_cast<int32_t>(x) ? static_cast<int32_t>(gf_exp(modq_res)) : 0;
-   return static_cast<gf2m>(div_res);
+   const gf2m div = gf_exp(modq_res);
+   return (~CT::Mask<gf2m>::is_zero(x)).if_set_return(div);
 }
 
 }  // namespace Botan

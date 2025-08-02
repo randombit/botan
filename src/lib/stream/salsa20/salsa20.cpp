@@ -135,7 +135,9 @@ void Salsa20::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) {
       salsa_core(m_buffer.data(), m_state.data(), 20);
 
       ++m_state[8];
-      m_state[9] += (m_state[8] == 0);
+      if(m_state[8] == 0) {
+         m_state[9] += 1;
+      }
 
       length -= available;
       in += available;
@@ -255,7 +257,9 @@ void Salsa20::set_iv_bytes(const uint8_t iv[], size_t length) {
 
    salsa_core(m_buffer.data(), m_state.data(), 20);
    ++m_state[8];
-   m_state[9] += (m_state[8] == 0);
+   if(m_state[8] == 0) {
+      m_state[9] += 1;
+   }
 
    m_position = 0;
 }
@@ -304,7 +308,9 @@ void Salsa20::seek(uint64_t offset) {
    salsa_core(m_buffer.data(), m_state.data(), 20);
 
    ++m_state[8];
-   m_state[9] += (m_state[8] == 0);
+   if(m_state[8] == 0) {
+      m_state[9] += 1;
+   }
 
    m_position = offset % 64;
 }

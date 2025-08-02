@@ -19,6 +19,7 @@ void BOTAN_FN_ISA_AVX2 ChaCha::chacha_avx2_x8(uint8_t output[64 * 8], uint32_t s
    const SIMD_8x32 CTR0 = SIMD_8x32(0, 1, 2, 3, 4, 5, 6, 7);
 
    const uint32_t C = 0xFFFFFFFF - state[12];
+   // NOLINTNEXTLINE(*-implicit-bool-conversion)
    const SIMD_8x32 CTR1 = SIMD_8x32(0, C < 1, C < 2, C < 3, C < 4, C < 5, C < 6, C < 7);
 
    SIMD_8x32 R00 = SIMD_8x32::splat(state[0]);

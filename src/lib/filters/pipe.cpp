@@ -194,11 +194,11 @@ void Pipe::find_endpoints(Filter* f) {
 * Remove the SecureQueues attached to the Filter
 */
 void Pipe::clear_endpoints(Filter* f) {
-   if(!f) {
+   if(f == nullptr) {
       return;
    }
    for(size_t j = 0; j != f->total_ports(); ++j) {
-      if(f->m_next[j] && dynamic_cast<SecureQueue*>(f->m_next[j])) {
+      if(f->m_next[j] != nullptr && dynamic_cast<SecureQueue*>(f->m_next[j]) != nullptr) {
          f->m_next[j] = nullptr;
       }
       clear_endpoints(f->m_next[j]);
@@ -233,10 +233,10 @@ void Pipe::prepend_filter(Filter* filter) {
 * Append a Filter to the Pipe
 */
 void Pipe::do_append(Filter* filter) {
-   if(!filter) {
+   if(filter == nullptr) {
       return;
    }
-   if(dynamic_cast<SecureQueue*>(filter)) {
+   if(dynamic_cast<SecureQueue*>(filter) != nullptr) {
       throw Invalid_Argument("Pipe::append: SecureQueue cannot be used");
    }
    if(filter->m_owned) {
@@ -249,7 +249,7 @@ void Pipe::do_append(Filter* filter) {
 
    filter->m_owned = true;
 
-   if(!m_pipe) {
+   if(m_pipe == nullptr) {
       m_pipe = filter;
    } else {
       m_pipe->attach(filter);
@@ -263,10 +263,10 @@ void Pipe::do_prepend(Filter* filter) {
    if(m_inside_msg) {
       throw Invalid_State("Cannot prepend to a Pipe while it is processing");
    }
-   if(!filter) {
+   if(filter == nullptr) {
       return;
    }
-   if(dynamic_cast<SecureQueue*>(filter)) {
+   if(dynamic_cast<SecureQueue*>(filter) != nullptr) {
       throw Invalid_Argument("Pipe::prepend: SecureQueue cannot be used");
    }
    if(filter->m_owned) {
@@ -275,7 +275,7 @@ void Pipe::do_prepend(Filter* filter) {
 
    filter->m_owned = true;
 
-   if(m_pipe) {
+   if(m_pipe != nullptr) {
       filter->attach(m_pipe);
    }
    m_pipe = filter;
@@ -289,7 +289,7 @@ void Pipe::pop() {
       throw Invalid_State("Cannot pop off a Pipe while it is processing");
    }
 
-   if(!m_pipe) {
+   if(m_pipe == nullptr) {
       return;
    }
 

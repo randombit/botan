@@ -20,39 +20,41 @@ std::string Key_Constraints::to_string() const {
 
    std::vector<std::string> str;
 
-   if(this->m_value & Key_Constraints::DigitalSignature) {
+   auto usage_set = [value = m_value](const Key_Constraints::Bits usage) { return ((value & usage) == usage); };
+
+   if(usage_set(Key_Constraints::DigitalSignature)) {
       str.push_back("digital_signature");
    }
 
-   if(this->m_value & Key_Constraints::NonRepudiation) {
+   if(usage_set(Key_Constraints::NonRepudiation)) {
       str.push_back("non_repudiation");
    }
 
-   if(this->m_value & Key_Constraints::KeyEncipherment) {
+   if(usage_set(Key_Constraints::KeyEncipherment)) {
       str.push_back("key_encipherment");
    }
 
-   if(this->m_value & Key_Constraints::DataEncipherment) {
+   if(usage_set(Key_Constraints::DataEncipherment)) {
       str.push_back("data_encipherment");
    }
 
-   if(this->m_value & Key_Constraints::KeyAgreement) {
+   if(usage_set(Key_Constraints::KeyAgreement)) {
       str.push_back("key_agreement");
    }
 
-   if(this->m_value & Key_Constraints::KeyCertSign) {
+   if(usage_set(Key_Constraints::KeyCertSign)) {
       str.push_back("key_cert_sign");
    }
 
-   if(this->m_value & Key_Constraints::CrlSign) {
+   if(usage_set(Key_Constraints::CrlSign)) {
       str.push_back("crl_sign");
    }
 
-   if(this->m_value & Key_Constraints::EncipherOnly) {
+   if(usage_set(Key_Constraints::EncipherOnly)) {
       str.push_back("encipher_only");
    }
 
-   if(this->m_value & Key_Constraints::DecipherOnly) {
+   if(usage_set(Key_Constraints::DecipherOnly)) {
       str.push_back("decipher_only");
    }
 

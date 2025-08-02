@@ -280,7 +280,7 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
    auto input_size = data.size();
 
    try {
-      while(input_size) {
+      while(input_size > 0) {
          size_t consumed = 0;
 
          auto get_epoch = [this](uint16_t epoch) { return read_cipher_state_epoch(epoch); };
@@ -501,7 +501,7 @@ void Channel_Impl_12::send_record_array(uint16_t epoch, Record_Type type, const 
 
    auto cipher_state = write_cipher_state_epoch(epoch);
 
-   while(length) {
+   while(length > 0) {
       const size_t sending = std::min<size_t>(length, MAX_PLAINTEXT_SIZE);
       write_record(cipher_state.get(), epoch, type, input, sending);
 

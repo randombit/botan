@@ -187,7 +187,7 @@ void Datagram_Handshake_IO::add_record(const uint8_t record[],
 
    const size_t DTLS_HANDSHAKE_HEADER_LEN = 12;
 
-   while(record_len) {
+   while(record_len > 0) {
       if(record_len < DTLS_HANDSHAKE_HEADER_LEN) {
          return;  // completely bogus? at least degenerate/weird
       }

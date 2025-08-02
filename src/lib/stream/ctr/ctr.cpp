@@ -188,13 +188,15 @@ void CTR_BE::add_counter(const uint64_t counter) {
          store_be(b0, &m_counter[i * BS + off]);
          store_be(b1, &m_counter[i * BS + off + 8]);
          b1 += 1;
-         b0 += (b1 == 0);  // carry
+         if(b1 == 0) {
+            b0 += 1;  // carry
+         }
       }
    } else {
       for(size_t i = 0; i != ctr_blocks; ++i) {
          uint64_t local_counter = counter;
          uint16_t carry = static_cast<uint8_t>(local_counter);
-         for(size_t j = 0; (carry || local_counter) && j != ctr_size; ++j) {
+         for(size_t j = 0; (carry > 0 || local_counter > 0) && j != ctr_size; ++j) {
             const size_t off = i * BS + (BS - 1 - j);
             const uint16_t cnt = static_cast<uint16_t>(m_counter[off]) + carry;
             m_counter[off] = static_cast<uint8_t>(cnt);
@@ -243,7 +245,9 @@ void CTR_BE::seek(uint64_t offset) {
          copy_mem(&m_counter[i * BS], &m_counter[(i - 1) * BS], BS);
 
          for(size_t j = 0; j != m_ctr_size; ++j) {
-            if(++m_counter[i * BS + (BS - 1 - j)]) {
+            uint8_t& c = m_counter[i * BS + (BS - 1 - j)];
+            c += 1;
+            if(c > 0) {
                break;
             }
          }
