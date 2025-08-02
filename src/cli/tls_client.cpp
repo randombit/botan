@@ -4,6 +4,7 @@
 *     2017 René Korthaus, Rohde & Schwarz Cybersecurity
 *     2022 René Meusel, Hannes Rantzsch - neXenio GmbH
 *     2023 René Meusel, Rohde & Schwarz Cybersecurity
+*     2025 Kagan Can Sit
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -31,8 +32,9 @@
    #include <memory>
    #include <string>
 
-   #include "socket_utils.h"
    #include "tls_helpers.h"
+   #include <botan/internal/socket_platform.h>
+   #include <botan/internal/stl_util.h>
 
 namespace Botan_CLI {
 
@@ -181,10 +183,10 @@ class TLS_Client final : public Command {
                "--tls-version=default --session-db= --session-db-pass= "
                "--next-protocols= --type=tcp --client-cert= --client-cert-key= "
                "--psk= --psk-identity= --psk-prf=SHA-256 --debug") {
-         init_sockets();
+         Botan::OS::Socket_Platform::socket_init();
       }
 
-      ~TLS_Client() override { stop_sockets(); }
+      ~TLS_Client() override { Botan::OS::Socket_Platform::socket_fini(); }
 
       TLS_Client(const TLS_Client& other) = delete;
       TLS_Client(TLS_Client&& other) = delete;
@@ -313,7 +315,8 @@ class TLS_Client final : public Command {
                   output() << "EOF on socket\n";
                   break;
                } else if(got == -1) {
-                  output() << "Socket error: " << errno << " " << err_to_string(errno) << "\n";
+                  output() << "Socket error: " << errno << " " << Botan::OS::Socket_Platform::get_last_socket_error()
+                           << "\n";
                   continue;
                }
 
@@ -334,7 +337,8 @@ class TLS_Client final : public Command {
                   we_closed = true;
                   break;
                } else if(got == -1) {
-                  output() << "Stdin error: " << errno << " " << err_to_string(errno) << "\n";
+                  output() << "Stdin error: " << errno << " " << Botan::OS::Socket_Platform::get_last_socket_error()
+                           << "\n";
                   continue;
                }
 
@@ -377,7 +381,8 @@ class TLS_Client final : public Command {
                if(errno == EINTR) {
                   sent = 0;
                } else {
-                  throw CLI_Error("Socket write failed errno=" + std::to_string(errno));
+                  throw CLI_Error("Socket write failed errno=" + std::to_string(errno) + " - " +
+                                  Botan::OS::Socket_Platform::get_last_socket_error());
                }
             }
 
@@ -386,24 +391,26 @@ class TLS_Client final : public Command {
       }
 
    private:
+      using socket_type = Botan::OS::Socket_Platform::socket_type;
+      using socket_op_ret_type = Botan::OS::Socket_Platform::socket_op_ret_type;
+      using socklen_type = Botan::OS::Socket_Platform::socklen_type;
+      using sendrecv_len_type = Botan::OS::Socket_Platform::sendrecv_len_type;
+
       static socket_type connect_to_host(const std::string& host, uint16_t port, bool tcp) {
          addrinfo hints{};
          std::memset(&hints, 0, sizeof(hints));
          hints.ai_family = AF_UNSPEC;
          hints.ai_socktype = tcp ? SOCK_STREAM : SOCK_DGRAM;
-         addrinfo* res = nullptr;
 
-         if(::getaddrinfo(host.c_str(), std::to_string(port).c_str(), &hints, &res) != 0) {
+         Botan::OS::Socket_Platform::unique_addrinfo_ptr res = nullptr;
+         if(::getaddrinfo(host.c_str(), std::to_string(port).c_str(), &hints, Botan::out_ptr(res)) != 0) {
             throw CLI_Error("getaddrinfo failed for " + host);
          }
 
-         socket_type fd = 0;
-         bool success = false;
+         for(addrinfo* rp = res.get(); rp != nullptr; rp = rp->ai_next) {
+            socket_type fd = ::socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 
-         for(addrinfo* rp = res; rp != nullptr; rp = rp->ai_next) {
-            fd = ::socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-
-            if(fd == invalid_socket()) {
+            if(fd == Botan::OS::Socket_Platform::invalid_socket()) {
                continue;
             }
 
@@ -411,30 +418,20 @@ class TLS_Client final : public Command {
                ::close(fd);
                continue;
             }
-
-            success = true;
-            break;
+            return fd;
          }
 
-         ::freeaddrinfo(res);
-
-         if(!success) {
-            // no address succeeded
-            throw CLI_Error("Connecting to host failed");
-         }
-
-         return fd;
+         throw CLI_Error("Connect failed");
       }
 
       static void dgram_socket_write(int sockfd, const uint8_t buf[], size_t length) {
          auto r = ::send(sockfd, buf, length, MSG_NOSIGNAL);
-
          if(r == -1) {
-            throw CLI_Error("Socket write failed errno=" + std::to_string(errno));
+            throw CLI_Error("Socket write failed errno=" + Botan::OS::Socket_Platform::get_last_socket_error());
          }
       }
 
-      socket_type m_sockfd = invalid_socket();
+      socket_type m_sockfd = Botan::OS::Socket_Platform::invalid_socket();
 };
 
 namespace {
