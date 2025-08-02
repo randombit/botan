@@ -160,9 +160,9 @@ class Command /* NOLINT(*special-member-functions) */ {
       /*
       * Read an entire file into memory and return the contents
       */
-      std::vector<uint8_t> slurp_file(const std::string& input_file, size_t buf_size = 0) const;
+      static std::vector<uint8_t> slurp_file(const std::string& input_file, size_t buf_size = 0);
 
-      std::string slurp_file_as_str(const std::string& input_file, size_t buf_size = 0) const;
+      static std::string slurp_file_as_str(const std::string& input_file, size_t buf_size = 0);
 
       /*
       * Read a file calling consumer_fn() with the inputs

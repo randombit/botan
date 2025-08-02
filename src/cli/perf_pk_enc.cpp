@@ -32,11 +32,11 @@ class PerfTest_PKEnc : public PerfTest {
          }
       }
 
-      void bench_pk_ka(const PerfConfig& config,
-                       const std::string& nm,
-                       const std::string& algo,
-                       const std::string& params,
-                       const std::string& provider = "") {
+      static void bench_pk_ka(const PerfConfig& config,
+                              const std::string& nm,
+                              const std::string& algo,
+                              const std::string& params,
+                              const std::string& provider = "") {
          auto& rng = config.rng();
          const auto msec = config.runtime();
 

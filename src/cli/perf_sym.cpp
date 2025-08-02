@@ -53,7 +53,7 @@ class PerfTest_BlockCipher final : public PerfTest {
       static bool has_impl_for(std::string_view alg) { return !Botan::BlockCipher::providers(alg).empty(); }
 
    private:
-      void bench_stream_cipher(const PerfConfig& config, Botan::BlockCipher& cipher) {
+      static void bench_stream_cipher(const PerfConfig& config, Botan::BlockCipher& cipher) {
          auto& rng = config.rng();
          const auto runtime = config.runtime();
          const auto provider = cipher.provider();
@@ -118,7 +118,7 @@ class PerfTest_CipherMode final : public PerfTest {
       static bool has_impl_for(std::string_view alg) { return !Botan::Cipher_Mode::providers(alg).empty(); }
 
    private:
-      void bench_cipher_mode(const PerfConfig& config, Botan::Cipher_Mode& enc, Botan::Cipher_Mode& dec) {
+      static void bench_cipher_mode(const PerfConfig& config, Botan::Cipher_Mode& enc, Botan::Cipher_Mode& dec) {
          auto& rng = config.rng();
          const auto runtime = config.runtime();
          const auto provider = enc.provider();
@@ -197,7 +197,7 @@ class PerfTest_StreamCipher final : public PerfTest {
       static bool has_impl_for(std::string_view alg) { return !Botan::StreamCipher::providers(alg).empty(); }
 
    private:
-      void bench_stream_cipher(const PerfConfig& config, Botan::StreamCipher& cipher) {
+      static void bench_stream_cipher(const PerfConfig& config, Botan::StreamCipher& cipher) {
          auto& rng = config.rng();
          const auto runtime = config.runtime();
          const auto provider = cipher.provider();
@@ -260,7 +260,7 @@ class PerfTest_HashFunction final : public PerfTest {
       static bool has_impl_for(std::string_view alg) { return !Botan::HashFunction::providers(alg).empty(); }
 
    private:
-      void bench_hash_fn(const PerfConfig& config, Botan::HashFunction& hash) {
+      static void bench_hash_fn(const PerfConfig& config, Botan::HashFunction& hash) {
          std::vector<uint8_t> output(hash.output_length());
          const auto provider = hash.provider();
          const auto runtime = config.runtime();
@@ -303,7 +303,7 @@ class PerfTest_MessageAuthenticationCode final : public PerfTest {
       }
 
    private:
-      void bench_mac_fn(const PerfConfig& config, Botan::MessageAuthenticationCode& mac) {
+      static void bench_mac_fn(const PerfConfig& config, Botan::MessageAuthenticationCode& mac) {
          std::vector<uint8_t> output(mac.output_length());
          const auto provider = mac.provider();
          const auto runtime = config.runtime();
@@ -352,7 +352,7 @@ class PerfTest_XOF final : public PerfTest {
       static bool has_impl_for(std::string_view alg) { return !Botan::XOF::providers(alg).empty(); }
 
    private:
-      void bench_xof_fn(const PerfConfig& config, Botan::XOF& xof) {
+      static void bench_xof_fn(const PerfConfig& config, Botan::XOF& xof) {
          const auto runtime = config.runtime();
          const auto provider = xof.provider();
 

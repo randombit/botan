@@ -32,11 +32,11 @@ class PerfTest_PK_KEM : public PerfTest {
          }
       }
 
-      void bench_pk_kem(const PerfConfig& config,
-                        const std::string& nm,
-                        const std::string& algo,
-                        const std::string& params,
-                        const std::string& provider = "") {
+      static void bench_pk_kem(const PerfConfig& config,
+                               const std::string& nm,
+                               const std::string& algo,
+                               const std::string& params,
+                               const std::string& provider = "") {
          const auto msec = config.runtime();
          auto& rng = config.rng();
 
