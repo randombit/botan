@@ -80,9 +80,9 @@ std::array<word, Scalar448::WORDS> add(std::span<const word, Scalar448::WORDS> x
 /**
  * @brief x = (x >= L) ? x - L : x. Constant time.
  *
- * @return true iff a reduction was performed
+ * @return a CT::Choice that is set iff a reduction was performed
  */
-bool ct_subtract_L_if_bigger(std::span<word, Scalar448::WORDS> x) {
+CT::Choice ct_subtract_L_if_bigger(std::span<word, Scalar448::WORDS> x) {
    std::array<word, Scalar448::WORDS> tmp;  // NOLINT(*-member-init)
    copy_mem(tmp, x);
    constexpr auto big_l = big_l_words();
@@ -91,7 +91,7 @@ bool ct_subtract_L_if_bigger(std::span<word, Scalar448::WORDS> x) {
    const auto smaller_than_L = CT::Mask<word>::expand(borrow);
    smaller_than_L.select_n(x.data(), x.data(), tmp.data(), Scalar448::WORDS);
 
-   return !smaller_than_L.as_bool();
+   return !smaller_than_L.as_choice();
 }
 
 template <size_t S>
@@ -157,7 +157,7 @@ Scalar448::Scalar448(std::span<const uint8_t> in_bytes) {
 bool Scalar448::get_bit(size_t bit_pos) const {
    BOTAN_ARG_CHECK(bit_pos < 446, "Bit position out of range");
    constexpr size_t word_sz = sizeof(word) * 8;
-   return (m_scalar_words[bit_pos / word_sz] >> (bit_pos % word_sz)) & 1;
+   return (((m_scalar_words[bit_pos / word_sz] >> (bit_pos % word_sz)) & 1) == 1);
 }
 
 Scalar448 Scalar448::operator+(const Scalar448& other) const {
@@ -189,7 +189,7 @@ bool Scalar448::bytes_are_reduced(std::span<const uint8_t> x) {
    const auto leading_zeros = x.subspan(BYTES);
    const auto leading_zeros_are_zero = CT::all_zeros(leading_zeros.data(), leading_zeros.size());
    auto x_sig_words = bytes_to_words(x.first<56>());
-   const auto least_56_bytes_smaller_L = CT::Mask<uint8_t>::expand(!ct_subtract_L_if_bigger(x_sig_words));
+   const auto least_56_bytes_smaller_L = CT::Mask<uint8_t>::from_choice(!ct_subtract_L_if_bigger(x_sig_words));
    return (leading_zeros_are_zero & least_56_bytes_smaller_L).as_bool();
 }
 

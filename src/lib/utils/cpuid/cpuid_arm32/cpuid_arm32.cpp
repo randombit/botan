@@ -40,7 +40,7 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
 
       feat |= if_set(hwcap_neon, ARM_hwcap_bit::NEON_bit, CPUFeature::Bit::NEON, allowed);
 
-      if(feat & CPUFeature::Bit::NEON) {
+      if(is_set(feat, CPUFeature::Bit::NEON)) {
          feat |= if_set(hwcap_crypto, ARM_hwcap_bit::AES_bit, CPUFeature::Bit::AES, allowed);
          feat |= if_set(hwcap_crypto, ARM_hwcap_bit::PMULL_bit, CPUFeature::Bit::PMULL, allowed);
          feat |= if_set(hwcap_crypto, ARM_hwcap_bit::SHA1_bit, CPUFeature::Bit::SHA1, allowed);

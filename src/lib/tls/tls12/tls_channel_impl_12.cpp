@@ -103,7 +103,7 @@ std::vector<X509_Certificate> Channel_Impl_12::peer_cert_chain() const {
 
 std::optional<std::string> Channel_Impl_12::external_psk_identity() const {
    const auto* state = (active_state() != nullptr) ? active_state() : pending_state();
-   if(state) {
+   if(state != nullptr) {
       return state->psk_identity();
    } else {
       return std::nullopt;
@@ -111,7 +111,7 @@ std::optional<std::string> Channel_Impl_12::external_psk_identity() const {
 }
 
 Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version version) {
-   if(pending_state()) {
+   if(pending_state() != nullptr) {
       throw Internal_Error("create_handshake_state called during handshake");
    }
 
@@ -172,7 +172,7 @@ bool Channel_Impl_12::timeout_check() {
 }
 
 void Channel_Impl_12::renegotiate(bool force_full_renegotiation) {
-   if(pending_state()) {  // currently in handshake?
+   if(pending_state() != nullptr) {  // currently in handshake?
       return;
    }
 
@@ -319,10 +319,10 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
             throw TLS_Exception(Alert::RecordOverflow, "TLS plaintext record is larger than allowed maximum");
          }
 
-         const bool epoch0_restart = m_is_datagram && record.epoch() == 0 && active_state();
+         const bool epoch0_restart = m_is_datagram && record.epoch() == 0 && active_state() != nullptr;
          BOTAN_ASSERT_IMPLICATION(epoch0_restart, allow_epoch0_restart, "Allowed state");
 
-         const bool initial_record = epoch0_restart || (!pending_state() && !active_state());
+         const bool initial_record = epoch0_restart || (pending_state() == nullptr && active_state() == nullptr);
          bool initial_handshake_message = false;
          if(record.type() == Record_Type::Handshake && !m_record_buf.empty()) {
             Handshake_Type type = static_cast<Handshake_Type>(m_record_buf[0]);
@@ -436,7 +436,7 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
 }
 
 void Channel_Impl_12::process_application_data(uint64_t seq_no, const secure_vector<uint8_t>& record) {
-   if(!active_state()) {
+   if(active_state() == nullptr) {
       throw Unexpected_Message("Application data before handshake done");
    }
 

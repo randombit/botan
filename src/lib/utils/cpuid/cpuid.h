@@ -124,6 +124,11 @@ class BOTAN_TEST_API CPUID final {
       }
 
    private:
+      static inline bool is_set(uint32_t allowed, CPUID::Feature bit) {
+         const uint32_t feat_bit = bit.as_u32();
+         return ((allowed & feat_bit) == feat_bit);
+      }
+
       struct CPUID_Data {
          public:
             CPUID_Data();

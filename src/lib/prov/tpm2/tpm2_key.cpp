@@ -293,7 +293,7 @@ std::unique_ptr<PrivateKey> PrivateKey::create(Object handles,
                                                [[maybe_unused]] const SessionBundle& sessions,
                                                [[maybe_unused]] const TPM2B_PUBLIC* public_info,
                                                [[maybe_unused]] std::span<const uint8_t> private_blob) {
-   if(!public_info) {
+   if(public_info == nullptr) {
       public_info = handles._public_info(sessions).pub.get();
    }
 

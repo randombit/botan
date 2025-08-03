@@ -111,13 +111,13 @@ int botan_pwdhash_timed(const char* algo,
 
       auto pwdhash = pwdhash_fam->tune(out_len, std::chrono::milliseconds(msec));
 
-      if(param1) {
+      if(param1 != nullptr) {
          *param1 = pwdhash->iterations();
       }
-      if(param2) {
+      if(param2 != nullptr) {
          *param2 = pwdhash->parallelism();
       }
-      if(param3) {
+      if(param3 != nullptr) {
          *param3 = pwdhash->memory_param();
       }
 

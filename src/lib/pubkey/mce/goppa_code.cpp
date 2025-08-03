@@ -25,7 +25,7 @@ void matrix_arr_mul(std::vector<uint32_t> matrix,
                     uint32_t output_vec[],
                     size_t output_vec_len) {
    for(size_t j = 0; j < numo_rows; j++) {
-      if((input_vec[j / 8] >> (j % 8)) & 1) {
+      if(((input_vec[j / 8] >> (j % 8)) & 1) != 0) {
          for(size_t i = 0; i < output_vec_len; i++) {
             output_vec[i] ^= matrix[j * (words_per_row) + i];
          }
@@ -62,7 +62,7 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m& syndrom_polyn,
    for(uint32_t i = 0; i < t; i++) {
       a = sp_field->gf_sqrt(h.get_coef(i));
 
-      if(i & 1) {
+      if((i & 1) != 0) {
          for(uint32_t j = 0; j < t; j++) {
             S.add_to_coef(j, sp_field->gf_mul(a, sqrtmod[i / 2].get_coef(j)));
          }
@@ -198,7 +198,7 @@ secure_vector<uint8_t> mceliece_decrypt(secure_vector<gf2m>& error_pos,
       cleartext[current / 8] ^= (1 << (current % 8));
    }
 
-   if(unused_pt_bits) {
+   if(unused_pt_bits > 0) {
       cleartext[cleartext_len - 1] &= unused_pt_bits_mask;
    }
 

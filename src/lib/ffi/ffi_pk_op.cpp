@@ -119,8 +119,8 @@ int botan_pk_op_sign_create(botan_pk_op_sign_t* op, botan_privkey_t key_obj, con
    return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
 
-      auto format = (flags & BOTAN_PUBKEY_DER_FORMAT_SIGNATURE) ? Botan::Signature_Format::DerSequence
-                                                                : Botan::Signature_Format::Standard;
+      const bool use_der = (flags & BOTAN_PUBKEY_DER_FORMAT_SIGNATURE) != 0;
+      auto format = use_der ? Botan::Signature_Format::DerSequence : Botan::Signature_Format::Standard;
 
       auto pk = std::make_unique<Botan::PK_Signer>(safe_get(key_obj), Botan::system_rng(), hash, format);
       return ffi_new_object(op, std::move(pk));
@@ -158,8 +158,8 @@ int botan_pk_op_verify_create(botan_pk_op_verify_t* op, botan_pubkey_t key_obj, 
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
-      auto format = (flags & BOTAN_PUBKEY_DER_FORMAT_SIGNATURE) ? Botan::Signature_Format::DerSequence
-                                                                : Botan::Signature_Format::Standard;
+      const bool use_der = (flags & BOTAN_PUBKEY_DER_FORMAT_SIGNATURE) != 0;
+      auto format = use_der ? Botan::Signature_Format::DerSequence : Botan::Signature_Format::Standard;
       auto pk = std::make_unique<Botan::PK_Verifier>(safe_get(key_obj), hash, format);
       return ffi_new_object(op, std::move(pk));
    });

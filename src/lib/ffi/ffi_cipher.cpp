@@ -184,7 +184,7 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
       // called with the final flag set but not enough buffer space was provided
       // to accommodate the final output.
       const bool was_finished_before = !mbuf.empty();
-      const bool final_input = (flags & BOTAN_CIPHER_UPDATE_FLAG_FINAL);
+      const bool final_input = (flags & BOTAN_CIPHER_UPDATE_FLAG_FINAL) != 0;
 
       // Bring the output variables into a defined state.
       *output_written = 0;

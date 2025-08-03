@@ -17,17 +17,19 @@ BOTAN_FFI_DECLARE_STRUCT(botan_mac_struct, Botan::MessageAuthenticationCode, 0xA
 
 int botan_mac_init(botan_mac_t* mac, const char* mac_name, uint32_t flags) {
    return ffi_guard_thunk(__func__, [=]() -> int {
-      if(!mac || !mac_name || flags != 0) {
+      if(any_null_pointers(mac, mac_name)) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
 
-      std::unique_ptr<Botan::MessageAuthenticationCode> m = Botan::MessageAuthenticationCode::create(mac_name);
-
-      if(m == nullptr) {
-         return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+      if(flags != 0) {
+         return BOTAN_FFI_ERROR_BAD_FLAG;
       }
 
-      return ffi_new_object(mac, std::move(m));
+      if(auto m = Botan::MessageAuthenticationCode::create(mac_name)) {
+         return ffi_new_object(mac, std::move(m));
+      } else {
+         return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+      }
    });
 }
 

@@ -307,7 +307,7 @@ int botan_x509_cert_verify(int* result_code,
       std::unique_ptr<Botan::Certificate_Store_In_Memory> trusted_extra;
       std::vector<Botan::Certificate_Store*> trusted_roots;
 
-      if(trusted_path && *trusted_path) {
+      if(trusted_path != nullptr && *trusted_path != 0) {
          trusted_from_path = std::make_unique<Botan::Certificate_Store_In_Memory>(trusted_path);
          trusted_roots.push_back(trusted_from_path.get());
       }
@@ -325,7 +325,7 @@ int botan_x509_cert_verify(int* result_code,
       auto validation_result =
          Botan::x509_path_validate(end_certs, restrictions, trusted_roots, hostname, usage, validation_time);
 
-      if(result_code) {
+      if(result_code != nullptr) {
          *result_code = static_cast<int>(validation_result.result());
       }
 
@@ -449,7 +449,7 @@ int botan_x509_cert_verify_with_crl(int* result_code,
       std::unique_ptr<Botan::Certificate_Store_In_Memory> trusted_crls;
       std::vector<Botan::Certificate_Store*> trusted_roots;
 
-      if(trusted_path && *trusted_path) {
+      if(trusted_path != nullptr && *trusted_path != 0) {
          trusted_from_path = std::make_unique<Botan::Certificate_Store_In_Memory>(trusted_path);
          trusted_roots.push_back(trusted_from_path.get());
       }
@@ -475,7 +475,7 @@ int botan_x509_cert_verify_with_crl(int* result_code,
       auto validation_result =
          Botan::x509_path_validate(end_certs, restrictions, trusted_roots, hostname, usage, validation_time);
 
-      if(result_code) {
+      if(result_code != nullptr) {
          *result_code = static_cast<int>(validation_result.result());
       }
 

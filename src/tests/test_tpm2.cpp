@@ -95,7 +95,7 @@ class TR {
       TR& operator=(const TR&) = delete;
 
       ~TR() {
-         if(m_esys_ctx && m_handle != ESYS_TR_NONE) {
+         if(m_esys_ctx != nullptr && m_handle != ESYS_TR_NONE) {
             Esys_FlushContext(m_esys_ctx, m_handle);
          }
       }

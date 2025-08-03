@@ -1876,7 +1876,7 @@ int main(int /*argc*/, char* argv[]) {
                   }
                   const size_t needed = chan->received_data(buf.data(), got);
 
-                  if(needed) {
+                  if(needed > 0) {
                      shim_log("Short read still need " + std::to_string(needed));
                   }
                }
