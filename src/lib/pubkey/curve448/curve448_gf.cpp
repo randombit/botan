@@ -17,44 +17,6 @@ namespace Botan {
 namespace {
 
 /**
- * @brief Compute (a + b). The carry is returned in the carry parameter.
- *  The carry is not included for the addition.
- */
-inline uint64_t u64_add(uint64_t a, uint64_t b, bool* carry) {
-   // Let the compiler optimize this into fancy instructions
-   const uint64_t sum = a + b;
-   *carry = sum < a;
-   return sum;
-}
-
-/**
- * @brief Compute (a + b + carry), where carry is in {0, 1}. The carry of this computation
- * is store in the in/out @p carry parameter.
- */
-inline uint64_t u64_add_with_carry(uint64_t a, uint64_t b, bool* carry) {
-   // Let the compiler optimize this into fancy instructions
-   uint64_t sum = a + b;
-   const bool carry_a_plus_b = (sum < a);
-   sum += static_cast<uint64_t>(*carry);
-   *carry = static_cast<uint64_t>(carry_a_plus_b) | static_cast<uint64_t>(sum < static_cast<uint64_t>(*carry));
-   return sum;
-}
-
-/**
- * @brief Compute (a - (b + borrow)). The borrow is returned in the carry parameter.
- *
- * I.e. borrow = 1 if a < b + borrow, else 0.
- */
-inline uint64_t u64_sub_with_borrow(uint64_t a, uint64_t b, bool* borrow) {
-   // Let the compiler optimize this into fancy instructions
-   const uint64_t diff = a - b;
-   const bool borrow_a_min_b = diff > a;
-   const uint64_t z = diff - static_cast<uint64_t>(*borrow);
-   *borrow = static_cast<uint64_t>(borrow_a_min_b) | static_cast<uint64_t>(z > diff);
-   return z;
-}
-
-/**
  * @brief Reduce the result of a addition modulo 2^448 - 2^224 - 1.
  *
  * Algorithm 1 of paper "Reduction Modulo 2^448 - 2^224 - 1", from line 27.
@@ -64,27 +26,29 @@ inline uint64_t u64_sub_with_borrow(uint64_t a, uint64_t b, bool* borrow) {
  */
 void reduce_after_add(std::span<uint64_t, WORDS_448> h_3, std::span<const uint64_t, 8> h_1) {
    std::array<uint64_t, 8> h_2; /* NOLINT(*-member-init) */
-   bool carry = false;
+   uint64_t carry = 0;
+
+   constexpr uint64_t zero = 0;
 
    // Line 27+ (of the paper's algorithm 1)
-   h_2[0] = u64_add(h_1[0], h_1[7], &carry);
-
-   h_2[1] = u64_add(h_1[1], carry, &carry);
-   h_2[2] = u64_add(h_1[2], carry, &carry);
+   h_2[0] = word_add(h_1[0], h_1[7], &carry);
+   h_2[1] = word_add(h_1[1], zero, &carry);
+   h_2[2] = word_add(h_1[2], zero, &carry);
 
    // Line 30
-   h_2[3] = u64_add_with_carry(h_1[3], h_1[7] << 32, &carry);
+   h_2[3] = word_add(h_1[3], h_1[7] << 32, &carry);
 
    // Line 31+
-   h_2[4] = u64_add(h_1[4], carry, &carry);
-   h_2[5] = u64_add(h_1[5], carry, &carry);
-   h_2[6] = u64_add(h_1[6], carry, &carry);
+   h_2[4] = word_add(h_1[4], zero, &carry);
+   h_2[5] = word_add(h_1[5], zero, &carry);
+   h_2[6] = word_add(h_1[6], zero, &carry);
 
    h_2[7] = carry;
 
-   h_3[0] = u64_add(h_2[0], h_2[7], &carry);
-   h_3[1] = u64_add(h_2[1], carry, &carry);
-   h_3[2] = u64_add(h_2[2], carry, &carry);
+   carry = 0;
+   h_3[0] = word_add(h_2[0], h_2[7], &carry);
+   h_3[1] = word_add(h_2[1], zero, &carry);
+   h_3[2] = word_add(h_2[2], zero, &carry);
    // Line 37
    h_3[3] = h_2[3] + (h_2[7] << 32) + carry;
 
@@ -105,24 +69,25 @@ void reduce_after_mul(std::span<uint64_t, WORDS_448> out, std::span<const uint64
    std::array<uint64_t, 8> t_0;  // NOLINT(*-member-init)
    std::array<uint64_t, 8> h_1;  // NOLINT(*-member-init)
 
-   bool carry = false;
+   uint64_t carry = 0;
 
    // Line 4 (of the paper's algorithm 1)
-   r[0] = u64_add(in[0], in[7], &carry);
+   r[0] = word_add(in[0], in[7], &carry);
 
    // Line 5-7
    for(size_t i = 1; i < 7; ++i) {
-      r[i] = u64_add_with_carry(in[i], in[i + 7], &carry);
+      r[i] = word_add(in[i], in[i + 7], &carry);
    }
    r[7] = carry;
    s[0] = r[0];
    s[1] = r[1];
    s[2] = r[2];
    // Line 10
-   s[3] = u64_add(r[3], in[10] & 0xFFFFFFFF00000000, &carry);
+   carry = 0;
+   s[3] = word_add(r[3], in[10] & 0xFFFFFFFF00000000, &carry);
    // Line 11-13
    for(size_t i = 4; i < 7; ++i) {
-      s[i] = u64_add_with_carry(r[i], in[i + 7], &carry);
+      s[i] = word_add(r[i], in[i + 7], &carry);
    }
    s[7] = r[7] + carry;
 
@@ -136,10 +101,10 @@ void reduce_after_mul(std::span<uint64_t, WORDS_448> out, std::span<const uint64
    for(size_t i = 4; i < 7; ++i) {
       t_0[i] = (in[i + 4] << 32) | (in[i + 3] >> 32);
    }
-   h_1[0] = u64_add(s[0], t_0[0], &carry);
+   carry = 0;
    // Line 23-25
-   for(size_t i = 1; i < 7; ++i) {
-      h_1[i] = u64_add_with_carry(s[i], t_0[i], &carry);
+   for(size_t i = 0; i < 7; ++i) {
+      h_1[i] = word_add(s[i], t_0[i], &carry);
    }
    h_1[7] = s[7] + carry;
 
@@ -165,9 +130,9 @@ void gf_add(std::span<uint64_t, WORDS_448> out,
             std::span<const uint64_t, WORDS_448> b) {
    std::array<uint64_t, WORDS_448 + 1> ws;  // NOLINT(*-member-init)
 
-   bool carry = false;
+   uint64_t carry = 0;
    for(size_t i = 0; i < WORDS_448; ++i) {
-      ws[i] = u64_add_with_carry(a[i], b[i], &carry);
+      ws[i] = word_add(a[i], b[i], &carry);
    }
    ws[WORDS_448] = carry;
 
@@ -185,30 +150,32 @@ void gf_sub(std::span<uint64_t, WORDS_448> out,
    std::array<uint64_t, WORDS_448> h_0;  // NOLINT(*-member-init)
    std::array<uint64_t, WORDS_448> h_1;  // NOLINT(*-member-init)
 
-   bool borrow = false;
+   uint64_t borrow = 0;
    for(size_t i = 0; i < WORDS_448; ++i) {
-      h_0[i] = u64_sub_with_borrow(a[i], b[i], &borrow);
+      h_0[i] = word_sub(a[i], b[i], &borrow);
    }
    uint64_t delta = borrow;
    uint64_t delta_p = delta << 32;
-   borrow = false;
+   borrow = 0;
 
-   h_1[0] = u64_sub_with_borrow(h_0[0], delta, &borrow);
-   h_1[1] = u64_sub_with_borrow(h_0[1], 0, &borrow);
-   h_1[2] = u64_sub_with_borrow(h_0[2], 0, &borrow);
-   h_1[3] = u64_sub_with_borrow(h_0[3], delta_p, &borrow);
-   h_1[4] = u64_sub_with_borrow(h_0[4], 0, &borrow);
-   h_1[5] = u64_sub_with_borrow(h_0[5], 0, &borrow);
-   h_1[6] = u64_sub_with_borrow(h_0[6], 0, &borrow);
+   constexpr uint64_t zero = 0;
+
+   h_1[0] = word_sub(h_0[0], delta, &borrow);
+   h_1[1] = word_sub(h_0[1], zero, &borrow);
+   h_1[2] = word_sub(h_0[2], zero, &borrow);
+   h_1[3] = word_sub(h_0[3], delta_p, &borrow);
+   h_1[4] = word_sub(h_0[4], zero, &borrow);
+   h_1[5] = word_sub(h_0[5], zero, &borrow);
+   h_1[6] = word_sub(h_0[6], zero, &borrow);
 
    delta = borrow;
    delta_p = delta << 32;
-   borrow = false;
+   borrow = 0;
 
-   out[0] = u64_sub_with_borrow(h_1[0], delta, &borrow);
-   out[1] = u64_sub_with_borrow(h_1[1], 0, &borrow);
-   out[2] = u64_sub_with_borrow(h_1[2], 0, &borrow);
-   out[3] = u64_sub_with_borrow(h_1[3], delta_p, &borrow);
+   out[0] = word_sub(h_1[0], delta, &borrow);
+   out[1] = word_sub(h_1[1], zero, &borrow);
+   out[2] = word_sub(h_1[2], zero, &borrow);
+   out[3] = word_sub(h_1[3], delta_p, &borrow);
    out[4] = h_1[4];
    out[5] = h_1[5];
    out[6] = h_1[6];
@@ -247,9 +214,9 @@ std::array<uint64_t, WORDS_448> to_canonical(std::span<const uint64_t, WORDS_448
                                               0xffffffffffffffff};
 
    std::array<uint64_t, WORDS_448> in_minus_p;  // NOLINT(*-member-init)
-   bool borrow = false;
+   uint64_t borrow = 0;
    for(size_t i = 0; i < WORDS_448; ++i) {
-      in_minus_p[i] = u64_sub_with_borrow(in[i], p[i], &borrow);
+      in_minus_p[i] = word_sub(in[i], p[i], &borrow);
    }
    std::array<uint64_t, WORDS_448> out;  // NOLINT(*-member-init)
    CT::Mask<uint64_t>::expand(borrow).select_n(out.data(), in.data(), in_minus_p.data(), WORDS_448);
