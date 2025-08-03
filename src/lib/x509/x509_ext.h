@@ -913,7 +913,7 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
 
       bool should_encode() const override { return true; }
 
-      ASIdentifierChoice add_new(const std::optional<ASIdentifierChoice>& old, asnum_t min, asnum_t max) {
+      static ASIdentifierChoice add_new(const std::optional<ASIdentifierChoice>& old, asnum_t min, asnum_t max) {
          std::vector<ASIdOrRange> range;
          if(!old.has_value() || !old.value().ranges().has_value()) {
             range = {ASIdOrRange(min, max)};
