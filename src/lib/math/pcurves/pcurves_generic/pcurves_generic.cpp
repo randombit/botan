@@ -1426,7 +1426,11 @@ PrimeOrderCurve::Scalar GenericPrimeOrderCurve::base_point_mul_x_mod_order(const
    BOTAN_STATE_CHECK(m_basemul != nullptr);
    auto pt_s = m_basemul->mul(from_stash(scalar), rng);
    const auto x_bytes = to_affine_x<GenericCurve>(pt_s).serialize<secure_vector<uint8_t>>();
-   return stash(GenericScalar::from_wide_bytes(this, x_bytes).value());
+   if(auto s = GenericScalar::from_wide_bytes(this, x_bytes)) {
+      return stash(*s);
+   } else {
+      throw Internal_Error("Failed to convert x coordinate to integer modulo scalar");
+   }
 }
 
 PrimeOrderCurve::ProjectivePoint GenericPrimeOrderCurve::mul(const AffinePoint& pt,
