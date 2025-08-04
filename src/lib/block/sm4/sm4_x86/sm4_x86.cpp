@@ -6,8 +6,8 @@
 
 #include <botan/internal/sm4.h>
 
-#include <botan/mem_ops.h>
 #include <botan/internal/isa_extn.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/simd_avx2.h>
 
 namespace Botan {

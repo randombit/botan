@@ -10,10 +10,10 @@
 #include <botan/eckcdsa.h>
 
 #include <botan/hash.h>
-#include <botan/mem_ops.h>
 #include <botan/rng.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/keypair.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/scan_name.h>

@@ -9,9 +9,9 @@
 #include <botan/internal/blake2b.h>
 
 #include <botan/exceptn.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/stl_util.h>
 

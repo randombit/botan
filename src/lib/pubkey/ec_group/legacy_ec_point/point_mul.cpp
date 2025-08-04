@@ -6,10 +6,10 @@
 
 #include <botan/internal/point_mul.h>
 
-#include <botan/mem_ops.h>
 #include <botan/rng.h>
 #include <botan/internal/barrett.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/rounding.h>
 
 namespace Botan {

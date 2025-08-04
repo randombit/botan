@@ -10,7 +10,6 @@
 #include <botan/internal/cshake_xof.h>
 
 #include <botan/exceptn.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/keccak_helpers.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/mem_utils.h>

@@ -8,10 +8,10 @@
 
 #include <botan/base64.h>
 #include <botan/hex.h>
-#include <botan/mem_ops.h>
 #include <botan/version.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/ffi_util.h>
+#include <botan/internal/mem_utils.h>
 #include <cstdio>
 #include <cstdlib>
 

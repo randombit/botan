@@ -11,11 +11,11 @@
 #include <botan/cipher_mode.h>
 #include <botan/hash.h>
 #include <botan/mac.h>
-#include <botan/mem_ops.h>
 #include <botan/pubkey.h>
 #include <botan/tpm2_context.h>
 #include <botan/tpm2_crypto_backend.h>
 #include <botan/tpm2_key.h>
+#include <botan/internal/mem_utils.h>
 
 #if defined(BOTAN_HAS_RSA)
    #include <botan/rsa.h>

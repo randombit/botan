@@ -9,7 +9,6 @@
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
 #include <botan/der_enc.h>
-#include <botan/mem_ops.h>
 #include <botan/pk_ops.h>
 #include <botan/pss_params.h>
 #include <botan/rng.h>

@@ -15,10 +15,10 @@
 #include <botan/kyber.h>
 
 #include <botan/assert.h>
-#include <botan/mem_ops.h>
 #include <botan/pubkey.h>
 #include <botan/rng.h>
 #include <botan/secmem.h>
+#include <botan/internal/mem_utils.h>
 
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>

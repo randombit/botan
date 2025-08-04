@@ -8,9 +8,9 @@
 #include <botan/internal/commoncrypto.h>
 
 #include <botan/cipher_mode.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/commoncrypto_utils.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/scan_name.h>
 

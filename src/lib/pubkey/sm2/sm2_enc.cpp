@@ -11,10 +11,10 @@
 #include <botan/der_enc.h>
 #include <botan/hash.h>
 #include <botan/kdf.h>
-#include <botan/mem_ops.h>
 #include <botan/pk_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/mem_utils.h>
 
 namespace Botan {
 

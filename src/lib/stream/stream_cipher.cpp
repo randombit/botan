@@ -7,8 +7,9 @@
 
 #include <botan/stream_cipher.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
-#include <botan/mem_ops.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/scan_name.h>
 
 #if defined(BOTAN_HAS_CHACHA)

@@ -11,8 +11,8 @@
 #include <botan/internal/cmce_field_ordering.h>
 
 #include <botan/cmce.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/mem_utils.h>
 
 #include <numeric>
 #include <utility>

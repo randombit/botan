@@ -10,9 +10,9 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
-#include <botan/mem_ops.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/x448_internal.h>
 

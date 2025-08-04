@@ -36,6 +36,8 @@ inline std::string bytes_to_string(std::span<const uint8_t> bytes) {
    return std::string(reinterpret_cast<const char*>(bytes.data()), bytes.size());
 }
 
+void zeroize(std::span<uint8_t> bytes);
+
 }  // namespace Botan
 
 #endif

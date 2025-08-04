@@ -8,7 +8,6 @@
 
 #include <botan/exceptn.h>
 #include <botan/hash.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/mem_utils.h>

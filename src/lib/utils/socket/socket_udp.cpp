@@ -9,7 +9,6 @@
 #include <botan/internal/socket_udp.h>
 
 #include <botan/exceptn.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/target_info.h>
 #include <botan/internal/uri.h>
@@ -142,8 +141,7 @@ class BSD_SocketUDP final : public OS::SocketUDP {
          m_socket = invalid_socket();
 
          addrinfo* res = nullptr;
-         addrinfo hints;
-         clear_mem(&hints, 1);
+         addrinfo hints {};
          hints.ai_family = AF_UNSPEC;
          hints.ai_socktype = SOCK_DGRAM;
 

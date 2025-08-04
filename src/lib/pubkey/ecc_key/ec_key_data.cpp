@@ -6,8 +6,9 @@
 
 #include <botan/internal/ec_key_data.h>
 
-#include <botan/mem_ops.h>
+#include <botan/assert.h>
 #include <botan/rng.h>
+#include <botan/internal/mem_utils.h>
 
 namespace Botan {
 

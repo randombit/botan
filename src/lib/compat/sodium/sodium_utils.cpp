@@ -6,11 +6,11 @@
 
 #include <botan/sodium.h>
 
-#include <botan/mem_ops.h>
 #include <botan/system_rng.h>
 #include <botan/internal/chacha.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/mem_utils.h>
 #include <cstdlib>
 
 #if defined(BOTAN_HAS_OS_UTILS)

@@ -8,8 +8,9 @@
 
 #include <botan/internal/xts.h>
 
-#include <botan/mem_ops.h>
+#include <botan/assert.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/poly_dbl.h>
 
 namespace Botan {

@@ -8,8 +8,8 @@
 
 #include <botan/exceptn.h>
 #include <botan/hash.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/mem_utils.h>
 #include <vector>
 
 namespace Botan {

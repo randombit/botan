@@ -15,11 +15,11 @@
 #include <botan/assert.h>
 #include <botan/frodokem.h>
 #include <botan/hex.h>
-#include <botan/mem_ops.h>
 #include <botan/xof.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/frodo_constants.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/stl_util.h>
 
 #if defined(BOTAN_HAS_FRODOKEM_AES)

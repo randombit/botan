@@ -7,9 +7,8 @@
 
 #include <botan/compression.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
-#include <botan/mem_ops.h>
-#include <cstdlib>
 
 #if defined(BOTAN_HAS_ZLIB)
    #include <botan/zlib.h>

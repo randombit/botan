@@ -8,10 +8,10 @@
 #include <botan/internal/eme_pkcs.h>
 
 #include <botan/exceptn.h>
-#include <botan/mem_ops.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/int_utils.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/stl_util.h>
 
 namespace Botan {

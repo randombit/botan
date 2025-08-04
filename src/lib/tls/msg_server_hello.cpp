@@ -11,12 +11,12 @@
 
 #include <botan/tls_messages.h>
 
-#include <botan/mem_ops.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_extensions.h>
 #include <botan/tls_session_manager.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>

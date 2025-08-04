@@ -7,8 +7,9 @@
 
 #include <botan/hmac_drbg.h>
 
-#include <botan/mem_ops.h>
+#include <botan/assert.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/mem_utils.h>
 #include <algorithm>
 
 namespace Botan {

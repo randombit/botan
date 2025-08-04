@@ -8,9 +8,9 @@
 #include <botan/internal/compress_utils.h>
 
 #include <botan/exceptn.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
+#include <botan/internal/mem_utils.h>
 #include <cstdlib>
 
 namespace Botan {

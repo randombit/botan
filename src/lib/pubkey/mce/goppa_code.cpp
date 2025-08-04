@@ -11,8 +11,9 @@
 
 #include <botan/internal/mce_internal.h>
 
-#include <botan/mem_ops.h>
+#include <botan/assert.h>
 #include <botan/internal/code_based_util.h>
+#include <botan/internal/mem_utils.h>
 
 namespace Botan {
 

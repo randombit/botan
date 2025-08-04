@@ -9,8 +9,8 @@
 
 #include <botan/block_cipher.h>
 #include <botan/cipher_mode.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/commoncrypto_utils.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/rounding.h>
 
 #include <limits.h>

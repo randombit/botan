@@ -6,8 +6,8 @@
 
 #include <botan/internal/eme_raw.h>
 
-#include <botan/mem_ops.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/mem_utils.h>
 
 namespace Botan {
 

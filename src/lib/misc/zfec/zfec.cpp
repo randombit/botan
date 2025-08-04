@@ -11,7 +11,7 @@
 #include <botan/zfec.h>
 
 #include <botan/exceptn.h>
-#include <botan/mem_ops.h>
+#include <botan/internal/mem_utils.h>
 #include <cstring>
 #include <vector>
 

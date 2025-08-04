@@ -8,8 +8,9 @@
 
 #include <botan/internal/shake_cipher.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
-#include <botan/mem_ops.h>
+#include <botan/internal/mem_utils.h>
 
 namespace Botan {
 

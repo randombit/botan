@@ -10,8 +10,8 @@
 #include <botan/data_snk.h>
 
 #include <botan/exceptn.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/mem_utils.h>
 #include <ostream>
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)

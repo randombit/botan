@@ -8,8 +8,8 @@
 #include <botan/symkey.h>
 
 #include <botan/hex.h>
-#include <botan/mem_ops.h>
 #include <botan/rng.h>
+#include <botan/internal/mem_utils.h>
 #include <algorithm>
 
 namespace Botan {

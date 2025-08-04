@@ -8,8 +8,8 @@
 #include <botan/internal/tls_session_key.h>
 
 #include <botan/kdf.h>
-#include <botan/mem_ops.h>
 #include <botan/tls_messages.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/tls_handshake_state.h>
 
 namespace Botan::TLS {
