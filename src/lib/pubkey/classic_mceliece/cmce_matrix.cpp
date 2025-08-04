@@ -64,8 +64,9 @@ CmceMatrix init_matrix_with_alphas(const Classic_McEliece_Parameters& params,
 
    for(size_t i = 0; i < params.t(); ++i) {
       for(size_t j = 0; j < params.n(); ++j) {
+         const auto inv_g = inv_g_of_alpha[j].elem().get();
          for(size_t alpha_i_j_bit = 0; alpha_i_j_bit < params.m(); ++alpha_i_j_bit) {
-            mat[i * params.m() + alpha_i_j_bit][j] = (uint16_t(1) << alpha_i_j_bit) & inv_g_of_alpha[j].elem().get();
+            mat[i * params.m() + alpha_i_j_bit][j] = static_cast<bool>((inv_g >> alpha_i_j_bit) & 1);
          }
       }
       // Update for the next i so that:
@@ -155,7 +156,7 @@ std::optional<CmceColumnSelection> move_columns(CmceMatrix& mat, const Classic_M
    for(auto pivot_idx : pivot_indices) {
       for(size_t i = 0; i < Classic_McEliece_Parameters::nu(); ++i) {
          auto mask_is_at_current_idx = Botan::CT::Mask<size_t>::is_equal(i, pivot_idx);
-         pivots.at(i) = mask_is_at_current_idx.select(1, pivots.at(i).as<size_t>());
+         pivots.at(i) = static_cast<bool>(mask_is_at_current_idx.select(1, pivots.at(i).as<size_t>()));
       }
    }
 

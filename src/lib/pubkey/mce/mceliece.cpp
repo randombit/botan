@@ -61,7 +61,7 @@ secure_vector<uint8_t> mult_by_pubkey(const secure_vector<uint8_t>& cleartext,
 
    for(size_t i = 0; i < dimension / 8; ++i) {
       for(size_t j = 0; j < 8; ++j) {
-         if(cleartext[i] & (1 << j)) {
+         if((cleartext[i] & (1 << j)) != 0) {
             xor_buf(cR.data(), pt, cR.size());
          }
          pt += cR.size();
@@ -69,7 +69,7 @@ secure_vector<uint8_t> mult_by_pubkey(const secure_vector<uint8_t>& cleartext,
    }
 
    for(size_t i = 0; i < dimension % 8; ++i) {
-      if(cleartext[dimension / 8] & (1 << i)) {
+      if((cleartext[dimension / 8] & (1 << i)) != 0) {
          xor_buf(cR.data(), pt, cR.size());
       }
       pt += cR.size();
@@ -93,7 +93,7 @@ secure_vector<uint8_t> create_random_error_vector(size_t code_length, size_t err
 
       const uint8_t mask = (1 << bit_pos);
 
-      if(result[byte_pos] & mask) {
+      if((result[byte_pos] & mask) != 0) {
          continue;  // already set this bit
       }
 

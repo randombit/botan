@@ -26,6 +26,10 @@ class Output_Buffers;
 * through the pipe until it reaches the end, where the output is
 * collected for retrieval.  If you're familiar with the Unix shell
 * environment, this design will sound quite familiar.
+*
+* @warning This Pipe interface, and all associated types (Filter, etc)
+* are considered decrepit, no longer used within the library itself,
+* and likely will see no future development. Avoid in new code.
 */
 class BOTAN_PUBLIC_API(2, 0) Pipe final : public DataSource {
    public:

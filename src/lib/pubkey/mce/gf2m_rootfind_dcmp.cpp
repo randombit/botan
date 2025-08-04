@@ -19,7 +19,7 @@ namespace {
 
 void patch_root_array(gf2m res_root_arr[], size_t res_root_arr_len, size_t root_pos) {
    volatile gf2m patch_elem = 0x01;
-   volatile gf2m cond_mask = (root_pos == res_root_arr_len);
+   volatile gf2m cond_mask = static_cast<gf2m>(root_pos == res_root_arr_len);
    cond_mask = expand_mask_16bit(cond_mask);
    cond_mask = ~cond_mask; /* now cond = 1 if not enough roots */
    patch_elem = patch_elem & cond_mask;
@@ -111,20 +111,19 @@ void gf2m_decomp_rootfind_state::calc_next_Aij() {
 
    gf2m new_j_gray = lex_to_gray(this->m_j);
 
-   if(this->m_j & 1) /* half of the times */
-   {
+   if((this->m_j & 1) != 0) {
+      /* half of the times */
       Lik_pos_base = 0;
-   } else if(this->m_j & 2) /* one quarter of the times */
-   {
+   } else if((this->m_j & 2) != 0) {
+      /* one quarter of the times */
       Lik_pos_base = this->m_outer_summands;
-   } else if(this->m_j & 4) /* one eighth of the times */
-   {
+   } else if((this->m_j & 4) != 0) {
+      /* one eighth of the times */
       Lik_pos_base = this->m_outer_summands * 2;
-   } else if(this->m_j & 8) /* one sixteenth of the times */
-   {
+   } else if((this->m_j & 8) != 0) {
+      /* one sixteenth of the times */
       Lik_pos_base = this->m_outer_summands * 3;
-   } else if(this->m_j & 16) /* ... */
-   {
+   } else if((this->m_j & 16) != 0) {
       Lik_pos_base = this->m_outer_summands * 4;
    } else {
       gf2m delta_offs = 5;

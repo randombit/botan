@@ -241,8 +241,11 @@ std::pair<Handshake_Type, std::vector<uint8_t>> Handshake_State::get_next_handsh
 }
 
 Session_Ticket Handshake_State::session_ticket() const {
-   if(new_session_ticket() && !new_session_ticket()->ticket().empty()) {
-      return new_session_ticket()->ticket();
+   if(const auto* nst = new_session_ticket()) {
+      const auto& ticket = nst->ticket();
+      if(!ticket.empty()) {
+         return ticket;
+      }
    }
 
    return client_hello()->session_ticket();
@@ -331,8 +334,8 @@ std::pair<std::string, Signature_Format> Handshake_State::parse_sig_format(
       throw Decoding_Error("Counterparty sent inconsistent key and sig types");
    }
 
-   if(for_client_auth && !cert_req()) {
-      throw TLS_Exception(Alert::HandshakeFailure, "No certificate verify set");
+   if(for_client_auth && cert_req() == nullptr) {
+      throw TLS_Exception(Alert::HandshakeFailure, "No CertificateVerify message received");
    }
 
    /*

@@ -147,7 +147,7 @@ std::vector<X509_Certificate> Client_Impl_12::get_peer_cert_chain(const Handshak
       return cstate.resume_peer_certs();
    }
 
-   if(state.server_certs()) {
+   if(state.server_certs() != nullptr) {
       return state.server_certs()->cert_chain();
    }
    return std::vector<X509_Certificate>();
@@ -209,7 +209,7 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
       }
    }
 
-   if(!state.client_hello()) {
+   if(state.client_hello() == nullptr) {
       // not resuming
       Client_Hello_12::Settings client_settings(version, m_info.hostname());
       state.client_hello(std::make_unique<Client_Hello_12>(state.handshake_io(),
@@ -253,10 +253,10 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
 
    Client_Handshake_State_12& state = dynamic_cast<Client_Handshake_State_12&>(state_base);
 
-   if(type == Handshake_Type::HelloRequest && active_state) {
+   if(type == Handshake_Type::HelloRequest && active_state != nullptr) {
       Hello_Request hello_request(contents);
 
-      if(state.client_hello()) {
+      if(state.client_hello() != nullptr) {
          throw TLS_Exception(Alert::HandshakeFailure, "Cannot renegotiate during a handshake");
       }
 
@@ -420,7 +420,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
       } else {
          // new session
 
-         if(active_state) {
+         if(active_state != nullptr) {
             // Here we are testing things that should not change during a renegotation,
             // even if the server creates a new session. Howerver they might change
             // in a resumption scenario.
@@ -492,7 +492,7 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
 
       X509_Certificate server_cert = server_certs[0];
 
-      if(active_state && active_state->server_certs()) {
+      if(active_state != nullptr && active_state->server_certs() != nullptr) {
          X509_Certificate current_cert = active_state->server_certs()->cert_chain().at(0);
 
          if(current_cert != server_cert) {
@@ -659,28 +659,29 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
 
       state.hash().update(state.handshake_io().format(contents, type));
 
-      if(!state.client_finished()) {
+      if(state.client_finished() == nullptr) {
          // session resume case
          state.handshake_io().send(Change_Cipher_Spec());
          change_cipher_spec_writer(Connection_Side::Client);
          state.client_finished(std::make_unique<Finished_12>(state.handshake_io(), state, Connection_Side::Client));
       }
 
-      Session session_info(state.session_keys().master_secret(),
-                           state.server_hello()->legacy_version(),
-                           state.server_hello()->ciphersuite(),
-                           Connection_Side::Client,
-                           state.server_hello()->supports_extended_master_secret(),
-                           state.server_hello()->supports_encrypt_then_mac(),
-                           get_peer_cert_chain(state),
-                           m_info,
-                           state.server_hello()->srtp_profile(),
-                           callbacks().tls_current_timestamp(),
+      Session session_info(
+         state.session_keys().master_secret(),
+         state.server_hello()->legacy_version(),
+         state.server_hello()->ciphersuite(),
+         Connection_Side::Client,
+         state.server_hello()->supports_extended_master_secret(),
+         state.server_hello()->supports_encrypt_then_mac(),
+         get_peer_cert_chain(state),
+         m_info,
+         state.server_hello()->srtp_profile(),
+         callbacks().tls_current_timestamp(),
 
-                           // Session Tickets (as defined in RFC 5077) contain a lifetime_hint,
-                           // sessions identified via a Session_ID do not.
-                           ((state.new_session_ticket()) ? state.new_session_ticket()->ticket_lifetime_hint()
-                                                         : std::chrono::seconds::max()));
+         // Session Tickets (as defined in RFC 5077) contain a lifetime_hint,
+         // sessions identified via a Session_ID do not.
+         (((state.new_session_ticket()) != nullptr) ? state.new_session_ticket()->ticket_lifetime_hint()
+                                                    : std::chrono::seconds::max()));
 
       // RFC 5077 3.4
       //    If the client receives a session ticket from the server, then it

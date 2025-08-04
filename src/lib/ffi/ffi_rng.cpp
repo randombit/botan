@@ -36,7 +36,7 @@ int botan_rng_init(botan_rng_t* rng_out, const char* rng_type) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
 
-      const std::string rng_type_s(rng_type ? rng_type : "system");
+      const std::string rng_type_s(rng_type != nullptr ? rng_type : "system");
 
       std::unique_ptr<Botan::RandomNumberGenerator> rng;
 
@@ -120,14 +120,14 @@ int botan_rng_init_custom(botan_rng_t* rng_out,
             void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override {
                if(accepts_input() && !input.empty()) {
                   int rc = m_add_entropy_cb(m_context, input.data(), input.size());
-                  if(rc) {
+                  if(rc != 0) {
                      throw Botan::Invalid_State("Failed to add entropy via C callback, rc=" + std::to_string(rc));
                   }
                }
 
                if(!output.empty()) {
                   int rc = m_get_cb(m_context, output.data(), output.size());
-                  if(rc) {
+                  if(rc != 0) {
                      throw Botan::Invalid_State("Failed to get random from C callback, rc=" + std::to_string(rc));
                   }
                }

@@ -12,8 +12,18 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <type_traits>
 
 namespace Botan {
+
+/**
+* Return true if any of the provided arguments are null
+*/
+template <typename... Ptrs>
+bool any_null_pointers(Ptrs... ptr) {
+   static_assert((... && std::is_pointer_v<Ptrs>), "All arguments must be pointers");
+   return (... || (ptr == nullptr));
+}
 
 inline std::span<const uint8_t> as_span_of_bytes(const char* s, size_t len) {
    const uint8_t* b = reinterpret_cast<const uint8_t*>(s);

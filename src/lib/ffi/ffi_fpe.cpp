@@ -38,7 +38,7 @@ int botan_fpe_fe1_init(
          return BOTAN_FFI_ERROR_BAD_FLAG;
       }
 
-      const bool compat_mode = (flags & BOTAN_FPE_FLAG_FE1_COMPAT_MODE);
+      const bool compat_mode = (flags & BOTAN_FPE_FLAG_FE1_COMPAT_MODE) != 0;
 
       std::unique_ptr<Botan::FPE_FE1> fpe_obj(new Botan::FPE_FE1(safe_get(n), rounds, compat_mode));
 

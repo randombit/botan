@@ -10,12 +10,15 @@
 #include <botan/exceptn.h>
 #include <botan/ffi.h>
 #include <botan/mem_ops.h>
+#include <botan/internal/mem_utils.h>
 #include <concepts>
 #include <cstdint>
 #include <exception>
 #include <memory>
 
 namespace Botan_FFI {
+
+using Botan::any_null_pointers;
 
 class BOTAN_UNSTABLE_API FFI_Error final : public Botan::Exception {
    public:

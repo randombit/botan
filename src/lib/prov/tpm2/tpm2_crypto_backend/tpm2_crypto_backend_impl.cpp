@@ -27,6 +27,7 @@
 
 #include <botan/internal/eme.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/tpm2_algo_mappings.h>
 #include <botan/internal/tpm2_util.h>
 
@@ -90,16 +91,11 @@ template <typename T>
 
 /// Safely converts the @p userdata to the Botan crypto context object.
 [[nodiscard]] std::optional<std::reference_wrapper<Botan::TPM2::CryptoCallbackState>> get(void* userdata) noexcept {
-   if(!userdata) {
+   if(auto* ccs = reinterpret_cast<Botan::TPM2::CryptoCallbackState*>(userdata)) {
+      return *ccs;
+   } else {
       return std::nullopt;
    }
-
-   auto* ccs = reinterpret_cast<Botan::TPM2::CryptoCallbackState*>(userdata);
-   if(!ccs) {
-      return std::nullopt;
-   }
-
-   return *ccs;
 }
 
 /**
@@ -140,13 +136,13 @@ template <std::invocable<> F>
                                      size_t buffer_size,
                                      const uint8_t* iv) noexcept {
    return thunk([&] {
-      if(!key) {
+      if(key == nullptr) {
          return (direction == Botan::Cipher_Dir::Encryption) ? TSS2_ESYS_RC_NO_ENCRYPT_PARAM
                                                              : TSS2_ESYS_RC_NO_DECRYPT_PARAM;
       }
 
       // nullptr buffer with size 0 is alright
-      if(!buffer && buffer_size != 0) {
+      if(buffer == nullptr && buffer_size != 0) {
          return TSS2_ESYS_RC_BAD_VALUE;
       }
 
@@ -179,7 +175,7 @@ template <std::invocable<> F>
       const auto s_data = std::span{buffer, buffer_size};
       const auto s_key = std::span{key, keylength};
       const auto s_iv = [&]() -> std::span<const uint8_t> {
-         if(iv) {
+         if(iv != nullptr) {
             return {iv, cipher->default_nonce_length()};
          } else {
             return {};
@@ -207,7 +203,7 @@ extern "C" {
 TSS2_RC hash_start(ESYS_CRYPTO_CONTEXT_BLOB** context, TPM2_ALG_ID hash_alg, void* userdata) {
    BOTAN_UNUSED(userdata);
    return thunk([&] {
-      if(!context) {
+      if(context == nullptr) {
          return TSS2_ESYS_RC_BAD_REFERENCE;
       }
 
@@ -217,7 +213,7 @@ TSS2_RC hash_start(ESYS_CRYPTO_CONTEXT_BLOB** context, TPM2_ALG_ID hash_alg, voi
       }
 
       auto hash = Botan::HashFunction::create(hash_name.value());
-      if(!hash) {
+      if(hash == nullptr) {
          return TSS2_ESYS_RC_NOT_IMPLEMENTED;
       }
 
@@ -247,7 +243,7 @@ TSS2_RC hash_update(ESYS_CRYPTO_CONTEXT_BLOB* context, const uint8_t* buffer, si
       }
 
       // nullptr buffer with size 0 is alright
-      if(!buffer && size != 0) {
+      if(buffer == nullptr && size != 0) {
          return TSS2_ESYS_RC_BAD_VALUE;
       }
 
@@ -275,7 +271,7 @@ TSS2_RC hash_finish(ESYS_CRYPTO_CONTEXT_BLOB** context, uint8_t* buffer, size_t*
 
    return thunk([&] {
       auto hash = get<Botan::HashFunction>(context);
-      if(!hash || !buffer) {
+      if(!hash || buffer == nullptr) {
          return TSS2_ESYS_RC_BAD_REFERENCE;
       }
 
@@ -300,7 +296,7 @@ TSS2_RC hash_finish(ESYS_CRYPTO_CONTEXT_BLOB** context, uint8_t* buffer, size_t*
  */
 void hash_abort(ESYS_CRYPTO_CONTEXT_BLOB** context, void* userdata) {
    BOTAN_UNUSED(userdata);
-   if(context) {
+   if(context != nullptr) {
       // allocated in hash_start()
       delete *context;  // NOLINT(*-owning-memory)
       *context = nullptr;
@@ -323,7 +319,7 @@ TSS2_RC hmac_start(
    ESYS_CRYPTO_CONTEXT_BLOB** context, TPM2_ALG_ID hash_alg, const uint8_t* key, size_t size, void* userdata) {
    BOTAN_UNUSED(userdata);
    return thunk([&] {
-      if(!context || !key) {
+      if(Botan::any_null_pointers(context, key)) {
          return TSS2_ESYS_RC_BAD_REFERENCE;
       }
 
@@ -333,7 +329,7 @@ TSS2_RC hmac_start(
       }
 
       auto hmac = Botan::MessageAuthenticationCode::create(Botan::fmt("HMAC({})", hash_name.value()));
-      if(!hmac) {
+      if(hmac == nullptr) {
          return TSS2_ESYS_RC_NOT_IMPLEMENTED;
       }
 
@@ -365,7 +361,7 @@ TSS2_RC hmac_update(ESYS_CRYPTO_CONTEXT_BLOB* context, const uint8_t* buffer, si
       }
 
       // nullptr buffer with size 0 is alright
-      if(!buffer && size != 0) {
+      if(buffer == nullptr && size != 0) {
          return TSS2_ESYS_RC_BAD_VALUE;
       }
 
@@ -393,7 +389,7 @@ TSS2_RC hmac_finish(ESYS_CRYPTO_CONTEXT_BLOB** context, uint8_t* buffer, size_t*
 
    return thunk([&] {
       auto hmac = get<Botan::MessageAuthenticationCode>(context);
-      if(!hmac || !buffer) {
+      if(!hmac || buffer == nullptr) {
          return TSS2_ESYS_RC_BAD_REFERENCE;
       }
 
@@ -418,7 +414,7 @@ TSS2_RC hmac_finish(ESYS_CRYPTO_CONTEXT_BLOB** context, uint8_t* buffer, size_t*
  */
 void hmac_abort(ESYS_CRYPTO_CONTEXT_BLOB** context, void* userdata) {
    BOTAN_UNUSED(userdata);
-   if(context) {
+   if(context != nullptr) {
       // allocated in hmac_start()
       delete *context;  // NOLINT(*-owning-memory)
       *context = nullptr;
@@ -438,7 +434,7 @@ void hmac_abort(ESYS_CRYPTO_CONTEXT_BLOB** context, void* userdata) {
 TSS2_RC get_random2b(TPM2B_NONCE* nonce, size_t num_bytes, void* userdata) {
    return thunk([&] {
       auto ccs = get(userdata);
-      if(!ccs || !ccs->get().rng || !nonce) {
+      if(!ccs || !ccs->get().rng || Botan::any_null_pointers(nonce)) {
          return TSS2_ESYS_RC_BAD_REFERENCE;
       }
 
@@ -544,7 +540,7 @@ TSS2_RC rsa_pk_encrypt(TPM2B_PUBLIC* pub_tpm_key,
 
    return thunk([&] {
       auto ccs = get(userdata);
-      if(!ccs || !pub_tpm_key || !in_buffer || !out_buffer || !ccs->get().rng) {
+      if(!ccs || !ccs->get().rng || Botan::any_null_pointers(pub_tpm_key, in_buffer, out_buffer)) {
          return TSS2_ESYS_RC_BAD_REFERENCE;
       }
 
@@ -642,7 +638,7 @@ TSS2_RC get_ecdh_point(TPM2B_PUBLIC* key,
    #if defined(BOTAN_HAS_ECDH)
    return thunk([&] {
       auto ccs = get(userdata);
-      if(!ccs || !key || !Z || !Q || !out_buffer | !ccs->get().rng) {
+      if(!ccs || !ccs->get().rng || Botan::any_null_pointers(key, Z, Q, out_buffer)) {
          return TSS2_ESYS_RC_BAD_REFERENCE;
       }
 

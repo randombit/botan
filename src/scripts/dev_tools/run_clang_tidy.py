@@ -48,7 +48,6 @@ disabled_needs_work = [
     'modernize-use-ranges', # limited by compiler support currently
     'performance-avoid-endl',
     'readability-convert-member-functions-to-static',
-    'readability-implicit-bool-conversion',
     'readability-inconsistent-declaration-parameter-name', # should fix this, blocked by https://github.com/llvm/llvm-project/issues/60845
     'readability-simplify-boolean-expr', # sometimes ok
     'readability-static-accessed-through-instance',

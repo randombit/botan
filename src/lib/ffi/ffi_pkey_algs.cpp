@@ -686,7 +686,7 @@ int botan_pubkey_load_sm2(botan_pubkey_t* key,
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::SM2_PublicKey> p_key;
-      if(!pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name)) {
+      if(pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name) == 0) {
          return ffi_new_object(key, std::move(p_key));
       } else {
          return BOTAN_FFI_ERROR_UNKNOWN_ERROR;

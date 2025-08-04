@@ -30,6 +30,11 @@ int botan_privkey_create(botan_privkey_t* key_obj,
                          const char* algo_name,
                          const char* algo_params,
                          botan_rng_t rng_obj) {
+   // TODO(Botan4) remove this implicit algorithm choice and reject nullptr algo_name
+   if(algo_name == nullptr) {
+      return botan_privkey_create(key_obj, "RSA", algo_params, rng_obj);
+   }
+
    return ffi_guard_thunk(__func__, [=]() -> int {
       if(key_obj == nullptr) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
@@ -40,11 +45,11 @@ int botan_privkey_create(botan_privkey_t* key_obj,
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
 
-      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
-      std::unique_ptr<Botan::Private_Key> key(
-         Botan::create_private_key(algo_name ? algo_name : "RSA", rng, algo_params ? algo_params : ""));
+      const std::string params(algo_params != nullptr ? algo_params : "");
 
-      if(key) {
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+
+      if(auto key = Botan::create_private_key(algo_name, rng, params)) {
          return ffi_new_object(key_obj, std::move(key));
       } else {
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
@@ -56,6 +61,11 @@ int botan_ec_privkey_create(botan_privkey_t* key_obj,
                             const char* algo_name,
                             botan_ec_group_t ec_group_obj,
                             botan_rng_t rng_obj) {
+   // TODO(Botan4) remove this implicit algorithm choice and reject nullptr algo_name
+   if(algo_name == nullptr) {
+      return botan_ec_privkey_create(key_obj, "ECDSA", ec_group_obj, rng_obj);
+   }
+
    return ffi_guard_thunk(__func__, [=]() -> int {
       if(key_obj == nullptr) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
@@ -64,10 +74,8 @@ int botan_ec_privkey_create(botan_privkey_t* key_obj,
 
       Botan::EC_Group ec_group = safe_get(ec_group_obj);
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
-      std::unique_ptr<Botan::Private_Key> key(
-         Botan::create_ec_private_key(algo_name ? algo_name : "ECDSA", ec_group, rng));
 
-      if(key) {
+      if(auto key = Botan::create_ec_private_key(algo_name, ec_group, rng)) {
          return ffi_new_object(key_obj, std::move(key));
       } else {
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;

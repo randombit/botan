@@ -66,7 +66,7 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
 
       feat |= if_set(riscv_features, RISCV_HWPROBE_bit::Vector, CPUFeature::Bit::VECTOR, allowed);
 
-      if(feat & CPUFeature::Bit::VECTOR) {
+      if(is_set(feat, CPUFeature::Bit::VECTOR)) {
          feat |= if_set(riscv_features, RISCV_HWPROBE_bit::Vector_Aes, CPUFeature::Bit::VECTOR_AES, allowed);
          feat |= if_set(riscv_features, RISCV_HWPROBE_bit::Vector_Sha256, CPUFeature::Bit::VECTOR_SHA256, allowed);
          feat |= if_set(riscv_features, RISCV_HWPROBE_bit::Vector_SM3, CPUFeature::Bit::VECTOR_SM3, allowed);

@@ -249,7 +249,7 @@ void OID::decode_from(BER_Decoder& decoder) {
             }
 
             const uint8_t next = data.take_byte();
-            const bool more = (next & 0x80);
+            const bool more = (next & 0x80) == 0x80;
             const uint8_t value = next & 0x7F;
 
             if((b >> (32 - 7)) != 0) {
