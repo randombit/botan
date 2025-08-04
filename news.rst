@@ -24,6 +24,8 @@ Version 3.9.0, Not Yet Released
 
 * Modify the OID lookup system to use a static switch for builtin OIDs. (GH #4896 #4888)
 
+* Optimizations for X448 and Ed448 (GH #5037)
+
 * Modify ``BOTAN_CLEAR_CPUID`` so that clearing ``ssse3`` also disables AVX2/AVX512
   (GH #4853)
 
@@ -54,7 +56,9 @@ Version 3.9.0, Not Yet Released
 * Resolve many warnings from ``clang-tidy`` (GH #4907 #4908 #4910 #4912 #4913 #4919 #4920 #4923
   #4924 #4931 #4956 #4957 #4958 #4959 #4960 #4961 #4962 #4963 #4964 #4968 #4969 #4971 #4972 #4973
   #4974 #4975 #4976 #4977 #4978 #4979 #4980 #4981 #4982 #4983 #4984 #4985 #4986 #4987 #4988 #4989
-  #4990 #4992 #4993 #4998 #5004 #5005 #5031 #5032)
+  #4990 #4992 #4993 #4998 #5004 #5005 #5031 #5032 #5034 #5035 #5036)
+
+* CMake improvements (GH #5022 #5027)
 
 * CI improvements (GH #4920 #4294 #4926 #4929)
 
