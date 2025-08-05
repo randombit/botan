@@ -88,7 +88,7 @@ void SP800_56C_One_Step_Hash::perform_kdf(std::span<uint8_t> key,
                                           std::span<const uint8_t> secret,
                                           std::span<const uint8_t> salt,
                                           std::span<const uint8_t> label) const {
-   BOTAN_ARG_CHECK(salt.empty(), "SP800_56A_Hash does not support a non-empty salt");
+   BOTAN_ARG_CHECK(salt.empty(), "SP800-56C KDF with hash does not support using a salt parameter");
    kdm_internal<HashFunction>(key, secret, label, *m_hash, [](HashFunction&) { /* NOP */ });
 }
 
