@@ -23,13 +23,14 @@ struct Jitter_RNG_Internal {
 };
 
 Jitter_RNG_Internal::Jitter_RNG_Internal() {
-   static int result = jent_entropy_init();
+   constexpr unsigned int oversampling_rate = 0;    // use default oversampling
+   constexpr unsigned int flags = JENT_FORCE_FIPS;  // enable health tests
+
+   // if flags and osr are used, use the same values for init and alloc
+   static int result = jent_entropy_init_ex(oversampling_rate, flags);
 
    // no further details documented regarding the return value
    BOTAN_ASSERT(result == 0, "JitterRNG: initialization successful");
-
-   constexpr unsigned int oversampling_rate = 0;  // use default oversampling
-   constexpr unsigned int flags = 0;
 
    m_rand_data = jent_entropy_collector_alloc(oversampling_rate, flags);
    BOTAN_ASSERT_NONNULL(m_rand_data);
