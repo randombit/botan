@@ -40,7 +40,7 @@ class PK_Keygen final : public Command {
    public:
       PK_Keygen() :
             Command(
-               "keygen --algo=RSA --params= --passphrase= --cipher= --pbkdf= --pbkdf-ms=300 --pbkdf-iter= --provider= --der-out") {
+               "keygen --algo=RSA --params= --passphrase= --cipher= --pbkdf= --pbkdf-ms=300 --pbkdf-iter= --provider= --rng-type= --drbg-seed= --der-out") {
       }
 
       std::string group() const override { return "pubkey"; }
@@ -178,7 +178,10 @@ std::unique_ptr<Botan::Private_Key> load_private_key(const std::string& key_file
 
 class PK_Sign final : public Command {
    public:
-      PK_Sign() : Command("sign --der-format --passphrase= --hash=SHA-256 --padding= --provider= key file") {}
+      PK_Sign() :
+            Command(
+               "sign --der-format --passphrase= --hash=SHA-256 --padding= --provider= --rng-type= --drbg-seed= key file") {
+      }
 
       std::string group() const override { return "pubkey"; }
 
@@ -284,7 +287,7 @@ class PKCS8_Tool final : public Command {
    public:
       PKCS8_Tool() :
             Command(
-               "pkcs8 --pass-in= --pub-out --der-out --pass-out= --cipher= --pbkdf= --pbkdf-ms=300 --pbkdf-iter= key") {
+               "pkcs8 --pass-in= --pub-out --der-out --pass-out= --cipher= --pbkdf= --pbkdf-ms=300 --pbkdf-iter= --rng-type= --drbg-seed= key") {
       }
 
       std::string group() const override { return "pubkey"; }
@@ -435,7 +438,8 @@ BOTAN_REGISTER_COMMAND("pk_workfactor", PK_Workfactor);
 
 class Gen_DL_Group final : public Command {
    public:
-      Gen_DL_Group() : Command("gen_dl_group --pbits=2048 --qbits=0 --seed= --type=subgroup") {}
+      Gen_DL_Group() :
+            Command("gen_dl_group --pbits=2048 --qbits=0 --seed= --type=subgroup --rng-type= --drbg-seed=") {}
 
       std::string group() const override { return "pubkey"; }
 
