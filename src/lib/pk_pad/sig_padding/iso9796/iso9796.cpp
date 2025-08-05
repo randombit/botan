@@ -71,7 +71,8 @@ std::vector<uint8_t> iso9796_encoding(std::span<const uint8_t> msg,
    stuffer.append(salt);
 
    //apply mask
-   mgf1_mask(*hash, H.data(), hash_len, EM.data(), output_length - hash_len - trailer_len);
+   const size_t mgf1_bytes = EM.size() - hash_len - trailer_len;
+   mgf1_mask(*hash, H, std::span{EM}.first(mgf1_bytes));
 
    //clear the leftmost bit (confer bouncy castle)
    EM[0] &= 0x7F;
@@ -143,7 +144,7 @@ bool iso9796_verification(std::span<const uint8_t> repr,
 
    const uint8_t* H = &coded[DB_size];
 
-   mgf1_mask(*hash, H, hash_len, DB, DB_size);
+   mgf1_mask(*hash, {H, hash_len}, {DB, DB_size});
    //clear the leftmost bit (confer bouncy castle)
    DB[0] &= 0x7F;
 

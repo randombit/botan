@@ -18,16 +18,10 @@ class HashFunction;
 /**
 * MGF1 from PKCS #1 v2.0
 * @param hash hash function to use
-* @param in input buffer
-* @param in_len size of the input buffer in bytes
-* @param out output buffer. The buffer is XORed with the output of MGF1.
-* @param out_len size of the output buffer in bytes
+* @param input - the input buffer
+* @param output - the output buffer. The buffer is XORed with the output of MGF1.
 */
-void mgf1_mask(HashFunction& hash, const uint8_t in[], size_t in_len, uint8_t out[], size_t out_len);
-
-inline void mgf1_mask(HashFunction& hash, std::span<const uint8_t> input, std::span<uint8_t> output) {
-   mgf1_mask(hash, input.data(), input.size(), output.data(), output.size());
-}
+void mgf1_mask(HashFunction& hash, std::span<const uint8_t> input, std::span<uint8_t> output);
 
 }  // namespace Botan
 

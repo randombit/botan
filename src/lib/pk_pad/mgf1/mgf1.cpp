@@ -1,6 +1,5 @@
 /*
-* MGF1
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2025 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -13,19 +12,18 @@
 
 namespace Botan {
 
-void mgf1_mask(HashFunction& hash, const uint8_t in[], size_t in_len, uint8_t out[], size_t out_len) {
+void mgf1_mask(HashFunction& hash, std::span<const uint8_t> input, std::span<uint8_t> output) {
    uint32_t counter = 0;
 
    std::vector<uint8_t> buffer(hash.output_length());
-   while(out_len > 0) {
-      hash.update(in, in_len);
+   while(!output.empty()) {
+      hash.update(input);
       hash.update_be(counter);
-      hash.final(buffer.data());
+      hash.final(buffer);
 
-      const size_t xored = std::min<size_t>(buffer.size(), out_len);
-      xor_buf(out, buffer.data(), xored);
-      out += xored;
-      out_len -= xored;
+      const size_t xored = std::min<size_t>(buffer.size(), output.size());
+      xor_buf(output.first(xored), std::span{buffer}.first(xored));
+      output = output.subspan(xored);
 
       ++counter;
    }
