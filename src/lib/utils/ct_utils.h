@@ -76,6 +76,12 @@ inline void unpoison(T& p)
 #endif
    }
 
+template<typename T>
+inline T value_barrier(T x) {
+   asm("" : "+r"(x) : /* no input */);
+   return x;
+}
+
 /**
 * A Mask type used for constant-time operations. A Mask<T> always has value
 * either 0 (all bits cleared) or ~0 (all bits set). All operations in a Mask<T>
@@ -115,6 +121,11 @@ class Mask
       static Mask<T> cleared()
          {
          return Mask<T>(0);
+         }
+      
+      static Mask<T> expand_top_bit(T v)
+         {
+         return Mask<T>(Botan::expand_top_bit<T>(Botan::CT::value_barrier<T>(v)));
          }
 
       /**
@@ -156,7 +167,7 @@ class Mask
       */
       static Mask<T> is_lt(T x, T y)
          {
-         return Mask<T>(expand_top_bit<T>(x^((x^y) | ((x-y)^x))));
+         return Mask<T>(Botan::expand_top_bit<T>(x^((x^y) | ((x-y)^x))));
          }
 
       /**
@@ -350,7 +361,7 @@ class Mask
       */
       T value() const
          {
-         return m_mask;
+         return value_barrier<T>(m_mask);
          }
 
    private:
