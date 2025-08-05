@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 3.9.0, Not Yet Released
+Version 3.9.0, 2025-08-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add SHA-1 implementation using AVX2/BMI2 (GH #4852)
