@@ -52,7 +52,7 @@ std::vector<uint8_t> pss_encode(HashFunction& hash,
    stuffer.append(0x01);
    stuffer.append(salt);
 
-   mgf1_mask(hash, H.data(), H.size(), EM.data(), db_len);
+   mgf1_mask(hash, H, std::span{EM}.first(db_len));
    EM[0] &= db0_mask;
 
    stuffer.append(H);
@@ -108,7 +108,7 @@ bool pss_verify(HashFunction& hash,
    const uint8_t* H = &coded[DB_size];
    const size_t H_size = HASH_SIZE;
 
-   mgf1_mask(hash, H, H_size, DB, DB_size);
+   mgf1_mask(hash, {H, H_size}, {DB, DB_size});
    DB[0] &= 0xFF >> top_bits;
 
    size_t salt_offset = 0;
