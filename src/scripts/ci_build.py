@@ -937,9 +937,10 @@ def main(args=None):
             cmds.append([py_interp, '-b'] + python_tests)
 
         if target in ['shared'] and options.os == 'linux':
-            cmds.append([py_interp, '-m', 'venv', 'test-venv'])
-            cmds.append([os.path.join('test-venv', 'bin/python'), '-m', 'pip', 'install', root_dir])
-            cmds.append([os.path.join('test-venv', 'bin/python'), os.path.join(root_dir, 'src/scripts/test_python_packaging.py')])
+            with tempfile.TemporaryDirectory() as venv_dir:
+                cmds.append([py_interp, '-m', 'venv', venv_dir])
+                cmds.append([os.path.join(venv_dir, 'bin/python'), '-m', 'pip', 'install', os.path.join(root_dir, 'src/python')])
+                cmds.append([os.path.join(venv_dir, 'bin/python'), os.path.join(root_dir, 'src/scripts/test_python_packaging.py')])
 
         if target in ['shared', 'static']:
             cmds.append(make_cmd + ['install'])

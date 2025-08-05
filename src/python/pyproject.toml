@@ -1,9 +1,7 @@
 [project]
 name = "botan3"
 description = "Python bindings for Botan C++ cryptography library"
-readme = "readme.rst"
 license = "BSD-2-Clause"
-license-files = [ "license.txt" ]
 dynamic = [ "version" ]
 authors = [
     {name = "Jack Lloyd", email = "jack@randombit.net"},
@@ -34,6 +32,4 @@ py-modules = ["botan3"]
 
 # read version information from git
 [tool.setuptools_scm]
-
-[tool.setuptools.package-dir]
-"" = "src/python"
+root = "../.."
