@@ -449,7 +449,8 @@ bool OS::read_env_variable(std::string& value_out, std::string_view name_view) {
       return false;
    }
 
-#if defined(BOTAN_TARGET_OS_HAS_WIN32) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+#if defined(BOTAN_TARGET_OS_HAS_WIN32) && \
+   (defined(BOTAN_BUILD_COMPILER_IS_MSVC) || defined(BOTAN_BUILD_COMPILER_IS_CLANGCL))
    const std::string name(name_view);
    char val[128] = {0};
    size_t req_size = 0;

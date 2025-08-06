@@ -32,3 +32,8 @@ if($identifiers_for_64bit -contains $ARCH ) {
 } else {
     echo "VSENV_ARCH=$ARCH" >> $env:GITHUB_ENV
 }
+
+# Remove standalone LLVM (and clang-cl) from PATH - we want to use the one shipped with VS.
+# https://github.com/actions/runner-images/issues/10001#issuecomment-2150541007
+$no_llvm_path = ($env:PATH -split ';' | Where-Object { $_ -ne 'C:\Program Files\LLVM\bin' }) -join ';'
+echo "PATH=$no_llvm_path" >> $env:GITHUB_ENV

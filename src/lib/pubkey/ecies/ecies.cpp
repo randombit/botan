@@ -30,8 +30,8 @@ namespace {
 BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 
-class ECIES_PrivateKey final : public EC_PrivateKey,
-                               public PK_Key_Agreement_Key {
+class ECIES_PrivateKey final : public virtual EC_PrivateKey,
+                               public virtual PK_Key_Agreement_Key {
    public:
       explicit ECIES_PrivateKey(const ECDH_PrivateKey& private_key) :
             // NOLINTNEXTLINE(*-slicing)
