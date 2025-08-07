@@ -674,10 +674,6 @@ Certificate_Status_Code PKIX::build_all_certificate_paths(std::vector<std::vecto
       throw Invalid_Argument("PKIX::build_all_certificate_paths: cert_paths_out must be empty");
    }
 
-   if(end_entity.is_self_signed()) {
-      return Certificate_Status_Code::CANNOT_ESTABLISH_TRUST;
-   }
-
    auto cert_in_any_trusted_store = [&](const X509_Certificate& cert) {
       return std::any_of(trusted_certstores.begin(), trusted_certstores.end(), [&](const Certificate_Store* store) {
          BOTAN_ARG_CHECK(store != nullptr, "certificate store must not be nullptr");
