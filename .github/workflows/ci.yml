@@ -167,14 +167,7 @@ jobs:
       - name: Configure Build
         run: python3 ./configure.py --cc=clang --build-targets=shared,cli,tests,examples,bogo_shim --build-fuzzers=test --with-boost --with-sqlite --with-zlib --with-lzma --with-bzip2 --with-tpm2
 
-      - name: Run Clang Tidy (Changed Files)
-        if: github.ref != 'refs/heads/master'
-        run: |
-           ./src/scripts/ci/gh_get_changes_in_pr.py $(git rev-parse HEAD) --api-token=${{ secrets.GITHUB_TOKEN }} | \
-             python3 ./src/scripts/dev_tools/run_clang_tidy.py --verbose --take-file-list-from-stdin --export-fixes-dir=clang_tidy_diagnostics
-
-      - name: Run Clang Tidy (All Files)
-        if: github.ref == 'refs/heads/master'
+      - name: Run Clang Tidy
         run: |
              python3 ./src/scripts/dev_tools/run_clang_tidy.py --verbose
 
