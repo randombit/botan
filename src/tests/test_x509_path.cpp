@@ -844,8 +844,8 @@ class Non_Self_Signed_Trust_Anchors_Test final : public Test {
       }
 
       std::vector<Test::Result> forbidden_self_signed_trust_anchors_test() {
-         auto restrictions = get_default_restrictions(false, false);  // non-self-signed anchors are forbidden
-         auto [certs, validation_time] = test_cert_chain_with_validation_time();
+         const auto restrictions = get_default_restrictions(false, false);  // non-self-signed anchors are forbidden
+         const auto [certs, validation_time] = test_cert_chain_with_validation_time();
 
          Botan::Certificate_Store_In_Memory cert_store(certs.at(3));
 
@@ -868,6 +868,25 @@ class Non_Self_Signed_Trust_Anchors_Test final : public Test {
          return {result};
       }
 
+      std::vector<Test::Result> stand_alone_root_test() {
+         const auto restrictions = get_default_restrictions(false, false);
+         const auto [certs, validation_time] = test_cert_chain_with_validation_time();
+         const auto self_signed_root = certs.at(4);
+
+         Botan::Certificate_Store_In_Memory cert_store(certs.at(4));
+
+         Test::Result result("Stand alone root certificate path validation");
+
+         const auto path_result = Botan::x509_path_validate(
+            self_signed_root, restrictions, {&cert_store}, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
+
+         result.test_eq("unexpected x509_path_validate result",
+                        path_result.result_string(),
+                        to_string(Botan::Certificate_Status_Code::OK));
+
+         return {result};
+      }
+
       std::vector<Test::Result> run() override {
          std::vector<Test::Result> results;
 
@@ -878,6 +897,9 @@ class Non_Self_Signed_Trust_Anchors_Test final : public Test {
          results.insert(results.end(), res.begin(), res.end());
 
          res = forbidden_self_signed_trust_anchors_test();
+         results.insert(results.end(), res.begin(), res.end());
+
+         res = stand_alone_root_test();
          results.insert(results.end(), res.begin(), res.end());
 
          return results;
