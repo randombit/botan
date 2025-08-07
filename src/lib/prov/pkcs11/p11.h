@@ -26,18 +26,7 @@
    #define CK_DECLARE_FUNCTION(returnType, name) returnType name
 #endif
 
-/* When building with clang-cl, specifying this with dllimport causes a warning when defining the
- * CK_C_XXX function pointer types in pkcs11.h:
- *
- * 'dllimport' attribute only applies to functions, variables, classes, and Objective-C interfaces
- *
- * I'm not convinced the dllimport is needed/approproate for typedefs under MSVC either.
-*/
-#if 0  // defined(_MSC_VER)
-   #define CK_DECLARE_FUNCTION_POINTER(returnType, name) returnType __declspec(dllimport)(*name)
-#else
-   #define CK_DECLARE_FUNCTION_POINTER(returnType, name) returnType(*name)
-#endif
+#define CK_DECLARE_FUNCTION_POINTER(returnType, name) returnType(*name)
 
 #define CK_CALLBACK_FUNCTION(returnType, name) returnType(*name)
 

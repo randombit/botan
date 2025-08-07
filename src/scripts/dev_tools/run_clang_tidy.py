@@ -384,8 +384,6 @@ def main(args = None): # pylint: disable=too-many-return-statements
         if file_matcher.search(file) is None:
             continue
 
-        files_checked += 1
-
         cache_hit = False
         if cache is not None:
             if cache.hit(config=check_config, source_file=info['preproc'], clang_tidy=clang_tidy_version):
@@ -396,6 +394,8 @@ def main(args = None): # pylint: disable=too-many-return-statements
             sys.stdout.flush()
 
         if not cache_hit:
+            files_checked += 1
+
             results.append((info, pool.apply_async(
                 run_clang_tidy,
                 (compile_commands_file,
