@@ -628,7 +628,7 @@ Certificate_Status_Code PKIX::build_certificate_path(std::vector<X509_Certificat
    }
    BOTAN_ASSERT_NOMSG(!all_cert_paths.empty());
 
-   // Paths ending in self-signed certificates are prefered.
+   // Paths ending in self-signed certificates are preferred.
    const auto first_with_self_signed_anchor = std::ranges::find_if(all_cert_paths, [&](const auto& left_path) {
       BOTAN_ASSERT_NOMSG(!left_path.empty());
       return left_path.back().is_self_signed();
