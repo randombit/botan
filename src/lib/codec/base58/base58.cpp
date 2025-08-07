@@ -12,6 +12,7 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/mul128.h>
 
 namespace Botan {
 
@@ -35,41 +36,90 @@ char lookup_base58_char(uint8_t x) {
    // "123456789 ABCDEFGH JKLMN PQRSTUVWXYZ abcdefghijk mnopqrstuvwxyz"
    BOTAN_DEBUG_ASSERT(x < 58);
 
-   const auto is_dec_19 = CT::Mask<uint8_t>::is_lte(x, 8);
-   const auto is_alpha_AH = CT::Mask<uint8_t>::is_within_range(x, 9, 16);
-   const auto is_alpha_JN = CT::Mask<uint8_t>::is_within_range(x, 17, 21);
-   const auto is_alpha_PZ = CT::Mask<uint8_t>::is_within_range(x, 22, 32);
-   const auto is_alpha_ak = CT::Mask<uint8_t>::is_within_range(x, 33, 43);
-   // otherwise in 'm'-'z'
+   // This works by computing offset(x) such that x + offset(x) is equal to the
+   // desired character
 
-   const char c_19 = '1' + x;
-   const char c_AH = 'A' + (x - 9);
-   const char c_JN = 'J' + (x - 17);
-   const char c_PZ = 'P' + (x - 22);
-   const char c_ak = 'a' + (x - 33);
-   const char c_mz = 'm' + (x - 44);
+   size_t offset = 49;
 
-   char ret = c_mz;
-   ret = is_dec_19.select(c_19, ret);
-   ret = is_alpha_AH.select(c_AH, ret);
-   ret = is_alpha_JN.select(c_JN, ret);
-   ret = is_alpha_PZ.select(c_PZ, ret);
-   ret = is_alpha_ak.select(c_ak, ret);
+   offset += CT::Mask<uint8_t>::is_gt(x, 8).if_set_return(7);
+   offset += CT::Mask<uint8_t>::is_gt(x, 16).if_set_return(1);
+   offset += CT::Mask<uint8_t>::is_gt(x, 21).if_set_return(1);
+   offset += CT::Mask<uint8_t>::is_gt(x, 32).if_set_return(6);
+   offset += CT::Mask<uint8_t>::is_gt(x, 43).if_set_return(1);
+   return static_cast<char>(x + offset);
+}
 
-   return ret;
+consteval word base58_conversion_radix() {
+   if constexpr(sizeof(word) == 8) {
+      // 58^10 largest that fits into a 64 bit word
+      return 430804206899405824U;
+   } else {
+      // 58^5 largest that fits into a 32 bit word
+      return 656356768U;
+   }
+}
+
+consteval size_t base58_conversion_radix_digits() {
+   if constexpr(sizeof(word) == 8) {
+      return 10;
+   } else {
+      return 5;
+   }
+}
+
+constexpr std::pair<uint8_t, word> divmod_58(word x) {
+   BOTAN_DEBUG_ASSERT(x < base58_conversion_radix());
+
+   word q = 0;
+
+   // Division by constant 58
+   //
+   // Compilers will *usually* convert an expression like `x / 58` into
+   // exactly this kind of operation, but not necessarily always...
+   if constexpr(sizeof(word) == 4) {
+      const uint64_t magic = 2369637129;  // ceil(2**36 / 29)
+      uint64_t z = magic * x;
+      q = z >> 37;
+   } else {
+      const uint64_t magic = 5088756985850910791;  // ceil(2**67 / 29)
+      uint64_t lo = 0;                             // unused
+      uint64_t hi = 0;
+      mul64x64_128(magic, x >> 1, &lo, &hi);
+      q = static_cast<word>(hi >> 3);
+   }
+
+   const uint8_t r = static_cast<uint8_t>(x - q * 58);
+   return std::make_pair(r, q);
 }
 
 std::string base58_encode(BigInt v, size_t leading_zeros) {
-   const word radix = 58;
+   constexpr word radix = base58_conversion_radix();
+   constexpr size_t radix_digits = base58_conversion_radix_digits();
 
-   std::string result;
    BigInt q;
+   std::vector<uint8_t> digits;
 
    while(v.is_nonzero()) {
       word r = 0;
       ct_divide_word(v, radix, q, r);
-      result.push_back(lookup_base58_char(static_cast<uint8_t>(r)));
+
+      for(size_t i = 0; i != radix_digits; ++i) {
+         const auto [r58, q58] = divmod_58(r);
+         digits.push_back(r58);
+         r = q58;
+      }
       v.swap(q);
+   }
+
+   // remove leading zeros
+   while(!digits.empty() && digits.back() == 0) {
+      digits.pop_back();
+   }
+
+   std::string result;
+
+   for(uint8_t d : digits) {
+      result.push_back(lookup_base58_char(d));
    }
 
    for(size_t i = 0; i != leading_zeros; ++i) {
@@ -139,7 +189,7 @@ std::string base58_check_encode(const uint8_t input[], size_t input_length) {
 std::vector<uint8_t> base58_decode(const char input[], size_t input_length) {
    const size_t leading_zeros = count_leading_zeros(input, input_length, '1');
 
-   BigInt v;
+   std::vector<uint8_t> digits;
 
    for(size_t i = leading_zeros; i != input_length; ++i) {
       const char c = input[i];
@@ -154,8 +204,29 @@ std::vector<uint8_t> base58_decode(const char input[], size_t input_length) {
          throw Decoding_Error("Invalid base58");
       }
 
+      digits.push_back(idx);
+   }
+
+   BigInt v;
+
+   constexpr word radix1 = 58;
+   constexpr word radix2 = 58 * 58;
+   constexpr word radix3 = 58 * 58 * 58;
+   constexpr word radix4 = 58 * 58 * 58 * 58;
+
+   std::span<uint8_t> remaining{digits};
+
+   while(remaining.size() >= 4) {
+      const word accum = radix3 * remaining[0] + radix2 * remaining[1] + radix1 * remaining[2] + remaining[3];
+      v *= radix4;
+      v += accum;
+      remaining = remaining.subspan(4);
+   }
+
+   while(!remaining.empty()) {
       v *= 58;
-      v += idx;
+      v += remaining[0];
+      remaining = remaining.subspan(1);
    }
 
    return v.serialize(v.bytes() + leading_zeros);
