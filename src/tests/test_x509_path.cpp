@@ -827,7 +827,7 @@ class Non_Self_Signed_Trust_Anchors_Test final : public Test {
             Cert_Path cert_path;
             const auto build_path_res =
                Botan::PKIX::build_certificate_path(cert_path, {&cert_store}, certs.at(0), certs);
-            result.test_is_eq("build_all_certificate_paths result",
+            result.test_is_eq("build_certificate_path result",
                               to_string(build_path_res),
                               to_string(Botan::Certificate_Status_Code::OK));
 
