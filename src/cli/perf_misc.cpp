@@ -15,6 +15,10 @@
    #include <botan/base32.h>
 #endif
 
+#if defined(BOTAN_HAS_BASE58_CODEC)
+   #include <botan/base58.h>
+#endif
+
 #if defined(BOTAN_HAS_BASE64_CODEC)
    #include <botan/base64.h>
 #endif
@@ -129,6 +133,36 @@ class PerfTest_Base64 final : public PerfTest {
 };
 
 BOTAN_REGISTER_PERF_TEST("base64", PerfTest_Base64);
+
+#endif
+
+#if defined(BOTAN_HAS_BASE58_CODEC)
+class PerfTest_Base58 final : public PerfTest {
+   public:
+      void go(const PerfConfig& config) override {
+         for(size_t buf_size : config.buffer_sizes()) {
+            std::vector<uint8_t> ibuf(buf_size);
+
+            auto enc_timer = config.make_timer("base58", ibuf.size(), "encode", "", ibuf.size());
+            auto dec_timer = config.make_timer("base58", ibuf.size(), "decode", "", ibuf.size());
+
+            const auto msec = config.runtime();
+
+            while(enc_timer->under(msec) && dec_timer->under(msec)) {
+               config.rng().randomize(ibuf);
+
+               const std::string b58 = enc_timer->run([&]() { return Botan::base58_encode(ibuf); });
+               const auto rbuf = dec_timer->run([&] { return Botan::base58_decode(b58); });
+               BOTAN_ASSERT(rbuf == ibuf, "Encode/decode round trip ok");
+            }
+
+            config.record_result(*enc_timer);
+            config.record_result(*dec_timer);
+         }
+      }
+};
+
+BOTAN_REGISTER_PERF_TEST("base58", PerfTest_Base58);
 
 #endif
 
