@@ -75,8 +75,8 @@ BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 
 class BOTAN_PUBLIC_API(2, 0) ECDH_PrivateKey final : public ECDH_PublicKey,
-                                                     public EC_PrivateKey,
-                                                     public PK_Key_Agreement_Key {
+                                                     public virtual EC_PrivateKey,
+                                                     public virtual PK_Key_Agreement_Key {
    public:
       /**
       * Load a private key.

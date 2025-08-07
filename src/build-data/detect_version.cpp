@@ -3,7 +3,7 @@
 * configure.py to determine the compilers version number.
 */
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) and !defined(__clang__)
 
 /*
    _MSC_VER Defined as an integer literal that encodes the major and

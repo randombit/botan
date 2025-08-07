@@ -98,8 +98,8 @@ class BOTAN_PUBLIC_API(2, 0) RSA_PublicKey : public virtual Public_Key {
 BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 
-class BOTAN_PUBLIC_API(2, 0) RSA_PrivateKey final : public Private_Key,
-                                                    public RSA_PublicKey {
+class BOTAN_PUBLIC_API(2, 0) RSA_PrivateKey final : public virtual Private_Key,
+                                                    public virtual RSA_PublicKey {
    public:
       /**
       * Load a private key.

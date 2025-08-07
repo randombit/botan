@@ -241,8 +241,7 @@ class BSD_Socket final : public OS::Socket {
                   struct timeval timeout_tv = make_timeout_tv();
                   fd_set write_set;
                   FD_ZERO(&write_set);
-                  // Weirdly, Winsock uses a SOCKET type but wants FD_SET to get an int instead
-                  FD_SET(static_cast<int>(m_socket), &write_set);
+                  FD_SET(m_socket, &write_set);
 
                   active = ::select(static_cast<int>(m_socket + 1), nullptr, &write_set, nullptr, &timeout_tv);
 

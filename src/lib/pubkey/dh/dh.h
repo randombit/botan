@@ -80,7 +80,7 @@ BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 
 class BOTAN_PUBLIC_API(2, 0) DH_PrivateKey final : public DH_PublicKey,
-                                                   public PK_Key_Agreement_Key,
+                                                   public virtual PK_Key_Agreement_Key,
                                                    public virtual Private_Key {
    public:
       /**
