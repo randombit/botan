@@ -353,8 +353,8 @@ namespace PKIX {
 * can also end in intermediate or leaf certificates found in the certificate
 * stores.
 *
-* Note that the validity (e.g. signatures or constraints) of these paths IS NOT
-* checked.
+* WARNING: The validity (e.g. signatures or constraints) of the output path IS
+* NOT checked.
 *
 * @param cert_paths output parameter to be filled with all discovered certificate paths
 * @param trusted_certstores list of certificate stores that contain trusted certificates
@@ -373,7 +373,7 @@ Certificate_Status_Code BOTAN_PUBLIC_API(3, 10)
 * paths ending in self-signed certificates, these are prioritized  over paths ending
 * in intermediate or leaf certificates of the certificate store.
 *
-* Note that the validity (e.g. signatures or constraints) of the output path IS
+* WARNING: The validity (e.g. signatures or constraints) of the output path IS
 * NOT checked.
 *
 * @param cert_path_out output parameter, cert_path will be appended to this vector
