@@ -350,7 +350,7 @@ namespace PKIX {
 /**
 * Create all certificate paths by identifying all possible routes from the
 * end-entity certificate to any certificate in the certificate store list. Paths
-* can also end in intermediate or leaf certificates found in the certificate
+* may also end in intermediate or leaf certificates found in the certificate
 * stores.
 *
 * WARNING: The validity (e.g. signatures or constraints) of the output path IS
