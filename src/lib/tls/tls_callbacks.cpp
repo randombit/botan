@@ -354,6 +354,26 @@ std::unique_ptr<PK_Key_Agreement_Key> TLS::Callbacks::tls_generate_ephemeral_key
    throw TLS_Exception(Alert::DecodeError, "cannot create a key offering without a group definition");
 }
 
+std::unique_ptr<PK_Key_Agreement_Key> TLS::Callbacks::tls_generate_ephemeral_ecdh_key(
+   TLS::Group_Params group, RandomNumberGenerator& rng, EC_Point_Format tls12_ecc_pubkey_encoding_format) {
+   // Delegating to the "universal" callback to obtain an ECDH key pair
+   auto key = tls_generate_ephemeral_key(group, rng);
+
+   // For ECDH key pairs, we set the internal point encoding flag for the key
+   // before passing it on into the TLS 1.2 implementation. To do that, we must
+   // assume that the key was derived from `ECDH_PrivateKey` which would very
+   // likely not hold if downstream users passed their custom private key type
+   // (e.g. to delegate to some crypto hardware). Such users should consider
+   // overriding this ECDH-specific callback to get around this assumption.
+   if(group.is_ecdh_named_curve() /* && not X25519 or X448 */) {
+      if(auto* ecc_key = dynamic_cast<ECDH_PrivateKey*>(key.get())) {
+         ecc_key->set_point_encoding(tls12_ecc_pubkey_encoding_format);
+      }
+   }
+
+   return key;
+}
+
 secure_vector<uint8_t> TLS::Callbacks::tls_ephemeral_key_agreement(
    const std::variant<TLS::Group_Params, DL_Group>& group,
    const PK_Key_Agreement_Key& private_key,
