@@ -126,33 +126,6 @@ jobs:
       - name: Build and Test Botan
         run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
 
-  clang_tidy:
-    name: "clang-tidy"
-
-    runs-on: ubuntu-24.04
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Read Repository Configuration
-        uses: ./.github/actions/read-repo-config
-
-      - name: Setup Build Agent
-        uses: ./.github/actions/setup-build-agent
-        with:
-          target: clang-tidy
-          compiler: clang
-          cache-key: linux-x86_64-clang-tidy
-
-      - name: Install dependencies
-        run: sudo apt-get -qq install libboost-dev libbz2-dev liblzma-dev libsqlite3-dev
-
-      - name: Configure Build
-        run: python3 ./configure.py --cc=clang --build-targets=shared,cli,tests,examples,bogo_shim --build-fuzzers=test --with-boost --with-sqlite --with-zlib --with-lzma --with-bzip2 --with-tpm2
-
-      - name: Run Clang Tidy
-        run: python3 ./src/scripts/dev_tools/run_clang_tidy.py --verbose
-
   valgrind:
     name: "valgrind"
     strategy:
