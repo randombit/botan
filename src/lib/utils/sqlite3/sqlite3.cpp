@@ -10,6 +10,7 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/int_utils.h>
 #include <sqlite3.h>
 
 namespace Botan {
@@ -155,9 +156,7 @@ std::string Sqlite3_Database::Sqlite3_Statement::get_str(int column) {
 size_t Sqlite3_Database::Sqlite3_Statement::get_size_t(int column) {
    BOTAN_ASSERT(::sqlite3_column_type(m_stmt, column) == SQLITE_INTEGER, "Return count is an integer");
 
-   const size_t sessions_int = ::sqlite3_column_int64(m_stmt, column);
-
-   return sessions_int;
+   return checked_cast_to<size_t>(::sqlite3_column_int64(m_stmt, column));
 }
 
 size_t Sqlite3_Database::Sqlite3_Statement::spin() {
