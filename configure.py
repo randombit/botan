@@ -3186,6 +3186,7 @@ def set_defaults_for_unset_options(options, info_arch, info_cc, info_os):
         default_paths = [
             '/etc/ssl/certs/ca-certificates.crt', # Ubuntu, Debian, Arch, Gentoo
             '/etc/pki/tls/certs/ca-bundle.crt', # RHEL
+            '/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem', # Fedora
             '/etc/ssl/ca-bundle.pem', # SuSE
             '/etc/ssl/cert.pem', # OpenBSD, FreeBSD, Alpine
             '/etc/certs/ca-certificates.crt', # Solaris
