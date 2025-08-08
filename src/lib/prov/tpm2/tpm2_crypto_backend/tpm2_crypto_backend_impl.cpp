@@ -25,7 +25,7 @@
    #include <botan/ecdh.h>
 #endif
 
-#include <botan/internal/eme.h>
+#include <botan/internal/enc_padding.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/mem_utils.h>
 #include <botan/internal/tpm2_algo_mappings.h>

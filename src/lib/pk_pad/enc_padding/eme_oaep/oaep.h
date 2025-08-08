@@ -8,7 +8,7 @@
 #ifndef BOTAN_OAEP_H_
 #define BOTAN_OAEP_H_
 
-#include <botan/internal/eme.h>
+#include <botan/internal/enc_padding.h>
 
 #include <botan/hash.h>
 #include <botan/internal/ct_utils.h>

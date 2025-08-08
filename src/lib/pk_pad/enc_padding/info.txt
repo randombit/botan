@@ -1,0 +1,13 @@
+<defines>
+RSA_ENCRYPTION_PADDING -> 20250720
+</defines>
+
+<module_info>
+name -> "RSA encryption padding schemes"
+brief -> "Implementations of public key encryption padding schemes"
+</module_info>
+
+<requires>
+hash
+rng
+</requires>

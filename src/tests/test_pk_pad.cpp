@@ -6,8 +6,8 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_PK_PADDING)
-   #include <botan/internal/eme.h>
+#if defined(BOTAN_HAS_RSA_ENCRYPTION_PADDING)
+   #include <botan/internal/enc_padding.h>
 #endif
 
 #if defined(BOTAN_HAS_RSA_SIGNATURE_PADDING)

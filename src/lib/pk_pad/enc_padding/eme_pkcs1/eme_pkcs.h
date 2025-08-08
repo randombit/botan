@@ -8,7 +8,7 @@
 #ifndef BOTAN_EME_PKCS1_H_
 #define BOTAN_EME_PKCS1_H_
 
-#include <botan/internal/eme.h>
+#include <botan/internal/enc_padding.h>
 
 namespace Botan {
 

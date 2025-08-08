@@ -11,7 +11,7 @@ brief -> "Implementation of the TPM2-TSS crypto callbacks"
 hash
 hmac
 modes
-pk_pad
+enc_padding
 eme_raw
 </requires>
 
