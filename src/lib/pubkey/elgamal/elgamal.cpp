@@ -105,10 +105,10 @@ namespace {
 /**
 * ElGamal encryption operation
 */
-class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_EME {
+class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_Padding {
    public:
       ElGamal_Encryption_Operation(const std::shared_ptr<const DL_PublicKey>& key, std::string_view padding) :
-            PK_Ops::Encryption_with_EME(padding), m_key(key) {
+            PK_Ops::Encryption_with_Padding(padding), m_key(key) {
          const size_t powm_window = 4;
          m_monty_y_p = monty_precompute(m_key->group()._monty_params_p(), m_key->public_key(), powm_window);
       }
@@ -154,12 +154,12 @@ std::vector<uint8_t> ElGamal_Encryption_Operation::raw_encrypt(std::span<const u
 /**
 * ElGamal decryption operation
 */
-class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_EME {
+class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_Padding {
    public:
       ElGamal_Decryption_Operation(const std::shared_ptr<const DL_PrivateKey>& key,
                                    std::string_view padding,
                                    RandomNumberGenerator& rng) :
-            PK_Ops::Decryption_with_EME(padding),
+            PK_Ops::Decryption_with_Padding(padding),
             m_key(key),
             m_blinder(
                m_key->group()._reducer_mod_p(),

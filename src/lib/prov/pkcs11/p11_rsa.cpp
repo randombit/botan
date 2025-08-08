@@ -175,12 +175,12 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
 
 // note: multiple-part decryption operations (with C_DecryptUpdate/C_DecryptFinal)
 // are not supported (PK_Ops::Decryption does not provide an `update` method)
-class PKCS11_RSA_Decryption_Operation_Software_EME final : public PK_Ops::Decryption_with_EME {
+class PKCS11_RSA_Decryption_Operation_Software_EME final : public PK_Ops::Decryption_with_Padding {
    public:
       PKCS11_RSA_Decryption_Operation_Software_EME(const PKCS11_RSA_PrivateKey& key,
                                                    std::string_view padding,
                                                    RandomNumberGenerator& rng) :
-            PK_Ops::Decryption_with_EME(padding), m_raw_decryptor(key, rng, "Raw") {}
+            PK_Ops::Decryption_with_Padding(padding), m_raw_decryptor(key, rng, "Raw") {}
 
       size_t plaintext_length(size_t ctext_len) const override { return m_raw_decryptor.plaintext_length(ctext_len); }
 

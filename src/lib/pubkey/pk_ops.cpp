@@ -28,16 +28,17 @@ AlgorithmIdentifier PK_Ops::Signature::algorithm_identifier() const {
    throw Not_Implemented("This signature scheme does not have an algorithm identifier available");
 }
 
-PK_Ops::Encryption_with_EME::Encryption_with_EME(std::string_view padding) :
+PK_Ops::Encryption_with_Padding::Encryption_with_Padding(std::string_view padding) :
       m_padding(EncryptionPaddingScheme::create(padding)) {}
 
-PK_Ops::Encryption_with_EME::~Encryption_with_EME() = default;
+PK_Ops::Encryption_with_Padding::~Encryption_with_Padding() = default;
 
-size_t PK_Ops::Encryption_with_EME::max_input_bits() const {
+size_t PK_Ops::Encryption_with_Padding::max_input_bits() const {
    return 8 * m_padding->maximum_input_size(max_ptext_input_bits());
 }
 
-std::vector<uint8_t> PK_Ops::Encryption_with_EME::encrypt(std::span<const uint8_t> msg, RandomNumberGenerator& rng) {
+std::vector<uint8_t> PK_Ops::Encryption_with_Padding::encrypt(std::span<const uint8_t> msg,
+                                                              RandomNumberGenerator& rng) {
    const size_t max_input_bits = max_ptext_input_bits();
    const size_t max_input_bytes = (max_input_bits + 7) / 8;
    BOTAN_ARG_CHECK(msg.size() <= max_input_bytes, "Plaintext too large");
@@ -47,12 +48,12 @@ std::vector<uint8_t> PK_Ops::Encryption_with_EME::encrypt(std::span<const uint8_
    return raw_encrypt(std::span{padded_ptext}.first(written), rng);
 }
 
-PK_Ops::Decryption_with_EME::Decryption_with_EME(std::string_view padding) :
+PK_Ops::Decryption_with_Padding::Decryption_with_Padding(std::string_view padding) :
       m_padding(EncryptionPaddingScheme::create(padding)) {}
 
-PK_Ops::Decryption_with_EME::~Decryption_with_EME() = default;
+PK_Ops::Decryption_with_Padding::~Decryption_with_Padding() = default;
 
-secure_vector<uint8_t> PK_Ops::Decryption_with_EME::decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) {
+secure_vector<uint8_t> PK_Ops::Decryption_with_Padding::decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) {
    const secure_vector<uint8_t> raw = raw_decrypt(ctext);
 
    secure_vector<uint8_t> ptext(raw.size());

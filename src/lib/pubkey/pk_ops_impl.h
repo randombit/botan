@@ -22,16 +22,16 @@ namespace Botan::PK_Ops {
 
 // NOLINTBEGIN(*-special-member-functions)
 
-class Encryption_with_EME : public Encryption {
+class Encryption_with_Padding : public Encryption {
    public:
-      ~Encryption_with_EME() override;
+      ~Encryption_with_Padding() override;
 
       size_t max_input_bits() const override;
 
       std::vector<uint8_t> encrypt(std::span<const uint8_t> ptext, RandomNumberGenerator& rng) override;
 
    protected:
-      explicit Encryption_with_EME(std::string_view padding);
+      explicit Encryption_with_Padding(std::string_view padding);
 
    private:
       virtual size_t max_ptext_input_bits() const = 0;
@@ -40,14 +40,14 @@ class Encryption_with_EME : public Encryption {
       std::unique_ptr<EncryptionPaddingScheme> m_padding;
 };
 
-class Decryption_with_EME : public Decryption {
+class Decryption_with_Padding : public Decryption {
    public:
-      ~Decryption_with_EME() override;
+      ~Decryption_with_Padding() override;
 
       secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) override;
 
    protected:
-      explicit Decryption_with_EME(std::string_view padding);
+      explicit Decryption_with_Padding(std::string_view padding);
 
    private:
       virtual secure_vector<uint8_t> raw_decrypt(std::span<const uint8_t> ctext) = 0;

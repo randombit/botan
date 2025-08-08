@@ -654,11 +654,11 @@ AlgorithmIdentifier RSA_Signature_Operation::algorithm_identifier() const {
    throw Invalid_Argument(fmt("Signatures using RSA/{} are not supported", padding_name));
 }
 
-class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_EME,
+class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_Padding,
                                        private RSA_Private_Operation {
    public:
       RSA_Decryption_Operation(const RSA_PrivateKey& rsa, std::string_view padding, RandomNumberGenerator& rng) :
-            PK_Ops::Decryption_with_EME(padding), RSA_Private_Operation(rsa, rng) {}
+            PK_Ops::Decryption_with_Padding(padding), RSA_Private_Operation(rsa, rng) {}
 
       size_t plaintext_length(size_t /*ctext_len*/) const override { return public_modulus_bytes(); }
 
@@ -710,11 +710,11 @@ class RSA_Public_Operation {
       std::shared_ptr<const RSA_Public_Data> m_public;
 };
 
-class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_EME,
+class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_Padding,
                                        private RSA_Public_Operation {
    public:
       RSA_Encryption_Operation(const RSA_PublicKey& rsa, std::string_view padding) :
-            PK_Ops::Encryption_with_EME(padding), RSA_Public_Operation(rsa) {}
+            PK_Ops::Encryption_with_Padding(padding), RSA_Public_Operation(rsa) {}
 
       size_t ciphertext_length(size_t /*ptext_len*/) const override { return public_modulus_bytes(); }
 
