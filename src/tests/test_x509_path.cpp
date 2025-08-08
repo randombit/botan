@@ -900,8 +900,8 @@ class Non_Self_Signed_Trust_Anchors_Test final : public Test {
       }
 
       std::vector<Test::Result> stand_alone_root_tests() {
-         const auto ss_trust_anchor_forbidden = get_default_restrictions(false, false);
-         const auto ss_trust_anchor_allowed = get_allow_non_self_signed_anchors_restrictions(false, false);
+         const auto self_signed_trust_anchor_forbidden = get_default_restrictions(false, false);
+         const auto self_signed_trust_anchor_allowed = get_allow_non_self_signed_anchors_restrictions(false, false);
 
          const auto cert_chain = get_valid_cert_chain();
          const auto& self_signed_root = cert_chain.at(4);
@@ -910,29 +910,29 @@ class Non_Self_Signed_Trust_Anchors_Test final : public Test {
 
          return {
             stand_alone_root_test("Standalone self-signed root (non-self-signed trust anchors forbidden)",
-                                  ss_trust_anchor_forbidden,
+                                  self_signed_trust_anchor_forbidden,
                                   self_signed_root,
                                   Botan::Certificate_Status_Code::OK),
             stand_alone_root_test("Standalone self-signed root (non-self-signed trust anchors allowed)",
-                                  ss_trust_anchor_allowed,
+                                  self_signed_trust_anchor_allowed,
                                   self_signed_root,
                                   Botan::Certificate_Status_Code::OK),
 
             stand_alone_root_test("Standalone self-signed end entity (non-self-signed trust anchors forbidden)",
-                                  ss_trust_anchor_forbidden,
+                                  self_signed_trust_anchor_forbidden,
                                   self_signed_ee,
                                   Botan::Certificate_Status_Code::OK),
             stand_alone_root_test("Standalone self-signed end entity (non-self-signed trust anchors allowed)",
-                                  ss_trust_anchor_allowed,
+                                  self_signed_trust_anchor_allowed,
                                   self_signed_ee,
                                   Botan::Certificate_Status_Code::OK),
 
             stand_alone_root_test("Standalone intermediate certificate (non-self-signed trust anchors forbidden)",
-                                  ss_trust_anchor_forbidden,
+                                  self_signed_trust_anchor_forbidden,
                                   ica,
                                   Botan::Certificate_Status_Code::CANNOT_ESTABLISH_TRUST),
             stand_alone_root_test("Standalone intermediate certificate (non-self-signed trust anchors allowed)",
-                                  ss_trust_anchor_allowed,
+                                  self_signed_trust_anchor_allowed,
                                   ica,
                                   Botan::Certificate_Status_Code::OK),
          };
