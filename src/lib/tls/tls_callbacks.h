@@ -12,6 +12,7 @@
 #define BOTAN_TLS_CALLBACKS_H_
 
 #include <botan/dl_group.h>
+#include <botan/ecc_key.h>
 #include <botan/ocsp.h>
 #include <botan/pubkey.h>
 #include <botan/tls_alert.h>
@@ -462,6 +463,36 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        */
       virtual std::unique_ptr<PK_Key_Agreement_Key> tls_generate_ephemeral_key(
          const std::variant<TLS::Group_Params, DL_Group>& group, RandomNumberGenerator& rng);
+
+      /**
+       * Generate an ECDH key pair for the TLS 1.2 handshake.
+       *
+       * Note that this callback is called exclusively by TLS 1.2 to handle the
+       * ECDH public key serialization format explicitly. TLS 1.3 fixes this
+       * format to 'uncompressed' and does not allow negotiating anything else.
+       * X25519 and X448 feature a defined and fixed public key encoding and are
+       * therefore not explicitly handled by this callback either.
+       *
+       * Users may override this if they want to provide a custom keypair type
+       * to offload TLS 1.2's ECDH handling to custom hardware, for instance. It
+       * is worth noting that support for compressed points in Botan is
+       * deprecated and this callback will disappear when it is removed in a
+       * future release.
+       *
+       * Typical use cases of the library don't need to do that and serious
+       * security risks are associated with customizing TLS's key exchange
+       * mechanism.
+       *
+       * @throws TLS_Exception(Alert::DecodeError) if the @p group is not known.
+       *
+       * @param group ECDH group identifier to generate an ephemeral keypair for
+       * @param rng a random number generator
+       * @param tls12_ecc_pubkey_encoding_format the key's serialization format
+       *
+       * @return an ECDH private key of an algorithm usable for key agreement
+       */
+      virtual std::unique_ptr<PK_Key_Agreement_Key> tls12_generate_ephemeral_ecdh_key(
+         TLS::Group_Params group, RandomNumberGenerator& rng, EC_Point_Format tls12_ecc_pubkey_encoding_format);
 
       /**
        * Agree on a shared secret with the peer's ephemeral public key for

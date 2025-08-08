@@ -1185,6 +1185,21 @@ Code Example: TLS Client using Custom Curve
 .. literalinclude:: /../src/examples/tls_custom_curves_client.cpp
    :language: cpp
 
+Special Case: Custom ECDH provider for TLS 1.2
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Users that wish to implement a custom ECDH provider for TLS 1.2 (e.g. to offload the implementation of
+standard curves to some crypto hardware), must take the negotiated ECC point encoding (compressed vs.
+uncompressed) into account. They should use the special callback  ``tls12_generate_ephemeral_ecdh_key``
+which provides the desired ECC point encoding as an input parameter.
+
+This special callback is called *only for TLS 1.2* and *only for ECDH using standardized curves* that
+Botan is aware of (for instance ``secp256r1``, ``brainpool256r1`` and such). Explicitly, that *does not
+include X25519 and X448* as those algorithms have a well-defined point format. TLS 1.3 does not allow
+negotiating the ECC point encoding (see `RFC 8446 Section 4.2.8.2 <https://www.rfc-editor.org/rfc/rfc8446#section-4.2.8.2>`_)
+and thus does not call this callback either. Support for compressed points in TLS 1.2 is deprecated in
+Botan and this callback will disappear when it is removed in a future release.
+
 .. _tls_asio_stream:
 
 TLS Stream
