@@ -14,7 +14,7 @@ namespace Botan {
 
 class HashFunction;
 class KDF;
-class EME;
+class EncryptionPaddingScheme;
 
 }  // namespace Botan
 
@@ -31,13 +31,13 @@ class Encryption_with_EME : public Encryption {
       std::vector<uint8_t> encrypt(std::span<const uint8_t> ptext, RandomNumberGenerator& rng) override;
 
    protected:
-      explicit Encryption_with_EME(std::string_view eme);
+      explicit Encryption_with_EME(std::string_view padding);
 
    private:
       virtual size_t max_ptext_input_bits() const = 0;
 
       virtual std::vector<uint8_t> raw_encrypt(std::span<const uint8_t> msg, RandomNumberGenerator& rng) = 0;
-      std::unique_ptr<EME> m_eme;
+      std::unique_ptr<EncryptionPaddingScheme> m_padding;
 };
 
 class Decryption_with_EME : public Decryption {
@@ -47,11 +47,11 @@ class Decryption_with_EME : public Decryption {
       secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) override;
 
    protected:
-      explicit Decryption_with_EME(std::string_view eme);
+      explicit Decryption_with_EME(std::string_view padding);
 
    private:
       virtual secure_vector<uint8_t> raw_decrypt(std::span<const uint8_t> ctext) = 0;
-      std::unique_ptr<EME> m_eme;
+      std::unique_ptr<EncryptionPaddingScheme> m_padding;
 };
 
 class Verification_with_Hash : public Verification {

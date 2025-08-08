@@ -523,7 +523,9 @@ class BOTAN_PUBLIC_API(2, 0) PK_Encryptor_EME final : public PK_Encryptor {
 };
 
 /**
-* Decryption with an MR algorithm and an EME.
+* Decryption with a padding scheme.
+*
+* This is typically only used with RSA
 */
 class BOTAN_PUBLIC_API(2, 0) PK_Decryptor_EME final : public PK_Decryptor {
    public:
@@ -531,12 +533,12 @@ class BOTAN_PUBLIC_API(2, 0) PK_Decryptor_EME final : public PK_Decryptor {
       * Construct an instance.
       * @param key the key to use inside the decryptor
       * @param rng the random generator to use
-      * @param eme the EME to use
+      * @param padding the padding scheme to use
       * @param provider the provider to use
       */
       PK_Decryptor_EME(const Private_Key& key,
                        RandomNumberGenerator& rng,
-                       std::string_view eme,
+                       std::string_view padding,
                        std::string_view provider = "");
 
       size_t plaintext_length(size_t ptext_len) const override;

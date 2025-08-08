@@ -478,14 +478,14 @@ TSS2_RC rsa_pk_encrypt(TPM2B_PUBLIC* pub_tpm_key,
    //
    //       https://github.com/randombit/botan/pull/4318#issuecomment-2297682058
    #if defined(BOTAN_HAS_RSA)
-   auto create_eme = [&](
-                        const TPMT_RSA_SCHEME& scheme,
-                        [[maybe_unused]] TPM2_ALG_ID name_algo,
-                        [[maybe_unused]] TPMU_ASYM_SCHEME scheme_detail) -> std::optional<std::unique_ptr<Botan::EME>> {
+   auto create_eme = [&](const TPMT_RSA_SCHEME& scheme,
+                         [[maybe_unused]] TPM2_ALG_ID name_algo,
+                         [[maybe_unused]] TPMU_ASYM_SCHEME scheme_detail)
+      -> std::optional<std::unique_ptr<Botan::EncryptionPaddingScheme>> {
       // OAEP is more complex by requiring a hash function and an optional
       // label. To avoid marshalling this into Botan's algorithm descriptor
       // we create an OAEP instance manually.
-      auto create_oaep = [&]() -> std::optional<std::unique_ptr<Botan::EME>> {
+      auto create_oaep = [&]() -> std::optional<std::unique_ptr<Botan::EncryptionPaddingScheme>> {
       #if defined(BOTAN_HAS_EME_OAEP)
          // TPM Library, Part 1: Architecture, Annex B.4
          //    The RSA key's scheme hash algorithm (or, if it is TPM_ALG_NULL,
@@ -520,14 +520,14 @@ TSS2_RC rsa_pk_encrypt(TPM2B_PUBLIC* pub_tpm_key,
       #endif
       };
 
-      try {  // EME::create throws if algorithm is not available
+      try {  // EncryptionPaddingScheme::create throws if algorithm is not available
          switch(scheme.scheme) {
             case TPM2_ALG_OAEP:
                return create_oaep();
             case TPM2_ALG_NULL:
-               return Botan::EME::create("Raw");
+               return Botan::EncryptionPaddingScheme::create("Raw");
             case TPM2_ALG_RSAES:
-               return Botan::EME::create("PKCS1v15");
+               return Botan::EncryptionPaddingScheme::create("PKCS1v15");
             default:
                return std::nullopt;  // -> not supported
          }
@@ -535,7 +535,7 @@ TSS2_RC rsa_pk_encrypt(TPM2B_PUBLIC* pub_tpm_key,
          /* ignore */
       }
 
-      return nullptr;  // -> not implemented (EME::create() threw)
+      return nullptr;  // -> not implemented (EncryptionPaddingScheme::create() threw)
    };
 
    return thunk([&] {

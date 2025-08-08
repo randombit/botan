@@ -11,7 +11,7 @@
 
 namespace Botan {
 
-class EME_Raw final : public EME {
+class EME_Raw final : public EncryptionPaddingScheme {
    public:
       EME_Raw() = default;
 

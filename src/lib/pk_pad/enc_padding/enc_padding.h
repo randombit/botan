@@ -4,8 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_PUBKEY_EME_H_
-#define BOTAN_PUBKEY_EME_H_
+#ifndef BOTAN_PUBKEY_ENCRYPTION_PADDING_H_
+#define BOTAN_PUBKEY_ENCRYPTION_PADDING_H_
 
 #include <botan/types.h>
 #include <botan/internal/ct_utils.h>
@@ -20,16 +20,17 @@ class RandomNumberGenerator;
 /**
 * Encoding Method for Encryption
 */
-class BOTAN_TEST_API EME /* NOLINT(*-special-member-functions) */ {
+class BOTAN_TEST_API EncryptionPaddingScheme /* NOLINT(*-special-member-functions) */ {
    public:
-      virtual ~EME();
+      virtual ~EncryptionPaddingScheme();
 
       /**
-      * Factory method for EME (message-encoding methods for encryption) objects
-      * @param algo_spec the name of the EME to create
+      * Factory method for encryption padding schemes
+      *
+      * @param algo_spec the name of the EncryptionPaddingScheme to create
       * @return pointer to newly allocated object of that type
       */
-      static std::unique_ptr<EME> create(std::string_view algo_spec);
+      static std::unique_ptr<EncryptionPaddingScheme> create(std::string_view algo_spec);
 
       /**
       * Return the maximum input size in bytes we can support

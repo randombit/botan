@@ -1,5 +1,4 @@
 /*
-* EME Base Class
 * (C) 1999-2008 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -25,7 +24,7 @@
 
 namespace Botan {
 
-std::unique_ptr<EME> EME::create(std::string_view algo_spec) {
+std::unique_ptr<EncryptionPaddingScheme> EncryptionPaddingScheme::create(std::string_view algo_spec) {
 #if defined(BOTAN_HAS_EME_RAW)
    if(algo_spec == "Raw") {
       return std::make_unique<EME_Raw>();
@@ -66,6 +65,6 @@ std::unique_ptr<EME> EME::create(std::string_view algo_spec) {
    throw Algorithm_Not_Found(algo_spec);
 }
 
-EME::~EME() = default;
+EncryptionPaddingScheme::~EncryptionPaddingScheme() = default;
 
 }  // namespace Botan

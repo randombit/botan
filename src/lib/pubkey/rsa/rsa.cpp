@@ -657,8 +657,8 @@ AlgorithmIdentifier RSA_Signature_Operation::algorithm_identifier() const {
 class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_EME,
                                        private RSA_Private_Operation {
    public:
-      RSA_Decryption_Operation(const RSA_PrivateKey& rsa, std::string_view eme, RandomNumberGenerator& rng) :
-            PK_Ops::Decryption_with_EME(eme), RSA_Private_Operation(rsa, rng) {}
+      RSA_Decryption_Operation(const RSA_PrivateKey& rsa, std::string_view padding, RandomNumberGenerator& rng) :
+            PK_Ops::Decryption_with_EME(padding), RSA_Private_Operation(rsa, rng) {}
 
       size_t plaintext_length(size_t /*ctext_len*/) const override { return public_modulus_bytes(); }
 
@@ -713,8 +713,8 @@ class RSA_Public_Operation {
 class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_EME,
                                        private RSA_Public_Operation {
    public:
-      RSA_Encryption_Operation(const RSA_PublicKey& rsa, std::string_view eme) :
-            PK_Ops::Encryption_with_EME(eme), RSA_Public_Operation(rsa) {}
+      RSA_Encryption_Operation(const RSA_PublicKey& rsa, std::string_view padding) :
+            PK_Ops::Encryption_with_EME(padding), RSA_Public_Operation(rsa) {}
 
       size_t ciphertext_length(size_t /*ptext_len*/) const override { return public_modulus_bytes(); }
 
