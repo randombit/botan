@@ -11,7 +11,7 @@ blinding
 keypair
 numbertheory
 sig_padding
-pk_pad
+enc_padding
 </requires>
 
 <header:public>

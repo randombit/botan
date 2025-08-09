@@ -8,14 +8,14 @@
 #ifndef BOTAN_EME_PKCS1_H_
 #define BOTAN_EME_PKCS1_H_
 
-#include <botan/internal/eme.h>
+#include <botan/internal/enc_padding.h>
 
 namespace Botan {
 
 /**
 * EME from PKCS #1 v1.5
 */
-class BOTAN_FUZZER_API EME_PKCS1v15 final : public EME {
+class BOTAN_FUZZER_API EME_PKCS1v15 final : public EncryptionPaddingScheme {
    private:
       size_t maximum_input_size(size_t keybits) const override;
 

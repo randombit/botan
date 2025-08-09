@@ -7,11 +7,13 @@
 
 #include <botan/internal/pk_ops_impl.h>
 
+#include <botan/assert.h>
 #include <botan/hash.h>
 #include <botan/kdf.h>
 #include <botan/rng.h>
 #include <botan/internal/bit_ops.h>
-#include <botan/internal/eme.h>
+#include <botan/internal/ct_utils.h>
+#include <botan/internal/enc_padding.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/scan_name.h>
@@ -26,33 +28,36 @@ AlgorithmIdentifier PK_Ops::Signature::algorithm_identifier() const {
    throw Not_Implemented("This signature scheme does not have an algorithm identifier available");
 }
 
-PK_Ops::Encryption_with_EME::Encryption_with_EME(std::string_view eme) : m_eme(EME::create(eme)) {}
+PK_Ops::Encryption_with_Padding::Encryption_with_Padding(std::string_view padding) :
+      m_padding(EncryptionPaddingScheme::create(padding)) {}
 
-PK_Ops::Encryption_with_EME::~Encryption_with_EME() = default;
+PK_Ops::Encryption_with_Padding::~Encryption_with_Padding() = default;
 
-size_t PK_Ops::Encryption_with_EME::max_input_bits() const {
-   return 8 * m_eme->maximum_input_size(max_ptext_input_bits());
+size_t PK_Ops::Encryption_with_Padding::max_input_bits() const {
+   return 8 * m_padding->maximum_input_size(max_ptext_input_bits());
 }
 
-std::vector<uint8_t> PK_Ops::Encryption_with_EME::encrypt(std::span<const uint8_t> msg, RandomNumberGenerator& rng) {
+std::vector<uint8_t> PK_Ops::Encryption_with_Padding::encrypt(std::span<const uint8_t> msg,
+                                                              RandomNumberGenerator& rng) {
    const size_t max_input_bits = max_ptext_input_bits();
    const size_t max_input_bytes = (max_input_bits + 7) / 8;
    BOTAN_ARG_CHECK(msg.size() <= max_input_bytes, "Plaintext too large");
 
-   secure_vector<uint8_t> eme_output(max_input_bits);
-   const size_t written = m_eme->pad(eme_output, msg, max_input_bits, rng);
-   return raw_encrypt(std::span{eme_output}.first(written), rng);
+   secure_vector<uint8_t> padded_ptext(max_input_bits);
+   const size_t written = m_padding->pad(padded_ptext, msg, max_input_bits, rng);
+   return raw_encrypt(std::span{padded_ptext}.first(written), rng);
 }
 
-PK_Ops::Decryption_with_EME::Decryption_with_EME(std::string_view eme) : m_eme(EME::create(eme)) {}
+PK_Ops::Decryption_with_Padding::Decryption_with_Padding(std::string_view padding) :
+      m_padding(EncryptionPaddingScheme::create(padding)) {}
 
-PK_Ops::Decryption_with_EME::~Decryption_with_EME() = default;
+PK_Ops::Decryption_with_Padding::~Decryption_with_Padding() = default;
 
-secure_vector<uint8_t> PK_Ops::Decryption_with_EME::decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) {
+secure_vector<uint8_t> PK_Ops::Decryption_with_Padding::decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) {
    const secure_vector<uint8_t> raw = raw_decrypt(ctext);
 
    secure_vector<uint8_t> ptext(raw.size());
-   auto len = m_eme->unpad(ptext, raw);
+   auto len = m_padding->unpad(ptext, raw);
 
    valid_mask = CT::Mask<uint8_t>::from_choice(len.has_value()).if_set_return(0xFF);
 

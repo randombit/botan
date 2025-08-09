@@ -6,8 +6,8 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_PK_PADDING)
-   #include <botan/internal/eme.h>
+#if defined(BOTAN_HAS_RSA_ENCRYPTION_PADDING)
+   #include <botan/internal/enc_padding.h>
 #endif
 
 #if defined(BOTAN_HAS_RSA_SIGNATURE_PADDING)
@@ -27,7 +27,7 @@ class EME_PKCS1v15_Decoding_Tests final : public Text_Based_Test {
 
          Test::Result result("PKCSv15 Decoding");
 
-         auto pkcs = Botan::EME::create("PKCS1v15");
+         auto pkcs = Botan::EncryptionPaddingScheme::create("PKCS1v15");
          if(!pkcs) {
             return result;
          }

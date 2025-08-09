@@ -25,9 +25,9 @@ workfactor.h
 <requires>
 asn1
 bigint
+enc_padding
 kdf
 pem
-pk_pad
 numbertheory
 rng
 hash
