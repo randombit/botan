@@ -1,31 +1,33 @@
 /*
 * (C) 2015,2017,2018 Jack Lloyd
+* (C) 2025 Dominik Schricker
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/ffi.h>
 
+#include <botan/internal/ffi_cert.h>
+#include <botan/internal/ffi_oid.h>
 #include <botan/internal/ffi_pkey.h>
+#include <botan/internal/ffi_rng.h>
 #include <botan/internal/ffi_util.h>
+#include <botan/internal/ffi_x509_rpki.h>
 #include <memory>
 
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-   #include <botan/data_src.h>
-   #include <botan/x509_crl.h>
-   #include <botan/x509cert.h>
-   #include <botan/x509path.h>
-#endif
+namespace {
+std::chrono::system_clock::time_point timepoint_from_timestamp(uint64_t time_since_epoch) {
+   return std::chrono::system_clock::time_point(std::chrono::seconds(time_since_epoch));
+}
+
+Botan::X509_Time time_from_timestamp(uint64_t time_since_epoch) {
+   return Botan::X509_Time(timepoint_from_timestamp(time_since_epoch));
+}
+}  // namespace
 
 extern "C" {
 
 using namespace Botan_FFI;
-
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-
-BOTAN_FFI_DECLARE_STRUCT(botan_x509_cert_struct, Botan::X509_Certificate, 0x8F628937);
-
-#endif
 
 int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* cert_path) {
    if(cert_obj == nullptr || cert_path == nullptr) {
@@ -134,12 +136,26 @@ int botan_x509_cert_get_subject_dn(
 }
 
 int botan_x509_cert_to_string(botan_x509_cert_t cert, char out[], size_t* out_len) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
    return copy_view_str(reinterpret_cast<uint8_t*>(out), out_len, botan_x509_cert_view_as_string, cert);
+#else
+   BOTAN_UNUSED(cert, out, out_len)
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 int botan_x509_cert_view_as_string(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_str_fn view) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return invoke_view_callback(view, ctx, c.to_string()); });
+#else
+   BOTAN_UNUSED(cert, ctx, view);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_view_pem(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_str_fn view) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return invoke_view_callback(view, ctx, c.PEM_encode()); });
 #else
    BOTAN_UNUSED(cert, ctx, view);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
@@ -157,6 +173,74 @@ int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage
    });
 #else
    BOTAN_UNUSED(cert, key_usage);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_get_basic_constraints(botan_x509_cert_t cert, int* is_ca, size_t* limit) {
+   if(is_ca == nullptr || limit == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) -> int {
+      if(c.is_CA_cert()) {
+         *is_ca = 1;
+         *limit = c.path_limit();
+      } else {
+         *is_ca = 0;
+         *limit = 0;
+      }
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(cert)
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_get_key_constraints(botan_x509_cert_t cert, uint32_t* usage) {
+   if(usage == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) -> int {
+      *usage = c.constraints().value();
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(cert)
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_get_ocsp_responder(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_str_fn view) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert,
+                          [=](const auto& c) -> int { return invoke_view_callback(view, ctx, c.ocsp_responder()); });
+#else
+   BOTAN_UNUSED(cert, ctx, view)
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_is_self_signed(botan_x509_cert_t cert, int* out) {
+   if(out == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) {
+      if(c.is_self_signed()) {
+         *out = 1;
+      } else {
+         *out = 0;
+      }
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(cert, out)
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
@@ -355,12 +439,6 @@ const char* botan_x509_cert_validation_status(int code) {
 #endif
 }
 
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-
-BOTAN_FFI_DECLARE_STRUCT(botan_x509_crl_struct, Botan::X509_CRL, 0x2C628910);
-
-#endif
-
 int botan_x509_crl_load_file(botan_x509_crl_t* crl_obj, const char* crl_path) {
    if(crl_obj == nullptr || crl_path == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
@@ -488,6 +566,278 @@ int botan_x509_cert_verify_with_crl(int* result_code,
 #else
    BOTAN_UNUSED(result_code, cert, intermediates, intermediates_len, trusted);
    BOTAN_UNUSED(trusted_len, trusted_path, hostname_cstr, reference_time, crls, crls_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_params_builder_destroy(botan_x509_cert_params_builder_t builder) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_CHECKED_DELETE(builder);
+#else
+   BOTAN_UNUSED(builder);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_create_cert_params_builder(botan_x509_cert_params_builder_t* builder_obj) {
+   if(builder_obj == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto co = std::make_unique<Botan::CertificateParametersBuilder>();
+      return ffi_new_object(builder_obj, std::move(co));
+   });
+#else
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+   #define X509_GET_CERT_PARAMS_BUILDER_STRING(FIELD_NAME)                                          \
+      int botan_x509_cert_params_builder_add_##FIELD_NAME(botan_x509_cert_params_builder_t builder, \
+                                                          const char* value) {                      \
+         if(value == nullptr) {                                                                     \
+            return BOTAN_FFI_ERROR_NULL_POINTER;                                                    \
+         }                                                                                          \
+         return BOTAN_FFI_VISIT(builder, [=](auto& o) { o.add_##FIELD_NAME(value); });              \
+      }
+#else
+   // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+   #define X509_GET_CERT_PARAMS_BUILDER_STRING(FIELD_NAME)                                          \
+      int botan_x509_cert_params_builder_add_##FIELD_NAME(botan_x509_cert_params_builder_t builder, \
+                                                          const char* value) {                      \
+         if(value == nullptr) {                                                                     \
+            return BOTAN_FFI_ERROR_NULL_POINTER;                                                    \
+         }                                                                                          \
+         BOTAN_UNUSED(builder);                                                                     \
+         return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;                                                    \
+      }
+#endif
+
+X509_GET_CERT_PARAMS_BUILDER_STRING(common_name)
+X509_GET_CERT_PARAMS_BUILDER_STRING(country)
+X509_GET_CERT_PARAMS_BUILDER_STRING(state)
+X509_GET_CERT_PARAMS_BUILDER_STRING(locality)
+X509_GET_CERT_PARAMS_BUILDER_STRING(serial_number)
+X509_GET_CERT_PARAMS_BUILDER_STRING(organization)
+X509_GET_CERT_PARAMS_BUILDER_STRING(organizational_unit)
+X509_GET_CERT_PARAMS_BUILDER_STRING(email)
+X509_GET_CERT_PARAMS_BUILDER_STRING(dns)
+X509_GET_CERT_PARAMS_BUILDER_STRING(uri)
+X509_GET_CERT_PARAMS_BUILDER_STRING(xmpp)
+
+int botan_x509_cert_params_builder_add_ipv4(botan_x509_cert_params_builder_t builder, uint32_t ipv4) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(builder, [=](auto& o) { o.add_ipv4(ipv4); });
+#else
+   BOTAN_UNUSED(builder, ipv4);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_params_builder_add_allowed_usage(botan_x509_cert_params_builder_t builder, uint32_t usage) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(builder, [=](auto& o) { o.add_allowed_usage(Botan::Key_Constraints(usage)); });
+#else
+   BOTAN_UNUSED(builder, usage);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_params_builder_add_allowed_extended_usage(botan_x509_cert_params_builder_t builder,
+                                                              botan_asn1_oid_t oid) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      safe_get(builder).add_allowed_extended_usage(safe_get(oid));
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(builder, oid);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_params_builder_set_as_ca_certificate(botan_x509_cert_params_builder_t builder, size_t limit) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(builder, [=](auto& o) { o.set_as_ca_certificate(limit); });
+#else
+   BOTAN_UNUSED(builder, limit);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_params_builder_add_ext_ip_addr_blocks(botan_x509_cert_params_builder_t builder,
+                                                          botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
+                                                          int is_critical) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      if(is_critical != 0 && is_critical != 1) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+      try {
+         safe_get(builder).add_extension(safe_get(ip_addr_blocks).copy(), is_critical);
+      } catch(Botan::Invalid_Argument&) {
+         return BOTAN_FFI_ERROR_INVALID_OBJECT_STATE;
+      }
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(builder, ip_addr_blocks, is_critical);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_params_builder_add_ext_as_blocks(botan_x509_cert_params_builder_t builder,
+                                                     botan_x509_ext_as_blocks_t as_blocks,
+                                                     int is_critical) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      if(is_critical != 0 && is_critical != 1) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+      try {
+         safe_get(builder).add_extension(safe_get(as_blocks).copy(), is_critical);
+      } catch(Botan::Invalid_Argument&) {
+         return BOTAN_FFI_ERROR_INVALID_OBJECT_STATE;
+      }
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(builder, as_blocks, is_critical);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_create_self_signed_cert(botan_x509_cert_t* cert_obj,
+                                       botan_privkey_t key,
+                                       botan_x509_cert_params_builder_t builder,
+                                       botan_rng_t rng,
+                                       uint64_t not_before,
+                                       uint64_t not_after,
+                                       const char* hash_fn,
+                                       const char* padding) {
+   if(cert_obj == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      std::optional<std::string> hash_fn_;
+      std::optional<std::string> padding_;
+      if(hash_fn != nullptr) {
+         hash_fn_ = hash_fn;
+      }
+      if(padding != nullptr) {
+         padding_ = padding;
+      }
+
+      auto cert = std::make_unique<Botan::X509_Certificate>(
+         safe_get(builder).into_self_signed_cert(timepoint_from_timestamp(not_before),
+                                                 timepoint_from_timestamp(not_after),
+                                                 safe_get(key),
+                                                 safe_get(rng),
+                                                 hash_fn_,
+                                                 padding_));
+
+      return ffi_new_object(cert_obj, std::move(cert));
+   });
+#else
+   BOTAN_UNUSED(key, builder, rng, not_before, not_after, hash_fn, padding);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_pkcs10_req_destroy(botan_x509_pkcs10_req_t req) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_CHECKED_DELETE(req);
+#else
+   BOTAN_UNUSED(req);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_create_pkcs10_req(botan_x509_pkcs10_req_t* req_obj,
+                                 botan_privkey_t key,
+                                 botan_x509_cert_params_builder_t builder,
+                                 botan_rng_t rng,
+                                 const char* hash_fn,
+                                 const char* padding,
+                                 const char* challenge_password) {
+   if(req_obj == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      std::optional<std::string> hash_fn_;
+      std::optional<std::string> padding_;
+      std::optional<std::string> challenge_password_;
+      if(hash_fn != nullptr) {
+         hash_fn_ = hash_fn;
+      }
+      if(padding != nullptr) {
+         padding_ = padding;
+      }
+      if(challenge_password != nullptr) {
+         challenge_password_ = challenge_password;
+      }
+
+      auto req = std::make_unique<Botan::PKCS10_Request>(
+         safe_get(builder).into_pkcs10_request(safe_get(key), safe_get(rng), hash_fn_, padding_, challenge_password_));
+      return ffi_new_object(req_obj, std::move(req));
+   });
+#else
+   BOTAN_UNUSED(key, builder, rng, padding, hash_fn, challenge_password);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_pkcs10_req_view_pem(botan_x509_pkcs10_req_t req, botan_view_ctx ctx, botan_view_str_fn view) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(req, [=](const auto& r) -> int { return invoke_view_callback(view, ctx, r.PEM_encode()); });
+#else
+   BOTAN_UNUSED(req, ctx, view);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+// req_load
+// view functions for req
+
+int botan_x509_sign_req(botan_x509_cert_t* subject_cert,
+                        botan_x509_pkcs10_req_t subject_req,
+                        botan_x509_cert_t issuing_cert,
+                        botan_privkey_t issuing_key,
+                        botan_rng_t rng,
+                        uint64_t not_before,
+                        uint64_t not_after,
+                        const char* hash_fn,
+                        const char* padding) {
+   if(subject_cert == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto& rng_ = safe_get(rng);
+      std::string hash_fn_;
+      std::string padding_;
+      if(hash_fn != nullptr) {
+         hash_fn_ = hash_fn;
+      }
+      if(padding != nullptr) {
+         padding_ = padding;
+      }
+
+      auto ca = Botan::X509_CA(safe_get(issuing_cert), safe_get(issuing_key), hash_fn_, padding_, rng_);
+
+      std::unique_ptr<Botan::X509_Certificate> cert = std::make_unique<Botan::X509_Certificate>(
+         ca.sign_request(safe_get(subject_req), rng_, time_from_timestamp(not_before), time_from_timestamp(not_after)));
+
+      return ffi_new_object(subject_cert, std::move(cert));
+   });
+#else
+   BOTAN_UNUSED(subject_req, issuing_cert, issuing_key, rng, not_before, not_after, hash_fn, padding);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }

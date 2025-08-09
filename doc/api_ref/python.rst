@@ -715,6 +715,133 @@ HOTP
       in. If the code did verify and resync_range was zero, then the
       next counter will always be counter+1.
 
+X509CertificateBuilder
+-----------------------------------------
+.. versionadded:: 3.9.0
+
+.. py:class:: X509CertificateBuilder(opts, expire_time=None)
+
+   .. py:method:: add_common_name(name)
+
+   .. py:method:: add_country(country)
+
+   .. py:method:: add_state(state)
+
+   .. py:method:: add_locality(locality)
+
+   .. py:method:: add_serial_number(serial_number)
+
+   .. py:method:: add_organization(organization)
+
+   .. py:method:: add_organizational_unit(org_unit)
+
+   .. py:method:: add_email(email)
+
+   .. py:method:: add_dns(dns)
+
+   .. py:method:: add_uri(uri)
+
+   .. py:method:: add_xmpp(xmpp)
+
+   .. py:method:: add_ipv4(ipv4)
+
+   .. py:method:: add_allowed_usage(usage_list)
+
+   .. py:method:: add_allowed_extended_usage(oid)
+
+   .. py:method:: set_as_ca_certificate(limit)
+
+   .. py:method:: add_ext_ip_addr_blocks(ip_addr_blocks, is_critical)
+
+   .. py:method:: add_ext_as_blocks(as_blocks, is_critical)
+
+   .. py:method:: create_self_signed(key, rng, not_before, not_after, hash_fn=None, padding=None)
+
+      Create a self-signed certificate from the given certificate options.
+      ``not_before`` and ``not_after`` are expected to be the time since the UNIX epoch, in seconds.
+
+   .. py:method:: create_req(key, rng, hash_fn=None, padding=None, challenge_password=None)
+
+      Create a PKCS #10 certificate request that can later be signed.
+
+X509ExtIPAddrBlocks
+-----------------------------------------
+
+.. versionadded:: 3.9.0
+
+.. py:class:: X509ExtIPAddrBlocks(cert=None)
+
+   .. py:method:: add_ip(ip, safi=None)
+
+      Add a single IP address to the extension. ``ip`` is expected to be a ``list[int]``
+      of length 4/16 for IPv4/IPv6.
+
+   .. py:method:: add_ip_range(min_, max_, safi=None)
+
+      Add an IP address range to the extension.
+
+   .. py:method:: restrict(ipv6, safi=None)
+
+      Make the extension contain no allowed IP addresses for the given SAFI (if any).
+      Set ``ipv6`` to True to indicate IPv6, False for IPv4.
+
+   .. py:method:: inherit(ipv6, safi=None)
+
+      Mark the specified IP version and SAFI (if any) as "inherit".
+
+   .. py:method:: addresses()
+
+      Get the IP addresses registered in the extension.
+
+X509ExtASBlocks
+-----------------------------------------
+
+.. versionadded:: 3.9.0
+
+.. py:class:: X509ExtASBlocks(cert=None)
+
+   .. py:method:: add_asnum(asnum):
+
+      Add a single asnum to the extension.
+
+   .. py:method:: add_asnum_range(min_, max_)
+
+      Add an asnum range to the extension.
+
+   .. py:method:: restrict_asnum()
+
+      Make the extension contain no allowed asnum's.
+
+   .. py:method:: inherit_asnum()
+
+      Mark the asnum entry as "inherit".
+
+   .. py:method:: add_rdi(rdi):
+
+   .. py:method:: add_rdi_range(min_, max_)
+
+   .. py:method:: restrict_rdi()
+
+   .. py:method:: inherit_rdi()
+
+   .. py:method:: asnum()
+
+      Get the asnum(s) registered in the extension.
+
+   .. py:method:: rdi()
+
+PKCS10Req
+-----------------------------------------
+.. versionadded:: 3.9.0
+
+.. py:class:: PKCS10Req()
+
+   .. py:method:: sign(issuing_cert, issuing_key, rng, not_before, not_after, hash_fn=None, padding=None)
+
+      ``not_before`` and ``not_after`` are expected to be the time since the UNIX epoch, in seconds.
+
+   .. py:method:: to_pem()
+
 X509Cert
 -----------------------------------------
 
@@ -735,6 +862,10 @@ X509Cert
    .. py:method:: to_string()
 
       Format the certificate as a free-form string.
+
+   .. py:method:: to_pem()
+
+      Format the certificate as a PEM string.
 
    .. py:method:: fingerprint(hash_algo='SHA-256')
 
@@ -791,6 +922,30 @@ X509Cert
       Return True if the certificates Key Usage extension contains all constraints given in ``usage_list``.
       Also return True if the certificate doesn't have this extension.
       Example usage constraints are: ``"DIGITAL_SIGNATURE"``, ``"KEY_CERT_SIGN"``, ``"CRL_SIGN"``.
+
+   .. py:method:: key_constraints()
+
+      Return a list of all the key constraints listed in the certificate.
+
+   .. py:method:: is_ca()
+
+      Return (True, limit) if the certificate is marked for CA usage, else (False, 0)
+
+   .. py:method:: ocsp_responder()
+
+      Return the OCSP responder.
+
+   .. py:method:: is_self_signed()
+
+      Return True if the certificate was self-signed.
+
+   .. py:method:: ext_ip_addr_blocks()
+
+      Return the certificate's IP Address Blocks extension.
+
+   .. py:method:: ext_as_blocks()
+
+      Return the certificate's AS Blocks extension.
 
    .. py:method:: verify(intermediates=None, \
                   trusted=None, \
