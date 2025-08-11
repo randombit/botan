@@ -55,40 +55,12 @@ class X25519_Roundtrip_Test final : public Test {
          for(size_t i = 0; i < 10; ++i) {
             Test::Result result("X25519 roundtrip");
 
-            Botan::X25519_PrivateKey a_priv_gen(this->rng());
-            Botan::X25519_PrivateKey b_priv_gen(this->rng());
-
-   #if defined(BOTAN_HAS_PKCS5_PBES2) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM) && \
-      defined(BOTAN_HAS_SHA2_32)
-            // Then serialize to encrypted storage
-
-            const std::string a_pass = "alice pass";
-            const std::string b_pass = "bob pass";
-            const auto pbe_time = std::chrono::milliseconds(1);
-            const std::string a_priv_pem = Botan::PKCS8::PEM_encode(a_priv_gen, this->rng(), a_pass, pbe_time);
-            const std::string b_priv_pem = Botan::PKCS8::PEM_encode(b_priv_gen, this->rng(), b_pass, pbe_time);
-
-            // Reload back into memory
-            Botan::DataSource_Memory a_priv_ds(a_priv_pem);
-            Botan::DataSource_Memory b_priv_ds(b_priv_pem);
-
-            auto a_priv = Botan::PKCS8::load_key(a_priv_ds, [a_pass]() { return std::string(a_pass); });
-            auto b_priv = Botan::PKCS8::load_key(b_priv_ds, b_pass);
-   #else
-            const std::string a_priv_pem = Botan::PKCS8::PEM_encode(a_priv_gen);
-            const std::string b_priv_pem = Botan::PKCS8::PEM_encode(b_priv_gen);
-
-            // Reload back into memory
-            Botan::DataSource_Memory a_priv_ds(a_priv_pem);
-            Botan::DataSource_Memory b_priv_ds(b_priv_pem);
-
-            auto a_priv = Botan::PKCS8::load_key(a_priv_ds);
-            auto b_priv = Botan::PKCS8::load_key(b_priv_ds);
-   #endif
+            Botan::X25519_PrivateKey a_priv(this->rng());
+            Botan::X25519_PrivateKey b_priv(this->rng());
 
             // Export public keys as PEM
-            const std::string a_pub_pem = Botan::X509::PEM_encode(*a_priv);
-            const std::string b_pub_pem = Botan::X509::PEM_encode(*b_priv);
+            const std::string a_pub_pem = Botan::X509::PEM_encode(a_priv);
+            const std::string b_pub_pem = Botan::X509::PEM_encode(b_priv);
 
             Botan::DataSource_Memory a_pub_ds(a_pub_pem);
             Botan::DataSource_Memory b_pub_ds(b_pub_pem);
@@ -100,16 +72,13 @@ class X25519_Roundtrip_Test final : public Test {
             Botan::X25519_PublicKey* b_pub_key = dynamic_cast<Botan::X25519_PublicKey*>(b_pub.get());
 
             if(a_pub_key != nullptr && b_pub_key != nullptr) {
-               Botan::PK_Key_Agreement a_ka(*a_priv, this->rng(), "Raw");
-               Botan::PK_Key_Agreement b_ka(*b_priv, this->rng(), "Raw");
+               Botan::PK_Key_Agreement a_ka(a_priv, this->rng(), "Raw");
+               Botan::PK_Key_Agreement b_ka(b_priv, this->rng(), "Raw");
 
                Botan::SymmetricKey a_key = a_ka.derive_key(32, b_pub_key->public_value());
                Botan::SymmetricKey b_key = b_ka.derive_key(32, a_pub_key->public_value());
 
-               if(!result.test_eq("key agreement", a_key.bits_of(), b_key.bits_of())) {
-                  result.test_note(a_priv_pem);
-                  result.test_note(b_priv_pem);
-               }
+               result.test_eq("key agreement", a_key.bits_of(), b_key.bits_of());
             } else {
                result.test_failure("Cast back to X25519 failed");
             }

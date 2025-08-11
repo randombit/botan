@@ -265,16 +265,14 @@ int botan_privkey_view_encrypted_der_timed(botan_privkey_t key,
    }
 
    return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      const std::string cipher = (maybe_cipher ? maybe_cipher : "");
+      const std::string pbkdf_algo = (maybe_pbkdf_algo ? maybe_pbkdf_algo : "");
       const std::chrono::milliseconds pbkdf_time(pbkdf_runtime_msec);
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
 
-      const std::string cipher = (maybe_cipher ? maybe_cipher : "");
-      const std::string pbkdf_algo = (maybe_pbkdf_algo ? maybe_pbkdf_algo : "");
-
-      auto pkcs8 =
-         Botan::PKCS8::BER_encode_encrypted_pbkdf_msec(k, rng, passphrase, pbkdf_time, nullptr, cipher, pbkdf_algo);
-
-      return invoke_view_callback(view, ctx, pkcs8);
+      auto options = Botan::PKCS8::KeyEncryptionOptions(cipher, pbkdf_algo, pbkdf_time);
+      auto pkcs8 = Botan::PKCS8::encrypt_private_key(k, passphrase, rng, options);
+      return invoke_view_callback(view, ctx, pkcs8.as_bytes());
    });
 }
 
@@ -291,16 +289,14 @@ int botan_privkey_view_encrypted_pem_timed(botan_privkey_t key,
    }
 
    return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      const std::string cipher = (maybe_cipher ? maybe_cipher : "");
+      const std::string pbkdf_algo = (maybe_pbkdf_algo ? maybe_pbkdf_algo : "");
       const std::chrono::milliseconds pbkdf_time(pbkdf_runtime_msec);
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
 
-      const std::string cipher = (maybe_cipher ? maybe_cipher : "");
-      const std::string pbkdf_algo = (maybe_pbkdf_algo ? maybe_pbkdf_algo : "");
-
-      auto pkcs8 =
-         Botan::PKCS8::PEM_encode_encrypted_pbkdf_msec(k, rng, passphrase, pbkdf_time, nullptr, cipher, pbkdf_algo);
-
-      return invoke_view_callback(view, ctx, pkcs8);
+      auto options = Botan::PKCS8::KeyEncryptionOptions(cipher, pbkdf_algo, pbkdf_time);
+      auto pkcs8 = Botan::PKCS8::encrypt_private_key(k, passphrase, rng, options);
+      return invoke_view_callback(view, ctx, pkcs8.as_pem());
    });
 }
 
@@ -343,9 +339,9 @@ int botan_privkey_view_encrypted_der(botan_privkey_t key,
       const std::string pbkdf_algo = (maybe_pbkdf_algo ? maybe_pbkdf_algo : "");
       const size_t pbkdf_iter = (maybe_pbkdf_iterations ? maybe_pbkdf_iterations : 100000);
 
-      auto pkcs8 = Botan::PKCS8::BER_encode_encrypted_pbkdf_iter(k, rng, passphrase, pbkdf_iter, cipher, pbkdf_algo);
-
-      return invoke_view_callback(view, ctx, pkcs8);
+      auto options = Botan::PKCS8::KeyEncryptionOptions(cipher, pbkdf_algo, pbkdf_iter);
+      auto pkcs8 = Botan::PKCS8::encrypt_private_key(k, passphrase, rng, options);
+      return invoke_view_callback(view, ctx, pkcs8.as_bytes());
    });
 }
 
@@ -368,9 +364,9 @@ int botan_privkey_view_encrypted_pem(botan_privkey_t key,
       const std::string pbkdf_algo = (maybe_pbkdf_algo ? maybe_pbkdf_algo : "");
       const size_t pbkdf_iter = (maybe_pbkdf_iterations ? maybe_pbkdf_iterations : 100000);
 
-      auto pkcs8 = Botan::PKCS8::PEM_encode_encrypted_pbkdf_iter(k, rng, passphrase, pbkdf_iter, cipher, pbkdf_algo);
-
-      return invoke_view_callback(view, ctx, pkcs8);
+      auto options = Botan::PKCS8::KeyEncryptionOptions(cipher, pbkdf_algo, pbkdf_iter);
+      auto pkcs8 = Botan::PKCS8::encrypt_private_key(k, passphrase, rng, options);
+      return invoke_view_callback(view, ctx, pkcs8.as_pem());
    });
 }
 
