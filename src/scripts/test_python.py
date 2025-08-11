@@ -778,6 +778,7 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         self.assertTrue(cert.allowed_usage(["CRL_SIGN", "KEY_CERT_SIGN"]))
         self.assertTrue(cert.allowed_usage(["KEY_CERT_SIGN"]))
+        self.assertTrue(cert.allowed_usage([botan.X509KeyConstraints.CRL_SIGN, botan.X509KeyConstraints.KEY_CERT_SIGN]))
         self.assertFalse(cert.allowed_usage(["DIGITAL_SIGNATURE"]))
         self.assertFalse(cert.allowed_usage(["DIGITAL_SIGNATURE", "CRL_SIGN"]))
 
@@ -822,10 +823,10 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertTrue(end21.is_revoked(int21crl))
 
     def test_cert_creation(self):
-        hash_fn = "SHA-256"
         group = "secp256r1"
-
         now = int(time.time())
+        not_before = now - 180
+        not_after = now + 86400
 
         rng = botan.RandomNumberGenerator()
         ca_key = botan.PrivateKey.create("ECDSA", group, rng)
@@ -835,24 +836,29 @@ ofvkP1EDmpx50fHLawIDAQAB
         ca_builder.add_organization("Botan Project")
         ca_builder.add_organizational_unit("Testing")
         ca_builder.set_as_ca_certificate(1)
-        ca_builder.add_allowed_usage(["DIGITAL_SIGNATURE"])
-        ca_cert = ca_builder.create_self_signed(ca_key, rng, now, now + 60, hash_fn)
-        constraints = ca_cert.key_constraints()
+        ca_cert = ca_builder.create_self_signed(ca_key, rng, not_before, not_after)
+        constraints = ca_cert.allowed_usages()
         self.assertEqual(len(constraints), 3)
-        for item in ["DIGITAL_SIGNATURE", "KEY_CERT_SIGN", "CRL_SIGN"]:
+        for item in [
+            botan.X509KeyConstraints.DIGITAL_SIGNATURE,
+            botan.X509KeyConstraints.KEY_CERT_SIGN,
+            botan.X509KeyConstraints.CRL_SIGN
+        ]:
             self.assertTrue(item in constraints)
         self.assertTrue(ca_cert.is_self_signed())
 
         cert_key = botan.PrivateKey.create("ECDSA", group, rng)
         req_builder = botan.X509CertificateBuilder()
+        req_builder.add_allowed_usage([botan.X509KeyConstraints.DIGITAL_SIGNATURE])
         req_builder.add_uri("https://botan.randombit.net")
         for item in ["imaginary.botan.randombit.net", "botan.randombit.net", "randombit.net"]:
             req_builder.add_dns(item)
-        req = req_builder.create_req(cert_key, rng, hash_fn)
+        req = req_builder.create_req(cert_key, rng)
+        self.assertTrue(req.verify(cert_key.get_public_key()))
 
-        cert = req.sign(ca_cert, ca_key, rng, now, now + 60, hash_fn)
+        cert = req.sign(ca_cert, ca_key, rng, not_before, not_after)
         self.assertFalse(cert.is_self_signed())
-        self.assertEqual(cert.key_constraints(), ["NO_CONSTRAINTS"])
+        self.assertEqual(cert.allowed_usages(), [botan.X509KeyConstraints.DIGITAL_SIGNATURE])
 
         with self.assertRaisesRegex(botan.BotanException, r".*No value available.*"):
             _ = cert.ext_ip_addr_blocks()
@@ -862,16 +868,57 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         self.assertEqual(cert.verify(None, [ca_cert]), 0)
 
-    def test_x509_rpki(self):
-        hash_fn = "SHA-256"
+    def test_cert_revocation(self):
         group = "secp256r1"
-
         now = int(time.time())
+        not_before = now - 180
+        not_after = now + 86400
 
         rng = botan.RandomNumberGenerator()
         ca_key = botan.PrivateKey.create("ECDSA", group, rng)
         ca_builder = botan.X509CertificateBuilder()
         ca_builder.set_as_ca_certificate(1)
+        ca_cert = ca_builder.create_self_signed(ca_key, rng, not_before, not_after, botan.MPI("0"))
+
+        cert_key_1 = botan.PrivateKey.create("ECDSA", group, rng)
+        req_builder_1 = botan.X509CertificateBuilder()
+        req_1 = req_builder_1.create_req(cert_key_1, rng)
+        cert_1 = req_1.sign(ca_cert, ca_key, rng, not_before, not_after, botan.MPI("1"))
+
+        cert_key_2 = botan.PrivateKey.create("ECDSA", group, rng)
+        req_builder_2 = botan.X509CertificateBuilder()
+        req_2 = req_builder_2.create_req(cert_key_2, rng)
+        cert_2 = req_2.sign(ca_cert, ca_key, rng, not_before, not_after, botan.MPI("2"))
+
+        crl = botan.X509CRL.create(rng, ca_cert, ca_key, now, now + 600)
+        self.assertTrue(crl.verify(ca_cert.subject_public_key()))
+        self.assertEqual(cert_1.verify(None, [ca_cert], crls=[crl]), 0)
+        self.assertEqual(cert_2.verify(None, [ca_cert], crls=[crl]), 0)
+
+        crl = crl.revoke(rng, ca_cert, ca_key, now, now + 86400, [cert_1], botan.X509CRLReason.KEY_COMPROMISE)
+        self.assertTrue(crl.verify(ca_cert.subject_public_key()))
+        self.assertEqual(cert_1.verify(None, [ca_cert], crls=[crl]), 5000)
+        self.assertEqual(cert_2.verify(None, [ca_cert], crls=[crl]), 0)
+        self.assertEqual(len(crl.revoked()), 1)
+        revoked_entry: botan.X509CRLEntry = crl.revoked()[0]
+        self.assertEqual(revoked_entry.reason, botan.X509CRLReason.KEY_COMPROMISE)
+        self.assertEqual(botan.MPI.from_bytes(revoked_entry.serial_number), botan.MPI("1"))
+        self.assertTrue(now - 5 <= revoked_entry.expire_time <= now + 5)
+
+        pem = crl.to_pem()
+        crl_from_pem = botan.X509CRL(buf=pem)
+        self.assertEqual(len(crl_from_pem.revoked()), 1)
+
+    def test_x509_rpki(self):
+        group = "secp256r1"
+        now = int(time.time())
+        not_before = now - 180
+        not_after = now + 86400
+
+        rng = botan.RandomNumberGenerator()
+        ca_key = botan.PrivateKey.create("ECDSA", group, rng)
+        ca_builder = botan.X509CertificateBuilder()
+        ca_builder.set_as_ca_certificate()
 
         ca_ip_addr_blocks = botan.X509ExtIPAddrBlocks()
 
@@ -896,7 +943,7 @@ ofvkP1EDmpx50fHLawIDAQAB
         with self.assertRaisesRegex(botan.BotanException, r".*Invalid object state.*"):
             ca_builder.add_ext_as_blocks(ca_as_blocks, True)
 
-        ca_cert = ca_builder.create_self_signed(ca_key, rng, now, now + 60, hash_fn)
+        ca_cert = ca_builder.create_self_signed(ca_key, rng, not_before, not_after)
 
         ca_ip_addr_blocks = ca_cert.ext_ip_addr_blocks()
         self.assertEqual(ca_ip_addr_blocks.addresses(), (
@@ -939,9 +986,9 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         req_builder.add_ext_ip_addr_blocks(req_ip_addr_blocks, True)
         req_builder.add_ext_as_blocks(req_as_blocks, True)
-        req = req_builder.create_req(cert_key, rng, hash_fn)
+        req = req_builder.create_req(cert_key, rng)
 
-        cert = req.sign(ca_cert, ca_key, rng, now, now + 60, hash_fn)
+        cert = req.sign(ca_cert, ca_key, rng, not_before, not_after)
 
         req_ip_addr_blocks = cert.ext_ip_addr_blocks()
         self.assertEqual(req_ip_addr_blocks.addresses(), (

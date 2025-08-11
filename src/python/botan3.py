@@ -27,6 +27,7 @@ from time import strptime, mktime, time as system_time
 from binascii import hexlify
 from datetime import datetime
 from collections.abc import Iterable
+from enum import IntEnum
 
 # This Python module requires the FFI API version introduced in Botan 3.10.0
 #
@@ -490,10 +491,10 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_cert_get_serial_number, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_get_authority_key_id, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_get_subject_key_id, [c_void_p, c_char_p, POINTER(c_size_t)])
-    ffi_api(dll.botan_x509_get_basic_constraints, [c_void_p, POINTER(c_int), POINTER(c_size_t)])
-    ffi_api(dll.botan_x509_get_key_constraints, [c_void_p, POINTER(c_uint32)])
-    ffi_api(dll.botan_x509_get_ocsp_responder, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
-    ffi_api(dll.botan_x509_is_self_signed, [c_void_p, POINTER(c_int)])
+    ffi_api(dll.botan_x509_cert_is_ca, [c_void_p, POINTER(c_int), POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_cert_get_allowed_usage, [c_void_p, POINTER(c_uint32)])
+    ffi_api(dll.botan_x509_cert_get_ocsp_responder, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_x509_cert_is_self_signed, [c_void_p, POINTER(c_int)])
     ffi_api(dll.botan_x509_cert_get_public_key_bits, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_view_public_key_bits, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_x509_cert_get_public_key, [c_void_p, c_void_p])
@@ -509,8 +510,8 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_cert_verify,
             [POINTER(c_int), c_void_p, c_void_p, c_size_t, c_void_p, c_size_t, c_char_p, c_size_t, c_char_p, c_uint64])
     ffi_api(dll.botan_x509_ext_ip_addr_blocks_destroy, [c_void_p])
-    ffi_api(dll.botan_x509_ext_create_ip_addr_blocks, [c_void_p])
-    ffi_api(dll.botan_x509_ext_create_ip_addr_blocks_from_cert, [c_void_p, c_void_p])
+    ffi_api(dll.botan_x509_ext_ip_addr_blocks_create, [c_void_p])
+    ffi_api(dll.botan_x509_ext_ip_addr_blocks_create_from_cert, [c_void_p, c_void_p])
     ffi_api(dll.botan_x509_ext_ip_addr_blocks_add_ip_addr,
             [c_void_p, c_char_p, c_char_p, c_int, POINTER(c_uint8)])
     ffi_api(dll.botan_x509_ext_ip_addr_blocks_restrict, [c_void_p, c_int, POINTER(c_uint8)])
@@ -521,8 +522,8 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_ext_ip_addr_blocks_get_address,
             [c_void_p, c_int, c_size_t, c_size_t, c_char_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_ext_as_blocks_destroy, [c_void_p])
-    ffi_api(dll.botan_x509_ext_create_as_blocks, [c_void_p])
-    ffi_api(dll.botan_x509_ext_create_as_blocks_from_cert, [c_void_p, c_void_p])
+    ffi_api(dll.botan_x509_ext_as_blocks_create, [c_void_p])
+    ffi_api(dll.botan_x509_ext_as_blocks_create_from_cert, [c_void_p, c_void_p])
     ffi_api(dll.botan_x509_ext_as_blocks_add_asnum, [c_void_p, c_uint32, c_uint32])
     ffi_api(dll.botan_x509_ext_as_blocks_restrict_asnum, [c_void_p])
     ffi_api(dll.botan_x509_ext_as_blocks_inherit_asnum, [c_void_p])
@@ -534,7 +535,7 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_ext_as_blocks_get_rdi, [c_void_p, POINTER(c_int), POINTER(c_size_t)])
     ffi_api(dll.botan_x509_ext_as_blocks_get_rdi_at, [c_void_p, c_size_t, POINTER(c_uint32), POINTER(c_uint32)])
     ffi_api(dll.botan_x509_cert_params_builder_destroy, [c_void_p])
-    ffi_api(dll.botan_x509_create_cert_params_builder, [c_void_p])
+    ffi_api(dll.botan_x509_cert_params_builder_create, [c_void_p])
     ffi_api(dll.botan_x509_cert_params_builder_add_common_name, [c_void_p, c_char_p])
     ffi_api(dll.botan_x509_cert_params_builder_add_country, [c_void_p, c_char_p])
     ffi_api(dll.botan_x509_cert_params_builder_add_state, [c_void_p, c_char_p])
@@ -549,24 +550,41 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_cert_params_builder_add_ipv4, [c_void_p, c_uint32])
     ffi_api(dll.botan_x509_cert_params_builder_add_allowed_usage, [c_void_p, c_uint32])
     ffi_api(dll.botan_x509_cert_params_builder_add_allowed_extended_usage, [c_void_p, c_void_p])
-    ffi_api(dll.botan_x509_cert_params_builder_set_as_ca_certificate, [c_void_p, c_size_t])
+    ffi_api(dll.botan_x509_cert_params_builder_set_as_ca_certificate, [c_void_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_params_builder_add_ext_ip_addr_blocks, [c_void_p, c_void_p, c_int])
     ffi_api(dll.botan_x509_cert_params_builder_add_ext_as_blocks, [c_void_p, c_void_p, c_int])
-    ffi_api(dll.botan_x509_create_self_signed_cert,
-            [c_void_p, c_void_p, c_void_p, c_void_p, c_uint64, c_uint64, c_char_p, c_char_p])
+    ffi_api(dll.botan_x509_cert_create_self_signed,
+            [c_void_p, c_void_p, c_void_p, c_void_p, c_uint64, c_uint64, c_void_p, c_char_p, c_char_p])
     ffi_api(dll.botan_x509_pkcs10_req_destroy, [c_void_p])
-    ffi_api(dll.botan_x509_create_pkcs10_req,
+    ffi_api(dll.botan_x509_pkcs10_req_load_file, [c_void_p, c_char_p])
+    ffi_api(dll.botan_x509_pkcs10_req_load, [c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_x509_pkcs10_req_get_public_key, [c_void_p, c_void_p])
+    ffi_api(dll.botan_x509_pkcs10_req_get_allowed_usage, [c_void_p, POINTER(c_uint32)])
+    ffi_api(dll.botan_x509_pkcs10_req_is_ca, [c_void_p, POINTER(c_int), POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_pkcs10_req_verify_signature, [c_void_p, c_void_p, POINTER(c_int)])
+    ffi_api(dll.botan_x509_pkcs10_req_create,
             [c_void_p, c_void_p, c_void_p, c_void_p, c_char_p, c_char_p, c_char_p])
     ffi_api(dll.botan_x509_pkcs10_req_view_pem, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
-    ffi_api(dll.botan_x509_sign_req,
-            [c_void_p, c_void_p, c_void_p, c_void_p, c_void_p, c_uint64, c_uint64, c_char_p, c_char_p])
+    ffi_api(dll.botan_x509_pkcs10_req_view_der, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_x509_pkcs10_req_sign,
+            [c_void_p, c_void_p, c_void_p, c_void_p, c_void_p, c_uint64, c_uint64, c_void_p, c_char_p, c_char_p])
 
     dll.botan_x509_cert_validation_status.argtypes = [c_int]
     dll.botan_x509_cert_validation_status.restype = c_char_p
 
     # X509 CRL
-    ffi_api(dll.botan_x509_crl_load, [c_void_p, c_char_p, c_size_t])
     ffi_api(dll.botan_x509_crl_load_file, [c_void_p, c_char_p])
+    ffi_api(dll.botan_x509_crl_load, [c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_x509_crl_create,
+            [c_void_p, c_void_p, c_void_p, c_void_p, c_uint64, c_uint32, c_char_p, c_char_p])
+    ffi_api(dll.botan_x509_crl_update,
+            [c_void_p, c_void_p, c_void_p, c_void_p, c_void_p, c_uint64, c_uint32, c_void_p, c_size_t, c_uint8, c_char_p, c_char_p])
+    ffi_api(dll.botan_x509_crl_get_count, [c_void_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_x509_crl_get_entry,
+            [c_void_p, c_size_t, c_char_p, POINTER(c_size_t), POINTER(c_uint64), POINTER(c_uint8)])
+    ffi_api(dll.botan_x509_crl_verify_signature, [c_void_p, c_void_p, POINTER(c_int)])
+    ffi_api(dll.botan_x509_crl_view_pem, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_x509_crl_view_der, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_x509_crl_destroy, [c_void_p])
     ffi_api(dll.botan_x509_is_revoked, [c_void_p, c_void_p], [-1])
     ffi_api(dll.botan_x509_cert_verify_with_crl,
@@ -1861,10 +1879,87 @@ def _load_buf_or_file(filename, buf, file_fn, buf_fn):
 #
 # X.509 certificates
 #
+class X509KeyConstraints(IntEnum):
+    NO_CONSTRAINTS = 0
+    DIGITAL_SIGNATURE = 1 << 15
+    NON_REPUDIATION = 1 << 14
+    KEY_ENCIPHERMENT = 1 << 13
+    DATA_ENCIPHERMENT = 1 << 12
+    KEY_AGREEMENT = 1 << 11
+    KEY_CERT_SIGN = 1 << 10
+    CRL_SIGN = 1 << 9
+    ENCIPHER_ONLY = 1 << 8
+    DECIPHER_ONLY = 1 << 7
+
+    @classmethod
+    def to_bits(cls, constraints):
+        con = 0
+        for constraint in constraints:
+            con |= constraint.value
+        return con
+
+    @classmethod
+    def from_bits(cls, bits):
+        if bits == 0:
+            return X509KeyConstraints.NO_CONSTRAINTS
+        all_constraints = [
+            X509KeyConstraints.DIGITAL_SIGNATURE,
+            X509KeyConstraints.NON_REPUDIATION,
+            X509KeyConstraints.KEY_ENCIPHERMENT,
+            X509KeyConstraints.DATA_ENCIPHERMENT,
+            X509KeyConstraints.KEY_AGREEMENT,
+            X509KeyConstraints.KEY_CERT_SIGN,
+            X509KeyConstraints.CRL_SIGN,
+            X509KeyConstraints.ENCIPHER_ONLY,
+            X509KeyConstraints.DECIPHER_ONLY,
+        ]
+
+        constraints = []
+        for constraint in all_constraints:
+            if bits & constraint.value != 0:
+                constraints.append(constraint)
+        return constraints
+
+    # TODO deprecate this in a future version
+    @classmethod
+    def from_string(cls, constraint):
+        try:
+            if isinstance(constraint, X509KeyConstraints):
+                return constraint
+            return cls[constraint]
+        except KeyError as exc:
+            raise BotanException("Not a valid key constraint") from exc
+
+    @classmethod
+    def to_string(cls, constraint):
+        return constraint.name
+
+
+class X509CRLReason(IntEnum):
+    UNSPECIFIED = 0
+    KEY_COMPROMISE = 1
+    CA_COMPROMISE = 2
+    AFFILIATION_CHANGED = 3
+    SUPERSEDED = 4
+    CESSATION_OF_OPERATION = 5
+    CERTIFICATE_HOLD = 6
+    REMOVE_FROM_CRL = 8
+    PRIVILEGE_WITHDRAWN = 9
+    AA_COMPROMISE = 10
+
+    @classmethod
+    def to_bits(cls, reason):
+        return reason.value
+
+    @classmethod
+    def from_bits(cls, reason):
+        return cls(reason)
+
+
 class X509CertificateBuilder:
     def __init__(self):
         self.__obj = c_void_p(0)
-        _DLL.botan_x509_create_cert_params_builder(byref(self.__obj))
+        _DLL.botan_x509_cert_params_builder_create(byref(self.__obj))
 
     def __del__(self):
         _DLL.botan_x509_cert_params_builder_destroy(self.__obj)
@@ -1909,29 +2004,14 @@ class X509CertificateBuilder:
         _DLL.botan_x509_cert_params_builder_add_ip(self.__obj, ipv4)
 
     def add_allowed_usage(self, usage_list):
-        # TODO this sucks, where enum
-        usage_values = {"NO_CONSTRAINTS": 0,
-                        "DIGITAL_SIGNATURE": 32768,
-                        "NON_REPUDIATION": 16384,
-                        "KEY_ENCIPHERMENT": 8192,
-                        "DATA_ENCIPHERMENT": 4096,
-                        "KEY_AGREEMENT": 2048,
-                        "KEY_CERT_SIGN": 1024,
-                        "CRL_SIGN": 512,
-                        "ENCIPHER_ONLY": 256,
-                        "DECIPHER_ONLY": 128}
-        usage = 0
-        for u in usage_list:
-            if u not in usage_values:
-                pass
-            usage += usage_values[u]
+        usage = X509KeyConstraints.to_bits(usage_list)
         _DLL.botan_x509_cert_params_builder_add_allowed_usage(self.__obj, c_uint32(usage))
 
     def add_allowed_extended_usage(self, oid):
         _DLL.botan_x509_cert_params_builder_add_allowed_extended_usage(self.__obj, oid.handle_())
 
-    def set_as_ca_certificate(self, limit):
-        _DLL.botan_x509_cert_params_builder_set_as_ca_certificate(self.__obj, c_size_t(limit))
+    def set_as_ca_certificate(self, limit=None):
+        _DLL.botan_x509_cert_params_builder_set_as_ca_certificate(self.__obj, c_size_t(limit) if limit is not None else None)
 
     def add_ext_ip_addr_blocks(self, ip_addr_blocks, is_critical):
         _DLL.botan_x509_cert_params_builder_add_ext_ip_addr_blocks(self.__obj, ip_addr_blocks.handle_(), 1 if is_critical else 0)
@@ -1939,24 +2019,25 @@ class X509CertificateBuilder:
     def add_ext_as_blocks(self, as_blocks, is_critical):
         _DLL.botan_x509_cert_params_builder_add_ext_as_blocks(self.__obj, as_blocks.handle_(), 1 if is_critical else 0)
 
-    def create_self_signed(self, key, rng, not_before, not_after, hash_fn=None, padding=None):
+    def create_self_signed(self, key, rng, not_before, not_after, serial_number=None, hash_fn=None, padding=None):
         cert = X509Cert()
-        _DLL.botan_x509_create_self_signed_cert(
+        serial_no = byref(serial_number.handle_()) if serial_number is not None else None
+        _DLL.botan_x509_cert_create_self_signed(
             byref(cert.handle_()),
             key.handle_(),
             self.__obj,
             rng.handle_(),
             not_before,
             not_after,
+            serial_no,
             _ctype_str(hash_fn),
             _ctype_str(padding),
         )
         return cert
 
-
     def create_req(self, key, rng, hash_fn=None, padding=None, challenge_password=None):
         req = PKCS10Req()
-        _DLL.botan_x509_create_pkcs10_req(
+        _DLL.botan_x509_pkcs10_req_create(
             byref(req.handle_()),
             key.handle_(),
             self.__obj,
@@ -1971,9 +2052,9 @@ class X509ExtIPAddrBlocks:
     def __init__(self, cert=None):
         self.__obj = c_void_p(0)
         if cert:
-            _DLL.botan_x509_ext_create_ip_addr_blocks_from_cert(byref(self.__obj), cert.handle_())
+            _DLL.botan_x509_ext_ip_addr_blocks_create_from_cert(byref(self.__obj), cert.handle_())
         else:
-            _DLL.botan_x509_ext_create_ip_addr_blocks(byref(self.__obj))
+            _DLL.botan_x509_ext_ip_addr_blocks_create(byref(self.__obj))
 
     def __del__(self):
         _DLL.botan_x509_ext_ip_addr_blocks_destroy(self.__obj)
@@ -2053,9 +2134,9 @@ class X509ExtASBlocks:
     def __init__(self, cert=None):
         self.__obj = c_void_p(0)
         if cert:
-            _DLL.botan_x509_ext_create_as_blocks_from_cert(byref(self.__obj), cert.handle_())
+            _DLL.botan_x509_ext_as_blocks_create_from_cert(byref(self.__obj), cert.handle_())
         else:
-            _DLL.botan_x509_ext_create_as_blocks(byref(self.__obj))
+            _DLL.botan_x509_ext_as_blocks_create(byref(self.__obj))
 
     def __del__(self):
         _DLL.botan_x509_ext_as_blocks_destroy(self.__obj)
@@ -2123,8 +2204,11 @@ class X509ExtASBlocks:
 
 
 class PKCS10Req:
-    def __init__(self):
-        self.__obj = c_void_p(0)
+    def __init__(self, filename=None, buf=None):
+        if not filename and not buf:
+            self.__obj = c_void_p(0)
+        else:
+            self.__obj = _load_buf_or_file(filename, buf, _DLL.botan_x509_pkcs10_req_load_file, _DLL.botan_x509_pkcs10_req_load)
 
     def __del__(self):
         _DLL.botan_x509_pkcs10_req_destroy(self.__obj)
@@ -2132,9 +2216,34 @@ class PKCS10Req:
     def handle_(self):
         return self.__obj
 
-    def sign(self, issuing_cert, issuing_key, rng, not_before, not_after, hash_fn=None, padding=None):
+    def public_key(self):
+        pub = c_void_p(0)
+        _DLL.botan_x509_pkcs10_req_get_public_key(self.__obj, byref(pub))
+        return PublicKey(pub)
+
+    def key_constraints(self):
+        usage = c_uint32(0)
+        _DLL.botan_x509_pkcs10_req_get_allowed_usage(self.__obj, byref(usage))
+        return X509KeyConstraints.from_bits(usage.value)
+
+    def is_ca(self):
+        is_ca = c_int(0)
+        limit = c_size_t(0)
+        _DLL.botan_x509_pkcs10_req_is_ca(self.__obj, byref(is_ca), byref(limit))
+        if is_ca.value == 0:
+            return (False, 0)
+        else:
+            return (True, limit.value)
+
+    def verify(self, key):
+        ret = c_int(0)
+        _DLL.botan_x509_pkcs10_req_verify_signature(self.__obj, key.handle_(), byref(ret))
+        return ret.value == 1
+
+    def sign(self, issuing_cert, issuing_key, rng, not_before, not_after, serial_number=None, hash_fn=None, padding=None):
         cert = X509Cert()
-        _DLL.botan_x509_sign_req(
+        serial_no = byref(serial_number.handle_()) if serial_number is not None else None
+        _DLL.botan_x509_pkcs10_req_sign(
             byref(cert.handle_()),
             self.__obj,
             issuing_cert.handle_(),
@@ -2142,6 +2251,7 @@ class PKCS10Req:
             rng.handle_(),
             not_before,
             not_after,
+            serial_no,
             _ctype_str(hash_fn),
             _ctype_str(padding)
         )
@@ -2149,6 +2259,9 @@ class PKCS10Req:
 
     def to_pem(self):
         return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_x509_pkcs10_req_view_pem(self.__obj, vc, vfn))
+
+    def to_der(self):
+        return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_x509_pkcs10_req_view_der(self.__obj, vc, vfn))
 
 
 class X509Cert: # pylint: disable=invalid-name
@@ -2246,47 +2359,19 @@ class X509Cert: # pylint: disable=invalid-name
         return time.value
 
     def allowed_usage(self, usage_list: List[str]) -> bool:
-        usage_values = {"NO_CONSTRAINTS": 0,
-                        "DIGITAL_SIGNATURE": 32768,
-                        "NON_REPUDIATION": 16384,
-                        "KEY_ENCIPHERMENT": 8192,
-                        "DATA_ENCIPHERMENT": 4096,
-                        "KEY_AGREEMENT": 2048,
-                        "KEY_CERT_SIGN": 1024,
-                        "CRL_SIGN": 512,
-                        "ENCIPHER_ONLY": 256,
-                        "DECIPHER_ONLY": 128}
-        usage = 0
-        for u in usage_list:
-            if u not in usage_values:
-                return False
-            usage += usage_values[u]
-
+        usage = X509KeyConstraints.to_bits([X509KeyConstraints.from_string(x) for x in usage_list])
         rc = _DLL.botan_x509_cert_allowed_usage(self.__obj, c_uint(usage))
         return rc == 0
 
-    def key_constraints(self):
-        usage_values = {"NO_CONSTRAINTS": 0,
-                        "DIGITAL_SIGNATURE": 32768,
-                        "NON_REPUDIATION": 16384,
-                        "KEY_ENCIPHERMENT": 8192,
-                        "DATA_ENCIPHERMENT": 4096,
-                        "KEY_AGREEMENT": 2048,
-                        "KEY_CERT_SIGN": 1024,
-                        "CRL_SIGN": 512,
-                        "ENCIPHER_ONLY": 256,
-                        "DECIPHER_ONLY": 128}
+    def allowed_usages(self):
         usage = c_uint32(0)
-        _DLL.botan_x509_get_key_constraints(self.__obj, byref(usage))
-        if usage.value == 0:
-            return ["NO_CONSTRAINTS"]
-        else:
-            return [name for name, bit in usage_values.items() if bit != 0 and usage.value & bit]
+        _DLL.botan_x509_cert_get_allowed_usage(self.__obj, byref(usage))
+        return X509KeyConstraints.from_bits(usage.value)
 
     def is_ca(self):
         is_ca = c_int(0)
         limit = c_size_t(0)
-        _DLL.botan_x509_get_basic_constraints(self.__obj, byref(is_ca), byref(limit))
+        _DLL.botan_x509_cert_is_ca(self.__obj, byref(is_ca), byref(limit))
         if is_ca.value == 0:
             return (False, 0)
         else:
@@ -2294,11 +2379,11 @@ class X509Cert: # pylint: disable=invalid-name
 
     def ocsp_responder(self):
         return _call_fn_viewing_str(
-            lambda vc, vfn: _DLL.botan_x509_get_ocsp_responder(self.__obj, vc, vfn))
+            lambda vc, vfn: _DLL.botan_x509_cert_get_ocsp_responder(self.__obj, vc, vfn))
 
     def is_self_signed(self):
         self_signed = c_int(0)
-        _DLL.botan_x509_is_self_signed(self.__obj, byref(self_signed))
+        _DLL.botan_x509_cert_is_self_signed(self.__obj, byref(self_signed))
         if self_signed.value == 0:
             return False
         else:
@@ -2378,21 +2463,91 @@ class X509Cert: # pylint: disable=invalid-name
         return rc == 0
 
 
-
-
 #
 # X.509 Certificate revocation lists
 #
+class X509CRLEntry:
+    def __init__(self, serial_number, expire_time, reason):
+        self.serial_number = serial_number
+        self.expire_time = expire_time
+        self.reason = reason
+
+
 class X509CRL:
     def __init__(self, filename: str | None = None, buf: bytes | None = None):
-        self.__obj = c_void_p(0)
-        self.__obj = _load_buf_or_file(filename, buf, _DLL.botan_x509_crl_load_file, _DLL.botan_x509_crl_load)
+        if not filename and not buf:
+            self.__obj = c_void_p(0)
+        else:
+            self.__obj = _load_buf_or_file(filename, buf, _DLL.botan_x509_crl_load_file, _DLL.botan_x509_crl_load)
 
     def __del__(self):
         _DLL.botan_x509_crl_destroy(self.__obj)
 
     def handle_(self):
         return self.__obj
+
+    @classmethod
+    def create(cls, rng, ca_cert, ca_key, issue_time, next_update, hash_fn=None, padding=None):
+        crl = X509CRL()
+        _DLL.botan_x509_crl_create(
+            byref(crl.handle_()),
+            rng.handle_(),
+            ca_cert.handle_(),
+            ca_key.handle_(),
+            issue_time,
+            next_update,
+            _ctype_str(hash_fn),
+            _ctype_str(padding)
+        )
+        return crl
+
+    def revoke(self, rng, ca_cert, ca_key, issue_time, next_update, revoked, reason, hash_fn=None, padding=None):
+        crl = X509CRL()
+        c_revoked = len(revoked) * c_void_p
+        arr_revoked = c_revoked()
+        for i, cert in enumerate(revoked):
+            arr_revoked[i] = cert.handle_()
+        revoked_len = c_size_t(len(revoked))
+
+        _DLL.botan_x509_crl_update(
+            byref(crl.handle_()),
+            self.__obj,
+            rng.handle_(),
+            ca_cert.handle_(),
+            ca_key.handle_(),
+            issue_time,
+            next_update,
+            arr_revoked,
+            revoked_len,
+            X509CRLReason.to_bits(reason),
+            _ctype_str(hash_fn),
+            _ctype_str(padding)
+        )
+        return crl
+
+    def revoked(self):
+        count = c_size_t(0)
+        _DLL.botan_x509_crl_get_count(self.__obj, byref(count))
+        revoked = []
+        for i in range(count.value):
+            expire_time = c_uint64(0)
+            reason = c_uint8(0)
+            serial = _call_fn_returning_vec(
+                32, lambda b, bl, i=i, expire_time=expire_time, reason=reason: _DLL.botan_x509_crl_get_entry(self.__obj, c_size_t(i), b, bl, byref(expire_time), byref(reason))
+            )
+            revoked.append(X509CRLEntry(serial, expire_time.value, X509CRLReason.from_bits(reason.value)))
+        return revoked
+
+    def verify(self, key):
+        ret = c_int(0)
+        _DLL.botan_x509_crl_verify_signature(self.__obj, key.handle_(), byref(ret))
+        return ret.value == 1
+
+    def to_pem(self):
+        return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_x509_crl_view_pem(self.__obj, vc, vfn))
+
+    def to_der(self):
+        return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_x509_crl_view_der(self.__obj, vc, vfn))
 
 
 class MPI:
@@ -2424,6 +2579,13 @@ class MPI:
     def random_range(cls, rng_obj: RandomNumberGenerator, lower: MPI, upper: MPI):
         bn = MPI()
         _DLL.botan_mp_rand_range(bn.handle_(), rng_obj.handle_(), lower.handle_(), upper.handle_())
+        return bn
+
+    @classmethod
+    def from_bytes(cls, buf):
+        bn = MPI()
+        out_len = c_size_t(len(buf))
+        _DLL.botan_mp_from_bin(bn.handle_(), buf, out_len)
         return bn
 
     def __del__(self):

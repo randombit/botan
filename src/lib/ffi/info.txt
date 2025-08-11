@@ -9,13 +9,13 @@ brief -> "C API for Botan's functionality"
 
 <header:internal>
 ffi_cert.h
+ffi_cert_ext.h
 ffi_ec.h
 ffi_mp.h
 ffi_oid.h
 ffi_pkey.h
 ffi_rng.h
 ffi_util.h
-ffi_x509_rpki.h
 </header:internal>
 
 <header:public>

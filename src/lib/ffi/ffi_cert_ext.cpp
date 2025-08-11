@@ -8,8 +8,8 @@
 #include <botan/ffi.h>
 
 #include <botan/internal/ffi_cert.h>
+#include <botan/internal/ffi_cert_ext.h>
 #include <botan/internal/ffi_util.h>
-#include <botan/internal/ffi_x509_rpki.h>
 #include <memory>
 
 namespace {
@@ -84,7 +84,7 @@ int botan_x509_ext_ip_addr_blocks_destroy(botan_x509_ext_ip_addr_blocks_t ip_add
 #endif
 }
 
-int botan_x509_ext_create_ip_addr_blocks(botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks) {
+int botan_x509_ext_ip_addr_blocks_create(botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks) {
    if(ip_addr_blocks == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
@@ -98,7 +98,7 @@ int botan_x509_ext_create_ip_addr_blocks(botan_x509_ext_ip_addr_blocks_t* ip_add
 #endif
 }
 
-int botan_x509_ext_create_ip_addr_blocks_from_cert(botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks,
+int botan_x509_ext_ip_addr_blocks_create_from_cert(botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks,
                                                    botan_x509_cert_t cert) {
    if(ip_addr_blocks == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
@@ -335,7 +335,7 @@ int botan_x509_ext_as_blocks_destroy(botan_x509_ext_as_blocks_t as_blocks) {
 #endif
 }
 
-int botan_x509_ext_create_as_blocks(botan_x509_ext_as_blocks_t* as_blocks) {
+int botan_x509_ext_as_blocks_create(botan_x509_ext_as_blocks_t* as_blocks) {
    if(as_blocks == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
@@ -349,7 +349,7 @@ int botan_x509_ext_create_as_blocks(botan_x509_ext_as_blocks_t* as_blocks) {
 #endif
 }
 
-int botan_x509_ext_create_as_blocks_from_cert(botan_x509_ext_as_blocks_t* as_blocks, botan_x509_cert_t cert) {
+int botan_x509_ext_as_blocks_create_from_cert(botan_x509_ext_as_blocks_t* as_blocks, botan_x509_cert_t cert) {
    if(as_blocks == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }

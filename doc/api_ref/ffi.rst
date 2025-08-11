@@ -1671,20 +1671,20 @@ X.509 Certificates
 
    Return the subject key ID set in the certificate, which may be empty.
 
-.. cpp:function::int botan_x509_get_basic_constraints(botan_x509_cert_t cert, int* is_ca, size_t* limit)
+.. cpp:function::int botan_x509_cert_is_ca(botan_x509_cert_t cert, int* is_ca, size_t* limit)
 
    Checks whether the certificate is a CA certificate and sets ``is_ca`` to 1 if it is, 0 otherwise.
    If it is a CA certificate, ``limit`` is set to the path limit, otherwise 0.
 
-.. cpp:function::int botan_x509_get_key_constraints(botan_x509_cert_t cert, uint32_t* usage)
+.. cpp:function::int botan_x509_cert_get_allowed_usage(botan_x509_cert_t cert, uint32_t* usage)
 
    Returns the key usage constraints.
 
-.. cpp:function::int botan_x509_get_ocsp_responder(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_str_fn view)
+.. cpp:function::int botan_x509_cert_get_ocsp_responder(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_str_fn view)
 
    Returns the OCSP responder.
 
-.. cpp:function::int botan_x509_is_self_signed(botan_x509_cert_t cert, int* out)
+.. cpp:function::int botan_x509_cert_is_self_signed(botan_x509_cert_t cert, int* out)
 
    Checks whether the certificate is self signed and sets ``out`` to 1 if it is, 0 otherwise.
 
@@ -1801,11 +1801,11 @@ X.509 Certificates
 
    Destroy the IP Address Blocks object.
 
-.. cpp:function::int botan_x509_ext_create_ip_addr_blocks(botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks)
+.. cpp:function::int botan_x509_ext_ip_addr_blocks_create(botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks)
 
    Create a new IP Address Blocks object.
 
-.. cpp:function::int botan_x509_ext_create_ip_addr_blocks_from_cert(botan_x509_cert_t cert, \
+.. cpp:function::int botan_x509_ext_ip_addr_blocks_create_from_cert(botan_x509_cert_t cert, \
                   botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks)
 
    Get an IP Address Blocks object from a certificate. Cannot be mutated.
@@ -1877,11 +1877,11 @@ X.509 Certificates
 
    Destroy the AS Blocks object.
 
-.. cpp:function::int botan_x509_ext_create_as_blocks(botan_x509_ext_as_blocks_t* as_blocks)
+.. cpp:function::int botan_x509_ext_as_blocks_create(botan_x509_ext_as_blocks_t* as_blocks)
 
    Create a new AS Blocks object.
 
-.. cpp:function::int botan_x509_ext_create_as_blocks_from_cert(botan_x509_cert_t cert, botan_x509_ext_as_blocks_t* as_blocks)
+.. cpp:function::int botan_x509_ext_as_blocks_create_from_cert(botan_x509_cert_t cert, botan_x509_ext_as_blocks_t* as_blocks)
 
    Get an AS Blocks object from a certificate. Cannot be mutated.
 
@@ -1920,12 +1920,11 @@ X.509 Certificates
 
 .. cpp:function::int botan_x509_cert_params_builder_destroy(botan_x509_cert_params_builder_t builder)
 
-   Destroy the options object.
+   Destroy the Certificate Params Builder object.
 
-.. cpp:function::int botan_x509_create_cert_params_builder(botan_x509_cert_params_builder_t* builder_obj);
+.. cpp:function::int botan_x509_cert_params_builder_create(botan_x509_cert_params_builder_t* builder_obj);
 
-   Create a new certificate builder object. ``opts`` defines the common name (e.g. `common_name/country/organization/organizational_unit`).
-   ``expire_time`` if given is the expiration time from current clock in seconds.
+   Create a new Certificate Params Builder object.
 
 .. cpp:function::int botan_x509_cert_params_builder_add_common_name(botan_x509_cert_params_builder_t builder, const char* name);
 
@@ -1955,7 +1954,7 @@ X.509 Certificates
 
 .. cpp:function::int botan_x509_cert_params_builder_add_allowed_extended_usage(botan_x509_cert_params_builder_t builder, botan_asn1_oid_t oid);
 
-.. cpp:function::int botan_x509_cert_params_builder_set_as_ca_certificate(botan_x509_cert_params_builder_t builder, size_t limit);
+.. cpp:function::int botan_x509_cert_params_builder_set_as_ca_certificate(botan_x509_cert_params_builder_t builder, size_t limit=None);
 
    Mark the certificate for CA usage.
 
@@ -1965,12 +1964,13 @@ X.509 Certificates
 .. cpp:function::int botan_x509_cert_params_builder_add_ext_as_blocks(botan_x509_cert_params_builder_t builder, \
                   botan_x509_ext_as_blocks_t as_blocks, int is_critical);
 
-.. cpp:function::int botan_x509_create_self_signed_cert(botan_x509_cert_t* cert_obj, \
+.. cpp:function::int botan_x509_cert_create_self_signed(botan_x509_cert_t* cert_obj, \
                   botan_privkey_t key, \
                   botan_x509_cert_params_builder_t builder, \
                   botan_rng_t rng, \
                   uint64_t not_before, \
                   uint64_t not_after, \
+                  const botan_mp_t* serial_number, \
                   const char* hash_fn, \
                   const char* padding)
 
@@ -1984,7 +1984,20 @@ X.509 Certificates
 
    Destroy the PKCS #10 certificate request object.
 
-.. cpp:function::int botan_x509_create_pkcs10_req(botan_x509_pkcs10_req_t* req_obj, \
+.. cpp:function::int botan_x509_pkcs10_req_load_file(botan_x509_pkcs10_req_t* req_obj, const char* req_path)
+
+.. cpp:function::int botan_x509_pkcs10_req_load(botan_x509_pkcs10_req_t* req_obj, const uint8_t req_bits[], size_t req_bits_len)
+
+.. cpp:function::int int botan_x509_pkcs10_req_get_public_key(botan_x509_pkcs10_req_t req, botan_pubkey_t* key)
+
+.. cpp:function::int int botan_x509_pkcs10_req_get_allowed_usage(botan_x509_pkcs10_req_t req, uint32_t* usage)
+
+.. cpp:function::int int botan_x509_pkcs10_req_is_ca(botan_x509_pkcs10_req_t req, int* is_ca, size_t* limit)
+
+.. cpp:function::int int botan_x509_pkcs10_req_verify_signature(botan_x509_pkcs10_req_t req, botan_pubkey_t key, int* result)
+
+
+.. cpp:function::int botan_x509_pkcs10_req_create(botan_x509_pkcs10_req_t* req_obj, \
                   botan_privkey_t key, \
                   botan_x509_cert_params_builder_t builder, \
                   botan_rng_t rng, \
@@ -1996,13 +2009,16 @@ X.509 Certificates
 
 .. cpp:function::int botan_x509_pkcs10_req_view_pem(botan_x509_pkcs10_req_t req, botan_view_ctx ctx, botan_view_str_fn view)
 
-.. cpp:function::int botan_x509_sign_req(botan_x509_cert_t* subject_cert, \
+.. cpp:function::int int botan_x509_pkcs10_req_view_der(botan_x509_pkcs10_req_t req, botan_view_ctx ctx, botan_view_bin_fn view)
+
+.. cpp:function::int botan_x509_pkcs10_req_sign(botan_x509_cert_t* subject_cert, \
                   botan_x509_pkcs10_req_t subject_req, \
                   botan_x509_cert_t issuing_cert, \
                   botan_privkey_t issuing_key, \
                   botan_rng_t rng, \
                   uint64_t not_before, \
                   uint64_t not_after, \
+                  const botan_mp_t* serial_number, \
                   const char* hash_fn, \
                   const char* padding)
 
@@ -2023,6 +2039,38 @@ X.509 Certificate Revocation Lists
 .. cpp:function:: int botan_x509_crl_load_file(botan_x509_crl_t* crl_obj, const char* filename)
 
    Load a CRL from a file.
+
+.. cpp:function:: int botan_x509_crl_create(botan_x509_crl_t* crl_obj, \
+                          botan_rng_t rng, \
+                          botan_x509_cert_t ca_cert, \
+                          botan_privkey_t ca_key, \
+                          uint64_t issue_time, \
+                          uint32_t next_update, \
+                          const char* hash_fn, \
+                          const char* padding)
+
+.. cpp:function:: int botan_x509_crl_update(botan_x509_crl_t* crl_obj, \
+                          botan_x509_crl_t last_crl, \
+                          botan_rng_t rng, \
+                          botan_x509_cert_t ca_cert, \
+                          botan_privkey_t ca_key, \
+                          uint64_t issue_time, \
+                          uint32_t next_update, \
+                          const botan_x509_cert_t* revoked, \
+                          size_t revoked_len, \
+                          uint8_t reason, \
+                          const char* hash_fn, \
+                          const char* padding)
+
+.. cpp:function:: int botan_x509_crl_get_count(botan_x509_crl_t crl, size_t* count);
+
+.. cpp:function:: int botan_x509_crl_get_entry(botan_x509_crl_t crl, size_t i, uint8_t serial[], size_t* serial_len, uint64_t* expire_time, uint8_t* reason)
+
+.. cpp:function:: int botan_x509_crl_verify_signature(botan_x509_crl_t crl, botan_pubkey_t key, int* result)
+
+.. cpp:function:: int botan_x509_crl_view_pem(botan_x509_crl_t crl, botan_view_ctx ctx, botan_view_str_fn view)
+
+.. cpp:function:: int botan_x509_crl_view_der(botan_x509_crl_t crl, botan_view_ctx ctx, botan_view_bin_fn view)
 
 .. cpp:function:: int botan_x509_crl_destroy(botan_x509_crl_t crl)
 

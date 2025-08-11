@@ -561,6 +561,14 @@ Multiple Precision Integers (MPI)
    Most of the usual arithmetic operators (``__add__``, ``__mul__``, etc) are
    defined.
 
+   .. py:classmethod:: from_bytes(buf)
+
+       Create a new MPI object from the big-endian binary encoding produced by ``to_bytes()``.
+
+   .. py:method::  to_bytes()
+
+      Return a big-endian binary encoding of the number.
+
    .. py:method:: inverse_mod(modulus)
 
       Return the inverse of ``self`` modulo ``modulus``, or zero if no inverse exists
@@ -755,7 +763,7 @@ X509CertificateBuilder
 
    .. py:method:: add_ext_as_blocks(as_blocks, is_critical)
 
-   .. py:method:: create_self_signed(key, rng, not_before, not_after, hash_fn=None, padding=None)
+   .. py:method:: create_self_signed(key, rng, not_before, not_after, serial_number=None, hash_fn=None, padding=None)
 
       Create a self-signed certificate from the given certificate options.
       ``not_before`` and ``not_after`` are expected to be the time since the UNIX epoch, in seconds.
@@ -771,12 +779,12 @@ X509ExtIPAddrBlocks
 
 .. py:class:: X509ExtIPAddrBlocks(cert=None)
 
-   .. py:method:: add_ip(ip, safi=None)
+   .. py:method:: add_addr(ip, safi=None)
 
       Add a single IP address to the extension. ``ip`` is expected to be a ``list[int]``
       of length 4/16 for IPv4/IPv6.
 
-   .. py:method:: add_ip_range(min_, max_, safi=None)
+   .. py:method:: add_range(min_, max_, safi=None)
 
       Add an IP address range to the extension.
 
@@ -836,11 +844,25 @@ PKCS10Req
 
 .. py:class:: PKCS10Req()
 
+   .. py:method:: public_key()
+
+      Get the public key associated with the signing request.
+
+   .. py:method:: allowed_usage()
+
+      Return a list of all the key constraints listed in the signing request.
+
+   .. py:method:: verify(key)
+
+      Verify the signature of the signing request.
+
    .. py:method:: sign(issuing_cert, issuing_key, rng, not_before, not_after, hash_fn=None, padding=None)
 
       ``not_before`` and ``not_after`` are expected to be the time since the UNIX epoch, in seconds.
 
    .. py:method:: to_pem()
+
+   .. py:method:: to_der()
 
 X509Cert
 -----------------------------------------
@@ -921,9 +943,9 @@ X509Cert
 
       Return True if the certificates Key Usage extension contains all constraints given in ``usage_list``.
       Also return True if the certificate doesn't have this extension.
-      Example usage constraints are: ``"DIGITAL_SIGNATURE"``, ``"KEY_CERT_SIGN"``, ``"CRL_SIGN"``.
+      Example usage constraints are: ``X509KeyConstraints.DIGITAL_SIGNATURE"``, ``X509KeyConstraints.KEY_CERT_SIGN``, ``X509KeyConstraints.CRL_SIGN``.
 
-   .. py:method:: key_constraints()
+   .. py:method:: allowed_usages()
 
       Return a list of all the key constraints listed in the certificate.
 
@@ -994,6 +1016,31 @@ X509CRL
 
    A CRL in PEM or DER format can be loaded from a file, with the ``filename`` argument,
    or from a bytestring, with the ``buf`` argument.
+
+   .. py:classmethod:: create(rng, ca_cert, ca_key, issue_time, next_update, hash_fn=None, padding=None)
+
+      Create a new CRL for the given CA.
+      ``issue_time`` is expected to be the time since the UNIX epoch, in seconds, ``next_update`` the time in seconds until the next update.
+
+
+   .. py:method:: revoke(rng, ca_cert, ca_key, issue_time, next_update, revoked, reason, hash_fn=None, padding=None)
+
+      Revoke certificates issued by the CA.
+      ``issue_time`` is expected to be the time since the UNIX epoch, in seconds, ``next_update`` the time in seconds until the next update.
+      Revoked is expected to be a list of certificates you want to revoked, reason should be of instance ``X509CRLReason``.
+      This method returns a new CRL, it does not modify the existing one!
+
+   .. py:method:: revoked()
+
+      Return entries listed in the CRL.
+
+   .. py:method:: verify(key)
+
+      Verify the signature of the CRL.
+
+   .. py:method:: to_pem()
+
+   .. py:method:: to_der()
 
 
 

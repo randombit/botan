@@ -154,6 +154,68 @@ class FFI_Test : public Test {
       virtual void ffi_test(Test::Result& result, botan_rng_t rng) = 0;
 };
 
+/**
+ * Helper class for testing "view"-style API functions that take a callback
+ * that gets passed a variable-length buffer of bytes.
+ *
+ * Example:
+ *   botan_privkey_t priv;
+ *   ViewBytesSink sink;
+ *   botan_privkey_view_raw(priv, sink.delegate(), sink.callback());
+ *   std::cout << hex_encode(sink.get()) << std::endl;
+ */
+class ViewBytesSink final {
+   public:
+      void* delegate() { return this; }
+
+      botan_view_bin_fn callback() { return &write_fn; }
+
+      const std::vector<uint8_t>& get() { return m_buf; }
+
+   private:
+      static int write_fn(void* ctx, const uint8_t buf[], size_t len) {
+         if(ctx == nullptr || buf == nullptr) {
+            return BOTAN_FFI_ERROR_NULL_POINTER;
+         }
+
+         auto* sink = static_cast<ViewBytesSink*>(ctx);
+         sink->m_buf.assign(buf, buf + len);
+
+         return 0;
+      }
+
+   private:
+      std::vector<uint8_t> m_buf;
+};
+
+/**
+ * See ViewBytesSink for how to use this. Works for `botan_view_str_fn` instead.
+*/
+class ViewStringSink final {
+   public:
+      void* delegate() { return this; }
+
+      botan_view_str_fn callback() { return &write_fn; }
+
+      std::string_view get() { return m_str; }
+
+   private:
+      static int write_fn(void* ctx, const char* str, size_t len) {
+         if(ctx == nullptr || str == nullptr) {
+            return BOTAN_FFI_ERROR_NULL_POINTER;
+         }
+
+         auto* sink = static_cast<ViewStringSink*>(ctx);
+         // discard the null terminator
+         sink->m_str = std::string(str, len - 1);
+
+         return 0;
+      }
+
+   private:
+      std::string m_str;
+};
+
 void ffi_test_pubkey_export(Test::Result& result, botan_pubkey_t pub, botan_privkey_t priv, botan_rng_t rng) {
    // export public key
    size_t pubkey_len = 0;
@@ -802,53 +864,148 @@ class FFI_Cert_Creation_Test final : public FFI_Test {
          const std::string group{"secp256r1"};
 
          botan_privkey_t ca_key;
+         botan_pubkey_t ca_key_pub;
          botan_privkey_t cert_key;
+         botan_pubkey_t cert_key_pub;
 
          if(TEST_FFI_INIT(botan_privkey_create, (&ca_key, "ECDSA", group.c_str(), rng))) {
             TEST_FFI_OK(botan_privkey_create, (&cert_key, "ECDSA", group.c_str(), rng));
 
+            TEST_FFI_OK(botan_privkey_export_pubkey, (&ca_key_pub, ca_key));
+            TEST_FFI_OK(botan_privkey_export_pubkey, (&cert_key_pub, cert_key));
+
             uint64_t now =
                std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch())
                   .count();
+            uint64_t not_before = now - 180;
+            uint64_t not_after = now + 86400;
 
             botan_x509_cert_params_builder_t ca_builder;
-            if(TEST_FFI_INIT(botan_x509_create_cert_params_builder, (&ca_builder))) {
+            if(TEST_FFI_INIT(botan_x509_cert_params_builder_create, (&ca_builder))) {
                TEST_FFI_OK(botan_x509_cert_params_builder_add_common_name, (ca_builder, "Test CA"));
                TEST_FFI_OK(botan_x509_cert_params_builder_add_country, (ca_builder, "US"));
                TEST_FFI_OK(botan_x509_cert_params_builder_add_organization, (ca_builder, "Botan Project"));
                TEST_FFI_OK(botan_x509_cert_params_builder_add_organizational_unit, (ca_builder, "Testing"));
-               TEST_FFI_OK(botan_x509_cert_params_builder_set_as_ca_certificate, (ca_builder, 1));
+               TEST_FFI_OK(botan_x509_cert_params_builder_set_as_ca_certificate, (ca_builder, nullptr));
                TEST_FFI_OK(botan_x509_cert_params_builder_add_uri, (ca_builder, "https://botan.randombit.net"));
                for(const auto* dns : {"imaginary.botan.randombit.net", "botan.randombit.net", "randombit.net"}) {
                   TEST_FFI_OK(botan_x509_cert_params_builder_add_dns, (ca_builder, dns));
                }
 
                botan_x509_cert_t ca_cert;
-               TEST_FFI_OK(botan_x509_create_self_signed_cert,
-                           (&ca_cert, ca_key, ca_builder, rng, now, now + 60, hash_fn.c_str(), ""));
+               TEST_FFI_OK(botan_x509_cert_create_self_signed,
+                           (&ca_cert, ca_key, ca_builder, rng, not_before, not_after, nullptr, hash_fn.c_str(), ""));
 
                botan_x509_cert_params_builder_t req_builder;
-               TEST_FFI_OK(botan_x509_create_cert_params_builder, (&req_builder));
+               TEST_FFI_OK(botan_x509_cert_params_builder_create, (&req_builder));
+               TEST_FFI_OK(botan_x509_cert_params_builder_add_allowed_usage, (req_builder, 1 << 15));
 
                botan_x509_pkcs10_req_t req;
-               TEST_FFI_OK(botan_x509_create_pkcs10_req,
+               TEST_FFI_OK(botan_x509_pkcs10_req_create,
                            (&req, cert_key, req_builder, rng, hash_fn.c_str(), nullptr, nullptr));
 
+               int res;
+               TEST_FFI_OK(botan_x509_pkcs10_req_verify_signature, (req, ca_key_pub, &res));
+               result.confirm("signature is not valid", res == 0);
+               TEST_FFI_OK(botan_x509_pkcs10_req_verify_signature, (req, cert_key_pub, &res));
+               result.confirm("signature is valid", res == 1);
+
+               uint32_t usage;
+               TEST_FFI_OK(botan_x509_pkcs10_req_get_allowed_usage, (req, &usage));
+               result.confirm("usage is correct", usage == 1 << 15);
+
+               int is_ca;
+               size_t limit;
+               TEST_FFI_OK(botan_x509_pkcs10_req_is_ca, (req, &is_ca, &limit));
+               result.confirm("cert is not a CA", is_ca == 0);
+
+               botan_pubkey_t pubkey_from_req;
+               TEST_FFI_OK(botan_x509_pkcs10_req_get_public_key, (req, &pubkey_from_req));
+               TEST_FFI_OK(botan_x509_pkcs10_req_verify_signature, (req, pubkey_from_req, &res));
+               result.confirm("signature is valid", res == 1);
+
+               ViewStringSink req_pem;
+               TEST_FFI_OK(botan_x509_pkcs10_req_view_pem, (req, req_pem.delegate(), req_pem.callback()));
+               std::string pem = {req_pem.get().begin(), req_pem.get().end()};
+
+               botan_x509_pkcs10_req_t req_from_pem;
+               TEST_FFI_OK(botan_x509_pkcs10_req_load,
+                           (&req_from_pem, reinterpret_cast<const uint8_t*>(pem.c_str()), pem.size()));
+
+               TEST_FFI_OK(botan_x509_pkcs10_req_verify_signature, (req_from_pem, cert_key_pub, &res));
+               result.confirm("signature is valid", res == 1);
+
+               botan_mp_t serial;
+               TEST_FFI_OK(botan_mp_init, (&serial));
+               TEST_FFI_OK(botan_mp_set_from_str, (serial, "12345"));
+
                botan_x509_cert_t cert;
-               TEST_FFI_OK(botan_x509_sign_req, (&cert, req, ca_cert, ca_key, rng, now, now + 60, hash_fn.c_str(), ""));
+               TEST_FFI_OK(botan_x509_pkcs10_req_sign,
+                           (&cert, req, ca_cert, ca_key, rng, not_before, not_after, &serial, hash_fn.c_str(), ""));
+
+               std::vector<uint8_t> serial_out(5);
+               size_t out_len = 5;
+
+               botan_mp_t serial_from_cert;
+               TEST_FFI_OK(botan_mp_init, (&serial_from_cert));
+
+               TEST_FFI_OK(botan_x509_cert_get_serial_number, (cert, serial_out.data(), &out_len));
+               TEST_FFI_OK(botan_mp_from_bin, (serial_from_cert, serial_out.data(), out_len));
+               TEST_FFI_RC(1, botan_mp_equal, (serial, serial_from_cert));
 
                int rc;
                TEST_FFI_RC(0, botan_x509_cert_verify, (&rc, cert, nullptr, 0, &ca_cert, 1, nullptr, 0, nullptr, 0));
+               result.confirm("validation succeeds", rc == 0);
 
+               botan_x509_crl_t crl;
+               TEST_FFI_OK(botan_x509_crl_create,
+                           (&crl, rng, ca_cert, ca_key, not_before, 86400, hash_fn.c_str(), nullptr));
+
+               TEST_FFI_RC(0,
+                           botan_x509_cert_verify_with_crl,
+                           (&rc, cert, nullptr, 0, &ca_cert, 1, &crl, 1, nullptr, 0, nullptr, 0));
+               botan_x509_crl_t new_crl;
+               botan_x509_cert_t certs[1] = {cert};
+               TEST_FFI_OK(
+                  botan_x509_crl_update,
+                  (&new_crl, crl, rng, ca_cert, ca_key, not_before, 86400, certs, 1, 1, hash_fn.c_str(), nullptr));
+
+               TEST_FFI_RC(1,
+                           botan_x509_cert_verify_with_crl,
+                           (&rc, cert, nullptr, 0, &ca_cert, 1, &new_crl, 1, nullptr, 0, nullptr, 0));
+               result.confirm("validation fails because cert is revoked", rc == 5000);
+
+               size_t count;
+               TEST_FFI_OK(botan_x509_crl_get_count, (new_crl, &count));
+               result.confirm("crl has correct number of entires", count == 1);
+
+               uint64_t expire_time;
+               uint8_t reason;
+               TEST_FFI_OK(botan_x509_crl_get_entry, (new_crl, 0, serial_out.data(), &out_len, &expire_time, &reason));
+               botan_mp_t serial_from_crl;
+               TEST_FFI_OK(botan_mp_init, (&serial_from_crl));
+               TEST_FFI_OK(botan_mp_from_bin, (serial_from_crl, serial_out.data(), out_len));
+               TEST_FFI_RC(1, botan_mp_equal, (serial, serial_from_crl));
+               result.confirm("expire time is correct", now - 5 <= expire_time && expire_time <= now + 5);
+               result.confirm("reason is correct", reason == 1);
+
+               TEST_FFI_OK(botan_mp_destroy, (serial));
+               TEST_FFI_OK(botan_mp_destroy, (serial_from_cert));
+               TEST_FFI_OK(botan_mp_destroy, (serial_from_crl));
+               TEST_FFI_OK(botan_x509_crl_destroy, (crl));
+               TEST_FFI_OK(botan_x509_crl_destroy, (new_crl));
                TEST_FFI_OK(botan_x509_cert_params_builder_destroy, (ca_builder));
                TEST_FFI_OK(botan_x509_cert_params_builder_destroy, (req_builder));
                TEST_FFI_OK(botan_x509_pkcs10_req_destroy, (req));
+               TEST_FFI_OK(botan_x509_pkcs10_req_destroy, (req_from_pem));
                TEST_FFI_OK(botan_x509_cert_destroy, (ca_cert));
                TEST_FFI_OK(botan_x509_cert_destroy, (cert));
+               TEST_FFI_OK(botan_pubkey_destroy, (ca_key_pub));
+               TEST_FFI_OK(botan_pubkey_destroy, (cert_key_pub));
+               TEST_FFI_OK(botan_pubkey_destroy, (pubkey_from_req));
+               TEST_FFI_OK(botan_privkey_destroy, (ca_key));
+               TEST_FFI_OK(botan_privkey_destroy, (cert_key));
             }
-
-            TEST_FFI_OK(botan_privkey_destroy, (ca_key));
-            TEST_FFI_OK(botan_privkey_destroy, (cert_key));
          }
       }
 };
@@ -870,13 +1027,16 @@ class FFI_X509_RPKI_Test final : public FFI_Test {
             uint64_t now =
                std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch())
                   .count();
+            uint64_t not_before = now - 180;
+            uint64_t not_after = now + 86400;
 
             botan_x509_cert_params_builder_t ca_builder;
-            if(TEST_FFI_INIT(botan_x509_create_cert_params_builder, (&ca_builder))) {
-               TEST_FFI_OK(botan_x509_cert_params_builder_set_as_ca_certificate, (ca_builder, 1));
+            if(TEST_FFI_INIT(botan_x509_cert_params_builder_create, (&ca_builder))) {
+               size_t limit = 1;
+               TEST_FFI_OK(botan_x509_cert_params_builder_set_as_ca_certificate, (ca_builder, &limit));
 
                botan_x509_ext_ip_addr_blocks_t ca_ip_addr_blocks;
-               TEST_FFI_OK(botan_x509_ext_create_ip_addr_blocks, (&ca_ip_addr_blocks));
+               TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_create, (&ca_ip_addr_blocks));
                std::vector<uint8_t> ip_addr = {192, 168, 2, 1};
                TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_add_ip_addr,
                            (ca_ip_addr_blocks, ip_addr.data(), ip_addr.data(), 0, nullptr));
@@ -981,7 +1141,7 @@ class FFI_X509_RPKI_Test final : public FFI_Test {
                TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_destroy, (ca_ip_addr_blocks));
 
                botan_x509_ext_as_blocks_t ca_as_blocks;
-               TEST_FFI_OK(botan_x509_ext_create_as_blocks, (&ca_as_blocks));
+               TEST_FFI_OK(botan_x509_ext_as_blocks_create, (&ca_as_blocks));
 
                TEST_FFI_OK(botan_x509_ext_as_blocks_add_asnum, (ca_as_blocks, 0, 3000));
                TEST_FFI_OK(botan_x509_ext_as_blocks_add_asnum, (ca_as_blocks, 4000, 5000));
@@ -1018,38 +1178,41 @@ class FFI_X509_RPKI_Test final : public FFI_Test {
                TEST_FFI_OK(botan_x509_ext_as_blocks_destroy, (ca_as_blocks));
 
                botan_x509_cert_t ca_cert;
-               TEST_FFI_OK(botan_x509_create_self_signed_cert,
-                           (&ca_cert, ca_key, ca_builder, rng, now, now + 60, hash_fn.c_str(), nullptr));
+               TEST_FFI_OK(
+                  botan_x509_cert_create_self_signed,
+                  (&ca_cert, ca_key, ca_builder, rng, not_before, not_after, nullptr, hash_fn.c_str(), nullptr));
 
                botan_x509_cert_params_builder_t req_builder;
-               TEST_FFI_OK(botan_x509_create_cert_params_builder, (&req_builder));
+               TEST_FFI_OK(botan_x509_cert_params_builder_create, (&req_builder));
 
                botan_x509_ext_ip_addr_blocks_t req_ip_addr_blocks;
-               TEST_FFI_OK(botan_x509_ext_create_ip_addr_blocks, (&req_ip_addr_blocks));
+               TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_create, (&req_ip_addr_blocks));
                TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_inherit, (req_ip_addr_blocks, 0, nullptr));
 
                TEST_FFI_OK(botan_x509_cert_params_builder_add_ext_ip_addr_blocks, (req_builder, req_ip_addr_blocks, 1));
                TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_destroy, (req_ip_addr_blocks));
 
                botan_x509_ext_as_blocks_t req_as_blocks;
-               TEST_FFI_OK(botan_x509_ext_create_as_blocks, (&req_as_blocks));
+               TEST_FFI_OK(botan_x509_ext_as_blocks_create, (&req_as_blocks));
                TEST_FFI_OK(botan_x509_ext_as_blocks_inherit_asnum, (req_as_blocks));
 
                TEST_FFI_OK(botan_x509_cert_params_builder_add_ext_as_blocks, (req_builder, req_as_blocks, 1));
                TEST_FFI_OK(botan_x509_ext_as_blocks_destroy, (req_as_blocks));
 
                botan_x509_pkcs10_req_t req;
-               TEST_FFI_OK(botan_x509_create_pkcs10_req,
+               TEST_FFI_OK(botan_x509_pkcs10_req_create,
                            (&req, cert_key, req_builder, rng, hash_fn.c_str(), nullptr, nullptr));
 
                botan_x509_cert_t cert;
-               TEST_FFI_OK(botan_x509_sign_req, (&cert, req, ca_cert, ca_key, rng, now, now + 60, hash_fn.c_str(), ""));
+               TEST_FFI_OK(
+                  botan_x509_pkcs10_req_sign,
+                  (&cert, req, ca_cert, ca_key, rng, not_before, not_after, nullptr, hash_fn.c_str(), nullptr));
 
                uint64_t test = 0;
                TEST_FFI_OK(botan_x509_cert_not_after, (cert, &test));
 
                botan_x509_ext_ip_addr_blocks_t req_ip_addr_blocks_from_cert;
-               TEST_FFI_OK(botan_x509_ext_create_ip_addr_blocks_from_cert, (&req_ip_addr_blocks_from_cert, cert));
+               TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_create_from_cert, (&req_ip_addr_blocks_from_cert, cert));
 
                TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_get_counts,
                            (req_ip_addr_blocks_from_cert, &v4_count, &v6_count));
@@ -1078,7 +1241,7 @@ class FFI_X509_RPKI_Test final : public FFI_Test {
                TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_destroy, (req_ip_addr_blocks_from_cert));
 
                botan_x509_ext_as_blocks_t req_as_blocks_from_cert;
-               TEST_FFI_OK(botan_x509_ext_create_as_blocks_from_cert, (&req_as_blocks_from_cert, cert));
+               TEST_FFI_OK(botan_x509_ext_as_blocks_create_from_cert, (&req_as_blocks_from_cert, cert));
 
                TEST_FFI_OK(botan_x509_ext_as_blocks_get_asnum, (req_as_blocks_from_cert, &present, &count));
                result.confirm("ext inherits asnum", present == 0);
