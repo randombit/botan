@@ -112,43 +112,69 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
 
 /*
 * Calculate the Jacobi symbol
+*
+* See Algorithm 2.149 in Handbook of Applied Cryptography
 */
-int32_t jacobi(const BigInt& a, const BigInt& n) {
-   if(n.is_even() || n < 2) {
-      throw Invalid_Argument("jacobi: second argument must be odd and > 1");
+int32_t jacobi(BigInt a, BigInt n) {
+   BOTAN_ARG_CHECK(n.is_odd() && n >= 3, "Argument n must be an odd integer >= 3");
+
+   if(a < 0 || a >= n) {
+      a %= n;
    }
 
-   BigInt x = a % n;
-   BigInt y = n;
-   int32_t J = 1;
+   if(a == 0) {
+      return 0;
+   }
+   if(a == 1) {
+      return 1;
+   }
 
-   while(y > 1) {
-      x %= y;
-      if(x > y / 2) {
-         x = y - x;
-         if(y % 4 == 3) {
-            J = -J;
-         }
+   int32_t s = 1;
+
+   for(;;) {
+      const size_t e = low_zero_bits(a);
+      a >>= e;
+      const word n_mod_8 = n.word_at(0) % 8;
+      const word n_mod_4 = n_mod_8 % 4;
+
+      if(e % 2 == 1 && (n_mod_8 == 3 || n_mod_8 == 5)) {
+         s = -s;
       }
-      if(x.is_zero()) {
+
+      if(n_mod_4 == 3 && a % 4 == 3) {
+         s = -s;
+      }
+
+      /*
+      * The HAC presentation of the algorithm uses recursion, which is not
+      * desirable or necessary.
+      *
+      * Instead we loop accumulating the product of the various jacobi()
+      * subcomputations into s, until we reach algorithm termination, which
+      * occurs in one of two ways.
+      *
+      * If a == 1 then the recursion has completed; we can return the value of s.
+      *
+      * Otherwise, after swapping and reducing, check for a == 0 [this value is
+      * called `n1` in HAC's presentation]. This would imply that jacobi(n1,a1)
+      * would have the value 0, due to Line 1 in HAC 2.149, in which case the
+      * entire product is zero, and we can immediately return that result.
+      */
+
+      if(a == 1) {
+         return s;
+      }
+
+      std::swap(a, n);
+
+      BOTAN_ASSERT_NOMSG(n.is_odd());
+
+      a %= n;
+
+      if(a == 0) {
          return 0;
       }
-
-      size_t shifts = low_zero_bits(x);
-      x >>= shifts;
-      if(shifts % 2 == 1) {
-         word y_mod_8 = y % 8;
-         if(y_mod_8 == 3 || y_mod_8 == 5) {
-            J = -J;
-         }
-      }
-
-      if(x % 4 == 3 && y % 4 == 3) {
-         J = -J;
-      }
-      std::swap(x, y);
    }
-   return J;
 }
 
 /*
