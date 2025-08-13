@@ -103,7 +103,21 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
             throw TLS_Exception(Alert::HandshakeFailure, "Server sent ECC curve prohibited by policy");
          }
 
-         const auto private_key = state.callbacks().tls_generate_ephemeral_key(curve_id, rng);
+         const auto private_key = [&] {
+            if(curve_id.is_ecdh_named_curve()) {
+               const auto pubkey_point_format = state.server_hello()->prefers_compressed_ec_points()
+                                                   ? EC_Point_Format::Compressed
+                                                   : EC_Point_Format::Uncompressed;
+               return state.callbacks().tls12_generate_ephemeral_ecdh_key(curve_id, rng, pubkey_point_format);
+            } else {
+               return state.callbacks().tls_generate_ephemeral_key(curve_id, rng);
+            }
+         }();
+
+         if(!private_key) {
+            throw TLS_Exception(Alert::InternalError, "Application did not provide an EC key");
+         }
+
          auto shared_secret =
             state.callbacks().tls_ephemeral_key_agreement(curve_id, *private_key, peer_public_value, rng, policy);
 
@@ -114,19 +128,10 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
             append_tls_length_value(m_pre_master, psk.bits_of(), 2);
          }
 
-         if(curve_id.is_ecdh_named_curve()) {
-            auto* ecdh_key = dynamic_cast<ECDH_PublicKey*>(private_key.get());
-            if(ecdh_key == nullptr) {
-               throw TLS_Exception(Alert::InternalError, "Application did not provide a ECDH_PublicKey");
-            }
-            append_tls_length_value(m_key_material,
-                                    ecdh_key->public_value(state.server_hello()->prefers_compressed_ec_points()
-                                                              ? EC_Point_Format::Compressed
-                                                              : EC_Point_Format::Uncompressed),
-                                    1);
-         } else {
-            append_tls_length_value(m_key_material, private_key->public_value(), 1);
-         }
+         // Note: In contrast to public_value(), raw_public_key_bits() takes the
+         // point format (compressed vs. uncompressed) into account that was set
+         // in its construction within tls_generate_ephemeral_key().
+         append_tls_length_value(m_key_material, private_key->raw_public_key_bits(), 1);
       } else {
          throw Internal_Error("Client_Key_Exchange: Unknown key exchange method was negotiated");
       }
