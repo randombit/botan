@@ -150,7 +150,17 @@ jobs:
 
   clang-tidy:
     name: "Clang Tidy"
-    runs-on: ubuntu-24.04
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        include:
+          - host_os: ubuntu-24.04
+          - host_os: macos-15
+
+    runs-on: ${{ matrix.host_os }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -162,10 +172,10 @@ jobs:
         with:
           target: clang-tidy
           compiler: clang
-          cache-key: linux-x86_64-clang-tidy
+          cache-key: clang-tidy-${{ matrix.host_os }}
 
       - name: Configure Build
-        run: python3 ./configure.py --cc=clang --build-targets=shared,cli,tests,examples,bogo_shim --build-fuzzers=test --with-boost --with-sqlite --with-zlib --with-lzma --with-bzip2 --with-tpm2
+        run: python3 ./configure.py --cc=clang --build-targets=shared,cli,tests,examples,bogo_shim --build-fuzzers=test --with-boost --with-sqlite --with-zlib --with-lzma --with-bzip2 --with-tpm2 --enable-modules=tls_null
 
       - name: Run Clang Tidy
         run: |

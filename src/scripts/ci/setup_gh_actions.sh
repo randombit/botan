@@ -84,6 +84,8 @@ else
         echo "BOOST_INCLUDEDIR=$boostincdir" >> "$GITHUB_ENV"
     elif [ "$TARGET" = "emscripten" ]; then
         brew install emscripten
+    elif [ "$TARGET" = "clang-tidy" ]; then
+        brew install pyyaml llvm
     fi
 
     if [ -d '/Applications/Xcode_16.1.app/Contents/Developer' ]; then
