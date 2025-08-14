@@ -18,6 +18,8 @@ namespace Botan {
 
 namespace AES_AARCH64 {
 
+namespace {
+
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_AES void enc(uint8x16_t& B, uint8x16_t K) {
    B = vaesmcq_u8(vaeseq_u8(B, K));
 }
@@ -65,6 +67,8 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AES void dec4_last(
    B2 = veorq_u8(vaesdq_u8(B2, K), K2);
    B3 = veorq_u8(vaesdq_u8(B3, K), K2);
 }
+
+}  // namespace
 
 }  // namespace AES_AARCH64
 
@@ -189,7 +193,7 @@ BOTAN_FN_ISA_AES void AES_128::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[
       dec(B, K6);
       dec(B, K7);
       dec(B, K8);
-      B = veorq_u8(vaesdq_u8(B, K9), K10);
+      dec_last(B, K9, K10);
       vst1q_u8(out + 16 * i, B);
    }
 }
@@ -258,7 +262,7 @@ BOTAN_FN_ISA_AES void AES_192::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[
       enc(B, K8);
       enc(B, K9);
       enc(B, K10);
-      B = veorq_u8(vaeseq_u8(B, K11), K12);
+      enc_last(B, K11, K12);
       vst1q_u8(out + 16 * i, B);
    }
 }
@@ -327,7 +331,7 @@ BOTAN_FN_ISA_AES void AES_192::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[
       dec(B, K8);
       dec(B, K9);
       dec(B, K10);
-      B = veorq_u8(vaesdq_u8(B, K11), K12);
+      dec_last(B, K11, K12);
       vst1q_u8(out + 16 * i, B);
    }
 }
@@ -404,7 +408,7 @@ BOTAN_FN_ISA_AES void AES_256::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[
       enc(B, K10);
       enc(B, K11);
       enc(B, K12);
-      B = veorq_u8(vaeseq_u8(B, K13), K14);
+      enc_last(B, K13, K14);
       vst1q_u8(out + 16 * i, B);
    }
 }
@@ -479,7 +483,7 @@ BOTAN_FN_ISA_AES void AES_256::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[
       dec(B, K10);
       dec(B, K11);
       dec(B, K12);
-      B = veorq_u8(vaesdq_u8(B, K13), K14);
+      dec_last(B, K13, K14);
       vst1q_u8(out + 16 * i, B);
    }
 }

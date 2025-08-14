@@ -21,45 +21,37 @@ namespace Botan {
 void BOTAN_FN_ISA_SHA2 SHA_1::sha1_armv8_compress_n(digest_type& digest,
                                                     std::span<const uint8_t> input8,
                                                     size_t blocks) {
-   uint32x4_t ABCD;
-   uint32_t E0;
-
    // Load magic constants
    const uint32x4_t C0 = vdupq_n_u32(0x5A827999);
    const uint32x4_t C1 = vdupq_n_u32(0x6ED9EBA1);
    const uint32x4_t C2 = vdupq_n_u32(0x8F1BBCDC);
    const uint32x4_t C3 = vdupq_n_u32(0xCA62C1D6);
 
-   ABCD = vld1q_u32(&digest[0]);
-   E0 = digest[4];
+   uint32x4_t ABCD = vld1q_u32(&digest[0]);  // NOLINT(*-container-data-pointer)
+   uint32_t E0 = digest[4];
 
-   // Intermediate void* cast due to https://llvm.org/bugs/show_bug.cgi?id=20670
-   const uint32_t* input32 = reinterpret_cast<const uint32_t*>(reinterpret_cast<const void*>(input8.data()));
+   const uint32_t* input32 = reinterpret_cast<const uint32_t*>(input8.data());
 
-   while(blocks) {
+   while(blocks > 0) {
       // Save current hash
       const uint32x4_t ABCD_SAVED = ABCD;
       const uint32_t E0_SAVED = E0;
 
-      uint32x4_t MSG0, MSG1, MSG2, MSG3;
-      uint32x4_t TMP0, TMP1;
-      uint32_t E1;
-
-      MSG0 = vld1q_u32(input32 + 0);
-      MSG1 = vld1q_u32(input32 + 4);
-      MSG2 = vld1q_u32(input32 + 8);
-      MSG3 = vld1q_u32(input32 + 12);
+      uint32x4_t MSG0 = vld1q_u32(input32 + 0);
+      uint32x4_t MSG1 = vld1q_u32(input32 + 4);
+      uint32x4_t MSG2 = vld1q_u32(input32 + 8);
+      uint32x4_t MSG3 = vld1q_u32(input32 + 12);
 
       MSG0 = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(MSG0)));
       MSG1 = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(MSG1)));
       MSG2 = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(MSG2)));
       MSG3 = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(MSG3)));
 
-      TMP0 = vaddq_u32(MSG0, C0);
-      TMP1 = vaddq_u32(MSG1, C0);
+      uint32x4_t TMP0 = vaddq_u32(MSG0, C0);
+      uint32x4_t TMP1 = vaddq_u32(MSG1, C0);
 
       // Rounds 0-3
-      E1 = vsha1h_u32(vgetq_lane_u32(ABCD, 0));
+      uint32_t E1 = vsha1h_u32(vgetq_lane_u32(ABCD, 0));
       ABCD = vsha1cq_u32(ABCD, E0, TMP0);
       TMP0 = vaddq_u32(MSG2, C0);
       MSG0 = vsha1su0q_u32(MSG0, MSG1, MSG2);
@@ -180,7 +172,6 @@ void BOTAN_FN_ISA_SHA2 SHA_1::sha1_armv8_compress_n(digest_type& digest,
       E0 = vsha1h_u32(vgetq_lane_u32(ABCD, 0));
       ABCD = vsha1pq_u32(ABCD, E1, TMP1);
       TMP1 = vaddq_u32(MSG3, C3);
-      MSG0 = vsha1su1q_u32(MSG0, MSG3);
 
       // Rounds 72-75
       E1 = vsha1h_u32(vgetq_lane_u32(ABCD, 0));
@@ -199,7 +190,7 @@ void BOTAN_FN_ISA_SHA2 SHA_1::sha1_armv8_compress_n(digest_type& digest,
    }
 
    // Save digest
-   vst1q_u32(&digest[0], ABCD);
+   vst1q_u32(&digest[0], ABCD);  // NOLINT(*-container-data-pointer)
    digest[4] = E0;
 }
 
