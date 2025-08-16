@@ -117,7 +117,7 @@ class Ascon_p final {
          // The padding is defined as:
          //   1. The first padding bit is set to 1
          //   2. The remaining bits are set to 0
-         constexpr std::array<uint8_t, byte_rate()> padding{0x80};
+         constexpr std::array<uint8_t, byte_rate()> padding{0x01};
 
          // We must always add a padded final input block, if the last verbatim
          // input block aligned with the byte rate, the final block may be just

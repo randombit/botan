@@ -146,7 +146,7 @@ class Hash_Function_Tests final : public Text_Based_Test {
                result.test_eq(provider, "hashing split", fork->final(), expected);
             }
 
-            if(hash->hash_block_size() > 0) {
+            if(hash->hash_block_size() > 0 && hash->name() != "Ascon-Hash256" /* which has an 8 bytes block size */) {
                // GOST-34.11 uses 32 byte block
                result.test_gte("If hash_block_size is set, it is large", hash->hash_block_size(), 32);
             }
