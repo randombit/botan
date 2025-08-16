@@ -1,0 +1,7 @@
+<internal_defines>
+ASCON_PERM -> 20250816
+</internal_defines>
+
+<module_info>
+name -> "Ascon-permutation"
+</module_info>

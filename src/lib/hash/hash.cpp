@@ -14,6 +14,10 @@
    #include <botan/internal/adler32.h>
 #endif
 
+#if defined(BOTAN_HAS_ASCON_HASH256)
+   #include <botan/internal/ascon_hash256.h>
+#endif
+
 #if defined(BOTAN_HAS_CRC24)
    #include <botan/internal/crc24.h>
 #endif
@@ -182,6 +186,12 @@ std::unique_ptr<HashFunction> HashFunction::create(std::string_view algo_spec, s
 #if defined(BOTAN_HAS_ADLER32)
    if(algo_spec == "Adler32") {
       return std::make_unique<Adler32>();
+   }
+#endif
+
+#if defined(BOTAN_HAS_ASCON_HASH256)
+   if(algo_spec == "Ascon-Hash256") {
+      return std::make_unique<Ascon_Hash256>();
    }
 #endif
 
