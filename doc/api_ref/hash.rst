@@ -97,6 +97,20 @@ Available Hash Functions
 The following cryptographic hash functions are implemented. If in doubt,
 any of SHA-384, SHA-3, or BLAKE2b are fine choices.
 
+Ascon-Hash256
+^^^^^^^^^^^^^
+
+Available if ``BOTAN_HAS_ASCON_HASH256`` is defined.
+
+A hash function based on the Ascon permutation, specifically designed to allow
+small footprint implementations. Its main use case is in constrained
+environments, such as IoT devices where traditional cryptographic functions
+may be too resource intensive.
+
+This hash function is standardized by NIST in SP.800-232.
+
+Algorithm specification name: ``Ascon-Hash256``
+
 BLAKE2b
 ^^^^^^^^^
 
