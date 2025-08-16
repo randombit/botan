@@ -21,7 +21,7 @@ void ANSI_X919_MAC::add_data(std::span<const uint8_t> input) {
    BufferSlicer in(input);
 
    const auto to_be_xored = in.take(std::min(8 - m_position, in.remaining()));
-   xor_buf(&m_state[m_position], to_be_xored.data(), to_be_xored.size());
+   xor_buf(std::span{m_state}.subspan(m_position, to_be_xored.size()), to_be_xored);
    m_position += to_be_xored.size();
 
    if(m_position < 8) {
@@ -30,12 +30,12 @@ void ANSI_X919_MAC::add_data(std::span<const uint8_t> input) {
 
    m_des1->encrypt(m_state);
    while(in.remaining() >= 8) {
-      xor_buf(m_state, in.take(8).data(), 8);
+      xor_buf(std::span{m_state}.first<8>(), in.take<8>());
       m_des1->encrypt(m_state);
    }
 
    const auto remaining = in.take(in.remaining());
-   xor_buf(m_state, remaining.data(), remaining.size());
+   xor_buf(std::span{m_state}.first(remaining.size()), remaining);
    m_position = remaining.size();
 }
 
