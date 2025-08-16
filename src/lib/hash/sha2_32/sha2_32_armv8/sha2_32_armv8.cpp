@@ -36,11 +36,10 @@ void BOTAN_FN_ISA_SHA2 BOTAN_SCRUB_STACK_AFTER_RETURN SHA_256::compress_digest_a
    };
 
    // Load initial values
-   uint32x4_t STATE0 = vld1q_u32(&digest[0]);
+   uint32x4_t STATE0 = vld1q_u32(&digest[0]);  // NOLINT(*-container-data-pointer)
    uint32x4_t STATE1 = vld1q_u32(&digest[4]);
 
-   // Intermediate void* cast due to https://llvm.org/bugs/show_bug.cgi?id=20670
-   const uint32_t* input32 = reinterpret_cast<const uint32_t*>(reinterpret_cast<const void*>(input8.data()));
+   const uint32_t* input32 = reinterpret_cast<const uint32_t*>(input8.data());
 
    while(blocks > 0) {
       // Save current state
@@ -57,7 +56,8 @@ void BOTAN_FN_ISA_SHA2 BOTAN_SCRUB_STACK_AFTER_RETURN SHA_256::compress_digest_a
       MSG2 = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(MSG2)));
       MSG3 = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(MSG3)));
 
-      uint32x4_t MSG_K, TSTATE;
+      uint32x4_t MSG_K;
+      uint32x4_t TSTATE;
 
       // Rounds 0-3
       MSG_K = vaddq_u32(MSG0, vld1q_u32(&K[4 * 0]));
@@ -176,7 +176,7 @@ void BOTAN_FN_ISA_SHA2 BOTAN_SCRUB_STACK_AFTER_RETURN SHA_256::compress_digest_a
    }
 
    // Save state
-   vst1q_u32(&digest[0], STATE0);
+   vst1q_u32(&digest[0], STATE0);  // NOLINT(*-container-data-pointer)
    vst1q_u32(&digest[4], STATE1);
 }
 

@@ -136,14 +136,11 @@ class Asio_SocketUDP final : public OS::SocketUDP {
 class BSD_SocketUDP final : public OS::SocketUDP {
    public:
       BSD_SocketUDP(std::string_view hostname, std::string_view service, std::chrono::microseconds timeout) :
-            m_timeout(timeout) {
+            m_timeout(timeout), m_socket(invalid_socket()) {
          socket_init();
 
-         m_socket = invalid_socket();
-
          addrinfo* res = nullptr;
-         addrinfo hints;
-         clear_mem(&hints, 1);
+         addrinfo hints{};
          hints.ai_family = AF_UNSPEC;
          hints.ai_socktype = SOCK_DGRAM;
 
@@ -291,6 +288,7 @@ class BSD_SocketUDP final : public OS::SocketUDP {
       static bool nonblocking_connect_in_progress() { return (errno == EINPROGRESS); }
 
       static void set_nonblocking(socket_type s) {
+         // NOLINTNEXTLINE(*-vararg)
          if(::fcntl(s, F_SETFL, O_NONBLOCK) < 0) {
             throw System_Error("Setting socket to non-blocking state failed", errno);
          }
@@ -300,11 +298,12 @@ class BSD_SocketUDP final : public OS::SocketUDP {
 
       static void socket_fini() {}
    #endif
-      sockaddr_storage sa;
+      sockaddr_storage sa = {};
       socklen_t salen;
 
       struct timeval make_timeout_tv() const {
-         struct timeval tv;
+         struct timeval tv {};
+
          tv.tv_sec = static_cast<decltype(timeval::tv_sec)>(m_timeout.count() / 1000000);
          tv.tv_usec = static_cast<decltype(timeval::tv_usec)>(m_timeout.count() % 1000000);
          return tv;

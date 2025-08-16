@@ -38,7 +38,7 @@ void BOTAN_FN_ISA_SHA512 SHA_512::compress_digest_armv8(digest_type& digest,
       0x431D67C49C100D4C, 0x4CC5D4BECB3E42B6, 0x597F299CFC657E2A, 0x5FCB6FAB3AD6FAEC, 0x6C44198C4A475817};
 
    // Load initial values
-   uint64x2_t STATE0 = vld1q_u64(&digest[0]);  // ab
+   uint64x2_t STATE0 = vld1q_u64(&digest[0]);  // ab NOLINT(*-container-data-pointer)
    uint64x2_t STATE1 = vld1q_u64(&digest[2]);  // cd
    uint64x2_t STATE2 = vld1q_u64(&digest[4]);  // ef
    uint64x2_t STATE3 = vld1q_u64(&digest[6]);  // gh
@@ -70,7 +70,9 @@ void BOTAN_FN_ISA_SHA512 SHA_512::compress_digest_armv8(digest_type& digest,
       MSG6 = vreinterpretq_u64_u8(vrev64q_u8(vreinterpretq_u8_u64(MSG6)));
       MSG7 = vreinterpretq_u64_u8(vrev64q_u8(vreinterpretq_u8_u64(MSG7)));
 
-      uint64x2_t MSG_K, TSTATE0, TSTATE1;
+      uint64x2_t MSG_K;
+      uint64x2_t TSTATE0;
+      uint64x2_t TSTATE1;
 
       // Rounds 0-1
       MSG_K = vaddq_u64(MSG0, vld1q_u64(&K[2 * 0]));
@@ -395,7 +397,7 @@ void BOTAN_FN_ISA_SHA512 SHA_512::compress_digest_armv8(digest_type& digest,
    }
 
    // Save state
-   vst1q_u64(&digest[0], STATE0);
+   vst1q_u64(&digest[0], STATE0);  // NOLINT(*-container-data-pointer)
    vst1q_u64(&digest[2], STATE1);
    vst1q_u64(&digest[4], STATE2);
    vst1q_u64(&digest[6], STATE3);

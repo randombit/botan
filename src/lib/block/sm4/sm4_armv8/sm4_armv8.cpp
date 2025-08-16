@@ -13,9 +13,9 @@ namespace Botan {
 
 namespace {
 
-alignas(16) static const uint8_t qswap_tbl[16] = {12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3};
+alignas(16) const uint8_t qswap_tbl[16] = {12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3};
 
-alignas(16) static const uint8_t bswap_tbl[16] = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+alignas(16) const uint8_t bswap_tbl[16] = {15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
 
 inline uint32x4_t qswap_32(uint32x4_t B) {
    return vreinterpretq_u32_u8(vqtbl1q_u8(vreinterpretq_u8_u32(B), vld1q_u8(qswap_tbl)));
@@ -43,7 +43,7 @@ inline void BOTAN_FN_ISA_SM4 SM4_E(uint32x4_t& B0, uint32x4_t& B1, uint32x4_t& B
 }  // namespace
 
 void BOTAN_FN_ISA_SM4 SM4::sm4_armv8_encrypt(const uint8_t input8[], uint8_t output8[], size_t blocks) const {
-   const uint32x4_t K0 = vld1q_u32(&m_RK[0]);
+   const uint32x4_t K0 = vld1q_u32(&m_RK[0]);  // NOLINT(*-container-data-pointer)
    const uint32x4_t K1 = vld1q_u32(&m_RK[4]);
    const uint32x4_t K2 = vld1q_u32(&m_RK[8]);
    const uint32x4_t K3 = vld1q_u32(&m_RK[12]);
@@ -52,8 +52,8 @@ void BOTAN_FN_ISA_SM4 SM4::sm4_armv8_encrypt(const uint8_t input8[], uint8_t out
    const uint32x4_t K6 = vld1q_u32(&m_RK[24]);
    const uint32x4_t K7 = vld1q_u32(&m_RK[28]);
 
-   const uint32_t* input32 = reinterpret_cast<const uint32_t*>(reinterpret_cast<const void*>(input8));
-   uint32_t* output32 = reinterpret_cast<uint32_t*>(reinterpret_cast<void*>(output8));
+   const uint32_t* input32 = reinterpret_cast<const uint32_t*>(input8);
+   uint32_t* output32 = reinterpret_cast<uint32_t*>(output8);
 
    while(blocks >= 4) {
       uint32x4_t B0 = bswap_32(vld1q_u32(input32));
@@ -100,7 +100,7 @@ void BOTAN_FN_ISA_SM4 SM4::sm4_armv8_encrypt(const uint8_t input8[], uint8_t out
 }
 
 void BOTAN_FN_ISA_SM4 SM4::sm4_armv8_decrypt(const uint8_t input8[], uint8_t output8[], size_t blocks) const {
-   const uint32x4_t K0 = qswap_32(vld1q_u32(&m_RK[0]));
+   const uint32x4_t K0 = qswap_32(vld1q_u32(&m_RK[0]));  // NOLINT(*-container-data-pointer)
    const uint32x4_t K1 = qswap_32(vld1q_u32(&m_RK[4]));
    const uint32x4_t K2 = qswap_32(vld1q_u32(&m_RK[8]));
    const uint32x4_t K3 = qswap_32(vld1q_u32(&m_RK[12]));
@@ -109,8 +109,8 @@ void BOTAN_FN_ISA_SM4 SM4::sm4_armv8_decrypt(const uint8_t input8[], uint8_t out
    const uint32x4_t K6 = qswap_32(vld1q_u32(&m_RK[24]));
    const uint32x4_t K7 = qswap_32(vld1q_u32(&m_RK[28]));
 
-   const uint32_t* input32 = reinterpret_cast<const uint32_t*>(reinterpret_cast<const void*>(input8));
-   uint32_t* output32 = reinterpret_cast<uint32_t*>(reinterpret_cast<void*>(output8));
+   const uint32_t* input32 = reinterpret_cast<const uint32_t*>(input8);
+   uint32_t* output32 = reinterpret_cast<uint32_t*>(output8);
 
    while(blocks >= 4) {
       uint32x4_t B0 = bswap_32(vld1q_u32(input32));
