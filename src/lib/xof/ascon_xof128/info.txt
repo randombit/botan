@@ -1,0 +1,11 @@
+<defines>
+ASCON_XOF128 -> 20250817
+</defines>
+
+<module_info>
+name -> "Ascon-XOF128"
+</module_info>
+
+<requires>
+ascon_perm
+</requires>

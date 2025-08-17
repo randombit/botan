@@ -349,6 +349,7 @@ class Speed final : public Command {
             /* XOFs */
             "SHAKE-128",
             "SHAKE-256",
+            "Ascon-XOF128",
 
             /* MACs */
             "CMAC(AES-128)",
