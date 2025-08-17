@@ -768,6 +768,17 @@ removal in future releases. This is the default.
 Disable all deprecated modules and features. Note that individual deprecated
 modules can be explicitly disabled using ``--disable-modules=MODS``.
 
+``--disable-neon``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable use of ARM NEON intrinsics at compile time. This is needed to support
+certain distributions which still support obsolete ARMv7 cores that don't
+support NEON and which, for whatever reason, completely disable support for NEON
+in their toolchains. For ordinary usage this is not necessary; the NEON using
+code will be compiled and simply not used if at runtime NEON support cannot be
+detected. This option is supported only for 32-bit ARM processors; Aarch64
+requires NEON and for such targets this option is ignored.
+
 ``--system-cert-bundle=PATH``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
