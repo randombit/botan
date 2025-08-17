@@ -10,15 +10,22 @@
 
 #include <botan/hash.h>
 
+#include <array>
+
 namespace Botan {
 
 /**
  * BLAKE2s
  */
-class BLAKE2s final : public HashFunction /* NOLINT(*-special-member-functions) */ {
+class BLAKE2s final : public HashFunction {
    public:
       explicit BLAKE2s(size_t output_bits = 256);
       ~BLAKE2s() override;
+
+      BLAKE2s(const BLAKE2s&) = default;
+      BLAKE2s& operator=(const BLAKE2s&) = delete;
+      BLAKE2s(BLAKE2s&&) = delete;
+      BLAKE2s& operator=(BLAKE2s&&) = delete;
 
       std::string name() const override;
 
@@ -38,12 +45,11 @@ class BLAKE2s final : public HashFunction /* NOLINT(*-special-member-functions) 
       void state_init(size_t outlen, const uint8_t* key, size_t keylen);
       void compress(bool last);
 
-      // TODO use secure_vector here
-      uint8_t m_b[64]{};    // input buffer
-      uint32_t m_h[8]{};    // chained state
-      uint32_t m_t[2]{};    // total number of bytes
-      uint8_t m_c = 0;      // pointer for b[]
-      size_t m_outlen = 0;  // digest size
+      std::array<uint8_t, 64> m_b{};  // input buffer
+      std::array<uint32_t, 8> m_h{};  // chained state
+      std::array<uint32_t, 2> m_t{};  // total number of bytes
+      uint8_t m_c = 0;                // pointer for b[]
+      size_t m_outlen = 0;            // digest size
 };
 
 }  // namespace Botan
