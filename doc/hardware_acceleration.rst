@@ -193,7 +193,11 @@ Configuring Acceleration
 
 If it is desirable to avoid using some form of acceleration, this can be accomplished
 *at build time* by using ``--disable-modules=``. For instance, to remove support
-of ARMv8 intrinsics for AES, use ``--disable-modules=aes_armv8``.
+of ARMv8 intrinsics for AES, use ``--disable-modules=aes_armv8``. Note that this is rarely
+if ever required; if support for the CPU extension is not available at runtime then the
+code using that extension will simply be skipped over. The only reason to do this is when
+the code is being deployed to a fixed target (eg the specific board used in your product)
+and you know that target does not support such an extension, and you wish to minimize code size.
 
 It is also possible to disable acceleration *at runtime* using
 ``BOTAN_CLEAR_CPUID`` :doc:`environment variable <api_ref/env_vars>`. This is the preferred

@@ -441,6 +441,19 @@ def process_command_line(args):
 
     add_with_without_pair(target_group, 'compilation-database', True, 'disable compile_commands.json')
 
+    isa_extensions_that_can_be_disabled = [('NEON', 'arm32')]
+
+    for (isa_extn_name,arch) in isa_extensions_that_can_be_disabled:
+        isa_extn = isa_extn_name.lower().replace(' ', '')
+
+        nm = isa_extn.replace('-', '').replace('.', '').replace(' ', '')
+
+        target_group.add_option('--disable-%s' % (isa_extn),
+                                help='disable %s intrinsics' % (isa_extn_name),
+                                action='append_const',
+                                const=(nm,arch),
+                                dest='disable_intrinsics')
+
     build_group = optparse.OptionGroup(parser, 'Build options')
 
     build_group.add_option('--system-cert-bundle', metavar='PATH', default=None,
@@ -692,6 +705,8 @@ def process_command_line(args):
 
     options.with_os_features = parse_multiple_enable(options.with_os_features)
     options.without_os_features = parse_multiple_enable(options.without_os_features)
+
+    options.disable_intrinsics = [] if options.disable_intrinsics is None else options.disable_intrinsics
 
     return options
 
@@ -1033,6 +1048,9 @@ class ModuleInfo(InfoObject):
                 if arch != arch_name:
                     continue
 
+            if (isa, arch_name) in options.disable_intrinsics:
+                return False # explicitly disabled
+
             if isa not in archinfo.isa_extensions:
                 return False
 
@@ -1215,12 +1233,13 @@ class ArchInfo(InfoObject):
             if alphanumeric.match(isa) is None:
                 logging.error('Invalid name for ISA extension "%s"', isa)
 
-    def supported_isa_extensions(self, cc):
+    def supported_isa_extensions(self, cc, options):
         isas = []
 
         for isa in self.isa_extensions:
-            if cc.isa_flags_for(isa, self.basename) is not None:
-                isas.append(isa)
+            if (isa, self.basename) not in options.disable_intrinsics:
+                if cc.isa_flags_for(isa, self.basename) is not None:
+                    isas.append(isa)
 
         return sorted(isas)
 
@@ -1357,12 +1376,13 @@ class CompilerInfo(InfoObject):
 
         return None
 
-    def get_isa_specific_flags(self, isas, arch):
+    def get_isa_specific_flags(self, isas, arch, options):
         flags = set()
 
         def simd32_impl():
             for simd_isa in ['ssse3', 'altivec', 'neon']:
                 if simd_isa in arch.isa_extensions and \
+                   (simd_isa, arch.basename) not in options.disable_intrinsics and \
                    self.isa_flags_for(simd_isa, arch.basename):
                     return simd_isa
             return None
@@ -1964,7 +1984,7 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
 
     def _isa_specific_flags(src):
         if os.path.basename(src) == 'test_simd.cpp':
-            return cc.get_isa_specific_flags(['simd'], arch)
+            return cc.get_isa_specific_flags(['simd'], arch, options)
 
         if src in module_that_owns:
             module = module_that_owns[src]
@@ -1972,7 +1992,7 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
             if 'simd_4x32' in module.dependencies(osinfo, arch):
                 isas.append('simd')
 
-            return cc.get_isa_specific_flags(isas, arch)
+            return cc.get_isa_specific_flags(isas, arch, options)
 
         return ''
 
@@ -2342,7 +2362,7 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'os_features': osinfo.enabled_features_internal(options),
         'os_features_public': osinfo.enabled_features_public(options),
         'os_name': osinfo.basename,
-        'cpu_features': arch.supported_isa_extensions(cc),
+        'cpu_features': arch.supported_isa_extensions(cc, options),
         'system_cert_bundle': options.system_cert_bundle,
 
         'enable_experimental_features': options.enable_experimental_features,
