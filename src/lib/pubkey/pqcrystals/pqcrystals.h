@@ -161,10 +161,7 @@ namespace detail {
 template <Domain To, template <typename, Domain> class StructureT, crystals_trait Trait, Domain From>
    requires(To != From)
 StructureT<Trait, To> domain_cast(StructureT<Trait, From>&& p) {
-   // The public factory method `from_domain_cast` is just a workaround for
-   // Xcode and NDK not understanding the friend declaration to allow this
-   // to directly call the private constructor.
-   return StructureT<Trait, To>::from_domain_cast(std::move(p));
+   return StructureT<Trait, To>(std::move(p));
 }
 
 /**
@@ -237,18 +234,6 @@ class Polynomial {
       explicit Polynomial(Polynomial<Trait, OtherD>&& other) noexcept :  // NOLINT(*-rvalue-reference-param-not-moved)
             m_coeffs_storage(std::move(other.m_coeffs_storage)),
             m_coeffs(owns_storage() ? std::span<T, Trait::N>(m_coeffs_storage) : other.m_coeffs) {}
-
-   public:
-      // Workaround, because Xcode and NDK don't understand the
-      // `detail::domain_cast` friend declaration.
-      //
-      // TODO: Try to remove this and use the c'tor directly in
-      //       `detail::domain_cast` after updating the compilers.
-      template <Domain OtherD>
-         requires(D != OtherD)
-      static Polynomial<Trait, D> from_domain_cast(Polynomial<Trait, OtherD>&& p) {
-         return Polynomial<Trait, D>(std::move(p));
-      }
 
    public:
       Polynomial() : m_coeffs_storage(Trait::N), m_coeffs(m_coeffs_storage) { BOTAN_DEBUG_ASSERT(owns_storage()); }
@@ -383,18 +368,6 @@ class PolynomialVector {
             m_vec.emplace_back(
                Polynomial<Trait, D>(std::span{m_polys_storage}.subspan(i * Trait::N).template first<Trait::N>()));
          }
-      }
-
-   public:
-      // Workaround, because Xcode and NDK don't understand the
-      // `detail::domain_cast` friend declaration above.
-      //
-      // TODO: Try to remove this and use the c'tor directly in
-      //       `detail::domain_cast` after updating the compilers.
-      template <Domain OtherD>
-         requires(D != OtherD)
-      static PolynomialVector<Trait, D> from_domain_cast(PolynomialVector<Trait, OtherD>&& other) {
-         return PolynomialVector<Trait, D>(std::move(other));
       }
 
    public:
