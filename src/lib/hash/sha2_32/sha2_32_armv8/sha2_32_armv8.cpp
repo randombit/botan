@@ -4,7 +4,7 @@
 * Contributed by Jeffrey Walton. Based on public domain code by
 * Johannes Schneiders, Skip Hovsmith and Barry O'Rourke.
 *
-* Further changes (C) 2020 Jack Lloyd
+* Further changes (C) 2020,2025 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -12,10 +12,32 @@
 #include <botan/internal/sha2_32.h>
 
 #include <botan/internal/isa_extn.h>
+#include <botan/internal/simd_4x32.h>
 #include <botan/internal/stack_scrubbing.h>
 #include <arm_neon.h>
 
 namespace Botan {
+
+namespace {
+
+inline BOTAN_FN_ISA_SHA2 SIMD_4x32 aarch64_sha256_expand_w(const SIMD_4x32 w0,
+                                                           const SIMD_4x32 w1,
+                                                           const SIMD_4x32 w2,
+                                                           const SIMD_4x32 w3) {
+   return SIMD_4x32(vsha256su1q_u32(vsha256su0q_u32(w0.raw(), w1.raw()), w2.raw(), w3.raw()));
+}
+
+inline BOTAN_FN_ISA_SHA2 void aarch64_sha256_update(SIMD_4x32& s0,
+                                                    SIMD_4x32& s1,
+                                                    const SIMD_4x32 w,
+                                                    const uint32_t K[4]) {
+   auto w_k = w + SIMD_4x32::load_le(K);
+   auto t = vsha256hq_u32(s0.raw(), s1.raw(), w_k.raw());
+   s1 = SIMD_4x32(vsha256h2q_u32(s1.raw(), s0.raw(), w_k.raw()));
+   s0 = SIMD_4x32(t);
+}
+
+}  // namespace
 
 /*
 * SHA-256 using CPU instructions in ARMv8
@@ -36,148 +58,48 @@ void BOTAN_FN_ISA_SHA2 BOTAN_SCRUB_STACK_AFTER_RETURN SHA_256::compress_digest_a
    };
 
    // Load initial values
-   uint32x4_t STATE0 = vld1q_u32(&digest[0]);  // NOLINT(*-container-data-pointer)
-   uint32x4_t STATE1 = vld1q_u32(&digest[4]);
+   SIMD_4x32 s0 = SIMD_4x32::load_le(&digest[0]);  // NOLINT(*-container-data-pointer)
+   SIMD_4x32 s1 = SIMD_4x32::load_le(&digest[4]);
 
    const uint32_t* input32 = reinterpret_cast<const uint32_t*>(input8.data());
 
    while(blocks > 0) {
-      // Save current state
-      const uint32x4_t ABCD_SAVE = STATE0;
-      const uint32x4_t EFGH_SAVE = STATE1;
+      const auto s0_save = s0;
+      const auto s1_save = s1;
 
-      uint32x4_t MSG0 = vld1q_u32(input32 + 0);
-      uint32x4_t MSG1 = vld1q_u32(input32 + 4);
-      uint32x4_t MSG2 = vld1q_u32(input32 + 8);
-      uint32x4_t MSG3 = vld1q_u32(input32 + 12);
+      auto w0 = SIMD_4x32::load_be(input32);
+      auto w1 = SIMD_4x32::load_be(input32 + 4);
+      auto w2 = SIMD_4x32::load_be(input32 + 8);
+      auto w3 = SIMD_4x32::load_be(input32 + 12);
 
-      MSG0 = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(MSG0)));
-      MSG1 = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(MSG1)));
-      MSG2 = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(MSG2)));
-      MSG3 = vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(MSG3)));
+      for(size_t r = 0; r != 48; r += 16) {
+         aarch64_sha256_update(s0, s1, w0, &K[r]);
+         w0 = aarch64_sha256_expand_w(w0, w1, w2, w3);
 
-      uint32x4_t MSG_K;
-      uint32x4_t TSTATE;
+         aarch64_sha256_update(s0, s1, w1, &K[r + 4 * 1]);
+         w1 = aarch64_sha256_expand_w(w1, w2, w3, w0);
 
-      // Rounds 0-3
-      MSG_K = vaddq_u32(MSG0, vld1q_u32(&K[4 * 0]));
-      TSTATE = vsha256hq_u32(STATE0, STATE1, MSG_K);
-      STATE1 = vsha256h2q_u32(STATE1, STATE0, MSG_K);
-      STATE0 = TSTATE;
-      MSG0 = vsha256su1q_u32(vsha256su0q_u32(MSG0, MSG1), MSG2, MSG3);
+         aarch64_sha256_update(s0, s1, w2, &K[r + 4 * 2]);
+         w2 = aarch64_sha256_expand_w(w2, w3, w0, w1);
 
-      // Rounds 4-7
-      MSG_K = vaddq_u32(MSG1, vld1q_u32(&K[4 * 1]));
-      TSTATE = vsha256hq_u32(STATE0, STATE1, MSG_K);
-      STATE1 = vsha256h2q_u32(STATE1, STATE0, MSG_K);
-      STATE0 = TSTATE;
-      MSG1 = vsha256su1q_u32(vsha256su0q_u32(MSG1, MSG2), MSG3, MSG0);
+         aarch64_sha256_update(s0, s1, w3, &K[r + 4 * 3]);
+         w3 = aarch64_sha256_expand_w(w3, w0, w1, w2);
+      }
 
-      // Rounds 8-11
-      MSG_K = vaddq_u32(MSG2, vld1q_u32(&K[4 * 2]));
-      TSTATE = vsha256hq_u32(STATE0, STATE1, MSG_K);
-      STATE1 = vsha256h2q_u32(STATE1, STATE0, MSG_K);
-      STATE0 = TSTATE;
-      MSG2 = vsha256su1q_u32(vsha256su0q_u32(MSG2, MSG3), MSG0, MSG1);
+      aarch64_sha256_update(s0, s1, w0, &K[4 * 12]);
+      aarch64_sha256_update(s0, s1, w1, &K[4 * 13]);
+      aarch64_sha256_update(s0, s1, w2, &K[4 * 14]);
+      aarch64_sha256_update(s0, s1, w3, &K[4 * 15]);
 
-      // Rounds 12-15
-      MSG_K = vaddq_u32(MSG3, vld1q_u32(&K[4 * 3]));
-      TSTATE = vsha256hq_u32(STATE0, STATE1, MSG_K);
-      STATE1 = vsha256h2q_u32(STATE1, STATE0, MSG_K);
-      STATE0 = TSTATE;
-      MSG3 = vsha256su1q_u32(vsha256su0q_u32(MSG3, MSG0), MSG1, MSG2);
-
-      // Rounds 16-19
-      MSG_K = vaddq_u32(MSG0, vld1q_u32(&K[4 * 4]));
-      TSTATE = vsha256hq_u32(STATE0, STATE1, MSG_K);
-      STATE1 = vsha256h2q_u32(STATE1, STATE0, MSG_K);
-      STATE0 = TSTATE;
-      MSG0 = vsha256su1q_u32(vsha256su0q_u32(MSG0, MSG1), MSG2, MSG3);
-
-      // Rounds 20-23
-      MSG_K = vaddq_u32(MSG1, vld1q_u32(&K[4 * 5]));
-      TSTATE = vsha256hq_u32(STATE0, STATE1, MSG_K);
-      STATE1 = vsha256h2q_u32(STATE1, STATE0, MSG_K);
-      STATE0 = TSTATE;
-      MSG1 = vsha256su1q_u32(vsha256su0q_u32(MSG1, MSG2), MSG3, MSG0);
-
-      // Rounds 24-27
-      MSG_K = vaddq_u32(MSG2, vld1q_u32(&K[4 * 6]));
-      TSTATE = vsha256hq_u32(STATE0, STATE1, MSG_K);
-      STATE1 = vsha256h2q_u32(STATE1, STATE0, MSG_K);
-      STATE0 = TSTATE;
-      MSG2 = vsha256su1q_u32(vsha256su0q_u32(MSG2, MSG3), MSG0, MSG1);
-
-      // Rounds 28-31
-      MSG_K = vaddq_u32(MSG3, vld1q_u32(&K[4 * 7]));
-      TSTATE = vsha256hq_u32(STATE0, STATE1, MSG_K);
-      STATE1 = vsha256h2q_u32(STATE1, STATE0, MSG_K);
-      STATE0 = TSTATE;
-      MSG3 = vsha256su1q_u32(vsha256su0q_u32(MSG3, MSG0), MSG1, MSG2);
-
-      // Rounds 32-35
-      MSG_K = vaddq_u32(MSG0, vld1q_u32(&K[4 * 8]));
-      TSTATE = vsha256hq_u32(STATE0, STATE1, MSG_K);
-      STATE1 = vsha256h2q_u32(STATE1, STATE0, MSG_K);
-      STATE0 = TSTATE;
-      MSG0 = vsha256su1q_u32(vsha256su0q_u32(MSG0, MSG1), MSG2, MSG3);
-
-      // Rounds 36-39
-      MSG_K = vaddq_u32(MSG1, vld1q_u32(&K[4 * 9]));
-      TSTATE = vsha256hq_u32(STATE0, STATE1, MSG_K);
-      STATE1 = vsha256h2q_u32(STATE1, STATE0, MSG_K);
-      STATE0 = TSTATE;
-      MSG1 = vsha256su1q_u32(vsha256su0q_u32(MSG1, MSG2), MSG3, MSG0);
-
-      // Rounds 40-43
-      MSG_K = vaddq_u32(MSG2, vld1q_u32(&K[4 * 10]));
-      TSTATE = vsha256hq_u32(STATE0, STATE1, MSG_K);
-      STATE1 = vsha256h2q_u32(STATE1, STATE0, MSG_K);
-      STATE0 = TSTATE;
-      MSG2 = vsha256su1q_u32(vsha256su0q_u32(MSG2, MSG3), MSG0, MSG1);
-
-      // Rounds 44-47
-      MSG_K = vaddq_u32(MSG3, vld1q_u32(&K[4 * 11]));
-      TSTATE = vsha256hq_u32(STATE0, STATE1, MSG_K);
-      STATE1 = vsha256h2q_u32(STATE1, STATE0, MSG_K);
-      STATE0 = TSTATE;
-      MSG3 = vsha256su1q_u32(vsha256su0q_u32(MSG3, MSG0), MSG1, MSG2);
-
-      // Rounds 48-51
-      MSG_K = vaddq_u32(MSG0, vld1q_u32(&K[4 * 12]));
-      TSTATE = vsha256hq_u32(STATE0, STATE1, MSG_K);
-      STATE1 = vsha256h2q_u32(STATE1, STATE0, MSG_K);
-      STATE0 = TSTATE;
-
-      // Rounds 52-55
-      MSG_K = vaddq_u32(MSG1, vld1q_u32(&K[4 * 13]));
-      TSTATE = vsha256hq_u32(STATE0, STATE1, MSG_K);
-      STATE1 = vsha256h2q_u32(STATE1, STATE0, MSG_K);
-      STATE0 = TSTATE;
-
-      // Rounds 56-59
-      MSG_K = vaddq_u32(MSG2, vld1q_u32(&K[4 * 14]));
-      TSTATE = vsha256hq_u32(STATE0, STATE1, MSG_K);
-      STATE1 = vsha256h2q_u32(STATE1, STATE0, MSG_K);
-      STATE0 = TSTATE;
-
-      // Rounds 60-63
-      MSG_K = vaddq_u32(MSG3, vld1q_u32(&K[4 * 15]));
-      TSTATE = vsha256hq_u32(STATE0, STATE1, MSG_K);
-      STATE1 = vsha256h2q_u32(STATE1, STATE0, MSG_K);
-      STATE0 = TSTATE;
-
-      // Add back to state
-      STATE0 = vaddq_u32(STATE0, ABCD_SAVE);
-      STATE1 = vaddq_u32(STATE1, EFGH_SAVE);
+      s0 += s0_save;
+      s1 += s1_save;
 
       input32 += 64 / 4;
       blocks--;
    }
 
-   // Save state
-   vst1q_u32(&digest[0], STATE0);  // NOLINT(*-container-data-pointer)
-   vst1q_u32(&digest[4], STATE1);
+   s0.store_le(&digest[0]);  // NOLINT(*-container-data-pointer)
+   s1.store_le(&digest[4]);
 }
 
 }  // namespace Botan
