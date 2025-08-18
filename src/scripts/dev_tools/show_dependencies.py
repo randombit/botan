@@ -148,7 +148,7 @@ while True:
 # Return true iff a depends on b,
 # i.e. b is in the dependencies of a
 def depends_on(a, b):
-    if not a in direct_dependencies:
+    if a not in direct_dependencies:
         return False
     else:
         return b in direct_dependencies[a]
