@@ -216,7 +216,7 @@ BigInt& BigInt::operator*=(word y) {
 * Division Operator
 */
 BigInt& BigInt::operator/=(const BigInt& y) {
-   if(y.sig_words() == 1 && is_power_of_2(y.word_at(0))) {
+   if(y.sig_words() == 1 && is_positive() && y.is_positive() && is_power_of_2(y.word_at(0))) {
       (*this) >>= (y.bits() - 1);
    } else {
       (*this) = (*this) / y;

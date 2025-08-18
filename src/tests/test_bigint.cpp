@@ -379,9 +379,9 @@ class BigInt_Div_Test final : public Text_Based_Test {
          e /= b;
          result.test_eq("a /= b", e, c);
 
-         if(b.sig_words() == 1) {
+         if(b.sig_words() == 1 && b.is_positive()) {
             const Botan::word bw = b.word_at(0);
-            result.test_eq("bw ok", Botan::BigInt::from_word(bw), b);
+            result.test_eq("Low word correct", Botan::BigInt::from_word(bw), b);
 
             Botan::BigInt ct_q;
             Botan::word ct_r = 0;

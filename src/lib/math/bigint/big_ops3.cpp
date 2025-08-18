@@ -103,7 +103,7 @@ BigInt operator*(const BigInt& x, word y) {
 * Division Operator
 */
 BigInt operator/(const BigInt& x, const BigInt& y) {
-   if(y.sig_words() == 1) {
+   if(y.sig_words() == 1 && y.is_positive()) {
       return x / y.word_at(0);
    }
 
@@ -165,7 +165,7 @@ word operator%(const BigInt& n, word mod) {
 
    word remainder = 0;
 
-   if(is_power_of_2(mod)) {
+   if(n.is_positive() && is_power_of_2(mod)) {
       remainder = (n.word_at(0) & (mod - 1));
    } else {
       const size_t sw = n.sig_words();
