@@ -405,17 +405,12 @@ BOTAN_REGISTER_TEST("math", "bn_div", BigInt_Div_Test);
 class BigInt_DivPow2k_Test final : public Test {
    public:
       std::vector<Test::Result> run() override {
-         Test::Result result("BigInt ct_divide_pow2k");
+         Test::Result result("BigInt divide pow2k");
 
          for(size_t k = 2; k != 128; ++k) {
-            auto div1 = Botan::ct_divide_pow2k(k, 1);
-            result.test_eq("ct_divide_pow2k div 1", div1, Botan::BigInt::power_of_2(k));
-
-            auto div2 = Botan::ct_divide_pow2k(k, 2);
-            result.test_eq("ct_divide_pow2k div 2", div2, Botan::BigInt::power_of_2(k - 1));
-
-            auto div4 = Botan::ct_divide_pow2k(k, 4);
-            result.test_eq("ct_divide_pow2k div 4", div4, Botan::BigInt::power_of_2(k - 2));
+            testcase(k, 1, result);
+            testcase(k, 2, result);
+            testcase(k, 4, result);
          }
 
          for(size_t k = 4; k != 512; ++k) {
@@ -426,14 +421,22 @@ class BigInt_DivPow2k_Test final : public Test {
                if(y.is_zero()) {
                   continue;
                }
-               const BigInt ct_pow2k = ct_divide_pow2k(k, y);
-               const BigInt ref = BigInt::power_of_2(k) / y;
 
-               result.test_eq("ct_divide_pow2k matches Knuth division", ct_pow2k, ref);
+               testcase(k, y, result);
             }
          }
 
          return {result};
+      }
+
+   private:
+      static void testcase(size_t k, const BigInt& y, Test::Result& result) {
+         const BigInt ct_pow2k = ct_divide_pow2k(k, y);
+         const BigInt vt_pow2k = vartime_divide_pow2k(k, y);
+         const BigInt ref = BigInt::power_of_2(k) / y;
+
+         result.test_eq("ct_divide_pow2k matches Knuth division", ct_pow2k, ref);
+         result.test_eq("vartime_divide_pow2k matches Knuth division", vt_pow2k, ref);
       }
 };
 

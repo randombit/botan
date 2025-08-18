@@ -157,7 +157,7 @@ class PerfTest_BnRedc final : public PerfTest {
       void go(const PerfConfig& config) override {
          const auto runtime = config.runtime();
 
-         for(size_t bitsize : {512, 1024, 2048, 4096}) {
+         for(size_t bitsize : {256, 512, 1024, 2048, 4096}) {
             Botan::BigInt p(config.rng(), bitsize);
 
             std::string bit_str = std::to_string(bitsize) + " bit ";
