@@ -6,6 +6,15 @@
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
+import sys
+import re
+import datetime
+import os
+import errno
+from textwrap import dedent, indent
+from jinja2 import Environment, FileSystemLoader
+from addchain import addchain_code
+
 """
 NOTE: This script requires the Jinja templating library to be installed.
 
@@ -20,15 +29,6 @@ Additionally if a group is given in ec_groups.txt with an `Impl` that contains
 created. This step requires that addchain (https://github.com/mmcloughlin/addchain)
 be installed.
 """
-
-import sys
-import re
-import datetime
-import os
-import errno
-from textwrap import dedent, indent
-from jinja2 import Environment, FileSystemLoader
-from addchain import addchain_code
 
 def curve_info(src):
     re_kv = re.compile('([A-Za-z]+) = ([0-9A-Za-z-_\\. ]+)')

@@ -12,7 +12,6 @@ Botan is released under the Simplified BSD License (see license.txt)
 import os
 import sys
 import json
-import re
 
 def format_size(bytes):
     kB = 1024

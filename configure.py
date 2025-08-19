@@ -3765,7 +3765,7 @@ if __name__ == '__main__':
     except UserError as e:
         logging.debug(traceback.format_exc())
         logging.error(e)
-    except Exception as e: # pylint: disable=broad-except
+    except Exception: # pylint: disable=broad-except
         # error() will stop script, so wrap all information into one call
         logging.error("""%s
 An internal error occurred.

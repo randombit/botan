@@ -45,7 +45,7 @@ def monty_redc_code(n, p_dash1=False):
         lines.append("accum.add(z[%d]);" % (n+i))
         lines.append("ws[%d] = accum.extract();" % (i))
 
-    lines.append("accum.add(z[%d]);" % (2*n-1));
+    lines.append("accum.add(z[%d]);" % (2*n-1))
 
     lines.append("ws[%d] = accum.extract();" % (n - 1))
     lines.append("word w1 = accum.extract();")

@@ -168,7 +168,9 @@ def open_input(args):
         except OSError:
             pass
 
-        import urllib.request, urllib.error, urllib.parse
+        import urllib.request
+        import urllib.error
+        import urllib.parse
         return urllib.request.urlopen(iana_url)
     else:
          return open(args[1])

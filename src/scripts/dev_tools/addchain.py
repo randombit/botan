@@ -74,7 +74,7 @@ def addchain_code(n, indent=3):
     output.append('return z')
 
     ws = " " * indent
-    return '\n'.join(['%s%s;' % (ws, l) for l in output])
+    return '\n'.join(['%s%s;' % (ws, line) for line in output])
 
 def main(args = None):
     if args is None:

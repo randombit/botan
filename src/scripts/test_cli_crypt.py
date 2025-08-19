@@ -51,7 +51,7 @@ class VecDocument:
                     current_testcase[key] = value
 
                 if current_testcase_number != last_testcase_number:
-                    if not current_group_name in self.data:
+                    if current_group_name not in self.data:
                         self.data[current_group_name] = []
                     if len(current_testcase) != 0:
                         self.data[current_group_name].append(current_testcase)
