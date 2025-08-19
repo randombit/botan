@@ -3,6 +3,18 @@ In1 = 0
 In2 = 5
 Output = 0
 
+In1 = 129
+In2 = -16
+Output = -8
+
+In1 = -129
+In2 = 2
+Output = -65
+
+In1 = 129
+In2 = -2
+Output = -64
+
 In1 = 0x1234567
 In2 = 0x103
 Output = 73701
