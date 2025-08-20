@@ -200,7 +200,7 @@ def main(args = None):
         if mode == "ML-KEM":
             print("# This file was auto-generated from github.com/post-quantum-cryptography/KAT", file=output)
         else:
-            print("# This file was auto-generated from the reference implemention's KATs", file=output)
+            print("# This file was auto-generated from the reference implementation's KATs", file=output)
         print("# See src/scripts/dev_tools/gen_kyber_kat.py\n", file=output)
 
         for file in args.files:

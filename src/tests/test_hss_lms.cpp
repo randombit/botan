@@ -244,7 +244,7 @@ class HSS_LMS_Statefulness_Test final : public Test {
          std::vector<uint8_t> mes = {0xde, 0xad, 0xbe, 0xef};
          auto sk_bytes_begin = sk.private_key_bits();
 
-         // Tree hights: 5,5 => 2^(5+5) = 1024 signatures available
+         // Tree heights: 5,5 => 2^(5+5) = 1024 signatures available
          const uint64_t expected_total = 1024;
          result.confirm("Fresh key starts with total number of remaining signatures.",
                         sk.remaining_operations() == expected_total);

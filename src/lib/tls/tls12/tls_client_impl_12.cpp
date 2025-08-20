@@ -421,8 +421,8 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          // new session
 
          if(active_state != nullptr) {
-            // Here we are testing things that should not change during a renegotation,
-            // even if the server creates a new session. Howerver they might change
+            // Here we are testing things that should not change during a renegotiation,
+            // even if the server creates a new session. However they might change
             // in a resumption scenario.
 
             if(active_state->version() != state.server_hello()->legacy_version()) {

@@ -116,7 +116,7 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
                                [&]() { cipher->set_iv(nullptr, large_nonce_size); });
 
             /*
-            If the set_nonce call earlier succeded, then we require that it also
+            If the set_nonce call earlier succeeded, then we require that it also
             worked (ie saved the nonce for later use) even though the key was
             not set. So, don't set the nonce now, to ensure the previous call
             had an effect.

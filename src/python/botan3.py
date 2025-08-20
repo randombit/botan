@@ -764,7 +764,7 @@ class TPM2Session(TPM2Object):
 
 
 class TPM2UnauthenticatedSession(TPM2Session):
-    """Session object that is not bound to any authenication credential.
+    """Session object that is not bound to any authentication credential.
     It provides basic parameter encryption between the application and the TPM."""
     def __init__(self, ctx: TPM2Context):
         obj = c_void_p(0)

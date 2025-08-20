@@ -28,7 +28,7 @@ std::vector<std::string> parse_algorithm_name(std::string_view scan_name);
 /**
 * Split a string
 * @param str the input string
-* @param delim the delimitor
+* @param delim the delimiter
 * @return string split by delim
 */
 BOTAN_TEST_API std::vector<std::string> split_on(std::string_view str, char delim);
@@ -36,7 +36,7 @@ BOTAN_TEST_API std::vector<std::string> split_on(std::string_view str, char deli
 /**
 * Join a string
 * @param strs strings to join
-* @param delim the delimitor
+* @param delim the delimiter
 * @return string joined by delim
 */
 std::string string_join(const std::vector<std::string>& strs, char delim);
@@ -72,7 +72,7 @@ std::string BOTAN_TEST_API ipv4_to_string(uint32_t ip_addr);
 std::map<std::string, std::string> read_cfg(std::istream& is);
 
 /**
-* Accepts key value pairs deliminated by commas:
+* Accepts key value pairs delimited by commas:
 *
 * "" (returns empty map)
 * "K=V" (returns map {'K': 'V'})

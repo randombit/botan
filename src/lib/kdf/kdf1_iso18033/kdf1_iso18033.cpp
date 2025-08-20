@@ -29,7 +29,7 @@ void KDF1_18033::perform_kdf(std::span<uint8_t> key,
    // This KDF uses a 32-bit counter for the hash blocks, initialized at 0.
    // It will wrap around after 2^32 iterations which limits the theoretically
    // possible output to 2^32 blocks.
-   BOTAN_ARG_CHECK(blocks_required <= 0xFFFFFFFF, "KDF1-18033 maximum output length exceeeded");
+   BOTAN_ARG_CHECK(blocks_required <= 0xFFFFFFFF, "KDF1-18033 maximum output length exceeded");
 
    BufferStuffer k(key);
    for(uint32_t counter = 0; !k.full(); ++counter) {

@@ -76,7 +76,7 @@ class DilithiumConstants final {
 
       enum DilithiumGamma1 : uint32_t { ToThe17th = (1 << 17), ToThe19th = (1 << 19) };
 
-      enum DilithiumGamma2 : uint32_t { Qminus1DevidedBy88 = (Q - 1) / 88, Qminus1DevidedBy32 = (Q - 1) / 32 };
+      enum DilithiumGamma2 : uint32_t { Qminus1DividedBy88 = (Q - 1) / 88, Qminus1DividedBy32 = (Q - 1) / 32 };
 
       enum DilithiumEta : uint8_t { _2 = 2, _4 = 4 };
 

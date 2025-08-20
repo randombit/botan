@@ -73,7 +73,7 @@ class Processor_RNG_EntropySource final : public Entropy_Source {
          *
          * The reseeding conditions of the POWER and ARM processor RNGs are not known
          * but probably work in a somewhat similar manner. The exact amount requested
-         * may be tweaked if and when such conditions become publically known.
+         * may be tweaked if and when such conditions become publicly known.
          */
          const size_t poll_bits = 65536;
          rng.reseed_from_rng(m_hwrng, poll_bits);

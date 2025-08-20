@@ -68,7 +68,7 @@ class BOTAN_PUBLIC_API(2, 0) X509_Object : public ASN1_Object {
       * @return status of the signature - OK if verified or otherwise an indicator of
       *         the problem preventing verification, along with the hash function that
       *         was used, for further policy checks. The second parameter is empty
-      *         unless the validation was sucessful.
+      *         unless the validation was successful.
       */
       std::pair<Certificate_Status_Code, std::string> verify_signature(const Public_Key& key) const;
 

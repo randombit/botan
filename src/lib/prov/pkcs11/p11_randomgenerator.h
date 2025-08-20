@@ -38,7 +38,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_RNG final : public Hardware_RNG {
       /// @return the module used by this RNG
       inline Module& module() const { return m_session.get().module(); }
 
-      // C_SeedRandom may suceed
+      // C_SeedRandom may succeed
       bool accepts_input() const override { return true; }
 
    private:

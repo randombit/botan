@@ -165,7 +165,7 @@ int botan_tpm2_ctx_enable_crypto_backend(botan_tpm2_ctx_t ctx, botan_rng_t rng) 
 }
 
 /**
- * Frees all resouces of a TPM2 context
+ * Frees all resources of a TPM2 context
  * @param ctx TPM2 context
  * @return 0 on success
  */

@@ -34,13 +34,13 @@ class SIMD_4x64 final {
       BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64() : m_simd(_mm256_setzero_si256()) {}
 
       // Load two halves at different addresses
-      static BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 load_le2(const void* inl, const void* inh) {
+      static BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 load_le2(const void* lo, const void* hi) {
          return SIMD_4x64(
-            _mm256_loadu2_m128i(reinterpret_cast<const __m128i*>(inl), reinterpret_cast<const __m128i*>(inh)));
+            _mm256_loadu2_m128i(reinterpret_cast<const __m128i*>(lo), reinterpret_cast<const __m128i*>(hi)));
       }
 
-      static BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 load_be2(const void* inl, const void* inh) {
-         return SIMD_4x64::load_le2(inl, inh).bswap();
+      static BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 load_be2(const void* lo, const void* hi) {
+         return SIMD_4x64::load_le2(lo, hi).bswap();
       }
 
       static BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 load_le(const void* in) {

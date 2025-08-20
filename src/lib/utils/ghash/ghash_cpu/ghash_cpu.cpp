@@ -136,7 +136,7 @@ inline SIMD_4x32 BOTAN_FN_ISA_CLMUL gcm_multiply_x4(const SIMD_4x32& H1,
                                                     const SIMD_4x32& X3,
                                                     const SIMD_4x32& X4) {
    /*
-   * Mutiply with delayed reduction, algorithm by Krzysztof Jankowski
+   * Multiply with delayed reduction, algorithm by Krzysztof Jankowski
    * and Pierre Laurent of Intel
    */
 

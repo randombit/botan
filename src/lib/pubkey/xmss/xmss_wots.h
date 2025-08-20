@@ -55,7 +55,7 @@ class XMSS_WOTS_PublicKey : public XMSS_WOTS_Base {
        * function.
        *
        * This overload is used in multithreaded scenarios, where it is
-       * required to provide seperate instances of XMSS_Hash to each
+       * required to provide separate instances of XMSS_Hash to each
        * thread.
        *
        * @param params      The WOTS parameters to use
@@ -108,7 +108,7 @@ class XMSS_WOTS_PrivateKey : public XMSS_WOTS_Base {
        * recommendation.
        *
        * This overload is used in multithreaded scenarios, where it is
-       * required to provide seperate instances of XMSS_Hash to each thread.
+       * required to provide separate instances of XMSS_Hash to each thread.
        *
        * @param params       The WOTS parameters to use
        * @param public_seed  The public seed for the private key generation
@@ -146,7 +146,7 @@ class XMSS_WOTS_PrivateKey : public XMSS_WOTS_Base {
        * Generates a signature from a private key and a message.
        *
        * This overload is used in multithreaded scenarios, where it is
-       * required to provide seperate instances of XMSS_Hash to each
+       * required to provide separate instances of XMSS_Hash to each
        * thread.
        *
        * @param msg A message to sign.

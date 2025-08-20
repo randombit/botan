@@ -154,7 +154,7 @@ void wots_sign_and_pkgen(StrongSpan<WotsSignature> sig_out,
 
    for(WotsChainIndex i(0); i < params.wots_len(); i++) {
       // If the current leaf is part of the signature wots_k stores the chain index
-      //   of the value neccessary for the signature. Otherwise: nullopt (no signature)
+      //   of the value necessary for the signature. Otherwise: nullopt (no signature)
       const auto wots_k = [&]() -> std::optional<WotsHashIndex> {
          if(sign_leaf_idx.has_value() && leaf_idx == sign_leaf_idx.value()) {
             return wots_steps[i.get()];

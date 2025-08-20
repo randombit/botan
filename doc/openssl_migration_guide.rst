@@ -457,7 +457,7 @@ Here is the equivalent C++ code using Botan:
    :language: cpp
 
 This example uses the ``PK_Signer`` and ``PK_Verifier`` classes to sign and verify
-a message using :ref:`api_ref/pubkey:ecdsa`. The private key is similary
+a message using :ref:`api_ref/pubkey:ecdsa`. The private key is similarly
 :ref:`loaded from a file <api_ref/pubkey:serializing private keys using pkcs #8>`.
 The :doc:`hash function <api_ref/hash>` is passed as a string parameter.
 ``PK_Verifier::check_signature()`` is used to

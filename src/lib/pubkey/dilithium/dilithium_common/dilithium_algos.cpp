@@ -113,10 +113,10 @@ void poly_pack_w1(const DilithiumPoly& p, BufferStuffer& stuffer, const Dilithiu
    using Gamma2 = DilithiumConstants::DilithiumGamma2;
    auto calculate_b = [](auto gamma2) { return ((DilithiumConstants::Q - 1) / (2 * gamma2)) - 1; };
    switch(mode.gamma2()) {
-      case Gamma2::Qminus1DevidedBy88:
-         return poly_pack<0, calculate_b(Gamma2::Qminus1DevidedBy88)>(p, stuffer);
-      case Gamma2::Qminus1DevidedBy32:
-         return poly_pack<0, calculate_b(Gamma2::Qminus1DevidedBy32)>(p, stuffer);
+      case Gamma2::Qminus1DividedBy88:
+         return poly_pack<0, calculate_b(Gamma2::Qminus1DividedBy88)>(p, stuffer);
+      case Gamma2::Qminus1DividedBy32:
+         return poly_pack<0, calculate_b(Gamma2::Qminus1DividedBy32)>(p, stuffer);
    }
 
    BOTAN_ASSERT_UNREACHABLE();
@@ -775,10 +775,10 @@ template <DilithiumConstants::DilithiumGamma2 gamma2>
 std::pair<int32_t, int32_t> decompose(int32_t r) {
    int32_t r1 = (r + 127) >> 7;
 
-   if constexpr(gamma2 == DilithiumConstants::DilithiumGamma2::Qminus1DevidedBy32) {
+   if constexpr(gamma2 == DilithiumConstants::DilithiumGamma2::Qminus1DividedBy32) {
       r1 = (r1 * 1025 + (1 << 21)) >> 22;
       r1 &= 15;
-   } else if constexpr(gamma2 == DilithiumConstants::DilithiumGamma2::Qminus1DevidedBy88) {
+   } else if constexpr(gamma2 == DilithiumConstants::DilithiumGamma2::Qminus1DividedBy88) {
       r1 = (r1 * 11275 + (1 << 23)) >> 24;
       r1 = is_negative_mask(43 - r1).if_not_set_return(r1);
    }
@@ -796,7 +796,7 @@ std::pair<int32_t, int32_t> decompose(int32_t r) {
  * optimization given the statically known value of gamma2.
  */
 template <DilithiumConstants::DilithiumGamma2 gamma2>
-std::pair<DilithiumPolyVec, DilithiumPolyVec> decompose_all_coefficents(const DilithiumPolyVec& vec) {
+std::pair<DilithiumPolyVec, DilithiumPolyVec> decompose_all_coefficients(const DilithiumPolyVec& vec) {
    auto result = std::make_pair(DilithiumPolyVec(vec.size()), DilithiumPolyVec(vec.size()));
 
    for(size_t i = 0; i < vec.size(); ++i) {
@@ -819,11 +819,11 @@ std::pair<DilithiumPolyVec, DilithiumPolyVec> decompose_all_coefficents(const Di
 std::pair<DilithiumPolyVec, DilithiumPolyVec> decompose(const DilithiumPolyVec& vec, const DilithiumConstants& mode) {
    using Gamma2 = DilithiumConstants::DilithiumGamma2;
    switch(mode.gamma2()) {
-      case Gamma2::Qminus1DevidedBy32:
-         return decompose_all_coefficents<Gamma2::Qminus1DevidedBy32>(vec);
+      case Gamma2::Qminus1DividedBy32:
+         return decompose_all_coefficients<Gamma2::Qminus1DividedBy32>(vec);
          break;
-      case Gamma2::Qminus1DevidedBy88:
-         return decompose_all_coefficents<Gamma2::Qminus1DevidedBy88>(vec);
+      case Gamma2::Qminus1DividedBy88:
+         return decompose_all_coefficients<Gamma2::Qminus1DividedBy88>(vec);
          break;
    }
 
@@ -922,11 +922,11 @@ void use_hint(DilithiumPolyVec& vec, const DilithiumPolyVec& hints, const Dilith
 
    using Gamma2 = DilithiumConstants::DilithiumGamma2;
    switch(mode.gamma2()) {
-      case Gamma2::Qminus1DevidedBy32:
-         use_hint_on_coefficients<Gamma2::Qminus1DevidedBy32>(hints, vec);
+      case Gamma2::Qminus1DividedBy32:
+         use_hint_on_coefficients<Gamma2::Qminus1DividedBy32>(hints, vec);
          break;
-      case Gamma2::Qminus1DevidedBy88:
-         use_hint_on_coefficients<Gamma2::Qminus1DevidedBy88>(hints, vec);
+      case Gamma2::Qminus1DividedBy88:
+         use_hint_on_coefficients<Gamma2::Qminus1DividedBy88>(hints, vec);
          break;
    }
 

@@ -80,7 +80,7 @@ def mlkem_load_encdec(req_fn, res_fn):
                 qt['dk'] = qtg['dk']
                 decaps_kat += [qt]
             else:
-                print('ERROR: Unkonwn function:', func)
+                print('ERROR: Unknown function:', func)
 
     return (encaps_kat, decaps_kat)
 

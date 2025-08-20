@@ -121,7 +121,7 @@ class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_Paddin
 
    private:
       std::shared_ptr<const DL_PublicKey> m_key;
-      std::shared_ptr<const Montgomery_Exponentation_State> m_monty_y_p;
+      std::shared_ptr<const Montgomery_Exponentiation_State> m_monty_y_p;
 };
 
 std::vector<uint8_t> ElGamal_Encryption_Operation::raw_encrypt(std::span<const uint8_t> ptext,

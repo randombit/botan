@@ -26,7 +26,7 @@ Session_Manager_In_Memory::Session_Manager_In_Memory(const std::shared_ptr<Rando
 void Session_Manager_In_Memory::store(const Session& session, const Session_Handle& handle) {
    // TODO: C++20 allows CTAD for template aliases (read: lock_guard_type), so
    //       technically we should be able to omit the explicit mutex type.
-   //       Unfortuately clang does not agree, yet.
+   //       Unfortunately clang does not agree, yet.
    lock_guard_type<recursive_mutex_type> lk(mutex());
 
    if(m_fifo.has_value()) {

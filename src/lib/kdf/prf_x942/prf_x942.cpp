@@ -45,7 +45,7 @@ void X942_PRF::perform_kdf(std::span<uint8_t> key,
    // This KDF uses a 32-bit counter for the hash blocks, initialized at 1.
    // It will wrap around after 2^32 - 1 iterations limiting the theoretically
    // possible output to 2^32 - 1 blocks.
-   BOTAN_ARG_CHECK(blocks_required <= 0xFFFFFFFE, "X942_PRF maximum output length exceeeded");
+   BOTAN_ARG_CHECK(blocks_required <= 0xFFFFFFFE, "X942_PRF maximum output length exceeded");
 
    auto hash = HashFunction::create("SHA-1");
    const auto in = concat<secure_vector<uint8_t>>(label, salt);

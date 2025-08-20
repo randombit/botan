@@ -90,7 +90,7 @@ BigInt BOTAN_TEST_API inverse_mod_public_prime(const BigInt& x, const BigInt& p)
 *
 * This always returns a result since any integer in [1,n) has an inverse modulo
 * a RSA public modulus n, unless you have happened to guess one of the factors
-* at random. In the unlikely event of this occuring, Internal_Error will be thrown.
+* at random. In the unlikely event of this occurring, Internal_Error will be thrown.
 */
 BigInt inverse_mod_rsa_public_modulus(const BigInt& x, const BigInt& n);
 

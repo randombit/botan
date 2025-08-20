@@ -648,7 +648,8 @@ enum class MechanismType : CK_MECHANISM_TYPE {
    DsaParameterGen = CKM_DSA_PARAMETER_GEN,
    DhPkcsParameterGen = CKM_DH_PKCS_PARAMETER_GEN,
    X942DhParameterGen = CKM_X9_42_DH_PARAMETER_GEN,
-   DsaProbablisticParameterGen = CKM_DSA_PROBABLISTIC_PARAMETER_GEN,
+   DsaProbablisticParameterGen = CKM_DSA_PROBABLISTIC_PARAMETER_GEN,  // TODO(Botan4) remove this typo
+   DsaProbabilisticParameterGen = CKM_DSA_PROBABLISTIC_PARAMETER_GEN,
    DsaShaweTaylorParameterGen = CKM_DSA_SHAWE_TAYLOR_PARAMETER_GEN,
    AesOfb = CKM_AES_OFB,
    AesCfb64 = CKM_AES_CFB64,
@@ -885,7 +886,7 @@ BOTAN_PUBLIC_API(2, 0) void set_pin(Slot& slot, const secure_string& so_pin, con
 /// Provides access to all PKCS#11 functions
 class BOTAN_PUBLIC_API(2, 0) LowLevel {
    public:
-      /// @param ptr the functon list pointer to use. Can be retrieved via `LowLevel::C_GetFunctionList`
+      /// @param ptr the function list pointer to use. Can be retrieved via `LowLevel::C_GetFunctionList`
       explicit LowLevel(FunctionListPtr ptr);
 
       /****************************** General purpose functions ******************************/

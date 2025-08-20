@@ -145,10 +145,10 @@ std::vector<Test::Result> test_container_strong_type() {
 
       CHECK("std::string container",
             [](auto& result) {
-               Test_Hash_Name thn("SHA-1");
+               Test_Hash_Name name("SHA-1");
 
                std::stringstream stream;
-               stream << thn;
+               stream << name;
                result.test_eq("strong types are streamable", stream.str(), std::string("SHA-1"));
             }),
 

@@ -1,6 +1,6 @@
 /*
  * XMSS Public Key
- * An XMSS: Extended Hash-Based Siganture public key.
+ * An XMSS: Extended Hash-Based Signature public key.
  * The XMSS public key does not support the X509 standard. Instead the
  * raw format described in [1] is used.
  *
@@ -49,7 +49,7 @@ std::vector<uint8_t> extract_raw_public_key(std::span<const uint8_t> key_bits) {
       DataSource_Memory src(key_bits);
       BER_Decoder(src).decode(raw_key, ASN1_Type::OctetString).verify_end();
 
-      // Smoke check the decoded key. Valid raw keys might be decodeable as BER
+      // Smoke check the decoded key. Valid raw keys might be decodable as BER
       // and they might be either a sole public key or a concatenation of public
       // and private key (with the optional WOTS+ derivation identifier).
       XMSS_Parameters params(deserialize_xmss_oid(raw_key));

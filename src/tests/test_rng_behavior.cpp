@@ -605,7 +605,7 @@ std::vector<Test::Result> hmac_drbg_multiple_requests() {
 }
 
 BOTAN_REGISTER_TEST("rng", "hmac_drbg_unit", HMAC_DRBG_Unit_Tests);
-BOTAN_REGISTER_TEST_FN("rng", "hmac_drbg_multi_requst", hmac_drbg_multiple_requests);
+BOTAN_REGISTER_TEST_FN("rng", "hmac_drbg_multi_request", hmac_drbg_multiple_requests);
 
 #endif
 
@@ -803,7 +803,7 @@ class System_RNG_Tests final : public Test {
 
             std::vector<uint8_t> check_buf(checkSize, 0xFE);
 
-            result.confirm("System RNG failed to write after 4GB boundry",
+            result.confirm("System RNG failed to write after 4GB boundary",
                            std::memcmp(large_buf.data() + size32BitsMax, check_buf.data(), checkSize) != 0);
          }
 

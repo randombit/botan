@@ -4273,7 +4273,7 @@ class FFI_OID_Test final : public FFI_Test {
          if(TEST_FFI_INIT(botan_privkey_create_rsa, (&priv, rng, 1024))) {
             TEST_FFI_OK(botan_privkey_check_key, (priv, rng, 0));
 
-            const std::string oid_rsa_expexted = "1.2.840.113549.1.1.1";
+            const std::string oid_rsa_expected = "1.2.840.113549.1.1.1";
 
             botan_asn1_oid_t rsa_oid_priv;
             botan_asn1_oid_t rsa_oid_pub;
@@ -4282,7 +4282,7 @@ class FFI_OID_Test final : public FFI_Test {
 
             TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_oid_from_string, (&rsa_oid_expected, nullptr));
             TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_oid_from_string, (nullptr, "1.2.3.4.5"));
-            TEST_FFI_OK(botan_oid_from_string, (&rsa_oid_expected, oid_rsa_expexted.c_str()));
+            TEST_FFI_OK(botan_oid_from_string, (&rsa_oid_expected, oid_rsa_expected.c_str()));
             TEST_FFI_OK(botan_privkey_oid, (&rsa_oid_priv, priv));
 
             TEST_FFI_RC(1, botan_oid_equal, (rsa_oid_priv, rsa_oid_expected));
@@ -4297,7 +4297,7 @@ class FFI_OID_Test final : public FFI_Test {
             TEST_FFI_OK(botan_oid_view_string, (rsa_oid_expected, oid_string.delegate(), oid_string.callback()));
             std::string oid_actual = {oid_string.get().begin(), oid_string.get().end()};
 
-            result.test_eq("oid to string", oid_actual, oid_rsa_expexted);
+            result.test_eq("oid to string", oid_actual, oid_rsa_expected);
 
             TEST_FFI_OK(botan_oid_from_string, (&rsa_oid_from_name, "RSA"));
             TEST_FFI_RC(1, botan_oid_equal, (rsa_oid_expected, rsa_oid_from_name));

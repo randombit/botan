@@ -128,7 +128,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
       throw Decoding_Error("Unknown X.509 cert version " + std::to_string(data->m_version));
    }
    if(obj.signature_algorithm() != data->m_sig_algo_inner) {
-      throw Decoding_Error("X.509 Certificate had differing algorithm identifers in inner and outer ID fields");
+      throw Decoding_Error("X.509 Certificate had differing algorithm identifiers in inner and outer ID fields");
    }
 
    public_key.assert_is_a(ASN1_Type::Sequence, ASN1_Class::Constructed, "X.509 certificate public key");

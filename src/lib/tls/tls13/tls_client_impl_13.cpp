@@ -179,7 +179,7 @@ void Client_Impl_13::handle(const Server_Hello_12& server_hello_msg) {
    //    MUST NOT send the "supported_versions" extension.
    //
    // Note that this condition should never happen, as the Server_Hello parsing
-   // code decides to create a Server_Hello_12 based on the absense of this extension.
+   // code decides to create a Server_Hello_12 based on the absence of this extension.
    if(server_hello_msg.extensions().has<Supported_Versions>()) {
       throw TLS_Exception(Alert::IllegalParameter, "Unexpected extension received");
    }

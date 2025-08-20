@@ -46,7 +46,7 @@ Portable replacement for timegm, _mkgmtime, etc
 Algorithm due to Howard Hinnant
 
 See https://howardhinnant.github.io/date_algorithms.html#days_from_civil
-for details and explaination. The code is slightly simplified by our assumption
+for details and explanation. The code is slightly simplified by our assumption
 that the date is at least 1970, which is sufficient for our purposes.
 */
 uint64_t days_since_epoch(uint32_t year, uint32_t month, uint32_t day) {

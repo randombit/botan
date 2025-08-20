@@ -333,7 +333,7 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_is_eq("collected block is correct", v(r2.value()), v(data));
             }),
 
-      CHECK("Aligned data is not buffered unneccesarily (no block-defer)",
+      CHECK("Aligned data is not buffered unnecessarily (no block-defer)",
             [=](auto& result) {
                Botan::AlignmentBuffer<uint8_t, 32> b;
 
@@ -397,7 +397,7 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_is_eq("collected block is correct", v(r3.value()), v(data));
             }),
 
-      CHECK("Aligned data is not buffered unneccesarily (with block-defer)",
+      CHECK("Aligned data is not buffered unnecessarily (with block-defer)",
             [=](auto& result) {
                Botan::AlignmentBuffer<uint8_t, 32, Botan::AlignmentBufferFinalBlock::must_be_deferred> b;
 

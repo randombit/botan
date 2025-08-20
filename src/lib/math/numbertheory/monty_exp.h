@@ -14,27 +14,27 @@ namespace Botan {
 
 class BigInt;
 class Barrett_Reduction;
-class Montgomery_Exponentation_State;
+class Montgomery_Exponentiation_State;
 
 /*
 * Precompute for calculating values g^x mod p
 */
-std::shared_ptr<const Montgomery_Exponentation_State> monty_precompute(const Montgomery_Params& params_p,
-                                                                       const BigInt& g,
-                                                                       size_t window_bits,
-                                                                       bool const_time = true);
+std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Params& params_p,
+                                                                        const BigInt& g,
+                                                                        size_t window_bits,
+                                                                        bool const_time = true);
 
 /*
 * Precompute for calculating values g^x mod p
 */
-std::shared_ptr<const Montgomery_Exponentation_State> monty_precompute(const Montgomery_Int& g,
-                                                                       size_t window_bits,
-                                                                       bool const_time = true);
+std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Int& g,
+                                                                        size_t window_bits,
+                                                                        bool const_time = true);
 
 /*
 * Return g^k mod p
 */
-Montgomery_Int monty_execute(const Montgomery_Exponentation_State& precomputed_state,
+Montgomery_Int monty_execute(const Montgomery_Exponentiation_State& precomputed_state,
                              const BigInt& k,
                              size_t max_k_bits);
 
@@ -42,7 +42,7 @@ Montgomery_Int monty_execute(const Montgomery_Exponentation_State& precomputed_s
 * Return g^k mod p taking variable time depending on k
 * @warning only use this if k is public
 */
-Montgomery_Int monty_execute_vartime(const Montgomery_Exponentation_State& precomputed_state, const BigInt& k);
+Montgomery_Int monty_execute_vartime(const Montgomery_Exponentiation_State& precomputed_state, const BigInt& k);
 
 inline Montgomery_Int monty_exp(const Montgomery_Params& params_p,
                                 const BigInt& g,

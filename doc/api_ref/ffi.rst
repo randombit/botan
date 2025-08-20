@@ -20,7 +20,7 @@ Rules of Engagement
 
 Writing language bindings for C or C++ libraries is typically a tedious and
 bug-prone experience. This FFI layer was designed to make the experience, if not
-pleasant, at least straighforward.
+pleasant, at least straightforward.
 
 * All objects manipulated by the API are opaque structs. Each struct is tagged
   with a 32-bit magic number which is unique to its type; accidentally passing
@@ -179,7 +179,7 @@ The following enum values are defined in the FFI header:
 
 .. cpp:enumerator:: BOTAN_FFI_TPM_ERROR = -78
 
-   An error occured when performing TPM2 interactions.
+   An error occurred when performing TPM2 interactions.
 
 .. cpp:enumerator:: BOTAN_FFI_ERROR_UNKNOWN_ERROR = -100
 
@@ -188,7 +188,7 @@ The following enum values are defined in the FFI header:
 Error values below -10000 are reserved for the application (these can be returned
 from view functions).
 
-Further information about the error that occured is available via
+Further information about the error that occurred is available via
 
 .. cpp:function:: const char* botan_error_last_exception_message()
 
@@ -1757,7 +1757,7 @@ X.509 Certificates
 
    Certificate path validation supporting Certificate Revocation Lists.
 
-   Works the same as ``botan_x509_cert_cerify``.
+   Works the same as ``botan_x509_cert_verify``.
 
    ``crls`` is an array of ``botan_x509_crl_t`` objects, ``crls_len`` is its length.
 

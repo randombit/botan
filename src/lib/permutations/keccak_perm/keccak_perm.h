@@ -44,7 +44,7 @@ class Keccak_Permutation final {
         *
         * @param capacity_bits Keccak capacity
         * @param custom_padding the custom bit padding that is to be appended on the call to finish
-        * @param custom_padding_bit_len the bit length of the custom_padd
+        * @param custom_padding_bit_len the bit length of the custom_padding
         */
       Keccak_Permutation(size_t capacity_bits, uint64_t custom_padding, uint8_t custom_padding_bit_len);
 

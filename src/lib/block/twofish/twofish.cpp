@@ -2,7 +2,7 @@
 * Twofish
 * (C) 1999-2007,2017 Jack Lloyd
 *
-* The key schedule implemenation is based on a public domain
+* The key schedule implementation is based on a public domain
 * implementation by Matthew Skala
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -216,7 +216,7 @@ void Twofish::key_schedule(std::span<const uint8_t> key) {
 
    for(size_t i = 0; i != key.size(); ++i) {
       /*
-      * Do one column of the RS matrix multiplcation
+      * Do one column of the RS matrix multiplication
       */
       if(key[i] != 0) {
          uint8_t X = POLY_TO_EXP[key[i] - 1];

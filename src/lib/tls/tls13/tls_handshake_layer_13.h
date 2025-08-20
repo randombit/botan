@@ -68,7 +68,7 @@ class BOTAN_TEST_API Handshake_Layer {
       std::optional<Post_Handshake_Message_13> next_post_handshake_message(const Policy& policy);
 
       /**
-       * Marshalls one handshake message for sending in an (encrypted) record and updates the
+       * Marshals one handshake message for sending in an (encrypted) record and updates the
        * provided transcript hash state accordingly.
        *
        * @param message the handshake message to be marshalled
@@ -80,7 +80,7 @@ class BOTAN_TEST_API Handshake_Layer {
                                                   Transcript_Hash_State& transcript_hash);
 
       /**
-       * Marshalls one post-handshake message for sending in an (encrypted) record.
+       * Marshals one post-handshake message for sending in an (encrypted) record.
        *
        * @param message the post handshake message to be marshalled
        *

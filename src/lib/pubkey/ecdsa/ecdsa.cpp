@@ -1,5 +1,5 @@
 /*
-* ECDSA implemenation
+* ECDSA implementation
 * (C) 2007 Manuel Hartl, FlexSecure GmbH
 *     2007 Falko Strenzke, FlexSecure GmbH
 *     2008-2010,2015,2016,2018,2024 Jack Lloyd

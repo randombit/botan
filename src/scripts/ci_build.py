@@ -875,7 +875,7 @@ def main(args=None):
                 valgrind_script_options.append('--skip-tests=%s' % (','.join(slow_tests)))
             elif target == 'valgrind-ct-full' and options.cc == 'clang' and '-Os' in options.custom_optimization_flags:
                 # Clang 18 (only) with -Os seems to have a problem with std::optional which flags certain
-                # uses as touching an unitialized stack variable. This affects the x509_rpki tests
+                # uses as touching an uninitialized stack variable. This affects the x509_rpki tests
                 # TODO(26.04) We can remove this once we have a new version of Clang to use
                 valgrind_script_options.append('--skip-tests=x509_rpki')
 

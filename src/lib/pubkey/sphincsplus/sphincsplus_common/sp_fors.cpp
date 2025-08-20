@@ -78,7 +78,7 @@ SphincsTreeNode fors_sign_and_pkgen(StrongSpan<ForsSignature> sig_out,
    BufferStuffer roots(roots_buffer);
    BufferStuffer sig(sig_out);
 
-   // Buffer to hold the FORS leafs during tree traversal
+   // Buffer to hold the FORS leaves during tree traversal
    // (Avoids a secure_vector allocation/deallocation in the hot path)
    ForsLeafSecret fors_leaf_secret(params.n());
 

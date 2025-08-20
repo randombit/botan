@@ -32,7 +32,7 @@ class ZFEC_KAT final : public Text_Based_Test {
          const size_t share_size = input.size() / K;
 
          if(expected.size() != share_size * (N - K)) {
-            throw Test_Error("ZFEC output does not coorespond with K/N");
+            throw Test_Error("ZFEC output does not correspond with K/N");
          }
 
          std::map<size_t, const uint8_t*> shares;

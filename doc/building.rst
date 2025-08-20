@@ -111,7 +111,7 @@ generators are available.
 Common Build Targets
 --------------------
 
-Build everthing that is configured::
+Build everything that is configured::
 
  $ make all
 
@@ -256,7 +256,7 @@ shell), and run::
    $ nmake check
    $ nmake install
 
-Micosoft's ``nmake`` does not support building multiple jobs in parallel, which
+Microsoft's ``nmake`` does not support building multiple jobs in parallel, which
 is unfortunate when building on modern multicore machines. It is possible to use
 the (somewhat unmaintained) `Jom <https://wiki.qt.io/Jom>`_ build tool, which is
 a ``nmake`` compatible build system that supports parallel builds. Alternately,
@@ -526,7 +526,7 @@ compile-time feature checks.
 
 Each of these macros has the form ``BOTAN_HAS_FOO``, for example
 ``BOTAN_HAS_RSA`` or ``BOTAN_HAS_TLS_13``. Each of these macros also has a
-value, which cooresponds to a YYYYMMDD date code integer. If a user-visible
+value, which corresponds to a YYYYMMDD date code integer. If a user-visible
 change is made to a module (for example adding a particular feature) the date
 code is set to a new value. This can be useful for applications if they need to
 check that both a feature is enabled in general and that it supports some
@@ -606,7 +606,7 @@ Minimized Builds
 --------------------
 
 Many developers wish to configure a minimized build which contains only the
-specific features their application will use. In general this is straighforward:
+specific features their application will use. In general this is straightforward:
 use ``--minimized-build`` plus ``--enable-modules=`` to enable the specific modules
 you wish to use. It is possible to use an asterisk (``*``) as a wildcard for
 related modules. For instance to enable all available AES implementations, use
@@ -1009,7 +1009,7 @@ Disable some specific modules
 ``--minimized-build``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Start with the bare minimum. This is mostly useful in conjuction with
+Start with the bare minimum. This is mostly useful in conjunction with
 ``--enable-modules`` to get a build that has just the features a
 particular application requires.
 

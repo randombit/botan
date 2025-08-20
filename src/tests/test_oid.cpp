@@ -24,10 +24,10 @@ Test::Result test_OID_to_string() {
    /*
    See #2730 and #2237
 
-   Certain locales format integers with thousands seperators.  This
+   Certain locales format integers with thousands separators.  This
    caused a subtle bug which caused OID comparisons to fail because
    OID::to_string(), which used ostringstream, introduced a thousands
-   seperator when the OID component had a value >= 1000. But this
+   separator when the OID component had a value >= 1000. But this
    only failed in certain locales (pt_BR was reported).
 
    Nominally C++ requires std::to_string to also be locale-respecting.
@@ -38,7 +38,7 @@ Test::Result test_OID_to_string() {
 
    Here we test the original issue of #2237 to verify it works. If
    the compiler implements std::to_string in a way that respects locale,
-   *and* this test is run in a locale that uses thousands seperators,
+   *and* this test is run in a locale that uses thousands separators,
    then it will fail. Which is much better than a very subtle failure.
    However if it ever does fail then we must replace nearly every
    call to std::to_string with something else that ignores locale.

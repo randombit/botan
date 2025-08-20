@@ -314,7 +314,7 @@ class Classic_McEliece_KAT_Tests final : public Botan_Tests::PK_PQC_KEM_KAT_Test
 
       Fixed_Output_RNG rng_for_encapsulation(const std::string& alg_name,
                                              Botan::RandomNumberGenerator& rng) const final {
-         // There is no way to tell exacly how much randomness is
+         // There is no way to tell exactly how much randomness is
          // needed for encapsulation (rejection sampling)
          // For testing we use a number that fits for all test cases
          auto params = get_params(alg_name);

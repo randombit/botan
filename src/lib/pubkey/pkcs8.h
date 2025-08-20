@@ -93,7 +93,7 @@ std::string PEM_encode(const Private_Key& key,
 * @param key the key to encode
 * @param rng the rng to use
 * @param pass the password to use for encryption
-* @param pbkdf_iter number of interations to run PBKDF2
+* @param pbkdf_iter number of iterations to run PBKDF2
 * @param cipher if non-empty specifies the cipher to use. CBC and GCM modes
 *   are supported, for example "AES-128/CBC", "AES-256/GCM", "Serpent/CBC".
 *   If empty a suitable default is chosen.

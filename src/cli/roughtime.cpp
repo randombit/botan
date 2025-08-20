@@ -69,7 +69,7 @@ class Roughtime final : public Command {
       Google-Sandbox-Roughtime ed25519 etPaaIxcBMY1oUeGpwvPMCJMwlRVNxv51KK/tktoJTQ= udp roughtime.sandbox.google.com:2002
 
 --chain-file=<filename>
-   Succesfull queries are appended to this file.
+   Successful queries are appended to this file.
    If limit of --max-chain-size records is reached, the oldest records are truncated.
    This queries records can be replayed using command roughtime_check <chain-file>.
 

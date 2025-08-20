@@ -122,7 +122,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
             * With overwhelming probability, this conversion is correct. The
             * only time it is not is in the extremely unlikely case where the
             * signer actually reduced the x coordinate modulo the group order.
-            * That is handled seperately in a second step.
+            * That is handled separately in a second step.
             */
             const auto z2 = pt.z().square();
 

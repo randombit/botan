@@ -450,7 +450,7 @@ Client_Hello_12::Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data) : 
 
 namespace {
 
-// Avoid sending an IPv4/IPv6 address in SNI as this is prohibitied
+// Avoid sending an IPv4/IPv6 address in SNI as this is prohibited
 bool hostname_acceptable_for_sni(std::string_view hostname) {
    if(hostname.empty()) {
       return false;
@@ -1032,7 +1032,7 @@ void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch) {
    //    "padding" extension.
 }
 
-void Client_Hello_13::calculate_psk_binders(Transcript_Hash_State ths) {
+void Client_Hello_13::calculate_psk_binders(Transcript_Hash_State transcript_hash) {
    auto* psk = m_data->extensions().get<PSK>();
    if(psk == nullptr || psk->empty()) {
       return;
@@ -1047,8 +1047,8 @@ void Client_Hello_13::calculate_psk_binders(Transcript_Hash_State ths) {
    // (truncated) transcript hash, calculate the PSK binders with it, update
    // the Client Hello thus finalizing the message. Down the road, it will be
    // re-marshalled with the correct binders and sent over the wire.
-   Handshake_Layer::prepare_message(*this, ths);
-   psk->calculate_binders(ths);
+   Handshake_Layer::prepare_message(*this, transcript_hash);
+   psk->calculate_binders(transcript_hash);
 }
 
 std::optional<Protocol_Version> Client_Hello_13::highest_supported_version(const Policy& policy) const {

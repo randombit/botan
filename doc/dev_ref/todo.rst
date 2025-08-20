@@ -22,7 +22,7 @@ New Ciphers/Hashes/MACs
 
 Hardware Specific Optimizations
 ----------------------------------------
-* Stiched AES/GCM mode for CPUs supporting both AES and CLMUL
+* Stitched AES/GCM mode for CPUs supporting both AES and CLMUL
 * GFNI implementations for: Camellia, SEED, ARIA
 * NEON/VMX/LSX support for the SIMD based GHASH
 * Poly1305 using AVX2

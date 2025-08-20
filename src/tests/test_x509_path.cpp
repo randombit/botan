@@ -190,7 +190,7 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run() {
 
    /**
    * Code to run the X.509v3 processing tests described in "Conformance
-   *  Testing of Relying Party Client Certificate Path Proccessing Logic",
+   *  Testing of Relying Party Client Certificate Path Processing Logic",
    *  which is available on NIST's web site.
    *
    * https://csrc.nist.gov/projects/pki-testing/x-509-path-validation-test-suite
@@ -1347,7 +1347,7 @@ class Path_Validation_With_Immortal_CRL final : public Test {
          trusted.add_crl(crl);
 
          // Just before the CA and subject certificates expire
-         // (validity from 01 March 2025 to 24 Feburary 2026)
+         // (validity from 01 March 2025 to 24 February 2026)
          auto valid_time = Botan::calendar_point(2026, 2, 23, 0, 0, 0).to_std_timepoint();
 
          Botan::Path_Validation_Restrictions restrictions(true /* require revocation info */);

@@ -662,7 +662,7 @@ class StrongSpan {
       // TODO: Technically, we should be able to phrase this with a `requires std::is_const_v<T>`
       //       instead of the `std::enable_if` constructions. clang-tidy (14 or 15) doesn't seem
       //       to pick up on that (yet?). As a result, for a non-const T it assumes this to be
-      //       a declaration of an ordinary copy constructor. The existance of a copy constructor
+      //       a declaration of an ordinary copy constructor. The existence of a copy constructor
       //       is interpreted as "not cheap to copy", setting off the `performance-unnecessary-value-param` check.
       //       See also: https://github.com/randombit/botan/issues/3591
       template <concepts::contiguous_strong_type T2>

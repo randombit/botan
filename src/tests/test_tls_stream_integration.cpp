@@ -152,7 +152,7 @@ class Peer {
                   m_stream->lowest_layer().close();
                }
 
-               throw Timeout_Exception("timeout occured: " + message);
+               throw Timeout_Exception("timeout occurred: " + message);
             }
          });
       }

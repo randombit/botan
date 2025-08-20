@@ -18,7 +18,7 @@ namespace Botan {
 
 /**
  * A registry for XMSS private keys, keeps track of the leaf index for
- * independend copies of the same key.
+ * independent copies of the same key.
  **/
 class XMSS_Index_Registry final {
    public:
@@ -79,13 +79,13 @@ class XMSS_Index_Registry final {
        * position of the according registry entry is returned. If last_unused
        * is bigger than the last unused index stored for the key identified by
        * id the unused leaf index for this key is set to last_unused. If no key
-       * matching id is registed yet, an entry of id is added, with the last
+       * matching id is registered yet, an entry of id is added, with the last
        * unused leaf index initialized to the value of last_unused.
        *
        * @last_unused Initial value for the last unused leaf index of the
        *              registered key.
        *
-       * @return positon of leaf index registry entry for key identified
+       * @return position of leaf index registry entry for key identified
        *         by id.
        **/
       size_t add(uint64_t id, size_t last_unused = 0);

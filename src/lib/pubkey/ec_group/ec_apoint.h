@@ -116,7 +116,7 @@ class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
       /// field inversion. This can be sufficient when implementing protocols
       /// that just need to perform a few additions.
       ///
-      /// In the future a cooresponding EC_ProjectivePoint type may be added
+      /// In the future a corresponding EC_ProjectivePoint type may be added
       /// which would avoid the expensive affine conversions
       EC_AffinePoint add(const EC_AffinePoint& q) const;
 

@@ -17,7 +17,7 @@ Implementation Techniques
 
 * "Accelerating AES with vector permute instructions"
   Mike Hamburg https://shiftleft.org/papers/vector_aes/
-  His public doman assembly code was rewritten into SSS3 intrinsics
+  His public domain assembly code was rewritten into SSS3 intrinsics
   for aes_ssse3.
 
 * "Elliptic curves and their implementation" Langley

@@ -4,7 +4,7 @@
 # Strips the KAT harness produced by the SPHINCS+ reference implementation down
 # to a less space consuming version. This script was used to generate
 # `src/tests/data/pubkey/sphincsplus.vec` test data from the *.rsp files of the
-# reference implemenation.
+# reference implementation.
 #
 # (C) 2023 Jack Lloyd
 # (C) 2023 René Meusel, Rohde & Schwarz Cybersecurity

@@ -176,7 +176,7 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Result final {
       bool successful_validation() const;
 
       /**
-      * @return true iff no warnings occured during validation
+      * @return true iff no warnings occurred during validation
       */
       bool no_warnings() const;
 
@@ -441,7 +441,7 @@ CertificatePathStatusCodes BOTAN_PUBLIC_API(3, 0)
 * @param cert_path path already validated by check_chain
 * @param trusted_certstores a list of certstores with trusted certs
 * @param certstore_to_recv_crls optional (nullptr to disable), all CRLs
-* retreived will be saved to this cert store.
+* retrieved will be saved to this cert store.
 * @param ref_time whatever time you want to perform the validation against
 * (normally current system clock)
 * @param timeout for timing out the responses, though actually this function

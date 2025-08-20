@@ -621,7 +621,7 @@ Version 1.11.29, 2016-03-20
 * Add support for processing X.509 name constraint extension during
   path validation. GH #454
 
-* Add X509_Certificate::v3_extensions which allows retreiving the
+* Add X509_Certificate::v3_extensions which allows retrieving the
   raw binary of all certificate extensions, including those which
   are not known to the library. This allows processing of custom
   extensions. GH #437
@@ -638,7 +638,7 @@ Version 1.11.29, 2016-03-20
 * SRP6 support is now optional in TLS
 
 * Support for negotiating MD5 and SHA-224 signatures in TLS v1.2 has
-  been removed. MD5 signatures are demonstratably insecure in TLS,
+  been removed. MD5 signatures are demonstrably insecure in TLS,
   SHA-224 is rarely used.
 
 * Support for negotiating ECC curves secp160r1, secp160r2, secp160k1,
@@ -689,7 +689,7 @@ Version 1.11.29, 2016-03-20
   the library itself. GH #430
 
 * Remove use of TickCount64 introduced in 1.11.27 which caused problem
-  with downstream distributors/users building XP compatiable binaries
+  with downstream distributors/users building XP compatible binaries
   which is still an option even in VS 2015
 
 * MCEIES requires KDF1 at runtime but did not require it be enabled
@@ -767,7 +767,7 @@ Version 1.11.27, 2016-02-01
 
 * Use TickCount64 and MemoryStatusEx in the Windows entropy source.
   Note these calls are only available in Vista/Server 2008. No
-  accomodations are made for XP or Server 2003, both of which are
+  accommodations are made for XP or Server 2003, both of which are
   no longer patched by the vendor. GH #365
 
 Version 1.11.26, 2016-01-04
@@ -796,7 +796,7 @@ Version 1.11.26, 2016-01-04
   extended with new features and options.
 
 * Correct an error in PointGFp multiplication when multiplying a point
-  by the scalar value 3. PointGFp::operator* would instead erronously
+  by the scalar value 3. PointGFp::operator* would instead erroneously
   compute it as if the scalar was 1 instead.
 
 * Enable RdRand entropy source on Windows/MSVC. GH #364
@@ -855,7 +855,7 @@ Version 1.11.26, 2016-01-04
 
 * Work around a problem with some antivirus programs which causes the
   ``shutil.rmtree`` and ``os.makedirs`` Python calls to occasionally
-  fail. The could prevent ``configure.py`` from running sucessfully
+  fail. The could prevent ``configure.py`` from running successfully
   on such systems. GH #353
 
 * Let ``configure.py`` run under CPython 2.6. GH #362
@@ -893,7 +893,7 @@ Version 1.11.25, 2015-12-07
 * Fixed the signature of the FFI function botan_pubkey_destroy, which took the
   wrong type and was not usable.
 
-* The TLS client would erronously reject any server key exchange packet smaller
+* The TLS client would erroneously reject any server key exchange packet smaller
   than 6 bytes. This prevented negotiating a plain PSK TLS ciphersuite with an
   empty identity hint. ECDHE_PSK and DHE_PSK suites were not affected.
 
@@ -922,7 +922,7 @@ Version 1.11.24, 2015-11-04
   even when using a deterministic PRNG with the same seed.
 
 * In `configure,py`, the flags for controlling use of debug, sanitizer, and
-  converage information have been split out into individual options
+  coverage information have been split out into individual options
   `--with-debug-info`, `--with-sanitizers`, and `--with-coverage`. These allow
   enabling more than one in a build in a controlled way. The `--build-mode` flag
   added in 1.11.17 has been removed.
@@ -1147,7 +1147,7 @@ Version 1.11.18, 2015-07-05
   create a pointer offset of a ``std::vector``. This failed when x was
   set equal to ``vec.size()`` to create the one-past-the-end address.
   The pointer in question was never dereferenced, but it triggered
-  the iterator debugging checks which prevented using these valuble
+  the iterator debugging checks which prevented using these valuable
   analysis tools. From Simon Warta and Daniel Seither. GH #125
 
 * Several incorrect or missing module dependencies have been fixed. These
@@ -1207,7 +1207,7 @@ Version 1.11.16, 2015-03-29
 
 * Added global timeout to HMAC_RNG entropy reseed. The defaults are
   the values set in the build.h macros ``BOTAN_RNG_AUTO_RESEED_TIMEOUT``
-  and ``BOTAN_RNG_RESEED_DEFAULT_TIMEOUT``, but can be overriden
+  and ``BOTAN_RNG_RESEED_DEFAULT_TIMEOUT``, but can be overridden
   on a specific poll with the new API call reseed_with_timeout.
 
 * Fixed Python cipher update_granularity() and default_nonce_length()
@@ -1469,7 +1469,7 @@ Version 1.11.10, 2014-12-10
 
 * Fixed a bug in CCM mode which caused it to produce incorrect tags when used
   with a value of L other than 2. This affected CCM TLS ciphersuites, which
-  use L=3. Thanks to Manuel Pégourié-Gonnard for the anaylsis and patch.
+  use L=3. Thanks to Manuel Pégourié-Gonnard for the analysis and patch.
   Bugzilla 270.
 
 * DTLS now supports timeouts and handshake retransmits. Timeout checking
@@ -1648,7 +1648,7 @@ Version 1.11.7, 2014-01-10
   ``bcrypt``, ``keygen``, ``speed``, and various others. As part of this
   change many obsolete, duplicated, or one-off examples were removed,
   while others were extended with new functionality. Contributions of
-  new subcommands, new bling for exising ones, or documentation in any
+  new subcommands, new bling for existing ones, or documentation in any
   form is welcome.
 
 * Fix a bug in Lion, which was broken by a change in 1.11.0. The
@@ -1722,7 +1722,7 @@ Version 1.10.6, 2013-11-10
   name for the EGD socket. Found by Coverity Scanner.
 
 * In PK_Encryptor_EME, PK_Decryptor_EME, PK_Verifier, and PK_Key_Agreement,
-  avoid dereferencing an unitialized pointer if no engine supported operations
+  avoid dereferencing an uninitialized pointer if no engine supported operations
   on the key object given. Found by Coverity scanner.
 
 * Avoid leaking a file descriptor in the /dev/random and EGD entropy sources if
@@ -2317,7 +2317,7 @@ Version 1.9.17, 2011-04-29
   ``BOTAN_TARGET_ARCH_IS_X86_32``. The classes calling assembly have
   also been renamed.
 
-* Similiarly to the above change, the AES implemenations using the
+* Similarly to the above change, the AES implementations using the
   AES-NI instruction set have been renamed from AES_XXX_Intel to
   AES_XXX_NI.
 
@@ -2423,7 +2423,7 @@ Version 1.9.13, 2011-02-19
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 GOST 34.10 signatures were being formatted in a way that was not
-compatible with other implemenations, and specifically how GOST is
+compatible with other implementations, and specifically how GOST is
 used in DNSSEC.
 
 The Keccak hash function was updated to the tweaked variant proposed
@@ -3137,7 +3137,7 @@ Version 1.7.0, 2007-05-19
 Version 1.6.2, 2007-03-24
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Fix autodection on Athlon64s running Linux
+* Fix autodetection on Athlon64s running Linux
 * Fix builds on QNX and compilers using STLport
 * Remove a call to abort() that crept into production
 
@@ -3192,7 +3192,7 @@ Version 1.5.10, 2006-08-13
 * Initialization failures are dealt with somewhat better
 * Add an example implementing Pollard's Rho algorithm
 * Better option handling in the test/benchmark tool
-* Expand the xor_ciph example to support longer keys
+* Expand the example of how to add a stream cipher to support longer keys
 * Some updates to the documentation
 
 Version 1.5.9, 2006-07-12
@@ -3830,7 +3830,7 @@ Version 1.1.13, 2003-04-22
 * Renamed Rijndael to AES, created aes.h, deleted rijndael.h
 * Removed support for the 'no_timer' LibraryInitializer option
 * Removed 'es_pthr' module, pending further testing
-* Cleaned up get_ciph.cpp
+* Cleaned up cipher factory
 
 Version 1.1.12, 2003-04-15
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -4215,7 +4215,7 @@ Version 0.7.9, 2002-03-19
 * Added ECB and CTS block cipher modes (ecb.h, cts.h)
 * Added a Mutex interface (mutex.h)
 * Added module pthr_mux, implementing the Mutex interface
-* Added Threaded Filter interface (thr_filt.h)
+* Added Threaded Filter interface
 * All algorithms can now by keyed with SymmetricKey objects
 * More testing occurs with --validate (expected failures)
 * Fixed two bugs reported by Hany Greiss, in Luby-Rackoff and RC6
