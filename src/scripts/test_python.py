@@ -12,6 +12,7 @@ import os
 import platform
 import argparse
 import sys
+import time
 from itertools import permutations
 
 # Starting with Python 3.8 DLL search locations are more restricted on Windows.
@@ -740,6 +741,7 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         self.assertTrue(cert.allowed_usage(["CRL_SIGN", "KEY_CERT_SIGN"]))
         self.assertTrue(cert.allowed_usage(["KEY_CERT_SIGN"]))
+        self.assertTrue(cert.allowed_usage([botan.X509KeyConstraints.CRL_SIGN, botan.X509KeyConstraints.KEY_CERT_SIGN]))
         self.assertFalse(cert.allowed_usage(["DIGITAL_SIGNATURE"]))
         self.assertFalse(cert.allowed_usage(["DIGITAL_SIGNATURE", "CRL_SIGN"]))
 
@@ -783,6 +785,191 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertFalse(int04_1.is_revoked(rootcrl))
         self.assertTrue(end21.is_revoked(int21crl))
 
+    def test_cert_creation(self):
+        group = "secp256r1"
+        now = int(time.time())
+        not_before = now - 180
+        not_after = now + 86400
+
+        rng = botan.RandomNumberGenerator()
+        ca_key = botan.PrivateKey.create("ECDSA", group, rng)
+        ca_builder = botan.X509CertificateBuilder()
+        ca_builder.add_common_name("Test CA")
+        ca_builder.add_country("US")
+        ca_builder.add_organization("Botan Project")
+        ca_builder.add_organizational_unit("Testing")
+        ca_builder.set_as_ca_certificate(1)
+        ca_cert = ca_builder.create_self_signed(ca_key, rng, not_before, not_after)
+        constraints = ca_cert.allowed_usages()
+        self.assertEqual(len(constraints), 3)
+        for item in [
+            botan.X509KeyConstraints.DIGITAL_SIGNATURE,
+            botan.X509KeyConstraints.KEY_CERT_SIGN,
+            botan.X509KeyConstraints.CRL_SIGN
+        ]:
+            self.assertTrue(item in constraints)
+        self.assertTrue(ca_cert.is_self_signed())
+
+        cert_key = botan.PrivateKey.create("ECDSA", group, rng)
+        req_builder = botan.X509CertificateBuilder()
+        req_builder.add_allowed_usage([botan.X509KeyConstraints.DIGITAL_SIGNATURE])
+        req_builder.add_uri("https://botan.randombit.net")
+        for item in ["imaginary.botan.randombit.net", "botan.randombit.net", "randombit.net"]:
+            req_builder.add_dns(item)
+        req = req_builder.create_req(cert_key, rng)
+        self.assertTrue(req.verify(cert_key.get_public_key()))
+
+        cert = req.sign(ca_cert, ca_key, rng, not_before, not_after)
+        self.assertFalse(cert.is_self_signed())
+        self.assertEqual(cert.allowed_usages(), [botan.X509KeyConstraints.DIGITAL_SIGNATURE])
+
+        with self.assertRaisesRegex(botan.BotanException, r".*No value available.*"):
+            _ = cert.ext_ip_addr_blocks()
+
+        with self.assertRaisesRegex(botan.BotanException, r".*No value available.*"):
+            _ = cert.ext_as_blocks()
+
+        self.assertEqual(cert.verify(None, [ca_cert]), 0)
+
+    def test_cert_revocation(self):
+        group = "secp256r1"
+        now = int(time.time())
+        not_before = now - 180
+        not_after = now + 86400
+
+        rng = botan.RandomNumberGenerator()
+        ca_key = botan.PrivateKey.create("ECDSA", group, rng)
+        ca_builder = botan.X509CertificateBuilder()
+        ca_builder.set_as_ca_certificate(1)
+        ca_cert = ca_builder.create_self_signed(ca_key, rng, not_before, not_after, botan.MPI("0"))
+
+        cert_key_1 = botan.PrivateKey.create("ECDSA", group, rng)
+        req_builder_1 = botan.X509CertificateBuilder()
+        req_1 = req_builder_1.create_req(cert_key_1, rng)
+        cert_1 = req_1.sign(ca_cert, ca_key, rng, not_before, not_after, botan.MPI("1"))
+
+        cert_key_2 = botan.PrivateKey.create("ECDSA", group, rng)
+        req_builder_2 = botan.X509CertificateBuilder()
+        req_2 = req_builder_2.create_req(cert_key_2, rng)
+        cert_2 = req_2.sign(ca_cert, ca_key, rng, not_before, not_after, botan.MPI("2"))
+
+        crl = botan.X509CRL.create(rng, ca_cert, ca_key, now, now + 600)
+        self.assertTrue(crl.verify(ca_cert.subject_public_key()))
+        self.assertEqual(cert_1.verify(None, [ca_cert], crls=[crl]), 0)
+        self.assertEqual(cert_2.verify(None, [ca_cert], crls=[crl]), 0)
+
+        crl = crl.revoke(rng, ca_cert, ca_key, now, now + 86400, [cert_1], botan.X509CRLReason.KEY_COMPROMISE)
+        self.assertTrue(crl.verify(ca_cert.subject_public_key()))
+        self.assertEqual(cert_1.verify(None, [ca_cert], crls=[crl]), 5000)
+        self.assertEqual(cert_2.verify(None, [ca_cert], crls=[crl]), 0)
+        self.assertEqual(len(crl.revoked()), 1)
+        revoked_entry: botan.X509CRLEntry = crl.revoked()[0]
+        self.assertEqual(revoked_entry.reason, botan.X509CRLReason.KEY_COMPROMISE)
+        self.assertEqual(botan.MPI.from_bytes(revoked_entry.serial_number), botan.MPI("1"))
+        self.assertTrue(now - 5 <= revoked_entry.expire_time <= now + 5)
+
+        pem = crl.to_pem()
+        crl_from_pem = botan.X509CRL(buf=pem)
+        self.assertEqual(len(crl_from_pem.revoked()), 1)
+
+    def test_x509_rpki(self):
+        group = "secp256r1"
+        now = int(time.time())
+        not_before = now - 180
+        not_after = now + 86400
+
+        rng = botan.RandomNumberGenerator()
+        ca_key = botan.PrivateKey.create("ECDSA", group, rng)
+        ca_builder = botan.X509CertificateBuilder()
+        ca_builder.set_as_ca_certificate()
+
+        ca_ip_addr_blocks = botan.X509ExtIPAddrBlocks()
+
+        ca_ip_addr_blocks.add_addr([192, 168, 2, 1])
+        ca_ip_addr_blocks.add_range([10, 0, 0, 1], [10, 0, 255, 255])
+        ca_ip_addr_blocks.restrict(False, 42)
+
+        ca_ip_addr_blocks.add_addr([0xab, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01])
+        ca_ip_addr_blocks.restrict(True, 234)
+
+        ca_as_blocks = botan.X509ExtASBlocks()
+        ca_as_blocks.add_asnum(30)
+        ca_as_blocks.add_asnum_range(3000, 4999)
+        ca_as_blocks.restrict_rdi()
+
+        ca_builder.add_ext_ip_addr_blocks(ca_ip_addr_blocks, True)
+        ca_builder.add_ext_as_blocks(ca_as_blocks, True)
+
+        with self.assertRaisesRegex(botan.BotanException, r".*Invalid object state.*"):
+            ca_builder.add_ext_ip_addr_blocks(ca_ip_addr_blocks, True)
+
+        with self.assertRaisesRegex(botan.BotanException, r".*Invalid object state.*"):
+            ca_builder.add_ext_as_blocks(ca_as_blocks, True)
+
+        ca_cert = ca_builder.create_self_signed(ca_key, rng, not_before, not_after)
+
+        ca_ip_addr_blocks = ca_cert.ext_ip_addr_blocks()
+        self.assertEqual(ca_ip_addr_blocks.addresses(), (
+            [
+                (None, [((10, 0, 0, 1), (10, 0, 255, 255)), ((192, 168, 2, 1), (192, 168, 2, 1))]),
+                (42, [])
+            ],
+            [
+                (None, [(
+                    (0xab, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01),
+                    (0xab, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01)
+                )], ),
+                (234, [])
+            ]
+        ))
+
+        with self.assertRaisesRegex(botan.BotanException, r".*Invalid object state.*"):
+            ca_ip_addr_blocks.add_addr([123, 0, 0, 1])
+
+        ca_as_blocks = ca_cert.ext_as_blocks()
+        self.assertEqual(ca_as_blocks.asnum(), [(30, 30), (3000, 4999)])
+        self.assertEqual(ca_as_blocks.rdi(), [])
+
+        with self.assertRaisesRegex(botan.BotanException, r".*Invalid object state.*"):
+            ca_as_blocks.add_asnum(999)
+
+        cert_key = botan.PrivateKey.create("ECDSA", group, rng)
+        req_builder = botan.X509CertificateBuilder()
+
+        req_ip_addr_blocks = botan.X509ExtIPAddrBlocks()
+        req_ip_addr_blocks.add_addr([192, 168, 2, 1])
+        req_ip_addr_blocks.add_range([10, 0, 5, 5], [10, 0, 7, 7])
+        req_ip_addr_blocks.restrict(False, 42)
+        req_ip_addr_blocks.inherit(True)
+        req_ip_addr_blocks.inherit(True, 234)
+
+        req_as_blocks = botan.X509ExtASBlocks()
+        req_as_blocks.add_asnum_range(3100, 4000)
+        req_as_blocks.inherit_rdi()
+
+        req_builder.add_ext_ip_addr_blocks(req_ip_addr_blocks, True)
+        req_builder.add_ext_as_blocks(req_as_blocks, True)
+        req = req_builder.create_req(cert_key, rng)
+
+        cert = req.sign(ca_cert, ca_key, rng, not_before, not_after)
+
+        req_ip_addr_blocks = cert.ext_ip_addr_blocks()
+        self.assertEqual(req_ip_addr_blocks.addresses(), (
+            [
+                (None, [((10, 0, 5, 5), (10, 0, 7, 7)), ((192, 168, 2, 1), (192, 168, 2, 1))]),
+                (42, [])
+            ],
+            [
+                (None, None),
+                (234, None)
+            ]
+        ))
+
+        req_as_blocks = cert.ext_as_blocks()
+        self.assertEqual(req_as_blocks.asnum(), [(3100, 4000)])
+        self.assertEqual(req_as_blocks.rdi(), None)
+
+        self.assertEqual(cert.verify(None, [ca_cert]), 0)
 
     def test_mpi(self):
         z = botan.MPI()
