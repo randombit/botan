@@ -236,7 +236,7 @@ secure_vector<uint8_t> RTSS_Share::reconstruct(const std::vector<RTSS_Share>& sh
 
    if(shares[0].size() != RTSS_HEADER_SIZE + share_len) {
       /*
-      * This second (laxer) check accomodates a bug in TSS that was
+      * This second (laxer) check accommodates a bug in TSS that was
       * fixed in 2.9.0 - previous versions used the length of the
       * *secret* here, instead of the length of the *share*, which is
       * precisely 1 + hash_len longer.

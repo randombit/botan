@@ -2,7 +2,7 @@
 * DES
 * (C) 1999-2008,2018,2020 Jack Lloyd
 *
-* Based on a public domain implemenation by Phil Karn (who in turn
+* Based on a public domain implementation by Phil Karn (who in turn
 * credited Richard Outerbridge and Jim Gillogly)
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -24,7 +24,7 @@ namespace {
 * Each SBOX lookup (in function spbox below) examines just a single 64 byte range of this table,
 * converting it to the appropriate value using a multiplication and AND. Typically these tables
 * are otherwise 256 bytes, and thus the lookups leak information about the data being processed.
-* In constrast lookups within a single 64 byte cache line do not leak information [*] and we
+* In contrast lookups within a single 64 byte cache line do not leak information [*] and we
 * can use alignas to ensure that the table entries are cache line aligned.
 *
 * [*] Assuming that the cache lines are at least 64 bytes long, and that the machine does not

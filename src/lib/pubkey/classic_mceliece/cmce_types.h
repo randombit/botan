@@ -21,7 +21,7 @@ using CmceGfElem = Strong<uint16_t, struct CmceGfElem_>;
 /// Represents a GF(q) modulus
 using CmceGfMod = Strong<uint16_t, struct CmceGfMod_>;
 
-/// Represents an element of a permuation (pi in spec). Used in field ordering creation.
+/// Represents an element of a permutation (pi in spec). Used in field ordering creation.
 using CmcePermutationElement = Strong<uint16_t, struct CmcePermutationElement_>;
 
 /// Represents a permutation (pi in spec). Used in field ordering creation.

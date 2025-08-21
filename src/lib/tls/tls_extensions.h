@@ -673,7 +673,7 @@ class BOTAN_UNSTABLE_API PSK final : public Extension /* NOLINT(*-special-member
        *
        * @note Technically, PSKs used for resumption also carry an identity.
        *       Though, typically, this is an opaque value meaningful only to the
-       *       peer and of no authorative value for the user. We therefore
+       *       peer and of no authoritative value for the user. We therefore
        *       report the identity of externally provided PSKs only.
        */
       std::pair<std::optional<std::string>, std::unique_ptr<Cipher_State>> take_selected_psk_info(

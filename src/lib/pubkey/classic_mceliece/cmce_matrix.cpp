@@ -212,7 +212,7 @@ std::optional<CmceColumnSelection> apply_gauss(const Classic_McEliece_Parameters
       }
 
       // Now the new row is added to all other rows, where the
-      // bit in the column of the current postion on the diagonal
+      // bit in the column of the current position on the diagonal
       // is still one
       for(size_t row = 0; row < params.pk_no_rows(); ++row) {
          if(row != diag_pos) {

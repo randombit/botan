@@ -48,7 +48,7 @@ template <typename T>
 T copy(const uint8_t* t)
    requires(is_array<T>::value)
 {
-   return typecast_copy<T>(t);  //arrays are endianess independent, so we do a memcpy
+   return typecast_copy<T>(t);  //arrays are endianness independent, so we do a memcpy
 }
 
 template <typename T>

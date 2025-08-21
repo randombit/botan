@@ -17,7 +17,7 @@
 namespace Botan {
 
 /**
- * Descibes a signature method for XMSS Winternitz One Time Signatures,
+ * Describes a signature method for XMSS Winternitz One Time Signatures,
  * as defined in:
  * [1] XMSS: Extended Hash-Based Signatures,
  *     Request for Comments: 8391
@@ -117,7 +117,7 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_WOTS_Parameters final {
 };
 
 /**
- * Descibes a signature method for XMSS, as defined in:
+ * Describes a signature method for XMSS, as defined in:
  * [1] XMSS: Extended Hash-Based Signatures,
  *     Request for Comments: 8391
  *     Release: May 2018.

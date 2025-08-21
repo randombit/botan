@@ -213,7 +213,7 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHashFamily /* NOLINT(*-special-member-funct
       * The parameters will be selected to use at most @p max_memory_usage_mb
       * megabytes of memory, or if left as zero any size is allowed.
       *
-      * This function works by runing a short tuning loop to estimate the
+      * This function works by running a short tuning loop to estimate the
       * performance of the algorithm, then scaling the parameters appropriately
       * to hit the target size. The length of time the tuning loop runs can be
       * controlled using the @p tuning_msec parameter.

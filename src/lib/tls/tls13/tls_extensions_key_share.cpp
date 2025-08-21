@@ -166,7 +166,7 @@ class Key_Share_ClientHello {
          // Client_Hello message. Hence, if offset or length fields are skewed
          // or maliciously fabricated, it is possible to read further than the
          // bounds of the current extension.
-         // Note that this aplies to many locations in the code base.
+         // Note that this applies to many locations in the code base.
          //
          // TODO: Overhaul the TLS_Data_Reader to allow for cheap "sub-readers"
          //       that enforce read bounds of sub-structures while parsing.

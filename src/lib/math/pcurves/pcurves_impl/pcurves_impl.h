@@ -1175,7 +1175,7 @@ class EllipticCurveParameters {
 };
 
 /**
-* This exists soley as a hack which somewhat reduces symbol lengths
+* This exists solely as a hack which somewhat reduces symbol lengths
 */
 template <WordType WI, size_t NI, std::array<WI, NI> PI>
 struct IntParams {

@@ -4,7 +4,7 @@
 # Strips the KAT harness produced by the Dilithium reference implementation down
 # to a less space consuming version. This script was used to generate
 # `src/tests/data/pubkey/dilithium_[...].vec` test data from the *.rsp files of
-# the reference implemenation.
+# the reference implementation.
 #
 # (C) 2022,2023 Jack Lloyd
 # (C) 2022 René Meusel, Rohde & Schwarz Cybersecurity

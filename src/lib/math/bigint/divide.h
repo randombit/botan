@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_DIVISON_ALGORITHM_H_
-#define BOTAN_DIVISON_ALGORITHM_H_
+#ifndef BOTAN_BIGINT_DIVIDE_H_
+#define BOTAN_BIGINT_DIVIDE_H_
 
 #include <botan/bigint.h>
 

@@ -29,7 +29,7 @@ namespace {
  * the input x using the outputs of the PRNG "G".
  *
  * This overload is used in multithreaded scenarios, where it is
- * required to provide seperate instances of XMSS_Hash to each
+ * required to provide separate instances of XMSS_Hash to each
  * thread.
  *
  * @param params      The WOTS parameters to use

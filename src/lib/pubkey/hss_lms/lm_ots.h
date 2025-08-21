@@ -108,7 +108,7 @@ class BOTAN_TEST_API LMOTS_Params final {
       /**
        * @brief Create the LM-OTS parameters from a hash function and width.
        *
-       * @param hash_name tha name of the hash function to use.
+       * @param hash_name the name of the hash function to use.
        * @param w the width (in bits) of the Winternitz coefficients.
        * @throws Decoding_Error If the algorithm type is unknown
        */

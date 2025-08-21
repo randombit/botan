@@ -681,7 +681,7 @@ TSS2_RC get_ecdh_point(TPM2B_PUBLIC* key,
  * @param[in] key key used for AES.
  * @param[in] tpm_sym_alg AES type in TSS2 notation (must be TPM2_ALG_AES).
  * @param[in] key_bits Key size in bits.
- * @param[in] tpm_mode Block cipher mode of opertion in TSS2 notation (CFB).
+ * @param[in] tpm_mode Block cipher mode of operation in TSS2 notation (CFB).
  *            For parameter encryption only CFB can be used.
  * @param[in,out] buffer Data to be encrypted. The encrypted date will be stored
  *                in this buffer.
@@ -712,7 +712,7 @@ TSS2_RC aes_encrypt(uint8_t* key,
  * @param[in] key key used for AES.
  * @param[in] tpm_sym_alg AES type in TSS2 notation (must be TPM2_ALG_AES).
  * @param[in] key_bits Key size in bits.
- * @param[in] tpm_mode Block cipher mode of opertion in TSS2 notation (CFB).
+ * @param[in] tpm_mode Block cipher mode of operation in TSS2 notation (CFB).
  *            For parameter encryption only CFB can be used.
  * @param[in,out] buffer Data to be decrypted. The decrypted date will be stored
  *                in this buffer.
@@ -745,7 +745,7 @@ TSS2_RC aes_decrypt(uint8_t* key,
  * @param[in] key key used for SM4.
  * @param[in] tpm_sym_alg SM4 type in TSS2 notation (must be TPM2_ALG_SM4).
  * @param[in] key_bits Key size in bits.
- * @param[in] tpm_mode Block cipher mode of opertion in TSS2 notation (CFB).
+ * @param[in] tpm_mode Block cipher mode of operation in TSS2 notation (CFB).
  *            For parameter encryption only CFB can be used.
  * @param[in,out] buffer Data to be encrypted. The encrypted date will be stored
  *                in this buffer.
@@ -776,7 +776,7 @@ TSS2_RC sm4_encrypt(uint8_t* key,
  * @param[in] key key used for SM4.
  * @param[in] tpm_sym_alg SM4 type in TSS2 notation (must be TPM2_ALG_SM4).
  * @param[in] key_bits Key size in bits.
- * @param[in] tpm_mode Block cipher mode of opertion in TSS2 notation (CFB).
+ * @param[in] tpm_mode Block cipher mode of operation in TSS2 notation (CFB).
  *            For parameter encryption only CFB can be used.
  * @param[in,out] buffer Data to be decrypted. The decrypted date will be stored
  *                in this buffer.

@@ -742,7 +742,7 @@ Test::Result test_padding_config() {
    auto sk = Botan::PKCS8::load_key(key_stream);
 
    // Create X509 CA certificate; PKCS1v15 is used for signing by default
-   Botan::X509_Cert_Options opt("TESTCA");
+   Botan::X509_Cert_Options opt("TEST CA");
    opt.CA_key();
 
    Botan::X509_Certificate ca_cert_def = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", *rng);

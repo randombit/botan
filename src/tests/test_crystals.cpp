@@ -159,7 +159,7 @@ std::vector<Test::Result> test_polynomial_basics() {
                }
             }),
 
-      CHECK("cloned polynomials always manage their storge",
+      CHECK("cloned polynomials always manage their storage",
             [](Test::Result& res) {
                Kyberish_Poly<Domain::Normal> p;
                auto p2 = p.clone();

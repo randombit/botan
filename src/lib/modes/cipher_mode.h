@@ -233,7 +233,7 @@ class BOTAN_PUBLIC_API(2, 0) Cipher_Mode : public SymmetricAlgorithm {
       virtual bool requires_entire_message() const { return false; }
 
       /**
-      * @return required minimium size to finalize() - may be any
+      * @return required minimum size to finalize() - may be any
       *         length larger than this.
       */
       virtual size_t minimum_final_size() const = 0;

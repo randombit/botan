@@ -219,7 +219,7 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       /// If the input is rejected then nullptr is returned
       std::unique_ptr<EC_Scalar_Data> scalar_deserialize(std::span<const uint8_t> bytes) const;
 
-      /// Scalar from bytes with ECDSA style trunction
+      /// Scalar from bytes with ECDSA style truncation
       ///
       /// This should always succeed
       std::unique_ptr<EC_Scalar_Data> scalar_from_bytes_with_trunc(std::span<const uint8_t> bytes) const;

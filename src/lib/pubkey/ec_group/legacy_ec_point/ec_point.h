@@ -25,7 +25,7 @@ namespace Botan {
 * Use EC_AffinePoint in new code; this type is no longer used internally at all
 * except to support very unfortunate (and deprecated) curve types, specifically
 * those with a cofactor, or with unreasonable sizes (above 521 bits), which
-* cannot be accomodated by the new faster EC library in math/pcurves. For
+* cannot be accommodated by the new faster EC library in math/pcurves. For
 * normal curves EC_AffinePoint will typically be 2 or 3 times faster.
 *
 * This type will be completely removed in Botan4

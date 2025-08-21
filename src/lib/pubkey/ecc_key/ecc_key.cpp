@@ -1,5 +1,5 @@
 /*
-* ECC Key implemenation
+* ECC Key implementation
 * (C) 2007 Manuel Hartl, FlexSecure GmbH
 *          Falko Strenzke, FlexSecure GmbH
 *     2008-2010 Jack Lloyd

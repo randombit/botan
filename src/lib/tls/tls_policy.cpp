@@ -230,7 +230,7 @@ std::vector<Group_Params> Policy::key_exchange_groups_to_offer() const {
 
    /*
    * If for some reason no pure ECC groups are enabled then simply
-   * send a share of whatever the policys top preference is.
+   * send a share of whatever the policy's top preference is.
    */
    if(groups_to_offer.empty()) {
       groups_to_offer.push_back(supported_groups.front());

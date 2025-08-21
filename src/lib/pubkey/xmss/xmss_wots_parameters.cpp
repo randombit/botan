@@ -1,6 +1,6 @@
 /*
  * XMSS WOTS Parameters
- * Descibes a signature method for XMSS Winternitz One Time Signatures,
+ * Describes a signature method for XMSS Winternitz One Time Signatures,
  * as defined in:
  * [1] XMSS: Extended Hash-Based Signatures,
  *     Request for Comments: 8391

@@ -1,5 +1,5 @@
 /*
-* SRP-6a (RFC 5054 compatatible)
+* SRP-6a (RFC 5054 compatible)
 * (C) 2011,2012,2019,2020 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)

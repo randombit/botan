@@ -580,7 +580,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @param hash_fn the hash function to use (typically "SHA-256" or "SHA-512")
       * @param input the input to hash
       * @param input_len length of input in bytes
-      * @param domain_sep a domain seperator
+      * @param domain_sep a domain separator
       * @param domain_sep_len length of domain_sep in bytes
       * @param random_oracle if the mapped point must be uniform (use
                "true" here unless you know what you are doing)
@@ -610,7 +610,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @param hash_fn the hash function to use (typically "SHA-256" or "SHA-512")
       * @param input the input to hash
       * @param input_len length of input in bytes
-      * @param domain_sep a domain seperator
+      * @param domain_sep a domain separator
       * @param random_oracle if the mapped point must be uniform (use
                "true" here unless you know what you are doing)
       */

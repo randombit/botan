@@ -48,9 +48,9 @@
 namespace Botan::TPM2 {
 
 /**
- * Check the return code and throw an exception if some error occured.
+ * Check the return code and throw an exception if some error occurred.
  *
- * @throws TPM2::Error if an error occured.
+ * @throws TPM2::Error if an error occurred.
  */
 constexpr void check_rc(std::string_view location, TSS2_RC rc) {
    if(rc != TSS2_RC_SUCCESS) {
@@ -59,13 +59,13 @@ constexpr void check_rc(std::string_view location, TSS2_RC rc) {
 }
 
 /**
- * Check the return code and throw an exception if an unexpected error occured.
+ * Check the return code and throw an exception if an unexpected error occurred.
  *
  * Errors that are listed in the `expected_errors` parameter are considered
  * expected and will not cause an exception to be thrown. Instead the error
  * code is decoded and returned to the caller for further processing.
  *
- * @throws TPM2::Error if an unexpected error occured.
+ * @throws TPM2::Error if an unexpected error occurred.
  * @returns TSS2_RC_SUCCESS or one of the expected error codes.
  */
 template <TSS2_RC... expected_errors>
@@ -76,7 +76,7 @@ template <TSS2_RC... expected_errors>
       return rc;
    }
 
-   // An error occured, we need to decode it to check if it was expected.
+   // An error occurred, we need to decode it to check if it was expected.
    const TSS2_RC decoded_rc = get_raw_rc(rc);
 
    // Check if the error is one of the expected and return those to the caller.
@@ -250,7 +250,7 @@ PropMap(MaskT, FieldPointerT) -> PropMap<MaskT, FieldPointerT>;
  *
  * @tparam UnderlyingT         the TPMA_* bit field type
  * @tparam AttributeWrapperT   the C++ struct type that wraps the TPMA_* bit field
- * @tparam props               a bunch of std::pair mappping boolean members of
+ * @tparam props               a bunch of std::pair mapping boolean members of
  *                             AttributeWrapperT to the bit masks of the TPMA_* type
  */
 template <std::unsigned_integral UnderlyingT,

@@ -5,7 +5,7 @@
 Botan is released under the Simplified BSD License (see license.txt)
 
 Compare two JSON files output by `botan speed --format=json` and report
-on noticable improvements or regressions in performance.
+on noticeable improvements or regressions in performance.
 """
 
 import json
@@ -145,7 +145,7 @@ def main(args = None):
             rep1 = rep1[1:]
 
     for (pct, algo) in sorted(speedups, key=lambda v: v[0], reverse=True):
-        print("+ %s improvment in %s" % (format_pct(pct), algo))
+        print("+ %s improvement in %s" % (format_pct(pct), algo))
 
     for (pct, algo) in sorted(slowdowns, key=lambda v: v[0]):
         print("- %s regression in %s" % (format_pct(pct), algo))

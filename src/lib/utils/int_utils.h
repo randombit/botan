@@ -49,7 +49,7 @@ constexpr inline std::optional<T> checked_mul(T a, T b) {
    // https://stackoverflow.com/questions/24795651
    const T r = (1U * a) * b;
    // If a == 0 then the multiply certainly did not overflow
-   // Otherwise r / a == b unless overflow occured
+   // Otherwise r / a == b unless overflow occurred
    if(a != 0 && r / a != b) {
       return {};
    }

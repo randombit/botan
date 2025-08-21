@@ -123,7 +123,7 @@ def main(args=None):
             corpus_files = [os.path.join(corpus_subdir, l) for l in sorted(list(os.listdir(corpus_subdir)))]
 
             # We have to do this hack because multiprocessing's Pool.map doesn't support
-            # passing any initial arguments, just the single iteratable
+            # passing any initial arguments, just the single iterable
             map_args = [(fuzzer_bin, f) for f in corpus_files]
 
             start = time.time()

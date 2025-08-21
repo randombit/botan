@@ -111,7 +111,7 @@ class SPHINCS_Plus_Test_Base : public Text_Based_Test {
          // push the entropy used for signing twice, as we want to perform two
          // signing operations
          const auto entropy_for_signing = kat_rng.random_vec<std::vector<uint8_t>>(1 * params.n());
-         // Depending on the configuation, upto 2 signatures with 'Randomized' are created
+         // Depending on the configuration, up to 2 signatures with 'Randomized' are created
          fixed_rng.add_entropy(entropy_for_signing);
          fixed_rng.add_entropy(entropy_for_signing);
 

@@ -45,7 +45,7 @@ TLS
 
 Starting with Botan 3.0 TLS 1.3 is supported.
 This development required a number of backward-incompatible changes to
-accomodate the protocol differences to TLS 1.2, which is still supported.
+accommodate the protocol differences to TLS 1.2, which is still supported.
 
 Build modules
 ^^^^^^^^^^^^^
@@ -201,7 +201,7 @@ This new approach allows TLS servers to handle sessions both stateless (as
 self-contained encrypted and authenticated tickets) and stateful (identified
 with unique database handles).
 
-To accomodates this flexibility the `Session_Manager` base class API has changed
+To accommodate this flexibility the `Session_Manager` base class API has changed
 drastically and is now responsible for creation, storage and management of both
 stateful sessions and stateless session tickets.
 Sub-classes therefore gain full control over the session ticket's structure and
@@ -453,5 +453,5 @@ of bytes per request (most notable ``HMAC_DRBG`` with a 64kB default). Botan 2.x
 
 Applications that rely on a static seed for deterministic RNG output might
 observe a different byte stream in such cases. As a workaround, users are
-advised to "mimick" the legacy behaviour by manually pulling from the RNG in
+advised to "mimic" the legacy behaviour by manually pulling from the RNG in
 "byte limit"-sized chunks and provide the "input" with each invocation.

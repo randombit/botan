@@ -33,7 +33,7 @@ API follows a few simple rules:
   uint8_t for binary.
 
 - No ownership of memory transfers across the API boundary. The API will consume
-  data from const pointers with specifed lengths. Outputs are either placed into
+  data from const pointers with specified lengths. Outputs are either placed into
   buffers provided by (and allocated by) the caller, or are returned via a
   callback (what the FFI layer calls "view" functions).
 
@@ -1127,7 +1127,7 @@ BOTAN_FFI_EXPORT(3, 8) int botan_oid_destroy(botan_asn1_oid_t oid);
 
 /**
 * Create an OID from a string, either dot notation (e.g. '1.2.3.4') or a registered name (e.g. 'RSA')
-* @param oid hanlder to the resulting OID
+* @param oid handle to the resulting OID
 * @param oid_str the name of the OID to create
 * @returns negative number on error, or zero on success
 */
@@ -2598,7 +2598,7 @@ BOTAN_FFI_EXPORT(3, 6)
 int botan_tpm2_ctx_enable_crypto_backend(botan_tpm2_ctx_t ctx, botan_rng_t rng);
 
 /**
-* Frees all resouces of a TPM2 context
+* Frees all resources of a TPM2 context
 * @param ctx TPM2 context
 * @return 0 on success
 */
@@ -2621,7 +2621,7 @@ int botan_tpm2_enable_crypto_backend(botan_tpm2_crypto_backend_state_t* cbs_out,
                                      botan_rng_t rng);
 
 /**
-* Frees all resouces of a TPM2 Crypto Callback State
+* Frees all resources of a TPM2 Crypto Callback State
 * Note that this does not attempt to de-register the crypto backend,
 * it just frees the resource pointed to by @p cbs. Use the ESAPI function
 * ``Esys_SetCryptoCallbacks(ctx, nullptr)`` to deregister manually.

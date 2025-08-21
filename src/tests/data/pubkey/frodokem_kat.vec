@@ -1,4 +1,4 @@
-# This file was auto-generated from the reference implemention's KATs
+# This file was auto-generated from the reference implementation's KATs
 # See src/scripts/dev_tools/gen_frodo_kat.py
 
 [eFrodoKEM-640-AES]

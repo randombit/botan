@@ -104,7 +104,7 @@ class LMS_Params final {
       static LMS_Params create_or_throw(std::string_view hash_name, uint8_t h);
 
       /**
-       * @brief Retuns the LMS algorithm type.
+       * @brief Returns the LMS algorithm type.
        */
       LMS_Algorithm_Type algorithm_type() const { return m_algorithm_type; }
 

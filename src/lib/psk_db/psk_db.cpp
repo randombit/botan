@@ -78,7 +78,7 @@ secure_vector<uint8_t> Encrypted_PSK_Database::get(std::string_view name) const 
 
 void Encrypted_PSK_Database::set(std::string_view name, const uint8_t val[], size_t len) {
    /*
-   * Both as a basic precaution wrt key seperation, and specifically to prevent
+   * Both as a basic precaution wrt key separation, and specifically to prevent
    * cut-and-paste attacks against the database, each PSK is encrypted with a
    * distinct key which is derived by hashing the wrapped key name with HMAC.
    */

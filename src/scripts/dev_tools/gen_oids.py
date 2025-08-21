@@ -49,7 +49,7 @@ def render_static_oid(m):
 
     for (k, v) in m.items():
 
-        # Verify no collsions between any of the values
+        # Verify no collisions between any of the values
         oid_hc = hash_oid(v)
         if oid_hc in oid_hashes:
             raise Exception("Hash collision between %s and %s" % (v, oid_hashes[oid_hc]))
@@ -104,15 +104,15 @@ def main(args = None):
             raise Exception(line)
 
         oid = match.group(1)
-        nam = match.group(2)
+        name = match.group(2)
 
-        if nam not in str2oid and oid not in oid2str:
-            str2oid[nam] = oid
-            oid2str[oid] = nam
-        elif nam in str2oid:
-            dup_oids.append((nam, oid))
+        if name not in str2oid and oid not in oid2str:
+            str2oid[name] = oid
+            oid2str[oid] = name
+        elif name in str2oid:
+            dup_oids.append((name, oid))
         elif oid in oid2str:
-            aliases.append((nam, oid))
+            aliases.append((name, oid))
 
     this_script = sys.argv[0]
     date = datetime.date.today().strftime("%Y-%m-%d")

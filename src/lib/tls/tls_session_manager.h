@@ -85,7 +85,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
        * This method is only called on TLS clients.
        *
        * @param session to save
-       * @param handle a Session_Handle on which this session shoud by stored
+       * @param handle a Session_Handle on which this session should by stored
        */
       virtual void store(const Session& session, const Session_Handle& handle) = 0;
 
@@ -111,7 +111,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager /* NOLINT(*-special-member-function
        * @param callbacks callbacks to be used for session policy decisions
        * @param policy policy to be used for session policy decisions
        *
-       * @return a std::pair of the Session associated to the choosen PSK and
+       * @return a std::pair of the Session associated to the chosen PSK and
        *         the index of the selected ticket; std::nullopt if no PSK was
        *         chosen for usage (will result in a full handshake)
        *

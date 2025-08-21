@@ -61,7 +61,7 @@ using TestStdVector = Botan::Strong<std::vector<uint8_t>, struct TestStdVector_>
 using TestSecureVector = Botan::Strong<Botan::secure_vector<uint8_t>, struct TestSecureVector_>;
 
 Test::Result test_buffered_computation_convenience_api() {
-   // This is mainly to test compilability of the various container
+   // This is mainly to test compatibility of the various container
    // types as in and out parameters. Hence, we refrain from checking
    // the 'final' output everywhere.
    Test::Result result("Convenience API of Buffered_Computation");

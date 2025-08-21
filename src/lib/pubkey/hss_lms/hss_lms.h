@@ -108,7 +108,7 @@ BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
  * HSS-LMS(<hash>,HW(<h>,<w>),HW(<h>,<w>),...)
  *
  * e.g. 'HSS-LMS(SHA-256,HW(5,1),HW(5,1))' to use SHA-256 in a two-layer HSS instance
- * with a LMS tree hights 5 and w=1. The following parameters are allowed (which are
+ * with a LMS tree height 5 and w=1. The following parameters are allowed (which are
  * specified in RFC 8554 and draft-fluhrer-lms-more-parm-sets-11):
  *
  * hash: 'SHA-256', 'Truncated(SHA-256,192)', 'SHAKE-256(256)', SHAKE-256(192)

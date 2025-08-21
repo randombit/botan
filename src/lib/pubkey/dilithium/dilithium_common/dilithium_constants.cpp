@@ -67,7 +67,7 @@ DilithiumConstants::DilithiumConstants(DilithiumMode mode) :
          m_tau = DilithiumTau::_39;
          m_lambda = DilithiumLambda::_128;
          m_gamma1 = DilithiumGamma1::ToThe17th;
-         m_gamma2 = DilithiumGamma2::Qminus1DevidedBy88;
+         m_gamma2 = DilithiumGamma2::Qminus1DividedBy88;
          m_k = 4;
          m_l = 4;
          m_eta = DilithiumEta::_2;
@@ -80,7 +80,7 @@ DilithiumConstants::DilithiumConstants(DilithiumMode mode) :
          m_tau = DilithiumTau::_49;
          m_lambda = DilithiumLambda::_192;
          m_gamma1 = DilithiumGamma1::ToThe19th;
-         m_gamma2 = DilithiumGamma2::Qminus1DevidedBy32;
+         m_gamma2 = DilithiumGamma2::Qminus1DividedBy32;
          m_k = 6;
          m_l = 5;
          m_eta = DilithiumEta::_4;
@@ -93,7 +93,7 @@ DilithiumConstants::DilithiumConstants(DilithiumMode mode) :
          m_tau = DilithiumTau::_60;
          m_lambda = DilithiumLambda::_256;
          m_gamma1 = DilithiumGamma1::ToThe19th;
-         m_gamma2 = DilithiumGamma2::Qminus1DevidedBy32;
+         m_gamma2 = DilithiumGamma2::Qminus1DividedBy32;
          m_k = 8;
          m_l = 7;
          m_eta = DilithiumEta::_2;

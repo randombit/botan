@@ -252,7 +252,7 @@ class Channel_Impl {
       /**
        * Implementations use this to signal that the peer indicated a protocol
        * version downgrade. After calling `request_downgrade()` no further
-       * state changes must be perfomed by the implementation. Particularly, no
+       * state changes must be performed by the implementation. Particularly, no
        * further handshake messages must be emitted. Instead, they must yield
        * control flow back to the underlying Channel implementation to perform
        * the protocol version downgrade.

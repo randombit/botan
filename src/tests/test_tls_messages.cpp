@@ -143,7 +143,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
 
                   const std::vector<std::string> CNs = resp.signer_name().get_attribute("CN");
 
-                  // This is not requird by OCSP protocol, we are just using it as a test here
+                  // This is not required by OCSP protocol, we are just using it as a test here
                   if(result.test_eq("OCSP response has signer name", CNs.size(), 1)) {
                      result.test_eq("Expected name", CNs[0], expected_name);
                   }
@@ -287,23 +287,23 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
                   const auto dh_groups = supp_groups_ext.dh_groups();
                   const auto ec_groups = supp_groups_ext.ec_groups();
 
-                  std::vector<Botan::TLS::Named_Group> named_groupes;
+                  std::vector<Botan::TLS::Named_Group> named_groups;
                   std::merge(dh_groups.begin(),
                              dh_groups.end(),
                              ec_groups.begin(),
                              ec_groups.end(),
-                             std::back_inserter(named_groupes));
+                             std::back_inserter(named_groups));
 
                   result.confirm("supported_groups extension - size check",
-                                 (named_groupes.size() * 2) == expected_content.size());
+                                 (named_groups.size() * 2) == expected_content.size());
 
                   for(size_t i = 0; i < expected_content.size(); i += 2) {
                      const auto expected_named_group =
                         Botan::make_uint16(expected_content.at(i), expected_content.at(i + 1));
 
                      result.confirm("signature_algorithms_cert extension - named group check",
-                                    std::any_of(named_groupes.cbegin(),
-                                                named_groupes.cend(),
+                                    std::any_of(named_groups.cbegin(),
+                                                named_groups.cend(),
                                                 [&expected_named_group](const Botan::TLS::Named_Group& named_group) {
                                                    return static_cast<Botan::TLS::Named_Group>(expected_named_group) ==
                                                           named_group;

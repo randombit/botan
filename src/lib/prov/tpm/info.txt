@@ -4,7 +4,7 @@ TPM -> 20151126
 
 <module_info>
 name -> "TPM v1 Support (deprecated)"
-brief -> "Wrappers and Utilites to interact with TPM v1"
+brief -> "Wrappers and Utilities to interact with TPM v1"
 lifecycle -> "Deprecated"
 </module_info>
 

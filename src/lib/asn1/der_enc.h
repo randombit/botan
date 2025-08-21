@@ -55,8 +55,8 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
       * Return the encoded contents as a std::vector
       *
       * If using this function, instead pass a std::vector to the
-      * contructor of DER_Encoder where the output will be placed. This
-      * avoids several unecessary copies.
+      * constructor of DER_Encoder where the output will be placed. This
+      * avoids several unnecessary copies.
       */
       BOTAN_DEPRECATED("Use DER_Encoder(vector) instead") std::vector<uint8_t> get_contents_unlocked();
 

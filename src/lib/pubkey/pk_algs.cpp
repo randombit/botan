@@ -489,7 +489,7 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
                                                 std::string_view params,
                                                 std::string_view provider) {
    /*
-   * Default paramaters are chosen for work factor > 2**128 where possible
+   * Default parameters are chosen for work factor > 2**128 where possible
    */
 
 #if defined(BOTAN_HAS_X25519)

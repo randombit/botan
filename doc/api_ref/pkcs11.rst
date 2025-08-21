@@ -777,7 +777,7 @@ The following PIN and SO-PIN/PUK values are used in tests:
    Unlike the CardOS (4.4, 5.0, 5.3), the aforementioned SO-PIN/PUK is
    inappropriate for Gemalto (IDPrime MD 3840) cards, as it must be a byte array
    of length 24. For this reason some of the tests for Gemalto card involving
-   SO-PIN will fail.  You run into a risk of exceding login attempts and as a
+   SO-PIN will fail.  You run into a risk of exceeding login attempts and as a
    result locking your card!  Currently, specifying pin via command-line option
    is not implemented, and therefore the desired PIN must be modified in the
    header src/tests/test_pkcs11.h:
@@ -887,7 +887,7 @@ Test results
 
  - rng_add_entropy [5]_
 
-.. [53] Failing operations for CardOS 5.3 (middelware 5.5.1)
+.. [53] Failing operations for CardOS 5.3 (middleware 5.5.1)
 
  - ecdh_privkey_export [2]_
  - ecdh_generate_private_key [35]_

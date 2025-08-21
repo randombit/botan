@@ -152,8 +152,8 @@ class Certificate_Store_MacOS_Impl {
    public:
       /**
        * Wraps a list of search query parameters that are later passed into
-       * Apple's certifificate store API. The class provides some convenience
-       * functionality and handles the query paramenter's data lifetime.
+       * Apple's certificate store API. The class provides some convenience
+       * functionality and handles the query parameter's data lifetime.
        */
       class Query {
          public:
@@ -214,7 +214,7 @@ class Certificate_Store_MacOS_Impl {
             using Values = std::vector<CFTypeRef>;
 
             Data m_data_store;     //! makes sure that data parameters are kept alive
-            DataRefs m_data_refs;  //! keeps track of CFDataRef objects refering into \p m_data_store
+            DataRefs m_data_refs;  //! keeps track of CFDataRef objects referring into \p m_data_store
             Keys m_keys;           //! ordered list of search parameter keys
             Values m_values;       //! ordered list of search parameter values
       };

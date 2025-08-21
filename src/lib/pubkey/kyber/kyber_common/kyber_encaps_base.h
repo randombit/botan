@@ -25,7 +25,7 @@ class Kyber_KEM_Operation_Base {
    private:
       // The public key's matrix is pre-computed to avoid redundant work when
       // encapsulating multiple keys. This matrix is needed for encapsulation as
-      // well as for the FO transform in the decapsulation.
+      // well as for the Fujisaki-Okamoto transform in the decapsulation.
       KyberPolyMat m_At;
 };
 

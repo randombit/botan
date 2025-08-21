@@ -1,5 +1,5 @@
 /*
-* Base class for message authentiction codes
+* Base class for message authentication codes
 * (C) 1999-2007 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)

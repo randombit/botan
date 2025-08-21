@@ -1,5 +1,5 @@
 /*
- * FrodoKEM implemenation
+ * FrodoKEM implementation
  * Based on the MIT licensed reference implementation by the designers
  * (https://github.com/microsoft/PQCrypto-LWEKE/tree/master/src)
  *

@@ -152,7 +152,7 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
 
          auto C1 = EC_AffinePoint::from_bigint_xy(m_group, x1, y1);
 
-         // Here C1 is publically invalid, so no problem with early return:
+         // Here C1 is publicly invalid, so no problem with early return:
          if(!C1) {
             return secure_vector<uint8_t>();
          }

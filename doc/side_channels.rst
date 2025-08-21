@@ -172,7 +172,7 @@ ECC scalar multiplication
 --------------------------
 
 Several elliptic curve scalar multiplication algorithms are implemented to
-accomodate different use cases. The implementations can be found in
+accommodate different use cases. The implementations can be found in
 pcurves_impl.h as PrecomputedBaseMulTable, WindowedMulTable, and
 WindowedMul2Table.
 
@@ -274,7 +274,7 @@ is based on code by Mike Hamburg [VectorAes], see aes_vperm.cpp.
 
 On all other processors, a constant time bitsliced implementation is used. This
 is typically slower than the vector permute implementation, and additionally for
-best performance multiple blocks must be processed in parellel.  So modes such
+best performance multiple blocks must be processed in parallel.  So modes such
 as CTR, GCM or XTS are relatively fast, but others such as CBC encryption
 suffer.
 

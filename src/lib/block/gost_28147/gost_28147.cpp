@@ -26,7 +26,7 @@ uint8_t GOST_28147_89_Params::sbox_pair(size_t row, size_t col) const {
 }
 
 GOST_28147_89_Params::GOST_28147_89_Params(std::string_view n) : m_name(n) {
-   // Encoded in the packed fromat from RFC 4357
+   // Encoded in the packed format from RFC 4357
 
    // GostR3411_94_TestParamSet (OID 1.2.643.2.2.31.0)
    static const uint8_t GOST_R_3411_TEST_PARAMS[64] = {

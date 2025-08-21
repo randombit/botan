@@ -19,7 +19,6 @@
 #include <functional>
 #include <optional>
 #include <span>
-#include <string>
 #include <tuple>
 #include <variant>
 #include <vector>
@@ -48,8 +47,8 @@ RetT reduce(const std::vector<KeyT>& keys, RetT acc, ReducerT reducer)
 /**
 * Existence check for values
 */
-template <typename T, typename OT>
-bool value_exists(const std::vector<T>& vec, const OT& val) {
+template <typename T, typename V>
+bool value_exists(const std::vector<T>& vec, const V& val) {
    for(size_t i = 0; i != vec.size(); ++i) {
       if(vec[i] == val) {
          return true;
@@ -137,7 +136,7 @@ class BufferStuffer final {
 
       /**
        * @returns a span for the next @p bytes bytes in the concatenated buffer.
-       *          Checks that the buffer is not exceded.
+       *          Checks that the buffer is not exceeded.
        */
       constexpr std::span<uint8_t> next(size_t bytes) {
          BOTAN_STATE_CHECK(m_buffer.size() >= bytes);

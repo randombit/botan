@@ -1682,7 +1682,7 @@ std::shared_ptr<const PrimeOrderCurve> PCurveInstance::from_params(
    // should work fine with any such prime and we are relying on the higher
    // levels to prevent creating such a group in the first place
    //
-   // TODO(Botan4) increase the 128 here to 192 when the cooresponding EC_Group constructor is changed
+   // TODO(Botan4) increase the 128 here to 192 when the corresponding EC_Group constructor is changed
    //
    if(p_bits != 521 && p_bits != 239 && (p_bits < 128 || p_bits > 512 || p_bits % 32 != 0)) {
       return {};

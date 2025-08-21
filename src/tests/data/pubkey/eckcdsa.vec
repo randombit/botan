@@ -1,6 +1,6 @@
 
 # Taken from Korean TTA Standard TTAK.KO-12.0015/R2
-# "Digital Signature Mechanism with Appendix - Part 3: Korean Certificate-based Digitial Signature Algorithm using Elliptic Curves (EC-KCDSA)"
+# "Digital Signature Mechanism with Appendix - Part 3: Korean Certificate-based Digital Signature Algorithm using Elliptic Curves (EC-KCDSA)"
 # http://www.tta.or.kr/include/Download.jsp?filename=stnfile/TTAK.KO-12.0015_R2.pdf
 
 # Same as ISO/IEC 14888-3:2018 - F.7.1 Example 1: Field Fp, 224-bit Prime p, SHA-224

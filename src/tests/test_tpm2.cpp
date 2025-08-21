@@ -627,7 +627,7 @@ std::vector<Test::Result> test_tpm2_rsa() {
                const auto attrs = session->attributes();
                result.confirm("encrypt flag was not cleared by ESAPI", attrs.encrypt);
 
-               // orignal message again
+               // original message again
                result.confirm("verification still successful", verify(message, signature));
             }),
 
@@ -1007,7 +1007,7 @@ std::vector<Test::Result> test_tpm2_ecc() {
                   const auto attrs = session->attributes();
                   result.confirm("encrypt flag was not cleared by ESAPI", attrs.encrypt);
 
-                  // orignal message again
+                  // original message again
                   result.confirm("verification still successful", verify(message, signature));
                }),
 

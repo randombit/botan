@@ -44,7 +44,7 @@ using FrodoPackedMatrix = Strong<std::vector<uint8_t>, struct FrodoPackedMatrix_
 using FrodoSerializedMatrix = Strong<secure_vector<uint8_t>, struct FrodoSerializedMatrix_>;
 
 // Constant byte 0x5F/0x96 given to SHAKE for domain separation
-using FrodoDomainSeparator = Strong<std::array<uint8_t, 1>, struct FrodoDoaminSeparator_>;
+using FrodoDomainSeparator = Strong<std::array<uint8_t, 1>, struct FrodoDomainSeparator_>;
 
 // Bytes of u/u'
 using FrodoPlaintext = Strong<secure_vector<uint8_t>, struct FrodoPlaintext_>;
@@ -52,7 +52,7 @@ using FrodoPlaintext = Strong<secure_vector<uint8_t>, struct FrodoPlaintext_>;
 // Bytes of salt
 using FrodoSalt = Strong<std::vector<uint8_t>, struct FrodoSalt_>;
 
-// Bytes of k/k' aka intermediate shared secret in FO transform
+// Bytes of k/k' aka intermediate shared secret in Fujisaki-Okamoto transform
 using FrodoIntermediateSharedSecret = Strong<secure_vector<uint8_t>, struct FrodoIntermediateSharedSecret_>;
 
 }  // namespace Botan

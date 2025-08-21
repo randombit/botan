@@ -62,7 +62,7 @@ class BOTAN_PUBLIC_API(2, 0) BlockCipher : public SymmetricAlgorithm {
       virtual size_t parallelism() const { return 1; }
 
       /**
-      * @return prefererred parallelism of this cipher in bytes
+      * @return preferred parallelism of this cipher in bytes
       */
       size_t parallel_bytes() const { return parallelism() * block_size() * BlockCipher::ParallelismMult; }
 
@@ -83,7 +83,7 @@ class BOTAN_PUBLIC_API(2, 0) BlockCipher : public SymmetricAlgorithm {
 
       /**
       * Decrypt a block.
-      * @param in The ciphertext block to be decypted as a byte array.
+      * @param in The ciphertext block to be decrypted as a byte array.
       * Must be of length block_size().
       * @param out The byte array designated to hold the decrypted block.
       * Must be of length block_size().

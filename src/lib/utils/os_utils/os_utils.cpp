@@ -593,7 +593,7 @@ std::vector<void*> OS::allocate_locked_pages(size_t count) {
 
       // Attempts to name the data page
       page_named(ptr, 3 * page_size);
-      // Make guard page preceeding the data page
+      // Make guard page preceding the data page
       page_prohibit_access(static_cast<uint8_t*>(ptr));
       // Make guard page following the data page
       page_prohibit_access(static_cast<uint8_t*>(ptr) + 2 * page_size);

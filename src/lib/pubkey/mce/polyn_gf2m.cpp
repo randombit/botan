@@ -462,9 +462,9 @@ std::pair<polyn_gf2m, polyn_gf2m> polyn_gf2m::eea_with_coefficients(const polyn_
             int cond_r = r0.get_degree() == 0;
             /**
             * Now come the conditions for all odd coefficients of this sigma
-            * candiate. If they are all fulfilled, then we know that we have a low
+            * candidate. If they are all fulfilled, then we know that we have a low
             * weight error vector, since the key-equation solving EEA is skipped if
-            * the degree of tau^2 is low (=m_deg(u0)) and all its odd cofficients are
+            * the degree of tau^2 is low (=m_deg(u0)) and all its odd coefficients are
             * zero (they would cause "full-length" contributions from the square
             * root computation).
             */

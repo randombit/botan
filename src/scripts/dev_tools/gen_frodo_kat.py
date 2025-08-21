@@ -4,7 +4,7 @@
 # Strips the KAT harness in the FrodoKEM reference implementation down
 # to a less space consuming version. This script was used to generate
 # `src/tests/data/pubkey/frodokem_kat.vec` test data from the *.rsp files in
-# the reference implemenation repository.
+# the reference implementation repository.
 #
 # See here: https://github.com/microsoft/PQCrypto-LWEKE/tree/master/KAT
 #
@@ -110,7 +110,7 @@ def main(args = None):
         args = sys.argv
 
     with open('src/tests/data/pubkey/frodokem_kat.vec', 'w') as output:
-        print("# This file was auto-generated from the reference implemention's KATs", file=output)
+        print("# This file was auto-generated from the reference implementation's KATs", file=output)
         print("# See src/scripts/dev_tools/gen_frodo_kat.py\n", file=output)
 
         for file in args[1:]:

@@ -75,7 +75,7 @@ class BOTAN_TEST_API HSS_LMS_Params final {
        * @brief Construct the HSS-LMS parameters form an algorithm parameter string.
        *
        * The HSS/LMS instance to use for creating new keys is defined using an algorithm parameter string,
-       * i.e. to define which hash function (hash), LMS tree hights (h)
+       * i.e. to define which hash function (hash), LMS tree height (h)
        * and OTS Winternitz coefficient widths (w) to use. The syntax is the following:
        *
        * HSS-LMS(<hash>,HW(<h>,<w>),HW(<h>,<w>),...)

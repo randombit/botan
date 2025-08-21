@@ -37,7 +37,7 @@ CRL_Entry::CRL_Entry(const X509_Certificate& cert, CRL_Code why) {
 }
 
 /*
-* Compare two CRL_Entrys for equality
+* Compare two CRL_Entry structs for equality
 */
 bool operator==(const CRL_Entry& a1, const CRL_Entry& a2) {
    if(a1.serial_number() != a2.serial_number()) {
@@ -53,7 +53,7 @@ bool operator==(const CRL_Entry& a1, const CRL_Entry& a2) {
 }
 
 /*
-* Compare two CRL_Entrys for inequality
+* Compare two CRL_Entry structs for inequality
 */
 bool operator!=(const CRL_Entry& a1, const CRL_Entry& a2) {
    return !(a1 == a2);

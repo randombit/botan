@@ -1,6 +1,6 @@
 /*
  * XMSS Private Key
- * An XMSS: Extended Hash-Based Siganture private key.
+ * An XMSS: Extended Hash-Based Signature private key.
  * The XMSS private key does not support the X509 and PKCS7 standard. Instead
  * the raw format described in [1] is used.
  *
@@ -178,7 +178,7 @@ class XMSS_PrivateKey_Internal {
       size_t reserve_unused_leaf_index() {
          size_t idx = (static_cast<std::atomic<size_t>&>(*recover_global_leaf_index())).fetch_add(1);
          if(idx >= m_xmss_params.total_number_of_signatures()) {
-            throw Decoding_Error("XMSS private key, one time signatures exhaused");
+            throw Decoding_Error("XMSS private key, one time signatures exhausted");
          }
          return idx;
       }
@@ -236,7 +236,7 @@ secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx, size_t targe
                 "Start index must be divisible by 2^{target node height}.");
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
-   // dertermine number of parallel tasks to split the tree_hashing into.
+   // determine number of parallel tasks to split the tree_hashing into.
 
    Thread_Pool& thread_pool = Thread_Pool::global_instance();
 

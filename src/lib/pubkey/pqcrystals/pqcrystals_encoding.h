@@ -107,7 +107,7 @@ struct BitPackingTrait final {
  *
  * Note that this bit-packing algorithm is inefficient if the bit-length of the
  * coefficients is a multiple of 8. In that case, a byte-level encoding (that
- * might need to take endianess into account) would be more efficient. However,
+ * might need to take endianness into account) would be more efficient. However,
  * neither Kyber nor Dilithium instantiate bit-packings with such a value range.
  *
  * @tparam range the upper bound of the coefficient range.

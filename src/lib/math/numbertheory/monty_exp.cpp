@@ -15,9 +15,9 @@
 
 namespace Botan {
 
-class Montgomery_Exponentation_State final {
+class Montgomery_Exponentiation_State final {
    public:
-      Montgomery_Exponentation_State(const Montgomery_Int& g, size_t window_bits, bool const_time);
+      Montgomery_Exponentiation_State(const Montgomery_Int& g, size_t window_bits, bool const_time);
 
       Montgomery_Int exponentiation(const BigInt& k, size_t max_k_bits) const;
 
@@ -29,9 +29,9 @@ class Montgomery_Exponentation_State final {
       size_t m_window_bits;
 };
 
-Montgomery_Exponentation_State::Montgomery_Exponentation_State(const Montgomery_Int& g,
-                                                               size_t window_bits,
-                                                               bool const_time) :
+Montgomery_Exponentiation_State::Montgomery_Exponentiation_State(const Montgomery_Int& g,
+                                                                 size_t window_bits,
+                                                                 bool const_time) :
       m_params(g._params()), m_window_bits(window_bits == 0 ? 4 : window_bits) {
    if(m_window_bits < 1 || m_window_bits > 12) {  // really even 8 is too large ...
       throw Invalid_Argument("Invalid window bits for Montgomery exponentiation");
@@ -83,7 +83,7 @@ void const_time_lookup(secure_vector<word>& output, const std::vector<Montgomery
 
 }  // namespace
 
-Montgomery_Int Montgomery_Exponentation_State::exponentiation(const BigInt& scalar, size_t max_k_bits) const {
+Montgomery_Int Montgomery_Exponentiation_State::exponentiation(const BigInt& scalar, size_t max_k_bits) const {
    BOTAN_DEBUG_ASSERT(scalar.bits() <= max_k_bits);
    // TODO add a const-time implementation of above assert and use it in release builds
 
@@ -109,7 +109,7 @@ Montgomery_Int Montgomery_Exponentation_State::exponentiation(const BigInt& scal
    return x;
 }
 
-Montgomery_Int Montgomery_Exponentation_State::exponentiation_vartime(const BigInt& scalar) const {
+Montgomery_Int Montgomery_Exponentiation_State::exponentiation_vartime(const BigInt& scalar) const {
    const size_t exp_nibbles = (scalar.bits() + m_window_bits - 1) / m_window_bits;
 
    secure_vector<word> ws(2 * m_params.p_words());
@@ -133,28 +133,28 @@ Montgomery_Int Montgomery_Exponentation_State::exponentiation_vartime(const BigI
    return x;
 }
 
-std::shared_ptr<const Montgomery_Exponentation_State> monty_precompute(const Montgomery_Int& g,
-                                                                       size_t window_bits,
-                                                                       bool const_time) {
-   return std::make_shared<const Montgomery_Exponentation_State>(g, window_bits, const_time);
+std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Int& g,
+                                                                        size_t window_bits,
+                                                                        bool const_time) {
+   return std::make_shared<const Montgomery_Exponentiation_State>(g, window_bits, const_time);
 }
 
-std::shared_ptr<const Montgomery_Exponentation_State> monty_precompute(const Montgomery_Params& params,
-                                                                       const BigInt& g,
-                                                                       size_t window_bits,
-                                                                       bool const_time) {
+std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Montgomery_Params& params,
+                                                                        const BigInt& g,
+                                                                        size_t window_bits,
+                                                                        bool const_time) {
    BOTAN_ARG_CHECK(g < params.p(), "Montgomery base too big");
    Montgomery_Int monty_g(params, g);
    return monty_precompute(monty_g, window_bits, const_time);
 }
 
-Montgomery_Int monty_execute(const Montgomery_Exponentation_State& precomputed_state,
+Montgomery_Int monty_execute(const Montgomery_Exponentiation_State& precomputed_state,
                              const BigInt& k,
                              size_t max_k_bits) {
    return precomputed_state.exponentiation(k, max_k_bits);
 }
 
-Montgomery_Int monty_execute_vartime(const Montgomery_Exponentation_State& precomputed_state, const BigInt& k) {
+Montgomery_Int monty_execute_vartime(const Montgomery_Exponentiation_State& precomputed_state, const BigInt& k) {
    return precomputed_state.exponentiation_vartime(k);
 }
 

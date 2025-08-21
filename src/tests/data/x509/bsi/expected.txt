@@ -3,7 +3,7 @@ algo_strength_02$Hash function used is considered too weak for security
 algo_strength_03$Signature error
 common_01$Verified
 common_02$Cannot establish trust
-common_03$CERTIFICATE decoding failed with X.509 Certificate had differing algorithm identifers in inner and outer ID fields
+common_03$CERTIFICATE decoding failed with X.509 Certificate had differing algorithm identifiers in inner and outer ID fields
 common_04$Certificate signed with unknown/unavailable algorithm
 common_05$CERTIFICATE decoding failed with BER: Value truncated
 common_06$Warning: Certificate serial number is negative

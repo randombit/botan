@@ -76,7 +76,7 @@ def prepend_destdir(path):
             raise PrependDestdirError("--prefix must be an absolute path when DESTDIR is set.")
 
         path = os.path.normpath(path)
-        # Remove / or \ prefixes if existent to accomodate for os.path.join()
+        # Remove / or \ prefixes if existent to accommodate for os.path.join()
         path = path.lstrip(os.path.sep)
         path = os.path.join(destdir, path)
 

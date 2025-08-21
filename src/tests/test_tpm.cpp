@@ -28,7 +28,7 @@ class TPM_Tests final : public Test {
             ctx.reset(new Botan::TPM_Context(pin_cb, nullptr));
             result.test_success("Created TPM context");
          } catch(Botan::TPM_Error& e) {
-            result.test_success("Error conecting to TPM, skipping tests");
+            result.test_success("Error connecting to TPM, skipping tests");
             return {result};
          }
 

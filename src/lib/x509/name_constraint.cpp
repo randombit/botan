@@ -243,18 +243,18 @@ bool GeneralName::matches_dns(std::string_view name, std::string_view constraint
 bool GeneralName::matches_dn(const X509_DN& name, const X509_DN& constraint) {
    const auto attr = name.get_attributes();
    bool ret = true;
-   size_t trys = 0;
+   size_t tries = 0;
 
    for(const auto& c : constraint.dn_info()) {
       auto i = attr.equal_range(c.first);
 
       if(i.first != i.second) {
-         trys += 1;
+         tries += 1;
          ret = ret && (i.first->second == c.second.value());
       }
    }
 
-   return trys > 0 && ret;
+   return tries > 0 && ret;
 }
 
 std::ostream& operator<<(std::ostream& os, const GeneralName& gn) {

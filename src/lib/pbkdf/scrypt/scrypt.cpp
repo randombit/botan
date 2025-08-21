@@ -44,7 +44,7 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
    * Some rough relations between scrypt parameters and runtime.
    * Denote here by stime(N,r,p) the msec it takes to run scrypt.
    *
-   * Emperically for smaller sizes:
+   * Empirically for smaller sizes:
    * stime(N,8*r,p) / stime(N,r,p) is ~ 6-7
    * stime(N,r,8*p) / stime(N,r,8*p) is ~ 7
    * stime(2*N,r,p) / stime(N,r,p) is ~ 2

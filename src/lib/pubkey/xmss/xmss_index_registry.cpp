@@ -1,7 +1,7 @@
 /*
  * XMSS Index Registry
  * A registry for XMSS private keys, keeps track of the leaf index for
- * independend copies of the same key.
+ * independent copies of the same key.
  * (C) 2016 Matthias Gierlings
  *
  * Botan is released under the Simplified BSD License (see license.txt)
