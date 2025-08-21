@@ -340,6 +340,7 @@ class Speed final : public Command {
             "SHA-512",
             "SHA-3(256)",
             "SHA-3(512)",
+            "Ascon-Hash256",
             "RIPEMD-160",
             "Skein-512",
             "Blake2b",
@@ -348,6 +349,7 @@ class Speed final : public Command {
             /* XOFs */
             "SHAKE-128",
             "SHAKE-256",
+            "Ascon-XOF128",
 
             /* MACs */
             "CMAC(AES-128)",

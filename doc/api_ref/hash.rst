@@ -97,6 +97,44 @@ Available Hash Functions
 The following cryptographic hash functions are implemented. If in doubt,
 any of SHA-384, SHA-3, or BLAKE2b are fine choices.
 
+Ascon-Hash256
+^^^^^^^^^^^^^
+
+Available if ``BOTAN_HAS_ASCON_HASH256`` is defined.
+
+A hash function based on the Ascon permutation, specifically designed to allow
+small footprint implementations. Its main use case is in constrained
+environments, such as IoT devices where traditional cryptographic functions
+may be too resource intensive.
+
+Unless you are interoperating with an existing device which due to resource
+constraints can only use Ascon, prefer more typical hashes such as SHA-256,
+SHA-512, or SHA-3.
+
+This hash function is standardized by NIST in SP.800-232. It is not compatible
+with earlier versions of the Ascon specification.
+
+Algorithm specification name: ``Ascon-Hash256``
+
+Ascon-XOF128
+^^^^^^^^^^^^
+
+Available if ``BOTAN_HAS_ASCON_XOF128`` is defined.
+
+An eXtensible Output Functions (XOF) based on the Ascon permutation. Just like
+the described Ascon-Hash above, its main use case is in constrained
+environments, such as IoT devices where traditional cryptographic functions
+may be too resource intensive.
+
+Unless you are interoperating with an existing device which due to resource
+constraints can only use Ascon, prefer the more typical XOF SHAKE-128, or
+SHAKE-512.
+
+This XOF is standardized by NIST in SP.800-232. It is not compatible
+with earlier versions of the Ascon specification.
+
+Algorithm specification name: ``Ascon-XOF128``
+
 BLAKE2b
 ^^^^^^^^^
 

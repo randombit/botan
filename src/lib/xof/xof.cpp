@@ -15,6 +15,10 @@
    #include <botan/internal/shake_xof.h>
 #endif
 
+#if defined(BOTAN_HAS_ASCON_XOF128)
+   #include <botan/internal/ascon_xof128.h>
+#endif
+
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
 
@@ -34,6 +38,12 @@ std::unique_ptr<XOF> XOF::create(std::string_view algo_spec, std::string_view pr
    }
    if(req.algo_name() == "SHAKE-256" && req.arg_count() == 0) {
       return std::make_unique<SHAKE_256_XOF>();
+   }
+#endif
+
+#if defined(BOTAN_HAS_ASCON_XOF128)
+   if(req.algo_name() == "Ascon-XOF128" && req.arg_count() == 0) {
+      return std::make_unique<Ascon_XOF128>();
    }
 #endif
 

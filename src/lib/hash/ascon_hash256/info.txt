@@ -1,0 +1,11 @@
+<defines>
+ASCON_HASH256 -> 20250816
+</defines>
+
+<module_info>
+name -> "Ascon-Hash256"
+</module_info>
+
+<requires>
+ascon_perm
+</requires>
