@@ -28,6 +28,7 @@ std::vector<std::pair<std::string, Botan::X509_DN>> get_utf8_dn_alternatives();
 
 std::vector<uint8_t> get_key_id();
 std::string get_subject_cn();
+std::vector<uint8_t> get_serial_number();
 
 std::vector<uint8_t> get_pubkey_sha1_of_cert_with_different_key_id();
 Botan::X509_DN get_dn_of_cert_with_different_key_id();

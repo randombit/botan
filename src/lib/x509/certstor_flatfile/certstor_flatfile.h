@@ -60,6 +60,9 @@ class BOTAN_PUBLIC_API(2, 11) Flatfile_Certificate_Store final : public Certific
       std::optional<X509_Certificate> find_cert_by_raw_subject_dn_sha256(
          const std::vector<uint8_t>& subject_hash) const override;
 
+      std::optional<X509_Certificate> find_cert_by_issuer_dn_and_serial_number(
+         const X509_DN& issuer_dn, std::span<const uint8_t> serial_number) const override;
+
       /**
        * Fetching CRLs is not supported by this certificate store. This will
        * always return an empty list.
@@ -71,6 +74,7 @@ class BOTAN_PUBLIC_API(2, 11) Flatfile_Certificate_Store final : public Certific
       std::map<X509_DN, std::vector<X509_Certificate>> m_dn_to_cert;
       std::map<std::vector<uint8_t>, std::optional<X509_Certificate>> m_pubkey_sha1_to_cert;
       std::map<std::vector<uint8_t>, std::optional<X509_Certificate>> m_subject_dn_sha256_to_cert;
+      std::map<X509_DN, std::vector<X509_Certificate>> m_issuer_dn_to_cert;
 };
 }  // namespace Botan
 

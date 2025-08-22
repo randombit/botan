@@ -37,6 +37,7 @@ vgcore.*
 /*.sublime-project
 /*.sublime-workspace
 /.editorconfig
+/.vscode
 
 # Archive files
 *.tgz

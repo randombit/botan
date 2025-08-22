@@ -267,8 +267,8 @@ Test::Result test_certstor_sqlite3_find_all_certs_test(const std::vector<Certifi
 
    #endif
 
-Test::Result test_certstor_find_hash_subject(const std::vector<CertificateAndKey>& certsandkeys) {
-   Test::Result result("Certificate Store - Find by subject hash");
+Test::Result test_certstor_all_finders(const std::vector<CertificateAndKey>& certsandkeys) {
+   Test::Result result("Certificate Store - Test all finders");
 
    try {
       Botan::Certificate_Store_In_Memory store;
@@ -279,15 +279,33 @@ Test::Result test_certstor_find_hash_subject(const std::vector<CertificateAndKey
 
       for(const auto& certandkey : certsandkeys) {
          const auto& cert = certandkey.certificate();
-         const auto hash = cert.raw_subject_dn_sha256();
 
-         const auto found = store.find_cert_by_raw_subject_dn_sha256(hash);
-         if(!found) {
-            result.test_failure("Can't retrieve certificate " + cert.fingerprint("SHA-1"));
-            return result;
+         // find by subject hash
+         {
+            const auto hash = cert.raw_subject_dn_sha256();
+
+            const auto found = store.find_cert_by_raw_subject_dn_sha256(hash);
+            if(!found) {
+               result.test_failure("Can't retrieve certificate " + cert.fingerprint("SHA-1"));
+               return result;
+            }
+
+            result.test_eq("Got wrong certificate", hash, found->raw_subject_dn_sha256());
          }
 
-         result.test_eq("Got wrong certificate", hash, found->raw_subject_dn_sha256());
+         // find by issuer dn and serial number
+         {
+            const auto& issuer_dn = cert.issuer_dn();
+            const auto& serial_number = cert.serial_number();
+
+            const auto found = store.find_cert_by_issuer_dn_and_serial_number(issuer_dn, serial_number);
+            if(!found) {
+               result.test_failure("Can't retrieve certificate " + cert.fingerprint("SHA-1"));
+               return result;
+            }
+
+            result.test_eq("Got wrong certificate", serial_number, found->serial_number());
+         }
       }
 
       const auto found = store.find_cert_by_raw_subject_dn_sha256(std::vector<uint8_t>(32, 0));
@@ -363,7 +381,7 @@ class Certstor_Tests final : public Test {
 
          std::vector<Test::Result> results;
 
-         results.push_back(test_certstor_find_hash_subject(certsandkeys));
+         results.push_back(test_certstor_all_finders(certsandkeys));
          results.push_back(test_certstor_load_allcert());
    #if defined(BOTAN_HAS_CERTSTOR_SQLITE3)
          results.push_back(test_certstor_sqlite3_insert_find_remove_test(certsandkeys));
