@@ -222,10 +222,97 @@ BigInt ct_modulo(const BigInt& x, const BigInt& y) {
    return r;
 }
 
+BigInt vartime_divide_pow2k(size_t k, const BigInt& y_arg) {
+   BOTAN_ARG_CHECK(!y_arg.is_zero(), "Cannot divide by zero");
+   BOTAN_ARG_CHECK(!y_arg.is_negative(), "Negative divisor not supported");
+   BOTAN_ARG_CHECK(k > 1, "Invalid k");
+
+   BigInt y = y_arg;
+
+   const size_t y_words = y.sig_words();
+
+   BOTAN_ASSERT_NOMSG(y_words > 0);
+
+   // Calculate shifts needed to normalize y with high bit set
+   const size_t shifts = y.top_bits_free();
+
+   if(shifts > 0) {
+      y <<= shifts;
+   }
+
+   BigInt r;
+   r.set_bit(k + shifts);  // (2^k) << shifts
+
+   // we know y has not changed size, since we only shifted up to set high bit
+   const size_t t = y_words - 1;
+   const size_t n = std::max(y_words, r.sig_words()) - 1;  // r may have changed size however
+
+   BOTAN_ASSERT_NOMSG(n >= t);
+
+   BigInt q = BigInt::zero();
+   q.grow_to(n - t + 1);
+
+   word* q_words = q.mutable_data();
+
+   BigInt shifted_y = y << (WordInfo<word>::bits * (n - t));
+
+   // Set q_{n-t} to number of times r > shifted_y
+   secure_vector<word> ws;
+   q_words[n - t] = r.reduce_below(shifted_y, ws);
+
+   const word y_t0 = y.word_at(t);
+   const word y_t1 = y.word_at(t - 1);
+   BOTAN_DEBUG_ASSERT((y_t0 >> (WordInfo<word>::bits - 1)) == 1);
+
+   for(size_t i = n; i != t; --i) {
+      const word x_i0 = r.word_at(i);
+      const word x_i1 = r.word_at(i - 1);
+      const word x_i2 = r.word_at(i - 2);
+
+      word qit = (x_i0 == y_t0) ? WordInfo<word>::max : bigint_divop_vartime(x_i0, x_i1, y_t0);
+
+      // Per HAC 14.23, this operation is required at most twice
+      for(size_t j = 0; j != 2; ++j) {
+         if(division_check_vartime(qit, y_t0, y_t1, x_i0, x_i1, x_i2)) {
+            qit--;
+         } else {
+            break;
+         }
+      }
+
+      shifted_y >>= WordInfo<word>::bits;
+      // Now shifted_y == y << (WordInfo<word>::bits * (i-t-1))
+
+      /*
+      * Special case qit == 1 which occurs relatively often here due to a
+      * combination of the fixed 2^k and in many cases the typical structure of
+      * public moduli (as this function is called by Barrett_Reduction::for_public_modulus).
+      *
+      * This case occurs as often as 5% of the loop iterations; in constrast in
+      * the generic divide it is hit at a tenth that rate on average.
+      */
+      if(qit == 1) {
+         r -= shifted_y;
+      } else {
+         r -= qit * shifted_y;
+      }
+
+      if(r.is_negative()) {
+         qit--;
+         r += shifted_y;
+         BOTAN_ASSERT_NOMSG(r.is_positive());
+      }
+
+      q_words[i - t - 1] = qit;
+   }
+
+   return q;
+}
+
 /*
 * Solve x = q * y + r
 *
-* See Handbook of Applied Cryptography section 14.2.5
+* See Handbook of Applied Cryptography algorithm 14.20
 */
 void vartime_divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt& r_out) {
    if(y_arg.is_zero()) {
@@ -272,34 +359,34 @@ void vartime_divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt&
    const word y_t1 = y.word_at(t - 1);
    BOTAN_DEBUG_ASSERT((y_t0 >> (WordInfo<word>::bits - 1)) == 1);
 
-   for(size_t j = n; j != t; --j) {
-      const word x_j0 = r.word_at(j);
-      const word x_j1 = r.word_at(j - 1);
-      const word x_j2 = r.word_at(j - 2);
+   for(size_t i = n; i != t; --i) {
+      const word x_i0 = r.word_at(i);
+      const word x_i1 = r.word_at(i - 1);
+      const word x_i2 = r.word_at(i - 2);
 
-      word qjt = (x_j0 == y_t0) ? WordInfo<word>::max : bigint_divop_vartime(x_j0, x_j1, y_t0);
+      word qit = (x_i0 == y_t0) ? WordInfo<word>::max : bigint_divop_vartime(x_i0, x_i1, y_t0);
 
       // Per HAC 14.23, this operation is required at most twice
-      for(size_t k = 0; k != 2; ++k) {
-         if(division_check_vartime(qjt, y_t0, y_t1, x_j0, x_j1, x_j2)) {
-            qjt--;
+      for(size_t j = 0; j != 2; ++j) {
+         if(division_check_vartime(qit, y_t0, y_t1, x_i0, x_i1, x_i2)) {
+            qit--;
          } else {
             break;
          }
       }
 
       shifted_y >>= WordInfo<word>::bits;
-      // Now shifted_y == y << (WordInfo<word>::bits * (j-t-1))
+      // Now shifted_y == y << (WordInfo<word>::bits * (i-t-1))
 
       // TODO this sequence could be better
-      r -= qjt * shifted_y;
+      r -= qit * shifted_y;
       if(r.is_negative()) {
-         qjt--;
+         qit--;
          r += shifted_y;
          BOTAN_ASSERT_NOMSG(r.is_positive());
       }
 
-      q_words[j - t - 1] = qjt;
+      q_words[i - t - 1] = qit;
    }
 
    if(shifts > 0) {

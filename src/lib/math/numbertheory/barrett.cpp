@@ -38,7 +38,7 @@ Barrett_Reduction Barrett_Reduction::for_public_modulus(const BigInt& mod) {
 
    // Compute mu = floor(2^{2k} / m)
    const size_t mu_bits = 2 * WordInfo<word>::bits * mod_words;
-   return Barrett_Reduction(mod, BigInt::power_of_2(mu_bits) / mod, mod_words);
+   return Barrett_Reduction(mod, vartime_divide_pow2k(mu_bits, mod), mod_words);
 }
 
 namespace {
