@@ -55,7 +55,7 @@ void update_stateful_private_key(const Botan::Private_Key& key,
    if(pass.empty()) {
       updated_key << Botan::PKCS8::PEM_encode(key);
    } else {
-      updated_key << Botan::PKCS8::PEM_encode(key, rng, pass);
+      updated_key << Botan::PKCS8::encrypt_private_key(key, pass, rng).as_pem();
    }
 }
 
