@@ -88,6 +88,11 @@ std::string get_subject_cn() {
    return "ISRG Root X1";
 }
 
+std::vector<uint8_t> get_serial_number() {
+   // serial number of "ISRG Root X1"
+   return Botan::hex_decode("8210CFB0D240E3594463E0BB63828B00");
+}
+
 std::vector<uint8_t> get_pubkey_sha1_of_cert_with_different_key_id() {
    // see https://github.com/randombit/botan/issues/2779 for details
    //
