@@ -227,6 +227,27 @@ Test::Result find_all_subjects(Botan::Certificate_Store& certstore) {
    return result;
 }
 
+Test::Result find_cert_by_issuer_dn_and_serial_number(Botan::Certificate_Store& certstore) {
+   Test::Result result("System Certificate Store - Find Certificate by issuer DN and serial number");
+
+   try {
+      result.start_timer();
+      auto cert = certstore.find_cert_by_issuer_dn_and_serial_number(get_dn(), get_serial_number());
+      result.end_timer();
+
+      if(result.test_not_nullopt("found certificate", cert)) {
+         auto cns = cert->subject_dn().get_attribute("CN");
+         result.test_is_eq("exactly one CN", cns.size(), size_t(1));
+         result.test_eq("CN", cns.front(), get_subject_cn());
+         result.test_eq("serial number", cert->serial_number(), get_serial_number());
+      }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
+
+   return result;
+}
+
 Test::Result no_certificate_matches(Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - can deal with no matches (regression test)");
 
@@ -312,6 +333,7 @@ class Certstor_System_Tests final : public Test {
          results.push_back(find_all_subjects(*system));
          results.push_back(no_certificate_matches(*system));
          results.push_back(find_cert_by_utf8_subject_dn(*system));
+         results.push_back(find_cert_by_issuer_dn_and_serial_number(*system));
    #if defined(BOTAN_HAS_CERTSTOR_MACOS)
          results.push_back(certificate_matching_with_dn_normalization(*system));
    #endif

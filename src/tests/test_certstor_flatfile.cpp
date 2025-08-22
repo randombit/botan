@@ -228,6 +228,28 @@ Test::Result certstore_contains_user_certificate() {
    return result;
 }
 
+Test::Result find_cert_by_issuer_dn_and_serial_number() {
+   Test::Result result("Flatfile Certificate Store - Find Certificate by issuer DN and serial number");
+
+   try {
+      result.start_timer();
+      Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
+      auto cert = certstore.find_cert_by_issuer_dn_and_serial_number(get_dn(), get_serial_number());
+      result.end_timer();
+
+      if(result.test_not_nullopt("found certificate", cert)) {
+         auto cns = cert->subject_dn().get_attribute("CN");
+         result.test_int_eq("exactly one CN", cns.size(), 1);
+         result.test_eq("CN", cns.front(), get_subject_cn());
+         result.test_eq("serial number", cert->serial_number(), get_serial_number());
+      }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
+
+   return result;
+}
+
 class Certstor_Flatfile_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -242,6 +264,7 @@ class Certstor_Flatfile_Tests final : public Test {
          results.push_back(find_all_subjects());
          results.push_back(no_certificate_matches());
          results.push_back(certstore_contains_user_certificate());
+         results.push_back(find_cert_by_issuer_dn_and_serial_number());
 
          return results;
       }

@@ -107,6 +107,11 @@ std::optional<X509_Certificate> Certificate_Store_In_SQL::find_cert_by_raw_subje
    throw Not_Implemented("Certificate_Store_In_SQL::find_cert_by_raw_subject_dn_sha256");
 }
 
+std::optional<X509_Certificate> Certificate_Store_In_SQL::find_cert_by_issuer_dn_and_serial_number(
+   const X509_DN& /*issuer_dn*/, std::span<const uint8_t> /*serial_number*/) const {
+   throw Not_Implemented("Certificate_Store_In_SQL::find_cert_by_issuer_dn_and_serial_number");
+}
+
 std::optional<X509_CRL> Certificate_Store_In_SQL::find_crl_for(const X509_Certificate& subject) const {
    auto all_crls = generate_crls();
 
