@@ -59,7 +59,14 @@ class Ascon_p final {
 
       constexpr size_t byte_rate() const { return m_bit_rate / 8; }
 
+      const AsconState& state() const { return m_S; }
+
+      AsconState& state() { return m_S; }
+
+      void permute() { permute(m_init_final_rounds); }
+
       void absorb(std::span<const uint8_t> input, std::optional<uint8_t> permutation_rounds = std::nullopt);
+      void percolate(std::span<uint8_t> data);
       void squeeze(std::span<uint8_t> output);
       void finish();
 
