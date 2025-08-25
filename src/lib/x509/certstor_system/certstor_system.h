@@ -26,6 +26,9 @@ class BOTAN_PUBLIC_API(2, 11) System_Certificate_Store final : public Certificat
       std::optional<X509_Certificate> find_cert_by_raw_subject_dn_sha256(
          const std::vector<uint8_t>& subject_hash) const override;
 
+      std::optional<X509_Certificate> find_cert_by_issuer_dn_and_serial_number(
+         const X509_DN& issuer_dn, std::span<const uint8_t> serial_number) const override;
+
       std::optional<X509_CRL> find_crl_for(const X509_Certificate& subject) const override;
 
       std::vector<X509_DN> all_subjects() const override;
