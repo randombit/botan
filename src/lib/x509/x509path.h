@@ -52,8 +52,9 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
       *        of trusted OCSP responders (additionally to the CA's responders)
       * @param ignore_trusted_root_time_range if true, validity checks on the
       *        time range of the trusted root certificate only produce warnings
-      * @param allow_non_self_signed_trust_anchors if true, intermediate and
-      *        leaf certificates of certificate stores are allowed as trust anchors.
+      * @param require_self_signed_trust_anchors if true, only self-signed certificates
+      *        are allowed as trust anchors. Trust anchors based on intermediate
+      *        and leaf certificates are forbidded in this case.
       */
       BOTAN_FUTURE_EXPLICIT Path_Validation_Restrictions(
          bool require_rev = false,
@@ -62,7 +63,7 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
          std::chrono::seconds max_ocsp_age = std::chrono::seconds::zero(),
          std::unique_ptr<Certificate_Store> trusted_ocsp_responders = std::make_unique<Certificate_Store_In_Memory>(),
          bool ignore_trusted_root_time_range = false,
-         bool allow_non_self_signed_trust_anchors = false);
+         bool require_self_signed_trust_anchors = true);
 
       /**
       * @param require_rev if true, revocation information is required
@@ -80,8 +81,9 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
       *        of trusted OCSP responders (additionally to the CA's responders)
       * @param ignore_trusted_root_time_range if true, validity checks on the
       *        time range of the trusted root certificate only produce warnings
-      * @param allow_non_self_signed_trust_anchors if true, intermediate and
-      *        leaf certificates of certificate stores are allowed as trust anchors.
+      * @param require_self_signed_trust_anchors if true, only self-signed certificates
+      *        are allowed as trust anchors. Trust anchors based on intermediate
+      *        and leaf certificates are forbidded in this case.
       */
       Path_Validation_Restrictions(
          bool require_rev,
@@ -91,7 +93,7 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
          std::chrono::seconds max_ocsp_age = std::chrono::seconds::zero(),
          std::unique_ptr<Certificate_Store> trusted_ocsp_responders = std::make_unique<Certificate_Store_In_Memory>(),
          bool ignore_trusted_root_time_range = false,
-         bool allow_non_self_signed_trust_anchors = false) :
+         bool require_self_signed_trust_anchors = true) :
             m_require_revocation_information(require_rev),
             m_ocsp_all_intermediates(ocsp_all_intermediates),
             m_trusted_hashes(trusted_hashes),
@@ -99,7 +101,7 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
             m_max_ocsp_age(max_ocsp_age),
             m_trusted_ocsp_responders(std::move(trusted_ocsp_responders)),
             m_ignore_trusted_root_time_range(ignore_trusted_root_time_range),
-            m_allow_non_self_signed_trust_anchors(allow_non_self_signed_trust_anchors) {}
+            m_require_self_signed_trust_anchors(require_self_signed_trust_anchors) {}
 
       /**
       * @return whether revocation information is required
@@ -149,13 +151,13 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
       bool ignore_trusted_root_time_range() const { return m_ignore_trusted_root_time_range; }
 
       /**
-       * Botan typically requires certificates to be self-signed to serve as
-       * trust anchors. Consequently, intermediate CA certificates and leaf
-       * certificates cannot be used as trust anchors, even if they are included
-       * in the Certificate Store. However, this restriction can be removed by
-       * setting allow_non_self_signed_trust_anchors=true in the constructor.
+       * By default Botan requires trust anchors to be self-signed.
+       * This prevents using intermediate CA certificates and leaf certificates
+       * as trust anchors, even if they are included in the Certificate Store.
+       * This restriction can be removed by setting
+       * require_self_signed_trust_anchors=false in the constructor.
        */
-      bool allow_non_self_signed_trust_anchors() const { return m_allow_non_self_signed_trust_anchors; }
+      bool require_self_signed_trust_anchors() const { return m_require_self_signed_trust_anchors; }
 
    private:
       bool m_require_revocation_information;
@@ -165,7 +167,7 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
       std::chrono::seconds m_max_ocsp_age;
       std::unique_ptr<Certificate_Store> m_trusted_ocsp_responders;
       bool m_ignore_trusted_root_time_range;
-      bool m_allow_non_self_signed_trust_anchors;
+      bool m_require_self_signed_trust_anchors;
 };
 
 /**

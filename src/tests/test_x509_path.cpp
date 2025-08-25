@@ -103,7 +103,7 @@ Botan::Path_Validation_Restrictions get_allow_non_self_signed_anchors_restrictio
                                               std::chrono::seconds::zero(),
                                               std::make_unique<Botan::Certificate_Store_In_Memory>(),
                                               false,
-                                              true);
+                                              false /* require_self_signed_trust_anchors */);
 }
 
 std::vector<Botan::Path_Validation_Restrictions> restrictions_to_test(bool req_revocation_info,
@@ -774,7 +774,7 @@ class Non_Self_Signed_Trust_Anchors_Test final : public Test {
 
          for(const auto& [info, end_certs, trust_anchor] : info_w_end_certs_w_trust_anchor) {
             Test::Result result(
-               Botan::fmt("Non-self-signed trust anchor with allow_non_self_signed_trust_anchors ({})", info));
+               Botan::fmt("Non-self-signed trust anchor without require_self_signed_trust_anchors ({})", info));
 
             const Botan::Certificate_Store_In_Memory trusted(trust_anchor);
 
@@ -1035,7 +1035,7 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run_with_restrictions(
                                                           restriction_template.max_ocsp_age(),
                                                           std::make_unique<Botan::Certificate_Store_In_Memory>(),
                                                           restriction_template.ignore_trusted_root_time_range(),
-                                                          restriction_template.allow_non_self_signed_trust_anchors());
+                                                          restriction_template.require_self_signed_trust_anchors());
 
          /*
           * Following the test document, the test are executed 16 times with

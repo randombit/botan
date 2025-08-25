@@ -59,7 +59,7 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
       // If using intermediate CAs as trust anchors, the signature of the trust
       // anchor cannot be verified since the issuer is not part of the
       // certificate chain
-      if(restrictions.allow_non_self_signed_trust_anchors() && at_trust_anchor && !subject.is_self_signed()) {
+      if(!restrictions.require_self_signed_trust_anchors() && at_trust_anchor && !subject.is_self_signed()) {
          continue;
       }
 
@@ -148,16 +148,16 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
 
       const X509_Certificate& subject = cert_path[i];
       const auto issuer = [&]() -> std::optional<X509_Certificate> {
-         if(at_trust_anchor && subject.is_self_signed()) {
-            return cert_path[i];
-         } else if(!at_trust_anchor) {
+         if(!at_trust_anchor) {
             return cert_path[i + 1];
+         } else if(subject.is_self_signed()) {
+            return cert_path[i];
+         } else {
+            return {};  // Non self-signed trust anchors have no checkable issuers.
          }
-         // Non self-signed trust anchors have no checkable issuers.
-         return {};
       }();
 
-      if(!restrictions.allow_non_self_signed_trust_anchors() && !issuer.has_value()) {
+      if(restrictions.require_self_signed_trust_anchors() && !issuer.has_value()) {
          status.insert(Certificate_Status_Code::CHAIN_LACKS_TRUST_ROOT);
       }
 
@@ -882,14 +882,14 @@ Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& e
       return Path_Validation_Result(path_building_result);
    }
 
-   // If we don't allow non-self-signed trust anchors we need to filter all paths
+   // If we require trust anchors to be self-signed we need to filter all paths
    // not ending in a self-signed certificate.
-   std::erase_if(cert_paths, [&](const auto& cert_path) {
-      if(cert_path.empty()) {
-         return true;
-      }
-      return !cert_path.back().is_self_signed() && !restrictions.allow_non_self_signed_trust_anchors();
-   });
+   if(restrictions.require_self_signed_trust_anchors()) {
+      std::erase_if(cert_paths,
+                    [&](const auto& cert_path) {  //
+                       return cert_path.empty() || !cert_path.back().is_self_signed();
+                    });
+   }
    if(cert_paths.empty()) {
       return Path_Validation_Result(Certificate_Status_Code::CANNOT_ESTABLISH_TRUST);
    }
@@ -978,14 +978,14 @@ Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,
                                                            std::chrono::seconds max_ocsp_age,
                                                            std::unique_ptr<Certificate_Store> trusted_ocsp_responders,
                                                            bool ignore_trusted_root_time_range,
-                                                           bool allow_non_self_signed_trust_anchors) :
+                                                           bool require_self_signed_trust_anchors) :
       m_require_revocation_information(require_rev),
       m_ocsp_all_intermediates(ocsp_intermediates),
       m_minimum_key_strength(key_strength),
       m_max_ocsp_age(max_ocsp_age),
       m_trusted_ocsp_responders(std::move(trusted_ocsp_responders)),
       m_ignore_trusted_root_time_range(ignore_trusted_root_time_range),
-      m_allow_non_self_signed_trust_anchors(allow_non_self_signed_trust_anchors) {
+      m_require_self_signed_trust_anchors(require_self_signed_trust_anchors) {
    if(key_strength <= 80) {
       m_trusted_hashes.insert("SHA-1");
    }
