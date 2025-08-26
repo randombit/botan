@@ -25,16 +25,24 @@ divisable = "divisable"       # Typo in Limbo test data
 
 # Weird names only used in a few modules
 Lik = "Lik"           # TODO(Botan4) remove when mce is removed
+Projet = "Projet"     # TODO(Botan4) remove when mce is removed
 
 # Acronyms that typos doesn't know about
 GOST = "GOST"
+EDE = "EDE"
+
+# clang-analyzer
+optin = "optin"
 
 # Abbreviations used locally, some not ideal
+chello = "chello"
 issu = "issu"
 parm = "parm"
+ser = "ser"
 stuf = "stuf"
 typ = "typ"
 
 [default.extend-identifiers]
 countr_zero = "countr_zero"
 ARIA_FO = "ARIA_FO"
+NDKs = "NDKs"

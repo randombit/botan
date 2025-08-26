@@ -55,6 +55,9 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "limbo" ]; then
         wget -nv "https://raw.githubusercontent.com/C2SP/x509-limbo/${LIMBO_TEST_SUITE_REVISION}/limbo.json" -O "${SCRIPT_LOCATION}/../../../limbo.json"
 
+    elif [ "$TARGET" = "typos" ]; then
+        cargo install typos-cli
+
     elif [ "$TARGET" = "coverage" ] || [ "$TARGET" = "sanitizer" ]; then
         if [ "$TARGET" = "coverage" ]; then
             curl -L https://coveralls.io/coveralls-linux.tar.gz | tar -xz -C /usr/local/bin

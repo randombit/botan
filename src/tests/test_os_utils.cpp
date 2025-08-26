@@ -144,7 +144,7 @@ class OS_Utils_Tests final : public Test {
       static Test::Result test_cpu_instruction_probe() {
          Test::Result result("OS::run_cpu_instruction_probe");
 
-         // OS::run_cpu_instruction_probe only implemented for Unix signals or Windows SEH
+         // OS::run_cpu_instruction_probe is only implemented on systems supporting Unix-style signals
 
          std::function<int()> ok_fn = []() noexcept -> int { return 5; };
          const int run_rc = Botan::OS::run_cpu_instruction_probe(ok_fn);

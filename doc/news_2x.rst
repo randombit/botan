@@ -1817,8 +1817,8 @@ Version 2.1.0, 2017-04-04
   using ``--disable-modules=pkcs11`` (GH #837)
 
 * Add ``OS::run_cpu_instruction_probe`` for runtime probing of ISA extensions.
-  Supporting this requires system-specific techniques, currently Windows SEH and
-  Unix signal handling are supported.
+  Supporting this requires system-specific techniques, currently Windows Structured
+  Exception Handling and Unix signal handling are supported.
 
 * Add support for ARM NEON in the SIMD_4x32 type
 

@@ -73,6 +73,7 @@ def known_targets():
         'shared',
         'static',
         'strubbing',
+        'typos',
         'valgrind',
         'valgrind-full',
         'valgrind-ct',
@@ -787,6 +788,8 @@ def main(args=None):
         # be able to annotate the correct files.
         cmds.append(["indir:%s" % root_dir, py_interp, '-m', 'pylint'] + pylint_flags + py_scripts)
 
+    elif target == 'typos':
+        cmds.append(['indir:%s' % (root_dir), 'typos', '-c', 'src/configs/typos.toml', '.'])
     elif target == 'format':
         cmds.append([py_interp,
                      os.path.join(root_dir, 'src/scripts/dev_tools/run_clang_format.py'),
