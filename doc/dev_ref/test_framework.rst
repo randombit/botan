@@ -70,7 +70,7 @@ Test
   .. cpp:function:: static Botan::RandomNumberGenerator& rng()
 
      Returns a reference to a fast, not cryptographically secure
-     random number generator. It is deterministicly seeded with the
+     random number generator. It is deterministically seeded with the
      seed logged by the test runner, so it is possible to reproduce
      results in "random" tests.
 

@@ -547,7 +547,7 @@ implementation must implement. There are more methods that provide applications
 with full flexibility to handle session objects. More detail can be found in
 the API documentation inline.
 
-.. cpp:class:: TLS::Session_Mananger
+.. cpp:class:: TLS::Session_Manager
 
  .. cpp:function:: void store(const Session& session, const Session_Handle& handle)
 
@@ -607,7 +607,7 @@ lock internally.
 
     Limits the maximum number of saved sessions to *max_sessions*.
 
-Noop Session Mananger
+Noop Session Manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``TLS::Session_Manager_Noop`` implementation does not save
@@ -1388,7 +1388,7 @@ Then a key used for AES-256 in GCM mode is created by first choosing a 128 bit
 random seed, and HMAC'ing it to produce a 256-bit value. This means for any one
 master key as many as 2\ :sup:`128` GCM keys can be created. This is done
 because NIST recommends that when using random nonces no one GCM key be used to
-encrypt more than 2\ :sup:`32` messages (to avoid the possiblity of nonce
+encrypt more than 2\ :sup:`32` messages (to avoid the possibility of nonce
 reuse).
 
 A random 96-bit nonce is created and included in the header.

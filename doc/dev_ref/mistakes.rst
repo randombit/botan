@@ -19,7 +19,7 @@ Public Algorithm Specific Classes
 ------------------------------------
 
 Classes like AES_128 and SHA_256 should never have been exposed to applications.
-Intead such operations should have been accessible only via the higher level
+Instead such operations should have been accessible only via the higher level
 interfaces (here BlockCipher and HashFunction). This would substantially reduce
 the overall API and ABI surface.
 

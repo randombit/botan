@@ -35,7 +35,7 @@ TPM 2.0 Context
 ~~~~~~~~~~~~~~~
 
 The TPM context is the main entry point for all TPM operations. Also, it
-provides authorative information about the TPM's capabilities and allows
+provides authoritative information about the TPM's capabilities and allows
 persisting and evicting keys into the TPM's NVRAM.
 
 .. cpp:class:: Botan::TPM2::Context

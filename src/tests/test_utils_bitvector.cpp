@@ -745,11 +745,11 @@ std::vector<Test::Result> test_bitvector_global_modifiers_and_predicates(Botan::
 
       CHECK("hamming weight oddness",
             [](auto& result) {
-               const auto evn = Botan::hex_decode("FE3410CB0278E4D26602");
+               const auto even = Botan::hex_decode("FE3410CB0278E4D26602");
                const auto odd = Botan::hex_decode("BB2418C2B4F288921203");
 
                result.confirm("odd hamming", Botan::bitvector(odd).has_odd_hamming_weight().as_bool());
-               result.confirm("even hamming", !Botan::bitvector(evn).has_odd_hamming_weight().as_bool());
+               result.confirm("even hamming", !Botan::bitvector(even).has_odd_hamming_weight().as_bool());
             }),
 
       CHECK("hamming weight",

@@ -73,7 +73,7 @@ BigInt BOTAN_PUBLIC_API(2, 0) inverse_mod(const BigInt& x, const BigInt& modulus
 int32_t BOTAN_PUBLIC_API(2, 0) jacobi(BigInt a, BigInt n);
 
 /**
-* Modular exponentation
+* Modular exponentiation
 * @param b an integer base
 * @param x a positive exponent
 * @param m a positive modulus

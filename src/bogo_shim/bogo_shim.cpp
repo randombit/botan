@@ -1640,7 +1640,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
             }
          } else if(m_args.flag_set("expect-no-secure-renegotiation")) {
             if(m_channel->secure_renegotiation_supported()) {
-               shim_exit_with_error("Expected no secure renegotation");
+               shim_exit_with_error("Expected no secure renegotiation");
             }
          }
 

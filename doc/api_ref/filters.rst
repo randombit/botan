@@ -688,7 +688,7 @@ functions that need to be implemented by a class deriving from
 
 .. cpp:function:: std::string Filter::name() const
 
-  This should just return a useful decription of the filter object.
+  This should just return a useful description of the filter object.
 
 .. cpp:function:: void Filter::write(const uint8_t* input, size_t length)
 

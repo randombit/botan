@@ -409,7 +409,7 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
          }
 
          for(const auto& extension : crls[i]->extensions().extensions()) {
-            // XXX this is wrong - the OID might be defined but the extention not full parsed
+            // XXX this is wrong - the OID might be defined but the extension not full parsed
             // for example see #1652
 
             // is the extension critical and unknown?

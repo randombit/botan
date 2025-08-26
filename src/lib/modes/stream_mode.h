@@ -23,7 +23,7 @@ namespace Botan {
 class Stream_Cipher_Mode final : public Cipher_Mode {
    public:
       /**
-      * @param cipher underyling stream cipher
+      * @param cipher underlying stream cipher
       */
       explicit Stream_Cipher_Mode(std::unique_ptr<StreamCipher> cipher) : m_cipher(std::move(cipher)) {}
 

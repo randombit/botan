@@ -7,7 +7,7 @@
 #
 # The simulator is populated with persistent keys for testing.
 #
-# If you need the simulated TPM 2.0 setup in your deveolpment environment, you
+# If you need the simulated TPM 2.0 setup in your development environment, you
 # can run this script manually. If something goes wrong, you can re-initialize
 # the TPM 2.0 simulator by running:
 #

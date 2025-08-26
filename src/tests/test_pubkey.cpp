@@ -332,7 +332,7 @@ std::vector<Test::Result> PK_Sign_Verify_DER_Test::run() {
    } catch(const Botan::Lookup_Error&) {
       result.test_note("Skipping sign/verify regression test");
    } catch(const std::exception& e) {
-      result.test_failure("regresstion test verification failed", e.what());
+      result.test_failure("regression test verification failed", e.what());
    }
 
    return {result};

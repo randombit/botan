@@ -239,7 +239,7 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
       secure_vector<uint8_t> private_key_bits() const override;
 
       /**
-       * Generates a non standartized byte sequence representing the XMSS
+       * Generates a non standardized byte sequence representing the XMSS
        * private key.
        *
        * @return byte sequence consisting of the following elements in order:

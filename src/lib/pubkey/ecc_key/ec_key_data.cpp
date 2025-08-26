@@ -42,7 +42,7 @@ EC_Scalar decode_ec_secret_key_scalar(const EC_Group& group, std::span<const uin
       * not have their high bit set and so can be encoded in 65 bytes, vs 66
       * bytes for the full order.
       *
-      * To accomodate this, zero prefix the key if we see such a short input
+      * To accommodate this, zero prefix the key if we see such a short input
       */
       secure_vector<uint8_t> padded_sk(order_bytes);
       copy_mem(std::span{padded_sk}.last(bytes.size()), bytes);

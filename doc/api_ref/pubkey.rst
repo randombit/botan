@@ -95,7 +95,7 @@ removed in a future major release.
       Return an object containing the public key corresponding to this private key.
 
       Prefer this over the (deprecated) implicit conversion of a private key to
-      a public key currently possible due to an inheritence relation.
+      a public key currently possible due to an inheritance relation.
 
    .. cpp:function:: secure_vector<uint8_t> private_key_info() const
 
@@ -107,7 +107,7 @@ removed in a future major release.
 
    .. cpp:function:: secure_vector<uint8_t> private_key_bits() const
 
-      Return the serialization of the private key, cooresponding to the
+      Return the serialization of the private key, corresponding to the
       `PrivateKey` field of a PKCS #8 `PrivateKeyInfo` structure. See
       :rfc:`5208` for details.
 
@@ -893,7 +893,7 @@ Signature generation is performed using
 
    .. cpp:function:: PK_Signer(const Private_Key& key, \
       const std::string& padding, \
-      Signature_Format format = Siganture_Format::Standard)
+      Signature_Format format = Signature_Format::Standard)
 
      Constructs a new signer object for the private key *key* using the
      hash/padding specified in *padding*. The key must support signature operations. In
@@ -1314,7 +1314,7 @@ produce an output of the desired length.
 
      The *peer_key* parameter must be the public key associated with the other party.
 
-     The shared key will be of length *key_len*. If the KDF cannot accomodate
+     The shared key will be of length *key_len*. If the KDF cannot accommodate
      outputs of this size (only likely for very large values, or if using KDF1),
      an exception will be thrown. If a KDF is not in use ("Raw" KDF), *key_len*
      is ignored and this function will always return directly what the agreement

@@ -1,0 +1,40 @@
+[files]
+extend-exclude = [
+   "src/lib/prov/pkcs11/pkcs11.h",
+   "src/lib/prov/pkcs11/pkcs11t.h",
+   "src/lib/prov/pkcs11/pkcs11f.h",
+   "src/build-data/cc/msvc.txt",
+   "src/build-data/cc/clangcl.txt",
+   "doc/authors.txt",
+]
+
+[default]
+extend-ignore-re = [
+    "\\b[0-9A-Za-z+/]{20,80}(=|==)?\\b",
+    "\\b[0-9A-Fa-f]{9,80}\\b",
+]
+
+[default.extend-words]
+# This is a hack for dealing with hex
+BA = "BA"
+ba = "ba"
+
+# These should be removed if possible
+Probablistic = "Probablistic" # pkcs11.h typo
+divisable = "divisable"       # Typo in Limbo test data
+
+# Weird names only used in a few modules
+Lik = "Lik"           # TODO(Botan4) remove when mce is removed
+
+# Acronyms that typos doesn't know about
+GOST = "GOST"
+
+# Abbreviations used locally, some not ideal
+issu = "issu"
+parm = "parm"
+stuf = "stuf"
+typ = "typ"
+
+[default.extend-identifiers]
+countr_zero = "countr_zero"
+ARIA_FO = "ARIA_FO"

@@ -210,7 +210,7 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       }
 
       /**
-      * Returns how large each of the message parts refered to
+      * Returns how large each of the message parts referred to
       * by message_parts() is
       *
       * This function is public but applications should have few

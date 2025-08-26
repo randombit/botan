@@ -34,12 +34,12 @@ Transcript_Hash_State Transcript_Hash_State::recreate_after_hello_retry_request(
    BOTAN_STATE_CHECK(prev_transcript_hash_state.m_hash == nullptr);
    BOTAN_STATE_CHECK(prev_transcript_hash_state.m_unprocessed_transcript.size() == 2);
 
-   Transcript_Hash_State ths(algo_spec);
+   Transcript_Hash_State transcript_hash(algo_spec);
 
    const auto& client_hello_1 = prev_transcript_hash_state.m_unprocessed_transcript.front();
    const auto& hello_retry_request = prev_transcript_hash_state.m_unprocessed_transcript.back();
 
-   const size_t hash_length = ths.m_hash->output_length();
+   const size_t hash_length = transcript_hash.m_hash->output_length();
    BOTAN_ASSERT_NOMSG(hash_length < 256);
 
    // RFC 8446 4.4.1
@@ -52,12 +52,12 @@ Transcript_Hash_State Transcript_Hash_State::recreate_after_hello_retry_request(
    message_hash.push_back(0x00);
    message_hash.push_back(0x00);
    message_hash.push_back(static_cast<uint8_t>(hash_length));
-   message_hash += ths.m_hash->process(client_hello_1);
+   message_hash += transcript_hash.m_hash->process(client_hello_1);
 
-   ths.update(message_hash);
-   ths.update(hello_retry_request);
+   transcript_hash.update(message_hash);
+   transcript_hash.update(hello_retry_request);
 
-   return ths;
+   return transcript_hash;
 }
 
 namespace {

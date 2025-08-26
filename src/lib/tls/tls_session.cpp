@@ -59,7 +59,7 @@ std::optional<Session_ID> Session_Handle::id() const {
       return std::get<Session_ID>(m_handle);
    }
 
-   // Opaque handles can mimick as a Session_ID if they are short enough
+   // Opaque handles can mimic as a Session_ID if they are short enough
    if(is_opaque_handle()) {
       const auto& handle = std::get<Opaque_Session_Handle>(m_handle);
       if(handle.size() <= 32) {
@@ -75,7 +75,7 @@ std::optional<Session_Ticket> Session_Handle::ticket() const {
       return std::get<Session_Ticket>(m_handle);
    }
 
-   // Opaque handles can mimick 'normal' Session_Tickets at any time
+   // Opaque handles can mimic 'normal' Session_Tickets at any time
    if(is_opaque_handle()) {
       return Session_Ticket(std::get<Opaque_Session_Handle>(m_handle).get());
    }

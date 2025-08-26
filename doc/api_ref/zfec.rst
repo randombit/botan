@@ -28,7 +28,7 @@ if needed define a padding scheme to pad your input to the necessary
 size.
 
 An example application that adds padding and a hash checksum is available
-in ``src/cli/zfec.cpp`` and invokable using ``botan fec_encode`` and
+in ``src/cli/zfec.cpp`` and invocable using ``botan fec_encode`` and
 ``botan fec_decode``.
 
 .. cpp:class:: ZFEC

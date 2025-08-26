@@ -63,7 +63,7 @@ class BOTAN_PUBLIC_API(2, 0) X509_Cert_Options final {
       std::string serial_number;  // NOLINT(*non-private-member-variable*)
 
       /**
-      * the subject email adress
+      * the subject email address
       */
       std::string email;  // NOLINT(*non-private-member-variable*)
 

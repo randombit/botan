@@ -50,7 +50,7 @@ void HKDF_Extract::perform_kdf(std::span<uint8_t> key,
                                std::span<const uint8_t> salt,
                                std::span<const uint8_t> label) const {
    const size_t prf_output_len = m_prf->output_length();
-   BOTAN_ARG_CHECK(key.size() <= prf_output_len, "HKDF-Extract maximum output length exceeeded");
+   BOTAN_ARG_CHECK(key.size() <= prf_output_len, "HKDF-Extract maximum output length exceeded");
    BOTAN_ARG_CHECK(label.empty(), "HKDF-Extract does not support a label input");
 
    if(key.empty()) {
@@ -86,7 +86,7 @@ void HKDF_Expand::perform_kdf(std::span<uint8_t> key,
                               std::span<const uint8_t> salt,
                               std::span<const uint8_t> label) const {
    const auto prf_output_length = m_prf->output_length();
-   BOTAN_ARG_CHECK(key.size() <= prf_output_length * 255, "HKDF-Expand maximum output length exceeeded");
+   BOTAN_ARG_CHECK(key.size() <= prf_output_length * 255, "HKDF-Expand maximum output length exceeded");
 
    if(key.empty()) {
       return;

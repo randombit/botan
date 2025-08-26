@@ -175,7 +175,7 @@ BigInt random_prime(
 
          if(coprime > 1) {
             /*
-            First do a single M-R iteration to quickly elimate most non-primes,
+            First do a single M-R iteration to quickly eliminate most non-primes,
             before doing the coprimality check which is expensive
             */
             if(!is_miller_rabin_probable_prime(p, mod_p, rng, 1)) {

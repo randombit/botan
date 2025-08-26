@@ -1,6 +1,6 @@
 /*
  * XMSS Parameters
- * Descibes a signature method for XMSS, as defined in:
+ * Describes a signature method for XMSS, as defined in:
  * [1] XMSS: Extended Hash-Based Signatures,
  *     Request for Comments: 8391
  *     Release: May 2018.

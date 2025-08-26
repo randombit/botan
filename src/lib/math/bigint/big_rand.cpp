@@ -49,7 +49,7 @@ BigInt BigInt::random_integer(RandomNumberGenerator& rng, const BigInt& min, con
    If min is > 1 then we generate a random number `r` in [0,max-min)
    and return min + r.
 
-   This same logic could also be reasonbly chosen for min == 1, but
+   This same logic could also be reasonably chosen for min == 1, but
    that breaks certain tests which expect stability of this function
    when generating within [1,n)
    */

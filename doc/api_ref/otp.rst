@@ -12,14 +12,14 @@ as a mobile phone.
 
 Botan implements the HOTP and TOTP schemes from RFC 4226 and 6238.
 
-Since the range of possible OTPs is quite small, applications must rate limit
+Since the range of possible OTP values is quite small, applications must rate limit
 OTP authentication attempts to some small number per second. Otherwise an attacker
-could quickly try all 1000000 6-digit OTPs in a brief amount of time.
+could quickly try all 1000000 6-digit values in a brief amount of time.
 
 HOTP
 ^^^^^^
 
-HOTP generates OTPs that are a short numeric sequence, between 6 and 8 digits
+HOTP generates an OTP that is a short numeric sequence, between 6 and 8 digits
 (most applications use 6 digits), created using the HMAC of a 64-bit counter
 value. If the counter ever repeats the OTP will also repeat, thus both parties
 must assure the counter only increments and is never repeated or

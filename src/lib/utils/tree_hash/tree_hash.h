@@ -47,7 +47,7 @@ template <typename T>
 concept strong_span = is_strong_span_v<T>;
 
 /**
- * @brief An adress in a Tree.
+ * @brief An address in a Tree.
  */
 template <typename T, typename TreeLayerIndex, typename TreeNodeIndex>
 concept tree_address = requires(T a, TreeLayerIndex tree_layer, TreeNodeIndex tree_index) {
@@ -96,7 +96,7 @@ concept tree_gen_leaf = concepts::tree_node_index<NodeIdx> && concepts::tree_lay
  * @param leaf_idx The optional index of the leaf used to sign in the bottom tree layer beginning with index 0.
  *                 nullopt if no node is signed, so we need no auth path.
  * @param node_size The size of each node in the tree.
- * @param total_tree_height The hight of the merkle tree to construct.
+ * @param total_tree_height The height of the merkle tree to construct.
  * @param idx_offset If we compute a subtree this marks the index of the leftmost leaf node in the bottom layer
  * @param node_pair_hash The function to process two child nodes to compute their parent node.
  * @param gen_leaf The logic to create a leaf node given the address in the tree. Probably this function
@@ -198,7 +198,7 @@ inline void treehash(
  * @param leaf_idx The index of the leaf used to sig in the bottom layer beginning with 0.
  * @param leaf The leaf node used to sig.
  * @param node_size The size of each node in the tree.
- * @param total_tree_height The hight of the merkle tree to construct.
+ * @param total_tree_height The height of the merkle tree to construct.
  * @param idx_offset If we compute a subtree this marks the index of the leftmost leaf node in the bottom layer.
  * @param node_pair_hash The function to process two child nodes to compute their parent node.
  * @param tree_address The address that is passed to node_pair hash. This function will update the

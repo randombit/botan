@@ -25,7 +25,7 @@ The best course of action is to avoid ``static`` variables. If that is
 impossible or inconvenient, one option is to disable the pool, either at build
 time (disable the ``locking_allocator`` module) or at runtime. Unfortunately the
 runtime setting requires setting an environment variable (see :ref:`env_vars`),
-and doing so consistently *prior to static intialization* is not trivial, due to
+and doing so consistently *prior to static initialization* is not trivial, due to
 the previously mentioned fiasco. One option might be to use GCC's
 ``constructor`` function attribute.
 

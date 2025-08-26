@@ -34,7 +34,7 @@ BOTAN_PUBLIC_API(3, 7) RandomNumberGenerator& esdm_rng();
 * esdm_rpcc_get_random_bytes_full (fully seeded) calls have to be used.
 *
 * Configurable modes:
-*   - fully seeded (-> fast): provide entropy from a DRBG/PRNG after beeing fully seeded,
+*   - fully seeded (-> fast): provide entropy from a DRBG/PRNG after being fully seeded,
 *          block until this point is reached, reseed from after a time
 *          and/or invocation limit, block again if reseeding is not possible
 *   - prediction resistance (-> slow): reseed ESDM with fresh entropy after each invocation
@@ -96,7 +96,7 @@ class BOTAN_PUBLIC_API(3, 7) ESDM_RNG final : public Botan::RandomNumberGenerato
 
    private:
       /**
-      * tracks if predicition resistant or fully seeded interface should be queried
+      * tracks if prediction resistant or fully seeded interface should be queried
       */
       bool m_prediction_resistance;
 

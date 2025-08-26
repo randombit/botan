@@ -718,7 +718,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
          this->encrypt(out_encapsulated_key, out_shared_key, rng, desired_shared_key_len, {salt, salt_len});
       }
 
-      BOTAN_DEPRECATED("use overload where rng comes after the out-paramters")
+      BOTAN_DEPRECATED("use overload where rng comes after the out-parameters")
       void encrypt(secure_vector<uint8_t>& out_encapsulated_key,
                    secure_vector<uint8_t>& out_shared_key,
                    size_t desired_shared_key_len,

@@ -239,7 +239,7 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello {
 
       /**
        * Select the highest protocol version from the list of versions
-       * supported by the client. If no such version can be determind this
+       * supported by the client. If no such version can be determined this
        * returns std::nullopt.
        */
       std::optional<Protocol_Version> highest_supported_version(const Policy& policy) const;
@@ -622,7 +622,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
 
       /**
       * Validate a Certificate message regarding what extensions are expected based on
-      * previous handshake messages. Also call the tls_examine_extenions() callback
+      * previous handshake messages. Also call the tls_examine_extensions() callback
       * for each entry.
       *
       * @param requested_extensions Extensions of Client_Hello or Certificate_Request messages

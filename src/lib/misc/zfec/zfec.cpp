@@ -23,7 +23,7 @@ namespace Botan {
 
 namespace {
 
-/* Tables for arithetic in GF(2^8) using 1+x^2+x^3+x^4+x^8
+/* Tables for arithmetic in GF(2^8) using 1+x^2+x^3+x^4+x^8
 *
 * See Lin & Costello, Appendix A, and Lee & Messerschmitt, p. 453.
 *
@@ -177,7 +177,7 @@ void invert_matrix(uint8_t matrix[], size_t K) {
       pivot_row[icol] = 1;
 
       if(c == 0) {
-         throw Invalid_Argument("ZFEC: singlar matrix");
+         throw Invalid_Argument("ZFEC: singular matrix");
       }
 
       if(c != 1) {

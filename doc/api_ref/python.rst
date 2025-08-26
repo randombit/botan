@@ -138,7 +138,7 @@ Ciphers
 
        Previously ``cipher``
 
-       The algorithm is spcified as a string (eg 'AES-128/GCM',
+       The algorithm is specified as a string (eg 'AES-128/GCM',
        'Serpent/OCB(12)', 'Threefish-512/EAX').
 
        Set the second param to False for decryption
@@ -801,7 +801,7 @@ X509Cert
                   crls=None)
 
       Verify a certificate. Returns 0 if validation was successful, returns a positive error code
-      if the validation was unsuccesful.
+      if the validation was unsuccessful.
 
       ``intermediates`` is a list of untrusted subauthorities.
 

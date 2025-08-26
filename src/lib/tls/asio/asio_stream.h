@@ -341,7 +341,7 @@ class Stream {
        * The function call will block until handshaking is complete or an error occurs.
        *
        * @param side The type of handshaking to be performed, i.e. as a client or as a server.
-       * @throws boost::system::system_error if error occured
+       * @throws boost::system::system_error if error occurred
        */
       void handshake(Connection_Side side) {
          boost::system::error_code ec;
@@ -361,7 +361,7 @@ class Stream {
          setup_native_handle(side, ec);
 
          // We write to the socket if we have data to send and read from it
-         // otherwise, until either some error occured or we have successfully
+         // otherwise, until either some error occurred or we have successfully
          // performed the handshake.
          while(!ec) {
             // Send pending data to the peer and abort the handshake if that
@@ -441,7 +441,7 @@ class Stream {
        *
        * Note that this can be used in reaction of a received shutdown alert from the peer.
        *
-       * @param ec Set to indicate what error occured, if any.
+       * @param ec Set to indicate what error occurred, if any.
        */
       void shutdown(boost::system::error_code& ec) {
          try_with_error_code([&] { native_handle()->close(); }, ec);
@@ -457,7 +457,7 @@ class Stream {
        *
        * Note that this can be used in reaction of a received shutdown alert from the peer.
        *
-       * @throws boost::system::system_error if error occured
+       * @throws boost::system::system_error if error occurred
        */
       void shutdown() {
          boost::system::error_code ec;
@@ -540,7 +540,7 @@ class Stream {
        */
       template <typename MutableBufferSequence>
       std::size_t read_some(const MutableBufferSequence& buffers, boost::system::error_code& ec) {
-         // We read from the socket until either some error occured or we have
+         // We read from the socket until either some error occurred or we have
          // decrypted at least one byte of application data.
          while(!ec) {
             // Some previous invocation of process_encrypted_data() generated
@@ -576,7 +576,7 @@ class Stream {
        *
        * @param buffers The buffers into which the data will be read.
        * @return The number of bytes read. Returns 0 if an error occurred.
-       * @throws boost::system::system_error if error occured
+       * @throws boost::system::system_error if error occurred
        */
       template <typename MutableBufferSequence>
       std::size_t read_some(const MutableBufferSequence& buffers) {
@@ -611,7 +611,7 @@ class Stream {
        *
        * @param buffers The data to be written.
        * @return The number of bytes written.
-       * @throws boost::system::system_error if error occured
+       * @throws boost::system::system_error if error occurred
        */
       template <typename ConstBufferSequence>
       std::size_t write_some(const ConstBufferSequence& buffers) {

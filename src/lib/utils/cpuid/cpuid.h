@@ -51,7 +51,7 @@ class BOTAN_TEST_API CPUID final {
 
       /**
       * Return a possibly empty string containing list of known CPU
-      * extensions. Each name will be seperated by a space, and the ordering
+      * extensions. Each name will be separated by a space, and the ordering
       * will be arbitrary. This list only contains values that are useful to
       * Botan (for example FMA instructions are not checked).
       *
@@ -81,7 +81,7 @@ class BOTAN_TEST_API CPUID final {
          if(state().has_bit((feat1.as_u32() | feat2.as_u32()))) {
             // Typically feat2 is a secondary feature that is almost but not
             // completely implied by feat1 (ex: AVX2 + BMI2) which we have to
-            // check for completness, but don't reflect into the provider name.
+            // check for completeness, but don't reflect into the provider name.
             return feat1.to_string();
          } else {
             return {};

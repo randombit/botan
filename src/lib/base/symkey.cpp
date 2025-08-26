@@ -87,7 +87,7 @@ bool operator==(const OctetString& s1, const OctetString& s2) {
 }
 
 /*
-* Unequality Operation for OctetStrings
+* Inequality Operation for OctetStrings
 */
 bool operator!=(const OctetString& s1, const OctetString& s2) {
    return !(s1 == s2);

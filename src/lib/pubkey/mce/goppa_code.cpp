@@ -36,7 +36,7 @@ void matrix_arr_mul(std::vector<uint32_t> matrix,
 /**
 * returns the error vector to the syndrome
 */
-secure_vector<gf2m> goppa_decode(const polyn_gf2m& syndrom_polyn,
+secure_vector<gf2m> goppa_decode(const polyn_gf2m& syndrome_polyn,
                                  const polyn_gf2m& g,
                                  const std::vector<polyn_gf2m>& sqrtmod,
                                  const std::vector<gf2m>& Linv) {
@@ -45,7 +45,7 @@ secure_vector<gf2m> goppa_decode(const polyn_gf2m& syndrom_polyn,
 
    std::shared_ptr<GF2m_Field> sp_field = g.get_sp_field();
 
-   std::pair<polyn_gf2m, polyn_gf2m> h_aux = polyn_gf2m::eea_with_coefficients(syndrom_polyn, g, 1);
+   std::pair<polyn_gf2m, polyn_gf2m> h_aux = polyn_gf2m::eea_with_coefficients(syndrome_polyn, g, 1);
    polyn_gf2m& h = h_aux.first;
    polyn_gf2m& aux = h_aux.second;
    gf2m a = sp_field->gf_inv(aux.get_coef(0));

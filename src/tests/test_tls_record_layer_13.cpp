@@ -755,7 +755,7 @@ std::vector<Test::Result> write_encrypted_records() {
             result.test_is_eq("TLS legacy version", reader.get_uint16_t(), uint16_t(0x0303));
 
             const auto fragment_length = reader.get_uint16_t();
-            result.test_lte("TLS limts", fragment_length, TLS::MAX_CIPHERTEXT_SIZE_TLS13);
+            result.test_lte("TLS limits", fragment_length, TLS::MAX_CIPHERTEXT_SIZE_TLS13);
             result.require("enough data", fragment_length + Botan::TLS::TLS_HEADER_SIZE < ct.size());
             return fragment_length;
          };

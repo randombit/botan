@@ -48,8 +48,8 @@ class BOTAN_PUBLIC_API(2, 0) ECDSA_PublicKey : public virtual EC_PublicKey {
       * See SEC section 4.6.1
       * @param group the elliptic curve group
       * @param msg the message
-      * @param r the r paramter of the signature
-      * @param s the s paramter of the signature
+      * @param r the r parameter of the signature
+      * @param s the s parameter of the signature
       * @param v the recovery ID
       */
       ECDSA_PublicKey(

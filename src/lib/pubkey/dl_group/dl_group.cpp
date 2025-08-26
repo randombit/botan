@@ -116,7 +116,7 @@ class DL_Group_Data final {
       Barrett_Reduction m_mod_p;
       std::optional<Barrett_Reduction> m_mod_q;
       Montgomery_Params m_monty_params;
-      std::shared_ptr<const Montgomery_Exponentation_State> m_monty;
+      std::shared_ptr<const Montgomery_Exponentiation_State> m_monty;
       size_t m_p_bits;
       size_t m_q_bits;
       size_t m_estimated_strength;

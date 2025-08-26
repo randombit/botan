@@ -342,7 +342,7 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        *
        * If deserialization fails, the default implementation throws a
        * Botan::Decoding_Error exception that will be translated into a
-       * TLS_Exception with an Alert::IllegalParamter.
+       * TLS_Exception with an Alert::IllegalParameter.
        *
        * @param group the group identifier or (in case of TLS 1.2) an explicit
        *              discrete-log group of the public key
