@@ -4,6 +4,10 @@ Release Notes
 Version 3.10.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add support for Ascon hash and XOF from NIST SP 800-232 (GH #5061)
+
+* New faster implementation of Jacobi function (GH #5057)
+
 * Add support for building with clang-cl (GH #4255)
 
 * Optimizations for base58 encoding and decoding (GH #5051)
@@ -12,6 +16,8 @@ Version 3.10.0, Not Yet Released
 
 * Remove various internal references to "EME", an obsolete term used for RSA
   encryption padding that originates from IEEE 1363. (GH #5055)
+
+* Fix various typos in the source and documentation (GH #5071)
 
 Version 3.9.0, 2025-08-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
