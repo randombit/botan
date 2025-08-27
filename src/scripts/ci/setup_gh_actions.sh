@@ -74,7 +74,9 @@ if type -p "apt-get"; then
         echo "PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so" >> "$GITHUB_ENV"
     fi
 else
-    export HOMEBREW_NO_AUTO_UPDATE=1
+    # Update to pick up fixed Emscripten package
+    # TODO uncomment this out once the Emscripten package is fixed
+    #export HOMEBREW_NO_AUTO_UPDATE=1
     export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
     brew install ccache
 
