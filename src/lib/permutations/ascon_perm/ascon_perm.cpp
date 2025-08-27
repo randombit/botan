@@ -46,7 +46,7 @@ void Ascon_p::absorb(std::span<const uint8_t> input, std::optional<uint8_t> perm
    }
 }
 
-void Ascon_p::percolate(std::span<uint8_t> data) {
+void Ascon_p::percolate_in(std::span<uint8_t> data) {
    BufferSlicer input_slicer(data);
    BufferStuffer output_stuffer(data);
 
@@ -72,6 +72,52 @@ void Ascon_p::percolate(std::span<uint8_t> data) {
       for(; !input_this_round.empty(); ++m_S_inpos) {
          m_S[m_S_inpos / 8] ^= static_cast<uint64_t>(input_this_round.take_byte()) << (8 * (m_S_inpos % 8));
          output_stuffer.append(static_cast<uint8_t>(m_S[m_S_inpos / 8] >> (8 * (m_S_inpos % 8))));
+      }
+
+      // We reached the end of a sponge state block... permute() and start over
+      if(m_S_inpos == byte_rate()) {
+         permute(m_processing_rounds);
+         m_S_inpos = 0;
+      }
+   }
+}
+
+void Ascon_p::percolate_out(std::span<uint8_t> data) {
+   BufferSlicer input_slicer(data);
+   BufferStuffer output_stuffer(data);
+
+   // Block-wise incorporation of the input data into the sponge state until
+   // all input bytes are processed
+   while(!input_slicer.empty()) {
+      const size_t to_take_this_round = std::min(input_slicer.remaining(), byte_rate() - m_S_inpos);
+      BufferSlicer input_this_round(input_slicer.take(to_take_this_round));
+
+      // If necessary, try to get aligned with the sponge state's 64-bit integer array
+      for(; !input_this_round.empty() && m_S_inpos % 8 > 0; ++m_S_inpos) {
+         const auto ct_byte = input_this_round.take_byte();
+         const auto key_byte = static_cast<uint8_t>(m_S[m_S_inpos / 8] >> (8 * (m_S_inpos % 8)));
+         const auto pt_byte = ct_byte ^ key_byte;
+         output_stuffer.append(pt_byte);
+         const auto ct_in_word = static_cast<uint64_t>(ct_byte) << (8 * (m_S_inpos % 8));
+         m_S[m_S_inpos / 8] ^= (static_cast<uint64_t>(key_byte) << (8 * (m_S_inpos % 8))) ^ ct_in_word;
+      }
+
+      // Process as many aligned 64-bit integer values as possible
+      for(; input_this_round.remaining() >= 8; m_S_inpos += 8) {
+         const auto ct_block = load_le(input_this_round.take<8>());
+         const auto pt_block = ct_block ^ m_S[m_S_inpos / 8];
+         output_stuffer.append(store_le(pt_block));
+         m_S[m_S_inpos / 8] ^= m_S[m_S_inpos / 8] ^ ct_block;
+      }
+
+      // Read remaining input data, causing misalignment, if necessary
+      for(; !input_this_round.empty(); ++m_S_inpos) {
+         const auto ct_byte = input_this_round.take_byte();
+         const auto key_byte = static_cast<uint8_t>(m_S[m_S_inpos / 8] >> (8 * (m_S_inpos % 8)));
+         const auto pt_byte = ct_byte ^ key_byte;
+         output_stuffer.append(pt_byte);
+         const auto ct_in_word = static_cast<uint64_t>(ct_byte) << (8 * (m_S_inpos % 8));
+         m_S[m_S_inpos / 8] ^= (static_cast<uint64_t>(key_byte) << (8 * (m_S_inpos % 8))) ^ ct_in_word;
       }
 
       // We reached the end of a sponge state block... permute() and start over
@@ -130,6 +176,22 @@ void Ascon_p::finish() {
    // padding bytes, otherwise the final block is padded as needed.
 
    absorb(std::span{padding}.first(byte_rate() - m_S_inpos), m_init_final_rounds);
+   BOTAN_ASSERT_NOMSG(m_S_inpos == 0);
+}
+
+void Ascon_p::intermediate_finish() {
+   // NIST SP.800-232, Section 2.1 (Algorithm 2 "pad()")
+
+   // The padding is defined as:
+   //   1. The first padding bit is set to 1
+   //   2. The remaining bits are set to 0
+   constexpr std::array<uint8_t, sizeof(AsconState)> padding{0x01};
+
+   // We must always add a padded final input block, if the last verbatim
+   // input block aligned with the byte rate, the final block may be just
+   // padding bytes, otherwise the final block is padded as needed.
+
+   absorb(std::span{padding}.first(byte_rate() - m_S_inpos));
    BOTAN_ASSERT_NOMSG(m_S_inpos == 0);
 }
 
