@@ -557,12 +557,23 @@ class divide_precomp final {
                return quotient;
             }
 #endif
+
+#if !defined(BOTAN_BUILD_COMPILER_IS_CLANGCL)
+
+            /* clang-cl has a bug where on encountering a 128/64 division it emits
+            * a call to __udivti3() but then fails to link the relevant builtin into
+            * the binary, causing a link failure. Work around this by simply omitting
+            * such code for clang-cl
+            *
+            * See https://github.com/llvm/llvm-project/issues/25679
+            */
             if constexpr(WordInfo<W>::dword_is_native) {
                typename WordInfo<W>::dword n = n1;
                n <<= WordInfo<W>::bits;
                n |= n0;
                return static_cast<W>(n / m_divisor);
             }
+#endif
          }
 
          W high = n1;
