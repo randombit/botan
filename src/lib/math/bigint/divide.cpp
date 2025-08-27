@@ -272,12 +272,14 @@ void vartime_divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt&
    const word y_t1 = y.word_at(t - 1);
    BOTAN_DEBUG_ASSERT((y_t0 >> (WordInfo<word>::bits - 1)) == 1);
 
+   divide_precomp div_y_t0(y_t0);
+
    for(size_t j = n; j != t; --j) {
       const word x_j0 = r.word_at(j);
       const word x_j1 = r.word_at(j - 1);
       const word x_j2 = r.word_at(j - 2);
 
-      word qjt = (x_j0 == y_t0) ? WordInfo<word>::max : bigint_divop_vartime(x_j0, x_j1, y_t0);
+      word qjt = (x_j0 == y_t0) ? WordInfo<word>::max : div_y_t0.vartime_div_2to1(x_j0, x_j1);
 
       // Per HAC 14.23, this operation is required at most twice
       for(size_t k = 0; k != 2; ++k) {

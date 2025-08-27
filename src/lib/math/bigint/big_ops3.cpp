@@ -168,9 +168,10 @@ word operator%(const BigInt& n, word mod) {
    if(n.is_positive() && is_power_of_2(mod)) {
       remainder = (n.word_at(0) & (mod - 1));
    } else {
+      divide_precomp redc_mod(mod);
       const size_t sw = n.sig_words();
       for(size_t i = sw; i > 0; --i) {
-         remainder = bigint_modop_vartime(remainder, n.word_at(i - 1), mod);
+         remainder = redc_mod.vartime_mod_2to1(remainder, n.word_at(i - 1));
       }
    }
 
