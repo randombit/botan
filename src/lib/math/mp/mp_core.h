@@ -529,50 +529,75 @@ inline constexpr auto bigint_ct_is_eq(const W x[], size_t x_size, const W y[], s
 }
 
 /**
-* Compute ((n1<<bits) + n0) / d
+* Setup for variable-time word level division/modulo operations
+*
+* Currently this just uses the compiler's support for a 2/1 word division,
+* but likely could be improved by precomputed values based on the divisor,
+* for example using the approaches outlined in Hacker's Delight chapter 10.
 */
 template <WordType W>
-inline constexpr auto bigint_divop_vartime(W n1, W n0, W d) -> W {
-   BOTAN_ARG_CHECK(d != 0, "Division by zero");
-
-   if constexpr(WordInfo<W>::dword_is_native) {
-      typename WordInfo<W>::dword n = n1;
-      n <<= WordInfo<W>::bits;
-      n |= n0;
-      return static_cast<W>(n / d);
-   } else {
-      W high = n1 % d;
-      W quotient = 0;
-
-      for(size_t i = 0; i != WordInfo<W>::bits; ++i) {
-         const W high_top_bit = high >> (WordInfo<W>::bits - 1);
-
-         high <<= 1;
-         high |= (n0 >> (WordInfo<W>::bits - 1 - i)) & 1;
-         quotient <<= 1;
-
-         if(high_top_bit || high >= d) {
-            high -= d;
-            quotient |= 1;
-         }
+class divide_precomp final {
+   public:
+      explicit constexpr divide_precomp(W divisor) : m_divisor(divisor) {
+         BOTAN_ARG_CHECK(m_divisor != 0, "Division by zero");
       }
 
-      return quotient;
-   }
-}
+      // Return floor((n1 || n0) / d)
+      //
+      // This assumes n1 < d so that the quotient fits in a word
+      inline constexpr W vartime_div_2to1(W n1, W n0) const {
+         BOTAN_ASSERT_NOMSG(n1 < m_divisor);
 
-/**
-* Compute ((n1<<bits) + n0) % d
-*/
-template <WordType W>
-inline constexpr auto bigint_modop_vartime(W n1, W n0, W d) -> W {
-   BOTAN_ARG_CHECK(d != 0, "Division by zero");
+         if(!std::is_constant_evaluated()) {
+#if defined(BOTAN_MP_USE_X86_64_ASM)
+            if constexpr(std::same_as<W, uint64_t>) {
+               W quotient = 0;
+               W remainder = 0;
+               asm("divq %[v]" : "=a"(quotient), "=d"(remainder) : [v] "r"(m_divisor), "a"(n0), "d"(n1));
+               return quotient;
+            }
+#endif
+            if constexpr(WordInfo<W>::dword_is_native) {
+               typename WordInfo<W>::dword n = n1;
+               n <<= WordInfo<W>::bits;
+               n |= n0;
+               return static_cast<W>(n / m_divisor);
+            }
+         }
 
-   W z = bigint_divop_vartime(n1, n0, d);
-   W carry = 0;
-   z = word_madd2(z, d, &carry);
-   return (n0 - z);
-}
+         W high = n1;
+         W quotient = 0;
+
+         for(size_t i = 0; i != WordInfo<W>::bits; ++i) {
+            const W high_top_bit = high >> (WordInfo<W>::bits - 1);
+
+            high <<= 1;
+            high |= (n0 >> (WordInfo<W>::bits - 1 - i)) & 1;
+            quotient <<= 1;
+
+            if(high_top_bit || high >= m_divisor) {
+               high -= m_divisor;
+               quotient |= 1;
+            }
+         }
+
+         return quotient;
+      }
+
+      // Return floor((n1 || n0) % d)
+      //
+      // This assumes n1 < d so that the quotient fits in a word
+      inline constexpr W vartime_mod_2to1(W n1, W n0) const {
+         BOTAN_ASSERT_NOMSG(n1 < m_divisor);
+         W q = this->vartime_div_2to1(n1, n0);
+         W carry = 0;
+         q = word_madd2(q, m_divisor, &carry);
+         return (n0 - q);
+      }
+
+   private:
+      W m_divisor;
+};
 
 /*
 * Compute an integer x such that (a*x) == -1 (mod 2^n)

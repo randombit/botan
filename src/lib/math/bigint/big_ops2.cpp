@@ -244,9 +244,10 @@ word BigInt::operator%=(word mod) {
    if(is_power_of_2(mod)) {
       remainder = (word_at(0) & (mod - 1));
    } else {
+      divide_precomp redc_mod(mod);
       const size_t sw = sig_words();
       for(size_t i = sw; i > 0; --i) {
-         remainder = bigint_modop_vartime(remainder, word_at(i - 1), mod);
+         remainder = redc_mod.vartime_mod_2to1(remainder, word_at(i - 1));
       }
    }
 
