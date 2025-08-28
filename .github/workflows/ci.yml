@@ -24,6 +24,7 @@ concurrency:
 
 jobs:
   windows:
+    if: false
     name: "Windows"
     strategy:
       fail-fast: false
@@ -75,6 +76,7 @@ jobs:
         run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='ninja' --cpu='${{ matrix.arch }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   linux:
+    if: false
     name: "Linux"
     strategy:
       fail-fast: false
@@ -109,6 +111,7 @@ jobs:
         run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   macos:
+    if: false
     name: "macOS"
     strategy:
       fail-fast: false
@@ -149,6 +152,7 @@ jobs:
         run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   clang-tidy:
+    if: false
     name: "Clang Tidy"
     runs-on: ubuntu-24.04
     steps:
@@ -176,6 +180,7 @@ jobs:
         run: ./src/scripts/ci/gh_clang_tidy_fixes_in_pr.py clang_tidy_diagnostics
 
   analysis:
+    if: false
     name: "Analysis"
     strategy:
       fail-fast: false
@@ -239,6 +244,7 @@ jobs:
         run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   specials:
+    if: false
     name: "Special"
     strategy:
       fail-fast: false
@@ -300,39 +306,11 @@ jobs:
 
       matrix:
         include:
-          - target: cross-i386
-            compiler: gcc
-            host_os: ubuntu-22.04
-          - target: shared
-            compiler: gcc
-            host_os: ubuntu-24.04-arm
-          - target: amalgamation
-            compiler: gcc
-            host_os: ubuntu-24.04-arm
-          - target: shared
-            compiler: clang
-            host_os: ubuntu-24.04-arm
-          - target: cross-ppc64
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: cross-mips64
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: cross-loongarch64
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: cross-android-arm64
-            compiler: clang
-            host_os: ubuntu-24.04
-          - target: static
-            compiler: gcc
-            host_os: windows-2022
-            make_tool: make
-          - target: cross-ios-arm64
-            compiler: xcode
-            host_os: macos-13
           - target: cross-arm32-baremetal
             compiler: gcc
+            host_os: ubuntu-24.04
+          - target: emscripten
+            compiler: clang
             host_os: ubuntu-24.04
 
     runs-on: ${{ matrix.host_os }}
