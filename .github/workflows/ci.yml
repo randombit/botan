@@ -310,7 +310,7 @@ jobs:
             compiler: gcc
             host_os: ubuntu-24.04
           - target: emscripten
-            compiler: clang
+            compiler: emcc
             host_os: ubuntu-24.04
 
     runs-on: ${{ matrix.host_os }}
