@@ -372,7 +372,7 @@ Certificate_Status_Code BOTAN_PUBLIC_API(3, 10)
 
 /**
 * Same as build_all_certificate_paths but only outputs a single path. If there are
-* paths ending in self-signed certificates, these are prioritized  over paths ending
+* paths ending in self-signed certificates, these are prioritized over paths ending
 * in intermediate or leaf certificates of the certificate store.
 *
 * WARNING: The validity (e.g. signatures or constraints) of the output path IS

@@ -673,12 +673,13 @@ Certificate_Status_Code PKIX::build_all_certificate_paths(std::vector<std::vecto
    if(!cert_paths_out.empty()) {
       throw Invalid_Argument("PKIX::build_all_certificate_paths: cert_paths_out must be empty");
    }
+   if(std::ranges::any_of(trusted_certstores, [](auto* ptr) { return ptr == nullptr; })) {
+      throw Invalid_Argument("certificate store list must not contain nullptr");
+   }
 
    auto cert_in_any_trusted_store = [&](const X509_Certificate& cert) {
-      return std::any_of(trusted_certstores.begin(), trusted_certstores.end(), [&](const Certificate_Store* store) {
-         BOTAN_ARG_CHECK(store != nullptr, "certificate store must not be nullptr");
-         return store->certificate_known(cert);
-      });
+      return std::ranges::any_of(trusted_certstores,
+                                 [&](const Certificate_Store* store) { return store->certificate_known(cert); });
    };
 
    /*
@@ -736,9 +737,7 @@ Certificate_Status_Code PKIX::build_all_certificate_paths(std::vector<std::vecto
          if(trusted) {
             cert_paths_out.push_back(path_so_far);
             cert_paths_out.back().push_back(*last);
-         }
-
-         if(last->is_self_signed() && !trusted) {
+         } else if(last->is_self_signed()) {
             stats.push_back(Certificate_Status_Code::CANNOT_ESTABLISH_TRUST);
             continue;
          }
