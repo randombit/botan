@@ -101,9 +101,10 @@ jobs:
           - target: cross-android-arm64-amalgamation
             compiler: clang
             host_os: ubuntu-24.04
-          - target: emscripten
-            compiler: emcc
-            host_os: macos-14
+# Disabled as Homebrew's emscripten is broken and Ubuntu's is obsolete/unusable
+#          - target: emscripten
+#            compiler: emcc
+#            host_os: macos-14
           - target: sde
             compiler: gcc
             host_os: ubuntu-24.04
