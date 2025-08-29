@@ -446,13 +446,14 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Extension /* NOLINT(*-special-member-fu
       * an appropriate status code shall be added to cert_status.
       *
       * @param subject Subject certificate that contains this extension
-      * @param issuer Issuer certificate
+      * @param issuer Issuer certificate. nullopt for certificates with no
+      *        available issuer (e.g. non self-signed trust anchors).
       * @param cert_path Certificate path which is currently validated
       * @param cert_status Certificate validation status codes for subject certificate
       * @param pos Position of subject certificate in cert_path
       */
       virtual void validate(const X509_Certificate& subject,
-                            const X509_Certificate& issuer,
+                            const std::optional<X509_Certificate>& issuer,
                             const std::vector<X509_Certificate>& cert_path,
                             std::vector<std::set<Certificate_Status_Code>>& cert_status,
                             size_t pos);
