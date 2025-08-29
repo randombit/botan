@@ -509,6 +509,13 @@ ofvkP1EDmpx50fHLawIDAQAB
         verify = botan.PKVerify(pk, param_str)
         verify_positive_and_negative(verify, sig)
 
+    @staticmethod
+    def _ecc_sec1_convert_to_compressed(uncompressed_sec1):
+        assert uncompressed_sec1[0] == 0x04
+        is_odd = uncompressed_sec1[-1] & 0x01 != 0
+        x = uncompressed_sec1[1:1 + (len(uncompressed_sec1) - 1) // 2]
+        return (b"\x03" if is_odd else b"\x02") + x
+
     def test_rsa(self):
         rng = botan.RandomNumberGenerator()
         rsapriv = botan.PrivateKey.create('RSA', '1024', rng)
@@ -609,6 +616,15 @@ ofvkP1EDmpx50fHLawIDAQAB
         priv2 = botan.PrivateKey.load_ecdsa(group, priv.get_field('x'))
         self._pksign_roundtrips(priv2, pub, hash_fn)
 
+        # Load public key from SEC.1 encoding
+        uncompressed_sec1 = pub.to_raw()
+        pub3 = botan.PublicKey.load_ecdsa_sec1(group, uncompressed_sec1)
+        self._pksign_roundtrips(priv, pub3, hash_fn)
+
+        compressed_sec1 = BotanPythonTests._ecc_sec1_convert_to_compressed(uncompressed_sec1)
+        pub4 = botan.PublicKey.load_ecdsa_sec1(group, compressed_sec1)
+        self._pksign_roundtrips(priv, pub4, hash_fn)
+
     def test_sm2(self):
         rng = botan.RandomNumberGenerator()
 
@@ -635,6 +651,15 @@ ofvkP1EDmpx50fHLawIDAQAB
         # Load private key from component
         priv2 = botan.PrivateKey.load_sm2(group, priv.get_field('x'))
         self._pksign_roundtrips(priv2, pub, hash_fn)
+
+        # Load public key from SEC.1 encoding
+        uncompressed_sec1 = pub.to_raw()
+        pub3 = botan.PublicKey.load_sm2_sec1(group, uncompressed_sec1)
+        self._pksign_roundtrips(priv, pub3, hash_fn)
+
+        compressed_sec1 = BotanPythonTests._ecc_sec1_convert_to_compressed(uncompressed_sec1)
+        pub4 = botan.PublicKey.load_sm2_sec1(group, compressed_sec1)
+        self._pksign_roundtrips(priv, pub4, hash_fn)
 
     def test_ecdh(self):
         a_rng = botan.RandomNumberGenerator('user')
@@ -680,6 +705,17 @@ ofvkP1EDmpx50fHLawIDAQAB
 
             a_raw = hex_encode(a_priv.to_raw())
             self.assertEqual(int(a_raw, base=16), a_priv_x)
+
+            uncompressed_sec1 = a_priv.get_public_key().to_raw()
+            compressed_sec1 = BotanPythonTests._ecc_sec1_convert_to_compressed(uncompressed_sec1)
+            new_a_pub1 = botan.PublicKey.load_ecdh_sec1(grp, uncompressed_sec1)
+            new_a_pub2 = botan.PublicKey.load_ecdh_sec1(grp, compressed_sec1)
+            self.assertEqual(new_a_pub1.to_raw(), new_a_pub2.to_raw())
+            self.assertEqual(new_a_pub1.to_raw(), a_priv.get_public_key().to_raw())
+            b_op2 = botan.PKKeyAgreement(b_priv, kdf)
+            b_key2 = b_op2.agree(compressed_sec1, 32, salt)
+            self.assertEqual(b_key2, b_key)
+
 
     def test_rfc7748_kex(self):
         rng = botan.RandomNumberGenerator()
