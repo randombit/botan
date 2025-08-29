@@ -132,7 +132,7 @@ const Certificate_Extension& Extensions::Extensions_Info::obj() const {
 * Validate the extension (the default implementation is a NOP)
 */
 void Certificate_Extension::validate(const X509_Certificate& /*unused*/,
-                                     const X509_Certificate& /*unused*/,
+                                     const std::optional<X509_Certificate>& /*unused*/,
                                      const std::vector<X509_Certificate>& /*unused*/,
                                      std::vector<std::set<Certificate_Status_Code>>& /*unused*/,
                                      size_t /*unused*/) {}
@@ -534,7 +534,7 @@ void Name_Constraints::decode_inner(const std::vector<uint8_t>& in) {
 }
 
 void Name_Constraints::validate(const X509_Certificate& subject,
-                                const X509_Certificate& /*issuer*/,
+                                const std::optional<X509_Certificate>& /*issuer*/,
                                 const std::vector<X509_Certificate>& cert_path,
                                 std::vector<std::set<Certificate_Status_Code>>& cert_status,
                                 size_t pos) {
@@ -617,7 +617,7 @@ void Certificate_Policies::decode_inner(const std::vector<uint8_t>& in) {
 }
 
 void Certificate_Policies::validate(const X509_Certificate& /*subject*/,
-                                    const X509_Certificate& /*issuer*/,
+                                    const std::optional<X509_Certificate>& /*issuer*/,
                                     const std::vector<X509_Certificate>& /*cert_path*/,
                                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
                                     size_t pos) {
@@ -1388,7 +1388,7 @@ IPAddressBlocks::IPAddress<V>::IPAddress(std::span<const uint8_t> v) {
 }
 
 void IPAddressBlocks::validate(const X509_Certificate& /* unused */,
-                               const X509_Certificate& /* unused */,
+                               const std::optional<X509_Certificate>& /* unused */,
                                const std::vector<X509_Certificate>& cert_path,
                                std::vector<std::set<Certificate_Status_Code>>& cert_status,
                                size_t pos) {
@@ -1624,7 +1624,7 @@ void ASBlocks::ASIdOrRange::decode_from(BER_Decoder& from) {
 }
 
 void ASBlocks::validate(const X509_Certificate& /* unused */,
-                        const X509_Certificate& /* unused */,
+                        const std::optional<X509_Certificate>& /* unused */,
                         const std::vector<X509_Certificate>& cert_path,
                         std::vector<std::set<Certificate_Status_Code>>& cert_status,
                         size_t pos) {
