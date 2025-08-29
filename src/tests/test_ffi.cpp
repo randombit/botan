@@ -61,6 +61,72 @@ namespace {
 
 // NOLINTEND(*-macro-usage)
 
+/**
+ * Helper class for testing "view"-style API functions that take a callback
+ * that gets passed a variable-length buffer of bytes.
+ *
+ * Example:
+ *   botan_privkey_t priv;
+ *   ViewBytesSink sink;
+ *   botan_privkey_view_raw(priv, sink.delegate(), sink.callback());
+ *   std::cout << hex_encode(sink.get()) << std::endl;
+ */
+class ViewBytesSink final {
+   public:
+      void* delegate() { return this; }
+
+      botan_view_bin_fn callback() { return &write_fn; }
+
+      std::span<const uint8_t> get() const { return m_buf; }
+
+      const uint8_t* data() const { return m_buf.data(); }
+
+      size_t size() const { return m_buf.size(); }
+
+   private:
+      static int write_fn(void* ctx, const uint8_t buf[], size_t len) {
+         if(ctx == nullptr || buf == nullptr) {
+            return BOTAN_FFI_ERROR_NULL_POINTER;
+         }
+
+         auto* sink = static_cast<ViewBytesSink*>(ctx);
+         sink->m_buf.assign(buf, buf + len);
+
+         return BOTAN_FFI_SUCCESS;
+      }
+
+   private:
+      std::vector<uint8_t> m_buf;
+};
+
+/**
+ * See ViewBytesSink for how to use this. Works for `botan_view_str_fn` instead.
+*/
+class ViewStringSink final {
+   public:
+      void* delegate() { return this; }
+
+      botan_view_str_fn callback() { return &write_fn; }
+
+      std::string_view get() { return m_str; }
+
+   private:
+      static int write_fn(void* ctx, const char* str, size_t len) {
+         if(ctx == nullptr || str == nullptr) {
+            return BOTAN_FFI_ERROR_NULL_POINTER;
+         }
+
+         auto* sink = static_cast<ViewStringSink*>(ctx);
+         // discard the null terminator
+         sink->m_str = std::string(str, len - 1);
+
+         return BOTAN_FFI_SUCCESS;
+      }
+
+   private:
+      std::string m_str;
+};
+
 // NOLINTBEGIN(*-init-variables)
 
 class FFI_Test : public Test {
@@ -3406,68 +3472,6 @@ class FFI_X448_Test final : public FFI_Test {
          TEST_FFI_OK(botan_privkey_destroy, (b_priv));
          TEST_FFI_OK(botan_pk_op_key_agreement_destroy, (ka));
       }
-};
-
-/**
- * Helper class for testing "view"-style API functions that take a callback
- * that gets passed a variable-length buffer of bytes.
- *
- * Example:
- *   botan_privkey_t priv;
- *   ViewBytesSink sink;
- *   botan_privkey_view_raw(priv, sink.delegate(), sink.callback());
- *   std::cout << hex_encode(sink.get()) << std::endl;
- */
-class ViewBytesSink final {
-   public:
-      void* delegate() { return this; }
-
-      botan_view_bin_fn callback() { return &write_fn; }
-
-      const std::vector<uint8_t>& get() { return m_buf; }
-
-   private:
-      static int write_fn(void* ctx, const uint8_t buf[], size_t len) {
-         if(ctx == nullptr || buf == nullptr) {
-            return BOTAN_FFI_ERROR_NULL_POINTER;
-         }
-
-         auto* sink = static_cast<ViewBytesSink*>(ctx);
-         sink->m_buf.assign(buf, buf + len);
-
-         return 0;
-      }
-
-   private:
-      std::vector<uint8_t> m_buf;
-};
-
-/**
- * See ViewBytesSink for how to use this. Works for `botan_view_str_fn` instead.
-*/
-class ViewStringSink final {
-   public:
-      void* delegate() { return this; }
-
-      botan_view_str_fn callback() { return &write_fn; }
-
-      std::string_view get() { return m_str; }
-
-   private:
-      static int write_fn(void* ctx, const char* str, size_t len) {
-         if(ctx == nullptr || str == nullptr) {
-            return BOTAN_FFI_ERROR_NULL_POINTER;
-         }
-
-         auto* sink = static_cast<ViewStringSink*>(ctx);
-         // discard the null terminator
-         sink->m_str = std::string(str, len - 1);
-
-         return 0;
-      }
-
-   private:
-      std::string m_str;
 };
 
 /**
