@@ -154,68 +154,6 @@ class FFI_Test : public Test {
       virtual void ffi_test(Test::Result& result, botan_rng_t rng) = 0;
 };
 
-/**
- * Helper class for testing "view"-style API functions that take a callback
- * that gets passed a variable-length buffer of bytes.
- *
- * Example:
- *   botan_privkey_t priv;
- *   ViewBytesSink sink;
- *   botan_privkey_view_raw(priv, sink.delegate(), sink.callback());
- *   std::cout << hex_encode(sink.get()) << std::endl;
- */
-class ViewBytesSink final {
-   public:
-      void* delegate() { return this; }
-
-      botan_view_bin_fn callback() { return &write_fn; }
-
-      const std::vector<uint8_t>& get() { return m_buf; }
-
-   private:
-      static int write_fn(void* ctx, const uint8_t buf[], size_t len) {
-         if(ctx == nullptr || buf == nullptr) {
-            return BOTAN_FFI_ERROR_NULL_POINTER;
-         }
-
-         auto* sink = static_cast<ViewBytesSink*>(ctx);
-         sink->m_buf.assign(buf, buf + len);
-
-         return 0;
-      }
-
-   private:
-      std::vector<uint8_t> m_buf;
-};
-
-/**
- * See ViewBytesSink for how to use this. Works for `botan_view_str_fn` instead.
-*/
-class ViewStringSink final {
-   public:
-      void* delegate() { return this; }
-
-      botan_view_str_fn callback() { return &write_fn; }
-
-      std::string_view get() { return m_str; }
-
-   private:
-      static int write_fn(void* ctx, const char* str, size_t len) {
-         if(ctx == nullptr || str == nullptr) {
-            return BOTAN_FFI_ERROR_NULL_POINTER;
-         }
-
-         auto* sink = static_cast<ViewStringSink*>(ctx);
-         // discard the null terminator
-         sink->m_str = std::string(str, len - 1);
-
-         return 0;
-      }
-
-   private:
-      std::string m_str;
-};
-
 void ffi_test_pubkey_export(Test::Result& result, botan_pubkey_t pub, botan_privkey_t priv, botan_rng_t rng) {
    // export public key
    size_t pubkey_len = 0;
@@ -893,7 +831,7 @@ class FFI_Cert_Creation_Test final : public FFI_Test {
                }
 
                botan_x509_cert_t ca_cert;
-               TEST_FFI_OK(botan_x509_cert_create_self_signed,
+               TEST_FFI_OK(botan_x509_cert_params_builder_into_self_signed,
                            (&ca_cert, ca_key, ca_builder, rng, not_before, not_after, nullptr, hash_fn.c_str(), ""));
 
                botan_x509_cert_params_builder_t req_builder;
@@ -901,7 +839,7 @@ class FFI_Cert_Creation_Test final : public FFI_Test {
                TEST_FFI_OK(botan_x509_cert_params_builder_add_allowed_usage, (req_builder, 1 << 15));
 
                botan_x509_pkcs10_req_t req;
-               TEST_FFI_OK(botan_x509_pkcs10_req_create,
+               TEST_FFI_OK(botan_x509_cert_params_builder_into_pkcs10_req,
                            (&req, cert_key, req_builder, rng, hash_fn.c_str(), nullptr, nullptr));
 
                int res;
@@ -981,10 +919,9 @@ class FFI_Cert_Creation_Test final : public FFI_Test {
 
                uint64_t expire_time;
                uint8_t reason;
-               TEST_FFI_OK(botan_x509_crl_get_entry, (new_crl, 0, serial_out.data(), &out_len, &expire_time, &reason));
                botan_mp_t serial_from_crl;
                TEST_FFI_OK(botan_mp_init, (&serial_from_crl));
-               TEST_FFI_OK(botan_mp_from_bin, (serial_from_crl, serial_out.data(), out_len));
+               TEST_FFI_OK(botan_x509_crl_get_entry, (new_crl, 0, serial_from_crl, &expire_time, &reason));
                TEST_FFI_RC(1, botan_mp_equal, (serial, serial_from_crl));
                result.confirm("expire time is correct", now - 5 <= expire_time && expire_time <= now + 5);
                result.confirm("reason is correct", reason == 1);
@@ -1179,7 +1116,7 @@ class FFI_X509_RPKI_Test final : public FFI_Test {
 
                botan_x509_cert_t ca_cert;
                TEST_FFI_OK(
-                  botan_x509_cert_create_self_signed,
+                  botan_x509_cert_params_builder_into_self_signed,
                   (&ca_cert, ca_key, ca_builder, rng, not_before, not_after, nullptr, hash_fn.c_str(), nullptr));
 
                botan_x509_cert_params_builder_t req_builder;
@@ -1200,7 +1137,7 @@ class FFI_X509_RPKI_Test final : public FFI_Test {
                TEST_FFI_OK(botan_x509_ext_as_blocks_destroy, (req_as_blocks));
 
                botan_x509_pkcs10_req_t req;
-               TEST_FFI_OK(botan_x509_pkcs10_req_create,
+               TEST_FFI_OK(botan_x509_cert_params_builder_into_pkcs10_req,
                            (&req, cert_key, req_builder, rng, hash_fn.c_str(), nullptr, nullptr));
 
                botan_x509_cert_t cert;

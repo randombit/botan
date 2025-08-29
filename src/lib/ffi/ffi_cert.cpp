@@ -124,6 +124,22 @@ int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key) 
 #endif
 }
 
+int botan_x509_cert_get_issuer_dn_count(botan_x509_cert_t cert, const char* key, size_t* len) {
+   if(key == nullptr || len == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) -> int {
+      auto issuer_info = c.issuer_info(key);
+      *len = issuer_info.size();
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(cert);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 int botan_x509_cert_get_issuer_dn(
    botan_x509_cert_t cert, const char* key, size_t index, uint8_t out[], size_t* out_len) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
@@ -142,6 +158,22 @@ int botan_x509_cert_get_issuer_dn(
 #endif
 }
 
+int botan_x509_cert_get_subject_dn_count(botan_x509_cert_t cert, const char* key, size_t* len) {
+   if(key == nullptr || len == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) -> int {
+      auto issuer_info = c.subject_info(key);
+      *len = issuer_info.size();
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(cert);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 int botan_x509_cert_get_subject_dn(
    botan_x509_cert_t cert, const char* key, size_t index, uint8_t out[], size_t* out_len) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
@@ -156,6 +188,26 @@ int botan_x509_cert_get_subject_dn(
    });
 #else
    BOTAN_UNUSED(cert, key, index, out, out_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_get_subject_name(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_str_fn view) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert,
+                          [=](const auto& c) { return invoke_view_callback(view, ctx, c.subject_dn().to_string()); });
+#else
+   BOTAN_UNUSED(cert, ctx, view);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_get_issuer_name(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_str_fn view) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert,
+                          [=](const auto& c) { return invoke_view_callback(view, ctx, c.subject_dn().to_string()); });
+#else
+   BOTAN_UNUSED(cert, ctx, view);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
@@ -586,7 +638,7 @@ int botan_x509_crl_get_count(botan_x509_crl_t crl, size_t* count) {
 }
 
 int botan_x509_crl_get_entry(
-   botan_x509_crl_t crl, size_t i, uint8_t serial[], size_t* serial_len, uint64_t* expire_time, uint8_t* reason) {
+   botan_x509_crl_t crl, size_t i, botan_mp_t serial, uint64_t* expire_time, uint8_t* reason) {
    if(expire_time == nullptr || reason == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
@@ -598,9 +650,10 @@ int botan_x509_crl_get_entry(
    }
    *reason = static_cast<uint8_t>(entries[i].reason_code());
    *expire_time = entries[i].expire_time().time_since_epoch();
-   return write_vec_output(serial, serial_len, entries[i].serial_number());
+   safe_get(serial)._assign_from_bytes(entries[i].serial_number());
+   return BOTAN_FFI_SUCCESS;
 #else
-   BOTAN_UNUSED(crl, i, serial, serial_len);
+   BOTAN_UNUSED(crl, i, serial);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
@@ -884,15 +937,15 @@ int botan_x509_cert_params_builder_add_ext_as_blocks(botan_x509_cert_params_buil
 #endif
 }
 
-int botan_x509_cert_create_self_signed(botan_x509_cert_t* cert_obj,
-                                       botan_privkey_t key,
-                                       botan_x509_cert_params_builder_t builder,
-                                       botan_rng_t rng,
-                                       uint64_t not_before,
-                                       uint64_t not_after,
-                                       const botan_mp_t* serial_number,
-                                       const char* hash_fn,
-                                       const char* padding) {
+int botan_x509_cert_params_builder_into_self_signed(botan_x509_cert_t* cert_obj,
+                                                    botan_privkey_t key,
+                                                    botan_x509_cert_params_builder_t builder,
+                                                    botan_rng_t rng,
+                                                    uint64_t not_before,
+                                                    uint64_t not_after,
+                                                    const botan_mp_t* serial_number,
+                                                    const char* hash_fn,
+                                                    const char* padding) {
    if(cert_obj == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
@@ -919,6 +972,32 @@ int botan_x509_cert_create_self_signed(botan_x509_cert_t* cert_obj,
    });
 #else
    BOTAN_UNUSED(key, builder, rng, not_before, not_after, hash_fn, padding);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_params_builder_into_pkcs10_req(botan_x509_pkcs10_req_t* req_obj,
+                                                   botan_privkey_t key,
+                                                   botan_x509_cert_params_builder_t builder,
+                                                   botan_rng_t rng,
+                                                   const char* hash_fn,
+                                                   const char* padding,
+                                                   const char* challenge_password) {
+   if(req_obj == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto req = std::make_unique<Botan::PKCS10_Request>(
+         safe_get(builder).into_pkcs10_request(safe_get(key),
+                                               safe_get(rng),
+                                               optional_from_ptr(hash_fn),
+                                               optional_from_ptr(padding),
+                                               optional_from_ptr(challenge_password)));
+      return ffi_new_object(req_obj, std::move(req));
+   });
+#else
+   BOTAN_UNUSED(key, builder, rng, padding, hash_fn, challenge_password);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
@@ -959,32 +1038,6 @@ int botan_x509_pkcs10_req_load(botan_x509_pkcs10_req_t* req_obj, const uint8_t r
    });
 #else
    BOTAN_UNUSED(req_bits_len);
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
-int botan_x509_pkcs10_req_create(botan_x509_pkcs10_req_t* req_obj,
-                                 botan_privkey_t key,
-                                 botan_x509_cert_params_builder_t builder,
-                                 botan_rng_t rng,
-                                 const char* hash_fn,
-                                 const char* padding,
-                                 const char* challenge_password) {
-   if(req_obj == nullptr) {
-      return BOTAN_FFI_ERROR_NULL_POINTER;
-   }
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return ffi_guard_thunk(__func__, [=]() -> int {
-      auto req = std::make_unique<Botan::PKCS10_Request>(
-         safe_get(builder).into_pkcs10_request(safe_get(key),
-                                               safe_get(rng),
-                                               optional_from_ptr(hash_fn),
-                                               optional_from_ptr(padding),
-                                               optional_from_ptr(challenge_password)));
-      return ffi_new_object(req_obj, std::move(req));
-   });
-#else
-   BOTAN_UNUSED(key, builder, rng, padding, hash_fn, challenge_password);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }

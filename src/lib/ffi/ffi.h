@@ -2153,15 +2153,25 @@ int botan_x509_cert_view_public_key_bits(botan_x509_cert_t cert, botan_view_ctx 
 
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key);
 
+BOTAN_FFI_EXPORT(3, 10) int botan_x509_cert_get_issuer_dn_count(botan_x509_cert_t cert, const char* key, size_t* len);
+
 /* TODO(Botan4) this should use char for the out param */
 BOTAN_FFI_EXPORT(2, 0)
 int botan_x509_cert_get_issuer_dn(
    botan_x509_cert_t cert, const char* key, size_t index, uint8_t out[], size_t* out_len);
 
+BOTAN_FFI_EXPORT(3, 10) int botan_x509_cert_get_subject_dn_count(botan_x509_cert_t cert, const char* key, size_t* len);
+
 /* TODO(Botan4) this should use char for the out param */
 BOTAN_FFI_EXPORT(2, 0)
 int botan_x509_cert_get_subject_dn(
    botan_x509_cert_t cert, const char* key, size_t index, uint8_t out[], size_t* out_len);
+
+BOTAN_FFI_EXPORT(3, 10)
+int botan_x509_cert_get_subject_name(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_str_fn view);
+
+BOTAN_FFI_EXPORT(3, 10)
+int botan_x509_cert_get_issuer_name(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_str_fn view);
 
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_to_string(botan_x509_cert_t cert, char out[], size_t* out_len);
 
@@ -2372,17 +2382,26 @@ int botan_x509_cert_params_builder_add_ext_as_blocks(botan_x509_cert_params_buil
 * X.509 cert creation
 */
 BOTAN_FFI_EXPORT(3, 10)
-int botan_x509_cert_create_self_signed(botan_x509_cert_t* cert_obj,
-                                       botan_privkey_t key,
-                                       botan_x509_cert_params_builder_t builder,
-                                       botan_rng_t rng,
-                                       uint64_t not_before,
-                                       uint64_t not_after,
-                                       const botan_mp_t* serial_number,
-                                       const char* hash_fn,
-                                       const char* padding);
+int botan_x509_cert_params_builder_into_self_signed(botan_x509_cert_t* cert_obj,
+                                                    botan_privkey_t key,
+                                                    botan_x509_cert_params_builder_t builder,
+                                                    botan_rng_t rng,
+                                                    uint64_t not_before,
+                                                    uint64_t not_after,
+                                                    const botan_mp_t* serial_number,
+                                                    const char* hash_fn,
+                                                    const char* padding);
 
 typedef struct botan_x509_pkcs10_req_struct* botan_x509_pkcs10_req_t;
+
+BOTAN_FFI_EXPORT(3, 10)
+int botan_x509_cert_params_builder_into_pkcs10_req(botan_x509_pkcs10_req_t* req_obj,
+                                                   botan_privkey_t key,
+                                                   botan_x509_cert_params_builder_t builder,
+                                                   botan_rng_t rng,
+                                                   const char* hash_fn,
+                                                   const char* padding,
+                                                   const char* challenge_password);
 
 BOTAN_FFI_EXPORT(3, 10) int botan_x509_pkcs10_req_destroy(botan_x509_pkcs10_req_t req);
 
@@ -2399,15 +2418,6 @@ BOTAN_FFI_EXPORT(3, 10) int botan_x509_pkcs10_req_is_ca(botan_x509_pkcs10_req_t 
 
 BOTAN_FFI_EXPORT(3, 10)
 int botan_x509_pkcs10_req_verify_signature(botan_x509_pkcs10_req_t req, botan_pubkey_t key, int* result);
-
-BOTAN_FFI_EXPORT(3, 10)
-int botan_x509_pkcs10_req_create(botan_x509_pkcs10_req_t* req_obj,
-                                 botan_privkey_t key,
-                                 botan_x509_cert_params_builder_t builder,
-                                 botan_rng_t rng,
-                                 const char* hash_fn,
-                                 const char* padding,
-                                 const char* challenge_password);
 
 BOTAN_FFI_EXPORT(3, 10)
 int botan_x509_pkcs10_req_view_pem(botan_x509_pkcs10_req_t req, botan_view_ctx ctx, botan_view_str_fn view);
@@ -2447,6 +2457,20 @@ int botan_x509_crl_create(botan_x509_crl_t* crl_obj,
                           const char* hash_fn,
                           const char* padding);
 
+/* Must match values of CRL_Code in pkix_enums.h */
+enum botan_x509_crl_reason_code /* NOLINT(*-enum-size) */ {
+   UNSPECIFIED = 0,
+   KEY_COMPROMISE = 1,
+   CA_COMPROMISE = 2,
+   AFFILIATION_CHANGED = 3,
+   SUPERSEDED = 4,
+   CESSATION_OF_OPERATION = 5,
+   CERTIFICATE_HOLD = 6,
+   REMOVE_FROM_CRL = 8,
+   PRIVILIGE_WITHDRAWN = 9,
+   AA_COMPROMISE = 10
+};
+
 BOTAN_FFI_EXPORT(3, 10)
 int botan_x509_crl_update(botan_x509_crl_t* crl_obj,
                           botan_x509_crl_t last_crl,
@@ -2464,8 +2488,7 @@ int botan_x509_crl_update(botan_x509_crl_t* crl_obj,
 BOTAN_FFI_EXPORT(3, 10) int botan_x509_crl_get_count(botan_x509_crl_t crl, size_t* count);
 
 BOTAN_FFI_EXPORT(3, 10)
-int botan_x509_crl_get_entry(
-   botan_x509_crl_t crl, size_t i, uint8_t serial[], size_t* serial_len, uint64_t* expire_time, uint8_t* reason);
+int botan_x509_crl_get_entry(botan_x509_crl_t crl, size_t i, botan_mp_t serial, uint64_t* expire_time, uint8_t* reason);
 
 BOTAN_FFI_EXPORT(3, 10) int botan_x509_crl_verify_signature(botan_x509_crl_t crl, botan_pubkey_t key, int* result);
 
