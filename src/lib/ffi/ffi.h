@@ -69,7 +69,7 @@ API follows a few simple rules:
 * that declaration is not visible here since this header is intentionally
 * free-standing, depending only on a few C standard library headers.
 */
-#define BOTAN_FFI_API_VERSION 20250506
+#define BOTAN_FFI_API_VERSION 20250829
 
 /**
 * BOTAN_FFI_EXPORT indicates public FFI functions.
@@ -1862,14 +1862,23 @@ int botan_privkey_load_ecdsa(botan_privkey_t* key, botan_mp_t scalar, const char
 BOTAN_FFI_EXPORT(2, 2)
 int botan_pubkey_load_ecdsa(botan_pubkey_t* key, botan_mp_t public_x, botan_mp_t public_y, const char* curve_name);
 
+BOTAN_FFI_EXPORT(3, 10)
+int botan_pubkey_load_ecdsa_sec1(botan_pubkey_t* key, const uint8_t sec1[], size_t sec1_len, const char* curve_name);
+
 BOTAN_FFI_EXPORT(2, 2)
 int botan_pubkey_load_ecdh(botan_pubkey_t* key, botan_mp_t public_x, botan_mp_t public_y, const char* curve_name);
+
+BOTAN_FFI_EXPORT(3, 10)
+int botan_pubkey_load_ecdh_sec1(botan_pubkey_t* key, const uint8_t sec1[], size_t sec1_len, const char* curve_name);
 
 BOTAN_FFI_EXPORT(2, 2)
 int botan_privkey_load_ecdh(botan_privkey_t* key, botan_mp_t scalar, const char* curve_name);
 
 BOTAN_FFI_EXPORT(2, 2)
 int botan_pubkey_load_sm2(botan_pubkey_t* key, botan_mp_t public_x, botan_mp_t public_y, const char* curve_name);
+
+BOTAN_FFI_EXPORT(3, 10)
+int botan_pubkey_load_sm2_sec1(botan_pubkey_t* key, const uint8_t sec1[], size_t sec1_len, const char* curve_name);
 
 BOTAN_FFI_EXPORT(2, 2)
 int botan_privkey_load_sm2(botan_privkey_t* key, botan_mp_t scalar, const char* curve_name);

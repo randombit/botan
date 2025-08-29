@@ -139,6 +139,24 @@ int pubkey_load_ec(std::unique_ptr<ECPublicKey_t>& key,
    }
 }
 
+template <class ECPublicKey_t>
+int pubkey_load_ec_sec1(std::unique_ptr<ECPublicKey_t>& key,
+                        std::span<const uint8_t> sec1,
+                        std::string_view curve_name) {
+   if(!Botan::EC_Group::supports_named_group(curve_name)) {
+      return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+   }
+
+   const auto group = Botan::EC_Group::from_name(curve_name);
+
+   if(auto pt = Botan::EC_AffinePoint::deserialize(group, sec1)) {
+      key.reset(new ECPublicKey_t(group, pt.value()));
+      return BOTAN_FFI_SUCCESS;
+   } else {
+      return BOTAN_FFI_ERROR_BAD_PARAMETER;
+   }
+}
+
 #endif
 
 Botan::BigInt pubkey_get_field(const Botan::Public_Key& key, std::string_view field) {
@@ -452,6 +470,29 @@ int botan_pubkey_load_ecdsa(botan_pubkey_t* key,
 #endif
 }
 
+int botan_pubkey_load_ecdsa_sec1(botan_pubkey_t* key, const uint8_t sec1[], size_t sec1_len, const char* curve_name) {
+#if defined(BOTAN_HAS_ECDSA)
+   if(key == nullptr || sec1 == nullptr || curve_name == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   *key = nullptr;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      std::unique_ptr<Botan::ECDSA_PublicKey> p_key;
+
+      int rc = pubkey_load_ec_sec1(p_key, {sec1, sec1_len}, curve_name);
+      if(rc == BOTAN_FFI_SUCCESS) {
+         ffi_new_object(key, std::move(p_key));
+      }
+
+      return rc;
+   });
+#else
+   BOTAN_UNUSED(key, sec1, sec1_len, curve_name);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 int botan_privkey_load_ecdsa(botan_privkey_t* key, const botan_mp_t scalar, const char* curve_name) {
 #if defined(BOTAN_HAS_ECDSA)
    if(key == nullptr || curve_name == nullptr) {
@@ -619,6 +660,29 @@ int botan_pubkey_load_ecdh(botan_pubkey_t* key,
 #endif
 }
 
+int botan_pubkey_load_ecdh_sec1(botan_pubkey_t* key, const uint8_t sec1[], size_t sec1_len, const char* curve_name) {
+#if defined(BOTAN_HAS_ECDH)
+   if(key == nullptr || sec1 == nullptr || curve_name == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   *key = nullptr;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      std::unique_ptr<Botan::ECDH_PublicKey> p_key;
+
+      int rc = pubkey_load_ec_sec1(p_key, {sec1, sec1_len}, curve_name);
+      if(rc == BOTAN_FFI_SUCCESS) {
+         ffi_new_object(key, std::move(p_key));
+      }
+
+      return rc;
+   });
+#else
+   BOTAN_UNUSED(key, sec1, sec1_len, curve_name);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 int botan_privkey_load_ecdh(botan_privkey_t* key, const botan_mp_t scalar, const char* curve_name) {
 #if defined(BOTAN_HAS_ECDH)
    if(key == nullptr || curve_name == nullptr) {
@@ -694,6 +758,29 @@ int botan_pubkey_load_sm2(botan_pubkey_t* key,
    });
 #else
    BOTAN_UNUSED(key, public_x, public_y, curve_name);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_pubkey_load_sm2_sec1(botan_pubkey_t* key, const uint8_t sec1[], size_t sec1_len, const char* curve_name) {
+#if defined(BOTAN_HAS_SM2)
+   if(key == nullptr || sec1 == nullptr || curve_name == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   *key = nullptr;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      std::unique_ptr<Botan::SM2_PublicKey> p_key;
+
+      int rc = pubkey_load_ec_sec1(p_key, {sec1, sec1_len}, curve_name);
+      if(rc == BOTAN_FFI_SUCCESS) {
+         ffi_new_object(key, std::move(p_key));
+      }
+
+      return rc;
+   });
+#else
+   BOTAN_UNUSED(key, sec1, sec1_len, curve_name);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
