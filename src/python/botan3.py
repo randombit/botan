@@ -1626,7 +1626,7 @@ class PKSign: # pylint: disable=invalid-name
         _DLL.botan_pk_op_sign_destroy(self.__obj)
 
     def update(self, msg):
-        _DLL.botan_pk_op_sign_update(self.__obj, _ctype_str(msg), len(msg))
+        _DLL.botan_pk_op_sign_update(self.__obj, _ctype_bits(msg), len(msg))
 
     def finish(self, rng_obj):
         outbuf_sz = c_size_t(0)
