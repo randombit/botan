@@ -2833,6 +2833,7 @@ class FFI_ECDSA_Test final : public FFI_Test {
          botan_mp_t private_scalar;
          botan_mp_t public_x;
          botan_mp_t public_y;
+         ViewBytesSink sec1;
          botan_mp_init(&private_scalar);
          botan_mp_init(&public_x);
          botan_mp_init(&public_y);
@@ -2843,13 +2844,17 @@ class FFI_ECDSA_Test final : public FFI_Test {
          TEST_FFI_OK(botan_privkey_get_field, (private_scalar, priv, "x"));
          TEST_FFI_OK(botan_pubkey_get_field, (public_x, pub, "public_x"));
          TEST_FFI_OK(botan_pubkey_get_field, (public_y, pub, "public_y"));
+         TEST_FFI_OK(botan_pubkey_view_raw, (pub, sec1.delegate(), sec1.callback()));
 
          botan_privkey_t loaded_privkey;
-         botan_pubkey_t loaded_pubkey;
+         botan_pubkey_t loaded_pubkey1;
+         botan_pubkey_t loaded_pubkey2;
          TEST_FFI_OK(botan_privkey_load_ecdsa, (&loaded_privkey, private_scalar, kCurve));
-         TEST_FFI_OK(botan_pubkey_load_ecdsa, (&loaded_pubkey, public_x, public_y, kCurve));
+         TEST_FFI_OK(botan_pubkey_load_ecdsa, (&loaded_pubkey1, public_x, public_y, kCurve));
+         TEST_FFI_OK(botan_pubkey_load_ecdsa_sec1, (&loaded_pubkey2, sec1.data(), sec1.size(), kCurve));
          TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey, rng, 0));
-         TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey, rng, 0));
+         TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey1, rng, 0));
+         TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey2, rng, 0));
 
          std::array<char, 32> namebuf{};
          size_t name_len = namebuf.size();
@@ -2918,7 +2923,8 @@ class FFI_ECDSA_Test final : public FFI_Test {
          TEST_FFI_OK(botan_pubkey_destroy, (pub));
          TEST_FFI_OK(botan_privkey_destroy, (priv));
          TEST_FFI_OK(botan_privkey_destroy, (loaded_privkey));
-         TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey));
+         TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey1));
+         TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey2));
       }
 };
 
@@ -2932,7 +2938,8 @@ class FFI_SM2_Sig_Test final : public FFI_Test {
          botan_privkey_t priv;
          botan_pubkey_t pub;
          botan_privkey_t loaded_privkey;
-         botan_pubkey_t loaded_pubkey;
+         botan_pubkey_t loaded_pubkey1;
+         botan_pubkey_t loaded_pubkey2;
 
          if(!TEST_FFI_INIT(botan_privkey_create, (&priv, "SM2_Sig", kCurve, rng))) {
             return;
@@ -2949,6 +2956,7 @@ class FFI_SM2_Sig_Test final : public FFI_Test {
          botan_mp_t private_scalar;
          botan_mp_t public_x;
          botan_mp_t public_y;
+         ViewBytesSink sec1;
          botan_mp_init(&private_scalar);
          botan_mp_init(&public_x);
          botan_mp_init(&public_y);
@@ -2956,10 +2964,13 @@ class FFI_SM2_Sig_Test final : public FFI_Test {
          TEST_FFI_OK(botan_privkey_get_field, (private_scalar, priv, "x"));
          TEST_FFI_OK(botan_pubkey_get_field, (public_x, pub, "public_x"));
          TEST_FFI_OK(botan_pubkey_get_field, (public_y, pub, "public_y"));
+         TEST_FFI_OK(botan_pubkey_view_raw, (pub, sec1.delegate(), sec1.callback()));
          REQUIRE_FFI_OK(botan_privkey_load_sm2, (&loaded_privkey, private_scalar, kCurve));
-         REQUIRE_FFI_OK(botan_pubkey_load_sm2, (&loaded_pubkey, public_x, public_y, kCurve));
+         REQUIRE_FFI_OK(botan_pubkey_load_sm2, (&loaded_pubkey1, public_x, public_y, kCurve));
+         REQUIRE_FFI_OK(botan_pubkey_load_sm2_sec1, (&loaded_pubkey2, sec1.data(), sec1.size(), kCurve));
          TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey, rng, 0));
-         TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey, rng, 0));
+         TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey1, rng, 0));
+         TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey2, rng, 0));
 
          std::array<char, 32> namebuf{};
          size_t name_len = namebuf.size();
@@ -3021,7 +3032,8 @@ class FFI_SM2_Sig_Test final : public FFI_Test {
          TEST_FFI_OK(botan_pubkey_destroy, (pub));
          TEST_FFI_OK(botan_privkey_destroy, (priv));
          TEST_FFI_OK(botan_privkey_destroy, (loaded_privkey));
-         TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey));
+         TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey1));
+         TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey2));
       }
 };
 
@@ -3034,7 +3046,8 @@ class FFI_SM2_Enc_Test final : public FFI_Test {
          botan_privkey_t priv;
          botan_pubkey_t pub;
          botan_privkey_t loaded_privkey;
-         botan_pubkey_t loaded_pubkey;
+         botan_pubkey_t loaded_pubkey1;
+         botan_pubkey_t loaded_pubkey2;
 
          if(!TEST_FFI_INIT(botan_privkey_create, (&priv, "SM2_Enc", kCurve, rng))) {
             return;
@@ -3051,6 +3064,7 @@ class FFI_SM2_Enc_Test final : public FFI_Test {
          botan_mp_t private_scalar;
          botan_mp_t public_x;
          botan_mp_t public_y;
+         ViewBytesSink sec1;
          botan_mp_init(&private_scalar);
          botan_mp_init(&public_x);
          botan_mp_init(&public_y);
@@ -3058,10 +3072,13 @@ class FFI_SM2_Enc_Test final : public FFI_Test {
          TEST_FFI_OK(botan_privkey_get_field, (private_scalar, priv, "x"));
          TEST_FFI_OK(botan_pubkey_get_field, (public_x, pub, "public_x"));
          TEST_FFI_OK(botan_pubkey_get_field, (public_y, pub, "public_y"));
+         TEST_FFI_OK(botan_pubkey_view_raw, (pub, sec1.delegate(), sec1.callback()));
          REQUIRE_FFI_OK(botan_privkey_load_sm2_enc, (&loaded_privkey, private_scalar, kCurve));
-         REQUIRE_FFI_OK(botan_pubkey_load_sm2_enc, (&loaded_pubkey, public_x, public_y, kCurve));
+         REQUIRE_FFI_OK(botan_pubkey_load_sm2_enc, (&loaded_pubkey1, public_x, public_y, kCurve));
+         REQUIRE_FFI_OK(botan_pubkey_load_sm2_sec1, (&loaded_pubkey2, sec1.data(), sec1.size(), kCurve));
          TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey, rng, 0));
-         TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey, rng, 0));
+         TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey1, rng, 0));
+         TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey2, rng, 0));
 
          std::array<char, 32> namebuf{};
          size_t name_len = namebuf.size();
@@ -3075,7 +3092,7 @@ class FFI_SM2_Enc_Test final : public FFI_Test {
          TEST_FFI_OK(botan_rng_get, (rng, message.data(), message.size()));
 
          botan_pk_op_encrypt_t enc;
-         if(TEST_FFI_OK(botan_pk_op_encrypt_create, (&enc, loaded_pubkey, "", 0))) {
+         if(TEST_FFI_OK(botan_pk_op_encrypt_create, (&enc, loaded_pubkey1, "", 0))) {
             size_t ctext_len;
             TEST_FFI_OK(botan_pk_op_encrypt_output_length, (enc, message.size(), &ctext_len));
 
@@ -3102,7 +3119,8 @@ class FFI_SM2_Enc_Test final : public FFI_Test {
          TEST_FFI_OK(botan_pubkey_destroy, (pub));
          TEST_FFI_OK(botan_privkey_destroy, (priv));
          TEST_FFI_OK(botan_privkey_destroy, (loaded_privkey));
-         TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey));
+         TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey1));
+         TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey2));
       }
 };
 
@@ -3129,6 +3147,7 @@ class FFI_ECDH_Test final : public FFI_Test {
          botan_mp_t private_scalar;
          botan_mp_t public_x;
          botan_mp_t public_y;
+         ViewBytesSink sec1;
          botan_mp_init(&private_scalar);
          botan_mp_init(&public_x);
          botan_mp_init(&public_y);
@@ -3136,15 +3155,20 @@ class FFI_ECDH_Test final : public FFI_Test {
          TEST_FFI_OK(botan_privkey_get_field, (private_scalar, priv1, "x"));
          TEST_FFI_OK(botan_pubkey_get_field, (public_x, pub1, "public_x"));
          TEST_FFI_OK(botan_pubkey_get_field, (public_y, pub1, "public_y"));
+         TEST_FFI_OK(botan_pubkey_view_raw, (pub1, sec1.delegate(), sec1.callback()));
 
          botan_privkey_t loaded_privkey1;
          botan_pubkey_t loaded_pubkey1;
+         botan_pubkey_t loaded_pubkey2;
          REQUIRE_FFI_OK(botan_privkey_load_ecdh, (&loaded_privkey1, private_scalar, "secp256r1"));
          REQUIRE_FFI_OK(botan_pubkey_load_ecdh, (&loaded_pubkey1, public_x, public_y, "secp256r1"));
+         REQUIRE_FFI_OK(botan_pubkey_load_ecdh_sec1, (&loaded_pubkey2, sec1.data(), sec1.size(), "secp256r1"));
          TEST_FFI_OK(botan_privkey_check_key, (loaded_privkey1, rng, 0));
          TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey1, rng, 0));
+         TEST_FFI_OK(botan_pubkey_check_key, (loaded_pubkey2, rng, 0));
 
          ffi_test_pubkey_export(result, loaded_pubkey1, priv1, rng);
+         ffi_test_pubkey_export(result, loaded_pubkey2, priv1, rng);
          ffi_test_pubkey_export(result, pub2, priv2, rng);
 
    #if defined(BOTAN_HAS_KDF2) && defined(BOTAN_HAS_SHA_256)
@@ -3202,6 +3226,7 @@ class FFI_ECDH_Test final : public FFI_Test {
          TEST_FFI_OK(botan_pubkey_destroy, (pub2));
          TEST_FFI_OK(botan_privkey_destroy, (loaded_privkey1));
          TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey1));
+         TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey2));
       }
 };
 
