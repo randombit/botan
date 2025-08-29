@@ -411,9 +411,12 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_pubkey_load_classic_mceliece, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_privkey_load_ecdsa, [c_void_p, c_void_p, c_char_p])
     ffi_api(dll.botan_pubkey_load_ecdsa, [c_void_p, c_void_p, c_void_p, c_char_p])
+    ffi_api(dll.botan_pubkey_load_ecdsa_sec1, [c_void_p, c_void_p, c_size_t, c_char_p])
     ffi_api(dll.botan_pubkey_load_ecdh, [c_void_p, c_void_p, c_void_p, c_char_p])
     ffi_api(dll.botan_privkey_load_ecdh, [c_void_p, c_void_p, c_char_p])
+    ffi_api(dll.botan_pubkey_load_ecdh_sec1, [c_void_p, c_void_p, c_size_t, c_char_p])
     ffi_api(dll.botan_pubkey_load_sm2, [c_void_p, c_void_p, c_void_p, c_char_p])
+    ffi_api(dll.botan_pubkey_load_sm2_sec1, [c_void_p, c_void_p, c_size_t, c_char_p])
     ffi_api(dll.botan_privkey_load_sm2, [c_void_p, c_void_p, c_char_p])
     ffi_api(dll.botan_pubkey_load_sm2_enc, [c_void_p, c_void_p, c_void_p, c_char_p])
     ffi_api(dll.botan_privkey_load_sm2_enc, [c_void_p, c_void_p, c_char_p])
@@ -1258,6 +1261,12 @@ class PublicKey: # pylint: disable=invalid-name
         return pub
 
     @classmethod
+    def load_ecdsa_sec1(cls, curve, sec1_encoding):
+        pub = PublicKey()
+        _DLL.botan_pubkey_load_ecdsa_sec1(byref(pub.handle_()), _ctype_bits(sec1_encoding), len(sec1_encoding), _ctype_str(curve))
+        return pub
+
+    @classmethod
     def load_ecdh(cls, curve, pub_x, pub_y):
         pub = PublicKey()
         pub_x = MPI(pub_x)
@@ -1266,11 +1275,23 @@ class PublicKey: # pylint: disable=invalid-name
         return pub
 
     @classmethod
+    def load_ecdh_sec1(cls, curve, sec1_encoding):
+        pub = PublicKey()
+        _DLL.botan_pubkey_load_ecdh_sec1(byref(pub.handle_()), _ctype_bits(sec1_encoding), len(sec1_encoding), _ctype_str(curve))
+        return pub
+
+    @classmethod
     def load_sm2(cls, curve, pub_x, pub_y):
         pub = PublicKey()
         pub_x = MPI(pub_x)
         pub_y = MPI(pub_y)
         _DLL.botan_pubkey_load_sm2(byref(pub.handle_()), pub_x.handle_(), pub_y.handle_(), _ctype_str(curve))
+        return pub
+
+    @classmethod
+    def load_sm2_sec1(cls, curve, sec1_encoding):
+        pub = PublicKey()
+        _DLL.botan_pubkey_load_sm2_sec1(byref(pub.handle_()), _ctype_bits(sec1_encoding), len(sec1_encoding), _ctype_str(curve))
         return pub
 
     @classmethod
