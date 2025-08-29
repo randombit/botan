@@ -26,8 +26,10 @@ from binascii import hexlify
 from datetime import datetime
 from collections.abc import Iterable
 
-# This Python module requires the FFI API version introduced in Botan 3.8.0
-BOTAN_FFI_VERSION = 20250506
+# This Python module requires the FFI API version introduced in Botan 3.10.0
+#
+# 3.10.0 - introduced botan_pubkey_load_ec*_sec1()
+BOTAN_FFI_VERSION = 20250829
 
 #
 # Base exception for all exceptions raised from this module

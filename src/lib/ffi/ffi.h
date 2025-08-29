@@ -69,7 +69,7 @@ API follows a few simple rules:
 * that declaration is not visible here since this header is intentionally
 * free-standing, depending only on a few C standard library headers.
 */
-#define BOTAN_FFI_API_VERSION 20250506
+#define BOTAN_FFI_API_VERSION 20250829
 
 /**
 * BOTAN_FFI_EXPORT indicates public FFI functions.
