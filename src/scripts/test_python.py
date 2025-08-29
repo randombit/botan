@@ -462,6 +462,53 @@ ofvkP1EDmpx50fHLawIDAQAB
         except botan.BotanException as e:
             self.assertEqual(str(e), "botan_pubkey_load_rsa failed: -1 (Invalid input): Invalid RSA public key parameters")
 
+    def _pksign_roundtrips(self, sk, pk, param_str):
+        def verify_positive_and_negative(verifier, sig):
+            self.assertTrue(verifier.check_signature(sig))
+            invalid_sig = bytes(sig[0] ^ 0xFF) + sig[1:]
+            self.assertFalse(verifier.check_signature(invalid_sig))
+
+        rng = botan.RandomNumberGenerator()
+        msg = "test message"
+        raw_bytes = bytes.fromhex("8100112233445566778899AABBCCDDEEFF") # these bytes can't be decoded as UTF-8!
+
+        # Check that update() takes UTF-8 data
+        signer = botan.PKSign(sk, param_str)
+        signer.update(msg[:3])
+        signer.update(msg[3:])
+        sig = signer.finish(rng)
+
+        verify = botan.PKVerify(pk, param_str)
+        verify.update(msg[:5])
+        verify.update(msg[5:])
+        verify_positive_and_negative(verify, sig)
+
+        # Check that update() takes raw bytes
+        signer = botan.PKSign(sk, param_str)
+        signer.update(raw_bytes[:7])
+        signer.update(raw_bytes[7:])
+        sig = signer.finish(rng)
+
+        verify = botan.PKVerify(pk, param_str)
+        verify.update(raw_bytes)
+        verify_positive_and_negative(verify, sig)
+
+        # Check that update() can take both UTF-8 and raw bytes
+        signer = botan.PKSign(sk, param_str)
+        signer.update(msg)
+        sig = signer.finish(rng)
+
+        verify = botan.PKVerify(pk, param_str)
+        verify.update(msg.encode("utf-8"))
+        self.assertTrue(verify.check_signature(sig))
+
+        # Check with an empty message
+        signer = botan.PKSign(sk, param_str)
+        sig = signer.finish(rng)
+
+        verify = botan.PKVerify(pk, param_str)
+        verify_positive_and_negative(verify, sig)
+
     def test_rsa(self):
         rng = botan.RandomNumberGenerator()
         rsapriv = botan.PrivateKey.create('RSA', '1024', rng)
@@ -493,24 +540,7 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         self.assertEqual(ptext, symkey)
 
-        signer = botan.PKSign(rsapriv, 'PSS(SHA-384)')
-
-        signer.update('messa')
-        signer.update('ge')
-        sig = signer.finish(botan.RandomNumberGenerator())
-
-        verify = botan.PKVerify(rsapub, 'PSS(SHA-384)')
-
-        verify.update('mess')
-        verify.update('age')
-        self.assertTrue(verify.check_signature(sig))
-
-        verify.update('mess of things')
-        verify.update('age')
-        self.assertFalse(verify.check_signature(sig))
-
-        verify.update('message')
-        self.assertTrue(verify.check_signature(sig))
+        self._pksign_roundtrips(rsapriv, rsapub, "PSS(SHA-384)")
 
         salt = b'saltyseawater'
         kem_e = botan.KemEncrypt(rsapub, 'KDF2(SHA-256)')
@@ -554,6 +584,8 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertEqual(pub.get_field('public_x'), priv.get_field('public_x'))
         self.assertEqual(pub.get_field('public_y'), priv.get_field('public_y'))
 
+        self._pksign_roundtrips(priv, pub, hash_fn)
+
         signer = botan.PKSign(priv, hash_fn, True)
         signer.update(msg)
         signature = signer.finish(rng)
@@ -567,27 +599,21 @@ ofvkP1EDmpx50fHLawIDAQAB
         verifier.update(msg)
         self.assertTrue(verifier.check_signature(signature))
 
+        # Load public key from components
         pub_x = pub.get_field('public_x')
         pub_y = priv.get_field('public_y')
         pub2 = botan.PublicKey.load_ecdsa(group, pub_x, pub_y)
-        verifier = botan.PKVerify(pub2, hash_fn, True)
-        verifier.update(msg)
-        self.assertTrue(verifier.check_signature(signature))
+        self._pksign_roundtrips(priv, pub2, hash_fn)
 
+        # Load private key from component
         priv2 = botan.PrivateKey.load_ecdsa(group, priv.get_field('x'))
-        signer = botan.PKSign(priv2, hash_fn, True)
-        # sign empty message
-        signature = signer.finish(rng)
-
-        # verify empty message
-        self.assertTrue(verifier.check_signature(signature))
+        self._pksign_roundtrips(priv2, pub, hash_fn)
 
     def test_sm2(self):
         rng = botan.RandomNumberGenerator()
 
         hash_fn = 'SM3'
         group = 'sm2p256v1'
-        msg = 'test message'
 
         if not botan.ECGroup.supports_named_group(group):
             self.skipTest("No sm2p256v1 group support in this build")
@@ -598,28 +624,17 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertEqual(pub.get_field('public_x'), priv.get_field('public_x'))
         self.assertEqual(pub.get_field('public_y'), priv.get_field('public_y'))
 
-        signer = botan.PKSign(priv, hash_fn)
-        signer.update(msg)
-        signature = signer.finish(rng)
+        self._pksign_roundtrips(priv, pub, hash_fn)
 
-        verifier = botan.PKVerify(pub, hash_fn)
-        verifier.update(msg)
-        self.assertTrue(verifier.check_signature(signature))
-
+        # Load public key from components
         pub_x = pub.get_field('public_x')
         pub_y = priv.get_field('public_y')
         pub2 = botan.PublicKey.load_sm2(group, pub_x, pub_y)
-        verifier = botan.PKVerify(pub2, hash_fn)
-        verifier.update(msg)
-        self.assertTrue(verifier.check_signature(signature))
+        self._pksign_roundtrips(priv, pub2, hash_fn)
 
+        # Load private key from component
         priv2 = botan.PrivateKey.load_sm2(group, priv.get_field('x'))
-        signer = botan.PKSign(priv2, hash_fn)
-        # sign empty message
-        signature = signer.finish(rng)
-
-        # verify empty message
-        self.assertTrue(verifier.check_signature(signature))
+        self._pksign_roundtrips(priv2, pub, hash_fn)
 
     def test_ecdh(self):
         a_rng = botan.RandomNumberGenerator('user')
@@ -689,25 +704,11 @@ ofvkP1EDmpx50fHLawIDAQAB
 
     def test_eddsa(self):
         rng = botan.RandomNumberGenerator()
-        msg = 'test message'
 
         for alg in ['Ed25519', 'Ed448']:
             priv = botan.PrivateKey.create(alg, '', rng)
             pub = priv.get_public_key()
-
-            # Sign message
-            signer = botan.PKSign(priv, '')
-            signer.update(msg)
-            signature = signer.finish(rng)
-
-            # Verify signature
-            verifier = botan.PKVerify(pub, '')
-            verifier.update(msg)
-            self.assertTrue(verifier.check_signature(signature))
-
-            # Verify invalid signature
-            verifier.update('not test message')
-            self.assertFalse(verifier.check_signature(signature))
+            self._pksign_roundtrips(priv, pub, "")
 
     def test_certs(self):
         cert = botan.X509Cert(filename=test_data("src/tests/data/x509/ecc/isrg-root-x2.pem"))
