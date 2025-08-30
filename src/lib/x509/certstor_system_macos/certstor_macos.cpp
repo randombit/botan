@@ -392,6 +392,30 @@ std::optional<X509_Certificate> Certificate_Store_MacOS::find_cert_by_raw_subjec
    throw Not_Implemented("Certificate_Store_MacOS::find_cert_by_raw_subject_dn_sha256");
 }
 
+std::optional<X509_Certificate> Certificate_Store_MacOS::find_cert_by_issuer_dn_and_serial_number(
+   const X509_DN& issuer_dn, std::span<const uint8_t> serial_number) const {
+   Certificate_Store_MacOS_Impl::Query query;
+   /*
+   Directly using kSecAttrSerialNumber can't find the certificate
+   Maybe macOS has a special encoding for the serial number
+
+   query.addParameter(kSecAttrSerialNumber, serial_number);
+   */
+   query.addParameter(kSecAttrIssuer, normalizeAndSerialize(issuer_dn));
+
+   /*
+   This is a temporary solution
+   Use only the issuer DN to find all certificates and filters the serial number, but may affect performance
+   */
+   for(const auto& cert : m_impl->findAll(std::move(query))) {
+      if(std::ranges::equal(cert.serial_number(), serial_number)) {
+         return cert;
+      }
+   }
+
+   return std::nullopt;
+}
+
 std::optional<X509_CRL> Certificate_Store_MacOS::find_crl_for(const X509_Certificate& subject) const {
    BOTAN_UNUSED(subject);
    return {};

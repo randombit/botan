@@ -52,6 +52,11 @@ std::optional<X509_Certificate> System_Certificate_Store::find_cert_by_raw_subje
    return m_system_store->find_cert_by_raw_subject_dn_sha256(subject_hash);
 }
 
+std::optional<X509_Certificate> System_Certificate_Store::find_cert_by_issuer_dn_and_serial_number(
+   const X509_DN& issuer_dn, std::span<const uint8_t> serial_number) const {
+   return m_system_store->find_cert_by_issuer_dn_and_serial_number(issuer_dn, serial_number);
+}
+
 std::optional<X509_CRL> System_Certificate_Store::find_crl_for(const X509_Certificate& subject) const {
    return m_system_store->find_crl_for(subject);
 }
