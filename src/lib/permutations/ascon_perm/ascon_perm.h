@@ -59,9 +59,22 @@ class Ascon_p final {
 
       constexpr size_t byte_rate() const { return m_bit_rate / 8; }
 
+      constexpr AsconState& state() { return m_S; }
+
+      template <size_t offset, size_t count>
+         requires(offset + count <= std::tuple_size_v<AsconState>)
+      constexpr auto range_of_state() {
+         return std::span{m_S}.subspan<offset, count>();
+      }
+
+      void permute() { permute(m_init_final_rounds); }
+
       void absorb(std::span<const uint8_t> input, std::optional<uint8_t> permutation_rounds = std::nullopt);
+      void percolate_in(std::span<uint8_t> data);
+      void percolate_out(std::span<uint8_t> data);
       void squeeze(std::span<uint8_t> output);
       void finish();
+      void intermediate_finish();
 
    private:
       void permute(uint8_t rounds);
