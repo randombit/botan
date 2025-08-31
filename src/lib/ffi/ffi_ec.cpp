@@ -121,18 +121,18 @@ int botan_ec_group_from_name(botan_ec_group_t* ec_group, const char* name) {
 }
 
 int botan_ec_group_view_der(botan_ec_group_t ec_group, botan_view_ctx ctx, botan_view_bin_fn view) {
-   return BOTAN_FFI_VISIT(ec_group,
+   return botan_ffi_visit(ec_group,
                           [=](const auto& g) -> int { return invoke_view_callback(view, ctx, g.DER_encode()); });
 }
 
 int botan_ec_group_view_pem(botan_ec_group_t ec_group, botan_view_ctx ctx, botan_view_str_fn view) {
-   return BOTAN_FFI_VISIT(ec_group, [=](const auto& g) -> int {
+   return botan_ffi_visit(ec_group, [=](const auto& g) -> int {
       return invoke_view_callback(view, ctx, g.PEM_encode(Botan::EC_Group_Encoding::NamedCurve));
    });
 }
 
 int botan_ec_group_get_curve_oid(botan_asn1_oid_t* oid, botan_ec_group_t ec_group) {
-   return BOTAN_FFI_VISIT(ec_group, [=](const auto& g) -> int {
+   return botan_ffi_visit(ec_group, [=](const auto& g) -> int {
       if(oid == nullptr) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
@@ -145,7 +145,7 @@ namespace {
 int botan_ec_group_get_component(botan_mp_t* out,
                                  botan_ec_group_t ec_group,
                                  const std::function<const Botan::BigInt&(const Botan::EC_Group&)>& getter) {
-   return BOTAN_FFI_VISIT(ec_group, [=](const auto& g) -> int {
+   return botan_ffi_visit(ec_group, [=](const auto& g) -> int {
       if(out == nullptr) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
@@ -183,6 +183,6 @@ int botan_ec_group_get_order(botan_mp_t* order, botan_ec_group_t ec_group) {
 }
 
 int botan_ec_group_equal(botan_ec_group_t curve1_w, botan_ec_group_t curve2_w) {
-   return BOTAN_FFI_VISIT(curve1_w, [=](const auto& curve1) -> int { return curve1 == safe_get(curve2_w); });
+   return botan_ffi_visit(curve1_w, [=](const auto& curve1) -> int { return curve1 == safe_get(curve2_w); });
 }
 }

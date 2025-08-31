@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <exception>
 #include <memory>
+#include <source_location>
 
 namespace Botan_FFI {
 
@@ -111,7 +112,7 @@ int ffi_guard_thunk(const char* func_name, T thunk) {
 }
 
 template <typename T, uint32_t M, typename F>
-int botan_ffi_visit(botan_struct<T, M>* o, F func, const char* func_name) {
+int botan_ffi_visit(botan_struct<T, M>* o, F func, const std::source_location sl = std::source_location::current()) {
    using RetT = std::invoke_result_t<F, T&>;
    static_assert(std::is_void_v<RetT> || std::is_same_v<RetT, BOTAN_FFI_ERROR> || std::is_same_v<RetT, int>,
                  "BOTAN_FFI_DO must be used with a block that returns either nothing, int or BOTAN_FFI_ERROR");
@@ -130,32 +131,14 @@ int botan_ffi_visit(botan_struct<T, M>* o, F func, const char* func_name) {
    }
 
    if constexpr(std::is_void_v<RetT>) {
-      return ffi_guard_thunk(func_name, [&] {
+      return ffi_guard_thunk(sl.function_name(), [&] {
          func(*p);
          return BOTAN_FFI_SUCCESS;
       });
    } else {
-      return ffi_guard_thunk(func_name, [&] { return func(*p); });
+      return ffi_guard_thunk(sl.function_name(), [&] { return func(*p); });
    }
 }
-
-// TODO: C++20 introduces std::source_location which will allow to eliminate this
-//       macro altogether. Instead, using code would just call the C++ function
-//       that makes use of std::source_location like so:
-//
-//   template<typename T, uint32_t M, typename F>
-//   int botan_ffi_visit(botan_struct<T, M>* obj, F func,
-//                       const std::source_location sl = std::source_location::current())
-//      {
-//      // [...]
-//      if constexpr(...)
-//         {
-//         return ffi_guard_thunk(sl.function_name(), [&] { return func(*p); })
-//         }
-//      // [...]
-//      }
-// NOLINTNEXTLINE(*-macro-usage)
-#define BOTAN_FFI_VISIT(obj, lambda) botan_ffi_visit(obj, lambda, __func__)
 
 template <typename T, uint32_t M>
 int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name) {

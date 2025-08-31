@@ -39,7 +39,7 @@ int botan_oid_from_string(botan_asn1_oid_t* oid_obj, const char* oid_str) {
 }
 
 int botan_oid_register(botan_asn1_oid_t oid, const char* name) {
-   return BOTAN_FFI_VISIT(oid, [=](const auto& o) -> int {
+   return botan_ffi_visit(oid, [=](const auto& o) -> int {
       if(name == nullptr) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
@@ -49,20 +49,20 @@ int botan_oid_register(botan_asn1_oid_t oid, const char* name) {
 }
 
 int botan_oid_view_string(botan_asn1_oid_t oid, botan_view_ctx ctx, botan_view_str_fn view) {
-   return BOTAN_FFI_VISIT(oid, [=](const auto& o) -> int { return invoke_view_callback(view, ctx, o.to_string()); });
+   return botan_ffi_visit(oid, [=](const auto& o) -> int { return invoke_view_callback(view, ctx, o.to_string()); });
 }
 
 int botan_oid_view_name(botan_asn1_oid_t oid, botan_view_ctx ctx, botan_view_str_fn view) {
-   return BOTAN_FFI_VISIT(
+   return botan_ffi_visit(
       oid, [=](const auto& o) -> int { return invoke_view_callback(view, ctx, o.to_formatted_string()); });
 }
 
 int botan_oid_equal(botan_asn1_oid_t a_w, botan_asn1_oid_t b_w) {
-   return BOTAN_FFI_VISIT(a_w, [=](const auto& a) -> int { return a == safe_get(b_w); });
+   return botan_ffi_visit(a_w, [=](const auto& a) -> int { return a == safe_get(b_w); });
 }
 
 int botan_oid_cmp(int* result, botan_asn1_oid_t a_w, botan_asn1_oid_t b_w) {
-   return BOTAN_FFI_VISIT(a_w, [=](auto& a) {
+   return botan_ffi_visit(a_w, [=](auto& a) {
       if(result == nullptr) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }

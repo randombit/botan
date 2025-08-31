@@ -42,18 +42,18 @@ int botan_hash_output_length(botan_hash_t hash, size_t* out) {
    if(out == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
-   return BOTAN_FFI_VISIT(hash, [=](const auto& h) { *out = h.output_length(); });
+   return botan_ffi_visit(hash, [=](const auto& h) { *out = h.output_length(); });
 }
 
 int botan_hash_block_size(botan_hash_t hash, size_t* out) {
    if(out == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
-   return BOTAN_FFI_VISIT(hash, [=](const auto& h) { *out = h.hash_block_size(); });
+   return botan_ffi_visit(hash, [=](const auto& h) { *out = h.hash_block_size(); });
 }
 
 int botan_hash_clear(botan_hash_t hash) {
-   return BOTAN_FFI_VISIT(hash, [](auto& h) { h.clear(); });
+   return botan_ffi_visit(hash, [](auto& h) { h.clear(); });
 }
 
 int botan_hash_update(botan_hash_t hash, const uint8_t* buf, size_t len) {
@@ -65,19 +65,19 @@ int botan_hash_update(botan_hash_t hash, const uint8_t* buf, size_t len) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
-   return BOTAN_FFI_VISIT(hash, [=](auto& h) { h.update(buf, len); });
+   return botan_ffi_visit(hash, [=](auto& h) { h.update(buf, len); });
 }
 
 int botan_hash_final(botan_hash_t hash, uint8_t out[]) {
    if(out == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
-   return BOTAN_FFI_VISIT(hash, [=](auto& h) { h.final(out); });
+   return botan_ffi_visit(hash, [=](auto& h) { h.final(out); });
 }
 
 // NOLINTNEXTLINE(misc-misplaced-const)
 int botan_hash_copy_state(botan_hash_t* dest, const botan_hash_t source) {
-   return BOTAN_FFI_VISIT(source, [=](const auto& src) { return ffi_new_object(dest, src.copy_state()); });
+   return botan_ffi_visit(source, [=](const auto& src) { return ffi_new_object(dest, src.copy_state()); });
 }
 
 int botan_hash_name(botan_hash_t hash, char* name, size_t* name_len) {
@@ -85,6 +85,6 @@ int botan_hash_name(botan_hash_t hash, char* name, size_t* name_len) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
-   return BOTAN_FFI_VISIT(hash, [=](const auto& h) { return write_str_output(name, name_len, h.name()); });
+   return botan_ffi_visit(hash, [=](const auto& h) { return write_str_output(name, name_len, h.name()); });
 }
 }

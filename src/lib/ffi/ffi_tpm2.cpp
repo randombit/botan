@@ -148,7 +148,7 @@ int botan_tpm2_ctx_from_esys(botan_tpm2_ctx_t* ctx_out, ESYS_CONTEXT* esys_ctx) 
 
 int botan_tpm2_ctx_enable_crypto_backend(botan_tpm2_ctx_t ctx, botan_rng_t rng) {
 #if defined(BOTAN_HAS_TPM2)
-   return BOTAN_FFI_VISIT(ctx, [=](botan_tpm2_ctx_wrapper& ctx_wrapper) -> int {
+   return botan_ffi_visit(ctx, [=](botan_tpm2_ctx_wrapper& ctx_wrapper) -> int {
       Botan::RandomNumberGenerator& rng_ref = safe_get(rng);
 
       // The lifetime of the RNG used for the crypto backend should be managed
@@ -215,7 +215,7 @@ int botan_tpm2_rng_init(botan_rng_t* rng_out,
                         botan_tpm2_session_t s2,
                         botan_tpm2_session_t s3) {
 #if defined(BOTAN_HAS_TPM2)
-   return BOTAN_FFI_VISIT(ctx, [=](botan_tpm2_ctx_wrapper& ctx_wrapper) -> int {
+   return botan_ffi_visit(ctx, [=](botan_tpm2_ctx_wrapper& ctx_wrapper) -> int {
       if(rng_out == nullptr) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
@@ -231,7 +231,7 @@ int botan_tpm2_rng_init(botan_rng_t* rng_out,
 
 int botan_tpm2_unauthenticated_session_init(botan_tpm2_session_t* session_out, botan_tpm2_ctx_t ctx) {
 #if defined(BOTAN_HAS_TPM2)
-   return BOTAN_FFI_VISIT(ctx, [=](botan_tpm2_ctx_wrapper& ctx_wrapper) -> int {
+   return botan_ffi_visit(ctx, [=](botan_tpm2_ctx_wrapper& ctx_wrapper) -> int {
       if(session_out == nullptr) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
