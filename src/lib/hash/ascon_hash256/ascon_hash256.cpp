@@ -13,8 +13,8 @@ namespace Botan {
 namespace {
 
 // NIST SP.800-232 Appendix A (Table 12)
-constexpr Ascon_p initial_state_of_ascon_hash_permutation({
-   Ascon_p::SpongeConfig{
+constexpr Ascon_p initial_state_of_ascon_hash_permutation(
+   {
       .bit_rate = 64,
       .initial_state =
          {
@@ -25,9 +25,10 @@ constexpr Ascon_p initial_state_of_ascon_hash_permutation({
             0x1a5c464906c5976d,
          },
    },
-   .init_and_final_rounds = 12,
-   .processing_rounds = 12,
-});
+   {
+      .init_and_final_rounds = 12,
+      .processing_rounds = 12,
+   });
 
 }  // namespace
 

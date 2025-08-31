@@ -1,0 +1,4 @@
+<module_info>
+name -> "Sponge Helper"
+type -> "Internal"
+</module_info>
