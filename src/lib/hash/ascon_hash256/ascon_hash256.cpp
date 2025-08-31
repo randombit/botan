@@ -14,17 +14,19 @@ namespace {
 
 // NIST SP.800-232 Appendix A (Table 12)
 constexpr Ascon_p initial_state_of_ascon_hash_permutation({
+   Ascon_p::SpongeConfig{
+      .bit_rate = 64,
+      .initial_state =
+         {
+            0x9b1e5494e934d681,
+            0x4bc3a01e333751d2,
+            0xae65396c6b34b81a,
+            0x3c7fd4a4d56a4db3,
+            0x1a5c464906c5976d,
+         },
+   },
    .init_and_final_rounds = 12,
    .processing_rounds = 12,
-   .bit_rate = 64,
-   .initial_state =
-      {
-         0x9b1e5494e934d681,
-         0x4bc3a01e333751d2,
-         0xae65396c6b34b81a,
-         0x3c7fd4a4d56a4db3,
-         0x1a5c464906c5976d,
-      },
 });
 
 }  // namespace

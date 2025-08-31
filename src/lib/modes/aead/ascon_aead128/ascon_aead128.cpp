@@ -28,10 +28,12 @@ constexpr auto as_array_of_uint64(std::span<const uint8_t> in) {
 
 // NIST SP.800-232 Appendix B (Table 13)
 constexpr Ascon_p initial_state_of_ascon_aead_permutation({
+   Ascon_p::SpongeConfig{
+      .bit_rate = 128,
+      .initial_state = {},
+   },
    .init_and_final_rounds = 12,
    .processing_rounds = 8,
-   .bit_rate = 128,
-   .initial_state = {},
 });
 
 // NIST SP.800-232 Section 5.1
