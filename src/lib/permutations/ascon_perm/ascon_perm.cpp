@@ -14,153 +14,134 @@
 
 namespace Botan {
 
-void Ascon_p::absorb(std::span<const uint8_t> input, std::optional<uint8_t> permutation_rounds) {
+namespace {
+
+template <std::invocable<uint64_t&, uint64_t> StateModifierFnT,
+          std::invocable<uint64_t&, uint64_t, size_t, size_t> PartialStateModifierFnT,
+          std::invocable PermutationRoundFnT>
+void process(uint8_t& inpos,
+             size_t byte_rate,
+             AsconState& S,
+             std::span<const uint8_t> input,
+             StateModifierFnT state_modifier_fn,
+             PartialStateModifierFnT partial_state_modifier_fn,
+             PermutationRoundFnT permutation_round_fn) {
    BufferSlicer input_slicer(input);
+
+   constexpr uint8_t word_width = 8;
 
    // Block-wise incorporation of the input data into the sponge state until
    // all input bytes are processed
    while(!input_slicer.empty()) {
-      const size_t to_take_this_round = std::min(input_slicer.remaining(), byte_rate() - m_S_inpos);
+      const size_t to_take_this_round = std::min(input_slicer.remaining(), byte_rate - inpos);
       BufferSlicer input_this_round(input_slicer.take(to_take_this_round));
 
       // If necessary, try to get aligned with the sponge state's 64-bit integer array
-      for(; !input_this_round.empty() && m_S_inpos % 8 > 0; ++m_S_inpos) {
-         m_S[m_S_inpos / 8] ^= static_cast<uint64_t>(input_this_round.take_byte()) << (8 * (m_S_inpos % 8));
+      const auto bytes_out_of_word_alignment = static_cast<size_t>(inpos % word_width);
+      if(bytes_out_of_word_alignment > 0) {
+         const auto bytes_until_word_alignment = word_width - bytes_out_of_word_alignment;
+         const auto bytes_from_input = std::min(input_this_round.remaining(), bytes_until_word_alignment);
+         BOTAN_DEBUG_ASSERT(bytes_from_input < word_width);
+
+         std::array<uint8_t, word_width> partial_word{};
+         input_this_round.copy_into(std::span{partial_word}.subspan(bytes_out_of_word_alignment, bytes_from_input));
+         partial_state_modifier_fn(
+            S[inpos / word_width], load_le(partial_word), bytes_out_of_word_alignment, bytes_from_input);
+         inpos += bytes_from_input;
       }
 
       // Process as many aligned 64-bit integer values as possible
-      for(; input_this_round.remaining() >= 8; m_S_inpos += 8) {
-         m_S[m_S_inpos / 8] ^= load_le(input_this_round.take<8>());
+      for(; input_this_round.remaining() >= word_width; inpos += word_width) {
+         state_modifier_fn(S[inpos / word_width], load_le(input_this_round.take<word_width>()));
       }
 
       // Read remaining input data, causing misalignment, if necessary
-      for(; !input_this_round.empty(); ++m_S_inpos) {
-         m_S[m_S_inpos / 8] ^= static_cast<uint64_t>(input_this_round.take_byte()) << (8 * (m_S_inpos % 8));
+      const auto remaining_bytes_out_of_word_alignment = input_this_round.remaining();
+      BOTAN_DEBUG_ASSERT(remaining_bytes_out_of_word_alignment < word_width);
+      if(remaining_bytes_out_of_word_alignment > 0) {
+         std::array<uint8_t, word_width> partial_word{};
+         input_this_round.copy_into(std::span{partial_word}.first(remaining_bytes_out_of_word_alignment));
+         partial_state_modifier_fn(
+            S[inpos / word_width], load_le(partial_word), 0, remaining_bytes_out_of_word_alignment);
+         inpos += remaining_bytes_out_of_word_alignment;
       }
 
       // We reached the end of a sponge state block... permute() and start over
-      if(m_S_inpos == byte_rate()) {
-         permute(permutation_rounds.value_or(m_processing_rounds));
-         m_S_inpos = 0;
+      if(inpos == byte_rate) {
+         permutation_round_fn();
+         inpos = 0;
       }
    }
+}
+
+}  // namespace
+
+void Ascon_p::absorb(std::span<const uint8_t> input, std::optional<uint8_t> permutation_rounds) {
+   process(
+      m_S_inpos,
+      byte_rate(),
+      m_S,
+      input,
+      [](uint64_t& state_word, uint64_t input_word) { state_word ^= input_word; },
+      [](uint64_t& state_word, uint64_t input_word, size_t, size_t) { state_word ^= input_word; },
+      [&] { permute(permutation_rounds.value_or(m_processing_rounds)); });
 }
 
 void Ascon_p::percolate_in(std::span<uint8_t> data) {
-   BufferSlicer input_slicer(data);
    BufferStuffer output_stuffer(data);
 
-   // Block-wise incorporation of the input data into the sponge state until
-   // all input bytes are processed
-   while(!input_slicer.empty()) {
-      const size_t to_take_this_round = std::min(input_slicer.remaining(), byte_rate() - m_S_inpos);
-      BufferSlicer input_this_round(input_slicer.take(to_take_this_round));
-
-      // If necessary, try to get aligned with the sponge state's 64-bit integer array
-      for(; !input_this_round.empty() && m_S_inpos % 8 > 0; ++m_S_inpos) {
-         m_S[m_S_inpos / 8] ^= static_cast<uint64_t>(input_this_round.take_byte()) << (8 * (m_S_inpos % 8));
-         output_stuffer.append(static_cast<uint8_t>(m_S[m_S_inpos / 8] >> (8 * (m_S_inpos % 8))));
-      }
-
-      // Process as many aligned 64-bit integer values as possible
-      for(; input_this_round.remaining() >= 8; m_S_inpos += 8) {
-         m_S[m_S_inpos / 8] ^= load_le(input_this_round.take<8>());
-         output_stuffer.append(store_le(m_S[m_S_inpos / 8]));
-      }
-
-      // Read remaining input data, causing misalignment, if necessary
-      for(; !input_this_round.empty(); ++m_S_inpos) {
-         m_S[m_S_inpos / 8] ^= static_cast<uint64_t>(input_this_round.take_byte()) << (8 * (m_S_inpos % 8));
-         output_stuffer.append(static_cast<uint8_t>(m_S[m_S_inpos / 8] >> (8 * (m_S_inpos % 8))));
-      }
-
-      // We reached the end of a sponge state block... permute() and start over
-      if(m_S_inpos == byte_rate()) {
-         permute(m_processing_rounds);
-         m_S_inpos = 0;
-      }
-   }
+   process(
+      m_S_inpos,
+      byte_rate(),
+      m_S,
+      data,
+      [&](uint64_t& state_word, uint64_t input_word) {
+         state_word ^= input_word;
+         output_stuffer.append(store_le(state_word));
+      },
+      [&](uint64_t& state_word, uint64_t input_word, size_t offset, size_t length) {
+         state_word ^= input_word;
+         const auto state_word_bytes = store_le(state_word);
+         output_stuffer.append(std::span{state_word_bytes}.subspan(offset, length));
+      },
+      [&] { permute(m_processing_rounds); });
 }
 
 void Ascon_p::percolate_out(std::span<uint8_t> data) {
-   BufferSlicer input_slicer(data);
    BufferStuffer output_stuffer(data);
 
-   // Block-wise incorporation of the input data into the sponge state until
-   // all input bytes are processed
-   while(!input_slicer.empty()) {
-      const size_t to_take_this_round = std::min(input_slicer.remaining(), byte_rate() - m_S_inpos);
-      BufferSlicer input_this_round(input_slicer.take(to_take_this_round));
-
-      // If necessary, try to get aligned with the sponge state's 64-bit integer array
-      for(; !input_this_round.empty() && m_S_inpos % 8 > 0; ++m_S_inpos) {
-         const auto ct_byte = input_this_round.take_byte();
-         const auto key_byte = static_cast<uint8_t>(m_S[m_S_inpos / 8] >> (8 * (m_S_inpos % 8)));
-         const auto pt_byte = ct_byte ^ key_byte;
-         output_stuffer.append(pt_byte);
-         const auto ct_in_word = static_cast<uint64_t>(ct_byte) << (8 * (m_S_inpos % 8));
-         m_S[m_S_inpos / 8] ^= (static_cast<uint64_t>(key_byte) << (8 * (m_S_inpos % 8))) ^ ct_in_word;
-      }
-
-      // Process as many aligned 64-bit integer values as possible
-      for(; input_this_round.remaining() >= 8; m_S_inpos += 8) {
-         const auto ct_block = load_le(input_this_round.take<8>());
-         const auto pt_block = ct_block ^ m_S[m_S_inpos / 8];
-         output_stuffer.append(store_le(pt_block));
-         m_S[m_S_inpos / 8] ^= m_S[m_S_inpos / 8] ^ ct_block;
-      }
-
-      // Read remaining input data, causing misalignment, if necessary
-      for(; !input_this_round.empty(); ++m_S_inpos) {
-         const auto ct_byte = input_this_round.take_byte();
-         const auto key_byte = static_cast<uint8_t>(m_S[m_S_inpos / 8] >> (8 * (m_S_inpos % 8)));
-         const auto pt_byte = ct_byte ^ key_byte;
-         output_stuffer.append(pt_byte);
-         const auto ct_in_word = static_cast<uint64_t>(ct_byte) << (8 * (m_S_inpos % 8));
-         m_S[m_S_inpos / 8] ^= (static_cast<uint64_t>(key_byte) << (8 * (m_S_inpos % 8))) ^ ct_in_word;
-      }
-
-      // We reached the end of a sponge state block... permute() and start over
-      if(m_S_inpos == byte_rate()) {
-         permute(m_processing_rounds);
-         m_S_inpos = 0;
-      }
-   }
+   process(
+      m_S_inpos,
+      byte_rate(),
+      m_S,
+      data,
+      [&](uint64_t& state_word, uint64_t input_word) {
+         output_stuffer.append(store_le(state_word ^ input_word));
+         state_word = input_word;
+      },
+      [&](uint64_t& state_word, uint64_t input_word, size_t offset, size_t length) {
+         const auto pt_block = store_le(state_word ^ input_word);
+         output_stuffer.append(std::span{pt_block}.subspan(offset, length));
+         uint64_t mask = ((uint64_t(0) - 1) >> (64 - (length * 8))) << (offset * 8);
+         state_word = (state_word & ~mask) | input_word;
+      },
+      [&] { permute(m_processing_rounds); });
 }
 
 void Ascon_p::squeeze(std::span<uint8_t> output) {
    BufferStuffer output_stuffer(output);
 
-   // Block-wise readout of the sponge state until enough bytes
-   // were filled into the output buffer
-   while(!output_stuffer.full()) {
-      const size_t bytes_in_this_round = std::min(output_stuffer.remaining_capacity(), byte_rate() - m_S_outpos);
-      BufferStuffer output_this_round(output_stuffer.next(bytes_in_this_round));
-
-      // If necessary, try to get aligned with the sponge state's 64-bit integer array
-      for(; !output_this_round.full() && m_S_outpos % 8 != 0; ++m_S_outpos) {
-         output_this_round.next_byte() = static_cast<uint8_t>(m_S[m_S_outpos / 8] >> (8 * (m_S_outpos % 8)));
-      }
-
-      // Read out as many aligned 64-bit integer values as possible
-      for(; output_this_round.remaining_capacity() >= 8; m_S_outpos += 8) {
-         store_le(m_S[m_S_outpos / 8], output_this_round.next<8>());
-      }
-
-      // Read remaining output data, causing misalignment, if necessary
-      for(; !output_this_round.full(); ++m_S_outpos) {
-         output_this_round.next_byte() = static_cast<uint8_t>(m_S[m_S_outpos / 8] >> (8 * (m_S_outpos % 8)));
-      }
-
-      // We reached the end of a sponge state block... permute() and start over
-      // TODO: Currently this might perform an unnecessary permutation if the
-      //       to-be-generated output length is divisible by the byte rate,
-      //       for instance with Ascon-Hash256 this is always the case.
-      if(m_S_outpos == byte_rate()) {
-         permute(m_processing_rounds);
-         m_S_outpos = 0;
-      }
-   }
+   process(
+      m_S_outpos,
+      byte_rate(),
+      m_S,
+      output,
+      [&](uint64_t& state_word, uint64_t input_word) { output_stuffer.append(store_le(state_word ^ input_word)); },
+      [&](uint64_t& state_word, uint64_t input_word, size_t offset, size_t length) {
+         const auto out_buffer = store_le(state_word ^ input_word);
+         output_stuffer.append(std::span{out_buffer}.subspan(offset, length));
+      },
+      [&] { permute(m_processing_rounds); });
 }
 
 void Ascon_p::finish() {
