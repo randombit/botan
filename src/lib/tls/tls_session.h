@@ -38,10 +38,7 @@ using Session_Ticket = Strong<std::vector<uint8_t>, struct Session_Ticket_>;
 using Opaque_Session_Handle = Strong<std::vector<uint8_t>, struct Opaque_Session_Handle_>;
 
 inline auto operator<(const Session_ID& id1, const Session_ID& id2) {
-   // TODO: C++20 better use std::lexicographical_compare_three_way
-   //       that was not available on all target platforms at the time
-   //       of this writing.
-   return std::lexicographical_compare(id1.begin(), id1.end(), id2.begin(), id2.end());
+   return std::is_lt(std::lexicographical_compare_three_way(id1.begin(), id1.end(), id2.begin(), id2.end()));
 }
 
 /**
