@@ -63,6 +63,9 @@ class BOTAN_PUBLIC_API(2, 10) Certificate_Store_MacOS final : public Certificate
       std::optional<X509_Certificate> find_cert_by_raw_subject_dn_sha256(
          const std::vector<uint8_t>& subject_hash) const override;
 
+      std::optional<X509_Certificate> find_cert_by_issuer_dn_and_serial_number(
+         const X509_DN& issuer_dn, std::span<const uint8_t> serial_number) const override;
+
       /**
        * Fetching CRLs is not supported by the keychain on macOS. This will
        * always return an empty list.

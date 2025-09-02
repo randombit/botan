@@ -57,6 +57,16 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Store /* NOLINT(*-special-member-functi
          const std::vector<uint8_t>& subject_hash) const = 0;
 
       /**
+      * Find a certificate by searching for one with a matching issuer DN and
+      * serial number. Used for CMS or PKCS#7.
+      * @param issuer_dn the distinguished name of the issuer
+      * @param serial_number the certificate's serial number
+      * @return a matching certificate or nullopt otherwise
+      */
+      virtual std::optional<X509_Certificate> find_cert_by_issuer_dn_and_serial_number(
+         const X509_DN& issuer_dn, std::span<const uint8_t> serial_number) const = 0;
+
+      /**
       * Finds a CRL for the given certificate
       * @param subject the subject certificate
       * @return the CRL for subject or nullopt otherwise
@@ -133,6 +143,9 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Store_In_Memory final : public Certific
 
       std::optional<X509_Certificate> find_cert_by_raw_subject_dn_sha256(
          const std::vector<uint8_t>& subject_hash) const override;
+
+      std::optional<X509_Certificate> find_cert_by_issuer_dn_and_serial_number(
+         const X509_DN& issuer_dn, std::span<const uint8_t> serial_number) const override;
 
       /**
       * Finds a CRL for the given certificate
