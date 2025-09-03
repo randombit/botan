@@ -112,7 +112,7 @@ def main(args = None):
                 hash_fn = sha3_256
                 def mldsa_sign_internal(m, sk, rnd):
                     # For some reason the interfaces vary between FIPS 204 and FIPS 205...
-                    if rnd == None:
+                    if rnd is None:
                         rnd = bytes([0]*32)
                     return alg.sign_internal(sk, m, rnd)
 

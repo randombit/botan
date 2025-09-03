@@ -41,7 +41,7 @@ class KatReader:
         while True:
             key, val = self.next_value()
 
-            if key == None:
+            if key is None:
                 return # eof
 
             if key not in ['count', 'seed', 'mlen', 'msg', 'pk', 'sk', 'smlen', 'sm']:

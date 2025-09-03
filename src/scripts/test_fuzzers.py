@@ -120,7 +120,7 @@ def main(args=None):
         for fuzzer in sorted(list(fuzzers_with_corpus)):
             fuzzer_bin = os.path.join(fuzzer_dir, fuzzer)
             corpus_subdir = os.path.join(corpus_dir, fuzzer)
-            corpus_files = [os.path.join(corpus_subdir, l) for l in sorted(list(os.listdir(corpus_subdir)))]
+            corpus_files = [os.path.join(corpus_subdir, fsname) for fsname in sorted(list(os.listdir(corpus_subdir)))]
 
             # We have to do this hack because multiprocessing's Pool.map doesn't support
             # passing any initial arguments, just the single iterable
@@ -170,7 +170,7 @@ def main(args=None):
             else:
                 corpus_subdir = random_corpus_dir
 
-            corpus_files = [os.path.join(corpus_subdir, l) for l in sorted(list(os.listdir(corpus_subdir)))]
+            corpus_files = [os.path.join(corpus_subdir, fsname) for fsname in sorted(list(os.listdir(corpus_subdir)))]
 
             if fuzzer in slow_fuzzers:
                 corpus_files = corpus_files[:random_corpus_size_for_slow_fuzzers]

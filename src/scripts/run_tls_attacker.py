@@ -54,11 +54,11 @@ def main(args=None):
         print("Unknown --type %s" % (options.test_type))
         return 1
 
-    if os.access(cli_exe, os.X_OK) != True:
+    if not os.access(cli_exe, os.X_OK):
         print("Unable to find CLI tool at %s" % (cli_exe))
         return 1
 
-    if os.access(src_dir, os.X_OK) != True:
+    if not os.access(src_dir, os.X_OK):
         print("Unable to find src dir at %s" % (src_dir))
         return 1
 
@@ -72,7 +72,7 @@ def main(args=None):
     tls_attacker_testsuites = os.path.join(tls_attacker_dir, 'resources/testsuite')
     tls_fuzzer_workflows = os.path.join(tls_attacker_dir, 'resources/fuzzing/workflows')
 
-    if os.access(tls_attacker_jar, os.R_OK) != True:
+    if not os.access(tls_attacker_jar, os.R_OK):
         print("Unable to find TLS-Attacker jar at %s" % (tls_attacker_jar))
         return 1
 

@@ -918,16 +918,16 @@ ofvkP1EDmpx50fHLawIDAQAB
     def test_mpi_random(self):
         rng = botan.RandomNumberGenerator()
 
-        u = botan.MPI.random(rng, 512)
-        self.assertEqual(u.bit_count(), 512)
+        upper = botan.MPI.random(rng, 512)
+        self.assertEqual(upper.bit_count(), 512)
 
-        l = u >> 32
-        self.assertEqual(l.bit_count(), 512-32)
+        lower = upper >> 32
+        self.assertEqual(lower.bit_count(), 512-32)
 
         for _i in range(10):
-            x = botan.MPI.random_range(rng, l, u)
-            self.assertLess(x, u)
-            self.assertGreater(x, l)
+            x = botan.MPI.random_range(rng, lower, upper)
+            self.assertLess(x, upper)
+            self.assertGreater(x, lower)
 
     def test_fpe(self):
 
