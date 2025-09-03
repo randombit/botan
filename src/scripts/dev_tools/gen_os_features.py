@@ -22,7 +22,7 @@ botan_root = os.path.join(os.path.dirname(sys.argv[0]), "..", "..", "..")
 
 # locale
 sys.path.append(botan_root)
-from configure import OsInfo
+from configure import OsInfo # noqa: E402
 
 parser = argparse.ArgumentParser(description="")
 parser.add_argument('--verbose', dest='verbose', action='store_const',
