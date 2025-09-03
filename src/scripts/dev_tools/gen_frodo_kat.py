@@ -44,7 +44,7 @@ class KatReader:
         while True:
             key, val = self.next_value()
 
-            if key == None:
+            if key is None:
                 return # eof
 
             if key not in ['count', 'seed', 'pk', 'sk', 'ct', 'ss']:
@@ -66,8 +66,7 @@ def shake_256_16(v):
     return h.hexdigest(16)
 
 def compress_kat(kat):
-    first = kat['count'] == 0
-    del kat['count']
+    del kat['count'] # not needed
 
     # rename keys
     kat['Seed'] = kat.pop('seed')

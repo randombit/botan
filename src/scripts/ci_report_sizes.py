@@ -22,7 +22,7 @@ def format_size(bytes):
         return "%d bytes" % (bytes)
 
 def report_size(fsname):
-    if os.access(fsname, os.R_OK) == False:
+    if not os.access(fsname, os.R_OK):
         print("ERROR: Could not find %s" % (fsname))
         return
     bytes = os.stat(fsname).st_size

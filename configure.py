@@ -41,8 +41,8 @@ class InternalError(Exception):
     pass
 
 
-def flatten(l):
-    return sum(l, [])
+def flatten(lst):
+    return sum(lst, [])
 
 def normalize_source_path(source):
     """
@@ -1586,7 +1586,7 @@ class CompilerInfo(InfoObject):
     def _so_link_search(osname, debug_info):
         so_link_typ = [osname, 'default']
         if debug_info:
-            so_link_typ = [l + '-debug' for l in so_link_typ] + so_link_typ
+            so_link_typ = [link + '-debug' for link in so_link_typ] + so_link_typ
         return so_link_typ
 
     def so_link_command_for(self, osname, options):
@@ -3408,7 +3408,7 @@ def run_compiler_preproc(options, ccinfo, source_file, default_return, extra_fla
     cc_output = run_compiler(options, ccinfo, default_return, ccinfo.preproc_flags.split(' ') + extra_flags + [source_file])
 
     def cleanup_output(output):
-        return ('\n'.join([l for l in output.splitlines() if l.startswith('#') is False])).strip()
+        return ('\n'.join([line for line in output.splitlines() if not line.startswith('#')])).strip()
 
     return cleanup_output(cc_output)
 

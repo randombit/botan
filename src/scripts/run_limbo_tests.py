@@ -224,7 +224,7 @@ def main(args = None):
             validation_time = int(parser.parse(test['validation_time']).timestamp())
 
         hostname = None
-        if test['expected_peer_name'] != None:
+        if test['expected_peer_name'] is not None:
             if test['expected_peer_name']['kind'] in ['DNS', 'IP']:
                 hostname = test['expected_peer_name']['value']
             else:

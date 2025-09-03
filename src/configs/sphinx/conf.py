@@ -111,7 +111,7 @@ try:
         'source_branch': 'master',
         'source_directory': 'doc/',
     }
-except ImportError as e:
+except ImportError:
     print("Could not import furo theme; falling back to agago")
     html_theme = 'agogo'
     html_theme_path = []

@@ -45,12 +45,12 @@ def scanner(args = None):
 
         for i in range(timeout):
             scanners[url].poll()
-            if scanners[url].returncode != None:
+            if scanners[url].returncode is not None:
                 break
             #print("Waiting %d more seconds for %s" % (timeout-i, url))
             time.sleep(1)
 
-        if scanners[url].returncode != None:
+        if scanners[url].returncode is not None:
             output = scanners[url].stdout.read() + scanners[url].stderr.read()
             report[url] = format_report(output.decode("utf-8"))
 

@@ -115,7 +115,7 @@ class OmitFirstLine:
     def __init__(self):
         self.first_line = True
 
-    def __call__(self, l):
+    def __call__(self, line):
         r = not self.first_line
         self.first_line = False
         return r

@@ -48,11 +48,11 @@ class Diagnostic:
         with open(self.file, encoding="utf-8") as srcfile:
             readoffset = 0
             lineoffset = 0
-            for l in srcfile.readlines():
-                readoffset += len(l)
+            for line in srcfile.readlines():
+                readoffset += len(line)
                 lineoffset += 1
                 if readoffset >= offset:
-                    coloffset = offset - readoffset + len(l)
+                    coloffset = offset - readoffset + len(line)
                     return (lineoffset, coloffset)
         raise RuntimeError(f"FileOffset {offset} out of range for {self.file}")
 

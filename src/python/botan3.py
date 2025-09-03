@@ -833,8 +833,7 @@ class RandomNumberGenerator:
 
     def get(self, length: int) -> bytes:
         out = create_string_buffer(length)
-        l = c_size_t(length)
-        _DLL.botan_rng_get(self.__obj, out, l)
+        _DLL.botan_rng_get(self.__obj, out, c_size_t(length))
         return _ctype_bufout(out)
 
 #
@@ -917,8 +916,8 @@ class HashFunction:
             self.__obj = c_void_p(0)
             _DLL.botan_hash_init(byref(self.__obj), _ctype_str(algo), flags)
 
-        self.__output_length = _call_fn_returning_sz(lambda l: _DLL.botan_hash_output_length(self.__obj, l))
-        self.__block_size = _call_fn_returning_sz(lambda l: _DLL.botan_hash_block_size(self.__obj, l))
+        self.__output_length = _call_fn_returning_sz(lambda length: _DLL.botan_hash_output_length(self.__obj, length))
+        self.__block_size = _call_fn_returning_sz(lambda length: _DLL.botan_hash_block_size(self.__obj, length))
 
     def __del__(self):
         _DLL.botan_hash_destroy(self.__obj)
@@ -1022,19 +1021,19 @@ class SymmetricCipher:
         return _call_fn_returning_str(32, lambda b, bl: _DLL.botan_cipher_name(self.__obj, b, bl))
 
     def default_nonce_length(self) -> int:
-        l = c_size_t(0)
-        _DLL.botan_cipher_get_default_nonce_length(self.__obj, byref(l))
-        return l.value
+        length = c_size_t(0)
+        _DLL.botan_cipher_get_default_nonce_length(self.__obj, byref(length))
+        return length.value
 
     def update_granularity(self) -> int:
-        l = c_size_t(0)
-        _DLL.botan_cipher_get_update_granularity(self.__obj, byref(l))
-        return l.value
+        length = c_size_t(0)
+        _DLL.botan_cipher_get_update_granularity(self.__obj, byref(length))
+        return length.value
 
     def ideal_update_granularity(self) -> int:
-        l = c_size_t(0)
-        _DLL.botan_cipher_get_ideal_update_granularity(self.__obj, byref(l))
-        return l.value
+        length = c_size_t(0)
+        _DLL.botan_cipher_get_ideal_update_granularity(self.__obj, byref(length))
+        return length.value
 
     def key_length(self) -> int:
         kmin = c_size_t(0)
@@ -1043,19 +1042,19 @@ class SymmetricCipher:
         return kmin.value, kmax.value
 
     def minimum_keylength(self) -> int:
-        l = c_size_t(0)
-        _DLL.botan_cipher_get_keyspec(self.__obj, byref(l), None, None)
-        return l.value
+        length = c_size_t(0)
+        _DLL.botan_cipher_get_keyspec(self.__obj, byref(length), None, None)
+        return length.value
 
     def maximum_keylength(self) -> int:
-        l = c_size_t(0)
-        _DLL.botan_cipher_get_keyspec(self.__obj, None, byref(l), None)
-        return l.value
+        length = c_size_t(0)
+        _DLL.botan_cipher_get_keyspec(self.__obj, None, byref(length), None)
+        return length.value
 
     def tag_length(self) -> int:
-        l = c_size_t(0)
-        _DLL.botan_cipher_get_tag_length(self.__obj, byref(l))
-        return l.value
+        length = c_size_t(0)
+        _DLL.botan_cipher_get_tag_length(self.__obj, byref(length))
+        return length.value
 
     def is_authenticated(self) -> bool:
         rc = _DLL.botan_cipher_is_authenticated(self.__obj)
@@ -1724,11 +1723,11 @@ class KemEncrypt:
 
     def shared_key_length(self, desired_key_len: int) -> int:
         return _call_fn_returning_sz(
-            lambda l: _DLL.botan_pk_op_kem_encrypt_shared_key_length(self.__obj, desired_key_len, l))
+            lambda len: _DLL.botan_pk_op_kem_encrypt_shared_key_length(self.__obj, desired_key_len, len))
 
     def encapsulated_key_length(self) -> int:
         return _call_fn_returning_sz(
-            lambda l: _DLL.botan_pk_op_kem_encrypt_encapsulated_key_length(self.__obj, l))
+            lambda len: _DLL.botan_pk_op_kem_encrypt_encapsulated_key_length(self.__obj, len))
 
     def create_shared_key(self, rng: RandomNumberGenerator, salt: bytes, desired_key_len: int) -> tuple[bytes, bytes]:
         shared_key_len = self.shared_key_length(desired_key_len)
@@ -1764,7 +1763,7 @@ class KemDecrypt:
 
     def shared_key_length(self, desired_key_len: int) -> int:
         return _call_fn_returning_sz(
-            lambda l: _DLL.botan_pk_op_kem_decrypt_shared_key_length(self.__obj, desired_key_len, l))
+            lambda len: _DLL.botan_pk_op_kem_decrypt_shared_key_length(self.__obj, desired_key_len, len))
 
     def decrypt_shared_key(self, salt: bytes, desired_key_len: int, encapsulated_key: bytes) -> bytes:
         shared_key_len = self.shared_key_length(desired_key_len)
@@ -2468,7 +2467,7 @@ class Srp6ServerSession:
         _DLL.botan_srp6_server_session_init(byref(self.__obj))
         self.__group = group
         self.__group_size = _call_fn_returning_sz(
-            lambda l: _DLL.botan_srp6_group_size(_ctype_str(group), l))
+            lambda len: _DLL.botan_srp6_group_size(_ctype_str(group), len))
 
     def __del__(self):
         _DLL.botan_srp6_server_session_destroy(self.__obj)
@@ -2490,7 +2489,7 @@ class Srp6ServerSession:
                                                                            k, kl))
 
 def srp6_generate_verifier(identifier: str, password: str, salt: bytes, group: str, hsh: str) -> bytes:
-    sz = _call_fn_returning_sz(lambda l: _DLL.botan_srp6_group_size(_ctype_str(group), l))
+    sz = _call_fn_returning_sz(lambda len: _DLL.botan_srp6_group_size(_ctype_str(group), len))
 
     return _call_fn_returning_vec(sz, lambda v, vl:
                                   _DLL.botan_srp6_generate_verifier(_ctype_str(identifier),
@@ -2501,7 +2500,7 @@ def srp6_generate_verifier(identifier: str, password: str, salt: bytes, group: s
                                                                     v, vl))
 
 def srp6_client_agree(username: str, password: str, group: str, hsh: str, salt: bytes, b: bytes, rng: RandomNumberGenerator) -> tuple[bytes, bytes]:
-    sz = _call_fn_returning_sz(lambda l: _DLL.botan_srp6_group_size(_ctype_str(group), l))
+    sz = _call_fn_returning_sz(lambda len: _DLL.botan_srp6_group_size(_ctype_str(group), len))
 
     return _call_fn_returning_vec_pair(sz, sz, lambda a, al, k, kl:
                                        _DLL.botan_srp6_client_agree(_ctype_str(username),

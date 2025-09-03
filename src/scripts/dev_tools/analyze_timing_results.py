@@ -41,7 +41,7 @@ def main(args = None):
         if match is None:
             print("Failed to match on '%s'" % (line))
 
-        cnt = int(match.group(1))
+        #cnt = int(match.group(1))
         id = int(match.group(2))
         time = int(match.group(3))
 

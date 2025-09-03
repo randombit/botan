@@ -86,7 +86,7 @@ def main(args = None):
             if script in results:
                 continue
 
-            if proc.poll() != None:
+            if proc.poll() is not None:
                 rv = proc.returncode
                 results[script] = rv
                 if rv == 0:

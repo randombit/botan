@@ -15,9 +15,9 @@ def monty_redc_code(n, p_dash1=False):
     fn_name = "bigint_monty_redc_pdash1" if p_dash1 else "bigint_monty_redc"
 
     if p_dash1:
-        hdr = "void bigint_monty_redc_pdash1_%d(word r[%d], const word z[%d], const word p[%d], word ws[%d]) {\n" % (n, n, 2*n, n, n)
+        hdr = "void %s_%d(word r[%d], const word z[%d], const word p[%d], word ws[%d]) {\n" % (fn_name, n, n, 2*n, n, n)
     else:
-        hdr = "void bigint_monty_redc_%d(word r[%d], const word z[%d], const word p[%d], word p_dash, word ws[%d]) {\n" % (n, n, 2*n, n, n)
+        hdr = "void %s_%d(word r[%d], const word z[%d], const word p[%d], word p_dash, word ws[%d]) {\n" % (fn_name, n, n, 2*n, n, n)
 
     ftr = "\n}\n"
 
@@ -52,7 +52,7 @@ def monty_redc_code(n, p_dash1=False):
 
     lines.append("bigint_monty_maybe_sub<%d>(r, w1, ws, p);" % (n))
 
-    return hdr + "\n".join(["   %s" % (l) for l in lines]) + ftr
+    return hdr + "\n".join(["   %s" % (line) for line in lines]) + ftr
 
 def main(args = None):
     if args is None:
