@@ -101,7 +101,7 @@ highlight_language = 'cpp'
 
 try:
     # On Arch this is python-sphinx-furo
-    import furo
+    import furo # noqa: F401
     html_theme = "furo"
 
     # Add a small edit button to each document to allow visitors to easily
