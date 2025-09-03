@@ -63,9 +63,9 @@ void Ascon_p::squeeze(std::span<uint8_t> output) {
 
    process(
       output,
-      [&](uint64_t& state_word, uint64_t input_word) { output_stuffer.append(store_le(state_word ^ input_word)); },
-      [&](uint64_t& state_word, uint64_t input_word, PartialWordBounds bounds) {
-         const auto out_buffer = store_le(state_word ^ input_word);
+      [&](uint64_t& state_word, uint64_t) { output_stuffer.append(store_le(state_word)); },
+      [&](uint64_t& state_word, uint64_t, PartialWordBounds bounds) {
+         const auto out_buffer = store_le(state_word);
          output_stuffer.append(std::span{out_buffer}.subspan(bounds.offset, bounds.length));
       },
       [&] { permute(m_processing_rounds); });
