@@ -645,7 +645,7 @@ def _call_fn_viewing_str(fn) -> str:
     _view_str_fn.output = None
     return result
 
-def _ctype_str(s: str) -> bytes:
+def _ctype_str(s: str | None) -> bytes | None:
     if s is None:
         return None
     assert isinstance(s, str)
@@ -724,7 +724,7 @@ class TPM2Object:
 class TPM2Context(TPM2Object):
     """TPM 2.0 Context object"""
 
-    def __init__(self, tcti_name_maybe_with_conf: str = None, tcti_conf: str = None):
+    def __init__(self, tcti_name_maybe_with_conf: str | None = None, tcti_conf: str | None = None):
         """Construct a TPM2Context object with optional TCTI name and configuration."""
 
         obj = c_void_p(0)
@@ -1035,7 +1035,7 @@ class SymmetricCipher:
         _DLL.botan_cipher_get_ideal_update_granularity(self.__obj, byref(length))
         return length.value
 
-    def key_length(self) -> int:
+    def key_length(self) -> tuple[int, int]:
         kmin = c_size_t(0)
         kmax = c_size_t(0)
         _DLL.botan_cipher_query_keylen(self.__obj, byref(kmin), byref(kmax))
@@ -1079,7 +1079,7 @@ class SymmetricCipher:
     def start(self, nonce: bytes):
         _DLL.botan_cipher_start(self.__obj, nonce, len(nonce))
 
-    def _update(self, txt: str | bytes, final: bool):
+    def _update(self, txt: str | bytes | None, final: bool):
 
         inp = txt if txt else ''
         bits = _ctype_bits(inp)
@@ -1165,7 +1165,7 @@ def pbkdf_timed(algo: str, password: str, out_len: int, ms_to_run: int = 300, sa
 #
 def scrypt(out_len: int, password: str, salt: str | bytes, n: int = 1024, r: int = 8, p: int = 8) -> bytes:
     out_buf = create_string_buffer(out_len)
-    passbits = _ctype_str(password)
+    passbits = _ctype_bits(password)
     saltbits = _ctype_bits(salt)
 
     _DLL.botan_pwdhash(_ctype_str("Scrypt"), n, r, p,
@@ -1186,7 +1186,7 @@ def scrypt(out_len: int, password: str, salt: str | bytes, n: int = 1024, r: int
 # returns an output of out_len bytes
 def argon2(variant: str, out_len: int, password: str, salt: str | bytes, m: int = 256, t: int = 1, p: int = 1) -> bytes:
     out_buf = create_string_buffer(out_len)
-    passbits = _ctype_str(password)
+    passbits = _ctype_bits(password)
     saltbits = _ctype_bits(salt)
 
     _DLL.botan_pwdhash(_ctype_str(variant), m, t, p,
@@ -1432,6 +1432,7 @@ class PrivateKey:
             else:
                 algo = 'ECDH'
         elif algo in ['mce', 'mceliece']:
+            # TODO(Botan4) remove this case
             algo = 'McEliece'
             params = "%d,%d" % (params[0], params[1])
 
@@ -1578,7 +1579,7 @@ class PrivateKey:
         else:
             return self.to_der()
 
-    def export_encrypted(self, passphrase: str, rng: RandomNumberGenerator, pem: bool = False, msec: int = 300, cipher: str = None, pbkdf: str = None): # pylint: disable=redefined-outer-name
+    def export_encrypted(self, passphrase: str, rng: RandomNumberGenerator, pem: bool = False, msec: int = 300, cipher: str | None = None, pbkdf: str | None = None): # pylint: disable=redefined-outer-name
         if pem:
             return _call_fn_viewing_str(
                 lambda vc, vfn: _DLL.botan_privkey_view_encrypted_pem_timed(
@@ -1600,7 +1601,7 @@ class PrivateKey:
         _DLL.botan_privkey_oid(byref(oid.handle_()), self.__obj)
         return oid
 
-    def stateful_operation(self) -> str:
+    def stateful_operation(self) -> bool:
         r = c_int(0)
         _DLL.botan_privkey_stateful_operation(self.__obj, byref(r))
         if r.value == 0:
@@ -1809,7 +1810,7 @@ class X509Cert: # pylint: disable=invalid-name
     def __del__(self):
         _DLL.botan_x509_cert_destroy(self.__obj)
 
-    def time_starts(self) -> str:
+    def time_starts(self) -> datetime:
         starts = _call_fn_returning_str(
             16, lambda b, bl: _DLL.botan_x509_cert_get_time_starts(self.__obj, b, bl))
         if len(starts) == 13:
@@ -1823,7 +1824,7 @@ class X509Cert: # pylint: disable=invalid-name
 
         return datetime.fromtimestamp(mktime(struct_time))
 
-    def time_expires(self) -> str:
+    def time_expires(self) -> datetime:
         expires = _call_fn_returning_str(
             16, lambda b, bl: _DLL.botan_x509_cert_get_time_expires(self.__obj, b, bl))
         if len(expires) == 13:
@@ -1917,7 +1918,7 @@ class X509Cert: # pylint: disable=invalid-name
                trusted: List[X509Cert] | None = None,
                trusted_path: str | None = None,
                required_strength: int = 0,
-               hostname: str = None,
+               hostname: str | None = None,
                reference_time: int = 0,
                crls: List[X509CRL] | None = None) -> int:
 
@@ -1994,7 +1995,7 @@ class X509CRL:
 
 class MPI:
 
-    def __init__(self, initial_value: _MPIArg = None, radix: int = None):
+    def __init__(self, initial_value: _MPIArg = None, radix: int | None = None):
 
         self.__obj = c_void_p(0)
         _DLL.botan_mp_init(byref(self.__obj))
@@ -2083,23 +2084,41 @@ class MPI:
     def __hash__(self):
         return hash(self.to_bytes())
 
-    def __eq__(self, other: MPI):
-        return self.cmp(other) == 0
+    def __eq__(self, other: MPI | object) -> bool:
+        if isinstance(other, MPI):
+            return self.cmp(other) == 0
+        else:
+            return False
 
-    def __ne__(self, other: MPI):
-        return self.cmp(other) != 0
+    def __ne__(self, other: MPI | object) -> bool:
+        if isinstance(other, MPI):
+            return self.cmp(other) != 0
+        else:
+            return False
 
-    def __lt__(self, other: MPI):
-        return self.cmp(other) < 0
+    def __lt__(self, other: MPI | object) -> bool:
+        if isinstance(other, MPI):
+            return self.cmp(other) < 0
+        else:
+            return False
 
-    def __le__(self, other: MPI):
-        return self.cmp(other) <= 0
+    def __le__(self, other: MPI | object) -> bool:
+        if isinstance(other, MPI):
+            return self.cmp(other) <= 0
+        else:
+            return False
 
-    def __gt__(self, other: MPI):
-        return self.cmp(other) > 0
+    def __gt__(self, other: MPI | object) -> bool:
+        if isinstance(other, MPI):
+            return self.cmp(other) > 0
+        else:
+            return False
 
-    def __ge__(self, other: MPI):
-        return self.cmp(other) >= 0
+    def __ge__(self, other: MPI | object) -> bool:
+        if isinstance(other, MPI):
+            return self.cmp(other) >= 0
+        else:
+            return False
 
     def __add__(self, other: MPI):
         r = MPI()
@@ -2141,25 +2160,21 @@ class MPI:
         return q
 
     def __lshift__(self, shift: int):
-        shift = c_size_t(shift)
         r = MPI()
-        _DLL.botan_mp_lshift(r.handle_(), self.__obj, shift)
+        _DLL.botan_mp_lshift(r.handle_(), self.__obj, c_size_t(shift))
         return r
 
     def __ilshift__(self, shift: int):
-        shift = c_size_t(shift)
-        _DLL.botan_mp_lshift(self.__obj, self.__obj, shift)
+        _DLL.botan_mp_lshift(self.__obj, self.__obj, c_size_t(shift))
         return self
 
     def __rshift__(self, shift: int):
-        shift = c_size_t(shift)
         r = MPI()
-        _DLL.botan_mp_rshift(r.handle_(), self.__obj, shift)
+        _DLL.botan_mp_rshift(r.handle_(), self.__obj, c_size_t(shift))
         return r
 
     def __irshift__(self, shift: int):
-        shift = c_size_t(shift)
-        _DLL.botan_mp_rshift(self.__obj, self.__obj, shift)
+        _DLL.botan_mp_rshift(self.__obj, self.__obj, c_size_t(shift))
         return self
 
     def mod_mul(self, other: MPI, modulus: MPI) -> MPI:
@@ -2237,23 +2252,41 @@ class OID:
         _DLL.botan_oid_cmp(byref(r), self.__obj, other.handle_())
         return r.value
 
-    def __eq__(self, other: OID):
-        return self.cmp(other) == 0
+    def __eq__(self, other: OID | object) -> bool:
+        if isinstance(other, OID):
+            return self.cmp(other) == 0
+        else:
+            return False
 
-    def __ne__(self, other: OID):
-        return self.cmp(other) != 0
+    def __ne__(self, other: OID | object) -> bool:
+        if isinstance(other, OID):
+            return self.cmp(other) != 0
+        else:
+            return False
 
-    def __lt__(self, other: OID):
-        return self.cmp(other) < 0
+    def __lt__(self, other: OID | object) -> bool:
+        if isinstance(other, OID):
+            return self.cmp(other) < 0
+        else:
+            return False
 
-    def __le__(self, other: OID):
-        return self.cmp(other) <= 0
+    def __le__(self, other: OID | object) -> bool:
+        if isinstance(other, OID):
+            return self.cmp(other) <= 0
+        else:
+            return False
 
-    def __gt__(self, other: OID):
-        return self.cmp(other) > 0
+    def __gt__(self, other: OID | object) -> bool:
+        if isinstance(other, OID):
+            return self.cmp(other) > 0
+        else:
+            return False
 
-    def __ge__(self, other: OID):
-        return self.cmp(other) >= 0
+    def __ge__(self, other: OID | object) -> bool:
+        if isinstance(other, OID):
+            return self.cmp(other) >= 0
+        else:
+            return False
 
 
 class ECGroup:
@@ -2326,7 +2359,7 @@ class ECGroup:
     def to_der(self) -> bytes:
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_ec_group_view_der(self.__obj, vc, vfn))
 
-    def to_pem(self) -> bytes:
+    def to_pem(self) -> str:
         return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_ec_group_view_pem(self.__obj, vc, vfn))
 
     def get_curve_oid(self) -> OID:
@@ -2364,11 +2397,13 @@ class ECGroup:
         _DLL.botan_ec_group_get_order(byref(order.handle_()), self.__obj)
         return order
 
-    def __eq__(self, other: ECGroup):
-        rc = _DLL.botan_ec_group_equal(self.__obj, other.handle_())
-        return rc == 1
+    def __eq__(self, other: ECGroup | object) -> bool:
+        if isinstance(other, ECGroup):
+            return _DLL.botan_ec_group_equal(self.__obj, other.handle_()) == 1
+        else:
+            return False
 
-    def __ne__(self, other: ECGroup):
+    def __ne__(self, other: ECGroup | object) -> bool:
         return not self == other
 
 
@@ -2447,7 +2482,7 @@ def nist_key_wrap(kek: bytes, key: bytes, cipher: str | None = None) -> bytes:
                            key, len(key),
                            kek, len(kek),
                            output, byref(out_len))
-    return output[0:int(out_len.value)]
+    return bytes(output[0:int(out_len.value)])
 
 def nist_key_unwrap(kek: bytes, wrapped: bytes, cipher: str | None = None) -> bytes:
     cipher_algo = "AES-%d" % (8*len(kek)) if cipher is None else cipher
@@ -2458,7 +2493,7 @@ def nist_key_unwrap(kek: bytes, wrapped: bytes, cipher: str | None = None) -> by
                            wrapped, len(wrapped),
                            kek, len(kek),
                            output, byref(out_len))
-    return output[0:int(out_len.value)]
+    return bytes(output[0:int(out_len.value)])
 
 class Srp6ServerSession:
     __obj = c_void_p(0)
