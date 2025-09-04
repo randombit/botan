@@ -30,6 +30,8 @@ void Ascon_p::percolate_in(std::span<uint8_t> data) {
       bounds.write_into(output_stuffer, state_word);
       return state_word;
    });
+   BOTAN_ASSERT_NOMSG(input_slicer.empty());
+   BOTAN_ASSERT_NOMSG(output_stuffer.full());
 }
 
 void Ascon_p::percolate_out(std::span<uint8_t> data) {
@@ -42,6 +44,8 @@ void Ascon_p::percolate_out(std::span<uint8_t> data) {
       bounds.write_into(output_stuffer, state_word ^ input_word);
       return bounds.masked_assignment(state_word, input_word);
    });
+   BOTAN_ASSERT_NOMSG(input_slicer.empty());
+   BOTAN_ASSERT_NOMSG(output_stuffer.full());
 }
 
 void Ascon_p::squeeze(std::span<uint8_t> output) {

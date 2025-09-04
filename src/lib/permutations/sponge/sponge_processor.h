@@ -27,7 +27,7 @@ class SpongeProcessor {
       constexpr static size_t word_bytes = SpongeT::word_bytes;
       constexpr static size_t word_bits = SpongeT::word_bits;
 
-      struct InnerWordBounds final {
+      struct PartialWordBounds final {
             size_t offset;  // NOLINT(*-non-private-member-*)
             size_t length;  // NOLINT(*-non-private-member-*)
 
@@ -48,13 +48,21 @@ class SpongeProcessor {
             }
       };
 
+      class FullWordBounds final {
+         public:
+            word_t read_from(BufferSlicer& slicer) const { return load_le(slicer.take<word_bytes>()); }
+
+            void write_into(BufferStuffer& stuffer, word_t full_word) const { stuffer.append(store_le(full_word)); }
+
+            word_t masked_assignment(word_t, word_t full_input_word) const { return full_input_word; }
+      };
+
    public:
       explicit SpongeProcessor(SpongeT& sponge, PermutationFnT permutation_fn) :
             m_sponge(sponge), m_permutation_fn(permutation_fn) {}
 
    public:
       template <typename WordModifierFnT>
-      // requires std::same_as<std::invoke_result<WordModifierFnT, word, InnerWordBounds>, word>
       void process(size_t bytes_to_process, WordModifierFnT word_modifier_fn) {
          const auto byte_rate = m_sponge.byte_rate();
          auto& S = m_sponge.state();
@@ -74,7 +82,7 @@ class SpongeProcessor {
                BOTAN_DEBUG_ASSERT(bytes_from_input < word_bytes);
 
                S[cursor / word_bytes] = word_modifier_fn(S[cursor / word_bytes],
-                                                         InnerWordBounds{
+                                                         PartialWordBounds{
                                                             .offset = bytes_out_of_word_alignment,
                                                             .length = bytes_from_input,
                                                          });
@@ -85,15 +93,14 @@ class SpongeProcessor {
             // Process as many aligned 64-bit integer values as possible
             for(; bytes_to_process_this_round >= word_bytes;
                 cursor += word_bytes, bytes_to_process_this_round -= word_bytes) {
-               S[cursor / word_bytes] =
-                  word_modifier_fn(S[cursor / word_bytes], InnerWordBounds{.offset = 0, .length = word_bytes});
+               S[cursor / word_bytes] = word_modifier_fn(S[cursor / word_bytes], FullWordBounds{});
             }
 
             // Read remaining input data, causing misalignment, if necessary
             BOTAN_DEBUG_ASSERT(bytes_to_process_this_round < word_bytes);
             if(bytes_to_process_this_round > 0) {
                S[cursor / word_bytes] = word_modifier_fn(S[cursor / word_bytes],
-                                                         InnerWordBounds{
+                                                         PartialWordBounds{
                                                             .offset = 0,
                                                             .length = bytes_to_process_this_round,
                                                          });
@@ -114,17 +121,18 @@ class SpongeProcessor {
 
       void absorb(std::span<const uint8_t> input) {
          BufferSlicer input_slicer(input);
-         process(input.size(), [&](word_t state_word, InnerWordBounds bounds) {
-            return state_word ^ bounds.read_from(input_slicer);
-         });
+         process(input.size(),
+                 [&](word_t state_word, auto bounds) { return state_word ^ bounds.read_from(input_slicer); });
+         BOTAN_ASSERT_NOMSG(input_slicer.empty());
       }
 
       void squeeze(std::span<uint8_t> output) {
          BufferStuffer output_stuffer(output);
-         process(output.size(), [&](word_t state_word, InnerWordBounds bounds) {
+         process(output.size(), [&](word_t state_word, auto bounds) {
             bounds.write_into(output_stuffer, state_word);
             return state_word;
          });
+         BOTAN_ASSERT_NOMSG(output_stuffer.full());
       }
 
    private:
