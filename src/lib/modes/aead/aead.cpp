@@ -15,6 +15,10 @@
    #include <botan/block_cipher.h>
 #endif
 
+#if defined(BOTAN_HAS_ASCON_AEAD128)
+   #include <botan/internal/ascon_aead128.h>
+#endif
+
 #if defined(BOTAN_HAS_AEAD_CCM)
    #include <botan/internal/ccm.h>
 #endif
@@ -53,6 +57,17 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create_or_throw(std::string_view algo,
 
 std::unique_ptr<AEAD_Mode> AEAD_Mode::create(std::string_view algo, Cipher_Dir dir, std::string_view provider) {
    BOTAN_UNUSED(provider);
+
+#if defined(BOTAN_HAS_ASCON_AEAD128)
+   if(algo == "Ascon-AEAD128") {
+      if(dir == Cipher_Dir::Encryption) {
+         return std::make_unique<Ascon_AEAD128_Encryption>();
+      } else {
+         return std::make_unique<Ascon_AEAD128_Decryption>();
+      }
+   }
+#endif
+
 #if defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305)
    if(algo == "ChaCha20Poly1305") {
       if(dir == Cipher_Dir::Encryption) {
