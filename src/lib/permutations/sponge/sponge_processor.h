@@ -22,14 +22,30 @@ template <typename SpongeT, std::invocable PermutationFnT>
 class SpongeProcessor {
    public:
       using state_t = typename SpongeT::state_t;
+      using word_t = typename SpongeT::word_t;
+
       constexpr static size_t word_bytes = SpongeT::word_bytes;
       constexpr static size_t word_bits = SpongeT::word_bits;
 
-      struct PartialWordBounds final {
+      struct InnerWordBounds final {
             size_t offset;  // NOLINT(*-non-private-member-*)
             size_t length;  // NOLINT(*-non-private-member-*)
 
-            word mask() const { return ((word(0) - 1) >> ((word_bytes - length) * 8)) << (offset * 8); }
+            word_t read_from(BufferSlicer& slicer) const {
+               std::array<uint8_t, word_bytes> partial_word_bytes{};
+               slicer.copy_into(std::span{partial_word_bytes}.subspan(offset, length));
+               return load_le(partial_word_bytes);
+            }
+
+            void write_into(BufferStuffer& stuffer, word_t partial_word) const {
+               const auto partial_word_bytes = store_le(partial_word);
+               stuffer.append(std::span{partial_word_bytes}.subspan(offset, length));
+            }
+
+            word_t masked_assignment(word_t state_word, word_t partial_input_word) const {
+               const auto mask = ((word_t(0) - 1) >> ((word_bytes - length) * 8)) << (offset * 8);
+               return (state_word & ~mask) | (partial_input_word & mask);
+            }
       };
 
    public:
@@ -37,87 +53,78 @@ class SpongeProcessor {
             m_sponge(sponge), m_permutation_fn(permutation_fn) {}
 
    public:
-      template <std::invocable<word&, word> WordModifierFnT,
-                std::invocable<word&, word, PartialWordBounds> PartialWordModifierFnT>
-      void process(std::span<const uint8_t> input,
-                   WordModifierFnT word_modifier_fn,
-                   PartialWordModifierFnT partial_word_modifier_fn) {
+      template <typename WordModifierFnT>
+      // requires std::same_as<std::invoke_result<WordModifierFnT, word, InnerWordBounds>, word>
+      void process(size_t bytes_to_process, WordModifierFnT word_modifier_fn) {
          const auto byte_rate = m_sponge.byte_rate();
          auto& S = m_sponge.state();
          auto& cursor = m_sponge._cursor();
 
-         BufferSlicer input_slicer(input);
-
          // Block-wise incorporation of the input data into the sponge state until
          // all input bytes are processed
-         while(!input_slicer.empty()) {
-            const size_t to_take_this_round = std::min(input_slicer.remaining(), byte_rate - cursor);
-            BufferSlicer input_this_round(input_slicer.take(to_take_this_round));
+         while(bytes_to_process > 0) {
+            const size_t bytes_this_round = std::min(bytes_to_process, byte_rate - cursor);
+            size_t bytes_to_process_this_round = bytes_this_round;
 
             // If necessary, try to get aligned with the sponge state's 64-bit integer array
             const auto bytes_out_of_word_alignment = static_cast<size_t>(cursor % word_bytes);
             if(bytes_out_of_word_alignment > 0) {
                const auto bytes_until_word_alignment = word_bytes - bytes_out_of_word_alignment;
-               const auto bytes_from_input = std::min(input_this_round.remaining(), bytes_until_word_alignment);
+               const auto bytes_from_input = std::min(bytes_to_process_this_round, bytes_until_word_alignment);
                BOTAN_DEBUG_ASSERT(bytes_from_input < word_bytes);
 
-               std::array<uint8_t, word_bytes> partial_word{};
-               input_this_round.copy_into(
-                  std::span{partial_word}.subspan(bytes_out_of_word_alignment, bytes_from_input));
-               partial_word_modifier_fn(S[cursor / word_bytes],
-                                        load_le(partial_word),
-                                        PartialWordBounds{
-                                           .offset = bytes_out_of_word_alignment,
-                                           .length = bytes_from_input,
-                                        });
-               cursor += static_cast<uint8_t>(bytes_from_input);
+               S[cursor / word_bytes] = word_modifier_fn(S[cursor / word_bytes],
+                                                         InnerWordBounds{
+                                                            .offset = bytes_out_of_word_alignment,
+                                                            .length = bytes_from_input,
+                                                         });
+               cursor += bytes_from_input;
+               bytes_to_process_this_round -= bytes_from_input;
             }
 
             // Process as many aligned 64-bit integer values as possible
-            for(; input_this_round.remaining() >= word_bytes; cursor += word_bytes) {
-               word_modifier_fn(S[cursor / word_bytes], load_le(input_this_round.take<word_bytes>()));
+            for(; bytes_to_process_this_round >= word_bytes;
+                cursor += word_bytes, bytes_to_process_this_round -= word_bytes) {
+               S[cursor / word_bytes] =
+                  word_modifier_fn(S[cursor / word_bytes], InnerWordBounds{.offset = 0, .length = word_bytes});
             }
 
             // Read remaining input data, causing misalignment, if necessary
-            const auto remaining_bytes_out_of_word_alignment = input_this_round.remaining();
-            BOTAN_DEBUG_ASSERT(remaining_bytes_out_of_word_alignment < word_bytes);
-            if(remaining_bytes_out_of_word_alignment > 0) {
-               std::array<uint8_t, word_bytes> partial_word{};
-               input_this_round.copy_into(std::span{partial_word}.first(remaining_bytes_out_of_word_alignment));
-               partial_word_modifier_fn(S[cursor / word_bytes],
-                                        load_le(partial_word),
-                                        PartialWordBounds{
-                                           .offset = 0,
-                                           .length = remaining_bytes_out_of_word_alignment,
-                                        });
-               cursor += static_cast<uint8_t>(remaining_bytes_out_of_word_alignment);
+            BOTAN_DEBUG_ASSERT(bytes_to_process_this_round < word_bytes);
+            if(bytes_to_process_this_round > 0) {
+               S[cursor / word_bytes] = word_modifier_fn(S[cursor / word_bytes],
+                                                         InnerWordBounds{
+                                                            .offset = 0,
+                                                            .length = bytes_to_process_this_round,
+                                                         });
+               cursor += bytes_to_process_this_round;
+               bytes_to_process_this_round = 0;
             }
 
             // We reached the end of a sponge state block... permute() and start over
+            BOTAN_DEBUG_ASSERT(bytes_to_process_this_round == 0);
             if(cursor == byte_rate) {
                m_permutation_fn();
                cursor = 0;
             }
+
+            bytes_to_process -= bytes_this_round;
          }
       }
 
       void absorb(std::span<const uint8_t> input) {
-         process(
-            input,
-            [](uint64_t& state_word, uint64_t input_word) { state_word ^= input_word; },
-            [](uint64_t& state_word, uint64_t input_word, PartialWordBounds) { state_word ^= input_word; });
+         BufferSlicer input_slicer(input);
+         process(input.size(), [&](word_t state_word, InnerWordBounds bounds) {
+            return state_word ^ bounds.read_from(input_slicer);
+         });
       }
 
       void squeeze(std::span<uint8_t> output) {
          BufferStuffer output_stuffer(output);
-
-         process(
-            output,
-            [&](uint64_t& state_word, uint64_t) { output_stuffer.append(store_le(state_word)); },
-            [&](uint64_t& state_word, uint64_t, PartialWordBounds bounds) {
-               const auto out_buffer = store_le(state_word);
-               output_stuffer.append(std::span{out_buffer}.subspan(bounds.offset, bounds.length));
-            });
+         process(output.size(), [&](word_t state_word, InnerWordBounds bounds) {
+            bounds.write_into(output_stuffer, state_word);
+            return state_word;
+         });
       }
 
    private:

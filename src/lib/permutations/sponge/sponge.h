@@ -19,6 +19,7 @@ namespace Botan {
 template <size_t words, std::unsigned_integral word = uint64_t>
 class Sponge {
    public:
+      using word_t = word;
       using state_t = std::array<word, words>;
       constexpr static size_t word_bytes = sizeof(word);
       constexpr static size_t word_bits = word_bytes * 8;

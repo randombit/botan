@@ -21,35 +21,27 @@ void Ascon_p::absorb(std::span<const uint8_t> input, std::optional<uint8_t> perm
 }
 
 void Ascon_p::percolate_in(std::span<uint8_t> data) {
+   BufferSlicer input_slicer(data);
    BufferStuffer output_stuffer(data);
-   SpongeProcessor(*this, [this] { permute(m_processing_rounds); })
-      .process(
-         data,
-         [&](uint64_t& state_word, uint64_t input_word) {
-            state_word ^= input_word;
-            output_stuffer.append(store_le(state_word));
-         },
-         [&](uint64_t& state_word, uint64_t input_word, auto bounds) {
-            state_word ^= input_word;
-            const auto state_word_bytes = store_le(state_word);
-            output_stuffer.append(std::span{state_word_bytes}.subspan(bounds.offset, bounds.length));
-         });
+   SpongeProcessor(*this, [this] {
+      permute(m_processing_rounds);
+   }).process(data.size(), [&](uint64_t state_word, auto bounds) {
+      state_word ^= bounds.read_from(input_slicer);
+      bounds.write_into(output_stuffer, state_word);
+      return state_word;
+   });
 }
 
 void Ascon_p::percolate_out(std::span<uint8_t> data) {
+   BufferSlicer input_slicer(data);
    BufferStuffer output_stuffer(data);
-   SpongeProcessor(*this, [this] { permute(m_processing_rounds); })
-      .process(
-         data,
-         [&](uint64_t& state_word, uint64_t input_word) {
-            output_stuffer.append(store_le(state_word ^ input_word));
-            state_word = input_word;
-         },
-         [&](uint64_t& state_word, uint64_t input_word, auto bounds) {
-            const auto pt_block = store_le(state_word ^ input_word);
-            output_stuffer.append(std::span{pt_block}.subspan(bounds.offset, bounds.length));
-            state_word = (state_word & ~bounds.mask()) | input_word;
-         });
+   SpongeProcessor(*this, [this] {
+      permute(m_processing_rounds);
+   }).process(data.size(), [&](uint64_t state_word, auto bounds) {
+      const auto input_word = bounds.read_from(input_slicer);
+      bounds.write_into(output_stuffer, state_word ^ input_word);
+      return bounds.masked_assignment(state_word, input_word);
+   });
 }
 
 void Ascon_p::squeeze(std::span<uint8_t> output) {
