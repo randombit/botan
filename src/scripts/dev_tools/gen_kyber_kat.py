@@ -57,7 +57,7 @@ class KatReader:
         while True:
             key, val = self.next_value()
 
-            if key == None:
+            if key is None:
                 return # eof
 
             if key in ['msg']:
@@ -88,8 +88,7 @@ def sha256_16(v):
     return h.hexdigest()[:32]
 
 def compress_kat(kat, mode):
-    first = kat['count'] == 0
-    del kat['count']
+    del kat['count'] # Not needed
 
     hash_fn = sha256_16 if '90s' in mode else shake_256_16
 

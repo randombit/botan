@@ -25,7 +25,7 @@ botan_root = os.path.join(os.path.dirname(sys.argv[0]), "..", "..")
 
 # locale
 sys.path.append(botan_root)
-from configure import ModuleInfo
+from configure import ModuleInfo # noqa: E402
 
 parser = argparse.ArgumentParser(description=
     'Show Botan module dependencies. '

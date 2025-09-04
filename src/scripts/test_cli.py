@@ -922,8 +922,8 @@ def cli_dl_group_info_tests(_tmp_dir):
         if len(lines) != 2:
             logging.error('Unexpected output from dl_group_info')
 
-        for l in lines:
-            if not dl_output.match(l):
+        for line in lines:
+            if not dl_output.match(line):
                 logging.error('Unexpected output from dl_group_info')
 
 

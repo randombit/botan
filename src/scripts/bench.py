@@ -120,18 +120,18 @@ def run_openssl_bench(openssl, algo):
 
         result = {}
 
-        for l in output.splitlines():
-            if ignored.match(l):
+        for line in output.splitlines():
+            if ignored.match(line):
                 continue
 
             if not result:
-                match = buf_header.match(l)
+                match = buf_header.match(line)
                 if match is None:
-                    logging.error("Unexpected output from OpenSSL %s", l)
+                    logging.error("Unexpected output from OpenSSL %s", line)
 
                 result = {'algo': algo, 'buf_size': int(match.group(3))}
             else:
-                match = res_header.match(l)
+                match = res_header.match(line)
 
                 result['bytes'] = int(match.group(1)) * result['buf_size']
                 result['runtime'] = float(match.group(2))
@@ -145,18 +145,18 @@ def run_openssl_bench(openssl, algo):
 
         result = {}
 
-        for l in output.splitlines():
-            if ignored.match(l):
+        for line in output.splitlines():
+            if ignored.match(line):
                 continue
 
-            if match := signature_ops.match(l):
+            if match := signature_ops.match(line):
                 results.append({
                     'algo': algo,
                     'key_size': int(match.group(3)),
                     'op': 'sign',
                     'ops': int(match.group(2)),
                     'runtime': float(match.group(4))})
-            elif match := verify_ops.match(l):
+            elif match := verify_ops.match(line):
                 results.append({
                     'algo': algo,
                     'key_size': int(match.group(3)),
@@ -165,7 +165,7 @@ def run_openssl_bench(openssl, algo):
                     'runtime': float(match.group(4))
                 })
             else:
-                logging.error("Unexpected output from OpenSSL %s", l)
+                logging.error("Unexpected output from OpenSSL %s", line)
 
     elif algo in KEY_AGREEMENT_EVP_MAP:
         res_header    = re.compile(r'\+(R7|R9|R12|R14):([0-9]+):([0-9]+):([0-9]+\.[0-9]+)$')
@@ -173,18 +173,18 @@ def run_openssl_bench(openssl, algo):
 
         result = {}
 
-        for l in output.splitlines():
-            if ignored.match(l):
+        for line in output.splitlines():
+            if ignored.match(line):
                 continue
 
-            if match := res_header.match(l):
+            if match := res_header.match(line):
                 results.append({
                     'algo': algo,
                     'key_size': int(match.group(3)),
                     'ops': int(match.group(2)),
                     'runtime': float(match.group(4))})
             else:
-                logging.error("Unexpected output from OpenSSL %s", l)
+                logging.error("Unexpected output from OpenSSL %s", line)
 
     return results
 
@@ -236,13 +236,13 @@ def run_botan_key_agreement_bench(botan, runtime, algo):
     output = json.loads(output)
 
     results = []
-    for l in output:
-        if l['op'] == 'key agreements':
+    for res in output:
+        if res['op'] == 'key agreements':
             results.append({
                 'algo': algo,
-                'key_size': int(re.search(r'[A-Z]+-[a-z]*([0-9]+).*', l['algo']).group(1)),
-                'ops': l['events'],
-                'runtime': l['nanos'] / 1000 / 1000 / 1000,
+                'key_size': int(re.search(r'[A-Z]+-[a-z]*([0-9]+).*', res['algo']).group(1)),
+                'ops': res['events'],
+                'runtime': res['nanos'] / 1000 / 1000 / 1000,
             })
     return results
 

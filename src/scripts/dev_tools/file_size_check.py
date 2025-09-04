@@ -7,11 +7,11 @@ import sys
 
 def lines_in(f):
     lines = 0
-    for l in f.decode('utf8').splitlines():
-        if l == '':
+    for line in f.decode('utf8').splitlines():
+        if line == '':
             continue
 
-        if l.startswith('#'):
+        if line.startswith('#'):
             continue
         lines += 1
     return lines
