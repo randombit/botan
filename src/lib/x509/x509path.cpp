@@ -218,11 +218,11 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
       if(subject.x509_version() < 3 && !extensions_vec.empty()) {
          status.insert(Certificate_Status_Code::EXT_IN_V1_V2_CERT);
       }
-      if(issuer.has_value()) {
-         for(const auto& extension : extensions_vec) {
-            extension.first->validate(subject, *issuer, cert_path, cert_status, i);
-         }
+
+      for(const auto& extension : extensions_vec) {
+         extension.first->validate(subject, issuer, cert_path, cert_status, i);
       }
+
       if(extensions_vec.size() != extensions.get_extension_oids().size()) {
          status.insert(Certificate_Status_Code::DUPLICATE_CERT_EXTENSION);
       }
