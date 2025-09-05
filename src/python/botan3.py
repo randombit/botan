@@ -20,7 +20,7 @@ It uses botan's ffi module, which exposes a C API.
 from __future__ import annotations
 from ctypes import CDLL, CFUNCTYPE, POINTER, byref, create_string_buffer, \
     c_void_p, c_size_t, c_uint8, c_uint32, c_uint64, c_int, c_uint, c_char, c_char_p, addressof, Array
-from typing import Callable, Any, Union, List
+from typing import Callable, Any, Union
 
 from sys import platform
 from time import strptime, mktime, time as system_time
@@ -968,7 +968,7 @@ class SymmetricCipher:
         _DLL.botan_cipher_get_default_nonce_length(self.__obj, byref(length))
         return length.value
 
-    def valid_nonce_length(self, nonce_len) -> bool:
+    def valid_nonce_length(self, nonce_len: int) -> bool:
         rc = _DLL.botan_cipher_valid_nonce_length(self.__obj, nonce_len)
         return rc == 1
 
@@ -1119,7 +1119,7 @@ class BlockCipher:
 #
 # Bcrypt
 #
-def bcrypt(passwd: str, rng_obj: RandomNumberGenerator, work_factor=10):
+def bcrypt(passwd: str, rng_obj: RandomNumberGenerator, work_factor=10) -> str:
     """
     Bcrypt password hashing
     """
@@ -1133,7 +1133,7 @@ def bcrypt(passwd: str, rng_obj: RandomNumberGenerator, work_factor=10):
         b = b[:-1]
     return _ctype_to_str(b)
 
-def check_bcrypt(passwd: str, passwd_hash: str):
+def check_bcrypt(passwd: str, passwd_hash: str) -> bool:
     rc = _DLL.botan_bcrypt_is_valid(_ctype_str(passwd), _ctype_str(passwd_hash))
     return rc == 0
 
@@ -1524,7 +1524,7 @@ class PrivateKey:
         return priv
 
     @classmethod
-    def load_ml_dsa(cls, mldsa_mode, key):
+    def load_ml_dsa(cls, mldsa_mode: str, key: bytes):
         priv = PrivateKey()
         _DLL.botan_privkey_load_ml_dsa(byref(priv.handle_()), key, len(key), _ctype_str(mldsa_mode))
         return priv
@@ -1580,7 +1580,7 @@ class PrivateKey:
         else:
             return self.to_der()
 
-    def export_encrypted(self, passphrase: str, rng: RandomNumberGenerator, pem: bool = False, msec: int = 300, cipher: str | None = None, pbkdf: str | None = None): # pylint: disable=redefined-outer-name
+    def export_encrypted(self, passphrase: str, rng: RandomNumberGenerator, pem: bool = False, msec: int = 300, cipher: str | None = None, pbkdf: str | None = None) -> str | bytes: # pylint: disable=redefined-outer-name
         if pem:
             return _call_fn_viewing_str(
                 lambda vc, vfn: _DLL.botan_privkey_view_encrypted_pem_timed(
@@ -1899,7 +1899,7 @@ class X509Cert: # pylint: disable=invalid-name
         _DLL.botan_x509_cert_not_after(self.__obj, byref(time))
         return time.value
 
-    def allowed_usage(self, usage_list: List[str]) -> bool:
+    def allowed_usage(self, usage_list: list[str]) -> bool:
         usage_values = {"NO_CONSTRAINTS": 0,
                         "DIGITAL_SIGNATURE": 32768,
                         "NON_REPUDIATION": 16384,
@@ -1920,13 +1920,13 @@ class X509Cert: # pylint: disable=invalid-name
         return rc == 0
 
     def verify(self,
-               intermediates: List[X509Cert] | None = None,
-               trusted: List[X509Cert] | None = None,
+               intermediates: list[X509Cert] | None = None,
+               trusted: list[X509Cert] | None = None,
                trusted_path: str | None = None,
                required_strength: int = 0,
                hostname: str | None = None,
                reference_time: int = 0,
-               crls: List[X509CRL] | None = None) -> int:
+               crls: list[X509CRL] | None = None) -> int:
 
         if intermediates is not None:
             c_intermediates = len(intermediates) * c_void_p
@@ -2552,7 +2552,7 @@ def srp6_client_agree(username: str, password: str, group: str, hsh: str, salt: 
                                                                     a, al,
                                                                     k, kl))
 
-def zfec_encode(k: int, n: int, input_bytes: bytes) -> List[bytes]:
+def zfec_encode(k: int, n: int, input_bytes: bytes) -> list[bytes]:
     """
     ZFEC-encode an input message according to the given parameters
 
@@ -2585,7 +2585,7 @@ def zfec_encode(k: int, n: int, input_bytes: bytes) -> List[bytes]:
     return [output.raw for output in outputs]
 
 
-def zfec_decode(k: int, n: int, indexes: List[int], inputs: List[bytes]) -> List[bytes]:
+def zfec_decode(k: int, n: int, indexes: list[int], inputs: list[bytes]) -> list[bytes]:
     """
     ZFEC decode
 
