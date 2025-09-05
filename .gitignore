@@ -1,6 +1,7 @@
 /Makefile
 build.ninja
 .ninja_log
+.ninja_deps
 libbotan*.so.*
 *.a
 *.so
@@ -38,6 +39,7 @@ vgcore.*
 /*.sublime-workspace
 /.editorconfig
 /.vscode
+/.clang-format
 
 # Archive files
 *.tgz

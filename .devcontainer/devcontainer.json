@@ -1,0 +1,48 @@
+{
+    "name": "Botan",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils": {
+            "installOhMyZsh": true,
+            "installOhMyZshConfig": true,
+            "configureZshAsDefaultShell": true
+        },
+        "ghcr.io/devcontainers-extra/features/zsh-plugins:0": {
+            "plugins": "fzf"
+        }
+    },
+    "postStartCommand": "cd ${containerWorkspaceFolder}; .devcontainer/startup.sh",
+    "remoteUser": "ubuntu",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "[cpp]": {
+                    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+                    "editor.formatOnSave": true
+                },
+                "clangd": {
+                    "path": "clangd-20",
+                    "arguments": [
+                        "--header-insertion=never"
+                    ],
+                    "checkUpdates": false
+                },
+                "clang-format.executable": "clang-format-17",
+                "ruff.enable": true,
+                "pylint.args": [
+                    "--rcfile=src/configs/pylint.rc"
+                ]
+            },
+            "extensions": [
+                "llvm-vs-code-extensions.vscode-clangd",
+                "ms-vscode.cpptools",
+                "ms-vscode.cpptools-themes",
+                "ms-python.python",
+                "charliermarsh.ruff",
+                "editorconfig.editorconfig"
+            ]
+        }
+    }
+}
