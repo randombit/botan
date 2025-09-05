@@ -16,6 +16,11 @@ import os
 import re
 from multiprocessing.pool import ThreadPool
 
+def clang_format_style_path():
+    script_location = os.path.dirname(os.path.abspath(__file__))
+    relative_style_path = "../../configs/clang-format"
+    return os.path.realpath(os.path.join(script_location, relative_style_path))
+
 def run_command(cmdline):
     proc = subprocess.Popen(cmdline,
                             stdout=subprocess.PIPE,
@@ -28,8 +33,8 @@ def run_command(cmdline):
 
     return (stdout, stderr)
 
-def apply_clang_format(clang_format, source_file):
-    cmdline = [clang_format, '-i', source_file]
+def apply_clang_format(clang_format, style_file, source_file):
+    cmdline = [clang_format, f'--style=file:{style_file}', '-i', source_file]
     (stdout, stderr) = run_command(cmdline)
 
     if stdout != '' or stderr != '':
@@ -50,8 +55,8 @@ def run_diff(source_file, formatted_contents):
         lineterm="",
     ))
 
-def check_clang_format(clang_format, source_file):
-    cmdline = [clang_format, source_file]
+def check_clang_format(clang_format, style_file, source_file):
+    cmdline = [clang_format, f'--style=file:{style_file}', source_file]
     (stdout, stderr) = run_command(cmdline)
 
     if stderr != '':
@@ -117,6 +122,7 @@ def main(args = None):
     parser.add_option('--src-dir', metavar='DIR', default='src')
     parser.add_option('--check', action='store_true', default=False)
     parser.add_option('--clang-format-binary', metavar='PATH', default='clang-format')
+    parser.add_option('--style-file', metavar='FILE', default=clang_format_style_path())
     parser.add_option('--skip-version-check', action='store_true', default=False)
 
     (options, args) = parser.parse_args(args)
@@ -138,6 +144,10 @@ def main(args = None):
             print("This script requires clang-format %d but current version is %d" % (req_version, version))
             print("Use --skip-version-check to carry on, however formatting may be incorrect")
             return 1
+
+    if not os.path.isfile(options.style_file):
+        print("Failed to find file containing clang-format configuration")
+        return 1
 
     jobs = options.jobs
     if jobs == 0:
@@ -170,9 +180,9 @@ def main(args = None):
     results = []
     for file in files_to_fmt:
         if options.check:
-            results.append(pool.apply_async(check_clang_format, (clang_format, file,)))
+            results.append(pool.apply_async(check_clang_format, (clang_format, options.style_file, file,)))
         else:
-            results.append(pool.apply_async(apply_clang_format, (clang_format, file,)))
+            results.append(pool.apply_async(apply_clang_format, (clang_format, options.style_file, file,)))
 
     fail_execution = False
 

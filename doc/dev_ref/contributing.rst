@@ -241,12 +241,13 @@ Avoid explicit ``new`` or (especially) explicit ``delete``: use RAII,
 Use ``m_`` prefix on all member variables.
 
 ``clang-format`` is used for all C++ formatting. The configuration is
-in ``.clang-format`` in the root directory. You can rerun the
-formatter using ``make fmt``, by invoking the script
-``src/scripts/dev_tools/run_clang_format.py`` or using an appropriate editor
-configuration from ``src/editors``. If the output would be truly horrible, it is
-allowed to disable formatting for a specific area using ``// clang-format off``
-annotations.
+in ``src/configs/clang-format``. You can rerun the formatter using ``make fmt``,
+by invoking the script ``src/scripts/dev_tools/run_clang_format.py`` or symlink
+the configuration into the repo root as ``.clang-format`` and using an appropriate
+editor configuration from ``src/editors``. Note that the dev-container shipped with
+this repository sets this up properly when used with VSCode. If the output would be
+truly horrible, it is allowed to disable formatting for a specific area using
+``// clang-format off`` annotations.
 
 .. note::
 
