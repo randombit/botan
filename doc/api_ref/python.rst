@@ -16,7 +16,7 @@ the C++ library. So for Botan 2, the module is named ``botan2`` while
 for Botan 3 it is ``botan3``.
 
 Versioning
-----------------------------------------
+-----------------------------------------
 .. py:function:: version_major()
 
    Returns the major number of the library version.
@@ -34,22 +34,22 @@ Versioning
    Returns a free form version string for the library
 
 Random Number Generators
-----------------------------------------
+-----------------------------------------
 
 .. py:class:: RandomNumberGenerator(rng_type = 'system')
 
-     Previously ``rng``
+   Previously ``rng``
 
-     Type 'user' also allowed (userspace HMAC_DRBG seeded from system
-     rng). The system RNG is very cheap to create, as just a single file
-     handle or CSP handle is kept open, from first use until shutdown,
-     no matter how many 'system' rng instances are created. Thus it is
-     easy to use the RNG in a one-off way, with `botan.RandomNumberGenerator().get(32)`.
+   Type 'user' also allowed (userspace HMAC_DRBG seeded from system
+   rng). The system RNG is very cheap to create, as just a single file
+   handle or CSP handle is kept open, from first use until shutdown,
+   no matter how many 'system' rng instances are created. Thus it is
+   easy to use the RNG in a one-off way, with `botan.RandomNumberGenerator().get(32)`.
 
-     When Botan is configured with TPM 2.0 support, also 'tpm2' is allowed
-     to instantiate a TPM-backed RNG. Note that this requires passing
-     additional named arguments ``tpm2_context=`` with a ``TPM2Context`` and
-     (optionally) ``tpm2_sessions=`` with one or more ``TPM2Session`` objects.
+   When Botan is configured with TPM 2.0 support, also 'tpm2' is allowed
+   to instantiate a TPM-backed RNG. Note that this requires passing
+   additional named arguments ``tpm2_context=`` with a ``TPM2Context`` and
+   (optionally) ``tpm2_sessions=`` with one or more ``TPM2Session`` objects.
 
    .. py:method:: get(length)
 
@@ -67,138 +67,164 @@ Random Number Generators
 
       Add some unpredictable seed data to the RNG
 
+TPM 2.0 Bindings
+-----------------------------------------
+
+.. versionadded:: 3.6.0
+
+.. py:class:: TPM2Context(tcti_nameconf = None, tcti_conf = None)
+
+   Create a TPM 2.0 context optionally with a TCTI name and configuration,
+   separated by a colon, or as separate parameters.
+
+   .. py:method:: supports_botan_crypto_backend()
+
+      Returns True if the TPM adapter can use Botan-based crypto primitives
+      to communicate with the TPM
+
+   .. py:method:: enable_botan_crypto_backend(rng)
+
+      Enables the TPM adapter to use Botan-based crypto primitives. The passed
+      RNG must not depend on the TPM itself.
+
+.. py:class:: TPM2UnauthenticatedSession(ctx)
+
+   Creates a TPM 2.0 session that is not bound to any authentication credential
+   but provides basic parameter encryption between the TPM and the application.
+
+
 Hash Functions
-----------------------------------------
+-----------------------------------------
 
 .. py:class:: HashFunction(algo)
 
-    Previously ``hash_function``
+   Previously ``hash_function``
 
-    The ``algo`` param is a string (eg 'SHA-1', 'SHA-384', 'BLAKE2b')
+   The ``algo`` param is a string (eg 'SHA-1', 'SHA-384', 'BLAKE2b')
 
-    .. py:method:: algo_name()
+   .. py:method:: algo_name()
 
-       Returns the name of this algorithm
+      Returns the name of this algorithm
 
-    .. py:method:: clear()
+   .. py:method:: clear()
 
-       Clear state
+      Clear state
 
-    .. py:method:: output_length()
+   .. py:method:: output_length()
 
-       Return output length in bytes
+      Return output length in bytes
 
-    .. py:method:: update(x)
+   .. py:method:: update(x)
 
-       Add some input
+      Add some input
 
-    .. py:method:: final()
+   .. py:method:: final()
 
-       Returns the hash of all input provided, resets
-       for another message.
+      Returns the hash of all input provided, resets
+      for another message.
 
 Message Authentication Codes
-----------------------------------------
+-----------------------------------------
 
 .. py:class:: MsgAuthCode(algo)
 
-    Previously ``message_authentication_code``
+   Previously ``message_authentication_code``
 
-    Algo is a string (eg 'HMAC(SHA-256)', 'Poly1305', 'CMAC(AES-256)')
+   Algo is a string (eg 'HMAC(SHA-256)', 'Poly1305', 'CMAC(AES-256)')
 
-    .. py:method:: algo_name()
+   .. py:method:: algo_name()
 
-       Returns the name of this algorithm
+      Returns the name of this algorithm
 
-    .. py:method:: clear()
+   .. py:method:: clear()
 
-       Clear internal state including the key
+      Clear internal state including the key
 
-    .. py:method:: output_length()
+   .. py:method:: output_length()
 
-       Return the output length in bytes
+      Return the output length in bytes
 
-    .. py:method:: set_key(key)
+   .. py:method:: set_key(key)
 
-       Set the key
+      Set the key
 
-    .. py:method:: update(x)
+   .. py:method:: update(x)
 
-       Add some input
+      Add some input
 
-    .. py:method:: final()
+   .. py:method:: final()
 
-       Returns the MAC of all input provided, resets
-       for another message with the same key.
+      Returns the MAC of all input provided, resets
+      for another message with the same key.
 
 Ciphers
-----------------------------------------
+-----------------------------------------
 
 .. py:class:: SymmetricCipher(object, algo, encrypt = True)
 
-       Previously ``cipher``
+   Previously ``cipher``
 
-       The algorithm is specified as a string (eg 'AES-128/GCM',
-       'Serpent/OCB(12)', 'Threefish-512/EAX').
+   The algorithm is specified as a string (eg 'AES-128/GCM',
+   'Serpent/OCB(12)', 'Threefish-512/EAX').
 
-       Set the second param to False for decryption
+   Set the second param to False for decryption
 
-    .. py:method:: algo_name()
+   .. py:method:: algo_name()
 
-       Returns the name of this algorithm
+      Returns the name of this algorithm
 
-    .. py:method:: tag_length()
+   .. py:method:: tag_length()
 
-       Returns the tag length (0 for unauthenticated modes)
+      Returns the tag length (0 for unauthenticated modes)
 
-    .. py:method:: default_nonce_length()
+   .. py:method:: default_nonce_length()
 
-       Returns default nonce length
+      Returns default nonce length
 
-    .. py:method:: update_granularity()
+   .. py:method:: valid_nonce_length(nonce_len)
 
-       Returns update block size. Call to update() must provide input
-       of exactly this many bytes
+      Returns True if nonce_len is a valid nonce len for this mode
 
-    .. py:method:: is_authenticated()
+   .. py:method:: update_granularity()
 
-       Returns True if this is an AEAD mode
+      Returns update block size. Call to update() must provide input
+      of exactly this many bytes
 
-    .. py:method:: valid_nonce_length(nonce_len)
+   .. py:method:: is_authenticated()
 
-       Returns True if nonce_len is a valid nonce len for this mode
+      Returns True if this is an AEAD mode
 
-    .. py:method:: clear()
+   .. py:method:: clear()
 
-       Resets all state
+      Resets all state
 
-    .. py:method:: set_key(key)
+   .. py:method:: set_key(key)
 
-       Set the key
+      Set the key
 
-    .. py:method:: set_assoc_data(ad)
+   .. py:method:: set_assoc_data(ad)
 
-       Sets the associated data. Fails if this is not an AEAD mode
+      Sets the associated data. Fails if this is not an AEAD mode
 
-    .. py:method:: start(nonce)
+   .. py:method:: start(nonce)
 
-       Start processing a message using nonce
+      Start processing a message using nonce
 
-    .. py:method:: update(txt)
+   .. py:method:: update(txt)
 
-       Consumes input text and returns output. Input text must be of
-       update_granularity() length.  Alternately, always call finish
-       with the entire message, avoiding calls to update entirely
+      Consumes input text and returns output. Input text must be of
+      update_granularity() length.  Alternately, always call finish
+      with the entire message, avoiding calls to update entirely
 
-    .. py:method:: finish(txt = None)
+   .. py:method:: finish(txt = None)
 
-       Finish processing (with an optional final input). May throw if
-       message authentication checks fail, in which case all plaintext
-       previously processed must be discarded. You may call finish()
-       with the entire message
+      Finish processing (with an optional final input). May throw if
+      message authentication checks fail, in which case all plaintext
+      previously processed must be discarded. You may call finish()
+      with the entire message
 
 Bcrypt
-----------------------------------------
+-----------------------------------------
 
 .. py:function:: bcrypt(passwd, rng, work_factor = 10)
 
@@ -210,7 +236,7 @@ Bcrypt
    iff the password matches.
 
 PBKDF
-----------------------------------------
+-----------------------------------------
 
 .. py:function:: pbkdf(algo, password, out_len, iterations = 100000, salt = None)
 
@@ -232,7 +258,7 @@ PBKDF
    iterations, and psk
 
 Scrypt
----------------
+-----------------------------------------
 
 .. versionadded:: 2.8.0
 
@@ -242,7 +268,7 @@ Scrypt
    and salt using Scrypt parameters N, r, p.
 
 KDF
-----------------------------------------
+-----------------------------------------
 
 .. py:function:: kdf(algo, secret, out_len, salt)
 
@@ -251,469 +277,278 @@ KDF
    specified length.
 
 Public Key
-----------------------------------------
+-----------------------------------------
 
 .. py:class:: PublicKey(object)
 
-  Previously ``public_key``
+   Previously ``public_key``
 
-  .. py:classmethod:: load(val)
+   .. py:classmethod:: load(val)
 
-     Load a public key. The value should be a PEM or DER blob.
+      Load a public key. The value should be a PEM or DER blob.
 
-  .. py:classmethod:: load_rsa(n, e)
+   .. py:classmethod:: load_rsa(n, e)
 
-     Load an RSA public key giving the modulus and public exponent
-     as integers.
+      Load an RSA public key giving the modulus and public exponent
+      as integers.
 
-  .. py:classmethod:: load_dsa(p, q, g, y)
+   .. py:classmethod:: load_dsa(p, q, g, y)
 
-     Load an DSA public key giving the parameters and public value
-     as integers.
+      Load an DSA public key giving the parameters and public value
+      as integers.
 
-  .. py:classmethod:: load_dh(p, g, y)
+   .. py:classmethod:: load_dh(p, g, y)
 
-     Load an Diffie-Hellman public key giving the parameters and
-     public value as integers.
+      Load an Diffie-Hellman public key giving the parameters and
+      public value as integers.
 
-  .. py:classmethod:: load_elgamal(p, q, g, y)
+   .. py:classmethod:: load_elgamal(p, q, g, y)
 
-     Load an ElGamal public key giving the parameters and
-     public value as integers.
+      Load an ElGamal public key giving the parameters and
+      public value as integers.
 
-  .. py:classmethod:: load_ecdsa(curve, pub_x, pub_y)
+   .. py:classmethod:: load_ecdsa(curve, pub_x, pub_y)
 
-     Load an ECDSA public key giving the curve as a string
-     (like "secp256r1") and the public point as a pair of
-     integers giving the affine coordinates.
+      Load an ECDSA public key giving the curve as a string
+      (like "secp256r1") and the public point as a pair of
+      integers giving the affine coordinates.
 
-  .. py:classmethod:: load_ecdh(curve, pub_x, pub_y)
+   .. py:classmethod:: load_ecdh(curve, pub_x, pub_y)
 
-     Load an ECDH public key giving the curve as a string
-     (like "secp256r1") and the public point as a pair of
-     integers giving the affine coordinates.
+      Load an ECDH public key giving the curve as a string
+      (like "secp256r1") and the public point as a pair of
+      integers giving the affine coordinates.
 
-  .. py:classmethod:: load_sm2(curve, pub_x, pub_y)
+   .. py:classmethod:: load_sm2(curve, pub_x, pub_y)
 
-     Load a SM2 public key giving the curve as a string (like
-     "sm2p256v1") and the public point as a pair of integers giving
-     the affine coordinates.
+      Load a SM2 public key giving the curve as a string (like
+      "sm2p256v1") and the public point as a pair of integers giving
+      the affine coordinates.
 
-  .. py:classmethod:: load_ml_kem(mode, raw_encoding)
+   .. py:classmethod:: load_ml_kem(mode, raw_encoding)
 
-     Load an ML-KEM public key giving the mode as a string (like
-     "ML-KEM-512") and the raw encoding of the public key.
+      Load an ML-KEM public key giving the mode as a string (like
+      "ML-KEM-512") and the raw encoding of the public key.
 
-  .. py:classmethod:: load_ml_dsa(mode, raw_encoding)
+   .. py:classmethod:: load_ml_dsa(mode, raw_encoding)
 
-     Load an ML-DSA public key giving the mode as a string (like
-     "ML-DSA-4x4") and the raw encoding of the public key.
+      Load an ML-DSA public key giving the mode as a string (like
+      "ML-DSA-4x4") and the raw encoding of the public key.
 
-  .. py:classmethod:: load_slh_dsa(mode, raw_encoding)
+   .. py:classmethod:: load_slh_dsa(mode, raw_encoding)
 
-     Load an SLH-DSA public key giving the mode as a string (like
-     "SLH-DSA-SHAKE-128f") and the raw encoding of the public key.
+      Load an SLH-DSA public key giving the mode as a string (like
+      "SLH-DSA-SHAKE-128f") and the raw encoding of the public key.
 
-  .. py:method:: check_key(rng_obj, strong=True):
+   .. py:method:: algo_name()
 
-     Test the key for consistency. If ``strong`` is ``True`` then
-     more expensive tests are performed.
+      Returns the algorithm name
 
-  .. py:method:: export(pem=False)
+   .. py:method:: check_key(rng_obj, strong=True):
 
-     Exports the public key using the usual X.509 SPKI representation.
-     If ``pem`` is True, the result is a PEM encoded string. Otherwise
-     it is a binary DER value.
+      Test the key for consistency. If ``strong`` is ``True`` then
+      more expensive tests are performed.
 
-  .. py:method:: to_der()
+   .. py:method:: estimated_strength()
 
-     Like ``self.export(False)``
+      Returns the estimated strength of this key against known attacks
+      (NFS, Pollard's rho, etc)
 
-  .. py:method:: to_pem()
+   .. py:method:: export(pem=False)
 
-     Like ``self.export(True)``
-
-  .. py:method:: to_raw()
-
-     Exports the key in its canonical raw encoding. This might not be
-     available for all key types and raise an exception in that case.
-
-  .. py:method:: get_field(field_name)
-
-     Return an integer field related to the public key. The valid field names
-     vary depending on the algorithm. For example RSA public modulus can be
-     extracted with ``rsa_key.get_field("n")``.
-
-  .. py:method:: object_identifier()
-
-     Returns the associated OID
-
-  .. py:method:: fingerprint(hash = 'SHA-256')
-
-     Returns a hash of the public key
-
-  .. py:method:: algo_name()
-
-     Returns the algorithm name
-
-  .. py:method:: estimated_strength()
-
-     Returns the estimated strength of this key against known attacks
-     (NFS, Pollard's rho, etc)
-
-Private Key
-----------------------------------------
-
-.. py:class:: PrivateKey
-
-  Previously ``private_key``
-
-  .. py:classmethod:: create(algo, param, rng)
-
-     Creates a new private key. The parameter type/value depends on
-     the algorithm. For "rsa" is is the size of the key in bits.
-     For "ecdsa" and "ecdh" it is a group name (for instance
-     "secp256r1"). For "ecdh" there is also a special case for groups
-     "curve25519" and "x448" (which are actually completely distinct key types
-     with a non-standard encoding).
-
-  .. py:classmethod:: create_ec(algo, ec_group, rng)
-
-     Creates a new ec private key.
-
-  .. py:classmethod:: load(val, passphrase="")
-
-     Return a private key (DER or PEM formats accepted)
-
-  .. py:classmethod:: load_rsa(p, q, e)
-
-     Return a private RSA key
-
-  .. py:classmethod:: load_dsa(p, q, g, x)
-
-     Return a private DSA key
-
-  .. py:classmethod:: load_dh(p, g, x)
-
-     Return a private DH key
-
-  .. py:classmethod:: load_elgamal(p, q, g, x)
-
-     Return a private ElGamal key
-
-  .. py:classmethod:: load_ecdsa(curve, x)
-
-     Return a private ECDSA key
-
-  .. py:classmethod:: load_ecdh(curve, x)
-
-     Return a private ECDH key
-
-  .. py:classmethod:: load_sm2(curve, x)
-
-     Return a private SM2 key
-
-  .. py:classmethod:: load_ml_kem(mode, raw_encoding)
-
-     Return a private ML-KEM key
-
-  .. py:classmethod:: load_ml_dsa(mode, raw_encoding)
-
-      Return a private ML-DSA key
-
-  .. py:classmethod:: load_slh_dsa(mode, raw_encoding)
-
-      Return a private SLH-DSA key
-
-  .. py:method:: get_public_key()
-
-     Return a public_key object
-
-  .. py:method:: to_pem()
-
-     Return the PEM encoded private key (unencrypted). Like ``self.export(True)``
-
-  .. py:method:: to_der()
-
-     Return the PEM encoded private key (unencrypted). Like ``self.export(False)``
-
-  .. py:method:: to_raw()
-
-     Exports the key in its canonical raw encoding. This might not be
-     available for all key types and raise an exception in that case.
-
-  .. py:method:: check_key(rng_obj, strong=True):
-
-     Test the key for consistency. If ``strong`` is ``True`` then
-     more expensive tests are performed.
-
-  .. py:method:: algo_name()
-
-     Returns the algorithm name
-
-  .. py:method:: export(pem=False)
-
-     Exports the private key in PKCS8 format. If ``pem`` is True, the
-     result is a PEM encoded string. Otherwise it is a binary DER
-     value. The key will not be encrypted.
-
-  .. py:method:: export_encrypted(passphrase, rng, pem=False, msec=300, cipher=None, pbkdf=None)
-
-     Exports the private key in PKCS8 format, encrypted using the
-     provided passphrase. If ``pem`` is True, the result is a PEM
-     encoded string. Otherwise it is a binary DER value.
-
-  .. py:method:: get_field(field_name)
-
-     Return an integer field related to the public key. The valid field names
-     vary depending on the algorithm. For example first RSA secret prime can be
-     extracted with ``rsa_key.get_field("p")``. This function can also be
-     used to extract the public parameters.
-
-  .. py:method:: object_identifier()
-
-     Returns the associated OID
-
-  .. py:method:: stateful_operation()
-     Return whether the key is stateful or not.
-
-  .. py:method:: remaining_operations()
-     If the key is stateful, return the number of remaining operations.
-     Raises an exception if the key is not stateful.
-
-Public Key Operations
-----------------------------------------
-
-.. py:class:: PKEncrypt(pubkey, padding)
-
-    Previously ``pk_op_encrypt``
-
-    .. py:method:: encrypt(msg, rng)
-
-.. py:class:: PKDecrypt(privkey, padding)
-
-    Previously ``pk_op_decrypt``
-
-    .. py:method:: decrypt(msg)
-
-.. py:class:: PKSign(privkey, hash_w_padding)
-
-    Previously ``pk_op_sign``
-
-    .. py:method:: update(msg)
-    .. py:method:: finish(rng)
-
-.. py:class:: PKVerify(pubkey, hash_w_padding)
-
-    Previously ``pk_op_verify``
-
-    .. py:method:: update(msg)
-    .. py:method:: check_signature(signature)
-
-.. py:class:: PKKeyAgreement(privkey, kdf)
-
-    Previously ``pk_op_key_agreement``
-
-    .. py:method:: public_value()
-
-    Returns the public value to be passed to the other party
-
-    .. py:method:: agree(other, key_len, salt)
-
-    Returns a key derived by the KDF.
-
-TPM 2.0 Bindings
--------------------------------------
-
-.. versionadded:: 3.6.0
-
-.. py:class:: TPM2Context(tcti_nameconf = None, tcti_conf = None)
-
-   Create a TPM 2.0 context optionally with a TCTI name and configuration,
-   separated by a colon, or as separate parameters.
-
-   .. py:method:: supports_botan_crypto_backend()
-
-   Returns True if the TPM adapter can use Botan-based crypto primitives
-   to communicate with the TPM
-
-   .. py:method:: enable_botan_crypto_backend(rng)
-
-   Enables the TPM adapter to use Botan-based crypto primitives. The passed
-   RNG must not depend on the TPM itself.
-
-.. py:class:: TPM2UnauthenticatedSession(ctx)
-
-   Creates a TPM 2.0 session that is not bound to any authentication credential
-   but provides basic parameter encryption between the TPM and the application.
-
-Multiple Precision Integers (MPI)
--------------------------------------
-.. versionadded:: 2.8.0
-
-.. py:class:: MPI(initial_value=None, radix=None)
-
-   Initialize an MPI object with specified value, left as zero otherwise.  The
-   ``initial_value`` should be an ``int``, ``str``, or ``MPI``.
-   The ``radix`` value should be set to 16 when initializing from a base 16 `str` value.
-
-
-   Most of the usual arithmetic operators (``__add__``, ``__mul__``, etc) are
-   defined.
-
-   .. py:method:: inverse_mod(modulus)
-
-      Return the inverse of ``self`` modulo ``modulus``, or zero if no inverse exists
-
-   .. py:method:: is_prime(rng, prob=128)
-
-      Test if ``self`` is prime
-
-   .. py:method:: pow_mod(exponent, modulus):
-
-      Return ``self`` to the ``exponent`` power modulo ``modulus``
-
-   .. py:method:: mod_mul(other, modulus):
-
-      Return the multiplication product of ``self`` and ``other`` modulo ``modulus``
-
-   .. py:method:: gcd(other):
-
-      Return the greatest common divisor of ``self`` and ``other``
-
-
-Object Identifiers (OID)
--------------------------------------
-.. versionadded:: 3.8.0
-
-.. py:class:: OID(object)
-
-   .. py:classmethod:: from_string(value)
-
-      Create a new OID from dot notation or from a known name
-
-   .. py:method:: to_string()
-
-      Export the OID in dot notation
-
-   .. py:method:: to_name()
-
-      Export the OID as a name if it has one, else in dot notation
-
-   .. py:method:: register(name)
-
-      Register the OID so that it may later be retrieved by the given name
-
-
-EC Groups
--------------------------------------
-.. versionadded:: 3.8.0
-
-.. py:class:: ECGroup(object)
-
-   .. py:classmethod:: supports_application_specific_group()
-
-      Returns true if in this build configuration it is possible to register an application specific elliptic curve
-
-   .. py:classmethod:: supports_named_group(name)
-
-      Returns true if in this build configuration ECGroup.from_name(name) will succeed
-
-   .. py:classmethod:: from_params(oid, p, a, b, base_x, base_y, order)
-
-      Creates a new ECGroup from ec parameters
-
-   .. py:classmethod:: from_ber(ber)
-
-      Creates a new ECGroup from a BER blob
-
-   .. py:classmethod:: from_pem(pem)
-
-      Creates a new ECGroup from a pem encoding
-
-   .. py:classmethod:: from_oid(oid)
-
-      Creates a new ECGroup from a group named by an OID
-
-   .. py:classmethod:: from_name(name)
-
-      Creates a new ECGroup from a common group name
+      Exports the public key using the usual X.509 SPKI representation.
+      If ``pem`` is True, the result is a PEM encoded string. Otherwise
+      it is a binary DER value.
 
    .. py:method:: to_der()
 
-      Export the group in DER encoding
+      Like ``self.export(False)``
 
    .. py:method:: to_pem()
 
-      Export the group in PEM encoding
+      Like ``self.export(True)``
 
-   .. py:method:: get_curve_oid()
+   .. py:method:: to_raw()
 
-      Get the curve OID
+      Exports the key in its canonical raw encoding. This might not be
+      available for all key types and raise an exception in that case.
 
-   .. py:method:: get_p()
+   .. py:method:: fingerprint(hash = 'SHA-256')
 
-      Get the prime modulus of the field
+      Returns a hash of the public key
 
-   .. py:method:: get_a()
+   .. py:method:: get_field(field_name)
 
-      Get the a parameter of the elliptic curve equation
+      Return an integer field related to the public key. The valid field names
+      vary depending on the algorithm. For example RSA public modulus can be
+      extracted with ``rsa_key.get_field("n")``.
 
-   .. py:method:: get_b()
+   .. py:method:: object_identifier()
 
-      Get the b parameter of the elliptic curve equation
+      Returns the associated OID
 
-   .. py:method:: get_g_x()
-
-      Get the x coordinate of the base point
-
-   .. py:method:: get_g_y()
-
-      Get the y coordinate of the base point
-
-   .. py:method:: get_order()
-
-      Get the order of the base point
-
-
-Format Preserving Encryption (FE1 scheme)
+Private Key
 -----------------------------------------
-.. versionadded:: 2.8.0
 
-.. py:class:: FormatPreservingEncryptionFE1(modulus, key, rounds=5, compat_mode=False)
+.. py:class:: PrivateKey
 
-   Initialize an instance for format preserving encryption
+   Previously ``private_key``
 
-   .. py:method:: encrypt(msg, tweak)
+   .. py:classmethod:: create(algo, param, rng)
 
-      The msg should be a botan3.MPI or an object which can be converted to one
+      Creates a new private key. The parameter type/value depends on
+      the algorithm. For "rsa" is is the size of the key in bits.
+      For "ecdsa" and "ecdh" it is a group name (for instance
+      "secp256r1"). For "ecdh" there is also a special case for groups
+      "curve25519" and "x448" (which are actually completely distinct key types
+      with a non-standard encoding).
 
-   .. py:method:: decrypt(msg, tweak)
+   .. py:classmethod:: create_ec(algo, ec_group, rng)
 
-      The msg should be a botan3.MPI or an object which can be converted to one
+      Creates a new ec private key.
 
-HOTP
+   .. py:classmethod:: load(val, passphrase="")
+
+      Return a private key (DER or PEM formats accepted)
+
+   .. py:classmethod:: load_rsa(p, q, e)
+
+      Return a private RSA key
+
+   .. py:classmethod:: load_dsa(p, q, g, x)
+
+      Return a private DSA key
+
+   .. py:classmethod:: load_dh(p, g, x)
+
+      Return a private DH key
+
+   .. py:classmethod:: load_elgamal(p, q, g, x)
+
+      Return a private ElGamal key
+
+   .. py:classmethod:: load_ecdsa(curve, x)
+
+      Return a private ECDSA key
+
+   .. py:classmethod:: load_ecdh(curve, x)
+
+      Return a private ECDH key
+
+   .. py:classmethod:: load_sm2(curve, x)
+
+      Return a private SM2 key
+
+   .. py:classmethod:: load_ml_kem(mode, raw_encoding)
+
+      Return a private ML-KEM key
+
+   .. py:classmethod:: load_ml_dsa(mode, raw_encoding)
+
+      Return a private ML-DSA key
+
+   .. py:classmethod:: load_slh_dsa(mode, raw_encoding)
+
+      Return a private SLH-DSA key
+
+   .. py:method:: algo_name()
+
+      Returns the algorithm name
+
+   .. py:method:: check_key(rng_obj, strong=True):
+
+      Test the key for consistency. If ``strong`` is ``True`` then
+      more expensive tests are performed.
+
+   .. py:method:: to_der()
+
+      Return the PEM encoded private key (unencrypted). Like ``self.export(False)``
+
+   .. py:method:: to_pem()
+
+      Return the PEM encoded private key (unencrypted). Like ``self.export(True)``
+
+   .. py:method:: to_raw()
+
+      Exports the key in its canonical raw encoding. This might not be
+      available for all key types and raise an exception in that case.
+
+   .. py:method:: export(pem=False)
+
+      Exports the private key in PKCS8 format. If ``pem`` is True, the
+      result is a PEM encoded string. Otherwise it is a binary DER
+      value. The key will not be encrypted.
+
+   .. py:method:: export_encrypted(passphrase, rng, pem=False, msec=300, cipher=None, pbkdf=None)
+
+      Exports the private key in PKCS8 format, encrypted using the
+      provided passphrase. If ``pem`` is True, the result is a PEM
+      encoded string. Otherwise it is a binary DER value.
+
+   .. py:method:: get_public_key()
+
+      Return a public_key object
+
+   .. py:method:: get_field(field_name)
+
+      Return an integer field related to the public key. The valid field names
+      vary depending on the algorithm. For example first RSA secret prime can be
+      extracted with ``rsa_key.get_field("p")``. This function can also be
+      used to extract the public parameters.
+
+   .. py:method:: object_identifier()
+
+      Returns the associated OID
+
+   .. py:method:: stateful_operation()
+
+      Return whether the key is stateful or not.
+
+   .. py:method:: remaining_operations()
+
+      If the key is stateful, return the number of remaining operations.
+      Raises an exception if the key is not stateful.
+
+Public Key Operations
 -----------------------------------------
-.. versionadded:: 2.8.0
 
-.. py:class:: HOTP(key, hash="SHA-1", digits=6)
+.. py:class:: PKEncrypt(pubkey, padding)
 
-   .. py:method:: generate(counter)
+   Previously ``pk_op_encrypt``
 
-      Generate an HOTP code for the provided counter
+   .. py:method:: encrypt(msg, rng)
 
-   .. py:method:: check(code, counter, resync_range=0)
+.. py:class:: PKDecrypt(privkey, padding)
 
-      Check if provided ``code`` is the correct code for ``counter``.
-      If ``resync_range`` is greater than zero, HOTP also checks
-      up to ``resync_range`` following counter values.
+   Previously ``pk_op_decrypt``
 
-      Returns a tuple of (bool,int) where the boolean indicates if the
-      code was valid, and the int indicates the next counter value
-      that should be used. If the code did not verify, the next
-      counter value is always identical to the counter that was passed
-      in. If the code did verify and resync_range was zero, then the
-      next counter will always be counter+1.
+   .. py:method:: decrypt(msg)
+
+.. py:class:: PKSign(privkey, hash_w_padding)
+
+   Previously ``pk_op_sign``
+
+   .. py:method:: update(msg)
+   .. py:method:: finish(rng)
+
+.. py:class:: PKVerify(pubkey, hash_w_padding)
+
+   Previously ``pk_op_verify``
+
+   .. py:method:: update(msg)
+   .. py:method:: check_signature(signature)
+
+.. py:class:: PKKeyAgreement(privkey, kdf)
+
+   Previously ``pk_op_key_agreement``
+
+   .. py:method:: public_value()
+
+      Returns the public value to be passed to the other party
+
+   .. py:method:: agree(other, key_len, salt)
+
+      Returns a key derived by the KDF.
 
 X509Cert
 -----------------------------------------
@@ -839,6 +674,175 @@ X509CRL
 
    A CRL in PEM or DER format can be loaded from a file, with the ``filename`` argument,
    or from a bytestring, with the ``buf`` argument.
+
+Multiple Precision Integers (MPI)
+-----------------------------------------
+
+.. versionadded:: 2.8.0
+
+.. py:class:: MPI(initial_value=None, radix=None)
+
+   Initialize an MPI object with specified value, left as zero otherwise.  The
+   ``initial_value`` should be an ``int``, ``str``, or ``MPI``.
+   The ``radix`` value should be set to 16 when initializing from a base 16 `str` value.
+
+
+   Most of the usual arithmetic operators (``__add__``, ``__mul__``, etc) are
+   defined.
+
+   .. py:method:: is_prime(rng, prob=128)
+
+      Test if ``self`` is prime
+
+   .. py:method:: gcd(other):
+
+      Return the greatest common divisor of ``self`` and ``other``
+
+   .. py:method:: pow_mod(exponent, modulus):
+
+      Return ``self`` to the ``exponent`` power modulo ``modulus``
+
+   .. py:method:: inverse_mod(modulus)
+
+      Return the inverse of ``self`` modulo ``modulus``, or zero if no inverse exists
+
+   .. py:method:: mod_mul(other, modulus):
+
+      Return the multiplication product of ``self`` and ``other`` modulo ``modulus``
+
+Object Identifiers (OID)
+-----------------------------------------
+.. versionadded:: 3.8.0
+
+.. py:class:: OID(object)
+
+   .. py:classmethod:: from_string(value)
+
+      Create a new OID from dot notation or from a known name
+
+   .. py:method:: to_string()
+
+      Export the OID in dot notation
+
+   .. py:method:: to_name()
+
+      Export the OID as a name if it has one, else in dot notation
+
+   .. py:method:: register(name)
+
+      Register the OID so that it may later be retrieved by the given name
+
+
+EC Groups
+-----------------------------------------
+.. versionadded:: 3.8.0
+
+.. py:class:: ECGroup(object)
+
+   .. py:classmethod:: supports_application_specific_group()
+
+      Returns true if in this build configuration it is possible to register an application specific elliptic curve
+
+   .. py:classmethod:: supports_named_group(name)
+
+      Returns true if in this build configuration ECGroup.from_name(name) will succeed
+
+   .. py:classmethod:: from_params(oid, p, a, b, base_x, base_y, order)
+
+      Creates a new ECGroup from ec parameters
+
+   .. py:classmethod:: from_ber(ber)
+
+      Creates a new ECGroup from a BER blob
+
+   .. py:classmethod:: from_pem(pem)
+
+      Creates a new ECGroup from a pem encoding
+
+   .. py:classmethod:: from_oid(oid)
+
+      Creates a new ECGroup from a group named by an OID
+
+   .. py:classmethod:: from_name(name)
+
+      Creates a new ECGroup from a common group name
+
+   .. py:method:: to_der()
+
+      Export the group in DER encoding
+
+   .. py:method:: to_pem()
+
+      Export the group in PEM encoding
+
+   .. py:method:: get_curve_oid()
+
+      Get the curve OID
+
+   .. py:method:: get_p()
+
+      Get the prime modulus of the field
+
+   .. py:method:: get_a()
+
+      Get the a parameter of the elliptic curve equation
+
+   .. py:method:: get_b()
+
+      Get the b parameter of the elliptic curve equation
+
+   .. py:method:: get_g_x()
+
+      Get the x coordinate of the base point
+
+   .. py:method:: get_g_y()
+
+      Get the y coordinate of the base point
+
+   .. py:method:: get_order()
+
+      Get the order of the base point
+
+
+Format Preserving Encryption (FE1 scheme)
+-----------------------------------------
+.. versionadded:: 2.8.0
+
+.. py:class:: FormatPreservingEncryptionFE1(modulus, key, rounds=5, compat_mode=False)
+
+   Initialize an instance for format preserving encryption
+
+   .. py:method:: encrypt(msg, tweak)
+
+      The msg should be a botan3.MPI or an object which can be converted to one
+
+   .. py:method:: decrypt(msg, tweak)
+
+      The msg should be a botan3.MPI or an object which can be converted to one
+
+HOTP
+-----------------------------------------
+.. versionadded:: 2.8.0
+
+.. py:class:: HOTP(key, hash="SHA-1", digits=6)
+
+   .. py:method:: generate(counter)
+
+      Generate an HOTP code for the provided counter
+
+   .. py:method:: check(code, counter, resync_range=0)
+
+      Check if provided ``code`` is the correct code for ``counter``.
+      If ``resync_range`` is greater than zero, HOTP also checks
+      up to ``resync_range`` following counter values.
+
+      Returns a tuple of (bool,int) where the boolean indicates if the
+      code was valid, and the int indicates the next counter value
+      that should be used. If the code did not verify, the next
+      counter value is always identical to the counter that was passed
+      in. If the code did verify and resync_range was zero, then the
+      next counter will always be counter+1.
+
 
 
 
