@@ -38,6 +38,7 @@ vgcore.*
 /*.sublime-workspace
 /.editorconfig
 /.vscode
+/.clang-format
 
 # Archive files
 *.tgz
