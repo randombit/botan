@@ -165,24 +165,32 @@ run the tests, test the fuzzers against a corpus, and produce an HTML report
 of total coverage. This coverage build requires the development headers for
 zlib, bzip2, liblzma, TrouSerS (libtspi), and Sqlite3.
 
+Development Container
+----------------------------------------
+
+The repository root contains a .devcontainer configuration based on Ubuntu which
+conveniently sets up a fully-functional build and test environment. This is the
+recommended way for new contributors to start developing.
+
+Currently, the .devcontainer integrates best with Visual Studio Code, but other
+integrations would be welcome. The container should also work decently using the
+bare-metal devcontainer CLI.
+
 Editor Integrations
 ----------------------------------------
 
 The folder ``src/editors`` contains configuration files for a few editors.
 To make use of them, create symlinks of those into the root of your local
-Botan repository. For example, to enable integration with VSCode and configure
-the editor using editorconfig, you can do the following:
+Botan repository. For instance, to enable editorconfig for any editor that
+supports it, you can do the following:
 
 .. code-block:: bash
 
   cd /home/you/projects/botan
-  ln -s src/editors/vscode .vscode
   ln -s src/editors/editorconfig .editorconfig
 
-  code .
-
-With the recommended extensions installed, you should now have a good starting
-point for working with Botan in VSCode.
+If you are using VSCode with the development container, the right symlinks are
+created automatically and you should be good to go off the bat.
 
 Copyright Notice
 ----------------------------------------

@@ -1,16 +1,11 @@
 {
     "[cpp]": {
         "editor.formatOnSave": true,
-        "editor.defaultFormatter": "xaver.clang-format"
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
     },
-    "C_Cpp.codeAnalysis.clangTidy.enabled": true,
-    "C_Cpp.default.cppStandard": "c++20",
-    "C_Cpp.default.cStandard": "c17",
-    "C_Cpp.formatting": "disabled",
     "clangd.arguments": [
         "--header-insertion=never"
     ],
     "clang-format.executable": "clang-format-17",
-    "pylint.args": [
-        "--rcfile=src/configs/pylint.rc"],
+    "pylint.args": ["--rcfile=src/configs/pylint.rc"]
 }
