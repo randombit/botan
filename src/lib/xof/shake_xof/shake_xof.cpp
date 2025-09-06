@@ -13,7 +13,11 @@
 
 namespace Botan {
 
-SHAKE_XOF::SHAKE_XOF(size_t capacity) : m_keccak(capacity, 0b1111, 4), m_output_generated(false) {
+// NIST FIPS 202 Section 6.2
+constexpr auto shake_padding = KeccakPaddingBits<1, 1, 1, 1>;
+
+SHAKE_XOF::SHAKE_XOF(size_t capacity) :
+      m_keccak({.capacity_bits = capacity, .padding = shake_padding}), m_output_generated(false) {
    BOTAN_ASSERT_NOMSG(capacity == 256 || capacity == 512);
 }
 

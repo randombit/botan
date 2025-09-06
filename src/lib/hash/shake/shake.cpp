@@ -12,7 +12,11 @@
 
 namespace Botan {
 
-SHAKE_128::SHAKE_128(size_t output_bits) : m_keccak(256, 0xF, 4), m_output_bits(output_bits) {
+// NIST FIPS 202 Section 6.2
+constexpr auto shake_padding = KeccakPaddingBits<1, 1, 1, 1>;
+
+SHAKE_128::SHAKE_128(size_t output_bits) :
+      m_keccak({.capacity_bits = 256, .padding = shake_padding}), m_output_bits(output_bits) {
    if(output_bits % 8 != 0) {
       throw Invalid_Argument(fmt("SHAKE_128: Invalid output length {}", output_bits));
    }
@@ -40,7 +44,8 @@ void SHAKE_128::final_result(std::span<uint8_t> output) {
    clear();
 }
 
-SHAKE_256::SHAKE_256(size_t output_bits) : m_keccak(512, 0xF, 4), m_output_bits(output_bits) {
+SHAKE_256::SHAKE_256(size_t output_bits) :
+      m_keccak({.capacity_bits = 512, .padding = shake_padding}), m_output_bits(output_bits) {
    if(output_bits % 8 != 0) {
       throw Invalid_Argument(fmt("SHAKE_256: Invalid output length {}", output_bits));
    }

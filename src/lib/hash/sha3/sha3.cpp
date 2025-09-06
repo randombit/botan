@@ -14,7 +14,11 @@
 
 namespace Botan {
 
-SHA_3::SHA_3(size_t output_bits) : m_keccak(2 * output_bits, 2, 2), m_output_length(output_bits / 8) {
+// NIST FIPS 202 Section 6.1
+constexpr auto sha3_padding = KeccakPaddingBits<0, 1>;
+
+SHA_3::SHA_3(size_t output_bits) :
+      m_keccak({.capacity_bits = output_bits * 2, .padding = sha3_padding}), m_output_length(output_bits / 8) {
    // We only support the parameters for SHA-3 in this constructor
 
    if(output_bits != 224 && output_bits != 256 && output_bits != 384 && output_bits != 512) {
