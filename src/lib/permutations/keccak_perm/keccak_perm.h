@@ -10,11 +10,39 @@
 #ifndef BOTAN_KECCAK_PERM_H_
 #define BOTAN_KECCAK_PERM_H_
 
+#include <botan/exceptn.h>
 #include <botan/secmem.h>
 #include <span>
 #include <string>
 
 namespace Botan {
+
+struct KeccakPadding {
+      uint64_t padding;  /// The padding bits in little-endian order
+      uint8_t bit_len;   /// The number of relevant bits in 'padding'
+};
+
+namespace detail {
+
+template <uint8_t... Bits>
+   requires(sizeof...(Bits) <= 63)
+consteval static KeccakPadding make_padding() {
+   // In the NIST document the padding bits are defined in big-endian order, but
+   // the Keccak state is defined in little-endian order. Thus, we need to reverse
+   // the order of the bits here.
+   uint64_t padding_bits = 0;
+   uint8_t bit_len = 0;
+   ((static_cast<void>(padding_bits |= ((Bits != 0) ? (uint64_t(1) << bit_len) : 0)), ++bit_len), ...);
+   return {padding_bits, bit_len};
+}
+
+}  // namespace detail
+
+/**
+ * Creates a KeccakPadding object from an explicitly specified sequence of bits
+ */
+template <uint8_t... Bits>
+constexpr KeccakPadding KeccakPaddingBits = detail::make_padding<Bits...>();
 
 /**
 * KECCAK FIPS
@@ -37,16 +65,28 @@ namespace Botan {
 */
 class Keccak_Permutation final {
    public:
+      struct Config {
+            size_t capacity_bits;
+            KeccakPadding padding;
+      };
+
+   public:
       /**
         * @brief Instantiate a Keccak permutation
         *
-        * The @p custom_padding is assumed to be init_pad || 00... || fini_pad
-        *
-        * @param capacity_bits Keccak capacity
-        * @param custom_padding the custom bit padding that is to be appended on the call to finish
-        * @param custom_padding_bit_len the bit length of the custom_padding
+        * @param config Keccak parameter configuration
         */
-      Keccak_Permutation(size_t capacity_bits, uint64_t custom_padding, uint8_t custom_padding_bit_len);
+      explicit Keccak_Permutation(Config config) :
+            m_capacity(config.capacity_bits),
+            m_byterate((1600 - m_capacity) / 8),
+            m_padding(config.padding),
+            m_S(25, 0),
+            m_S_inpos(0),
+            m_S_outpos(0) {
+         if(m_capacity >= 1600 || m_capacity % 64 != 0) {
+            throw Botan::Invalid_Argument("Invalid Keccak capacity");
+         }
+      }
 
       size_t capacity() const { return m_capacity; }
 
@@ -90,8 +130,7 @@ class Keccak_Permutation final {
    private:
       const size_t m_capacity;
       const size_t m_byterate;
-      const uint64_t m_custom_padding;
-      const uint8_t m_custom_padding_bit_len;
+      KeccakPadding m_padding;
       secure_vector<uint64_t> m_S;
       uint8_t m_S_inpos;
       uint8_t m_S_outpos;
