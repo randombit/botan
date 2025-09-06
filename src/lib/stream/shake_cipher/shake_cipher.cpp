@@ -14,7 +14,7 @@
 namespace Botan {
 
 SHAKE_Cipher::SHAKE_Cipher(size_t keccak_capacity) :
-      m_keccak(keccak_capacity, 0xF, 4),
+      m_keccak({.capacity_bits = keccak_capacity, .padding = KeccakPadding::shake()}),
       m_has_keying_material(false),
       m_keystream_buffer(buffer_size()),
       m_bytes_generated(0) {}
