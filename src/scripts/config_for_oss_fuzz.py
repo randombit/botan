@@ -34,8 +34,10 @@ args = [
 ]
 
 if cxxflags.find("-fsanitize=memory") > 0:
-    args.append('--disable-asm')
+    args.append("--disable-asm")
 
-configure = os.path.realpath(os.path.join(os.path.realpath(__file__), '..', '..', '..', 'configure.py'))
+configure = os.path.realpath(
+    os.path.join(os.path.realpath(__file__), "..", "..", "..", "configure.py")
+)
 
 subprocess.run([configure] + args)

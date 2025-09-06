@@ -13,6 +13,7 @@ import os
 import sys
 import json
 
+
 def format_size(bytes):
     kB = 1024
 
@@ -21,6 +22,7 @@ def format_size(bytes):
     else:
         return "%d bytes" % (bytes)
 
+
 def report_size(fsname):
     if not os.access(fsname, os.R_OK):
         print("ERROR: Could not find %s" % (fsname))
@@ -28,7 +30,8 @@ def report_size(fsname):
     bytes = os.stat(fsname).st_size
     print("File '%s' is %s" % (fsname, format_size(bytes)))
 
-def main(args = None):
+
+def main(args=None):
     if args is None:
         args = sys.argv
 
@@ -38,14 +41,15 @@ def main(args = None):
 
     build_config = json.loads(open(args[1]).read())
 
-    for lib in build_config['library_targets'].split(' '):
+    for lib in build_config["library_targets"].split(" "):
         report_size(lib)
 
-    if 'text_exe' in build_config:
-        report_size(build_config['test_exe'])
+    if "text_exe" in build_config:
+        report_size(build_config["test_exe"])
 
-    if 'cli_exe' in build_config:
-        report_size(build_config['cli_exe'])
+    if "cli_exe" in build_config:
+        report_size(build_config["cli_exe"])
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

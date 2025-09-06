@@ -9,7 +9,7 @@ Botan is released under the Simplified BSD License (see license.txt)
 """
 
 import sys
-import optparse # pylint: disable=deprecated-module
+import optparse  # pylint: disable=deprecated-module
 import subprocess
 import shutil
 import logging
@@ -18,6 +18,7 @@ import tempfile
 import os
 import stat
 import multiprocessing
+
 
 def get_concurrency():
     """
@@ -30,32 +31,35 @@ def get_concurrency():
     except ImportError:
         return def_concurrency
 
+
 def have_prog(prog):
     """
     Check if some named program exists in the path
     """
-    for path in os.environ['PATH'].split(os.pathsep):
+    for path in os.environ["PATH"].split(os.pathsep):
         exe_file = os.path.join(path, prog)
         if os.path.exists(exe_file) and os.access(exe_file, os.X_OK):
             return True
     return False
 
+
 def find_rst2man():
-    possible_names = ['rst2man', 'rst2man.py', 'rst2man-%d.%d' % sys.version_info[:2]]
+    possible_names = ["rst2man", "rst2man.py", "rst2man-%d.%d" % sys.version_info[:2]]
 
     for name in possible_names:
         if have_prog(name):
             return name
     raise Exception("Was configured with rst2man but could not be located in PATH")
 
+
 def touch(fname):
     try:
         os.utime(fname, None)
     except OSError:
-        open(fname, 'a', encoding='utf8').close()
+        open(fname, "a", encoding="utf8").close()
+
 
 def copy_files(src_path, dest_dir):
-
     logging.debug("Copying %s to %s", src_path, dest_dir)
 
     file_mode = os.stat(src_path).st_mode
@@ -78,9 +82,9 @@ def copy_files(src_path, dest_dir):
             elif stat.S_ISDIR(file_mode):
                 copy_files(os.path.join(src_path, f), os.path.join(dest_dir, f))
 
-def run_and_check(cmd_line, cwd=None):
 
-    logging.info("Starting %s", ' '.join(cmd_line))
+def run_and_check(cmd_line, cwd=None):
+    logging.info("Starting %s", " ".join(cmd_line))
 
     rc = None
 
@@ -90,25 +94,38 @@ def run_and_check(cmd_line, cwd=None):
         proc.communicate()
         rc = proc.returncode
     except OSError as e:
-        logging.error("Executing %s failed (%s)", ' '.join(cmd_line), e)
+        logging.error("Executing %s failed (%s)", " ".join(cmd_line), e)
 
     if rc != 0:
-        logging.error("Error running %s", ' '.join(cmd_line))
+        logging.error("Error running %s", " ".join(cmd_line))
         sys.exit(1)
 
 
 def parse_options(args):
     parser = optparse.OptionParser()
 
-    parser.add_option('--verbose', action='store_true', default=False,
-                      help='Show debug messages')
-    parser.add_option('--quiet', action='store_true', default=False,
-                      help='Show only warnings and errors')
+    parser.add_option(
+        "--verbose", action="store_true", default=False, help="Show debug messages"
+    )
+    parser.add_option(
+        "--quiet",
+        action="store_true",
+        default=False,
+        help="Show only warnings and errors",
+    )
 
-    parser.add_option('--build-dir', metavar='DIR', default='build',
-                      help='Location of build output (default \'%default\')')
-    parser.add_option('--dry-run', default=False, action='store_true',
-                      help='Just display what would be done')
+    parser.add_option(
+        "--build-dir",
+        metavar="DIR",
+        default="build",
+        help="Location of build output (default '%default')",
+    )
+    parser.add_option(
+        "--dry-run",
+        default=False,
+        action="store_true",
+        help="Just display what would be done",
+    )
 
     (options, args) = parser.parse_args(args)
 
@@ -127,85 +144,103 @@ def parse_options(args):
 
     return options
 
+
 def read_config(config):
     try:
-        f = open(config, encoding='utf8')
+        f = open(config, encoding="utf8")
         cfg = json.load(f)
         f.close()
     except OSError as ex:
-        raise Exception('Failed to load build config %s - is build dir correct?' % (config)) from ex
+        raise Exception(
+            "Failed to load build config %s - is build dir correct?" % (config)
+        ) from ex
 
     return cfg
 
-def main(args=None):
 
+def main(args=None):
     if args is None:
         args = sys.argv
 
-    logging.basicConfig(stream=sys.stdout,
-                        format='%(levelname) 7s: %(message)s')
+    logging.basicConfig(stream=sys.stdout, format="%(levelname) 7s: %(message)s")
 
     options = parse_options(args)
 
     if options is None:
         return 1
 
-    cfg = read_config(os.path.join(options.build_dir, 'build_config.json'))
+    cfg = read_config(os.path.join(options.build_dir, "build_config.json"))
 
-    with_docs = bool(cfg['with_documentation'])
-    with_sphinx = bool(cfg['with_sphinx'])
-    with_pdf = bool(cfg['with_pdf'])
-    with_rst2man = bool(cfg['with_rst2man'])
-    with_doxygen = bool(cfg['with_doxygen'])
+    with_docs = bool(cfg["with_documentation"])
+    with_sphinx = bool(cfg["with_sphinx"])
+    with_pdf = bool(cfg["with_pdf"])
+    with_rst2man = bool(cfg["with_rst2man"])
+    with_doxygen = bool(cfg["with_doxygen"])
 
-    doc_stamp_file = cfg['doc_stamp_file']
+    doc_stamp_file = cfg["doc_stamp_file"]
 
-    handbook_src = cfg['doc_dir']
-    handbook_output = cfg['handbook_output_dir']
+    handbook_src = cfg["doc_dir"]
+    handbook_output = cfg["handbook_output_dir"]
 
     if with_docs is False:
-        logging.debug('Documentation build disabled')
+        logging.debug("Documentation build disabled")
         return 1
 
     cmds = []
 
     if with_doxygen:
-        cmds.append(['doxygen', os.path.join(cfg['build_dir'], 'botan.doxy')])
+        cmds.append(["doxygen", os.path.join(cfg["build_dir"], "botan.doxy")])
 
     if with_sphinx:
-        sphinx_build = ['sphinx-build', '-q', '-c', cfg['sphinx_config_dir'], '-j', 'auto', '-W', '--keep-going']
+        sphinx_build = [
+            "sphinx-build",
+            "-q",
+            "-c",
+            cfg["sphinx_config_dir"],
+            "-j",
+            "auto",
+            "-W",
+            "--keep-going",
+        ]
 
-        cmds.append(sphinx_build + ['-b', 'html', handbook_src, handbook_output])
+        cmds.append(sphinx_build + ["-b", "html", handbook_src, handbook_output])
 
         if with_pdf:
-            latex_output = tempfile.mkdtemp(prefix='botan_latex_')
-            cmds.append(sphinx_build + ['-b', 'latex', handbook_src, latex_output])
-            cmds.append(['make', '-C', latex_output])
-            cmds.append(['cp', os.path.join(latex_output, 'botan.pdf'), handbook_output])
+            latex_output = tempfile.mkdtemp(prefix="botan_latex_")
+            cmds.append(sphinx_build + ["-b", "latex", handbook_src, latex_output])
+            cmds.append(["make", "-C", latex_output])
+            cmds.append(
+                ["cp", os.path.join(latex_output, "botan.pdf"), handbook_output]
+            )
     else:
         # otherwise just copy it
-        cmds.append(['cp', handbook_src, handbook_output])
+        cmds.append(["cp", handbook_src, handbook_output])
 
     if with_rst2man:
-        cmds.append([find_rst2man(),
-                     os.path.join(cfg['build_dir'], 'botan.rst'),
-                     os.path.join(cfg['build_dir'], 'botan.1')])
+        cmds.append(
+            [
+                find_rst2man(),
+                os.path.join(cfg["build_dir"], "botan.rst"),
+                os.path.join(cfg["build_dir"], "botan.1"),
+            ]
+        )
 
-    cmds.append(['touch', doc_stamp_file])
+    cmds.append(["touch", doc_stamp_file])
 
     for cmd in cmds:
         if options.dry_run:
-            print(' '.join(cmd))
+            print(" ".join(cmd))
         else:
-            if cmd[0] == 'cp':
+            if cmd[0] == "cp":
                 assert len(cmd) == 3
                 copy_files(cmd[1], cmd[2])
-            elif cmd[0] == 'touch':
+            elif cmd[0] == "touch":
                 assert len(cmd) == 2
                 touch(cmd[1])
             else:
                 run_and_check(cmd)
     return 0
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

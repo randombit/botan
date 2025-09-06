@@ -20,23 +20,29 @@ This can be used in interactive GDB sessions for debugging and development.
 
 import gdb
 
+
 def stack_pointer(frame):
-    return frame.read_register('sp')
+    return frame.read_register("sp")
+
 
 def frame_pointer(frame):
-    return frame.read_register('fp')
+    return frame.read_register("fp")
+
 
 def current_stackframe_memory_span(frame):
     start, end = stack_pointer(frame), frame_pointer(frame)
     if frame.architecture().name() == "aarch64" and end < start:
-        start, end = end, start # On aarch64, the stack grows downwards!
+        start, end = end, start  # On aarch64, the stack grows downwards!
     return (start, end - start)
+
 
 def report_error(error):
     gdb.write(f"Error: {error}\n", gdb.STDERR)
 
+
 def report_status(status):
     gdb.write(f"{status}\n", gdb.STDOUT)
+
 
 class PostStrubLocation(gdb.FinishBreakpoint):
     """
@@ -57,15 +63,22 @@ class PostStrubLocation(gdb.FinishBreakpoint):
         return self.payload_stack_memory[1]
 
     def is_stackframe_scrubbed(self):
-        return all(b'\x00' == b for b in self.stackframe_memory())
+        return all(b"\x00" == b for b in self.stackframe_memory())
 
     def stop(self):
         if self.stackframe_size() == 0:
-            report_error(f"{self.function_name} has an empty stackframe, cannot validate")
+            report_error(
+                f"{self.function_name} has an empty stackframe, cannot validate"
+            )
         elif not self.is_stackframe_scrubbed():
-            report_error(f"{self.function_name} didn't get its stack frame scrubbed after usage")
+            report_error(
+                f"{self.function_name} didn't get its stack frame scrubbed after usage"
+            )
         else:
-            report_status(f"Success: stackframe of {self.function_name} contains {self.stackframe_size()} zero bytes after invcoation")
+            report_status(
+                f"Success: stackframe of {self.function_name} contains {self.stackframe_size()} zero bytes after invcoation"
+            )
+
 
 class TargetReturnLocation(gdb.Breakpoint):
     """
@@ -80,7 +93,7 @@ class TargetReturnLocation(gdb.Breakpoint):
         arch = frame.architecture()
         assert arch.name() == "aarch64", "TargetReturnLocation is meant for aarch64"
         disass = arch.disassemble(frame.block().start, frame.block().end)
-        addrs = [f"0x{instr['addr']:x}" for instr in disass if instr['asm'] == 'ret']
+        addrs = [f"0x{instr['addr']:x}" for instr in disass if instr["asm"] == "ret"]
         if not addrs:
             report_error(f"no ret instructions found in {function_name}")
         else:
@@ -103,6 +116,7 @@ class TargetReturnLocation(gdb.Breakpoint):
             stackframe = current_stackframe_memory_span(target_frame)
             PostStrubLocation(caller_frame, stackframe, self.function_name)
             self.hit = True
+
 
 class StrubTarget(gdb.Breakpoint):
     """
@@ -146,6 +160,7 @@ class StrubTarget(gdb.Breakpoint):
         # Don't stop for interactive inspection at this location
         return False
 
+
 class StrubTest(gdb.Command):
     """
     User-defined gdb command to set up a stack scrubbing (strub) test allowing
@@ -165,9 +180,12 @@ class StrubTest(gdb.Command):
         bp = StrubTarget(argstring)
         if bp.pending:
             bp.delete()
-            report_error(f"the provided symbol '{argstring}' does not appear to be available")
+            report_error(
+                f"the provided symbol '{argstring}' does not appear to be available"
+            )
 
         report_status("strubtest setup done")
+
 
 # Register the custom command with GDB. It may be invoked from GDB's CLI:
 #

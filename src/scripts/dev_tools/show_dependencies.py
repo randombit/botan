@@ -25,42 +25,55 @@ botan_root = os.path.join(os.path.dirname(sys.argv[0]), "..", "..")
 
 # locale
 sys.path.append(botan_root)
-from configure import ModuleInfo # noqa: E402
+from configure import ModuleInfo  # noqa: E402
 
-parser = argparse.ArgumentParser(description=
-    'Show Botan module dependencies. '
-    'The output is reduced by indirect dependencies, '
-    'i.e. you must look at the result recursively to get all dependencies.')
+parser = argparse.ArgumentParser(
+    description="Show Botan module dependencies. "
+    "The output is reduced by indirect dependencies, "
+    "i.e. you must look at the result recursively to get all dependencies."
+)
 
-parser.add_argument('mode',
-                    choices=["list", "draw"],
-                    help='The output mode')
-parser.add_argument('--format',
-                    nargs='?',
-                    choices=["pdf", "png"],
-                    default="pdf",
-                    help='The file format (drawing mode only)')
-parser.add_argument('--engine',
-                    nargs='?',
-                    choices=["fdp", "dot"],
-                    default="dot",
-                    help='The graph engine (drawing mode only)')
-parser.add_argument('--all', dest='all', action='store_const',
-                    const=True, default=False,
-                    help='Show all dependencies. Default: direct dependencies only. (list mode only)')
-parser.add_argument('--verbose', dest='verbose', action='store_const',
-                    const=True, default=False,
-                    help='Verbose output (default: false)')
+parser.add_argument("mode", choices=["list", "draw"], help="The output mode")
+parser.add_argument(
+    "--format",
+    nargs="?",
+    choices=["pdf", "png"],
+    default="pdf",
+    help="The file format (drawing mode only)",
+)
+parser.add_argument(
+    "--engine",
+    nargs="?",
+    choices=["fdp", "dot"],
+    default="dot",
+    help="The graph engine (drawing mode only)",
+)
+parser.add_argument(
+    "--all",
+    dest="all",
+    action="store_const",
+    const=True,
+    default=False,
+    help="Show all dependencies. Default: direct dependencies only. (list mode only)",
+)
+parser.add_argument(
+    "--verbose",
+    dest="verbose",
+    action="store_const",
+    const=True,
+    default=False,
+    help="Verbose output (default: false)",
+)
 args = parser.parse_args()
 
 files = []
-files += glob.glob(botan_root + '/src/lib/*/*/*/*/*/*/info.txt')
-files += glob.glob(botan_root + '/src/lib/*/*/*/*/*/info.txt')
-files += glob.glob(botan_root + '/src/lib/*/*/*/*/info.txt')
-files += glob.glob(botan_root + '/src/lib/*/*/*/info.txt')
-files += glob.glob(botan_root + '/src/lib/*/*/info.txt')
-files += glob.glob(botan_root + '/src/lib/*/info.txt')
-files += glob.glob(botan_root + '/src/lib/info.txt')
+files += glob.glob(botan_root + "/src/lib/*/*/*/*/*/*/info.txt")
+files += glob.glob(botan_root + "/src/lib/*/*/*/*/*/info.txt")
+files += glob.glob(botan_root + "/src/lib/*/*/*/*/info.txt")
+files += glob.glob(botan_root + "/src/lib/*/*/*/info.txt")
+files += glob.glob(botan_root + "/src/lib/*/*/info.txt")
+files += glob.glob(botan_root + "/src/lib/*/info.txt")
+files += glob.glob(botan_root + "/src/lib/info.txt")
 files.sort()
 
 if len(files) == 0:
@@ -69,14 +82,18 @@ if len(files) == 0:
 
 modules = []
 
-def dicts(t): return {k: dicts(t[k]) for k in t}
 
-def paths(t, path = [], level=0):
-    ret =  []
+def dicts(t):
+    return {k: dicts(t[k]) for k in t}
+
+
+def paths(t, path=[], level=0):
+    ret = []
     for key in t:
         ret.append(path + [key])
-        ret += paths(t[key], path + [key], level+1)
+        ret += paths(t[key], path + [key], level + 1)
     return ret
+
 
 if args.verbose:
     print("Getting dependencies from into.txt files ...")
@@ -92,7 +109,7 @@ for filename in files:
 
 if args.verbose:
     print(str(len(modules)) + " modules:")
-    names=[m.basename for m in modules]
+    names = [m.basename for m in modules]
     names.sort()
     print(names)
     print("")
@@ -100,8 +117,10 @@ if args.verbose:
 if args.verbose:
     print("resolving dependencies ...")
 
+
 def cartinality(depdict):
     return sum([len(depdict[k]) for k in depdict])
+
 
 registered_dependencies = dict()
 all_dependencies = dict()
@@ -111,6 +130,7 @@ for module in modules:
     lst = module.dependencies(None)
     registered_dependencies[module.basename] = set(lst) - set([module.basename])
 
+
 # Get all_dependencies from registered_dependencies
 def add_dependency():
     for key in all_dependencies:
@@ -118,7 +138,9 @@ def add_dependency():
         new_modules_for_key = None
         for currently_in in all_dependencies[key]:
             if currently_in in all_dependencies:
-                potentially_new_modules_for_key = all_dependencies[currently_in] - set([key])
+                potentially_new_modules_for_key = all_dependencies[currently_in] - set(
+                    [key]
+                )
                 if not potentially_new_modules_for_key <= all_dependencies[key]:
                     new_modules_for_key = potentially_new_modules_for_key.copy()
                     break
@@ -134,7 +156,7 @@ direct_dependencies = copy.deepcopy(registered_dependencies)
 all_dependencies = OrderedDict(sorted(all_dependencies.items()))
 direct_dependencies = OrderedDict(sorted(direct_dependencies.items()))
 
-#print(direct_dependencies)
+# print(direct_dependencies)
 
 last_card = -1
 while True:
@@ -145,6 +167,7 @@ while True:
     last_card = card
     add_dependency()
 
+
 # Return true iff a depends on b,
 # i.e. b is in the dependencies of a
 def depends_on(a, b):
@@ -152,6 +175,7 @@ def depends_on(a, b):
         return False
     else:
         return b in direct_dependencies[a]
+
 
 def remove_indirect_dependencies():
     for mod in direct_dependencies:
@@ -163,6 +187,7 @@ def remove_indirect_dependencies():
                     return
                     # Go to next mod
 
+
 last_card = -1
 while True:
     card = cartinality(direct_dependencies)
@@ -172,13 +197,15 @@ while True:
     last_card = card
     remove_indirect_dependencies()
 
+
 def openfile(f):
     # pylint: disable=no-member
     # os.startfile is available on Windows only
-    if sys.platform.startswith('linux'):
+    if sys.platform.startswith("linux"):
         subprocess.call(["xdg-open", f])
     else:
         os.startfile(f)
+
 
 if args.verbose:
     print("Done resolving dependencies.")
@@ -198,7 +225,7 @@ if args.mode == "draw":
     tmpdir = tempfile.mkdtemp(prefix="botan-")
 
     g2 = gv.Digraph(format=args.format, engine=args.engine)
-    g2.attr('graph', rankdir='RL') # draw horizontally
+    g2.attr("graph", rankdir="RL")  # draw horizontally
     for key in direct_dependencies:
         g2.node(key)
         for dep in direct_dependencies[key]:
@@ -206,7 +233,7 @@ if args.mode == "draw":
 
     if args.verbose:
         print("Rendering graph ...")
-    filename = g2.render(filename='graph', directory=tmpdir)
+    filename = g2.render(filename="graph", directory=tmpdir)
 
     if args.verbose:
         print("Opening " + filename + " ...")

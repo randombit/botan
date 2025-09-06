@@ -16,6 +16,7 @@ import sys
 import hashlib
 import binascii
 
+
 class KatReader:
     def __init__(self, file):
         self.file = file
@@ -28,10 +29,10 @@ class KatReader:
             if line == "":
                 return (None, None)
 
-            if line.startswith('#') or line == "\n":
+            if line.startswith("#") or line == "\n":
                 continue
 
-            key, val = line.strip().split(' = ')
+            key, val = line.strip().split(" = ")
 
             return (key, val)
 
@@ -42,17 +43,17 @@ class KatReader:
             key, val = self.next_value()
 
             if key is None:
-                return # eof
+                return  # eof
 
-            if key not in ['count', 'seed', 'mlen', 'msg', 'pk', 'sk', 'smlen', 'sm']:
+            if key not in ["count", "seed", "mlen", "msg", "pk", "sk", "smlen", "sm"]:
                 raise Exception("Unknown key %s" % (key))
 
-            if key in ['count', 'mlen', 'smlen']:
+            if key in ["count", "mlen", "smlen"]:
                 kat[key] = int(val)
             else:
                 kat[key] = val
 
-            if key == 'sm':
+            if key == "sm":
                 yield kat
                 kat = {}
 
@@ -69,12 +70,14 @@ def sha256(v):
     return h.digest()
 
 
-def main(args = None):
+def main(args=None):
     if args is None:
         args = sys.argv
 
     if len(args) < 3:
-        print("Usage: %s <algo-spec as found in oids.txt> <*.rsp file> [optional: limit of KATs]")
+        print(
+            "Usage: %s <algo-spec as found in oids.txt> <*.rsp file> [optional: limit of KATs]"
+        )
         return 1
 
     param = args[1]
@@ -92,17 +95,21 @@ def main(args = None):
         cnt += 1
 
         # Remove the input message from the end of the 'sm' field
-        signature = binascii.unhexlify(kat["sm"][:-kat["mlen"]*2])
+        signature = binascii.unhexlify(kat["sm"][: -kat["mlen"] * 2])
 
         print("SphincsParameterSet = %s" % param)
         print("seed = %s" % kat["seed"])
         print("msg = %s" % kat["msg"])
         print("pk = %s" % kat["pk"])
         print("sk = %s" % kat["sk"])
-        print("HashSig = %s" % binascii.hexlify(hash_fn(signature)).decode("utf-8").upper())
+        print(
+            "HashSig = %s"
+            % binascii.hexlify(hash_fn(signature)).decode("utf-8").upper()
+        )
         print()
 
     return 0
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

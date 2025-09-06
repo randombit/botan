@@ -19,3 +19,6 @@ fe7a2a1d850ae02934ea04d25fa214c825442535
 
 # [clang-format] AllowShortBlocksOnASingleLine
 de48a2eb6d2d77e104044da84c2fb7df5c08d65a
+
+# [ruff] initial application
+a05a80f3a993a726c53efe513c11480c594572be

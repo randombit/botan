@@ -19,6 +19,7 @@ from collections import OrderedDict
 import multiprocessing
 from multiprocessing.pool import ThreadPool
 
+
 class VecDocument:
     def __init__(self, filepath):
         self.data = OrderedDict()
@@ -31,14 +32,14 @@ class VecDocument:
         PATTERN_GROUPHEADER = r"^\[(.+)\]$"
         PATTERN_KEYVALUE = r"^\s*([a-zA-Z]+)\s*=(.*)$"
 
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             # Append one empty line to simplify parsing
             lines = f.read().splitlines() + ["\n"]
 
             for line in lines:
                 line = line.strip()
                 if line.startswith("#"):
-                    pass # Skip
+                    pass  # Skip
                 elif line == "":
                     current_testcase_number += 1
                 elif re.match(PATTERN_GROUPHEADER, line):
@@ -67,8 +68,10 @@ class VecDocument:
     def get_data(self):
         return self.data
 
+
 TESTS_RUN = 0
 TESTS_FAILED = 0
+
 
 class TestLogHandler(logging.StreamHandler, object):
     def emit(self, record):
@@ -77,6 +80,7 @@ class TestLogHandler(logging.StreamHandler, object):
         if record.levelno >= logging.ERROR:
             global TESTS_FAILED
             TESTS_FAILED += 1
+
 
 def setup_logging(options):
     if options.verbose:
@@ -87,17 +91,18 @@ def setup_logging(options):
         log_level = logging.INFO
 
     lh = TestLogHandler(sys.stdout)
-    lh.setFormatter(logging.Formatter('%(levelname) 7s: %(message)s'))
+    lh.setFormatter(logging.Formatter("%(levelname) 7s: %(message)s"))
     logging.getLogger().addHandler(lh)
     logging.getLogger().setLevel(log_level)
 
+
 def test_cipher_kat(cli_binary, data):
-    iv = data['Nonce'] if 'Nonce' in data else ''
-    key = data['Key']
-    plaintext = data['In'].lower()
-    ciphertext = data['Out'].lower()
-    algorithm = data['Algorithm']
-    direction = data['Direction']
+    iv = data["Nonce"] if "Nonce" in data else ""
+    key = data["Key"]
+    plaintext = data["In"].lower()
+    ciphertext = data["Out"].lower()
+    algorithm = data["Algorithm"]
+    direction = data["Direction"]
 
     cmd = [
         cli_binary,
@@ -105,30 +110,36 @@ def test_cipher_kat(cli_binary, data):
         "--cipher=%s" % algorithm,
         "--nonce=%s" % iv,
         "--key=%s" % key,
-        "-"]
+        "-",
+    ]
 
-    if 'AD' in data:
-        cmd += ['--ad=%s' % (data['AD'])]
+    if "AD" in data:
+        cmd += ["--ad=%s" % (data["AD"])]
 
     if direction == "decrypt":
-        cmd += ['--decrypt']
+        cmd += ["--decrypt"]
 
     if direction == "decrypt":
         invalue = ciphertext
     else:
         invalue = plaintext
 
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE
+    )
     (stdout_raw, stderr_raw) = p.communicate(input=binascii.unhexlify(invalue))
     output = binascii.hexlify(stdout_raw).decode("UTF-8").lower()
     stderr = stderr_raw.decode("UTF-8")
 
-    if stderr != '':
+    if stderr != "":
         logging.error("Unexpected stderr output %s" % (stderr))
 
     expected = plaintext if direction == "decrypt" else ciphertext
     if expected != output:
-        logging.error("For test %s got %s expected %s" % (data['testname'], output, expected))
+        logging.error(
+            "For test %s got %s expected %s" % (data["testname"], output, expected)
+        )
+
 
 def get_testdata(document, max_tests):
     out = []
@@ -136,18 +147,19 @@ def get_testdata(document, max_tests):
         testcase_number = 0
         for testcase in document[algorithm]:
             testcase_number += 1
-            for direction in ['encrypt', 'decrypt']:
+            for direction in ["encrypt", "decrypt"]:
                 testname = "{} no {:0>3} ({})".format(
-                    algorithm.lower(), testcase_number, direction)
+                    algorithm.lower(), testcase_number, direction
+                )
                 testname = re.sub("[^a-z0-9-]", "_", testname)
                 testname = re.sub("_+", "_", testname)
                 testname = testname.strip("_")
-                test = {'testname': testname}
+                test = {"testname": testname}
                 for key in testcase:
                     value = testcase[key]
                     test[key] = value
-                test['Algorithm'] = algorithm
-                test['Direction'] = direction
+                test["Algorithm"] = algorithm
+                test["Direction"] = direction
 
                 out.append(test)
 
@@ -155,17 +167,18 @@ def get_testdata(document, max_tests):
                 break
     return out
 
+
 def main(args=None):
     if args is None:
         args = sys.argv
 
     parser = argparse.ArgumentParser(description="")
-    parser.add_argument('cli_binary', help='path to the botan cli binary')
-    parser.add_argument('--threads', type=int, default=0, metavar="T")
-    parser.add_argument('--verbose', action='store_true', default=False)
-    parser.add_argument('--quiet', action='store_true', default=False)
-    parser.add_argument('--run-slow-tests', action='store_true', default=False)
-    parser.add_argument('--test-data-dir', default='.')
+    parser.add_argument("cli_binary", help="path to the botan cli binary")
+    parser.add_argument("--threads", type=int, default=0, metavar="T")
+    parser.add_argument("--verbose", action="store_true", default=False)
+    parser.add_argument("--quiet", action="store_true", default=False)
+    parser.add_argument("--run-slow-tests", action="store_true", default=False)
+    parser.add_argument("--test-data-dir", default=".")
     args = parser.parse_args()
 
     setup_logging(args)
@@ -177,18 +190,18 @@ def main(args=None):
     if threads == 0:
         threads = multiprocessing.cpu_count()
 
-    test_data_dir = os.path.join(args.test_data_dir, 'src', 'tests', 'data')
+    test_data_dir = os.path.join(args.test_data_dir, "src", "tests", "data")
 
     mode_test_data = [
-        os.path.join(test_data_dir, 'aead', 'ccm.vec'),
-        os.path.join(test_data_dir, 'aead', 'chacha20poly1305.vec'),
-        os.path.join(test_data_dir, 'aead', 'eax.vec'),
-        os.path.join(test_data_dir, 'aead', 'gcm.vec'),
-        os.path.join(test_data_dir, 'aead', 'ocb.vec'),
-        os.path.join(test_data_dir, 'modes', 'cbc.vec'),
-        os.path.join(test_data_dir, 'modes', 'cfb.vec'),
-        os.path.join(test_data_dir, 'modes', 'ctr.vec'),
-        os.path.join(test_data_dir, 'modes', 'xts.vec'),
+        os.path.join(test_data_dir, "aead", "ccm.vec"),
+        os.path.join(test_data_dir, "aead", "chacha20poly1305.vec"),
+        os.path.join(test_data_dir, "aead", "eax.vec"),
+        os.path.join(test_data_dir, "aead", "gcm.vec"),
+        os.path.join(test_data_dir, "aead", "ocb.vec"),
+        os.path.join(test_data_dir, "modes", "cbc.vec"),
+        os.path.join(test_data_dir, "modes", "cfb.vec"),
+        os.path.join(test_data_dir, "modes", "ctr.vec"),
+        os.path.join(test_data_dir, "modes", "xts.vec"),
     ]
 
     kats = []
@@ -212,12 +225,15 @@ def main(args=None):
 
     end_time = time.time()
 
-    print("Ran %d tests with %d failures in %.02f seconds" % (
-        len(kats), TESTS_FAILED, end_time - start_time))
+    print(
+        "Ran %d tests with %d failures in %.02f seconds"
+        % (len(kats), TESTS_FAILED, end_time - start_time)
+    )
 
     if TESTS_FAILED > 0:
         return 1
     return 0
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

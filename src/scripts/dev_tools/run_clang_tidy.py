@@ -10,7 +10,7 @@ import hashlib
 import json
 import multiprocessing
 from multiprocessing.pool import ThreadPool
-import optparse # pylint: disable=deprecated-module
+import optparse  # pylint: disable=deprecated-module
 import os
 import random
 import re
@@ -22,127 +22,132 @@ import time
 import uuid
 
 enabled_checks = [
-    'bugprone-*',
-    'cert-*',
-    'clang-analyzer-*',
-    'cppcoreguidelines-*',
-    'hicpp-*',
-    'misc-*',
-    'modernize-*',
-    'performance-*',
-    'portability-*',
-    'readability-*',
+    "bugprone-*",
+    "cert-*",
+    "clang-analyzer-*",
+    "cppcoreguidelines-*",
+    "hicpp-*",
+    "misc-*",
+    "modernize-*",
+    "performance-*",
+    "portability-*",
+    "readability-*",
 ]
 
 # these are ones that we might want to be clean for in the future,
 # but currently are not
 disabled_needs_work = [
-    '*-named-parameter',
-    'cppcoreguidelines-use-default-member-init',
-    'bugprone-unchecked-optional-access',
-    'bugprone-empty-catch',
-    'cppcoreguidelines-avoid-const-or-ref-data-members',
-    'misc-const-correctness', # pretty noisy
-    'misc-include-cleaner',
-    'modernize-pass-by-value',
-    'modernize-use-ranges', # limited by compiler support currently
-    'performance-avoid-endl',
-    'readability-convert-member-functions-to-static',
-    'readability-inconsistent-declaration-parameter-name', # should fix this, blocked by https://github.com/llvm/llvm-project/issues/60845
-    'readability-simplify-boolean-expr', # sometimes ok
-    'readability-static-accessed-through-instance',
+    "*-named-parameter",
+    "cppcoreguidelines-use-default-member-init",
+    "bugprone-unchecked-optional-access",
+    "bugprone-empty-catch",
+    "cppcoreguidelines-avoid-const-or-ref-data-members",
+    "misc-const-correctness",  # pretty noisy
+    "misc-include-cleaner",
+    "modernize-pass-by-value",
+    "modernize-use-ranges",  # limited by compiler support currently
+    "performance-avoid-endl",
+    "readability-convert-member-functions-to-static",
+    "readability-inconsistent-declaration-parameter-name",  # should fix this, blocked by https://github.com/llvm/llvm-project/issues/60845
+    "readability-simplify-boolean-expr",  # sometimes ok
+    "readability-static-accessed-through-instance",
 ]
 
 # these we are probably not interested in ever being clang-tidy clean for
 disabled_not_interested = [
-    '*-array-to-pointer-decay',
-    '*-avoid-c-arrays', # triggers also on foo(T x[], size_t len) decls
-    '*-else-after-return',
-    '*-function-size',
-    '*-magic-numbers', # can't stop the magic
-    '*-narrowing-conversions',
-    '*-no-array-decay',
-    '*-use-auto', # not universally a good idea
-    '*-use-emplace', # often less clear
-    '*-deprecated-headers', # wrong for system headers like stdlib.h
-    'cert-dcl21-cpp', # invalid, and removed already in clang-tidy 19
-    'bugprone-easily-swappable-parameters',
-    'bugprone-implicit-widening-of-multiplication-result',
-    'cppcoreguidelines-pro-bounds-pointer-arithmetic',
-    'cppcoreguidelines-pro-bounds-constant-array-index',
-    'cppcoreguidelines-pro-type-const-cast', # see above
-    'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
-    'hicpp-no-assembler',
-    'hicpp-signed-bitwise', # impossible to avoid in C/C++, int promotion rules :/
-    'misc-no-recursion',
-    'modernize-use-trailing-return-type', # fine, but we're not using it everywhere
-    'modernize-return-braced-init-list', # thanks I hate it
-    'modernize-use-default-member-init',
-    'modernize-use-designated-initializers',
-    'modernize-use-nodiscard',
-    'modernize-use-using', # fine not great
-    'portability-simd-intrinsics',
-    'readability-avoid-return-with-void-value', # Jack likes doing this
-    'readability-function-cognitive-complexity',
-    'readability-identifier-length', # lol, lmao
-    'readability-math-missing-parentheses',
-    'readability-non-const-parameter',
-    'readability-redundant-inline-specifier', # Jack likes doing this
-    'readability-redundant-access-specifiers', # reneme likes doing this
-    'readability-use-anyofallof', # not more readable
+    "*-array-to-pointer-decay",
+    "*-avoid-c-arrays",  # triggers also on foo(T x[], size_t len) decls
+    "*-else-after-return",
+    "*-function-size",
+    "*-magic-numbers",  # can't stop the magic
+    "*-narrowing-conversions",
+    "*-no-array-decay",
+    "*-use-auto",  # not universally a good idea
+    "*-use-emplace",  # often less clear
+    "*-deprecated-headers",  # wrong for system headers like stdlib.h
+    "cert-dcl21-cpp",  # invalid, and removed already in clang-tidy 19
+    "bugprone-easily-swappable-parameters",
+    "bugprone-implicit-widening-of-multiplication-result",
+    "cppcoreguidelines-pro-bounds-pointer-arithmetic",
+    "cppcoreguidelines-pro-bounds-constant-array-index",
+    "cppcoreguidelines-pro-type-const-cast",  # see above
+    "cppcoreguidelines-pro-type-reinterpret-cast",  # not possible thanks though
+    "hicpp-no-assembler",
+    "hicpp-signed-bitwise",  # impossible to avoid in C/C++, int promotion rules :/
+    "misc-no-recursion",
+    "modernize-use-trailing-return-type",  # fine, but we're not using it everywhere
+    "modernize-return-braced-init-list",  # thanks I hate it
+    "modernize-use-default-member-init",
+    "modernize-use-designated-initializers",
+    "modernize-use-nodiscard",
+    "modernize-use-using",  # fine not great
+    "portability-simd-intrinsics",
+    "readability-avoid-return-with-void-value",  # Jack likes doing this
+    "readability-function-cognitive-complexity",
+    "readability-identifier-length",  # lol, lmao
+    "readability-math-missing-parentheses",
+    "readability-non-const-parameter",
+    "readability-redundant-inline-specifier",  # Jack likes doing this
+    "readability-redundant-access-specifiers",  # reneme likes doing this
+    "readability-use-anyofallof",  # not more readable
 ]
 
 disabled_checks = sorted(disabled_needs_work + disabled_not_interested)
 
+
 def create_check_option(enabled, disabled):
-    return ','.join(enabled) + ',' + ','.join(['-' + d for d in disabled])
+    return ",".join(enabled) + "," + ",".join(["-" + d for d in disabled])
+
 
 def render_clang_tidy_file(target_dir, enabled, disabled):
-    filepath = os.path.join(target_dir, '.clang-tidy')
-    print(f'regenerating {filepath}')
+    filepath = os.path.join(target_dir, ".clang-tidy")
+    print(f"regenerating {filepath}")
     with open(filepath, "w", encoding="utf-8") as clang_tidy_file:
-        clang_tidy_file.writelines([
-            '---\n',
-            f'# This file was automatically generated by {sys.argv[0]} --regenerate-inline-config-file\n',
-            '#\n',
-            '# All manual edits to this file will be lost. Edit the script\n',
-            '# then regenerate this configuration file.\n',
-            '\n',
-            'Checks: >\n'] +
-            [ f'    {check},\n' for check in sorted(enabled)] +
-            [ f'    -{check},\n' for check in sorted(disabled)] +
-            ['---\n'])
+        clang_tidy_file.writelines(
+            [
+                "---\n",
+                f"# This file was automatically generated by {sys.argv[0]} --regenerate-inline-config-file\n",
+                "#\n",
+                "# All manual edits to this file will be lost. Edit the script\n",
+                "# then regenerate this configuration file.\n",
+                "\n",
+                "Checks: >\n",
+            ]
+            + [f"    {check},\n" for check in sorted(enabled)]
+            + [f"    -{check},\n" for check in sorted(disabled)]
+            + ["---\n"]
+        )
+
 
 def load_compile_commands(build_dir):
-    compile_commands_file = os.path.join(build_dir, 'compile_commands.json')
-    compile_commands = open(compile_commands_file, encoding='utf8').read()
+    compile_commands_file = os.path.join(build_dir, "compile_commands.json")
+    compile_commands = open(compile_commands_file, encoding="utf8").read()
     return (compile_commands_file, json.loads(compile_commands))
 
+
 def run_command(cmdline):
-    proc = subprocess.Popen(cmdline,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
+    proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     (stdout, _stderr) = proc.communicate()
 
-    stdout = stdout.decode('utf8')
+    stdout = stdout.decode("utf8")
     # stderr is discarded
 
     return stdout
 
-def run_clang_tidy(compile_commands_file,
-                   check_config,
-                   source_file,
-                   options):
 
-    cmdline = ['clang-tidy',
-               '--quiet',
-               '-checks=%s' % (check_config),
-               '-p', compile_commands_file,
-               '-header-filter=.*']
+def run_clang_tidy(compile_commands_file, check_config, source_file, options):
+    cmdline = [
+        "clang-tidy",
+        "--quiet",
+        "-checks=%s" % (check_config),
+        "-p",
+        compile_commands_file,
+        "-header-filter=.*",
+    ]
 
     if options.fixit:
-        cmdline.append('-fix')
+        cmdline.append("-fix")
 
     if options.export_fixes_dir:
         os.makedirs(options.export_fixes_dir, exist_ok=True)
@@ -161,6 +166,7 @@ def run_clang_tidy(compile_commands_file,
 
     return True
 
+
 def file_matches(file, args):
     if args is None or len(args) == 0:
         return True
@@ -170,35 +176,36 @@ def file_matches(file, args):
             return True
     return False
 
+
 def preproc_file(compile_commands):
-    cmd = shlex.split(compile_commands['command'])
+    cmd = shlex.split(compile_commands["command"])
 
     dash_o = cmd.index("-o")
     if dash_o >= 0:
-        cmd.pop(dash_o + 1) # remove object file name
-        cmd.pop(dash_o)     # remove -o
+        cmd.pop(dash_o + 1)  # remove object file name
+        cmd.pop(dash_o)  # remove -o
 
     if "-c" in cmd:
         cmd.remove("-c")
     cmd.append("-E")
 
     result = subprocess.run(
-        cmd,
-        check=True,
-        stdout=subprocess.PIPE,
-        universal_newlines=True)
+        cmd, check=True, stdout=subprocess.PIPE, universal_newlines=True
+    )
 
-    return hashlib.sha256(result.stdout.encode('utf-8')).hexdigest()
+    return hashlib.sha256(result.stdout.encode("utf-8")).hexdigest()
+
 
 def hash_args(**kwargs):
     outer_hash = hashlib.sha256()
 
     for key in sorted(kwargs.keys()):
         value = kwargs[key]
-        outer_hash.update(hashlib.sha256(key.encode('utf-8')).digest())
-        outer_hash.update(hashlib.sha256(value.encode('utf-8')).digest())
+        outer_hash.update(hashlib.sha256(key.encode("utf-8")).digest())
+        outer_hash.update(hashlib.sha256(value.encode("utf-8")).digest())
 
     return outer_hash.hexdigest()
+
 
 class CacheDatabase:
     """
@@ -206,6 +213,7 @@ class CacheDatabase:
     runs of clang-tidy. The cache key is calculated as the hash of the source file
     and a set of meta information such as 'clang-tidy --version' and the check configuration.
     """
+
     CACHE_DEBUG = False
 
     def __init__(self, db_path):
@@ -218,7 +226,7 @@ class CacheDatabase:
         cache_key = hash_args(**kwargs)
 
         cur = self.db.cursor()
-        cur.execute("SELECT key from clang_tidy_clean where key = ?", (cache_key, ))
+        cur.execute("SELECT key from clang_tidy_clean where key = ?", (cache_key,))
         res = cur.fetchall()
 
         if len(res) > 0:
@@ -236,7 +244,7 @@ class CacheDatabase:
         cur = self.db.cursor()
         if self.CACHE_DEBUG:
             print("Cache save for", cache_key)
-        cur.execute("INSERT OR IGNORE INTO clang_tidy_clean values(?)", (cache_key, ))
+        cur.execute("INSERT OR IGNORE INTO clang_tidy_clean values(?)", (cache_key,))
         self.db.commit()
 
     def count(self):
@@ -262,29 +270,41 @@ class CacheDatabase:
         for cache_key in entries[:to_prune]:
             if self.CACHE_DEBUG:
                 print("Pruning", cache_key[0])
-            cur.execute("DELETE FROM clang_tidy_clean WHERE key = ?", (cache_key[0], ))
+            cur.execute("DELETE FROM clang_tidy_clean WHERE key = ?", (cache_key[0],))
         self.db.commit()
 
-def main(args = None): # pylint: disable=too-many-return-statements
+
+def main(args=None):  # pylint: disable=too-many-return-statements
     if args is None:
         args = sys.argv
 
     parser = optparse.OptionParser()
 
-    parser.add_option('-j', '--jobs', action='store', type='int', default=multiprocessing.cpu_count() + 1,
-                      help='set number of jobs to run (default %default)')
-    parser.add_option('--verbose', action='store_true', default=False)
-    parser.add_option('--fixit', action='store_true', default=False)
-    parser.add_option('--build-dir', default='build')
-    parser.add_option('--list-checks', action='store_true', default=False)
-    parser.add_option('--regenerate-inline-config-file', action='store_true', default=False)
-    parser.add_option('--only-changed-files', action='store_true', default=False)
-    parser.add_option('--only-matching', metavar='REGEX', default='.*')
-    parser.add_option('--take-file-list-from-stdin', action='store_true', default=False)
-    parser.add_option('--export-fixes-dir', default=None)
-    parser.add_option('--cache-db', metavar='DB',
-                      help='Path to sqlite3 database file for caching',
-                      default=os.getenv("BOTAN_CLANG_TIDY_CACHE"))
+    parser.add_option(
+        "-j",
+        "--jobs",
+        action="store",
+        type="int",
+        default=multiprocessing.cpu_count() + 1,
+        help="set number of jobs to run (default %default)",
+    )
+    parser.add_option("--verbose", action="store_true", default=False)
+    parser.add_option("--fixit", action="store_true", default=False)
+    parser.add_option("--build-dir", default="build")
+    parser.add_option("--list-checks", action="store_true", default=False)
+    parser.add_option(
+        "--regenerate-inline-config-file", action="store_true", default=False
+    )
+    parser.add_option("--only-changed-files", action="store_true", default=False)
+    parser.add_option("--only-matching", metavar="REGEX", default=".*")
+    parser.add_option("--take-file-list-from-stdin", action="store_true", default=False)
+    parser.add_option("--export-fixes-dir", default=None)
+    parser.add_option(
+        "--cache-db",
+        metavar="DB",
+        help="Path to sqlite3 database file for caching",
+        default=os.getenv("BOTAN_CLANG_TIDY_CACHE"),
+    )
 
     # 100K entries with our current schema is about 15 Mb
     max_db_entries = int(os.getenv("BOTAN_CLANG_TIDY_CACHE_MAX_SIZE") or 100_000)
@@ -296,16 +316,19 @@ def main(args = None): # pylint: disable=too-many-return-statements
         return 1
 
     if options.only_changed_files and options.take_file_list_from_stdin:
-        print("Cannot use both --only-changed-files and --take-file-list-from-stdin", file=sys.stderr)
+        print(
+            "Cannot use both --only-changed-files and --take-file-list-from-stdin",
+            file=sys.stderr,
+        )
         return 1
 
     files_to_check = []
     if options.only_changed_files:
-        changes = run_command(['git', 'diff', '--name-only', '-r', 'master'])
+        changes = run_command(["git", "diff", "--name-only", "-r", "master"])
 
         files_to_check = []
         for file in changes.split():
-            if file.endswith('.cpp') or file.endswith('.h'):
+            if file.endswith(".cpp") or file.endswith(".h"):
                 files_to_check.append(os.path.basename(file))
 
         if len(files_to_check) == 0:
@@ -316,9 +339,9 @@ def main(args = None): # pylint: disable=too-many-return-statements
 
         for line in sys.stdin:
             file = os.path.basename(line.strip())
-            if file.endswith('.cpp') or file.endswith('.h'):
+            if file.endswith(".cpp") or file.endswith(".h"):
                 files_to_check.append(file)
-            elif file in ['run_clang_tidy.py']:
+            elif file in ["run_clang_tidy.py"]:
                 scan_all = True
 
         if scan_all:
@@ -333,11 +356,13 @@ def main(args = None): # pylint: disable=too-many-return-statements
     check_config = create_check_option(enabled_checks, disabled_checks)
 
     if options.list_checks:
-        print(run_command(['clang-tidy', '-list-checks', '-checks', check_config]), end='')
+        print(
+            run_command(["clang-tidy", "-list-checks", "-checks", check_config]), end=""
+        )
         return 0
 
     if options.regenerate_inline_config_file:
-        render_clang_tidy_file('src', enabled_checks, disabled_checks)
+        render_clang_tidy_file("src", enabled_checks, disabled_checks)
         return 0
 
     pool = ThreadPool(options.jobs)
@@ -353,30 +378,35 @@ def main(args = None): # pylint: disable=too-many-return-statements
 
     if cache is not None:
         if options.verbose:
-            print("Using cache at %s with %d entries" % (options.cache_db, cache.count()))
+            print(
+                "Using cache at %s with %d entries" % (options.cache_db, cache.count())
+            )
 
         results = []
 
-        clang_tidy_version = subprocess.run(['clang-tidy', '--version'],
-                                            check=True,
-                                            stdout=subprocess.PIPE).stdout.decode('utf-8')
+        clang_tidy_version = subprocess.run(
+            ["clang-tidy", "--version"], check=True, stdout=subprocess.PIPE
+        ).stdout.decode("utf-8")
 
         for info in compile_commands:
-            results.append(pool.apply_async(preproc_file, (info, )))
+            results.append(pool.apply_async(preproc_file, (info,)))
 
-        assert(len(results) == len(compile_commands))
-        for (i, result) in enumerate(results):
-            compile_commands[i]['preproc'] = result.get()
+        assert len(results) == len(compile_commands)
+        for i, result in enumerate(results):
+            compile_commands[i]["preproc"] = result.get()
 
         if options.verbose:
-            print("Preprocessing/hashing %d files took %.02f sec" % (len(results), time.time() - start_time))
+            print(
+                "Preprocessing/hashing %d files took %.02f sec"
+                % (len(results), time.time() - start_time)
+            )
             sys.stdout.flush()
 
         start_time = time.time()
 
     results = []
     for info in compile_commands:
-        file = info['file']
+        file = info["file"]
 
         if len(files_to_check) > 0 and os.path.basename(file) not in files_to_check:
             continue
@@ -386,7 +416,11 @@ def main(args = None): # pylint: disable=too-many-return-statements
 
         cache_hit = False
         if cache is not None:
-            if cache.hit(config=check_config, source_file=info['preproc'], clang_tidy=clang_tidy_version):
+            if cache.hit(
+                config=check_config,
+                source_file=info["preproc"],
+                clang_tidy=clang_tidy_version,
+            ):
                 cache_hit = True
 
         if cache_hit and options.verbose:
@@ -396,23 +430,30 @@ def main(args = None): # pylint: disable=too-many-return-statements
         if not cache_hit:
             files_checked += 1
 
-            results.append((info, pool.apply_async(
-                run_clang_tidy,
-                (compile_commands_file,
-                 check_config,
-                 file,
-                 options))))
+            results.append(
+                (
+                    info,
+                    pool.apply_async(
+                        run_clang_tidy,
+                        (compile_commands_file, check_config, file, options),
+                    ),
+                )
+            )
 
     fail_cnt = 0
-    for (info, result) in results:
+    for info, result in results:
         success = result.get()
 
         if options.verbose:
-            print("Checked", info['file'])
+            print("Checked", info["file"])
             sys.stdout.flush()
 
         if success and cache is not None:
-            cache.record(config=check_config, source_file=info['preproc'], clang_tidy=clang_tidy_version)
+            cache.record(
+                config=check_config,
+                source_file=info["preproc"],
+                clang_tidy=clang_tidy_version,
+            )
 
         if not success:
             fail_cnt += 1
@@ -430,5 +471,6 @@ def main(args = None): # pylint: disable=too-many-return-statements
         print("Found clang-tidy errors in %d files" % (fail_cnt))
         return 1
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

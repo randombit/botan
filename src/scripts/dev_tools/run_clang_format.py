@@ -8,7 +8,7 @@ Botan is released under the Simplified BSD License (see license.txt)
 
 import subprocess
 import sys
-import optparse # pylint: disable=deprecated-module
+import optparse  # pylint: disable=deprecated-module
 import multiprocessing
 import difflib
 import time
@@ -16,64 +16,72 @@ import os
 import re
 from multiprocessing.pool import ThreadPool
 
+
 def run_command(cmdline):
-    proc = subprocess.Popen(cmdline,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
+    proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     (stdout, stderr) = proc.communicate()
 
-    stdout = stdout.decode('utf8')
-    stderr = stderr.decode('utf8')
+    stdout = stdout.decode("utf8")
+    stderr = stderr.decode("utf8")
 
     return (stdout, stderr)
 
+
 def apply_clang_format(clang_format, source_file):
-    cmdline = [clang_format, '-i', source_file]
+    cmdline = [clang_format, "-i", source_file]
     (stdout, stderr) = run_command(cmdline)
 
-    if stdout != '' or stderr != '':
-        print("Running '%s' stdout: '%s' stderr: '%s''" % (' '.join(cmdline), stdout, stderr))
+    if stdout != "" or stderr != "":
+        print(
+            "Running '%s' stdout: '%s' stderr: '%s''"
+            % (" ".join(cmdline), stdout, stderr)
+        )
         return False
     return True
 
-def run_diff(source_file, formatted_contents):
-    original_contents = open(source_file, encoding='utf8').read()
-    if original_contents == formatted_contents:
-        return ''
 
-    return '\n'.join(difflib.unified_diff(
-        original_contents.splitlines(),
-        formatted_contents.splitlines(),
-        fromfile="%s (original)" % (source_file),
-        tofile="%s" % (source_file),
-        lineterm="",
-    ))
+def run_diff(source_file, formatted_contents):
+    original_contents = open(source_file, encoding="utf8").read()
+    if original_contents == formatted_contents:
+        return ""
+
+    return "\n".join(
+        difflib.unified_diff(
+            original_contents.splitlines(),
+            formatted_contents.splitlines(),
+            fromfile="%s (original)" % (source_file),
+            tofile="%s" % (source_file),
+            lineterm="",
+        )
+    )
+
 
 def check_clang_format(clang_format, source_file):
     cmdline = [clang_format, source_file]
     (stdout, stderr) = run_command(cmdline)
 
-    if stderr != '':
-        print("Running '%s' stderr: '%s''" % (' '.join(cmdline), stderr))
+    if stderr != "":
+        print("Running '%s' stderr: '%s''" % (" ".join(cmdline), stderr))
         return False
 
     diff = run_diff(source_file, stdout)
-    if diff != '':
+    if diff != "":
         print(diff)
         return False
 
     return True
 
+
 def list_source_files_in(directory):
-    excluded = ['pkcs11t.h', 'pkcs11f.h', 'pkcs11.h']
+    excluded = ["pkcs11t.h", "pkcs11f.h", "pkcs11.h"]
 
-    for (dirpath, _, filenames) in os.walk(directory):
+    for dirpath, _, filenames in os.walk(directory):
         for filename in filenames:
-            if filename.endswith('.cpp') or filename.endswith('.h'):
-
+            if filename.endswith(".cpp") or filename.endswith(".h"):
                 if filename not in excluded:
                     yield os.path.join(dirpath, filename)
+
 
 def filter_files(files, filters):
     if len(filters) == 0:
@@ -89,13 +97,16 @@ def filter_files(files, filters):
 
     return files_to_fmt
 
+
 # Run clang-version -version and return the major version
 def clang_format_version(clang_format):
-    clang_format_version_re = re.compile(r'^(.* )?clang-format version ([0-9]+)\.([0-9]+)\.([0-9]+)')
+    clang_format_version_re = re.compile(
+        r"^(.* )?clang-format version ([0-9]+)\.([0-9]+)\.([0-9]+)"
+    )
 
-    (stdout, stderr) = run_command([clang_format, '-version'])
+    (stdout, stderr) = run_command([clang_format, "-version"])
 
-    if stderr != '':
+    if stderr != "":
         print("Error trying to get clang-format version number: '%s'" % (stderr))
         return None
 
@@ -107,17 +118,18 @@ def clang_format_version(clang_format):
 
     return int(version.group(2))
 
-def main(args = None):
+
+def main(args=None):
     if args is None:
         args = sys.argv
 
     parser = optparse.OptionParser()
 
-    parser.add_option('-j', '--jobs', action='store', type='int', default=0)
-    parser.add_option('--src-dir', metavar='DIR', default='src')
-    parser.add_option('--check', action='store_true', default=False)
-    parser.add_option('--clang-format-binary', metavar='PATH', default='clang-format')
-    parser.add_option('--skip-version-check', action='store_true', default=False)
+    parser.add_option("-j", "--jobs", action="store", type="int", default=0)
+    parser.add_option("--src-dir", metavar="DIR", default="src")
+    parser.add_option("--check", action="store_true", default=False)
+    parser.add_option("--clang-format-binary", metavar="PATH", default="clang-format")
+    parser.add_option("--skip-version-check", action="store_true", default=False)
 
     (options, args) = parser.parse_args(args)
 
@@ -135,8 +147,13 @@ def main(args = None):
         req_version = 17
 
         if version != req_version:
-            print("This script requires clang-format %d but current version is %d" % (req_version, version))
-            print("Use --skip-version-check to carry on, however formatting may be incorrect")
+            print(
+                "This script requires clang-format %d but current version is %d"
+                % (req_version, version)
+            )
+            print(
+                "Use --skip-version-check to carry on, however formatting may be incorrect"
+            )
             return 1
 
     jobs = options.jobs
@@ -160,7 +177,7 @@ def main(args = None):
         return 1
 
     # this file is incredibly slow to format so start it early
-    slow_to_format = ['os_utils.cpp']
+    slow_to_format = ["os_utils.cpp"]
 
     first = [x for x in files_to_fmt if os.path.basename(x) in slow_to_format]
     rest = [x for x in files_to_fmt if x not in first]
@@ -170,9 +187,25 @@ def main(args = None):
     results = []
     for file in files_to_fmt:
         if options.check:
-            results.append(pool.apply_async(check_clang_format, (clang_format, file,)))
+            results.append(
+                pool.apply_async(
+                    check_clang_format,
+                    (
+                        clang_format,
+                        file,
+                    ),
+                )
+            )
         else:
-            results.append(pool.apply_async(apply_clang_format, (clang_format, file,)))
+            results.append(
+                pool.apply_async(
+                    apply_clang_format,
+                    (
+                        clang_format,
+                        file,
+                    ),
+                )
+            )
 
     fail_execution = False
 
@@ -187,5 +220,6 @@ def main(args = None):
 
     return -1 if fail_execution else 0
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

@@ -5,25 +5,28 @@ import subprocess
 import re
 import sys
 
+
 def lines_in(f):
     lines = 0
-    for line in f.decode('utf8').splitlines():
-        if line == '':
+    for line in f.decode("utf8").splitlines():
+        if line == "":
             continue
 
-        if line.startswith('#'):
+        if line.startswith("#"):
             continue
         lines += 1
     return lines
 
+
 def run_cc(cmd):
-    preproc = subprocess.run(cmd.split(' '), stdout=subprocess.PIPE)
+    preproc = subprocess.run(cmd.split(" "), stdout=subprocess.PIPE)
 
     return lines_in(preproc.stdout)
 
-cc = json.loads(open('build/compile_commands.json').read())
 
-src_file = re.compile('-E src/.*/([a-z0-9/_]+.cpp) ')
+cc = json.loads(open("build/compile_commands.json").read())
+
+src_file = re.compile("-E src/.*/([a-z0-9/_]+.cpp) ")
 
 search_for = None
 
@@ -32,7 +35,7 @@ if len(sys.argv) == 2:
 
 total_lines = 0
 for c in cc:
-    cmd = c['command'].replace(' -c ', ' -E ').split(' -o')[0] + " -o -"
+    cmd = c["command"].replace(" -c ", " -E ").split(" -o")[0] + " -o -"
     file_name = src_file.search(cmd)
     if file_name is None:
         continue

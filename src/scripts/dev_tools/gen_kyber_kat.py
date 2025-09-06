@@ -33,6 +33,7 @@ import binascii
 import os
 import argparse
 
+
 class KatReader:
     def __init__(self, file):
         self.file = file
@@ -44,10 +45,10 @@ class KatReader:
             if line == "":
                 return (None, None)
 
-            if line.startswith('#') or line == "\n":
+            if line.startswith("#") or line == "\n":
                 continue
 
-            key, val = line.strip().split(' = ')
+            key, val = line.strip().split(" = ")
 
             return (key, val)
 
@@ -58,22 +59,34 @@ class KatReader:
             key, val = self.next_value()
 
             if key is None:
-                return # eof
+                return  # eof
 
-            if key in ['msg']:
+            if key in ["msg"]:
                 continue
 
-            if key not in ['count', 'z', 'd', 'seed', 'pk', 'sk', 'ct', 'ss', 'ct_n', 'ss_n']:
+            if key not in [
+                "count",
+                "z",
+                "d",
+                "seed",
+                "pk",
+                "sk",
+                "ct",
+                "ss",
+                "ct_n",
+                "ss_n",
+            ]:
                 raise Exception("Unknown key %s" % (key))
 
-            if key == 'count':
+            if key == "count":
                 kat[key] = int(val)
             else:
                 kat[key] = val
 
-            if key == 'ss':
+            if key == "ss":
                 yield kat
                 kat = {}
+
 
 def shake_256_16(v):
     # v is assumed to be hex
@@ -81,33 +94,35 @@ def shake_256_16(v):
     h.update(binascii.unhexlify(v))
     return h.hexdigest(16)
 
+
 def sha256_16(v):
     # v is assumed to be hex
     h = hashlib.sha256()
     h.update(binascii.unhexlify(v))
     return h.hexdigest()[:32]
 
-def compress_kat(kat, mode):
-    del kat['count'] # Not needed
 
-    hash_fn = sha256_16 if '90s' in mode else shake_256_16
+def compress_kat(kat, mode):
+    del kat["count"]  # Not needed
+
+    hash_fn = sha256_16 if "90s" in mode else shake_256_16
 
     # For ML-KEM we use the private seed as the private key's storage format
     if mode == "ML-KEM":
-        kat['sk'] = kat['d'] + kat['z']
-        del kat['d']
-        del kat['z']
+        kat["sk"] = kat["d"] + kat["z"]
+        del kat["d"]
+        del kat["z"]
 
     # rename keys and hash large values to reduce size of KAT vectors
-    kat['Seed'] = kat.pop('seed')
-    kat['SS']   = kat.pop('ss')
-    kat['PK']   = hash_fn(kat.pop('pk'))
-    kat['SK']   = hash_fn(kat.pop('sk'))
-    kat['CT']   = hash_fn(kat.pop('ct'))
+    kat["Seed"] = kat.pop("seed")
+    kat["SS"] = kat.pop("ss")
+    kat["PK"] = hash_fn(kat.pop("pk"))
+    kat["SK"] = hash_fn(kat.pop("sk"))
+    kat["CT"] = hash_fn(kat.pop("ct"))
 
     if mode == "ML-KEM":
-        kat['CT_N'] = kat.pop('ct_n')
-        kat['SS_N'] = kat.pop('ss_n')
+        kat["CT_N"] = kat.pop("ct_n")
+        kat["SS_N"] = kat.pop("ss_n")
 
     return kat
 
@@ -115,10 +130,24 @@ def compress_kat(kat, mode):
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("files", nargs="+", help="Input files")
-    parser.add_argument("--kyber-r3", action="store_true", help="Enable Kyber R3 mode", default=False)
-    parser.add_argument("--ml-kem-ipd", action="store_true", help="Enable ML-KEM initial public draft mode", default=False)
-    parser.add_argument("--ml-kem", action="store_true", help="Enable ML-KEM final mode", default=False)
-    parser.add_argument("--kats-per-mode", type=int, help="Number of KATs to generate per mode", default=25)
+    parser.add_argument(
+        "--kyber-r3", action="store_true", help="Enable Kyber R3 mode", default=False
+    )
+    parser.add_argument(
+        "--ml-kem-ipd",
+        action="store_true",
+        help="Enable ML-KEM initial public draft mode",
+        default=False,
+    )
+    parser.add_argument(
+        "--ml-kem", action="store_true", help="Enable ML-KEM final mode", default=False
+    )
+    parser.add_argument(
+        "--kats-per-mode",
+        type=int,
+        help="Number of KATs to generate per mode",
+        default=25,
+    )
 
     return parser.parse_args()
 
@@ -154,9 +183,9 @@ def map_mode(file_name, mode):
         if file_name == "kat_MLKEM_768":
             return "ML-KEM-768"
     else:
-        raise Exception('Unknown mode', mode)
+        raise Exception("Unknown mode", mode)
 
-    raise Exception('Unknown Kyber KAT file name', file_name)
+    raise Exception("Unknown Kyber KAT file name", file_name)
 
 
 def selected_mode(args):
@@ -189,17 +218,23 @@ def output_file(mode):
     raise Exception("Unknown mode", mode)
 
 
-def main(args = None):
+def main(args=None):
     if args is None:
         return 1
 
     mode = selected_mode(args)
 
-    with open(output_file(mode), 'w') as output:
+    with open(output_file(mode), "w") as output:
         if mode == "ML-KEM":
-            print("# This file was auto-generated from github.com/post-quantum-cryptography/KAT", file=output)
+            print(
+                "# This file was auto-generated from github.com/post-quantum-cryptography/KAT",
+                file=output,
+            )
         else:
-            print("# This file was auto-generated from the reference implementation's KATs", file=output)
+            print(
+                "# This file was auto-generated from the reference implementation's KATs",
+                file=output,
+            )
         print("# See src/scripts/dev_tools/gen_kyber_kat.py\n", file=output)
 
         for file in args.files:
@@ -209,13 +244,14 @@ def main(args = None):
 
             print(f"[{algo_mode}]", file=output)
 
-            for kat in list(reader.read_kats())[:args.kats_per_mode]:
+            for kat in list(reader.read_kats())[: args.kats_per_mode]:
                 kat = compress_kat(kat, mode)
 
                 for key in kat.keys():
-                    print(key, '=', kat[key], file=output)
+                    print(key, "=", kat[key], file=output)
                 print("", file=output)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     args = parse_arguments()
     sys.exit(main(args))

@@ -10,7 +10,8 @@ import sys
 import re
 import os
 
-def main(args = None):
+
+def main(args=None):
     if args is None:
         args = sys.argv
 
@@ -18,7 +19,9 @@ def main(args = None):
         print("Usage: %s <lcov_filename>" % (args[0]))
         return 1
 
-    header_re = re.compile(R'^SF:(.*/build/include/(public|internal|external)/botan(/internal)?/.*)')
+    header_re = re.compile(
+        R"^SF:(.*/build/include/(public|internal|external)/botan(/internal)?/.*)"
+    )
 
     new_content = ""
 
@@ -37,11 +40,12 @@ def main(args = None):
         else:
             new_content += line
 
-    fd = open(args[1], 'w')
+    fd = open(args[1], "w")
     fd.write(new_content)
     fd.close()
 
     return 0
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())
