@@ -783,10 +783,16 @@ def main(args=None):
             'src/editors/vscode/scripts/test.py',
             'src/ct_selftest/ct_selftest.py']
 
-        # This has to run in the repository root to generate the correct
+        # These commands have to run in the repository root to generate the correct
         # relative paths in the output. Otherwise GitHub Actions will not
         # be able to annotate the correct files.
         cmds.append(["indir:%s" % root_dir, py_interp, '-m', 'pylint'] + pylint_flags + py_scripts)
+
+        ruff_flags = []
+        if is_running_in_github_actions():
+            ruff_flags += ["--output-format=github"]
+
+        cmds.append(["indir:%s" % (root_dir), "ruff", "check"] + ruff_flags + ["."])
 
     elif target == 'typos':
         cmds.append(['indir:%s' % (root_dir), 'typos', '-c', 'src/configs/typos.toml', '.'])
