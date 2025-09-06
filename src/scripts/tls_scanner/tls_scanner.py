@@ -8,19 +8,21 @@ import time
 import subprocess
 import re
 
+
 def format_report(client_output):
-    version_re = re.compile('TLS (v1\.[0-3]) using ([A-Z0-9_]+)')
+    version_re = re.compile("TLS (v1\.[0-3]) using ([A-Z0-9_]+)")
 
     version_match = version_re.search(client_output)
 
-    #print(client_output)
+    # print(client_output)
 
     if version_match:
         return "Established %s %s" % (version_match.group(1), version_match.group(2))
     else:
         return client_output
 
-def scanner(args = None):
+
+def scanner(args=None):
     if args is None:
         args = sys.argv
 
@@ -31,8 +33,12 @@ def scanner(args = None):
     scanners = {}
 
     for url in [s.strip() for s in open(args[1]).readlines()]:
-        scanners[url] = subprocess.Popen(['../../../botan', 'tls_client', '--policy=policy.txt', url],
-                                         stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
+        scanners[url] = subprocess.Popen(
+            ["../../../botan", "tls_client", "--policy=policy.txt", url],
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
 
     for url in scanners.keys():
         scanners[url].stdin.close()
@@ -47,7 +53,7 @@ def scanner(args = None):
             scanners[url].poll()
             if scanners[url].returncode is not None:
                 break
-            #print("Waiting %d more seconds for %s" % (timeout-i, url))
+            # print("Waiting %d more seconds for %s" % (timeout-i, url))
             time.sleep(1)
 
         if scanners[url].returncode is not None:
@@ -59,5 +65,6 @@ def scanner(args = None):
 
     return 0
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(scanner())

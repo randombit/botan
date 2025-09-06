@@ -17,26 +17,28 @@ from typing import Self
 from enum import StrEnum, auto
 import json
 
-def run_command(cmd: list[str], is_text = True):
-    """ Run the command . """
+
+def run_command(cmd: list[str], is_text=True):
+    """Run the command ."""
     return subprocess.run(cmd, capture_output=True, text=is_text, check=False)
 
+
 def run_with_valgrind(cmd: list[str]):
-    """ Run a command with valgrind. """
-    valgrind_args = ['valgrind',
-                     '-v',
-                     '--error-exitcode=2']
+    """Run a command with valgrind."""
+    valgrind_args = ["valgrind", "-v", "--error-exitcode=2"]
     res = run_command(valgrind_args + cmd, is_text=False)
     # valgrind may output non-utf-8 characters
     res.stdout = res.stdout.decode("utf-8", errors="replace")
     res.stderr = res.stderr.decode("utf-8", errors="replace")
     return res
 
+
 class ValgrindTest:
-    """ A single test from ct_selftest """
+    """A single test from ct_selftest"""
 
     class Status(StrEnum):
-        """ Defines the test result status """
+        """Defines the test result status"""
+
         OK = auto()
         WARNING = auto()
         ERROR = auto()
@@ -55,12 +57,14 @@ class ValgrindTest:
     def from_line(line: str):
         info = line.split("\t")
         assert len(info) == 3
-        return ValgrindTest(name=info[2],
-                            expect_failure=info[0] == "true",
-                            needs_special_config=info[1] == "true")
+        return ValgrindTest(
+            name=info[2],
+            expect_failure=info[0] == "true",
+            needs_special_config=info[1] == "true",
+        )
 
     def runnable(self, build_cfg):
-        """ Decide whether or not to run this test given build config info """
+        """Decide whether or not to run this test given build config info"""
         if not self.needs_special_config:
             return True
 
@@ -68,12 +72,15 @@ class ValgrindTest:
             return False  # test has special build requirements, but we have no info
 
         if self.name == "clang_vs_bare_metal_ct_mask":
-            return build_cfg["cc_macro"] == "CLANG" and "-Os" in build_cfg["cc_compile_flags"]
+            return (
+                build_cfg["cc_macro"] == "CLANG"
+                and "-Os" in build_cfg["cc_compile_flags"]
+            )
 
         raise LookupError(f"Unknown special config test '{self.name}'")
 
     def run(self, exe_path: str, build_config):
-        """ Run the test and return whether it succeeded """
+        """Run the test and return whether it succeeded"""
 
         if not self.runnable(build_config):
             self.status = self.Status.SKIP
@@ -98,15 +105,21 @@ class ValgrindTest:
 
     @staticmethod
     def read_test_list(ct_selftest_test_list: str) -> list[Self]:
-        """ Read the list of tests from the output of `ct_selftest --list`. """
+        """Read the list of tests from the output of `ct_selftest --list`."""
 
-        return [ValgrindTest.from_line(line) for line in ct_selftest_test_list.split("\n")[2:] if line]
+        return [
+            ValgrindTest.from_line(line)
+            for line in ct_selftest_test_list.split("\n")[2:]
+            if line
+        ]
 
 
-def main(): # pylint: disable=missing-function-docstring
+def main():  # pylint: disable=missing-function-docstring
     parser = argparse.ArgumentParser("ct_selftests")
     parser.add_argument("ct_selftest_path", help="Path to the ct_selftest executable")
-    parser.add_argument("--build-config-path", help="Path to Botan's build-config.json file", default="")
+    parser.add_argument(
+        "--build-config-path", help="Path to Botan's build-config.json file", default=""
+    )
 
     args = parser.parse_args()
 
@@ -145,5 +158,5 @@ def main(): # pylint: disable=missing-function-docstring
                 print(test.stderr)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

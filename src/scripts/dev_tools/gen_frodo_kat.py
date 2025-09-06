@@ -19,6 +19,7 @@ import hashlib
 import binascii
 import os
 
+
 class KatReader:
     def __init__(self, file):
         self.file = file
@@ -31,10 +32,10 @@ class KatReader:
             if line == "":
                 return (None, None)
 
-            if line.startswith('#') or line == "\n":
+            if line.startswith("#") or line == "\n":
                 continue
 
-            key, val = line.strip().split(' = ')
+            key, val = line.strip().split(" = ")
 
             return (key, val)
 
@@ -45,19 +46,20 @@ class KatReader:
             key, val = self.next_value()
 
             if key is None:
-                return # eof
+                return  # eof
 
-            if key not in ['count', 'seed', 'pk', 'sk', 'ct', 'ss']:
+            if key not in ["count", "seed", "pk", "sk", "ct", "ss"]:
                 raise Exception("Unknown key %s" % (key))
 
-            if key == 'count':
+            if key == "count":
                 kat[key] = int(val)
             else:
                 kat[key] = val
 
-            if key == 'ss':
+            if key == "ss":
                 yield kat
                 kat = {}
+
 
 def shake_256_16(v):
     # v is assumed to be hex
@@ -65,19 +67,21 @@ def shake_256_16(v):
     h.update(binascii.unhexlify(v))
     return h.hexdigest(16)
 
+
 def compress_kat(kat):
-    del kat['count'] # not needed
+    del kat["count"]  # not needed
 
     # rename keys
-    kat['Seed'] = kat.pop('seed')
-    kat['SS']   = kat.pop('ss')
-    kat['PK']   = shake_256_16(kat.pop('pk'))
-    kat['SK']   = shake_256_16(kat.pop('sk'))
-    kat['CT']   = shake_256_16(kat.pop('ct'))
+    kat["Seed"] = kat.pop("seed")
+    kat["SS"] = kat.pop("ss")
+    kat["PK"] = shake_256_16(kat.pop("pk"))
+    kat["SK"] = shake_256_16(kat.pop("sk"))
+    kat["CT"] = shake_256_16(kat.pop("ct"))
 
     return kat
 
-def map_mode(mode, is_ephemeral = False):
+
+def map_mode(mode, is_ephemeral=False):
     out = None
     if mode == "PQCkemKAT_19888":
         out = "eFrodoKEM-640-AES"
@@ -93,14 +97,15 @@ def map_mode(mode, is_ephemeral = False):
         out = "eFrodoKEM-1344-SHAKE"
 
     if out is None:
-        raise Exception('Unknown FrodoKEM mode', mode)
+        raise Exception("Unknown FrodoKEM mode", mode)
 
     if is_ephemeral:
         return out
     else:
         return out[1:]  # remove 'e' to obtain 'FrodoKEM'
 
-def main(args = None):
+
+def main(args=None):
     """Set True for eFrodo, otherwise the non-ephemeral variant is assumed.
     Necessary because the files have the same name for either variant."""
     is_ephemeral = False
@@ -108,8 +113,11 @@ def main(args = None):
     if args is None:
         args = sys.argv
 
-    with open('src/tests/data/pubkey/frodokem_kat.vec', 'w') as output:
-        print("# This file was auto-generated from the reference implementation's KATs", file=output)
+    with open("src/tests/data/pubkey/frodokem_kat.vec", "w") as output:
+        print(
+            "# This file was auto-generated from the reference implementation's KATs",
+            file=output,
+        )
         print("# See src/scripts/dev_tools/gen_frodo_kat.py\n", file=output)
 
         for file in args[1:]:
@@ -123,8 +131,9 @@ def main(args = None):
                 kat = compress_kat(kat)
 
                 for key in kat.keys():
-                    print(key, '=', kat[key], file=output)
+                    print(key, "=", kat[key], file=output)
                 print("", file=output)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

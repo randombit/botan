@@ -13,6 +13,7 @@ import os
 import zipfile
 import stat
 
+
 def main(args=None):
     if args is None:
         args = sys.argv
@@ -26,26 +27,27 @@ def main(args=None):
     if len(args) == 3:
         output_dir = args[2]
     else:
-        output_dir = ''
+        output_dir = ""
 
     if not os.access(root_dir, os.R_OK):
         print("Error could not access directory '%s'" % (root_dir))
         return 1
 
     for corpus_dir in os.listdir(root_dir):
-        if corpus_dir == '.git':
+        if corpus_dir == ".git":
             continue
         subdir = os.path.join(root_dir, corpus_dir)
         if not stat.S_ISDIR(os.stat(subdir).st_mode):
             continue
 
-        zipfile_path = os.path.join(output_dir, '%s.zip' % (corpus_dir))
-        zf = zipfile.ZipFile(zipfile_path, 'w', zipfile.ZIP_DEFLATED)
+        zipfile_path = os.path.join(output_dir, "%s.zip" % (corpus_dir))
+        zf = zipfile.ZipFile(zipfile_path, "w", zipfile.ZIP_DEFLATED)
         for f in os.listdir(subdir):
             zf.write(os.path.join(subdir, f), f)
         zf.close()
 
     return 0
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

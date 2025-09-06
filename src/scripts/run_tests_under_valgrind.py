@@ -9,12 +9,13 @@ Botan is released under the Simplified BSD License (see license.txt)
 """
 
 import multiprocessing
-import optparse # pylint: disable=deprecated-module
+import optparse  # pylint: disable=deprecated-module
 import subprocess
 import sys
 import time
 
 from multiprocessing.pool import ThreadPool
+
 
 def get_concurrency():
     def_concurrency = 2
@@ -25,22 +26,24 @@ def get_concurrency():
     except ImportError:
         return def_concurrency
 
+
 def available_tests(botan_test):
-    cmd = [botan_test, '--list-tests']
+    cmd = [botan_test, "--list-tests"]
     tests = subprocess.Popen(cmd, close_fds=True, stdout=subprocess.PIPE).communicate()
 
-    return [str(s, encoding='utf8') for s in tests[0].split()]
+    return [str(s, encoding="utf8") for s in tests[0].split()]
+
 
 def run_valgrind(options, test):
-    valgrind_cmd = ['valgrind', '-v', '--error-exitcode=9']
+    valgrind_cmd = ["valgrind", "-v", "--error-exitcode=9"]
 
     if options.with_leak_check:
-        valgrind_cmd += ['--leak-check=full', '--show-reachable=yes']
+        valgrind_cmd += ["--leak-check=full", "--show-reachable=yes"]
 
     if options.track_origins:
-        valgrind_cmd += ['--track-origins=yes']
+        valgrind_cmd += ["--track-origins=yes"]
 
-    botan_test_options = ['--test-threads=1', '--run-memory-intensive-tests']
+    botan_test_options = ["--test-threads=1", "--run-memory-intensive-tests"]
     cmd = valgrind_cmd + [options.test_binary] + botan_test_options + test
 
     start = time.time()
@@ -52,15 +55,19 @@ def run_valgrind(options, test):
         sys.stdout.flush()
 
     if proc.returncode == 0:
-        return True # success
+        return True  # success
 
-    print("FAILED: valgrind testing %s failed with error code %d" % (test, proc.returncode))
-    print(proc.stdout.decode('utf8'))
-    print(proc.stderr.decode('utf8'))
+    print(
+        "FAILED: valgrind testing %s failed with error code %d"
+        % (test, proc.returncode)
+    )
+    print(proc.stdout.decode("utf8"))
+    print(proc.stderr.decode("utf8"))
     return False
 
+
 def filter_tests(available, cmdline, options):
-    skip_tests = sum([x.split(',') for x in options.skip_tests], [])
+    skip_tests = sum([x.split(",") for x in options.skip_tests], [])
 
     to_run = []
 
@@ -68,7 +75,7 @@ def filter_tests(available, cmdline, options):
         if test in skip_tests:
             continue
 
-        if test.startswith('pkcs11'):
+        if test.startswith("pkcs11"):
             continue
 
         if cmdline == [] or test in cmdline:
@@ -76,34 +83,61 @@ def filter_tests(available, cmdline, options):
 
     return to_run
 
-def split_list(list, n):
-    return [list[x:x+n] for x in range(0, len(list), n)]
 
-def main(args = None):
+def split_list(list, n):
+    return [list[x : x + n] for x in range(0, len(list), n)]
+
+
+def main(args=None):
     if args is None:
         args = sys.argv
 
     parser = optparse.OptionParser()
 
-    parser.add_option('--verbose', action='store_true', default=False, help='be noisy')
+    parser.add_option("--verbose", action="store_true", default=False, help="be noisy")
 
-    parser.add_option('--test-binary', metavar='PATH', default='./botan-test',
-                      help='path to botan-test binary')
+    parser.add_option(
+        "--test-binary",
+        metavar="PATH",
+        default="./botan-test",
+        help="path to botan-test binary",
+    )
 
-    parser.add_option('--jobs', metavar='J', default=get_concurrency(),
-                      help='number of jobs to run in parallel (default %default)')
+    parser.add_option(
+        "--jobs",
+        metavar="J",
+        default=get_concurrency(),
+        help="number of jobs to run in parallel (default %default)",
+    )
 
-    parser.add_option('--with-leak-check', action='store_true', default=False,
-                      help='enable full valgrind leak checks')
+    parser.add_option(
+        "--with-leak-check",
+        action="store_true",
+        default=False,
+        help="enable full valgrind leak checks",
+    )
 
-    parser.add_option('--track-origins', action='store_true', default=False,
-                      help='enable origin tracking')
+    parser.add_option(
+        "--track-origins",
+        action="store_true",
+        default=False,
+        help="enable origin tracking",
+    )
 
-    parser.add_option('--skip-tests', metavar='TESTS', default=[], action='append',
-                      help='skip the named tests')
+    parser.add_option(
+        "--skip-tests",
+        metavar="TESTS",
+        default=[],
+        action="append",
+        help="skip the named tests",
+    )
 
-    parser.add_option('--bunch', action='store_true', default=False,
-                      help='run several test suites under each valgrind exec')
+    parser.add_option(
+        "--bunch",
+        action="store_true",
+        default=False,
+        help="run several test suites under each valgrind exec",
+    )
 
     (options, args) = parser.parse_args(args)
 
@@ -134,5 +168,6 @@ def main(args = None):
     else:
         return 0
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

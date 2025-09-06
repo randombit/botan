@@ -19,6 +19,7 @@ from enum import Enum
 SCRIPT_LOCATION = os.path.dirname(os.path.abspath(__file__))
 GDB_EXTENSION = os.path.join(SCRIPT_LOCATION, "gdb", "strubtest.py")
 
+
 class CPU(Enum):
     ANY = "any"
     X86_64 = "x86_64"
@@ -27,15 +28,23 @@ class CPU(Enum):
     @staticmethod
     def current():
         cpu = platform.machine().lower()
-        if cpu in ['x86_64', 'amd64']:
+        if cpu in ["x86_64", "amd64"]:
             return CPU.X86_64
-        elif cpu in ['aarch64', 'arm64']:
+        elif cpu in ["aarch64", "arm64"]:
             return CPU.AARCH64
         else:
             raise ValueError(f"Unsupported or unknown CPU architecture: {cpu}")
 
+
 class StrubTest:
-    def __init__(self, symbol, inferior_cmdline, masked_cpuid_bits = None, cpu = CPU.ANY, expect_fail = False):
+    def __init__(
+        self,
+        symbol,
+        inferior_cmdline,
+        masked_cpuid_bits=None,
+        cpu=CPU.ANY,
+        expect_fail=False,
+    ):
         self.symbol = symbol
         self.inferior_cmdline = inferior_cmdline
         self.masked_cpuid_bits = masked_cpuid_bits
@@ -44,19 +53,32 @@ class StrubTest:
 
     @property
     def gdb_command(self):
-        return ["gdb", "-x", GDB_EXTENSION,
-                       "-ex", f"strubtest {self.symbol}",
-                       "-ex", "run",
-                       "--batch",
-                       "--args", *self.inferior_cmdline]
+        return [
+            "gdb",
+            "-x",
+            GDB_EXTENSION,
+            "-ex",
+            f"strubtest {self.symbol}",
+            "-ex",
+            "run",
+            "--batch",
+            "--args",
+            *self.inferior_cmdline,
+        ]
 
     @property
     def rendered_gdb_command(self):
-        return " ".join([token if " " not in token else f"'{token}'" for token in self.gdb_command])
+        return " ".join(
+            [token if " " not in token else f"'{token}'" for token in self.gdb_command]
+        )
 
     @property
     def environment(self):
-        return {"BOTAN_CLEAR_CPUID": ",".join(self.masked_cpuid_bits)} if self.masked_cpuid_bits else {}
+        return (
+            {"BOTAN_CLEAR_CPUID": ",".join(self.masked_cpuid_bits)}
+            if self.masked_cpuid_bits
+            else {}
+        )
 
     @property
     def rendered_environment(self):
@@ -74,7 +96,12 @@ class StrubTest:
             return self._skip("incompatible platform")
 
         try:
-            proc = subprocess.run(self.gdb_command, capture_output=True, check=False, env=self.rendered_environment)
+            proc = subprocess.run(
+                self.gdb_command,
+                capture_output=True,
+                check=False,
+                env=self.rendered_environment,
+            )
         except subprocess.SubprocessError as ex:
             return self._fail("subprocess failure", exception=ex)
 
@@ -89,12 +116,17 @@ class StrubTest:
         else:
             return self._fail("never invoked", proc_result=proc)
 
-    def _print_debug_report(self, proc_result = None, exception = None):
+    def _print_debug_report(self, proc_result=None, exception=None):
         print(f"    ran: {self.rendered_gdb_command}")
 
         if self.environment:
             print("    Environment:")
-            print(indent("\n".join([f"{k}={v}" for (k,v) in self.environment.items()]), " " * 6))
+            print(
+                indent(
+                    "\n".join([f"{k}={v}" for (k, v) in self.environment.items()]),
+                    " " * 6,
+                )
+            )
         if exception:
             print("    Exception:")
             print(indent(str(exception), " " * 6))
@@ -106,7 +138,7 @@ class StrubTest:
                 print("    stderr:")
                 print(indent(proc_result.stderr.decode("utf-8"), " " * 6))
 
-    def _fail(self, errmsg, proc_result = None, exception = None, may_be_expected = False):
+    def _fail(self, errmsg, proc_result=None, exception=None, may_be_expected=False):
         if may_be_expected and self.expect_fail:
             print(f"{errmsg} (expected)")
             return True
@@ -115,7 +147,7 @@ class StrubTest:
             self._print_debug_report(proc_result=proc_result, exception=exception)
             return False
 
-    def _succeed(self, proc_result = None):
+    def _succeed(self, proc_result=None):
         if not self.expect_fail:
             print("ok")
         else:
@@ -127,14 +159,16 @@ class StrubTest:
         print(f"skipped ({reason})")
         return True
 
-def dummy_file(size = 1024):
+
+def dummy_file(size=1024):
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         temp_file.write(os.urandom(size))
         return temp_file.name
 
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--botan-cli', required=True)
+    parser.add_argument("--botan-cli", required=True)
     args = parser.parse_args()
 
     cli = args.botan_cli
@@ -143,17 +177,37 @@ def main():
     tests = [
         # This is a self-test, it is expected to fail because the version
         # information is naturally not annotated for stack scrubbing.
-        StrubTest("Botan::version_string", [cli, "version", "--full"], expect_fail=True),
-
+        StrubTest(
+            "Botan::version_string", [cli, "version", "--full"], expect_fail=True
+        ),
         # Below is a list of all strub-annotated symbols. Each of these
         # symbols is tested by running the Botan CLI with GDB and checking
         # that the stack scrubbing was performed correctly.
-
-        StrubTest("Botan::SHA_256::compress_digest",          [cli, "hash", "--algo=SHA-256", myfile]),
-        StrubTest("Botan::SHA_256::compress_digest_x86",      [cli, "hash", "--algo=SHA-256", myfile], cpu=CPU.X86_64),
-        StrubTest("Botan::SHA_256::compress_digest_armv8",    [cli, "hash", "--algo=SHA-256", myfile], cpu=CPU.AARCH64),
-        StrubTest("Botan::SHA_256::compress_digest_x86_avx2", [cli, "hash", "--algo=SHA-256", myfile], cpu=CPU.X86_64, masked_cpuid_bits=["intel_sha"]),
-        StrubTest("Botan::SHA_256::compress_digest_x86_simd", [cli, "hash", "--algo=SHA-256", myfile], cpu=CPU.X86_64, masked_cpuid_bits=["intel_sha", "avx2"]),
+        StrubTest(
+            "Botan::SHA_256::compress_digest", [cli, "hash", "--algo=SHA-256", myfile]
+        ),
+        StrubTest(
+            "Botan::SHA_256::compress_digest_x86",
+            [cli, "hash", "--algo=SHA-256", myfile],
+            cpu=CPU.X86_64,
+        ),
+        StrubTest(
+            "Botan::SHA_256::compress_digest_armv8",
+            [cli, "hash", "--algo=SHA-256", myfile],
+            cpu=CPU.AARCH64,
+        ),
+        StrubTest(
+            "Botan::SHA_256::compress_digest_x86_avx2",
+            [cli, "hash", "--algo=SHA-256", myfile],
+            cpu=CPU.X86_64,
+            masked_cpuid_bits=["intel_sha"],
+        ),
+        StrubTest(
+            "Botan::SHA_256::compress_digest_x86_simd",
+            [cli, "hash", "--algo=SHA-256", myfile],
+            cpu=CPU.X86_64,
+            masked_cpuid_bits=["intel_sha", "avx2"],
+        ),
     ]
 
     results = [test.run() for test in tests]
@@ -161,5 +215,6 @@ def main():
 
     return 1 if any(not ok for ok in results) else 0
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

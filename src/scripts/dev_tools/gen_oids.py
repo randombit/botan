@@ -14,21 +14,23 @@ import datetime
 import re
 from jinja2 import Environment, FileSystemLoader
 
+
 # This must match OID::hash_code
 def hash_oid(oid):
-    word_size = 2 ** 64
+    word_size = 2**64
     h = 0x621F302327D9A49A
 
-    for part in map(int, oid.split('.')):
+    for part in map(int, oid.split(".")):
         h = (h * 193) % word_size
         h += part
 
     # This reduction step occurs in static_oids.cpp.in
     return h % 858701
 
+
 # This must match hash_oid_name in static_oids.cpp.in
 def hash_oid_name(name):
-    word_size = 2 ** 64
+    word_size = 2**64
 
     h = 0x8188B31879A4879A
 
@@ -38,8 +40,10 @@ def hash_oid_name(name):
 
     return h % 805289
 
+
 def format_oid(oid):
-    return '{' + oid.replace('.', ', ') + '}'
+    return "{" + oid.replace(".", ", ") + "}"
+
 
 def render_static_oid(m):
     res = []
@@ -47,37 +51,41 @@ def render_static_oid(m):
     name_hashes = {}
     oid_hashes = {}
 
-    for (k, v) in m.items():
-
+    for k, v in m.items():
         # Verify no collisions between any of the values
         oid_hc = hash_oid(v)
         if oid_hc in oid_hashes:
-            raise Exception("Hash collision between %s and %s" % (v, oid_hashes[oid_hc]))
+            raise Exception(
+                "Hash collision between %s and %s" % (v, oid_hashes[oid_hc])
+            )
         oid_hashes[oid_hc] = v
 
         name_hc = hash_oid_name(k)
         if name_hc in name_hashes:
-            raise Exception("Hash collision between %s and %s" % (k, name_hashes[name_hc]))
+            raise Exception(
+                "Hash collision between %s and %s" % (k, name_hashes[name_hc])
+            )
         name_hashes[name_hc] = k
 
-        res.append({ 'oid_hash': oid_hc,
-                     'name_hash': name_hc,
-                     'name': k,
-                     'oid': format_oid(v) })
+        res.append(
+            {"oid_hash": oid_hc, "name_hash": name_hc, "name": k, "oid": format_oid(v)}
+        )
 
     return res
 
-def format_oid_with_name(m):
-    return [ {'name': kv[0], 'oid': format_oid(kv[1])} for kv in m ]
 
-def main(args = None):
+def format_oid_with_name(m):
+    return [{"name": kv[0], "oid": format_oid(kv[1])} for kv in m]
+
+
+def main(args=None):
     """
     Regenerate src/lib/asn1/static_oids.cpp
     """
     if args is None:
         args = sys.argv
 
-    oid_lines = open('./src/build-data/oids.txt', encoding='utf8').readlines()
+    oid_lines = open("./src/build-data/oids.txt", encoding="utf8").readlines()
 
     oid_re = re.compile(r"^([0-9][0-9.]+) += +([A-Za-z0-9_\./\(\), -]+)$")
     hdr_re = re.compile(r"^\[([a-z0-9_]+)\]$")
@@ -92,7 +100,7 @@ def main(args = None):
         if len(line) == 0:
             continue
 
-        if line[0] == '#':
+        if line[0] == "#":
             continue
 
         match = hdr_re.match(line)
@@ -119,16 +127,23 @@ def main(args = None):
 
     env = Environment(loader=FileSystemLoader("src/build-data/templates"))
 
-    with open('./src/lib/asn1/static_oids.cpp', encoding='utf8', mode='w') as static_oids:
+    with open(
+        "./src/lib/asn1/static_oids.cpp", encoding="utf8", mode="w"
+    ) as static_oids:
         template = env.get_template("static_oids.cpp.in")
-        static_oids.write(template.render(script=this_script,
-                                          date=date,
-                                          static_oid_data=render_static_oid(str2oid),
-                                          dup_oids=format_oid_with_name(dup_oids),
-                                          aliases=format_oid_with_name(aliases)))
+        static_oids.write(
+            template.render(
+                script=this_script,
+                date=date,
+                static_oid_data=render_static_oid(str2oid),
+                dup_oids=format_oid_with_name(dup_oids),
+                aliases=format_oid_with_name(aliases),
+            )
+        )
         static_oids.write("\n")
 
     return 0
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

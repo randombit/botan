@@ -9,55 +9,58 @@ on noticeable improvements or regressions in performance.
 """
 
 import json
-import optparse # pylint: disable=deprecated-module
+import optparse  # pylint: disable=deprecated-module
 import sys
 import re
+
 
 def ops_per_second(events, nanos):
     return (events * 1000000000) / nanos
 
+
 def format_pct(r):
-    #assert r > 1
+    # assert r > 1
     return "%.01f%%" % (abs(r - 1) * 100)
+
 
 def parse_perf_report(report):
     if len(report) == 0:
         print("No report data")
         return None
 
-    version = {'version': 'unknown', 'git': 'unknown'}
-    if 'version' in report[0]:
+    version = {"version": "unknown", "git": "unknown"}
+    if "version" in report[0]:
         version = report[0]
 
-        if 'git' in version and version['git'] != 'unknown':
-            version['git'] = version['git'][:12]
+        if "git" in version and version["git"] != "unknown":
+            version["git"] = version["git"][:12]
 
         report = report[1:]
 
     results = []
     for t in report:
-        if 'algo' in t and 'op' in t and 'events' in t and 'nanos' in t:
+        if "algo" in t and "op" in t and "events" in t and "nanos" in t:
+            op = t["op"]
+            if "buf_size" in t:
+                op += " " + str(t["buf_size"]) + " buffer"
 
-            op = t['op']
-            if 'buf_size' in t:
-                op += ' ' + str(t['buf_size']) + ' buffer'
-
-            results.append(((t['algo'], op), ops_per_second(t['events'], t['nanos'])))
+            results.append(((t["algo"], op), ops_per_second(t["events"], t["nanos"])))
         else:
             print("Unexpected record", t)
 
     results = sorted(results, key=lambda r: r[0])
     return (version, results)
 
-def main(args = None):
+
+def main(args=None):
     if args is None:
         args = sys.argv
 
     usage = "usage: %prog [options] base.json compare.json"
     parser = optparse.OptionParser(usage=usage)
 
-    parser.add_option('--limit', default=3, help="set reporting limit (as percent)")
-    parser.add_option('--filter', default='.*', help="filter results by regex")
+    parser.add_option("--limit", default=3, help="set reporting limit (as percent)")
+    parser.add_option("--filter", default=".*", help="filter results by regex")
 
     (options, args) = parser.parse_args(args)
 
@@ -65,20 +68,25 @@ def main(args = None):
         print("Usage: compare_perf.py orig.json new.json")
         return 1
 
-    (ver0, rep0) = parse_perf_report(json.loads(open(args[1], encoding='utf8').read()))
-    (ver1, rep1) = parse_perf_report(json.loads(open(args[2], encoding='utf8').read()))
+    (ver0, rep0) = parse_perf_report(json.loads(open(args[1], encoding="utf8").read()))
+    (ver1, rep1) = parse_perf_report(json.loads(open(args[2], encoding="utf8").read()))
 
     reportable = float(options.limit) / 100
     filter_re = re.compile(options.filter)
 
     def diff(k, a, b):
-        return k in a and k in b and a[k] != b[k] and (a[k] != "unknown" or b[k] != "unknown")
+        return (
+            k in a
+            and k in b
+            and a[k] != b[k]
+            and (a[k] != "unknown" or b[k] != "unknown")
+        )
 
     if ver0 and ver1:
         s = "Diff between "
 
-        diff_version = diff('version', ver0, ver1)
-        diff_git = diff('git', ver0, ver1)
+        diff_version = diff("version", ver0, ver1)
+        diff_git = diff("git", ver0, ver1)
 
         # TODO check/diff the compiler flags
 
@@ -87,11 +95,11 @@ def main(args = None):
         if diff_version or diff_git:
             s += " ("
             if diff_version and diff_git:
-                s += ver0['version'] + " " + ver0['git']
+                s += ver0["version"] + " " + ver0["git"]
             elif diff_version:
-                s += ver0['version']
+                s += ver0["version"]
             elif diff_git:
-                s += ver0['git']
+                s += ver0["git"]
             s += ")"
 
         s += " and " + args[2]
@@ -99,11 +107,11 @@ def main(args = None):
         if diff_version or diff_git:
             s += " ("
             if diff_version and diff_git:
-                s += ver1['version'] + " " + ver1['git']
+                s += ver1["version"] + " " + ver1["git"]
             elif diff_version:
-                s += ver1['version']
+                s += ver1["version"]
             elif diff_git:
-                s += ver1['git']
+                s += ver1["git"]
             s += ")"
 
         s += "\n"
@@ -125,7 +133,7 @@ def main(args = None):
 
         if rep0 != [] and rep1 != []:
             assert rep0[0][0] == rep1[0][0]
-            algo = ' '.join(rep0[0][0])
+            algo = " ".join(rep0[0][0])
 
             if filter_re.search(algo) is not None:
                 orig = rep0[0][1]
@@ -144,19 +152,25 @@ def main(args = None):
             rep0 = rep0[1:]
             rep1 = rep1[1:]
 
-    for (pct, algo) in sorted(speedups, key=lambda v: v[0], reverse=True):
+    for pct, algo in sorted(speedups, key=lambda v: v[0], reverse=True):
         print("+ %s improvement in %s" % (format_pct(pct), algo))
 
-    for (pct, algo) in sorted(slowdowns, key=lambda v: v[0]):
+    for pct, algo in sorted(slowdowns, key=lambda v: v[0]):
         print("- %s regression in %s" % (format_pct(pct), algo))
 
     if data_points > 0:
-        print("\nSummary: over %d tests saw %d speedups and %d slowdowns" % (data_points, len(speedups), len(slowdowns)))
+        print(
+            "\nSummary: over %d tests saw %d speedups and %d slowdowns"
+            % (data_points, len(speedups), len(slowdowns))
+        )
     else:
         print("\nNo data points")
 
     if missing > 0:
-        print("NOTE: there were %d data points in one set but not the other" % (missing))
+        print(
+            "NOTE: there were %d data points in one set but not the other" % (missing)
+        )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

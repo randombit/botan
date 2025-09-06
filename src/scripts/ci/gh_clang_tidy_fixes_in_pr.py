@@ -14,8 +14,15 @@ import sys
 
 import yaml
 
+
 class FileLocation:
-    def __init__(self, line : int, column : int, endline : int | None = None, endcolumn : int | None = None):
+    def __init__(
+        self,
+        line: int,
+        column: int,
+        endline: int | None = None,
+        endcolumn: int | None = None,
+    ):
         self.line = line
         self.column = column
         self.endline = endline
@@ -27,24 +34,22 @@ class FileLocation:
 
 class Diagnostic:
     @staticmethod
-    def read_diagnostics_from(yaml_file : str):
+    def read_diagnostics_from(yaml_file: str):
         with open(yaml_file, encoding="utf-8") as yml:
             fixes = yaml.load(yml, Loader=yaml.FullLoader)
             if "Diagnostics" not in fixes:
                 raise RuntimeError(f"No Diagnostics found in {yaml_file}")
             return [Diagnostic(diag) for diag in fixes["Diagnostics"]]
 
-
-    def __map_file_path(self, file_path, base_path): # pylint: disable=unused-argument
+    def __map_file_path(self, file_path, base_path):  # pylint: disable=unused-argument
         if file_path.endswith(".h"):
             # This only works for symlink builds, which is sufficient for CI reporting
             return os.path.realpath(file_path)
 
         return file_path
 
-
-    def __map_file_offset(self, offset : int) -> tuple[int, int]:
-        """ For self.file determine the (line, column) given a byte offset """
+    def __map_file_offset(self, offset: int) -> tuple[int, int]:
+        """For self.file determine the (line, column) given a byte offset"""
         with open(self.file, encoding="utf-8") as srcfile:
             readoffset = 0
             lineoffset = 0
@@ -56,17 +61,20 @@ class Diagnostic:
                     return (lineoffset, coloffset)
         raise RuntimeError(f"FileOffset {offset} out of range for {self.file}")
 
-
     def __map_file_location(self, msg):
-        """ For self.file determine the specified error range of the message """
+        """For self.file determine the specified error range of the message"""
         location = self.__map_file_offset(msg["FileOffset"])
         if "Ranges" in msg and len(msg["Ranges"]) == 1:
-            the_range = msg ["Ranges"][0]
-            if the_range["FilePath"] == msg["FilePath"] and the_range["FileOffset"] == msg["FileOffset"]:
-                endlocation = self.__map_file_offset(the_range["FileOffset"] + the_range["Length"])
+            the_range = msg["Ranges"][0]
+            if (
+                the_range["FilePath"] == msg["FilePath"]
+                and the_range["FileOffset"] == msg["FileOffset"]
+            ):
+                endlocation = self.__map_file_offset(
+                    the_range["FileOffset"] + the_range["Length"]
+                )
                 return FileLocation(*location, *endlocation)
         return FileLocation(*location)
-
 
     def __init__(self, yaml_diag):
         self.name = yaml_diag["DiagnosticName"]
@@ -77,22 +85,22 @@ class Diagnostic:
         self.location = self.__map_file_location(msg)
 
 
-def render_as_github_annotations(diagnostics : list[Diagnostic]):
-    def map_level(level : str) -> str:
+def render_as_github_annotations(diagnostics: list[Diagnostic]):
+    def map_level(level: str) -> str:
         if level == "Error":
             return "error"
         elif level == "Warning":
             return "warning"
         else:
-            return "notice" # fallback: likely never used
+            return "notice"  # fallback: likely never used
 
-    def render_location(location : FileLocation) -> str:
+    def render_location(location: FileLocation) -> str:
         linemarkers = [f"line={location.line}"]
         colmarkers = [f"col={location.column}"]
         if location.has_range():
             linemarkers += [f"endLine={location.endline}"]
             colmarkers += [f"endColumn={location.endcolumn}"]
-        return ','.join(linemarkers + colmarkers)
+        return ",".join(linemarkers + colmarkers)
 
     def render_message(msg: str) -> str:
         return msg.replace("\n", " - ")
@@ -105,9 +113,11 @@ def render_as_github_annotations(diagnostics : list[Diagnostic]):
 
 
 def main():
-    parser = argparse.ArgumentParser(prog="ClangTidy Decoder",
-                                     description="Parses ClangTidy YAML output and emits GitHub Workflow commands")
-    parser.add_argument('directory')
+    parser = argparse.ArgumentParser(
+        prog="ClangTidy Decoder",
+        description="Parses ClangTidy YAML output and emits GitHub Workflow commands",
+    )
+    parser.add_argument("directory")
     args = parser.parse_args()
 
     diagnostics = []
@@ -116,5 +126,6 @@ def main():
 
     render_as_github_annotations(diagnostics)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     sys.exit(main())

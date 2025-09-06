@@ -15,9 +15,9 @@ import os
 import sys
 import unittest
 
-sys.path.append("../..") # Botan repo root
-from install import prepend_destdir # pylint: disable=wrong-import-position
-from install import PrependDestdirError # pylint: disable=wrong-import-position
+sys.path.append("../..")  # Botan repo root
+from install import prepend_destdir  # pylint: disable=wrong-import-position
+from install import PrependDestdirError  # pylint: disable=wrong-import-position
 
 
 class PrependDestdir(unittest.TestCase):
@@ -62,6 +62,6 @@ class PrependDestdir(unittest.TestCase):
             prepend_destdir("/foo/../..")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.TestCase.longMessage = True
     unittest.main()

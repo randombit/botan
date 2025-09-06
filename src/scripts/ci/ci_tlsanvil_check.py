@@ -20,7 +20,7 @@ result_level = {
 
 
 def expected_result_for(method_id: str):
-    """ Get the expected result for a given test id """
+    """Get the expected result for a given test id"""
     allowed_to_conceptually_succeed = {
         # Okay: RFC does not specifically define an alert. Bogo Test expects an DecodeError Alert
         #   while TLS-Anvil expects an IllegalParameter Alert. We use the DecodeError Alert.
@@ -30,7 +30,7 @@ def expected_result_for(method_id: str):
     # TODO: Analyze partially failing tests and document if/why they are allowed to fail
     allowed_to_partially_fail = {
         "server.tls12.statemachine.StateMachine.earlyChangeCipherSpec",
-        "server.tls12.rfc7568.DoNotUseSSLVersion30.sendClientHelloVersion0300RecordVersion"
+        "server.tls12.rfc7568.DoNotUseSSLVersion30.sendClientHelloVersion0300RecordVersion",
     }
 
     # TODO: Analyze failing tests and document if/why they are allowed to fail
@@ -43,7 +43,7 @@ def expected_result_for(method_id: str):
         "server.tls12.rfc8422.TLSExtensionForECC.rejectsInvalidCurvePoints",
         "server.tls12.rfc5246.ClientHello.leaveOutExtensions",
         "server.tls12.rfc5246.E1CompatibilityWithTLS10_11andSSL30.acceptAnyRecordVersionNumber",
-        "both.tls13.rfc8446.KeyUpdate.appDataUnderNewKeysSucceeds"
+        "both.tls13.rfc8446.KeyUpdate.appDataUnderNewKeysSucceeds",
     }
 
     if method_id in allowed_to_fully_fail:
@@ -67,39 +67,63 @@ def test_result_valid(method_id: str, result: str):
 
     expected_res = expected_result_for(method_id)
     if result_level[result] < expected_res:
-        logging.warning("Warning: Test result better than expected for '%s'. Consider tighten the expectation.", method_id)
+        logging.warning(
+            "Warning: Test result better than expected for '%s'. Consider tighten the expectation.",
+            method_id,
+        )
 
     return result_level[result] <= expected_result_for(method_id)
 
 
 def failing_test_info(json_data, method_id) -> str:
-    """ Print debug information about a failing test """
+    """Print debug information about a failing test"""
     info_str = ""
     try:
-        method_class, method_name = method_id.rsplit('.', 1)
+        method_class, method_name = method_id.rsplit(".", 1)
         info = [f"Error: {method_id} - Unexpected result '{json_data['Result']}'"]
         info += [""]
         info += [f"Class Name: 'de.rub.nds.tlstest.suite.tests.{method_class}'"]
         info += [f"Method Name: '{method_name}'"]
         info += [""]
-        if json_data['TestMethod']['RFC'] is not None:
-            info += [ f"RFC {json_data['TestMethod']['RFC']['number']}, Section {json_data['TestMethod']['RFC']['Section']}:"]
+        if json_data["TestMethod"]["RFC"] is not None:
+            info += [
+                f"RFC {json_data['TestMethod']['RFC']['number']}, Section {json_data['TestMethod']['RFC']['Section']}:"
+            ]
         else:
             info += ["Custom Test Case:"]
         info += [f"{json_data['TestMethod']['Description']}"]
         info += [""]
 
-        info += [f"Result: {json_data['Result']} (expected {list(result_level.keys())[list(result_level.values()).index(expected_result_for(method_id))]})"]
-        if json_data['DisabledReason'] is not None:
+        info += [
+            f"Result: {json_data['Result']} (expected {list(result_level.keys())[list(result_level.values()).index(expected_result_for(method_id))]})"
+        ]
+        if json_data["DisabledReason"] is not None:
             info += [f"Disabled Reason: {json_data['DisabledReason']}"]
 
+        additional_res_info = list(
+            {
+                state["AdditionalResultInformation"]
+                for state in json_data["States"]
+                if state["AdditionalResultInformation"] != ""
+            }
+        )
+        additional_test_info = list(
+            {
+                state["AdditionalTestInformation"]
+                for state in json_data["States"]
+                if state["AdditionalTestInformation"] != ""
+            }
+        )
+        state_result = [{state["Result"] for state in json_data["States"]}]
 
-        additional_res_info = list({state["AdditionalResultInformation"] for state in json_data['States'] if state["AdditionalResultInformation"] != ""})
-        additional_test_info = list({state["AdditionalTestInformation"] for state in json_data['States'] if state["AdditionalTestInformation"] != ""})
-        state_result = [{state["Result"] for state in json_data['States']}]
-
-        if len(state_result) > 1 or len(additional_res_info) > 1 or len(additional_test_info) > 1:
-            info += ["Different results for different states. See test results artifact for more information."]
+        if (
+            len(state_result) > 1
+            or len(additional_res_info) > 1
+            or len(additional_test_info) > 1
+        ):
+            info += [
+                "Different results for different states. See test results artifact for more information."
+            ]
 
         if len(additional_res_info) == 1:
             info += ["", f"Additional Result Info: {additional_res_info[0]}"]
@@ -111,7 +135,9 @@ def failing_test_info(json_data, method_id) -> str:
         info_str = "\n".join(info)
 
         # Color in red
-        info_str = "\n".join([f"\033[0;31m{line}\033[0m" for line in info_str.split("\n")])
+        info_str = "\n".join(
+            [f"\033[0;31m{line}\033[0m" for line in info_str.split("\n")]
+        )
 
         # In GitHub Actions logging group
         info_str = f"::group::{info_str}\n::endgroup::"
