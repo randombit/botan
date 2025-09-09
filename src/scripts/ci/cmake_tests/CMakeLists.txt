@@ -131,4 +131,15 @@ endif()
 unset(Botan_FOUND)
 unset(botan_FOUND)
 
+# test #11: use backward-compatibility ALIAS targets
+#           (Assuming that we use at least CMake 3.18, otherwise that might fail)
+find_package(Botan REQUIRED)
+if(Botan_FOUND)
+  if(NOT TARGET Botan::Botan AND NOT TARGET Botan::Botan-static)
+    message(FATAL_ERROR "Test #11 didn't find the expected backward-compatibility ALIAS target")
+  endif()
+endif()
+
+unset(Botan_FOUND)
+
 enable_testing()
