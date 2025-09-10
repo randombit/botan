@@ -2,27 +2,19 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Configure (gcc)",
-            "detail": "Default ./configure.py invocation for gcc. Run your own if you want.",
+            "label": "Configure",
+            "detail": "Default ./configure.py invocation. Run your own if you want.",
             "group": "build",
             "type": "shell",
-            "command": "python3 ./configure.py --cc gcc --compiler-cache=ccache --build-tool=ninja --without-documentation --debug-mode --build-targets=\"static,tests,bogo_shim\"",
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared",
-                "close": false
-            }
-        },
-        {
-            "label": "Configure (msvc)",
-            "detail": "Default ./configure.py invocation for msvc. Run your own if you want.",
-            "group": "build",
-            "type": "shell",
-            "shell": {
-                "args": [
-                ]
+            "linux": {
+                "command": "./configure.py --compiler-cache=ccache --build-tool=ninja --without-documentation --debug-mode --build-targets=\"static,tests,cli,bogo_shim\""
             },
-            "command": "python ./configure.py --cc msvc --compiler-cache=sccache.exe --build-tool=ninja --link-method=hardlink --without-documentation --debug-mode --build-targets=\"static,tests\"",
+            "osx": {
+                "command": "./configure.py --compiler-cache=ccache --build-tool=ninja --without-documentation --debug-mode --build-targets=\"static,tests,cli\""
+            },
+            "windows": {
+                "command": "./configure.py --compiler-cache=sccache.exe --build-tool=ninja --link-method=hardlink --without-documentation --debug-mode --build-targets=\"static,tests,cli\"",
+            },
             "presentation": {
                 "reveal": "always",
                 "panel": "shared",
@@ -31,14 +23,18 @@
         },
         {
             "label": "Build All",
-            "group": "build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "type": "shell",
+            "dependsOn": "Configure",
             "linux": {
-                "command": "make -j $(nproc)",
+                "command": "ninja",
                 "problemMatcher": "$gcc"
             },
             "osx": {
-                "command": "make -j $(sysctl -n hw.logicalcpu)",
+                "command": "ninja",
                 "problemMatcher": "$gcc"
             },
             "windows": {
@@ -55,90 +51,53 @@
             "label": "Build Unittests",
             "group": "build",
             "type": "shell",
+            "dependsOn": "Configure",
             "linux": {
-                "command": "make -j $(nproc) tests"
+                "command": "ninja tests",
+                "problemMatcher": "$gcc"
             },
             "osx": {
-                "command": "make -j $(sysctl -n hw.logicalcpu) tests"
+                "command": "ninja tests",
+                "problemMatcher": "$gcc"
+            },
+            "windows": {
+                "command": "ninja tests",
+                "problemMatcher": "$msCompile"
             },
             "presentation": {
                 "reveal": "always",
                 "panel": "shared",
                 "close": false
             },
-            "problemMatcher": "$gcc"
         },
         {
             "label": "Build BoGo Shim",
             "group": "build",
             "type": "shell",
+            "dependsOn": "Configure",
             "linux": {
-                "command": "make -j $(nproc) bogo_shim"
+                "command": "ninja bogo_shim",
+                "problemMatcher": "$gcc"
             },
             "osx": {
-                "command": "make -j $(sysctl -n hw.logicalcpu) bogo_shim"
+                "command": "ninja bogo_shim",
+                "problemMatcher": "$gcc"
             },
             "presentation": {
                 "reveal": "always",
                 "panel": "shared",
                 "close": true
             },
-            "problemMatcher": "$gcc"
         },
         {
             "label": "Run Unittests",
-            "detail": "run all unittests",
-            "group": "test",
-            "type": "shell",
-            "command": "python3 ${workspaceFolder}/src/editors/vscode/scripts/test.py",
-            "dependsOn": "Build Unittests",
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared",
-                "close": false
+            "detail": "opportunistically runs the currently open unit test file or all unit tests",
+            "group": {
+                "kind": "test",
+                "isDefault": true
             },
-            "problemMatcher": [
-                {
-                    "owner": "cpp",
-                    "pattern": {
-                        "regexp": "^Failure \\d+: (.+Internal error: False assertion .*) @(.*):(.*)$",
-                        "message": 1,
-                        "file": 2,
-                        "line": 3,
-                        "column": 0,
-                        "endColumn": 0
-                    }
-                },
-                {
-                    "owner": "cpp",
-                    "pattern": {
-                        "regexp": "Failure \\d+: (.*) \\(at ([^:]+):(\\d+)\\)",
-                        "message": 1,
-                        "file": 2,
-                        "line": 3,
-                        "column": 0,
-                        "endColumn": 0
-                    }
-                },
-                {
-                    "owner": "cpp",
-                    "pattern": {
-                        "regexp": "Failure \\d+: (.*)",
-                        "message": 1,
-                        "file": 0,
-                        "line": 0,
-                        "column": 0,
-                        "endColumn": 0
-                    }
-                }
-            ]
-        },
-        {
-            "label": "Run Current Unittest File",
-            "detail": "run the unittest file that is currently in focus",
-            "group": "test",
             "type": "shell",
-            "command": "python3 ${workspaceFolder}/src/editors/vscode/scripts/test.py ${relativeFile}",
+            "command": "${workspaceFolder}/src/editors/vscode/scripts/test.py ${relativeFile}",
             "dependsOn": "Build Unittests",
             "presentation": {
                 "reveal": "always",
@@ -185,7 +144,7 @@
             "label": "Run BoGo Tests",
             "group": "test",
             "type": "shell",
-            "command": "python3 ${workspaceFolder}/src/editors/vscode/scripts/bogo.py",
+            "command": "${workspaceFolder}/src/editors/vscode/scripts/bogo.py",
             "dependsOn": "Build BoGo Shim",
             "presentation": {
                 "reveal": "always",
@@ -206,6 +165,18 @@
                     }
                 ]
             }
-        }
+        },
+        {
+            "label": "List Unittests",
+            "detail": "Lists all available unit tests",
+            "group": "test",
+            "type": "shell",
+            "command": "${workspaceFolder}/src/editors/vscode/scripts/test.py --list ${relativeFile}",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "close": false
+            }
+        },
     ]
 }
