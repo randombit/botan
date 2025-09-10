@@ -55,6 +55,9 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "limbo" ]; then
         wget -nv "https://raw.githubusercontent.com/C2SP/x509-limbo/${LIMBO_TEST_SUITE_REVISION}/limbo.json" -O "${SCRIPT_LOCATION}/../../../limbo.json"
 
+    elif [ "$TARGET" = "lint" ]; then
+        pip install ruff
+
     elif [ "$TARGET" = "typos" ]; then
         cargo install typos-cli
 
