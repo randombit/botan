@@ -732,7 +732,7 @@ Certificate_Status_Code PKIX::build_all_certificate_paths(std::vector<std::vecto
 
    while(!stack.empty()) {
       std::optional<X509_Certificate> last = stack.back().first;
-      // found a deletion marker that guides the DFS, backtracing
+      // found a deletion marker that guides the DFS, backtracking
       if(last == std::nullopt) {
          stack.pop_back();
          std::string fprint = path_so_far.back().fingerprint("SHA-256");
@@ -791,7 +791,7 @@ Certificate_Status_Code PKIX::build_all_certificate_paths(std::vector<std::vecto
          path_so_far.push_back(*last);
          certs_seen.emplace(fprint);
 
-         // push a deletion marker on the stack for backtracing later
+         // push a deletion marker on the stack for backtracking later
          stack.push_back({std::optional<X509_Certificate>(), false});
 
          for(const auto& trusted_cert : trusted_issuers) {
