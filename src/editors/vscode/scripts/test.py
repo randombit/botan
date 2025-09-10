@@ -2,43 +2,57 @@
 
 import os
 import re
-import sys
+import argparse
+import glob
 
 import common
-
 
 TESTS_DIR = "src/tests"
 
 
-def get_test_names_from(test_file):
+def discover_tests_in_file(test_file):
     if not os.path.dirname(test_file) == TESTS_DIR:
-        raise common.BuildError(
-            'Given file path is not a Botan unit test: ' + test_file)
+        return []
 
     with open(test_file, 'r', encoding='utf-8') as f:
         find_test_registration = \
             re.compile(
-                r'BOTAN_REGISTER_TEST(_FN)?\s*\(\s*\"(.+)\",\s*\"(.+)\",[^)]+\)')
+                r'BOTAN_REGISTER_[A-Z_]*TEST(_FN)?\s*\(\s*\"(.+)\",\s*\"(.+)\",[^)]+\)')
 
         matches = find_test_registration.findall(f.read())
-        tests = [match[-1] for match in matches]
+        return [match[-1] for match in matches]
 
-    if not tests:
-        raise common.BuildError(
-            'Failed to find a BOTAN_REGISTER_TEST in the given test file: ' + test_file)
+def discover_tests(args):
+    tests = []
+    if args.test_src_file:
+        tests = discover_tests_in_file(args.test_src_file)
 
-    return tests
+    if args.list and not tests:
+        # Apparently 'test_src_file' didn't contain any tests, lets
+        # go ahead and discover all unit tests in the src/tests dir.
+        test_files = glob.glob(os.path.join(TESTS_DIR, '*.cpp'), recursive=False)
+        for test_file in test_files:
+            tests += discover_tests_in_file(test_file)
 
+    return sorted(set(tests))
 
 def main():
     test_binary = os.path.join('.', common.get_test_binary_name())
+    args = argparse.ArgumentParser(description='Run Botan tests')
+    args.add_argument('--list', action='store_true', default=False, help='List all available tests')
+    args.add_argument('test_src_file', nargs='?', help='Path to the test source file')
+    parsed_args = args.parse_args()
 
-    if len(sys.argv) == 2:
-        test_src_file = sys.argv[1]
-        test_names = get_test_names_from(test_src_file)
-        common.run_cmd("%s %s" % (test_binary, ' '.join(test_names)))
-    else:
-        common.run_cmd(test_binary)
+    discovered_tests = discover_tests(parsed_args)
+
+    if parsed_args.list:
+        print("\n".join(discovered_tests))
+        return
+
+    if not parsed_args.test_src_file:
+        discovered_tests.clear()
+
+    common.run_cmd(" ".join([test_binary, *discovered_tests]))
 
 
 if __name__ == '__main__':
