@@ -384,6 +384,7 @@ Certificate_Status_Code BOTAN_PUBLIC_API(3, 10)
 * @param end_entity_extra optional list of additional untrusted certs for path building
 * @return result of the path building operation (OK or error)
 */
+BOTAN_DEPRECATED("Use build_all_certificate_paths")
 Certificate_Status_Code BOTAN_PUBLIC_API(2, 0)
    build_certificate_path(std::vector<X509_Certificate>& cert_path_out,
                           const std::vector<Certificate_Store*>& trusted_certstores,

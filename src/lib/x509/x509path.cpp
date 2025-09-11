@@ -181,22 +181,23 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
          }
       }
 
-      // Only warn, if trust anchor is not in time range if configured this way
-      const bool is_trust_anchor_and_time_ignored = restrictions.ignore_trusted_root_time_range() && at_trust_anchor;
+      // If so configured, allow trust anchors outside the validity period with
+      // a warning rather than a hard error
+      const bool enforce_validity_period = !at_trust_anchor || !restrictions.ignore_trusted_root_time_range();
       // Check all certs for valid time range
       if(validation_time < subject.not_before()) {
-         if(is_trust_anchor_and_time_ignored) {
-            status.insert(Certificate_Status_Code::TRUSTED_CERT_NOT_YET_VALID);  // only warn
-         } else {
+         if(enforce_validity_period) {
             status.insert(Certificate_Status_Code::CERT_NOT_YET_VALID);
+         } else {
+            status.insert(Certificate_Status_Code::TRUSTED_CERT_NOT_YET_VALID);  // only warn
          }
       }
 
       if(validation_time > subject.not_after()) {
-         if(is_trust_anchor_and_time_ignored) {
-            status.insert(Certificate_Status_Code::TRUSTED_CERT_HAS_EXPIRED);  // only warn
-         } else {
+         if(enforce_validity_period) {
             status.insert(Certificate_Status_Code::CERT_HAS_EXPIRED);
+         } else {
+            status.insert(Certificate_Status_Code::TRUSTED_CERT_HAS_EXPIRED);  // only warn
          }
       }
 
@@ -884,10 +885,10 @@ Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& e
    // If we require trust anchors to be self-signed we need to filter all paths
    // not ending in a self-signed certificate.
    if(restrictions.require_self_signed_trust_anchors()) {
-      std::erase_if(cert_paths,
-                    [&](const auto& cert_path) {  //
-                       return cert_path.empty() || !cert_path.back().is_self_signed();
-                    });
+      auto has_non_self_signed_trust_anchor = [](const auto& cert_path) {
+         return cert_path.empty() || !cert_path.back().is_self_signed();
+      };
+      std::erase_if(cert_paths, has_non_self_signed_trust_anchor);
    }
    if(cert_paths.empty()) {
       return Path_Validation_Result(Certificate_Status_Code::CANNOT_ESTABLISH_TRUST);
