@@ -33,10 +33,8 @@ void Module::reload(C_InitializeArgs init_args) {
    if(m_low_level) {
       m_low_level->C_Finalize(nullptr);
    }
-
    m_library = std::make_unique<Dynamically_Loaded_Library>(m_file_path);
-   LowLevel::C_GetFunctionList(*m_library, &m_func_list);
-   m_low_level = std::make_unique<LowLevel>(m_func_list);
+   m_low_level = std::make_unique<LowLevel>(InterfaceWrapper::latest_p11_interface(*m_library));
 
    m_low_level->C_Initialize(&init_args);
 }

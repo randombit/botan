@@ -16,7 +16,8 @@ or HSM specific code for each device they want to support.
 
    .. note::
 
-     The Botan PKCS#11 interface is implemented against version v2.40 of the standard.
+     The Botan PKCS#11 interface is implemented against version v3.2 of the standard.
+     Versions 2.40 upto 3.2 are supported, but only the 3.2 headers are shipped with Botan.
 
 Botan wraps the C PKCS#11 API to provide a C++ PKCS#11 interface. This is done
 in two levels of abstraction: a low level API (see :ref:`pkcs11_low_level`) and
@@ -39,7 +40,7 @@ Low Level API
 The PKCS#11 standards committee provides header files (``pkcs11.h``, ``pkcs11f.h`` and
 ``pkcs11t.h``) which define the PKCS#11 API in the C programming language. These
 header files could be used directly to access PKCS#11 compatible smart cards or
-HSMs. The external header files are shipped with Botan in version v2.4 of the standard. The PKCS#11 low
+HSMs. The external header files are shipped with Botan in version v3.2 of the standard. The PKCS#11 low
 level API wraps the original PKCS#11 API, but still allows to access all functions described in the
 standard and has the advantage that it is a C++ interface with features like RAII, exceptions
 and automatic memory management.
