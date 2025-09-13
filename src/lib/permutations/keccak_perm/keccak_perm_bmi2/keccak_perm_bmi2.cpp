@@ -22,8 +22,8 @@ void Keccak_Permutation::permute_bmi2() {
    uint64_t T[25];
 
    for(size_t i = 0; i != 24; i += 2) {
-      Keccak_Permutation_round(T, m_S.data(), RC[i + 0]);
-      Keccak_Permutation_round(m_S.data(), T, RC[i + 1]);
+      Keccak_Permutation_round(T, state().data(), RC[i + 0]);
+      Keccak_Permutation_round(state().data(), T, RC[i + 1]);
    }
 }
 
