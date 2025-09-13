@@ -35,7 +35,7 @@ class Sponge {
       };
 
    public:
-      constexpr explicit Sponge(Config config) : m_S(config.initial_state), m_S_cursor(0), m_bit_rate(config.bit_rate) {
+      consteval explicit Sponge(Config config) : m_S(config.initial_state), m_S_cursor(0), m_bit_rate(config.bit_rate) {
          if(m_bit_rate % (sizeof(word) * 8) != 0 || m_bit_rate > words * sizeof(word) * 8) {
             throw Botan::Invalid_Argument("Invalid sponge bit rate");
          }

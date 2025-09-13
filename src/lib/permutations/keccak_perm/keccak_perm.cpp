@@ -30,11 +30,6 @@ std::string Keccak_Permutation::provider() const {
    return "base";
 }
 
-void Keccak_Permutation::clear() {
-   state() = {};
-   reset_cursor();
-}
-
 void Keccak_Permutation::absorb(std::span<const uint8_t> input) {
    absorb_into_sponge(*this, input);
 }

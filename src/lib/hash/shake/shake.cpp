@@ -12,8 +12,10 @@
 
 namespace Botan {
 
-SHAKE_128::SHAKE_128(size_t output_bits) :
-      m_keccak({.capacity_bits = 256, .padding = KeccakPadding::shake()}), m_output_bits(output_bits) {
+constexpr auto shake128_permutation = Keccak_Permutation({.capacity_bits = 256, .padding = KeccakPadding::shake()});
+constexpr auto shake256_permutation = Keccak_Permutation({.capacity_bits = 512, .padding = KeccakPadding::shake()});
+
+SHAKE_128::SHAKE_128(size_t output_bits) : m_keccak(shake128_permutation), m_output_bits(output_bits) {
    if(output_bits % 8 != 0) {
       throw Invalid_Argument(fmt("SHAKE_128: Invalid output length {}", output_bits));
    }
@@ -21,6 +23,10 @@ SHAKE_128::SHAKE_128(size_t output_bits) :
 
 std::string SHAKE_128::name() const {
    return fmt("SHAKE-128({})", m_output_bits);
+}
+
+void SHAKE_128::clear() {
+   m_keccak = shake128_permutation;
 }
 
 std::unique_ptr<HashFunction> SHAKE_128::new_object() const {
@@ -41,8 +47,7 @@ void SHAKE_128::final_result(std::span<uint8_t> output) {
    clear();
 }
 
-SHAKE_256::SHAKE_256(size_t output_bits) :
-      m_keccak({.capacity_bits = 512, .padding = KeccakPadding::shake()}), m_output_bits(output_bits) {
+SHAKE_256::SHAKE_256(size_t output_bits) : m_keccak(shake256_permutation), m_output_bits(output_bits) {
    if(output_bits % 8 != 0) {
       throw Invalid_Argument(fmt("SHAKE_256: Invalid output length {}", output_bits));
    }
@@ -50,6 +55,10 @@ SHAKE_256::SHAKE_256(size_t output_bits) :
 
 std::string SHAKE_256::name() const {
    return fmt("SHAKE-256({})", m_output_bits);
+}
+
+void SHAKE_256::clear() {
+   m_keccak = shake256_permutation;
 }
 
 std::unique_ptr<HashFunction> SHAKE_256::new_object() const {

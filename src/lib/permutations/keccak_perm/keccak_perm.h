@@ -65,10 +65,9 @@ class Keccak_Permutation final : public Sponge<25, uint64_t> {
         *
         * @param config Keccak parameter configuration
         */
-      constexpr explicit Keccak_Permutation(Config config) :
+      consteval explicit Keccak_Permutation(Config config) :
             Sponge({.bit_rate = state_bits() - config.capacity_bits, .initial_state = {}}), m_padding(config.padding) {}
 
-      void clear();
       std::string provider() const;
 
       /**
