@@ -10,8 +10,7 @@
 #ifndef BOTAN_KECCAK_PERM_H_
 #define BOTAN_KECCAK_PERM_H_
 
-#include <botan/exceptn.h>
-#include <botan/secmem.h>
+#include <botan/internal/sponge.h>
 #include <span>
 #include <string>
 
@@ -53,7 +52,7 @@ struct KeccakPadding {
 *       https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf#page=28
 * [2] https://csrc.nist.gov/projects/hash-functions/sha-3-project
 */
-class Keccak_Permutation final {
+class Keccak_Permutation final : public Sponge<25, uint64_t> {
    public:
       struct Config {
             size_t capacity_bits;
@@ -66,23 +65,8 @@ class Keccak_Permutation final {
         *
         * @param config Keccak parameter configuration
         */
-      explicit Keccak_Permutation(Config config) :
-            m_capacity(config.capacity_bits),
-            m_byterate((1600 - m_capacity) / 8),
-            m_padding(config.padding),
-            m_S(25, 0),
-            m_S_inpos(0),
-            m_S_outpos(0) {
-         if(m_capacity >= 1600 || m_capacity % 64 != 0) {
-            throw Botan::Invalid_Argument("Invalid Keccak capacity");
-         }
-      }
-
-      size_t capacity() const { return m_capacity; }
-
-      size_t bit_rate() const { return m_byterate * 8; }
-
-      size_t byte_rate() const { return m_byterate; }
+      constexpr explicit Keccak_Permutation(Config config) :
+            Sponge({.bit_rate = state_bits() - config.capacity_bits, .initial_state = {}}), m_padding(config.padding) {}
 
       void clear();
       std::string provider() const;
@@ -110,20 +94,18 @@ class Keccak_Permutation final {
       */
       void finish();
 
-   private:
+      /**
+       * The Keccak permutation function
+       */
       void permute();
 
+   private:
 #if defined(BOTAN_HAS_KECCAK_PERM_BMI2)
       void permute_bmi2();
 #endif
 
    private:
-      const size_t m_capacity;
-      const size_t m_byterate;
       KeccakPadding m_padding;
-      secure_vector<uint64_t> m_S;
-      uint8_t m_S_inpos;
-      uint8_t m_S_outpos;
 };
 
 }  // namespace Botan
