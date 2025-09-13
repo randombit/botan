@@ -21,17 +21,6 @@
 
 namespace Botan {
 
-Keccak_Permutation::Keccak_Permutation(size_t capacity, uint64_t custom_padding, uint8_t custom_padding_bit_len) :
-      m_capacity(capacity),
-      m_byterate((1600 - capacity) / 8),
-      m_custom_padding(custom_padding),
-      m_custom_padding_bit_len(custom_padding_bit_len),
-      m_S(25),  // 1600 bit
-      m_S_inpos(0),
-      m_S_outpos(0) {
-   BOTAN_ARG_CHECK(capacity % 64 == 0, "capacity must be a multiple of 64");
-}
-
 std::string Keccak_Permutation::provider() const {
 #if defined(BOTAN_HAS_KECCAK_PERM_BMI2)
    if(auto feat = CPUID::check(CPUID::Feature::BMI)) {
@@ -113,13 +102,30 @@ void Keccak_Permutation::squeeze(std::span<uint8_t> output) {
 }
 
 void Keccak_Permutation::finish() {
-   // append the first bit of the final padding after the custom padding
-   uint8_t init_pad = static_cast<uint8_t>(m_custom_padding | uint64_t(1) << m_custom_padding_bit_len);
-   m_S[m_S_inpos / 8] ^= static_cast<uint64_t>(init_pad) << (8 * (m_S_inpos % 8));
+   // The padding for Keccak[c]-based functions spans the entire remaining
+   // byterate until the next permute() call. At most that could be an entire
+   // byterate. First are a few bits of "custom" padding defined by the using
+   // function (e.g. SHA-3 uses "01"), then the remaining space is filled with
+   // "pad10*1" (see NIST FIPS 202 Section 5.1) followed by a final permute().
 
-   // final bit of the padding of the last block
-   m_S[(m_byterate / 8) - 1] ^= static_cast<uint64_t>(0x80) << 56;
+   // Apply the custom padding + the left-most 1-bit of "pad10*1" to the current
+   // (partial) word of the sponge state
+   const uint64_t start_of_padding = (m_padding.padding | uint64_t(1) << m_padding.bit_len);
+   m_S[m_S_inpos / 8] ^= start_of_padding << (8 * (m_S_inpos % 8));
 
+   // XOR'ing the 0-bits of "pad10*1" into the state is a NOOP
+
+   // If the custom padding + the left-most 1-bit of "pad10*1" had resulted in a
+   // byte-aligned "partial padding", the final 1-bit of of "pad10*1" could
+   // potentially override parts of the already-appended "start_of_padding".
+   // In case we ever introduce a Keccak-based function with such a need, we
+   // have to modify this padding algorithm.
+   BOTAN_DEBUG_ASSERT(m_padding.bit_len % 8 != 7);
+
+   // Append the final bit of "pad10*1" into the last word of the input range
+   m_S[(m_byterate / 8) - 1] ^= uint64_t(0x8000000000000000);
+
+   // Perform the final permutation
    permute();
 }
 

@@ -18,7 +18,9 @@
 namespace Botan {
 
 cSHAKE_XOF::cSHAKE_XOF(size_t capacity, std::vector<uint8_t> function_name) :
-      m_keccak(capacity, 0b00, 2), m_function_name(std::move(function_name)), m_output_generated(false) {
+      m_keccak({.capacity_bits = capacity, .padding = KeccakPadding::cshake()}),
+      m_function_name(std::move(function_name)),
+      m_output_generated(false) {
    BOTAN_ASSERT_NOMSG(capacity == 256 || capacity == 512);
 }
 
