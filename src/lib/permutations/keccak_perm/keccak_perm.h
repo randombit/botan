@@ -2,7 +2,7 @@
 * Keccak Permutation
 * (C) 2010,2016 Jack Lloyd
 * (C) 2023 Falko Strenzke
-* (C) 2023 René Meusel - Rohde & Schwarz Cybersecurity
+* (C) 2023,2025 René Meusel - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,11 +10,28 @@
 #ifndef BOTAN_KECCAK_PERM_H_
 #define BOTAN_KECCAK_PERM_H_
 
-#include <botan/secmem.h>
+#include <botan/internal/sponge.h>
 #include <span>
 #include <string>
 
 namespace Botan {
+
+struct KeccakPadding {
+      uint64_t padding;  /// The padding bits in little-endian order
+      uint8_t bit_len;   /// The number of relevant bits in 'padding'
+
+      /// NIST FIPS 202 Section 6.1
+      static constexpr KeccakPadding sha3() { return {.padding = 0b10 /* little-endian */, .bit_len = 2}; }
+
+      /// NIST FIPS 202 Section 6.2
+      static constexpr KeccakPadding shake() { return {.padding = 0b1111, .bit_len = 4}; }
+
+      /// NIST SP.800-185 Section 3.3
+      static constexpr KeccakPadding cshake() { return {.padding = 0b00, .bit_len = 2}; }
+
+      /// Keccak submission, prior to the introduction of an algorithm specific padding
+      static constexpr KeccakPadding keccak1600() { return {.padding = 0, .bit_len = 0}; }
+};
 
 /**
 * KECCAK FIPS
@@ -35,24 +52,21 @@ namespace Botan {
 *       https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf#page=28
 * [2] https://csrc.nist.gov/projects/hash-functions/sha-3-project
 */
-class Keccak_Permutation final {
+class Keccak_Permutation final : public Sponge<25, uint64_t> {
+   public:
+      struct Config {
+            size_t capacity_bits;
+            KeccakPadding padding;
+      };
+
    public:
       /**
         * @brief Instantiate a Keccak permutation
         *
-        * The @p custom_padding is assumed to be init_pad || 00... || fini_pad
-        *
-        * @param capacity_bits Keccak capacity
-        * @param custom_padding the custom bit padding that is to be appended on the call to finish
-        * @param custom_padding_bit_len the bit length of the custom_padding
+        * @param config Keccak parameter configuration
         */
-      Keccak_Permutation(size_t capacity_bits, uint64_t custom_padding, uint8_t custom_padding_bit_len);
-
-      size_t capacity() const { return m_capacity; }
-
-      size_t bit_rate() const { return m_byterate * 8; }
-
-      size_t byte_rate() const { return m_byterate; }
+      constexpr explicit Keccak_Permutation(Config config) :
+            Sponge({.bit_rate = state_bits() - config.capacity_bits, .initial_state = {}}), m_padding(config.padding) {}
 
       void clear();
       std::string provider() const;
@@ -80,21 +94,18 @@ class Keccak_Permutation final {
       */
       void finish();
 
-   private:
+      /**
+       * The Keccak permutation function
+       */
       void permute();
 
+   private:
 #if defined(BOTAN_HAS_KECCAK_PERM_BMI2)
       void permute_bmi2();
 #endif
 
    private:
-      const size_t m_capacity;
-      const size_t m_byterate;
-      const uint64_t m_custom_padding;
-      const uint8_t m_custom_padding_bit_len;
-      secure_vector<uint64_t> m_S;
-      uint8_t m_S_inpos;
-      uint8_t m_S_outpos;
+      KeccakPadding m_padding;
 };
 
 }  // namespace Botan
