@@ -34,7 +34,7 @@ class SHAKE_128 final : public HashFunction {
       std::unique_ptr<HashFunction> copy_state() const override;
       std::string name() const override;
 
-      void clear() override { m_keccak.clear(); }
+      void clear() override;
 
       std::string provider() const override { return m_keccak.provider(); }
 
@@ -65,7 +65,7 @@ class SHAKE_256 final : public HashFunction {
       std::unique_ptr<HashFunction> copy_state() const override;
       std::string name() const override;
 
-      void clear() override { m_keccak.clear(); }
+      void clear() override;
 
       std::string provider() const override { return m_keccak.provider(); }
 
