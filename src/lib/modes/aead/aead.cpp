@@ -39,6 +39,10 @@
    #include <botan/internal/siv.h>
 #endif
 
+#if defined(BOTAN_HAS_ASCON_AEAD128)
+   #include <botan/internal/ascon_aead128.h>
+#endif
+
 namespace Botan {
 
 std::unique_ptr<AEAD_Mode> AEAD_Mode::create_or_throw(std::string_view algo,
@@ -59,6 +63,16 @@ std::unique_ptr<AEAD_Mode> AEAD_Mode::create(std::string_view algo, Cipher_Dir d
          return std::make_unique<ChaCha20Poly1305_Encryption>();
       } else {
          return std::make_unique<ChaCha20Poly1305_Decryption>();
+      }
+   }
+#endif
+
+#if defined(BOTAN_HAS_ASCON_AEAD128)
+   if(algo == "Ascon-AEAD128") {
+      if(dir == Cipher_Dir::Encryption) {
+         return std::make_unique<Ascon_AEAD128_Encryption>();
+      } else {
+         return std::make_unique<Ascon_AEAD128_Decryption>();
       }
    }
 #endif
