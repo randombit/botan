@@ -106,6 +106,17 @@ class XOF_Tests final : public Text_Based_Test {
             result.test_eq("generated output", xof->output_stdvec(expected.size()), expected);
             result.confirm("object does not accept input after first output", !xof->accepts_input());
 
+            // input and output (overwriting existing data)
+            // -> regression test where the buffer content was inadvertently
+            //    xor'ed into the state. Fine with zero-buffer not so fine with
+            //    random buffer -.-
+            xof->clear();
+            xof->start(salt, key);
+            xof->update(in);
+            auto nonzero_data = rng().random_vec(expected.size());
+            xof->output(nonzero_data);
+            result.test_eq("generated output (overwriting existing data)", nonzero_data, expected);
+
             // if not necessary, invoking start() should be optional
             if(salt.empty() && key.empty()) {
                xof->clear();
