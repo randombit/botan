@@ -350,6 +350,27 @@ Both ChaCha20Poly1305 and AES with GCM are widely implemented. SIV is somewhat
 more obscure (and is slower than either GCM or ChaCha20Poly1305), but has
 excellent security properties.
 
+Ascon-AEAD128
+~~~~~~~~~~~~~
+
+Available if ``BOTAN_HAS_ASCON_AEAD128`` is defined.
+
+An AEAD scheme based on the Ascon permutation, specifically designed to allow
+small footprint implementations. Its main use case is in constrained
+environments, such as IoT devices where traditional cryptographic functions
+may be too resource intensive.
+
+Unless you are interoperating with an existing device which due to resource
+constraints can only use Ascon, prefer more typical AEADs such as AES-256/GCM,
+AES-256/SIV, or ChaCha20Poly1305.
+
+This AEAD scheme is standardized by NIST in SP.800-232. It is not compatible
+with earlier versions of the Ascon specification. The current implementation
+does not provide explicit support for the tag truncation and nonce masking
+features specified in the standard.
+
+Algorithm specification name: ``Ascon-AEAD128``
+
 CCM
 ~~~~~
 

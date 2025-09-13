@@ -45,8 +45,8 @@ namespace Botan {
 * <dt>Public Key Interface Classes<dd>
 *        PK_Key_Agreement, PK_Signer, PK_Verifier, PK_Encryptor, PK_Decryptor, PK_KEM_Encryptor, PK_KEM_Decryptor
 * <dt>Authenticated Encryption Modes<dd>
-*        @ref CCM_Mode "CCM", @ref ChaCha20Poly1305_Mode "ChaCha20Poly1305", @ref EAX_Mode "EAX",
-*        @ref GCM_Mode "GCM", @ref OCB_Mode "OCB", @ref SIV_Mode "SIV"
+*        @ref Ascon_AEAD128 "Ascon-AEAD128" @ref CCM_Mode "CCM", @ref ChaCha20Poly1305_Mode "ChaCha20Poly1305",
+*        @ref EAX_Mode "EAX", @ref GCM_Mode "GCM", @ref OCB_Mode "OCB", @ref SIV_Mode "SIV"
 * <dt>Block Ciphers<dd>
 *        @ref aria.h "ARIA", @ref aes.h "AES", @ref Blowfish, @ref camellia.h "Camellia", @ref Cascade_Cipher "Cascade",
 *        @ref CAST_128 "CAST-128", @ref CAST_128 DES, @ref TripleDES "3DES",
