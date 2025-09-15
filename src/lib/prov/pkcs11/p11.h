@@ -3777,6 +3777,59 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
                        ReturnValue* return_value = ThrowException) const;
 
       /**
+       * C_WrapKeyAuthenticated wraps (i.e. encrypts) a private or secret key.
+       *
+       * @param session session's handle
+       * @param mechanism_ptr wrapping mechanism
+       * @param wrapping_key wrapping key
+       * @param key key to be wrapped
+       * @param associated_data_ptr associated data for an AEAD mechanism
+       * @param associated_data_len length of the associated data
+       * @param wrapped_key_ptr gets the wrapped key
+       * @param wrapped_key_len_ptr gets the length of the wrapped key
+       * @param return_value default value (`ThrowException`): throw exception on error
+       * @return true on success, false otherwise
+       */
+      bool C_WrapKeyAuthenticated(SessionHandle session,
+                                  const Mechanism* mechanism_ptr,
+                                  ObjectHandle wrapping_key,
+                                  ObjectHandle key,
+                                  const Byte* associated_data_ptr,
+                                  Ulong associated_data_len,
+                                  Byte* wrapped_key_ptr,
+                                  Ulong* wrapped_key_len_ptr,
+                                  ReturnValue* return_value = ThrowException) const;
+
+      /**
+       * C_UnwrapKeyAuthenticated unwraps (i.e. decrypts) a wrapped key,
+       * creating a new private key or secret key object.
+       *
+       * @param session session's handle
+       * @param mechanism_ptr unwrapping mechanism
+       * @param unwrapping_key unwrapping key
+       * @param wrapped_key_ptr wrapped key
+       * @param wrapped_key_len length of the wrapped key
+       * @param attribute_template_ptr new key template
+       * @param attribute_count template length
+       * @param associated_data_ptr associated data for an AEAD mechanism
+       * @param associated_data_len length of the associated data
+       * @param key_ptr gets new key handle
+       * @param return_value default value (`ThrowException`): throw exception on error
+       * @return true on success, false otherwise
+       */
+      bool C_UnwrapKeyAuthenticated(SessionHandle session,
+                                    const Mechanism* mechanism_ptr,
+                                    ObjectHandle unwrapping_key,
+                                    const Byte* wrapped_key_ptr,
+                                    Ulong wrapped_key_len,
+                                    Attribute* attribute_template_ptr,
+                                    Ulong attribute_count,
+                                    const Byte* associated_data_ptr,
+                                    Ulong associated_data_len,
+                                    ObjectHandle* key_ptr,
+                                    ReturnValue* return_value = ThrowException) const;
+
+      /**
        * C_EncapulateKey creates a new secret key object from a public key using a
        * KEM.
        *
@@ -3785,9 +3838,9 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @param public_key the encapsulating key
        * @param template_ptr new key template
        * @param attribute_count template length
-       * @param key_ptr the encapsulated key
        * @param ciphertext_ptr the wrapped key
        * @param ciphertext_len_ptr the wrapped key size
+       * @param key_ptr the encapsulated key
        * @param return_value default value (`ThrowException`): throw exception on error
        * @return true on success, false otherwise
        */
@@ -3796,9 +3849,9 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
                             ObjectHandle public_key,
                             Attribute* template_ptr,
                             Ulong attribute_count,
-                            ObjectHandle* key_ptr,
                             Byte* ciphertext_ptr,
                             Ulong* ciphertext_len_ptr,
+                            ObjectHandle* key_ptr,
                             ReturnValue* return_value = ThrowException);
 
       /**
@@ -3812,10 +3865,10 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @param session the session's handle
        * @param mechanism_ptr the decapsulation mechanism
        * @param private_key the decapsulating key
-       * @param ciphertext_ptr the wrapped key
-       * @param ciphertext_len the wrapped key size
        * @param template_ptr new key template
        * @param attribute_count template length
+       * @param ciphertext_ptr the wrapped key
+       * @param ciphertext_len the wrapped key size
        * @param key_ptr the decapsulated key
        * @param return_value default value (`ThrowException`): throw exception on error
        * @return true on success, false otherwise
@@ -3823,10 +3876,10 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       bool C_DecapsulateKey(SessionHandle session,
                             const Mechanism* mechanism_ptr,
                             ObjectHandle private_key,
-                            const Byte* ciphertext_ptr,
-                            Ulong ciphertext_len,
                             Attribute* template_ptr,
                             Ulong attribute_count,
+                            const Byte* ciphertext_ptr,
+                            Ulong ciphertext_len,
                             ObjectHandle* key_ptr,
                             ReturnValue* return_value = ThrowException);
 

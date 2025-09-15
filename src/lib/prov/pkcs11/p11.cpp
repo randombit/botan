@@ -1073,42 +1073,88 @@ bool LowLevel::C_DeriveKey(SessionHandle session,
       return_value);
 }
 
+bool LowLevel::C_WrapKeyAuthenticated(SessionHandle session,
+                                      const Mechanism* mechanism_ptr,
+                                      ObjectHandle wrapping_key,
+                                      ObjectHandle key,
+                                      const Byte* associated_data_ptr,
+                                      Ulong associated_data_len,
+                                      Byte* wrapped_key_ptr,
+                                      Ulong* wrapped_key_len_ptr,
+                                      ReturnValue* return_value) const {
+   return handle_return_value(
+      m_interface_wrapper->func_3_2().C_WrapKeyAuthenticated(session,
+                                                             const_cast<Mechanism*>(mechanism_ptr),
+                                                             wrapping_key,
+                                                             key,
+                                                             const_cast<Byte*>(associated_data_ptr),
+                                                             associated_data_len,
+                                                             wrapped_key_ptr,
+                                                             wrapped_key_len_ptr),
+      return_value);
+}
+
+bool LowLevel::C_UnwrapKeyAuthenticated(SessionHandle session,
+                                        const Mechanism* mechanism_ptr,
+                                        ObjectHandle unwrapping_key,
+                                        const Byte* wrapped_key_ptr,
+                                        Ulong wrapped_key_len,
+                                        Attribute* attribute_template_ptr,
+                                        Ulong attribute_count,
+                                        const Byte* associated_data_ptr,
+                                        Ulong associated_data_len,
+                                        ObjectHandle* key_ptr,
+                                        ReturnValue* return_value) const {
+   return handle_return_value(
+      m_interface_wrapper->func_3_2().C_UnwrapKeyAuthenticated(session,
+                                                               const_cast<Mechanism*>(mechanism_ptr),
+                                                               unwrapping_key,
+                                                               const_cast<Byte*>(wrapped_key_ptr),
+                                                               wrapped_key_len,
+                                                               attribute_template_ptr,
+                                                               attribute_count,
+                                                               const_cast<Byte*>(associated_data_ptr),
+                                                               associated_data_len,
+                                                               key_ptr),
+      return_value);
+}
+
 bool LowLevel::C_EncapsulateKey(SessionHandle session,
                                 const Mechanism* mechanism_ptr,
                                 ObjectHandle public_key,
                                 Attribute* template_ptr,
                                 Ulong attribute_count,
-                                ObjectHandle* key_ptr,
                                 Byte* ciphertext_ptr,
                                 Ulong* ciphertext_len_ptr,
+                                ObjectHandle* key_ptr,
                                 ReturnValue* return_value) {
    return handle_return_value(m_interface_wrapper->func_3_2().C_EncapsulateKey(session,
                                                                                const_cast<Mechanism*>(mechanism_ptr),
                                                                                public_key,
                                                                                template_ptr,
                                                                                attribute_count,
-                                                                               key_ptr,
                                                                                ciphertext_ptr,
-                                                                               ciphertext_len_ptr),
+                                                                               ciphertext_len_ptr,
+                                                                               key_ptr),
                               return_value);
 }
 
 bool LowLevel::C_DecapsulateKey(SessionHandle session,
                                 const Mechanism* mechanism_ptr,
                                 ObjectHandle private_key,
-                                const Byte* ciphertext_ptr,
-                                Ulong ciphertext_len,
                                 Attribute* template_ptr,
                                 Ulong attribute_count,
+                                const Byte* ciphertext_ptr,
+                                Ulong ciphertext_len,
                                 ObjectHandle* key_ptr,
                                 ReturnValue* return_value) {
    return handle_return_value(m_interface_wrapper->func_3_2().C_DecapsulateKey(session,
                                                                                const_cast<Mechanism*>(mechanism_ptr),
                                                                                private_key,
-                                                                               const_cast<Byte*>(ciphertext_ptr),
-                                                                               ciphertext_len,
                                                                                template_ptr,
                                                                                attribute_count,
+                                                                               const_cast<Byte*>(ciphertext_ptr),
+                                                                               ciphertext_len,
                                                                                key_ptr),
                               return_value);
 }
