@@ -40,7 +40,9 @@ Low Level API
 The PKCS#11 standards committee provides header files (``pkcs11.h``, ``pkcs11f.h`` and
 ``pkcs11t.h``) which define the PKCS#11 API in the C programming language. These
 header files could be used directly to access PKCS#11 compatible smart cards or
-HSMs. The external header files are shipped with Botan in version v3.2 of the standard. The PKCS#11 low
+HSMs. A public domain variant of these header files is shipped with Botan in
+version v3.2 of the standard. This variant is interchangeable with the original
+v3.2 header files of OASIS. The PKCS#11 low
 level API wraps the original PKCS#11 API, but still allows to access all functions described in the
 standard and has the advantage that it is a C++ interface with features like RAII, exceptions
 and automatic memory management.

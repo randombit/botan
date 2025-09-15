@@ -42,6 +42,7 @@
 
 // NOLINTEND(*-macro-usage,*-macro-parentheses)
 
+#define PKCS11_DEPRECATED  // also use deprecated PKCS #11 symbols
 #include <pkcs11.h>
 
 #if defined(_MSC_VER)
