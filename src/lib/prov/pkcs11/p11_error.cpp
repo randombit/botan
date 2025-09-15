@@ -220,6 +220,8 @@ std::string to_string(ReturnValue return_val) {
          return "operation violates token validation policies";
       case ReturnValue::TokenNotInitialized:
          return "token needs initialization";
+      case ReturnValue::ParameterSetNotSupported:
+         return "parameter set not supported";
       case ReturnValue::VendorDefined:
          return "vendor defined error";
    }

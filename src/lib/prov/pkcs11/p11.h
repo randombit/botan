@@ -197,7 +197,7 @@ enum class AttributeType : CK_ATTRIBUTE_TYPE {
    HssLmotsTypes = CKA_HSS_LMOTS_TYPES,
    HssKeysRemaining = CKA_HSS_KEYS_REMAINING,
    ParameterSet = CKA_PARAMETER_SET,
-   ValidationFlags = CKA_VALIDATION_FLAGS,
+   ObjectValidationFlags = CKA_OBJECT_VALIDATION_FLAGS,
    ValidationType = CKA_VALIDATION_TYPE,
    ValidationVersion = CKA_VALIDATION_VERSION,
    ValidationLevel = CKA_VALIDATION_LEVEL,
@@ -207,7 +207,7 @@ enum class AttributeType : CK_ATTRIBUTE_TYPE {
    ValidationCountry = CKA_VALIDATION_COUNTRY,
    ValidationCertificateIdentifier = CKA_VALIDATION_CERTIFICATE_IDENTIFIER,
    ValidationCertificateUri = CKA_VALIDATION_CERTIFICATE_URI,
-   ValidationVendor = CKA_VALIDATION_VENDOR,
+   ValidationVendorUri = CKA_VALIDATION_VENDOR_URI,
    ValidationProfile = CKA_VALIDATION_PROFILE,
    EncapsulateTemplate = CKA_ENCAPSULATE_TEMPLATE,
    DecapsulateTemplate = CKA_DECAPSULATE_TEMPLATE,
@@ -221,6 +221,8 @@ enum class AttributeType : CK_ATTRIBUTE_TYPE {
    Encapsulate = CKA_ENCAPSULATE,
    Decapsulate = CKA_DECAPSULATE,
    HashOfCertificate = CKA_HASH_OF_CERTIFICATE,
+   PublicCrc64Value = CKA_PUBLIC_CRC64_VALUE,
+   Seed = CKA_SEED,
    VendorDefined = CKA_VENDOR_DEFINED,
 };
 
@@ -233,11 +235,55 @@ enum class CertificateType : CK_CERTIFICATE_TYPE {
 
 /// Indicates if a stored certificate is a user certificate for which the corresponding private key is available
 /// on the token ("token user"), a CA certificate ("authority"), or another end-entity certificate ("other entity").
-enum class CertificateCategory : CK_ULONG {
+enum class CertificateCategory : CK_CERTIFICATE_CATEGORY {
    Unspecified = CK_CERTIFICATE_CATEGORY_UNSPECIFIED,
    TokenUser = CK_CERTIFICATE_CATEGORY_TOKEN_USER,
    Authority = CK_CERTIFICATE_CATEGORY_AUTHORITY,
    OtherEntity = CK_CERTIFICATE_CATEGORY_OTHER_ENTITY
+};
+
+enum class OtpParamType : CK_OTP_PARAM_TYPE {
+   OtpValue = CK_OTP_VALUE,
+   OtpPin = CK_OTP_PIN,
+   OtpChallenge = CK_OTP_CHALLENGE,
+   OtpTime = CK_OTP_TIME,
+   OtpCounter = CK_OTP_COUNTER,
+   OtpFlags = CK_OTP_FLAGS,
+   OtpOutputLength = CK_OTP_OUTPUT_LENGTH,
+   OtpOutputFormat = CK_OTP_OUTPUT_FORMAT,
+};
+
+enum class OtpFormat : CK_ULONG {
+   OtpFormatDecimal = CK_OTP_FORMAT_DECIMAL,
+   OtpFormatHexadecimal = CK_OTP_FORMAT_HEXADECIMAL,
+   OtpFormatAlphanumeric = CK_OTP_FORMAT_ALPHANUMERIC,
+   OtpFormatBinary = CK_OTP_FORMAT_BINARY,
+};
+
+enum class OtpChallengeRequirement : CK_ULONG {
+   OtpParamIgnored = CK_OTP_PARAM_IGNORED,
+   OtpParamOptional = CK_OTP_PARAM_OPTIONAL,
+   OtpParamMandatory = CK_OTP_PARAM_MANDATORY,
+};
+
+enum class JavaMidpSecurityDomain : CK_JAVA_MIDP_SECURITY_DOMAIN {
+   SecurityDomainUnspecified = CK_SECURITY_DOMAIN_UNSPECIFIED,
+   SecurityDomainManufacturer = CK_SECURITY_DOMAIN_MANUFACTURER,
+   SecurityDomainOperator = CK_SECURITY_DOMAIN_OPERATOR,
+   SecurityDomainThirdParty = CK_SECURITY_DOMAIN_THIRD_PARTY,
+};
+
+enum class PrfDataType : CK_PRF_DATA_TYPE {
+   Sp800_108IterationVariable = CK_SP800_108_ITERATION_VARIABLE,
+   Sp800_108Counter = CK_SP800_108_COUNTER,
+   Sp800_108DkmLength = CK_SP800_108_DKM_LENGTH,
+   Sp800_108ByteArray = CK_SP800_108_BYTE_ARRAY,
+   Sp800_108KeyHandle = CK_SP800_108_KEY_HANDLE,
+};
+
+enum class Sp800_108DkmLengthMethod : CK_SP800_108_DKM_LENGTH_METHOD {
+   Sp800_108DkmLengthSumOfKeys = CK_SP800_108_DKM_LENGTH_SUM_OF_KEYS,
+   Sp800_108DkmLengthSumOfSegments = CK_SP800_108_DKM_LENGTH_SUM_OF_SEGMENTS,
 };
 
 enum class KeyDerivation : CK_ULONG {
@@ -350,6 +396,14 @@ inline Flag operator|(Flag a, Flag b) {
    return static_cast<Flag>(static_cast<CK_FLAGS>(a) | static_cast<CK_FLAGS>(b));
 }
 
+enum class GeneratorFunction : CK_GENERATOR_FUNCTION {
+   NoGenerate = CKG_NO_GENERATE,
+   Generate = CKG_GENERATE,
+   GenerateCounter = CKG_GENERATE_COUNTER,
+   GenerateRandom = CKG_GENERATE_RANDOM,
+   GenerateCounterXor = CKG_GENERATE_COUNTER_XOR,
+};
+
 enum class MGF : CK_RSA_PKCS_MGF_TYPE {
    MgfUnused = 0,
    Mgf1Sha1 = CKG_MGF1_SHA1,
@@ -368,6 +422,12 @@ enum class HardwareType : CK_HW_FEATURE_TYPE {
    Clock = CKH_CLOCK,
    UserInterface = CKH_USER_INTERFACE,
    VendorDefined = CKH_VENDOR_DEFINED,
+};
+
+enum class HedgeType : CK_HEDGE_TYPE {
+   HedgePreferred = CKH_HEDGE_PREFERRED,
+   HedgeRequired = CKH_HEDGE_REQUIRED,
+   DeterministicRequired = CKH_DETERMINISTIC_REQUIRED,
 };
 
 enum class KeyType : CK_KEY_TYPE {
@@ -806,7 +866,7 @@ enum class MechanismType : CK_MECHANISM_TYPE {
    DhPkcsParameterGen = CKM_DH_PKCS_PARAMETER_GEN,
    X942DhParameterGen = CKM_X9_42_DH_PARAMETER_GEN,
    DsaProbablisticParameterGen = CKM_DSA_PROBABLISTIC_PARAMETER_GEN,  // TODO(Botan4) remove this typo
-   DsaProbabilisticParameterGen = CKM_DSA_PROBABLISTIC_PARAMETER_GEN,
+   DsaProbabilisticParameterGen = CKM_DSA_PROBABILISTIC_PARAMETER_GEN,
    DsaShaweTaylorParameterGen = CKM_DSA_SHAWE_TAYLOR_PARAMETER_GEN,
    DsaFipsGGen = CKM_DSA_FIPS_G_GEN,
    AesOfb = CKM_AES_OFB,
@@ -940,6 +1000,17 @@ enum class ObjectClass : CK_OBJECT_CLASS {
    VendorDefined = CKO_VENDOR_DEFINED,
 };
 
+enum class ProfileId : CK_PROFILE_ID {
+   InvalidId = CKP_INVALID_ID,
+   BaselineProvider = CKP_BASELINE_PROVIDER,
+   ExtendedProvider = CKP_EXTENDED_PROVIDER,
+   AuthenticationToken = CKP_AUTHENTICATION_TOKEN,
+   PublicCertificatesToken = CKP_PUBLIC_CERTIFICATES_TOKEN,
+   CompleteProvider = CKP_COMPLETE_PROVIDER,
+   HkdfTlsToken = CKP_HKDF_TLS_TOKEN,
+   VendorDefined = CKP_VENDOR_DEFINED,
+};
+
 enum class PseudoRandom : CK_PKCS5_PBKD2_PSEUDO_RANDOM_FUNCTION_TYPE {
    Pkcs5Pbkd2HmacSha1 = CKP_PKCS5_PBKD2_HMAC_SHA1,
    Pkcs5Pbkd2HmacGostr3411 = CKP_PKCS5_PBKD2_HMAC_GOSTR3411,
@@ -984,6 +1055,18 @@ enum class SessionState : CK_STATE {
    RwPublicSession = CKS_RW_PUBLIC_SESSION,
    RwUserFunctions = CKS_RW_USER_FUNCTIONS,
    RwSoFunctions = CKS_RW_SO_FUNCTIONS,
+};
+
+enum class SessionValidationFlagsType : CK_SESSION_VALIDATION_FLAGS_TYPE {
+   LastValidationOk = CKS_LAST_VALIDATION_OK,
+};
+
+enum class Trust : CK_TRUST {
+   TrustUnknown = CKT_TRUST_UNKNOWN,
+   Trusted = CKT_TRUSTED,
+   TrustAnchor = CKT_TRUST_ANCHOR,
+   NotTrusted = CKT_NOT_TRUSTED,
+   TrustMustVerifyTrust = CKT_TRUST_MUST_VERIFY_TRUST,
 };
 
 enum class ReturnValue : CK_RV {
@@ -1090,6 +1173,7 @@ enum class ReturnValue : CK_RV {
    SeedRandomRequired = CKR_SEED_RANDOM_REQUIRED,
    OperationNotValidated = CKR_OPERATION_NOT_VALIDATED,
    TokenNotInitialized = CKR_TOKEN_NOT_INITIALIZED,
+   ParameterSetNotSupported = CKR_PARAMETER_SET_NOT_SUPPORTED,
    VendorDefined = CKR_VENDOR_DEFINED,
 };
 
@@ -1097,6 +1181,20 @@ enum class UserType : CK_USER_TYPE {
    SO = CKU_SO,
    User = CKU_USER,
    ContextSpecific = CKU_CONTEXT_SPECIFIC,
+};
+
+enum class ValidationAuthorityType : CK_VALIDATION_AUTHORITY_TYPE {
+   AuthorityTypeUnspecified = CKV_AUTHORITY_TYPE_UNSPECIFIED,
+   AuthorityTypeNistCmvp = CKV_AUTHORITY_TYPE_NIST_CMVP,
+   AuthorityTypeCommonCriteria = CKV_AUTHORITY_TYPE_COMMON_CRITERIA,
+};
+
+enum class ValidationType : CK_VALIDATION_TYPE {
+   TypeUnspecified = CKV_TYPE_UNSPECIFIED,
+   TypeSoftware = CKV_TYPE_SOFTWARE,
+   TypeHardware = CKV_TYPE_HARDWARE,
+   TypeFirmware = CKV_TYPE_FIRMWARE,
+   TypeHybrid = CKV_TYPE_HYBRID,
 };
 
 enum class PublicPointEncoding : uint32_t { Raw, Der };
