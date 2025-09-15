@@ -304,7 +304,6 @@ enum class Flag : CK_FLAGS {
    MessageSign = CKF_MESSAGE_SIGN,
    MessageVerify = CKF_MESSAGE_VERIFY,
    MultiMessage = CKF_MULTI_MESSAGE,
-   MultiMessge = CKF_MULTI_MESSGE,
    FindObjects = CKF_FIND_OBJECTS,
    Encrypt = CKF_ENCRYPT,
    Decrypt = CKF_DECRYPT,
@@ -1231,7 +1230,7 @@ class BOTAN_PUBLIC_API(3, 7) InterfaceWrapper {
       virtual const FunctionList32& func_3_2() const;
 
       /// Find the latest supported "PKCS 11" interface. Fork safe interfaces
-      /// are prefered over non fork safe ones of the same version.
+      /// are preferred over non fork safe ones of the same version.
       static std::unique_ptr<InterfaceWrapper> latest_p11_interface(Dynamically_Loaded_Library& library);
 
       /**

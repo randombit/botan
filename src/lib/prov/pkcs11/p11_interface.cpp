@@ -101,8 +101,8 @@ std::unique_ptr<InterfaceWrapper> InterfaceWrapper::latest_p11_interface(Dynamic
    }
 
    // We prioritize valid interfaces the following way:
-   // Higher versions are prefered over lower ones. If multiple interfaces of
-   // the highest version exist, fork safe interfaces are prefered.
+   // Higher versions are preferred over lower ones. If multiple interfaces of
+   // the highest version exist, fork safe interfaces are preferred.
    auto priority_comparator = [](const Interface& left, const Interface& right) {
       Version left_version = version_of(left);
       Version right_version = version_of(right);
