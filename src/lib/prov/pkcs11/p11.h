@@ -1302,7 +1302,7 @@ class BOTAN_PUBLIC_API(3, 7) InterfaceWrapper {
 
    public:
       /// Basic constructor using an interface.
-      InterfaceWrapper(Interface raw_interface);
+      explicit InterfaceWrapper(Interface raw_interface);
 
       InterfaceWrapper(const InterfaceWrapper&) = default;
       InterfaceWrapper& operator=(const InterfaceWrapper&) = default;
@@ -1317,7 +1317,7 @@ class BOTAN_PUBLIC_API(3, 7) InterfaceWrapper {
       Version version() const;
 
       /// Access the name of the interface
-      std::basic_string_view<Utf8Char> name() const;
+      std::span<const Utf8Char> name() const;
 
       /// Access a function list that contains all methods since PKCS #11 v.2.40
       virtual const FunctionList& func_2_40() const;

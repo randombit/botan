@@ -18,8 +18,9 @@ namespace Botan::PKCS11 {
 
 namespace {
 
-constexpr std::array<Utf8Char, 8> PKCS11_INTERFACE_NAME_ARR = {"PKCS 11"};
-constexpr std::basic_string_view<Utf8Char> PKCS11_INTERFACE_NAME(PKCS11_INTERFACE_NAME_ARR.data());
+constexpr std::array<Utf8Char, 8> PKCS11_INTERFACE_NAME_ARR = {"PKCS 11"};  // including \0
+const std::span<const Utf8Char> PKCS11_INTERFACE_NAME(PKCS11_INTERFACE_NAME_ARR.data(),
+                                                      PKCS11_INTERFACE_NAME_ARR.size() - 1);
 
 std::strong_ordering operator<=>(const Version& left, const Version& right) {
    // Compare both versions by concatenating their bytes: major || minor
@@ -40,8 +41,11 @@ Version version_of(const Interface& interface) {
    return *reinterpret_cast<Version*>(interface.pFunctionList);
 };
 
-std::basic_string_view<Utf8Char> name_of(const Interface& interface) {
-   return std::basic_string_view<Utf8Char>(interface.pInterfaceName);
+std::span<const Utf8Char> name_of(const Interface& interface) {
+   // We cannot use std::basic_string_view<Utf8Char> since some compilers do not
+   // seem to support string views with unsigned characters.
+   std::string_view s(reinterpret_cast<char*>(interface.pInterfaceName));
+   return std::span<const Utf8Char>(reinterpret_cast<const Utf8Char*>(s.data()), s.size());
 }
 
 }  // namespace
@@ -55,17 +59,17 @@ Version InterfaceWrapper::version() const {
    return version_of(m_interface);
 }
 
-std::basic_string_view<Utf8Char> InterfaceWrapper::name() const {
+std::span<const Utf8Char> InterfaceWrapper::name() const {
    return name_of(m_interface);
 }
 
 std::unique_ptr<InterfaceWrapper> InterfaceWrapper::latest_p11_interface(Dynamically_Loaded_Library& library) {
-   Ulong count;
+   Ulong count = 0;
    auto rv = LowLevel::C_GetInterfaceList(library, nullptr, &count, nullptr);
    if(!rv) {
       // Method could not be executed. Probably due to a cryptoki library with PKCS #11 < 3.0.
       // Try the legacy C_GetFunctionList method (for PKCS#11 version 2.40).
-      FunctionList* func_list;
+      FunctionList* func_list = nullptr;
       rv = LowLevel::C_GetFunctionList(library, &func_list, nullptr);
       if(!rv) {
          throw Invalid_Argument("Failed to load function list for PKCS#11 library.");
@@ -118,14 +122,14 @@ std::unique_ptr<InterfaceWrapper> InterfaceWrapper::latest_p11_interface(Dynamic
 }
 
 const FunctionList& InterfaceWrapper::func_2_40() const {
-   if(name() != PKCS11_INTERFACE_NAME) {
+   if(!std::ranges::equal(name(), PKCS11_INTERFACE_NAME)) {
       throw Botan::Invalid_State("Vendor defined PKCS #11 interfaces are not supported.");
    }
    return *reinterpret_cast<FunctionList*>(raw_interface().pFunctionList);
 }
 
 const FunctionList30& InterfaceWrapper::func_3_0() const {
-   if(name() != PKCS11_INTERFACE_NAME) {
+   if(!std::ranges::equal(name(), PKCS11_INTERFACE_NAME)) {
       throw Botan::Invalid_State("Vendor defined PKCS #11 interfaces are not supported.");
    }
    if(version() < Version{3, 0}) {
@@ -135,7 +139,7 @@ const FunctionList30& InterfaceWrapper::func_3_0() const {
 }
 
 const FunctionList32& InterfaceWrapper::func_3_2() const {
-   if(name() != PKCS11_INTERFACE_NAME) {
+   if(!std::ranges::equal(name(), PKCS11_INTERFACE_NAME)) {
       throw Botan::Invalid_State("Vendor defined PKCS #11 interfaces are not supported.");
    }
    if(version() < Version{3, 2}) {

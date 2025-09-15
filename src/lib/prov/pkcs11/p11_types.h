@@ -46,7 +46,7 @@ class BOTAN_PUBLIC_API(2, 0) Module final {
       Module& operator=(const Module& other) = delete;
 
       /// Calls C_Finalize()
-      virtual ~Module() noexcept;
+      ~Module() noexcept;
 
       /**
       * Reloads the module and reinitializes it.
