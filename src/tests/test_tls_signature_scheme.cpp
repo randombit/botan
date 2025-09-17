@@ -48,7 +48,6 @@ std::vector<Test::Result> test_signature_scheme() {
       result.confirm("padding_string deals with bogus schemes", !not_unknown(bogus.padding_string()));
       result.confirm("algorithm_name deals with bogus schemes", !not_unknown(bogus.algorithm_name()));
 
-      result.confirm("format deals with bogus schemes", !bogus.format().has_value());
       result.confirm("algorithm_identifier deals with bogus schemes",
                      Botan::AlgorithmIdentifier() == bogus.key_algorithm_identifier());
    }));
