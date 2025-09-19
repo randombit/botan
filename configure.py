@@ -583,6 +583,8 @@ def process_command_line(args):
 
     add_with_without_pair(docs_group, 'pdf', False, 'run Sphinx to generate PDF doc')
 
+    add_with_without_pair(docs_group, 'texinfo', False, 'run Sphinx to generate texinfo doc')
+
     add_with_without_pair(docs_group, 'rst2man', None, 'run rst2man to generate man page')
 
     add_with_without_pair(docs_group, 'doxygen', False, 'run Doxygen')
@@ -2248,6 +2250,7 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'with_documentation': options.with_documentation,
         'with_sphinx': options.with_sphinx,
         'with_pdf': options.with_pdf,
+        'with_texinfo': options.with_texinfo,
         'with_rst2man': options.with_rst2man,
         'sphinx_config_dir': source_paths.sphinx_config_dir,
         'with_doxygen': options.with_doxygen,
@@ -3376,9 +3379,14 @@ def validate_options(options, info_os, info_cc, cc_version, available_module_pol
             raise UserError('Using --with-sphinx plus --without-documentation makes no sense')
         if options.with_pdf:
             raise UserError('Using --with-pdf plus --without-documentation makes no sense')
+        if options.with_texinfo:
+            raise UserError('Using --with-texinfo --without-documentation makes no sense')
 
     if options.with_pdf and not options.with_sphinx:
         raise UserError('Option --with-pdf requires --with-sphinx')
+
+    if options.with_texinfo and not options.with_sphinx:
+        raise UserError('Option --with-texinfo requires --with-sphinx')
 
     if options.ct_value_barrier_type:
         if options.ct_value_barrier_type not in ['asm', 'volatile', 'none']:

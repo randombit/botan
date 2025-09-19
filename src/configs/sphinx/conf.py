@@ -234,3 +234,9 @@ extensions = [
 
 # Make sure the target is unique
 autosectionlabel_prefix_document = True
+
+# -- Options for texinfo output --------------------------------------------------
+authors = 'The Botan Authors'
+
+# Show URL addresses after external links, options are 'inline', 'footnote' and 'no'
+texinfo_show_urls = 'inline'
