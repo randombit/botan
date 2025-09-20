@@ -155,6 +155,7 @@ def main(args=None):
     with_docs = bool(cfg['with_documentation'])
     with_sphinx = bool(cfg['with_sphinx'])
     with_pdf = bool(cfg['with_pdf'])
+    with_texinfo = bool(cfg['with_texinfo'])
     with_rst2man = bool(cfg['with_rst2man'])
     with_doxygen = bool(cfg['with_doxygen'])
 
@@ -182,6 +183,13 @@ def main(args=None):
             cmds.append(sphinx_build + ['-b', 'latex', handbook_src, latex_output])
             cmds.append(['make', '-C', latex_output])
             cmds.append(['cp', os.path.join(latex_output, 'botan.pdf'), handbook_output])
+
+        if with_texinfo:
+            texinfo_output = tempfile.mkdtemp(prefix='botan_texinfo_')
+            cmds.append(sphinx_build + ['-b', 'texinfo', handbook_src, texinfo_output])
+            cmds.append(['make', '-C', texinfo_output])
+            cmds.append(['cp', os.path.join(texinfo_output, 'botan.texi'), handbook_output])
+
     else:
         # otherwise just copy it
         cmds.append(['cp', handbook_src, handbook_output])
