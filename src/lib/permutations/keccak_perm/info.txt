@@ -5,3 +5,7 @@ KECCAK_PERM -> 20230613
 <module_info>
 name -> "Keccak-permutation"
 </module_info>
+
+<requires>
+sponge
+</requires>
