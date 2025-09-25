@@ -435,4 +435,11 @@ void TLS::Callbacks::tls_ssl_key_log_data(std::string_view label,
    BOTAN_UNUSED(label, client_random, secret);
 }
 
+std::unique_ptr<KDF> TLS::Callbacks::tls_protocol_specific_kdf(std::string_view name,
+                                                               std::string_view hash_function) const {
+   BOTAN_UNUSED(name);
+   BOTAN_UNUSED(hash_function);
+   return nullptr;
+}
+
 }  // namespace Botan
