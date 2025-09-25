@@ -1,5 +1,5 @@
 /*
- * PKCS #11 v3.2 header.
+ * PKCS #11 v3.2 header (Draft wd13).
  * This file is in the Public Domain, originially created by Simo Sorce.
  * Source: https://github.com/latchset/pkcs11-headers/blob/c5e61990c5621a9b955/public-domain/3.2/pkcs11.h
  */
