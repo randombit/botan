@@ -187,13 +187,7 @@ Session_Ticket Handshake_State::session_ticket() const {
 }
 
 std::unique_ptr<KDF> Handshake_State::protocol_specific_prf() const {
-   const std::string prf_algo = ciphersuite().prf_algo();
-
-   if(prf_algo == "MD5" || prf_algo == "SHA-1") {
-      return KDF::create_or_throw("TLS-12-PRF(SHA-256)");
-   }
-
-   return KDF::create_or_throw("TLS-12-PRF(" + prf_algo + ")");
+   return m_callbacks.tls12_protocol_specific_kdf(ciphersuite().prf_algo());
 }
 
 std::pair<std::string, Signature_Format> Handshake_State::choose_sig_format(const Private_Key& key,
