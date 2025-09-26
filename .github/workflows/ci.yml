@@ -117,18 +117,21 @@ jobs:
         include:
           - target: shared
             compiler: xcode
-            os: macos-13
+            os: macos-13 # x86
           - target: amalgamation
             compiler: xcode
-            os: macos-13
+            os: macos-13 # x86
             make_tool: ninja
           - target: shared
             compiler: xcode
-            os: macos-14 # uses Apple Silicon
+            os: macos-14
             make_tool: ninja
           - target: amalgamation
             compiler: xcode
-            os: macos-14 # uses Apple Silicon
+            os: macos-14
+          - target: shared
+            compiler: xcode
+            os: macos-26
 
     runs-on: ${{ matrix.os }}
 
