@@ -21,4 +21,5 @@ commoncrypto
 <requires>
 modes
 block
+pubkey
 </requires>
