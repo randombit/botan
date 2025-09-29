@@ -21,7 +21,7 @@
 namespace Botan {
 
 /**
-* If top bit of arg is set, return ~0. Otherwise return 0.
+* If top bit of arg is set, return |1| (all bits set). Otherwise return |0| (all bits unset)
 */
 template <std::unsigned_integral T>
 BOTAN_FORCE_INLINE constexpr T expand_top_bit(T a) {
@@ -29,7 +29,7 @@ BOTAN_FORCE_INLINE constexpr T expand_top_bit(T a) {
 }
 
 /**
-* If arg is zero, return ~0. Otherwise return 0
+* If arg is zero, return |1|. Otherwise return |0|
 */
 template <std::unsigned_integral T>
 BOTAN_FORCE_INLINE constexpr T ct_is_zero(T x) {
@@ -54,10 +54,13 @@ BOTAN_FORCE_INLINE constexpr bool is_power_of_2(T arg) {
 */
 template <std::unsigned_integral T>
 BOTAN_FORCE_INLINE constexpr size_t high_bit(T n) {
+   static_assert(sizeof(T) <= sizeof(size_t));
+
    size_t hb = 0;
 
    for(size_t s = 8 * sizeof(T) / 2; s > 0; s /= 2) {
-      const size_t z = s * ((~ct_is_zero<T>(n >> s)) & 1);
+      const size_t mask = ~ct_is_zero<size_t>(n >> s); // either |0| or |1|
+      const size_t z = s & mask;
       hb += z;
       n >>= z;
    }
@@ -74,10 +77,13 @@ BOTAN_FORCE_INLINE constexpr size_t high_bit(T n) {
 */
 template <std::unsigned_integral T>
 BOTAN_FORCE_INLINE constexpr size_t significant_bytes(T n) {
+   static_assert(sizeof(T) <= sizeof(size_t));
+
    size_t b = 0;
 
    for(size_t s = 8 * sizeof(T) / 2; s >= 8; s /= 2) {
-      const size_t z = s * (~ct_is_zero(n >> s) & 1);
+      const size_t mask = ~ct_is_zero<size_t>(n >> s); // either |0| or |1|
+      const size_t z = s & mask;
       b += z / 8;
       n >>= z;
    }
@@ -94,6 +100,8 @@ BOTAN_FORCE_INLINE constexpr size_t significant_bytes(T n) {
 */
 template <std::unsigned_integral T>
 BOTAN_FORCE_INLINE constexpr size_t ctz(T n) {
+   static_assert(sizeof(T) <= sizeof(size_t));
+
    /*
    * If n == 0 then this function will compute 8*sizeof(T)-1, so
    * initialize lb to 1 if n == 0 to produce the expected result.
@@ -101,8 +109,9 @@ BOTAN_FORCE_INLINE constexpr size_t ctz(T n) {
    size_t lb = ct_is_zero(n) & 1;
 
    for(size_t s = 8 * sizeof(T) / 2; s > 0; s /= 2) {
-      const T mask = (static_cast<T>(1) << s) - 1;
-      const size_t z = s * (ct_is_zero(n & mask) & 1);
+      const T range = (static_cast<T>(1) << s) - 1;
+      const size_t mask = ct_is_zero<size_t>(n & range); // either |0| or |1|
+      const size_t z = s & mask;
       lb += z;
       n >>= z;
    }
