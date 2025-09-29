@@ -347,6 +347,10 @@ class BuildPaths:
             return (self.example_sources, self.example_obj_dir)
         raise InternalError("Unknown src info type '%s'" % (typ))
 
+    def relative_to_out_dir(self, absolute_dir):
+        assert os.path.isabs(absolute_dir)
+        return os.path.relpath(absolute_dir, self.out_dir)
+
 ACCEPTABLE_BUILD_TARGETS = ["static", "shared", "cli", "tests", "bogo_shim", "examples", "ct_selftest"]
 
 def process_command_line(args):
@@ -1943,7 +1947,7 @@ def process_template_string(template_text, variables, template_source):
 def process_template(template_file, variables):
     return process_template_string(read_textfile(template_file), variables, template_file)
 
-def yield_objectfile_list(sources, obj_dir, obj_suffix, options):
+def yield_objectfile_list(sources, obj_dir, build_dirs, obj_suffix, options):
     obj_suffix = '.' + obj_suffix
 
     for src in sources:
@@ -1978,7 +1982,7 @@ def yield_objectfile_list(sources, obj_dir, obj_suffix, options):
             name = filename
 
         name = name.replace('.cpp', obj_suffix)
-        yield normalize_source_path(os.path.join(obj_dir, name))
+        yield build_dirs.relative_to_out_dir(normalize_source_path(os.path.join(obj_dir, name)))
 
 def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
     # first create a map of src_file->owning module
@@ -2046,7 +2050,7 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
 
         if src_list is not None:
             src_list.sort()
-            objects = list(yield_objectfile_list(src_list, src_dir, osinfo.obj_suffix, options))
+            objects = list(yield_objectfile_list(src_list, src_dir, build_paths, osinfo.obj_suffix, options))
             build_info = _build_info(src_list, objects, t)
 
             for b in build_info:
