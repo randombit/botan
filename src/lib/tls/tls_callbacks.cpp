@@ -20,6 +20,7 @@
 #include <botan/tls_policy.h>
 #include <botan/x509path.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/stl_util.h>
 
 #if defined(BOTAN_HAS_X25519)
@@ -435,11 +436,12 @@ void TLS::Callbacks::tls_ssl_key_log_data(std::string_view label,
    BOTAN_UNUSED(label, client_random, secret);
 }
 
-std::unique_ptr<KDF> TLS::Callbacks::tls_protocol_specific_kdf(std::string_view name,
-                                                               std::string_view hash_function) const {
-   BOTAN_UNUSED(name);
-   BOTAN_UNUSED(hash_function);
-   return nullptr;
+std::unique_ptr<KDF> TLS::Callbacks::tls12_protocol_specific_kdf(std::string_view prf_algo) const {
+   if(prf_algo == "MD5" || prf_algo == "SHA-1") {
+      return KDF::create_or_throw("TLS-12-PRF(SHA-256)");
+   }
+
+   return KDF::create_or_throw(Botan::fmt("TLS-12-PRF({})", prf_algo));
 }
 
 }  // namespace Botan

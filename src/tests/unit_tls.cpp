@@ -244,7 +244,7 @@ class TLS_Handshake_Test final {
                                                      const std::vector<uint8_t>&,
                                                      Botan::RandomNumberGenerator&,
                                                      const Botan::TLS::Policy&)>;
-      using custom_kdf_clbk = std::function<std::unique_ptr<Botan::KDF>(std::string_view, std::string_view)>;
+      using custom_kdf_clbk = std::function<std::unique_ptr<Botan::KDF>(std::string_view)>;
 
    public:
       TLS_Handshake_Test(const std::string& test_descr,
@@ -504,12 +504,11 @@ class TLS_Handshake_Test final {
                return Botan::TLS::Callbacks::tls_ephemeral_key_agreement(group, private_key, public_value, rng, policy);
             }
 
-            std::unique_ptr<Botan::KDF> tls_protocol_specific_kdf(std::string_view name,
-                                                                  std::string_view hash_function) const override {
+            std::unique_ptr<Botan::KDF> tls12_protocol_specific_kdf(std::string_view prf_algo) const override {
                if(m_custom_kdf_callback) {
-                  return m_custom_kdf_callback(name, hash_function);
+                  return m_custom_kdf_callback(prf_algo);
                } else {
-                  return nullptr;
+                  return Botan::TLS::Callbacks::tls12_protocol_specific_kdf(prf_algo);
                }
             }
 
@@ -1095,7 +1094,7 @@ class TLS_Unit_Tests final : public Test {
 
             std::unique_ptr<KDF> new_object() const override { return std::make_unique<CustomKDF>(); }
 
-            // always returns a static key
+            // always returns a static master secret
             void perform_kdf(std::span<uint8_t> key,
                              std::span<const uint8_t> /*secret*/,
                              std::span<const uint8_t> /*salt*/,
@@ -1124,12 +1123,12 @@ class TLS_Unit_Tests final : public Test {
          bool client_custom_kdf_called = false;
          bool server_custom_kdf_called = false;
 
-         test.set_client_custom_kdf_callback([&](std::string_view, std::string_view) -> std::unique_ptr<Botan::KDF> {
+         test.set_client_custom_kdf_callback([&](std::string_view) -> std::unique_ptr<Botan::KDF> {
             client_custom_kdf_called = true;
             return std::make_unique<CustomKDF>();
          });
 
-         test.set_server_custom_kdf_callback([&](std::string_view, std::string_view) -> std::unique_ptr<Botan::KDF> {
+         test.set_server_custom_kdf_callback([&](std::string_view) -> std::unique_ptr<Botan::KDF> {
             server_custom_kdf_called = true;
             return std::make_unique<CustomKDF>();
          });

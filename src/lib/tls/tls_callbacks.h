@@ -679,18 +679,18 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
                                         std::span<const uint8_t> secret) const;
 
       /**
-       * Optional callback: Allows provision of a user-defined key derivation function for TLS
+       * Returns the key derivation function to be used for TLS 1.2
        *
-       * Useful to implement a key derivation inside a protected hardware environment
-       * if a PSK is used that shall not be exposed to the user land.
+       * The default implementation can be overridden to provide a user-defined
+       * key derivation function, for example to delegate key derivation to a
+       * hardware-protected environment when a pre-shared key must remain
+       * inaccessible to the non-secure world.
        *
-       * @param name           name of the key derivation function ("TLS-12-PRF" for TLS 1.2)
-       * @param hash_function  name of the hash function (e.g. "SHA-256")
+       * @param prf_algo  name of the hash function (e.g. "SHA-256")
        *
-       * @return  the user-defined KDF or nullptr if the default shall be used
+       * @return  TLS 1.2 KDF implementation
        */
-      virtual std::unique_ptr<KDF> tls_protocol_specific_kdf(std::string_view name,
-                                                             std::string_view hash_function) const;
+      virtual std::unique_ptr<KDF> tls12_protocol_specific_kdf(std::string_view prf_algo) const;
 };
 
 }  // namespace TLS

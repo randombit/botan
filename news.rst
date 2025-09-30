@@ -19,7 +19,7 @@ Version 3.10.0, Not Yet Released
 
 * Fix various typos in the source and documentation (GH #5071)
 
-* Add optional callback to provide a user-defined TLS key derivation function
+* Add optional callback to provide a user-defined TLS 1.2 key derivation function (GH #5107)
 
 Version 3.9.0, 2025-08-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
