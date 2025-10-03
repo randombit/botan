@@ -337,8 +337,6 @@ class FFI_Utils_Test final : public FFI_Test {
          const std::vector<uint8_t> bin = {0xAA, 0xDE, 0x01};
 
          std::string outstr;
-         std::vector<uint8_t> outbuf;
-
          outstr.resize(2 * bin.size());
          TEST_FFI_OK(botan_hex_encode, (bin.data(), bin.size(), outstr.data(), 0));
          result.test_eq("uppercase hex", outstr, "AADE01");

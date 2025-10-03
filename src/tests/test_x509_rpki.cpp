@@ -2120,10 +2120,6 @@ Test::Result test_x509_as_blocks_path_validation_failure_builder() {
 
       // Subject cert
       std::unique_ptr<ASBlocks> sub_blocks = std::make_unique<ASBlocks>();
-
-      std::vector<ASBlocks::ASIdOrRange> sub_as_ranges;
-      std::vector<ASBlocks::ASIdOrRange> sub_rdi_ranges;
-
       if(!inherit_all_asnums) {
          // assign the subject asnum ranges
          if(push_asnum_min_edge_ranges) {

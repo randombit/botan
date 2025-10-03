@@ -447,7 +447,7 @@ class Asio_Stream_Tests final : public Test {
 
          auto ctx = get_context();
          AsioStream ssl(ctx, ioc, test_data());
-         uint8_t data[TEST_DATA_SIZE];
+         uint8_t data[TEST_DATA_SIZE]{};
 
          Test::Result result("async read_some success");
 
