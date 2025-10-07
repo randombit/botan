@@ -106,9 +106,8 @@ inline uint64_t force_le(uint64_t x) {
 }
 
 inline void lps(uint64_t block[8]) {
-   uint8_t r[64];
-   // FIXME
-   std::memcpy(r, block, 64);
+   const uint64_t block2[8] = {block[0], block[1], block[2], block[3], block[4], block[5], block[6], block[7]};
+   std::span<const uint8_t> r{reinterpret_cast<const uint8_t*>(block2), 64};
 
    for(int i = 0; i < 8; ++i) {
       block[i] = force_le(STREEBOG_Ax[0][r[i + 0 * 8]]) ^ force_le(STREEBOG_Ax[1][r[i + 1 * 8]]) ^
