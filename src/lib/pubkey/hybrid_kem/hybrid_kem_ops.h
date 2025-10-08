@@ -60,7 +60,7 @@ class KEM_Encryption_with_Combiner : public PK_Ops::KEM_Encryption {
        * @brief Describes how the shared secrets are combined to derive the final shared secret.
        *
        * @param out_shared_secret the output buffer for the shared secret
-       * @param shared_secrets a list of shared secrets coreesponding to the public keys
+       * @param shared_secrets a list of shared secrets corresponding to the public keys
        * @param ciphertexts a list of encapsulated shared secrets
        * @param desired_shared_key_len the desired shared key length
        * @param salt the salt (input of kem_encrypt)
@@ -116,7 +116,7 @@ class KEM_Decryption_with_Combiner : public PK_Ops::KEM_Decryption {
        * @brief Describes how the shared secrets are combined to derive the final shared secret.
        *
        * @param out_shared_secret the output buffer for the shared secret
-       * @param shared_secrets a list of shared secrets coreesponding to the public keys
+       * @param shared_secrets a list of shared secrets corresponding to the public keys
        * @param ciphertexts the list of encapsulated shared secrets
        * @param desired_shared_key_len the desired shared key length
        * @param salt the salt (input of kem_decrypt)

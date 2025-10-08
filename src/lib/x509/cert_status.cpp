@@ -104,7 +104,7 @@ const char* to_string(Certificate_Status_Code code) {
       case Certificate_Status_Code::OCSP_SIGNATURE_ERROR:
          return "OCSP signature error";
       case Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND:
-         return "Unable to find certificate issusing OCSP response";
+         return "Unable to find certificate issuing OCSP response";
       case Certificate_Status_Code::OCSP_RESPONSE_MISSING_KEYUSAGE:
          return "OCSP issuer's keyusage prohibits OCSP";
       case Certificate_Status_Code::OCSP_RESPONSE_INVALID:

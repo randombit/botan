@@ -622,7 +622,7 @@ constexpr auto operator--(Strong<T, Tags...>& a) {
 }
 
 /**
- * This mimmicks a std::span but keeps track of the strong-type information. Use
+ * This mimics a std::span but keeps track of the strong-type information. Use
  * this when you would want to use `const Strong<...>&` as a parameter
  * declaration. In particular this allows assigning strong-type information to
  * slices of a bigger buffer without copying the bytes. E.g:

@@ -12,7 +12,7 @@ Implementation Techniques
 
 * "Randomizing the Montgomery Powering Ladder"
   Le, Tan, Tunstall https://eprint.iacr.org/2015/657
-  A variant of Algorithm 7 is used for GF(p) point multplications when
+  A variant of Algorithm 7 is used for GF(p) point multiplications when
   BOTAN_POINTGFP_BLINDED_MULTIPLY_USE_MONTGOMERY_LADDER is set
 
 * "Accelerating AES with vector permute instructions"

@@ -26,7 +26,7 @@ class Blinder final {
       * its inverse, of a form appropriate to the algorithm being blinded), and
       * then choosing new blinding operands by successive squaring of both
       * values. This is much faster than computing a new starting point but
-      * introduces some possible corelation
+      * introduces some possible correlation
       *
       * To avoid possible leakage problems in long-running processes, the blinder
       * periodically reinitializes the sequence. This value specifies how often

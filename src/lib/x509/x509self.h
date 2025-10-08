@@ -28,7 +28,7 @@ class BOTAN_PUBLIC_API(2, 0) X509_Cert_Options final {
       std::string common_name;  // NOLINT(*non-private-member-variable*)
 
       /**
-      * the subject counry
+      * the subject country
       */
       std::string country;  // NOLINT(*non-private-member-variable*)
 
