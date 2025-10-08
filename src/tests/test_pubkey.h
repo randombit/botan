@@ -55,7 +55,7 @@ class PK_Signature_Generation_Test : public PK_Test {
       }
 
    private:
-      Test::Result run_one_test(const std::string& header, const VarMap& vars) final;
+      Test::Result run_one_test(const std::string& pad_hdr, const VarMap& vars) final;
 };
 
 class PK_Signature_Verification_Test : public PK_Test {

@@ -50,7 +50,7 @@ class TPM_Tests final : public Test {
 
             std::vector<std::string> registered_keys = Botan::TPM_PrivateKey::registered_keys(*ctx);
 
-            for(auto url : registered_keys) {
+            for(const auto& url : registered_keys) {
                result.test_note("TPM registered key " + url);
             }
 
