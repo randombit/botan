@@ -82,7 +82,7 @@ Version 1.11.34, 2016-11-28
 * Fix TLS session resumption bugs which caused resumption failures if an
   application used a single session cache for both TLS and DTLS. (GH #688)
 
-* Add SHAKE-128 and SHAKE-256 XOFs as hash functions supporting paramaterized
+* Add SHAKE-128 and SHAKE-256 XOFs as hash functions supporting parameterized
   output lengths.
 
 * Add MessageAuthenticationCode::start_msg interface, for MACs which require or
@@ -1343,7 +1343,7 @@ Version 1.11.13, 2015-01-11
 
 * Add SHA-512/256
 
-* The format of serialized TLS sessions has changed. Additiionally, PEM
+* The format of serialized TLS sessions has changed. Additionally, PEM
   formatted sessions now use the label of "TLS SESSION" instead of "SSL SESSION"
 
 * Serialized TLS sessions are now encrypted using AES-256/GCM instead of a
@@ -2870,7 +2870,7 @@ Version 1.7.22, 2008-11-17
 Version 1.7.21, 2008-11-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Make algorithm lookup much more configuable
+* Make algorithm lookup much more configurable
 * Add facilities for runtime performance testing of algorithms
 * Drop use of entropy estimation in the PRNGs
 * Increase intervals between HMAC_RNG automatic reseeding
@@ -3626,7 +3626,7 @@ Version 1.3.5, 2003-11-30
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Major improvements in ASN.1 string handling
-* Added partial support for ASN.1 UTF8 STRINGs and BMP STRINGs
+* Added partial support for ASN.1 UTF8 STRING and BMP STRING types
 * Added partial support for the X.509v3 certificate policies extension
 * Centralized the handling of character set information
 * Added FIPS 140-2 startup self tests
@@ -3910,7 +3910,7 @@ Version 1.1.6, 2002-12-10
 
 * Initial support for X.509v3 certificates and CAs
 * Major redesign/rewrite of the ASN.1 encoding/decoding code
-* Added handling for DSA/NR signatures encoded as DER SEQUENCEs
+* Added handling for DSA/NR signatures encoded as a DER SEQUENCE
 * Documented the generic cipher lookup interface
 * Added an (untested) entropy source for BeOS
 * Various cleanups and bug fixes

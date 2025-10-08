@@ -352,7 +352,7 @@ are no extra parameters:
 
    Generate a new X448 private key
 
-Others require additionally specfiying which curve to use. First create a
+Others require additionally specifying which curve to use. First create a
 relevant :cpp:class:`EC_Group` using for example :cpp:func:`EC_Group::from_name`
 or :cpp:func:`EC_Group::from_OID`. Then pass it to the private key
 constructor. If the choice of group is not otherwise mandated by your

@@ -83,7 +83,7 @@ class URI_Tests final : public Test {
             }
          }
 
-         //since GCC 4.8 does not support regex this would possibly be acceped as valid domains,
+         //since GCC 4.8 does not support regex this would possibly be accepted as valid domains,
          //but we just want to test IPv6 parsing, so the test needs to be individual
          result.test_throws("invalid IPv6", []() { Botan::URI::from_ipv6("]"); });
          result.test_throws("invalid IPv6", []() { Botan::URI::from_ipv6("[::1]1"); });

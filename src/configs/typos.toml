@@ -27,9 +27,11 @@ divisable = "divisable"       # Typo in Limbo test data
 Lik = "Lik"           # TODO(Botan4) remove when mce is removed
 Projet = "Projet"     # TODO(Botan4) remove when mce is removed
 
-# Acronyms that typos doesn't know about
+# Names that typos doesn't know about
+EMAC = "EMAC"
 GOST = "GOST"
 EDE = "EDE"
+vor = "vor"
 
 # clang-analyzer
 optin = "optin"
@@ -41,8 +43,11 @@ parm = "parm"
 ser = "ser"
 stuf = "stuf"
 typ = "typ"
+indx = "indx"
 
 [default.extend-identifiers]
 countr_zero = "countr_zero"
 ARIA_FO = "ARIA_FO"
 NDKs = "NDKs"
+STRINGSs = "STRINGSs"
+Tru64 = "Tru64"
