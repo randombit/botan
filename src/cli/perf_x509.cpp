@@ -16,9 +16,9 @@
    #include <botan/bigint.h>
    #include <botan/der_enc.h>
    #include <botan/pk_algs.h>
+   #include <botan/x509_builder.h>
    #include <botan/x509_ca.h>
    #include <botan/x509_ext.h>
-   #include <botan/x509self.h>
 #endif
 
 namespace Botan_CLI {
@@ -40,14 +40,23 @@ class PerfTest_ASN1_Parsing final : public PerfTest {
       }
 
       static CA create_ca(Botan::RandomNumberGenerator& rng) {
-         auto root_cert_options = Botan::X509_Cert_Options("Benchmark Root/DE/RS/CS");
-         root_cert_options.dns = "unobtainium.example.com";
-         root_cert_options.email = "idont@exist.com";
-         root_cert_options.is_CA = true;
-
          auto root_key = create_private_key(rng);
          BOTAN_ASSERT_NONNULL(root_key);
-         auto root_cert = Botan::X509::create_self_signed_cert(root_cert_options, *root_key, get_hash_function(), rng);
+
+         Botan::CertificateParametersBuilder root_cert_params;
+         root_cert_params.add_common_name("Benchmark Root")
+            .add_country("DE")
+            .add_organization("RS")
+            .add_organizational_unit("CS")
+            .add_dns("unobtainium.example.com")
+            .add_email("idont@exist.com")
+            .set_as_ca_certificate();
+
+         const auto not_before = std::chrono::system_clock::now();
+         const auto not_after = not_before + std::chrono::seconds(86400);
+
+         auto root_cert =
+            root_cert_params.into_self_signed_cert(not_before, not_after, *root_key, rng, get_hash_function());
          auto ca = Botan::X509_CA(root_cert, *root_key, get_hash_function(), rng);
 
          return CA{
