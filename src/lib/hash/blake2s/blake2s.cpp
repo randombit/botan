@@ -56,9 +56,7 @@ void BLAKE2s::state_init(size_t outlen, const uint8_t* key, size_t keylen) {
    m_c = 0;     // pointer within buffer
    m_outlen = outlen;
 
-   for(size_t i = keylen; i < 64; i++) {  // zero input block
-      m_b[i] = 0;
-   }
+   std::fill(m_b.begin() + keylen, m_b.end(), 0);  // zero input block
    if(keylen > 0) {
       add_data(std::span<const uint8_t>(key, keylen));
       m_c = 64;  // at the end
@@ -67,7 +65,8 @@ void BLAKE2s::state_init(size_t outlen, const uint8_t* key, size_t keylen) {
 
 // Compression function. "last" flag indicates last block.
 
-void BLAKE2s::compress(bool last) {
+void BLAKE2s::compress(bool last, std::span<const uint8_t> buf) {
+   BOTAN_ASSERT_NOMSG(buf.size() == 64);
    const uint8_t sigma[10][16] = {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
                                   {14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3},
                                   {11, 8, 12, 0, 5, 2, 15, 13, 10, 14, 3, 6, 7, 1, 9, 4},
@@ -91,7 +90,7 @@ void BLAKE2s::compress(bool last) {
    if(last) {        // last block flag set ?
       v[14] = ~v[14];
    }
-   load_le<uint32_t>(m, m_b, 16);  // get little-endian words
+   load_le<uint32_t>(m, buf.data(), 16);  // get little-endian words
 
    // NOLINTNEXTLINE(modernize-loop-convert) TODO clean this up
    for(size_t i = 0; i < 10; i++) {  // ten rounds
@@ -118,18 +117,27 @@ void BLAKE2s::clear() {
 }
 
 void BLAKE2s::add_data(std::span<const uint8_t> in) {
-   // NOLINTNEXTLINE(modernize-loop-convert) TODO optimize this
-   for(size_t i = 0; i < in.size(); i++) {
-      if(m_c == 64) {        // buffer full ?
-         m_t[0] += m_c;      // add counters
-         if(m_t[0] < m_c) {  // carry overflow ?
-            m_t[1]++;        // high word
-         }
-         compress(false);  // compress (not last)
-         m_c = 0;          // counter to zero
+   size_t fill = 64 - m_c;
+   if(in.size() > fill) {
+      std::copy(in.begin(), in.begin() + fill, m_b.begin() + m_c);  // fill buffer
+      m_t[0] += 64;                                                 // add counters
+      if(m_t[0] < 64) {                                             // carry overflow ?
+         m_t[1]++;                                                  // high word
       }
-      m_b[m_c++] = in[i];
+      compress(false, m_b);
+      in = in.subspan(fill);
+      m_c = 0;
+      while(in.size() > 64) {
+         m_t[0] += 64;      // add counters
+         if(m_t[0] < 64) {  // carry overflow ?
+            m_t[1]++;       // high word
+         }
+         compress(false, in.first(64));
+         in = in.subspan(64);
+      }
    }
+   std::copy(in.begin(), in.end(), m_b.begin() + m_c);
+   m_c += static_cast<uint8_t>(in.size());
 }
 
 void BLAKE2s::final_result(std::span<uint8_t> out) {
@@ -138,10 +146,8 @@ void BLAKE2s::final_result(std::span<uint8_t> out) {
       m_t[1]++;        // high word
    }
 
-   while(m_c < 64) {  // fill up with zeros
-      m_b[m_c++] = 0;
-   }
-   compress(true);  // final block flag = 1
+   std::fill(m_b.begin() + m_c, m_b.end(), 0);  // fill up with zeros
+   compress(true, m_b);                         // final block flag = 1
 
    // little endian convert and store
    copy_out_le(out.first(output_length()), m_h);
@@ -151,7 +157,7 @@ void BLAKE2s::final_result(std::span<uint8_t> out) {
 
 std::unique_ptr<HashFunction> BLAKE2s::copy_state() const {
    std::unique_ptr<BLAKE2s> h = std::make_unique<BLAKE2s>(m_outlen << 3);
-   std::memcpy(h->m_b, m_b, sizeof(m_b));
+   h->m_b = m_b;
    std::memcpy(h->m_h, m_h, sizeof(m_h));
    std::memcpy(h->m_t, m_t, sizeof(m_t));
    h->m_c = m_c;
@@ -161,7 +167,7 @@ std::unique_ptr<HashFunction> BLAKE2s::copy_state() const {
 /*
  * BLAKE2s Constructor
  */
-BLAKE2s::BLAKE2s(size_t output_bits) {
+BLAKE2s::BLAKE2s(size_t output_bits) : m_b(64) {
    if(output_bits == 0 || output_bits > 256 || output_bits % 8 != 0) {
       throw Invalid_Argument("Bad output bits size for BLAKE2s");
    };
@@ -169,7 +175,6 @@ BLAKE2s::BLAKE2s(size_t output_bits) {
 }
 
 BLAKE2s::~BLAKE2s() {
-   secure_scrub_memory(m_b, sizeof(m_b));
    secure_scrub_memory(m_h, sizeof(m_h));
    secure_scrub_memory(m_t, sizeof(m_t));
 }
