@@ -286,6 +286,24 @@ int botan_pubkey_load_rsa(botan_pubkey_t* key, botan_mp_t n, botan_mp_t e) {
 #endif
 }
 
+int botan_pubkey_load_rsa_pkcs1(botan_pubkey_t* key, const uint8_t bits[], size_t len) {
+#if defined(BOTAN_HAS_RSA)
+   if(key == nullptr || bits == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   *key = nullptr;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const Botan::AlgorithmIdentifier alg_id("RSA", Botan::AlgorithmIdentifier::USE_NULL_PARAM);
+      auto rsa = std::make_unique<Botan::RSA_PublicKey>(alg_id, std::span{bits, len});
+      return ffi_new_object(key, std::move(rsa));
+   });
+#else
+   BOTAN_UNUSED(key, bits, len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 int botan_privkey_rsa_get_p(botan_mp_t p, botan_privkey_t key) {
    return botan_privkey_get_field(p, key, "p");
 }

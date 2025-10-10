@@ -368,6 +368,7 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_privkey_rsa_get_e, [c_void_p, c_void_p])
     ffi_api(dll.botan_privkey_rsa_get_privkey, [c_void_p, c_char_p, POINTER(c_size_t), c_uint32])
     ffi_api(dll.botan_pubkey_load_rsa, [c_void_p, c_void_p, c_void_p])
+    ffi_api(dll.botan_pubkey_load_rsa_pkcs1, [c_void_p, c_char_p, c_size_t])
     ffi_api(dll.botan_pubkey_rsa_get_e, [c_void_p, c_void_p])
     ffi_api(dll.botan_pubkey_rsa_get_n, [c_void_p, c_void_p])
     ffi_api(dll.botan_privkey_load_dsa,

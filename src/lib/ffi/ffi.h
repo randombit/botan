@@ -1649,6 +1649,8 @@ int botan_privkey_rsa_get_privkey(botan_privkey_t rsa_key, uint8_t out[], size_t
 
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_load_rsa(botan_pubkey_t* key, botan_mp_t n, botan_mp_t e);
 
+BOTAN_FFI_EXPORT(3, 11) int botan_pubkey_load_rsa_pkcs1(botan_pubkey_t* key, const uint8_t bits[], size_t len);
+
 BOTAN_FFI_DEPRECATED("Use botan_pubkey_get_field")
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_rsa_get_e(botan_mp_t e, botan_pubkey_t rsa_key);
 BOTAN_FFI_DEPRECATED("Use botan_pubkey_get_field")
