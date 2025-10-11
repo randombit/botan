@@ -70,7 +70,7 @@ class BOTAN_UNSTABLE_API SessionHandle final {
 
       ~SessionHandle();
 
-      // NOLINTNEXTLINE(*-explicit-conversions) FIXME
+      // NOLINTNEXTLINE(*-explicit-conversions) Intentional: SessionHandle is a wrapper around ESYS_TR for C API interop
       [[nodiscard]] operator ESYS_TR() && noexcept;
 
    private:
@@ -165,7 +165,7 @@ class BOTAN_PUBLIC_API(3, 6) Session {
  */
 class SessionBundle {
    public:
-      // NOLINTNEXTLINE(*-explicit-conversions) FIXME
+      // NOLINTNEXTLINE(*-explicit-conversions) Intentional: Allows convenient single-session usage without explicit SessionBundle construction
       SessionBundle(std::shared_ptr<Session> s1 = nullptr,
                     std::shared_ptr<Session> s2 = nullptr,
                     std::shared_ptr<Session> s3 = nullptr) :
