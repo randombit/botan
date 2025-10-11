@@ -70,8 +70,7 @@ class BOTAN_UNSTABLE_API SessionHandle final {
 
       ~SessionHandle();
 
-      // NOLINTNEXTLINE(*-explicit-conversions) FIXME
-      [[nodiscard]] operator ESYS_TR() && noexcept;
+      [[nodiscard]] explicit operator ESYS_TR() && noexcept;
 
    private:
       friend class Botan::TPM2::Session;
@@ -165,10 +164,9 @@ class BOTAN_PUBLIC_API(3, 6) Session {
  */
 class SessionBundle {
    public:
-      // NOLINTNEXTLINE(*-explicit-conversions) FIXME
-      SessionBundle(std::shared_ptr<Session> s1 = nullptr,
-                    std::shared_ptr<Session> s2 = nullptr,
-                    std::shared_ptr<Session> s3 = nullptr) :
+      explicit SessionBundle(std::shared_ptr<Session> s1 = nullptr,
+                             std::shared_ptr<Session> s2 = nullptr,
+                             std::shared_ptr<Session> s3 = nullptr) :
             m_sessions({std::move(s1), std::move(s2), std::move(s3)}) {}
 
       [[nodiscard]] detail::SessionHandle operator[](size_t i) const noexcept {
