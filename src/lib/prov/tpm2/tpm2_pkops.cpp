@@ -54,7 +54,7 @@ std::vector<uint8_t> Signature_Operation::sign(Botan::RandomNumberGenerator& rng
    auto do_sign = [this](const TPM2B_DIGEST& digest, const TPMT_TK_HASHCHECK& validation) {
       unique_esys_ptr<TPMT_SIGNATURE> signature;
       check_rc("Esys_Sign",
-               Esys_Sign(*key_handle().context(),
+               Esys_Sign(key_handle().context()->esys_context(),
                          key_handle().transient_handle(),
                          sessions()[0],
                          sessions()[1],
@@ -108,7 +108,7 @@ bool Verification_Operation::is_valid_signature(std::span<const uint8_t> sig_dat
 
    // If the signature is not valid, this returns TPM2_RC_SIGNATURE.
    const auto rc = check_rc_expecting<TPM2_RC_SIGNATURE>("Esys_VerifySignature",
-                                                         Esys_VerifySignature(*key_handle().context(),
+                                                         Esys_VerifySignature(key_handle().context()->esys_context(),
                                                                               key_handle().transient_handle(),
                                                                               sessions()[0],
                                                                               sessions()[1],

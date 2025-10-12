@@ -76,16 +76,20 @@ Object load_persistent_object(const std::shared_ptr<Context>& ctx,
    Object object(ctx);
 
    check_rc("Esys_TR_FromTPMPublic",
-            Esys_TR_FromTPMPublic(
-               *ctx, persistent_object_handle, sessions[0], sessions[1], sessions[2], out_transient_handle(object)));
+            Esys_TR_FromTPMPublic(ctx->esys_context(),
+                                  persistent_object_handle,
+                                  sessions[0],
+                                  sessions[1],
+                                  sessions[2],
+                                  out_transient_handle(object)));
 
    if(!auth_value.empty()) {
       const auto user_auth = copy_into<TPM2B_AUTH>(auth_value);
-      check_rc("Esys_TR_SetAuth", Esys_TR_SetAuth(*ctx, object.transient_handle(), &user_auth));
+      check_rc("Esys_TR_SetAuth", Esys_TR_SetAuth(ctx->esys_context(), object.transient_handle(), &user_auth));
    }
 
    check_rc("Esys_TR_GetTpmHandle",
-            Esys_TR_GetTpmHandle(*ctx, object.transient_handle(), out_persistent_handle(object)));
+            Esys_TR_GetTpmHandle(ctx->esys_context(), object.transient_handle(), out_persistent_handle(object)));
 
    const auto key_type = object._public_info(sessions).pub->publicArea.type;
    BOTAN_ARG_CHECK(key_type == TPM2_ALG_RSA || key_type == TPM2_ALG_ECC,
@@ -140,7 +144,7 @@ std::unique_ptr<PublicKey> PublicKey::load_transient(const std::shared_ptr<Conte
 
    Object handle(ctx);
    check_rc("Esys_LoadExternal",
-            Esys_LoadExternal(*ctx,
+            Esys_LoadExternal(ctx->esys_context(),
                               sessions[0],
                               sessions[1],
                               sessions[2],
@@ -197,7 +201,7 @@ std::unique_ptr<PrivateKey> PrivateKey::load_transient(const std::shared_ptr<Con
    const auto private_data = copy_into<TPM2B_PRIVATE>(private_blob);
 
    check_rc("Esys_Load",
-            Esys_Load(*ctx,
+            Esys_Load(ctx->esys_context(),
                       parent.handles().transient_handle(),
                       sessions[0],
                       sessions[1],
@@ -208,7 +212,7 @@ std::unique_ptr<PrivateKey> PrivateKey::load_transient(const std::shared_ptr<Con
 
    if(!auth_value.empty()) {
       const auto user_auth = copy_into<TPM2B_AUTH>(auth_value);
-      check_rc("Esys_TR_SetAuth", Esys_TR_SetAuth(*ctx, handle.transient_handle(), &user_auth));
+      check_rc("Esys_TR_SetAuth", Esys_TR_SetAuth(ctx->esys_context(), handle.transient_handle(), &user_auth));
    }
 
    return create(std::move(handle), sessions, nullptr /* pull public info from handle */, private_blob);
@@ -254,7 +258,7 @@ std::unique_ptr<PrivateKey> PrivateKey::create_transient_from_template(const std
    //
    // See the Architecture Document, Section 27.1.
    check_rc("Esys_CreateLoaded",
-            Esys_CreateLoaded(*ctx,
+            Esys_CreateLoaded(ctx->esys_context(),
                               parent,
                               sessions[0],
                               sessions[1],
