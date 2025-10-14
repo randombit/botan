@@ -12,7 +12,7 @@ Under ``src`` there are directories
 * ``tests`` contain what you would expect. Input files go under ``tests/data``.
 * ``python/botan3.py`` is the Python ctypes wrapper
 * ``bogo_shim`` contains the shim binary and configuration for
-  `BoringSSL's TLS test suite <https://github.com/google/boringssl/tree/master/ssl/test>`_
+  `BoringSSL's TLS test suite <https://github.com/google/boringssl/tree/main/ssl/test>`_
 * ``fuzzer`` contains fuzz targets for various modules of the library
 * ``ct_selftest`` has some tests to validate constant time checker tools (e.g. valgrind)
 * ``build-data`` contains files read by the configure script. For
