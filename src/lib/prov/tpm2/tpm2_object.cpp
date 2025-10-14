@@ -82,9 +82,9 @@ void Object::flush() const noexcept {
    // Only purely transient objects have to be flushed
    if(has_transient_handle()) {
       if(has_persistent_handle()) {
-         Esys_TR_Close(*m_ctx, &m_handles->transient);
+         Esys_TR_Close(m_ctx->esys_context(), &m_handles->transient);
       } else {
-         Esys_FlushContext(*m_ctx, m_handles->transient);
+         Esys_FlushContext(m_ctx->esys_context(), m_handles->transient);
       }
    }
 }
@@ -136,7 +136,7 @@ PublicInfo& Object::_public_info(const SessionBundle& sessions, std::optional<TP
       m_public_info = std::make_unique<PublicInfo>();
 
       check_rc("Esys_ReadPublic",
-               Esys_ReadPublic(*m_ctx,
+               Esys_ReadPublic(m_ctx->esys_context(),
                                m_handles->transient,
                                sessions[0],
                                sessions[1],

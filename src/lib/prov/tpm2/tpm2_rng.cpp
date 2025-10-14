@@ -29,7 +29,8 @@ void RandomNumberGenerator::fill_bytes_with_input(std::span<uint8_t> output, std
       const size_t chunk = std::min(in.remaining(), MAX_STIR_RANDOM_SIZE);
       const auto data = copy_into<TPM2B_SENSITIVE_DATA>(in.take(chunk));
 
-      check_rc("Esys_StirRandom", Esys_StirRandom(*m_ctx, m_sessions[0], m_sessions[1], m_sessions[2], &data));
+      check_rc("Esys_StirRandom",
+               Esys_StirRandom(m_ctx->esys_context(), m_sessions[0], m_sessions[1], m_sessions[2], &data));
    }
    BOTAN_ASSERT_NOMSG(in.empty());
 
@@ -38,7 +39,7 @@ void RandomNumberGenerator::fill_bytes_with_input(std::span<uint8_t> output, std
       unique_esys_ptr<TPM2B_DIGEST> digest = nullptr;
       const auto requested_bytes = std::min(out.remaining_capacity(), m_max_tpm2_rng_bytes);
       check_rc("Esys_GetRandom",
-               Esys_GetRandom(*m_ctx,
+               Esys_GetRandom(m_ctx->esys_context(),
                               m_sessions[0],
                               m_sessions[1],
                               m_sessions[2],

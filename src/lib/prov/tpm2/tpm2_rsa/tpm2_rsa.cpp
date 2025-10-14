@@ -267,7 +267,7 @@ class RSA_Encryption_Operation final : public PK_Ops::Encryption {
 
          unique_esys_ptr<TPM2B_PUBLIC_KEY_RSA> ciphertext;
          check_rc("Esys_RSA_Encrypt",
-                  Esys_RSA_Encrypt(*m_key_handle.context(),
+                  Esys_RSA_Encrypt(m_key_handle.context()->esys_context(),
                                    m_key_handle.transient_handle(),
                                    m_sessions[0],
                                    m_sessions[1],
@@ -346,7 +346,7 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption {
          //       all cases here. It passed the test (with a faulty ciphertext),
          //       but I didn't find this to be clearly documented. :-(
          auto rc = check_rc_expecting<TPM2_RC_FAILURE>("Esys_RSA_Decrypt",
-                                                       Esys_RSA_Decrypt(*m_key_handle.context(),
+                                                       Esys_RSA_Decrypt(m_key_handle.context()->esys_context(),
                                                                         m_key_handle.transient_handle(),
                                                                         m_sessions[0],
                                                                         m_sessions[1],
