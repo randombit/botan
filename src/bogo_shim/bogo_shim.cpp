@@ -30,7 +30,10 @@
 #include <botan/internal/stl_util.h>
 #include <botan/internal/target_info.h>
 
+#include <cstring>
 #include <ctime>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -57,29 +60,27 @@ int shim_output(const std::string& s, int rc = 0) {
    return rc;
 }
 
-void shim_log(const std::string& s) {
-   if(::getenv("BOTAN_BOGO_SHIM_LOG") != nullptr) {
-      /*
-      FIXMEs:
-       - Rewrite this to use a std::ostream instead
-       - Allow using the env variable to point to where the log is written
-       - Avoid rechecking the env variable with each call (!)
-      */
+void shim_log(std::string_view s) {
+   static const auto log_path = []() -> std::string {
+      const char* env = ::getenv("BOTAN_BOGO_SHIM_LOG");
+      if(env == nullptr) {
+         return {};
+      }
 
-      // NOLINTNEXTLINE(*-avoid-non-const-global-variables,*-owning-memory)
-      static FILE* g_log = std::fopen("/tmp/bogo_shim.log", "w");
+      auto log_file_path = std::string(env);
+      if(log_file_path.empty() || log_file_path == "1") {
+         return "/tmp/bogo_shim.log";
+      }
+      return env;
+   }();
 
-      if(g_log != nullptr) {
-         timeval tv{};
+   if(!log_path.empty()) {
+      static std::ofstream g_log(log_path, std::ios::out | std::ios::trunc);
+      if(g_log.is_open() && g_log.good()) {
+         const auto duration = std::chrono::system_clock::now().time_since_epoch();
+         const auto seconds = std::chrono::duration_cast<std::chrono::duration<double>>(duration);
 
-         ::gettimeofday(&tv, nullptr);
-         // NOLINTNEXTLINE(*-vararg)
-         static_cast<void>(std::fprintf(g_log,
-                                        "%lld.%lu: %s\n",
-                                        static_cast<unsigned long long>(tv.tv_sec),
-                                        static_cast<unsigned long>(tv.tv_usec),
-                                        s.c_str()));
-         static_cast<void>(std::fflush(g_log));
+         g_log << std::fixed << std::setprecision(6) << seconds.count() << ": " << s << std::endl;
       }
    }
 }
