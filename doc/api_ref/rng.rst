@@ -190,8 +190,8 @@ for this use by NIST.
 ChaCha_RNG
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This is a very fast userspace PRNG based on ChaCha20 and HMAC(SHA-256). The key
-for ChaCha is derived by hashing entropy inputs with HMAC. Then the ChaCha
+This is a very fast userspace PRNG based on ChaCha20 and HMAC(SHA-512). The key
+and IV for ChaCha are derived by hashing entropy inputs with HMAC. Then the ChaCha
 keystream generator is run, first to generate the new HMAC key (used for any
 future entropy additions), then the desired RNG outputs.
 
@@ -202,9 +202,12 @@ faster then HMAC_DRBG (basically running as fast as ChaCha can generate
 keystream bits), and certain applications need access to a very fast RNG.
 
 One thing applications using ``ChaCha_RNG`` need to be aware of is that for
-performance reasons, no backtracking resistance is implemented in the RNG
-design. An attacker who recovers the ``ChaCha_RNG`` state can recover the output
-backwards in time to the last rekey and forwards to the next rekey.
+performance reasons, no backtracking resistance is enabled in the RNG by default.
+An attacker who recovers the ``ChaCha_RNG`` state can recover the output
+backwards in time to the last rekey and forwards to the next rekey under these
+circumstances. You can enable backtracking resistance by setting ``fast_key_erasure``
+to ``true`` in the respective constructor of ``ChaCha_RNG``. With this setting enabled,
+the ChaCha key gets overwritten after every generate request made to the RNG.
 
 An explicit reseeding (:cpp:func:`RandomNumberGenerator::add_entropy`) or
 providing any input to the RNG
