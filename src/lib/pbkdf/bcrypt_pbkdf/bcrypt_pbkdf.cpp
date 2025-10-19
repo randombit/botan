@@ -77,7 +77,8 @@ void bcrypt_round(Blowfish& blowfish,
                   const secure_vector<uint8_t>& pass_hash,
                   const secure_vector<uint8_t>& salt_hash,
                   secure_vector<uint8_t>& out,
-                  secure_vector<uint8_t>& tmp) {
+                  secure_vector<uint8_t>& tmp,
+                  const std::optional<std::stop_token>& stop_token) {
    const size_t BCRYPT_PBKDF_OUTPUT = 32;
 
    // "OxychromaticBlowfishSwatDynamite"
@@ -88,8 +89,13 @@ void bcrypt_round(Blowfish& blowfish,
    const size_t BCRYPT_PBKDF_WORKFACTOR = 6;
    const size_t BCRYPT_PBKDF_ROUNDS = 64;
 
-   blowfish.salted_set_key(
-      pass_hash.data(), pass_hash.size(), salt_hash.data(), salt_hash.size(), BCRYPT_PBKDF_WORKFACTOR, true);
+   blowfish.salted_set_key(pass_hash.data(),
+                           pass_hash.size(),
+                           salt_hash.data(),
+                           salt_hash.size(),
+                           BCRYPT_PBKDF_WORKFACTOR,
+                           true,
+                           stop_token);
 
    copy_mem(tmp.data(), BCRYPT_PBKDF_MAGIC, BCRYPT_PBKDF_OUTPUT);
    for(size_t i = 0; i != BCRYPT_PBKDF_ROUNDS; ++i) {
@@ -117,7 +123,8 @@ void Bcrypt_PBKDF::derive_key(uint8_t output[],
                               const char* password,
                               size_t password_len,
                               const uint8_t salt[],
-                              size_t salt_len) const {
+                              size_t salt_len,
+                              const std::optional<std::stop_token>& stop_token) const {
    // No output desired, so we are all done already...
    if(output_len == 0) {
       return;
@@ -144,14 +151,14 @@ void Bcrypt_PBKDF::derive_key(uint8_t output[],
       sha512->update_be(static_cast<uint32_t>(block + 1));
       sha512->final(salt_hash.data());
 
-      bcrypt_round(blowfish, pass_hash, salt_hash, out, tmp);
+      bcrypt_round(blowfish, pass_hash, salt_hash, out, tmp, stop_token);
 
       for(size_t r = 1; r < m_iterations; ++r) {
          // Next salt is H(prev_output)
          sha512->update(tmp);
          sha512->final(salt_hash.data());
 
-         bcrypt_round(blowfish, pass_hash, salt_hash, out, tmp);
+         bcrypt_round(blowfish, pass_hash, salt_hash, out, tmp, stop_token);
       }
 
       for(size_t i = 0; i != BCRYPT_BLOCK_SIZE; ++i) {
