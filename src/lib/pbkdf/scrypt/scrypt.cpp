@@ -175,15 +175,22 @@ void scryptBlockMix(size_t r, uint8_t* B, uint8_t* Y) {
    }
 }
 
-void scryptROMmix(size_t r, size_t N, uint8_t* B, secure_vector<uint8_t>& V) {
+void scryptROMmix(
+   size_t r, size_t N, uint8_t* B, secure_vector<uint8_t>& V, const std::optional<std::stop_token>& stop_token) {
    const size_t S = 128 * r;
 
    for(size_t i = 0; i != N; ++i) {
+      if((i & 63) == 0 && stop_token.has_value() && stop_token->stop_requested()) {
+         throw Botan::Operation_Canceled("scrypt");
+      }
       copy_mem(&V[S * i], B, S);
       scryptBlockMix(r, B, &V[N * S]);
    }
 
    for(size_t i = 0; i != N; ++i) {
+      if((i & 63) == 0 && stop_token.has_value() && stop_token->stop_requested()) {
+         throw Botan::Operation_Canceled("scrypt");
+      }
       // compiler doesn't know here that N is power of 2
       const size_t j = load_le<uint32_t>(&B[(2 * r - 1) * 64], 0) & (N - 1);
       xor_buf(B, &V[j * S], S);
@@ -198,7 +205,8 @@ void Scrypt::derive_key(uint8_t output[],
                         const char* password,
                         size_t password_len,
                         const uint8_t salt[],
-                        size_t salt_len) const {
+                        size_t salt_len,
+                        const std::optional<std::stop_token>& stop_token) const {
    const size_t N = memory_param();
    const size_t p = parallelism();
    const size_t r = iterations();
@@ -220,7 +228,7 @@ void Scrypt::derive_key(uint8_t output[],
 
    // these can be parallel
    for(size_t i = 0; i != p; ++i) {
-      scryptROMmix(r, N, &B[128 * r * i], V);
+      scryptROMmix(r, N, &B[128 * r * i], V, stop_token);
    }
 
    pbkdf2(*hmac_sha256, output, output_len, B.data(), B.size(), 1);
