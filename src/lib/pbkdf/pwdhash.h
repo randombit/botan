@@ -13,6 +13,7 @@
 #include <span>
 #include <string>
 #include <vector>
+#include <stop_token>
 
 namespace Botan {
 
@@ -169,6 +170,11 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash /* NOLINT(*-special-member-functions) 
                               size_t ad_len,
                               const uint8_t key[],
                               size_t key_len) const;
+
+      void set_stop_token(std::stop_token t) { m_stop_token = t; }
+
+   protected:
+      std::optional<std::stop_token> m_stop_token;
 };
 
 class BOTAN_PUBLIC_API(2, 8) PasswordHashFamily /* NOLINT(*-special-member-functions) */ {
