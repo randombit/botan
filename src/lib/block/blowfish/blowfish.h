@@ -10,6 +10,8 @@
 
 #include <botan/block_cipher.h>
 #include <botan/secmem.h>
+#include <optional>
+#include <stop_token>
 
 namespace Botan {
 
@@ -29,7 +31,8 @@ class BOTAN_TEST_API Blowfish final : public Block_Cipher_Fixed_Params<8, 1, 56>
                           const uint8_t salt[],
                           size_t salt_length,
                           size_t workfactor,
-                          bool salt_first = false);
+                          bool salt_first = false,
+                          const std::optional<std::stop_token>& stop_token = std::nullopt);
 
       void clear() override;
 

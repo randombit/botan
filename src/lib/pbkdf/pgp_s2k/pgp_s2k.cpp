@@ -26,7 +26,8 @@ void pgp_s2k(HashFunction& hash,
              const size_t password_size,
              const uint8_t salt[],
              size_t salt_len,
-             size_t iterations) {
+             size_t iterations,
+             const std::optional<std::stop_token>& stop_token) {
    if(iterations > 1 && salt_len == 0) {
       throw Invalid_Argument("OpenPGP S2K requires a salt in iterated mode");
    }
@@ -54,7 +55,11 @@ void pgp_s2k(HashFunction& hash,
       // The input is always fully processed even if iterations is very small
       if(!input_buf.empty()) {
          size_t left = std::max(iterations, input_buf.size());
+         size_t iter = 0;
          while(left > 0) {
+            if((iter++ & 255) == 0 && stop_token.has_value() && stop_token->stop_requested()) {
+               throw Botan::Operation_Canceled("pgp_s2k");
+            }
             const size_t input_to_take = std::min(left, input_buf.size());
             hash.update(input_buf.data(), input_to_take);
             left -= input_to_take;
@@ -82,7 +87,7 @@ size_t OpenPGP_S2K::pbkdf(uint8_t output_buf[],
       iterations = s2k_params.tune(output_len, msec, 0, std::chrono::milliseconds(10))->iterations();
    }
 
-   pgp_s2k(*m_hash, output_buf, output_len, password.data(), password.size(), salt, salt_len, iterations);
+   pgp_s2k(*m_hash, output_buf, output_len, password.data(), password.size(), salt, salt_len, iterations, std::nullopt);
 
    return iterations;
 }
@@ -138,8 +143,9 @@ void RFC4880_S2K::derive_key(uint8_t out[],
                              const char* password,
                              const size_t password_len,
                              const uint8_t salt[],
-                             size_t salt_len) const {
-   pgp_s2k(*m_hash, out, out_len, password, password_len, salt, salt_len, m_iterations);
+                             size_t salt_len,
+                             const std::optional<std::stop_token>& stop_token) const {
+   pgp_s2k(*m_hash, out, out_len, password, password_len, salt, salt_len, m_iterations, stop_token);
 }
 
 }  // namespace Botan

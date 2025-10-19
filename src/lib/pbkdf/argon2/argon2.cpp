@@ -279,7 +279,8 @@ void process_block(secure_vector<uint64_t>& B,
                    size_t threads,
                    uint8_t mode,
                    size_t memory,
-                   size_t time) {
+                   size_t time,
+                   const std::optional<std::stop_token>& stop_token) {
    uint64_t T[128];
    size_t index = 0;
    if(n == 0 && slice == 0) {
@@ -296,6 +297,10 @@ void process_block(secure_vector<uint64_t>& B,
    }
 
    while(index < segments) {
+      if((index & 63) == 0 && stop_token.has_value() && stop_token->stop_requested()) {
+         throw Botan::Operation_Canceled("argon2");
+      }
+
       const size_t offset = lane * lanes + slice * segments + index;
 
       size_t prev = offset - 1;
@@ -326,7 +331,12 @@ void process_block(secure_vector<uint64_t>& B,
    }
 }
 
-void process_blocks(secure_vector<uint64_t>& B, size_t t, size_t memory, size_t threads, uint8_t mode) {
+void process_blocks(secure_vector<uint64_t>& B,
+                    size_t t,
+                    size_t memory,
+                    size_t threads,
+                    uint8_t mode,
+                    const std::optional<std::stop_token>& stop_token) {
    const size_t lanes = memory / threads;
    const size_t segments = lanes / SYNC_POINTS;
 
@@ -341,7 +351,7 @@ void process_blocks(secure_vector<uint64_t>& B, size_t t, size_t memory, size_t 
 
             for(size_t lane = 0; lane != threads; ++lane) {
                fut_results.push_back(thread_pool.run(
-                  process_block, std::ref(B), n, slice, lane, lanes, segments, threads, mode, memory, t));
+                  process_block, std::ref(B), n, slice, lane, lanes, segments, threads, mode, memory, t, stop_token));
             }
 
             for(auto& fut : fut_results) {
@@ -357,7 +367,7 @@ void process_blocks(secure_vector<uint64_t>& B, size_t t, size_t memory, size_t 
    for(size_t n = 0; n != t; ++n) {
       for(size_t slice = 0; slice != SYNC_POINTS; ++slice) {
          for(size_t lane = 0; lane != threads; ++lane) {
-            process_block(B, n, slice, lane, lanes, segments, threads, mode, memory, t);
+            process_block(B, n, slice, lane, lanes, segments, threads, mode, memory, t, stop_token);
          }
       }
    }
@@ -374,7 +384,8 @@ void Argon2::argon2(uint8_t output[],
                     const uint8_t key[],
                     size_t key_len,
                     const uint8_t ad[],
-                    size_t ad_len) const {
+                    size_t ad_len,
+                    const std::optional<std::stop_token>& stop_token) const {
    BOTAN_ARG_CHECK(output_len >= 4 && output_len <= std::numeric_limits<uint32_t>::max(),
                    "Invalid Argon2 output length");
    BOTAN_ARG_CHECK(password_len <= std::numeric_limits<uint32_t>::max(), "Invalid Argon2 password length");
@@ -406,7 +417,7 @@ void Argon2::argon2(uint8_t output[],
    secure_vector<uint64_t> B(memory * 1024 / 8);
 
    init_blocks(B, *blake2, H0, memory, m_p);
-   process_blocks(B, m_t, memory, m_p, m_family);
+   process_blocks(B, m_t, memory, m_p, m_family, stop_token);
 
    clear_mem(output, output_len);
    extract_key(output, output_len, B, memory, m_p);
