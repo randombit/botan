@@ -172,7 +172,7 @@ void PBKDF2::derive_key(uint8_t out[],
                         const size_t password_len,
                         const uint8_t salt[],
                         size_t salt_len,
-                        const std::optional<std::stop_token>& stop_token) const {
+                        [[maybe_unused]] const std::optional<std::stop_token>& stop_token) const {
    pbkdf2_set_key(*m_prf, password, password_len);
    pbkdf2(*m_prf, out, out_len, salt, salt_len, m_iterations);
 }
