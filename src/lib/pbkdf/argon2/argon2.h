@@ -60,6 +60,8 @@ class BOTAN_PUBLIC_API(2, 11) Argon2 final : public PasswordHash {
 
       bool supports_associated_data() const override { return true; }
 
+      bool supports_cooperative_cancellation() const override { return true; }
+
       size_t iterations() const override { return t(); }
 
       size_t parallelism() const override { return p(); }
