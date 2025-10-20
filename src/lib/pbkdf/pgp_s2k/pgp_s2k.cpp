@@ -140,7 +140,8 @@ void RFC4880_S2K::derive_key(uint8_t out[],
                              const char* password,
                              const size_t password_len,
                              const uint8_t salt[],
-                             size_t salt_len) const {
+                             size_t salt_len,
+                             const std::optional<std::stop_token>& stop_token) const {
    pgp_s2k(*m_hash, out, out_len, password, password_len, salt, salt_len, m_iterations);
 }
 

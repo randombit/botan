@@ -83,7 +83,7 @@ size_t pbkdf2(MessageAuthenticationCode& prf,
 
    PBKDF2 pbkdf2(prf, iterations);
 
-   pbkdf2.derive_key(out, out_len, password.data(), password.size(), salt, salt_len);
+   pbkdf2.derive_key(out, out_len, password.data(), password.size(), salt, salt_len, std::nullopt);
 
    return iterations;
 }
@@ -144,7 +144,7 @@ size_t PKCS5_PBKDF2::pbkdf(uint8_t key[],
 
    PBKDF2 pbkdf2(*m_mac, iterations);
 
-   pbkdf2.derive_key(key, key_len, password.data(), password.size(), salt, salt_len);
+   pbkdf2.derive_key(key, key_len, password.data(), password.size(), salt, salt_len, std::nullopt);
 
    return iterations;
 }
@@ -171,7 +171,8 @@ void PBKDF2::derive_key(uint8_t out[],
                         const char* password,
                         const size_t password_len,
                         const uint8_t salt[],
-                        size_t salt_len) const {
+                        size_t salt_len,
+                        const std::optional<std::stop_token>& stop_token) const {
    pbkdf2_set_key(*m_prf, password, password_len);
    pbkdf2(*m_prf, out, out_len, salt, salt_len, m_iterations);
 }

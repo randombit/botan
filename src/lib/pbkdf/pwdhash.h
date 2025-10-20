@@ -70,6 +70,11 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash /* NOLINT(*-special-member-functions) 
       virtual bool supports_associated_data() const { return false; }
 
       /**
+      * @returns true if this password hash supports cancelling a key derivation operation using a stop_token
+      */
+      virtual bool supports_cooperative_cancellation() const { return false; }
+
+      /**
       * Hash a password into a bitstring
       *
       * Derive a key from the specified @p password and  @p salt, placing it into
@@ -107,7 +112,8 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash /* NOLINT(*-special-member-functions) 
                 std::string_view password,
                 std::span<const uint8_t> salt,
                 std::span<const uint8_t> associated_data,
-                std::span<const uint8_t> key) const {
+                std::span<const uint8_t> key,
+                const std::optional<std::stop_token>& stop_token = std::nullopt) const {
          this->derive_key(out.data(),
                           out.size(),
                           password.data(),
@@ -117,7 +123,8 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash /* NOLINT(*-special-member-functions) 
                           associated_data.data(),
                           associated_data.size(),
                           key.data(),
-                          key.size());
+                          key.size(),
+                          stop_token);
       }
 
       /**
@@ -138,7 +145,8 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash /* NOLINT(*-special-member-functions) 
                               const char* password,
                               size_t password_len,
                               const uint8_t salt[],
-                              size_t salt_len) const = 0;
+                              size_t salt_len,
+                              const std::optional<std::stop_token>& stop_token = std::nullopt) const = 0;
 
       /**
       * Derive a key from a password plus additional data and/or a secret key
@@ -169,21 +177,8 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash /* NOLINT(*-special-member-functions) 
                               const uint8_t ad[],
                               size_t ad_len,
                               const uint8_t key[],
-                              size_t key_len) const;
-
-      /**
-      * @returns true if this password hash supports cancelling a key derivation operation using a stop_token
-      */
-      virtual bool supports_cooperative_cancellation() const { return false; }
-
-      /**
-      * Supply a stop_token to enable cooperative cancellation.
-      * Deriving a key will throw Botan::Invalid_State if the associated stop_source is cancelled.
-      */
-      void set_stop_token(std::stop_token t) { m_stop_token = t; }
-
-   protected:
-      std::optional<std::stop_token> m_stop_token;
+                              size_t key_len,
+                              const std::optional<std::stop_token>& stop_token = std::nullopt) const;
 };
 
 class BOTAN_PUBLIC_API(2, 8) PasswordHashFamily /* NOLINT(*-special-member-functions) */ {

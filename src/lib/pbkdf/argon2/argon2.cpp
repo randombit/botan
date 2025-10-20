@@ -378,7 +378,8 @@ void Argon2::argon2(uint8_t output[],
                     const uint8_t key[],
                     size_t key_len,
                     const uint8_t ad[],
-                    size_t ad_len) const {
+                    size_t ad_len,
+                    const std::optional<std::stop_token>& stop_token) const {
    BOTAN_ARG_CHECK(output_len >= 4 && output_len <= std::numeric_limits<uint32_t>::max(),
                    "Invalid Argon2 output length");
    BOTAN_ARG_CHECK(password_len <= std::numeric_limits<uint32_t>::max(), "Invalid Argon2 password length");
@@ -410,7 +411,7 @@ void Argon2::argon2(uint8_t output[],
    secure_vector<uint64_t> B(memory * 1024 / 8);
 
    init_blocks(B, *blake2, H0, memory, m_p);
-   process_blocks(B, m_t, memory, m_p, m_family, m_stop_token);
+   process_blocks(B, m_t, memory, m_p, m_family, stop_token);
 
    clear_mem(output, output_len);
    extract_key(output, output_len, B, memory, m_p);

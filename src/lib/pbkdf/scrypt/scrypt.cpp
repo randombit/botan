@@ -198,7 +198,8 @@ void Scrypt::derive_key(uint8_t output[],
                         const char* password,
                         size_t password_len,
                         const uint8_t salt[],
-                        size_t salt_len) const {
+                        size_t salt_len,
+                        const std::optional<std::stop_token>& stop_token) const {
    const size_t N = memory_param();
    const size_t p = parallelism();
    const size_t r = iterations();

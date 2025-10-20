@@ -117,7 +117,8 @@ void Bcrypt_PBKDF::derive_key(uint8_t output[],
                               const char* password,
                               size_t password_len,
                               const uint8_t salt[],
-                              size_t salt_len) const {
+                              size_t salt_len,
+                              const std::optional<std::stop_token>& stop_token) const {
    // No output desired, so we are all done already...
    if(output_len == 0) {
       return;

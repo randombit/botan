@@ -41,7 +41,8 @@ void PasswordHash::derive_key(uint8_t out[],
                               const uint8_t ad[],
                               size_t ad_len,
                               const uint8_t key[],
-                              size_t key_len) const {
+                              size_t key_len,
+                              const std::optional<std::stop_token>& stop_token) const {
    BOTAN_UNUSED(ad, key);
 
    if(ad_len == 0 && key_len == 0) {
