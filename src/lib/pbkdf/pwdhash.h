@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 #include <stop_token>
+#include <optional>
 
 namespace Botan {
 
