@@ -122,6 +122,10 @@ It can be instantiated with any HMAC but is typically used with
 SHA-256, SHA-384, or SHA-512, as these are the hash functions approved
 for this use by NIST.
 
+HMAC-DRBG is implemented against the NIST SP800-90A specification, as
+stated above and provides stable output across botan releases regarding
+identical seeds (e.g. in KATs or unit tests).
+
 .. note::
    There is no reason to use this class directly unless your application
    requires HMAC-DRBG with specific parameters or options. Usually this
@@ -194,6 +198,11 @@ This is a very fast userspace PRNG based on ChaCha20 and HMAC(SHA-512). The key
 and IV for ChaCha are derived by hashing entropy inputs with HMAC. Then the ChaCha
 keystream generator is run, first to generate the new HMAC key (used for any
 future entropy additions), then the desired RNG outputs.
+
+Please note, that you should not rely on the stability of this RNG's outputs
+regarding identical seeds across versions. The output changed in version 3.10.0
+and will likely change again at any future time. Use ``HMAC_DRBG`` if this kind
+of stability should be necessary for your application scenario.
 
 This RNG composes two primitives thought to be secure (ChaCha and HMAC) in a
 simple and well studied way (the extract-then-expand paradigm), but is still an
