@@ -1,19 +1,30 @@
 {
+    "inputs": [
+        {
+            "id": "testSelection",
+            "type": "promptString",
+            "description": "Which test would you like to run? (see './botan-test --list-tests')",
+            "args": {
+                "prompt": "Test Selection"
+            }
+        }
+    ],
     "configurations": [
         {
-            "name": "Debug Unittests",
             "name": "Debug Unittests (gdb)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/botan-test",
             "args": [
-                "--test-threads=1"
+                "--test-threads=1",
+                "${input:testSelection}"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
+            "preLaunchTask": "Build Unittests",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
@@ -33,12 +44,14 @@
             "request": "launch",
             "program": "${workspaceFolder}/botan-test.exe",
             "args": [
-                "--test-threads=1"
+                "--test-threads=1",
+                "${input:testSelection}"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "console": "externalTerminal"
+            "console": "externalTerminal",
+            "preLaunchTask": "Build Unittests"
         }
     ]
 }
