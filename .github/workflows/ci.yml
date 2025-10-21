@@ -115,21 +115,24 @@ jobs:
 
       matrix:
         include:
+        # - target: shared
+        #   compiler: xcode
+        #   os: macos-13 # x86
+        # - target: amalgamation
+        #   compiler: xcode
+        #   os: macos-13 # x86
+        #   make_tool: ninja
+        # - target: shared
+        #   compiler: xcode
+        #   os: macos-14
+        #   make_tool: ninja
+        # - target: amalgamation
+        #   compiler: xcode
+        #   os: macos-14
           - target: shared
             compiler: xcode
-            os: macos-13 # x86
+            os: macos-26
           - target: amalgamation
-            compiler: xcode
-            os: macos-13 # x86
-            make_tool: ninja
-          - target: shared
-            compiler: xcode
-            os: macos-14
-            make_tool: ninja
-          - target: amalgamation
-            compiler: xcode
-            os: macos-14
-          - target: shared
             compiler: xcode
             os: macos-26
 
@@ -333,7 +336,7 @@ jobs:
             make_tool: make
           - target: cross-ios-arm64
             compiler: xcode
-            host_os: macos-13
+            host_os: macos-26
           - target: cross-arm32-baremetal
             compiler: gcc
             host_os: ubuntu-24.04

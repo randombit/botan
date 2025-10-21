@@ -297,8 +297,9 @@ void process_block(secure_vector<uint64_t>& B,
    }
 
    while(index < segments) {
-      if ((index & 63) == 0 && stop_token.has_value() && stop_token->stop_requested())
+      if((index & 63) == 0 && stop_token.has_value() && stop_token->stop_requested()) {
          throw Botan::Invalid_State("Cancelled");
+      }
 
       const size_t offset = lane * lanes + slice * segments + index;
 
@@ -330,7 +331,12 @@ void process_block(secure_vector<uint64_t>& B,
    }
 }
 
-void process_blocks(secure_vector<uint64_t>& B, size_t t, size_t memory, size_t threads, uint8_t mode, const std::optional<std::stop_token>& stop_token) {
+void process_blocks(secure_vector<uint64_t>& B,
+                    size_t t,
+                    size_t memory,
+                    size_t threads,
+                    uint8_t mode,
+                    const std::optional<std::stop_token>& stop_token) {
    const size_t lanes = memory / threads;
    const size_t segments = lanes / SYNC_POINTS;
 

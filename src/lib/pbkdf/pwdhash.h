@@ -10,11 +10,11 @@
 #include <botan/types.h>
 #include <chrono>
 #include <memory>
+#include <optional>
 #include <span>
+#include <stop_token>
 #include <string>
 #include <vector>
-#include <stop_token>
-#include <optional>
 
 namespace Botan {
 
