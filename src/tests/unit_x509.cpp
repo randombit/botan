@@ -423,7 +423,7 @@ Test::Result test_x509_dates() {
 Test::Result test_x509_encode_authority_info_access_extension() {
    Test::Result result("X509 with encoded PKIX.AuthorityInformationAccess extension");
 
-   #if defined(BOTAN_HAS_RSA)
+   #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1)
    auto rng = Test::new_rng(__func__);
 
    const std::string sig_algo{"RSA"};
@@ -1597,7 +1597,14 @@ Test::Result test_x509_tn_auth_list_extension_decode() {
 
 std::vector<std::string> get_sig_paddings(const std::string& sig_algo, const std::string& hash) {
    if(sig_algo == "RSA") {
-      return {"PKCS1v15(" + hash + ")", "PSS(" + hash + ")"};
+      return {
+   #if defined(BOTAN_HAS_EMSA_PKCS1)
+         "PKCS1v15(" + hash + ")",
+   #endif
+   #if defined(BOTAN_HAS_EMSA_PSS)
+            "PSS(" + hash + ")",
+   #endif
+      };
    } else if(sig_algo == "DSA" || sig_algo == "ECDSA" || sig_algo == "ECGDSA" || sig_algo == "ECKCDSA" ||
              sig_algo == "GOST-34.10") {
       return {hash};

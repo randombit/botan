@@ -296,6 +296,8 @@ std::vector<Test::Result> Extended_Path_Validation_Tests::run() {
 
 BOTAN_REGISTER_TEST("x509", "x509_path_extended", Extended_Path_Validation_Tests);
 
+      #if defined(BOTAN_HAS_PSS)
+
 class PSS_Path_Validation_Tests : public Test {
    public:
       std::vector<Test::Result> run() override;
@@ -382,6 +384,8 @@ std::vector<Test::Result> PSS_Path_Validation_Tests::run() {
 }
 
 BOTAN_REGISTER_TEST("x509", "x509_path_rsa_pss", PSS_Path_Validation_Tests);
+
+      #endif
 
 class Validate_V1Cert_Test final : public Test {
    public:

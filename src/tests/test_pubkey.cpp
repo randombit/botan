@@ -908,10 +908,23 @@ class PK_API_Sign_Test : public Text_Based_Test {
                            !privkey->remaining_operations().has_value());
          }
 
-         auto signer = std::make_unique<Botan::PK_Signer>(
-            *privkey, this->rng(), sig_params, Botan::Signature_Format::Standard, provider);
-         auto verifier =
-            std::make_unique<Botan::PK_Verifier>(*pubkey, verify_params, Botan::Signature_Format::Standard, provider);
+         auto [signer, verifier] = [&] {
+            try {
+               return std::make_pair(std::make_unique<Botan::PK_Signer>(
+                                        *privkey, this->rng(), sig_params, Botan::Signature_Format::Standard, provider),
+                                     std::make_unique<Botan::PK_Verifier>(
+                                        *pubkey, verify_params, Botan::Signature_Format::Standard, provider));
+            } catch(Botan::Algorithm_Not_Found&) {}
+
+            return std::pair<std::unique_ptr<Botan::PK_Signer>, std::unique_ptr<Botan::PK_Verifier>>{};
+         }();
+
+         if(!signer || !verifier) {
+            result.test_note(Botan::fmt(
+               "Skipping Sign/verify API tests for {}({}) with provider {}", algorithm, algo_params, provider));
+            return result;
+         }
+
          result.confirm("Creating PK_Signer works", signer != nullptr);
          result.confirm("Creating PK_Signer works", verifier != nullptr);
 
