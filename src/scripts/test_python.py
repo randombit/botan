@@ -324,6 +324,7 @@ class BotanPythonTests(unittest.TestCase):
             (kmin, kmax) = enc.key_length()
 
             self.assertLessEqual(kmin, kmax)
+            self.assertTrue(enc.valid_nonce_length(enc.default_nonce_length()))
 
             rng = botan.RandomNumberGenerator()
             iv = rng.get(enc.default_nonce_length())
