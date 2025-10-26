@@ -6,7 +6,7 @@
 # `src/tests/data/pubkey/frodokem_kat.vec` test data from the *.rsp files in
 # the reference implementation repository.
 #
-# See here: https://github.com/microsoft/PQCrypto-LWEKE/tree/master/KAT
+# See here: https://github.com/microsoft/PQCrypto-LWEKE/tree/master
 #
 # (C) 2023 Jack Lloyd
 # (C) 2023 René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity
