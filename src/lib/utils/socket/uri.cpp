@@ -37,12 +37,7 @@ bool is_domain_name(std::string_view domain) {
 }
 
 bool is_ipv4(std::string_view ip) {
-   std::string ip_str(ip);
-   sockaddr_storage inaddr{};
-
-   // TODO use string_to_ipv4 here
-   // NOLINTNEXTLINE(*-implicit-bool-conversion)
-   return !!inet_pton(AF_INET, ip_str.c_str(), &inaddr);
+   return string_to_ipv4(ip).has_value();
 }
 
 bool is_ipv6(std::string_view ip) {

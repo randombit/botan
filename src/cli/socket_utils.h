@@ -52,8 +52,16 @@ inline void stop_sockets() {
 }
 
 inline std::string err_to_string(int e) {
-   // TODO use strerror_s here
-   return "Error code " + std::to_string(e);
+   /*
+    * MS documentation specifies 94 character max for user messages.
+    * strerror_s truncates to buffer size - 1 and guarantees null termination.
+    * Using 100 bytes yo ensure sufficient space with safety margin.
+    * https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/strerror-s-strerror-s-wcserror-s-wcserror-s
+    */
+   std::array<char, 100> buf{};
+   const auto res = strerror_s(buf.data(), buf.size() - 1, e);
+   const std::string_view msg = (res == 0) ? buf.data() : "failed to map error with strerror_s()";
+   return Botan::fmt("Error: {} - {}", e, msg);
 }
 
 inline int close(int fd) {
