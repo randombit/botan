@@ -1,7 +1,7 @@
 /*
  * Tests for FrodoKEM ("You SHALL Pass")
  * - KAT tests using the KAT vectors from
- *   https://github.com/microsoft/PQCrypto-LWEKE/tree/master/KAT
+ *   https://github.com/microsoft/PQCrypto-LWEKE/tree/master
  *
  * (C) 2023 Jack Lloyd
  * (C) 2023 René Meusel and Amos Treiber, Rohde & Schwarz Cybersecurity

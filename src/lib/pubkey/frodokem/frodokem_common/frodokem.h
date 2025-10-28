@@ -1,7 +1,7 @@
 /*
  * FrodoKEM implementation
  * Based on the MIT licensed reference implementation by the designers
- * (https://github.com/microsoft/PQCrypto-LWEKE/tree/master/src)
+ * (https://github.com/microsoft/PQCrypto-LWEKE/tree/master)
  *
  * The Fellowship of the FrodoKEM:
  * (C) 2023 Jack Lloyd

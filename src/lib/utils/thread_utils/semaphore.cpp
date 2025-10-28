@@ -7,7 +7,7 @@
 
 #include <botan/internal/semaphore.h>
 
-// Based on code by Pierre Gaston (http://p9as.blogspot.com/2012/06/c11-semaphores.html)
+// Based on code by Pierre Gaston
 
 namespace Botan {
 

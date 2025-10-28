@@ -1,5 +1,4 @@
 # SHA-1 and SHA-256 data from RFC 5869
-# SHA-512 data from https://www.kullo.net/blog/hkdf-sha-512-test-vectors/
 
 [HKDF(HMAC(SHA-1))]
 Salt = 000102030405060708090A0B0C

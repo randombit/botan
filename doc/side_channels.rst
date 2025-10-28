@@ -466,7 +466,7 @@ Attacks on TLS-ECDH
 elliptic-curve cryptography. (https://safecurves.cr.yp.to)
 
 [Lucky13] AlFardan, Paterson "Lucky Thirteen: Breaking the TLS and DTLS Record Protocols"
-(http://www.isg.rhul.ac.uk/tls/TLStiming.pdf)
+(https://www.isg.rhul.ac.uk/tls/Lucky13.html)
 
 [MillionMsg] Bleichenbacher "Chosen Ciphertext Attacks Against Protocols Based
 on the RSA Encryption Standard PKCS1"
