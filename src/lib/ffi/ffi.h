@@ -932,14 +932,26 @@ BOTAN_FFI_EXPORT(2, 1) int botan_mp_init(botan_mp_t* mp);
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_destroy(botan_mp_t mp);
 
 /**
-* Convert the MPI to a hex string. Writes botan_mp_num_bytes(mp)*2 + 1 bytes
+* Convert the MPI to a hex string. Writes up to botan_mp_num_bytes(mp)*2 + 5 bytes
+*
+* Prefer botan_mp_view_hex
 */
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_to_hex(botan_mp_t mp, char* out);
 
 /**
-* Convert the MPI to a string. Currently base == 10 and base == 16 are supported.
+* View the hex string encoding of the MPI.
 */
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_to_str(botan_mp_t mp, uint8_t base, char* out, size_t* out_len);
+BOTAN_FFI_EXPORT(3, 10) int botan_mp_view_hex(botan_mp_t mp, botan_view_ctx ctx, botan_view_str_fn view);
+
+/**
+* Convert the MPI to a string. Currently radix == 10 and radix == 16 are supported.
+*/
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_to_str(botan_mp_t mp, uint8_t radix, char* out, size_t* out_len);
+
+/**
+* View the MPI as a radix-N integer. Currently only radix 10 and radix 16 are supported
+*/
+BOTAN_FFI_EXPORT(3, 10) int botan_mp_view_str(botan_mp_t mp, uint8_t radix, botan_view_ctx ctx, botan_view_str_fn view);
 
 /**
 * Set the MPI to zero
@@ -979,8 +991,17 @@ BOTAN_FFI_EXPORT(2, 1) int botan_mp_num_bytes(botan_mp_t n, size_t* bytes);
 
 /*
 * Convert the MPI to a big-endian binary string. Writes botan_mp_num_bytes to vec
+*
+* Note that the sign of the integer is ignored here; only the absolute value is copied
 */
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_to_bin(botan_mp_t mp, uint8_t vec[]);
+
+/*
+* View the big-endian binary string encoding of this integer
+*
+* Note that the sign of the integer is ignored here; only the absolute value is viewed
+*/
+BOTAN_FFI_EXPORT(3, 10) int botan_mp_view_bin(botan_mp_t mp, botan_view_ctx ctx, botan_view_bin_fn view);
 
 /*
 * Set an MP to the big-endian binary value

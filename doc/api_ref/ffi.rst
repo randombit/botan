@@ -663,11 +663,34 @@ Multiple Precision Integers
 
 .. cpp:function:: int botan_mp_to_hex(botan_mp_t mp, char* out)
 
-   Writes exactly ``botan_mp_num_bytes(mp)*2 + 1`` bytes to out
+   Writes the hex encoding to the ``out`` parameter. This must point to a pre-allocated
+   buffer of at least ``botan_mp_num_bytes(mp)*2 + 5`` bytes. Some number of bytes will
+   be written, followed by a null terminator.
 
-.. cpp:function:: int botan_mp_to_str(botan_mp_t mp, uint8_t base, char* out, size_t* out_len)
+   .. warning::
 
-   Base can be either 10 or 16.
+      This function is error-prone to use since the caller is not able to specify the
+      length of the buffer, so if insufficient space is allocated an overwrite will occur,
+      instead of the function returning ``BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE`` as
+      is typical for FFI. Prefer :cpp:func:`botan_mp_view_hex` which avoids this problem.
+
+.. cpp:function:: int botan_mp_view_hex(botan_mp_t mp, botan_view_ctx ctx, botan_view_str_fn view)
+
+   View the hex encoding of the integer.
+
+.. cpp:function:: int botan_mp_to_str(botan_mp_t mp, uint8_t radix, char* out, size_t* out_len)
+
+   The ``radix`` can currently be either 10 or 16. If ``radix`` is 16 this behaves
+   identically to :cpp:func:`botan_mp_to_hex` with the addition that the output length is
+   checked rather than assumed.
+
+   .. note::
+
+      Prefer using :cpp:func:`botan_mp_view_str`
+
+.. cpp:function:: int botan_mp_view_str(botan_mp_t mp, uint8_t radix, botan_view_ctx ctx, botan_view_str_fn view)
+
+   View the string encoding of the integer. The radix can currently be either 10 or 16.
 
 .. cpp:function:: int botan_mp_set_from_int(botan_mp_t mp, int initial_value)
 
@@ -692,6 +715,16 @@ Multiple Precision Integers
 .. cpp:function:: int botan_mp_to_bin(botan_mp_t mp, uint8_t vec[])
 
    Writes exactly ``botan_mp_num_bytes(mp)`` to ``vec``.
+
+   Note that the sign of ``mp`` is ignored.
+
+   .. note::
+
+      Prefer :cpp:func:`botan_mp_view_bin`.
+
+.. cpp:function:: int botan_mp_view_bin(botan_mp_t mp, botan_view_ctx ctx, botan_view_bin_fn view)
+
+   View the big-endian byte encoding of the integer. Note that the sign of ``mp`` is ignored.
 
 .. cpp:function:: int botan_mp_from_bin(botan_mp_t mp, const uint8_t vec[], size_t vec_len)
 

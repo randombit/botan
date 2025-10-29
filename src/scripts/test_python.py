@@ -837,6 +837,9 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertEqual(int(small), 0xDEADBEEF)
         self.assertEqual(int(radix), int(small))
 
+        self.assertEqual(repr(small), "3735928559")
+        self.assertEqual(repr(big), "10578070104470344071876527419957")
+
         self.assertEqual(int(small >> 16), 0xDEAD)
 
         small >>= 15
