@@ -2226,7 +2226,14 @@ class FFI_MP_Test final : public FFI_Test {
 
             TEST_FFI_OK(botan_mp_flip_sign, (x));
 
+            // Regression test for bug reported by @hgarrereyn
+            // See: GH #5128
+            botan_mp_t out_shift;
+            TEST_FFI_OK(botan_mp_init, (&out_shift));
+            TEST_FFI_OK(botan_mp_lshift, (out_shift, zero, 0));
+
             botan_mp_destroy(zero);
+            botan_mp_destroy(out_shift);
          }
 
          size_t x_bits = 0;

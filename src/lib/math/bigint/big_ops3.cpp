@@ -185,6 +185,10 @@ word operator%(const BigInt& n, word mod) {
 * Left Shift Operator
 */
 BigInt operator<<(const BigInt& x, size_t shift) {
+   if(x.is_zero()) {
+      return BigInt::zero();
+   }
+
    const size_t x_sw = x.sig_words();
 
    const size_t new_size = x_sw + (shift + WordInfo<word>::bits - 1) / WordInfo<word>::bits;
