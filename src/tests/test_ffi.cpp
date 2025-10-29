@@ -134,17 +134,21 @@ class FFI_Test : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result(this->name());
 
-         botan_rng_t rng;
-         if(botan_rng_init(&rng, "system") != 0) {
-            result.test_failure("Failed to init RNG");
-            return {result};
+         if(!skip_this_test()) {
+            botan_rng_t rng;
+            if(botan_rng_init(&rng, "system") != 0) {
+               result.test_failure("Failed to init RNG");
+               return {result};
+            }
+
+            result.start_timer();
+            ffi_test(result, rng);
+            result.end_timer();
+
+            botan_rng_destroy(rng);
+         } else {
+            result.test_note("FFI test asked to be skipped");
          }
-
-         result.start_timer();
-         ffi_test(result, rng);
-         result.end_timer();
-
-         botan_rng_destroy(rng);
 
          return {result};
       }
@@ -152,6 +156,8 @@ class FFI_Test : public Test {
    private:
       virtual std::string name() const = 0;
       virtual void ffi_test(Test::Result& result, botan_rng_t rng) = 0;
+
+      virtual bool skip_this_test() const { return false; }
 };
 
 void ffi_test_pubkey_export(Test::Result& result, botan_pubkey_t pub, botan_privkey_t priv, botan_rng_t rng) {
@@ -714,6 +720,14 @@ class FFI_CRL_Test final : public FFI_Test {
 class FFI_Cert_Validation_Test final : public FFI_Test {
    public:
       std::string name() const override { return "FFI Cert Validation"; }
+
+      bool skip_this_test() const override {
+   #if !defined(BOTAN_HAS_PKCSV15_SIGNATURE_PADDING)
+         return true;
+   #else
+         return false;
+   #endif
+      }
 
       void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
          botan_x509_cert_t root;
