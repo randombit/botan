@@ -15,6 +15,10 @@ import sys
 ignored_tests = {}
 
 tests_that_succeed_unexpectedly = {
+    'crl::revoked-certificate-with-crl': 'Need CRL support in this script',
+    'crl::crlnumber-missing': 'Need CRL support in this script',
+    'crl::crlnumber-critical': 'Need CRL support in this script',
+
     'rfc5280::aki::critical-aki unexpected': 'Conflates CA and verifier requirements',
     'rfc5280::aki::critical-aki': 'Conflates CA and verifier requirements',
     'rfc5280::aki::intermediate-missing-aki': 'Conflates CA and verifier requirements',
