@@ -211,3 +211,8 @@ Value = -0x2C74CC8EB77FB260B99B22CF68FA5DE561B0F1D3D6248FD4FC9A32814AC773D5
 Shift = 0x28
 Output = -0x2C74CC8EB77FB260B99B22CF68FA5DE561B0F1D3D6248FD4FC9A32
 
+# Left-shifting an "empty" (aka zero) big int caused a segfault. This test is a
+# right shift and was added to mirror the regression test in lshift.vec.
+Value = 0x0
+Shift = 0x0
+Output = 0x0
