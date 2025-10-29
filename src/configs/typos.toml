@@ -48,6 +48,4 @@ indx = "indx"
 [default.extend-identifiers]
 countr_zero = "countr_zero"
 ARIA_FO = "ARIA_FO"
-NDKs = "NDKs"
-STRINGSs = "STRINGSs"
 Tru64 = "Tru64"

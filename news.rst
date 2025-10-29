@@ -818,8 +818,8 @@ Version 3.2.0, 2023-10-09
 
 * Add checks for invalid length AD in Argon2 (GH #3626)
 
-* CI now uses Android NDK 26, and earlier NDKs are not supported
-  due to limitations of the C++ library in earlier NDKs (GH #3718)
+* CI now uses Android NDK 26. Earlier NDK versions are no longer supported
+  due to limitations in their C++ library implementations. (GH #3718)
 
 * Improve support for IBM's XLC compiler (GH #3730)
 
