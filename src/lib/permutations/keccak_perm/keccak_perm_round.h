@@ -12,7 +12,7 @@
 
 namespace Botan {
 
-inline void Keccak_Permutation_round(uint64_t T[25], const uint64_t A[25], uint64_t RC) {
+BOTAN_FORCE_INLINE void Keccak_Permutation_round(uint64_t T[25], const uint64_t A[25], uint64_t RC) {
    const uint64_t C0 = A[0] ^ A[5] ^ A[10] ^ A[15] ^ A[20];
    const uint64_t C1 = A[1] ^ A[6] ^ A[11] ^ A[16] ^ A[21];
    const uint64_t C2 = A[2] ^ A[7] ^ A[12] ^ A[17] ^ A[22];
