@@ -108,7 +108,7 @@ class ViewStringSink final {
 
       botan_view_str_fn callback() { return &write_fn; }
 
-      std::string_view get() { return m_str; }
+      const std::string& get() { return m_str; }
 
    private:
       static int write_fn(void* ctx, const char* str, size_t len) {
@@ -2235,6 +2235,18 @@ class FFI_MP_Test final : public FFI_Test {
 
          TEST_FFI_OK(botan_mp_to_hex, (x, str_buf));
          result.test_eq("botan_mp_to_hex", std::string(str_buf), "0x0103");
+
+         ViewStringSink hex_sink;
+         TEST_FFI_OK(botan_mp_view_hex, (x, hex_sink.delegate(), hex_sink.callback()));
+         result.test_eq("botan_mp_view_hex", hex_sink.get(), "0x0103");
+
+         ViewStringSink str_sink;
+         TEST_FFI_OK(botan_mp_view_str, (x, 10, str_sink.delegate(), str_sink.callback()));
+         result.test_eq("botan_mp_view_str", str_sink.get(), "259");
+
+         ViewBytesSink bin_sink;
+         TEST_FFI_OK(botan_mp_view_bin, (x, bin_sink.delegate(), bin_sink.callback()));
+         result.test_eq("botan_mp_view_str", bin_sink.get(), "0103");
 
          uint32_t x_32;
          TEST_FFI_OK(botan_mp_to_uint32, (x, &x_32));

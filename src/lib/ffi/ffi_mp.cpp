@@ -84,16 +84,39 @@ int botan_mp_from_bin(botan_mp_t mp, const uint8_t bin[], size_t bin_len) {
 int botan_mp_to_hex(const botan_mp_t mp, char* out) {
    return BOTAN_FFI_VISIT(mp, [=](const auto& bn) {
       const std::string hex = bn.to_hex_string();
+
+      // Check that we are about to write no more than the documented upper bound
+      const size_t upper_bound = 2 * bn.bytes() + 5;
+      BOTAN_ASSERT_NOMSG(hex.size() + 1 <= upper_bound);
       std::memcpy(out, hex.c_str(), 1 + hex.size());
    });
 }
 
-int botan_mp_to_str(const botan_mp_t mp, uint8_t digit_base, char* out, size_t* out_len) {
+int botan_mp_view_hex(const botan_mp_t mp, botan_view_ctx ctx, botan_view_str_fn view) {
    return BOTAN_FFI_VISIT(mp, [=](const auto& bn) -> int {
-      if(digit_base == 0 || digit_base == 10) {
+      const std::string hex = bn.to_hex_string();
+      return invoke_view_callback(view, ctx, hex);
+   });
+}
+
+int botan_mp_to_str(const botan_mp_t mp, uint8_t radix, char* out, size_t* out_len) {
+   return BOTAN_FFI_VISIT(mp, [=](const auto& bn) -> int {
+      if(radix == 0 || radix == 10) {
          return write_str_output(out, out_len, bn.to_dec_string());
-      } else if(digit_base == 16) {
+      } else if(radix == 16) {
          return write_str_output(out, out_len, bn.to_hex_string());
+      } else {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+   });
+}
+
+int botan_mp_view_str(const botan_mp_t mp, uint8_t radix, botan_view_ctx ctx, botan_view_str_fn view) {
+   return BOTAN_FFI_VISIT(mp, [=](const auto& bn) -> int {
+      if(radix == 10) {
+         return invoke_view_callback(view, ctx, bn.to_dec_string());
+      } else if(radix == 16) {
+         return invoke_view_callback(view, ctx, bn.to_hex_string());
       } else {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }
@@ -102,6 +125,13 @@ int botan_mp_to_str(const botan_mp_t mp, uint8_t digit_base, char* out, size_t* 
 
 int botan_mp_to_bin(const botan_mp_t mp, uint8_t vec[]) {
    return BOTAN_FFI_VISIT(mp, [=](const auto& bn) { bn.serialize_to(std::span{vec, bn.bytes()}); });
+}
+
+int botan_mp_view_bin(const botan_mp_t mp, botan_view_ctx ctx, botan_view_bin_fn view) {
+   return BOTAN_FFI_VISIT(mp, [=](const auto& bn) {
+      const auto bytes = bn.serialize();
+      return invoke_view_callback(view, ctx, bytes);
+   });
 }
 
 int botan_mp_to_uint32(const botan_mp_t mp, uint32_t* val) {

@@ -230,7 +230,9 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_mp_init, [c_void_p])
     ffi_api(dll.botan_mp_destroy, [c_void_p])
     ffi_api(dll.botan_mp_to_hex, [c_void_p, c_char_p])
+    ffi_api(dll.botan_mp_view_hex, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
     ffi_api(dll.botan_mp_to_str, [c_void_p, c_uint8, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_mp_view_str, [c_void_p, c_uint8, c_void_p, VIEW_STR_CALLBACK])
     ffi_api(dll.botan_mp_clear, [c_void_p])
     ffi_api(dll.botan_mp_set_from_int, [c_void_p, c_int])
     ffi_api(dll.botan_mp_set_from_mp, [c_void_p, c_void_p])
@@ -2031,21 +2033,11 @@ class MPI:
         return self.__obj
 
     def __int__(self):
-        out = create_string_buffer(2*self.byte_count() + 3)
-        _DLL.botan_mp_to_hex(self.__obj, out)
-        return int(out.value, 16)
+        hexv = _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_mp_view_hex(self.__obj, vc, vfn))
+        return int(hexv, 16)
 
     def __repr__(self):
-        # Should have a better size estimate than this ...
-        bits = self.bit_count()
-        est_digits = 4 if bits < 3 else bits
-        out_len = c_size_t(est_digits)
-        out = create_string_buffer(out_len.value)
-
-        _DLL.botan_mp_to_str(self.__obj, c_uint8(10), out, byref(out_len))
-
-        out = out.raw[0:int(out_len.value - 1)]
-        return _ctype_to_str(out)
+        return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_mp_view_str(self.__obj, 10, vc, vfn))
 
     def to_bytes(self) -> Array[c_char]:
         byte_count = self.byte_count()
