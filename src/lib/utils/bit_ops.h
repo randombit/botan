@@ -21,7 +21,7 @@
 namespace Botan {
 
 /**
-* If top bit of arg is set, return ~0. Otherwise return 0.
+* If top bit of arg is set, return |1| (all bits set). Otherwise return |0| (all bits unset)
 */
 template <std::unsigned_integral T>
 BOTAN_FORCE_INLINE constexpr T expand_top_bit(T a) {
@@ -29,11 +29,21 @@ BOTAN_FORCE_INLINE constexpr T expand_top_bit(T a) {
 }
 
 /**
-* If arg is zero, return ~0. Otherwise return 0
+* If arg is zero, return |1|. Otherwise return |0|
 */
 template <std::unsigned_integral T>
 BOTAN_FORCE_INLINE constexpr T ct_is_zero(T x) {
    return expand_top_bit<T>(~x & (x - 1));
+}
+
+/**
+* If arg is zero, return the size_t `s`. Otherwise return the size_t zero.
+*/
+template <std::unsigned_integral T>
+BOTAN_FORCE_INLINE constexpr size_t ct_if_is_zero_ret(T x, size_t s) {
+   const T a = ~x & (x - 1);
+   const size_t mask = static_cast<size_t>(0) - static_cast<size_t>(a >> (sizeof(T) * 8 - 1));
+   return mask & s;
 }
 
 /**
@@ -57,7 +67,8 @@ BOTAN_FORCE_INLINE constexpr size_t high_bit(T n) {
    size_t hb = 0;
 
    for(size_t s = 8 * sizeof(T) / 2; s > 0; s /= 2) {
-      const size_t z = s * ((~ct_is_zero<T>(n >> s)) & 1);
+      // Equivalent to: ((n >> s) == 0) ? 0 : s;
+      const size_t z = s - ct_if_is_zero_ret<T>(n >> s, s);
       hb += z;
       n >>= z;
    }
@@ -77,7 +88,8 @@ BOTAN_FORCE_INLINE constexpr size_t significant_bytes(T n) {
    size_t b = 0;
 
    for(size_t s = 8 * sizeof(T) / 2; s >= 8; s /= 2) {
-      const size_t z = s * (~ct_is_zero(n >> s) & 1);
+      // Equivalent to: ((n >> s) == 0) ? 0 : s;
+      const size_t z = s - ct_if_is_zero_ret<T>(n >> s, s);
       b += z / 8;
       n >>= z;
    }
@@ -98,11 +110,12 @@ BOTAN_FORCE_INLINE constexpr size_t ctz(T n) {
    * If n == 0 then this function will compute 8*sizeof(T)-1, so
    * initialize lb to 1 if n == 0 to produce the expected result.
    */
-   size_t lb = ct_is_zero(n) & 1;
+   size_t lb = ct_if_is_zero_ret<T>(n, 1);
 
    for(size_t s = 8 * sizeof(T) / 2; s > 0; s /= 2) {
-      const T mask = (static_cast<T>(1) << s) - 1;
-      const size_t z = s * (ct_is_zero(n & mask) & 1);
+      const T range = (static_cast<T>(1) << s) - 1;
+      // Equivalent to: ((n & range) == 0) ? s : 0;
+      const size_t z = ct_if_is_zero_ret<T>(n & range, s);
       lb += z;
       n >>= z;
    }
