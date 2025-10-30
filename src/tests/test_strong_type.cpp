@@ -107,7 +107,7 @@ std::vector<Test::Result> test_container_strong_type() {
                result.confirm("empty()", !nonce.empty());
                result.test_is_eq("data()", nonce.data(), dataptr);
 
-               for(auto& c : nonce) {
+               for(const auto& c : nonce) {
                   result.confirm("iteration", c > 0);
                }
             }),

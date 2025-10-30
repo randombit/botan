@@ -253,8 +253,6 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
 
       Test::Result run_one_test(const std::string& extension, const VarMap& vars) override {
          const std::vector<uint8_t> buffer = vars.get_req_bin("Buffer");
-         const std::vector<uint8_t> protocol = vars.get_opt_bin("Protocol");
-         const std::vector<uint8_t> ciphersuite = vars.get_opt_bin("Ciphersuite");
          const std::string exception = vars.get_req_str("Exception");
          const bool is_positive_test = exception.empty();
 

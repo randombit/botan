@@ -107,18 +107,20 @@ class DL_Generate_Group_Tests final : public Test {
          result.test_lte("DSA g size", dsa1024.get_g().bits(), 1024);
          result.test_eq("DSA group verifies", dsa1024.verify_group(rng, false), true);
 
-         const std::vector<uint8_t> short_seed(16);
          const std::vector<uint8_t> invalid_seed(20);
-         const std::vector<uint8_t> working_seed = Botan::hex_decode("0000000000000000000000000000000000000021");
-
          result.test_throws("DSA seed does not generate group",
                             "DL_Group: The seed given does not generate a DSA group",
                             [&rng, &invalid_seed]() { Botan::DL_Group dsa(rng, invalid_seed, 1024, 160); });
 
+         const std::vector<uint8_t> short_seed(16);
          result.test_throws(
             "DSA seed is too short",
             "Generating a DSA parameter set with a 160 bit long q requires a seed at least as many bits long",
             [&rng, &short_seed]() { Botan::DL_Group dsa(rng, short_seed, 1024, 160); });
+
+         const std::vector<uint8_t> working_seed = Botan::hex_decode("0000000000000000000000000000000000000021");
+         Botan::DL_Group dsa(rng, working_seed, 1024, 160);
+         result.test_eq("DSA group from working seed verifies", dsa.verify_group(rng, false), true);
 
          // From FIPS 186-3 test data
          const std::vector<uint8_t> seed = Botan::hex_decode("1F5DA0AF598EEADEE6E6665BF880E63D8B609BA2");

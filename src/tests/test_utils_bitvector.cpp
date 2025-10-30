@@ -754,7 +754,7 @@ std::vector<Test::Result> test_bitvector_global_modifiers_and_predicates(Botan::
 
       CHECK("hamming weight",
             [](auto& result) {
-               auto naive_count = [](auto& v) {
+               auto naive_count = [](const auto& v) {
                   size_t weight = 0;
                   for(const auto& bit : v) {
                      weight += bit.template as<size_t>();
