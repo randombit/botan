@@ -73,9 +73,15 @@ int botan_srp6_server_session_step1(botan_srp6_server_session_t srp6,
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
       try {
+         const auto group = Botan::DL_Group::from_name(group_id);
+         const auto rc = check_and_prepare_output_space(b_pub, b_pub_len, group.p_bytes());
+         if(rc != BOTAN_FFI_SUCCESS) {
+            return rc;
+         }
+
          Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
          auto v_bn = Botan::BigInt::from_bytes(std::span{verifier, verifier_len});
-         auto b_pub_bn = s.step1(v_bn, group_id, hash_id, rng);
+         auto b_pub_bn = s.step1(v_bn, group, hash_id, group.exponent_bits(), rng);
          return write_vec_output(b_pub, b_pub_len, b_pub_bn.serialize());
       } catch(Botan::Decoding_Error&) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
