@@ -223,25 +223,39 @@ int copy_view_str(uint8_t out[], size_t* out_len, Fn fn, Args... args) {
 }
 
 template <std::integral T>
-inline int write_output(T out[], size_t* out_len, const T buf[], size_t buf_len) {
-   static_assert(sizeof(T) == 1, "T should be either uint8_t or char");
-
+   requires(sizeof(T) == 1)
+inline int check_and_prepare_output_space(T out[], size_t* out_len, size_t required_len) {
    if(out_len == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
    const size_t avail = *out_len;
-   *out_len = buf_len;
+   *out_len = required_len;
 
-   if((avail >= buf_len) && (out != nullptr)) {
-      Botan::copy_mem(out, buf, buf_len);
-      return BOTAN_FFI_SUCCESS;
-   } else {
+   if(avail < required_len || out == nullptr) {
       if(out != nullptr) {
          Botan::clear_mem(out, avail);
       }
       return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
+   } else {
+      return BOTAN_FFI_SUCCESS;
    }
+}
+
+template <std::integral T>
+inline int write_output(T out[], size_t* out_len, const T buf[], size_t buf_len) {
+   static_assert(sizeof(T) == 1, "T should be either uint8_t or char");
+
+   const auto rc = check_and_prepare_output_space(out, out_len, buf_len);
+   if(rc != BOTAN_FFI_SUCCESS) {
+      return rc;
+   }
+
+   if(out != nullptr) {
+      Botan::copy_mem(out, buf, buf_len);
+   }
+
+   return BOTAN_FFI_SUCCESS;
 }
 
 inline int write_vec_output(uint8_t out[], size_t* out_len, std::span<const uint8_t> buf) {
