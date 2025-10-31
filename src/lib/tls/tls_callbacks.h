@@ -4,6 +4,7 @@
 *     2016 Jack Lloyd
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
 *     2022 René Meusel, Rohde & Schwarz Cybersecurity
+*     2025 Frederik Dornemann, CARIAD SE
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -13,6 +14,7 @@
 
 #include <botan/dl_group.h>
 #include <botan/ecc_key.h>
+#include <botan/kdf.h>
 #include <botan/ocsp.h>
 #include <botan/pubkey.h>
 #include <botan/tls_alert.h>
@@ -675,6 +677,20 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
       virtual void tls_ssl_key_log_data(std::string_view label,
                                         std::span<const uint8_t> client_random,
                                         std::span<const uint8_t> secret) const;
+
+      /**
+       * Returns the key derivation function to be used for TLS 1.2
+       *
+       * The default implementation can be overridden to provide a user-defined
+       * key derivation function, for example to delegate key derivation to a
+       * hardware-protected environment when a pre-shared key must remain
+       * inaccessible to the non-secure world.
+       *
+       * @param prf_algo  name of the hash function (e.g. "SHA-256")
+       *
+       * @return  TLS 1.2 KDF implementation
+       */
+      virtual std::unique_ptr<KDF> tls12_protocol_specific_kdf(std::string_view prf_algo) const;
 };
 
 }  // namespace TLS
