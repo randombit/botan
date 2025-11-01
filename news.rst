@@ -4,20 +4,55 @@ Release Notes
 Version 3.10.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add support for Ascon hash and XOF from NIST SP 800-232 (GH #5061)
-
-* New faster implementation of Jacobi function (GH #5057)
+* Add support for Ascon hash and XOF from NIST SP 800-232 (GH #5061 #5097)
 
 * Add support for building with clang-cl (GH #4255)
 
 * Optimizations for base58 encoding and decoding (GH #5051)
+
+* Optimizations for SHA-3/SHAKE (GH #5133)
+
+* Optimizations and cleanups for BLAKE2s (GH #5117)
+
+* Optimizations for Streebog (GH #5111)
+
+* Add new interface to ``Certificate_Store`` allowing search by issuer DN
+  plus serial. (GH #5072)
+
+* Fix a bug preventing botan_srp6_server_session_step1 from being reinvoked
+  (GH #5112 #5135)
+
+* Modify some bit operation functions to reduce risk of compilers introducing
+  non-constant time behavior (GH #5066)
+
+* Add new FFI functions for loading elliptic curve keys in SEC1 format (GH #5083)
+
+* Add new FFI functions for viewing the value of a ``botan_mp_t`` (GH #5131)
+
+* New faster implementation of Jacobi function (GH #5057)
+
+* Add optimized integer division logic for various special cases (GH #5068 #5077)
+
+* Correct documentation/comments relating to the maximum output length
+  that ``botan_mp_to_hex`` might write (GH #5131 #5129)
+
+* Fix an issue when trying to use CMake older than 3.18 (GH #5098 #5099)
+
+* Add typing hints to the Python binding (GH #5086 #5092)
+
+* Fix various issues flagged by the ``ruff`` Python linter (GH #5089)
+
+* Fix a bug in the Python binding which prevented signing raw bytes with ``PKSign``
+  (GH #5082)
 
 * Update configure to check for Fedora's new location for trust roots (GH #5052)
 
 * Remove various internal references to "EME", an obsolete term used for RSA
   encryption padding that originates from IEEE 1363. (GH #5055)
 
-* Fix various typos in the source and documentation (GH #5071)
+* Fix various typos in the source and documentation (GH #5071 #5075 #5114)
+
+* Add a ``.devcontainer`` setup (GH #5094)
 
 Version 3.9.0, 2025-08-05
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
