@@ -17,7 +17,7 @@ namespace Botan {
 
 class BOTAN_TEST_API CPUFeature {
    public:
-      enum Bit : uint32_t {
+      enum Bit : uint32_t /* NOLINT(*-use-enum-class) */ {
          SSE2 = (1U << 0),
          SSSE3 = (1U << 1),
          AVX2 = (1U << 2),

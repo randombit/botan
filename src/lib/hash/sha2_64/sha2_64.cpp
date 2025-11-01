@@ -7,9 +7,7 @@
 
 #include <botan/internal/sha2_64.h>
 
-#include <botan/internal/bit_ops.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/rotate.h>
 #include <botan/internal/sha2_64_f.h>
 #include <botan/internal/stl_util.h>
 

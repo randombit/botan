@@ -10,9 +10,9 @@
 
 #include <botan/internal/kex_to_kem_adapter.h>
 
+#include <botan/assert.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/internal/stl_util.h>
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    #include <botan/dh.h>

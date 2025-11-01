@@ -10,10 +10,7 @@
 #if defined(BOTAN_HAS_CERTSTOR_FLATFILE)
 
    #include "test_certstor_utils.h"
-   #include <botan/ber_dec.h>
    #include <botan/certstor_flatfile.h>
-   #include <botan/der_enc.h>
-   #include <botan/hex.h>
 
 namespace Botan_Tests {
 

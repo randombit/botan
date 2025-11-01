@@ -8,7 +8,6 @@
 
 #include <botan/internal/lms.h>
 
-#include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tree_hash.h>
 

@@ -21,7 +21,7 @@ using mutex_type = std::mutex;
 using recursive_mutex_type = std::recursive_mutex;
 
 template <typename T>
-using lock_guard_type = std::lock_guard<T>;
+using lock_guard_type = std::scoped_lock<T>;
 
 #else
 

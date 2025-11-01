@@ -10,15 +10,12 @@
 #include <botan/internal/tls_record.h>
 
 #include <botan/rng.h>
-#include <botan/tls_callbacks.h>
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_exceptn.h>
-#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tls_seq_numbers.h>
 #include <botan/internal/tls_session_key.h>
-#include <sstream>
 
 #if defined(BOTAN_HAS_TLS_CBC)
    #include <botan/internal/tls_cbc.h>

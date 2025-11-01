@@ -12,7 +12,6 @@
 
 #include <botan/credentials_manager.h>
 #include <botan/pk_keys.h>
-#include <botan/tls_algos.h>
 #include <botan/tls_extensions.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/target_info.h>

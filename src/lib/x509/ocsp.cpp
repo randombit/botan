@@ -13,9 +13,6 @@
 #include <botan/der_enc.h>
 #include <botan/pubkey.h>
 #include <botan/x509_ext.h>
-#include <botan/internal/parsing.h>
-
-#include <functional>
 
 #if defined(BOTAN_HAS_HTTP_UTIL)
    #include <botan/internal/http_util.h>

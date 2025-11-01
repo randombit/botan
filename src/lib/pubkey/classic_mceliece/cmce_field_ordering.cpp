@@ -8,12 +8,10 @@
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
+
 #include <botan/internal/cmce_field_ordering.h>
 
-#include <botan/cmce.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/loadstor.h>
-
 #include <numeric>
 #include <utility>
 #include <vector>

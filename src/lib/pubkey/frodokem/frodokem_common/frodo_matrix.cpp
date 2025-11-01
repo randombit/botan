@@ -13,9 +13,6 @@
 #include <botan/internal/frodo_matrix.h>
 
 #include <botan/assert.h>
-#include <botan/frodokem.h>
-#include <botan/hex.h>
-#include <botan/mem_ops.h>
 #include <botan/xof.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/frodo_constants.h>
@@ -31,9 +28,6 @@
 #endif
 
 #include <array>
-#include <cmath>
-#include <cstdint>
-#include <memory>
 #include <span>
 #include <utility>
 #include <vector>

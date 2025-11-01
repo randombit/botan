@@ -11,8 +11,8 @@
 #include <botan/tls_alert.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_version.h>
+#include <botan/internal/loadstor.h>
 #include <botan/internal/tls_cipher_state.h>
-#include <botan/internal/tls_reader.h>
 #include <algorithm>
 
 namespace Botan::TLS {

@@ -18,7 +18,6 @@
 #include <botan/internal/tls_reader.h>
 
 #include <botan/dh.h>
-#include <botan/ecdh.h>
 
 namespace Botan::TLS {
 

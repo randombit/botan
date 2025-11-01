@@ -7,9 +7,9 @@
 
 #include <botan/pkix_types.h>
 
+#include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
-#include <botan/internal/stl_util.h>
 #include <cctype>
 #include <ostream>
 #include <sstream>

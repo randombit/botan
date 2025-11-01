@@ -111,7 +111,7 @@ API follows a few simple rules:
 * If you add a new value here be sure to also add it in
 * botan_error_description
 */
-enum BOTAN_FFI_ERROR /* NOLINT(*-enum-size) */ {
+enum BOTAN_FFI_ERROR /* NOLINT(*-enum-size,*-use-enum-class) */ {
    BOTAN_FFI_SUCCESS = 0,
 
    BOTAN_FFI_INVALID_VERIFIER = 1,
@@ -2184,7 +2184,7 @@ BOTAN_FFI_EXPORT(3, 0)
 int botan_x509_cert_view_as_string(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_str_fn view);
 
 /* Must match values of Key_Constraints in key_constraints.h */
-enum botan_x509_cert_key_constraints /* NOLINT(*-enum-size) */ {
+enum botan_x509_cert_key_constraints /* NOLINT(*-enum-size,*-use-enum-class) */ {
    NO_CONSTRAINTS = 0,
    DIGITAL_SIGNATURE = 32768,
    NON_REPUDIATION = 16384,

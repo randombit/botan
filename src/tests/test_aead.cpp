@@ -9,7 +9,6 @@
 
 #if defined(BOTAN_HAS_AEAD_MODES)
    #include <botan/aead.h>
-   #include <botan/mem_ops.h>
 #endif
 
 namespace Botan_Tests {
@@ -84,7 +83,7 @@ class AEAD_Tests final : public Text_Based_Test {
          enc->update(garbage);
 
          // reset message specific state
-         enc->reset();
+         enc->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
 
          /*
          Now try to set the AD *after* setting the nonce
@@ -96,7 +95,7 @@ class AEAD_Tests final : public Text_Based_Test {
             enc->set_associated_data(ad);
          } catch(Botan::Invalid_State&) {
             // ad after setting nonce rejected, in this case we need to reset
-            enc->reset();
+            enc->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
             enc->set_associated_data(ad);
             enc->start(nonce);
          }
@@ -116,7 +115,7 @@ class AEAD_Tests final : public Text_Based_Test {
             const size_t update_granularity = enc->update_granularity();
             if(input.size() > update_granularity) {
                // reset state first
-               enc->reset();
+               enc->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
 
                enc->set_associated_data(ad);
                enc->start(nonce);
@@ -149,7 +148,7 @@ class AEAD_Tests final : public Text_Based_Test {
             size_t min_final_bytes = enc->minimum_final_size();
             if(input.size() > (update_granularity + min_final_bytes)) {
                // again reset state first
-               enc->reset();
+               enc->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
 
                enc->set_associated_data(ad);
                enc->start(nonce);
@@ -253,7 +252,7 @@ class AEAD_Tests final : public Text_Based_Test {
          dec->update(garbage);
 
          // reset message specific state
-         dec->reset();
+         dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
 
          Botan::secure_vector<uint8_t> buf(input.begin(), input.end());
          try {
@@ -264,7 +263,7 @@ class AEAD_Tests final : public Text_Based_Test {
                dec->set_associated_data(ad);
             } catch(Botan::Invalid_State&) {
                // ad after setting nonce rejected, in this case we need to reset
-               dec->reset();
+               dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
                dec->set_associated_data(ad);
                dec->start(nonce);
             }
@@ -277,7 +276,7 @@ class AEAD_Tests final : public Text_Based_Test {
             const size_t update_granularity = dec->update_granularity();
             if(input.size() > update_granularity) {
                // reset state first
-               dec->reset();
+               dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
 
                dec->set_associated_data(ad);
                dec->start(nonce);
@@ -309,7 +308,7 @@ class AEAD_Tests final : public Text_Based_Test {
             const size_t min_final_size = dec->minimum_final_size();
             if(input.size() > (update_granularity + min_final_size)) {
                // again reset state first
-               dec->reset();
+               dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
 
                dec->set_associated_data(ad);
                dec->start(nonce);
@@ -346,7 +345,7 @@ class AEAD_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> mutated_input = mutate_vec(input, rng, true);
          buf.assign(mutated_input.begin(), mutated_input.end());
 
-         dec->reset();
+         dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
 
          dec->set_associated_data(ad);
          dec->start(nonce);
@@ -365,7 +364,7 @@ class AEAD_Tests final : public Text_Based_Test {
             buf.assign(input.begin(), input.end());
             std::vector<uint8_t> bad_nonce = mutate_vec(nonce, rng);
 
-            dec->reset();
+            dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
             dec->set_associated_data(ad);
             dec->start(bad_nonce);
 
@@ -382,7 +381,7 @@ class AEAD_Tests final : public Text_Based_Test {
          // test decryption with modified associated_data
          const std::vector<uint8_t> bad_ad = mutate_vec(ad, rng, true);
 
-         dec->reset();
+         dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
          dec->set_associated_data(bad_ad);
 
          dec->start(nonce);

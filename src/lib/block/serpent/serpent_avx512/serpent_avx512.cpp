@@ -6,7 +6,7 @@
 
 #include <botan/internal/serpent.h>
 
-#include <botan/internal/serpent_sbox.h>
+#include <botan/internal/serpent_fn.h>
 #include <botan/internal/simd_avx512.h>
 
 namespace Botan {

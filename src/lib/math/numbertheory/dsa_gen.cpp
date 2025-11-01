@@ -11,7 +11,6 @@
 #include <botan/hash.h>
 #include <botan/numthry.h>
 #include <botan/rng.h>
-#include <botan/internal/barrett.h>
 #include <botan/internal/fmt.h>
 
 namespace Botan {

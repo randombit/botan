@@ -12,7 +12,6 @@
 #include <botan/pkcs10.h>
 #include <botan/pubkey.h>
 #include <botan/x509_ext.h>
-#include <botan/x509_key.h>
 
 namespace Botan {
 

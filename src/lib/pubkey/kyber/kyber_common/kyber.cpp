@@ -15,27 +15,14 @@
 #include <botan/kyber.h>
 
 #include <botan/assert.h>
-#include <botan/mem_ops.h>
 #include <botan/pubkey.h>
 #include <botan/rng.h>
 #include <botan/secmem.h>
-
-#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/kyber_algos.h>
 #include <botan/internal/kyber_constants.h>
 #include <botan/internal/kyber_keys.h>
-#include <botan/internal/kyber_symmetric_primitives.h>
 #include <botan/internal/kyber_types.h>
-#include <botan/internal/stl_util.h>
-
-#if defined(BOTAN_HAS_KYBER)
-   #include <botan/internal/kyber_modern.h>
-#endif
-
-#if defined(BOTAN_HAS_KYBER_90S)
-   #include <botan/internal/kyber_90s.h>
-#endif
 
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
    #include <botan/internal/kyber_round3_impl.h>

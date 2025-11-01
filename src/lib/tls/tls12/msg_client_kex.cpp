@@ -9,7 +9,6 @@
 #include <botan/tls_messages.h>
 
 #include <botan/credentials_manager.h>
-#include <botan/ecdh.h>
 #include <botan/rng.h>
 #include <botan/rsa.h>
 #include <botan/tls_extensions.h>

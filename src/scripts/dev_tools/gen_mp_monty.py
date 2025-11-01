@@ -72,8 +72,6 @@ def main(args = None):
 
 #include <botan/internal/mp_core.h>
 
-#include <botan/internal/ct_utils.h>
-
 namespace Botan {
 """ % (sys.argv[0], datetime.date.today().strftime("%Y-%m-%d")))
 

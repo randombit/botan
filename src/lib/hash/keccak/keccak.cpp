@@ -9,7 +9,6 @@
 
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/loadstor.h>
 
 namespace Botan {
 

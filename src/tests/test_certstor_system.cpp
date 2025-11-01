@@ -10,10 +10,7 @@
 #if defined(BOTAN_HAS_CERTSTOR_SYSTEM)
 
    #include "test_certstor_utils.h"
-   #include <botan/ber_dec.h>
    #include <botan/certstor_system.h>
-   #include <botan/der_enc.h>
-   #include <botan/hex.h>
    #include <algorithm>
    #include <memory>
 

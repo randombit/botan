@@ -7,6 +7,7 @@
 
 #include <botan/internal/cast128.h>
 
+#include <botan/mem_ops.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 

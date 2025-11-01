@@ -12,11 +12,6 @@
 
 #include <botan/assert.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/loadstor.h>
-
-#include <memory>
-#include <tuple>
-#include <vector>
 
 namespace Botan {
 

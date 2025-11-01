@@ -15,7 +15,6 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/isa_extn.h>
 #include <botan/internal/simd_4x32.h>
-#include <botan/internal/target_info.h>
 #include <bit>
 
 namespace Botan {

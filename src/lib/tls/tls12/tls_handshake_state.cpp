@@ -12,7 +12,6 @@
 #include <botan/tls_messages.h>
 #include <botan/tls_signature_scheme.h>
 #include <botan/internal/tls_record.h>
-#include <sstream>
 
 namespace Botan::TLS {
 

@@ -11,8 +11,6 @@
 #include <botan/x509_ext.h>
 #include <botan/x509cert.h>
 
-#include <sstream>
-
 namespace Botan {
 
 struct CRL_Data {

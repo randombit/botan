@@ -164,7 +164,7 @@ class BOTAN_PUBLIC_API(2, 0) Fanout_Filter : public Filter {
 * whitespaces, FULL_CHECK - perform checks, also complain
 * about white spaces.
 */
-enum Decoder_Checking : uint8_t { NONE, IGNORE_WS, FULL_CHECK };
+enum Decoder_Checking : uint8_t /* NOLINT(*-use-enum-class) */ { NONE, IGNORE_WS, FULL_CHECK };
 
 }  // namespace Botan
 

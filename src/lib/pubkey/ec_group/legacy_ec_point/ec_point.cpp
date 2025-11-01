@@ -15,7 +15,6 @@
 #include <botan/internal/ec_inner_data.h>
 #include <botan/internal/mod_inv.h>
 #include <botan/internal/monty.h>
-#include <botan/internal/mp_core.h>
 #include <botan/internal/stl_util.h>
 
 namespace Botan {

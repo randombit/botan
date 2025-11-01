@@ -19,7 +19,7 @@ namespace Botan {
 
 class BOTAN_PUBLIC_API(3, 3) FrodoKEMMode {
    public:
-      enum Mode : uint8_t {
+      enum Mode : uint8_t /* NOLINT(*-use-enum-class) */ {
          FrodoKEM640_SHAKE,
          FrodoKEM976_SHAKE,
          FrodoKEM1344_SHAKE,

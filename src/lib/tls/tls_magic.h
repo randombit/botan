@@ -19,9 +19,9 @@ namespace Botan::TLS {
 /**
 * Protocol Constants for SSL/TLS
 *
-* TODO: this should not be an enum
+* TODO(Botan4): this should not be an enum at all
 */
-enum Size_Limits : size_t /* NOLINT(*-enum-size) */ {
+enum Size_Limits : size_t /* NOLINT(*-enum-size,*-use-enum-class) */ {
    TLS_HEADER_SIZE = 5,
    DTLS_HEADER_SIZE = TLS_HEADER_SIZE + 8,
 

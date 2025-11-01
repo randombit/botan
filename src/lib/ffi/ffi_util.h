@@ -39,7 +39,7 @@ struct botan_struct {
 
       virtual ~botan_struct() {
          m_magic = 0;
-         m_obj.reset();
+         m_obj.reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
       }
 
       botan_struct(const botan_struct& other) = delete;

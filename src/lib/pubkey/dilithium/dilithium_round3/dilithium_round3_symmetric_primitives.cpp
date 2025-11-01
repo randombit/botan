@@ -10,7 +10,6 @@
 
 #include <botan/internal/dilithium_round3_symmetric_primitives.h>
 
-#include <botan/rng.h>
 #include <botan/internal/dilithium_algos.h>
 
 namespace Botan {

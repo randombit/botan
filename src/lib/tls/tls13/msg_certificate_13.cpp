@@ -10,17 +10,12 @@
 #include <botan/tls_messages.h>
 
 #include <botan/credentials_manager.h>
-#include <botan/data_src.h>
 #include <botan/ocsp.h>
 #include <botan/tls_alert.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_extensions.h>
 #include <botan/x509_key.h>
-#include <botan/internal/loadstor.h>
-#include <botan/internal/stl_util.h>
-#include <botan/internal/tls_handshake_hash.h>
-#include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_reader.h>
 
 #include <iterator>

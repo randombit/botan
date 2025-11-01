@@ -20,7 +20,7 @@ In the week prior to a release, after feature freeze goes into effect
 - [ ] Check that the version number in ``src/build-data/version.txt`` is correct.
 - [ ] Confirm that the release notes in ``news.rst`` are accurate and complete.
 - [ ] Diff ffi.h vs the previous release; is a new FFI version required?
-- [ ] Do maintainer-mode builds with Clang and GCC to catch any warnings
+- [ ] Perform a full clang-tidy run with latest available Clang
 - [ ] Test build configurations using `src/scripts/test_all_configs.py`
 - [ ] Test a few builds on platforms not in CI (eg OpenBSD, FreeBSD, Solaris)
 - [ ] Update relevant third party test suites (eg Limbo and BoGo)

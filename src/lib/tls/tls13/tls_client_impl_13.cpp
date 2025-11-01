@@ -9,15 +9,12 @@
 #include <botan/internal/tls_client_impl_13.h>
 
 #include <botan/credentials_manager.h>
-#include <botan/hash.h>
-#include <botan/tls_client.h>
 #include <botan/tls_messages.h>
 #include <botan/types.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_channel_impl_13.h>
 #include <botan/internal/tls_cipher_state.h>
 
-#include <iterator>
 #include <utility>
 
 namespace Botan::TLS {

@@ -70,6 +70,8 @@ class DilithiumConstants final {
       /// @}
 
    public:
+      // NOLINTBEGIN(*-use-enum-class)
+
       enum DilithiumTau : uint8_t { _39 = 39, _49 = 49, _60 = 60 };
 
       enum DilithiumLambda : uint16_t { _128 = 128, _192 = 192, _256 = 256 };
@@ -83,6 +85,8 @@ class DilithiumConstants final {
       enum DilithiumBeta : uint8_t { _78 = 78, _196 = 196, _120 = 120 };
 
       enum DilithiumOmega : uint8_t { _80 = 80, _55 = 55, _75 = 75 };
+
+      // NOLINTEND(*-use-enum-class)
 
       explicit DilithiumConstants(DilithiumMode dimension);
       ~DilithiumConstants();

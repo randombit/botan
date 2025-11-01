@@ -48,7 +48,7 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       /**
       * Determine the prime creation for DL groups.
       */
-      enum PrimeType : uint8_t { Strong, Prime_Subgroup, DSA_Kosherizer };
+      enum PrimeType : uint8_t /* NOLINT(*-use-enum-class) */ { Strong, Prime_Subgroup, DSA_Kosherizer };
 
       using Format = DL_Group_Format;
 

@@ -209,7 +209,7 @@ class BOTAN_PUBLIC_API(2, 8) Tweakable_Block_Cipher : public BlockCipher {
 template <size_t BS, size_t KMIN, size_t KMAX = 0, size_t KMOD = 1, typename BaseClass = BlockCipher>
 class Block_Cipher_Fixed_Params : public BaseClass {
    public:
-      enum { BLOCK_SIZE = BS }; /* NOLINT(*-enum-size) */
+      enum { BLOCK_SIZE = BS }; /* NOLINT(*-enum-size,*-use-enum-class) */
 
       size_t block_size() const final { return BS; }
 

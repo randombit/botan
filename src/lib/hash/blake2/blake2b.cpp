@@ -14,8 +14,6 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/stl_util.h>
-
-#include <algorithm>
 #include <array>
 
 namespace Botan {

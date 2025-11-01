@@ -530,7 +530,11 @@ class BOTAN_PUBLIC_API(3, 5) TNAuthList final : public Certificate_Extension {
          public:
             /* TNEntry choice values
              * see: https://datatracker.ietf.org/doc/html/rfc8226#section-9 */
-            enum Type : uint8_t { ServiceProviderCode = 0, TelephoneNumberRange = 1, TelephoneNumber = 2 };
+            enum Type : uint8_t /* NOLINT(*-use-enum-class) */ {
+               ServiceProviderCode = 0,
+               TelephoneNumberRange = 1,
+               TelephoneNumber = 2
+            };
 
             struct TelephoneNumberRangeData {
                   ASN1_String start;  //TelephoneNumber (IA5String)

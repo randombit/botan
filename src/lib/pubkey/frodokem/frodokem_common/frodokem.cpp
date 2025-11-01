@@ -13,18 +13,15 @@
 #include <botan/frodokem.h>
 
 #include <botan/assert.h>
-#include <botan/hex.h>
 #include <botan/rng.h>
 #include <botan/xof.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/frodo_constants.h>
 #include <botan/internal/frodo_matrix.h>
 #include <botan/internal/frodo_types.h>
-#include <botan/internal/loadstor.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/stl_util.h>
 
-#include <algorithm>
 #include <memory>
 #include <tuple>
 #include <vector>

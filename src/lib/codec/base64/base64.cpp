@@ -10,7 +10,6 @@
 #include <botan/exceptn.h>
 #include <botan/internal/charset.h>
 #include <botan/internal/codec_base.h>
-#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>

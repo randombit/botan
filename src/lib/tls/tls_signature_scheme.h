@@ -29,7 +29,7 @@ class BOTAN_PUBLIC_API(3, 0) Signature_Scheme {
       * API where `Signature_Scheme` was an enum class with associated free-standing
       * functions. Leaving it as a bare enum resembles the legacy user-facing API.
       */
-      enum Code : uint16_t {
+      enum Code : uint16_t /* NOLINT(*-use-enum-class) */ {
          NONE = 0x0000,
 
          RSA_PKCS1_SHA1 = 0x0201,  // not implemented
