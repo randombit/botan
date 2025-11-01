@@ -18,7 +18,6 @@
 #include <botan/internal/rounding.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/target_info.h>
-#include <botan/internal/version_info.h>
 
 #include <bit>
 #include <ctime>

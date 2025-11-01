@@ -11,8 +11,6 @@
 #include <botan/ed25519.h>
 
 #include <botan/hash.h>
-#include <botan/rng.h>
-#include <botan/internal/ct_utils.h>
 #include <botan/internal/ed25519_internal.h>
 
 namespace Botan {

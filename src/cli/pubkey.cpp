@@ -11,18 +11,15 @@
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
 
    #include <botan/base64.h>
-   #include <botan/hex.h>
-   #include <botan/rng.h>
-
    #include <botan/data_src.h>
    #include <botan/hash.h>
+   #include <botan/hex.h>
    #include <botan/pk_algs.h>
    #include <botan/pk_keys.h>
    #include <botan/pkcs8.h>
    #include <botan/pubkey.h>
    #include <botan/x509_key.h>
    #include <botan/internal/workfactor.h>
-
    #include <fstream>
    #include <sstream>
 

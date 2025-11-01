@@ -11,7 +11,6 @@
 #if defined(BOTAN_HAS_PQCRYSTALS)
    #include <botan/hex.h>
 
-   #include <botan/internal/fmt.h>
    #include <botan/internal/pqcrystals.h>
    #include <botan/internal/pqcrystals_encoding.h>
    #include <botan/internal/pqcrystals_helpers.h>

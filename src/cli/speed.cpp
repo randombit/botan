@@ -17,8 +17,6 @@
 
 // Always available:
 #include <botan/version.h>
-#include <botan/internal/fmt.h>
-#include <botan/internal/stl_util.h>
 #include <botan/internal/target_info.h>
 
 #if defined(BOTAN_HAS_CPUID)

@@ -17,7 +17,7 @@ namespace Botan {
 
 class BOTAN_TEST_API CPUFeature {
    public:
-      enum Bit : uint32_t {
+      enum Bit : uint32_t /* NOLINT(*-use-enum-class) */ {
          SCALAR_AES = (1U << 0),
          SCALAR_SHA256 = (1U << 1),
          SCALAR_SM3 = (1U << 2),

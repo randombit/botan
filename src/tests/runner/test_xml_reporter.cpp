@@ -18,8 +18,6 @@
       #include <botan/internal/os_utils.h>
    #endif
 
-   #include <iomanip>
-   #include <numeric>
    #include <sstream>
 
 namespace Botan_Tests {

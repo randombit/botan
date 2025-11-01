@@ -348,7 +348,7 @@ class BOTAN_UNSTABLE_API Supported_Groups final : public Extension {
 */
 class BOTAN_UNSTABLE_API Supported_Point_Formats final : public Extension {
    public:
-      enum ECPointFormat : uint8_t {
+      enum ECPointFormat : uint8_t /* NOLINT(*-use-enum-class) */ {
          UNCOMPRESSED = 0,
          ANSIX962_COMPRESSED_PRIME = 1,
          ANSIX962_COMPRESSED_CHAR2 = 2,  // don't support these curves

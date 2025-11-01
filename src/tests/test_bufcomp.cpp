@@ -9,7 +9,6 @@
 #include "tests.h"
 
 #include <botan/buf_comp.h>
-#include <botan/mem_ops.h>
 #include <botan/secmem.h>
 #include <botan/strong_type.h>
 

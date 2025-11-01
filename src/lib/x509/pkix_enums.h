@@ -19,7 +19,7 @@ class Public_Key;
 */
 enum class Certificate_Status_Code : uint16_t {
    // TODO(Botan4) renumber this, e.g. Validation Errors -> IP_ADDR_BLOCKS_ERROR
-
+   // TODO(Botan4) rename variants to CamelCase
    OK = 0,
    VERIFIED = 0,
 
@@ -111,7 +111,7 @@ BOTAN_PUBLIC_API(2, 0) const char* to_string(Certificate_Status_Code code);
 */
 class BOTAN_PUBLIC_API(3, 0) Key_Constraints final {
    public:
-      enum Bits : uint16_t {
+      enum Bits : uint16_t /* NOLINT(*-use-enum-class) */ {
          None = 0,
          DigitalSignature = 1 << 15,
          NonRepudiation = 1 << 14,

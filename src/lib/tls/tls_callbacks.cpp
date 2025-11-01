@@ -19,7 +19,6 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/x509path.h>
-#include <botan/internal/ct_utils.h>
 #include <botan/internal/stl_util.h>
 
 #if defined(BOTAN_HAS_X25519)

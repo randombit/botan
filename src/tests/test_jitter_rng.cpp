@@ -4,9 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <vector>
-
-#include <botan/build.h>
+#include "tests.h"
 
 #ifdef BOTAN_HAS_JITTER_RNG
 
@@ -14,8 +12,6 @@
    #include <botan/entropy_src.h>
    #include <botan/jitter_rng.h>
    #include <botan/system_rng.h>
-
-   #include "tests.h"
 
 namespace Botan_Tests {
 

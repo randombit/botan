@@ -10,9 +10,9 @@
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    #include <botan/data_src.h>
    #include <botan/exceptn.h>
+   #include <botan/pk_keys.h>
    #include <botan/pkcs10.h>
    #include <botan/x509_crl.h>
-   #include <botan/x509_key.h>
    #include <botan/x509path.h>
    #include <botan/internal/calendar.h>
    #include <botan/internal/filesystem.h>

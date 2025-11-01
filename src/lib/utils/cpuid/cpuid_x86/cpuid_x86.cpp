@@ -7,9 +7,8 @@
 
 #include <botan/internal/cpuid.h>
 
-#include <botan/assert.h>
+#include <botan/compiler.h>
 #include <botan/mem_ops.h>
-#include <botan/internal/loadstor.h>
 #include <botan/internal/target_info.h>
 
 #include <immintrin.h>

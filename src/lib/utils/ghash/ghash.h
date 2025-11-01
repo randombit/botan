@@ -42,7 +42,7 @@ class GHASH final : public SymmetricAlgorithm {
 
       void clear() override;
 
-      void reset();
+      void reset_state();
 
       std::string name() const override { return "GHASH"; }
 

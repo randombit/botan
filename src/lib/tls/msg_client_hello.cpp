@@ -11,7 +11,6 @@
 
 #include <botan/tls_messages.h>
 
-#include <botan/credentials_manager.h>
 #include <botan/hash.h>
 #include <botan/rng.h>
 #include <botan/tls_callbacks.h>
@@ -23,7 +22,6 @@
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_reader.h>
-#include <botan/internal/tls_session_key.h>
 
 #ifdef BOTAN_HAS_TLS_13
    #include <botan/internal/tls_handshake_layer_13.h>

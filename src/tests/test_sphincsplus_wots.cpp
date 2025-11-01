@@ -9,10 +9,8 @@
 
 #if defined(BOTAN_HAS_SPHINCS_PLUS_COMMON)
 
-   #include <botan/hash.h>
-   #include <botan/hex.h>
-
    #include <botan/assert.h>
+   #include <botan/hash.h>
    #include <botan/sp_parameters.h>
    #include <botan/internal/loadstor.h>
    #include <botan/internal/sp_address.h>

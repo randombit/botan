@@ -11,8 +11,6 @@
 #include <botan/p11_types.h>
 #include <botan/internal/dyn_load.h>
 
-#include <cstdint>
-#include <functional>
 #include <string>
 
 namespace Botan::PKCS11 {

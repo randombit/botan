@@ -21,7 +21,6 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/dilithium_keys.h>
 #include <botan/internal/dilithium_symmetric_primitives.h>
-#include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/pqcrystals_encoding.h>
 #include <botan/internal/pqcrystals_helpers.h>

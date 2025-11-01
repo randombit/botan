@@ -15,7 +15,6 @@
 
 #include <algorithm>
 #include <array>
-#include <ranges>
 #include <sstream>
 #include <string>
 #include <vector>

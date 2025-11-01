@@ -259,7 +259,7 @@ class BOTAN_PUBLIC_API(2, 0) Attribute final : public ASN1_Object {
 */
 class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
    public:
-      enum MatchResult : uint8_t {
+      enum MatchResult : uint8_t /* NOLINT(*-use-enum-class) */ {
          All,
          Some,
          None,

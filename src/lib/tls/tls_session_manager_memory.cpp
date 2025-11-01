@@ -11,8 +11,6 @@
 #include <botan/rng.h>
 #include <botan/internal/stl_util.h>
 
-#include <algorithm>
-
 namespace Botan::TLS {
 
 Session_Manager_In_Memory::Session_Manager_In_Memory(const std::shared_ptr<RandomNumberGenerator>& rng,

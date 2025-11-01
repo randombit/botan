@@ -8,10 +8,7 @@
 */
 #include <botan/internal/hybrid_kem.h>
 
-#include <botan/pk_algs.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/kex_to_kem_adapter.h>
-#include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/stl_util.h>
 
 namespace Botan {

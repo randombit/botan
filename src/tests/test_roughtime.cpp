@@ -4,7 +4,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "test_rng.h"
 #include "tests.h"
 
 #if defined(BOTAN_HAS_BIGINT)
@@ -14,7 +13,6 @@
 #if defined(BOTAN_HAS_ROUGHTIME)
    #include <botan/base64.h>
    #include <botan/ed25519.h>
-   #include <botan/hex.h>
    #include <botan/mem_ops.h>
    #include <botan/roughtime.h>
 #endif

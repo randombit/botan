@@ -7,13 +7,10 @@
 
 #include <botan/tls_messages.h>
 
-#include <botan/ber_dec.h>
-#include <botan/der_enc.h>
 #include <botan/ocsp.h>
-#include <botan/tls_extensions.h>
+#include <botan/internal/loadstor.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>
-#include <botan/internal/tls_reader.h>
 
 namespace Botan::TLS {
 

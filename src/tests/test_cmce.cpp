@@ -18,11 +18,7 @@
    #include <botan/hash.h>
    #include <botan/pk_algs.h>
    #include <botan/pubkey.h>
-   #include <botan/internal/cmce_decaps.h>
-   #include <botan/internal/cmce_encaps.h>
-   #include <botan/internal/cmce_field_ordering.h>
    #include <botan/internal/cmce_gf.h>
-   #include <botan/internal/cmce_keys_internal.h>
    #include <botan/internal/cmce_parameters.h>
    #include <botan/internal/cmce_poly.h>
 

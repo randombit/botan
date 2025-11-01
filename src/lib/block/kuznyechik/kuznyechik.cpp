@@ -11,7 +11,6 @@
 
 #include <botan/internal/kuznyechik.h>
 
-#include <botan/mem_ops.h>
 #include <botan/internal/loadstor.h>
 #include <algorithm>
 

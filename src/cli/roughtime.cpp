@@ -11,9 +11,6 @@
 
    #include <botan/base64.h>
    #include <botan/ed25519.h>
-   #include <botan/hash.h>
-   #include <botan/hex.h>
-   #include <botan/rng.h>
    #include <botan/roughtime.h>
    #include <botan/internal/calendar.h>
 

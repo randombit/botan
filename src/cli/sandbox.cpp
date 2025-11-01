@@ -8,12 +8,12 @@
 
 #include <botan/allocator.h>
 #include <botan/internal/target_info.h>
-#include <memory>
 
 #if defined(BOTAN_TARGET_OS_HAS_CAP_ENTER)
    #include <sys/capsicum.h>
    #include <unistd.h>
 #elif defined(BOTAN_TARGET_OS_HAS_SETPPRIV)
+   #include <memory>
    #include <priv.h>
 #elif defined(BOTAN_TARGET_OS_HAS_SANDBOX_PROC)
    #include <sandbox.h>

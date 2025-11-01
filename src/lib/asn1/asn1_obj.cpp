@@ -7,11 +7,11 @@
 
 #include <botan/asn1_obj.h>
 
+#include <botan/assert.h>
 #include <botan/data_src.h>
 #include <botan/der_enc.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/mem_utils.h>
-#include <botan/internal/stl_util.h>
 #include <sstream>
 
 namespace Botan {

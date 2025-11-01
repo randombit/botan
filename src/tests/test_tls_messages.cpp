@@ -16,7 +16,6 @@
    #include <botan/tls_alert.h>
    #include <botan/tls_callbacks.h>
    #include <botan/tls_ciphersuite.h>
-   #include <botan/tls_handshake_msg.h>
    #include <botan/tls_messages.h>
    #include <botan/tls_version.h>
    #include <botan/internal/loadstor.h>

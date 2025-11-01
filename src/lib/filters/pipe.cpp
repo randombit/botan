@@ -7,7 +7,6 @@
 
 #include <botan/pipe.h>
 
-#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/mem_utils.h>
 #include <botan/internal/out_buf.h>

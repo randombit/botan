@@ -465,24 +465,26 @@ class BOTAN_PUBLIC_API(3, 0) Session final : public Session_Base {
       std::chrono::seconds lifetime_hint() const { return m_lifetime_hint; }
 
    private:
-      // Struct Version history
-      //
-      // 20160812 - Pre TLS 1.3
-      // 20220505 - Introduction of TLS 1.3 sessions
-      //            - added fields:
-      //              - m_early_data_allowed
-      //              - m_max_early_data_bytes
-      //              - m_ticket_age_add
-      //              - m_lifetime_hint
-      // 20230112 - Remove Session_ID and Session_Ticket from this object
-      //            (association is now in the hands of the Session_Manager)
-      //          - Peer certificates are now stored as a SEQUENCE
-      // 20230222 - Remove deprecated and unused fields
-      //            - compression method (always 0)
-      //            - fragment size (always 0)
-      //            - SRP identifier (always "")
-      // 20231031 - Allow storage of peer's raw public key
-      enum { TLS_SESSION_PARAM_STRUCT_VERSION = 20231031 };
+      /*
+      * Struct Version history
+      *
+      * 20160812 - Pre TLS 1.3
+      * 20220505 - Introduction of TLS 1.3 sessions
+      *            - added fields:
+      *              - m_early_data_allowed
+      *              - m_max_early_data_bytes
+      *              - m_ticket_age_add
+      *              - m_lifetime_hint
+      * 20230112 - Remove Session_ID and Session_Ticket from this object
+      *            (association is now in the hands of the Session_Manager)
+      *          - Peer certificates are now stored as a SEQUENCE
+      * 20230222 - Remove deprecated and unused fields
+      *            - compression method (always 0)
+      *            - fragment size (always 0)
+      *            - SRP identifier (always "")
+      * 20231031 - Allow storage of peer's raw public key
+      */
+      static constexpr size_t TLS_SESSION_PARAM_STRUCT_VERSION = 20231031;
 
       secure_vector<uint8_t> m_master_secret;
 

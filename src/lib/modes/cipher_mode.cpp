@@ -10,7 +10,9 @@
 #include <botan/internal/parsing.h>
 #include <botan/internal/scan_name.h>
 #include <botan/internal/stream_mode.h>
+#include <memory>
 #include <sstream>
+#include <utility>
 
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
    #include <botan/block_cipher.h>

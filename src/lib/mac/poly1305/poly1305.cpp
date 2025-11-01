@@ -13,7 +13,6 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/donna128.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/mul128.h>
 #include <botan/internal/stl_util.h>
 
 namespace Botan {

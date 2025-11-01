@@ -12,7 +12,6 @@
 #include <botan/data_src.h>
 #include <botan/pem.h>
 #include <botan/pkix_types.h>
-#include <stdexcept>
 
 namespace Botan {
 namespace {

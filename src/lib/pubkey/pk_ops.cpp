@@ -11,7 +11,6 @@
 #include <botan/hash.h>
 #include <botan/kdf.h>
 #include <botan/rng.h>
-#include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/enc_padding.h>
 #include <botan/internal/fmt.h>

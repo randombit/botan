@@ -9,7 +9,6 @@
 
 #include <botan/internal/sp800_108.h>
 
-#include <botan/exceptn.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>

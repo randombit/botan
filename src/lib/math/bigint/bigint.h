@@ -27,7 +27,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       /**
        * Base enumerator for encoding and decoding
        */
-      enum Base : uint16_t {
+      enum Base : uint16_t /* NOLINT(*-use-enum-class) */ {
          Decimal BOTAN_DEPRECATED("All functions using this enum are deprecated") = 10,
          Hexadecimal BOTAN_DEPRECATED("All functions using this enum are deprecated") = 16,
          Binary BOTAN_DEPRECATED("All functions using this enum are deprecated") = 256
@@ -36,7 +36,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       /**
        * Sign symbol definitions for positive and negative numbers
        */
-      enum Sign : uint8_t { Negative = 0, Positive = 1 };
+      enum Sign : uint8_t /* NOLINT(*-use-enum-class) */ { Negative = 0, Positive = 1 };
 
       /**
        * Create empty (zero) BigInt
