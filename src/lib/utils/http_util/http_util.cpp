@@ -127,30 +127,33 @@ Response http_sync(const http_exch_fn& http_transact,
 
    const auto host_loc_sep = url.find('/', protocol_host_sep + 3);
 
-   std::string hostname;
-   std::string loc;
-   std::string service;
+   const auto [hostname, location, service] = [&]() {
+      std::string host;
+      std::string loc;
+      std::string svc;
 
-   if(host_loc_sep == std::string::npos) {
-      hostname = url.substr(protocol_host_sep + 3);
-      loc = "/";
-   } else {
-      hostname = url.substr(protocol_host_sep + 3, host_loc_sep - protocol_host_sep - 3);
-      loc = url.substr(host_loc_sep);
-   }
+      if(host_loc_sep == std::string::npos) {
+         host = url.substr(protocol_host_sep + 3);
+         loc = "/";
+      } else {
+         host = url.substr(protocol_host_sep + 3, host_loc_sep - protocol_host_sep - 3);
+         loc = url.substr(host_loc_sep);
+      }
 
-   const auto port_sep = hostname.find(':');
-   if(port_sep == std::string::npos) {
-      service = "http";
-      // hostname not modified
-   } else {
-      service = hostname.substr(port_sep + 1, std::string::npos);
-      hostname = hostname.substr(0, port_sep);
-   }
+      const auto port_sep = host.find(':');
+      if(port_sep == std::string::npos) {
+         svc = "http";
+         // hostname not modified
+      } else {
+         svc = host.substr(port_sep + 1, std::string::npos);
+         host.resize(port_sep);  // Keep only hostname part, remove port number
+      }
+
+      return std::tuple(std::move(host), std::move(loc), std::move(svc));
+   }();
 
    std::ostringstream outbuf;
-
-   outbuf << verb << " " << loc << " HTTP/1.0\r\n";
+   outbuf << verb << " " << location << " HTTP/1.0\r\n";
    outbuf << "Host: " << hostname << "\r\n";
 
    if(verb == "GET") {
