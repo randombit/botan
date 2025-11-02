@@ -75,6 +75,7 @@ class PartialWordBounds final {
       * while leaving all other bits in 'state_word' unchanged.
       */
       word_t masked_assignment(word_t state_word, word_t partial_input_word) const {
+         BOTAN_DEBUG_ASSERT(length > 0);
          const auto mask = ((word_t(0) - 1) >> ((word_bytes - length) * 8)) << (offset * 8);
          return (state_word & ~mask) | (partial_input_word & mask);
       }
@@ -134,6 +135,10 @@ BOTAN_FORCE_INLINE void process_bytes_in_sponge(SpongeT& sponge,
                                                 size_t bytes_to_process,
                                                 const detail::PermutationFn auto& permutation_fn,
                                                 const detail::ModifierFn<SpongeT> auto& modifier_fn) {
+   if(bytes_to_process == 0) {
+      return;
+   }
+
    constexpr auto word_bytes = SpongeT::word_bytes;
    const auto byte_rate = sponge.byte_rate();
    auto& S = sponge.state();
