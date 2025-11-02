@@ -885,9 +885,9 @@ class RSA_Compute_Exp_Test : public Test {
 
             auto d = Botan::compute_rsa_secret_exponent(e, phi_n, p, q);
 
-            auto one = (e * d) % phi_n;
+            auto ed_mod_phi_n = (e * d) % phi_n;
 
-            result.test_eq("compute_rsa_secret_exponent returned inverse", (e * d) % phi_n, Botan::BigInt::one());
+            result.test_eq("compute_rsa_secret_exponent returned inverse", ed_mod_phi_n, Botan::BigInt::one());
          }
 
          return {result};
