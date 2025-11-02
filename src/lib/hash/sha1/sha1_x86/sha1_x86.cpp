@@ -20,6 +20,8 @@ namespace Botan {
 
 namespace {
 
+// NOLINTBEGIN(portability-simd-intrinsics)
+
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI SIMD_4x32 sha1_x86_nexte(const SIMD_4x32& x, const SIMD_4x32& y) {
    return SIMD_4x32(_mm_sha1nexte_epu32(x.raw(), y.raw()));
 }
@@ -38,6 +40,18 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha1_x86_next_msg(const SIMD_4x32& W0
 }
 
 template <uint8_t R1, uint8_t R2 = R1>
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha1_x86_first8(SIMD_4x32& ABCD,
+                                                           SIMD_4x32& E,
+                                                           const SIMD_4x32& W0,
+                                                           const SIMD_4x32& W1) {
+   auto TE = ABCD;
+   ABCD = SIMD_4x32(_mm_sha1rnds4_epu32(ABCD.raw(), (E + W0).raw(), R1));
+
+   E = ABCD;
+   ABCD = SIMD_4x32(_mm_sha1rnds4_epu32(ABCD.raw(), sha1_x86_nexte(TE, W1).raw(), R2));
+}
+
+template <uint8_t R1, uint8_t R2 = R1>
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha1_x86_rnds8(SIMD_4x32& ABCD,
                                                           SIMD_4x32& E,
                                                           const SIMD_4x32& W0,
@@ -52,6 +66,8 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha1_x86_rnds8(SIMD_4x32& ABCD,
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI SIMD_4x32 rev_words(const SIMD_4x32& v) {
    return SIMD_4x32(_mm_shuffle_epi32(v.raw(), 0b00011011));
 }
+
+// NOLINTEND(portability-simd-intrinsics)
 
 }  // namespace
 
@@ -73,12 +89,7 @@ void BOTAN_FN_ISA_SHANI SHA_1::sha1_compress_x86(digest_type& digest,
       auto W2 = rev_words(SIMD_4x32::load_be(input + 32));
       auto W3 = rev_words(SIMD_4x32::load_be(input + 48));
 
-      auto E1 = ABCD;
-      ABCD = SIMD_4x32(_mm_sha1rnds4_epu32(ABCD.raw(), _mm_add_epi32(E0.raw(), W0.raw()), 0));
-
-      E0 = ABCD;
-      ABCD = SIMD_4x32(_mm_sha1rnds4_epu32(ABCD.raw(), _mm_sha1nexte_epu32(E1.raw(), W1.raw()), 0));
-
+      sha1_x86_first8<0>(ABCD, E0, W0, W1);
       sha1_x86_rnds8<0>(ABCD, E0, W2, W3);
 
       W0 = sha1_x86_msg1(W0, W1);

@@ -43,6 +43,9 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features([[maybe_unused]] uint32_t allowe
 #endif
 
 #if defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_HAS_OS_UTILS)
+
+   // NOLINTBEGIN(*-no-assembler)
+
    auto vmx_probe = []() noexcept -> int {
       asm("vor 0, 0, 0");
       return 1;
@@ -76,6 +79,8 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features([[maybe_unused]] uint32_t allowe
       }
    #endif
    }
+
+   // NOLINTBEGIN(*-no-assembler)
 
 #endif
 

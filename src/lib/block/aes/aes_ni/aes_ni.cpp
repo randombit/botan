@@ -16,6 +16,8 @@ namespace Botan {
 
 namespace {
 
+// NOLINTBEGIN(portability-simd-intrinsics)
+
 template <uint8_t RC>
 BOTAN_FN_ISA_AESNI inline __m128i aes_128_key_expansion(__m128i key, __m128i key_getting_rcon) {
    __m128i key_with_rcon = _mm_aeskeygenassist_si128(key_getting_rcon, RC);
@@ -120,6 +122,8 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AESNI void aesdeclast(
    B2 = SIMD_4x32(_mm_aesdeclast_si128(B2.raw(), K.raw()));
    B3 = SIMD_4x32(_mm_aesdeclast_si128(B3.raw(), K.raw()));
 }
+
+// NOLINTEND(portability-simd-intrinsics)
 
 }  // namespace
 
@@ -256,6 +260,8 @@ BOTAN_FN_ISA_AESNI void AES_128::aesni_key_schedule(const uint8_t key[], size_t 
    m_EK.resize(44);
    m_DK.resize(44);
 
+   // NOLINTBEGIN(portability-simd-intrinsics) TODO convert to using SIMD_4x32
+
    const __m128i K0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(key));
    const __m128i K1 = aes_128_key_expansion<0x01>(K0, K0);
    const __m128i K2 = aes_128_key_expansion<0x02>(K1, K1);
@@ -295,6 +301,8 @@ BOTAN_FN_ISA_AESNI void AES_128::aesni_key_schedule(const uint8_t key[], size_t 
    _mm_storeu_si128(DK_mm + 8, _mm_aesimc_si128(K2));
    _mm_storeu_si128(DK_mm + 9, _mm_aesimc_si128(K1));
    _mm_storeu_si128(DK_mm + 10, K0);
+
+   // NOLINTEND(portability-simd-intrinsics)
 }
 
 /*
@@ -444,6 +452,8 @@ BOTAN_FN_ISA_AESNI void AES_192::aesni_key_schedule(const uint8_t key[], size_t 
    m_EK.resize(52);
    m_DK.resize(52);
 
+   // NOLINTBEGIN(portability-simd-intrinsics) TODO convert to using SIMD_4x32
+
    __m128i K0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(key));
    __m128i K1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(key + 8));
    K1 = _mm_srli_si128(K1, 8);
@@ -476,6 +486,8 @@ BOTAN_FN_ISA_AESNI void AES_192::aesni_key_schedule(const uint8_t key[], size_t 
    _mm_storeu_si128(DK_mm + 10, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 2)));
    _mm_storeu_si128(DK_mm + 11, _mm_aesimc_si128(_mm_loadu_si128(EK_mm + 1)));
    _mm_storeu_si128(DK_mm + 12, _mm_loadu_si128(EK_mm + 0));
+
+   // NOLINTEND(portability-simd-intrinsics)
 }
 
 /*
@@ -637,6 +649,8 @@ BOTAN_FN_ISA_AESNI void AES_256::aesni_key_schedule(const uint8_t key[], size_t 
    m_EK.resize(60);
    m_DK.resize(60);
 
+   // NOLINTBEGIN(portability-simd-intrinsics) TODO convert to using SIMD_4x32
+
    const __m128i K0 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(key));
    const __m128i K1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(key + 16));
 
@@ -694,6 +708,8 @@ BOTAN_FN_ISA_AESNI void AES_256::aesni_key_schedule(const uint8_t key[], size_t 
    _mm_storeu_si128(DK_mm + 12, _mm_aesimc_si128(K2));
    _mm_storeu_si128(DK_mm + 13, _mm_aesimc_si128(K1));
    _mm_storeu_si128(DK_mm + 14, K0);
+
+   // NOLINTEND(portability-simd-intrinsics)
 }
 
 }  // namespace Botan

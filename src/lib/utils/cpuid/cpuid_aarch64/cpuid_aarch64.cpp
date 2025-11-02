@@ -111,6 +111,8 @@ std::optional<uint32_t> aarch64_feat_using_mac_api(uint32_t allowed) {
 std::optional<uint32_t> aarch64_feat_using_instr_probe(uint32_t allowed) {
 #if defined(BOTAN_USE_GCC_INLINE_ASM)
 
+   // NOLINTBEGIN(*-no-assembler)
+
    /*
    No getauxval API available, fall back on probe functions.
    NEON registers v0-v7 are caller saved in Aarch64
@@ -140,6 +142,8 @@ std::optional<uint32_t> aarch64_feat_using_instr_probe(uint32_t allowed) {
       asm(".long 0xcec08000");
       return 1;
    };
+
+   // NOLINTEND(*-no-assembler)
 
    uint32_t feat = 0;
    if((allowed & CPUFeature::Bit::NEON) == CPUFeature::Bit::NEON) {

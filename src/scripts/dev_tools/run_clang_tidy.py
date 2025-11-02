@@ -72,7 +72,6 @@ disabled_not_interested = [
     'cppcoreguidelines-pro-bounds-constant-array-index',
     'cppcoreguidelines-pro-type-const-cast', # see above
     'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
-    'hicpp-no-assembler',
     'hicpp-signed-bitwise', # impossible to avoid in C/C++, int promotion rules :/
     'misc-no-recursion',
     'modernize-use-trailing-return-type', # fine, but we're not using it everywhere
@@ -81,7 +80,6 @@ disabled_not_interested = [
     'modernize-use-designated-initializers',
     'modernize-use-nodiscard',
     'modernize-use-using', # fine not great
-    'portability-simd-intrinsics',
     'readability-avoid-return-with-void-value', # Jack likes doing this
     'readability-function-cognitive-complexity',
     'readability-identifier-length', # lol, lmao

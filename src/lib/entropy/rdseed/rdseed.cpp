@@ -41,7 +41,7 @@ BOTAN_FUNC_ISA("rdseed") bool read_rdseed(secure_vector<uint32_t>& seed) {
       int cf = 0;
 
 #if defined(BOTAN_USE_GCC_INLINE_ASM)
-      asm("rdseed %0; adcl $0,%1" : "=r"(r), "=r"(cf) : "0"(r), "1"(cf) : "cc");
+      asm("rdseed %0; adcl $0,%1" : "=r"(r), "=r"(cf) : "0"(r), "1"(cf) : "cc");  // NOLINT(*-no-assembler)
 #else
       cf = _rdseed32_step(&r);
 #endif
@@ -53,9 +53,9 @@ BOTAN_FUNC_ISA("rdseed") bool read_rdseed(secure_vector<uint32_t>& seed) {
 
       // Intel suggests pausing if RDSEED fails.
 #if defined(BOTAN_USE_GCC_INLINE_ASM)
-      asm volatile("pause");
+      asm volatile("pause");  // NOLINT(*-no-assembler)
 #else
-      _mm_pause();
+      _mm_pause();  // NOLINT(portability-simd-intrinsics)
 #endif
    }
 

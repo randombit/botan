@@ -176,6 +176,8 @@ uint64_t OS::get_cpu_cycle_counter() {
 
 #elif defined(BOTAN_USE_GCC_INLINE_ASM)
 
+   // NOLINTBEGIN(*-no-assembler)
+
    #if defined(BOTAN_TARGET_ARCH_IS_X86_64)
 
    uint32_t rtc_low = 0;
@@ -211,8 +213,8 @@ uint64_t OS::get_cpu_cycle_counter() {
    #elif defined(BOTAN_TARGET_ARCH_IS_ALPHA)
    asm volatile("rpcc %0" : "=r"(rtc));
 
-      // OpenBSD does not trap access to the %tick register
    #elif defined(BOTAN_TARGET_ARCH_IS_SPARC64) && !defined(BOTAN_TARGET_OS_IS_OPENBSD)
+   // OpenBSD does not trap access to the %tick register so we avoid it there
    asm volatile("rd %%tick, %0" : "=r"(rtc));
 
    #elif defined(BOTAN_TARGET_ARCH_IS_IA64)
@@ -227,6 +229,8 @@ uint64_t OS::get_cpu_cycle_counter() {
    #else
       //#warning "OS::get_cpu_cycle_counter not implemented"
    #endif
+
+   // NOLINTEND(*-no-assembler)
 
 #endif
 

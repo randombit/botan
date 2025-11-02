@@ -162,7 +162,7 @@ class OS_Utils_Tests final : public Test {
 
       #if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
          crash_probe = []() noexcept -> int {
-            asm volatile("ud2");
+            asm volatile("ud2");  // NOLINT(*-no-assembler)
             return 3;
          };
 
@@ -170,7 +170,7 @@ class OS_Utils_Tests final : public Test {
          //ARM: asm volatile (".word 0xf7f0a000\n");
          // illegal instruction in both ARM and Thumb modes
          crash_probe = []() noexcept -> int {
-            asm volatile(".word 0xe7f0def0\n");
+            asm volatile(".word 0xe7f0def0\n");  // NOLINT(*-no-assembler)
             return 3;
          };
 

@@ -15,6 +15,8 @@ namespace SHACAL2_AVX512_F {
 
 namespace {
 
+// NOLINTBEGIN(portability-simd-intrinsics)
+
 /*
 * 8x16 Transpose
 *
@@ -119,6 +121,8 @@ void transpose_out(SIMD_16x32& B0,
    B6 = SIMD_16x32(_mm512_shuffle_i32x4(s4, s5, 0b11101110));
    B7 = SIMD_16x32(_mm512_shuffle_i32x4(s6, s7, 0b11101110));
 }
+
+// NOLINTEND(portability-simd-intrinsics)
 
 template <typename SimdT>
 void BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX512 SHACAL2_Fwd(const SimdT& A,
