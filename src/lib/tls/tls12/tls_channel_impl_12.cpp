@@ -67,7 +67,7 @@ void Channel_Impl_12::reset_active_association_state() {
    m_read_cipher_states[0] = nullptr;
 
    if(m_sequence_numbers) {
-      m_sequence_numbers->reset();
+      m_sequence_numbers->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
    }
 }
 
