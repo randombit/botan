@@ -22,8 +22,6 @@
 #include <botan/internal/stl_util.h>
 #include <botan/internal/xmss_verification_operation.h>
 
-#include <iterator>
-
 namespace Botan {
 
 namespace {

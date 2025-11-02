@@ -11,8 +11,6 @@
    #include <botan/internal/calendar.h>
 #endif
 
-#include <utility>
-
 namespace Botan_Tests {
 
 namespace {

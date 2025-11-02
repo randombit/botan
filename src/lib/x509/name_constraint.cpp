@@ -14,8 +14,6 @@
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
-#include <functional>
-#include <sstream>
 
 namespace Botan {
 

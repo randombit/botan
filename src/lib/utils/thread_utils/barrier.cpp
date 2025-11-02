@@ -6,11 +6,12 @@
 */
 
 #include <botan/internal/barrier.h>
+#include <mutex>
 
 namespace Botan {
 
 void Barrier::wait(size_t delta) {
-   std::lock_guard<std::mutex> lock(m_mutex);
+   std::scoped_lock<std::mutex> lock(m_mutex);
    m_value += delta;
 }
 

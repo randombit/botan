@@ -13,7 +13,6 @@
 #include "test_rng.h"
 #include "tests.h"
 
-#include <iterator>
 #include <memory>
 
 #if defined(BOTAN_HAS_FRODOKEM)
@@ -22,7 +21,6 @@
    #include <botan/frodokem.h>
    #include <botan/pubkey.h>
    #include <botan/xof.h>
-   #include <botan/internal/fmt.h>
    #include <botan/internal/frodo_constants.h>
 #endif
 

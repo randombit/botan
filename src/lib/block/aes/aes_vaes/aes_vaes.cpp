@@ -7,7 +7,6 @@
 #include <botan/internal/aes.h>
 
 #include <botan/internal/isa_extn.h>
-#include <botan/internal/loadstor.h>
 #include <botan/internal/simd_avx2.h>
 #include <wmmintrin.h>
 

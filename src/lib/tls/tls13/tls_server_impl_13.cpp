@@ -10,7 +10,6 @@
 
 #include <botan/credentials_manager.h>
 #include <botan/rng.h>
-#include <botan/internal/loadstor.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_cipher_state.h>
 

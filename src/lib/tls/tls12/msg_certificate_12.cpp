@@ -14,7 +14,6 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>
-#include <botan/internal/tls_reader.h>
 
 namespace Botan::TLS {
 

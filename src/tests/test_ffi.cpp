@@ -16,8 +16,8 @@
    #include <botan/ec_group.h>
    #include <botan/ffi.h>
    #include <botan/hex.h>
+   #include <botan/mem_ops.h>
    #include <botan/internal/fmt.h>
-   #include <botan/internal/loadstor.h>
    #include <botan/internal/stl_util.h>
    #include <botan/internal/target_info.h>
    #include <set>

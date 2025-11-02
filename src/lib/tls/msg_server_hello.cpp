@@ -11,7 +11,6 @@
 
 #include <botan/tls_messages.h>
 
-#include <botan/mem_ops.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_extensions.h>
@@ -21,7 +20,6 @@
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_reader.h>
-#include <botan/internal/tls_session_key.h>
 #include <array>
 
 namespace Botan::TLS {

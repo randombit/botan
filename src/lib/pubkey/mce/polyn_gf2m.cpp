@@ -14,7 +14,6 @@
 
 #include <botan/exceptn.h>
 #include <botan/rng.h>
-#include <botan/internal/bit_ops.h>
 #include <botan/internal/code_based_util.h>
 #include <botan/internal/loadstor.h>
 

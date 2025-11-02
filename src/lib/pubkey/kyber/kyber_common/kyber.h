@@ -29,7 +29,7 @@ namespace Botan {
 
 class BOTAN_PUBLIC_API(3, 0) KyberMode {
    public:
-      enum Mode : uint8_t {
+      enum Mode : uint8_t /* NOLINT(*-use-enum-class) */ {
          // Kyber512 as proposed in round 3 of the NIST competition
          Kyber512_R3 = 0,
          // Kyber768 as proposed in round 3 of the NIST competition

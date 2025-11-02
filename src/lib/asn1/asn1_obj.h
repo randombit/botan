@@ -463,7 +463,7 @@ class BOTAN_PUBLIC_API(2, 0) ASN1_String final : public ASN1_Object {
 */
 class BOTAN_PUBLIC_API(2, 0) AlgorithmIdentifier final : public ASN1_Object {
    public:
-      enum Encoding_Option : uint8_t { USE_NULL_PARAM, USE_EMPTY_PARAM };
+      enum Encoding_Option : uint8_t { USE_NULL_PARAM, USE_EMPTY_PARAM }; /* NOLINT(*-use-enum-class) */
 
       void encode_into(DER_Encoder& to) const override;
       void decode_from(BER_Decoder& from) override;

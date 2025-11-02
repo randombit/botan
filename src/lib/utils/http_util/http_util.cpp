@@ -13,7 +13,6 @@
 #include <botan/internal/mem_utils.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/socket.h>
-#include <botan/internal/stl_util.h>
 #include <iomanip>
 #include <sstream>
 

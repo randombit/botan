@@ -7,10 +7,6 @@
 
 #include "tests.h"
 
-#include <array>
-#include <chrono>
-#include <thread>
-
 #if defined(BOTAN_HAS_TLS)
 
    #include <botan/credentials_manager.h>
@@ -20,6 +16,8 @@
    #include <botan/tls_session_manager_memory.h>
    #include <botan/tls_session_manager_stateless.h>
    #include <botan/internal/fmt.h>
+   #include <array>
+   #include <chrono>
 
    #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
       #include <botan/tls_session_manager_sqlite.h>

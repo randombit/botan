@@ -12,13 +12,10 @@
 
    #include <botan/assert.h>
    #include <botan/hash.h>
-   #include <botan/pk_algs.h>
    #include <botan/pubkey.h>
    #include <botan/secmem.h>
    #include <botan/sp_parameters.h>
    #include <botan/sphincsplus.h>
-   #include <botan/internal/loadstor.h>
-   #include <botan/internal/sp_hash.h>
    #include <algorithm>
 
    #include "test_pubkey.h"

@@ -8,10 +8,10 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_TLS)
-
    #include <botan/tls_signature_scheme.h>
+#endif
 
-   #include <botan/ec_group.h>
+#if defined(BOTAN_HAS_TLS)
 
 namespace Botan_Tests {
 

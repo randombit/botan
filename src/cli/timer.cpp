@@ -7,7 +7,6 @@
 #include "timer.h"
 
 #include <chrono>
-#include <iomanip>
 #include <sstream>
 
 #if defined(BOTAN_HAS_OS_UTILS)

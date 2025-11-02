@@ -16,7 +16,6 @@
    #include <botan/internal/divide.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/mod_inv.h>
-   #include <botan/internal/mp_core.h>
    #include <botan/internal/parsing.h>
    #include <botan/internal/primality.h>
    #include <botan/internal/stl_util.h>

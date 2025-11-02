@@ -11,7 +11,6 @@
    #include <botan/numthry.h>
    #include <botan/internal/mod_inv.h>
    #include <botan/internal/monty.h>
-   #include <iterator>
 
 namespace Botan_CLI {
 

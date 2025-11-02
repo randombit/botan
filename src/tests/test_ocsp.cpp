@@ -12,7 +12,6 @@
    #include <botan/ocsp.h>
    #include <botan/x509path.h>
    #include <botan/internal/calendar.h>
-   #include <fstream>
 #endif
 
 namespace Botan_Tests {

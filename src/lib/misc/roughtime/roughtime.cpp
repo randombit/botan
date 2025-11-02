@@ -15,7 +15,6 @@
 #include <botan/internal/socket_udp.h>
 #include <botan/internal/stl_util.h>
 
-#include <cmath>
 #include <map>
 #include <sstream>
 

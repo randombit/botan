@@ -21,10 +21,6 @@
    #include <botan/internal/kyber_90s.h>
 #endif
 
-#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
-   #include <botan/internal/kyber_round3_impl.h>
-#endif
-
 #if defined(BOTAN_HAS_ML_KEM)
    #include <botan/internal/ml_kem_impl.h>
 #endif

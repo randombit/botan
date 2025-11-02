@@ -8,8 +8,6 @@
 
 #include <botan/internal/hss_lms_utils.h>
 
-#include <botan/internal/stl_util.h>
-
 namespace Botan {
 
 // The magic numbers in the initializer list below reflect the structure of the

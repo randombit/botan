@@ -39,7 +39,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       typedef EC_Point_Format Compression_Type;
       using enum EC_Point_Format;
 
-      enum : uint8_t { WORKSPACE_SIZE = 8 };
+      enum : uint8_t /* NOLINT(*-use-enum-class) */ { WORKSPACE_SIZE = 8 };
 
       /**
       * Construct an uninitialized EC_Point

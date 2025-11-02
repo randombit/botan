@@ -320,8 +320,7 @@ Session::Session(std::span<const uint8_t> ber_data) /* NOLINT(*-member-init) */ 
 
    BER_Decoder(ber_data.data(), ber_data.size())
       .start_sequence()
-      .decode_and_check(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION),
-                        "Unknown version in serialized TLS session")
+      .decode_and_check(TLS_SESSION_PARAM_STRUCT_VERSION, "Unknown version in serialized TLS session")
       .decode_integer_type(start_time)
       .decode_integer_type(major_version)
       .decode_integer_type(minor_version)
@@ -372,7 +371,7 @@ secure_vector<uint8_t> Session::DER_encode() const {
 
    return DER_Encoder()
       .start_sequence()
-      .encode(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION))
+      .encode(TLS_SESSION_PARAM_STRUCT_VERSION)
       .encode(static_cast<size_t>(std::chrono::system_clock::to_time_t(m_start_time)))
       .encode(static_cast<size_t>(m_version.major_version()))
       .encode(static_cast<size_t>(m_version.minor_version()))

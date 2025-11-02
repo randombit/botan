@@ -8,11 +8,10 @@
 
 #include <botan/tls_session_manager_stateless.h>
 
+#include <botan/assert.h>
 #include <botan/credentials_manager.h>
 #include <botan/exceptn.h>
 #include <botan/rng.h>
-
-#include <botan/internal/stl_util.h>
 
 namespace Botan::TLS {
 

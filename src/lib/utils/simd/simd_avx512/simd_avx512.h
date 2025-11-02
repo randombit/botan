@@ -86,17 +86,17 @@ class SIMD_16x32 final {
       }
 
       SIMD_16x32 BOTAN_FN_ISA_AVX512 sigma0() const {
-         const SIMD_16x32 rot1 = this->rotr<2>();
-         const SIMD_16x32 rot2 = this->rotr<13>();
-         const SIMD_16x32 rot3 = this->rotr<22>();
-         return rot1 ^ rot2 ^ rot3;
+         const SIMD_16x32 r1 = this->rotr<2>();
+         const SIMD_16x32 r2 = this->rotr<13>();
+         const SIMD_16x32 r3 = this->rotr<22>();
+         return r1 ^ r2 ^ r3;
       }
 
       SIMD_16x32 BOTAN_FN_ISA_AVX512 sigma1() const {
-         const SIMD_16x32 rot1 = this->rotr<6>();
-         const SIMD_16x32 rot2 = this->rotr<11>();
-         const SIMD_16x32 rot3 = this->rotr<25>();
-         return rot1 ^ rot2 ^ rot3;
+         const SIMD_16x32 r1 = this->rotr<6>();
+         const SIMD_16x32 r2 = this->rotr<11>();
+         const SIMD_16x32 r3 = this->rotr<25>();
+         return r1 ^ r2 ^ r3;
       }
 
       BOTAN_FN_ISA_AVX512

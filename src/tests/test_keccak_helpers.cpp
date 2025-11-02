@@ -11,7 +11,6 @@
 
    #include <botan/hex.h>
    #include <botan/internal/keccak_helpers.h>
-   #include <botan/internal/keccak_perm.h>
    #include <botan/internal/mem_utils.h>
 
    #if defined(BOTAN_HAS_SHAKE_XOF)

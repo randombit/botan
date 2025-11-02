@@ -9,7 +9,6 @@
 
 #include <botan/internal/ghash.h>
 
-#include <botan/exceptn.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/stl_util.h>
@@ -190,10 +189,10 @@ void GHASH::nonce_hash(std::span<uint8_t, GCM_BS> y0, std::span<const uint8_t> n
 void GHASH::clear() {
    zap(m_HM);
    zap(m_H_pow);
-   reset();
+   this->reset_state();
 }
 
-void GHASH::reset() {
+void GHASH::reset_state() {
    m_H_ad = {0};
    secure_scrub_memory(m_ghash);
    if(m_nonce) {

@@ -6,7 +6,6 @@
 
 #include <botan/internal/monty.h>
 
-#include <botan/numthry.h>
 #include <botan/internal/barrett.h>
 #include <botan/internal/mp_core.h>
 #include <array>

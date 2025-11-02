@@ -9,8 +9,6 @@
 
 #include <botan/internal/keccak_perm.h>
 
-#include <botan/exceptn.h>
-#include <botan/internal/fmt.h>
 #include <botan/internal/keccak_perm_round.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/stl_util.h>

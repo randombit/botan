@@ -48,6 +48,8 @@ class KyberConstants final {
       static constexpr uint16_t SAMPLE_NTT_POLY_FROM_XOF_BOUND = 280 * 3 /* XOF bytes per while iteration */;
 
    public:
+      // NOLINTBEGIN(*-use-enum-class)
+
       enum KyberEta : uint8_t { _2 = 2, _3 = 3 };
 
       enum KyberDu : uint8_t { _10 = 10, _11 = 11 };
@@ -55,6 +57,8 @@ class KyberConstants final {
       enum KyberDv : uint8_t { _4 = 4, _5 = 5 };
 
       enum KyberStrength : uint16_t { _128 = 128, _192 = 192, _256 = 256 };
+
+      // NOLINTEND(*-use-enum-class)
 
    public:
       /* NOLINT(*-explicit-conversions) */ KyberConstants(KyberMode mode);

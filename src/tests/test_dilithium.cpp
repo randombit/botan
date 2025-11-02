@@ -17,7 +17,6 @@
    #include <botan/hash.h>
    #include <botan/pk_algs.h>
    #include <botan/pubkey.h>
-   #include <botan/internal/fmt.h>
    #include <algorithm>
 
    #include "test_pubkey.h"

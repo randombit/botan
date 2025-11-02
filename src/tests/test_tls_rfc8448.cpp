@@ -25,14 +25,16 @@
    #include <botan/assert.h>
    #include <botan/credentials_manager.h>
    #include <botan/data_src.h>
-   #include <botan/ecdsa.h>
-   #include <botan/hash.h>
+   #include <botan/dl_group.h>
+   #include <botan/ec_group.h>
    #include <botan/pk_algs.h>
    #include <botan/pkcs8.h>
-   #include <botan/rsa.h>
-   #include <botan/tls.h>
+   #include <botan/tls_callbacks.h>
+   #include <botan/tls_client.h>
    #include <botan/tls_extensions.h>
    #include <botan/tls_messages.h>
+   #include <botan/tls_server.h>
+   #include <botan/tls_session_manager.h>
    #include <botan/x509_key.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/stl_util.h>

@@ -5,10 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/exceptn.h>
+#include <botan/internal/filesystem.h>
 
 #include <botan/assert.h>
-#include <botan/internal/filesystem.h>
+#include <botan/exceptn.h>
 #include <botan/internal/target_info.h>
 #include <algorithm>
 #include <deque>

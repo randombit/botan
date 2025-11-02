@@ -559,7 +559,7 @@ class BOTAN_PUBLIC_API(2, 0) Hex_Encoder final : public Filter {
       /**
       * Whether to use uppercase or lowercase letters for the encoded string.
       */
-      enum Case : uint8_t { Uppercase, Lowercase };
+      enum Case : uint8_t /* NOLINT(*-use-enum-class) */ { Uppercase, Lowercase };
 
       std::string name() const override { return "Hex_Encoder"; }
 

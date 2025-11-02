@@ -17,7 +17,7 @@ namespace Botan {
 
 class BOTAN_TEST_API CPUFeature {
    public:
-      enum Bit : uint32_t {
+      enum Bit : uint32_t /* NOLINT(*-use-enum-class) */ {
          LSX = (1U << 0),
          LASX = (1U << 1),
          CRYPTO = (1U << 2),

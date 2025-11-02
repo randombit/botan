@@ -9,7 +9,7 @@
 #include <botan/internal/tls_transcript_hash_13.h>
 
 #include <botan/tls_exceptn.h>
-#include <botan/tls_messages.h>
+#include <botan/tls_extensions.h>
 #include <botan/internal/tls_reader.h>
 
 #include <utility>

@@ -7,8 +7,6 @@
 
 #include "tests.h"
 
-#include "test_rng.h"
-
 #if defined(BOTAN_HAS_ECDSA)
    #include "test_pubkey.h"
    #include <botan/ecdsa.h>
