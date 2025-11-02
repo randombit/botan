@@ -2,3 +2,7 @@
 name -> "Ascon-permutation"
 type -> "Internal"
 </module_info>
+
+<requires>
+sponge
+</requires>
