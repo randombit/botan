@@ -543,7 +543,7 @@ def process_command_line(args):
     build_group.add_option('--with-python-versions', dest='python_version',
                            metavar='N.M',
                            default='%d.%d' % (sys.version_info[0], sys.version_info[1]),
-                           help='where to install botan2.py (def %default)')
+                           help='where to install botan3.py (def %default)')
 
     build_group.add_option('--disable-cc-tests', dest='enable_cc_tests',
                            default=True, action='store_false',
