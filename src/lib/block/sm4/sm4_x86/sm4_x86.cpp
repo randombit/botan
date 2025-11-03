@@ -15,6 +15,7 @@ namespace Botan {
 namespace {
 
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_SM4 SIMD_8x32 sm4_x86_rnds4(const SIMD_8x32& b, const SIMD_8x32& k) {
+   // NOLINTNEXTLINE(portability-simd-intrinsics)
    return SIMD_8x32(_mm256_sm4rnds4_epi32(b.raw(), k.raw()));
 }
 

@@ -16,6 +16,8 @@ namespace {
 
 namespace Camellia_GFNI {
 
+// NOLINTBEGIN(portability-simd-intrinsics)
+
 inline BOTAN_FN_ISA_AVX2_GFNI __m256i camellia_s1234(__m256i x) {
    constexpr uint64_t pre123_a = gfni_matrix(R"(
       1 1 1 0 1 1 0 1
@@ -98,6 +100,8 @@ inline BOTAN_FN_ISA_AVX2_GFNI uint64_t F(uint64_t x) {
    // My kingdom for a horizontal XOR (even AVX-512 doesn't have this, only OR/AND)
    return Z[0] ^ Z[1] ^ Z[2] ^ Z[3];
 }
+
+// NOLINTEND(portability-simd-intrinsics)
 
 inline uint64_t FL(uint64_t v, uint64_t K) {
    uint32_t x1 = static_cast<uint32_t>(v >> 32);

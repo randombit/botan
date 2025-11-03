@@ -20,6 +20,8 @@ namespace Botan {
 
 namespace {
 
+// NOLINTBEGIN(portability-simd-intrinsics)
+
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_SIMD_4X32 SIMD_4x32 reverse_vector(const SIMD_4x32& in) {
 #if defined(BOTAN_SIMD_USE_SSSE3)
    const __m128i BSWAP_MASK = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
@@ -93,6 +95,8 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_CLMUL SIMD_4x32 clmul(const SIMD_4x32& H, const 
    return z;
 #endif
 }
+
+// NOLINTEND(portability-simd-intrinsics)
 
 inline SIMD_4x32 BOTAN_FN_ISA_CLMUL gcm_reduce(const SIMD_4x32& B0, const SIMD_4x32& B1) {
    SIMD_4x32 X0 = B1.shr<31>();

@@ -56,6 +56,7 @@ hwrng_output read_hwrng(bool& success) {
    int cf = 0;
    #if defined(BOTAN_USE_GCC_INLINE_ASM)
    // same asm seq works for 32 and 64 bit
+   // NOLINTNEXTLINE(*-no-assembler)
    asm volatile("rdrand %0; adcl $0,%1" : "=r"(output), "=r"(cf) : "0"(output), "1"(cf) : "cc");
    #elif defined(BOTAN_TARGET_ARCH_IS_X86_32)
    cf = _rdrand32_step(&output);
@@ -73,8 +74,8 @@ hwrng_output read_hwrng(bool& success) {
    */
    uint64_t output2 = 0;
    // DARN codes are 0: 32-bit conditioned, 1: 64-bit conditioned, 2: 64-bit raw (ala RDSEED)
-   asm volatile("darn %0, 1" : "=r"(output));
-   asm volatile("darn %0, 1" : "=r"(output2));
+   asm volatile("darn %0, 1" : "=r"(output));   // NOLINT(*-no-assembler)
+   asm volatile("darn %0, 1" : "=r"(output2));  // NOLINT(*-no-assembler)
 
    if((~output) != 0 && (~output2) != 0) {
       output ^= output2;

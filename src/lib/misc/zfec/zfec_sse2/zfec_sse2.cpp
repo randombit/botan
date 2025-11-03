@@ -14,6 +14,8 @@ namespace Botan {
 
 namespace {
 
+// NOLINTBEGIN(portability-simd-intrinsics)
+
 inline SIMD_4x32 rshift_1_u8(SIMD_4x32 v) {
    return SIMD_4x32(_mm_add_epi8(v.raw(), v.raw()));
 }
@@ -21,6 +23,8 @@ inline SIMD_4x32 rshift_1_u8(SIMD_4x32 v) {
 inline SIMD_4x32 high_bit_set_u8(SIMD_4x32 v) {
    return SIMD_4x32(_mm_cmpgt_epi8(_mm_setzero_si128(), v.raw()));
 }
+
+// NOLINTEND(portability-simd-intrinsics)
 
 }  // namespace
 

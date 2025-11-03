@@ -553,6 +553,7 @@ class divide_precomp final {
             if constexpr(std::same_as<W, uint64_t>) {
                W quotient = 0;
                W remainder = 0;
+               // NOLINTNEXTLINE(*-no-assembler)
                asm("divq %[v]" : "=a"(quotient), "=d"(remainder) : [v] "r"(m_divisor), "a"(n0), "d"(n1));
                return quotient;
             }

@@ -15,6 +15,8 @@
 
 namespace Botan {
 
+// NOLINTBEGIN(portability-simd-intrinsics)
+
 class SIMD_8x64 final {
    public:
       SIMD_8x64& operator=(const SIMD_8x64& other) = default;
@@ -123,6 +125,8 @@ class SIMD_8x64 final {
    private:
       __m512i m_simd;
 };
+
+// NOLINTEND(portability-simd-intrinsics)
 
 }  // namespace Botan
 

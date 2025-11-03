@@ -18,6 +18,8 @@ require a different instruction
 */
 
 void BOTAN_FN_ISA_SHANI SHACAL2::x86_encrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks) const {
+   // NOLINTBEGIN(portability-simd-intrinsics) TODO convert to SIMD_4x32 plus SHA-NI helpers
+
    const __m128i MASK1 = _mm_set_epi8(8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7);
    const __m128i MASK2 = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
 
@@ -95,6 +97,8 @@ void BOTAN_FN_ISA_SHANI SHACAL2::x86_encrypt_blocks(const uint8_t in[], uint8_t 
       in_mm += 2;
       out_mm += 2;
    }
+
+   // NOLINTEND(portability-simd-intrinsics)
 }
 
 }  // namespace Botan

@@ -294,6 +294,13 @@ into something with a conditional jump, but code intended to be const-time
 should in any case be annotated (using ``CT::poison``) so it can be checked at
 runtime with tools.
 
+SIMD Intrinsics
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Using intrinsics is the preferred method of invoking hardware specific instructions.
+In doing so, prefer using (and extending if required) the wrapper types included in
+``utils/simd``.
+
 Operating System Dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

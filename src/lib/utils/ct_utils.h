@@ -286,7 +286,7 @@ constexpr inline T value_barrier(T x) {
       * however the current approach seems sufficient with current compilers,
       * and is minimally damaging with regards to degrading code generation.
       */
-      asm("" : "+r"(x) : /* no input */);
+      asm("" : "+r"(x) : /* no input */);  // NOLINT(*-no-assembler)
       return x;
 #elif defined(BOTAN_CT_VALUE_BARRIER_USE_VOLATILE)
       volatile T vx = x;

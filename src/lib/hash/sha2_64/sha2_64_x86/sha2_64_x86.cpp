@@ -13,6 +13,8 @@ namespace Botan {
 
 namespace {
 
+// NOLINTBEGIN(portability-simd-intrinsics)
+
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHA512 void sha512_msg_expand(__m256i& m0, __m256i& m1, __m256i& m2, __m256i& m3) {
    m3 = _mm256_sha512msg1_epi64(m3, _mm256_extracti128_si256(m0, 0));
    m2 = _mm256_add_epi64(m2, _mm256_permute4x64_epi64(_mm256_blend_epi32(m0, m1, 3), 0b00111001));
@@ -36,6 +38,8 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 void permute_state(__m256i& state0, __m256i
    state1 = _mm256_permute2x128_si256(statet, state1, 0x02);
 }
 
+// NOLINTEND(portability-simd-intrinsics)
+
 }  // namespace
 
 BOTAN_FN_ISA_SHA512
@@ -58,6 +62,8 @@ void SHA_512::compress_digest_x86(digest_type& digest, std::span<const uint8_t> 
       0x113F9804BEF90DAE, 0x1B710B35131C471B, 0x28DB77F523047D84, 0x32CAAB7B40C72493, 0x3C9EBE0A15C9BEBC,
       0x431D67C49C100D4C, 0x4CC5D4BECB3E42B6, 0x597F299CFC657E2A, 0x5FCB6FAB3AD6FAEC, 0x6C44198C4A475817,
    };
+
+   // NOLINTBEGIN(portability-simd-intrinsics) TODO Use SIMD_4x64 here
 
    const __m256i* K_mm = reinterpret_cast<const __m256i*>(K);
 
@@ -112,6 +118,8 @@ void SHA_512::compress_digest_x86(digest_type& digest, std::span<const uint8_t> 
 
    _mm256_storeu_si256(digest_mm, state0);
    _mm256_storeu_si256(digest_mm + 1, state1);
+
+   // NOLINTEND(portability-simd-intrinsics)
 }
 
 }  // namespace Botan

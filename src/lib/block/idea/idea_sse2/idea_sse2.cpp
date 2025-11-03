@@ -13,6 +13,8 @@
 
 namespace Botan {
 
+// NOLINTBEGIN(portability-simd-intrinsics) TODO add various helper fns
+
 namespace {
 
 BOTAN_FN_ISA_SSE2 inline __m128i mul(__m128i X, uint16_t K_16) {
@@ -192,5 +194,7 @@ BOTAN_FN_ISA_SSE2 void IDEA::sse2_idea_op_8(const uint8_t in[64], uint8_t out[64
    CT::unpoison(out, 64);
    CT::unpoison(EK, 52);
 }
+
+// NOLINTEND(portability-simd-intrinsics)
 
 }  // namespace Botan

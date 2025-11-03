@@ -19,6 +19,8 @@ namespace Botan {
 
 namespace {
 
+// NOLINTBEGIN(portability-simd-intrinsics)
+
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha256_rnds4(SIMD_4x32& S0,
                                                         SIMD_4x32& S1,
                                                         const SIMD_4x32& msg,
@@ -42,6 +44,8 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha256_permute_state(SIMD_4x32& S0, S
    S1 = SIMD_4x32(_mm_blend_epi16(S1.raw(), S0.raw(), 0xF0));  // CDGH
    S0 = SIMD_4x32(tmp);
 }
+
+// NOLINTEND(portability-simd-intrinsics)
 
 }  // namespace
 
