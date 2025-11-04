@@ -9,3 +9,7 @@ name -> "CPUID for Aarch64"
 <arch>
 arm64
 </arch>
+
+<requires>
+os_utils
+</requires>
