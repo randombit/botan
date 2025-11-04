@@ -30,6 +30,14 @@ class Credentials_Manager : public Botan::Credentials_Manager {
       Botan::System_Certificate_Store m_cert_store;
 };
 
+// Custom TLS policy that relaxes the certificate revocation info requirement.
+// Often this setting causes frustration for new users. However, applications
+// should carefully consider whether or not to enable revocation checks.
+class Example_Policy : public Botan::TLS::Policy {
+   public:
+      bool require_cert_revocation_info() const override { return false; }
+};
+
 // NOLINTBEGIN(*-avoid-bind)
 
 // a simple https client based on TLS::Stream
@@ -43,7 +51,7 @@ class client {
             m_ctx(std::make_shared<Botan::TLS::Context>(std::make_shared<Credentials_Manager>(),
                                                         std::make_shared<Botan::AutoSeeded_RNG>(),
                                                         std::make_shared<Botan::TLS::Session_Manager_Noop>(),
-                                                        std::make_shared<Botan::TLS::Policy>(),
+                                                        std::make_shared<Example_Policy>(),
                                                         Botan::TLS::Server_Information(host))),
             m_stream(io_context, m_ctx) {
          boost::asio::async_connect(m_stream.lowest_layer(),
