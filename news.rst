@@ -4,7 +4,7 @@ Release Notes
 Version 3.10.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add support for Ascon hash and XOF from NIST SP 800-232 (GH #5061 #5097)
+* Add support for Ascon AEAD, hash and XOF from NIST SP 800-232 (GH #5061 #5076 #5097)
 
 * Add support for building with clang-cl (GH #4255)
 
