@@ -376,6 +376,10 @@ later.
 
      Adds given certificate to the store
 
+ .. cpp:function:: Certificate_Store_In_Memory(const X509_Certificate& cert, const X509_CRL& crl)
+
+     Adds given certificate and CRL to the store
+
  .. cpp:function:: Certificate_Store_In_Memory()
 
      Create an empty store
