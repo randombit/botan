@@ -330,7 +330,7 @@ jobs:
             make_tool: make
           - target: cross-ios-arm64
             compiler: xcode
-            host_os: macos-13
+            host_os: macos-26
           - target: cross-arm32-baremetal
             compiler: gcc
             host_os: ubuntu-24.04
