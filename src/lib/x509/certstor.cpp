@@ -8,6 +8,7 @@
 
 #include <botan/certstor.h>
 
+#include <botan/assert.h>
 #include <botan/data_src.h>
 #include <botan/hash.h>
 #include <botan/pkix_types.h>
@@ -100,6 +101,7 @@ std::optional<X509_Certificate> Certificate_Store_In_Memory::find_cert_by_pubkey
    }
 
    auto hash = HashFunction::create("SHA-1");
+   BOTAN_ASSERT_NONNULL(hash);
 
    for(const auto& cert : m_certs) {
       hash->update(cert.subject_public_key_bitstring());
@@ -118,6 +120,7 @@ std::optional<X509_Certificate> Certificate_Store_In_Memory::find_cert_by_raw_su
    }
 
    auto hash = HashFunction::create("SHA-256");
+   BOTAN_ASSERT_NONNULL(hash);
 
    for(const auto& cert : m_certs) {
       hash->update(cert.raw_subject_dn());
