@@ -1,0 +1,11 @@
+<defines>
+ASCON_AEAD128 -> 20250823
+</defines>
+
+<module_info>
+name -> "Ascon-AEAD128"
+</module_info>
+
+<requires>
+ascon_perm
+</requires>

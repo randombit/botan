@@ -316,6 +316,7 @@ class Speed final : public Command {
             "AES-128/GCM",
             "AES-128/XTS",
             "AES-128/SIV",
+            "Ascon-AEAD128",
 
             "Serpent/CBC",
             "Serpent/CTR-BE",
