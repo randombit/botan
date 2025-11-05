@@ -2,6 +2,8 @@
 BLAKE2B -> 20130131
 </defines>
 
+# TODO(Botan4) rename this module blake2b
+
 <module_info>
 name -> "BLAKE2b"
 </module_info>
