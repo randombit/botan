@@ -2224,6 +2224,73 @@ class FFI_StreamCipher_Test final : public FFI_Test {
       }
 };
 
+class FFI_XOF_Test final : public FFI_Test {
+      std::string name() const override { return "FFI XOF"; }
+
+      void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
+         const char* input1 = "XOF input";
+         const char* input2 = "more XOF input";
+         const char* input3 = "additional XOF input";
+         const char* xof_name = "SHAKE-128";
+
+         botan_xof_t xof1;
+         TEST_FFI_FAIL("unknown XOF", botan_xof_init, (&xof1, "SCHUETTEL-128", 0));
+         TEST_FFI_FAIL("invalid flags", botan_xof_init, (&xof1, "SHAKE-128", 42));
+
+         if(!TEST_FFI_INIT(botan_xof_init, (&xof1, xof_name, 0))) {
+            return;
+         }
+
+         std::array<char, 10> out_name{};
+         size_t out_name_len = 5;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_xof_name, (xof1, nullptr, &out_name_len));
+         result.test_eq("valid XOF name length", out_name_len, out_name.size());
+         TEST_FFI_OK(botan_xof_name, (xof1, out_name.data(), &out_name_len));
+
+         size_t out_block_size;
+         TEST_FFI_OK(botan_xof_block_size, (xof1, &out_block_size));
+         result.test_eq("valid XOF block size", out_block_size, 168);
+
+         result.test_is_eq("ready for input", botan_xof_accepts_input(xof1), 1);
+         TEST_FFI_OK(botan_xof_update, (xof1, reinterpret_cast<const uint8_t*>(input1), strlen(input1)));
+         result.test_is_eq("still ready for input", botan_xof_accepts_input(xof1), 1);
+         TEST_FFI_OK(botan_xof_update, (xof1, reinterpret_cast<const uint8_t*>(input2), strlen(input2)));
+
+         botan_xof_t xof2;
+         TEST_FFI_OK(botan_xof_copy_state, (&xof2, xof1));
+         result.test_is_eq("copy still ready for input", botan_xof_accepts_input(xof2), 1);
+
+         std::array<uint8_t, 16> out_bytes{};
+         TEST_FFI_OK(botan_xof_output, (xof1, nullptr, 0));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_xof_output, (xof1, nullptr, 1));
+         TEST_FFI_OK(botan_xof_output, (xof1, out_bytes.data(), out_bytes.size()));
+
+         result.test_eq("expected first output", out_bytes, "2E870A5FE35999A7B15F9F0BB5AC1689");
+         result.test_ne("no more input", botan_xof_accepts_input(xof1), 1);
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE,
+                     botan_xof_update,
+                     (xof1, reinterpret_cast<const uint8_t*>(input1), strlen(input1)));
+
+         TEST_FFI_OK(botan_xof_output, (xof1, out_bytes.data(), out_bytes.size()));
+         result.test_eq("expected second output", out_bytes, "E266E213DA0F2763AE29601AB8F9DEDC");
+
+         TEST_FFI_OK(botan_xof_update, (xof2, reinterpret_cast<const uint8_t*>(input3), strlen(input3)));
+         TEST_FFI_OK(botan_xof_output, (xof2, out_bytes.data(), out_bytes.size()));
+         result.test_eq("expected first output after additional input", out_bytes, "D9D5416188659DDC5C26FCF52E49A157");
+
+         TEST_FFI_OK(botan_xof_clear, (xof1));
+         result.test_is_eq("again ready for input", botan_xof_accepts_input(xof1), 1);
+         TEST_FFI_OK(botan_xof_update, (xof1, reinterpret_cast<const uint8_t*>(input1), strlen(input1)));
+         TEST_FFI_OK(botan_xof_update, (xof1, reinterpret_cast<const uint8_t*>(input2), strlen(input2)));
+         TEST_FFI_OK(botan_xof_update, (xof1, reinterpret_cast<const uint8_t*>(input3), strlen(input3)));
+         TEST_FFI_OK(botan_xof_output, (xof1, out_bytes.data(), out_bytes.size()));
+         result.test_eq("expected first output with full input", out_bytes, "D9D5416188659DDC5C26FCF52E49A157");
+
+         TEST_FFI_OK(botan_xof_destroy, (xof1));
+         TEST_FFI_OK(botan_xof_destroy, (xof2));
+      }
+};
+
 class FFI_HashFunction_Test final : public FFI_Test {
    public:
       std::string name() const override { return "FFI hash"; }
@@ -5246,6 +5313,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_chacha", FFI_ChaCha20Poly1305_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_eax", FFI_EAX_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_aead", FFI_AEAD_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_streamcipher", FFI_StreamCipher_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_xof", FFI_XOF_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_hashfunction", FFI_HashFunction_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_mac", FFI_MAC_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_scrypt", FFI_Scrypt_Test);
