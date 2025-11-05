@@ -8,6 +8,7 @@
 
 #include <botan/certstor.h>
 
+#include <botan/assert.h>
 #include <botan/data_src.h>
 #include <botan/hash.h>
 #include <botan/pkix_types.h>
@@ -99,7 +100,7 @@ std::optional<X509_Certificate> Certificate_Store_In_Memory::find_cert_by_pubkey
       throw Invalid_Argument("Certificate_Store_In_Memory::find_cert_by_pubkey_sha1 invalid hash");
    }
 
-   auto hash = HashFunction::create("SHA-1");
+   auto hash = HashFunction::create_or_throw("SHA-1");
 
    for(const auto& cert : m_certs) {
       hash->update(cert.subject_public_key_bitstring());
@@ -117,7 +118,7 @@ std::optional<X509_Certificate> Certificate_Store_In_Memory::find_cert_by_raw_su
       throw Invalid_Argument("Certificate_Store_In_Memory::find_cert_by_raw_subject_dn_sha256 invalid hash");
    }
 
-   auto hash = HashFunction::create("SHA-256");
+   auto hash = HashFunction::create_or_throw("SHA-256");
 
    for(const auto& cert : m_certs) {
       hash->update(cert.raw_subject_dn());
@@ -180,6 +181,11 @@ std::optional<X509_CRL> Certificate_Store_In_Memory::find_crl_for(const X509_Cer
 
 Certificate_Store_In_Memory::Certificate_Store_In_Memory(const X509_Certificate& cert) {
    add_certificate(cert);
+}
+
+Certificate_Store_In_Memory::Certificate_Store_In_Memory(const X509_Certificate& cert, const X509_CRL& crl) {
+   add_certificate(cert);
+   add_crl(crl);
 }
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)

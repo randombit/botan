@@ -104,6 +104,11 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Store_In_Memory final : public Certific
       explicit Certificate_Store_In_Memory(const X509_Certificate& cert);
 
       /**
+      * Adds given certificate and CRL to the store.
+      */
+      Certificate_Store_In_Memory(const X509_Certificate& cert, const X509_CRL& crl);
+
+      /**
       * Create an empty store.
       */
       Certificate_Store_In_Memory() = default;

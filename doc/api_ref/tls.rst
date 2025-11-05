@@ -1355,9 +1355,9 @@ your policy via the :cpp:class:`TLS::Context` to the :cpp:class:`TLS::Stream`.
 Aside of the modern coroutines-based approach, the ASIO stream may also be used
 in a more traditional way, using callback handler methods instead of coroutines.
 
-Also, this example shows how to use a custom :cpp:class:`Credentials_Manager`
-and pass it to the :cpp:class:`TLS::Stream` via a :cpp:class:`TLS::Context`
-object.
+Also, this example shows how to use custom :cpp:class:`Credentials_Manager` and
+:cpp:class:`TLS::Policy` subclasses, passing them to the :cpp:class:`TLS::Stream`
+via a :cpp:class:`TLS::Context` object.
 
 .. literalinclude:: /../src/examples/tls_stream_client.cpp
    :language: cpp
