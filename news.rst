@@ -12,6 +12,8 @@ Version 3.10.0, Not Yet Released
 
 * Optimizations for SHA-3/SHAKE (GH #5133)
 
+* Optimizations for SEED (GH #5147)
+
 * Optimizations and cleanups for BLAKE2s (GH #5117)
 
 * Optimizations for Streebog (GH #5111)
