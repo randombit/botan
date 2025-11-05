@@ -51,7 +51,7 @@ alignas(256) const uint8_t SEED_S1[256] = {
 /*
 * SEED G Function
 */
-inline uint32_t SEED_G(uint32_t X) {
+BOTAN_FORCE_INLINE uint32_t SEED_G(uint32_t X) {
    const uint32_t M = 0x01010101;
    const uint32_t s0 = M * SEED_S0[get_byte<3>(X)];
    const uint32_t s1 = M * SEED_S1[get_byte<2>(X)];
@@ -75,6 +75,52 @@ void SEED::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();
 
    prefetch_arrays(SEED_S0, SEED_S1);
+
+   while(blocks >= 2) {
+      uint32_t B00 = load_be<uint32_t>(in, 0);
+      uint32_t B01 = load_be<uint32_t>(in, 1);
+      uint32_t B02 = load_be<uint32_t>(in, 2);
+      uint32_t B03 = load_be<uint32_t>(in, 3);
+      uint32_t B10 = load_be<uint32_t>(in, 4);
+      uint32_t B11 = load_be<uint32_t>(in, 5);
+      uint32_t B12 = load_be<uint32_t>(in, 6);
+      uint32_t B13 = load_be<uint32_t>(in, 7);
+
+      for(size_t j = 0; j != 16; j += 2) {
+         uint32_t T00 = B02 ^ m_K[2 * j];
+         uint32_t T10 = B12 ^ m_K[2 * j];
+         uint32_t T01 = SEED_G(B02 ^ B03 ^ m_K[2 * j + 1]);
+         uint32_t T11 = SEED_G(B12 ^ B13 ^ m_K[2 * j + 1]);
+         T00 = SEED_G(T01 + T00);
+         T10 = SEED_G(T11 + T10);
+         T01 = SEED_G(T01 + T00);
+         T11 = SEED_G(T11 + T10);
+         B01 ^= T01;
+         B11 ^= T11;
+         B00 ^= T00 + T01;
+         B10 ^= T10 + T11;
+
+         T00 = B00 ^ m_K[2 * j + 2];
+         T10 = B10 ^ m_K[2 * j + 2];
+         T01 = SEED_G(B00 ^ B01 ^ m_K[2 * j + 3]);
+         T11 = SEED_G(B10 ^ B11 ^ m_K[2 * j + 3]);
+         T10 = SEED_G(T11 + T10);
+         T00 = SEED_G(T01 + T00);
+         T01 = SEED_G(T01 + T00);
+         T11 = SEED_G(T11 + T10);
+         B03 ^= T01;
+         B13 ^= T11;
+         B02 ^= T00 + T01;
+         B12 ^= T10 + T11;
+      }
+
+      store_be(out, B02, B03, B00, B01, B12, B13, B10, B11);
+
+      in += 2 * BLOCK_SIZE;
+      out += 2 * BLOCK_SIZE;
+
+      blocks -= 2;
+   }
 
    for(size_t i = 0; i != blocks; ++i) {
       uint32_t B0 = load_be<uint32_t>(in, 0);
@@ -112,6 +158,51 @@ void SEED::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();
 
    prefetch_arrays(SEED_S0, SEED_S1);
+
+   while(blocks >= 2) {
+      uint32_t B00 = load_be<uint32_t>(in, 0);
+      uint32_t B01 = load_be<uint32_t>(in, 1);
+      uint32_t B02 = load_be<uint32_t>(in, 2);
+      uint32_t B03 = load_be<uint32_t>(in, 3);
+      uint32_t B10 = load_be<uint32_t>(in, 4);
+      uint32_t B11 = load_be<uint32_t>(in, 5);
+      uint32_t B12 = load_be<uint32_t>(in, 6);
+      uint32_t B13 = load_be<uint32_t>(in, 7);
+
+      for(size_t j = 0; j != 16; j += 2) {
+         uint32_t T00 = B02 ^ m_K[30 - 2 * j];
+         uint32_t T10 = B12 ^ m_K[30 - 2 * j];
+         uint32_t T01 = SEED_G(B02 ^ B03 ^ m_K[31 - 2 * j]);
+         uint32_t T11 = SEED_G(B12 ^ B13 ^ m_K[31 - 2 * j]);
+         T00 = SEED_G(T01 + T00);
+         T10 = SEED_G(T11 + T10);
+         T01 = SEED_G(T01 + T00);
+         T11 = SEED_G(T11 + T10);
+         B01 ^= T01;
+         B11 ^= T11;
+         B00 ^= T00 + T01;
+         B10 ^= T10 + T11;
+
+         T00 = B00 ^ m_K[28 - 2 * j];
+         T10 = B10 ^ m_K[28 - 2 * j];
+         T01 = SEED_G(B00 ^ B01 ^ m_K[29 - 2 * j]);
+         T11 = SEED_G(B10 ^ B11 ^ m_K[29 - 2 * j]);
+         T00 = SEED_G(T01 + T00);
+         T10 = SEED_G(T11 + T10);
+         T01 = SEED_G(T01 + T00);
+         T11 = SEED_G(T11 + T10);
+         B03 ^= T01;
+         B13 ^= T11;
+         B02 ^= T00 + T01;
+         B12 ^= T10 + T11;
+      }
+
+      store_be(out, B02, B03, B00, B01, B12, B13, B10, B11);
+
+      in += 2 * BLOCK_SIZE;
+      out += 2 * BLOCK_SIZE;
+      blocks -= 2;
+   }
 
    for(size_t i = 0; i != blocks; ++i) {
       uint32_t B0 = load_be<uint32_t>(in, 0);
