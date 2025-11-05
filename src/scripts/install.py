@@ -123,7 +123,7 @@ def main(args):
 
     def copy_file(src, dst):
         logging.debug('Copying %s to %s', src, dst)
-        shutil.copyfile(src, dst)
+        shutil.copy2(src, dst)
 
     def copy_executable(src, dst):
         copy_file(src, dst)
