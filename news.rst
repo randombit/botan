@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 3.10.0, Not Yet Released
+Version 3.10.0, 2025-11-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add support for Ascon AEAD, hash and XOF from NIST SP 800-232 (GH #5061 #5076 #5097)
