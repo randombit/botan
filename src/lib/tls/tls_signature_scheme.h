@@ -48,6 +48,12 @@ class BOTAN_PUBLIC_API(3, 0) Signature_Scheme {
 
          EDDSA_25519 = 0x0807,
          EDDSA_448 = 0x0808,
+
+         // Support for ML-DSA is experimental and disabled by default;
+         // you can use --enable-experimental-features to enable it
+         ML_DSA_44 = 0x0904,
+         ML_DSA_65 = 0x0905,
+         ML_DSA_87 = 0x0906,
       };
 
    public:
