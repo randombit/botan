@@ -15,6 +15,7 @@ x86_64:ssse3
 arm32:neon
 arm64:neon
 loongarch64:lsx
+wasm:simd128
 </isa>
 
 <arch>
@@ -23,6 +24,7 @@ x86_64
 arm32
 arm64
 loongarch64
+wasm
 </arch>
 
 <requires>

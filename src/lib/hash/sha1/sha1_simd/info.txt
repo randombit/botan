@@ -17,6 +17,7 @@ x32:ssse3
 arm32:neon
 arm64:neon
 loongarch64:lsx
+wasm:simd128
 
 # AltiVec/VMX also does work, but at least on the machines tested (POWER8 and
 # POWER10) this was slower than scalar, while for ARM and x86 speedups of
@@ -30,6 +31,7 @@ x32
 arm32
 arm64
 loongarch64
+wasm
 </arch>
 
 <requires>
