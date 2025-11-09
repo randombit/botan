@@ -982,6 +982,48 @@ std::vector<Test::Result> test_bigint_serialization() {
                b.binary_encode(enc5.data(), enc5.size());
                res.test_bin_eq("BigInt::binary_encode", enc5, "000000000000000000000000FEDCBA9876543210BAADC0FFEE");
             }),
+
+      CHECK("BigInt std::array serialization",
+            [](Test::Result& res) {
+               const Botan::BigInt testData(0x1234567890ABCDEF);
+
+               const auto arr32 = testData.serialize_to_array<32>();
+               res.test_sz_eq("BigInt::serialize std::array size", arr32.size(), size_t{32});
+               res.test_bin_eq("BigInt::serialize array compare",
+                               arr32,
+                               "0000000000000000000000000000000000000000000000001234567890ABCDEF");
+
+               const auto vec32 = testData.serialize<std::vector<uint8_t>>(32);
+               res.test_bin_eq("BigInt::serialize std::array matches vector",
+                               std::span<const uint8_t>(arr32),
+                               std::span<const uint8_t>(vec32));
+
+               res.test_u8_eq("BigInt::serialize std::array last byte", arr32[31], uint8_t{0xEF});
+               res.test_u8_eq("BigInt::serialize std::array first bytes zeroed", arr32[0], uint8_t{0x00});
+
+               res.test_throws<Botan::Invalid_Argument>("BigInt::serialize_to_array too small", [&testData]() {
+                  [[maybe_unused]] const auto arr = testData.serialize_to_array<4>();
+               });
+
+               const Botan::BigInt smallTestData = Botan::BigInt::from_u64(0xFF);
+               const auto arr8 = smallTestData.serialize_to_array<8>();
+               res.test_sz_eq("BigInt::serialize std::array small size", arr8.size(), size_t{8});
+               res.test_u8_eq("BigInt::serialize std::array small value last byte", arr8[7], uint8_t{0xFF});
+               res.test_u8_eq("BigInt::serialize std::array small value zeroed", arr8[0], uint8_t{0x00});
+
+               const Botan::BigInt zero = Botan::BigInt::zero();
+               const auto arr0 = zero.serialize_to_array<4>();
+               res.test_sz_eq("BigInt::serialize std::array zero serialization size", arr0.size(), 4);
+               res.test_bin_eq("BigInt::serialize std::array all zeros",
+                               std::span<const uint8_t>(arr0),
+                               std::vector<uint8_t>(arr0.size(), 0x00));
+
+               const Botan::BigInt large("0xFEDCBA9876543210FEDCBA9876543210");
+               const auto arr16 = large.serialize_to_array<16>();
+               res.test_sz_eq("BigInt::serialize std::array large size", arr16.size(), size_t{16});
+               res.test_u8_eq("BigInt::serialize std::array large first byte", arr16[0], uint8_t{0xFE});
+               res.test_u8_eq("BigInt::serialize std::array large last byte", arr16[15], uint8_t{0x10});
+            }),
    };
 }
 
