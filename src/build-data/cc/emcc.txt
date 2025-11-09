@@ -22,6 +22,10 @@ visibility_attribute '__attribute__((visibility("default")))'
 default -> "false"
 </so_link_commands>
 
+<isa_flags>
+simd128 -> "-msimd128"
+</isa_flags>
+
 <binary_link_commands>
 default -> "{cxx}"
 </binary_link_commands>
