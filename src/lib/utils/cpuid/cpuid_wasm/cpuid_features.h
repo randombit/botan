@@ -20,6 +20,8 @@ class BOTAN_TEST_API CPUFeature {
    public:
       enum Bit : uint32_t /* NOLINT(*-use-enum-class) */ {
          SIMD128 = (1U << 0),
+
+         SIMD_4X32 = SIMD128,
       };
 
       CPUFeature(Bit b) : m_bit(b) {}  // NOLINT(*-explicit-conversions)
