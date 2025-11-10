@@ -7,11 +7,7 @@ name -> "GHASH Vector Permutations"
 brief -> "GHASH using Vector Permutation instructions"
 </module_info>
 
-<isa>
-sse2
-ssse3
-</isa>
-
 <requires>
 cpuid
+simd_2x64
 </requires>

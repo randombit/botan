@@ -14,6 +14,10 @@
    #include <botan/internal/stl_util.h>
 #endif
 
+#if defined(BOTAN_HAS_SIMD_2X64)
+   #include <botan/internal/simd_2x64.h>
+#endif
+
 #if defined(BOTAN_HAS_CPUID)
    #include <botan/internal/cpuid.h>
 #endif
@@ -233,6 +237,176 @@ class SIMD_4X32_Tests final : public Test {
 };
 
 BOTAN_REGISTER_TEST("utils", "simd_4x32", SIMD_4X32_Tests);
+#endif
+
+#if defined(BOTAN_HAS_SIMD_2X64)
+
+class SIMD_2X64_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("SIMD_2x64");
+
+   #if defined(BOTAN_HAS_CPUID)
+         if(!Botan::CPUID::has(Botan::CPUID::Feature::SIMD_2X64)) {
+            result.test_note("Skipping SIMD_2x64 tests due to missing CPU support at runtime");
+            return {result};
+         }
+   #endif
+
+         const uint64_t pat1 = 0x2F8C91D4A37E5C10;
+         const uint64_t pat2 = 0x1B74A6F8C29D1345;
+
+         const uint64_t pat1_1 = pat1 + pat1;
+         const uint64_t pat1_2 = pat1 + pat2;
+
+         test_eq(result, "default init", Botan::SIMD_2x64(), 0, 0);
+         test_eq(result, "SIMD scalar constructor", Botan::SIMD_2x64(1, 2), 1, 2);
+
+         const auto input = Botan::SIMD_2x64(pat1, pat2);
+         const auto splat = Botan::SIMD_2x64(pat1, pat1);
+
+         const auto rotl = input.rotl<3>();
+         test_eq(result, "rotl", rotl, Botan::rotl<3>(pat1), Botan::rotl<3>(pat2));
+
+         const auto rotr = input.rotr<9>();
+         test_eq(result, "rotr", rotr, Botan::rotr<9>(pat1), Botan::rotr<9>(pat2));
+
+         test_eq(result, "rotr<8>", input.rotr<8>(), Botan::rotr<8>(pat1), Botan::rotr<8>(pat2));
+         test_eq(result, "rotr<16>", input.rotr<16>(), Botan::rotr<16>(pat1), Botan::rotr<16>(pat2));
+         test_eq(result, "rotr<24>", input.rotr<24>(), Botan::rotr<24>(pat1), Botan::rotr<24>(pat2));
+         test_eq(result, "rotr<32>", input.rotr<32>(), Botan::rotr<32>(pat1), Botan::rotr<32>(pat2));
+
+         const auto add = input + splat;
+         test_eq(result, "add +", add, pat1_1, pat1_2);
+
+         test_eq(result, "xor", input ^ splat, 0, pat2 ^ pat1);
+
+         auto shifter = Botan::SIMD_2x64(0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF);
+         shifter = shifter.shr<23>();
+         test_eq(result, ">>", shifter, 0x1FFFFFFFFFF, 0x1FFFFFFFFFF);
+
+         shifter = shifter.shl<27>();
+         test_eq(result, "<<", shifter, 0xFFFFFFFFF8000000, 0xFFFFFFFFF8000000);
+
+         shifter = input.andc(shifter);
+         test_eq(result, "andc", shifter, ~pat1 & 0xFFFFFFFFF8000000, ~pat2 & 0xFFFFFFFFF8000000);
+
+         test_eq(result, "bswap", input.bswap(), Botan::reverse_bytes(pat1), Botan::reverse_bytes(pat2));
+
+         test_eq(result,
+                 "reverse_all_bytes",
+                 Botan::SIMD_2x64(0x0001020304050607, 0x08090a0b0c0d0e0f).reverse_all_bytes(),
+                 0x0f0e0d0c0b0a0908,
+                 0x0706050403020100);
+
+         test_eq(result, "swap_lanes", Botan::SIMD_2x64(pat1, pat2).swap_lanes(), pat2, pat1);
+
+         const auto interleave_a = Botan::SIMD_2x64(0x1111111122222222, 0x3333333344444444);
+         const auto interleave_b = Botan::SIMD_2x64(0x5555555566666666, 0x7777777788888888);
+         test_eq(result,
+                 "interleave_high",
+                 Botan::SIMD_2x64::interleave_high(interleave_a, interleave_b),
+                 0x3333333344444444,
+                 0x7777777788888888);
+
+         test_eq(result,
+                 "interleave_low",
+                 Botan::SIMD_2x64::interleave_low(interleave_a, interleave_b),
+                 0x1111111122222222,
+                 0x5555555566666666);
+
+         test_eq(result, "all_ones", Botan::SIMD_2x64::all_ones(), 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF);
+
+         // Test load/stores SIMD wrapper types
+         const auto simd_le_in = Botan::hex_decode("ABCDEF01234567890123456789ABCDEF");
+         const auto simd_be_in = Botan::hex_decode("0123456789ABCDEFABCDEF0123456789");
+         const auto simd_le_array_in = Botan::concat(simd_le_in, simd_be_in);
+         const auto simd_be_array_in = Botan::concat(simd_be_in, simd_le_in);
+
+         auto simd_le = Botan::load_le<Botan::SIMD_2x64>(simd_le_in);
+         auto simd_be = Botan::load_be<Botan::SIMD_2x64>(simd_be_in);
+         auto simd_le_array = Botan::load_le<std::array<Botan::SIMD_2x64, 2>>(simd_le_array_in);
+         auto simd_be_array = Botan::load_be<std::array<Botan::SIMD_2x64, 2>>(simd_be_array_in);
+
+         auto simd_le_vec = Botan::store_le<std::vector<uint8_t>>(simd_le);
+         auto simd_be_vec = Botan::store_be(simd_be);
+         auto simd_le_array_vec = Botan::store_le<std::vector<uint8_t>>(simd_le_array);
+         auto simd_be_array_vec = Botan::store_be(simd_be_array);
+
+         result.test_is_eq("roundtrip SIMD little-endian", simd_le_vec, simd_le_in);
+         result.test_is_eq(
+            "roundtrip SIMD big-endian", std::vector(simd_be_vec.begin(), simd_be_vec.end()), simd_be_in);
+         result.test_is_eq("roundtrip SIMD array little-endian", simd_le_array_vec, simd_le_array_in);
+         result.test_is_eq("roundtrip SIMD array big-endian",
+                           std::vector(simd_be_array_vec.begin(), simd_be_array_vec.end()),
+                           simd_be_array_in);
+
+         using StrongSIMD = Botan::Strong<Botan::SIMD_2x64, struct StrongSIMD_>;
+         const auto simd_le_strong = Botan::load_le<StrongSIMD>(simd_le_in);
+         const auto simd_be_strong = Botan::load_be<StrongSIMD>(simd_be_in);
+
+         result.test_is_eq(
+            "roundtrip SIMD strong little-endian", Botan::store_le<std::vector<uint8_t>>(simd_le_strong), simd_le_in);
+         result.test_is_eq(
+            "roundtrip SIMD strong big-endian", Botan::store_be<std::vector<uint8_t>>(simd_be_strong), simd_be_in);
+
+         return {result};
+      }
+
+   private:
+      static void test_eq(
+         Test::Result& result, const std::string& op, const Botan::SIMD_2x64& simd, uint64_t exp0, uint64_t exp1) {
+         uint8_t arr_be[16 + 15];
+         uint8_t arr_be2[16 + 15];
+         uint8_t arr_le[16 + 15];
+         uint8_t arr_le2[16 + 15];
+
+         for(size_t misalignment = 0; misalignment != 16; ++misalignment) {
+            uint8_t* mem_be = arr_be + misalignment;
+            uint8_t* mem_be2 = arr_be2 + misalignment;
+            uint8_t* mem_le = arr_le + misalignment;
+            uint8_t* mem_le2 = arr_le2 + misalignment;
+
+            simd.store_be(mem_be);
+
+            result.test_int_eq(
+               "SIMD_2x64 " + op + " elem0 BE",
+               Botan::make_uint64(
+                  mem_be[0], mem_be[1], mem_be[2], mem_be[3], mem_be[4], mem_be[5], mem_be[6], mem_be[7]),
+               exp0);
+            result.test_int_eq(
+               "SIMD_2x64 " + op + " elem1 BE",
+               Botan::make_uint64(
+                  mem_be[8], mem_be[9], mem_be[10], mem_be[11], mem_be[12], mem_be[13], mem_be[14], mem_be[15]),
+               exp1);
+
+            // Check load_be+store_be results in same value
+            const Botan::SIMD_2x64 reloaded_be = Botan::SIMD_2x64::load_be(mem_be);
+            reloaded_be.store_be(mem_be2);
+            result.test_eq(nullptr, "SIMD_2x64 load_be", mem_be, 16, mem_be2, 16);
+
+            simd.store_le(mem_le);
+
+            result.test_int_eq(
+               "SIMD_2x64 " + op + " elem0 LE",
+               Botan::make_uint64(
+                  mem_le[7], mem_le[6], mem_le[5], mem_le[4], mem_le[3], mem_le[2], mem_le[1], mem_le[0]),
+               exp0);
+            result.test_int_eq(
+               "SIMD_2x64 " + op + " elem1 LE",
+               Botan::make_uint64(
+                  mem_le[15], mem_le[14], mem_le[13], mem_le[12], mem_le[11], mem_le[10], mem_le[9], mem_le[8]),
+               exp1);
+
+            // Check load_le+store_le results in same value
+            const Botan::SIMD_2x64 reloaded_le = Botan::SIMD_2x64::load_le(mem_le);
+            reloaded_le.store_le(mem_le2);
+            result.test_eq(nullptr, "SIMD_2x64 load_le", mem_le, 16, mem_le2, 16);
+         }
+      }
+};
+
+BOTAN_REGISTER_TEST("utils", "simd_2x64", SIMD_2X64_Tests);
 #endif
 
 }  // namespace Botan_Tests

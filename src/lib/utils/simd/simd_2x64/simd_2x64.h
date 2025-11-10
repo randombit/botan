@@ -42,7 +42,7 @@ class SIMD_2x64 final {
       ~SIMD_2x64() = default;
 
       // zero initialized
-      SIMD_2x64() :
+      BOTAN_FN_ISA_SIMD_2X64 SIMD_2x64() :
 #if defined(BOTAN_SIMD_USE_SSSE3)
             m_simd(_mm_setzero_si128())
 #elif defined(BOTAN_SIMD_USE_SIMD128)
@@ -51,7 +51,24 @@ class SIMD_2x64 final {
       {
       }
 
-      static SIMD_2x64 load_le(const void* in) {
+      static SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 all_ones() {
+#if defined(BOTAN_SIMD_USE_SSSE3)
+         return SIMD_2x64(_mm_set1_epi8(-1));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_2x64(wasm_i8x16_splat(0xFF));
+#endif
+      }
+
+      BOTAN_FN_ISA_SIMD_2X64 SIMD_2x64(uint64_t low, uint64_t high) :
+#if defined(BOTAN_SIMD_USE_SSSE3)
+            m_simd(_mm_set_epi64x(high, low))
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+            m_simd(wasm_u64x2_make(low, high))
+#endif
+      {
+      }
+
+      static SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 load_le(const void* in) {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_2x64(_mm_loadu_si128(reinterpret_cast<const __m128i*>(in)));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
@@ -60,6 +77,10 @@ class SIMD_2x64 final {
       }
 
       static SIMD_2x64 load_be(const void* in) { return SIMD_2x64::load_le(in).bswap(); }
+
+      static SIMD_2x64 load_le(std::span<const uint8_t, 16> in) { return SIMD_2x64::load_le(in.data()); }
+
+      static SIMD_2x64 load_be(std::span<const uint8_t, 16> in) { return SIMD_2x64::load_be(in.data()); }
 
       SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 bswap() const {
 #if defined(BOTAN_SIMD_USE_SSSE3)
@@ -70,15 +91,40 @@ class SIMD_2x64 final {
 #endif
       }
 
+      SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 swap_lanes() const {
+#if defined(BOTAN_SIMD_USE_SSSE3)
+         return SIMD_2x64(_mm_shuffle_epi32(m_simd, _MM_SHUFFLE(1, 0, 3, 2)));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_2x64(wasm_i64x2_shuffle(m_simd, m_simd, 1, 0));
+#endif
+      }
+
+      SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 reverse_all_bytes() const {
+#if defined(BOTAN_SIMD_USE_SSSE3)
+         const auto idx = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+         return SIMD_2x64(_mm_shuffle_epi8(m_simd, idx));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_2x64(wasm_i8x16_shuffle(m_simd, m_simd, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0));
+#endif
+      }
+
       void store_le(uint64_t out[2]) const { this->store_le(reinterpret_cast<uint8_t*>(out)); }
 
-      void store_le(uint8_t out[]) const {
+      void BOTAN_FN_ISA_SIMD_2X64 store_le(uint8_t out[]) const {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          _mm_storeu_si128(reinterpret_cast<__m128i*>(out), m_simd);
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          wasm_v128_store(out, m_simd);
 #endif
       }
+
+      void store_be(uint64_t out[2]) const { this->store_be(reinterpret_cast<uint8_t*>(out)); }
+
+      void store_be(uint8_t out[]) const { bswap().store_le(out); }
+
+      void store_be(std::span<uint8_t, 16> out) const { this->store_be(out.data()); }
+
+      void store_le(std::span<uint8_t, 16> out) const { this->store_le(out.data()); }
 
       SIMD_2x64 operator+(const SIMD_2x64& other) const {
          SIMD_2x64 retval(*this);
@@ -92,7 +138,7 @@ class SIMD_2x64 final {
          return retval;
       }
 
-      void operator+=(const SIMD_2x64& other) {
+      void BOTAN_FN_ISA_SIMD_2X64 operator+=(const SIMD_2x64& other) {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          m_simd = _mm_add_epi64(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_SIMD128)
@@ -100,11 +146,20 @@ class SIMD_2x64 final {
 #endif
       }
 
-      void operator^=(const SIMD_2x64& other) {
+      void BOTAN_FN_ISA_SIMD_2X64 operator^=(const SIMD_2x64& other) {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          m_simd = _mm_xor_si128(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          m_simd = wasm_v128_xor(m_simd, other.m_simd);
+#endif
+      }
+
+      SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 andc(const SIMD_2x64& other) const noexcept {
+#if defined(BOTAN_SIMD_USE_SSSE3)
+         return SIMD_2x64(_mm_andnot_si128(m_simd, other.m_simd));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         // SIMD128 is a & ~b
+         return SIMD_2x64(wasm_v128_andnot(other.m_simd, m_simd));
 #endif
       }
 
@@ -150,11 +205,20 @@ class SIMD_2x64 final {
       }
 
       template <int SHIFT>
-      SIMD_2x64 shr() const noexcept {
+      SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 shr() const noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_2x64(_mm_srli_epi64(m_simd, SHIFT));
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          return SIMD_2x64(wasm_u64x2_shr(m_simd, SHIFT));
+#endif
+      }
+
+      template <int SHIFT>
+      SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 shl() const noexcept {
+#if defined(BOTAN_SIMD_USE_SSSE3)
+         return SIMD_2x64(_mm_slli_epi64(m_simd, SHIFT));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_2x64(wasm_i64x2_shl(m_simd, SHIFT));
 #endif
       }
 
@@ -164,6 +228,22 @@ class SIMD_2x64 final {
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          return SIMD_2x64(
             wasm_i8x16_shuffle(b.m_simd, a.m_simd, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23));
+#endif
+      }
+
+      static SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 interleave_low(const SIMD_2x64& a, const SIMD_2x64& b) {
+#if defined(BOTAN_SIMD_USE_SSSE3)
+         return SIMD_2x64(_mm_unpacklo_epi64(a.m_simd, b.m_simd));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_2x64(wasm_u64x2_extract_lane(a.m_simd, 0), wasm_u64x2_extract_lane(b.m_simd, 0));
+#endif
+      }
+
+      static SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 interleave_high(const SIMD_2x64& a, const SIMD_2x64& b) {
+#if defined(BOTAN_SIMD_USE_SSSE3)
+         return SIMD_2x64(_mm_unpackhi_epi64(a.m_simd, b.m_simd));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_2x64(wasm_u64x2_extract_lane(a.m_simd, 1), wasm_u64x2_extract_lane(b.m_simd, 1));
 #endif
       }
 
@@ -202,7 +282,7 @@ class SIMD_2x64 final {
       }
 
       // Argon2 specific operation
-      static SIMD_2x64 mul2_32(SIMD_2x64 x, SIMD_2x64 y) {
+      static SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 mul2_32(SIMD_2x64 x, SIMD_2x64 y) {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          const __m128i m = _mm_mul_epu32(x.m_simd, y.m_simd);
          return SIMD_2x64(_mm_add_epi64(m, m));
@@ -214,7 +294,7 @@ class SIMD_2x64 final {
 #endif
       }
 
-      native_simd_type raw() const noexcept { return m_simd; }
+      native_simd_type BOTAN_FN_ISA_SIMD_2X64 raw() const noexcept { return m_simd; }
 
       explicit SIMD_2x64(native_simd_type x) : m_simd(x) {}
 
