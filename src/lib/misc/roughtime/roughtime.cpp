@@ -47,7 +47,8 @@ template <typename T>
 T copy(const uint8_t* t)
    requires(is_array<T>::value)
 {
-   return typecast_copy<T>(t);  //arrays are endianness independent, so we do a memcpy
+   //arrays are endianness independent, so we do a memcpy
+   return typecast_copy<T>(std::span<const uint8_t, sizeof(T)>(t, sizeof(T)));
 }
 
 template <typename T>
@@ -146,10 +147,7 @@ void hashNode(std::span<uint8_t, 64> hash, std::span<const uint8_t, 64> node, bo
 
 template <size_t N, typename T>
 std::array<uint8_t, N> vector_to_array(std::vector<uint8_t, T> vec) {
-   if(vec.size() != N) {
-      throw std::logic_error("Invalid vector size");
-   }
-   return typecast_copy<std::array<uint8_t, N>>(vec.data());
+   return typecast_copy<std::array<uint8_t, N>>(vec);
 }
 }  // namespace
 
@@ -159,7 +157,7 @@ Nonce::Nonce(const std::vector<uint8_t>& nonce) : m_nonce{} {
    if(nonce.size() != 64) {
       throw Invalid_Argument("Roughtime nonce must be 64 bytes long");
    }
-   m_nonce = typecast_copy<std::array<uint8_t, 64>>(nonce.data());
+   m_nonce = typecast_copy<std::array<uint8_t, 64>>(nonce);
 }
 
 Nonce::Nonce(RandomNumberGenerator& rng) : m_nonce(rng.random_array<64>()) {}
