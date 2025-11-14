@@ -2211,6 +2211,32 @@ enum botan_x509_cert_key_constraints /* NOLINT(*-enum-size,*-use-enum-class) */ 
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage);
 
 /**
+* Check if the certificate allows the specified extended usage OID. See RFC 5280
+* Section 4.2.1.12 for OIDs to query for this. If no extended key usage
+* extension is found in the certificate, this always returns "not success".
+*
+* Typical OIDs to check for:
+*   * "PKIX.ServerAuth"
+*   * "PKIX.ClientAuth"
+*   * "PKIX.CodeSigning"
+*   * "PKIX.OCSPSigning"
+*
+* The @p oid parameter can be either a canonical OID string or identifiers as
+* indicated in the examples above.
+*/
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_allowed_extended_usage_str(botan_x509_cert_t cert, const char* oid);
+
+/**
+* Check if the certificate allows the specified extended usage OID. See RFC 5280
+* Section 4.2.1.12 for OIDs to query for this. If no extended key usage
+* extension is found in the certificate, this always returns "not success".
+*
+* This is similar to botan_x509_cert_allowed_extended_usage_str but takes an OID
+* object instead of a string describing the OID.
+*/
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_allowed_extended_usage_oid(botan_x509_cert_t cert, botan_asn1_oid_t oid);
+
+/**
 * Check if the certificate matches the specified hostname via alternative name or CN match.
 * RFC 5280 wildcards also supported.
 */

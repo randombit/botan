@@ -15,6 +15,7 @@
    #include <botan/x509_crl.h>
    #include <botan/x509cert.h>
    #include <botan/x509path.h>
+   #include <botan/internal/ffi_oid.h>
 #endif
 
 extern "C" {
@@ -186,6 +187,31 @@ int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage
    });
 #else
    BOTAN_UNUSED(cert, key_usage);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_allowed_extended_usage_str(botan_x509_cert_t cert, const char* oid) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) -> int {
+      if(Botan::any_null_pointers(oid)) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      return c.has_ex_constraint(oid) ? BOTAN_FFI_SUCCESS : 1;
+   });
+#else
+   BOTAN_UNUSED(cert, oid);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_allowed_extended_usage_oid(botan_x509_cert_t cert, botan_asn1_oid_t oid) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(
+      cert, [=](const auto& c) -> int { return c.has_ex_constraint(safe_get(oid)) ? BOTAN_FFI_SUCCESS : 1; });
+#else
+   BOTAN_UNUSED(cert, oid);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }

@@ -1752,6 +1752,20 @@ X.509 Certificates
 
 .. cpp:function:: int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage)
 
+.. cpp:function:: int botan_x509_cert_allowed_extended_usage_str(botan_x509_cert_t cert, const char* oid)
+
+   Check whether the certificate has the specified extended key usage OID from
+   `RFC 5280 - 4.2.1.12 <https://www.rfc-editor.org/rfc/rfc5280#section-4.2.1.12>`_.
+   If the certificate has no extended key usage extension, this will always
+   behave as if the requested OID is *not present*.
+
+.. cpp:function:: int botan_x509_cert_allowed_extended_usage_oid(botan_x509_cert_t cert, botan_asn1_oid_t oid)
+
+   Check whether the certificate has the specified extended key usage OID from
+   `RFC 5280 - 4.2.1.12 <https://www.rfc-editor.org/rfc/rfc5280#section-4.2.1.12>`_.
+   If the certificate has no extended key usage extension, this will always
+   behave as if the requested OID is *not present*.
+
 .. cpp:function:: int botan_x509_cert_verify(int* validation_result, \
                   botan_x509_cert_t cert, \
                   const botan_x509_cert_t* intermediates, \
