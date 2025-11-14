@@ -1123,6 +1123,22 @@ class ModuleInfo(InfoObject):
 
         return supported_isa_flags(ccinfo, arch) and supported_compiler(ccinfo, cc_min_version)
 
+    def compatible_compiler_flags(self, ccinfo, arch, options):
+        if ccinfo.basename != 'emcc':
+            return True
+
+        # Wasm SIMD optimizations are always opt-in. Binaries with unknown instructions cannot be instantiated.
+        compile_flags = " ".join(ccinfo.cc_compile_flags(options))
+        for isa in self.isa:
+            isa_flags = ccinfo.isa_flags_for(isa, arch.basename)
+            if not isa_flags:
+                continue
+
+            if isa_flags not in compile_flags:
+                return False
+
+        return True
+
     def dependencies(self, osinfo, archinfo):
         # base is an implicit dep for all submodules
         deps = ['base']
@@ -2489,6 +2505,9 @@ class ModulesChooser:
             return False
         elif not module.compatible_compiler(self._ccinfo, self._cc_min_version, self._archinfo.basename):
             self._not_using_because['incompatible compiler'].add(modname)
+            return False
+        elif not module.compatible_compiler_flags(self._ccinfo, self._archinfo, self._options):
+            self._not_using_because['incompatible compiler flags'].add(modname)
             return False
         elif module.is_deprecated() and not self._options.enable_deprecated_features and modname not in self._options.enabled_modules:
             self._not_using_because['deprecated'].add(modname)

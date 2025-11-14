@@ -1,0 +1,41 @@
+/**
+* (C) 2025 Jack Lloyd
+* (C) 2025 polarnis
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+#ifndef BOTAN_CPUID_FEATURES_H_
+#define BOTAN_CPUID_FEATURES_H_
+
+#include <botan/api.h>
+#include <cstdint>
+#include <optional>
+#include <string>
+#include <string_view>
+
+namespace Botan {
+
+class BOTAN_TEST_API CPUFeature {
+   public:
+      enum Bit : uint32_t /* NOLINT(*-use-enum-class) */ {
+         SIMD128 = (1U << 0),
+
+         SIMD_4X32 = SIMD128,
+      };
+
+      CPUFeature(Bit b) : m_bit(b) {}  // NOLINT(*-explicit-conversions)
+
+      uint32_t as_u32() const { return static_cast<uint32_t>(m_bit); }
+
+      std::string to_string() const;
+
+      static std::optional<CPUFeature> from_string(std::string_view s);
+
+   private:
+      Bit m_bit;
+};
+
+}  // namespace Botan
+
+#endif

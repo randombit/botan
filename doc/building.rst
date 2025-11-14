@@ -362,6 +362,10 @@ This will produce HTML files ``botan-test.html`` and ``botan.html``
 along with a static archive ``libbotan-3.a`` which can be linked with
 other modules.
 
+To use the Wasm SIMD128 extension for improved performance of certain
+algorithms (see ``hardware_acceleration.rst``), ensure that you pass the
+``-msimd128`` compilation flag.
+
 Supporting Older Distros
 --------------------------
 

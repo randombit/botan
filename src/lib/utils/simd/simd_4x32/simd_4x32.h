@@ -38,19 +38,15 @@
    #include <lsxintrin.h>
    #define BOTAN_SIMD_USE_LSX
 
+#elif defined(BOTAN_TARGET_ARCH_SUPPORTS_SIMD128)
+   #include <wasm_simd128.h>
+   #define BOTAN_SIMD_USE_SIMD128
+
 #else
    #error "No SIMD instruction set enabled"
 #endif
 
 namespace Botan {
-
-#if defined(BOTAN_SIMD_USE_SSSE3) || defined(BOTAN_SIMD_USE_LSX)
-using native_simd_type = __m128i;
-#elif defined(BOTAN_SIMD_USE_ALTIVEC)
-using native_simd_type = __vector unsigned int;
-#elif defined(BOTAN_SIMD_USE_NEON)
-using native_simd_type = uint32x4_t;
-#endif
 
 // NOLINTBEGIN(portability-simd-intrinsics)
 
@@ -61,10 +57,20 @@ using native_simd_type = uint32x4_t;
 * needed for evaluation of specific crypto primitives. For example it does not
 * currently have equality operators of any kind.
 *
-* Implemented for SSE2, VMX (Altivec), ARMv7/Aarch64 NEON, and LoongArch LSX
+* Implemented for SSE2, VMX (Altivec), ARMv7/Aarch64 NEON, LoongArch LSX and Wasm SIMD128
 */
 class SIMD_4x32 final {
    public:
+#if defined(BOTAN_SIMD_USE_SSSE3) || defined(BOTAN_SIMD_USE_LSX)
+      using native_simd_type = __m128i;
+#elif defined(BOTAN_SIMD_USE_ALTIVEC)
+      using native_simd_type = __vector unsigned int;
+#elif defined(BOTAN_SIMD_USE_NEON)
+      using native_simd_type = uint32x4_t;
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+      using native_simd_type = v128_t;
+#endif
+
       SIMD_4x32& operator=(const SIMD_4x32& other) = default;
       SIMD_4x32(const SIMD_4x32& other) = default;
 
@@ -87,6 +93,8 @@ class SIMD_4x32 final {
          m_simd = vdupq_n_u32(0);
 #elif defined(BOTAN_SIMD_USE_LSX)
          m_simd = __lsx_vldi(0);
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         m_simd = wasm_u32x4_const_splat(0);
 #endif
       }
 
@@ -107,6 +115,8 @@ class SIMD_4x32 final {
          // Better way to do this?
          const uint32_t B[4] = {B0, B1, B2, B3};
          m_simd = __lsx_vld(B, 0);
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         m_simd = wasm_u32x4_make(B0, B1, B2, B3);
 #endif
       }
 
@@ -122,6 +132,8 @@ class SIMD_4x32 final {
          return SIMD_4x32(vdupq_n_u32(B));
 #elif defined(BOTAN_SIMD_USE_LSX)
          return SIMD_4x32(__lsx_vreplgr2vr_w(B));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_4x32(wasm_u32x4_splat(B));
 #else
          return SIMD_4x32(B, B, B, B);
 #endif
@@ -137,6 +149,8 @@ class SIMD_4x32 final {
          return SIMD_4x32(vreinterpretq_u32_u8(vdupq_n_u8(B)));
 #elif defined(BOTAN_SIMD_USE_LSX)
          return SIMD_4x32(__lsx_vreplgr2vr_b(B));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_4x32(wasm_u8x16_splat(B));
 #else
          const uint32_t B4 = make_uint32(B, B, B, B);
          return SIMD_4x32(B4, B4, B4, B4);
@@ -165,6 +179,8 @@ class SIMD_4x32 final {
          }
 #elif defined(BOTAN_SIMD_USE_LSX)
          return SIMD_4x32(__lsx_vld(in, 0));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_4x32(wasm_v128_load(in));
 #endif
       }
 
@@ -172,7 +188,7 @@ class SIMD_4x32 final {
       * Load a SIMD register with big-endian convention
       */
       static SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 load_be(const void* in) noexcept {
-#if defined(BOTAN_SIMD_USE_SSSE3) || defined(BOTAN_SIMD_USE_LSX)
+#if defined(BOTAN_SIMD_USE_SSSE3) || defined(BOTAN_SIMD_USE_LSX) || defined(BOTAN_SIMD_USE_SIMD128)
          return load_le(in).bswap();
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
@@ -231,6 +247,8 @@ class SIMD_4x32 final {
          }
 #elif defined(BOTAN_SIMD_USE_LSX)
          __lsx_vst(raw(), out, 0);
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         wasm_v128_store(out, m_simd);
 #endif
       }
 
@@ -238,7 +256,7 @@ class SIMD_4x32 final {
       * Load a SIMD register with big-endian convention
       */
       BOTAN_FN_ISA_SIMD_4X32 void store_be(uint8_t out[]) const noexcept {
-#if defined(BOTAN_SIMD_USE_SSSE3) || defined(BOTAN_SIMD_USE_LSX)
+#if defined(BOTAN_SIMD_USE_SSSE3) || defined(BOTAN_SIMD_USE_LSX) || defined(BOTAN_SIMD_USE_SIMD128)
 
          bswap().store_le(out);
 
@@ -339,6 +357,8 @@ class SIMD_4x32 final {
             vorrq_u32(vshlq_n_u32(m_simd, static_cast<int>(ROT)), vshrq_n_u32(m_simd, static_cast<int>(32 - ROT))));
 #elif defined(BOTAN_SIMD_USE_LSX)
          return SIMD_4x32(__lsx_vrotri_w(raw(), 32 - ROT));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_4x32(wasm_v128_or(wasm_i32x4_shl(m_simd, ROT), wasm_u32x4_shr(m_simd, 32 - ROT)));
 #endif
       }
 
@@ -404,6 +424,8 @@ class SIMD_4x32 final {
          m_simd = vaddq_u32(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_LSX)
          m_simd = __lsx_vadd_w(m_simd, other.m_simd);
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         m_simd = wasm_i32x4_add(m_simd, other.m_simd);
 #endif
       }
 
@@ -416,6 +438,8 @@ class SIMD_4x32 final {
          m_simd = vsubq_u32(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_LSX)
          m_simd = __lsx_vsub_w(m_simd, other.m_simd);
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         m_simd = wasm_i32x4_sub(m_simd, other.m_simd);
 #endif
       }
 
@@ -428,6 +452,8 @@ class SIMD_4x32 final {
          m_simd = veorq_u32(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_LSX)
          m_simd = __lsx_vxor_v(m_simd, other.m_simd);
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         m_simd = wasm_v128_xor(m_simd, other.m_simd);
 #endif
       }
 
@@ -442,6 +468,8 @@ class SIMD_4x32 final {
          m_simd = vorrq_u32(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_LSX)
          m_simd = __lsx_vor_v(m_simd, other.m_simd);
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         m_simd = wasm_v128_or(m_simd, other.m_simd);
 #endif
       }
 
@@ -454,6 +482,8 @@ class SIMD_4x32 final {
          m_simd = vandq_u32(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_LSX)
          m_simd = __lsx_vand_v(m_simd, other.m_simd);
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         m_simd = wasm_v128_and(m_simd, other.m_simd);
 #endif
       }
 
@@ -472,6 +502,8 @@ class SIMD_4x32 final {
          return SIMD_4x32(vshlq_n_u32(m_simd, SHIFT));
 #elif defined(BOTAN_SIMD_USE_LSX)
          return SIMD_4x32(__lsx_vslli_w(m_simd, SHIFT));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_4x32(wasm_i32x4_shl(m_simd, SHIFT));
 #endif
       }
 
@@ -488,6 +520,8 @@ class SIMD_4x32 final {
          return SIMD_4x32(vshrq_n_u32(m_simd, SHIFT));
 #elif defined(BOTAN_SIMD_USE_LSX)
          return SIMD_4x32(__lsx_vsrli_w(m_simd, SHIFT));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_4x32(wasm_u32x4_shr(m_simd, SHIFT));
 #endif
       }
 
@@ -500,6 +534,8 @@ class SIMD_4x32 final {
          return SIMD_4x32(vmvnq_u32(m_simd));
 #elif defined(BOTAN_SIMD_USE_LSX)
          return SIMD_4x32(__lsx_vnor_v(m_simd, m_simd));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_4x32(wasm_v128_not(m_simd));
 #endif
       }
 
@@ -519,6 +555,9 @@ class SIMD_4x32 final {
 #elif defined(BOTAN_SIMD_USE_LSX)
          // LSX is ~a & b
          return SIMD_4x32(__lsx_vandn_v(m_simd, other.m_simd));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         // SIMD128 is a & ~b
+         return SIMD_4x32(wasm_v128_andnot(other.m_simd, m_simd));
 #endif
       }
 
@@ -545,6 +584,8 @@ class SIMD_4x32 final {
          return SIMD_4x32(vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(m_simd))));
 #elif defined(BOTAN_SIMD_USE_LSX)
          return SIMD_4x32(__lsx_vshuf4i_b(m_simd, 0b00011011));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_4x32(wasm_i8x16_shuffle(m_simd, m_simd, 3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12));
 #endif
       }
 
@@ -568,6 +609,20 @@ class SIMD_4x32 final {
          return SIMD_4x32(vec_perm(raw(), zero, shuf[I - 1]));
 #elif defined(BOTAN_SIMD_USE_LSX)
          return SIMD_4x32(__lsx_vbsll_v(raw(), 4 * I));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         if constexpr(I == 0) {
+            return SIMD_4x32(m_simd);
+         }
+
+         const auto zero = wasm_u32x4_const_splat(0);
+         if constexpr(I == 1) {
+            return SIMD_4x32(wasm_i8x16_shuffle(m_simd, zero, 16, 16, 16, 16, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
+         }
+         if constexpr(I == 2) {
+            return SIMD_4x32(wasm_i8x16_shuffle(m_simd, zero, 16, 16, 16, 16, 16, 16, 16, 16, 0, 1, 2, 3, 4, 5, 6, 7));
+         }
+
+         return SIMD_4x32(wasm_i8x16_shuffle(m_simd, zero, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 0, 1, 2, 3));
 #endif
       }
 
@@ -591,6 +646,23 @@ class SIMD_4x32 final {
          return SIMD_4x32(vec_perm(raw(), zero, shuf[I - 1]));
 #elif defined(BOTAN_SIMD_USE_LSX)
          return SIMD_4x32(__lsx_vbsrl_v(raw(), 4 * I));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         if constexpr(I == 0) {
+            return SIMD_4x32(m_simd);
+         }
+
+         const auto zero = wasm_u32x4_const_splat(0);
+         if constexpr(I == 1) {
+            return SIMD_4x32(
+               wasm_i8x16_shuffle(m_simd, zero, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 16, 16, 16));
+         }
+         if constexpr(I == 2) {
+            return SIMD_4x32(
+               wasm_i8x16_shuffle(m_simd, zero, 8, 9, 10, 11, 12, 13, 14, 15, 16, 16, 16, 16, 16, 16, 16, 16));
+         }
+
+         return SIMD_4x32(
+            wasm_i8x16_shuffle(m_simd, zero, 12, 13, 14, 15, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16));
 #endif
       }
 
@@ -649,6 +721,16 @@ class SIMD_4x32 final {
          B1.m_simd = __lsx_vilvh_w(T2, T0);
          B2.m_simd = __lsx_vilvl_w(T3, T1);
          B3.m_simd = __lsx_vilvh_w(T3, T1);
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         const auto T0 = wasm_i32x4_shuffle(B0.m_simd, B2.m_simd, 0, 4, 1, 5);
+         const auto T2 = wasm_i32x4_shuffle(B0.m_simd, B2.m_simd, 2, 6, 3, 7);
+         const auto T1 = wasm_i32x4_shuffle(B1.m_simd, B3.m_simd, 0, 4, 1, 5);
+         const auto T3 = wasm_i32x4_shuffle(B1.m_simd, B3.m_simd, 2, 6, 3, 7);
+
+         B0.m_simd = wasm_i32x4_shuffle(T0, T1, 0, 4, 1, 5);
+         B1.m_simd = wasm_i32x4_shuffle(T0, T1, 2, 6, 3, 7);
+         B2.m_simd = wasm_i32x4_shuffle(T2, T3, 0, 4, 1, 5);
+         B3.m_simd = wasm_i32x4_shuffle(T2, T3, 2, 6, 3, 7);
 #endif
       }
 
@@ -659,6 +741,8 @@ class SIMD_4x32 final {
          return SIMD_4x32(vbslq_u32(mask.raw(), a.raw(), b.raw()));
 #elif defined(BOTAN_SIMD_USE_LSX)
          return SIMD_4x32(__lsx_vbitsel_v(b.raw(), a.raw(), mask.raw()));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_4x32(wasm_v128_bitselect(a.raw(), b.raw(), mask.raw()));
 #else
          return (mask & a) ^ mask.andc(b);
 #endif
@@ -697,6 +781,8 @@ class SIMD_4x32 final {
          return SIMD_4x32(reinterpret_cast<__vector unsigned int>(r));
 #elif defined(BOTAN_SIMD_USE_LSX)
          return SIMD_4x32(__lsx_vshuf_b(tbl.raw(), tbl.raw(), idx.raw()));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_4x32(wasm_i8x16_swizzle(tbl.raw(), idx.raw()));
 #endif
       }
 
@@ -733,7 +819,7 @@ class SIMD_4x32 final {
          const auto mask = __lsx_vslti_bu(idx.raw(), 16);
          return SIMD_4x32(__lsx_vbitsel_v(zero, r, mask));
 #else
-         // ARM and x86 byte shuffles have the behavior we want for out of range idx
+         // ARM, x86 and Wasm byte shuffles have the behavior we want for out of range idx
          return SIMD_4x32::byte_shuffle(tbl, idx);
 #endif
       }
@@ -749,6 +835,9 @@ class SIMD_4x32 final {
 #elif defined(BOTAN_SIMD_USE_LSX)
          const auto mask = SIMD_4x32(0x07060504, 0x0B0A0908, 0x0F0E0D0C, 0x13121110);
          return SIMD_4x32(__lsx_vshuf_b(a.raw(), b.raw(), mask.raw()));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_4x32(
+            wasm_i8x16_shuffle(b.raw(), a.raw(), 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19));
 #endif
       }
 
@@ -762,6 +851,9 @@ class SIMD_4x32 final {
          return SIMD_4x32(vec_perm(b.raw(), a.raw(), mask));
 #elif defined(BOTAN_SIMD_USE_LSX)
          return SIMD_4x32(__lsx_vshuf4i_d(a.raw(), b.raw(), 0b0011));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_4x32(
+            wasm_i8x16_shuffle(b.raw(), a.raw(), 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23));
 #endif
       }
 

@@ -19,6 +19,7 @@ arm64:neon
 ppc32:altivec
 ppc64:altivec
 loongarch64:lsx
+wasm:simd128
 </isa>
 
 <arch>
@@ -30,6 +31,7 @@ arm64
 ppc32
 ppc64
 loongarch64
+wasm
 </arch>
 
 <requires>
