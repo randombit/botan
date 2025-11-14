@@ -1692,6 +1692,14 @@ X.509 Certificates
 
    Return the serial number of the certificate.
 
+.. cpp:function:: int botan_x509_cert_is_ca(botan_x509_cert_t cert)
+
+   Check whether the certificate is marked as a CA certificate.
+
+.. cpp:function:: int botan_x509_cert_get_path_length_constraint(botan_x509_cert_t cert, size_t* path_len)
+
+   Get the path length constraint for a CA certificate.
+
 .. cpp:function:: int botan_x509_cert_get_authority_key_id(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
 
    Return the authority key ID set in the certificate, which may be empty.

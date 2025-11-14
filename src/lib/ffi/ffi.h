@@ -2168,6 +2168,17 @@ int botan_x509_cert_view_public_key_bits(botan_x509_cert_t cert, botan_view_ctx 
 
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key);
 
+/**
+ * Returns 0 iff the cert is a CA certificate
+ */
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_is_ca(botan_x509_cert_t cert);
+
+/**
+ * Retrieves the path length constraint from the certificate.
+ * If no such constraint is present, BOTAN_FFI_ERROR_NO_VALUE is returned.
+ */
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_get_path_length_constraint(botan_x509_cert_t cert, size_t* path_limit);
+
 /* TODO(Botan4) this should use char for the out param */
 BOTAN_FFI_EXPORT(2, 0)
 int botan_x509_cert_get_issuer_dn(

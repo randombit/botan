@@ -734,11 +734,22 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          if(!TEST_FFI_INIT(botan_x509_cert_load_file, (&root, Test::data_file("x509/nist/root.crt").c_str()))) {
             return;
          }
+         TEST_FFI_RC(0, botan_x509_cert_is_ca, (root));
 
          botan_x509_cert_t end2;
          botan_x509_cert_t sub2;
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&end2, Test::data_file("x509/nist/test02/end.crt").c_str()));
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&sub2, Test::data_file("x509/nist/test02/int.crt").c_str()));
+         TEST_FFI_RC(1, botan_x509_cert_is_ca, (end2));
+
+         size_t path_limit;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE, botan_x509_cert_get_path_length_constraint, (root, &path_limit));
+
+         botan_x509_cert_t root_with_pathlen;
+         REQUIRE_FFI_OK(botan_x509_cert_load_file,
+                        (&root_with_pathlen, Test::data_file("x509/extended/02/root.crt").c_str()));
+         TEST_FFI_OK(botan_x509_cert_get_path_length_constraint, (root_with_pathlen, &path_limit));
+         result.test_eq("Path length constraint", path_limit, 1);
 
          TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end2, &sub2, 1, &root, 1, nullptr, 0, nullptr, 0));
          result.confirm("Validation test02 failed", rc == 5002);
@@ -793,6 +804,7 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          result.test_eq(
             "Validation test20 status string", botan_x509_cert_validation_status(rc), "Certificate is revoked");
 
+         TEST_FFI_OK(botan_x509_cert_destroy, (root_with_pathlen));
          TEST_FFI_OK(botan_x509_cert_destroy, (end2));
          TEST_FFI_OK(botan_x509_cert_destroy, (sub2));
          TEST_FFI_OK(botan_x509_cert_destroy, (end7));

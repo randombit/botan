@@ -79,6 +79,35 @@ int botan_x509_cert_load(botan_x509_cert_t* cert_obj, const uint8_t cert_bits[],
 #endif
 }
 
+int botan_x509_cert_is_ca(botan_x509_cert_t cert) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return c.is_CA_cert() ? BOTAN_FFI_SUCCESS : 1; });
+#else
+   BOTAN_UNUSED(cert);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_get_path_length_constraint(botan_x509_cert_t cert, size_t* path_limit) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) -> int {
+      if(Botan::any_null_pointers(path_limit)) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      if(const auto path_len = c.path_length_constraint()) {
+         *path_limit = path_len.value();
+         return BOTAN_FFI_SUCCESS;
+      } else {
+         return BOTAN_FFI_ERROR_NO_VALUE;
+      }
+   });
+#else
+   BOTAN_UNUSED(cert, path_limit);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key) {
    if(key == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
