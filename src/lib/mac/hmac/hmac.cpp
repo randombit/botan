@@ -36,7 +36,7 @@ void HMAC::final_result(std::span<uint8_t> mac) {
 
 Key_Length_Specification HMAC::key_spec() const {
    // Support very long lengths for things like PBKDF2 and the TLS PRF
-   return Key_Length_Specification(0, 4096);
+   return Key_Length_Specification(0, 8192);
 }
 
 size_t HMAC::output_length() const {

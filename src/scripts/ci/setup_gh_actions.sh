@@ -31,7 +31,7 @@ fi
 
 if type -p "apt-get"; then
 
-    sudo rm /var/lib/man-db/auto-update
+    sudo rm -f /var/lib/man-db/auto-update
 
     sudo apt-get -qq update
     # shellcheck disable=SC2046

@@ -132,7 +132,7 @@ class BotanPythonTests(unittest.TestCase):
         hmac = botan.MsgAuthCode('HMAC(SHA-256)')
         self.assertEqual(hmac.algo_name(), 'HMAC(SHA-256)')
         self.assertEqual(hmac.minimum_keylength(), 0)
-        self.assertEqual(hmac.maximum_keylength(), 4096)
+        self.assertEqual(hmac.maximum_keylength(), 8192)
 
         expected = hex_decode('A21B1F5D4CF4F73A4DD939750F7A066A7F98CC131CB16A6692759021CFAB8181')
 
