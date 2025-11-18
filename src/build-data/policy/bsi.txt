@@ -155,7 +155,7 @@ emsa_raw
 emsa_x931
 
 # hash
-blake2
+#blake2 # not recommended, but needed for argon2
 comb4p
 gost_3411
 md4
