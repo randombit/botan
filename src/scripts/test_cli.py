@@ -1433,10 +1433,7 @@ def cli_tls_http_server_tests(tmp_dir):
     asyncio.run(run_async_test())
 
 def cli_tls_proxy_tests(tmp_dir):
-    # This was disabled in GH #3845 due to flakiness, then thought possibly
-    # fixed and enabled again in Gh #4178. However the test still occasionally
-    # fails. Disable it again pending diagnosis...
-    if not run_socket_tests() or platform.system() == 'Windows' or not check_for_command("tls_proxy"):
+    if not run_socket_tests() or not check_for_command("tls_proxy"):
         return
 
     server_port = port_for('tls_proxy_backend')
@@ -1804,6 +1801,7 @@ def main(args=None):
     parser.add_option('--threads', action='store', type='int', default=0)
     parser.add_option('--run-slow-tests', action='store_true', default=False)
     parser.add_option('--run-online-tests', action='store_true', default=False)
+    parser.add_option('--skip-tls-proxy-test', action='store_true', default=False)
     parser.add_option('--test-data-dir', default='.')
 
     (options, args) = parser.parse_args(args)
@@ -1885,7 +1883,6 @@ def main(args=None):
         cli_tls_ciphersuite_tests,
         cli_tls_client_hello_tests,
         cli_tls_http_server_tests,
-        cli_tls_proxy_tests,
         cli_tls_socket_tests,
         cli_tls_online_pqc_hybrid_tests,
         cli_trust_root_tests,
@@ -1901,6 +1898,9 @@ def main(args=None):
         test_fns = slow_test_fns + fast_test_fns
     else:
         test_fns = fast_test_fns
+
+    if not options.skip_tls_proxy_test:
+        test_fns.append(cli_tls_proxy_tests)
 
     global ONLINE_TESTS
     ONLINE_TESTS = options.run_online_tests
