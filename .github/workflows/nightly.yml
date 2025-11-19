@@ -62,7 +62,7 @@ jobs:
           cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
       - name: Build and Test Botan
-        run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
+        run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --ci-image='${{ matrix.host_os }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   x-compile:
     name: "Cross"
@@ -125,7 +125,7 @@ jobs:
           cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-xcompile-${{ matrix.target }}
 
       - name: Build and Test Botan
-        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
+        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --ci-image='${{ matrix.host_os }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   valgrind:
     name: "valgrind"
@@ -144,32 +144,32 @@ jobs:
         compiler: ["clang", "gcc"]
         cxxflags: ["-O1", "-O2", "-O3"]
         target:   ["valgrind-ct-full"]
-        platform: ["ubuntu-24.04", "ubuntu-24.04-arm"]
+        host_os:  ["ubuntu-24.04", "ubuntu-24.04-arm"]
 
         exclude:
-          - platform: "ubuntu-24.04-arm"
+          - host_os: "ubuntu-24.04-arm"
             compiler: clang
-          - platform: "ubuntu-24.04-arm"
+          - host_os: "ubuntu-24.04-arm"
             cxxflags: "-O1"
 
         include:
           - compiler: clang
             cxxflags: ""              # default compilation flags
             target:   "valgrind-full" # memory bug detection
-            platform: "ubuntu-24.04"
+            host_os:  "ubuntu-24.04"
           - compiler: clang
             cxxflags: "-Os"
             # Clang's -Os generated binary is fast enough to run the full test suite.
             target:   "valgrind-ct-full"
-            platform: "ubuntu-24.04"
+            host_os:  "ubuntu-24.04"
           - compiler: gcc
             cxxflags: "-Os"
             # GCC with -Os generates a much slower binary, that won't finish
             # before timing out on GH Actions, so we run a reduced set of tests.
             target:   "valgrind-ct"
-            platform: "ubuntu-24.04"
+            host_os:  "ubuntu-24.04"
 
-    runs-on: ${{ matrix.platform }}
+    runs-on: ${{ matrix.host_os }}
 
     steps:
       - uses: actions/checkout@v4
@@ -182,10 +182,10 @@ jobs:
         with:
           target: ${{ matrix.target }}
           compiler: ${{ matrix.compiler }}
-          cache-key: ${{ matrix.platform }}-${{ matrix.compiler }}-${{ matrix.target }}-${{ matrix.cxxflags }}
+          cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-${{ matrix.target }}-${{ matrix.cxxflags }}
 
       - name: Valgrind Checks
-        run: python3 ./src/scripts/ci_build.py --make-tool=make --cc=${{ matrix.compiler }} --custom-optimization-flags="${{ matrix.cxxflags }}" ${{ matrix.target }}
+        run: python3 ./src/scripts/ci_build.py --make-tool=make --cc=${{ matrix.compiler }} --ci-image='${{ matrix.host_os }}' --custom-optimization-flags="${{ matrix.cxxflags }}" ${{ matrix.target }}
 
   hybrid_tls_interop:
     name: "PQ/T TLS 1.3"

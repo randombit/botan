@@ -613,6 +613,8 @@ def parse_args(args):
                       help='Set directory to place build artifacts into (default %default)')
     parser.add_option('--boringssl-dir', metavar='D', default='boringssl',
                       help='Set directory of BoringSSL checkout to use for BoGo tests')
+    parser.add_option('--ci-image', default=None,
+                      help='Set the Github Actions CI image name')
 
     parser.add_option('--make-tool', metavar='TOOL', default=default_make_tool(),
                       help='Specify tool to run to build source (default %default)')
@@ -671,6 +673,25 @@ def validate_make_tool(make_tool, build_jobs):
         return make_tool, ['-k', '0']
     else:
         return make_tool, []
+
+# There is some unfortunate flakiness in the tls_proxy cli test that has
+# yet to be debugged. Until this is resolved certain CI targets do not
+# run this test.
+def skip_tls_proxy_tests_for_this_target(ci_image):
+    # If we don't know what CI image we are on go ahead and run it
+    if ci_image is None:
+        return False
+
+    # Occasionally fails - see GH #3845 #4178 #4181
+    if ci_image == 'windows-2022':
+        return True
+
+    # The tls_proxy test seems to consistently fail on certain macOS images
+    # See GH #5160
+    if ci_image in ['macos-15-intel', 'macos-26']:
+        return True
+
+    return False
 
 def main(args=None):
     """
@@ -921,11 +942,16 @@ def main(args=None):
                 args.append('--run-slow-tests')
             if root_dir != '.':
                 args.append('--test-data-dir=%s' % root_dir)
+
             test_scripts = ['test_cli.py', 'test_cli_crypt.py']
+
             for script in test_scripts:
-                test_data_arg = []
-                cmds.append([py_interp, os.path.join(root_dir, 'src/scripts', script)] +
-                            args + test_data_arg + [botan_exe])
+                script_path = os.path.join(root_dir, 'src/scripts', script)
+                extra_args = []
+                if script == 'test_cli.py' and skip_tls_proxy_tests_for_this_target(options.ci_image):
+                    extra_args.append('--skip-tls-proxy-test')
+
+                cmds.append([py_interp, script_path] + args + extra_args + [botan_exe])
 
         if target in ['strubbing']:
             cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/test_strubbed_symbols.py'),

@@ -72,7 +72,7 @@ jobs:
           arch: ${{ matrix.arch }}
 
       - name: Build and Test Botan
-        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='ninja' --cpu='${{ matrix.arch }}' --test-results-dir=junit_results ${{ matrix.target }}
+        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --ci-image='${{ matrix.host_os }}' --make-tool='ninja' --cpu='${{ matrix.arch }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   linux:
     name: "Linux"
@@ -83,14 +83,18 @@ jobs:
         include:
           - compiler: gcc
             target: shared
+            host_os: ubuntu-22.04
           - compiler: gcc
             target: amalgamation
+            host_os: ubuntu-22.04
           - compiler: gcc
             target: static
+            host_os: ubuntu-22.04
           - compiler: clang
             target: shared
+            host_os: ubuntu-22.04
 
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.host_os }}
 
     steps:
       - uses: actions/checkout@v4
@@ -103,10 +107,10 @@ jobs:
         with:
           target: ${{ matrix.target }}
           compiler: ${{ matrix.compiler }}
-          cache-key: linux-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
+          cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
       - name: Build and Test Botan
-        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
+        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --ci-image='${{ matrix.host_os }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   macos:
     name: "macOS"
@@ -117,20 +121,20 @@ jobs:
         include:
           - target: shared
             compiler: xcode
-            os: macos-13
+            host_os: macos-15-intel
           - target: amalgamation
             compiler: xcode
-            os: macos-13
+            host_os: macos-15-intel
             make_tool: ninja
           - target: shared
             compiler: xcode
-            os: macos-14 # uses Apple Silicon
+            host_os: macos-15 # uses Apple Silicon
             make_tool: ninja
           - target: amalgamation
             compiler: xcode
-            os: macos-14 # uses Apple Silicon
+            host_os: macos-15 # uses Apple Silicon
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.host_os }}
 
     steps:
       - uses: actions/checkout@v4
@@ -143,10 +147,10 @@ jobs:
         with:
           target: ${{ matrix.target }}
           compiler: ${{ matrix.compiler }}
-          cache-key: macos-${{ matrix.compiler }}-${{ matrix.os }}-${{ matrix.target }}
+          cache-key: macos-${{ matrix.compiler }}-${{ matrix.host_os }}-${{ matrix.target }}
 
       - name: Build and Test Botan
-        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
+        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --ci-image='${{ matrix.host_os }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   clang-tidy:
     name: "Clang Tidy"
@@ -236,7 +240,7 @@ jobs:
           cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
       - name: Build and Test Botan
-        run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
+        run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --ci-image='${{ matrix.host_os }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   specials:
     name: "Special"
@@ -291,7 +295,7 @@ jobs:
           cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
       - name: Build and Test Botan
-        run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
+        run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --ci-image='${{ matrix.host_os }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   x-compile:
     name: "Cross"
@@ -351,4 +355,4 @@ jobs:
           cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-xcompile-${{ matrix.target }}
 
       - name: Build and Test Botan
-        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
+        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --ci-image='${{ matrix.host_os }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
