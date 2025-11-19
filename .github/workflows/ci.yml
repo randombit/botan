@@ -72,10 +72,10 @@ jobs:
             host_os: ubuntu-24.04
           - target: shared
             compiler: clang
-            host_os: macos-latest
+            host_os: macos-15
           - target: cross-ios-arm64
             compiler: clang
-            host_os: macos-latest
+            host_os: macos-15
 
     steps:
       - uses: actions/checkout@v4
