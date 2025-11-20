@@ -1,0 +1,11 @@
+<internal_defines>
+CPUID_DETECTION -> 20251105
+</internal_defines>
+
+<module_info>
+name -> "CPUID for Wasm"
+</module_info>
+
+<arch>
+wasm
+</arch>

@@ -67,4 +67,10 @@
 
 #endif
 
+#if defined(BOTAN_TARGET_ARCH_IS_WASM)
+
+   #define BOTAN_FN_ISA_SIMD_4X32 BOTAN_FUNC_ISA("simd128")
+
+#endif
+
 #endif

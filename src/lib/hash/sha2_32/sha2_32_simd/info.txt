@@ -14,6 +14,8 @@ x32:ssse3
 
 arm32:neon
 arm64:neon
+
+wasm:simd128
 </isa>
 
 <arch>
@@ -28,6 +30,8 @@ arm64
 #ppc32
 #ppc64
 #loongson64
+
+wasm
 </arch>
 
 <requires>
