@@ -128,10 +128,17 @@ size_t EAX_Encryption::process_msg(uint8_t buf[], size_t sz) {
    return sz;
 }
 
-void EAX_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
+size_t EAX_Encryption::finish_msg(std::span<uint8_t> buffer, size_t input_bytes) {
    BOTAN_STATE_CHECK(!m_nonce_mac.empty());
-   update(buffer, offset);
 
+   const size_t tag_length = tag_size();
+
+   BOTAN_ASSERT_NOMSG(input_bytes + tag_length == buffer.size());
+
+   const auto payload = buffer.first(input_bytes);
+   const auto tag = buffer.last(tag_length);
+
+   process(payload);
    secure_vector<uint8_t> data_mac = m_cmac->final();
    xor_buf(data_mac, m_nonce_mac, data_mac.size());
 
@@ -141,9 +148,11 @@ void EAX_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    xor_buf(data_mac, m_ad_mac, data_mac.size());
 
-   buffer += std::make_pair(data_mac.data(), tag_size());
+   copy_mem(tag, std::span{data_mac}.first(tag_length));
 
    m_nonce_mac.clear();
+
+   return buffer.size();
 }
 
 size_t EAX_Decryption::process_msg(uint8_t buf[], size_t sz) {
@@ -153,41 +162,38 @@ size_t EAX_Decryption::process_msg(uint8_t buf[], size_t sz) {
    return sz;
 }
 
-void EAX_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
+size_t EAX_Decryption::finish_msg(std::span<uint8_t> buffer, size_t input_bytes) {
    BOTAN_STATE_CHECK(!m_nonce_mac.empty());
-   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
-   const size_t sz = buffer.size() - offset;
-   uint8_t* buf = buffer.data() + offset;
+   const size_t tag_length = tag_size();
 
-   BOTAN_ARG_CHECK(sz >= tag_size(), "input did not include the tag");
+   BOTAN_ASSERT_NOMSG(buffer.size() == input_bytes);
+   BOTAN_ASSERT_NOMSG(buffer.size() >= tag_length);
 
-   const size_t remaining = sz - tag_size();
+   const auto remaining = buffer.first(buffer.size() - tag_length);
+   const auto tag = buffer.last(tag_length);
 
-   if(remaining > 0) {
-      m_cmac->update(buf, remaining);
-      m_ctr->cipher(buf, buf, remaining);
+   if(!remaining.empty()) {
+      process(remaining);
    }
 
-   const uint8_t* included_tag = &buf[remaining];
-
-   secure_vector<uint8_t> mac = m_cmac->final();
-   mac ^= m_nonce_mac;
+   auto mac = m_cmac->final();
+   xor_buf(mac, m_nonce_mac);
 
    if(m_ad_mac.empty()) {
       m_ad_mac = eax_prf(1, block_size(), *m_cmac, nullptr, 0);
    }
 
-   mac ^= m_ad_mac;
+   xor_buf(mac, m_ad_mac);
 
-   const bool accept_mac = CT::is_equal(mac.data(), included_tag, tag_size()).as_bool();
-
-   buffer.resize(offset + remaining);
+   const bool accept_mac = CT::is_equal(mac.data(), tag.data(), tag_length).as_bool();
 
    m_nonce_mac.clear();
 
    if(!accept_mac) {
       throw Invalid_Authentication_Tag("EAX tag check failed");
    }
+
+   return remaining.size();
 }
 
 }  // namespace Botan
