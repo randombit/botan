@@ -84,7 +84,7 @@ class SIMD_4x32 final {
       /**
       * Zero initialize SIMD register with 4 32-bit elements
       */
-      SIMD_4x32() noexcept {
+      BOTAN_FN_ISA_SIMD_4X32 SIMD_4x32() noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          m_simd = _mm_setzero_si128();
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
@@ -101,7 +101,7 @@ class SIMD_4x32 final {
       /**
       * Load SIMD register with 4 32-bit elements
       */
-      SIMD_4x32(uint32_t B0, uint32_t B1, uint32_t B2, uint32_t B3) noexcept {
+      BOTAN_FN_ISA_SIMD_4X32 SIMD_4x32(uint32_t B0, uint32_t B1, uint32_t B2, uint32_t B3) noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          m_simd = _mm_set_epi32(B3, B2, B1, B0);
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
@@ -125,7 +125,7 @@ class SIMD_4x32 final {
       /**
       * Load SIMD register with one 32-bit element repeated
       */
-      static SIMD_4x32 splat(uint32_t B) noexcept {
+      static SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 splat(uint32_t B) noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_4x32(_mm_set1_epi32(B));
 #elif defined(BOTAN_SIMD_USE_NEON)
@@ -142,7 +142,7 @@ class SIMD_4x32 final {
       /**
       * Load SIMD register with one 8-bit element repeated
       */
-      static SIMD_4x32 splat_u8(uint8_t B) noexcept {
+      static SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 splat_u8(uint8_t B) noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_4x32(_mm_set1_epi8(B));
 #elif defined(BOTAN_SIMD_USE_NEON)
@@ -160,7 +160,7 @@ class SIMD_4x32 final {
       /**
       * Load a SIMD register with little-endian convention
       */
-      static SIMD_4x32 load_le(const void* in) noexcept {
+      static SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 load_le(const void* in) noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_4x32(_mm_loadu_si128(reinterpret_cast<const __m128i*>(in)));
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
@@ -222,7 +222,7 @@ class SIMD_4x32 final {
       /**
       * Load a SIMD register with little-endian convention
       */
-      void store_le(uint8_t out[]) const noexcept {
+      void BOTAN_FN_ISA_SIMD_4X32 store_le(uint8_t out[]) const noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
 
          _mm_storeu_si128(reinterpret_cast<__m128i*>(out), raw());
@@ -415,7 +415,7 @@ class SIMD_4x32 final {
          return retval;
       }
 
-      void operator+=(const SIMD_4x32& other) noexcept {
+      void BOTAN_FN_ISA_SIMD_4X32 operator+=(const SIMD_4x32& other) noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          m_simd = _mm_add_epi32(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
@@ -429,7 +429,7 @@ class SIMD_4x32 final {
 #endif
       }
 
-      void operator-=(const SIMD_4x32& other) noexcept {
+      void BOTAN_FN_ISA_SIMD_4X32 operator-=(const SIMD_4x32& other) noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          m_simd = _mm_sub_epi32(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
@@ -443,7 +443,7 @@ class SIMD_4x32 final {
 #endif
       }
 
-      void operator^=(const SIMD_4x32& other) noexcept {
+      void BOTAN_FN_ISA_SIMD_4X32 operator^=(const SIMD_4x32& other) noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          m_simd = _mm_xor_si128(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
@@ -459,7 +459,7 @@ class SIMD_4x32 final {
 
       void operator^=(uint32_t other) noexcept { *this ^= SIMD_4x32::splat(other); }
 
-      void operator|=(const SIMD_4x32& other) noexcept {
+      void BOTAN_FN_ISA_SIMD_4X32 operator|=(const SIMD_4x32& other) noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          m_simd = _mm_or_si128(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
@@ -473,7 +473,7 @@ class SIMD_4x32 final {
 #endif
       }
 
-      void operator&=(const SIMD_4x32& other) noexcept {
+      void BOTAN_FN_ISA_SIMD_4X32 operator&=(const SIMD_4x32& other) noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          m_simd = _mm_and_si128(m_simd, other.m_simd);
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
@@ -488,7 +488,7 @@ class SIMD_4x32 final {
       }
 
       template <int SHIFT>
-      SIMD_4x32 shl() const noexcept
+      SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 shl() const noexcept
          requires(SHIFT > 0 && SHIFT < 32)
       {
 #if defined(BOTAN_SIMD_USE_SSSE3)
@@ -508,7 +508,7 @@ class SIMD_4x32 final {
       }
 
       template <int SHIFT>
-      SIMD_4x32 shr() const noexcept {
+      SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 shr() const noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_4x32(_mm_srli_epi32(m_simd, SHIFT));
 
@@ -525,7 +525,7 @@ class SIMD_4x32 final {
 #endif
       }
 
-      SIMD_4x32 operator~() const noexcept {
+      SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 operator~() const noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_4x32(_mm_xor_si128(m_simd, _mm_set1_epi32(0xFFFFFFFF)));
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
@@ -540,7 +540,7 @@ class SIMD_4x32 final {
       }
 
       // (~reg) & other
-      SIMD_4x32 andc(const SIMD_4x32& other) const noexcept {
+      SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 andc(const SIMD_4x32& other) const noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          return SIMD_4x32(_mm_andnot_si128(m_simd, other.m_simd));
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
@@ -590,7 +590,7 @@ class SIMD_4x32 final {
       }
 
       template <size_t I>
-      SIMD_4x32 shift_elems_left() const noexcept
+      SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 shift_elems_left() const noexcept
          requires(I <= 3)
       {
 #if defined(BOTAN_SIMD_USE_SSSE3)
@@ -627,7 +627,7 @@ class SIMD_4x32 final {
       }
 
       template <size_t I>
-      SIMD_4x32 shift_elems_right() const noexcept
+      SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 shift_elems_right() const noexcept
          requires(I <= 3)
       {
 #if defined(BOTAN_SIMD_USE_SSSE3)
@@ -669,7 +669,10 @@ class SIMD_4x32 final {
       /**
       * 4x4 Transposition on SIMD registers
       */
-      static void transpose(SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) noexcept {
+      static void BOTAN_FN_ISA_SIMD_4X32 transpose(SIMD_4x32& B0,
+                                                   SIMD_4x32& B1,
+                                                   SIMD_4x32& B2,
+                                                   SIMD_4x32& B3) noexcept {
 #if defined(BOTAN_SIMD_USE_SSSE3)
          const __m128i T0 = _mm_unpacklo_epi32(B0.m_simd, B1.m_simd);
          const __m128i T1 = _mm_unpacklo_epi32(B2.m_simd, B3.m_simd);
@@ -857,7 +860,7 @@ class SIMD_4x32 final {
 #endif
       }
 
-      native_simd_type raw() const noexcept { return m_simd; }
+      native_simd_type BOTAN_FN_ISA_SIMD_4X32 raw() const noexcept { return m_simd; }
 
       explicit SIMD_4x32(native_simd_type x) noexcept : m_simd(x) {}
 
