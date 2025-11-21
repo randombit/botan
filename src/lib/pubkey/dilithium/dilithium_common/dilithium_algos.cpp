@@ -26,6 +26,7 @@
 #include <botan/internal/pqcrystals_helpers.h>
 #include <botan/internal/stl_util.h>
 
+#include <algorithm>
 #include <utility>
 
 namespace Botan::Dilithium_Algos {
