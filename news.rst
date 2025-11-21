@@ -7,6 +7,9 @@ Version 3.11.0, Not Yet Released
 * ``SIMD_4x32`` port to Wasm SIMD128, bringing speedups to AES, ChaCha, Serpent, SHA-1,
   SHA-256, SHACAL2, NOEKEON and ZFEC when SIMD128 is enabled
 
+* ``SIMD_2x64`` port to Wasm SIMD128, ``ghash_vperm`` port to ``SIMD_2x64``, bringing speedups
+  to GCM routines when SIMD128 is enabled
+
 Version 3.10.0, 2025-11-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
