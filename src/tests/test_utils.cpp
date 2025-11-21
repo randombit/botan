@@ -21,8 +21,6 @@
 #include <botan/internal/target_info.h>
 
 #include <bit>
-#include <ctime>
-#include <functional>
 
 #if defined(BOTAN_HAS_CPUID)
    #include <botan/internal/cpuid.h>
