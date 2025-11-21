@@ -16,7 +16,6 @@
 #include <botan/types.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/mp_asmi.h>
-#include <algorithm>
 #include <array>
 #include <span>
 

@@ -11,6 +11,7 @@
 #include <botan/pss_params.h>
 #include <botan/tls_version.h>
 #include <botan/internal/stl_util.h>
+#include <algorithm>
 
 namespace Botan::TLS {
 

@@ -11,7 +11,7 @@
 
 #include <botan/internal/cmce_poly.h>
 #include <botan/internal/ct_utils.h>
-#include <botan/internal/stl_util.h>
+#include <algorithm>
 
 namespace Botan {
 

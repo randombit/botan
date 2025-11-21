@@ -5,6 +5,7 @@
 */
 
 #include "tests.h"
+#include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 

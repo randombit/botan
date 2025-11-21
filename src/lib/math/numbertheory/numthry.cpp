@@ -16,7 +16,6 @@
 #include <botan/internal/monty_exp.h>
 #include <botan/internal/mp_core.h>
 #include <botan/internal/primality.h>
-#include <algorithm>
 
 namespace Botan {
 
