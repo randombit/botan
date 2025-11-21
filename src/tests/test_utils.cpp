@@ -7,6 +7,7 @@
 */
 
 #include "tests.h"
+#include <botan/rng.h>
 #include <botan/version.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/calendar.h>

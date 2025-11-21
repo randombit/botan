@@ -9,6 +9,7 @@
 #define BOTAN_TEST_REPORTER_H_
 
 #include "../tests.h"
+#include <chrono>
 
 namespace Botan_Tests {
 
