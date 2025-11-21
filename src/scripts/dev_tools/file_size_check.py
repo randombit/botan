@@ -4,6 +4,7 @@ import json
 import subprocess
 import re
 import sys
+from multiprocessing.pool import ThreadPool
 
 def lines_in(f):
     lines = 0
@@ -21,29 +22,39 @@ def run_cc(cmd):
 
     return lines_in(preproc.stdout)
 
-cc = json.loads(open('build/compile_commands.json').read())
+def main():
+    search_for = None
 
-src_file = re.compile('-E src/.*/([a-z0-9/_]+.cpp) ')
+    if len(sys.argv) == 2:
+        search_for = re.compile(sys.argv[1])
 
-search_for = None
+    cc = json.loads(open('build/compile_commands.json').read())
 
-if len(sys.argv) == 2:
-    search_for = re.compile(sys.argv[1])
+    src_file = re.compile('-E src/.*/([a-z0-9/_]+.cpp) ')
 
-total_lines = 0
-for c in cc:
-    cmd = c['command'].replace(' -c ', ' -E ').split(' -o')[0] + " -o -"
-    file_name = src_file.search(cmd)
-    if file_name is None:
-        continue
+    pool = ThreadPool(8)
 
-    file_name = file_name.group(1)
-    if search_for is not None and search_for.search(file_name) is None:
-        continue
+    total_lines = 0
+    futures = []
+    for c in cc:
+        cmd = c['command'].replace(' -c ', ' -E ').split(' -o')[0] + " -o -"
+        file_name = src_file.search(cmd)
+        if file_name is None:
+            continue
 
-    lines = run_cc(cmd)
-    total_lines += lines
-    print(lines, file_name)
-    sys.stdout.flush()
+        file_name = file_name.group(1)
+        if search_for is not None and search_for.search(file_name) is None:
+            continue
 
-print(total_lines, "total")
+        futures.append((file_name, pool.apply_async(run_cc, (cmd, ))))
+
+    for (file_name, future) in futures:
+        lines = future.get()
+        total_lines += lines
+        print(lines, file_name)
+        sys.stdout.flush()
+
+    print(total_lines, "total")
+
+if __name__ == '__main__':
+    sys.exit(main())
