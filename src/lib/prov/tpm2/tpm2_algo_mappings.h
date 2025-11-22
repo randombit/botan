@@ -23,8 +23,8 @@
 
 namespace Botan::TPM2 {
 
-[[nodiscard]] inline std::optional<TPM2_ALG_ID> asymmetric_algorithm_botan_to_tss2(
-   std::string_view algo_name) noexcept {
+[[nodiscard]]
+inline std::optional<TPM2_ALG_ID> asymmetric_algorithm_botan_to_tss2(std::string_view algo_name) noexcept {
    if(algo_name == "RSA") {
       return TPM2_ALG_RSA;
    } else if(algo_name == "ECC") {
@@ -44,7 +44,8 @@ namespace Botan::TPM2 {
  * @returns a TPMI_ALG_HASH value if the @p hash_name is known,
  *          otherwise std::nullopt
  */
-[[nodiscard]] inline std::optional<TPMI_ALG_HASH> hash_algo_botan_to_tss2(std::string_view hash_name) noexcept {
+[[nodiscard]]
+inline std::optional<TPMI_ALG_HASH> hash_algo_botan_to_tss2(std::string_view hash_name) noexcept {
    if(hash_name == "SHA-1") {
       return TPM2_ALG_SHA1;
    } else if(hash_name == "SHA-256") {
@@ -70,7 +71,8 @@ namespace Botan::TPM2 {
  * @returns a TPMI_ALG_HASH value if the @p hash_name is known,
  *         otherwise throws Lookup_Error
   */
-[[nodiscard]] inline TPMI_ALG_HASH get_tpm2_hash_type(std::string_view hash_name) {
+[[nodiscard]]
+inline TPMI_ALG_HASH get_tpm2_hash_type(std::string_view hash_name) {
    if(auto hash_id = hash_algo_botan_to_tss2(hash_name)) {
       return hash_id.value();
    }
@@ -82,7 +84,8 @@ namespace Botan::TPM2 {
  * @returns a Botan hash name string if the @p hash_id value is known,
  *          otherwise std::nullopt
  */
-[[nodiscard]] inline std::optional<std::string> hash_algo_tss2_to_botan(TPMI_ALG_HASH hash_id) noexcept {
+[[nodiscard]]
+inline std::optional<std::string> hash_algo_tss2_to_botan(TPMI_ALG_HASH hash_id) noexcept {
    switch(hash_id) {
       case TPM2_ALG_SHA1:
          return "SHA-1";
@@ -109,7 +112,8 @@ namespace Botan::TPM2 {
  * @returns a Botan hash name string if the @p hash_id value is known,
  *          otherwise throws Invalid_State
  */
-[[nodiscard]] inline std::string get_botan_hash_name(TPM2_ALG_ID hash_id) {
+[[nodiscard]]
+inline std::string get_botan_hash_name(TPM2_ALG_ID hash_id) {
    if(auto hash_name = hash_algo_tss2_to_botan(hash_id)) {
       return hash_name.value();
    }
@@ -117,8 +121,8 @@ namespace Botan::TPM2 {
    throw Invalid_State("TPM 2.0 hash object with unexpected hash type");
 }
 
-[[nodiscard]] inline std::optional<std::string> block_cipher_tss2_to_botan(TPMI_ALG_SYM cipher_id,
-                                                                           TPM2_KEY_BITS key_bits) noexcept {
+[[nodiscard]]
+inline std::optional<std::string> block_cipher_tss2_to_botan(TPMI_ALG_SYM cipher_id, TPM2_KEY_BITS key_bits) noexcept {
    switch(cipher_id) {
       case TPM2_ALG_AES:
          if(key_bits == 128) {
@@ -156,7 +160,8 @@ namespace Botan::TPM2 {
    return std::nullopt;
 }
 
-[[nodiscard]] inline std::optional<std::pair<TPMI_ALG_SYM, TPM2_KEY_BITS>> block_cipher_botan_to_tss2(
+[[nodiscard]]
+inline std::optional<std::pair<TPMI_ALG_SYM, TPM2_KEY_BITS>> block_cipher_botan_to_tss2(
    std::string_view cipher_name) noexcept {
    if(cipher_name == "AES-128") {
       return std::pair{TPM2_ALG_AES, 128};
@@ -179,7 +184,8 @@ namespace Botan::TPM2 {
    }
 }
 
-[[nodiscard]] inline std::optional<std::string> cipher_mode_tss2_to_botan(TPMI_ALG_SYM_MODE mode_id) {
+[[nodiscard]]
+inline std::optional<std::string> cipher_mode_tss2_to_botan(TPMI_ALG_SYM_MODE mode_id) {
    switch(mode_id) {
       case TPM2_ALG_CFB:
          return "CFB";
@@ -196,7 +202,8 @@ namespace Botan::TPM2 {
    }
 }
 
-[[nodiscard]] inline std::optional<std::string> curve_id_tss2_to_botan(TPMI_ECC_CURVE mode_id) {
+[[nodiscard]]
+inline std::optional<std::string> curve_id_tss2_to_botan(TPMI_ECC_CURVE mode_id) {
    // Currently, tpm2-tss does not include support for Brainpool curves or 25519/448.
    // Once the corresponding PR (https://github.com/tpm2-software/tpm2-tss/pull/2897) is merged and released,
    // this function should be updated.
@@ -218,7 +225,8 @@ namespace Botan::TPM2 {
    }
 }
 
-[[nodiscard]] inline std::optional<size_t> curve_id_order_byte_size(TPMI_ECC_CURVE curve_id) {
+[[nodiscard]]
+inline std::optional<size_t> curve_id_order_byte_size(TPMI_ECC_CURVE curve_id) {
    switch(curve_id) {
       case TPM2_ECC_NIST_P192:
          return 24;
@@ -237,7 +245,8 @@ namespace Botan::TPM2 {
    }
 }
 
-[[nodiscard]] inline std::optional<TPM2_ECC_CURVE> get_tpm2_curve_id(const OID& curve_oid) {
+[[nodiscard]]
+inline std::optional<TPM2_ECC_CURVE> get_tpm2_curve_id(const OID& curve_oid) {
    // Currently, tpm2-tss does not include support for Brainpool curves or 25519/448.
    // Once the corresponding PR (https://github.com/tpm2-software/tpm2-tss/pull/2897) is merged and released,
    // this function should be updated.
@@ -259,7 +268,8 @@ namespace Botan::TPM2 {
    }
 }
 
-[[nodiscard]] inline std::optional<TPMI_ALG_SYM_MODE> cipher_mode_botan_to_tss2(std::string_view mode_name) noexcept {
+[[nodiscard]]
+inline std::optional<TPMI_ALG_SYM_MODE> cipher_mode_botan_to_tss2(std::string_view mode_name) noexcept {
    if(mode_name == "CFB") {
       return TPM2_ALG_CFB;
    } else if(mode_name == "CBC") {
@@ -279,7 +289,8 @@ namespace Botan::TPM2 {
  * @returns a Botan cipher mode name string if the @p cipher_id, @p key_bits and
  *          @p mode_name are known, otherwise std::nullopt
  */
-[[nodiscard]] inline std::optional<std::string> cipher_tss2_to_botan(TPMT_SYM_DEF cipher_def) noexcept {
+[[nodiscard]]
+inline std::optional<std::string> cipher_tss2_to_botan(TPMT_SYM_DEF cipher_def) noexcept {
    const auto cipher_name = block_cipher_tss2_to_botan(cipher_def.algorithm, cipher_def.keyBits.sym);
    if(!cipher_name) {
       return std::nullopt;
@@ -293,7 +304,8 @@ namespace Botan::TPM2 {
    return Botan::fmt("{}({})", mode_name.value(), cipher_name.value());
 }
 
-[[nodiscard]] inline std::optional<TPMT_SYM_DEF> cipher_botan_to_tss2(std::string_view algo_name) {
+[[nodiscard]]
+inline std::optional<TPMT_SYM_DEF> cipher_botan_to_tss2(std::string_view algo_name) {
    SCAN_Name spec(algo_name);
    if(spec.arg_count() == 0) {
       return std::nullopt;
@@ -313,7 +325,8 @@ namespace Botan::TPM2 {
    };
 }
 
-[[nodiscard]] inline TPMT_SYM_DEF get_tpm2_sym_cipher_spec(std::string_view algo_name) {
+[[nodiscard]]
+inline TPMT_SYM_DEF get_tpm2_sym_cipher_spec(std::string_view algo_name) {
    if(auto cipher = cipher_botan_to_tss2(algo_name)) {
       return cipher.value();
    }
@@ -321,8 +334,8 @@ namespace Botan::TPM2 {
    throw Lookup_Error("TPM 2.0 Symmetric Cipher Spec", algo_name);
 }
 
-[[nodiscard]] inline std::optional<TPMI_ALG_SIG_SCHEME> rsa_signature_padding_botan_to_tss2(
-   std::string_view padding_name) noexcept {
+[[nodiscard]]
+inline std::optional<TPMI_ALG_SIG_SCHEME> rsa_signature_padding_botan_to_tss2(std::string_view padding_name) noexcept {
    // TODO(Botan4) remove the deprecated aliases
    if(padding_name == "EMSA_PKCS1" || padding_name == "PKCS1v15" || padding_name == "EMSA-PKCS1-v1_5" ||
       padding_name == "EMSA3") {
@@ -335,7 +348,8 @@ namespace Botan::TPM2 {
    }
 }
 
-[[nodiscard]] inline std::optional<TPMT_SIG_SCHEME> rsa_signature_scheme_botan_to_tss2(std::string_view name) {
+[[nodiscard]]
+inline std::optional<TPMT_SIG_SCHEME> rsa_signature_scheme_botan_to_tss2(std::string_view name) {
    const SCAN_Name req(name);
    if(req.arg_count() == 0) {
       return std::nullopt;
@@ -358,8 +372,8 @@ namespace Botan::TPM2 {
    };
 }
 
-[[nodiscard]] inline std::optional<TPMI_ALG_ASYM_SCHEME> rsa_encryption_padding_botan_to_tss2(
-   std::string_view name) noexcept {
+[[nodiscard]]
+inline std::optional<TPMI_ALG_ASYM_SCHEME> rsa_encryption_padding_botan_to_tss2(std::string_view name) noexcept {
    if(name == "OAEP" || name == "EME-OAEP" || name == "EME1") {
       return TPM2_ALG_OAEP;
    } else if(name == "PKCS1v15" || name == "EME-PKCS1-v1_5") {
@@ -371,7 +385,8 @@ namespace Botan::TPM2 {
    }
 }
 
-[[nodiscard]] inline std::optional<TPMT_RSA_DECRYPT> rsa_encryption_scheme_botan_to_tss2(std::string_view padding) {
+[[nodiscard]]
+inline std::optional<TPMT_RSA_DECRYPT> rsa_encryption_scheme_botan_to_tss2(std::string_view padding) {
    const SCAN_Name req(padding);
    const auto scheme = rsa_encryption_padding_botan_to_tss2(req.algo_name());
    if(!scheme) {

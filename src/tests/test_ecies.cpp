@@ -77,12 +77,13 @@ void check_encrypt_decrypt(Test::Result& result,
    }
 }
 
-[[maybe_unused]] void check_encrypt_decrypt(Test::Result& result,
-                                            const Botan::ECDH_PrivateKey& private_key,
-                                            const Botan::ECDH_PrivateKey& other_private_key,
-                                            const Botan::ECIES_System_Params& ecies_params,
-                                            size_t iv_length,
-                                            Botan::RandomNumberGenerator& rng) {
+[[maybe_unused]]
+void check_encrypt_decrypt(Test::Result& result,
+                           const Botan::ECDH_PrivateKey& private_key,
+                           const Botan::ECDH_PrivateKey& other_private_key,
+                           const Botan::ECIES_System_Params& ecies_params,
+                           size_t iv_length,
+                           Botan::RandomNumberGenerator& rng) {
    const std::vector<uint8_t> plaintext{1, 2, 3};
    check_encrypt_decrypt(result,
                          private_key,

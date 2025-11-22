@@ -85,7 +85,8 @@ void shim_log(std::string_view s) {
    }
 }
 
-[[noreturn]] void shim_exit_with_error(const std::string& s, int rc = 1) noexcept {
+[[noreturn]]
+void shim_exit_with_error(const std::string& s, int rc = 1) noexcept {
    shim_log("Exiting with " + s);
    std::cerr << s << "\n";
    std::exit(rc);

@@ -168,7 +168,8 @@ class TLS_Data_Reader final {
          }
       }
 
-      [[noreturn]] void throw_decode_error(std::string_view why) const {
+      [[noreturn]]
+      void throw_decode_error(std::string_view why) const {
          throw Decoding_Error(fmt("Invalid {}: {}", m_typename, why));
       }
 

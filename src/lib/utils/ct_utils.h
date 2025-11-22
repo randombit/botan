@@ -227,7 +227,8 @@ template <typename... Ts>
  * Poisons an r-value @p v and forwards it as the return value.
  */
 template <poisonable T>
-[[nodiscard]] decltype(auto) driveby_poison(T&& v)
+[[nodiscard]]
+decltype(auto) driveby_poison(T&& v)
    requires(std::is_rvalue_reference_v<decltype(v)>)
 {
    poison(v);
@@ -238,7 +239,8 @@ template <poisonable T>
  * Unpoisons an r-value @p v and forwards it as the return value.
  */
 template <unpoisonable T>
-[[nodiscard]] decltype(auto) driveby_unpoison(T&& v)
+[[nodiscard]]
+decltype(auto) driveby_unpoison(T&& v)
    requires(std::is_rvalue_reference_v<decltype(v)>)
 {
    unpoison(v);
