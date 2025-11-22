@@ -441,7 +441,7 @@ def process_command_line(args):
 
     add_with_without_pair(target_group, 'compilation-database', True, 'disable compile_commands.json')
 
-    isa_extensions_that_can_be_disabled = [('NEON', 'arm32')]
+    isa_extensions_that_can_be_disabled = [('NEON', 'arm32'), ('LASX', 'loongarch64'), ('LSX', 'loongarch64')]
 
     for (isa_extn_name,arch) in isa_extensions_that_can_be_disabled:
         isa_extn = isa_extn_name.lower().replace(' ', '')
