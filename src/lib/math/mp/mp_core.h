@@ -391,7 +391,8 @@ inline constexpr void bigint_shr2(W y[], const W x[], size_t x_size, size_t shif
 * Linear Multiply - returns the carry
 */
 template <WordType W>
-[[nodiscard]] inline constexpr auto bigint_linmul2(W x[], size_t x_size, W y) -> W {
+[[nodiscard]]
+inline constexpr auto bigint_linmul2(W x[], size_t x_size, W y) -> W {
    W carry = 0;
 
    for(size_t i = 0; i != x_size; ++i) {

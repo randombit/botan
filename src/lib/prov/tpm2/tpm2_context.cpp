@@ -151,7 +151,8 @@ uint32_t get_tpm_property(ESYS_CONTEXT* ctx, TPM2_PT property) {
 }
 
 template <TPM2_CAP capability, typename ReturnT>
-[[nodiscard]] std::vector<ReturnT> get_tpm_property_list(ESYS_CONTEXT* ctx, TPM2_PT property, uint32_t count) {
+[[nodiscard]]
+std::vector<ReturnT> get_tpm_property_list(ESYS_CONTEXT* ctx, TPM2_PT property, uint32_t count) {
    auto extract = [](const TPMU_CAPABILITIES& caps, uint32_t max_count) {
       std::vector<ReturnT> result;
       if constexpr(capability == TPM2_CAP_HANDLES) {

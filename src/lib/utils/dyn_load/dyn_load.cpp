@@ -24,7 +24,8 @@ namespace Botan {
 
 namespace {
 
-[[noreturn]] void raise_runtime_loader_exception(std::string_view lib_name, const char* msg) {
+[[noreturn]]
+void raise_runtime_loader_exception(std::string_view lib_name, const char* msg) {
    std::ostringstream err;
    err << "Failed to load " << lib_name << ": ";
    if(msg != nullptr) {

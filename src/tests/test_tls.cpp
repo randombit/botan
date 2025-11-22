@@ -261,8 +261,8 @@ class TLS_CBC_KAT_Tests final : public Text_Based_Test {
       }
 
    private:
-      [[nodiscard]] static std::pair<std::unique_ptr<Botan::BlockCipher>,
-                                     std::unique_ptr<Botan::MessageAuthenticationCode>>
+      [[nodiscard]]
+      static std::pair<std::unique_ptr<Botan::BlockCipher>, std::unique_ptr<Botan::MessageAuthenticationCode>>
       get_cipher_and_mac(const VarMap& vars) {
          return {
             Botan::BlockCipher::create_or_throw(vars.get_req_str("BlockCipher")),

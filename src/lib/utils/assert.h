@@ -28,7 +28,8 @@ namespace Botan {
 * Called when an invalid argument is used
 * Throws Invalid_Argument
 */
-[[noreturn]] void BOTAN_UNSTABLE_API throw_invalid_argument(const char* message, const char* func, const char* file);
+[[noreturn]]
+void BOTAN_UNSTABLE_API throw_invalid_argument(const char* message, const char* func, const char* file);
 
 #define BOTAN_ARG_CHECK(expr, msg)                               \
    /* NOLINTNEXTLINE(*-avoid-do-while) */                        \
@@ -44,7 +45,8 @@ namespace Botan {
 * Called when an invalid state is encountered
 * Throws Invalid_State
 */
-[[noreturn]] void BOTAN_UNSTABLE_API throw_invalid_state(const char* message, const char* func, const char* file);
+[[noreturn]]
+void BOTAN_UNSTABLE_API throw_invalid_state(const char* message, const char* func, const char* file);
 
 #define BOTAN_STATE_CHECK(expr)                                 \
    /* NOLINTNEXTLINE(*-avoid-do-while) */                       \
@@ -158,7 +160,8 @@ constexpr void ignore_params([[maybe_unused]] const T&... args) {}
 * Due to this difference, and the fact that it is not inlined, calling
 * this is significantly more costly than using `std::unreachable`.
 */
-[[noreturn]] void BOTAN_UNSTABLE_API assert_unreachable(const char* file, int line);
+[[noreturn]]
+void BOTAN_UNSTABLE_API assert_unreachable(const char* file, int line);
 
 #define BOTAN_ASSERT_UNREACHABLE() Botan::assert_unreachable(__FILE__, __LINE__)
 

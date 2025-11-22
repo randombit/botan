@@ -411,7 +411,8 @@ auto to_underlying(T e) noexcept {
 
 // TODO: C++23 - use std::out_ptr
 template <typename T>
-[[nodiscard]] constexpr auto out_ptr(T& outptr) noexcept {
+[[nodiscard]]
+constexpr auto out_ptr(T& outptr) noexcept {
    class out_ptr_t {
       public:
          constexpr ~out_ptr_t() noexcept {
@@ -428,7 +429,11 @@ template <typename T>
          out_ptr_t& operator=(out_ptr_t&&) = delete;
 
          // NOLINTNEXTLINE(*-explicit-conversions) FIXME
-         [[nodiscard]] constexpr operator typename T::element_type **() && noexcept { return &m_rawptr; }
+         [[nodiscard]]
+         constexpr
+         operator typename T::element_type **() && noexcept {
+            return &m_rawptr;
+         }
 
       private:
          T& m_ptr;
@@ -440,7 +445,8 @@ template <typename T>
 
 template <typename T>
    requires std::is_default_constructible_v<T>
-[[nodiscard]] constexpr auto out_opt(std::optional<T>& outopt) noexcept {
+[[nodiscard]]
+constexpr auto out_opt(std::optional<T>& outopt) noexcept {
    class out_opt_t {
       public:
          constexpr ~out_opt_t() noexcept { m_opt = m_raw; }
@@ -454,7 +460,11 @@ template <typename T>
          out_opt_t& operator=(out_opt_t&&) = delete;
 
          // NOLINTNEXTLINE(*-explicit-conversions) FIXME
-         [[nodiscard]] constexpr operator T*() && noexcept { return &m_raw; }
+         [[nodiscard]]
+         constexpr
+         operator T*() && noexcept {
+            return &m_raw;
+         }
 
       private:
          std::optional<T>& m_opt;

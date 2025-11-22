@@ -147,7 +147,8 @@ class BOTAN_PUBLIC_API(2, 0) Pipe final : public DataSource {
       * for which the information is desired
       * @return number of bytes that can still be read
       */
-      [[nodiscard]] size_t remaining(message_id msg = DEFAULT_MESSAGE) const;
+      [[nodiscard]]
+      size_t remaining(message_id msg = DEFAULT_MESSAGE) const;
 
       /**
       * Read the default message from the pipe. Moves the internal
@@ -158,7 +159,8 @@ class BOTAN_PUBLIC_API(2, 0) Pipe final : public DataSource {
       * @param length the length of the byte array output
       * @return number of bytes actually read into output
       */
-      [[nodiscard]] size_t read(uint8_t output[], size_t length) override;
+      [[nodiscard]]
+      size_t read(uint8_t output[], size_t length) override;
 
       /**
       * Read a specified message from the pipe. Moves the internal
@@ -169,7 +171,8 @@ class BOTAN_PUBLIC_API(2, 0) Pipe final : public DataSource {
       * @param msg the number identifying the message to read from
       * @return number of bytes actually read into output
       */
-      [[nodiscard]] size_t read(uint8_t output[], size_t length, message_id msg);
+      [[nodiscard]]
+      size_t read(uint8_t output[], size_t length, message_id msg);
 
       /**
       * Read a single byte from the pipe. Moves the internal offset so
@@ -180,21 +183,24 @@ class BOTAN_PUBLIC_API(2, 0) Pipe final : public DataSource {
       * @param msg the message to read from
       * @return number of bytes actually read into output
       */
-      [[nodiscard]] size_t read(uint8_t& output, message_id msg = DEFAULT_MESSAGE);
+      [[nodiscard]]
+      size_t read(uint8_t& output, message_id msg = DEFAULT_MESSAGE);
 
       /**
       * Read the full contents of the pipe.
       * @param msg the number identifying the message to read from
       * @return secure_vector holding the contents of the pipe
       */
-      [[nodiscard]] secure_vector<uint8_t> read_all(message_id msg = DEFAULT_MESSAGE);
+      [[nodiscard]]
+      secure_vector<uint8_t> read_all(message_id msg = DEFAULT_MESSAGE);
 
       /**
       * Read the full contents of the pipe.
       * @param msg the number identifying the message to read from
       * @return string holding the contents of the pipe
       */
-      [[nodiscard]] std::string read_all_as_string(message_id msg = DEFAULT_MESSAGE);
+      [[nodiscard]]
+      std::string read_all_as_string(message_id msg = DEFAULT_MESSAGE);
 
       /**
       * Read from the default message but do not modify the internal
@@ -205,7 +211,8 @@ class BOTAN_PUBLIC_API(2, 0) Pipe final : public DataSource {
       * @param offset the offset from the current position in message
       * @return number of bytes actually peeked and written into output
       */
-      [[nodiscard]] size_t peek(uint8_t output[], size_t length, size_t offset) const override;
+      [[nodiscard]]
+      size_t peek(uint8_t output[], size_t length, size_t offset) const override;
 
       /** Read from the specified message but do not modify the
       * internal offset. Consecutive calls to peek() will return
@@ -216,7 +223,8 @@ class BOTAN_PUBLIC_API(2, 0) Pipe final : public DataSource {
       * @param msg the number identifying the message to peek from
       * @return number of bytes actually peeked and written into output
       */
-      [[nodiscard]] size_t peek(uint8_t output[], size_t length, size_t offset, message_id msg) const;
+      [[nodiscard]]
+      size_t peek(uint8_t output[], size_t length, size_t offset, message_id msg) const;
 
       /** Read a single byte from the specified message but do not
       * modify the internal offset. Consecutive calls to peek() will
@@ -226,7 +234,8 @@ class BOTAN_PUBLIC_API(2, 0) Pipe final : public DataSource {
       * @param msg the number identifying the message to peek from
       * @return number of bytes actually peeked and written into output
       */
-      [[nodiscard]] size_t peek(uint8_t& output, size_t offset, message_id msg = DEFAULT_MESSAGE) const;
+      [[nodiscard]]
+      size_t peek(uint8_t& output, size_t offset, message_id msg = DEFAULT_MESSAGE) const;
 
       /**
       * @return the number of bytes read from the default message.
