@@ -25,11 +25,10 @@ from time import strptime, mktime, time as system_time
 from binascii import hexlify
 from datetime import datetime
 from collections.abc import Iterable
+from enum import IntEnum
 
-# This Python module requires the FFI API version introduced in Botan 3.10.0
-#
-# 3.10.0 - introduced botan_pubkey_load_ec*_sec1()
-BOTAN_FFI_VERSION = 20250829
+# This Python module requires the FFI API version introduced in Botan 3.11.0
+BOTAN_FFI_VERSION = 20260203
 
 #
 # Base exception for all exceptions raised from this module
@@ -1981,16 +1980,136 @@ class X509Cert: # pylint: disable=invalid-name
 #
 # X.509 Certificate revocation lists
 #
+
+class X509CRLReason(IntEnum):
+    UNSPECIFIED = 0
+    KEY_COMPROMISE = 1
+    CA_COMPROMISE = 2
+    AFFILIATION_CHANGED = 3
+    SUPERSEDED = 4
+    CESSATION_OF_OPERATION = 5
+    CERTIFICATE_HOLD = 6
+    REMOVE_FROM_CRL = 8
+    PRIVILEGE_WITHDRAWN = 9
+    AA_COMPROMISE = 10
+
+    @classmethod
+    def to_bits(cls, reason: X509CRLReason) -> int:
+        return reason.value
+
+    @classmethod
+    def from_bits(cls, reason: int) -> X509CRLReason:
+        return cls(reason)
+
+
+class X509CRLEntry:
+    def __init__(self, serial_number: MPI, expire_time: int, reason: X509CRLReason):
+        self.serial_number = serial_number
+        self.expire_time = expire_time
+        self.reason = reason
+
+
 class X509CRL:
     def __init__(self, filename: str | None = None, buf: bytes | None = None):
-        self.__obj = c_void_p(0)
-        self.__obj = _load_buf_or_file(filename, buf, _DLL.botan_x509_crl_load_file, _DLL.botan_x509_crl_load)
+        if not filename and not buf:
+            self.__obj = c_void_p(0)
+        else:
+            self.__obj = _load_buf_or_file(filename, buf, _DLL.botan_x509_crl_load_file, _DLL.botan_x509_crl_load)
 
     def __del__(self):
         _DLL.botan_x509_crl_destroy(self.__obj)
 
     def handle_(self):
         return self.__obj
+
+    @classmethod
+    def create(
+        cls,
+        rng: RandomNumberGenerator,
+        ca_cert: X509Cert,
+        ca_key: PrivateKey,
+        issue_time: int,
+        next_update: int,
+        hash_fn: str | None = None,
+        padding: str | None = None
+    ) -> X509CRL:
+        """Create a new CRL for the given CA.
+        ``issue_time`` is expected to be a UNIX timestamp, in seconds.
+        ``next_update`` is expected to be in seconds."""
+        crl = X509CRL()
+        _DLL.botan_x509_crl_create(
+            byref(crl.handle_()),
+            rng.handle_(),
+            ca_cert.handle_(),
+            ca_key.handle_(),
+            issue_time,
+            next_update,
+            _ctype_str(hash_fn),
+            _ctype_str(padding)
+        )
+        return crl
+
+    def revoke(
+        self,
+        rng: RandomNumberGenerator,
+        ca_cert: X509Cert,
+        ca_key: PrivateKey,
+        issue_time: int,
+        next_update: int,
+        revoked: List[X509Cert],
+        reason: X509CRLReason,
+        hash_fn: str | None = None,
+        padding: str | None = None
+    ) -> X509CRL:
+        """Revoke some certificates. This does not modify the original CRL in place,
+        instead it creates a new CRL object.
+        ``issue_time`` is expected to be a UNIX timestamp, in seconds.
+        ``next_update`` is expected to be in seconds."""
+        crl = X509CRL()
+        c_revoked = len(revoked) * c_void_p
+        arr_revoked = c_revoked()
+        for i, cert in enumerate(revoked):
+            arr_revoked[i] = cert.handle_()
+        revoked_len = c_size_t(len(revoked))
+
+        _DLL.botan_x509_crl_update(
+            byref(crl.handle_()),
+            self.__obj,
+            rng.handle_(),
+            ca_cert.handle_(),
+            ca_key.handle_(),
+            issue_time,
+            next_update,
+            arr_revoked,
+            revoked_len,
+            X509CRLReason.to_bits(reason),
+            _ctype_str(hash_fn),
+            _ctype_str(padding)
+        )
+        return crl
+
+    def revoked(self) -> List[X509CRLEntry]:
+        count = c_size_t(0)
+        _DLL.botan_x509_crl_get_count(self.__obj, byref(count))
+        revoked = []
+        for i in range(count.value):
+            expire_time = c_uint64(0)
+            reason = c_uint8(0)
+            serial = MPI()
+            _DLL.botan_x509_crl_get_entry(self.__obj, c_size_t(i), serial.handle_(), byref(expire_time), byref(reason))
+            revoked.append(X509CRLEntry(serial, expire_time.value, X509CRLReason.from_bits(reason.value)))
+        return revoked
+
+    def verify(self, key: PublicKey) -> bool:
+        ret = c_int(0)
+        _DLL.botan_x509_crl_verify_signature(self.__obj, key.handle_(), byref(ret))
+        return ret.value == 1
+
+    def to_pem(self) -> str:
+        return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_x509_crl_view_pem(self.__obj, vc, vfn))
+
+    def to_der(self) -> bytes:
+        return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_x509_crl_view_der(self.__obj, vc, vfn))
 
 
 class MPI:
