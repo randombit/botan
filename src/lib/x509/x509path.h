@@ -52,6 +52,9 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
       *        of trusted OCSP responders (additionally to the CA's responders)
       * @param ignore_trusted_root_time_range if true, validity checks on the
       *        time range of the trusted root certificate only produce warnings
+      * @param require_self_signed_trust_anchors if true, only self-signed certificates
+      *        are allowed as trust anchors. Trust anchors based on intermediate
+      *        and leaf certificates are forbidden in this case.
       */
       BOTAN_FUTURE_EXPLICIT Path_Validation_Restrictions(
          bool require_rev = false,
@@ -59,7 +62,8 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
          bool ocsp_all_intermediates = false,
          std::chrono::seconds max_ocsp_age = std::chrono::seconds::zero(),
          std::unique_ptr<Certificate_Store> trusted_ocsp_responders = std::make_unique<Certificate_Store_In_Memory>(),
-         bool ignore_trusted_root_time_range = false);
+         bool ignore_trusted_root_time_range = false,
+         bool require_self_signed_trust_anchors = true);
 
       /**
       * @param require_rev if true, revocation information is required
@@ -77,6 +81,9 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
       *        of trusted OCSP responders (additionally to the CA's responders)
       * @param ignore_trusted_root_time_range if true, validity checks on the
       *        time range of the trusted root certificate only produce warnings
+      * @param require_self_signed_trust_anchors if true, only self-signed certificates
+      *        are allowed as trust anchors. Trust anchors based on intermediate
+      *        and leaf certificates are forbidden in this case.
       */
       Path_Validation_Restrictions(
          bool require_rev,
@@ -85,14 +92,16 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
          const std::set<std::string>& trusted_hashes,
          std::chrono::seconds max_ocsp_age = std::chrono::seconds::zero(),
          std::unique_ptr<Certificate_Store> trusted_ocsp_responders = std::make_unique<Certificate_Store_In_Memory>(),
-         bool ignore_trusted_root_time_range = false) :
+         bool ignore_trusted_root_time_range = false,
+         bool require_self_signed_trust_anchors = true) :
             m_require_revocation_information(require_rev),
             m_ocsp_all_intermediates(ocsp_all_intermediates),
             m_trusted_hashes(trusted_hashes),
             m_minimum_key_strength(minimum_key_strength),
             m_max_ocsp_age(max_ocsp_age),
             m_trusted_ocsp_responders(std::move(trusted_ocsp_responders)),
-            m_ignore_trusted_root_time_range(ignore_trusted_root_time_range) {}
+            m_ignore_trusted_root_time_range(ignore_trusted_root_time_range),
+            m_require_self_signed_trust_anchors(require_self_signed_trust_anchors) {}
 
       /**
       * @return whether revocation information is required
@@ -141,6 +150,15 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
        */
       bool ignore_trusted_root_time_range() const { return m_ignore_trusted_root_time_range; }
 
+      /**
+       * By default Botan requires trust anchors to be self-signed.
+       * This prevents using intermediate CA certificates and leaf certificates
+       * as trust anchors, even if they are included in the Certificate Store.
+       * This restriction can be removed by setting
+       * require_self_signed_trust_anchors=false in the constructor.
+       */
+      bool require_self_signed_trust_anchors() const { return m_require_self_signed_trust_anchors; }
+
    private:
       bool m_require_revocation_information;
       bool m_ocsp_all_intermediates;
@@ -149,6 +167,7 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
       std::chrono::seconds m_max_ocsp_age;
       std::unique_ptr<Certificate_Store> m_trusted_ocsp_responders;
       bool m_ignore_trusted_root_time_range;
+      bool m_require_self_signed_trust_anchors;
 };
 
 /**
@@ -330,19 +349,42 @@ Path_Validation_Result BOTAN_PUBLIC_API(2, 0)
 */
 namespace PKIX {
 
-Certificate_Status_Code build_all_certificate_paths(std::vector<std::vector<X509_Certificate>>& cert_paths,
-                                                    const std::vector<Certificate_Store*>& trusted_certstores,
-                                                    const std::optional<X509_Certificate>& end_entity,
-                                                    const std::vector<X509_Certificate>& end_entity_extra);
+/**
+* Create all certificate paths by identifying all possible routes from the
+* end-entity certificate to any certificate in the certificate store list. Paths
+* may also end in intermediate or leaf certificates found in the certificate
+* stores.
+*
+* WARNING: The validity (e.g. signatures or constraints) of the output path IS
+* NOT checked.
+*
+* @param cert_paths output parameter to be filled with all discovered certificate paths
+* @param trusted_certstores list of certificate stores that contain trusted certificates
+* @param end_entity the cert to be validated
+* @param end_entity_extra optional list of additional untrusted certs for path building
+* @return result of the path building operation (OK or error)
+*/
+Certificate_Status_Code BOTAN_PUBLIC_API(3, 11)
+   build_all_certificate_paths(std::vector<std::vector<X509_Certificate>>& cert_paths,
+                               const std::vector<Certificate_Store*>& trusted_certstores,
+                               const X509_Certificate& end_entity,
+                               const std::vector<X509_Certificate>& end_entity_extra);
 
 /**
-* Build certificate path
+* Same as build_all_certificate_paths but only outputs a single path. If there are
+* paths ending in self-signed certificates, these are prioritized over paths ending
+* in intermediate or leaf certificates of the certificate store.
+*
+* WARNING: The validity (e.g. signatures or constraints) of the output path IS
+* NOT checked.
+*
 * @param cert_path_out output parameter, cert_path will be appended to this vector
 * @param trusted_certstores list of certificate stores that contain trusted certificates
 * @param end_entity the cert to be validated
 * @param end_entity_extra optional list of additional untrusted certs for path building
 * @return result of the path building operation (OK or error)
 */
+BOTAN_DEPRECATED("Use build_all_certificate_paths")
 Certificate_Status_Code BOTAN_PUBLIC_API(2, 0)
    build_certificate_path(std::vector<X509_Certificate>& cert_path_out,
                           const std::vector<Certificate_Store*>& trusted_certstores,
