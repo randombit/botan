@@ -71,7 +71,7 @@ def check_clang_format(clang_format, style_file, source_file):
     return True
 
 def list_source_files_in(directory):
-    excluded = ['pkcs11t.h', 'pkcs11f.h', 'pkcs11.h']
+    excluded = ['pkcs11.h']
 
     for (dirpath, _, filenames) in os.walk(directory):
         for filename in filenames:

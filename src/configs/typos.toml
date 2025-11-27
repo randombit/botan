@@ -1,8 +1,6 @@
 [files]
 extend-exclude = [
    "src/lib/prov/pkcs11/pkcs11.h",
-   "src/lib/prov/pkcs11/pkcs11t.h",
-   "src/lib/prov/pkcs11/pkcs11f.h",
    "src/build-data/cc/msvc.txt",
    "src/build-data/cc/clangcl.txt",
    "doc/authors.txt",
