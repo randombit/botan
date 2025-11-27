@@ -22,6 +22,7 @@ class BOTAN_TEST_API CPUFeature {
          SIMD128 = (1U << 0),
 
          SIMD_4X32 = SIMD128,
+         SIMD_2X64 = SIMD128,
       };
 
       CPUFeature(Bit b) : m_bit(b) {}  // NOLINT(*-explicit-conversions)
