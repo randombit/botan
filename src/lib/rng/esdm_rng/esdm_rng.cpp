@@ -21,7 +21,8 @@ namespace {
 */
 class ESDM_Context {
    public:
-      [[nodiscard]] static std::shared_ptr<void> instance() {
+      [[nodiscard]]
+      static std::shared_ptr<void> instance() {
          static ESDM_Context g_instance;
          return g_instance.acquire();
       }
@@ -29,7 +30,8 @@ class ESDM_Context {
    private:
       ESDM_Context() = default;
 
-      [[nodiscard]] std::shared_ptr<void> acquire() {
+      [[nodiscard]]
+      std::shared_ptr<void> acquire() {
          std::scoped_lock lk(m_mutex);
          if(m_refs++ == 0) {
             if(esdm_rpcc_init_unpriv_service(nullptr) != 0) {

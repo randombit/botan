@@ -140,7 +140,10 @@ class BOTAN_PUBLIC_API(3, 6) Session {
        */
       Session(std::shared_ptr<Context> ctx, ESYS_TR session_handle) : m_session(std::move(ctx), session_handle) {}
 
-      [[nodiscard]] detail::SessionHandle handle() { return detail::SessionHandle(*this); }
+      [[nodiscard]]
+      detail::SessionHandle handle() {
+         return detail::SessionHandle(*this);
+      }
 
       SessionAttributes attributes() const;
       void set_attributes(SessionAttributes attributes);
@@ -171,7 +174,9 @@ class SessionBundle {
                     std::shared_ptr<Session> s3 = nullptr) :
             m_sessions({std::move(s1), std::move(s2), std::move(s3)}) {}
 
-      [[nodiscard]] detail::SessionHandle operator[](size_t i) const noexcept {
+      [[nodiscard]]
+      detail::SessionHandle
+      operator[](size_t i) const noexcept {
          if(m_sessions[i] == nullptr) {
             return {};
          } else {

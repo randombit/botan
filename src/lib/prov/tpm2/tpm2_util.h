@@ -70,7 +70,8 @@ constexpr void check_rc(std::string_view location, TSS2_RC rc) {
  */
 template <TSS2_RC... expected_errors>
    requires(sizeof...(expected_errors) > 0)
-[[nodiscard]] constexpr TSS2_RC check_rc_expecting(std::string_view location, TSS2_RC rc) {
+[[nodiscard]]
+constexpr TSS2_RC check_rc_expecting(std::string_view location, TSS2_RC rc) {
    // If the RC is success, we can return early and avoid the decoding.
    if(rc == TSS2_RC_SUCCESS) {
       return rc;
@@ -203,7 +204,11 @@ class ObjectSetter {
       ObjectSetter& operator=(ObjectSetter&&) = delete;
 
       // NOLINTNEXTLINE(*-explicit-conversions) FIXME
-      [[nodiscard]] constexpr operator uint32_t*() && noexcept { return &m_handle; }
+      [[nodiscard]]
+      constexpr
+      operator uint32_t*() && noexcept {
+         return &m_handle;
+      }
 
    private:
       constexpr bool was_written() const { return m_handle != (m_persistent ? 0 : ESYS_TR_NONE); }
@@ -235,10 +240,18 @@ struct PropMap {
       MaskT mask;
 
       /// Access the boolean member 'field' from the given @p object
-      [[nodiscard]] constexpr bool& operator()(auto& object) const noexcept { return object.*field; }
+      [[nodiscard]]
+      constexpr bool&
+      operator()(auto& object) const noexcept {
+         return object.*field;
+      }
 
       /// Read-only access the boolean member 'field' from the given @p object
-      [[nodiscard]] constexpr bool operator()(const auto& object) const noexcept { return object.*field; }
+      [[nodiscard]]
+      constexpr bool
+      operator()(const auto& object) const noexcept {
+         return object.*field;
+      }
 };
 
 /// Deduction guide to simplify the creation of PropMap instances

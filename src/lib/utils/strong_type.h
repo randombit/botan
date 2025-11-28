@@ -221,7 +221,8 @@ class Strong : public detail::Strong_Adapter<T> {
  * @return   the unwrapped value
  */
 template <typename T>
-[[nodiscard]] constexpr decltype(auto) unwrap_strong_type(T&& t) {
+[[nodiscard]]
+constexpr decltype(auto) unwrap_strong_type(T&& t) {
    if constexpr(!concepts::strong_type<std::remove_cvref_t<T>>) {
       // If the parameter type isn't a strong type, return it as is.
       return std::forward<T>(t);

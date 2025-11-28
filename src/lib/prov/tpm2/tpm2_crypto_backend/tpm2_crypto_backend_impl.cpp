@@ -67,7 +67,8 @@ namespace {
 /// Safely converts the @p blob to a Botan crypto object of type @p T.
 template <typename T>
    requires std::constructible_from<DigestObject, std::unique_ptr<T>>
-[[nodiscard]] std::optional<std::reference_wrapper<T>> get(DigestCallbackState* blob) noexcept {
+[[nodiscard]]
+std::optional<std::reference_wrapper<T>> get(DigestCallbackState* blob) noexcept {
    if(!blob) {
       return std::nullopt;
    }
@@ -81,7 +82,8 @@ template <typename T>
 
 template <typename T>
    requires std::constructible_from<DigestObject, std::unique_ptr<T>>
-[[nodiscard]] std::optional<std::reference_wrapper<T>> get(DigestCallbackState** blob) noexcept {
+[[nodiscard]]
+std::optional<std::reference_wrapper<T>> get(DigestCallbackState** blob) noexcept {
    if(!blob) {
       return std::nullopt;
    }
@@ -90,7 +92,8 @@ template <typename T>
 }
 
 /// Safely converts the @p userdata to the Botan crypto context object.
-[[nodiscard]] std::optional<std::reference_wrapper<Botan::TPM2::CryptoCallbackState>> get(void* userdata) noexcept {
+[[nodiscard]]
+std::optional<std::reference_wrapper<Botan::TPM2::CryptoCallbackState>> get(void* userdata) noexcept {
    if(auto* ccs = reinterpret_cast<Botan::TPM2::CryptoCallbackState*>(userdata)) {
       return *ccs;
    } else {
@@ -105,7 +108,8 @@ template <typename T>
  */
 template <std::invocable<> F>
    requires std::same_as<std::invoke_result_t<F>, TSS2_RC>
-[[nodiscard]] TSS2_RC thunk(F f) noexcept {
+[[nodiscard]]
+TSS2_RC thunk(F f) noexcept {
    try {
       return f();
    } catch(const Botan::Invalid_Argument&) {
@@ -127,14 +131,15 @@ template <std::invocable<> F>
  * Encrypts or decrypts @p data using the symmetric cipher specified.
  * The bytes in @p data are encrypted/decrypted in-place.
  */
-[[nodiscard]] TSS2_RC symmetric_algo(Botan::Cipher_Dir direction,
-                                     const uint8_t* key,
-                                     TPM2_ALG_ID tpm_sym_alg,
-                                     TPMI_AES_KEY_BITS key_bits,
-                                     TPM2_ALG_ID tpm_mode,
-                                     uint8_t* buffer,
-                                     size_t buffer_size,
-                                     const uint8_t* iv) noexcept {
+[[nodiscard]]
+TSS2_RC symmetric_algo(Botan::Cipher_Dir direction,
+                       const uint8_t* key,
+                       TPM2_ALG_ID tpm_sym_alg,
+                       TPMI_AES_KEY_BITS key_bits,
+                       TPM2_ALG_ID tpm_mode,
+                       uint8_t* buffer,
+                       size_t buffer_size,
+                       const uint8_t* iv) noexcept {
    return thunk([&] {
       if(key == nullptr) {
          return (direction == Botan::Cipher_Dir::Encryption) ? TSS2_ESYS_RC_NO_ENCRYPT_PARAM
