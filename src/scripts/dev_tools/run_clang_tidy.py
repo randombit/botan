@@ -37,11 +37,11 @@ enabled_checks = [
 # these are ones that we might want to be clean for in the future,
 # but currently are not
 disabled_needs_work = [
-    '*-named-parameter',
     'cppcoreguidelines-use-default-member-init',
     'bugprone-unchecked-optional-access',
     'bugprone-empty-catch',
     'cppcoreguidelines-avoid-const-or-ref-data-members',
+    'cppcoreguidelines-pro-type-const-cast',
     'misc-const-correctness', # pretty noisy
     'misc-include-cleaner', # warning: useful but quite buggy
     'modernize-pass-by-value',
@@ -67,12 +67,11 @@ disabled_not_interested = [
     '*-deprecated-headers', # wrong for system headers like stdlib.h
     'cert-dcl21-cpp', # invalid, and removed already in clang-tidy 19
     'bugprone-easily-swappable-parameters',
-    'bugprone-implicit-widening-of-multiplication-result',
+    'bugprone-implicit-widening-of-multiplication-result', # would be reasonable if it ignored constants (it doesn't)
     'cppcoreguidelines-pro-bounds-pointer-arithmetic',
     'cppcoreguidelines-pro-bounds-constant-array-index',
-    'cppcoreguidelines-pro-type-const-cast', # see above
-    'cppcoreguidelines-pro-type-reinterpret-cast', # not possible thanks though
-    'hicpp-signed-bitwise', # impossible to avoid in C/C++, int promotion rules :/
+    'cppcoreguidelines-pro-type-reinterpret-cast',
+    'hicpp-signed-bitwise', # would be reasonable if it ignored constants (it doesn't)
     'misc-no-recursion',
     'modernize-use-trailing-return-type', # fine, but we're not using it everywhere
     'modernize-return-braced-init-list', # thanks I hate it
