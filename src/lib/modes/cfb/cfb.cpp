@@ -45,6 +45,10 @@ size_t CFB_Mode::output_length(size_t input_length) const {
    return input_length;
 }
 
+size_t CFB_Mode::bytes_needed_for_finalization(size_t final_input_length) const {
+   return output_length(final_input_length);
+}
+
 size_t CFB_Mode::update_granularity() const {
    return feedback();
 }
@@ -151,8 +155,10 @@ size_t CFB_Encryption::process_msg(uint8_t buf[], size_t sz) {
    return sz;
 }
 
-void CFB_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
-   update(buffer, offset);
+size_t CFB_Encryption::finish_msg(std::span<uint8_t> final_block, [[maybe_unused]] size_t input_bytes) {
+   BOTAN_DEBUG_ASSERT(final_block.size() == bytes_needed_for_finalization(input_bytes));
+   process(final_block);
+   return final_block.size();
 }
 
 namespace {
@@ -204,8 +210,10 @@ size_t CFB_Decryption::process_msg(uint8_t buf[], size_t sz) {
    return sz;
 }
 
-void CFB_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
-   update(buffer, offset);
+size_t CFB_Decryption::finish_msg(std::span<uint8_t> buffer, [[maybe_unused]] size_t input_bytes) {
+   BOTAN_DEBUG_ASSERT(buffer.size() == bytes_needed_for_finalization(input_bytes));
+   process(buffer);
+   return buffer.size();
 }
 
 }  // namespace Botan

@@ -10,6 +10,7 @@
 #define BOTAN_TLS_NULL_HMAC_AEAD_H_
 
 #include <botan/aead.h>
+#include <botan/assert.h>
 #include <botan/mac.h>
 #include <botan/tls_version.h>
 
@@ -73,10 +74,14 @@ class BOTAN_TEST_API TLS_NULL_HMAC_AEAD_Encryption final : public TLS_NULL_HMAC_
 
       size_t output_length(size_t input_length) const override;
 
+      size_t bytes_needed_for_finalization(size_t final_input_length) const override {
+         return output_length(final_input_length);
+      }
+
       size_t minimum_final_size() const override { return 0; }
 
    private:
-      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+      size_t finish_msg(std::span<uint8_t> final_block, size_t input_bytes) override;
 };
 
 /**
@@ -91,7 +96,12 @@ class BOTAN_TEST_API TLS_NULL_HMAC_AEAD_Decryption final : public TLS_NULL_HMAC_
 
       size_t minimum_final_size() const override { return tag_size(); }
 
-      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+      size_t bytes_needed_for_finalization(size_t final_input_length) const override {
+         BOTAN_ARG_CHECK(final_input_length >= tag_size(), "Sufficient input");
+         return final_input_length;
+      }
+
+      size_t finish_msg(std::span<uint8_t> final_block, size_t input_bytes) override;
 };
 
 }  // namespace Botan::TLS

@@ -29,6 +29,10 @@ class XTS_Mode : public Cipher_Mode {
 
       Key_Length_Specification key_spec() const final;
 
+      size_t output_length(size_t input_length) const final;
+
+      size_t bytes_needed_for_finalization(size_t final_input_length) const final;
+
       size_t default_nonce_length() const final;
 
       bool valid_nonce_length(size_t n) const final;
@@ -76,11 +80,9 @@ class XTS_Encryption final : public XTS_Mode {
       */
       explicit XTS_Encryption(std::unique_ptr<BlockCipher> cipher) : XTS_Mode(std::move(cipher)) {}
 
-      size_t output_length(size_t input_length) const override;
-
    private:
       size_t process_msg(uint8_t buf[], size_t size) override;
-      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+      size_t finish_msg(std::span<uint8_t> final_block, size_t final_input) override;
 };
 
 /**
@@ -93,11 +95,9 @@ class XTS_Decryption final : public XTS_Mode {
       */
       explicit XTS_Decryption(std::unique_ptr<BlockCipher> cipher) : XTS_Mode(std::move(cipher)) {}
 
-      size_t output_length(size_t input_length) const override;
-
    private:
       size_t process_msg(uint8_t buf[], size_t size) override;
-      void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
+      size_t finish_msg(std::span<uint8_t> final_block, size_t final_input) override;
 };
 
 }  // namespace Botan

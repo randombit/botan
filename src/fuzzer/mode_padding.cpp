@@ -161,7 +161,7 @@ void fuzz(std::span<const uint8_t> in) {
       FUZZER_ASSERT_EQUAL(ct_esp, ref_esp);
    }
 
-   const uint16_t ct_cbc = Botan::TLS::check_tls_cbc_padding(in.data(), len);
+   const uint16_t ct_cbc = Botan::TLS::check_tls_cbc_padding(in);
    const uint16_t ref_cbc = ref_tls_cbc_unpad(in);
    FUZZER_ASSERT_EQUAL(ct_cbc, ref_cbc);
 }
