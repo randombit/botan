@@ -249,6 +249,7 @@ supported it.
 ============== ===================
 FFI Version    Supported Starting
 ============== ===================
+20260203       3.11.0
 20250829       3.10.0
 20250506       3.8.0
 20240408       3.4.0
@@ -1815,6 +1816,61 @@ X.509 Certificate Revocation Lists
 .. cpp:function:: int botan_x509_crl_load_file(botan_x509_crl_t* crl_obj, const char* filename)
 
    Load a CRL from a file.
+
+.. cpp:function:: int botan_x509_crl_create(botan_x509_crl_t* crl_obj, \
+                  botan_rng_t rng, \
+                  botan_x509_cert_t ca_cert, \
+                  botan_privkey_t ca_key, \
+                  uint64_t issue_time, \
+                  uint32_t next_update, \
+                  const char* hash_fn, \
+                  const char* padding)
+
+   Create a new CRL. ``issue_time`` is expected to be a UNIX timestamp, in seconds.
+   ``next_update`` is expected to be in seconds.
+   ``hash_fn`` and ``padding`` may be NULL.
+
+.. cpp:enum:: botan_x509_crl_reason_code
+
+   CRL revocation reason codes. Allowed values: `UNSPECIFIED`,
+   `KEY_COMPROMISE`, `CA_COMPROMISE`, `AFFILIATION_CHANGED`,
+   `SUPERSEDED`, `CESSATION_OF_OPERATION`, `CERTIFICATE_HOLD`,
+   `REMOVE_FROM_CRL`, `PRIVILEGE_WITHDRAWN`, `AA_COMPROMISE`.
+
+.. cpp:function:: int botan_x509_crl_update(botan_x509_crl_t* crl_obj, \
+                  botan_x509_crl_t last_crl, \
+                  botan_rng_t rng, \
+                  botan_x509_cert_t ca_cert, \
+                  botan_privkey_t ca_key, \
+                  uint64_t issue_time, \
+                  uint32_t next_update, \
+                  const botan_x509_cert_t* revoked, \
+                  size_t revoked_len, \
+                  uint8_t reason, \
+                  const char* hash_fn, \
+                  const char* padding)
+
+   Revoke some certificates. This does not update the given CRL in place.
+   Create a new CRL. ``issue_time`` is expected to be a UNIX timestamp, in seconds.
+   ``next_update`` is expected to be in seconds.
+   ``hash_fn`` and ``padding`` may be NULL.
+   ``revoked`` is an array of ``botan_x509_cert_t`` objects, ``revoked_len`` is its length.
+
+.. cpp:function:: int botan_x509_crl_get_count(botan_x509_crl_t crl, size_t* count)
+
+   Get the number of elements in a CRL.
+
+.. cpp:function:: int botan_x509_crl_get_entry(botan_x509_crl_t crl, size_t i, botan_mp_t serial, uint64_t* expire_time, uint8_t* reason)
+
+   Get a single element of the CRL. The ``botan_mp_t`` must be initialized beforehand.
+
+.. cpp:function:: int botan_x509_crl_verify_signature(botan_x509_crl_t crl, botan_pubkey_t key, int* result)
+
+   Verify the signature of a CRL. Sets ``result`` to 1 if the signature is valid, otherwise to 0.
+
+.. cpp:function:: int botan_x509_crl_view_pem(botan_x509_crl_t crl, botan_view_ctx ctx, botan_view_str_fn view)
+
+.. cpp:function:: int botan_x509_crl_view_der(botan_x509_crl_t crl, botan_view_ctx ctx, botan_view_bin_fn view)
 
 .. cpp:function:: int botan_x509_crl_destroy(botan_x509_crl_t crl)
 
