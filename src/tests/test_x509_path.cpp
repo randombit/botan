@@ -12,6 +12,7 @@
    #include <botan/exceptn.h>
    #include <botan/pk_keys.h>
    #include <botan/pkcs10.h>
+   #include <botan/rng.h>
    #include <botan/x509_crl.h>
    #include <botan/x509path.h>
    #include <botan/internal/calendar.h>

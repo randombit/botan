@@ -9,8 +9,8 @@
 #define BOTAN_TESTS_H_
 
 #include <botan/assert.h>
+#include <botan/exceptn.h>
 #include <botan/hex.h>
-#include <botan/rng.h>
 #include <botan/symkey.h>
 #include <botan/types.h>
 #include <deque>
@@ -28,6 +28,8 @@
 #include <vector>
 
 namespace Botan {
+
+class RandomNumberGenerator;
 
 #if defined(BOTAN_HAS_BIGINT)
 class BigInt;
@@ -227,7 +229,7 @@ class Test {
       */
       class Result final {
          public:
-            explicit Result(std::string who) : m_who(std::move(who)), m_timestamp(std::chrono::system_clock::now()) {}
+            explicit Result(std::string who);
 
             /**
              * This 'consolidation constructor' creates a single test result from
@@ -249,15 +251,16 @@ class Test {
 
             const std::vector<std::string>& notes() const { return m_log; }
 
-            std::optional<std::chrono::nanoseconds> elapsed_time() const {
+            std::optional<uint64_t> elapsed_time() const {
                if(m_ns_taken == 0) {
                   return std::nullopt;
                } else {
-                  return std::chrono::nanoseconds(m_ns_taken);
+                  return m_ns_taken;
                }
             }
 
-            const std::chrono::system_clock::time_point& timestamp() const { return m_timestamp; }
+            // Nanoseconds since epoch
+            uint64_t timestamp() const { return m_timestamp; }
 
             std::string result_string() const;
 
@@ -602,7 +605,7 @@ class Test {
          private:
             std::string m_who;
             std::optional<CodeLocation> m_where;
-            std::chrono::system_clock::time_point m_timestamp;
+            uint64_t m_timestamp;
             uint64_t m_started = 0;
             uint64_t m_ns_taken = 0;
             size_t m_tests_passed = 0;
@@ -610,9 +613,9 @@ class Test {
             std::vector<std::string> m_log;
       };
 
-      virtual ~Test() = default;
+      virtual ~Test();
 
-      Test() = default;
+      Test();
       Test(const Test& other) = delete;
       Test(Test&& other) = default;
       Test& operator=(const Test& other) = delete;
@@ -652,32 +655,10 @@ class Test {
 
       static std::string format_time(uint64_t nanoseconds);
 
-      static std::string format_time(const std::chrono::nanoseconds nanoseconds) {
-         return format_time(nanoseconds.count());
-      }
-
-      template <typename Alloc>
-      static std::vector<uint8_t, Alloc> mutate_vec(const std::vector<uint8_t, Alloc>& v,
-                                                    Botan::RandomNumberGenerator& rng,
-                                                    bool maybe_resize = false,
-                                                    size_t min_offset = 0) {
-         std::vector<uint8_t, Alloc> r = v;
-
-         if(maybe_resize && (r.empty() || rng.next_byte() < 32)) {
-            // TODO: occasionally truncate, insert at random index
-            const size_t add = 1 + (rng.next_byte() % 16);
-            r.resize(r.size() + add);
-            rng.randomize(&r[r.size() - add], add);
-         }
-
-         if(r.size() > min_offset) {
-            const size_t offset = std::max<size_t>(min_offset, rng.next_byte() % r.size());
-            const uint8_t perturb = rng.next_nonzero_byte();
-            r[offset] ^= perturb;
-         }
-
-         return r;
-      }
+      static std::vector<uint8_t> mutate_vec(const std::vector<uint8_t>& v,
+                                             Botan::RandomNumberGenerator& rng,
+                                             bool maybe_resize = false,
+                                             size_t min_offset = 0);
 
       static void set_test_options(const Test_Options& opts);
 

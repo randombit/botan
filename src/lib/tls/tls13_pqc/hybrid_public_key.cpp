@@ -15,6 +15,7 @@
 #include <botan/internal/hybrid_kem_ops.h>
 #include <botan/internal/kex_to_kem_adapter.h>
 #include <botan/internal/stl_util.h>
+#include <algorithm>
 #include <sstream>
 
 namespace Botan::TLS {

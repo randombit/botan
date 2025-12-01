@@ -8,6 +8,7 @@
 #ifndef BOTAN_X509_CERTS_H_
 #define BOTAN_X509_CERTS_H_
 
+#include <botan/asn1_time.h>
 #include <botan/x509_obj.h>
 #include <memory>
 

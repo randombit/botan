@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_COMPRESSION)
    #include <botan/compression.h>
+   #include <botan/rng.h>
 #endif
 
 namespace Botan_Tests {

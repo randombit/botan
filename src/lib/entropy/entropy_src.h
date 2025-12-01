@@ -71,6 +71,8 @@ class BOTAN_PUBLIC_API(2, 0) Entropy_Sources final {
       * source blocks forever, this invocation will potentially also block.
       *
       * @returns the number of bits collected from the entropy sources
+      *
+      * TODO(Botan4) remove the timeout argument and <chrono> include
       */
       size_t poll(RandomNumberGenerator& rng, size_t bits, std::chrono::milliseconds timeout);
 

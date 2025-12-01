@@ -15,7 +15,6 @@
 #include <botan/internal/oid_map.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/stl_util.h>
-#include <algorithm>
 #include <span>
 #include <sstream>
 
