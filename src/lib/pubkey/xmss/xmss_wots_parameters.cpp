@@ -143,7 +143,7 @@ secure_vector<uint8_t> XMSS_WOTS_Parameters::base_w(const secure_vector<uint8_t>
 
 secure_vector<uint8_t> XMSS_WOTS_Parameters::base_w(size_t value) const {
    value <<= (8 - ((m_len_2 * m_lg_w) % 8));
-   size_t len_2_bytes = static_cast<size_t>(std::ceil(static_cast<float>(m_len_2 * m_lg_w) / 8.0));
+   const size_t len_2_bytes = static_cast<size_t>(std::ceil(static_cast<float>(m_len_2 * m_lg_w) / 8.0));
    secure_vector<uint8_t> result;
    xmss_concat(result, value, len_2_bytes);
    return base_w(result, m_len_2);
@@ -152,7 +152,7 @@ secure_vector<uint8_t> XMSS_WOTS_Parameters::base_w(size_t value) const {
 void XMSS_WOTS_Parameters::append_checksum(secure_vector<uint8_t>& data) const {
    size_t csum = 0;
 
-   for(uint8_t b : data) {
+   for(const uint8_t b : data) {
       csum += wots_parameter() - 1 - b;
    }
 

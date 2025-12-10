@@ -45,7 +45,7 @@ std::vector<Test::Result> test_strong_type() {
                Test_Size size1;
 
                // value initialization
-               [[maybe_unused]] Test_Size size2(42);
+               [[maybe_unused]] const Test_Size size2(42);
 
                // assignment operator
                size1 = Test_Size(42);
@@ -92,8 +92,8 @@ std::vector<Test::Result> test_container_strong_type() {
    return {
       CHECK("initialization",
             [](auto&) {
-               [[maybe_unused]] Test_Nonce empty_nonce;
-               [[maybe_unused]] Test_Nonce short_nonce(Botan::hex_decode("DEADBEEF"));
+               [[maybe_unused]] const Test_Nonce empty_nonce;
+               [[maybe_unused]] const Test_Nonce short_nonce(Botan::hex_decode("DEADBEEF"));
             }),
 
       CHECK("behaves like a standard container",
@@ -144,7 +144,7 @@ std::vector<Test::Result> test_container_strong_type() {
 
       CHECK("std::string container",
             [](auto& result) {
-               Test_Hash_Name name("SHA-1");
+               const Test_Hash_Name name("SHA-1");
 
                std::stringstream stream;
                stream << name;
@@ -235,7 +235,7 @@ std::vector<Test::Result> test_integer_strong_type() {
    return {
       CHECK("comparison operators with POD are always allowed",
             [](auto& result) {
-               StrongInt i(42);
+               const StrongInt i(42);
 
                result.confirm("i ==", i == 42);
                result.confirm("i !=", i != 0);
@@ -273,11 +273,11 @@ std::vector<Test::Result> test_integer_strong_type() {
 
       CHECK("comparison operators with Strong<>",
             [](auto& result) {
-               StrongInt i(42);
-               StrongInt i42(42);
-               StrongInt i41(41);
-               StrongInt i43(43);
-               StrongInt i0(0);
+               const StrongInt i(42);
+               const StrongInt i42(42);
+               const StrongInt i41(41);
+               const StrongInt i43(43);
+               const StrongInt i0(0);
 
                result.confirm("==", i == i42);
                result.confirm("!=", i != i0);
@@ -292,9 +292,9 @@ std::vector<Test::Result> test_integer_strong_type() {
       CHECK("arithmetics with Strong<>",
             [](auto& result) {
                StrongInt i(42);
-               StrongInt i2(2);
-               StrongInt i4(4);
-               StrongInt i12(12);
+               const StrongInt i2(2);
+               const StrongInt i4(4);
+               const StrongInt i12(12);
 
                result.confirm("+", i + i == 84);
                result.confirm("-", i - i == 0);
@@ -320,7 +320,7 @@ std::vector<Test::Result> test_integer_strong_type() {
       CHECK("arithmetics with POD",
             [](auto& result) {
                StrongIntWithPodArithmetics i(42);
-               StrongIntWithPodArithmetics i2(2);
+               const StrongIntWithPodArithmetics i2(2);
 
                result.confirm("i +", i + 1 == 43);
                result.confirm("i -", i - 1 == 41);
@@ -355,8 +355,8 @@ std::vector<Test::Result> test_integer_strong_type() {
 
       CHECK("arithmetics with POD is still Strong<>",
             [](auto& result) {
-               StrongIntWithPodArithmetics i(42);
-               StrongIntWithPodArithmetics i2(2);
+               StrongIntWithPodArithmetics i(42);  // NOLINT(*-const-correctness) clang-tidy bug
+               const StrongIntWithPodArithmetics i2(2);
 
                result.confirm("i +", Botan::is_strong_type_v<decltype(i + 1)>);
                result.confirm("i -", Botan::is_strong_type_v<decltype(i - 1)>);
@@ -415,7 +415,7 @@ Test::Result test_strong_span() {
    Test_Bar bar(Botan::hex_decode("CAFECAFE"));
    result.test_is_eq("binds to StrongSpan<Test_Bar>", test_strong_helper(bar), 2);
 
-   Botan::StrongSpan<const Test_Foo> span(foo);
+   const Botan::StrongSpan<const Test_Foo> span(foo);
 
    result.confirm("underlying type is uint8_t", std::is_same_v<decltype(span)::value_type, uint8_t>);
    result.confirm("strong type is a contiguous buffer", Botan::concepts::contiguous_container<decltype(foo)>);
@@ -483,7 +483,7 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
 
       CHECK("unwrapping a strong type wisely chooses return reference type",
             [&](Test::Result& result) {
-               Strong_String stt("wrapped");
+               Strong_String stt("wrapped");  // NOLINT(*-const-correctness) clang-tidy bug
                const Strong_String stt_const("const wrapped");
 
                using lvalue_ref = decltype(Botan::unwrap_strong_type(stt));
@@ -523,7 +523,7 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
       CHECK(
          "unwrapping a non-strong type does not alter return reference type",
          [](Test::Result& result) {
-            std::string stt("wrapped");
+            std::string stt("wrapped");  // NOLINT(*-const-correctness) required for the test
             const std::string stt_const("const wrapped");
 
             using lvalue_ref = decltype(Botan::unwrap_strong_type(stt));

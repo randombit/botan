@@ -28,7 +28,7 @@ StreamCipher_Filter::StreamCipher_Filter(std::string_view sc_name, const Symmetr
 
 void StreamCipher_Filter::write(const uint8_t input[], size_t length) {
    while(length > 0) {
-      size_t copied = std::min<size_t>(length, m_buffer.size());
+      const size_t copied = std::min<size_t>(length, m_buffer.size());
       m_cipher->cipher(input, m_buffer.data(), copied);
       send(m_buffer, copied);
       input += copied;

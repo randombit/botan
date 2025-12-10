@@ -60,7 +60,7 @@ std::vector<uint8_t> DLIES_Encryptor::enc(const uint8_t in[], size_t length, Ran
    const size_t cipher_key_len = m_cipher ? m_cipher_key_len : length;
 
    if(m_cipher) {
-      SymmetricKey enc_key(secret_keys.data(), cipher_key_len);
+      const SymmetricKey enc_key(secret_keys.data(), cipher_key_len);
       m_cipher->set_key(enc_key);
 
       if(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size())) {
@@ -136,7 +136,7 @@ secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
    const SymmetricKey secret_value = m_ka.derive_key(0, other_pub_key);
 
    const size_t ciphertext_len = length - m_pub_key_size - m_mac->output_length();
-   size_t cipher_key_len = m_cipher ? m_cipher_key_len : ciphertext_len;
+   const size_t cipher_key_len = m_cipher ? m_cipher_key_len : ciphertext_len;
 
    // derive secret key from secret value
    const size_t required_key_length = cipher_key_len + m_mac_keylen;
@@ -154,14 +154,14 @@ secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
 
    // calculated tag == received tag ?
 
-   std::span<const uint8_t> tag(msg + m_pub_key_size + ciphertext_len, m_mac->output_length());
+   const std::span<const uint8_t> tag(msg + m_pub_key_size + ciphertext_len, m_mac->output_length());
 
    valid_mask = CT::is_equal(tag.data(), calculated_tag.data(), tag.size()).value();
 
    // decrypt
    if(m_cipher) {
       if(valid_mask == 0xFF) {
-         SymmetricKey dec_key(secret_keys.data(), cipher_key_len);
+         const SymmetricKey dec_key(secret_keys.data(), cipher_key_len);
          m_cipher->set_key(dec_key);
 
          try {

@@ -48,7 +48,7 @@ Point448 x448_basepoint(const ScalarX448& k) {
 Point448 x448(const ScalarX448& k, const Point448& u) {
    const auto a24 = Gf448Elem(39081);
 
-   Gf448Elem x_1 = Gf448Elem(u.get());
+   const Gf448Elem x_1 = Gf448Elem(u.get());
    Gf448Elem x_2 = Gf448Elem::one();
    Gf448Elem z_2 = Gf448Elem::zero();
    Gf448Elem x_3 = Gf448Elem(u.get());

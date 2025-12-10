@@ -112,7 +112,7 @@ void* Sodium::sodium_malloc(size_t size) {
       return nullptr;
    }
 
-   // NOLINTNEXTLINE(*-no-malloc,*-owning-memory)
+   // NOLINTNEXTLINE(*-no-malloc,*-owning-memory,*-const-correctness)
    uint8_t* p = static_cast<uint8_t*>(std::calloc(size + sizeof(len), 1));
    store_le(len, p);
    return p + 8;

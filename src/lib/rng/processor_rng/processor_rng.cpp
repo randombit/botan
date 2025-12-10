@@ -49,11 +49,11 @@ typedef uint64_t hwrng_output;
 #endif
 
 hwrng_output read_hwrng(bool& success) {
-   hwrng_output output = 0;
+   hwrng_output output = 0;  // NOLINT(*-const-correctness) clang-tidy doesn't understand inline asm
    success = false;
 
 #if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY)
-   int cf = 0;
+   int cf = 0;  // NOLINT(*-const-correctness) clang-tidy doesn't understand inline asm
    #if defined(BOTAN_USE_GCC_INLINE_ASM)
    // same asm seq works for 32 and 64 bit
    // NOLINTNEXTLINE(*-no-assembler)
@@ -72,7 +72,7 @@ hwrng_output read_hwrng(bool& success) {
    Avoid the bias by invoking it twice and, assuming both succeed, returning the
    XOR of the two results, which should unbias the output.
    */
-   uint64_t output2 = 0;
+   uint64_t output2 = 0;  // NOLINT(*-const-correctness) clang-tidy doesn't understand inline asm
    // DARN codes are 0: 32-bit conditioned, 1: 64-bit conditioned, 2: 64-bit raw (ala RDSEED)
    asm volatile("darn %0, 1" : "=r"(output));   // NOLINT(*-no-assembler)
    asm volatile("darn %0, 1" : "=r"(output2));  // NOLINT(*-no-assembler)
@@ -94,7 +94,7 @@ hwrng_output read_hwrng(bool& success) {
 hwrng_output read_hwrng() {
    for(size_t i = 0; i < HWRNG_RETRIES; ++i) {
       bool success = false;
-      hwrng_output output = read_hwrng(success);
+      const hwrng_output output = read_hwrng(success);
 
       if(success) {
          return output;

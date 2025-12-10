@@ -373,7 +373,7 @@ BER_Decoder& BER_Decoder::decode(ASN1_Object& obj, ASN1_Type /*unused*/, ASN1_Cl
 * Decode a BER encoded NULL
 */
 BER_Decoder& BER_Decoder::decode_null() {
-   BER_Object obj = get_next_object();
+   const BER_Object obj = get_next_object();
    obj.assert_is_a(ASN1_Type::Null, ASN1_Class::Universal);
    if(obj.length() > 0) {
       throw BER_Decoding_Error("NULL object had nonzero size");
@@ -392,7 +392,7 @@ BER_Decoder& BER_Decoder::decode_octet_string_bigint(BigInt& out) {
 * Decode a BER encoded BOOLEAN
 */
 BER_Decoder& BER_Decoder::decode(bool& out, ASN1_Type type_tag, ASN1_Class class_tag) {
-   BER_Object obj = get_next_object();
+   const BER_Object obj = get_next_object();
    obj.assert_is_a(type_tag, class_tag);
 
    if(obj.length() != 1) {
@@ -457,7 +457,7 @@ uint64_t BER_Decoder::decode_constrained_integer(ASN1_Type type_tag, ASN1_Class 
 * Decode a BER encoded INTEGER
 */
 BER_Decoder& BER_Decoder::decode(BigInt& out, ASN1_Type type_tag, ASN1_Class class_tag) {
-   BER_Object obj = get_next_object();
+   const BER_Object obj = get_next_object();
    obj.assert_is_a(type_tag, class_tag);
 
    if(obj.length() == 0) {

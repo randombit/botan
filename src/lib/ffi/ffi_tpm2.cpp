@@ -154,8 +154,7 @@ int botan_tpm2_ctx_enable_crypto_backend(botan_tpm2_ctx_t ctx, botan_rng_t rng) 
       // The lifetime of the RNG used for the crypto backend should be managed
       // by the TPM2::Context. Here, we just need to trust the user that they
       // keep the passed-in RNG instance intact for the lifetime of the context.
-      std::shared_ptr<Botan::RandomNumberGenerator> rng_ptr(&rng_ref, [](auto*) {});
-      ctx_wrapper.ctx->use_botan_crypto_backend(rng_ptr);
+      ctx_wrapper.ctx->use_botan_crypto_backend(std::shared_ptr<Botan::RandomNumberGenerator>(&rng_ref, [](auto*) {}));
       return BOTAN_FFI_SUCCESS;
    });
 #else
@@ -191,7 +190,7 @@ int botan_tpm2_enable_crypto_backend(botan_tpm2_crypto_backend_state_t* cbs_out,
 
       // Here, we just need to trust the user that they keep the passed-in RNG
       // instance intact for the lifetime of the context.
-      std::shared_ptr<Botan::RandomNumberGenerator> rng_ptr(&rng_ref, [](auto*) {});
+      const std::shared_ptr<Botan::RandomNumberGenerator> rng_ptr(&rng_ref, [](auto*) {});
       return ffi_new_object(cbs_out, Botan::TPM2::use_botan_crypto_backend(esys_ctx, rng_ptr));
    });
 #else

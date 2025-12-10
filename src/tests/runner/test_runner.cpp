@@ -167,12 +167,12 @@ bool Test_Runner::run_tests_multithreaded(const std::vector<std::string>& tests_
    std::vector<std::future<std::vector<Test::Result>>> fut_results;
 
    auto run_test_exclusive = [&](const std::string& test_name) {
-      std::unique_lock lk(rwlock);
+      const std::unique_lock lk(rwlock);
       return run_a_test(test_name);
    };
 
    auto run_test_shared = [&](const std::string& test_name) {
-      std::shared_lock lk(rwlock);
+      const std::shared_lock lk(rwlock);
       return run_a_test(test_name);
    };
 

@@ -145,7 +145,7 @@ LMOTS_Params LMOTS_Params::create_or_throw(std::string_view hash_name, uint8_t w
    if(w != 1 && w != 2 && w != 4 && w != 8) {
       throw Decoding_Error("Invalid Winternitz parameter");
    }
-   LMOTS_Algorithm_Type type = [](std::string_view hash, uint8_t w_p) -> LMOTS_Algorithm_Type {
+   const LMOTS_Algorithm_Type type = [](std::string_view hash, uint8_t w_p) -> LMOTS_Algorithm_Type {
       if(hash == "SHA-256") {
          switch(w_p) {
             case 1:
@@ -223,7 +223,7 @@ LMOTS_Signature::LMOTS_Signature(LMOTS_Algorithm_Type lmots_type,
                                  std::vector<uint8_t> C,
                                  std::vector<uint8_t> y_buffer) :
       m_algorithm_type(lmots_type), m_C(std::move(C)), m_y_buffer(std::move(y_buffer)) {
-   LMOTS_Params params = LMOTS_Params::create_or_throw(m_algorithm_type);
+   const LMOTS_Params params = LMOTS_Params::create_or_throw(m_algorithm_type);
 
    BufferSlicer y_slicer(m_y_buffer);
    for(uint16_t i = 0; i < params.p(); ++i) {
@@ -233,7 +233,7 @@ LMOTS_Signature::LMOTS_Signature(LMOTS_Algorithm_Type lmots_type,
 }
 
 LMOTS_Signature LMOTS_Signature::from_bytes_or_throw(BufferSlicer& slicer) {
-   size_t total_remaining_bytes = slicer.remaining();
+   const size_t total_remaining_bytes = slicer.remaining();
    // Alg. 6a. 1. (last 4 bytes) / Alg. 4b. 1.
    if(total_remaining_bytes < sizeof(LMOTS_Algorithm_Type)) {
       throw Decoding_Error("Too few signature bytes while parsing LMOTS signature.");
@@ -242,7 +242,7 @@ LMOTS_Signature LMOTS_Signature::from_bytes_or_throw(BufferSlicer& slicer) {
    auto algorithm_type = load_be<LMOTS_Algorithm_Type>(slicer.take<sizeof(LMOTS_Algorithm_Type)>());
 
    // Alg. 6a. 2.d. / Alg. 4b. 2.c.
-   LMOTS_Params params = LMOTS_Params::create_or_throw(algorithm_type);
+   const LMOTS_Params params = LMOTS_Params::create_or_throw(algorithm_type);
 
    if(total_remaining_bytes < size(params)) {
       throw Decoding_Error("Too few signature bytes while parsing LMOTS signature.");

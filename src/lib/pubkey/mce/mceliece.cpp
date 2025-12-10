@@ -86,7 +86,7 @@ secure_vector<uint8_t> create_random_error_vector(size_t code_length, size_t err
    size_t bits_set = 0;
 
    while(bits_set < error_weight) {
-      gf2m x = random_code_element(static_cast<uint16_t>(code_length), rng);
+      const gf2m x = random_code_element(static_cast<uint16_t>(code_length), rng);
 
       const size_t byte_pos = x / 8;
       const size_t bit_pos = x % 8;

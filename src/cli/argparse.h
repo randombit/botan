@@ -58,7 +58,7 @@ inline std::vector<std::string> Argument_Parser::split_on(const std::string& str
    }
 
    std::string substr;
-   for(char c : str) {
+   for(const char c : str) {
       if(c == delim) {
          if(!substr.empty()) {
             elems.push_back(substr);

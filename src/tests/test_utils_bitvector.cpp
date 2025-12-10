@@ -26,7 +26,7 @@ size_t rand_in_range(Botan::RandomNumberGenerator& rng, size_t min, size_t max) 
       return min;
    }
 
-   size_t val = Botan::load_le<size_t>(rng.random_array<sizeof(size_t)>());
+   const size_t val = Botan::load_le<size_t>(rng.random_array<sizeof(size_t)>());
    return min + (val % (max - min));
 }
 
@@ -52,8 +52,8 @@ std::vector<size_t> rand_indices(Botan::RandomNumberGenerator& rng, size_t n, si
 
 /// Create an empty bitvector of random size and chose a random number of points of interests
 std::pair<Botan::bitvector, std::set<size_t>> rnd_bitvector_with_rnd_pois(Botan::RandomNumberGenerator& rng) {
-   Botan::bitvector bv(rand_in_range(rng, 0, 65));
-   size_t no_poi = rand_in_range(rng, 0, bv.size());
+   const Botan::bitvector bv(rand_in_range(rng, 0, 65));
+   const size_t no_poi = rand_in_range(rng, 0, bv.size());
    auto points_of_interest = rand_indices(rng, no_poi, bv.size());
 
    return {bv, {points_of_interest.begin(), points_of_interest.end()}};
@@ -72,7 +72,7 @@ std::vector<Test::Result> test_bitvector_bitwise_accessors(Botan::RandomNumberGe
    return {
       CHECK("default constructed bitvector",
             [](auto& result) {
-               Botan::bitvector bv;
+               const Botan::bitvector bv;
                result.confirm("default constructed bitvector is empty", bv.empty());
                result.test_eq("default constructed bitvector has zero size", bv.size(), size_t(0));
             }),
@@ -91,7 +91,7 @@ std::vector<Test::Result> test_bitvector_bitwise_accessors(Botan::RandomNumberGe
             [&](auto& result) {
                auto [bv, ones] = rnd_bitvector_with_rnd_pois(rng);
 
-               for(size_t i : ones) {
+               for(const size_t i : ones) {
                   if(rng.next_byte() % 2 == 0) {
                      bv.set(i);
                   } else {
@@ -110,7 +110,7 @@ std::vector<Test::Result> test_bitvector_bitwise_accessors(Botan::RandomNumberGe
                   b.set();
                }
 
-               for(size_t i : zeros) {
+               for(const size_t i : zeros) {
                   if(rng.next_byte() % 2 == 0) {
                      bv.unset(i);
                   } else {
@@ -154,7 +154,7 @@ std::vector<Test::Result> test_bitvector_bitwise_accessors(Botan::RandomNumberGe
                result.test_eq("has more than 64 bits", bv.size(), 128);
                bv.set(1).set(63).set(64).set(127);
                for(size_t i = 0; i < bv.size(); ++i) {
-                  bool expected = (i == 1 || i == 63 || i == 64 || i == 127);
+                  const bool expected = (i == 1 || i == 63 || i == 64 || i == 127);
                   result.test_eq(Botan::fmt("bit {} in expected state", i), bv.at(i), expected);
                }
             }),
@@ -226,7 +226,7 @@ std::vector<Test::Result> test_bitvector_capacity(Botan::RandomNumberGenerator& 
    return {
       CHECK("default constructed bitvector",
             [](auto& result) {
-               Botan::bitvector bv;
+               const Botan::bitvector bv;
                result.confirm("empty", bv.empty());
                result.test_eq("no size", bv.size(), size_t(0));
                result.test_eq("no capacity", bv.capacity(), size_t(0));
@@ -234,7 +234,7 @@ std::vector<Test::Result> test_bitvector_capacity(Botan::RandomNumberGenerator& 
 
       CHECK("allocated bitvector has capacity",
             [](auto& result) {
-               Botan::bitvector bv(1);
+               const Botan::bitvector bv(1);
                result.confirm("empty", !bv.empty());
                result.test_eq("small size", bv.size(), size_t(1));
                result.test_gte("a little capacity", bv.capacity(), size_t(8));
@@ -379,7 +379,7 @@ std::vector<Test::Result> test_bitvector_subvector(Botan::RandomNumberGenerator&
    return {
       CHECK("range errors are caught",
             [&](auto& result) {
-               Botan::bitvector bv(100);
+               const Botan::bitvector bv(100);
                result.template test_throws<Botan::Invalid_Argument>("out of range", [&] { bv.subvector(0, 101); });
                result.template test_throws<Botan::Invalid_Argument>("out of range", [&] { bv.subvector(90, 11); });
                result.template test_throws<Botan::Invalid_Argument>("out of range", [&] { bv.subvector(100, 1); });
@@ -388,7 +388,7 @@ std::vector<Test::Result> test_bitvector_subvector(Botan::RandomNumberGenerator&
 
       CHECK("empty copy is allowed",
             [&](auto& result) {
-               Botan::bitvector bv1(100);
+               const Botan::bitvector bv1(100);
                auto bv2 = bv1.subvector(0, 0);
                result.test_eq("empty at 0", bv2.size(), size_t(0));
                auto bv3 = bv1.subvector(10, 0);
@@ -940,7 +940,7 @@ std::vector<Test::Result> test_bitvector_serialization(Botan::RandomNumberGenera
                std::vector<uint8_t> bytes;
                result.require("empty buffer", bytes.empty());
 
-               Botan::bitvector bv(bytes);
+               const Botan::bitvector bv(bytes);
                result.confirm("empty bit vector", bv.empty());
 
                auto rendered = bv.to_bytes();
@@ -949,8 +949,8 @@ std::vector<Test::Result> test_bitvector_serialization(Botan::RandomNumberGenera
 
       CHECK("to_bytes() uses secure_allocator if necessary",
             [](auto& result) {
-               Botan::bitvector bv;
-               Botan::secure_bitvector sbv;
+               const Botan::bitvector bv;
+               const Botan::secure_bitvector sbv;
 
                auto rbv = bv.to_bytes();
                auto rsbv = sbv.to_bytes();
@@ -963,7 +963,7 @@ std::vector<Test::Result> test_bitvector_serialization(Botan::RandomNumberGenera
 
       CHECK("load all bits from byte-array (aligned data)",
             [&](auto& result) {
-               Botan::bitvector bv(bytearray);
+               const Botan::bitvector bv(bytearray);
                validate_bytewise(result, bv, bytearray);
 
                const auto rbv = bv.to_bytes();
@@ -975,7 +975,7 @@ std::vector<Test::Result> test_bitvector_serialization(Botan::RandomNumberGenera
                std::array<uint8_t, 63> unaligned_bytearray{};
                Botan::copy_mem(unaligned_bytearray, std::span{bytearray}.first<unaligned_bytearray.size()>());
 
-               Botan::bitvector bv(unaligned_bytearray);
+               const Botan::bitvector bv(unaligned_bytearray);
                validate_bytewise(result, bv, unaligned_bytearray);
 
                const auto rbv = bv.to_bytes();
@@ -1025,7 +1025,7 @@ std::vector<Test::Result> test_bitvector_constant_time_operations(Botan::RandomN
       CHECK("conditional XOR, block aligned",
             [&](auto& result) {
                Botan::bitvector bv1(Botan::hex_decode("BAADF00DCAFEBEEF"));
-               Botan::secure_bitvector bv2(Botan::hex_decode("CAFEBEEFC001B33F"));
+               const Botan::secure_bitvector bv2(Botan::hex_decode("CAFEBEEFC001B33F"));
                const auto initial_bv1 = bv1;
                const auto xor_result = bv1 ^ bv2;
 
@@ -1039,7 +1039,7 @@ std::vector<Test::Result> test_bitvector_constant_time_operations(Botan::RandomN
       CHECK("conditional XOR, byte aligned",
             [&](auto& result) {
                Botan::bitvector bv1(Botan::hex_decode("BAADF00DCAFEBEEF42"));
-               Botan::secure_bitvector bv2(Botan::hex_decode("CAFEBEEFC001B33F13"));
+               const Botan::secure_bitvector bv2(Botan::hex_decode("CAFEBEEFC001B33F13"));
                const auto initial_bv1 = bv1;
                const auto xor_result = bv1 ^ bv2;
 
@@ -1286,7 +1286,7 @@ class BitVector_Tests final : public Test {
          std::vector<Test::Result> results;
          auto& rng = Test::rng();
 
-         std::vector<std::function<std::vector<Test::Result>(Botan::RandomNumberGenerator&)>> funcs{
+         const std::vector<std::function<std::vector<Test::Result>(Botan::RandomNumberGenerator&)>> funcs{
             test_bitvector_bitwise_accessors,
             test_bitvector_capacity,
             test_bitvector_subvector,

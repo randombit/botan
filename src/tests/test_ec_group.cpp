@@ -304,7 +304,7 @@ class EC_Group_Tests : public Test {
 
          // The scalar multiplication algorithm relies on this being true:
          try {
-            Botan::EC_Point zero_coords = group.point(0, 0);
+            const Botan::EC_Point zero_coords = group.point(0, 0);
             result.confirm("point (0,0) is not on the curve", !zero_coords.on_the_curve());
          } catch(Botan::Exception&) {
             result.test_success("point (0,0) is rejected");
@@ -312,7 +312,7 @@ class EC_Group_Tests : public Test {
       }
 
       void test_point_swap(Test::Result& result, const Botan::EC_Group& group) {
-         Botan::EC_Point a(create_random_point(this->rng(), group));
+         const Botan::EC_Point a(create_random_point(this->rng(), group));
          Botan::EC_Point b(create_random_point(this->rng(), group));
          b *= Botan::BigInt(this->rng(), 20);
 
@@ -397,7 +397,7 @@ Test::Result test_mixed_points() {
       const Botan::EC_Point& G256 = secp256r1.get_base_point();
       const Botan::EC_Point& G384 = secp384r1.get_base_point();
 
-      result.test_throws("Mixing points from different groups", [&] { Botan::EC_Point p = G256 + G384; });
+      result.test_throws("Mixing points from different groups", [&] { const Botan::EC_Point p = G256 + G384; });
    #endif
 
       const auto p1 = Botan::EC_AffinePoint::generator(secp256r1);
@@ -454,7 +454,7 @@ class EC_Group_Registration_Tests final : public Test {
          const Botan::OID oid("1.3.6.1.4.1.25258.4.1");
 
          // Creating this object implicitly registers the curve for future use ...
-         Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
+         const Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
 
          auto group = Botan::EC_Group::from_OID(oid);
 
@@ -484,7 +484,7 @@ class EC_Group_Registration_Tests final : public Test {
 
          // This uses the deprecated constructor to verify we dedup even without an OID
          // This whole test can be removed once explicit curve support is removed
-         Botan::EC_Group reg_group(p, a, b, g_x, g_y, order, 1);
+         const Botan::EC_Group reg_group(p, a, b, g_x, g_y, order, 1);
          result.confirm("Group has correct OID", reg_group.get_curve_oid() == oid);
 
          return result;
@@ -507,7 +507,7 @@ class EC_Group_Registration_Tests final : public Test {
          const Botan::OID oid("1.2.840.10045.3.1.7");
 
          try {
-            Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
+            const Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
             result.test_failure("Should have failed");
          } catch(Botan::Invalid_Argument&) {
             result.test_success("Got expected exception");
@@ -532,7 +532,7 @@ class EC_Group_Registration_Tests final : public Test {
 
          const Botan::OID oid("1.3.6.1.4.1.25258.100.0");  // some other random OID
 
-         Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
+         const Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
          result.test_success("Registration success");
          result.confirm("Group has correct OID", reg_group.get_curve_oid() == oid);
 
@@ -561,13 +561,13 @@ class EC_Group_Registration_Tests final : public Test {
 
          Botan::OID::register_oid(custom_oid, "secp256r1");
 
-         Botan::EC_Group reg_group(custom_oid,
-                                   secp256r1.get_p(),
-                                   secp256r1.get_a(),
-                                   secp256r1.get_b(),
-                                   secp256r1.get_g_x(),
-                                   secp256r1.get_g_y(),
-                                   secp256r1.get_order());
+         const Botan::EC_Group reg_group(custom_oid,
+                                         secp256r1.get_p(),
+                                         secp256r1.get_a(),
+                                         secp256r1.get_b(),
+                                         secp256r1.get_g_x(),
+                                         secp256r1.get_g_y(),
+                                         secp256r1.get_order());
 
          result.test_success("Registration success");
          result.confirm("Group has correct OID", reg_group.get_curve_oid() == custom_oid);

@@ -87,8 +87,8 @@ class RAII_LowLevel {
       }
 
       SessionHandle open_rw_session_with_user_login() {
-         Flags session_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
-         SessionHandle handle = open_session(session_flags);
+         const Flags session_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
+         const SessionHandle handle = open_session(session_flags);
          login(UserType::User, PIN());
          return handle;
       }
@@ -155,7 +155,7 @@ Test::Result test_function(const std::string& name,
                            const PKCS11_BoundTestFunction& revert_func,
                            bool expect_failure,
                            ReturnValue expected_return_value) {
-   std::string test_name =
+   const std::string test_name =
       revert_fn_name.empty() ? "PKCS 11 low level - " + name : "PKCS 11 low level - " + name + "/" + revert_fn_name;
    Test::Result result(test_name);
 
@@ -222,15 +222,14 @@ Test::Result test_function(const std::string& name,
 Test::Result test_low_level_ctor() {
    Test::Result result("PKCS 11 low level - LowLevel ctor");
 
-   Dynamically_Loaded_Library pkcs11_module(Test::pkcs11_lib());
+   const Dynamically_Loaded_Library pkcs11_module(Test::pkcs11_lib());
    FunctionList* func_list(nullptr);
    LowLevel::C_GetFunctionList(pkcs11_module, &func_list);
 
-   LowLevel p11_low_level(func_list);
+   const LowLevel p11_low_level(func_list);
    result.test_success("LowLevel ctor does complete for valid function list");
 
-   result.test_throws("LowLevel ctor fails for invalid function list pointer",
-                      []() { LowLevel p11_low_level2(nullptr); });
+   result.test_throws("LowLevel ctor fails for invalid function list pointer", []() { LowLevel(nullptr); });
 
    return result;
 }
@@ -239,6 +238,7 @@ Test::Result test_low_level_ctor() {
 
 Test::Result test_c_get_function_list() {
    Dynamically_Loaded_Library pkcs11_module(Test::pkcs11_lib());
+   // NOLINTNEXTLINE(*-const-correctness) bug in clang-tidy
    FunctionList* func_list = nullptr;
    return test_function(
       "C_GetFunctionList",
@@ -246,7 +246,7 @@ Test::Result test_c_get_function_list() {
 }
 
 Test::Result test_initialize_finalize() {
-   Dynamically_Loaded_Library pkcs11_module(Test::pkcs11_lib());
+   const Dynamically_Loaded_Library pkcs11_module(Test::pkcs11_lib());
    FunctionList* func_list = nullptr;
    LowLevel::C_GetFunctionList(pkcs11_module, &func_list);
 
@@ -261,7 +261,7 @@ Test::Result test_initialize_finalize() {
 }
 
 Test::Result test_c_get_info() {
-   RAII_LowLevel p11_low_level;
+   const RAII_LowLevel p11_low_level;
 
    Info info = {};
    Test::Result result =
@@ -272,7 +272,7 @@ Test::Result test_c_get_info() {
 }
 
 Test::Result test_c_get_slot_list() {
-   RAII_LowLevel p11_low_level;
+   const RAII_LowLevel p11_low_level;
 
    std::vector<SlotId> slot_vec;
 
@@ -305,7 +305,7 @@ Test::Result test_c_get_slot_list() {
 }
 
 Test::Result test_c_get_slot_info() {
-   RAII_LowLevel p11_low_level;
+   const RAII_LowLevel p11_low_level;
    std::vector<SlotId> slot_vec = p11_low_level.get_slots(false);
 
    SlotInfo slot_info = {};
@@ -313,14 +313,14 @@ Test::Result test_c_get_slot_info() {
       "C_GetSlotInfo",
       std::bind(&LowLevel::C_GetSlotInfo, p11_low_level.get(), slot_vec.at(0), &slot_info, std::placeholders::_1));
 
-   std::string slot_desc(reinterpret_cast<char*>(slot_info.slotDescription));
+   const std::string slot_desc(reinterpret_cast<char*>(slot_info.slotDescription));
    result.test_ne("C_GetSlotInfo returns non empty description", slot_desc.size(), 0);
 
    return result;
 }
 
 Test::Result test_c_get_token_info() {
-   RAII_LowLevel p11_low_level;
+   const RAII_LowLevel p11_low_level;
    std::vector<SlotId> slot_vec = p11_low_level.get_slots(true);
 
    TokenInfo token_info = {};
@@ -328,16 +328,16 @@ Test::Result test_c_get_token_info() {
       "C_GetTokenInfo",
       std::bind(&LowLevel::C_GetTokenInfo, p11_low_level.get(), slot_vec.at(0), &token_info, std::placeholders::_1));
 
-   std::string serial(reinterpret_cast<char*>(token_info.serialNumber));
+   const std::string serial(reinterpret_cast<char*>(token_info.serialNumber));
    result.test_ne("C_GetTokenInfo returns non empty serial number", serial.size(), 0);
 
    return result;
 }
 
 Test::Result test_c_wait_for_slot_event() {
-   RAII_LowLevel p11_low_level;
+   const RAII_LowLevel p11_low_level;
 
-   Flags flags = PKCS11::flags(Flag::DontBlock);
+   const Flags flags = PKCS11::flags(Flag::DontBlock);
    SlotId slot_id = 0;
 
    return test_function(
@@ -348,7 +348,7 @@ Test::Result test_c_wait_for_slot_event() {
 }
 
 Test::Result test_c_get_mechanism_list() {
-   RAII_LowLevel p11_low_level;
+   const RAII_LowLevel p11_low_level;
    std::vector<SlotId> slot_vec = p11_low_level.get_slots(true);
 
    std::vector<MechanismType> mechanisms;
@@ -367,7 +367,7 @@ Test::Result test_c_get_mechanism_list() {
 }
 
 Test::Result test_c_get_mechanism_info() {
-   RAII_LowLevel p11_low_level;
+   const RAII_LowLevel p11_low_level;
    std::vector<SlotId> slot_vec = p11_low_level.get_slots(true);
 
    std::vector<MechanismType> mechanisms;
@@ -384,7 +384,7 @@ Test::Result test_c_get_mechanism_info() {
 }
 
 Test::Result test_c_init_token() {
-   RAII_LowLevel p11_low_level;
+   const RAII_LowLevel p11_low_level;
    std::vector<SlotId> slot_vec = p11_low_level.get_slots(true);
 
    const std::string token_label = "Botan PKCS#11 tests";
@@ -403,7 +403,7 @@ Test::Result test_c_init_token() {
 }
 
 Test::Result test_open_close_session() {
-   RAII_LowLevel p11_low_level;
+   const RAII_LowLevel p11_low_level;
    std::vector<SlotId> slot_vec = p11_low_level.get_slots(true);
 
    // public read only session
@@ -487,8 +487,8 @@ Test::Result test_c_get_session_info() {
    std::vector<SlotId> slot_vec = p11_low_level.get_slots(true);
 
    // public read only session
-   Flags flags = PKCS11::flags(Flag::SerialSession);
-   SessionHandle session_handle = p11_low_level.open_session(flags);
+   const Flags flags = PKCS11::flags(Flag::SerialSession);
+   const SessionHandle session_handle = p11_low_level.open_session(flags);
 
    SessionInfo session_info = {};
    Test::Result result = test_function(
@@ -533,8 +533,8 @@ Test::Result test_c_login_logout_security_officier() {
    RAII_LowLevel p11_low_level;
 
    // can only login to R/W session
-   Flags session_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
-   SessionHandle session_handle = p11_low_level.open_session(session_flags);
+   const Flags session_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
+   const SessionHandle session_handle = p11_low_level.open_session(session_flags);
 
    return login_logout_helper(p11_low_level, session_handle, UserType::SO, PKCS11_SO_PIN);
 }
@@ -561,8 +561,8 @@ Test::Result test_c_init_pin() {
    RAII_LowLevel p11_low_level;
 
    // C_InitPIN can only be called in the "R/W SO Functions" state
-   Flags session_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
-   SessionHandle session_handle = p11_low_level.open_session(session_flags);
+   const Flags session_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
+   const SessionHandle session_handle = p11_low_level.open_session(session_flags);
 
    p11_low_level.login(UserType::SO, SO_PIN());
 
@@ -581,7 +581,7 @@ Test::Result test_c_set_pin() {
    RAII_LowLevel p11_low_level;
 
    // C_SetPIN can only be called in the "R / W Public Session" state, "R / W SO Functions" state, or "R / W User Functions" state
-   Flags session_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
+   const Flags session_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
    SessionHandle session_handle = p11_low_level.open_session(session_flags);
 
    // now we are in "R / W Public Session" state: this will change the pin of the user
@@ -603,8 +603,8 @@ Test::Result test_c_set_pin() {
    const std::string test_pin("654321");
    const auto test_pin_secvec = secure_vector<uint8_t>(test_pin.begin(), test_pin.end());
 
-   PKCS11_BoundTestFunction set_pin_bind = get_pin_bind(PIN(), test_pin_secvec);
-   PKCS11_BoundTestFunction revert_pin_bind = get_pin_bind(test_pin_secvec, PIN());
+   const PKCS11_BoundTestFunction set_pin_bind = get_pin_bind(PIN(), test_pin_secvec);
+   const PKCS11_BoundTestFunction revert_pin_bind = get_pin_bind(test_pin_secvec, PIN());
 
    Test::Result result = test_function("C_SetPIN", set_pin_bind, "C_SetPIN", revert_pin_bind);
 
@@ -616,11 +616,11 @@ Test::Result test_c_set_pin() {
 
    // change so_pin in "R / W SO Functions" state
    const std::string test_so_pin = "87654321";
-   secure_vector<uint8_t> test_so_pin_secvec(test_so_pin.begin(), test_so_pin.end());
+   const secure_vector<uint8_t> test_so_pin_secvec(test_so_pin.begin(), test_so_pin.end());
    p11_low_level.login(UserType::SO, SO_PIN());
 
-   PKCS11_BoundTestFunction set_so_pin_bind = get_pin_bind(SO_PIN(), test_so_pin_secvec);
-   PKCS11_BoundTestFunction revert_so_pin_bind = get_pin_bind(test_so_pin_secvec, SO_PIN());
+   const PKCS11_BoundTestFunction set_so_pin_bind = get_pin_bind(SO_PIN(), test_so_pin_secvec);
+   const PKCS11_BoundTestFunction revert_so_pin_bind = get_pin_bind(test_so_pin_secvec, SO_PIN());
 
    result.merge(test_function("C_SetPIN", set_so_pin_bind, "C_SetPIN", revert_so_pin_bind));
 
@@ -656,7 +656,7 @@ ObjectHandle create_simple_data_object(const RAII_LowLevel& p11_low_level) {
 
 Test::Result test_c_create_object_c_destroy_object() {
    RAII_LowLevel p11_low_level;
-   SessionHandle session_handle = p11_low_level.open_rw_session_with_user_login();
+   const SessionHandle session_handle = p11_low_level.open_rw_session_with_user_login();
 
    ObjectHandle object_handle(0);
 
@@ -679,12 +679,12 @@ Test::Result test_c_create_object_c_destroy_object() {
 Test::Result test_c_get_object_size() {
    RAII_LowLevel p11_low_level;
 
-   Flags session_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
-   SessionHandle session_handle = p11_low_level.open_session(session_flags);
+   const Flags session_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
+   const SessionHandle session_handle = p11_low_level.open_session(session_flags);
 
    p11_low_level.login(UserType::User, PIN());
 
-   ObjectHandle object_handle = create_simple_data_object(p11_low_level);
+   const ObjectHandle object_handle = create_simple_data_object(p11_low_level);
    Ulong object_size = 0;
 
    auto bind = std::bind(&LowLevel::C_GetObjectSize,
@@ -705,9 +705,9 @@ Test::Result test_c_get_object_size() {
 
 Test::Result test_c_get_attribute_value() {
    RAII_LowLevel p11_low_level;
-   SessionHandle session_handle = p11_low_level.open_rw_session_with_user_login();
+   const SessionHandle session_handle = p11_low_level.open_rw_session_with_user_login();
 
-   ObjectHandle object_handle = create_simple_data_object(p11_low_level);
+   const ObjectHandle object_handle = create_simple_data_object(p11_low_level);
 
    std::map<AttributeType, secure_vector<uint8_t>> getter = {{AttributeType::Label, secure_vector<uint8_t>()},
                                                              {AttributeType::Value, secure_vector<uint8_t>()}};
@@ -724,8 +724,8 @@ Test::Result test_c_get_attribute_value() {
 
    Test::Result result = test_function("C_GetAttributeValue", bind);
 
-   std::string _label(getter[AttributeType::Label].begin(), getter[AttributeType::Label].end());
-   std::string value(getter[AttributeType::Value].begin(), getter[AttributeType::Value].end());
+   const std::string _label(getter[AttributeType::Label].begin(), getter[AttributeType::Label].end());
+   const std::string value(getter[AttributeType::Value].begin(), getter[AttributeType::Value].end());
    result.test_eq("label", _label, "A data object");
    result.test_eq("value", value, "Sample data");
 
@@ -753,12 +753,12 @@ std::map<AttributeType, std::vector<uint8_t>> get_attribute_values(const RAII_Lo
 Test::Result test_c_set_attribute_value() {
    RAII_LowLevel p11_low_level;
 
-   Flags session_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
-   SessionHandle session_handle = p11_low_level.open_session(session_flags);
+   const Flags session_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
+   const SessionHandle session_handle = p11_low_level.open_session(session_flags);
 
    p11_low_level.login(UserType::User, PIN());
 
-   ObjectHandle object_handle = create_simple_data_object(p11_low_level);
+   const ObjectHandle object_handle = create_simple_data_object(p11_low_level);
 
    std::string new_label = "A modified data object";
 
@@ -778,11 +778,11 @@ Test::Result test_c_set_attribute_value() {
    Test::Result result = test_function("C_SetAttributeValue", bind);
 
    // get attributes and check if they are changed correctly
-   std::vector<AttributeType> types = {AttributeType::Label, AttributeType::Value};
+   const std::vector<AttributeType> types = {AttributeType::Label, AttributeType::Value};
    auto received_attributes = get_attribute_values(p11_low_level, session_handle, object_handle, types);
 
-   std::string retrieved_label(received_attributes[AttributeType::Label].begin(),
-                               received_attributes[AttributeType::Label].end());
+   const std::string retrieved_label(received_attributes[AttributeType::Label].begin(),
+                                     received_attributes[AttributeType::Label].end());
 
    result.test_eq("label", new_label, retrieved_label);
 
@@ -794,12 +794,12 @@ Test::Result test_c_set_attribute_value() {
 
 Test::Result test_c_copy_object() {
    RAII_LowLevel p11_low_level;
-   SessionHandle session_handle = p11_low_level.open_rw_session_with_user_login();
+   const SessionHandle session_handle = p11_low_level.open_rw_session_with_user_login();
 
-   ObjectHandle object_handle = create_simple_data_object(p11_low_level);
+   const ObjectHandle object_handle = create_simple_data_object(p11_low_level);
    ObjectHandle copied_object_handle = 0;
 
-   std::string copied_label = "A copied data object";
+   const std::string copied_label = "A copied data object";
 
    Attribute copy_attribute_values = {static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Label),
                                       const_cast<char*>(copied_label.c_str()),
@@ -817,11 +817,11 @@ Test::Result test_c_copy_object() {
    Test::Result result = test_function("C_CopyObject", binder);
 
    // get attributes and check if its copied correctly
-   std::vector<AttributeType> types = {AttributeType::Label, AttributeType::Value};
+   const std::vector<AttributeType> types = {AttributeType::Label, AttributeType::Value};
    auto received_attributes = get_attribute_values(p11_low_level, session_handle, copied_object_handle, types);
 
-   std::string retrieved_label(received_attributes[AttributeType::Label].begin(),
-                               received_attributes[AttributeType::Label].end());
+   const std::string retrieved_label(received_attributes[AttributeType::Label].begin(),
+                                     received_attributes[AttributeType::Label].end());
 
    result.test_eq("label", copied_label, retrieved_label);
 

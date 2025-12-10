@@ -64,7 +64,7 @@ int botan_fpe_destroy(botan_fpe_t fpe) {
 int botan_fpe_encrypt(botan_fpe_t fpe, botan_mp_t x, const uint8_t tweak[], size_t tweak_len) {
 #if defined(BOTAN_HAS_FPE_FE1)
    return ffi_guard_thunk(__func__, [=]() {
-      Botan::BigInt r = safe_get(fpe).encrypt(safe_get(x), tweak, tweak_len);
+      const Botan::BigInt r = safe_get(fpe).encrypt(safe_get(x), tweak, tweak_len);
       safe_get(x) = r;
       return BOTAN_FFI_SUCCESS;
    });
@@ -77,7 +77,7 @@ int botan_fpe_encrypt(botan_fpe_t fpe, botan_mp_t x, const uint8_t tweak[], size
 int botan_fpe_decrypt(botan_fpe_t fpe, botan_mp_t x, const uint8_t tweak[], size_t tweak_len) {
 #if defined(BOTAN_HAS_FPE_FE1)
    return ffi_guard_thunk(__func__, [=]() {
-      Botan::BigInt r = safe_get(fpe).decrypt(safe_get(x), tweak, tweak_len);
+      const Botan::BigInt r = safe_get(fpe).decrypt(safe_get(x), tweak, tweak_len);
       safe_get(x) = r;
       return BOTAN_FFI_SUCCESS;
    });

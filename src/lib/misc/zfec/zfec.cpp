@@ -102,7 +102,7 @@ const uint8_t* GF_MUL_TABLE(uint8_t y) {
          std::vector<uint8_t> m_table;
    };
 
-   static GF_Table table;
+   static const GF_Table table;
    return table.ptr(y);
 }
 
@@ -509,7 +509,7 @@ void ZFEC::decode_shares(const std::map<size_t, const uint8_t*>& shares,
    // If we had the original data shares then no need to perform
    // a matrix inversion, return immediately.
    if(!missing_primary_share) {
-      for(size_t index : indexes) {
+      for(const size_t index : indexes) {
          BOTAN_ASSERT_NOMSG(index < m_K);
       }
       return;

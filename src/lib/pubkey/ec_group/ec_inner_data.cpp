@@ -291,8 +291,8 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_deserialize(std::span<
    // The deprecated "hybrid" point format
    // TODO(Botan4) remove this
    if(bytes.size() >= 1 + 2 * 4 && (bytes[0] == 0x06 || bytes[0] == 0x07)) {
-      bool hdr_y_is_even = bytes[0] == 0x06;
-      bool y_is_even = (bytes.back() & 0x01) == 0;
+      const bool hdr_y_is_even = bytes[0] == 0x06;
+      const bool y_is_even = (bytes.back() & 0x01) == 0;
 
       if(hdr_y_is_even == y_is_even) {
          std::vector<uint8_t> sec1(bytes.begin(), bytes.end());
@@ -412,8 +412,8 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::mul_px_qy(const EC_AffinePoi
       const auto& group = p.group();
 
       // TODO this could be better!
-      EC_Point_Var_Point_Precompute p_mul(p.to_legacy_point(), rng, ws);
-      EC_Point_Var_Point_Precompute q_mul(q.to_legacy_point(), rng, ws);
+      const EC_Point_Var_Point_Precompute p_mul(p.to_legacy_point(), rng, ws);
+      const EC_Point_Var_Point_Precompute q_mul(q.to_legacy_point(), rng, ws);
 
       const auto order = group->order() * group->cofactor();  // See #3800
 
@@ -471,7 +471,7 @@ std::unique_ptr<EC_Mul2Table_Data> EC_Group_Data::make_mul2_table(const EC_Affin
       return std::make_unique<EC_Mul2Table_Data_PC>(h);
    } else {
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      EC_AffinePoint_Data_BN g(shared_from_this(), this->base_point());
+      const EC_AffinePoint_Data_BN g(shared_from_this(), this->base_point());
       return std::make_unique<EC_Mul2Table_Data_BN>(g, h);
 #else
       throw Not_Implemented("Legacy EC interfaces disabled in this build configuration");

@@ -6,7 +6,7 @@
 
 int main() {
    // You can change this to "PBKDF2(SHA-512)" or "Scrypt" or "Argon2id" or ...
-   std::string_view pbkdf_algo = "Argon2i";
+   const std::string_view pbkdf_algo = "Argon2i";
    auto pbkdf_runtime = std::chrono::milliseconds(300);
    constexpr size_t output_hash = 32;
    constexpr size_t salt_len = 32;
@@ -20,7 +20,7 @@ int main() {
 
    const auto salt = Botan::system_rng().random_array<salt_len>();
 
-   std::string_view password = "tell no one";
+   const std::string_view password = "tell no one";
 
    std::array<uint8_t, output_hash> key{};
    pwdhash->hash(key, password, salt);

@@ -116,7 +116,7 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
    }
 
    if(const auto* active = active_state()) {
-      Protocol_Version active_version = active->version();
+      const Protocol_Version active_version = active->version();
 
       if(active_version.is_datagram_protocol() != version.is_datagram_protocol()) {
          throw TLS_Exception(Alert::ProtocolVersion,
@@ -207,7 +207,7 @@ void Channel_Impl_12::change_cipher_spec_reader(Connection_Side side) {
    BOTAN_ASSERT(!m_read_cipher_states.contains(epoch), "No read cipher state currently set for next epoch");
 
    // flip side as we are reading
-   std::shared_ptr<Connection_Cipher_State> read_state(
+   const std::shared_ptr<Connection_Cipher_State> read_state(
       new Connection_Cipher_State(pending->version(),
                                   (side == Connection_Side::Client) ? Connection_Side::Server : Connection_Side::Client,
                                   false,
@@ -233,7 +233,7 @@ void Channel_Impl_12::change_cipher_spec_writer(Connection_Side side) {
 
    BOTAN_ASSERT(!m_write_cipher_states.contains(epoch), "No write cipher state currently set for next epoch");
 
-   std::shared_ptr<Connection_Cipher_State> write_state(
+   const std::shared_ptr<Connection_Cipher_State> write_state(
       new Connection_Cipher_State(pending->version(),
                                   side,
                                   true,
@@ -325,7 +325,7 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
          const bool initial_record = epoch0_restart || (pending_state() == nullptr && active_state() == nullptr);
          bool initial_handshake_message = false;
          if(record.type() == Record_Type::Handshake && !m_record_buf.empty()) {
-            Handshake_Type type = static_cast<Handshake_Type>(m_record_buf[0]);
+            const Handshake_Type type = static_cast<Handshake_Type>(m_record_buf[0]);
             initial_handshake_message = (type == Handshake_Type::ClientHello);
          }
 
@@ -444,7 +444,7 @@ void Channel_Impl_12::process_application_data(uint64_t seq_no, const secure_vec
 }
 
 void Channel_Impl_12::process_alert(const secure_vector<uint8_t>& record) {
-   Alert alert_msg(record);
+   const Alert alert_msg(record);
 
    if(alert_msg.type() == Alert::NoRenegotiation) {
       m_pending_state.reset();
@@ -644,7 +644,7 @@ SymmetricKey Channel_Impl_12::key_material_export(std::string_view label,
       salt += active->server_hello()->random();
 
       if(!context.empty()) {
-         size_t context_size = context.length();
+         const size_t context_size = context.length();
          if(context_size > 0xFFFF) {
             throw Invalid_Argument("key_material_export context is too long");
          }

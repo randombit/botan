@@ -186,7 +186,7 @@ DER_Encoder& DER_Encoder::end_cons() {
 * Start a new ASN.1 EXPLICIT encoding
 */
 DER_Encoder& DER_Encoder::start_explicit(uint16_t type_no) {
-   ASN1_Type type_tag = static_cast<ASN1_Type>(type_no);
+   const ASN1_Type type_tag = static_cast<ASN1_Type>(type_no);
 
    // This would confuse DER_Sequence
    if(type_tag == ASN1_Type::Set) {
@@ -278,7 +278,7 @@ DER_Encoder& DER_Encoder::encode(const uint8_t bytes[], size_t length, ASN1_Type
 * DER encode a BOOLEAN
 */
 DER_Encoder& DER_Encoder::encode(bool is_true, ASN1_Type type_tag, ASN1_Class class_tag) {
-   uint8_t val = is_true ? 0xFF : 0x00;
+   const uint8_t val = is_true ? 0xFF : 0x00;
    return add_object(type_tag, class_tag, &val, 1);
 }
 

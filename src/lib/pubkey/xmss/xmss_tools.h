@@ -46,7 +46,7 @@ void xmss_concat(secure_vector<uint8_t>& target, const T& src) {
 **/
 template <std::unsigned_integral T>
 void xmss_concat(secure_vector<uint8_t>& target, const T& src, size_t len) {
-   size_t c = static_cast<size_t>(std::min(len, sizeof(src)));
+   const size_t c = static_cast<size_t>(std::min(len, sizeof(src)));
    if(len > sizeof(src)) {
       target.resize(target.size() + len - sizeof(src), 0);
    }

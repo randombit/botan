@@ -41,7 +41,7 @@ bool is_ipv4(std::string_view ip) {
 }
 
 bool is_ipv6(std::string_view ip) {
-   std::string ip_str(ip);
+   const std::string ip_str(ip);
    sockaddr_storage in6addr{};
 
    // TODO use string_to_ipv6 here
@@ -58,8 +58,8 @@ uint16_t parse_port_number(const char* func_name, std::string_view uri, size_t p
 
    uint32_t port = 0;
 
-   for(char c : uri.substr(pos + 1)) {
-      size_t digit = c - '0';
+   for(const char c : uri.substr(pos + 1)) {
+      const size_t digit = c - '0';
       if(digit >= 10) {
          throw Invalid_Argument(fmt("URI::{} invalid port field in {}", func_name, uri));
       }

@@ -54,7 +54,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t in[], size_t len) {
 // Some helpers for the fuzzer jigs
 
 inline std::shared_ptr<Botan::RandomNumberGenerator> fuzzer_rng_as_shared() {
-   static std::shared_ptr<Botan::ChaCha_RNG> rng =
+   static const std::shared_ptr<Botan::ChaCha_RNG> rng =
       std::make_shared<Botan::ChaCha_RNG>(Botan::secure_vector<uint8_t>(32));
    return rng;
 }

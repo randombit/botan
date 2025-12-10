@@ -71,7 +71,7 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
       size_t p = 0;
       size_t key_length = 0;
 
-      AlgorithmIdentifier prf_algo;
+      const AlgorithmIdentifier prf_algo;
       BER_Decoder(kdf_algo.parameters())
          .start_sequence()
          .decode(salt, ASN1_Type::OctetString)
@@ -235,7 +235,7 @@ std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbes2_encrypt_shared(std::s
       .encode(AlgorithmIdentifier(cipher, encoded_iv))
       .end_cons();
 
-   AlgorithmIdentifier id(OID::from_string("PBE-PKCS5v20"), pbes2_params);
+   const AlgorithmIdentifier id(OID::from_string("PBE-PKCS5v20"), pbes2_params);
 
    return std::make_pair(id, unlock(ctext));
 }

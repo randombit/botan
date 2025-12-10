@@ -46,7 +46,7 @@ class Bzip2_Compression_Stream final : public Bzip2_Stream {
             block_size = 9;
          }
 
-         int rc = BZ2_bzCompressInit(streamp(), static_cast<unsigned int>(block_size), 0, 0);
+         const int rc = BZ2_bzCompressInit(streamp(), static_cast<unsigned int>(block_size), 0, 0);
 
          if(rc != BZ_OK) {
             throw Compression_Error("BZ2_bzCompressInit", ErrorType::Bzip2Error, rc);
@@ -61,7 +61,7 @@ class Bzip2_Compression_Stream final : public Bzip2_Stream {
       ~Bzip2_Compression_Stream() override { BZ2_bzCompressEnd(streamp()); }
 
       bool run(uint32_t flags) override {
-         int rc = BZ2_bzCompress(streamp(), flags);
+         const int rc = BZ2_bzCompress(streamp(), flags);
 
          if(rc < 0) {
             throw Compression_Error("BZ2_bzCompress", ErrorType::Bzip2Error, rc);
@@ -74,7 +74,7 @@ class Bzip2_Compression_Stream final : public Bzip2_Stream {
 class Bzip2_Decompression_Stream final : public Bzip2_Stream {
    public:
       Bzip2_Decompression_Stream() {
-         int rc = BZ2_bzDecompressInit(streamp(), 0, 0);
+         const int rc = BZ2_bzDecompressInit(streamp(), 0, 0);
 
          if(rc != BZ_OK) {
             throw Compression_Error("BZ2_bzDecompressInit", ErrorType::Bzip2Error, rc);
@@ -89,7 +89,7 @@ class Bzip2_Decompression_Stream final : public Bzip2_Stream {
       ~Bzip2_Decompression_Stream() override { BZ2_bzDecompressEnd(streamp()); }
 
       bool run(uint32_t /*flags*/) override {
-         int rc = BZ2_bzDecompress(streamp());
+         const int rc = BZ2_bzDecompress(streamp());
 
          if(rc != BZ_OK && rc != BZ_STREAM_END) {
             throw Compression_Error("BZ2_bzDecompress", ErrorType::Bzip2Error, rc);

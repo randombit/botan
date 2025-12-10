@@ -76,7 +76,7 @@ class Filter_Tests final : public Test {
             result.test_eq("check_available", queue_a.check_available(1), true);
             result.test_eq("check_available", queue_a.check_available(50), false);
             uint8_t b = 0;
-            size_t bytes_read = queue_a.read_byte(b);
+            const size_t bytes_read = queue_a.read_byte(b);
             result.test_eq("1 byte read", bytes_read, 1);
 
             Botan::secure_vector<uint8_t> produced(b);
@@ -85,7 +85,7 @@ class Filter_Tests final : public Test {
 
             result.test_eq("1 bytes read so far from SecureQueue", queue_a.get_bytes_read(), 1);
 
-            Botan::SecureQueue queue_b;
+            const Botan::SecureQueue queue_b;
             queue_a = queue_b;
             result.test_eq("bytes_read is set correctly", queue_a.get_bytes_read(), 0);
          } catch(std::exception& e) {
@@ -242,7 +242,7 @@ class Filter_Tests final : public Test {
 
          result.test_throws("pipe error", "Pipe::read: Invalid message number 100", [&]() {
             uint8_t b = 0;
-            size_t got = pipe.read(&b, 1, 100);
+            const size_t got = pipe.read(&b, 1, 100);
             BOTAN_UNUSED(got);
          });
 
@@ -293,7 +293,7 @@ class Filter_Tests final : public Test {
          result.test_eq("Message count", pipe.message_count(), 0);
 
          pipe.start_msg();
-         uint8_t inb = 0x41;
+         const uint8_t inb = 0x41;
          pipe.write(&inb, 1);
          pipe.write(std::vector<uint8_t>(6, 0x41));
          pipe.write(inb);
@@ -485,7 +485,7 @@ class Filter_Tests final : public Test {
 
          pipe.process_msg(compr);
 
-         std::string decomp = pipe.read_all_as_string(1);
+         const std::string decomp = pipe.read_all_as_string(1);
          result.test_eq("Decompressed ok", decomp, input_str);
    #endif
 
@@ -518,7 +518,7 @@ class Filter_Tests final : public Test {
 
          pipe.process_msg(compr);
 
-         std::string decomp = pipe.read_all_as_string(1);
+         const std::string decomp = pipe.read_all_as_string(1);
          result.test_eq("Decompressed ok", decomp, input_str);
    #endif
 
@@ -538,7 +538,7 @@ class Filter_Tests final : public Test {
          result.test_eq("Message count", pipe.message_count(), 1);
          result.test_eq("Message size", pipe.remaining(), 8);
 
-         std::string output = pipe.read_all_as_string(0);
+         const std::string output = pipe.read_all_as_string(0);
          result.test_eq("Message size", pipe.remaining(0), 0);
          result.test_eq("Output round tripped", output, "QUJDRFg=");
 
@@ -648,6 +648,7 @@ class Filter_Tests final : public Test {
 
    #if defined(BOTAN_HAS_CODEC_FILTERS) && defined(BOTAN_HAS_SHA2_32) && defined(BOTAN_HAS_SHA2_64)
 
+         // NOLINTNEXTLINE(*-const-correctness) bug in clang-tidy
          Botan::Filter* filters[2] = {new Botan::Hash_Filter("SHA-256"), new Botan::Hex_Encoder};
 
          auto chain = std::make_unique<Botan::Chain>(filters, 2);
@@ -693,7 +694,7 @@ class Filter_Tests final : public Test {
          hex_dec.end_msg();
          ::close(fd[0]);
 
-         std::string dec = hex_dec.read_all_as_string();
+         const std::string dec = hex_dec.read_all_as_string();
 
          result.test_eq("IO through Unix pipe works", dec, "hi chappy");
    #endif
@@ -729,7 +730,7 @@ class Filter_Tests final : public Test {
 
          pipe.start_msg();
          for(size_t i = 0; i != 919; ++i) {
-            std::vector<uint8_t> input(i + 5, static_cast<uint8_t>(i));
+            const std::vector<uint8_t> input(i + 5, static_cast<uint8_t>(i));
             pipe.write(input);
          }
          pipe.end_msg();

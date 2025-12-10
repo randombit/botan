@@ -62,7 +62,7 @@ std::unique_ptr<TPM2::PrivateKey> RSA_PrivateKey::create_unrestricted_transient(
                                                                                 std::optional<uint32_t> exponent) {
    BOTAN_ARG_CHECK(parent.is_parent(), "The passed key cannot be used as a parent key");
 
-   TPM2B_SENSITIVE_CREATE sensitive_data = {
+   const TPM2B_SENSITIVE_CREATE sensitive_data = {
       .size = 0,  // ignored
       .sensitive =
          {
@@ -75,7 +75,7 @@ std::unique_ptr<TPM2::PrivateKey> RSA_PrivateKey::create_unrestricted_transient(
          },
    };
 
-   TPMT_PUBLIC key_template = {
+   const TPMT_PUBLIC key_template = {
       .type = TPM2_ALG_RSA,
 
       // This is the algorithm for fingerprinting the newly created public key.

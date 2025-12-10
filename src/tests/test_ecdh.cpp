@@ -87,7 +87,7 @@ class ECDH_AllGroups_Tests : public Test {
                // Regression test: prohibit ECDH-agreement with all-zero public value
                result.test_throws<Botan::Decoding_Error>("ECDH public value is point-at-infinity", [&] {
                   const auto sk = Botan::ECDH_PrivateKey(rng(), group);
-                  Botan::PK_Key_Agreement ka(sk, rng(), kdf);
+                  const Botan::PK_Key_Agreement ka(sk, rng(), kdf);
                   const auto sec1_infinity = std::array{uint8_t(0x00)};
                   const auto a_ss = ka.derive_key(0, sec1_infinity);
                });
@@ -99,10 +99,10 @@ class ECDH_AllGroups_Tests : public Test {
                   const Botan::ECDH_PrivateKey b_priv(rng(), group);
                   const auto b_pub = b_priv.public_value();
 
-                  Botan::PK_Key_Agreement a_ka(a_priv, rng(), kdf);
+                  const Botan::PK_Key_Agreement a_ka(a_priv, rng(), kdf);
                   const auto a_ss = a_ka.derive_key(0, b_pub);
 
-                  Botan::PK_Key_Agreement b_ka(b_priv, rng(), kdf);
+                  const Botan::PK_Key_Agreement b_ka(b_priv, rng(), kdf);
                   const auto b_ss = b_ka.derive_key(0, a_pub);
 
                   result.test_eq("Same shared secret", a_ss.bits_of(), b_ss.bits_of());

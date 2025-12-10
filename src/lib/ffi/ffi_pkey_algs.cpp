@@ -230,7 +230,7 @@ int botan_privkey_create_rsa(botan_privkey_t* key_obj, botan_rng_t rng_obj, size
       return BOTAN_FFI_ERROR_BAD_PARAMETER;
    }
 
-   std::string n_str = std::to_string(n_bits);
+   const std::string n_str = std::to_string(n_bits);
 
    return botan_privkey_create(key_obj, "RSA", n_str.c_str(), rng_obj);
 }
@@ -260,7 +260,7 @@ int botan_privkey_load_rsa_pkcs1(botan_privkey_t* key, const uint8_t bits[], siz
    *key = nullptr;
 
    return ffi_guard_thunk(__func__, [=]() -> int {
-      Botan::AlgorithmIdentifier alg_id("RSA", Botan::AlgorithmIdentifier::USE_NULL_PARAM);
+      const Botan::AlgorithmIdentifier alg_id("RSA", Botan::AlgorithmIdentifier::USE_NULL_PARAM);
       auto rsa = std::make_unique<Botan::RSA_PrivateKey>(alg_id, std::span{bits, len});
       return ffi_new_object(key, std::move(rsa));
    });
@@ -352,7 +352,7 @@ int botan_privkey_create_dsa(botan_privkey_t* key, botan_rng_t rng_obj, size_t p
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
-      Botan::DL_Group group(rng, Botan::DL_Group::Prime_Subgroup, pbits, qbits);
+      const Botan::DL_Group group(rng, Botan::DL_Group::Prime_Subgroup, pbits, qbits);
       auto dsa = std::make_unique<Botan::DSA_PrivateKey>(rng, group);
       return ffi_new_object(key, std::move(dsa));
    });
@@ -370,7 +370,7 @@ int botan_privkey_load_dsa(botan_privkey_t* key, botan_mp_t p, botan_mp_t q, bot
    *key = nullptr;
 
    return ffi_guard_thunk(__func__, [=]() -> int {
-      Botan::DL_Group group(safe_get(p), safe_get(q), safe_get(g));
+      const Botan::DL_Group group(safe_get(p), safe_get(q), safe_get(g));
       auto dsa = std::make_unique<Botan::DSA_PrivateKey>(group, safe_get(x));
       return ffi_new_object(key, std::move(dsa));
    });
@@ -388,7 +388,7 @@ int botan_pubkey_load_dsa(botan_pubkey_t* key, botan_mp_t p, botan_mp_t q, botan
    *key = nullptr;
 
    return ffi_guard_thunk(__func__, [=]() -> int {
-      Botan::DL_Group group(safe_get(p), safe_get(q), safe_get(g));
+      const Botan::DL_Group group(safe_get(p), safe_get(q), safe_get(g));
       auto dsa = std::make_unique<Botan::DSA_PublicKey>(group, safe_get(y));
       return ffi_new_object(key, std::move(dsa));
    });
@@ -457,7 +457,7 @@ int botan_pubkey_load_ecdsa(botan_pubkey_t* key,
    return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::ECDSA_PublicKey> p_key;
 
-      int rc = pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name);
+      const int rc = pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name);
       if(rc == BOTAN_FFI_SUCCESS) {
          ffi_new_object(key, std::move(p_key));
       }
@@ -480,7 +480,7 @@ int botan_pubkey_load_ecdsa_sec1(botan_pubkey_t* key, const uint8_t sec1[], size
    return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::ECDSA_PublicKey> p_key;
 
-      int rc = pubkey_load_ec_sec1(p_key, {sec1, sec1_len}, curve_name);
+      const int rc = pubkey_load_ec_sec1(p_key, {sec1, sec1_len}, curve_name);
       if(rc == BOTAN_FFI_SUCCESS) {
          ffi_new_object(key, std::move(p_key));
       }
@@ -502,7 +502,7 @@ int botan_privkey_load_ecdsa(botan_privkey_t* key, const botan_mp_t scalar, cons
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::ECDSA_PrivateKey> p_key;
-      int rc = privkey_load_ec(p_key, safe_get(scalar), curve_name);
+      const int rc = privkey_load_ec(p_key, safe_get(scalar), curve_name);
       if(rc == BOTAN_FFI_SUCCESS) {
          ffi_new_object(key, std::move(p_key));
       }
@@ -526,12 +526,12 @@ int botan_privkey_create_elgamal(botan_privkey_t* key, botan_rng_t rng_obj, size
       return BOTAN_FFI_ERROR_BAD_PARAMETER;
    }
 
-   Botan::DL_Group::PrimeType prime_type =
+   const Botan::DL_Group::PrimeType prime_type =
       ((pbits - 1) == qbits) ? Botan::DL_Group::Strong : Botan::DL_Group::Prime_Subgroup;
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
-      Botan::DL_Group group(rng, prime_type, pbits, qbits);
+      const Botan::DL_Group group(rng, prime_type, pbits, qbits);
       auto elg = std::make_unique<Botan::ElGamal_PrivateKey>(rng, group);
       return ffi_new_object(key, std::move(elg));
    });
@@ -548,7 +548,7 @@ int botan_pubkey_load_elgamal(botan_pubkey_t* key, botan_mp_t p, botan_mp_t g, b
    }
    *key = nullptr;
    return ffi_guard_thunk(__func__, [=]() -> int {
-      Botan::DL_Group group(safe_get(p), safe_get(g));
+      const Botan::DL_Group group(safe_get(p), safe_get(g));
       auto elg = std::make_unique<Botan::ElGamal_PublicKey>(group, safe_get(y));
       return ffi_new_object(key, std::move(elg));
    });
@@ -565,7 +565,7 @@ int botan_privkey_load_elgamal(botan_privkey_t* key, botan_mp_t p, botan_mp_t g,
    }
    *key = nullptr;
    return ffi_guard_thunk(__func__, [=]() -> int {
-      Botan::DL_Group group(safe_get(p), safe_get(g));
+      const Botan::DL_Group group(safe_get(p), safe_get(g));
       auto elg = std::make_unique<Botan::ElGamal_PrivateKey>(group, safe_get(x));
       return ffi_new_object(key, std::move(elg));
    });
@@ -588,7 +588,7 @@ int botan_privkey_load_dh(botan_privkey_t* key, botan_mp_t p, botan_mp_t g, bota
    }
    *key = nullptr;
    return ffi_guard_thunk(__func__, [=]() -> int {
-      Botan::DL_Group group(safe_get(p), safe_get(g));
+      const Botan::DL_Group group(safe_get(p), safe_get(g));
       auto dh = std::make_unique<Botan::DH_PrivateKey>(group, safe_get(x));
       return ffi_new_object(key, std::move(dh));
    });
@@ -605,7 +605,7 @@ int botan_pubkey_load_dh(botan_pubkey_t* key, botan_mp_t p, botan_mp_t g, botan_
    }
    *key = nullptr;
    return ffi_guard_thunk(__func__, [=]() -> int {
-      Botan::DL_Group group(safe_get(p), safe_get(g));
+      const Botan::DL_Group group(safe_get(p), safe_get(g));
       auto dh = std::make_unique<Botan::DH_PublicKey>(group, safe_get(y));
       return ffi_new_object(key, std::move(dh));
    });
@@ -647,7 +647,7 @@ int botan_pubkey_load_ecdh(botan_pubkey_t* key,
    *key = nullptr;
    return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::ECDH_PublicKey> p_key;
-      int rc = pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name);
+      const int rc = pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name);
 
       if(rc == BOTAN_FFI_SUCCESS) {
          ffi_new_object(key, std::move(p_key));
@@ -670,7 +670,7 @@ int botan_pubkey_load_ecdh_sec1(botan_pubkey_t* key, const uint8_t sec1[], size_
    return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::ECDH_PublicKey> p_key;
 
-      int rc = pubkey_load_ec_sec1(p_key, {sec1, sec1_len}, curve_name);
+      const int rc = pubkey_load_ec_sec1(p_key, {sec1, sec1_len}, curve_name);
       if(rc == BOTAN_FFI_SUCCESS) {
          ffi_new_object(key, std::move(p_key));
       }
@@ -691,7 +691,7 @@ int botan_privkey_load_ecdh(botan_privkey_t* key, const botan_mp_t scalar, const
    *key = nullptr;
    return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::ECDH_PrivateKey> p_key;
-      int rc = privkey_load_ec(p_key, safe_get(scalar), curve_name);
+      const int rc = privkey_load_ec(p_key, safe_get(scalar), curve_name);
       if(rc == BOTAN_FFI_SUCCESS) {
          ffi_new_object(key, std::move(p_key));
       }
@@ -772,7 +772,7 @@ int botan_pubkey_load_sm2_sec1(botan_pubkey_t* key, const uint8_t sec1[], size_t
    return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::SM2_PublicKey> p_key;
 
-      int rc = pubkey_load_ec_sec1(p_key, {sec1, sec1_len}, curve_name);
+      const int rc = pubkey_load_ec_sec1(p_key, {sec1, sec1_len}, curve_name);
       if(rc == BOTAN_FFI_SUCCESS) {
          ffi_new_object(key, std::move(p_key));
       }
@@ -794,7 +794,7 @@ int botan_privkey_load_sm2(botan_privkey_t* key, const botan_mp_t scalar, const 
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::SM2_PrivateKey> p_key;
-      int rc = privkey_load_ec(p_key, safe_get(scalar), curve_name);
+      const int rc = privkey_load_ec(p_key, safe_get(scalar), curve_name);
 
       if(rc == BOTAN_FFI_SUCCESS) {
          ffi_new_object(key, std::move(p_key));

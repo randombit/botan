@@ -23,7 +23,7 @@ namespace {
 ASN1_Type choose_encoding(std::string_view str) {
    auto all_printable = CT::Mask<uint8_t>::set();
 
-   for(char cs : str) {
+   for(const char cs : str) {
       const uint8_t c = static_cast<uint8_t>(cs);
 
       auto is_alpha_lower = CT::Mask<uint8_t>::is_within_range(c, 'a', 'z');
@@ -86,7 +86,7 @@ void ASN1_String::encode_into(DER_Encoder& encoder) const {
 * Decode a BER encoded ASN1_String
 */
 void ASN1_String::decode_from(BER_Decoder& source) {
-   BER_Object obj = source.get_next_object();
+   const BER_Object obj = source.get_next_object();
 
    if(!is_asn1_string_type(obj.type())) {
       auto typ = static_cast<uint32_t>(obj.type());

@@ -118,7 +118,7 @@ secure_vector<size_t> binary_matrix::row_reduced_echelon_form() {
 
 void randomize_support(std::vector<gf2m>& L, RandomNumberGenerator& rng) {
    for(size_t i = 0; i != L.size(); ++i) {
-      gf2m rnd = random_gf2m(rng);
+      const gf2m rnd = random_gf2m(rng);
 
       // no rejection sampling, but for useful code-based parameters with n <= 13 this seem tolerable
       std::swap(L[i], L[rnd % L.size()]);
@@ -210,7 +210,7 @@ McEliece_PrivateKey generate_mceliece_key(RandomNumberGenerator& rng, size_t ext
       } catch(const Invalid_State&) {}
    } while(!success);
 
-   std::vector<polyn_gf2m> sqrtmod = polyn_gf2m::sqrt_mod_init(g);
+   const std::vector<polyn_gf2m> sqrtmod = polyn_gf2m::sqrt_mod_init(g);
    std::vector<polyn_gf2m> F = syndrome_init(g, L, static_cast<int>(code_length));
 
    // Each F[i] is the (precomputed) syndrome of the error vector with

@@ -101,7 +101,7 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_CLMUL SIMD_4x32 clmul(const SIMD_4x32& H, const 
 inline SIMD_4x32 BOTAN_FN_ISA_CLMUL gcm_reduce(const SIMD_4x32& B0, const SIMD_4x32& B1) {
    SIMD_4x32 X0 = B1.shr<31>();
    SIMD_4x32 X1 = B1.shl<1>();
-   SIMD_4x32 X2 = B0.shr<31>();
+   const SIMD_4x32 X2 = B0.shr<31>();
    SIMD_4x32 X3 = B0.shl<1>();
 
    X3 |= X0.shift_elems_right<3>();
@@ -120,7 +120,7 @@ inline SIMD_4x32 BOTAN_FN_ISA_CLMUL gcm_reduce(const SIMD_4x32& B0, const SIMD_4
 inline SIMD_4x32 BOTAN_FN_ISA_CLMUL gcm_multiply(const SIMD_4x32& H, const SIMD_4x32& x) {
    SIMD_4x32 T0 = clmul<0x11>(H, x);
    SIMD_4x32 T1 = clmul<0x10>(H, x);
-   SIMD_4x32 T2 = clmul<0x01>(H, x);
+   const SIMD_4x32 T2 = clmul<0x01>(H, x);
    SIMD_4x32 T3 = clmul<0x00>(H, x);
 
    T1 ^= T2;

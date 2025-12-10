@@ -48,7 +48,7 @@ class ZFEC_KAT final : public Text_Based_Test {
             shares.insert(std::make_pair(i, expected_share));
          }
 
-         Botan::ZFEC zfec(K, N);
+         const Botan::ZFEC zfec(K, N);
 
          const std::string zfec_impl = zfec.provider();
 

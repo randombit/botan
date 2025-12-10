@@ -291,7 +291,7 @@ Record_Layer::ReadResult<Record> Record_Layer::next_record(Cipher_State* cipher_
    // The first received record(s) are likely a client or server hello. To be able to
    // perform protocol downgrades we must be less vigorous with the record's
    // legacy version. Hence, `check_tls13_version` is `false` for the first record(s).
-   TLSPlaintext_Header plaintext_header({header_begin, header_end}, !m_receiving_compat_mode);
+   const TLSPlaintext_Header plaintext_header({header_begin, header_end}, !m_receiving_compat_mode);
 
    // After the key exchange phase of the handshake is completed and record protection is engaged,
    // cipher_state is set. At this point, only protected traffic (and CCS) is allowed.

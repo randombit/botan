@@ -29,6 +29,7 @@ BOTAN_MALLOC_FN void* allocate_memory(size_t elems, size_t elem_size) {
    }
 
 #if defined(BOTAN_HAS_LOCKING_ALLOCATOR)
+   // NOLINTNEXTLINE(*-const-correctness) bug in clang-tidy
    if(void* p = mlock_allocator::instance().allocate(elems, elem_size)) {
       return p;
    }
@@ -37,6 +38,7 @@ BOTAN_MALLOC_FN void* allocate_memory(size_t elems, size_t elem_size) {
 #if defined(BOTAN_TARGET_OS_HAS_ALLOC_CONCEAL)
    void* ptr = ::calloc_conceal(elems, elem_size);
 #else
+   // NOLINTNEXTLINE(*-const-correctness) bug in clang-tidy
    void* ptr = std::calloc(elems, elem_size);  // NOLINT(*-no-malloc,*-owning-memory)
 #endif
    if(ptr == nullptr) {

@@ -350,7 +350,7 @@ size_t BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws) {
    size_t reductions = 0;
 
    for(;;) {
-      word borrow = bigint_sub3(ws.data(), _data(), p_words + 1, p._data(), p_words);
+      const word borrow = bigint_sub3(ws.data(), _data(), p_words + 1, p._data(), p_words);
       if(borrow > 0) {
          break;
       }
@@ -378,7 +378,7 @@ void BigInt::ct_reduce_below(const BigInt& mod, secure_vector<word>& ws, size_t 
    clear_mem(ws.data(), sz);
 
    for(size_t i = 0; i != bound; ++i) {
-      word borrow = bigint_sub3(ws.data(), _data(), sz, mod._data(), mod_words);
+      const word borrow = bigint_sub3(ws.data(), _data(), sz, mod._data(), mod_words);
 
       CT::Mask<word>::is_zero(borrow).select_n(mutable_data(), ws.data(), _data(), sz);
    }

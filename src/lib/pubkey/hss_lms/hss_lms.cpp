@@ -122,7 +122,7 @@ HSS_LMS_PrivateKey::HSS_LMS_PrivateKey(std::span<const uint8_t> private_key) {
 }
 
 HSS_LMS_PrivateKey::HSS_LMS_PrivateKey(RandomNumberGenerator& rng, std::string_view algo_params) {
-   HSS_LMS_Params hss_params(algo_params);
+   const HSS_LMS_Params hss_params(algo_params);
    m_private = std::make_shared<HSS_LMS_PrivateKeyInternal>(hss_params, rng);
    auto scope = CT::scoped_poison(*m_private);
    m_public = std::make_shared<HSS_LMS_PublicKeyInternal>(HSS_LMS_PublicKeyInternal::create(*m_private));

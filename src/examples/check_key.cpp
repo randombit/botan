@@ -5,7 +5,7 @@
 #include <iostream>
 
 int main() {
-   Botan::X509_Certificate cert("cert.pem");
+   const Botan::X509_Certificate cert("cert.pem");
    Botan::AutoSeeded_RNG rng;
    auto key = cert.subject_public_key();
    if(!key->check_key(rng, false)) {

@@ -66,7 +66,7 @@ void Pipe::write(uint8_t input) {
 void Pipe::write(DataSource& source) {
    secure_vector<uint8_t> buffer(DefaultBufferSize);
    while(!source.end_of_data()) {
-      size_t got = source.read(buffer.data(), buffer.size());
+      const size_t got = source.read(buffer.data(), buffer.size());
       write(buffer.data(), got);
    }
 }
@@ -98,7 +98,7 @@ size_t Pipe::read(uint8_t& out, message_id msg) {
 secure_vector<uint8_t> Pipe::read_all(message_id msg) {
    msg = ((msg != DEFAULT_MESSAGE) ? msg : default_msg());
    secure_vector<uint8_t> buffer(remaining(msg));
-   size_t got = read(buffer.data(), buffer.size(), msg);
+   const size_t got = read(buffer.data(), buffer.size(), msg);
    buffer.resize(got);
    return buffer;
 }
@@ -113,7 +113,7 @@ std::string Pipe::read_all_as_string(message_id msg) {
    str.reserve(remaining(msg));
 
    while(true) {
-      size_t got = read(buffer.data(), buffer.size(), msg);
+      const size_t got = read(buffer.data(), buffer.size(), msg);
       if(got == 0) {
          break;
       }

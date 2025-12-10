@@ -50,7 +50,7 @@ class Bcrypt_Tests final : public Text_Based_Test {
       std::vector<Test::Result> run_final_tests() override {
          Test::Result result("bcrypt");
 
-         uint64_t start = Test::timestamp();
+         const uint64_t start = Test::timestamp();
 
          const std::string password = "ag00d1_2BE5ur3";
 

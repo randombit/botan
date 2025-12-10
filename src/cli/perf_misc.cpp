@@ -40,7 +40,7 @@ namespace Botan_CLI {
 class PerfTest_Hex final : public PerfTest {
    public:
       void go(const PerfConfig& config) override {
-         for(size_t buf_size : config.buffer_sizes()) {
+         for(const size_t buf_size : config.buffer_sizes()) {
             std::vector<uint8_t> ibuf(buf_size);
             std::vector<uint8_t> rbuf(buf_size);
             const size_t olen = 2 * buf_size;
@@ -72,7 +72,7 @@ BOTAN_REGISTER_PERF_TEST("hex", PerfTest_Hex);
 class PerfTest_Base32 final : public PerfTest {
    public:
       void go(const PerfConfig& config) override {
-         for(size_t buf_size : config.buffer_sizes()) {
+         for(const size_t buf_size : config.buffer_sizes()) {
             std::vector<uint8_t> ibuf(buf_size);
             std::vector<uint8_t> rbuf(buf_size);
             const size_t olen = Botan::base32_encode_max_output(ibuf.size());
@@ -106,7 +106,7 @@ BOTAN_REGISTER_PERF_TEST("base32", PerfTest_Base32);
 class PerfTest_Base64 final : public PerfTest {
    public:
       void go(const PerfConfig& config) override {
-         for(size_t buf_size : config.buffer_sizes()) {
+         for(const size_t buf_size : config.buffer_sizes()) {
             std::vector<uint8_t> ibuf(buf_size);
             std::vector<uint8_t> rbuf(buf_size);
             const size_t olen = Botan::base64_encode_max_output(ibuf.size());
@@ -140,7 +140,7 @@ BOTAN_REGISTER_PERF_TEST("base64", PerfTest_Base64);
 class PerfTest_Base58 final : public PerfTest {
    public:
       void go(const PerfConfig& config) override {
-         for(size_t buf_size : config.buffer_sizes()) {
+         for(const size_t buf_size : config.buffer_sizes()) {
             std::vector<uint8_t> ibuf(buf_size);
 
             auto enc_timer = config.make_timer("base58", ibuf.size(), "encode", "", ibuf.size());

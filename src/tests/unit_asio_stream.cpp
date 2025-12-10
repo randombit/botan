@@ -443,7 +443,7 @@ class Asio_Stream_Tests final : public Test {
 
       void test_async_read_some_success(std::vector<Test::Result>& results) {
          net::io_context ioc;
-         TestStream remote{ioc};
+         const TestStream remote{ioc};
 
          auto ctx = get_context();
          AsioStream ssl(ctx, ioc, test_data());
@@ -457,7 +457,7 @@ class Asio_Stream_Tests final : public Test {
             result.confirm("does not report an error", !ec);
          };
 
-         net::mutable_buffer buf{data, TEST_DATA_SIZE};
+         const net::mutable_buffer buf{data, TEST_DATA_SIZE};
          net::async_read(ssl, buf, read_handler);
 
          ssl.next_layer().close_remote();
@@ -508,7 +508,7 @@ class Asio_Stream_Tests final : public Test {
             result.confirm("propagates error code", ec == net::error::no_recovery);
          };
 
-         net::mutable_buffer buf{data, TEST_DATA_SIZE};
+         const net::mutable_buffer buf{data, TEST_DATA_SIZE};
          net::async_read(ssl, buf, read_handler);
 
          ssl.next_layer().close_remote();
@@ -529,7 +529,7 @@ class Asio_Stream_Tests final : public Test {
             result.confirm("propagates error code", ec == ThrowingMockChannel::expected_ec());
          };
 
-         net::mutable_buffer buf{data, TEST_DATA_SIZE};
+         const net::mutable_buffer buf{data, TEST_DATA_SIZE};
          net::async_read(ssl, buf, read_handler);
 
          ssl.next_layer().close_remote();
@@ -539,7 +539,7 @@ class Asio_Stream_Tests final : public Test {
 
       void test_async_read_zero_buffer(std::vector<Test::Result>& results) {
          net::io_context ioc;
-         TestStream remote{ioc};
+         const TestStream remote{ioc};
 
          auto ctx = get_context();
          AsioStream ssl(ctx, ioc);
@@ -554,7 +554,7 @@ class Asio_Stream_Tests final : public Test {
             result.confirm("does not report an error", !ec);
          };
 
-         net::mutable_buffer buf{data, std::size_t(0)};
+         const net::mutable_buffer buf{data, std::size_t(0)};
          net::async_read(ssl, buf, read_handler);
 
          ssl.next_layer().close_remote();

@@ -28,7 +28,7 @@ std::vector<Test::Result> test_hss_lms_params_parsing() {
       CHECK("HSS Parameter Parsing",
             [&](Test::Result& result) {
                result.test_no_throw("no throw", [&] {
-                  Botan::HSS_LMS_Params hss_params("SHA-256,HW(5,1),HW(25,8)");
+                  const Botan::HSS_LMS_Params hss_params("SHA-256,HW(5,1),HW(25,8)");
 
                   result.test_is_eq("hss levels", hss_params.L(), Botan::HSS_Level(2));
                   const auto& top_lms_params = hss_params.params_at_level(Botan::HSS_Level(0));
@@ -141,7 +141,7 @@ class HSS_LMS_Negative_Tests final : public Test {
             bad_sig.at(idx) ^= 0x80;
             result.test_no_throw(Botan::fmt("Verification does not throw (byte idx {})", idx), [&]() {
                verifier.update(mes);
-               bool valid = verifier.check_signature(bad_sig);
+               const bool valid = verifier.check_signature(bad_sig);
                result.confirm(Botan::fmt("Manipulated signature is invalid (byte idx {})", idx), !valid);
             });
          }
@@ -166,7 +166,7 @@ class HSS_LMS_Negative_Tests final : public Test {
          for(size_t n = 0; n < valid_sig.size(); ++n) {
             result.test_no_throw("Verification does not throw", [&]() {
                verifier.update(mes);
-               bool valid = verifier.check_signature(valid_sig.data(), n);
+               const bool valid = verifier.check_signature(valid_sig.data(), n);
                result.confirm("Too short signature is invalid", !valid);
             });
          }
@@ -182,13 +182,13 @@ class HSS_LMS_Negative_Tests final : public Test {
 
          auto sk_bytes = sk->private_key_bits();
          result.test_no_throw("Entire private key valid", [&]() {
-            Botan::HSS_LMS_PrivateKey key(sk_bytes);
+            const Botan::HSS_LMS_PrivateKey key(sk_bytes);
             BOTAN_UNUSED(key);
          });
          for(size_t n = 0; n < sk_bytes.size(); ++n) {
             result.test_throws<Botan::Decoding_Error>("Partial private key invalid", [&]() {
-               std::span<const uint8_t> partial_key = {sk_bytes.data(), n};
-               Botan::HSS_LMS_PrivateKey key(partial_key);
+               const std::span<const uint8_t> partial_key = {sk_bytes.data(), n};
+               const Botan::HSS_LMS_PrivateKey key(partial_key);
                BOTAN_UNUSED(key);
             });
          }
@@ -203,13 +203,13 @@ class HSS_LMS_Negative_Tests final : public Test {
 
          auto sk_bytes = sk->public_key_bits();
          result.test_no_throw("Entire public key valid", [&]() {
-            Botan::HSS_LMS_PublicKey key(sk_bytes);
+            const Botan::HSS_LMS_PublicKey key(sk_bytes);
             BOTAN_UNUSED(key);
          });
          for(size_t n = 0; n < sk_bytes.size(); ++n) {
             result.test_throws<Botan::Decoding_Error>("Partial public key invalid", [&]() {
-               std::span<const uint8_t> partial_key = {sk_bytes.data(), n};
-               Botan::HSS_LMS_PublicKey key(partial_key);
+               const std::span<const uint8_t> partial_key = {sk_bytes.data(), n};
+               const Botan::HSS_LMS_PublicKey key(partial_key);
                BOTAN_UNUSED(key);
             });
          }
@@ -272,7 +272,7 @@ class HSS_LMS_Statefulness_Test final : public Test {
       Test::Result test_max_sig_count() {
          Test::Result result("HSS-LMS");
 
-         uint64_t total_sig_count = 32;
+         const uint64_t total_sig_count = 32;
          auto sk = create_private_key_with_idx(total_sig_count - 1);
 
          Botan::PK_Signer signer(sk, Test::rng(), "");
@@ -306,14 +306,14 @@ class HSS_LMS_Missing_API_Test final : public Test {
                         3 * sizeof(uint32_t) + Botan::LMS_IDENTIFIER_LEN);
 
          // HSS_LMS_Verification_Operation::hash_function()
-         Botan::PK_Verifier verifier(*sk, "");
+         const Botan::PK_Verifier verifier(*sk, "");
          result.test_eq("PK_Verifier should report the hash of the key", verifier.hash_function(), "SHA-256");
 
          // HSS_LMS_PrivateKey::raw_private_key_bits()
          result.test_eq("Our BER and raw encoding is the same", sk->raw_private_key_bits(), sk->private_key_bits());
 
          // HSS_LMS_Signature_Operation::algorithm_identifier()
-         Botan::PK_Signer signer(*sk, Test::rng(), "");
+         const Botan::PK_Signer signer(*sk, Test::rng(), "");
          result.test_is_eq(signer.algorithm_identifier(), sk->algorithm_identifier());
 
          // HSS_LMS_Signature_Operation::hash_function()

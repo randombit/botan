@@ -46,7 +46,7 @@ class TSS_Recovery_Tests final : public Text_Based_Test {
 
             if(N != M) {
                while(shares.size() > M) {
-                  size_t to_remove = this->rng().next_byte() % shares.size();
+                  const size_t to_remove = this->rng().next_byte() % shares.size();
                   shares.erase(shares.begin() + to_remove);
                   try {
                      auto reconstructed_secret = Botan::RTSS_Share::reconstruct(shares);
@@ -122,7 +122,7 @@ class TSS_Generation_Tests final : public Text_Based_Test {
 
          if(N != M) {
             while(shares.size() > M) {
-               size_t to_remove = this->rng().next_byte() % shares.size();
+               const size_t to_remove = this->rng().next_byte() % shares.size();
                shares.erase(shares.begin() + to_remove);
 
                try {

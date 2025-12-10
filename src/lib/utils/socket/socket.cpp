@@ -51,7 +51,7 @@ class Asio_Socket final : public OS::Socket {
          check_timeout();
 
          boost::asio::ip::tcp::resolver resolver(m_io);
-         boost::asio::ip::tcp::resolver::results_type dns_iter =
+         const boost::asio::ip::tcp::resolver::results_type dns_iter =
             resolver.resolve(std::string{hostname}, std::string{service});
 
          boost::system::error_code ec = boost::asio::error::would_block;
@@ -211,13 +211,13 @@ class BSD_Socket final : public OS::Socket {
          const std::string hostname_str(hostname);
          const std::string service_str(service);
 
-         int rc = ::getaddrinfo(hostname_str.c_str(), service_str.c_str(), &hints, &res);
+         const int rc = ::getaddrinfo(hostname_str.c_str(), service_str.c_str(), &hints, &res);
 
          if(rc != 0) {
             throw System_Error(fmt("Name resolution failed for {}", hostname), rc);
          }
 
-         for(addrinfo* rp = res; (m_socket == invalid_socket()) && (rp != nullptr); rp = rp->ai_next) {
+         for(const addrinfo* rp = res; (m_socket == invalid_socket()) && (rp != nullptr); rp = rp->ai_next) {
             if(rp->ai_family != AF_INET && rp->ai_family != AF_INET6) {
                continue;
             }
@@ -231,7 +231,7 @@ class BSD_Socket final : public OS::Socket {
 
             set_nonblocking(m_socket);
 
-            int err = ::connect(m_socket, rp->ai_addr, static_cast<socklen_type>(rp->ai_addrlen));
+            const int err = ::connect(m_socket, rp->ai_addr, static_cast<socklen_type>(rp->ai_addrlen));
 
             if(err == -1) {
                int active = 0;
@@ -290,19 +290,19 @@ class BSD_Socket final : public OS::Socket {
          FD_ZERO(&write_set);
          FD_SET(m_socket, &write_set);
 
-         size_t len = buf.size();
+         const size_t len = buf.size();
 
          size_t sent_so_far = 0;
          while(sent_so_far != len) {
             struct timeval timeout = make_timeout_tv();
-            int active = ::select(static_cast<int>(m_socket + 1), nullptr, &write_set, nullptr, &timeout);
+            const int active = ::select(static_cast<int>(m_socket + 1), nullptr, &write_set, nullptr, &timeout);
 
             if(active == 0) {
                throw System_Error("Timeout during socket write");
             }
 
             const size_t left = len - sent_so_far;
-            socket_op_ret_type sent =
+            const socket_op_ret_type sent =
                ::send(m_socket, cast_uint8_ptr_to_char(&buf[sent_so_far]), static_cast<sendrecv_len_type>(left), 0);
             if(sent < 0) {
                throw System_Error("Socket write failed", errno);
@@ -318,13 +318,14 @@ class BSD_Socket final : public OS::Socket {
          FD_SET(m_socket, &read_set);
 
          struct timeval timeout = make_timeout_tv();
-         int active = ::select(static_cast<int>(m_socket + 1), &read_set, nullptr, nullptr, &timeout);
+         const int active = ::select(static_cast<int>(m_socket + 1), &read_set, nullptr, nullptr, &timeout);
 
          if(active == 0) {
             throw System_Error("Timeout during socket read");
          }
 
-         socket_op_ret_type got = ::recv(m_socket, cast_uint8_ptr_to_char(buf), static_cast<sendrecv_len_type>(len), 0);
+         const socket_op_ret_type got =
+            ::recv(m_socket, cast_uint8_ptr_to_char(buf), static_cast<sendrecv_len_type>(len), 0);
 
          if(got < 0) {
             throw System_Error("Socket read failed", errno);

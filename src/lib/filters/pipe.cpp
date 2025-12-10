@@ -299,7 +299,7 @@ void Pipe::pop() {
    size_t to_remove = m_pipe->owns() + 1;
 
    while(to_remove > 0) {
-      std::unique_ptr<Filter> to_destroy(m_pipe);
+      const std::unique_ptr<Filter> to_destroy(m_pipe);
       m_pipe = m_pipe->m_next[0];
       to_remove -= 1;
    }

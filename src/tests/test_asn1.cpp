@@ -46,7 +46,7 @@ Test::Result test_ber_eoc_decoding_limits() {
 
    // OSS-Fuzz #4353
 
-   Botan::ASN1_Pretty_Printer printer;
+   const Botan::ASN1_Pretty_Printer printer;
 
    size_t max_eoc_allowed = 0;
 
@@ -176,7 +176,7 @@ Test::Result test_asn1_ascii_encoding() {
    try {
       // UTF-8 encoded (ASCII chars only) word 'Moscow'
       const std::string moscow = "Moscow";
-      Botan::ASN1_String str(moscow);
+      const Botan::ASN1_String str(moscow);
 
       Botan::DER_Encoder enc;
 
@@ -202,7 +202,7 @@ Test::Result test_asn1_utf8_encoding() {
    try {
       // UTF-8 encoded russian word for Moscow in cyrillic script
       const std::string moscow = "\xD0\x9C\xD0\xBE\xD1\x81\xD0\xBA\xD0\xB2\xD0\xB0";
-      Botan::ASN1_String str(moscow);
+      const Botan::ASN1_String str(moscow);
 
       Botan::DER_Encoder enc;
 
@@ -304,10 +304,10 @@ class ASN1_Time_Parsing_Tests final : public Text_Based_Test {
          const bool valid = tag_str.find(".invalid") == std::string::npos;
 
          if(valid) {
-            Botan::ASN1_Time time(tspec, tag);
+            const Botan::ASN1_Time time(tspec, tag);
             result.test_success("Accepted valid time");
          } else {
-            result.test_throws("Invalid time rejected", [=]() { Botan::ASN1_Time time(tspec, tag); });
+            result.test_throws("Invalid time rejected", [=]() { const Botan::ASN1_Time time(tspec, tag); });
          }
 
          return result;
@@ -321,12 +321,12 @@ class ASN1_Printer_Tests final : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result("ASN1_Pretty_Printer");
 
-         Botan::ASN1_Pretty_Printer printer;
+         const Botan::ASN1_Pretty_Printer printer;
 
          const size_t num_tests = 7;
 
          for(size_t i = 1; i <= num_tests; ++i) {
-            std::string i_str = std::to_string(i);
+            const std::string i_str = std::to_string(i);
             const std::vector<uint8_t> input_data = Test::read_binary_data_file("asn1_print/input" + i_str + ".der");
             const std::string expected_output = Test::read_data_file("asn1_print/output" + i_str + ".txt");
 

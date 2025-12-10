@@ -140,7 +140,7 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
 
          // test secret derivation: ISO 18033 test vectors use KDF1 from ISO 18033
          // no cofactor-/oldcofactor-/singlehash-/check-mode and 128 byte secret length
-         Botan::ECIES_KA_Params ka_params(
+         const Botan::ECIES_KA_Params ka_params(
             eph_private_key.domain(), "KDF1-18033(SHA-1)", 128, compression_type, Flags::None);
          const Botan::ECIES_KA_Operation ka(eph_private_key, ka_params, true, this->rng());
          const Botan::SymmetricKey secret_key = ka.derive_secret(eph_public_key_bin, other_public_key_point);
@@ -153,10 +153,10 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
          for(auto comp_type : {Botan::EC_Point_Format::Uncompressed,
                                Botan::EC_Point_Format::Compressed,
                                Botan::EC_Point_Format::Hybrid}) {
-            for(bool cofactor_mode : {true, false}) {
-               for(bool single_hash_mode : {true, false}) {
-                  for(bool old_cofactor_mode : {true, false}) {
-                     for(bool check_mode : {true, false}) {
+            for(const bool cofactor_mode : {true, false}) {
+               for(const bool single_hash_mode : {true, false}) {
+                  for(const bool old_cofactor_mode : {true, false}) {
+                     for(const bool check_mode : {true, false}) {
                         Flags flags = ecies_flags(cofactor_mode, old_cofactor_mode, check_mode, single_hash_mode);
 
                         if(size_t(cofactor_mode) + size_t(check_mode) + size_t(old_cofactor_mode) > 1) {
@@ -174,14 +174,14 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
                            continue;
                         }
 
-                        Botan::ECIES_System_Params ecies_params(eph_private_key.domain(),
-                                                                "KDF2(SHA-1)",
-                                                                "AES-256/CBC",
-                                                                32,
-                                                                "HMAC(SHA-1)",
-                                                                20,
-                                                                comp_type,
-                                                                flags);
+                        const Botan::ECIES_System_Params ecies_params(eph_private_key.domain(),
+                                                                      "KDF2(SHA-1)",
+                                                                      "AES-256/CBC",
+                                                                      32,
+                                                                      "HMAC(SHA-1)",
+                                                                      20,
+                                                                      comp_type,
+                                                                      flags);
                         check_encrypt_decrypt(
                            result, eph_private_key, other_private_key, ecies_params, 16, this->rng());
                      }
@@ -336,7 +336,7 @@ Test::Result test_kdf_not_found() {
                                                  flags);
 
    result.test_throws("kdf not found", [&]() {
-      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, *rng);
+      const Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, *rng);
       ecies_enc.encrypt(std::vector<uint8_t>(8), *rng);
    });
 
@@ -367,7 +367,7 @@ Test::Result test_mac_not_found() {
                                                  flags);
 
    result.test_throws("mac not found", [&]() {
-      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, *rng);
+      const Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, *rng);
       ecies_enc.encrypt(std::vector<uint8_t>(8), *rng);
    });
 
@@ -398,7 +398,7 @@ Test::Result test_cipher_not_found() {
                                                  flags);
 
    result.test_throws("cipher not found", [&]() {
-      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, *rng);
+      const Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, *rng);
       ecies_enc.encrypt(std::vector<uint8_t>(8), *rng);
    });
 

@@ -491,8 +491,8 @@ Ed25519_Point_Niels select(const Ed25519_Point_Niels base[8], int8_t b) {
 
    // If negative have to swap yminusx and yplusx
    for(size_t i = 0; i != 10; ++i) {
-      int32_t t_yplusx = t.yplusx[i] ^ ((t.yplusx[i] ^ t.yminusx[i]) & neg_mask);
-      int32_t t_yminusx = t.yminusx[i] ^ ((t.yminusx[i] ^ t.yplusx[i]) & neg_mask);
+      const int32_t t_yplusx = t.yplusx[i] ^ ((t.yplusx[i] ^ t.yminusx[i]) & neg_mask);
+      const int32_t t_yminusx = t.yminusx[i] ^ ((t.yminusx[i] ^ t.yplusx[i]) & neg_mask);
 
       t.yplusx[i] = t_yplusx;
       t.yminusx[i] = t_yminusx;

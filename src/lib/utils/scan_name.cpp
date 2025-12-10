@@ -66,7 +66,7 @@ SCAN_Name::SCAN_Name(std::string_view algo_spec) : m_orig_algo_spec(algo_spec) {
 
    const std::string decoding_error = "Bad SCAN name '" + m_orig_algo_spec + "': ";
 
-   for(char c : algo_spec) {
+   for(const char c : algo_spec) {
       if(c == '/' || c == ',' || c == '(' || c == ')') {
          if(c == '(') {
             ++level;

@@ -38,7 +38,6 @@ Checks: >
     -cppcoreguidelines-pro-type-reinterpret-cast,
     -cppcoreguidelines-use-default-member-init,
     -hicpp-signed-bitwise,
-    -misc-const-correctness,
     -misc-include-cleaner,
     -misc-no-recursion,
     -modernize-pass-by-value,

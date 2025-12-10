@@ -320,7 +320,7 @@ int botan_x509_cert_verify(int* result_code,
          trusted_roots.push_back(trusted_extra.get());
       }
 
-      Botan::Path_Validation_Restrictions restrictions(false, required_strength);
+      const Botan::Path_Validation_Restrictions restrictions(false, required_strength);
 
       auto validation_result =
          Botan::x509_path_validate(end_certs, restrictions, trusted_roots, hostname, usage, validation_time);
@@ -348,7 +348,7 @@ const char* botan_x509_cert_validation_status(int code) {
    }
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   Botan::Certificate_Status_Code sc = static_cast<Botan::Certificate_Status_Code>(code);
+   const Botan::Certificate_Status_Code sc = static_cast<Botan::Certificate_Status_Code>(code);
    return Botan::to_string(sc);
 #else
    return nullptr;
@@ -470,7 +470,7 @@ int botan_x509_cert_verify_with_crl(int* result_code,
          trusted_roots.push_back(trusted_crls.get());
       }
 
-      Botan::Path_Validation_Restrictions restrictions(false, required_strength);
+      const Botan::Path_Validation_Restrictions restrictions(false, required_strength);
 
       auto validation_result =
          Botan::x509_path_validate(end_certs, restrictions, trusted_roots, hostname, usage, validation_time);

@@ -328,7 +328,7 @@ void* Memory_Pool::allocate(size_t n) {
    const size_t n_bucket = choose_bucket(n);
 
    if(n_bucket > 0) {
-      lock_guard_type<mutex_type> lock(m_mutex);
+      const lock_guard_type<mutex_type> lock(m_mutex);
 
       std::deque<Bucket>& buckets = m_buckets_for[n_bucket];
 
@@ -339,6 +339,7 @@ void* Memory_Pool::allocate(size_t n) {
       recycled.
       */
       for(auto& bucket : buckets) {
+         // NOLINTNEXTLINE(*-const-correctness) bug in clang-tidy
          if(uint8_t* p = bucket.alloc()) {
             return p;
          }
@@ -354,6 +355,7 @@ void* Memory_Pool::allocate(size_t n) {
          OS::page_allow_access(ptr);
 #endif
          buckets.push_front(Bucket(ptr, m_page_size, n_bucket));
+         // NOLINTNEXTLINE(*-const-correctness) bug in clang-tidy
          void* p = buckets[0].alloc();
          BOTAN_ASSERT_NOMSG(p != nullptr);
          return p;
@@ -375,7 +377,7 @@ bool Memory_Pool::deallocate(void* p, size_t len) noexcept {
 
    if(n_bucket != 0) {
       try {
-         lock_guard_type<mutex_type> lock(m_mutex);
+         const lock_guard_type<mutex_type> lock(m_mutex);
 
          std::deque<Bucket>& buckets = m_buckets_for[n_bucket];
 

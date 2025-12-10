@@ -44,9 +44,9 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
 
       append_tls_length_value(m_key_material, as_span_of_bytes(m_psk_identity.value()), 2);
 
-      SymmetricKey psk = creds.psk("tls-client", std::string(hostname), m_psk_identity.value());
+      const SymmetricKey psk = creds.psk("tls-client", std::string(hostname), m_psk_identity.value());
 
-      std::vector<uint8_t> zeros(psk.length());
+      const std::vector<uint8_t> zeros(psk.length());
 
       append_tls_length_value(m_pre_master, zeros, 2);
       append_tls_length_value(m_pre_master, psk.bits_of(), 2);
@@ -56,7 +56,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
       SymmetricKey psk;
 
       if(kex_algo == Kex_Algo::ECDHE_PSK) {
-         std::string identity_hint = reader.get_string(2, 0, 65535);
+         const std::string identity_hint = reader.get_string(2, 0, 65535);
 
          m_psk_identity = creds.psk_identity("tls-client", std::string(hostname), identity_hint);
 
@@ -154,7 +154,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          m_pre_master[0] = offered_version.major_version();
          m_pre_master[1] = offered_version.minor_version();
 
-         PK_Encryptor_EME encryptor(*rsa_pub, rng, "PKCS1v15");
+         const PK_Encryptor_EME encryptor(*rsa_pub, rng, "PKCS1v15");
 
          const std::vector<uint8_t> encrypted_key = encryptor.encrypt(m_pre_master, rng);
 
@@ -195,7 +195,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
       const std::vector<uint8_t> encrypted_pre_master = reader.get_range<uint8_t>(2, 0, 65535);
       reader.assert_done();
 
-      PK_Decryptor_EME decryptor(*server_rsa_kex_key, rng, "PKCS1v15");
+      const PK_Decryptor_EME decryptor(*server_rsa_kex_key, rng, "PKCS1v15");
 
       const uint8_t client_major = state.client_hello()->legacy_version().major_version();
       const uint8_t client_minor = state.client_hello()->legacy_version().minor_version();
@@ -238,7 +238,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
       }
 
       if(kex_algo == Kex_Algo::PSK) {
-         std::vector<uint8_t> zeros(psk.length());
+         const std::vector<uint8_t> zeros(psk.length());
          append_tls_length_value(m_pre_master, zeros, 2);
          append_tls_length_value(m_pre_master, psk.bits_of(), 2);
       } else if(kex_algo == Kex_Algo::DH || kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK) {

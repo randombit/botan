@@ -279,7 +279,7 @@ class IntMod final {
          // We could multiply by INV_2 but there is a better way ...
 
          std::array<W, N> t = value();
-         W borrow = shift_right<1>(t);
+         const W borrow = shift_right<1>(t);
 
          // If value was odd, add (P/2)+1
          bigint_cnd_add(borrow, t.data(), INV_2.data(), N);
@@ -290,7 +290,7 @@ class IntMod final {
       /// Return (*this) multiplied by 2
       constexpr Self mul2() const {
          std::array<W, N> t = value();
-         W carry = shift_left<1>(t);
+         const W carry = shift_left<1>(t);
 
          std::array<W, N> r;  // NOLINT(*-member-init)
          bigint_monty_maybe_sub<N>(r.data(), carry, t.data(), P.data());
@@ -517,7 +517,7 @@ class IntMod final {
          while((a.m_val[0] & 1) != 1) {
             shift_right<1>(a.m_val);
 
-            W borrow = shift_right<1>(x.m_val);
+            const W borrow = shift_right<1>(x.m_val);
 
             // Conditional ok: this function is variable time
             if(borrow) {
@@ -603,7 +603,7 @@ class IntMod final {
             * If it did not then we are in the b > a path
             */
             std::array<W, N> r;  // NOLINT(*-member-init)
-            word carry = bigint_sub3(r.data(), b.data(), N, a.data(), N);
+            const word carry = bigint_sub3(r.data(), b.data(), N, a.data(), N);
 
             // Conditional ok: this function is variable time
             if(carry == 0) {
@@ -1559,8 +1559,8 @@ class WindowedMul2Table final {
       */
       ProjectivePoint mul2(const Scalar& s1, const Scalar& s2, RandomNumberGenerator& rng) const {
          using BlindedScalar = BlindedScalarBits<C, W>;
-         BlindedScalar bits1(s1, rng);
-         BlindedScalar bits2(s2, rng);
+         const BlindedScalar bits1(s1, rng);
+         const BlindedScalar bits2(s2, rng);
 
          return mul2_exec<C, W>(m_table, bits1, bits2, rng);
       }
@@ -1599,8 +1599,8 @@ class VartimeMul2Table final {
          const UnblindedScalarBits<C, W> bits1(s1);
          const UnblindedScalarBits<C, W> bits2(s2);
 
-         bool s1_is_zero = s1.is_zero().as_bool();
-         bool s2_is_zero = s2.is_zero().as_bool();
+         const bool s1_is_zero = s1.is_zero().as_bool();
+         const bool s2_is_zero = s2.is_zero().as_bool();
 
          // Conditional ok: this function is variable time
          if(s1_is_zero && s2_is_zero) {

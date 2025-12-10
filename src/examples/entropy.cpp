@@ -14,7 +14,6 @@
 // includes needed for example Entropy_Source implementations
 #include <botan/entropy_src.h>
 #include <botan/rng.h>
-#include <array>
 #include <chrono>
 
 // includes needed for main
@@ -103,7 +102,7 @@ class Timer_Entropy_Source final : public Botan::Entropy_Source {
          */
 
          for(size_t i = 0; i != poll_goal; ++i) {
-            uint64_t timer = high_resolution_timer();
+            const uint64_t timer = high_resolution_timer();
 
             // If the timer is fast, this loop will almost always exit immediately and
             // the counter will just be zero.

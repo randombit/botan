@@ -38,7 +38,7 @@ bool TOTP::verify_totp(uint32_t otp, std::chrono::system_clock::time_point curre
 }
 
 bool TOTP::verify_totp(uint32_t otp, uint64_t unix_time, size_t clock_drift_accepted) {
-   uint64_t t = unix_time / m_time_step;
+   const uint64_t t = unix_time / m_time_step;
 
    for(size_t i = 0; i <= clock_drift_accepted; ++i) {
       if(m_hotp.generate_hotp(t - i) == otp) {

@@ -127,7 +127,7 @@ std::unique_ptr<Public_Key> Ed25519_PrivateKey::public_key() const {
 }
 
 secure_vector<uint8_t> Ed25519_PrivateKey::private_key_bits() const {
-   secure_vector<uint8_t> bits(m_private.data(), &m_private[32]);
+   const secure_vector<uint8_t> bits(m_private.data(), &m_private[32]);
    return DER_Encoder().encode(bits, ASN1_Type::OctetString).get_contents();
 }
 

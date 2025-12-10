@@ -27,7 +27,7 @@ void OID_Map::add_oid(const OID& oid, std::string_view str) {
       }
    }
 
-   lock_guard_type<mutex_type> lock(m_mutex);
+   const lock_guard_type<mutex_type> lock(m_mutex);
 
    auto o2s = m_oid2str.find(oid);
 
@@ -49,7 +49,7 @@ void OID_Map::add_str2oid(const OID& oid, std::string_view str) {
       return;
    }
 
-   lock_guard_type<mutex_type> lock(m_mutex);
+   const lock_guard_type<mutex_type> lock(m_mutex);
    if(!m_str2oid.contains(std::string(str))) {
       m_str2oid.insert(std::make_pair(str, oid));
    }
@@ -60,7 +60,7 @@ void OID_Map::add_oid2str(const OID& oid, std::string_view str) {
       return;
    }
 
-   lock_guard_type<mutex_type> lock(m_mutex);
+   const lock_guard_type<mutex_type> lock(m_mutex);
    if(!m_oid2str.contains(oid)) {
       m_oid2str.insert(std::make_pair(oid, str));
    }
@@ -71,7 +71,7 @@ std::string OID_Map::oid2str(const OID& oid) {
       return std::string(*name);
    }
 
-   lock_guard_type<mutex_type> lock(m_mutex);
+   const lock_guard_type<mutex_type> lock(m_mutex);
 
    auto i = m_oid2str.find(oid);
    if(i != m_oid2str.end()) {
@@ -86,7 +86,7 @@ OID OID_Map::str2oid(std::string_view str) {
       return std::move(*oid);
    }
 
-   lock_guard_type<mutex_type> lock(m_mutex);
+   const lock_guard_type<mutex_type> lock(m_mutex);
    auto i = m_str2oid.find(std::string(str));
    if(i != m_str2oid.end()) {
       return i->second;

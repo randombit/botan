@@ -87,9 +87,9 @@ class TOTP_KAT_Tests final : public Text_Based_Test {
 
          Botan::TOTP totp(key, hash_algo, digits, timestep);
 
-         std::chrono::system_clock::time_point time = from_timestring(timestamp);
-         std::chrono::system_clock::time_point later_time = time + std::chrono::seconds(timestep);
-         std::chrono::system_clock::time_point too_late = time + std::chrono::seconds(2 * timestep);
+         const std::chrono::system_clock::time_point time = from_timestring(timestamp);
+         const std::chrono::system_clock::time_point later_time = time + std::chrono::seconds(timestep);
+         const std::chrono::system_clock::time_point too_late = time + std::chrono::seconds(2 * timestep);
 
          result.test_int_eq("TOTP generate", totp.generate_totp(time), otp);
 

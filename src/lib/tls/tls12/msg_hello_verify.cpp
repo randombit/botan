@@ -16,7 +16,7 @@ Hello_Verify_Request::Hello_Verify_Request(const std::vector<uint8_t>& buf) {
       throw Decoding_Error("Hello verify request too small");
    }
 
-   Protocol_Version version(buf[0], buf[1]);
+   const Protocol_Version version(buf[0], buf[1]);
 
    if(!version.is_datagram_protocol()) {
       throw Decoding_Error("Unknown version from server in hello verify request");
@@ -50,7 +50,7 @@ std::vector<uint8_t> Hello_Verify_Request::serialize() const {
       negotiated (RFC 6347, section 4.2.1)
    */
 
-   Protocol_Version format_version(254, 255);  // DTLS 1.0
+   const Protocol_Version format_version(254, 255);  // DTLS 1.0
 
    std::vector<uint8_t> bits;
    bits.push_back(format_version.major_version());

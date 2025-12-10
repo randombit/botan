@@ -42,7 +42,6 @@ disabled_needs_work = [
     'bugprone-unchecked-optional-access',
     'bugprone-empty-catch',
     'cppcoreguidelines-avoid-const-or-ref-data-members',
-    'misc-const-correctness', # pretty noisy
     'misc-include-cleaner', # warning: useful but quite buggy
     'modernize-pass-by-value',
     'modernize-use-ranges', # limited by compiler support currently

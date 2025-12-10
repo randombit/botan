@@ -368,7 +368,7 @@ std::vector<uint8_t> Key_Usage::encode_inner() const {
 void Key_Usage::decode_inner(const std::vector<uint8_t>& in) {
    BER_Decoder ber(in);
 
-   BER_Object obj = ber.get_next_object();
+   const BER_Object obj = ber.get_next_object();
 
    obj.assert_is_a(ASN1_Type::BitString, ASN1_Class::Universal, "usage constraint");
 
@@ -621,7 +621,7 @@ void Certificate_Policies::validate(const X509_Certificate& /*subject*/,
                                     const std::vector<X509_Certificate>& /*cert_path*/,
                                     std::vector<std::set<Certificate_Status_Code>>& cert_status,
                                     size_t pos) {
-   std::set<OID> oid_set(m_oids.begin(), m_oids.end());
+   const std::set<OID> oid_set(m_oids.begin(), m_oids.end());
    if(oid_set.size() != m_oids.size()) {
       cert_status.at(pos).insert(Certificate_Status_Code::DUPLICATE_CERT_POLICY);
    }
@@ -634,7 +634,7 @@ std::vector<uint8_t> Authority_Information_Access::encode_inner() const {
    der.start_sequence();
    // OCSP
    if(!m_ocsp_responder.empty()) {
-      ASN1_String url(m_ocsp_responder, ASN1_Type::Ia5String);
+      const ASN1_String url(m_ocsp_responder, ASN1_Type::Ia5String);
       der.start_sequence()
          .encode(OID::from_string("PKIX.OCSP"))
          .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, url.value())
@@ -643,7 +643,7 @@ std::vector<uint8_t> Authority_Information_Access::encode_inner() const {
 
    // CA Issuers
    for(const auto& ca_isser : m_ca_issuers) {
-      ASN1_String asn1_ca_issuer(ca_isser, ASN1_Type::Ia5String);
+      const ASN1_String asn1_ca_issuer(ca_isser, ASN1_Type::Ia5String);
       der.start_sequence()
          .encode(OID::from_string("PKIX.CertificateAuthorityIssuers"))
          .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, asn1_ca_issuer.value())
@@ -665,14 +665,14 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in) 
       info.decode(oid);
 
       if(oid == OID::from_string("PKIX.OCSP")) {
-         BER_Object name = info.get_next_object();
+         const BER_Object name = info.get_next_object();
 
          if(name.is_a(6, ASN1_Class::ContextSpecific)) {
             m_ocsp_responder = ASN1::to_string(name);
          }
       }
       if(oid == OID::from_string("PKIX.CertificateAuthorityIssuers")) {
-         BER_Object name = info.get_next_object();
+         const BER_Object name = info.get_next_object();
 
          if(name.is_a(6, ASN1_Class::ContextSpecific)) {
             m_ca_issuers.push_back(ASN1::to_string(name));
@@ -801,7 +801,7 @@ void TNAuthList::Entry::encode_into(DER_Encoder& /*to*/) const {
 }
 
 void TNAuthList::Entry::decode_from(class BER_Decoder& ber) {
-   BER_Object obj = ber.get_next_object();
+   const BER_Object obj = ber.get_next_object();
 
    const uint32_t type_tag = static_cast<Type>(obj.type_tag());
 
@@ -992,8 +992,8 @@ IPAddressBlocks::IPAddressFamily IPAddressBlocks::merge(std::vector<IPAddressFam
 
    bool all_inherit = true;
    bool none_inherit = true;
-   for(IPAddressFamily& block : blocks) {
-      IPAddressChoice<V> choice = std::get<IPAddressChoice<V>>(block.addr_choice());
+   for(const IPAddressFamily& block : blocks) {
+      const IPAddressChoice<V> choice = std::get<IPAddressChoice<V>>(block.addr_choice());
       all_inherit = !choice.ranges().has_value() && all_inherit;  // all the blocks have the 'inherit' value
       none_inherit = choice.ranges().has_value() && none_inherit;
    }
@@ -1009,10 +1009,10 @@ IPAddressBlocks::IPAddressFamily IPAddressBlocks::merge(std::vector<IPAddressFam
    }
 
    std::vector<IPAddressOrRange<V>> merged_ranges;
-   for(IPAddressFamily& block : blocks) {
-      IPAddressChoice<V> choice = std::get<IPAddressChoice<V>>(block.addr_choice());
-      std::vector<IPAddressOrRange<V>> ranges = choice.ranges().value();
-      for(IPAddressOrRange<V>& r : ranges) {
+   for(const IPAddressFamily& block : blocks) {
+      const IPAddressChoice<V> choice = std::get<IPAddressChoice<V>>(block.addr_choice());
+      const std::vector<IPAddressOrRange<V>> ranges = choice.ranges().value();
+      for(const IPAddressOrRange<V>& r : ranges) {
          merged_ranges.push_back(r);
       }
    }
@@ -1110,7 +1110,7 @@ void populate_validation_map(uint32_t afam,
                              const IPAddressBlocks::IPAddressFamily::AddrChoice& choice,
                              IPValidationMap<V>& map) {
    const std::optional<IPRangeVec<V>>& ranges = std::get<IPAddressBlocks::IPAddressChoice<V>>(choice).ranges();
-   bool has_value = ranges.has_value();
+   const bool has_value = ranges.has_value();
    const IPRangeVec<V>* value = has_value ? &ranges.value() : nullptr;
    map.emplace(afam, std::make_pair(has_value, std::move(value)));
 }
@@ -1201,13 +1201,13 @@ void IPAddressBlocks::IPAddressOrRange<V>::encode_into(Botan::DER_Encoder& into)
    // count contiguous 0s/1s from the right of the min/max addresses
    for(size_t i = version_octets; i > 0; i--) {
       if(!zeros_done) {
-         uint8_t local_zeros = static_cast<uint8_t>(std::countr_zero(min[i - 1]));
+         const uint8_t local_zeros = static_cast<uint8_t>(std::countr_zero(min[i - 1]));
          zeros += local_zeros;
          zeros_done = (local_zeros != 8);
       }
 
       if(!ones_done) {
-         uint8_t local_ones = static_cast<uint8_t>(std::countr_one(max[i - 1]));
+         const uint8_t local_ones = static_cast<uint8_t>(std::countr_one(max[i - 1]));
          ones += local_ones;
          ones_done = (local_ones != 8);
       }
@@ -1358,7 +1358,7 @@ IPAddressBlocks::IPAddress<V> IPAddressBlocks::IPAddressOrRange<V>::decode_singl
    }
 
    // pad to version length with 0's for min addresses, 255's (0xff) for max addresses
-   uint8_t fill_discarded = min ? 0 : 0xff;
+   const uint8_t fill_discarded = min ? 0 : 0xff;
    for(size_t i = 0; i < discarded_octets; i++) {
       decoded.push_back(fill_discarded);
    }

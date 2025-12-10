@@ -44,7 +44,7 @@ void fuzz(std::span<const uint8_t> in) {
       * on actual output formatting, no memory is allocated, etc.
       */
       std::ofstream out;
-      ASN1_Parser printer;
+      const ASN1_Parser printer;
       printer.print_to_stream(out, in.data(), in.size());
    } catch(Botan::Exception& e) {}
 }

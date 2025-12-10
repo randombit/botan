@@ -144,7 +144,7 @@ std::shared_ptr<const Montgomery_Exponentiation_State> monty_precompute(const Mo
                                                                         size_t window_bits,
                                                                         bool const_time) {
    BOTAN_ARG_CHECK(g < params.p(), "Montgomery base too big");
-   Montgomery_Int monty_g(params, g);
+   const Montgomery_Int monty_g(params, g);
    return monty_precompute(monty_g, window_bits, const_time);
 }
 
@@ -190,6 +190,7 @@ Montgomery_Int monty_multi_exp(
    const Montgomery_Int y3x2 = y3.mul(x2, ws);
    const Montgomery_Int y3x3 = y3.mul(x3, ws);
 
+   // NOLINTNEXTLINE(*-const-correctness) bug in clang-tidy
    const Montgomery_Int* M[16] = {&one,
                                   &x1,  // 0001
                                   &x2,  // 0010

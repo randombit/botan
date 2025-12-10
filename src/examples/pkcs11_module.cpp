@@ -10,7 +10,7 @@ int main() {
    // Sometimes useful if a newly connected token is not detected by the PKCS#11 module
    module.reload();
 
-   Botan::PKCS11::Info info = module.get_info();
+   const Botan::PKCS11::Info info = module.get_info();
 
    // print library version
    std::cout << std::to_string(info.libraryVersion.major) << "." << std::to_string(info.libraryVersion.minor) << '\n';

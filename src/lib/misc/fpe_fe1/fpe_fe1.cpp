@@ -40,7 +40,7 @@ void factor(BigInt n, BigInt& a, BigInt& b) {
    * fixing the factoring for those users.
    */
 
-   size_t n_low_zero = low_zero_bits(n);
+   const size_t n_low_zero = low_zero_bits(n);
 
    a <<= (n_low_zero / 2);
    b <<= n_low_zero - (n_low_zero / 2);

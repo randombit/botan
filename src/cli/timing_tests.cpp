@@ -151,7 +151,7 @@ class Bleichenbacker_Timing_Test final : public Timing_Test {
       }
 
       uint64_t measure_critical_function(const std::vector<uint8_t>& input) override {
-         TimingTestTimer timer;
+         const TimingTestTimer timer;
          m_dec.decrypt_or_random(input.data(), m_ctext_length, m_expected_content_size, timing_test_rng());
          return timer.complete();
       }
@@ -190,7 +190,7 @@ class Manger_Timing_Test final : public Timing_Test {
       }
 
       uint64_t measure_critical_function(const std::vector<uint8_t>& input) override {
-         TimingTestTimer timer;
+         const TimingTestTimer timer;
          try {
             m_dec.decrypt(input.data(), m_ctext_length);
          } catch(Botan::Decoding_Error&) {}
@@ -253,13 +253,13 @@ uint64_t Lucky13_Timing_Test::measure_critical_function(const std::vector<uint8_
    Botan::secure_vector<uint8_t> data(input.begin(), input.end());
    Botan::secure_vector<uint8_t> aad(13);
    const Botan::secure_vector<uint8_t> iv(16);
-   Botan::secure_vector<uint8_t> key(16 + m_mac_keylen);
+   const Botan::secure_vector<uint8_t> key(16 + m_mac_keylen);
 
    m_dec.set_key(unlock(key));
    m_dec.set_associated_data(aad);
    m_dec.start(unlock(iv));
 
-   TimingTestTimer timer;
+   const TimingTestTimer timer;
    try {
       m_dec.finish(data);
    } catch(Botan::TLS::TLS_Exception&) {}
@@ -296,7 +296,7 @@ uint64_t ECDSA_Timing_Test::measure_critical_function(const std::vector<uint8_t>
    // fixed message to minimize noise
    const auto m = Botan::EC_Scalar::from_bytes_with_trunc(m_group, std::vector<uint8_t>{5});
 
-   TimingTestTimer timer;
+   const TimingTestTimer timer;
 
    // the following ECDSA operations involve and should not leak any information about k
    const auto r = Botan::EC_Scalar::gk_x_mod_order(k, timing_test_rng());
@@ -327,7 +327,7 @@ class ECC_Mul_Timing_Test final : public Timing_Test {
 uint64_t ECC_Mul_Timing_Test::measure_critical_function(const std::vector<uint8_t>& input) {
    const auto k = Botan::EC_Scalar::from_bytes_with_trunc(m_group, input);
 
-   TimingTestTimer timer;
+   const TimingTestTimer timer;
    const auto kG = Botan::EC_AffinePoint::g_mul(k, timing_test_rng());
    return timer.complete();
 }
@@ -350,7 +350,7 @@ uint64_t Powmod_Timing_Test::measure_critical_function(const std::vector<uint8_t
    const Botan::BigInt x(input.data(), input.size());
    const size_t max_x_bits = m_group.p_bits();
 
-   TimingTestTimer timer;
+   const TimingTestTimer timer;
 
    const Botan::BigInt g_x_p = m_group.power_g_p(x, max_x_bits);
 
@@ -374,7 +374,7 @@ class Invmod_Timing_Test final : public Timing_Test {
 uint64_t Invmod_Timing_Test::measure_critical_function(const std::vector<uint8_t>& input) {
    const Botan::BigInt k(input.data(), input.size());
 
-   TimingTestTimer timer;
+   const TimingTestTimer timer;
    const Botan::BigInt inv = Botan::inverse_mod_secret_prime(k, m_p);
    return timer.complete();
 }
@@ -449,7 +449,7 @@ class Timing_Test_Command final : public Command {
             filename = test_data_dir + "/" + test_type + ".vec";
          }
 
-         std::vector<std::string> lines = read_testdata(filename);
+         const std::vector<std::string> lines = read_testdata(filename);
 
          std::vector<std::vector<uint64_t>> results = test->execute_evaluation(lines, warmup_runs, measurement_runs);
 
@@ -590,7 +590,7 @@ class MARVIN_Test_Command final : public Command {
          sigemptyset(&sigaction.sa_mask);
          sigaction.sa_flags = 0;
 
-         int rc = ::sigaction(SIGINT, &sigaction, nullptr);
+         const int rc = ::sigaction(SIGINT, &sigaction, nullptr);
          if(rc != 0) {
             throw CLI_Error("Failed to set SIGINT handler");
          }
@@ -639,7 +639,7 @@ class MARVIN_Test_Command final : public Command {
          auto& rng = Botan::system_rng();
    #endif
 
-         Botan::PK_Decryptor_EME op(*key, rng, "PKCS1v15");
+         const Botan::PK_Decryptor_EME op(*key, rng, "PKCS1v15");
 
          std::vector<size_t> indexes;
          for(size_t i = 0; i != testcases; ++i) {
@@ -671,7 +671,7 @@ class MARVIN_Test_Command final : public Command {
                   Botan::CT::conditional_assign_mem(j_eq_testcase, ciphertext.data(), testcase_j, modulus_bytes);
                }
 
-               TimingTestTimer timer;
+               const TimingTestTimer timer;
                op.decrypt_or_random(ciphertext.data(), modulus_bytes, expect_pt_len, rng);
                const uint64_t duration = timer.complete();
                BOTAN_ASSERT_NOMSG(measurements[testcase].size() == r);
@@ -747,8 +747,8 @@ class MARVIN_Test_Command final : public Command {
          for(size_t i = 0; i != n; ++i) {
             uint8_t jb[sizeof(uint64_t)];
             rng.randomize(jb, sizeof(jb));
-            uint64_t j8 = Botan::load_le<uint64_t>(jb, 0);
-            size_t j = i + static_cast<size_t>(j8) % (n - i);
+            const uint64_t j8 = Botan::load_le<uint64_t>(jb, 0);
+            const size_t j = i + static_cast<size_t>(j8) % (n - i);
             std::swap(vec[i], vec[j]);
          }
       }

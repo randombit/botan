@@ -701,7 +701,7 @@ class bitvector_base final {
        */
       template <bitvectorish OutT = bitvector_base<AllocatorT>>
       auto subvector(size_type pos, std::optional<size_type> length = std::nullopt) const {
-         size_type bitlen = length.value_or(size() - pos);
+         const size_type bitlen = length.value_or(size() - pos);
          BOTAN_ARG_CHECK(pos + bitlen <= size(), "Not enough bits to copy");
 
          OutT newvector(bitlen);
@@ -715,9 +715,9 @@ class bitvector_base final {
                   newvector_unwrapped.m_blocks,
                   std::span{m_blocks}.subspan(block_index(pos), block_index(pos + bitlen - 1) - block_index(pos) + 1));
             } else {
-               BitRangeOperator<const bitvector_base<AllocatorT>, BitRangeAlignment::no_alignment> from_op(
+               const BitRangeOperator<const bitvector_base<AllocatorT>, BitRangeAlignment::no_alignment> from_op(
                   *this, pos, bitlen);
-               BitRangeOperator<strong_type_wrapped_type<OutT>> to_op(
+               const BitRangeOperator<strong_type_wrapped_type<OutT>> to_op(
                   unwrap_strong_type(newvector_unwrapped), 0, bitlen);
                range_operation([](auto /* to */, auto from) { return from; }, to_op, from_op);
             }
@@ -749,7 +749,8 @@ class bitvector_base final {
          if(pos % 8 == 0) {
             out = load_le<result_t>(std::span{m_blocks}.subspan(block_index(pos)).template first<sizeof(result_t)>());
          } else {
-            BitRangeOperator<const bitvector_base<AllocatorT>, BitRangeAlignment::no_alignment> op(*this, pos, bits);
+            const BitRangeOperator<const bitvector_base<AllocatorT>, BitRangeAlignment::no_alignment> op(
+               *this, pos, bits);
             range_operation(
                [&](std::unsigned_integral auto integer) {
                   if constexpr(std::same_as<result_t, decltype(integer)>) {
@@ -785,7 +786,7 @@ class bitvector_base final {
             store_le(std::span{m_blocks}.subspan(block_index(pos)).template first<sizeof(in_t)>(),
                      unwrap_strong_type(value));
          } else {
-            BitRangeOperator<bitvector_base<AllocatorT>, BitRangeAlignment::no_alignment> op(*this, pos, bits);
+            const BitRangeOperator<bitvector_base<AllocatorT>, BitRangeAlignment::no_alignment> op(*this, pos, bits);
             range_operation(
                [&]<std::unsigned_integral BlockT>(BlockT block) -> BlockT {
                   if constexpr(std::same_as<in_t, BlockT>) {
@@ -1094,7 +1095,7 @@ class bitvector_base final {
                // std::align takes `ptr` as a reference (!), i.e. `void*&` and
                // uses it as an out-param. Though, `cptr` is const because this
                // method is const-qualified, hence the const_cast<>.
-               void* ptr = const_cast<void*>(cptr);
+               void* ptr = const_cast<void*>(cptr);  // NOLINT(*-const-correctness)
                size_t size = sizeof(BlockT);
                return ptr_before != nullptr && std::align(alignof(BlockT), size, ptr, size) == ptr_before;
             }

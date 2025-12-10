@@ -104,8 +104,8 @@ class TR {
 
 struct esys_context_liberator {
       void operator()(ESYS_CONTEXT* esys_ctx) {
-         TSS2_TCTI_CONTEXT* tcti_ctx = nullptr;
-         Esys_GetTcti(esys_ctx, &tcti_ctx);  // ignore error in destructor
+         TSS2_TCTI_CONTEXT* tcti_ctx = nullptr;  // NOLINT(*-const-correctness) clang-tidy bug
+         Esys_GetTcti(esys_ctx, &tcti_ctx);      // ignore error in destructor
          if(tcti_ctx != nullptr) {
             Tss2_TctiLdr_Finalize(&tcti_ctx);
          }
@@ -691,11 +691,11 @@ std::vector<Test::Result> test_tpm2_rsa() {
 
                // encrypt a message using the TPM's public key
                Botan::Null_RNG null_rng;
-               Botan::PK_Encryptor_EME enc(*pk, null_rng, "OAEP(SHA-256)");
+               const Botan::PK_Encryptor_EME enc(*pk, null_rng, "OAEP(SHA-256)");
                const auto ciphertext = enc.encrypt(plaintext, null_rng);
 
                // decrypt the message using the TPM's private RSA key
-               Botan::PK_Decryptor_EME dec(*sk, null_rng, "OAEP(SHA-256)");
+               const Botan::PK_Decryptor_EME dec(*sk, null_rng, "OAEP(SHA-256)");
                const auto decrypted = dec.decrypt(ciphertext);
                result.test_eq("decrypted message", decrypted, plaintext);
             }),
@@ -710,7 +710,7 @@ std::vector<Test::Result> test_tpm2_rsa() {
                // encrypt a message using a software RSA key for the TPM's private key
                auto pk = key->public_key();
                auto rng = Test::new_rng("tpm2 rsa decrypt");
-               Botan::PK_Encryptor_EME enc(*pk, *rng, "OAEP(SHA-256)");
+               const Botan::PK_Encryptor_EME enc(*pk, *rng, "OAEP(SHA-256)");
                const auto ciphertext = enc.encrypt(plaintext, *rng);
 
                // decrypt the message using the TPM's private key
@@ -739,21 +739,21 @@ std::vector<Test::Result> test_tpm2_rsa() {
 
                // encrypt a message using the TPM's public key
                auto rng = Test::new_rng("tpm2_transient_key_encrypt");
-               Botan::PK_Encryptor_EME enc(*pk, *rng, "OAEP(SHA-256)");
+               const Botan::PK_Encryptor_EME enc(*pk, *rng, "OAEP(SHA-256)");
                const auto ciphertext = enc.encrypt(plaintext, *rng);
 
                // decrypt the message using the TPM's private RSA key
                Botan::Null_RNG null_rng;
-               Botan::PK_Decryptor_EME dec(*sk, null_rng, "OAEP(SHA-256)");
+               const Botan::PK_Decryptor_EME dec(*sk, null_rng, "OAEP(SHA-256)");
                const auto decrypted = dec.decrypt(ciphertext);
                result.test_eq("decrypted message", decrypted, plaintext);
 
                // encrypt a message using the TPM's public key (using PKCS#1)
-               Botan::PK_Encryptor_EME enc_pkcs(*pk, *rng, "PKCS1v15");
+               const Botan::PK_Encryptor_EME enc_pkcs(*pk, *rng, "PKCS1v15");
                const auto ciphertext_pkcs = enc_pkcs.encrypt(plaintext, *rng);
 
                // decrypt the message using the TPM's private RSA key (using PKCS#1)
-               Botan::PK_Decryptor_EME dec_pkcs(*sk, null_rng, "PKCS1v15");
+               const Botan::PK_Decryptor_EME dec_pkcs(*sk, null_rng, "PKCS1v15");
                const auto decrypted_pkcs = dec_pkcs.decrypt(ciphertext_pkcs);
                result.test_eq("decrypted message", decrypted_pkcs, plaintext);
             }),

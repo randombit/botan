@@ -31,6 +31,6 @@ int main(int argc, char* argv[]) {
       return 1;
    }
 
-   std::vector<std::string> args(argv + std::min(argc, 2), argv + argc);
+   const std::vector<std::string> args(argv + std::min(argc, 2), argv + argc);
    return cmd->run(args);
 }

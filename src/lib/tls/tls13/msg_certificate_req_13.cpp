@@ -50,7 +50,7 @@ Certificate_Request_13::Certificate_Request_13(const std::vector<uint8_t>& buf, 
    // For Certificate Request said table states:
    //    "status_request", "signature_algorithms", "signed_certificate_timestamp",
    //     "certificate_authorities", "oid_filters", "signature_algorithms_cert",
-   std::set<Extension_Code> allowed_extensions = {
+   const std::set<Extension_Code> allowed_extensions = {
       Extension_Code::CertificateStatusRequest,
       Extension_Code::SignatureAlgorithms,
       // Extension_Code::SignedCertificateTimestamp,  // NYI

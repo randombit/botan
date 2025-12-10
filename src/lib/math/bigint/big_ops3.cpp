@@ -22,7 +22,7 @@ BigInt BigInt::add2(const BigInt& x, const word y[], size_t y_size, BigInt::Sign
    BigInt z = BigInt::with_capacity(std::max(x_sw, y_size) + 1);
 
    if(x.sign() == y_sign) {
-      word carry = bigint_add3(z.mutable_data(), x._data(), x_sw, y, y_size);
+      const word carry = bigint_add3(z.mutable_data(), x._data(), x_sw, y, y_size);
       z.mutable_data()[std::max(x_sw, y_size)] += carry;
       z.set_sign(x.sign());
    } else {
@@ -168,7 +168,7 @@ word operator%(const BigInt& n, word mod) {
    if(n.is_positive() && is_power_of_2(mod)) {
       remainder = (n.word_at(0) & (mod - 1));
    } else {
-      divide_precomp redc_mod(mod);
+      const divide_precomp redc_mod(mod);
       const size_t sw = n.sig_words();
       for(size_t i = sw; i > 0; --i) {
          remainder = redc_mod.vartime_mod_2to1(remainder, n.word_at(i - 1));

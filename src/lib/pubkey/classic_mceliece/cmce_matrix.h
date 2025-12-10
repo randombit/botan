@@ -90,7 +90,7 @@ class BOTAN_TEST_API Classic_McEliece_Matrix {
          // Check padding of mat_bytes rows
          BOTAN_ASSERT_NOMSG(m_mat_bytes.size() == params.pk_no_rows() * params.pk_row_size_bytes());
          for(size_t row = 0; row < params.pk_no_rows(); ++row) {
-            uint8_t padded_byte = m_mat_bytes[(row + 1) * params.pk_row_size_bytes() - 1];
+            const uint8_t padded_byte = m_mat_bytes[(row + 1) * params.pk_row_size_bytes() - 1];
             CT::unpoison(padded_byte);
             BOTAN_ARG_CHECK(padded_byte >> (params.pk_no_cols() % 8) == 0, "Valid padding of unused bytes");
          }

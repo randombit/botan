@@ -321,7 +321,7 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
                               const get_cipherstate_fn& get_cipherstate) {
    if(readbuf.size() < TLS_HEADER_SIZE) {
       // header incomplete
-      if(size_t needed = fill_buffer_to(readbuf, input, input_len, consumed, TLS_HEADER_SIZE)) {
+      if(const size_t needed = fill_buffer_to(readbuf, input, input_len, consumed, TLS_HEADER_SIZE)) {
          return Record_Header(needed);
       }
 
@@ -381,7 +381,7 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
       throw TLS_Exception(Alert::DecodeError, "Received a completely empty record");
    }
 
-   if(size_t needed = fill_buffer_to(readbuf, input, input_len, consumed, TLS_HEADER_SIZE + record_size)) {
+   if(const size_t needed = fill_buffer_to(readbuf, input, input_len, consumed, TLS_HEADER_SIZE + record_size)) {
       return Record_Header(needed);
    }
 

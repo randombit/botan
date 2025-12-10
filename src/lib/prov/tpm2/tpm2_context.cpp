@@ -441,7 +441,7 @@ Context::~Context() {
       // If the TCTI context was initialized explicitly, Esys_GetTcti() will
       // return a pointer to the TCTI context that then has to be finalized
       // explicitly. See ESAPI Specification Section 6.3 "Esys_GetTcti".
-      TSS2_TCTI_CONTEXT* tcti_ctx = nullptr;
+      TSS2_TCTI_CONTEXT* tcti_ctx = nullptr;   // NOLINT(*-const-correctness) bug in clang-tidy
       Esys_GetTcti(m_impl->m_ctx, &tcti_ctx);  // ignore error in destructor
       if(tcti_ctx != nullptr) {
          Tss2_TctiLdr_Finalize(&tcti_ctx);

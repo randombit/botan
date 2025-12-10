@@ -508,7 +508,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
          auto y = EC_Scalar::from_bigint(*this, y_bn);
          auto h = EC_AffinePoint(*this, h_pt);
 
-         Mul2Table gh_mul(h);
+         const Mul2Table gh_mul(h);
 
          if(auto r = gh_mul.mul2_vartime(x, y)) {
             return r->to_legacy_point();

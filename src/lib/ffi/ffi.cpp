@@ -114,7 +114,7 @@ int botan_view_bin_bounce_fn(botan_view_ctx vctx, const uint8_t* buf, size_t len
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
-   botan_view_bounce_struct* ctx = static_cast<botan_view_bounce_struct*>(vctx);
+   const botan_view_bounce_struct* ctx = static_cast<botan_view_bounce_struct*>(vctx);
 
    const size_t avail = *ctx->out_len;
    *ctx->out_len = len;

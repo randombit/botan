@@ -191,7 +191,7 @@ class Result_Wrapper {
       Test::Result& result() { return m_result; }
 
       void expect_success(const std::string& msg, const error_code& ec) {
-         error_code success;
+         const error_code success;
          expect_ec(msg, success, ec);
       }
 

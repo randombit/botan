@@ -12,7 +12,7 @@ namespace Botan {
 
 XMSS_Signature::XMSS_Signature(XMSS_Parameters::xmss_algorithm_t oid, std::span<const uint8_t> raw_sig) :
       m_leaf_idx(0), m_randomness(0, 0x00) {
-   XMSS_Parameters xmss_params(oid);
+   const XMSS_Parameters xmss_params(oid);
 
    if(raw_sig.size() !=
       (xmss_params.len() + xmss_params.tree_height() + 1) * xmss_params.element_size() + sizeof(uint32_t)) {

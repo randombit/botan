@@ -35,7 +35,7 @@ std::optional<OID> if_match(std::string_view req, std::string_view actual, std::
 uint32_t hash_oid_name(std::string_view s) {
    uint64_t hash = 0x8188B31879A4879A;
 
-   for(char c : s) {
+   for(const char c : s) {
       hash *= 251;
       hash += c;
    }

@@ -66,7 +66,7 @@ int botan_oid_cmp(int* result, botan_asn1_oid_t a_w, botan_asn1_oid_t b_w) {
       if(result == nullptr) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
-      Botan::OID b = safe_get(b_w);
+      const Botan::OID b = safe_get(b_w);
       // we don't have .cmp for OID
       if(a == b) {
          *result = 0;
