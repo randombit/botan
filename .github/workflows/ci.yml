@@ -173,7 +173,7 @@ jobs:
 
       - name: Run Clang Tidy
         run: |
-             python3 ./src/scripts/dev_tools/run_clang_tidy.py --verbose
+             python3 ./src/scripts/dev_tools/run_clang_tidy.py
 
       - name: Display Clang Tidy Results
         if: failure()

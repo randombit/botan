@@ -272,7 +272,7 @@ def main(args = None): # pylint: disable=too-many-return-statements
 
     parser.add_option('-j', '--jobs', action='store', type='int', default=multiprocessing.cpu_count() + 1,
                       help='set number of jobs to run (default %default)')
-    parser.add_option('--verbose', action='store_true', default=False)
+    parser.add_option('--quiet', action='store_true', default=False)
     parser.add_option('--fixit', action='store_true', default=False)
     parser.add_option('--build-dir', default='build')
     parser.add_option('--list-checks', action='store_true', default=False)
@@ -351,7 +351,7 @@ def main(args = None): # pylint: disable=too-many-return-statements
     clang_tidy_version = None
 
     if cache is not None:
-        if options.verbose:
+        if not options.quiet:
             print("Using cache at %s with %d entries" % (options.cache_db, cache.count()))
 
         results = []
@@ -367,7 +367,7 @@ def main(args = None): # pylint: disable=too-many-return-statements
         for (i, result) in enumerate(results):
             compile_commands[i]['preproc'] = result.get()
 
-        if options.verbose:
+        if not options.quiet:
             print("Preprocessing/hashing %d files took %.02f sec" % (len(results), time.time() - start_time))
             sys.stdout.flush()
 
@@ -388,7 +388,7 @@ def main(args = None): # pylint: disable=too-many-return-statements
             if cache.hit(config=check_config, source_file=info['preproc'], clang_tidy=clang_tidy_version):
                 cache_hit = True
 
-        if cache_hit and options.verbose:
+        if cache_hit and not options.quiet:
             print("Checked", info["file"], " (cached)")
             sys.stdout.flush()
 
@@ -406,7 +406,7 @@ def main(args = None): # pylint: disable=too-many-return-statements
     for (info, result) in results:
         success = result.get()
 
-        if options.verbose:
+        if not options.quiet:
             print("Checked", info['file'])
             sys.stdout.flush()
 
