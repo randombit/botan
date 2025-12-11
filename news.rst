@@ -4,8 +4,17 @@ Release Notes
 Version 3.11.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Upgrade PKCS #11 wrapper to support v3.2 of the standard (GH #4540)
+
+* Add support for verifying X509 certificate chains when the trust anchor is
+  not self signed. (GH #5047)
+
 * ``SIMD_4x32`` port to Wasm SIMD128, bringing speedups to AES, ChaCha, Serpent, SHA-1,
-  SHA-256, SHACAL2, NOEKEON and ZFEC when SIMD128 is enabled
+  SHA-256, SHACAL2, NOEKEON and ZFEC when SIMD128 is enabled. (GH #5155)
+
+* Unroll loops to improve Montgomery reduction performance. (GH #5150)
+
+* Increase maximum HMAC key length to 8192 bytes. (GH #5156)
 
 Version 3.10.0, 2025-11-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
