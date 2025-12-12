@@ -1,0 +1,19 @@
+<internal_defines>
+SM3_X86_AVX2_BMI2 -> 20251212
+</internal_defines>
+
+<module_info>
+name -> "SM3 using AVX2/BMI2"
+brief -> "SM3 using AVX2/BMI2 instructions"
+</module_info>
+
+<isa>
+avx2
+bmi2
+</isa>
+
+<requires>
+cpuid
+simd_4x32
+simd_avx2
+</requires>

@@ -31,6 +31,8 @@ class SM3 final : public HashFunction {
    public:
       std::string name() const override { return "SM3"; }
 
+      std::string provider() const override;
+
       size_t output_length() const override { return output_bytes; }
 
       size_t hash_block_size() const override { return block_bytes; }
@@ -45,6 +47,10 @@ class SM3 final : public HashFunction {
       void add_data(std::span<const uint8_t> input) override;
 
       void final_result(std::span<uint8_t> output) override;
+
+#if defined(BOTAN_HAS_SM3_X86_AVX2_BMI2)
+      static void compress_digest_x86_avx2(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
+#endif
 
    private:
       MerkleDamgard_Hash<SM3> m_md;

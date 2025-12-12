@@ -331,8 +331,8 @@ class SIMD_4x32 final {
             const auto shuf_rotl_24 = _mm_set_epi64x(0x0c0f0e0d080b0a09, 0x0407060500030201);
             return SIMD_4x32(_mm_shuffle_epi8(raw(), shuf_rotl_24));
          } else {
-            return SIMD_4x32(_mm_or_si128(_mm_slli_epi32(raw(), static_cast<int>(ROT)),
-                                          _mm_srli_epi32(raw(), static_cast<int>(32 - ROT))));
+            return SIMD_4x32(_mm_xor_si128(_mm_slli_epi32(raw(), static_cast<int>(ROT)),
+                                           _mm_srli_epi32(raw(), static_cast<int>(32 - ROT))));
          }
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
