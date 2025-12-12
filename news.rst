@@ -16,6 +16,9 @@ Version 3.11.0, Not Yet Released
 
 * Increase maximum HMAC key length to 8192 bytes. (GH #5156)
 
+* ``SIMD_2x64`` port to Wasm SIMD128, ``ghash_vperm`` port to ``SIMD_2x64``, bringing speedups
+  to GCM routines when SIMD128 is enabled
+
 Version 3.10.0, 2025-11-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
