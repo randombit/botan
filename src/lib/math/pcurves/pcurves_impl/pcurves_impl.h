@@ -871,12 +871,12 @@ class IntMod final {
 *
 * This contains a pair of integers (x,y) which satisfy the curve equation
 */
-template <typename FieldElement, typename Params>
+template <typename FieldElement>
 class AffineCurvePoint final {
    public:
       static constexpr size_t BYTES = 1 + 2 * FieldElement::BYTES;
 
-      using Self = AffineCurvePoint<FieldElement, Params>;
+      using Self = AffineCurvePoint<FieldElement>;
 
       // Note this constructor does not check the validity of the x/y pair
       // This must be verified prior to this constructor being called
@@ -974,7 +974,7 @@ class ProjectiveCurvePoint {
       static constexpr bool A_is_minus_3 = (A == FieldElement::constant(-3)).as_bool();
 
       using Self = ProjectiveCurvePoint<FieldElement, Params>;
-      using AffinePoint = AffineCurvePoint<FieldElement, Params>;
+      using AffinePoint = AffineCurvePoint<FieldElement>;
 
       /**
       * Convert a point from affine to projective form
@@ -1214,7 +1214,7 @@ class EllipticCurve {
 
       using FieldElement = IntMod<FieldRep<FieldParams>>;
 
-      using AffinePoint = AffineCurvePoint<FieldElement, Params>;
+      using AffinePoint = AffineCurvePoint<FieldElement>;
       using ProjectivePoint = ProjectiveCurvePoint<FieldElement, Params>;
 
       static constexpr size_t OrderBits = Scalar::BITS;
