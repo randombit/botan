@@ -116,7 +116,7 @@ bool iso9796_verification(std::span<const uint8_t> repr,
    const size_t trailer_len = last == 0xBC ? 1 : 2;
 
    if(trailer_len == 2) {
-      uint8_t hash_id = ieee1363_hash_id(hash->name());
+      const uint8_t hash_id = ieee1363_hash_id(hash->name());
       if(hash_id == 0) {
          throw Decoding_Error("ISO-9796: no hash identifier for " + hash->name());
       }

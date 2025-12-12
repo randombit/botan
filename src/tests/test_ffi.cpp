@@ -754,7 +754,7 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&end7, Test::data_file("x509/nist/test07/end.crt").c_str()));
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&sub7, Test::data_file("x509/nist/test07/int.crt").c_str()));
 
-         botan_x509_cert_t subs[2] = {sub2, sub7};
+         const botan_x509_cert_t subs[2] = {sub2, sub7};
          TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end7, subs, 2, &root, 1, nullptr, 0, nullptr, 0));
          result.confirm("Validation test07 failed with expected error", rc == 1001);
          result.test_eq("Validation test07 status string",
@@ -786,7 +786,7 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&end20, Test::data_file("x509/nist/test20/end.crt").c_str()));
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&sub20, Test::data_file("x509/nist/test20/int.crt").c_str()));
          REQUIRE_FFI_OK(botan_x509_crl_load_file, (&sub20crl, Test::data_file("x509/nist/test20/int.crl").c_str()));
-         botan_x509_crl_t crls[2] = {sub20crl, rootcrl};
+         const botan_x509_crl_t crls[2] = {sub20crl, rootcrl};
          TEST_FFI_RC(
             1, botan_x509_cert_verify_with_crl, (&rc, end20, &sub20, 1, &root, 1, crls, 2, nullptr, 80, nullptr, 0));
          result.confirm("Validation test20 failed with expected error", rc == 5000);
@@ -1466,7 +1466,7 @@ class FFI_AEAD_Test final : public FFI_Test {
          botan_cipher_t cipher_encrypt;
          botan_cipher_t cipher_decrypt;
 
-         std::array<std::string, 5> aeads = {
+         const std::array<std::string, 5> aeads = {
             "AES-128/GCM", "ChaCha20Poly1305", "AES-128/EAX", "AES-256/SIV", "AES-128/CCM"};
 
          for(const std::string& aead : aeads) {
@@ -1978,7 +1978,7 @@ class FFI_KDF_Test final : public FFI_Test {
          std::string outstr;
          outstr.resize(out_len);
 
-         int rc =
+         const int rc =
             botan_bcrypt_generate(reinterpret_cast<uint8_t*>(outstr.data()), &out_len, passphrase.c_str(), rng, 4, 0);
 
          if(rc == 0) {
@@ -2078,7 +2078,7 @@ class FFI_ErrorHandling_Test final : public FFI_Test {
             result.confirm("Never a null pointer", err != nullptr);
 
             if(err != nullptr) {
-               std::string s(err);
+               const std::string s(err);
 
                if(s != "Unknown error") {
                   result.confirm("No duplicate messages", !errors.contains(s));
@@ -4355,7 +4355,7 @@ class FFI_OID_Test final : public FFI_Test {
 
             ViewStringSink oid_string;
             TEST_FFI_OK(botan_oid_view_string, (rsa_oid_expected, oid_string.delegate(), oid_string.callback()));
-            std::string oid_actual = {oid_string.get().begin(), oid_string.get().end()};
+            const std::string oid_actual = {oid_string.get().begin(), oid_string.get().end()};
 
             result.test_eq("oid to string", oid_actual, oid_rsa_expected);
 
@@ -4364,7 +4364,7 @@ class FFI_OID_Test final : public FFI_Test {
 
             ViewStringSink rsa_name;
             TEST_FFI_OK(botan_oid_view_name, (rsa_oid_from_name, rsa_name.delegate(), rsa_name.callback()));
-            std::string rsa_name_string = {rsa_name.get().begin(), rsa_name.get().end()};
+            const std::string rsa_name_string = {rsa_name.get().begin(), rsa_name.get().end()};
             result.test_eq("oid to name", rsa_name_string, "RSA");
 
             TEST_FFI_OK(botan_oid_destroy, (rsa_oid_priv));
@@ -4511,7 +4511,7 @@ class FFI_EC_Group_Test final : public FFI_Test {
                TEST_FFI_RC(1, botan_ec_group_equal, (group_from_name, group_from_parameters));
                TEST_FFI_RC(1, botan_ec_group_equal, (group_from_parameters, group_from_registered_oid));
 
-               std::vector<std::tuple<botan_mp_t, botan_mp_t>> parameters_inner = {
+               const std::vector<std::tuple<botan_mp_t, botan_mp_t>> parameters_inner = {
                   {p_from_name, p_from_parameters},
                   {a_from_name, a_from_parameters},
                   {b_from_name, b_from_parameters},
@@ -4542,12 +4542,12 @@ class FFI_EC_Group_Test final : public FFI_Test {
             botan_oid_destroy(group_oid);
             botan_oid_destroy(oid_from_oid);
 
-            std::vector<std::tuple<botan_mp_t, botan_mp_t>> parameters = {{p_from_name, p_from_oid},
-                                                                          {a_from_name, a_from_oid},
-                                                                          {b_from_name, b_from_oid},
-                                                                          {g_x_from_name, g_x_from_oid},
-                                                                          {g_y_from_name, g_y_from_oid},
-                                                                          {order_from_name, order_from_oid}};
+            const std::vector<std::tuple<botan_mp_t, botan_mp_t>> parameters = {{p_from_name, p_from_oid},
+                                                                                {a_from_name, a_from_oid},
+                                                                                {b_from_name, b_from_oid},
+                                                                                {g_x_from_name, g_x_from_oid},
+                                                                                {g_y_from_name, g_y_from_oid},
+                                                                                {order_from_name, order_from_oid}};
 
             for(auto [x, y] : parameters) {
                TEST_FFI_RC(1, botan_mp_equal, (x, y));
@@ -4582,7 +4582,7 @@ class FFI_EC_Group_Test final : public FFI_Test {
 
             ViewStringSink pem_string;
             TEST_FFI_OK(botan_ec_group_view_pem, (group_from_name, pem_string.delegate(), pem_string.callback()));
-            std::string pem_actual = {pem_string.get().begin(), pem_string.get().end()};
+            const std::string pem_actual = {pem_string.get().begin(), pem_string.get().end()};
 
             botan_ec_group_t group_from_pem;
             TEST_FFI_OK(botan_ec_group_from_pem, (&group_from_pem, pem_actual.c_str()));

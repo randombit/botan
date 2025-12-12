@@ -75,7 +75,7 @@ std::unique_ptr<StreamCipher> StreamCipher::create(std::string_view algo_spec, s
       if(provider.empty() || provider == "base") {
          auto cipher = BlockCipher::create(req.arg(0));
          if(cipher) {
-            size_t ctr_size = req.arg_as_integer(1, cipher->block_size());
+            const size_t ctr_size = req.arg_as_integer(1, cipher->block_size());
             return std::make_unique<CTR_BE>(std::move(cipher), ctr_size);
          }
       }

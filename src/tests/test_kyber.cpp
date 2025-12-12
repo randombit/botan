@@ -63,12 +63,12 @@ class KYBER_Tests final : public Test {
          const auto pub_key_bits = pub_key->public_key_bits();
 
          // Bob (reading from serialized public key)
-         Botan::Kyber_PublicKey alice_pub_key(pub_key_bits, mode);
+         const Botan::Kyber_PublicKey alice_pub_key(pub_key_bits, mode);
          auto enc = Botan::PK_KEM_Encryptor(alice_pub_key, "Raw", "base");
          const auto kem_result = enc.encrypt(*rng);
 
          // Alice (reading from serialized private key)
-         Botan::Kyber_PrivateKey alice_priv_key(priv_key_bits, mode);
+         const Botan::Kyber_PrivateKey alice_priv_key(priv_key_bits, mode);
          auto dec = Botan::PK_KEM_Decryptor(alice_priv_key, *rng, "Raw", "base");
          const auto key_alice = dec.decrypt(kem_result.encapsulated_shared_key(), 0 /* no KDF */, empty_salt);
          result.test_eq("shared secrets are equal", key_alice, kem_result.shared_key());
@@ -139,7 +139,7 @@ class Kyber_KAT_Tests : public PK_PQC_KEM_KAT_Test {
 
          // We use different hash functions for Kyber 90s, as those are
          // consistent with the algorithm requirements of the implementations.
-         std::string_view hash_name = get_mode(mode).is_90s() ? "SHA-256" : "SHAKE-256(128)";
+         const std::string_view hash_name = get_mode(mode).is_90s() ? "SHA-256" : "SHAKE-256(128)";
 
          auto hash = Botan::HashFunction::create_or_throw(hash_name);
          const auto digest = hash->process(value);

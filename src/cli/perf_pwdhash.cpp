@@ -76,9 +76,9 @@ class PerfTest_Scrypt final : public PerfTest {
       void go(const PerfConfig& config) override {
          auto pwdhash_fam = Botan::PasswordHashFamily::create_or_throw("Scrypt");
 
-         for(size_t N : {8192, 16384, 32768, 65536}) {
-            for(size_t r : {1, 8, 16}) {
-               for(size_t p : {1}) {
+         for(const size_t N : {8192, 16384, 32768, 65536}) {
+            for(const size_t r : {1, 8, 16}) {
+               for(const size_t p : {1}) {
                   auto pwdhash = pwdhash_fam->from_params(N, r, p);
 
                   const size_t mem_usage = pwdhash->total_memory_usage() / (1024 * 1024);
@@ -121,9 +121,9 @@ class PerfTest_Argon2 final : public PerfTest {
 
          const auto msec = config.runtime();
 
-         for(size_t M : {8 * 1024, 64 * 1024, 256 * 1024}) {
-            for(size_t t : {1, 4}) {
-               for(size_t p : {1, 4}) {
+         for(const size_t M : {8 * 1024, 64 * 1024, 256 * 1024}) {
+            for(const size_t t : {1, 4}) {
+               for(const size_t p : {1, 4}) {
                   auto pwhash = pwhash_fam->from_params(M, t, p);
                   auto timer = config.make_timer(pwhash->to_string());
 

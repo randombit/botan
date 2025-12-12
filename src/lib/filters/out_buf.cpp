@@ -28,7 +28,7 @@ size_t Output_Buffers::read(uint8_t output[], size_t length, Pipe::message_id ms
 * Peek at data in a message
 */
 size_t Output_Buffers::peek(uint8_t output[], size_t length, size_t stream_offset, Pipe::message_id msg) const {
-   SecureQueue* q = get(msg);
+   const SecureQueue* q = get(msg);
    if(q != nullptr) {
       return q->peek(output, length, stream_offset);
    }
@@ -39,7 +39,7 @@ size_t Output_Buffers::peek(uint8_t output[], size_t length, size_t stream_offse
 * Check available bytes in a message
 */
 size_t Output_Buffers::remaining(Pipe::message_id msg) const {
-   SecureQueue* q = get(msg);
+   const SecureQueue* q = get(msg);
    if(q != nullptr) {
       return q->size();
    }
@@ -50,7 +50,7 @@ size_t Output_Buffers::remaining(Pipe::message_id msg) const {
 * Return the total bytes of a message that have already been read.
 */
 size_t Output_Buffers::get_bytes_read(Pipe::message_id msg) const {
-   SecureQueue* q = get(msg);
+   const SecureQueue* q = get(msg);
    if(q != nullptr) {
       return q->get_bytes_read();
    }

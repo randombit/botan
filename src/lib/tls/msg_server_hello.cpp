@@ -325,7 +325,7 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
    }
 
    if(client_hello.supports_encrypt_then_mac() && policy.negotiate_encrypt_then_mac()) {
-      Ciphersuite c = resumed_session.ciphersuite();
+      const Ciphersuite c = resumed_session.ciphersuite();
       if(c.cbc_ciphersuite()) {
          m_data->extensions().add(new Encrypt_then_MAC);
       }
@@ -368,7 +368,7 @@ bool Server_Hello_12::secure_renegotiation() const {
 }
 
 std::vector<uint8_t> Server_Hello_12::renegotiation_info() const {
-   if(Renegotiation_Extension* reneg = m_data->extensions().get<Renegotiation_Extension>()) {
+   if(const Renegotiation_Extension* reneg = m_data->extensions().get<Renegotiation_Extension>()) {
       return reneg->renegotiation_info();
    }
    return std::vector<uint8_t>();

@@ -560,8 +560,8 @@ class BOTAN_PUBLIC_API(2, 0) Object {
 
 template <typename T>
 std::vector<T> Object::search(Session& session, const std::vector<Attribute>& search_template) {
-   ObjectFinder finder(session, search_template);
-   std::vector<ObjectHandle> handles = finder.find();
+   const ObjectFinder finder(session, search_template);
+   const std::vector<ObjectHandle> handles = finder.find();
    std::vector<T> result;
    result.reserve(handles.size());
    for(const auto& handle : handles) {

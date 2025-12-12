@@ -26,7 +26,7 @@ bool PKCS11_ECDSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong)
       return true;
    }
 
-   ECDSA_PublicKey pubkey(domain(), public_ec_point());
+   const ECDSA_PublicKey pubkey(domain(), public_ec_point());
    return KeyPair::signature_consistency_check(rng, *this, pubkey, "SHA-256");
 }
 
@@ -187,7 +187,7 @@ PKCS11_ECDSA_KeyPair generate_ecdsa_keypair(Session& session,
    ObjectHandle pub_key_handle = 0;
    ObjectHandle priv_key_handle = 0;
 
-   Mechanism mechanism = {static_cast<CK_MECHANISM_TYPE>(MechanismType::EcKeyPairGen), nullptr, 0};
+   const Mechanism mechanism = {static_cast<CK_MECHANISM_TYPE>(MechanismType::EcKeyPairGen), nullptr, 0};
 
    session.module()->C_GenerateKeyPair(session.handle(),
                                        &mechanism,

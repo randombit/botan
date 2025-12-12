@@ -24,7 +24,7 @@ inline Botan::BigInt decompress_point(bool yMod2,
                                       const Botan::BigInt& curve_p,
                                       const Botan::BigInt& curve_a,
                                       const Botan::BigInt& curve_b) {
-   Botan::BigInt xpow3 = x * x * x;
+   const Botan::BigInt xpow3 = x * x * x;
 
    Botan::BigInt g = curve_a * x;
    g += xpow3;

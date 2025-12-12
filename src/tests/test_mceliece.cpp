@@ -56,7 +56,7 @@ class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test {
 
          Botan::HMAC_DRBG rng("SHA-384");
          rng.initialize_with(keygen_seed.data(), keygen_seed.size());
-         Botan::McEliece_PrivateKey mce_priv(rng, keygen_n, keygen_t);
+         const Botan::McEliece_PrivateKey mce_priv(rng, keygen_n, keygen_t);
 
          result.test_eq("public key fingerprint", hash_bytes(mce_priv.public_key_bits()), fprint_pub);
          result.test_eq("private key fingerprint", hash_bytes(mce_priv.private_key_bits()), fprint_priv);
@@ -143,14 +143,14 @@ class McEliece_Tests final : public Test {
                Test::Result result("McEliece keygen");
                result.start_timer();
 
-               Botan::McEliece_PrivateKey sk1(this->rng(), params.code_length, t);
+               const Botan::McEliece_PrivateKey sk1(this->rng(), params.code_length, t);
                const Botan::McEliece_PublicKey& pk1 = sk1;
 
                const std::vector<uint8_t> pk_enc = pk1.public_key_bits();
                const Botan::secure_vector<uint8_t> sk_enc = sk1.private_key_bits();
 
-               Botan::McEliece_PublicKey pk(pk_enc);
-               Botan::McEliece_PrivateKey sk(sk_enc);
+               const Botan::McEliece_PublicKey pk(pk_enc);
+               const Botan::McEliece_PrivateKey sk(sk_enc);
 
                result.test_eq("decoded public key equals original", fingerprint(pk1), fingerprint(pk));
                result.test_eq("decoded private key equals original", fingerprint(sk1), fingerprint(sk));

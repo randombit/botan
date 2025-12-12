@@ -417,7 +417,7 @@ std::ostream& operator<<(std::ostream& out, const X509_DN& dn) {
 
    for(size_t i = 0; i != info.size(); ++i) {
       out << to_short_form(info[i].first) << "=\"";
-      for(char c : info[i].second.value()) {
+      for(const char c : info[i].second.value()) {
          if(c == '\\' || c == '\"') {
             out << "\\";
          }

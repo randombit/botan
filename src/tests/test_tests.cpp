@@ -80,16 +80,16 @@ class Test_Tests final : public Test {
 
          {
             Test::Result test_result(testcase_name);
-            size_t x = 5;
-            size_t y = 6;
+            const size_t x = 5;
+            const size_t y = 6;
             test_result.test_eq("test ints equal", x, y);
             verify_failure("test ints equal", result, test_result);
          }
 
          {
             Test::Result test_result(testcase_name);
-            size_t x = 5;
-            size_t y = 5;
+            const size_t x = 5;
+            const size_t y = 5;
             test_result.test_ne("test ints not equal", x, y);
             verify_failure("test ints not equal", result, test_result);
          }
@@ -219,7 +219,7 @@ class Test_Tests final : public Test {
             histogram[rng->next_byte()] += 1;
          }
 
-         for(size_t count : histogram) {
+         for(const size_t count : histogram) {
             if(count < RUNS / 2 || count > RUNS * 2) {
                result.test_failure("Testsuite_RNG produced non-uniform output");
             } else {

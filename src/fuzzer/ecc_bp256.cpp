@@ -12,6 +12,6 @@ void fuzz(std::span<const uint8_t> in) {
       return;
    }
 
-   static Botan::EC_Group bp256("brainpool256r1");
+   static const Botan::EC_Group bp256("brainpool256r1");
    return check_ecc_math(bp256, in);
 }

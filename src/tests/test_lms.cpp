@@ -40,7 +40,7 @@ class LMS_Test final : public Text_Based_Test {
          auto hash = Botan::HashFunction::create("SHA-256");
 
          auto lms_pk_ref_slicer = Botan::BufferSlicer(pk_ref);
-         Botan::LMS_PublicKey lms_pk_ref = Botan::LMS_PublicKey::from_bytes_or_throw(lms_pk_ref_slicer);
+         const Botan::LMS_PublicKey lms_pk_ref = Botan::LMS_PublicKey::from_bytes_or_throw(lms_pk_ref_slicer);
 
          // Test public key creation
          auto lms_sk =

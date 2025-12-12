@@ -392,7 +392,7 @@ class Cipher_Mode_IV_Carry_Tests final : public Test {
 
             dec->finish(msg);
 
-            for(uint8_t b : msg) {
+            for(const uint8_t b : msg) {
                result.test_eq("Plaintext zeros", static_cast<size_t>(b), 0);
             }
          }

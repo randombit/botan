@@ -126,7 +126,7 @@ std::string make_bcrypt(std::string_view pass, std::span<const uint8_t> salt, ui
       blowfish.encrypt_n(ctext.data(), ctext.data(), 3);
    }
 
-   std::string salt_b64 = bcrypt_base64_encode(salt);
+   const std::string salt_b64 = bcrypt_base64_encode(salt);
 
    std::string work_factor_str = std::to_string(work_factor);
    if(work_factor_str.length() == 1) {

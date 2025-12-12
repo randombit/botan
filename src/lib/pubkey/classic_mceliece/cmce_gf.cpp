@@ -47,8 +47,8 @@ inline CmceGfElem internal_reduce(uint32_t x, CmceGfMod mod) {
 Classic_McEliece_GF Classic_McEliece_GF::operator*(Classic_McEliece_GF other) const {
    BOTAN_ASSERT_NOMSG(m_modulus == other.m_modulus);
 
-   uint32_t a = m_elem.get();
-   uint32_t b = other.m_elem.get();
+   const uint32_t a = m_elem.get();
+   const uint32_t b = other.m_elem.get();
 
    uint32_t acc = a * (b & CT::value_barrier<uint32_t>(1));
 

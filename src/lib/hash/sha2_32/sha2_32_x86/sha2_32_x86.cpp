@@ -31,7 +31,7 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha256_rnds4(SIMD_4x32& S0,
 }
 
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha256_msg_exp(SIMD_4x32& m0, SIMD_4x32& m1, SIMD_4x32& m2) {
-   m2 += SIMD_4x32(_mm_alignr_epi8(m1.raw(), m0.raw(), 4));
+   m2 += SIMD_4x32::alignr4(m1, m0);
    m0 = SIMD_4x32(_mm_sha256msg1_epu32(m0.raw(), m1.raw()));
    m2 = SIMD_4x32(_mm_sha256msg2_epu32(m2.raw(), m1.raw()));
 }
@@ -40,9 +40,9 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha256_permute_state(SIMD_4x32& S0, S
    S0 = SIMD_4x32(_mm_shuffle_epi32(S0.raw(), 0b10110001));  // CDAB
    S1 = SIMD_4x32(_mm_shuffle_epi32(S1.raw(), 0b00011011));  // EFGH
 
-   __m128i tmp = _mm_alignr_epi8(S0.raw(), S1.raw(), 8);       // ABEF
+   const auto T = SIMD_4x32::alignr8(S0, S1);                  // ABEF
    S1 = SIMD_4x32(_mm_blend_epi16(S1.raw(), S0.raw(), 0xF0));  // CDGH
-   S0 = SIMD_4x32(tmp);
+   S0 = T;
 }
 
 // NOLINTEND(portability-simd-intrinsics)

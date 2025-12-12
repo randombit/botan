@@ -75,7 +75,7 @@ class PKCS11_ECDH_KA_Operation final : public PK_Ops::Key_Agreement {
                                      static_cast<Ulong>(attributes.count()),
                                      &secret_handle);
 
-         Object secret_object(m_key.session(), secret_handle);
+         const Object secret_object(m_key.session(), secret_handle);
          secure_vector<uint8_t> secret = secret_object.get_attribute_value(AttributeType::Value);
          if(secret.size() < key_len) {
             throw PKCS11_Error("ECDH key derivation secret length is too short");
@@ -102,7 +102,7 @@ PKCS11_ECDH_KeyPair generate_ecdh_keypair(Session& session,
    ObjectHandle pub_key_handle = 0;
    ObjectHandle priv_key_handle = 0;
 
-   Mechanism mechanism = {static_cast<CK_MECHANISM_TYPE>(MechanismType::EcKeyPairGen), nullptr, 0};
+   const Mechanism mechanism = {static_cast<CK_MECHANISM_TYPE>(MechanismType::EcKeyPairGen), nullptr, 0};
 
    session.module()->C_GenerateKeyPair(session.handle(),
                                        &mechanism,

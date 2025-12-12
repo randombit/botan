@@ -57,7 +57,7 @@ void GOST_34_11::add_data(std::span<const uint8_t> input) {
 void GOST_34_11::compress_n(const uint8_t input[], size_t blocks) {
    for(size_t i = 0; i != blocks; ++i) {
       for(uint16_t j = 0, carry = 0; j != 32; ++j) {
-         uint16_t s = m_sum[j] + input[32 * i + j] + carry;
+         const uint16_t s = m_sum[j] + input[32 * i + j] + carry;
          carry = get_byte<0>(s);
          m_sum[j] = get_byte<1>(s);
       }
@@ -88,7 +88,7 @@ void GOST_34_11::compress_n(const uint8_t input[], size_t blocks) {
          }
 
          // A(x)
-         uint64_t A_U = U[0];
+         const uint64_t A_U = U[0];
          U[0] = U[1];
          U[1] = U[2];
          U[2] = U[3];
@@ -103,8 +103,8 @@ void GOST_34_11::compress_n(const uint8_t input[], size_t blocks) {
          }
 
          // A(A(x))
-         uint64_t AA_V_1 = V[0] ^ V[1];
-         uint64_t AA_V_2 = V[1] ^ V[2];
+         const uint64_t AA_V_1 = V[0] ^ V[1];
+         const uint64_t AA_V_2 = V[1] ^ V[2];
          V[0] = V[2];
          V[1] = V[3];
          V[2] = AA_V_1;

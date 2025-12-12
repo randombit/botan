@@ -170,7 +170,7 @@ uint16_t choose_ciphersuite(const Policy& policy,
 
          const std::vector<Signature_Scheme> allowed = policy.allowed_signature_schemes();
 
-         std::vector<Signature_Scheme> client_sig_methods = client_hello.signature_schemes();
+         const std::vector<Signature_Scheme> client_sig_methods = client_hello.signature_schemes();
 
          /*
          Contrary to the wording of draft-ietf-tls-md5-sha1-deprecate we do
@@ -179,7 +179,7 @@ uint16_t choose_ciphersuite(const Policy& policy,
          */
          bool we_support_some_hash_by_client = false;
 
-         for(Signature_Scheme scheme : client_sig_methods) {
+         for(const Signature_Scheme scheme : client_sig_methods) {
             if(!scheme.is_available()) {
                continue;
             }
@@ -214,16 +214,16 @@ uint16_t choose_ciphersuite(const Policy& policy,
 
 std::map<std::string, std::vector<X509_Certificate>> get_server_certs(
    std::string_view hostname, const std::vector<Signature_Scheme>& cert_sig_schemes, Credentials_Manager& creds) {
-   const char* cert_types[] = {"RSA", "ECDSA", "DSA", nullptr};
+   const std::vector<std::string> cert_types = {"RSA", "ECDSA"};
 
    std::map<std::string, std::vector<X509_Certificate>> cert_chains;
 
-   for(size_t i = 0; cert_types[i] != nullptr; ++i) {
+   for(const auto& cert_type : cert_types) {
       const std::vector<X509_Certificate> certs = creds.cert_chain_single_type(
-         cert_types[i], to_algorithm_identifiers(cert_sig_schemes), "tls-server", std::string(hostname));
+         cert_type, to_algorithm_identifiers(cert_sig_schemes), "tls-server", std::string(hostname));
 
       if(!certs.empty()) {
-         cert_chains[cert_types[i]] = certs;
+         cert_chains[cert_type] = certs;
       }
    }
 
@@ -277,7 +277,7 @@ std::vector<X509_Certificate> Server_Impl_12::get_peer_cert_chain(const Handshak
 void Server_Impl_12::initiate_handshake(Handshake_State& state, bool force_full_renegotiation) {
    dynamic_cast<Server_Handshake_State&>(state).set_allow_session_resumption(!force_full_renegotiation);
 
-   Hello_Request hello_req(state.handshake_io());
+   const Hello_Request hello_req(state.handshake_io());
 }
 
 namespace {
@@ -413,7 +413,8 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
 
       if(!cookie_secret.empty()) {
          const std::string client_identity = callbacks().tls_peer_network_identity();
-         Hello_Verify_Request verify(pending_state.client_hello()->cookie_input_data(), client_identity, cookie_secret);
+         const Hello_Verify_Request verify(
+            pending_state.client_hello()->cookie_input_data(), client_identity, cookie_secret);
 
          if(pending_state.client_hello()->cookie() != verify.cookie()) {
             if(epoch0_restart) {
@@ -768,10 +769,10 @@ void Server_Impl_12::session_create(Server_Handshake_State& pending_state) {
    const uint16_t ciphersuite =
       choose_ciphersuite(policy(), pending_state.version(), cert_chains, *pending_state.client_hello());
 
-   Server_Hello_12::Settings srv_settings(Session_ID(make_hello_random(rng(), callbacks(), policy())),
-                                          pending_state.version(),
-                                          ciphersuite,
-                                          session_manager().emits_session_tickets());
+   const Server_Hello_12::Settings srv_settings(Session_ID(make_hello_random(rng(), callbacks(), policy())),
+                                                pending_state.version(),
+                                                ciphersuite,
+                                                session_manager().emits_session_tickets());
 
    pending_state.server_hello(std::make_unique<Server_Hello_12>(pending_state.handshake_io(),
                                                                 pending_state.hash(),

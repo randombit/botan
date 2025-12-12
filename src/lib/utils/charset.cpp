@@ -107,7 +107,7 @@ std::string format_char_for_display(char c) {
    } else if(c == '\r') {
       oss << "\\r";
    } else if(static_cast<unsigned char>(c) >= 128) {
-      unsigned char z = static_cast<unsigned char>(c);
+      const unsigned char z = static_cast<unsigned char>(c);
       oss << "\\x" << std::hex << std::uppercase << static_cast<int>(z);
    } else {
       oss << c;

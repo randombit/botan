@@ -159,7 +159,7 @@ std::vector<Test::Result> test_session_manager_in_memory() {
             [&](auto& result) {
                result.confirm("no session found via server info", mgr->find(server_info(), cbs, plcy).empty());
 
-               Botan::TLS::Session_ID mock_id = random_id(*rng);
+               Botan::TLS::Session_ID const mock_id = random_id(*rng);
                auto mock_ticket = rng->random_vec<Botan::TLS::Session_Ticket>(128);
 
                result.confirm("no session found via ID", !mgr->retrieve(mock_id, cbs, plcy));
@@ -240,7 +240,7 @@ std::vector<Test::Result> test_session_manager_in_memory() {
 
       CHECK("add session with ID",
             [&](auto& result) {
-               Botan::TLS::Session_ID new_id = random_id(*rng);
+               Botan::TLS::Session_ID const new_id = random_id(*rng);
 
                mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs), new_id);
                result.require("obtain via ID", mgr->retrieve(new_id, cbs, plcy).has_value());
@@ -260,7 +260,7 @@ std::vector<Test::Result> test_session_manager_in_memory() {
 
       CHECK("add session with ticket",
             [&](auto& result) {
-               Botan::TLS::Session_Ticket new_ticket = random_ticket(*rng);
+               Botan::TLS::Session_Ticket const new_ticket = random_ticket(*rng);
 
                mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs), new_ticket);
                // cannot be obtained by (non-existent) ID or randomly generated ticket
@@ -313,8 +313,8 @@ std::vector<Test::Result> test_session_manager_in_memory() {
             [&](auto& result) {
                Botan::TLS::Session_Manager_In_Memory local_mgr(rng);
 
-               Botan::TLS::Session_Ticket ticket1 = random_ticket(*rng);
-               Botan::TLS::Session_Ticket ticket2 = random_ticket(*rng);
+               Botan::TLS::Session_Ticket const ticket1 = random_ticket(*rng);
+               Botan::TLS::Session_Ticket const ticket2 = random_ticket(*rng);
                Botan::TLS::Session_Ticket ticket3 = random_ticket(*rng);
 
                local_mgr.store(default_session(Botan::TLS::Connection_Side::Client, cbs), ticket1);
@@ -681,7 +681,7 @@ std::vector<Test::Result> test_session_manager_hybrid() {
    // transparently constructs a hybrid manager with the respective internal
    // stateful manager.
    auto CHECK_all = [&](const std::string& name, auto lambda) -> std::vector<Test::Result> {
-      std::vector<std::pair<std::string, std::function<std::unique_ptr<Botan::TLS::Session_Manager>()>>>
+      std::vector<std::pair<std::string, std::function<std::unique_ptr<Botan::TLS::Session_Manager>()>>> const
          stateful_manager_factories = {
             {"In Memory",
              [&rng]() -> std::unique_ptr<Botan::TLS::Session_Manager> {
@@ -689,18 +689,19 @@ std::vector<Test::Result> test_session_manager_hybrid() {
              }},
    #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
             {"SQLite",
-             [&rng]() -> std::unique_ptr<Botan::TLS::Session_Manager> {
-                return std::make_unique<Botan::TLS::Session_Manager_SQLite>(
-                   "secure_pw", rng, Test::temp_file_name("tls_session_manager_sqlite"), 10);
-             }},
+             [&rng]() -> std::
+                         unique_ptr<Botan::TLS::Session_Manager> {
+                            return std::make_unique<Botan::TLS::Session_Manager_SQLite>(
+                               "secure_pw", rng, Test::temp_file_name("tls_session_manager_sqlite"), 10);
+                         }},
    #endif
          };
 
       std::vector<Test::Result> results;
       using namespace std::placeholders;
-      for(auto& factory_and_name : stateful_manager_factories) {
-         auto& stateful_manager_name = factory_and_name.first;
-         auto& stateful_manager_factory = factory_and_name.second;
+      for(const auto& factory_and_name : stateful_manager_factories) {
+         const auto& stateful_manager_name = factory_and_name.first;
+         const auto& stateful_manager_factory = factory_and_name.second;
          auto make_manager = [stateful_manager_factory, &creds, &rng](bool prefer_tickets) {
             return Botan::TLS::Session_Manager_Hybrid(stateful_manager_factory(), creds, rng, prefer_tickets);
          };
@@ -814,7 +815,7 @@ std::vector<Test::Result> test_session_manager_sqlite() {
    return {
       CHECK("migrate session database scheme (purges database)",
             [&](auto& result) {
-               Temporary_Database_File dbfile("tls-sessions/botan-2.19.3.sqlite");
+               Temporary_Database_File const dbfile("tls-sessions/botan-2.19.3.sqlite");
 
                // legacy database (encrypted with 'thetruthisoutthere') containing:
                //    $ sqlite3 src/tests/data/tls-sessions/botan-2.19.3.sqlite  'SELECT * FROM tls_sessions;'
@@ -1001,7 +1002,7 @@ std::vector<Test::Result> tls_session_manager_expiry() {
    Session_Manager_Policy plcy;
 
    auto CHECK_all = [&](const std::string& name, auto lambda) -> std::vector<Test::Result> {
-      std::vector<std::pair<std::string, std::function<std::unique_ptr<Botan::TLS::Session_Manager>()>>>
+      const std::vector<std::pair<std::string, std::function<std::unique_ptr<Botan::TLS::Session_Manager>()>>>
          stateful_manager_factories = {
             {"In Memory",
              [&rng]() -> std::unique_ptr<Botan::TLS::Session_Manager> {
@@ -1024,7 +1025,7 @@ std::vector<Test::Result> tls_session_manager_expiry() {
       std::vector<Test::Result> results;
       results.reserve(stateful_manager_factories.size());
       using namespace std::placeholders;
-      for(auto& [sub_name, factory] : stateful_manager_factories) {
+      for(const auto& [sub_name, factory] : stateful_manager_factories) {
          auto nm = Botan::fmt("{} ({})", name, sub_name);
          auto fn = std::bind(lambda, sub_name, factory, _1);  // NOLINT(*-avoid-bind)
          results.push_back(CHECK(nm.c_str(), fn));

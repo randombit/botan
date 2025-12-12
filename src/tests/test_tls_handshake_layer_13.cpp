@@ -267,7 +267,7 @@ std::vector<Test::Result> prepare_message() {
             [&](auto& result) {
                auto hello = std::get<Client_Hello_13>(
                   Client_Hello_13::parse({client_hello_message.cbegin() + 4, client_hello_message.cend()}));
-               Handshake_Layer hl(Connection_Side::Client);
+               const Handshake_Layer hl(Connection_Side::Client);
                Transcript_Hash_State th("SHA-256");
                result.test_eq("produces the same message", hl.prepare_message(hello, th), client_hello_message);
                check_transcript_hash_filled(result, th);
@@ -277,7 +277,7 @@ std::vector<Test::Result> prepare_message() {
             [&](auto& result) {
                auto hello = std::get<Server_Hello_13>(
                   Server_Hello_13::parse({server_hello_message.cbegin() + 4, server_hello_message.cend()}));
-               Handshake_Layer hl(Connection_Side::Server);
+               const Handshake_Layer hl(Connection_Side::Server);
                Transcript_Hash_State th("SHA-256");
                result.test_eq("produces the same message", hl.prepare_message(hello, th), server_hello_message);
                check_transcript_hash_filled(result, th);

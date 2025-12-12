@@ -176,7 +176,7 @@ class TLS_Server final : public Command {
             return;
          }
 
-         socket_type server_fd = make_server_socket(port);
+         const socket_type server_fd = make_server_socket(port);
          size_t clients_served = 0;
 
          output() << "Listening for new connections on " << transport << " port " << port << std::endl;
@@ -194,7 +194,7 @@ class TLS_Server final : public Command {
                socklen_t from_len = sizeof(sockaddr_in);
 
                void* peek_buf = nullptr;
-               size_t peek_len = 0;
+               size_t peek_len = 0;  // NOLINT(*-const-correctness)
 
    #if defined(BOTAN_TARGET_OS_IS_MACOS)
                // macOS handles zero size buffers differently - it will return 0 even if there's no incoming data,
@@ -227,7 +227,7 @@ class TLS_Server final : public Command {
 
             if(!dump_traces_to.empty()) {
                auto now = std::chrono::system_clock::now().time_since_epoch();
-               uint64_t timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+               const uint64_t timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
                const std::string dump_file = dump_traces_to + "/tls_" + std::to_string(timestamp) + ".bin";
                dump_stream = std::make_unique<std::ofstream>(dump_file.c_str());
             }
@@ -236,7 +236,7 @@ class TLS_Server final : public Command {
                while(!server.is_closed()) {
                   try {
                      uint8_t buf[4 * 1024] = {0};
-                     ssize_t got = ::recv(m_socket, Botan::cast_uint8_ptr_to_char(buf), sizeof(buf), 0);
+                     const ssize_t got = ::recv(m_socket, Botan::cast_uint8_ptr_to_char(buf), sizeof(buf), 0);
 
                      if(got == -1) {
                         error_output() << "Error in socket read - " << err_to_string(errno) << std::endl;
@@ -255,7 +255,7 @@ class TLS_Server final : public Command {
                      server.received_data(buf, got);
 
                      while(server.is_active() && !m_pending_output.empty()) {
-                        std::string output = m_pending_output.front();
+                        const std::string output = m_pending_output.front();
                         m_pending_output.pop_front();
                         server.send(output);
 
@@ -290,7 +290,7 @@ class TLS_Server final : public Command {
 
       void send(std::span<const uint8_t> buf) {
          if(m_is_tcp) {
-            ssize_t sent = ::send(m_socket, buf.data(), static_cast<sendrecv_len_type>(buf.size()), MSG_NOSIGNAL);
+            const ssize_t sent = ::send(m_socket, buf.data(), static_cast<sendrecv_len_type>(buf.size()), MSG_NOSIGNAL);
 
             if(sent == -1) {
                error_output() << "Error writing to socket - " << err_to_string(errno) << std::endl;
@@ -320,7 +320,7 @@ class TLS_Server final : public Command {
       socket_type make_server_socket(uint16_t port) {
          const int type = m_is_tcp ? SOCK_STREAM : SOCK_DGRAM;
 
-         socket_type fd = ::socket(PF_INET, type, 0);
+         const socket_type fd = ::socket(PF_INET, type, 0);
          if(fd == invalid_socket()) {
             throw CLI_Error("Unable to acquire socket");
          }

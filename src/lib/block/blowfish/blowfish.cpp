@@ -388,7 +388,8 @@ void Blowfish::generate_sbox(secure_vector<uint32_t>& box,
          L ^= BFF(R, m_S);
       }
 
-      uint32_t T = R;
+      // Must read-then-write since sometimes sbox parameter is m_P
+      const uint32_t T = R;
       R = L ^ m_P[16];
       L = T ^ m_P[17];
       box[i] = L;

@@ -60,7 +60,7 @@ EC_AffinePoint recover_ecdsa_public_key(
 
          const auto r_inv = EC_Scalar::from_bigint(group, r).invert_vartime();
 
-         EC_Group::Mul2Table GR_mul(R.value());
+         const EC_Group::Mul2Table GR_mul(R.value());
          if(auto egsr = GR_mul.mul2_vartime(ne * r_inv, ss * r_inv)) {
             return egsr.value();
          }

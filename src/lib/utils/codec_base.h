@@ -169,7 +169,7 @@ size_t base_decode(const Base& base,
       ++input_consumed;
    }
 
-   size_t written = (out_ptr - output) - base.bytes_to_remove(final_truncate);
+   const size_t written = (out_ptr - output) - base.bytes_to_remove(final_truncate);
 
    return written;
 }

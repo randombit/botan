@@ -16,9 +16,9 @@ int main() {
    Botan::PKCS11::Session session(slot, false);
 
    // create an simple data object
-   Botan::secure_vector<uint8_t> value = {0x00, 0x01, 0x02, 0x03};
-   std::size_t id = 1337;
-   std::string label = "test data object";
+   const Botan::secure_vector<uint8_t> value = {0x00, 0x01, 0x02, 0x03};
+   const std::size_t id = 1337;
+   const std::string label = "test data object";
 
    // set properties of the new object
    Botan::PKCS11::DataObjectProperties data_obj_props;
@@ -31,19 +31,20 @@ int main() {
    data_obj_props.set_object_id(encoded_id);
 
    // create the object
-   Botan::PKCS11::Object data_obj(session, data_obj_props);
+   const Botan::PKCS11::Object data_obj(session, data_obj_props);
 
    // get label of this object
-   Botan::PKCS11::secure_string retrieved_label = data_obj.get_attribute_value(Botan::PKCS11::AttributeType::Label);
+   const Botan::PKCS11::secure_string retrieved_label =
+      data_obj.get_attribute_value(Botan::PKCS11::AttributeType::Label);
 
    // set a new label
-   Botan::PKCS11::secure_string new_label = {'B', 'o', 't', 'a', 'n'};
+   const Botan::PKCS11::secure_string new_label = {'B', 'o', 't', 'a', 'n'};
    data_obj.set_attribute_value(Botan::PKCS11::AttributeType::Label, new_label);
 
    // copy the object
    Botan::PKCS11::AttributeContainer copy_attributes;
    copy_attributes.add_string(Botan::PKCS11::AttributeType::Label, "copied object");
-   [[maybe_unused]] Botan::PKCS11::ObjectHandle copied_obj_handle = data_obj.copy(copy_attributes);
+   [[maybe_unused]] const Botan::PKCS11::ObjectHandle copied_obj_handle = data_obj.copy(copy_attributes);
 
    // search for an object
    Botan::PKCS11::AttributeContainer search_template;

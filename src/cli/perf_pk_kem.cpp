@@ -67,7 +67,7 @@ class PerfTest_PK_KEM : public PerfTest {
                kem_enc_timer->stop();
 
                kem_dec_timer->start();
-               Botan::secure_vector<uint8_t> dec_shared_key =
+               const Botan::secure_vector<uint8_t> dec_shared_key =
                   dec.decrypt(kem_result.encapsulated_shared_key(), 64, salt);
                kem_dec_timer->stop();
 

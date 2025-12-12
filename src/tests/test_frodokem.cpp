@@ -50,12 +50,12 @@ class Frodo_KAT_Tests final : public PK_PQC_KEM_KAT_Test {
       }
 
       Fixed_Output_RNG rng_for_keygen(const std::string& mode, Botan::RandomNumberGenerator& rng) const final {
-         Botan::FrodoKEMConstants consts(get_mode(mode));
+         const Botan::FrodoKEMConstants consts(get_mode(mode));
          return Fixed_Output_RNG(rng, consts.len_sec_bytes() + consts.len_se_bytes() + consts.len_a_bytes());
       }
 
       Fixed_Output_RNG rng_for_encapsulation(const std::string& mode, Botan::RandomNumberGenerator& rng) const final {
-         Botan::FrodoKEMConstants consts(get_mode(mode));
+         const Botan::FrodoKEMConstants consts(get_mode(mode));
          return Fixed_Output_RNG(rng, consts.len_sec_bytes() + consts.len_salt_bytes());
       }
 };
@@ -90,15 +90,15 @@ std::vector<Test::Result> test_frodo_roundtrips() {
 
    std::vector<Test::Result> results;
    for(auto mode : modes) {
-      Botan::FrodoKEMMode m(mode);
+      const Botan::FrodoKEMMode m(mode);
       if(!m.is_available()) {
          continue;
       }
       Botan::FrodoKEMConstants consts(mode);
       Test::Result& result = results.emplace_back("FrodoKEM roundtrip: " + m.to_string());
 
-      Botan::FrodoKEM_PrivateKey sk1(*rng, mode);
-      Botan::FrodoKEM_PublicKey pk1(sk1.public_key_bits(), mode);
+      const Botan::FrodoKEM_PrivateKey sk1(*rng, mode);
+      const Botan::FrodoKEM_PublicKey pk1(sk1.public_key_bits(), mode);
 
       // Happy case
       Botan::PK_KEM_Encryptor enc1(pk1, "Raw");
@@ -114,7 +114,7 @@ std::vector<Test::Result> test_frodo_roundtrips() {
       result.test_eq("length of shared secret (decaps)", ss.size(), dec1.shared_key_length(0));
 
       // Decryption failures ("All right then, keep your secrets.")
-      Botan::FrodoKEM_PrivateKey sk2(*rng, mode);
+      const Botan::FrodoKEM_PrivateKey sk2(*rng, mode);
 
       // Decryption failure: mismatching private key
       Botan::PK_KEM_Decryptor dec2(sk2, *rng, "Raw");

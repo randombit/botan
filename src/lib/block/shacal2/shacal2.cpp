@@ -49,7 +49,7 @@ void SHACAL2::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 
 #if defined(BOTAN_HAS_SHACAL2_AVX512)
    if(CPUID::has(CPUID::Feature::AVX512)) {
-      size_t consumed = avx512_encrypt_blocks(in, out, blocks);
+      const size_t consumed = avx512_encrypt_blocks(in, out, blocks);
       in += consumed * BLOCK_SIZE;
       out += consumed * BLOCK_SIZE;
       blocks -= consumed;
@@ -126,7 +126,7 @@ void SHACAL2::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 
 #if defined(BOTAN_HAS_SHACAL2_AVX512)
    if(CPUID::has(CPUID::Feature::AVX512)) {
-      size_t consumed = avx512_decrypt_blocks(in, out, blocks);
+      const size_t consumed = avx512_decrypt_blocks(in, out, blocks);
       in += consumed * BLOCK_SIZE;
       out += consumed * BLOCK_SIZE;
       blocks -= consumed;

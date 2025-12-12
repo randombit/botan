@@ -72,7 +72,7 @@ int botan_ec_privkey_create(botan_privkey_t* key_obj,
       }
       *key_obj = nullptr;
 
-      Botan::EC_Group ec_group = safe_get(ec_group_obj);
+      const Botan::EC_Group ec_group = safe_get(ec_group_obj);
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
 
       if(auto key = Botan::create_ec_private_key(algo_name, ec_group, rng)) {

@@ -44,7 +44,7 @@ Version version_of(const Interface& interface) {
 std::span<const Utf8Char> name_of(const Interface& interface) {
    // We cannot use std::basic_string_view<Utf8Char> since some compilers do not
    // seem to support string views with unsigned characters.
-   std::string_view s(reinterpret_cast<char*>(interface.pInterfaceName));
+   const std::string_view s(reinterpret_cast<char*>(interface.pInterfaceName));
    return std::span<const Utf8Char>(reinterpret_cast<const Utf8Char*>(s.data()), s.size());
 }
 
@@ -69,7 +69,7 @@ InterfaceWrapper InterfaceWrapper::latest_p11_interface(Dynamically_Loaded_Libra
    if(!rv) {
       // Method could not be executed. Probably due to a cryptoki library with PKCS #11 < 3.0.
       // Try the legacy C_GetFunctionList method (for PKCS#11 version 2.40).
-      FunctionList* func_list = nullptr;
+      FunctionList* func_list = nullptr;  // NOLINT(*-const-correctness) bug in clang-tidy
       rv = LowLevel::C_GetFunctionList(library, &func_list, nullptr);
       if(!rv) {
          throw Invalid_Argument("Failed to load function list for PKCS#11 library.");
@@ -94,7 +94,7 @@ InterfaceWrapper InterfaceWrapper::latest_p11_interface(Dynamically_Loaded_Libra
       // This is also done by the example in PKCS #11 (version >= 3.0) spec.
       // Note that version above the currently supported maximal version should
       // be compatible too.
-      Version version = version_of(i);
+      const Version version = version_of(i);
       return version >= Version{2, 40};
    };
    std::vector<Interface> valid_interfaces;
@@ -108,8 +108,8 @@ InterfaceWrapper InterfaceWrapper::latest_p11_interface(Dynamically_Loaded_Libra
    // Higher versions are preferred over lower ones. If multiple interfaces of
    // the highest version exist, fork safe interfaces are preferred.
    auto priority_comparator = [](const Interface& left, const Interface& right) {
-      Version left_version = version_of(left);
-      Version right_version = version_of(right);
+      const Version left_version = version_of(left);
+      const Version right_version = version_of(right);
 
       if(left_version == right_version) {
          return (left.flags & static_cast<CK_FLAGS>(Flag::InterfaceForkSafe)) <

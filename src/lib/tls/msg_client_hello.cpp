@@ -259,7 +259,7 @@ bool Client_Hello::offered_suite(uint16_t ciphersuite) const {
 }
 
 std::vector<Signature_Scheme> Client_Hello::signature_schemes() const {
-   if(Signature_Algorithms* sigs = m_data->extensions().get<Signature_Algorithms>()) {
+   if(const Signature_Algorithms* sigs = m_data->extensions().get<Signature_Algorithms>()) {
       return sigs->supported_schemes();
    }
    return {};
@@ -270,7 +270,7 @@ std::vector<Signature_Scheme> Client_Hello::certificate_signature_schemes() cons
    //   If no "signature_algorithms_cert" extension is present, then the
    //   "signature_algorithms" extension also applies to signatures appearing
    //   in certificates.
-   if(Signature_Algorithms_Cert* sigs = m_data->extensions().get<Signature_Algorithms_Cert>()) {
+   if(const Signature_Algorithms_Cert* sigs = m_data->extensions().get<Signature_Algorithms_Cert>()) {
       return sigs->supported_schemes();
    } else {
       return signature_schemes();
@@ -278,28 +278,28 @@ std::vector<Signature_Scheme> Client_Hello::certificate_signature_schemes() cons
 }
 
 std::vector<Group_Params> Client_Hello::supported_ecc_curves() const {
-   if(Supported_Groups* groups = m_data->extensions().get<Supported_Groups>()) {
+   if(const Supported_Groups* groups = m_data->extensions().get<Supported_Groups>()) {
       return groups->ec_groups();
    }
    return {};
 }
 
 std::vector<Group_Params> Client_Hello::supported_dh_groups() const {
-   if(Supported_Groups* groups = m_data->extensions().get<Supported_Groups>()) {
+   if(const Supported_Groups* groups = m_data->extensions().get<Supported_Groups>()) {
       return groups->dh_groups();
    }
    return std::vector<Group_Params>();
 }
 
 bool Client_Hello_12::prefers_compressed_ec_points() const {
-   if(Supported_Point_Formats* ecc_formats = m_data->extensions().get<Supported_Point_Formats>()) {
+   if(const Supported_Point_Formats* ecc_formats = m_data->extensions().get<Supported_Point_Formats>()) {
       return ecc_formats->prefers_compressed();
    }
    return false;
 }
 
 std::string Client_Hello::sni_hostname() const {
-   if(Server_Name_Indicator* sni = m_data->extensions().get<Server_Name_Indicator>()) {
+   if(const Server_Name_Indicator* sni = m_data->extensions().get<Server_Name_Indicator>()) {
       return sni->host_name();
    }
    return "";
@@ -310,14 +310,14 @@ bool Client_Hello_12::secure_renegotiation() const {
 }
 
 std::vector<uint8_t> Client_Hello_12::renegotiation_info() const {
-   if(Renegotiation_Extension* reneg = m_data->extensions().get<Renegotiation_Extension>()) {
+   if(const Renegotiation_Extension* reneg = m_data->extensions().get<Renegotiation_Extension>()) {
       return reneg->renegotiation_info();
    }
    return {};
 }
 
 std::vector<Protocol_Version> Client_Hello::supported_versions() const {
-   if(Supported_Versions* versions = m_data->extensions().get<Supported_Versions>()) {
+   if(const Supported_Versions* versions = m_data->extensions().get<Supported_Versions>()) {
       return versions->versions();
    }
    return {};
@@ -376,7 +376,7 @@ std::vector<std::string> Client_Hello::next_protocols() const {
 }
 
 std::vector<uint16_t> Client_Hello::srtp_profiles() const {
-   if(SRTP_Protection_Profiles* srtp = m_data->extensions().get<SRTP_Protection_Profiles>()) {
+   if(const SRTP_Protection_Profiles* srtp = m_data->extensions().get<SRTP_Protection_Profiles>()) {
       return srtp->profiles();
    }
    return {};
@@ -435,7 +435,7 @@ Client_Hello_12::Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data) : 
    const uint16_t TLS_EMPTY_RENEGOTIATION_INFO_SCSV = 0x00FF;
 
    if(offered_suite(static_cast<uint16_t>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV))) {
-      if(Renegotiation_Extension* reneg = m_data->extensions().get<Renegotiation_Extension>()) {
+      if(const Renegotiation_Extension* reneg = m_data->extensions().get<Renegotiation_Extension>()) {
          if(!reneg->renegotiation_info().empty()) {
             throw TLS_Exception(Alert::HandshakeFailure, "Client sent renegotiation SCSV and non-empty extension");
          }

@@ -29,7 +29,7 @@ bool is_lucas_probable_prime(const BigInt& C, const Barrett_Reduction& mod_C) {
    BigInt D = BigInt::from_word(5);
 
    for(;;) {
-      int32_t j = jacobi(D, C);
+      const int32_t j = jacobi(D, C);
       if(j == 0) {
          return false;
       }
@@ -102,7 +102,7 @@ bool is_bailie_psw_probable_prime(const BigInt& n, const Barrett_Reduction& mod_
       return false;
    }
 
-   Montgomery_Params monty_n(n, mod_n);
+   const Montgomery_Params monty_n(n, mod_n);
    const auto base = BigInt::from_word(2);
    return passes_miller_rabin_test(n, mod_n, monty_n, base) && is_lucas_probable_prime(n, mod_n);
 }
@@ -159,7 +159,7 @@ bool is_miller_rabin_probable_prime(const BigInt& n,
       return false;
    }
 
-   Montgomery_Params monty_n(n, mod_n);
+   const Montgomery_Params monty_n(n, mod_n);
 
    for(size_t i = 0; i != test_iterations; ++i) {
       const BigInt a = BigInt::random_integer(rng, BigInt::from_word(2), n);

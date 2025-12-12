@@ -134,7 +134,9 @@ class RNG final : public Command {
          std::string type = get_arg("rng-type");
 
          if(type.empty()) {
-            for(std::string flag : {"system", "rdrand", "auto", "entropy", "drbg", "esdm-full", "esdm-pr", "jitter"}) {
+            const std::vector<std::string> known_rng_types = {
+               "system", "rdrand", "auto", "entropy", "drbg", "esdm-full", "esdm-pr", "jitter"};
+            for(const auto& flag : known_rng_types) {
                if(flag_set(flag)) {
                   type = flag;
                   break;

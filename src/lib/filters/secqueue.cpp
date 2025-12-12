@@ -31,14 +31,14 @@ class SecureQueueNode final {
       SecureQueueNode& operator=(SecureQueueNode&& other) = delete;
 
       size_t write(const uint8_t input[], size_t length) {
-         size_t copied = std::min<size_t>(length, m_buffer.size() - m_end);
+         const size_t copied = std::min<size_t>(length, m_buffer.size() - m_end);
          copy_mem(m_buffer.data() + m_end, input, copied);
          m_end += copied;
          return copied;
       }
 
       size_t read(uint8_t output[], size_t length) {
-         size_t copied = std::min(length, m_end - m_start);
+         const size_t copied = std::min(length, m_end - m_start);
          copy_mem(output, m_buffer.data() + m_start, copied);
          m_start += copied;
          return copied;
@@ -49,7 +49,7 @@ class SecureQueueNode final {
          if(offset >= left) {
             return 0;
          }
-         size_t copied = std::min(length, left - offset);
+         const size_t copied = std::min(length, left - offset);
          copy_mem(output, m_buffer.data() + m_start + offset, copied);
          return copied;
       }
@@ -89,9 +89,9 @@ SecureQueue::SecureQueue(const SecureQueue& input) : Fanout_Filter(), m_bytes_re
 * Destroy this SecureQueue
 */
 void SecureQueue::destroy() {
-   SecureQueueNode* temp = m_head;
+   const SecureQueueNode* temp = m_head;
    while(temp != nullptr) {
-      SecureQueueNode* holder = temp->m_next;
+      const SecureQueueNode* holder = temp->m_next;
       delete temp;  // NOLINT(*-owning-memory)
       temp = holder;
    }
@@ -193,7 +193,7 @@ size_t SecureQueue::get_bytes_read() const {
 * Return how many bytes the queue holds
 */
 size_t SecureQueue::size() const {
-   SecureQueueNode* current = m_head;
+   const SecureQueueNode* current = m_head;
    size_t count = 0;
 
    while(current != nullptr) {

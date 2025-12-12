@@ -226,7 +226,7 @@ bool DSA_Verification_Operation::verify(std::span<const uint8_t> input, std::spa
       return false;
    }
 
-   BigInt r(sig.first(q_bytes));
+   const BigInt r(sig.first(q_bytes));
    BigInt s(sig.last(q_bytes));
 
    if(r == 0 || r >= q || s == 0 || s >= q) {

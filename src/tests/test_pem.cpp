@@ -17,7 +17,7 @@ class PEM_Tests : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result("PEM encoding");
 
-         std::vector<uint8_t> vec = {0, 1, 2, 3, 4};
+         const std::vector<uint8_t> vec = {0, 1, 2, 3, 4};
 
          const std::string pem1 = Botan::PEM_Code::encode(vec, "BUNNY", 3);
 

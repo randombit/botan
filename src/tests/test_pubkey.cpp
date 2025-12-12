@@ -339,7 +339,7 @@ std::vector<Test::Result> PK_Sign_Verify_DER_Test::run() {
 }
 
 std::vector<std::string> PK_Sign_Verify_DER_Test::possible_providers(const std::string& algo_name) {
-   std::vector<std::string> pk_provider =
+   const std::vector<std::string> pk_provider =
       Botan::probe_provider_private_key(algo_name, {"base", "commoncrypto", "openssl", "tpm"});
    return Test::provider_filter(pk_provider);
 }
@@ -558,7 +558,7 @@ Test::Result PK_Key_Agreement_Test::run_one_test(const std::string& header, cons
 }
 
 std::vector<std::string> PK_Key_Generation_Test::possible_providers(const std::string& algo_name) {
-   std::vector<std::string> pk_provider =
+   const std::vector<std::string> pk_provider =
       Botan::probe_provider_private_key(algo_name, {"base", "commoncrypto", "openssl", "tpm"});
    return Test::provider_filter(pk_provider);
 }

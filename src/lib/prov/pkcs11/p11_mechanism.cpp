@@ -137,7 +137,7 @@ MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(std::string_view p
       // at this point it would be possible to support additional configurations that are not predefined above by parsing `padding`
       throw Lookup_Error(fmt("PKCS#11 RSA encrypt/decrypt does not support padding with '{}'", padding));
    }
-   RSA_CryptMechanism mechanism_info = mechanism_info_it->second;
+   const RSA_CryptMechanism mechanism_info = mechanism_info_it->second;
 
    MechanismWrapper mech(mechanism_info.type());
    if(mechanism_info.type() == MechanismType::RsaPkcsOaep) {
@@ -232,7 +232,7 @@ MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(std::string_view pa
       // at this point it would be possible to support additional configurations that are not predefined above by parsing `padding`
       throw Lookup_Error(fmt("PKCS#11 RSA sign/verify does not support padding with '{}'", padding));
    }
-   RSA_SignMechanism mechanism_info = mechanism_info_it->second;
+   const RSA_SignMechanism mechanism_info = mechanism_info_it->second;
 
    MechanismWrapper mech(mechanism_info.type());
    if(PssOptions().contains(mechanism_info.type())) {
@@ -261,7 +261,7 @@ MechanismWrapper MechanismWrapper::create_ecdsa_mechanism(std::string_view hash_
       return MechanismWrapper(mechanism->second);
    }
 
-   SCAN_Name req(hash_spec);
+   const SCAN_Name req(hash_spec);
 
    if(req.algo_name() == "EMSA1" && req.arg_count() == 1) {
       mechanism = EcdsaHash.find(req.arg(0));
@@ -291,11 +291,11 @@ MechanismWrapper MechanismWrapper::create_ecdh_mechanism(std::string_view params
    const bool use_cofactor =
       (param_parts[0] == "Cofactor") || (param_parts.size() == 2 && param_parts[1] == "Cofactor");
 
-   std::string kdf_name = (param_parts[0] == "Cofactor" ? param_parts[1] : param_parts[0]);
+   const std::string kdf_name = (param_parts[0] == "Cofactor" ? param_parts[1] : param_parts[0]);
    std::string hash = kdf_name;
 
    if(kdf_name != "Raw") {
-      SCAN_Name kdf_hash(kdf_name);
+      const SCAN_Name kdf_hash(kdf_name);
 
       if(kdf_hash.arg_count() > 0) {
          hash = kdf_hash.arg(0);

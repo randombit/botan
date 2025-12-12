@@ -128,13 +128,13 @@ std::vector<Test::Result> test_polynomial_basics() {
    return {
       CHECK("polynomial owning storage",
             [](Test::Result& res) {
-               Kyberish_Poly<Domain::Normal> p;
+               const Kyberish_Poly<Domain::Normal> p;
                res.confirm("default constructed poly owns memory", p.owns_storage());
                for(auto coeff : p) {
                   res.test_is_eq<int16_t>("default constructed poly has 0 coefficients", coeff, 0);
                }
 
-               Kyberish_Poly<Domain::NTT> p_ntt;
+               const Kyberish_Poly<Domain::NTT> p_ntt;
                res.confirm("default constructed poly owns memory (NTT)", p_ntt.owns_storage());
                for(auto coeff : p) {
                   res.test_is_eq<int16_t>("default constructed poly (NTT) has 0 coefficients", coeff, 0);
@@ -143,14 +143,14 @@ std::vector<Test::Result> test_polynomial_basics() {
 
       CHECK("polynomial vector managing storage",
             [](Test::Result& res) {
-               Kyberish_PolyVec<Domain::Normal> polys(4);
+               const Kyberish_PolyVec<Domain::Normal> polys(4);
                res.test_is_eq<size_t>("requested size", polys.size(), 4);
 
                for(const auto& poly : polys) {
                   res.confirm("poly embedded in vector does not own memory", !poly.owns_storage());
                }
 
-               Kyberish_PolyVec<Domain::NTT> polys_ntt(4);
+               const Kyberish_PolyVec<Domain::NTT> polys_ntt(4);
                res.test_is_eq<size_t>("requested size (NTT)", polys.size(), 4);
 
                for(const auto& poly : polys_ntt) {
@@ -160,12 +160,12 @@ std::vector<Test::Result> test_polynomial_basics() {
 
       CHECK("cloned polynomials always manage their storage",
             [](Test::Result& res) {
-               Kyberish_Poly<Domain::Normal> p;
+               const Kyberish_Poly<Domain::Normal> p;
                auto p2 = p.clone();
                res.confirm("cloned poly owns memory", p2.owns_storage());
 
-               Kyberish_PolyVec<Domain::Normal> pv(3);
-               for(auto& poly : pv) {
+               const Kyberish_PolyVec<Domain::Normal> pv(3);
+               for(const auto& poly : pv) {
                   res.require("poly in vector does not own memory", !poly.owns_storage());
                   auto pv2 = poly.clone();
                   res.confirm("cloned poly in vector owns memory", pv2.owns_storage());
@@ -176,12 +176,12 @@ std::vector<Test::Result> test_polynomial_basics() {
                   res.confirm("cloned vector polynomial don't own memory", !poly.owns_storage());
                }
 
-               Kyberish_Poly<Domain::NTT> p_ntt;
+               const Kyberish_Poly<Domain::NTT> p_ntt;
                auto p2_ntt = p_ntt.clone();
                res.confirm("cloned poly (NTT) owns memory", p2_ntt.owns_storage());
 
-               Kyberish_PolyVec<Domain::NTT> pv_ntt(3);
-               for(auto& poly : pv_ntt) {
+               const Kyberish_PolyVec<Domain::NTT> pv_ntt(3);
+               for(const auto& poly : pv_ntt) {
                   res.require("poly (NTT) in vector does not own memory", !poly.owns_storage());
                   auto pv2_ntt = poly.clone();
                   res.confirm("cloned poly (NTT) in vector owns memory", pv2_ntt.owns_storage());

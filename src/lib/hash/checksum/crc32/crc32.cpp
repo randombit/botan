@@ -70,7 +70,7 @@ void CRC32::add_data(std::span<const uint8_t> input) {
       crc = CRC32_T0[(crc ^ input[15]) & 0xFF] ^ (crc >> 8);
    }
 
-   for(uint8_t b : input) {
+   for(const uint8_t b : input) {
       crc = CRC32_T0[(crc ^ b) & 0xFF] ^ (crc >> 8);
    }
 

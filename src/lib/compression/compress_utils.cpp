@@ -25,7 +25,7 @@ void* Compression_Alloc_Info::do_malloc(size_t n, size_t size) {
       return nullptr;
    }
 
-   void* ptr = std::calloc(n, size);  // NOLINT(*-no-malloc,*-owning-memory)
+   void* ptr = std::calloc(n, size);  // NOLINT(*-no-malloc,*-owning-memory,*-const-correctness)
 
    /*
    * Return null rather than throwing here as we are being called by a

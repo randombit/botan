@@ -46,7 +46,7 @@ McEliece_PrivateKey::McEliece_PrivateKey(const polyn_gf2m& goppa_polyn,
 
 // NOLINTNEXTLINE(*-member-init)
 McEliece_PrivateKey::McEliece_PrivateKey(RandomNumberGenerator& rng, size_t code_length, size_t t) {
-   uint32_t ext_deg = ceil_log2(code_length);
+   const uint32_t ext_deg = ceil_log2(code_length);
    *this = generate_mceliece_key(rng, ext_deg, code_length, t);
 }
 
@@ -55,7 +55,7 @@ const polyn_gf2m& McEliece_PrivateKey::get_goppa_polyn() const {
 }
 
 size_t McEliece_PublicKey::get_message_word_bit_length() const {
-   size_t codimension = ceil_log2(m_code_length) * m_t;
+   const size_t codimension = ceil_log2(m_code_length) * m_t;
    return m_code_length - codimension;
 }
 
@@ -66,7 +66,7 @@ secure_vector<uint8_t> McEliece_PublicKey::random_plaintext_element(RandomNumber
    rng.randomize(plaintext.data(), plaintext.size());
 
    // unset unused bits in the last plaintext byte
-   if(uint32_t used = bits % 8) {
+   if(const uint32_t used = bits % 8) {
       const uint8_t mask = (1 << used) - 1;
       plaintext[plaintext.size() - 1] &= mask;
    }
@@ -134,13 +134,13 @@ secure_vector<uint8_t> McEliece_PrivateKey::private_key_bits() const {
    enc.end_cons();
    secure_vector<uint8_t> enc_support;
 
-   for(uint16_t Linv : m_Linv) {
+   for(const uint16_t Linv : m_Linv) {
       enc_support.push_back(get_byte<0>(Linv));
       enc_support.push_back(get_byte<1>(Linv));
    }
    enc.encode(enc_support, ASN1_Type::OctetString);
    secure_vector<uint8_t> enc_H;
-   for(uint32_t coef : m_coeffs) {
+   for(const uint32_t coef : m_coeffs) {
       enc_H.push_back(get_byte<0>(coef));
       enc_H.push_back(get_byte<1>(coef));
       enc_H.push_back(get_byte<2>(coef));
@@ -186,7 +186,7 @@ McEliece_PrivateKey::McEliece_PrivateKey(std::span<const uint8_t> key_bits) {
       throw Decoding_Error("invalid McEliece parameters");
    }
 
-   uint32_t ext_deg = ceil_log2(n);
+   const uint32_t ext_deg = ceil_log2(n);
    m_code_length = n;
    m_t = t;
    m_codimension = (ext_deg * t);
@@ -220,7 +220,7 @@ McEliece_PrivateKey::McEliece_PrivateKey(std::span<const uint8_t> key_bits) {
       throw Decoding_Error("encoded support has length different from code length");
    }
    for(uint32_t i = 0; i < n * 2; i += 2) {
-      gf2m el = (enc_support[i] << 8) | enc_support[i + 1];
+      const gf2m el = (enc_support[i] << 8) | enc_support[i + 1];
       m_Linv.push_back(el);
    }
    secure_vector<uint8_t> enc_H;
@@ -233,7 +233,7 @@ McEliece_PrivateKey::McEliece_PrivateKey(std::span<const uint8_t> key_bits) {
    }
 
    for(uint32_t i = 0; i < enc_H.size(); i += 4) {
-      uint32_t coeff = (enc_H[i] << 24) | (enc_H[i + 1] << 16) | (enc_H[i + 2] << 8) | enc_H[i + 3];
+      const uint32_t coeff = (enc_H[i] << 24) | (enc_H[i + 1] << 16) | (enc_H[i + 2] << 8) | enc_H[i + 3];
       m_coeffs.push_back(coeff);
    }
 }

@@ -102,7 +102,7 @@ secure_vector<uint8_t> decrypt_bin(const uint8_t input[], size_t input_len, std:
    }
 
    for(size_t i = 0; i != VERSION_CODE_LEN; ++i) {
-      uint32_t version = load_be<uint32_t>(ciphertext.data(), 0);
+      const uint32_t version = load_be<uint32_t>(ciphertext.data(), 0);
       if(version != CRYPTOBOX_VERSION_CODE) {
          throw Decoding_Error("Bad CryptoBox version");
       }

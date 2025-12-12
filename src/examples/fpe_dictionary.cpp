@@ -21,7 +21,7 @@ class Dictionary {
       size_t rank(const std::string& word) const {
          auto i = std::lower_bound(m_dict.begin(), m_dict.end(), word);
 
-         size_t r = i - m_dict.begin();
+         const size_t r = i - m_dict.begin();
 
          if(m_dict[r] != word) {
             throw std::runtime_error("The word " + word + " does not appear in the dictionary");

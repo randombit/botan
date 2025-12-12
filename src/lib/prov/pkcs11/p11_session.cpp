@@ -20,7 +20,7 @@ Session::Session(Slot& slot, Flags flags, VoidPtr callback_data, Notify notify_c
 }
 
 Session::Session(Slot& slot, SessionHandle handle) : m_slot(slot), m_handle(handle) {
-   SessionInfo info = get_info();
+   const SessionInfo info = get_info();
    if(info.state == static_cast<CK_STATE>(SessionState::RoPublicSession) ||
       info.state == static_cast<CK_STATE>(SessionState::RwPublicSession)) {
       m_logged_in = false;

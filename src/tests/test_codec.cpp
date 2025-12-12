@@ -56,7 +56,7 @@ class Base32_Tests final : public Text_Based_Test {
          Test::Result result("Base32");
          const std::string valid_b32 = "MY======";
 
-         for(char ws_char : {' ', '\t', '\r', '\n'}) {
+         for(const char ws_char : {' ', '\t', '\r', '\n'}) {
             for(size_t i = 0; i <= valid_b32.size(); ++i) {
                std::string b32_ws = valid_b32;
                b32_ws.insert(i, 1, ws_char);
@@ -187,7 +187,7 @@ class Base64_Tests final : public Text_Based_Test {
          Test::Result result("Base64");
          const std::string valid_b64 = "Zg==";
 
-         for(char ws_char : {' ', '\t', '\r', '\n'}) {
+         for(const char ws_char : {' ', '\t', '\r', '\n'}) {
             for(size_t i = 0; i <= valid_b64.size(); ++i) {
                std::string b64_ws = valid_b64;
                b64_ws.insert(i, 1, ws_char);

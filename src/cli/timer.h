@@ -57,7 +57,7 @@ class Timer final {
 
       template <typename F>
       auto run(F f) -> decltype(f()) {
-         Timer_Scope timer(*this);
+         const Timer_Scope timer(*this);
          return f();
       }
 

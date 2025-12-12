@@ -37,7 +37,7 @@ void Buffered_Filter::write(const uint8_t input[], size_t input_size) {
    }
 
    if(m_buffer_pos + input_size >= m_main_block_mod + m_final_minimum) {
-      size_t to_copy = std::min<size_t>(m_buffer.size() - m_buffer_pos, input_size);
+      const size_t to_copy = std::min<size_t>(m_buffer.size() - m_buffer_pos, input_size);
 
       copy_mem(&m_buffer[m_buffer_pos], input, to_copy);
       m_buffer_pos += to_copy;
@@ -58,8 +58,8 @@ void Buffered_Filter::write(const uint8_t input[], size_t input_size) {
    }
 
    if(input_size >= m_final_minimum) {
-      size_t full_blocks = (input_size - m_final_minimum) / m_main_block_mod;
-      size_t to_copy = full_blocks * m_main_block_mod;
+      const size_t full_blocks = (input_size - m_final_minimum) / m_main_block_mod;
+      const size_t to_copy = full_blocks * m_main_block_mod;
 
       if(to_copy > 0) {
          buffered_block(input, to_copy);
@@ -81,10 +81,10 @@ void Buffered_Filter::end_msg() {
       throw Invalid_State("Buffered filter end_msg without enough input");
    }
 
-   size_t spare_blocks = (m_buffer_pos - m_final_minimum) / m_main_block_mod;
+   const size_t spare_blocks = (m_buffer_pos - m_final_minimum) / m_main_block_mod;
 
    if(spare_blocks > 0) {
-      size_t spare_bytes = m_main_block_mod * spare_blocks;
+      const size_t spare_bytes = m_main_block_mod * spare_blocks;
       buffered_block(m_buffer.data(), spare_bytes);
       buffered_final(&m_buffer[spare_bytes], m_buffer_pos - spare_bytes);
    } else {

@@ -22,7 +22,7 @@ void RWLock::lock() {
 }
 
 void RWLock::unlock() {
-   std::unique_lock<std::mutex> lock(m_mutex);
+   const std::unique_lock<std::mutex> lock(m_mutex);
    m_state = 0;
    m_gate1.notify_all();
 }
@@ -38,7 +38,7 @@ void RWLock::lock_shared() {
 }
 
 void RWLock::unlock_shared() {
-   std::unique_lock<std::mutex> lock(m_mutex);
+   const std::unique_lock<std::mutex> lock(m_mutex);
    const uint32_t num_readers = (m_state & readers_mask) - 1;
    m_state &= ~readers_mask;
    m_state |= num_readers;

@@ -329,7 +329,7 @@ class GenericScalar final {
       }
 
       static GenericScalar zero(const GenericPrimeOrderCurve* curve) {
-         StorageUnit zeros{};
+         const StorageUnit zeros{};
          return GenericScalar(curve, zeros);
       }
 
@@ -369,7 +369,7 @@ class GenericScalar final {
          const size_t words = curve->_params().words();
 
          StorageUnit t{};
-         W carry = bigint_add3(t.data(), a.data(), words, b.data(), words);
+         const W carry = bigint_add3(t.data(), a.data(), words, b.data(), words);
 
          StorageUnit r{};
          bigint_monty_maybe_sub(words, r.data(), carry, t.data(), curve->_params().order().data());
@@ -435,7 +435,7 @@ class GenericScalar final {
          while((a.m_val[0] & 1) != 1) {
             shift_right<1>(a.m_val);
 
-            W borrow = shift_right<1>(x.m_val);
+            const W borrow = shift_right<1>(x.m_val);
 
             // Conditional ok: this function is variable time
             if(borrow > 0) {
@@ -487,7 +487,7 @@ class GenericScalar final {
             * If it did not then we are in the b > a path
             */
             std::array<W, N> r{};
-            word carry = bigint_sub3(r.data(), b.data(), N, a.data(), N);
+            const word carry = bigint_sub3(r.data(), b.data(), N, a.data(), N);
 
             // Conditional ok: this function is variable time
             if(carry == 0) {
@@ -624,7 +624,7 @@ class GenericField final {
       }
 
       static GenericField zero(const GenericPrimeOrderCurve* curve) {
-         StorageUnit zeros{};
+         const StorageUnit zeros{};
          return GenericField(curve, zeros);
       }
 
@@ -672,7 +672,7 @@ class GenericField final {
       */
       GenericField div2() const {
          StorageUnit t = value();
-         W borrow = shift_right<1>(t);
+         const W borrow = shift_right<1>(t);
 
          // If value was odd, add (P/2)+1
          bigint_cnd_add(borrow, t.data(), m_curve->_params().field_inv_2().data(), N);
@@ -683,7 +683,7 @@ class GenericField final {
       /// Return (*this) multiplied by 2
       GenericField mul2() const {
          StorageUnit t = value();
-         W carry = shift_left<1>(t);
+         const W carry = shift_left<1>(t);
 
          StorageUnit r;
          bigint_monty_maybe_sub<N>(r.data(), carry, t.data(), m_curve->_params().field().data());
@@ -704,7 +704,7 @@ class GenericField final {
          const size_t words = curve->_params().words();
 
          StorageUnit t{};
-         W carry = bigint_add3(t.data(), a.data(), words, b.data(), words);
+         const W carry = bigint_add3(t.data(), a.data(), words, b.data(), words);
 
          StorageUnit r{};
          bigint_monty_maybe_sub(words, r.data(), carry, t.data(), curve->_params().field().data());
@@ -1291,7 +1291,7 @@ class GenericWindowedMul final {
             m_table(varpoint_setup<GenericCurve, TableSize>(pt)) {}
 
       GenericProjectivePoint mul(const GenericScalar& s, RandomNumberGenerator& rng) {
-         GenericBlindedScalarBits bits(s, rng, WindowBits);
+         const GenericBlindedScalarBits bits(s, rng, WindowBits);
 
          return varpoint_exec<GenericCurve, WindowBits>(m_table, bits, rng);
       }
@@ -1310,7 +1310,7 @@ class GenericBaseMulTable final {
             m_table(basemul_setup<GenericCurve, WindowBits>(pt, blinded_scalar_bits(*pt.curve()))) {}
 
       GenericProjectivePoint mul(const GenericScalar& s, RandomNumberGenerator& rng) {
-         GenericBlindedScalarBits scalar(s, rng, WindowBits);
+         const GenericBlindedScalarBits scalar(s, rng, WindowBits);
          return basemul_exec<GenericCurve, WindowBits>(m_table, scalar, rng);
       }
 
@@ -1338,8 +1338,8 @@ class GenericWindowedMul2 final {
             m_table(mul2_setup<GenericCurve, WindowBits>(p, q)) {}
 
       GenericProjectivePoint mul2(const GenericScalar& x, const GenericScalar& y, RandomNumberGenerator& rng) const {
-         GenericBlindedScalarBits x_bits(x, rng, WindowBits);
-         GenericBlindedScalarBits y_bits(y, rng, WindowBits);
+         const GenericBlindedScalarBits x_bits(x, rng, WindowBits);
+         const GenericBlindedScalarBits y_bits(y, rng, WindowBits);
          return mul2_exec<GenericCurve, WindowBits>(m_table, x_bits, y_bits, rng);
       }
 
@@ -1467,7 +1467,7 @@ std::optional<PrimeOrderCurve::ProjectivePoint> GenericPrimeOrderCurve::mul2_var
 
 std::optional<PrimeOrderCurve::ProjectivePoint> GenericPrimeOrderCurve::mul_px_qy(
    const AffinePoint& p, const Scalar& x, const AffinePoint& q, const Scalar& y, RandomNumberGenerator& rng) const {
-   GenericWindowedMul2 table(from_stash(p), from_stash(q));
+   const GenericWindowedMul2 table(from_stash(p), from_stash(q));
    auto pt = table.mul2(from_stash(x), from_stash(y), rng);
    if(pt.is_identity().as_bool()) {
       return {};

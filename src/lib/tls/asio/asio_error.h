@@ -61,7 +61,7 @@ class StreamCategory final : public BoostErrorCategory {
 };
 
 inline const StreamCategory& botan_stream_category() {
-   static StreamCategory category;
+   static const StreamCategory category;
    return category;
 }
 
@@ -75,13 +75,13 @@ class BotanAlertCategory final : public BoostErrorCategory {
       const char* name() const noexcept override { return "Botan TLS Alert"; }
 
       std::string message(int ev) const override {
-         Botan::TLS::Alert alert(static_cast<Botan::TLS::Alert::Type>(ev));
+         const Botan::TLS::Alert alert(static_cast<Botan::TLS::Alert::Type>(ev));
          return alert.type_string();
       }
 };
 
 inline const BotanAlertCategory& botan_alert_category() noexcept {
-   static BotanAlertCategory category;
+   static const BotanAlertCategory category;
    return category;
 }
 
@@ -100,7 +100,7 @@ class BotanErrorCategory : public BoostErrorCategory {
 };
 
 inline const BotanErrorCategory& botan_category() noexcept {
-   static BotanErrorCategory category;
+   static const BotanErrorCategory category;
    return category;
 }
 

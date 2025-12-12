@@ -294,7 +294,7 @@ int botan_pk_op_kem_encrypt_create_shared_key(botan_pk_op_kem_encrypt_t op,
    return BOTAN_FFI_VISIT(op, [=](auto& kem) {
       const auto result = kem.encrypt(safe_get(rng), desired_shared_key_len, {salt, salt_len});
 
-      int rc = write_vec_output(encapsulated_key_out, encapsulated_key_len, result.encapsulated_shared_key());
+      const int rc = write_vec_output(encapsulated_key_out, encapsulated_key_len, result.encapsulated_shared_key());
 
       if(rc != 0) {
          return rc;

@@ -34,12 +34,12 @@ void kdm_internal(std::span<uint8_t> output_buffer,
                   std::span<const uint8_t> fixed_info,
                   HashOrMacType& hash_or_mac,
                   const std::function<void(HashOrMacType&)>& init_h_callback) {
-   size_t l = output_buffer.size() * 8;
+   const size_t l = output_buffer.size() * 8;
    // 1. If L > 0, then set reps = ceil(L / H_outputBits); otherwise,
    //    output an error indicator and exit this process without
    //    performing the remaining actions (i.e., omit steps 2 through 8).
    BOTAN_ARG_CHECK(l > 0, "Zero KDM output length");
-   size_t reps = ceil_division(l, hash_or_mac.output_length() * 8);
+   const size_t reps = ceil_division(l, hash_or_mac.output_length() * 8);
 
    // 2. If reps > (2^32 − 1), then output an error indicator and exit this
    //    process without performing the remaining actions

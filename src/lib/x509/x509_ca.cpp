@@ -116,7 +116,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer& signer,
                                     const X509_DN& subject_dn,
                                     const Extensions& extensions) {
    const size_t SERIAL_BITS = 128;
-   BigInt serial_no(rng, SERIAL_BITS);
+   const BigInt serial_no(rng, SERIAL_BITS);
 
    return make_cert(
       signer, rng, serial_no, sig_algo, pub_key, not_before, not_after, issuer_dn, subject_dn, extensions);
@@ -189,7 +189,7 @@ X509_CRL X509_CA::update_crl(const X509_CRL& crl,
 X509_CRL X509_CA::new_crl(RandomNumberGenerator& rng,
                           std::chrono::system_clock::time_point issue_time,
                           std::chrono::seconds next_update) const {
-   std::vector<CRL_Entry> empty;
+   const std::vector<CRL_Entry> empty;
    return make_crl(empty, 1, rng, issue_time, next_update);
 }
 

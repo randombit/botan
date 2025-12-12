@@ -73,7 +73,7 @@ void CTR_DRBG_AES256::incr_V_into(std::span<uint8_t> output) {
 void CTR_DRBG_AES256::update(std::span<const uint8_t> provided_data) {
    std::array<uint8_t, 3 * 16> temp = {0};
 
-   std::span<uint8_t> t(temp);
+   const std::span<uint8_t> t(temp);
    for(size_t i = 0; i != 3; ++i) {
       incr_V_into(t.subspan(16 * i, 16));
    }

@@ -2120,11 +2120,11 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
             getter_template.emplace_back(Attribute{static_cast<CK_ATTRIBUTE_TYPE>(entry.first), nullptr, 0});
          }
 
-         bool success = C_GetAttributeValue(session,
-                                            object,
-                                            const_cast<Attribute*>(getter_template.data()),
-                                            static_cast<Ulong>(getter_template.size()),
-                                            return_value);
+         const bool success = C_GetAttributeValue(session,
+                                                  object,
+                                                  const_cast<Attribute*>(getter_template.data()),
+                                                  static_cast<Ulong>(getter_template.size()),
+                                                  return_value);
 
          if(!success) {
             return success;

@@ -111,17 +111,19 @@ class Roughtime final : public Test {
          Test::Result result("roughtime nonce");
 
          auto rand64 = Botan::unlock(rng.random_vec(64));
-         Botan::Roughtime::Nonce nonce_v(rand64);
+         const Botan::Roughtime::Nonce nonce_v(rand64);
          result.confirm("nonce from vector",
                         nonce_v.get_nonce() == Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));
-         Botan::Roughtime::Nonce nonce_a(Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));
+         const Botan::Roughtime::Nonce nonce_a(Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));
          result.confirm("nonce from array",
                         nonce_v.get_nonce() == Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));
          rand64.push_back(10);
-         result.test_throws("vector oversize", [&rand64]() { Botan::Roughtime::Nonce nonce_v2(rand64); });  //size 65
+         result.test_throws("vector oversize",
+                            [&rand64]() { Botan::Roughtime::Nonce const nonce_v2(rand64); });  //size 65
          rand64.pop_back();
          rand64.pop_back();
-         result.test_throws("vector undersize", [&rand64]() { Botan::Roughtime::Nonce nonce_v2(rand64); });  //size 63
+         result.test_throws("vector undersize",
+                            [&rand64]() { Botan::Roughtime::Nonce const nonce_v2(rand64); });  //size 63
 
          return result;
       }
@@ -133,7 +135,7 @@ class Roughtime final : public Test {
          result.confirm("default constructed is empty", c1.links().empty() && c1.responses().empty());
 
          auto rand64 = Botan::unlock(rng.random_vec(64));
-         Botan::Roughtime::Nonce nonce_v(rand64);
+         const Botan::Roughtime::Nonce nonce_v(rand64);
          result.confirm(
             "empty chain nonce is blind",
             c1.next_nonce(nonce_v).get_nonce() == Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));
@@ -152,27 +154,28 @@ class Roughtime final : public Test {
          result.confirm("max size", c1.links().size() == 1 && c1.responses().size() == 1);
 
          result.test_throws("non-positive max chain size", [&]() { c1.append(c2.links()[1], 0); });
-         result.test_throws("1 field", [&]() { Botan::Roughtime::Chain a("ed25519"); });
-         result.test_throws(
-            "2 fields", [&]() { Botan::Roughtime::Chain a("ed25519 bbT+RPS7zKX6w71ssPibzmwWqU9ffRV5oj2OresSmhE="); });
+         result.test_throws("1 field", [&]() { Botan::Roughtime::Chain const a("ed25519"); });
+         result.test_throws("2 fields", [&]() {
+            Botan::Roughtime::Chain const a("ed25519 bbT+RPS7zKX6w71ssPibzmwWqU9ffRV5oj2OresSmhE=");
+         });
          result.test_throws("3 fields", [&]() {
-            Botan::Roughtime::Chain a(
+            Botan::Roughtime::Chain const a(
                "ed25519 bbT+RPS7zKX6w71ssPibzmwWqU9ffRV5oj2OresSmhE= eu9yhsJfVfguVSqGZdE8WKIxaBBM0ZG3Vmuc+IyZmG2YVmrIktUByDdwIFw6F4rZqmSFsBO85ljoVPz5bVPCOw==");
          });
          result.test_throws("5 fields", [&]() {
-            Botan::Roughtime::Chain a(
+            Botan::Roughtime::Chain const a(
                "ed25519 bbT+RPS7zKX6w71ssPibzmwWqU9ffRV5oj2OresSmhE= eu9yhsJfVfguVSqGZdE8WKIxaBBM0ZG3Vmuc+IyZmG2YVmrIktUByDdwIFw6F4rZqmSFsBO85ljoVPz5bVPCOw== BQAAAEAAAABAAAAApAAAADwBAABTSUcAUEFUSFNSRVBDRVJUSU5EWBnGOEajOwPA6G7oL47seBP4C7eEpr57H43C2/fK/kMA0UGZVUdf4KNX8oxOK6JIcsbVk8qhghTwA70qtwpYmQkDAAAABAAAAAwAAABSQURJTUlEUFJPT1RAQg8AJrA8tEqPBQAqisiuAxgy2Pj7UJAiWbCdzGz1xcCnja3T+AqhC8fwpeIwW4GPy/vEb/awXW2DgSLKJfzWIAz+2lsR7t4UjNPvAgAAAEAAAABTSUcAREVMRes9Ch4X0HIw5KdOTB8xK4VDFSJBD/G9t7Et/CU7UW61OiTBXYYQTG2JekWZmGa0OHX1JPGG+APkpbsNw0BKUgYDAAAAIAAAACgAAABQVUJLTUlOVE1BWFR/9BWjpsWTQ1f6iUJea3EfZ1MkX3ftJiV3ABqNLpncFwAAAAAAAAAA//////////8AAAAA abc");
          });
          result.test_throws("invalid key type", [&]() {
-            Botan::Roughtime::Chain a(
+            Botan::Roughtime::Chain const a(
                "rsa bbT+RPS7zKX6w71ssPibzmwWqU9ffRV5oj2OresSmhE= eu9yhsJfVfguVSqGZdE8WKIxaBBM0ZG3Vmuc+IyZmG2YVmrIktUByDdwIFw6F4rZqmSFsBO85ljoVPz5bVPCOw== BQAAAEAAAABAAAAApAAAADwBAABTSUcAUEFUSFNSRVBDRVJUSU5EWBnGOEajOwPA6G7oL47seBP4C7eEpr57H43C2/fK/kMA0UGZVUdf4KNX8oxOK6JIcsbVk8qhghTwA70qtwpYmQkDAAAABAAAAAwAAABSQURJTUlEUFJPT1RAQg8AJrA8tEqPBQAqisiuAxgy2Pj7UJAiWbCdzGz1xcCnja3T+AqhC8fwpeIwW4GPy/vEb/awXW2DgSLKJfzWIAz+2lsR7t4UjNPvAgAAAEAAAABTSUcAREVMRes9Ch4X0HIw5KdOTB8xK4VDFSJBD/G9t7Et/CU7UW61OiTBXYYQTG2JekWZmGa0OHX1JPGG+APkpbsNw0BKUgYDAAAAIAAAACgAAABQVUJLTUlOVE1BWFR/9BWjpsWTQ1f6iUJea3EfZ1MkX3ftJiV3ABqNLpncFwAAAAAAAAAA//////////8AAAAA");
          });
          result.test_throws("invalid key", [&]() {
-            Botan::Roughtime::Chain a(
+            Botan::Roughtime::Chain const a(
                "ed25519 bbT+RPS7zKX6wssPibzmwWqU9ffRV5oj2OresSmhE= eu9yhsJfVfguVSqGZdE8WKIxaBBM0ZG3Vmuc+IyZmG2YVmrIktUByDdwIFw6F4rZqmSFsBO85ljoVPz5bVPCOw== BQAAAEAAAABAAAAApAAAADwBAABTSUcAUEFUSFNSRVBDRVJUSU5EWBnGOEajOwPA6G7oL47seBP4C7eEpr57H43C2/fK/kMA0UGZVUdf4KNX8oxOK6JIcsbVk8qhghTwA70qtwpYmQkDAAAABAAAAAwAAABSQURJTUlEUFJPT1RAQg8AJrA8tEqPBQAqisiuAxgy2Pj7UJAiWbCdzGz1xcCnja3T+AqhC8fwpeIwW4GPy/vEb/awXW2DgSLKJfzWIAz+2lsR7t4UjNPvAgAAAEAAAABTSUcAREVMRes9Ch4X0HIw5KdOTB8xK4VDFSJBD/G9t7Et/CU7UW61OiTBXYYQTG2JekWZmGa0OHX1JPGG+APkpbsNw0BKUgYDAAAAIAAAACgAAABQVUJLTUlOVE1BWFR/9BWjpsWTQ1f6iUJea3EfZ1MkX3ftJiV3ABqNLpncFwAAAAAAAAAA//////////8AAAAA");
          });
          result.test_throws("invalid nonce", [&]() {
-            Botan::Roughtime::Chain a(
+            Botan::Roughtime::Chain const a(
                "ed25519 bbT+RPS7zKX6w71ssPibzmwWqU9ffRV5oj2OresSmhE= eu9yhsJfVfguVSqGZdE8WKIxaBBM0ZG3Vmuc+IyZmG2UByDdwIFw6F4rZqmSFsBO85ljoVPz5bVPCOw== BQAAAEAAAABAAAAApAAAADwBAABTSUcAUEFUSFNSRVBDRVJUSU5EWBnGOEajOwPA6G7oL47seBP4C7eEpr57H43C2/fK/kMA0UGZVUdf4KNX8oxOK6JIcsbVk8qhghTwA70qtwpYmQkDAAAABAAAAAwAAABSQURJTUlEUFJPT1RAQg8AJrA8tEqPBQAqisiuAxgy2Pj7UJAiWbCdzGz1xcCnja3T+AqhC8fwpeIwW4GPy/vEb/awXW2DgSLKJfzWIAz+2lsR7t4UjNPvAgAAAEAAAABTSUcAREVMRes9Ch4X0HIw5KdOTB8xK4VDFSJBD/G9t7Et/CU7UW61OiTBXYYQTG2JekWZmGa0OHX1JPGG+APkpbsNw0BKUgYDAAAAIAAAACgAAABQVUJLTUlOVE1BWFR/9BWjpsWTQ1f6iUJea3EfZ1MkX3ftJiV3ABqNLpncFwAAAAAAAAAA//////////8AAAAA");
          });
 
@@ -230,13 +233,13 @@ class Roughtime final : public Test {
       static Test::Result test_request_online(Botan::RandomNumberGenerator& rng) {
          Test::Result result("roughtime request online");
 
-         Botan::Roughtime::Nonce nonce(rng);
+         const Botan::Roughtime::Nonce nonce(rng);
          try {
             const auto response_raw =
                Botan::Roughtime::online_request("roughtime.cloudflare.com:2003", nonce, std::chrono::seconds(5));
             const auto now = std::chrono::system_clock::now();
             const auto response = Botan::Roughtime::Response::from_bits(response_raw, nonce);
-            std::chrono::milliseconds local_clock_max_error(1000);
+            const std::chrono::milliseconds local_clock_max_error(1000);
             const auto diff_abs =
                now >= response.utc_midpoint() ? now - response.utc_midpoint() : response.utc_midpoint() - now;
             result.confirm("online", diff_abs <= (response.utc_radius() + local_clock_max_error));

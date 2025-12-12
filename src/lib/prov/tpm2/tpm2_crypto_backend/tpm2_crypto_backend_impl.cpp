@@ -512,7 +512,7 @@ TSS2_RC rsa_pk_encrypt(TPM2B_PUBLIC* pub_tpm_key,
          // TPM Library, Part 1: Architecture, Annex B.4
          //    [...] is used to compute lhash := H(label), and the null
          //    termination octet is included in the digest.
-         std::string_view label_with_zero_terminator{label, std::strlen(label) + 1};
+         const std::string_view label_with_zero_terminator{label, std::strlen(label) + 1};
          return std::make_unique<Botan::OAEP>(std::move(H_label), std::move(H_mgf1), label_with_zero_terminator);
       #else
          BOTAN_UNUSED(label);
@@ -588,7 +588,7 @@ TSS2_RC rsa_pk_encrypt(TPM2B_PUBLIC* pub_tpm_key,
 
       // PK_Encryptor_EME does not provide a way to pass in an output buffer.
       // TODO: provide an `.encrypt()` overload that accepts an output buffer.
-      Botan::PK_Encryptor_EME encryptor(pubkey, rng, "Raw");
+      const Botan::PK_Encryptor_EME encryptor(pubkey, rng, "Raw");
       const auto encrypted = encryptor.encrypt({out_buffer, padded_bytes}, rng);
       BOTAN_DEBUG_ASSERT(encrypted.size() == output_size);
 
@@ -660,7 +660,7 @@ TSS2_RC get_ecdh_point(TPM2B_PUBLIC* key,
       eph_pub_point.serialize_y_to(Botan::TPM2::as_span(Q->y, curve_order_byte_size));
 
       // 3: ECDH Key Agreement
-      Botan::PK_Key_Agreement ecdh(eph_key, rng, "Raw" /*No KDF used here*/);
+      const Botan::PK_Key_Agreement ecdh(eph_key, rng, "Raw" /*No KDF used here*/);
       const auto shared_secret = ecdh.derive_key(0 /*Ignored for raw KDF*/, tpm_sw_pubkey.public_value()).bits_of();
 
       Botan::TPM2::copy_into(*Z, shared_secret);

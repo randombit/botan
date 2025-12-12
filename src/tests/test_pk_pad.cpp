@@ -49,7 +49,7 @@ class EME_PKCS1v15_Decoding_Tests final : public Text_Based_Test {
             result.test_eq("EME decoded plaintext correct", decoded, plaintext);
          } else {
             bool all_zeros = true;
-            for(uint8_t b : decoded) {
+            for(const uint8_t b : decoded) {
                if(b != 0) {
                   all_zeros = false;
                }
@@ -73,7 +73,7 @@ class SignaturePaddingSchemeNameTests final : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result("SignaturePaddingScheme::name");
 
-         std::vector<std::string> pads_need_hash = {
+         const std::vector<std::string> pads_need_hash = {
    #if BOTAN_HAS_EMSA_X931
             "X9.31",
    #endif
@@ -90,7 +90,7 @@ class SignaturePaddingSchemeNameTests final : public Test {
    #endif
          };
 
-         std::vector<std::string> pads_no_hash = {
+         const std::vector<std::string> pads_no_hash = {
    #if BOTAN_HAS_EMSA_RAW
             "Raw",
    #endif
@@ -114,7 +114,7 @@ class SignaturePaddingSchemeNameTests final : public Test {
          }
 
          for(const auto& pad : pads_need_hash) {
-            std::string algo_name = pad + "(YYZ)";
+            const std::string algo_name = pad + "(YYZ)";
             try {
                auto padding = Botan::SignaturePaddingScheme::create_or_throw(algo_name);
                result.test_failure("SignaturePaddingScheme::name for " + pad + ": " +

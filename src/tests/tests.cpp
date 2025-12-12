@@ -659,7 +659,7 @@ std::string Test::temp_file_name(const std::string& basename) {
    // POSIX only calls for 6 'X' chars but OpenBSD allows arbitrary amount
    std::string mkstemp_basename = "/tmp/" + basename + ".XXXXXXXXXX";
 
-   int fd = ::mkstemp(mkstemp_basename.data());
+   const int fd = ::mkstemp(mkstemp_basename.data());
 
    // error
    if(fd < 0) {
@@ -760,10 +760,10 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator {
       }
 
       Testsuite_RNG(std::string_view seed, std::string_view test_name) : m_x(0) {
-         for(char c : seed) {
+         for(const char c : seed) {
             this->mix(static_cast<uint8_t>(c));
          }
-         for(char c : test_name) {
+         for(const char c : test_name) {
             this->mix(static_cast<uint8_t>(c));
          }
       }
@@ -1191,8 +1191,8 @@ std::vector<Test::Result> Text_Based_Test::run() {
          continue;
       }
 
-      std::string key = strip_ws(std::string(line.begin(), line.begin() + equal_i - 1));
-      std::string val = strip_ws(std::string(line.begin() + equal_i + 1, line.end()));
+      const std::string key = strip_ws(std::string(line.begin(), line.begin() + equal_i - 1));
+      const std::string val = strip_ws(std::string(line.begin() + equal_i + 1, line.end()));
 
       if(!m_required_keys.contains(key) && !m_optional_keys.contains(key)) {
          auto r = Test::Result::Failure(header_or_name, Botan::fmt("{} failed unknown key {}", test_id, key));
@@ -1217,7 +1217,7 @@ std::vector<Test::Result> Text_Based_Test::run() {
 
             ++test_cnt;
 
-            uint64_t start = Test::timestamp();
+            const uint64_t start = Test::timestamp();
 
             Test::Result result = run_one_test(header, vars);
 #if defined(BOTAN_HAS_CPUID)

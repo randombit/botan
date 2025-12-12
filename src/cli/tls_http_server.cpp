@@ -78,17 +78,17 @@ class Logger final {
       Logger(std::ostream& out, std::ostream& err) : m_out(out), m_err(err) {}
 
       void log(std::string_view out) {
-         std::scoped_lock lk(m_mutex);
+         const std::scoped_lock lk(m_mutex);
          m_out << Botan::fmt("[{}] {}", timestamp(), out) << "\n";
       }
 
       void error(std::string_view err) {
-         std::scoped_lock lk(m_mutex);
+         const std::scoped_lock lk(m_mutex);
          m_err << Botan::fmt("[{}] {}", timestamp(), err) << "\n";
       }
 
       void flush() {
-         std::scoped_lock lk(m_mutex);
+         const std::scoped_lock lk(m_mutex);
          m_out.flush();
          m_err.flush();
       }
@@ -133,7 +133,7 @@ class TlsHttpCallbacks final : public Botan::TLS::StreamCallbacks {
             strm << "Client random: " << Botan::hex_encode(client_hello.random()) << "\n";
 
             strm << "Client offered following ciphersuites:\n";
-            for(uint16_t suite_id : client_hello.ciphersuites()) {
+            for(const uint16_t suite_id : client_hello.ciphersuites()) {
                const auto ciphersuite = Botan::TLS::Ciphersuite::by_id(suite_id);
 
                strm << " - 0x" << std::hex << std::setfill('0') << std::setw(4) << suite_id << std::dec
@@ -337,11 +337,11 @@ class TLS_HTTP_Server final : public Command {
       std::string description() const override { return "Provides a simple HTTP server"; }
 
       size_t thread_count() const {
-         if(size_t t = get_arg_sz("threads")) {
+         if(const size_t t = get_arg_sz("threads")) {
             return t;
          }
    #if defined(BOTAN_HAS_OS_UTILS)
-         if(size_t t = Botan::OS::get_cpu_available()) {
+         if(const size_t t = Botan::OS::get_cpu_available()) {
             return t;
          }
    #endif

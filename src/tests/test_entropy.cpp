@@ -26,7 +26,7 @@ class Entropy_Source_Tests final : public Test {
       std::vector<Test::Result> run() override {
          Botan::Entropy_Sources& srcs = Botan::Entropy_Sources::global_sources();
 
-         std::vector<std::string> src_names = srcs.enabled_sources();
+         const std::vector<std::string> src_names = srcs.enabled_sources();
 
          std::vector<Test::Result> results;
 
@@ -38,7 +38,7 @@ class Entropy_Source_Tests final : public Test {
             try {
                SeedCapturing_RNG rng;
 
-               size_t bits = srcs.poll_just(rng, src_name);
+               const size_t bits = srcs.poll_just(rng, src_name);
 
                result.test_gte("Entropy estimate", rng.seed_material().size() * 8, bits);
 
@@ -77,7 +77,7 @@ class Entropy_Source_Tests final : public Test {
 
                         SeedCapturing_RNG rng2;
 
-                        size_t bits2 = srcs.poll_just(rng2, src_name);
+                        const size_t bits2 = srcs.poll_just(rng2, src_name);
 
                         result.test_note("poll 2 result", rng2.seed_material());
 
@@ -92,11 +92,11 @@ class Entropy_Source_Tests final : public Test {
                               comp->start();
                               comp->finish(compressed);
 
-                              size_t comp2_size = compressed.size();
+                              const size_t comp2_size = compressed.size();
 
                               result.test_lt("Two blocks of entropy are larger than one", comp1_size, comp2_size);
 
-                              size_t comp_diff = comp2_size - comp1_size;
+                              const size_t comp_diff = comp2_size - comp1_size;
 
                               result.test_gte(
                                  comp_algo + " diff compressed entropy better than advertised", comp_diff * 8, bits2);

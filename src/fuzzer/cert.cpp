@@ -16,6 +16,6 @@ void fuzz(std::span<const uint8_t> in) {
 
    try {
       Botan::DataSource_Memory input(in);
-      Botan::X509_Certificate cert(input);
+      const Botan::X509_Certificate cert(input);
    } catch(Botan::Exception& e) {}
 }

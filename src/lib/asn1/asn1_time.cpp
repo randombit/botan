@@ -23,7 +23,7 @@ ASN1_Time ASN1_Time::from_seconds_since_epoch(uint64_t time_since_epoch) {
 }
 
 ASN1_Time::ASN1_Time(const std::chrono::system_clock::time_point& time) {
-   calendar_point cal(time);
+   const calendar_point cal(time);
 
    m_year = cal.year();
    m_month = cal.month();
@@ -57,7 +57,7 @@ void ASN1_Time::encode_into(DER_Encoder& der) const {
 }
 
 void ASN1_Time::decode_from(BER_Decoder& source) {
-   BER_Object ber_time = source.get_next_object();
+   const BER_Object ber_time = source.get_next_object();
 
    set_to(ASN1::to_string(ber_time), ber_time.type());
 }
@@ -86,7 +86,7 @@ std::string ASN1_Time::to_string() const {
    const uint64_t int_repr = year_factor * full_year + mon_factor * m_month + day_factor * m_day +
                              hour_factor * m_hour + min_factor * m_minute + m_second;
 
-   std::string repr = std::to_string(int_repr) + "Z";
+   const std::string repr = std::to_string(int_repr) + "Z";
 
    const size_t desired_size = (m_tag == ASN1_Type::UtcTime) ? 13 : 15;
 

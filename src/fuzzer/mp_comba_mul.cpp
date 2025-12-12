@@ -12,7 +12,7 @@ void fuzz(std::span<const uint8_t> in) {
    if(in.empty() || words > 2 * 16) {
       return;
    }
-   size_t in_len = in.size();
+   const size_t in_len = in.size();
 
    word x[24] = {0};
    word y[24] = {0};

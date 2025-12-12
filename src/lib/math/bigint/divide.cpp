@@ -265,7 +265,7 @@ BigInt vartime_divide_pow2k(size_t k, const BigInt& y_arg) {
    const word y_t1 = y.word_at(t - 1);
    BOTAN_DEBUG_ASSERT((y_t0 >> (WB - 1)) == 1);
 
-   divide_precomp div_y_t0(y_t0);
+   const divide_precomp div_y_t0(y_t0);
 
    for(size_t i = n; i != t; --i) {
       const word x_i0 = r.word_at(i);
@@ -368,7 +368,7 @@ void vartime_divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt&
    const word y_t1 = y.word_at(t - 1);
    BOTAN_DEBUG_ASSERT((y_t0 >> (WB - 1)) == 1);
 
-   divide_precomp div_y_t0(y_t0);
+   const divide_precomp div_y_t0(y_t0);
 
    for(size_t i = n; i != t; --i) {
       const word x_i0 = r.word_at(i);

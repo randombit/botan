@@ -22,7 +22,7 @@ Botan::TLS::Handshake_Layer prepare(std::span<const uint8_t> data) {
 }  // namespace
 
 void fuzz(std::span<const uint8_t> in) {
-   static Botan::TLS::Default_Policy policy;
+   static const Botan::TLS::Default_Policy policy;
 
    try {
       auto hl1 = prepare(in);

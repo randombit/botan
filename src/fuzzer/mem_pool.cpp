@@ -58,7 +58,7 @@ std::vector<RawPage> allocate_raw_pages(size_t count, size_t page_size) {
    for(size_t i = 0; i != count; ++i) {
       void* ptr = nullptr;
 
-      int rc = ::posix_memalign(&ptr, page_size, page_size);
+      const int rc = ::posix_memalign(&ptr, page_size, page_size);
       FUZZER_ASSERT_EQUAL(rc, 0);
 
       if(ptr != nullptr) {
@@ -76,7 +76,7 @@ void fuzz(std::span<const uint8_t> in) {
    const size_t page_size = 4096;
 
    // static to avoid repeated allocations
-   static std::vector<RawPage> raw_mem = allocate_raw_pages(page_count, page_size);
+   static const std::vector<RawPage> raw_mem = allocate_raw_pages(page_count, page_size);
 
    std::vector<void*> mem_pages;
    mem_pages.reserve(raw_mem.size());

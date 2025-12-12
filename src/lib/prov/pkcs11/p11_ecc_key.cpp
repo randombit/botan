@@ -82,7 +82,7 @@ PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session,
 
    ObjectHandle pub_key_handle = CK_INVALID_HANDLE;
    ObjectHandle priv_key_handle = CK_INVALID_HANDLE;
-   Mechanism mechanism = {CKM_EC_KEY_PAIR_GEN, nullptr, 0};
+   const Mechanism mechanism = {CKM_EC_KEY_PAIR_GEN, nullptr, 0};
    session.module()->C_GenerateKeyPair(session.handle(),
                                        &mechanism,
                                        pub_key_props.data(),
@@ -93,7 +93,7 @@ PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session,
                                        &priv_key_handle);
 
    this->reset_handle(priv_key_handle);
-   Object public_key(session, pub_key_handle);
+   const Object public_key(session, pub_key_handle);
 
    auto pt_bytes = public_key.get_attribute_value(AttributeType::EcPoint);
    m_public_key = decode_public_point(m_domain_params, pt_bytes);

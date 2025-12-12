@@ -68,7 +68,7 @@ PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session,
 
    ObjectHandle pub_key_handle = CK_INVALID_HANDLE;
    ObjectHandle priv_key_handle = CK_INVALID_HANDLE;
-   Mechanism mechanism = {static_cast<CK_MECHANISM_TYPE>(MechanismType::RsaPkcsKeyPairGen), nullptr, 0};
+   const Mechanism mechanism = {static_cast<CK_MECHANISM_TYPE>(MechanismType::RsaPkcsKeyPairGen), nullptr, 0};
    session.module()->C_GenerateKeyPair(session.handle(),
                                        &mechanism,
                                        pub_key_props.data(),
@@ -431,7 +431,7 @@ PKCS11_RSA_KeyPair generate_rsa_keypair(Session& session,
    ObjectHandle pub_key_handle = 0;
    ObjectHandle priv_key_handle = 0;
 
-   Mechanism mechanism = {static_cast<CK_MECHANISM_TYPE>(MechanismType::RsaPkcsKeyPairGen), nullptr, 0};
+   const Mechanism mechanism = {static_cast<CK_MECHANISM_TYPE>(MechanismType::RsaPkcsKeyPairGen), nullptr, 0};
 
    session.module()->C_GenerateKeyPair(session.handle(),
                                        &mechanism,

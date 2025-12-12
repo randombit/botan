@@ -312,9 +312,9 @@ size_t PK_Signer::signature_length() const {
    if(m_sig_format == Signature_Format::Standard) {
       return m_op->signature_length();
    } else if(m_sig_format == Signature_Format::DerSequence) {
-      size_t sig_len = m_op->signature_length();
+      const size_t sig_len = m_op->signature_length();
 
-      size_t der_overhead = [sig_len]() {
+      const size_t der_overhead = [sig_len]() {
          /*
          This was computed by DER encoding of some maximal value signatures
          (since DER is variable length)
@@ -470,7 +470,7 @@ bool PK_Verifier::check_signature(const uint8_t sig[], size_t length) {
             decoding_success = true;
          } catch(Decoding_Error&) {}
 
-         bool accept = m_op->is_valid_signature(real_sig);
+         const bool accept = m_op->is_valid_signature(real_sig);
 
          return accept && decoding_success;
       } else {

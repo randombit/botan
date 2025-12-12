@@ -19,8 +19,8 @@ bool encryption_consistency_check(RandomNumberGenerator& rng,
                                   const Private_Key& private_key,
                                   const Public_Key& public_key,
                                   std::string_view padding) {
-   PK_Encryptor_EME encryptor(public_key, rng, padding);
-   PK_Decryptor_EME decryptor(private_key, rng, padding);
+   const PK_Encryptor_EME encryptor(public_key, rng, padding);
+   const PK_Decryptor_EME decryptor(private_key, rng, padding);
 
    /*
    Weird corner case, if the key is too small to encrypt anything at
@@ -38,7 +38,7 @@ bool encryption_consistency_check(RandomNumberGenerator& rng,
       return false;
    }
 
-   std::vector<uint8_t> decrypted = unlock(decryptor.decrypt(ciphertext));
+   const std::vector<uint8_t> decrypted = unlock(decryptor.decrypt(ciphertext));
 
    return (plaintext == decrypted);
 }

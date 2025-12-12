@@ -90,7 +90,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
                                                const AffinePoint& q,
                                                const Scalar& y,
                                                RandomNumberGenerator& rng) const override {
-         WindowedMul2Table<C, Mul2WindowBits> tbl(from_stash(p), from_stash(q));
+         const WindowedMul2Table<C, Mul2WindowBits> tbl(from_stash(p), from_stash(q));
          auto pt = tbl.mul2(from_stash(x), from_stash(y), rng);
          if(pt.is_identity().as_bool()) {
             return {};

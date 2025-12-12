@@ -14,7 +14,7 @@ int main() {
    Botan::PKCS11::Session session(slot, false);
 
    // load existing certificate
-   Botan::X509_Certificate root("test.crt");
+   const Botan::X509_Certificate root("test.crt");
 
    // set props
    Botan::PKCS11::X509_CertificateProperties props(root.subject_dn().DER_encode(), root.BER_encode());
@@ -24,10 +24,10 @@ int main() {
    props.set_token(true);
 
    // import
-   Botan::PKCS11::PKCS11_X509_Certificate pkcs11_cert(session, props);
+   const Botan::PKCS11::PKCS11_X509_Certificate pkcs11_cert(session, props);
 
    // load by handle
-   Botan::PKCS11::PKCS11_X509_Certificate pkcs11_cert2(session, pkcs11_cert.handle());
+   const Botan::PKCS11::PKCS11_X509_Certificate pkcs11_cert2(session, pkcs11_cert.handle());
 
    return 0;
 }

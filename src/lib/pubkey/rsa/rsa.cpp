@@ -721,7 +721,7 @@ class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_Padding,
       size_t max_ptext_input_bits() const override { return public_modulus_bits() - 1; }
 
       std::vector<uint8_t> raw_encrypt(std::span<const uint8_t> input, RandomNumberGenerator& /*rng*/) override {
-         BigInt input_bn(input);
+         const BigInt input_bn(input);
          return public_op(input_bn).serialize(public_modulus_bytes());
       }
 };
@@ -747,7 +747,7 @@ class RSA_Verify_Operation final : public PK_Ops::Verification,
          if(input_len > public_modulus_bytes()) {
             throw Decoding_Error("RSA signature too large to be valid for this key");
          }
-         BigInt input_bn(input, input_len);
+         const BigInt input_bn(input, input_len);
          return public_op(input_bn).serialize();
       }
 
@@ -821,7 +821,7 @@ std::string parse_rsa_signature_algorithm(const AlgorithmIdentifier& alg_id) {
          throw Decoding_Error("PSS params must be provided");
       }
 
-      PSS_Params pss_params(alg_id.parameters());
+      const PSS_Params pss_params(alg_id.parameters());
 
       // hash_algo must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
       // We also support SHA-3 (is also supported by e.g. OpenSSL and bouncycastle)

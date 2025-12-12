@@ -29,7 +29,7 @@ std::unique_ptr<Botan::Private_Key> load_sm2_private_key(const VarMap& vars) {
    const BigInt x = vars.get_req_bn("x");
    const Botan::OID oid = Botan::OID(vars.get_req_str("Oid"));
 
-   Botan::EC_Group domain(oid, p, a, b, xG, yG, order);
+   const Botan::EC_Group domain(oid, p, a, b, xG, yG, order);
 
    Botan::Null_RNG null_rng;
    return std::make_unique<Botan::SM2_PrivateKey>(null_rng, domain, x);

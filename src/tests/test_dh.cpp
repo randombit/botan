@@ -57,7 +57,7 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test {
             }
          }();
 
-         Botan::DH_PublicKey key(group, y);
+         const Botan::DH_PublicKey key(group, y);
          return key.public_value();
       }
 
@@ -101,7 +101,7 @@ class DH_Invalid_Key_Tests final : public Text_Based_Test {
          const Botan::BigInt g = vars.get_req_bn("G");
          const Botan::BigInt pubkey = vars.get_req_bn("InvalidKey");
 
-         Botan::DL_Group group(p, q, g);
+         const Botan::DL_Group group(p, q, g);
 
          auto key = std::make_unique<Botan::DH_PublicKey>(group, pubkey);
          result.test_eq("public key fails check", key->check_key(this->rng(), false), false);

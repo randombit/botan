@@ -294,7 +294,7 @@ namespace Botan::TPM2 {
 }
 
 [[nodiscard]] inline std::optional<TPMT_SYM_DEF> cipher_botan_to_tss2(std::string_view algo_name) {
-   SCAN_Name spec(algo_name);
+   const SCAN_Name spec(algo_name);
    if(spec.arg_count() == 0) {
       return std::nullopt;
    }

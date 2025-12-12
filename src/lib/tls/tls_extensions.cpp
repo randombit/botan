@@ -256,7 +256,7 @@ Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader, uint16_t e
    }
 
    while(name_bytes > 0) {
-      uint8_t name_type = reader.get_byte();
+      const uint8_t name_type = reader.get_byte();
       name_bytes--;
 
       if(name_type == 0) {
@@ -282,7 +282,7 @@ std::vector<uint8_t> Server_Name_Indicator::serialize(Connection_Side whoami) co
 
    std::vector<uint8_t> buf;
 
-   size_t name_len = m_sni_host_name.size();
+   const size_t name_len = m_sni_host_name.size();
 
    buf.push_back(get_byte<0>(static_cast<uint16_t>(name_len + 3)));
    buf.push_back(get_byte<1>(static_cast<uint16_t>(name_len + 3)));
@@ -570,7 +570,7 @@ std::vector<uint8_t> Supported_Point_Formats::serialize(Connection_Side /*whoami
 }
 
 Supported_Point_Formats::Supported_Point_Formats(TLS_Data_Reader& reader, uint16_t extension_size) {
-   uint8_t len = reader.get_byte();
+   const uint8_t len = reader.get_byte();
 
    if(len + 1 != extension_size) {
       throw Decoding_Error("Inconsistent length field in supported point formats list");
@@ -578,7 +578,7 @@ Supported_Point_Formats::Supported_Point_Formats(TLS_Data_Reader& reader, uint16
 
    bool includes_uncompressed = false;
    for(size_t i = 0; i != len; ++i) {
-      uint8_t format = reader.get_byte();
+      const uint8_t format = reader.get_byte();
 
       if(static_cast<ECPointFormat>(format) == UNCOMPRESSED) {
          m_prefers_compressed = false;
@@ -621,7 +621,7 @@ std::vector<uint8_t> serialize_signature_algorithms(const std::vector<Signature_
    buf.push_back(get_byte<0>(len));
    buf.push_back(get_byte<1>(len));
 
-   for(Signature_Scheme scheme : schemes) {
+   for(const Signature_Scheme scheme : schemes) {
       buf.push_back(get_byte<0>(scheme.wire_code()));
       buf.push_back(get_byte<1>(scheme.wire_code()));
    }
@@ -685,7 +685,7 @@ std::vector<uint8_t> SRTP_Protection_Profiles::serialize(Connection_Side /*whoam
    buf.push_back(get_byte<0>(pp_len));
    buf.push_back(get_byte<1>(pp_len));
 
-   for(uint16_t pp : m_pp) {
+   for(const uint16_t pp : m_pp) {
       buf.push_back(get_byte<0>(pp));
       buf.push_back(get_byte<1>(pp));
    }
@@ -728,7 +728,7 @@ std::vector<uint8_t> Supported_Versions::serialize(Connection_Side whoami) const
 
       buf.push_back(len);
 
-      for(Protocol_Version version : m_versions) {
+      for(const Protocol_Version version : m_versions) {
          buf.push_back(version.major_version());
          buf.push_back(version.minor_version());
       }

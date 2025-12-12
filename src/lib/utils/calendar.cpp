@@ -89,7 +89,7 @@ std::string calendar_point::to_string() const {
 }
 
 calendar_point::calendar_point(const std::chrono::system_clock::time_point& time_point) {
-   std::tm tm = do_gmtime(std::chrono::system_clock::to_time_t(time_point));
+   const std::tm tm = do_gmtime(std::chrono::system_clock::to_time_t(time_point));
 
    m_year = tm.tm_year + 1900;
    m_month = tm.tm_mon + 1;

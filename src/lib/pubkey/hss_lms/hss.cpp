@@ -62,7 +62,7 @@ std::vector<LMS_Tree_Node_Idx> derive_lms_leaf_indices_from_hss_index(HSS_Sig_Id
    for(int32_t layer_ctr = hss_params.L().get() - 1; layer_ctr >= 0; --layer_ctr) {
       HSS_Level layer(layer_ctr);
       const HSS_LMS_Params::LMS_LMOTS_Params_Pair& layer_params = hss_params.params_at_level(layer);
-      size_t layer_h = layer_params.lms_params().h();
+      const size_t layer_h = layer_params.lms_params().h();
       q.at(layer.get()) =
          checked_cast_to<LMS_Tree_Node_Idx>(hss_idx.get() % checked_cast_to<uint64_t>(1ULL << layer_h));
       hss_idx = hss_idx >> layer_h;
@@ -88,14 +88,14 @@ HSS_LMS_Params::HSS_LMS_Params(std::string_view algo_params) : m_max_sig_count(0
          return fmt("HSS-LMS({})", algo_params);
       }
    }();
-   SCAN_Name scan(wrap_in_hss_lms);
+   const SCAN_Name scan(wrap_in_hss_lms);
 
    BOTAN_ARG_CHECK(scan.arg_count() >= 2 && scan.arg_count() <= HSS_MAX_LEVELS + 1, "Invalid number of arguments");
-   std::string hash = scan.arg(0);
+   const std::string hash = scan.arg(0);
    BOTAN_ARG_CHECK(is_supported_hash_function(hash), "Supported HSS-LMS hash function");
 
    for(size_t i = 1; i < scan.arg_count(); ++i) {
-      SCAN_Name scan_layer(scan.arg(i));
+      const SCAN_Name scan_layer(scan.arg(i));
       BOTAN_ARG_CHECK(scan_layer.algo_name() == "HW", "Invalid name for layer parameters");
       BOTAN_ARG_CHECK(scan_layer.arg_count() == 2, "Invalid number of layer parameters");
       const auto h =
@@ -147,13 +147,14 @@ std::shared_ptr<HSS_LMS_PrivateKeyInternal> HSS_LMS_PrivateKeyInternal::from_byt
       const auto lmots_type = load_be<LMOTS_Algorithm_Type>(slicer.take<sizeof(LMOTS_Algorithm_Type)>());
       params.push_back({LMS_Params::create_or_throw(lms_type), LMOTS_Params::create_or_throw(lmots_type)});
    }
-   std::string hash_name = params.at(0).lms_params().hash_name();
-   if(std::any_of(params.begin(), params.end(), [&hash_name](HSS_LMS_Params::LMS_LMOTS_Params_Pair& lms_lmots_params) {
-         bool invalid_lmots_hash = lms_lmots_params.lmots_params().hash_name() != hash_name;
-         bool invalid_lms_hash = lms_lmots_params.lms_params().hash_name() != hash_name;
-         return invalid_lmots_hash || invalid_lms_hash;
-      })) {
-      throw Decoding_Error("Inconsistent hash functions are not allowed.");
+   const auto& hash_name = params.at(0).lms_params().hash_name();
+
+   for(const auto& param : params) {
+      const bool invalid_lmots_hash = param.lmots_params().hash_name() != hash_name;
+      const bool invalid_lms_hash = param.lms_params().hash_name() != hash_name;
+      if(invalid_lmots_hash || invalid_lms_hash) {
+         throw Decoding_Error("Inconsistent hash functions are not allowed.");
+      }
    }
 
    if(slicer.remaining() < params.at(0).lms_params().m() + LMS_IDENTIFIER_LEN) {

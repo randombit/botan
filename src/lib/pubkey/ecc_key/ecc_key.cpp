@@ -173,7 +173,7 @@ secure_vector<uint8_t> EC_PrivateKey::private_key_bits() const {
 EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
                              std::span<const uint8_t> key_bits,
                              bool with_modular_inverse) {
-   EC_Group group(alg_id.parameters());
+   const EC_Group group(alg_id.parameters());
 
    OID key_parameters;
    secure_vector<uint8_t> private_key_bits;

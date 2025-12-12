@@ -74,7 +74,7 @@ bool X509_CRL::is_revoked(const X509_Certificate& cert) const {
       return false;
    }
 
-   std::vector<uint8_t> crl_akid = authority_key_id();
+   const std::vector<uint8_t> crl_akid = authority_key_id();
    const std::vector<uint8_t>& cert_akid = cert.authority_key_id();
 
    if(!crl_akid.empty() && !cert_akid.empty()) {

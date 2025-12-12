@@ -19,7 +19,7 @@ class URI_Tests final : public Test {
    private:
       static Test::Result test_uri_ctor() {
          Test::Result result("URI constructors");
-         Botan::URI uri(Botan::URI::Type::Domain, "localhost", 9000);
+         const Botan::URI uri(Botan::URI::Type::Domain, "localhost", 9000);
          result.confirm("type", uri.type() == Botan::URI::Type::Domain);
          result.test_eq("host", uri.host(), "localhost");
          result.test_eq("post", size_t(uri.port()), 9000);

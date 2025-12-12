@@ -122,7 +122,7 @@ class XMSS_Keygen_Reference_Test final : public Text_Based_Test {
          add_entropy(vars.get_req_bin("SecretSeed"));  // XMSS_PrivateKey constructor's call to ..._Internal constructor
 
          const auto xmss_algo = Botan::XMSS_Parameters::xmss_id_from_string(vars.get_req_str("Params"));
-         Botan::XMSS_PrivateKey keypair(xmss_algo, fixed_rng);
+         const Botan::XMSS_PrivateKey keypair(xmss_algo, fixed_rng);
 
          result.test_eq("Generated private key matches", keypair.raw_private_key(), vars.get_req_bin("PrivateKey"));
          result.test_eq("Generated public key matches", keypair.raw_public_key(), vars.get_req_bin("PublicKey"));

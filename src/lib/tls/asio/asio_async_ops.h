@@ -152,7 +152,7 @@ class AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_t
             // an application data record, the "input buffer" will become
             // non-empty.
             if(!ec && bytes_transferred > 0) {
-               boost::asio::const_buffer read_buffer{m_stream.input_buffer().data(), bytes_transferred};
+               const boost::asio::const_buffer read_buffer{m_stream.input_buffer().data(), bytes_transferred};
                m_stream.process_encrypted_data(read_buffer);
             }
 
@@ -328,7 +328,7 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
             // result in the advancement of the handshake state and produce data
             // in the output buffer.
             if(!ec && bytesTransferred > 0) {
-               boost::asio::const_buffer read_buffer{m_stream.input_buffer().data(), bytesTransferred};
+               const boost::asio::const_buffer read_buffer{m_stream.input_buffer().data(), bytesTransferred};
                m_stream.process_encrypted_data(read_buffer);
             }
 
@@ -340,7 +340,9 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
                // operation will eventually call `*this` as its own handler, passing the 0 back to this call operator.
                // This is necessary because the check of `bytesTransferred > 0` assumes that `bytesTransferred` bytes
                // were just read and are available in input_buffer for further processing.
-               AsyncWriteOperation<AsyncHandshakeOperation<std::decay_t<Handler>, Stream, Allocator>, Stream, Allocator>
+               const AsyncWriteOperation<AsyncHandshakeOperation<std::decay_t<Handler>, Stream, Allocator>,
+                                         Stream,
+                                         Allocator>
                   op{std::move(*this), m_stream, 0};
                return;
             }

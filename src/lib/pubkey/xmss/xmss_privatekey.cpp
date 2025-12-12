@@ -111,7 +111,7 @@ class XMSS_PrivateKey_Internal {
          s.skip(m_xmss_params.raw_public_key_size());
 
          auto unused_leaf_bytes = s.take(sizeof(uint32_t));
-         size_t unused_leaf = load_be<uint32_t>(unused_leaf_bytes.data(), 0);
+         const size_t unused_leaf = load_be<uint32_t>(unused_leaf_bytes.data(), 0);
          if(unused_leaf >= (1ULL << m_xmss_params.tree_height())) {
             throw Decoding_Error("XMSS private key leaf index out of bounds");
          }
@@ -176,7 +176,7 @@ class XMSS_PrivateKey_Internal {
       }
 
       size_t reserve_unused_leaf_index() {
-         size_t idx = (static_cast<std::atomic<size_t>&>(*recover_global_leaf_index())).fetch_add(1);
+         const size_t idx = (static_cast<std::atomic<size_t>&>(*recover_global_leaf_index())).fetch_add(1);
          if(idx >= m_xmss_params.total_number_of_signatures()) {
             throw Decoding_Error("XMSS private key, one time signatures exhausted");
          }
@@ -270,7 +270,7 @@ secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx, size_t targe
       using tree_hash_subtree_fn_t =
          void (XMSS_PrivateKey::*)(secure_vector<uint8_t>&, size_t, size_t, XMSS_Address&, XMSS_Hash&);
 
-      tree_hash_subtree_fn_t work_fn = &XMSS_PrivateKey::tree_hash_subtree;
+      const tree_hash_subtree_fn_t work_fn = &XMSS_PrivateKey::tree_hash_subtree;
 
       work.push_back(thread_pool.run(work_fn,
                                      this,
@@ -353,7 +353,7 @@ void XMSS_PrivateKey::tree_hash_subtree(
       adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
       adrs.set_ots_address(static_cast<uint32_t>(i));
 
-      XMSS_WOTS_PublicKey pk = this->wots_public_key_for(adrs, hash);
+      const XMSS_WOTS_PublicKey pk = this->wots_public_key_for(adrs, hash);
 
       adrs.set_type(XMSS_Address::Type::LTree_Address);
       adrs.set_ltree_address(static_cast<uint32_t>(i));

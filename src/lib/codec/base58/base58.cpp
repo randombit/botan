@@ -78,7 +78,7 @@ constexpr std::pair<uint8_t, word> divmod_58(word x) {
    // exactly this kind of operation, but not necessarily always...
    if constexpr(sizeof(word) == 4) {
       const uint64_t magic = 2369637129;  // ceil(2**36 / 29)
-      uint64_t z = magic * x;
+      const uint64_t z = magic * x;
       q = z >> 37;
    } else {
       const uint64_t magic = 5088756985850910791;  // ceil(2**67 / 29)
@@ -118,7 +118,7 @@ std::string base58_encode(BigInt v, size_t leading_zeros) {
 
    std::string result;
 
-   for(uint8_t d : digits) {
+   for(const uint8_t d : digits) {
       result.push_back(lookup_base58_char(d));
    }
 
@@ -175,7 +175,7 @@ uint8_t base58_value_of(char input) {
 }  // namespace
 
 std::string base58_encode(const uint8_t input[], size_t input_length) {
-   BigInt v(input, input_length);
+   const BigInt v(input, input_length);
    return base58_encode(v, count_leading_zeros(input, input_length, 0));
 }
 

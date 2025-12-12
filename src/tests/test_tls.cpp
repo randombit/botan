@@ -37,23 +37,23 @@ class TLS_Session_Tests final : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result("TLS::Session");
 
-         Botan::TLS::Session session(Botan::secure_vector<uint8_t>{0xCC, 0xDD},
-                                     Botan::TLS::Protocol_Version::TLS_V12,
-                                     0xC02F,
-                                     Botan::TLS::Connection_Side::Client,
-                                     true,
-                                     false,
-                                     std::vector<Botan::X509_Certificate>(),
-                                     Botan::TLS::Server_Information("server"),
-                                     0x0000,
-                                     std::chrono::system_clock::now());
+         const Botan::TLS::Session session(Botan::secure_vector<uint8_t>{0xCC, 0xDD},
+                                           Botan::TLS::Protocol_Version::TLS_V12,
+                                           0xC02F,
+                                           Botan::TLS::Connection_Side::Client,
+                                           true,
+                                           false,
+                                           std::vector<Botan::X509_Certificate>(),
+                                           Botan::TLS::Server_Information("server"),
+                                           0x0000,
+                                           std::chrono::system_clock::now());
 
          const std::string pem = session.PEM_encode();
-         Botan::TLS::Session session_from_pem(pem);
+         const Botan::TLS::Session session_from_pem(pem);
          result.test_eq("Roundtrip from pem", session.DER_encode(), session_from_pem.DER_encode());
 
          const auto der = session.DER_encode();
-         Botan::TLS::Session session_from_der(der);
+         const Botan::TLS::Session session_from_der(der);
          result.test_eq("Roundtrip from der", session.DER_encode(), session_from_der.DER_encode());
 
          const Botan::SymmetricKey key("ABCDEF");
@@ -68,7 +68,7 @@ class TLS_Session_Tests final : public Test {
          result.test_eq("tls", "TLS session encryption same header", ctext1.data(), 12, expected_hdr.data(), 12);
          result.test_eq("tls", "TLS session encryption same header", ctext2.data(), 12, expected_hdr.data(), 12);
 
-         Botan::TLS::Session dsession = Botan::TLS::Session::decrypt(ctext1.data(), ctext1.size(), key);
+         const Botan::TLS::Session dsession = Botan::TLS::Session::decrypt(ctext1.data(), ctext1.size(), key);
 
          Fixed_Output_RNG frng1("00112233445566778899AABBCCDDEEFF802802802802802802802802");
          const std::vector<uint8_t> ctextf1 = session.encrypt(key, frng1);
@@ -77,16 +77,16 @@ class TLS_Session_Tests final : public Test {
 
          result.test_eq("Only randomness comes from RNG", ctextf1, ctextf2);
 
-         Botan::TLS::Session session2(Botan::secure_vector<uint8_t>{0xCC, 0xEE},
-                                      Botan::TLS::Protocol_Version::TLS_V12,
-                                      0xBAAD,  // cipher suite does not exist
-                                      Botan::TLS::Connection_Side::Client,
-                                      true,
-                                      false,
-                                      std::vector<Botan::X509_Certificate>(),
-                                      Botan::TLS::Server_Information("server"),
-                                      0x0000,
-                                      std::chrono::system_clock::now());
+         const Botan::TLS::Session session2(Botan::secure_vector<uint8_t>{0xCC, 0xEE},
+                                            Botan::TLS::Protocol_Version::TLS_V12,
+                                            0xBAAD,  // cipher suite does not exist
+                                            Botan::TLS::Connection_Side::Client,
+                                            true,
+                                            false,
+                                            std::vector<Botan::X509_Certificate>(),
+                                            Botan::TLS::Server_Information("server"),
+                                            0x0000,
+                                            std::chrono::system_clock::now());
          const std::string pem_with_unknown_ciphersuite = session2.PEM_encode();
 
          result.test_throws("unknown ciphersuite during session parsing",
@@ -109,7 +109,7 @@ class TLS_CBC_Padding_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> record = vars.get_req_bin("Record");
          const size_t output = vars.get_req_sz("Output");
 
-         uint16_t res = Botan::TLS::check_tls_cbc_padding(record.data(), record.size());
+         const uint16_t res = Botan::TLS::check_tls_cbc_padding(record.data(), record.size());
 
          Test::Result result("TLS CBC padding check");
          result.test_eq("Expected", res, output);
@@ -200,7 +200,7 @@ class TLS_CBC_Tests final : public Text_Based_Test {
          const bool is_valid = vars.get_req_sz("Valid") == 1;
 
          // todo test permutations
-         bool encrypt_then_mac = false;
+         const bool encrypt_then_mac = false;
 
          Botan::TLS::TLS_CBC_HMAC_AEAD_Decryption tls_cbc(std::make_unique<Noop_Block_Cipher>(block_size),
                                                           std::make_unique<ZeroMac>(mac_len),
@@ -488,7 +488,7 @@ class Test_TLS_Alert_Strings : public Test {
             seen.insert(str);
          }
 
-         Botan::TLS::Alert unknown_alert = Botan::TLS::Alert({01, 66});
+         const Botan::TLS::Alert unknown_alert = Botan::TLS::Alert({01, 66});
 
          result.test_eq("Unknown alert str", unknown_alert.type_string(), "unrecognized_alert_66");
 
@@ -516,7 +516,7 @@ class Test_TLS_Policy_Text : public Test {
             const std::string from_file = read_tls_policy(policy_file);
 
             if(from_policy_obj != from_file) {
-               std::string d = diff(from_policy_obj, from_file);
+               const std::string d = diff(from_policy_obj, from_file);
                result.test_failure(Botan::fmt("Values for TLS policy from {} don't match (diff {})", policy_file, d));
             } else {
                result.test_success("Values from TLS policy from " + policy_file + " match");
@@ -561,7 +561,7 @@ class Test_TLS_Policy_Text : public Test {
             throw Test_Error("Missing policy file " + fspath);
          }
 
-         Botan::TLS::Text_Policy policy(is);
+         const Botan::TLS::Text_Policy policy(is);
          return policy.to_string();
       }
 
@@ -642,11 +642,9 @@ class Test_TLS_Algo_Strings : public Test {
       static Test::Result test_tls_sig_method_strings() {
          Test::Result result("TLS::Signature_Scheme");
 
-         std::vector<Botan::TLS::Signature_Scheme> schemes = Botan::TLS::Signature_Scheme::all_available_schemes();
-
          std::set<std::string> scheme_strs;
-         for(auto scheme : schemes) {
-            std::string scheme_str = scheme.to_string();
+         for(auto scheme : Botan::TLS::Signature_Scheme::all_available_schemes()) {
+            const std::string scheme_str = scheme.to_string();
 
             result.test_eq("Scheme strings unique", scheme_strs.count(scheme_str), 0);
 
@@ -665,10 +663,10 @@ class Test_TLS_Algo_Strings : public Test {
             Botan::TLS::Auth_Method::IMPLICIT,
          });
 
-         for(Botan::TLS::Auth_Method meth : auth_methods) {
-            std::string meth_str = Botan::TLS::auth_method_to_string(meth);
+         for(const Botan::TLS::Auth_Method meth : auth_methods) {
+            const std::string meth_str = Botan::TLS::auth_method_to_string(meth);
             result.test_ne("Method string is not empty", meth_str, "");
-            Botan::TLS::Auth_Method meth2 = Botan::TLS::auth_method_from_string(meth_str);
+            const Botan::TLS::Auth_Method meth2 = Botan::TLS::auth_method_from_string(meth_str);
             result.confirm("Decoded method matches", meth == meth2);
          }
 
@@ -684,10 +682,10 @@ class Test_TLS_Algo_Strings : public Test {
                                                             Botan::TLS::Kex_Algo::PSK,
                                                             Botan::TLS::Kex_Algo::ECDHE_PSK});
 
-         for(Botan::TLS::Kex_Algo meth : kex_algos) {
-            std::string meth_str = Botan::TLS::kex_method_to_string(meth);
+         for(const Botan::TLS::Kex_Algo meth : kex_algos) {
+            const std::string meth_str = Botan::TLS::kex_method_to_string(meth);
             result.test_ne("Method string is not empty", meth_str, "");
-            Botan::TLS::Kex_Algo meth2 = Botan::TLS::kex_method_from_string(meth_str);
+            const Botan::TLS::Kex_Algo meth2 = Botan::TLS::kex_method_from_string(meth_str);
             result.confirm("Decoded method matches", meth == meth2);
          }
 

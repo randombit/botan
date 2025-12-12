@@ -19,7 +19,7 @@ BigInt& BigInt::add(const word y[], size_t y_words, Sign y_sign) {
    grow_to(std::max(x_sw, y_words) + 1);
 
    if(sign() == y_sign) {
-      word carry = bigint_add2(mutable_data(), size() - 1, y, y_words);
+      const word carry = bigint_add2(mutable_data(), size() - 1, y, y_words);
       mutable_data()[size() - 1] += carry;
    } else {
       const int32_t relative_size = bigint_cmp(_data(), x_sw, y, y_words);
@@ -230,7 +230,7 @@ word BigInt::operator%=(word mod) {
    if(is_power_of_2(mod)) {
       remainder = (word_at(0) & (mod - 1));
    } else {
-      divide_precomp redc_mod(mod);
+      const divide_precomp redc_mod(mod);
       const size_t sw = sig_words();
       for(size_t i = sw; i > 0; --i) {
          remainder = redc_mod.vartime_mod_2to1(remainder, word_at(i - 1));

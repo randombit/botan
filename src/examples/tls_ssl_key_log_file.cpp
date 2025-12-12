@@ -78,7 +78,7 @@ class Server_Credential : public Botan::Credentials_Manager {
          // e.g., the certificate file "botan.randombit.net.crt"
          std::vector<Botan::X509_Certificate> certs;
          for(auto& cert : certificates) {
-            std::string algorithm = cert.subject_public_key()->algo_name();
+            const std::string algorithm = cert.subject_public_key()->algo_name();
             for(const auto& key : cert_key_types) {
                if(algorithm == key) {
                   certs.push_back(cert);
@@ -310,14 +310,14 @@ int main() {
    std::condition_variable conn_cond;
    std::vector<std::shared_ptr<DtlsConnection>> connections;
    std::thread server(server_proc, [&](std::shared_ptr<DtlsConnection> conn) {
-      std::lock_guard lk(m);
+      const std::scoped_lock lk(m);
       connections.push_back(std::move(conn));
       if(connections.size() == 2) {
          conn_cond.notify_one();
       }
    });
    std::thread client(client_proc, [&](std::shared_ptr<DtlsConnection> conn) {
-      std::lock_guard lk(m);
+      const std::scoped_lock lk(m);
       connections.push_back(std::move(conn));
       if(connections.size() == 2) {
          conn_cond.notify_one();
