@@ -125,8 +125,7 @@ class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
             PK_Ops::Signature_with_Hash(padding),
             m_group(ecdsa.domain()),
             m_x(ecdsa._private_key()),
-            m_b(EC_Scalar::random(m_group, rng)),
-            m_b_inv(m_b.invert()) {
+            m_b(EC_Scalar::random(m_group, rng)) {
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
          m_rfc6979 = std::make_unique<RFC6979_Nonce_Generator>(
             this->rfc6979_hash_function(), m_group.get_order_bits(), ecdsa._private_key());
@@ -148,7 +147,6 @@ class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
 #endif
 
       EC_Scalar m_b;
-      EC_Scalar m_b_inv;
 };
 
 AlgorithmIdentifier ECDSA_Signature_Operation::algorithm_identifier() const {
@@ -168,18 +166,33 @@ std::vector<uint8_t> ECDSA_Signature_Operation::raw_sign(std::span<const uint8_t
 
    const auto r = EC_Scalar::gk_x_mod_order(k, rng);
 
-   // Blind the inversion of k
-   const auto k_inv = (m_b * k).invert() * m_b;
-
    /*
-   * Blind the input message and compute x*r+m as (x*r*b + m*b)/b
+   * Blind the inputs
+   *
+   * Here we are computing (x*r+m)/k
+   *
+   * Instead have a random b and compute (k*b)^-1
+   *
+   * Then compute (x*r+m) as (x*r*b + m*b)
+   *
+   * Finally (x*r*b + m*b)/(k*b) = (x*r+m)/k
+   *
+   * This effectively blinds both the inversion as well as the various scalar
+   * multiplications. All of these operations should be constant-time anyway but
+   * blinding is very cheap and may help if either the compiler introduces
+   * variable-time behavior, or for the case of EM/power side channel attacks [1].
+   *
+   * [1] But note that such attacks are currently outside of Botan's threat model.
+   *
    */
-   m_b.square_self();
-   m_b_inv.square_self();
+   const auto k_inv = (m_b * k).invert();
 
    const auto xr_m = ((m_x * m_b) * r) + (m * m_b);
 
-   const auto s = (k_inv * xr_m) * m_b_inv;
+   const auto s = (k_inv * xr_m);
+
+   // Generate the next blinding value via modular squaring
+   m_b.square_self();
 
    // With overwhelming probability, a bug rather than actual zero r/s
    if(r.is_zero() || s.is_zero()) {
