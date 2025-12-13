@@ -7,12 +7,14 @@
 #include "tests.h"
 
 #include <botan/hex.h>
+#include <botan/rng.h>
 #include <botan/internal/filesystem.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/target_info.h>
+#include <chrono>
 #include <fstream>
 #include <iomanip>
 #include <sstream>
@@ -42,6 +44,12 @@
 #endif
 
 namespace Botan_Tests {
+
+Test::Test() = default;
+
+Test::~Test() = default;
+
+Test::Result::Result(std::string who) : m_who(std::move(who)), m_timestamp(Test::timestamp()) {}
 
 void Test::Result::merge(const Result& other, bool ignore_test_name) {
    if(who() != other.who()) {
@@ -407,6 +415,28 @@ Botan::RandomNumberGenerator& Test::rng() const {
    }
 
    return *m_test_rng;
+}
+
+std::vector<uint8_t> Test::mutate_vec(const std::vector<uint8_t>& v,
+                                      Botan::RandomNumberGenerator& rng,
+                                      bool maybe_resize,
+                                      size_t min_offset) {
+   std::vector<uint8_t> r = v;
+
+   if(maybe_resize && (r.empty() || rng.next_byte() < 32)) {
+      // TODO: occasionally truncate, insert at random index
+      const size_t add = 1 + (rng.next_byte() % 16);
+      r.resize(r.size() + add);
+      rng.randomize(&r[r.size() - add], add);
+   }
+
+   if(r.size() > min_offset) {
+      const size_t offset = std::max<size_t>(min_offset, rng.next_byte() % r.size());
+      const uint8_t perturb = rng.next_nonzero_byte();
+      r[offset] ^= perturb;
+   }
+
+   return r;
 }
 
 std::vector<std::string> Test::possible_providers(const std::string& /*alg*/) {

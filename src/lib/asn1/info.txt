@@ -14,6 +14,7 @@ bigint
 <header:public>
 asn1_print.h
 asn1_obj.h
+asn1_time.h
 der_enc.h
 oids.h
 ber_dec.h
