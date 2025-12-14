@@ -528,6 +528,28 @@ inline constexpr auto bigint_ct_is_eq(const W x[], size_t x_size, const W y[], s
    return CT::Mask<W>::is_zero(diff);
 }
 
+template <WordType W, W div>
+consteval std::pair<W, size_t> div_magic()
+   requires(div == 10)
+{
+   if constexpr(div == 10 && std::same_as<W, uint32_t>) {
+      constexpr W magic = 0xCCCCCCCD;
+      constexpr size_t shift = 35;
+      return std::make_pair(magic, shift);
+   } else if constexpr(div == 10 && std::same_as<W, uint64_t>) {
+      constexpr W magic = 0xCCCCCCCCCCCCCCCD;
+      constexpr size_t shift = 67;
+      return std::make_pair(magic, shift);
+   }
+}
+
+template <WordType W>
+inline constexpr W divide_10(W x) {
+   auto [magic, shift] = div_magic<W, 10>();
+   const auto p = typename WordInfo<W>::dword(magic) * x;
+   return static_cast<W>(p >> shift);
+}
+
 /**
 * Setup for variable-time word level division/modulo operations
 *
