@@ -10,6 +10,7 @@
 #include <botan/hex.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/divide.h>
+#include <botan/internal/mp_core.h>
 #include <botan/internal/stl_util.h>
 
 namespace Botan {
@@ -65,10 +66,10 @@ std::string BigInt::to_dec_string() const {
    for(size_t i = 0; i != digit_blocks; ++i) {
       word remainder = digit_groups[i];
       for(size_t j = 0; j != radix_digits; ++j) {
-         // Compiler should convert div/mod by 10 into mul by magic constant
-         const word digit = remainder % 10;
-         remainder /= 10;
+         const word new_remainder = divide_10(remainder);
+         const word digit = remainder - new_remainder * 10;
          digits[radix_digits * i + j] = static_cast<uint8_t>(digit);
+         remainder = new_remainder;
       }
    }
 
