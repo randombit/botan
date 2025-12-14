@@ -701,7 +701,7 @@ inline constexpr auto monty_inverse(W a) -> W {
    W r = 0;
 
    for(size_t i = 0; i != WordInfo<W>::bits; ++i) {
-      const W bi = b % 2;
+      const W bi = CT::value_barrier(b % 2);
       r >>= 1;
       r += bi << (WordInfo<W>::bits - 1);
 
