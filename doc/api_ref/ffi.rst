@@ -165,6 +165,11 @@ The following enum values are defined in the FFI header:
    An operation was invoked that makes sense for the object, but it is in the
    wrong state to perform it.
 
+.. cpp:enumerator:: BOTAN_FFI_ERROR_OUT_OF_RANGE = -36
+
+   Querying an enumerable value resulted in an "out of range" error. This error
+   code may be used as the marker for the end of a value enumeration.
+
 .. cpp:enumerator:: BOTAN_FFI_ERROR_NOT_IMPLEMENTED = -40
 
    This is returned if the functionality is not available for some reason.  For
