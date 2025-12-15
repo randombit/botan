@@ -39,7 +39,7 @@ Version version_of(const Interface& interface) {
    //   pFunctionList - the interface function list which must always begin with
    //   a CK_VERSION structure as the first field
    return *reinterpret_cast<Version*>(interface.pFunctionList);
-};
+}
 
 std::span<const Utf8Char> name_of(const Interface& interface) {
    // We cannot use std::basic_string_view<Utf8Char> since some compilers do not
