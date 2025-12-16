@@ -54,6 +54,11 @@ class SIMD_8x64 final {
          return SIMD_8x64(_mm512_loadu_si512(reinterpret_cast<const __m512i*>(in)));
       }
 
+      BOTAN_FN_ISA_AVX512
+      static SIMD_8x64 broadcast_2x64(const uint64_t* in) {
+         return SIMD_8x64(_mm512_broadcast_i64x2(_mm_loadu_si128(reinterpret_cast<const __m128i*>(in))));
+      }
+
       static BOTAN_FN_ISA_SIMD_8X64 SIMD_8x64 load_be(const void* in) { return SIMD_8x64::load_le(in).bswap(); }
 
       SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 bswap() const {

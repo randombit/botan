@@ -49,6 +49,10 @@ class SIMD_4x64 final {
 
       static BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 load_be(const void* in) { return SIMD_4x64::load_le(in).bswap(); }
 
+      static BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 broadcast_2x64(const uint64_t* in) {
+         return SIMD_4x64(_mm256_broadcastsi128_si256(_mm_loadu_si128(reinterpret_cast<const __m128i*>(in))));
+      }
+
       SIMD_4x64 BOTAN_FN_ISA_SIMD_4X64 bswap() const {
          const auto idx = _mm256_set_epi8(
             8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7);
