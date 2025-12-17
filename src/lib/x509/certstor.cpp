@@ -8,11 +8,13 @@
 
 #include <botan/certstor.h>
 
+#include <botan/asn1_obj.h>
 #include <botan/assert.h>
 #include <botan/data_src.h>
 #include <botan/hash.h>
 #include <botan/pkix_types.h>
 #include <botan/internal/filesystem.h>
+#include <algorithm>
 
 namespace Botan {
 

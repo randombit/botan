@@ -9,12 +9,11 @@
 
 #include <botan/internal/tls_client_impl_12.h>
 
-#include <botan/ocsp.h>
-#include <botan/tls_client.h>
 #include <botan/tls_messages.h>
+#include <botan/tls_policy.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_handshake_state.h>
-
+#include <algorithm>
 #include <optional>
 #include <sstream>
 #include <utility>

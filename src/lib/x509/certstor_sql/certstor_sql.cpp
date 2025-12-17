@@ -8,6 +8,7 @@
 
 #include <botan/certstor_sql.h>
 
+#include <botan/asn1_obj.h>
 #include <botan/ber_dec.h>
 #include <botan/data_src.h>
 #include <botan/pk_keys.h>
@@ -251,6 +252,7 @@ void Certificate_Store_In_SQL::remove_key(const Private_Key& key) {
 
 // Revocation
 void Certificate_Store_In_SQL::revoke_cert(const X509_Certificate& cert, CRL_Code code, const X509_Time& time) {
+   // TODO(Botan4) require that time be valid
    insert_cert(cert);
 
    auto stmt1 = m_database->new_statement("INSERT OR REPLACE INTO " + m_prefix +
@@ -264,6 +266,20 @@ void Certificate_Store_In_SQL::revoke_cert(const X509_Certificate& cert, CRL_Cod
    } else {
       stmt1->bind(3, static_cast<size_t>(-1));
    }
+
+   stmt1->spin();
+}
+
+// Revocation
+void Certificate_Store_In_SQL::revoke_cert(const X509_Certificate& cert, CRL_Code code) {
+   insert_cert(cert);
+
+   auto stmt1 = m_database->new_statement("INSERT OR REPLACE INTO " + m_prefix +
+                                          "revoked ( fingerprint, reason, time ) VALUES ( ?1, ?2, ?3 )");
+
+   stmt1->bind(1, cert.fingerprint("SHA-256"));
+   stmt1->bind(2, static_cast<uint32_t>(code));
+   stmt1->bind(3, static_cast<size_t>(-1));
 
    stmt1->spin();
 }

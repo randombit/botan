@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_ECC_GROUP)
    #include <botan/bigint.h>
    #include <botan/ec_group.h>
+   #include <botan/rng.h>
    #include <botan/internal/fmt.h>
 #endif
 

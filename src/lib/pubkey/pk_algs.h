@@ -8,11 +8,20 @@
 #ifndef BOTAN_PK_KEY_FACTORY_H_
 #define BOTAN_PK_KEY_FACTORY_H_
 
-#include <botan/asn1_obj.h>
-#include <botan/pk_keys.h>
+#include <botan/types.h>
 #include <memory>
+#include <span>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace Botan {
+
+class Public_Key;
+class Private_Key;
+class AlgorithmIdentifier;
+class EC_Group;
+class RandomNumberGenerator;
 
 BOTAN_PUBLIC_API(2, 0)
 std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
@@ -33,8 +42,6 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view algo_name,
                                                 RandomNumberGenerator& rng,
                                                 std::string_view algo_params = "",
                                                 std::string_view provider = "");
-
-class EC_Group;
 
 /**
 * Create a new ECC key

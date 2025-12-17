@@ -12,7 +12,6 @@
 #include <botan/internal/kuznyechik.h>
 
 #include <botan/internal/loadstor.h>
-#include <algorithm>
 
 namespace Botan {
 
@@ -94,7 +93,10 @@ consteval std::array<uint8_t, 256> L_table(bool forward) noexcept {
    }
 
    if(!forward) {
-      std::reverse(L.begin(), L.end());
+      // Reverse L
+      for(size_t i = 0; i != 128; ++i) {
+         std::swap(L[i], L[255 - i]);
+      }
    }
 
    auto sqr_matrix = [](std::span<const uint8_t, 256> mat) {

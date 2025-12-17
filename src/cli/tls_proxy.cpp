@@ -24,6 +24,7 @@
    #include <botan/hex.h>
    #include <botan/pkcs8.h>
    #include <botan/rng.h>
+   #include <botan/tls_callbacks.h>
    #include <botan/tls_server.h>
    #include <botan/tls_session_manager_memory.h>
    #include <botan/x509cert.h>

@@ -8,6 +8,7 @@
 
 #include "tests.h"
 
+#include <botan/rng.h>
 #include <botan/symkey.h>
 
 namespace Botan_Tests {

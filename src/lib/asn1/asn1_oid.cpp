@@ -296,4 +296,9 @@ void OID::decode_from(BER_Decoder& decoder) {
    m_id = parts;
 }
 
+std::ostream& operator<<(std::ostream& out, const OID& oid) {
+   out << oid.to_string();
+   return out;
+}
+
 }  // namespace Botan

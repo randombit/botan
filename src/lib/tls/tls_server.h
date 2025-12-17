@@ -13,12 +13,14 @@
 
 #include <botan/credentials_manager.h>
 #include <botan/tls_channel.h>
-#include <botan/tls_policy.h>
 #include <vector>
 
 namespace Botan::TLS {
 
+class Callbacks;
+class Session_Manager;
 class Channel_Impl;
+class Policy;
 
 /**
 * TLS Server

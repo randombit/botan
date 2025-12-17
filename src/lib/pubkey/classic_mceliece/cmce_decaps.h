@@ -11,7 +11,6 @@
 
 #include <botan/cmce.h>
 #include <botan/pk_ops.h>
-#include <botan/rng.h>
 #include <botan/internal/bitvector.h>
 #include <botan/internal/cmce_field_ordering.h>
 #include <botan/internal/cmce_keys_internal.h>

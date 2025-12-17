@@ -9,6 +9,8 @@
 #if defined(BOTAN_HAS_PSK_DB)
 
    #include <botan/psk_db.h>
+   #include <botan/rng.h>
+   #include <map>
 
    #if defined(BOTAN_HAS_SQLITE3)
       #include <botan/sqlite3.h>

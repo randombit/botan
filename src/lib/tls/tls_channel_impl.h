@@ -14,6 +14,7 @@
 #include <botan/assert.h>
 #include <botan/tls_channel.h>
 #include <botan/tls_magic.h>
+#include <botan/tls_session_manager.h>
 #include <botan/tls_version.h>
 
 #include <memory>

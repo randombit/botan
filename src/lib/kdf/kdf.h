@@ -12,6 +12,7 @@
 #include <botan/concepts.h>
 #include <botan/exceptn.h>
 #include <botan/secmem.h>
+#include <array>
 #include <memory>
 #include <span>
 #include <string>

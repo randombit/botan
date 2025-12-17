@@ -10,11 +10,9 @@
 #define BOTAN_TLS_CHANNEL_IMPL_12_H_
 
 #include <botan/tls_alert.h>
-#include <botan/tls_callbacks.h>
 #include <botan/tls_session.h>
 #include <botan/tls_session_manager.h>
 #include <botan/internal/tls_channel_impl.h>
-#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -26,6 +24,7 @@ class X509_Certificate;
 
 namespace TLS {
 
+class Callbacks;
 class Connection_Cipher_State;
 class Connection_Sequence_Numbers;
 class Handshake_State;
@@ -39,12 +38,6 @@ class Policy;
 */
 class Channel_Impl_12 : public Channel_Impl {
    public:
-      typedef std::function<void(const uint8_t[], size_t)> output_fn;
-      typedef std::function<void(const uint8_t[], size_t)> data_cb;
-      typedef std::function<void(Alert, const uint8_t[], size_t)> alert_cb;
-      typedef std::function<bool(const Session&)> handshake_cb;
-      typedef std::function<void(const Handshake_Message&)> handshake_msg_cb;
-
       /**
       * Set up a new TLS session
       *

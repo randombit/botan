@@ -25,7 +25,6 @@
 #include <botan/internal/pqcrystals_encoding.h>
 #include <botan/internal/pqcrystals_helpers.h>
 #include <botan/internal/stl_util.h>
-
 #include <utility>
 
 namespace Botan::Dilithium_Algos {
@@ -286,8 +285,12 @@ std::optional<DilithiumPolyVec> hint_unpack(BufferSlicer& slicer, const Dilithiu
    }
 
    // Check that the remaining bit positions are all zero (strong unforgeability)
-   const auto remaining = bit_positions.take(bit_positions.remaining());
-   if(!std::all_of(remaining.begin(), remaining.end(), [](auto b) { return b == 0; })) {
+   uint8_t sum = 0;
+   for(const uint8_t b : bit_positions.take(bit_positions.remaining())) {
+      sum |= b;
+   }
+
+   if(sum != 0) {
       return std::nullopt;
    }
 

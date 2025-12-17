@@ -15,6 +15,7 @@
 #include <botan/entropy_src.h>
 #include <botan/rng.h>
 #include <chrono>
+#include <cstring>
 
 // includes needed for main
 #include <botan/auto_rng.h>

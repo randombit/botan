@@ -11,10 +11,8 @@
 #ifndef BOTAN_TLS_CHANNEL_H_
 #define BOTAN_TLS_CHANNEL_H_
 
+#include <botan/symkey.h>
 #include <botan/tls_alert.h>
-#include <botan/tls_callbacks.h>
-#include <botan/tls_session.h>
-#include <botan/tls_session_manager.h>
 #include <botan/x509cert.h>
 
 #include <span>

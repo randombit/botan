@@ -7,12 +7,9 @@
 #ifndef BOTAN_TLS_ALGO_IDS_H_
 #define BOTAN_TLS_ALGO_IDS_H_
 
-#include <botan/asn1_obj.h>
-#include <botan/pk_keys.h>
 #include <botan/types.h>
 #include <optional>
 #include <string>
-#include <vector>
 
 //BOTAN_FUTURE_INTERNAL_HEADER(tls_algos.h)
 

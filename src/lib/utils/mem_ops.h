@@ -51,9 +51,8 @@ namespace Botan {
 BOTAN_PUBLIC_API(2, 0) void secure_scrub_memory(void* ptr, size_t n);
 
 /**
-* Scrub memory contents in a way that a compiler should not elide,
-* using some system specific technique. Note that this function might
-* not zero the memory.
+* Zero memory contents in a way that a compiler should not elide,
+* using some system specific technique.
 *
 * @param data  the data region to be scrubbed
 */

@@ -17,7 +17,6 @@
    #include <botan/hash.h>
    #include <botan/pk_algs.h>
    #include <botan/pubkey.h>
-   #include <algorithm>
 
    #include "test_pubkey.h"
 #endif
@@ -239,7 +238,7 @@ BOTAN_REGISTER_TEST("pubkey", "dilithium_roundtrips", DilithiumRoundtripTests);
 class Dilithium_Keygen_Tests final : public PK_Key_Generation_Test {
    public:
       std::vector<std::string> keygen_params() const override {
-         std::vector<std::string> all_instances = {
+         const std::vector<std::string> all_instances = {
             "Dilithium-4x4-AES-r3",
             "Dilithium-6x5-AES-r3",
             "Dilithium-8x7-AES-r3",
@@ -250,11 +249,14 @@ class Dilithium_Keygen_Tests final : public PK_Key_Generation_Test {
             "ML-DSA-6x5",
             "ML-DSA-8x7",
          };
+
          std::vector<std::string> available_instances;
-         std::copy_if(all_instances.begin(),
-                      all_instances.end(),
-                      std::back_inserter(available_instances),
-                      [](const std::string& instance) { return Botan::DilithiumMode(instance).is_available(); });
+
+         for(const auto& mode : all_instances) {
+            if(Botan::DilithiumMode(mode).is_available()) {
+               available_instances.push_back(mode);
+            }
+         }
          return available_instances;
       }
 

@@ -15,6 +15,7 @@
 
    #if defined(BOTAN_HAS_CERTSTOR_SQLITE3)
       #include <botan/certstor_sqlite.h>
+      #include <botan/rng.h>
       #include <botan/sqlite3.h>
    #endif
 #endif

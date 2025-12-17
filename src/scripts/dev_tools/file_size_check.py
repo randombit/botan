@@ -56,5 +56,7 @@ def main():
 
     print(total_lines, "total")
 
+    return 0
+
 if __name__ == '__main__':
     sys.exit(main())

@@ -83,6 +83,22 @@ std::string format(const std::chrono::nanoseconds& dur) {
    return out.str();
 }
 
+std::map<std::string, std::string> parse_report_properties(const std::vector<std::string>& report_properties) {
+   std::map<std::string, std::string> result;
+
+   for(const auto& prop : report_properties) {
+      const auto colon = prop.find(':');
+      // props without a colon separator or without a name are not allowed
+      if(colon == std::string::npos || colon == 0) {
+         throw Test_Error("--report-properties should be of the form <key>:<value>,<key>:<value>,...");
+      }
+
+      result.insert_or_assign(prop.substr(0, colon), prop.substr(colon + 1, prop.size() - colon - 1));
+   }
+
+   return result;
+}
+
 }  // namespace
 
 XmlReporter::XmlReporter(const Test_Options& opts, std::string output_dir) :
@@ -91,7 +107,7 @@ XmlReporter::XmlReporter(const Test_Options& opts, std::string output_dir) :
    set_property("compiler", full_compiler_name_string());
    set_property("compiler_version", full_compiler_version_string());
    set_property("timestamp", format(std::chrono::system_clock::now()));
-   auto custom_props = opts.report_properties();
+   auto custom_props = parse_report_properties(opts.report_properties());
    for(const auto& prop : custom_props) {
       set_property(prop.first, prop.second);
    }

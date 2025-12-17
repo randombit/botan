@@ -15,7 +15,7 @@
 #include <botan/secmem.h>
 #include <botan/strong_type.h>
 
-#include <algorithm>
+#include <cstring>
 #include <functional>
 #include <optional>
 #include <span>
@@ -396,7 +396,11 @@ template <size_t N>
 class StringLiteral final {
    public:
       // NOLINTNEXTLINE(*-explicit-conversions)
-      constexpr StringLiteral(const char (&str)[N]) : value() { std::copy_n(str, N, value); }
+      consteval StringLiteral(const char (&str)[N]) : value() {
+         for(size_t i = 0; i != N; ++i) {
+            value[i] = str[i];
+         }
+      }
 
       // NOLINTNEXTLINE(*non-private-member-variable*)
       char value[N];

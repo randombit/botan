@@ -7,6 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_STREAM_CIPHER)
+   #include <botan/rng.h>
    #include <botan/stream_cipher.h>
    #include <botan/internal/fmt.h>
 #endif

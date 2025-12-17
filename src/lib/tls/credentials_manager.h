@@ -8,7 +8,6 @@
 #ifndef BOTAN_CREDENTIALS_MANAGER_H_
 #define BOTAN_CREDENTIALS_MANAGER_H_
 
-#include <botan/asn1_obj.h>
 #include <botan/certstor.h>
 #include <botan/pk_keys.h>
 #include <botan/strong_type.h>
