@@ -1,3 +1,5 @@
+#test cpuid avx2
+
 [SM3]
 
 # From ZA computation in https://tools.ietf.org/html/draft-shen-sm2-ecdsa-02

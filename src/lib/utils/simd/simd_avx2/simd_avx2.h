@@ -135,8 +135,8 @@ class SIMD_8x32 final {
 
             return SIMD_8x32(_mm256_shuffle_epi8(m_avx2, shuf_rotl_24));
          } else {
-            return SIMD_8x32(_mm256_or_si256(_mm256_slli_epi32(m_avx2, static_cast<int>(ROT)),
-                                             _mm256_srli_epi32(m_avx2, static_cast<int>(32 - ROT))));
+            return SIMD_8x32(_mm256_xor_si256(_mm256_slli_epi32(m_avx2, static_cast<int>(ROT)),
+                                              _mm256_srli_epi32(m_avx2, static_cast<int>(32 - ROT))));
          }
 #endif
       }
@@ -271,6 +271,24 @@ class SIMD_8x32 final {
          B1.m_avx2 = _mm256_unpackhi_epi64(T0, T1);
          B2.m_avx2 = _mm256_unpacklo_epi64(T2, T3);
          B3.m_avx2 = _mm256_unpackhi_epi64(T2, T3);
+      }
+
+      static inline SIMD_8x32 BOTAN_FN_ISA_AVX2 alignr8(const SIMD_8x32& a, const SIMD_8x32& b) {
+         return SIMD_8x32(_mm256_alignr_epi8(a.raw(), b.raw(), 8));
+      }
+
+      template <size_t I>
+      BOTAN_FN_ISA_AVX2 SIMD_8x32 shift_elems_left() const noexcept
+         requires(I > 0 && I <= 3)
+      {
+         return SIMD_8x32(_mm256_slli_si256(raw(), 4 * I));
+      }
+
+      template <size_t I>
+      BOTAN_FN_ISA_AVX2 SIMD_8x32 shift_elems_right() const noexcept
+         requires(I > 0 && I <= 3)
+      {
+         return SIMD_8x32(_mm256_srli_si256(raw(), 4 * I));
       }
 
       BOTAN_FN_ISA_AVX2
