@@ -16,6 +16,7 @@
 
 #include <botan/compiler.h>
 #include <botan/internal/bswap.h>
+#include <botan/internal/value_barrier.h>
 #include <concepts>
 
 namespace Botan {
@@ -24,8 +25,9 @@ namespace Botan {
 * If top bit of arg is set, return |1| (all bits set). Otherwise return |0| (all bits unset)
 */
 template <std::unsigned_integral T>
-BOTAN_FORCE_INLINE constexpr T expand_top_bit(T a) {
-   return static_cast<T>(0) - (a >> (sizeof(T) * 8 - 1));
+BOTAN_FORCE_INLINE constexpr T ct_expand_top_bit(T a) {
+   const T top = CT::value_barrier<T>(a >> (sizeof(T) * 8 - 1));
+   return static_cast<T>(0) - top;
 }
 
 /**
@@ -33,7 +35,7 @@ BOTAN_FORCE_INLINE constexpr T expand_top_bit(T a) {
 */
 template <std::unsigned_integral T>
 BOTAN_FORCE_INLINE constexpr T ct_is_zero(T x) {
-   return expand_top_bit<T>(~x & (x - 1));
+   return ct_expand_top_bit<T>(~x & (x - 1));
 }
 
 /**
@@ -41,8 +43,13 @@ BOTAN_FORCE_INLINE constexpr T ct_is_zero(T x) {
 */
 template <std::unsigned_integral T>
 BOTAN_FORCE_INLINE constexpr size_t ct_if_is_zero_ret(T x, size_t s) {
+   /*
+   Similar to `return ct_is_zero(x) & s` but has to account for possibility that
+   sizeof(T) is smaller than sizeof(size_t) which would lead to incomplete masking
+   */
    const T a = ~x & (x - 1);
-   const size_t mask = static_cast<size_t>(0) - static_cast<size_t>(a >> (sizeof(T) * 8 - 1));
+   const size_t a_top = static_cast<size_t>(CT::value_barrier<T>(a >> (sizeof(T) * 8 - 1)));
+   const size_t mask = static_cast<size_t>(0) - a_top;
    return mask & s;
 }
 

@@ -19,6 +19,7 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/target_info.h>
+#include <botan/internal/value_barrier.h>
 
 #include <optional>
 #include <span>
@@ -248,56 +249,6 @@ template <unpoisonable T>
 /// @}
 
 /**
-* This function returns its argument, but (if called in a non-constexpr context)
-* attempts to prevent the compiler from reasoning about the value or the possible
-* range of values. Such optimizations have a way of breaking constant time code.
-*
-* The method that is use is decided at configuration time based on the target
-* compiler and architecture (see `ct_value_barrier` blocks in `src/build-data/cc`).
-* The decision can be overridden by the user with the configure.py option
-* `--ct-value-barrier-type=`
-*
-* There are three options currently possible in the data files and with the
-* option:
-*
-*  * `asm`: Use an inline assembly expression which (currently) prevents Clang
-*    and GCC from optimizing based on the possible value of the input expression.
-*
-*  * `volatile`: Launder the input through a volatile variable. This is likely
-*    to cause significant performance regressions since the value must be
-*    actually stored and loaded back from memory each time.
-*
-*  * `none`: disable constant time barriers entirely. This is used
-*    with MSVC, which is not known to perform optimizations that break
-*    constant time code and which does not support GCC-style inline asm.
-*
-*/
-template <std::unsigned_integral T>
-   requires(!std::same_as<bool, T>)
-constexpr inline T value_barrier(T x) {
-   if(std::is_constant_evaluated()) {
-      return x;
-   } else {
-#if defined(BOTAN_CT_VALUE_BARRIER_USE_ASM)
-      /*
-      * We may want a "stronger" statement such as
-      *     asm volatile("" : "+r,m"(x) : : "memory);
-      * (see https://theunixzoo.co.uk/blog/2021-10-14-preventing-optimisations.html)
-      * however the current approach seems sufficient with current compilers,
-      * and is minimally damaging with regards to degrading code generation.
-      */
-      asm("" : "+r"(x) : /* no input */);  // NOLINT(*-no-assembler)
-      return x;
-#elif defined(BOTAN_CT_VALUE_BARRIER_USE_VOLATILE)
-      volatile T vx = x;
-      return vx;
-#else
-      return x;
-#endif
-   }
-}
-
-/**
 * A Choice is used for constant-time conditionals.
 *
 * Internally it always is either |0| (all 0 bits) or |1| (all 1 bits)
@@ -440,7 +391,7 @@ class Mask final {
       /**
       * Return a Mask<T> which is set if the top bit of v is set
       */
-      static constexpr Mask<T> expand_top_bit(T v) { return Mask<T>(Botan::expand_top_bit<T>(value_barrier<T>(v))); }
+      static constexpr Mask<T> expand_top_bit(T v) { return Mask<T>(ct_expand_top_bit<T>(v)); }
 
       /**
        * Return a Mask<T> which is set if the given @p bit of @p v is set.
