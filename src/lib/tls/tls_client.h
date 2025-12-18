@@ -12,7 +12,9 @@
 #define BOTAN_TLS_CLIENT_H_
 
 #include <botan/credentials_manager.h>
+#include <botan/tls_callbacks.h>  // TODO(Botan4) not necessary here, remove
 #include <botan/tls_channel.h>
+#include <botan/tls_policy.h>  // TODO(Botan4) not necessary here, remove
 #include <botan/tls_server_info.h>
 #include <botan/tls_version.h>
 #include <memory>
