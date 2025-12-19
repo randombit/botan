@@ -14,6 +14,12 @@ the desired end result. Over time further progress is made in each.
   accounted for where necessary. The library should never crash, or invoke
   undefined behavior, regardless of circumstances.
 
+* Constant time programming. The table stakes for a modern cryptographic library
+  include being immune to basic timing/cache based side channels. Botan includes
+  utilities to assist in writing and testing constant time code. A test suite
+  run nightly in CI verifies Botan's constant time behavior across a range of
+  compilers, compiler options, and CPU architectures.
+
 * Implement schemes important in practice. It should be practical to implement
   any real-world crypto protocol using just what the library provides. It is
   worth some (limited) additional complexity in the library, in order to expand
@@ -48,9 +54,9 @@ the desired end result. Over time further progress is made in each.
   least the option of using a post-quantum scheme. Botan provides a conservative
   selection of algorithms thought to be post-quantum secure.
 
-* Performance. Botan does not in every case strive to be faster than every other
-  software implementation, but performance should be competitive and over time
-  new optimizations are identified and applied.
+* Performance. Botan aims to have the fastest possible implementation of all
+  algorithms it supports, subject to the constraints implicit with the other
+  project goals.
 
 * Support whatever I/O mechanism the application wants. Allow the application to
   control all aspects of how the network is contacted, and ensure the API makes
