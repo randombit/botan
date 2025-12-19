@@ -45,4 +45,5 @@ scan_name.h
 stack_scrubbing.h
 stl_util.h
 time_utils.h
+value_barrier.h
 </header:internal>

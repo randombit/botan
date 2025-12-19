@@ -11,6 +11,7 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/calendar.h>
 #include <botan/internal/charset.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
@@ -794,7 +795,10 @@ class BitOps_Tests final : public Test {
    private:
       template <typename T>
       void test_ctz(Test::Result& result, T val, size_t expected) {
-         result.test_eq("ctz(" + std::to_string(val) + ")", Botan::ctz<T>(val), expected);
+         Botan::CT::poison(val);
+         const size_t computed = Botan::ctz<T>(val);
+         Botan::CT::unpoison_all(computed, val);
+         result.test_eq("ctz(" + std::to_string(val) + ")", computed, expected);
       }
 
       Test::Result test_ctz() {
@@ -811,7 +815,10 @@ class BitOps_Tests final : public Test {
 
       template <typename T>
       void test_sig_bytes(Test::Result& result, T val, size_t expected) {
-         result.test_eq("significant_bytes(" + std::to_string(val) + ")", Botan::significant_bytes<T>(val), expected);
+         Botan::CT::poison(val);
+         const size_t computed = Botan::significant_bytes<T>(val);
+         Botan::CT::unpoison_all(computed, val);
+         result.test_eq("significant_bytes(" + std::to_string(val) + ")", computed, expected);
       }
 
       Test::Result test_sig_bytes() {
