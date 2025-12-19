@@ -1,4 +1,4 @@
-#test cpuid avx2
+#test cpuid intel_sm3 avx2
 
 [SM3]
 

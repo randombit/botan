@@ -12,7 +12,7 @@
 #include <botan/internal/sm3_fn.h>
 #include <botan/internal/stl_util.h>
 
-#if defined(BOTAN_HAS_SM3_X86_AVX2_BMI2)
+#if defined(BOTAN_HAS_CPUID)
    #include <botan/internal/cpuid.h>
 #endif
 
@@ -22,6 +22,12 @@ namespace Botan {
 * SM3 Compression Function
 */
 void SM3::compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
+#if defined(BOTAN_HAS_SM3_X86)
+   if(CPUID::has(CPUID::Feature::SM3, CPUID::Feature::AVX2)) {
+      return compress_digest_x86(digest, input, blocks);
+   }
+#endif
+
 #if defined(BOTAN_HAS_SM3_X86_AVX2_BMI2)
    if(CPUID::has(CPUID::Feature::AVX2, CPUID::Feature::BMI)) {
       return compress_digest_x86_avx2(digest, input, blocks);
@@ -197,6 +203,12 @@ void SM3::final_result(std::span<uint8_t> output) {
 }
 
 std::string SM3::provider() const {
+#if defined(BOTAN_HAS_SM3_X86)
+   if(auto feat = CPUID::check(CPUID::Feature::SM3, CPUID::Feature::AVX2)) {
+      return *feat;
+   }
+#endif
+
 #if defined(BOTAN_HAS_SM3_X86_AVX2_BMI2)
    if(auto feat = CPUID::check(CPUID::Feature::AVX2, CPUID::Feature::BMI)) {
       return *feat;

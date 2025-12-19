@@ -52,6 +52,10 @@ class SM3 final : public HashFunction {
       static void compress_digest_x86_avx2(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
 #endif
 
+#if defined(BOTAN_HAS_SM3_X86)
+      static void compress_digest_x86(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
+#endif
+
    private:
       MerkleDamgard_Hash<SM3> m_md;
 };
