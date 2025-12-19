@@ -118,7 +118,13 @@ bool passes_miller_rabin_test(const BigInt& n,
    BOTAN_ASSERT_NOMSG(n > 1);
 
    const BigInt n_minus_1 = n - 1;
-   const size_t s = low_zero_bits(n_minus_1);
+   /*
+   * This unpoison is not ideal but realistically there is no way to
+   * hide the number of loop iterations (below). The main user of
+   * secret primes is RSA and we always generate RSA primes such that
+   * p == 3 (mod 4), which means s is always 1.
+   */
+   const size_t s = CT::driveby_unpoison(low_zero_bits(n_minus_1));
    const BigInt nm1_s = n_minus_1 >> s;
    const size_t n_bits = n.bits();
 
