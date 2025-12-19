@@ -9,12 +9,20 @@ Version 3.11.0, Not Yet Released
 * Add support for verifying X509 certificate chains when the trust anchor is
   not self signed. (GH #5047)
 
+* Add optimized SM3 implementations using AVX2/BMI2 (GH #5178) and SM3-NI (GH #5183)
+
+* Improve handling of constant time and variable time divisions (GH #5176 #5177 #5180)
+
+* Optimize ECDSA signature setup phase (GH #5173)
+
 * ``SIMD_4x32`` port to Wasm SIMD128, bringing speedups to AES, ChaCha, Serpent, SHA-1,
   SHA-256, SHACAL2, NOEKEON and ZFEC when SIMD128 is enabled. (GH #5155)
 
 * Unroll loops to improve Montgomery reduction performance. (GH #5150)
 
 * Increase maximum HMAC key length to 8192 bytes. (GH #5156)
+
+* Fix various clang-tidy warnings (GH #5172)
 
 Version 3.10.0, 2025-11-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
