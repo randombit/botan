@@ -686,6 +686,12 @@ class BOTAN_PUBLIC_API(2, 0) Fork : public Fanout_Filter {
 * This class is a threaded version of the Fork filter. While this uses
 * threads, the class itself is NOT thread-safe. This is meant as a drop-
 * in replacement for Fork where performance gains are possible.
+*
+* This is deprecated as supporting it requires quite a bit of extra complexity
+* and realistically if performance is a concern, avoiding this Pipe/Filters
+* interface entirely is highly recommended.
+*
+* TODO(Botan4) remove this and all associated helpers (like Barrier and Semaphore)
 */
 class BOTAN_PUBLIC_API(2, 0) Threaded_Fork final : public Fork {
    public:
@@ -694,6 +700,7 @@ class BOTAN_PUBLIC_API(2, 0) Threaded_Fork final : public Fork {
       /**
       * Construct a Threaded_Fork filter with up to four forks.
       */
+      BOTAN_DEPRECATED("Deprecated, use plain Fork")
       Threaded_Fork(Filter* f1, Filter* f2, Filter* f3 = nullptr, Filter* f4 = nullptr);
 
       /**
@@ -701,7 +708,7 @@ class BOTAN_PUBLIC_API(2, 0) Threaded_Fork final : public Fork {
       * @param filter_arr the list of filters
       * @param length how many filters
       */
-      Threaded_Fork(Filter* filter_arr[], size_t length);
+      BOTAN_DEPRECATED("Deprecated, use plain Fork") Threaded_Fork(Filter* filter_arr[], size_t length);
 
       ~Threaded_Fork() override;
 
