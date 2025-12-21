@@ -141,7 +141,7 @@ jobs:
       matrix:
         # Run a matrix of compiler and optimization flag combinations to maximize
         # the signal of secret-dependent execution issues introduced by compilers.
-        compiler: ["clang", "gcc"]
+        compiler: ["clang", "gcc-14"]
         cxxflags: ["-O1", "-O2", "-O3"]
         target:   ["valgrind-ct-full"]
         host_os:  ["ubuntu-24.04", "ubuntu-24.04-arm"]
@@ -162,7 +162,7 @@ jobs:
             # Clang's -Os generated binary is fast enough to run the full test suite.
             target:   "valgrind-ct-full"
             host_os:  "ubuntu-24.04"
-          - compiler: gcc
+          - compiler: gcc-14
             cxxflags: "-Os"
             # GCC with -Os generates a much slower binary, that won't finish
             # before timing out on GH Actions, so we run a reduced set of tests.
