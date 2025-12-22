@@ -2249,6 +2249,40 @@ BOTAN_FFI_EXPORT(2, 13) int botan_x509_crl_destroy(botan_x509_crl_t crl);
  */
 BOTAN_FFI_EXPORT(2, 13) int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert);
 
+/*
+* X.509 Cert/CRL generic getters
+**************************/
+
+/**
+* This could either be a botan_x509_cert_t or botan_x509_crl_t.
+*/
+typedef void* botan_x509_object_t;
+
+typedef enum /* NOLINT(*-enum-size) */ {
+   BOTAN_X509_SERIAL_NUMBER,            /* binary big-endian encoding */
+   BOTAN_X509_SUBJECT_DN_BITS,          /* binary DER encoding of the subject distinguished name */
+   BOTAN_X509_ISSUER_DN_BITS,           /* binary DER encoding of the issuer distinguished name */
+   BOTAN_X509_SUBJECT_KEY_IDENTIFIER,   /* binary encoding */
+   BOTAN_X509_AUTHORITY_KEY_IDENTIFIER, /* binary encoding */
+   BOTAN_X509_PUBLIC_KEY_PKCS8_BITS,    /* binary DER encoding of the PKCS#8 public key */
+   BOTAN_X509_TBS_DATA_BITS,            /* binary DER encoding */
+   BOTAN_X509_SIGNATURE_SCHEME_BITS,    /* binary DER encoding of the algorithm identifier */
+   BOTAN_X509_SIGNATURE_BITS,           /* binary signature bits */
+   BOTAN_X509_DER_ENCODING,             /* binary DER encoding of the whole object */
+} botan_x509_value_type;
+
+/**
+ * Retrieve a specific binary value from an X.509 certificate or CRL.
+ *
+ * @returns BOTAN_FFI_ERROR_NO_VALUE if the provided @p object does not provide
+ *          the requested @p value_type at all or not in binary format.
+ */
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_view_binary_value(botan_x509_object_t object,
+                                 botan_x509_value_type value_type,
+                                 botan_view_ctx ctx,
+                                 botan_view_bin_fn view);
+
 /**
  * Different flavor of `botan_x509_cert_verify`, supports revocation lists.
  * CRLs are passed as an array, same as intermediates and trusted CAs

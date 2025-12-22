@@ -15,6 +15,8 @@
    #include <botan/x509_crl.h>
    #include <botan/x509cert.h>
    #include <botan/x509path.h>
+   #include <botan/internal/loadstor.h>
+   #include <botan/internal/stl_util.h>
 #endif
 
 extern "C" {
@@ -488,6 +490,85 @@ int botan_x509_cert_verify_with_crl(int* result_code,
 #else
    BOTAN_UNUSED(result_code, cert, intermediates, intermediates_len, trusted);
    BOTAN_UNUSED(trusted_len, trusted_path, hostname_cstr, reference_time, crls, crls_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_view_binary_value(botan_x509_object_t object,
+                                 botan_x509_value_type value_type,
+                                 botan_view_ctx ctx,
+                                 botan_view_bin_fn view_fn) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   auto view = [=](std::span<const uint8_t> value) { return invoke_view_callback(view_fn, ctx, value); };
+
+   auto handle_x509_object_fields = [=](const Botan::X509_Object& x509) -> int {
+      switch(value_type) {
+         case BOTAN_X509_TBS_DATA_BITS:
+            return view(x509.tbs_data());
+         case BOTAN_X509_SIGNATURE_SCHEME_BITS:
+            return view(x509.signature_algorithm().BER_encode());
+         case BOTAN_X509_SIGNATURE_BITS:
+            return view(x509.signature());
+         case BOTAN_X509_DER_ENCODING:
+            return view(x509.BER_encode());
+         default:
+            return BOTAN_FFI_ERROR_INTERNAL_ERROR; /* lambda called with unexpected value_type */
+      }
+   };
+
+   auto handler = Botan::overloaded{
+      [=](const Botan::X509_Certificate& cert) -> int {
+         switch(value_type) {
+            case BOTAN_X509_SERIAL_NUMBER:
+               return view(cert.serial_number());
+            case BOTAN_X509_SUBJECT_DN_BITS:
+               return view(cert.raw_subject_dn());
+            case BOTAN_X509_ISSUER_DN_BITS:
+               return view(cert.raw_issuer_dn());
+            case BOTAN_X509_SUBJECT_KEY_IDENTIFIER:
+               return cert.subject_key_id().empty() ? BOTAN_FFI_ERROR_NO_VALUE : view(cert.subject_key_id());
+            case BOTAN_X509_AUTHORITY_KEY_IDENTIFIER:
+               return cert.authority_key_id().empty() ? BOTAN_FFI_ERROR_NO_VALUE : view(cert.authority_key_id());
+            case BOTAN_X509_PUBLIC_KEY_PKCS8_BITS:
+               return view(cert.subject_public_key_info());
+
+            case BOTAN_X509_TBS_DATA_BITS:
+            case BOTAN_X509_SIGNATURE_SCHEME_BITS:
+            case BOTAN_X509_SIGNATURE_BITS:
+            case BOTAN_X509_DER_ENCODING:
+               return handle_x509_object_fields(cert);
+         }
+
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      },
+      [=](const Botan::X509_CRL& crl) -> int {
+         switch(value_type) {
+            case BOTAN_X509_SERIAL_NUMBER:
+               return view(Botan::store_be(crl.crl_number()));
+            case BOTAN_X509_ISSUER_DN_BITS:
+               return view(Botan::ASN1::put_in_sequence(crl.issuer_dn().get_bits()));
+            case BOTAN_X509_AUTHORITY_KEY_IDENTIFIER:
+               return crl.authority_key_id().empty() ? BOTAN_FFI_ERROR_NO_VALUE : view(crl.authority_key_id());
+
+            case BOTAN_X509_TBS_DATA_BITS:
+            case BOTAN_X509_SIGNATURE_SCHEME_BITS:
+            case BOTAN_X509_SIGNATURE_BITS:
+            case BOTAN_X509_DER_ENCODING:
+               return handle_x509_object_fields(crl);
+
+            case BOTAN_X509_SUBJECT_DN_BITS:
+            case BOTAN_X509_SUBJECT_KEY_IDENTIFIER:
+            case BOTAN_X509_PUBLIC_KEY_PKCS8_BITS:
+               return BOTAN_FFI_ERROR_NO_VALUE;
+         }
+
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      },
+   };
+
+   return BOTAN_FFI_VISIT_VARIANT(object, handler, botan_x509_cert_t, botan_x509_crl_t);
+#else
+   BOTAN_UNUSED(object, value_type, ctx, view);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
