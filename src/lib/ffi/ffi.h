@@ -2228,6 +2228,39 @@ int botan_mceies_decrypt(botan_privkey_t mce_key,
 
 typedef struct botan_x509_cert_struct* botan_x509_cert_t;
 
+/**
+ * Generic values that may be retrieved from X.509 certificates or CRLs via
+ * the generic getter functions.
+ *
+ * When extending this list the existing entries must stay backward-compatible
+ * to remain ABI compatible across versions. Therefore, new values must be added
+ * to the end of this list.
+ *
+ * See:
+ *   * botan_x509_cert_view_binary_values()
+ *   * botan_x509_crl_view_binary_values()
+ *   * botan_x509_cert_view_string_values()
+ */
+typedef enum /* NOLINT(*-enum-size) */ {
+   BOTAN_X509_SERIAL_NUMBER = 0,            /** singleton binary big-endian encoding */
+   BOTAN_X509_SUBJECT_DN_BITS = 1,          /** singleton binary DER encoding of the subject distinguished name */
+   BOTAN_X509_ISSUER_DN_BITS = 2,           /** singleton binary DER encoding of the issuer distinguished name */
+   BOTAN_X509_SUBJECT_KEY_IDENTIFIER = 3,   /** singleton binary encoding */
+   BOTAN_X509_AUTHORITY_KEY_IDENTIFIER = 4, /** singleton binary encoding */
+
+   BOTAN_X509_PUBLIC_KEY_PKCS8_BITS = 200, /** singleton binary DER encoding of the PKCS#8 public key */
+   BOTAN_X509_TBS_DATA_BITS = 201,         /** singleton binary DER encoding */
+   BOTAN_X509_SIGNATURE_SCHEME_BITS = 202, /** singleton binary DER encoding of the algorithm identifier */
+   BOTAN_X509_SIGNATURE_BITS = 203,        /** singleton binary signature bits */
+
+   BOTAN_X509_DER_ENCODING = 300, /** singleton binary DER encoding of the whole object */
+   BOTAN_X509_PEM_ENCODING = 301, /** singleton string value PEM encoding of the whole object */
+
+   BOTAN_X509_CRL_DISTRIBUTION_URLS = 400, /** multi-value string of the CRL distribution points */
+   BOTAN_X509_OCSP_RESPONDER_URLS = 401,   /** multi-value string of the OCSP responder URLs */
+   BOTAN_X509_CA_ISSUERS_URLS = 402,       /** multi-value string of the CA issuer URLs */
+} botan_x509_value_type;
+
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_load(botan_x509_cert_t* cert_obj, const uint8_t cert[], size_t cert_len);
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* filename);
 
@@ -2237,6 +2270,34 @@ BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_destroy(botan_x509_cert_t cert);
 
 BOTAN_FFI_EXPORT(2, 8) int botan_x509_cert_dup(botan_x509_cert_t* new_cert, botan_x509_cert_t cert);
+
+/**
+ * Retrieve a specific binary value from an X.509 certificate.
+ *
+ * For multi-values @p index allows enumerating the available entries, until
+ * BOTAN_FFI_ERROR_OUT_OF_RANGE is returned. For singleton values, an @p index
+ * of value "0" is expected.
+ *
+ * @returns BOTAN_FFI_ERROR_NO_VALUE if the provided @p cert does not provide
+ *          the requested @p value_type at all or not in binary format.
+ */
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_cert_view_binary_values(
+   botan_x509_cert_t cert, botan_x509_value_type value_type, size_t index, botan_view_ctx ctx, botan_view_bin_fn view);
+
+/**
+ * Retrieve a specific string value from an X.509 certificate.
+ *
+ * For multi-values @p index allows enumerating the available entries, until
+ * BOTAN_FFI_ERROR_OUT_OF_RANGE is returned. For singleton values, an @p index
+ * of value "0" is expected.
+ *
+ * @returns BOTAN_FFI_ERROR_NO_VALUE if the provided @p cert does not provide
+ *          the requested @p value_type at all or not in string format.
+ */
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_cert_view_string_values(
+   botan_x509_cert_t cert, botan_x509_value_type value_type, size_t index, botan_view_ctx ctx, botan_view_str_fn view);
 
 /* Prefer botan_x509_cert_not_before and botan_x509_cert_not_after */
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_time_starts(botan_x509_cert_t cert, char out[], size_t* out_len);
@@ -2487,6 +2548,39 @@ BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_next_update(botan_x509_crl_t crl, uin
 
 BOTAN_FFI_EXPORT(2, 13) int botan_x509_crl_destroy(botan_x509_crl_t crl);
 
+/**
+ * Retrieve a specific binary value from an X.509 certificate revocation list.
+ *
+ * For multi-values @p index allows enumerating the available entries, until
+ * BOTAN_FFI_ERROR_OUT_OF_RANGE is returned. For singleton values, an @p index
+ * of value "0" is expected.
+ *
+ * @returns BOTAN_FFI_ERROR_NO_VALUE if the provided @p crl_obj does not provide
+ *          the requested @p value_type at all or not in binary format.
+ */
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_crl_view_binary_values(botan_x509_crl_t crl_obj,
+                                      botan_x509_value_type value_type,
+                                      size_t index,
+                                      botan_view_ctx ctx,
+                                      botan_view_bin_fn view);
+
+/**
+ * Retrieve a specific string value from an X.509 certificate revocation list.
+ *
+ * For multi-values @p index allows enumerating the available entries, until
+ * BOTAN_FFI_ERROR_OUT_OF_RANGE is returned. For singleton values, an @p index
+ * of value "0" is expected.
+ *
+ * @returns BOTAN_FFI_ERROR_NO_VALUE if the provided @p crl_obj does not provide
+ *          the requested @p value_type at all or not in string format.
+ */
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_crl_view_string_values(botan_x509_crl_t crl_obj,
+                                      botan_x509_value_type value_type,
+                                      size_t index,
+                                      botan_view_ctx ctx,
+                                      botan_view_str_fn view);
 /**
  * Given a CRL and a certificate,
  * check if the certificate is revoked on that particular CRL
