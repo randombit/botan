@@ -1,0 +1,15 @@
+<internal_defines>
+KECCAK_PERM_AVX512 -> 20250524
+</internal_defines>
+
+<module_info>
+name -> "Keccak permutation using AVX512"
+</module_info>
+
+<isa>
+avx512
+</isa>
+
+<requires>
+cpuid
+</requires>
