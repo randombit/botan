@@ -21,6 +21,12 @@
 namespace Botan {
 
 std::string Keccak_Permutation::provider() const {
+#if defined(BOTAN_HAS_KECCAK_PERM_AVX512)
+   if(auto feat = CPUID::check(CPUID::Feature::AVX512)) {
+      return *feat;
+   }
+#endif
+
 #if defined(BOTAN_HAS_KECCAK_PERM_BMI2)
    if(auto feat = CPUID::check(CPUID::Feature::BMI)) {
       return *feat;
@@ -78,6 +84,12 @@ void Keccak_Permutation::finish() {
 }
 
 void Keccak_Permutation::permute() {
+#if defined(BOTAN_HAS_KECCAK_PERM_AVX512)
+   if(CPUID::has(CPUID::Feature::AVX512)) {
+      return permute_avx512();
+   }
+#endif
+
 #if defined(BOTAN_HAS_KECCAK_PERM_BMI2)
    if(CPUID::has(CPUID::Feature::BMI)) {
       return permute_bmi2();
