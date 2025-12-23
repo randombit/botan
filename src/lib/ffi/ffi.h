@@ -2239,6 +2239,7 @@ BOTAN_FFI_EXPORT(2, 8) const char* botan_x509_cert_validation_status(int code);
 **************************/
 
 typedef struct botan_x509_crl_struct* botan_x509_crl_t;
+typedef struct botan_x509_crl_entry_struct* botan_x509_crl_entry_t;
 
 BOTAN_FFI_EXPORT(2, 13) int botan_x509_crl_load_file(botan_x509_crl_t* crl_obj, const char* crl_path);
 BOTAN_FFI_EXPORT(2, 13)
@@ -2254,6 +2255,40 @@ BOTAN_FFI_EXPORT(2, 13) int botan_x509_crl_destroy(botan_x509_crl_t crl);
  * check if the certificate is revoked on that particular CRL
  */
 BOTAN_FFI_EXPORT(2, 13) int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert);
+
+/**
+* Allows iterating all entries of the CRL.
+*
+* @param crl     the CRL whose entries should be listed
+* @param index   the index of the CRL entry to return
+* @param entry   an object handle containing the CRL entry data
+*
+* @returns BOTAN_FFI_ERROR_OUT_OF_RANGE if the given @p index is out of range of
+*          the CRL entry list.
+*/
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_crl_entries(botan_x509_crl_t crl, size_t index, botan_x509_crl_entry_t* entry);
+
+/**
+* Return the revocation reason code for the given CRL @p entry.
+* See RFC 5280 - 5.3.1 for possible reason codes.
+*/
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_entry_reason(botan_x509_crl_entry_t entry, int* reason_code);
+
+/**
+* Return the revocation date for the given CRL @p entry as time since epoch
+* in seconds.
+*/
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_crl_entry_revocation_date(botan_x509_crl_entry_t entry, uint64_t* time_since_epoch);
+
+/**
+* View the serial number associated with the given CRL @p entry.
+*/
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_crl_entry_view_serial_number(botan_x509_crl_entry_t entry, botan_view_ctx ctx, botan_view_bin_fn view);
+
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_entry_destroy(botan_x509_crl_entry_t entry);
 
 /**
  * Different flavor of `botan_x509_cert_verify`, supports revocation lists.
