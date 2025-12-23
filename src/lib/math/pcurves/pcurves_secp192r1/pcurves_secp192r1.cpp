@@ -23,6 +23,34 @@ class Secp192r1Rep final {
       typedef typename Params::W W;
 
       constexpr static std::array<W, N> redc(const std::array<W, 2 * N>& z) {
+         if constexpr(std::same_as<W, uint64_t> && WordInfo<W>::dword_is_native) {
+            using dword = typename WordInfo<W>::dword;
+
+            const dword S01 = dword(z[0]) + z[3] + z[5];
+            const dword S23 = dword(z[1]) + z[3] + z[4] + z[5];
+            const dword S45 = dword(z[2]) + z[4] + z[5];
+
+            std::array<W, N> r = {};
+
+            dword S = S01;
+            r[0] = static_cast<uint64_t>(S);
+            S >>= 64;
+
+            S += S23;
+            r[1] = static_cast<uint64_t>(S);
+            S >>= 64;
+
+            S += S45;
+            r[2] = static_cast<uint64_t>(S);
+            S >>= 64;
+
+            BOTAN_DEBUG_ASSERT(S <= 3);
+
+            solinas_correct_redc<N>(r, P, p192_mul_mod_192(static_cast<W>(S)));
+
+            return r;
+         }
+
          const int64_t X00 = get_uint32(z.data(), 0);
          const int64_t X01 = get_uint32(z.data(), 1);
          const int64_t X02 = get_uint32(z.data(), 2);
