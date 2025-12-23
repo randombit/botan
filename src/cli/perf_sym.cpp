@@ -368,6 +368,9 @@ class PerfTest_XOF final : public PerfTest {
 
             config.record_result(*in_timer);
             config.record_result(*out_timer);
+
+            // Our XOFs don't want to consume inputs after producing output, so reset the state
+            xof.clear();
          }
       }
 
