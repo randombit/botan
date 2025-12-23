@@ -17,6 +17,7 @@
    #include <botan/ffi.h>
    #include <botan/hex.h>
    #include <botan/mem_ops.h>
+   #include <botan/internal/calendar.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/stl_util.h>
    #include <botan/internal/target_info.h>
@@ -696,6 +697,27 @@ class FFI_CRL_Test final : public FFI_Test {
             return;
          }
 
+         botan_x509_crl_t crl_without_next_update;
+         if(!TEST_FFI_INIT(botan_x509_crl_load_file,
+                           (&crl_without_next_update,
+                            Test::data_file("x509/misc/crl_without_nextupdate/valid_forever.crl").c_str()))) {
+            return;
+         }
+
+         uint64_t this_update;
+         uint64_t next_update;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE, botan_x509_crl_next_update, (crl_without_next_update, &next_update));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE, botan_x509_crl_next_update, (crl_without_next_update, nullptr));
+         TEST_FFI_OK(botan_x509_crl_this_update, (bytecrl, &this_update));
+         TEST_FFI_OK(botan_x509_crl_next_update, (bytecrl, &next_update));
+         result.test_is_eq(
+            "this update", this_update, Botan::calendar_point(2050, 2, 25, 15, 21, 42).seconds_since_epoch());
+         result.test_is_eq(
+            "next update", next_update, Botan::calendar_point(2050, 2, 25, 15, 24, 41).seconds_since_epoch());
+
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_x509_crl_this_update, (bytecrl, nullptr));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_x509_crl_next_update, (bytecrl, nullptr));
+
          botan_x509_crl_t crl;
          REQUIRE_FFI_OK(botan_x509_crl_load_file, (&crl, Test::data_file("x509/nist/root.crl").c_str()));
 
@@ -712,6 +734,7 @@ class FFI_CRL_Test final : public FFI_Test {
 
          TEST_FFI_OK(botan_x509_crl_destroy, (crl));
          TEST_FFI_OK(botan_x509_crl_destroy, (bytecrl));
+         TEST_FFI_OK(botan_x509_crl_destroy, (crl_without_next_update));
       }
 };
 

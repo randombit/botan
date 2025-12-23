@@ -1820,6 +1820,16 @@ X.509 Certificate Revocation Lists
 
    Destroy the CRL object.
 
+.. cpp:function:: int botan_x509_crl_this_update(botan_x509_crl_t crl, uint64_t* time_since_epoch)
+
+   Return the time the CRL becomes valid, as seconds since epoch.
+
+.. cpp:function:: int botan_x509_crl_next_update(botan_x509_crl_t crl, uint64_t* time_since_epoch)
+
+   Return the time the CRL expires, as seconds since epoch. Note that this field
+   is technically optional in CRLs, if the CRL does not specify a "next update"
+   timestamp, :cpp:enumerator:`BOTAN_FFI_ERROR_NO_VALUE` is returned.
+
 .. cpp:function:: int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert)
 
    Check whether a given ``crl`` contains a given ``cert``.
