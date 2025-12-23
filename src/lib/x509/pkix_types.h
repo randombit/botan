@@ -322,6 +322,10 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
 
       static bool matches_dns(std::string_view name, std::string_view constraint);
 
+      /**
+      * Partial DN matching according to RFC 5280, Section 7.1, i.e.,
+      * whether the constraint is a prefix of the name.
+      */
       static bool matches_dn(const X509_DN& name, const X509_DN& constraint);
 };
 
