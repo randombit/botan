@@ -1,3 +1,5 @@
+#test cpuid avx512 bmi2
+
 # Selected values from the NIST CAVS file for SHAKE
 
 [SHAKE-128(128)]
