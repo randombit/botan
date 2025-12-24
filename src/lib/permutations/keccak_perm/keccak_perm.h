@@ -104,6 +104,10 @@ class Keccak_Permutation final : public Sponge<25, uint64_t> {
       void permute_bmi2();
 #endif
 
+#if defined(BOTAN_HAS_KECCAK_PERM_AVX512)
+      void permute_avx512();
+#endif
+
    private:
       KeccakPadding m_padding;
 };

@@ -34,15 +34,21 @@ def parse_perf_report(report):
 
         report = report[1:]
 
+    re_with_suffix = re.compile(r'(.*) \[[a-z0-9]+\]$')
+
     results = []
     for t in report:
         if 'algo' in t and 'op' in t and 'events' in t and 'nanos' in t:
 
+            algo = t['algo']
+            match = re_with_suffix.match(algo)
+            if match:
+                algo = match.group(1)
             op = t['op']
             if 'buf_size' in t:
                 op += ' ' + str(t['buf_size']) + ' buffer'
 
-            results.append(((t['algo'], op), ops_per_second(t['events'], t['nanos'])))
+            results.append(((algo, op), ops_per_second(t['events'], t['nanos'])))
         else:
             print("Unexpected record", t)
 
