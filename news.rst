@@ -9,11 +9,15 @@ Version 3.11.0, Not Yet Released
 * Add support for verifying X509 certificate chains when the trust anchor is
   not self signed. (GH #5047)
 
+* Add optimized Keccak permutation implementation using AVX-512 (GH #5191)
+
 * Add optimized SM3 implementations using AVX2/BMI2 (GH #5178) and SM3-NI (GH #5183)
 
 * Improve handling of constant time and variable time divisions (GH #5176 #5177 #5180)
 
 * Optimize ECDSA signature setup phase (GH #5173)
+
+* Optimize elliptic curve operations on secp192r1 (GH #5186)
 
 * ``SIMD_4x32`` port to Wasm SIMD128, bringing speedups to AES, ChaCha, Serpent, SHA-1,
   SHA-256, SHACAL2, NOEKEON and ZFEC when SIMD128 is enabled. (GH #5155)
