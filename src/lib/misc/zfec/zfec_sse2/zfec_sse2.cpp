@@ -10,6 +10,8 @@
 #include <botan/internal/simd_4x32.h>
 #include <immintrin.h>
 
+// TODO(Botan4) remove this module - SSE2 only processors are basically nonexistent now
+
 namespace Botan {
 
 namespace {
