@@ -16,31 +16,28 @@ New Ciphers/Hashes/MACs
 * Threefish-1024
 * Skein-MAC
 * FFX format preserving encryption (NIST 800-38G)
-* Adiantum (https://eprint.iacr.org/2018/720)
 * HPKE (RFC 9180)
 * Blake3
 
 Hardware Specific Optimizations
 ----------------------------------------
-* Stitched AES/GCM mode for CPUs supporting both AES and CLMUL
-* GFNI implementations for: Camellia, SEED, ARIA
+* AVX512 IFMA optimized field arithmetic for P-256 and/or P-384
+* Stitched AES/GCM implementation
+* GFNI implementations of SEED, ARIA, others?
 * NEON/VMX/LSX support for the SIMD based GHASH
 * Poly1305 using AVX2
-* SM3 using x86 SM3-NI
-* SM3 using AVX2/BMI2
 * Constant time bitsliced DES
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
 * Improved Salsa implementations (SIMD_4x32 and/or AVX2)
 * Add CLMUL/PMULL implementations for CRC24
 * Add support for ARMv8.4-A SHA-3 and SM3 instructions
-* POWER8 SHA-2 extensions (GH #1486 + #1487)
+* Support POWER8 SHA-2 extensions (GH #1486 + #1487)
 * Add support for RISC-V crypto extensions
 * Add support for using Loongarch64 LASX (256-bit SIMD)
 
 Public Key Crypto, Math
 ----------------------------------------
 
-* Short vector optimization for BigInt
 * BLS12-381 pairing, BLS signatures
 * Identity based encryption
 * Paillier homomorphic cryptosystem
