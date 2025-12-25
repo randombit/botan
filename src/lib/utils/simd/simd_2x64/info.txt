@@ -17,10 +17,12 @@ simd_2x64.h
 x86_32:ssse3
 x86_64:ssse3
 x32:ssse3
+wasm:simd128
 </isa>
 
 <arch>
 x86_32
 x86_64
 x32
+wasm
 </arch>
