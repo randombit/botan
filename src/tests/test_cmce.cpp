@@ -326,7 +326,9 @@ class Classic_McEliece_KAT_Tests final : public Botan_Tests::PK_PQC_KEM_KAT_Test
          return Fixed_Output_RNG(rand_buffer);
       }
 
-      void inspect_rng_after_encaps(const std::string& /*params*/, const Fixed_Output_RNG&, Test::Result&) const final {
+      void inspect_rng_after_encaps(const std::string& /*params*/,
+                                    const Fixed_Output_RNG& /*rng*/,
+                                    Test::Result& /*result*/) const final {
          // Encaps uses any number of random bytes, so we cannot check the RNG
       }
 };

@@ -44,6 +44,7 @@ class BoostErrorCategory : public boost::system::error_category {
 
 namespace TLS {
 
+// NOLINTNEXTLINE(*-use-enum-class)
 enum StreamError : uint8_t { StreamTruncated = 1 };
 
 //! @brief An error category for errors from the TLS::Stream

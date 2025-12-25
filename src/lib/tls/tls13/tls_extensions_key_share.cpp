@@ -120,7 +120,7 @@ class Key_Share_ClientHello;
 
 class Key_Share_ServerHello {
    public:
-      Key_Share_ServerHello(TLS_Data_Reader& reader, uint16_t) : m_server_share(reader) {}
+      Key_Share_ServerHello(TLS_Data_Reader& reader, uint16_t /*len*/) : m_server_share(reader) {}
 
       Key_Share_ServerHello(Named_Group group,
                             const Key_Share_ClientHello& client_keyshare,

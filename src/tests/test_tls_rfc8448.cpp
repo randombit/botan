@@ -101,7 +101,7 @@ class Padding final : public Botan::TLS::Extension {
 
       explicit Padding(const size_t padding_bytes) : m_padding_bytes(padding_bytes) {}
 
-      std::vector<uint8_t> serialize(Botan::TLS::Connection_Side) const override {
+      std::vector<uint8_t> serialize(Botan::TLS::Connection_Side /*whoami*/) const override {
          return std::vector<uint8_t>(m_padding_bytes, 0x00);
       }
 
@@ -188,25 +188,25 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks {
          session_activated_called = true;
       }
 
-      bool tls_should_persist_resumption_information(const Session&) override {
+      bool tls_should_persist_resumption_information(const Session& /*session*/) override {
          count_callback_invocation("tls_should_persist_resumption_information");
          return true;  // should always store the session
       }
 
       void tls_verify_cert_chain(const std::vector<Botan::X509_Certificate>& cert_chain,
-                                 const std::vector<std::optional<Botan::OCSP::Response>>&,
-                                 const std::vector<Botan::Certificate_Store*>&,
-                                 Botan::Usage_Type,
-                                 std::string_view,
-                                 const Botan::TLS::Policy&) override {
+                                 const std::vector<std::optional<Botan::OCSP::Response>>& /*ocsp*/,
+                                 const std::vector<Botan::Certificate_Store*>& /*trusted*/,
+                                 Botan::Usage_Type /*usage*/,
+                                 std::string_view /*hostname*/,
+                                 const Botan::TLS::Policy& /*policy*/) override {
          count_callback_invocation("tls_verify_cert_chain");
          certificate_chain = cert_chain;
       }
 
       void tls_verify_raw_public_key(const Public_Key& raw_pk,
-                                     Usage_Type,
-                                     std::string_view,
-                                     const TLS::Policy&) override {
+                                     Usage_Type /*usage*/,
+                                     std::string_view /*hostname*/,
+                                     const TLS::Policy& /*policy*/) override {
          count_callback_invocation("tls_verify_raw_public_key");
          // TODO: is there a better way to copy a generic public key?
          raw_public_key = Botan::X509::load_key(raw_pk.subject_public_key());
@@ -570,7 +570,9 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager {
          m_sessions.push_back({session, handle});
       }
 
-      std::optional<Session_Handle> establish(const Session& session, const std::optional<Session_ID>&, bool) override {
+      std::optional<Session_Handle> establish(const Session& session,
+                                              const std::optional<Session_ID>& /*session*/,
+                                              bool /*no_ticket*/) override {
          // we assume that the 'mocked' session is already stored in the manager,
          // verify that it is equivalent to the one created by the testee and
          // return the associated handle stored with it
@@ -596,7 +598,8 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager {
          }
       }
 
-      std::vector<Session_with_Handle> find_some(const Server_Information& info, const size_t) override {
+      std::vector<Session_with_Handle> find_some(const Server_Information& info,
+                                                 const size_t /*max_sessions_hint*/) override {
          std::vector<Session_with_Handle> found_sessions;
          for(const auto& [session, handle] : m_sessions) {
             if(session.server_info() == info) {
@@ -780,7 +783,7 @@ void sort_extensions(Botan::TLS::Extensions& exts, const std::vector<Botan::TLS:
  */
 void sort_rfc8448_extensions(Botan::TLS::Extensions& exts,
                              Botan::TLS::Connection_Side side,
-                             Botan::TLS::Handshake_Type = Botan::TLS::Handshake_Type::ClientHello) {
+                             Botan::TLS::Handshake_Type /*type*/ = Botan::TLS::Handshake_Type::ClientHello) {
    if(side == Botan::TLS::Connection_Side::Client) {
       sort_extensions(exts,
                       {

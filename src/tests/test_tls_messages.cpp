@@ -59,17 +59,17 @@ class Test_Callbacks : public Botan::TLS::Callbacks {
       explicit Test_Callbacks(Test::Result& result) : m_result(result) {}
 
    public:
-      void tls_emit_data(std::span<const uint8_t>) override {
+      void tls_emit_data(std::span<const uint8_t> /*data*/) override {
          m_result.test_failure("unsolicited call to tls_emit_data");
       }
 
-      void tls_record_received(uint64_t, std::span<const uint8_t>) override {
+      void tls_record_received(uint64_t /*rec_no*/, std::span<const uint8_t> /*data*/) override {
          m_result.test_failure("unsolicited call to tls_record_received");
       }
 
-      void tls_alert(Botan::TLS::Alert) override { m_result.test_failure("unsolicited call to tls_alert"); }
+      void tls_alert(Botan::TLS::Alert /*alert*/) override { m_result.test_failure("unsolicited call to tls_alert"); }
 
-      void tls_session_established(const Botan::TLS::Session_Summary&) override {
+      void tls_session_established(const Botan::TLS::Session_Summary& /*session_info*/) override {
          m_result.test_failure("unsolicited call to tls_session_established");
       }
 

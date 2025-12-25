@@ -36,8 +36,8 @@ class Client_Credential : public Botan::Credentials_Manager {
    public:
       Client_Credential() = default;
 
-      std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(const std::string&,
-                                                                             const std::string&) override {
+      std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(const std::string& /*type*/,
+                                                                             const std::string& /*context*/) override {
          return {&m_cert_store};
       }
 
@@ -64,8 +64,8 @@ class Server_Credential : public Botan::Credentials_Manager {
          }
       }
 
-      std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(const std::string&,
-                                                                             const std::string&) override {
+      std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(const std::string& /*type*/,
+                                                                             const std::string& /*context*/) override {
          return {&m_cert_store};
       }
 
