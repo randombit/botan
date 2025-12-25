@@ -14,8 +14,23 @@
 
 namespace Botan {
 
+namespace {
+
+constexpr auto select_cshake_xof_permutation(size_t capacity) {
+   switch(capacity) {
+      case 256:
+         return Keccak_Permutation({.capacity_bits = 256, .padding = KeccakPadding::cshake()});
+      case 512:
+         return Keccak_Permutation({.capacity_bits = 512, .padding = KeccakPadding::cshake()});
+      default:
+         throw Botan::Invalid_Argument("cSHAKE_XOF: Unsupported capacity");
+   }
+}
+
+}  // namespace
+
 cSHAKE_XOF::cSHAKE_XOF(size_t capacity, std::vector<uint8_t> function_name) :
-      m_keccak({.capacity_bits = capacity, .padding = KeccakPadding::cshake()}),
+      m_keccak(select_cshake_xof_permutation(capacity)),
       m_function_name(std::move(function_name)),
       m_output_generated(false) {
    BOTAN_ASSERT_NOMSG(capacity == 256 || capacity == 512);
@@ -28,7 +43,7 @@ cSHAKE_XOF::cSHAKE_XOF(size_t capacity, std::string_view function_name) :
       cSHAKE_XOF(capacity, as_span_of_bytes(function_name)) {}
 
 void cSHAKE_XOF::reset() {
-   m_keccak.clear();
+   m_keccak = select_cshake_xof_permutation(m_keccak.bit_capacity());
    m_output_generated = false;
 }
 
