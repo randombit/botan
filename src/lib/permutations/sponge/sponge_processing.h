@@ -96,7 +96,7 @@ class FullWordBounds final {
 
       void write_into(BufferStuffer& stuffer, word_t full_word) const { stuffer.append(store_le(full_word)); }
 
-      word_t masked_assignment(word_t, word_t full_input_word) const { return full_input_word; }
+      word_t masked_assignment(word_t /*unused*/, word_t full_input_word) const { return full_input_word; }
 };
 
 template <typename T>

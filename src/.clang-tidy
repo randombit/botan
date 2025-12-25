@@ -21,7 +21,6 @@ Checks: >
     -*-else-after-return,
     -*-function-size,
     -*-magic-numbers,
-    -*-named-parameter,
     -*-narrowing-conversions,
     -*-no-array-decay,
     -*-use-auto,

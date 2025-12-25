@@ -222,13 +222,16 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
          return _signature_element_size_for_DER_encoding().value_or(0);
       }
 
+      // NOLINTBEGIN(bugprone-virtual-near-miss)
+
       /*
       * Return the format normally used by this algorithm for X.509 signatures
       */
-      BOTAN_DEPRECATED("Deprecated no replacement")
-      Signature_Format default_x509_signature_format() const /* NOLINT(bugprone-virtual-near-miss) */ {
+      BOTAN_DEPRECATED("Deprecated no replacement") Signature_Format default_x509_signature_format() const {
          return _default_x509_signature_format();
       }
+
+      // NOLINTEND(bugprone-virtual-near-miss)
 
       /**
       * This is an internal library function exposed on key types.
