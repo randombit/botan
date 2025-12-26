@@ -89,7 +89,10 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Store_In_SQL : public Certificate_Store
       void remove_key(const Private_Key& key);
 
       /// Marks "cert" as revoked starting from "time".
-      void revoke_cert(const X509_Certificate& cert, CRL_Code reason, const X509_Time& time = X509_Time());
+      void revoke_cert(const X509_Certificate& cert, CRL_Code reason, const X509_Time& time);
+
+      /// Marks "cert" as revoked with no time specified
+      void revoke_cert(const X509_Certificate& cert, CRL_Code reason);
 
       /// Reverses the revocation for "cert".
       void affirm_cert(const X509_Certificate& cert);

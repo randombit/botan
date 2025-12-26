@@ -11,6 +11,7 @@
 #include <botan/tls_alert.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_extensions.h>
+#include <botan/tls_policy.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>

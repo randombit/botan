@@ -47,7 +47,7 @@ class URI_Tests final : public Test {
                uint16_t port;
          };
 
-         const std::array tests{
+         const std::vector<URITestCase> tests{
             URITestCase{"localhost:80", "localhost", Botan::URI::Type::Domain, 80},
             URITestCase{"www.example.com", "www.example.com", Botan::URI::Type::Domain, 0},
             URITestCase{"192.168.1.1", "192.168.1.1", Botan::URI::Type::IPv4, 0},

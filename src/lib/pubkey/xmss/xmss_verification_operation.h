@@ -10,6 +10,7 @@
 
 #include <botan/pk_ops.h>
 #include <botan/xmss.h>
+#include <botan/internal/xmss_hash.h>
 #include <botan/internal/xmss_signature.h>
 
 namespace Botan {

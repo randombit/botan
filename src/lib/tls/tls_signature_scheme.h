@@ -9,12 +9,11 @@
 #ifndef BOTAN_TLS_SIGNATURE_SCHEME_H_
 #define BOTAN_TLS_SIGNATURE_SCHEME_H_
 
-#include <botan/asn1_obj.h>
 #include <botan/pk_keys.h>
 #include <botan/types.h>
-
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace Botan::TLS {
 

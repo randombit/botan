@@ -9,7 +9,6 @@
 
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/mp_core.h>
-#include <algorithm>
 
 namespace Botan {
 

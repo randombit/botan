@@ -14,7 +14,6 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/loadstor.h>
-#include <algorithm>
 
 namespace Botan {
 

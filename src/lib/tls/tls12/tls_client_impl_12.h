@@ -11,7 +11,6 @@
 
 #include <botan/credentials_manager.h>
 #include <botan/tls_channel.h>
-#include <botan/tls_policy.h>
 #include <botan/internal/tls_channel_impl_12.h>
 #include <memory>
 #include <vector>

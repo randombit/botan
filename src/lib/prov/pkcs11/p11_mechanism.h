@@ -11,9 +11,9 @@
 
 #include <botan/p11.h>
 
+#include <cstring>
 #include <memory>
-#include <string>
-#include <utility>
+#include <string_view>
 
 namespace Botan::PKCS11 {
 

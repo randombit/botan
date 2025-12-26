@@ -11,9 +11,10 @@
 #include <botan/tls_client.h>
 
 #include <botan/tls_messages.h>
+#include <botan/tls_policy.h>
+#include <botan/internal/tls_client_impl_12.h>
 #include <botan/internal/tls_handshake_state.h>
 
-#include <botan/internal/tls_client_impl_12.h>
 #if defined(BOTAN_HAS_TLS_13)
    #include <botan/internal/tls_client_impl_13.h>
 #endif

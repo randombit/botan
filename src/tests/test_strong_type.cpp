@@ -12,9 +12,9 @@
 #include <botan/rng.h>
 #include <botan/secmem.h>
 #include <botan/strong_type.h>
-
 #include <algorithm>
 #include <array>
+#include <map>
 #include <sstream>
 #include <string>
 #include <vector>

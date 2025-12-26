@@ -8,7 +8,6 @@
 #ifndef BOTAN_PUBKEY_H_
 #define BOTAN_PUBKEY_H_
 
-#include <botan/asn1_obj.h>
 #include <botan/pk_keys.h>
 #include <botan/pk_ops_fwd.h>
 #include <botan/symkey.h>

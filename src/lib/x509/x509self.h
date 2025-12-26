@@ -8,6 +8,7 @@
 #ifndef BOTAN_X509_SELF_H_
 #define BOTAN_X509_SELF_H_
 
+#include <botan/asn1_obj.h>
 #include <botan/pkcs10.h>
 #include <botan/pkix_types.h>
 #include <botan/x509cert.h>

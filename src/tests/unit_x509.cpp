@@ -13,6 +13,7 @@
    #include <botan/pk_algs.h>
    #include <botan/pkcs10.h>
    #include <botan/pkcs8.h>
+   #include <botan/rng.h>
    #include <botan/x509_ca.h>
    #include <botan/x509_ext.h>
    #include <botan/x509path.h>

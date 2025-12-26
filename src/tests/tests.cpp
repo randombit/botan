@@ -7,15 +7,20 @@
 #include "tests.h"
 
 #include <botan/hex.h>
+#include <botan/rng.h>
 #include <botan/internal/filesystem.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/target_info.h>
+#include <chrono>
+#include <deque>
 #include <fstream>
 #include <iomanip>
+#include <set>
 #include <sstream>
+#include <unordered_set>
 
 #if defined(BOTAN_HAS_BIGINT)
    #include <botan/bigint.h>
@@ -42,6 +47,12 @@
 #endif
 
 namespace Botan_Tests {
+
+Test::Test() = default;
+
+Test::~Test() = default;
+
+Test::Result::Result(std::string who) : m_who(std::move(who)), m_timestamp(Test::timestamp()) {}
 
 void Test::Result::merge(const Result& other, bool ignore_test_name) {
    if(who() != other.who()) {
@@ -409,6 +420,28 @@ Botan::RandomNumberGenerator& Test::rng() const {
    return *m_test_rng;
 }
 
+std::vector<uint8_t> Test::mutate_vec(const std::vector<uint8_t>& v,
+                                      Botan::RandomNumberGenerator& rng,
+                                      bool maybe_resize,
+                                      size_t min_offset) {
+   std::vector<uint8_t> r = v;
+
+   if(maybe_resize && (r.empty() || rng.next_byte() < 32)) {
+      // TODO: occasionally truncate, insert at random index
+      const size_t add = 1 + (rng.next_byte() % 16);
+      r.resize(r.size() + add);
+      rng.randomize(&r[r.size() - add], add);
+   }
+
+   if(r.size() > min_offset) {
+      const size_t offset = std::max<size_t>(min_offset, rng.next_byte() % r.size());
+      const uint8_t perturb = rng.next_nonzero_byte();
+      r[offset] ^= perturb;
+   }
+
+   return r;
+}
+
 std::vector<std::string> Test::possible_providers(const std::string& /*alg*/) {
    return Test::provider_filter({"base"});
 }
@@ -526,29 +559,32 @@ class Test_Registry {
          return nullptr;
       }
 
-      std::set<std::string> registered_tests() const {
-         std::set<std::string> s;
+      std::vector<std::string> registered_tests() const {
+         std::vector<std::string> s;
+         s.reserve(m_tests.size());
          for(auto&& i : m_tests) {
-            s.insert(i.first);
+            s.push_back(i.first);
          }
          return s;
       }
 
-      std::set<std::string> registered_test_categories() const {
-         std::set<std::string> s;
+      std::vector<std::string> registered_test_categories() const {
+         std::vector<std::string> s;
+         s.reserve(m_categories.size());
          for(auto&& i : m_categories) {
-            s.insert(i.first);
+            s.push_back(i.first);
          }
          return s;
       }
 
       std::vector<std::string> filter_registered_tests(const std::vector<std::string>& requested,
-                                                       const std::set<std::string>& to_be_skipped) {
+                                                       const std::vector<std::string>& to_be_skipped) {
          std::vector<std::string> result;
 
+         std::set<std::string> to_be_skipped_set(to_be_skipped.begin(), to_be_skipped.end());
          // TODO: this is O(n^2), but we have a relatively small number of tests.
          auto insert_if_not_exists_and_not_skipped = [&](const std::string& test_name) {
-            if(!Botan::value_exists(result, test_name) && !to_be_skipped.contains(test_name)) {
+            if(!Botan::value_exists(result, test_name) && !to_be_skipped_set.contains(test_name)) {
                result.push_back(test_name);
             }
          };
@@ -609,7 +645,7 @@ void Test::register_test(const std::string& category,
 
 //static
 uint64_t Test::timestamp() {
-   auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+   auto now = std::chrono::system_clock::now().time_since_epoch();
    return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
 }
 
@@ -625,12 +661,12 @@ std::vector<Test::Result> Test::flatten_result_lists(std::vector<std::vector<Tes
 }
 
 //static
-std::set<std::string> Test::registered_tests() {
+std::vector<std::string> Test::registered_tests() {
    return Test_Registry::instance().registered_tests();
 }
 
 //static
-std::set<std::string> Test::registered_test_categories() {
+std::vector<std::string> Test::registered_test_categories() {
    return Test_Registry::instance().registered_test_categories();
 }
 
@@ -646,7 +682,7 @@ bool Test::test_needs_serialization(const std::string& test_name) {
 
 //static
 std::vector<std::string> Test::filter_registered_tests(const std::vector<std::string>& requested,
-                                                       const std::set<std::string>& to_be_skipped) {
+                                                       const std::vector<std::string>& to_be_skipped) {
    return Test_Registry::instance().filter_registered_tests(requested, to_be_skipped);
 }
 
@@ -851,15 +887,57 @@ size_t Test::random_index(Botan::RandomNumberGenerator& rng, size_t max) {
    return Botan::load_be(rng.random_array<8>()) % max;
 }
 
-std::vector<std::vector<uint8_t>> VarMap::get_req_bin_list(const std::string& key) const {
-   auto i = m_vars.find(key);
-   if(i == m_vars.end()) {
+void VarMap::clear() {
+   m_vars.clear();
+}
+
+namespace {
+
+bool varmap_pair_lt(const std::pair<std::string, std::string>& kv, const std::string& k) {
+   return kv.first < k;
+}
+
+}  // namespace
+
+void VarMap::add(const std::string& key, const std::string& value) {
+   auto i = std::lower_bound(m_vars.begin(), m_vars.end(), key, varmap_pair_lt);
+
+   if(i != m_vars.end() && i->first == key) {
+      i->second = value;
+   } else {
+      m_vars.emplace(i, key, value);
+   }
+}
+
+std::optional<std::string> VarMap::get_var(const std::string& key) const {
+   auto i = std::lower_bound(m_vars.begin(), m_vars.end(), key, varmap_pair_lt);
+
+   if(i != m_vars.end() && i->first == key) {
+      return i->second;
+   } else {
+      return {};
+   }
+}
+
+bool VarMap::has_key(const std::string& key) const {
+   return get_var(key).has_value();
+}
+
+std::string VarMap::get_req_str(const std::string& key) const {
+   auto var = get_var(key);
+   if(var) {
+      return *var;
+   } else {
       throw Test_Error("Test missing variable " + key);
    }
+}
+
+std::vector<std::vector<uint8_t>> VarMap::get_req_bin_list(const std::string& key) const {
+   const auto var = get_req_str(key);
 
    std::vector<std::vector<uint8_t>> bin_list;
 
-   for(auto&& part : Botan::split_on(i->second, ',')) {
+   for(auto&& part : Botan::split_on(var, ',')) {
       try {
          bin_list.push_back(Botan::hex_decode(part));
       } catch(std::exception& e) {
@@ -874,60 +952,50 @@ std::vector<std::vector<uint8_t>> VarMap::get_req_bin_list(const std::string& ke
 }
 
 std::vector<uint8_t> VarMap::get_req_bin(const std::string& key) const {
-   auto i = m_vars.find(key);
-   if(i == m_vars.end()) {
-      throw Test_Error("Test missing variable " + key);
-   }
+   const auto var = get_req_str(key);
 
    try {
-      if(i->second.starts_with("0x")) {
-         if(i->second.size() % 2 == 0) {
-            return Botan::hex_decode(i->second.substr(2));
+      if(var.starts_with("0x")) {
+         if(var.size() % 2 == 0) {
+            return Botan::hex_decode(var.substr(2));
          } else {
-            std::string z = i->second;
+            std::string z = var;
             std::swap(z[0], z[1]);  // swap 0x to x0 then remove x
             return Botan::hex_decode(z.substr(1));
          }
       } else {
-         return Botan::hex_decode(i->second);
+         return Botan::hex_decode(var);
       }
    } catch(std::exception& e) {
       std::ostringstream oss;
-      oss << "Bad input '" << i->second << "'"
+      oss << "Bad input '" << var << "'"
           << " for key " << key << " - " << e.what();
       throw Test_Error(oss.str());
    }
 }
 
 std::string VarMap::get_opt_str(const std::string& key, const std::string& def_value) const {
-   auto i = m_vars.find(key);
-   if(i == m_vars.end()) {
+   if(auto v = get_var(key)) {
+      return *v;
+   } else {
       return def_value;
    }
-   return i->second;
 }
 
 bool VarMap::get_req_bool(const std::string& key) const {
-   auto i = m_vars.find(key);
-   if(i == m_vars.end()) {
-      throw Test_Error("Test missing variable " + key);
-   }
+   const auto var = get_req_str(key);
 
-   if(i->second == "true") {
+   if(var == "true") {
       return true;
-   } else if(i->second == "false") {
+   } else if(var == "false") {
       return false;
    } else {
-      throw Test_Error("Invalid boolean for key '" + key + "' value '" + i->second + "'");
+      throw Test_Error("Invalid boolean for key '" + key + "' value '" + var + "'");
    }
 }
 
 size_t VarMap::get_req_sz(const std::string& key) const {
-   auto i = m_vars.find(key);
-   if(i == m_vars.end()) {
-      throw Test_Error("Test missing variable " + key);
-   }
-   return Botan::to_u32bit(i->second);
+   return Botan::to_u32bit(get_req_str(key));
 }
 
 uint8_t VarMap::get_req_u8(const std::string& key) const {
@@ -943,103 +1011,125 @@ uint32_t VarMap::get_req_u32(const std::string& key) const {
 }
 
 uint64_t VarMap::get_req_u64(const std::string& key) const {
-   auto i = m_vars.find(key);
-   if(i == m_vars.end()) {
-      throw Test_Error("Test missing variable " + key);
-   }
+   const auto var = get_req_str(key);
    try {
-      return std::stoull(i->second);
+      return std::stoull(var);
    } catch(std::exception&) {
-      throw Test_Error("Invalid u64 value '" + i->second + "'");
+      throw Test_Error("Invalid u64 value '" + var + "'");
    }
 }
 
 size_t VarMap::get_opt_sz(const std::string& key, const size_t def_value) const {
-   auto i = m_vars.find(key);
-   if(i == m_vars.end()) {
+   if(auto v = get_var(key)) {
+      return Botan::to_u32bit(*v);
+   } else {
       return def_value;
    }
-   return Botan::to_u32bit(i->second);
 }
 
 uint64_t VarMap::get_opt_u64(const std::string& key, const uint64_t def_value) const {
-   auto i = m_vars.find(key);
-   if(i == m_vars.end()) {
+   if(auto v = get_var(key)) {
+      try {
+         return std::stoull(*v);
+      } catch(std::exception&) {
+         throw Test_Error("Invalid u64 value '" + *v + "'");
+      }
+   } else {
       return def_value;
-   }
-   try {
-      return std::stoull(i->second);
-   } catch(std::exception&) {
-      throw Test_Error("Invalid u64 value '" + i->second + "'");
    }
 }
 
 std::vector<uint8_t> VarMap::get_opt_bin(const std::string& key) const {
-   auto i = m_vars.find(key);
-   if(i == m_vars.end()) {
-      return std::vector<uint8_t>();
-   }
-
-   try {
-      return Botan::hex_decode(i->second);
-   } catch(std::exception&) {
-      throw Test_Error("Test invalid hex input '" + i->second + "'" + +" for key " + key);
-   }
-}
-
-std::string VarMap::get_req_str(const std::string& key) const {
-   auto i = m_vars.find(key);
-   if(i == m_vars.end()) {
-      throw Test_Error("Test missing variable " + key);
-   }
-   return i->second;
+   if(auto v = get_var(key)) {
+      try {
+         return Botan::hex_decode(*v);
+      } catch(std::exception&) {
+         throw Test_Error("Test invalid hex input '" + *v + "'" + +" for key " + key);
+      }
+   } else {
+      return {};
+   };
 }
 
 #if defined(BOTAN_HAS_BIGINT)
 Botan::BigInt VarMap::get_req_bn(const std::string& key) const {
-   auto i = m_vars.find(key);
-   if(i == m_vars.end()) {
-      throw Test_Error("Test missing variable " + key);
-   }
+   const auto var = get_req_str(key);
 
    try {
-      return Botan::BigInt(i->second);
+      return Botan::BigInt(var);
    } catch(std::exception&) {
-      throw Test_Error("Test invalid bigint input '" + i->second + "' for key " + key);
+      throw Test_Error("Test invalid bigint input '" + var + "' for key " + key);
    }
 }
 
 Botan::BigInt VarMap::get_opt_bn(const std::string& key, const Botan::BigInt& def_value) const {
-   auto i = m_vars.find(key);
-   if(i == m_vars.end()) {
+   if(auto v = get_var(key)) {
+      try {
+         return Botan::BigInt(*v);
+      } catch(std::exception&) {
+         throw Test_Error("Test invalid bigint input '" + *v + "' for key " + key);
+      }
+   } else {
       return def_value;
-   }
-
-   try {
-      return Botan::BigInt(i->second);
-   } catch(std::exception&) {
-      throw Test_Error("Test invalid bigint input '" + i->second + "' for key " + key);
    }
 }
 #endif
 
+class Text_Based_Test::Text_Based_Test_Data {
+   public:
+      Text_Based_Test_Data(const std::string& data_src,
+                           const std::string& required_keys_str,
+                           const std::string& optional_keys_str) :
+            m_data_src(data_src) {
+         if(required_keys_str.empty()) {
+            throw Test_Error("Invalid test spec");
+         }
+
+         m_required_keys = Botan::split_on(required_keys_str, ',');
+         std::vector<std::string> optional_keys = Botan::split_on(optional_keys_str, ',');
+
+         m_all_keys.insert(m_required_keys.begin(), m_required_keys.end());
+         m_all_keys.insert(optional_keys.begin(), optional_keys.end());
+         m_output_key = m_required_keys.at(m_required_keys.size() - 1);
+      }
+
+      std::string get_next_line();
+
+      const std::string& current_source_name() const { return m_cur_src_name; }
+
+      bool known_key(const std::string& key) const;
+
+      const std::vector<std::string>& required_keys() const { return m_required_keys; }
+
+      const std::string& output_key() const { return m_output_key; }
+
+      const std::vector<std::string>& cpu_flags() const { return m_cpu_flags; }
+
+      void set_cpu_flags(std::vector<std::string> flags) { m_cpu_flags = std::move(flags); }
+
+      const std::string& initial_data_src_name() const { return m_data_src; }
+
+   private:
+      std::string m_data_src;
+      std::vector<std::string> m_required_keys;
+      std::unordered_set<std::string> m_all_keys;
+      std::string m_output_key;
+
+      bool m_first = true;
+      std::unique_ptr<std::istream> m_cur;
+      std::string m_cur_src_name;
+      std::deque<std::string> m_srcs;
+      std::vector<std::string> m_cpu_flags;
+};
+
 Text_Based_Test::Text_Based_Test(const std::string& data_src,
-                                 const std::string& required_keys_str,
-                                 const std::string& optional_keys_str) :
-      m_data_src(data_src) {
-   if(required_keys_str.empty()) {
-      throw Test_Error("Invalid test spec");
-   }
+                                 const std::string& required_keys,
+                                 const std::string& optional_keys) :
+      m_data(std::make_unique<Text_Based_Test_Data>(data_src, required_keys, optional_keys)) {}
 
-   std::vector<std::string> required_keys = Botan::split_on(required_keys_str, ',');
-   std::vector<std::string> optional_keys = Botan::split_on(optional_keys_str, ',');
+Text_Based_Test::~Text_Based_Test() = default;
 
-   m_required_keys.insert(required_keys.begin(), required_keys.end());
-   m_optional_keys.insert(optional_keys.begin(), optional_keys.end());
-   m_output_key = required_keys.at(required_keys.size() - 1);
-}
-
-std::string Text_Based_Test::get_next_line() {
+std::string Text_Based_Test::Text_Based_Test_Data::get_next_line() {
    while(true) {
       if(m_cur == nullptr || m_cur->good() == false) {
          if(m_srcs.empty()) {
@@ -1099,6 +1189,10 @@ std::string Text_Based_Test::get_next_line() {
    }
 }
 
+bool Text_Based_Test::Text_Based_Test_Data::known_key(const std::string& key) const {
+   return m_all_keys.contains(key);
+}
+
 namespace {
 
 // strips leading and trailing but not internal whitespace
@@ -1141,14 +1235,14 @@ std::vector<Test::Result> Text_Based_Test::run() {
    std::vector<Test::Result> results;
 
    std::string header;
-   std::string header_or_name = m_data_src;
+   std::string header_or_name = m_data->initial_data_src_name();
    VarMap vars;
    size_t test_cnt = 0;
 
    while(true) {
-      const std::string line = get_next_line();
-      if(line.empty())  // EOF
-      {
+      const std::string line = m_data->get_next_line();
+      if(line.empty()) {
+         // EOF
          break;
       }
 
@@ -1156,22 +1250,22 @@ std::vector<Test::Result> Text_Based_Test::run() {
          std::vector<std::string> pragma_tokens = Botan::split_on(line.substr(6), ' ');
 
          if(pragma_tokens.empty()) {
-            throw Test_Error("Empty pragma found in " + m_cur_src_name);
+            throw Test_Error("Empty pragma found in " + m_data->current_source_name());
          }
 
          if(pragma_tokens[0] != "cpuid") {
-            throw Test_Error("Unknown test pragma '" + line + "' in " + m_cur_src_name);
+            throw Test_Error("Unknown test pragma '" + line + "' in " + m_data->current_source_name());
          }
 
          if(!Test_Registry::instance().needs_serialization(this->test_name())) {
             throw Test_Error(Botan::fmt("'{}' used cpuid control but is not serialized", this->test_name()));
          }
 
-         m_cpu_flags = parse_cpuid_bits(pragma_tokens);
+         m_data->set_cpu_flags(parse_cpuid_bits(pragma_tokens));
 
          continue;
       } else if(line[0] == '#') {
-         throw Test_Error("Unknown test pragma '" + line + "' in " + m_cur_src_name);
+         throw Test_Error("Unknown test pragma '" + line + "' in " + m_data->current_source_name());
       }
 
       if(line[0] == '[' && line[line.size() - 1] == ']') {
@@ -1194,16 +1288,16 @@ std::vector<Test::Result> Text_Based_Test::run() {
       const std::string key = strip_ws(std::string(line.begin(), line.begin() + equal_i - 1));
       const std::string val = strip_ws(std::string(line.begin() + equal_i + 1, line.end()));
 
-      if(!m_required_keys.contains(key) && !m_optional_keys.contains(key)) {
+      if(!m_data->known_key(key)) {
          auto r = Test::Result::Failure(header_or_name, Botan::fmt("{} failed unknown key {}", test_id, key));
          results.push_back(r);
       }
 
       vars.add(key, val);
 
-      if(key == m_output_key) {
+      if(key == m_data->output_key()) {
          try {
-            for(const auto& req_key : m_required_keys) {
+            for(const auto& req_key : m_data->required_keys()) {
                if(!vars.has_key(req_key)) {
                   auto r =
                      Test::Result::Failure(header_or_name, Botan::fmt("{} missing required key {}", test_id, req_key));
@@ -1221,8 +1315,8 @@ std::vector<Test::Result> Text_Based_Test::run() {
 
             Test::Result result = run_one_test(header, vars);
 #if defined(BOTAN_HAS_CPUID)
-            if(!m_cpu_flags.empty()) {
-               for(const auto& cpuid_str : m_cpu_flags) {
+            if(!m_data->cpu_flags().empty()) {
+               for(const auto& cpuid_str : m_data->cpu_flags()) {
                   if(const auto bit = Botan::CPUID::Feature::from_string(cpuid_str)) {
                      if(Botan::CPUID::has(*bit)) {
                         Botan::CPUID::clear_cpuid_bit(*bit);
@@ -1244,7 +1338,7 @@ std::vector<Test::Result> Text_Based_Test::run() {
                }
                oss << "failed ";
 
-               for(const auto& k : m_required_keys) {
+               for(const auto& k : m_data->required_keys()) {
                   oss << k << "=" << vars.get_req_str(k) << " ";
                }
 
@@ -1258,7 +1352,7 @@ std::vector<Test::Result> Text_Based_Test::run() {
                oss << header << " ";
             }
 
-            for(const auto& k : m_required_keys) {
+            for(const auto& k : m_data->required_keys()) {
                oss << k << "=" << vars.get_req_str(k) << " ";
             }
 
@@ -1284,25 +1378,7 @@ std::vector<Test::Result> Text_Based_Test::run() {
       results.push_back(Test::Result::Failure(header_or_name, "run_final_tests exception " + std::string(e.what())));
    }
 
-   m_first = true;
-
    return results;
-}
-
-std::map<std::string, std::string> Test_Options::report_properties() const {
-   std::map<std::string, std::string> result;
-
-   for(const auto& prop : m_report_properties) {
-      const auto colon = prop.find(':');
-      // props without a colon separator or without a name are not allowed
-      if(colon == std::string::npos || colon == 0) {
-         throw Test_Error("--report-properties should be of the form <key>:<value>,<key>:<value>,...");
-      }
-
-      result.insert_or_assign(prop.substr(0, colon), prop.substr(colon + 1, prop.size() - colon - 1));
-   }
-
-   return result;
 }
 
 }  // namespace Botan_Tests

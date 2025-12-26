@@ -10,12 +10,12 @@
 #define BOTAN_TLS_SERVER_IMPL_12_H_
 
 #include <botan/credentials_manager.h>
-#include <botan/tls_policy.h>
 #include <botan/internal/tls_channel_impl_12.h>
 #include <vector>
 
 namespace Botan::TLS {
 
+class Policy;
 class Server_Handshake_State;
 
 /**
@@ -23,8 +23,6 @@ class Server_Handshake_State;
 */
 class Server_Impl_12 : public Channel_Impl_12 {
    public:
-      typedef std::function<std::string(std::vector<std::string>)> next_protocol_fn;
-
       /**
       * Server initialization
       *

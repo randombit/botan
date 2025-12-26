@@ -19,6 +19,7 @@
    #include <botan/internal/parsing.h>
    #include <botan/internal/primality.h>
    #include <botan/internal/stl_util.h>
+   #include <set>
 #endif
 
 namespace Botan_Tests {

@@ -15,6 +15,7 @@
 #include <botan/mem_ops.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/xmss_address.h>
+#include <botan/internal/xmss_hash.h>
 #include <botan/internal/xmss_tools.h>
 
 namespace Botan {

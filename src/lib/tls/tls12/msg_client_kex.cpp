@@ -12,6 +12,7 @@
 #include <botan/rng.h>
 #include <botan/rsa.h>
 #include <botan/tls_extensions.h>
+#include <botan/tls_policy.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>

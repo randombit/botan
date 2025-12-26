@@ -8,7 +8,6 @@
 #define BOTAN_ALLOCATOR_HELPERS_H_
 
 #include <botan/types.h>
-#include <cstring>
 
 namespace Botan {
 

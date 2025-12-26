@@ -11,6 +11,7 @@
 #include <botan/credentials_manager.h>
 #include <botan/pubkey.h>
 #include <botan/tls_extensions.h>
+#include <botan/tls_policy.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/target_info.h>
 #include <botan/internal/tls_handshake_io.h>

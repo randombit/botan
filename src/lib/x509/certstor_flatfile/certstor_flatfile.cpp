@@ -12,9 +12,12 @@
 #include <botan/data_src.h>
 #include <botan/pem.h>
 #include <botan/pkix_types.h>
+#include <algorithm>
 
 namespace Botan {
+
 namespace {
+
 std::vector<std::vector<uint8_t>> decode_all_certificates(DataSource& source) {
    std::vector<std::vector<uint8_t>> pems;
 
@@ -32,6 +35,7 @@ std::vector<std::vector<uint8_t>> decode_all_certificates(DataSource& source) {
 
    return pems;
 }
+
 }  // namespace
 
 Flatfile_Certificate_Store::Flatfile_Certificate_Store(std::string_view file, bool ignore_non_ca) {
@@ -139,4 +143,5 @@ std::optional<X509_CRL> Flatfile_Certificate_Store::find_crl_for(const X509_Cert
    BOTAN_UNUSED(subject);
    return {};
 }
+
 }  // namespace Botan

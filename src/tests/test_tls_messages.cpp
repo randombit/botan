@@ -17,6 +17,7 @@
    #include <botan/tls_callbacks.h>
    #include <botan/tls_ciphersuite.h>
    #include <botan/tls_messages.h>
+   #include <botan/tls_policy.h>
    #include <botan/tls_version.h>
    #include <botan/internal/loadstor.h>
    #include <algorithm>

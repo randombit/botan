@@ -6,6 +6,8 @@
 
 #include "tests.h"
 
+#include <botan/rng.h>
+
 #if defined(BOTAN_HAS_BIGINT)
    #include <botan/bigint.h>
 #endif

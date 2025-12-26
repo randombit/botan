@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
    #include <botan/numthry.h>
+   #include <botan/rng.h>
    #include <botan/internal/monty.h>
 #endif
 

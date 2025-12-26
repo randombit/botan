@@ -8,26 +8,30 @@
 #ifndef BOTAN_TESTS_H_
 #define BOTAN_TESTS_H_
 
+/*
+Warning: be very careful about adding any new includes here
+
+Each include is parsed for every test file which can get quite expensive
+*/
+
 #include <botan/assert.h>
+#include <botan/exceptn.h>
 #include <botan/hex.h>
-#include <botan/rng.h>
 #include <botan/symkey.h>
 #include <botan/types.h>
-#include <deque>
 #include <functional>
 #include <iosfwd>
-#include <map>
 #include <memory>
 #include <optional>
-#include <set>
 #include <span>
 #include <sstream>
 #include <string>
-#include <unordered_map>
 #include <variant>
 #include <vector>
 
 namespace Botan {
+
+class RandomNumberGenerator;
 
 #if defined(BOTAN_HAS_BIGINT)
 class BigInt;
@@ -84,7 +88,7 @@ class Test_Options {
                    bool abort_on_first_fail,
                    bool no_stdout) :
             m_requested_tests(requested_tests),
-            m_skip_tests(skip_tests.begin(), skip_tests.end()),
+            m_skip_tests(skip_tests),
             m_data_dir(data_dir),
             m_pkcs11_lib(pkcs11_lib),
             m_provider(provider),
@@ -108,7 +112,7 @@ class Test_Options {
 
       const std::vector<std::string>& requested_tests() const { return m_requested_tests; }
 
-      const std::set<std::string>& skip_tests() const { return m_skip_tests; }
+      const std::vector<std::string>& skip_tests() const { return m_skip_tests; }
 
       const std::string& data_dir() const { return m_data_dir; }
 
@@ -130,7 +134,7 @@ class Test_Options {
 
       const std::string& xml_results_dir() const { return m_xml_results_dir; }
 
-      std::map<std::string, std::string> report_properties() const;
+      const std::vector<std::string>& report_properties() const { return m_report_properties; }
 
       size_t test_runs() const { return m_test_runs; }
 
@@ -152,7 +156,7 @@ class Test_Options {
 
    private:
       std::vector<std::string> m_requested_tests;
-      std::set<std::string> m_skip_tests;
+      std::vector<std::string> m_skip_tests;
       std::string m_data_dir;
       std::string m_pkcs11_lib;
       std::string m_provider;
@@ -227,7 +231,7 @@ class Test {
       */
       class Result final {
          public:
-            explicit Result(std::string who) : m_who(std::move(who)), m_timestamp(std::chrono::system_clock::now()) {}
+            explicit Result(std::string who);
 
             /**
              * This 'consolidation constructor' creates a single test result from
@@ -249,15 +253,16 @@ class Test {
 
             const std::vector<std::string>& notes() const { return m_log; }
 
-            std::optional<std::chrono::nanoseconds> elapsed_time() const {
+            std::optional<uint64_t> elapsed_time() const {
                if(m_ns_taken == 0) {
                   return std::nullopt;
                } else {
-                  return std::chrono::nanoseconds(m_ns_taken);
+                  return m_ns_taken;
                }
             }
 
-            const std::chrono::system_clock::time_point& timestamp() const { return m_timestamp; }
+            // Nanoseconds since epoch
+            uint64_t timestamp() const { return m_timestamp; }
 
             std::string result_string() const;
 
@@ -602,7 +607,7 @@ class Test {
          private:
             std::string m_who;
             std::optional<CodeLocation> m_where;
-            std::chrono::system_clock::time_point m_timestamp;
+            uint64_t m_timestamp;
             uint64_t m_started = 0;
             uint64_t m_ns_taken = 0;
             size_t m_tests_passed = 0;
@@ -610,9 +615,9 @@ class Test {
             std::vector<std::string> m_log;
       };
 
-      virtual ~Test() = default;
+      virtual ~Test();
 
-      Test() = default;
+      Test();
       Test(const Test& other) = delete;
       Test(Test&& other) = default;
       Test& operator=(const Test& other) = delete;
@@ -637,10 +642,11 @@ class Test {
                                 bool needs_serialization,
                                 std::function<std::unique_ptr<Test>()> maker_fn);
 
-      static std::set<std::string> registered_tests();
-      static std::set<std::string> registered_test_categories();
+      static std::vector<std::string> registered_tests();
+      static std::vector<std::string> registered_test_categories();
+
       static std::vector<std::string> filter_registered_tests(const std::vector<std::string>& requested,
-                                                              const std::set<std::string>& to_be_skipped);
+                                                              const std::vector<std::string>& to_be_skipped);
 
       static std::unique_ptr<Test> get_test(const std::string& test_name);
       static bool test_needs_serialization(const std::string& test_name);
@@ -652,32 +658,10 @@ class Test {
 
       static std::string format_time(uint64_t nanoseconds);
 
-      static std::string format_time(const std::chrono::nanoseconds nanoseconds) {
-         return format_time(nanoseconds.count());
-      }
-
-      template <typename Alloc>
-      static std::vector<uint8_t, Alloc> mutate_vec(const std::vector<uint8_t, Alloc>& v,
-                                                    Botan::RandomNumberGenerator& rng,
-                                                    bool maybe_resize = false,
-                                                    size_t min_offset = 0) {
-         std::vector<uint8_t, Alloc> r = v;
-
-         if(maybe_resize && (r.empty() || rng.next_byte() < 32)) {
-            // TODO: occasionally truncate, insert at random index
-            const size_t add = 1 + (rng.next_byte() % 16);
-            r.resize(r.size() + add);
-            rng.randomize(&r[r.size() - add], add);
-         }
-
-         if(r.size() > min_offset) {
-            const size_t offset = std::max<size_t>(min_offset, rng.next_byte() % r.size());
-            const uint8_t perturb = rng.next_nonzero_byte();
-            r[offset] ^= perturb;
-         }
-
-         return r;
-      }
+      static std::vector<uint8_t> mutate_vec(const std::vector<uint8_t>& v,
+                                             Botan::RandomNumberGenerator& rng,
+                                             bool maybe_resize = false,
+                                             size_t min_offset = 0);
 
       static void set_test_options(const Test_Options& opts);
 
@@ -846,11 +830,7 @@ class TestFnRegistration {
 
 class VarMap {
    public:
-      void clear() { m_vars.clear(); }
-
-      void add(const std::string& key, const std::string& value) { m_vars[key] = value; }
-
-      bool has_key(const std::string& key) const { return m_vars.count(key) == 1; }
+      bool has_key(const std::string& key) const;
 
       bool get_req_bool(const std::string& key) const;
 
@@ -877,8 +857,14 @@ class VarMap {
 
       uint64_t get_opt_u64(const std::string& key, uint64_t def_value) const;
 
+      void clear();
+
+      void add(const std::string& key, const std::string& value);
+
    private:
-      std::unordered_map<std::string, std::string> m_vars;
+      std::optional<std::string> get_var(const std::string& key) const;
+
+      std::vector<std::pair<std::string, std::string>> m_vars;
 };
 
 /*
@@ -902,13 +888,18 @@ class Text_Based_Test : public Test {
                       const std::string& required_keys_str,
                       const std::string& optional_keys_str = "");
 
+      Text_Based_Test(const Text_Based_Test& other) = delete;
+      Text_Based_Test(Text_Based_Test&& other) = default;
+      Text_Based_Test& operator=(const Text_Based_Test& other) = delete;
+      Text_Based_Test& operator=(Text_Based_Test&& other) = delete;
+
+      ~Text_Based_Test() override;
+
       virtual bool clear_between_callbacks() const { return true; }
 
       std::vector<Test::Result> run() override;
 
-   protected:
-      std::string get_next_line();
-
+   private:
       virtual Test::Result run_one_test(const std::string& header, const VarMap& vars) = 0;
       // Called before run_one_test
       virtual bool skip_this_test(const std::string& header, const VarMap& vars);
@@ -916,16 +907,8 @@ class Text_Based_Test : public Test {
       virtual std::vector<Test::Result> run_final_tests() { return std::vector<Test::Result>(); }
 
    private:
-      std::string m_data_src;
-      std::set<std::string> m_required_keys;
-      std::set<std::string> m_optional_keys;
-      std::string m_output_key;
-
-      bool m_first = true;
-      std::unique_ptr<std::istream> m_cur;
-      std::string m_cur_src_name;
-      std::deque<std::string> m_srcs;
-      std::vector<std::string> m_cpu_flags;
+      class Text_Based_Test_Data;
+      std::unique_ptr<Text_Based_Test_Data> m_data;
 };
 
 /**

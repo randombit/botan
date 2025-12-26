@@ -8,6 +8,7 @@
 
 #include "fuzzers.h"
 
+#include <botan/tls_policy.h>
 #include <botan/internal/tls_handshake_layer_13.h>
 #include <botan/internal/tls_transcript_hash_13.h>
 

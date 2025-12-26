@@ -9,7 +9,6 @@
 #define BOTAN_SYMMETRIC_ALGORITHM_H_
 
 #include <botan/types.h>
-
 #include <span>
 #include <string>
 

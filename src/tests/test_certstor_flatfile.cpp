@@ -11,6 +11,7 @@
 
    #include "test_certstor_utils.h"
    #include <botan/certstor_flatfile.h>
+   #include <algorithm>
 
 namespace Botan_Tests {
 

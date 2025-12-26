@@ -33,9 +33,10 @@ Botan::Classic_McEliece_Polynomial create_element_from_bytes(std::span<const uin
    Botan::load_le<uint16_t>(coef.data(), bytes.data(), ring.degree());
 
    std::vector<Botan::Classic_McEliece_GF> coeff_vec_gf;
-   std::transform(coef.begin(), coef.end(), std::back_inserter(coeff_vec_gf), [&](auto& coeff) {
-      return Botan::Classic_McEliece_GF(Botan::CmceGfElem(coeff), ring.poly_f());
-   });
+   coeff_vec_gf.reserve(coef.size());
+   for(const auto& coeff : coef) {
+      coeff_vec_gf.push_back(Botan::Classic_McEliece_GF(Botan::CmceGfElem(coeff), ring.poly_f()));
+   }
    return Botan::Classic_McEliece_Polynomial(coeff_vec_gf);
 }
 
@@ -262,13 +263,10 @@ class CMCE_Invalid_Test : public Text_Based_Test {
 class CMCE_Generic_Keygen_Tests final : public PK_Key_Generation_Test {
    public:
       std::vector<std::string> keygen_params() const override {
-         auto to_test = get_test_instances_min();
-
          std::vector<std::string> res;
-         std::transform(to_test.begin(), to_test.end(), std::back_inserter(res), [](auto& param_set) {
-            return param_set.to_string();
-         });
-
+         for(const auto& param_set : get_test_instances_min()) {
+            res.push_back(param_set.to_string());
+         }
          return res;
       }
 

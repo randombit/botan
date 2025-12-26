@@ -10,7 +10,6 @@
 #define BOTAN_HSS_H_
 
 #include <botan/asn1_obj.h>
-#include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/lms.h>
@@ -22,6 +21,8 @@
 #include <vector>
 
 namespace Botan {
+
+class RandomNumberGenerator;
 
 /**
  * @brief The index of a node within a specific LMS tree layer

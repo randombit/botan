@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_SODIUM_API)
    #include <botan/sodium.h>
+   #include <cstring>
 #endif
 
 namespace Botan_Tests {

@@ -13,6 +13,7 @@
 #include <botan/strong_type.h>
 
 #include <array>
+#include <cstring>
 #include <string>
 #include <vector>
 

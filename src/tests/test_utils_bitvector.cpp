@@ -8,10 +8,12 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_BITVECTOR)
+   #include <botan/rng.h>
    #include <botan/internal/bitvector.h>
    #include <botan/internal/fmt.h>
    #include <algorithm>
    #include <numeric>
+   #include <set>
 #endif
 
 namespace Botan_Tests {

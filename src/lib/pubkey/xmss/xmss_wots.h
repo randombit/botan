@@ -9,21 +9,14 @@
 #ifndef BOTAN_XMSS_WOTS_H_
 #define BOTAN_XMSS_WOTS_H_
 
-#include <botan/asn1_obj.h>
-#include <botan/exceptn.h>
-#include <botan/pk_keys.h>
-#include <botan/rng.h>
 #include <botan/secmem.h>
 #include <botan/xmss_parameters.h>
-#include <botan/internal/xmss_hash.h>
-#include <map>
-#include <memory>
-#include <string>
 #include <vector>
 
 namespace Botan {
 
 class XMSS_Address;
+class XMSS_Hash;
 class XMSS_WOTS_PrivateKey;
 
 typedef std::vector<secure_vector<uint8_t>> wots_keysig_t;

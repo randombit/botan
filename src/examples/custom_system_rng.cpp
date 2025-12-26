@@ -13,6 +13,7 @@
 */
 
 #include <botan/rng.h>
+#include <cstring>
 
 class MySoC_RandomNumberGenerator final : public Botan::Hardware_RNG {
    public:
