@@ -9,6 +9,7 @@
 #ifndef BOTAN_BIGINT_H_
 #define BOTAN_BIGINT_H_
 
+#include <botan/concepts.h>
 #include <botan/exceptn.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
@@ -709,10 +710,15 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        */
       template <typename T = std::vector<uint8_t>>
       T serialize(size_t len) const {
-         // TODO this supports std::vector and secure_vector
-         // it would be nice if this also could work with std::array as in
-         //   bn.serialize_to<std::array<uint8_t, 32>>(32);
-         T out(len);
+         T out = [len] {
+            if constexpr(Botan::ranges::statically_spanable_range<T>) {
+               BOTAN_ARG_CHECK(len == std::tuple_size_v<T>, "BigInt::serialize array size must match requested length");
+               return T{};  // Fixed-size containers (std::array)
+            } else {
+               return T(len);  // Dynamic containers (std::vector, secure_vector)
+            }
+         }();
+
          this->serialize_to(out);
          return out;
       }
