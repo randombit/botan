@@ -696,6 +696,15 @@ class FFI_CRL_Test final : public FFI_Test {
             return;
          }
 
+         ViewBytesSink akid;
+         TEST_FFI_OK(botan_x509_view_binary_value,
+                     (bytecrl, BOTAN_X509_AUTHORITY_KEY_IDENTIFIER, akid.delegate(), akid.callback()));
+         result.test_eq("authority key ID", akid.get(), "4ACF102F238FAB555A3F2732E2811CE7444C81F9");
+
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE,
+                     botan_x509_view_binary_value,
+                     (bytecrl, BOTAN_X509_SUBJECT_KEY_IDENTIFIER, akid.delegate(), akid.callback()));
+
          botan_x509_crl_t crl;
          REQUIRE_FFI_OK(botan_x509_crl_load_file, (&crl, Test::data_file("x509/nist/root.crl").c_str()));
 
@@ -725,6 +734,43 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
    #else
          return false;
    #endif
+      }
+
+      void verify_bare_pkcs1_rsa_signature(Test::Result& result, botan_x509_cert_t ee, botan_x509_cert_t ca) {
+         ViewBytesSink tbs_data;
+         ViewBytesSink sig_scheme;
+         ViewBytesSink signature;
+         ViewBytesSink public_key;
+
+         TEST_FFI_OK(botan_x509_view_binary_value,
+                     (ee, BOTAN_X509_TBS_DATA_BITS, tbs_data.delegate(), tbs_data.callback()));
+         TEST_FFI_OK(botan_x509_view_binary_value,
+                     (ee, BOTAN_X509_SIGNATURE_SCHEME_BITS, sig_scheme.delegate(), sig_scheme.callback()));
+         TEST_FFI_OK(botan_x509_view_binary_value,
+                     (ee, BOTAN_X509_SIGNATURE_BITS, signature.delegate(), signature.callback()));
+         TEST_FFI_OK(botan_x509_view_binary_value,
+                     (ca, BOTAN_X509_PUBLIC_KEY_PKCS8_BITS, public_key.delegate(), public_key.callback()));
+
+         // At the moment there's no way to directly instantiate a signature
+         // verifier object with an encoded signature algorithm scheme. Hence,
+         // we just check that the hard-coded expectation is fulfilled.
+         //
+         // TODO: improve this if we ever have a pk_op_verify_t constructor that
+         //       takes an encoded AlgorithmIdentifier.
+         const auto expected_sig_scheme =
+            Botan::AlgorithmIdentifier("RSA/PKCS1v15(SHA-1)", Botan::AlgorithmIdentifier::USE_NULL_PARAM).BER_encode();
+         result.test_eq("AlgorithmIdentifier", sig_scheme.get(), expected_sig_scheme);
+
+         botan_pubkey_t pubkey;
+         TEST_FFI_INIT(botan_pubkey_load, (&pubkey, public_key.data(), public_key.size()));
+
+         botan_pk_op_verify_t verifier;
+         TEST_FFI_INIT(botan_pk_op_verify_create, (&verifier, pubkey, "PKCS1v15(SHA-1)", 0));
+         TEST_FFI_OK(botan_pk_op_verify_update, (verifier, tbs_data.data(), tbs_data.size()));
+         TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+
+         TEST_FFI_OK(botan_pk_op_verify_destroy, (verifier));
+         TEST_FFI_OK(botan_pubkey_destroy, (pubkey));
       }
 
       void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
@@ -764,6 +810,8 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          TEST_FFI_RC(0, botan_x509_cert_verify, (&rc, end7, subs, 2, &root, 1, nullptr, 80, nullptr, 0));
          result.confirm("Validation test07 passed", rc == 0);
          result.test_eq("Validation test07 status string", botan_x509_cert_validation_status(rc), "Verified");
+
+         verify_bare_pkcs1_rsa_signature(result, end7, sub7);
 
          TEST_FFI_RC(1,
                      botan_x509_cert_verify_with_crl,
@@ -850,6 +898,11 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
             result.test_eq("cert serial length", serial.size(), 16);
             result.test_eq("cert serial", Botan::hex_encode(serial), "41D29DD172EAEEA780C12C6CE92F8752");
 
+            ViewBytesSink serial_sink;
+            TEST_FFI_OK(botan_x509_view_binary_value,
+                        (cert, BOTAN_X509_SERIAL_NUMBER, serial_sink.delegate(), serial_sink.callback()));
+            result.test_eq("cert serial (2)", serial_sink.get(), "41D29DD172EAEEA780C12C6CE92F8752");
+
             size_t fingerprint_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
                         botan_x509_cert_get_fingerprint,
@@ -869,6 +922,12 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             result.test_eq("No AKID", key_id_len, 0);
 
+            // "No AKID" is explicitly communicated with an error code
+            ViewBytesSink key_id_sink;
+            TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE,
+                        botan_x509_view_binary_value,
+                        (cert, BOTAN_X509_AUTHORITY_KEY_IDENTIFIER, key_id_sink.delegate(), key_id_sink.callback()));
+
             key_id_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
                         botan_x509_cert_get_subject_key_id,
@@ -879,6 +938,10 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
             result.test_eq("cert subject key id",
                            Botan::hex_encode(key_id.data(), key_id.size(), true),
                            "7C4296AEDE4B483BFA92F89E8CCF6D8BA9723795");
+
+            TEST_FFI_OK(botan_x509_view_binary_value,
+                        (cert, BOTAN_X509_SUBJECT_KEY_IDENTIFIER, key_id_sink.delegate(), key_id_sink.callback()));
+            result.test_eq("cert subject key id", key_id_sink.get(), "7C4296AEDE4B483BFA92F89E8CCF6D8BA9723795");
 
             size_t pubkey_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,

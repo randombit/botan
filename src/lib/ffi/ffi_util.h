@@ -32,13 +32,31 @@ class BOTAN_UNSTABLE_API FFI_Error final : public Botan::Exception {
       int m_err_code;
 };
 
-template <typename T, uint32_t MAGIC>
-struct botan_struct {
+struct botan_struct_base {
    public:
-      explicit botan_struct(std::unique_ptr<T> obj) : m_magic(MAGIC), m_obj(std::move(obj)) {}
+      explicit botan_struct_base(uint32_t magic) : m_magic(magic) {}
 
-      virtual ~botan_struct() {
-         m_magic = 0;
+      botan_struct_base(const botan_struct_base& other) = delete;
+      botan_struct_base(botan_struct_base&& other) = delete;
+      botan_struct_base& operator=(const botan_struct_base& other) = delete;
+      botan_struct_base& operator=(botan_struct_base&& other) = delete;
+
+      virtual ~botan_struct_base() { m_magic = 0; }
+
+      uint32_t magic() const { return m_magic; }
+
+   private:
+      uint32_t m_magic = 0;
+};
+
+template <typename T, uint32_t MAGIC>
+struct botan_struct : public botan_struct_base {
+   public:
+      constexpr static uint32_t magic_value = MAGIC;
+
+      explicit botan_struct(std::unique_ptr<T> obj) : botan_struct_base(MAGIC), m_obj(std::move(obj)) {}
+
+      ~botan_struct() override {
          m_obj.reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
       }
 
@@ -47,12 +65,11 @@ struct botan_struct {
       botan_struct& operator=(const botan_struct& other) = delete;
       botan_struct& operator=(botan_struct&& other) = delete;
 
-      bool magic_ok() const { return (m_magic == MAGIC); }
+      bool magic_ok() const { return (magic() == magic_value); }
 
       T* unsafe_get() const { return m_obj.get(); }
 
    private:
-      uint32_t m_magic = 0;
       std::unique_ptr<T> m_obj;
 };
 
@@ -67,6 +84,24 @@ struct botan_struct {
    struct NAME final : public Botan_FFI::botan_struct<int, MAGIC> {}
 
 // NOLINTEND(*-macro-usage)
+
+template <typename T>
+struct is_botan_ffi_wrapper_struct {
+   private:
+      template <typename U, uint32_t magic>
+      static std::true_type test(const Botan_FFI::botan_struct<U, magic>*);
+      static std::false_type test(...);
+
+   public:
+      static constexpr bool value =
+         decltype(test(std::declval<std::remove_cv_t<std::remove_reference_t<T>>*>()))::value;
+};
+
+template <typename T>
+inline constexpr bool is_botan_ffi_wrapper_struct_v = is_botan_ffi_wrapper_struct<T>::value;
+
+template <typename T>
+concept botan_ffi_handle = std::is_pointer_v<T> && is_botan_ffi_wrapper_struct_v<std::remove_pointer_t<T>>;
 
 // Declared in ffi.cpp
 void ffi_clear_last_exception();
@@ -156,6 +191,53 @@ int botan_ffi_visit(botan_struct<T, M>* o, F func, const char* func_name) {
 //      }
 // NOLINTNEXTLINE(*-macro-usage)
 #define BOTAN_FFI_VISIT(obj, lambda) botan_ffi_visit(obj, lambda, __func__)
+
+template <botan_ffi_handle... InputTs, typename F>
+   requires(std::invocable<F, decltype(*std::declval<InputTs>()->unsafe_get())> && ...)
+int botan_ffi_visit_variant(void* object, F func, const char* func_name) {
+   if(!object) {
+      // quick way out, if nil handle was provided
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   // If the iteration below does not find a match of the given handle in the
+   // expected handle types, this won't be overwritten and returned.
+   int retval = BOTAN_FFI_ERROR_INVALID_OBJECT;
+
+   // Try to match the given handle against all expected handle types, and
+   // stop candidate iteration once a match was found.
+   // TODO: C++26 "pack indexing" should allow to use an ordinary loop for
+   //       matching against InputTs, instead of this fold expression hack.
+   std::ignore = ([&] {
+      auto* candidate = reinterpret_cast<botan_struct_base*>(object);
+      using handle_t = std::remove_cvref_t<std::remove_pointer_t<InputTs>>;
+      if(candidate->magic() != handle_t::magic_value) {
+         return false;  // fold-expression: try the next candidate
+      }
+
+      retval = botan_ffi_visit(static_cast<InputTs>(candidate), func, func_name);
+      return true;  // fold-expression: candidate matched, stop searching
+   }() || ...);
+
+   return retval;
+}
+
+// Same functionality as BOTAN_FFI_VISIT but obj is a void* that may take the
+// form of a number of FFI handle types. The distinction is done at runtime
+// based on the intrinsic FFI handles' magic value. For that, users of this
+// macro have to provide a list of all expected FFI handle types and the
+// provided functor must be able to handle all respective wrapped types. E.g.:
+//
+//    auto handler = Botan::overloaded{
+//       [=](const Botan::X509_Certificate& cert) -> int { /* handle botan_x509_cert_t */ },
+//       [=](const Botan::X509_CRL& crl) -> int { /* handle botan_x509_crl_t */ },
+//    };
+//    BOTAN_FFI_VISIT_VARIANT(object, handler, botan_x509_cert_t, botan_x509_crl_t);
+//
+// TODO: C++20 introduces std::source_location which will allow to eliminate this
+//       macro altogether.
+// NOLINTNEXTLINE(*-macro-usage)
+#define BOTAN_FFI_VISIT_VARIANT(obj, functor, ...) botan_ffi_visit_variant<__VA_ARGS__>(obj, functor, __func__)
 
 template <typename T, uint32_t M>
 int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name) {
