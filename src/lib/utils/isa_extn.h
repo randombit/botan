@@ -36,6 +36,7 @@
    #define BOTAN_FN_ISA_AVX2_GFNI BOTAN_FUNC_ISA("gfni,avx2")
    #define BOTAN_FN_ISA_AVX512 BOTAN_FUNC_ISA("avx512f,avx512dq,avx512bw,avx512vl")
    #define BOTAN_FN_ISA_AVX512_BMI2 BOTAN_FUNC_ISA("avx512f,avx512dq,avx512bw,avx512vl,bmi,bmi2")
+   #define BOTAN_FN_ISA_AVX512_GFNI BOTAN_FUNC_ISA("avx512f,avx512dq,avx512bw,avx512vl,gfni")
 
 #endif
 
