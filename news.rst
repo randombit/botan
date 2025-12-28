@@ -13,6 +13,8 @@ Version 3.11.0, Not Yet Released
 
 * Add optimized SM3 implementations using AVX2/BMI2 (GH #5178) and SM3-NI (GH #5183)
 
+* Add optimized SM4 implementation using AVX-512/GFNI (GH #5192)
+
 * Improve handling of constant time and variable time divisions (GH #5176 #5177 #5180)
 
 * Optimize ECDSA signature setup phase (GH #5173)

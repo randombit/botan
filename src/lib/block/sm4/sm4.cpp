@@ -176,6 +176,12 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    }
 #endif
 
+#if defined(BOTAN_HAS_SM4_AVX512_GFNI)
+   if(CPUID::has(CPUID::Feature::AVX512, CPUID::Feature::GFNI)) {
+      return sm4_avx512_gfni_encrypt(in, out, blocks);
+   }
+#endif
+
 #if defined(BOTAN_HAS_SM4_GFNI)
    if(CPUID::has(CPUID::Feature::GFNI)) {
       return sm4_gfni_encrypt(in, out, blocks);
@@ -246,6 +252,12 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
 #if defined(BOTAN_HAS_SM4_X86)
    if(CPUID::has(CPUID::Feature::SM4)) {
       return sm4_x86_decrypt(in, out, blocks);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SM4_AVX512_GFNI)
+   if(CPUID::has(CPUID::Feature::AVX512, CPUID::Feature::GFNI)) {
+      return sm4_avx512_gfni_decrypt(in, out, blocks);
    }
 #endif
 
@@ -345,6 +357,12 @@ size_t SM4::parallelism() const {
    }
 #endif
 
+#if defined(BOTAN_HAS_SM4_AVX512_GFNI)
+   if(CPUID::has(CPUID::Feature::AVX512, CPUID::Feature::GFNI)) {
+      return 16;
+   }
+#endif
+
 #if defined(BOTAN_HAS_SM4_GFNI)
    if(CPUID::has(CPUID::Feature::GFNI)) {
       return 8;
@@ -357,6 +375,12 @@ size_t SM4::parallelism() const {
 std::string SM4::provider() const {
 #if defined(BOTAN_HAS_SM4_ARMV8)
    if(auto feat = CPUID::check(CPUID::Feature::SM4)) {
+      return *feat;
+   }
+#endif
+
+#if defined(BOTAN_HAS_SM4_AVX512_GFNI)
+   if(auto feat = CPUID::check(CPUID::Feature::AVX512, CPUID::Feature::GFNI)) {
       return *feat;
    }
 #endif

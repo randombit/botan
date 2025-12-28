@@ -192,6 +192,9 @@ class SIMD_16x32 final {
       }
 
       BOTAN_FN_ISA_AVX512
+      SIMD_16x32 rev_words() const noexcept { return SIMD_16x32(_mm512_shuffle_epi32(raw(), _MM_PERM_ABCD)); }
+
+      BOTAN_FN_ISA_AVX512
       static void transpose(SIMD_16x32& B0, SIMD_16x32& B1, SIMD_16x32& B2, SIMD_16x32& B3) {
          const __m512i T0 = _mm512_unpacklo_epi32(B0.m_avx512, B1.m_avx512);
          const __m512i T1 = _mm512_unpacklo_epi32(B2.m_avx512, B3.m_avx512);

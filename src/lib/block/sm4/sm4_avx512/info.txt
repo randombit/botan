@@ -1,0 +1,19 @@
+<internal_defines>
+SM4_AVX512_GFNI -> 20251227
+</internal_defines>
+
+<module_info>
+name -> "SM4 AVX-512/GFNI"
+</module_info>
+
+<requires>
+cpuid
+simd_4x32
+simd_avx2
+simd_avx512
+</requires>
+
+<isa>
+gfni
+avx512
+</isa>
