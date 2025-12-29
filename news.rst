@@ -19,19 +19,16 @@ Version 3.11.0, Not Yet Released
 
 * Optimize ECDSA signature setup phase (GH #5173)
 
-* Optimize elliptic curve operations on secp192r1 (GH #5186)
+* Various elliptic curve arithmetic optimizations (GH #5186 #5194 #5195 #5196)
 
-* ``SIMD_4x32`` port to Wasm SIMD128, bringing speedups to AES, ChaCha, Serpent, SHA-1,
-  SHA-256, SHACAL2, NOEKEON and ZFEC when SIMD128 is enabled. (GH #5155)
+* Add support for WebAssembly SIMD, optimizing various algorithms including AES, GCM,
+  ChaCha, SHA-1, SHA-256 and others. (GH #5155 #5163)
 
 * Unroll loops to improve Montgomery reduction performance. (GH #5150)
 
 * Increase maximum HMAC key length to 8192 bytes. (GH #5156)
 
 * Fix various clang-tidy warnings (GH #5172)
-
-* ``SIMD_2x64`` port to Wasm SIMD128, ``ghash_vperm`` port to ``SIMD_2x64``, bringing speedups
-  to GCM routines when SIMD128 is enabled
 
 Version 3.10.0, 2025-11-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
