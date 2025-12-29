@@ -331,7 +331,7 @@ class IntMod final {
       * If `cond` is true, sets *this to `nx`
       */
       constexpr void conditional_assign(CT::Choice cond, const Self& nx) {
-         const W mask = CT::Mask<W>::from_choice(cond).value();
+         const W mask = cond.into_bitmask<W>();
 
          for(size_t i = 0; i != N; ++i) {
             m_val[i] = Botan::choose(mask, nx.m_val[i], m_val[i]);
@@ -344,7 +344,7 @@ class IntMod final {
       * If `cond` is true, sets `x` to `nx` and `y` to `ny`
       */
       static constexpr void conditional_assign(Self& x, Self& y, CT::Choice cond, const Self& nx, const Self& ny) {
-         const W mask = CT::Mask<W>::from_choice(cond).value();
+         const W mask = cond.into_bitmask<W>();
 
          for(size_t i = 0; i != N; ++i) {
             x.m_val[i] = Botan::choose(mask, nx.m_val[i], x.m_val[i]);
@@ -359,7 +359,7 @@ class IntMod final {
       */
       static constexpr void conditional_assign(
          Self& x, Self& y, Self& z, CT::Choice cond, const Self& nx, const Self& ny, const Self& nz) {
-         const W mask = CT::Mask<W>::from_choice(cond).value();
+         const W mask = cond.into_bitmask<W>();
 
          for(size_t i = 0; i != N; ++i) {
             x.m_val[i] = Botan::choose(mask, nx.m_val[i], x.m_val[i]);
@@ -374,7 +374,7 @@ class IntMod final {
       * If `cond` is true, swaps the values of `x` and `y`
       */
       static constexpr void conditional_swap(CT::Choice cond, Self& x, Self& y) {
-         const W mask = CT::Mask<W>::from_choice(cond).value();
+         const W mask = cond.into_bitmask<W>();
 
          for(size_t i = 0; i != N; ++i) {
             auto nx = Botan::choose(mask, y.m_val[i], x.m_val[i]);
