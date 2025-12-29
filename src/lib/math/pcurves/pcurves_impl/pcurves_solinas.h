@@ -87,7 +87,8 @@ constexpr inline void solinas_correct_redc(std::array<W, N>& r, const std::array
       r[i] = word_sub(r[i], C[i], &borrow);
    }
 
-   const auto mask = CT::Mask<W>::expand(borrow).value();
+   // borrow is either 0 or 1, perfect for setting up a mask without extra work
+   const W mask = CT::value_barrier<W>(0 - borrow);
 
    W carry = 0;
 
