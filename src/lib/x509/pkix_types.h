@@ -48,12 +48,22 @@ class BOTAN_PUBLIC_API(2, 0) X509_DN final : public ASN1_Object {
          }
       }
 
+      /**
+      * Since DN matching for Name Constraints requires preserving order and
+      * multimaps have sorted keys, this constructor is deprecated.
+      */
+      BOTAN_DEPRECATED("Deprecated use initializer list constructor")
       explicit X509_DN(const std::multimap<OID, std::string>& args) {
          for(const auto& i : args) {
             add_attribute(i.first, i.second);
          }
       }
 
+      /**
+      * Since DN matching for Name Constraints requires preserving order and
+      * multimaps have sorted keys, this constructor is deprecated.
+      */
+      BOTAN_DEPRECATED("Deprecated use initializer list constructor")
       explicit X509_DN(const std::multimap<std::string, std::string>& args) {
          for(const auto& i : args) {
             add_attribute(i.first, i.second);
@@ -79,6 +89,10 @@ class BOTAN_PUBLIC_API(2, 0) X509_DN final : public ASN1_Object {
 
       std::string to_string() const;
 
+      /**
+      * Return the DN components as a vector. Note that the order of the components is
+      * preserved only when using the initializer list constructor.
+      */
       const std::vector<std::pair<OID, ASN1_String>>& dn_info() const { return m_rdn; }
 
       std::multimap<OID, std::string> get_attributes() const;
