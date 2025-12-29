@@ -257,23 +257,29 @@ template <unpoisonable T>
 */
 class Choice final {
    public:
+      using underlying_type = word;
+
       /**
       * If v == 0 return an unset (false) Choice, otherwise a set Choice
       */
       template <typename T>
          requires std::unsigned_integral<T> && (!std::same_as<bool, T>)
       constexpr static Choice from_int(T v) {
-         // Mask of T that is either |0| or |1|
-         const T v_is_0 = ct_is_zero<T>(value_barrier<T>(v));
+         if constexpr(sizeof(T) <= sizeof(underlying_type)) {
+            return !Choice(ct_is_zero<underlying_type>(v));
+         } else {
+            // Mask of T that is either |0| or |1|
+            const T v_is_0 = ct_is_zero<T>(value_barrier<T>(v));
 
-         // We want the mask to be set if v != 0 so we must check that
-         // v_is_0 is itself zero.
-         //
-         // Also sizeof(T) may not equal sizeof(uint32_t) so we must
-         // use ct_is_zero<uint32_t>. It's ok to either truncate or
-         // zero extend v_is_0 to 32 bits since we know it is |0| or |1|
-         // so even just the low bit is sufficient.
-         return Choice(ct_is_zero<uint32_t>(static_cast<uint32_t>(v_is_0)));
+            // We want the mask to be set if v != 0 so we must check that
+            // v_is_0 is itself zero.
+            //
+            // Also sizeof(T) may not equal sizeof(underlying_type) so we must
+            // use ct_is_zero<underlying_type>. It's ok to either truncate or
+            // zero extend v_is_0 to 32 bits since we know it is |0| or |1|
+            // so even just the low bit is sufficient.
+            return Choice(ct_is_zero<underlying_type>(static_cast<underlying_type>(v_is_0)));
+         }
       }
 
       /**
@@ -282,12 +288,9 @@ class Choice final {
       template <typename T>
          requires std::unsigned_integral<T> && (!std::same_as<bool, T>)
       constexpr T into_bitmask() const {
-         if constexpr(sizeof(T) <= sizeof(uint32_t)) {
+         if constexpr(sizeof(T) <= sizeof(underlying_type)) {
             // The inner mask is already |0| or |1| so just truncate
             return static_cast<T>(value());
-         } else if constexpr(sizeof(T) <= 2 * sizeof(uint32_t)) {
-            const uint64_t m2 = (static_cast<uint64_t>(value()) << 32) | value();
-            return static_cast<T>(m2);
          } else {
             return ~ct_is_zero<T>(value());
          }
@@ -296,9 +299,9 @@ class Choice final {
       /**
       * Create a Choice directly from a mask value - this assumes v is either |0| or |1|
       */
-      constexpr static Choice from_mask(uint32_t v) { return Choice(v); }
+      constexpr static Choice from_mask(underlying_type v) { return Choice(v); }
 
-      constexpr static Choice yes() { return Choice(static_cast<uint32_t>(-1)); }
+      constexpr static Choice yes() { return !no(); }
 
       constexpr static Choice no() { return Choice(0); }
 
@@ -325,7 +328,7 @@ class Choice final {
       constexpr bool as_bool() const { return m_value != 0; }
 
       /// Return the masked value
-      constexpr uint32_t value() const { return value_barrier(m_value); }
+      constexpr underlying_type value() const { return value_barrier(m_value); }
 
       constexpr Choice(const Choice& other) = default;
       constexpr Choice(Choice&& other) = default;
@@ -334,9 +337,9 @@ class Choice final {
       constexpr ~Choice() = default;
 
    private:
-      constexpr explicit Choice(uint32_t v) : m_value(v) {}
+      constexpr explicit Choice(underlying_type v) : m_value(CT::value_barrier<underlying_type>(v)) {}
 
-      uint32_t m_value;
+      underlying_type m_value;
 };
 
 /**
@@ -396,7 +399,7 @@ class Mask final {
       * Return a Mask<T> which is set if choice is set
       */
       static constexpr Mask<T> from_choice(Choice c) {
-         if constexpr(sizeof(T) <= sizeof(uint32_t)) {
+         if constexpr(sizeof(T) <= sizeof(Choice::underlying_type)) {
             // Take advantage of the fact that Choice's mask is always
             // either |0| or |1|
             return Mask<T>(static_cast<T>(c.value()));
@@ -613,8 +616,8 @@ class Mask final {
       * Return a Choice based on this mask
       */
       constexpr CT::Choice as_choice() const {
-         if constexpr(sizeof(T) >= sizeof(uint32_t)) {
-            return CT::Choice::from_mask(static_cast<uint32_t>(unpoisoned_value()));
+         if constexpr(sizeof(T) >= sizeof(Choice::underlying_type)) {
+            return CT::Choice::from_mask(static_cast<Choice::underlying_type>(unpoisoned_value()));
          } else {
             return CT::Choice::from_int(unpoisoned_value());
          }
