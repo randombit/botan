@@ -805,7 +805,7 @@ class GenericField final {
       void _const_time_unpoison() const { CT::unpoison(m_val); }
 
       static void conditional_swap(CT::Choice cond, GenericField& x, GenericField& y) {
-         const W mask = CT::Mask<W>::from_choice(cond).value();
+         const W mask = cond.into_bitmask<W>();
 
          for(size_t i = 0; i != N; ++i) {
             auto nx = choose(mask, y.m_val[i], x.m_val[i]);
@@ -816,7 +816,7 @@ class GenericField final {
       }
 
       void conditional_assign(CT::Choice cond, const GenericField& nx) {
-         const W mask = CT::Mask<W>::from_choice(cond).value();
+         const W mask = cond.into_bitmask<W>();
 
          for(size_t i = 0; i != N; ++i) {
             m_val[i] = choose(mask, nx.m_val[i], m_val[i]);
@@ -830,7 +830,7 @@ class GenericField final {
       */
       static void conditional_assign(
          GenericField& x, GenericField& y, CT::Choice cond, const GenericField& nx, const GenericField& ny) {
-         const W mask = CT::Mask<W>::from_choice(cond).value();
+         const W mask = cond.into_bitmask<W>();
 
          for(size_t i = 0; i != N; ++i) {
             x.m_val[i] = choose(mask, nx.m_val[i], x.m_val[i]);
@@ -850,7 +850,7 @@ class GenericField final {
                                      const GenericField& nx,
                                      const GenericField& ny,
                                      const GenericField& nz) {
-         const W mask = CT::Mask<W>::from_choice(cond).value();
+         const W mask = cond.into_bitmask<W>();
 
          for(size_t i = 0; i != N; ++i) {
             x.m_val[i] = choose(mask, nx.m_val[i], x.m_val[i]);

@@ -277,6 +277,23 @@ class Choice final {
       }
 
       /**
+      * Return a bitmask |1| if the choice is set, or |0| otherwise
+      */
+      template <typename T>
+         requires std::unsigned_integral<T> && (!std::same_as<bool, T>)
+      constexpr T into_bitmask() const {
+         if constexpr(sizeof(T) <= sizeof(uint32_t)) {
+            // The inner mask is already |0| or |1| so just truncate
+            return static_cast<T>(value());
+         } else if constexpr(sizeof(T) <= 2 * sizeof(uint32_t)) {
+            const uint64_t m2 = (static_cast<uint64_t>(value()) << 32) | value();
+            return static_cast<T>(m2);
+         } else {
+            return ~ct_is_zero<T>(value());
+         }
+      }
+
+      /**
       * Create a Choice directly from a mask value - this assumes v is either |0| or |1|
       */
       constexpr static Choice from_mask(uint32_t v) { return Choice(v); }
