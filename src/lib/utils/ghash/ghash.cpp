@@ -46,7 +46,7 @@ void GHASH::ghash_multiply(std::span<uint8_t, GCM_BS> x, std::span<const uint8_t
 #endif
 
 #if defined(BOTAN_HAS_GHASH_CLMUL_VPERM)
-   if(CPUID::has(CPUID::Feature::SIMD_4X32)) {
+   if(CPUID::has(CPUID::Feature::SIMD_2X64)) {
       return ghash_multiply_vperm(x.data(), m_HM.data(), input.data(), blocks);
    }
 #endif
