@@ -7,7 +7,9 @@
 #include "fuzzers.h"
 
 #include <botan/hex.h>
+#include <botan/tls_callbacks.h>
 #include <botan/tls_client.h>
+#include <botan/tls_policy.h>
 #include <botan/tls_session_manager_noop.h>
 
 class Fuzzer_TLS_Client_Creds : public Botan::Credentials_Manager {

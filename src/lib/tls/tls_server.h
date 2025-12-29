@@ -12,13 +12,17 @@
 #define BOTAN_TLS_SERVER_H_
 
 #include <botan/credentials_manager.h>
+#include <botan/tls_callbacks.h>  // TODO(Botan4) not necessary here, remove
 #include <botan/tls_channel.h>
-#include <botan/tls_policy.h>
+#include <botan/tls_policy.h>  // TODO(Botan4) not necessary here, remove
 #include <vector>
 
 namespace Botan::TLS {
 
+class Callbacks;
+class Session_Manager;
 class Channel_Impl;
+class Policy;
 
 /**
 * TLS Server

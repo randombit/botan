@@ -10,6 +10,7 @@
 #include <botan/credentials_manager.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
+#include <botan/tls_policy.h>
 #include <botan/internal/tls_reader.h>
 
 namespace Botan::TLS {

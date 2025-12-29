@@ -72,10 +72,7 @@ class PrimeOrderCurve /* NOLINT(*-special-member-functions) */ {
             Scalar& operator=(Scalar&& other) = default;
             ~Scalar() = default;
 
-            void _zeroize() {
-               secure_scrub_memory(m_value);
-               std::ranges::fill(m_value, 0);  // secure_scrub_memory does not guarantee zero output!
-            }
+            void _zeroize() { secure_scrub_memory(m_value); }
 
             const auto& _curve() const { return m_curve; }
 

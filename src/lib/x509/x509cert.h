@@ -13,11 +13,11 @@
 
 namespace Botan {
 
+class AlternativeName;
+class Extensions;
+class NameConstraints;
 class Public_Key;
 class X509_DN;
-class Extensions;
-class AlternativeName;
-class NameConstraints;
 
 enum class Usage_Type : uint8_t {
    UNSPECIFIED,  // no restrictions

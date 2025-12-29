@@ -13,6 +13,7 @@
 #include <botan/hex.h>
 #include <botan/rng.h>
 #include <deque>
+#include <optional>
 #include <string>
 
 #if defined(BOTAN_HAS_AES)
@@ -183,7 +184,9 @@ class Request_Counting_RNG final : public Botan::RandomNumberGenerator {
          The HMAC_DRBG and ChaCha reseed KATs assume this RNG type
          outputs all 0x80
          */
-         std::ranges::fill(output, 0x80);
+         for(auto& b : output) {
+            b = 0x80;
+         }
          if(!output.empty()) {
             m_randomize_count++;
          }

@@ -16,6 +16,7 @@
    #include <botan/ecdsa.h>
    #include <botan/hash.h>
    #include <botan/pkcs8.h>
+   #include <botan/rng.h>
 #endif
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)

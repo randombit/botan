@@ -11,6 +11,7 @@
 #include <botan/types.h>
 #include <exception>
 #include <string>
+#include <string_view>
 
 namespace Botan {
 

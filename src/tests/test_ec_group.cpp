@@ -15,6 +15,7 @@
    #include <botan/hex.h>
    #include <botan/numthry.h>
    #include <botan/pk_keys.h>
+   #include <botan/rng.h>
    #include <botan/x509_key.h>
    #include <botan/internal/barrett.h>
    #include <botan/internal/ec_inner_data.h>

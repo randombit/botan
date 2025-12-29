@@ -7,6 +7,7 @@
 */
 
 #include "tests.h"
+#include <botan/rng.h>
 #include <botan/version.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/calendar.h>
@@ -21,8 +22,6 @@
 #include <botan/internal/target_info.h>
 
 #include <bit>
-#include <ctime>
-#include <functional>
 
 #if defined(BOTAN_HAS_CPUID)
    #include <botan/internal/cpuid.h>

@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_PASSWORD_HASHING)
    #include <botan/pwdhash.h>
+   #include <cstring>
 #endif
 
 #if defined(BOTAN_HAS_BCRYPT)

@@ -9,6 +9,8 @@
 #define BOTAN_TEST_STDOUT_REPORTER_H_
 
 #include "test_reporter.h"
+#include <iosfwd>
+#include <set>
 
 namespace Botan_Tests {
 

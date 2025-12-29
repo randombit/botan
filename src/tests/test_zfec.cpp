@@ -8,7 +8,9 @@
 
 #if defined(BOTAN_HAS_ZFEC)
 
+   #include <botan/rng.h>
    #include <botan/zfec.h>
+   #include <set>
 
 namespace Botan_Tests {
 

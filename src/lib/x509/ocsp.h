@@ -49,9 +49,9 @@ class BOTAN_PUBLIC_API(2, 0) SingleResponse final : public ASN1_Object {
 
       size_t cert_status() const { return m_cert_status; }
 
-      X509_Time this_update() const { return m_thisupdate; }
+      const X509_Time& this_update() const { return m_thisupdate; }
 
-      X509_Time next_update() const { return m_nextupdate; }
+      const X509_Time& next_update() const { return m_nextupdate; }
 
       void encode_into(DER_Encoder& to) const override;
 

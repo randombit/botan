@@ -16,6 +16,7 @@
    #include <botan/bigint.h>
    #include <botan/der_enc.h>
    #include <botan/pk_algs.h>
+   #include <botan/pk_keys.h>
    #include <botan/x509_ca.h>
    #include <botan/x509_ext.h>
    #include <botan/x509self.h>

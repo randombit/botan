@@ -13,6 +13,7 @@
    #include <botan/hash.h>
    #include <botan/pk_algs.h>
    #include <botan/pkcs8.h>
+   #include <botan/rng.h>
 #endif
 
 namespace Botan_Tests {
@@ -282,7 +283,7 @@ class ECDSA_AllGroups_Test : public Test {
                   Botan::PK_Verifier verifier(*pub, hash);
 
                   for(size_t i = 0; i != 16; ++i) {
-                     auto message = rng().random_vec(rng().next_byte());
+                     auto message = Botan::unlock(rng().random_vec(rng().next_byte()));
                      auto sig = signer.sign_message(message, rng());
                      result.test_eq("Expected signature size", sig.size(), 2 * group.get_order_bytes());
 

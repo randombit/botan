@@ -7,6 +7,7 @@
 
 #include <botan/x509_crl.h>
 
+#include <botan/asn1_obj.h>
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
 #include <botan/der_enc.h>

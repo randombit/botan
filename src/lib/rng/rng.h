@@ -171,6 +171,9 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       * of bits collected.
       *
       * Sets the seeded state to true if enough entropy was added.
+      *
+      * TODO(Botan4) this doesn't need to be virtual anymore
+      * TODO(Botan4) remove poll timeout argument entirely (polling is always fast now)
       */
       virtual size_t reseed(Entropy_Sources& srcs,
                             size_t poll_bits = RandomNumberGenerator::DefaultPollBits,
@@ -182,6 +185,8 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       * Sets the seeded state to true if enough entropy was added.
       *
       * @throws Exception if RNG accepts input but reseeding failed.
+      *
+      * TODO(Botan4) this does not need to be virtual
       */
       virtual void reseed_from_rng(RandomNumberGenerator& rng,
                                    size_t poll_bits = RandomNumberGenerator::DefaultPollBits);

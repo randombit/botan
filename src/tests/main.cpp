@@ -17,7 +17,7 @@
 
 namespace {
 
-void print_item_list(std::ostringstream& err, const std::set<std::string>& list) {
+void print_item_list(std::ostringstream& err, const std::vector<std::string>& list) {
    size_t line_len = 0;
 
    for(const auto& item : list) {

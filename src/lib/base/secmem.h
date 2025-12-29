@@ -10,7 +10,6 @@
 
 #include <botan/allocator.h>
 #include <botan/types.h>  // IWYU pragma: export
-#include <algorithm>
 #include <span>
 #include <type_traits>
 #include <vector>  // IWYU pragma: export

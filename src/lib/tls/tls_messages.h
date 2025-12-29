@@ -9,6 +9,11 @@
 #ifndef BOTAN_TLS_MESSAGES_H_
 #define BOTAN_TLS_MESSAGES_H_
 
+#include <botan/strong_type.h>
+#include <botan/tls_ciphersuite.h>
+#include <botan/tls_extensions.h>
+#include <botan/tls_handshake_msg.h>
+#include <botan/tls_session.h>
 #include <chrono>
 #include <memory>
 #include <optional>
@@ -17,19 +22,11 @@
 #include <variant>
 #include <vector>
 
-#include <botan/pk_keys.h>
-#include <botan/strong_type.h>
-#include <botan/tls_ciphersuite.h>
-#include <botan/tls_extensions.h>
-#include <botan/tls_handshake_msg.h>
-#include <botan/tls_policy.h>
-#include <botan/tls_session.h>
-#include <botan/x509cert.h>
-
 namespace Botan {
 
 class Public_Key;
 class Credentials_Manager;
+class X509_Certificate;
 
 namespace OCSP {
 class Response;
@@ -551,7 +548,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
       class Certificate_Entry {
          public:
             Certificate_Entry(TLS_Data_Reader& reader, Connection_Side side, Certificate_Type cert_type);
-            explicit Certificate_Entry(X509_Certificate cert);
+            explicit Certificate_Entry(const X509_Certificate& cert);
             explicit Certificate_Entry(std::shared_ptr<Public_Key> raw_public_key);
 
             bool has_certificate() const { return m_certificate.has_value(); }

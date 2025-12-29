@@ -15,9 +15,10 @@
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_extensions.h>
+#include <botan/tls_policy.h>
 #include <botan/x509_key.h>
 #include <botan/internal/tls_reader.h>
-
+#include <algorithm>
 #include <iterator>
 #include <memory>
 
@@ -312,8 +313,8 @@ Certificate_13::Certificate_Entry::Certificate_Entry(TLS_Data_Reader& reader,
    }
 }
 
-Certificate_13::Certificate_Entry::Certificate_Entry(X509_Certificate cert) :
-      m_certificate(std::move(cert)), m_raw_public_key(m_certificate->subject_public_key()) {}
+Certificate_13::Certificate_Entry::Certificate_Entry(const X509_Certificate& cert) :
+      m_certificate(cert), m_raw_public_key(m_certificate->subject_public_key()) {}
 
 Certificate_13::Certificate_Entry::Certificate_Entry(std::shared_ptr<Public_Key> raw_public_key) :
       m_certificate(std::nullopt), m_raw_public_key(std::move(raw_public_key)) {

@@ -15,8 +15,8 @@
 #include <botan/rng.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
+#include <botan/tls_policy.h>
 #include <botan/tls_version.h>
-
 #include <botan/internal/parsing.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_handshake_hash.h>
@@ -415,11 +415,13 @@ void Client_Hello_12::add_tls12_supported_groups_extensions(const Policy& policy
    //    key exchange using that group.
    //
    // We don't support hybrid key exchange in TLS 1.2
-   const std::vector<Group_Params> kex_groups = policy.key_exchange_groups();
+
    std::vector<Group_Params> compatible_kex_groups;
-   std::copy_if(kex_groups.begin(), kex_groups.end(), std::back_inserter(compatible_kex_groups), [](const auto group) {
-      return !group.is_post_quantum();
-   });
+   for(const auto& group : policy.key_exchange_groups()) {
+      if(!group.is_post_quantum()) {
+         compatible_kex_groups.push_back(group);
+      }
+   }
 
    auto supported_groups = std::make_unique<Supported_Groups>(std::move(compatible_kex_groups));
 

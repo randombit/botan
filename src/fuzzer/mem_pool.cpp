@@ -8,6 +8,7 @@
 
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/mem_pool.h>
+#include <cstring>
 #include <map>
 #include <utility>
 #include <vector>

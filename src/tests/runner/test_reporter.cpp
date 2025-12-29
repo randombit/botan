@@ -31,7 +31,8 @@ TestSummary::TestSummary(const Test::Result& result) :
       m_assertions(result.tests_run()),
       m_notes(result.notes()),
       m_failures(result.failures()),
-      m_timestamp(result.timestamp()),
+      m_timestamp(
+         std::chrono::duration_cast<std::chrono::system_clock::duration>(std::chrono::nanoseconds(result.timestamp()))),
       m_elapsed_time(result.elapsed_time()) {}
 
 Testsuite::Testsuite(std::string name) : m_name(std::move(name)) {}

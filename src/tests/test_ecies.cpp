@@ -10,6 +10,7 @@
 #if defined(BOTAN_HAS_ECIES)
    #include <botan/ecdh.h>
    #include <botan/ecies.h>
+   #include <botan/rng.h>
 #endif
 
 namespace Botan_Tests {

@@ -10,8 +10,8 @@
 
 #include <botan/assert.h>
 #include <botan/exceptn.h>
+#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
-#include <algorithm>
 
 namespace Botan {
 
@@ -26,7 +26,7 @@ void Truncated_Hash::final_result(std::span<uint8_t> out) {
 
    // truncate output to a full number of bytes
    const auto bytes = output_length();
-   std::copy_n(m_buffer.begin(), bytes, out.data());
+   copy_mem(out.data(), m_buffer.data(), bytes);
    zeroise(m_buffer);
 
    // mask the unwanted bits in the final byte
