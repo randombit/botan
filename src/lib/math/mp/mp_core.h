@@ -691,21 +691,16 @@ template <WordType W>
 inline constexpr auto monty_inverse(W a) -> W {
    BOTAN_ARG_CHECK(a % 2 == 1, "Cannot compute Montgomery inverse of an even integer");
 
-   /*
-   * From "A New Algorithm for Inversion mod p^k" by Çetin Kaya Koç
-   * https://eprint.iacr.org/2017/411.pdf sections 5 and 7.
-   */
+   // Newton's Method, following https://lemire.me/blog/2017/09/18/computing-the-inverse-of-odd-integers/
 
-   W b = 1;
-   W r = 0;
+   constexpr size_t iter = WordInfo<W>::bits == 64 ? 4 : 3;
 
-   for(size_t i = 0; i != WordInfo<W>::bits; ++i) {
-      const W bi = CT::value_barrier(b % 2);
-      r >>= 1;
-      r += bi << (WordInfo<W>::bits - 1);
+   // Initial guess provides 5 bits of accuracy
+   W r = (3 * a) ^ 2;
 
-      b -= a * bi;
-      b >>= 1;
+   // Each iteration doubles the accuracy
+   for(size_t i = 0; i != iter; ++i) {
+      r = r * (2 - r * a);
    }
 
    // Now invert in addition space
