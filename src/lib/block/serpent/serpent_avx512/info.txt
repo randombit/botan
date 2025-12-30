@@ -16,7 +16,17 @@ cpuid
 simd_avx512
 </requires>
 
-# MSVC miscompiles this code
 <cc>
+# MSVC miscompiles this code
 !msvc
+
+# TODO(Botan4) this can be cleaned up if min GCC is increased
+
+# GCC 11 miscompiles this code in amalgamation mode
+gcc:12
+
+# Whitelist all other AVX-512 supporting compilers; this can be removed in Botan4
+clang
+clangcl
+xcode
 </cc>
