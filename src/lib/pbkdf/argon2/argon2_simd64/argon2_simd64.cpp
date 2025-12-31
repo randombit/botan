@@ -67,7 +67,7 @@ BOTAN_FORCE_INLINE void blamka_R(SIMD_2x64& A0,
 
 }  // namespace
 
-void Argon2::blamka_ssse3(uint64_t N[128], uint64_t T[128]) {
+void Argon2::blamka_simd64(uint64_t N[128], uint64_t T[128]) {
    for(size_t i = 0; i != 8; ++i) {
       SIMD_2x64 Tv[8];
       for(size_t j = 0; j != 4; ++j) {

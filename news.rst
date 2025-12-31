@@ -22,7 +22,7 @@ Version 3.11.0, Not Yet Released
 * Various elliptic curve arithmetic optimizations (GH #5186 #5194 #5195 #5196)
 
 * Add support for WebAssembly SIMD, optimizing various algorithms including AES, GCM,
-  ChaCha, SHA-1, SHA-256 and others. (GH #5155 #5163)
+  ChaCha, SHA-1, SHA-256 and others. (GH #5155 #5163 #5201)
 
 * Unroll loops to improve Montgomery reduction performance. (GH #5150)
 

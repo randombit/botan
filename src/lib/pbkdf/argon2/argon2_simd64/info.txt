@@ -1,15 +1,11 @@
 <internal_defines>
-ARGON2_SSSE3 -> 20220303
+ARGON2_SIMD64 -> 20251107
 </internal_defines>
 
 <module_info>
-name -> "Argon2 SSSE3"
-brief -> "Argon2 using SSSE3 instructions"
+name -> "Argon2 SIMD_2x64"
+brief -> "Argon2 using SIMD_2x64"
 </module_info>
-
-<isa>
-ssse3
-</isa>
 
 # MSVC miscompiles this code on x86-32
 <cc>
