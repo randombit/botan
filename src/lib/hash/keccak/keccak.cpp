@@ -12,19 +12,32 @@
 
 namespace Botan {
 
+namespace {
+
+constexpr auto select_keccak_hash_permutation(size_t output_bits) {
+   switch(output_bits) {
+      case 224:
+         return Keccak_Permutation({.capacity_bits = 448, .padding = KeccakPadding::keccak1600()});
+      case 256:
+         return Keccak_Permutation({.capacity_bits = 512, .padding = KeccakPadding::keccak1600()});
+      case 384:
+         return Keccak_Permutation({.capacity_bits = 768, .padding = KeccakPadding::keccak1600()});
+      case 512:
+         return Keccak_Permutation({.capacity_bits = 1024, .padding = KeccakPadding::keccak1600()});
+      default:
+         // We only support the parameters for the SHA-3 proposal
+         throw Invalid_Argument(fmt("Keccak_1600: Invalid output length {}", output_bits));
+   }
+}
+
+}  // namespace
+
 std::unique_ptr<HashFunction> Keccak_1600::copy_state() const {
    return std::make_unique<Keccak_1600>(*this);
 }
 
 Keccak_1600::Keccak_1600(size_t output_bits) :
-      m_keccak({.capacity_bits = 2 * output_bits, .padding = KeccakPadding::keccak1600()}),
-      m_output_length(output_bits / 8) {
-   // We only support the parameters for the SHA-3 proposal
-
-   if(output_bits != 224 && output_bits != 256 && output_bits != 384 && output_bits != 512) {
-      throw Invalid_Argument(fmt("Keccak_1600: Invalid output length {}", output_bits));
-   }
-}
+      m_keccak(select_keccak_hash_permutation(output_bits)), m_output_length(output_bits / 8) {}
 
 std::string Keccak_1600::name() const {
    return fmt("Keccak-1600({})", m_output_length * 8);
@@ -35,7 +48,7 @@ std::unique_ptr<HashFunction> Keccak_1600::new_object() const {
 }
 
 void Keccak_1600::clear() {
-   m_keccak.clear();
+   m_keccak = select_keccak_hash_permutation(m_output_length * 8);
 }
 
 std::string Keccak_1600::provider() const {
