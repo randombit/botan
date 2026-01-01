@@ -14,6 +14,7 @@
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
+#include <botan/internal/x509_utils.h>
 
 namespace Botan {
 
@@ -239,20 +240,23 @@ bool GeneralName::matches_dns(std::string_view name, std::string_view constraint
 
 //static
 bool GeneralName::matches_dn(const X509_DN& name, const X509_DN& constraint) {
-   const auto attr = name.get_attributes();
-   bool ret = true;
-   size_t tries = 0;
+   // Perform DN matching by comparing RDNs in sequence, i.e.,
+   // whether the constraint is a prefix of the name.
+   const auto& name_info = name.dn_info();
+   const auto& constraint_info = constraint.dn_info();
 
-   for(const auto& c : constraint.dn_info()) {
-      auto i = attr.equal_range(c.first);
+   if(constraint_info.size() > name_info.size()) {
+      return false;
+   }
 
-      if(i.first != i.second) {
-         tries += 1;
-         ret = ret && (i.first->second == c.second.value());
+   for(size_t i = 0; i < constraint_info.size(); ++i) {
+      if(name_info[i].first != constraint_info[i].first ||
+         !x500_name_cmp(name_info[i].second.value(), constraint_info[i].second.value())) {
+         return false;
       }
    }
 
-   return tries > 0 && ret;
+   return !constraint_info.empty();
 }
 
 std::ostream& operator<<(std::ostream& os, const GeneralName& gn) {
