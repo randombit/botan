@@ -40,7 +40,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t in[], size_t len) {
    if(len <= max_fuzzer_input_size) {
       try {
          fuzz(std::span<const uint8_t>(in, len));
-      } catch(std::exception& e) {
+      } catch(const std::exception& e) {
          std::cerr << "Uncaught exception from fuzzer driver " << e.what() << "\n";
          abort();
       } catch(...) {

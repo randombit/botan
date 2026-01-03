@@ -32,5 +32,5 @@ void fuzz(std::span<const uint8_t> in) {
 
       auto hl2 = prepare(in);
       while(hl2.next_post_handshake_message(policy).has_value()) {};
-   } catch(Botan::Exception& e) {}
+   } catch(const Botan::Exception& e) {}
 }
