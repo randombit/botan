@@ -93,6 +93,12 @@ snail-mail address (S), and Bitcoin address (B).
   N: Justin Karneges
   D: Qt support modules (mutexes and types), X.509 API design
 
+  N: Kagan Can Sit
+  E: kagancansit@hotmail.com
+  W: https://kagancansit.github.io
+  D: C++20 modernization, performance optimizations, code quality improvements
+  S: Turkey
+
   N: Rostyslav Khudolii
   E: rhudoliy@gmail.com
   D: SRP6 FFI
