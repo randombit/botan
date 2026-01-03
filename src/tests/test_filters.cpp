@@ -16,6 +16,7 @@
    #include <botan/filters.h>
    #include <botan/pipe.h>
    #include <botan/internal/secqueue.h>
+   #include <botan/internal/target_info.h>
 #endif
 
 #if defined(BOTAN_HAS_PIPE_UNIXFD_IO)
@@ -676,7 +677,7 @@ class Filter_Tests final : public Test {
       static Test::Result test_pipe_fd_io() {
          Test::Result result("Pipe file descriptor IO");
 
-   #if defined(BOTAN_HAS_PIPE_UNIXFD_IO) && defined(BOTAN_HAS_CODEC_FILTERS)
+   #if defined(BOTAN_HAS_PIPE_UNIXFD_IO) && defined(BOTAN_HAS_CODEC_FILTERS) && !defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
          int fd[2];
          if(::pipe(fd) != 0) {
             return result;  // pipe unavailable?
