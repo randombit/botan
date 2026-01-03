@@ -13,7 +13,7 @@ namespace {
 void check_os2ecp(const Botan::EC_Group& group, std::span<const uint8_t> in) {
    try {
       Botan::EC_AffinePoint(group, in);
-   } catch(Botan::Exception& e) {}
+   } catch(const Botan::Exception& e) {}
 }
 
 }  // namespace

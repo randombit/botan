@@ -15,5 +15,5 @@ void fuzz(std::span<const uint8_t> input) {
 
    try {
       Botan::URI::from_any(std::string(reinterpret_cast<const char*>(input.data()), input.size()));
-   } catch(Botan::Exception& e) {}
+   } catch(const Botan::Exception& e) {}
 }

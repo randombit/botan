@@ -15,7 +15,7 @@ void fuzz(std::span<const uint8_t> in) {
    try {
       Botan::DataSource_Memory input(in);
       Botan::PKCS8::load_key(input);
-   } catch(Botan::Exception& e) {}
+   } catch(const Botan::Exception& e) {}
 
    /*
    * This avoids OOMs in OSS-Fuzz caused by storing precomputations

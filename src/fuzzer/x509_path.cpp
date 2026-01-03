@@ -24,5 +24,5 @@ void fuzz(std::span<const uint8_t> in) {
       const Botan::Path_Validation_Restrictions restrictions;
 
       x509_path_validate({subject}, restrictions, roots);
-   } catch(Botan::Exception& e) {}
+   } catch(const Botan::Exception& e) {}
 }

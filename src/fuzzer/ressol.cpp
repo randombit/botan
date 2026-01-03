@@ -35,5 +35,5 @@ void fuzz(std::span<const uint8_t> in) {
                                           << "Z = " << z.to_hex_string() << "\n");
          }
       }
-   } catch(Botan::Exception& e) {}
+   } catch(const Botan::Exception& e) {}
 }

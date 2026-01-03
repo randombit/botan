@@ -185,5 +185,5 @@ void fuzz(std::span<const uint8_t> in) {
 
    try {
       server.received_data(in.subspan(1, in.size() - 1));
-   } catch(std::exception& e) {}
+   } catch(const std::exception& e) {}
 }

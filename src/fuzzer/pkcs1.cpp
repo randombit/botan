@@ -48,13 +48,13 @@ void fuzz(std::span<const uint8_t> in) {
       lib_rejected = !written.has_value().as_bool();
 
       lib_result.resize(written.value_or(0));
-   } catch(Botan::Decoding_Error&) {
+   } catch(const Botan::Decoding_Error&) {
       lib_rejected = true;
    }
 
    try {
       ref_result = simple_pkcs1_unpad(in.data(), in.size());
-   } catch(Botan::Decoding_Error& e) {
+   } catch(const Botan::Decoding_Error& e) {
       ref_rejected = true;
    }
 
