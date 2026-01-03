@@ -53,6 +53,7 @@ joerg
 Jose Luis Pereira (Fyde Inc.)
 Juraj Somorovsky (Hackmanit GmbH)
 Justin Karneges
+Kagan Can Sit
 Kai Michaelis (Rohde & Schwarz Cybersecurity)
 Kirill A. Korinsky
 Konstantinos Kolelis
