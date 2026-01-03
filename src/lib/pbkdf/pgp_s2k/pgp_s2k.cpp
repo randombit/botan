@@ -77,8 +77,6 @@ size_t OpenPGP_S2K::pbkdf(uint8_t output_buf[],
                           size_t salt_len,
                           size_t iterations,
                           std::chrono::milliseconds msec) const {
-   const std::unique_ptr<PasswordHash> pwdhash;
-
    if(iterations == 0) {
       const RFC4880_S2K_Family s2k_params(m_hash->new_object());
       iterations = s2k_params.tune(output_len, msec, 0, std::chrono::milliseconds(10))->iterations();
