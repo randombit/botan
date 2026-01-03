@@ -2197,6 +2197,11 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
 
     def test_exe_extra_ldflags():
         if osinfo.matches_name("emscripten"):
+            # It doesn't make much sense (and it's not even possible) to preload files when FS is not virtualized.
+            virtualized_fs = '-sNODERAWFS=1' not in cc.ldflags(options)
+            if not virtualized_fs:
+                return ''
+
             return '--preload-file=%s@src/tests/data' % source_paths.test_data_dir
 
         return ''

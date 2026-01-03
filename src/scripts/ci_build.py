@@ -308,9 +308,10 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         flags += ['--disable-modules=locking_allocator']
 
     if target == 'emscripten':
-        flags += ['--cpu=wasm']
-        # need to find a way to run the wasm-compiled tests w/o a browser
-        test_cmd = None
+        # While it's possible to run the tests in a headless browser on CI, it's easier to just target Node.js instead,
+        # especially to gather the results.
+        flags += ['--cpu=wasm', '--program-suffix=.js', '--extra-cxxflags=-msimd128', '--ldflags=-sNODERAWFS=1']
+        test_cmd = ['node', os.path.join(build_dir, 'botan-test.js')] + test_cmd[1:]
 
     if target in ['sanitizer', 'strubbing'] and target_cc in ['gcc']:
         # Stack scrubbing is supported on GCC 14 and newer, only. This is newer
