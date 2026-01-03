@@ -833,6 +833,32 @@ X509Cert
 X509CRL
 -----------------------------------------
 
+.. py:class:: X509CRLReason
+
+   .. py:attribute:: UNSPECIFIED
+   .. py:attribute:: KEY_COMPROMISE
+   .. py:attribute:: CA_COMPROMISE
+   .. py:attribute:: AFFILIATION_CHANGED
+   .. py:attribute:: SUPERSEDED
+   .. py:attribute:: CESSATION_OF_OPERATION
+   .. py:attribute:: CERTIFICATE_HOLD
+   .. py:attribute:: REMOVE_FROM_CRL
+   .. py:attribute:: PRIVILEGE_WITHDRAWN
+   .. py:attribute:: AA_COMPROMISE
+
+
+.. py:class:: X509CRLEntry
+
+   .. py:attribute:: serial_number
+
+      The revoked certificates' serial number, as an ``MPI``.
+
+   .. py:attribute:: expire_time
+   .. py:attribute:: reason
+
+      The reason the certificate was revoked, as an ``X509CRLReason``.
+
+
 .. py:class:: X509CRL(filename=None, buf=None)
 
    Class representing an X.509 Certificate Revocation List.
@@ -840,8 +866,28 @@ X509CRL
    A CRL in PEM or DER format can be loaded from a file, with the ``filename`` argument,
    or from a bytestring, with the ``buf`` argument.
 
+   .. py:classmethod:: create(rng, ca_cert, ca_key, issue_time, next_update, hash_fn=None, padding=None)
 
+      Create a new CRL for the given CA.
+      ``issue_time`` is expected to be a UNIX timestamp, in seconds.
+      ``next_update`` is expected to be in seconds.
 
+   .. py:method:: revoke(rng, ca_cert, ca_key, issue_time, next_update, revoked, reason, hash_fn=None, padding=None)
 
+      Revoke some certificates. This does not modify the original CRL in place,
+      instead it creates a new CRL object.
+      ``revoked`` is expected to be a list of certs to revoke.
+      ``issue_time`` is expected to be a UNIX timestamp, in seconds.
+      ``next_update`` is expected to be in seconds.
 
+   .. py:method:: revoked()
 
+      Get a list of revoked certificates from this CRL. Each entry is a ``X509CRLEntry``.
+
+   .. py:method:: verify(key)
+
+         Verify the CRL's signature against a ``PublicKey``.
+
+   .. py:method:: to_pem()
+
+   .. py:method:: to_der()

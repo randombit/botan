@@ -69,7 +69,7 @@ API follows a few simple rules:
 * that declaration is not visible here since this header is intentionally
 * free-standing, depending only on a few C standard library headers.
 */
-#define BOTAN_FFI_API_VERSION 20250829
+#define BOTAN_FFI_API_VERSION 20260203
 
 /**
 * BOTAN_FFI_EXPORT indicates public FFI functions.
@@ -2240,6 +2240,55 @@ typedef struct botan_x509_crl_struct* botan_x509_crl_t;
 BOTAN_FFI_EXPORT(2, 13) int botan_x509_crl_load_file(botan_x509_crl_t* crl_obj, const char* crl_path);
 BOTAN_FFI_EXPORT(2, 13)
 int botan_x509_crl_load(botan_x509_crl_t* crl_obj, const uint8_t crl_bits[], size_t crl_bits_len);
+
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_crl_create(botan_x509_crl_t* crl_obj,
+                          botan_rng_t rng,
+                          botan_x509_cert_t ca_cert,
+                          botan_privkey_t ca_key,
+                          uint64_t issue_time,
+                          uint32_t next_update,
+                          const char* hash_fn,
+                          const char* padding);
+
+/* Must match values of CRL_Code in pkix_enums.h */
+enum botan_x509_crl_reason_code /* NOLINT(*-enum-size) */ {
+   UNSPECIFIED = 0,
+   KEY_COMPROMISE = 1,
+   CA_COMPROMISE = 2,
+   AFFILIATION_CHANGED = 3,
+   SUPERSEDED = 4,
+   CESSATION_OF_OPERATION = 5,
+   CERTIFICATE_HOLD = 6,
+   REMOVE_FROM_CRL = 8,
+   PRIVILEGE_WITHDRAWN = 9,
+   AA_COMPROMISE = 10
+};
+
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_crl_update(botan_x509_crl_t* crl_obj,
+                          botan_x509_crl_t last_crl,
+                          botan_rng_t rng,
+                          botan_x509_cert_t ca_cert,
+                          botan_privkey_t ca_key,
+                          uint64_t issue_time,
+                          uint32_t next_update,
+                          const botan_x509_cert_t* revoked,
+                          size_t revoked_len,
+                          uint8_t reason,
+                          const char* hash_fn,
+                          const char* padding);
+
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_get_count(botan_x509_crl_t crl, size_t* count);
+
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_crl_get_entry(botan_x509_crl_t crl, size_t i, botan_mp_t serial, uint64_t* expire_time, uint8_t* reason);
+
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_verify_signature(botan_x509_crl_t crl, botan_pubkey_t key, int* result);
+
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_view_pem(botan_x509_crl_t crl, botan_view_ctx ctx, botan_view_str_fn view);
+
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_view_der(botan_x509_crl_t crl, botan_view_ctx ctx, botan_view_bin_fn view);
 
 BOTAN_FFI_EXPORT(2, 13) int botan_x509_crl_destroy(botan_x509_crl_t crl);
 
