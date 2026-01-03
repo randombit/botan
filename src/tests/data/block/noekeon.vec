@@ -1,4 +1,4 @@
-#test cpuid sse2 neon altivec lsx
+#test cpuid sse2 neon altivec lsx simd128
 
 [Noekeon]
 
