@@ -89,7 +89,6 @@ std::vector<X509_Certificate> Certificate_Store_In_SQL::find_all_certs(const X50
       stmt->bind(2, key_id);
    }
 
-   const std::optional<X509_Certificate> cert;
    while(stmt->step()) {
       auto blob = stmt->get_blob(0);
       certs.push_back(X509_Certificate(blob.first, blob.second));
