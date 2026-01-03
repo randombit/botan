@@ -87,21 +87,25 @@ class OS_Utils_Tests final : public Test {
       }
 
       static Test::Result test_get_high_resolution_clock() {
-         const size_t max_trials = 1024;
-         const size_t max_repeats = 128;
+         // We can easily test progression; however, testing precision is trickier.
+         // On very fast machines with very low clock resolution (like the web platform offers),
+         // it may be necessary to make the call quite a few times to notice any change.
+         constexpr auto max_trials = 32768;
 
          Test::Result result("OS::get_high_resolution_clock");
 
          // TODO better tests
-         const uint64_t hr_ts1 = Botan::OS::get_high_resolution_clock();
+         const auto hr_ts1 = Botan::OS::get_high_resolution_clock();
          result.confirm("high resolution timestamp value is never zero", hr_ts1 != 0);
 
-         size_t counts = 0;
-         while(counts < max_trials && (Botan::OS::get_high_resolution_clock() == hr_ts1)) {
-            ++counts;
+         for(size_t trials = 0; trials < max_trials; ++trials) {
+            if(hr_ts1 < Botan::OS::get_high_resolution_clock()) {
+               result.test_success("high resolution clock made forward progress");
+               return result;
+            }
          }
 
-         result.test_lt("high resolution clock eventually changes value", counts, max_repeats);
+         result.test_failure("high resolution clock didn't make forward progress, even after many trials");
 
          return result;
       }
