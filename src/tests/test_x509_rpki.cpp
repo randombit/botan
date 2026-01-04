@@ -1664,9 +1664,9 @@ Test::Result test_x509_as_blocks_range_merge() {
    };
 
    std::vector<ASBlocks::ASIdOrRange> as_ranges;
-   for(auto pair : ranges) {
-      auto range = ASBlocks::ASIdOrRange(pair[0], pair[1]);
-      as_ranges.push_back(range);
+   as_ranges.reserve(ranges.size());
+   for(const auto& pair : ranges) {
+      as_ranges.emplace_back(pair[0], pair[1]);
    }
 
    ASBlocks::ASIdentifierChoice asnum = ASBlocks::ASIdentifierChoice(as_ranges);

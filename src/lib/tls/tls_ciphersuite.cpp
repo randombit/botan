@@ -109,7 +109,7 @@ std::optional<Ciphersuite> Ciphersuite::by_id(uint16_t suite) {
 std::optional<Ciphersuite> Ciphersuite::from_name(std::string_view name) {
    const std::vector<Ciphersuite>& all_suites = all_known_ciphersuites();
 
-   for(auto suite : all_suites) {
+   for(const auto& suite : all_suites) {
       if(suite.to_string() == name) {
          return suite;
       }
