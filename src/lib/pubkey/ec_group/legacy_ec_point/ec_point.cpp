@@ -712,11 +712,22 @@ bool EC_Point::on_the_curve() const {
 }
 
 bool EC_Point::_is_x_eq_to_v_mod_order(const BigInt& v) const {
+   BOTAN_ASSERT_NOMSG(v.is_positive());
+
    if(this->is_zero()) {
       return false;
    }
 
    const auto& group = m_curve.group();
+
+   // In this case v cannot possibly be valid, since it must be in [0..m) where
+   // m is the smaller of the field modulus or group order
+   if(v >= group.p()) {
+      return false;
+   }
+   if(v >= group.order()) {
+      return false;
+   }
 
    /*
    * The trick used below doesn't work for curves with cofactors
