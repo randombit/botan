@@ -103,6 +103,11 @@ The following enum values are defined in the FFI header:
 
    While decrypting in an AEAD mode, the tag failed to verify.
 
+.. cpp:enumerator:: BOTAN_FFI_ERROR_NO_VALUE = -3
+
+   Given the context of the invocation no semantically reasonable value could
+   be produced, any provided out-parameters must be ignored.
+
 .. cpp:enumerator:: BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE = -10
 
    Functions which write a variable amount of space return this if the indicated
