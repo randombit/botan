@@ -54,7 +54,7 @@ class Gen_Prime final : public Command {
             const Botan::BigInt p = Botan::random_prime(rng(), bits);
 
             if(hex) {
-               output() << "0x" << std::hex << p << "\n";
+               output() << std::hex << p << "\n";
             } else {
                output() << p << "\n";
             }

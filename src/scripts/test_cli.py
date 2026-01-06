@@ -337,6 +337,7 @@ def cli_is_prime_tests(_tmp_dir):
 def cli_gen_prime_tests(_tmp_dir):
     test_cli("gen_prime", "64", "15568813029901363163")
     test_cli("gen_prime", "128", "287193909494025008847286845478788766073")
+    test_cli("gen_prime", ["--hex", "64"], "0xD80F88F6ADBE67DB")
 
 def cli_cycle_counter(_tmp_dir):
     output = test_cli("cpu_clock", None, None)
