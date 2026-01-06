@@ -108,5 +108,5 @@ void fuzz(std::span<const uint8_t> in) {
 
    try {
       client.received_data(in);
-   } catch(std::exception& e) {}
+   } catch(const std::exception& e) {}
 }

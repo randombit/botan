@@ -44,5 +44,5 @@ void fuzz(std::span<const uint8_t> in) {
                                        << "Ct = " << ct.to_hex_string() << "\n"
                                        << "Ref = " << ref.to_hex_string() << "\n");
       }
-   } catch(Botan::Invalid_Argument&) {}
+   } catch(const Botan::Invalid_Argument&) {}
 }
