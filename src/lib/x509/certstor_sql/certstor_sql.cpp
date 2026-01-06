@@ -113,9 +113,9 @@ std::optional<X509_Certificate> Certificate_Store_In_SQL::find_cert_by_issuer_dn
 }
 
 std::optional<X509_CRL> Certificate_Store_In_SQL::find_crl_for(const X509_Certificate& subject) const {
-   auto all_crls = generate_crls();
+   const auto all_crls = generate_crls();
 
-   for(auto crl : all_crls) {
+   for(const auto& crl : all_crls) {
       if(!crl.get_revoked().empty() && crl.issuer_dn() == subject.issuer_dn()) {
          return crl;
       }

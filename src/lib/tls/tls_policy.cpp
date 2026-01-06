@@ -614,7 +614,7 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version) const {
 
    std::vector<uint16_t> ciphersuite_codes;
    ciphersuite_codes.reserve(ciphersuites.size());
-   for(auto i : ciphersuites) {
+   for(const auto& i : ciphersuites) {
       ciphersuite_codes.push_back(i.ciphersuite_code());
    }
    return ciphersuite_codes;
