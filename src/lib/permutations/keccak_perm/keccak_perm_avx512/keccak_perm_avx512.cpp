@@ -44,7 +44,7 @@ class SIMD_5x64 final {
 
          // Insert the relevant words from i4 into the i0/i1 data
          const auto i4_lo_idx = _mm512_setr_epi64(0, 1, 2, 3, 4, 5, 8, 10);
-         const auto i4_hi_idx = _mm512_setr_epi64(0, 1, 2, 3, 4, 5, 9, 11);
+         const auto i4_hi_idx = _mm512_setr_epi64(0, 1, 2, 3, -1, -1, 9, 11);
 
          auto t0 = _mm512_permutex2var_epi64(lo_01, i4_lo_idx, i4.m_v);
          auto t2 = _mm512_permutex2var_epi64(hi_01, i4_hi_idx, i4.m_v);
@@ -52,7 +52,7 @@ class SIMD_5x64 final {
          // Now merge the 0/1/4 and 2/3 vectors using permutes
          const auto idx0 = _mm512_setr_epi64(0, 1, 8, 9, 6, -1, -1, -1);
          const auto idx1 = _mm512_setr_epi64(2, 3, 10, 11, 7, -1, -1, -1);
-         const auto idx4 = _mm512_setr_epi64(4, 5, 12, 13, 4, -1, -1, -1);
+         const auto idx4 = _mm512_setr_epi64(4, 5, 12, 13, -1, -1, -1, -1);
 
          i0.m_v = _mm512_permutex2var_epi64(t0, idx0, lo_23);
          i1.m_v = _mm512_permutex2var_epi64(t2, idx0, hi_23);
