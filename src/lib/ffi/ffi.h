@@ -2309,6 +2309,28 @@ int botan_x509_cert_excluded_name_constraints(botan_x509_cert_t cert,
                                               botan_x509_general_name_t* constraint);
 
 /**
+* Provides access to all "subject alternative names", where each entry is
+* returned as a botan_x509_general_name_t. If the given @p index is not
+* within range of the available entries, BOTAN_FFI_ERROR_OUT_OF_RANGE is
+* returned. If @p cert does not contain a SubjectAlternativeNames extension,
+* BOTAN_FFI_ERROR_NO_VALUE is returned.
+*/
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_cert_subject_alternative_names(botan_x509_cert_t cert,
+                                              size_t index,
+                                              botan_x509_general_name_t* alt_name);
+
+/**
+* Provides access to all "issuer alternative names", where each entry is
+* returned as a botan_x509_general_name_t. If the given @p index is not
+* within range of the available entries, BOTAN_FFI_ERROR_OUT_OF_RANGE is
+* returned. If @p cert does not contain an IssuerAlternativeNames extension,
+* BOTAN_FFI_ERROR_NO_VALUE is returned.
+*/
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_cert_issuer_alternative_names(botan_x509_cert_t cert, size_t index, botan_x509_general_name_t* alt_name);
+
+/**
 * Check if the certificate matches the specified hostname via alternative name or CN match.
 * RFC 5280 wildcards also supported.
 */

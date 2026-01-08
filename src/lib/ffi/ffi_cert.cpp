@@ -469,6 +469,107 @@ int botan_x509_cert_excluded_name_constraints(botan_x509_cert_t cert,
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
+}
+
+namespace {
+
+/**
+ * As specified in RFC 5280 Section 4.2.1.6. alternative names essentially are a
+ * collection of GeneralNames. This allows mapping a single entry of @p altnames
+ * to a GeneralName by its @p index. If the index is out of range, std::nullopt
+ * is returned.
+ */
+std::optional<Botan::GeneralName> extract_general_name_at(const Botan::AlternativeName& altnames, size_t index) {
+   if(index < altnames.email().size()) {
+      auto itr = altnames.email().begin();
+      std::advance(itr, index);
+      return Botan::GeneralName::email(*itr);
+   }
+   index -= altnames.email().size();
+
+   if(index < altnames.dns().size()) {
+      auto itr = altnames.dns().begin();
+      std::advance(itr, index);
+      return Botan::GeneralName::dns(*itr);
+   }
+   index -= altnames.dns().size();
+
+   if(index < altnames.directory_names().size()) {
+      auto itr = altnames.directory_names().begin();
+      std::advance(itr, index);
+      return Botan::GeneralName::directory_name(*itr);
+   }
+   index -= altnames.directory_names().size();
+
+   if(index < altnames.uris().size()) {
+      auto itr = altnames.uris().begin();
+      std::advance(itr, index);
+      return Botan::GeneralName::uri(*itr);
+   }
+   index -= altnames.uris().size();
+
+   if(index < altnames.ipv4_address().size()) {
+      auto itr = altnames.ipv4_address().begin();
+      std::advance(itr, index);
+      return Botan::GeneralName::ipv4_address(*itr);
+   }
+
+   return std::nullopt;
+}
+
+}  // namespace
+
+extern "C" {
+
+int botan_x509_cert_subject_alternative_names(botan_x509_cert_t cert,
+                                              size_t index,
+                                              botan_x509_general_name_t* alt_name) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const Botan::X509_Certificate& c) {
+      if(Botan::any_null_pointers(alt_name)) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      if(!c.v3_extensions().extension_set(Botan::OID::from_string("X509v3.SubjectAlternativeName"))) {
+         return BOTAN_FFI_ERROR_NO_VALUE;
+      }
+
+      if(auto name = extract_general_name_at(c.subject_alt_name(), index)) {
+         return ffi_new_object(alt_name, std::make_unique<Botan::GeneralName>(std::move(name).value()));
+      }
+
+      return BOTAN_FFI_ERROR_OUT_OF_RANGE;
+   });
+#else
+   BOTAN_UNUSED(cert, index, alt_name);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_issuer_alternative_names(botan_x509_cert_t cert,
+                                             size_t index,
+                                             botan_x509_general_name_t* alt_name) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const Botan::X509_Certificate& c) {
+      if(Botan::any_null_pointers(alt_name)) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      if(!c.v3_extensions().extension_set(Botan::OID::from_string("X509v3.IssuerAlternativeName"))) {
+         return BOTAN_FFI_ERROR_NO_VALUE;
+      }
+
+      if(auto name = extract_general_name_at(c.issuer_alt_name(), index)) {
+         return ffi_new_object(alt_name, std::make_unique<Botan::GeneralName>(std::move(name).value()));
+      }
+
+      return BOTAN_FFI_ERROR_OUT_OF_RANGE;
+   });
+#else
+   BOTAN_UNUSED(cert, index, alt_name);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
 
 int botan_x509_cert_hostname_match(botan_x509_cert_t cert, const char* hostname) {
    if(hostname == nullptr) {
