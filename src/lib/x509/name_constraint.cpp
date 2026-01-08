@@ -14,6 +14,7 @@
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
+#include <botan/internal/stl_util.h>
 #include <botan/internal/x509_utils.h>
 
 namespace Botan {
@@ -41,6 +42,38 @@ std::string GeneralName::type() const {
    BOTAN_ASSERT_UNREACHABLE();
 }
 
+/**
+ * Placeholder for "no subnet mask", i.e. "a specific IP address".
+ * The GeneralName must be able to store both individual addresses, when used in
+ * Subject/Issuer alternative names as well as IP subnet identifier as name
+ * constraints.
+ */
+constexpr static uint32_t blind_mask = 0xFFFFFFFF;
+
+GeneralName GeneralName::email(std::string_view email) {
+   return GeneralName::make<RFC822_IDX>(email);
+}
+
+GeneralName GeneralName::dns(std::string_view dns) {
+   return GeneralName::make<DNS_IDX>(dns);
+}
+
+GeneralName GeneralName::uri(std::string_view uri) {
+   return GeneralName::make<URI_IDX>(uri);
+}
+
+GeneralName GeneralName::directory_name(Botan::X509_DN dn) {
+   return GeneralName::make<DN_IDX>(std::move(dn));
+}
+
+GeneralName GeneralName::ipv4_address(uint32_t ipv4) {
+   return GeneralName::ipv4_address(ipv4, blind_mask);
+}
+
+GeneralName GeneralName::ipv4_address(uint32_t ipv4, uint32_t mask) {
+   return GeneralName::make<IPV4_IDX>(std::pair{ipv4, mask});
+}
+
 std::string GeneralName::name() const {
    const size_t index = m_name.index();
 
@@ -54,10 +87,31 @@ std::string GeneralName::name() const {
       return std::get<DN_IDX>(m_name).to_string();
    } else if(index == IPV4_IDX) {
       auto [net, mask] = std::get<IPV4_IDX>(m_name);
-      return fmt("{}/{}", ipv4_to_string(net), ipv4_to_string(mask));
+      if(mask == blind_mask) {
+         return ipv4_to_string(net);
+      } else {
+         return fmt("{}/{}", ipv4_to_string(net), ipv4_to_string(mask));
+      }
    } else {
       BOTAN_ASSERT_UNREACHABLE();
    }
+}
+
+std::vector<uint8_t> GeneralName::binary_name() const {
+   return std::visit(Botan::overloaded{
+                        [](const Botan::X509_DN& dn) { return Botan::ASN1::put_in_sequence(dn.get_bits()); },
+                        [](const std::pair<uint32_t, uint32_t>& ip) {
+                           if(ip.second == blind_mask) {
+                              return store_be<std::vector<uint8_t>>(ip.first);
+                           } else {
+                              return concat<std::vector<uint8_t>>(store_be(ip.first), store_be(ip.second));
+                           }
+                        },
+                        [](const auto&) -> std::vector<uint8_t> {
+                           throw Invalid_State("Cannot convert GeneralName to binary string");
+                        },
+                     },
+                     m_name);
 }
 
 void GeneralName::encode_into(DER_Encoder& /*to*/) const {
