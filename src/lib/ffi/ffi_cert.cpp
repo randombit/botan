@@ -426,6 +426,50 @@ int botan_x509_general_name_destroy(botan_x509_general_name_t name) {
 #endif
 }
 
+int botan_x509_cert_permitted_name_constraints(botan_x509_cert_t cert,
+                                               size_t index,
+                                               botan_x509_general_name_t* constraint) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const Botan::X509_Certificate& c) {
+      if(Botan::any_null_pointers(constraint)) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      const auto& constraints = c.name_constraints().permitted();
+      if(index >= constraints.size()) {
+         return BOTAN_FFI_ERROR_OUT_OF_RANGE;
+      }
+
+      return ffi_new_object(constraint, std::make_unique<Botan::GeneralName>(constraints[index].base()));
+   });
+#else
+   BOTAN_UNUSED(cert, index, constraint);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_excluded_name_constraints(botan_x509_cert_t cert,
+                                              size_t index,
+                                              botan_x509_general_name_t* constraint) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const Botan::X509_Certificate& c) {
+      if(Botan::any_null_pointers(constraint)) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      const auto& constraints = c.name_constraints().excluded();
+      if(index >= constraints.size()) {
+         return BOTAN_FFI_ERROR_OUT_OF_RANGE;
+      }
+
+      return ffi_new_object(constraint, std::make_unique<Botan::GeneralName>(constraints[index].base()));
+   });
+#else
+   BOTAN_UNUSED(cert, index, constraint);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 int botan_x509_cert_hostname_match(botan_x509_cert_t cert, const char* hostname) {
    if(hostname == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;

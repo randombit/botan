@@ -2289,6 +2289,26 @@ int botan_x509_general_name_view_binary_value(botan_x509_general_name_t name,
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_general_name_destroy(botan_x509_general_name_t alt_names);
 
 /**
+* Extracts "permitted" name constraints from a given @p cert one-by-one.
+* Returns BOTAN_FFI_ERROR_OUT_OF_RANGE if the given @p index is larger than the
+* available number of "permitted" name constraints.
+*/
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_cert_permitted_name_constraints(botan_x509_cert_t cert,
+                                               size_t index,
+                                               botan_x509_general_name_t* constraint);
+
+/**
+* Extracts "excluded" name constraints from a given @p cert one-by-one.
+* Returns BOTAN_FFI_ERROR_OUT_OF_RANGE if the given @p index is larger than the
+* available number of "excluded" name constraints.
+*/
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_cert_excluded_name_constraints(botan_x509_cert_t cert,
+                                              size_t index,
+                                              botan_x509_general_name_t* constraint);
+
+/**
 * Check if the certificate matches the specified hostname via alternative name or CN match.
 * RFC 5280 wildcards also supported.
 */

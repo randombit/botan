@@ -1817,6 +1817,22 @@ X.509 Certificates
 
    Destroy the GeneralName object.
 
+.. cpp:function:: int botan_x509_cert_permitted_name_constraints(botan_x509_cert_t cert, \
+                                                                 size_t index, \
+                                                                 botan_x509_general_name_t* constraint)
+
+   Enumerate the permitted name constraints in the certificate as GeneralName
+   objects. If the given index is not available,
+   :cpp:enumerator:`BOTAN_FFI_ERROR_OUT_OF_RANGE` is returned.
+
+.. cpp:function:: int botan_x509_cert_excluded_name_constraints(botan_x509_cert_t cert, \
+                                                                size_t index, \
+                                                                botan_x509_general_name_t* constraint)
+
+   Enumerate the excluded name constraints in the certificate as GeneralName
+   objects. If the given index is not available,
+   :cpp:enumerator:`BOTAN_FFI_ERROR_OUT_OF_RANGE` is returned.
+
 .. cpp:function:: int botan_x509_cert_verify(int* validation_result, \
                   botan_x509_cert_t cert, \
                   const botan_x509_cert_t* intermediates, \
