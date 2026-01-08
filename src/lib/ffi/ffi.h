@@ -2239,6 +2239,55 @@ BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_allowed_extended_usage_str(botan_x50
 */
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_allowed_extended_usage_oid(botan_x509_cert_t cert, botan_asn1_oid_t oid);
 
+typedef struct botan_x509_general_name_struct* botan_x509_general_name_t;
+
+/**
+* GeneralName type identifiers as defined in RFC 5280 A.2 (GeneralName ::= CHOICE)
+* Type identifiers that are omitted here are (currently) not supported. Also,
+* there is currently no way to access OTHER_NAME values via the FFI.
+*/
+enum botan_x509_general_name_types /* NOLINT(*-enum-size,*-use-enum-class) */ {
+   BOTAN_X509_OTHER_NAME = 0,
+   BOTAN_X509_EMAIL_ADDRESS = 1,
+   BOTAN_X509_DNS_NAME = 2,
+   BOTAN_X509_DIRECTORY_NAME = 4,
+   BOTAN_X509_URI = 6,
+   BOTAN_X509_IP_ADDRESS = 7,
+};
+
+/**
+* Provides the contained type of the @p name and returns BOTAN_FFI_SUCCESS if
+* that type is supported and may be retrieved via the view functions below.
+* Otherwise BOTAN_FFI_ERROR_INVALID_OBJECT_STATE is returned.
+*/
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_general_name_get_type(botan_x509_general_name_t name, unsigned int* type);
+
+/**
+* Views the name as a string or returns BOTAN_FFI_ERROR_INVALID_OBJECT_STATE
+* if the contained GeneralName value cannot be represented as a string.
+*
+* The types BOTAN_X509_EMAIL_ADDRESS, BOTAN_X509_DNS_NAME, BOTAN_X509_URI,
+* BOTAN_X509_IP_ADDRESS may be viewed as "string".
+*/
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_general_name_view_string_value(botan_x509_general_name_t name,
+                                              botan_view_ctx ctx,
+                                              botan_view_str_fn view);
+
+/**
+* Views the name as a bit string or returns BOTAN_FFI_ERROR_INVALID_OBJECT_STATE
+* if the contained GeneralName value cannot be represented as a binary string.
+*
+* The types BOTAN_X509_DIRECTORY_NAME, BOTAN_X509_IP_ADDRESS may be viewed as
+* "binary".
+*/
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_general_name_view_binary_value(botan_x509_general_name_t name,
+                                              botan_view_ctx ctx,
+                                              botan_view_bin_fn view);
+
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_general_name_destroy(botan_x509_general_name_t alt_names);
+
 /**
 * Check if the certificate matches the specified hostname via alternative name or CN match.
 * RFC 5280 wildcards also supported.

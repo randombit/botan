@@ -1649,6 +1649,11 @@ X.509 Certificates
 
    An opaque data type for an X.509 certificate. Don't mess with it.
 
+.. cpp:type:: opaque* botan_x509_general_name_t
+
+   An opaque data type for an X.509 GeneralName used to query subject/issuer
+   alternative names and name constraints. Don't mess with it.
+
 .. cpp:function:: int botan_x509_cert_load(botan_x509_cert_t* cert_obj, \
                                         const uint8_t cert[], size_t cert_len)
 
@@ -1771,6 +1776,46 @@ X.509 Certificates
    `RFC 5280 - 4.2.1.12 <https://www.rfc-editor.org/rfc/rfc5280#section-4.2.1.12>`_.
    If the certificate has no extended key usage extension, this will always
    behave as if the requested OID is *not present*.
+
+.. cpp:enum:: botan_x509_general_name_types
+
+   GeneralName data types. Allowed values:
+   `BOTAN_X509_OTHER_NAME`, `BOTAN_X509_EMAIL_ADDRESS`, `BOTAN_X509_DNS_NAME`,
+   `BOTAN_X509_DIRECTORY_NAME`, `BOTAN_X509_URI`, `BOTAN_X509_IP_ADDRESS`.
+
+.. cpp:function:: int botan_x509_general_name_get_type(botan_x509_general_name_t name, unsigned int* type)
+
+   Get the data type of the GeneralName object as a member of
+   :cpp:enum:`botan_x509_general_name_types`. Depending on this type, one of the
+   view functions below can be used to extract the value.
+
+   `BOTAN_X509_DIRECTORY_NAME` is a binary DER encoding of a distinguished name.
+   `BOTAN_X509_IP_ADDRESS` is a big endian binary encoding of the IP address
+   optionally concatenated with the subnet mask.
+   `BOTAN_X509_EMAIL_ADDRESS`, `BOTAN_X509_DNS_NAME`, and `BOTAN_X509_URI` are
+   characters arrays.
+   Support for `BOTAN_X509_OTHER_NAME` is deprecated and cannot be viewed using
+   these functions.
+
+.. cpp:function:: int botan_x509_general_name_view_string_value(botan_x509_general_name_t name, \
+                                                                botan_view_ctx ctx, \
+                                                                botan_view_str_fn view)
+
+   Allows querying the value of GeneralName objects of type
+   `BOTAN_X509_EMAIL_ADDRESS`, `BOTAN_X509_DNS_NAME`, `BOTAN_X509_URI`, and
+   `BOTAN_X509_IP_ADDRESS`.
+
+.. cpp:function:: int botan_x509_general_name_view_binary_value(botan_x509_general_name_t name, \
+                                                                botan_view_ctx ctx, \
+                                                                botan_view_bin_fn view)
+
+   Allows querying the value of GeneralName objects of type
+   `BOTAN_X509_DIRECTORY_NAME` (as DER encoded distinguished name) and
+   `BOTAN_X509_IP_ADDRESS` (as big-endian encoded IP address + subnet mask).
+
+.. cpp:function:: int botan_x509_general_name_destroy(botan_x509_general_name_t alt_names)
+
+   Destroy the GeneralName object.
 
 .. cpp:function:: int botan_x509_cert_verify(int* validation_result, \
                   botan_x509_cert_t cert, \
