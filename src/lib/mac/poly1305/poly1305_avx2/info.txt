@@ -1,0 +1,17 @@
+<internal_defines>
+POLY1305_AVX2 -> 20260108
+</internal_defines>
+
+<module_info>
+name -> "Poly1305 AVX2"
+brief -> "Poly1305 using AVX2 instructions"
+</module_info>
+
+<isa>
+avx2
+</isa>
+
+<requires>
+simd_avx2
+cpuid
+</requires>

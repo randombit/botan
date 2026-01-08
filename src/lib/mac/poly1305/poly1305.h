@@ -39,6 +39,15 @@ class Poly1305 final : public MessageAuthenticationCode {
       void final_result(std::span<uint8_t> output) override;
       void key_schedule(std::span<const uint8_t> key) override;
 
+#if defined(BOTAN_HAS_POLY1305_AVX2)
+      static size_t poly1305_avx2_blocks(secure_vector<uint64_t>& X, const uint8_t m[], size_t blocks);
+#endif
+
+#if defined(BOTAN_HAS_POLY1305_AVX512)
+      static size_t poly1305_avx512_blocks(secure_vector<uint64_t>& X, const uint8_t m[], size_t blocks);
+#endif
+
+      // State layout: pad [2] || accum [3] || r [3] || r^2 [3] || ... || r^n [3]
       secure_vector<uint64_t> m_poly;
       AlignmentBuffer<uint8_t, 16> m_buffer;
 };
