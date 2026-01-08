@@ -46,6 +46,10 @@ jobs:
             arch: x86
             host_os: windows-2022
             compiler: msvc
+          - target: amalgamation
+            arch: x86
+            host_os: windows-2022
+            compiler: msvc
           - target: shared
             arch: x86_64
             host_os: windows-2022

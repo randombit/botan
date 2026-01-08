@@ -1185,7 +1185,7 @@ class bitvector_base final {
 
          private:
             template <std::unsigned_integral... BlockTs>
-               requires(all_same_v<BlockTs...>)
+               requires(all_same_v<std::remove_cv_t<BlockTs>...>)
             constexpr static auto apply(FnT fn, size_type bits, BlockTs... blocks) {
                if constexpr(needs_mask) {
                   return fn(blocks..., make_mask<detail::first_t<BlockTs...>>(bits));
