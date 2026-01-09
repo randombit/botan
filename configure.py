@@ -3331,7 +3331,7 @@ def canonicalize_options(options, info_os, info_arch):
 # Checks user options for consistency
 # This method DOES NOT change options on behalf of the user but explains
 # why the given configuration does not work.
-def validate_options(options, info_os, info_cc, cc_version, available_module_policies):
+def validate_options(options, info_os, info_cc, available_module_policies):
     if options.name_amalgamation != 'botan_all':
         if options.name_amalgamation == '':
             raise UserError('Amalgamation basename must be non-empty')
@@ -3415,9 +3415,6 @@ def validate_options(options, info_os, info_cc, cc_version, available_module_pol
     if options.ct_value_barrier_type:
         if options.ct_value_barrier_type not in ['asm', 'volatile', 'none']:
             raise UserError('Unknown setting "%s" for --ct-value-barrier-type' % (options.ct_value_barrier_type))
-
-    if options.enable_stack_scrubbing and (options.compiler not in ['gcc'] or float(cc_version) < 14):
-        raise UserError('Your compiler does not support stack scrubbing. Only GCC 14 and newer support this at the moment.')
 
     # Warnings
     if options.os == 'windows' and options.compiler not in ('msvc', 'clangcl'):
@@ -3754,10 +3751,9 @@ def main(argv):
     set_defaults_for_unset_options(options, info_arch, info_cc, info_os)
     canonicalize_options(options, info_os, info_arch)
 
+    validate_options(options, info_os, info_cc, info_module_policies)
+
     cc = info_cc[options.compiler]
-    arch = info_arch[options.arch]
-    osinfo = info_os[options.os]
-    module_policy = info_module_policies[options.module_policy] if options.module_policy else None
 
     if options.enable_cc_tests:
         cc_min_version = options.cc_min_version or calculate_cc_min_version(options, cc, source_paths)
@@ -3769,10 +3765,15 @@ def main(argv):
     else:
         cc_min_version = options.cc_min_version or "0.0"
 
-    validate_options(options, info_os, info_cc, cc_min_version, info_module_policies)
-
     logging.info('Target is %s:%s-%s-%s',
                  options.compiler, cc_min_version, options.os, options.arch)
+
+    if options.enable_stack_scrubbing and (options.compiler not in ['gcc'] or float(cc_min_version) < 14):
+        logging.warning('Your compiler does not support stack scrubbing. Only GCC 14 and newer support this at the moment.')
+
+    arch = info_arch[options.arch]
+    osinfo = info_os[options.os]
+    module_policy = info_module_policies[options.module_policy] if options.module_policy else None
 
     chooser = ModulesChooser(info_modules, module_policy, arch, osinfo, cc, cc_min_version, options)
     loaded_module_names = chooser.choose()
