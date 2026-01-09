@@ -27,6 +27,11 @@ inline std::optional<uint32_t> is_sub_element_of(const OID& oid, std::initialize
    return c[c.size() - 1];
 }
 
+/*
+* X.500 String Comparison
+*/
+bool x500_name_cmp(std::string_view name1, std::string_view name2);
+
 }  // namespace Botan
 
 #endif

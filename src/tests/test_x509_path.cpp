@@ -14,6 +14,7 @@
    #include <botan/pkcs10.h>
    #include <botan/rng.h>
    #include <botan/x509_crl.h>
+   #include <botan/x509_ext.h>
    #include <botan/x509path.h>
    #include <botan/internal/calendar.h>
    #include <botan/internal/filesystem.h>
@@ -1703,6 +1704,93 @@ class XMSS_Path_Validation_Tests final : public Test {
 BOTAN_REGISTER_TEST("x509", "x509_path_xmss", XMSS_Path_Validation_Tests);
 
    #endif
+
+class Name_Constraint_DN_Prefix_Test final : public Test {
+   public:
+      static Test::Result validate_name_constraint_dn_prefix_accepted() {
+         // Regression test case taken from strongSwan that originally failed with Botan.
+         // OpenSSL also accepts this case.
+         // Excluded constraint: C=CH, O=another
+         // Subject DN: C=CH, CN=tester, O=another
+         // The validation should accept the chain since CN at position 1 breaks prefix match.
+         Test::Result result("strongSwan name constraint DN prefix matching accepted");
+
+         const auto validation_time = Botan::calendar_point(2025, 12, 29, 9, 50, 0).to_std_timepoint();
+
+         // These files were created with strongSwan using the OpenSSL plugin based on the
+         // strongSwan `test_excluded_dn` test case of the `certnames` test suite.
+         const Botan::X509_Certificate ca_accepted(
+            Test::data_file("x509/name_constraint_prefix/nc_prefix_strongswan_ca_accepted.pem"));
+         const Botan::X509_Certificate intermediate_accepted(
+            Test::data_file("x509/name_constraint_prefix/nc_prefix_strongswan_im_accepted.pem"));
+         const Botan::X509_Certificate subject_cert_accepted(
+            Test::data_file("x509/name_constraint_prefix/nc_prefix_strongswan_subject_accepted.pem"));
+
+         result.test_eq("CA DN", ca_accepted.subject_dn().to_string(), R"(C="CH",O="strongSwan",CN="CA")");
+         result.test_eq("IM DN", intermediate_accepted.subject_dn().to_string(), R"(C="CH",O="strongSwan",CN="IM")");
+         result.test_eq(
+            "Subject DN", subject_cert_accepted.subject_dn().to_string(), R"(C="CH",CN="tester",O="another")");
+
+         Botan::Certificate_Store_In_Memory trusted;
+         trusted.add_certificate(ca_accepted);
+         const std::vector<Botan::X509_Certificate> chain = {subject_cert_accepted, intermediate_accepted};
+
+         const Botan::Path_Validation_Restrictions restrictions(false, 80);
+
+         const Botan::Path_Validation_Result validation_result = Botan::x509_path_validate(
+            chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
+
+         result.confirm("Verification passes since Name Constraints are not a prefix",
+                        validation_result.successful_validation());
+         return result;
+      }
+
+      static Test::Result validate_name_constraint_dn_prefix_not_accepted() {
+         // Excluded constraint: C=CH, O=another
+         // Subject DN: C=CH, O=another, CN=tester
+         // The validation should *not* accept the chain since the constraint is a prefix.
+         // This test catches changes in order of the RDNs to be compared in name constraint checks,
+         // which was an issue due to constructors of Botan::X509_DN taking a multimap.
+         Test::Result result("strongSwan name constraint DN prefix matching not accepted");
+
+         const auto validation_time = Botan::calendar_point(2025, 12, 29, 9, 50, 0).to_std_timepoint();
+
+         // These files were created with strongSwan using the OpenSSL plugin based on the
+         // strongSwan `test_excluded_dn` test case of the `certnames` test suite.
+         const Botan::X509_Certificate ca_not_accepted(
+            Test::data_file("x509/name_constraint_prefix/nc_prefix_strongswan_ca_not_accepted.pem"));
+         const Botan::X509_Certificate intermediate_not_accepted(
+            Test::data_file("x509/name_constraint_prefix/nc_prefix_strongswan_im_not_accepted.pem"));
+         const Botan::X509_Certificate subject_cert_not_accepted(
+            Test::data_file("x509/name_constraint_prefix/nc_prefix_strongswan_subject_not_accepted.pem"));
+
+         result.test_eq("CA DN", ca_not_accepted.subject_dn().to_string(), R"(C="CH",O="strongSwan",CN="CA")");
+         result.test_eq(
+            "IM DN", intermediate_not_accepted.subject_dn().to_string(), R"(C="CH",O="strongSwan",CN="IM")");
+         result.test_eq(
+            "Subject DN", subject_cert_not_accepted.subject_dn().to_string(), R"(C="CH",O="another",CN="tester")");
+
+         Botan::Certificate_Store_In_Memory trusted;
+         trusted.add_certificate(ca_not_accepted);
+         const std::vector<Botan::X509_Certificate> chain = {subject_cert_not_accepted, intermediate_not_accepted};
+
+         const Botan::Path_Validation_Restrictions restrictions(false, 80);
+
+         const Botan::Path_Validation_Result validation_result = Botan::x509_path_validate(
+            chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
+
+         result.test_eq("Verification does not pass since Name Constraints is a prefix",
+                        validation_result.successful_validation(),
+                        false);
+         return result;
+      }
+
+      std::vector<Test::Result> run() override {
+         return {validate_name_constraint_dn_prefix_accepted(), validate_name_constraint_dn_prefix_not_accepted()};
+      }
+};
+
+BOTAN_REGISTER_TEST("x509", "x509_path_nc_prefix_dn", Name_Constraint_DN_Prefix_Test);
 
 #endif
 

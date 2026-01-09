@@ -10,13 +10,12 @@
 #include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/internal/x509_utils.h>
 #include <cctype>
 #include <ostream>
 #include <sstream>
 
 namespace Botan {
-
-namespace {
 
 namespace {
 
@@ -30,9 +29,6 @@ bool is_space(char c) {
 
 }  // namespace
 
-/*
-* X.500 String Comparison
-*/
 bool x500_name_cmp(std::string_view name1, std::string_view name2) {
    // MSVC uses an actual iterator type for string_view, so we must use plain `auto` here
    auto p1 = name1.begin();  // NOLINT(readability-qualified-auto)
@@ -91,8 +87,6 @@ bool x500_name_cmp(std::string_view name1, std::string_view name2) {
    // accept:
    return true;
 }
-
-}  // namespace
 
 /*
 * Add an attribute to a X509_DN

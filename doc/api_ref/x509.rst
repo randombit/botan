@@ -166,6 +166,11 @@ X.509 Distinguished Names
 
       Returns true if ``get_attribute`` or ``get_first_attribute`` will return a value.
 
+  .. cpp:function:: const std::vector<std::pair<OID, ASN1_String>>& dn_info() const
+
+      Return the DN components as a vector of OID and ASN1_String pairs. Note that
+      the order of the components is preserved only when using the initializer list constructor.
+
   .. cpp:function:: std::vector<std::string> get_attribute(const std::string& attr) const
 
       Return all attributes associated with a certain attribute type.
@@ -193,7 +198,10 @@ X.509 Distinguished Names
       Add an attribute to a DN using an OID instead of string-valued attribute type.
 
 The ``X509_DN`` type also supports iostream extraction and insertion operators,
-for formatted input and output.
+for formatted input and output. Note that the class has deprecated constructors
+taking a ``std::multimap``; use the initializer list constructor instead. When
+using the deprecated constructors, the order of the DN components is not preserved,
+which can violate RFC 5280 requirements.
 
 X.509v3 Extensions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
