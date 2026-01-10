@@ -25,14 +25,14 @@ Hardware Specific Optimizations
 * Stitched AES/GCM implementation
 * GFNI implementations of SEED, ARIA, others?
 * NEON/VMX/LSX support for the SIMD based GHASH
-* Poly1305 using AVX2
+* Poly1305 using AVX2/AVX512
 * Constant time bitsliced DES
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
 * Improved Salsa implementations (SIMD_4x32 and/or AVX2)
 * Add CLMUL/PMULL implementations for CRC24
 * Add support for ARMv8.4-A SHA-3 and SM3 instructions
 * Support POWER8 SHA-2 extensions (GH #1486 + #1487)
-* Add support for RISC-V crypto extensions
+* Add support for RISC-V vector and crypto extensions
 * Add support for using Loongarch64 LASX (256-bit SIMD)
 
 Public Key Crypto, Math

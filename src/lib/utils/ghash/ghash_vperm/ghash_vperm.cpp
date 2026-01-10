@@ -12,8 +12,6 @@
 
 namespace Botan {
 
-// TODO: extend this to support NEON and AltiVec
-
 BOTAN_FN_ISA_SIMD_2X64
 void GHASH::ghash_multiply_vperm(uint8_t x[16], const uint64_t HM[256], const uint8_t input_bytes[], size_t blocks) {
    auto X = SIMD_2x64::load_le(x).reverse_all_bytes();
