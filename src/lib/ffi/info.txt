@@ -1,5 +1,9 @@
 <defines>
-FFI -> 20250829
+# When bumping remember to also update
+# - BOTAN_FFI_API_VERSION in ffi.h
+# - botan_ffi_supports_api in ffi.cpp
+# - The table of versions in ffi.rst
+FFI -> 20260203
 </defines>
 
 <module_info>
