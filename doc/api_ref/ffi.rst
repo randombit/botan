@@ -1693,6 +1693,14 @@ X.509 Certificates
 
    Return the serial number of the certificate.
 
+.. cpp:function:: int botan_x509_cert_is_ca(botan_x509_cert_t cert)
+
+   Check whether the certificate is marked as a CA certificate.
+
+.. cpp:function:: int botan_x509_cert_get_path_length_constraint(botan_x509_cert_t cert, size_t* path_len)
+
+   Get the path length constraint for a CA certificate.
+
 .. cpp:function:: int botan_x509_cert_get_authority_key_id(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
 
    Return the authority key ID set in the certificate, which may be empty.
@@ -1744,6 +1752,20 @@ X.509 Certificates
    `CRL_SIGN`, `ENCIPHER_ONLY`, `DECIPHER_ONLY`.
 
 .. cpp:function:: int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage)
+
+.. cpp:function:: int botan_x509_cert_allowed_extended_usage_str(botan_x509_cert_t cert, const char* oid)
+
+   Check whether the certificate has the specified extended key usage OID from
+   `RFC 5280 - 4.2.1.12 <https://www.rfc-editor.org/rfc/rfc5280#section-4.2.1.12>`_.
+   If the certificate has no extended key usage extension, this will always
+   behave as if the requested OID is *not present*.
+
+.. cpp:function:: int botan_x509_cert_allowed_extended_usage_oid(botan_x509_cert_t cert, botan_asn1_oid_t oid)
+
+   Check whether the certificate has the specified extended key usage OID from
+   `RFC 5280 - 4.2.1.12 <https://www.rfc-editor.org/rfc/rfc5280#section-4.2.1.12>`_.
+   If the certificate has no extended key usage extension, this will always
+   behave as if the requested OID is *not present*.
 
 .. cpp:function:: int botan_x509_cert_verify(int* validation_result, \
                   botan_x509_cert_t cert, \

@@ -757,11 +757,22 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          if(!TEST_FFI_INIT(botan_x509_cert_load_file, (&root, Test::data_file("x509/nist/root.crt").c_str()))) {
             return;
          }
+         TEST_FFI_RC(0, botan_x509_cert_is_ca, (root));
 
          botan_x509_cert_t end2;
          botan_x509_cert_t sub2;
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&end2, Test::data_file("x509/nist/test02/end.crt").c_str()));
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&sub2, Test::data_file("x509/nist/test02/int.crt").c_str()));
+         TEST_FFI_RC(1, botan_x509_cert_is_ca, (end2));
+
+         size_t path_limit;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE, botan_x509_cert_get_path_length_constraint, (root, &path_limit));
+
+         botan_x509_cert_t root_with_pathlen;
+         REQUIRE_FFI_OK(botan_x509_cert_load_file,
+                        (&root_with_pathlen, Test::data_file("x509/extended/02/root.crt").c_str()));
+         TEST_FFI_OK(botan_x509_cert_get_path_length_constraint, (root_with_pathlen, &path_limit));
+         result.test_eq("Path length constraint", path_limit, 1);
 
          TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end2, &sub2, 1, &root, 1, nullptr, 0, nullptr, 0));
          result.confirm("Validation test02 failed", rc == 5002);
@@ -816,6 +827,7 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          result.test_eq(
             "Validation test20 status string", botan_x509_cert_validation_status(rc), "Certificate is revoked");
 
+         TEST_FFI_OK(botan_x509_cert_destroy, (root_with_pathlen));
          TEST_FFI_OK(botan_x509_cert_destroy, (end2));
          TEST_FFI_OK(botan_x509_cert_destroy, (sub2));
          TEST_FFI_OK(botan_x509_cert_destroy, (end7));
@@ -950,6 +962,69 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             TEST_FFI_OK(botan_x509_cert_destroy, (cert));
          }
+      }
+};
+
+class FFI_Cert_ExtKeyUsages_Test final : public FFI_Test {
+   public:
+      std::string name() const override { return "FFI X509 Extended Key Usage"; }
+
+      void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
+         botan_x509_cert_t cert_with_eku;
+         if(!TEST_FFI_INIT(botan_x509_cert_load_file,
+                           (&cert_with_eku, Test::data_file("x509/pss_certs/03/end.crt").c_str()))) {
+            return;
+         }
+
+         // Prepare some OID objects for OID-based EKU queries
+         botan_asn1_oid_t oid_srv_auth1;
+         botan_asn1_oid_t oid_srv_auth2;
+         botan_asn1_oid_t oid_ocsp_signing;
+         TEST_FFI_OK(botan_oid_from_string, (&oid_srv_auth1, "1.3.6.1.5.5.7.3.1"));
+         TEST_FFI_OK(botan_oid_from_string, (&oid_srv_auth2, "PKIX.ServerAuth"));
+         TEST_FFI_OK(botan_oid_from_string, (&oid_ocsp_signing, "PKIX.OCSPSigning"));
+
+         // Make sure the OID object is checked for nullptr
+         TEST_FFI_RC(
+            BOTAN_FFI_ERROR_NULL_POINTER, botan_x509_cert_allowed_extended_usage_oid, (cert_with_eku, nullptr));
+
+         // Should have serverAuth (TLS Web Server Authentication)
+         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "1.3.6.1.5.5.7.3.1"));
+         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "PKIX.ServerAuth"));
+         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_oid, (cert_with_eku, oid_srv_auth1));
+         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_oid, (cert_with_eku, oid_srv_auth2));
+
+         // Should have clientAuth (TLS Web Client Authentication)
+         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "1.3.6.1.5.5.7.3.2"));
+         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "PKIX.ClientAuth"));
+
+         // Should NOT have OCSPSigning
+         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "1.3.6.1.5.5.7.3.9"));
+         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "PKIX.OCSPSigning"));
+
+         // Should NOT have codeSigning
+         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "1.3.6.1.5.5.7.3.3"));
+         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "PKIX.CodeSigning"));
+         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_oid, (cert_with_eku, oid_ocsp_signing));
+
+         TEST_FFI_OK(botan_x509_cert_destroy, (cert_with_eku));
+
+         botan_x509_cert_t cert_without_eku;
+         if(!TEST_FFI_INIT(botan_x509_cert_load_file,
+                           (&cert_without_eku, Test::data_file("x509/nist/root.crt").c_str()))) {
+            return;
+         }
+
+         // Should return non-zero for any EKU query (no EKU extension present)
+         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_without_eku, "1.3.6.1.5.5.7.3.1"));
+         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_without_eku, "1.3.6.1.5.5.7.3.2"));
+         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_without_eku, "PKIX.OCSPSigning"));
+         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_without_eku, "PKIX.CodeSigning"));
+
+         TEST_FFI_OK(botan_oid_destroy, (oid_srv_auth1));
+         TEST_FFI_OK(botan_oid_destroy, (oid_srv_auth2));
+         TEST_FFI_OK(botan_oid_destroy, (oid_ocsp_signing));
+         TEST_FFI_OK(botan_x509_cert_destroy, (cert_without_eku));
       }
 };
 
@@ -4773,6 +4848,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_zfec", FFI_ZFEC_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_crl", FFI_CRL_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_cert_validation", FFI_Cert_Validation_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ecdsa_certificate", FFI_ECDSA_Certificate_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_cert_ext_keyusage", FFI_Cert_ExtKeyUsages_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_pkcs_hashid", FFI_PKCS_Hashid_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_cbc_cipher", FFI_CBC_Cipher_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_gcm", FFI_GCM_Test);

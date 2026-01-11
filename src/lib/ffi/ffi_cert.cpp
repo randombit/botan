@@ -15,6 +15,7 @@
    #include <botan/x509_crl.h>
    #include <botan/x509cert.h>
    #include <botan/x509path.h>
+   #include <botan/internal/ffi_oid.h>
 #endif
 
 extern "C" {
@@ -75,6 +76,35 @@ int botan_x509_cert_load(botan_x509_cert_t* cert_obj, const uint8_t cert_bits[],
    });
 #else
    BOTAN_UNUSED(cert_bits_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_is_ca(botan_x509_cert_t cert) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return c.is_CA_cert() ? BOTAN_FFI_SUCCESS : 1; });
+#else
+   BOTAN_UNUSED(cert);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_get_path_length_constraint(botan_x509_cert_t cert, size_t* path_limit) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) -> int {
+      if(Botan::any_null_pointers(path_limit)) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      if(const auto path_len = c.path_length_constraint()) {
+         *path_limit = path_len.value();
+         return BOTAN_FFI_SUCCESS;
+      } else {
+         return BOTAN_FFI_ERROR_NO_VALUE;
+      }
+   });
+#else
+   BOTAN_UNUSED(cert, path_limit);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
@@ -157,6 +187,31 @@ int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage
    });
 #else
    BOTAN_UNUSED(cert, key_usage);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_allowed_extended_usage_str(botan_x509_cert_t cert, const char* oid) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) -> int {
+      if(Botan::any_null_pointers(oid)) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      return c.has_ex_constraint(oid) ? BOTAN_FFI_SUCCESS : 1;
+   });
+#else
+   BOTAN_UNUSED(cert, oid);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_allowed_extended_usage_oid(botan_x509_cert_t cert, botan_asn1_oid_t oid) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(
+      cert, [=](const auto& c) -> int { return c.has_ex_constraint(safe_get(oid)) ? BOTAN_FFI_SUCCESS : 1; });
+#else
+   BOTAN_UNUSED(cert, oid);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }

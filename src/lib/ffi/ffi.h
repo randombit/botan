@@ -2170,6 +2170,17 @@ int botan_x509_cert_view_public_key_bits(botan_x509_cert_t cert, botan_view_ctx 
 
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key);
 
+/**
+ * Returns 0 iff the cert is a CA certificate
+ */
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_is_ca(botan_x509_cert_t cert);
+
+/**
+ * Retrieves the path length constraint from the certificate.
+ * If no such constraint is present, BOTAN_FFI_ERROR_NO_VALUE is returned.
+ */
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_get_path_length_constraint(botan_x509_cert_t cert, size_t* path_limit);
+
 /* TODO(Botan4) this should use char for the out param */
 BOTAN_FFI_EXPORT(2, 0)
 int botan_x509_cert_get_issuer_dn(
@@ -2185,7 +2196,7 @@ BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_to_string(botan_x509_cert_t cert, cha
 BOTAN_FFI_EXPORT(3, 0)
 int botan_x509_cert_view_as_string(botan_x509_cert_t cert, botan_view_ctx ctx, botan_view_str_fn view);
 
-/* Must match values of Key_Constraints in key_constraints.h */
+/* Must match values of Key_Constraints in pkix_enums.h */
 enum botan_x509_cert_key_constraints /* NOLINT(*-enum-size,*-use-enum-class) */ {
    NO_CONSTRAINTS = 0,
    DIGITAL_SIGNATURE = 32768,
@@ -2200,6 +2211,32 @@ enum botan_x509_cert_key_constraints /* NOLINT(*-enum-size,*-use-enum-class) */ 
 };
 
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage);
+
+/**
+* Check if the certificate allows the specified extended usage OID. See RFC 5280
+* Section 4.2.1.12 for OIDs to query for this. If no extended key usage
+* extension is found in the certificate, this always returns "not success".
+*
+* Typical OIDs to check for:
+*   * "PKIX.ServerAuth"
+*   * "PKIX.ClientAuth"
+*   * "PKIX.CodeSigning"
+*   * "PKIX.OCSPSigning"
+*
+* The @p oid parameter can be either a canonical OID string or identifiers as
+* indicated in the examples above.
+*/
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_allowed_extended_usage_str(botan_x509_cert_t cert, const char* oid);
+
+/**
+* Check if the certificate allows the specified extended usage OID. See RFC 5280
+* Section 4.2.1.12 for OIDs to query for this. If no extended key usage
+* extension is found in the certificate, this always returns "not success".
+*
+* This is similar to botan_x509_cert_allowed_extended_usage_str but takes an OID
+* object instead of a string describing the OID.
+*/
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_allowed_extended_usage_oid(botan_x509_cert_t cert, botan_asn1_oid_t oid);
 
 /**
 * Check if the certificate matches the specified hostname via alternative name or CN match.
