@@ -395,6 +395,42 @@ int botan_x509_crl_load(botan_x509_crl_t* crl_obj, const uint8_t crl_bits[], siz
 #endif
 }
 
+int botan_x509_crl_this_update(botan_x509_crl_t crl, uint64_t* time_since_epoch) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(crl, [=](const auto& c) {
+      if(Botan::any_null_pointers(time_since_epoch)) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+      *time_since_epoch = c.this_update().time_since_epoch();
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(crl, time_since_epoch);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_crl_next_update(botan_x509_crl_t crl, uint64_t* time_since_epoch) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(crl, [=](const auto& c) {
+      const auto& time = c.next_update();
+      if(!time.time_is_set()) {
+         return BOTAN_FFI_ERROR_NO_VALUE;
+      }
+
+      if(Botan::any_null_pointers(time_since_epoch)) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      *time_since_epoch = c.next_update().time_since_epoch();
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(crl, time_since_epoch);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 int botan_x509_crl_destroy(botan_x509_crl_t crl) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_CHECKED_DELETE(crl);
