@@ -407,6 +407,13 @@ To generate the amalgamation, run ``configure.py`` with whatever options you
 would ordinarily use, along with the option ``--amalgamation``. This will create
 two (rather large) files, ``botan_all.h`` and ``botan_all.cpp``.
 
+.. warning::
+
+   Compiling a single 120K+ line C++ file containing a variety of
+   carefully optimized SIMD and inline asm has a way of triggering
+   compiler bugs. When using an amalgamation build, be sure to build
+   and run the test suite!
+
 .. note::
 
    The library will as usual be configured to target some specific operating
