@@ -15,6 +15,7 @@
    #include <botan/x509_crl.h>
    #include <botan/x509cert.h>
    #include <botan/x509path.h>
+   #include <botan/internal/ffi_mp.h>
    #include <botan/internal/ffi_oid.h>
 #endif
 
@@ -269,6 +270,22 @@ int botan_x509_cert_get_serial_number(botan_x509_cert_t cert, uint8_t out[], siz
    return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return write_vec_output(out, out_len, c.serial_number()); });
 #else
    BOTAN_UNUSED(cert, out, out_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_serial_number(botan_x509_cert_t cert, botan_mp_t* serial_number) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const Botan::X509_Certificate& c) {
+      if(Botan::any_null_pointers(serial_number)) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      auto serial_bn = Botan::BigInt::from_bytes(c.serial_number());
+      return ffi_new_object(serial_number, std::make_unique<Botan::BigInt>(std::move(serial_bn)));
+   });
+#else
+   BOTAN_UNUSED(cert, serial_number);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
@@ -883,6 +900,22 @@ int botan_x509_crl_entry_reason(botan_x509_crl_entry_t entry, int* reason_code) 
    });
 #else
    BOTAN_UNUSED(entry, reason_code);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_crl_entry_serial_number(botan_x509_crl_entry_t entry, botan_mp_t* serial_number) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(entry, [=](const Botan::CRL_Entry& e) {
+      if(Botan::any_null_pointers(serial_number)) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      auto serial_bn = Botan::BigInt::from_bytes(e.serial_number());
+      return ffi_new_object(serial_number, std::make_unique<Botan::BigInt>(std::move(serial_bn)));
+   });
+#else
+   BOTAN_UNUSED(entry, serial_number);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }

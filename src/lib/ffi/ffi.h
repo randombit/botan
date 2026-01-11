@@ -2161,6 +2161,7 @@ BOTAN_FFI_EXPORT(2, 0)
 int botan_x509_cert_get_fingerprint(botan_x509_cert_t cert, const char* hash, uint8_t out[], size_t* out_len);
 
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_serial_number(botan_x509_cert_t cert, uint8_t out[], size_t* out_len);
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_serial_number(botan_x509_cert_t cert, botan_mp_t* serial_number);
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_authority_key_id(botan_x509_cert_t cert, uint8_t out[], size_t* out_len);
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_subject_key_id(botan_x509_cert_t cert, uint8_t out[], size_t* out_len);
 
@@ -2414,6 +2415,12 @@ BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_entry_reason(botan_x509_crl_entry_t e
 */
 BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_crl_entry_revocation_date(botan_x509_crl_entry_t entry, uint64_t* time_since_epoch);
+
+/**
+* Return the serial number associated with the given CRL @p entry.
+*/
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_crl_entry_serial_number(botan_x509_crl_entry_t entry, botan_mp_t* serial_number);
 
 /**
 * View the serial number associated with the given CRL @p entry.
