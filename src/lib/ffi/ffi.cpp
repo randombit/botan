@@ -193,6 +193,9 @@ const char* botan_error_description(int err) {
       case BOTAN_FFI_ERROR_INVALID_OBJECT_STATE:
          return "Invalid object state";
 
+      case BOTAN_FFI_ERROR_OUT_OF_RANGE:
+         return "Index out of range";
+
       case BOTAN_FFI_ERROR_NOT_IMPLEMENTED:
          return "Not implemented";
 

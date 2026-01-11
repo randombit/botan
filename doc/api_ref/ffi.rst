@@ -165,6 +165,11 @@ The following enum values are defined in the FFI header:
    An operation was invoked that makes sense for the object, but it is in the
    wrong state to perform it.
 
+.. cpp:enumerator:: BOTAN_FFI_ERROR_OUT_OF_RANGE = -36
+
+   Querying an enumerable value resulted in an "out of range" error. This error
+   code may be used as the marker for the end of a value enumeration.
+
 .. cpp:enumerator:: BOTAN_FFI_ERROR_NOT_IMPLEMENTED = -40
 
    This is returned if the functionality is not available for some reason.  For
@@ -1830,6 +1835,10 @@ X.509 Certificate Revocation Lists
 
    An opaque data type for an X.509 CRL.
 
+.. cpp:type:: opaque* botan_x509_crl_entry_t
+
+   An opaque data type for an X.509 CRL entry.
+
 .. cpp:function:: int botan_x509_crl_load(botan_x509_crl_t* crl_obj, \
                                         const uint8_t crl[], size_t crl_len)
 
@@ -1857,6 +1866,31 @@ X.509 Certificate Revocation Lists
 
    Check whether a given ``crl`` contains a given ``cert``.
    Return ``0`` when the certificate is revoked, ``-1`` otherwise.
+
+.. cpp:function:: int botan_x509_crl_entries(botan_x509_crl_t crl, \
+                                             size_t index, \
+                                             botan_x509_crl_entry_t *entry)
+
+   List the entries in the CRL. Using the `index` parameter applications can
+   enumerate all entries in the CRL. If the list of entries is exhausted, this
+   will return :cpp:enumerator:`BOTAN_FFI_ERROR_OUT_OF_RANGE`.
+
+.. cpp:function:: int botan_x509_crl_entry_reason(botan_x509_crl_entry_t entry, int* reason_code)
+
+   Get the revocation reason code for the given CRL entry. The reason code is
+   according to `RFC 5280 - 5.3.1 <https://www.rfc-editor.org/rfc/rfc5280#section-5.3.1>`_.
+
+.. cpp:function:: int botan_x509_crl_entry_revocation_date(botan_x509_crl_entry_t entry, uint64_t* time_since_epoch)
+
+   Get the revocation date for the given CRL entry, as seconds since epoch.
+
+.. cpp:function:: int botan_x509_crl_entry_view_serial_number(botan_x509_crl_entry_t entry, botan_view_ctx ctx, botan_view_bin_fn view)
+
+   View the serial number for the given CRL entry.
+
+.. cpp:function:: int botan_x509_crl_entry_destroy(botan_x509_crl_entry_t entry)
+
+   Destroy the CRL entry object.
 
 ZFEC (Forward Error Correction)
 ----------------------------------------

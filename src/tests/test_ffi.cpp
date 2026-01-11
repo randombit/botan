@@ -17,6 +17,7 @@
    #include <botan/ffi.h>
    #include <botan/hex.h>
    #include <botan/mem_ops.h>
+   #include <botan/pkix_enums.h>
    #include <botan/internal/calendar.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/stl_util.h>
@@ -727,10 +728,37 @@ class FFI_CRL_Test final : public FFI_Test {
          TEST_FFI_OK(botan_x509_cert_destroy, (cert1));
 
          botan_x509_cert_t cert2;
+         std::vector<uint8_t> cert2_serial;
+         size_t cert2_serial_len = 0;
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&cert2, Test::data_file("x509/nist/test20/int.crt").c_str()));
          TEST_FFI_RC(0, botan_x509_is_revoked, (crl, cert2));
          TEST_FFI_RC(-1, botan_x509_is_revoked, (bytecrl, cert2));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
+                     botan_x509_cert_get_serial_number,
+                     (cert2, nullptr, &cert2_serial_len));
+         cert2_serial.resize(cert2_serial_len);
+         TEST_FFI_OK(botan_x509_cert_get_serial_number, (cert2, cert2_serial.data(), &cert2_serial_len));
          TEST_FFI_OK(botan_x509_cert_destroy, (cert2));
+
+         botan_x509_crl_entry_t entry;
+         TEST_FFI_OK(botan_x509_crl_entries, (crl, 0, &entry));
+
+         ViewBytesSink serial;
+         uint64_t ts;
+         int reason;
+
+         TEST_FFI_OK(botan_x509_crl_entry_view_serial_number, (entry, serial.delegate(), serial.callback()));
+         TEST_FFI_OK(botan_x509_crl_entry_revocation_date, (entry, &ts));
+         TEST_FFI_OK(botan_x509_crl_entry_reason, (entry, &reason));
+         TEST_FFI_OK(botan_x509_crl_entry_destroy, (entry));
+
+         result.test_is_eq(
+            "Reason", static_cast<uint8_t>(reason), Botan::to_underlying(Botan::CRL_Code::KeyCompromise));
+         result.test_is_eq("Revocation time", ts, Botan::calendar_point(1999, 1, 1, 12, 0, 0).seconds_since_epoch());
+         result.test_eq("Revoked cert serial", serial.get(), cert2_serial);
+
+         TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE, botan_x509_crl_entries, (crl, 1, &entry));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE, botan_x509_crl_entries, (bytecrl, 0, &entry));
 
          TEST_FFI_OK(botan_x509_crl_destroy, (crl));
          TEST_FFI_OK(botan_x509_crl_destroy, (bytecrl));
