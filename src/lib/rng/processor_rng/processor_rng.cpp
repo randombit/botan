@@ -7,6 +7,7 @@
 #include <botan/processor_rng.h>
 
 #include <botan/internal/cpuid.h>
+#include <botan/internal/isa_extn.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/target_info.h>
 
@@ -48,7 +49,7 @@ typedef uint32_t hwrng_output;
 typedef uint64_t hwrng_output;
 #endif
 
-hwrng_output read_hwrng(bool& success) {
+hwrng_output BOTAN_FN_ISA_RNG read_hwrng(bool& success) {
    hwrng_output output = 0;  // NOLINT(*-const-correctness) clang-tidy doesn't understand inline asm
    success = false;
 

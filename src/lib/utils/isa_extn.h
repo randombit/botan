@@ -28,6 +28,7 @@
    #define BOTAN_FN_ISA_SHANI BOTAN_FUNC_ISA("sha,ssse3,sse4.1")
    #define BOTAN_FN_ISA_SHA512 BOTAN_FUNC_ISA("sha512,avx2")
    #define BOTAN_FN_ISA_BMI2 BOTAN_FUNC_ISA("bmi,bmi2")
+   #define BOTAN_FN_ISA_RNG BOTAN_FUNC_ISA("rdrnd")
    #define BOTAN_FN_ISA_SSE2 BOTAN_FUNC_ISA("sse2")
    #define BOTAN_FN_ISA_AVX2 BOTAN_FUNC_ISA("avx2")
    #define BOTAN_FN_ISA_AVX2_BMI2 BOTAN_FUNC_ISA("avx2,bmi,bmi2")
@@ -64,6 +65,7 @@
    #define BOTAN_FN_ISA_SIMD_4X32 BOTAN_FUNC_ISA("altivec")
    #define BOTAN_FN_ISA_CLMUL BOTAN_FUNC_ISA("vsx,crypto")
    #define BOTAN_FN_ISA_AES BOTAN_FUNC_ISA("vsx,crypto")
+   #define BOTAN_FN_ISA_RNG BOTAN_FUNC_ISA("cpu=power9")
 
 #endif
 
