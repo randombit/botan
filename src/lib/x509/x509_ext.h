@@ -322,16 +322,28 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Policies final : public Certificate_Ext
 class BOTAN_PUBLIC_API(2, 0) Authority_Information_Access final : public Certificate_Extension {
    public:
       std::unique_ptr<Certificate_Extension> copy() const override {
-         return std::make_unique<Authority_Information_Access>(m_ocsp_responder, m_ca_issuers);
+         return std::make_unique<Authority_Information_Access>(m_ocsp_responders, m_ca_issuers);
       }
 
       Authority_Information_Access() = default;
 
+      BOTAN_DEPRECATED("Use constructor with list of OCSP responders")
       explicit Authority_Information_Access(std::string_view ocsp,
                                             const std::vector<std::string>& ca_issuers = std::vector<std::string>()) :
-            m_ocsp_responder(ocsp), m_ca_issuers(ca_issuers) {}
+            m_ocsp_responders{std::string(ocsp)}, m_ca_issuers(ca_issuers) {}
 
-      std::string ocsp_responder() const { return m_ocsp_responder; }
+      explicit Authority_Information_Access(std::vector<std::string> ocsp_responders,
+                                            std::vector<std::string> ca_issuers = std::vector<std::string>()) :
+            m_ocsp_responders(std::move(ocsp_responders)), m_ca_issuers(std::move(ca_issuers)) {}
+
+      BOTAN_DEPRECATED("Use ocsp_responders") std::string ocsp_responder() const {
+         if(m_ocsp_responders.empty()) {
+            return {};
+         }
+         return m_ocsp_responders[0];
+      }
+
+      const std::vector<std::string>& ocsp_responders() const { return m_ocsp_responders; }
 
       static OID static_oid() { return OID({1, 3, 6, 1, 5, 5, 7, 1, 1}); }
 
@@ -342,12 +354,12 @@ class BOTAN_PUBLIC_API(2, 0) Authority_Information_Access final : public Certifi
    private:
       std::string oid_name() const override { return "PKIX.AuthorityInformationAccess"; }
 
-      bool should_encode() const override { return (!m_ocsp_responder.empty() || !m_ca_issuers.empty()); }
+      bool should_encode() const override { return (!m_ocsp_responders.empty() || !m_ca_issuers.empty()); }
 
       std::vector<uint8_t> encode_inner() const override;
       void decode_inner(const std::vector<uint8_t>& in) override;
 
-      std::string m_ocsp_responder;
+      std::vector<std::string> m_ocsp_responders;
       std::vector<std::string> m_ca_issuers;
 };
 
