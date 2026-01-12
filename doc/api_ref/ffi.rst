@@ -1705,6 +1705,13 @@ X.509 Certificates
    values. If a value does not exist :cpp:enumerator:`BOTAN_FFI_ERROR_NO_VALUE`
    is returned.
 
+.. cpp:function:: int botan_x509_cert_view_binary_values_count(botan_x509_cert_t cert, \
+                                                               botan_x509_value_type value_type, \
+                                                               size_t* count)
+
+   Get the number of entries for multi-value binary fields of information
+   contained in the certificate.
+
 .. cpp:function:: int botan_x509_cert_view_string_values(botan_x509_cert_t cert, \
                                                          botan_x509_value_type value_type, \
                                                          size_t index, \
@@ -1720,6 +1727,13 @@ X.509 Certificates
    See :ref:`x509_getter_function` for further information about the available
    values. If a value does not exist :cpp:enumerator:`BOTAN_FFI_ERROR_NO_VALUE`
    is returned.
+
+.. cpp:function:: int botan_x509_cert_view_string_values_count(botan_x509_cert_t cert, \
+                                                               botan_x509_value_type value_type, \
+                                                               size_t* count)
+
+   Get the number of entries for multi-value string fields of information
+   contained in the certificate.
 
 .. cpp:function:: int botan_x509_cert_get_time_starts(botan_x509_cert_t cert, char out[], size_t* out_len)
 
@@ -2037,6 +2051,13 @@ X.509 Certificate Revocation Lists
    values. If a value does not exist :cpp:enumerator:`BOTAN_FFI_ERROR_NO_VALUE`
    is returned.
 
+.. cpp:function:: int botan_x509_crl_view_binary_values_count(botan_x509_crl_t crl, \
+                                                               botan_x509_value_type value_type, \
+                                                               size_t* count)
+
+   Get the number of entries for multi-value binary fields of information
+   contained in the CRL.
+
 .. cpp:function:: int botan_x509_crl_view_string_values(botan_x509_crl_t crl, \
                                                         botan_x509_value_type value_type, \
                                                         size_t index, \
@@ -2052,6 +2073,13 @@ X.509 Certificate Revocation Lists
    See :ref:`x509_getter_function` for further information about the available
    values. If a value does not exist :cpp:enumerator:`BOTAN_FFI_ERROR_NO_VALUE`
    is returned.
+
+.. cpp:function:: int botan_x509_crl_view_string_values_count(botan_x509_crl_t crl, \
+                                                               botan_x509_value_type value_type, \
+                                                               size_t* count)
+
+   Get the number of entries for multi-value string fields of information
+   contained in the CRL.
 
 .. cpp:function:: int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert)
 

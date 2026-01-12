@@ -2284,6 +2284,8 @@ BOTAN_FFI_EXPORT(2, 8) int botan_x509_cert_dup(botan_x509_cert_t* new_cert, bota
 BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_cert_view_binary_values(
    botan_x509_cert_t cert, botan_x509_value_type value_type, size_t index, botan_view_ctx ctx, botan_view_bin_fn view);
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_cert_view_binary_values_count(botan_x509_cert_t cert, botan_x509_value_type value_type, size_t* count);
 
 /**
  * Retrieve a specific string value from an X.509 certificate.
@@ -2298,6 +2300,8 @@ int botan_x509_cert_view_binary_values(
 BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_cert_view_string_values(
    botan_x509_cert_t cert, botan_x509_value_type value_type, size_t index, botan_view_ctx ctx, botan_view_str_fn view);
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_cert_view_string_values_count(botan_x509_cert_t cert, botan_x509_value_type value_type, size_t* count);
 
 /* Prefer botan_x509_cert_not_before and botan_x509_cert_not_after */
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_time_starts(botan_x509_cert_t cert, char out[], size_t* out_len);
@@ -2564,6 +2568,8 @@ int botan_x509_crl_view_binary_values(botan_x509_crl_t crl_obj,
                                       size_t index,
                                       botan_view_ctx ctx,
                                       botan_view_bin_fn view);
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_crl_view_binary_values_count(botan_x509_crl_t crl_obj, botan_x509_value_type value_type, size_t* count);
 
 /**
  * Retrieve a specific string value from an X.509 certificate revocation list.
@@ -2581,6 +2587,9 @@ int botan_x509_crl_view_string_values(botan_x509_crl_t crl_obj,
                                       size_t index,
                                       botan_view_ctx ctx,
                                       botan_view_str_fn view);
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_crl_view_string_values_count(botan_x509_crl_t crl_obj, botan_x509_value_type value_type, size_t* count);
+
 /**
  * Given a CRL and a certificate,
  * check if the certificate is revoked on that particular CRL
