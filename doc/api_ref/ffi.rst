@@ -1825,6 +1825,11 @@ X.509 Certificates
    objects. If the given index is not available,
    :cpp:enumerator:`BOTAN_FFI_ERROR_OUT_OF_RANGE` is returned.
 
+.. cpp:function:: int botan_x509_cert_permitted_name_constraints_count(botan_x509_cert_t cert, \
+                                                                       size_t* count)
+
+   Get the number of permitted name constraints in the certificate.
+
 .. cpp:function:: int botan_x509_cert_excluded_name_constraints(botan_x509_cert_t cert, \
                                                                 size_t index, \
                                                                 botan_x509_general_name_t* constraint)
@@ -1832,6 +1837,11 @@ X.509 Certificates
    Enumerate the excluded name constraints in the certificate as GeneralName
    objects. If the given index is not available,
    :cpp:enumerator:`BOTAN_FFI_ERROR_OUT_OF_RANGE` is returned.
+
+.. cpp:function:: int botan_x509_cert_excluded_name_constraints_count(botan_x509_cert_t cert, \
+                                                                       size_t* count)
+
+   Get the number of excluded name constraints in the certificate.
 
 .. cpp:function:: int botan_x509_cert_subject_alternative_names(botan_x509_cert_t cert, \
                                                                 size_t index, \
@@ -1841,6 +1851,11 @@ X.509 Certificates
    objects. If the given index is not available,
    :cpp:enumerator:`BOTAN_FFI_ERROR_OUT_OF_RANGE` is returned.
 
+.. cpp:function:: int botan_x509_cert_subject_alternative_names_count(botan_x509_cert_t cert, \
+                                                                      size_t* count)
+
+   Get the number of subject alternative names in the certificate.
+
 .. cpp:function:: int botan_x509_cert_issuer_alternative_names(botan_x509_cert_t cert, \
                                                                size_t index, \
                                                                botan_x509_general_name_t* alt_name)
@@ -1848,6 +1863,11 @@ X.509 Certificates
    Enumerate the issuer alternative names in the certificate as GeneralName
    objects. If the given index is not available,
    :cpp:enumerator:`BOTAN_FFI_ERROR_OUT_OF_RANGE` is returned.
+
+.. cpp:function:: int botan_x509_cert_issuer_alternative_names_count(botan_x509_cert_t cert, \
+                                                                      size_t* count)
+
+   Get the number of issuer alternative names in the certificate.
 
 .. cpp:function:: int botan_x509_cert_verify(int* validation_result, \
                   botan_x509_cert_t cert, \
@@ -1951,6 +1971,10 @@ X.509 Certificate Revocation Lists
    List the entries in the CRL. Using the `index` parameter applications can
    enumerate all entries in the CRL. If the list of entries is exhausted, this
    will return :cpp:enumerator:`BOTAN_FFI_ERROR_OUT_OF_RANGE`.
+
+.. cpp:function:: int botan_x509_crl_entries_count(botan_x509_crl_t crl, size_t* count)
+
+   Get the number of entries in the CRL.
 
 .. cpp:function:: int botan_x509_crl_entry_reason(botan_x509_crl_entry_t entry, int* reason_code)
 
