@@ -730,6 +730,10 @@ class FFI_CRL_Test final : public FFI_Test {
          TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE,
                      botan_x509_crl_view_binary_values,
                      (bytecrl, BOTAN_X509_SUBJECT_KEY_IDENTIFIER, 0, akid.delegate(), akid.callback()));
+         size_t akid_count;
+         TEST_FFI_OK(botan_x509_crl_view_binary_values_count,
+                     (bytecrl, BOTAN_X509_SUBJECT_KEY_IDENTIFIER, &akid_count));
+         result.test_eq("no subject key ID entries", akid_count, 0);
 
          botan_x509_crl_t crl;
          REQUIRE_FFI_OK(botan_x509_crl_load_file, (&crl, Test::data_file("x509/nist/root.crl").c_str()));
@@ -793,6 +797,9 @@ class FFI_CRL_Test final : public FFI_Test {
          ViewStringSink crl_pem;
          TEST_FFI_OK(botan_x509_crl_view_string_values,
                      (bytecrl, BOTAN_X509_PEM_ENCODING, 0, crl_pem.delegate(), crl_pem.callback()));
+         size_t pem_count;
+         TEST_FFI_OK(botan_x509_crl_view_string_values_count, (bytecrl, BOTAN_X509_PEM_ENCODING, &pem_count));
+         result.test_eq("one PEM encoding", pem_count, 1);
 
          auto remove_newlines = [](std::string_view str) {
             auto out = std::string(str);
@@ -849,6 +856,16 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE,
                      botan_x509_cert_view_binary_values,
                      (ca, BOTAN_X509_PUBLIC_KEY_PKCS8_BITS, 1, public_key.delegate(), public_key.callback()));
+
+         size_t count;
+         TEST_FFI_OK(botan_x509_cert_view_binary_values_count, (ee, BOTAN_X509_TBS_DATA_BITS, &count));
+         result.test_eq("TBS data count", count, 1);
+         TEST_FFI_OK(botan_x509_cert_view_binary_values_count, (ee, BOTAN_X509_SIGNATURE_SCHEME_BITS, &count));
+         result.test_eq("Signature scheme count", count, 1);
+         TEST_FFI_OK(botan_x509_cert_view_binary_values_count, (ee, BOTAN_X509_SIGNATURE_BITS, &count));
+         result.test_eq("Signature count", count, 1);
+         TEST_FFI_OK(botan_x509_cert_view_binary_values_count, (ca, BOTAN_X509_PUBLIC_KEY_PKCS8_BITS, &count));
+         result.test_eq("Public key count", count, 1);
 
          // At the moment there's no way to directly instantiate a signature
          // verifier object with an encoded signature algorithm scheme. Hence,
@@ -1105,6 +1122,21 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             std::string printable(printable_len - 1, '0');
             TEST_FFI_OK(botan_x509_cert_to_string, (cert, printable.data(), &printable_len));
+
+            size_t count;
+            TEST_FFI_OK(botan_x509_cert_view_string_values_count, (cert, BOTAN_X509_PEM_ENCODING, &count));
+            result.test_eq("one PEM encoding", count, 1);
+            TEST_FFI_OK(botan_x509_cert_view_binary_values_count, (cert, BOTAN_X509_DER_ENCODING, &count));
+            result.test_eq("one DER encoding", count, 1);
+
+            ViewBytesSink der;
+            ViewStringSink pem;
+            TEST_FFI_OK(botan_x509_cert_view_binary_values,
+                        (cert, BOTAN_X509_DER_ENCODING, 0, der.delegate(), der.callback()));
+            result.confirm("DER encoding produced something", !der.get().empty());
+            TEST_FFI_OK(botan_x509_cert_view_string_values,
+                        (cert, BOTAN_X509_PEM_ENCODING, 0, pem.delegate(), pem.callback()));
+            result.confirm("PEM encoding produced something", !pem.get().empty());
 
             TEST_FFI_RC(0, botan_x509_cert_allowed_usage, (cert, KEY_CERT_SIGN));
             TEST_FFI_RC(0, botan_x509_cert_allowed_usage, (cert, CRL_SIGN));
@@ -1511,20 +1543,14 @@ class FFI_Cert_AuthorityInformationAccess_Test final : public FFI_Test {
       static auto read_aia_string_list(Test::Result& result, botan_x509_cert_t cert, botan_x509_value_type value_type) {
          std::vector<std::string> out;
 
-         for(size_t i = 0; true; ++i) {
-            const auto rc = botan_x509_cert_view_string_values(
-               cert, value_type, i, &out, [](botan_view_ctx ctx, const char* str, size_t) -> int {
-                  static_cast<std::vector<std::string>*>(ctx)->emplace_back(str);
-                  return BOTAN_FFI_SUCCESS;
-               });
-
-            if(rc == BOTAN_FFI_ERROR_OUT_OF_RANGE) {
-               break;
-            } else {
-               if(!result.test_eq_sz("error code from accessing AIA", rc, BOTAN_FFI_SUCCESS)) {
-                  break;
-               }
-            }
+         size_t count = 0;
+         TEST_FFI_OK(botan_x509_cert_view_string_values_count, (cert, value_type, &count));
+         for(size_t i = 0; i < count; ++i) {
+            TEST_FFI_OK(botan_x509_cert_view_string_values,
+                        (cert, value_type, i, &out, [](botan_view_ctx ctx, const char* str, size_t) -> int {
+                           static_cast<std::vector<std::string>*>(ctx)->emplace_back(str);
+                           return BOTAN_FFI_SUCCESS;
+                        }));
          }
 
          return out;
