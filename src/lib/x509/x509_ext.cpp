@@ -632,9 +632,9 @@ std::vector<uint8_t> Authority_Information_Access::encode_inner() const {
    DER_Encoder der(output);
 
    der.start_sequence();
-   // OCSP
-   if(!m_ocsp_responder.empty()) {
-      const ASN1_String url(m_ocsp_responder, ASN1_Type::Ia5String);
+   // OCSP Responders
+   for(const auto& ocsp_responder : m_ocsp_responders) {
+      const ASN1_String url(ocsp_responder, ASN1_Type::Ia5String);
       der.start_sequence()
          .encode(OID::from_string("PKIX.OCSP"))
          .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, url.value())
@@ -642,8 +642,8 @@ std::vector<uint8_t> Authority_Information_Access::encode_inner() const {
    }
 
    // CA Issuers
-   for(const auto& ca_isser : m_ca_issuers) {
-      const ASN1_String asn1_ca_issuer(ca_isser, ASN1_Type::Ia5String);
+   for(const auto& ca_issuer : m_ca_issuers) {
+      const ASN1_String asn1_ca_issuer(ca_issuer, ASN1_Type::Ia5String);
       der.start_sequence()
          .encode(OID::from_string("PKIX.CertificateAuthorityIssuers"))
          .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, asn1_ca_issuer.value())
@@ -668,7 +668,7 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in) 
          const BER_Object name = info.get_next_object();
 
          if(name.is_a(6, ASN1_Class::ContextSpecific)) {
-            m_ocsp_responder = ASN1::to_string(name);
+            m_ocsp_responders.push_back(ASN1::to_string(name));
          }
       }
       if(oid == OID::from_string("PKIX.CertificateAuthorityIssuers")) {
