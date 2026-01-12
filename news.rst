@@ -9,6 +9,9 @@ Version 3.11.0, Not Yet Released
 * Add support for verifying X509 certificate chains when the trust anchor is
   not self signed. (GH #5047)
 
+* Many additions to the C89/FFI interface, especially regarding X.509
+  certificates and CRLs (GH #5217 #5220 #5221 #5222 #5225)
+
 * Add optimized Keccak permutation implementation using AVX-512 (GH #5191)
 
 * Add optimized SM3 implementations using AVX2/BMI2 (GH #5178) and SM3-NI (GH #5183)
@@ -22,13 +25,16 @@ Version 3.11.0, Not Yet Released
 * Various elliptic curve arithmetic optimizations (GH #5186 #5194 #5195 #5196)
 
 * Add support for WebAssembly SIMD, optimizing various algorithms including AES, GCM,
-  ChaCha, SHA-1, SHA-256 and others. (GH #5155 #5163 #5201)
+  ChaCha, SHA-1, SHA-256, Argon2 and others. (GH #5155 #5163 #5201)
+
+* Emscripten/WebAssembly improvements including using the new Wasm exception mechanism
+  (GH #5202) and re-enabling testing in CI with Emscripten (GH #5209)
 
 * Unroll loops to improve Montgomery reduction performance. (GH #5150)
 
 * Increase maximum HMAC key length to 8192 bytes. (GH #5156)
 
-* Fix various clang-tidy warnings (GH #5172)
+* Fix various clang-tidy and cppcheck warnings (GH #5172 #5207 #5204 #5205)
 
 Version 3.10.0, 2025-11-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
