@@ -330,7 +330,12 @@ class BOTAN_PUBLIC_API(2, 0) X509_Certificate : public X509_Object {
       /**
       * Return the listed address of an OCSP responder, or empty if not set
       */
-      std::string ocsp_responder() const;
+      BOTAN_DEPRECATED("Use ocsp_responders") std::string ocsp_responder() const;
+
+      /**
+      * Return the listed addresses of OCSP responders, or empty if not set
+      */
+      const std::vector<std::string>& ocsp_responders() const;
 
       /**
       * Return the listed addresses of ca issuers, or empty if not set

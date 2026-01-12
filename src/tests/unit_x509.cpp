@@ -490,6 +490,31 @@ Test::Result test_x509_encode_authority_info_access_extension() {
 
    result.test_is_true("OCSP URI available", !cert.ocsp_responder().empty());
    result.test_is_true("CA Issuer URI available", !cert.ca_issuers().empty());
+
+   // create a certificate with multiple OCSP URIs
+   Botan::X509_Cert_Options opts_multi_ocsp = req_opts1(sig_algo);
+   const std::vector<std::string> ocsp_uris = {"http://ocsp.example.com", "http://backup-ocsp.example.com"};
+   opts_multi_ocsp.extensions.add(std::make_unique<Botan::Cert_Extension::Authority_Information_Access>(ocsp_uris));
+
+   req = Botan::X509::create_cert_req(opts_multi_ocsp, *key, hash_fn, *rng);
+
+   cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
+
+   const auto* aia_ext =
+      cert.v3_extensions().get_extension_object_as<Botan::Cert_Extension::Authority_Information_Access>();
+   result.test_is_true("AIA extension present", aia_ext != nullptr);
+
+   const auto ocsp_responders = aia_ext->ocsp_responders();
+   result.test_sz_eq("number of OCSP responder URIs", ocsp_responders.size(), 2);
+   result.test_str_eq("First OCSP responder URI matches", ocsp_responders[0], "http://ocsp.example.com");
+   result.test_str_eq("Second OCSP responder URI matches", ocsp_responders[1], "http://backup-ocsp.example.com");
+
+   const auto cert_ocsp_responders = cert.ocsp_responders();
+   result.test_sz_eq("Certificate: number of OCSP responder URIs", cert_ocsp_responders.size(), 2);
+   result.test_str_eq(
+      "Certificate: First OCSP responder URI matches", cert_ocsp_responders[0], "http://ocsp.example.com");
+   result.test_str_eq(
+      "Certificate: Second OCSP responder URI matches", cert_ocsp_responders[1], "http://backup-ocsp.example.com");
    #endif
 
    return result;
@@ -685,6 +710,17 @@ Test::Result test_x509_authority_info_access_extension() {
       ca_issuers2[1],
       "ldap://directory.d-trust.net/CN=Bdrive%20Test%20CA%201-2%202017,O=Bundesdruckerei%20GmbH,C=DE?cACertificate?base?");
    result.test_str_eq("OCSP responder URL matches", aia_cert_2ca.ocsp_responder(), "http://staging.ocsp.d-trust.net");
+
+   // contains AIA extension with multiple OCSP responders
+   const Botan::X509_Certificate aia_cert_multi_ocsp(
+      Test::data_file("x509/misc/contains_multiple_ocsp_responders.pem"));
+
+   const auto& ocsp_responders_multi = aia_cert_multi_ocsp.ocsp_responders();
+   result.test_sz_eq("number of OCSP responders", ocsp_responders_multi.size(), 3);
+   result.test_str_eq("First OCSP responder URL matches", ocsp_responders_multi[0], "http://ocsp1.example.com");
+   result.test_str_eq("Second OCSP responder URL matches", ocsp_responders_multi[1], "http://ocsp2.example.com");
+   result.test_str_eq("Third OCSP responder URL matches", ocsp_responders_multi[2], "http://ocsp3.example.com");
+   result.test_is_true("no CA Issuer URI available", aia_cert_multi_ocsp.ca_issuers().empty());
 
    return result;
 }

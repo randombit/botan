@@ -48,7 +48,7 @@ struct X509_Certificate_Data {
       std::vector<OID> m_cert_policies;
 
       std::vector<std::string> m_crl_distribution_points;
-      std::string m_ocsp_responder;
+      std::vector<std::string> m_ocsp_responders;
       std::vector<std::string> m_ca_issuers;
 
       std::vector<uint8_t> m_issuer_dn_bits_sha256;
@@ -265,7 +265,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    }
 
    if(const auto* ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Authority_Information_Access>()) {
-      data->m_ocsp_responder = ext->ocsp_responder();
+      data->m_ocsp_responders = ext->ocsp_responders();
       data->m_ca_issuers = ext->ca_issuers();
    }
 
@@ -538,7 +538,14 @@ bool X509_Certificate::is_critical(std::string_view ex_name) const {
 }
 
 std::string X509_Certificate::ocsp_responder() const {
-   return data().m_ocsp_responder;
+   if(data().m_ocsp_responders.empty()) {
+      return {};
+   }
+   return data().m_ocsp_responders[0];
+}
+
+const std::vector<std::string>& X509_Certificate::ocsp_responders() const {
+   return data().m_ocsp_responders;
 }
 
 std::vector<std::string> X509_Certificate::ca_issuers() const {
@@ -798,8 +805,12 @@ std::string X509_Certificate::to_string() const {
       }
    }
 
-   if(!ocsp_responder().empty()) {
-      out << "OCSP responder " << ocsp_responder() << "\n";
+   const auto& ocsp_responders = this->ocsp_responders();
+   if(!ocsp_responders.empty()) {
+      out << "OCSP Responders:\n";
+      for(const auto& ocsp_responder : ocsp_responders) {
+         out << "   URI: " << ocsp_responder << "\n";
+      }
    }
 
    const std::vector<std::string> ca_issuers = this->ca_issuers();
