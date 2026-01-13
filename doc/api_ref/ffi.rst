@@ -1701,7 +1701,11 @@ X.509 Certificates
 
 .. cpp:function:: int botan_x509_cert_get_serial_number(botan_x509_cert_t cert, uint8_t out[], size_t* out_len)
 
-   Return the serial number of the certificate.
+   Return the serial number of the certificate as big-endian encoded bytes.
+
+.. cpp:function:: int botan_x509_cert_serial_number(botan_x509_cert_t cert, botan_mp_t* serial_number)
+
+   Return the serial number of the certificate as a multi-precision integer.
 
 .. cpp:function:: int botan_x509_cert_is_ca(botan_x509_cert_t cert)
 
@@ -1985,9 +1989,13 @@ X.509 Certificate Revocation Lists
 
    Get the revocation date for the given CRL entry, as seconds since epoch.
 
+.. cpp:function:: int botan_x509_crl_entry_serial_number(botan_x509_crl_entry_t entry, botan_mp_t* serial_number)
+
+   Get the serial number for the given CRL entry as a multi-precision integer.
+
 .. cpp:function:: int botan_x509_crl_entry_view_serial_number(botan_x509_crl_entry_t entry, botan_view_ctx ctx, botan_view_bin_fn view)
 
-   View the serial number for the given CRL entry.
+   View the serial number for the given CRL entry, as big-endian encoded bytes.
 
 .. cpp:function:: int botan_x509_crl_entry_destroy(botan_x509_crl_entry_t entry)
 

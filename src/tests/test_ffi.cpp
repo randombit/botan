@@ -732,6 +732,7 @@ class FFI_CRL_Test final : public FFI_Test {
 
          botan_x509_cert_t cert2;
          std::vector<uint8_t> cert2_serial;
+         botan_mp_t cert2_serial_bn;
          size_t cert2_serial_len = 0;
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&cert2, Test::data_file("x509/nist/test20/int.crt").c_str()));
          TEST_FFI_RC(0, botan_x509_is_revoked, (crl, cert2));
@@ -741,6 +742,7 @@ class FFI_CRL_Test final : public FFI_Test {
                      (cert2, nullptr, &cert2_serial_len));
          cert2_serial.resize(cert2_serial_len);
          TEST_FFI_OK(botan_x509_cert_get_serial_number, (cert2, cert2_serial.data(), &cert2_serial_len));
+         TEST_FFI_OK(botan_x509_cert_serial_number, (cert2, &cert2_serial_bn));
          TEST_FFI_OK(botan_x509_cert_destroy, (cert2));
 
          size_t entries;
@@ -749,14 +751,20 @@ class FFI_CRL_Test final : public FFI_Test {
          TEST_FFI_OK(botan_x509_crl_entries_count, (bytecrl, &entries));
          result.test_eq("no revoked cert", entries, 0);
 
+         ViewBytesSink serial;
+         TEST_FFI_OK(botan_mp_view_bin, (cert2_serial_bn, serial.delegate(), serial.callback()));
+         result.test_eq("serial == serial_bn", serial.get(), cert2_serial);
+         TEST_FFI_OK(botan_mp_destroy, (cert2_serial_bn));
+
          botan_x509_crl_entry_t entry;
          TEST_FFI_OK(botan_x509_crl_entries, (crl, 0, &entry));
 
-         ViewBytesSink serial;
          uint64_t ts;
          int reason;
+         botan_mp_t entry_serial_bn;
 
          TEST_FFI_OK(botan_x509_crl_entry_view_serial_number, (entry, serial.delegate(), serial.callback()));
+         TEST_FFI_OK(botan_x509_crl_entry_serial_number, (entry, &entry_serial_bn));
          TEST_FFI_OK(botan_x509_crl_entry_revocation_date, (entry, &ts));
          TEST_FFI_OK(botan_x509_crl_entry_reason, (entry, &reason));
          TEST_FFI_OK(botan_x509_crl_entry_destroy, (entry));
@@ -765,6 +773,10 @@ class FFI_CRL_Test final : public FFI_Test {
             "Reason", static_cast<uint8_t>(reason), Botan::to_underlying(Botan::CRL_Code::KeyCompromise));
          result.test_is_eq("Revocation time", ts, Botan::calendar_point(1999, 1, 1, 12, 0, 0).seconds_since_epoch());
          result.test_eq("Revoked cert serial", serial.get(), cert2_serial);
+
+         TEST_FFI_OK(botan_mp_view_bin, (entry_serial_bn, serial.delegate(), serial.callback()));
+         result.test_eq("Revoked cert serial_bn", serial.get(), cert2_serial);
+         TEST_FFI_OK(botan_mp_destroy, (entry_serial_bn));
 
          TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE, botan_x509_crl_entries, (crl, 1, &entry));
          TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE, botan_x509_crl_entries, (bytecrl, 0, &entry));
