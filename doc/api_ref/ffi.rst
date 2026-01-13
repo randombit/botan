@@ -1741,13 +1741,27 @@ X.509 Certificates
                                             const char* key, size_t index, \
                                             uint8_t out[], size_t* out_len)
 
-   Get a value from the issuer DN field.
+   Get a value from the issuer DN field. If the index is out of range,
+   :cpp:enumerator:`BOTAN_FFI_ERROR_BAD_PARAMETER` is returned for historical
+   reasons.
+
+.. cpp:function:: int botan_x509_cert_get_issuer_dn_count(botan_x509_cert_t cert, \
+                                                          const char* key, size_t* count)
+
+   Get the number of values for a given key in the issuer DN field.
 
 .. cpp:function:: int botan_x509_cert_get_subject_dn(botan_x509_cert_t cert, \
                                              const char* key, size_t index, \
                                              uint8_t out[], size_t* out_len)
 
-   Get a value from the subject DN field.
+   Get a value from the subject DN field. If the index is out of range,
+   :cpp:enumerator:`BOTAN_FFI_ERROR_BAD_PARAMETER` is returned for historical
+   reasons.
+
+.. cpp:function:: int botan_x509_cert_get_subject_dn_count(botan_x509_cert_t cert, \
+                                                           const char* key, size_t* count)
+
+   Get the number of values for a given key in the subject DN field.
 
 .. cpp:function:: int botan_x509_cert_to_string(botan_x509_cert_t cert, char out[], size_t* out_len)
 

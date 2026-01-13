@@ -2183,15 +2183,30 @@ BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_is_ca(botan_x509_cert_t cert);
  */
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_get_path_length_constraint(botan_x509_cert_t cert, size_t* path_limit);
 
-/* TODO(Botan4) this should use char for the out param */
+/**
+ * Enumerates the names of the given @p key in the issuer DN. If @p index is
+ * out of bounds, BOTAN_FFI_ERROR_BAD_PARAMETER is returned.
+ *
+ * TODO(Botan4) use BOTAN_FFI_ERROR_OUT_OF_RANGE instead of BAD_PARAMETER
+ * TODO(Botan4) this should use char for the out param
+ */
 BOTAN_FFI_EXPORT(2, 0)
 int botan_x509_cert_get_issuer_dn(
    botan_x509_cert_t cert, const char* key, size_t index, uint8_t out[], size_t* out_len);
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_get_issuer_dn_count(botan_x509_cert_t cert, const char* key, size_t* count);
 
-/* TODO(Botan4) this should use char for the out param */
+/**
+ * Enumerates the names of the given @p key in the subject DN. If @p index is
+ * out of bounds, BOTAN_FFI_ERROR_BAD_PARAMETER is returned.
+ *
+ * TODO(Botan4) use BOTAN_FFI_ERROR_OUT_OF_RANGE instead of BAD_PARAMETER
+ * TODO(Botan4) this should use char for the out param
+ */
 BOTAN_FFI_EXPORT(2, 0)
 int botan_x509_cert_get_subject_dn(
    botan_x509_cert_t cert, const char* key, size_t index, uint8_t out[], size_t* out_len);
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_cert_get_subject_dn_count(botan_x509_cert_t cert, const char* key, size_t* count);
 
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_to_string(botan_x509_cert_t cert, char out[], size_t* out_len);
 

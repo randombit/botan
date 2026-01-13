@@ -980,6 +980,12 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
             }
    #endif
 
+            size_t rdn_count;
+            TEST_FFI_OK(botan_x509_cert_get_issuer_dn_count, (cert, "Name", &rdn_count));
+            result.test_eq("issuer DN 'name' count", rdn_count, 1);
+            TEST_FFI_OK(botan_x509_cert_get_issuer_dn_count, (cert, "Organizational Unit", &rdn_count));
+            result.test_eq("issuer DN 'organizational unit' count", rdn_count, 0);
+
             size_t dn_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
                         botan_x509_cert_get_issuer_dn,
@@ -988,6 +994,11 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
             std::vector<uint8_t> dn(dn_len);
             TEST_FFI_OK(botan_x509_cert_get_issuer_dn, (cert, "Name", 0, dn.data(), &dn_len));
             result.test_eq("issuer dn", reinterpret_cast<const char*>(dn.data()), "ISRG Root X2");
+
+            TEST_FFI_OK(botan_x509_cert_get_subject_dn_count, (cert, "Name", &rdn_count));
+            result.test_eq("subject DN 'name' count", rdn_count, 1);
+            TEST_FFI_OK(botan_x509_cert_get_subject_dn_count, (cert, "Organizational Unit", &rdn_count));
+            result.test_eq("subject DN 'organizational unit' count", rdn_count, 0);
 
             dn_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,

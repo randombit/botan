@@ -138,11 +138,27 @@ int botan_x509_cert_get_issuer_dn(
          // TODO(Botan4) change the type of out and remove this cast
          return write_str_output(reinterpret_cast<char*>(out), out_len, c.issuer_info(key).at(index));
       } else {
-         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;  // TODO(Botan4): use BOTAN_FFI_ERROR_OUT_OF_RANGE
       }
    });
 #else
    BOTAN_UNUSED(cert, key, index, out, out_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_get_issuer_dn_count(botan_x509_cert_t cert, const char* key, size_t* count) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) -> int {
+      if(Botan::any_null_pointers(count)) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      *count = c.issuer_info(key).size();
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(cert, key, count);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
@@ -156,11 +172,27 @@ int botan_x509_cert_get_subject_dn(
          // TODO(Botan4) change the type of out and remove this cast
          return write_str_output(reinterpret_cast<char*>(out), out_len, c.subject_info(key).at(index));
       } else {
-         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;  // TODO(Botan4): use BOTAN_FFI_ERROR_OUT_OF_RANGE
       }
    });
 #else
    BOTAN_UNUSED(cert, key, index, out, out_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_get_subject_dn_count(botan_x509_cert_t cert, const char* key, size_t* count) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) -> int {
+      if(Botan::any_null_pointers(count)) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      *count = c.subject_info(key).size();
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(cert, key, count);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
