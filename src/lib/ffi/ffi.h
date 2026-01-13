@@ -2297,6 +2297,7 @@ BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_cert_permitted_name_constraints(botan_x509_cert_t cert,
                                                size_t index,
                                                botan_x509_general_name_t* constraint);
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_permitted_name_constraints_count(botan_x509_cert_t cert, size_t* count);
 
 /**
 * Extracts "excluded" name constraints from a given @p cert one-by-one.
@@ -2307,6 +2308,7 @@ BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_cert_excluded_name_constraints(botan_x509_cert_t cert,
                                               size_t index,
                                               botan_x509_general_name_t* constraint);
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_excluded_name_constraints_count(botan_x509_cert_t cert, size_t* count);
 
 /**
 * Provides access to all "subject alternative names", where each entry is
@@ -2319,6 +2321,7 @@ BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_cert_subject_alternative_names(botan_x509_cert_t cert,
                                               size_t index,
                                               botan_x509_general_name_t* alt_name);
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_subject_alternative_names_count(botan_x509_cert_t cert, size_t* count);
 
 /**
 * Provides access to all "issuer alternative names", where each entry is
@@ -2329,6 +2332,7 @@ int botan_x509_cert_subject_alternative_names(botan_x509_cert_t cert,
 */
 BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_cert_issuer_alternative_names(botan_x509_cert_t cert, size_t index, botan_x509_general_name_t* alt_name);
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_issuer_alternative_names_count(botan_x509_cert_t cert, size_t* count);
 
 /**
 * Check if the certificate matches the specified hostname via alternative name or CN match.
@@ -2396,6 +2400,7 @@ BOTAN_FFI_EXPORT(2, 13) int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x5
 */
 BOTAN_FFI_EXPORT(3, 11)
 int botan_x509_crl_entries(botan_x509_crl_t crl, size_t index, botan_x509_crl_entry_t* entry);
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_entries_count(botan_x509_crl_t crl, size_t* count);
 
 /**
 * Return the revocation reason code for the given CRL @p entry.

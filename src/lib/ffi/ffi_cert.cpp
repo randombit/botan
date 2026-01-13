@@ -448,6 +448,19 @@ int botan_x509_cert_permitted_name_constraints(botan_x509_cert_t cert,
 #endif
 }
 
+int botan_x509_cert_permitted_name_constraints_count(botan_x509_cert_t cert, size_t* count) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   if(Botan::any_null_pointers(count)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { *count = c.name_constraints().permitted().size(); });
+#else
+   BOTAN_UNUSED(cert, count);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 int botan_x509_cert_excluded_name_constraints(botan_x509_cert_t cert,
                                               size_t index,
                                               botan_x509_general_name_t* constraint) {
@@ -469,6 +482,19 @@ int botan_x509_cert_excluded_name_constraints(botan_x509_cert_t cert,
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
+
+int botan_x509_cert_excluded_name_constraints_count(botan_x509_cert_t cert, size_t* count) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   if(Botan::any_null_pointers(count)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { *count = c.name_constraints().excluded().size(); });
+#else
+   BOTAN_UNUSED(cert, count);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
 }
 
 namespace {
@@ -478,6 +504,9 @@ namespace {
  * collection of GeneralNames. This allows mapping a single entry of @p altnames
  * to a GeneralName by its @p index. If the index is out of range, std::nullopt
  * is returned.
+ *
+ * NOTE: if the set of alternative name types handled here is extended,
+ *       count_general_names_in() must be updated accordingly!
  */
 std::optional<Botan::GeneralName> extract_general_name_at(const Botan::AlternativeName& altnames, size_t index) {
    if(index < altnames.email().size()) {
@@ -517,6 +546,18 @@ std::optional<Botan::GeneralName> extract_general_name_at(const Botan::Alternati
    return std::nullopt;
 }
 
+/**
+ * Counts the total number of GeneralNames contained in the given
+ * AlternativeName @p alt_names.
+ *
+ * NOTE: if the set of alternative name types handled here is extended,
+ *       extract_general_name_at() must be updated accordingly!
+ */
+size_t count_general_names_in(const Botan::AlternativeName& alt_names) {
+   return alt_names.email().size() + alt_names.dns().size() + alt_names.directory_names().size() +
+          alt_names.uris().size() + alt_names.ipv4_address().size();
+}
+
 }  // namespace
 
 extern "C" {
@@ -546,6 +587,20 @@ int botan_x509_cert_subject_alternative_names(botan_x509_cert_t cert,
 #endif
 }
 
+int botan_x509_cert_subject_alternative_names_count(botan_x509_cert_t cert, size_t* count) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   if(Botan::any_null_pointers(count)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   return BOTAN_FFI_VISIT(
+      cert, [=](const Botan::X509_Certificate& c) { *count = count_general_names_in(c.subject_alt_name()); });
+#else
+   BOTAN_UNUSED(cert, count);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 int botan_x509_cert_issuer_alternative_names(botan_x509_cert_t cert,
                                              size_t index,
                                              botan_x509_general_name_t* alt_name) {
@@ -567,6 +622,20 @@ int botan_x509_cert_issuer_alternative_names(botan_x509_cert_t cert,
    });
 #else
    BOTAN_UNUSED(cert, index, alt_name);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_issuer_alternative_names_count(botan_x509_cert_t cert, size_t* count) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   if(Botan::any_null_pointers(count)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   return BOTAN_FFI_VISIT(
+      cert, [=](const Botan::X509_Certificate& c) { *count = count_general_names_in(c.issuer_alt_name()); });
+#else
+   BOTAN_UNUSED(cert, count);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
@@ -776,6 +845,19 @@ int botan_x509_crl_entries(botan_x509_crl_t crl, size_t index, botan_x509_crl_en
    });
 #else
    BOTAN_UNUSED(crl, index, entry);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_crl_entries_count(botan_x509_crl_t crl, size_t* count) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   if(Botan::any_null_pointers(count)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   return BOTAN_FFI_VISIT(crl, [=](const Botan::X509_CRL& c) { *count = c.get_revoked().size(); });
+#else
+   BOTAN_UNUSED(crl, count);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
