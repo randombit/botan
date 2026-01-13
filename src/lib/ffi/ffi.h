@@ -2252,7 +2252,7 @@ int botan_x509_cert_view_public_key_bits(botan_x509_cert_t cert, botan_view_ctx 
 BOTAN_FFI_EXPORT(2, 0) int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key);
 
 /**
- * Returns 0 iff the cert is a CA certificate
+ * Returns 1 iff the cert is a CA certificate
  */
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_is_ca(botan_x509_cert_t cert);
 
