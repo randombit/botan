@@ -2,6 +2,7 @@
 * FFI (C89 API)
 * (C) 2015,2017 Jack Lloyd
 * (C) 2021 René Fischer
+* (C) 2024,2025,2026 Amos Treiber, René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -375,6 +376,84 @@ BOTAN_FFI_EXPORT(2, 8) int botan_rng_add_entropy(botan_rng_t rng, const uint8_t*
 * @return 0 if success, error if invalid object handle
 */
 BOTAN_FFI_EXPORT(2, 0) int botan_rng_destroy(botan_rng_t rng);
+
+/*
+* Opaque type of an eXtendable Output Function (XOF)
+*/
+typedef struct botan_xof_struct* botan_xof_t;
+
+/**
+* Initialize an eXtendable Output Function
+* @param xof XOF object
+* @param xof_name name of the XOF, e.g., "SHAKE-128"
+* @param flags should be 0 in current API revision, all other uses are reserved
+*       and return BOTAN_FFI_ERROR_BAD_FLAG
+*/
+BOTAN_FFI_EXPORT(3, 11) int botan_xof_init(botan_xof_t* xof, const char* xof_name, uint32_t flags);
+
+/**
+* Copy the state of an eXtendable Output Function
+* @param dest destination XOF object
+* @param source source XOF object
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 11) int botan_xof_copy_state(botan_xof_t* dest, botan_xof_t source);
+
+/**
+* Writes the block size of the eXtendable Output Function to *block_size
+* @param xof XOF object
+* @param block_size variable to hold the XOF's block size
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 11) int botan_xof_block_size(botan_xof_t xof, size_t* block_size);
+
+/**
+* Get the name of this eXtendable Output Function
+* @param xof the object to read
+* @param name output buffer
+* @param name_len on input, the length of buffer, on success the number of bytes written
+*/
+BOTAN_FFI_EXPORT(3, 11) int botan_xof_name(botan_xof_t xof, char* name, size_t* name_len);
+
+/**
+* Get the input/output state of this eXtendable Output Function
+* Typically, XOFs don't accept input as soon as the first output bytes were requested.
+* @param xof the object to read
+* @returns 1 iff the XOF is still accepting input bytes
+*/
+BOTAN_FFI_EXPORT(3, 11) int botan_xof_accepts_input(botan_xof_t xof);
+
+/**
+* Reinitializes the state of the eXtendable Output Function.
+* @param xof XOF object
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 11) int botan_xof_clear(botan_xof_t xof);
+
+/**
+* Send more input to the eXtendable Output Function
+* @param xof XOF object
+* @param in input buffer
+* @param in_len number of bytes to read from the input buffer
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 11) int botan_xof_update(botan_xof_t xof, const uint8_t* in, size_t in_len);
+
+/**
+* Generate output bytes from the eXtendable Output Function
+* @param xof XOF object
+* @param out output buffer
+* @param out_len number of bytes to write into the output buffer
+* @return 0 on success, a negative value on failure
+*/
+BOTAN_FFI_EXPORT(3, 11) int botan_xof_output(botan_xof_t xof, uint8_t* out, size_t out_len);
+
+/**
+* Frees all resources of the eXtendable Output Function object
+* @param xof xof object
+* @return 0 if success, error if invalid object handle
+*/
+BOTAN_FFI_EXPORT(3, 11) int botan_xof_destroy(botan_xof_t xof);
 
 /*
 * Opaque type of a hash function
