@@ -28,8 +28,9 @@ from collections.abc import Iterable
 
 # This Python module requires the FFI API version introduced in Botan 3.10.0
 #
+# 3.11.0 - XOF API
 # 3.10.0 - introduced botan_pubkey_load_ec*_sec1()
-BOTAN_FFI_VERSION = 20250829
+BOTAN_FFI_VERSION = 20260203
 
 #
 # Base exception for all exceptions raised from this module
@@ -162,6 +163,17 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_hash_clear, [c_void_p])
     ffi_api(dll.botan_hash_destroy, [c_void_p])
     ffi_api(dll.botan_hash_name, [c_void_p, c_char_p, POINTER(c_size_t)])
+
+    # XOF
+    ffi_api(dll.botan_xof_init, [c_void_p, c_char_p, c_uint32])
+    ffi_api(dll.botan_xof_copy_state, [c_void_p, c_void_p])
+    ffi_api(dll.botan_xof_block_size, [c_void_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_xof_name, [c_void_p, c_char_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_xof_accepts_input, [c_void_p])
+    ffi_api(dll.botan_xof_clear, [c_void_p])
+    ffi_api(dll.botan_xof_update, [c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_xof_output, [c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_xof_destroy, [c_void_p])
 
     #  MAC
     ffi_api(dll.botan_mac_init, [c_void_p, c_char_p, c_uint32])
@@ -586,6 +598,10 @@ def _call_fn_returning_sz(fn) -> int:
     fn(byref(sz))
     return int(sz.value)
 
+def _call_fn_returning_bool(fn) -> bool:
+    res = fn()
+    return res > 0
+
 def _call_fn_returning_vec(guess, fn) -> bytes:
 
     buf = create_string_buffer(guess)
@@ -982,6 +998,57 @@ class HashFunction:
         out = create_string_buffer(self.output_length())
         _DLL.botan_hash_final(self.__obj, out)
         return _ctype_bufout(out)
+
+#
+# eXtensible Output Functions
+#
+class XOF:
+    """eXtensible Output Function (XOF). The ``algo`` param is a string (e.g 'SHAKE-256', 'Ascon-XOF128')"""
+
+    def __init__(self, algo: str | c_void_p):
+        if isinstance(algo, c_void_p):
+            self.__obj = algo
+        else:
+            flags = c_uint32(0) # always zero in this API version
+            self.__obj = c_void_p(0)
+            _DLL.botan_xof_init(byref(self.__obj), _ctype_str(algo), flags)
+
+    def __del__(self):
+        _DLL.botan_xof_destroy(self.__obj)
+
+    def copy_state(self) -> XOF:
+        copy = c_void_p(0)
+        _DLL.botan_xof_copy_state(byref(copy), self.__obj)
+        return XOF(copy)
+
+    def clear(self):
+        """Clear state"""
+        _DLL.botan_xof_clear(self.__obj)
+
+    def update(self, x: str | bytes):
+        """Add some input"""
+        bits = _ctype_bits(x)
+        _DLL.botan_xof_update(self.__obj, bits, len(bits))
+
+    def output(self, length: int) -> bytes:
+        """Returns `length` bytes of output from the XOF after all input was provided"""
+        if length <= 0:
+            return b''
+        buf = create_string_buffer(length)
+        _DLL.botan_xof_output(self.__obj, buf, c_size_t(length))
+        return _ctype_bufout(buf)
+
+    def accepts_input(self) -> bool:
+        """Returns True if the XOF can accept more input, False if it is in output-only mode."""
+        return _call_fn_returning_bool(lambda: _DLL.botan_xof_accepts_input(self.__obj))
+
+    def algo_name(self) -> str:
+        """Returns the name of this algorithm"""
+        return _call_fn_returning_str(32, lambda b, bl: _DLL.botan_xof_name(self.__obj, b, bl))
+
+    def block_size(self) -> int:
+        """Return block size in bytes"""
+        return _call_fn_returning_sz(lambda length: _DLL.botan_xof_block_size(self.__obj, length))
 
 #
 # Message authentication codes
