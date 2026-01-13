@@ -90,7 +90,7 @@ jobs:
             host_os: ubuntu-22.04
           - compiler: gcc
             target: amalgamation
-            host_os: ubuntu-22.04
+            host_os: ubuntu-24.04
           - compiler: gcc
             target: static
             host_os: ubuntu-22.04

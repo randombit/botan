@@ -1,0 +1,17 @@
+<internal_defines>
+POLY1305_AVX512 -> 20260108
+</internal_defines>
+
+<module_info>
+name -> "Poly1305 AVX512"
+brief -> "Poly1305 using AVX-512 IFMA instructions"
+</module_info>
+
+<isa>
+avx512
+</isa>
+
+<requires>
+simd_avx512
+cpuid
+</requires>

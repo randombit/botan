@@ -1,4 +1,6 @@
 
+#test cpuid avx512 avx2
+
 [Poly1305]
 
 # RFC 7539 section A.3
