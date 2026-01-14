@@ -42,6 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           path: ./source
 
       - name: Read Repository Configuration
@@ -50,6 +51,7 @@ jobs:
       - name: Fetch BoringSSL fork for BoGo tests
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           repository: ${{ env.BORINGSSL_REPO }}
           ref: ${{ env.BORINGSSL_BRANCH }}
           path: ./boringssl
@@ -112,6 +114,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Read Repository Configuration
         uses: ./.github/actions/read-repo-config
@@ -172,6 +176,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Read Repository Configuration
         uses: ./.github/actions/read-repo-config
@@ -193,6 +199,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Read Repository Configuration
         uses: ./.github/actions/read-repo-config
@@ -215,6 +223,8 @@ jobs:
     steps:
       - name: Fetch Botan Repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Read Repository Configuration
         uses: ./.github/actions/read-repo-config

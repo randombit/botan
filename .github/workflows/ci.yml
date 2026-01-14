@@ -63,6 +63,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Read Repository Configuration
         uses: ./.github/actions/read-repo-config
@@ -102,6 +104,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Read Repository Configuration
         uses: ./.github/actions/read-repo-config
@@ -142,6 +146,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Read Repository Configuration
         uses: ./.github/actions/read-repo-config
@@ -161,6 +167,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Read Repository Configuration
         uses: ./.github/actions/read-repo-config
@@ -224,6 +232,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: ./source
+          persist-credentials: false
 
       - name: Read Repository Configuration
         uses: ./source/.github/actions/read-repo-config
@@ -231,6 +240,7 @@ jobs:
       - name: Fetch BoringSSL fork for BoGo tests
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           repository: ${{ env.BORINGSSL_REPO }}
           ref: ${{ env.BORINGSSL_BRANCH }}
           path: ./boringssl
@@ -286,6 +296,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
           path: ./source
 
       - name: Read Repository Configuration
@@ -347,6 +358,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Read Repository Configuration
         uses: ./.github/actions/read-repo-config
