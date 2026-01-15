@@ -293,6 +293,37 @@ class BotanPythonTests(unittest.TestCase):
         self.assertEqual(hex_encode(sha256.final()),
                          "08bfce15fd2406114825ee6f770a06b1b00c129cb48fcddc54ef58b5de48bdf5")
 
+    def test_xof(self):
+        try:
+            _h = botan.XOF('NoSuchXof')
+        except botan.BotanException as e:
+            self.assertEqual(str(e), "botan_xof_init failed: -40 (Not implemented)")
+
+        shake128 = botan.XOF('SHAKE-128')
+        self.assertEqual(shake128.algo_name(), 'SHAKE-128')
+        self.assertEqual(shake128.block_size(), 168)
+        self.assertTrue(shake128.accepts_input())
+
+        shake128.update('ignore this please')
+        shake128.clear()
+        shake128.update(hex_decode("32a36452a646beba4bf611e0bf2cfcb6"))
+
+        shake128_2 = shake128.copy_state()
+        self.assertTrue(shake128_2.accepts_input())
+
+        self.assertEqual(hex_encode(shake128.output(8)), "3df0ccef456072f3")
+        self.assertFalse(shake128.accepts_input())
+        self.assertEqual(hex_encode(shake128.output(8)), "daa5642d4b02bd5f")
+
+        self.assertEqual(hex_encode(shake128_2.output(4)), "3df0ccef")
+        self.assertFalse(shake128_2.accepts_input())
+        shake128_3 = shake128_2.copy_state()
+        self.assertFalse(shake128_3.accepts_input())
+        self.assertEqual(hex_encode(shake128_3.output(12)), "456072f3daa5642d4b02bd5f")
+
+        with self.assertRaises(botan.BotanException):
+            shake128.update('no more input accepted')
+
     def test_cipher(self):
         for mode in ['AES-128/CTR-BE', 'Serpent/GCM', 'ChaCha20Poly1305', 'AES-128/CBC/PKCS7']:
             try:
