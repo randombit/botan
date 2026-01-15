@@ -13,6 +13,8 @@
 
 #if defined(BOTAN_TARGET_ARCH_IS_X86_FAMILY) && !defined(BOTAN_USE_GCC_INLINE_ASM)
    #include <immintrin.h>
+#elif defined(BOTAN_TARGET_ARCH_IS_ARM64) && !defined(BOTAN_USE_GCC_INLINE_ASM)
+   #include <arm_acle.h>
 #endif
 
 namespace Botan {
@@ -83,6 +85,17 @@ hwrng_output BOTAN_FN_ISA_RNG read_hwrng(bool& success) {
       success = true;
    }
 
+#elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
+
+   uint64_t nzcv = 0;  // NOLINT(*-const-correctness) clang-tidy doesn't understand inline asm
+   #if defined(BOTAN_USE_GCC_INLINE_ASM)
+   // NOLINTNEXTLINE(*-no-assembler)
+   asm volatile("mrs %0, rndr; mrs %1, nzcv" : "=r"(output), "=r"(nzcv) : "0"(output), "1"(nzcv) : "cc");
+   #else
+   nzcv = __rndr(&output);
+   #endif
+   success = (0 == nzcv);
+
 #endif
 
    if(success) {
@@ -113,6 +126,8 @@ bool Processor_RNG::available() {
    return CPUID::has(CPUID::Feature::RDRAND);
 #elif defined(BOTAN_TARGET_ARCH_IS_PPC_FAMILY)
    return CPUID::has(CPUID::Feature::DARN);
+#elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
+   return CPUID::has(CPUID::Feature::RNG);
 #else
    return false;
 #endif
@@ -123,6 +138,8 @@ std::string Processor_RNG::name() const {
    return "rdrand";
 #elif defined(BOTAN_TARGET_ARCH_IS_PPC_FAMILY)
    return "darn";
+#elif defined(BOTAN_TARGET_ARCH_IS_ARM64)
+   return "rng";
 #else
    return "hwrng";
 #endif
