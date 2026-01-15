@@ -1618,12 +1618,25 @@ def cli_tls_client_hello_tests(_tmp_dir):
         output = test_cli("tls_client_hello", ["--hex", "-"], None, chello)
         test_cli("hash", ["--no-fsname", "--algo=SHA-256", "-"], output_hash, output)
 
-def cli_speed_pk_tests(_tmp_dir):
+def cli_speed_pk_fast_tests(_tmp_dir):
     msec = 1
 
     pk_algos = ["ECDSA", "ECDH", "SM2", "ECKCDSA", "ECGDSA", "GOST-34.10",
-                "DH", "DSA", "ElGamal", "Ed25519", "Ed448", "X25519", "X448",
-                "RSA", "RSA_keygen", "XMSS", "Kyber", "Dilithium", "SLH-DSA"]
+                "ML-KEM", "ML-DSA", "Ed25519", "Ed448", "X25519", "X448",
+                "DH", "DSA", "ElGamal"]
+
+    output = test_cli("speed", ["--msec=%d" % (msec)] + pk_algos, None).split('\n')
+
+    # ECDSA-secp256r1 106 keygen/sec; 9.35 ms/op 37489733 cycles/op (1 op in 9 ms)
+    format_re = re.compile(r'^.* [0-9]+ ([A-Za-z0-9 ]+)/sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9\.]+ ms\)')
+    for line in output:
+        if format_re.match(line) is None:
+            logging.error("Unexpected line %s", line)
+
+def cli_speed_pk_slow_tests(_tmp_dir):
+    msec = 1
+
+    pk_algos = ["RSA", "RSA_keygen", "XMSS", "SLH-DSA"]
 
     output = test_cli("speed", ["--msec=%d" % (msec)] + pk_algos, None).split('\n')
 
@@ -1837,12 +1850,9 @@ def main(args=None):
             return 1
 
     slow_test_fns = [
-        cli_speed_tests,
-        cli_speed_pk_tests,
+        cli_speed_pk_slow_tests,
         cli_speed_math_tests,
         cli_speed_pbkdf_tests,
-        cli_speed_table_tests,
-        cli_speed_invalid_option_tests,
         cli_xmss_sign_tests,
     ]
 
@@ -1881,6 +1891,10 @@ def main(args=None):
         cli_rng_tests,
         cli_roughtime_check_tests,
         cli_roughtime_tests,
+        cli_speed_tests,
+        cli_speed_pk_fast_tests,
+        cli_speed_invalid_option_tests,
+        cli_speed_table_tests,
         cli_timing_test_tests,
         cli_tls_ciphersuite_tests,
         cli_tls_client_hello_tests,
@@ -1897,9 +1911,9 @@ def main(args=None):
     test_fns = []
 
     if options.run_slow_tests:
-        test_fns = slow_test_fns + fast_test_fns
-    else:
-        test_fns = fast_test_fns
+        test_fns += slow_test_fns
+
+    test_fns += fast_test_fns
 
     if not options.skip_tls_proxy_test:
         test_fns.append(cli_tls_proxy_tests)
