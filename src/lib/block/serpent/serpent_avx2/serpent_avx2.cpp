@@ -295,6 +295,7 @@ void BOTAN_FN_ISA_AVX2 Serpent::avx2_decrypt_8(const uint8_t in[128], uint8_t ou
    SIMD_8x32::zero_registers();
 }
 
+// TODO(Botan4) remove when compiler hack above is removed
 #undef transform
 #undef i_transform
 
