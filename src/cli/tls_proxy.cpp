@@ -19,7 +19,7 @@
    #include <vector>
 
    #include <boost/asio.hpp>
-   #include <boost/bind.hpp>
+   #include <boost/bind/bind.hpp>
 
    #include <botan/hex.h>
    #include <botan/pkcs8.h>
