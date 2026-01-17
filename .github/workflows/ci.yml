@@ -129,18 +129,10 @@ jobs:
         include:
           - target: shared
             compiler: xcode
-            host_os: macos-15-intel
+            host_os: macos-26
           - target: amalgamation
             compiler: xcode
-            host_os: macos-15-intel
-            make_tool: ninja
-          - target: shared
-            compiler: xcode
-            host_os: macos-15 # uses Apple Silicon
-            make_tool: ninja
-          - target: amalgamation
-            compiler: xcode
-            host_os: macos-15 # uses Apple Silicon
+            host_os: macos-26
 
     runs-on: ${{ matrix.host_os }}
 
