@@ -18,7 +18,6 @@
       #include <botan/tls_session_manager_noop.h>
 
       #include <boost/beast/_experimental/test/stream.hpp>
-      #include <boost/bind.hpp>
       #include <utility>
 
 namespace Botan_Tests {
