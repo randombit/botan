@@ -262,6 +262,8 @@ def test_cli(cmd, cmd_options,
 
     if "\r\n" in stdout:
         stdout = stdout.replace("\r\n", "\n")
+    if "\r\n" in stderr:
+        stderr = stderr.replace("\r\n", "\n")
 
     if stderr:
         if expected_stderr is None:
@@ -566,6 +568,11 @@ mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
              "Certificate did not validate - Certificate issuer not found")
 
 def cli_xmss_sign_tests(tmp_dir):
+    if os.linesep != '\n':
+        # This test is hashing the PEM encoding of the XMSS private key which
+        # will have a different value due to line endings
+        return
+
     priv_key = os.path.join(tmp_dir, 'priv.pem')
     pub_key = os.path.join(tmp_dir, 'pub.pem')
     pub_key2 = os.path.join(tmp_dir, 'pub2.pem')
@@ -1667,6 +1674,12 @@ def cli_speed_table_tests(_tmp_dir):
     tbl_val_re = re.compile(r'^.* +(encrypt|decrypt) +[0-9]+(\.[0-9]{2})$')
 
     output = test_cli("speed", ["--format=table", "--msec=%d" % (msec), "AES-128"], None).split('\n')
+
+    # Mac is somewhat unusual in that there is (at least for now) a parallel provider
+    # that is distinct from but does not replace the usual algorithm implementations.
+    # Just zap out lines referencing this provider from the output so that the remainder
+    # has the same format as other platforms
+    output = [line for line in output if "commoncrypto" not in line]
 
     if len(output) != 11:
         logging.error('Unexpected number of lines from table output')
