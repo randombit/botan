@@ -47,6 +47,13 @@ tests_that_succeed_unexpectedly = {
     'webpki::forbidden-dsa-leaf': 'Conflates CA and verifier requirements',
     'webpki::forbidden-dsa-root': 'Conflates CA and verifier requirements',
 
+    'webpki::cn::ipv4-hex-mismatch': 'CABF BR 7.1.4.3 applies to CAs not verifiers',
+    'webpki::cn::ipv4-leading-zeros-mismatch': 'CABF BR 7.1.4.3 applies to CAs not verifiers',
+    'webpki::cn::punycode-not-in-san': 'CABF BR 7.1.4.3 applies to CAs not verifiers',
+    'webpki::cn::utf8-vs-punycode-mismatch':  'CABF BR 7.1.4.3 applies to CAs not verifiers',
+    'webpki::cn::not-in-san':  'CABF BR 7.1.4.3 applies to CAs not verifiers',
+    'webpki::cn::case-mismatch':  'CABF BR 7.1.4.3 applies to CAs not verifiers',
+
     'webpki::forbidden-p192-leaf': 'We do not place restrictions on the leaf key',
     'webpki::forbidden-weak-rsa-in-leaf': 'We do not place restrictions on the leaf key',
 
