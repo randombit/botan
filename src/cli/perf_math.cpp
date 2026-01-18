@@ -277,24 +277,13 @@ class PerfTest_RandomPrime final : public PerfTest {
 
          for(size_t bits : {256, 384, 512, 768, 1024, 1536}) {
             auto genprime_timer = config.make_timer("random_prime " + std::to_string(bits));
-            auto gensafe_timer = config.make_timer("random_safe_prime " + std::to_string(bits));
             auto is_prime_timer = config.make_timer("is_prime " + std::to_string(bits));
 
-            while(gensafe_timer->under(runtime)) {
+            while(genprime_timer->under(runtime) && is_prime_timer->under(runtime)) {
                const Botan::BigInt p = genprime_timer->run([&] { return Botan::random_prime(rng, bits, coprime); });
 
                if(!is_prime_timer->run([&] { return Botan::is_prime(p, rng, 64, true); })) {
                   config.error_output() << "Generated prime " << p << " which failed a primality test";
-               }
-
-               const Botan::BigInt sg = gensafe_timer->run([&] { return Botan::random_safe_prime(rng, bits); });
-
-               if(!is_prime_timer->run([&] { return Botan::is_prime(sg, rng, 64, true); })) {
-                  config.error_output() << "Generated safe prime " << sg << " which failed a primality test";
-               }
-
-               if(!is_prime_timer->run([&] { return Botan::is_prime(sg / 2, rng, 64, true); })) {
-                  config.error_output() << "Generated prime " << sg / 2 << " which failed a primality test";
                }
 
                // Now test p+2, p+4, ... which may or may not be prime
@@ -304,7 +293,6 @@ class PerfTest_RandomPrime final : public PerfTest {
             }
 
             config.record_result(*genprime_timer);
-            config.record_result(*gensafe_timer);
             config.record_result(*is_prime_timer);
          }
       }

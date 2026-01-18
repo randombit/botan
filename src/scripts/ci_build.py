@@ -939,7 +939,9 @@ def main(args=None):
             botan_exe = os.path.join(build_dir, 'botan-cli.exe' if options.os == 'windows' else 'botan')
 
             args = ['--threads=%d' % (options.build_jobs)]
-            if target in ['coverage']:
+            if target in ['shared']:
+                # Ideally we'd run these in the coverage build but with coverage some
+                # of them run incredibly slowly, eg cli_xmss_sign_tests takes 10+ minutes
                 args.append('--run-slow-tests')
             if root_dir != '.':
                 args.append('--test-data-dir=%s' % root_dir)
