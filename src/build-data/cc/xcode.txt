@@ -60,6 +60,8 @@ sse41  -> "-msse4.1"
 avx2   -> "-mavx2"
 avx512  -> "-mavx512f -mavx512bw -mavx512dq -mavx512vbmi -mavx512vbmi2 -mavx512bitalg -mavx512vl -mavx512ifma"
 
+avx512_clmul -> "-mavx512f -mavx512bw -mavx512dq -mavx512vbmi -mavx512vbmi2 -mavx512bitalg -mavx512vl -mavx512ifma -mvpclmulqdq"
+
 bmi2   -> "-mbmi -mbmi2"
 aesni  -> "-maes -mpclmul"
 rdrand -> "-mrdrnd"

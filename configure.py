@@ -1246,7 +1246,7 @@ class ArchInfo(InfoObject):
         self.family = lex.family
         self.isa_extensions = lex.isa_extensions
 
-        alphanumeric = re.compile('^[a-z0-9]+$')
+        alphanumeric = re.compile('^[a-z0-9_]+$')
         for isa in self.isa_extensions:
             if alphanumeric.match(isa) is None:
                 logging.error('Invalid name for ISA extension "%s"', isa)
