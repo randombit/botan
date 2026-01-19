@@ -50,13 +50,27 @@ class XTS_Mode : public Cipher_Mode {
 
       const BlockCipher& cipher() const { return *m_cipher; }
 
-      void update_tweak(size_t last_used);
+      void update_tweak(size_t consumed);
 
       size_t cipher_block_size() const { return m_cipher_block_size; }
 
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override;
       void key_schedule(std::span<const uint8_t> key) override;
+
+      /*
+      * Tweak block update step for XTS
+      *
+      * Assumes tweak is BS * n bytes long.
+      *
+      * Assumes that each block of tweak is already set to the successive doublings
+      * of the block prior.
+      */
+      static void update_tweak_block(uint8_t tweak[], size_t BS, size_t blocks_in_tweak);
+
+#if defined(BOTAN_HAS_MODE_XTS_AVX512_CLMUL)
+      static void update_tweak_block_avx512_clmul(uint8_t tweak[], size_t BS, size_t blocks_in_tweak);
+#endif
 
       std::unique_ptr<BlockCipher> m_cipher;
       std::unique_ptr<BlockCipher> m_tweak_cipher;

@@ -34,8 +34,13 @@ void BOTAN_TEST_API poly_double_n_le(uint8_t out[], const uint8_t in[], size_t n
 
 /*
 * Tweak block update step for XTS
+*
+* Assumes tweak is BS * n bytes long.
+*
+* The first block remains unmodified.
+* The remaining n-1 blocks are set to the successive doublings of the first block
 */
-void xts_update_tweak_block(uint8_t tweak[], size_t BS, size_t n);
+void xts_compute_tweak_block(uint8_t tweak[], size_t BS, size_t n);
 
 }  // namespace Botan
 
