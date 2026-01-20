@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Helper script to generate forged OCSP responses
 # that are signed by a random self-signed CA that
@@ -15,11 +15,11 @@ if [ $# -ne 3 ]; then
     exit 1
 fi
 
-if [ $(date "+%y%m%d") != "161118" ]; then
+if [ "$(date "+%y%m%d")" != "161118" ]; then
     echo "You need a time machine to run this script..."
     echo "Use libfaketime to set the system clock back to the 18th of November 2016"
     echo "Like so (path is for Ubuntu, might vary):"
-    echo "  LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1 FAKETIME=\"2016-11-18 12:00:00\" $0 $@"
+    echo "  LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1 FAKETIME=\"2016-11-18 12:00:00\" $0 $*"
     exit 1
 fi
 
@@ -98,22 +98,22 @@ openssl x509 -req \
     -sha256 -extfile $RPcertconf
 
 # mark victim's cert as "valid" or "revoked"
-enddate=$(openssl x509 -in $Vcert -enddate -noout | sed 's/notAfter=//')
+enddate=$(openssl x509 -in "$Vcert" -enddate -noout | sed 's/notAfter=//')
 formatted_enddate=$(date -d "$enddate" "+%y%m%d%H%M%S")
-serial=$(openssl x509 -in $Vcert -serial -noout | sed 's/serial=//')
-subject=$(openssl x509 -in $Vcert -subject -nameopt "oneline,RFC2253" -noout | sed 's/subject=//')
+serial=$(openssl x509 -in "$Vcert" -serial -noout | sed 's/serial=//')
+subject=$(openssl x509 -in "$Vcert" -subject -nameopt "oneline,RFC2253" -noout | sed 's/subject=//')
 
 if [ "$Vstatus" = "valid" ]; then
-    echo "V\t${formatted_enddate}Z\t\t${serial}\tunknown\t${subject}" > $RPindex
+    printf 'V\t%sZ\t\t%s\tunknown\t%s\n' "$formatted_enddate" "$serial" "$subject" > "$RPindex"
 elif [ "$Vstatus" = "revoked" ]; then
     formatted_currentdate=$(date "+%y%m%d%H%M%S")
-    echo "R\t${formatted_enddate}Z\t${formatted_currentdate}Z\t${serial}\tunknown\t${subject}" > $RPindex
+    printf 'R\t%sZ\t%sZ\t%s\tunknown\t%s\n' "$formatted_enddate" "$formatted_currentdate" "$serial" "$subject" > "$RPindex"
 else
     echo "Don't understand OCSP response status: $Vstatus"
     exit 1
 fi
 
 # generate an OCSP response using the just-created certificate
-openssl ocsp -issuer $Vissuer -cert $Vcert -reqout $RQ -text -no_nonce
-openssl ocsp -reqin $RQ -rsigner $RPcert -rkey $RPkey -CA $Vissuer -index $RPindex -ndays 5 -respout $RP -text
-openssl ocsp -reqin $RQ -rsigner $RPcert -rkey $RPkey -CA $Vissuer -index $RPindex -ndays 5 -respout $RPnocerts -resp_no_certs -text
+openssl ocsp -issuer "$Vissuer" -cert "$Vcert" -reqout $RQ -text -no_nonce
+openssl ocsp -reqin $RQ -rsigner $RPcert -rkey $RPkey -CA "$Vissuer" -index $RPindex -ndays 5 -respout $RP -text
+openssl ocsp -reqin $RQ -rsigner $RPcert -rkey $RPkey -CA "$Vissuer" -index $RPindex -ndays 5 -respout $RPnocerts -resp_no_certs -text

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Helper script to generate a certificate chain
 # alternative certificates might sign the OCSP responses.
@@ -8,12 +8,12 @@
 #
 # Botan is released under the Simplified BSD License (see license.txt)
 
-if [ $(date "+%y%m%d") != "220922" ]; then
+if [ "$(date "+%y%m%d")" != "220922" ]; then
     echo "You should use a time machine to run this script..."
     echo "Use libfaketime to set the system clock back to the 22nd of September 2022. This recreates the certificates with the same timestamps as used in the tests and saves you from re-setting the validation reference dates."
     echo
     echo "Like so (path is for Ubuntu, might vary):"
-    echo "  LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1 FAKETIME=\"2022-09-22 12:00:00\" $0 $@"
+    echo "  LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1 FAKETIME=\"2022-09-22 12:00:00\" $0 $*"
     exit 1
 fi
 
@@ -24,13 +24,11 @@ PREFIX="mychain_"
 ROOTkey="root.key"
 ROOTcsr="root.csr"
 ROOTcert="${PREFIX}root.pem"
-ROOTindex="root_index.txt"
 ROOTconf="root.conf"
 
 INTkey="int.key"
 INTcsr="int.csr"
 INTcert="${PREFIX}int.pem"
-INTindex="int_index.txt"
 INTconf="int.conf"
 
 DELRESPkey="int_ocsp_delegate_responder.key"
@@ -182,16 +180,16 @@ create_ocsp_response()
     local CAindex="index.txt"
     local ocspReq="req.der"
 
-    enddate=$(openssl x509 -in $subjectCert -enddate -noout | sed 's/notAfter=//')
+    enddate=$(openssl x509 -in "$subjectCert" -enddate -noout | sed 's/notAfter=//')
     formatted_enddate=$(date -d "$enddate" "+%y%m%d%H%M%S")
-    serial=$(openssl x509 -in $subjectCert -serial -noout | sed 's/serial=//')
-    subject=$(openssl x509 -in $subjectCert -subject -nameopt "oneline,RFC2253" -noout | sed 's/subject=//')
+    serial=$(openssl x509 -in "$subjectCert" -serial -noout | sed 's/serial=//')
+    subject=$(openssl x509 -in "$subjectCert" -subject -nameopt "oneline,RFC2253" -noout | sed 's/subject=//')
 
     if [ "$subjectStatus" = "valid" ]; then
-        echo "V\t${formatted_enddate}Z\t\t${serial}\tunknown\t${subject}" > $CAindex
+        printf 'V\t%sZ\t\t%s\tunknown\t%s\n' "$formatted_enddate" "$serial" "$subject" > "$CAindex"
     elif [ "$subjectStatus" = "revoked" ]; then
         formatted_currentdate=$(date "+%y%m%d%H%M%S")
-        echo "R\t${formatted_enddate}Z\t${formatted_currentdate}Z\t${serial}\tunknown\t${subject}" > $CAindex
+        printf 'R\t%sZ\t%sZ\t%s\tunknown\t%s\n' "$formatted_enddate" "$formatted_currentdate" "$serial" "$subject" > "$CAindex"
     else
         echo "Don't understand OCSP response status: $subjectStatus"
         exit 1
@@ -204,8 +202,8 @@ create_ocsp_response()
     fi
 
     # generate an OCSP response using the just-created certificate
-    openssl ocsp -issuer $caCert -cert $subjectCert -reqout $ocspReq -text -no_nonce
-    openssl ocsp -reqin $ocspReq -rsigner $responderCert -rkey $responderKey -CA $caCert -index $CAindex -ndays 30 -respout $ocspResponse $staple -text
+    openssl ocsp -issuer "$caCert" -cert "$subjectCert" -reqout $ocspReq -text -no_nonce
+    openssl ocsp -reqin $ocspReq -rsigner "$responderCert" -rkey "$responderKey" -CA "$caCert" -index $CAindex -ndays 30 -respout "$ocspResponse" $staple -text
 }
 
 # (Malformed) OCSP response for Intermediate signed by Intermediate itself
