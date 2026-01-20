@@ -1049,23 +1049,23 @@ class FFI_Cert_ExtKeyUsages_Test final : public FFI_Test {
             BOTAN_FFI_ERROR_NULL_POINTER, botan_x509_cert_allowed_extended_usage_oid, (cert_with_eku, nullptr));
 
          // Should have serverAuth (TLS Web Server Authentication)
-         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "1.3.6.1.5.5.7.3.1"));
-         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "PKIX.ServerAuth"));
-         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_oid, (cert_with_eku, oid_srv_auth1));
-         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_oid, (cert_with_eku, oid_srv_auth2));
+         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "1.3.6.1.5.5.7.3.1"));
+         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "PKIX.ServerAuth"));
+         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_oid, (cert_with_eku, oid_srv_auth1));
+         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_oid, (cert_with_eku, oid_srv_auth2));
 
          // Should have clientAuth (TLS Web Client Authentication)
-         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "1.3.6.1.5.5.7.3.2"));
-         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "PKIX.ClientAuth"));
+         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "1.3.6.1.5.5.7.3.2"));
+         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "PKIX.ClientAuth"));
 
          // Should NOT have OCSPSigning
-         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "1.3.6.1.5.5.7.3.9"));
-         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "PKIX.OCSPSigning"));
+         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "1.3.6.1.5.5.7.3.9"));
+         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "PKIX.OCSPSigning"));
 
          // Should NOT have codeSigning
-         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "1.3.6.1.5.5.7.3.3"));
-         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "PKIX.CodeSigning"));
-         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_oid, (cert_with_eku, oid_ocsp_signing));
+         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "1.3.6.1.5.5.7.3.3"));
+         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_str, (cert_with_eku, "PKIX.CodeSigning"));
+         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_oid, (cert_with_eku, oid_ocsp_signing));
 
          TEST_FFI_OK(botan_x509_cert_destroy, (cert_with_eku));
 
@@ -1075,11 +1075,11 @@ class FFI_Cert_ExtKeyUsages_Test final : public FFI_Test {
             return;
          }
 
-         // Should return non-zero for any EKU query (no EKU extension present)
-         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_without_eku, "1.3.6.1.5.5.7.3.1"));
-         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_without_eku, "1.3.6.1.5.5.7.3.2"));
-         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_without_eku, "PKIX.OCSPSigning"));
-         TEST_FFI_RC(1, botan_x509_cert_allowed_extended_usage_str, (cert_without_eku, "PKIX.CodeSigning"));
+         // Should return zero for any EKU query (no EKU extension present)
+         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_str, (cert_without_eku, "1.3.6.1.5.5.7.3.1"));
+         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_str, (cert_without_eku, "1.3.6.1.5.5.7.3.2"));
+         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_str, (cert_without_eku, "PKIX.OCSPSigning"));
+         TEST_FFI_RC(0, botan_x509_cert_allowed_extended_usage_str, (cert_without_eku, "PKIX.CodeSigning"));
 
          TEST_FFI_OK(botan_oid_destroy, (oid_srv_auth1));
          TEST_FFI_OK(botan_oid_destroy, (oid_srv_auth2));
