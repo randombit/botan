@@ -1,0 +1,16 @@
+<internal_defines>
+GHASH_AVX512_CLMUL -> 20260120
+</internal_defines>
+
+<module_info>
+name -> "GHASH AVX-512 CLMUL"
+</module_info>
+
+<requires>
+cpuid
+ghash_cpu # for polyval_fn.h
+</requires>
+
+<isa>
+avx512_clmul
+</isa>
