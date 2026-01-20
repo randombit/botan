@@ -14,8 +14,6 @@ set -ex
 
 TARGET="$1"
 
-SCRIPT_LOCATION=$(cd "$(dirname "$0")"; pwd)
-
 function build_and_install_jitterentropy() {
     mkdir jitterentropy-library
     curl -L "https://github.com/smuellerDD/jitterentropy-library/archive/refs/tags/v${JITTERENTROPY_VERSION}.tar.gz" | tar -xz -C .
