@@ -92,26 +92,7 @@ get_sig_algo_padding_and_generate_key(Botan::RandomNumberGenerator& rng) {
 
    #if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_SHA2_32)
    // Try to find a group that is supported in this build
-   const auto group_name = []() -> std::optional<std::string> {
-      if(Botan::EC_Group::supports_named_group("secp192r1")) {
-         return "secp192r1";
-      } else if(Botan::EC_Group::supports_named_group("secp256r1")) {
-         return "secp256r1";
-      } else if(Botan::EC_Group::supports_named_group("secp384r1")) {
-         return "secp384r1";
-      } else if(Botan::EC_Group::supports_named_group("secp521r1")) {
-         return "secp521r1";
-      } else if(Botan::EC_Group::supports_named_group("brainpool256r1")) {
-         return "brainpool256r1";
-      } else if(Botan::EC_Group::supports_named_group("brainpool384r1")) {
-         return "brainpool384r1";
-      } else if(Botan::EC_Group::supports_named_group("brainpool512r1")) {
-         return "brainpool512r1";
-      } else {
-         return std::nullopt;
-      }
-   }();
-
+   const auto group_name = Test::supported_ec_group_name();
    if(group_name) {
       return {"ECDSA", "", "SHA-256", generate_key("ECDSA", *group_name)};
    }
