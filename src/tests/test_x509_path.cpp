@@ -1709,6 +1709,8 @@ BOTAN_REGISTER_TEST("x509", "x509_path_xmss", XMSS_Path_Validation_Tests);
 
    #endif
 
+   #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1)
+
 class Name_Constraint_DN_Prefix_Test final : public Test {
    public:
       static Test::Result validate_name_constraint_dn_prefix_accepted() {
@@ -1795,6 +1797,8 @@ class Name_Constraint_DN_Prefix_Test final : public Test {
 };
 
 BOTAN_REGISTER_TEST("x509", "x509_path_nc_prefix_dn", Name_Constraint_DN_Prefix_Test);
+
+   #endif
 
 #endif
 
