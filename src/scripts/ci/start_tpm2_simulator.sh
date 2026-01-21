@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 #
 # Sets up a TPM2 simulator that is running behind a user-space TPM2 resource
@@ -36,8 +36,8 @@ swtpm_setup --create-config-files overwrite
 # "Endorsement Key"  - baked into the TPM (signed by the manufacturer)
 # "Platform Key"     - signed serial number of the EK (signed by the OEM; eg. the laptop manufacturer)
 # "Storage Root Key" - created by the user (signed by the EK)
-rm -fR $tmp_dir && mkdir $tmp_dir
-swtpm_setup --tpmstate $tmp_dir    \
+rm -fR "$tmp_dir" && mkdir "$tmp_dir"
+swtpm_setup --tpmstate "$tmp_dir"  \
             --create-ek-cert       \
             --create-platform-cert \
             --create-spk           \
@@ -45,7 +45,7 @@ swtpm_setup --tpmstate $tmp_dir    \
             --display
 
 echo "Starting TPM2 simulator..."
-swtpm socket --tpmstate dir=$tmp_dir     \
+swtpm socket --tpmstate dir="$tmp_dir"   \
              --ctrl type=tcp,port=2322   \
              --server type=tcp,port=2321 \
              --flags not-need-init       \
@@ -73,42 +73,42 @@ tpm2_createprimary --tcti="$tcti"          \
                    --hierarchy e           \
                    --hash-algorithm sha256 \
                    --key-algorithm rsa     \
-                   --key-context $tmp_dir/primary.ctx
+                   --key-context "$tmp_dir/primary.ctx"
 
 
 # Use default key template of tpm2_create for rsa.
 # This means that the key will NOT be "restricted".
-tpm2_create --tcti="$tcti"                        \
-            --parent-context $tmp_dir/primary.ctx \
-            --key-algorithm rsa                   \
-            --public $tmp_dir/rsa.pub             \
-            --private $tmp_dir/rsa.priv           \
+tpm2_create --tcti="$tcti"                          \
+            --parent-context "$tmp_dir/primary.ctx" \
+            --key-algorithm rsa                     \
+            --public "$tmp_dir/rsa.pub"             \
+            --private "$tmp_dir/rsa.priv"           \
             --key-auth $test_pwd
-tpm2_load --tcti="$tcti"                        \
-          --parent-context $tmp_dir/primary.ctx \
-          --public $tmp_dir/rsa.pub             \
-          --private $tmp_dir/rsa.priv           \
-          --key-context $tmp_dir/rsa.ctx
-tpm2_evictcontrol --tcti="$tcti"                    \
-                  --hierarchy o                     \
-                  --object-context $tmp_dir/rsa.ctx \
+tpm2_load --tcti="$tcti"                          \
+          --parent-context "$tmp_dir/primary.ctx" \
+          --public "$tmp_dir/rsa.pub"             \
+          --private "$tmp_dir/rsa.priv"           \
+          --key-context "$tmp_dir/rsa.ctx"
+tpm2_evictcontrol --tcti="$tcti"                      \
+                  --hierarchy o                       \
+                  --object-context "$tmp_dir"/rsa.ctx \
                   $persistent_rsa_key_handle
 
 # Do the same for ecc
-tpm2_create --tcti="$tcti"                        \
-            --parent-context $tmp_dir/primary.ctx \
-            --key-algorithm ecc                   \
-            --public $tmp_dir/ecc.pub             \
-            --private $tmp_dir/ecc.priv           \
+tpm2_create --tcti="$tcti"                          \
+            --parent-context "$tmp_dir/primary.ctx" \
+            --key-algorithm ecc                     \
+            --public "$tmp_dir/ecc.pub"             \
+            --private "$tmp_dir/ecc.priv"           \
             --key-auth $test_pwd
-tpm2_load --tcti="$tcti"                        \
-          --parent-context $tmp_dir/primary.ctx \
-          --public $tmp_dir/ecc.pub             \
-          --private $tmp_dir/ecc.priv           \
-          --key-context $tmp_dir/ecc.ctx
-tpm2_evictcontrol --tcti="$tcti"                    \
-                  --hierarchy o                     \
-                  --object-context $tmp_dir/ecc.ctx \
+tpm2_load --tcti="$tcti"                          \
+          --parent-context "$tmp_dir/primary.ctx" \
+          --public "$tmp_dir/ecc.pub"             \
+          --private "$tmp_dir/ecc.priv"           \
+          --key-context "$tmp_dir/ecc.ctx"
+tpm2_evictcontrol --tcti="$tcti"                      \
+                  --hierarchy o                       \
+                  --object-context "$tmp_dir/ecc.ctx" \
                   $persistent_ecc_key_handle
 
 echo "Effectively disable dictionary attack lockout..."
@@ -122,9 +122,12 @@ tpm2_dictionarylockout --tcti="$tcti"     \
 # the test scripts that are going to run, if we're running on GitHub Actions.
 if [ -n "$GITHUB_ACTIONS" ]; then
     echo "Setting up GitHub Actions environment..."
-    echo "BOTAN_TPM2_TCTI_NAME=$tcti_name"                                 >> $GITHUB_ENV
-    echo "BOTAN_TPM2_TCTI_CONF=$tcti_conf"                                 >> $GITHUB_ENV
-    echo "BOTAN_TPM2_PERSISTENT_KEY_AUTH_VALUE=$test_pwd"                  >> $GITHUB_ENV
-    echo "BOTAN_TPM2_PERSISTENT_RSA_KEY_HANDLE=$persistent_rsa_key_handle" >> $GITHUB_ENV
-    echo "BOTAN_TPM2_PERSISTENT_ECC_KEY_HANDLE=$persistent_ecc_key_handle" >> $GITHUB_ENV
+    {
+        echo "BOTAN_TPM2_TCTI_NAME=$tcti_name"
+        echo "BOTAN_TPM2_TCTI_CONF=$tcti_conf"
+        echo "BOTAN_TPM2_PERSISTENT_KEY_AUTH_VALUE=$test_pwd"
+        echo "BOTAN_TPM2_PERSISTENT_RSA_KEY_HANDLE=$persistent_rsa_key_handle"
+        echo "BOTAN_TPM2_PERSISTENT_ECC_KEY_HANDLE=$persistent_ecc_key_handle"
+    } >> "$GITHUB_ENV"
 fi
+
