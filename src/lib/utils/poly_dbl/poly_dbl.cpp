@@ -116,7 +116,9 @@ void poly_double_n_le(uint8_t out[], const uint8_t in[], size_t n) {
    }
 }
 
-void xts_update_tweak_block(uint8_t tweak[], size_t BS, size_t blocks_in_tweak) {
+void xts_compute_tweak_block(uint8_t tweak[], size_t BS, size_t blocks_in_tweak) {
+   BOTAN_ASSERT_NOMSG(blocks_in_tweak > 0);
+
    if(BS == 16) {
       constexpr size_t LIMBS = 2;
 

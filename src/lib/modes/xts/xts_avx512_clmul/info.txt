@@ -1,0 +1,15 @@
+<internal_defines>
+MODE_XTS_AVX512_CLMUL -> 20260119
+</internal_defines>
+
+<module_info>
+name -> "XTS tweak computation using AVX-512/clmul"
+</module_info>
+
+<isa>
+avx512_clmul
+</isa>
+
+<requires>
+cpuid
+</requires>
