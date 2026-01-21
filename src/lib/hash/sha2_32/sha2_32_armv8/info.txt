@@ -13,4 +13,5 @@ armv8crypto
 
 <requires>
 cpuid
+simd_4x32
 </requires>
