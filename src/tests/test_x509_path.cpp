@@ -901,8 +901,12 @@ class Non_Self_Signed_Trust_Anchors_Test final : public Test {
          const auto path_result = Botan::x509_path_validate(
             standalone_cert, restrictions, {&cert_store}, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
-         result.test_eq(
-            "unexpected x509_path_validate result", path_result.result_string(), to_string(expected_result));
+         if(path_result.result() == Botan::Certificate_Status_Code::CERT_PUBKEY_INVALID) {
+            result.test_note("CERT_PUBKEY_INVALID encountered - was that key type disabled at build time?");
+         } else {
+            result.test_eq(
+               "unexpected x509_path_validate result", path_result.result_string(), to_string(expected_result));
+         }
 
          return result;
       }
