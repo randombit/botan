@@ -184,8 +184,14 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager {
 
 std::shared_ptr<Credentials_Manager_Test> create_creds(Botan::RandomNumberGenerator& rng,
                                                        bool with_client_certs = false) {
-   // rsa and ecdsa are required for the tls module
-   const auto ecdsa_params = Botan::EC_Group::from_name("secp256r1");
+   // RSA and ECDSA are required for the TLS module, but we need to find an
+   // ECC group that is supported in this build or skip this test.
+   const auto ec_group = Test::supported_ec_group_name({"secp256r1", "secp384r1", "secp521r1"});
+   if(!ec_group) {
+      return nullptr;
+   }
+
+   const auto ecdsa_params = Botan::EC_Group::from_name(*ec_group);
    const size_t rsa_params = 1024;
 
    auto rsa_ca_key = std::make_unique<Botan::RSA_PrivateKey>(rng, rsa_params);
@@ -1090,6 +1096,11 @@ class TLS_Unit_Tests final : public Test {
          }
 
          auto creds = create_creds(*rng);
+         if(!creds) {
+            // Credentials manager creation failed, likely no EC group available
+            // Skip this test entirely
+            return {Test::Result::Note("TLS unit tests", "Skipping due to missing credentials")};
+         }
 
    #if defined(BOTAN_HAS_TLS_CBC)
          for(const std::string etm_setting : {"false", "true"}) {
@@ -1249,18 +1260,19 @@ class TLS_Unit_Tests final : public Test {
                               {{"groups", "ffdhe/ietf/2048"}});
 
          auto creds_with_client_cert = create_creds(*rng, true);
-
-         client_ses->remove_all();
-         test_modern_versions("AES-256/GCM client certs",
-                              results,
-                              client_ses,
-                              server_ses,
-                              creds_with_client_cert,
-                              rng,
-                              "ECDH",
-                              "AES-256/GCM",
-                              "AEAD",
-                              true);
+         if(creds_with_client_cert) {
+            client_ses->remove_all();
+            test_modern_versions("AES-256/GCM client certs",
+                                 results,
+                                 client_ses,
+                                 server_ses,
+                                 creds_with_client_cert,
+                                 rng,
+                                 "ECDH",
+                                 "AES-256/GCM",
+                                 "AEAD",
+                                 true);
+         }
 
    #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
          client_ses = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);

@@ -7,7 +7,9 @@
 
 #include <botan/pk_algs.h>
 
+#include <botan/asn1_obj.h>
 #include <botan/assert.h>
+#include <botan/pk_keys.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 

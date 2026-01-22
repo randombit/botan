@@ -633,6 +633,18 @@ class Test {
 
       Botan::RandomNumberGenerator& rng() const;
 
+      /**
+       * Use this if a test needs some supported EC group but it is not relevant
+       * which one exactly. This tries to find a commonly used group that is
+       * both supported in this build and as small as possible (for test speed).
+       *
+       * If @p preferred_groups is non-empty, a group from that list is chosen
+       *
+       * @returns the name of a supported EC group, or std::nullopt if no
+       *          supported EC group could be found for this build
+       */
+      static std::optional<std::string> supported_ec_group_name(std::vector<std::string> preferred_groups = {});
+
       const std::optional<CodeLocation>& registration_location() const { return m_registration_location; }
 
       /// @p smoke_test are run first in an unfiltered test run

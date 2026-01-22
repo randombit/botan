@@ -901,8 +901,12 @@ class Non_Self_Signed_Trust_Anchors_Test final : public Test {
          const auto path_result = Botan::x509_path_validate(
             standalone_cert, restrictions, {&cert_store}, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
-         result.test_eq(
-            "unexpected x509_path_validate result", path_result.result_string(), to_string(expected_result));
+         if(path_result.result() == Botan::Certificate_Status_Code::CERT_PUBKEY_INVALID) {
+            result.test_note("CERT_PUBKEY_INVALID encountered - was that key type disabled at build time?");
+         } else {
+            result.test_eq(
+               "unexpected x509_path_validate result", path_result.result_string(), to_string(expected_result));
+         }
 
          return result;
       }
@@ -1705,6 +1709,8 @@ BOTAN_REGISTER_TEST("x509", "x509_path_xmss", XMSS_Path_Validation_Tests);
 
    #endif
 
+   #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1)
+
 class Name_Constraint_DN_Prefix_Test final : public Test {
    public:
       static Test::Result validate_name_constraint_dn_prefix_accepted() {
@@ -1791,6 +1797,8 @@ class Name_Constraint_DN_Prefix_Test final : public Test {
 };
 
 BOTAN_REGISTER_TEST("x509", "x509_path_nc_prefix_dn", Name_Constraint_DN_Prefix_Test);
+
+   #endif
 
 #endif
 

@@ -51,6 +51,13 @@ ffi
 tls
 prf_tls
 
+# pcurves
+pcurves_secp256r1
+pcurves_secp384r1
+pcurves_secp521r1
+
+pcurves_generic
+
 ghash_cpu
 ghash_vperm
 

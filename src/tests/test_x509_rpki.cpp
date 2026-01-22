@@ -45,25 +45,6 @@ Botan::X509_Time from_date(const int y, const int m, const int d) {
    return Botan::X509_Time(t.to_std_timepoint());
 }
 
-std::unique_ptr<Botan::Private_Key> generate_key(const std::string& algo, Botan::RandomNumberGenerator& rng) {
-   std::string params;
-   if(algo == "ECDSA") {
-      params = "secp256r1";
-
-   #if defined(BOTAN_HAS_ECC_GROUP)
-      if(Botan::EC_Group::supports_named_group("secp192r1")) {
-         params = "secp192r1";
-      }
-   #endif
-   } else if(algo == "Ed25519") {
-      params = "";
-   } else if(algo == "RSA") {
-      params = "1536";
-   }
-
-   return Botan::create_private_key(algo, rng, params);
-}
-
 Botan::X509_Cert_Options ca_opts(const std::string& sig_padding = "") {
    Botan::X509_Cert_Options opts("Test CA/US/Botan Project/Testing");
 
@@ -99,40 +80,45 @@ Botan::X509_Cert_Options req_opts(const std::string& algo, const std::string& si
    return opts;
 }
 
-std::tuple<std::string, std::string, std::string> get_sig_algo_padding() {
-   #if defined(BOTAN_HAS_ECDSA)
-   const std::string sig_algo{"ECDSA"};
-   const std::string padding_method;
-   const std::string hash_fn{"SHA-256"};
-   #elif defined(BOTAN_HAS_ED25519)
-   const std::string sig_algo{"Ed25519"};
-   const std::string padding_method;
-   const std::string hash_fn{"SHA-512"};
-   #elif defined(BOTAN_HAS_RSA)
-   const std::string sig_algo{"RSA"};
-   const std::string padding_method{"PKCS1v15(SHA-256)"};
-   const std::string hash_fn{"SHA-256"};
+std::tuple<std::string, std::string, std::string, std::unique_ptr<Botan::Private_Key>>
+get_sig_algo_padding_and_generate_key(Botan::RandomNumberGenerator& rng) {
+   const auto generate_key = [&](const std::string& alg_name, const std::string& params = "") {
+      auto key = Botan::create_private_key(alg_name, rng, params);
+      if(!key) {
+         throw Test_Error("Could not generate key for algorithm " + alg_name);
+      }
+      return key;
+   };
+
+   #if defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_SHA2_32)
+   // Try to find a group that is supported in this build
+   const auto group_name = Test::supported_ec_group_name();
+   if(group_name) {
+      return {"ECDSA", "", "SHA-256", generate_key("ECDSA", *group_name)};
+   }
    #endif
 
-   return std::make_tuple(sig_algo, padding_method, hash_fn);
+   #if defined(BOTAN_HAS_ED25519)
+   return {"Ed25519", "", "SHA-512", generate_key("Ed25519")};
+   #elif defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1)
+   return {"RSA", "PKCS1v15(SHA-256)", "SHA-256", generate_key("RSA", "1536")};
+   #else
+   throw Test_Error("No suitable signature algorithm available in this build");
+   #endif
 }
 
 Botan::X509_Certificate make_self_signed(std::unique_ptr<Botan::RandomNumberGenerator>& rng,
                                          const Botan::X509_Cert_Options& opts = std::move(ca_opts())) {
-   auto [sig_algo, padding_method, hash_fn] = get_sig_algo_padding();
-   auto key = generate_key(sig_algo, *rng);
-   const auto cert = Botan::X509::create_self_signed_cert(opts, *key, hash_fn, *rng);
-
-   return cert;
+   auto [sig_algo, padding_method, hash_fn, key] = get_sig_algo_padding_and_generate_key(*rng);
+   return Botan::X509::create_self_signed_cert(opts, *key, hash_fn, *rng);
 }
 
 CA_Creation_Result make_ca(std::unique_ptr<Botan::RandomNumberGenerator>& rng,
                            const Botan::X509_Cert_Options& opts = std::move(ca_opts())) {
-   auto [sig_algo, padding_method, hash_fn] = get_sig_algo_padding();
-   auto ca_key = generate_key(sig_algo, *rng);
+   auto [sig_algo, padding_method, hash_fn, ca_key] = get_sig_algo_padding_and_generate_key(*rng);
    const auto ca_cert = Botan::X509::create_self_signed_cert(opts, *ca_key, hash_fn, *rng);
    Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, padding_method, *rng);
-   auto sub_key = generate_key(sig_algo, *rng);
+   auto sub_key = ca_key->generate_another(*rng);
 
    return CA_Creation_Result{ca_cert, std::move(ca), std::move(sub_key), sig_algo, hash_fn};
 }
@@ -141,12 +127,10 @@ std::pair<Botan::X509_Certificate, Botan::X509_CA> make_and_sign_ca(
    std::unique_ptr<Botan::Certificate_Extension> ext,
    Botan::X509_CA& parent_ca,
    std::unique_ptr<Botan::RandomNumberGenerator>& rng) {
-   auto [sig_algo, padding_method, hash_fn] = get_sig_algo_padding();
+   auto [sig_algo, padding_method, hash_fn, key] = get_sig_algo_padding_and_generate_key(*rng);
 
    Botan::X509_Cert_Options opts = ca_opts();
    opts.extensions.add(std::move(ext));
-
-   const std::unique_ptr<Botan::Private_Key> key = generate_key(sig_algo, *rng);
 
    const Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *key, hash_fn, *rng);
    Botan::X509_Certificate cert = parent_ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));

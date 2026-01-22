@@ -192,14 +192,23 @@ std::string Signature_Scheme::algorithm_name() const noexcept {
 }
 
 AlgorithmIdentifier Signature_Scheme::key_algorithm_identifier() const noexcept {
+   const auto der_encode_oid = [](const std::string_view oid_name) {
+      try {
+         if(auto oid = OID::from_name(oid_name)) {
+            return oid->BER_encode();
+         }
+      } catch(...) {}
+      BOTAN_ASSERT_UNREACHABLE();
+   };
+
    switch(m_code) {
       // case ECDSA_SHA1:  not defined
       case ECDSA_SHA256:
-         return {"ECDSA", EC_Group::from_name("secp256r1").DER_encode()};
+         return {"ECDSA", der_encode_oid("secp256r1")};
       case ECDSA_SHA384:
-         return {"ECDSA", EC_Group::from_name("secp384r1").DER_encode()};
+         return {"ECDSA", der_encode_oid("secp384r1")};
       case ECDSA_SHA512:
-         return {"ECDSA", EC_Group::from_name("secp521r1").DER_encode()};
+         return {"ECDSA", der_encode_oid("secp521r1")};
 
       case EDDSA_25519:
          return {"Ed25519", AlgorithmIdentifier::USE_EMPTY_PARAM};

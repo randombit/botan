@@ -46,6 +46,10 @@
    #endif
 #endif
 
+#if defined(BOTAN_HAS_ECC_GROUP)
+   #include <botan/ec_group.h>
+#endif
+
 namespace Botan_Tests {
 
 Test::Test() = default;
@@ -418,6 +422,31 @@ Botan::RandomNumberGenerator& Test::rng() const {
    }
 
    return *m_test_rng;
+}
+
+std::optional<std::string> Test::supported_ec_group_name(std::vector<std::string> preferred_groups) {
+#if defined(BOTAN_HAS_ECC_GROUP)
+   if(preferred_groups.empty()) {
+      preferred_groups = {
+         "secp256r1",
+         "brainpool256r1",
+         "secp384r1",
+         "brainpool384r1",
+         "secp521r1",
+         "brainpool512r1",
+      };
+   }
+
+   for(const auto& group : preferred_groups) {
+      if(Botan::EC_Group::supports_named_group(group)) {
+         return group;
+      }
+   }
+#else
+   BOTAN_UNUSED(preferred_groups);
+#endif
+
+   return std::nullopt;
 }
 
 std::vector<uint8_t> Test::mutate_vec(const std::vector<uint8_t>& v,
