@@ -15,6 +15,7 @@
 #include <botan/secmem.h>
 #include <botan/strong_type.h>
 
+#include <algorithm>
 #include <cstring>
 #include <functional>
 #include <optional>
@@ -49,12 +50,7 @@ RetT reduce(const std::vector<KeyT>& keys, RetT acc, ReducerT reducer)
 */
 template <typename T, typename V>
 bool value_exists(const std::vector<T>& vec, const V& val) {
-   for(size_t i = 0; i != vec.size(); ++i) {
-      if(vec[i] == val) {
-         return true;
-      }
-   }
-   return false;
+   return std::find(vec.begin(), vec.end(), val) != vec.end();
 }
 
 template <typename T, typename Pred>
