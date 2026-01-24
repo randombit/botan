@@ -12,6 +12,7 @@
 #include <botan/types.h>
 #include <botan/internal/isa_extn.h>
 #include <botan/internal/target_info.h>
+#include <bit>
 #include <span>
 
 #if defined(BOTAN_TARGET_ARCH_SUPPORTS_SSSE3)
@@ -30,7 +31,6 @@
 
 #elif defined(BOTAN_TARGET_ARCH_SUPPORTS_NEON)
    #include <arm_neon.h>
-   #include <bit>
    #define BOTAN_SIMD_USE_NEON
 
 #elif defined(BOTAN_TARGET_ARCH_SUPPORTS_LSX)
@@ -578,6 +578,15 @@ class SIMD_4x32 final {
          // SIMD128 is a & ~b
          return SIMD_4x32(wasm_v128_andnot(other.m_simd, m_simd));
 #endif
+      }
+
+      BOTAN_FN_ISA_SIMD_4X32 SIMD_4x32 reverse_all_bytes() const {
+         const auto rev_idx = SIMD_4x32(0x0C0D0E0F, 0x08090A0B, 0x04050607, 0x00010203);
+         if constexpr(std::endian::native == std::endian::little) {
+            return SIMD_4x32::byte_shuffle(*this, rev_idx);
+         } else {
+            return SIMD_4x32::byte_shuffle(this->bswap(), rev_idx.bswap()).bswap();
+         }
       }
 
       /**

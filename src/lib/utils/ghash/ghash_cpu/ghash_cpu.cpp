@@ -173,7 +173,7 @@ multiply_clmul(uint8_t x[16], secure_vector<uint64_t>& H_pow, const uint8_t inpu
 }  // namespace
 
 void BOTAN_FN_ISA_CLMUL GHASH::ghash_precompute_cpu(const uint8_t H_bytes[16], secure_vector<uint64_t>& H_pow) {
-   precompute_clmul(mulx_polyval(reverse_vector(SIMD_4x32::load_le(H_bytes))), H_pow);
+   precompute_clmul(mulx_polyval(SIMD_4x32::load_le(H_bytes).reverse_all_bytes()), H_pow);
 }
 
 void BOTAN_FN_ISA_CLMUL GHASH::ghash_multiply_cpu(uint8_t x[16],

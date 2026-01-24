@@ -214,7 +214,7 @@ multiply_avx512(uint8_t x[16], const uint64_t H_pow[16 * 2], const uint8_t input
 }  // namespace
 
 void BOTAN_FN_ISA_AVX512_CLMUL GHASH::ghash_precompute_avx512_clmul(const uint8_t H_bytes[16], uint64_t H_pow[16 * 2]) {
-   precompute_avx512(mulx_polyval(reverse_vector(SIMD_4x32::load_le(H_bytes))), H_pow);
+   precompute_avx512(mulx_polyval(SIMD_4x32::load_le(H_bytes).reverse_all_bytes()), H_pow);
 }
 
 void BOTAN_FN_ISA_AVX512_CLMUL GHASH::ghash_multiply_avx512_clmul(uint8_t x[16],
