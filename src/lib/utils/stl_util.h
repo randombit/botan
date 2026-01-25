@@ -49,8 +49,8 @@ RetT reduce(const std::vector<KeyT>& keys, RetT acc, ReducerT reducer)
 */
 template <typename T, typename V>
 bool value_exists(const std::vector<T>& vec, const V& val) {
-   for(size_t i = 0; i != vec.size(); ++i) {
-      if(vec[i] == val) {
+   for(const auto& elem : vec) {
+      if(elem == val) {
          return true;
       }
    }
