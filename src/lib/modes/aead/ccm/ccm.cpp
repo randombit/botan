@@ -187,7 +187,7 @@ void CCM_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    E.encrypt(format_b0(sz), T);
 
    for(size_t i = 0; i != ad.size(); i += CCM_BS) {
-      xor_buf(T.data(), &ad[i], CCM_BS);
+      xor_buf(std::span{T}.first(CCM_BS), std::span(&ad[i], CCM_BS));
       E.encrypt(T);
    }
 
@@ -202,12 +202,13 @@ void CCM_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    while(buf != buf_end) {
       const size_t to_proc = std::min<size_t>(CCM_BS, buf_end - buf);
+      const std::span tbuf = std::span(buf, to_proc);
 
-      xor_buf(T.data(), buf, to_proc);
+      xor_buf(std::span{T}.first(to_proc), tbuf);
       E.encrypt(T);
 
       E.encrypt(C, X);
-      xor_buf(buf, X.data(), to_proc);
+      xor_buf(tbuf, std::span{X}.first(to_proc));
       inc(C);
 
       buf += to_proc;
@@ -239,7 +240,7 @@ void CCM_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    E.encrypt(format_b0(sz - tag_size()), T);
 
    for(size_t i = 0; i != ad.size(); i += CCM_BS) {
-      xor_buf(T.data(), &ad[i], CCM_BS);
+      xor_buf(std::span{T}.first(CCM_BS), std::span(&ad[i], CCM_BS));
       E.encrypt(T);
    }
 
@@ -255,12 +256,13 @@ void CCM_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    while(buf != buf_end) {
       const size_t to_proc = std::min<size_t>(CCM_BS, buf_end - buf);
+      const std::span tbuf = std::span(buf, to_proc);
 
       E.encrypt(C, X);
-      xor_buf(buf, X.data(), to_proc);
+      xor_buf(tbuf, std::span{X}.first(to_proc));
       inc(C);
 
-      xor_buf(T.data(), buf, to_proc);
+      xor_buf(std::span{T}.first(to_proc), tbuf);
       E.encrypt(T);
 
       buf += to_proc;
