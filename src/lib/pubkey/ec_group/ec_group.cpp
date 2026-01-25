@@ -125,6 +125,36 @@ class EC_Group_Data_Map final {
          return new_group;
       }
 
+      std::shared_ptr<EC_Group_Data> lookup_from_params(const BigInt& p,
+                                                        const BigInt& a,
+                                                        const BigInt& b,
+                                                        std::span<const uint8_t> base_pt,
+                                                        const BigInt& order,
+                                                        const BigInt& cofactor) {
+         const lock_guard_type<mutex_type> lock(m_mutex);
+
+         for(auto i : m_registered_curves) {
+            if(i->params_match(p, a, b, base_pt, order, cofactor)) {
+               return i;
+            }
+         }
+
+         // Try to use the order as a hint to look up the group id
+         const OID oid_from_order = EC_Group::EC_group_identity_from_order(order);
+         if(oid_from_order.has_value()) {
+            auto new_group = EC_Group::EC_group_info(oid_from_order);
+
+            // Have to check all params in the (unlikely/malicious) event of an order collision
+            if(new_group && new_group->params_match(p, a, b, base_pt, order, cofactor)) {
+               m_registered_curves.push_back(new_group);
+               return new_group;
+            }
+         }
+
+         return {};
+      }
+
+      // TODO(Botan4) this entire function can be removed since OIDs will be required
       std::shared_ptr<EC_Group_Data> lookup_or_create_without_oid(const BigInt& p,
                                                                   const BigInt& a,
                                                                   const BigInt& b,
@@ -252,14 +282,13 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
          .end_cons()
          .verify_end();
 
-      if(p.bits() < 112 || p.bits() > 521 || p.is_negative()) {
-         throw Decoding_Error("ECC p parameter is invalid size");
+      // TODO(Botan4) Require cofactor == 1
+      if(cofactor <= 0 || cofactor >= 16) {
+         throw Decoding_Error("Invalid ECC cofactor parameter");
       }
 
-      // TODO(Botan4) we can remove this check since we'll only accept pre-registered groups
-      auto mod_p = Barrett_Reduction::for_public_modulus(p);
-      if(!is_bailie_psw_probable_prime(p, mod_p)) {
-         throw Decoding_Error("ECC p parameter is not a prime");
+      if(p.bits() < 112 || p.bits() > 521 || p.is_negative()) {
+         throw Decoding_Error("ECC p parameter is invalid size");
       }
 
       if(a.is_negative() || a >= p) {
@@ -274,15 +303,24 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
          throw Decoding_Error("Invalid ECC group order");
       }
 
-      // TODO(Botan4) we can remove this check since we'll only accept pre-registered groups
+      if(auto data = ec_group_data().lookup_from_params(p, a, b, base_pt, order, cofactor)) {
+         return std::make_pair(data, true);
+      }
+
+      /*
+      TODO(Botan4) the remaining code is used only to handle the case of decoding an EC_Group
+      which is neither a builtin group nor a group that was registered by the application.
+      It can all be removed and replaced with a throw
+      */
+
+      auto mod_p = Barrett_Reduction::for_public_modulus(p);
+      if(!is_bailie_psw_probable_prime(p, mod_p)) {
+         throw Decoding_Error("ECC p parameter is not a prime");
+      }
+
       auto mod_order = Barrett_Reduction::for_public_modulus(order);
       if(!is_bailie_psw_probable_prime(order, mod_order)) {
          throw Decoding_Error("Invalid ECC order parameter");
-      }
-
-      // TODO(Botan4) Require cofactor == 1
-      if(cofactor <= 0 || cofactor >= 16) {
-         throw Decoding_Error("Invalid ECC cofactor parameter");
       }
 
       const size_t p_bytes = p.bytes();
