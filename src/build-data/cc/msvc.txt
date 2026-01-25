@@ -67,6 +67,8 @@ clmul  -> ""
 rdrand -> ""
 rdseed -> ""
 sha    -> ""
+bmi2   -> ""
+gfni   -> ""
 </isa_flags>
 
 <lib_flags>

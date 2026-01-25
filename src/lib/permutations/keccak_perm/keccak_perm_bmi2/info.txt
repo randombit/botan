@@ -19,3 +19,9 @@ x86_64
 <requires>
 cpuid
 </requires>
+
+# It doesn't make sense to use this on MSVC since it doesn't
+# have any way of enabling BMI2 codegen
+<cc>
+!msvc
+</cc>
