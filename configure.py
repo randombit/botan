@@ -3214,10 +3214,6 @@ def set_defaults_for_unset_options(options, info_arch, info_cc, info_os):
         options.cpu = cpu
         logging.info('Guessing target processor is a %s (use --cpu to set)', options.arch)
 
-    # OpenBSD uses an old binutils that does not support AVX2
-    if options.os == 'openbsd':
-        del info_cc['gcc'].isa_flags['avx2']
-
     if options.with_documentation is True:
         if options.with_sphinx is None and have_program('sphinx-build'):
             logging.info('Found sphinx-build (use --without-sphinx to disable)')
