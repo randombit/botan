@@ -2475,6 +2475,79 @@ int botan_x509_crl_load(botan_x509_crl_t* crl_obj, const uint8_t crl_bits[], siz
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_this_update(botan_x509_crl_t crl, uint64_t* time_since_epoch);
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_next_update(botan_x509_crl_t crl, uint64_t* time_since_epoch);
 
+/**
+* Create a new CRL
+* @param crl_obj The newly created CRL
+* @param rng a random number generator object
+* @param ca_cert The CA Certificate the CRL belongs to
+* @param ca_key The private key of that CA
+* @param issue_time The time when the CRL becomes valid
+* @param next_update The number of seconds after issue_time until the CRL expires
+* @param hash_fn The hash function to use, may be null
+* @param padding The padding to use, may be null
+*/
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_crl_create(botan_x509_crl_t* crl_obj,
+                          botan_rng_t rng,
+                          botan_x509_cert_t ca_cert,
+                          botan_privkey_t ca_key,
+                          uint64_t issue_time,
+                          uint32_t next_update,
+                          const char* hash_fn,
+                          const char* padding);
+
+/* Must match values of CRL_Code in pkix_enums.h */
+enum botan_x509_crl_reason_code /* NOLINT(*-enum-size) */ {
+   BOTAN_CRL_ENTRY_UNSPECIFIED = 0,
+   BOTAN_CRL_ENTRY_KEY_COMPROMISE = 1,
+   BOTAN_CRL_ENTRY_CA_COMPROMISE = 2,
+   BOTAN_CRL_ENTRY_AFFILIATION_CHANGED = 3,
+   BOTAN_CRL_ENTRY_SUPERSEDED = 4,
+   BOTAN_CRL_ENTRY_CESSATION_OF_OPERATION = 5,
+   BOTAN_CRL_ENTRY_CERTIFICATE_HOLD = 6,
+   BOTAN_CRL_ENTRY_REMOVE_FROM_CRL = 8,
+   BOTAN_CRL_ENTRY_PRIVILEGE_WITHDRAWN = 9,
+   BOTAN_CRL_ENTRY_AA_COMPROMISE = 10
+};
+
+/**
+* Create a new CRL entry that marks @p cert as revoked
+* @param entry The newly created CRL entry
+* @param cert The certificate to mark as revoked
+* @param reason_code The reason code for revocation
+*/
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_crl_entry_create(botan_x509_crl_entry_t* entry, botan_x509_cert_t cert, int reason_code);
+
+/**
+* Update a CRL with new revoked entries. This does not modify the old crl, and instead creates a new one.
+* @param crl_obj The newly created CRL
+* @param last_crl The CRL to update
+* @param rng a random number generator object
+* @param ca_cert The CA Certificate the CRL belongs to
+* @param ca_key The private key of that CA
+* @param issue_time The time when the CRL becomes valid
+* @param next_update The number of seconds after issue_time until the CRL expires
+* @param new_entries The entries to add to the CRL
+* @param new_entries_len The number of entries
+* @param hash_fn The hash function to use, may be null
+* @param padding The padding to use, may be null
+*/
+BOTAN_FFI_EXPORT(3, 11)
+int botan_x509_crl_update(botan_x509_crl_t* crl_obj,
+                          botan_x509_crl_t last_crl,
+                          botan_rng_t rng,
+                          botan_x509_cert_t ca_cert,
+                          botan_privkey_t ca_key,
+                          uint64_t issue_time,
+                          uint32_t next_update,
+                          const botan_x509_crl_entry_t* new_entries,
+                          size_t new_entries_len,
+                          const char* hash_fn,
+                          const char* padding);
+
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_verify_signature(botan_x509_crl_t crl, botan_pubkey_t key, int* result);
+
 BOTAN_FFI_EXPORT(2, 13) int botan_x509_crl_destroy(botan_x509_crl_t crl);
 
 /**
@@ -2499,7 +2572,7 @@ BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_entries_count(botan_x509_crl_t crl, s
 
 /**
 * Return the revocation reason code for the given CRL @p entry.
-* See RFC 5280 - 5.3.1 for possible reason codes.
+* See `botan_x509_crl_reason_code` and RFC 5280 - 5.3.1 for possible reason codes.
 */
 BOTAN_FFI_EXPORT(3, 11) int botan_x509_crl_entry_reason(botan_x509_crl_entry_t entry, int* reason_code);
 
