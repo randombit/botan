@@ -132,13 +132,13 @@ secure_vector<uint8_t> SIV_Mode::S2V(const uint8_t* text, size_t text_len) {
 
    if(text_len < block_size()) {
       poly_double_n(V.data(), V.size());
-      xor_buf(V.data(), text, text_len);
+      xor_buf(std::span{V}.first(text_len), std::span(text, text_len));
       V[text_len] ^= 0x80;
       return m_mac->process(V);
    }
 
    m_mac->update(text, text_len - block_size());
-   xor_buf(V.data(), &text[text_len - block_size()], block_size());
+   xor_buf(std::span{V}.first(block_size()), std::span(&text[text_len - block_size()], block_size()));
    m_mac->update(V);
 
    return m_mac->final();
