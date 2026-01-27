@@ -1394,25 +1394,10 @@ class CompilerInfo(InfoObject):
 
         return None
 
-    def get_isa_specific_flags(self, isas, arch, options):
+    def get_isa_specific_flags(self, isas, arch):
         flags = set()
 
-        def simd32_impl():
-            for simd_isa in ['ssse3', 'altivec', 'neon']:
-                if simd_isa in arch.isa_extensions and \
-                   (simd_isa, arch.basename) not in options.disable_intrinsics and \
-                   self.isa_flags_for(simd_isa, arch.basename):
-                    return simd_isa
-            return None
-
         for isa in isas:
-
-            if isa == 'simd':
-                isa = simd32_impl()
-
-                if isa is None:
-                    continue
-
             flagset = self.isa_flags_for(isa, arch.basename)
             if flagset is None:
                 raise UserError('Compiler %s does not support %s' % (self.basename, isa))
@@ -2001,16 +1986,10 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
             module_that_owns[src] = mod
 
     def _isa_specific_flags(src):
-        if os.path.basename(src) == 'test_simd.cpp':
-            return cc.get_isa_specific_flags(['simd'], arch, options)
-
         if src in module_that_owns:
             module = module_that_owns[src]
             isas = module.isas_needed(arch.basename)
-            if 'simd_4x32' in module.dependencies(osinfo, arch):
-                isas.append('simd')
-
-            return cc.get_isa_specific_flags(isas, arch, options)
+            return cc.get_isa_specific_flags(isas, arch)
 
         return ''
 
