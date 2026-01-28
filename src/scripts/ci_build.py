@@ -17,6 +17,7 @@ import time
 import tempfile
 import optparse # pylint: disable=deprecated-module
 import multiprocessing
+import glob
 
 def get_concurrency():
     def_concurrency = 2
@@ -80,6 +81,7 @@ def known_targets():
         'valgrind-full',
         'valgrind-ct',
         'valgrind-ct-full',
+        'wycheproof',
     ]
 
 def is_running_in_github_actions():
@@ -113,7 +115,7 @@ class LoggingGroup:
             print("> Running '%s' took %d seconds" % (self.group_title, time_taken))
 
 def build_targets(target, target_os):
-    if target in ['shared', 'minimized', 'examples', 'limbo'] or target.startswith('policy-'):
+    if target in ['shared', 'minimized', 'examples', 'limbo', 'wycheproof'] or target.startswith('policy-'):
         yield 'shared'
     elif target in ['static', 'fuzzers', 'cross-arm32-baremetal', 'emscripten', 'strubbing']:
         yield 'static'
@@ -125,10 +127,10 @@ def build_targets(target, target_os):
         yield 'shared'
         yield 'static'
 
-    if target not in ['examples', 'limbo']:
+    if target not in ['examples', 'limbo', 'wycheproof']:
         yield 'cli'
 
-    if target not in ['examples', 'limbo', 'hybrid-tls13-interop-test', 'strubbing']:
+    if target not in ['examples', 'limbo', 'hybrid-tls13-interop-test', 'strubbing', 'wycheproof']:
         yield 'tests'
 
     if target in ['coverage', 'no_tls12', 'no_tls13']:
@@ -257,7 +259,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     else:
         flags += ['--without-doc']
 
-    if target in ['docs', 'codeql', 'hybrid-tls13-interop-test', 'limbo']:
+    if target in ['docs', 'codeql', 'hybrid-tls13-interop-test', 'limbo', 'wycheproof']:
         test_cmd = None
 
     if target in ['codeql']:
@@ -811,7 +813,11 @@ def main(args=None):
             'src/editors/vscode/scripts/bogo.py',
             'src/editors/vscode/scripts/common.py',
             'src/editors/vscode/scripts/test.py',
-            'src/ct_selftest/ct_selftest.py']
+            'src/ct_selftest/ct_selftest.py'
+        ]
+
+        # Add all nightly wycheproof runner scripts
+        py_scripts += glob.glob('src/scripts/wycheproof/**/*.py', recursive=True)
 
         # These commands have to run in the repository root to generate the correct
         # relative paths in the output. Otherwise GitHub Actions will not
@@ -992,6 +998,10 @@ def main(args=None):
 
         if target in ['shared', 'coverage'] and not (options.os == 'windows' and options.cpu == 'x86'):
             cmds.append([py_interp, '-b'] + python_tests)
+
+        if target in ['wycheproof']:
+            wycheproof_online_tests_dir = os.path.join(root_dir, 'src/scripts/wycheproof')
+            cmds.append(["indir:%s" % wycheproof_online_tests_dir, py_interp, "-m", "unittest"])
 
         if target in ['shared', 'static']:
             cmds.append(make_cmd + ['install'])
