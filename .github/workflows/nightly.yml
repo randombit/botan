@@ -192,6 +192,24 @@ jobs:
       - name: Valgrind Checks
         run: python3 ./src/scripts/ci_build.py --make-tool=make --cc=${{ matrix.compiler }} --ci-image='${{ matrix.host_os }}' --custom-optimization-flags="${{ matrix.cxxflags }}" ${{ matrix.target }}
 
+  wycheproof:
+    name: "Wycheproof"
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Read Repository Configuration
+        uses: ./.github/actions/read-repo-config
+      - name: Setup Build Agent
+        uses: ./.github/actions/setup-build-agent
+        with:
+          target: wycheproof
+          compiler: gcc
+          cache-key: linux-x86_64-wycheproof
+      - name: Run Wycheproof Tests
+        run: python3 ./src/scripts/ci_build.py --cc=gcc --make-tool=make wycheproof
+
   hybrid_tls_interop:
     name: "PQ/T TLS 1.3"
 
