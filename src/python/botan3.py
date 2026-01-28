@@ -4,7 +4,8 @@ https://botan.randombit.net
 
 (C) 2015,2017,2018,2019,2023 Jack Lloyd
 (C) 2015 Uri  Blumenthal (extensions and patches)
-(C) 2024 Amos Treiber, René Meusel - Rohde & Schwarz Cybersecurity
+(C) 2024 Amos Treiber - Rohde & Schwarz Cybersecurity
+(C) 2024,2026 René Meusel - Rohde & Schwarz Cybersecurity
 (C) 2025 Dominik Schricker
 
 Botan is released under the Simplified BSD License (see license.txt)
@@ -17,7 +18,8 @@ It uses botan's ffi module, which exposes a C API.
 
 from __future__ import annotations
 from ctypes import CDLL, CFUNCTYPE, POINTER, byref, create_string_buffer, \
-    c_void_p, c_size_t, c_uint8, c_uint32, c_uint64, c_int, c_uint, c_char, c_char_p, addressof, Array
+    c_void_p, c_size_t, c_uint8, c_uint32, c_uint64, c_int, c_uint, c_char, c_char_p, addressof, Array, \
+    cast, memmove, py_object, string_at
 from typing import Callable, Any, Union
 
 from sys import platform
@@ -93,6 +95,9 @@ def _load_botan_dll(expected_version):
 
 VIEW_BIN_CALLBACK = CFUNCTYPE(c_int, c_void_p, POINTER(c_char), c_size_t)
 VIEW_STR_CALLBACK = CFUNCTYPE(c_int, c_void_p, c_char_p, c_size_t)
+RNG_GET_CALLBACK = CFUNCTYPE(c_int, c_void_p, POINTER(c_uint8), c_size_t)
+RNG_ADD_ENTROPY_CALLBACK = CFUNCTYPE(c_int, c_void_p, POINTER(c_uint8), c_size_t)
+RNG_DESTROY_CALLBACK = CFUNCTYPE(None, c_void_p)
 
 def _errcheck(rc, fn, _args):
     # This errcheck should only be used for int-returning functions
@@ -147,6 +152,7 @@ def _set_prototypes(dll):
 
     #  RNG
     ffi_api(dll.botan_rng_init, [c_void_p, c_char_p])
+    ffi_api(dll.botan_rng_init_custom, [c_void_p, c_char_p, c_void_p, RNG_GET_CALLBACK, RNG_ADD_ENTROPY_CALLBACK, RNG_DESTROY_CALLBACK])
     ffi_api(dll.botan_rng_get, [c_void_p, c_char_p, c_size_t])
     ffi_api(dll.botan_rng_reseed, [c_void_p, c_size_t])
     ffi_api(dll.botan_rng_reseed_from_rng, [c_void_p, c_void_p, c_size_t])
@@ -809,6 +815,54 @@ class TPM2UnauthenticatedSession(TPM2Session):
         _DLL.botan_tpm2_unauthenticated_session_init(byref(obj), ctx.handle_())
         super().__init__(obj)
 
+class _CustomRngContext:
+    def __init__(self, get_cb: Callable[[int], bytes], add_entropy_cb: Callable[[bytes], None] | None):
+        if not callable(get_cb):
+            raise BotanException("Custom RNG requires a callable get_callback= argument")
+        if add_entropy_cb is not None and not callable(add_entropy_cb):
+            raise BotanException("add_entropy_callback must be callable if provided")
+
+        self.get_callback = get_cb
+        self.add_entropy_callback = add_entropy_cb
+
+    @staticmethod
+    def _translate_exceptions(fn):
+        def wrapper(*args, **kwargs):
+            try:
+                return fn(*args, **kwargs)
+            except BotanException as e:
+                return e.error_code()
+            except Exception:
+                return -100  # internal error
+        return wrapper
+
+    @staticmethod
+    @RNG_GET_CALLBACK
+    @_translate_exceptions
+    def _custom_get(ctx, out, out_len):
+        py_ctx = cast(ctx, POINTER(py_object)).contents.value
+        result = bytes(py_ctx.get_callback(out_len))
+        if len(result) != out_len:
+            return -1  # Invalid input
+        memmove(out, result, out_len)
+        return 0  # success
+
+    @staticmethod
+    @RNG_ADD_ENTROPY_CALLBACK
+    @_translate_exceptions
+    def _custom_add_entropy(ctx, entropy, length):
+        py_ctx = cast(ctx, POINTER(py_object)).contents.value
+        if py_ctx.add_entropy_callback is not None:
+            data = bytes(string_at(entropy, length))
+            py_ctx.add_entropy_callback(data)
+        return 0  # success
+
+    @staticmethod
+    @RNG_DESTROY_CALLBACK
+    @_translate_exceptions
+    def _custom_destroy(ctx):
+        pass
+
 #
 # RNG
 #
@@ -838,9 +892,24 @@ class RandomNumberGenerator:
         * 'hwrng':  Adapter to an available hardware RNG (platform dependent)
         * 'tpm2':   Adapter to a TPM 2.0 RNG
                     (needs additional named arguments tpm2_context= and, optionally, tpm2_sessions=)
+        * 'custom': Adapter to user-defined callbacks
+                    (needs additional named arguments get_callback= and, optionally, add_entropy_callback=)
         """
         self.__obj = c_void_p(0)
-        if rng_type == 'tpm2':
+        if rng_type == 'custom':
+            custom_rng_ctx = _CustomRngContext(kwargs.pop("get_callback", None), kwargs.pop("add_entropy_callback", None))
+            if kwargs:
+                raise BotanException("Unexpected arguments for custom RNG: %s" % (", ".join(kwargs.keys())))
+            self._custom_rng_ctx_ref = py_object(custom_rng_ctx)
+            _DLL.botan_rng_init_custom(
+                byref(self.__obj),
+                _ctype_str("Python Custom RNG"),
+                cast(byref(self._custom_rng_ctx_ref), c_void_p),
+                _CustomRngContext._custom_get,
+                _CustomRngContext._custom_add_entropy,
+                _CustomRngContext._custom_destroy,
+            )
+        elif rng_type == 'tpm2':
             ctx = kwargs.pop("tpm2_context", None)
             if not ctx or not isinstance(ctx, TPM2Context):
                 raise BotanException("Cannot instantiate a TPM2-based RNG without a TPM2 context, pass tpm2_context= argument?")
