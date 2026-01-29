@@ -15,8 +15,7 @@
 #include <span>
 
 #if defined(BOTAN_TARGET_ARCH_SUPPORTS_SSSE3)
-   #include <emmintrin.h>
-   #include <tmmintrin.h>
+   #include <immintrin.h>
    #define BOTAN_SIMD_USE_SSSE3
 
 #elif defined(BOTAN_TARGET_ARCH_SUPPORTS_ALTIVEC)
@@ -857,6 +856,46 @@ class SIMD_4x32 final {
 #elif defined(BOTAN_SIMD_USE_SIMD128)
          return SIMD_4x32(
             wasm_i8x16_shuffle(b.raw(), a.raw(), 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23));
+#endif
+      }
+
+      /**
+      If the topmost bit of x is set, return a vector of all ones, otherwise a vector of all zeros
+      ie: (v >> 127) ? splat(0xFFFFFFFF) : zero;
+
+      Most of the implementations work by doing an arithmetic shift of 31 to smear the top bits
+      of each word, followed by a broadcast of the top word.
+      */
+      inline SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 top_bit_mask() const {
+#if defined(BOTAN_SIMD_USE_SSSE3)
+         return SIMD_4x32(_mm_shuffle_epi32(_mm_srai_epi32(raw(), 31), 0b11111111));
+#elif defined(BOTAN_SIMD_USE_NEON)
+   #if defined(BOTAN_TARGET_ARCH_IS_ARM32)
+         int32x4_t v = vshrq_n_s32(vreinterpretq_s32_u32(raw()), 31);
+         int32x2_t hi = vget_high_s32(v);
+         return SIMD_4x32(vreinterpretq_u32_s32(vdupq_lane_s32(hi, 1)));
+   #else
+         return SIMD_4x32(vreinterpretq_u32_s32(vdupq_laneq_s32(vshrq_n_s32(vreinterpretq_s32_u32(raw()), 31), 3)));
+   #endif
+#elif defined(BOTAN_SIMD_USE_ALTIVEC)
+         const __vector unsigned int shift = vec_splats(31U);
+         const __vector signed int shifted = vec_sra(reinterpret_cast<__vector signed int>(raw()), shift);
+         return SIMD_4x32(reinterpret_cast<__vector unsigned int>(vec_splat(shifted, 3)));
+#elif defined(BOTAN_SIMD_USE_LSX)
+         return SIMD_4x32(__lsx_vshuf4i_w(__lsx_vsrai_w(raw(), 31), 0xFF));
+#elif defined(BOTAN_SIMD_USE_SIMD128)
+         return SIMD_4x32(wasm_i32x4_splat(wasm_i32x4_extract_lane(wasm_i32x4_shr(raw(), 31), 3)));
+#endif
+      }
+
+      /**
+      * Swap the upper and lower 64-bit halves of the vector
+      */
+      inline SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 swap_halves() const {
+#if defined(BOTAN_SIMD_USE_SSSE3)
+         return SIMD_4x32(_mm_shuffle_epi32(raw(), 0b01001110));
+#else
+         return SIMD_4x32::alignr8(*this, *this);
 #endif
       }
 
