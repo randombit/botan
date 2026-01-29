@@ -179,6 +179,83 @@ class BotanPythonTests(unittest.TestCase):
 
         user_rng.add_entropy('seed material...')
 
+    def test_custom_rng(self):
+        class CustomRngHandler:
+            def __init__(self, hardcoded=False):
+                self._entropy_pool = b''
+                self._hardcoded = hardcoded
+
+            @property
+            def entropy_pool(self):
+                return self._entropy_pool
+
+            def get_entropy(self, length):
+                if self._hardcoded:
+                    return b'x' * length
+
+                if length > len(self._entropy_pool):
+                    raise botan.BotanException("Not enough entropy in pool", -10)
+
+                entropy = self._entropy_pool[:length]
+                self._entropy_pool = self._entropy_pool[length:]
+                return entropy
+
+            def add_entropy(self, data):
+                self._entropy_pool += data
+
+        # callback function validation
+        self.assertRaises(botan.BotanException, lambda: botan.RandomNumberGenerator("custom"))
+        self.assertRaises(botan.BotanException, lambda: botan.RandomNumberGenerator("custom", get_callback=None))
+        self.assertRaises(botan.BotanException, lambda: botan.RandomNumberGenerator("custom", add_entropy_callback=lambda x: None))
+        self.assertRaises(botan.BotanException, lambda: botan.RandomNumberGenerator("custom", get_callback=lambda x: b'x' * x, unexpected="unexpected"))
+
+        my_custom_rng1 = CustomRngHandler()
+        my_custom_rng2 = CustomRngHandler()
+        my_custom_rng3 = CustomRngHandler(hardcoded=True)
+        custom_rng1 = botan.RandomNumberGenerator("custom",
+                                                 get_callback=my_custom_rng1.get_entropy,
+                                                 add_entropy_callback=my_custom_rng1.add_entropy)
+        custom_rng2 = botan.RandomNumberGenerator("custom",
+                                                 get_callback=my_custom_rng2.get_entropy,
+                                                 add_entropy_callback=my_custom_rng2.add_entropy)
+
+        # omit the add_entropy_callback as it is optional
+        custom_rng3 = botan.RandomNumberGenerator("custom", get_callback=my_custom_rng3.get_entropy)
+
+        self.assertRaises(botan.BotanException, lambda: custom_rng1.get(32))
+        self.assertEqual(len(my_custom_rng1.entropy_pool), 0)
+        self.assertEqual(len(my_custom_rng2.entropy_pool), 0)
+
+        custom_rng1.add_entropy(b'entropy')
+        self.assertEqual(len(my_custom_rng1.entropy_pool), 7)
+        self.assertEqual(len(my_custom_rng2.entropy_pool), 0)
+        self.assertEqual(len(my_custom_rng3.entropy_pool), 0)
+
+        custom_rng2.add_entropy(b'entropie')
+        self.assertEqual(len(my_custom_rng1.entropy_pool), 7)
+        self.assertEqual(len(my_custom_rng2.entropy_pool), 8)
+        self.assertEqual(len(my_custom_rng3.entropy_pool), 0)
+
+        custom_rng3.add_entropy(b'into the void')
+        self.assertEqual(len(my_custom_rng1.entropy_pool), 7)
+        self.assertEqual(len(my_custom_rng2.entropy_pool), 8)
+        self.assertEqual(len(my_custom_rng3.entropy_pool), 0)
+
+        self.assertEqual(custom_rng1.get(7), b'entropy')
+        self.assertEqual(len(my_custom_rng1.entropy_pool), 0)
+        self.assertEqual(len(my_custom_rng2.entropy_pool), 8)
+        self.assertEqual(len(my_custom_rng3.entropy_pool), 0)
+
+        self.assertEqual(custom_rng2.get(8), b'entropie')
+        self.assertEqual(len(my_custom_rng1.entropy_pool), 0)
+        self.assertEqual(len(my_custom_rng2.entropy_pool), 0)
+        self.assertEqual(len(my_custom_rng3.entropy_pool), 0)
+
+        self.assertEqual(custom_rng3.get(13), b'x' * 13)
+        self.assertEqual(len(my_custom_rng1.entropy_pool), 0)
+        self.assertEqual(len(my_custom_rng2.entropy_pool), 0)
+        self.assertEqual(len(my_custom_rng3.entropy_pool), 0)
+
     def test_esdm_rng(self):
         try:
             esdm_rng = botan.RandomNumberGenerator("esdm-full")
