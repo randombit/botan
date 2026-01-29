@@ -26,6 +26,7 @@ class GMAC final : public MessageAuthenticationCode {
    public:
       void clear() override;
       std::string name() const override;
+      std::string provider() const override;
       size_t output_length() const override;
       std::unique_ptr<MessageAuthenticationCode> new_object() const override;
 
