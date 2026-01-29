@@ -34,7 +34,7 @@ def parse_perf_report(report):
 
         report = report[1:]
 
-    re_with_suffix = re.compile(r'(.*) \[[a-z0-9]+\]$')
+    re_with_suffix = re.compile(r'(.*) \[[a-z0-9_]+\]$')
 
     results = []
     for t in report:
