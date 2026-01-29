@@ -598,12 +598,11 @@ class Test_Registry {
       }
 
       std::vector<std::string> registered_test_categories() const {
-         std::vector<std::string> s;
-         s.reserve(m_categories.size());
+         std::set<std::string> s;
          for(auto&& i : m_categories) {
-            s.push_back(i.first);
+            s.insert(i.first);
          }
-         return s;
+         return std::vector<std::string>(s.begin(), s.end());
       }
 
       std::vector<std::string> filter_registered_tests(const std::vector<std::string>& requested,
