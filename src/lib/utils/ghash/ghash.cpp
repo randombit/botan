@@ -99,8 +99,8 @@ void GHASH::key_schedule(std::span<const uint8_t> key) {
 #if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
    if(CPUID::has(CPUID::Feature::HW_CLMUL)) {
       zap(m_HM);
-      if(m_H_pow.size() != 8) {
-         m_H_pow.resize(8);
+      if(m_H_pow.size() != 16) {
+         m_H_pow.resize(16);
       }
       ghash_precompute_cpu(key.data(), m_H_pow.data());
       // m_HM left empty

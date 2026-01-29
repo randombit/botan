@@ -54,9 +54,9 @@ class GHASH final : public SymmetricAlgorithm {
       void ghash_final_block(std::span<uint8_t, GCM_BS> x, uint64_t ad_len, uint64_t pt_len);
 
 #if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
-      static void ghash_precompute_cpu(const uint8_t H[16], uint64_t H_pow[4 * 2]);
+      static void ghash_precompute_cpu(const uint8_t H[16], uint64_t H_pow[8 * 2]);
 
-      static void ghash_multiply_cpu(uint8_t x[16], const uint64_t H_pow[4 * 2], const uint8_t input[], size_t blocks);
+      static void ghash_multiply_cpu(uint8_t x[16], const uint64_t H_pow[8 * 2], const uint8_t input[], size_t blocks);
 #endif
 
 #if defined(BOTAN_HAS_GHASH_CLMUL_VPERM)
