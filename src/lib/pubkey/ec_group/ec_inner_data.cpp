@@ -10,6 +10,7 @@
 #include <botan/internal/ec_inner_pc.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/pcurves.h>
+#include <algorithm>
 
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
    #include <botan/internal/ec_inner_bn.h>
@@ -129,8 +130,92 @@ bool EC_Group_Data::params_match(const BigInt& p,
                                  const BigInt& g_y,
                                  const BigInt& order,
                                  const BigInt& cofactor) const {
-   return (this->p() == p && this->a() == a && this->b() == b && this->order() == order &&
-           this->cofactor() == cofactor && this->g_x() == g_x && this->g_y() == g_y);
+   if(p != this->p()) {
+      return false;
+   }
+   if(a != this->a()) {
+      return false;
+   }
+   if(b != this->b()) {
+      return false;
+   }
+   if(order != this->order()) {
+      return false;
+   }
+   if(cofactor != this->cofactor()) {
+      return false;
+   }
+   if(g_x != this->g_x()) {
+      return false;
+   }
+   if(g_y != this->g_y()) {
+      return false;
+   }
+
+   return true;
+}
+
+bool EC_Group_Data::params_match(const BigInt& p,
+                                 const BigInt& a,
+                                 const BigInt& b,
+                                 std::span<const uint8_t> base_pt,
+                                 const BigInt& order,
+                                 const BigInt& cofactor) const {
+   if(p != this->p()) {
+      return false;
+   }
+   if(a != this->a()) {
+      return false;
+   }
+   if(b != this->b()) {
+      return false;
+   }
+   if(order != this->order()) {
+      return false;
+   }
+   if(cofactor != this->cofactor()) {
+      return false;
+   }
+
+   const size_t field_len = this->p_bytes();
+
+   if(base_pt.size() == 1 + field_len && (base_pt[0] == 0x02 || base_pt[0] == 0x03)) {
+      // compressed
+
+      const auto g_x = m_g_x.serialize(field_len);
+      const auto g_y = m_g_y.is_odd();
+
+      const auto sec1_x = base_pt.subspan(1, field_len);
+      const bool sec1_y = (base_pt[0] == 0x03);
+
+      if(!std::ranges::equal(sec1_x, g_x)) {
+         return false;
+      }
+
+      if(sec1_y != g_y) {
+         return false;
+      }
+
+      return true;
+   } else if(base_pt.size() == 1 + 2 * field_len && base_pt[0] == 0x04) {
+      const auto g_x = m_g_x.serialize(field_len);
+      const auto g_y = m_g_y.serialize(field_len);
+
+      const auto sec1_x = base_pt.subspan(1, field_len);
+      const auto sec1_y = base_pt.subspan(1 + field_len, field_len);
+
+      if(!std::ranges::equal(sec1_x, g_x)) {
+         return false;
+      }
+
+      if(!std::ranges::equal(sec1_y, g_y)) {
+         return false;
+      }
+
+      return true;
+   } else {
+      throw Decoding_Error("Invalid base point encoding in explicit group");
+   }
 }
 
 bool EC_Group_Data::params_match(const EC_Group_Data& other) const {
