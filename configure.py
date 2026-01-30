@@ -2001,15 +2001,9 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
             module_that_owns[src] = mod
 
     def _isa_specific_flags(src):
-        if os.path.basename(src) == 'test_simd.cpp':
-            return cc.get_isa_specific_flags(['simd'], arch, options)
-
         if src in module_that_owns:
             module = module_that_owns[src]
             isas = module.isas_needed(arch.basename)
-            if 'simd_4x32' in module.dependencies(osinfo, arch):
-                isas.append('simd')
-
             return cc.get_isa_specific_flags(isas, arch, options)
 
         return ''

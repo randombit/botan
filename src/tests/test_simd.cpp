@@ -6,12 +6,14 @@
 
 #include "tests.h"
 
+#include <botan/internal/bswap.h>
+#include <botan/internal/isa_extn.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/rotate.h>
+#include <botan/internal/stl_util.h>
+
 #if defined(BOTAN_HAS_SIMD_4X32)
-   #include <botan/internal/bswap.h>
-   #include <botan/internal/loadstor.h>
-   #include <botan/internal/rotate.h>
    #include <botan/internal/simd_4x32.h>
-   #include <botan/internal/stl_util.h>
 #endif
 
 #if defined(BOTAN_HAS_SIMD_2X64)
@@ -28,7 +30,7 @@ namespace Botan_Tests {
 
 class SIMD_4X32_Tests final : public Test {
    public:
-      std::vector<Test::Result> run() override {
+      std::vector<Test::Result> BOTAN_FN_ISA_SIMD_4X32 run() override {
          Test::Result result("SIMD_4x32");
 
    #if defined(BOTAN_HAS_CPUID)
@@ -243,7 +245,7 @@ BOTAN_REGISTER_TEST("utils", "simd_4x32", SIMD_4X32_Tests);
 
 class SIMD_2X64_Tests final : public Test {
    public:
-      std::vector<Test::Result> run() override {
+      std::vector<Test::Result> BOTAN_FN_ISA_SIMD_2X64 run() override {
          Test::Result result("SIMD_2x64");
 
    #if defined(BOTAN_HAS_CPUID)
