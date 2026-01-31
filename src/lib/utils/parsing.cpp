@@ -54,12 +54,12 @@ uint32_t to_u32bit(std::string_view str_view) {
 /*
 * Parse a SCAN-style algorithm name
 */
-std::vector<std::string> parse_algorithm_name(std::string_view namex) {
-   if(namex.find('(') == std::string::npos && namex.find(')') == std::string::npos) {
-      return {std::string(namex)};
+std::vector<std::string> parse_algorithm_name(std::string_view scan_name) {
+   if(scan_name.find('(') == std::string::npos && scan_name.find(')') == std::string::npos) {
+      return {std::string(scan_name)};
    }
 
-   std::string name(namex);
+   std::string name(scan_name);
    std::string substring;
    std::vector<std::string> elems;
    size_t level = 0;
@@ -84,7 +84,7 @@ std::vector<std::string> parse_algorithm_name(std::string_view namex) {
          }
 
          if(level == 0 || (level == 1 && i != name.end() - 1)) {
-            throw Invalid_Algorithm_Name(namex);
+            throw Invalid_Algorithm_Name(scan_name);
          }
          --level;
       }
@@ -102,7 +102,7 @@ std::vector<std::string> parse_algorithm_name(std::string_view namex) {
    }
 
    if(!substring.empty()) {
-      throw Invalid_Algorithm_Name(namex);
+      throw Invalid_Algorithm_Name(scan_name);
    }
 
    return elems;
@@ -238,15 +238,15 @@ std::string ipv4_to_string(uint32_t ip) {
    return str;
 }
 
-std::string tolower_string(std::string_view in) {
-   std::string s(in);
-   for(char& c : s) {
+std::string tolower_string(std::string_view str) {
+   std::string lower(str);
+   for(char& c : lower) {
       const int cu = static_cast<unsigned char>(c);
       if(std::isalpha(cu) != 0) {
          c = static_cast<char>(std::tolower(cu));
       }
    }
-   return s;
+   return lower;
 }
 
 bool host_wildcard_match(std::string_view issued_, std::string_view host_) {
