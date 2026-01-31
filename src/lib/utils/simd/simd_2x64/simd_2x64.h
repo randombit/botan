@@ -11,6 +11,7 @@
 #include <botan/types.h>
 #include <botan/internal/isa_extn.h>
 #include <botan/internal/target_info.h>
+#include <span>
 
 // TODO: extend this to support NEON / AltiVec / LSX
 
