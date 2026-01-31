@@ -54,9 +54,12 @@ class GHASH final : public SymmetricAlgorithm {
       void ghash_final_block(std::span<uint8_t, GCM_BS> x, uint64_t ad_len, uint64_t pt_len);
 
 #if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
-      static void ghash_precompute_cpu(const uint8_t H[16], uint64_t H_pow[4 * 2]);
+      static void ghash_precompute_cpu(const uint8_t H[16], secure_vector<uint64_t>& H_pow);
 
-      static void ghash_multiply_cpu(uint8_t x[16], const uint64_t H_pow[4 * 2], const uint8_t input[], size_t blocks);
+      static void ghash_multiply_cpu(uint8_t x[16],
+                                     secure_vector<uint64_t>& H_pow,
+                                     const uint8_t input[],
+                                     size_t blocks);
 #endif
 
 #if defined(BOTAN_HAS_GHASH_CLMUL_VPERM)
@@ -70,9 +73,10 @@ class GHASH final : public SymmetricAlgorithm {
    private:
       AlignmentBuffer<uint8_t, GCM_BS> m_buffer;
 
-      std::array<uint8_t, GCM_BS>
-         m_H_ad{};  /// cache of hash state after consuming the AD, reused for multiple messages
-      std::array<uint8_t, GCM_BS> m_ghash{};  /// hash state used for update() or update_associated_data()
+      /// cache of hash state after consuming the AD, reused for multiple messages
+      std::array<uint8_t, GCM_BS> m_H_ad{};
+      /// hash state used for update() or update_associated_data()
+      std::array<uint8_t, GCM_BS> m_ghash{};
       secure_vector<uint64_t> m_HM;
       secure_vector<uint64_t> m_H_pow;
 

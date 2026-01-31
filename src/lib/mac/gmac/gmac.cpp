@@ -35,6 +35,10 @@ std::string GMAC::name() const {
    return fmt("GMAC({})", m_cipher->name());
 }
 
+std::string GMAC::provider() const {
+   return m_ghash->provider();
+}
+
 size_t GMAC::output_length() const {
    return GCM_BS;
 }
