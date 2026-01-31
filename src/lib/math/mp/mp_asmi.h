@@ -472,11 +472,14 @@ class word3 final {
    #endif
 
          typedef typename WordInfo<W>::dword dword;
-         const dword s = dword(x) * y + m_w0;
-         W carry = static_cast<W>(s >> WordInfo<W>::bits);
-         m_w0 = static_cast<W>(s);
-         m_w1 += carry;
-         m_w2 += (m_w1 < carry);
+         const auto z = dword(x) * y;
+         const auto z0 = static_cast<W>(z);
+         const auto z1 = static_cast<W>(z >> WordInfo<W>::bits);
+
+         W carry = 0;
+         m_w0 = word_add(m_w0, z0, &carry);
+         m_w1 = word_add(m_w1, z1, &carry);
+         m_w2 += carry;
       }
 
       inline constexpr void mul_x2(W x, W y) {
@@ -502,18 +505,19 @@ class word3 final {
          }
    #endif
 
-         W carry = 0;
-         x = word_madd2(x, y, &carry);
-         y = carry;
+         typedef typename WordInfo<W>::dword dword;
+         const auto z = dword(x) * y;
+         const auto z0 = static_cast<W>(z);
+         const auto z1 = static_cast<W>(z >> WordInfo<W>::bits);
 
-         carry = 0;
-         m_w0 = word_add(m_w0, x, &carry);
-         m_w1 = word_add(m_w1, y, &carry);
+         W carry = 0;
+         m_w0 = word_add(m_w0, z0, &carry);
+         m_w1 = word_add(m_w1, z1, &carry);
          m_w2 += carry;
 
          carry = 0;
-         m_w0 = word_add(m_w0, x, &carry);
-         m_w1 = word_add(m_w1, y, &carry);
+         m_w0 = word_add(m_w0, z0, &carry);
+         m_w1 = word_add(m_w1, z1, &carry);
          m_w2 += carry;
       }
 
