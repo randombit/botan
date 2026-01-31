@@ -89,7 +89,7 @@ std::map<std::string, std::string> read_cfg(std::istream& is);
 BOTAN_TEST_API
 std::map<std::string, std::string> read_kv(std::string_view kv);
 
-std::string tolower_string(std::string_view s);
+std::string tolower_string(std::string_view str);
 
 /**
 * Check if the given hostname is a match for the specified wildcard
