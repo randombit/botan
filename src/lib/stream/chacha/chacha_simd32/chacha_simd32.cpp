@@ -12,7 +12,7 @@
 namespace Botan {
 
 //static
-void ChaCha::chacha_simd32_x4(uint8_t output[64 * 4], uint32_t state[16], size_t rounds) {
+void BOTAN_FN_ISA_SIMD_4X32 ChaCha::chacha_simd32_x4(uint8_t output[64 * 4], uint32_t state[16], size_t rounds) {
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
    const SIMD_4x32 CTR0 = SIMD_4x32(0, 1, 2, 3);
 

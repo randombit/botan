@@ -68,7 +68,8 @@ BOTAN_FN_ISA_AESNI __m128i aes_256_key_expansion(__m128i key, __m128i key2) {
    return _mm_xor_si128(key, key_with_rcon);
 }
 
-BOTAN_FORCE_INLINE void keyxor(SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AESNI void keyxor(
+   SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) {
    B0 ^= K;
    B1 ^= K;
    B2 ^= K;

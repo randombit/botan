@@ -43,7 +43,10 @@ W3 = &W[t- 4];
 and on output:
 W0 = W[t]..W[t+3]
 */
-BOTAN_FORCE_INLINE SIMD_4x32 sha1_simd_next_w(SIMD_4x32& XW0, SIMD_4x32 XW1, SIMD_4x32 XW2, SIMD_4x32 XW3) {
+BOTAN_FORCE_INLINE SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 sha1_simd_next_w(SIMD_4x32& XW0,
+                                                                     SIMD_4x32 XW1,
+                                                                     SIMD_4x32 XW2,
+                                                                     SIMD_4x32 XW3) {
    SIMD_4x32 T0 = XW0;                  // W[t-16..t-13]
    T0 ^= SIMD_4x32::alignr8(XW1, XW0);  // W[t-14..t-11]
    T0 ^= XW2;                           // W[t-8..t-5]

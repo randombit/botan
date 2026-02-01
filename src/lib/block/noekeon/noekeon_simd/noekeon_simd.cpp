@@ -16,14 +16,14 @@ namespace {
 /*
 * Noekeon's Theta Operation
 */
-inline void theta(SIMD_4x32& A0,
-                  SIMD_4x32& A1,
-                  SIMD_4x32& A2,
-                  SIMD_4x32& A3,
-                  const SIMD_4x32& K0,
-                  const SIMD_4x32& K1,
-                  const SIMD_4x32& K2,
-                  const SIMD_4x32& K3) {
+inline void BOTAN_FN_ISA_SIMD_4X32 theta(SIMD_4x32& A0,
+                                         SIMD_4x32& A1,
+                                         SIMD_4x32& A2,
+                                         SIMD_4x32& A3,
+                                         const SIMD_4x32& K0,
+                                         const SIMD_4x32& K1,
+                                         const SIMD_4x32& K2,
+                                         const SIMD_4x32& K3) {
    SIMD_4x32 T = A0 ^ A2;
    T ^= T.rotl<8>() ^ T.rotr<8>();
    A1 ^= T;
@@ -43,7 +43,7 @@ inline void theta(SIMD_4x32& A0,
 /*
 * Noekeon's Gamma S-Box Layer
 */
-inline void gamma(SIMD_4x32& A0, SIMD_4x32& A1, SIMD_4x32& A2, SIMD_4x32& A3) {
+inline void BOTAN_FN_ISA_SIMD_4X32 gamma(SIMD_4x32& A0, SIMD_4x32& A1, SIMD_4x32& A2, SIMD_4x32& A3) {
    A1 ^= ~(A2 | A3);
    A0 ^= A2 & A1;
 
@@ -62,7 +62,7 @@ inline void gamma(SIMD_4x32& A0, SIMD_4x32& A1, SIMD_4x32& A2, SIMD_4x32& A3) {
 /*
 * Noekeon Encryption
 */
-void Noekeon::simd_encrypt_4(const uint8_t in[], uint8_t out[]) const {
+void BOTAN_FN_ISA_SIMD_4X32 Noekeon::simd_encrypt_4(const uint8_t in[], uint8_t out[]) const {
    const SIMD_4x32 K0 = SIMD_4x32::splat(m_EK[0]);
    const SIMD_4x32 K1 = SIMD_4x32::splat(m_EK[1]);
    const SIMD_4x32 K2 = SIMD_4x32::splat(m_EK[2]);
@@ -105,7 +105,7 @@ void Noekeon::simd_encrypt_4(const uint8_t in[], uint8_t out[]) const {
 /*
 * Noekeon Encryption
 */
-void Noekeon::simd_decrypt_4(const uint8_t in[], uint8_t out[]) const {
+void BOTAN_FN_ISA_SIMD_4X32 Noekeon::simd_decrypt_4(const uint8_t in[], uint8_t out[]) const {
    const SIMD_4x32 K0 = SIMD_4x32::splat(m_DK[0]);
    const SIMD_4x32 K1 = SIMD_4x32::splat(m_DK[1]);
    const SIMD_4x32 K2 = SIMD_4x32::splat(m_DK[2]);
