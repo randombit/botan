@@ -73,7 +73,7 @@ class FrodoMatrix final {
                                 const Dimensions& dimensions,
                                 StrongSpan<const FrodoSampleR> r);
 
-      // Helper function that calls FrodoMatrix::sample on initially provided consts and shake XOF.
+      // Helper function that calls FrodoMatrix::sample on initially provided constants and shake XOF.
       // The output function calls shake.output at each invocation.
       static std::function<FrodoMatrix(const Dimensions& dimensions)> make_sample_generator(
          const FrodoKEMConstants& constants, Botan::XOF& shake);
