@@ -11,6 +11,7 @@
 #include <botan/credentials_manager.h>
 #include <botan/rng.h>
 #include <botan/rsa.h>
+#include <botan/tls_callbacks.h>
 #include <botan/tls_extensions.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/ct_utils.h>

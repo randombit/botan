@@ -9,6 +9,7 @@
 
 #include <botan/internal/tls_client_impl_12.h>
 
+#include <botan/tls_callbacks.h>
 #include <botan/tls_messages.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/stl_util.h>
