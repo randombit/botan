@@ -50,13 +50,13 @@ class Frodo_KAT_Tests final : public PK_PQC_KEM_KAT_Test {
       }
 
       Fixed_Output_RNG rng_for_keygen(const std::string& mode, Botan::RandomNumberGenerator& rng) const final {
-         const Botan::FrodoKEMConstants consts(get_mode(mode));
-         return Fixed_Output_RNG(rng, consts.len_sec_bytes() + consts.len_se_bytes() + consts.len_a_bytes());
+         const Botan::FrodoKEMConstants constants(get_mode(mode));
+         return Fixed_Output_RNG(rng, constants.len_sec_bytes() + constants.len_se_bytes() + constants.len_a_bytes());
       }
 
       Fixed_Output_RNG rng_for_encapsulation(const std::string& mode, Botan::RandomNumberGenerator& rng) const final {
-         const Botan::FrodoKEMConstants consts(get_mode(mode));
-         return Fixed_Output_RNG(rng, consts.len_sec_bytes() + consts.len_salt_bytes());
+         const Botan::FrodoKEMConstants constants(get_mode(mode));
+         return Fixed_Output_RNG(rng, constants.len_sec_bytes() + constants.len_salt_bytes());
       }
 };
 
@@ -76,16 +76,16 @@ std::vector<Test::Result> test_frodo_roundtrips() {
                             Botan::FrodoKEMMode::FrodoKEM976_AES,
                             Botan::FrodoKEMMode::FrodoKEM640_AES};
 
-   auto get_decryption_error_value = [](Botan::FrodoKEMConstants& consts,
+   auto get_decryption_error_value = [](Botan::FrodoKEMConstants& constants,
                                         std::span<const uint8_t> encaps_value,
                                         const Botan::FrodoKEM_PrivateKey& sk) {
       // Extracts the `S` value from the encoded private key
-      auto& shake = consts.SHAKE_XOF();
+      auto& shake = constants.SHAKE_XOF();
       const auto sk_bytes = sk.raw_private_key_bits();
-      auto sk_s = std::span<const uint8_t>(sk_bytes.data(), consts.len_sec_bytes());
+      auto sk_s = std::span<const uint8_t>(sk_bytes.data(), constants.len_sec_bytes());
       shake.update(encaps_value);
       shake.update(sk_s);
-      return shake.output(consts.len_sec_bytes());
+      return shake.output(constants.len_sec_bytes());
    };
 
    std::vector<Test::Result> results;
@@ -94,7 +94,7 @@ std::vector<Test::Result> test_frodo_roundtrips() {
       if(!m.is_available()) {
          continue;
       }
-      Botan::FrodoKEMConstants consts(mode);
+      Botan::FrodoKEMConstants constants(mode);
       Test::Result& result = results.emplace_back("FrodoKEM roundtrip: " + m.to_string());
 
       const Botan::FrodoKEM_PrivateKey sk1(*rng, mode);
@@ -121,13 +121,13 @@ std::vector<Test::Result> test_frodo_roundtrips() {
       auto ss_mismatch = dec2.decrypt(enc_res.encapsulated_shared_key(), 0 /* no KDF */);
       result.test_eq("decryption failure sk",
                      ss_mismatch,
-                     get_decryption_error_value(consts, enc_res.encapsulated_shared_key(), sk2));
+                     get_decryption_error_value(constants, enc_res.encapsulated_shared_key(), sk2));
 
       // Decryption failure: bitflip in encapsulated shared value
       const auto mutated_encaps_value = Test::mutate_vec(enc_res.encapsulated_shared_key(), *rng);
       ss_mismatch = dec2.decrypt(mutated_encaps_value, 0 /* no KDF */);
       result.test_eq(
-         "decryption failure bitflip", ss_mismatch, get_decryption_error_value(consts, mutated_encaps_value, sk2));
+         "decryption failure bitflip", ss_mismatch, get_decryption_error_value(constants, mutated_encaps_value, sk2));
 
       // Decryption failure: malformed encapsulation value
       result.test_throws(

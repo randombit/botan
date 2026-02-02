@@ -87,12 +87,12 @@ struct Dilithiumish_Constants {
       static constexpr size_t NTT_Degree = 256;
 };
 
-template <typename ConstsT>
-class Mock_Trait final : public Botan::CRYSTALS::Trait_Base<ConstsT, Mock_Trait<ConstsT>> {
+template <typename ConstantsT>
+class Mock_Trait final : public Botan::CRYSTALS::Trait_Base<ConstantsT, Mock_Trait<ConstantsT>> {
    public:
-      using T = typename Botan::CRYSTALS::Trait_Base<ConstsT, Mock_Trait<ConstsT>>::T;
-      using T2 = typename Botan::CRYSTALS::Trait_Base<ConstsT, Mock_Trait<ConstsT>>::T2;
-      constexpr static auto N = Botan::CRYSTALS::Trait_Base<ConstsT, Mock_Trait<ConstsT>>::N;
+      using T = typename Botan::CRYSTALS::Trait_Base<ConstantsT, Mock_Trait<ConstantsT>>::T;
+      using T2 = typename Botan::CRYSTALS::Trait_Base<ConstantsT, Mock_Trait<ConstantsT>>::T2;
+      constexpr static auto N = Botan::CRYSTALS::Trait_Base<ConstantsT, Mock_Trait<ConstantsT>>::N;
 
       static T montgomery_reduce_coefficient(T2 /*unused*/) {
          throw Botan_Tests::Test_Error("montgomery reduction not implemented");

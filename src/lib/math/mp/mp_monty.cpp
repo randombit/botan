@@ -117,7 +117,7 @@ void bigint_monty_redc_generic(
 
    /*
    * The result might need to be reduced mod p. To avoid a timing
-   * channel, always perform the subtraction. If in the compution
+   * channel, always perform the subtraction. If in the computation
    * of x - p a borrow is required then x was already < p.
    *
    * x starts at ws[0] and is p_size bytes long plus a possible high

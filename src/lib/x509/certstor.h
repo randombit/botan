@@ -75,7 +75,7 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Store /* NOLINT(*-special-member-functi
 
       /**
       * @return whether the certificate is known
-      * @param cert certififcate to be searched
+      * @param cert certificate to be searched
       */
       bool certificate_known(const X509_Certificate& cert) const {
          return find_cert(cert.subject_dn(), cert.subject_key_id()).has_value();
