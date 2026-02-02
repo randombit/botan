@@ -110,11 +110,11 @@ const SIMD_4x32 mc_backward[4] = {
 
 const SIMD_4x32 lo_nibs_mask = SIMD_4x32::splat_u8(0x0F);
 
-inline SIMD_4x32 low_nibs(SIMD_4x32 x) {
+inline SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 low_nibs(SIMD_4x32 x) {
    return lo_nibs_mask & x;
 }
 
-inline SIMD_4x32 high_nibs(SIMD_4x32 x) {
+inline SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 high_nibs(SIMD_4x32 x) {
    return (x.shr<4>() & lo_nibs_mask);
 }
 
@@ -273,7 +273,7 @@ vperm_decrypt_blocks(const uint8_t in[], uint8_t out[], size_t blocks, const SIM
 
 }  // namespace
 
-void AES_128::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void BOTAN_FN_ISA_SIMD_4X32 AES_128::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_4x32 K[11] = {
       SIMD_4x32::load_le(&m_EK[4 * 0]),
       SIMD_4x32::load_le(&m_EK[4 * 1]),
@@ -291,7 +291,7 @@ void AES_128::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
    return vperm_encrypt_blocks(in, out, blocks, K, 10);
 }
 
-void AES_128::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void BOTAN_FN_ISA_SIMD_4X32 AES_128::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_4x32 K[11] = {
       SIMD_4x32::load_le(&m_DK[4 * 0]),
       SIMD_4x32::load_le(&m_DK[4 * 1]),
@@ -309,7 +309,7 @@ void AES_128::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
    return vperm_decrypt_blocks(in, out, blocks, K, 10);
 }
 
-void AES_192::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void BOTAN_FN_ISA_SIMD_4X32 AES_192::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_4x32 K[13] = {
       SIMD_4x32::load_le(&m_EK[4 * 0]),
       SIMD_4x32::load_le(&m_EK[4 * 1]),
@@ -329,7 +329,7 @@ void AES_192::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
    return vperm_encrypt_blocks(in, out, blocks, K, 12);
 }
 
-void AES_192::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void BOTAN_FN_ISA_SIMD_4X32 AES_192::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_4x32 K[13] = {
       SIMD_4x32::load_le(&m_DK[4 * 0]),
       SIMD_4x32::load_le(&m_DK[4 * 1]),
@@ -349,7 +349,7 @@ void AES_192::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
    return vperm_decrypt_blocks(in, out, blocks, K, 12);
 }
 
-void AES_256::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void BOTAN_FN_ISA_SIMD_4X32 AES_256::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_4x32 K[15] = {
       SIMD_4x32::load_le(&m_EK[4 * 0]),
       SIMD_4x32::load_le(&m_EK[4 * 1]),
@@ -371,7 +371,7 @@ void AES_256::vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
    return vperm_encrypt_blocks(in, out, blocks, K, 14);
 }
 
-void AES_256::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void BOTAN_FN_ISA_SIMD_4X32 AES_256::vperm_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const SIMD_4x32 K[15] = {
       SIMD_4x32::load_le(&m_DK[4 * 0]),
       SIMD_4x32::load_le(&m_DK[4 * 1]),
@@ -492,7 +492,7 @@ SIMD_4x32 BOTAN_FN_ISA_SIMD_4X32 aes_schedule_192_smear(SIMD_4x32 x, SIMD_4x32 y
 
 // NOLINTBEGIN(readability-container-data-pointer)
 
-void AES_128::vperm_key_schedule(const uint8_t keyb[], size_t /*unused*/) {
+void BOTAN_FN_ISA_SIMD_4X32 AES_128::vperm_key_schedule(const uint8_t keyb[], size_t /*unused*/) {
    m_EK.resize(11 * 4);
    m_DK.resize(11 * 4);
 
@@ -516,7 +516,7 @@ void AES_128::vperm_key_schedule(const uint8_t keyb[], size_t /*unused*/) {
    aes_schedule_mangle_last_dec(key).store_le(&m_DK[0]);
 }
 
-void AES_192::vperm_key_schedule(const uint8_t keyb[], size_t /*unused*/) {
+void BOTAN_FN_ISA_SIMD_4X32 AES_192::vperm_key_schedule(const uint8_t keyb[], size_t /*unused*/) {
    m_EK.resize(13 * 4);
    m_DK.resize(13 * 4);
 
@@ -559,7 +559,7 @@ void AES_192::vperm_key_schedule(const uint8_t keyb[], size_t /*unused*/) {
    }
 }
 
-void AES_256::vperm_key_schedule(const uint8_t keyb[], size_t /*unused*/) {
+void BOTAN_FN_ISA_SIMD_4X32 AES_256::vperm_key_schedule(const uint8_t keyb[], size_t /*unused*/) {
    m_EK.resize(15 * 4);
    m_DK.resize(15 * 4);
 

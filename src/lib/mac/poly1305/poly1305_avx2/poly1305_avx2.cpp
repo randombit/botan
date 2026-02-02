@@ -124,7 +124,10 @@ BOTAN_FN_ISA_AVX2 void load_4_blocks_26(SIMD_4x26& msg_0,
 // NOLINTEND(portability-simd-intrinsics)
 
 // Convert radix-2^26 limbs back to radix-2^44
-BOTAN_FORCE_INLINE void convert_26_to_44(uint64_t& r0, uint64_t& r1, uint64_t& r2, const std::array<uint32_t, 5> in) {
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 void convert_26_to_44(uint64_t& r0,
+                                                           uint64_t& r1,
+                                                           uint64_t& r2,
+                                                           const std::array<uint32_t, 5> in) {
    constexpr uint64_t M44 = 0xFFFFFFFFFFF;
    constexpr uint64_t M42 = 0x3FFFFFFFFFF;
 
@@ -151,8 +154,8 @@ BOTAN_FORCE_INLINE std::array<uint32_t, 5> convert_44_to_26(uint64_t r0, uint64_
    return out;
 }
 
-void load_r(
-   SIMD_4x26& r0, SIMD_4x26& r1, SIMD_4x26& r2, SIMD_4x26& r3, SIMD_4x26& r4, const secure_vector<uint64_t>& X) {
+inline void BOTAN_FN_ISA_AVX2
+load_r(SIMD_4x26& r0, SIMD_4x26& r1, SIMD_4x26& r2, SIMD_4x26& r3, SIMD_4x26& r4, const secure_vector<uint64_t>& X) {
    // TODO do this in vector registers instead
    const auto t = convert_44_to_26(X[5], X[6], X[7]);
    const auto t2 = convert_44_to_26(X[8], X[9], X[10]);

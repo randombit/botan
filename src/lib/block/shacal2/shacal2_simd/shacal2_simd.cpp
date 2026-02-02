@@ -13,29 +13,29 @@ namespace Botan {
 
 namespace {
 
-inline void SHACAL2_Fwd(const SIMD_4x32& A,
-                        const SIMD_4x32& B,
-                        const SIMD_4x32& C,
-                        SIMD_4x32& D,
-                        const SIMD_4x32& E,
-                        const SIMD_4x32& F,
-                        const SIMD_4x32& G,
-                        SIMD_4x32& H,
-                        uint32_t RK) {
+inline void BOTAN_FN_ISA_SIMD_4X32 SHACAL2_Fwd(const SIMD_4x32& A,
+                                               const SIMD_4x32& B,
+                                               const SIMD_4x32& C,
+                                               SIMD_4x32& D,
+                                               const SIMD_4x32& E,
+                                               const SIMD_4x32& F,
+                                               const SIMD_4x32& G,
+                                               SIMD_4x32& H,
+                                               uint32_t RK) {
    H += E.sigma1() + SIMD_4x32::choose(E, F, G) + SIMD_4x32::splat(RK);
    D += H;
    H += A.sigma0() + SIMD_4x32::majority(A, B, C);
 }
 
-inline void SHACAL2_Rev(const SIMD_4x32& A,
-                        const SIMD_4x32& B,
-                        const SIMD_4x32& C,
-                        SIMD_4x32& D,
-                        const SIMD_4x32& E,
-                        const SIMD_4x32& F,
-                        const SIMD_4x32& G,
-                        SIMD_4x32& H,
-                        uint32_t RK) {
+inline void BOTAN_FN_ISA_SIMD_4X32 SHACAL2_Rev(const SIMD_4x32& A,
+                                               const SIMD_4x32& B,
+                                               const SIMD_4x32& C,
+                                               SIMD_4x32& D,
+                                               const SIMD_4x32& E,
+                                               const SIMD_4x32& F,
+                                               const SIMD_4x32& G,
+                                               SIMD_4x32& H,
+                                               uint32_t RK) {
    H -= A.sigma0() + SIMD_4x32::majority(A, B, C);
    D -= H;
    H -= E.sigma1() + SIMD_4x32::choose(E, F, G) + SIMD_4x32::splat(RK);
@@ -43,7 +43,7 @@ inline void SHACAL2_Rev(const SIMD_4x32& A,
 
 }  // namespace
 
-void SHACAL2::simd_encrypt_4(const uint8_t in[], uint8_t out[]) const {
+void BOTAN_FN_ISA_SIMD_4X32 SHACAL2::simd_encrypt_4(const uint8_t in[], uint8_t out[]) const {
    SIMD_4x32 A = SIMD_4x32::load_be(in);
    SIMD_4x32 E = SIMD_4x32::load_be(in + 16);
    SIMD_4x32 B = SIMD_4x32::load_be(in + 32);
@@ -82,7 +82,7 @@ void SHACAL2::simd_encrypt_4(const uint8_t in[], uint8_t out[]) const {
    H.store_be(out + 112);
 }
 
-void SHACAL2::simd_decrypt_4(const uint8_t in[], uint8_t out[]) const {
+void BOTAN_FN_ISA_SIMD_4X32 SHACAL2::simd_decrypt_4(const uint8_t in[], uint8_t out[]) const {
    SIMD_4x32 A = SIMD_4x32::load_be(in);
    SIMD_4x32 E = SIMD_4x32::load_be(in + 16);
    SIMD_4x32 B = SIMD_4x32::load_be(in + 32);

@@ -15,7 +15,7 @@ namespace Botan {
 /*
 * SIMD Serpent Encryption of 4 blocks in parallel
 */
-void Serpent::simd_encrypt_4(const uint8_t in[64], uint8_t out[64]) const {
+void BOTAN_FN_ISA_SIMD_4X32 Serpent::simd_encrypt_4(const uint8_t in[64], uint8_t out[64]) const {
    using namespace Botan::Serpent_F;
 
    SIMD_4x32 B0 = SIMD_4x32::load_le(in);
@@ -138,7 +138,7 @@ void Serpent::simd_encrypt_4(const uint8_t in[64], uint8_t out[64]) const {
 /*
 * SIMD Serpent Decryption of 4 blocks in parallel
 */
-void Serpent::simd_decrypt_4(const uint8_t in[64], uint8_t out[64]) const {
+void BOTAN_FN_ISA_SIMD_4X32 Serpent::simd_decrypt_4(const uint8_t in[64], uint8_t out[64]) const {
    using namespace Botan::Serpent_F;
 
    SIMD_4x32 B0 = SIMD_4x32::load_le(in);

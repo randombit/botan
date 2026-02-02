@@ -345,6 +345,22 @@ void Poly1305::key_schedule(std::span<const uint8_t> key) {
    poly1305_init(m_poly, key.data());
 }
 
+std::string Poly1305::provider() const {
+#if defined(BOTAN_HAS_POLY1305_AVX512)
+   if(auto feat = CPUID::check(CPUID::Feature::AVX512)) {
+      return *feat;
+   }
+#endif
+
+#if defined(BOTAN_HAS_POLY1305_AVX2)
+   if(auto feat = CPUID::check(CPUID::Feature::AVX2)) {
+      return *feat;
+   }
+#endif
+
+   return "base";
+}
+
 void Poly1305::add_data(std::span<const uint8_t> input) {
    assert_key_material_set();
 

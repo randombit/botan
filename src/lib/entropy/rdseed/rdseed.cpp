@@ -21,7 +21,7 @@ namespace Botan {
 
 namespace {
 
-BOTAN_FUNC_ISA("rdseed") bool read_rdseed(secure_vector<uint32_t>& seed) {
+BOTAN_FUNC_ISA("rdseed,sse2") bool read_rdseed(secure_vector<uint32_t>& seed) {
    /*
    * RDSEED is not guaranteed to generate an output within any specific number
    * of attempts. However in testing on a Skylake system, with all hyperthreads

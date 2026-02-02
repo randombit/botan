@@ -67,7 +67,7 @@ class Key_Inserter final {
       explicit Key_Inserter(const uint32_t* RK) : m_RK(RK) {}
 
       template <BitsliceT T>
-      inline void operator()(size_t R, T& B0, T& B1, T& B2, T& B3) const {
+      BOTAN_FORCE_INLINE void operator()(size_t R, T& B0, T& B1, T& B2, T& B3) const {
          B0 ^= m_RK[4 * R];
          B1 ^= m_RK[4 * R + 1];
          B2 ^= m_RK[4 * R + 2];
