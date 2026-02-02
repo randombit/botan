@@ -9,6 +9,7 @@
 #define BOTAN_OCSP_H_
 
 #include <botan/asn1_obj.h>
+#include <botan/asn1_time.h>
 #include <botan/bigint.h>
 #include <botan/pkix_types.h>
 #include <botan/x509cert.h>

@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/asn1_obj.h>
+#include <botan/asn1_time.h>
 
 #include <botan/assert.h>
 #include <botan/ber_dec.h>

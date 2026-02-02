@@ -12,6 +12,7 @@ bigint
 </requires>
 
 <header:public>
+asn1_time.h
 asn1_print.h
 asn1_obj.h
 der_enc.h

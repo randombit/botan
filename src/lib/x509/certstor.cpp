@@ -9,6 +9,7 @@
 #include <botan/certstor.h>
 
 #include <botan/asn1_obj.h>
+#include <botan/asn1_time.h>
 #include <botan/assert.h>
 #include <botan/data_src.h>
 #include <botan/hash.h>

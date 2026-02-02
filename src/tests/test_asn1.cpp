@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_ASN1)
    #include <botan/asn1_obj.h>
    #include <botan/asn1_print.h>
+   #include <botan/asn1_time.h>
    #include <botan/ber_dec.h>
    #include <botan/bigint.h>
    #include <botan/der_enc.h>
