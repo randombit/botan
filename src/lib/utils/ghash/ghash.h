@@ -34,6 +34,9 @@ class GHASH final : public SymmetricAlgorithm {
       /// Incremental update of associated data used in the GMAC use-case
       void update_associated_data(std::span<const uint8_t> ad);
 
+      /// Reset the AAD state without resetting the key (used in GMAC::final_result)
+      void reset_associated_data();
+
       void final(std::span<uint8_t> out);
 
       Key_Length_Specification key_spec() const override { return Key_Length_Specification(16); }

@@ -146,6 +146,14 @@ void GHASH::set_associated_data(std::span<const uint8_t> input) {
    m_ad_len = input.size();
 }
 
+void GHASH::reset_associated_data() {
+   // This should only be called in GMAC context
+   BOTAN_STATE_CHECK(m_text_len == 0);
+   assert_key_material_set();
+   m_H_ad = {0};
+   m_ad_len = 0;
+}
+
 void GHASH::update_associated_data(std::span<const uint8_t> ad) {
    assert_key_material_set();
    ghash_update(m_ghash, ad);
