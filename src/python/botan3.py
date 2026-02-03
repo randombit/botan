@@ -441,6 +441,7 @@ def _set_prototypes(dll):
             [c_char_p, POINTER(c_size_t), c_char_p, c_char_p, c_void_p])
     ffi_api(dll.botan_pubkey_view_ec_public_point,
             [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_pubkey_ecc_key_used_explicit_encoding, [c_void_p], [-32])
 
     #  PK
     ffi_api(dll.botan_pk_op_encrypt_create, [c_void_p, c_void_p, c_char_p, c_uint32])
@@ -1582,6 +1583,12 @@ class PublicKey: # pylint: disable=invalid-name
 
     def get_public_point(self) -> bytes:
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_pubkey_view_ec_public_point(self.__obj, vc, vfn))
+
+    def used_explicit_encoding(self) -> bool:
+        rc = _DLL.botan_pubkey_ecc_key_used_explicit_encoding(self.__obj)
+        if rc == -32:
+            raise BotanException("Only ECC keys have a notion of explicit encoding")
+        return rc == 1
 
 #
 # Private Key
