@@ -206,9 +206,10 @@ void OID::encode_into(DER_Encoder& der) const {
    std::vector<uint8_t> encoding;
 
    // We know 40 * root can't overflow because root is between 0 and 2
-   auto first = BOTAN_ASSERT_IS_SOME(checked_add(40 * m_id[0], m_id[1]));
+   auto first = checked_add(40 * m_id[0], m_id[1]);
+   BOTAN_ASSERT_NOMSG(first.has_value());
 
-   append(encoding, first);
+   append(encoding, *first);
 
    for(size_t i = 2; i != m_id.size(); ++i) {
       append(encoding, m_id[i]);

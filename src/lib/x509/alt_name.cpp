@@ -11,7 +11,6 @@
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -49,7 +48,8 @@ size_t AlternativeName::count() const {
    const auto sum = checked_add(
       m_dns.size(), m_uri.size(), m_email.size(), m_ipv4_addr.size(), m_dn_names.size(), m_othernames.size());
 
-   return BOTAN_ASSERT_IS_SOME(sum);
+   BOTAN_ASSERT_NOMSG(sum.has_value());
+   return sum.value();
 }
 
 bool AlternativeName::has_items() const {
