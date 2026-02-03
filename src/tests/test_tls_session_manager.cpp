@@ -24,6 +24,10 @@
       #include <botan/tls_session_manager_sqlite.h>
    #endif
 
+   #if defined(BOTAN_HAS_TLS_13)
+      #include <botan/tls_psk_identity_13.h>
+   #endif
+
    #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
       #include <version>
       #if defined(__cpp_lib_filesystem)

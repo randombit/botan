@@ -12,12 +12,12 @@
 #include <botan/credentials_manager.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
+#include <botan/tls_psk_identity_13.h>
 #include <botan/tls_session.h>
 #include <botan/tls_session_manager.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_cipher_state.h>
 #include <botan/internal/tls_reader.h>
-
 #include <algorithm>
 #include <utility>
 
