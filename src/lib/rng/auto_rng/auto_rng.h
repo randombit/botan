@@ -9,7 +9,6 @@
 #define BOTAN_AUTO_SEEDING_RNG_H_
 
 #include <botan/rng.h>
-
 #include <memory>
 
 namespace Botan {
@@ -30,9 +29,8 @@ class BOTAN_PUBLIC_API(2, 0) AutoSeeded_RNG final : public RandomNumberGenerator
       */
       void force_reseed();
 
-      size_t reseed(Entropy_Sources& srcs,
-                    size_t poll_bits = RandomNumberGenerator::DefaultPollBits,
-                    std::chrono::milliseconds poll_timeout = RandomNumberGenerator::DefaultPollTimeout) override;
+      size_t reseed_from_sources(Entropy_Sources& srcs,
+                                 size_t poll_bits = RandomNumberGenerator::DefaultPollBits) override;
 
       std::string name() const override;
 

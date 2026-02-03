@@ -156,11 +156,4 @@ Processor_RNG::Processor_RNG() {
    }
 }
 
-size_t Processor_RNG::reseed(Entropy_Sources& /*srcs*/,
-                             size_t /*poll_bits*/,
-                             std::chrono::milliseconds /*poll_timeout*/) {
-   /* no way to add entropy */
-   return 0;
-}
-
 }  // namespace Botan

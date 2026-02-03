@@ -32,11 +32,6 @@ class BOTAN_PUBLIC_API(2, 15) Processor_RNG final : public Hardware_RNG {
 
       bool is_seeded() const override { return true; }
 
-      /*
-      * No way to reseed processor provided generator, so reseed is ignored
-      */
-      size_t reseed(Entropy_Sources& src, size_t bits, std::chrono::milliseconds timeout) override;
-
       std::string name() const override;
 
    private:

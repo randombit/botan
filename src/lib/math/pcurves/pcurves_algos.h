@@ -9,6 +9,7 @@
 
 #include <botan/types.h>
 #include <botan/internal/ct_utils.h>
+#include <algorithm>
 #include <span>
 #include <vector>
 

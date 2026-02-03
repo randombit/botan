@@ -736,7 +736,7 @@ class AutoSeeded_RNG_Tests final : public Test {
          result.test_eq("AutoSeeded_RNG unseeded after calling clear", rng.is_seeded(), false);
 
    #if defined(BOTAN_HAS_ENTROPY_SOURCE)
-         const size_t no_entropy_bits = rng.reseed(no_entropy_for_you, 256, std::chrono::milliseconds(300));
+         const size_t no_entropy_bits = rng.reseed_from(no_entropy_for_you, 256);
          result.test_eq("AutoSeeded_RNG can't reseed from nothing", no_entropy_bits, 0);
          result.test_eq("AutoSeeded_RNG still unseeded", rng.is_seeded(), false);
    #endif
@@ -785,7 +785,7 @@ class System_RNG_Tests final : public Test {
          result.confirm("System RNG always seeded", rng.is_seeded());
 
    #if defined(BOTAN_HAS_ENTROPY_SOURCE)
-         rng.reseed(Botan::Entropy_Sources::global_sources(), 256, std::chrono::milliseconds(100));
+         rng.reseed_from(Botan::Entropy_Sources::global_sources(), 256);
    #endif
 
          for(size_t i = 0; i != 128; ++i) {
@@ -796,17 +796,17 @@ class System_RNG_Tests final : public Test {
 
          if(Test::run_long_tests() && Test::run_memory_intensive_tests() && (sizeof(size_t) > 4)) {
             // Pass buffer with a size greater than 32bit
-            const size_t size32BitsMax = std::numeric_limits<uint32_t>::max();
+            constexpr size_t maximum_u32 = 0xFFFFFFFF;
             const size_t checkSize = 1024;
-            std::vector<uint8_t> large_buf(size32BitsMax + checkSize);
-            std::memset(large_buf.data() + size32BitsMax, 0xFE, checkSize);
+            std::vector<uint8_t> large_buf(maximum_u32 + checkSize);
+            std::memset(large_buf.data() + maximum_u32, 0xFE, checkSize);
 
             rng.randomize(large_buf.data(), large_buf.size());
 
             std::vector<uint8_t> check_buf(checkSize, 0xFE);
 
             result.confirm("System RNG failed to write after 4GB boundary",
-                           std::memcmp(large_buf.data() + size32BitsMax, check_buf.data(), checkSize) != 0);
+                           std::memcmp(large_buf.data() + maximum_u32, check_buf.data(), checkSize) != 0);
          }
 
          return std::vector<Test::Result>{result};
@@ -833,8 +833,7 @@ class Processor_RNG_Tests final : public Test {
             result.confirm("CPU RNG always seeded", rng.is_seeded());
 
    #if defined(BOTAN_HAS_ENTROPY_SOURCE)
-            const size_t reseed_bits =
-               rng.reseed(Botan::Entropy_Sources::global_sources(), 256, std::chrono::seconds(1));
+            const size_t reseed_bits = rng.reseed_from(Botan::Entropy_Sources::global_sources(), 256);
             result.test_eq("CPU RNG cannot consume inputs", reseed_bits, size_t(0));
    #endif
 

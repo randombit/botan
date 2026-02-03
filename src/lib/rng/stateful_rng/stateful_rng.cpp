@@ -74,10 +74,10 @@ void Stateful_RNG::fill_bytes_with_input(std::span<uint8_t> output, std::span<co
    }
 }
 
-size_t Stateful_RNG::reseed(Entropy_Sources& srcs, size_t poll_bits, std::chrono::milliseconds poll_timeout) {
+size_t Stateful_RNG::reseed_from_sources(Entropy_Sources& srcs, size_t poll_bits) {
    const lock_guard_type<recursive_mutex_type> lock(m_mutex);
 
-   const size_t bits_collected = RandomNumberGenerator::reseed(srcs, poll_bits, poll_timeout);
+   const size_t bits_collected = RandomNumberGenerator::reseed_from_sources(srcs, poll_bits);
 
    if(bits_collected >= security_level()) {
       reset_reseed_counter();
@@ -117,7 +117,7 @@ void Stateful_RNG::reseed_check() {
       }
 
       if(m_entropy_sources != nullptr) {
-         reseed(*m_entropy_sources, security_level());
+         reseed_from_sources(*m_entropy_sources, security_level());
       }
 
       if(!is_seeded()) {

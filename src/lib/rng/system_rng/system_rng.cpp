@@ -19,6 +19,7 @@
 
 #if defined(BOTAN_TARGET_OS_HAS_RTLGENRANDOM)
    #include <botan/internal/dyn_load.h>
+   #include <limits>
 #elif defined(BOTAN_TARGET_OS_HAS_CRYPTO_NG)
    #include <bcrypt.h>
    #include <windows.h>

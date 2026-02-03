@@ -21,6 +21,7 @@
    #include <botan/internal/cmce_gf.h>
    #include <botan/internal/cmce_parameters.h>
    #include <botan/internal/cmce_poly.h>
+   #include <algorithm>
 
 namespace Botan_Tests {
 
