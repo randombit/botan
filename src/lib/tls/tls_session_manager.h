@@ -17,13 +17,12 @@
    #include <botan/tls_psk_identity_13.h>
 #endif
 
-#include <chrono>
-#include <map>
 #include <utility>
-#include <variant>
 
 namespace Botan {
+
 class RandomNumberGenerator;
+
 }
 
 namespace Botan::TLS {

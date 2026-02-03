@@ -12,6 +12,7 @@
 
 #include <botan/credentials_manager.h>
 #include <botan/pk_keys.h>
+#include <botan/tls_callbacks.h>
 #include <botan/tls_extensions.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/stl_util.h>
