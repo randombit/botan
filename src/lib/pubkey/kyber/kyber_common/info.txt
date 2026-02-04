@@ -10,7 +10,7 @@ type -> "Internal"
 
 <requires>
 hash_engine
-pqcrystals
+module_lattice
 pubkey
 hash
 rng

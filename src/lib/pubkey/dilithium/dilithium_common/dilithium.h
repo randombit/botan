@@ -14,6 +14,7 @@
 #ifndef BOTAN_DILITHIUM_COMMON_H_
 #define BOTAN_DILITHIUM_COMMON_H_
 
+#include <botan/module_lattice_keys.h>
 #include <botan/pk_keys.h>
 
 namespace Botan {
@@ -110,38 +111,80 @@ BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 
 class BOTAN_PUBLIC_API(3, 0) Dilithium_PrivateKey final : public virtual Dilithium_PublicKey,
-                                                          public virtual Botan::Private_Key {
+                                                          public virtual Module_Lattice_PrivateKey,
+                                                          public virtual Private_Key {
    public:
       std::unique_ptr<Public_Key> public_key() const override;
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       /**
-       * Generates a new key pair
+       * Generates a new key pair.
+       *
+       * New ML-DSA keys are encoded in the format MlPrivateKeyFormat::Both,
+       * new Dilithium round 3 keys in MlPrivateKeyFormat::Expanded.
        */
       Dilithium_PrivateKey(RandomNumberGenerator& rng, DilithiumMode mode);
 
       /**
        * Read an encoded private key.
+       *
+       * ML-DSA keys are accepted in all three CHOICE alternatives of RFC 9881
+       * (seed, expanded key, or both) and, for backwards compatibility, as the
+       * raw 32-byte seed or the raw expanded key of FIPS 204. Dilithium round 3
+       * keys are accepted as the raw expanded key only. The detected format is
+       * retained, see private_key_format().
        */
       Dilithium_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> sk);
 
       /**
-       * Read an encoded private key given the dilithium @p mode.
+       * Read an encoded private key given the dilithium @p mode. See the
+       * constructor above for the accepted encodings.
        */
       Dilithium_PrivateKey(std::span<const uint8_t> sk, DilithiumMode mode);
 
-      secure_vector<uint8_t> private_key_bits() const override;
+      /**
+       * The format this key was loaded from, or the default format of a newly
+       * generated key (MlPrivateKeyFormat::Both for ML-DSA). It is the format
+       * used for private_key_bits(), private_key_info() and
+       * raw_private_key_bits().
+       */
+      MlPrivateKeyFormat private_key_format() const override;
 
-      secure_vector<uint8_t> raw_private_key_bits() const override;
+      /**
+       * The raw key material in the given @p format: the 32-byte seed or the
+       * expanded key of FIPS 204, without ASN.1 wrapping.
+       *
+       * @throws Encoding_Error for MlPrivateKeyFormat::Both (no raw encoding
+       *         exists), for MlPrivateKeyFormat::Seed if the key was loaded
+       *         from an expanded key (and thus holds no seed), and for
+       *         anything but MlPrivateKeyFormat::Expanded on Dilithium round 3 keys.
+       */
+      secure_vector<uint8_t> formatted_raw_private_key_bits(MlPrivateKeyFormat format) const override;
+
+      /**
+       * The ML-DSA-PrivateKey CHOICE encoding of RFC 9881 in the given
+       * @p format, i.e. the content of the PKCS#8 privateKey field. Dilithium
+       * round 3 keys are encoded as the raw expanded key
+       * (MlPrivateKeyFormat::Expanded only).
+       *
+       * @throws Encoding_Error if the key cannot be encoded in @p format
+       *         (see formatted_raw_private_key_bits())
+       */
+      secure_vector<uint8_t> formatted_private_key_bits(MlPrivateKeyFormat format) const override;
 
       std::unique_ptr<PK_Ops::Signature> _create_signature_op(
          RandomNumberGenerator& rng, const PK_Signature_Options_Reader& options) const override;
+
+      bool is_ml_dsa() const;
+
+      bool is_dilithium_round3() const;
 
    private:
       friend class Dilithium_Signature_Operation;
 
       std::shared_ptr<const Dilithium_PrivateKeyInternal> m_private;
+      MlPrivateKeyFormat m_private_key_format;
 };
 
 BOTAN_DIAGNOSTIC_POP

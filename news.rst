@@ -4,6 +4,14 @@ Release Notes
 Version 3.14.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Fix the ML-DSA private key encoding in PKCS #8 containers to conform to
+  RFC 9881. All three encodings of the RFC (seed, expanded key, both) are
+  supported; a key loaded from one of them is re-encoded in the same format,
+  newly generated keys are encoded in the "both" format. Previously the raw
+  32-byte seed was written, which is still accepted when loading a key.
+  In this course, add the interface ``Module_Lattice_PrivateKey`` which is
+  implemented by ``ML_DSA_PrivateKey`` and ``ML_KEM_PrivateKey``. (GH #5002 #5307)
+
 * Add new type ``PK_Signature_Options`` which allows precisely controlling how
   signatures are created and verified. (GH #5849)
 
