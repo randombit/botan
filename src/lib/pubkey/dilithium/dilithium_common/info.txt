@@ -23,7 +23,7 @@ dilithium_types.h
 
 <requires>
 keypair
-pqcrystals
+module_lattice
 pubkey
 rng
 shake_xof

@@ -138,8 +138,6 @@ void poly_pack_gamma1(const DilithiumPoly& p, BufferStuffer& stuffer, const Dili
    BOTAN_ASSERT_UNREACHABLE();
 }
 
-#if defined(BOTAN_NEEDS_DILITHIUM_PRIVATE_KEY_ENCODING)
-
 /**
  * NIST FIPS 204, Algorithm 17 (BitPack)
  * (for a = -eta, b = eta)
@@ -164,8 +162,6 @@ void poly_pack_t0(const DilithiumPoly& p, BufferStuffer& stuffer) {
    constexpr auto TwoToTheDminus1 = 1 << (DilithiumConstants::D - 1);
    poly_pack<TwoToTheDminus1 - 1, TwoToTheDminus1>(p, stuffer);
 }
-
-#endif
 
 /**
  * NIST FIPS 204, Algorithm 18 (SimpleBitUnpack)
@@ -197,8 +193,6 @@ void poly_unpack_gamma1(DilithiumPoly& p, ByteSourceT& byte_source, const Dilith
    BOTAN_ASSERT_UNREACHABLE();
 }
 
-#if defined(BOTAN_NEEDS_DILITHIUM_PRIVATE_KEY_ENCODING)
-
 /**
  * NIST FIPS 204, Algorithm 19 (BitUnpack)
  * (for a = -eta, b = eta)
@@ -223,8 +217,6 @@ void poly_unpack_t0(DilithiumPoly& p, BufferSlicer& slicer) {
    constexpr auto TwoToTheDminus1 = 1 << (DilithiumConstants::D - 1);
    poly_unpack<TwoToTheDminus1 - 1, TwoToTheDminus1>(p, slicer);
 }
-
-#endif
 
 /**
  * NIST FIPS 204, Algorithm 20 (HintBitPack)
@@ -364,8 +356,6 @@ std::pair<DilithiumSeedRho, DilithiumPolyVec> decode_public_key(StrongSpan<const
    return {std::move(rho), std::move(t1)};
 }
 
-#if defined(BOTAN_NEEDS_DILITHIUM_PRIVATE_KEY_ENCODING)
-
 /**
  * NIST FIPS 204, Algorithm 24 (skEncode)
  */
@@ -413,7 +403,9 @@ DilithiumSerializedPrivateKey encode_keypair(const DilithiumInternalKeypair& key
 DilithiumInternalKeypair decode_keypair(StrongSpan<const DilithiumSerializedPrivateKey> sk, DilithiumConstants mode) {
    const auto scope = CT::scoped_poison(sk);
 
-   BOTAN_ASSERT_NOMSG(sk.size() == mode.private_key_bytes());
+   if(sk.size() != mode.private_key_bytes()) {
+      throw Decoding_Error("invalid size for expanded ML-DSA (or Dilithium) private key");
+   }
 
    BufferSlicer slicer(sk);
 
@@ -475,8 +467,6 @@ DilithiumInternalKeypair decode_keypair(StrongSpan<const DilithiumSerializedPriv
 
    return keypair;
 }
-
-#endif
 
 /**
  * NIST FIPS 204, Algorithm 26 (sigEncode)
