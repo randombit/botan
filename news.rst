@@ -5,7 +5,14 @@ Version 3.14.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 General Notes
-----------------------------------------
+-------------
+
+* Fix the ML-DSA private key encoding in PKCS #8 containers to conform to
+  RFC 9881. All three encodings of the RFC (seed, expanded key, both) are
+  supported. (GH #5002 #5307)
+
+* Add new type ``PK_Signature_Options`` which allows precisely controlling how
+  signatures are created and verified. (GH #5849)
 
 * Botan4 is expected to be released in May 2027. This new major release will
   remove significant deprecated functionality.  Please consult the deprecation
