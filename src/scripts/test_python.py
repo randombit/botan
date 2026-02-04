@@ -431,6 +431,8 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         rsapub = botan.PublicKey.load(rsa_pub_pem)
         self.assertEqual(rsapub.to_pem(), rsa_pub_pem)
+        with self.assertRaisesRegex(botan.BotanException, r".*Only ECC keys.*"):
+            rsapub.used_explicit_encoding()
 
         n = 0xB5AD8818DCA1F256FF8FAB0888D0667D95DF2098B0D201A4C75590D3EBDFA159DD91C64AFDA082609EF885B2D1F4DC055C8FF9FA371C2F3398E0B612C603151131C81DB322C8D15E53EB56B4DF7325F05046889CB25021DE4282E16B9B28F5CBB2B8DDECE0F8E4E8A77F674F26AE92B7220920A1FBE43F51039A9C79D1F1CB6B
         e = 0x10001
@@ -698,6 +700,23 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         kdf = 'KDF2(SHA-384)'
 
+        if botan.ECGroup.supports_application_specific_group():
+            # This is a DER-encoded EC public key with an explicitly encoded group
+            # that is almost like secp256r1 but with a different prime modulus.
+            pub_almost_secp256r1 = bytes.fromhex("""308201333081ec06072a8648ce3d0201
+                3081e0020101302c06072a8648ce3d0101022100fd091059a6893635f900e9449d63
+                f572b2aebc4cff7b4e5e33f1b200e8bbc1453044042002f6efa55976c9cb06ff16bb
+                629c0a8d4d5143b40084b1a1cc0e4dff17443eb704205ac635d8aa3a93e7b3ebbd55
+                769886bc651d06b0cc53b0f63bce3c3e27d2604b0441040000000000000000000006
+                597fa94b1fd90000000000000000000000000000021b8c7dd77f9a95627922eceefe
+                a73f028f1ec95ba9b8fa95a3ad24bdf9fff414022100ffffffff00000000ffffffff
+                ffffffffbce6faada7179e84f3b9cac2fc6325510201010342000400000000000000
+                00000006597fa94b1fd90000000000000000000000000000021b8c7dd77f9a956279
+                22eceefea73f028f1ec95ba9b8fa95a3ad24bdf9fff414""")
+
+            strange_pub = botan.PublicKey.load(pub_almost_secp256r1)
+            self.assertTrue(strange_pub.used_explicit_encoding())
+
         for grp in ['secp256r1', 'secp384r1', 'brainpool256r1']:
             if not botan.ECGroup.supports_named_group(grp):
                 continue
@@ -718,6 +737,8 @@ ofvkP1EDmpx50fHLawIDAQAB
             self.assertEqual(a_op.public_value(), a_pub_pt)
             self.assertEqual(b_op.public_value(), b_pub_pt)
             self.assertEqual(a_pub_raw, a_pubv)
+            self.assertFalse(a_priv.get_public_key().used_explicit_encoding())
+            self.assertFalse(b_priv.get_public_key().used_explicit_encoding())
 
             salt = a_rng.get(8) + b_rng.get(8)
 
