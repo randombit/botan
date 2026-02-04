@@ -9,6 +9,7 @@
 #include <botan/certstor_sql.h>
 
 #include <botan/asn1_obj.h>
+#include <botan/asn1_time.h>
 #include <botan/ber_dec.h>
 #include <botan/data_src.h>
 #include <botan/pk_keys.h>

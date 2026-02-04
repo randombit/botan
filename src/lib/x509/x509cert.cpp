@@ -9,6 +9,7 @@
 #include <botan/x509cert.h>
 
 #include <botan/asn1_obj.h>
+#include <botan/asn1_time.h>
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
 #include <botan/hash.h>

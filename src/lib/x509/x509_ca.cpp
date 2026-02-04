@@ -8,6 +8,7 @@
 #include <botan/x509_ca.h>
 
 #include <botan/asn1_obj.h>
+#include <botan/asn1_time.h>
 #include <botan/bigint.h>
 #include <botan/der_enc.h>
 #include <botan/pkcs10.h>
