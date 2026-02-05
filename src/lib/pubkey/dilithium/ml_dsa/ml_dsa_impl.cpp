@@ -7,13 +7,25 @@
 */
 
 #include "botan/asn1_obj.h"
+#include "botan/exceptn.h"
 #include <botan/internal/ml_dsa_impl.h>
 
 #include <botan/internal/dilithium_algos.h>
 
 #include <botan/der_enc.h>
+#include <botan/ber_dec.h>
 
-#include <iostream>
+namespace {
+
+    Botan::DilithiumInternalKeypair try_decode_seed_only(std::span<const uint8_t> key_bits,
+                                                                        Botan::DilithiumConstants mode)
+    {
+        Botan::secure_vector<uint8_t> seed;
+        Botan::BER_Decoder(key_bits).decode(seed, Botan::ASN1_Type::OctetString, Botan::ASN1_Type(0), Botan::ASN1_Class::ContextSpecific).verify_end();
+        return Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(seed), std::move(mode));
+    }
+
+}
 
 namespace Botan {
 
@@ -38,9 +50,17 @@ secure_vector<uint8_t> ML_DSA_Expanding_Keypair_Codec::encode_keypair(DilithiumI
    return result; 
 }
 
-DilithiumInternalKeypair ML_DSA_Expanding_Keypair_Codec::decode_keypair(std::span<const uint8_t> private_key_seed,
+DilithiumInternalKeypair ML_DSA_Expanding_Keypair_Codec::decode_keypair(std::span<const uint8_t> private_key_bits,
                                                                         DilithiumConstants mode) const {
-   return Dilithium_Algos::expand_keypair(DilithiumSeedRandomness(private_key_seed), std::move(mode));
+    /* we have to check 3 different format: "seed-only", "expanded-only", and "both"
+     */
+    try {
+       return try_decode_seed_only(private_key_bits, mode);
+    } catch (Botan::Decoding_Error const& e)
+    {
+       // pass
+    }
+    throw Decoding_Error("unsupported ML-DSA private key format");
 }
 
 }  // namespace Botan
