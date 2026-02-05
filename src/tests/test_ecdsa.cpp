@@ -9,6 +9,7 @@
 
 #if defined(BOTAN_HAS_ECDSA)
    #include "test_pubkey.h"
+   #include <botan/ec_group.h>
    #include <botan/ecdsa.h>
    #include <botan/hash.h>
    #include <botan/pk_algs.h>

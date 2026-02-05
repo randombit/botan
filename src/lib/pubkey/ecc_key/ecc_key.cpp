@@ -44,15 +44,15 @@ EC_Group_Encoding default_encoding_for(const EC_Group& group) {
 }  // namespace
 
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
-EC_PublicKey::EC_PublicKey(EC_Group group, const EC_Point& pub_point) {
+EC_PublicKey::EC_PublicKey(const EC_Group& group, const EC_Point& pub_point) {
    auto pt = EC_AffinePoint(group, pub_point);
-   m_public_key = std::make_shared<const EC_PublicKey_Data>(std::move(group), std::move(pt));
+   m_public_key = std::make_shared<const EC_PublicKey_Data>(group, std::move(pt));
    m_domain_encoding = default_encoding_for(domain());  // NOLINT(*-prefer-member-initializer)
 }
 #endif
 
-EC_PublicKey::EC_PublicKey(EC_Group group, EC_AffinePoint pub_point) {
-   m_public_key = std::make_shared<const EC_PublicKey_Data>(std::move(group), std::move(pub_point));
+EC_PublicKey::EC_PublicKey(const EC_Group& group, const EC_AffinePoint& pub_point) {
+   m_public_key = std::make_shared<const EC_PublicKey_Data>(group, pub_point);
    m_domain_encoding = default_encoding_for(domain());  // NOLINT(*-prefer-member-initializer)
 }
 
@@ -129,24 +129,24 @@ const EC_Scalar& EC_PrivateKey::_private_key() const {
 * EC_PrivateKey constructor
 */
 EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
-                             EC_Group ec_group,
+                             const EC_Group& ec_group,
                              const BigInt& x,
                              bool with_modular_inverse) {
    auto scalar = (x.is_zero()) ? EC_Scalar::random(ec_group, rng) : EC_Scalar::from_bigint(ec_group, x);
-   m_private_key = std::make_shared<EC_PrivateKey_Data>(std::move(ec_group), std::move(scalar));
+   m_private_key = std::make_shared<EC_PrivateKey_Data>(ec_group, std::move(scalar));
    m_public_key = m_private_key->public_key(rng, with_modular_inverse);
    m_domain_encoding = default_encoding_for(domain());
 }
 
-EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng, EC_Group ec_group, bool with_modular_inverse) {
+EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng, const EC_Group& ec_group, bool with_modular_inverse) {
    auto scalar = EC_Scalar::random(ec_group, rng);
-   m_private_key = std::make_shared<EC_PrivateKey_Data>(std::move(ec_group), std::move(scalar));
+   m_private_key = std::make_shared<EC_PrivateKey_Data>(ec_group, std::move(scalar));
    m_public_key = m_private_key->public_key(rng, with_modular_inverse);
    m_domain_encoding = default_encoding_for(domain());
 }
 
-EC_PrivateKey::EC_PrivateKey(EC_Group ec_group, EC_Scalar x, bool with_modular_inverse) {
-   m_private_key = std::make_shared<EC_PrivateKey_Data>(std::move(ec_group), std::move(x));
+EC_PrivateKey::EC_PrivateKey(const EC_Group& ec_group, const EC_Scalar& x, bool with_modular_inverse) {
+   m_private_key = std::make_shared<EC_PrivateKey_Data>(ec_group, x);
    m_public_key = m_private_key->public_key(with_modular_inverse);
    m_domain_encoding = default_encoding_for(domain());
 }

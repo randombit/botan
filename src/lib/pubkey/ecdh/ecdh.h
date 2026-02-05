@@ -91,14 +91,14 @@ class BOTAN_PUBLIC_API(2, 0) ECDH_PrivateKey final : public ECDH_PublicKey,
       * @param group curve parameters to bu used for this key
       * @param x      the private key
       */
-      ECDH_PrivateKey(EC_Group group, EC_Scalar x) : EC_PrivateKey(std::move(group), std::move(x)) {}
+      ECDH_PrivateKey(const EC_Group& group, const EC_Scalar& x) : EC_PrivateKey(group, x) {}
 
       /**
       * Create a new private key
       * @param rng a random number generator
       * @param group parameters to used for this key
       */
-      ECDH_PrivateKey(RandomNumberGenerator& rng, EC_Group group) : EC_PrivateKey(rng, std::move(group)) {}
+      ECDH_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group) : EC_PrivateKey(rng, group) {}
 
       /**
       * Generate a new private key

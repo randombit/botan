@@ -8,6 +8,7 @@
 
 #include <botan/sm2.h>
 
+#include <botan/ec_group.h>
 #include <botan/hash.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/loadstor.h>
@@ -17,6 +18,10 @@ namespace Botan {
 
 std::string SM2_PublicKey::algo_name() const {
    return "SM2";
+}
+
+std::optional<size_t> SM2_PublicKey::_signature_element_size_for_DER_encoding() const {
+   return domain().get_order_bytes();
 }
 
 std::unique_ptr<Public_Key> SM2_PrivateKey::public_key() const {
@@ -49,18 +54,18 @@ SM2_PrivateKey::SM2_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<cons
       m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()),
       m_da_inv_legacy(m_da_inv.to_bigint()) {}
 
-SM2_PrivateKey::SM2_PrivateKey(EC_Group group, EC_Scalar x) :
-      EC_PrivateKey(std::move(group), std::move(x)),
+SM2_PrivateKey::SM2_PrivateKey(const EC_Group& group, const EC_Scalar& x) :
+      EC_PrivateKey(group, x),
       m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()),
       m_da_inv_legacy(m_da_inv.to_bigint()) {}
 
-SM2_PrivateKey::SM2_PrivateKey(RandomNumberGenerator& rng, EC_Group group) :
-      EC_PrivateKey(rng, std::move(group)),
+SM2_PrivateKey::SM2_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group) :
+      EC_PrivateKey(rng, group),
       m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()),
       m_da_inv_legacy(m_da_inv.to_bigint()) {}
 
-SM2_PrivateKey::SM2_PrivateKey(RandomNumberGenerator& rng, EC_Group group, const BigInt& x) :
-      EC_PrivateKey(rng, std::move(group), x),
+SM2_PrivateKey::SM2_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, const BigInt& x) :
+      EC_PrivateKey(rng, group, x),
       m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()),
       m_da_inv_legacy(m_da_inv.to_bigint()) {}
 

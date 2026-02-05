@@ -15,6 +15,7 @@
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
+   #include <botan/ec_group.h>
    #include <botan/ecdsa.h>
    #include <botan/pubkey.h>
 #endif

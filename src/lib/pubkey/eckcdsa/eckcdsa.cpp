@@ -9,6 +9,7 @@
 
 #include <botan/eckcdsa.h>
 
+#include <botan/ec_group.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
 #include <botan/rng.h>
@@ -259,6 +260,10 @@ bool ECKCDSA_Verification_Operation::verify(std::span<const uint8_t> msg, std::s
 }
 
 }  // namespace
+
+std::optional<size_t> ECKCDSA_PublicKey::_signature_element_size_for_DER_encoding() const {
+   return domain().get_order_bytes();
+}
 
 std::unique_ptr<Private_Key> ECKCDSA_PublicKey::generate_another(RandomNumberGenerator& rng) const {
    return std::make_unique<ECKCDSA_PrivateKey>(rng, domain());

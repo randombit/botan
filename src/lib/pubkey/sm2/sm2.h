@@ -8,6 +8,9 @@
 #ifndef BOTAN_SM2_KEY_H_
 #define BOTAN_SM2_KEY_H_
 
+#include <botan/bigint.h>
+#include <botan/ec_apoint.h>
+#include <botan/ec_scalar.h>
 #include <botan/ecc_key.h>
 
 namespace Botan {
@@ -53,9 +56,7 @@ class BOTAN_PUBLIC_API(2, 2) SM2_PublicKey : public virtual EC_PublicKey {
          return (op == PublicKeyOperation::Signature || op == PublicKeyOperation::Encryption);
       }
 
-      std::optional<size_t> _signature_element_size_for_DER_encoding() const override {
-         return domain().get_order_bytes();
-      }
+      std::optional<size_t> _signature_element_size_for_DER_encoding() const override;
 
       std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
                                                                    std::string_view provider) const override;
@@ -90,14 +91,14 @@ class BOTAN_PUBLIC_API(2, 2) SM2_PrivateKey final : public SM2_PublicKey,
       * @param group curve parameters to bu used for this key
       * @param x      the private key
       */
-      SM2_PrivateKey(EC_Group group, EC_Scalar x);
+      SM2_PrivateKey(const EC_Group& group, const EC_Scalar& x);
 
       /**
       * Create a new private key
       * @param rng a random number generator
       * @param group parameters to used for this key
       */
-      SM2_PrivateKey(RandomNumberGenerator& rng, EC_Group group);
+      SM2_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group);
 
       /**
       * Create a private key.
@@ -106,7 +107,7 @@ class BOTAN_PUBLIC_API(2, 2) SM2_PrivateKey final : public SM2_PublicKey,
       * @param x the private key (if zero, generate a new random key)
       */
       BOTAN_DEPRECATED("Use one of the other constructors")
-      SM2_PrivateKey(RandomNumberGenerator& rng, EC_Group group, const BigInt& x);
+      SM2_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, const BigInt& x);
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
@@ -120,6 +121,7 @@ class BOTAN_PUBLIC_API(2, 2) SM2_PrivateKey final : public SM2_PublicKey,
                                                                std::string_view params,
                                                                std::string_view provider) const override;
 
+      // TODO(Botan4) remove this and the member variable
       BOTAN_DEPRECATED("Deprecated no replacement") const BigInt& get_da_inv() const { return m_da_inv_legacy; }
 
       const EC_Scalar& _get_da_inv() const { return m_da_inv; }

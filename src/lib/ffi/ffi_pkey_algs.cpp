@@ -8,6 +8,7 @@
 
 #include <botan/ffi.h>
 
+#include <botan/ec_group.h>
 #include <botan/hash.h>
 #include <botan/pem.h>
 #include <botan/internal/ffi_mp.h>

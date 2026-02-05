@@ -1,4 +1,5 @@
 #include <botan/bigint.h>
+#include <botan/ec_group.h>
 #include <botan/ecdh.h>
 #include <botan/hex.h>
 #include <botan/pkcs8.h>

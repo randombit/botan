@@ -10,6 +10,7 @@
 
 #if defined(BOTAN_HAS_ECKCDSA)
    #include "test_pubkey.h"
+   #include <botan/ec_group.h>
    #include <botan/eckcdsa.h>
 #endif
 

@@ -17,6 +17,10 @@
    #include <botan/rsa.h>
 #endif
 
+#if defined(BOTAN_HAS_ECC_GROUP)
+   #include <botan/ec_group.h>
+#endif
+
 #if defined(BOTAN_HAS_ECDH)
    #include <botan/ecdh.h>
 #endif

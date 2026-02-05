@@ -10,6 +10,7 @@
 
 #include <botan/ecdsa.h>
 
+#include <botan/ec_group.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/pk_ops_impl.h>
 
@@ -75,6 +76,10 @@ EC_AffinePoint recover_ecdsa_public_key(
 ECDSA_PublicKey::ECDSA_PublicKey(
    const EC_Group& group, const std::vector<uint8_t>& msg, const BigInt& r, const BigInt& s, uint8_t v) :
       EC_PublicKey(group, recover_ecdsa_public_key(group, msg, r, s, v)) {}
+
+std::optional<size_t> ECDSA_PublicKey::_signature_element_size_for_DER_encoding() const {
+   return domain().get_order_bytes();
+}
 
 std::unique_ptr<Private_Key> ECDSA_PublicKey::generate_another(RandomNumberGenerator& rng) const {
    return std::make_unique<ECDSA_PrivateKey>(rng, domain());

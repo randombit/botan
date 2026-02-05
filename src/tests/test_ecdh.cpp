@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_ECDH)
    #include "test_pubkey.h"
+   #include <botan/ec_group.h>
    #include <botan/ecdh.h>
 #endif
 
