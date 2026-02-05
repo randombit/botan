@@ -11,7 +11,6 @@
 #define BOTAN_MP_CORE_OPS_H_
 
 #include <botan/assert.h>
-#include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/types.h>
 #include <botan/internal/ct_utils.h>

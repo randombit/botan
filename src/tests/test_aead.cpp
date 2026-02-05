@@ -9,6 +9,7 @@
 
 #if defined(BOTAN_HAS_AEAD_MODES)
    #include <botan/aead.h>
+   #include <botan/exceptn.h>
    #include <botan/rng.h>
 #endif
 

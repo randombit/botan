@@ -8,6 +8,7 @@
 
 #include <botan/internal/chacha20poly1305.h>
 
+#include <botan/exceptn.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 

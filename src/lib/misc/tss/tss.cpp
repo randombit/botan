@@ -7,6 +7,7 @@
 
 #include <botan/tss.h>
 
+#include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/hex.h>
 #include <botan/rng.h>

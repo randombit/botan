@@ -14,9 +14,7 @@
 #ifndef BOTAN_KYBER_COMMON_H_
 #define BOTAN_KYBER_COMMON_H_
 
-#include <botan/exceptn.h>
 #include <botan/pk_keys.h>
-
 #include <span>
 
 #if !defined(BOTAN_HAS_KYBER_90S) && !defined(BOTAN_HAS_KYBER) && !defined(BOTAN_HAS_ML_KEM)

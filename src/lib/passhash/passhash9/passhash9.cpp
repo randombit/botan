@@ -8,6 +8,7 @@
 #include <botan/passhash9.h>
 
 #include <botan/base64.h>
+#include <botan/exceptn.h>
 #include <botan/pbkdf2.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>

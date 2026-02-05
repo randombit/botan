@@ -6,6 +6,7 @@
 
 #include <botan/rng.h>
 
+#include <botan/exceptn.h>
 #include <botan/internal/loadstor.h>
 
 #if defined(BOTAN_HAS_ENTROPY_SOURCE)

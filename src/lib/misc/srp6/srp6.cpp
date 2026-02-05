@@ -9,6 +9,7 @@
 
 #include <botan/assert.h>
 #include <botan/dl_group.h>
+#include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/internal/fmt.h>
 

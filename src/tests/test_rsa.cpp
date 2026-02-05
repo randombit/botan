@@ -262,7 +262,7 @@ class RSA_Blinding_Tests final : public Test {
 
          // one more decryption should trigger a blinder reinitialization
          result.test_throws("RSA blinding reinit",
-                            "Test error Fixed output RNG ran out of bytes, test bug?",
+                            "Fixed output RNG ran out of bytes, test bug?",
                             [&decryptor, &encryptor, &null_rng]() {
                                std::vector<uint8_t> ciphertext =
                                   encryptor.encrypt(std::vector<uint8_t>(16, 5), null_rng);

@@ -6,6 +6,8 @@
 */
 
 #include <botan/bigint.h>
+
+#include <botan/exceptn.h>
 #include <istream>
 #include <ostream>
 

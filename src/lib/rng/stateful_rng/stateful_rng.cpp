@@ -7,6 +7,7 @@
 #include <botan/stateful_rng.h>
 
 #include <botan/assert.h>
+#include <botan/exceptn.h>
 #include <botan/internal/os_utils.h>
 
 namespace Botan {

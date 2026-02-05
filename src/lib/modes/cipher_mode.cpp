@@ -7,6 +7,7 @@
 
 #include <botan/cipher_mode.h>
 
+#include <botan/exceptn.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/scan_name.h>
 #include <botan/internal/stream_mode.h>

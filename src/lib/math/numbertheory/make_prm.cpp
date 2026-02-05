@@ -7,6 +7,7 @@
 
 #include <botan/internal/primality.h>
 
+#include <botan/exceptn.h>
 #include <botan/numthry.h>
 #include <botan/rng.h>
 #include <botan/internal/barrett.h>

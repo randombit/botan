@@ -49,11 +49,9 @@ namespace Botan_Tests {
 using Botan::BigInt;
 #endif
 
-class Test_Error : public Botan::Exception {
+class Test_Error : public std::runtime_error {
    public:
-      explicit Test_Error(const std::string& what) : Exception("Test error", what) {}
-
-      Botan::ErrorType error_type() const noexcept override { return Botan::ErrorType::Unknown; }
+      explicit Test_Error(const std::string& what) : std::runtime_error(what) {}
 };
 
 class Test_Aborted final : public Test_Error {

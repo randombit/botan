@@ -14,7 +14,6 @@
 
 #include <botan/curve_gfp.h>
 #include <botan/ec_point_format.h>
-#include <botan/exceptn.h>
 #include <vector>
 
 namespace Botan {

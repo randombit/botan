@@ -9,6 +9,7 @@
 #include <botan/internal/siv.h>
 
 #include <botan/block_cipher.h>
+#include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/cmac.h>
 #include <botan/internal/ct_utils.h>

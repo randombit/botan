@@ -9,6 +9,7 @@
 #include <botan/system_rng.h>
 
 #include <botan/assert.h>
+#include <botan/exceptn.h>
 #include <botan/internal/target_info.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_WIN32)

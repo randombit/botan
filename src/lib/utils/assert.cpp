@@ -7,6 +7,7 @@
 
 #include <botan/assert.h>
 
+#include <botan/concepts.h>
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/target_info.h>
@@ -25,6 +26,11 @@ void throw_invalid_argument(const char* message, const char* func, const char* f
 
 void throw_invalid_state(const char* expr, const char* func, const char* file) {
    throw Invalid_State(fmt("Invalid state: expr {} was false in {}:{}", expr, func, file));
+}
+
+// Declared in concepts.h
+void ranges::memory_region_size_violation() {
+   throw Invalid_Argument("Memory regions did not have expected byte lengths");
 }
 
 void assertion_failure(const char* expr_str, const char* assertion_made, const char* func, const char* file, int line) {

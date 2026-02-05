@@ -12,6 +12,7 @@
 
 #include <botan/dh.h>
 #include <botan/dl_group.h>
+#include <botan/ec_group.h>
 #include <botan/ecdh.h>
 #include <botan/ocsp.h>
 #include <botan/pk_algs.h>
