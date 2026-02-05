@@ -8,6 +8,7 @@
 
 #include <botan/mem_ops.h>
 #include <botan/internal/mod_inv.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 

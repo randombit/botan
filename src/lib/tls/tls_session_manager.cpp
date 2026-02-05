@@ -14,6 +14,10 @@
 #include <botan/tls_policy.h>
 #include <algorithm>
 
+#if defined(BOTAN_HAS_TLS_13)
+   #include <botan/tls_psk_identity_13.h>
+#endif
+
 namespace Botan::TLS {
 
 Session_Manager::Session_Manager(const std::shared_ptr<RandomNumberGenerator>& rng) : m_rng(rng) {

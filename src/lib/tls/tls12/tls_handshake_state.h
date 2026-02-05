@@ -13,6 +13,7 @@
 #include <botan/pubkey.h>
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_exceptn.h>
+#include <botan/tls_extensions.h>
 #include <botan/tls_handshake_msg.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>

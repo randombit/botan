@@ -14,7 +14,6 @@
 #include <botan/types.h>
 
 #include <chrono>
-#include <cstdint>
 #include <vector>
 
 namespace Botan::TLS {

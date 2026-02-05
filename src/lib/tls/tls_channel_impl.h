@@ -31,17 +31,6 @@ namespace TLS {
 class Client;
 class Server;
 
-enum class Record_Type : uint8_t {
-   Invalid = 0,  // RFC 8446 (TLS 1.3)
-
-   ChangeCipherSpec = 20,
-   Alert = 21,
-   Handshake = 22,
-   ApplicationData = 23,
-
-   Heartbeat = 24,  // RFC 6520 (TLS 1.3)
-};
-
 class Channel_Impl {
    public:
       virtual ~Channel_Impl() = default;

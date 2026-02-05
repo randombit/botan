@@ -10,7 +10,6 @@
 
 #include <botan/tls_magic.h>
 #include <botan/tls_version.h>
-#include <botan/internal/tls_channel_impl.h>
 #include <deque>
 #include <functional>
 #include <map>

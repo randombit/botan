@@ -10,12 +10,18 @@
 #define BOTAN_TLS_RECORDS_H_
 
 #include <botan/aead.h>
+#include <botan/assert.h>
 #include <botan/tls_algos.h>
 #include <botan/tls_magic.h>
 #include <botan/tls_version.h>
-#include <botan/internal/tls_channel_impl.h>
 #include <functional>
 #include <vector>
+
+namespace Botan {
+
+class RandomNumberGenerator;
+
+}
 
 namespace Botan::TLS {
 

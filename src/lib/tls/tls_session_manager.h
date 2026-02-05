@@ -13,10 +13,6 @@
 #include <botan/tls_session.h>
 #include <botan/types.h>
 
-#if defined(BOTAN_HAS_TLS_13)
-   #include <botan/tls_psk_identity_13.h>
-#endif
-
 #include <utility>
 
 namespace Botan {
@@ -29,6 +25,7 @@ namespace Botan::TLS {
 
 class Callbacks;
 class Policy;
+class PskIdentity;
 
 /**
 * Session_Manager is an interface to systems which can save session parameters
