@@ -6,6 +6,8 @@
 
 #include "tests.h"
 
+#include <botan/hex.h>
+
 #if defined(BOTAN_HAS_BASE64_CODEC)
    #include <botan/base64.h>
 #endif

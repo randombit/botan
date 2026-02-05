@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_AEAD_SIV)
    #include <botan/aead.h>
+   #include <botan/hex.h>
    #include <botan/internal/parsing.h>
 #endif
 

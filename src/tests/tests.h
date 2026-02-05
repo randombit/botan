@@ -16,7 +16,6 @@ Each include is parsed for every test file which can get quite expensive
 
 #include <botan/assert.h>
 #include <botan/exceptn.h>
-#include <botan/hex.h>
 #include <botan/symkey.h>
 #include <botan/types.h>
 #include <functional>
@@ -296,11 +295,7 @@ class Test {
 
             void test_note(const std::string& note, const char* extra = nullptr);
 
-            template <typename Alloc>
-            void test_note(const std::string& who, const std::vector<uint8_t, Alloc>& vec) {
-               const std::string hex = Botan::hex_encode(vec);
-               return test_note(who, hex.c_str());
-            }
+            void test_note(const std::string& who, std::span<const uint8_t> data);
 
             void note_missing(const std::string& whatever);
 
@@ -487,10 +482,7 @@ class Test {
                   producer.c_str(), what, produced.data(), produced.size(), expected.data(), expected.size());
             }
 
-            bool test_eq(const std::string& what, std::span<const uint8_t> produced, const char* expected_hex) {
-               const std::vector<uint8_t> expected = Botan::hex_decode(expected_hex);
-               return test_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
-            }
+            bool test_eq(const std::string& what, std::span<const uint8_t> produced, const char* expected_hex);
 
             template <std::size_t N>
             bool test_eq(const std::string& what,

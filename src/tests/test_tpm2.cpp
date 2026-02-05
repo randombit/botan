@@ -8,6 +8,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_TPM2)
+   #include <botan/hex.h>
    #include <botan/pubkey.h>
    #include <botan/tpm2_key.h>
    #include <botan/tpm2_rng.h>

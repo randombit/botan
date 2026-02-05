@@ -9,6 +9,7 @@
 
 #if defined(BOTAN_HAS_TLS_13)
 
+   #include <botan/hex.h>
    #include <botan/tls_ciphersuite.h>
    #include <botan/tls_exceptn.h>
    #include <botan/tls_magic.h>

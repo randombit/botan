@@ -91,6 +91,11 @@ void Test::Result::end_timer() {
    }
 }
 
+void Test::Result::test_note(const std::string& who, std::span<const uint8_t> data) {
+   const std::string hex = Botan::hex_encode(data);
+   return test_note(who, hex.c_str());
+}
+
 void Test::Result::test_note(const std::string& note, const char* extra) {
    if(!note.empty()) {
       std::ostringstream out;
@@ -194,6 +199,11 @@ bool Test::Result::test_ne(const std::string& what,
       return test_failure(who() + ": " + what + " produced matching");
    }
    return test_success();
+}
+
+bool Test::Result::test_eq(const std::string& what, std::span<const uint8_t> produced, const char* expected_hex) {
+   const std::vector<uint8_t> expected = Botan::hex_decode(expected_hex);
+   return test_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
 }
 
 bool Test::Result::test_eq(const char* producer,

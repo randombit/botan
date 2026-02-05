@@ -10,6 +10,7 @@
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    #include <botan/ber_dec.h>
    #include <botan/der_enc.h>
+   #include <botan/hex.h>
    #include <botan/pk_algs.h>
    #include <botan/pkcs10.h>
    #include <botan/pkcs8.h>

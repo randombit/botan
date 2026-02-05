@@ -7,6 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_SODIUM_API)
+   #include <botan/hex.h>
    #include <botan/sodium.h>
    #include <cstring>
 #endif
