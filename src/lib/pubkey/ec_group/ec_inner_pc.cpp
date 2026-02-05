@@ -7,6 +7,7 @@
 #include <botan/internal/ec_inner_pc.h>
 
 #include <botan/mem_ops.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 

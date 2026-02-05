@@ -12,7 +12,6 @@
 #include <botan/asn1_obj.h>
 #include <botan/bigint.h>
 #include <botan/internal/monty.h>
-#include <botan/internal/stl_util.h>
 #include <memory>
 #include <span>
 
