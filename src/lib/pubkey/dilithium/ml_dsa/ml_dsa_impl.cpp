@@ -16,6 +16,7 @@
 #include <botan/ber_dec.h>
 
 namespace {
+typedef Botan::DilithiumInternalKeypair (*decoding_func)(std::span<const uint8_t> key_bits, Botan::DilithiumConstants mode);
 
     Botan::DilithiumInternalKeypair try_decode_seed_only(std::span<const uint8_t> key_bits,
                                                                         Botan::DilithiumConstants mode)
@@ -23,6 +24,16 @@ namespace {
         Botan::secure_vector<uint8_t> seed;
         Botan::BER_Decoder(key_bits).decode(seed, Botan::ASN1_Type::OctetString, Botan::ASN1_Type(0), Botan::ASN1_Class::ContextSpecific).verify_end();
         return Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(seed), std::move(mode));
+    }
+    Botan::DilithiumInternalKeypair try_decode_expanded_only(std::span<const uint8_t> /*key_bits*/,
+                                                                        Botan::DilithiumConstants /*mode*/)
+    {
+        throw Botan::Decoding_Error("ML-DSA private format 'expanded-only' not supported");
+    }
+    Botan::DilithiumInternalKeypair try_decode_both(std::span<const uint8_t> /*key_bits*/,
+                                                                        Botan::DilithiumConstants /*mode*/)
+    {
+        throw Botan::Decoding_Error("ML-DSA private format 'both' not supported");
     }
 
 }
@@ -54,8 +65,12 @@ DilithiumInternalKeypair ML_DSA_Expanding_Keypair_Codec::decode_keypair(std::spa
                                                                         DilithiumConstants mode) const {
     /* we have to check 3 different format: "seed-only", "expanded-only", and "both"
      */
+    decoding_func fn_arr [3] = {try_decode_both, try_decode_seed_only, try_decode_expanded_only};
     try {
-       return try_decode_seed_only(private_key_bits, mode);
+        for(auto fn : fn_arr)
+        {
+            return fn(private_key_bits, mode);
+        }
     } catch (Botan::Decoding_Error const& e)
     {
        // pass
