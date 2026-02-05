@@ -10,6 +10,7 @@
 #ifndef BOTAN_TLS_CHANNEL_IMPL_13_H_
 #define BOTAN_TLS_CHANNEL_IMPL_13_H_
 
+#include <botan/tls_messages_13.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_channel_impl.h>
 #include <botan/internal/tls_handshake_layer_13.h>

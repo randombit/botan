@@ -9,7 +9,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/tls_messages.h>
+#include <botan/tls_messages_12.h>
 
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
@@ -21,6 +21,11 @@
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_reader.h>
+
+#ifdef BOTAN_HAS_TLS_13
+   #include <botan/tls_messages_13.h>
+#endif
+
 #include <array>
 
 namespace Botan::TLS {

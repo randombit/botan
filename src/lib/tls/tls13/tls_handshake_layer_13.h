@@ -13,7 +13,7 @@
 #include <vector>
 
 #include <botan/tls_magic.h>
-#include <botan/tls_messages.h>
+#include <botan/tls_messages_13.h>
 
 namespace Botan::TLS {
 

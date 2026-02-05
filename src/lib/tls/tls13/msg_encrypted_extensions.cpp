@@ -6,7 +6,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/tls_messages.h>
+#include <botan/tls_messages_13.h>
 
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>

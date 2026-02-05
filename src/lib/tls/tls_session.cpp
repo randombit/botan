@@ -15,11 +15,14 @@
 #include <botan/pem.h>
 #include <botan/rng.h>
 #include <botan/tls_callbacks.h>
-#include <botan/tls_messages.h>
 #include <botan/x509_key.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/stl_util.h>
+
+#if defined(BOTAN_HAS_TLS_13)
+   #include <botan/tls_messages_13.h>
+#endif
 
 #include <utility>
 

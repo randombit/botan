@@ -6,7 +6,7 @@
 
 #include "fuzzers.h"
 
-#include <botan/tls_messages.h>
+#include <botan/tls_messages_12.h>
 
 void fuzz(std::span<const uint8_t> in) {
    try {

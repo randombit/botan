@@ -12,11 +12,10 @@
 #include <functional>
 #include <optional>
 #include <variant>
-#include <vector>
 
 #include <botan/tls_exceptn.h>
 #include <botan/tls_magic.h>
-#include <botan/tls_messages.h>
+#include <botan/tls_messages_13.h>
 #include <botan/internal/stl_util.h>
 
 namespace Botan::TLS {

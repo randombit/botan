@@ -11,7 +11,6 @@
 
 #include <botan/secmem.h>
 #include <botan/tls_magic.h>
-#include <botan/tls_messages.h>
 
 #include <botan/internal/tls_transcript_hash_13.h>
 
