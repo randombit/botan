@@ -16,6 +16,7 @@
 #include <botan/internal/pcurves_instance.h>
 #include <botan/internal/pcurves_mul.h>
 #include <botan/internal/primality.h>
+#include <botan/internal/stl_util.h>
 #include <algorithm>
 
 namespace Botan::PCurve {

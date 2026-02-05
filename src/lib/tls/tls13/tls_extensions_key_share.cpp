@@ -14,6 +14,7 @@
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
+#include <botan/internal/scoped_cleanup.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_reader.h>
 #include <algorithm>

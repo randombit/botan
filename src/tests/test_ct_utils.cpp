@@ -9,6 +9,7 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <algorithm>
+#include <cstring>
 
 namespace Botan_Tests {
 

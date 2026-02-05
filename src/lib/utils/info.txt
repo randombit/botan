@@ -42,6 +42,7 @@ prefetch.h
 rotate.h
 rounding.h
 scan_name.h
+scoped_cleanup.h
 stack_scrubbing.h
 stl_util.h
 time_utils.h

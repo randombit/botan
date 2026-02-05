@@ -13,6 +13,7 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/mgf1.h>
+#include <botan/internal/stl_util.h>
 #include <array>
 
 namespace Botan {
