@@ -1,6 +1,7 @@
 /*
 * TLS Messages
-* (C) 2021-2022 Jack Lloyd
+* (C) 2004-2011,2015 Jack Lloyd
+*     2016 Matthias Gierlings
 *     2021 Elektrobit Automotive GmbH
 *     2022 René Meusel, Hannes Rantzsch - neXenio GmbH
 *

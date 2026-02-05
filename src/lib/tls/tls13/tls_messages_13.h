@@ -1,7 +1,8 @@
 /*
 * TLS Messages
-* (C) 2004-2011,2015 Jack Lloyd
-*     2016 Matthias Gierlings
+* (C) 2021-2022 Jack Lloyd
+*     2021 Elektrobit Automotive GmbH
+*     2022 René Meusel, Hannes Rantzsch - neXenio GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */

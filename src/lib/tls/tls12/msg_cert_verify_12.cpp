@@ -2,8 +2,6 @@
 * Certificate Verify Message
 * (C) 2004,2006,2011,2012 Jack Lloyd
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
-*     2021 Elektrobit Automotive GmbH
-*     2022 René Meusel, Hannes Rantzsch - neXenio GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
