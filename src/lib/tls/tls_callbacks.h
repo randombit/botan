@@ -12,7 +12,7 @@
 #define BOTAN_TLS_CALLBACKS_H_
 
 #include <botan/dl_group.h>
-#include <botan/ecc_key.h>
+#include <botan/ec_point_format.h>
 #include <botan/ocsp.h>
 #include <botan/pubkey.h>
 #include <botan/tls_alert.h>
