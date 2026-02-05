@@ -8,6 +8,7 @@
 #include <botan/hmac_drbg.h>
 
 #include <botan/exceptn.h>
+#include <botan/mac.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
 #include <algorithm>
@@ -44,6 +45,8 @@ void check_limits(size_t reseed_interval, size_t max_number_of_bytes_per_request
 }
 
 }  // namespace
+
+HMAC_DRBG::~HMAC_DRBG() = default;
 
 HMAC_DRBG::HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
                      RandomNumberGenerator& underlying_rng,

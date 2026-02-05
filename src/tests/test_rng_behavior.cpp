@@ -17,6 +17,7 @@
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
    #include <botan/hmac_drbg.h>
+   #include <botan/mac.h>
 #endif
 
 #if defined(BOTAN_HAS_AUTO_RNG)
