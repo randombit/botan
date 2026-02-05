@@ -11,6 +11,7 @@
 #include <botan/tpm2_key.h>
 #include <botan/tpm2_session.h>
 
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>

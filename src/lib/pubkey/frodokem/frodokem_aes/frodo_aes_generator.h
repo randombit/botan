@@ -12,12 +12,10 @@
 #define BOTAN_FRODOKEM_AES_GENERATOR_H_
 
 #include <botan/internal/aes.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/frodo_constants.h>
 #include <botan/internal/frodo_types.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/stl_util.h>
-
-#include <functional>
 #include <span>
 
 namespace Botan {

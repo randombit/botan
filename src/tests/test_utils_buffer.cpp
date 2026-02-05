@@ -10,6 +10,7 @@
 #include <botan/concepts.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/alignment_buffer.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/stl_util.h>
 
 #include <array>

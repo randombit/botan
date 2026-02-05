@@ -11,6 +11,8 @@
 #include <botan/exceptn.h>
 #include <botan/strong_type.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/buffer_slicer.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/hss_lms_utils.h>
 #include <botan/internal/int_utils.h>
@@ -96,6 +98,10 @@ std::vector<uint8_t> gen_Q_with_cksm(const LMOTS_Params& params,
 }
 
 }  // namespace
+
+std::unique_ptr<HashFunction> LMOTS_Params::hash() const {
+   return HashFunction::create_or_throw(hash_name());
+}
 
 LMOTS_Params LMOTS_Params::create_or_throw(LMOTS_Algorithm_Type type) {
    auto [hash_name, w] = [](const LMOTS_Algorithm_Type& lmots_type) -> std::pair<std::string_view, uint8_t> {

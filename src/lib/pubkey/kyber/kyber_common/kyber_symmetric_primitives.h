@@ -11,12 +11,10 @@
 #define BOTAN_KYBER_SYMMETRIC_PRIMITIVES_H_
 
 #include <botan/hash.h>
-#include <botan/secmem.h>
 #include <botan/xof.h>
-
+#include <botan/internal/buffer_slicer.h>
 #include <botan/internal/kyber_constants.h>
 #include <botan/internal/kyber_types.h>
-#include <botan/internal/stl_util.h>
 
 #include <span>
 #include <tuple>

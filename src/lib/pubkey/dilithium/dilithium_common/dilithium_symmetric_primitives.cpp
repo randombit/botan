@@ -11,6 +11,8 @@
 
 #include <botan/internal/dilithium_symmetric_primitives.h>
 
+#include <botan/internal/fmt.h>
+
 #if defined(BOTAN_HAS_DILITHIUM)
    #include <botan/internal/dilithium_round3.h>
 #endif
@@ -24,6 +26,10 @@
 #endif
 
 namespace Botan {
+
+std::string DilithiumMessageHash::name() const {
+   return Botan::fmt("{}({})", m_shake.name(), DilithiumConstants::MESSAGE_HASH_BYTES * 8);
+}
 
 std::unique_ptr<Dilithium_Symmetric_Primitives_Base> Dilithium_Symmetric_Primitives_Base::create(
    const DilithiumConstants& mode) {

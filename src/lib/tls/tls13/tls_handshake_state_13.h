@@ -9,14 +9,12 @@
 #ifndef BOTAN_TLS_HANDSHAKE_STATE_13_H_
 #define BOTAN_TLS_HANDSHAKE_STATE_13_H_
 
-#include <functional>
-#include <optional>
-#include <variant>
-
 #include <botan/tls_exceptn.h>
 #include <botan/tls_magic.h>
 #include <botan/tls_messages_13.h>
 #include <botan/internal/stl_util.h>
+#include <optional>
+#include <variant>
 
 namespace Botan::TLS {
 

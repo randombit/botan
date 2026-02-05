@@ -13,6 +13,8 @@
 #include <botan/internal/cmce_matrix.h>
 
 #include <botan/strong_type.h>
+#include <botan/internal/buffer_slicer.h>
+#include <botan/internal/buffer_stuffer.h>
 
 namespace Botan {
 

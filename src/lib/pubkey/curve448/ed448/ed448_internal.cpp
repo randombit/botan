@@ -10,6 +10,8 @@
 
 #include <botan/exceptn.h>
 #include <botan/types.h>
+#include <botan/internal/buffer_slicer.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/shake_xof.h>

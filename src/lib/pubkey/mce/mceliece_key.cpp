@@ -16,12 +16,12 @@
 #include <botan/der_enc.h>
 #include <botan/rng.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/code_based_util.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/mce_internal.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/polyn_gf2m.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 

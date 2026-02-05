@@ -9,8 +9,8 @@
 #include <botan/internal/kdf2.h>
 
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 

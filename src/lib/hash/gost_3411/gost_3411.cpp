@@ -7,8 +7,8 @@
 
 #include <botan/internal/gost_3411.h>
 
+#include <botan/internal/buffer_slicer.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 

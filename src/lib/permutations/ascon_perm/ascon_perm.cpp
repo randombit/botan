@@ -8,10 +8,10 @@
 
 #include <botan/internal/ascon_perm.h>
 
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/sponge_processing.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 

@@ -7,8 +7,8 @@
 
 #include <botan/internal/cascade.h>
 
+#include <botan/internal/buffer_slicer.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/stl_util.h>
 #include <numeric>
 
 namespace Botan {

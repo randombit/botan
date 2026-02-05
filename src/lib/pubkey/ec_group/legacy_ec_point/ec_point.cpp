@@ -11,11 +11,11 @@
 
 #include <botan/numthry.h>
 #include <botan/rng.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/ec_inner_data.h>
 #include <botan/internal/mod_inv.h>
 #include <botan/internal/monty.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 

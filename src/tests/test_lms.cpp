@@ -8,8 +8,9 @@
 
 #if defined(BOTAN_HAS_HSS_LMS)
 
+   #include <botan/hash.h>
+   #include <botan/internal/buffer_slicer.h>
    #include <botan/internal/lms.h>
-   #include <botan/internal/stl_util.h>
 
 namespace Botan_Tests {
 

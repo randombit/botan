@@ -7,7 +7,7 @@
 
 #include <botan/internal/par_hash.h>
 
-#include <botan/internal/stl_util.h>
+#include <botan/internal/buffer_stuffer.h>
 
 #include <sstream>
 

@@ -10,6 +10,8 @@
  **/
 
 #include <botan/internal/cmce_decaps.h>
+
+#include <botan/internal/buffer_slicer.h>
 #include <algorithm>
 
 namespace Botan {

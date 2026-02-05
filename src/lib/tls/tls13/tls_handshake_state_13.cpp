@@ -8,6 +8,8 @@
 
 #include <botan/internal/tls_handshake_state_13.h>
 
+#include <botan/assert.h>
+
 namespace Botan::TLS::Internal {
 
 Client_Hello_13& Handshake_State_13_Base::store(Client_Hello_13 client_hello, const bool /*from_peer*/) {

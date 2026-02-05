@@ -12,8 +12,8 @@
 #include <botan/mem_ops.h>
 #include <botan/pubkey.h>
 #include <botan/rng.h>
+#include <botan/internal/buffer_slicer.h>
 #include <botan/internal/socket_udp.h>
-#include <botan/internal/stl_util.h>
 
 #include <map>
 #include <sstream>

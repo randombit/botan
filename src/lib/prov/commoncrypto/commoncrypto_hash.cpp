@@ -8,8 +8,7 @@
 #include <botan/internal/commoncrypto.h>
 
 #include <botan/hash.h>
-#include <botan/internal/stl_util.h>
-#include <unordered_map>
+#include <botan/internal/buffer_slicer.h>
 
 #include <CommonCrypto/CommonCrypto.h>
 

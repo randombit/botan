@@ -8,12 +8,12 @@
 
 #include <botan/internal/sp_hash.h>
 
-#include <botan/internal/stl_util.h>
-
 #include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/sp_parameters.h>
+#include <botan/internal/buffer_slicer.h>
+#include <memory>
 
 #if defined(BOTAN_HAS_SPHINCS_PLUS_SHAKE_BASE)
    #include <botan/internal/sp_hash_shake.h>
@@ -22,8 +22,6 @@
 #if defined(BOTAN_HAS_SPHINCS_PLUS_SHA2_BASE)
    #include <botan/internal/sp_hash_sha2.h>
 #endif
-
-#include <memory>
 
 namespace Botan {
 

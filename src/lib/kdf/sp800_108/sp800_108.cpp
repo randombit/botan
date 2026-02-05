@@ -10,9 +10,10 @@
 #include <botan/internal/sp800_108.h>
 
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/buffer_slicer.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/stl_util.h>
 
 #include <limits>
 

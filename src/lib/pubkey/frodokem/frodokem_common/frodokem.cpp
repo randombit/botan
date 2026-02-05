@@ -15,6 +15,8 @@
 #include <botan/assert.h>
 #include <botan/rng.h>
 #include <botan/xof.h>
+#include <botan/internal/buffer_slicer.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/frodo_constants.h>
 #include <botan/internal/frodo_matrix.h>

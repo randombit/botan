@@ -7,10 +7,10 @@
 
 #include <botan/internal/siphash.h>
 
+#include <botan/internal/buffer_slicer.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
