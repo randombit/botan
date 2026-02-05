@@ -18,6 +18,7 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/target_info.h>
 
+#include <cstring>
 #include <functional>
 #include <map>
 

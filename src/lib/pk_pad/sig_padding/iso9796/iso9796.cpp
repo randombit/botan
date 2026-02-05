@@ -15,6 +15,7 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/hash_id.h>
 #include <botan/internal/mgf1.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 

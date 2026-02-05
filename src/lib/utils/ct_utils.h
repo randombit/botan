@@ -14,10 +14,11 @@
 #ifndef BOTAN_CT_UTILS_H_
 #define BOTAN_CT_UTILS_H_
 
+#include <botan/assert.h>
 #include <botan/concepts.h>
 #include <botan/secmem.h>
 #include <botan/internal/bit_ops.h>
-#include <botan/internal/stl_util.h>
+#include <botan/internal/scoped_cleanup.h>
 #include <botan/internal/target_info.h>
 #include <botan/internal/value_barrier.h>
 
