@@ -9,6 +9,7 @@
 
 #if defined(BOTAN_HAS_RSA)
    #include "test_pubkey.h"
+   #include <botan/pubkey.h>
    #include <botan/rsa.h>
    #include <botan/internal/blinding.h>
    #include <botan/internal/fmt.h>

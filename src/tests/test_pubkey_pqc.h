@@ -16,6 +16,7 @@
 
    #include <botan/hash.h>
    #include <botan/pk_algs.h>
+   #include <botan/pubkey.h>
    #include <botan/internal/fmt.h>
 
 namespace Botan_Tests {

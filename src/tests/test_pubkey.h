@@ -9,11 +9,18 @@
 
 #include "tests.h"
 
-#include "test_rng.h"
+#include <string>
+#include <vector>
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
 
-   #include <botan/pubkey.h>
+   #include <botan/pk_keys.h>
+
+namespace Botan {
+
+class PK_Decryptor;
+
+}
 
 namespace Botan_Tests {
 
@@ -50,9 +57,8 @@ class PK_Signature_Generation_Test : public PK_Test {
 
       virtual std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) = 0;
 
-      virtual std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const {
-         return std::make_unique<Fixed_Output_RNG>(nonce);
-      }
+      // Default is a Fixed_Output_RNG returning the nonce
+      virtual std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const;
 
    private:
       Test::Result run_one_test(const std::string& pad_hdr, const VarMap& vars) final;
@@ -124,9 +130,8 @@ class PK_Encryption_Decryption_Test : public PK_Test {
 
       std::string default_padding(const VarMap& /*vars*/) const override { return "Raw"; }
 
-      virtual std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const {
-         return std::make_unique<Fixed_Output_RNG>(nonce);
-      }
+      // Default is Fixed_Output_RNG returning the nonce
+      virtual std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const;
 
    private:
       Test::Result run_one_test(const std::string& pad_hdr, const VarMap& vars) final;

@@ -12,6 +12,7 @@
    #include <botan/dh.h>
    #include <botan/dl_group.h>
    #include <botan/dlies.h>
+   #include <botan/rng.h>
 #endif
 
 namespace Botan_Tests {

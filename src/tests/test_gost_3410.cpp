@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
    #include "test_pubkey.h"
+   #include "test_rng.h"
    #include <botan/ec_group.h>
    #include <botan/gost_3410.h>
 #endif

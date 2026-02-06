@@ -97,6 +97,11 @@ std::vector<std::string> PK_Test::possible_providers(const std::string& /*params
    return Test::provider_filter({"base", "commoncrypto", "openssl", "tpm"});
 }
 
+std::unique_ptr<Botan::RandomNumberGenerator> PK_Signature_Generation_Test::test_rng(
+   const std::vector<uint8_t>& nonce) const {
+   return std::make_unique<Fixed_Output_RNG>(nonce);
+}
+
 Test::Result PK_Signature_Generation_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars) {
    const std::vector<uint8_t> message = vars.get_req_bin("Msg");
    const std::vector<uint8_t> signature = vars.get_req_bin("Signature");
@@ -342,6 +347,11 @@ std::vector<std::string> PK_Sign_Verify_DER_Test::possible_providers(const std::
    const std::vector<std::string> pk_provider =
       Botan::probe_provider_private_key(algo_name, {"base", "commoncrypto", "openssl", "tpm"});
    return Test::provider_filter(pk_provider);
+}
+
+std::unique_ptr<Botan::RandomNumberGenerator> PK_Encryption_Decryption_Test::test_rng(
+   const std::vector<uint8_t>& nonce) const {
+   return std::make_unique<Fixed_Output_RNG>(nonce);
 }
 
 Test::Result PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars) {

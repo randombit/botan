@@ -11,6 +11,7 @@
    #include <botan/data_src.h>
    #include <botan/ed25519.h>
    #include <botan/pkcs8.h>
+   #include <botan/pubkey.h>
    #include <botan/x509_key.h>
 #endif
 

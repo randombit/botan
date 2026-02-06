@@ -10,6 +10,7 @@
    #include "test_pubkey.h"
    #include <botan/ec_group.h>
    #include <botan/ecdh.h>
+   #include <botan/pubkey.h>
 #endif
 
 namespace Botan_Tests {
@@ -89,7 +90,7 @@ class ECDH_AllGroups_Tests : public Test {
                result.test_throws<Botan::Decoding_Error>("ECDH public value is point-at-infinity", [&] {
                   const auto sk = Botan::ECDH_PrivateKey(rng(), group);
                   const Botan::PK_Key_Agreement ka(sk, rng(), kdf);
-                  const auto sec1_infinity = std::array{uint8_t(0x00)};
+                  std::vector<uint8_t> sec1_infinity(1, 0x00);
                   const auto a_ss = ka.derive_key(0, sec1_infinity);
                });
 
