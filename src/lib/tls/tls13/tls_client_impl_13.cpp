@@ -146,7 +146,7 @@ std::optional<Session_with_Handle> Client_Impl_13::find_session_for_resumption()
    return std::move(session_to_resume);
 }
 
-void Client_Impl_13::handle(const Server_Hello_12& server_hello_msg) {
+void Client_Impl_13::handle(const Server_Hello_12_Shim& server_hello_msg) {
    if(m_handshake_state.has_hello_retry_request()) {
       throw TLS_Exception(Alert::UnexpectedMessage, "Version downgrade received after Hello Retry");
    }
