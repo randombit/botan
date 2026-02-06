@@ -30,13 +30,13 @@ namespace Botan {
 BOTAN_TEST_API void secure_zeroize_buffer(void* ptr, size_t n);
 
 /**
- * @param ptr a pointer to memory to zero
- * @param bytes the number of bytes to zero in ptr
+ * @param buf a pointer to the start of the region
+ * @param n the number of elements in buf
  */
 template <std::unsigned_integral T>
-inline void zeroize_buffer(T ptr[], size_t n) {
+inline void zeroize_buffer(T buf[], size_t n) {
    if(n > 0) {
-      std::memset(ptr, 0, sizeof(T) * n);
+      std::memset(buf, 0, sizeof(T) * n);
    }
 }
 
