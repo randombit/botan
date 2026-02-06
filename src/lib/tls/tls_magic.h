@@ -8,6 +8,7 @@
 #ifndef BOTAN_TLS_PROTOCOL_MAGIC_H_
 #define BOTAN_TLS_PROTOCOL_MAGIC_H_
 
+#include <botan/strong_type.h>
 #include <botan/types.h>
 #include <vector>
 
@@ -89,6 +90,9 @@ enum class Handshake_Type : uint8_t {
 BOTAN_TEST_API const char* handshake_type_to_string(Handshake_Type t);
 
 using Transcript_Hash = std::vector<uint8_t>;
+
+/// @brief Used to derive the ticket's PSK from the resumption_master_secret
+using Ticket_Nonce = Strong<std::vector<uint8_t>, struct Ticket_Nonce_>;
 
 }  // namespace Botan::TLS
 

@@ -16,7 +16,7 @@
    #include <botan/tls_alert.h>
    #include <botan/tls_callbacks.h>
    #include <botan/tls_ciphersuite.h>
-   #include <botan/tls_messages.h>
+   #include <botan/tls_messages_12.h>
    #include <botan/tls_policy.h>
    #include <botan/tls_version.h>
    #include <botan/internal/loadstor.h>
@@ -25,6 +25,7 @@
 
    #if defined(BOTAN_HAS_TLS_13)
       #include "test_rng.h"
+      #include <botan/tls_messages_13.h>
       #include <botan/internal/tls_reader.h>
    #endif
 #endif
@@ -185,7 +186,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
                });
             } else if(algo == "alert") {
                result.test_throws("invalid alert input", exception, [&buffer]() {
-                  Botan::secure_vector<uint8_t> const sb(buffer.begin(), buffer.end());
+                  const Botan::secure_vector<uint8_t> sb(buffer.begin(), buffer.end());
                   const Botan::TLS::Alert message(sb);
                });
             } else {
@@ -427,7 +428,7 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
 
                      const std::string extensions = vars.get_req_str("AdditionalData");
                      std::vector<uint8_t> exts_buffer;
-                     for(Botan::TLS::Extension_Code const& type : ch.extensions().extension_types()) {
+                     for(const Botan::TLS::Extension_Code& type : ch.extensions().extension_types()) {
                         const uint16_t u16type = static_cast<uint16_t>(type);
                         exts_buffer.push_back(Botan::get_byte<0>(u16type));
                         exts_buffer.push_back(Botan::get_byte<1>(u16type));
@@ -471,7 +472,7 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
                      result.confirm("Ciphersuite", (msg.ciphersuite() == cs.ciphersuite_code()));
 
                      std::vector<uint8_t> buf;
-                     for(Botan::TLS::Extension_Code const& type : msg.extensions().extension_types()) {
+                     for(const Botan::TLS::Extension_Code& type : msg.extensions().extension_types()) {
                         const uint16_t u16type = static_cast<uint16_t>(type);
                         buf.push_back(Botan::get_byte<0>(u16type));
                         buf.push_back(Botan::get_byte<1>(u16type));

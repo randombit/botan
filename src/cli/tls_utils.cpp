@@ -16,6 +16,10 @@
    #include <botan/internal/stl_util.h>
    #include <sstream>
 
+   #if defined(BOTAN_HAS_TLS_13)
+      #include <botan/tls_messages_13.h>
+   #endif
+
    #include "tls_helpers.h"
 
 namespace Botan_CLI {

@@ -9,7 +9,7 @@
 
 #include <botan/kdf.h>
 #include <botan/mem_ops.h>
-#include <botan/tls_messages.h>
+#include <botan/tls_messages_12.h>
 #include <botan/internal/tls_handshake_state.h>
 
 namespace Botan::TLS {
