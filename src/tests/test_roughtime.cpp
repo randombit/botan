@@ -34,8 +34,7 @@ class Roughtime_Request_Tests final : public Text_Based_Test {
 
          const auto request = Botan::Roughtime::encode_request(nonce);
          result.test_eq(
-            "encode", type == "Valid", request == Botan::typecast_copy<std::array<uint8_t, 1024>>(request_v.data()));
-
+            "encode", type == "Valid", request == Botan::typecast_copy<std::array<uint8_t, 1024>>(request_v));
          return result;
       }
 };
@@ -114,10 +113,10 @@ class Roughtime final : public Test {
          auto rand64 = Botan::unlock(rng.random_vec(64));
          const Botan::Roughtime::Nonce nonce_v(rand64);
          result.confirm("nonce from vector",
-                        nonce_v.get_nonce() == Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));
-         const Botan::Roughtime::Nonce nonce_a(Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));
+                        nonce_v.get_nonce() == Botan::typecast_copy<std::array<uint8_t, 64>>(rand64));
+         const Botan::Roughtime::Nonce nonce_a(Botan::typecast_copy<std::array<uint8_t, 64>>(rand64));
          result.confirm("nonce from array",
-                        nonce_v.get_nonce() == Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));
+                        nonce_v.get_nonce() == Botan::typecast_copy<std::array<uint8_t, 64>>(rand64));
          rand64.push_back(10);
          result.test_throws("vector oversize",
                             [&rand64]() { Botan::Roughtime::Nonce const nonce_v2(rand64); });  //size 65
@@ -137,9 +136,8 @@ class Roughtime final : public Test {
 
          auto rand64 = Botan::unlock(rng.random_vec(64));
          const Botan::Roughtime::Nonce nonce_v(rand64);
-         result.confirm(
-            "empty chain nonce is blind",
-            c1.next_nonce(nonce_v).get_nonce() == Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));
+         result.confirm("empty chain nonce is blind",
+                        c1.next_nonce(nonce_v).get_nonce() == Botan::typecast_copy<std::array<uint8_t, 64>>(rand64));
 
          const std::string chain_str =
             "ed25519 bbT+RPS7zKX6w71ssPibzmwWqU9ffRV5oj2OresSmhE= eu9yhsJfVfguVSqGZdE8WKIxaBBM0ZG3Vmuc+IyZmG2YVmrIktUByDdwIFw6F4rZqmSFsBO85ljoVPz5bVPCOw== BQAAAEAAAABAAAAApAAAADwBAABTSUcAUEFUSFNSRVBDRVJUSU5EWBnGOEajOwPA6G7oL47seBP4C7eEpr57H43C2/fK/kMA0UGZVUdf4KNX8oxOK6JIcsbVk8qhghTwA70qtwpYmQkDAAAABAAAAAwAAABSQURJTUlEUFJPT1RAQg8AJrA8tEqPBQAqisiuAxgy2Pj7UJAiWbCdzGz1xcCnja3T+AqhC8fwpeIwW4GPy/vEb/awXW2DgSLKJfzWIAz+2lsR7t4UjNPvAgAAAEAAAABTSUcAREVMRes9Ch4X0HIw5KdOTB8xK4VDFSJBD/G9t7Et/CU7UW61OiTBXYYQTG2JekWZmGa0OHX1JPGG+APkpbsNw0BKUgYDAAAAIAAAACgAAABQVUJLTUlOVE1BWFR/9BWjpsWTQ1f6iUJea3EfZ1MkX3ftJiV3ABqNLpncFwAAAAAAAAAA//////////8AAAAA\n"
