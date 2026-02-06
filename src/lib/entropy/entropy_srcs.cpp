@@ -187,6 +187,20 @@ size_t Entropy_Sources::poll(RandomNumberGenerator& rng, size_t poll_bits, std::
    return bits_collected;
 }
 
+size_t Entropy_Sources::poll(RandomNumberGenerator& rng, size_t poll_bits) {
+   size_t bits_collected = 0;
+
+   for(auto& src : m_srcs) {
+      bits_collected += src->poll(rng);
+
+      if(bits_collected >= poll_bits) {
+         break;
+      }
+   }
+
+   return bits_collected;
+}
+
 size_t Entropy_Sources::poll_just(RandomNumberGenerator& rng, std::string_view the_src) {
    for(auto& src : m_srcs) {
       if(src->name() == the_src) {

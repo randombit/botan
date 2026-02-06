@@ -14,11 +14,21 @@
 #include <botan/secmem.h>
 
 #include <array>
-#include <chrono>
 #include <concepts>
 #include <span>
 #include <string>
 #include <type_traits>
+
+/*
+* We only include <chrono> in downstream applications to avoid
+* breaking semver wrt RandomNumberGenerator::reseed. Within the
+* library we avoid it because it slows down compilation significantly.
+*
+* TODO(Botan4): remove this entirely
+*/
+#if !defined(BOTAN_IS_BEING_BUILT)
+   #include <chrono>
+#endif
 
 namespace Botan {
 
@@ -39,11 +49,6 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       * Number of entropy bits polled for reseeding userspace RNGs like HMAC_DRBG
       */
       static constexpr size_t DefaultPollBits = 256;
-
-      /**
-      * Default poll timeout
-      */
-      static constexpr auto DefaultPollTimeout = std::chrono::milliseconds(50);
 
       virtual ~RandomNumberGenerator() = default;
 
@@ -166,18 +171,15 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       virtual bool is_seeded() const = 0;
 
       /**
-      * Poll provided sources for up to poll_bits bits of entropy
-      * or until the timeout expires. Returns estimate of the number
-      * of bits collected.
-      *
+      * Poll provided sources for up to poll_bits bits of entropy.
+      * Returns estimate of the number of bits collected.
       * Sets the seeded state to true if enough entropy was added.
       *
-      * TODO(Botan4) this doesn't need to be virtual anymore
-      * TODO(Botan4) remove poll timeout argument entirely (polling is always fast now)
+      * @throws Exception if RNG accepts input but reseeding failed.
       */
-      virtual size_t reseed(Entropy_Sources& srcs,
-                            size_t poll_bits = RandomNumberGenerator::DefaultPollBits,
-                            std::chrono::milliseconds poll_timeout = RandomNumberGenerator::DefaultPollTimeout);
+      size_t reseed_from(Entropy_Sources& srcs, size_t poll_bits = RandomNumberGenerator::DefaultPollBits) {
+         return reseed_from_sources(srcs, poll_bits);
+      }
 
       /**
       * Reseed by reading specified bits from the RNG
@@ -185,11 +187,10 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       * Sets the seeded state to true if enough entropy was added.
       *
       * @throws Exception if RNG accepts input but reseeding failed.
-      *
-      * TODO(Botan4) this does not need to be virtual
       */
-      virtual void reseed_from_rng(RandomNumberGenerator& rng,
-                                   size_t poll_bits = RandomNumberGenerator::DefaultPollBits);
+      void reseed_from(RandomNumberGenerator& rng, size_t poll_bits = RandomNumberGenerator::DefaultPollBits) {
+         return reseed_from_rng(rng, poll_bits);
+      }
 
       // Some utility functions built on the interface above:
 
@@ -268,7 +269,49 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
          return b;
       }
 
+      /**
+      * Reseed by reading specified bits from the RNG
+      *
+      * Sets the seeded state to true if enough entropy was added.
+      *
+      * @throws Exception if RNG accepts input but reseeding failed.
+      */
+      virtual void reseed_from_rng(RandomNumberGenerator& rng,
+                                   size_t poll_bits = RandomNumberGenerator::DefaultPollBits);
+
+#if !defined(BOTAN_IS_BEING_BUILT)
+      /**
+      * Default poll timeout
+      */
+      static constexpr auto DefaultPollTimeout = std::chrono::milliseconds(50);
+
+      /**
+       * Poll provided sources for up to poll_bits bits of entropy.
+       * Returns estimate of the number of bits collected.
+       *
+       * Sets the seeded state to true if enough entropy was added.
+       *
+       * TODO(Botan4) remove this function
+       */
+      BOTAN_DEPRECATED("Use reseed_from_sources")
+      inline size_t reseed(Entropy_Sources& srcs,
+                           size_t poll_bits = RandomNumberGenerator::DefaultPollBits,
+                           std::chrono::milliseconds /*unused_timeout*/ = DefaultPollTimeout) {
+         return reseed_from(srcs, poll_bits);
+      }
+#endif
+
    protected:
+      /**
+      * Poll provided sources for up to poll_bits bits of entropy.
+      * Returns estimate of the number of bits collected.
+      * Sets the seeded state to true if enough entropy was added.
+      *
+      * @throws Exception if RNG accepts input but reseeding failed.
+      */
+      virtual size_t reseed_from_sources(Entropy_Sources& srcs,
+                                         size_t poll_bits = RandomNumberGenerator::DefaultPollBits);
+
       /**
       * Generic interface to provide entropy to a concrete implementation and to
       * fill a given buffer with random output. Both @p output and @p input may

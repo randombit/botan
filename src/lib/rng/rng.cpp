@@ -48,12 +48,12 @@ void RandomNumberGenerator::randomize_with_ts_input(std::span<uint8_t> output) {
    }
 }
 
-size_t RandomNumberGenerator::reseed(Entropy_Sources& srcs, size_t poll_bits, std::chrono::milliseconds poll_timeout) {
+size_t RandomNumberGenerator::reseed_from_sources(Entropy_Sources& srcs, size_t poll_bits) {
    if(this->accepts_input()) {
 #if defined(BOTAN_HAS_ENTROPY_SOURCE)
-      return srcs.poll(*this, poll_bits, poll_timeout);
+      return srcs.poll(*this, poll_bits);
 #else
-      BOTAN_UNUSED(srcs, poll_bits, poll_timeout);
+      BOTAN_UNUSED(srcs, poll_bits);
 #endif
    }
 

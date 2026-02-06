@@ -17,6 +17,7 @@
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tpm2_algo_mappings.h>
 #include <botan/internal/tpm2_util.h>
+#include <algorithm>
 
 #include <tss2/tss2_esys.h>
 #include <tss2/tss2_tcti.h>

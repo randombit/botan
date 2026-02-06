@@ -17,6 +17,7 @@
    #include <botan/internal/mem_utils.h>
    #include <botan/internal/stl_util.h>
    #include <botan/internal/tpm2_hash.h>
+   #include <algorithm>
 
    #if defined(BOTAN_HAS_TPM2_RSA_ADAPTER)
       #include <botan/tpm2_rsa.h>

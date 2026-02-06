@@ -14,6 +14,7 @@
    #include <botan/ed448.h>
    #include <botan/internal/curve448_scalar.h>
    #include <botan/internal/ed448_internal.h>
+   #include <algorithm>
 
 namespace Botan_Tests {
 namespace {

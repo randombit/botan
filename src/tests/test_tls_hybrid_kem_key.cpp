@@ -15,6 +15,7 @@
    #include <botan/internal/hybrid_public_key.h>
    #include <botan/internal/kex_to_kem_adapter.h>
    #include <botan/internal/stl_util.h>
+   #include <algorithm>
 
 namespace Botan_Tests {
 

@@ -10,6 +10,8 @@
 #include "fuzzers.h"
 
 #include <botan/internal/mp_core.h>
+#include <iomanip>
+#include <sstream>
 #include <string_view>
 
 using Botan::word;

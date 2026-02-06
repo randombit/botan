@@ -72,9 +72,19 @@ class BOTAN_PUBLIC_API(2, 0) Entropy_Sources final {
       *
       * @returns the number of bits collected from the entropy sources
       *
-      * TODO(Botan4) remove the timeout argument and <chrono> include
+      * TODO(Botan4) remove this variant, and the <chrono> include above
       */
+      BOTAN_DEPRECATED("Use version without a timeout argument")
       size_t poll(RandomNumberGenerator& rng, size_t bits, std::chrono::milliseconds timeout);
+
+      /**
+      * Poll all sources to collect @p bits of entropy. Entropy collection is
+      * aborted as soon as the requested number of bits are obtained or the
+      * timeout runs out.
+      *
+      * @returns the number of bits collected from the entropy sources
+      */
+      size_t poll(RandomNumberGenerator& rng, size_t bits);
 
       /**
       * Poll just a single named source. Ordinally only used for testing

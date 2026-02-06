@@ -1410,9 +1410,8 @@ Test::Result test_rng_add_entropy() {
    result.confirm("RNG ignores call to clear", p11_rng.is_seeded());
 
    #if defined(BOTAN_HAS_ENTROPY_SOURCE)
-   result.test_eq("RNG ignores calls to reseed",
-                  p11_rng.reseed(Botan::Entropy_Sources::global_sources(), 256, std::chrono::milliseconds(300)),
-                  0);
+   result.test_eq(
+      "RNG ignores calls to reseed", p11_rng.reseed_from_sources(Botan::Entropy_Sources::global_sources(), 256), 0);
    #endif
 
    auto rng = Test::new_rng(__func__);
