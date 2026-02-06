@@ -23,7 +23,7 @@ Client_Hello_13& Handshake_State_13_Base::store(Client_Hello_13 client_hello, co
    return m_client_hello.value();
 }
 
-Client_Hello_12& Handshake_State_13_Base::store(Client_Hello_12 client_hello, const bool /*from_peer*/) {
+Client_Hello_12_Shim& Handshake_State_13_Base::store(Client_Hello_12_Shim client_hello, const bool /*from_peer*/) {
    m_client_hello_12 = std::move(client_hello);
    return m_client_hello_12.value();
 }
