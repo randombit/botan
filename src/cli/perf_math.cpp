@@ -29,7 +29,7 @@ namespace Botan_CLI {
 class PerfTest_MpMul final : public PerfTest {
    public:
       void go(const PerfConfig& config) override {
-         const std::chrono::milliseconds runtime_per_size = config.runtime();
+         const auto runtime_per_size = config.runtime();
 
          for(const size_t bits : {256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096}) {
             auto mul_timer = config.make_timer("BigInt mul " + std::to_string(bits));
@@ -63,7 +63,7 @@ BOTAN_REGISTER_PERF_TEST("mp_mul", PerfTest_MpMul);
 class PerfTest_MpDiv final : public PerfTest {
    public:
       void go(const PerfConfig& config) override {
-         const std::chrono::milliseconds runtime_per_size = config.runtime();
+         const auto runtime_per_size = config.runtime();
 
          for(const size_t n_bits : {256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096}) {
             const size_t q_bits = n_bits / 2;
@@ -108,7 +108,7 @@ BOTAN_REGISTER_PERF_TEST("mp_div", PerfTest_MpDiv);
 class PerfTest_MpDiv10 final : public PerfTest {
    public:
       void go(const PerfConfig& config) override {
-         const std::chrono::milliseconds runtime_per_size = config.runtime();
+         const auto runtime_per_size = config.runtime();
 
          for(const size_t n_bits : {256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096}) {
             const std::string bit_descr = std::to_string(n_bits) + "/10";

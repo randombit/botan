@@ -377,7 +377,7 @@ class Speed final : public Command {
       std::string description() const override { return "Measures the speed of algorithms"; }
 
       void go() override {
-         const std::chrono::milliseconds msec(get_arg_sz("msec"));
+         const uint64_t milliseconds = get_arg_sz("msec");
          std::vector<std::string> ecc_groups = Command::split_on(get_arg("ecc-groups"), ',');
          const std::string format = get_arg("format");
          const std::string clock_ratio = get_arg("cpu-clock-ratio");
@@ -474,7 +474,7 @@ class Speed final : public Command {
          const PerfConfig perf_config([&](const Timer& t) { this->record_result(t); },
                                       clock_speed,
                                       clock_cycle_ratio,
-                                      msec,
+                                      milliseconds,
                                       ecc_groups,
                                       buf_sizes,
                                       this->error_output(),

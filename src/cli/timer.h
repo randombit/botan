@@ -8,7 +8,6 @@
 #define BOTAN_CLI_TIMER_H_
 
 #include <botan/types.h>
-#include <chrono>
 #include <string>
 
 namespace Botan_CLI {
@@ -31,9 +30,9 @@ class Timer final {
 
       void stop();
 
-      bool under(std::chrono::milliseconds msec) const {
-         auto nano = std::chrono::duration_cast<std::chrono::nanoseconds>(msec);
-         return (nano.count() >= 0) ? (value() < static_cast<size_t>(nano.count())) : true;
+      bool under(uint64_t msec) const {
+         const uint64_t nano = msec * 1000000;
+         return value() < nano;
       }
 
       class Timer_Scope final {
@@ -62,7 +61,7 @@ class Timer final {
       }
 
       template <typename F>
-      void run_until_elapsed(std::chrono::milliseconds msec, F f) {
+      void run_until_elapsed(uint64_t msec, F f) {
          while(this->under(msec)) {
             run(f);
          }
