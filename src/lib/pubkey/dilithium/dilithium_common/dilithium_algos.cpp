@@ -18,13 +18,14 @@
 #include <botan/internal/dilithium_algos.h>
 
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/buffer_slicer.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/dilithium_keys.h>
 #include <botan/internal/dilithium_symmetric_primitives.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/pqcrystals_encoding.h>
 #include <botan/internal/pqcrystals_helpers.h>
-#include <botan/internal/stl_util.h>
 #include <utility>
 
 namespace Botan::Dilithium_Algos {

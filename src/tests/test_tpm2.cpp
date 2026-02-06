@@ -12,6 +12,7 @@
    #include <botan/tpm2_key.h>
    #include <botan/tpm2_rng.h>
    #include <botan/tpm2_session.h>
+   #include <botan/internal/buffer_slicer.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/loadstor.h>
    #include <botan/internal/mem_utils.h>

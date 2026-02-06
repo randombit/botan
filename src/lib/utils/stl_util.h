@@ -12,10 +12,7 @@
 
 #include <botan/assert.h>
 #include <botan/concepts.h>
-#include <botan/secmem.h>
 #include <botan/strong_type.h>
-
-#include <cstring>
 #include <functional>
 #include <optional>
 #include <span>
@@ -68,120 +65,6 @@ void map_remove_if(Pred pred, T& assoc) {
       }
    }
 }
-
-/**
- * Helper class to ease unmarshalling of concatenated fixed-length values
- */
-class BufferSlicer final {
-   public:
-      explicit BufferSlicer(std::span<const uint8_t> buffer) : m_remaining(buffer) {}
-
-      template <concepts::contiguous_container ContainerT>
-      auto copy(const size_t count) {
-         const auto result = take(count);
-         return ContainerT(result.begin(), result.end());
-      }
-
-      auto copy_as_vector(const size_t count) { return copy<std::vector<uint8_t>>(count); }
-
-      auto copy_as_secure_vector(const size_t count) { return copy<secure_vector<uint8_t>>(count); }
-
-      std::span<const uint8_t> take(const size_t count) {
-         BOTAN_STATE_CHECK(remaining() >= count);
-         auto result = m_remaining.first(count);
-         m_remaining = m_remaining.subspan(count);
-         return result;
-      }
-
-      template <size_t count>
-      std::span<const uint8_t, count> take() {
-         BOTAN_STATE_CHECK(remaining() >= count);
-         auto result = m_remaining.first<count>();
-         m_remaining = m_remaining.subspan(count);
-         return result;
-      }
-
-      template <concepts::contiguous_strong_type T>
-      StrongSpan<const T> take(const size_t count) {
-         return StrongSpan<const T>(take(count));
-      }
-
-      uint8_t take_byte() { return take(1)[0]; }
-
-      void copy_into(std::span<uint8_t> sink) {
-         const auto data = take(sink.size());
-         std::copy(data.begin(), data.end(), sink.begin());
-      }
-
-      void skip(const size_t count) { take(count); }
-
-      size_t remaining() const { return m_remaining.size(); }
-
-      bool empty() const { return m_remaining.empty(); }
-
-   private:
-      std::span<const uint8_t> m_remaining;
-};
-
-/**
- * @brief Helper class to ease in-place marshalling of concatenated fixed-length
- *        values.
- *
- * The size of the final buffer must be known from the start, reallocations are
- * not performed.
- */
-class BufferStuffer final {
-   public:
-      constexpr explicit BufferStuffer(std::span<uint8_t> buffer) : m_buffer(buffer) {}
-
-      /**
-       * @returns a span for the next @p bytes bytes in the concatenated buffer.
-       *          Checks that the buffer is not exceeded.
-       */
-      constexpr std::span<uint8_t> next(size_t bytes) {
-         BOTAN_STATE_CHECK(m_buffer.size() >= bytes);
-
-         auto result = m_buffer.first(bytes);
-         m_buffer = m_buffer.subspan(bytes);
-         return result;
-      }
-
-      template <size_t bytes>
-      constexpr std::span<uint8_t, bytes> next() {
-         BOTAN_STATE_CHECK(m_buffer.size() >= bytes);
-
-         auto result = m_buffer.first<bytes>();
-         m_buffer = m_buffer.subspan(bytes);
-         return result;
-      }
-
-      template <concepts::contiguous_strong_type StrongT>
-      StrongSpan<StrongT> next(size_t bytes) {
-         return StrongSpan<StrongT>(next(bytes));
-      }
-
-      /**
-       * @returns a reference to the next single byte in the buffer
-       */
-      constexpr uint8_t& next_byte() { return next(1)[0]; }
-
-      constexpr void append(std::span<const uint8_t> buffer) {
-         auto sink = next(buffer.size());
-         std::copy(buffer.begin(), buffer.end(), sink.begin());
-      }
-
-      constexpr void append(uint8_t b, size_t repeat = 1) {
-         auto sink = next(repeat);
-         std::fill(sink.begin(), sink.end(), b);
-      }
-
-      constexpr bool full() const { return m_buffer.empty(); }
-
-      constexpr size_t remaining_capacity() const { return m_buffer.size(); }
-
-   private:
-      std::span<uint8_t> m_buffer;
-};
 
 namespace detail {
 
@@ -333,23 +216,6 @@ struct overloaded : Ts... {
 // explicit deduction guide (not needed as of C++20)
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
-
-/*
- * @brief Helper class to pass literal strings to C++ templates
- */
-template <size_t N>
-class StringLiteral final {
-   public:
-      // NOLINTNEXTLINE(*-explicit-conversions)
-      consteval StringLiteral(const char (&str)[N]) : value() {
-         for(size_t i = 0; i != N; ++i) {
-            value[i] = str[i];
-         }
-      }
-
-      // NOLINTNEXTLINE(*non-private-member-variable*)
-      char value[N];
-};
 
 // TODO: C++23: replace with std::to_underlying
 template <typename T>

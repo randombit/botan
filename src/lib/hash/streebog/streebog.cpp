@@ -10,9 +10,9 @@
 
 #include <botan/exceptn.h>
 #include <botan/internal/bswap.h>
+#include <botan/internal/buffer_slicer.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/stl_util.h>
 #include <bit>
 
 namespace Botan {

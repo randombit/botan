@@ -16,6 +16,7 @@
 #include <botan/rng.h>
 #include <botan/tls_callbacks.h>
 #include <botan/x509_key.h>
+#include <botan/internal/buffer_slicer.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/stl_util.h>

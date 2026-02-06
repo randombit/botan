@@ -10,10 +10,10 @@
 
 #include <botan/internal/poly1305.h>
 
+#include <botan/internal/buffer_slicer.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/donna128.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/stl_util.h>
 
 #if defined(BOTAN_HAS_POLY1305_AVX2) || defined(BOTAN_HAS_POLY1305_AVX512)
    #include <botan/internal/cpuid.h>

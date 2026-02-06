@@ -13,11 +13,12 @@
 #include <botan/assert.h>
 #include <botan/sp_parameters.h>
 
+#include <botan/internal/buffer_slicer.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/sp_address.h>
 #include <botan/internal/sp_hash.h>
 #include <botan/internal/sp_treehash.h>
 #include <botan/internal/sp_types.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 

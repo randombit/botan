@@ -9,6 +9,7 @@
 #include <botan/bigint.h>
 #include <botan/exceptn.h>
 #include <botan/rng.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/mp_core.h>
@@ -16,7 +17,6 @@
 #include <botan/internal/pcurves_instance.h>
 #include <botan/internal/pcurves_mul.h>
 #include <botan/internal/primality.h>
-#include <botan/internal/stl_util.h>
 #include <algorithm>
 
 namespace Botan::PCurve {

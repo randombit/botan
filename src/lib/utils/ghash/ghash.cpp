@@ -11,7 +11,6 @@
 
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/stl_util.h>
 
 #if defined(BOTAN_HAS_CPUID)
    #include <botan/internal/cpuid.h>

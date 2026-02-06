@@ -10,9 +10,9 @@
 #include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/hash_id.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 

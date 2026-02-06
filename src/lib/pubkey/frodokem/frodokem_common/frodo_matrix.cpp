@@ -15,9 +15,13 @@
 #include <botan/assert.h>
 #include <botan/xof.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/frodo_constants.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/stl_util.h>
+#include <array>
+#include <span>
+#include <utility>
+#include <vector>
 
 #if defined(BOTAN_HAS_FRODOKEM_AES)
    #include <botan/internal/frodo_aes_generator.h>
@@ -26,11 +30,6 @@
 #if defined(BOTAN_HAS_FRODOKEM_SHAKE)
    #include <botan/internal/frodo_shake_generator.h>
 #endif
-
-#include <array>
-#include <span>
-#include <utility>
-#include <vector>
 
 namespace Botan {
 

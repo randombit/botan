@@ -19,6 +19,8 @@
 
 namespace Botan {
 
+class BufferSlicer;
+
 /**
  * @brief Enum of available LMS algorithm types.
  *
@@ -126,7 +128,7 @@ class LMS_Params final {
       /**
        * @brief Construct a new hash instance for the LMS instance.
        */
-      std::unique_ptr<HashFunction> hash() const { return HashFunction::create_or_throw(hash_name()); }
+      std::unique_ptr<HashFunction> hash() const;
 
    private:
       /**

@@ -14,6 +14,8 @@
 
 #include <botan/internal/kyber_algos.h>
 
+#include <botan/internal/buffer_slicer.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/kyber_helpers.h>
 #include <botan/internal/kyber_keys.h>
 #include <botan/internal/loadstor.h>

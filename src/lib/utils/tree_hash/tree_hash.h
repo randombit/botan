@@ -12,10 +12,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/strong_type.h>
-#include <botan/internal/stl_util.h>
-
-#include <cstdint>
-#include <functional>
+#include <botan/internal/buffer_slicer.h>
 #include <optional>
 #include <vector>
 

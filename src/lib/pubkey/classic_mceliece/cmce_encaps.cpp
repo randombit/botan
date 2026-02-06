@@ -8,9 +8,12 @@
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
+
 #include <botan/internal/cmce_encaps.h>
 
 #include <botan/rng.h>
+#include <botan/internal/buffer_slicer.h>
+#include <botan/internal/buffer_stuffer.h>
 
 namespace Botan {
 

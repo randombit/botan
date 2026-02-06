@@ -14,9 +14,7 @@
 #include <botan/dilithium.h>
 
 #include <botan/internal/dilithium_types.h>
-#include <botan/internal/fmt.h>
 #include <botan/internal/shake_xof.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -34,9 +32,7 @@ class DilithiumMessageHash /* NOLINT(*-special-member-functions) */ {
 
       virtual ~DilithiumMessageHash() = default;
 
-      std::string name() const {
-         return Botan::fmt("{}({})", m_shake.name(), DilithiumConstants::MESSAGE_HASH_BYTES * 8);
-      }
+      std::string name() const;
 
       virtual bool is_valid_user_context(std::span<const uint8_t> user_context) const {
          // Only ML-DSA supports user contexts, for all other modes it must be empty.

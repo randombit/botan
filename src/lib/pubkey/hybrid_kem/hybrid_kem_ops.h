@@ -13,7 +13,6 @@
 #include <botan/pk_algs.h>
 #include <botan/pubkey.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/internal/stl_util.h>
 
 #include <memory>
 #include <vector>

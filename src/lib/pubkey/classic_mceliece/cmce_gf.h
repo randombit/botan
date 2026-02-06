@@ -13,7 +13,6 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/cmce_types.h>
 #include <botan/internal/ct_utils.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 

@@ -8,6 +8,7 @@
 
 #include <botan/internal/tpm2_hash.h>
 
+#include <botan/internal/buffer_slicer.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tpm2_algo_mappings.h>

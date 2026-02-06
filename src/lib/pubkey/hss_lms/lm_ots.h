@@ -9,15 +9,18 @@
 #ifndef BOTAN_LM_OTS_H_
 #define BOTAN_LM_OTS_H_
 
-#include <botan/hash.h>
-#include <botan/internal/stl_util.h>
-
+#include <botan/secmem.h>
+#include <botan/strong_type.h>
+#include <memory>
 #include <span>
 #include <string>
 #include <string_view>
 #include <vector>
 
 namespace Botan {
+
+class BufferSlicer;
+class HashFunction;
 
 /**
  * @brief Seed of the LMS tree, used to generate the LM-OTS private keys.
@@ -152,7 +155,7 @@ class BOTAN_TEST_API LMOTS_Params final {
       /**
        * @brief Construct a new hash instance for the OTS instance.
        */
-      std::unique_ptr<HashFunction> hash() const { return HashFunction::create_or_throw(hash_name()); }
+      std::unique_ptr<HashFunction> hash() const;
 
    private:
       /**

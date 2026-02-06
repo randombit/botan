@@ -8,7 +8,11 @@
 
 #include <botan/internal/lms.h>
 
+#include <botan/hash.h>
+#include <botan/internal/buffer_slicer.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/stl_util.h>
 #include <botan/internal/tree_hash.h>
 
 namespace Botan {
@@ -107,6 +111,10 @@ void lms_treehash(StrongSpan<LMS_Tree_Node> out_root,
 }
 
 }  // namespace
+
+std::unique_ptr<HashFunction> LMS_Params::hash() const {
+   return HashFunction::create_or_throw(hash_name());
+}
 
 LMS_Params LMS_Params::create_or_throw(LMS_Algorithm_Type type) {
    auto [hash_name, height] = [](const LMS_Algorithm_Type& lms_type) -> std::pair<std::string_view, uint8_t> {

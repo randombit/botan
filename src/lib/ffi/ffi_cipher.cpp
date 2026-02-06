@@ -8,9 +8,10 @@
 
 #include <botan/aead.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/buffer_slicer.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ffi_util.h>
 #include <botan/internal/scoped_cleanup.h>
-#include <botan/internal/stl_util.h>
 
 #include <limits>
 

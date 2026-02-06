@@ -8,6 +8,8 @@
 
 #include <botan/tpm2_rng.h>
 
+#include <botan/internal/buffer_slicer.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tpm2_util.h>
 
