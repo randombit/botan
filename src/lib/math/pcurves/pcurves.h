@@ -8,7 +8,6 @@
 #define BOTAN_PCURVES_H_
 
 #include <botan/concepts.h>
-#include <botan/mem_ops.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <array>
@@ -72,7 +71,7 @@ class PrimeOrderCurve /* NOLINT(*-special-member-functions) */ {
             Scalar& operator=(Scalar&& other) = default;
             ~Scalar() = default;
 
-            void _zeroize() { secure_scrub_memory(m_value); }
+            void _zeroize();
 
             const auto& _curve() const { return m_curve; }
 

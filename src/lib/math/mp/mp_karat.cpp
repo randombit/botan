@@ -9,8 +9,8 @@
 #include <botan/internal/mp_core.h>
 
 #include <botan/exceptn.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/mem_utils.h>
 
 namespace Botan {
 
@@ -24,7 +24,7 @@ void basecase_mul(word z[], size_t z_size, const word x[], size_t x_size, const 
 
    const size_t x_size_8 = x_size - (x_size % 8);
 
-   clear_mem(z, z_size);
+   zeroize_buffer(z, z_size);
 
    for(size_t i = 0; i != y_size; ++i) {
       const word y_i = y[i];
@@ -50,7 +50,7 @@ void basecase_sqr(word z[], size_t z_size, const word x[], size_t x_size) {
 
    const size_t x_size_8 = x_size - (x_size % 8);
 
-   clear_mem(z, z_size);
+   zeroize_buffer(z, z_size);
 
    for(size_t i = 0; i != x_size; ++i) {
       const word x_i = x[i];
@@ -107,12 +107,12 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N, word work
    word* ws0 = workspace;
    word* ws1 = workspace + N;
 
-   clear_mem(workspace, 2 * N);
+   zeroize_buffer(workspace, 2 * N);
 
    /*
    * If either of cmp0 or cmp1 is zero then z0 or z1 resp is zero here,
    * resulting in a no-op - z0*z1 will be equal to zero so we don't need to do
-   * anything, clear_mem above already set the correct result.
+   * anything, zeroize_buffer above already set the correct result.
    *
    * However we ignore the result of the comparisons and always perform the
    * subtractions and recursively multiply to avoid the timing channel.
@@ -137,7 +137,7 @@ void karatsuba_mul(word z[], const word x[], const word y[], size_t N, word work
    z_carry += bigint_add2(z + N + N2, N2, &ws_carry, 1);
    bigint_add2(z + N + N2, N2, &z_carry, 1);
 
-   clear_mem(workspace + N, N2);
+   zeroize_buffer(workspace + N, N2);
 
    bigint_cnd_add(neg_mask.value(), z + N2, workspace, 2 * N - N2);
    bigint_cnd_sub((~neg_mask).value(), z + N2, workspace, 2 * N - N2);
@@ -174,7 +174,7 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[]) {
    word* ws0 = workspace;
    word* ws1 = workspace + N;
 
-   clear_mem(workspace, 2 * N);
+   zeroize_buffer(workspace, 2 * N);
 
    // See comment in karatsuba_mul
    bigint_sub_abs(z0, x0, x1, N2, workspace);
@@ -290,7 +290,7 @@ void bigint_mul(word z[],
                 size_t y_sw,
                 word workspace[],
                 size_t ws_size) {
-   clear_mem(z, z_size);
+   zeroize_buffer(z, z_size);
 
    if(x_sw == 1) {
       bigint_linmul3(z, y, y_sw, x[0]);
@@ -325,7 +325,7 @@ void bigint_mul(word z[],
 * Squaring Algorithm Dispatcher
 */
 void bigint_sqr(word z[], size_t z_size, const word x[], size_t x_size, size_t x_sw, word workspace[], size_t ws_size) {
-   clear_mem(z, z_size);
+   zeroize_buffer(z, z_size);
 
    BOTAN_ASSERT(z_size / 2 >= x_sw, "Output size is sufficient");
 

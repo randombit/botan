@@ -8,6 +8,7 @@
 #define BOTAN_MEM_UTILS_H_
 
 #include <botan/types.h>
+#include <concepts>
 #include <cstring>
 #include <span>
 #include <string>
@@ -32,10 +33,17 @@ BOTAN_TEST_API void secure_zeroize_buffer(void* ptr, size_t n);
  * @param ptr a pointer to memory to zero
  * @param bytes the number of bytes to zero in ptr
  */
-template <typename T>
-inline constexpr void zeroize_buffer(T ptr[], size_t n) {
+template <std::unsigned_integral T>
+inline void zeroize_buffer(T ptr[], size_t n) {
    if(n > 0) {
       std::memset(ptr, 0, sizeof(T) * n);
+   }
+}
+
+template <std::unsigned_integral T>
+inline void unchecked_copy_memory(T* out, const T* in, size_t n) {
+   if(in != nullptr && out != nullptr && n > 0) {
+      std::memmove(out, in, sizeof(T) * n);
    }
 }
 

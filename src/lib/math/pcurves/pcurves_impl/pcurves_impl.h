@@ -11,6 +11,7 @@
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/pcurves_algos.h>
 #include <botan/internal/pcurves_mul.h>
 #include <botan/internal/pcurves_util.h>
@@ -1373,7 +1374,7 @@ class BlindedScalarBits final {
       }
 
       ~BlindedScalarBits() {
-         secure_scrub_memory(m_bytes.data(), m_bytes.size());
+         secure_zeroize_buffer(m_bytes.data(), m_bytes.size());
          CT::unpoison(m_bytes.data(), m_bytes.size());
       }
 

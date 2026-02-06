@@ -6,6 +6,7 @@
 
 #include <botan/internal/barrett.h>
 
+#include <botan/mem_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/mp_core.h>

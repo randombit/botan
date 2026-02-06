@@ -114,7 +114,7 @@ BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>&
    // Conditionally add back the modulus
    bigint_cnd_add(borrow, ws.data(), mod._data(), mod_sw);
 
-   copy_mem(mutable_data(), ws.data(), mod_sw);
+   unchecked_copy_memory(mutable_data(), ws.data(), mod_sw);
 
    return (*this);
 }
