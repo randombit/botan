@@ -4,8 +4,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/mem_ops.h>
+#include <botan/internal/mem_utils.h>
 
+#include <botan/mem_ops.h>
 #include <botan/internal/target_info.h>
 #include <cstring>
 
@@ -22,6 +23,10 @@
 namespace Botan {
 
 void secure_scrub_memory(void* ptr, size_t n) {
+   return secure_zeroize_buffer(ptr, n);
+}
+
+void secure_zeroize_buffer(void* ptr, size_t n) {
 #if defined(BOTAN_TARGET_OS_HAS_RTLSECUREZEROMEMORY)
    ::RtlSecureZeroMemory(ptr, n);
 

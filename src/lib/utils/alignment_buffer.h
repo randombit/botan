@@ -9,10 +9,8 @@
 #ifndef BOTAN_ALIGNMENT_BUFFER_H_
 #define BOTAN_ALIGNMENT_BUFFER_H_
 
-#include <botan/concepts.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/buffer_slicer.h>
-
+#include <botan/internal/mem_utils.h>
 #include <array>
 #include <optional>
 #include <span>
@@ -62,7 +60,7 @@ class AlignmentBuffer {
    public:
       AlignmentBuffer() = default;
 
-      ~AlignmentBuffer() { secure_scrub_memory(m_buffer.data(), m_buffer.size()); }
+      ~AlignmentBuffer() { secure_zeroize_buffer(m_buffer.data(), sizeof(T) * m_buffer.size()); }
 
       AlignmentBuffer(const AlignmentBuffer& other) = default;
       AlignmentBuffer(AlignmentBuffer&& other) noexcept = default;
@@ -70,7 +68,7 @@ class AlignmentBuffer {
       AlignmentBuffer& operator=(AlignmentBuffer&& other) noexcept = default;
 
       void clear() {
-         clear_mem(m_buffer.data(), m_buffer.size());
+         zeroize_buffer(m_buffer.data(), m_buffer.size());
          m_position = 0;
       }
 
@@ -79,7 +77,7 @@ class AlignmentBuffer {
        */
       void fill_up_with_zeros() {
          if(!ready_to_consume()) {
-            clear_mem(&m_buffer[m_position], elements_until_alignment());
+            zeroize_buffer(&m_buffer[m_position], elements_until_alignment());
             m_position = m_buffer.size();
          }
       }

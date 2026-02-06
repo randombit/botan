@@ -7,7 +7,7 @@
 #ifndef BOTAN_MEM_UTILS_H_
 #define BOTAN_MEM_UTILS_H_
 
-#include <cstdint>
+#include <botan/types.h>
 #include <cstring>
 #include <span>
 #include <string>
@@ -15,6 +15,29 @@
 #include <type_traits>
 
 namespace Botan {
+
+/**
+* Zeroize memory contents in a way that a compiler should not elide,
+* using some system specific technique.
+*
+* Use this function to scrub memory just before deallocating it, or on
+* a stack buffer before returning from the function.
+*
+* @param ptr a pointer to memory to scrub
+* @param n the number of bytes pointed to by ptr
+*/
+BOTAN_TEST_API void secure_zeroize_buffer(void* ptr, size_t n);
+
+/**
+ * @param ptr a pointer to memory to zero
+ * @param bytes the number of bytes to zero in ptr
+ */
+template <typename T>
+inline constexpr void zeroize_buffer(T ptr[], size_t n) {
+   if(n > 0) {
+      std::memset(ptr, 0, sizeof(T) * n);
+   }
+}
 
 /**
 * Return true if any of the provided arguments are null

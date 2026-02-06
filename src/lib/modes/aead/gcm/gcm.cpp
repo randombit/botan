@@ -10,6 +10,7 @@
 
 #include <botan/block_cipher.h>
 #include <botan/exceptn.h>
+#include <botan/mem_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/ctr.h>
 #include <botan/internal/fmt.h>
