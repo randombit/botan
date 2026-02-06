@@ -51,8 +51,6 @@ class Session_with_Handle;
 class Session;
 class Policy;
 
-std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng, Callbacks& cb, const Policy& policy);
-
 /**
 * DTLS Hello Verify Request
 */
@@ -150,73 +148,20 @@ class BOTAN_UNSTABLE_API Client_Hello : public Handshake_Message {
       std::unique_ptr<Client_Hello_Internal> m_data;  // NOLINT(*non-private-member-variable*)
 };
 
-class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello {
+/**
+ * Basic implementation of Client_Hello from TLS 1.2. The full implementation
+ * is in Client_Hello_12 in the tls12 module. This is meant to be used by the
+ * TLS 1.3 implementation to parse, validate and understand a downgrade request.
+ */
+class BOTAN_UNSTABLE_API Client_Hello_12_Shim : public Client_Hello {
    public:
-      class Settings final {
-         public:
-            explicit Settings(const Protocol_Version version, std::string_view hostname = "") :
-                  m_new_session_version(version), m_hostname(hostname) {}
-
-            Protocol_Version protocol_version() const { return m_new_session_version; }
-
-            const std::string& hostname() const { return m_hostname; }
-
-         private:
-            const Protocol_Version m_new_session_version;
-            const std::string m_hostname;
-      };
-
-   public:
-      explicit Client_Hello_12(const std::vector<uint8_t>& buf);
-
-      Client_Hello_12(Handshake_IO& io,
-                      Handshake_Hash& hash,
-                      const Policy& policy,
-                      Callbacks& cb,
-                      RandomNumberGenerator& rng,
-                      const std::vector<uint8_t>& reneg_info,
-                      const Settings& client_settings,
-                      const std::vector<std::string>& next_protocols);
-
-      Client_Hello_12(Handshake_IO& io,
-                      Handshake_Hash& hash,
-                      const Policy& policy,
-                      Callbacks& cb,
-                      RandomNumberGenerator& rng,
-                      const std::vector<uint8_t>& reneg_info,
-                      const Session_with_Handle& session_and_handle,
-                      const std::vector<std::string>& next_protocols);
+      explicit Client_Hello_12_Shim(const std::vector<uint8_t>& buf);
 
    protected:
+      using Client_Hello::Client_Hello;
+
       friend class Client_Hello_13;  // to allow construction by Client_Hello_13::parse()
-      explicit Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data);
-
-   public:
-      using Client_Hello::compression_methods;
-      using Client_Hello::random;
-
-      bool prefers_compressed_ec_points() const;
-
-      bool secure_renegotiation() const;
-
-      std::vector<uint8_t> renegotiation_info() const;
-
-      bool supports_session_ticket() const;
-
-      Session_Ticket session_ticket() const;
-
-      std::optional<Session_Handle> session_handle() const;
-
-      bool supports_extended_master_secret() const;
-
-      bool supports_cert_status_message() const;
-
-      bool supports_encrypt_then_mac() const;
-
-      void update_hello_cookie(const Hello_Verify_Request& hello_verify);
-
-   private:
-      void add_tls12_supported_groups_extensions(const Policy& policy);
+      explicit Client_Hello_12_Shim(std::unique_ptr<Client_Hello_Internal> data);
 };
 
 class Server_Hello_Internal;

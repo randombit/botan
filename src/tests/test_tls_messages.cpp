@@ -420,8 +420,8 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
             try {
                std::visit(
                   [&](auto ch) {
-                     if constexpr(std::is_same_v<Botan::TLS::Client_Hello_12, decltype(ch)>) {
-                        result.test_is_true("expected Client_Hello_12", msg_type == "client_hello_12");
+                     if constexpr(std::is_same_v<Botan::TLS::Client_Hello_12_Shim, decltype(ch)>) {
+                        result.test_is_true("expected Client_Hello_12_Shim", msg_type == "client_hello_12");
                      }
                      if constexpr(std::is_same_v<Botan::TLS::Client_Hello_13, decltype(ch)>) {
                         result.test_is_true("expected Client_Hello_13", msg_type == "client_hello_13");

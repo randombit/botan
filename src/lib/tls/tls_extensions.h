@@ -138,6 +138,8 @@ class BOTAN_UNSTABLE_API Server_Name_Indicator final : public Extension {
 
       bool empty() const override { return false; }
 
+      static bool hostname_acceptable_for_sni(std::string_view hostname);
+
    private:
       std::string m_sni_host_name;
 };

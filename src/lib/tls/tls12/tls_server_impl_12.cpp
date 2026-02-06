@@ -17,6 +17,7 @@
 #include <botan/tls_version.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_handshake_state.h>
+#include <botan/internal/tls_messages_internal.h>
 
 namespace Botan::TLS {
 

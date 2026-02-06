@@ -32,7 +32,7 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello {
                       std::optional<Session_with_Handle>& session,
                       std::vector<ExternalPSK> psks);
 
-      static std::variant<Client_Hello_13, Client_Hello_12> parse(const std::vector<uint8_t>& buf);
+      static std::variant<Client_Hello_13, Client_Hello_12_Shim> parse(const std::vector<uint8_t>& buf);
 
       void retry(const Hello_Retry_Request& hrr,
                  const Transcript_Hash_State& transcript_hash_state,
@@ -411,7 +411,7 @@ using as_wrapped_references_t = typename as_wrapped_references<T>::type;
 
 // Handshake message types from RFC 8446 4.
 using Handshake_Message_13 = std::variant<Client_Hello_13,
-                                          Client_Hello_12,
+                                          Client_Hello_12_Shim,
                                           Server_Hello_13,
                                           Server_Hello_12_Shim,
                                           Hello_Retry_Request,
@@ -441,11 +441,12 @@ using Server_Handshake_13_Message = std::variant<Server_Hello_13,
                                                  Finished_13>;
 using Server_Handshake_13_Message_Ref = detail::as_wrapped_references_t<Server_Handshake_13_Message>;
 
-using Client_Handshake_13_Message = std::variant<Client_Hello_13,
-                                                 Client_Hello_12,  // indicates a TLS peer that does not offer TLS 1.3
-                                                 Certificate_13,
-                                                 Certificate_Verify_13,
-                                                 Finished_13>;
+using Client_Handshake_13_Message =
+   std::variant<Client_Hello_13,
+                Client_Hello_12_Shim,  // indicates a TLS peer that does not offer TLS 1.3
+                Certificate_13,
+                Certificate_Verify_13,
+                Finished_13>;
 using Client_Handshake_13_Message_Ref = detail::as_wrapped_references_t<Client_Handshake_13_Message>;
 
 }  // namespace Botan::TLS
