@@ -5,12 +5,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/tls_messages_12.h>
+#include <botan/tls_messages.h>
 
-#include <botan/ocsp.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/tls_handshake_hash.h>
-#include <botan/internal/tls_handshake_io.h>
 
 namespace Botan::TLS {
 
@@ -31,18 +28,6 @@ Certificate_Status::Certificate_Status(const std::vector<uint8_t>& buf, const Co
    }
 
    m_response.assign(buf.begin() + 4, buf.end());
-}
-
-Certificate_Status::Certificate_Status(Handshake_IO& io, Handshake_Hash& hash, const OCSP::Response& ocsp) :
-      m_response(ocsp.raw_bits()) {
-   hash.update(io.send(*this));
-}
-
-Certificate_Status::Certificate_Status(Handshake_IO& io,
-                                       Handshake_Hash& hash,
-                                       std::vector<uint8_t> raw_response_bytes) :
-      Certificate_Status(std::move(raw_response_bytes)) {
-   hash.update(io.send(*this));
 }
 
 Certificate_Status::Certificate_Status(std::vector<uint8_t> raw_response_bytes) :
