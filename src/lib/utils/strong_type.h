@@ -10,12 +10,45 @@
 #define BOTAN_STRONG_TYPE_H_
 
 #include <botan/concepts.h>
-
 #include <iosfwd>
 #include <span>
 #include <string>
 
 namespace Botan {
+
+template <typename T, typename Tag, typename... Capabilities>
+class Strong;
+
+template <typename... Ts>
+struct is_strong_type : std::false_type {};
+
+template <typename... Ts>
+struct is_strong_type<Strong<Ts...>> : std::true_type {};
+
+template <typename... Ts>
+constexpr bool is_strong_type_v = is_strong_type<std::remove_const_t<Ts>...>::value;
+
+namespace concepts {
+
+template <typename T>
+concept streamable = requires(std::ostream& os, T a) { os << a; };
+
+template <class T>
+concept strong_type = is_strong_type_v<T>;
+
+template <class T>
+concept contiguous_strong_type = strong_type<T> && contiguous_container<T>;
+
+template <class T>
+concept integral_strong_type = strong_type<T> && std::integral<typename T::wrapped_type>;
+
+template <class T>
+concept unsigned_integral_strong_type = strong_type<T> && std::unsigned_integral<typename T::wrapped_type>;
+
+template <typename T, typename Capability>
+concept strong_type_with_capability = T::template has_capability<Capability>();
+
+}  // namespace concepts
 
 /**
  * Added as an additional "capability tag" to enable arithmetic operators with
@@ -133,20 +166,6 @@ class Container_Strong_Adapter_Base : public Strong_Base<T> {
       template <typename U>
       decltype(auto) operator[](U&& i) noexcept(noexcept(this->get().operator[](i))) {
          return this->get()[std::forward<U>(i)];
-      }
-
-      template <typename U>
-      decltype(auto) at(U&& i) const noexcept(noexcept(this->get().at(i)))
-         requires(concepts::has_bounds_checked_accessors<T>)
-      {
-         return this->get().at(std::forward<U>(i));
-      }
-
-      template <typename U>
-      decltype(auto) at(U&& i) noexcept(noexcept(this->get().at(i)))
-         requires(concepts::has_bounds_checked_accessors<T>)
-      {
-         return this->get().at(std::forward<U>(i));
       }
 };
 

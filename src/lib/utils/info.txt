@@ -6,9 +6,9 @@ brief -> "Various utility functions and types"
 load_on always
 
 <header:public>
+allocator.h
 api.h
 assert.h
-allocator.h
 compiler.h
 concepts.h
 data_src.h
@@ -16,8 +16,10 @@ database.h
 exceptn.h
 mem_ops.h
 mutex.h
-types.h
+# TODO(Botan4) move this to internal
+range_concepts.h
 strong_type.h
+types.h
 version.h
 </header:public>
 

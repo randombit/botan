@@ -20,6 +20,7 @@
    #include <botan/x509path.h>
    #include <botan/x509self.h>
    #include <botan/internal/calendar.h>
+   #include <algorithm>
 
    #if defined(BOTAN_HAS_ECC_GROUP)
       #include <botan/ec_group.h>
