@@ -8,6 +8,7 @@
 
 #include <botan/internal/tls_server_impl_12.h>
 
+#include <botan/certstor.h>
 #include <botan/ocsp.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_magic.h>
@@ -593,11 +594,11 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
                                                    !pending_state.server_hello()->supports_session_ticket());
 
          if(pending_state.server_hello()->supports_session_ticket() && handle.has_value() && handle->is_ticket()) {
-            pending_state.new_session_ticket(
-               std::make_unique<New_Session_Ticket_12>(pending_state.handshake_io(),
-                                                       pending_state.hash(),
-                                                       handle->ticket().value(),
-                                                       policy().session_ticket_lifetime()));
+            pending_state.new_session_ticket(std::make_unique<New_Session_Ticket_12>(
+               pending_state.handshake_io(),
+               pending_state.hash(),
+               handle->ticket().value(),
+               static_cast<uint32_t>(policy().session_ticket_lifetime().count())));
          }
       }
 
@@ -719,10 +720,9 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state, const
 
    if(pending_state.server_hello()->supports_session_ticket()) {
       if(new_handle.has_value() && new_handle->is_ticket()) {
-         pending_state.new_session_ticket(std::make_unique<New_Session_Ticket_12>(pending_state.handshake_io(),
-                                                                                  pending_state.hash(),
-                                                                                  new_handle->ticket().value(),
-                                                                                  policy().session_ticket_lifetime()));
+         const uint32_t lifetime = static_cast<uint32_t>(policy().session_ticket_lifetime().count());
+         pending_state.new_session_ticket(std::make_unique<New_Session_Ticket_12>(
+            pending_state.handshake_io(), pending_state.hash(), new_handle->ticket().value(), lifetime));
       } else {
          pending_state.new_session_ticket(
             std::make_unique<New_Session_Ticket_12>(pending_state.handshake_io(), pending_state.hash()));

@@ -11,6 +11,7 @@
 #include <botan/hex.h>
 #include <botan/pwdhash.h>
 #include <botan/rng.h>
+#include <botan/tls_session.h>
 #include <botan/internal/loadstor.h>
 #include <chrono>
 

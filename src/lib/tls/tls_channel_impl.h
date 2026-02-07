@@ -14,9 +14,9 @@
 #include <botan/assert.h>
 #include <botan/tls_channel.h>
 #include <botan/tls_magic.h>
+#include <botan/tls_session.h>  // TODO remove this dep
 #include <botan/tls_session_manager.h>
 #include <botan/tls_version.h>
-
 #include <memory>
 #include <utility>
 #include <vector>

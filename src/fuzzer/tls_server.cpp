@@ -10,9 +10,13 @@
 #include <botan/hex.h>
 #include <botan/pkcs8.h>
 #include <botan/tls_callbacks.h>
+#include <botan/tls_ciphersuite.h>
+#include <botan/tls_external_psk.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_server.h>
+#include <botan/tls_server_info.h>
 #include <botan/tls_session_manager_noop.h>
+#include <botan/x509cert.h>
 
 #include <memory>
 

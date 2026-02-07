@@ -8,6 +8,8 @@
 #include <botan/credentials_manager.h>
 
 #include <botan/pkix_types.h>
+#include <botan/tls_external_psk.h>
+#include <botan/x509cert.h>
 #include <botan/internal/fmt.h>
 
 namespace Botan {

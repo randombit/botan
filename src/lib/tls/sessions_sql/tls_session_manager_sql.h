@@ -9,6 +9,7 @@
 #define BOTAN_TLS_SQL_SESSION_MANAGER_H_
 
 #include <botan/database.h>
+#include <botan/symkey.h>
 #include <botan/tls_session_manager.h>
 
 namespace Botan {

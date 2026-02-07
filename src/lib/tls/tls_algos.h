@@ -275,6 +275,12 @@ inline bool key_exchange_is_psk(Kex_Algo m) {
    return (m == Kex_Algo::PSK || m == Kex_Algo::ECDHE_PSK || m == Kex_Algo::DHE_PSK);
 }
 
+// As defined in RFC 8446 4.4.2
+enum class Certificate_Type : uint8_t { X509 = 0, RawPublicKey = 2 };
+
+std::string certificate_type_to_string(Certificate_Type type);
+Certificate_Type certificate_type_from_string(const std::string& type_str);
+
 }  // namespace Botan::TLS
 
 #endif

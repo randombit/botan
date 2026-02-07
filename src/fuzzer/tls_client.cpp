@@ -8,7 +8,9 @@
 
 #include <botan/hex.h>
 #include <botan/tls_callbacks.h>
+#include <botan/tls_ciphersuite.h>
 #include <botan/tls_client.h>
+#include <botan/tls_external_psk.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_session_manager_noop.h>
 

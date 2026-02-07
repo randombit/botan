@@ -9,10 +9,12 @@
 #define BOTAN_CLI_TLS_HELPERS_H_
 
 #include <botan/assert.h>
+#include <botan/certstor.h>
 #include <botan/credentials_manager.h>
 #include <botan/data_src.h>
 #include <botan/hex.h>
 #include <botan/pkcs8.h>
+#include <botan/tls_external_psk.h>
 #include <botan/tls_policy.h>
 #include <botan/x509_key.h>
 #include <botan/x509self.h>

@@ -12,11 +12,14 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_extensions.h>
 #include <botan/tls_policy.h>
+#include <botan/x509cert.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>
 
 namespace Botan::TLS {
+
+Certificate_12::~Certificate_12() = default;
 
 /**
 * Create a new Certificate message
@@ -97,6 +100,10 @@ std::vector<uint8_t> Certificate_12::serialize() const {
    }
 
    return buf;
+}
+
+size_t Certificate_12::count() const {
+   return m_certs.size();
 }
 
 }  // namespace Botan::TLS
