@@ -8,6 +8,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_XOF)
+   #include <botan/exceptn.h>
    #include <botan/rng.h>
    #include <botan/xof.h>
    #include <botan/internal/fmt.h>
