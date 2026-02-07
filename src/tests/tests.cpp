@@ -8,6 +8,7 @@
 
 #include <botan/hex.h>
 #include <botan/rng.h>
+#include <botan/symkey.h>
 #include <botan/internal/filesystem.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>

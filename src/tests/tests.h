@@ -15,7 +15,6 @@ Each include is parsed for every test file which can get quite expensive
 */
 
 #include <botan/assert.h>
-#include <botan/symkey.h>
 #include <botan/types.h>
 #include <functional>
 #include <iosfwd>
@@ -31,6 +30,7 @@ Each include is parsed for every test file which can get quite expensive
 namespace Botan {
 
 class RandomNumberGenerator;
+class OctetString;
 
 #if defined(BOTAN_HAS_BIGINT)
 class BigInt;
