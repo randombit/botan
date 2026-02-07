@@ -20,9 +20,9 @@ Each include is parsed for every test file which can get quite expensive
 #include <iosfwd>
 #include <memory>
 #include <optional>
-#include <stdexcept>
 #include <span>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <variant>
 #include <vector>
