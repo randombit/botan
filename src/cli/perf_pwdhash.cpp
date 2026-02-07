@@ -8,6 +8,8 @@
 
 #if defined(BOTAN_HAS_PASSWORD_HASHING)
    #include <botan/pwdhash.h>
+   #include <botan/rng.h>
+   #include <botan/internal/fmt.h>
    #include <cstring>
 #endif
 

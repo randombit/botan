@@ -10,6 +10,7 @@
    #include <botan/assert.h>
    #include <botan/pk_algs.h>
    #include <botan/pkcs8.h>
+   #include <botan/rng.h>
    #include <botan/x509_key.h>
    #include <botan/internal/fmt.h>
 #endif

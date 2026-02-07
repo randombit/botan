@@ -10,6 +10,8 @@
 // Always available:
 #include <botan/assert.h>
 #include <botan/hex.h>
+#include <botan/rng.h>
+#include <botan/internal/fmt.h>
 
 #if defined(BOTAN_HAS_BASE32_CODEC)
    #include <botan/base32.h>

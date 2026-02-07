@@ -7,15 +7,20 @@
 #ifndef BOTAN_CLI_PERF_H_
 #define BOTAN_CLI_PERF_H_
 
-#include <botan/rng.h>
-#include <botan/internal/fmt.h>
 #include <functional>
 #include <iosfwd>
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "timer.h"
+
+namespace Botan {
+
+class RandomNumberGenerator;
+
+}
 
 namespace Botan_CLI {
 

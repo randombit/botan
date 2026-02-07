@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
    #include <botan/pk_algs.h>
    #include <botan/pubkey.h>
+   #include <botan/internal/fmt.h>
 #endif
 
 namespace Botan_CLI {

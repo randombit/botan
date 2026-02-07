@@ -5,6 +5,7 @@
 */
 
 #include "perf.h"
+
 #include "cli_exceptions.h"
 #include <map>
 
@@ -45,7 +46,7 @@ std::string PerfTest::format_name(const std::string& alg, const std::string& par
    if(param.starts_with(alg)) {
       return param;
    }
-   return Botan::fmt("{}-{}", alg, param);
+   return alg + "-" + param;
 }
 
 }  // namespace Botan_CLI
