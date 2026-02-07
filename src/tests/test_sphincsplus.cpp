@@ -5,7 +5,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "test_rng.h"
 #include "tests.h"
 
 #if defined(BOTAN_HAS_SPHINCS_PLUS_COMMON) && defined(BOTAN_HAS_AES)
@@ -19,6 +18,7 @@
    #include <algorithm>
 
    #include "test_pubkey.h"
+   #include "test_rng.h"
 
 namespace Botan_Tests {
 

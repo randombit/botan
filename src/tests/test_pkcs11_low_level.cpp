@@ -6,19 +6,18 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "test_pkcs11.h"
 #include "tests.h"
 
-#include <array>
-#include <functional>
-#include <map>
-#include <memory>
-#include <string>
-#include <vector>
-
 #if defined(BOTAN_HAS_PKCS11)
+   #include "test_pkcs11.h"
    #include <botan/p11.h>
    #include <botan/internal/dyn_load.h>
+   #include <array>
+   #include <functional>
+   #include <map>
+   #include <memory>
+   #include <string>
+   #include <vector>
 #endif
 
 namespace Botan_Tests {

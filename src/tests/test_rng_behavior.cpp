@@ -5,9 +5,11 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "test_rng.h"
 #include "tests.h"
 
+#include "test_rng.h"
+
+#include <botan/exceptn.h>
 #include <botan/internal/target_info.h>
 #include <cstring>
 

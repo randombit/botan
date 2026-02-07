@@ -10,6 +10,7 @@
 #if defined(BOTAN_HAS_NUMBERTHEORY)
    #include "test_rng.h"
    #include <botan/bigint.h>
+   #include <botan/exceptn.h>
    #include <botan/numthry.h>
    #include <botan/internal/barrett.h>
    #include <botan/internal/ct_utils.h>

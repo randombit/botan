@@ -9,7 +9,6 @@
 #define BOTAN_TESTS_RNGS_FOR_TESTING_H_
 
 #include "tests.h"
-#include <botan/exceptn.h>
 #include <botan/hex.h>
 #include <botan/rng.h>
 #include <deque>

@@ -9,12 +9,11 @@
 
 #include "tests.h"
 
-#include <string>
-#include <vector>
-
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
 
    #include <botan/pk_keys.h>
+   #include <string>
+   #include <vector>
 
 namespace Botan {
 

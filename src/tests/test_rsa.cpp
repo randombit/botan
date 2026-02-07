@@ -4,11 +4,11 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "test_rng.h"
 #include "tests.h"
 
 #if defined(BOTAN_HAS_RSA)
    #include "test_pubkey.h"
+   #include "test_rng.h"
    #include <botan/pubkey.h>
    #include <botan/rsa.h>
    #include <botan/internal/blinding.h>
