@@ -14,7 +14,8 @@ namespace Botan {
 
 namespace {
 
-BOTAN_FORCE_INLINE void keyxor(SIMD_8x32 K, SIMD_8x32& B0, SIMD_8x32& B1, SIMD_8x32& B2, SIMD_8x32& B3) {
+BOTAN_FORCE_INLINE void BOTAN_FN_ISA_AVX2_VAES
+keyxor(SIMD_8x32 K, SIMD_8x32& B0, SIMD_8x32& B1, SIMD_8x32& B2, SIMD_8x32& B3) {
    B0 ^= K;
    B1 ^= K;
    B2 ^= K;
