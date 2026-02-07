@@ -10,9 +10,7 @@
 #ifndef BOTAN_TLS_POLICY_H_
 #define BOTAN_TLS_POLICY_H_
 
-#include <botan/tls_ciphersuite.h>
-#include <botan/tls_extensions.h>
-#include <botan/tls_signature_scheme.h>
+#include <botan/tls_algos.h>
 #include <botan/tls_version.h>
 #include <chrono>
 #include <map>
@@ -24,6 +22,9 @@ namespace Botan {
 class Public_Key;
 
 namespace TLS {
+
+class Ciphersuite;
+class Signature_Scheme;
 
 /**
 * TLS Policy Base Class

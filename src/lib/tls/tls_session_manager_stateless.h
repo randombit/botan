@@ -15,6 +15,8 @@ namespace Botan {
 
 class RandomNumberGenerator;
 class Credentials_Manager;
+class OctetString;
+typedef OctetString SymmetricKey;
 
 namespace TLS {
 
@@ -54,10 +56,8 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_Stateless : public Session_Manager 
    protected:
       std::optional<Session> retrieve_one(const Session_Handle& handle) override;
 
-      std::vector<Session_with_Handle> find_some(const Server_Information& /*info*/,
-                                                 size_t /*max_sessions_hint*/) override {
-         return {};
-      }
+      // Returns empty by default
+      std::vector<Session_with_Handle> find_some(const Server_Information& info, size_t max_sessions_hint) override;
 
    private:
       std::optional<SymmetricKey> get_ticket_key() noexcept;

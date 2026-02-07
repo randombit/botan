@@ -9,10 +9,10 @@
 #ifndef BOTAN_TLS_13_TICKET_H_
 #define BOTAN_TLS_13_TICKET_H_
 
+#include <botan/strong_type.h>
 #include <botan/tls_external_psk.h>
-#include <botan/tls_session.h>
+#include <botan/tls_session.h>  // TODO remove this dep
 #include <botan/types.h>
-
 #include <chrono>
 #include <vector>
 

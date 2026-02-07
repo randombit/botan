@@ -7,7 +7,9 @@
 
 #include <botan/tls_messages_13.h>
 
+#include <botan/certstor.h>
 #include <botan/credentials_manager.h>
+#include <botan/pkix_types.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
@@ -65,7 +67,7 @@ Certificate_Request_13::Certificate_Request_13(const std::vector<uint8_t>& buf, 
    }
 }
 
-Certificate_Request_13::Certificate_Request_13(std::vector<X509_DN> acceptable_CAs,
+Certificate_Request_13::Certificate_Request_13(const std::vector<X509_DN>& acceptable_CAs,
                                                const Policy& policy,
                                                Callbacks& callbacks) {
    // RFC 8446 4.3.2
@@ -94,7 +96,7 @@ Certificate_Request_13::Certificate_Request_13(std::vector<X509_DN> acceptable_C
    }
 
    if(!acceptable_CAs.empty()) {
-      m_extensions.add(std::make_unique<Certificate_Authorities>(std::move(acceptable_CAs)));
+      m_extensions.add(std::make_unique<Certificate_Authorities>(acceptable_CAs));
    }
 
    // TODO: Support cert_status_request for OCSP stapling
@@ -118,7 +120,7 @@ std::optional<Certificate_Request_13> Certificate_Request_13::maybe_create(const
       return std::nullopt;
    }
 
-   return Certificate_Request_13(std::move(client_auth_CAs), policy, callbacks);
+   return Certificate_Request_13(client_auth_CAs, policy, callbacks);
 }
 
 std::vector<X509_DN> Certificate_Request_13::acceptable_CAs() const {

@@ -9,8 +9,7 @@
 #include <botan/tls_session_manager_hybrid.h>
 
 #include <botan/assert.h>
-#include <botan/rng.h>
-
+#include <botan/tls_session.h>
 #include <functional>
 
 namespace Botan::TLS {
@@ -24,6 +23,12 @@ Session_Manager_Hybrid::Session_Manager_Hybrid(std::unique_ptr<Session_Manager> 
       m_stateless(credentials_manager, rng),
       m_prefer_tickets(prefer_tickets) {
    BOTAN_ASSERT_NONNULL(m_stateful);
+}
+
+std::vector<Session_with_Handle> Session_Manager_Hybrid::find(const Server_Information& info,
+                                                              Callbacks& callbacks,
+                                                              const Policy& policy) {
+   return m_stateful->find(info, callbacks, policy);
 }
 
 std::optional<Session_Handle> Session_Manager_Hybrid::establish(const Session& session,

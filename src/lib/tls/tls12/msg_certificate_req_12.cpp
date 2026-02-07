@@ -10,7 +10,9 @@
 #include <botan/tls_messages_12.h>
 
 #include <botan/ber_dec.h>
+#include <botan/certstor.h>
 #include <botan/der_enc.h>
+#include <botan/pkix_types.h>
 #include <botan/tls_extensions.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/fmt.h>
@@ -19,6 +21,8 @@
 #include <botan/internal/tls_reader.h>
 
 namespace Botan::TLS {
+
+Certificate_Request_12::~Certificate_Request_12() = default;
 
 Handshake_Type Certificate_Request_12::type() const {
    return Handshake_Type::CertificateRequest;

@@ -64,9 +64,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_Hybrid final : public Session_Manag
 
       std::vector<Session_with_Handle> find(const Server_Information& info,
                                             Callbacks& callbacks,
-                                            const Policy& policy) override {
-         return m_stateful->find(info, callbacks, policy);
-      }
+                                            const Policy& policy) override;
 
       void store(const Session& session, const Session_Handle& handle) override { m_stateful->store(session, handle); }
 

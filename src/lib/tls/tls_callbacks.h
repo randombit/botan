@@ -12,11 +12,11 @@
 #define BOTAN_TLS_CALLBACKS_H_
 
 #include <botan/ec_point_format.h>
+#include <botan/pkix_enums.h>
 #include <botan/pubkey.h>
 #include <botan/tls_alert.h>
 #include <botan/tls_algos.h>
 #include <botan/tls_magic.h>
-#include <botan/x509cert.h>
 #include <chrono>
 #include <memory>
 #include <optional>
@@ -266,6 +266,8 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        *
        * This function should not be "const" since the implementation might need
        * to perform some side effecting operation to compute the result.
+       *
+       * TODO(Botan4) change return type to uint64_t
        */
       virtual std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const {
          return std::chrono::milliseconds(0);
@@ -642,6 +644,8 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        *
        * Note that typical usages will not need to override this callback but it
        * is useful for testing purposes to allow for deterministic test outcomes.
+       *
+       * TODO(Botan4) change return type to uint64_t
        */
       virtual std::chrono::system_clock::time_point tls_current_timestamp();
 

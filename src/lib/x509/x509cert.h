@@ -19,15 +19,6 @@ class NameConstraints;
 class Public_Key;
 class X509_DN;
 
-enum class Usage_Type : uint8_t {
-   UNSPECIFIED,  // no restrictions
-   TLS_SERVER_AUTH,
-   TLS_CLIENT_AUTH,
-   CERTIFICATE_AUTHORITY,
-   OCSP_RESPONDER,
-   ENCRYPTION
-};
-
 struct X509_Certificate_Data;
 
 /**
