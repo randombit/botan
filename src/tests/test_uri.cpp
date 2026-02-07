@@ -11,6 +11,7 @@
 
 #if defined(BOTAN_HAS_SOCKETS) && (defined(BOTAN_TARGET_OS_HAS_SOCKETS) || defined(BOTAN_TARGET_OS_HAS_WINSOCK2))
 
+   #include <botan/exceptn.h>
    #include <botan/internal/uri.h>
 
 namespace Botan_Tests {

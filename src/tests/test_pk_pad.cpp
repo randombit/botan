@@ -5,6 +5,7 @@
 */
 
 #include "tests.h"
+#include <botan/exceptn.h>
 
 #if defined(BOTAN_HAS_RSA_ENCRYPTION_PADDING)
    #include <botan/internal/enc_padding.h>

@@ -12,6 +12,7 @@
 
 #if defined(BOTAN_HAS_NIST_KEYWRAP)
    #include <botan/block_cipher.h>
+   #include <botan/exceptn.h>
    #include <botan/nist_keywrap.h>
 #endif
 

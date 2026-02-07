@@ -15,13 +15,13 @@ Each include is parsed for every test file which can get quite expensive
 */
 
 #include <botan/assert.h>
-#include <botan/exceptn.h>
 #include <botan/symkey.h>
 #include <botan/types.h>
 #include <functional>
 #include <iosfwd>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <span>
 #include <sstream>
 #include <string>
@@ -177,11 +177,6 @@ class Test_Options {
 };
 
 namespace detail {
-
-template <typename, typename = void>
-constexpr bool has_Botan_to_string = false;
-template <typename T>
-constexpr bool has_Botan_to_string<T, std::void_t<decltype(Botan::to_string(std::declval<T>()))>> = true;
 
 template <typename, typename = void>
 constexpr bool has_std_to_string = false;
@@ -581,15 +576,15 @@ class Test {
             std::string to_string(const T& v) {
                if constexpr(detail::is_optional_v<T>) {
                   return (v.has_value()) ? to_string(v.value()) : std::string("std::nullopt");
-               } else if constexpr(detail::has_Botan_to_string<T>) {
-                  return Botan::to_string(v);
                } else if constexpr(detail::has_ostream_operator<T>) {
                   std::ostringstream oss;
                   oss << v;
                   return oss.str();
                } else if constexpr(detail::has_std_to_string<T>) {
+                  //static_assert(false, "no std::to_string for you");
                   return std::to_string(v);
                } else {
+                  //static_assert(false, "unknown type");
                   return "<?>";
                }
             }
