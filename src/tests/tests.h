@@ -270,22 +270,6 @@ class Test {
                return r;
             }
 
-            static Result OfExpectedFailure(bool expecting_failure, const Test::Result& result) {
-               if(!expecting_failure) {
-                  return result;
-               }
-
-               if(result.tests_failed() == 0) {
-                  Result r = result;
-                  r.test_failure("Expected this test to fail, but it did not");
-                  return r;
-               } else {
-                  Result r(result.who());
-                  r.test_note("Got expected failure");
-                  return r;
-               }
-            }
-
             void merge(const Result& other, bool ignore_test_name = false);
 
             void test_note(const std::string& note, const char* extra = nullptr);
