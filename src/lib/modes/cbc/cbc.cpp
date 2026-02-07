@@ -172,7 +172,7 @@ void CTS_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
       buffer.resize(full_blocks + offset);
       update(buffer, offset);
 
-      xor_buf(last.data(), state_ptr(), BS);
+      xor_buf(std::span{last}.first(BS), std::span(state_ptr(), BS));
       cipher().encrypt(last.data());
 
       for(size_t i = 0; i != final_bytes - BS; ++i) {
@@ -207,11 +207,11 @@ size_t CBC_Decryption::process_msg(uint8_t buf[], size_t sz) {
 
       cipher().decrypt_n(buf, m_tempbuf.data(), to_proc / BS);
 
-      xor_buf(m_tempbuf.data(), state_ptr(), BS);
+      xor_buf(std::span{m_tempbuf}.first(BS), std::span(state_ptr(), BS));
       xor_buf(&m_tempbuf[BS], buf, to_proc - BS);
       copy_mem(state_ptr(), buf + (to_proc - BS), BS);
 
-      copy_mem(buf, m_tempbuf.data(), to_proc);
+      copy_mem(std::span(buf, to_proc), std::span{m_tempbuf}.first(to_proc));
 
       buf += to_proc;
       blocks -= to_proc / BS;
@@ -284,14 +284,15 @@ void CTS_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
       cipher().decrypt(last.data());
 
-      xor_buf(last.data(), &last[BS], final_bytes - BS);
+      const auto diff = final_bytes - BS;
+      xor_buf(std::span{last}.first(diff), std::span(&last[BS], diff));
 
       for(size_t i = 0; i != final_bytes - BS; ++i) {
          std::swap(last[i], last[i + BS]);
       }
 
       cipher().decrypt(last.data());
-      xor_buf(last.data(), state_ptr(), BS);
+      xor_buf(std::span{last}.first(BS), std::span(state_ptr(), BS));
 
       buffer += last;
    }
