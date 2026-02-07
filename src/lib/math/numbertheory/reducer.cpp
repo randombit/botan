@@ -7,6 +7,7 @@
 
 #include <botan/reducer.h>
 
+#include <botan/exceptn.h>
 #include <botan/internal/divide.h>
 
 namespace Botan {

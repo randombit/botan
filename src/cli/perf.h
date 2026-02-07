@@ -9,7 +9,6 @@
 
 #include <botan/rng.h>
 #include <botan/internal/fmt.h>
-#include <chrono>
 #include <functional>
 #include <iosfwd>
 #include <map>
@@ -25,7 +24,7 @@ class PerfConfig final {
       PerfConfig(std::function<void(const Timer&)> record_result,
                  size_t clock_speed,
                  double clock_cycle_ratio,
-                 std::chrono::milliseconds runtime,
+                 uint64_t runtime,
                  const std::vector<std::string>& ecc_groups,
                  const std::vector<size_t>& buffer_sizes,
                  std::ostream& error_output,
@@ -43,7 +42,7 @@ class PerfConfig final {
 
       const std::vector<std::string>& ecc_groups() const { return m_ecc_groups; }
 
-      std::chrono::milliseconds runtime() const { return m_runtime; }
+      uint64_t runtime() const { return m_runtime; }
 
       std::ostream& error_output() const { return m_error_output; }
 
@@ -63,7 +62,7 @@ class PerfConfig final {
       std::function<void(const Timer&)> m_record_result;
       size_t m_clock_speed = 0;
       double m_clock_cycle_ratio = 0.0;
-      std::chrono::milliseconds m_runtime;
+      uint64_t m_runtime;
       std::vector<std::string> m_ecc_groups;
       std::vector<size_t> m_buffer_sizes;
       std::ostream& m_error_output;

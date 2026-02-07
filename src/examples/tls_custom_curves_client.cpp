@@ -1,5 +1,7 @@
 #include <botan/auto_rng.h>
 #include <botan/certstor.h>
+#include <botan/dl_group.h>
+#include <botan/ec_group.h>
 #include <botan/ecdh.h>
 #include <botan/tls.h>
 

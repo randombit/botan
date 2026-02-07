@@ -155,13 +155,7 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       BER_Decoder& get_next_value(T& out, ASN1_Type type_tag, ASN1_Class class_tag = ASN1_Class::ContextSpecific)
          requires std::is_standard_layout_v<T> && std::is_trivial_v<T>
       {
-         const BER_Object obj = get_next_object();
-         obj.assert_is_a(type_tag, class_tag);
-
-         if(obj.length() != sizeof(T)) {
-            throw BER_Decoding_Error("Size mismatch. Object value size is " + std::to_string(obj.length()) +
-                                     "; Output type size is " + std::to_string(sizeof(T)));
-         }
+         const BER_Object obj = get_next_value(sizeof(T), type_tag, class_tag);
 
          std::memcpy(reinterpret_cast<uint8_t*>(&out), obj.bits(), obj.length());
 
@@ -330,6 +324,8 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
 
    private:
       BER_Decoder(BER_Object&& obj, BER_Decoder* parent);
+
+      BER_Object get_next_value(size_t sizeofT, ASN1_Type type_tag, ASN1_Class class_tag);
 
       BER_Decoder* m_parent = nullptr;
       BER_Object m_pushed;

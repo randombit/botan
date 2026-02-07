@@ -11,10 +11,9 @@
 #define BOTAN_MP_CORE_OPS_H_
 
 #include <botan/assert.h>
-#include <botan/exceptn.h>
-#include <botan/mem_ops.h>
 #include <botan/types.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/mp_asmi.h>
 #include <array>
 #include <span>
@@ -309,8 +308,8 @@ inline constexpr void bigint_shl1(W x[], size_t x_size, size_t x_words, size_t s
    const size_t word_shift = shift / WordInfo<W>::bits;
    const size_t bit_shift = shift % WordInfo<W>::bits;
 
-   copy_mem(x + word_shift, x, x_words);
-   clear_mem(x, word_shift);
+   unchecked_copy_memory(x + word_shift, x, x_words);
+   zeroize_buffer(x, word_shift);
 
    const auto carry_mask = CT::Mask<W>::expand(bit_shift);
    const W carry_shift = carry_mask.if_set_return(WordInfo<W>::bits - bit_shift);
@@ -331,9 +330,9 @@ inline constexpr void bigint_shr1(W x[], size_t x_size, size_t shift) {
    const size_t top = x_size >= word_shift ? (x_size - word_shift) : 0;
 
    if(top > 0) {
-      copy_mem(x, x + word_shift, top);
+      unchecked_copy_memory(x, x + word_shift, top);
    }
-   clear_mem(x + top, std::min(word_shift, x_size));
+   zeroize_buffer(x + top, std::min(word_shift, x_size));
 
    const auto carry_mask = CT::Mask<W>::expand(bit_shift);
    const W carry_shift = carry_mask.if_set_return(WordInfo<W>::bits - bit_shift);
@@ -352,7 +351,7 @@ inline constexpr void bigint_shl2(W y[], const W x[], size_t x_size, size_t shif
    const size_t word_shift = shift / WordInfo<W>::bits;
    const size_t bit_shift = shift % WordInfo<W>::bits;
 
-   copy_mem(y + word_shift, x, x_size);
+   unchecked_copy_memory(y + word_shift, x, x_size);
 
    const auto carry_mask = CT::Mask<W>::expand(bit_shift);
    const W carry_shift = carry_mask.if_set_return(WordInfo<W>::bits - bit_shift);
@@ -372,7 +371,7 @@ inline constexpr void bigint_shr2(W y[], const W x[], size_t x_size, size_t shif
    const size_t new_size = x_size < word_shift ? 0 : (x_size - word_shift);
 
    if(new_size > 0) {
-      copy_mem(y, x + word_shift, new_size);
+      unchecked_copy_memory(y, x + word_shift, new_size);
    }
 
    const auto carry_mask = CT::Mask<W>::expand(bit_shift);
@@ -929,7 +928,7 @@ inline void bigint_monty_redc(
 
 inline void bigint_monty_redc_inplace(word z[], const word p[], size_t p_size, word p_dash, word ws[], size_t ws_size) {
    bigint_monty_redc(z, z, p, p_size, p_dash, ws, ws_size);
-   clear_mem(z + p_size, p_size);
+   zeroize_buffer(z + p_size, p_size);
 }
 
 /**

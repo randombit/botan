@@ -21,9 +21,11 @@ namespace Botan::TPM2 {
 EC_PublicKey::EC_PublicKey(Object handle, SessionBundle sessions, const TPM2B_PUBLIC* public_blob) :
       EC_PublicKey(std::move(handle), std::move(sessions), ecc_pubkey_from_tss2_public(public_blob)) {}
 
-EC_PublicKey::EC_PublicKey(Object handle, SessionBundle sessions, std::pair<EC_Group, EC_AffinePoint> public_key) :
+EC_PublicKey::EC_PublicKey(Object handle,
+                           SessionBundle sessions,
+                           const std::pair<EC_Group, EC_AffinePoint>& public_key) :
       Botan::TPM2::PublicKey(std::move(handle), std::move(sessions)),
-      Botan::EC_PublicKey(std::move(public_key.first), public_key.second) {}
+      Botan::EC_PublicKey(public_key.first, public_key.second) {}
 
 EC_PrivateKey::EC_PrivateKey(Object handle,
                              SessionBundle sessions,
@@ -33,10 +35,10 @@ EC_PrivateKey::EC_PrivateKey(Object handle,
 
 EC_PrivateKey::EC_PrivateKey(Object handle,
                              SessionBundle sessions,
-                             std::pair<EC_Group, EC_AffinePoint> public_key,
+                             const std::pair<EC_Group, EC_AffinePoint>& public_key,
                              std::span<const uint8_t> private_blob) :
       Botan::TPM2::PrivateKey(std::move(handle), std::move(sessions), private_blob),
-      Botan::EC_PublicKey(std::move(public_key.first), public_key.second) {}
+      Botan::EC_PublicKey(public_key.first, public_key.second) {}
 
 std::unique_ptr<Public_Key> EC_PrivateKey::public_key() const {
    return std::make_unique<Botan::ECDSA_PublicKey>(domain(), _public_ec_point());

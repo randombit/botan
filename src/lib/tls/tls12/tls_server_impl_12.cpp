@@ -8,6 +8,7 @@
 
 #include <botan/internal/tls_server_impl_12.h>
 
+#include <botan/ocsp.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_magic.h>
 #include <botan/tls_messages_12.h>

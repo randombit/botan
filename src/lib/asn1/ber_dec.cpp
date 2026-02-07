@@ -283,6 +283,18 @@ BER_Object BER_Decoder::get_next_object() {
    return next;
 }
 
+BER_Object BER_Decoder::get_next_value(size_t sizeofT, ASN1_Type type_tag, ASN1_Class class_tag) {
+   const BER_Object obj = get_next_object();
+   obj.assert_is_a(type_tag, class_tag);
+
+   if(obj.length() != sizeofT) {
+      throw BER_Decoding_Error("Size mismatch. Object value size is " + std::to_string(obj.length()) +
+                               "; Output type size is " + std::to_string(sizeofT));
+   }
+
+   return obj;
+}
+
 /*
 * Push a object back into the stream
 */

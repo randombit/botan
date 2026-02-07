@@ -10,7 +10,6 @@
 #ifndef BOTAN_TREE_HASH_H_
 #define BOTAN_TREE_HASH_H_
 
-#include <botan/exceptn.h>
 #include <botan/strong_type.h>
 #include <botan/internal/buffer_slicer.h>
 #include <optional>

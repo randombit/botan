@@ -7,6 +7,7 @@
 
 #include <botan/internal/divide.h>
 
+#include <botan/exceptn.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/mp_core.h>
 

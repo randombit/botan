@@ -9,12 +9,10 @@
 #ifndef BOTAN_XMSS_H_
 #define BOTAN_XMSS_H_
 
-#include <memory>
-#include <span>
-
-#include <botan/exceptn.h>
 #include <botan/pk_keys.h>
 #include <botan/xmss_parameters.h>
+#include <memory>
+#include <span>
 
 namespace Botan {
 

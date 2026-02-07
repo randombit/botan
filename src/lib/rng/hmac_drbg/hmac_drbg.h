@@ -8,11 +8,12 @@
 #ifndef BOTAN_HMAC_DRBG_H_
 #define BOTAN_HMAC_DRBG_H_
 
-#include <botan/mac.h>
 #include <botan/stateful_rng.h>
+#include <memory>
 
 namespace Botan {
 
+class MessageAuthenticationCode;
 class Entropy_Sources;
 
 /**
@@ -122,6 +123,14 @@ class BOTAN_PUBLIC_API(2, 0) HMAC_DRBG final : public Stateful_RNG {
                 Entropy_Sources& entropy_sources,
                 size_t reseed_interval = RandomNumberGenerator::DefaultReseedInterval,
                 size_t max_number_of_bytes_per_request = 64 * 1024);
+
+      ~HMAC_DRBG() override;
+
+      HMAC_DRBG(const HMAC_DRBG& rng) = delete;
+      HMAC_DRBG& operator=(const HMAC_DRBG& rng) = delete;
+
+      HMAC_DRBG(HMAC_DRBG&& rng) = delete;
+      HMAC_DRBG& operator=(HMAC_DRBG&& rng) = delete;
 
       std::string name() const override;
 

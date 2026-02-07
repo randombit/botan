@@ -11,19 +11,26 @@
 #ifndef BOTAN_TLS_CALLBACKS_H_
 #define BOTAN_TLS_CALLBACKS_H_
 
-#include <botan/dl_group.h>
-#include <botan/ecc_key.h>
-#include <botan/ocsp.h>
+#include <botan/ec_point_format.h>
 #include <botan/pubkey.h>
 #include <botan/tls_alert.h>
-#include <botan/tls_session.h>
+#include <botan/tls_algos.h>
+#include <botan/tls_magic.h>
+#include <botan/x509cert.h>
 #include <chrono>
+#include <memory>
 #include <optional>
+#include <variant>
 
 namespace Botan {
 
+class DL_Group;
+class PK_Key_Agreement_Key;
 class Certificate_Store;
 class X509_Certificate;
+class Public_Key;
+class Private_Key;
+class RandomNumberGenerator;
 
 namespace OCSP {
 
@@ -37,6 +44,8 @@ class Handshake_Message;
 class Policy;
 class Extensions;
 class Certificate_Status_Request;
+class Session_Summary;
+class Session;
 
 /**
 * Encapsulates the callbacks that a TLS channel will make which are due to

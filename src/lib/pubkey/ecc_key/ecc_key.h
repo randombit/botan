@@ -10,12 +10,16 @@
 #ifndef BOTAN_ECC_PUBLIC_KEY_BASE_H_
 #define BOTAN_ECC_PUBLIC_KEY_BASE_H_
 
-#include <botan/ec_group.h>
+#include <botan/ec_point_format.h>
 #include <botan/pk_keys.h>
 #include <memory>
 
 namespace Botan {
 
+class EC_AffinePoint;
+class EC_Point;
+class EC_Group;
+class EC_Scalar;
 class EC_PublicKey_Data;
 class EC_PrivateKey_Data;
 
@@ -112,7 +116,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
       * @param group EC domain parameters
       * @param pub_point public point on the curve
       */
-      EC_PublicKey(EC_Group group, const EC_Point& pub_point);
+      EC_PublicKey(const EC_Group& group, const EC_Point& pub_point);
 #endif
 
       /**
@@ -121,7 +125,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
       * @param group EC domain parameters
       * @param public_key public point on the curve
       */
-      EC_PublicKey(EC_Group group, EC_AffinePoint public_key);
+      EC_PublicKey(const EC_Group& group, const EC_AffinePoint& public_key);
 
       /**
       * Load a public key.
@@ -181,7 +185,10 @@ class BOTAN_PUBLIC_API(2, 0) EC_PrivateKey : public virtual EC_PublicKey,
       * TODO: Remove, once the respective deprecated constructors of the
       *       concrete ECC algorithms is removed.
       */
-      EC_PrivateKey(RandomNumberGenerator& rng, EC_Group group, const BigInt& x, bool with_modular_inverse = false);
+      EC_PrivateKey(RandomNumberGenerator& rng,
+                    const EC_Group& group,
+                    const BigInt& x,
+                    bool with_modular_inverse = false);
 
       /**
       * Creates a new private key
@@ -190,7 +197,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_PrivateKey : public virtual EC_PublicKey,
       * multiplying the base point with the modular inverse of x (as in ECGDSA
       * and ECKCDSA), otherwise by multiplying directly with x (as in ECDSA).
       */
-      EC_PrivateKey(RandomNumberGenerator& rng, EC_Group group, bool with_modular_inverse = false);
+      EC_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, bool with_modular_inverse = false);
 
       /**
       * Load a EC private key from the secret scalar
@@ -199,7 +206,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_PrivateKey : public virtual EC_PublicKey,
       * multiplying the base point with the modular inverse of x (as in ECGDSA
       * and ECKCDSA), otherwise by multiplying directly with x (as in ECDSA).
       */
-      EC_PrivateKey(EC_Group group, EC_Scalar scalar, bool with_modular_inverse = false);
+      EC_PrivateKey(const EC_Group& group, const EC_Scalar& scalar, bool with_modular_inverse = false);
 
       /*
       * Creates a new private key object from the

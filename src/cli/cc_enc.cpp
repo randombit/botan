@@ -9,6 +9,7 @@
 
 #if defined(BOTAN_HAS_FPE_FE1) && defined(BOTAN_HAS_PBKDF)
 
+   #include <botan/exceptn.h>
    #include <botan/fpe_fe1.h>
    #include <botan/pbkdf.h>
    #include <botan/symkey.h>

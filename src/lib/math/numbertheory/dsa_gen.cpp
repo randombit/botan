@@ -8,6 +8,7 @@
 #include <botan/internal/primality.h>
 
 #include <botan/bigint.h>
+#include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/numthry.h>
 #include <botan/rng.h>

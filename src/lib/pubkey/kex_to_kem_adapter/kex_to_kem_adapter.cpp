@@ -20,6 +20,7 @@
 #endif
 
 #if defined(BOTAN_HAS_ECDH)
+   #include <botan/ec_group.h>
    #include <botan/ecdh.h>
 #endif
 

@@ -14,6 +14,7 @@
 
 #if defined(BOTAN_HAS_TLS)
 
+   #include <botan/dl_group.h>
    #include <botan/rng.h>
    #include <botan/tls_callbacks.h>
    #include <botan/tls_client.h>

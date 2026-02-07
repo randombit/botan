@@ -7,9 +7,14 @@
 #include <botan/internal/pcurves.h>
 
 #include <botan/assert.h>
+#include <botan/internal/mem_utils.h>
 #include <botan/internal/pcurves_instance.h>
 
 namespace Botan::PCurve {
+
+void PrimeOrderCurve::Scalar::_zeroize() {
+   secure_zeroize_buffer(m_value.data(), m_value.size() * sizeof(word));
+}
 
 //static
 std::shared_ptr<const PrimeOrderCurve> PrimeOrderCurve::from_params(

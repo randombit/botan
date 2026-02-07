@@ -8,9 +8,8 @@
 #ifndef BOTAN_TLS_READER_H_
 #define BOTAN_TLS_READER_H_
 
-#include <botan/exceptn.h>
+#include <botan/assert.h>
 #include <botan/secmem.h>
-#include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/mem_utils.h>
 #include <span>
@@ -22,7 +21,7 @@ namespace Botan::TLS {
 /**
 * Helper class for decoding TLS protocol messages
 */
-class TLS_Data_Reader final {
+class BOTAN_TEST_API TLS_Data_Reader final {
    public:
       TLS_Data_Reader(const char* type, std::span<const uint8_t> buf_in) :
             m_typename(type), m_buf(buf_in), m_offset(0) {}
@@ -162,16 +161,9 @@ class TLS_Data_Reader final {
          return num_elems;
       }
 
-      void assert_at_least(size_t n) const {
-         if(m_buf.size() - m_offset < n) {
-            throw_decode_error("Expected " + std::to_string(n) + " bytes remaining, only " +
-                               std::to_string(m_buf.size() - m_offset) + " left");
-         }
-      }
+      void assert_at_least(size_t n) const;
 
-      [[noreturn]] void throw_decode_error(std::string_view why) const {
-         throw Decoding_Error(fmt("Invalid {}: {}", m_typename, why));
-      }
+      [[noreturn]] void throw_decode_error(std::string_view why) const;
 
       const char* m_typename;
       std::span<const uint8_t> m_buf;
@@ -189,14 +181,11 @@ inline void append_tls_length_value(std::vector<uint8_t, Alloc>& buf,
    const size_t T_size = sizeof(T);
    const size_t val_bytes = T_size * vals_size;
 
-   if(tag_size != 1 && tag_size != 2 && tag_size != 3) {
-      throw Invalid_Argument("append_tls_length_value: invalid tag size");
-   }
+   BOTAN_ARG_CHECK(tag_size == 1 || tag_size == 2 || tag_size == 3, "Invalid TLS tag size");
 
-   if((tag_size == 1 && val_bytes > 255) || (tag_size == 2 && val_bytes > 65535) ||
-      (tag_size == 3 && val_bytes > 16777215)) {
-      throw Invalid_Argument("append_tls_length_value: value too large");
-   }
+   const size_t max_possible_size = (1 << (8 * tag_size)) - 1;
+
+   BOTAN_ARG_CHECK(val_bytes <= max_possible_size, "Value too large to encode");
 
    for(size_t i = 0; i != tag_size; ++i) {
       buf.push_back(get_byte_var(sizeof(val_bytes) - tag_size + i, val_bytes));

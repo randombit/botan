@@ -7,6 +7,7 @@
 
 #include <botan/bigint.h>
 
+#include <botan/exceptn.h>
 #include <botan/hex.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/buffer_stuffer.h>

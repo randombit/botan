@@ -1,5 +1,6 @@
 #include <botan/aead.h>
 #include <botan/auto_rng.h>
+#include <botan/exceptn.h>
 #include <botan/hex.h>
 #include <botan/pwdhash.h>
 

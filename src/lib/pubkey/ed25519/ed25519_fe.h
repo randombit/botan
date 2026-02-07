@@ -13,7 +13,6 @@
 #define BOTAN_ED25519_FE_H_
 
 #include <botan/exceptn.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <array>
 
@@ -42,7 +41,11 @@ class Ed25519_FieldElement final {
       }
 
       // NOLINTNEXTLINE(*-member-init)
-      constexpr explicit Ed25519_FieldElement(std::span<int32_t, 10> fe) { copy_mem(m_fe.data(), fe.data(), 10); }
+      constexpr explicit Ed25519_FieldElement(std::span<int32_t, 10> fe) {
+         for(size_t i = 0; i != 10; ++i) {
+            m_fe[i] = fe[i];
+         }
+      }
 
       // NOLINTNEXTLINE(*-member-init)
       constexpr Ed25519_FieldElement(int64_t h0,

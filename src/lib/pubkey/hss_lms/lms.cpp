@@ -8,6 +8,7 @@
 
 #include <botan/internal/lms.h>
 
+#include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/buffer_stuffer.h>

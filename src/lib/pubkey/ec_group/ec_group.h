@@ -26,24 +26,6 @@
 namespace Botan {
 
 /**
-* This enum indicates the method used to encode the EC parameters
-*
-* @warning All support for explicit or implicit domain encodings
-* will be removed in Botan4. Only named curves will be supported.
-*
-* TODO(Botan4) remove this enum
-*/
-enum class EC_Group_Encoding : uint8_t {
-   Explicit = 0,
-   ImplicitCA = 1,
-   NamedCurve = 2,
-
-   EC_DOMPAR_ENC_EXPLICIT = Explicit,
-   EC_DOMPAR_ENC_IMPLICITCA = ImplicitCA,
-   EC_DOMPAR_ENC_OID = NamedCurve
-};
-
-/**
 * This enum indicates the source of the elliptic curve parameters
 * in use.
 *

@@ -6,6 +6,8 @@
 
 #include "tests.h"
 
+#include <botan/hex.h>
+
 #if defined(BOTAN_HAS_SIMD_4X32)
    #include <botan/internal/bswap.h>
    #include <botan/internal/loadstor.h>

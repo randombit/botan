@@ -9,7 +9,6 @@
 #define BOTAN_CIPHER_MODE_H_
 
 #include <botan/concepts.h>
-#include <botan/exceptn.h>
 #include <botan/secmem.h>
 #include <botan/sym_algo.h>
 #include <memory>

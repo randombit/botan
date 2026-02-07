@@ -9,6 +9,7 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/ec_group.h>
 #include <botan/hash.h>
 #include <botan/kdf.h>
 #include <botan/mem_ops.h>

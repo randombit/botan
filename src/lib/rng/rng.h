@@ -10,7 +10,6 @@
 #define BOTAN_RANDOM_NUMBER_GENERATOR_H_
 
 #include <botan/concepts.h>
-#include <botan/exceptn.h>
 #include <botan/secmem.h>
 
 #include <array>

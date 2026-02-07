@@ -61,9 +61,7 @@ class BOTAN_PUBLIC_API(2, 0) ECDSA_PublicKey : public virtual EC_PublicKey {
       */
       std::string algo_name() const override { return "ECDSA"; }
 
-      std::optional<size_t> _signature_element_size_for_DER_encoding() const override {
-         return domain().get_order_bytes();
-      }
+      std::optional<size_t> _signature_element_size_for_DER_encoding() const override;
 
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::Signature); }
 
@@ -104,14 +102,14 @@ class BOTAN_PUBLIC_API(2, 0) ECDSA_PrivateKey final : public ECDSA_PublicKey,
       * @param group curve parameters to bu used for this key
       * @param x      the private key
       */
-      ECDSA_PrivateKey(EC_Group group, EC_Scalar x) : EC_PrivateKey(std::move(group), std::move(x)) {}
+      ECDSA_PrivateKey(const EC_Group& group, const EC_Scalar& x) : EC_PrivateKey(group, x) {}
 
       /**
       * Create a new private key
       * @param rng a random number generator
       * @param group parameters to used for this key
       */
-      ECDSA_PrivateKey(RandomNumberGenerator& rng, EC_Group group) : EC_PrivateKey(rng, std::move(group)) {}
+      ECDSA_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group) : EC_PrivateKey(rng, group) {}
 
       /**
       * Create a private key.

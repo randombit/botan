@@ -7,6 +7,7 @@
 */
 
 #include "tests.h"
+#include <botan/hex.h>
 #include <botan/rng.h>
 #include <botan/version.h>
 #include <botan/internal/bit_ops.h>
@@ -322,12 +323,12 @@ class Utility_Function_Tests final : public Test {
          result.test_is_eq(outarr, {0xAA, 0x11, 0xBB, 0x22, 0xCC, 0x33, 0xDD, 0x44});
          std::vector<uint8_t> outvec(8);
          Botan::store_be(outvec, i0, i1, i2, i3);
-         result.test_is_eq(outvec, Botan::hex_decode("AA11BB22CC33DD44"));
+         result.test_eq("store_be", outvec, "AA11BB22CC33DD44");
 
          Botan::store_le(outarr, i0, i1, i2, i3);
          result.test_is_eq(outarr, {0x11, 0xAA, 0x22, 0xBB, 0x33, 0xCC, 0x44, 0xDD});
          Botan::store_le(outvec, i0, i1, i2, i3);
-         result.test_is_eq(outvec, Botan::hex_decode("11AA22BB33CC44DD"));
+         result.test_eq("store_le", outvec, "11AA22BB33CC44DD");
 
 #if !defined(BOTAN_TERMINATE_ON_ASSERTS)
          std::vector<uint8_t> sink56bits(7);
@@ -347,14 +348,14 @@ class Utility_Function_Tests final : public Test {
          auto out64_vec_be = Botan::store_be<std::vector<uint8_t>>(i0, i1, i2, i3);
          auto out64_strong_be = Botan::store_be<TestVectorSink>(i0, i1, i2, i3);
          result.test_is_eq(out64_array_be, {0xAA, 0x11, 0xBB, 0x22, 0xCC, 0x33, 0xDD, 0x44});
-         result.test_is_eq(out64_vec_be, Botan::hex_decode("AA11BB22CC33DD44"));
-         result.test_is_eq(out64_strong_be, TestVectorSink(Botan::hex_decode("AA11BB22CC33DD44")));
+         result.test_eq("store_be(vec)", out64_vec_be, "AA11BB22CC33DD44");
+         result.test_eq("store_be(strong)", out64_strong_be, "AA11BB22CC33DD44");
          auto out64_array_le = Botan::store_le(i0, i1, i2, i3);
          auto out64_vec_le = Botan::store_le<std::vector<uint8_t>>(i0, i1, i2, i3);
          auto out64_strong_le = Botan::store_le<TestVectorSink>(i0, i1, i2, i3);
          result.test_is_eq(out64_array_le, {0x11, 0xAA, 0x22, 0xBB, 0x33, 0xCC, 0x44, 0xDD});
-         result.test_is_eq(out64_vec_le, Botan::hex_decode("11AA22BB33CC44DD"));
-         result.test_is_eq(out64_strong_le, TestVectorSink(Botan::hex_decode("11AA22BB33CC44DD")));
+         result.test_eq("store_le(vec)", out64_vec_le, "11AA22BB33CC44DD");
+         result.test_eq("store_le(strong)", out64_strong_le, "11AA22BB33CC44DD");
 
          result.test_is_eq(in16, Botan::load_be(Botan::store_be(in16)));
          result.test_is_eq(in32, Botan::load_be(Botan::store_be(in32)));
@@ -391,12 +392,12 @@ class Utility_Function_Tests final : public Test {
 
          // Test store of entire ranges
          const std::array<uint16_t, 2> in16_array = {0x0A0B, 0x0C0D};
-         result.test_is_eq(Botan::store_be<std::vector<uint8_t>>(in16_array), Botan::hex_decode("0A0B0C0D"));
-         result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(in16_array), Botan::hex_decode("0B0A0D0C"));
+         result.test_eq("store_be(vec)", Botan::store_be<std::vector<uint8_t>>(in16_array), "0A0B0C0D");
+         result.test_eq("store_le(vec)", Botan::store_le<std::vector<uint8_t>>(in16_array), "0B0A0D0C");
 
          const std::vector<uint16_t> in16_vector = {0x0A0B, 0x0C0D};
-         result.test_is_eq(Botan::store_be<std::vector<uint8_t>>(in16_vector), Botan::hex_decode("0A0B0C0D"));
-         result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(in16_vector), Botan::hex_decode("0B0A0D0C"));
+         result.test_eq("store_be(vec)", Botan::store_be<std::vector<uint8_t>>(in16_vector), "0A0B0C0D");
+         result.test_eq("store_le(vec)", Botan::store_le<std::vector<uint8_t>>(in16_vector), "0B0A0D0C");
 
          std::array<uint8_t, 4> out_array{};
          Botan::store_be(out_array, in16_array);
@@ -431,10 +432,10 @@ class Utility_Function_Tests final : public Test {
          const TestInt64 in64_strong{0xABCDEF0123456789};
          const TestInt32 in32_strong{0xABCDEF01};
 
-         result.test_is_eq(Botan::store_be<std::vector<uint8_t>>(in64_strong), Botan::hex_decode("ABCDEF0123456789"));
-         result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(in64_strong), Botan::hex_decode("8967452301EFCDAB"));
-         result.test_is_eq(Botan::store_be<std::vector<uint8_t>>(in32_strong), Botan::hex_decode("ABCDEF01"));
-         result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(in32_strong), Botan::hex_decode("01EFCDAB"));
+         result.test_eq("store_be(u64,strong)", Botan::store_be<std::vector<uint8_t>>(in64_strong), "ABCDEF0123456789");
+         result.test_eq("store_le(u64,strong)", Botan::store_le<std::vector<uint8_t>>(in64_strong), "8967452301EFCDAB");
+         result.test_eq("store_be(u32,strong)", Botan::store_be<std::vector<uint8_t>>(in32_strong), "ABCDEF01");
+         result.test_eq("store_le(u32,strong)", Botan::store_le<std::vector<uint8_t>>(in32_strong), "01EFCDAB");
 
          result.test_is_eq(Botan::load_be<TestInt64>(Botan::hex_decode("ABCDEF0123456789")), in64_strong);
          result.test_is_eq(Botan::load_le<TestInt64>(Botan::hex_decode("8967452301EFCDAB")), in64_strong);
@@ -442,10 +443,12 @@ class Utility_Function_Tests final : public Test {
          result.test_is_eq(Botan::load_le<TestInt32>(Botan::hex_decode("01EFCDAB")), in32_strong);
 
          const std::vector<TestInt64> some_in64_strongs{TestInt64{0xABCDEF0123456789}, TestInt64{0x0123456789ABCDEF}};
-         result.test_is_eq(Botan::store_be<std::vector<uint8_t>>(some_in64_strongs),
-                           Botan::hex_decode("ABCDEF01234567890123456789ABCDEF"));
-         result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(some_in64_strongs),
-                           Botan::hex_decode("8967452301EFCDABEFCDAB8967452301"));
+         result.test_eq("store_be(vector,strong)",
+                        Botan::store_be<std::vector<uint8_t>>(some_in64_strongs),
+                        "ABCDEF01234567890123456789ABCDEF");
+         result.test_eq("store_le(vector,strong)",
+                        Botan::store_le<std::vector<uint8_t>>(some_in64_strongs),
+                        "8967452301EFCDABEFCDAB8967452301");
 
          const auto in64_strongs_le =
             Botan::load_le<std::array<TestInt64, 2>>(Botan::hex_decode("8967452301EFCDABEFCDAB8967452301"));
@@ -462,8 +465,7 @@ class Utility_Function_Tests final : public Test {
          result.test_is_eq(in64_enum_le, TestEnum64::_2);
          const auto in64_enum_be = Botan::load_be<TestEnum64>(Botan::hex_decode("1234567890ABCDEF"));
          result.test_is_eq(in64_enum_be, TestEnum64::_1);
-         result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(TestEnum64::_1),
-                           Botan::hex_decode("EFCDAB9078563412"));
+         result.test_eq("store_be(enum64)", Botan::store_le<std::vector<uint8_t>>(TestEnum64::_1), "EFCDAB9078563412");
          result.test_is_eq<std::array<uint8_t, 8>>(Botan::store_be(TestEnum64::_2),
                                                    {0xEF, 0xCD, 0xAB, 0x90, 0x78, 0x56, 0x34, 0x12});
 
@@ -471,7 +473,7 @@ class Utility_Function_Tests final : public Test {
          result.test_is_eq(in32_enum_le, TestEnum32::_1);
          const auto in32_enum_be = Botan::load_be<TestEnum32>(Botan::hex_decode("78563412"));
          result.test_is_eq(in32_enum_be, TestEnum32::_2);
-         result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(TestEnum32::_1), Botan::hex_decode("78563412"));
+         result.test_eq("store_le(enum32)", Botan::store_le<std::vector<uint8_t>>(TestEnum32::_1), "78563412");
          result.test_is_eq<std::array<uint8_t, 4>>(Botan::store_be(TestEnum32::_2), {0x78, 0x56, 0x34, 0x12});
 
          return result;
@@ -713,7 +715,7 @@ class Utility_Function_Tests final : public Test {
                      std::vector<uint8_t> out_vector(4);
                      const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
                      Botan::copy_out_be(out_vector, in_array);
-                     result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C0D"));
+                     result.test_eq("copy_out_be", out_vector, "0A0B0C0D");
                   }),
 
             CHECK("copy_out_be with 16bit input (partial words)",
@@ -721,7 +723,7 @@ class Utility_Function_Tests final : public Test {
                      std::vector<uint8_t> out_vector(3);
                      const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
                      Botan::copy_out_be(out_vector, in_array);
-                     result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C"));
+                     result.test_eq("copy_out_be(u16)", out_vector, "0A0B0C");
                   }),
 
             CHECK("copy_out_le with 16bit input (word aligned)",
@@ -729,7 +731,7 @@ class Utility_Function_Tests final : public Test {
                      std::vector<uint8_t> out_vector(4);
                      const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
                      Botan::copy_out_le(out_vector, in_array);
-                     result.test_is_eq(out_vector, Botan::hex_decode("0B0A0D0C"));
+                     result.test_eq("copy_out_le(u16)", out_vector, "0B0A0D0C");
                   }),
 
             CHECK("copy_out_le with 16bit input (partial words)",
@@ -737,7 +739,7 @@ class Utility_Function_Tests final : public Test {
                      std::vector<uint8_t> out_vector(3);
                      const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
                      Botan::copy_out_le(out_vector, in_array);
-                     result.test_is_eq(out_vector, Botan::hex_decode("0B0A0D"));
+                     result.test_eq("copy_out_le(u16)", out_vector, "0B0A0D");
                   }),
 
             CHECK("copy_out_be with 64bit input (word aligned)",
@@ -745,7 +747,7 @@ class Utility_Function_Tests final : public Test {
                      std::vector<uint8_t> out_vector(16);
                      const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
                      Botan::copy_out_be(out_vector, in_array);
-                     result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C0D0E0F10111213141516171819"));
+                     result.test_eq("copy_out_be(u64)", out_vector, "0A0B0C0D0E0F10111213141516171819");
                   }),
 
             CHECK("copy_out_le with 64bit input (word aligned)",
@@ -753,7 +755,7 @@ class Utility_Function_Tests final : public Test {
                      std::vector<uint8_t> out_vector(16);
                      const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
                      Botan::copy_out_le(out_vector, in_array);
-                     result.test_is_eq(out_vector, Botan::hex_decode("11100F0E0D0C0B0A1918171615141312"));
+                     result.test_eq("copy_out_le(u64)", out_vector, "11100F0E0D0C0B0A1918171615141312");
                   }),
 
             CHECK("copy_out_be with 64bit input (partial words)",
@@ -761,7 +763,7 @@ class Utility_Function_Tests final : public Test {
                      std::vector<uint8_t> out_vector(15);
                      const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
                      Botan::copy_out_be(out_vector, in_array);
-                     result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C0D0E0F101112131415161718"));
+                     result.test_eq("copy_out_be(u64)", out_vector, "0A0B0C0D0E0F101112131415161718");
                   }),
 
             CHECK("copy_out_le with 64bit input (partial words)",
@@ -769,7 +771,7 @@ class Utility_Function_Tests final : public Test {
                      std::vector<uint8_t> out_vector(15);
                      const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
                      Botan::copy_out_le(out_vector, in_array);
-                     result.test_is_eq(out_vector, Botan::hex_decode("11100F0E0D0C0B0A19181716151413"));
+                     result.test_eq("copy_out_le(u64)", out_vector, "11100F0E0D0C0B0A19181716151413");
                   }),
          };
       }

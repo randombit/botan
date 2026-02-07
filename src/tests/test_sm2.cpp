@@ -9,6 +9,7 @@
 
 #if defined(BOTAN_HAS_SM2)
    #include "test_pubkey.h"
+   #include <botan/ec_group.h>
    #include <botan/sm2.h>
 #endif
 

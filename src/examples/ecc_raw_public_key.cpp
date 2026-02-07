@@ -1,3 +1,4 @@
+#include <botan/ec_group.h>
 #include <botan/ecdsa.h>
 #include <botan/hex.h>
 #include <botan/x509_key.h>

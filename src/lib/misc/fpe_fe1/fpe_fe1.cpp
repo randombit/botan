@@ -7,6 +7,7 @@
 
 #include <botan/fpe_fe1.h>
 
+#include <botan/exceptn.h>
 #include <botan/mac.h>
 #include <botan/numthry.h>
 #include <botan/internal/divide.h>

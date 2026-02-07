@@ -7,6 +7,7 @@
 
 #include <botan/bigint.h>
 
+#include <botan/exceptn.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>

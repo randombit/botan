@@ -6,6 +6,7 @@
 
 #include <botan/processor_rng.h>
 
+#include <botan/exceptn.h>
 #include <botan/internal/cpuid.h>
 #include <botan/internal/isa_extn.h>
 #include <botan/internal/loadstor.h>

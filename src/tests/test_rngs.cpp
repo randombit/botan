@@ -7,6 +7,7 @@
 #include "test_rng.h"
 
 #if defined(BOTAN_HAS_AES)
+   #include <botan/block_cipher.h>
    #include <botan/internal/loadstor.h>
 #endif
 
@@ -15,6 +16,8 @@
 namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_AES)
+
+CTR_DRBG_AES256::~CTR_DRBG_AES256() = default;
 
 void CTR_DRBG_AES256::clear() {
    const uint8_t zeros[32] = {0};

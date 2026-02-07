@@ -9,8 +9,7 @@
 #ifndef BOTAN_CONCEPTS_H_
 #define BOTAN_CONCEPTS_H_
 
-#include <botan/exceptn.h>
-
+#include <botan/types.h>
 #include <concepts>
 #include <iosfwd>
 #include <ranges>
@@ -96,6 +95,11 @@ inline constexpr size_t size_bytes(const spanable_range auto& r) {
 }
 
 /**
+* Throws an exception indicating that the attempted read or write was invalid
+*/
+[[noreturn]] void BOTAN_UNSTABLE_API memory_region_size_violation();
+
+/**
  * Check that a given range @p r has a certain statically-known byte length. If
  * the range's extent is known at compile time, this is a static check,
  * otherwise a runtime argument check will be added.
@@ -110,7 +114,7 @@ inline constexpr void assert_exact_byte_length(const R& r) {
       static_assert(s.size_bytes() == expected, "memory region does not have expected byte lengths");
    } else {
       if(s.size_bytes() != expected) {
-         throw Invalid_Argument("Memory regions did not have expected byte lengths");
+         memory_region_size_violation();
       }
    }
 }
@@ -139,7 +143,7 @@ inline constexpr void assert_equal_byte_lengths(const R0& r0, const Rs&... rs)
          ((std::span<const std::ranges::range_value_t<Rs>>{rs}.size_bytes() == expected_size) && ...);
 
       if(!correct_size) {
-         throw Invalid_Argument("Memory regions did not have equal lengths");
+         memory_region_size_violation();
       }
    }
 }

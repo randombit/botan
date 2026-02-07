@@ -10,6 +10,7 @@
 #if defined(BOTAN_HAS_TLS)
 
    #include <botan/credentials_manager.h>
+   #include <botan/hex.h>
    #include <botan/rng.h>
    #include <botan/tls_callbacks.h>
    #include <botan/tls_policy.h>

@@ -6,6 +6,8 @@
 
 #include <botan/internal/monty.h>
 
+#include <botan/exceptn.h>
+#include <botan/mem_ops.h>
 #include <botan/internal/barrett.h>
 #include <botan/internal/mp_core.h>
 #include <array>

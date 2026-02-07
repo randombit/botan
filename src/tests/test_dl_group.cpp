@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_DL_GROUP)
    #include <botan/dl_group.h>
+   #include <botan/hex.h>
    #include <botan/internal/workfactor.h>
 #endif
 

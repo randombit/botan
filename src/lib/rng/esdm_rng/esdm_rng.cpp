@@ -7,6 +7,7 @@
 
 #include <botan/esdm_rng.h>
 
+#include <botan/exceptn.h>
 #include <esdm/esdm_rpc_client.h>
 #include <mutex>
 

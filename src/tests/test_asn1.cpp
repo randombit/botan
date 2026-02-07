@@ -187,8 +187,7 @@ Test::Result test_asn1_ascii_encoding() {
 
       // \x13 - ASN1 tag for 'printable string'
       // \x06 - 6 characters of payload
-      const auto moscowEncoded = Botan::hex_decode("13064D6F73636F77");
-      result.test_eq("encoding result", encodingResult, moscowEncoded);
+      result.test_eq("encoding result", encodingResult, "13064D6F73636F77");
 
       result.test_success("No crash");
    } catch(const std::exception& ex) {
@@ -213,8 +212,7 @@ Test::Result test_asn1_utf8_encoding() {
 
       // \x0C - ASN1 tag for 'UTF8 string'
       // \x0C - 12 characters of payload
-      const auto moscowEncoded = Botan::hex_decode("0C0CD09CD0BED181D0BAD0B2D0B0");
-      result.test_eq("encoding result", encodingResult, moscowEncoded);
+      result.test_eq("encoding result", encodingResult, "0C0CD09CD0BED181D0BAD0B2D0B0");
 
       result.test_success("No crash");
    } catch(const std::exception& ex) {

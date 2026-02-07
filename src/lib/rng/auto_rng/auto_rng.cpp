@@ -6,7 +6,9 @@
 
 #include <botan/auto_rng.h>
 
+#include <botan/exceptn.h>
 #include <botan/hmac_drbg.h>
+#include <botan/mac.h>
 
 #if defined(BOTAN_HAS_ENTROPY_SOURCE)
    #include <botan/entropy_src.h>

@@ -13,6 +13,7 @@
 #include <botan/der_enc.h>
 #include <botan/tls_extensions.h>
 #include <botan/tls_policy.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_reader.h>

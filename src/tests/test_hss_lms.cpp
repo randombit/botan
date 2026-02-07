@@ -12,6 +12,7 @@
 
    #include <botan/hss_lms.h>
    #include <botan/pk_algs.h>
+   #include <botan/pubkey.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/hss.h>
    #include <botan/internal/loadstor.h>

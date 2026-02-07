@@ -45,7 +45,7 @@ class Cipher_Mode_Padding_Tests final : public Text_Based_Test {
          if(expected.empty()) {
             // This is an unpad an invalid input and ensure we reject
             if(pad->unpad(std::span{input}.last(block_size)) != block_size) {
-               result.test_failure("Did not reject invalid padding", Botan::hex_encode(input));
+               result.test_failure("Did not reject invalid padding", input);
             } else {
                result.test_success("Rejected invalid padding");
             }

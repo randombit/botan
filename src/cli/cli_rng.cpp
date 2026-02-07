@@ -36,6 +36,7 @@
 
 #if defined(BOTAN_HAS_HMAC_DRBG)
    #include <botan/hmac_drbg.h>
+   #include <botan/mac.h>
 #endif
 
 namespace Botan_CLI {

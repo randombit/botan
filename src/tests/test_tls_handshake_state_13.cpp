@@ -8,6 +8,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_TLS_13)
+   #include <botan/hex.h>
    #include <botan/tls_exceptn.h>
    #include <botan/internal/tls_handshake_state_13.h>
 #endif

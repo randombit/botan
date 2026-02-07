@@ -9,6 +9,7 @@
 
 #include <botan/cipher_mode.h>
 #include <botan/data_src.h>
+#include <botan/exceptn.h>
 #include <botan/mac.h>
 #include <botan/pem.h>
 #include <botan/pwdhash.h>

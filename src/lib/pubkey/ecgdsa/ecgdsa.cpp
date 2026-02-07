@@ -8,6 +8,7 @@
 
 #include <botan/ecgdsa.h>
 
+#include <botan/ec_group.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/pk_ops_impl.h>
 
@@ -111,6 +112,10 @@ bool ECGDSA_Verification_Operation::verify(std::span<const uint8_t> msg, std::sp
 }
 
 }  // namespace
+
+std::optional<size_t> ECGDSA_PublicKey::_signature_element_size_for_DER_encoding() const {
+   return domain().get_order_bytes();
+}
 
 std::unique_ptr<Private_Key> ECGDSA_PublicKey::generate_another(RandomNumberGenerator& rng) const {
    return std::make_unique<ECGDSA_PrivateKey>(rng, domain());

@@ -9,10 +9,13 @@
 
 #if defined(BOTAN_HAS_ECDSA)
    #include "test_pubkey.h"
+   #include "test_rng.h"
+   #include <botan/ec_group.h>
    #include <botan/ecdsa.h>
    #include <botan/hash.h>
    #include <botan/pk_algs.h>
    #include <botan/pkcs8.h>
+   #include <botan/pubkey.h>
    #include <botan/rng.h>
 #endif
 
