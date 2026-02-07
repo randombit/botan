@@ -337,9 +337,9 @@ class BOTAN_UNSTABLE_API Server_Hello_12 final : public Server_Hello {
 /**
 * Certificate Status (RFC 6066)
 */
-class BOTAN_UNSTABLE_API Certificate_Status final : public Handshake_Message {
+class BOTAN_UNSTABLE_API Certificate_Status : public Handshake_Message {
    public:
-      Handshake_Type type() const override { return Handshake_Type::CertificateStatus; }
+      Handshake_Type type() const final { return Handshake_Type::CertificateStatus; }
 
       //std::shared_ptr<const OCSP::Response> response() const { return m_response; }
 
@@ -347,16 +347,9 @@ class BOTAN_UNSTABLE_API Certificate_Status final : public Handshake_Message {
 
       explicit Certificate_Status(const std::vector<uint8_t>& buf, Connection_Side from);
 
-      Certificate_Status(Handshake_IO& io, Handshake_Hash& hash, const OCSP::Response& response);
-
-      /*
-       * Create a Certificate_Status message using an already DER encoded OCSP response.
-       */
-      Certificate_Status(Handshake_IO& io, Handshake_Hash& hash, std::vector<uint8_t> raw_response_bytes);
-
       explicit Certificate_Status(std::vector<uint8_t> raw_response_bytes);
 
-      std::vector<uint8_t> serialize() const override;
+      std::vector<uint8_t> serialize() const final;
 
    private:
       std::vector<uint8_t> m_response;

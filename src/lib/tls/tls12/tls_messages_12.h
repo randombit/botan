@@ -123,6 +123,17 @@ class BOTAN_UNSTABLE_API Certificate_Verify_12 final : public Certificate_Verify
       bool verify(const X509_Certificate& cert, const Handshake_State& state, const Policy& policy) const;
 };
 
+/**
+* Certificate Status (RFC 6066)
+*/
+class BOTAN_UNSTABLE_API Certificate_Status_12 final : public Certificate_Status {
+   public:
+      /*
+       * Create a Certificate_Status message using an already DER encoded OCSP response.
+       */
+      Certificate_Status_12(Handshake_IO& io, Handshake_Hash& hash, std::vector<uint8_t> raw_response_bytes);
+};
+
 class BOTAN_UNSTABLE_API Finished_12 final : public Finished {
    public:
       using Finished::Finished;
