@@ -403,38 +403,10 @@ class Test {
             bool test_gt(const std::string& what, size_t produced, size_t expected);
             bool test_gte(const std::string& what, size_t produced, size_t expected);
 
-            template <typename T>
-            bool test_rc_ok(const std::string& func, T rc) {
-               static_assert(std::is_integral_v<T>, "Integer required.");
-
-               if(rc != 0) {
-                  std::ostringstream err;
-                  err << m_who;
-                  err << " " << func;
-                  err << " unexpectedly failed with error code " << rc;
-                  return test_failure(err.str());
-               }
-
-               return test_success();
-            }
-
-            template <typename T>
-            bool test_rc_fail(const std::string& func, const std::string& why, T rc) {
-               static_assert(std::is_integral_v<T>, "Integer required.");
-
-               if(rc == 0) {
-                  std::ostringstream err;
-                  err << m_who;
-                  err << " call to " << func << " unexpectedly succeeded";
-                  err << " expecting failure because " << why;
-                  return test_failure(err.str());
-               }
-
-               return test_success();
-            }
-
+            /* Test predicates on integer return codes */
+            bool test_rc_ok(const std::string& func, int rc);
+            bool test_rc_fail(const std::string& func, const std::string& why, int rc);
             bool test_rc(const std::string& func, int expected, int rc);
-
             bool test_rc_init(const std::string& func, int rc);
 
             bool test_ne(const std::string& what, size_t produced, size_t expected);

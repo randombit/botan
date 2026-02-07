@@ -185,17 +185,15 @@ Test::Result test_function(const std::string& name,
    success = test_func(&rv);
    result.test_eq(name, success, !expect_failure);
    if(!expect_failure) {
-      result.test_rc_ok(name, static_cast<uint32_t>(rv));
+      result.test_is_eq<uint32_t>(name, static_cast<uint32_t>(rv), 0);
    } else {
-      result.test_rc_fail(name,
-                          "return value should be: " + std::to_string(static_cast<uint32_t>(expected_return_value)),
-                          static_cast<uint32_t>(rv));
+      result.test_is_eq<uint32_t>(name, static_cast<uint32_t>(rv), static_cast<uint32_t>(expected_return_value));
    }
 
    if(success && !revert_fn_name.empty()) {
       success = revert_func(&rv);
       result.test_eq(revert_fn_name, success, !expect_failure);
-      result.test_rc_ok(revert_fn_name, static_cast<uint32_t>(rv));
+      result.test_is_eq<uint32_t>(revert_fn_name, static_cast<uint32_t>(rv), 0);
    }
 
    return result;
@@ -477,7 +475,7 @@ Test::Result test_c_close_all_sessions() {
    ReturnValue rv = ReturnValue::OK;
    success = p11_low_level.get()->C_CloseAllSessions(slot_vec.at(0), &rv);
    result.test_eq("C_CloseAllSessions", success, true);
-   result.test_rc_ok("C_CloseAllSessions", static_cast<uint32_t>(rv));
+   result.test_is_eq<uint32_t>("C_CloseAllSessions", static_cast<uint32_t>(rv), 0);
 
    return result;
 }
