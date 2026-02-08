@@ -3558,6 +3558,13 @@ def do_io_for_build(osinfo, using_mods, info_modules, build_paths, source_paths,
         shutil.copy(in_src_lib_dir('pch/pch.h'), os.path.join(build_paths.pch_dir, 'pch_lib.h'))
         shutil.copy(in_src_lib_dir('pch/pch.h'), os.path.join(build_paths.pch_dir, 'pch_exe.h'))
 
+        # MSVC requires a .cpp file to compile the PCH
+        if template_vars['cc_macro'] in ['MSVC']:
+            with open(os.path.join(build_paths.pch_dir, 'pch_lib.cpp'), 'w', encoding='utf8') as f:
+                f.write('#include "pch_lib.h"\n')
+            with open(os.path.join(build_paths.pch_dir, 'pch_exe.cpp'), 'w', encoding='utf8') as f:
+                f.write('#include "pch_exe.h"\n')
+
     def link_headers(headers, visibility, directory):
         logging.debug('Linking %d %s header files in %s', len(headers), visibility, directory)
 
