@@ -6,6 +6,8 @@
 
 #include "perf.h"
 
+#include <ostream>
+
 #if defined(BOTAN_HAS_BIGINT)
    #include <botan/assert.h>
    #include <botan/bigint.h>

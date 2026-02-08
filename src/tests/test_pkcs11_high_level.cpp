@@ -7,20 +7,19 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "test_pkcs11.h"
 #include "tests.h"
 
-#include <memory>
-#include <numeric>
-#include <sstream>
-#include <string>
-#include <vector>
-
 #if defined(BOTAN_HAS_PKCS11)
+   #include "test_pkcs11.h"
    #include <botan/p11.h>
    #include <botan/p11_object.h>
    #include <botan/p11_randomgenerator.h>
    #include <botan/internal/fmt.h>
+   #include <memory>
+   #include <numeric>
+   #include <sstream>
+   #include <string>
+   #include <vector>
 #endif
 
 #if defined(BOTAN_HAS_ASN1)

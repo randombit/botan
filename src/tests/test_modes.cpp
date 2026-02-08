@@ -10,6 +10,7 @@
 
 #if defined(BOTAN_HAS_CIPHER_MODES)
    #include <botan/cipher_mode.h>
+   #include <botan/exceptn.h>
    #include <botan/hex.h>
    #include <botan/rng.h>
 #endif

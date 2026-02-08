@@ -33,13 +33,10 @@ class Ascon_p final : public Sponge<5, uint64_t> {
             Sponge({config.bit_rate, config.initial_state}),
             m_init_final_rounds(config.init_and_final_rounds),
             m_processing_rounds(config.processing_rounds) {
-         if(m_init_final_rounds > 16) {
-            throw Botan::Invalid_Argument("Invalid Ascon initialization/finalization rounds");
-         }
+         BOTAN_ARG_CHECK(m_init_final_rounds > 0 && m_init_final_rounds <= 16,
+                         "Invalid Ascon initialization/finalization rounds");
 
-         if(m_processing_rounds > 16) {
-            throw Botan::Invalid_Argument("Invalid Ascon processing rounds");
-         }
+         BOTAN_ARG_CHECK(m_processing_rounds > 0 && m_processing_rounds <= 16, "Invalid Ascon processing rounds");
       }
 
       std::string provider() const { return "base"; }

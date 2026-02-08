@@ -9,6 +9,7 @@
 #include <botan/assert.h>
 #include <set>
 
+#include <botan/rng.h>
 #include <botan/symkey.h>
 
 #if defined(BOTAN_HAS_BLOCK_CIPHER)

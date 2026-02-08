@@ -8,6 +8,7 @@
 
 #include <botan/hex.h>
 #include <botan/rng.h>
+#include <botan/symkey.h>
 #include <botan/internal/filesystem.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
@@ -383,6 +384,26 @@ bool Test::Result::test_eq(const std::string& what, const Botan::EC_Point& a, co
 
 bool Test::Result::test_eq(const std::string& what, bool produced, bool expected) {
    return test_is_eq(what, produced, expected);
+}
+
+bool Test::Result::test_rc_ok(const std::string& func, int rc) {
+   if(rc != 0) {
+      std::ostringstream err;
+      err << m_who << " " << func << " unexpectedly failed with error code " << rc;
+      return test_failure(err.str());
+   }
+
+   return test_success();
+}
+
+bool Test::Result::test_rc_fail(const std::string& func, const std::string& why, int rc) {
+   if(rc == 0) {
+      std::ostringstream err;
+      err << m_who << " call to " << func << " unexpectedly succeeded expecting failure because " << why;
+      return test_failure(err.str());
+   }
+
+   return test_success();
 }
 
 bool Test::Result::test_rc_init(const std::string& func, int rc) {

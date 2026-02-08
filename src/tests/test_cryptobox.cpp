@@ -4,13 +4,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#define BOTAN_NO_DEPRECATED_WARNINGS
-
-#include "test_rng.h"
 #include "tests.h"
 
 #if defined(BOTAN_HAS_CRYPTO_BOX)
+   #include "test_rng.h"
    #include <botan/cryptobox.h>
+   #include <botan/exceptn.h>
    #include <botan/pem.h>
 #endif
 

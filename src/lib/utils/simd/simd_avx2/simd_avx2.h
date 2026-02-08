@@ -357,18 +357,18 @@ class SIMD_8x32 final {
 // NOLINTEND(portability-simd-intrinsics)
 
 template <size_t R>
-inline SIMD_8x32 rotl(SIMD_8x32 input) {
+inline SIMD_8x32 BOTAN_FN_ISA_AVX2 rotl(SIMD_8x32 input) {
    return input.rotl<R>();
 }
 
 template <size_t R>
-inline SIMD_8x32 rotr(SIMD_8x32 input) {
+inline SIMD_8x32 BOTAN_FN_ISA_AVX2 rotr(SIMD_8x32 input) {
    return input.rotr<R>();
 }
 
 // For Serpent:
 template <size_t S>
-inline SIMD_8x32 shl(SIMD_8x32 input) {
+inline SIMD_8x32 BOTAN_FN_ISA_AVX2 shl(SIMD_8x32 input) {
    return input.shl<S>();
 }
 

@@ -5,11 +5,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "test_pubkey.h"
 #include "tests.h"
 
 #if defined(BOTAN_HAS_HSS_LMS)
-
+   #include "test_pubkey.h"
    #include <botan/hss_lms.h>
    #include <botan/pk_algs.h>
    #include <botan/pubkey.h>

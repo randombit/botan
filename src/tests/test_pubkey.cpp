@@ -5,13 +5,15 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "test_pubkey.h"
+#include "tests.h"
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
 
+   #include "test_pubkey.h"
    #include "test_rng.h"
 
    #include <botan/data_src.h>
+   #include <botan/exceptn.h>
    #include <botan/hex.h>
    #include <botan/pk_algs.h>
    #include <botan/pkcs8.h>

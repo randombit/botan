@@ -15,8 +15,6 @@ Each include is parsed for every test file which can get quite expensive
 */
 
 #include <botan/assert.h>
-#include <botan/exceptn.h>
-#include <botan/symkey.h>
 #include <botan/types.h>
 #include <functional>
 #include <iosfwd>
@@ -24,6 +22,7 @@ Each include is parsed for every test file which can get quite expensive
 #include <optional>
 #include <span>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <variant>
 #include <vector>
@@ -31,6 +30,7 @@ Each include is parsed for every test file which can get quite expensive
 namespace Botan {
 
 class RandomNumberGenerator;
+class OctetString;
 
 #if defined(BOTAN_HAS_BIGINT)
 class BigInt;
@@ -179,11 +179,6 @@ class Test_Options {
 namespace detail {
 
 template <typename, typename = void>
-constexpr bool has_Botan_to_string = false;
-template <typename T>
-constexpr bool has_Botan_to_string<T, std::void_t<decltype(Botan::to_string(std::declval<T>()))>> = true;
-
-template <typename, typename = void>
 constexpr bool has_std_to_string = false;
 template <typename T>
 constexpr bool has_std_to_string<T, std::void_t<decltype(std::to_string(std::declval<T>()))>> = true;
@@ -273,22 +268,6 @@ class Test {
                Result r(who);
                r.test_note(what);
                return r;
-            }
-
-            static Result OfExpectedFailure(bool expecting_failure, const Test::Result& result) {
-               if(!expecting_failure) {
-                  return result;
-               }
-
-               if(result.tests_failed() == 0) {
-                  Result r = result;
-                  r.test_failure("Expected this test to fail, but it did not");
-                  return r;
-               } else {
-                  Result r(result.who());
-                  r.test_note("Got expected failure");
-                  return r;
-               }
             }
 
             void merge(const Result& other, bool ignore_test_name = false);
@@ -408,38 +387,10 @@ class Test {
             bool test_gt(const std::string& what, size_t produced, size_t expected);
             bool test_gte(const std::string& what, size_t produced, size_t expected);
 
-            template <typename T>
-            bool test_rc_ok(const std::string& func, T rc) {
-               static_assert(std::is_integral_v<T>, "Integer required.");
-
-               if(rc != 0) {
-                  std::ostringstream err;
-                  err << m_who;
-                  err << " " << func;
-                  err << " unexpectedly failed with error code " << rc;
-                  return test_failure(err.str());
-               }
-
-               return test_success();
-            }
-
-            template <typename T>
-            bool test_rc_fail(const std::string& func, const std::string& why, T rc) {
-               static_assert(std::is_integral_v<T>, "Integer required.");
-
-               if(rc == 0) {
-                  std::ostringstream err;
-                  err << m_who;
-                  err << " call to " << func << " unexpectedly succeeded";
-                  err << " expecting failure because " << why;
-                  return test_failure(err.str());
-               }
-
-               return test_success();
-            }
-
+            /* Test predicates on integer return codes */
+            bool test_rc_ok(const std::string& func, int rc);
+            bool test_rc_fail(const std::string& func, const std::string& why, int rc);
             bool test_rc(const std::string& func, int expected, int rc);
-
             bool test_rc_init(const std::string& func, int rc);
 
             bool test_ne(const std::string& what, size_t produced, size_t expected);
@@ -581,15 +532,15 @@ class Test {
             std::string to_string(const T& v) {
                if constexpr(detail::is_optional_v<T>) {
                   return (v.has_value()) ? to_string(v.value()) : std::string("std::nullopt");
-               } else if constexpr(detail::has_Botan_to_string<T>) {
-                  return Botan::to_string(v);
                } else if constexpr(detail::has_ostream_operator<T>) {
                   std::ostringstream oss;
                   oss << v;
                   return oss.str();
                } else if constexpr(detail::has_std_to_string<T>) {
+                  //static_assert(false, "no std::to_string for you");
                   return std::to_string(v);
                } else {
+                  //static_assert(false, "unknown type");
                   return "<?>";
                }
             }

@@ -9,7 +9,8 @@
 #ifndef BOTAN_SPONGE_CONSTRUCTION_H_
 #define BOTAN_SPONGE_CONSTRUCTION_H_
 
-#include <botan/exceptn.h>
+#include <botan/assert.h>
+#include <botan/types.h>
 #include <array>
 
 namespace Botan {
@@ -36,9 +37,7 @@ class Sponge {
 
    public:
       constexpr explicit Sponge(Config config) : m_S(config.initial_state), m_S_cursor(0), m_bit_rate(config.bit_rate) {
-         if(m_bit_rate % (sizeof(word) * 8) != 0 || m_bit_rate > words * sizeof(word) * 8) {
-            throw Botan::Invalid_Argument("Invalid sponge bit rate");
-         }
+         BOTAN_ARG_CHECK(m_bit_rate % word_bits == 0 && m_bit_rate < words * word_bits, "Invalid sponge bit rate");
       }
 
       constexpr static size_t state_bytes() { return sizeof(state_t); }

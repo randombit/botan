@@ -8,6 +8,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_MAC)
+   #include <botan/exceptn.h>
    #include <botan/mac.h>
    #include <botan/rng.h>
    #include <botan/internal/fmt.h>

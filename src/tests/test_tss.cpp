@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_THRESHOLD_SECRET_SHARING)
    #include "test_rng.h"
+   #include <botan/exceptn.h>
    #include <botan/tss.h>
 #endif
 
