@@ -2382,13 +2382,29 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
     }
 
     if variables['enable_pch']:
-        variables['pch_include_for_lib'] = '%s %s' % (cc.pch_include, os.path.join(build_paths.pch_dir, 'pch_lib.h'))
         variables['pch_path_for_lib'] = os.path.join(build_paths.pch_dir, 'pch_lib.h.' + cc.pch_suffix)
-
-        variables['pch_include_for_exe'] = '%s %s' % (cc.pch_include, os.path.join(build_paths.pch_dir, 'pch_exe.h'))
         variables['pch_path_for_exe'] = os.path.join(build_paths.pch_dir, 'pch_exe.h.' + cc.pch_suffix)
 
         variables['pch_target'] = 'pch'
+        variables['is_msvc'] = cc.macro_name == 'MSVC'
+        
+        if cc.macro_name == 'MSVC':
+            # MSVC requires compiling a .cpp file and using /Fp to specify output
+            variables['pch_src_for_lib'] = os.path.join(build_paths.pch_dir, 'pch_lib.cpp')
+            variables['pch_src_for_exe'] = os.path.join(build_paths.pch_dir, 'pch_exe.cpp')
+            variables['pch_compile_for_lib'] = '/Ycpch_lib.h /Fp%s' % variables['pch_path_for_lib']
+            variables['pch_compile_for_exe'] = '/Ycpch_exe.h /Fp%s' % variables['pch_path_for_exe']
+            # MSVC uses /Yu to use PCH and /Fp to specify which one, and /FI to force include
+            variables['pch_include_for_lib'] = '/Yupch_lib.h /Fp%s /FIpch_lib.h' % variables['pch_path_for_lib']
+            variables['pch_include_for_exe'] = '/Yupch_exe.h /Fp%s /FIpch_exe.h' % variables['pch_path_for_exe']
+        else:
+            # GCC/Clang compile the header directly
+            variables['pch_src_for_lib'] = os.path.join(build_paths.pch_dir, 'pch_lib.h')
+            variables['pch_src_for_exe'] = os.path.join(build_paths.pch_dir, 'pch_exe.h')
+            variables['pch_compile_for_lib'] = cc.pch_compile
+            variables['pch_compile_for_exe'] = cc.pch_compile
+            variables['pch_include_for_lib'] = '%s %s' % (cc.pch_include, os.path.join(build_paths.pch_dir, 'pch_lib.h'))
+            variables['pch_include_for_exe'] = '%s %s' % (cc.pch_include, os.path.join(build_paths.pch_dir, 'pch_exe.h'))
     else:
         variables['pch_include_for_lib'] = ''
         variables['pch_path_for_lib'] = ''
@@ -2396,6 +2412,7 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         variables['pch_path_for_exe'] = ''
 
         variables['pch_target'] = ''
+        variables['is_msvc'] = False
 
     variables['installed_include_dir'] = os.path.join(
         variables['prefix'],
@@ -3554,6 +3571,13 @@ def do_io_for_build(osinfo, using_mods, info_modules, build_paths, source_paths,
     if options.enable_pch:
         shutil.copy(in_src_lib_dir('pch/pch.h'), os.path.join(build_paths.pch_dir, 'pch_lib.h'))
         shutil.copy(in_src_lib_dir('pch/pch.h'), os.path.join(build_paths.pch_dir, 'pch_exe.h'))
+        
+        # MSVC requires a .cpp file to compile the PCH
+        if template_vars['cc_macro'] == 'MSVC':
+            with open(os.path.join(build_paths.pch_dir, 'pch_lib.cpp'), 'w', encoding='utf8') as f:
+                f.write('#include "pch_lib.h"\n')
+            with open(os.path.join(build_paths.pch_dir, 'pch_exe.cpp'), 'w', encoding='utf8') as f:
+                f.write('#include "pch_exe.h"\n')
 
     def link_headers(headers, visibility, directory):
         logging.debug('Linking %d %s header files in %s', len(headers), visibility, directory)

@@ -16,6 +16,10 @@ add_lib_option "%s.lib"
 
 compile_flags "/nologo /c"
 
+pch_compile "/Yc"
+pch_suffix "pch"
+pch_include "/Yu"
+
 optimization_flags "/O2 /Oi /Zc:throwingNew"
 size_optimization_flags "/O1 /Os"
 
