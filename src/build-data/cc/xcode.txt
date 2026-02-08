@@ -23,7 +23,7 @@ add_sysroot_option "--sysroot="
 
 pch_suffix "pch"
 pch_compile "-Xclang -fno-pch-timestamp -x c++-header -c"
-pch_include "-Xclang -fno-pch-timestamp -include"
+pch_include "-Xclang -fno-pch-timestamp -include {pch}"
 
 <sanitizers>
 default   -> address,undefined

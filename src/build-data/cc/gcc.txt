@@ -32,7 +32,7 @@ add_sysroot_option "--sysroot="
 
 pch_compile "-x c++-header -c"
 pch_suffix "gch"
-pch_include "-include"
+pch_include "-include {pch}"
 
 <sanitizers>
 default   -> iterator,address

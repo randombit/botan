@@ -31,7 +31,7 @@ lang_flags "/Zc:preprocessor /Zc:inline /std:c++20 /EHs /GR"
 
 pch_suffix "pch"
 pch_compile "/Yc"
-pch_include "/FI"
+pch_include "/Yu{pch} /FI{pch}"
 output_to_pch "/Fp"
 
 # 4251: STL types used in DLL interface
