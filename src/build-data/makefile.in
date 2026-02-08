@@ -13,7 +13,7 @@ PYTHON_EXE     = %{python_exe}
 ABI_FLAGS      = %{cc_sysroot} %{cxx_abi_flags}
 LANG_FLAGS     = %{cc_lang_flags} %{os_feature_macros}
 LANG_EXE_FLAGS = %{cc_lang_binary_linker_flags}
-CXXFLAGS       = %{cc_compile_flags}
+CXXFLAGS       = %{cc_compile_flags} %{pch_include_for_lib}
 WARN_FLAGS     = %{cc_warning_flags}
 LIB_FLAGS      = %{lib_flags}
 LDFLAGS        = %{ldflags}
@@ -44,11 +44,19 @@ cli: $(CLI)
 tests: $(TEST)
 libs: $(LIBRARIES)
 docs: %{doc_stamp_file}
+pch: %{pch_path_for_lib}
 
 # Misc targets
 
 %{if make_supports_phony}
 .PHONY: all cli libs tests check docs clean distclean install fmt tidy
+%{endif}
+
+%{if enable_pch}
+
+%{pch_path_for_lib}: %{pch_dir}/pch.h
+	$(CXX) $(BUILD_FLAGS) %{lib_flags} -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile} %{dash_c} %{pch_dir}/pch.h %{dash_o}$@
+
 %{endif}
 
 %{doc_stamp_file}: %{doc_dir}/*.rst %{doc_dir}/api_ref/*.rst %{doc_dir}/dev_ref/*.rst
@@ -150,22 +158,22 @@ ct_selftest: %{out_dir}/botan_ct_selftest
 # Build Commands
 
 %{for lib_build_info}
-%{obj}: %{src}
+%{obj}: pch %{src}
 	$(CXX) $(LIB_FLAGS) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for cli_build_info}
-%{obj}: %{src}
+%{obj}: pch %{src}
 	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for test_build_info}
-%{obj}: %{src}
+%{obj}: pch %{src}
 	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for fuzzer_build_info}
-%{obj}: %{src}
+%{obj}: pch %{src}
 	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 
 %{exe}: %{obj} $(LIBRARIES)
@@ -173,7 +181,7 @@ ct_selftest: %{out_dir}/botan_ct_selftest
 %{endfor}
 
 %{for examples_build_info}
-%{obj}: %{src}
+%{obj}: pch %{src}
 	$(CXX) $(BUILD_FLAGS) %{public_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 
 %{exe}: %{obj} $(LIBRARIES)

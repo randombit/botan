@@ -7,7 +7,7 @@ minimum_supported_version 11.0
 lang_flags "-std=c++20 -D_REENTRANT"
 
 # This should only contain flags which are included in GCC 11
-warning_flags "-Wall -Wextra -Wpedantic -Wstrict-aliasing -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wzero-as-null-pointer-constant -Wnon-virtual-dtor -Wold-style-cast -Wsuggest-override -Wshadow -Wextra-semi"
+warning_flags "-Wall -Wextra -Wpedantic -Wstrict-aliasing -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wzero-as-null-pointer-constant -Wnon-virtual-dtor -Wold-style-cast -Wsuggest-override -Wshadow -Wextra-semi -Winvalid-pch"
 
 # Boost headers have 0 as nullptr and non-virtual-dtor issues so we can't werror on them
 # -Wmaybe-uninitialized is buggy https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105937
@@ -29,6 +29,10 @@ stack_protector_flags "-fstack-protector"
 
 add_system_include_dir_option "-isystem"
 add_sysroot_option "--sysroot="
+
+pch_compile "-x c++-header"
+pch_suffix "gch"
+pch_include "-include"
 
 <sanitizers>
 default   -> iterator,address

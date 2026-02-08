@@ -15,6 +15,10 @@ optimization_flags "-O3"
 sanitizer_optimization_flags "-O1 -fno-optimize-sibling-calls -fno-omit-frame-pointer"
 size_optimization_flags "-Os"
 
+pch_compile "-x c++-header"
+pch_suffix "pch"
+pch_include "-include"
+
 visibility_build_flags "-fvisibility=hidden"
 visibility_attribute '__attribute__((visibility("default")))'
 

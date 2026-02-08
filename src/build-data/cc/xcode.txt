@@ -21,6 +21,10 @@ size_optimization_flags "-Os"
 add_system_include_dir_option "-isystem"
 add_sysroot_option "--sysroot="
 
+pch_compile "-x c++-header"
+pch_suffix "pch"
+pch_include "-include"
+
 <sanitizers>
 default   -> address,undefined
 
