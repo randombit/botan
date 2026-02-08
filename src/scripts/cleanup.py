@@ -112,6 +112,13 @@ def main(args=None):
     remove_file(build_config['cli_exe'])
     remove_file(build_config['test_exe'])
 
+    pch_suffixes = ['pch', 'gch']
+
+    for f in os.listdir(build_config['pch_dir']):
+        for suffix in pch_suffixes:
+            if f.endswith(suffix):
+                remove_file(os.path.join(build_config['pch_dir'], f))
+
     lib_basename = build_config['lib_prefix'] + build_config['libname']
     matches_libname = re.compile('^' + lib_basename + '.([a-z]+)((\\.[0-9\\.]+)|$)')
 
