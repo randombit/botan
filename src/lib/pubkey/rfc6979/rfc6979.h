@@ -10,7 +10,6 @@
 
 #include <botan/bigint.h>
 #include <memory>
-#include <span>
 #include <string_view>
 
 #if defined(BOTAN_HAS_ECC_GROUP)

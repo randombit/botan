@@ -13,7 +13,6 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/ffi_util.h>
 #include <cstdio>
-#include <cstdlib>
 
 #if defined(BOTAN_HAS_OS_UTILS)
    #include <botan/internal/os_utils.h>

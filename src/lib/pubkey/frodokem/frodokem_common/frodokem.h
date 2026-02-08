@@ -16,7 +16,6 @@
 #include <botan/frodo_mode.h>
 #include <botan/pk_keys.h>
 
-#include <tuple>
 #include <vector>
 
 namespace Botan {

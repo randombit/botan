@@ -8,7 +8,6 @@
 #define BOTAN_PRIMALITY_TEST_H_
 
 #include <botan/types.h>
-#include <memory>
 #include <vector>
 
 namespace Botan {
