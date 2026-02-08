@@ -2250,10 +2250,6 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'with_doxygen': options.with_doxygen,
         'maintainer_mode': options.maintainer_mode,
 
-        'enable_pch': options.enable_pch and cc.supports_pch(),
-        'pch_suffix': cc.pch_suffix or '',
-        'pch_compile': cc.pch_compile or '',
-
         'out_dir': normalize_source_path(build_dir),
         'build_dir': normalize_source_path(build_paths.build_dir),
         'module_info_dir': build_paths.doc_module_info,
@@ -2261,7 +2257,6 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'doc_stamp_file': normalize_source_path(os.path.join(build_paths.build_dir, 'doc.stamp')),
         'makefile_path': os.path.join(build_paths.build_dir, '..', 'Makefile'),
         'ninja_build_path': os.path.join(build_paths.build_dir, '..', 'build.ninja'),
-        'pch_dir': build_paths.pch_dir or '',
 
         # Use response files for the archive command on windows
         # Note: macOS (and perhaps other OSes) do not support this
@@ -2311,8 +2306,6 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
 
         'dash_o': cc.output_to_object,
         'dash_c': cc.compile_flags,
-
-        'dash_o_pch': cc.output_to_pch,
 
         'cc_lang_flags': cc.cc_lang_flags(),
         'cc_lang_binary_linker_flags': cc.cc_lang_binary_linker_flags(),
@@ -2385,21 +2378,27 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'disabled_mod_list': sorted([m.basename for m in disabled_modules]),
     }
 
-    if variables['enable_pch']:
-        variables['pch_include_for_lib'] = '%s %s' % (cc.pch_include, os.path.join(build_paths.pch_dir, 'pch_lib.h'))
-        variables['pch_path_for_lib'] = os.path.join(build_paths.pch_dir, 'pch_lib.h.' + cc.pch_suffix)
+    if options.enable_pch and cc.supports_pch():
+        variables['enable_pch'] = True
+        variables['dash_o_pch'] = cc.output_to_pch
+        variables['pch_suffix'] = cc.pch_suffix
+        variables['pch_compile'] = cc.pch_compile
+        variables['pch_dir'] = build_paths.pch_dir
 
-        variables['pch_include_for_exe'] = '%s %s' % (cc.pch_include, os.path.join(build_paths.pch_dir, 'pch_exe.h'))
-        variables['pch_path_for_exe'] = os.path.join(build_paths.pch_dir, 'pch_exe.h.' + cc.pch_suffix)
+        pch_lib_file = os.path.join(build_paths.pch_dir, 'pch_lib.h')
+        pch_exe_file = os.path.join(build_paths.pch_dir, 'pch_exe.h')
 
-        variables['pch_target'] = 'pch'
+        variables['pch_include_for_lib'] = cc.pch_include.format(pch=pch_lib_file)
+        variables['pch_path_for_lib'] = pch_lib_file + '.' + cc.pch_suffix
+
+        variables['pch_include_for_exe'] = cc.pch_include.format(pch=pch_exe_file)
+        variables['pch_path_for_exe'] = pch_exe_file + '.' + cc.pch_suffix
     else:
+        variables['enable_pch'] = False
         variables['pch_include_for_lib'] = ''
         variables['pch_path_for_lib'] = ''
         variables['pch_include_for_exe'] = ''
         variables['pch_path_for_exe'] = ''
-
-        variables['pch_target'] = ''
 
     variables['installed_include_dir'] = os.path.join(
         variables['prefix'],
