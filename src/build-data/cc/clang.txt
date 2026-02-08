@@ -22,8 +22,8 @@ add_system_include_dir_option "-isystem"
 add_sysroot_option "--sysroot="
 
 pch_suffix "pch"
-pch_compile "-Xclang -fno-pch-timestamp -x c++-header -c {pch_inc}"
-pch_include "-Xclang -fno-pch-timestamp -include {pch}"
+pch_compile "-Xclang -fno-pch-timestamp -x c++-header"
+pch_include "-Xclang -fno-pch-timestamp -include"
 
 <sanitizers>
 default   -> address,undefined

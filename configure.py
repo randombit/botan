@@ -1281,7 +1281,6 @@ class CompilerInfo(InfoObject):
                 'macro_name': None,
                 'minimum_supported_version': None,
                 'output_to_object': '-o ',
-                'output_to_pch': '-o ',
                 'output_to_exe': '-o ',
                 'add_include_dir_option': '-I',
                 'add_system_include_dir_option': '-I',
@@ -1346,7 +1345,6 @@ class CompilerInfo(InfoObject):
         self.optimization_flags = lex.optimization_flags
         self.output_to_exe = lex.output_to_exe
         self.output_to_object = lex.output_to_object
-        self.output_to_pch = lex.output_to_pch
         self.preproc_flags = lex.preproc_flags
         self.sanitizers = lex.sanitizers
         self.sanitizer_types = []
@@ -2250,6 +2248,10 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'with_doxygen': options.with_doxygen,
         'maintainer_mode': options.maintainer_mode,
 
+        'enable_pch': options.enable_pch and cc.supports_pch(),
+        'pch_suffix': cc.pch_suffix or '',
+        'pch_compile': cc.pch_compile or '',
+
         'out_dir': normalize_source_path(build_dir),
         'build_dir': normalize_source_path(build_paths.build_dir),
         'module_info_dir': build_paths.doc_module_info,
@@ -2257,6 +2259,7 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'doc_stamp_file': normalize_source_path(os.path.join(build_paths.build_dir, 'doc.stamp')),
         'makefile_path': os.path.join(build_paths.build_dir, '..', 'Makefile'),
         'ninja_build_path': os.path.join(build_paths.build_dir, '..', 'build.ninja'),
+        'pch_dir': build_paths.pch_dir or '',
 
         # Use response files for the archive command on windows
         # Note: macOS (and perhaps other OSes) do not support this
@@ -2378,41 +2381,21 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'disabled_mod_list': sorted([m.basename for m in disabled_modules]),
     }
 
-    if options.enable_pch and cc.supports_pch():
-        variables['enable_pch'] = True
-        variables['dash_o_pch'] = cc.output_to_pch
-        variables['pch_suffix'] = cc.pch_suffix
-        variables['pch_dir'] = build_paths.pch_dir
+    if variables['enable_pch']:
+        variables['pch_include_for_lib'] = '%s %s' % (cc.pch_include, os.path.join(build_paths.pch_dir, 'pch_lib.h'))
+        variables['pch_path_for_lib'] = os.path.join(build_paths.pch_dir, 'pch_lib.h.' + cc.pch_suffix)
 
-        pch_lib_inc = os.path.join(build_paths.pch_dir, 'pch_lib.h')
-        pch_exe_inc = os.path.join(build_paths.pch_dir, 'pch_exe.h')
-        variables['pch_lib_inc'] = pch_lib_inc
-        variables['pch_exe_inc'] = pch_exe_inc
+        variables['pch_include_for_exe'] = '%s %s' % (cc.pch_include, os.path.join(build_paths.pch_dir, 'pch_exe.h'))
+        variables['pch_path_for_exe'] = os.path.join(build_paths.pch_dir, 'pch_exe.h.' + cc.pch_suffix)
 
-        pch_lib_src = pch_lib_inc
-        pch_exe_src = pch_lib_inc
-
-        if cc.macro_name in ['MSVC']:
-            # As usual, cl is awkward and weird about everything
-            pch_lib_src = os.path.join(build_paths.pch_dir, 'pch_lib.cpp')
-            pch_exe_src = os.path.join(build_paths.pch_dir, 'pch_exe.cpp')
-
-        variables['pch_lib_src'] = pch_lib_src
-        variables['pch_exe_src'] = pch_exe_src
-
-        variables['pch_include_for_lib'] = cc.pch_include.format(pch=pch_lib_inc)
-        variables['pch_path_for_lib'] = pch_lib_inc + '.' + cc.pch_suffix
-        variables['pch_compile_for_lib'] = cc.pch_compile.format(pch_inc=pch_lib_inc, pch_src=pch_lib_src)
-
-        variables['pch_include_for_exe'] = cc.pch_include.format(pch=pch_exe_inc)
-        variables['pch_path_for_exe'] = pch_exe_inc + '.' + cc.pch_suffix
-        variables['pch_compile_for_exe'] = cc.pch_compile.format(pch_inc=pch_exe_inc, pch_src=pch_exe_src)
+        variables['pch_target'] = 'pch'
     else:
-        variables['enable_pch'] = False
         variables['pch_include_for_lib'] = ''
         variables['pch_path_for_lib'] = ''
         variables['pch_include_for_exe'] = ''
         variables['pch_path_for_exe'] = ''
+
+        variables['pch_target'] = ''
 
     variables['installed_include_dir'] = os.path.join(
         variables['prefix'],
@@ -3571,13 +3554,6 @@ def do_io_for_build(osinfo, using_mods, info_modules, build_paths, source_paths,
     if options.enable_pch:
         shutil.copy(in_src_lib_dir('pch/pch.h'), os.path.join(build_paths.pch_dir, 'pch_lib.h'))
         shutil.copy(in_src_lib_dir('pch/pch.h'), os.path.join(build_paths.pch_dir, 'pch_exe.h'))
-
-        # MSVC requires a .cpp file to compile the PCH
-        if template_vars['cc_macro'] in ['MSVC']:
-            with open(os.path.join(build_paths.pch_dir, 'pch_lib.cpp'), 'w', encoding='utf8') as f:
-                f.write('#include "pch_lib.h"\n')
-            with open(os.path.join(build_paths.pch_dir, 'pch_exe.cpp'), 'w', encoding='utf8') as f:
-                f.write('#include "pch_exe.h"\n')
 
     def link_headers(headers, visibility, directory):
         logging.debug('Linking %d %s header files in %s', len(headers), visibility, directory)

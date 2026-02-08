@@ -23,14 +23,14 @@ INSTALLED_LIB_DIR = %{libdir}
 
 %{if enable_pch}
 rule compile_pch_lib
-  command = %{cxx} %{lib_flags} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile_for_lib} $in %{dash_o_pch}$out
+  command = %{cxx} %{lib_flags} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile} %{dash_c} $in %{dash_o}$out
 
 rule compile_pch_exe
-  command = %{cxx} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile_for_exe} $in %{dash_o_pch}$out
+  command = %{cxx} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile} %{dash_c} $in %{dash_o}$out
 
-build %{pch_path_for_lib}: compile_pch_lib %{pch_lib_src}
+build %{pch_path_for_lib}: compile_pch_lib %{pch_dir}/pch_lib.h
 
-build %{pch_path_for_exe}: compile_pch_exe %{pch_exe_src}
+build %{pch_path_for_exe}: compile_pch_exe %{pch_dir}/pch_exe.h
 
 %{endif}
 
@@ -208,6 +208,10 @@ build libs: phony %{library_targets} $
 
 build docs: phony %{doc_stamp_file}
 
+%{if enable_pch}
+build pch: phony %{pch_path_for_lib} %{pch_path_for_exe}
+%{endif}
+
 build clean: clean
 
 build distclean: distclean
@@ -224,15 +228,15 @@ build tidy: tidy
 # Build Commands
 
 %{for lib_build_info}
-build %{obj}: compile_lib %{src} | %{pch_path_for_lib}
+build %{obj}: compile_lib %{src} | %{pch_target}
 %{endfor}
 
 %{for cli_build_info}
-build %{obj}: compile_exe %{src} | %{pch_path_for_exe}
+build %{obj}: compile_exe %{src} | %{pch_target}
 %{endfor}
 
 %{for test_build_info}
-build %{obj}: compile_exe %{src} | %{pch_path_for_exe}
+build %{obj}: compile_exe %{src} | %{pch_target}
 %{endfor}
 
 %{for fuzzer_build_info}

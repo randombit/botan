@@ -30,9 +30,9 @@ stack_protector_flags "-fstack-protector"
 add_system_include_dir_option "-isystem"
 add_sysroot_option "--sysroot="
 
+pch_compile "-x c++-header"
 pch_suffix "gch"
-pch_compile "-x c++-header -c {pch_inc}"
-pch_include "-include {pch}"
+pch_include "-include"
 
 <sanitizers>
 default   -> iterator,address
