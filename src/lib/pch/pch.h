@@ -37,7 +37,7 @@
 #include <variant>
 #include <vector>
 
-#if __has_include(<immintrin.h>)
+#if (defined(__x86_64__) || defined(_M_X64)) && __has_include(<immintrin.h>)
    #include <immintrin.h>
 #endif
 
