@@ -228,15 +228,15 @@ build tidy: tidy
 # Build Commands
 
 %{for lib_build_info}
-build %{obj}: compile_lib %{src} | %{pch_target}
+build %{obj}: compile_lib %{src} | %{pch_path_for_lib}
 %{endfor}
 
 %{for cli_build_info}
-build %{obj}: compile_exe %{src} | %{pch_target}
+build %{obj}: compile_exe %{src} | %{pch_path_for_exe}
 %{endfor}
 
 %{for test_build_info}
-build %{obj}: compile_exe %{src} | %{pch_target}
+build %{obj}: compile_exe %{src} | %{pch_path_for_exe}
 %{endfor}
 
 %{for fuzzer_build_info}
