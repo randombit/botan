@@ -23,10 +23,10 @@ INSTALLED_LIB_DIR = %{libdir}
 
 %{if enable_pch}
 rule compile_pch_lib
-  command = %{cxx} %{lib_flags} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile} %{dash_c} $in %{dash_o}$out
+  command = %{cxx} %{lib_flags} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile} $in %{dash_o_pch}$out
 
 rule compile_pch_exe
-  command = %{cxx} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile} %{dash_c} $in %{dash_o}$out
+  command = %{cxx} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile} $in %{dash_o_pch}$out
 
 build %{pch_path_for_lib}: compile_pch_lib %{pch_dir}/pch_lib.h
 
