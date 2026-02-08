@@ -9,7 +9,6 @@
 
 #include <botan/types.h>
 #include <concepts>
-#include <type_traits>
 
 namespace Botan {
 

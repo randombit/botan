@@ -13,7 +13,6 @@
 #include <botan/pkix_types.h>
 
 #include <map>
-#include <memory>
 #include <vector>
 
 namespace Botan {

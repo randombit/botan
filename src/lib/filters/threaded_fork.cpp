@@ -12,7 +12,6 @@
 
    #include <botan/internal/barrier.h>
    #include <botan/internal/semaphore.h>
-   #include <functional>
 
 namespace Botan {
 

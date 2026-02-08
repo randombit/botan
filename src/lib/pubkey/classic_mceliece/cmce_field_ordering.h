@@ -12,8 +12,6 @@
 #include <botan/internal/cmce_parameters.h>
 #include <botan/internal/cmce_types.h>
 
-#include <numeric>
-
 namespace Botan {
 
 /**

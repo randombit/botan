@@ -13,7 +13,6 @@
 #include <botan/pkix_enums.h>
 #include <botan/x509cert.h>
 #include <chrono>
-#include <functional>
 #include <set>
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS) && defined(BOTAN_HAS_HTTP_UTIL)

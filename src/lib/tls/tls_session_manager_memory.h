@@ -9,7 +9,6 @@
 #ifndef BOTAN_TLS_SESSION_MANAGER_IN_MEMORY_H_
 #define BOTAN_TLS_SESSION_MANAGER_IN_MEMORY_H_
 
-#include <botan/mutex.h>
 #include <botan/tls_session.h>
 #include <botan/tls_session_manager.h>
 
