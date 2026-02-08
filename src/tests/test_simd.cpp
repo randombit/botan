@@ -7,13 +7,14 @@
 #include "tests.h"
 
 #include <botan/hex.h>
+#include <botan/internal/bswap.h>
+#include <botan/internal/isa_extn.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/rotate.h>
+#include <botan/internal/stl_util.h>
 
 #if defined(BOTAN_HAS_SIMD_4X32)
-   #include <botan/internal/bswap.h>
-   #include <botan/internal/loadstor.h>
-   #include <botan/internal/rotate.h>
    #include <botan/internal/simd_4x32.h>
-   #include <botan/internal/stl_util.h>
 #endif
 
 #if defined(BOTAN_HAS_SIMD_2X64)
@@ -26,19 +27,21 @@
 
 namespace Botan_Tests {
 
-#if defined(BOTAN_HAS_SIMD_4X32)
+#if defined(BOTAN_HAS_SIMD_4X32) && defined(BOTAN_HAS_CPUID)
 
 class SIMD_4X32_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
-         Test::Result result("SIMD_4x32");
-
-   #if defined(BOTAN_HAS_CPUID)
          if(!Botan::CPUID::has(Botan::CPUID::Feature::SIMD_4X32)) {
-            result.test_note("Skipping SIMD_4x32 tests due to missing CPU support at runtime");
-            return {result};
+            return {Test::Result::Note("simd_4x32", "Skipping tests due to missing SIMD support at runtime")};
+         } else {
+            return {test_simd_4x32()};
          }
-   #endif
+      }
+
+   private:
+      Test::Result BOTAN_FN_ISA_SIMD_4X32 test_simd_4x32() {
+         Test::Result result("SIMD_4x32");
 
          const uint32_t pat1 = 0xAABBCCDD;
          const uint32_t pat2 = 0x87654321;
@@ -182,14 +185,13 @@ class SIMD_4X32_Tests final : public Test {
          return {result};
       }
 
-   private:
-      static void test_eq(Test::Result& result,
-                          const std::string& op,
-                          const Botan::SIMD_4x32& simd,
-                          uint32_t exp0,
-                          uint32_t exp1,
-                          uint32_t exp2,
-                          uint32_t exp3) {
+      static void BOTAN_FN_ISA_SIMD_4X32 test_eq(Test::Result& result,
+                                                 const std::string& op,
+                                                 const Botan::SIMD_4x32& simd,
+                                                 uint32_t exp0,
+                                                 uint32_t exp1,
+                                                 uint32_t exp2,
+                                                 uint32_t exp3) {
          uint8_t arr_be[16 + 15];
          uint8_t arr_be2[16 + 15];
          uint8_t arr_le[16 + 15];
@@ -241,19 +243,21 @@ class SIMD_4X32_Tests final : public Test {
 BOTAN_REGISTER_TEST("utils", "simd_4x32", SIMD_4X32_Tests);
 #endif
 
-#if defined(BOTAN_HAS_SIMD_2X64)
+#if defined(BOTAN_HAS_SIMD_2X64) && defined(BOTAN_HAS_CPUID)
 
 class SIMD_2X64_Tests final : public Test {
    public:
-      std::vector<Test::Result> run() override {
-         Test::Result result("SIMD_2x64");
-
-   #if defined(BOTAN_HAS_CPUID)
+      std::vector<Test::Result> BOTAN_FN_ISA_SIMD_2X64 run() override {
          if(!Botan::CPUID::has(Botan::CPUID::Feature::SIMD_2X64)) {
-            result.test_note("Skipping SIMD_2x64 tests due to missing CPU support at runtime");
-            return {result};
+            return {Test::Result::Note("simd_2x64", "Skipping tests due to missing SIMD support at runtime")};
+         } else {
+            return {test_simd_2x64()};
          }
-   #endif
+      }
+
+   private:
+      Test::Result BOTAN_FN_ISA_SIMD_2X64 test_simd_2x64() {
+         Test::Result result("SIMD_2x64");
 
          const uint64_t pat1 = 0x2F8C91D4A37E5C10;
          const uint64_t pat2 = 0x1B74A6F8C29D1345;
@@ -356,8 +360,8 @@ class SIMD_2X64_Tests final : public Test {
       }
 
    private:
-      static void test_eq(
-         Test::Result& result, const std::string& op, const Botan::SIMD_2x64& simd, uint64_t exp0, uint64_t exp1) {
+      static void BOTAN_FN_ISA_SIMD_2X64
+      test_eq(Test::Result& result, const std::string& op, const Botan::SIMD_2x64& simd, uint64_t exp0, uint64_t exp1) {
          uint8_t arr_be[16 + 15];
          uint8_t arr_be2[16 + 15];
          uint8_t arr_le[16 + 15];

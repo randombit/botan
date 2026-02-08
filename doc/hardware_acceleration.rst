@@ -155,10 +155,10 @@ On ARM platforms, the following CPU specific optimizations are available.
 | ZFEC      | NEON                                       | `zfec_vperm`       | 3.0.0      |
 +-----------+--------------------------------------------+--------------------+------------+
 
-PowerPC
+POWER/PowerPC
 --------------
 
-On ppc64 and ppc32 platforms, the following CPU specific optimizations are available:
+On 64-bit POWER/PowerPC platforms, the following CPU specific optimizations are available:
 
 +-----------+--------------------------------------------+--------------------+------------+
 | Algorithm | Extension                                  | Module             | Added in   |
