@@ -2387,11 +2387,15 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
 
         variables['pch_include_for_exe'] = '%s %s' % (cc.pch_include, os.path.join(build_paths.pch_dir, 'pch_exe.h'))
         variables['pch_path_for_exe'] = os.path.join(build_paths.pch_dir, 'pch_exe.h.' + cc.pch_suffix)
+        
+        variables['pch_target'] = 'pch'
     else:
         variables['pch_include_for_lib'] = ''
         variables['pch_path_for_lib'] = ''
         variables['pch_include_for_exe'] = ''
         variables['pch_path_for_exe'] = ''
+        
+        variables['pch_target'] = ''
 
     variables['installed_include_dir'] = os.path.join(
         variables['prefix'],
