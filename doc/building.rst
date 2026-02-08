@@ -294,6 +294,21 @@ macOs systems.
 
 Support for ``ninja`` is still new and there are probably some rough edges.
 
+Precompiled Headers
+---------------------
+
+When building with GCC or Clang, the option ``--enable-pch`` enables use of a
+precompiled header, which can speed up compilation considerably. With other
+compilers the option is ignored.
+
+If combining precompiled headers with ``ccache``, you must configure ``ccache``
+with ``sloppiness = pch_defines,time_macros`` (for example by setting the
+environment variable ``CCACHE_SLOPPINESS``), as otherwise the cache will not be
+used.
+
+Distributed compilation tools such as ``distcc`` may not work well with
+precompiled headers; in that situation leave them disabled.
+
 For iOS using XCode
 -------------------------
 

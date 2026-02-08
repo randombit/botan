@@ -217,6 +217,11 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         install_prefix = tempfile.mkdtemp(prefix='botan-install-')
         flags += ['--prefix=%s' % (install_prefix)]
 
+    if target == 'shared':
+        # Exercise precompiled headers in the common build configuration
+        # (ignored by compilers that do not support PCH)
+        flags += ['--enable-pch']
+
     if ccache is not None:
         flags += ['--compiler-cache=%s' % (ccache)]
 
