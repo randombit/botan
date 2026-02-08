@@ -419,7 +419,7 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
             try {
                std::visit(
                   [&](auto ch) {
-                     if constexpr(std::is_same_v<Botan::TLS::Client_Hello_12, decltype(ch)>) {
+                     if constexpr(std::is_same_v<Botan::TLS::Client_Hello_12_Shim, decltype(ch)>) {
                         result.confirm("expected Client_Hello_12", msg_type == "client_hello_12");
                      }
                      if constexpr(std::is_same_v<Botan::TLS::Client_Hello_13, decltype(ch)>) {
@@ -460,9 +460,9 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
             try {
                std::visit(
                   [&](auto msg) {
-                     if constexpr(std::is_same_v<Botan::TLS::Server_Hello_12, decltype(msg)>) {
+                     if constexpr(std::is_same_v<Botan::TLS::Server_Hello_12_Shim, decltype(msg)>) {
                         result.confirm("expected Server_Hello_12", msg_type == "server_hello_12");
-                        result.confirm("expected pre TLS 1.3 message", pv == msg.legacy_version());
+                        result.confirm("expected pre TLS 1.3 message", pv == msg.selected_version());
                      } else if constexpr(std::is_same_v<Botan::TLS::Server_Hello_13, decltype(msg)>) {
                         result.confirm("expected Server_Hello_13", msg_type == "server_hello_13");
                      } else if constexpr(std::is_same_v<Botan::TLS::Hello_Retry_Request, decltype(msg)>) {
