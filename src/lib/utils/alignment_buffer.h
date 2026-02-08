@@ -14,6 +14,7 @@
 #include <array>
 #include <optional>
 #include <span>
+#include <tuple>
 
 namespace Botan {
 

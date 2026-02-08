@@ -7,8 +7,8 @@
 
 #include <botan/assert.h>
 
-#include <botan/concepts.h>
 #include <botan/exceptn.h>
+#include <botan/range_concepts.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/target_info.h>
 #include <sstream>

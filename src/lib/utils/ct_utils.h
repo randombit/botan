@@ -15,7 +15,7 @@
 #define BOTAN_CT_UTILS_H_
 
 #include <botan/assert.h>
-#include <botan/concepts.h>
+#include <botan/range_concepts.h>
 #include <botan/secmem.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/scoped_cleanup.h>
