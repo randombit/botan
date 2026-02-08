@@ -5,7 +5,3 @@ family ppc
 powerpc
 ppc
 </aliases>
-
-<isa_extensions>
-altivec
-</isa_extensions>
