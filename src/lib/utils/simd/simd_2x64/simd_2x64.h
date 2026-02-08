@@ -16,7 +16,6 @@
 // TODO: extend this to support NEON / AltiVec / LSX
 
 #if defined(BOTAN_TARGET_ARCH_SUPPORTS_SSSE3)
-   #include <emmintrin.h>
    #include <tmmintrin.h>
    #define BOTAN_SIMD_USE_SSSE3
 #elif defined(BOTAN_TARGET_ARCH_SUPPORTS_SIMD128)
