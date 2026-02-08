@@ -13,7 +13,7 @@ PYTHON_EXE     = %{python_exe}
 ABI_FLAGS      = %{cc_sysroot} %{cxx_abi_flags}
 LANG_FLAGS     = %{cc_lang_flags} %{os_feature_macros}
 LANG_EXE_FLAGS = %{cc_lang_binary_linker_flags}
-CXXFLAGS       = %{cc_compile_flags} %{pch_include_for_lib}
+CXXFLAGS       = %{cc_compile_flags}
 WARN_FLAGS     = %{cc_warning_flags}
 LIB_FLAGS      = %{lib_flags}
 LDFLAGS        = %{ldflags}
@@ -44,7 +44,7 @@ cli: $(CLI)
 tests: $(TEST)
 libs: $(LIBRARIES)
 docs: %{doc_stamp_file}
-pch: %{pch_path_for_lib}
+pch: %{pch_path_for_lib} %{pch_path_for_exe}
 
 # Misc targets
 
@@ -54,8 +54,11 @@ pch: %{pch_path_for_lib}
 
 %{if enable_pch}
 
-%{pch_path_for_lib}: %{pch_dir}/pch.h
-	$(CXX) $(BUILD_FLAGS) %{lib_flags} -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile} %{dash_c} %{pch_dir}/pch.h %{dash_o}$@
+%{pch_path_for_lib}: %{pch_dir}/pch_lib.h
+	$(CXX) $(LIB_FLAGS) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile} %{dash_c} %{pch_dir}/pch_lib.h %{dash_o}$@
+
+%{pch_path_for_exe}: %{pch_dir}/pch_exe.h
+	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile} %{dash_c} %{pch_dir}/pch_exe.h %{dash_o}$@
 
 %{endif}
 
@@ -159,21 +162,21 @@ ct_selftest: %{out_dir}/botan_ct_selftest
 
 %{for lib_build_info}
 %{obj}: pch %{src}
-	$(CXX) $(LIB_FLAGS) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) %{pch_include_for_lib} $(LIB_FLAGS) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for cli_build_info}
 %{obj}: pch %{src}
-	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) %{pch_include_for_exe} $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for test_build_info}
 %{obj}: pch %{src}
-	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) %{pch_include_for_exe} $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for fuzzer_build_info}
-%{obj}: pch %{src}
+%{obj}: %{src}
 	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 
 %{exe}: %{obj} $(LIBRARIES)
@@ -181,7 +184,7 @@ ct_selftest: %{out_dir}/botan_ct_selftest
 %{endfor}
 
 %{for examples_build_info}
-%{obj}: pch %{src}
+%{obj}: %{src}
 	$(CXX) $(BUILD_FLAGS) %{public_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 
 %{exe}: %{obj} $(LIBRARIES)

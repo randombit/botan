@@ -2382,11 +2382,16 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
     }
 
     if variables['enable_pch']:
-        variables['pch_include_for_lib'] = '%s %s' % (cc.pch_include, os.path.join(build_paths.pch_dir, 'pch.h'))
-        variables['pch_path_for_lib'] = os.path.join(build_paths.pch_dir, 'pch.h.' + cc.pch_suffix)
+        variables['pch_include_for_lib'] = '%s %s' % (cc.pch_include, os.path.join(build_paths.pch_dir, 'pch_lib.h'))
+        variables['pch_path_for_lib'] = os.path.join(build_paths.pch_dir, 'pch_lib.h.' + cc.pch_suffix)
+
+        variables['pch_include_for_exe'] = '%s %s' % (cc.pch_include, os.path.join(build_paths.pch_dir, 'pch_exe.h'))
+        variables['pch_path_for_exe'] = os.path.join(build_paths.pch_dir, 'pch_exe.h.' + cc.pch_suffix)
     else:
         variables['pch_include_for_lib'] = ''
         variables['pch_path_for_lib'] = ''
+        variables['pch_include_for_exe'] = ''
+        variables['pch_path_for_exe'] = ''
 
     variables['installed_include_dir'] = os.path.join(
         variables['prefix'],
@@ -3543,7 +3548,8 @@ def do_io_for_build(osinfo, using_mods, info_modules, build_paths, source_paths,
     link_method = choose_link_method(options)
 
     if options.enable_pch:
-        portable_symlink(in_src_lib_dir('pch/pch.h'), build_paths.pch_dir, link_method)
+        portable_symlink(in_src_lib_dir('pch/pch_lib.h'), build_paths.pch_dir, link_method)
+        portable_symlink(in_src_lib_dir('pch/pch_exe.h'), build_paths.pch_dir, link_method)
 
     def link_headers(headers, visibility, directory):
         logging.debug('Linking %d %s header files in %s', len(headers), visibility, directory)
