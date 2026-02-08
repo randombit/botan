@@ -51,10 +51,6 @@ ar_command lib
 ar_options "/nologo"
 ar_output_to "/OUT:"
 
-pch_compile "-x c++-header"
-pch_suffix "pch"
-pch_include "-include"
-
 <sanitizers>
 default -> address
 
