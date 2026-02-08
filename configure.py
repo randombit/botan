@@ -1281,6 +1281,7 @@ class CompilerInfo(InfoObject):
                 'macro_name': None,
                 'minimum_supported_version': None,
                 'output_to_object': '-o ',
+                'output_to_pch': '-o ',
                 'output_to_exe': '-o ',
                 'add_include_dir_option': '-I',
                 'add_system_include_dir_option': '-I',
@@ -1345,6 +1346,7 @@ class CompilerInfo(InfoObject):
         self.optimization_flags = lex.optimization_flags
         self.output_to_exe = lex.output_to_exe
         self.output_to_object = lex.output_to_object
+        self.output_to_pch = lex.output_to_pch
         self.preproc_flags = lex.preproc_flags
         self.sanitizers = lex.sanitizers
         self.sanitizer_types = []
@@ -2309,6 +2311,8 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
 
         'dash_o': cc.output_to_object,
         'dash_c': cc.compile_flags,
+
+        'dash_o_pch': cc.output_to_pch,
 
         'cc_lang_flags': cc.cc_lang_flags(),
         'cc_lang_binary_linker_flags': cc.cc_lang_binary_linker_flags(),
