@@ -2385,14 +2385,29 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         variables['pch_compile'] = cc.pch_compile
         variables['pch_dir'] = build_paths.pch_dir
 
-        pch_lib_file = os.path.join(build_paths.pch_dir, 'pch_lib.h')
-        pch_exe_file = os.path.join(build_paths.pch_dir, 'pch_exe.h')
+        if cc.macro_name in ['MSVC']:
+            pch_lib_inc = os.path.join(build_paths.pch_dir, 'pch_lib.cpp')
+            pch_exe_inc = os.path.join(build_paths.pch_dir, 'pch_exe.cpp')
 
-        variables['pch_include_for_lib'] = cc.pch_include.format(pch=pch_lib_file)
-        variables['pch_path_for_lib'] = pch_lib_file + '.' + cc.pch_suffix
+            variables['pch_lib_inc'] = pch_lib_inc
+            variables['pch_exe_inc'] = pch_exe_inc
+            variables['pch_include_for_lib'] = cc.pch_include.format(pch=pch_lib_inc)
+            variables['pch_path_for_lib'] = pch_lib_inc + '.' + cc.pch_suffix
 
-        variables['pch_include_for_exe'] = cc.pch_include.format(pch=pch_exe_file)
-        variables['pch_path_for_exe'] = pch_exe_file + '.' + cc.pch_suffix
+            variables['pch_include_for_exe'] = cc.pch_include.format(pch=pch_exe_inc)
+            variables['pch_path_for_exe'] = pch_exe_inc + '.' + cc.pch_suffix
+        else:
+            pch_lib_inc = os.path.join(build_paths.pch_dir, 'pch_lib.h')
+            pch_exe_inc = os.path.join(build_paths.pch_dir, 'pch_exe.h')
+
+            variables['pch_lib_inc'] = pch_lib_inc
+            variables['pch_exe_inc'] = pch_exe_inc
+            variables['pch_include_for_lib'] = cc.pch_include.format(pch=pch_lib_inc)
+            variables['pch_path_for_lib'] = pch_lib_inc + '.' + cc.pch_suffix
+
+            variables['pch_include_for_exe'] = cc.pch_include.format(pch=pch_exe_inc)
+            variables['pch_path_for_exe'] = pch_exe_inc + '.' + cc.pch_suffix
+
     else:
         variables['enable_pch'] = False
         variables['pch_include_for_lib'] = ''
