@@ -37,12 +37,4 @@
 #include <variant>
 #include <vector>
 
-/*
-Some cross compilers running on x86 will "have" immintrin.h and then error if
-you include it, so check for being plausibly actually x86 before including
-*/
-#if __has_include(<immintrin.h>) && (defined(__x86_64__) || defined(_M_X6))
-   #include <immintrin.h>
-#endif
-
 /* IWYU pragma: end_exports */
