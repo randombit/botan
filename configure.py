@@ -2259,7 +2259,6 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'doc_stamp_file': normalize_source_path(os.path.join(build_paths.build_dir, 'doc.stamp')),
         'makefile_path': os.path.join(build_paths.build_dir, '..', 'Makefile'),
         'ninja_build_path': os.path.join(build_paths.build_dir, '..', 'build.ninja'),
-        'pch_dir': build_paths.pch_dir or '',
 
         # Use response files for the archive command on windows
         # Note: macOS (and perhaps other OSes) do not support this
@@ -2382,6 +2381,7 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
     }
 
     if variables['enable_pch']:
+        variables['pch_dir'] = build_paths.pch_dir
         variables['pch_include_for_lib'] = '%s %s' % (cc.pch_include, os.path.join(build_paths.pch_dir, 'pch_lib.h'))
         variables['pch_path_for_lib'] = os.path.join(build_paths.pch_dir, 'pch_lib.h.' + cc.pch_suffix)
 

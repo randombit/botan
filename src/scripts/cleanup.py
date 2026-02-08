@@ -114,10 +114,11 @@ def main(args=None):
 
     pch_suffixes = ['pch', 'gch']
 
-    for f in os.listdir(build_config['pch_dir']):
-        for suffix in pch_suffixes:
-            if f.endswith(suffix):
-                remove_file(os.path.join(build_config['pch_dir'], f))
+    if 'pch_dir' in build_config:
+        for f in os.listdir(build_config['pch_dir']):
+            for suffix in pch_suffixes:
+                if f.endswith(suffix):
+                    remove_file(os.path.join(build_config['pch_dir'], f))
 
     lib_basename = build_config['lib_prefix'] + build_config['libname']
     matches_libname = re.compile('^' + lib_basename + '.([a-z]+)((\\.[0-9\\.]+)|$)')
