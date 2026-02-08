@@ -10,10 +10,12 @@
 #define BOTAN_TLS_SESSION_MANAGER_H_
 
 #include <botan/mutex.h>
-#include <botan/tls_session.h>
+#include <botan/tls_session_id.h>
 #include <botan/types.h>
-
+#include <memory>
+#include <optional>
 #include <utility>
+#include <vector>
 
 namespace Botan {
 
@@ -26,6 +28,10 @@ namespace Botan::TLS {
 class Callbacks;
 class Policy;
 class PskIdentity;
+class Server_Information;
+class Session;
+class Session_Handle;
+class Session_with_Handle;
 
 /**
 * Session_Manager is an interface to systems which can save session parameters

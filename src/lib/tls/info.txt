@@ -27,6 +27,7 @@ tls_policy.h
 tls_server.h
 tls_server_info.h
 tls_session.h
+tls_session_id.h
 tls_session_manager.h
 tls_session_manager_noop.h
 tls_session_manager_memory.h

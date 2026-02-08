@@ -24,6 +24,8 @@
 
 namespace Botan::TLS {
 
+Server_Key_Exchange::~Server_Key_Exchange() = default;
+
 /**
 * Create a new Server Key Exchange message
 */

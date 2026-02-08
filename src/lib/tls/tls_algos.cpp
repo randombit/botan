@@ -405,4 +405,25 @@ std::optional<std::string> Group_Params::to_string() const {
    }
 }
 
+std::string certificate_type_to_string(Certificate_Type type) {
+   switch(type) {
+      case Certificate_Type::X509:
+         return "X509";
+      case Certificate_Type::RawPublicKey:
+         return "RawPublicKey";
+   }
+
+   return "Unknown";
+}
+
+Certificate_Type certificate_type_from_string(const std::string& type_str) {
+   if(type_str == "X509") {
+      return Certificate_Type::X509;
+   } else if(type_str == "RawPublicKey") {
+      return Certificate_Type::RawPublicKey;
+   } else {
+      throw Decoding_Error("Unknown certificate type: " + type_str);
+   }
+}
+
 }  // namespace Botan::TLS

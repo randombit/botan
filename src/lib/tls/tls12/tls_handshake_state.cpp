@@ -9,6 +9,7 @@
 #include <botan/internal/tls_handshake_state.h>
 
 #include <botan/kdf.h>
+#include <botan/pkix_types.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_messages_12.h>
 #include <botan/tls_policy.h>

@@ -11,9 +11,11 @@
 #ifndef BOTAN_TLS_MESSAGES_H_
 #define BOTAN_TLS_MESSAGES_H_
 
-#include <botan/tls_extensions.h>
+#include <botan/tls_algos.h>
 #include <botan/tls_handshake_msg.h>
-#include <botan/tls_session.h>
+#include <botan/tls_session_id.h>
+#include <botan/tls_signature_scheme.h>
+#include <botan/tls_version.h>
 #include <memory>
 #include <set>
 #include <string>
@@ -24,6 +26,11 @@ namespace Botan {
 class Public_Key;
 class Credentials_Manager;
 class X509_Certificate;
+class X509_DN;
+class RandomNumberGenerator;
+
+class OctetString;
+typedef OctetString SymmetricKey;
 
 namespace OCSP {
 class Response;
@@ -31,12 +38,17 @@ class Response;
 
 namespace TLS {
 
+enum class Extension_Code : uint16_t;
+
 class Session_Manager;
+class Extensions;
 class Handshake_IO;
 class Handshake_State;
 class Hello_Retry_Request;
 class Callbacks;
 class Cipher_State;
+class Session_with_Handle;
+class Session;
 class Policy;
 
 std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng, Callbacks& cb, const Policy& policy);

@@ -11,6 +11,12 @@
 
 #include <botan/tls_messages.h>
 
+namespace Botan {
+
+class PK_Key_Agreement_Key;
+
+}
+
 namespace Botan::TLS {
 
 /**
@@ -53,19 +59,21 @@ class BOTAN_UNSTABLE_API Client_Key_Exchange final : public Handshake_Message {
 /**
 * Certificate Message of TLS 1.2
 */
-class BOTAN_UNSTABLE_API Certificate_12 final : public Handshake_Message {
+class BOTAN_UNSTABLE_API Certificate_12 final : public Handshake_Message /* NOLINT(*-special-member-functions) */ {
    public:
       Handshake_Type type() const override { return Handshake_Type::Certificate; }
 
       const std::vector<X509_Certificate>& cert_chain() const { return m_certs; }
 
-      size_t count() const { return m_certs.size(); }
+      size_t count() const;
 
       bool empty() const { return m_certs.empty(); }
 
       Certificate_12(Handshake_IO& io, Handshake_Hash& hash, const std::vector<X509_Certificate>& certs);
 
       Certificate_12(const std::vector<uint8_t>& buf, const Policy& policy);
+
+      ~Certificate_12() override;
 
       std::vector<uint8_t> serialize() const override;
 
@@ -92,6 +100,13 @@ class BOTAN_UNSTABLE_API Certificate_Request_12 final : public Handshake_Message
                              const std::vector<X509_DN>& allowed_cas);
 
       explicit Certificate_Request_12(const std::vector<uint8_t>& buf);
+
+      ~Certificate_Request_12() override;
+
+      Certificate_Request_12(const Certificate_Request_12&) = delete;
+      Certificate_Request_12(Certificate_Request_12&&) = delete;
+      Certificate_Request_12& operator=(const Certificate_Request_12& other) = delete;
+      Certificate_Request_12& operator=(Certificate_Request_12&& other) = delete;
 
       std::vector<uint8_t> serialize() const override;
 
@@ -188,6 +203,13 @@ class BOTAN_UNSTABLE_API Server_Key_Exchange final : public Handshake_Message {
                           Auth_Method sig_alg,
                           Protocol_Version version);
 
+      ~Server_Key_Exchange() override;
+
+      Server_Key_Exchange(const Server_Key_Exchange& other) = delete;
+      Server_Key_Exchange(Server_Key_Exchange&& other) = delete;
+      Server_Key_Exchange& operator=(const Server_Key_Exchange& other) = delete;
+      Server_Key_Exchange& operator=(Server_Key_Exchange&& other) = delete;
+
    private:
       std::vector<uint8_t> serialize() const override;
 
@@ -221,14 +243,14 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_12 final : public Handshake_Message 
    public:
       Handshake_Type type() const override { return Handshake_Type::NewSessionTicket; }
 
-      std::chrono::seconds ticket_lifetime_hint() const { return m_ticket_lifetime_hint; }
+      uint32_t ticket_lifetime_hint() const { return m_ticket_lifetime_hint; }
 
       const Session_Ticket& ticket() const { return m_ticket; }
 
       New_Session_Ticket_12(Handshake_IO& io,
                             Handshake_Hash& hash,
                             Session_Ticket ticket,
-                            std::chrono::seconds lifetime);
+                            uint32_t lifetime_in_seconds);
 
       New_Session_Ticket_12(Handshake_IO& io, Handshake_Hash& hash);
 
@@ -237,7 +259,7 @@ class BOTAN_UNSTABLE_API New_Session_Ticket_12 final : public Handshake_Message 
       std::vector<uint8_t> serialize() const override;
 
    private:
-      std::chrono::seconds m_ticket_lifetime_hint{};
+      uint32_t m_ticket_lifetime_hint = 0;
       Session_Ticket m_ticket;
 };
 

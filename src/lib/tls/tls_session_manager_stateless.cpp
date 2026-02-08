@@ -12,6 +12,7 @@
 #include <botan/credentials_manager.h>
 #include <botan/exceptn.h>
 #include <botan/rng.h>
+#include <botan/tls_session.h>
 
 namespace Botan::TLS {
 
@@ -19,6 +20,11 @@ Session_Manager_Stateless::Session_Manager_Stateless(const std::shared_ptr<Crede
                                                      const std::shared_ptr<RandomNumberGenerator>& rng) :
       Session_Manager(rng), m_credentials_manager(creds) {
    BOTAN_ASSERT_NONNULL(m_credentials_manager);
+}
+
+std::vector<Session_with_Handle> Session_Manager_Stateless::find_some(const Server_Information& /*info*/,
+                                                                      size_t /*max_sessions_hint*/) {
+   return {};
 }
 
 std::optional<Session_Handle> Session_Manager_Stateless::establish(const Session& session,

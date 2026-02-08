@@ -15,7 +15,9 @@
 #include <botan/rng.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
+#include <botan/tls_extensions.h>
 #include <botan/tls_policy.h>
+#include <botan/tls_session.h>
 #include <botan/tls_version.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/stl_util.h>

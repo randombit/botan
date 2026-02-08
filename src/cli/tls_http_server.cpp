@@ -37,6 +37,7 @@
    #include <boost/beast/http.hpp>
 
    #include <botan/asio_stream.h>
+   #include <botan/tls_ciphersuite.h>
    #include <botan/tls_messages.h>
    #include <botan/tls_session_manager_memory.h>
    #include <botan/version.h>

@@ -13,12 +13,12 @@
 #ifndef BOTAN_TLS_EXTENSIONS_H_
 #define BOTAN_TLS_EXTENSIONS_H_
 
-#include <botan/credentials_manager.h>
-#include <botan/pkix_types.h>
 #include <botan/secmem.h>
 #include <botan/tls_algos.h>
+#include <botan/tls_external_psk.h>
 #include <botan/tls_magic.h>
-#include <botan/tls_session.h>
+#include <botan/tls_session.h>  // TODO remove this dep
+#include <botan/tls_session_id.h>
 #include <botan/tls_signature_scheme.h>
 #include <botan/tls_version.h>
 
@@ -33,6 +33,7 @@ namespace Botan {
 
 class RandomNumberGenerator;
 class Credentials_Manager;
+class X509_DN;
 
 namespace TLS {
 
@@ -199,12 +200,6 @@ class BOTAN_UNSTABLE_API Application_Layer_Protocol_Notification final : public 
    private:
       std::vector<std::string> m_protocols;
 };
-
-// As defined in RFC 8446 4.4.2
-enum class Certificate_Type : uint8_t { X509 = 0, RawPublicKey = 2 };
-
-std::string certificate_type_to_string(Certificate_Type type);
-Certificate_Type certificate_type_from_string(const std::string& type_str);
 
 /**
  * RFC 7250
@@ -635,7 +630,7 @@ class BOTAN_UNSTABLE_API PSK_Key_Exchange_Modes final : public Extension {
 /**
  * Certificate Authorities Extension from RFC 8446 4.2.4
  */
-class BOTAN_UNSTABLE_API Certificate_Authorities final : public Extension {
+class BOTAN_UNSTABLE_API Certificate_Authorities final : public Extension /* NOLINT(*-special-member-functions) */ {
    public:
       static Extension_Code static_type() { return Extension_Code::CertificateAuthorities; }
 
@@ -648,7 +643,14 @@ class BOTAN_UNSTABLE_API Certificate_Authorities final : public Extension {
       const std::vector<X509_DN>& distinguished_names() const { return m_distinguished_names; }
 
       Certificate_Authorities(TLS_Data_Reader& reader, uint16_t extension_size);
-      explicit Certificate_Authorities(std::vector<X509_DN> acceptable_DNs);
+      explicit Certificate_Authorities(const std::vector<X509_DN>& acceptable_DNs);
+
+      ~Certificate_Authorities() override;
+
+      Certificate_Authorities(const Certificate_Authorities& other) = delete;
+      Certificate_Authorities(Certificate_Authorities&& other) = delete;
+      Certificate_Authorities& operator=(const Certificate_Authorities& other) = delete;
+      Certificate_Authorities& operator=(Certificate_Authorities&& other) = delete;
 
    private:
       std::vector<X509_DN> m_distinguished_names;

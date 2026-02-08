@@ -16,7 +16,7 @@ namespace Botan::TLS {
 New_Session_Ticket_12::New_Session_Ticket_12(Handshake_IO& io,
                                              Handshake_Hash& hash,
                                              Session_Ticket ticket,
-                                             std::chrono::seconds lifetime) :
+                                             uint32_t lifetime) :
       m_ticket_lifetime_hint(lifetime), m_ticket(std::move(ticket)) {
    hash.update(io.send(*this));
 }
@@ -32,14 +32,14 @@ New_Session_Ticket_12::New_Session_Ticket_12(const std::vector<uint8_t>& buf) {
 
    TLS_Data_Reader reader("SessionTicket", buf);
 
-   m_ticket_lifetime_hint = std::chrono::seconds(reader.get_uint32_t());
+   m_ticket_lifetime_hint = reader.get_uint32_t();
    m_ticket = Session_Ticket(reader.get_range<uint8_t>(2, 0, 65535));
    reader.assert_done();
 }
 
 std::vector<uint8_t> New_Session_Ticket_12::serialize() const {
    std::vector<uint8_t> buf(4);
-   store_be(static_cast<uint32_t>(m_ticket_lifetime_hint.count()), buf.data());
+   store_be(m_ticket_lifetime_hint, buf.data());
    append_tls_length_value(buf, m_ticket.get(), 2);
    return buf;
 }

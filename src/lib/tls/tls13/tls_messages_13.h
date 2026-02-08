@@ -10,7 +10,10 @@
 #ifndef BOTAN_TLS_MESSAGES_13_H_
 #define BOTAN_TLS_MESSAGES_13_H_
 
+#include <botan/tls_extensions.h>
 #include <botan/tls_messages.h>
+#include <botan/x509cert.h>
+#include <chrono>
 
 namespace Botan::TLS {
 
@@ -290,7 +293,7 @@ class BOTAN_UNSTABLE_API Certificate_Request_13 final : public Handshake_Message
       const std::vector<uint8_t>& context() const { return m_context; }
 
    private:
-      Certificate_Request_13(std::vector<X509_DN> acceptable_CAs, const Policy& policy, Callbacks& callbacks);
+      Certificate_Request_13(const std::vector<X509_DN>& acceptable_CAs, const Policy& policy, Callbacks& callbacks);
 
    private:
       std::vector<uint8_t> m_context;

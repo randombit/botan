@@ -14,6 +14,7 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/pkix_types.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/fmt.h>
@@ -373,27 +374,6 @@ std::vector<uint8_t> Application_Layer_Protocol_Notification::serialize(Connecti
    buf[1] = get_byte<1>(static_cast<uint16_t>(buf.size() - 2));
 
    return buf;
-}
-
-std::string certificate_type_to_string(Certificate_Type type) {
-   switch(type) {
-      case Certificate_Type::X509:
-         return "X509";
-      case Certificate_Type::RawPublicKey:
-         return "RawPublicKey";
-   }
-
-   return "Unknown";
-}
-
-Certificate_Type certificate_type_from_string(const std::string& type_str) {
-   if(type_str == "X509") {
-      return Certificate_Type::X509;
-   } else if(type_str == "RawPublicKey") {
-      return Certificate_Type::RawPublicKey;
-   } else {
-      throw Decoding_Error("Unknown certificate type: " + type_str);
-   }
 }
 
 Certificate_Type_Base::Certificate_Type_Base(std::vector<Certificate_Type> supported_cert_types) :
@@ -937,8 +917,10 @@ Certificate_Authorities::Certificate_Authorities(TLS_Data_Reader& reader, uint16
    }
 }
 
-Certificate_Authorities::Certificate_Authorities(std::vector<X509_DN> acceptable_DNs) :
-      m_distinguished_names(std::move(acceptable_DNs)) {}
+Certificate_Authorities::~Certificate_Authorities() = default;
+
+Certificate_Authorities::Certificate_Authorities(const std::vector<X509_DN>& acceptable_DNs) :
+      m_distinguished_names(acceptable_DNs) {}
 
 std::vector<uint8_t> EarlyDataIndication::serialize(Connection_Side /*whoami*/) const {
    std::vector<uint8_t> result;

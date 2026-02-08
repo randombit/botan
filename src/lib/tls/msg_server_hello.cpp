@@ -12,9 +12,11 @@
 #include <botan/tls_messages_12.h>
 
 #include <botan/tls_callbacks.h>
+#include <botan/tls_ciphersuite.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_extensions.h>
 #include <botan/tls_policy.h>
+#include <botan/tls_session.h>
 #include <botan/tls_session_manager.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/stl_util.h>

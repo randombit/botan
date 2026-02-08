@@ -12,6 +12,7 @@
 #include <botan/rng.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_policy.h>
+#include <botan/tls_session.h>
 #include <algorithm>
 
 #if defined(BOTAN_HAS_TLS_13)
