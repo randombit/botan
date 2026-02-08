@@ -44,7 +44,6 @@ cli: $(CLI)
 tests: $(TEST)
 libs: $(LIBRARIES)
 docs: %{doc_stamp_file}
-pch: %{pch_path_for_lib} %{pch_path_for_exe}
 
 # Misc targets
 
@@ -161,17 +160,17 @@ ct_selftest: %{out_dir}/botan_ct_selftest
 # Build Commands
 
 %{for lib_build_info}
-%{obj}: pch %{src}
+%{obj}: %{pch_path_for_lib} %{src}
 	$(CXX) %{pch_include_for_lib} $(LIB_FLAGS) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for cli_build_info}
-%{obj}: pch %{src}
+%{obj}: %{pch_path_for_exe} %{src}
 	$(CXX) %{pch_include_for_exe} $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for test_build_info}
-%{obj}: pch %{src}
+%{obj}: %{pch_path_for_exe} %{src}
 	$(CXX) %{pch_include_for_exe} $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
