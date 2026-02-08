@@ -208,10 +208,6 @@ build libs: phony %{library_targets} $
 
 build docs: phony %{doc_stamp_file}
 
-%{if enable_pch}
-build pch: phony %{pch_path_for_lib} %{pch_path_for_exe}
-%{endif}
-
 build clean: clean
 
 build distclean: distclean
