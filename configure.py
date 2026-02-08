@@ -3552,8 +3552,8 @@ def do_io_for_build(osinfo, using_mods, info_modules, build_paths, source_paths,
     link_method = choose_link_method(options)
 
     if options.enable_pch:
-        portable_symlink(in_src_lib_dir('pch/pch_lib.h'), build_paths.pch_dir, link_method)
-        portable_symlink(in_src_lib_dir('pch/pch_exe.h'), build_paths.pch_dir, link_method)
+        shutil.copy(in_src_lib_dir('pch/pch.h'), os.path.join(build_paths.pch_dir, 'pch_lib.h'))
+        shutil.copy(in_src_lib_dir('pch/pch.h'), os.path.join(build_paths.pch_dir, 'pch_exe.h'))
 
     def link_headers(headers, visibility, directory):
         logging.debug('Linking %d %s header files in %s', len(headers), visibility, directory)
