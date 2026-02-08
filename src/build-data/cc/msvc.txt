@@ -30,7 +30,7 @@ preproc_flags "/nologo /EP /Zc:preprocessor"
 lang_flags "/Zc:preprocessor /Zc:inline /std:c++20 /EHs /GR"
 
 pch_suffix "pch"
-pch_compile "/Yc"
+pch_compile "/nologo /Yc"
 pch_include "/Yu{pch} /FI{pch}"
 output_to_pch "/Fp"
 
