@@ -54,10 +54,10 @@ docs: %{doc_stamp_file}
 %{if enable_pch}
 
 %{pch_path_for_lib}: %{pch_dir}/pch_lib.h
-	$(CXX) $(LIB_FLAGS) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile} %{dash_c} %{pch_dir}/pch_lib.h %{dash_o}$@
+	$(CXX) $(LIB_FLAGS) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile} %{pch_dir}/pch_lib.h %{dash_o_pch}$@
 
 %{pch_path_for_exe}: %{pch_dir}/pch_exe.h
-	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile} %{dash_c} %{pch_dir}/pch_exe.h %{dash_o}$@
+	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile} %{pch_dir}/pch_exe.h %{dash_o_pch}$@
 
 %{endif}
 

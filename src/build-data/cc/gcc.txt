@@ -30,7 +30,7 @@ stack_protector_flags "-fstack-protector"
 add_system_include_dir_option "-isystem"
 add_sysroot_option "--sysroot="
 
-pch_compile "-x c++-header"
+pch_compile "-x c++-header -c"
 pch_suffix "gch"
 pch_include "-include"
 

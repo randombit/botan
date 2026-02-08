@@ -29,6 +29,11 @@ preproc_flags "/nologo /EP /Zc:preprocessor"
 
 lang_flags "/Zc:preprocessor /Zc:inline /std:c++20 /EHs /GR"
 
+pch_suffix "pch"
+pch_compile "-Xclang -fno-pch-timestamp -x c++-header"
+pch_include "-Xclang -fno-pch-timestamp -include"
+output_to_pch "/Fp"
+
 # 4251: STL types used in DLL interface
 # 4275: ???
 # 5072: ASan without debug info
