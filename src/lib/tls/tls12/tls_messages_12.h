@@ -54,7 +54,10 @@ class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello_12_Shim {
                       const Session_with_Handle& session_and_handle,
                       const std::vector<std::string>& next_protocols);
 
-      using Client_Hello_12_Shim::Client_Hello_12_Shim;
+      explicit Client_Hello_12(const std::vector<uint8_t>& buf);
+
+   private:
+      explicit Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data);
 
    public:
       using Client_Hello::compression_methods;
