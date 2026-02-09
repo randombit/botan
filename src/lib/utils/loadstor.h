@@ -10,8 +10,8 @@
 #ifndef BOTAN_LOAD_STORE_H_
 #define BOTAN_LOAD_STORE_H_
 
-#include <botan/concepts.h>
 #include <botan/mem_ops.h>
+#include <botan/range_concepts.h>
 #include <botan/strong_type.h>
 #include <botan/types.h>
 #include <botan/internal/bswap.h>

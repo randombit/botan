@@ -12,6 +12,7 @@
 
 #include <botan/assert.h>
 #include <botan/concepts.h>
+#include <botan/range_concepts.h>
 #include <botan/strong_type.h>
 #include <functional>
 #include <optional>
