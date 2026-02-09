@@ -14,9 +14,12 @@
 
 #include <botan/der_enc.h>
 #include <botan/ber_dec.h>
+#include <string>
+
 
 namespace {
 typedef Botan::DilithiumInternalKeypair (*decoding_func)(std::span<const uint8_t> key_bits, Botan::DilithiumConstants mode);
+
 
     Botan::DilithiumInternalKeypair try_decode_seed_only(std::span<const uint8_t> key_bits,
                                                                         Botan::DilithiumConstants mode)
@@ -40,15 +43,30 @@ typedef Botan::DilithiumInternalKeypair (*decoding_func)(std::span<const uint8_t
 
 namespace Botan {
 
-secure_vector<uint8_t> ML_DSA_Expanding_Keypair_Codec::encode_keypair(DilithiumInternalKeypair keypair) const {
-   BOTAN_ASSERT_NONNULL(keypair.second);
-   const auto& seed = keypair.second->seed();
-   const DilithiumSerializedPrivateKey& expandedKey_strong = Dilithium_Algos::encode_keypair(keypair);
-   BOTAN_ARG_CHECK(seed.has_value(), "Cannot encode keypair without the private seed");
-    secure_vector<uint8_t> result;
-    DER_Encoder der_enc(result);
-    der_enc.encode(seed.value().get(), ASN1_Type(Botan::ASN1_Type::OctetString) /*real_type*/ , ASN1_Type(Botan::ASN1_Type(0)), Botan::ASN1_Class::ContextSpecific    );
-    /* 
+secure_vector<uint8_t> ML_DSA_Expanding_Keypair_Codec::encode_keypair(
+    DilithiumInternalKeypair keypair) const {
+  BOTAN_ASSERT_NONNULL(keypair.second);
+  const auto &seed = keypair.second->seed();
+  BOTAN_ARG_CHECK(
+      seed.has_value(),
+      "Cannot encode keypair without the private seed"); // TODO: WHEN NOT 
+                                                         // HAVING SEED,
+                                                         // ENCODE AS
+                                                         // EXPANDED-ONLY IN 
+                                                         // CASE OF ML-DSA.
+                                                         // DILITHIUM FAILS WITHOUT SEED.
+  if(!keypair.second->mode().is_ml_dsa()) 
+  {
+      // return the raw seed for dilithium
+      return seed.value().get();
+  }
+  secure_vector<uint8_t> result;
+  DER_Encoder der_enc(result);
+  der_enc.encode(seed.value().get(),
+                 ASN1_Type(Botan::ASN1_Type::OctetString) /*real_type*/,
+                 ASN1_Type(Botan::ASN1_Type(0)),
+                 Botan::ASN1_Class::ContextSpecific);
+  /* 
      *
             <80 20>
           0  32: [0]
@@ -63,19 +81,26 @@ secure_vector<uint8_t> ML_DSA_Expanding_Keypair_Codec::encode_keypair(DilithiumI
 
 DilithiumInternalKeypair ML_DSA_Expanding_Keypair_Codec::decode_keypair(std::span<const uint8_t> private_key_bits,
                                                                         DilithiumConstants mode) const {
+    if(private_key_bits.size() == 32) 
+    {
+        // backwards compatibility (not RFC 9881 conforming) to raw seed format.
+        return Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(private_key_bits), std::move(mode));
+    }
     /* we have to check 3 different format: "seed-only", "expanded-only", and "both"
      */
     decoding_func fn_arr [3] = {try_decode_both, try_decode_seed_only, try_decode_expanded_only};
-    try {
         for(auto fn : fn_arr)
         {
-            return fn(private_key_bits, mode);
-        }
-    } catch (Botan::Decoding_Error const& e)
-    {
-       // pass
-    }
-    throw Decoding_Error("unsupported ML-DSA private key format");
+            try 
+            {
+                return fn(private_key_bits, mode);
+            }
+            catch (Botan::Decoding_Error const& e)
+            {
+                // pass
+            }
+        } 
+    throw Decoding_Error("unsupported ML-DSA private key format, key size in bytes: " + std::to_string(private_key_bits.size()));
 }
 
 }  // namespace Botan
