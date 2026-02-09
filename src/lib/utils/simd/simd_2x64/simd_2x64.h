@@ -79,11 +79,15 @@ class SIMD_2x64 final {
 #endif
       }
 
-      static SIMD_2x64 load_be(const void* in) { return SIMD_2x64::load_le(in).bswap(); }
+      static SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 load_be(const void* in) { return SIMD_2x64::load_le(in).bswap(); }
 
-      static SIMD_2x64 load_le(std::span<const uint8_t, 16> in) { return SIMD_2x64::load_le(in.data()); }
+      static SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 load_le(std::span<const uint8_t, 16> in) {
+         return SIMD_2x64::load_le(in.data());
+      }
 
-      static SIMD_2x64 load_be(std::span<const uint8_t, 16> in) { return SIMD_2x64::load_be(in.data()); }
+      static SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 load_be(std::span<const uint8_t, 16> in) {
+         return SIMD_2x64::load_be(in.data());
+      }
 
       SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 bswap() const {
 #if defined(BOTAN_SIMD_USE_SSSE3)
@@ -111,7 +115,7 @@ class SIMD_2x64 final {
 #endif
       }
 
-      void store_le(uint64_t out[2]) const { this->store_le(reinterpret_cast<uint8_t*>(out)); }
+      void BOTAN_FN_ISA_SIMD_2X64 store_le(uint64_t out[2]) const { this->store_le(reinterpret_cast<uint8_t*>(out)); }
 
       void BOTAN_FN_ISA_SIMD_2X64 store_le(uint8_t out[]) const {
 #if defined(BOTAN_SIMD_USE_SSSE3)
@@ -121,21 +125,21 @@ class SIMD_2x64 final {
 #endif
       }
 
-      void store_be(uint64_t out[2]) const { this->store_be(reinterpret_cast<uint8_t*>(out)); }
+      void BOTAN_FN_ISA_SIMD_2X64 store_be(uint64_t out[2]) const { this->store_be(reinterpret_cast<uint8_t*>(out)); }
 
-      void store_be(uint8_t out[]) const { bswap().store_le(out); }
+      void BOTAN_FN_ISA_SIMD_2X64 store_be(uint8_t out[]) const { bswap().store_le(out); }
 
-      void store_be(std::span<uint8_t, 16> out) const { this->store_be(out.data()); }
+      void BOTAN_FN_ISA_SIMD_2X64 store_be(std::span<uint8_t, 16> out) const { this->store_be(out.data()); }
 
-      void store_le(std::span<uint8_t, 16> out) const { this->store_le(out.data()); }
+      void BOTAN_FN_ISA_SIMD_2X64 store_le(std::span<uint8_t, 16> out) const { this->store_le(out.data()); }
 
-      SIMD_2x64 operator+(const SIMD_2x64& other) const {
+      SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 operator+(const SIMD_2x64& other) const {
          SIMD_2x64 retval(*this);
          retval += other;
          return retval;
       }
 
-      SIMD_2x64 operator^(const SIMD_2x64& other) const {
+      SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 operator^(const SIMD_2x64& other) const {
          SIMD_2x64 retval(*this);
          retval ^= other;
          return retval;
@@ -203,7 +207,7 @@ class SIMD_2x64 final {
       }
 
       template <size_t ROT>
-      SIMD_2x64 rotl() const {
+      SIMD_2x64 BOTAN_FN_ISA_SIMD_2X64 rotl() const {
          return this->rotr<64 - ROT>();
       }
 
@@ -251,7 +255,8 @@ class SIMD_2x64 final {
       }
 
       // Argon2 specific operation
-      static void twist(SIMD_2x64& B0, SIMD_2x64& B1, SIMD_2x64& C0, SIMD_2x64& C1, SIMD_2x64& D0, SIMD_2x64& D1) {
+      static void BOTAN_FN_ISA_SIMD_2X64
+      twist(SIMD_2x64& B0, SIMD_2x64& B1, SIMD_2x64& C0, SIMD_2x64& C1, SIMD_2x64& D0, SIMD_2x64& D1) {
          auto T0 = SIMD_2x64::alignr8(B1, B0);
          auto T1 = SIMD_2x64::alignr8(B0, B1);
          B0 = T0;
@@ -268,7 +273,8 @@ class SIMD_2x64 final {
       }
 
       // Argon2 specific operation
-      static void untwist(SIMD_2x64& B0, SIMD_2x64& B1, SIMD_2x64& C0, SIMD_2x64& C1, SIMD_2x64& D0, SIMD_2x64& D1) {
+      static void BOTAN_FN_ISA_SIMD_2X64
+      untwist(SIMD_2x64& B0, SIMD_2x64& B1, SIMD_2x64& C0, SIMD_2x64& C1, SIMD_2x64& D0, SIMD_2x64& D1) {
          auto T0 = SIMD_2x64::alignr8(B0, B1);
          auto T1 = SIMD_2x64::alignr8(B1, B0);
          B0 = T0;
@@ -299,7 +305,7 @@ class SIMD_2x64 final {
 
       native_simd_type BOTAN_FN_ISA_SIMD_2X64 raw() const noexcept { return m_simd; }
 
-      explicit SIMD_2x64(native_simd_type x) : m_simd(x) {}
+      explicit BOTAN_FN_ISA_SIMD_2X64 SIMD_2x64(native_simd_type x) : m_simd(x) {}
 
    private:
       native_simd_type m_simd;
