@@ -12,19 +12,20 @@
 
 #include <botan/tls_extensions.h>
 
-#include <botan/ber_dec.h>
-#include <botan/der_enc.h>
-#include <botan/pkix_types.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/mem_utils.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_reader.h>
 
-#include <algorithm>
-#include <iterator>
+#if defined(BOTAN_HAS_TLS_13)
+   #include <botan/tls_extensions_13.h>
+#endif
+
+#if defined(BOTAN_HAS_TLS_12)
+   #include <botan/tls_extensions_12.h>
+#endif
 
 namespace Botan::TLS {
 
@@ -47,12 +48,6 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
       case Extension_Code::CertificateStatusRequest:
          return std::make_unique<Certificate_Status_Request>(reader, size, message_type, from);
 
-      case Extension_Code::EcPointFormats:
-         return std::make_unique<Supported_Point_Formats>(reader, size);
-
-      case Extension_Code::SafeRenegotiation:
-         return std::make_unique<Renegotiation_Extension>(reader, size);
-
       case Extension_Code::SignatureAlgorithms:
          return std::make_unique<Signature_Algorithms>(reader, size);
 
@@ -71,20 +66,35 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
       case Extension_Code::ServerCertificateType:
          return std::make_unique<Server_Certificate_Type>(reader, size, from);
 
-      case Extension_Code::ExtendedMasterSecret:
-         return std::make_unique<Extended_Master_Secret>(reader, size);
-
       case Extension_Code::RecordSizeLimit:
          return std::make_unique<Record_Size_Limit>(reader, size, from);
+
+      case Extension_Code::SupportedVersions:
+         return std::make_unique<Supported_Versions>(reader, size, from);
+
+#if defined(BOTAN_HAS_TLS_12)
+      case Extension_Code::EcPointFormats:
+         return std::make_unique<Supported_Point_Formats>(reader, size);
+
+      case Extension_Code::SafeRenegotiation:
+         return std::make_unique<Renegotiation_Extension>(reader, size);
+
+      case Extension_Code::ExtendedMasterSecret:
+         return std::make_unique<Extended_Master_Secret>(reader, size);
 
       case Extension_Code::EncryptThenMac:
          return std::make_unique<Encrypt_then_MAC>(reader, size);
 
       case Extension_Code::SessionTicket:
          return std::make_unique<Session_Ticket_Extension>(reader, size);
-
-      case Extension_Code::SupportedVersions:
-         return std::make_unique<Supported_Versions>(reader, size, from);
+#else
+      case Extension_Code::EcPointFormats:
+      case Extension_Code::SafeRenegotiation:
+      case Extension_Code::ExtendedMasterSecret:
+      case Extension_Code::EncryptThenMac:
+      case Extension_Code::SessionTicket:
+         break;  // considered as 'unknown extension'
+#endif
 
 #if defined(BOTAN_HAS_TLS_13)
       case Extension_Code::PresharedKey:
@@ -104,6 +114,14 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
 
       case Extension_Code::KeyShare:
          return std::make_unique<Key_Share>(reader, size, message_type);
+#else
+      case Extension_Code::PresharedKey:
+      case Extension_Code::EarlyData:
+      case Extension_Code::Cookie:
+      case Extension_Code::PskKeyExchangeModes:
+      case Extension_Code::CertificateAuthorities:
+      case Extension_Code::KeyShare:
+         break;  // considered as 'unknown extension'
 #endif
    }
 
@@ -316,19 +334,6 @@ bool Server_Name_Indicator::hostname_acceptable_for_sni(std::string_view hostnam
    }
 
    return true;
-}
-
-Renegotiation_Extension::Renegotiation_Extension(TLS_Data_Reader& reader, uint16_t extension_size) :
-      m_reneg_data(reader.get_range<uint8_t>(1, 0, 255)) {
-   if(m_reneg_data.size() + 1 != extension_size) {
-      throw Decoding_Error("Bad encoding for secure renegotiation extn");
-   }
-}
-
-std::vector<uint8_t> Renegotiation_Extension::serialize(Connection_Side /*whoami*/) const {
-   std::vector<uint8_t> buf;
-   append_tls_length_value(buf, m_reneg_data, 1);
-   return buf;
 }
 
 Application_Layer_Protocol_Notification::Application_Layer_Protocol_Notification(TLS_Data_Reader& reader,
@@ -561,55 +566,6 @@ Supported_Groups::Supported_Groups(TLS_Data_Reader& reader, uint16_t extension_s
    }
 }
 
-std::vector<uint8_t> Supported_Point_Formats::serialize(Connection_Side /*whoami*/) const {
-   // if this extension is sent, it MUST include uncompressed (RFC 4492, section 5.1)
-   if(m_prefers_compressed) {
-      return std::vector<uint8_t>{2, ANSIX962_COMPRESSED_PRIME, UNCOMPRESSED};
-   } else {
-      return std::vector<uint8_t>{1, UNCOMPRESSED};
-   }
-}
-
-Supported_Point_Formats::Supported_Point_Formats(TLS_Data_Reader& reader, uint16_t extension_size) {
-   const uint8_t len = reader.get_byte();
-
-   if(len + 1 != extension_size) {
-      throw Decoding_Error("Inconsistent length field in supported point formats list");
-   }
-
-   bool includes_uncompressed = false;
-   for(size_t i = 0; i != len; ++i) {
-      const uint8_t format = reader.get_byte();
-
-      if(static_cast<ECPointFormat>(format) == UNCOMPRESSED) {
-         m_prefers_compressed = false;
-         reader.discard_next(len - i - 1);
-         return;
-      } else if(static_cast<ECPointFormat>(format) == ANSIX962_COMPRESSED_PRIME) {
-         m_prefers_compressed = true;
-         std::vector<uint8_t> remaining_formats = reader.get_fixed<uint8_t>(len - i - 1);
-         includes_uncompressed =
-            std::any_of(std::begin(remaining_formats), std::end(remaining_formats), [](uint8_t remaining_format) {
-               return static_cast<ECPointFormat>(remaining_format) == UNCOMPRESSED;
-            });
-         break;
-      }
-
-      // ignore ANSIX962_COMPRESSED_CHAR2, we don't support these curves
-   }
-
-   // RFC 4492 5.1.:
-   //   If the Supported Point Formats Extension is indeed sent, it MUST contain the value 0 (uncompressed)
-   //   as one of the items in the list of point formats.
-   // Note:
-   //   RFC 8422 5.1.2. explicitly requires this check,
-   //   but only if the Supported Groups extension was sent.
-   if(!includes_uncompressed) {
-      throw TLS_Exception(Alert::IllegalParameter,
-                          "Supported Point Formats Extension must contain the uncompressed point format");
-   }
-}
-
 namespace {
 
 std::vector<uint8_t> serialize_signature_algorithms(const std::vector<Signature_Scheme>& schemes) {
@@ -663,9 +619,6 @@ std::vector<uint8_t> Signature_Algorithms_Cert::serialize(Connection_Side /*whoa
 Signature_Algorithms_Cert::Signature_Algorithms_Cert(TLS_Data_Reader& reader, uint16_t extension_size) :
       m_schemes(parse_signature_algorithms(reader, extension_size)) {}
 
-Session_Ticket_Extension::Session_Ticket_Extension(TLS_Data_Reader& reader, uint16_t extension_size) :
-      m_ticket(Session_Ticket(reader.get_elem<uint8_t, std::vector<uint8_t>>(extension_size))) {}
-
 SRTP_Protection_Profiles::SRTP_Protection_Profiles(TLS_Data_Reader& reader, uint16_t extension_size) :
       m_pp(reader.get_range<uint16_t>(2, 0, 65535)) {
    const std::vector<uint8_t> mki = reader.get_range<uint8_t>(1, 0, 255);
@@ -694,26 +647,6 @@ std::vector<uint8_t> SRTP_Protection_Profiles::serialize(Connection_Side /*whoam
    buf.push_back(0);  // srtp_mki, always empty here
 
    return buf;
-}
-
-Extended_Master_Secret::Extended_Master_Secret(TLS_Data_Reader& /*unused*/, uint16_t extension_size) {
-   if(extension_size != 0) {
-      throw Decoding_Error("Invalid extended_master_secret extension");
-   }
-}
-
-std::vector<uint8_t> Extended_Master_Secret::serialize(Connection_Side /*whoami*/) const {
-   return std::vector<uint8_t>();
-}
-
-Encrypt_then_MAC::Encrypt_then_MAC(TLS_Data_Reader& /*unused*/, uint16_t extension_size) {
-   if(extension_size != 0) {
-      throw Decoding_Error("Invalid encrypt_then_mac extension");
-   }
-}
-
-std::vector<uint8_t> Encrypt_then_MAC::serialize(Connection_Side /*whoami*/) const {
-   return std::vector<uint8_t>();
 }
 
 std::vector<uint8_t> Supported_Versions::serialize(Connection_Side whoami) const {
@@ -836,146 +769,4 @@ std::vector<uint8_t> Record_Size_Limit::serialize(Connection_Side /*whoami*/) co
    return buf;
 }
 
-#if defined(BOTAN_HAS_TLS_13)
-Cookie::Cookie(const std::vector<uint8_t>& cookie) : m_cookie(cookie) {}
-
-Cookie::Cookie(TLS_Data_Reader& reader, uint16_t extension_size) {
-   if(extension_size == 0) {
-      return;
-   }
-
-   const uint16_t len = reader.get_uint16_t();
-
-   if(len == 0) {
-      // Based on RFC 8446 4.2.2, len of the Cookie buffer must be at least 1
-      throw Decoding_Error("Cookie length must be at least 1 byte");
-   }
-
-   if(len > reader.remaining_bytes()) {
-      throw Decoding_Error("Not enough bytes in the buffer to decode Cookie");
-   }
-
-   for(size_t i = 0; i < len; ++i) {
-      m_cookie.push_back(reader.get_byte());
-   }
-}
-
-std::vector<uint8_t> Cookie::serialize(Connection_Side /*whoami*/) const {
-   std::vector<uint8_t> buf;
-
-   const uint16_t len = static_cast<uint16_t>(m_cookie.size());
-
-   buf.push_back(get_byte<0>(len));
-   buf.push_back(get_byte<1>(len));
-
-   for(const auto& cookie_byte : m_cookie) {
-      buf.push_back(cookie_byte);
-   }
-
-   return buf;
-}
-
-std::vector<uint8_t> PSK_Key_Exchange_Modes::serialize(Connection_Side /*whoami*/) const {
-   std::vector<uint8_t> buf;
-
-   BOTAN_ASSERT_NOMSG(m_modes.size() < 256);
-   buf.push_back(static_cast<uint8_t>(m_modes.size()));
-   for(const auto& mode : m_modes) {
-      buf.push_back(static_cast<uint8_t>(mode));
-   }
-
-   return buf;
-}
-
-PSK_Key_Exchange_Modes::PSK_Key_Exchange_Modes(TLS_Data_Reader& reader, uint16_t extension_size) {
-   if(extension_size < 2) {
-      throw Decoding_Error("Empty psk_key_exchange_modes extension is illegal");
-   }
-
-   const auto mode_count = reader.get_byte();
-   for(uint16_t i = 0; i < mode_count; ++i) {
-      const auto mode = static_cast<PSK_Key_Exchange_Mode>(reader.get_byte());
-      if(mode == PSK_Key_Exchange_Mode::PSK_KE || mode == PSK_Key_Exchange_Mode::PSK_DHE_KE) {
-         m_modes.push_back(mode);
-      }
-   }
-}
-
-std::vector<uint8_t> Certificate_Authorities::serialize(Connection_Side /*whoami*/) const {
-   std::vector<uint8_t> out;
-   std::vector<uint8_t> dn_list;
-
-   for(const auto& dn : m_distinguished_names) {
-      std::vector<uint8_t> encoded_dn;
-      auto encoder = DER_Encoder(encoded_dn);
-      dn.encode_into(encoder);
-      append_tls_length_value(dn_list, encoded_dn, 2);
-   }
-
-   append_tls_length_value(out, dn_list, 2);
-
-   return out;
-}
-
-Certificate_Authorities::Certificate_Authorities(TLS_Data_Reader& reader, uint16_t extension_size) {
-   if(extension_size < 2) {
-      throw Decoding_Error("Empty certificate_authorities extension is illegal");
-   }
-
-   const uint16_t purported_size = reader.get_uint16_t();
-
-   if(reader.remaining_bytes() != purported_size) {
-      throw Decoding_Error("Inconsistent length in certificate_authorities extension");
-   }
-
-   while(reader.has_remaining()) {
-      std::vector<uint8_t> name_bits = reader.get_tls_length_value(2);
-
-      BER_Decoder decoder(name_bits.data(), name_bits.size());
-      m_distinguished_names.emplace_back();
-      decoder.decode(m_distinguished_names.back());
-   }
-}
-
-Certificate_Authorities::~Certificate_Authorities() = default;
-
-Certificate_Authorities::Certificate_Authorities(const std::vector<X509_DN>& acceptable_DNs) :
-      m_distinguished_names(acceptable_DNs) {}
-
-std::vector<uint8_t> EarlyDataIndication::serialize(Connection_Side /*whoami*/) const {
-   std::vector<uint8_t> result;
-   if(m_max_early_data_size.has_value()) {
-      const auto max_data = m_max_early_data_size.value();
-      result.push_back(get_byte<0>(max_data));
-      result.push_back(get_byte<1>(max_data));
-      result.push_back(get_byte<2>(max_data));
-      result.push_back(get_byte<3>(max_data));
-   }
-   return result;
-}
-
-EarlyDataIndication::EarlyDataIndication(TLS_Data_Reader& reader,
-                                         uint16_t extension_size,
-                                         Handshake_Type message_type) {
-   if(message_type == Handshake_Type::NewSessionTicket) {
-      if(extension_size != 4) {
-         throw TLS_Exception(Alert::DecodeError,
-                             "Received an early_data extension in a NewSessionTicket message "
-                             "without maximum early data size indication");
-      }
-
-      m_max_early_data_size = reader.get_uint32_t();
-   } else if(extension_size != 0) {
-      throw TLS_Exception(Alert::DecodeError,
-                          "Received an early_data extension containing an unexpected data "
-                          "size indication");
-   }
-}
-
-bool EarlyDataIndication::empty() const {
-   // This extension may be empty by definition but still carry information
-   return false;
-}
-
-#endif
 }  // namespace Botan::TLS

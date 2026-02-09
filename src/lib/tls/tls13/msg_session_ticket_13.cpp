@@ -11,6 +11,7 @@
 
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
+#include <botan/tls_extensions_13.h>
 #include <botan/tls_session.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tls_reader.h>

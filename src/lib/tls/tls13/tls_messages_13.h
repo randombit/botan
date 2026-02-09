@@ -15,7 +15,11 @@
 #include <botan/x509cert.h>
 #include <chrono>
 
+#include <botan/tls_external_psk.h>
+
 namespace Botan::TLS {
+
+class Transcript_Hash_State;
 
 class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello {
    public:

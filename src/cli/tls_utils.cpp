@@ -18,6 +18,7 @@
    #include <sstream>
 
    #if defined(BOTAN_HAS_TLS_12) && defined(BOTAN_HAS_TLS_13)
+      #include <botan/tls_extensions_13.h>
       #include <botan/tls_messages_12.h>
       #include <botan/tls_messages_13.h>
    #endif

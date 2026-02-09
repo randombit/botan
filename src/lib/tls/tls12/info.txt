@@ -9,6 +9,7 @@ brief -> "TLS 1.2 protocol implementation"
 
 <header:public>
 tls_messages_12.h
+tls_extensions_12.h
 </header:public>
 
 <header:internal>
