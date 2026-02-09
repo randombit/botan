@@ -9,10 +9,10 @@
 
 #include <botan/exceptn.h>
 #include <botan/ffi.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/mem_utils.h>
 #include <concepts>
 #include <cstdint>
+#include <cstring>
 #include <exception>
 #include <memory>
 
@@ -234,7 +234,7 @@ inline int check_and_prepare_output_space(T out[], size_t* out_len, size_t requi
 
    if(avail < required_len || out == nullptr) {
       if(out != nullptr) {
-         Botan::clear_mem(out, avail);
+         std::memset(out, 0, sizeof(T) * avail);
       }
       return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
    } else {
@@ -252,7 +252,7 @@ inline int write_output(T out[], size_t* out_len, const T buf[], size_t buf_len)
    }
 
    if(out != nullptr) {
-      Botan::copy_mem(out, buf, buf_len);
+      std::memcpy(out, buf, sizeof(T) * buf_len);
    }
 
    return BOTAN_FFI_SUCCESS;

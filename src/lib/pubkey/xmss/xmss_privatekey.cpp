@@ -46,8 +46,7 @@ secure_vector<uint8_t> extract_raw_private_key(std::span<const uint8_t> key_bits
       key_bits.size() == xmss_params.raw_legacy_private_key_size()) {
       raw_key.assign(key_bits.begin(), key_bits.end());
    } else {
-      DataSource_Memory src(key_bits);
-      BER_Decoder(src).decode(raw_key, ASN1_Type::OctetString).verify_end();
+      BER_Decoder(key_bits).decode(raw_key, ASN1_Type::OctetString).verify_end();
    }
 
    return raw_key;

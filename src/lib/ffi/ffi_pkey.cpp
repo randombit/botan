@@ -6,6 +6,7 @@
 
 #include <botan/ffi.h>
 
+#include <botan/assert.h>
 #include <botan/data_src.h>
 #include <botan/hash.h>
 #include <botan/pk_algs.h>

@@ -9,7 +9,7 @@
 #define BOTAN_PARSING_UTILS_H_
 
 #include <botan/types.h>
-#include <istream>
+#include <iosfwd>
 #include <map>
 #include <optional>
 #include <string>

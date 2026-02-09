@@ -7,6 +7,7 @@
 #include <botan/ffi.h>
 
 #include <botan/aead.h>
+#include <botan/mem_ops.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/buffer_stuffer.h>

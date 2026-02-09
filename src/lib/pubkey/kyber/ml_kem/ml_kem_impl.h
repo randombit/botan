@@ -18,6 +18,7 @@
 #include <botan/internal/kyber_keys.h>
 #include <botan/internal/kyber_symmetric_primitives.h>
 #include <botan/internal/kyber_types.h>
+#include <botan/internal/loadstor.h>
 
 namespace Botan {
 

@@ -12,6 +12,7 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    #include <botan/asn1_time.h>
+   #include <botan/assert.h>
    #include <botan/data_src.h>
    #include <botan/x509_crl.h>
    #include <botan/x509cert.h>

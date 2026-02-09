@@ -6,6 +6,7 @@
 
 #include <botan/ffi.h>
 
+#include <botan/assert.h>
 #include <botan/internal/ffi_mp.h>
 #include <botan/internal/ffi_util.h>
 #include <memory>

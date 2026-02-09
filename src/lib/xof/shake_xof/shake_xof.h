@@ -13,8 +13,6 @@
 #include <botan/xof.h>
 #include <botan/internal/keccak_perm.h>
 
-#include <vector>
-
 namespace Botan {
 
 /**

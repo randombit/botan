@@ -9,13 +9,14 @@
 #define BOTAN_BER_DECODER_H_
 
 #include <botan/asn1_obj.h>
-#include <botan/data_src.h>
 #include <cstring>
+#include <memory>
 #include <optional>
 
 namespace Botan {
 
 class BigInt;
+class DataSource;
 
 /**
 * BER Decoding Object
@@ -58,10 +59,10 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       BOTAN_FUTURE_EXPLICIT BER_Decoder(BER_Object&& obj) : BER_Decoder(std::move(obj), nullptr) {}
 
       BER_Decoder(const BER_Decoder& other);
-      BER_Decoder(BER_Decoder&& other) = default;
+      BER_Decoder(BER_Decoder&& other) noexcept;
 
       BER_Decoder& operator=(const BER_Decoder&) = delete;
-      BER_Decoder& operator=(BER_Decoder&&) = default;
+      BER_Decoder& operator=(BER_Decoder&&) noexcept;
 
       /**
       * Get the next object in the data stream.
@@ -168,9 +169,12 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       template <typename Alloc>
       BER_Decoder& raw_bytes(std::vector<uint8_t, Alloc>& out) {
          out.clear();
-         uint8_t buf = 0;
-         while(m_source->read_byte(buf)) {
-            out.push_back(buf);
+         for(;;) {
+            if(auto next = this->read_next_byte()) {
+               out.push_back(*next);
+            } else {
+               break;
+            }
          }
          return (*this);
       }
@@ -320,10 +324,12 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
          return decode_optional_string(out, real_type, static_cast<uint32_t>(expected_tag), class_tag);
       }
 
-      ~BER_Decoder() = default;
+      ~BER_Decoder();
 
    private:
       BER_Decoder(BER_Object&& obj, BER_Decoder* parent);
+
+      std::optional<uint8_t> read_next_byte();
 
       BER_Object get_next_value(size_t sizeofT, ASN1_Type type_tag, ASN1_Class class_tag);
 

@@ -9,6 +9,7 @@
 
 #include <botan/assert.h>
 #include <botan/ber_dec.h>
+#include <botan/data_src.h>
 #include <botan/der_enc.h>
 #include <botan/pem.h>
 #include <botan/pubkey.h>
