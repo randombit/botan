@@ -10,6 +10,7 @@
 #include <botan/tls_messages_12.h>
 
 #include <botan/tls_callbacks.h>
+#include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_handshake_hash.h>
@@ -257,6 +258,24 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    cb.tls_modify_extensions(m_data->extensions(), Connection_Side::Client, type());
 
    hash.update(io.send(*this));
+}
+
+Client_Hello_12::Client_Hello_12(const std::vector<uint8_t>& buf) :
+      Client_Hello_12(std::make_unique<Client_Hello_Internal>(buf)) {}
+
+Client_Hello_12::Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data) : Client_Hello_12_Shim(std::move(data)) {
+   const uint16_t TLS_EMPTY_RENEGOTIATION_INFO_SCSV = 0x00FF;
+
+   if(offered_suite(static_cast<uint16_t>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV))) {
+      if(const Renegotiation_Extension* reneg = m_data->extensions().get<Renegotiation_Extension>()) {
+         if(!reneg->renegotiation_info().empty()) {
+            throw TLS_Exception(Alert::HandshakeFailure, "Client sent renegotiation SCSV and non-empty extension");
+         }
+      } else {
+         // add fake extension
+         m_data->extensions().add(new Renegotiation_Extension());  // NOLINT(*-owning-memory)
+      }
+   }
 }
 
 Hello_Request::Hello_Request(Handshake_IO& io) {

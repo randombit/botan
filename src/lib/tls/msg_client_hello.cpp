@@ -265,20 +265,7 @@ const std::vector<uint8_t>& Client_Hello::cookie() const {
 }
 
 Client_Hello_12_Shim::Client_Hello_12_Shim(std::unique_ptr<Client_Hello_Internal> data) :
-      Client_Hello(std::move(data)) {
-   const uint16_t TLS_EMPTY_RENEGOTIATION_INFO_SCSV = 0x00FF;
-
-   if(offered_suite(static_cast<uint16_t>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV))) {
-      if(const Renegotiation_Extension* reneg = m_data->extensions().get<Renegotiation_Extension>()) {
-         if(!reneg->renegotiation_info().empty()) {
-            throw TLS_Exception(Alert::HandshakeFailure, "Client sent renegotiation SCSV and non-empty extension");
-         }
-      } else {
-         // add fake extension
-         m_data->extensions().add(new Renegotiation_Extension());  // NOLINT(*-owning-memory)
-      }
-   }
-}
+      Client_Hello(std::move(data)) {}
 
 Client_Hello_12_Shim::Client_Hello_12_Shim(const std::vector<uint8_t>& buf) :
       Client_Hello_12_Shim(std::make_unique<Client_Hello_Internal>(buf)) {}
