@@ -1346,6 +1346,16 @@ BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_from_oid(botan_ec_group_t* ec_group, b
 BOTAN_FFI_EXPORT(3, 8) int botan_ec_group_from_name(botan_ec_group_t* ec_group, const char* name);
 
 /**
+* Unregister a previously registered group.
+* @param oid the oid associated with the group to unregister
+* @returns 1 if the group was found and unregistered, else 0
+*
+* Using this is discouraged for normal use. This is only useful or necessary if
+* you are registering a very large number of distinct groups, and need to worry about memory constraints.
+*/
+BOTAN_FFI_EXPORT(3, 11) int botan_ec_group_unregister(botan_asn1_oid_t oid);
+
+/**
 * View an EC Group in DER encoding
 */
 BOTAN_FFI_EXPORT(3, 8)

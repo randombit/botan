@@ -205,6 +205,16 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       */
       BOTAN_DEPRECATED("Deprecated no replacement") EC_Group();
 
+      /**
+      * Unregister a previously registered group.
+      *
+      * Using this is discouraged for normal use. This is only useful or necessary if
+      * you are registering a very large number of distinct groups, and need to worry about memory constraints.
+      *
+      * Returns true if the group was found and unregistered.
+      */
+      static bool unregister(const OID& oid);
+
       ~EC_Group();
 
       EC_Group(const EC_Group&);

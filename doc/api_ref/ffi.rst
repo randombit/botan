@@ -967,6 +967,13 @@ EC Groups
 
    Initialize an EC Group from a common group name (eg "secp256r1")
 
+.. cpp:function:: int botan_ec_group_unregister(botan_asn1_oid_t oid)
+
+   Unregister a previously registered group. Returns 1 if the group was found and unregistered, else 0.
+
+   Using this is discouraged for normal use. This is only useful or necessary if
+   you are registering a very large number of distinct groups, and need to worry about memory constraints.
+
 .. cpp:function:: int botan_ec_group_view_der(botan_ec_group_t ec_group, botan_view_ctx ctx, botan_view_bin_fn view)
 
    View an EC Group in DER encoding
