@@ -24,7 +24,6 @@ x86_64
 x32
 arm32
 arm64
-ppc32
 ppc64
 loongarch64
 wasm

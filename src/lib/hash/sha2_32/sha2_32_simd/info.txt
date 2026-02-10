@@ -27,7 +27,6 @@ arm32
 arm64
 
 # Works for VMX and LSX but not faster on systems tested so far
-#ppc32
 #ppc64
 #loongson64
 
