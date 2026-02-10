@@ -20,10 +20,10 @@ namespace Botan::TLS {
 class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello {
    public:
       /**
-          * Creates a client hello which might optionally use the passed-in
-          * @p session for resumption. In that case, this will "extract" the
-          * master secret from the passed-in @p session.
-          */
+      * Creates a client hello which might optionally use the passed-in
+      * @p session for resumption. In that case, this will "extract" the
+      * master secret from the passed-in @p session.
+      */
       Client_Hello_13(const Policy& policy,
                       Callbacks& cb,
                       RandomNumberGenerator& rng,
@@ -40,29 +40,29 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello {
                  RandomNumberGenerator& rng);
 
       /**
-          * Select the highest protocol version from the list of versions
-          * supported by the client. If no such version can be determined this
-          * returns std::nullopt.
-          */
+      * Select the highest protocol version from the list of versions
+      * supported by the client. If no such version can be determined this
+      * returns std::nullopt.
+      */
       std::optional<Protocol_Version> highest_supported_version(const Policy& policy) const;
 
       /**
-          * This validates that a Client Hello received after sending a Hello
-          * Retry Request was updated in accordance with RFC 8446 4.1.2. If issues
-          * are found, this method throws accordingly.
-          */
+      * This validates that a Client Hello received after sending a Hello
+      * Retry Request was updated in accordance with RFC 8446 4.1.2. If issues
+      * are found, this method throws accordingly.
+      */
       void validate_updates(const Client_Hello_13& new_ch);
 
    private:
       explicit Client_Hello_13(std::unique_ptr<Client_Hello_Internal> data);
 
       /**
-          * If the Client Hello contains a PSK extensions with identities this will
-          * generate the PSK binders as described in RFC 8446 4.2.11.2.
-          * Note that the passed in \p transcript_hash_state might be virgin for
-          * the initial Client Hello and should be primed with ClientHello1 and
-          * HelloRetryRequest for an updated Client Hello.
-          */
+      * If the Client Hello contains a PSK extensions with identities this will
+      * generate the PSK binders as described in RFC 8446 4.2.11.2.
+      * Note that the passed in \p transcript_hash_state might be virgin for
+      * the initial Client Hello and should be primed with ClientHello1 and
+      * HelloRetryRequest for an updated Client Hello.
+      */
       void calculate_psk_binders(Transcript_Hash_State transcript_hash_state);
 };
 
