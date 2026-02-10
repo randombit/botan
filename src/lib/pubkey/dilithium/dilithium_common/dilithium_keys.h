@@ -58,6 +58,8 @@ class Dilithium_PublicKeyInternal {
 
       const DilithiumConstants& mode() const { return m_mode; }
 
+      bool operator==(const Dilithium_PublicKeyInternal& other) const = default;
+
    private:
       const DilithiumConstants m_mode;
       DilithiumSeedRho m_rho;
@@ -92,6 +94,12 @@ class Dilithium_PrivateKeyInternal {
       const DilithiumPolyVec& s2() const { return m_s2; }
 
       const DilithiumPolyVec& t0() const { return m_t0; }
+
+      bool operator==(const Dilithium_PrivateKeyInternal& other) const {
+          // exclude the generative seed from the comparison, as it might not have been provided
+         return this->m_s1 == other.m_s1 && this->m_s2 == other.m_s2 && this->m_t0 == other.m_t0 &&
+                this->m_signing_seed == other.m_signing_seed;
+      }
 
       void _const_time_poison() const {
          // Note: m_rho and m_tr is public knowledge

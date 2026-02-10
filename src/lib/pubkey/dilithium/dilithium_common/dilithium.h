@@ -52,6 +52,8 @@ class BOTAN_PUBLIC_API(3, 0) DilithiumMode {
 
       Mode mode() const { return m_mode; }
 
+      bool operator==(const DilithiumMode& other) const = default;
+
    private:
       Mode m_mode;
 };
@@ -141,6 +143,8 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PrivateKey final : public virtual Dilithi
       std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
                                                              std::string_view params,
                                                              std::string_view provider) const override;
+
+      bool is_mldsa() const;
 
    private:
       friend class Dilithium_Signature_Operation;
