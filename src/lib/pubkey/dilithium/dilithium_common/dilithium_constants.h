@@ -168,19 +168,6 @@ class DilithiumConstants final {
 
       Dilithium_Keypair_Codec& keypair_codec() const { return *m_keypair_codec; }
 
-      bool operator==(const DilithiumConstants& other) const {
-         return m_mode == other.m_mode && m_tau == other.m_tau && m_lambda == other.m_lambda &&
-                m_gamma1 == other.m_gamma1 && m_gamma2 == other.m_gamma2 && m_k == other.m_k && m_l == other.m_l &&
-                m_eta == other.m_eta && m_beta == other.m_beta && m_omega == other.m_omega &&
-                m_public_key_bytes == other.m_public_key_bytes &&
-                m_commitment_hash_full_bytes == other.m_commitment_hash_full_bytes &&
-                m_private_key_bytes == other.m_private_key_bytes && m_public_key_bytes == other.m_public_key_bytes &&
-                m_signature_bytes == other.m_signature_bytes &&
-                m_serialized_commitment_bytes ==
-                   other
-                      .m_serialized_commitment_bytes;  // && *m_symmetric_primitives == *other.m_symmetric_primitives);
-      }
-
    private:
       DilithiumMode m_mode;
 

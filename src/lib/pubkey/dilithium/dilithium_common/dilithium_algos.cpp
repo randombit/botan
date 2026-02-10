@@ -15,7 +15,6 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  */
 
-#include <botan/hex.h>
 #include <botan/internal/dilithium_algos.h>
 
 #include <botan/internal/bit_ops.h>
@@ -397,6 +396,7 @@ DilithiumSerializedPrivateKey encode_keypair(const DilithiumInternalKeypair& key
 
    BOTAN_ASSERT_NOMSG(stuffer.full());
    CT::unpoison(serialization);
+
    return serialization;
 }
 
