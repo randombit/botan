@@ -10,7 +10,7 @@ Version 3.11.0, Not Yet Released
   not self signed. (GH #5047)
 
 * Many additions to the C89/FFI interface, especially regarding X.509
-  certificates and CRLs (GH #5217 #5220 #5221 #5222 #5225)
+  certificates and CRLs (GH #5217 #5220 #5221 #5222 #5225) also XOF (GH #5148)
 
 * Add optimized Keccak permutation implementation using AVX-512 (GH #5191)
 
@@ -18,11 +18,19 @@ Version 3.11.0, Not Yet Released
 
 * Add optimized SM4 implementation using AVX-512/GFNI (GH #5192)
 
+* Add AVX-512/CLMUL optimized XTS mode (GH #5251)
+
+* GCM and GMAC optimizations (GH #5273 #5278)
+
+* Poly1305 optimizations, including AVX2 and AVX-512 implementations (GH #5227)
+
 * Improve handling of constant time and variable time divisions (GH #5176 #5177 #5180)
 
 * Optimize ECDSA signature setup phase (GH #5173)
 
-* Various elliptic curve arithmetic optimizations (GH #5186 #5194 #5195 #5196)
+* Various elliptic curve arithmetic optimizations (GH #5186 #5194 #5195 #5196 #5275)
+
+* Check for already known/validated groups when decoding explicit EC parameters (GH #5268)
 
 * Add support for WebAssembly SIMD, optimizing various algorithms including AES, GCM,
   ChaCha, SHA-1, SHA-256, Argon2 and others. (GH #5155 #5163 #5201)
@@ -30,9 +38,17 @@ Version 3.11.0, Not Yet Released
 * Emscripten/WebAssembly improvements including using the new Wasm exception mechanism
   (GH #5202) and re-enabling testing in CI with Emscripten (GH #5209)
 
+* Support for AltiVec on 32-bit PowerPC platforms has been dropped (GH #5266)
+
+* Many changes to improve library build times (GH #5279 #5280 #5284 #5285 #5286 #5287 #5288
+  #5289 #5291 #5294 #5295 #5296 #5300 #5304)
+
 * Unroll loops to improve Montgomery reduction performance. (GH #5150)
 
 * Increase maximum HMAC key length to 8192 bytes. (GH #5156)
+
+* Python binding additions including custom RNG (GH #5271) and checks for explicit
+  EC parameter encoding (GH #5282)
 
 * Fix various clang-tidy and cppcheck warnings (GH #5172 #5207 #5204 #5205)
 
