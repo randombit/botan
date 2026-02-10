@@ -428,9 +428,8 @@ secure_vector<uint8_t> Dilithium_PrivateKey::private_key_bits() const {
 }
 
 bool Dilithium_PrivateKey::is_mldsa() const {
-    return m_private->mode().is_ml_dsa();
+   return m_private->mode().is_ml_dsa();
 }
-
 
 std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
                                                                              std::string_view params,
