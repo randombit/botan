@@ -1,6 +1,6 @@
 /*
 * (C) 2025 Jack Lloyd
-* (C) 2025 Dominik Schricker
+* (C) 2025,2026 Dominik Schricker
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -118,6 +118,10 @@ int botan_ec_group_from_name(botan_ec_group_t* ec_group, const char* name) {
       auto group_ptr = std::make_unique<Botan::EC_Group>(std::move(group));
       return ffi_new_object(ec_group, std::move(group_ptr));
    });
+}
+
+int botan_ec_group_unregister(botan_asn1_oid_t oid) {
+   return BOTAN_FFI_VISIT(oid, [=](const auto& o) -> int { return Botan::EC_Group::unregister(o) ? 1 : 0; });
 }
 
 int botan_ec_group_view_der(botan_ec_group_t ec_group, botan_view_ctx ctx, botan_view_bin_fn view) {
