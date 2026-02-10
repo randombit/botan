@@ -20,7 +20,7 @@ namespace Botan::TLS {
 * TLS_NULL_HMAC_AEAD_Mode Constructor
 */
 TLS_NULL_HMAC_AEAD_Mode::TLS_NULL_HMAC_AEAD_Mode(std::unique_ptr<MessageAuthenticationCode> mac, size_t mac_keylen) :
-      m_mac_name(mac->name()), m_mac_keylen(mac_keylen), m_tag_size(mac->output_length()), m_mac(std::move(mac)){};
+      m_mac_name(mac->name()), m_mac_keylen(mac_keylen), m_tag_size(mac->output_length()), m_mac(std::move(mac)) {}
 
 void TLS_NULL_HMAC_AEAD_Mode::clear() {
    m_key.clear();
