@@ -271,8 +271,6 @@ class Polynomial {
          return *this;
       }
 
-      bool operator==(const ThisPolynomial& other) const { return std::equal(this->m_coeffs.begin(), this->m_coeffs.end(), other.m_coeffs.begin(), other.m_coeffs.end()); }
-
       ~Polynomial() = default;
 
       constexpr size_t size() const { return m_coeffs.size(); }
@@ -412,8 +410,6 @@ class PolynomialVector {
       ThisPolynomialVector& operator=(const ThisPolynomialVector& other) = delete;
       ThisPolynomialVector& operator=(ThisPolynomialVector&& other) noexcept = default;
       ~PolynomialVector() = default;
-
-      bool operator==(const ThisPolynomialVector& other) const { return m_vec == other.m_vec; }
 
       size_t size() const { return m_vec.size(); }
 

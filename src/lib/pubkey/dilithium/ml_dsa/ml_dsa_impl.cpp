@@ -16,6 +16,10 @@
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <string>
+#include <utility>
+
+
+namespace Botan {
 
 namespace {
 typedef Botan::DilithiumInternalKeypair (*decoding_func)(std::span<const uint8_t> key_bits,
@@ -35,7 +39,7 @@ Botan::DilithiumInternalKeypair try_decode_expanded_only(std::span<const uint8_t
    Botan::secure_vector<uint8_t> expanded;
    Botan::BER_Decoder(key_bits).decode(expanded, Botan::ASN1_Type::OctetString).verify_end();
    Botan::DilithiumInternalKeypair key_pair =
-      Botan::Dilithium_Algos::decode_keypair(Botan::DilithiumSerializedPrivateKey(expanded), mode);
+      Botan::Dilithium_Algos::decode_keypair(Botan::DilithiumSerializedPrivateKey(expanded), std::move(mode));
    return key_pair;
 }
 
@@ -52,7 +56,11 @@ Botan::DilithiumInternalKeypair try_decode_both(std::span<const uint8_t> key_bit
       Botan::Dilithium_Algos::decode_keypair(Botan::DilithiumSerializedPrivateKey(expanded), mode);
    Botan::DilithiumInternalKeypair key_pair_from_seed =
       Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(seed), std::move(mode));
-   if(*key_pair_from_seed.second != *key_pair.second) {
+
+      DilithiumSerializedPrivateKey expanded_from_seed = Dilithium_Algos::encode_keypair(key_pair_from_seed);
+    
+
+   if(expanded_from_seed.get() != expanded) {
       throw Botan::Decoding_Error("seed and expanded key in ML-DSA serialized key do not match");
    }
    return key_pair;
@@ -60,7 +68,6 @@ Botan::DilithiumInternalKeypair try_decode_both(std::span<const uint8_t> key_bit
 
 }  // namespace
 
-namespace Botan {
 
 secure_vector<uint8_t> ML_DSA_Expanding_Keypair_Codec::encode_keypair(DilithiumInternalKeypair keypair) const {
    BOTAN_ASSERT_NONNULL(keypair.second);
