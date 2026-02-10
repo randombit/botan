@@ -342,6 +342,7 @@ std::string map_to_bogo_error(const std::string& e) noexcept {
       {"Peer sent unknown signature scheme", ":WRONG_SIGNATURE_TYPE:"},
       {"We did not offer the usage of RSA_PSS_SHA256 as a signature scheme", ":WRONG_SIGNATURE_TYPE:"},
       {"X25519 public point appears to be of low order", ":BAD_ECPOINT:"},
+      {"TLS signature extension did not allow for RSA/SHA-256 signature", ":WRONG_SIGNATURE_TYPE:"},
    };
 
    auto err_map_i = err_map.find(e);
@@ -1533,6 +1534,7 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
       void tls_modify_extensions(Botan::TLS::Extensions& exts,
                                  Botan::TLS::Connection_Side /* side */,
                                  Botan::TLS::Handshake_Type msg_type) override {
+#if defined(BOTAN_HAS_TLS_13)
          if(msg_type == Botan::TLS::Handshake_Type::CertificateRequest) {
             if(m_args.option_used("use-client-ca-list")) {
                // The CertificateAuthorities extension is filled with the CA
@@ -1551,6 +1553,9 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
                }
             }
          }
+#else
+         BOTAN_UNUSED(exts, msg_type);
+#endif
       }
 
       std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos) override {
