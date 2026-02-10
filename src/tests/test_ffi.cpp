@@ -16,14 +16,17 @@
    #include <botan/ffi.h>
    #include <botan/hex.h>
    #include <botan/mem_ops.h>
-   #include <botan/pkix_enums.h>
-   #include <botan/pkix_types.h>
    #include <botan/internal/calendar.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/loadstor.h>
    #include <botan/internal/stl_util.h>
    #include <botan/internal/target_info.h>
    #include <set>
+#endif
+
+#if defined(BOTAN_HAS_X509)
+   #include <botan/pkix_enums.h>
+   #include <botan/pkix_types.h>
 #endif
 
 #if defined(BOTAN_HAS_TPM2)
@@ -767,8 +770,10 @@ class FFI_CRL_Test final : public FFI_Test {
          TEST_FFI_OK(botan_x509_crl_entry_reason, (entry, &reason));
          TEST_FFI_OK(botan_x509_crl_entry_destroy, (entry));
 
+   #if defined(BOTAN_HAS_X509)
          result.test_is_eq(
             "Reason", static_cast<uint8_t>(reason), Botan::to_underlying(Botan::CRL_Code::KeyCompromise));
+   #endif
          result.test_is_eq("Revocation time", ts, Botan::calendar_point(1999, 1, 1, 12, 0, 0).seconds_since_epoch());
          result.test_eq("Revoked cert serial", serial.get(), cert2_serial);
 
@@ -1085,6 +1090,8 @@ class FFI_Cert_ExtKeyUsages_Test final : public FFI_Test {
          TEST_FFI_OK(botan_x509_cert_destroy, (cert_without_eku));
       }
 };
+
+   #if defined(BOTAN_HAS_X509)
 
 auto read_distinguished_name(std::span<const uint8_t> bytes) {
    auto dec = Botan::BER_Decoder(bytes);
@@ -1413,6 +1420,8 @@ class FFI_Cert_NameConstraints_Test final : public FFI_Test {
          TEST_FFI_OK(botan_x509_cert_destroy, (cert));
       }
 };
+
+   #endif
 
 class FFI_PKCS_Hashid_Test final : public FFI_Test {
    public:
@@ -5302,8 +5311,6 @@ BOTAN_REGISTER_TEST("ffi", "ffi_crl", FFI_CRL_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_cert_validation", FFI_Cert_Validation_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ecdsa_certificate", FFI_ECDSA_Certificate_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_cert_ext_keyusage", FFI_Cert_ExtKeyUsages_Test);
-BOTAN_REGISTER_TEST("ffi", "ffi_cert_alt_names", FFI_Cert_AlternativeNames_Test);
-BOTAN_REGISTER_TEST("ffi", "ffi_cert_name_constraints", FFI_Cert_NameConstraints_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_pkcs_hashid", FFI_PKCS_Hashid_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_cbc_cipher", FFI_CBC_Cipher_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_gcm", FFI_GCM_Test);
@@ -5350,6 +5357,11 @@ BOTAN_REGISTER_TEST("ffi", "ffi_dh", FFI_DH_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_oid", FFI_OID_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ec_group", FFI_EC_Group_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_srp6", FFI_SRP6_Test);
+
+   #if defined(BOTAN_HAS_X509)
+BOTAN_REGISTER_TEST("ffi", "ffi_cert_alt_names", FFI_Cert_AlternativeNames_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_cert_name_constraints", FFI_Cert_NameConstraints_Test);
+   #endif
 
 #endif
 

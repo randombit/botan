@@ -20,6 +20,99 @@
    #include <botan/internal/ffi_oid.h>
 #endif
 
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+
+namespace Botan_FFI {
+
+namespace {
+
+/**
+ * As specified in RFC 5280 Section 4.2.1.6. alternative names essentially are a
+ * collection of GeneralNames. This allows mapping a single entry of @p altnames
+ * to a GeneralName by its @p index. If the index is out of range, std::nullopt
+ * is returned.
+ *
+ * NOTE: if the set of alternative name types handled here is extended,
+ *       count_general_names_in() must be updated accordingly!
+ */
+std::optional<Botan::GeneralName> extract_general_name_at(const Botan::AlternativeName& altnames, size_t index) {
+   if(index < altnames.email().size()) {
+      auto itr = altnames.email().begin();
+      std::advance(itr, index);
+      return Botan::GeneralName::email(*itr);
+   }
+   index -= altnames.email().size();
+
+   if(index < altnames.dns().size()) {
+      auto itr = altnames.dns().begin();
+      std::advance(itr, index);
+      return Botan::GeneralName::dns(*itr);
+   }
+   index -= altnames.dns().size();
+
+   if(index < altnames.directory_names().size()) {
+      auto itr = altnames.directory_names().begin();
+      std::advance(itr, index);
+      return Botan::GeneralName::directory_name(*itr);
+   }
+   index -= altnames.directory_names().size();
+
+   if(index < altnames.uris().size()) {
+      auto itr = altnames.uris().begin();
+      std::advance(itr, index);
+      return Botan::GeneralName::uri(*itr);
+   }
+   index -= altnames.uris().size();
+
+   if(index < altnames.ipv4_address().size()) {
+      auto itr = altnames.ipv4_address().begin();
+      std::advance(itr, index);
+      return Botan::GeneralName::ipv4_address(*itr);
+   }
+
+   return std::nullopt;
+}
+
+/**
+ * Counts the total number of GeneralNames contained in the given
+ * AlternativeName @p alt_names.
+ *
+ * NOTE: if the set of alternative name types handled here is extended,
+ *       extract_general_name_at() must be updated accordingly!
+ */
+size_t count_general_names_in(const Botan::AlternativeName& alt_names) {
+   return alt_names.email().size() + alt_names.dns().size() + alt_names.directory_names().size() +
+          alt_names.uris().size() + alt_names.ipv4_address().size();
+}
+
+std::optional<botan_x509_general_name_types> to_botan_x509_general_name_types(Botan::GeneralName::NameType gn_type) {
+   using Type = Botan::GeneralName::NameType;
+   switch(gn_type) {
+      case Type::Unknown:
+         return std::nullopt;
+      case Type::RFC822:
+         return BOTAN_X509_EMAIL_ADDRESS;
+      case Type::DNS:
+         return BOTAN_X509_DNS_NAME;
+      case Type::URI:
+         return BOTAN_X509_URI;
+      case Type::DN:
+         return BOTAN_X509_DIRECTORY_NAME;
+      case Type::IPv4:
+         return BOTAN_X509_IP_ADDRESS;
+      case Type::Other:
+         return BOTAN_X509_OTHER_NAME;
+   }
+
+   BOTAN_ASSERT_UNREACHABLE();
+}
+
+}  // namespace
+
+}  // namespace Botan_FFI
+
+#endif
+
 extern "C" {
 
 using namespace Botan_FFI;
@@ -367,35 +460,6 @@ int botan_x509_cert_view_public_key_bits(botan_x509_cert_t cert, botan_view_ctx 
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
-}
-
-namespace {
-
-std::optional<botan_x509_general_name_types> to_botan_x509_general_name_types(Botan::GeneralName::NameType gn_type) {
-   using Type = Botan::GeneralName::NameType;
-   switch(gn_type) {
-      case Type::Unknown:
-         return std::nullopt;
-      case Type::RFC822:
-         return BOTAN_X509_EMAIL_ADDRESS;
-      case Type::DNS:
-         return BOTAN_X509_DNS_NAME;
-      case Type::URI:
-         return BOTAN_X509_URI;
-      case Type::DN:
-         return BOTAN_X509_DIRECTORY_NAME;
-      case Type::IPv4:
-         return BOTAN_X509_IP_ADDRESS;
-      case Type::Other:
-         return BOTAN_X509_OTHER_NAME;
-   }
-
-   BOTAN_ASSERT_UNREACHABLE();
-}
-
-}  // namespace
-
-extern "C" {
 
 int botan_x509_general_name_get_type(botan_x509_general_name_t name, unsigned int* type) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
@@ -545,72 +609,6 @@ int botan_x509_cert_excluded_name_constraints_count(botan_x509_cert_t cert, size
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
-}
-
-namespace {
-
-/**
- * As specified in RFC 5280 Section 4.2.1.6. alternative names essentially are a
- * collection of GeneralNames. This allows mapping a single entry of @p altnames
- * to a GeneralName by its @p index. If the index is out of range, std::nullopt
- * is returned.
- *
- * NOTE: if the set of alternative name types handled here is extended,
- *       count_general_names_in() must be updated accordingly!
- */
-std::optional<Botan::GeneralName> extract_general_name_at(const Botan::AlternativeName& altnames, size_t index) {
-   if(index < altnames.email().size()) {
-      auto itr = altnames.email().begin();
-      std::advance(itr, index);
-      return Botan::GeneralName::email(*itr);
-   }
-   index -= altnames.email().size();
-
-   if(index < altnames.dns().size()) {
-      auto itr = altnames.dns().begin();
-      std::advance(itr, index);
-      return Botan::GeneralName::dns(*itr);
-   }
-   index -= altnames.dns().size();
-
-   if(index < altnames.directory_names().size()) {
-      auto itr = altnames.directory_names().begin();
-      std::advance(itr, index);
-      return Botan::GeneralName::directory_name(*itr);
-   }
-   index -= altnames.directory_names().size();
-
-   if(index < altnames.uris().size()) {
-      auto itr = altnames.uris().begin();
-      std::advance(itr, index);
-      return Botan::GeneralName::uri(*itr);
-   }
-   index -= altnames.uris().size();
-
-   if(index < altnames.ipv4_address().size()) {
-      auto itr = altnames.ipv4_address().begin();
-      std::advance(itr, index);
-      return Botan::GeneralName::ipv4_address(*itr);
-   }
-
-   return std::nullopt;
-}
-
-/**
- * Counts the total number of GeneralNames contained in the given
- * AlternativeName @p alt_names.
- *
- * NOTE: if the set of alternative name types handled here is extended,
- *       extract_general_name_at() must be updated accordingly!
- */
-size_t count_general_names_in(const Botan::AlternativeName& alt_names) {
-   return alt_names.email().size() + alt_names.dns().size() + alt_names.directory_names().size() +
-          alt_names.uris().size() + alt_names.ipv4_address().size();
-}
-
-}  // namespace
-
-extern "C" {
 
 int botan_x509_cert_subject_alternative_names(botan_x509_cert_t cert,
                                               size_t index,
