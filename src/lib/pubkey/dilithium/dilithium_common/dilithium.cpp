@@ -487,6 +487,11 @@ secure_vector<uint8_t> Dilithium_PrivateKey::private_key_bits() const {
    return m_private->mode().keypair_codec().encode_keypair({m_public, m_private});
 }
 
+bool Dilithium_PrivateKey::is_mldsa() const {
+    return m_private->mode().is_ml_dsa();
+}
+
+
 std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::_create_signature_op(
    RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
