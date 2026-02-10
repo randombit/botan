@@ -293,7 +293,7 @@ BOTAN_REGISTER_TEST("pubkey", "dilithium_keygen", Dilithium_Keygen_Tests);
 #if defined(BOTAN_HAS_DILITHIUM_COMMON) && defined(BOTAN_HAS_SHA3)
 class MLDSA_Privkey_Tests : public Text_Based_Test {
    public:
-      MLDSA_Privkey_Tests() : Text_Based_Test("mldsa_pkcs8.vec", "key") {}
+      MLDSA_Privkey_Tests() : Text_Based_Test("mldsa_privkey.vec", "key") {}
 
       Test::Result run_one_test(const std::string& name, const VarMap& vars) override {
          Test::Result result(name);
@@ -330,6 +330,10 @@ class MLDSA_Privkey_Tests : public Text_Based_Test {
          auto verifier = Botan::PK_Verifier(pub_key, "");
          verifier.update(ref_msg.data(), ref_msg.size());
          result.confirm("signature verifies", verifier.check_signature(signature.data(), signature.size()));
+
+         auto reencoded_priv_key = priv_key->private_key_bits();
+         auto redecoded_priv_key = Botan::Dilithium_PrivateKey(reencoded_priv_key, mode);
+         result.confirm("re-encoding and subsequent re-decoding of private ML-DSA key without error", true);
          return result;
       }
 };
