@@ -14,6 +14,7 @@
    #include <botan/hex.h>
    #include <botan/mceliece.h>
    #include <botan/pubkey.h>
+   #include <botan/rng.h>
 
    #if defined(BOTAN_HAS_HMAC_DRBG)
       #include <botan/hmac_drbg.h>

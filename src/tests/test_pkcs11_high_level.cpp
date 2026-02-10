@@ -15,6 +15,7 @@
    #include <botan/p11_object.h>
    #include <botan/p11_randomgenerator.h>
    #include <botan/internal/fmt.h>
+   #include <algorithm>
    #include <memory>
    #include <numeric>
    #include <sstream>
