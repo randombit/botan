@@ -52,8 +52,6 @@ class BOTAN_PUBLIC_API(3, 0) DilithiumMode final {
 
       Mode mode() const { return m_mode; }
 
-      bool operator==(const DilithiumMode& other) const = default;
-
    private:
       Mode m_mode;
 };
