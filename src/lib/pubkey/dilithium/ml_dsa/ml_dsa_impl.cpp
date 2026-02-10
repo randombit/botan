@@ -65,33 +65,35 @@ namespace Botan {
 secure_vector<uint8_t> ML_DSA_Expanding_Keypair_Codec::encode_keypair(DilithiumInternalKeypair keypair) const {
    BOTAN_ASSERT_NONNULL(keypair.second);
    const auto& seed = keypair.second->seed();
-   BOTAN_ARG_CHECK(seed.has_value(),
-                   "Cannot encode keypair without the private seed");  // TODO: WHEN NOT
-                                                                       // HAVING SEED,
-                                                                       // ENCODE AS
-                                                                       // EXPANDED-ONLY IN
-                                                                       // CASE OF ML-DSA.
-                                                                       // DILITHIUM FAILS WITHOUT SEED.
    if(!keypair.second->mode().is_ml_dsa()) {
       // return the raw seed for dilithium
+      BOTAN_ARG_CHECK(seed.has_value(), "Cannot encode keypair without the private seed");
       return seed.value().get();
    }
    secure_vector<uint8_t> result;
    DER_Encoder der_enc(result);
-   der_enc.encode(seed.value().get(),
-                  ASN1_Type(Botan::ASN1_Type::OctetString) /*real_type*/,
-                  ASN1_Type(Botan::ASN1_Type(0)),
-                  Botan::ASN1_Class::ContextSpecific);
-   /* 
-     *
-            <80 20>
-          0  32: [0]
-               :   00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
-               :   10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F
-     *
-     *  The previous format, which only contains the seed as OS without the [0]-tag, it can decode. Apparentyl, it has this feature as a non-standard compatibility fallback for legacy formats.
-     * Reason: it has to look like this test vector from :
-     */
+   if(!seed.has_value()) {
+      // encode expanded-only format
+      DilithiumSerializedPrivateKey expanded = Dilithium_Algos::encode_keypair(keypair);
+      der_enc.encode(expanded.get(), ASN1_Type::OctetString);
+   } else {
+      // encode seed-only format
+      der_enc.encode(seed.value().get(),
+                     ASN1_Type(Botan::ASN1_Type::OctetString) /*real_type*/,
+                     ASN1_Type(Botan::ASN1_Type(0)),
+                     Botan::ASN1_Class::ContextSpecific);
+      /* 
+       *
+       <80 20>
+       0  32: [0]
+            :   00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+            :   10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F
+       *
+       *  Note: The previous format, which only contains the seed as an OCTET STRING without the [0]-tag, can still be decoded by OpenSSL. Apparently, it has this feature as a non-standard compatibility fallback for legacy formats.
+       * Reason: it has to look like this test vector from :
+       */
+   }
+
    return result;
 }
 
