@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
    #include <botan/hex.h>
+   #include <botan/tls_ciphersuite.h>
    #include <botan/tls_messages.h>
    #include <botan/tls_version.h>
    #include <botan/internal/fmt.h>

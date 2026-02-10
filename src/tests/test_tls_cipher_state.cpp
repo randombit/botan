@@ -15,6 +15,7 @@
 
    #include <botan/internal/tls_channel_impl_13.h>
    #include <botan/internal/tls_cipher_state.h>
+   #include <map>
 
 namespace Botan_Tests {
 

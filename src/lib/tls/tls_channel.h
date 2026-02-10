@@ -13,12 +13,19 @@
 
 #include <botan/symkey.h>
 #include <botan/tls_alert.h>
-#include <botan/x509cert.h>
-
+#include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
 #include <vector>
+
+namespace Botan {
+
+class Public_Key;
+class X509_Certificate;
+
+}  // namespace Botan
 
 namespace Botan::TLS {
 

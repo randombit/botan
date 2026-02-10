@@ -15,8 +15,10 @@
    #include <botan/tls_alert.h>
    #include <botan/tls_policy.h>
    #include <botan/tls_session.h>
+   #include <botan/tls_signature_scheme.h>
    #include <botan/tls_version.h>
    #include <botan/internal/fmt.h>
+   #include <set>
 
    #if defined(BOTAN_HAS_TLS_CBC)
       #include <botan/internal/tls_cbc.h>

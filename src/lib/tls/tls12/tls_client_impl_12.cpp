@@ -667,22 +667,27 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
          state.client_finished(std::make_unique<Finished_12>(state.handshake_io(), state, Connection_Side::Client));
       }
 
-      Session session_info(
-         state.session_keys().master_secret(),
-         state.server_hello()->legacy_version(),
-         state.server_hello()->ciphersuite(),
-         Connection_Side::Client,
-         state.server_hello()->supports_extended_master_secret(),
-         state.server_hello()->supports_encrypt_then_mac(),
-         get_peer_cert_chain(state),
-         m_info,
-         state.server_hello()->srtp_profile(),
-         callbacks().tls_current_timestamp(),
+      // Session Tickets (as defined in RFC 5077) contain a lifetime_hint,
+      // sessions identified via a Session_ID do not.
+      const std::chrono::seconds session_lifetime_hint = [&] {
+         if(state.new_session_ticket() != nullptr) {
+            return std::chrono::seconds(state.new_session_ticket()->ticket_lifetime_hint());
+         } else {
+            return std::chrono::seconds::max();
+         }
+      }();
 
-         // Session Tickets (as defined in RFC 5077) contain a lifetime_hint,
-         // sessions identified via a Session_ID do not.
-         (((state.new_session_ticket()) != nullptr) ? state.new_session_ticket()->ticket_lifetime_hint()
-                                                    : std::chrono::seconds::max()));
+      Session session_info(state.session_keys().master_secret(),
+                           state.server_hello()->legacy_version(),
+                           state.server_hello()->ciphersuite(),
+                           Connection_Side::Client,
+                           state.server_hello()->supports_extended_master_secret(),
+                           state.server_hello()->supports_encrypt_then_mac(),
+                           get_peer_cert_chain(state),
+                           m_info,
+                           state.server_hello()->srtp_profile(),
+                           callbacks().tls_current_timestamp(),
+                           session_lifetime_hint);
 
       // RFC 5077 3.4
       //    If the client receives a session ticket from the server, then it

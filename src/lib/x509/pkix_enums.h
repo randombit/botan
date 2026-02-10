@@ -208,6 +208,15 @@ enum class CRL_Code : uint8_t {
    AaCompromise = 10,
 };
 
+enum class Usage_Type : uint8_t {
+   UNSPECIFIED,  // no restrictions
+   TLS_SERVER_AUTH,
+   TLS_CLIENT_AUTH,
+   CERTIFICATE_AUTHORITY,
+   OCSP_RESPONDER,
+   ENCRYPTION
+};
+
 }  // namespace Botan
 
 #endif

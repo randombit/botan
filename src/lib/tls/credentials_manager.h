@@ -8,19 +8,26 @@
 #ifndef BOTAN_CREDENTIALS_MANAGER_H_
 #define BOTAN_CREDENTIALS_MANAGER_H_
 
-#include <botan/certstor.h>
-#include <botan/pk_keys.h>
-#include <botan/strong_type.h>
 #include <botan/symkey.h>
-#include <botan/tls_external_psk.h>
 #include <botan/tls_magic.h>
-#include <botan/x509cert.h>
+#include <memory>
+#include <optional>
 #include <string>
 
 namespace Botan {
 
+class AlgorithmIdentifier;
+class Certificate_Store;
+class Public_Key;
+class Private_Key;
+class X509_Certificate;
 class X509_DN;
-class BigInt;
+
+namespace TLS {
+
+class ExternalPSK;
+
+}
 
 /**
 * Interface for a credentials manager.
