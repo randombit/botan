@@ -18,7 +18,6 @@
 #include <string>
 #include <utility>
 
-
 namespace Botan {
 
 namespace {
@@ -57,8 +56,7 @@ Botan::DilithiumInternalKeypair try_decode_both(std::span<const uint8_t> key_bit
    Botan::DilithiumInternalKeypair key_pair_from_seed =
       Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(seed), std::move(mode));
 
-      DilithiumSerializedPrivateKey expanded_from_seed = Dilithium_Algos::encode_keypair(key_pair_from_seed);
-    
+   DilithiumSerializedPrivateKey expanded_from_seed = Dilithium_Algos::encode_keypair(key_pair_from_seed);
 
    if(expanded_from_seed.get() != expanded) {
       throw Botan::Decoding_Error("seed and expanded key in ML-DSA serialized key do not match");
@@ -67,7 +65,6 @@ Botan::DilithiumInternalKeypair try_decode_both(std::span<const uint8_t> key_bit
 }
 
 }  // namespace
-
 
 secure_vector<uint8_t> ML_DSA_Expanding_Keypair_Codec::encode_keypair(DilithiumInternalKeypair keypair) const {
    BOTAN_ASSERT_NONNULL(keypair.second);
