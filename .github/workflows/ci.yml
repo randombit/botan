@@ -269,6 +269,9 @@ jobs:
           - target: minimized
             compiler: gcc
             host_os: ubuntu-24.04
+          - target: no_tls13
+            compiler: gcc
+            host_os: ubuntu-24.04
           - target: policy-bsi
             compiler: gcc
             host_os: ubuntu-24.04
@@ -301,6 +304,15 @@ jobs:
 
       - name: Read Repository Configuration
         uses: ./source/.github/actions/read-repo-config
+
+      - name: Fetch BoringSSL fork for BoGo tests
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          repository: ${{ env.BORINGSSL_REPO }}
+          ref: ${{ env.BORINGSSL_BRANCH }}
+          path: ./boringssl
+        if: matrix.target == 'no_tls13'
 
       - name: Setup Build Agent
         uses: ./source/.github/actions/setup-build-agent

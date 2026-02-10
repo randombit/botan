@@ -22,7 +22,7 @@ def gha_linux_packages(target, compiler):
     if target.startswith('valgrind'):
         packages.append('valgrind')
 
-    if target in ['shared', 'coverage', 'amalgamation', 'sanitizer', 'tlsanvil', 'examples', 'clang-tidy']:
+    if target in ['shared', 'coverage', 'amalgamation', 'sanitizer', 'tlsanvil', 'examples', 'clang-tidy', 'no_tls13']:
         packages.append('libboost-dev')
 
     if target in ['clang']:
