@@ -14,7 +14,6 @@
 #include <botan/concepts.h>
 #include <botan/range_concepts.h>
 #include <botan/strong_type.h>
-#include <functional>
 #include <optional>
 #include <span>
 #include <tuple>
@@ -34,7 +33,8 @@ namespace Botan {
  */
 template <typename RetT, typename KeyT, typename ReducerT>
 RetT reduce(const std::vector<KeyT>& keys, RetT acc, ReducerT reducer)
-   requires std::is_convertible_v<ReducerT, std::function<RetT(RetT, const KeyT&)>>
+requires std::invocable<ReducerT&, RetT, const KeyT&> &&
+         std::convertible_to<std::invoke_result_t<ReducerT&, RetT, const KeyT&>, RetT>
 {
    for(const KeyT& key : keys) {
       acc = reducer(std::move(acc), key);
