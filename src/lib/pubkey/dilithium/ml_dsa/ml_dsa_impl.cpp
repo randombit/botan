@@ -24,7 +24,7 @@ namespace {
 typedef Botan::DilithiumInternalKeypair (*decoding_func)(std::span<const uint8_t> key_bits,
                                                          Botan::DilithiumConstants mode);
 
-Botan::DilithiumInternalKeypair try_decode_seed_only(std::span<const uint8_t> key_bits,
+Botan::DilithiumInternalKeypair decode_seed_only_or_throw(std::span<const uint8_t> key_bits,
                                                      Botan::DilithiumConstants mode) {
    Botan::secure_vector<uint8_t> seed;
    Botan::BER_Decoder(key_bits)
@@ -33,7 +33,7 @@ Botan::DilithiumInternalKeypair try_decode_seed_only(std::span<const uint8_t> ke
    return Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(seed), std::move(mode));
 }
 
-Botan::DilithiumInternalKeypair try_decode_expanded_only(std::span<const uint8_t> key_bits,
+Botan::DilithiumInternalKeypair decode_expanded_only_or_throw(std::span<const uint8_t> key_bits,
                                                          Botan::DilithiumConstants mode) {
    Botan::secure_vector<uint8_t> expanded;
    Botan::BER_Decoder(key_bits).decode(expanded, Botan::ASN1_Type::OctetString).verify_end();
@@ -42,7 +42,7 @@ Botan::DilithiumInternalKeypair try_decode_expanded_only(std::span<const uint8_t
    return key_pair;
 }
 
-Botan::DilithiumInternalKeypair try_decode_both(std::span<const uint8_t> key_bits, Botan::DilithiumConstants mode) {
+Botan::DilithiumInternalKeypair decode_seed_plus_expanded_or_throw(std::span<const uint8_t> key_bits, Botan::DilithiumConstants mode) {
    Botan::secure_vector<uint8_t> expanded;
    Botan::secure_vector<uint8_t> seed;
    Botan::BER_Decoder(key_bits)
@@ -87,14 +87,13 @@ secure_vector<uint8_t> ML_DSA_Expanding_Keypair_Codec::encode_keypair(DilithiumI
                      ASN1_Type(Botan::ASN1_Type(0)),
                      Botan::ASN1_Class::ContextSpecific);
       /* 
-       *
+       * This yields the following ASN.1/DER structure:
        <80 20>
        0  32: [0]
             :   00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
             :   10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F
        *
        *  Note: The previous format, which only contains the seed as an OCTET STRING without the [0]-tag, can still be decoded by OpenSSL. Apparently, it has this feature as a non-standard compatibility fallback for legacy formats.
-       * Reason: it has to look like this test vector from :
        */
    }
 
@@ -109,7 +108,7 @@ DilithiumInternalKeypair ML_DSA_Expanding_Keypair_Codec::decode_keypair(std::spa
    }
    /* we have to check 3 different format: "seed-only", "expanded-only", and "both"
      */
-   decoding_func fn_arr[3] = {try_decode_both, try_decode_seed_only, try_decode_expanded_only};
+   decoding_func fn_arr[3] = {decode_seed_plus_expanded_or_throw, decode_seed_only_or_throw, decode_expanded_only_or_throw};
    for(auto fn : fn_arr) {
       try {
          return fn(private_key_bits, mode);
