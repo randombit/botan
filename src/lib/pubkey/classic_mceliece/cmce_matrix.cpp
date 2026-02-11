@@ -207,7 +207,7 @@ std::optional<CmceColumnSelection> apply_gauss(const Classic_McEliece_Parameters
 
       // If the current bit on the diagonal is not set at this point
       // the matrix is not systematic. We abort the computation in this case.
-      const bool diag_bit_zero = !mat[diag_pos].at(diag_pos);
+      const bool diag_bit_zero = !mat[diag_pos].at(diag_pos).is_set();
       CT::unpoison(diag_bit_zero);
       if(diag_bit_zero) {
          return std::nullopt;

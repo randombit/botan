@@ -305,7 +305,7 @@ Classic_McEliece_Field_Ordering Classic_McEliece_Field_Ordering::create_from_con
       const size_t gap = size_t(1) << std::min(i, 2 * params.m() - 2 - i);
       for(size_t j = 0; j < size_t(n) / 2; ++j) {
          const size_t pos = (j % gap) + 2 * gap * (j / gap);
-         auto mask = CT::Mask<uint16_t>::expand_bool(control_bits[i * n / 2 + j]);
+         auto mask = CT::Mask<uint16_t>::expand_bool(control_bits[i * n / 2 + j].is_set());
          mask.conditional_swap(pi[pos], pi[pos + gap]);
       }
    }
@@ -320,7 +320,7 @@ void Classic_McEliece_Field_Ordering::permute_with_pivots(const Classic_McEliece
    for(size_t p_idx = 1; p_idx <= Classic_McEliece_Parameters::mu(); ++p_idx) {
       size_t p_counter = 0;
       for(size_t col = 0; col < Classic_McEliece_Parameters::nu(); ++col) {
-         auto mask_is_pivot_set = CT::Mask<size_t>::expand_bool(pivots.at(col));
+         auto mask_is_pivot_set = CT::Mask<size_t>::expand_bool(pivots.at(col).is_set());
          p_counter += mask_is_pivot_set.if_set_return(1);
          auto mask_is_current_pivot = CT::Mask<size_t>::is_equal(p_idx, p_counter);
          (mask_is_pivot_set & mask_is_current_pivot)
