@@ -28,6 +28,7 @@
 #include <botan/tls_server.h>
 #include <botan/tls_session_manager_hybrid.h>
 #include <botan/tls_session_manager_memory.h>
+#include <botan/internal/concat_util.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>

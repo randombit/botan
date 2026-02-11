@@ -9,6 +9,7 @@
 #include <botan/internal/cmce_keys_internal.h>
 
 #include <botan/internal/buffer_slicer.h>
+#include <botan/internal/concat_util.h>
 
 namespace Botan {
 

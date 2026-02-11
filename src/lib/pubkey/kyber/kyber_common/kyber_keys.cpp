@@ -12,8 +12,8 @@
 #include <botan/internal/kyber_keys.h>
 
 #include <botan/internal/buffer_slicer.h>
+#include <botan/internal/concat_util.h>
 #include <botan/internal/kyber_symmetric_primitives.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 

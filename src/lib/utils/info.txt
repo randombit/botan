@@ -32,6 +32,7 @@ buffer_stuffer.h
 calendar.h
 charset.h
 codec_base.h
+concat_util.h
 ct_utils.h
 donna128.h
 filesystem.h

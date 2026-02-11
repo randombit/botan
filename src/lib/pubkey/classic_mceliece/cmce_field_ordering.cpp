@@ -11,6 +11,7 @@
 
 #include <botan/internal/cmce_field_ordering.h>
 
+#include <botan/internal/concat_util.h>
 #include <botan/internal/loadstor.h>
 #include <algorithm>
 #include <numeric>

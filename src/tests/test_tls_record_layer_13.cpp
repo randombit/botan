@@ -13,13 +13,11 @@
    #include <botan/tls_ciphersuite.h>
    #include <botan/tls_exceptn.h>
    #include <botan/tls_magic.h>
-   #include <botan/internal/stl_util.h>
+   #include <botan/internal/concat_util.h>
+   #include <botan/internal/tls_channel_impl_13.h>
    #include <botan/internal/tls_cipher_state.h>
    #include <botan/internal/tls_reader.h>
-
-   #include <botan/internal/tls_channel_impl_13.h>
    #include <botan/internal/tls_record_layer_13.h>
-
    #include <array>
 
 namespace Botan_Tests {

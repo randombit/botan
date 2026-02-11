@@ -22,8 +22,8 @@
 #include <botan/der_enc.h>
 #include <botan/rng.h>
 #include <botan/internal/buffer_slicer.h>
+#include <botan/internal/concat_util.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/stl_util.h>
 #include <botan/internal/xmss_common_ops.h>
 #include <botan/internal/xmss_index_registry.h>
 #include <botan/internal/xmss_signature_operation.h>

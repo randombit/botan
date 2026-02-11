@@ -13,13 +13,13 @@
    #include <botan/exceptn.h>
    #include <botan/numthry.h>
    #include <botan/internal/barrett.h>
+   #include <botan/internal/concat_util.h>
    #include <botan/internal/ct_utils.h>
    #include <botan/internal/divide.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/mod_inv.h>
    #include <botan/internal/parsing.h>
    #include <botan/internal/primality.h>
-   #include <botan/internal/stl_util.h>
    #include <set>
 #endif
 

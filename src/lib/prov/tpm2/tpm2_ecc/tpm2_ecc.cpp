@@ -8,7 +8,7 @@
 
 #include <botan/tpm2_ecc.h>
 
-#include <botan/internal/stl_util.h>
+#include <botan/internal/concat_util.h>
 #include <botan/internal/tpm2_algo_mappings.h>
 #include <botan/internal/tpm2_hash.h>
 #include <botan/internal/tpm2_pkops.h>
