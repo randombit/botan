@@ -13,11 +13,14 @@ BOGO_PATH = os.path.join(BORING_PATH, "ssl", "test", "runner")
 
 SHIM_PATH = "./botan_bogo_shim"
 SHIM_CONFIG_NO_TLS13 = "src/bogo_shim/config_no_tls13.json"
+SHIM_CONFIG_NO_TLS12 = "src/bogo_shim/config_no_tls12.json"
 SHIM_CONFIG = "src/bogo_shim/config.json"
 
 
 def main():
     parser = argparse.ArgumentParser(description='Run BoringSSL Bogo tests with Botan shim')
+    parser.add_argument('--without-tls-12', action='store_true',
+                        help='Use shim config that disables TLS 1.2')
     parser.add_argument('--without-tls-13', action='store_true',
                         help='Use shim config that disables TLS 1.3')
     parser.add_argument('--wait-for-debugger', action='store_true',
@@ -28,6 +31,8 @@ def main():
     # Select config depending on the option
     if args.without_tls_13:
         config_path = SHIM_CONFIG_NO_TLS13
+    elif args.without_tls_12:
+        config_path = SHIM_CONFIG_NO_TLS12
     else:
         config_path = SHIM_CONFIG
 
@@ -41,6 +46,7 @@ def main():
 
     bogo_args = ';'.join(args.bogo_args) if args.bogo_args else ''
     extra_args = "-wait-for-debugger " if args.wait_for_debugger else ""
+    extra_args += "-skip-tls12 -skip-dtls " if args.without_tls_12 else ""
     extra_args += "-skip-tls13 " if args.without_tls_13 else ""
     extra_args += "-debug -test '%s'" % bogo_args if bogo_args else ''
 

@@ -65,6 +65,7 @@ def known_targets():
         'minimized',
         'nist',
         'no_pcurves',
+        'no_tls12',
         'no_tls13',
         'policy-bsi',
         'policy-fips140',
@@ -130,7 +131,7 @@ def build_targets(target, target_os):
     if target not in ['examples', 'limbo', 'hybrid-tls13-interop-test', 'strubbing']:
         yield 'tests'
 
-    if target in ['coverage', 'no_tls13']:
+    if target in ['coverage', 'no_tls12', 'no_tls13']:
         yield 'bogo_shim'
     if target in ['sanitizer'] and target_os not in ['windows']:
         yield 'bogo_shim'
@@ -237,6 +238,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
     if target in ['no_pcurves']:
         flags += ['--disable-modules=pcurves_impl']
+
+    if target in ['no_tls12']:
+        flags += ['--disable-modules=tls12']
 
     if target in ['no_tls13']:
         flags += ['--disable-modules=tls13']
@@ -445,7 +449,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
             flags += ['--with-commoncrypto']
 
         def add_boost_support(target, target_os):
-            if target in ['coverage', 'amalgamation', 'no_tls13']:
+            if target in ['coverage', 'amalgamation', 'no_tls12', 'no_tls13']:
                 return True
 
             if target == 'sanitizer' and target_os == 'linux':
@@ -918,13 +922,16 @@ def main(args=None):
                          'src/scripts/run_tests_under_valgrind.py'] +
                         valgrind_script_options)
 
-        if target in ['coverage', 'sanitizer', 'no_tls13'] and options.os != 'windows':
+        if target in ['coverage', 'sanitizer', 'no_tls12', 'no_tls13'] and options.os != 'windows':
             if not options.boringssl_dir:
                 raise Exception('%s build needs --boringssl-dir' % (target))
 
             runner_dir = os.path.abspath(os.path.join(options.boringssl_dir, 'ssl', 'test', 'runner'))
 
-            if target == 'no_tls13':
+            if target == 'no_tls12':
+                shim_config = os.path.abspath(os.path.join(root_dir, 'src', 'bogo_shim', 'config_no_tls12.json'))
+                extra_args = ['-skip-tls12', '-skip-dtls']
+            elif target == 'no_tls13':
                 shim_config = os.path.abspath(os.path.join(root_dir, 'src', 'bogo_shim', 'config_no_tls13.json'))
                 extra_args = ['-skip-tls13']
             else:
