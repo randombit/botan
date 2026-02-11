@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
-import sys
 from common import run_cmd, get_concurrency
 
 
@@ -16,6 +16,12 @@ SHIM_CONFIG = "src/bogo_shim/config.json"
 
 
 def main():
+    parser = argparse.ArgumentParser(description='Run BoringSSL Bogo tests with Botan shim')
+    parser.add_argument('--wait-for-debugger', action='store_true',
+                        help='BoGo waits for some seconds so that we can attach a debugger to the shim')
+    parser.add_argument('bogo_args', nargs=argparse.REMAINDER, help='Extra args for the bogo runner')
+    args = parser.parse_args()
+
     if not os.path.isdir(BORING_PATH):
         # check out our fork of boring ssl
         run_cmd("git clone --depth 1 --branch %s %s %s" %
@@ -24,12 +30,13 @@ def main():
     # make doubly sure we're on the correct branch
     run_cmd("git -C %s checkout %s" % (BORING_PATH, BORING_BRANCH))
 
-    extra_args = "-debug -test '%s'" % ';'.join(
-        sys.argv[1:]) if len(sys.argv) > 1 else ''
+    bogo_args = ';'.join(args.bogo_args) if args.bogo_args else ''
+    extra_args = "-wait-for-debugger " if args.wait_for_debugger else ""
+    extra_args += "-debug -test '%s'" % bogo_args if bogo_args else ''
 
     run_cmd("go test -pipe -num-workers %d -shim-path %s -shim-config %s %s" %
-            (get_concurrency(), os.path.abspath(SHIM_PATH), os.path.abspath(SHIM_CONFIG), extra_args), BOGO_PATH)
-
+            (get_concurrency(), os.path.abspath(SHIM_PATH), os.path.abspath(SHIM_CONFIG), extra_args),
+            BOGO_PATH)
 
 if __name__ == '__main__':
     main()

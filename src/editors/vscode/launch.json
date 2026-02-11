@@ -52,6 +52,40 @@
             "environment": [],
             "console": "externalTerminal",
             "preLaunchTask": "Build Unittests"
+        },
+        {
+            // Debugging of BoGo tests:
+            //
+            // 1. Run the BoGo tests with the --wait-for-debugger option
+            //    $> src/editors/vscode/scripts/bogo.py --wait-for-debugger '<test to be debugged>'
+            // 2. Start this debugger configuration from VS Code and
+            //    select the 'botan_bogo_shim' process in the process picker
+            // 3. Wait for the BoGo test to start the test
+            //
+            // Note that attaching might fail due to missing privileges.
+            // In that case, you can try to first run the following command:
+            //    $> sudo sysctl kernel.yama.ptrace_scope=0
+            "name": "Debug BoGo (gdb)",
+            "type": "cppdbg",
+            "request": "attach",
+            "processId":"${command:pickProcess}",
+            "program": "${workspaceFolder}/botan_bogo_shim",
+            "stopAtEntry": true,
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
         }
     ]
 }
