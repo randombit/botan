@@ -8,6 +8,7 @@
 #include <botan/ber_dec.h>
 
 #include <botan/bigint.h>
+#include <botan/data_src.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <memory>
@@ -198,6 +199,8 @@ class DataSource_BERObject final : public DataSource {
 
 }  // namespace
 
+BER_Decoder::~BER_Decoder() = default;
+
 /*
 * Check if more objects are there
 */
@@ -232,6 +235,16 @@ BER_Decoder& BER_Decoder::discard_remaining() {
    uint8_t buf = 0;
    while(m_source->read_byte(buf) != 0) {}
    return (*this);
+}
+
+std::optional<uint8_t> BER_Decoder::read_next_byte() {
+   BOTAN_ASSERT_NOMSG(m_source != nullptr);
+   uint8_t b = 0;
+   if(m_source->read_byte(b) != 0) {
+      return b;
+   } else {
+      return {};
+   }
 }
 
 const BER_Object& BER_Decoder::peek_next_object() {
@@ -372,6 +385,10 @@ BER_Decoder::BER_Decoder(const BER_Decoder& other) : m_parent(other.m_parent), m
    // take ownership of other's data source
    std::swap(m_data_src, other.m_data_src);
 }
+
+BER_Decoder::BER_Decoder(BER_Decoder&& other) noexcept = default;
+
+BER_Decoder& BER_Decoder::operator=(BER_Decoder&&) noexcept = default;
 
 /*
 * Request for an object to decode itself

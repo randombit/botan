@@ -15,11 +15,8 @@
 #ifndef BOTAN_KYBER_ALGOS_H_
 #define BOTAN_KYBER_ALGOS_H_
 
-#include <botan/xof.h>
-#include <botan/internal/fmt.h>
 #include <botan/internal/kyber_symmetric_primitives.h>
 #include <botan/internal/kyber_types.h>
-#include <botan/internal/loadstor.h>
 
 namespace Botan::Kyber_Algos {
 

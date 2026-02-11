@@ -12,6 +12,7 @@
    #include <botan/asn1_time.h>
    #include <botan/ber_dec.h>
    #include <botan/bigint.h>
+   #include <botan/data_src.h>
    #include <botan/der_enc.h>
    #include <botan/internal/fmt.h>
 #endif

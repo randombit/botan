@@ -8,6 +8,7 @@
 #include <botan/internal/parsing.h>
 
 #include <botan/exceptn.h>
+#include <istream>
 
 namespace Botan {
 

@@ -12,10 +12,10 @@
 #include <botan/concepts.h>
 #include <botan/secmem.h>
 #include <botan/sym_algo.h>
-
 #include <memory>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace Botan {
 

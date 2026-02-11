@@ -7,6 +7,7 @@
 
 #include <botan/ffi.h>
 
+#include <botan/assert.h>
 #include <botan/numthry.h>
 #include <botan/internal/barrett.h>
 #include <botan/internal/divide.h>

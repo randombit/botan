@@ -9,11 +9,9 @@
 #ifndef BOTAN_SPHINCS_PLUS_ADDRESS_H_
 #define BOTAN_SPHINCS_PLUS_ADDRESS_H_
 
-#include <array>
-
-#include <botan/hash.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/sp_types.h>
+#include <array>
 
 namespace Botan {
 

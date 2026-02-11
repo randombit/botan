@@ -7,6 +7,7 @@
 
 #include <botan/ffi.h>
 
+#include <botan/assert.h>
 #include <botan/internal/ffi_rng.h>
 #include <botan/internal/ffi_util.h>
 
