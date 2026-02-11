@@ -101,23 +101,31 @@ The ``PasswordHashFamily`` creates specific instances of ``PasswordHash``:
       Create a default instance of the password hashing algorithm. Be warned the
       value returned here may change from release to release.
 
+   .. cpp:function:: std::unique_ptr<PasswordHash> tune_params( \
+                     size_t output_len, \
+                     uint64_t desired_msec, \
+                     std::optional<size_t> max_memory_usage_mb = {}, \
+                     uint64_t tuning_msec = 10) const
+
+      Return a password hash instance tuned to run for approximately ``desired_msec``
+      milliseconds when producing an output of length ``output_len``. (Accuracy
+      may vary, use the command line utility ``botan pbkdf_tune`` to check.)
+
+      The parameters will be selected to use at most *max_memory_usage_mb* megabytes
+      of memory, or if left as nullopt any size is allowed.
+
+      This function works by running a short tuning loop to estimate the
+      performance of the algorithm, then scaling the parameters appropriately to
+      hit the target size. The length of time the tuning loop runs can be
+      controlled using the *tuning_msec* parameter.
+
    .. cpp:function:: std::unique_ptr<PasswordHash> tune( \
                      size_t output_len, \
                      std::chrono::milliseconds msec, \
                      size_t max_memory_usage_mb = 0, \
                      std::chrono::milliseconds tuning_msec = std::chrono::milliseconds(10)) const
 
-      Return a password hash instance tuned to run for approximately ``msec``
-      milliseconds when producing an output of length ``output_len``. (Accuracy
-      may vary, use the command line utility ``botan pbkdf_tune`` to check.)
-
-      The parameters will be selected to use at most *max_memory_usage_mb* megabytes
-      of memory, or if left as zero any size is allowed.
-
-      This function works by running a short tuning loop to estimate the
-      performance of the algorithm, then scaling the parameters appropriately to
-      hit the target size. The length of time the tuning loop runs can be
-      controlled using the *tuning_msec* parameter.
+      A deprecated variant of tune_params. It will be removed in Botan4.
 
    .. cpp:function:: std::unique_ptr<PasswordHash> from_params( \
          size_t i1, size_t i2 = 0, size_t i3 = 0) const
