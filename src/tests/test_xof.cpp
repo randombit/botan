@@ -11,8 +11,8 @@
    #include <botan/exceptn.h>
    #include <botan/rng.h>
    #include <botan/xof.h>
+   #include <botan/internal/concat_util.h>
    #include <botan/internal/fmt.h>
-   #include <botan/internal/stl_util.h>
 
    #if defined(BOTAN_HAS_CSHAKE_XOF)
       // This XOF implementation is not exposed via the library's public interface

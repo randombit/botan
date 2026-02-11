@@ -10,6 +10,7 @@
 
 #include <botan/tls_alert.h>
 #include <botan/tls_exceptn.h>
+#include <botan/internal/concat_util.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_reader.h>
 #include <botan/internal/tls_transcript_hash_13.h>

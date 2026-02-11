@@ -14,6 +14,7 @@
 #include <botan/pk_algs.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/buffer_stuffer.h>
+#include <botan/internal/concat_util.h>
 #include <botan/internal/hybrid_kem_ops.h>
 #include <botan/internal/kex_to_kem_adapter.h>
 #include <botan/internal/stl_util.h>

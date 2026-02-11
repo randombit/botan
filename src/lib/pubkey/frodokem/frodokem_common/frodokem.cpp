@@ -17,12 +17,12 @@
 #include <botan/xof.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/buffer_stuffer.h>
+#include <botan/internal/concat_util.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/frodo_constants.h>
 #include <botan/internal/frodo_matrix.h>
 #include <botan/internal/frodo_types.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/internal/stl_util.h>
 
 #include <memory>
 #include <tuple>

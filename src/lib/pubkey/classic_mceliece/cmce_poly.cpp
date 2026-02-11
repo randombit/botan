@@ -12,6 +12,7 @@
 #include <botan/internal/cmce_poly.h>
 
 #include <botan/internal/buffer_stuffer.h>
+#include <botan/internal/concat_util.h>
 #include <botan/internal/ct_utils.h>
 #include <algorithm>
 

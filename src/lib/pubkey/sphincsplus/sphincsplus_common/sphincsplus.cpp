@@ -11,6 +11,7 @@
 #include <botan/rng.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/buffer_stuffer.h>
+#include <botan/internal/concat_util.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/sp_fors.h>
@@ -20,7 +21,6 @@
 #include <botan/internal/sp_types.h>
 #include <botan/internal/sp_wots.h>
 #include <botan/internal/sp_xmss.h>
-#include <botan/internal/stl_util.h>
 
 #include <utility>
 

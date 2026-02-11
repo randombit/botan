@@ -8,10 +8,11 @@
 
 #include <botan/x509path.h>
 
+#include <botan/assert.h>
 #include <botan/ocsp.h>
 #include <botan/pk_keys.h>
 #include <botan/x509_ext.h>
-#include <botan/internal/stl_util.h>
+#include <botan/internal/concat_util.h>
 #include <algorithm>
 #include <chrono>
 #include <set>

@@ -14,9 +14,9 @@
 #include <botan/kdf.h>
 #include <botan/mac.h>
 #include <botan/rng.h>
+#include <botan/internal/concat_util.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
