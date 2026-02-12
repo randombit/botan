@@ -33,7 +33,7 @@ Server_Hello_13& Handshake_State_13_Base::store(Server_Hello_13 server_hello, co
    return m_server_hello.value();
 }
 
-Server_Hello_12& Handshake_State_13_Base::store(Server_Hello_12 server_hello, const bool /*from_peer*/) {
+Server_Hello_12_Shim& Handshake_State_13_Base::store(Server_Hello_12_Shim server_hello, const bool /*from_peer*/) {
    m_server_hello_12 = std::move(server_hello);
    return m_server_hello_12.value();
 }

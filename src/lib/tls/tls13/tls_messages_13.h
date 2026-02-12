@@ -108,7 +108,8 @@ class BOTAN_UNSTABLE_API Server_Hello_13 : public Server_Hello {
                                                                        const Policy& policy,
                                                                        Callbacks& cb);
 
-      static std::variant<Hello_Retry_Request, Server_Hello_13, Server_Hello_12> parse(const std::vector<uint8_t>& buf);
+      static std::variant<Hello_Retry_Request, Server_Hello_13, Server_Hello_12_Shim> parse(
+         const std::vector<uint8_t>& buf);
 
       /**
        * Return desired downgrade version indicated by hello random, if any.
@@ -412,7 +413,7 @@ using as_wrapped_references_t = typename as_wrapped_references<T>::type;
 using Handshake_Message_13 = std::variant<Client_Hello_13,
                                           Client_Hello_12,
                                           Server_Hello_13,
-                                          Server_Hello_12,
+                                          Server_Hello_12_Shim,
                                           Hello_Retry_Request,
                                           // End_Of_Early_Data,
                                           Encrypted_Extensions,
@@ -431,7 +432,7 @@ using Server_Post_Handshake_13_Message = std::variant<New_Session_Ticket_13, Key
 using Client_Post_Handshake_13_Message = std::variant<Key_Update>;
 
 using Server_Handshake_13_Message = std::variant<Server_Hello_13,
-                                                 Server_Hello_12,  // indicates a TLS version downgrade
+                                                 Server_Hello_12_Shim,  // indicates a TLS version downgrade
                                                  Hello_Retry_Request,
                                                  Encrypted_Extensions,
                                                  Certificate_13,

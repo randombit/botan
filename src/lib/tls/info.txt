@@ -40,6 +40,7 @@ tls_version.h
 <header:internal>
 tls_channel_impl.h
 tls_handshake_transitions.h
+tls_messages_internal.h
 tls_reader.h
 </header:internal>
 

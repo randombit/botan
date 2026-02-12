@@ -194,7 +194,7 @@ std::vector<Test::Result> read_handshake_messages() {
                Transcript_Hash_State th("SHA-256");
                hl.copy_data(server_hello_12_message);
                result.confirm("is a legacy server hello",
-                              has_message<Server_Hello_12>(result, hl.next_message(Policy(), th)));
+                              has_message<Server_Hello_12_Shim>(result, hl.next_message(Policy(), th)));
                check_transcript_hash_filled(result, th);
             }),
 
