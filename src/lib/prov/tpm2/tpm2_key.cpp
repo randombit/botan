@@ -15,6 +15,7 @@
    #include <botan/tpm2_ecc.h>
 #endif
 
+#include <botan/internal/concat_util.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tpm2_algo_mappings.h>
