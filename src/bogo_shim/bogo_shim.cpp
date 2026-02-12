@@ -131,6 +131,7 @@ std::string map_to_bogo_error(const std::string& e) noexcept {
       {"Client did not comply with the requested key exchange group", ":WRONG_CURVE:"},
       {"Client Hello must either contain both key_share and supported_groups extensions or neither",
        ":MISSING_KEY_SHARE:"},
+      {"Server Hello did not contain a key share extension", ":MISSING_KEY_SHARE:"},
       {"Client Hello offered a PSK without a psk_key_exchange_modes extension", ":MISSING_EXTENSION:"},
       {"Client offered DTLS version with major version 0xFF", ":UNSUPPORTED_PROTOCOL:"},
       {"Client offered SSLv3 which is not supported", ":UNSUPPORTED_PROTOCOL:"},

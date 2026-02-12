@@ -183,7 +183,7 @@ Server_Hello_13::Server_Hello_13(std::unique_ptr<Server_Hello_Internal> data,
    //    Current ServerHello messages additionally contain
    //    either the "pre_shared_key" extension or the "key_share"
    //    extension, or both [...].
-   if(!exts.has<Key_Share>() && !exts.has<PSK_Key_Exchange_Modes>()) {
+   if(!exts.has<Key_Share>() && !exts.has<PSK>()) {
       throw TLS_Exception(Alert::MissingExtension, "server hello must contain key exchange information");
    }
 }
