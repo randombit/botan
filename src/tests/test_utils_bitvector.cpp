@@ -331,6 +331,37 @@ std::vector<Test::Result> test_bitvector_capacity(Botan::RandomNumberGenerator& 
                result.confirm("0 is false", !bv[0]);
                result.confirm("5 is false", !bv[5]);
             }),
+
+      CHECK("binary bitwise and comparison operators",
+            [](Test::Result& result) {
+               Botan::bitvector a(8);
+               a.set(0).set(3);
+               Botan::bitvector b(8);
+               b.set(1).set(3);
+               Botan::bitvector c(8);
+               c.set(0).set(3);  // same is a
+
+               result.confirm("equal bitvectors compare equal", a == c);
+               result.confirm("different bitvectors do not compare equal", !(a == b));
+               result.confirm("different bitvectors compare not equal", a != b);
+               result.confirm("equal bitvectors do not compare not equal", !(a != c));
+
+               auto or_ab = a | b;
+               result.confirm("OR sets union bit 0", or_ab.at(0).is_set());
+               result.confirm("OR sets union bit 1", or_ab.at(1).is_set());
+               result.confirm("OR sets union bit 3", or_ab.at(3).is_set());
+               result.confirm("OR leaves unset bit 2", !or_ab.at(2).is_set());
+
+               auto and_ab = a & b;
+               result.confirm("AND keeps common bit 3", and_ab.at(3).is_set());
+               result.confirm("AND clears non-common bit 0", !and_ab.at(0).is_set());
+               result.confirm("AND clears non-common bit 1", !and_ab.at(1).is_set());
+
+               auto xor_ab = a ^ b;
+               result.confirm("XOR sets differing bit 0", xor_ab.at(0).is_set());
+               result.confirm("XOR sets differing bit 1", xor_ab.at(1).is_set());
+               result.confirm("XOR clears common bit 3", !xor_ab.at(3).is_set());
+            }),
    };
 }
 
