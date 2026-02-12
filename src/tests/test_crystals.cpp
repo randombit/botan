@@ -15,7 +15,6 @@
    #include <botan/internal/pqcrystals.h>
    #include <botan/internal/pqcrystals_encoding.h>
    #include <botan/internal/pqcrystals_helpers.h>
-   #include <botan/internal/stl_util.h>
 
 namespace Botan_Tests {
 

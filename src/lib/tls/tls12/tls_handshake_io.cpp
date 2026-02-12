@@ -8,7 +8,7 @@
 #include <botan/internal/tls_handshake_io.h>
 
 #include <botan/exceptn.h>
-#include <botan/tls_messages_12.h>
+#include <botan/tls_handshake_msg.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/tls_record.h>
 #include <botan/internal/tls_seq_numbers.h>

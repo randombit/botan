@@ -8,6 +8,7 @@
 
 #include <botan/tls_messages_12.h>
 
+#include <botan/bigint.h>
 #include <botan/credentials_manager.h>
 #include <botan/dl_group.h>
 #include <botan/pubkey.h>

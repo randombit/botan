@@ -7,7 +7,6 @@
 
 #include <botan/tls_signature_scheme.h>
 
-#include <botan/ec_group.h>
 #include <botan/pk_keys.h>
 #include <botan/pss_params.h>
 #include <botan/tls_version.h>

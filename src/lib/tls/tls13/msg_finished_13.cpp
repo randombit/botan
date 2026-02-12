@@ -9,9 +9,6 @@
 
 #include <botan/tls_messages_13.h>
 
-#include <botan/kdf.h>
-#include <botan/internal/ct_utils.h>
-
 #include <botan/internal/tls_cipher_state.h>
 
 namespace Botan::TLS {

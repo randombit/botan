@@ -10,7 +10,6 @@
 #include <botan/internal/ml_kem_impl.h>
 
 #include <botan/internal/ct_utils.h>
-#include <botan/internal/kyber_algos.h>
 #include <botan/internal/kyber_constants.h>
 #include <botan/internal/kyber_types.h>
 

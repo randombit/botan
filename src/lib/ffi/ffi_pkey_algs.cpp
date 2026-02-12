@@ -66,10 +66,6 @@
    #include <botan/ed448.h>
 #endif
 
-#if defined(BOTAN_HAS_MCELIECE)
-   #include <botan/mceliece.h>
-#endif
-
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    #include <botan/dh.h>
 #endif

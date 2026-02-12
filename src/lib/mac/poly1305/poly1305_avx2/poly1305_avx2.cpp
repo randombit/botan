@@ -7,7 +7,6 @@
 #include <botan/internal/poly1305.h>
 
 #include <botan/internal/isa_extn.h>
-#include <botan/internal/loadstor.h>
 #include <immintrin.h>
 
 namespace Botan {
