@@ -1,0 +1,286 @@
+{
+    "LooseErrorTests": {
+        "AppDataBeforeHandshake": "BoGo expects different error before vs after CCS",
+        "AppDataBeforeHandshake-Empty": "Invalid record message",
+        "ServerHelloBogusCipher": "Unexpected error",
+        "Garbage": "Decoding error",
+        "Resume-Client-CipherMismatch": "Unexpected error",
+        "InvalidECDHPoint-Server": "Unexpected error",
+        "NoSharedCipher": "Unexpected error",
+        "NoSharedCipher-TLS13": "Unexpected error",
+
+        "PartialFinishedWithServerHelloDone": "Unexpected record vs excess handshake data",
+        "HelloRetryRequest-DuplicateCurve-TLS13": "expects 'illegal parameter' but we want to stick with 'decode error'",
+        "HelloRetryRequest-DuplicateCookie-TLS13": "expects 'illegal parameter' but we want to stick with 'decode error'",
+        "EncryptedExtensionsWithKeyShare-TLS13": "expects 'unsupported extension' but RFC requires 'illegal parameter'",
+        "ClientSkipCertificateVerify-TLS13": "would require ambiguous error mapping",
+        "Resume-Client-Mismatch-TLS13-TLS12-TLS": "server requests a downgrade to TLS 1.2, echoing the random session ID during a TLS 1.3 resumption. => error mapping conflict",
+        "ServerAuth-NoFallback-TLS13": "would require ambiguous error mapping",
+
+        "TLS-TLS13-PSK_WITH_AES_128_CBC_SHA-server": "expects a different error for better coverage of Boring SSL's code base",
+        "TLS-TLS13-PSK_WITH_AES_256_CBC_SHA-server": "expects a different error for better coverage of Boring SSL's code base",
+        "TLS-TLS13-ECDHE_PSK_WITH_AES_128_CBC_SHA-server": "expects a different error for better coverage of Boring SSL's code base",
+        "TLS-TLS13-ECDHE_PSK_WITH_AES_256_CBC_SHA-server": "expects a different error for better coverage of Boring SSL's code base",
+        "TLS-TLS13-ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256-server": "expects a different error for better coverage of Boring SSL's code base",
+
+        "CertificateVerificationFail-Server-TLS12-TLS-Sync": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS12-CustomCallback-TLS-Sync": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS12-TLS-Sync-ImplicitHandshake": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS12-CustomCallback-TLS-Sync-ImplicitHandshake": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS12-TLS-Sync-SplitHandshakeRecords": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS12-CustomCallback-TLS-Sync-SplitHandshakeRecords": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS12-TLS-Sync-PackHandshake": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS12-CustomCallback-TLS-Sync-PackHandshake": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS12-DTLS-Sync": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS13-DTLS-Sync": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS12-CustomCallback-DTLS-Sync": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS13-CustomCallback-DTLS-Sync": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS12-DTLS-Sync-ImplicitHandshake": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS12-CustomCallback-DTLS-Sync-ImplicitHandshake": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS13-CustomCallback-DTLS-Sync-ImplicitHandshake": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS13-DTLS-Sync-ImplicitHandshake": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS12-DTLS-Sync-SplitHandshakeRecords": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS12-CustomCallback-DTLS-Sync-SplitHandshakeRecords": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS13-DTLS-Sync-SplitHandshakeRecords": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS13-CustomCallback-DTLS-Sync-SplitHandshakeRecords": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS12-CustomCallback-DTLS-Sync-PackHandshake": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS12-DTLS-Sync-PackHandshake": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS13-DTLS-Sync-PackHandshake": "too picky TLS alert",
+        "CertificateVerificationFail-Server-TLS13-CustomCallback-DTLS-Sync-PackHandshake": "too picky TLS alert",
+
+        "NoSSL3-Client-Unsolicited": "too picky TLS alert"
+    },
+
+    "DisabledTests": {
+        "*TLS1": "No TLS 1.0",
+        "*-TLS1-*": "No TLS 1.0",
+        "*-TLS10-*": "No TLS 1.0",
+        "TLS1-*": "No TLS 1.0",
+        "VersionNegotiation*-TLS": "No TLS 1.0",
+        "VersionNegotiation*-DTLS": "No DTLS 1.0",
+
+        "*TLS11": "No TLS 1.1",
+        "*-TLS11-*": "No TLS 1.1",
+        "TLS11-*": "No TLS 1.1",
+
+        "EchoTLS13CompatibilitySessionID": "If we don't implement TLS 1.3, we won't set session ID accordingly",
+        "Downgrade-TLS12-Client": "If we don't implement TLS 1.3, we won't enforce the downgrade sentinel value",
+        "Downgrade-TLS12-Server": "If we don't implement TLS 1.3, we won't emit the downgrade sentinel value",
+        "MinimumVersion-Client2-TLS13-*": "We don't implement TLS 1.3, so we cannot offer TLS 1.3",
+        "MinimumVersion-Client-TLS13-*": "We don't implement TLS 1.3, so we cannot offer TLS 1.3",
+        "MinimumVersion-Server-TLS13-*": "We don't implement TLS 1.3, so we cannot expect TLS 1.3",
+        "MinimumVersion-Server2-TLS13-*": "We don't implement TLS 1.3, so we cannot expect TLS 1.3",
+
+        "*DTLS13*": "No DTLS 1.3",
+        "DTLS-TLS13*": "No DTLS 1.3",
+        "*TLS13-DTLS": "No DTLS 1.3",
+        "*DTLS-TLS13": "No DTLS 1.3",
+        "TLS13*-DTLS-*": "No DTLS 1.3",
+        "MinimumVersion-*-TLS13-*DTLS": "No DTLS 1.3",
+
+        "*RSA_PKCS1_MD5_SHA1": "We do not implement MD5/SHA1 concatenation anyway",
+        "*RSA_PKCS1_SHA1*": "We do not implement PKCS1 SHA-1",
+        "*-ECDSA_SHA1-*": "We do not implement ECDSA SHA-1",
+        "*RSA_PKCS1_SHA256_LEGACY-TLS13": "We do allow for PKCS1 in TLS 1.3",
+
+        "Compliance-fips202205-*": "We do not have explicit support for a FIPS TLS policy",
+        "Compliance-fips-202205-*": "We do not have explicit support for a FIPS TLS policy",
+        "Compliance-wpa-202304-*": "We do not have explicit support for the WPA Enterprise mode",
+        "Compliance-cnsa202407-*": "We do not have explicit support for CNSA",
+
+        "CBCRecordSplitting*": "No need to split CBC records in TLS 1.2",
+        "DelegatedCredentials*": "No support of -delegated-cerdential",
+
+        "*SCSV*": "SCSV is meaningless without TLS 1.0/1.1 support",
+
+        "AllExtensions-*": "Not all extensions are implemented",
+
+        "VersionTolerance-TLS13": "We are not tolerating 0x0400 as Client Hello legacy_version",
+
+        "Server-JDK11-*": "We don't implement JDK-specific workarounds",
+        "Client-RejectJDK11DowngradeRandom": "We don't implement this workaround",
+        "ExportTrafficSecrets-*": "Exporting traffic secrets is not implemented",
+        "TooManyChangeCipherSpec-Client-TLS13": "Limits on the number of CCS are not implemented",
+        "TooManyChangeCipherSpec-Server-TLS13": "Limits on the number of CCS are not implemented",
+        "TooManyKeyUpdates": "Limits on the number of KeyUpdates are not implemented",
+
+        "PostQuantumNotEnabledByDefaultInClients": "Oh yes it is",
+
+        "TLS12SessionID-TLS13": "We don't offer TLS 1.3 when a TLS 1.2 session was found",
+        "Ticket-Forbidden-TLS13": "We don't offer TLS 1.3 when a TLS 1.2 session was found",
+        "Resume-Client-NoResume-TLS12-TLS13-TLS": "We don't offer TLS 1.3 when a TLS 1.2 session was found",
+        "Resume-Client-Mismatch-TLS12-TLS13-TLS": "We don't offer TLS 1.3 when a TLS 1.2 session was found",
+        "Resume-Server-UnofferedCipher-TLS13": "BoringSSL will not allow switching ciphers during TLS 1.3 resumption, we do, though.",
+
+        "HttpGET": "TLS 1.3 server does not detect HTTP",
+        "HttpPOST": "TLS 1.3 server does not detect HTTP",
+        "HttpPUT": "TLS 1.3 server does not detect HTTP",
+        "HttpHEAD": "TLS 1.3 server does not detect HTTP",
+        "HttpCONNECT": "TLS 1.3 server does not detect HTTP",
+
+        "*EarlyData*": "No TLS 1.3 Early Data, yet",
+        "TLS13-TicketAgeSkew-*": "No TLS 1.3 Early Data, yet",
+        "ExportKeyingMaterial-Server-HalfRTT-TLS13": "No TLS 1.3 Early Data, yet",
+        "EarlyDataEnabled*": "No TLS 1.3 Early Data, yet",
+        "EarlyData-Reject0RTT*": "No TLS 1.3 Early Data, yet",
+        "PartialEndOfEarlyDataWithClientHello": "No TLS 1.3 Early Data, yet",
+
+        "SendNoClientCertificateExtensions-TLS13": "-signed-cert-timestamps currently not supported in the shim",
+        "KeyUpdate-RequestACK-UnfinishedWrite": "-read-with-unfinished-write currently not supported in the shim",
+
+        "TLS-ECH*": "No ECH support",
+        "ECH*": "No ECH support",
+
+        "DuplicateCertCompressionExt*": "No support for 1.3 cert compression extension",
+        "CertCompression*-TLS13": "No support for 1.3 cert compression extension",
+
+        "SupportedVersionSelection-TLS12": "We just ignore the version extension in this case",
+        "NoCommonSignatureAlgorithms-TLS12-Fallback": "Fallback behaviour not implemented by shim",
+        "CheckClientCertificateTypes": "Client certificate type check is a library-user responsibility",
+
+        "Downgrade-*-Client-Ignore": "Not possible to ignore downgrade indicator",
+
+        "Agree-Digest-SHA1": "No SHA-1 in TLS 1.2",
+        "ServerAuth-SHA1-Fallback-*": "No SHA-1 in TLS 1.2",
+        "*-InvalidSignature-*_SHA1-TLS12": "No SHA-1 in TLS 1.2",
+        "*-Sign-*_SHA1-TLS12": "No SHA-1 in TLS 1.2",
+        "*-Sign-Negotiate-*_SHA1-TLS12": "No SHA-1 in TLS 1.2",
+        "*-VerifyDefault-*_SHA1-TLS12": "No SHA-1 in TLS 1.2",
+        "*-Verify-*_SHA1-TLS12": "No SHA-1 in TLS 1.2",
+
+        "*QUIC*": "No QUIC",
+        "ALPS*": "No ALPS",
+        "ExtraClientEncryptedExtension-*": "No ALPS",
+
+        "*NPN*": "No support for NPN",
+        "ALPNServer-Preferred-*": "No support for NPN",
+        "*-NextProtocol*": "No support for NPN",
+
+        "*SignedCertificateTimestamp*": "No support for SCT",
+        "*SCT*": "No support for SCT",
+        "Renegotiation-ChangeAuthProperties": "No support for SCT",
+        "UnsolicitedCertificateExtensions-*": "No support for SCT",
+        "IgnoreExtensionsOnIntermediates-TLS13": "No support for SCT",
+        "SendNoExtensionsOnIntermediate-TLS13": "No support for SCT",
+
+        "CertificateVerificationSoftFail*":  "Fail, but don't fail... wtf?",
+
+        "*NULL-SHA*": "No support for NULL ciphers",
+        "*WITH_NULL*": "No support for NULL ciphers",
+        "*GREASE*": "No support for GREASE",
+        "*ChannelID*": "No support for ChannelID",
+        "*TokenBinding*": "No support for Token Binding",
+        "ClientHelloPadding": "No support for client hello padding extension",
+        "TLSUnique*": "Not supported",
+        "*CECPQ2*": "Not implemented",
+        "PQExperimentSignal*": "Not implemented",
+        "*P-224*": "P-224 not supported in TLS",
+        "*V2ClientHello*": "No support for SSLv2 client hellos",
+        "*Ed25519*": "Ed25519 not implemented in TLS",
+        "*FalseStart*": "Botan doesn't do false start",
+        "MaxSendFragment*": "Maximum fragment extension not supported",
+        "ExportKeyingMaterial-EmptyContext*": "No support for empty context",
+
+        "Peek-*": "No peek API",
+        "*OldCallback*": "BoringSSL specific API test",
+        "*Renegotiate-Client-Explicit*":  "BoringSSL specific API test",
+        "CBCRecordSplittingPartialWrite*": "BoringSSL specific API test",
+        "TicketCallback*": "BoringSSL specific API test",
+        "Server-DDoS*": "BoringSSL specific API test",
+        "RetainOnlySHA256-*": "BoringSSL specific API test",
+        "Renegotiate-Client-UnfinishedWrite": "BoringSSL specific API test",
+        "FailEarlyCallback": "BoringSSL specific API test",
+
+        "MLKEMKeyShareIncludedSecond": "BoringSSL specific policy test (we may offer solo PQ/T groups)",
+        "NotJustMLKEMKeyShare": "BoringSSL specific policy test (we may offer solo PQ/T groups)",
+        "MLKEMKeyShareIncludedThird": "BoringSSL specific policy test (we may offer solo PQ/T groups)",
+        "NotJustKyberKeyShare": "BoringSSL specific policy test (we may offer solo PQ/T groups)",
+        "KyberKeyShareIncludedSecond": "BoringSSL specific policy test (we may offer solo PQ/T groups)",
+        "KyberKeyShareIncludedThird": "BoringSSL specific policy test (we may offer solo PQ/T groups)",
+        "CurveTest-*Kyber*": "We no longer support Kyber r3 key exchange",
+
+        "ShimTicketRewritable": "Botan has a different ticket format",
+        "Resume-Server-DeclineCrossVersion*": "Botan has a different ticket format",
+        "Resume-Server-DeclineBadCipher*": "Botan has a different ticket format",
+        "Resume-Server-CipherNotPreferred*": "Botan has a different ticket format",
+
+        "TLS*-NoTicket-NoAccept": "BoGo expects that if ticket is issued stateful resumption is impossible",
+
+        "CheckLeafCurve": "Botan doesn't care what curve an ECDSA cert uses",
+        "CheckECDSACurve-TLS12": "Botan doesn't care what curve an ECDSA cert uses",
+
+        "CertificateVerificationDoesNotFailOnResume*": "Botan doesn't support reverify on resume",
+        "CertificateVerificationFailsOnResume*": "Botan doesn't support reverify on resume",
+        "CertificateVerificationPassesOnResume*": "Botan doesn't support reverify on resume",
+
+        "CipherNegotiation-2": "No support for cipher equivalence classes",
+        "CipherNegotiation-3": "No support for cipher equivalence classes",
+        "CipherNegotiation-4": "No support for cipher equivalence classes",
+        "CipherNegotiation-5": "No support for cipher equivalence classes",
+        "CipherNegotiation-8": "No support for cipher equivalence classes",
+
+        "ALPNServer-SelectEmpty-*": "Botan treats empty ALPN from callback as a decline",
+
+        "AppDataAfterChangeCipherSpec-DTLS*": "BoringSSL DTLS drops out of order AppData, we reject",
+
+        "Resume-Client-NoResume-TLS1-TLS11-TLS": "BoGo expects resumption attempt sends latest version",
+        "Resume-Client-NoResume-TLS1-TLS12-TLS": "BoGo expects resumption attempt sends latest version",
+        "Resume-Client-NoResume-TLS11-TLS12-TLS": "BoGo expects resumption attempt sends latest version",
+        "Resume-Client-NoResume-TLS1-TLS12-DTLS": "BoGo expects resumption attempt sends latest version",
+
+        "Resume-Client-Mismatch-TLS1-TLS11-TLS": "BoGo expects resumption attempt sends latest version",
+        "Resume-Client-Mismatch-TLS1-TLS12-TLS": "BoGo expects resumption attempt sends latest version",
+        "Resume-Client-Mismatch-TLS11-TLS12-TLS": "BoGo expects resumption attempt sends latest version",
+        "Resume-Client-Mismatch-TLS1-TLS12-DTLS": "BoGo expects resumption attempt sends latest version",
+
+        "LooseInitialRecordVersion-TLS12": "Botan is somewhat strict about the record version number",
+
+        "CurveTest-*-Compressed*": "Point compression is supported, which BoGo doesn't expect",
+        "PointFormat-*-MissingUncompressed": "Point compression is supported, which BoGo doesn't expect",
+
+        "RSAPSSSupport-ConfigPSS-NoCerts-TLS12-*": "Needs investigation",
+        "RSAPSSSupport-Default-NoCerts-TLS12-*": "Needs investigation",
+
+        "DTLS-Retransmit*": "Shim needs timeout support",
+
+        "DTLS-StrayRetransmitFinished-ClientFull": "Needs investigation",
+        "DTLS-StrayRetransmitFinished-ServerResume": "Needs investigation",
+        "DTLS-Replay-NonMonotonic": "Needs investigation, started failing after https://github.com/google/boringssl/commit/f94f3ed3965ea033001fb9ae006084eee408b861",
+
+        "SRTP-Server-IgnoreMKI-*": "Non-empty MKI is rejected (bug)",
+
+        "Renegotiate-Client-Packed": "Packing HelloRequest with Finished loses the HelloRequest (bug)",
+        "SendHalfHelloRequest*PackHandshake": "Packing HelloRequest with Finished loses the HelloRequest (bug)",
+
+        "PartialClientFinishedWithClientHello": "Need to check for buffered messages when CCS (bug)",
+        "SendUnencryptedFinished-DTLS": "Need to check for buffered messages when CCS (bug)",
+
+        "RSAKeyUsage-*-TLS12": "We always enforce key usage",
+        "RSAKeyUsage-Client-WantSignature-GotEncipherment-AlwaysEnforced-TLS13": "We always enforce key usage",
+
+        "AllExtensions-Client-Permute-TLS-TLS12" : "Requires new shim flags that are NYI (as of March 2022)",
+        "AllExtensions-Client-Permute-DTLS-TLS12" : "Requires new shim flags that are NYI (as of March 2022)",
+        "EarlyData-WriteAfterEncryptedExtensions" : "Requires new shim flags that are NYI (as of March 2022)",
+        "EarlyData-WriteAfterServerHello" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-Certificate-*" : "Requires new shim flags that are NYI (as of May 2024)",
+        "TLS-HintMismatch-CipherMismatch1" : "Requires new shim flags that are NYI (as of March 2023)",
+        "TLS-HintMismatch-CipherMismatch2" : "Requires new shim flags that are NYI (as of March 2023)",
+        "TLS-HintMismatch-ECDHE-Group" : "Requires new shim flags that are NYI (as of March 2023)",
+        "TLS-HintMismatch-SignatureInput" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-KeyShare" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-HandshakerHelloRetryRequest" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-ShimHelloRetryRequest" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-SignatureAlgorithm-TLS*" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-NoTickets1-TLS*" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-NoTickets2-TLS*" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-Version2" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-CertificateRequest" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-CertificateCompression-HandshakerOnly" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-CertificateCompression-ShimOnly" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-CertificateCompression-AlgorithmMismatch" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-CertificateCompression-InputMismatch" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-Version1" : "Requires new shim flags that are NYI (as of March 2022)",
+
+        "CertificateSelection-*" : "Certificate selection is a library-user responsibility"
+  }
+}
