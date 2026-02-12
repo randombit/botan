@@ -338,7 +338,7 @@ class MLDSA_Privkey_Tests : public Text_Based_Test {
       }
 };
 
-BOTAN_REGISTER_TEST("pubkey", "mldsa-pkcs8-decoding", MLDSA_Privkey_Tests);
+BOTAN_REGISTER_TEST("pubkey", "mldsa_private_key", MLDSA_Privkey_Tests);
 
 #endif
 
