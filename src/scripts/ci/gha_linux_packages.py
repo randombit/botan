@@ -138,6 +138,7 @@ def gha_linux_packages(target, compiler):
         packages.append('doxygen')
         packages.append('python3-docutils')
         packages.append('python3-sphinx')
+        packages.append('furo')
 
     return packages
 
