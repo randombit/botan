@@ -56,7 +56,7 @@ namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_TLS)
+#if defined(BOTAN_HAS_TLS_12)
 class Credentials_Manager_Test final : public Botan::Credentials_Manager {
    public:
       Credentials_Manager_Test(bool with_client_certs,

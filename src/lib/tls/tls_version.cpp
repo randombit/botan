@@ -13,6 +13,24 @@
 
 namespace Botan::TLS {
 
+Protocol_Version Protocol_Version::latest_tls_version() {
+#if defined(BOTAN_HAS_TLS_13)
+   return Protocol_Version::TLS_V13;
+#elif defined(BOTAN_HAS_TLS_12)
+   return Protocol_Version::TLS_V12;
+#else
+   throw Not_Implemented("This build contains no usable TLS version");
+#endif
+}
+
+Protocol_Version Protocol_Version::latest_dtls_version() {
+#if defined(BOTAN_HAS_TLS_12)
+   return Protocol_Version::DTLS_V12;
+#else
+   throw Not_Implemented("This build contains no usable DTLS version");
+#endif
+}
+
 std::string Protocol_Version::to_string() const {
    const uint8_t maj = major_version();
    const uint8_t min = minor_version();
@@ -82,11 +100,22 @@ bool Protocol_Version::valid() const {
 }
 
 bool Protocol_Version::known_version() const {
-   return (m_version == static_cast<uint16_t>(Protocol_Version::TLS_V12) ||
 #if defined(BOTAN_HAS_TLS_13)
-           m_version == static_cast<uint16_t>(Protocol_Version::TLS_V13) ||
+   if(m_version == static_cast<uint16_t>(Protocol_Version::TLS_V13)) {
+      return true;
+   }
 #endif
-           m_version == static_cast<uint16_t>(Protocol_Version::DTLS_V12));
+
+#if defined(BOTAN_HAS_TLS_12)
+   if(m_version == static_cast<uint16_t>(Protocol_Version::TLS_V12)) {
+      return true;
+   }
+   if(m_version == static_cast<uint16_t>(Protocol_Version::DTLS_V12)) {
+      return true;
+   }
+#endif
+
+   return false;
 }
 
 }  // namespace Botan::TLS

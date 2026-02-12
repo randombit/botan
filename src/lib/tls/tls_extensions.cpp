@@ -672,24 +672,35 @@ std::vector<uint8_t> Supported_Versions::serialize(Connection_Side whoami) const
 }
 
 Supported_Versions::Supported_Versions(Protocol_Version offer, const Policy& policy) {
-   if(offer.is_datagram_protocol()) {
-#if defined(BOTAN_HAS_TLS_12)
-      if(offer >= Protocol_Version::DTLS_V12 && policy.allow_dtls12()) {
-         m_versions.push_back(Protocol_Version::DTLS_V12);
-      }
-#endif
-   } else {
+   // RFC 8446 4.2.1
+   //    The extension contains a list of supported versions in preference order,
+   //    with the most preferred version first. Implementations [...] MUST send
+   //    this extension in the ClientHello containing all versions of TLS which
+   //    they are prepared to negotiate.
+   //
+   // We simply assume that we always want the newest available TLS version.
 #if defined(BOTAN_HAS_TLS_13)
+   if(!offer.is_datagram_protocol()) {
       if(offer >= Protocol_Version::TLS_V13 && policy.allow_tls13()) {
          m_versions.push_back(Protocol_Version::TLS_V13);
       }
+   }
 #endif
+
 #if defined(BOTAN_HAS_TLS_12)
+   if(offer.is_datagram_protocol()) {
+      if(offer >= Protocol_Version::DTLS_V12 && policy.allow_dtls12()) {
+         m_versions.push_back(Protocol_Version::DTLS_V12);
+      }
+   } else {
       if(offer >= Protocol_Version::TLS_V12 && policy.allow_tls12()) {
          m_versions.push_back(Protocol_Version::TLS_V12);
       }
-#endif
    }
+#endif
+
+   // if no versions are supported, the input variables are not used
+   BOTAN_UNUSED(offer, policy);
 }
 
 Supported_Versions::Supported_Versions(TLS_Data_Reader& reader, uint16_t extension_size, Connection_Side from) {

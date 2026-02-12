@@ -333,6 +333,7 @@ bool Policy::acceptable_protocol_version(Protocol_Version version) const {
    }
 #endif
 
+   BOTAN_UNUSED(version);
    return false;
 }
 
@@ -341,18 +342,16 @@ Protocol_Version Policy::latest_supported_version(bool datagram) const {
       if(acceptable_protocol_version(Protocol_Version::DTLS_V12)) {
          return Protocol_Version::DTLS_V12;
       }
-      throw Invalid_State("Policy forbids all available DTLS version");
    } else {
-#if defined(BOTAN_HAS_TLS_13)
       if(acceptable_protocol_version(Protocol_Version::TLS_V13)) {
          return Protocol_Version::TLS_V13;
       }
-#endif
       if(acceptable_protocol_version(Protocol_Version::TLS_V12)) {
          return Protocol_Version::TLS_V12;
       }
-      throw Invalid_State("Policy forbids all available TLS version");
    }
+
+   throw Invalid_State("Policy forbids all available TLS version");
 }
 
 bool Policy::acceptable_ciphersuite(const Ciphersuite& ciphersuite) const {
