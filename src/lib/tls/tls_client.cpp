@@ -11,8 +11,11 @@
 #include <botan/tls_client.h>
 
 #include <botan/tls_policy.h>
-#include <botan/internal/tls_client_impl_12.h>
-#include <botan/internal/tls_handshake_state.h>
+#include <botan/internal/tls_channel_impl.h>
+
+#if defined(BOTAN_HAS_TLS_12)
+   #include <botan/internal/tls_client_impl_12.h>
+#endif
 
 #if defined(BOTAN_HAS_TLS_13)
    #include <botan/internal/tls_client_impl_13.h>
@@ -54,15 +57,23 @@ Client::Client(const std::shared_ptr<Callbacks>& callbacks,
    }
 #endif
 
-   m_impl = std::make_unique<Client_Impl_12>(callbacks,
-                                             session_manager,
-                                             creds,
-                                             policy,
-                                             rng,
-                                             std::move(info),
-                                             offer_version.is_datagram_protocol(),
-                                             next_protocols,
-                                             io_buf_sz);
+#if defined(BOTAN_HAS_TLS_12)
+   if(offer_version.is_pre_tls_13()) {
+      m_impl = std::make_unique<Client_Impl_12>(callbacks,
+                                                session_manager,
+                                                creds,
+                                                policy,
+                                                rng,
+                                                std::move(info),
+                                                offer_version.is_datagram_protocol(),
+                                                next_protocols,
+                                                io_buf_sz);
+      return;
+   }
+#endif
+
+   BOTAN_UNUSED(callbacks, session_manager, creds, policy, rng, info, offer_version, next_protocols, io_buf_sz);
+   throw Not_Implemented("Requested TLS version to be offered is not available in this build");
 }
 
 Client::~Client() = default;
@@ -70,6 +81,7 @@ Client::~Client() = default;
 size_t Client::downgrade() {
    BOTAN_ASSERT_NOMSG(m_impl->is_downgrading());
 
+#if defined(BOTAN_HAS_TLS_12)
    auto info = m_impl->extract_downgrade_info();
    m_impl = std::make_unique<Client_Impl_12>(*info);
 
@@ -81,6 +93,11 @@ size_t Client::downgrade() {
       // before any data was transferred
       return 0;
    }
+#else
+   // If TLS 1.2 is not available, we will never downgrade, the downgrade info
+   // won't even be created and `is_downgrading()` would always return false.
+   BOTAN_ASSERT_UNREACHABLE();
+#endif
 }
 
 size_t Client::from_peer(std::span<const uint8_t> data) {

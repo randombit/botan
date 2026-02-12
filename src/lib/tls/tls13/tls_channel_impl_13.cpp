@@ -10,10 +10,10 @@
 #include <botan/internal/tls_channel_impl_13.h>
 
 #include <botan/tls_callbacks.h>
+#include <botan/tls_exceptn.h>
+#include <botan/tls_messages_13.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_cipher_state.h>
-#include <botan/internal/tls_handshake_state.h>
-#include <botan/internal/tls_record.h>
 
 #include <array>
 
@@ -122,7 +122,7 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
                   // Note: Server_Hello_12 was deliberately not included in the check below because in TLS 1.2 Server Hello and
                   //       other handshake messages can be legally coalesced in a single record.
                   //
-                  if(holds_any_of<Client_Hello_12,
+                  if(holds_any_of<Client_Hello_12_Shim,
                                   Client_Hello_13 /*, EndOfEarlyData,*/,
                                   Server_Hello_13,
                                   Hello_Retry_Request,

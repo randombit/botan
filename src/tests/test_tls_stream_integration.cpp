@@ -910,10 +910,16 @@ class SystemConfiguration {
 
 std::vector<SystemConfiguration> get_configurations() {
    return {
+   #if defined(BOTAN_HAS_TLS_12)
       SystemConfiguration("TLS 1.2 only", "allow_tls12=true\nallow_tls13=false", "allow_tls12=true\nallow_tls13=false"),
+   #endif
+
    #if defined(BOTAN_HAS_TLS_13)
          SystemConfiguration(
             "TLS 1.3 only", "allow_tls12=false\nallow_tls13=true", "allow_tls12=false\nallow_tls13=true"),
+   #endif
+
+   #if defined(BOTAN_HAS_TLS_12) && defined(BOTAN_HAS_TLS_13)
          SystemConfiguration("TLS 1.x server, TLS 1.2 client",
                              "allow_tls12=true\nallow_tls13=false",
                              "allow_tls12=true\nallow_tls13=true"),

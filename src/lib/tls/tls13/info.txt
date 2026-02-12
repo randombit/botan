@@ -9,6 +9,7 @@ brief -> "TLS 1.3 protocol implementation"
 
 <header:public>
 tls_messages_13.h
+tls_extensions_13.h
 tls_psk_identity_13.h
 </header:public>
 
@@ -26,5 +27,4 @@ tls_transcript_hash_13.h
 <requires>
 hkdf
 tls
-tls12
 </requires>

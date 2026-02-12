@@ -16,15 +16,19 @@
    #include <botan/tls_alert.h>
    #include <botan/tls_callbacks.h>
    #include <botan/tls_ciphersuite.h>
-   #include <botan/tls_messages_12.h>
    #include <botan/tls_policy.h>
    #include <botan/tls_version.h>
    #include <botan/internal/loadstor.h>
    #include <algorithm>
    #include <exception>
 
+   #if defined(BOTAN_HAS_TLS_12)
+      #include <botan/tls_messages_12.h>
+   #endif
+
    #if defined(BOTAN_HAS_TLS_13)
       #include "test_rng.h"
+      #include <botan/tls_extensions_13.h>
       #include <botan/tls_messages_13.h>
       #include <botan/internal/tls_reader.h>
    #endif
@@ -35,6 +39,8 @@ namespace Botan_Tests {
 namespace {
 
 #if defined(BOTAN_HAS_TLS)
+
+   #if defined(BOTAN_HAS_TLS_12)
 Test::Result test_hello_verify_request() {
    Test::Result result("hello_verify_request construction");
 
@@ -55,6 +61,7 @@ Test::Result test_hello_verify_request() {
    result.test_eq("Cookie comparison", hfr.cookie(), test);
    return result;
 }
+   #endif
 
 class Test_Callbacks : public Botan::TLS::Callbacks {
    public:
@@ -79,6 +86,7 @@ class Test_Callbacks : public Botan::TLS::Callbacks {
       Test::Result& m_result;
 };
 
+   #if defined(BOTAN_HAS_TLS_12)
 class TLS_Message_Parsing_Test final : public Text_Based_Test {
    public:
       TLS_Message_Parsing_Test() :
@@ -207,6 +215,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_TEST("tls", "tls_messages", TLS_Message_Parsing_Test);
+   #endif
 
    #if defined(BOTAN_HAS_TLS_13)
       #if defined(BOTAN_HAS_X25519)
@@ -392,7 +401,9 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
       std::vector<Test::Result> run_final_tests() override {
          std::vector<Test::Result> results;
 
+      #if defined(BOTAN_HAS_TLS_12)
          results.push_back(test_hello_verify_request());
+      #endif
 
          return results;
       }
@@ -419,8 +430,8 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
             try {
                std::visit(
                   [&](auto ch) {
-                     if constexpr(std::is_same_v<Botan::TLS::Client_Hello_12, decltype(ch)>) {
-                        result.confirm("expected Client_Hello_12", msg_type == "client_hello_12");
+                     if constexpr(std::is_same_v<Botan::TLS::Client_Hello_12_Shim, decltype(ch)>) {
+                        result.confirm("expected Client_Hello_12_Shim", msg_type == "client_hello_12");
                      }
                      if constexpr(std::is_same_v<Botan::TLS::Client_Hello_13, decltype(ch)>) {
                         result.confirm("expected Client_Hello_13", msg_type == "client_hello_13");

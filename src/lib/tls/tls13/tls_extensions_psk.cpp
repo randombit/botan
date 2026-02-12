@@ -7,7 +7,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/tls_extensions.h>
+#include <botan/tls_extensions_13.h>
 
 #include <botan/credentials_manager.h>
 #include <botan/tls_callbacks.h>
@@ -20,8 +20,6 @@
 #include <botan/internal/tls_reader.h>
 #include <algorithm>
 #include <utility>
-
-#if defined(BOTAN_HAS_TLS_13)
 
 namespace Botan::TLS {
 
@@ -432,5 +430,3 @@ bool PSK::validate_binder(const PSK& server_psk, const std::vector<uint8_t>& bin
 }
 
 }  // namespace Botan::TLS
-
-#endif  // HAS_TLS_13

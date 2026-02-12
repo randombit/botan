@@ -11,8 +11,11 @@
 #include <botan/tls_server.h>
 
 #include <botan/tls_policy.h>
-#include <botan/internal/tls_handshake_state.h>
-#include <botan/internal/tls_server_impl_12.h>
+#include <botan/internal/tls_channel_impl.h>
+
+#if defined(BOTAN_HAS_TLS_12)
+   #include <botan/internal/tls_server_impl_12.h>
+#endif
 
 #if defined(BOTAN_HAS_TLS_13)
    #include <botan/internal/tls_server_impl_13.h>
@@ -32,19 +35,27 @@ Server::Server(const std::shared_ptr<Callbacks>& callbacks,
                size_t io_buf_sz) {
    const auto max_version = policy->latest_supported_version(is_datagram);
 
-   if(!max_version.is_pre_tls_13()) {
 #if defined(BOTAN_HAS_TLS_13)
+   if(!max_version.is_pre_tls_13()) {
       m_impl = std::make_unique<Server_Impl_13>(callbacks, session_manager, creds, policy, rng);
 
       if(m_impl->expects_downgrade()) {
          m_impl->set_io_buffer_size(io_buf_sz);
       }
-#else
-      throw Not_Implemented("TLS 1.3 server is not available in this build");
-#endif
-   } else {
-      m_impl = std::make_unique<Server_Impl_12>(callbacks, session_manager, creds, policy, rng, is_datagram, io_buf_sz);
+
+      return;
    }
+#endif
+
+#if defined(BOTAN_HAS_TLS_12)
+   if(max_version.is_pre_tls_13()) {
+      m_impl = std::make_unique<Server_Impl_12>(callbacks, session_manager, creds, policy, rng, is_datagram, io_buf_sz);
+      return;
+   }
+#endif
+
+   BOTAN_UNUSED(max_version, callbacks, session_manager, creds, policy, rng, is_datagram, io_buf_sz);
+   throw Not_Implemented("Requested TLS server version is not available in this build");
 }
 
 Server::~Server() = default;
@@ -52,6 +63,9 @@ Server::~Server() = default;
 size_t Server::from_peer(std::span<const uint8_t> data) {
    auto read = m_impl->from_peer(data);
 
+#if defined(BOTAN_HAS_TLS_12)
+   // If TLS 1.2 is not available, we will never downgrade, the downgrade info
+   // won't even be created and `is_downgrading()` would always return false.
    if(m_impl->is_downgrading()) {
       auto info = m_impl->extract_downgrade_info();
       m_impl = std::make_unique<Server_Impl_12>(*info);
@@ -59,6 +73,7 @@ size_t Server::from_peer(std::span<const uint8_t> data) {
       // replay peer data received so far
       read = m_impl->from_peer(info->peer_transcript);
    }
+#endif
 
    return read;
 }
