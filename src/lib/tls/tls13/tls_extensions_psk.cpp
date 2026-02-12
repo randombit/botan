@@ -22,8 +22,6 @@
 #include <algorithm>
 #include <utility>
 
-#if defined(BOTAN_HAS_TLS_13)
-
 namespace Botan::TLS {
 
 namespace {
@@ -433,5 +431,3 @@ bool PSK::validate_binder(const PSK& server_psk, const std::vector<uint8_t>& bin
 }
 
 }  // namespace Botan::TLS
-
-#endif  // HAS_TLS_13

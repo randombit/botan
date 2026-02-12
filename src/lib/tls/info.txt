@@ -45,6 +45,10 @@ tls_reader.h
 </header:internal>
 
 <requires>
+aead
+aes
+asn1
+dh
 ecdh
 ecdsa
 gcm
@@ -52,7 +56,6 @@ hmac
 rng
 sha2_32
 sha2_64
-tls12
 x509
 </requires>
 

@@ -13,10 +13,6 @@
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_state.h>
 
-#if defined(BOTAN_HAS_TLS_13)
-   #include <botan/internal/tls_cipher_state.h>
-#endif
-
 namespace Botan::TLS {
 
 namespace {

@@ -10,10 +10,10 @@
 #include <botan/internal/tls_channel_impl_13.h>
 
 #include <botan/tls_callbacks.h>
+#include <botan/tls_exceptn.h>
+#include <botan/tls_messages_13.h>
 #include <botan/internal/concat_util.h>
 #include <botan/internal/tls_cipher_state.h>
-#include <botan/internal/tls_handshake_state.h>
-#include <botan/internal/tls_record.h>
 
 #include <array>
 

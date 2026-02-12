@@ -499,8 +499,8 @@ class Test_TLS_Alert_Strings : public Test {
 
 BOTAN_REGISTER_TEST("tls", "tls_alert_strings", Test_TLS_Alert_Strings);
 
-   #if defined(BOTAN_HAS_TLS_13) && defined(BOTAN_HAS_TLS_13_PQC) && defined(BOTAN_HAS_X25519) && \
-      defined(BOTAN_HAS_X448)
+   #if defined(BOTAN_HAS_TLS_12) && defined(BOTAN_HAS_TLS_13) && defined(BOTAN_HAS_TLS_13_PQC) && \
+      defined(BOTAN_HAS_X25519) && defined(BOTAN_HAS_X448)
 
 class Test_TLS_Policy_Text : public Test {
    public:

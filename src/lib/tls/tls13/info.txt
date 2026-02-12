@@ -27,5 +27,4 @@ tls_transcript_hash_13.h
 <requires>
 hkdf
 tls
-tls12
 </requires>

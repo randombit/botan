@@ -58,6 +58,7 @@ enum class AlertType : uint16_t {
    None = 256,
 
    // Compat enum variants, will be removed in a future major release
+   // TODO(Botan4): remove these
    CLOSE_NOTIFY BOTAN_DEPRECATED("Use CloseNotify") = CloseNotify,
    NO_APPLICATION_PROTOCOL BOTAN_DEPRECATED("Use NoApplicationProtocol") = NoApplicationProtocol,
    PROTOCOL_VERSION BOTAN_DEPRECATED("Use ProtocolVersion") = ProtocolVersion,
