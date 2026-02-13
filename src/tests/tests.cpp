@@ -53,11 +53,19 @@
 
 namespace Botan_Tests {
 
+Test_Error::Test_Error(std::string_view what) : std::runtime_error(std::string(what)) {}
+
 Test::Test() = default;
 
 Test::~Test() = default;
 
-Test::Result::Result(std::string who) : m_who(std::move(who)), m_timestamp(Test::timestamp()) {}
+Test::Result::Result(std::string_view who) : m_who(who), m_timestamp(Test::timestamp()) {}
+
+Test::Result::Result(std::string_view who, const std::vector<Result>& downstream_results) : Result(who) {
+   for(const auto& result : downstream_results) {
+      merge(result, true /* ignore non-matching test names */);
+   }
+}
 
 void Test::Result::merge(const Result& other, bool ignore_test_name) {
    if(who() != other.who()) {
@@ -92,12 +100,12 @@ void Test::Result::end_timer() {
    }
 }
 
-void Test::Result::test_note(const std::string& who, std::span<const uint8_t> data) {
-   const std::string hex = Botan::hex_encode(data);
-   return test_note(who, hex.c_str());
+void Test::Result::test_note(std::string_view note, std::span<const uint8_t> context) {
+   const std::string hex = Botan::hex_encode(context);
+   return test_note(note, hex.c_str());
 }
 
-void Test::Result::test_note(const std::string& note, const char* extra) {
+void Test::Result::test_note(std::string_view note, const char* extra) {
    if(!note.empty()) {
       std::ostringstream out;
       out << who() << " " << note;
@@ -108,56 +116,65 @@ void Test::Result::test_note(const std::string& note, const char* extra) {
    }
 }
 
-void Test::Result::note_missing(const std::string& whatever) {
+void Test::Result::note_missing(std::string_view whatever_sv) {
    static std::set<std::string> s_already_seen;
 
+   const std::string whatever(whatever_sv);
    if(!s_already_seen.contains(whatever)) {
-      test_note("Skipping tests due to missing " + whatever);
+      test_note(Botan::fmt("Skipping tests due to missing {}", whatever));
       s_already_seen.insert(whatever);
    }
 }
 
-bool Test::Result::ThrowExpectations::check(const std::string& test_name, Test::Result& result) {
+void Test::Result::require(std::string_view what, bool expr, bool expected) {
+   if(!confirm(what, expr, expected)) {
+      throw Test_Aborted(Botan::fmt("Test aborted, because required condition was not met: {}", what));
+   }
+}
+
+bool Test::Result::ThrowExpectations::check(std::string_view test_name, Test::Result& result) {
    m_consumed = true;
 
    try {
       m_fn();
       if(!m_expect_success) {
-         return result.test_failure(test_name + " failed to throw expected exception");
+         return result.test_failure(Botan::fmt("{} failed to throw expected exception", test_name));
       }
    } catch(const std::exception& ex) {
       if(m_expect_success) {
-         return result.test_failure(test_name + " threw unexpected exception: " + ex.what());
+         return result.test_failure(Botan::fmt("{} threw unexpected exception: {}", test_name, ex.what()));
       }
       if(m_expected_exception_check_fn && !m_expected_exception_check_fn(std::current_exception())) {
-         return result.test_failure(test_name + " threw unexpected exception: " + ex.what());
+         return result.test_failure(Botan::fmt("{} threw unexpected exception: {}", test_name, ex.what()));
       }
       if(m_expected_message.has_value() && m_expected_message.value() != ex.what()) {
-         return result.test_failure(test_name + " threw exception with unexpected message (expected: '" +
-                                    m_expected_message.value() + "', got: '" + ex.what() + "')");
+         return result.test_failure(Botan::fmt("{} threw exception with unexpected message (expected {} got {})",
+                                               test_name,
+                                               m_expected_message.value(),
+                                               ex.what()));
       }
    } catch(...) {
       if(m_expect_success || m_expected_exception_check_fn || m_expected_message.has_value()) {
-         return result.test_failure(test_name + " threw unexpected unknown exception");
+         return result.test_failure(Botan::fmt("{} threw unexpected unknown exception", test_name));
       }
    }
 
-   return result.test_success(test_name + " behaved as expected");
+   return result.test_success();
 }
 
-bool Test::Result::test_throws(const std::string& what, const std::function<void()>& fn) {
+bool Test::Result::test_throws(std::string_view what, const std::function<void()>& fn) {
    return ThrowExpectations(fn).check(what, *this);
 }
 
-bool Test::Result::test_throws(const std::string& what, const std::string& expected, const std::function<void()>& fn) {
+bool Test::Result::test_throws(std::string_view what, std::string_view expected, const std::function<void()>& fn) {
    return ThrowExpectations(fn).expect_message(expected).check(what, *this);
 }
 
-bool Test::Result::test_no_throw(const std::string& what, const std::function<void()>& fn) {
+bool Test::Result::test_no_throw(std::string_view what, const std::function<void()>& fn) {
    return ThrowExpectations(fn).expect_success().check(what, *this);
 }
 
-bool Test::Result::test_success(const std::string& note) {
+bool Test::Result::test_success(std::string_view note) {
    if(Test::options().log_success()) {
       test_note(note);
    }
@@ -165,17 +182,20 @@ bool Test::Result::test_success(const std::string& note) {
    return true;
 }
 
-bool Test::Result::test_failure(const std::string& what, const std::string& error) {
-   return test_failure(who() + " " + what + " with error " + error);
+bool Test::Result::test_failure(std::string_view what, std::string_view error) {
+   return test_failure(Botan::fmt("{} {} with error {}", who(), what, error));
 }
 
-void Test::Result::test_failure(const std::string& what, const uint8_t buf[], size_t buf_len) {
-   test_failure(who() + ": " + what + " buf len " + std::to_string(buf_len) + " value " +
-                Botan::hex_encode(buf, buf_len));
+void Test::Result::test_failure(std::string_view what, const uint8_t buf[], size_t buf_len) {
+   return test_failure(what, {buf, buf_len});
 }
 
-bool Test::Result::test_failure(const std::string& err) {
-   m_fail_log.push_back(err);
+void Test::Result::test_failure(std::string_view what, std::span<const uint8_t> context) {
+   test_failure(Botan::fmt("{} {} with value {}", who(), what, Botan::hex_encode(context)));
+}
+
+bool Test::Result::test_failure(std::string_view err) {
+   m_fail_log.push_back(std::string(err));
 
    if(Test::options().abort_on_first_fail() && m_who != "Failing Test") {
       std::abort();
@@ -191,24 +211,24 @@ bool same_contents(const uint8_t x[], const uint8_t y[], size_t len) {
 
 }  // namespace
 
-bool Test::Result::test_ne(const std::string& what,
+bool Test::Result::test_ne(std::string_view what,
                            const uint8_t produced[],
                            size_t produced_len,
                            const uint8_t expected[],
                            size_t expected_len) {
    if(produced_len == expected_len && same_contents(produced, expected, expected_len)) {
-      return test_failure(who() + ": " + what + " produced matching");
+      return test_failure(Botan::fmt("{} {} produced matching bytes", who(), what));
    }
    return test_success();
 }
 
-bool Test::Result::test_eq(const std::string& what, std::span<const uint8_t> produced, const char* expected_hex) {
+bool Test::Result::test_eq(std::string_view what, std::span<const uint8_t> produced, const char* expected_hex) {
    const std::vector<uint8_t> expected = Botan::hex_decode(expected_hex);
    return test_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
 }
 
 bool Test::Result::test_eq(const char* producer,
-                           const std::string& what,
+                           std::string_view what,
                            const uint8_t produced[],
                            size_t produced_size,
                            const uint8_t expected[],
@@ -251,45 +271,30 @@ bool Test::Result::test_eq(const char* producer,
    return test_failure(err.str());
 }
 
-bool Test::Result::test_is_nonempty(const std::string& what_is_it, const std::string& to_examine) {
+bool Test::Result::test_is_nonempty(std::string_view what_is_it, std::string_view to_examine) {
    if(to_examine.empty()) {
-      return test_failure(what_is_it + " was empty");
+      return test_failure(what_is_it, "was empty");
    }
    return test_success();
 }
 
-bool Test::Result::test_eq(const std::string& what, const std::string& produced, const std::string& expected) {
+bool Test::Result::test_eq(std::string_view what, std::string_view produced, std::string_view expected) {
    return test_is_eq(what, produced, expected);
 }
 
-bool Test::Result::test_eq(const std::string& what, const char* produced, const char* expected) {
+bool Test::Result::test_eq(std::string_view what, const char* produced, const char* expected) {
    return test_is_eq(what, std::string(produced), std::string(expected));
 }
 
-bool Test::Result::test_eq(const std::string& what, size_t produced, size_t expected) {
+bool Test::Result::test_eq(std::string_view what, size_t produced, size_t expected) {
    return test_is_eq(what, produced, expected);
 }
 
-bool Test::Result::test_eq_sz(const std::string& what, size_t produced, size_t expected) {
+bool Test::Result::test_eq_sz(std::string_view what, size_t produced, size_t expected) {
    return test_is_eq(what, produced, expected);
 }
 
-bool Test::Result::test_eq(const std::string& what,
-                           const Botan::OctetString& produced,
-                           const Botan::OctetString& expected) {
-   std::ostringstream out;
-   out << m_who << " " << what;
-
-   if(produced == expected) {
-      out << " produced expected result " << produced.to_string();
-      return test_success(out.str());
-   } else {
-      out << " produced unexpected result '" << produced.to_string() << "' expected '" << expected.to_string() << "'";
-      return test_failure(out.str());
-   }
-}
-
-bool Test::Result::test_lt(const std::string& what, size_t produced, size_t expected) {
+bool Test::Result::test_lt(std::string_view what, size_t produced, size_t expected) {
    if(produced >= expected) {
       std::ostringstream err;
       err << m_who << " " << what;
@@ -300,7 +305,7 @@ bool Test::Result::test_lt(const std::string& what, size_t produced, size_t expe
    return test_success();
 }
 
-bool Test::Result::test_lte(const std::string& what, size_t produced, size_t expected) {
+bool Test::Result::test_lte(std::string_view what, size_t produced, size_t expected) {
    if(produced > expected) {
       std::ostringstream err;
       err << m_who << " " << what << " unexpected result " << produced << " > " << expected;
@@ -310,7 +315,7 @@ bool Test::Result::test_lte(const std::string& what, size_t produced, size_t exp
    return test_success();
 }
 
-bool Test::Result::test_gte(const std::string& what, size_t produced, size_t expected) {
+bool Test::Result::test_gte(std::string_view what, size_t produced, size_t expected) {
    if(produced < expected) {
       std::ostringstream err;
       err << m_who;
@@ -322,7 +327,7 @@ bool Test::Result::test_gte(const std::string& what, size_t produced, size_t exp
    return test_success();
 }
 
-bool Test::Result::test_gt(const std::string& what, size_t produced, size_t expected) {
+bool Test::Result::test_gt(std::string_view what, size_t produced, size_t expected) {
    if(produced <= expected) {
       std::ostringstream err;
       err << m_who;
@@ -334,15 +339,15 @@ bool Test::Result::test_gt(const std::string& what, size_t produced, size_t expe
    return test_success();
 }
 
-bool Test::Result::test_ne(const std::string& what, const std::string& str1, const std::string& str2) {
+bool Test::Result::test_ne(std::string_view what, std::string_view str1, std::string_view str2) {
    if(str1 != str2) {
-      return test_success(str1 + " != " + str2);
+      return test_success(Botan::fmt("{} != {}", str1, str2));
+   } else {
+      return test_failure(Botan::fmt("{} {} unexpectedly produced matching strings {}", who(), what, str1));
    }
-
-   return test_failure(who() + " " + what + " produced matching strings " + str1);
 }
 
-bool Test::Result::test_ne(const std::string& what, size_t produced, size_t expected) {
+bool Test::Result::test_ne(std::string_view what, size_t produced, size_t expected) {
    if(produced != expected) {
       return test_success();
    }
@@ -353,11 +358,11 @@ bool Test::Result::test_ne(const std::string& what, size_t produced, size_t expe
 }
 
 #if defined(BOTAN_HAS_BIGINT)
-bool Test::Result::test_eq(const std::string& what, const BigInt& produced, const BigInt& expected) {
+bool Test::Result::test_eq(std::string_view what, const BigInt& produced, const BigInt& expected) {
    return test_is_eq(what, produced, expected);
 }
 
-bool Test::Result::test_ne(const std::string& what, const BigInt& produced, const BigInt& expected) {
+bool Test::Result::test_ne(std::string_view what, const BigInt& produced, const BigInt& expected) {
    if(produced != expected) {
       return test_success();
    }
@@ -369,7 +374,7 @@ bool Test::Result::test_ne(const std::string& what, const BigInt& produced, cons
 #endif
 
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
-bool Test::Result::test_eq(const std::string& what, const Botan::EC_Point& a, const Botan::EC_Point& b) {
+bool Test::Result::test_eq(std::string_view what, const Botan::EC_Point& a, const Botan::EC_Point& b) {
    //return test_is_eq(what, a, b);
    if(a == b) {
       return test_success();
@@ -382,11 +387,11 @@ bool Test::Result::test_eq(const std::string& what, const Botan::EC_Point& a, co
 }
 #endif
 
-bool Test::Result::test_eq(const std::string& what, bool produced, bool expected) {
+bool Test::Result::test_eq(std::string_view what, bool produced, bool expected) {
    return test_is_eq(what, produced, expected);
 }
 
-bool Test::Result::test_rc_ok(const std::string& func, int rc) {
+bool Test::Result::test_rc_ok(std::string_view func, int rc) {
    if(rc != 0) {
       std::ostringstream err;
       err << m_who << " " << func << " unexpectedly failed with error code " << rc;
@@ -396,7 +401,7 @@ bool Test::Result::test_rc_ok(const std::string& func, int rc) {
    return test_success();
 }
 
-bool Test::Result::test_rc_fail(const std::string& func, const std::string& why, int rc) {
+bool Test::Result::test_rc_fail(std::string_view func, std::string_view why, int rc) {
    if(rc == 0) {
       std::ostringstream err;
       err << m_who << " call to " << func << " unexpectedly succeeded expecting failure because " << why;
@@ -406,7 +411,7 @@ bool Test::Result::test_rc_fail(const std::string& func, const std::string& why,
    return test_success();
 }
 
-bool Test::Result::test_rc_init(const std::string& func, int rc) {
+bool Test::Result::test_rc_init(std::string_view func, int rc) {
    if(rc == 0) {
       return test_success();
    } else {
@@ -430,7 +435,7 @@ bool Test::Result::test_rc_init(const std::string& func, int rc) {
    }
 }
 
-bool Test::Result::test_rc(const std::string& func, int expected, int rc) {
+bool Test::Result::test_rc(std::string_view func, int expected, int rc) {
    if(expected != rc) {
       std::ostringstream err;
       err << m_who;
@@ -517,12 +522,6 @@ std::string Test::format_time(uint64_t nanoseconds) {
    }
 
    return o.str();
-}
-
-Test::Result::Result(std::string who, const std::vector<Result>& downstream_results) : Result(std::move(who)) {
-   for(const auto& result : downstream_results) {
-      merge(result, true /* ignore non-matching test names */);
-   }
 }
 
 // TODO: this should move to `StdoutReporter`
