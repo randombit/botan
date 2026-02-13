@@ -4,11 +4,12 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "../tests/test_rng.h"  // FIXME
 #include "cli.h"
 
 #if defined(BOTAN_HAS_ENTROPY_SOURCE)
    #include <botan/entropy_src.h>
+   #include <botan/hex.h>
+   #include <botan/rng.h>
 #endif
 
 #if defined(BOTAN_HAS_COMPRESSION)
@@ -18,6 +19,39 @@
 namespace Botan_CLI {
 
 #if defined(BOTAN_HAS_ENTROPY_SOURCE)
+
+namespace {
+
+class SeedCapturing_RNG final : public Botan::RandomNumberGenerator {
+   public:
+      bool accepts_input() const override { return true; }
+
+      void clear() override {}
+
+      bool is_seeded() const override { return false; }
+
+      std::string name() const override { return "SeedCapturing"; }
+
+      size_t samples() const { return m_samples; }
+
+      const std::vector<uint8_t>& seed_material() const { return m_seed; }
+
+   private:
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override {
+         if(!output.empty()) {
+            throw CLI_Error("SeedCapturing_RNG has no output");
+         }
+
+         m_samples++;
+         m_seed.insert(m_seed.end(), input.begin(), input.end());
+      }
+
+   private:
+      std::vector<uint8_t> m_seed;
+      size_t m_samples = 0;
+};
+
+}  // namespace
 
 class Entropy final : public Command {
    public:
@@ -41,7 +75,7 @@ class Entropy final : public Command {
          }
 
          for(const std::string& source : sources) {
-            Botan_Tests::SeedCapturing_RNG rng;
+            SeedCapturing_RNG rng;
             const size_t entropy_estimate = entropy_sources.poll_just(rng, source);
 
             if(rng.samples() == 0) {
