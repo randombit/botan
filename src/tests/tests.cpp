@@ -284,21 +284,6 @@ bool Test::Result::test_eq_sz(const std::string& what, size_t produced, size_t e
    return test_is_eq(what, produced, expected);
 }
 
-bool Test::Result::test_eq(const std::string& what,
-                           const Botan::OctetString& produced,
-                           const Botan::OctetString& expected) {
-   std::ostringstream out;
-   out << m_who << " " << what;
-
-   if(produced == expected) {
-      out << " produced expected result " << produced.to_string();
-      return test_success(out.str());
-   } else {
-      out << " produced unexpected result '" << produced.to_string() << "' expected '" << expected.to_string() << "'";
-      return test_failure(out.str());
-   }
-}
-
 bool Test::Result::test_lt(const std::string& what, size_t produced, size_t expected) {
    if(produced >= expected) {
       std::ostringstream err;

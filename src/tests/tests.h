@@ -30,7 +30,6 @@ Each include is parsed for every test file which can get quite expensive
 namespace Botan {
 
 class RandomNumberGenerator;
-class OctetString;
 
 #if defined(BOTAN_HAS_BIGINT)
 class BigInt;
@@ -350,10 +349,6 @@ class Test {
 
             bool test_eq(const std::string& what, size_t produced, size_t expected);
             bool test_eq_sz(const std::string& what, size_t produced, size_t expected);
-
-            bool test_eq(const std::string& what,
-                         const Botan::OctetString& produced,
-                         const Botan::OctetString& expected);
 
             template <typename I1, typename I2>
             bool test_int_eq(I1 x, I2 y, const char* what) {
