@@ -286,10 +286,7 @@ class Test {
 
             void test_failure(const std::string& what, const uint8_t buf[], size_t buf_len);
 
-            template <typename Alloc>
-            void test_failure(const std::string& what, const std::vector<uint8_t, Alloc>& buf) {
-               test_failure(what, buf.data(), buf.size());
-            }
+            void test_failure(const std::string& what, std::span<const uint8_t> context);
 
             bool confirm(const std::string& what, bool expr, bool expected = true) {
                return test_eq(what, expr, expected);

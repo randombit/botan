@@ -174,6 +174,11 @@ void Test::Result::test_failure(const std::string& what, const uint8_t buf[], si
                 Botan::hex_encode(buf, buf_len));
 }
 
+void Test::Result::test_failure(const std::string& what, std::span<const uint8_t> context) {
+   test_failure(who() + ": " + what + " buf len " + std::to_string(context.size()) + " value " +
+                Botan::hex_encode(context));
+}
+
 bool Test::Result::test_failure(const std::string& err) {
    m_fail_log.push_back(err);
 
