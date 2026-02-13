@@ -10,7 +10,6 @@
 #include <botan/tls_messages_12.h>
 
 #include <botan/ber_dec.h>
-#include <botan/certstor.h>
 #include <botan/der_enc.h>
 #include <botan/pkix_types.h>
 #include <botan/tls_extensions.h>

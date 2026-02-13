@@ -19,10 +19,6 @@
    #include <botan/internal/calendar.h>
 #endif
 
-#if defined(BOTAN_HAS_ECC_GROUP)
-   #include <botan/ec_group.h>
-#endif
-
 namespace Botan_Tests {
 
 namespace {

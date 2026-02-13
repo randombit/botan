@@ -10,7 +10,6 @@
 #include <botan/internal/keccak_perm.h>
 
 #include <botan/internal/keccak_perm_round.h>
-#include <botan/internal/loadstor.h>
 #include <botan/internal/sponge_processing.h>
 
 #if defined(BOTAN_HAS_CPUID)
