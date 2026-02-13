@@ -92,7 +92,7 @@ std::vector<Test::Result> read_full_records() {
 
                     auto record = std::get<TLS::Record>(read);
                     result.confirm("received CCS", record.type == TLS::Record_Type::ChangeCipherSpec);
-                    result.test_eq("CCS byte is 0x01", record.fragment, Botan::hex_decode("01"));
+                    result.test_eq("CCS byte is 0x01", record.fragment, "01");
 
                     result.confirm("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
                  }),
@@ -110,14 +110,14 @@ std::vector<Test::Result> read_full_records() {
                     auto record = std::get<TLS::Record>(read);
 
                     result.confirm("received CCS 1", record.type == TLS::Record_Type::ChangeCipherSpec);
-                    result.test_eq("CCS byte is 0x01", record.fragment, Botan::hex_decode("01"));
+                    result.test_eq("CCS byte is 0x01", record.fragment, "01");
 
                     read = rl.next_record();
                     result.require("received something", std::holds_alternative<TLS::Record>(read));
                     record = std::get<TLS::Record>(read);
 
                     result.confirm("received CCS 2", record.type == TLS::Record_Type::ChangeCipherSpec);
-                    result.test_eq("CCS byte is 0x01", record.fragment, Botan::hex_decode("01"));
+                    result.test_eq("CCS byte is 0x01", record.fragment, "01");
 
                     result.confirm("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
                  }),
@@ -161,7 +161,7 @@ std::vector<Test::Result> read_full_records() {
 
               rec = std::get<TLS::Record>(read);
               result.confirm("received CCS record", rec.type == TLS::Record_Type::ChangeCipherSpec);
-              result.test_eq("CCS byte is 0x01", rec.fragment, Botan::hex_decode("01"));
+              result.test_eq("CCS byte is 0x01", rec.fragment, "01");
 
               result.confirm("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
            })};
@@ -336,7 +336,7 @@ std::vector<Test::Result> read_fragmented_records() {
 
                     auto rec1 = std::get<TLS::Record>(res1);
                     result.confirm("received CCS", rec1.type == TLS::Record_Type::ChangeCipherSpec);
-                    result.test_eq("CCS byte is 0x01", rec1.fragment, Botan::hex_decode("01"));
+                    result.test_eq("CCS byte is 0x01", rec1.fragment, "01");
 
                     result.confirm("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
                  }),
@@ -397,7 +397,7 @@ std::vector<Test::Result> write_records() {
                               record.size() == client_hello_msg.size() + Botan::TLS::TLS_HEADER_SIZE);
 
                const auto header = std::vector<uint8_t>(record.cbegin(), record.cbegin() + Botan::TLS::TLS_HEADER_SIZE);
-               result.test_eq("record header is well-formed", header, Botan::hex_decode("16030100c4"));
+               result.test_eq("record header is well-formed", header, "16030100c4");
             }),
       CHECK("prepare a dummy CCS",
             [&](auto& result) {
@@ -406,7 +406,7 @@ std::vector<Test::Result> write_records() {
                   record_layer_client(true).prepare_records(Botan::TLS::Record_Type::ChangeCipherSpec, ccs_content);
                result.require("record was created", record.size() == Botan::TLS::TLS_HEADER_SIZE + 1);
 
-               result.test_eq("CCS record is well-formed", record, Botan::hex_decode("140303000101"));
+               result.test_eq("CCS record is well-formed", record, "140303000101");
             }),
       CHECK("cannot prepare non-dummy CCS",
             [&](auto& result) {
@@ -739,7 +739,7 @@ std::vector<Test::Result> write_encrypted_records() {
                   Botan::TLS::Record_Type::ChangeCipherSpec, ccs_content, cs.get());
                result.require("record was created and not encrypted", record.size() == Botan::TLS::TLS_HEADER_SIZE + 1);
 
-               result.test_eq("CCS record is well-formed", record, Botan::hex_decode("140303000101"));
+               result.test_eq("CCS record is well-formed", record, "140303000101");
             }),
 
       CHECK("write a lot of data producing two protected records", [&](Test::Result& result) {
