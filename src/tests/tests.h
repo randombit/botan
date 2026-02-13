@@ -307,7 +307,7 @@ class Test {
             }
 
             template <typename T>
-            bool test_is_eq(const std::string& what, const T& produced, const T& expected) {
+            bool test_is_eq(std::string_view what, const T& produced, const T& expected) {
                std::ostringstream out;
                out << m_who << " " << what;
 
