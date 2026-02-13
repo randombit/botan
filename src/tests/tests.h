@@ -223,13 +223,13 @@ class Test {
       */
       class Result final {
          public:
-            explicit Result(std::string who);
+            explicit Result(std::string_view who);
 
             /**
              * This 'consolidation constructor' creates a single test result from
              * a vector of downstream test result objects.
              */
-            Result(std::string who, const std::vector<Result>& downstream_results);
+            Result(std::string_view who, const std::vector<Result>& downstream_results);
 
             size_t tests_passed() const { return m_tests_passed; }
 
@@ -258,13 +258,13 @@ class Test {
 
             std::string result_string() const;
 
-            static Result Failure(const std::string& who, const std::string& what) {
+            static Result Failure(std::string_view who, std::string_view what) {
                Result r(who);
                r.test_failure(what);
                return r;
             }
 
-            static Result Note(const std::string& who, const std::string& what) {
+            static Result Note(std::string_view who, std::string_view what) {
                Result r(who);
                r.test_note(what);
                return r;
@@ -272,21 +272,21 @@ class Test {
 
             void merge(const Result& other, bool ignore_test_name = false);
 
-            void test_note(const std::string& note, const char* extra = nullptr);
+            void test_note(std::string_view note, const char* extra = nullptr);
 
-            void test_note(const std::string& who, std::span<const uint8_t> data);
+            void test_note(std::string_view note, std::span<const uint8_t> context);
 
-            void note_missing(const std::string& whatever);
+            void note_missing(std::string_view whatever);
 
-            bool test_success(const std::string& note = "");
+            bool test_success(std::string_view note = "");
 
-            bool test_failure(const std::string& err);
+            bool test_failure(std::string_view err);
 
-            bool test_failure(const std::string& what, const std::string& error);
+            bool test_failure(std::string_view what, std::string_view error);
 
-            void test_failure(const std::string& what, const uint8_t buf[], size_t buf_len);
+            void test_failure(std::string_view what, const uint8_t buf[], size_t buf_len);
 
-            void test_failure(const std::string& what, std::span<const uint8_t> context);
+            void test_failure(std::string_view what, std::span<const uint8_t> context);
 
             bool confirm(const std::string& what, bool expr, bool expected = true) {
                return test_eq(what, expr, expected);

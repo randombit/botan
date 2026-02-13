@@ -57,7 +57,13 @@ Test::Test() = default;
 
 Test::~Test() = default;
 
-Test::Result::Result(std::string who) : m_who(std::move(who)), m_timestamp(Test::timestamp()) {}
+Test::Result::Result(std::string_view who) : m_who(who), m_timestamp(Test::timestamp()) {}
+
+Test::Result::Result(std::string_view who, const std::vector<Result>& downstream_results) : Result(who) {
+   for(const auto& result : downstream_results) {
+      merge(result, true /* ignore non-matching test names */);
+   }
+}
 
 void Test::Result::merge(const Result& other, bool ignore_test_name) {
    if(who() != other.who()) {
@@ -92,12 +98,12 @@ void Test::Result::end_timer() {
    }
 }
 
-void Test::Result::test_note(const std::string& who, std::span<const uint8_t> data) {
-   const std::string hex = Botan::hex_encode(data);
-   return test_note(who, hex.c_str());
+void Test::Result::test_note(std::string_view note, std::span<const uint8_t> context) {
+   const std::string hex = Botan::hex_encode(context);
+   return test_note(note, hex.c_str());
 }
 
-void Test::Result::test_note(const std::string& note, const char* extra) {
+void Test::Result::test_note(std::string_view note, const char* extra) {
    if(!note.empty()) {
       std::ostringstream out;
       out << who() << " " << note;
@@ -108,11 +114,12 @@ void Test::Result::test_note(const std::string& note, const char* extra) {
    }
 }
 
-void Test::Result::note_missing(const std::string& whatever) {
+void Test::Result::note_missing(std::string_view whatever_sv) {
    static std::set<std::string> s_already_seen;
 
+   const std::string whatever(whatever_sv);
    if(!s_already_seen.contains(whatever)) {
-      test_note("Skipping tests due to missing " + whatever);
+      test_note(Botan::fmt("Skipping tests due to missing {}", whatever));
       s_already_seen.insert(whatever);
    }
 }
@@ -157,7 +164,7 @@ bool Test::Result::test_no_throw(const std::string& what, const std::function<vo
    return ThrowExpectations(fn).expect_success().check(what, *this);
 }
 
-bool Test::Result::test_success(const std::string& note) {
+bool Test::Result::test_success(std::string_view note) {
    if(Test::options().log_success()) {
       test_note(note);
    }
@@ -165,22 +172,20 @@ bool Test::Result::test_success(const std::string& note) {
    return true;
 }
 
-bool Test::Result::test_failure(const std::string& what, const std::string& error) {
-   return test_failure(who() + " " + what + " with error " + error);
+bool Test::Result::test_failure(std::string_view what, std::string_view error) {
+   return test_failure(Botan::fmt("{} {} with error {}", who(), what, error));
 }
 
-void Test::Result::test_failure(const std::string& what, const uint8_t buf[], size_t buf_len) {
-   test_failure(who() + ": " + what + " buf len " + std::to_string(buf_len) + " value " +
-                Botan::hex_encode(buf, buf_len));
+void Test::Result::test_failure(std::string_view what, const uint8_t buf[], size_t buf_len) {
+   return test_failure(what, {buf, buf_len});
 }
 
-void Test::Result::test_failure(const std::string& what, std::span<const uint8_t> context) {
-   test_failure(who() + ": " + what + " buf len " + std::to_string(context.size()) + " value " +
-                Botan::hex_encode(context));
+void Test::Result::test_failure(std::string_view what, std::span<const uint8_t> context) {
+   test_failure(Botan::fmt("{} {} with value {}", who(), what, Botan::hex_encode(context)));
 }
 
-bool Test::Result::test_failure(const std::string& err) {
-   m_fail_log.push_back(err);
+bool Test::Result::test_failure(std::string_view err) {
+   m_fail_log.push_back(std::string(err));
 
    if(Test::options().abort_on_first_fail() && m_who != "Failing Test") {
       std::abort();
@@ -522,12 +527,6 @@ std::string Test::format_time(uint64_t nanoseconds) {
    }
 
    return o.str();
-}
-
-Test::Result::Result(std::string who, const std::vector<Result>& downstream_results) : Result(std::move(who)) {
-   for(const auto& result : downstream_results) {
-      merge(result, true /* ignore non-matching test names */);
-   }
 }
 
 // TODO: this should move to `StdoutReporter`
