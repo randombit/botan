@@ -10,6 +10,7 @@
 #if defined(BOTAN_HAS_TLS_13)
 
    #include <botan/exceptn.h>
+   #include <botan/hash.h>
    #include <botan/hex.h>
    #include <botan/internal/tls_transcript_hash_13.h>
    #include <array>
