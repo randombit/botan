@@ -13,12 +13,12 @@
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
 #include <botan/rng.h>
+#include <botan/internal/concat_util.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/scan_name.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 

@@ -11,11 +11,11 @@
 
 #include <botan/internal/sp_hash.h>
 
+#include <botan/internal/concat_util.h>
 #include <botan/internal/hmac.h>
 #include <botan/internal/mgf1.h>
 #include <botan/internal/sha2_32.h>
 #include <botan/internal/sha2_64.h>
-#include <botan/internal/stl_util.h>
 #include <botan/internal/trunc_hash.h>
 
 namespace Botan {

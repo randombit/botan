@@ -336,9 +336,10 @@ bool Signature_Scheme::is_suitable_for(const Private_Key& private_key) const noe
 
 std::vector<AlgorithmIdentifier> to_algorithm_identifiers(const std::vector<Signature_Scheme>& schemes) {
    std::vector<AlgorithmIdentifier> result;
-   std::transform(schemes.begin(), schemes.end(), std::back_inserter(result), [](const auto& scheme) {
-      return scheme.algorithm_identifier();
-   });
+   result.reserve(schemes.size());
+   for(const auto& scheme : schemes) {
+      result.push_back(scheme.algorithm_identifier());
+   }
    return result;
 }
 

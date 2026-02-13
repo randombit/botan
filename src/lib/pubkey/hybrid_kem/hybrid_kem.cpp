@@ -8,6 +8,7 @@
 */
 #include <botan/internal/hybrid_kem.h>
 
+#include <botan/internal/concat_util.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/stl_util.h>
 

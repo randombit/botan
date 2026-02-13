@@ -12,10 +12,10 @@
 #include <botan/internal/blake2s.h>
 
 #include <botan/exceptn.h>
+#include <botan/internal/concat_util.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 

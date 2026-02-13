@@ -11,11 +11,11 @@
 #include <botan/rng.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/buffer_stuffer.h>
+#include <botan/internal/concat_util.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/hss_lms_utils.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/scan_name.h>
-#include <botan/internal/stl_util.h>
 #include <limits>
 
 namespace Botan {

@@ -10,10 +10,10 @@
 #include <botan/internal/hkdf.h>
 
 #include <botan/internal/buffer_stuffer.h>
+#include <botan/internal/concat_util.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/mem_utils.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 

@@ -17,6 +17,7 @@
    #include <botan/hex.h>
    #include <botan/mem_ops.h>
    #include <botan/internal/calendar.h>
+   #include <botan/internal/concat_util.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/loadstor.h>
    #include <botan/internal/stl_util.h>

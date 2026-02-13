@@ -25,10 +25,10 @@
    #include <botan/kyber.h>
    #include <botan/pubkey.h>
    #include <botan/rng.h>
+   #include <botan/internal/concat_util.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/kyber_constants.h>
    #include <botan/internal/kyber_helpers.h>
-   #include <botan/internal/stl_util.h>
 #endif
 
 namespace Botan_Tests {

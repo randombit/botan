@@ -9,8 +9,8 @@
 #include <botan/internal/ascon_aead128.h>
 
 #include <botan/exceptn.h>
+#include <botan/internal/concat_util.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
