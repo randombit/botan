@@ -8,6 +8,7 @@
 
 #include <botan/internal/tls_transcript_hash_13.h>
 
+#include <botan/hash.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_extensions.h>
 #include <botan/internal/tls_reader.h>
@@ -19,6 +20,13 @@ namespace Botan::TLS {
 Transcript_Hash_State::Transcript_Hash_State(std::string_view algo_spec) {
    set_algorithm(algo_spec);
 }
+
+Transcript_Hash_State::Transcript_Hash_State() = default;
+
+Transcript_Hash_State::~Transcript_Hash_State() = default;
+
+Transcript_Hash_State::Transcript_Hash_State(Transcript_Hash_State&& other) noexcept = default;
+Transcript_Hash_State& Transcript_Hash_State::operator=(Transcript_Hash_State&& other) noexcept = default;
 
 Transcript_Hash_State::Transcript_Hash_State(const Transcript_Hash_State& other) :
       m_hash((other.m_hash != nullptr) ? other.m_hash->copy_state() : nullptr),

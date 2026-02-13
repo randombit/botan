@@ -9,13 +9,17 @@
 #ifndef BOTAN_TLS_TRANSCRIPT_HASH_13_H_
 #define BOTAN_TLS_TRANSCRIPT_HASH_13_H_
 
-#include <botan/hash.h>
 #include <botan/tls_magic.h>
-
 #include <memory>
 #include <span>
 #include <string_view>
 #include <vector>
+
+namespace Botan {
+
+class HashFunction;
+
+}  // namespace Botan
 
 namespace Botan::TLS {
 
@@ -27,9 +31,9 @@ namespace Botan::TLS {
  */
 class BOTAN_TEST_API Transcript_Hash_State {
    public:
-      Transcript_Hash_State() = default;
+      Transcript_Hash_State();
       explicit Transcript_Hash_State(std::string_view algo_spec);
-      ~Transcript_Hash_State() = default;
+      ~Transcript_Hash_State();
 
       /**
        * Recreates a Transcript_Hash_State after receiving a Hello Retry Request.
@@ -45,8 +49,8 @@ class BOTAN_TEST_API Transcript_Hash_State {
 
       Transcript_Hash_State& operator=(const Transcript_Hash_State&) = delete;
 
-      Transcript_Hash_State(Transcript_Hash_State&&) = default;
-      Transcript_Hash_State& operator=(Transcript_Hash_State&&) = default;
+      Transcript_Hash_State(Transcript_Hash_State&& other) noexcept;
+      Transcript_Hash_State& operator=(Transcript_Hash_State&& other) noexcept;
 
       void update(std::span<const uint8_t> serialized_message_s);
 
@@ -79,6 +83,7 @@ class BOTAN_TEST_API Transcript_Hash_State {
       Transcript_Hash_State clone() const;
 
    private:
+      // called by clone
       Transcript_Hash_State(const Transcript_Hash_State& other);
 
    private:

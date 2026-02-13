@@ -10,6 +10,7 @@
 #include <botan/tls_extensions.h>
 
 #include <botan/credentials_manager.h>
+#include <botan/hash.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_psk_identity_13.h>
