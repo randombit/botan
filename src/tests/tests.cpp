@@ -390,6 +390,19 @@ bool Test::Result::test_sz_gte(std::string_view what, size_t produced, size_t ex
    }
 }
 
+bool Test::Result::test_opt_u8_eq(std::string_view what, std::optional<uint8_t> a, std::optional<uint8_t> b) {
+   if(a.has_value() != b.has_value()) {
+      std::ostringstream err;
+      err << m_who << " " << what << " only one of a/b was nullopt";
+      return test_failure(err.str());
+   } else if(a.has_value() && b.has_value()) {
+      return test_u8_eq(what, a.value(), b.value());
+   } else {
+      // both nullopt
+      return test_success();
+   }
+}
+
 bool Test::Result::test_ne(std::string_view what, std::string_view str1, std::string_view str2) {
    if(str1 != str2) {
       return test_success(Botan::fmt("{} != {}", str1, str2));

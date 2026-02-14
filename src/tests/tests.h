@@ -321,15 +321,6 @@ class Test {
                }
             }
 
-            template <typename T>
-            bool test_not_nullopt(std::string_view what, const std::optional<T>& val) {
-               if(val == std::nullopt) {
-                  return test_failure(what, "was nullopt");
-               } else {
-                  return test_success("not nullopt");
-               }
-            }
-
             bool test_eq(std::string_view what, const char* produced, const char* expected);
 
             bool test_is_nonempty(std::string_view what_is_it, std::string_view to_examine);
@@ -372,19 +363,18 @@ class Test {
 
             bool test_ne(std::string_view what, std::string_view str1, std::string_view str2);
 
+            /* Test predicates on optional values */
+
             template <typename T>
-            bool test_eq(std::string_view what, const std::optional<T>& a, const std::optional<T>& b) {
-               if(a.has_value() != b.has_value()) {
-                  std::ostringstream err;
-                  err << m_who << " " << what << " only one of a/b was nullopt";
-                  return test_failure(err.str());
-               } else if(a.has_value() && b.has_value()) {
-                  return test_is_eq(what, a.value(), b.value());
+            bool test_opt_not_null(std::string_view what, const std::optional<T>& val) {
+               if(val == std::nullopt) {
+                  return test_failure(what, "was nullopt");
                } else {
-                  // both nullopt
-                  return test_success();
+                  return test_success("not nullopt");
                }
             }
+
+            bool test_opt_u8_eq(std::string_view what, std::optional<uint8_t> a, std::optional<uint8_t> b);
 
 #if defined(BOTAN_HAS_BIGINT)
             bool test_eq(std::string_view what, const BigInt& produced, const BigInt& expected);

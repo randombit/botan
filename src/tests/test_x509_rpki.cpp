@@ -227,12 +227,12 @@ Test::Result test_x509_ip_addr_blocks_extension_decode() {
       const auto& addr_blocks = ip_addr_blocks->addr_blocks();
       result.test_sz_eq("cert has two IpAddrBlocks", addr_blocks.size(), 5);
 
-      result.test_eq("block 0 has no safi", addr_blocks[0].safi(), std::optional<uint8_t>{std::nullopt});
+      result.test_opt_u8_eq("block 0 has no safi", addr_blocks[0].safi(), std::nullopt);
       result.test_is_true(
          "block 0 is inherited",
          !std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(addr_blocks[0].addr_choice()).ranges().has_value());
 
-      result.test_eq("block 1 has correct safi", addr_blocks[1].safi(), std::optional<uint8_t>{1});
+      result.test_opt_u8_eq("block 1 has correct safi", addr_blocks[1].safi(), 1);
       const auto& block_1 =
          std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(addr_blocks[1].addr_choice()).ranges().value();
 
@@ -240,12 +240,12 @@ Test::Result test_x509_ip_addr_blocks_extension_decode() {
       result.test_eq("block 1 min is correct", block_1[0].min().value(), {192, 168, 0, 0});
       result.test_eq("block 1 max is correct", block_1[0].max().value(), {200, 0, 0, 0});
 
-      result.test_eq("block 2 has correct safi", addr_blocks[2].safi(), std::optional<uint8_t>{2});
+      result.test_opt_u8_eq("block 2 has correct safi", addr_blocks[2].safi(), 2);
       result.test_is_true(
          "block 2 is inherited",
          !std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(addr_blocks[2].addr_choice()).ranges().has_value());
 
-      result.test_eq("block 3 has no safi", addr_blocks[3].safi(), std::optional<uint8_t>{std::nullopt});
+      result.test_opt_u8_eq("block 3 has no safi", addr_blocks[3].safi(), std::nullopt);
       const auto& block_3 =
          std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(addr_blocks[3].addr_choice()).ranges().value();
 
@@ -257,7 +257,7 @@ Test::Result test_x509_ip_addr_blocks_extension_decode() {
                      block_3[0].max().value(),
                      {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff});
 
-      result.test_eq("block 24 has correct safi", addr_blocks[4].safi(), std::optional<uint8_t>{1});
+      result.test_opt_u8_eq("block 24 has correct safi", addr_blocks[4].safi(), 1);
       result.test_is_true(
          "block 4 is inherited",
          !std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(addr_blocks[4].addr_choice()).ranges().has_value());
@@ -390,7 +390,7 @@ Test::Result test_x509_ip_addr_blocks_rfc3779_example() {
    const auto* ext_1 = cert_1.v3_extensions().get_extension_object_as<IPAddressBlocks>();
 
    auto ext_1_addr_fam_1 = ext_1->addr_blocks()[0];
-   result.test_eq("extension 1 ipv4 safi", ext_1_addr_fam_1.safi(), std::optional<uint8_t>(1));
+   result.test_opt_u8_eq("extension 1 ipv4 safi", ext_1_addr_fam_1.safi(), 1);
    auto ext_1_ranges =
       std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(ext_1_addr_fam_1.addr_choice()).ranges().value();
    result.test_eq("extension 1 range 1 min", ext_1_ranges[0].min().value(), {10, 0, 32, 0});
@@ -408,7 +408,7 @@ Test::Result test_x509_ip_addr_blocks_rfc3779_example() {
    result.test_eq("extension 1 range 5 min", ext_1_ranges[4].min().value(), {10, 3, 0, 0});
    result.test_eq("extension 1 range 5 max", ext_1_ranges[4].max().value(), {10, 3, 255, 255});
 
-   result.test_eq("extension 1 ipv6 safi", ext_1->addr_blocks()[1].safi(), std::optional<uint8_t>{std::nullopt});
+   result.test_opt_u8_eq("extension 1 ipv6 safi", ext_1->addr_blocks()[1].safi(), std::nullopt);
    result.test_is_true(
       "extension 1 ipv6 inherited",
       !std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(ext_1->addr_blocks()[1].addr_choice()).ranges().has_value());
@@ -437,7 +437,7 @@ Test::Result test_x509_ip_addr_blocks_rfc3779_example() {
    const auto* ext_2 = cert_2.v3_extensions().get_extension_object_as<IPAddressBlocks>();
 
    auto ext_2_addr_fam_1 = ext_2->addr_blocks()[0];
-   result.test_eq("extension 2 ipv4 1 safi", ext_2_addr_fam_1.safi(), std::optional<uint8_t>(1));
+   result.test_opt_u8_eq("extension 2 ipv4 1 safi", ext_2_addr_fam_1.safi(), 1);
    auto ext_2_ranges_1 =
       std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(ext_2_addr_fam_1.addr_choice()).ranges().value();
    result.test_eq("extension 2 fam 1 range 1 min", ext_2_ranges_1[0].min().value(), {10, 0, 0, 0});
@@ -446,13 +446,13 @@ Test::Result test_x509_ip_addr_blocks_rfc3779_example() {
    result.test_eq("extension 2 fam 1 range 2 min", ext_2_ranges_1[1].min().value(), {172, 16, 0, 0});
    result.test_eq("extension 2 fam 1 range 2 max", ext_2_ranges_1[1].max().value(), {172, 31, 255, 255});
 
-   result.test_eq("extension 2 ipv4 2 safi", ext_2->addr_blocks()[1].safi(), std::optional<uint8_t>{2});
+   result.test_opt_u8_eq("extension 2 ipv4 2 safi", ext_2->addr_blocks()[1].safi(), 2);
    result.test_is_true(
       "extension 2 ipv4 2 inherited",
       !std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(ext_2->addr_blocks()[1].addr_choice()).ranges().has_value());
 
    auto ext_2_addr_fam_3 = ext_2->addr_blocks()[2];
-   result.test_eq("extension 2 ipv4 1 safi", ext_2_addr_fam_3.safi(), std::optional<uint8_t>(std::nullopt));
+   result.test_opt_u8_eq("extension 2 ipv4 1 safi", ext_2_addr_fam_3.safi(), std::nullopt);
    auto ext_2_ranges_3 =
       std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(ext_2_addr_fam_3.addr_choice()).ranges().value();
    result.test_eq("extension 2 fam 3 range 1 min",
@@ -639,7 +639,7 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_ctor() {
          if(push_ipv4_family) {
             auto family = dec_addr_blocks[0];
             result.test_is_true("ipv4 family afi", ipv4_addr_family.afi() == family.afi());
-            result.test_eq("ipv4 family safi", ipv4_addr_family.safi(), family.safi());
+            result.test_opt_u8_eq("ipv4 family safi", ipv4_addr_family.safi(), family.safi());
             auto choice = std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(family.addr_choice());
 
             if(!inherit_ipv4) {
@@ -664,7 +664,7 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_ctor() {
          if(push_ipv6_family) {
             auto family = dec_addr_blocks[dec_addr_blocks.size() - 1];
             result.test_is_true("ipv6 family afi", ipv6_addr_family.afi() == family.afi());
-            result.test_eq("ipv6 family safi", ipv6_addr_family.safi(), family.safi());
+            result.test_opt_u8_eq("ipv6 family safi", ipv6_addr_family.safi(), family.safi());
             auto choice = std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(family.addr_choice());
             if(!inherit_ipv6) {
                auto ranges = choice.ranges().value();
@@ -757,7 +757,7 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_edge_cases_ctor() {
                const auto& dec_addr_blocks = ip_blocks->addr_blocks();
                auto family = dec_addr_blocks[0];
                result.test_is_true("ipv6 family afi", ipv6_addr_family.afi() == family.afi());
-               result.test_eq("ipv6 family safi", ipv6_addr_family.safi(), family.safi());
+               result.test_opt_u8_eq("ipv6 family safi", ipv6_addr_family.safi(), family.safi());
                auto choice = std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(family.addr_choice());
                auto ranges = choice.ranges().value();
 
@@ -940,7 +940,7 @@ Test::Result test_x509_ip_addr_blocks_family_merge() {
       const IPAddressBlocks::IPAddressFamily& exp = expected_blocks[i];
 
       result.test_is_true("blocks match push order by afi at index " + std::to_string(i), dec.afi() == exp.afi());
-      result.test_eq("blocks match push order by safi at index " + std::to_string(i), dec.safi(), exp.safi());
+      result.test_opt_u8_eq("blocks match push order by safi at index " + std::to_string(i), dec.safi(), exp.safi());
 
       if((exp.afi() == 1) && (dec.afi() == 1)) {
          auto dec_choice = std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(dec.addr_choice());
