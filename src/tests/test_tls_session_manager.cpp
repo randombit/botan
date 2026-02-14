@@ -9,6 +9,7 @@
 
 #if defined(BOTAN_HAS_TLS)
 
+   #include <botan/assert.h>
    #include <botan/credentials_manager.h>
    #include <botan/hex.h>
    #include <botan/rng.h>
