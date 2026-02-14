@@ -65,13 +65,13 @@ class Sodium_API_Tests : public Test {
       static Test::Result sodium_utils() {
          Test::Result result("sodium math utils");
 
-         result.confirm("sodium_is_zero", Botan::Sodium::sodium_is_zero(nullptr, 0) == 1);
+         result.test_is_true("sodium_is_zero", Botan::Sodium::sodium_is_zero(nullptr, 0) == 1);
 
          std::vector<uint8_t> a(5);
-         result.confirm("sodium_is_zero", Botan::Sodium::sodium_is_zero(a.data(), a.size()) == 1);
+         result.test_is_true("sodium_is_zero", Botan::Sodium::sodium_is_zero(a.data(), a.size()) == 1);
          Botan::Sodium::sodium_increment(a.data(), a.size());
          result.test_eq("sodium_increment", a, "0100000000");
-         result.confirm("sodium_is_zero", Botan::Sodium::sodium_is_zero(a.data(), a.size()) == 0);
+         result.test_is_true("sodium_is_zero", Botan::Sodium::sodium_is_zero(a.data(), a.size()) == 0);
 
          std::memset(a.data(), 0xFF, a.size());
          Botan::Sodium::sodium_increment(a.data(), a.size());
@@ -79,14 +79,14 @@ class Sodium_API_Tests : public Test {
          Botan::Sodium::sodium_increment(a.data(), a.size());
          result.test_eq("sodium_increment", a, "0100000000");
 
-         result.confirm("sodium_compare", Botan::Sodium::sodium_compare(a.data(), a.data(), a.size()) == 0);
-         result.confirm("sodium_memcmp", Botan::Sodium::sodium_memcmp(a.data(), a.data(), a.size()) == 0);
+         result.test_is_true("sodium_compare", Botan::Sodium::sodium_compare(a.data(), a.data(), a.size()) == 0);
+         result.test_is_true("sodium_memcmp", Botan::Sodium::sodium_memcmp(a.data(), a.data(), a.size()) == 0);
 
          std::vector<uint8_t> b(5, 0x10);
-         result.confirm("sodium_compare a<b", Botan::Sodium::sodium_compare(a.data(), b.data(), a.size()) == -1);
-         result.confirm("sodium_compare b<a", Botan::Sodium::sodium_compare(b.data(), a.data(), a.size()) == 1);
-         result.confirm("sodium_memcmp a<b", Botan::Sodium::sodium_memcmp(a.data(), b.data(), a.size()) == -1);
-         result.confirm("sodium_memcmp b<a", Botan::Sodium::sodium_memcmp(b.data(), a.data(), a.size()) == -1);
+         result.test_is_true("sodium_compare a<b", Botan::Sodium::sodium_compare(a.data(), b.data(), a.size()) == -1);
+         result.test_is_true("sodium_compare b<a", Botan::Sodium::sodium_compare(b.data(), a.data(), a.size()) == 1);
+         result.test_is_true("sodium_memcmp a<b", Botan::Sodium::sodium_memcmp(a.data(), b.data(), a.size()) == -1);
+         result.test_is_true("sodium_memcmp b<a", Botan::Sodium::sodium_memcmp(b.data(), a.data(), a.size()) == -1);
 
          Botan::Sodium::sodium_add(a.data(), b.data(), a.size());
          result.test_eq("sodium_add", a, "1110101010");
@@ -649,7 +649,7 @@ class Sodium_API_Tests : public Test {
          result.test_rc_ok(
             "sign_detached",
             Botan::Sodium::crypto_sign_ed25519_detached(sig.data(), &sig_len, msg.data(), msg.size(), sk.data()));
-         result.confirm("sig len", sig_len == 64);
+         result.test_is_true("sig len", sig_len == 64);
 
          result.test_eq(
             "sig",

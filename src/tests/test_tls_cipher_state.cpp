@@ -332,18 +332,18 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
 
        CHECK_both("ciphersuite compatibility",
                   [&](Cipher_State* cs, Journaling_Secret_Logger*, Connection_Side side, Test::Result& result) {
-                     result.confirm("self-compatibility", cs->is_compatible_with(cipher));
-                     result.confirm(
+                     result.test_is_true("self-compatibility", cs->is_compatible_with(cipher));
+                     result.test_is_true(
                         "fully defined state is not compatible to other suites",
                         !cs->is_compatible_with(Ciphersuite::from_name("CHACHA20_POLY1305_SHA256").value()) &&
                            !cs->is_compatible_with(Ciphersuite::from_name("AES_128_CCM_SHA256").value()) &&
                            !cs->is_compatible_with(Ciphersuite::from_name("PSK_WITH_AES_128_GCM_SHA256").value()));
                      if(side == Connection_Side::Client) {
-                        result.confirm("Clients don't expect unprotected alerts after server hello",
-                                       !cs->must_expect_unprotected_alert_traffic());
+                        result.test_is_true("Clients don't expect unprotected alerts after server hello",
+                                            !cs->must_expect_unprotected_alert_traffic());
                      } else {
-                        result.confirm("Servers must expect unprotected alerts in response to their server hello",
-                                       cs->must_expect_unprotected_alert_traffic());
+                        result.test_is_true("Servers must expect unprotected alerts in response to their server hello",
+                                            cs->must_expect_unprotected_alert_traffic());
                      }
                   }),
 
@@ -353,101 +353,102 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
                                                               [&] { cs->next_ticket_nonce(); });
                   }),
 
-       CHECK_both("handshake traffic without PSK",
-                  [&](Cipher_State* cs, Journaling_Secret_Logger* sl, Connection_Side side, Test::Result& result) {
-                     result.confirm("can not yet write application data", !cs->can_encrypt_application_traffic());
-                     result.confirm("can not yet export key material", !cs->can_export_keys());
+       CHECK_both(
+          "handshake traffic without PSK",
+          [&](Cipher_State* cs, Journaling_Secret_Logger* sl, Connection_Side side, Test::Result& result) {
+             result.test_is_true("can not yet write application data", !cs->can_encrypt_application_traffic());
+             result.test_is_true("can not yet export key material", !cs->can_export_keys());
 
-                     // decrypt encrypted extensions from server
-                     encrypted_extensions.xxcrypt(result, cs, side);
+             // decrypt encrypted extensions from server
+             encrypted_extensions.xxcrypt(result, cs, side);
 
-                     // validate the MAC we receive in server Finished message
-                     const auto expected_server_mac = Botan::hex_decode(
-                        "9b 9b 14 1d 90 63 37 fb d2 cb dc e7 1d f4"
-                        "de da 4a b4 2c 30 95 72 cb 7f ff ee 54 54 b7 8f 07 18");
-                     if(side == Connection_Side::Client) {
-                        result.confirm("expecting the correct MAC for server finished",
-                                       cs->verify_peer_finished_mac(th_pre_server_finished, expected_server_mac));
-                     } else {
-                        result.test_eq("expecting the correct MAC for server finished",
-                                       cs->finished_mac(th_pre_server_finished),
-                                       expected_server_mac);
-                     }
+             // validate the MAC we receive in server Finished message
+             const auto expected_server_mac = Botan::hex_decode(
+                "9b 9b 14 1d 90 63 37 fb d2 cb dc e7 1d f4"
+                "de da 4a b4 2c 30 95 72 cb 7f ff ee 54 54 b7 8f 07 18");
+             if(side == Connection_Side::Client) {
+                result.test_is_true("expecting the correct MAC for server finished",
+                                    cs->verify_peer_finished_mac(th_pre_server_finished, expected_server_mac));
+             } else {
+                result.test_eq("expecting the correct MAC for server finished",
+                               cs->finished_mac(th_pre_server_finished),
+                               expected_server_mac);
+             }
 
-                     // advance Cipher_State with client_hello...server_Finished
-                     // (allows receiving of application data, but does not yet allow such sending)
-                     result.test_no_throw("state advancement is legal",
-                                          [&] { cs->advance_with_server_finished(th_server_finished, *sl); });
+             // advance Cipher_State with client_hello...server_Finished
+             // (allows receiving of application data, but does not yet allow such sending)
+             result.test_no_throw("state advancement is legal",
+                                  [&] { cs->advance_with_server_finished(th_server_finished, *sl); });
 
-                     if(side == Connection_Side::Client) {
-                        result.confirm("can read application data", cs->can_decrypt_application_traffic());
-                        result.confirm("can not yet write application data", !cs->can_encrypt_application_traffic());
-                        result.confirm("Clients don't expect unprotected alerts after server hello",
-                                       !cs->must_expect_unprotected_alert_traffic());
-                     } else {
-                        result.confirm("can not yet read application data", !cs->can_decrypt_application_traffic());
-                        result.confirm("can write application data", cs->can_encrypt_application_traffic());
-                        result.confirm("Servers must expect unprotected alerts in response to their first flight",
-                                       cs->must_expect_unprotected_alert_traffic());
-                     }
-
-                     // check the logged key material
-                     result.test_sz_eq("contains expected number of keys", sl->secrets.size(), 5);
-                     result.require("has client traffic secret", sl->secrets.contains("CLIENT_TRAFFIC_SECRET_0"));
-                     result.require("has server traffic secret", sl->secrets.contains("SERVER_TRAFFIC_SECRET_0"));
-                     result.require("has exporter secret", sl->secrets.contains("EXPORTER_SECRET"));
-                     result.test_eq(
-                        "client traffic secret (0)", sl->secrets.at("CLIENT_TRAFFIC_SECRET_0"), client_traffic_secret);
-                     result.test_eq(
-                        "server traffic secret (0)", sl->secrets.at("SERVER_TRAFFIC_SECRET_0"), server_traffic_secret);
-
-                     // generate the MAC for the client Finished message
-                     const auto expected_client_mac = Botan::hex_decode(
-                        "a8 ec 43 6d 67 76 34 ae 52 5a c1 fc eb e1 1a 03"
-                        "9e c1 76 94 fa c6 e9 85 27 b6 42 f2 ed d5 ce 61");
-                     if(side == Connection_Side::Client) {
-                        result.test_eq("generating the correct MAC for client finished",
-                                       cs->finished_mac(th_server_finished),
-                                       expected_client_mac);
-                     } else {
-                        result.confirm("verify the correct MAC for client finished",
-                                       cs->verify_peer_finished_mac(th_server_finished, expected_client_mac));
-                     }
-
-                     // encrypt client Finished message by client
-                     // (under the client handshake traffic secret)
-                     encrypted_client_finished_message.xxcrypt(result, cs, side);
-
-                     // advance Cipher_State with client_hello...client_Finished
-                     // (allows generation of resumption PSKs)
-                     result.test_no_throw("state advancement is legal",
-                                          [&] { cs->advance_with_client_finished(th_client_finished); });
-
-                     result.confirm("can write application data", cs->can_encrypt_application_traffic());
-                     result.confirm("can read application data", cs->can_decrypt_application_traffic());
-                     result.confirm("doesn't need to expect unprotected alerts",
+             if(side == Connection_Side::Client) {
+                result.test_is_true("can read application data", cs->can_decrypt_application_traffic());
+                result.test_is_true("can not yet write application data", !cs->can_encrypt_application_traffic());
+                result.test_is_true("Clients don't expect unprotected alerts after server hello",
                                     !cs->must_expect_unprotected_alert_traffic());
-                     result.confirm("can export key material", cs->can_export_keys());
-                     result.test_eq("key export produces expected result",
-                                    cs->export_key(export_label, export_context, 16),
-                                    expected_key_export);
+             } else {
+                result.test_is_true("can not yet read application data", !cs->can_decrypt_application_traffic());
+                result.test_is_true("can write application data", cs->can_encrypt_application_traffic());
+                result.test_is_true("Servers must expect unprotected alerts in response to their first flight",
+                                    cs->must_expect_unprotected_alert_traffic());
+             }
 
-                     // decrypt "new session ticket" post-handshake message from server
-                     // (encrypted under the application traffic secret)
-                     encrypted_new_session_ticket.xxcrypt(result, cs, side);
+             // check the logged key material
+             result.test_sz_eq("contains expected number of keys", sl->secrets.size(), 5);
+             result.require("has client traffic secret", sl->secrets.contains("CLIENT_TRAFFIC_SECRET_0"));
+             result.require("has server traffic secret", sl->secrets.contains("SERVER_TRAFFIC_SECRET_0"));
+             result.require("has exporter secret", sl->secrets.contains("EXPORTER_SECRET"));
+             result.test_eq(
+                "client traffic secret (0)", sl->secrets.at("CLIENT_TRAFFIC_SECRET_0"), client_traffic_secret);
+             result.test_eq(
+                "server traffic secret (0)", sl->secrets.at("SERVER_TRAFFIC_SECRET_0"), server_traffic_secret);
 
-                     // encrypt application data by client
-                     encrypted_application_data_client.xxcrypt(result, cs, side);
+             // generate the MAC for the client Finished message
+             const auto expected_client_mac = Botan::hex_decode(
+                "a8 ec 43 6d 67 76 34 ae 52 5a c1 fc eb e1 1a 03"
+                "9e c1 76 94 fa c6 e9 85 27 b6 42 f2 ed d5 ce 61");
+             if(side == Connection_Side::Client) {
+                result.test_eq("generating the correct MAC for client finished",
+                               cs->finished_mac(th_server_finished),
+                               expected_client_mac);
+             } else {
+                result.test_is_true("verify the correct MAC for client finished",
+                                    cs->verify_peer_finished_mac(th_server_finished, expected_client_mac));
+             }
 
-                     // decrypt application data from server
-                     // (encrypted under the application traffic secret -- and a new sequence number)
-                     encrypted_application_data_server.xxcrypt(result, cs, side);
+             // encrypt client Finished message by client
+             // (under the client handshake traffic secret)
+             encrypted_client_finished_message.xxcrypt(result, cs, side);
 
-                     result.confirm("can export key material still", cs->can_export_keys());
-                     result.test_eq("key export result did not change",
-                                    cs->export_key(export_label, export_context, 16),
-                                    expected_key_export);
-                  }),
+             // advance Cipher_State with client_hello...client_Finished
+             // (allows generation of resumption PSKs)
+             result.test_no_throw("state advancement is legal",
+                                  [&] { cs->advance_with_client_finished(th_client_finished); });
+
+             result.test_is_true("can write application data", cs->can_encrypt_application_traffic());
+             result.test_is_true("can read application data", cs->can_decrypt_application_traffic());
+             result.test_is_true("doesn't need to expect unprotected alerts",
+                                 !cs->must_expect_unprotected_alert_traffic());
+             result.test_is_true("can export key material", cs->can_export_keys());
+             result.test_eq("key export produces expected result",
+                            cs->export_key(export_label, export_context, 16),
+                            expected_key_export);
+
+             // decrypt "new session ticket" post-handshake message from server
+             // (encrypted under the application traffic secret)
+             encrypted_new_session_ticket.xxcrypt(result, cs, side);
+
+             // encrypt application data by client
+             encrypted_application_data_client.xxcrypt(result, cs, side);
+
+             // decrypt application data from server
+             // (encrypted under the application traffic secret -- and a new sequence number)
+             encrypted_application_data_server.xxcrypt(result, cs, side);
+
+             result.test_is_true("can export key material still", cs->can_export_keys());
+             result.test_eq("key export result did not change",
+                            cs->export_key(export_label, export_context, 16),
+                            expected_key_export);
+          }),
 
        CHECK_both("ticket nonce counter counts",
                   [&](Cipher_State* cs, Journaling_Secret_Logger*, Connection_Side, Test::Result& result) {
@@ -499,18 +500,18 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
                                     sl->secrets.at("SERVER_TRAFFIC_SECRET_1"),
                                     updated_server_traffic_secret);
 
-                     result.confirm("can encrypt application traffic", cs->can_encrypt_application_traffic());
+                     result.test_is_true("can encrypt application traffic", cs->can_encrypt_application_traffic());
                   }),
 
        CHECK_both("cleanup", [&](Cipher_State* cs, Journaling_Secret_Logger*, Connection_Side, Test::Result& result) {
           // cleanup
           cs->clear_write_keys();
-          result.confirm("can no longer write application data", !cs->can_encrypt_application_traffic());
-          result.confirm("can still read application data", cs->can_decrypt_application_traffic());
+          result.test_is_true("can no longer write application data", !cs->can_encrypt_application_traffic());
+          result.test_is_true("can still read application data", cs->can_decrypt_application_traffic());
 
           cs->clear_read_keys();
-          result.confirm("can no longer write application data", !cs->can_encrypt_application_traffic());
-          result.confirm("can no longer read application data", !cs->can_decrypt_application_traffic());
+          result.test_is_true("can no longer write application data", !cs->can_encrypt_application_traffic());
+          result.test_is_true("can no longer read application data", !cs->can_decrypt_application_traffic());
        })});
 }
 
@@ -686,19 +687,20 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
                      result.test_eq("PSK binder is as expected", mac, expected_psk_binder);
                   }),
 
-       CHECK_both(
-          "ciphersuite compatibility",
-          [&](Cipher_State* cs, Journaling_Secret_Logger*, Connection_Side, Test::Result& result) {
-             result.confirm("self-compatibility", cs->is_compatible_with(cipher));
-             result.confirm("partially defined state is compatible with suites using the same hash",
-                            cs->is_compatible_with(Ciphersuite::from_name("CHACHA20_POLY1305_SHA256").value()) &&
-                               cs->is_compatible_with(Ciphersuite::from_name("AES_128_CCM_SHA256").value()) &&
-                               cs->is_compatible_with(Ciphersuite::from_name("AES_128_CCM_8_SHA256").value()));
+       CHECK_both("ciphersuite compatibility",
+                  [&](Cipher_State* cs, Journaling_Secret_Logger*, Connection_Side, Test::Result& result) {
+                     result.test_is_true("self-compatibility", cs->is_compatible_with(cipher));
+                     result.test_is_true(
+                        "partially defined state is compatible with suites using the same hash",
+                        cs->is_compatible_with(Ciphersuite::from_name("CHACHA20_POLY1305_SHA256").value()) &&
+                           cs->is_compatible_with(Ciphersuite::from_name("AES_128_CCM_SHA256").value()) &&
+                           cs->is_compatible_with(Ciphersuite::from_name("AES_128_CCM_8_SHA256").value()));
 
-             result.confirm("partially defined state is not compatible with other hashes or protocol versions",
-                            !cs->is_compatible_with(Ciphersuite::from_name("PSK_WITH_AES_128_GCM_SHA256").value()) &&
-                               !cs->is_compatible_with(Ciphersuite::from_name("AES_256_GCM_SHA384").value()));
-          }),
+                     result.test_is_true(
+                        "partially defined state is not compatible with other hashes or protocol versions",
+                        !cs->is_compatible_with(Ciphersuite::from_name("PSK_WITH_AES_128_GCM_SHA256").value()) &&
+                           !cs->is_compatible_with(Ciphersuite::from_name("AES_256_GCM_SHA384").value()));
+                  }),
 
        CHECK_both("calculate the early traffic secrets",
                   [&](Cipher_State* cs, Journaling_Secret_Logger* sl, Connection_Side side, Test::Result& result) {
@@ -709,10 +711,10 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
                                     early_expected_key_export);
 
                      if(side == Connection_Side::Client) {
-                        result.confirm("Clients must expect servers to respond with an unprotected alert",
-                                       cs->must_expect_unprotected_alert_traffic());
+                        result.test_is_true("Clients must expect servers to respond with an unprotected alert",
+                                            cs->must_expect_unprotected_alert_traffic());
                      } else {
-                        result.confirm(
+                        result.test_is_true(
                            "Servers do not expect clients to send alerts protected with the early data secret",
                            !cs->must_expect_unprotected_alert_traffic());
                      }
@@ -724,8 +726,8 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
 
                      // TODO: Once 0-RTT traffic is implemented this will likely allow handling of
                      //       application traffic in this state.
-                     result.confirm("can not yet write application data", !cs->can_encrypt_application_traffic());
-                     result.confirm("can not yet read application data", !cs->can_decrypt_application_traffic());
+                     result.test_is_true("can not yet write application data", !cs->can_encrypt_application_traffic());
+                     result.test_is_true("can not yet read application data", !cs->can_decrypt_application_traffic());
                   }),
 
        CHECK_both(
@@ -756,20 +758,20 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
                 "48 d3 e0 e1 b3 d9 07 c6 ac ff 14 5e 16 09 03 88"
                 "c7 7b 05 c0 50 b6 34 ab 1a 88 bb d0 dd 1a 34 b2");
              if(side == Connection_Side::Client) {
-                result.confirm("expecting the correct MAC for server finished",
-                               cs->verify_peer_finished_mac(th_pre_server_finished, expected_server_mac));
-                result.confirm("Clients don't expect unprotected alerts after server hello",
-                               !cs->must_expect_unprotected_alert_traffic());
+                result.test_is_true("expecting the correct MAC for server finished",
+                                    cs->verify_peer_finished_mac(th_pre_server_finished, expected_server_mac));
+                result.test_is_true("Clients don't expect unprotected alerts after server hello",
+                                    !cs->must_expect_unprotected_alert_traffic());
              } else {
                 result.test_eq("expecting the correct MAC for server finished",
                                cs->finished_mac(th_pre_server_finished),
                                expected_server_mac);
-                result.confirm("Servers must expect unprotected alerts in response to their server hello",
-                               cs->must_expect_unprotected_alert_traffic());
+                result.test_is_true("Servers must expect unprotected alerts in response to their server hello",
+                                    cs->must_expect_unprotected_alert_traffic());
              }
 
-             result.confirm("cannot read application data", !cs->can_decrypt_application_traffic());
-             result.confirm("cannot write application data", !cs->can_encrypt_application_traffic());
+             result.test_is_true("cannot read application data", !cs->can_decrypt_application_traffic());
+             result.test_is_true("cannot write application data", !cs->can_encrypt_application_traffic());
 
              // advance Cipher_State with client_hello...server_Finished
              // (allows receiving of application data, but no such sending)
@@ -777,15 +779,15 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
                                   [&] { cs->advance_with_server_finished(th_server_finished, *sl); });
 
              if(side == Connection_Side::Client) {
-                result.confirm("can read application data", cs->can_decrypt_application_traffic());
-                result.confirm("cannot write application data", !cs->can_encrypt_application_traffic());
-                result.confirm("Clients don't expect unprotected alerts after server hello",
-                               !cs->must_expect_unprotected_alert_traffic());
+                result.test_is_true("can read application data", cs->can_decrypt_application_traffic());
+                result.test_is_true("cannot write application data", !cs->can_encrypt_application_traffic());
+                result.test_is_true("Clients don't expect unprotected alerts after server hello",
+                                    !cs->must_expect_unprotected_alert_traffic());
              } else {
-                result.confirm("cannot read application data", !cs->can_decrypt_application_traffic());
-                result.confirm("can write application data", cs->can_encrypt_application_traffic());
-                result.confirm("Servers must expect unprotected alerts in response to their first flight",
-                               cs->must_expect_unprotected_alert_traffic());
+                result.test_is_true("cannot read application data", !cs->can_decrypt_application_traffic());
+                result.test_is_true("can write application data", cs->can_encrypt_application_traffic());
+                result.test_is_true("Servers must expect unprotected alerts in response to their first flight",
+                                    cs->must_expect_unprotected_alert_traffic());
              }
 
              // check the logged key material
@@ -806,8 +808,8 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
                                cs->finished_mac(th_end_of_early_data),
                                expected_client_mac);
              } else {
-                result.confirm("verify the correct MAC for client finished",
-                               cs->verify_peer_finished_mac(th_end_of_early_data, expected_client_mac));
+                result.test_is_true("verify the correct MAC for client finished",
+                                    cs->verify_peer_finished_mac(th_end_of_early_data, expected_client_mac));
              }
 
              // encrypt client Finished message by client
@@ -822,11 +824,11 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
                      result.test_no_throw("state advancement is legal",
                                           [&] { cs->advance_with_client_finished(th_client_finished); });
 
-                     result.confirm("can read application data", cs->can_decrypt_application_traffic());
-                     result.confirm("can write application data", cs->can_encrypt_application_traffic());
-                     result.confirm("doesn't need to expect unprotected alerts",
-                                    !cs->must_expect_unprotected_alert_traffic());
-                     result.confirm("can export key material", cs->can_export_keys());
+                     result.test_is_true("can read application data", cs->can_decrypt_application_traffic());
+                     result.test_is_true("can write application data", cs->can_encrypt_application_traffic());
+                     result.test_is_true("doesn't need to expect unprotected alerts",
+                                         !cs->must_expect_unprotected_alert_traffic());
+                     result.test_is_true("can export key material", cs->can_export_keys());
                      result.test_eq("key export produces expected result",
                                     cs->export_key(export_label, export_context, 16),
                                     expected_key_export);

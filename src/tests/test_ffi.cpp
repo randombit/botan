@@ -345,7 +345,7 @@ class FFI_Utils_Test final : public FFI_Test {
 
          std::vector<uint8_t> to_zero = {0xFF, 0xA0};
          TEST_FFI_OK(botan_scrub_mem, (to_zero.data(), to_zero.size()));
-         result.confirm("scrub_memory zeros", to_zero[0] == 0 && to_zero[1] == 0);
+         result.test_is_true("scrub_memory zeros", to_zero[0] == 0 && to_zero[1] == 0);
 
          const std::vector<uint8_t> bin = {0xAA, 0xDE, 0x01};
 
@@ -381,12 +381,12 @@ class FFI_RNG_Test final : public FFI_Test {
          REQUIRE_FFI_OK(botan_rng_init, (&null_rng, "null"));
 
          int rc = botan_rng_init(&hwrng_rng, "hwrng");
-         result.confirm("Either success or not implemented", rc == 0 || rc == BOTAN_FFI_ERROR_NOT_IMPLEMENTED);
+         result.test_is_true("Either success or not implemented", rc == 0 || rc == BOTAN_FFI_ERROR_NOT_IMPLEMENTED);
 
          std::vector<uint8_t> outbuf(512);
 
          rc = botan_rng_init(&rng, "user-threadsafe");
-         result.confirm("Either success or not implemented", rc == 0 || rc == BOTAN_FFI_ERROR_NOT_IMPLEMENTED);
+         result.test_is_true("Either success or not implemented", rc == 0 || rc == BOTAN_FFI_ERROR_NOT_IMPLEMENTED);
 
          if(rc != 0) {
             REQUIRE_FFI_OK(botan_rng_init, (&rng, "user"));
@@ -828,11 +828,11 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          result.test_sz_eq("Path length constraint", path_limit, 1);
 
          TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end2, &sub2, 1, &root, 1, nullptr, 0, nullptr, 0));
-         result.confirm("Validation test02 failed", rc == 5002);
+         result.test_is_true("Validation test02 failed", rc == 5002);
          result.test_eq("Validation test02 status string", botan_x509_cert_validation_status(rc), "Signature error");
 
          TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end2, nullptr, 0, &root, 1, nullptr, 0, nullptr, 0));
-         result.confirm("Validation test02 failed (missing int)", rc == 3000);
+         result.test_is_true("Validation test02 failed (missing int)", rc == 3000);
          result.test_eq(
             "Validation test02 status string", botan_x509_cert_validation_status(rc), "Certificate issuer not found");
 
@@ -843,19 +843,19 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
 
          const botan_x509_cert_t subs[2] = {sub2, sub7};
          TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end7, subs, 2, &root, 1, nullptr, 0, nullptr, 0));
-         result.confirm("Validation test07 failed with expected error", rc == 1001);
+         result.test_is_true("Validation test07 failed with expected error", rc == 1001);
          result.test_eq("Validation test07 status string",
                         botan_x509_cert_validation_status(rc),
                         "Hash function used is considered too weak for security");
 
          TEST_FFI_RC(0, botan_x509_cert_verify, (&rc, end7, subs, 2, &root, 1, nullptr, 80, nullptr, 0));
-         result.confirm("Validation test07 passed", rc == 0);
+         result.test_is_true("Validation test07 passed", rc == 0);
          result.test_eq("Validation test07 status string", botan_x509_cert_validation_status(rc), "Verified");
 
          TEST_FFI_RC(1,
                      botan_x509_cert_verify_with_crl,
                      (&rc, end7, subs, 2, nullptr, 0, nullptr, 0, "x509/farce", 0, nullptr, 0));
-         result.confirm("Validation test07 failed with expected error", rc == 3000);
+         result.test_is_true("Validation test07 failed with expected error", rc == 3000);
          result.test_eq(
             "Validation test07 status string", botan_x509_cert_validation_status(rc), "Certificate issuer not found");
 
@@ -864,7 +864,7 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          REQUIRE_FFI_OK(botan_x509_crl_load_file, (&rootcrl, Test::data_file("x509/nist/root.crl").c_str()));
          TEST_FFI_RC(
             0, botan_x509_cert_verify_with_crl, (&rc, end7, subs, 2, &root, 1, &rootcrl, 1, nullptr, 80, nullptr, 0));
-         result.confirm("Validation test07 with CRL passed", rc == 0);
+         result.test_is_true("Validation test07 with CRL passed", rc == 0);
          result.test_eq("Validation test07 with CRL status string", botan_x509_cert_validation_status(rc), "Verified");
 
          botan_x509_cert_t end20;
@@ -876,7 +876,7 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          const botan_x509_crl_t crls[2] = {sub20crl, rootcrl};
          TEST_FFI_RC(
             1, botan_x509_cert_verify_with_crl, (&rc, end20, &sub20, 1, &root, 1, crls, 2, nullptr, 80, nullptr, 0));
-         result.confirm("Validation test20 failed with expected error", rc == 5000);
+         result.test_is_true("Validation test20 failed with expected error", rc == 5000);
          result.test_eq(
             "Validation test20 status string", botan_x509_cert_validation_status(rc), "Certificate is revoked");
 
@@ -922,11 +922,11 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             uint64_t not_before = 0;
             TEST_FFI_OK(botan_x509_cert_not_before, (cert, &not_before));
-            result.confirm("cert not before", not_before == 1599177600);
+            result.test_is_true("cert not before", not_before == 1599177600);
 
             uint64_t not_after = 0;
             TEST_FFI_OK(botan_x509_cert_not_after, (cert, &not_after));
-            result.confirm("cert not after", not_after == 2231510400);
+            result.test_is_true("cert not after", not_after == 2231510400);
 
             size_t serial_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
@@ -1194,7 +1194,7 @@ class FFI_Cert_AlternativeNames_Test final : public FFI_Test {
          botan_x509_general_name_t nil = nullptr;
          TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE, botan_x509_cert_subject_alternative_names, (cert_none, 0, &nil));
          TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE, botan_x509_cert_issuer_alternative_names, (cert_none, 0, &nil));
-         result.confirm("no general name created", nil == nullptr);
+         result.test_is_true("no general name created", nil == nullptr);
 
          botan_x509_cert_t cert;
          if(!TEST_FFI_INIT(botan_x509_cert_load_file,
@@ -1208,23 +1208,23 @@ class FFI_Cert_AlternativeNames_Test final : public FFI_Test {
          const auto san_email =
             read_string_alternative_names(result, cert, get_san, count_san, BOTAN_X509_EMAIL_ADDRESS);
          result.test_sz_eq("expected number of emails in SAN", san_email.size(), 2);
-         result.confirm("testing@x509-labs.com", Botan::value_exists(san_email, "testing@x509-labs.com"));
-         result.confirm("info@x509-labs.com", Botan::value_exists(san_email, "info@x509-labs.com"));
+         result.test_is_true("testing@x509-labs.com", Botan::value_exists(san_email, "testing@x509-labs.com"));
+         result.test_is_true("info@x509-labs.com", Botan::value_exists(san_email, "info@x509-labs.com"));
 
          const auto san_dns = read_string_alternative_names(result, cert, get_san, count_san, BOTAN_X509_DNS_NAME);
          result.test_sz_eq("expected number of hostnames in SAN", san_dns.size(), 3);
-         result.confirm("test.x509-labs.com", Botan::value_exists(san_dns, "test.x509-labs.com"));
-         result.confirm("versuch.x509-labs.com", Botan::value_exists(san_dns, "versuch.x509-labs.com"));
-         result.confirm("trail.x509-labs.com", Botan::value_exists(san_dns, "trail.x509-labs.com"));
+         result.test_is_true("test.x509-labs.com", Botan::value_exists(san_dns, "test.x509-labs.com"));
+         result.test_is_true("versuch.x509-labs.com", Botan::value_exists(san_dns, "versuch.x509-labs.com"));
+         result.test_is_true("trail.x509-labs.com", Botan::value_exists(san_dns, "trail.x509-labs.com"));
 
          const auto san_uri = read_string_alternative_names(result, cert, get_san, count_san, BOTAN_X509_URI);
          result.test_sz_eq("expected number of URIs in SAN", san_uri.size(), 2);
-         result.confirm("https://x509-labs.com", Botan::value_exists(san_uri, "https://x509-labs.com"));
-         result.confirm("http://x509-labs.com", Botan::value_exists(san_uri, "http://x509-labs.com"));
+         result.test_is_true("https://x509-labs.com", Botan::value_exists(san_uri, "https://x509-labs.com"));
+         result.test_is_true("http://x509-labs.com", Botan::value_exists(san_uri, "http://x509-labs.com"));
 
          const auto san_ip4 = read_string_alternative_names(result, cert, get_san, count_san, BOTAN_X509_IP_ADDRESS);
          result.test_sz_eq("expected number of IPv4 addresses", san_ip4.size(), 1);
-         result.confirm("127.0.0.1", Botan::value_exists(san_ip4, "127.0.0.1"));
+         result.test_is_true("127.0.0.1", Botan::value_exists(san_ip4, "127.0.0.1"));
          const auto san_ip4_bin =
             read_binary_alternative_names(result, cert, get_san, count_san, BOTAN_X509_IP_ADDRESS);
          result.test_sz_eq("expected number of IPv4 addresses (bin)", san_ip4_bin.size(), 1);
@@ -1234,9 +1234,9 @@ class FFI_Cert_AlternativeNames_Test final : public FFI_Test {
             read_binary_alternative_names(result, cert, get_san, count_san, BOTAN_X509_DIRECTORY_NAME);
          result.test_sz_eq("expected number of DNs in SAN", san_dn_bytes.size(), 3);
          const auto san_dn_cns = read_common_names(san_dn_bytes);
-         result.confirm("First Name", Botan::value_exists(san_dn_cns, "First Name"));
-         result.confirm("Middle Name", Botan::value_exists(san_dn_cns, "Middle Name"));
-         result.confirm("Last Name", Botan::value_exists(san_dn_cns, "Last Name"));
+         result.test_is_true("First Name", Botan::value_exists(san_dn_cns, "First Name"));
+         result.test_is_true("Middle Name", Botan::value_exists(san_dn_cns, "Middle Name"));
+         result.test_is_true("Last Name", Botan::value_exists(san_dn_cns, "Last Name"));
 
          auto get_ian = botan_x509_cert_issuer_alternative_names;
          auto count_ian = botan_x509_cert_issuer_alternative_names_count;
@@ -1247,18 +1247,18 @@ class FFI_Cert_AlternativeNames_Test final : public FFI_Test {
 
          const auto ian_dns = read_string_alternative_names(result, cert, get_ian, count_ian, BOTAN_X509_DNS_NAME);
          result.test_sz_eq("expected number of hostnames in IAN", ian_dns.size(), 3);
-         result.confirm("test.x509-labs-ca.com", Botan::value_exists(ian_dns, "test.x509-labs-ca.com"));
-         result.confirm("versuch.x509-labs-ca.com", Botan::value_exists(ian_dns, "versuch.x509-labs-ca.com"));
-         result.confirm("trail.x509-labs-ca.com", Botan::value_exists(ian_dns, "trail.x509-labs-ca.com"));
+         result.test_is_true("test.x509-labs-ca.com", Botan::value_exists(ian_dns, "test.x509-labs-ca.com"));
+         result.test_is_true("versuch.x509-labs-ca.com", Botan::value_exists(ian_dns, "versuch.x509-labs-ca.com"));
+         result.test_is_true("trail.x509-labs-ca.com", Botan::value_exists(ian_dns, "trail.x509-labs-ca.com"));
 
          const auto ian_uri = read_string_alternative_names(result, cert, get_ian, count_ian, BOTAN_X509_URI);
          result.test_sz_eq("expected number of URIs in IAN", ian_uri.size(), 2);
-         result.confirm("https://x509-labs-ca.com", Botan::value_exists(ian_uri, "https://x509-labs-ca.com"));
-         result.confirm("http://x509-labs-ca.com", Botan::value_exists(ian_uri, "http://x509-labs-ca.com"));
+         result.test_is_true("https://x509-labs-ca.com", Botan::value_exists(ian_uri, "https://x509-labs-ca.com"));
+         result.test_is_true("http://x509-labs-ca.com", Botan::value_exists(ian_uri, "http://x509-labs-ca.com"));
 
          const auto ian_ip4 = read_string_alternative_names(result, cert, get_ian, count_ian, BOTAN_X509_IP_ADDRESS);
          result.test_sz_eq("expected number of IPv4 addresses", ian_ip4.size(), 1);
-         result.confirm("192.168.1.1", Botan::value_exists(ian_ip4, "192.168.1.1"));
+         result.test_is_true("192.168.1.1", Botan::value_exists(ian_ip4, "192.168.1.1"));
          const auto ian_ip4_bin =
             read_binary_alternative_names(result, cert, get_ian, count_ian, BOTAN_X509_IP_ADDRESS);
          result.test_sz_eq("expected number of IPv4 addresses (bin)", ian_ip4_bin.size(), 1);
@@ -1268,9 +1268,9 @@ class FFI_Cert_AlternativeNames_Test final : public FFI_Test {
             read_binary_alternative_names(result, cert, get_ian, count_ian, BOTAN_X509_DIRECTORY_NAME);
          result.test_sz_eq("expected number of DNs in IAN", ian_dn_bytes.size(), 3);
          const auto ian_dn_cns = read_common_names(ian_dn_bytes);
-         result.confirm("First CA", Botan::value_exists(ian_dn_cns, "First CA"));
-         result.confirm("Middle CA", Botan::value_exists(ian_dn_cns, "Middle CA"));
-         result.confirm("Last CA", Botan::value_exists(ian_dn_cns, "Last CA"));
+         result.test_is_true("First CA", Botan::value_exists(ian_dn_cns, "First CA"));
+         result.test_is_true("Middle CA", Botan::value_exists(ian_dn_cns, "Middle CA"));
+         result.test_is_true("Last CA", Botan::value_exists(ian_dn_cns, "Last CA"));
 
          TEST_FFI_OK(botan_x509_cert_destroy, (cert));
          TEST_FFI_OK(botan_x509_cert_destroy, (cert_none));
@@ -1357,13 +1357,14 @@ class FFI_Cert_NameConstraints_Test final : public FFI_Test {
          result.test_sz_eq("exclusions", excluded.size(), 1);
 
          using V = decltype(permitted)::value_type;
-         result.confirm("email", Botan::value_exists(permitted, V{BOTAN_X509_EMAIL_ADDRESS, "pec.aruba.it"}));
-         result.confirm("DNS", Botan::value_exists(permitted, V{BOTAN_X509_DNS_NAME, "gov.it"}));
-         result.confirm("DN",
-                        Botan::value_exists(permitted,
-                                            V{BOTAN_X509_DIRECTORY_NAME,
-                                              R"(C="IT",X520.State="Roma",X520.Locality="Roma",O="Sogei S.p.A.")"}));
-         result.confirm("IP", Botan::value_exists(excluded, V{BOTAN_X509_IP_ADDRESS, "0.0.0.0/0.0.0.0"}));
+         result.test_is_true("email", Botan::value_exists(permitted, V{BOTAN_X509_EMAIL_ADDRESS, "pec.aruba.it"}));
+         result.test_is_true("DNS", Botan::value_exists(permitted, V{BOTAN_X509_DNS_NAME, "gov.it"}));
+         result.test_is_true(
+            "DN",
+            Botan::value_exists(
+               permitted,
+               V{BOTAN_X509_DIRECTORY_NAME, R"(C="IT",X520.State="Roma",X520.Locality="Roma",O="Sogei S.p.A.")"}));
+         result.test_is_true("IP", Botan::value_exists(excluded, V{BOTAN_X509_IP_ADDRESS, "0.0.0.0/0.0.0.0"}));
 
          // below are more generic general_name_t tests
 
@@ -2638,13 +2639,13 @@ class FFI_ErrorHandling_Test final : public FFI_Test {
          std::set<std::string> errors;
          for(int i = -100; i != 50; ++i) {
             const char* err = botan_error_description(i);
-            result.confirm("Never a null pointer", err != nullptr);
+            result.test_is_true("Never a null pointer", err != nullptr);
 
             if(err != nullptr) {
                const std::string s(err);
 
                if(s != "Unknown error") {
-                  result.confirm("No duplicate messages", !errors.contains(s));
+                  result.test_is_true("No duplicate messages", !errors.contains(s));
                   errors.insert(s);
                }
             }
@@ -2769,10 +2770,10 @@ class FFI_MP_Test final : public FFI_Test {
             botan_mp_init(&zero);
             int cmp;
             TEST_FFI_OK(botan_mp_cmp, (&cmp, x, zero));
-            result.confirm("bigint_mp_cmp(+, 0)", cmp == 1);
+            result.test_is_true("bigint_mp_cmp(+, 0)", cmp == 1);
 
             TEST_FFI_OK(botan_mp_cmp, (&cmp, zero, x));
-            result.confirm("bigint_mp_cmp(0, +)", cmp == -1);
+            result.test_is_true("bigint_mp_cmp(0, +)", cmp == -1);
 
             TEST_FFI_RC(0, botan_mp_is_negative, (x));
             TEST_FFI_RC(1, botan_mp_is_positive, (x));
@@ -2788,16 +2789,16 @@ class FFI_MP_Test final : public FFI_Test {
             TEST_FFI_RC(1, botan_mp_is_positive, (zero));
 
             TEST_FFI_OK(botan_mp_cmp, (&cmp, x, zero));
-            result.confirm("bigint_mp_cmp(-, 0)", cmp == -1);
+            result.test_is_true("bigint_mp_cmp(-, 0)", cmp == -1);
 
             TEST_FFI_OK(botan_mp_cmp, (&cmp, zero, x));
-            result.confirm("bigint_mp_cmp(0, -)", cmp == 1);
+            result.test_is_true("bigint_mp_cmp(0, -)", cmp == 1);
 
             TEST_FFI_OK(botan_mp_cmp, (&cmp, zero, zero));
-            result.confirm("bigint_mp_cmp(0, 0)", cmp == 0);
+            result.test_is_true("bigint_mp_cmp(0, 0)", cmp == 0);
 
             TEST_FFI_OK(botan_mp_cmp, (&cmp, x, x));
-            result.confirm("bigint_mp_cmp(x, x)", cmp == 0);
+            result.test_is_true("bigint_mp_cmp(x, x)", cmp == 0);
 
             TEST_FFI_OK(botan_mp_flip_sign, (x));
 
@@ -3012,10 +3013,10 @@ class FFI_TOTP_Test final : public FFI_Test {
 
          uint32_t code;
          TEST_FFI_OK(botan_totp_generate, (totp, &code, 59));
-         result.confirm("TOTP code", code == 94287082);
+         result.test_is_true("TOTP code", code == 94287082);
 
          TEST_FFI_OK(botan_totp_generate, (totp, &code, 1111111109));
-         result.confirm("TOTP code 2", code == 7081804);
+         result.test_is_true("TOTP code 2", code == 7081804);
 
          TEST_FFI_OK(botan_totp_check, (totp, 94287082, 59 + 60, 60));
          TEST_FFI_RC(1, botan_totp_check, (totp, 94287082, 59 + 31, 1));
@@ -3041,22 +3042,22 @@ class FFI_HOTP_Test final : public FFI_Test {
          }
 
          TEST_FFI_OK(botan_hotp_generate, (hotp, &hotp_val, 0));
-         result.confirm("Valid value for counter 0", hotp_val == 755224);
+         result.test_is_true("Valid value for counter 0", hotp_val == 755224);
          TEST_FFI_OK(botan_hotp_generate, (hotp, &hotp_val, 1));
-         result.confirm("Valid value for counter 0", hotp_val == 287082);
+         result.test_is_true("Valid value for counter 0", hotp_val == 287082);
          TEST_FFI_OK(botan_hotp_generate, (hotp, &hotp_val, 2));
-         result.confirm("Valid value for counter 0", hotp_val == 359152);
+         result.test_is_true("Valid value for counter 0", hotp_val == 359152);
          TEST_FFI_OK(botan_hotp_generate, (hotp, &hotp_val, 0));
-         result.confirm("Valid value for counter 0", hotp_val == 755224);
+         result.test_is_true("Valid value for counter 0", hotp_val == 755224);
 
          uint64_t next_ctr = 0;
 
          TEST_FFI_OK(botan_hotp_check, (hotp, &next_ctr, 755224, 0, 0));
-         result.confirm("HOTP resync", next_ctr == 1);
+         result.test_is_true("HOTP resync", next_ctr == 1);
          TEST_FFI_OK(botan_hotp_check, (hotp, nullptr, 359152, 2, 0));
          TEST_FFI_RC(1, botan_hotp_check, (hotp, nullptr, 359152, 1, 0));
          TEST_FFI_OK(botan_hotp_check, (hotp, &next_ctr, 359152, 0, 2));
-         result.confirm("HOTP resync", next_ctr == 3);
+         result.test_is_true("HOTP resync", next_ctr == 3);
 
          TEST_FFI_OK(botan_hotp_destroy, (hotp));
       }
@@ -3106,11 +3107,11 @@ class FFI_XMSS_Test final : public FFI_Test {
 
             int stateful;
             TEST_FFI_OK(botan_privkey_stateful_operation, (priv, &stateful));
-            result.confirm("key is stateful", stateful == 1, true);
+            result.test_is_true("key is stateful", stateful == 1);
 
             uint64_t remaining;
             TEST_FFI_OK(botan_privkey_remaining_operations, (priv, &remaining));
-            result.confirm("key has remaining operations", remaining == 1024, true);
+            result.test_is_true("key has remaining operations", remaining == 1024);
 
             TEST_FFI_OK(botan_privkey_destroy, (priv));
          }
@@ -3129,7 +3130,7 @@ class FFI_RSA_Test final : public FFI_Test {
 
             int stateful;
             TEST_FFI_OK(botan_privkey_stateful_operation, (priv, &stateful));
-            result.confirm("key is not stateful", stateful == 1, false);
+            result.test_is_true("key is not stateful", stateful == 0);
 
             uint64_t remaining;
             TEST_FFI_FAIL("key is not stateful", botan_privkey_remaining_operations, (priv, &remaining));
@@ -4166,8 +4167,9 @@ class FFI_KEM_Roundtrip_Test : public FFI_Test {
                          &ciphertext_length_out));
 
             // TODO: should this report both lengths for usage convenience?
-            result.confirm("at least one buffer length is reported",
-                           shared_key_length_out == shared_key_length || ciphertext_length_out == ciphertext_length);
+            result.test_is_true(
+               "at least one buffer length is reported",
+               shared_key_length_out == shared_key_length || ciphertext_length_out == ciphertext_length);
 
             // allocate buffers (with additional space) and perform the actual encryption
             shared_key_length_out = shared_key_length * 2;
@@ -4779,13 +4781,13 @@ class FFI_DH_Test final : public FFI_Test {
          int cmp;
 
          TEST_FFI_OK(botan_mp_cmp, (&cmp, loaded_public_g, public_g));
-         result.confirm("bigint_mp_cmp(g, g)", cmp == 0);
+         result.test_is_true("bigint_mp_cmp(g, g)", cmp == 0);
 
          TEST_FFI_OK(botan_mp_cmp, (&cmp, loaded_public_p, public_p));
-         result.confirm("bigint_mp_cmp(p, p)", cmp == 0);
+         result.test_is_true("bigint_mp_cmp(p, p)", cmp == 0);
 
          TEST_FFI_OK(botan_mp_cmp, (&cmp, loaded_public_y, public_y));
-         result.confirm("bigint_mp_cmp(y, y)", cmp == 0);
+         result.test_is_true("bigint_mp_cmp(y, y)", cmp == 0);
 
          botan_pk_op_ka_t ka1;
          REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka1, loaded_privkey1, "Raw", 0));
@@ -4877,13 +4879,13 @@ class FFI_OID_Test final : public FFI_Test {
          int res;
 
          TEST_FFI_OK(botan_oid_cmp, (&res, oid_a, oid_b));
-         result.confirm("oid_a and oid_b are equal", res == 0);
+         result.test_is_true("oid_a and oid_b are equal", res == 0);
 
          TEST_FFI_OK(botan_oid_cmp, (&res, oid_a, oid_c));
-         result.confirm("oid_a is bigger", res == 1);
+         result.test_is_true("oid_a is bigger", res == 1);
 
          TEST_FFI_OK(botan_oid_cmp, (&res, oid_c, oid_a));
-         result.confirm("oid_c is smaller", res == -1);
+         result.test_is_true("oid_c is smaller", res == -1);
 
          TEST_FFI_OK(botan_oid_destroy, (oid));
          TEST_FFI_OK(botan_oid_destroy, (new_oid));
@@ -4950,10 +4952,10 @@ class FFI_EC_Group_Test final : public FFI_Test {
          int named_group;
          TEST_FFI_OK(botan_ec_group_supports_application_specific_group, (&appl_spec_groups));
          TEST_FFI_OK(botan_ec_group_supports_named_group, ("secp256r1", &named_group));
-         result.confirm("application specific groups support matches build",
-                        appl_spec_groups == 1,
-                        Botan::EC_Group::supports_application_specific_group());
-         result.confirm(
+         result.test_bool_eq("application specific groups support matches build",
+                             appl_spec_groups == 1,
+                             Botan::EC_Group::supports_application_specific_group());
+         result.test_bool_eq(
             "named group support matches build", named_group == 1, Botan::EC_Group::supports_named_group("secp256r1"));
 
          if(named_group == 1) {

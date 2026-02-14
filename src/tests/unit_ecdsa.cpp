@@ -66,7 +66,7 @@ Test::Result test_decode_ver_link_SHA256() {
          const Botan::X509_Certificate link_cert(Test::data_file("x509/ecc/link_SHA256.cer"));
 
          auto pubkey = root_cert.subject_public_key();
-         result.confirm("verified self-signed signature", link_cert.check_signature(*pubkey));
+         result.test_is_true("verified self-signed signature", link_cert.check_signature(*pubkey));
       } catch(Botan::Exception& e) {
          result.test_failure(e.what());
       }
@@ -88,11 +88,11 @@ Test::Result test_decode_ver_link_SHA1() {
          auto sha1 = Botan::HashFunction::create("SHA-1");
 
          if(!sha1) {
-            result.confirm("verification of self-signed signature failed due to missing SHA-1",
-                           !link_cert.check_signature(*pubkey));
+            result.test_is_true("verification of self-signed signature failed due to missing SHA-1",
+                                !link_cert.check_signature(*pubkey));
             return result;
          }
-         result.confirm("verified self-signed signature", link_cert.check_signature(*pubkey));
+         result.test_is_true("verified self-signed signature", link_cert.check_signature(*pubkey));
       } catch(Botan::Exception& e) {
          result.test_failure(e.what());
       }
@@ -112,20 +112,20 @@ Test::Result test_encoding_options() {
          const auto group = Botan::EC_Group::from_name(group_id);
          Botan::ECDSA_PrivateKey key(*rng, group);
 
-         result.confirm("Default encoding is uncompressed",
-                        key.point_encoding() == Botan::EC_Point_Format::Uncompressed);
+         result.test_is_true("Default encoding is uncompressed",
+                             key.point_encoding() == Botan::EC_Point_Format::Uncompressed);
 
          const std::vector<uint8_t> enc_uncompressed = key.public_key_bits();
          key.set_point_encoding(Botan::EC_Point_Format::Compressed);
 
-         result.confirm("set_point_encoding works", key.point_encoding() == Botan::EC_Point_Format::Compressed);
+         result.test_is_true("set_point_encoding works", key.point_encoding() == Botan::EC_Point_Format::Compressed);
 
          const std::vector<uint8_t> enc_compressed = key.public_key_bits();
          result.test_sz_lt("Compressed points are smaller", enc_compressed.size(), enc_uncompressed.size());
          const size_t size_diff = enc_uncompressed.size() - enc_compressed.size();
          result.test_sz_gte("Compressed points smaller by group size", size_diff, group.get_p_bytes());
          key.set_point_encoding(Botan::EC_Point_Format::Hybrid);
-         result.confirm("set_point_encoding works", key.point_encoding() == Botan::EC_Point_Format::Hybrid);
+         result.test_is_true("set_point_encoding works", key.point_encoding() == Botan::EC_Point_Format::Hybrid);
          const std::vector<uint8_t> enc_hybrid = key.public_key_bits();
          result.test_sz_eq("Hybrid point same size as uncompressed", enc_uncompressed.size(), enc_hybrid.size());
       }
@@ -146,9 +146,9 @@ Test::Result test_ecc_key_with_rfc5915_extensions() {
          Botan::DataSource_Stream key_stream(Test::data_file("x509/ecc/ecc_private_with_rfc5915_ext.pem"));
          auto pkcs8 = Botan::PKCS8::load_key(key_stream);
 
-         result.confirm("loaded RFC 5915 key", pkcs8 != nullptr);
+         result.test_is_true("loaded RFC 5915 key", pkcs8 != nullptr);
          result.test_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
-         result.confirm("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()) != nullptr);
+         result.test_is_true("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()) != nullptr);
       }
    } catch(std::exception& e) {
       result.test_failure("load_rfc5915_ext", e.what());
@@ -165,9 +165,9 @@ Test::Result test_ecc_key_with_rfc5915_parameters() {
          Botan::DataSource_Stream key_stream(Test::data_file("x509/ecc/ecc_private_with_rfc5915_parameters.pem"));
          auto pkcs8 = Botan::PKCS8::load_key(key_stream);
 
-         result.confirm("loaded RFC 5915 key", pkcs8 != nullptr);
+         result.test_is_true("loaded RFC 5915 key", pkcs8 != nullptr);
          result.test_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
-         result.confirm("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()) != nullptr);
+         result.test_is_true("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()) != nullptr);
       }
    } catch(std::exception& e) {
       result.test_failure("load_rfc5915_params", e.what());

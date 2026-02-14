@@ -203,7 +203,7 @@ class Result_Wrapper {
          }
       }
 
-      void confirm(const std::string& msg, bool condition) { m_result.confirm(msg, condition); }
+      void test_is_true(const std::string& msg, bool condition) { m_result.test_is_true(msg, condition); }
 
       void test_failure(const std::string& msg) { m_result.test_failure(msg); }
 
@@ -518,7 +518,7 @@ class Test_Conversation : public TestBase,
                                   std::bind(&Client::received_zero_byte, client().get(), _1, _2),
                                   std::bind(test_case, shared_from_this(), _1));
             result().expect_success("receive_response", ec);
-            result().confirm("correct message", client()->message() == message);
+            result().test_is_true("correct message", client()->message() == message);
 
             client()->reset_timeout("shutdown");
             yield client()->stream().async_shutdown(std::bind(test_case, shared_from_this(), _1));
@@ -526,7 +526,7 @@ class Test_Conversation : public TestBase,
 
             client()->reset_timeout("await close_notify");
             yield net::async_read(client()->stream(), client()->buffer(), std::bind(test_case, shared_from_this(), _1));
-            result().confirm("received close_notify", client()->stream().shutdown_received());
+            result().test_is_true("received close_notify", client()->stream().shutdown_received());
             result().expect_ec("closed with EOF", net::error::eof, ec);
 
             teardown();
@@ -560,13 +560,13 @@ class Test_Conversation_Sync : public Synchronous_Test {
          net::read(
             client()->stream(), client()->buffer(), std::bind(&Client::received_zero_byte, client().get(), _1, _2), ec);
          result().expect_success("receive_response", ec);
-         result().confirm("correct message", client()->message() == message);
+         result().test_is_true("correct message", client()->message() == message);
 
          client()->stream().shutdown(ec);
          result().expect_success("shutdown", ec);
 
          net::read(client()->stream(), client()->buffer(), ec);
-         result().confirm("received close_notify", client()->stream().shutdown_received());
+         result().test_is_true("received close_notify", client()->stream().shutdown_received());
          result().expect_ec("closed with EOF", net::error::eof, ec);
 
          teardown();
@@ -605,7 +605,7 @@ class Test_Eager_Close : public TestBase,
             result().expect_success("shutdown", ec);
 
             client()->close_socket();
-            result().confirm("did not receive close_notify", !client()->stream().shutdown_received());
+            result().test_is_true("did not receive close_notify", !client()->stream().shutdown_received());
 
             teardown();
          }
@@ -633,7 +633,7 @@ class Test_Eager_Close_Sync : public Synchronous_Test {
          result().expect_success("shutdown", ec);
 
          client()->close_socket();
-         result().confirm("did not receive close_notify", !client()->stream().shutdown_received());
+         result().test_is_true("did not receive close_notify", !client()->stream().shutdown_received());
 
          teardown();
       }
@@ -682,7 +682,7 @@ class Test_Close_Without_Shutdown : public TestBase,
             result().expect_success("receive_response", ec);
 
             client()->close_socket();
-            result().confirm("did not receive close_notify", !client()->stream().shutdown_received());
+            result().test_is_true("did not receive close_notify", !client()->stream().shutdown_received());
 
             teardown();
          }
@@ -708,7 +708,7 @@ class Test_Close_Without_Shutdown_Sync : public Synchronous_Test {
          server()->expect_short_read();
 
          client()->close_socket();
-         result().confirm("did not receive close_notify", !client()->stream().shutdown_received());
+         result().test_is_true("did not receive close_notify", !client()->stream().shutdown_received());
 
          teardown();
       }
@@ -754,7 +754,7 @@ class Test_No_Shutdown_Response : public TestBase,
             client()->reset_timeout("read close_notify");
             yield net::async_read(client()->stream(), client()->buffer(), std::bind(test_case, shared_from_this(), _1));
             result().expect_ec("read gives EOF", net::error::eof, ec);
-            result().confirm("received close_notify", client()->stream().shutdown_received());
+            result().test_is_true("received close_notify", client()->stream().shutdown_received());
 
             // close the socket rather than shutting down
             client()->close_socket();
@@ -788,7 +788,7 @@ class Test_No_Shutdown_Response_Sync : public Synchronous_Test {
 
          net::read(client()->stream(), client()->buffer(), ec);
          result().expect_ec("read gives EOF", net::error::eof, ec);
-         result().confirm("received close_notify", client()->stream().shutdown_received());
+         result().test_is_true("received close_notify", client()->stream().shutdown_received());
 
          // close the socket rather than shutting down
          client()->close_socket();

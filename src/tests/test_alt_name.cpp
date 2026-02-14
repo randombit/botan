@@ -74,17 +74,17 @@ class X509_Alt_Name_Tests final : public Test {
 
          result.test_sz_eq("Expected number of domains", recoded.dns().size(), dns_names.size());
          for(const auto& name : dns_names) {
-            result.confirm("Has expected DNS name", recoded.dns().contains(name));
+            result.test_is_true("Has expected DNS name", recoded.dns().contains(name));
          }
 
          result.test_sz_eq("Expected number of URIs", recoded.uris().size(), uri_names.size());
          for(const auto& name : uri_names) {
-            result.confirm("Has expected URI name", recoded.uris().contains(name));
+            result.test_is_true("Has expected URI name", recoded.uris().contains(name));
          }
 
          result.test_sz_eq("Expected number of email", recoded.email().size(), email_names.size());
          for(const auto& name : email_names) {
-            result.confirm("Has expected email name", recoded.email().contains(name));
+            result.test_is_true("Has expected email name", recoded.email().contains(name));
          }
 
          result.test_sz_eq("Expected number of DNs", recoded.directory_names().size(), 2);

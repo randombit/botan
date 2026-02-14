@@ -160,7 +160,7 @@ class X509test_Path_Validation_Tests final : public Test {
 
             result.test_eq("test " + filename, path_result.result_string(), expected_result);
             result.test_eq("test no warnings string", path_result.warnings_string(), "");
-            result.confirm("test no warnings", path_result.no_warnings());
+            result.test_is_true("test no warnings", path_result.no_warnings());
             result.end_timer();
             results.push_back(result);
          }
@@ -193,11 +193,11 @@ class X509test_Path_Validation_Tests final : public Test {
             }
 
             // certificate verification succeed even if no OCSP URL (softfail)
-            result.confirm("test success", path_result.successful_validation());
+            result.test_is_true("test success", path_result.successful_validation());
             result.test_eq("test " + filename, path_result.result_string(), "Verified");
       #if defined(BOTAN_TARGET_OS_HAS_THREADS) && defined(BOTAN_HAS_HTTP_UTIL)
             // if softfail, there is warnings
-            result.confirm("test warnings", !path_result.no_warnings());
+            result.test_is_true("test warnings", !path_result.no_warnings());
             result.test_eq("test warnings string", path_result.warnings_string(), "[0] OCSP URL not available");
       #endif
             result.end_timer();
@@ -686,12 +686,12 @@ class Root_Cert_Time_Check_Test final : public Test {
             result.test_is_eq(descr_str, validation_result.result(), exp_status);
             const auto warnings = validation_result.warnings();
             BOTAN_ASSERT_NOMSG(warnings.size() == 2);
-            result.confirm("No warning for leaf cert", warnings.at(0).empty());
+            result.test_is_true("No warning for leaf cert", warnings.at(0).empty());
             if(exp_warning) {
-               result.confirm("Warning for root cert",
-                              warnings.at(1).size() == 1 && warnings.at(1).contains(*exp_warning));
+               result.test_is_true("Warning for root cert",
+                                   warnings.at(1).size() == 1 && warnings.at(1).contains(*exp_warning));
             } else {
-               result.confirm("No warning for root cert", warnings.at(1).empty());
+               result.test_is_true("No warning for root cert", warnings.at(1).empty());
             }
          };
          // (Trusted) root cert validity range: 2022-2028
@@ -1170,9 +1170,9 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                                                                std::chrono::milliseconds(0),
                                                                {ocsp});
 
-            return result.confirm(std::string("Status: '") + Botan::to_string(expected) + "' should match '" +
-                                     Botan::to_string(path_result.result()) + "'",
-                                  path_result.result() == expected);
+            return result.test_is_true(std::string("Status: '") + Botan::to_string(expected) + "' should match '" +
+                                          Botan::to_string(path_result.result()) + "'",
+                                       path_result.result() == expected);
          };
 
          check_path(Botan::calendar_point(2016, 11, 11, 12, 30, 0).to_std_timepoint(),
@@ -1213,9 +1213,9 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                                                                std::chrono::milliseconds(0),
                                                                {ocsp});
 
-            return result.confirm(std::string("Status: '") + Botan::to_string(expected) + "' should match '" +
-                                     Botan::to_string(path_result.result()) + "'",
-                                  path_result.result() == expected);
+            return result.test_is_true(std::string("Status: '") + Botan::to_string(expected) + "' should match '" +
+                                          Botan::to_string(path_result.result()) + "'",
+                                       path_result.result() == expected);
          };
 
          check_path(Botan::calendar_point(2016, 11, 11, 12, 30, 0).to_std_timepoint(),
@@ -1257,9 +1257,9 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                                                                std::chrono::milliseconds(0),
                                                                {ocsp});
 
-            return result.confirm(std::string("Status: '") + Botan::to_string(expected) + "' should match '" +
-                                     Botan::to_string(path_result.result()) + "'",
-                                  path_result.result() == expected);
+            return result.test_is_true(std::string("Status: '") + Botan::to_string(expected) + "' should match '" +
+                                          Botan::to_string(path_result.result()) + "'",
+                                       path_result.result() == expected);
          };
 
          check_path(Botan::calendar_point(2019, 5, 28, 7, 0, 0).to_std_timepoint(),
@@ -1298,9 +1298,9 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                                                                std::chrono::milliseconds(0),
                                                                {ocsp});
 
-            return result.confirm(std::string("Status: '") + Botan::to_string(expected) + "' should match '" +
-                                     Botan::to_string(path_result.result()) + "'",
-                                  path_result.result() == expected);
+            return result.test_is_true(std::string("Status: '") + Botan::to_string(expected) + "' should match '" +
+                                          Botan::to_string(path_result.result()) + "'",
+                                       path_result.result() == expected);
          };
 
          check_path(Botan::calendar_point(2019, 5, 28, 7, 0, 0).to_std_timepoint(),
@@ -1346,9 +1346,9 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                                                                std::chrono::milliseconds(0),
                                                                {ocsp_ee, ocsp_ca});
 
-            return result.confirm(std::string("Status: '") + Botan::to_string(expected) + "' should match '" +
-                                     Botan::to_string(path_result.result()) + "'",
-                                  path_result.result() == expected);
+            return result.test_is_true(std::string("Status: '") + Botan::to_string(expected) + "' should match '" +
+                                          Botan::to_string(path_result.result()) + "'",
+                                       path_result.result() == expected);
          };
 
          check_path(Botan::calendar_point(2022, 9, 18, 16, 30, 0).to_std_timepoint(),
@@ -1399,8 +1399,8 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                               static_cast<uint32_t>(path_result.result()),
                               static_cast<uint32_t>(expected));
             if(also_expected) {
-               result.confirm("Secondary error is also present",
-                              flatten(path_result.all_statuses()).contains(also_expected.value()));
+               result.test_is_true("Secondary error is also present",
+                                   flatten(path_result.all_statuses()).contains(also_expected.value()));
             }
          };
 
@@ -1450,8 +1450,8 @@ class Path_Validation_With_OCSP_Tests final : public Test {
 
             result.test_is_eq(
                "Path validation with forged OCSP response should fail with", path_result.result(), expected);
-            result.confirm("Secondary error is also present",
-                           flatten(path_result.all_statuses()).contains(also_expected));
+            result.test_is_true("Secondary error is also present",
+                                flatten(path_result.all_statuses()).contains(also_expected));
             result.test_note(std::string("Failed with: ") + Botan::to_string(path_result.result()));
          };
 
@@ -1500,8 +1500,8 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                                       Botan::calendar_point(2022, 9, 22, 22, 30, 0).to_std_timepoint(),
                                       std::chrono::milliseconds(0),
                                       {ocsp_ee, ocsp_ca});
-         result.confirm("should reject intermediate OCSP response",
-                        path_result.result() == Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND);
+         result.test_is_true("should reject intermediate OCSP response",
+                             path_result.result() == Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND);
          result.test_note(std::string("Failed with: ") + Botan::to_string(path_result.result()));
 
          return result;
@@ -1573,10 +1573,10 @@ class CVE_2020_0601_Tests final : public Test {
                                                              std::chrono::milliseconds(0),
                                                              {});
 
-         result.confirm("Validation failed", !path_result1.successful_validation());
+         result.test_is_true("Validation failed", !path_result1.successful_validation());
 
-         result.confirm("Expected status",
-                        path_result1.result() == Botan::Certificate_Status_Code::CANNOT_ESTABLISH_TRUST);
+         result.test_is_true("Expected status",
+                             path_result1.result() == Botan::Certificate_Status_Code::CANNOT_ESTABLISH_TRUST);
 
          const auto path_result2 = Botan::x509_path_validate(std::vector<Botan::X509_Certificate>{ee_crt},
                                                              restrictions,
@@ -1587,10 +1587,10 @@ class CVE_2020_0601_Tests final : public Test {
                                                              std::chrono::milliseconds(0),
                                                              {});
 
-         result.confirm("Validation failed", !path_result2.successful_validation());
+         result.test_is_true("Validation failed", !path_result2.successful_validation());
 
-         result.confirm("Expected status",
-                        path_result2.result() == Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND);
+         result.test_is_true("Expected status",
+                             path_result2.result() == Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND);
 
          // Verify the signature from the bad CA is actually correct
          Botan::Certificate_Store_In_Memory frusted;
@@ -1605,7 +1605,7 @@ class CVE_2020_0601_Tests final : public Test {
                                                              std::chrono::milliseconds(0),
                                                              {});
 
-         result.confirm("Validation succeeded", path_result3.successful_validation());
+         result.test_is_true("Validation succeeded", path_result3.successful_validation());
 
          return {result};
       }
@@ -1632,9 +1632,9 @@ class Path_Validation_With_Immortal_CRL final : public Test {
 
          // Check that a CRL without nextUpdate is parsable
          auto crl = Botan::X509_CRL(Test::data_file("x509/misc/crl_without_nextupdate/valid_forever.crl"));
-         result.confirm("this update is set", crl.this_update().time_is_set());
-         result.confirm("next update is not set", !crl.next_update().time_is_set());
-         result.confirm("CRL is not empty", !crl.get_revoked().empty());
+         result.test_is_true("this update is set", crl.this_update().time_is_set());
+         result.test_is_true("next update is not set", !crl.next_update().time_is_set());
+         result.test_is_true("CRL is not empty", !crl.get_revoked().empty());
 
          // Ensure that we support the used sig algo, otherwish stop here
          if(!Botan::EC_Group::supports_named_group("brainpool512r1")) {
@@ -1655,14 +1655,14 @@ class Path_Validation_With_Immortal_CRL final : public Test {
          // Validate a certificate that is not listed in the CRL
          const auto valid = Botan::x509_path_validate(
             valid_subject, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, valid_time);
-         if(!result.confirm("Valid certificate", valid.successful_validation())) {
+         if(!result.test_is_true("Valid certificate", valid.successful_validation())) {
             result.test_note(valid.result_string());
          }
 
          // Ensure that a certificate listed in the CRL is recognized as revoked
          const auto revoked = Botan::x509_path_validate(
             revoked_subject, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, valid_time);
-         if(!result.confirm("No valid certificate", !revoked.successful_validation())) {
+         if(!result.test_is_true("No valid certificate", !revoked.successful_validation())) {
             result.test_note(revoked.result_string());
          }
          result.test_is_eq("Certificate is revoked", revoked.result(), Botan::Certificate_Status_Code::CERT_IS_REVOKED);
@@ -1747,8 +1747,8 @@ class Name_Constraint_DN_Prefix_Test final : public Test {
          const Botan::Path_Validation_Result validation_result = Botan::x509_path_validate(
             chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
-         result.confirm("Verification passes since Name Constraints are not a prefix",
-                        validation_result.successful_validation());
+         result.test_is_true("Verification passes since Name Constraints are not a prefix",
+                             validation_result.successful_validation());
          return result;
       }
 

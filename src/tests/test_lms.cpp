@@ -59,7 +59,7 @@ class LMS_Test final : public Text_Based_Test {
 
          auto sig_slicer = Botan::BufferSlicer(sig);
          auto sig_obj = Botan::LMS_Signature::from_bytes_or_throw(sig_slicer);
-         result.confirm("Signature verification", pub_key.verify_signature(msg, sig_obj));
+         result.test_is_true("Signature verification", pub_key.verify_signature(msg, sig_obj));
 
          return result;
       }

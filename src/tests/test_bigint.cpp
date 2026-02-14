@@ -96,13 +96,13 @@ class BigInt_Unit_Tests final : public Test {
          });
 
          BigInt p = Botan::random_prime(*rng, 2);
-         result.confirm("Only two 2-bit primes", p == 2 || p == 3);
+         result.test_is_true("Only two 2-bit primes", p == 2 || p == 3);
 
          p = Botan::random_prime(*rng, 3);
-         result.confirm("Only two 3-bit primes", p == 5 || p == 7);
+         result.test_is_true("Only two 3-bit primes", p == 5 || p == 7);
 
          p = Botan::random_prime(*rng, 4);
-         result.confirm("Only two 4-bit primes", p == 11 || p == 13);
+         result.test_is_true("Only two 4-bit primes", p == 11 || p == 13);
 
          for(size_t bits = 5; bits <= 32; ++bits) {
             p = Botan::random_prime(*rng, bits);
@@ -113,8 +113,8 @@ class BigInt_Unit_Tests final : public Test {
          const size_t safe_prime_bits = 65;
          const BigInt safe_prime = Botan::random_safe_prime(*rng, safe_prime_bits);
          result.test_sz_eq("Safe prime size", safe_prime.bits(), safe_prime_bits);
-         result.confirm("P is prime", Botan::is_prime(safe_prime, *rng));
-         result.confirm("(P-1)/2 is prime", Botan::is_prime((safe_prime - 1) / 2, *rng));
+         result.test_is_true("P is prime", Botan::is_prime(safe_prime, *rng));
+         result.test_is_true("(P-1)/2 is prime", Botan::is_prime((safe_prime - 1) / 2, *rng));
 
          return result;
       }
@@ -236,22 +236,22 @@ class BigInt_Cmp_Test final : public Text_Based_Test {
          const bool expected = vars.get_req_bool("R");
 
          if(op == "EQ") {
-            result.confirm("Values equal", x == y, expected);
+            result.test_bool_eq("Values equal", x == y, expected);
          } else if(op == "LT") {
-            result.confirm("Values LT", x < y, expected);
+            result.test_bool_eq("Values LT", x < y, expected);
 
             if(expected) {
-               result.confirm("If LT then reverse is GT", y >= x);
+               result.test_is_true("If LT then reverse is GT", y >= x);
             } else {
-               result.confirm("If not LT then GTE", x >= y);
+               result.test_is_true("If not LT then GTE", x >= y);
             }
          } else if(op == "LTE") {
-            result.confirm("Values LTE", x <= y, expected);
+            result.test_bool_eq("Values LTE", x <= y, expected);
 
             if(expected) {
-               result.confirm("If LTE then either LT or EQ", x < y || x == y);
+               result.test_is_true("If LTE then either LT or EQ", x < y || x == y);
             } else {
-               result.confirm("If not LTE then GT", x > y);
+               result.test_is_true("If not LTE then GT", x > y);
             }
          } else {
             throw Test_Error("Unknown BigInt comparison type " + op);
@@ -772,7 +772,7 @@ class BigInt_InvMod_Test final : public Text_Based_Test {
                result.test_eq("inverse_mod_general", g.value(), expected);
                result.test_eq("inverse works", ((g.value() * a) % mod), BigInt::one());
             } else {
-               result.confirm("inverse_mod_general", expected.is_zero());
+               result.test_is_true("inverse_mod_general", expected.is_zero());
             }
 
             if(Botan::is_prime(mod, rng()) && mod != 2) {
@@ -834,9 +834,9 @@ class Lucas_Primality_Test final : public Test {
             const bool is_lucas_pp = (is_prime == false && passes_lucas == true);
 
             if(is_lucas_pp) {
-               result.confirm("Lucas pseudoprime is in list", lucas_pp.count(i) == 1);
+               result.test_is_true("Lucas pseudoprime is in list", lucas_pp.contains(i));
             } else {
-               result.confirm("Lucas non-pseudoprime is not in list", !lucas_pp.contains(i));
+               result.test_is_true("Lucas non-pseudoprime is not in list", !lucas_pp.contains(i));
             }
          }
 

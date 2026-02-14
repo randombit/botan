@@ -181,9 +181,9 @@ class EC_Group_Tests : public Test {
 
             const auto group = Botan::EC_Group::from_name(group_name);
 
-            result.confirm("EC_Group is known", group.get_curve_oid().has_value());
-            result.confirm("EC_Group is considered valid", group.verify_group(this->rng(), true));
-            result.confirm("EC_Group is not considered explicit encoding", !group.used_explicit_encoding());
+            result.test_is_true("EC_Group is known", group.get_curve_oid().has_value());
+            result.test_is_true("EC_Group is considered valid", group.verify_group(this->rng(), true));
+            result.test_is_true("EC_Group is not considered explicit encoding", !group.used_explicit_encoding());
 
             result.test_sz_eq("EC_Group has correct bit size", group.get_p().bits(), group.get_p_bits());
             result.test_sz_eq("EC_Group has byte size", group.get_p().bytes(), group.get_p_bytes());
@@ -195,7 +195,7 @@ class EC_Group_Tests : public Test {
             result.test_eq(
                "EC_group_identity_from_order works", from_order.to_string(), group.get_curve_oid().to_string());
 
-            result.confirm("Same group is same", group == Botan::EC_Group::from_name(group_name));
+            result.test_is_true("Same group is same", group == Botan::EC_Group::from_name(group_name));
 
             try {
                const Botan::EC_Group copy(group.get_curve_oid(),
@@ -206,18 +206,18 @@ class EC_Group_Tests : public Test {
                                           group.get_g_y(),
                                           group.get_order());
 
-               result.confirm("Same group is same even with copy", group == copy);
+               result.test_is_true("Same group is same even with copy", group == copy);
             } catch(Botan::Invalid_Argument&) {}
 
             const auto group_der_oid = group.DER_encode();
             const Botan::EC_Group group_via_oid(group_der_oid);
-            result.confirm("EC_Group via OID is not considered explicit encoding",
-                           !group_via_oid.used_explicit_encoding());
+            result.test_is_true("EC_Group via OID is not considered explicit encoding",
+                                !group_via_oid.used_explicit_encoding());
 
             const auto group_der_explicit = group.DER_encode(Botan::EC_Group_Encoding::Explicit);
             const Botan::EC_Group group_via_explicit(group_der_explicit);
-            result.confirm("EC_Group via explicit DER is considered explicit encoding",
-                           group_via_explicit.used_explicit_encoding());
+            result.test_is_true("EC_Group via explicit DER is considered explicit encoding",
+                                group_via_explicit.used_explicit_encoding());
 
             if(group.a_is_minus_3()) {
                result.test_eq("Group A equals -3", group.get_a(), group.get_p() - 3);
@@ -233,7 +233,7 @@ class EC_Group_Tests : public Test {
 
    #if defined(BOTAN_HAS_LEGACY_EC_POINT)
             const auto pt_mult_by_order = group.get_base_point() * group.get_order();
-            result.confirm("Multiplying point by the order results in zero point", pt_mult_by_order.is_zero());
+            result.test_is_true("Multiplying point by the order results in zero point", pt_mult_by_order.is_zero());
 
             // get a valid point
             Botan::EC_Point p = group.get_base_point() * this->rng().next_nonzero_byte();
@@ -306,7 +306,7 @@ class EC_Group_Tests : public Test {
          // The scalar multiplication algorithm relies on this being true:
          try {
             const Botan::EC_Point zero_coords = group.point(0, 0);
-            result.confirm("point (0,0) is not on the curve", !zero_coords.on_the_curve());
+            result.test_is_true("point (0,0) is not on the curve", !zero_coords.on_the_curve());
          } catch(Botan::Exception&) {
             result.test_success("point (0,0) is rejected");
          }
@@ -333,29 +333,29 @@ class EC_Group_Tests : public Test {
 
          const Botan::EC_Point p1 = group.get_base_point() * 2;
 
-         result.confirm("point is on the curve", p1.on_the_curve());
-         result.confirm("point is not zero", !p1.is_zero());
+         result.test_is_true("point is on the curve", p1.on_the_curve());
+         result.test_is_true("point is not zero", !p1.is_zero());
 
          Botan::EC_Point p2 = p1;
          p2 -= p1;
 
-         result.confirm("p - q with q = p results in zero", p2.is_zero());
+         result.test_is_true("p - q with q = p results in zero", p2.is_zero());
 
          const Botan::EC_Point minus_p1 = -p1;
-         result.confirm("point is on the curve", minus_p1.on_the_curve());
+         result.test_is_true("point is on the curve", minus_p1.on_the_curve());
          const Botan::EC_Point shouldBeZero = p1 + minus_p1;
-         result.confirm("point is on the curve", shouldBeZero.on_the_curve());
-         result.confirm("point is zero", shouldBeZero.is_zero());
+         result.test_is_true("point is on the curve", shouldBeZero.on_the_curve());
+         result.test_is_true("point is zero", shouldBeZero.is_zero());
 
          result.test_eq("minus point x", minus_p1.get_affine_x(), p1.get_affine_x());
          result.test_eq("minus point y", minus_p1.get_affine_y(), group.get_p() - p1.get_affine_y());
 
-         result.confirm("zero point is zero", zero.is_zero());
-         result.confirm("zero point is on the curve", zero.on_the_curve());
+         result.test_is_true("zero point is zero", zero.is_zero());
+         result.test_is_true("zero point is on the curve", zero.on_the_curve());
          result.test_eq("addition of zero does nothing", p1, p1 + zero);
          result.test_eq("addition of zero does nothing", p1, zero + p1);
          result.test_eq("addition of zero does nothing", p1, p1 - zero);
-         result.confirm("zero times anything is the zero point", (zero * 39193).is_zero());
+         result.test_is_true("zero times anything is the zero point", (zero * 39193).is_zero());
 
          for(auto scheme : {Botan::EC_Point_Format::Uncompressed,
                             Botan::EC_Point_Format::Compressed,
@@ -377,7 +377,7 @@ Test::Result test_decoding_with_seed() {
          const auto secp384r1 = Botan::EC_Group::from_name("secp384r1");
          const auto secp384r1_with_seed =
             Botan::EC_Group::from_PEM(Test::read_data_file("x509/ecc/secp384r1_seed.pem"));
-         result.confirm("decoding worked", secp384r1_with_seed.initialized());
+         result.test_is_true("decoding worked", secp384r1_with_seed.initialized());
          result.test_eq("P-384 prime", secp384r1_with_seed.get_p(), secp384r1.get_p());
       }
    } catch(Botan::Exception& e) {
@@ -462,7 +462,7 @@ class EC_Group_Registration_Tests final : public Test {
          result.test_eq("Group registration worked", group.get_p(), p);
 
          // TODO(Botan4) this could change to == Generic
-         result.confirm("Group is not pcurve", group.engine() != Botan::EC_Group_Engine::Optimized);
+         result.test_is_true("Group is not pcurve", group.engine() != Botan::EC_Group_Engine::Optimized);
 
          return result;
       }
@@ -486,7 +486,7 @@ class EC_Group_Registration_Tests final : public Test {
          // This uses the deprecated constructor to verify we dedup even without an OID
          // This whole test can be removed once explicit curve support is removed
          const Botan::EC_Group reg_group(p, a, b, g_x, g_y, order, 1);
-         result.confirm("Group has correct OID", reg_group.get_curve_oid() == oid);
+         result.test_is_true("Group has correct OID", reg_group.get_curve_oid() == oid);
 
          return result;
       }
@@ -535,16 +535,16 @@ class EC_Group_Registration_Tests final : public Test {
 
          const Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
          result.test_success("Registration success");
-         result.confirm("Group has correct OID", reg_group.get_curve_oid() == oid);
+         result.test_is_true("Group has correct OID", reg_group.get_curve_oid() == oid);
 
          // We can now get it by OID:
          const auto hc_group = Botan::EC_Group::from_OID(oid);
-         result.confirm("Group has correct OID", hc_group.get_curve_oid() == oid);
+         result.test_is_true("Group has correct OID", hc_group.get_curve_oid() == oid);
 
          // Existing secp256r1 unmodified:
          const Botan::OID secp160r1("1.2.840.10045.3.1.7");
          const auto other_group = Botan::EC_Group::from_OID(secp160r1);
-         result.confirm("Group has correct OID", other_group.get_curve_oid() == secp160r1);
+         result.test_is_true("Group has correct OID", other_group.get_curve_oid() == secp160r1);
 
          return result;
       }
@@ -556,7 +556,7 @@ class EC_Group_Registration_Tests final : public Test {
 
          const Botan::OID secp256r1_oid("1.2.840.10045.3.1.7");
          const auto secp256r1 = Botan::EC_Group::from_OID(secp256r1_oid);
-         result.confirm("Group has correct OID", secp256r1.get_curve_oid() == secp256r1_oid);
+         result.test_is_true("Group has correct OID", secp256r1.get_curve_oid() == secp256r1_oid);
 
          const Botan::OID custom_oid("1.3.6.1.4.1.25258.100.99");  // some other random OID
 
@@ -571,25 +571,26 @@ class EC_Group_Registration_Tests final : public Test {
                                          secp256r1.get_order());
 
          result.test_success("Registration success");
-         result.confirm("Group has correct OID", reg_group.get_curve_oid() == custom_oid);
+         result.test_is_true("Group has correct OID", reg_group.get_curve_oid() == custom_oid);
 
          // We can now get it by OID:
-         result.confirm("Group has correct OID", Botan::EC_Group::from_OID(custom_oid).get_curve_oid() == custom_oid);
+         result.test_is_true("Group has correct OID",
+                             Botan::EC_Group::from_OID(custom_oid).get_curve_oid() == custom_oid);
 
          // In the current data model of EC_Group there is a 1:1 OID:group, so these
          // have distinct underlying data
-         result.confirm("Groups have different inner data pointers", reg_group._data() != secp256r1._data());
+         result.test_is_true("Groups have different inner data pointers", reg_group._data() != secp256r1._data());
 
    #if defined(BOTAN_HAS_PCURVES_SECP256R1)
          // However we should have gotten a pcurves out of the deal *and* it
          // should be the exact same shared_ptr as the official curve
 
-         result.confirm("Group is pcurves based", reg_group.engine() == Botan::EC_Group_Engine::Optimized);
+         result.test_is_true("Group is pcurves based", reg_group.engine() == Botan::EC_Group_Engine::Optimized);
 
          try {
             const auto& pcurve = reg_group._data()->pcurve();
-            result.confirm("Group with custom OID got the same pcurve pointer",
-                           &pcurve == &secp256r1._data()->pcurve());
+            result.test_is_true("Group with custom OID got the same pcurve pointer",
+                                &pcurve == &secp256r1._data()->pcurve());
          } catch(...) {
             result.test_failure("Group with custom OID did not get a pcurve pointer");
          }
@@ -626,7 +627,7 @@ class EC_PointEnc_Tests final : public Test {
 
                result.test_sz_eq("Expected compressed size", pt_c.size(), 1 + fe_bytes);
                const uint8_t expected_c_header = (pt_u[pt_u.size() - 1] % 2 == 0) ? 0x02 : 0x03;
-               result.confirm("Expected compressed header", pt_c[0] == expected_c_header);
+               result.test_is_true("Expected compressed header", pt_c[0] == expected_c_header);
 
                result.test_eq(
                   "Expected compressed x", std::span{pt_c}.subspan(1), std::span{pt_u}.subspan(1, fe_bytes));
@@ -691,10 +692,10 @@ class EC_Point_Arithmetic_Tests final : public Test {
             const auto g_bytes = g.serialize_uncompressed();
 
             const auto id = Botan::EC_AffinePoint::g_mul(zero, rng);
-            result.confirm("g*zero is point at identity", id.is_identity());
+            result.test_is_true("g*zero is point at identity", id.is_identity());
 
             const auto id2 = id.add(id);
-            result.confirm("identity plus itself is identity", id2.is_identity());
+            result.test_is_true("identity plus itself is identity", id2.is_identity());
 
             const auto g_one = Botan::EC_AffinePoint::g_mul(one, rng);
             result.test_eq("g*one == generator", g_one.serialize_uncompressed(), g_bytes);
@@ -708,28 +709,28 @@ class EC_Point_Arithmetic_Tests final : public Test {
             const auto g_neg_one = Botan::EC_AffinePoint::g_mul(one.negate(), rng);
 
             const auto id_from_g = g_one.add(g_neg_one);
-            result.confirm("g - g is identity", id_from_g.is_identity());
+            result.test_is_true("g - g is identity", id_from_g.is_identity());
 
             const auto g_two = Botan::EC_AffinePoint::g_mul(one + one, rng);
             const auto g_plus_g = g_one.add(g_one);
             result.test_eq("2*g == g+g", g_two.serialize_uncompressed(), g_plus_g.serialize_uncompressed());
 
-            result.confirm("Scalar::zero is zero", zero.is_zero());
-            result.confirm("(zero+zero) is zero", (zero + zero).is_zero());
-            result.confirm("(zero*zero) is zero", (zero * zero).is_zero());
-            result.confirm("(zero-zero) is zero", (zero - zero).is_zero());  // NOLINT(*-redundant-expression)
+            result.test_is_true("Scalar::zero is zero", zero.is_zero());
+            result.test_is_true("(zero+zero) is zero", (zero + zero).is_zero());
+            result.test_is_true("(zero*zero) is zero", (zero * zero).is_zero());
+            result.test_is_true("(zero-zero) is zero", (zero - zero).is_zero());  // NOLINT(*-redundant-expression)
 
             const auto neg_zero = zero.negate();
-            result.confirm("zero.negate() is zero", neg_zero.is_zero());
+            result.test_is_true("zero.negate() is zero", neg_zero.is_zero());
 
-            result.confirm("(zero+nz) is zero", (zero + neg_zero).is_zero());
-            result.confirm("(nz+nz) is zero", (neg_zero + neg_zero).is_zero());
-            result.confirm("(nz+zero) is zero", (neg_zero + zero).is_zero());
+            result.test_is_true("(zero+nz) is zero", (zero + neg_zero).is_zero());
+            result.test_is_true("(nz+nz) is zero", (neg_zero + neg_zero).is_zero());
+            result.test_is_true("(nz+zero) is zero", (neg_zero + zero).is_zero());
 
-            result.confirm("Scalar::one is not zero", !one.is_zero());
-            result.confirm("(one-one) is zero", (one - one).is_zero());  // NOLINT(*-redundant-expression)
-            result.confirm("(one+one.negate()) is zero", (one + one.negate()).is_zero());
-            result.confirm("(one.negate()+one) is zero", (one.negate() + one).is_zero());
+            result.test_is_true("Scalar::one is not zero", !one.is_zero());
+            result.test_is_true("(one-one) is zero", (one - one).is_zero());  // NOLINT(*-redundant-expression)
+            result.test_is_true("(one+one.negate()) is zero", (one + one.negate()).is_zero());
+            result.test_is_true("(one.negate()+one) is zero", (one.negate() + one).is_zero());
 
             for(size_t i = 0; i != 16; ++i) {
                const auto pt = Botan::EC_AffinePoint::g_mul(Botan::EC_Scalar::random(group, rng), rng);
@@ -785,7 +786,7 @@ class EC_Point_Arithmetic_Tests final : public Test {
                if(auto mul2pt = mul2_table.mul2_vartime(s1, s2)) {
                   result.test_eq("ref == mul2t", ref.serialize_uncompressed(), mul2pt->serialize_uncompressed());
                } else {
-                  result.confirm("ref is identity", ref.is_identity());
+                  result.test_is_true("ref is identity", ref.is_identity());
                }
             }
 

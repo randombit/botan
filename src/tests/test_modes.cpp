@@ -69,8 +69,8 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
             result.test_sz_gt(
                "ideal granularity is at least update granularity", enc->ideal_granularity(), enc->update_granularity());
 
-            result.confirm("ideal granularity is a multiple of update granularity",
-                           enc->ideal_granularity() % enc->update_granularity() == 0);
+            result.test_is_true("ideal granularity is a multiple of update granularity",
+                                enc->ideal_granularity() % enc->update_granularity() == 0);
 
             try {
                test_mode(result, algo, provider_ask, "encryption", *enc, key, nonce, input, expected, this->rng());
@@ -138,7 +138,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
             result.test_sz_eq("output_length", mode.output_length(input.size()), expected.size());
          }
 
-         result.confirm("default nonce size is allowed", mode.valid_nonce_length(mode.default_nonce_length()));
+         result.test_is_true("default nonce size is allowed", mode.valid_nonce_length(mode.default_nonce_length()));
 
          // Test that disallowed nonce sizes result in an exception
          static constexpr size_t large_nonce_size = 65000;

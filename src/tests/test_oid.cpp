@@ -81,7 +81,7 @@ Test::Result test_add_and_lookup() {
 
    Botan::OID::register_oid(oid, name);
 
-   result.confirm("named OID found", Botan::OID::from_name(name).value_or(Botan::OID()) == oid);
+   result.test_is_true("named OID found", Botan::OID::from_name(name).value_or(Botan::OID()) == oid);
    result.test_eq("name of OID matches expected", oid.to_formatted_string(), name);
 
    // completely redundant, nothing happens:
@@ -94,7 +94,8 @@ Test::Result test_add_and_lookup() {
    Botan::OID::register_oid(oid2, name);
 
    // name->oid map is unchanged:
-   result.confirm("named OID found after second insert", Botan::OID::from_name(name).value_or(Botan::OID()) == oid);
+   result.test_is_true("named OID found after second insert",
+                       Botan::OID::from_name(name).value_or(Botan::OID()) == oid);
    result.test_eq("name of OID matches expected", oid.to_formatted_string(), name);
    // now second OID maps back to the string as expected:
    result.test_eq("name of OID matches expected", oid2.to_formatted_string(), name);

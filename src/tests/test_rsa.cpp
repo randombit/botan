@@ -373,8 +373,8 @@ class RSA_DecryptOrRandom_Tests : public Test {
             result.test_ne("Returned random message", rec, ctext);
 
             for(size_t j = 0; j != req_bytes; ++j) {
-               result.confirm("Random message satisfies stated content requirements",
-                              rec[required_offsets[j]] == required_contents[j]);
+               result.test_is_true("Random message satisfies stated content requirements",
+                                   rec[required_offsets[j]] == required_contents[j]);
             }
          }
       }

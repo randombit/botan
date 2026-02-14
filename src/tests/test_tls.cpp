@@ -669,7 +669,7 @@ class Test_TLS_Algo_Strings : public Test {
             const std::string meth_str = Botan::TLS::auth_method_to_string(meth);
             result.test_ne("Method string is not empty", meth_str, "");
             const Botan::TLS::Auth_Method meth2 = Botan::TLS::auth_method_from_string(meth_str);
-            result.confirm("Decoded method matches", meth == meth2);
+            result.test_is_true("Decoded method matches", meth == meth2);
          }
 
          return result;
@@ -688,7 +688,7 @@ class Test_TLS_Algo_Strings : public Test {
             const std::string meth_str = Botan::TLS::kex_method_to_string(meth);
             result.test_ne("Method string is not empty", meth_str, "");
             const Botan::TLS::Kex_Algo meth2 = Botan::TLS::kex_method_from_string(meth_str);
-            result.confirm("Decoded method matches", meth == meth2);
+            result.test_is_true("Decoded method matches", meth == meth2);
          }
 
          return result;

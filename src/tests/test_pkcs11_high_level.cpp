@@ -212,7 +212,7 @@ Test::Result test_get_slot_info() {
 
    SlotInfo info = slot.get_slot_info();
    const std::string description = reinterpret_cast<char*>(info.slotDescription);
-   result.confirm("Slot description is not empty", !description.empty());
+   result.test_is_true("Slot description is not empty", !description.empty());
 
    return result;
 }
@@ -253,7 +253,7 @@ Test::Result test_get_token_info() {
 
    TokenInfo info = slot.get_token_info();
    const std::string label = reinterpret_cast<char*>(info.label);
-   result.confirm("Token label is not empty", !label.empty());
+   result.test_is_true("Token label is not empty", !label.empty());
 
    return result;
 }
@@ -266,7 +266,7 @@ Test::Result test_get_mechanism_list() {
    const Slot slot(module, slot_vec.at(0));
 
    const std::vector<MechanismType> mechanisms = slot.get_mechanism_list();
-   result.confirm("The Slot supports at least one mechanism", !mechanisms.empty());
+   result.test_is_true("The Slot supports at least one mechanism", !mechanisms.empty());
 
    return result;
 }
@@ -621,7 +621,7 @@ Test::Result test_rsa_privkey_import() {
 
    // create private key
    const RSA_PrivateKey priv_key(*rng, 2048);
-   result.confirm("Key self test OK", priv_key.check_key(*rng, true));
+   result.test_is_true("Key self test OK", priv_key.check_key(*rng, true));
 
    // import to card
    RSA_PrivateKeyImportProperties props(priv_key.get_n(), priv_key.get_d());
@@ -639,7 +639,7 @@ Test::Result test_rsa_privkey_import() {
 
    const PKCS11_RSA_PrivateKey pk(test_session.session(), props);
    result.test_success("RSA private key import was successful");
-   result.confirm("PK self test OK", pk.check_key(*rng, true));
+   result.test_is_true("PK self test OK", pk.check_key(*rng, true));
 
    pk.destroy();
    return result;
@@ -672,11 +672,11 @@ Test::Result test_rsa_privkey_export() {
    props.set_sensitive(false);
 
    const PKCS11_RSA_PrivateKey pk(test_session.session(), props);
-   result.confirm("Check PK11 key", pk.check_key(*rng, true));
+   result.test_is_true("Check PK11 key", pk.check_key(*rng, true));
 
    const RSA_PrivateKey exported = pk.export_key();
    result.test_success("RSA private key export was successful");
-   result.confirm("Check exported key", exported.check_key(*rng, true));
+   result.test_is_true("Check exported key", exported.check_key(*rng, true));
 
    pk.destroy();
    return result;
@@ -700,7 +700,7 @@ Test::Result test_rsa_pubkey_import() {
 
    const PKCS11_RSA_PublicKey pk(test_session.session(), props);
    result.test_success("RSA public key import was successful");
-   result.confirm("Check PK11 key", pk.check_key(*rng, true));
+   result.test_is_true("Check PK11 key", pk.check_key(*rng, true));
 
    pk.destroy();
 
@@ -903,7 +903,7 @@ Test::Result test_ecdsa_privkey_import() {
 
    // create ecdsa private key
    const ECDSA_PrivateKey priv_key(*rng, EC_Group::from_name("secp256r1"));
-   result.confirm("Key self test OK", priv_key.check_key(*rng, true));
+   result.test_is_true("Key self test OK", priv_key.check_key(*rng, true));
 
    // import to card
    EC_PrivateKeyImportProperties props(priv_key.DER_domain(), priv_key.private_value());
@@ -918,7 +918,7 @@ Test::Result test_ecdsa_privkey_import() {
    PKCS11_ECDSA_PrivateKey pk(test_session.session(), props);
    result.test_success("ECDSA private key import was successful");
    pk.set_public_point(priv_key._public_ec_point());
-   result.confirm("P11 key self test OK", pk.check_key(*rng, false));
+   result.test_is_true("P11 key self test OK", pk.check_key(*rng, false));
 
    pk.destroy();
    return result;
@@ -934,7 +934,7 @@ Test::Result test_ecdsa_privkey_export() {
    // create private key
    const ECDSA_PrivateKey priv_key(*rng, EC_Group::from_name("secp256r1"));
 
-   result.confirm("Check ECDSA key", priv_key.check_key(*rng, true));
+   result.test_is_true("Check ECDSA key", priv_key.check_key(*rng, true));
    // import to card
    EC_PrivateKeyImportProperties props(priv_key.DER_domain(), priv_key.private_value());
    props.set_token(true);
@@ -948,11 +948,11 @@ Test::Result test_ecdsa_privkey_export() {
 
    PKCS11_ECDSA_PrivateKey pk(test_session.session(), props);
    pk.set_public_point(priv_key._public_ec_point());
-   result.confirm("Check PK11 key", pk.check_key(*rng, false));
+   result.test_is_true("Check PK11 key", pk.check_key(*rng, false));
 
    const ECDSA_PrivateKey exported = pk.export_key();
    result.test_success("ECDSA private key export was successful");
-   result.confirm("Check exported key valid", exported.check_key(*rng, true));
+   result.test_is_true("Check exported key valid", exported.check_key(*rng, true));
    result.test_eq("Check exported key contents", exported.private_key_bits(), priv_key.private_key_bits());
 
    pk.destroy();
@@ -1392,7 +1392,7 @@ Test::Result test_rng_generate_random() {
    const TestSession test_session(true);
 
    PKCS11_RNG p11_rng(test_session.session());
-   result.confirm("RNG already seeded", p11_rng.is_seeded());
+   result.test_is_true("RNG already seeded", p11_rng.is_seeded());
 
    std::vector<uint8_t> random(20);
    p11_rng.randomize(random.data(), random.size());
@@ -1407,9 +1407,9 @@ Test::Result test_rng_add_entropy() {
 
    PKCS11_RNG p11_rng(test_session.session());
 
-   result.confirm("RNG already seeded", p11_rng.is_seeded());
+   result.test_is_true("RNG already seeded", p11_rng.is_seeded());
    p11_rng.clear();
-   result.confirm("RNG ignores call to clear", p11_rng.is_seeded());
+   result.test_is_true("RNG ignores call to clear", p11_rng.is_seeded());
 
    #if defined(BOTAN_HAS_ENTROPY_SOURCE)
    result.test_eq(

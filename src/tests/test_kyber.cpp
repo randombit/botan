@@ -90,7 +90,7 @@ class KYBER_Tests final : public Test {
                    kem_result.encapsulated_shared_key().crend(),
                    std::back_inserter(reverse_cipher_text));
          const auto key_alice_rev = dec.decrypt(reverse_cipher_text, 0, empty_salt);
-         result.confirm("shared secrets are not equal", key_alice != key_alice_rev);
+         result.test_is_true("shared secrets are not equal", key_alice != key_alice_rev);
 
          // Try to decrypt the valid ciphertext again
          const auto key_alice_try2 = dec.decrypt(kem_result.encapsulated_shared_key(), 0 /* no KDF */, empty_salt);

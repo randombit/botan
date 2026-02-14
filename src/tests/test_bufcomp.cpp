@@ -29,11 +29,11 @@ class Test_Buf_Comp final : public Botan::Buffered_Computation {
 
       void add_data(std::span<const uint8_t> input) override {
          if(m_result.test_sz_eq("input length as expected", input.size(), size_t(5))) {
-            m_result.confirm("input[0] == 'A'", input[0] == 'A');
-            m_result.confirm("input[0] == 'B'", input[1] == 'B');
-            m_result.confirm("input[0] == 'C'", input[2] == 'C');
-            m_result.confirm("input[0] == 'D'", input[3] == 'D');
-            m_result.confirm("input[0] == 'E'", input[4] == 'E');
+            m_result.test_is_true("input[0] == 'A'", input[0] == 'A');
+            m_result.test_is_true("input[0] == 'B'", input[1] == 'B');
+            m_result.test_is_true("input[0] == 'C'", input[2] == 'C');
+            m_result.test_is_true("input[0] == 'D'", input[3] == 'D');
+            m_result.test_is_true("input[0] == 'E'", input[4] == 'E');
          }
 
          ++m_counter;

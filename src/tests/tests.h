@@ -286,10 +286,6 @@ class Test {
 
             void test_failure(std::string_view what, std::span<const uint8_t> context);
 
-            bool confirm(std::string_view what, bool expr, bool expected = true) {
-               return test_bool_eq(what, expr, expected);
-            }
-
             /**
              * Require a condition, throw Test_Aborted otherwise
              * Note: works best when combined with CHECK scopes!
@@ -868,7 +864,7 @@ class Text_Based_Test : public Test {
  *       {
  *       CHECK("some unit test name", [](Test::Result& r)
  *          {
- *          r.confirm("some observation", 1+1 == 2);
+ *          r.test_is_true("some observation", 1+1 == 2);
  *          }),
  *       CHECK("some other unit test name", [](Test::Result& r)
  *          {

@@ -677,15 +677,15 @@ class TLS_Context {
                                       const std::vector<std::string>& callback_names) {
          const auto& invokes = m_callbacks->callback_invocations();
          for(const auto& cbn : callback_names) {
-            result.confirm(Botan::fmt("{} was invoked (Context: {})", cbn, context),
-                           invokes.contains(cbn) && invokes.at(cbn) > 0);
+            result.test_is_true(Botan::fmt("{} was invoked (Context: {})", cbn, context),
+                                invokes.contains(cbn) && invokes.at(cbn) > 0);
          }
 
          for(const auto& invoke : invokes) {
             if(invoke.second == 0) {
                continue;
             }
-            result.confirm(
+            result.test_is_true(
                invoke.first + " was expected (Context: " + context + ")",
                std::find(callback_names.cbegin(), callback_names.cend(), invoke.first) != callback_names.cend());
          }
@@ -1000,7 +1000,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                             vars.get_req_u64("CurrentTimestamp"),
                                                             add_extensions_and_sort);
 
-                     result.confirm("client not closed", !ctx->client.is_closed());
+                     result.test_is_true("client not closed", !ctx->client.is_closed());
                      ctx->check_callback_invocations(result,
                                                      "client hello prepared",
                                                      {
@@ -1033,8 +1033,8 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                       "tls_examine_extensions_server_hello",
                                                       "tls_ephemeral_key_agreement"});
 
-                     result.confirm("client is not yet active", !ctx->client.is_active());
-                     result.confirm("handshake is not yet complete", !ctx->client.is_handshake_complete());
+                     result.test_is_true("client is not yet active", !ctx->client.is_active());
+                     result.test_is_true("handshake is not yet complete", !ctx->client.is_handshake_complete());
                   }),
 
             CHECK("Server HS messages .. Client Finished",
@@ -1059,7 +1059,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                      result.require("certificate exists", !ctx->certs_verified().empty());
                      result.require("correct certificate", ctx->certs_verified().front() == server_certificate());
                      result.require("client is active", ctx->client.is_active());
-                     result.confirm("handshake is complete", ctx->client.is_handshake_complete());
+                     result.test_is_true("handshake is complete", ctx->client.is_handshake_complete());
 
                      result.test_eq("correct handshake finished",
                                     ctx->pull_send_buffer(),
@@ -1123,7 +1123,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                      ctx->check_callback_invocations(
                         result, "CLOSE_NOTIFY received", {"tls_alert", "tls_peer_closed_connection"});
 
-                     result.confirm("connection is closed", ctx->client.is_closed());
+                     result.test_is_true("connection is closed", ctx->client.is_closed());
                   }),
          };
       }
@@ -1165,7 +1165,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                         std::pair{Botan::TLS::Session(vars.get_req_bin("Client_SessionData")),
                                   Botan::TLS::Session_Ticket(vars.get_req_bin("SessionTicket"))});
 
-                     result.confirm("client not closed", !ctx->client.is_closed());
+                     result.test_is_true("client not closed", !ctx->client.is_closed());
                      ctx->check_callback_invocations(result,
                                                      "client hello prepared",
                                                      {
@@ -1225,7 +1225,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                             std::make_shared<RFC8448_Text_Policy>("rfc8448_hrr_client"),
                                                             vars.get_req_u64("CurrentTimestamp"),
                                                             add_extensions_and_sort);
-                     result.confirm("client not closed", !ctx->client.is_closed());
+                     result.test_is_true("client not closed", !ctx->client.is_closed());
 
                      ctx->check_callback_invocations(result,
                                                      "client hello prepared",
@@ -1312,7 +1312,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                      ctx->check_callback_invocations(
                         result, "encrypted handshake messages received", {"tls_alert", "tls_peer_closed_connection"});
 
-                     result.confirm("connection is closed", ctx->client.is_closed());
+                     result.test_is_true("connection is closed", ctx->client.is_closed());
                   }),
          };
       }
@@ -1419,7 +1419,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                      });
 
                      ctx->client.received_data(vars.get_req_bin("Record_Server_CloseNotify"));
-                     result.confirm("connection closed", ctx->client.is_closed());
+                     result.test_is_true("connection closed", ctx->client.is_closed());
 
                      ctx->check_callback_invocations(
                         result, "after receiving close notify", {"tls_alert", "tls_peer_closed_connection"});
@@ -1501,8 +1501,8 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                     // ClientFinished contains the expected ChangeCipherSpec record
                                     vars.get_req_bin("Record_ClientFinished"));
 
-                     result.confirm("client is ready to send application traffic", ctx->client.is_active());
-                     result.confirm("handshake is complete", ctx->client.is_handshake_complete());
+                     result.test_is_true("client is ready to send application traffic", ctx->client.is_active());
+                     result.test_is_true("handshake is complete", ctx->client.is_handshake_complete());
                   }),
 
             CHECK("Close connection",
@@ -1515,11 +1515,11 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
 
                      result.require("client cannot send application traffic anymore", !ctx->client.is_active());
                      result.require("client is not fully closed yet", !ctx->client.is_closed());
-                     result.confirm("handshake stays completed", ctx->client.is_handshake_complete());
+                     result.test_is_true("handshake stays completed", ctx->client.is_handshake_complete());
 
                      ctx->client.received_data(vars.get_req_bin("Record_Server_CloseNotify"));
 
-                     result.confirm("client connection was terminated", ctx->client.is_closed());
+                     result.test_is_true("client connection was terminated", ctx->client.is_closed());
                   }),
          };
       }
@@ -1565,7 +1565,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                     vars.get_req_str("PskPRF"),
                                     lock(vars.get_req_bin("PskSecret"))));
 
-                     result.confirm("client not closed", !ctx->client.is_closed());
+                     result.test_is_true("client not closed", !ctx->client.is_closed());
                      ctx->check_callback_invocations(result,
                                                      "client hello prepared",
                                                      {
@@ -1591,8 +1591,8 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                       "tls_examine_extensions_server_hello",
                                                       "tls_ephemeral_key_agreement"});
 
-                     result.confirm("client is not yet active", !ctx->client.is_active());
-                     result.confirm("handshake is not yet complete", !ctx->client.is_handshake_complete());
+                     result.test_is_true("client is not yet active", !ctx->client.is_active());
+                     result.test_is_true("handshake is not yet complete", !ctx->client.is_handshake_complete());
                   }),
 
             CHECK(
@@ -1612,7 +1612,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                    "tls_session_activated"});
                   result.require("PSK negotiated", ctx->psk_identity_negotiated() == vars.get_req_str("PskIdentity"));
                   result.require("client is active", ctx->client.is_active());
-                  result.confirm("handshake is complete", ctx->client.is_handshake_complete());
+                  result.test_is_true("handshake is complete", ctx->client.is_handshake_complete());
 
                   result.test_eq(
                      "correct handshake finished", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientFinished"));
@@ -1655,7 +1655,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                      ctx->check_callback_invocations(
                         result, "CLOSE_NOTIFY received", {"tls_alert", "tls_peer_closed_connection"});
 
-                     result.confirm("connection is closed", ctx->client.is_closed());
+                     result.test_is_true("connection is closed", ctx->client.is_closed());
                   }),
          };
       }
@@ -1755,7 +1755,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                      });
 
                      const auto raw_pk = ctx->client.peer_raw_public_key();
-                     result.confirm(
+                     result.test_is_true(
                         "Received server's raw public key",
                         raw_pk && raw_pk->fingerprint_public() == server_raw_public_key_pair()->fingerprint_public());
 
@@ -1779,7 +1779,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                      });
 
                      ctx->client.received_data(vars.get_req_bin("Record_Server_CloseNotify"));
-                     result.confirm("connection closed", ctx->client.is_closed());
+                     result.test_is_true("connection closed", ctx->client.is_closed());
 
                      ctx->check_callback_invocations(
                         result, "after receiving close notify", {"tls_alert", "tls_peer_closed_connection"});
@@ -1823,7 +1823,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                         false,
                         std::pair{Botan::TLS::Session(vars.get_req_bin("Client_SessionData")),
                                   Botan::TLS::Session_Ticket(vars.get_req_bin("SessionTicket"))});
-                     result.confirm("server not closed", !ctx->server.is_closed());
+                     result.test_is_true("server not closed", !ctx->server.is_closed());
 
                      ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
 
@@ -1873,8 +1873,8 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      //       that did not receive the client's Finished message, yet.
                      //       However, before receiving and validating this message,
                      //       the handshake is not yet finished.
-                     result.confirm("Server can now send application data", ctx->server.is_active());
-                     result.confirm("handshake is not yet complete", !ctx->server.is_handshake_complete());
+                     result.test_is_true("Server can now send application data", ctx->server.is_active());
+                     result.test_is_true("handshake is not yet complete", !ctx->server.is_handshake_complete());
                   }),
 
             CHECK("Send Client Finished",
@@ -1944,9 +1944,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      ctx->check_callback_invocations(
                         result, "client finished received", {"tls_alert", "tls_peer_closed_connection"});
 
-                     result.confirm("connection is not yet closed", !ctx->server.is_closed());
-                     result.confirm("connection is still active", ctx->server.is_active());
-                     result.confirm("handshake is still finished", ctx->server.is_handshake_complete());
+                     result.test_is_true("connection is not yet closed", !ctx->server.is_closed());
+                     result.test_is_true("connection is still active", ctx->server.is_active());
+                     result.test_is_true("handshake is still finished", ctx->server.is_handshake_complete());
                   }),
 
             CHECK("Expect Server close_notify",
@@ -1954,9 +1954,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.require("ctx is available", ctx != nullptr);
                      ctx->server.close();
 
-                     result.confirm("connection is now inactive", !ctx->server.is_active());
-                     result.confirm("connection is now closed", ctx->server.is_closed());
-                     result.confirm("handshake is still finished", ctx->server.is_handshake_complete());
+                     result.test_is_true("connection is now inactive", !ctx->server.is_active());
+                     result.test_is_true("connection is now closed", ctx->server.is_closed());
+                     result.test_is_true("handshake is still finished", ctx->server.is_handshake_complete());
                      result.test_eq("Server's close notify",
                                     ctx->pull_send_buffer(),
                                     vars.get_req_bin("Record_Server_CloseNotify"));
@@ -1994,7 +1994,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                         false,
                         std::pair{Botan::TLS::Session(vars.get_req_bin("Client_SessionData")),
                                   Botan::TLS::Session_Ticket(vars.get_req_bin("SessionTicket"))});
-                     result.confirm("server not closed", !ctx->server.is_closed());
+                     result.test_is_true("server not closed", !ctx->server.is_closed());
 
                      ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
 
@@ -2037,8 +2037,8 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      //       that did not receive the client's Finished message, yet.
                      //       However, before receiving and validating this message,
                      //       the handshake is not yet finished.
-                     result.confirm("Server can now send application data", ctx->server.is_active());
-                     result.confirm("handshake is not yet complete", !ctx->server.is_handshake_complete());
+                     result.test_is_true("Server can now send application data", ctx->server.is_active());
+                     result.test_is_true("handshake is not yet complete", !ctx->server.is_handshake_complete());
                   }),
 
             // TODO: The rest of this test vector requires 0-RTT which is not
@@ -2077,7 +2077,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                             vars.get_req_u64("CurrentTimestamp"),
                                                             add_cookie_and_sort,
                                                             make_mock_signatures(vars));
-                     result.confirm("server not closed", !ctx->server.is_closed());
+                     result.test_is_true("server not closed", !ctx->server.is_closed());
 
                      ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
 
@@ -2096,8 +2096,8 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.test_eq("Server's Hello Retry Request record",
                                     ctx->pull_send_buffer(),
                                     vars.get_req_bin("Record_HelloRetryRequest"));
-                     result.confirm("TLS handshake not yet finished", !ctx->server.is_active());
-                     result.confirm("handshake is not yet complete", !ctx->server.is_handshake_complete());
+                     result.test_is_true("TLS handshake not yet finished", !ctx->server.is_active());
+                     result.test_is_true("handshake is not yet complete", !ctx->server.is_handshake_complete());
                   }),
 
             CHECK("Receive updated Client Hello message",
@@ -2148,9 +2148,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                     ctx->pull_send_buffer(),
                                     concat(vars.get_req_bin("Record_ServerHello"),
                                            vars.get_req_bin("Record_ServerHandshakeMessages")));
-                     result.confirm("Server could now send application data", ctx->server.is_active());
-                     result.confirm("handshake is not yet complete",
-                                    !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
+                     result.test_is_true("Server could now send application data", ctx->server.is_active());
+                     result.test_is_true("handshake is not yet complete",
+                                         !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
                   }),
 
             CHECK("Receive Client Finished",
@@ -2165,8 +2165,8 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                       "tls_session_established",
                                                       "tls_session_activated"});
 
-                     result.confirm("TLS handshake finished", ctx->server.is_active());
-                     result.confirm("handshake is complete", ctx->server.is_handshake_complete());
+                     result.test_is_true("TLS handshake finished", ctx->server.is_active());
+                     result.test_is_true("handshake is complete", ctx->server.is_handshake_complete());
                   }),
 
             CHECK("Receive Client close_notify",
@@ -2177,9 +2177,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      ctx->check_callback_invocations(
                         result, "client finished received", {"tls_alert", "tls_peer_closed_connection"});
 
-                     result.confirm("connection is not yet closed", !ctx->server.is_closed());
-                     result.confirm("connection is still active", ctx->server.is_active());
-                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                     result.test_is_true("connection is not yet closed", !ctx->server.is_closed());
+                     result.test_is_true("connection is still active", ctx->server.is_active());
+                     result.test_is_true("handshake is still complete", ctx->server.is_handshake_complete());
                   }),
 
             CHECK("Expect Server close_notify",
@@ -2187,9 +2187,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.require("ctx is available", ctx != nullptr);
                      ctx->server.close();
 
-                     result.confirm("connection is now inactive", !ctx->server.is_active());
-                     result.confirm("connection is now closed", ctx->server.is_closed());
-                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                     result.test_is_true("connection is now inactive", !ctx->server.is_active());
+                     result.test_is_true("connection is now closed", ctx->server.is_closed());
+                     result.test_is_true("handshake is still complete", ctx->server.is_handshake_complete());
                      result.test_eq("Server's close notify",
                                     ctx->pull_send_buffer(),
                                     vars.get_req_bin("Record_Server_CloseNotify"));
@@ -2217,7 +2217,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                         sort_rfc8448_extensions,
                         make_mock_signatures(vars),
                         true /* use alternative certificate */);
-                     result.confirm("server not closed", !ctx->server.is_closed());
+                     result.test_is_true("server not closed", !ctx->server.is_closed());
 
                      ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
 
@@ -2270,10 +2270,10 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                     concat(vars.get_req_bin("Record_ServerHello"),
                                            vars.get_req_bin("Record_ServerHandshakeMessages")));
 
-                     result.confirm("Not yet aware of client's cert chain", ctx->server.peer_cert_chain().empty());
-                     result.confirm("Server could now send application data", ctx->server.is_active());
-                     result.confirm("handshake is not yet complete",
-                                    !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
+                     result.test_is_true("Not yet aware of client's cert chain", ctx->server.peer_cert_chain().empty());
+                     result.test_is_true("Server could now send application data", ctx->server.is_active());
+                     result.test_is_true("handshake is not yet complete",
+                                         !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
                   }),
 
             CHECK("Receive Client's second flight",
@@ -2298,11 +2298,11 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                       "tls_session_activated"});
 
                      const auto cert_chain = ctx->server.peer_cert_chain();
-                     result.confirm("Received client's cert chain",
-                                    !cert_chain.empty() && cert_chain.front() == client_certificate());
+                     result.test_is_true("Received client's cert chain",
+                                         !cert_chain.empty() && cert_chain.front() == client_certificate());
 
-                     result.confirm("TLS handshake finished", ctx->server.is_active());
-                     result.confirm("handshake is complete", ctx->server.is_handshake_complete());
+                     result.test_is_true("TLS handshake finished", ctx->server.is_active());
+                     result.test_is_true("handshake is complete", ctx->server.is_handshake_complete());
                   }),
 
             CHECK("Receive Client close_notify",
@@ -2313,9 +2313,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      ctx->check_callback_invocations(
                         result, "client finished received", {"tls_alert", "tls_peer_closed_connection"});
 
-                     result.confirm("connection is not yet closed", !ctx->server.is_closed());
-                     result.confirm("connection is still active", ctx->server.is_active());
-                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                     result.test_is_true("connection is not yet closed", !ctx->server.is_closed());
+                     result.test_is_true("connection is still active", ctx->server.is_active());
+                     result.test_is_true("handshake is still complete", ctx->server.is_handshake_complete());
                   }),
 
             CHECK("Expect Server close_notify",
@@ -2323,9 +2323,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.require("ctx is available", ctx != nullptr);
                      ctx->server.close();
 
-                     result.confirm("connection is now inactive", !ctx->server.is_active());
-                     result.confirm("connection is now closed", ctx->server.is_closed());
-                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                     result.test_is_true("connection is now inactive", !ctx->server.is_active());
+                     result.test_is_true("connection is now closed", ctx->server.is_closed());
+                     result.test_is_true("handshake is still complete", ctx->server.is_handshake_complete());
                      result.test_eq("Server's close notify",
                                     ctx->pull_send_buffer(),
                                     vars.get_req_bin("Record_Server_CloseNotify"));
@@ -2352,7 +2352,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                          vars.get_req_u64("CurrentTimestamp"),
                                                          sort_rfc8448_extensions,
                                                          make_mock_signatures(vars));
-                     result.confirm("server not closed", !ctx->server.is_closed());
+                     result.test_is_true("server not closed", !ctx->server.is_closed());
 
                      ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
 
@@ -2401,9 +2401,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                     concat(vars.get_req_bin("Record_ServerHello"),
                                            vars.get_req_bin("Record_ServerHandshakeMessages")));
 
-                     result.confirm("Server could now send application data", ctx->server.is_active());
-                     result.confirm("handshake is not yet complete",
-                                    !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
+                     result.test_is_true("Server could now send application data", ctx->server.is_active());
+                     result.test_is_true("handshake is not yet complete",
+                                         !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
                   }),
 
             CHECK("Receive Client Finished",
@@ -2418,8 +2418,8 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                       "tls_session_established",
                                                       "tls_session_activated"});
 
-                     result.confirm("TLS handshake fully finished", ctx->server.is_active());
-                     result.confirm("handshake is complete", ctx->server.is_handshake_complete());
+                     result.test_is_true("TLS handshake fully finished", ctx->server.is_active());
+                     result.test_is_true("handshake is complete", ctx->server.is_handshake_complete());
                   }),
 
             CHECK("Receive Client close_notify",
@@ -2430,9 +2430,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      ctx->check_callback_invocations(
                         result, "client finished received", {"tls_alert", "tls_peer_closed_connection"});
 
-                     result.confirm("connection is not yet closed", !ctx->server.is_closed());
-                     result.confirm("connection is still active", ctx->server.is_active());
-                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                     result.test_is_true("connection is not yet closed", !ctx->server.is_closed());
+                     result.test_is_true("connection is still active", ctx->server.is_active());
+                     result.test_is_true("handshake is still complete", ctx->server.is_handshake_complete());
                   }),
 
             CHECK("Expect Server close_notify",
@@ -2440,9 +2440,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.require("ctx is available", ctx != nullptr);
                      ctx->server.close();
 
-                     result.confirm("connection is now inactive", !ctx->server.is_active());
-                     result.confirm("connection is now closed", ctx->server.is_closed());
-                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                     result.test_is_true("connection is now inactive", !ctx->server.is_active());
+                     result.test_is_true("connection is now closed", ctx->server.is_closed());
+                     result.test_is_true("handshake is still complete", ctx->server.is_handshake_complete());
                      result.test_eq("Server's close notify",
                                     ctx->pull_send_buffer(),
                                     vars.get_req_bin("Record_Server_CloseNotify"));
@@ -2497,7 +2497,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                         ExternalPSK(vars.get_req_str("PskIdentity"),
                                     vars.get_req_str("PskPRF"),
                                     lock(vars.get_req_bin("PskSecret"))));
-                     result.confirm("server not closed", !ctx->server.is_closed());
+                     result.test_is_true("server not closed", !ctx->server.is_closed());
 
                      ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
 
@@ -2535,9 +2535,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                     concat(vars.get_req_bin("Record_ServerHello"),
                                            vars.get_req_bin("Record_ServerHandshakeMessages")));
 
-                     result.confirm("Server can now send application data", ctx->server.is_active());
-                     result.confirm("handshake is not yet complete",
-                                    !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
+                     result.test_is_true("Server can now send application data", ctx->server.is_active());
+                     result.test_is_true("handshake is not yet complete",
+                                         !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
                   }),
 
             CHECK("Send Client Finished",
@@ -2580,15 +2580,15 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      ctx->check_callback_invocations(
                         result, "client finished received", {"tls_alert", "tls_peer_closed_connection"});
 
-                     result.confirm("connection is not yet closed", !ctx->server.is_closed());
-                     result.confirm("connection is still active", ctx->server.is_active());
-                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                     result.test_is_true("connection is not yet closed", !ctx->server.is_closed());
+                     result.test_is_true("connection is still active", ctx->server.is_active());
+                     result.test_is_true("handshake is still complete", ctx->server.is_handshake_complete());
 
                      ctx->server.close();
 
-                     result.confirm("connection is now inactive", !ctx->server.is_active());
-                     result.confirm("connection is now closed", ctx->server.is_closed());
-                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                     result.test_is_true("connection is now inactive", !ctx->server.is_active());
+                     result.test_is_true("connection is now closed", ctx->server.is_closed());
+                     result.test_is_true("handshake is still complete", ctx->server.is_handshake_complete());
                      result.test_eq("Server's close notify",
                                     ctx->pull_send_buffer(),
                                     vars.get_req_bin("Record_Server_CloseNotify"));
@@ -2637,7 +2637,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                             vars.get_req_u64("CurrentTimestamp"),
                                                             sort_our_extensions,
                                                             make_mock_signatures(vars));
-                     result.confirm("server not closed", !ctx->server.is_closed());
+                     result.test_is_true("server not closed", !ctx->server.is_closed());
 
                      ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
 
@@ -2690,10 +2690,10 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                     concat(vars.get_req_bin("Record_ServerHello"),
                                            vars.get_req_bin("Record_ServerHandshakeMessages")));
 
-                     result.confirm("Not yet aware of client's cert chain", ctx->server.peer_cert_chain().empty());
-                     result.confirm("Server could now send application data", ctx->server.is_active());
-                     result.confirm("handshake is not yet complete",
-                                    !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
+                     result.test_is_true("Not yet aware of client's cert chain", ctx->server.peer_cert_chain().empty());
+                     result.test_is_true("Server could now send application data", ctx->server.is_active());
+                     result.test_is_true("handshake is not yet complete",
+                                         !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
                   }),
 
             CHECK("Receive Client's second flight",
@@ -2718,12 +2718,12 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                       "tls_session_activated"});
 
                      const auto raw_pk = ctx->server.peer_raw_public_key();
-                     result.confirm(
+                     result.test_is_true(
                         "Received client's raw public key",
                         raw_pk && raw_pk->fingerprint_public() == client_raw_public_key_pair()->fingerprint_public());
 
-                     result.confirm("TLS handshake finished", ctx->server.is_active());
-                     result.confirm("handshake is complete", ctx->server.is_handshake_complete());
+                     result.test_is_true("TLS handshake finished", ctx->server.is_active());
+                     result.test_is_true("handshake is complete", ctx->server.is_handshake_complete());
                   }),
 
             CHECK("Receive Client close_notify",
@@ -2734,9 +2734,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      ctx->check_callback_invocations(
                         result, "client finished received", {"tls_alert", "tls_peer_closed_connection"});
 
-                     result.confirm("connection is not yet closed", !ctx->server.is_closed());
-                     result.confirm("connection is still active", ctx->server.is_active());
-                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                     result.test_is_true("connection is not yet closed", !ctx->server.is_closed());
+                     result.test_is_true("connection is still active", ctx->server.is_active());
+                     result.test_is_true("handshake is still complete", ctx->server.is_handshake_complete());
                   }),
 
             CHECK("Expect Server close_notify",
@@ -2744,9 +2744,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.require("ctx is available", ctx != nullptr);
                      ctx->server.close();
 
-                     result.confirm("connection is now inactive", !ctx->server.is_active());
-                     result.confirm("connection is now closed", ctx->server.is_closed());
-                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                     result.test_is_true("connection is now inactive", !ctx->server.is_active());
+                     result.test_is_true("connection is now closed", ctx->server.is_closed());
+                     result.test_is_true("handshake is still complete", ctx->server.is_handshake_complete());
                      result.test_eq("Server's close notify",
                                     ctx->pull_send_buffer(),
                                     vars.get_req_bin("Record_Server_CloseNotify"));

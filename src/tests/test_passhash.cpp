@@ -166,7 +166,7 @@ class Passhash9_Tests final : public Text_Based_Test {
       std::vector<Test::Result> run_final_tests() override {
          Test::Result result("passhash9");
 
-         result.confirm("Unknown algorithm is unknown", Botan::is_passhash9_alg_supported(255) == false);
+         result.test_is_true("Unknown algorithm is unknown", Botan::is_passhash9_alg_supported(255) == false);
 
          auto& rng = this->rng();
 

@@ -31,9 +31,9 @@ std::vector<Test::Result> test_buffer_slicer() {
             [](auto& result) {
                const std::vector<uint8_t> buffer(0);
                Botan::BufferSlicer s(buffer);
-               result.confirm("empty slicer has no remaining bytes", s.remaining() == 0);
-               result.confirm("empty slicer is empty()", s.empty());
-               result.confirm("empty slicer can take() 0 bytes", s.take(0).empty());
+               result.test_is_true("empty slicer has no remaining bytes", s.remaining() == 0);
+               result.test_is_true("empty slicer is empty()", s.empty());
+               result.test_is_true("empty slicer can take() 0 bytes", s.take(0).empty());
 
                result.test_throws("empty slicer cannot emit bytes", [&]() { s.take(1); });
                result.test_throws("empty slicer cannot skip bytes", [&]() { s.skip(1); });
@@ -46,7 +46,7 @@ std::vector<Test::Result> test_buffer_slicer() {
                Botan::BufferSlicer s(buffer);
 
                result.test_sz_eq("non-empty slicer has remaining bytes", s.remaining(), buffer.size());
-               result.confirm("non-empty slicer is not empty()", !s.empty());
+               result.test_is_true("non-empty slicer is not empty()", !s.empty());
 
                const auto hello = s.take(5);
                result.require("has 5 bytes", hello.size() == 5);
@@ -79,10 +79,10 @@ std::vector<Test::Result> test_buffer_slicer() {
 
                const auto exclaim = s.take<1>();
                result.test_is_eq("took ...!", exclaim[0], uint8_t('!'));
-               result.confirm("has static extent", decltype(exclaim)::extent != std::dynamic_extent);
-               result.confirm("static extent is 1", decltype(exclaim)::extent == 1);
+               result.test_is_true("has static extent", decltype(exclaim)::extent != std::dynamic_extent);
+               result.test_is_true("static extent is 1", decltype(exclaim)::extent == 1);
 
-               result.confirm("empty", s.empty());
+               result.test_is_true("empty", s.empty());
                result.test_sz_eq("nothing remaining", s.remaining(), 0);
 
                result.test_throws("empty slicer cannot emit bytes", [&]() { s.take(1); });
@@ -117,8 +117,8 @@ std::vector<Test::Result> test_buffer_stuffer() {
                Botan::BufferStuffer s(empty_buffer);
 
                result.test_sz_eq("has no capacity", s.remaining_capacity(), 0);
-               result.confirm("is immediately full", s.full());
-               result.confirm("can next() 0 bytes", s.next(0).empty());
+               result.test_is_true("is immediately full", s.full());
+               result.test_is_true("can next() 0 bytes", s.next(0).empty());
 
                result.test_throws("cannot next() anything", [&]() { s.next(1); });
                result.test_throws("cannot append bytes", [&]() {
@@ -133,7 +133,7 @@ std::vector<Test::Result> test_buffer_stuffer() {
                Botan::BufferStuffer s(sink);
 
                result.test_sz_eq("has some capacity", s.remaining_capacity(), sink.size());
-               result.confirm("is not full", !s.full());
+               result.test_is_true("is not full", !s.full());
 
                auto n1 = s.next(5);
                result.require("got requested bytes", n1.size() == 5);
@@ -165,7 +165,7 @@ std::vector<Test::Result> test_buffer_stuffer() {
                n3[0] = ' ';
                n3[1] = '!';
 
-               result.confirm("is full", s.full());
+               result.test_is_true("is full", s.full());
 
                result.test_throws("cannot next() anything", [&]() { s.next(1); });
                result.test_throws("cannot append bytes", [&]() {
@@ -192,8 +192,8 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_sz_eq("size()", b.size(), 32);
                result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 0);
                result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 32);
-               result.confirm("in_alignment()", b.in_alignment());
-               result.confirm("!ready_to_consume()", !b.ready_to_consume());
+               result.test_is_true("in_alignment()", b.in_alignment());
+               result.test_is_true("!ready_to_consume()", !b.ready_to_consume());
             }),
 
       CHECK("Fill Alignment Buffer",
@@ -205,16 +205,16 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_sz_eq("size()", b.size(), 32);
                result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 16);
                result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 16);
-               result.confirm("!in_alignment()", !b.in_alignment());
-               result.confirm("!ready_to_consume()", !b.ready_to_consume());
+               result.test_is_true("!in_alignment()", !b.in_alignment());
+               result.test_is_true("!ready_to_consume()", !b.ready_to_consume());
 
                b.append(second_half_data);
 
                result.test_sz_eq("size()", b.size(), 32);
                result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 32);
                result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 0);
-               result.confirm("!in_alignment()", !b.in_alignment());
-               result.confirm("ready_to_consume()", b.ready_to_consume());
+               result.test_is_true("!in_alignment()", !b.in_alignment());
+               result.test_is_true("ready_to_consume()", b.ready_to_consume());
             }),
 
       CHECK("Consume Alignment Buffer",
@@ -229,8 +229,8 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_sz_eq("size()", b.size(), 32);
                result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 0);
                result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 32);
-               result.confirm("in_alignment()", b.in_alignment());
-               result.confirm("!ready_to_consume()", !b.ready_to_consume());
+               result.test_is_true("in_alignment()", b.in_alignment());
+               result.test_is_true("!ready_to_consume()", !b.ready_to_consume());
 
                result.test_is_eq("in == out", v(data), v(out));
             }),
@@ -242,7 +242,7 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.require("!ready_to_consume()", !b.ready_to_consume());
                const auto out_empty = b.consume_partial();
                result.test_sz_eq("consuming nothing resets buffer", b.elements_in_buffer(), 0);
-               result.confirm("consumed empty buffer", out_empty.empty());
+               result.test_is_true("consumed empty buffer", out_empty.empty());
 
                b.append(first_half_data);
                result.require("!ready_to_consume()", !b.ready_to_consume());
@@ -269,8 +269,8 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_sz_eq("size()", b.size(), 32);
                result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 0);
                result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 32);
-               result.confirm("in_alignment()", b.in_alignment());
-               result.confirm("!ready_to_consume()", !b.ready_to_consume());
+               result.test_is_true("in_alignment()", b.in_alignment());
+               result.test_is_true("!ready_to_consume()", !b.ready_to_consume());
             }),
 
       CHECK("Add Zero-Padding to Alignment Buffer",
@@ -285,8 +285,8 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_sz_eq("size()", b.size(), 32);
                result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 32);
                result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 0);
-               result.confirm("!in_alignment()", !b.in_alignment());
-               result.confirm("ready_to_consume()", b.ready_to_consume());
+               result.test_is_true("!in_alignment()", !b.in_alignment());
+               result.test_is_true("ready_to_consume()", b.ready_to_consume());
 
                const auto out = b.consume();
 
@@ -296,7 +296,7 @@ std::vector<Test::Result> test_alignment_buffer() {
                // Regression test for GH #3734
                // fill_up_with_zeros() must work if called on a full (ready to consume) alignment buffer
                b.append(data);
-               result.confirm("ready_to_consume()", b.ready_to_consume());
+               result.test_is_true("ready_to_consume()", b.ready_to_consume());
                result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 0);
 
                b.fill_up_with_zeros();
@@ -313,22 +313,22 @@ std::vector<Test::Result> test_alignment_buffer() {
                Botan::BufferSlicer second_half(second_half_data);
 
                const auto r1 = b.handle_unaligned_data(first_half);
-               result.confirm("half a block is not returned", !r1.has_value());
-               result.confirm("first input is consumed", first_half.empty());
+               result.test_is_true("half a block is not returned", !r1.has_value());
+               result.test_is_true("first input is consumed", first_half.empty());
 
                result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 16);
                result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 16);
-               result.confirm("!in_alignment()", !b.in_alignment());
-               result.confirm("!ready_to_consume()", !b.ready_to_consume());
+               result.test_is_true("!in_alignment()", !b.in_alignment());
+               result.test_is_true("!ready_to_consume()", !b.ready_to_consume());
 
                const auto r2 = b.handle_unaligned_data(second_half);
                result.require("second half completes block", r2.has_value());
-               result.confirm("second input is consumed", second_half.empty());
+               result.test_is_true("second input is consumed", second_half.empty());
 
                result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 0);
                result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 32);
-               result.confirm("in_alignment()", b.in_alignment());
-               result.confirm("!ready_to_consume()", !b.ready_to_consume());
+               result.test_is_true("in_alignment()", b.in_alignment());
+               result.test_is_true("!ready_to_consume()", !b.ready_to_consume());
 
                result.test_is_eq("collected block is correct", v(r2.value()), v(data));
             }),
@@ -339,23 +339,23 @@ std::vector<Test::Result> test_alignment_buffer() {
 
                Botan::BufferSlicer full_block_1(data);
                const auto r1 = b.handle_unaligned_data(full_block_1);
-               result.confirm("aligned data is not buffered", !r1.has_value());
-               result.confirm("in_alignment()", b.in_alignment());
-               result.confirm("!ready_to_consume()", !b.ready_to_consume());
+               result.test_is_true("aligned data is not buffered", !r1.has_value());
+               result.test_is_true("in_alignment()", b.in_alignment());
+               result.test_is_true("!ready_to_consume()", !b.ready_to_consume());
                result.test_sz_eq("aligned data is not consumed", full_block_1.remaining(), 32);
 
                Botan::BufferSlicer half_block(first_half_data);
                Botan::BufferSlicer full_block_2(data);
                const auto r2 = b.handle_unaligned_data(half_block);
-               result.confirm("unaligned data is buffered", !r2.has_value());
-               result.confirm("!in_alignment()", !b.in_alignment());
-               result.confirm("!ready_to_consume()", !b.ready_to_consume());
-               result.confirm("unaligned data is consumed", half_block.empty());
+               result.test_is_true("unaligned data is buffered", !r2.has_value());
+               result.test_is_true("!in_alignment()", !b.in_alignment());
+               result.test_is_true("!ready_to_consume()", !b.ready_to_consume());
+               result.test_is_true("unaligned data is consumed", half_block.empty());
 
                const auto r3 = b.handle_unaligned_data(full_block_2);
-               result.confirm("collected block is consumed", r3.has_value());
-               result.confirm("in_alignment()", b.in_alignment());
-               result.confirm("!ready_to_consume()", !b.ready_to_consume());
+               result.test_is_true("collected block is consumed", r3.has_value());
+               result.test_is_true("in_alignment()", b.in_alignment());
+               result.test_is_true("!ready_to_consume()", !b.ready_to_consume());
                result.test_sz_eq("input is consumed until alignment", full_block_2.remaining(), 16);
             }),
 
@@ -368,22 +368,22 @@ std::vector<Test::Result> test_alignment_buffer() {
                Botan::BufferSlicer third_half(first_half_data);
 
                const auto r1 = b.handle_unaligned_data(first_half);
-               result.confirm("half a block is not returned", !r1.has_value());
-               result.confirm("first input is consumed", first_half.empty());
+               result.test_is_true("half a block is not returned", !r1.has_value());
+               result.test_is_true("first input is consumed", first_half.empty());
 
                result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 16);
                result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 16);
-               result.confirm("!in_alignment()", !b.in_alignment());
-               result.confirm("!ready_to_consume()", !b.ready_to_consume());
+               result.test_is_true("!in_alignment()", !b.in_alignment());
+               result.test_is_true("!ready_to_consume()", !b.ready_to_consume());
 
                const auto r2 = b.handle_unaligned_data(second_half);
                result.require("second half completes block but is not returned", !r2.has_value());
-               result.confirm("second input is consumed", second_half.empty());
+               result.test_is_true("second input is consumed", second_half.empty());
 
                result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 32);
                result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 0);
-               result.confirm("!in_alignment()", !b.in_alignment());
-               result.confirm("ready_to_consume()", b.ready_to_consume());
+               result.test_is_true("!in_alignment()", !b.in_alignment());
+               result.test_is_true("ready_to_consume()", b.ready_to_consume());
 
                const auto r3 = b.handle_unaligned_data(third_half);
                result.require("extra data pushes out block", r3.has_value());
@@ -391,8 +391,8 @@ std::vector<Test::Result> test_alignment_buffer() {
 
                result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 0);
                result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 32);
-               result.confirm("in_alignment()", b.in_alignment());
-               result.confirm("!ready_to_consume()", !b.ready_to_consume());
+               result.test_is_true("in_alignment()", b.in_alignment());
+               result.test_is_true("!ready_to_consume()", !b.ready_to_consume());
 
                result.test_is_eq("collected block is correct", v(r3.value()), v(data));
             }),
@@ -403,23 +403,23 @@ std::vector<Test::Result> test_alignment_buffer() {
 
                Botan::BufferSlicer full_block_1(data);
                const auto r1 = b.handle_unaligned_data(full_block_1);
-               result.confirm("exactly aligned data is buffered", !r1.has_value());
-               result.confirm("!in_alignment()", !b.in_alignment());
-               result.confirm("ready_to_consume()", b.ready_to_consume());
-               result.confirm("exactly aligned block is consumed", full_block_1.empty());
+               result.test_is_true("exactly aligned data is buffered", !r1.has_value());
+               result.test_is_true("!in_alignment()", !b.in_alignment());
+               result.test_is_true("ready_to_consume()", b.ready_to_consume());
+               result.test_is_true("exactly aligned block is consumed", full_block_1.empty());
 
                Botan::BufferSlicer empty_input({});
                const auto r2 = b.handle_unaligned_data(empty_input);
                result.require("empty input does not push out buffer", !r2.has_value());
-               result.confirm("!in_alignment()", !b.in_alignment());
-               result.confirm("ready_to_consume()", b.ready_to_consume());
+               result.test_is_true("!in_alignment()", !b.in_alignment());
+               result.test_is_true("ready_to_consume()", b.ready_to_consume());
 
                const uint8_t extra_byte = 1;
                Botan::BufferSlicer one_extra_byte({&extra_byte, 1});
                const auto r3 = b.handle_unaligned_data(one_extra_byte);
                result.require("more data pushes out buffer", r3.has_value());
-               result.confirm("in_alignment()", b.in_alignment());
-               result.confirm("!ready_to_consume()", !b.ready_to_consume());
+               result.test_is_true("in_alignment()", b.in_alignment());
+               result.test_is_true("!ready_to_consume()", !b.ready_to_consume());
                result.test_sz_eq("no input data is consumed", one_extra_byte.remaining(), 1);
 
                result.test_is_eq("collected block is correct", v(r3.value()), v(data));
@@ -432,7 +432,7 @@ std::vector<Test::Result> test_alignment_buffer() {
 
                Botan::BufferSlicer half_block(first_half_data);
                const auto [s1, r1] = b.aligned_data_to_process(half_block);
-               result.confirm("not enough data for alignment processing", s1.empty());
+               result.test_is_true("not enough data for alignment processing", s1.empty());
                result.test_sz_eq("not enough data for alignment processing", r1, 0);
                result.test_sz_eq("(short) unaligned data is not consumed", half_block.remaining(), 16);
 
@@ -460,7 +460,7 @@ std::vector<Test::Result> test_alignment_buffer() {
 
                Botan::BufferSlicer half_block(first_half_data);
                const auto s1 = b.next_aligned_block_to_process(half_block);
-               result.confirm("not enough data for alignment processing", !s1.has_value());
+               result.test_is_true("not enough data for alignment processing", !s1.has_value());
                result.test_sz_eq("(short) unaligned data is not consumed", half_block.remaining(), 16);
 
                const auto more_than_one_block = Botan::concat<std::vector<uint8_t>>(data, first_half_data);
@@ -493,7 +493,7 @@ std::vector<Test::Result> test_alignment_buffer() {
 
                Botan::BufferSlicer half_block(first_half_data);
                const auto [s1, r1] = b.aligned_data_to_process(half_block);
-               result.confirm("not enough data for alignment processing", s1.empty());
+               result.test_is_true("not enough data for alignment processing", s1.empty());
                result.test_sz_eq("not enough data for alignment processing", r1, 0);
                result.test_sz_eq("(short) unaligned data is not consumed", half_block.remaining(), 16);
 
@@ -521,7 +521,7 @@ std::vector<Test::Result> test_alignment_buffer() {
 
                Botan::BufferSlicer half_block(first_half_data);
                const auto s1 = b.next_aligned_block_to_process(half_block);
-               result.confirm("not enough data for alignment processing", !s1.has_value());
+               result.test_is_true("not enough data for alignment processing", !s1.has_value());
                result.test_sz_eq("(short) unaligned data is not consumed", half_block.remaining(), 16);
 
                const auto more_than_one_block = Botan::concat<std::vector<uint8_t>>(data, first_half_data);
@@ -541,7 +541,7 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_sz_eq("first block is consumed", two_blocks.remaining(), 32);
 
                const auto s3_2 = b.next_aligned_block_to_process(two_blocks);
-               result.confirm("second block is not passed through", !s3_2.has_value());
+               result.test_is_true("second block is not passed through", !s3_2.has_value());
                result.test_sz_eq("second block is not consumed", two_blocks.remaining(), 32);
             }),
    };
@@ -553,51 +553,52 @@ std::vector<Test::Result> test_concat() {
             [](Test::Result& result) {
                // only define a dynamic output type, but no input to be concat'ed
                const auto empty1 = Botan::concat<std::vector<uint8_t>>();
-               result.confirm("empty concat 1", empty1.empty());
+               result.test_is_true("empty concat 1", empty1.empty());
 
                // pass an empty input buffer to be concat'ed
                const auto empty2 = Botan::concat(std::vector<uint8_t>());
-               result.confirm("empty concat 2", empty2.empty());
+               result.test_is_true("empty concat 2", empty2.empty());
 
                // pass multiple empty input buffers to be concat'ed
                const auto empty3 = Botan::concat(std::vector<uint8_t>(), Botan::secure_vector<uint8_t>());
-               result.confirm("empty concat 3", empty3.empty());
+               result.test_is_true("empty concat 3", empty3.empty());
 
                // pass multiple empty input buffers to be concat'ed without auto-detection of the output buffer
                const auto empty4 = Botan::concat<std::array<uint8_t, 0>>(
                   std::vector<uint8_t>(), std::array<uint8_t, 0>(), Botan::secure_vector<uint8_t>());
-               result.confirm("empty concat 4", empty4.empty());
+               result.test_is_true("empty concat 4", empty4.empty());
             }),
 
-      CHECK(
-         "auto-detected output type",
-         [](Test::Result& result) {
-            // define a static output type without any input parameters
-            const auto t0 = Botan::concat<std::array<uint8_t, 0>>();
-            result.confirm("type 0", std::is_same_v<std::array<uint8_t, 0>, std::remove_cvref_t<decltype(t0)>>);
+      CHECK("auto-detected output type",
+            [](Test::Result& result) {
+               // define a static output type without any input parameters
+               const auto t0 = Botan::concat<std::array<uint8_t, 0>>();
+               result.test_is_true("type 0", std::is_same_v<std::array<uint8_t, 0>, std::remove_cvref_t<decltype(t0)>>);
 
-            // define a dynamic output type without any input parameters
-            const auto t1 = Botan::concat<std::vector<uint8_t>>();
-            result.confirm("type 1", std::is_same_v<std::vector<uint8_t>, std::remove_cvref_t<decltype(t1)>>);
+               // define a dynamic output type without any input parameters
+               const auto t1 = Botan::concat<std::vector<uint8_t>>();
+               result.test_is_true("type 1", std::is_same_v<std::vector<uint8_t>, std::remove_cvref_t<decltype(t1)>>);
 
-            // pass a single dynamic input buffer and auto-detect result type
-            const auto t2 = Botan::concat(std::vector<uint8_t>());
-            result.confirm("type 2", std::is_same_v<std::vector<uint8_t>, std::remove_cvref_t<decltype(t2)>>);
+               // pass a single dynamic input buffer and auto-detect result type
+               const auto t2 = Botan::concat(std::vector<uint8_t>());
+               result.test_is_true("type 2", std::is_same_v<std::vector<uint8_t>, std::remove_cvref_t<decltype(t2)>>);
 
-            // pass multiple dynamic input buffers and auto-detect result type
-            const auto t3 = Botan::concat(Botan::secure_vector<uint8_t>(), std::vector<uint8_t>());
-            result.confirm("type 3", std::is_same_v<Botan::secure_vector<uint8_t>, std::remove_cvref_t<decltype(t3)>>);
+               // pass multiple dynamic input buffers and auto-detect result type
+               const auto t3 = Botan::concat(Botan::secure_vector<uint8_t>(), std::vector<uint8_t>());
+               result.test_is_true("type 3",
+                                   std::is_same_v<Botan::secure_vector<uint8_t>, std::remove_cvref_t<decltype(t3)>>);
 
-            // pass a mixture of dynamic and static input buffers and auto-detect result type
-            const auto t4 =
-               Botan::concat(std::vector<uint8_t>(), std::array<uint8_t, 0>(), Botan::secure_vector<uint8_t>());
-            result.confirm("type 4", std::is_same_v<std::vector<uint8_t>, std::remove_cvref_t<decltype(t4)>>);
+               // pass a mixture of dynamic and static input buffers and auto-detect result type
+               const auto t4 =
+                  Botan::concat(std::vector<uint8_t>(), std::array<uint8_t, 0>(), Botan::secure_vector<uint8_t>());
+               result.test_is_true("type 4", std::is_same_v<std::vector<uint8_t>, std::remove_cvref_t<decltype(t4)>>);
 
-            // pass only static input buffers and auto-detect result type
-            const std::array<uint8_t, 5> some_buffer{};
-            const auto t5 = Botan::concat(std::array<uint8_t, 1>(), std::array<uint8_t, 3>(), std::span{some_buffer});
-            result.confirm("type 5", std::is_same_v<std::array<uint8_t, 9>, std::remove_cvref_t<decltype(t5)>>);
-         }),
+               // pass only static input buffers and auto-detect result type
+               const std::array<uint8_t, 5> some_buffer{};
+               const auto t5 =
+                  Botan::concat(std::array<uint8_t, 1>(), std::array<uint8_t, 3>(), std::span{some_buffer});
+               result.test_is_true("type 5", std::is_same_v<std::array<uint8_t, 9>, std::remove_cvref_t<decltype(t5)>>);
+            }),
 
       CHECK("concatenate",
             [](Test::Result& result) {
@@ -619,14 +620,14 @@ std::vector<Test::Result> test_concat() {
                // concatenate into a statically sized output buffer, that is auto-detected
                const auto concat3 = Botan::concat(a1, std::span<const uint8_t, 5>(v1));
                result.test_is_eq("concat 3", concat3, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
-               result.confirm("correct type 3",
-                              std::is_same_v<std::array<uint8_t, 10>, std::remove_cvref_t<decltype(concat3)>>);
+               result.test_is_true("correct type 3",
+                                   std::is_same_v<std::array<uint8_t, 10>, std::remove_cvref_t<decltype(concat3)>>);
 
                // concatenate into a statically sized output buffer, that is auto-detected, at compile time
                constexpr auto concat4 = Botan::concat(a1, a1);
                result.test_is_eq("concat 4", concat4, {1, 2, 3, 4, 5, 1, 2, 3, 4, 5});
-               result.confirm("correct type 4",
-                              std::is_same_v<std::array<uint8_t, 10>, std::remove_cvref_t<decltype(concat4)>>);
+               result.test_is_true("correct type 4",
+                                   std::is_same_v<std::array<uint8_t, 10>, std::remove_cvref_t<decltype(concat4)>>);
             }),
 
       CHECK("dynamic length-check",

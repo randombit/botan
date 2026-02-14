@@ -68,12 +68,12 @@ class Utility_Function_Tests final : public Test {
             auto sum1 = Botan::checked_add<size_t>(i, zero, zero, zero, large);
             auto sum2 = Botan::checked_add<size_t>(large, zero, zero, zero, i);
 
-            result.confirm("checked_add looks at all args", sum1 == sum2);
+            result.test_is_true("checked_add looks at all args", sum1 == sum2);
 
             if(i < 5) {
                result.test_sz_eq("checked_add worked", sum1.value(), i + large);
             } else {
-               result.confirm("checked_add did not return a result", !sum1.has_value());
+               result.test_is_true("checked_add did not return a result", !sum1.has_value());
             }
          }
 
@@ -88,7 +88,7 @@ class Utility_Function_Tests final : public Test {
             if(auto z = Botan::checked_add(x, y)) {
                result.test_u32_eq("checked_add adds", static_cast<uint32_t>(z.value()), ref);
             } else {
-               result.confirm("checked_add checks", (ref >> 16) > 0);
+               result.test_is_true("checked_add checks", (ref >> 16) > 0);
             }
          }
 
@@ -109,7 +109,7 @@ class Utility_Function_Tests final : public Test {
             if(auto z = Botan::checked_mul(x, y)) {
                result.test_u32_eq("checked_mul multiplies", static_cast<uint32_t>(z.value()), ref);
             } else {
-               result.confirm("checked_mul checks", (ref >> 16) > 0);
+               result.test_is_true("checked_mul checks", (ref >> 16) > 0);
             }
          }
 
@@ -153,9 +153,9 @@ class Utility_Function_Tests final : public Test {
                try {
                   const size_t z = Botan::round_up(i, m);
 
-                  result.confirm("z % m == 0", z % m == 0);
-                  result.confirm("z >= i", z >= i);
-                  result.confirm("z <= i + m", z <= i + m);
+                  result.test_is_true("z % m == 0", z % m == 0);
+                  result.test_is_true("z >= i", z >= i);
+                  result.test_is_true("z <= i + m", z <= i + m);
                } catch(Botan::Exception& e) {
                   result.test_failure(Botan::fmt("round_up({},{})", i, m), e.what());
                }
@@ -966,7 +966,7 @@ class Version_Tests final : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result("Versions");
 
-         result.confirm("Version datestamp matches macro", Botan::version_datestamp() == BOTAN_VERSION_DATESTAMP);
+         result.test_is_true("Version datestamp matches macro", Botan::version_datestamp() == BOTAN_VERSION_DATESTAMP);
 
          const char* version_cstr = Botan::version_cstr();
          const std::string version_str = Botan::version_string();
@@ -980,12 +980,12 @@ class Version_Tests final : public Test {
             Botan::fmt("{}.{}.{}", BOTAN_VERSION_MAJOR, BOTAN_VERSION_MINOR, BOTAN_VERSION_PATCH);
 
          // May have a suffix eg 4.0.0-rc2
-         result.confirm("Short version string has expected format", sversion_str.starts_with(expected_sversion));
+         result.test_is_true("Short version string has expected format", sversion_str.starts_with(expected_sversion));
 
          const std::string version_check_ok =
             Botan::runtime_version_check(BOTAN_VERSION_MAJOR, BOTAN_VERSION_MINOR, BOTAN_VERSION_PATCH);
 
-         result.confirm("Correct version no warning", version_check_ok.empty());
+         result.test_is_true("Correct version no warning", version_check_ok.empty());
 
          const std::string version_check_bad = Botan::runtime_version_check(1, 19, 42);
 
@@ -1229,7 +1229,7 @@ class ReadKV_Tests final : public Text_Based_Test {
 
          for(size_t i = 0; i != expected.size(); i += 2) {
             auto j = kv.find(expected[i]);
-            if(result.confirm("Found key", j != kv.end())) {
+            if(result.test_is_true("Found key", j != kv.end())) {
                result.test_eq("Matching value", j->second, expected[i + 1]);
             }
          }
@@ -1258,7 +1258,7 @@ class CPUID_Tests final : public Test {
 
                const std::string feat_str = feat.to_string();
 
-               result.confirm("Feature string is not empty", !feat_str.empty());
+               result.test_is_true("Feature string is not empty", !feat_str.empty());
 
                if(auto from_str = Botan::CPUID::Feature::from_string(feat_str)) {
                   result.test_u32_eq("Feature::from_string returns expected bit", from_str->as_u32(), bit);
@@ -1276,7 +1276,7 @@ class CPUID_Tests final : public Test {
          const auto bit = Botan::CPUID::Feature::SSE2;
 
          if(Botan::CPUID::has(bit)) {
-            result.confirm("Output string includes sse2", cpuid_string.find("sse2") != std::string::npos);
+            result.test_is_true("Output string includes sse2", cpuid_string.find("sse2") != std::string::npos);
 
             Botan::CPUID::clear_cpuid_bit(bit);
 
@@ -1313,21 +1313,21 @@ class UUID_Tests : public Test {
                             []() { const Botan::UUID u(std::vector<uint8_t>(15)); });
 
          result.test_is_false("Empty UUID is empty", empty_uuid.is_valid());
-         result.confirm("Empty UUID equals another empty UUID", empty_uuid == Botan::UUID());
+         result.test_is_true("Empty UUID equals another empty UUID", empty_uuid == Botan::UUID());
 
          result.test_throws("Empty UUID cannot become a string", [&]() { empty_uuid.to_string(); });
 
          result.test_is_true("Random UUID not empty", random_uuid1.is_valid());
          result.test_is_true("Random UUID not empty", random_uuid2.is_valid());
 
-         result.confirm("Random UUIDs are distinct", random_uuid1 != random_uuid2);
-         result.confirm("Random UUIDs not equal to empty", random_uuid1 != empty_uuid);
+         result.test_is_true("Random UUIDs are distinct", random_uuid1 != random_uuid2);
+         result.test_is_true("Random UUIDs not equal to empty", random_uuid1 != empty_uuid);
 
          const std::string uuid4_str = loaded_uuid.to_string();
          result.test_eq("String matches expected", uuid4_str, "04040404-0404-0404-0404-040404040404");
 
          const std::string uuid_r1_str = random_uuid1.to_string();
-         result.confirm("UUID from string matches", Botan::UUID(uuid_r1_str) == random_uuid1);
+         result.test_is_true("UUID from string matches", Botan::UUID(uuid_r1_str) == random_uuid1);
 
          class AllSame_RNG : public Botan::RandomNumberGenerator {
             public:
@@ -1399,7 +1399,7 @@ class ScopedCleanup_Tests : public Test {
                      {
                         auto clean = Botan::scoped_cleanup([&] { ran = true; });
                      }
-                     result.confirm("cleanup ran", ran);
+                     result.test_is_true("cleanup ran", ran);
                   }),
 
             CHECK("leaving a function, results in cleanup",
@@ -1411,10 +1411,10 @@ class ScopedCleanup_Tests : public Test {
                         fn_called = true;
                      };
 
-                     result.confirm("cleanup not yet ran", !ran);
+                     result.test_is_true("cleanup not yet ran", !ran);
                      fn();
-                     result.confirm("fn called", fn_called);
-                     result.confirm("cleanup ran", ran);
+                     result.test_is_true("fn called", fn_called);
+                     result.test_is_true("cleanup ran", ran);
                   }),
 
             CHECK("stack unwinding results in cleanup",
@@ -1428,16 +1428,16 @@ class ScopedCleanup_Tests : public Test {
                         throw std::runtime_error("test");
                      };
 
-                     result.confirm("cleanup not yet ran", !ran);
+                     result.test_is_true("cleanup not yet ran", !ran);
                      try {
                         fn();
                      } catch(const std::exception&) {
                         exception_caught = true;
                      }
 
-                     result.confirm("fn called", fn_called);
-                     result.confirm("cleanup ran", ran);
-                     result.confirm("exception caught", exception_caught);
+                     result.test_is_true("fn called", fn_called);
+                     result.test_is_true("cleanup ran", ran);
+                     result.test_is_true("exception caught", exception_caught);
                   }),
 
             CHECK("cleanup isn't called after disengaging",
@@ -1447,7 +1447,7 @@ class ScopedCleanup_Tests : public Test {
                         auto clean = Botan::scoped_cleanup([&] { ran = true; });
                         clean.disengage();
                      }
-                     result.confirm("cleanup not ran", !ran);
+                     result.test_is_true("cleanup not ran", !ran);
                   }),
 
          };

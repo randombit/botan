@@ -112,8 +112,9 @@ std::vector<Test::Result> handshake_message_filtering() {
                   std::get<Botan::TLS::Server_Hello_13>(Botan::TLS::Server_Hello_13::parse(server_hello_message));
 
                auto filtered = state.received(std::move(server_hello));
-               result.confirm("client can receive server hello",
-                              std::holds_alternative<std::reference_wrapper<Botan::TLS::Server_Hello_13>>(filtered));
+               result.test_is_true(
+                  "client can receive server hello",
+                  std::holds_alternative<std::reference_wrapper<Botan::TLS::Server_Hello_13>>(filtered));
 
                result.test_eq("correct server hello stored", state.server_hello().serialize(), server_hello_message);
             }),

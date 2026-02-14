@@ -21,7 +21,7 @@ class URI_Tests final : public Test {
       static Test::Result test_uri_ctor() {
          Test::Result result("URI constructors");
          const Botan::URI uri(Botan::URI::Type::Domain, "localhost", 9000);
-         result.confirm("type", uri.type() == Botan::URI::Type::Domain);
+         result.test_is_true("type", uri.type() == Botan::URI::Type::Domain);
          result.test_eq("host", uri.host(), "localhost");
          result.test_sz_eq("post", size_t(uri.port()), 9000);
          return result;
@@ -73,7 +73,7 @@ class URI_Tests final : public Test {
             }
 
             const auto any = Botan::URI::from_any(t.uri);
-            result.confirm("from_any type is expected", any.type() == t.type);
+            result.test_is_true("from_any type is expected", any.type() == t.type);
             test_URI(any, t.host, t.port);
             if(t.type == Botan::URI::Type::Domain) {
                test_URI(Botan::URI::from_domain(t.uri), t.host, t.port);

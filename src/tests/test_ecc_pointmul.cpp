@@ -189,7 +189,7 @@ class ECC_Mul2_Inf_Tests final : public Test {
             const auto neg_r2 = neg_r + neg_r;
 
             const auto zero = r - r;  // NOLINT(*-redundant-expression)
-            result.confirm("Computed EC_Scalar is zero", zero.is_zero());
+            result.test_is_true("Computed EC_Scalar is zero", zero.is_zero());
 
             const auto g2 = g.add(g);
 
@@ -205,9 +205,9 @@ class ECC_Mul2_Inf_Tests final : public Test {
 
             // Test 'zeroization' (explicit erasure of the scalar content)
             auto r2 = Botan::EC_Scalar::random(group, rng());
-            result.confirm("random value is not zero", !r2.is_zero());
+            result.test_is_true("random value is not zero", !r2.is_zero());
             r2.zeroize();
-            result.confirm("value is zero", r2.is_zero());
+            result.test_is_true("value is zero", r2.is_zero());
 
             results.push_back(result);
          }
@@ -336,7 +336,7 @@ class ECC_Scalar_Arithmetic_Tests final : public Test {
             result.test_eq("r * r^-1 = 1", (r * r_inv).serialize(), ser_one);
 
             const auto r_inv_vt = r.invert_vartime();
-            result.confirm("CT and variable time inversions produced same result", r_inv == r_inv_vt);
+            result.test_is_true("CT and variable time inversions produced same result", r_inv == r_inv_vt);
          }
 
          for(size_t i = 0; i != test_iter; ++i) {

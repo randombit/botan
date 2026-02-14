@@ -24,33 +24,33 @@ std::vector<Test::Result> test_signature_scheme() {
 
    for(const auto& s : Botan::TLS::Signature_Scheme::all_available_schemes()) {
       results.push_back(CHECK(s.to_string().c_str(), [&](auto& result) {
-         result.confirm("is_set handles all cases", s.is_set());
-         result.confirm("is_available handles all cases", s.is_available());
+         result.test_is_true("is_set handles all cases", s.is_set());
+         result.test_is_true("is_available handles all cases", s.is_available());
 
-         result.confirm("to_string handles all cases", not_unknown(s.to_string()));
-         result.confirm("hash_function_name handles all cases", not_unknown(s.hash_function_name()));
-         result.confirm("padding_string handles all cases", not_unknown(s.padding_string()));
-         result.confirm("algorithm_name handles all cases", not_unknown(s.algorithm_name()));
+         result.test_is_true("to_string handles all cases", not_unknown(s.to_string()));
+         result.test_is_true("hash_function_name handles all cases", not_unknown(s.hash_function_name()));
+         result.test_is_true("padding_string handles all cases", not_unknown(s.padding_string()));
+         result.test_is_true("algorithm_name handles all cases", not_unknown(s.algorithm_name()));
 
-         result.confirm("format handles all cases", s.format().has_value());
-         result.confirm("algorithm_identifier handles all cases",
-                        Botan::AlgorithmIdentifier() != s.key_algorithm_identifier());
+         result.test_is_true("format handles all cases", s.format().has_value());
+         result.test_is_true("algorithm_identifier handles all cases",
+                             Botan::AlgorithmIdentifier() != s.key_algorithm_identifier());
       }));
    }
 
    Botan::TLS::Signature_Scheme bogus(0x1337);
    results.push_back(CHECK("bogus scheme", [&](auto& result) {
-      result.confirm("is_set still works", bogus.is_set());
-      result.confirm("is not available", !bogus.is_available());
+      result.test_is_true("is_set still works", bogus.is_set());
+      result.test_is_true("is not available", !bogus.is_available());
 
-      result.confirm("to_string deals with bogus schemes", !not_unknown(bogus.to_string()));
-      result.confirm("hash_function_name deals with bogus schemes", !not_unknown(bogus.hash_function_name()));
-      result.confirm("padding_string deals with bogus schemes", !not_unknown(bogus.padding_string()));
-      result.confirm("algorithm_name deals with bogus schemes", !not_unknown(bogus.algorithm_name()));
+      result.test_is_true("to_string deals with bogus schemes", !not_unknown(bogus.to_string()));
+      result.test_is_true("hash_function_name deals with bogus schemes", !not_unknown(bogus.hash_function_name()));
+      result.test_is_true("padding_string deals with bogus schemes", !not_unknown(bogus.padding_string()));
+      result.test_is_true("algorithm_name deals with bogus schemes", !not_unknown(bogus.algorithm_name()));
 
-      result.confirm("format deals with bogus schemes", !bogus.format().has_value());
-      result.confirm("algorithm_identifier deals with bogus schemes",
-                     Botan::AlgorithmIdentifier() == bogus.key_algorithm_identifier());
+      result.test_is_true("format deals with bogus schemes", !bogus.format().has_value());
+      result.test_is_true("algorithm_identifier deals with bogus schemes",
+                          Botan::AlgorithmIdentifier() == bogus.key_algorithm_identifier());
    }));
 
    return results;

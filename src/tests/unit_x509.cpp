@@ -199,7 +199,7 @@ Test::Result test_cert_status_strings() {
 
    for(const auto code : codes) {
       const std::string s = Botan::to_string(code);
-      result.confirm("String is long enough to be informative", s.size() > 12);
+      result.test_sz_gt("String is long enough to be informative", s.size(), 12);
       result.test_sz_eq("No duplicates", seen.count(s), 0);
       seen.insert(s);
    }
@@ -217,10 +217,10 @@ Test::Result test_x509_extension() {
 
    extn.add(std::make_unique<Botan::Cert_Extension::Basic_Constraints>(true), true);
 
-   result.confirm("Basic constraints is set", extn.extension_set(oid_bc));
-   result.confirm("Basic constraints is critical", extn.critical_extension_set(oid_bc));
-   result.confirm("SKID is not set", !extn.extension_set(oid_skid));
-   result.confirm("SKID is not critical", !extn.critical_extension_set(oid_skid));
+   result.test_is_true("Basic constraints is set", extn.extension_set(oid_bc));
+   result.test_is_true("Basic constraints is critical", extn.critical_extension_set(oid_bc));
+   result.test_is_true("SKID is not set", !extn.extension_set(oid_skid));
+   result.test_is_true("SKID is not critical", !extn.critical_extension_set(oid_skid));
 
    result.test_eq("Extension::get_extension_bits", extn.get_extension_bits(oid_bc), "30060101FF020100");
 
@@ -231,19 +231,19 @@ Test::Result test_x509_extension() {
 
    result.test_eq("Extension::get_extension_bits", extn.get_extension_bits(oid_bc), "30060101FF020100");
 
-   result.confirm("Returns false since extension already existed",
-                  !extn.add_new(std::make_unique<Botan::Cert_Extension::Basic_Constraints>(false), false));
+   result.test_is_true("Returns false since extension already existed",
+                       !extn.add_new(std::make_unique<Botan::Cert_Extension::Basic_Constraints>(false), false));
 
-   result.confirm("Basic constraints is still critical", extn.critical_extension_set(oid_bc));
+   result.test_is_true("Basic constraints is still critical", extn.critical_extension_set(oid_bc));
 
    extn.replace(std::make_unique<Botan::Cert_Extension::Basic_Constraints>(false), false);
-   result.confirm("Replaced basic constraints is not critical", !extn.critical_extension_set(oid_bc));
+   result.test_is_true("Replaced basic constraints is not critical", !extn.critical_extension_set(oid_bc));
    result.test_eq("Extension::get_extension_bits", extn.get_extension_bits(oid_bc), "3000");
 
-   result.confirm("Delete returns false if extn not set", !extn.remove(oid_skid));
-   result.confirm("Delete returns true if extn was set", extn.remove(oid_bc));
-   result.confirm("Basic constraints is not set", !extn.extension_set(oid_bc));
-   result.confirm("Basic constraints is not critical", !extn.critical_extension_set(oid_bc));
+   result.test_is_true("Delete returns false if extn not set", !extn.remove(oid_skid));
+   result.test_is_true("Delete returns true if extn was set", extn.remove(oid_bc));
+   result.test_is_true("Basic constraints is not set", !extn.extension_set(oid_bc));
+   result.test_is_true("Basic constraints is not critical", !extn.critical_extension_set(oid_bc));
 
    return result;
 }
@@ -252,9 +252,9 @@ Test::Result test_x509_dates() {
    Test::Result result("X509 Time");
 
    Botan::X509_Time time;
-   result.confirm("unset time not set", !time.time_is_set());
+   result.test_is_true("unset time not set", !time.time_is_set());
    time = Botan::X509_Time("080201182200Z", Botan::ASN1_Type::UtcTime);
-   result.confirm("time set after construction", time.time_is_set());
+   result.test_is_true("time set after construction", time.time_is_set());
    result.test_eq("time readable_string", time.readable_string(), "2008/02/01 18:22:00 UTC");
 
    time = Botan::X509_Time("200305100350Z", Botan::ASN1_Type::UtcTime);
@@ -462,11 +462,11 @@ Test::Result test_x509_encode_authority_info_access_extension() {
    }
 
    for(const auto& ca_issuer : cert.ca_issuers()) {
-      result.confirm("CA issuer URI present in certificate",
-                     std::ranges::find(ca_issuers, ca_issuer) != ca_issuers.end());
+      result.test_is_true("CA issuer URI present in certificate",
+                          std::ranges::find(ca_issuers, ca_issuer) != ca_issuers.end());
    }
 
-   result.confirm("no OCSP url available", cert.ocsp_responder().empty());
+   result.test_is_true("no OCSP url available", cert.ocsp_responder().empty());
 
    // create a certificate with only OCSP URI information
    Botan::X509_Cert_Options opts2 = req_opts1(sig_algo);
@@ -476,8 +476,8 @@ Test::Result test_x509_encode_authority_info_access_extension() {
 
    cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
-   result.confirm("OCSP URI available", !cert.ocsp_responder().empty());
-   result.confirm("no CA Issuer URI available", cert.ca_issuers().empty());
+   result.test_is_true("OCSP URI available", !cert.ocsp_responder().empty());
+   result.test_is_true("no CA Issuer URI available", cert.ca_issuers().empty());
    result.test_eq("OCSP responder URI matches", cert.ocsp_responder(), std::string(ocsp_uri));
 
    // create a certificate with OCSP URI and CA Issuer information
@@ -488,8 +488,8 @@ Test::Result test_x509_encode_authority_info_access_extension() {
 
    cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
-   result.confirm("OCSP URI available", !cert.ocsp_responder().empty());
-   result.confirm("CA Issuer URI available", !cert.ca_issuers().empty());
+   result.test_is_true("OCSP URI available", !cert.ocsp_responder().empty());
+   result.test_is_true("CA Issuer URI available", !cert.ca_issuers().empty());
    #endif
 
    return result;
@@ -515,9 +515,9 @@ Test::Result test_crl_dn_name() {
 
    const Botan::X509_CRL crl = ca.new_crl(*rng);
 
-   result.confirm("matches issuer cert", crl.issuer_dn() == cert.subject_dn());
+   result.test_is_true("matches issuer cert", crl.issuer_dn() == cert.subject_dn());
 
-   result.confirm("contains DC component", crl.issuer_dn().get_attributes().count(dc_oid) == 1);
+   result.test_is_true("contains DC component", crl.issuer_dn().get_attributes().count(dc_oid) == 1);
       #endif
 
    return result;
@@ -530,8 +530,8 @@ Test::Result test_rdn_multielement_set_name() {
 
    const Botan::X509_Certificate cert(Test::data_file("x509/misc/rdn_set.crt"));
 
-   result.confirm("issuer DN contains expected name components", cert.issuer_dn().get_attributes().size() == 4);
-   result.confirm("subject DN contains expected name components", cert.subject_dn().get_attributes().size() == 4);
+   result.test_is_true("issuer DN contains expected name components", cert.issuer_dn().get_attributes().size() == 4);
+   result.test_is_true("subject DN contains expected name components", cert.subject_dn().get_attributes().size() == 4);
 
    return result;
 }
@@ -720,7 +720,7 @@ Test::Result test_verify_gost2012_cert() {
          const Botan::Path_Validation_Result validation_result =
             Botan::x509_path_validate(root_int, restrictions, trusted);
 
-         result.confirm("GOST certificate validates", validation_result.successful_validation());
+         result.test_is_true("GOST certificate validates", validation_result.successful_validation());
       }
    } catch(const Botan::Decoding_Error& e) {
       result.test_failure(e.what());
@@ -828,7 +828,7 @@ Test::Result test_padding_config() {
    const Botan::Path_Validation_Restrictions restrictions(false, 80);
    const Botan::Path_Validation_Result validation_result =
       Botan::x509_path_validate(end_cert_pss, restrictions, trusted);
-   test_result.confirm("PSS signed certificate validates", validation_result.successful_validation());
+   test_result.test_is_true("PSS signed certificate validates", validation_result.successful_validation());
 
    return test_result;
 }
@@ -874,7 +874,7 @@ Test::Result test_pkcs10_ext(const Botan::Private_Key& key,
    }
 
    result.test_sz_eq("Expected number of alt DNs", req.subject_alt_name().directory_names().size(), 1);
-   result.confirm("Alt DN is correct", *req.subject_alt_name().directory_names().begin() == alt_dn);
+   result.test_is_true("Alt DN is correct", *req.subject_alt_name().directory_names().begin() == alt_dn);
 
    return result;
 }
@@ -890,8 +890,8 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    const auto ca_cert = Botan::X509::create_self_signed_cert(ca_opts(sig_padding), ca_key, hash_fn, rng);
 
    {
-      result.confirm("ca key usage cert", ca_cert.constraints().includes(Botan::Key_Constraints::KeyCertSign));
-      result.confirm("ca key usage crl", ca_cert.constraints().includes(Botan::Key_Constraints::CrlSign));
+      result.test_is_true("ca key usage cert", ca_cert.constraints().includes(Botan::Key_Constraints::KeyCertSign));
+      result.test_is_true("ca key usage crl", ca_cert.constraints().includes(Botan::Key_Constraints::CrlSign));
    }
 
    /* Create user #1's key and cert request */
@@ -939,7 +939,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
 
    {
       auto constraints = req_opts1(sig_algo).constraints;
-      result.confirm("user1 key usage", user1_cert.constraints().includes(constraints));
+      result.test_is_true("user1 key usage", user1_cert.constraints().includes(constraints));
    }
 
    /* Copy, assign and compare */
@@ -995,12 +995,12 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    store.add_certificate(ca.ca_certificate());
 
    Botan::Path_Validation_Result result_u1 = Botan::x509_path_validate(user1_cert, restrictions, store);
-   if(!result.confirm("user 1 validates", result_u1.successful_validation())) {
+   if(!result.test_is_true("user 1 validates", result_u1.successful_validation())) {
       result.test_note("user 1 validation result was " + result_u1.result_string());
    }
 
    Botan::Path_Validation_Result result_u2 = Botan::x509_path_validate(user2_cert, restrictions, store);
-   if(!result.confirm("user 2 validates", result_u2.successful_validation())) {
+   if(!result.test_is_true("user 2 validates", result_u2.successful_validation())) {
       result.test_note("user 2 validation result was " + result_u2.result_string());
    }
 
@@ -1035,7 +1035,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    store.add_crl(crl3);
 
    result_u1 = Botan::x509_path_validate(user1_cert, restrictions, store);
-   if(!result.confirm("user 1 validates", result_u1.successful_validation())) {
+   if(!result.test_is_true("user 1 validates", result_u1.successful_validation())) {
       result.test_note("user 1 validation result was " + result_u1.result_string());
    }
 
@@ -1077,7 +1077,8 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
    result.test_is_false("encryption is not allowed", user1_cert.allowed_usage(Usage_Type::ENCRYPTION));
 
    // cert only allows digitalSignature, so checking for only that should be ok
-   result.confirm("key usage digitalSignature allowed", user1_cert.allowed_usage(Key_Constraints::DigitalSignature));
+   result.test_is_true("key usage digitalSignature allowed",
+                       user1_cert.allowed_usage(Key_Constraints::DigitalSignature));
 
    opts.constraints = Key_Constraints(Key_Constraints::DigitalSignature | Key_Constraints::CrlSign);
 
@@ -1087,10 +1088,10 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
       ca.sign_request(mult_usage_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
    // cert allows multiple usages, so each one of them as well as both together should be allowed
-   result.confirm("key usage multiple digitalSignature allowed",
-                  mult_usage_cert.allowed_usage(Key_Constraints::DigitalSignature));
-   result.confirm("key usage multiple cRLSign allowed", mult_usage_cert.allowed_usage(Key_Constraints::CrlSign));
-   result.confirm(
+   result.test_is_true("key usage multiple digitalSignature allowed",
+                       mult_usage_cert.allowed_usage(Key_Constraints::DigitalSignature));
+   result.test_is_true("key usage multiple cRLSign allowed", mult_usage_cert.allowed_usage(Key_Constraints::CrlSign));
+   result.test_is_true(
       "key usage multiple digitalSignature and cRLSign allowed",
       mult_usage_cert.allowed_usage(Key_Constraints(Key_Constraints::DigitalSignature | Key_Constraints::CrlSign)));
    result.test_is_false("encryption is not allowed", mult_usage_cert.allowed_usage(Usage_Type::ENCRYPTION));
@@ -1103,9 +1104,10 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
       ca.sign_request(no_usage_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
    // cert allows every usage
-   result.confirm("key usage digitalSignature allowed", no_usage_cert.allowed_usage(Key_Constraints::DigitalSignature));
-   result.confirm("key usage cRLSign allowed", no_usage_cert.allowed_usage(Key_Constraints::CrlSign));
-   result.confirm("key usage encryption allowed", no_usage_cert.allowed_usage(Usage_Type::ENCRYPTION));
+   result.test_is_true("key usage digitalSignature allowed",
+                       no_usage_cert.allowed_usage(Key_Constraints::DigitalSignature));
+   result.test_is_true("key usage cRLSign allowed", no_usage_cert.allowed_usage(Key_Constraints::CrlSign));
+   result.test_is_true("key usage encryption allowed", no_usage_cert.allowed_usage(Usage_Type::ENCRYPTION));
 
    if(sig_algo == "RSA") {
       // cert allows data encryption
@@ -1116,8 +1118,8 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
       const Botan::X509_Certificate enc_cert =
          ca.sign_request(enc_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
-      result.confirm("cert allows encryption", enc_cert.allowed_usage(Usage_Type::ENCRYPTION));
-      result.confirm("cert does not allow TLS client auth", !enc_cert.allowed_usage(Usage_Type::TLS_CLIENT_AUTH));
+      result.test_is_true("cert allows encryption", enc_cert.allowed_usage(Usage_Type::ENCRYPTION));
+      result.test_is_true("cert does not allow TLS client auth", !enc_cert.allowed_usage(Usage_Type::TLS_CLIENT_AUTH));
    }
 
    return result;
@@ -1160,7 +1162,7 @@ Test::Result test_self_issued(const Botan::Private_Key& ca_key,
    const Botan::Path_Validation_Result validation_result =
       Botan::x509_path_validate(self_issued_cert, restrictions, trusted);
 
-   result.confirm("chain with self-issued cert validates", validation_result.successful_validation());
+   result.test_is_true("chain with self-issued cert validates", validation_result.successful_validation());
 
    return result;
 }
@@ -1185,7 +1187,7 @@ Test::Result test_valid_constraints(const Botan::Private_Key& key, const std::st
 
    Test::Result result("X509 Valid Constraints " + pk_algo);
 
-   result.confirm("empty constraints always acceptable", Key_Constraints().compatible_with(key));
+   result.test_is_true("empty constraints always acceptable", Key_Constraints().compatible_with(key));
 
    // Now check some typical usage scenarios for the given key type
    // Taken from RFC 5280, sec. 4.2.1.3
@@ -1353,10 +1355,10 @@ Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
 
    const Botan::ASN1_String req_val1 = req_dn.get_first_attribute(attr1);
    const Botan::ASN1_String req_val2 = req_dn.get_first_attribute(attr2);
-   result.confirm("Attr1 matches encoded", req_val1 == val1);
-   result.confirm("Attr2 matches encoded", req_val2 == val2);
-   result.confirm("Attr1 tag matches encoded", req_val1.tagging() == val1.tagging());
-   result.confirm("Attr2 tag matches encoded", req_val2.tagging() == val2.tagging());
+   result.test_is_true("Attr1 matches encoded", req_val1 == val1);
+   result.test_is_true("Attr2 matches encoded", req_val2 == val2);
+   result.test_is_true("Attr1 tag matches encoded", req_val1.tagging() == val1.tagging());
+   result.test_is_true("Attr2 tag matches encoded", req_val2.tagging() == val2.tagging());
 
    const Botan::X509_Time not_before("100301123001Z", Botan::ASN1_Type::UtcTime);
    const Botan::X509_Time not_after("300301123001Z", Botan::ASN1_Type::UtcTime);
@@ -1369,10 +1371,10 @@ Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
 
    const Botan::ASN1_String cert_val1 = cert_dn.get_first_attribute(attr1);
    const Botan::ASN1_String cert_val2 = cert_dn.get_first_attribute(attr2);
-   result.confirm("Attr1 matches encoded", cert_val1 == val1);
-   result.confirm("Attr2 matches encoded", cert_val2 == val2);
-   result.confirm("Attr1 tag matches encoded", cert_val1.tagging() == val1.tagging());
-   result.confirm("Attr2 tag matches encoded", cert_val2.tagging() == val2.tagging());
+   result.test_is_true("Attr1 matches encoded", cert_val1 == val1);
+   result.test_is_true("Attr2 matches encoded", cert_val2 == val2);
+   result.test_is_true("Attr1 tag matches encoded", cert_val1.tagging() == val1.tagging());
+   result.test_is_true("Attr2 tag matches encoded", cert_val2.tagging() == val2.tagging());
 
    return result;
 }
@@ -1425,20 +1427,20 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    /* Create a self-signed certificate */
    const Botan::X509_Certificate self_signed_cert = Botan::X509::create_self_signed_cert(opts, *user_key, hash_fn, rng);
 
-   result.confirm("Extensions::extension_set true for Key_Usage",
-                  self_signed_cert.v3_extensions().extension_set(ku_oid));
+   result.test_is_true("Extensions::extension_set true for Key_Usage",
+                       self_signed_cert.v3_extensions().extension_set(ku_oid));
 
    // check if known Key_Usage extension is present in self-signed cert
    auto key_usage_ext = self_signed_cert.v3_extensions().get(ku_oid);
-   if(result.confirm("Key_Usage extension present in self-signed certificate", key_usage_ext != nullptr)) {
-      result.confirm(
+   if(result.test_is_true("Key_Usage extension present in self-signed certificate", key_usage_ext != nullptr)) {
+      result.test_is_true(
          "Key_Usage extension value matches in self-signed certificate",
          dynamic_cast<Botan::Cert_Extension::Key_Usage&>(*key_usage_ext).get_constraints() == opts.constraints);
    }
 
    // check if custom extension is present in self-signed cert
    auto string_ext = self_signed_cert.v3_extensions().get_raw<String_Extension>(oid);
-   if(result.confirm("Custom extension present in self-signed certificate", string_ext != nullptr)) {
+   if(result.test_is_true("Custom extension present in self-signed certificate", string_ext != nullptr)) {
       result.test_eq(
          "Custom extension value matches in self-signed certificate", string_ext->value(), "AAAAAAAAAAAAAABCDEF");
    }
@@ -1447,11 +1449,11 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    const auto* cert_cdps =
       self_signed_cert.v3_extensions().get_extension_object_as<Botan::Cert_Extension::CRL_Distribution_Points>();
 
-   if(result.confirm("CRL Distribution Points extension present in self-signed certificate",
-                     !cert_cdps->crl_distribution_urls().empty())) {
+   if(result.test_is_true("CRL Distribution Points extension present in self-signed certificate",
+                          !cert_cdps->crl_distribution_urls().empty())) {
       for(const auto& cdp : cert_cdps->distribution_points()) {
-         result.confirm("CDP URI present in self-signed certificate",
-                        std::ranges::find(cdp_urls, cdp.point().get_first_attribute("URI")) != cdp_urls.end());
+         result.test_is_true("CDP URI present in self-signed certificate",
+                             std::ranges::find(cdp_urls, cdp.point().get_first_attribute("URI")) != cdp_urls.end());
       }
    }
 
@@ -1462,20 +1464,21 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
       ca.sign_request(user_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
    // check if known Key_Usage extension is present in CA-signed cert
-   result.confirm("Extensions::extension_set true for Key_Usage", ca_signed_cert.v3_extensions().extension_set(ku_oid));
+   result.test_is_true("Extensions::extension_set true for Key_Usage",
+                       ca_signed_cert.v3_extensions().extension_set(ku_oid));
 
    key_usage_ext = ca_signed_cert.v3_extensions().get(ku_oid);
-   if(result.confirm("Key_Usage extension present in CA-signed certificate", key_usage_ext != nullptr)) {
+   if(result.test_is_true("Key_Usage extension present in CA-signed certificate", key_usage_ext != nullptr)) {
       auto constraints = dynamic_cast<Botan::Cert_Extension::Key_Usage&>(*key_usage_ext).get_constraints();
-      result.confirm("Key_Usage extension value matches in user certificate",
-                     constraints == Botan::Key_Constraints::DigitalSignature);
+      result.test_is_true("Key_Usage extension value matches in user certificate",
+                          constraints == Botan::Key_Constraints::DigitalSignature);
    }
 
    // check if custom extension is present in CA-signed cert
-   result.confirm("Extensions::extension_set true for String_Extension",
-                  ca_signed_cert.v3_extensions().extension_set(oid));
+   result.test_is_true("Extensions::extension_set true for String_Extension",
+                       ca_signed_cert.v3_extensions().extension_set(oid));
    string_ext = ca_signed_cert.v3_extensions().get_raw<String_Extension>(oid);
-   if(result.confirm("Custom extension present in CA-signed certificate", string_ext != nullptr)) {
+   if(result.test_is_true("Custom extension present in CA-signed certificate", string_ext != nullptr)) {
       result.test_eq(
          "Custom extension value matches in CA-signed certificate", string_ext->value(), "AAAAAAAAAAAAAABCDEF");
    }
@@ -1483,11 +1486,11 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    // check if CDPs are present in the CA-signed cert
    cert_cdps = ca_signed_cert.v3_extensions().get_extension_object_as<Botan::Cert_Extension::CRL_Distribution_Points>();
 
-   if(result.confirm("CRL Distribution Points extension present in self-signed certificate",
-                     !cert_cdps->crl_distribution_urls().empty())) {
+   if(result.test_is_true("CRL Distribution Points extension present in self-signed certificate",
+                          !cert_cdps->crl_distribution_urls().empty())) {
       for(const auto& cdp : cert_cdps->distribution_points()) {
-         result.confirm("CDP URI present in self-signed certificate",
-                        std::ranges::find(cdp_urls, cdp.point().get_first_attribute("URI")) != cdp_urls.end());
+         result.test_is_true("CDP URI present in self-signed certificate",
+                             std::ranges::find(cdp_urls, cdp.point().get_first_attribute("URI")) != cdp_urls.end());
       }
    }
 
@@ -1575,7 +1578,7 @@ Test::Result test_x509_tn_auth_list_extension_decode() {
 
    const auto& tn_entries = tn_auth_list->entries();
 
-   result.confirm("cert has TNAuthList extension", tn_auth_list != nullptr, true);
+   result.test_not_null("cert has TNAuthList extension", tn_auth_list);
 
    result.test_throws("wrong telephone_number_range() accessor for spc",
                       [&tn_entries] { tn_entries[0].telephone_number_range(); });

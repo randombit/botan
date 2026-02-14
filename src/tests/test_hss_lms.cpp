@@ -135,14 +135,14 @@ class HSS_LMS_Negative_Tests final : public Test {
          signer.update(mes);
          auto valid_sig = signer.signature(Test::rng());
          verifier.update(mes);
-         result.confirm("Entire signature is valid", verifier.check_signature(valid_sig.data(), valid_sig.size()));
+         result.test_is_true("Entire signature is valid", verifier.check_signature(valid_sig.data(), valid_sig.size()));
          for(size_t idx = 0; idx < valid_sig.size(); ++idx) {
             auto bad_sig = valid_sig;
             bad_sig.at(idx) ^= 0x80;
             result.test_no_throw(Botan::fmt("Verification does not throw (byte idx {})", idx), [&]() {
                verifier.update(mes);
                const bool valid = verifier.check_signature(bad_sig);
-               result.confirm(Botan::fmt("Manipulated signature is invalid (byte idx {})", idx), !valid);
+               result.test_is_true(Botan::fmt("Manipulated signature is invalid (byte idx {})", idx), !valid);
             });
          }
 
@@ -162,12 +162,12 @@ class HSS_LMS_Negative_Tests final : public Test {
          signer.update(mes);
          auto valid_sig = signer.signature(Test::rng());
          verifier.update(mes);
-         result.confirm("Entire signature is valid", verifier.check_signature(valid_sig.data(), valid_sig.size()));
+         result.test_is_true("Entire signature is valid", verifier.check_signature(valid_sig.data(), valid_sig.size()));
          for(size_t n = 0; n < valid_sig.size(); ++n) {
             result.test_no_throw("Verification does not throw", [&]() {
                verifier.update(mes);
                const bool valid = verifier.check_signature(valid_sig.data(), n);
-               result.confirm("Too short signature is invalid", !valid);
+               result.test_is_true("Too short signature is invalid", !valid);
             });
          }
 
@@ -246,23 +246,23 @@ class HSS_LMS_Statefulness_Test final : public Test {
 
          // Tree heights: 5,5 => 2^(5+5) = 1024 signatures available
          const uint64_t expected_total = 1024;
-         result.confirm("Fresh key starts with total number of remaining signatures.",
-                        sk.remaining_operations() == expected_total);
+         result.test_is_true("Fresh key starts with total number of remaining signatures.",
+                             sk.remaining_operations() == expected_total);
 
          // Creating a signature should update the private key's state
          auto sig_0 = signer.sign_message(mes, Test::rng());
-         result.confirm(
+         result.test_is_true(
             "First signature uses index 0.",
             Botan::HSS_Signature::from_bytes_or_throw(sig_0).bottom_sig().q() == Botan::LMS_Tree_Node_Idx(0));
 
          auto sk_bytes_after_sig = sk.private_key_bits();
 
-         result.confirm("Signature decreases number of remaining signatures.",
-                        sk.remaining_operations() == expected_total - 1);
+         result.test_is_true("Signature decreases number of remaining signatures.",
+                             sk.remaining_operations() == expected_total - 1);
          result.test_ne("Signature updates private key.", sk_bytes_after_sig, sk_bytes_begin);
 
          auto sig_1 = signer.sign_message(mes, Test::rng());
-         result.confirm(
+         result.test_is_true(
             "Next signature uses the new index.",
             Botan::HSS_Signature::from_bytes_or_throw(sig_1).bottom_sig().q() == Botan::LMS_Tree_Node_Idx(1));
 
@@ -279,11 +279,11 @@ class HSS_LMS_Statefulness_Test final : public Test {
          std::vector<uint8_t> mes = {0xde, 0xad, 0xbe, 0xef};
          auto sk_bytes_begin = sk.private_key_bits();
 
-         result.confirm("One remaining signature.", sk.remaining_operations() == uint64_t(1));
+         result.test_is_true("One remaining signature.", sk.remaining_operations() == uint64_t(1));
          result.test_no_throw("Use last signature index.", [&]() { signer.sign_message(mes, Test::rng()); });
-         result.confirm("No remaining signatures.", sk.remaining_operations() == uint64_t(0));
+         result.test_is_true("No remaining signatures.", sk.remaining_operations() == uint64_t(0));
          result.test_throws("Cannot sign with exhausted key.", [&]() { signer.sign_message(mes, Test::rng()); });
-         result.confirm("Still zero remaining signatures.", sk.remaining_operations() == uint64_t(0));
+         result.test_is_true("Still zero remaining signatures.", sk.remaining_operations() == uint64_t(0));
 
          return result;
       }

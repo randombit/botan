@@ -299,7 +299,7 @@ Test::Result hash_truncation_negative_tests() {
    result.test_throws<Botan::Invalid_Argument>("cannot output more bits than the underlying hash",
                                                [] { Botan::HashFunction::create("Truncated(SHA-256,257)"); });
    auto unobtainable = Botan::HashFunction::create("Truncated(NonExistentHash-256,128)");
-   result.confirm("non-existent hashes are not created", unobtainable == nullptr);
+   result.test_is_true("non-existent hashes are not created", unobtainable == nullptr);
    return result;
 }
 
