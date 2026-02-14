@@ -199,21 +199,21 @@ std::vector<Test::Result> test_tpm2_properties() {
 
       CHECK("Supports basic algorithms",
             [&](Test::Result& result) {
-               result.confirm("RSA is supported", ctx->supports_algorithm("RSA"));
-               result.confirm("AES-128 is supported", ctx->supports_algorithm("AES-128"));
-               result.confirm("AES-256 is supported", ctx->supports_algorithm("AES-256"));
-               result.confirm("SHA-1 is supported", ctx->supports_algorithm("SHA-1"));
-               result.confirm("SHA-256 is supported", ctx->supports_algorithm("SHA-256"));
-               result.confirm("OFB(AES-128) is supported", ctx->supports_algorithm("OFB(AES-128)"));
-               result.confirm("OFB is supported", ctx->supports_algorithm("OFB"));
+               result.test_is_true("RSA is supported", ctx->supports_algorithm("RSA"));
+               result.test_is_true("AES-128 is supported", ctx->supports_algorithm("AES-128"));
+               result.test_is_true("AES-256 is supported", ctx->supports_algorithm("AES-256"));
+               result.test_is_true("SHA-1 is supported", ctx->supports_algorithm("SHA-1"));
+               result.test_is_true("SHA-256 is supported", ctx->supports_algorithm("SHA-256"));
+               result.test_is_true("OFB(AES-128) is supported", ctx->supports_algorithm("OFB(AES-128)"));
+               result.test_is_true("OFB is supported", ctx->supports_algorithm("OFB"));
             }),
 
       CHECK("Unsupported algorithms aren't supported",
             [&](Test::Result& result) {
-               result.confirm("Enigma is not supported", !ctx->supports_algorithm("Enigma"));
-               result.confirm("MD5 is not supported", !ctx->supports_algorithm("MD5"));
-               result.confirm("DES is not supported", !ctx->supports_algorithm("DES"));
-               result.confirm("OAEP(Keccak) is not supported", !ctx->supports_algorithm("OAEP(Keccak)"));
+               result.test_is_true("Enigma is not supported", !ctx->supports_algorithm("Enigma"));
+               result.test_is_true("MD5 is not supported", !ctx->supports_algorithm("MD5"));
+               result.test_is_true("DES is not supported", !ctx->supports_algorithm("DES"));
+               result.test_is_true("OAEP(Keccak) is not supported", !ctx->supports_algorithm("OAEP(Keccak)"));
             }),
    };
 }
@@ -230,11 +230,11 @@ std::vector<Test::Result> test_tpm2_context() {
       CHECK("Persistent handles",
             [&](Test::Result& result) {
                const auto handles = ctx->persistent_handles();
-               result.confirm("At least one persistent handle", !handles.empty());
-               result.confirm("SRK is in the list", Botan::value_exists(handles, 0x81000001));
-               result.confirm("Test private key is in the list", Botan::value_exists(handles, persistent_key_id));
-               result.confirm("Test persistence location is not in the list",
-                              !Botan::value_exists(handles, persistent_key_id + 1));
+               result.test_is_true("At least one persistent handle", !handles.empty());
+               result.test_is_true("SRK is in the list", Botan::value_exists(handles, 0x81000001));
+               result.test_is_true("Test private key is in the list", Botan::value_exists(handles, persistent_key_id));
+               result.test_is_true("Test persistence location is not in the list",
+                                   !Botan::value_exists(handles, persistent_key_id + 1));
             }),
 
          CHECK("Crypto backend",
@@ -266,7 +266,7 @@ std::vector<Test::Result> test_tpm2_context() {
             result.require("SRK is not null", srk != nullptr);
             result.test_eq("Algo", srk->algo_name(), "RSA");
             result.test_sz_eq("Key size", srk->key_length(), 2048);
-            result.confirm("Has persistent handle", srk->handles().has_persistent_handle());
+            result.test_is_true("Has persistent handle", srk->handles().has_persistent_handle());
          }),
    #endif
    };
@@ -411,8 +411,8 @@ std::vector<Test::Result> test_tpm2_sessions() {
 
    auto ok = [](Test::Result& result, std::string_view name, const std::shared_ptr<Botan::TPM2::Session>& session) {
       result.require(Botan::fmt("Session '{}' is non-null", name), session != nullptr);
-      result.confirm(Botan::fmt("Session '{}' has a valid handle", name), session->handle() != ESYS_TR_NONE);
-      result.confirm(Botan::fmt("Session '{}' has a non-empty nonce", name), !session->tpm_nonce().empty());
+      result.test_is_true(Botan::fmt("Session '{}' has a valid handle", name), session->handle() != ESYS_TR_NONE);
+      result.test_is_true(Botan::fmt("Session '{}' has a non-empty nonce", name), !session->tpm_nonce().empty());
    };
 
    return {
@@ -448,7 +448,7 @@ std::vector<Test::Result> test_tpm2_sessions() {
             auto ecc_key = Botan::TPM2::EC_PrivateKey::load_persistent(ctx, persistent_key_id, {}, {});
             result.require("EK is not null", ecc_key != nullptr);
             result.test_eq("Algo", ecc_key->algo_name(), "ECDSA");
-            result.confirm("Has persistent handle", ecc_key->handles().has_persistent_handle());
+            result.test_is_true("Has persistent handle", ecc_key->handles().has_persistent_handle());
 
             ok(result, "default", Session::authenticated_session(ctx, *ecc_key));
             ok(result, "CFB(AES-128)", Session::authenticated_session(ctx, *ecc_key, "CFB(AES-128)"));
@@ -472,8 +472,8 @@ std::vector<Test::Result> test_tpm2_rng() {
    return {
       CHECK("Basic functionalities",
             [&](Test::Result& result) {
-               result.confirm("Accepts input", rng.accepts_input());
-               result.confirm("Is seeded", rng.is_seeded());
+               result.test_is_true("Accepts input", rng.accepts_input());
+               result.test_is_true("Is seeded", rng.is_seeded());
                result.test_eq("Right name", rng.name(), "TPM2_RNG");
 
                result.test_no_throw("Clear", [&] { rng.clear(); });
@@ -483,30 +483,30 @@ std::vector<Test::Result> test_tpm2_rng() {
             [&](Test::Result& result) {
                std::array<uint8_t, 8> buf1 = {};
                rng.randomize(buf1);
-               result.confirm("Is at least not 0 (8)", not_zero_64(buf1));
+               result.test_is_true("Is at least not 0 (8)", not_zero_64(buf1));
 
                std::array<uint8_t, 15> buf2 = {};
                rng.randomize(buf2);
-               result.confirm("Is at least not 0 (15)", not_zero_64(buf2));
+               result.test_is_true("Is at least not 0 (15)", not_zero_64(buf2));
 
                std::array<uint8_t, 256> buf3 = {};
                rng.randomize(buf3);
-               result.confirm("Is at least not 0 (256)", not_zero_64(buf3));
+               result.test_is_true("Is at least not 0 (256)", not_zero_64(buf3));
             }),
 
       CHECK("Randomize with inputs",
             [&](Test::Result& result) {
                std::array<uint8_t, 9> buf1 = {};
                rng.randomize_with_input(buf1, std::array<uint8_t, 30>{});
-               result.confirm("Randomized with inputs is at least not 0 (9)", not_zero_64(buf1));
+               result.test_is_true("Randomized with inputs is at least not 0 (9)", not_zero_64(buf1));
 
                std::array<uint8_t, 66> buf2 = {};
                rng.randomize_with_input(buf2, std::array<uint8_t, 64>{});
-               result.confirm("Randomized with inputs is at least not 0 (66)", not_zero_64(buf2));
+               result.test_is_true("Randomized with inputs is at least not 0 (66)", not_zero_64(buf2));
 
                std::array<uint8_t, 256> buf3 = {};
                rng.randomize_with_input(buf3, std::array<uint8_t, 196>{});
-               result.confirm("Randomized with inputs is at least not 0 (256)", not_zero_64(buf3));
+               result.test_is_true("Randomized with inputs is at least not 0 (256)", not_zero_64(buf3));
             }),
    };
 }
@@ -520,7 +520,7 @@ auto load_persistent(Test::Result& result,
                      std::span<const uint8_t> auth_value,
                      const std::shared_ptr<Botan::TPM2::Session>& session) {
    const auto persistent_handles = ctx->persistent_handles();
-   result.confirm(
+   result.test_is_true(
       "Persistent key available",
       std::find(persistent_handles.begin(), persistent_handles.end(), persistent_key_id) != persistent_handles.end());
 
@@ -551,13 +551,13 @@ std::vector<Test::Result> test_tpm2_rsa() {
    return {
       CHECK("RSA and its helpers are supported",
             [&](Test::Result& result) {
-               result.confirm("RSA is supported", ctx->supports_algorithm("RSA"));
-               result.confirm("PKCS1 is supported", ctx->supports_algorithm("PKCS1v15"));
-               result.confirm("PKCS1 with hash is supported", ctx->supports_algorithm("PKCS1v15(SHA-1)"));
-               result.confirm("OAEP is supported", ctx->supports_algorithm("OAEP"));
-               result.confirm("OAEP with hash is supported", ctx->supports_algorithm("OAEP(SHA-256)"));
-               result.confirm("PSS is supported", ctx->supports_algorithm("PSS"));
-               result.confirm("PSS with hash is supported", ctx->supports_algorithm("PSS(SHA-256)"));
+               result.test_is_true("RSA is supported", ctx->supports_algorithm("RSA"));
+               result.test_is_true("PKCS1 is supported", ctx->supports_algorithm("PKCS1v15"));
+               result.test_is_true("PKCS1 with hash is supported", ctx->supports_algorithm("PKCS1v15(SHA-1)"));
+               result.test_is_true("OAEP is supported", ctx->supports_algorithm("OAEP"));
+               result.test_is_true("OAEP with hash is supported", ctx->supports_algorithm("OAEP(SHA-256)"));
+               result.test_is_true("PSS is supported", ctx->supports_algorithm("PSS"));
+               result.test_is_true("PSS with hash is supported", ctx->supports_algorithm("PSS(SHA-256)"));
             }),
 
       CHECK("Load the private key multiple times",
@@ -590,7 +590,7 @@ std::vector<Test::Result> test_tpm2_rsa() {
 
                auto public_key = key->public_key();
                Botan::PK_Verifier verifier(*public_key, "PSS(SHA-256)");
-               result.confirm("Signature is valid", verifier.verify_message(message, signature));
+               result.test_is_true("Signature is valid", verifier.verify_message(message, signature));
             }),
 
       CHECK("verify signature",
@@ -613,12 +613,12 @@ std::vector<Test::Result> test_tpm2_rsa() {
                const auto message = Botan::hex_decode("baadcafe");
                const auto signature = sign(message);
 
-               result.confirm("verification successful", verify(message, signature));
+               result.test_is_true("verification successful", verify(message, signature));
 
                // change the message
                auto rng = Test::new_rng("tpm2_verify_message");
                auto mutated_message = Test::mutate_vec(message, *rng);
-               result.confirm("verification failed", !verify(mutated_message, signature));
+               result.test_is_true("verification failed", !verify(mutated_message, signature));
 
                // ESAPI manipulates the session attributes internally and does
                // not reset them when an error occurs. A failure to validate a
@@ -626,10 +626,10 @@ std::vector<Test::Result> test_tpm2_rsa() {
                // leaving the session attributes in an unexpected state.
                // The Botan wrapper has a workaround for this...
                const auto attrs = session->attributes();
-               result.confirm("encrypt flag was not cleared by ESAPI", attrs.encrypt);
+               result.test_is_true("encrypt flag was not cleared by ESAPI", attrs.encrypt);
 
                // original message again
-               result.confirm("verification still successful", verify(message, signature));
+               result.test_is_true("verification still successful", verify(message, signature));
             }),
 
       CHECK("sign and verify multiple messages with the same Signer/Verifier objects",
@@ -658,16 +658,16 @@ std::vector<Test::Result> test_tpm2_rsa() {
                auto pk = load_persistent<Botan::TPM2::RSA_PublicKey>(result, ctx, persistent_key_id, password, session);
                Botan::PK_Verifier verifier(*pk, "PSS(SHA-256)");
                for(size_t i = 0; i < messages.size(); ++i) {
-                  result.confirm(Botan::fmt("verification successful ({})", i),
-                                 verifier.verify_message(messages[i], signatures[i]));
+                  result.test_is_true(Botan::fmt("verification successful ({})", i),
+                                      verifier.verify_message(messages[i], signatures[i]));
                }
 
                // verify via software
                auto soft_pk = Botan::RSA_PublicKey(pk->algorithm_identifier(), pk->public_key_bits());
                Botan::PK_Verifier soft_verifier(soft_pk, "PSS(SHA-256)");
                for(size_t i = 0; i < messages.size(); ++i) {
-                  result.confirm(Botan::fmt("software verification successful ({})", i),
-                                 soft_verifier.verify_message(messages[i], signatures[i]));
+                  result.test_is_true(Botan::fmt("software verification successful ({})", i),
+                                      soft_verifier.verify_message(messages[i], signatures[i]));
                }
             }),
 
@@ -783,15 +783,15 @@ std::vector<Test::Result> test_tpm2_rsa() {
                   Botan::TPM2::RSA_PrivateKey::create_unrestricted_transient(ctx, authed_session, secret, *srk, 2048);
 
                result.require("key was created", sk != nullptr);
-               result.confirm("is transient", sk->handles().has_transient_handle());
-               result.confirm("is not persistent", !sk->handles().has_persistent_handle());
+               result.test_is_true("is transient", sk->handles().has_transient_handle());
+               result.test_is_true("is not persistent", !sk->handles().has_persistent_handle());
 
                const auto sk_blob = sk->raw_private_key_bits();
                const auto pk_blob = sk->raw_public_key_bits();
                const auto pk = sk->public_key();
 
-               result.confirm("secret blob is not empty", !sk_blob.empty());
-               result.confirm("public blob is not empty", !pk_blob.empty());
+               result.test_is_true("secret blob is not empty", !sk_blob.empty());
+               result.test_is_true("public blob is not empty", !pk_blob.empty());
 
                // Perform a round-trip sign/verify test with the new key pair
                std::vector<uint8_t> message = {'h', 'e', 'l', 'l', 'o'};
@@ -801,7 +801,7 @@ std::vector<Test::Result> test_tpm2_rsa() {
                result.require("signature is not empty", !signature.empty());
 
                Botan::PK_Verifier verifier(*pk, "PSS(SHA-256)");
-               result.confirm("Signature is valid", verifier.verify_message(message, signature));
+               result.test_is_true("Signature is valid", verifier.verify_message(message, signature));
 
                // Destruct the key and load it again from the encrypted blob
                sk.reset();
@@ -821,78 +821,78 @@ std::vector<Test::Result> test_tpm2_rsa() {
                Botan::PK_Signer signer_loaded(*sk_loaded, null_rng /* TPM takes care of this */, "PSS(SHA-256)");
                const auto signature_loaded = signer_loaded.sign_message(message_loaded, null_rng);
                result.require("Next signature is not empty", !signature_loaded.empty());
-               result.confirm("Existing verifier can validate signature",
-                              verifier.verify_message(message_loaded, signature_loaded));
+               result.test_is_true("Existing verifier can validate signature",
+                                   verifier.verify_message(message_loaded, signature_loaded));
 
                // Load the public portion of the key
                auto pk_loaded = Botan::TPM2::PublicKey::load_transient(ctx, pk_blob, {});
                result.require("public key was loaded", pk_loaded != nullptr);
 
                Botan::PK_Verifier verifier_loaded(*pk_loaded, "PSS(SHA-256)");
-               result.confirm("TPM-verified signature is valid",
-                              verifier_loaded.verify_message(message_loaded, signature_loaded));
+               result.test_is_true("TPM-verified signature is valid",
+                                   verifier_loaded.verify_message(message_loaded, signature_loaded));
 
                // Perform a round-trip sign/verify test with the new key pair (PKCS#1)
                std::vector<uint8_t> message_pkcs = {'b', 'o', 'n', 'j', 'o', 'u', 'r'};
                Botan::PK_Signer signer_pkcs(*sk_loaded, null_rng /* TPM takes care of this */, "PKCS1v15(SHA-256)");
                const auto signature_pkcs = signer_pkcs.sign_message(message_pkcs, null_rng);
                result.require("Next signature is not empty", !signature_pkcs.empty());
-               result.confirm("Existing verifier cannot validate signature",
-                              !verifier.verify_message(message_pkcs, signature_pkcs));
+               result.test_is_true("Existing verifier cannot validate signature",
+                                   !verifier.verify_message(message_pkcs, signature_pkcs));
 
                // Create a verifier for PKCS#1
                Botan::PK_Verifier verifier_pkcs(*pk_loaded, "PKCS1v15(SHA-256)");
-               result.confirm("TPM-verified signature is valid",
-                              verifier_pkcs.verify_message(message_pkcs, signature_pkcs));
+               result.test_is_true("TPM-verified signature is valid",
+                                   verifier_pkcs.verify_message(message_pkcs, signature_pkcs));
             }),
 
-      CHECK("Make a transient key persistent then remove it again",
-            [&](Test::Result& result) {
-               auto srk = ctx->storage_root_key({}, {});
+      CHECK(
+         "Make a transient key persistent then remove it again",
+         [&](Test::Result& result) {
+            auto srk = ctx->storage_root_key({}, {});
 
-               auto sign_verify_roundtrip = [&](const Botan::TPM2::PrivateKey& key) {
-                  std::vector<uint8_t> message = {'h', 'e', 'l', 'l', 'o'};
-                  Botan::Null_RNG null_rng;
-                  Botan::PK_Signer signer(key, null_rng /* TPM takes care of this */, "PSS(SHA-256)");
-                  const auto signature = signer.sign_message(message, null_rng);
-                  result.require("signature is not empty", !signature.empty());
+            auto sign_verify_roundtrip = [&](const Botan::TPM2::PrivateKey& key) {
+               std::vector<uint8_t> message = {'h', 'e', 'l', 'l', 'o'};
+               Botan::Null_RNG null_rng;
+               Botan::PK_Signer signer(key, null_rng /* TPM takes care of this */, "PSS(SHA-256)");
+               const auto signature = signer.sign_message(message, null_rng);
+               result.require("signature is not empty", !signature.empty());
 
-                  auto pk = key.public_key();
-                  Botan::PK_Verifier verifier(*pk, "PSS(SHA-256)");
-                  result.confirm("Signature is valid", verifier.verify_message(message, signature));
-               };
+               auto pk = key.public_key();
+               Botan::PK_Verifier verifier(*pk, "PSS(SHA-256)");
+               result.test_is_true("Signature is valid", verifier.verify_message(message, signature));
+            };
 
-               // Create Key
-               auto authed_session = Botan::TPM2::Session::authenticated_session(ctx, *srk);
+            // Create Key
+            auto authed_session = Botan::TPM2::Session::authenticated_session(ctx, *srk);
 
-               const std::array<uint8_t, 6> secret = {'s', 'e', 'c', 'r', 'e', 't'};
-               auto sk =
-                  Botan::TPM2::RSA_PrivateKey::create_unrestricted_transient(ctx, authed_session, secret, *srk, 2048);
-               result.require("key was created", sk != nullptr);
-               result.confirm("is transient", sk->handles().has_transient_handle());
-               result.confirm("is not persistent", !sk->handles().has_persistent_handle());
-               result.test_no_throw("use key after creation", [&] { sign_verify_roundtrip(*sk); });
+            const std::array<uint8_t, 6> secret = {'s', 'e', 'c', 'r', 'e', 't'};
+            auto sk =
+               Botan::TPM2::RSA_PrivateKey::create_unrestricted_transient(ctx, authed_session, secret, *srk, 2048);
+            result.require("key was created", sk != nullptr);
+            result.test_is_true("is transient", sk->handles().has_transient_handle());
+            result.test_is_true("is not persistent", !sk->handles().has_persistent_handle());
+            result.test_no_throw("use key after creation", [&] { sign_verify_roundtrip(*sk); });
 
-               // Make it persistent
-               const auto handles = ctx->persistent_handles().size();
-               const auto new_location = ctx->persist(*sk, authed_session, secret);
-               result.test_sz_eq("One more handle", ctx->persistent_handles().size(), handles + 1);
-               result.confirm("New location occupied", Botan::value_exists(ctx->persistent_handles(), new_location));
-               result.confirm("is persistent", sk->handles().has_persistent_handle());
-               result.test_is_eq(
-                  "Persistent handle is the new handle", sk->handles().persistent_handle(), new_location);
-               result.test_throws<Botan::Invalid_Argument>(
-                  "Cannot persist to the same location", [&] { ctx->persist(*sk, authed_session, {}, new_location); });
-               result.test_throws<Botan::Invalid_Argument>("Cannot persist and already persistent key",
-                                                           [&] { ctx->persist(*sk, authed_session); });
-               result.test_no_throw("use key after persisting", [&] { sign_verify_roundtrip(*sk); });
+            // Make it persistent
+            const auto handles = ctx->persistent_handles().size();
+            const auto new_location = ctx->persist(*sk, authed_session, secret);
+            result.test_sz_eq("One more handle", ctx->persistent_handles().size(), handles + 1);
+            result.test_is_true("New location occupied", Botan::value_exists(ctx->persistent_handles(), new_location));
+            result.test_is_true("is persistent", sk->handles().has_persistent_handle());
+            result.test_is_eq("Persistent handle is the new handle", sk->handles().persistent_handle(), new_location);
+            result.test_throws<Botan::Invalid_Argument>("Cannot persist to the same location",
+                                                        [&] { ctx->persist(*sk, authed_session, {}, new_location); });
+            result.test_throws<Botan::Invalid_Argument>("Cannot persist and already persistent key",
+                                                        [&] { ctx->persist(*sk, authed_session); });
+            result.test_no_throw("use key after persisting", [&] { sign_verify_roundtrip(*sk); });
 
-               // Evict it
-               ctx->evict(std::move(sk), authed_session);
-               result.test_sz_eq("One less handle", ctx->persistent_handles().size(), handles);
-               result.confirm("New location no longer occupied",
-                              !Botan::value_exists(ctx->persistent_handles(), new_location));
-            }),
+            // Evict it
+            ctx->evict(std::move(sk), authed_session);
+            result.test_sz_eq("One less handle", ctx->persistent_handles().size(), handles);
+            result.test_is_true("New location no longer occupied",
+                                !Botan::value_exists(ctx->persistent_handles(), new_location));
+         }),
    };
 }
 
@@ -907,7 +907,7 @@ auto load_persistent_ecc(Test::Result& result,
                          const std::shared_ptr<Botan::TPM2::Session>& session) {
    // TODO: Merge with RSA
    const auto persistent_handles = ctx->persistent_handles();
-   result.confirm(
+   result.test_is_true(
       "Persistent key available",
       std::find(persistent_handles.begin(), persistent_handles.end(), persistent_key_id) != persistent_handles.end());
 
@@ -939,8 +939,8 @@ std::vector<Test::Result> test_tpm2_ecc() {
    return {
       CHECK("ECC and its helpers are supported",
             [&](Test::Result& result) {
-               result.confirm("ECC is supported", ctx->supports_algorithm("ECC"));
-               result.confirm("ECDSA is supported", ctx->supports_algorithm("ECDSA"));
+               result.test_is_true("ECC is supported", ctx->supports_algorithm("ECC"));
+               result.test_is_true("ECDSA is supported", ctx->supports_algorithm("ECDSA"));
             }),
          CHECK("Load the private key multiple times",
                [&](Test::Result& result) {
@@ -971,7 +971,7 @@ std::vector<Test::Result> test_tpm2_ecc() {
 
                   auto public_key = key->public_key();
                   Botan::PK_Verifier verifier(*public_key, "SHA-256");
-                  result.confirm("Signature is valid", verifier.verify_message(message, signature));
+                  result.test_is_true("Signature is valid", verifier.verify_message(message, signature));
                }),
          CHECK("verify signature ECDSA",
                [&](Test::Result& result) {
@@ -993,12 +993,12 @@ std::vector<Test::Result> test_tpm2_ecc() {
                   const auto message = Botan::hex_decode("baadcafe");
                   const auto signature = sign(message);
 
-                  result.confirm("verification successful", verify(message, signature));
+                  result.test_is_true("verification successful", verify(message, signature));
 
                   // change the message
                   auto rng = Test::new_rng("tpm2_verify_ecdsa");
                   auto mutated_message = Test::mutate_vec(message, *rng);
-                  result.confirm("verification failed", !verify(mutated_message, signature));
+                  result.test_is_true("verification failed", !verify(mutated_message, signature));
 
                   // ESAPI manipulates the session attributes internally and does
                   // not reset them when an error occurs. A failure to validate a
@@ -1006,10 +1006,10 @@ std::vector<Test::Result> test_tpm2_ecc() {
                   // leaving the session attributes in an unexpected state.
                   // The Botan wrapper has a workaround for this...
                   const auto attrs = session->attributes();
-                  result.confirm("encrypt flag was not cleared by ESAPI", attrs.encrypt);
+                  result.test_is_true("encrypt flag was not cleared by ESAPI", attrs.encrypt);
 
                   // original message again
-                  result.confirm("verification still successful", verify(message, signature));
+                  result.test_is_true("verification still successful", verify(message, signature));
                }),
 
          CHECK("sign and verify multiple messages with the same Signer/Verifier objects",
@@ -1039,8 +1039,8 @@ std::vector<Test::Result> test_tpm2_ecc() {
                      load_persistent_ecc<Botan::TPM2::EC_PublicKey>(result, ctx, persistent_key_id, password, session);
                   Botan::PK_Verifier verifier(*pk, "SHA-256");
                   for(size_t i = 0; i < messages.size(); ++i) {
-                     result.confirm(Botan::fmt("verification successful ({})", i),
-                                    verifier.verify_message(messages[i], signatures[i]));
+                     result.test_is_true(Botan::fmt("verification successful ({})", i),
+                                         verifier.verify_message(messages[i], signatures[i]));
                   }
 
                   // verify via software
@@ -1049,8 +1049,8 @@ std::vector<Test::Result> test_tpm2_ecc() {
                         ->public_key();
                   Botan::PK_Verifier soft_verifier(*soft_pk, "SHA-256");
                   for(size_t i = 0; i < messages.size(); ++i) {
-                     result.confirm(Botan::fmt("software verification successful ({})", i),
-                                    soft_verifier.verify_message(messages[i], signatures[i]));
+                     result.test_is_true(Botan::fmt("software verification successful ({})", i),
+                                         soft_verifier.verify_message(messages[i], signatures[i]));
                   }
                }),
 
@@ -1099,7 +1099,7 @@ std::vector<Test::Result> test_tpm2_ecc() {
 
                   auto public_key = sk->public_key();
                   Botan::PK_Verifier verifier(*public_key, "SHA-256");
-                  result.confirm("Signature is valid", verifier.verify_message(message, signature));
+                  result.test_is_true("Signature is valid", verifier.verify_message(message, signature));
                }),
 
          CHECK("Create a new transient ECDSA key",
@@ -1116,15 +1116,15 @@ std::vector<Test::Result> test_tpm2_ecc() {
                      ctx, authed_session, secret, *srk, Botan::EC_Group::from_name("secp384r1"));
 
                   result.require("key was created", sk != nullptr);
-                  result.confirm("is transient", sk->handles().has_transient_handle());
-                  result.confirm("is not persistent", !sk->handles().has_persistent_handle());
+                  result.test_is_true("is transient", sk->handles().has_transient_handle());
+                  result.test_is_true("is not persistent", !sk->handles().has_persistent_handle());
 
                   const auto sk_blob = sk->raw_private_key_bits();
                   const auto pk_blob = sk->raw_public_key_bits();
                   const auto pk = sk->public_key();
 
-                  result.confirm("secret blob is not empty", !sk_blob.empty());
-                  result.confirm("public blob is not empty", !pk_blob.empty());
+                  result.test_is_true("secret blob is not empty", !sk_blob.empty());
+                  result.test_is_true("public blob is not empty", !pk_blob.empty());
 
                   // Perform a round-trip sign/verify test with the new key pair
                   std::vector<uint8_t> message = {'h', 'e', 'l', 'l', 'o'};
@@ -1134,7 +1134,7 @@ std::vector<Test::Result> test_tpm2_ecc() {
                   result.require("signature is not empty", !signature.empty());
 
                   Botan::PK_Verifier verifier(*pk, "SHA-256");
-                  result.confirm("Signature is valid", verifier.verify_message(message, signature));
+                  result.test_is_true("Signature is valid", verifier.verify_message(message, signature));
 
                   // Destruct the key and load it again from the encrypted blob
                   sk.reset();
@@ -1154,16 +1154,16 @@ std::vector<Test::Result> test_tpm2_ecc() {
                   Botan::PK_Signer signer_loaded(*sk_loaded, null_rng /* TPM takes care of this */, "SHA-256");
                   const auto signature_loaded = signer_loaded.sign_message(message_loaded, null_rng);
                   result.require("Next signature is not empty", !signature_loaded.empty());
-                  result.confirm("Existing verifier can validate signature",
-                                 verifier.verify_message(message_loaded, signature_loaded));
+                  result.test_is_true("Existing verifier can validate signature",
+                                      verifier.verify_message(message_loaded, signature_loaded));
 
                   // Load the public portion of the key
                   auto pk_loaded = Botan::TPM2::PublicKey::load_transient(ctx, pk_blob, {});
                   result.require("public key was loaded", pk_loaded != nullptr);
 
                   Botan::PK_Verifier verifier_loaded(*pk_loaded, "SHA-256");
-                  result.confirm("TPM-verified signature is valid",
-                                 verifier_loaded.verify_message(message_loaded, signature_loaded));
+                  result.test_is_true("TPM-verified signature is valid",
+                                      verifier_loaded.verify_message(message_loaded, signature_loaded));
                }),
 
          CHECK(
@@ -1181,7 +1181,7 @@ std::vector<Test::Result> test_tpm2_ecc() {
 
                   auto pk = key.public_key();
                   Botan::PK_Verifier verifier(*pk, "SHA-256");
-                  result.confirm("Signature is valid", verifier.verify_message(message, signature));
+                  result.test_is_true("Signature is valid", verifier.verify_message(message, signature));
                };
 
                // Create Key
@@ -1191,16 +1191,17 @@ std::vector<Test::Result> test_tpm2_ecc() {
                auto sk = Botan::TPM2::EC_PrivateKey::create_unrestricted_transient(
                   ctx, authed_session, secret, *srk, Botan::EC_Group::from_name("secp192r1"));
                result.require("key was created", sk != nullptr);
-               result.confirm("is transient", sk->handles().has_transient_handle());
-               result.confirm("is not persistent", !sk->handles().has_persistent_handle());
+               result.test_is_true("is transient", sk->handles().has_transient_handle());
+               result.test_is_true("is not persistent", !sk->handles().has_persistent_handle());
                result.test_no_throw("use key after creation", [&] { sign_verify_roundtrip(*sk); });
 
                // Make it persistent
                const auto handles = ctx->persistent_handles().size();
                const auto new_location = ctx->persist(*sk, authed_session, secret);
                result.test_sz_eq("One more handle", ctx->persistent_handles().size(), handles + 1);
-               result.confirm("New location occupied", Botan::value_exists(ctx->persistent_handles(), new_location));
-               result.confirm("is persistent", sk->handles().has_persistent_handle());
+               result.test_is_true("New location occupied",
+                                   Botan::value_exists(ctx->persistent_handles(), new_location));
+               result.test_is_true("is persistent", sk->handles().has_persistent_handle());
                result.test_is_eq(
                   "Persistent handle is the new handle", sk->handles().persistent_handle(), new_location);
                result.test_throws<Botan::Invalid_Argument>(
@@ -1212,8 +1213,8 @@ std::vector<Test::Result> test_tpm2_ecc() {
                // Evict it
                ctx->evict(std::move(sk), authed_session);
                result.test_sz_eq("One less handle", ctx->persistent_handles().size(), handles);
-               result.confirm("New location no longer occupied",
-                              !Botan::value_exists(ctx->persistent_handles(), new_location));
+               result.test_is_true("New location no longer occupied",
+                                   !Botan::value_exists(ctx->persistent_handles(), new_location));
             }),
       #endif
 
@@ -1303,10 +1304,10 @@ std::vector<Test::Result> test_tpm2_hash() {
    return {
       CHECK("Hashes are supported",
             [&](Test::Result& result) {
-               result.confirm("SHA-1 is supported", ctx->supports_algorithm("SHA-1"));
-               result.confirm("SHA-256 is supported", ctx->supports_algorithm("SHA-256"));
-               result.confirm("SHA-384 is supported", ctx->supports_algorithm("SHA-384"));
-               result.confirm("SHA-512 is supported", ctx->supports_algorithm("SHA-512"));
+               result.test_is_true("SHA-1 is supported", ctx->supports_algorithm("SHA-1"));
+               result.test_is_true("SHA-256 is supported", ctx->supports_algorithm("SHA-256"));
+               result.test_is_true("SHA-384 is supported", ctx->supports_algorithm("SHA-384"));
+               result.test_is_true("SHA-512 is supported", ctx->supports_algorithm("SHA-512"));
             }),
 
       CHECK("SHA-1", [&](Test::Result& result) { test(result, "SHA-1"); }),
@@ -1339,7 +1340,7 @@ std::vector<Test::Result> test_tpm2_hash() {
                const auto [digest_null, ticket_null] = tpm_hash_null.final_with_ticket();
                result.require("digest is set", digest_null != nullptr);
                result.require("ticket is set", ticket_null != nullptr);
-               result.confirm("ticket is empty", ticket_null->digest.size == 0);
+               result.test_is_true("ticket is empty", ticket_null->digest.size == 0);
 
                // using the OWNER hierarchy (for instance) enables the validation ticket
                auto tpm_hash_owner = Botan::TPM2::HashFunction(
@@ -1348,7 +1349,7 @@ std::vector<Test::Result> test_tpm2_hash() {
                const auto [digest_owner, ticket_owner] = tpm_hash_owner.final_with_ticket();
                result.require("digest is set", digest_owner != nullptr);
                result.require("ticket is set", ticket_owner != nullptr);
-               result.confirm("ticket is not empty", ticket_owner->digest.size > 0);
+               result.test_is_true("ticket is not empty", ticket_owner->digest.size > 0);
 
                const auto digest_vec = Botan::TPM2::copy_into<Botan::secure_vector<uint8_t>>(*digest_owner);
                result.test_eq("digest",

@@ -157,7 +157,7 @@ Test::Result find_certs_by_subject_dn_and_key_id(Botan::Certificate_Store& certs
       auto certs = certstore.find_all_certs(dn, get_key_id());
       result.end_timer();
 
-      if(result.confirm("result not empty", !certs.empty()) &&
+      if(result.test_is_true("result not empty", !certs.empty()) &&
          result.test_sz_eq("exactly one certificate", certs.size(), 1)) {
          auto cns = certs.front().subject_dn().get_attribute("CN");
          result.test_sz_eq("exactly one CN", cns.size(), 1);
@@ -188,7 +188,7 @@ Test::Result find_all_certs_by_subject_dn(Botan::Certificate_Store& certstore) {
          }
       }
 
-      if(result.confirm("result not empty", !certs.empty())) {
+      if(result.test_is_true("result not empty", !certs.empty())) {
          auto cns = certs.front().subject_dn().get_attribute("CN");
          result.test_sz_gte("at least one CN", cns.size(), size_t(1));
          result.test_eq("CN", cns.front(), get_subject_cn());
@@ -208,13 +208,13 @@ Test::Result find_all_subjects(Botan::Certificate_Store& certstore) {
       auto subjects = certstore.all_subjects();
       result.end_timer();
 
-      if(result.confirm("result not empty", !subjects.empty())) {
+      if(result.test_is_true("result not empty", !subjects.empty())) {
          auto dn = get_dn();
          auto needle = std::find_if(
             subjects.cbegin(), subjects.cend(), [=](const Botan::X509_DN& subject) { return subject == dn; });
 
-         if(result.confirm("found expected certificate", needle != subjects.end())) {
-            result.confirm("expected certificate", *needle == dn);
+         if(result.test_is_true("found expected certificate", needle != subjects.end())) {
+            result.test_is_true("expected certificate", *needle == dn);
          }
       }
    } catch(std::exception& e) {
@@ -258,9 +258,9 @@ Test::Result no_certificate_matches(Botan::Certificate_Store& certstore) {
       auto pubk_cert = certstore.find_cert_by_pubkey_sha1(kid);
       result.end_timer();
 
-      result.confirm("find_all_certs did not find the dummy", certs.empty());
-      result.confirm("find_cert did not find the dummy", !cert);
-      result.confirm("find_cert_by_pubkey_sha1 did not find the dummy", !pubk_cert);
+      result.test_is_true("find_all_certs did not find the dummy", certs.empty());
+      result.test_is_true("find_cert did not find the dummy", !cert);
+      result.test_is_true("find_cert_by_pubkey_sha1 did not find the dummy", !pubk_cert);
    } catch(std::exception& e) {
       result.test_failure(e.what());
    }
@@ -281,8 +281,8 @@ Test::Result certificate_matching_with_dn_normalization(Botan::Certificate_Store
       auto cert = certstore.find_cert(dn, std::vector<uint8_t>());
       result.end_timer();
 
-      if(result.confirm("find_all_certs did find the skewed DN", !certs.empty()) &&
-         result.confirm("find_cert did find the skewed DN", cert.has_value())) {
+      if(result.test_is_true("find_all_certs did find the skewed DN", !certs.empty()) &&
+         result.test_is_true("find_cert did find the skewed DN", cert.has_value())) {
          result.test_eq(
             "it is the correct cert", certs.front().subject_dn().get_first_attribute("CN"), get_subject_cn());
          result.test_eq("it is the correct cert", cert->subject_dn().get_first_attribute("CN"), get_subject_cn());

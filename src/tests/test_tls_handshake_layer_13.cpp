@@ -157,7 +157,7 @@ std::vector<Test::Result> read_handshake_messages() {
             [&](auto& result) {
                Handshake_Layer hl(Connection_Side::Client);
                Transcript_Hash_State th("SHA-256");
-               result.confirm("needs header bytes", !hl.next_message(Policy(), th));
+               result.test_is_true("needs header bytes", !hl.next_message(Policy(), th));
                check_transcript_hash_empty(result, th);
             }),
 
@@ -166,7 +166,7 @@ std::vector<Test::Result> read_handshake_messages() {
                Handshake_Layer hl(Connection_Side::Client);
                Transcript_Hash_State th("SHA-256");
                hl.copy_data(std::vector<uint8_t>{0x00, 0x01, 0x02});
-               result.confirm("needs more bytes", !hl.next_message(Policy(), th));
+               result.test_is_true("needs more bytes", !hl.next_message(Policy(), th));
                check_transcript_hash_empty(result, th);
             }),
 
@@ -175,7 +175,8 @@ std::vector<Test::Result> read_handshake_messages() {
                Handshake_Layer hl(Connection_Side::Client);
                Transcript_Hash_State th("SHA-256");
                hl.copy_data(client_hello_message);
-               result.confirm("is a client hello", has_message<Client_Hello_13>(result, hl.next_message(Policy(), th)));
+               result.test_is_true("is a client hello",
+                                   has_message<Client_Hello_13>(result, hl.next_message(Policy(), th)));
                check_transcript_hash_filled(result, th);
             }),
 
@@ -184,7 +185,8 @@ std::vector<Test::Result> read_handshake_messages() {
                Handshake_Layer hl(Connection_Side::Client);
                Transcript_Hash_State th("SHA-256");
                hl.copy_data(server_hello_message);
-               result.confirm("is a server hello", has_message<Server_Hello_13>(result, hl.next_message(Policy(), th)));
+               result.test_is_true("is a server hello",
+                                   has_message<Server_Hello_13>(result, hl.next_message(Policy(), th)));
                check_transcript_hash_filled(result, th);
             }),
 
@@ -193,8 +195,8 @@ std::vector<Test::Result> read_handshake_messages() {
                Handshake_Layer hl(Connection_Side::Client);
                Transcript_Hash_State th("SHA-256");
                hl.copy_data(server_hello_12_message);
-               result.confirm("is a legacy server hello",
-                              has_message<Server_Hello_12_Shim>(result, hl.next_message(Policy(), th)));
+               result.test_is_true("is a legacy server hello",
+                                   has_message<Server_Hello_12_Shim>(result, hl.next_message(Policy(), th)));
                check_transcript_hash_filled(result, th);
             }),
 
@@ -206,13 +208,14 @@ std::vector<Test::Result> read_handshake_messages() {
                const Botan::secure_vector<uint8_t> partial_client_hello_message(client_hello_message.cbegin(),
                                                                                 client_hello_message.cend() - 15);
                hl.copy_data(partial_client_hello_message);
-               result.confirm("needs more bytes", !hl.next_message(Policy(), th));
-               result.confirm("holds pending message data", hl.has_pending_data());
+               result.test_is_true("needs more bytes", !hl.next_message(Policy(), th));
+               result.test_is_true("holds pending message data", hl.has_pending_data());
 
                const Botan::secure_vector<uint8_t> remaining_client_hello_message(client_hello_message.cend() - 15,
                                                                                   client_hello_message.cend());
                hl.copy_data(remaining_client_hello_message);
-               result.confirm("is a client hello", has_message<Client_Hello_13>(result, hl.next_message(Policy(), th)));
+               result.test_is_true("is a client hello",
+                                   has_message<Client_Hello_13>(result, hl.next_message(Policy(), th)));
 
                check_transcript_hash_filled(result, th);
             }),
@@ -222,9 +225,10 @@ std::vector<Test::Result> read_handshake_messages() {
                Handshake_Layer hl(Connection_Side::Client);
                Transcript_Hash_State th("SHA-256");
                hl.copy_data(Botan::concat(server_hello_message, encrypted_extensions));
-               result.confirm("is a server hello", has_message<Server_Hello_13>(result, hl.next_message(Policy(), th)));
-               result.confirm("is encrypted extensions",
-                              has_message<Encrypted_Extensions>(result, hl.next_message(Policy(), th)));
+               result.test_is_true("is a server hello",
+                                   has_message<Server_Hello_13>(result, hl.next_message(Policy(), th)));
+               result.test_is_true("is encrypted extensions",
+                                   has_message<Encrypted_Extensions>(result, hl.next_message(Policy(), th)));
                check_transcript_hash_filled(result, th);
             }),
 
@@ -306,7 +310,7 @@ std::vector<Test::Result> full_client_handshake() {
                hl.copy_data(server_hello_message);
 
                const auto server_hello = hl.next_message(policy, th);
-               result.confirm("is a Server Hello", has_message<Server_Hello_13>(result, server_hello));
+               result.test_is_true("is a Server Hello", has_message<Server_Hello_13>(result, server_hello));
 
                // we now know the algorithm from the Server Hello
                th.set_algorithm("SHA-256");
@@ -325,23 +329,23 @@ std::vector<Test::Result> full_client_handshake() {
                hl.copy_data(server_handshake_messages);
 
                const auto enc_exts = hl.next_message(policy, th);
-               result.confirm("is Encrypted Extensions", has_message<Encrypted_Extensions>(result, enc_exts));
+               result.test_is_true("is Encrypted Extensions", has_message<Encrypted_Extensions>(result, enc_exts));
 
                const auto cert = hl.next_message(policy, th);
-               result.confirm("is Certificate", has_message<Certificate_13>(result, cert));
+               result.test_is_true("is Certificate", has_message<Certificate_13>(result, cert));
 
                const auto expected_after_certificate = Botan::hex_decode(
                   "76 4d 66 32 b3 c3 5c 3f 32 05 e3 49 9a c3 ed ba ab b8 82 95 fb a7 51 46 1d 36 78 e2 e5 ea 06 87");
 
                const auto cert_verify = hl.next_message(policy, th);
-               result.confirm("is Certificate Verify", has_message<Certificate_Verify_13>(result, cert_verify));
+               result.test_is_true("is Certificate Verify", has_message<Certificate_Verify_13>(result, cert_verify));
                result.test_eq("hash before Cert Verify is still available", th.previous(), expected_after_certificate);
 
                const auto expected_after_server_finished = Botan::hex_decode(
                   "96 08 10 2a 0f 1c cc 6d b6 25 0b 7b 7e 41 7b 1a 00 0e aa da 3d aa e4 77 7a 76 86 c9 ff 83 df 13");
 
                const auto server_finished = hl.next_message(policy, th);
-               result.confirm("is Finished", has_message<Finished_13>(result, server_finished));
+               result.test_is_true("is Finished", has_message<Finished_13>(result, server_finished));
                result.test_eq("hash is updated after server Finished", th.current(), expected_after_server_finished);
             }),
 
@@ -378,7 +382,7 @@ std::vector<Test::Result> hello_retry_request_handshake() {
                hl.copy_data(hrr_hello_retry_request_msg);
 
                const auto hrr = hl.next_message(policy, th);
-               result.confirm("is a Hello Retry Request", has_message<Hello_Retry_Request>(result, hrr));
+               result.test_is_true("is a Hello Retry Request", has_message<Hello_Retry_Request>(result, hrr));
 
                // we now know the algorithm from the Hello Retry Request
                // which will not change with the future Server Hello anymore (RFC 8446 4.1.4)

@@ -64,14 +64,14 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
       virtual void inspect_rng_after_keygen(const std::string& /*params*/,
                                             const Fixed_Output_RNG& rng_keygen,
                                             Test::Result& result) const {
-         result.confirm("All prepared random bits used for key generation", rng_keygen.empty());
+         result.test_is_true("All prepared random bits used for key generation", rng_keygen.empty());
       }
 
       /// Callback to test the RNG's state after encapsulation. If not overridden checks that the RNG is empty.
       virtual void inspect_rng_after_encaps(const std::string& /*params*/,
                                             const Fixed_Output_RNG& rng_encaps,
                                             Test::Result& result) const {
-         result.confirm("All prepared random bits used for encapsulation", rng_encaps.empty());
+         result.test_is_true("All prepared random bits used for encapsulation", rng_encaps.empty());
       }
 
    private:
@@ -114,8 +114,8 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
 
          // Algorithm properties
          result.test_eq("Algorithm name", sk->algo_name(), algo_name());
-         result.confirm("Supported operation KeyEncapsulation",
-                        sk->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation));
+         result.test_is_true("Supported operation KeyEncapsulation",
+                             sk->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation));
          result.test_sz_gte("Key has reasonable estimated strength (lower)", sk->estimated_strength(), 64);
          result.test_sz_lt("Key has reasonable estimated strength (upper)", sk->estimated_strength(), 512);
 
@@ -205,8 +205,8 @@ class PK_PQC_KEM_ACVP_KAT_KeyGen_Test : public PK_Test {
 
          // Algorithm properties
          result.test_eq("Algorithm name", sk->algo_name(), algo_name());
-         result.confirm("Supported operation KeyEncapsulation",
-                        sk->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation));
+         result.test_is_true("Supported operation KeyEncapsulation",
+                             sk->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation));
          result.test_sz_gte("Key has reasonable estimated strength (lower)", sk->estimated_strength(), 64);
          result.test_sz_lt("Key has reasonable estimated strength (upper)", sk->estimated_strength(), 512);
 
@@ -214,7 +214,7 @@ class PK_PQC_KEM_ACVP_KAT_KeyGen_Test : public PK_Test {
          auto pk = sk->public_key();
          result.test_is_eq("Generated public key", compress_value(pk->public_key_bits()), vars.get_req_bin("EK"));
 
-         result.confirm("All prepared random bits used for key generation", rng_keygen.empty());
+         result.test_is_true("All prepared random bits used for key generation", rng_keygen.empty());
 
          return result;
       }
@@ -257,7 +257,7 @@ class PK_PQC_KEM_ACVP_KAT_Encap_Test : public PK_Test {
          result.test_is_eq("Shared Secret", encaped.shared_key(), Botan::lock(vars.get_req_bin("K")));
          result.test_is_eq("Ciphertext", compress_value(encaped.encapsulated_shared_key()), vars.get_req_bin("C"));
 
-         result.confirm("All prepared random bits used for key generation", rng_encap.empty());
+         result.test_is_true("All prepared random bits used for key generation", rng_encap.empty());
 
          return result;
       }

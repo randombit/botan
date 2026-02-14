@@ -101,9 +101,9 @@ Test::Result test_equality() {
    const Botan::OctetString os2("FFFFFFFFFFFFFFFF");
    const Botan::OctetString& os2_copy = os2;
 
-   result.confirm("OctetString equality operations works as expected", os1 == os1_copy);
-   result.confirm("OctetString equality operations works as expected", os2 == os2_copy);
-   result.confirm("OctetString equality operations works as expected", os1 != os2);
+   result.test_is_true("OctetString equality operations works as expected", os1 == os1_copy);
+   result.test_is_true("OctetString equality operations works as expected", os2 == os2_copy);
+   result.test_is_true("OctetString equality operations works as expected", os1 != os2);
 
    return result;
 }

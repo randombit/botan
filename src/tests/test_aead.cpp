@@ -38,8 +38,9 @@ class AEAD_Tests final : public Text_Based_Test {
 
          result.test_sz_eq("AEAD encrypt output_length is correct", enc->output_length(input.size()), expected.size());
 
-         result.confirm("AEAD name is not empty", !enc->name().empty());
-         result.confirm("AEAD default nonce size is accepted", enc->valid_nonce_length(enc->default_nonce_length()));
+         result.test_is_true("AEAD name is not empty", !enc->name().empty());
+         result.test_is_true("AEAD default nonce size is accepted",
+                             enc->valid_nonce_length(enc->default_nonce_length()));
 
          auto get_garbage = [&] { return rng.random_vec(enc->update_granularity()); };
 
@@ -163,9 +164,11 @@ class AEAD_Tests final : public Text_Based_Test {
 
                const size_t bytes_written = enc->process(buf.data(), bytes_to_process);
 
-               result.confirm("Process returns data unless requires_entire_message",
-                              enc->requires_entire_message(),
-                              bytes_written == 0);
+               if(enc->requires_entire_message()) {
+                  result.test_sz_eq("If requires_entire_message then no output is produced", bytes_written, 0);
+               } else {
+                  result.test_sz_gt("If !requires_entire_message then some output is produced", bytes_written, 0);
+               }
 
                if(bytes_written == 0) {
                   // SIV case
@@ -323,9 +326,11 @@ class AEAD_Tests final : public Text_Based_Test {
 
                const size_t bytes_written = dec->process(buf.data(), bytes_to_process);
 
-               result.confirm("Process returns data unless requires_entire_message",
-                              dec->requires_entire_message(),
-                              bytes_written == 0);
+               if(dec->requires_entire_message()) {
+                  result.test_sz_eq("If requires_entire_message then no output is produced", bytes_written, 0);
+               } else {
+                  result.test_sz_gt("If !requires_entire_message then some output is produced", bytes_written, 0);
+               }
 
                if(bytes_written == 0) {
                   // SIV case
@@ -453,8 +458,8 @@ class AEAD_Tests final : public Text_Based_Test {
          result.test_sz_gt(
             "ideal granularity is at least update granularity", enc->ideal_granularity(), enc->update_granularity());
 
-         result.confirm("ideal granularity is a multiple of update granularity",
-                        enc->ideal_granularity() % enc->update_granularity() == 0);
+         result.test_is_true("ideal granularity is a multiple of update granularity",
+                             enc->ideal_granularity() % enc->update_granularity() == 0);
 
          // test enc
          result.merge(test_enc(key, nonce, input, expected, ad, algo, this->rng()));

@@ -56,7 +56,7 @@ class EME_PKCS1v15_Decoding_Tests final : public Text_Based_Test {
                }
             }
 
-            result.confirm("On invalid padding output is all zero", all_zeros);
+            result.test_is_true("On invalid padding output is all zero", all_zeros);
          }
 
          // TODO: also test that encoding is accepted

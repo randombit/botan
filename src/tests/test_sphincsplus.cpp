@@ -127,7 +127,7 @@ class SPHINCS_Plus_Test_Base : public Text_Based_Test {
          Botan::PK_Verifier verifier(*priv_key.public_key(), params.algorithm_identifier());
          const bool verify_success =
             verifier.verify_message(msg_ref.data(), msg_ref.size(), signature_rand.data(), signature_rand.size());
-         result.confirm("verification of valid randomized signature", verify_success);
+         result.test_is_true("verification of valid randomized signature", verify_success);
 
          // Signature roundtrip (Deterministic mode) - not available for all parameter sets
          // For testing time reasons we only test this for some tests if not --run-long-tests
@@ -140,7 +140,7 @@ class SPHINCS_Plus_Test_Base : public Text_Based_Test {
 
             auto verify_success_det =
                verifier.verify_message(msg_ref.data(), msg_ref.size(), signature_det.data(), signature_det.size());
-            result.confirm("verification of valid deterministic signature", verify_success_det);
+            result.test_is_true("verification of valid deterministic signature", verify_success_det);
          }
 
          // Verification with generated Keypair
@@ -166,21 +166,22 @@ class SPHINCS_Plus_Test_Base : public Text_Based_Test {
             Botan::PK_Verifier deserialized_verifier(deserialized_pub_key, params.algorithm_identifier());
             const bool verify_success_deserialized = deserialized_verifier.verify_message(
                msg_ref.data(), msg_ref.size(), signature_rand.data(), signature_rand.size());
-            result.confirm("verification of valid signature after deserialization", verify_success_deserialized);
+            result.test_is_true("verification of valid signature after deserialization", verify_success_deserialized);
 
             // Verification of invalid signature
             auto broken_sig = Test::mutate_vec(deserialized_signature, this->rng());
             const bool verify_fail = deserialized_verifier.verify_message(
                msg_ref.data(), msg_ref.size(), broken_sig.data(), broken_sig.size());
-            result.confirm("verification of invalid signature", !verify_fail);
+            result.test_is_true("verification of invalid signature", !verify_fail);
 
             const bool verify_success_after_fail = deserialized_verifier.verify_message(
                msg_ref.data(), msg_ref.size(), signature_rand.data(), signature_rand.size());
-            result.confirm("verification of valid signature after broken signature", verify_success_after_fail);
+            result.test_is_true("verification of valid signature after broken signature", verify_success_after_fail);
          }
 
          // Misc
-         result.confirm("parameter serialization works", params.to_string() == vars.get_req_str("SphincsParameterSet"));
+         result.test_is_true("parameter serialization works",
+                             params.to_string() == vars.get_req_str("SphincsParameterSet"));
 
          return result;
       }

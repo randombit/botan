@@ -66,9 +66,9 @@ std::vector<Test::Result> test_strong_type() {
                const Test_Size a(42);
                const Test_Size b(42);
 
-               result.confirm("equal", a == b);
-               result.confirm("lower than", a < Test_Size(1337));
-               result.confirm("greater than", Test_Size(1337) > b);
+               result.test_is_true("equal", a == b);
+               result.test_is_true("lower than", a < Test_Size(1337));
+               result.test_is_true("greater than", Test_Size(1337) > b);
             }),
 
       CHECK("function overloading",
@@ -79,12 +79,13 @@ std::vector<Test::Result> test_strong_type() {
 
       CHECK("is_strong_type",
             [](auto& result) {
-               result.confirm("strong type (int)", Botan::is_strong_type_v<Test_Size>);
-               result.confirm("no strong type (int)", !Botan::is_strong_type_v<size_t>);
-               result.confirm("strong type (vector)", Botan::is_strong_type_v<Test_Nonce>);
-               result.confirm("no strong type (vector)", !Botan::is_strong_type_v<std::vector<uint8_t>>);
-               result.confirm("strong type (const vector)", Botan::is_strong_type_v<const Test_Nonce>);
-               result.confirm("no strong type (const vector)", !Botan::is_strong_type_v<const std::vector<uint8_t>>);
+               result.test_is_true("strong type (int)", Botan::is_strong_type_v<Test_Size>);
+               result.test_is_true("no strong type (int)", !Botan::is_strong_type_v<size_t>);
+               result.test_is_true("strong type (vector)", Botan::is_strong_type_v<Test_Nonce>);
+               result.test_is_true("no strong type (vector)", !Botan::is_strong_type_v<std::vector<uint8_t>>);
+               result.test_is_true("strong type (const vector)", Botan::is_strong_type_v<const Test_Nonce>);
+               result.test_is_true("no strong type (const vector)",
+                                   !Botan::is_strong_type_v<const std::vector<uint8_t>>);
             }),
    };
 }
@@ -104,11 +105,11 @@ std::vector<Test::Result> test_container_strong_type() {
                auto nonce = Test_Nonce(std::move(base_nonce));
 
                result.test_sz_eq("size()", nonce.size(), 4);
-               result.confirm("empty()", !nonce.empty());
+               result.test_is_true("empty()", !nonce.empty());
                result.test_is_eq("data()", nonce.data(), dataptr);
 
                for(const auto& c : nonce) {
-                  result.confirm("iteration", c > 0);
+                  result.test_is_true("iteration", c > 0);
                }
             }),
 
@@ -118,20 +119,26 @@ std::vector<Test::Result> test_container_strong_type() {
             using Test_Map = Botan::Strong<std::map<int, std::string>, struct Test_Map_>;
             using Test_Array = Botan::Strong<std::array<uint64_t, 32>, struct Test_Array_>;
 
-            result.confirm("Test_Nonce is container", Botan::concepts::container<Test_Nonce>);
-            result.confirm("Test_Array is container", Botan::concepts::container<Test_Array>);
-            result.confirm("Test_Map is container", Botan::concepts::container<Test_Map>);
-            result.confirm("Test_Size is not container", !Botan::concepts::container<Test_Size>);
+            result.test_is_true("Test_Nonce is container", Botan::concepts::container<Test_Nonce>);
+            result.test_is_true("Test_Array is container", Botan::concepts::container<Test_Array>);
+            result.test_is_true("Test_Map is container", Botan::concepts::container<Test_Map>);
+            result.test_is_true("Test_Size is not container", !Botan::concepts::container<Test_Size>);
 
-            result.confirm("Test_Nonce is contiguous_container", Botan::concepts::contiguous_container<Test_Nonce>);
-            result.confirm("Test_Array is contiguous_container", Botan::concepts::contiguous_container<Test_Array>);
-            result.confirm("Test_Map is not contiguous_container", !Botan::concepts::contiguous_container<Test_Map>);
-            result.confirm("Test_Size is not contiguous_container", !Botan::concepts::contiguous_container<Test_Size>);
+            result.test_is_true("Test_Nonce is contiguous_container",
+                                Botan::concepts::contiguous_container<Test_Nonce>);
+            result.test_is_true("Test_Array is contiguous_container",
+                                Botan::concepts::contiguous_container<Test_Array>);
+            result.test_is_true("Test_Map is not contiguous_container",
+                                !Botan::concepts::contiguous_container<Test_Map>);
+            result.test_is_true("Test_Size is not contiguous_container",
+                                !Botan::concepts::contiguous_container<Test_Size>);
 
-            result.confirm("Test_Nonce is resizable_container", Botan::concepts::resizable_container<Test_Nonce>);
-            result.confirm("Test_Array is not resizable_container", !Botan::concepts::resizable_container<Test_Array>);
-            result.confirm("Test_Map is not resizable_container", !Botan::concepts::resizable_container<Test_Map>);
-            result.confirm("Test_Size is not resizable_container", !Botan::concepts::resizable_container<Test_Size>);
+            result.test_is_true("Test_Nonce is resizable_container", Botan::concepts::resizable_container<Test_Nonce>);
+            result.test_is_true("Test_Array is not resizable_container",
+                                !Botan::concepts::resizable_container<Test_Array>);
+            result.test_is_true("Test_Map is not resizable_container", !Botan::concepts::resizable_container<Test_Map>);
+            result.test_is_true("Test_Size is not resizable_container",
+                                !Botan::concepts::resizable_container<Test_Size>);
          }),
 
       CHECK("binds to a std::span<>",
@@ -217,38 +224,38 @@ std::vector<Test::Result> test_integer_strong_type() {
             [](auto& result) {
                const StrongInt i(42);
 
-               result.confirm("i ==", i == 42);
-               result.confirm("i !=", i != 0);
-               result.confirm("i >", i > 41);
-               result.confirm("i >= 1", i >= 41);
-               result.confirm("i >= 2", i >= 42);
-               result.confirm("i <", i < 43);
-               result.confirm("i <= 1", i <= 43);
-               result.confirm("i <= 2", i <= 42);
+               result.test_is_true("i ==", i == 42);
+               result.test_is_true("i !=", i != 0);
+               result.test_is_true("i >", i > 41);
+               result.test_is_true("i >= 1", i >= 41);
+               result.test_is_true("i >= 2", i >= 42);
+               result.test_is_true("i <", i < 43);
+               result.test_is_true("i <= 1", i <= 43);
+               result.test_is_true("i <= 2", i <= 42);
 
-               result.confirm("== i", 42 == i);
-               result.confirm("!= i", 0 != i);
-               result.confirm("> i", 43 > i);
-               result.confirm(">= 1 i", 43 >= i);
-               result.confirm(">= 2 i", 42 >= i);
-               result.confirm("< i", 41 < i);
-               result.confirm("<= 1 i", 41 <= i);
-               result.confirm("<= 2 i", 42 <= i);
+               result.test_is_true("== i", 42 == i);
+               result.test_is_true("!= i", 0 != i);
+               result.test_is_true("> i", 43 > i);
+               result.test_is_true(">= 1 i", 43 >= i);
+               result.test_is_true(">= 2 i", 42 >= i);
+               result.test_is_true("< i", 41 < i);
+               result.test_is_true("<= 1 i", 41 <= i);
+               result.test_is_true("<= 2 i", 42 <= i);
             }),
 
       CHECK("increment/decrement are always allowed",
             [](auto& result) {
                StrongInt i(42);
 
-               result.confirm("i++", i++ == 42);
-               result.confirm("i post-incremented", i == 43);
-               result.confirm("++i", ++i == 44);
-               result.confirm("i pre-incremented", i == 44);
+               result.test_is_true("i++", i++ == 42);
+               result.test_is_true("i post-incremented", i == 43);
+               result.test_is_true("++i", ++i == 44);
+               result.test_is_true("i pre-incremented", i == 44);
 
-               result.confirm("i--", i-- == 44);
-               result.confirm("i post-decremented", i == 43);
-               result.confirm("--i", --i == 42);
-               result.confirm("i pre-decremented", i == 42);
+               result.test_is_true("i--", i-- == 44);
+               result.test_is_true("i post-decremented", i == 43);
+               result.test_is_true("--i", --i == 42);
+               result.test_is_true("i pre-decremented", i == 42);
             }),
 
       CHECK("comparison operators with Strong<>",
@@ -259,14 +266,14 @@ std::vector<Test::Result> test_integer_strong_type() {
                const StrongInt i43(43);
                const StrongInt i0(0);
 
-               result.confirm("==", i == i42);
-               result.confirm("!=", i != i0);
-               result.confirm(">", i > i41);
-               result.confirm(">= 1", i >= i41);
-               result.confirm(">= 2", i >= i42);
-               result.confirm("<", i < i43);
-               result.confirm("<= 1", i <= i43);
-               result.confirm("<= 2", i <= i42);
+               result.test_is_true("==", i == i42);
+               result.test_is_true("!=", i != i0);
+               result.test_is_true(">", i > i41);
+               result.test_is_true(">= 1", i >= i41);
+               result.test_is_true(">= 2", i >= i42);
+               result.test_is_true("<", i < i43);
+               result.test_is_true("<= 1", i <= i43);
+               result.test_is_true("<= 2", i <= i42);
             }),
 
       CHECK("arithmetics with Strong<>",
@@ -276,25 +283,25 @@ std::vector<Test::Result> test_integer_strong_type() {
                const StrongInt i4(4);
                const StrongInt i12(12);
 
-               result.confirm("+", i + i == 84);
-               result.confirm("-", i - i == 0);
-               result.confirm("*", i * i == 1764);
-               result.confirm("/", i / i == 1);
-               result.confirm("^", (i ^ i) == 0);
-               result.confirm("&", (i & i) == 42);
-               result.confirm("|", (i | i) == 42);
-               result.confirm(">>", (i >> i2) == 10);
-               result.confirm("<<", (i << i2) == 168);
+               result.test_is_true("+", i + i == 84);
+               result.test_is_true("-", i - i == 0);
+               result.test_is_true("*", i * i == 1764);
+               result.test_is_true("/", i / i == 1);
+               result.test_is_true("^", (i ^ i) == 0);
+               result.test_is_true("&", (i & i) == 42);
+               result.test_is_true("|", (i | i) == 42);
+               result.test_is_true(">>", (i >> i2) == 10);
+               result.test_is_true("<<", (i << i2) == 168);
 
-               result.confirm("+=", (i += i2) == 44);
-               result.confirm("-=", (i -= i2) == 42);
-               result.confirm("*=", (i *= i2) == 84);
-               result.confirm("/=", (i /= i2) == 42);
-               result.confirm("^=", (i ^= i2) == 40);
-               result.confirm("&=", (i &= i12) == 8);
-               result.confirm("|=", (i |= i2) == 10);
-               result.confirm("<<=", (i <<= i2) == 40);
-               result.confirm(">>=", (i >>= i4) == 2);
+               result.test_is_true("+=", (i += i2) == 44);
+               result.test_is_true("-=", (i -= i2) == 42);
+               result.test_is_true("*=", (i *= i2) == 84);
+               result.test_is_true("/=", (i /= i2) == 42);
+               result.test_is_true("^=", (i ^= i2) == 40);
+               result.test_is_true("&=", (i &= i12) == 8);
+               result.test_is_true("|=", (i |= i2) == 10);
+               result.test_is_true("<<=", (i <<= i2) == 40);
+               result.test_is_true(">>=", (i >>= i4) == 2);
             }),
 
       CHECK("arithmetics with POD",
@@ -302,35 +309,35 @@ std::vector<Test::Result> test_integer_strong_type() {
                StrongIntWithPodArithmetics i(42);
                const StrongIntWithPodArithmetics i2(2);
 
-               result.confirm("i +", i + 1 == 43);
-               result.confirm("i -", i - 1 == 41);
-               result.confirm("i *", i * 2 == 84);
-               result.confirm("i /", i / 2 == 21);
-               result.confirm("i ^", (i ^ 10) == 32);
-               result.confirm("i &", (i & 15) == 10);
-               result.confirm("i |", (i | 4) == 46);
-               result.confirm("i >>", (i >> 2) == 10);
-               result.confirm("i <<", (i << 2) == 168);
+               result.test_is_true("i +", i + 1 == 43);
+               result.test_is_true("i -", i - 1 == 41);
+               result.test_is_true("i *", i * 2 == 84);
+               result.test_is_true("i /", i / 2 == 21);
+               result.test_is_true("i ^", (i ^ 10) == 32);
+               result.test_is_true("i &", (i & 15) == 10);
+               result.test_is_true("i |", (i | 4) == 46);
+               result.test_is_true("i >>", (i >> 2) == 10);
+               result.test_is_true("i <<", (i << 2) == 168);
 
-               result.confirm("+ i", 1 + i == 43);
-               result.confirm("- i", 1 - i == -41);
-               result.confirm("* i", 2 * i == 84);
-               result.confirm("/ i", 84 / i == 2);
-               result.confirm("^ i", (10 ^ i) == 32);
-               result.confirm("& i", (15 & i) == 10);
-               result.confirm("| i", (4 | i) == 46);
-               result.confirm(">> i", (4 >> i2) == 1);
-               result.confirm("<< i", (2 << i2) == 8);
+               result.test_is_true("+ i", 1 + i == 43);
+               result.test_is_true("- i", 1 - i == -41);
+               result.test_is_true("* i", 2 * i == 84);
+               result.test_is_true("/ i", 84 / i == 2);
+               result.test_is_true("^ i", (10 ^ i) == 32);
+               result.test_is_true("& i", (15 & i) == 10);
+               result.test_is_true("| i", (4 | i) == 46);
+               result.test_is_true(">> i", (4 >> i2) == 1);
+               result.test_is_true("<< i", (2 << i2) == 8);
 
-               result.confirm("i +=", (i += 2) == 44);
-               result.confirm("i -=", (i -= 2) == 42);
-               result.confirm("i *=", (i *= 2) == 84);
-               result.confirm("i /=", (i /= 2) == 42);
-               result.confirm("i ^=", (i ^= 2) == 40);
-               result.confirm("i &=", (i &= 12) == 8);
-               result.confirm("i |=", (i |= 2) == 10);
-               result.confirm("i <<=", (i <<= 2) == 40);
-               result.confirm("i >>=", (i >>= 4) == 2);
+               result.test_is_true("i +=", (i += 2) == 44);
+               result.test_is_true("i -=", (i -= 2) == 42);
+               result.test_is_true("i *=", (i *= 2) == 84);
+               result.test_is_true("i /=", (i /= 2) == 42);
+               result.test_is_true("i ^=", (i ^= 2) == 40);
+               result.test_is_true("i &=", (i &= 12) == 8);
+               result.test_is_true("i |=", (i |= 2) == 10);
+               result.test_is_true("i <<=", (i <<= 2) == 40);
+               result.test_is_true("i >>=", (i >>= 4) == 2);
             }),
 
       CHECK("arithmetics with POD is still Strong<>",
@@ -338,35 +345,35 @@ std::vector<Test::Result> test_integer_strong_type() {
                StrongIntWithPodArithmetics i(42);  // NOLINT(*-const-correctness) clang-tidy bug
                const StrongIntWithPodArithmetics i2(2);
 
-               result.confirm("i +", Botan::is_strong_type_v<decltype(i + 1)>);
-               result.confirm("i -", Botan::is_strong_type_v<decltype(i - 1)>);
-               result.confirm("i *", Botan::is_strong_type_v<decltype(i * 2)>);
-               result.confirm("i /", Botan::is_strong_type_v<decltype(i / 2)>);
-               result.confirm("i ^", Botan::is_strong_type_v<decltype((i ^ 10))>);
-               result.confirm("i &", Botan::is_strong_type_v<decltype((i & 15))>);
-               result.confirm("i |", Botan::is_strong_type_v<decltype((i | 4))>);
-               result.confirm("i >>", Botan::is_strong_type_v<decltype((i >> 2))>);
-               result.confirm("i <<", Botan::is_strong_type_v<decltype((i << 2))>);
+               result.test_is_true("i +", Botan::is_strong_type_v<decltype(i + 1)>);
+               result.test_is_true("i -", Botan::is_strong_type_v<decltype(i - 1)>);
+               result.test_is_true("i *", Botan::is_strong_type_v<decltype(i * 2)>);
+               result.test_is_true("i /", Botan::is_strong_type_v<decltype(i / 2)>);
+               result.test_is_true("i ^", Botan::is_strong_type_v<decltype((i ^ 10))>);
+               result.test_is_true("i &", Botan::is_strong_type_v<decltype((i & 15))>);
+               result.test_is_true("i |", Botan::is_strong_type_v<decltype((i | 4))>);
+               result.test_is_true("i >>", Botan::is_strong_type_v<decltype((i >> 2))>);
+               result.test_is_true("i <<", Botan::is_strong_type_v<decltype((i << 2))>);
 
-               result.confirm("+ i", Botan::is_strong_type_v<decltype(1 + i)>);
-               result.confirm("- i", Botan::is_strong_type_v<decltype(1 - i)>);
-               result.confirm("* i", Botan::is_strong_type_v<decltype(2 * i)>);
-               result.confirm("/ i", Botan::is_strong_type_v<decltype(84 / i)>);
-               result.confirm("^ i", Botan::is_strong_type_v<decltype((10 ^ i))>);
-               result.confirm("& i", Botan::is_strong_type_v<decltype((15 & i))>);
-               result.confirm("| i", Botan::is_strong_type_v<decltype((4 | i))>);
-               result.confirm(">> i", Botan::is_strong_type_v<decltype((4 >> i2))>);
-               result.confirm("<< i", Botan::is_strong_type_v<decltype((2 << i2))>);
+               result.test_is_true("+ i", Botan::is_strong_type_v<decltype(1 + i)>);
+               result.test_is_true("- i", Botan::is_strong_type_v<decltype(1 - i)>);
+               result.test_is_true("* i", Botan::is_strong_type_v<decltype(2 * i)>);
+               result.test_is_true("/ i", Botan::is_strong_type_v<decltype(84 / i)>);
+               result.test_is_true("^ i", Botan::is_strong_type_v<decltype((10 ^ i))>);
+               result.test_is_true("& i", Botan::is_strong_type_v<decltype((15 & i))>);
+               result.test_is_true("| i", Botan::is_strong_type_v<decltype((4 | i))>);
+               result.test_is_true(">> i", Botan::is_strong_type_v<decltype((4 >> i2))>);
+               result.test_is_true("<< i", Botan::is_strong_type_v<decltype((2 << i2))>);
 
-               result.confirm("i +=", Botan::is_strong_type_v<decltype(i += 2)>);
-               result.confirm("i -=", Botan::is_strong_type_v<decltype(i -= 2)>);
-               result.confirm("i *=", Botan::is_strong_type_v<decltype(i *= 2)>);
-               result.confirm("i /=", Botan::is_strong_type_v<decltype(i /= 2)>);
-               result.confirm("i ^=", Botan::is_strong_type_v<decltype(i ^= 2)>);
-               result.confirm("i &=", Botan::is_strong_type_v<decltype(i &= 12)>);
-               result.confirm("i |=", Botan::is_strong_type_v<decltype(i |= 2)>);
-               result.confirm("i <<=", Botan::is_strong_type_v<decltype(i <<= 2)>);
-               result.confirm("i >>=", Botan::is_strong_type_v<decltype(i >>= 4)>);
+               result.test_is_true("i +=", Botan::is_strong_type_v<decltype(i += 2)>);
+               result.test_is_true("i -=", Botan::is_strong_type_v<decltype(i -= 2)>);
+               result.test_is_true("i *=", Botan::is_strong_type_v<decltype(i *= 2)>);
+               result.test_is_true("i /=", Botan::is_strong_type_v<decltype(i /= 2)>);
+               result.test_is_true("i ^=", Botan::is_strong_type_v<decltype(i ^= 2)>);
+               result.test_is_true("i &=", Botan::is_strong_type_v<decltype(i &= 12)>);
+               result.test_is_true("i |=", Botan::is_strong_type_v<decltype(i |= 2)>);
+               result.test_is_true("i <<=", Botan::is_strong_type_v<decltype(i <<= 2)>);
+               result.test_is_true("i >>=", Botan::is_strong_type_v<decltype(i >>= 4)>);
             }),
    };
 }
@@ -397,13 +404,14 @@ Test::Result test_strong_span() {
 
    const Botan::StrongSpan<const Test_Foo> span(foo);
 
-   result.confirm("underlying type is uint8_t", std::is_same_v<decltype(span)::value_type, uint8_t>);
-   result.confirm("strong type is a contiguous buffer", Botan::concepts::contiguous_container<decltype(foo)>);
-   result.confirm("strong type is a contiguous strong type buffer",
-                  Botan::concepts::contiguous_strong_type<decltype(foo)>);
-   result.confirm("strong span is not a contiguous buffer", !Botan::concepts::contiguous_container<decltype(span)>);
-   result.confirm("strong span is not a contiguous strong type buffer",
-                  !Botan::concepts::contiguous_strong_type<decltype(span)>);
+   result.test_is_true("underlying type is uint8_t", std::is_same_v<decltype(span)::value_type, uint8_t>);
+   result.test_is_true("strong type is a contiguous buffer", Botan::concepts::contiguous_container<decltype(foo)>);
+   result.test_is_true("strong type is a contiguous strong type buffer",
+                       Botan::concepts::contiguous_strong_type<decltype(foo)>);
+   result.test_is_true("strong span is not a contiguous buffer",
+                       !Botan::concepts::contiguous_container<decltype(span)>);
+   result.test_is_true("strong span is not a contiguous strong type buffer",
+                       !Botan::concepts::contiguous_strong_type<decltype(span)>);
 
    return result;
 }
@@ -461,83 +469,88 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
                result.test_eq("stt_ptr_move", *stt_ptr_move.get(), "wrapped ptr");
             }),
 
-      CHECK("unwrapping a strong type wisely chooses return reference type",
-            [&](Test::Result& result) {
-               Strong_String stt("wrapped");  // NOLINT(*-const-correctness) clang-tidy bug
-               const Strong_String stt_const("const wrapped");
-
-               using lvalue_ref = decltype(Botan::unwrap_strong_type(stt));
-               result.confirm("unpack() on non-const is an lvalue reference", std::is_lvalue_reference_v<lvalue_ref>);
-               result.confirm("unpack() on non-const is a non-const lvalue reference",
-                              !std::is_const_v<std::remove_reference_t<lvalue_ref>>);
-               result.confirm(
-                  "wrapped_type on non-const lvalue strong type",
-                  std::same_as<Botan::strong_type_wrapped_type<decltype(stt)>, std::remove_cvref_t<lvalue_ref>>);
-
-               using const_lvalue_ref = decltype(Botan::unwrap_strong_type(stt_const));
-               result.confirm("unpack() on const is an lvalue reference", std::is_lvalue_reference_v<const_lvalue_ref>);
-               result.confirm("unpack() on const is a const lvalue reference",
-                              std::is_const_v<std::remove_reference_t<const_lvalue_ref>>);
-               result.confirm(
-                  "wrapped_type on const lvalue strong type",
-                  std::same_as<Botan::strong_type_wrapped_type<decltype(stt_const)>, std::remove_cvref_t<lvalue_ref>>);
-
-               using lvalue = decltype(Botan::unwrap_strong_type(std::move(stt)));
-               result.confirm("unpack() on rvalue reference is an rvalue reference",
-                              std::is_rvalue_reference_v<lvalue>);
-               result.confirm("unpack() on rvalue is a non-const rvalue reference",
-                              !std::is_const_v<std::remove_reference_t<lvalue>>);
-               result.confirm(
-                  "wrapped_type on rvalue reference strong type",
-                  std::same_as<Botan::strong_type_wrapped_type<decltype(std::move(stt))>, std::remove_cvref_t<lvalue>>);
-
-               using lvalue2 = decltype(Botan::unwrap_strong_type(Strong_String("wrapped rvalue")));
-               result.confirm("unpack() on rvalue is an rvalue reference", std::is_rvalue_reference_v<lvalue2>);
-               result.confirm("unpack() on rvalue is a non-const rvalue reference",
-                              !std::is_const_v<std::remove_reference_t<lvalue2>>);
-               result.confirm("wrapped_type on rvalue strong type",
-                              std::same_as<Botan::strong_type_wrapped_type<decltype(Strong_String("wrapped rvalue"))>,
-                                           std::remove_cvref_t<lvalue2>>);
-            }),
-
       CHECK(
-         "unwrapping a non-strong type does not alter return reference type",
-         [](Test::Result& result) {
-            std::string stt("wrapped");  // NOLINT(*-const-correctness) required for the test
-            const std::string stt_const("const wrapped");
+         "unwrapping a strong type wisely chooses return reference type",
+         [&](Test::Result& result) {
+            Strong_String stt("wrapped");  // NOLINT(*-const-correctness) clang-tidy bug
+            const Strong_String stt_const("const wrapped");
 
             using lvalue_ref = decltype(Botan::unwrap_strong_type(stt));
-            result.confirm("unpack() on non-const is an lvalue reference", std::is_lvalue_reference_v<lvalue_ref>);
-            result.confirm("unpack() on non-const is a non-const lvalue reference",
-                           !std::is_const_v<std::remove_reference_t<lvalue_ref>>);
-            result.confirm(
-               "wrapped_type on lvalue non-strong type",
+            result.test_is_true("unpack() on non-const is an lvalue reference", std::is_lvalue_reference_v<lvalue_ref>);
+            result.test_is_true("unpack() on non-const is a non-const lvalue reference",
+                                !std::is_const_v<std::remove_reference_t<lvalue_ref>>);
+            result.test_is_true(
+               "wrapped_type on non-const lvalue strong type",
                std::same_as<Botan::strong_type_wrapped_type<decltype(stt)>, std::remove_cvref_t<lvalue_ref>>);
 
             using const_lvalue_ref = decltype(Botan::unwrap_strong_type(stt_const));
-            result.confirm("unpack() on const is an lvalue reference", std::is_lvalue_reference_v<const_lvalue_ref>);
-            result.confirm("unpack() on const is a const lvalue reference",
-                           std::is_const_v<std::remove_reference_t<const_lvalue_ref>>);
-            result.confirm("wrapped_type on const lvalue non-strong type",
-                           std::same_as<Botan::strong_type_wrapped_type<decltype(stt_const)>,
-                                        std::remove_cvref_t<const_lvalue_ref>>);
+            result.test_is_true("unpack() on const is an lvalue reference",
+                                std::is_lvalue_reference_v<const_lvalue_ref>);
+            result.test_is_true("unpack() on const is a const lvalue reference",
+                                std::is_const_v<std::remove_reference_t<const_lvalue_ref>>);
+            result.test_is_true(
+               "wrapped_type on const lvalue strong type",
+               std::same_as<Botan::strong_type_wrapped_type<decltype(stt_const)>, std::remove_cvref_t<lvalue_ref>>);
 
             using lvalue = decltype(Botan::unwrap_strong_type(std::move(stt)));
-            result.confirm("unpack() on rvalue reference is an rvalue reference", std::is_rvalue_reference_v<lvalue>);
-            result.confirm("unpack() on rvalue is a non-const rvalue reference",
-                           !std::is_const_v<std::remove_reference_t<lvalue>>);
-            result.confirm(
-               "wrapped_type on rvalue reference non-strong type",
+            result.test_is_true("unpack() on rvalue reference is an rvalue reference",
+                                std::is_rvalue_reference_v<lvalue>);
+            result.test_is_true("unpack() on rvalue is a non-const rvalue reference",
+                                !std::is_const_v<std::remove_reference_t<lvalue>>);
+            result.test_is_true(
+               "wrapped_type on rvalue reference strong type",
                std::same_as<Botan::strong_type_wrapped_type<decltype(std::move(stt))>, std::remove_cvref_t<lvalue>>);
 
-            using lvalue2 = decltype(Botan::unwrap_strong_type(std::string("rvalue")));
-            result.confirm("unpack() on rvalue reference is an rvalue reference", std::is_rvalue_reference_v<lvalue2>);
-            result.confirm("unpack() on rvalue is a non-const rvalue reference",
-                           !std::is_const_v<std::remove_reference_t<lvalue2>>);
-            result.confirm("wrapped_type on rvalue non-strong type",
-                           std::same_as<Botan::strong_type_wrapped_type<decltype(std::string("rvalue"))>,
-                                        std::remove_cvref_t<lvalue2>>);
+            using lvalue2 = decltype(Botan::unwrap_strong_type(Strong_String("wrapped rvalue")));
+            result.test_is_true("unpack() on rvalue is an rvalue reference", std::is_rvalue_reference_v<lvalue2>);
+            result.test_is_true("unpack() on rvalue is a non-const rvalue reference",
+                                !std::is_const_v<std::remove_reference_t<lvalue2>>);
+            result.test_is_true("wrapped_type on rvalue strong type",
+                                std::same_as<Botan::strong_type_wrapped_type<decltype(Strong_String("wrapped rvalue"))>,
+                                             std::remove_cvref_t<lvalue2>>);
          }),
+
+      CHECK("unwrapping a non-strong type does not alter return reference type",
+            [](Test::Result& result) {
+               std::string stt("wrapped");  // NOLINT(*-const-correctness) required for the test
+               const std::string stt_const("const wrapped");
+
+               using lvalue_ref = decltype(Botan::unwrap_strong_type(stt));
+               result.test_is_true("unpack() on non-const is an lvalue reference",
+                                   std::is_lvalue_reference_v<lvalue_ref>);
+               result.test_is_true("unpack() on non-const is a non-const lvalue reference",
+                                   !std::is_const_v<std::remove_reference_t<lvalue_ref>>);
+               result.test_is_true(
+                  "wrapped_type on lvalue non-strong type",
+                  std::same_as<Botan::strong_type_wrapped_type<decltype(stt)>, std::remove_cvref_t<lvalue_ref>>);
+
+               using const_lvalue_ref = decltype(Botan::unwrap_strong_type(stt_const));
+               result.test_is_true("unpack() on const is an lvalue reference",
+                                   std::is_lvalue_reference_v<const_lvalue_ref>);
+               result.test_is_true("unpack() on const is a const lvalue reference",
+                                   std::is_const_v<std::remove_reference_t<const_lvalue_ref>>);
+               result.test_is_true("wrapped_type on const lvalue non-strong type",
+                                   std::same_as<Botan::strong_type_wrapped_type<decltype(stt_const)>,
+                                                std::remove_cvref_t<const_lvalue_ref>>);
+
+               using lvalue = decltype(Botan::unwrap_strong_type(std::move(stt)));
+               result.test_is_true("unpack() on rvalue reference is an rvalue reference",
+                                   std::is_rvalue_reference_v<lvalue>);
+               result.test_is_true("unpack() on rvalue is a non-const rvalue reference",
+                                   !std::is_const_v<std::remove_reference_t<lvalue>>);
+               result.test_is_true(
+                  "wrapped_type on rvalue reference non-strong type",
+                  std::same_as<Botan::strong_type_wrapped_type<decltype(std::move(stt))>, std::remove_cvref_t<lvalue>>);
+
+               using lvalue2 = decltype(Botan::unwrap_strong_type(std::string("rvalue")));
+               result.test_is_true("unpack() on rvalue reference is an rvalue reference",
+                                   std::is_rvalue_reference_v<lvalue2>);
+               result.test_is_true("unpack() on rvalue is a non-const rvalue reference",
+                                   !std::is_const_v<std::remove_reference_t<lvalue2>>);
+               result.test_is_true("wrapped_type on rvalue non-strong type",
+                                   std::same_as<Botan::strong_type_wrapped_type<decltype(std::string("rvalue"))>,
+                                                std::remove_cvref_t<lvalue2>>);
+            }),
 
       CHECK("generically unwrapping an object from a strong type",
             [&](Test::Result& result) {

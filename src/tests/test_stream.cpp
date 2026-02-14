@@ -53,12 +53,12 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
             result.test_is_nonempty("provider", provider);
             result.test_eq(provider, cipher->name(), algo);
 
-            result.confirm("default iv length is valid", cipher->valid_iv_length(cipher->default_iv_length()));
+            result.test_is_true("default iv length is valid", cipher->valid_iv_length(cipher->default_iv_length()));
 
-            result.confirm("advertised buffer size is > 0", cipher->buffer_size() > 0);
+            result.test_is_true("advertised buffer size is > 0", cipher->buffer_size() > 0);
 
             if(cipher->default_iv_length() == 0) {
-               result.confirm("if default iv length is zero, no iv supported", nonce.empty());
+               result.test_is_true("if default iv length is zero, no iv supported", nonce.empty());
 
                // This should still succeed
                cipher->set_iv(nullptr, 0);
@@ -111,8 +111,8 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
             Test invalid nonce sizes. this assumes no implemented cipher supports a nonce of 65000
             */
             const size_t large_nonce_size = 65000;
-            result.confirm("Stream cipher does not support very large nonce",
-                           cipher->valid_iv_length(large_nonce_size) == false);
+            result.test_is_true("Stream cipher does not support very large nonce",
+                                cipher->valid_iv_length(large_nonce_size) == false);
 
             result.test_throws("Throws if invalid nonce size given",
                                [&]() { cipher->set_iv(nullptr, large_nonce_size); });
@@ -133,7 +133,7 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
 
             // Test that clone works and does not affect parent object
             auto clone = cipher->new_object();
-            result.confirm("Clone has different pointer", cipher.get() != clone.get());
+            result.test_is_true("Clone has different pointer", cipher.get() != clone.get());
             result.test_eq("Clone has same name", cipher->name(), clone->name());
             clone->set_key(this->rng().random_vec(cipher->maximum_keylength()));
 

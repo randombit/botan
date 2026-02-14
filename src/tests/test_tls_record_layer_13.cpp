@@ -91,10 +91,10 @@ std::vector<Test::Result> read_full_records() {
                     result.require("received something", std::holds_alternative<TLS::Record>(read));
 
                     auto record = std::get<TLS::Record>(read);
-                    result.confirm("received CCS", record.type == TLS::Record_Type::ChangeCipherSpec);
+                    result.test_is_true("received CCS", record.type == TLS::Record_Type::ChangeCipherSpec);
                     result.test_eq("CCS byte is 0x01", record.fragment, "01");
 
-                    result.confirm("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
+                    result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
                  }),
 
            CHECK("two CCS messages",
@@ -109,17 +109,17 @@ std::vector<Test::Result> read_full_records() {
                     result.require("received something", std::holds_alternative<TLS::Record>(read));
                     auto record = std::get<TLS::Record>(read);
 
-                    result.confirm("received CCS 1", record.type == TLS::Record_Type::ChangeCipherSpec);
+                    result.test_is_true("received CCS 1", record.type == TLS::Record_Type::ChangeCipherSpec);
                     result.test_eq("CCS byte is 0x01", record.fragment, "01");
 
                     read = rl.next_record();
                     result.require("received something", std::holds_alternative<TLS::Record>(read));
                     record = std::get<TLS::Record>(read);
 
-                    result.confirm("received CCS 2", record.type == TLS::Record_Type::ChangeCipherSpec);
+                    result.test_is_true("received CCS 2", record.type == TLS::Record_Type::ChangeCipherSpec);
                     result.test_eq("CCS byte is 0x01", record.fragment, "01");
 
-                    result.confirm("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
+                    result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
                  }),
 
            CHECK("read full handshake message",
@@ -128,16 +128,16 @@ std::vector<Test::Result> read_full_records() {
                     rl.copy_data(client_hello_record);
 
                     auto read = rl.next_record();
-                    result.confirm("received something", std::holds_alternative<TLS::Record>(read));
+                    result.test_is_true("received something", std::holds_alternative<TLS::Record>(read));
 
                     auto rec = std::get<TLS::Record>(read);
-                    result.confirm("received handshake record", rec.type == TLS::Record_Type::Handshake);
+                    result.test_is_true("received handshake record", rec.type == TLS::Record_Type::Handshake);
                     result.test_eq("contains the full handshake message",
                                    Botan::secure_vector<uint8_t>(client_hello_record.begin() + TLS::TLS_HEADER_SIZE,
                                                                  client_hello_record.end()),
                                    rec.fragment);
 
-                    result.confirm("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
+                    result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
                  }),
 
            CHECK("read full handshake message followed by CCS", [&](auto& result) {
@@ -150,7 +150,7 @@ std::vector<Test::Result> read_full_records() {
               result.require("received something", std::holds_alternative<TLS::Record>(read));
 
               auto rec = std::get<TLS::Record>(read);
-              result.confirm("received handshake record", rec.type == TLS::Record_Type::Handshake);
+              result.test_is_true("received handshake record", rec.type == TLS::Record_Type::Handshake);
               result.test_eq("contains the full handshake message",
                              Botan::secure_vector<uint8_t>(client_hello_record.begin() + TLS::TLS_HEADER_SIZE,
                                                            client_hello_record.end()),
@@ -160,10 +160,10 @@ std::vector<Test::Result> read_full_records() {
               result.require("received something", std::holds_alternative<TLS::Record>(read));
 
               rec = std::get<TLS::Record>(read);
-              result.confirm("received CCS record", rec.type == TLS::Record_Type::ChangeCipherSpec);
+              result.test_is_true("received CCS record", rec.type == TLS::Record_Type::ChangeCipherSpec);
               result.test_eq("CCS byte is 0x01", rec.fragment, "01");
 
-              result.confirm("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
+              result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
            })};
 }
 
@@ -213,7 +213,7 @@ std::vector<Test::Result> basic_sanitization_parse_records(TLS::Connection_Side 
                     std::vector<uint8_t> full_record{'\x16', '\x03', '\x03', '\x40', '\x00'};
                     full_record.resize(TLS::MAX_PLAINTEXT_SIZE + TLS::TLS_HEADER_SIZE);
                     auto read = parse_records(full_record);
-                    result.confirm("returned 'record'", !std::holds_alternative<TLS::BytesNeeded>(read));
+                    result.test_is_true("returned 'record'", !std::holds_alternative<TLS::BytesNeeded>(read));
                  }),
 
            CHECK("received too many bytes in one protected record",
@@ -315,7 +315,7 @@ std::vector<Test::Result> read_fragmented_records() {
       [](Botan::TLS::BytesNeeded bytes_needed, auto& record_layer, std::vector<uint8_t> bytes, auto& result) {
          record_layer.copy_data(bytes);
          const auto rlr = record_layer.next_record();
-         if(result.confirm("waiting for bytes", std::holds_alternative<TLS::BytesNeeded>(rlr))) {
+         if(result.test_is_true("waiting for bytes", std::holds_alternative<TLS::BytesNeeded>(rlr))) {
             result.test_sz_eq("right amount", std::get<TLS::BytesNeeded>(rlr), bytes_needed);
          }
       };
@@ -335,10 +335,10 @@ std::vector<Test::Result> read_fragmented_records() {
                     result.require("received something 1", std::holds_alternative<TLS::Record>(res1));
 
                     auto rec1 = std::get<TLS::Record>(res1);
-                    result.confirm("received CCS", rec1.type == TLS::Record_Type::ChangeCipherSpec);
+                    result.test_is_true("received CCS", rec1.type == TLS::Record_Type::ChangeCipherSpec);
                     result.test_eq("CCS byte is 0x01", rec1.fragment, "01");
 
-                    result.confirm("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
+                    result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
                  }),
 
            CHECK("two change cipher specs in several pieces", [&](auto& result) {
@@ -350,8 +350,8 @@ std::vector<Test::Result> read_fragmented_records() {
               result.require("received something 2", std::holds_alternative<TLS::Record>(res2));
 
               auto rec2 = std::get<TLS::Record>(res2);
-              result.confirm("received CCS", rec2.type == TLS::Record_Type::ChangeCipherSpec);
-              result.confirm("demands more bytes", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
+              result.test_is_true("received CCS", rec2.type == TLS::Record_Type::ChangeCipherSpec);
+              result.test_is_true("demands more bytes", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
 
               wait_for_more_bytes(2, rl, {'\x03'}, result);
 
@@ -360,9 +360,9 @@ std::vector<Test::Result> read_fragmented_records() {
               result.require("received something 3", std::holds_alternative<TLS::Record>(res3));
 
               auto rec3 = std::get<TLS::Record>(res3);
-              result.confirm("received CCS", rec3.type == TLS::Record_Type::ChangeCipherSpec);
+              result.test_is_true("received CCS", rec3.type == TLS::Record_Type::ChangeCipherSpec);
 
-              result.confirm("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
+              result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
            })};
 }
 
@@ -523,7 +523,7 @@ std::vector<Test::Result> read_encrypted_records() {
                result.test_is_eq("inner type was 'HANDSHAKE'", record.type, Botan::TLS::Record_Type::Handshake);
                result.test_sz_eq("decrypted payload length", record.fragment.size(), 657 /* taken from RFC 8448 */);
 
-               result.confirm("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
+               result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
             }),
 
       CHECK("premature application data",
@@ -671,28 +671,29 @@ std::vector<Test::Result> read_encrypted_records() {
                records = std::get<TLS::Record>(res);
                result.test_eq("third record", records.fragment, plaintext_records.at(2));
 
-               result.confirm("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
+               result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
             }),
 
-      CHECK(
-         "read coalesced server hello and encrypted extensions",
-         [&](Test::Result& result) {
-            // contains the plaintext server hello and the encrypted extensions in one go
-            auto coalesced = server_hello;
-            coalesced.insert(coalesced.end(), encrypted_record.cbegin(), encrypted_record.cend());
+      CHECK("read coalesced server hello and encrypted extensions",
+            [&](Test::Result& result) {
+               // contains the plaintext server hello and the encrypted extensions in one go
+               auto coalesced = server_hello;
+               coalesced.insert(coalesced.end(), encrypted_record.cbegin(), encrypted_record.cend());
 
-            auto client = record_layer_client(true);
-            client.copy_data(coalesced);
+               auto client = record_layer_client(true);
+               client.copy_data(coalesced);
 
-            const auto srv_hello = client.next_record(nullptr);
-            result.confirm("read a record", std::holds_alternative<TLS::Record>(srv_hello));
-            result.confirm("is handshake record", std::get<TLS::Record>(srv_hello).type == TLS::Record_Type::Handshake);
+               const auto srv_hello = client.next_record(nullptr);
+               result.test_is_true("read a record", std::holds_alternative<TLS::Record>(srv_hello));
+               result.test_is_true("is handshake record",
+                                   std::get<TLS::Record>(srv_hello).type == TLS::Record_Type::Handshake);
 
-            auto cs = rfc8448_rtt1_handshake_traffic();
-            const auto enc_exts = client.next_record(cs.get());
-            result.confirm("read a record", std::holds_alternative<TLS::Record>(enc_exts));
-            result.confirm("is handshake record", std::get<TLS::Record>(enc_exts).type == TLS::Record_Type::Handshake);
-         }),
+               auto cs = rfc8448_rtt1_handshake_traffic();
+               const auto enc_exts = client.next_record(cs.get());
+               result.test_is_true("read a record", std::holds_alternative<TLS::Record>(enc_exts));
+               result.test_is_true("is handshake record",
+                                   std::get<TLS::Record>(enc_exts).type == TLS::Record_Type::Handshake);
+            }),
 
       CHECK("read a padded record",
             [&](Test::Result& result) {
@@ -701,7 +702,7 @@ std::vector<Test::Result> read_encrypted_records() {
 
                auto cs = rfc8448_rtt1_handshake_traffic();
                const auto record = client.next_record(cs.get());
-               result.confirm("read a record with padding", std::holds_alternative<TLS::Record>(record));
+               result.test_is_true("read a record with padding", std::holds_alternative<TLS::Record>(record));
             }),
 
       CHECK("read an empty encrypted record", [&](Test::Result& result) {
@@ -710,7 +711,7 @@ std::vector<Test::Result> read_encrypted_records() {
 
          auto cs = rfc8448_rtt1_handshake_traffic();
          const auto record = client.next_record(cs.get());
-         result.confirm("read an empty record", std::holds_alternative<TLS::Record>(record));
+         result.test_is_true("read an empty record", std::holds_alternative<TLS::Record>(record));
       })};
 }
 
@@ -766,7 +767,7 @@ std::vector<Test::Result> write_encrypted_records() {
          const auto fragment_length2 = read_record_header(reader);
          reader.discard_next(fragment_length2);
 
-         result.confirm("consumed all bytes", !reader.has_remaining());
+         result.test_is_true("consumed all bytes", !reader.has_remaining());
       })};
 }
 
@@ -802,12 +803,12 @@ std::vector<Test::Result> legacy_version_handling() {
                  [&](Test::Result& result) {
                     auto rl = record_layer_client();
                     auto rec = rl.prepare_records(TLS::Record_Type::Handshake, std::vector<uint8_t>(5));
-                    result.confirm("first record has version 0x0301", has_version(rec, 0x0301));
+                    result.test_is_true("first record has version 0x0301", has_version(rec, 0x0301));
 
                     rl.disable_sending_compat_mode();
 
                     rec = rl.prepare_records(TLS::Record_Type::Handshake, std::vector<uint8_t>(5));
-                    result.confirm("next record has version 0x0303", has_version(rec, 0x0303));
+                    result.test_is_true("next record has version 0x0303", has_version(rec, 0x0303));
                  }),
 
            CHECK("client side starts with version 0x0301 (even if multiple reconds are required)",
@@ -815,20 +816,20 @@ std::vector<Test::Result> legacy_version_handling() {
                     auto rl = record_layer_client();
                     auto rec = rl.prepare_records(TLS::Record_Type::Handshake,
                                                   std::vector<uint8_t>(5 * Botan::TLS::MAX_PLAINTEXT_SIZE));
-                    result.confirm("first record has version 0x0301", has_version(rec, 0x0301));
+                    result.test_is_true("first record has version 0x0301", has_version(rec, 0x0301));
 
                     rl.disable_sending_compat_mode();
 
                     rec = rl.prepare_records(TLS::Record_Type::Handshake,
                                              std::vector<uint8_t>(5 * Botan::TLS::MAX_PLAINTEXT_SIZE));
-                    result.confirm("next record has version 0x0303", has_version(rec, 0x0303));
+                    result.test_is_true("next record has version 0x0303", has_version(rec, 0x0303));
                  }),
 
            CHECK("server side starts with version 0x0303",
                  [&](Test::Result& result) {
                     auto rl = record_layer_server(true);
                     auto rec = rl.prepare_records(TLS::Record_Type::Handshake, std::vector<uint8_t>(5));
-                    result.confirm("first record has version 0x0303", has_version(rec, 0x0303));
+                    result.test_is_true("first record has version 0x0303", has_version(rec, 0x0303));
                  }),
 
            CHECK("server side accepts version 0x0301 for the first record",

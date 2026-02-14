@@ -70,18 +70,18 @@ class Roughtime_Response_Tests final : public Text_Based_Test {
             }
 
             if(!response.validate(Botan::Ed25519_PublicKey(pubkey))) {
-               result.confirm("fail_validation", type == "Invalid");
+               result.test_is_true("fail_validation", type == "Invalid");
             } else {
                const auto midpoint = Botan::Roughtime::Response::sys_microseconds64(
                   std::chrono::microseconds(vars.get_req_u64("MidpointMicroSeconds")));
                const auto radius = std::chrono::microseconds(vars.get_req_u32("RadiusMicroSeconds"));
 
-               result.confirm("midpoint", response.utc_midpoint() == midpoint);
-               result.confirm("radius", response.utc_radius() == radius);
-               result.confirm("OK", type == "Valid");
+               result.test_is_true("midpoint", response.utc_midpoint() == midpoint);
+               result.test_is_true("radius", response.utc_radius() == radius);
+               result.test_is_true("OK", type == "Valid");
             }
          } catch(const Botan::Roughtime::Roughtime_Error& e) {
-            result.confirm(e.what(), type == "Invalid");
+            result.test_is_true(e.what(), type == "Invalid");
          }
 
          return result;
@@ -123,11 +123,11 @@ class Roughtime final : public Test {
 
          auto rand64 = Botan::unlock(rng.random_vec(64));
          const Botan::Roughtime::Nonce nonce_v(rand64);
-         result.confirm("nonce from vector",
-                        nonce_v.get_nonce() == Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));
+         result.test_is_true("nonce from vector",
+                             nonce_v.get_nonce() == Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));
          const Botan::Roughtime::Nonce nonce_a(Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));
-         result.confirm("nonce from array",
-                        nonce_v.get_nonce() == Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));
+         result.test_is_true("nonce from array",
+                             nonce_v.get_nonce() == Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));
          rand64.push_back(10);
          result.test_throws("vector oversize",
                             [&rand64]() { const Botan::Roughtime::Nonce nonce_v2(rand64); });  //size 65
@@ -143,11 +143,11 @@ class Roughtime final : public Test {
          Test::Result result("roughtime chain");
 
          Botan::Roughtime::Chain c1;
-         result.confirm("default constructed is empty", c1.links().empty() && c1.responses().empty());
+         result.test_is_true("default constructed is empty", c1.links().empty() && c1.responses().empty());
 
          auto rand64 = Botan::unlock(rng.random_vec(64));
          const Botan::Roughtime::Nonce nonce_v(rand64);
-         result.confirm(
+         result.test_is_true(
             "empty chain nonce is blind",
             c1.next_nonce(nonce_v).get_nonce() == Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));
 
@@ -156,13 +156,13 @@ class Roughtime final : public Test {
             "ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= uLeTON9D+2HqJMzK6sYWLNDEdtBl9t/9yw1cVAOm0/sONH5Oqdq9dVPkC9syjuWbglCiCPVF+FbOtcxCkrgMmA== BQAAAEAAAABAAAAApAAAADwBAABTSUcAUEFUSFNSRVBDRVJUSU5EWOw1jl0uSiBEH9HE8/6r7zxoSc01f48vw+UzH8+VJoPelnvVJBj4lnH8uRLh5Aw0i4Du7XM1dp2u0r/I5PzhMQoDAAAABAAAAAwAAABSQURJTUlEUFJPT1RAQg8AUBo+tEqPBQC47l77to7ESFTVhlw1SC74P5ssx6gpuJ6eP+1916GuUiySGE/x3Fp0c3otUGAdsRQou5p9PDTeane/YEeVq4/8AgAAAEAAAABTSUcAREVMRe5T1ml8wHyWAcEtHP/U5Rg/jFXTEXOSglngSa4aI/CECVdy4ZNWeP6vv+2//ZW7lQsrWo7ZkXpvm9BdBONRSQIDAAAAIAAAACgAAABQVUJLTUlOVE1BWFQpXlenV0OfVisvp9jDHXLw8vymZVK9Pgw9k6Edf8ZEhUgSGEc5jwUASHLvZE2PBQAAAAAA\n";
 
          Botan::Roughtime::Chain c2(chain_str);
-         result.confirm("have two elements", c2.links().size() == 2 && c2.responses().size() == 2);
-         result.confirm("serialize loopback", c2.to_string() == chain_str);
+         result.test_is_true("have two elements", c2.links().size() == 2 && c2.responses().size() == 2);
+         result.test_is_true("serialize loopback", c2.to_string() == chain_str);
 
          c1.append(c2.links()[0], 1);
-         result.confirm("append ok", c1.links().size() == 1 && c1.responses().size() == 1);
+         result.test_is_true("append ok", c1.links().size() == 1 && c1.responses().size() == 1);
          c1.append(c2.links()[1], 1);
-         result.confirm("max size", c1.links().size() == 1 && c1.responses().size() == 1);
+         result.test_is_true("max size", c1.links().size() == 1 && c1.responses().size() == 1);
 
          result.test_throws("non-positive max chain size", [&]() { c1.append(c2.links()[1], 0); });
          result.test_throws("1 field", [&]() { const Botan::Roughtime::Chain a("ed25519"); });
@@ -203,15 +203,15 @@ class Roughtime final : public Test {
             "int08h-Roughtime ed25519 AW5uAoTSTDfG5NfY1bTh08GUnOqlRb+HVhbJ3ODJvsE= udp roughtime.int08h.com:2002\n"
             "ticktock ed25519 cj8GsiNlRkqiDElAeNMSBBMwrAl15hYPgX50+GWX/lA= udp ticktock.mixmin.net:5333\n");
 
-         result.confirm("size", servers.size() == 5);
+         result.test_is_true("size", servers.size() == 5);
          result.test_eq("name", servers[0].name(), "Chainpoint-Roughtime");
          result.test_eq("name", servers[4].name(), "ticktock");
-         result.confirm(
+         result.test_is_true(
             "public key",
             servers[0].public_key().get_public_key() ==
                Botan::Ed25519_PublicKey(Botan::base64_decode("bbT+RPS7zKX6w71ssPibzmwWqU9ffRV5oj2OresSmhE="))
                   .get_public_key());
-         result.confirm("single address", servers[0].addresses().size() == 1);
+         result.test_is_true("single address", servers[0].addresses().size() == 1);
          result.test_eq("address", servers[0].addresses()[0], "roughtime.chainpoint.org:2002");
 
          result.test_throws("1 field", [&]() { Botan::Roughtime::servers_from_str("A"); });
@@ -253,7 +253,7 @@ class Roughtime final : public Test {
             const std::chrono::milliseconds local_clock_max_error(1000);
             const auto diff_abs =
                now >= response.utc_midpoint() ? now - response.utc_midpoint() : response.utc_midpoint() - now;
-            result.confirm("online", diff_abs <= (response.utc_radius() + local_clock_max_error));
+            result.test_is_true("online", diff_abs <= (response.utc_radius() + local_clock_max_error));
          } catch(const std::exception& e) {
             result.test_failure(e.what());
          }

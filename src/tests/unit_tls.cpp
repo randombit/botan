@@ -693,11 +693,11 @@ void TLS_Handshake_Test::go() {
 
          m_results.test_eq("TLS key material export", client_key.bits_of(), server_key.bits_of());
 
-         m_results.confirm("Client is active", client->is_active());
-         m_results.confirm("Client is not closed", !client->is_closed());
+         m_results.test_is_true("Client is active", client->is_active());
+         m_results.test_is_false("Client is not closed", client->is_closed());
          client->close();
-         m_results.confirm("Client is no longer active", !client->is_active());
-         m_results.confirm("Client is closed", client->is_closed());
+         m_results.test_is_false("Client is no longer active", client->is_active());
+         m_results.test_is_true("Client is closed", client->is_closed());
       }
    }
 
@@ -1069,8 +1069,8 @@ class TLS_Unit_Tests final : public Test {
                });
 
             test.go();
-            test.results().confirm("custom generation was used", generator_called);
-            test.results().confirm("custom agreement was used", agreement_called);
+            test.results().test_is_true("custom generation was used", generator_called);
+            test.results().test_is_true("custom agreement was used", agreement_called);
             results.push_back(test.results());
          }
       }

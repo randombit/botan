@@ -104,7 +104,7 @@ class Message_Auth_Tests final : public Text_Based_Test {
 
             // Test that clone works and does not affect parent object
             auto clone = mac->new_object();
-            result.confirm("Clone has different pointer", mac.get() != clone.get());
+            result.test_is_true("Clone has different pointer", mac.get() != clone.get());
             result.test_eq("Clone has same name", mac->name(), clone->name());
             clone->set_key(key);
             clone->start(iv);

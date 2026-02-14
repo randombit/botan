@@ -358,7 +358,7 @@ Test::Result test_c_get_mechanism_list() {
                            std::placeholders::_1);
 
    Test::Result result = test_function("C_GetMechanismList", binder);
-   result.confirm("C_GetMechanismList returns non empty mechanisms list", !mechanisms.empty());
+   result.test_is_true("C_GetMechanismList returns non empty mechanisms list", !mechanisms.empty());
 
    return result;
 }
@@ -493,11 +493,12 @@ Test::Result test_c_get_session_info() {
       std::bind(
          &LowLevel::C_GetSessionInfo, p11_low_level.get(), session_handle, &session_info, std::placeholders::_1));
 
-   result.confirm("C_GetSessionInfo returns same slot id as during call to C_OpenSession",
-                  session_info.slotID == slot_vec.at(0));
-   result.confirm("C_GetSessionInfo returns same flags as during call to C_OpenSession", session_info.flags == flags);
-   result.confirm("C_GetSessionInfo returns public read only session state",
-                  session_info.state == static_cast<CK_FLAGS>(SessionState::RoPublicSession));
+   result.test_is_true("C_GetSessionInfo returns same slot id as during call to C_OpenSession",
+                       session_info.slotID == slot_vec.at(0));
+   result.test_is_true("C_GetSessionInfo returns same flags as during call to C_OpenSession",
+                       session_info.flags == flags);
+   result.test_is_true("C_GetSessionInfo returns public read only session state",
+                       session_info.state == static_cast<CK_FLAGS>(SessionState::RoPublicSession));
 
    return result;
 }

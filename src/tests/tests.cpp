@@ -127,7 +127,7 @@ void Test::Result::note_missing(std::string_view whatever_sv) {
 }
 
 void Test::Result::require(std::string_view what, bool expr, bool expected) {
-   if(!confirm(what, expr, expected)) {
+   if(!test_bool_eq(what, expr, expected)) {
       throw Test_Aborted(Botan::fmt("Test aborted, because required condition was not met: {}", what));
    }
 }

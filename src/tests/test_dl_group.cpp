@@ -178,9 +178,9 @@ class DL_Named_Group_Tests final : public Test {
             const size_t strength = group.estimated_strength();
 
             // 8192 bit ~~ 2**202 strength
-            result.confirm("Plausible strength", strength >= 80 && strength < 210);
+            result.test_is_true("Plausible strength", strength >= 80 && strength < 210);
 
-            result.confirm("Expected source", group.source() == Botan::DL_Group_Source::Builtin);
+            result.test_is_true("Expected source", group.source() == Botan::DL_Group_Source::Builtin);
 
             if(name.find("modp/srp/") == std::string::npos) {
                result.test_ne("DL_Group q is set", group.get_q(), 0);

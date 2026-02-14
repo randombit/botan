@@ -164,13 +164,13 @@ std::vector<Test::Result> test_session_manager_in_memory() {
 
       CHECK("empty cache does not obtain anything",
             [&](auto& result) {
-               result.confirm("no session found via server info", mgr->find(server_info(), cbs, plcy).empty());
+               result.test_is_true("no session found via server info", mgr->find(server_info(), cbs, plcy).empty());
 
                const Botan::TLS::Session_ID mock_id = random_id(*rng);
                auto mock_ticket = rng->random_vec<Botan::TLS::Session_Ticket>(128);
 
-               result.confirm("no session found via ID", !mgr->retrieve(mock_id, cbs, plcy));
-               result.confirm("no session found via ID", !mgr->retrieve(mock_ticket, cbs, plcy));
+               result.test_is_true("no session found via ID", !mgr->retrieve(mock_id, cbs, plcy));
+               result.test_is_true("no session found via ID", !mgr->retrieve(mock_ticket, cbs, plcy));
             }),
 
       CHECK("clearing empty cache",
@@ -179,9 +179,9 @@ std::vector<Test::Result> test_session_manager_in_memory() {
       CHECK("establish new session",
             [&](auto& result) {
                auto handle = mgr->establish(default_session(Botan::TLS::Connection_Side::Server, cbs), default_id);
-               if(result.confirm("establishment was successful", handle.has_value())) {
+               if(result.test_is_true("establishment was successful", handle.has_value())) {
                   result.require("session id was set", handle->id().has_value());
-                  result.confirm("session ticket was empty", !handle->ticket().has_value());
+                  result.test_is_true("session ticket was empty", !handle->ticket().has_value());
                   result.test_is_eq("session id is correct", handle->id().value(), default_id);
                }
             }),
@@ -189,20 +189,20 @@ std::vector<Test::Result> test_session_manager_in_memory() {
       CHECK("obtain session from server info",
             [&](auto& result) {
                auto sessions = mgr->find(server_info(), cbs, plcy);
-               if(result.confirm("session was found successfully", sessions.size() == 1)) {
+               if(result.test_is_true("session was found successfully", sessions.size() == 1)) {
                   result.test_is_eq("protocol version was echoed",
                                     sessions[0].session.version(),
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
                   result.test_is_eq("ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
                   result.test_is_eq("ID was echoed", sessions[0].handle.id().value(), default_id);
-                  result.confirm("not a ticket", !sessions[0].handle.ticket().has_value());
+                  result.test_is_true("not a ticket", !sessions[0].handle.ticket().has_value());
                }
             }),
 
       CHECK("obtain session from ID",
             [&](auto& result) {
                auto session = mgr->retrieve(default_id, cbs, plcy);
-               if(result.confirm("session was found successfully", session.has_value())) {
+               if(result.test_is_true("session was found successfully", session.has_value())) {
                   result.test_is_eq("protocol version was echoed",
                                     session->version(),
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
@@ -213,7 +213,7 @@ std::vector<Test::Result> test_session_manager_in_memory() {
       CHECK("obtain session from ID disguised as opaque handle",
             [&](auto& result) {
                auto session = mgr->retrieve(Botan::TLS::Opaque_Session_Handle(default_id), cbs, plcy);
-               if(result.confirm("session was found successfully", session.has_value())) {
+               if(result.test_is_true("session was found successfully", session.has_value())) {
                   result.test_is_eq("protocol version was echoed",
                                     session->version(),
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
@@ -224,19 +224,19 @@ std::vector<Test::Result> test_session_manager_in_memory() {
       CHECK("obtain session from ticket == id does not work",
             [&](auto& result) {
                auto session = mgr->retrieve(Botan::TLS::Session_Ticket(default_id), cbs, plcy);
-               result.confirm("session was not found", !session.has_value());
+               result.test_is_true("session was not found", !session.has_value());
             }),
 
       CHECK("invalid ticket causes std::nullopt",
             [&](auto& result) {
                auto no_session = mgr->retrieve(random_ticket(*rng), cbs, plcy);
-               result.confirm("std::nullopt on bogus ticket", !no_session.has_value());
+               result.test_is_true("std::nullopt on bogus ticket", !no_session.has_value());
             }),
 
       CHECK("invalid ID causes std::nullopt",
             [&](auto& result) {
                auto no_session = mgr->retrieve(random_id(*rng), cbs, plcy);
-               result.confirm("std::nullopt on bogus ID", !no_session.has_value());
+               result.test_is_true("std::nullopt on bogus ID", !no_session.has_value());
             }),
 
       CHECK("remove_all",
@@ -253,13 +253,13 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                result.require("obtain via ID", mgr->retrieve(new_id, cbs, plcy).has_value());
 
                auto sessions = mgr->find(server_info(), cbs, plcy);
-               if(result.confirm("found via server info", sessions.size() == 1)) {
+               if(result.test_is_true("found via server info", sessions.size() == 1)) {
                   result.test_is_eq("protocol version was echoed",
                                     sessions[0].session.version(),
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
                   result.test_is_eq("ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
                   result.test_is_eq("ID was echoed", sessions[0].handle.id().value(), new_id);
-                  result.confirm("ticket was not stored", !sessions[0].handle.ticket().has_value());
+                  result.test_is_true("ticket was not stored", !sessions[0].handle.ticket().has_value());
                }
 
                mgr->remove_all();
@@ -273,12 +273,12 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                // cannot be obtained by (non-existent) ID or randomly generated ticket
 
                auto sessions = mgr->find(server_info(), cbs, plcy);
-               if(result.confirm("found via server info", sessions.size() == 1)) {
+               if(result.test_is_true("found via server info", sessions.size() == 1)) {
                   result.test_is_eq("protocol version was echoed",
                                     sessions[0].session.version(),
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
                   result.test_is_eq("ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
-                  result.confirm("ID was not stored", !sessions[0].handle.id().has_value());
+                  result.test_is_true("ID was not stored", !sessions[0].handle.id().has_value());
                   result.test_is_eq("ticket was echoed", sessions[0].handle.ticket().value(), new_ticket);
                }
 
@@ -302,16 +302,16 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                result.test_sz_eq("can find via server info", local_mgr.find(server_info(), cbs, plcy).size(), 2);
 
                result.test_sz_eq("one was deleted", local_mgr.remove(default_id), 1);
-               result.confirm("cannot obtain via default ID anymore",
-                              !local_mgr.retrieve(default_id, cbs, plcy).has_value());
+               result.test_is_true("cannot obtain via default ID anymore",
+                                   !local_mgr.retrieve(default_id, cbs, plcy).has_value());
                result.test_sz_eq("can find less via server info", local_mgr.find(server_info(), cbs, plcy).size(), 1);
 
                result.test_sz_eq("last one was deleted",
                                  local_mgr.remove(Botan::TLS::Opaque_Session_Handle(new_session2->id().value())),
                                  1);
-               result.confirm("cannot obtain via ID anymore",
-                              !local_mgr.retrieve(new_session2->id().value(), cbs, plcy).has_value());
-               result.confirm("cannot find via server info", local_mgr.find(server_info(), cbs, plcy).empty());
+               result.test_is_true("cannot obtain via ID anymore",
+                                   !local_mgr.retrieve(new_session2->id().value(), cbs, plcy).has_value());
+               result.test_is_true("cannot find via server info", local_mgr.find(server_info(), cbs, plcy).empty());
             }),
 
       CHECK("removing by ticket or opaque handle",
@@ -351,24 +351,24 @@ std::vector<Test::Result> test_session_manager_in_memory() {
             }
 
             for(const auto& handle : handles) {
-               result.confirm("session still there", mgr->retrieve(handle, cbs, plcy).has_value());
+               result.test_is_true("session still there", mgr->retrieve(handle, cbs, plcy).has_value());
             }
 
             // add one more session (causing a first purge to happen)
             handles.push_back(
                mgr->establish(default_session(Botan::TLS::Connection_Side::Server, cbs), random_id(*rng)).value());
 
-            result.confirm("oldest session gone", !mgr->retrieve(handles[0], cbs, plcy).has_value());
+            result.test_is_true("oldest session gone", !mgr->retrieve(handles[0], cbs, plcy).has_value());
             for(size_t i = 1; i < handles.size(); ++i) {
-               result.confirm("session still there", mgr->retrieve(handles[i], cbs, plcy).has_value());
+               result.test_is_true("session still there", mgr->retrieve(handles[i], cbs, plcy).has_value());
             }
 
             // remove a session to cause a 'gap' in the FIFO
             mgr->remove(handles[4]);
-            result.confirm("oldest session gone", !mgr->retrieve(handles[0], cbs, plcy).has_value());
-            result.confirm("deleted session gone", !mgr->retrieve(handles[4], cbs, plcy).has_value());
+            result.test_is_true("oldest session gone", !mgr->retrieve(handles[0], cbs, plcy).has_value());
+            result.test_is_true("deleted session gone", !mgr->retrieve(handles[4], cbs, plcy).has_value());
             for(size_t i = 1; i < handles.size(); ++i) {
-               result.confirm("session still there", i == 4 || mgr->retrieve(handles[i], cbs, plcy).has_value());
+               result.test_is_true("session still there", i == 4 || mgr->retrieve(handles[i], cbs, plcy).has_value());
             }
 
             // insert enough new sessions to fully purge the ones currently held
@@ -378,11 +378,11 @@ std::vector<Test::Result> test_session_manager_in_memory() {
             }
 
             for(size_t i = 0; i < handles.size() - mgr->capacity(); ++i) {
-               result.confirm("session gone", !mgr->retrieve(handles[i], cbs, plcy).has_value());
+               result.test_is_true("session gone", !mgr->retrieve(handles[i], cbs, plcy).has_value());
             }
 
             for(size_t i = handles.size() - mgr->capacity(); i < handles.size(); ++i) {
-               result.confirm("session still there", mgr->retrieve(handles[i], cbs, plcy).has_value());
+               result.test_is_true("session still there", mgr->retrieve(handles[i], cbs, plcy).has_value());
             }
 
             // clear it all out
@@ -436,9 +436,9 @@ std::vector<Test::Result> test_session_manager_choose_ticket() {
 
                Botan::TLS::Session_Ticket random_session_ticket = random_ticket(*rng);
 
-               result.confirm("empty ticket list, no session",
-                              !mgr.choose_from_offered_tickets({}, "SHA-256", cbs, plcy).has_value());
-               result.confirm(
+               result.test_is_true("empty ticket list, no session",
+                                   !mgr.choose_from_offered_tickets({}, "SHA-256", cbs, plcy).has_value());
+               result.test_is_true(
                   "empty session manager, no session",
                   !mgr.choose_from_offered_tickets(std::vector{ticket(random_session_ticket)}, "SHA-256", cbs, plcy)
                       .has_value());
@@ -557,26 +557,26 @@ std::vector<Test::Result> test_session_manager_stateless() {
    return {
       CHECK("establish with default parameters",
             [&](auto& result) {
-               result.confirm("will emit tickets", mgr.emits_session_tickets());
+               result.test_is_true("will emit tickets", mgr.emits_session_tickets());
                auto ticket = mgr.establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
-               result.confirm("returned ticket", ticket.has_value() && ticket->is_ticket());
+               result.test_is_true("returned ticket", ticket.has_value() && ticket->is_ticket());
             }),
 
       CHECK("establish with disabled tickets",
             [&](auto& result) {
-               result.confirm("will emit tickets", mgr.emits_session_tickets());
+               result.test_is_true("will emit tickets", mgr.emits_session_tickets());
                auto ticket =
                   mgr.establish(default_session(Botan::TLS::Connection_Side::Server, cbs), std::nullopt, true);
-               result.confirm("returned std::nullopt", !ticket.has_value());
+               result.test_is_true("returned std::nullopt", !ticket.has_value());
             }),
 
       CHECK("establish without ticket key in credentials manager",
             [&](auto& result) {
                Botan::TLS::Session_Manager_Stateless local_mgr(std::make_shared<Empty_Credentials_Manager>(), rng);
 
-               result.confirm("won't emit tickets", !local_mgr.emits_session_tickets());
+               result.test_is_true("won't emit tickets", !local_mgr.emits_session_tickets());
                auto ticket = local_mgr.establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
-               result.confirm("returned std::nullopt", !ticket.has_value());
+               result.test_is_true("returned std::nullopt", !ticket.has_value());
             }),
 
       CHECK("retrieve via ticket",
@@ -586,9 +586,9 @@ std::vector<Test::Result> test_session_manager_stateless() {
                result.require("tickets created successfully", ticket1.has_value() && ticket2.has_value());
 
                Botan::TLS::Session_Manager_Stateless local_mgr(creds, rng);
-               result.confirm("can retrieve ticket 1", mgr.retrieve(ticket1.value(), cbs, plcy).has_value());
-               result.confirm("can retrieve ticket 2 from different manager but sam credentials",
-                              local_mgr.retrieve(ticket2.value(), cbs, plcy).has_value());
+               result.test_is_true("can retrieve ticket 1", mgr.retrieve(ticket1.value(), cbs, plcy).has_value());
+               result.test_is_true("can retrieve ticket 2 from different manager but sam credentials",
+                                   local_mgr.retrieve(ticket2.value(), cbs, plcy).has_value());
             }),
 
       CHECK("retrieve via ID does not work",
@@ -596,7 +596,8 @@ std::vector<Test::Result> test_session_manager_stateless() {
                auto ticket1 = mgr.establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
                result.require("tickets created successfully", ticket1.has_value() && ticket1.has_value());
 
-               result.confirm("retrieval by ID does not work", !mgr.retrieve(random_id(*rng), cbs, plcy).has_value());
+               result.test_is_true("retrieval by ID does not work",
+                                   !mgr.retrieve(random_id(*rng), cbs, plcy).has_value());
             }),
 
       CHECK("retrieve via opaque handle does work",
@@ -604,8 +605,8 @@ std::vector<Test::Result> test_session_manager_stateless() {
                auto ticket1 = mgr.establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
                result.require("tickets created successfully", ticket1.has_value() && ticket1.has_value());
 
-               result.confirm("retrieval by opaque handle",
-                              mgr.retrieve(ticket1->opaque_handle(), cbs, plcy).has_value());
+               result.test_is_true("retrieval by opaque handle",
+                                   mgr.retrieve(ticket1->opaque_handle(), cbs, plcy).has_value());
             }),
 
       CHECK("no retrieve without or with wrong ticket key",
@@ -618,11 +619,11 @@ std::vector<Test::Result> test_session_manager_stateless() {
                Botan::TLS::Session_Manager_Stateless local_mgr2(std::make_shared<Other_Test_Credentials_Manager>(),
                                                                 rng);
 
-               result.confirm("no successful retrieval (without key)",
-                              !local_mgr1.retrieve(ticket1.value(), cbs, plcy).has_value());
-               result.confirm("no successful retrieval (with wrong key)",
-                              !local_mgr2.retrieve(ticket1.value(), cbs, plcy).has_value());
-               result.confirm("successful retrieval", mgr.retrieve(ticket1.value(), cbs, plcy).has_value());
+               result.test_is_true("no successful retrieval (without key)",
+                                   !local_mgr1.retrieve(ticket1.value(), cbs, plcy).has_value());
+               result.test_is_true("no successful retrieval (with wrong key)",
+                                   !local_mgr2.retrieve(ticket1.value(), cbs, plcy).has_value());
+               result.test_is_true("successful retrieval", mgr.retrieve(ticket1.value(), cbs, plcy).has_value());
             }),
 
       CHECK("Clients cannot be stateless",
@@ -639,7 +640,7 @@ std::vector<Test::Result> test_session_manager_stateless() {
 
                auto ticket1 = mgr.establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
                result.require("tickets created successfully", ticket1.has_value() && ticket1.has_value());
-               result.confirm("finding tickets does not work", mgr.find(server_info(), cbs, plcy).empty());
+               result.test_is_true("finding tickets does not work", mgr.find(server_info(), cbs, plcy).empty());
             }),
 
       CHECK("remove is a NOOP",
@@ -648,10 +649,10 @@ std::vector<Test::Result> test_session_manager_stateless() {
                result.require("tickets created successfully", ticket1.has_value() && ticket1.has_value());
 
                result.test_sz_eq("remove the ticket", mgr.remove(ticket1.value()), 0);
-               result.confirm("successful retrieval 1", mgr.retrieve(ticket1.value(), cbs, plcy).has_value());
+               result.test_is_true("successful retrieval 1", mgr.retrieve(ticket1.value(), cbs, plcy).has_value());
 
                result.test_sz_eq("remove the ticket", mgr.remove_all(), 0);
-               result.confirm("successful retrieval 1", mgr.retrieve(ticket1.value(), cbs, plcy).has_value());
+               result.test_is_true("successful retrieval 1", mgr.retrieve(ticket1.value(), cbs, plcy).has_value());
             }),
 
       CHECK(
@@ -721,44 +722,44 @@ std::vector<Test::Result> test_session_manager_hybrid() {
                    auto mgr_prefers_tickets = make_manager(true);
                    auto ticket1 =
                       mgr_prefers_tickets.establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
-                   result.confirm("emits a ticket", ticket1.has_value() && ticket1->is_ticket());
+                   result.test_is_true("emits a ticket", ticket1.has_value() && ticket1->is_ticket());
 
                    auto mgr_prefers_ids = make_manager(false);
                    auto ticket2 = mgr_prefers_ids.establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
-                   result.confirm("emits an ID", ticket2.has_value() && ticket2->is_id());
+                   result.test_is_true("emits an ID", ticket2.has_value() && ticket2->is_id());
 
                    auto ticket3 = mgr_prefers_ids.establish(default_session(Botan::TLS::Connection_Side::Server, cbs),
                                                             std::nullopt,
                                                             true /* TLS 1.2 no ticket support */);
-                   result.confirm("emits an ID", ticket3.has_value() && ticket3->is_id());
+                   result.test_is_true("emits an ID", ticket3.has_value() && ticket3->is_id());
 
                    auto ticket4 = mgr_prefers_ids.establish(default_session(Botan::TLS::Connection_Side::Server, cbs),
                                                             std::nullopt,
                                                             true /* TLS 1.2 no ticket support */);
-                   result.confirm("emits an ID", ticket4.has_value() && ticket4->is_id());
+                   result.test_is_true("emits an ID", ticket4.has_value() && ticket4->is_id());
                 }),
 
-      CHECK_all("ticket vs ID preference in retrieval",
-                [&](const auto& make_manager, auto& result) {
-                   auto mgr_prefers_tickets = make_manager(true);
-                   auto mgr_prefers_ids = make_manager(false);
+      CHECK_all(
+         "ticket vs ID preference in retrieval",
+         [&](const auto& make_manager, auto& result) {
+            auto mgr_prefers_tickets = make_manager(true);
+            auto mgr_prefers_ids = make_manager(false);
 
-                   auto id1 = mgr_prefers_tickets.underlying_stateful_manager()->establish(
-                      default_session(Botan::TLS::Connection_Side::Server, cbs));
-                   auto id2 = mgr_prefers_ids.underlying_stateful_manager()->establish(
-                      default_session(Botan::TLS::Connection_Side::Server, cbs));
-                   auto ticket =
-                      mgr_prefers_tickets.establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
+            auto id1 = mgr_prefers_tickets.underlying_stateful_manager()->establish(
+               default_session(Botan::TLS::Connection_Side::Server, cbs));
+            auto id2 = mgr_prefers_ids.underlying_stateful_manager()->establish(
+               default_session(Botan::TLS::Connection_Side::Server, cbs));
+            auto ticket = mgr_prefers_tickets.establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
 
-                   result.require("establishments worked", id1.has_value() && id2.has_value() && ticket.has_value());
+            result.require("establishments worked", id1.has_value() && id2.has_value() && ticket.has_value());
 
-                   result.confirm("mgr1 + ID1", mgr_prefers_tickets.retrieve(id1.value(), cbs, plcy).has_value());
-                   result.confirm("mgr1 + ID2", !mgr_prefers_tickets.retrieve(id2.value(), cbs, plcy).has_value());
-                   result.confirm("mgr2 + ID1", !mgr_prefers_ids.retrieve(id1.value(), cbs, plcy).has_value());
-                   result.confirm("mgr2 + ID2", mgr_prefers_ids.retrieve(id2.value(), cbs, plcy).has_value());
-                   result.confirm("mgr1 + ticket", mgr_prefers_tickets.retrieve(ticket.value(), cbs, plcy).has_value());
-                   result.confirm("mgr2 + ticket", mgr_prefers_ids.retrieve(ticket.value(), cbs, plcy).has_value());
-                }),
+            result.test_is_true("mgr1 + ID1", mgr_prefers_tickets.retrieve(id1.value(), cbs, plcy).has_value());
+            result.test_is_true("mgr1 + ID2", !mgr_prefers_tickets.retrieve(id2.value(), cbs, plcy).has_value());
+            result.test_is_true("mgr2 + ID1", !mgr_prefers_ids.retrieve(id1.value(), cbs, plcy).has_value());
+            result.test_is_true("mgr2 + ID2", mgr_prefers_ids.retrieve(id2.value(), cbs, plcy).has_value());
+            result.test_is_true("mgr1 + ticket", mgr_prefers_tickets.retrieve(ticket.value(), cbs, plcy).has_value());
+            result.test_is_true("mgr2 + ticket", mgr_prefers_ids.retrieve(ticket.value(), cbs, plcy).has_value());
+         }),
 
       CHECK_all("no session tickets if hybrid manager cannot create them",
                 [&](const auto& make_manager, auto& result) {
@@ -769,9 +770,9 @@ std::vector<Test::Result> test_session_manager_hybrid() {
                    auto mgr_prefers_tickets = make_manager(true);
                    auto mgr_prefers_ids = make_manager(false);
 
-                   result.confirm("does not emit tickets", !empty_mgr.emits_session_tickets());
-                   result.confirm("does emit tickets 1", mgr_prefers_tickets.emits_session_tickets());
-                   result.confirm("does emit tickets 2", mgr_prefers_ids.emits_session_tickets());
+                   result.test_is_true("does not emit tickets", !empty_mgr.emits_session_tickets());
+                   result.test_is_true("does emit tickets 1", mgr_prefers_tickets.emits_session_tickets());
+                   result.test_is_true("does emit tickets 2", mgr_prefers_ids.emits_session_tickets());
                 }),
    });
 }
@@ -815,37 +816,40 @@ std::vector<Test::Result> test_session_manager_sqlite() {
    Session_Manager_Policy plcy;
 
    return {
-      CHECK("migrate session database scheme (purges database)",
-            [&](auto& result) {
-               const Temporary_Database_File dbfile("tls-sessions/botan-2.19.3.sqlite");
+      CHECK(
+         "migrate session database scheme (purges database)",
+         [&](auto& result) {
+            const Temporary_Database_File dbfile("tls-sessions/botan-2.19.3.sqlite");
 
-               // legacy database (encrypted with 'thetruthisoutthere') containing:
-               //    $ sqlite3 src/tests/data/tls-sessions/botan-2.19.3.sqlite  'SELECT * FROM tls_sessions;'
-               //    63C136FAD49F05A184F910FD6568A3884164216C11E41CEBFDCD149AF66C1714|1673606906|cloudflare.com|443|...
-               //    63C137030387E4A6CDAD303CCB1F53884944FDE5B4EDD91E6FCF74DCB033DCEB|1673606915|randombit.net|443|...
-               Botan::TLS::Session_Manager_SQLite legacy_db("thetruthisoutthere", rng, dbfile.get());
+            // legacy database (encrypted with 'thetruthisoutthere') containing:
+            //    $ sqlite3 src/tests/data/tls-sessions/botan-2.19.3.sqlite  'SELECT * FROM tls_sessions;'
+            //    63C136FAD49F05A184F910FD6568A3884164216C11E41CEBFDCD149AF66C1714|1673606906|cloudflare.com|443|...
+            //    63C137030387E4A6CDAD303CCB1F53884944FDE5B4EDD91E6FCF74DCB033DCEB|1673606915|randombit.net|443|...
+            Botan::TLS::Session_Manager_SQLite legacy_db("thetruthisoutthere", rng, dbfile.get());
 
-               result.confirm("Session_ID for randombit.net is gone",
-                              !legacy_db
-                                  .retrieve(Botan::TLS::Session_ID(Botan::hex_decode(
-                                               "63C137030387E4A6CDAD303CCB1F53884944FDE5B4EDD91E6FCF74DCB033DCEB")),
-                                            cbs,
-                                            plcy)
-                                  .has_value());
-               result.confirm("Session_ID for cloudflare.com is gone",
-                              !legacy_db
-                                  .retrieve(Botan::TLS::Session_ID(Botan::hex_decode(
-                                               "63C136FAD49F05A184F910FD6568A3884164216C11E41CEBFDCD149AF66C1714")),
-                                            cbs,
-                                            plcy)
-                                  .has_value());
-               result.confirm("no more session for randombit.net",
-                              legacy_db.find(Botan::TLS::Server_Information("randombit.net", 443), cbs, plcy).empty());
-               result.confirm("no more session for cloudflare.com",
-                              legacy_db.find(Botan::TLS::Server_Information("cloudflare.com", 443), cbs, plcy).empty());
+            result.test_is_true("Session_ID for randombit.net is gone",
+                                !legacy_db
+                                    .retrieve(Botan::TLS::Session_ID(Botan::hex_decode(
+                                                 "63C137030387E4A6CDAD303CCB1F53884944FDE5B4EDD91E6FCF74DCB033DCEB")),
+                                              cbs,
+                                              plcy)
+                                    .has_value());
+            result.test_is_true("Session_ID for cloudflare.com is gone",
+                                !legacy_db
+                                    .retrieve(Botan::TLS::Session_ID(Botan::hex_decode(
+                                                 "63C136FAD49F05A184F910FD6568A3884164216C11E41CEBFDCD149AF66C1714")),
+                                              cbs,
+                                              plcy)
+                                    .has_value());
+            result.test_is_true(
+               "no more session for randombit.net",
+               legacy_db.find(Botan::TLS::Server_Information("randombit.net", 443), cbs, plcy).empty());
+            result.test_is_true(
+               "no more session for cloudflare.com",
+               legacy_db.find(Botan::TLS::Server_Information("cloudflare.com", 443), cbs, plcy).empty());
 
-               result.test_sz_eq("empty database won't get more empty", legacy_db.remove_all(), 0);
-            }),
+            result.test_sz_eq("empty database won't get more empty", legacy_db.remove_all(), 0);
+         }),
 
       CHECK("clearing empty database",
             [&](auto& result) {
@@ -882,7 +886,7 @@ std::vector<Test::Result> test_session_manager_sqlite() {
                               some_random_handle->is_id() && some_virtual_handle->is_id());
 
                auto session1 = mgr.retrieve(some_random_handle.value(), cbs, plcy);
-               if(result.confirm("found session by user-provided ID", session1.has_value())) {
+               if(result.test_is_true("found session by user-provided ID", session1.has_value())) {
                   result.test_is_eq("protocol version was echoed",
                                     session1->version(),
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
@@ -890,7 +894,7 @@ std::vector<Test::Result> test_session_manager_sqlite() {
                }
 
                auto session2 = mgr.retrieve(some_virtual_handle.value(), cbs, plcy);
-               if(result.confirm("found session by manager-generated ID", session2.has_value())) {
+               if(result.test_is_true("found session by manager-generated ID", session2.has_value())) {
                   result.test_is_eq("protocol version was echoed",
                                     session2->version(),
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
@@ -898,7 +902,7 @@ std::vector<Test::Result> test_session_manager_sqlite() {
                }
 
                auto session3 = mgr.retrieve(random_id(*rng), cbs, plcy);
-               result.confirm("random ID creates empty result", !session3.has_value());
+               result.test_is_true("random ID creates empty result", !session3.has_value());
             }),
 
       CHECK("retrieval via ticket creates empty result",
@@ -909,8 +913,8 @@ std::vector<Test::Result> test_session_manager_sqlite() {
                   mgr.establish(default_session(Botan::TLS::Connection_Side::Server, cbs), random_id(*rng));
                auto some_virtual_handle = mgr.establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
 
-               result.confirm("std::nullopt on random ticket",
-                              !mgr.retrieve(random_ticket(*rng), cbs, plcy).has_value());
+               result.test_is_true("std::nullopt on random ticket",
+                                   !mgr.retrieve(random_ticket(*rng), cbs, plcy).has_value());
             }),
 
       CHECK("storing sessions and finding them by server info",
@@ -925,8 +929,8 @@ std::vector<Test::Result> test_session_manager_sqlite() {
                auto found_sessions = mgr.find(server_info(), cbs, plcy);
                if(result.test_sz_eq("found both sessions", found_sessions.size(), 2)) {
                   for(const auto& [session, handle] : found_sessions) {
-                     result.confirm("ID matches", !handle.is_id() || handle.id().value() == id);
-                     result.confirm("ticket matches", !handle.is_ticket() || handle.ticket().value() == ticket);
+                     result.test_is_true("ID matches", !handle.is_id() || handle.id().value() == id);
+                     result.test_is_true("ticket matches", !handle.is_ticket() || handle.ticket().value() == ticket);
                   }
                }
             }),
@@ -947,8 +951,9 @@ std::vector<Test::Result> test_session_manager_sqlite() {
                auto found_sessions = mgr.find(server_info(), cbs, plcy);
                if(result.test_sz_eq("found some other sessions", found_sessions.size(), 2)) {
                   for(const auto& [session, handle] : found_sessions) {
-                     result.confirm("ID does not match", !handle.is_id() || handle.id().value() != id);
-                     result.confirm("ticket does not match", !handle.is_ticket() || handle.ticket().value() != ticket);
+                     result.test_is_true("ID does not match", !handle.is_id() || handle.id().value() != id);
+                     result.test_is_true("ticket does not match",
+                                         !handle.is_ticket() || handle.ticket().value() != ticket);
                   }
                }
 
@@ -1044,7 +1049,7 @@ std::vector<Test::Result> tls_session_manager_expiry() {
                    result.require("saved successfully", handle.has_value());
                    result.require("session was found", mgr->retrieve(handle.value(), cbs, plcy).has_value());
                    cbs.tick();
-                   result.confirm("session has expired", !mgr->retrieve(handle.value(), cbs, plcy).has_value());
+                   result.test_is_true("session has expired", !mgr->retrieve(handle.value(), cbs, plcy).has_value());
                    result.test_sz_eq("session was deleted when it expired", mgr->remove_all(), 0);
                 }),
 
@@ -1106,11 +1111,11 @@ std::vector<Test::Result> tls_session_manager_expiry() {
 
                auto sessions_and_handles2 = mgr->find(server_info(), cbs, plcy);
                result.test_sz_eq("only one session is found", sessions_and_handles2.size(), 1);
-               result.confirm("found session is the Session_ID", sessions_and_handles2.front().handle.is_id());
+               result.test_is_true("found session is the Session_ID", sessions_and_handles2.front().handle.is_id());
                result.test_is_eq(
                   "found session is the Session_ID", sessions_and_handles2.front().handle.id().value(), handle_1);
-               result.confirm("found session is TLS 1.2",
-                              sessions_and_handles2.front().session.version().is_pre_tls_13());
+               result.test_is_true("found session is TLS 1.2",
+                                   sessions_and_handles2.front().session.version().is_pre_tls_13());
             }),
 
          CHECK_all("number of found tickets is capped",

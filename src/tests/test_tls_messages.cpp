@@ -123,7 +123,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
                      Botan::TLS::Ciphersuite::by_id(Botan::make_uint16(ciphersuite[0], ciphersuite[1])).value();
                   const Botan::TLS::Server_Hello_12 message(buffer);
                   result.test_eq("Protocol version", message.legacy_version().to_string(), pv.to_string());
-                  result.confirm("Ciphersuite", (message.ciphersuite() == cs.ciphersuite_code()));
+                  result.test_is_true("Ciphersuite", (message.ciphersuite() == cs.ciphersuite_code()));
                   std::vector<uint8_t> buf;
                   for(const Botan::TLS::Extension_Code& type : message.extension_types()) {
                      const uint16_t u16type = static_cast<uint16_t>(type);
@@ -272,9 +272,9 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
 
                   const std::vector<std::vector<uint8_t>> expected_versions = vars.get_req_bin_list("Expected_Content");
                   for(const auto& expected_version : expected_versions) {
-                     result.confirm("Expected_Content",
-                                    supported_versions.supports(
-                                       Botan::TLS::Protocol_Version(expected_version[0], expected_version[1])));
+                     result.test_is_true("Expected_Content",
+                                         supported_versions.supports(
+                                            Botan::TLS::Protocol_Version(expected_version[0], expected_version[1])));
                   }
 
                   result.test_eq("supported_version test 1", Botan::hex_encode(serialized_buffer), expected_buffer);
@@ -296,20 +296,20 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
                              ec_groups.end(),
                              std::back_inserter(named_groups));
 
-                  result.confirm("supported_groups extension - size check",
-                                 (named_groups.size() * 2) == expected_content.size());
+                  result.test_is_true("supported_groups extension - size check",
+                                      (named_groups.size() * 2) == expected_content.size());
 
                   for(size_t i = 0; i < expected_content.size(); i += 2) {
                      const auto expected_named_group =
                         Botan::make_uint16(expected_content.at(i), expected_content.at(i + 1));
 
-                     result.confirm("signature_algorithms_cert extension - named group check",
-                                    std::any_of(named_groups.cbegin(),
-                                                named_groups.cend(),
-                                                [&expected_named_group](const Botan::TLS::Named_Group& named_group) {
-                                                   return static_cast<Botan::TLS::Named_Group>(expected_named_group) ==
-                                                          named_group;
-                                                }));
+                     result.test_is_true(
+                        "signature_algorithms_cert extension - named group check",
+                        std::any_of(named_groups.cbegin(),
+                                    named_groups.cend(),
+                                    [&expected_named_group](const Botan::TLS::Named_Group& named_group) {
+                                       return static_cast<Botan::TLS::Named_Group>(expected_named_group) == named_group;
+                                    }));
                   }
 
                   result.test_eq("supported_groups extension - serialization test", serialized_buffer, buffer);
@@ -321,16 +321,16 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
                   const auto serialized_buffer = sig_algo_cert.serialize(Botan::TLS::Connection_Side::Client);
                   const auto expected_content = vars.get_req_bin("Expected_Content");
 
-                  result.confirm("signature_algorithms_cert extension - size check",
-                                 sig_algo_cert.supported_schemes().size() * 2 == expected_content.size());
+                  result.test_is_true("signature_algorithms_cert extension - size check",
+                                      sig_algo_cert.supported_schemes().size() * 2 == expected_content.size());
 
                   size_t offset = 0;
                   for(const auto& sig_scheme : sig_algo_cert.supported_schemes()) {
                      const auto expected_sig_scheme =
                         Botan::make_uint16(expected_content.at(offset), expected_content.at(offset + 1));
 
-                     result.confirm("signature_algorithms_cert extension - sig scheme check",
-                                    Botan::TLS::Signature_Scheme(expected_sig_scheme) == sig_scheme);
+                     result.test_is_true("signature_algorithms_cert extension - sig scheme check",
+                                         Botan::TLS::Signature_Scheme(expected_sig_scheme) == sig_scheme);
 
                      offset += 2;
                   }
@@ -421,10 +421,10 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
                std::visit(
                   [&](auto ch) {
                      if constexpr(std::is_same_v<Botan::TLS::Client_Hello_12, decltype(ch)>) {
-                        result.confirm("expected Client_Hello_12", msg_type == "client_hello_12");
+                        result.test_is_true("expected Client_Hello_12", msg_type == "client_hello_12");
                      }
                      if constexpr(std::is_same_v<Botan::TLS::Client_Hello_13, decltype(ch)>) {
-                        result.confirm("expected Client_Hello_13", msg_type == "client_hello_13");
+                        result.test_is_true("expected Client_Hello_13", msg_type == "client_hello_13");
                      }
 
                      const std::string extensions = vars.get_req_str("AdditionalData");
@@ -443,12 +443,12 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
                      }
                      result.test_eq("Supported ciphersuites", ciphersuites_buffer, ciphersuite);
 
-                     result.confirm("this is a positive test that should not have failed yet", is_positive_test);
+                     result.test_is_true("this is a positive test that should not have failed yet", is_positive_test);
                   },
                   Botan::TLS::Client_Hello_13::parse(buffer));
             } catch(const std::exception& ex) {
                result.test_eq("correct error produced", ex.what(), exception);
-               result.confirm("negative test", !is_positive_test);
+               result.test_is_true("negative test", !is_positive_test);
             }
          }
 
@@ -462,15 +462,15 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
                std::visit(
                   [&](auto msg) {
                      if constexpr(std::is_same_v<Botan::TLS::Server_Hello_12_Shim, decltype(msg)>) {
-                        result.confirm("expected Server_Hello_12", msg_type == "server_hello_12");
-                        result.confirm("expected pre TLS 1.3 message", pv == msg.selected_version());
+                        result.test_is_true("expected Server_Hello_12", msg_type == "server_hello_12");
+                        result.test_is_true("expected pre TLS 1.3 message", pv == msg.selected_version());
                      } else if constexpr(std::is_same_v<Botan::TLS::Server_Hello_13, decltype(msg)>) {
-                        result.confirm("expected Server_Hello_13", msg_type == "server_hello_13");
+                        result.test_is_true("expected Server_Hello_13", msg_type == "server_hello_13");
                      } else if constexpr(std::is_same_v<Botan::TLS::Hello_Retry_Request, decltype(msg)>) {
-                        result.confirm("expected Hello_Retry_Request", msg_type == "hello_retry_request");
+                        result.test_is_true("expected Hello_Retry_Request", msg_type == "hello_retry_request");
                      }
 
-                     result.confirm("Ciphersuite", (msg.ciphersuite() == cs.ciphersuite_code()));
+                     result.test_is_true("Ciphersuite", (msg.ciphersuite() == cs.ciphersuite_code()));
 
                      std::vector<uint8_t> buf;
                      for(const Botan::TLS::Extension_Code& type : msg.extensions().extension_types()) {
@@ -483,7 +483,7 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
                   Botan::TLS::Server_Hello_13::parse(buffer));
             } catch(const std::exception& ex) {
                result.test_eq("correct error produced", ex.what(), exception);
-               result.confirm("negative test", !is_positive_test);
+               result.test_is_true("negative test", !is_positive_test);
             }
          }
 

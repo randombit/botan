@@ -237,7 +237,7 @@ class Test_Tests final : public Test {
             result.test_success("Got expected failure for " + what);
             const std::string result_str = test_result.result_string();
 
-            result.confirm("result string contains FAIL", result_str.find("FAIL") != std::string::npos);
+            result.test_is_true("result string contains FAIL", result_str.find("FAIL") != std::string::npos);
          } else {
             result.test_failure("Expected test to fail for " + what);
          }

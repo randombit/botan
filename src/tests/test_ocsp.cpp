@@ -39,7 +39,8 @@ class OCSP_Tests final : public Test {
          for(const std::string& ocsp_input_path : ocsp_input_paths) {
             try {
                const Botan::OCSP::Response resp(Test::read_binary_data_file(ocsp_input_path));
-               result.confirm("parsing was successful", resp.status() == Botan::OCSP::Response_Status_Code::Successful);
+               result.test_is_true("parsing was successful",
+                                   resp.status() == Botan::OCSP::Response_Status_Code::Successful);
                result.test_success("Parsed input " + ocsp_input_path);
             } catch(Botan::Exception& e) {
                result.test_failure("Parsing failed", e.what());
@@ -48,8 +49,8 @@ class OCSP_Tests final : public Test {
 
          const Botan::OCSP::Response resp(
             Test::read_binary_data_file("x509/ocsp/patrickschmidt_ocsp_try_later_wrong_sig.der"));
-         result.confirm("parsing exposes correct status code",
-                        resp.status() == Botan::OCSP::Response_Status_Code::Try_Later);
+         result.test_is_true("parsing exposes correct status code",
+                             resp.status() == Botan::OCSP::Response_Status_Code::Try_Later);
 
          return result;
       }
@@ -184,8 +185,8 @@ class OCSP_Tests final : public Test {
 
             return result.test_sz_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
                    result.test_sz_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
-                   result.confirm(std::string("Status: '") + Botan::to_string(expected) + "'",
-                                  ocsp_status[0].contains(expected));
+                   result.test_is_true(std::string("Status: '") + Botan::to_string(expected) + "'",
+                                       ocsp_status[0].contains(expected));
          };
 
          check_ocsp(Botan::calendar_point(2016, 11, 11, 12, 30, 0).to_std_timepoint(),
@@ -224,8 +225,8 @@ class OCSP_Tests final : public Test {
 
             return result.test_sz_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
                    result.test_sz_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
-                   result.confirm(std::string("Status: '") + Botan::to_string(expected) + "'",
-                                  ocsp_status[0].contains(expected));
+                   result.test_is_true(std::string("Status: '") + Botan::to_string(expected) + "'",
+                                       ocsp_status[0].contains(expected));
          };
 
          check_ocsp(Botan::calendar_point(2016, 11, 11, 12, 30, 0).to_std_timepoint(),
@@ -264,8 +265,8 @@ class OCSP_Tests final : public Test {
 
             return result.test_sz_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
                    result.test_sz_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
-                   result.confirm(std::string("Status: '") + Botan::to_string(expected) + "'",
-                                  ocsp_status[0].contains(expected));
+                   result.test_is_true(std::string("Status: '") + Botan::to_string(expected) + "'",
+                                       ocsp_status[0].contains(expected));
          };
 
          check_ocsp(Botan::calendar_point(2019, 5, 28, 7, 0, 0).to_std_timepoint(),
@@ -299,8 +300,8 @@ class OCSP_Tests final : public Test {
 
             return result.test_sz_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
                    result.test_sz_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
-                   result.confirm(std::string("Status: '") + Botan::to_string(expected) + "'",
-                                  ocsp_status[0].contains(expected));
+                   result.test_is_true(std::string("Status: '") + Botan::to_string(expected) + "'",
+                                       ocsp_status[0].contains(expected));
          };
 
          check_ocsp(Botan::calendar_point(2019, 5, 28, 7, 0, 0).to_std_timepoint(),
@@ -364,7 +365,7 @@ class OCSP_Tests final : public Test {
                const bool status_good = ocsp_status[0].contains(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD);
                const bool server_not_found =
                   ocsp_status[0].contains(Botan::Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE);
-               result.confirm("Expected status", status_good || server_not_found);
+               result.test_is_true("Expected status", status_good || server_not_found);
             }
          }
 
@@ -417,7 +418,7 @@ class OCSP_Tests final : public Test {
                return cert.v3_extensions().extension_set(Botan::OID::from_string("PKIX.OCSP.NoCheck"));
             }) != ocsp.certificates().end();
 
-         result.confirm("Contains NoCheck extension", contains_cert_with_nocheck);
+         result.test_is_true("Contains NoCheck extension", contains_cert_with_nocheck);
 
          return result;
       }

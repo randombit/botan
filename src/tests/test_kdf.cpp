@@ -49,7 +49,7 @@ class KDF_KAT_Tests final : public Text_Based_Test {
 
          // Test that clone works
          auto clone = kdf->new_object();
-         result.confirm("Clone has different pointer", kdf.get() != clone.get());
+         result.test_is_true("Clone has different pointer", kdf.get() != clone.get());
          result.test_eq("Clone has same name", kdf->name(), clone->name());
 
          return result;

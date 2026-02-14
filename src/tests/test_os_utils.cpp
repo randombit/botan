@@ -96,7 +96,7 @@ class OS_Utils_Tests final : public Test {
 
          // TODO better tests
          const auto hr_ts1 = Botan::OS::get_high_resolution_clock();
-         result.confirm("high resolution timestamp value is never zero", hr_ts1 != 0);
+         result.test_is_true("high resolution timestamp value is never zero", hr_ts1 != 0);
 
          for(size_t trials = 0; trials < max_trials; ++trials) {
             if(hr_ts1 < Botan::OS::get_high_resolution_clock()) {
@@ -125,14 +125,14 @@ class OS_Utils_Tests final : public Test {
          Test::Result result("OS::get_system_timestamp_ns");
 
          const uint64_t sys_ts1 = Botan::OS::get_system_timestamp_ns();
-         result.confirm("System timestamp value is never zero", sys_ts1 != 0);
+         result.test_is_true("System timestamp value is never zero", sys_ts1 != 0);
 
          // do something that consumes a little time
          Botan::OS::get_process_id();
 
          const uint64_t sys_ts2 = Botan::OS::get_system_timestamp_ns();
 
-         result.confirm("System time moves forward", sys_ts1 <= sys_ts2);
+         result.test_is_true("System time moves forward", sys_ts1 <= sys_ts2);
 
          return result;
       }
@@ -158,7 +158,7 @@ class OS_Utils_Tests final : public Test {
             return {result};
          }
 
-         result.confirm("Correct result returned by working probe fn", run_rc == 5);
+         result.test_is_true("Correct result returned by working probe fn", run_rc == 5);
 
          std::function<int()> crash_probe;
 
@@ -190,7 +190,7 @@ class OS_Utils_Tests final : public Test {
 
          if(crash_probe) {
             const int crash_rc = Botan::OS::run_cpu_instruction_probe(crash_probe);
-            result.confirm("Result for function executing undefined opcode", crash_rc < 0);
+            result.test_is_true("Result for function executing undefined opcode", crash_rc < 0);
          }
 
          return result;

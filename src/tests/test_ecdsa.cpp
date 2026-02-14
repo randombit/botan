@@ -217,7 +217,7 @@ class ECDSA_Key_Recovery_Tests final : public Text_Based_Test {
 
             auto sig = Botan::BigInt::encode_fixed_length_int_pair(R, S, group.get_order_bytes());
 
-            result.confirm("Signature verifies", verifier.verify_message(msg, sig));
+            result.test_is_true("Signature verifies", verifier.verify_message(msg, sig));
          } catch(Botan::Exception& e) {
             result.test_failure("Failed to recover ECDSA public key", e.what());
          }
@@ -290,13 +290,14 @@ class ECDSA_AllGroups_Test : public Test {
                      auto sig = signer.sign_message(message, rng());
                      result.test_sz_eq("Expected signature size", sig.size(), 2 * group.get_order_bytes());
 
-                     result.confirm("Signature accepted", verifier.verify_message(message, sig));
+                     result.test_is_true("Signature accepted", verifier.verify_message(message, sig));
 
                      const auto corrupted_message = mutate_vec(message, rng(), true);
-                     result.confirm("Modified message rejected", !verifier.verify_message(corrupted_message, sig));
+                     result.test_is_true("Modified message rejected", !verifier.verify_message(corrupted_message, sig));
 
                      const auto corrupted_sig = mutate_vec(sig, rng(), true);
-                     result.confirm("Modified signature rejected", !verifier.verify_message(message, corrupted_sig));
+                     result.test_is_true("Modified signature rejected",
+                                         !verifier.verify_message(message, corrupted_sig));
                   }
                } catch(std::exception& e) {
                   result.test_failure("Exception", e.what());
@@ -336,7 +337,7 @@ class ECDSA_ExplicitCurveKey_Test : public Text_Based_Test {
 
                const auto& group = ecdsa->domain();
                result.test_is_true("Key is marked as explicit encoding", group.used_explicit_encoding());
-               result.confirm("Group has expected OID", group.get_curve_oid() == expected_oid);
+               result.test_is_true("Group has expected OID", group.get_curve_oid() == expected_oid);
             } else {
                result.test_failure("Returned key was some other type");
             }

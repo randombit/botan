@@ -42,22 +42,22 @@ class HOTP_KAT_Tests final : public Text_Based_Test {
 
          std::pair<bool, uint64_t> otp_res = hotp.verify_hotp(otp, counter, 0);
          result.test_is_true("OTP verify result", otp_res.first);
-         result.confirm("OTP verify next counter", otp_res.second == counter + 1);
+         result.test_is_true("OTP verify next counter", otp_res.second == counter + 1);
 
          // Test invalid OTP
          otp_res = hotp.verify_hotp(otp + 1, counter, 0);
          result.test_is_false("OTP verify result", otp_res.first);
-         result.confirm("OTP verify next counter", otp_res.second == counter);
+         result.test_is_true("OTP verify next counter", otp_res.second == counter);
 
          // Test invalid OTP with long range
          otp_res = hotp.verify_hotp(otp + 1, counter, 100);
          result.test_is_false("OTP verify result", otp_res.first);
-         result.confirm("OTP verify next counter", otp_res.second == counter);
+         result.test_is_true("OTP verify next counter", otp_res.second == counter);
 
          // Test valid OTP with long range
          otp_res = hotp.verify_hotp(otp, counter - 90, 100);
          result.test_is_true("OTP verify result", otp_res.first);
-         result.confirm("OTP verify next counter", otp_res.second == counter + 1);
+         result.test_is_true("OTP verify next counter", otp_res.second == counter + 1);
 
          return result;
       }

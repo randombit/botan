@@ -571,8 +571,8 @@ std::vector<Test::Result> hmac_drbg_multiple_requests() {
                     auto rng1 = make_seeded_rng(2);
                     auto rng2 = make_seeded_rng(2);
 
-                    result.confirm("RNG 1 is seeded and ready to go", rng1->is_seeded());
-                    result.confirm("RNG 2 is seeded and ready to go", rng2->is_seeded());
+                    result.test_is_true("RNG 1 is seeded and ready to go", rng1->is_seeded());
+                    result.test_is_true("RNG 2 is seeded and ready to go", rng2->is_seeded());
 
                     auto bulk = rng1->random_vec<std::vector<uint8_t>>(2 * rng_max_output);
 
@@ -589,8 +589,8 @@ std::vector<Test::Result> hmac_drbg_multiple_requests() {
               auto rng1 = make_seeded_rng(3);
               auto rng2 = make_seeded_rng(3);
 
-              result.confirm("RNG 1 is seeded and ready to go", rng1->is_seeded());
-              result.confirm("RNG 2 is seeded and ready to go", rng2->is_seeded());
+              result.test_is_true("RNG 1 is seeded and ready to go", rng1->is_seeded());
+              result.test_is_true("RNG 2 is seeded and ready to go", rng2->is_seeded());
 
               std::vector<uint8_t> bulk(3 * rng_max_output);
               rng1->randomize_with_input(bulk, seed);
@@ -720,18 +720,18 @@ class AutoSeeded_RNG_Tests final : public Test {
 
          Botan::AutoSeeded_RNG rng;
 
-         result.confirm("AutoSeeded_RNG::name", rng.name().starts_with("HMAC_DRBG(HMAC(SHA-"));
+         result.test_is_true("AutoSeeded_RNG::name", rng.name().starts_with("HMAC_DRBG(HMAC(SHA-"));
 
-         result.confirm("AutoSeeded_RNG starts seeded", rng.is_seeded());
+         result.test_is_true("AutoSeeded_RNG starts seeded", rng.is_seeded());
          rng.random_vec(16);  // generate and discard output
          rng.clear();
          result.test_is_false("AutoSeeded_RNG unseeded after calling clear", rng.is_seeded());
 
          // AutoSeeded_RNG automatically reseeds as required:
          rng.random_vec(16);
-         result.confirm("AutoSeeded_RNG can be reseeded", rng.is_seeded());
+         result.test_is_true("AutoSeeded_RNG can be reseeded", rng.is_seeded());
 
-         result.confirm("AutoSeeded_RNG ", rng.is_seeded());
+         result.test_is_true("AutoSeeded_RNG ", rng.is_seeded());
          rng.random_vec(16);  // generate and discard output
          rng.clear();
          result.test_is_false("AutoSeeded_RNG unseeded after calling clear", rng.is_seeded());
@@ -743,7 +743,7 @@ class AutoSeeded_RNG_Tests final : public Test {
    #endif
 
          rng.random_vec(16);  // generate and discard output
-         result.confirm("AutoSeeded_RNG can be reseeded", rng.is_seeded());
+         result.test_is_true("AutoSeeded_RNG can be reseeded", rng.is_seeded());
 
          for(size_t i = 0; i != 4096; ++i) {
             std::vector<uint8_t> buf(i);
@@ -781,9 +781,9 @@ class System_RNG_Tests final : public Test {
 
          result.test_sz_gte("Some non-empty name is returned", rng.name().size(), 1);
 
-         result.confirm("System RNG always seeded", rng.is_seeded());
+         result.test_is_true("System RNG always seeded", rng.is_seeded());
          rng.clear();  // clear is a noop for system rng
-         result.confirm("System RNG always seeded", rng.is_seeded());
+         result.test_is_true("System RNG always seeded", rng.is_seeded());
 
    #if defined(BOTAN_HAS_ENTROPY_SOURCE)
          rng.reseed_from(Botan::Entropy_Sources::global_sources(), 256);
@@ -806,8 +806,8 @@ class System_RNG_Tests final : public Test {
 
             std::vector<uint8_t> check_buf(checkSize, 0xFE);
 
-            result.confirm("System RNG failed to write after 4GB boundary",
-                           std::memcmp(large_buf.data() + maximum_u32, check_buf.data(), checkSize) != 0);
+            result.test_is_true("System RNG failed to write after 4GB boundary",
+                                std::memcmp(large_buf.data() + maximum_u32, check_buf.data(), checkSize) != 0);
          }
 
          return std::vector<Test::Result>{result};
@@ -829,9 +829,9 @@ class Processor_RNG_Tests final : public Test {
             Botan::Processor_RNG rng;
 
             result.test_ne("Has a name", rng.name(), "");
-            result.confirm("CPU RNG always seeded", rng.is_seeded());
+            result.test_is_true("CPU RNG always seeded", rng.is_seeded());
             rng.clear();  // clear is a noop for rdrand
-            result.confirm("CPU RNG always seeded", rng.is_seeded());
+            result.test_is_true("CPU RNG always seeded", rng.is_seeded());
 
    #if defined(BOTAN_HAS_ENTROPY_SOURCE)
             const size_t reseed_bits = rng.reseed_from(Botan::Entropy_Sources::global_sources(), 256);

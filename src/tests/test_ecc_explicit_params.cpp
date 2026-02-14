@@ -37,7 +37,7 @@ class ECC_Explicit_Curve_Tests final : public Text_Based_Test {
 
                auto used_explicit = ecdsa->domain().used_explicit_encoding();
 
-               result.confirm("Loaded ECC key marked as an explicit encoding", used_explicit);
+               result.test_is_true("Loaded ECC key marked as an explicit encoding", used_explicit);
             } else {
                result.test_failure("Returned key was some other type");
             }
@@ -50,7 +50,8 @@ class ECC_Explicit_Curve_Tests final : public Text_Based_Test {
          } catch(Botan::Not_Implemented& e) {
             // Can happen if pcurves_generic is not in the build
             const std::string err(e.what());
-            result.confirm("Expected error", err.find("is not supported in this build config") != std::string::npos);
+            result.test_is_true("Expected error",
+                                err.find("is not supported in this build config") != std::string::npos);
          } catch(Botan::Exception& e) {
             const std::string err(e.what());
             if(expected_result == "OK") {

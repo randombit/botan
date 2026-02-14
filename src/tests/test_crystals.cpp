@@ -129,13 +129,13 @@ std::vector<Test::Result> test_polynomial_basics() {
       CHECK("polynomial owning storage",
             [](Test::Result& res) {
                const Kyberish_Poly<Domain::Normal> p;
-               res.confirm("default constructed poly owns memory", p.owns_storage());
+               res.test_is_true("default constructed poly owns memory", p.owns_storage());
                for(auto coeff : p) {
                   res.test_is_eq<int16_t>("default constructed poly has 0 coefficients", coeff, 0);
                }
 
                const Kyberish_Poly<Domain::NTT> p_ntt;
-               res.confirm("default constructed poly owns memory (NTT)", p_ntt.owns_storage());
+               res.test_is_true("default constructed poly owns memory (NTT)", p_ntt.owns_storage());
                for(auto coeff : p) {
                   res.test_is_eq<int16_t>("default constructed poly (NTT) has 0 coefficients", coeff, 0);
                }
@@ -147,14 +147,14 @@ std::vector<Test::Result> test_polynomial_basics() {
                res.test_sz_eq("requested size", polys.size(), 4);
 
                for(const auto& poly : polys) {
-                  res.confirm("poly embedded in vector does not own memory", !poly.owns_storage());
+                  res.test_is_true("poly embedded in vector does not own memory", !poly.owns_storage());
                }
 
                const Kyberish_PolyVec<Domain::NTT> polys_ntt(4);
                res.test_sz_eq("requested size (NTT)", polys.size(), 4);
 
                for(const auto& poly : polys_ntt) {
-                  res.confirm("poly (NTT) embedded in vector does not own memory", !poly.owns_storage());
+                  res.test_is_true("poly (NTT) embedded in vector does not own memory", !poly.owns_storage());
                }
             }),
 
@@ -162,34 +162,34 @@ std::vector<Test::Result> test_polynomial_basics() {
             [](Test::Result& res) {
                const Kyberish_Poly<Domain::Normal> p;
                auto p2 = p.clone();
-               res.confirm("cloned poly owns memory", p2.owns_storage());
+               res.test_is_true("cloned poly owns memory", p2.owns_storage());
 
                const Kyberish_PolyVec<Domain::Normal> pv(3);
                for(const auto& poly : pv) {
                   res.require("poly in vector does not own memory", !poly.owns_storage());
                   auto pv2 = poly.clone();
-                  res.confirm("cloned poly in vector owns memory", pv2.owns_storage());
+                  res.test_is_true("cloned poly in vector owns memory", pv2.owns_storage());
                }
 
                auto pv2 = pv.clone();
                for(const auto& poly : pv2) {
-                  res.confirm("cloned vector polynomial don't own memory", !poly.owns_storage());
+                  res.test_is_true("cloned vector polynomial don't own memory", !poly.owns_storage());
                }
 
                const Kyberish_Poly<Domain::NTT> p_ntt;
                auto p2_ntt = p_ntt.clone();
-               res.confirm("cloned poly (NTT) owns memory", p2_ntt.owns_storage());
+               res.test_is_true("cloned poly (NTT) owns memory", p2_ntt.owns_storage());
 
                const Kyberish_PolyVec<Domain::NTT> pv_ntt(3);
                for(const auto& poly : pv_ntt) {
                   res.require("poly (NTT) in vector does not own memory", !poly.owns_storage());
                   auto pv2_ntt = poly.clone();
-                  res.confirm("cloned poly (NTT) in vector owns memory", pv2_ntt.owns_storage());
+                  res.test_is_true("cloned poly (NTT) in vector owns memory", pv2_ntt.owns_storage());
                }
 
                auto pv2_ntt = pv_ntt.clone();
                for(const auto& poly : pv2_ntt) {
-                  res.confirm("cloned vector polynomial (NTT) don't own memory", !poly.owns_storage());
+                  res.test_is_true("cloned vector polynomial (NTT) don't own memory", !poly.owns_storage());
                }
             }),
 
@@ -250,35 +250,35 @@ std::vector<Test::Result> test_polynomial_basics() {
       CHECK("value range validation",
             [](Test::Result& res) {
                Kyberish_Poly<Domain::Normal> p;
-               res.confirm("value range validation (all zero)", p.ct_validate_value_range(0, 1));
+               res.test_is_true("value range validation (all zero)", p.ct_validate_value_range(0, 1));
 
                p[0] = 1;
                p[32] = 1;
                p[172] = 1;
-               res.confirm("value range validation", p.ct_validate_value_range(0, 1));
+               res.test_is_true("value range validation", p.ct_validate_value_range(0, 1));
 
                p[11] = 2;
-               res.confirm("value range validation", !p.ct_validate_value_range(0, 1));
+               res.test_is_true("value range validation", !p.ct_validate_value_range(0, 1));
 
                p[11] = -1;
-               res.confirm("value range validation", !p.ct_validate_value_range(0, 1));
+               res.test_is_true("value range validation", !p.ct_validate_value_range(0, 1));
             }),
 
       CHECK("value range validation for polynomial vectors",
             [](Test::Result& res) {
                Kyberish_PolyVec<Domain::Normal> pv(3);
-               res.confirm("value range validation (all zero)", pv.ct_validate_value_range(0, 1));
+               res.test_is_true("value range validation (all zero)", pv.ct_validate_value_range(0, 1));
 
                pv[0][0] = 1;
                pv[1][32] = 1;
                pv[2][172] = 1;
-               res.confirm("value range validation", pv.ct_validate_value_range(0, 1));
+               res.test_is_true("value range validation", pv.ct_validate_value_range(0, 1));
 
                pv[0][11] = 2;
-               res.confirm("value range validation", !pv.ct_validate_value_range(0, 1));
+               res.test_is_true("value range validation", !pv.ct_validate_value_range(0, 1));
 
                pv[0][11] = -1;
-               res.confirm("value range validation", !pv.ct_validate_value_range(0, 1));
+               res.test_is_true("value range validation", !pv.ct_validate_value_range(0, 1));
             }),
    };
 }
@@ -338,12 +338,12 @@ void random_encoding_roundtrips(Test::Result& res, Botan::RandomNumberGenerator&
    std::vector<uint8_t> buffer((p.size() * expected_encoding_bits + 7) / 8);
    Botan::BufferStuffer stuffer(buffer);
    Botan::CRYSTALS::pack<range>(p, stuffer);
-   res.confirm("encoded polynomial fills buffer", stuffer.full());
+   res.test_is_true("encoded polynomial fills buffer", stuffer.full());
 
    Botan::BufferSlicer slicer(buffer);
    Poly p_unpacked;
    Botan::CRYSTALS::unpack<range>(p_unpacked, slicer);
-   res.confirm("decoded polynomial reads all bytes", slicer.empty());
+   res.test_is_true("decoded polynomial reads all bytes", slicer.empty());
 
    p_unpacked -= p;
    res.test_sz_eq("p = unpack(pack(p))", p_unpacked.hamming_weight(), 0);
