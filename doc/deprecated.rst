@@ -227,7 +227,6 @@ internal to the library in the future.
   Internal implementation headers - seemingly no reason for applications to use:
   ``assert.h``,
   ``curve_gfp.h``,
-  ``numthry.h``,
   ``reducer.h``,
   ``tls_algos.h``,
   ``tls_magic.h``
