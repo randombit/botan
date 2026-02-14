@@ -160,7 +160,7 @@ Test::Result test_function(const std::string& name,
 
    // test throw variant
    if(expect_failure) {
-      result.test_throws(name + " fails as expected", [test_func]() { test_func(ThrowException); });
+      result.test_throws(name + " fails as expected", [&test_func]() { test_func(ThrowException); });
    } else {
       test_func(ThrowException);
       result.test_success(name + " did not throw and completed successfully");
