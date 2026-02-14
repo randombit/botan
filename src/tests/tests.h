@@ -278,7 +278,11 @@ class Test {
 
             bool test_success(std::string_view note = "");
 
+            bool test_failure(std::string err);
+
             bool test_failure(std::string_view err);
+
+            bool test_failure(const char* err);
 
             bool test_failure(std::string_view what, std::string_view error);
 

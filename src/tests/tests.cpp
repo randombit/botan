@@ -214,8 +214,16 @@ void Test::Result::test_failure(std::string_view what, std::span<const uint8_t> 
    test_failure(Botan::fmt("{} {} with value {}", who(), what, Botan::hex_encode(context)));
 }
 
+bool Test::Result::test_failure(const char* err) {
+   return test_failure(std::string_view(err));
+}
+
 bool Test::Result::test_failure(std::string_view err) {
-   m_fail_log.push_back(std::string(err));
+   return test_failure(std::string(err));
+}
+
+bool Test::Result::test_failure(std::string err) {
+   m_fail_log.push_back(std::move(err));
 
    if(Test::options().abort_on_first_fail() && m_who != "Failing Test") {
       std::abort();
