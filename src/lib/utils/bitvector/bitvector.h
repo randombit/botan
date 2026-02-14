@@ -1350,11 +1350,6 @@ bool operator==(const T1& lhs, const T2& rhs) {
    return lhs.equals_vartime(rhs);
 }
 
-template <bitvectorish T1, bitvectorish T2>
-bool operator!=(const T1& lhs, const T2& rhs) {
-   return lhs.equals_vartime(rhs);
-}
-
 namespace detail {
 
 /**
