@@ -99,6 +99,61 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX512_GFNI void encrypt(const uint8_t ptext[16 
 }
 
 template <typename SIMD_T, size_t M>
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX512_GFNI void encrypt_x2(const uint8_t ptext[32 * 4 * M],
+                                                            uint8_t ctext[32 * 4 * M],
+                                                            std::span<const uint32_t> RK) {
+   SIMD_T B0 = SIMD_T::load_be(ptext);
+   SIMD_T B1 = SIMD_T::load_be(ptext + 16 * M);
+   SIMD_T B2 = SIMD_T::load_be(ptext + 16 * 2 * M);
+   SIMD_T B3 = SIMD_T::load_be(ptext + 16 * 3 * M);
+
+   SIMD_T B4 = SIMD_T::load_be(ptext + 16 * 4 * M);
+   SIMD_T B5 = SIMD_T::load_be(ptext + 16 * 5 * M);
+   SIMD_T B6 = SIMD_T::load_be(ptext + 16 * 6 * M);
+   SIMD_T B7 = SIMD_T::load_be(ptext + 16 * 7 * M);
+
+   SIMD_T::transpose(B0, B1, B2, B3);
+   SIMD_T::transpose(B4, B5, B6, B7);
+
+   B0 = B0.rev_words();
+   B1 = B1.rev_words();
+   B2 = B2.rev_words();
+   B3 = B3.rev_words();
+
+   B4 = B4.rev_words();
+   B5 = B5.rev_words();
+   B6 = B6.rev_words();
+   B7 = B7.rev_words();
+
+   for(size_t j = 0; j != 8; ++j) {
+      B0 ^= sm4_f(B1 ^ B2 ^ B3 ^ SIMD_T::splat(RK[4 * j]));
+      B4 ^= sm4_f(B5 ^ B6 ^ B7 ^ SIMD_T::splat(RK[4 * j]));
+
+      B1 ^= sm4_f(B2 ^ B3 ^ B0 ^ SIMD_T::splat(RK[4 * j + 1]));
+      B5 ^= sm4_f(B6 ^ B7 ^ B4 ^ SIMD_T::splat(RK[4 * j + 1]));
+
+      B2 ^= sm4_f(B3 ^ B0 ^ B1 ^ SIMD_T::splat(RK[4 * j + 2]));
+      B6 ^= sm4_f(B7 ^ B4 ^ B5 ^ SIMD_T::splat(RK[4 * j + 2]));
+
+      B3 ^= sm4_f(B0 ^ B1 ^ B2 ^ SIMD_T::splat(RK[4 * j + 3]));
+      B7 ^= sm4_f(B4 ^ B5 ^ B6 ^ SIMD_T::splat(RK[4 * j + 3]));
+   }
+
+   SIMD_T::transpose(B0, B1, B2, B3);
+   SIMD_T::transpose(B4, B5, B6, B7);
+
+   B3.rev_words().store_be(ctext);
+   B2.rev_words().store_be(ctext + 16 * M);
+   B1.rev_words().store_be(ctext + 16 * 2 * M);
+   B0.rev_words().store_be(ctext + 16 * 3 * M);
+
+   B7.rev_words().store_be(ctext + 16 * 4 * M);
+   B6.rev_words().store_be(ctext + 16 * 5 * M);
+   B5.rev_words().store_be(ctext + 16 * 6 * M);
+   B4.rev_words().store_be(ctext + 16 * 7 * M);
+}
+
+template <typename SIMD_T, size_t M>
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX512_GFNI void decrypt(const uint8_t ctext[16 * 4 * M],
                                                          uint8_t ptext[16 * 4 * M],
                                                          std::span<const uint32_t> RK) {
@@ -129,6 +184,61 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX512_GFNI void decrypt(const uint8_t ctext[16 
    B0.rev_words().store_be(ptext + 16 * 3 * M);
 }
 
+template <typename SIMD_T, size_t M>
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX512_GFNI void decrypt_x2(const uint8_t ctext[32 * 4 * M],
+                                                            uint8_t ptext[32 * 4 * M],
+                                                            std::span<const uint32_t> RK) {
+   SIMD_T B0 = SIMD_T::load_be(ctext);
+   SIMD_T B1 = SIMD_T::load_be(ctext + 16 * M);
+   SIMD_T B2 = SIMD_T::load_be(ctext + 16 * 2 * M);
+   SIMD_T B3 = SIMD_T::load_be(ctext + 16 * 3 * M);
+
+   SIMD_T B4 = SIMD_T::load_be(ctext + 16 * 4 * M);
+   SIMD_T B5 = SIMD_T::load_be(ctext + 16 * 5 * M);
+   SIMD_T B6 = SIMD_T::load_be(ctext + 16 * 6 * M);
+   SIMD_T B7 = SIMD_T::load_be(ctext + 16 * 7 * M);
+
+   SIMD_T::transpose(B0, B1, B2, B3);
+   SIMD_T::transpose(B4, B5, B6, B7);
+
+   B0 = B0.rev_words();
+   B1 = B1.rev_words();
+   B2 = B2.rev_words();
+   B3 = B3.rev_words();
+
+   B4 = B4.rev_words();
+   B5 = B5.rev_words();
+   B6 = B6.rev_words();
+   B7 = B7.rev_words();
+
+   for(size_t j = 0; j != 8; ++j) {
+      B0 ^= sm4_f(B1 ^ B2 ^ B3 ^ SIMD_T::splat(RK[32 - (4 * j + 1)]));
+      B4 ^= sm4_f(B5 ^ B6 ^ B7 ^ SIMD_T::splat(RK[32 - (4 * j + 1)]));
+
+      B1 ^= sm4_f(B2 ^ B3 ^ B0 ^ SIMD_T::splat(RK[32 - (4 * j + 2)]));
+      B5 ^= sm4_f(B6 ^ B7 ^ B4 ^ SIMD_T::splat(RK[32 - (4 * j + 2)]));
+
+      B2 ^= sm4_f(B3 ^ B0 ^ B1 ^ SIMD_T::splat(RK[32 - (4 * j + 3)]));
+      B6 ^= sm4_f(B7 ^ B4 ^ B5 ^ SIMD_T::splat(RK[32 - (4 * j + 3)]));
+
+      B3 ^= sm4_f(B0 ^ B1 ^ B2 ^ SIMD_T::splat(RK[32 - (4 * j + 4)]));
+      B7 ^= sm4_f(B4 ^ B5 ^ B6 ^ SIMD_T::splat(RK[32 - (4 * j + 4)]));
+   }
+
+   SIMD_T::transpose(B0, B1, B2, B3);
+   SIMD_T::transpose(B4, B5, B6, B7);
+
+   B3.rev_words().store_be(ptext);
+   B2.rev_words().store_be(ptext + 16 * M);
+   B1.rev_words().store_be(ptext + 16 * 2 * M);
+   B0.rev_words().store_be(ptext + 16 * 3 * M);
+
+   B7.rev_words().store_be(ptext + 16 * 4 * M);
+   B6.rev_words().store_be(ptext + 16 * 5 * M);
+   B5.rev_words().store_be(ptext + 16 * 6 * M);
+   B4.rev_words().store_be(ptext + 16 * 7 * M);
+}
+
 }  // namespace
 
 }  // namespace SM4_AVX512_GFNI
@@ -136,6 +246,13 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX512_GFNI void decrypt(const uint8_t ctext[16 
 void BOTAN_FN_ISA_AVX512_GFNI SM4::sm4_avx512_gfni_encrypt(const uint8_t ptext[],
                                                            uint8_t ctext[],
                                                            size_t blocks) const {
+   while(blocks >= 32) {
+      SM4_AVX512_GFNI::encrypt_x2<SIMD_16x32, 4>(ptext, ctext, m_RK);
+      ptext += 16 * 32;
+      ctext += 16 * 32;
+      blocks -= 32;
+   }
+
    while(blocks >= 16) {
       SM4_AVX512_GFNI::encrypt<SIMD_16x32, 4>(ptext, ctext, m_RK);
       ptext += 16 * 16;
@@ -162,6 +279,13 @@ void BOTAN_FN_ISA_AVX512_GFNI SM4::sm4_avx512_gfni_encrypt(const uint8_t ptext[]
 void BOTAN_FN_ISA_AVX512_GFNI SM4::sm4_avx512_gfni_decrypt(const uint8_t ctext[],
                                                            uint8_t ptext[],
                                                            size_t blocks) const {
+   while(blocks >= 32) {
+      SM4_AVX512_GFNI::decrypt_x2<SIMD_16x32, 4>(ctext, ptext, m_RK);
+      ptext += 16 * 32;
+      ctext += 16 * 32;
+      blocks -= 32;
+   }
+
    while(blocks >= 16) {
       SM4_AVX512_GFNI::decrypt<SIMD_16x32, 4>(ctext, ptext, m_RK);
       ptext += 16 * 16;
