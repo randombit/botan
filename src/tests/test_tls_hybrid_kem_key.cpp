@@ -154,30 +154,32 @@ void roundtrip_test(Test::Result& result, Ts... kex_kem_fn) {
    const auto expected_key_length = key_length_of_hybrid_public_key(kex_kem_fn...);
    const auto expected_strength = estimated_strength_of_hybrid_public_key(kex_kem_fn...);
 
-   result.test_eq(
+   result.test_sz_eq(
       "ciphertext has expected length", kem_result.encapsulated_shared_key().size(), expected_ciphertext_length);
-   result.test_eq("shared secret has expected length", kem_result.shared_key().size(), expected_shared_secret_length);
-   result.test_eq(
+   result.test_sz_eq(
+      "shared secret has expected length", kem_result.shared_key().size(), expected_shared_secret_length);
+   result.test_sz_eq(
       "expected length of ciphertext is as expected", encryptor.encapsulated_key_length(), expected_ciphertext_length);
-   result.test_eq("shared secret has expected length", encryptor.shared_key_length(0), expected_shared_secret_length);
+   result.test_sz_eq(
+      "shared secret has expected length", encryptor.shared_key_length(0), expected_shared_secret_length);
 
    Botan::PK_KEM_Decryptor decryptor(hybrid_key, rng, "Raw");
    Botan::secure_vector<uint8_t> decaps_shared_secret = decryptor.decrypt(kem_result.encapsulated_shared_key(), 0, {});
 
    result.test_eq("shared secret after KEM roundtrip matches", decaps_shared_secret, kem_result.shared_key());
-   result.test_eq(
+   result.test_sz_eq(
       "expected shared secret has expected length", decryptor.shared_key_length(0), expected_shared_secret_length);
-   result.test_eq("shared secret has expected length", decaps_shared_secret.size(), expected_shared_secret_length);
+   result.test_sz_eq("shared secret has expected length", decaps_shared_secret.size(), expected_shared_secret_length);
 
-   result.test_eq("public key bits is the sum of its parts",
-                  hybrid_public_key.raw_public_key_bits().size(),
-                  expected_public_key_length);
+   result.test_sz_eq("public key bits is the sum of its parts",
+                     hybrid_public_key.raw_public_key_bits().size(),
+                     expected_public_key_length);
 
-   result.test_eq(
+   result.test_sz_eq(
       "Public_Key::key_length is the maximum of its parts", hybrid_public_key.key_length(), expected_key_length);
-   result.test_eq("Public_Key::estimated_strength is the maximum of its parts",
-                  hybrid_public_key.estimated_strength(),
-                  expected_strength);
+   result.test_sz_eq("Public_Key::estimated_strength is the maximum of its parts",
+                     hybrid_public_key.estimated_strength(),
+                     expected_strength);
 }
 
 std::vector<Test::Result> hybrid_kem_keypair() {
@@ -248,20 +250,21 @@ void kex_to_kem_roundtrip(Test::Result& result,
    Botan::PK_KEM_Encryptor encryptor(kexkem_public_key, "Raw");
    const auto kem_result = encryptor.encrypt(rng);
 
-   result.test_eq("ciphertext has expected length",
-                  kem_result.encapsulated_shared_key().size(),
-                  encryptor.encapsulated_key_length());
-   result.test_eq("shared secret has expected length", kem_result.shared_key().size(), encryptor.shared_key_length(0));
+   result.test_sz_eq("ciphertext has expected length",
+                     kem_result.encapsulated_shared_key().size(),
+                     encryptor.encapsulated_key_length());
+   result.test_sz_eq(
+      "shared secret has expected length", kem_result.shared_key().size(), encryptor.shared_key_length(0));
 
    Botan::PK_KEM_Decryptor decryptor(kexkem_key, rng, "Raw");
 
-   result.test_eq("encapsulated length matches the decryptor's expectation",
-                  kem_result.encapsulated_shared_key().size(),
-                  decryptor.encapsulated_key_length());
+   result.test_sz_eq("encapsulated length matches the decryptor's expectation",
+                     kem_result.encapsulated_shared_key().size(),
+                     decryptor.encapsulated_key_length());
 
    Botan::secure_vector<uint8_t> decaps_shared_secret = decryptor.decrypt(kem_result.encapsulated_shared_key(), 0, {});
 
-   result.test_eq(
+   result.test_sz_eq(
       "decapsulated shared secret has expected length", decaps_shared_secret.size(), decryptor.shared_key_length(0));
 
    result.test_eq("shared secret after KEM roundtrip matches", decaps_shared_secret, kem_result.shared_key());

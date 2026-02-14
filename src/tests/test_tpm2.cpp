@@ -193,8 +193,8 @@ std::vector<Test::Result> test_tpm2_properties() {
       CHECK("Max random bytes per request",
             [&](Test::Result& result) {
                const auto prop = ctx->max_random_bytes_per_request();
-               result.test_gte("at least as long as SHA-256", prop, 32);
-               result.test_lte("at most as long as SHA-512", prop, 64);
+               result.test_sz_gte("at least as long as SHA-256", prop, 32);
+               result.test_sz_lte("at most as long as SHA-512", prop, 64);
             }),
 
       CHECK("Supports basic algorithms",
@@ -265,7 +265,7 @@ std::vector<Test::Result> test_tpm2_context() {
             auto srk = ctx->storage_root_key({}, {});
             result.require("SRK is not null", srk != nullptr);
             result.test_eq("Algo", srk->algo_name(), "RSA");
-            result.test_eq("Key size", srk->key_length(), 2048);
+            result.test_sz_eq("Key size", srk->key_length(), 2048);
             result.confirm("Has persistent handle", srk->handles().has_persistent_handle());
          }),
    #endif
@@ -325,7 +325,7 @@ std::vector<Test::Result> test_external_tpm2_context() {
                   auto rng = Botan::TPM2::RandomNumberGenerator(ctx, session);
 
                   auto bytes = rng.random_vec(16);
-                  result.test_eq("some random bytes generated", bytes.size(), 16);
+                  result.test_sz_eq("some random bytes generated", bytes.size(), 16);
 
                   // All Botan-wrapped things go out of scope...
                }
@@ -335,7 +335,7 @@ std::vector<Test::Result> test_external_tpm2_context() {
 
                auto [bytes, rc_random] = raw_get_random_bytes(esys_ctx.get(), 16, raw_session);
                Botan::TPM2::check_rc("random byte generation successful", rc_random);
-               result.test_eq_sz("some raw random bytes generated", bytes->size, 16);
+               result.test_sz_eq("some raw random bytes generated", bytes->size, 16);
             }),
 
          CHECK("TPM2::Context-managed crypto backend fails gracefully after TPM2::Context destruction",
@@ -373,7 +373,7 @@ std::vector<Test::Result> test_external_tpm2_context() {
 
                   auto [bytes, rc_random] = raw_get_random_bytes(esys_ctx.get(), 16, raw_session);
                   Botan::TPM2::check_rc("random byte generation successful", rc_random);
-                  result.test_eq_sz("some raw random bytes generated", bytes->size, 16);
+                  result.test_sz_eq("some raw random bytes generated", bytes->size, 16);
    #endif
                }),
 
@@ -397,7 +397,7 @@ std::vector<Test::Result> test_external_tpm2_context() {
 
             auto [bytes, rc_random] = raw_get_random_bytes(esys_ctx.get(), 16, raw_session);
             Botan::TPM2::check_rc("random byte generation successful", rc_random);
-            result.test_eq_sz("some raw random bytes generated", bytes->size, 16);
+            result.test_sz_eq("some raw random bytes generated", bytes->size, 16);
          }),
    #endif
    };
@@ -876,7 +876,7 @@ std::vector<Test::Result> test_tpm2_rsa() {
                // Make it persistent
                const auto handles = ctx->persistent_handles().size();
                const auto new_location = ctx->persist(*sk, authed_session, secret);
-               result.test_eq("One more handle", ctx->persistent_handles().size(), handles + 1);
+               result.test_sz_eq("One more handle", ctx->persistent_handles().size(), handles + 1);
                result.confirm("New location occupied", Botan::value_exists(ctx->persistent_handles(), new_location));
                result.confirm("is persistent", sk->handles().has_persistent_handle());
                result.test_is_eq(
@@ -889,7 +889,7 @@ std::vector<Test::Result> test_tpm2_rsa() {
 
                // Evict it
                ctx->evict(std::move(sk), authed_session);
-               result.test_eq("One less handle", ctx->persistent_handles().size(), handles);
+               result.test_sz_eq("One less handle", ctx->persistent_handles().size(), handles);
                result.confirm("New location no longer occupied",
                               !Botan::value_exists(ctx->persistent_handles(), new_location));
             }),
@@ -1198,7 +1198,7 @@ std::vector<Test::Result> test_tpm2_ecc() {
                // Make it persistent
                const auto handles = ctx->persistent_handles().size();
                const auto new_location = ctx->persist(*sk, authed_session, secret);
-               result.test_eq("One more handle", ctx->persistent_handles().size(), handles + 1);
+               result.test_sz_eq("One more handle", ctx->persistent_handles().size(), handles + 1);
                result.confirm("New location occupied", Botan::value_exists(ctx->persistent_handles(), new_location));
                result.confirm("is persistent", sk->handles().has_persistent_handle());
                result.test_is_eq(
@@ -1211,7 +1211,7 @@ std::vector<Test::Result> test_tpm2_ecc() {
 
                // Evict it
                ctx->evict(std::move(sk), authed_session);
-               result.test_eq("One less handle", ctx->persistent_handles().size(), handles);
+               result.test_sz_eq("One less handle", ctx->persistent_handles().size(), handles);
                result.confirm("New location no longer occupied",
                               !Botan::value_exists(ctx->persistent_handles(), new_location));
             }),
@@ -1261,7 +1261,7 @@ std::vector<Test::Result> test_tpm2_hash() {
       }
 
       result.test_eq("Name", tpm_hash->name(), soft_hash->name());
-      result.test_eq("Output length", tpm_hash->output_length(), soft_hash->output_length());
+      result.test_sz_eq("Output length", tpm_hash->output_length(), soft_hash->output_length());
 
       // multiple update calls
       tpm_hash->update("Hello, ");
@@ -1294,7 +1294,7 @@ std::vector<Test::Result> test_tpm2_hash() {
       // new_object
       auto new_tpm_hash = tpm_hash->new_object();
       result.test_eq("Name (new_object)", new_tpm_hash->name(), tpm_hash->name());
-      result.test_eq("Output length (new_object)", new_tpm_hash->output_length(), tpm_hash->output_length());
+      result.test_sz_eq("Output length (new_object)", new_tpm_hash->output_length(), tpm_hash->output_length());
       result.test_eq("digest (new object)",
                      new_tpm_hash->process("Salut tout le monde!"),
                      soft_hash->process("Salut tout le monde!"));

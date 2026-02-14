@@ -65,29 +65,29 @@ class Filter_Tests final : public Test {
 
          try {
             Botan::SecureQueue queue_a;
-            result.test_eq("queue not attachable", queue_a.attachable(), false);
+            result.test_is_false("queue not attachable", queue_a.attachable());
 
             std::vector<uint8_t> test_data = {0x24, 0xB2, 0xBF, 0xC2, 0xE6, 0xD4, 0x7E, 0x04, 0x67, 0xB3};
             queue_a.write(test_data.data(), test_data.size());
 
-            result.test_eq("size of SecureQueue is correct", queue_a.size(), test_data.size());
-            result.test_eq("0 bytes read so far from SecureQueue", queue_a.get_bytes_read(), 0);
+            result.test_sz_eq("size of SecureQueue is correct", queue_a.size(), test_data.size());
+            result.test_sz_eq("0 bytes read so far from SecureQueue", queue_a.get_bytes_read(), 0);
 
-            result.test_eq("check_available", queue_a.check_available(1), true);
-            result.test_eq("check_available", queue_a.check_available(50), false);
+            result.test_is_true("check_available", queue_a.check_available(1));
+            result.test_is_false("check_available", queue_a.check_available(50));
             uint8_t b = 0;
             const size_t bytes_read = queue_a.read_byte(b);
-            result.test_eq("1 byte read", bytes_read, 1);
+            result.test_sz_eq("1 byte read", bytes_read, 1);
 
             Botan::secure_vector<uint8_t> produced(b);
             Botan::secure_vector<uint8_t> expected(test_data.at(0));
             result.test_eq("byte read is correct", produced, expected);
 
-            result.test_eq("1 bytes read so far from SecureQueue", queue_a.get_bytes_read(), 1);
+            result.test_sz_eq("1 bytes read so far from SecureQueue", queue_a.get_bytes_read(), 1);
 
             const Botan::SecureQueue queue_b;
             queue_a = queue_b;
-            result.test_eq("bytes_read is set correctly", queue_a.get_bytes_read(), 0);
+            result.test_sz_eq("bytes_read is set correctly", queue_a.get_bytes_read(), 0);
          } catch(std::exception& e) {
             result.test_failure("SecureQueue", e.what());
          }
@@ -290,7 +290,7 @@ class Filter_Tests final : public Test {
 
          pipe.append(new Botan::Hash_Filter("SHA-256"));
 
-         result.test_eq("Message count", pipe.message_count(), 0);
+         result.test_sz_eq("Message count", pipe.message_count(), 0);
 
          pipe.start_msg();
          const uint8_t inb = 0x41;
@@ -299,25 +299,25 @@ class Filter_Tests final : public Test {
          pipe.write(inb);
          pipe.end_msg();
 
-         result.test_eq("Message count", pipe.message_count(), 1);
-         result.test_eq("Message size", pipe.remaining(), 32);
+         result.test_sz_eq("Message count", pipe.message_count(), 1);
+         result.test_sz_eq("Message size", pipe.remaining(), 32);
 
          std::vector<uint8_t> out(32);
          std::vector<uint8_t> last16(16);
 
-         result.test_eq("Bytes read", pipe.get_bytes_read(0), 0);
-         result.test_eq("More to read", pipe.end_of_data(), false);
-         result.test_eq("Expected read count", pipe.read(out.data(), 5), 5);
-         result.test_eq("Bytes read", pipe.get_bytes_read(0), 5);
-         result.test_eq("Peek read", pipe.peek(last16.data(), 18, 11), 16);
-         result.test_eq("Expected read count", pipe.read(&out[5], 17), 17);
-         result.test_eq("Bytes read", pipe.get_bytes_read(0), 22);
-         result.test_eq("Remaining", pipe.remaining(), 10);
-         result.test_eq("Remaining", pipe.remaining(), 10);
-         result.test_eq("Expected read count", pipe.read(&out[22], 12), 10);
-         result.test_eq("Expected read count", pipe.read(out.data(), 1), 0);  // no more output
-         result.test_eq("Bytes read", pipe.get_bytes_read(0), 32);
-         result.test_eq("No more to read", pipe.end_of_data(), true);
+         result.test_sz_eq("Bytes read", pipe.get_bytes_read(0), 0);
+         result.test_is_false("More to read", pipe.end_of_data());
+         result.test_sz_eq("Expected read count", pipe.read(out.data(), 5), 5);
+         result.test_sz_eq("Bytes read", pipe.get_bytes_read(0), 5);
+         result.test_sz_eq("Peek read", pipe.peek(last16.data(), 18, 11), 16);
+         result.test_sz_eq("Expected read count", pipe.read(&out[5], 17), 17);
+         result.test_sz_eq("Bytes read", pipe.get_bytes_read(0), 22);
+         result.test_sz_eq("Remaining", pipe.remaining(), 10);
+         result.test_sz_eq("Remaining", pipe.remaining(), 10);
+         result.test_sz_eq("Expected read count", pipe.read(&out[22], 12), 10);
+         result.test_sz_eq("Expected read count", pipe.read(out.data(), 1), 0);  // no more output
+         result.test_sz_eq("Bytes read", pipe.get_bytes_read(0), 32);
+         result.test_is_true("No more to read", pipe.end_of_data());
 
          result.test_eq("Expected output", out, "C34AB6ABB7B2BB595BC25C3B388C872FD1D575819A8F55CC689510285E212385");
          result.test_eq("Expected last16", last16, "D1D575819A8F55CC689510285E212385");
@@ -379,8 +379,8 @@ class Filter_Tests final : public Test {
             dec_pipe.process_msg(cfb_expected[i - 1]);
          }
 
-         result.test_eq("enc pipe msg count", enc_pipe.message_count(), sizeof(msg_bits) - 1);
-         result.test_eq("dec pipe msg count", dec_pipe.message_count(), sizeof(msg_bits) - 1);
+         result.test_sz_eq("enc pipe msg count", enc_pipe.message_count(), sizeof(msg_bits) - 1);
+         result.test_sz_eq("dec pipe msg count", dec_pipe.message_count(), sizeof(msg_bits) - 1);
 
          for(size_t i = 0; i != enc_pipe.message_count(); ++i) {
             result.test_eq("encrypt", enc_pipe.read_all_as_string(i), cfb_expected[i]);
@@ -403,11 +403,11 @@ class Filter_Tests final : public Test {
 
          result.test_eq("Cipher filter name", cipher->name(), "AES-128/CBC/PKCS7");
 
-         result.test_eq("Cipher filter nonce size", cipher->valid_iv_length(16), true);
-         result.test_eq("Cipher filter nonce size", cipher->valid_iv_length(17), false);
+         result.test_is_true("Cipher filter nonce size", cipher->valid_iv_length(16));
+         result.test_is_false("Cipher filter nonce size", cipher->valid_iv_length(17));
 
-         result.test_eq("Cipher key length max", cipher->key_spec().maximum_keylength(), 16);
-         result.test_eq("Cipher key length min", cipher->key_spec().minimum_keylength(), 16);
+         result.test_sz_eq("Cipher key length max", cipher->key_spec().maximum_keylength(), 16);
+         result.test_sz_eq("Cipher key length min", cipher->key_spec().minimum_keylength(), 16);
 
          // takes ownership of cipher
          Botan::Pipe pipe(cipher);
@@ -417,10 +417,10 @@ class Filter_Tests final : public Test {
 
          pipe.process_msg("Don't use plain CBC mode");
 
-         result.test_eq("Message count", pipe.message_count(), 1);
-         result.test_eq("Bytes read", pipe.get_bytes_read(), 0);
+         result.test_sz_eq("Message count", pipe.message_count(), 1);
+         result.test_sz_eq("Bytes read", pipe.get_bytes_read(), 0);
          auto ciphertext = pipe.read_all();
-         result.test_eq("Bytes read after", pipe.get_bytes_read(), ciphertext.size());
+         result.test_sz_eq("Bytes read after", pipe.get_bytes_read(), ciphertext.size());
 
          result.test_eq("Ciphertext", ciphertext, "9BDD7300E0CB61CA71FFF957A71605DB 6836159C36781246A1ADF50982757F4B");
 
@@ -449,9 +449,9 @@ class Filter_Tests final : public Test {
          pipe.end_msg();
 
          pipe.set_default_msg(3);
-         result.test_eq("Bytes read", pipe.get_bytes_read(), 0);
+         result.test_sz_eq("Bytes read", pipe.get_bytes_read(), 0);
          Botan::secure_vector<uint8_t> zeros_out = pipe.read_all();
-         result.test_eq("Bytes read", pipe.get_bytes_read(), zeros_out.size());
+         result.test_sz_eq("Bytes read", pipe.get_bytes_read(), zeros_out.size());
 
          result.test_eq("Cipher roundtrip", zeros_in, zeros_out);
    #endif
@@ -476,7 +476,7 @@ class Filter_Tests final : public Test {
 
          auto compr = pipe.read_all(0);
          // Can't do equality check on compression because output may differ
-         result.test_lt("Compressed is shorter", compr.size(), input_str.size());
+         result.test_sz_lt("Compressed is shorter", compr.size(), input_str.size());
 
          auto decomp_f = std::make_unique<Botan::Decompression_Filter>("zlib");
          result.test_eq("Decompressor name", decomp_f->name(), "Zlib_Decompression");
@@ -531,15 +531,15 @@ class Filter_Tests final : public Test {
    #if defined(BOTAN_HAS_CODEC_FILTERS)
          Botan::Pipe pipe(new Botan::Base64_Encoder);
 
-         result.test_eq("Message count", pipe.message_count(), 0);
+         result.test_sz_eq("Message count", pipe.message_count(), 0);
 
          pipe.process_msg("ABCDX");
 
-         result.test_eq("Message count", pipe.message_count(), 1);
-         result.test_eq("Message size", pipe.remaining(), 8);
+         result.test_sz_eq("Message count", pipe.message_count(), 1);
+         result.test_sz_eq("Message size", pipe.remaining(), 8);
 
          const std::string output = pipe.read_all_as_string(0);
-         result.test_eq("Message size", pipe.remaining(0), 0);
+         result.test_sz_eq("Message size", pipe.remaining(0), 0);
          result.test_eq("Output round tripped", output, "QUJDRFg=");
 
          pipe.append(new Botan::Base64_Decoder);
@@ -617,7 +617,7 @@ class Filter_Tests final : public Test {
 
          pipe.process_msg("ABCDEF");
 
-         result.test_eq("Message count", pipe.message_count(), 1);
+         result.test_sz_eq("Message count", pipe.message_count(), 1);
          result.test_eq("Ciphertext", pipe.read_all(), "FDFD6238F7C6");
 
          pipe.process_msg("ABCDEF");
@@ -632,9 +632,9 @@ class Filter_Tests final : public Test {
    #if defined(BOTAN_HAS_SHA2_32) && defined(BOTAN_HAS_SHA2_64)
          Botan::Pipe pipe(new Botan::Fork(new Botan::Hash_Filter("SHA-256"), new Botan::Hash_Filter("SHA-512-256")));
 
-         result.test_eq("Message count", pipe.message_count(), 0);
+         result.test_sz_eq("Message count", pipe.message_count(), 0);
          pipe.process_msg("OMG");
-         result.test_eq("Message count", pipe.message_count(), 2);
+         result.test_sz_eq("Message count", pipe.message_count(), 2);
 
          // Test reading out of order
          result.test_eq("Hash 2", pipe.read_all(1), "610480FFA82F24F6926544B976FE387878E3D973C03DFD591C2E9896EFB903E0");
@@ -661,9 +661,9 @@ class Filter_Tests final : public Test {
          result.test_eq("Fork has a name", fork->name(), "Fork");
          Botan::Pipe pipe(fork.release());
 
-         result.test_eq("Message count", pipe.message_count(), 0);
+         result.test_sz_eq("Message count", pipe.message_count(), 0);
          pipe.process_msg("OMG");
-         result.test_eq("Message count", pipe.message_count(), 2);
+         result.test_sz_eq("Message count", pipe.message_count(), 2);
 
          result.test_eq(
             "Hash 1", pipe.read_all_as_string(0), "C00862D1C6C1CF7C1B49388306E7B3C1BB79D8D6EC978B41035B556DBB3797DF");
@@ -708,9 +708,9 @@ class Filter_Tests final : public Test {
    #if defined(BOTAN_HAS_THREAD_UTILS) && defined(BOTAN_HAS_CODEC_FILTERS) && defined(BOTAN_HAS_SHA2_32)
          Botan::Pipe pipe(new Botan::Threaded_Fork(new Botan::Hex_Encoder, new Botan::Base64_Encoder));
 
-         result.test_eq("Message count", pipe.message_count(), 0);
+         result.test_sz_eq("Message count", pipe.message_count(), 0);
          pipe.process_msg("woo");
-         result.test_eq("Message count", pipe.message_count(), 2);
+         result.test_sz_eq("Message count", pipe.message_count(), 2);
 
          // Test reading out of order
          result.test_eq("Hash 2", pipe.read_all_as_string(1), "d29v");
@@ -726,7 +726,7 @@ class Filter_Tests final : public Test {
 
          pipe.append(new Botan::Threaded_Fork(filters, filter_count));
 
-         result.test_eq("Message count before start_msg", pipe.message_count(), 2);
+         result.test_sz_eq("Message count before start_msg", pipe.message_count(), 2);
 
          pipe.start_msg();
          for(size_t i = 0; i != 919; ++i) {
@@ -735,7 +735,7 @@ class Filter_Tests final : public Test {
          }
          pipe.end_msg();
 
-         result.test_eq("Message count after end_msg", pipe.message_count(), 2 + filter_count);
+         result.test_sz_eq("Message count after end_msg", pipe.message_count(), 2 + filter_count);
          for(size_t i = 0; i != filter_count; ++i) {
             result.test_eq(
                "Output", pipe.read_all(2 + i), "327AD8055223F5926693D8BEA40F7B35BDEEB535647DFB93F464E40EA01939A9");

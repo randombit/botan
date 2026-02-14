@@ -47,18 +47,18 @@ Test::Result test_extended_euclidean_algorithm() {
    //    error C7595: 'Botan::extended_euclidean_algorithm': call to immediate function is not a constant expression
    //
    // What we'd actually want to write here:
-   //    res.test_is_eq<uint32_t>("gcd(350, 294)", Botan::extended_euclidean_algorithm<uint32_t>(350, 294).gcd, 14);
-   res.test_is_eq<uint32_t>("gcd(1337, 1337)", gcd<uint32_t>(1337, 1337), 1337);
-   res.test_is_eq<uint32_t>("gcd(350, 294)", gcd<uint32_t>(350, 294), 14);
-   res.test_is_eq<uint32_t>("gcd(294, 350)", gcd<uint32_t>(294, 350), 14);
+   //    res.test_u32_eq("gcd(350, 294)", Botan::extended_euclidean_algorithm<uint32_t>(350, 294).gcd, 14);
+   res.test_u32_eq("gcd(1337, 1337)", gcd<uint32_t>(1337, 1337), 1337);
+   res.test_u32_eq("gcd(350, 294)", gcd<uint32_t>(350, 294), 14);
+   res.test_u32_eq("gcd(294, 350)", gcd<uint32_t>(294, 350), 14);
 
-   res.test_is_eq<uint16_t>("gcd(1337, 1337)", gcd<uint16_t>(1337, 1337), 1337);
-   res.test_is_eq<uint16_t>("gcd(350, 294)", gcd<uint16_t>(350, 294), 14);
-   res.test_is_eq<uint16_t>("gcd(294, 350)", gcd<uint16_t>(294, 350), 14);
+   res.test_u16_eq("gcd(1337, 1337)", gcd<uint16_t>(1337, 1337), 1337);
+   res.test_u16_eq("gcd(350, 294)", gcd<uint16_t>(350, 294), 14);
+   res.test_u16_eq("gcd(294, 350)", gcd<uint16_t>(294, 350), 14);
 
-   res.test_is_eq<uint16_t>("u(1337, 1337)", u<uint16_t>(1337, 1337), 0);
-   res.test_is_eq<uint16_t>("v(1337, 1337)", v<uint16_t>(1337, 1337), 1);
-   res.test_is_eq<uint16_t>("u(294, 350)", u<uint16_t>(294, 350), 6);
+   res.test_u16_eq("u(1337, 1337)", u<uint16_t>(1337, 1337), 0);
+   res.test_u16_eq("v(1337, 1337)", v<uint16_t>(1337, 1337), 1);
+   res.test_u16_eq("u(294, 350)", u<uint16_t>(294, 350), 6);
 
    res.test_is_eq<int16_t>("q^-1(3329) - Kyber::Q", Botan::modular_inverse<int16_t>(3329), -3327);
    res.test_is_eq<int32_t>("q^-1(8380417) - Dilithium::Q", Botan::modular_inverse<int32_t>(8380417), 58728449);
@@ -144,14 +144,14 @@ std::vector<Test::Result> test_polynomial_basics() {
       CHECK("polynomial vector managing storage",
             [](Test::Result& res) {
                const Kyberish_PolyVec<Domain::Normal> polys(4);
-               res.test_is_eq<size_t>("requested size", polys.size(), 4);
+               res.test_sz_eq("requested size", polys.size(), 4);
 
                for(const auto& poly : polys) {
                   res.confirm("poly embedded in vector does not own memory", !poly.owns_storage());
                }
 
                const Kyberish_PolyVec<Domain::NTT> polys_ntt(4);
-               res.test_is_eq<size_t>("requested size (NTT)", polys.size(), 4);
+               res.test_sz_eq("requested size (NTT)", polys.size(), 4);
 
                for(const auto& poly : polys_ntt) {
                   res.confirm("poly (NTT) embedded in vector does not own memory", !poly.owns_storage());
@@ -196,55 +196,55 @@ std::vector<Test::Result> test_polynomial_basics() {
       CHECK("hamming weight of polynomials",
             [](Test::Result& res) {
                Kyberish_Poly<Domain::Normal> p;
-               res.test_is_eq<size_t>("hamming weight of 0", p.hamming_weight(), 0);
+               res.test_sz_eq("hamming weight of 0", p.hamming_weight(), 0);
 
                p[0] = 1337;
-               res.test_is_eq<size_t>("hamming weight of 1", p.hamming_weight(), 1);
+               res.test_sz_eq("hamming weight of 1", p.hamming_weight(), 1);
 
                p[1] = 42;
-               res.test_is_eq<size_t>("hamming weight of 2", p.hamming_weight(), 2);
+               res.test_sz_eq("hamming weight of 2", p.hamming_weight(), 2);
 
                p[2] = 11;
-               res.test_is_eq<size_t>("hamming weight of 3", p.hamming_weight(), 3);
+               res.test_sz_eq("hamming weight of 3", p.hamming_weight(), 3);
 
                p[3] = 4;
-               res.test_is_eq<size_t>("hamming weight of 4", p.hamming_weight(), 4);
+               res.test_sz_eq("hamming weight of 4", p.hamming_weight(), 4);
 
                p[3] = 0;
-               res.test_is_eq<size_t>("hamming weight of 3", p.hamming_weight(), 3);
+               res.test_sz_eq("hamming weight of 3", p.hamming_weight(), 3);
 
                p[2] = 0;
-               res.test_is_eq<size_t>("hamming weight of 2", p.hamming_weight(), 2);
+               res.test_sz_eq("hamming weight of 2", p.hamming_weight(), 2);
 
                p[1] = 0;
-               res.test_is_eq<size_t>("hamming weight of 1", p.hamming_weight(), 1);
+               res.test_sz_eq("hamming weight of 1", p.hamming_weight(), 1);
 
                p[0] = 0;
-               res.test_is_eq<size_t>("hamming weight of 0", p.hamming_weight(), 0);
+               res.test_sz_eq("hamming weight of 0", p.hamming_weight(), 0);
             }),
 
       CHECK("hamming weight of polynomial vectors",
             [](Test::Result& res) {
                Kyberish_PolyVec<Domain::Normal> pv(3);
-               res.test_is_eq<size_t>("hamming weight of 0", pv.hamming_weight(), 0);
+               res.test_sz_eq("hamming weight of 0", pv.hamming_weight(), 0);
 
                pv[0][0] = 1337;
-               res.test_is_eq<size_t>("hamming weight of 1", pv.hamming_weight(), 1);
+               res.test_sz_eq("hamming weight of 1", pv.hamming_weight(), 1);
 
                pv[1][1] = 42;
-               res.test_is_eq<size_t>("hamming weight of 2", pv.hamming_weight(), 2);
+               res.test_sz_eq("hamming weight of 2", pv.hamming_weight(), 2);
 
                pv[2][2] = 11;
-               res.test_is_eq<size_t>("hamming weight of 3", pv.hamming_weight(), 3);
+               res.test_sz_eq("hamming weight of 3", pv.hamming_weight(), 3);
 
                pv[2][2] = 0;
-               res.test_is_eq<size_t>("hamming weight of 2", pv.hamming_weight(), 2);
+               res.test_sz_eq("hamming weight of 2", pv.hamming_weight(), 2);
 
                pv[1][1] = 0;
-               res.test_is_eq<size_t>("hamming weight of 1", pv.hamming_weight(), 1);
+               res.test_sz_eq("hamming weight of 1", pv.hamming_weight(), 1);
 
                pv[0][0] = 0;
-               res.test_is_eq<size_t>("hamming weight of 0", pv.hamming_weight(), 0);
+               res.test_sz_eq("hamming weight of 0", pv.hamming_weight(), 0);
             }),
 
       CHECK("value range validation",
@@ -346,7 +346,7 @@ void random_encoding_roundtrips(Test::Result& res, Botan::RandomNumberGenerator&
    res.confirm("decoded polynomial reads all bytes", slicer.empty());
 
    p_unpacked -= p;
-   res.test_eq("p = unpack(pack(p))", p_unpacked.hamming_weight(), 0);
+   res.test_sz_eq("p = unpack(pack(p))", p_unpacked.hamming_weight(), 0);
 }
 
 }  // namespace
@@ -425,7 +425,7 @@ std::vector<Test::Result> test_encoding() {
                Botan::CRYSTALS::unpack<255>(p2, slicer2);
                res.require("read all bytes from 8-bit encoding", slicer2.empty());
                for(size_t i = 0; i < p2.size(); ++i) {
-                  res.test_is_eq<size_t>("decoded 8-bit coefficient", p2[i], i);
+                  res.test_sz_eq("decoded 8-bit coefficient", p2[i], i);
                }
 
                Kyberish_Poly<Domain::Normal> p3;
@@ -433,7 +433,7 @@ std::vector<Test::Result> test_encoding() {
                Botan::CRYSTALS::unpack<512>(p3, slicer3, [](uint16_t x) -> int16_t { return x / 2; });
                res.require("read all bytes from 10-bit encoding", slicer3.empty());
                for(size_t i = 0; i < p3.size(); ++i) {
-                  res.test_is_eq<size_t>("decoded 10-bit coefficient with mapping", p3[i], i);
+                  res.test_sz_eq("decoded 10-bit coefficient with mapping", p3[i], i);
                }
             }),
 
@@ -451,14 +451,14 @@ std::vector<Test::Result> test_encoding() {
                DeterministicXOF xof2(eightbitencoding);
                Botan::CRYSTALS::unpack<255>(p2, xof2);
                for(size_t i = 0; i < p2.size(); ++i) {
-                  res.test_is_eq<size_t>("decoded 8-bit coefficient", p2[i], i);
+                  res.test_sz_eq("decoded 8-bit coefficient", p2[i], i);
                }
 
                Kyberish_Poly<Domain::Normal> p3;
                DeterministicXOF xof3(tenbitencoding);
                Botan::CRYSTALS::unpack<512>(p3, xof3, [](int16_t x) -> int16_t { return x / 2; });
                for(size_t i = 0; i < p3.size(); ++i) {
-                  res.test_is_eq<size_t>("decoded 10-bit coefficient with mapping", p3[i], i);
+                  res.test_sz_eq("decoded 10-bit coefficient with mapping", p3[i], i);
                }
    #else
                BOTAN_UNUSED(res);
@@ -545,9 +545,9 @@ std::vector<Test::Result> test_bounded_xof() {
       CHECK("bounded XOF with small bound",
             [](Test::Result& result) {
                Mocked_Bounded_XOF<3> xof;
-               result.test_is_eq("next_byte() returns 0", xof.next_byte(), uint8_t(0));
-               result.test_is_eq("next_byte() returns 1", xof.next_byte(), uint8_t(1));
-               result.test_is_eq("next_byte() returns 2", xof.next_byte(), uint8_t(2));
+               result.test_u8_eq("next_byte() returns 0", xof.next_byte(), uint8_t(0));
+               result.test_u8_eq("next_byte() returns 1", xof.next_byte(), uint8_t(1));
+               result.test_u8_eq("next_byte() returns 2", xof.next_byte(), uint8_t(2));
                result.test_throws<Botan::Internal_Error>("next_byte() throws", [&xof]() { xof.next_byte(); });
             }),
 
@@ -559,8 +559,8 @@ std::vector<Test::Result> test_bounded_xof() {
                };
 
                Mocked_Bounded_XOF<5> xof;
-               result.test_is_eq("next_byte() returns 1", xof.next_byte(filter), uint8_t(1));
-               result.test_is_eq("next_byte() returns 3", xof.next_byte(filter), uint8_t(3));
+               result.test_u8_eq("next_byte() returns 1", xof.next_byte(filter), uint8_t(1));
+               result.test_u8_eq("next_byte() returns 3", xof.next_byte(filter), uint8_t(3));
                result.test_throws<Botan::Internal_Error>("next_byte() throws", [&]() { xof.next_byte(filter); });
             }),
 
@@ -569,10 +569,10 @@ std::vector<Test::Result> test_bounded_xof() {
                auto map = [](auto bytes) { return Botan::load_be(bytes); };
 
                Mocked_Bounded_XOF<17> xof;
-               result.test_is_eq("next returns 0x00010203", xof.next<4>(map), uint32_t(0x00010203));
-               result.test_is_eq("next returns 0x04050607", xof.next<4>(map), uint32_t(0x04050607));
-               result.test_is_eq("next returns 0x08090A0B", xof.next<4>(map), uint32_t(0x08090A0B));
-               result.test_is_eq("next returns 0x0C0D0E0F", xof.next<4>(map), uint32_t(0x0C0D0E0F));
+               result.test_u32_eq("next returns 0x00010203", xof.next<4>(map), uint32_t(0x00010203));
+               result.test_u32_eq("next returns 0x04050607", xof.next<4>(map), uint32_t(0x04050607));
+               result.test_u32_eq("next returns 0x08090A0B", xof.next<4>(map), uint32_t(0x08090A0B));
+               result.test_u32_eq("next returns 0x0C0D0E0F", xof.next<4>(map), uint32_t(0x0C0D0E0F));
                result.test_throws<Botan::Internal_Error>("next() throws", [&]() { xof.next<4>(map); });
             }),
 
@@ -582,11 +582,11 @@ std::vector<Test::Result> test_bounded_xof() {
                auto filter = [](uint32_t number) { return number < 50; };
 
                Mocked_Bounded_XOF<17> xof;
-               result.test_is_eq("next returns 3", xof.next<3>(map, filter), uint32_t(3));
-               result.test_is_eq("next returns 12", xof.next<3>(map, filter), uint32_t(12));
-               result.test_is_eq("next returns 21", xof.next<3>(map, filter), uint32_t(21));
-               result.test_is_eq("next returns 30", xof.next<3>(map, filter), uint32_t(30));
-               result.test_is_eq("next returns 39", xof.next<3>(map, filter), uint32_t(39));
+               result.test_u32_eq("next returns 3", xof.next<3>(map, filter), uint32_t(3));
+               result.test_u32_eq("next returns 12", xof.next<3>(map, filter), uint32_t(12));
+               result.test_u32_eq("next returns 21", xof.next<3>(map, filter), uint32_t(21));
+               result.test_u32_eq("next returns 30", xof.next<3>(map, filter), uint32_t(30));
+               result.test_u32_eq("next returns 39", xof.next<3>(map, filter), uint32_t(39));
                result.test_throws<Botan::Internal_Error>("next() throws", [&]() { xof.next<3>(map, filter); });
             }),
    };

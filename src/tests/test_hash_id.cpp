@@ -54,7 +54,7 @@ class PKCS_HashID_Test final : public Test {
                Botan::DER_Encoder der(bits);
                der.start_sequence().encode(alg).encode(dummy_hash, Botan::ASN1_Type::OctetString).end_cons();
 
-               result.test_eq("Dummy hash is expected size", bits.size() - pkcs_id.size(), dummy_hash.size());
+               result.test_sz_eq("Dummy hash is expected size", bits.size() - pkcs_id.size(), dummy_hash.size());
 
                for(size_t i = pkcs_id.size(); i != bits.size(); ++i) {
                   if(bits[i] != 0) {

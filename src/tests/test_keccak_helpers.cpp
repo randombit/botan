@@ -21,21 +21,21 @@ namespace Botan_Tests {
 
 namespace {
 
-decltype(auto) encode_size(size_t x) {
+size_t encode_size(size_t x) {
    return Botan::keccak_int_encoding_size(x);
 }
 
-decltype(auto) left_encode(Test::Result& result, size_t x) {
+std::vector<uint8_t> left_encode(Test::Result& result, size_t x) {
    const auto expected_length = Botan::keccak_int_encoding_size(x);
    std::vector<uint8_t> out(expected_length);
-   result.test_eq("left_encode return value", Botan::keccak_int_left_encode(out, x).size(), expected_length);
+   result.test_sz_eq("left_encode return value", Botan::keccak_int_left_encode(out, x).size(), expected_length);
    return out;
 }
 
-decltype(auto) right_encode(Test::Result& result, size_t x) {
+std::vector<uint8_t> right_encode(Test::Result& result, size_t x) {
    const auto expected_length = Botan::keccak_int_encoding_size(x);
    std::vector<uint8_t> out(expected_length);
-   result.test_eq("right_encode return value", Botan::keccak_int_right_encode(out, x).size(), expected_length);
+   result.test_sz_eq("right_encode return value", Botan::keccak_int_right_encode(out, x).size(), expected_length);
    return out;
 }
 
@@ -57,13 +57,13 @@ std::vector<Test::Result> keccak_helpers() {
    return {
       CHECK("keccak_int_encoding_size()",
             [](Test::Result& result) {
-               result.test_eq("keccak_int_encoding_size(0)", encode_size(0), 2);
-               result.test_eq("keccak_int_encoding_size(255)", encode_size(0xFF), 2);
-               result.test_eq("keccak_int_encoding_size(256)", encode_size(0xFF + 1), 3);
-               result.test_eq("keccak_int_encoding_size(65.535)", encode_size(0xFFFF), 3);
-               result.test_eq("keccak_int_encoding_size(65.536)", encode_size(0xFFFF + 1), 4);
-               result.test_eq("keccak_int_encoding_size(16.777.215)", encode_size(0xFFFFFF), 4);
-               result.test_eq("keccak_int_encoding_size(16.777.216)", encode_size(0xFFFFFF + 1), 5);
+               result.test_sz_eq("keccak_int_encoding_size(0)", encode_size(0), 2);
+               result.test_sz_eq("keccak_int_encoding_size(255)", encode_size(0xFF), 2);
+               result.test_sz_eq("keccak_int_encoding_size(256)", encode_size(0xFF + 1), 3);
+               result.test_sz_eq("keccak_int_encoding_size(65.535)", encode_size(0xFFFF), 3);
+               result.test_sz_eq("keccak_int_encoding_size(65.536)", encode_size(0xFFFF + 1), 4);
+               result.test_sz_eq("keccak_int_encoding_size(16.777.215)", encode_size(0xFFFFFF), 4);
+               result.test_sz_eq("keccak_int_encoding_size(16.777.216)", encode_size(0xFFFFFF + 1), 5);
             }),
 
          CHECK("keccak_int_left_encode()",
@@ -102,7 +102,7 @@ std::vector<Test::Result> keccak_helpers() {
 
                const std::vector<uint8_t> n{'K', 'M', 'A', 'C'};
                const auto bytes_generated = Botan::keccak_absorb_padded_strings_encoding(out, padmod, n);
-               result.test_eq("padded bytes", bytes_generated, padmod);
+               result.test_sz_eq("padded bytes", bytes_generated, padmod);
 
                result.test_is_eq(
                   out,
@@ -124,7 +124,7 @@ std::vector<Test::Result> keccak_helpers() {
                   "This is a long salt, that is longer than 128 bytes in order to fill up the first round of the Keccak permutation. That should do it.";
                const auto bytes_generated =
                   Botan::keccak_absorb_padded_strings_encoding(out, padmod, n, Botan::as_span_of_bytes(str));
-               result.test_eq("padded bytes", bytes_generated, padmod * 2);
+               result.test_sz_eq("padded bytes", bytes_generated, padmod * 2);
 
                result.test_is_eq(
                   out,
@@ -148,7 +148,7 @@ std::vector<Test::Result> keccak_helpers() {
 
                const std::vector<uint8_t> n{'K', 'M', 'A', 'C'};
                const auto bytes_generated = Botan::keccak_absorb_padded_strings_encoding(*xof, padmod, n);
-               result.test_eq("padded bytes", bytes_generated, padmod);
+               result.test_sz_eq("padded bytes", bytes_generated, padmod);
 
                result.test_is_eq(
                   xof->output_stdvec(32),
@@ -169,7 +169,7 @@ std::vector<Test::Result> keccak_helpers() {
                "This is a long salt, that is longer than 128 bytes in order to fill up the first round of the Keccak permutation. That should do it.";
             const auto bytes_generated =
                Botan::keccak_absorb_padded_strings_encoding(*xof, padmod, n, Botan::as_span_of_bytes(str));
-            result.test_eq("padded bytes", bytes_generated, padmod * 2);
+            result.test_sz_eq("padded bytes", bytes_generated, padmod * 2);
 
             result.test_is_eq(
                xof->output_stdvec(32),

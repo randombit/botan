@@ -57,8 +57,8 @@ std::vector<Test::Result> test_strong_type() {
                Test_Size a(42);
                const Test_Size b(42);
 
-               result.test_is_eq("get()", a.get(), size_t(42));
-               result.test_is_eq("const get()", b.get(), size_t(42));
+               result.test_sz_eq("get()", a.get(), 42);
+               result.test_sz_eq("const get()", b.get(), 42);
             }),
 
       CHECK("comparisons",
@@ -103,7 +103,7 @@ std::vector<Test::Result> test_container_strong_type() {
                auto* dataptr = base_nonce.data();
                auto nonce = Test_Nonce(std::move(base_nonce));
 
-               result.test_is_eq("size()", nonce.size(), size_t(4));
+               result.test_sz_eq("size()", nonce.size(), 4);
                result.confirm("empty()", !nonce.empty());
                result.test_is_eq("data()", nonce.data(), dataptr);
 
@@ -160,10 +160,10 @@ std::vector<Test::Result> test_container_strong_type() {
 
                std::ranges::sort(hashes);
 
-               result.test_eq("1", hashes.get().at(0).get(), size_t(1));
-               result.test_eq("2", hashes.get().at(1).get(), size_t(2));
-               result.test_eq("3", hashes.get().at(2).get(), size_t(3));
-               result.test_eq("4", hashes.get().at(3).get(), size_t(4));
+               result.test_sz_eq("1", hashes.get().at(0).get(), size_t(1));
+               result.test_sz_eq("2", hashes.get().at(1).get(), size_t(2));
+               result.test_sz_eq("3", hashes.get().at(2).get(), size_t(3));
+               result.test_sz_eq("4", hashes.get().at(3).get(), size_t(4));
             }),
 
       CHECK("byte-container strong types can be randomly generated",
@@ -197,13 +197,13 @@ std::vector<Test::Result> test_container_strong_type() {
                using Test_Vector = Botan::Strong<std::vector<uint8_t>, struct Test_Vector_>;
 
                Test_Array a({1, 2, 3, 4});
-               result.test_is_eq<uint8_t>("[] returns 3", a[2], 3);
+               result.test_u8_eq("[] returns 3", a[2], 3);
 
                Test_Map m({{1, "one"}, {2, "two"}, {3, "three"}});
                result.test_is_eq<std::string>("[] returns 'two'", m[2], "two");
 
                Test_Vector v({1, 2, 3, 4});
-               result.test_is_eq<uint8_t>("[] returns 2", v[1], 2);
+               result.test_u8_eq("[] returns 2", v[1], 2);
             }),
    };
 }

@@ -411,12 +411,12 @@ std::vector<Test::Result> PSS_Path_Validation_Tests::run() {
          // CRT self signed test
          auto pubkey = end->subject_public_key();
          const bool accept = expected_result == "Verified";
-         result.test_eq(test_name + " verify signature", end->check_signature(*pubkey), accept);
+         result.test_bool_eq(test_name + " verify signature", end->check_signature(*pubkey), accept);
       } else if(csr) {
          // PKCS#10 Request test
          auto pubkey = csr->subject_public_key();
          const bool accept = expected_result == "Verified";
-         result.test_eq(test_name + " verify signature", csr->check_signature(*pubkey), accept);
+         result.test_bool_eq(test_name + " verify signature", csr->check_signature(*pubkey), accept);
       }
 
       result.end_timer();
@@ -510,7 +510,7 @@ std::vector<Test::Result> Validate_V2Uid_in_V1_Test::run() {
       Botan::x509_path_validate(chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
    Test::Result result("Verifying v1 certificate using v2 uid fields");
-   result.test_eq("Path validation failed", validation_result.successful_validation(), false);
+   result.test_is_false("Path validation failed", validation_result.successful_validation());
    result.test_eq(
       "Path validation result", validation_result.result_string(), "Encountered v2 identifiers in v1 certificate");
 
@@ -551,7 +551,7 @@ std::vector<Test::Result> Validate_Name_Constraint_SAN_Test::run() {
       Botan::x509_path_validate(chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
    Test::Result result("Verifying certificate with alternative SAN violating name constraint");
-   result.test_eq("Path validation failed", validation_result.successful_validation(), false);
+   result.test_is_false("Path validation failed", validation_result.successful_validation());
    result.test_eq(
       "Path validation result", validation_result.result_string(), "Certificate does not pass name constraint");
 
@@ -592,7 +592,7 @@ std::vector<Test::Result> Validate_Name_Constraint_CaseInsensitive::run() {
       Botan::x509_path_validate(chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
    Test::Result result("DNS name constraints are case insensitive");
-   result.test_eq("Path validation succeeded", validation_result.successful_validation(), true);
+   result.test_is_true("Path validation succeeded", validation_result.successful_validation());
 
    return {result};
 }
@@ -631,7 +631,7 @@ std::vector<Test::Result> Validate_Name_Constraint_NoCheckSelf::run() {
       Botan::x509_path_validate(chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
    Test::Result result("Name constraints do not apply to the certificate which includes them");
-   result.test_eq("Path validation succeeded", validation_result.successful_validation(), true);
+   result.test_is_true("Path validation succeeded", validation_result.successful_validation());
 
    return {result};
 }
@@ -1785,9 +1785,8 @@ class Name_Constraint_DN_Prefix_Test final : public Test {
          const Botan::Path_Validation_Result validation_result = Botan::x509_path_validate(
             chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
-         result.test_eq("Verification does not pass since Name Constraints is a prefix",
-                        validation_result.successful_validation(),
-                        false);
+         result.test_is_false("Verification does not pass since Name Constraints is a prefix",
+                              validation_result.successful_validation());
          return result;
       }
 

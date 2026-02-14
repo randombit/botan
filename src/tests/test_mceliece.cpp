@@ -155,7 +155,7 @@ class McEliece_Tests final : public Test {
 
                result.test_eq("decoded public key equals original", fingerprint(pk1), fingerprint(pk));
                result.test_eq("decoded private key equals original", fingerprint(sk1), fingerprint(sk));
-               result.test_eq("key validation passes", sk.check_key(this->rng(), false), true);
+               result.test_is_true("key validation passes", sk.check_key(this->rng(), false));
                result.end_timer();
 
                result.end_timer();

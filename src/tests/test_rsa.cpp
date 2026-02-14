@@ -219,7 +219,7 @@ class RSA_Blinding_Tests final : public Test {
             // assert RNG is not called in this situation
             std::vector<uint8_t> signature = signer.signature(null_rng);
 
-            result.test_eq("Signature verifies", verifier.verify_message(input, signature), true);
+            result.test_is_true("Signature verifies", verifier.verify_message(input, signature));
          }
    #endif
 
@@ -259,7 +259,7 @@ class RSA_Blinding_Tests final : public Test {
             result.test_eq("Successful decryption", plaintext, input);
          }
 
-         result.test_eq("RNG is no longer seeded", fixed_rng.is_seeded(), false);
+         result.test_is_false("RNG is no longer seeded", fixed_rng.is_seeded());
 
          // one more decryption should trigger a blinder reinitialization
          result.test_throws("RSA blinding reinit",
@@ -324,7 +324,7 @@ class RSA_DecryptOrRandom_Tests : public Test {
 
             auto rec = dec.decrypt_or_random(bad_ctext.data(), bad_ctext.size(), pt_len, rng);
 
-            result.test_eq("Returns a ciphertext of expected length", rec.size(), pt_len);
+            result.test_sz_eq("Returns a ciphertext of expected length", rec.size(), pt_len);
          }
 
          // Test decrypt_or_random with content check happy path

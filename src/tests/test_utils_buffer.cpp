@@ -45,7 +45,7 @@ std::vector<Test::Result> test_buffer_slicer() {
                const std::vector<uint8_t> buffer{'h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', ' ', '!'};
                Botan::BufferSlicer s(buffer);
 
-               result.test_eq("non-empty slicer has remaining bytes", s.remaining(), buffer.size());
+               result.test_sz_eq("non-empty slicer has remaining bytes", s.remaining(), buffer.size());
                result.confirm("non-empty slicer is not empty()", !s.empty());
 
                const auto hello = s.take(5);
@@ -56,26 +56,26 @@ std::vector<Test::Result> test_buffer_slicer() {
                result.test_is_eq("took hello", hello[3], uint8_t('l'));
                result.test_is_eq("took hello", hello[4], uint8_t('o'));
 
-               result.test_eq("remaining bytes", s.remaining(), 8);
+               result.test_sz_eq("remaining bytes", s.remaining(), 8);
 
                s.skip(1);
-               result.test_eq("remaining bytes", s.remaining(), 7);
+               result.test_sz_eq("remaining bytes", s.remaining(), 7);
 
                const auto wor = s.copy_as_vector(3);
                result.require("has 3 bytes", wor.size() == 3);
                result.test_is_eq("took wor...", wor[0], uint8_t('w'));
                result.test_is_eq("took wor...", wor[1], uint8_t('o'));
                result.test_is_eq("took wor...", wor[2], uint8_t('r'));
-               result.test_eq("remaining bytes", s.remaining(), 4);
+               result.test_sz_eq("remaining bytes", s.remaining(), 4);
 
                std::vector<uint8_t> ld(2);
                s.copy_into(ld);
                result.test_is_eq("took ...ld", ld[0], uint8_t('l'));
                result.test_is_eq("took ...ld", ld[1], uint8_t('d'));
-               result.test_eq("remaining bytes", s.remaining(), 2);
+               result.test_sz_eq("remaining bytes", s.remaining(), 2);
 
                s.skip(1);
-               result.test_eq("remaining bytes", s.remaining(), 1);
+               result.test_sz_eq("remaining bytes", s.remaining(), 1);
 
                const auto exclaim = s.take<1>();
                result.test_is_eq("took ...!", exclaim[0], uint8_t('!'));
@@ -83,7 +83,7 @@ std::vector<Test::Result> test_buffer_slicer() {
                result.confirm("static extent is 1", decltype(exclaim)::extent == 1);
 
                result.confirm("empty", s.empty());
-               result.test_eq("nothing remaining", s.remaining(), 0);
+               result.test_sz_eq("nothing remaining", s.remaining(), 0);
 
                result.test_throws("empty slicer cannot emit bytes", [&]() { s.take(1); });
                result.test_throws("empty slicer cannot skip bytes", [&]() { s.skip(1); });
@@ -116,7 +116,7 @@ std::vector<Test::Result> test_buffer_stuffer() {
                std::vector<uint8_t> empty_buffer;
                Botan::BufferStuffer s(empty_buffer);
 
-               result.test_eq("has no capacity", s.remaining_capacity(), 0);
+               result.test_sz_eq("has no capacity", s.remaining_capacity(), 0);
                result.confirm("is immediately full", s.full());
                result.confirm("can next() 0 bytes", s.next(0).empty());
 
@@ -132,7 +132,7 @@ std::vector<Test::Result> test_buffer_stuffer() {
                std::vector<uint8_t> sink(13);
                Botan::BufferStuffer s(sink);
 
-               result.test_eq("has some capacity", s.remaining_capacity(), sink.size());
+               result.test_sz_eq("has some capacity", s.remaining_capacity(), sink.size());
                result.confirm("is not full", !s.full());
 
                auto n1 = s.next(5);
@@ -150,12 +150,12 @@ std::vector<Test::Result> test_buffer_stuffer() {
                n2.get()[1] = 'w';
                n2.get()[2] = 'o';
 
-               result.test_eq("has 5 bytes remaining", s.remaining_capacity(), 5);
+               result.test_sz_eq("has 5 bytes remaining", s.remaining_capacity(), 5);
 
                std::vector<uint8_t> rld{'r', 'l', 'd'};
                s.append(rld);
 
-               result.test_eq("has 2 bytes remaining", s.remaining_capacity(), 2);
+               result.test_sz_eq("has 2 bytes remaining", s.remaining_capacity(), 2);
 
                auto n3 = s.next<2>();
                result.require("got requested bytes", n3.size() == 2);
@@ -189,9 +189,9 @@ std::vector<Test::Result> test_alignment_buffer() {
       CHECK("Fresh Alignment Buffer",
             [](auto& result) {
                const Botan::AlignmentBuffer<uint8_t, 32> b;
-               result.test_eq("size()", b.size(), 32);
-               result.test_eq("elements_in_buffer()", b.elements_in_buffer(), 0);
-               result.test_eq("elements_until_alignment()", b.elements_until_alignment(), 32);
+               result.test_sz_eq("size()", b.size(), 32);
+               result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 0);
+               result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 32);
                result.confirm("in_alignment()", b.in_alignment());
                result.confirm("!ready_to_consume()", !b.ready_to_consume());
             }),
@@ -202,17 +202,17 @@ std::vector<Test::Result> test_alignment_buffer() {
 
                b.append(first_half_data);
 
-               result.test_eq("size()", b.size(), 32);
-               result.test_eq("elements_in_buffer()", b.elements_in_buffer(), 16);
-               result.test_eq("elements_until_alignment()", b.elements_until_alignment(), 16);
+               result.test_sz_eq("size()", b.size(), 32);
+               result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 16);
+               result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 16);
                result.confirm("!in_alignment()", !b.in_alignment());
                result.confirm("!ready_to_consume()", !b.ready_to_consume());
 
                b.append(second_half_data);
 
-               result.test_eq("size()", b.size(), 32);
-               result.test_eq("elements_in_buffer()", b.elements_in_buffer(), 32);
-               result.test_eq("elements_until_alignment()", b.elements_until_alignment(), 0);
+               result.test_sz_eq("size()", b.size(), 32);
+               result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 32);
+               result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 0);
                result.confirm("!in_alignment()", !b.in_alignment());
                result.confirm("ready_to_consume()", b.ready_to_consume());
             }),
@@ -226,9 +226,9 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.require("ready_to_consume()", b.ready_to_consume());
                const auto out = b.consume();
 
-               result.test_eq("size()", b.size(), 32);
-               result.test_eq("elements_in_buffer()", b.elements_in_buffer(), 0);
-               result.test_eq("elements_until_alignment()", b.elements_until_alignment(), 32);
+               result.test_sz_eq("size()", b.size(), 32);
+               result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 0);
+               result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 32);
                result.confirm("in_alignment()", b.in_alignment());
                result.confirm("!ready_to_consume()", !b.ready_to_consume());
 
@@ -241,19 +241,19 @@ std::vector<Test::Result> test_alignment_buffer() {
 
                result.require("!ready_to_consume()", !b.ready_to_consume());
                const auto out_empty = b.consume_partial();
-               result.test_eq("consuming nothing resets buffer", b.elements_in_buffer(), 0);
+               result.test_sz_eq("consuming nothing resets buffer", b.elements_in_buffer(), 0);
                result.confirm("consumed empty buffer", out_empty.empty());
 
                b.append(first_half_data);
                result.require("!ready_to_consume()", !b.ready_to_consume());
                const auto out_half = b.consume_partial();
-               result.test_eq("consumed half-data resets buffer", b.elements_in_buffer(), 0);
+               result.test_sz_eq("consumed half-data resets buffer", b.elements_in_buffer(), 0);
                result.test_is_eq("half-in == half-out", v(out_half), v(first_half_data));
 
                b.append(data);
                result.require("ready_to_consume()", b.ready_to_consume());
                const auto out_full = b.consume_partial();
-               result.test_eq("consumed full-data resets buffer", b.elements_in_buffer(), 0);
+               result.test_sz_eq("consumed full-data resets buffer", b.elements_in_buffer(), 0);
                result.test_is_eq("full-in == full-out", v(out_full), v(data));
             }),
 
@@ -266,9 +266,9 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.require("elements_in_buffer()", b.elements_in_buffer() == 16);
                b.clear();
 
-               result.test_eq("size()", b.size(), 32);
-               result.test_eq("elements_in_buffer()", b.elements_in_buffer(), 0);
-               result.test_eq("elements_until_alignment()", b.elements_until_alignment(), 32);
+               result.test_sz_eq("size()", b.size(), 32);
+               result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 0);
+               result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 32);
                result.confirm("in_alignment()", b.in_alignment());
                result.confirm("!ready_to_consume()", !b.ready_to_consume());
             }),
@@ -282,9 +282,9 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.require("elements_in_buffer()", b.elements_in_buffer() == 16);
                b.fill_up_with_zeros();
 
-               result.test_eq("size()", b.size(), 32);
-               result.test_eq("elements_in_buffer()", b.elements_in_buffer(), 32);
-               result.test_eq("elements_until_alignment()", b.elements_until_alignment(), 0);
+               result.test_sz_eq("size()", b.size(), 32);
+               result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 32);
+               result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 0);
                result.confirm("!in_alignment()", !b.in_alignment());
                result.confirm("ready_to_consume()", b.ready_to_consume());
 
@@ -297,7 +297,7 @@ std::vector<Test::Result> test_alignment_buffer() {
                // fill_up_with_zeros() must work if called on a full (ready to consume) alignment buffer
                b.append(data);
                result.confirm("ready_to_consume()", b.ready_to_consume());
-               result.test_eq("elements_until_alignment()", b.elements_until_alignment(), 0);
+               result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 0);
 
                b.fill_up_with_zeros();
                const auto out_without_padding = b.consume();
@@ -316,8 +316,8 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.confirm("half a block is not returned", !r1.has_value());
                result.confirm("first input is consumed", first_half.empty());
 
-               result.test_eq("elements_in_buffer()", b.elements_in_buffer(), 16);
-               result.test_eq("elements_until_alignment()", b.elements_until_alignment(), 16);
+               result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 16);
+               result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 16);
                result.confirm("!in_alignment()", !b.in_alignment());
                result.confirm("!ready_to_consume()", !b.ready_to_consume());
 
@@ -325,8 +325,8 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.require("second half completes block", r2.has_value());
                result.confirm("second input is consumed", second_half.empty());
 
-               result.test_eq("elements_in_buffer()", b.elements_in_buffer(), 0);
-               result.test_eq("elements_until_alignment()", b.elements_until_alignment(), 32);
+               result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 0);
+               result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 32);
                result.confirm("in_alignment()", b.in_alignment());
                result.confirm("!ready_to_consume()", !b.ready_to_consume());
 
@@ -342,7 +342,7 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.confirm("aligned data is not buffered", !r1.has_value());
                result.confirm("in_alignment()", b.in_alignment());
                result.confirm("!ready_to_consume()", !b.ready_to_consume());
-               result.test_eq("aligned data is not consumed", full_block_1.remaining(), 32);
+               result.test_sz_eq("aligned data is not consumed", full_block_1.remaining(), 32);
 
                Botan::BufferSlicer half_block(first_half_data);
                Botan::BufferSlicer full_block_2(data);
@@ -356,7 +356,7 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.confirm("collected block is consumed", r3.has_value());
                result.confirm("in_alignment()", b.in_alignment());
                result.confirm("!ready_to_consume()", !b.ready_to_consume());
-               result.test_eq("input is consumed until alignment", full_block_2.remaining(), 16);
+               result.test_sz_eq("input is consumed until alignment", full_block_2.remaining(), 16);
             }),
 
       CHECK("Handle unaligned data in Alignment Buffer (with block-defer)",
@@ -371,8 +371,8 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.confirm("half a block is not returned", !r1.has_value());
                result.confirm("first input is consumed", first_half.empty());
 
-               result.test_eq("elements_in_buffer()", b.elements_in_buffer(), 16);
-               result.test_eq("elements_until_alignment()", b.elements_until_alignment(), 16);
+               result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 16);
+               result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 16);
                result.confirm("!in_alignment()", !b.in_alignment());
                result.confirm("!ready_to_consume()", !b.ready_to_consume());
 
@@ -380,17 +380,17 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.require("second half completes block but is not returned", !r2.has_value());
                result.confirm("second input is consumed", second_half.empty());
 
-               result.test_eq("elements_in_buffer()", b.elements_in_buffer(), 32);
-               result.test_eq("elements_until_alignment()", b.elements_until_alignment(), 0);
+               result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 32);
+               result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 0);
                result.confirm("!in_alignment()", !b.in_alignment());
                result.confirm("ready_to_consume()", b.ready_to_consume());
 
                const auto r3 = b.handle_unaligned_data(third_half);
                result.require("extra data pushes out block", r3.has_value());
-               result.test_eq("third input is not consumed", third_half.remaining(), 16);
+               result.test_sz_eq("third input is not consumed", third_half.remaining(), 16);
 
-               result.test_eq("elements_in_buffer()", b.elements_in_buffer(), 0);
-               result.test_eq("elements_until_alignment()", b.elements_until_alignment(), 32);
+               result.test_sz_eq("elements_in_buffer()", b.elements_in_buffer(), 0);
+               result.test_sz_eq("elements_until_alignment()", b.elements_until_alignment(), 32);
                result.confirm("in_alignment()", b.in_alignment());
                result.confirm("!ready_to_consume()", !b.ready_to_consume());
 
@@ -420,7 +420,7 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.require("more data pushes out buffer", r3.has_value());
                result.confirm("in_alignment()", b.in_alignment());
                result.confirm("!ready_to_consume()", !b.ready_to_consume());
-               result.test_eq("no input data is consumed", one_extra_byte.remaining(), 1);
+               result.test_sz_eq("no input data is consumed", one_extra_byte.remaining(), 1);
 
                result.test_is_eq("collected block is correct", v(r3.value()), v(data));
             }),
@@ -433,24 +433,24 @@ std::vector<Test::Result> test_alignment_buffer() {
                Botan::BufferSlicer half_block(first_half_data);
                const auto [s1, r1] = b.aligned_data_to_process(half_block);
                result.confirm("not enough data for alignment processing", s1.empty());
-               result.test_eq("not enough data for alignment processing", r1, 0);
-               result.test_eq("(short) unaligned data is not consumed", half_block.remaining(), 16);
+               result.test_sz_eq("not enough data for alignment processing", r1, 0);
+               result.test_sz_eq("(short) unaligned data is not consumed", half_block.remaining(), 16);
 
                const auto more_than_one_block = Botan::concat<std::vector<uint8_t>>(data, first_half_data);
                Botan::BufferSlicer one_and_a_half_block(more_than_one_block);
                const auto [s2, r2] = b.aligned_data_to_process(one_and_a_half_block);
-               result.test_eq("data of one block for processing", s2.size(), 32);
-               result.test_eq("one block for processing", r2, 1);
+               result.test_sz_eq("data of one block for processing", s2.size(), 32);
+               result.test_sz_eq("one block for processing", r2, 1);
                result.test_is_eq(v(s2), v(data));
-               result.test_eq("(middle) unaligned data is not consumed", one_and_a_half_block.remaining(), 16);
+               result.test_sz_eq("(middle) unaligned data is not consumed", one_and_a_half_block.remaining(), 16);
 
                const auto two_blocks_data = Botan::concat<std::vector<uint8_t>>(data, data);
                Botan::BufferSlicer two_blocks(two_blocks_data);
                const auto [s3, r3] = b.aligned_data_to_process(two_blocks);
-               result.test_eq("data of two block for processing", s3.size(), 64);
-               result.test_eq("two blocks for processing", r3, 2);
+               result.test_sz_eq("data of two block for processing", s3.size(), 64);
+               result.test_sz_eq("two blocks for processing", r3, 2);
                result.test_is_eq(v(s3), two_blocks_data);
-               result.test_eq("aligned data is fully consumed", two_blocks.remaining(), 0);
+               result.test_sz_eq("aligned data is fully consumed", two_blocks.remaining(), 0);
             }),
 
       CHECK("Aligned data blockwise (no block-defer)",
@@ -461,29 +461,29 @@ std::vector<Test::Result> test_alignment_buffer() {
                Botan::BufferSlicer half_block(first_half_data);
                const auto s1 = b.next_aligned_block_to_process(half_block);
                result.confirm("not enough data for alignment processing", !s1.has_value());
-               result.test_eq("(short) unaligned data is not consumed", half_block.remaining(), 16);
+               result.test_sz_eq("(short) unaligned data is not consumed", half_block.remaining(), 16);
 
                const auto more_than_one_block = Botan::concat<std::vector<uint8_t>>(data, first_half_data);
                Botan::BufferSlicer one_and_a_half_block(more_than_one_block);
                const auto s2 = b.next_aligned_block_to_process(one_and_a_half_block);
                result.require("one block for processing", s2.has_value());
-               result.test_eq("data of one block for processing", s2->size(), 32);
+               result.test_sz_eq("data of one block for processing", s2->size(), 32);
                result.test_is_eq(v(s2.value()), v(data));
-               result.test_eq("(middle) unaligned data is not consumed", one_and_a_half_block.remaining(), 16);
+               result.test_sz_eq("(middle) unaligned data is not consumed", one_and_a_half_block.remaining(), 16);
 
                const auto two_blocks_data = Botan::concat<std::vector<uint8_t>>(data, data);
                Botan::BufferSlicer two_blocks(two_blocks_data);
                const auto s3_1 = b.next_aligned_block_to_process(two_blocks);
                result.require("first block for processing", s3_1.has_value());
-               result.test_eq("data of first block for processing", s3_1->size(), 32);
+               result.test_sz_eq("data of first block for processing", s3_1->size(), 32);
                result.test_is_eq(v(s3_1.value()), v(data));
-               result.test_eq("first block is consumed", two_blocks.remaining(), 32);
+               result.test_sz_eq("first block is consumed", two_blocks.remaining(), 32);
 
                const auto s3_2 = b.next_aligned_block_to_process(two_blocks);
                result.require("second block for processing", s3_2.has_value());
-               result.test_eq("data of second block for processing", s3_2->size(), 32);
+               result.test_sz_eq("data of second block for processing", s3_2->size(), 32);
                result.test_is_eq(v(s3_2.value()), v(data));
-               result.test_eq("second block is consumed", two_blocks.remaining(), 0);
+               result.test_sz_eq("second block is consumed", two_blocks.remaining(), 0);
             }),
 
       CHECK("Aligned data passthrough (with block-defer)",
@@ -494,24 +494,24 @@ std::vector<Test::Result> test_alignment_buffer() {
                Botan::BufferSlicer half_block(first_half_data);
                const auto [s1, r1] = b.aligned_data_to_process(half_block);
                result.confirm("not enough data for alignment processing", s1.empty());
-               result.test_eq("not enough data for alignment processing", r1, 0);
-               result.test_eq("(short) unaligned data is not consumed", half_block.remaining(), 16);
+               result.test_sz_eq("not enough data for alignment processing", r1, 0);
+               result.test_sz_eq("(short) unaligned data is not consumed", half_block.remaining(), 16);
 
                const auto more_than_one_block = Botan::concat<std::vector<uint8_t>>(data, first_half_data);
                Botan::BufferSlicer one_and_a_half_block(more_than_one_block);
                const auto [s2, r2] = b.aligned_data_to_process(one_and_a_half_block);
-               result.test_eq("data of one block for processing", s2.size(), 32);
-               result.test_eq("one block for processing", r2, 1);
+               result.test_sz_eq("data of one block for processing", s2.size(), 32);
+               result.test_sz_eq("one block for processing", r2, 1);
                result.test_is_eq(v(s2), v(data));
-               result.test_eq("(middle) unaligned data is not consumed", one_and_a_half_block.remaining(), 16);
+               result.test_sz_eq("(middle) unaligned data is not consumed", one_and_a_half_block.remaining(), 16);
 
                const auto two_blocks_data = Botan::concat<std::vector<uint8_t>>(data, data);
                Botan::BufferSlicer two_blocks(two_blocks_data);
                const auto [s3, r3] = b.aligned_data_to_process(two_blocks);
-               result.test_eq("data of first block for processing", s3.size(), 32);
-               result.test_eq("one block for processing", r3, 1);
+               result.test_sz_eq("data of first block for processing", s3.size(), 32);
+               result.test_sz_eq("one block for processing", r3, 1);
                result.test_is_eq(v(s3), v(data));
-               result.test_eq("aligned data is partially consumed", two_blocks.remaining(), 32);
+               result.test_sz_eq("aligned data is partially consumed", two_blocks.remaining(), 32);
             }),
 
       CHECK("Aligned data blockwise (with block-defer)",
@@ -522,27 +522,27 @@ std::vector<Test::Result> test_alignment_buffer() {
                Botan::BufferSlicer half_block(first_half_data);
                const auto s1 = b.next_aligned_block_to_process(half_block);
                result.confirm("not enough data for alignment processing", !s1.has_value());
-               result.test_eq("(short) unaligned data is not consumed", half_block.remaining(), 16);
+               result.test_sz_eq("(short) unaligned data is not consumed", half_block.remaining(), 16);
 
                const auto more_than_one_block = Botan::concat<std::vector<uint8_t>>(data, first_half_data);
                Botan::BufferSlicer one_and_a_half_block(more_than_one_block);
                const auto s2 = b.next_aligned_block_to_process(one_and_a_half_block);
                result.require("one block for processing", s2.has_value());
-               result.test_eq("data of one block for processing", s2->size(), 32);
+               result.test_sz_eq("data of one block for processing", s2->size(), 32);
                result.test_is_eq(v(s2.value()), v(data));
-               result.test_eq("(middle) unaligned data is not consumed", one_and_a_half_block.remaining(), 16);
+               result.test_sz_eq("(middle) unaligned data is not consumed", one_and_a_half_block.remaining(), 16);
 
                const auto two_blocks_data = Botan::concat<std::vector<uint8_t>>(data, data);
                Botan::BufferSlicer two_blocks(two_blocks_data);
                const auto s3_1 = b.next_aligned_block_to_process(two_blocks);
                result.require("first block for processing", s3_1.has_value());
-               result.test_eq("data of first block for processing", s3_1->size(), 32);
+               result.test_sz_eq("data of first block for processing", s3_1->size(), 32);
                result.test_is_eq(v(s3_1.value()), v(data));
-               result.test_eq("first block is consumed", two_blocks.remaining(), 32);
+               result.test_sz_eq("first block is consumed", two_blocks.remaining(), 32);
 
                const auto s3_2 = b.next_aligned_block_to_process(two_blocks);
                result.confirm("second block is not passed through", !s3_2.has_value());
-               result.test_eq("second block is not consumed", two_blocks.remaining(), 32);
+               result.test_sz_eq("second block is not consumed", two_blocks.remaining(), 32);
             }),
    };
 }

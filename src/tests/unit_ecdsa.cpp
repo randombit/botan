@@ -48,7 +48,7 @@ Test::Result test_decode_ecdsa_X509() {
             "3B:6C:99:1C:D6:5A:51:FC:EB:17:E3:AA:F6:3C:1A:DA:14:1F:82:41:30:6F:64:EE:FF:63:F3:1F:D6:07:14:9F");
 
          auto pubkey = cert.subject_public_key();
-         result.test_eq("verify self-signed signature", cert.check_signature(*pubkey), true);
+         result.test_is_true("verify self-signed signature", cert.check_signature(*pubkey));
       } catch(Botan::Exception& e) {
          result.test_failure(e.what());
       }
@@ -121,13 +121,13 @@ Test::Result test_encoding_options() {
          result.confirm("set_point_encoding works", key.point_encoding() == Botan::EC_Point_Format::Compressed);
 
          const std::vector<uint8_t> enc_compressed = key.public_key_bits();
-         result.test_lt("Compressed points are smaller", enc_compressed.size(), enc_uncompressed.size());
+         result.test_sz_lt("Compressed points are smaller", enc_compressed.size(), enc_uncompressed.size());
          const size_t size_diff = enc_uncompressed.size() - enc_compressed.size();
-         result.test_gte("Compressed points smaller by group size", size_diff, group.get_p_bytes());
+         result.test_sz_gte("Compressed points smaller by group size", size_diff, group.get_p_bytes());
          key.set_point_encoding(Botan::EC_Point_Format::Hybrid);
          result.confirm("set_point_encoding works", key.point_encoding() == Botan::EC_Point_Format::Hybrid);
          const std::vector<uint8_t> enc_hybrid = key.public_key_bits();
-         result.test_eq("Hybrid point same size as uncompressed", enc_uncompressed.size(), enc_hybrid.size());
+         result.test_sz_eq("Hybrid point same size as uncompressed", enc_uncompressed.size(), enc_hybrid.size());
       }
    } catch(Botan::Exception& e) {
       result.test_failure(e.what());

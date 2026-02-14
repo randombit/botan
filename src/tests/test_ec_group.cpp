@@ -140,9 +140,9 @@ std::vector<Test::Result> ECC_Randomized_Tests::run() {
             result.test_eq("p + q", A1, R);
             result.test_eq("q + p", A2, R);
 
-            result.test_eq("p on the curve", P.on_the_curve(), true);
-            result.test_eq("q on the curve", Q.on_the_curve(), true);
-            result.test_eq("r on the curve", R.on_the_curve(), true);
+            result.test_is_true("p on the curve", P.on_the_curve());
+            result.test_is_true("q on the curve", Q.on_the_curve());
+            result.test_is_true("r on the curve", R.on_the_curve());
 
             result.test_eq("P1", P1, P);
             result.test_eq("Q1", Q1, Q);
@@ -185,8 +185,8 @@ class EC_Group_Tests : public Test {
             result.confirm("EC_Group is considered valid", group.verify_group(this->rng(), true));
             result.confirm("EC_Group is not considered explicit encoding", !group.used_explicit_encoding());
 
-            result.test_eq("EC_Group has correct bit size", group.get_p().bits(), group.get_p_bits());
-            result.test_eq("EC_Group has byte size", group.get_p().bytes(), group.get_p_bytes());
+            result.test_sz_eq("EC_Group has correct bit size", group.get_p().bits(), group.get_p_bits());
+            result.test_sz_eq("EC_Group has byte size", group.get_p().bytes(), group.get_p_bytes());
 
             result.test_eq("EC_Group has cofactor == 1", group.get_cofactor(), 1);
 
@@ -620,11 +620,11 @@ class EC_PointEnc_Tests final : public Test {
                const auto pt = Botan::EC_AffinePoint::g_mul(scalar, rng);
 
                const auto pt_u = pt.serialize_uncompressed();
-               result.test_eq("Expected uncompressed header", static_cast<size_t>(pt_u[0]), 0x04);
+               result.test_u8_eq("Expected uncompressed header", pt_u[0], 0x04);
                const size_t fe_bytes = (pt_u.size() - 1) / 2;
                const auto pt_c = pt.serialize_compressed();
 
-               result.test_eq("Expected compressed size", pt_c.size(), 1 + fe_bytes);
+               result.test_sz_eq("Expected compressed size", pt_c.size(), 1 + fe_bytes);
                const uint8_t expected_c_header = (pt_u[pt_u.size() - 1] % 2 == 0) ? 0x02 : 0x03;
                result.confirm("Expected compressed header", pt_c[0] == expected_c_header);
 
@@ -816,7 +816,7 @@ class ECC_Invalid_Key_Tests final : public Text_Based_Test {
 
          try {
             auto key = Botan::X509::load_key(key_data);
-            result.test_eq("public key fails check", key->check_key(this->rng(), false), false);
+            result.test_is_false("public key fails check", key->check_key(this->rng(), false));
          } catch(Botan::Decoding_Error&) {
             result.test_success("Decoding invalid ECC key results in decoding error exception");
          }

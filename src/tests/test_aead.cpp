@@ -36,7 +36,7 @@ class AEAD_Tests final : public Text_Based_Test {
 
          auto enc = Botan::AEAD_Mode::create(algo, Botan::Cipher_Dir::Encryption);
 
-         result.test_eq("AEAD encrypt output_length is correct", enc->output_length(input.size()), expected.size());
+         result.test_sz_eq("AEAD encrypt output_length is correct", enc->output_length(input.size()), expected.size());
 
          result.confirm("AEAD name is not empty", !enc->name().empty());
          result.confirm("AEAD default nonce size is accepted", enc->valid_nonce_length(enc->default_nonce_length()));
@@ -60,12 +60,12 @@ class AEAD_Tests final : public Text_Based_Test {
                                                      [&]() { enc->set_associated_data(ad.data(), ad.size()); });
          }
 
-         result.test_eq("key is not set", enc->has_keying_material(), false);
+         result.test_is_false("key is not set", enc->has_keying_material());
 
          // Ensure that test resets AD and message state
-         result.test_eq("key is not set", enc->has_keying_material(), false);
+         result.test_is_false("key is not set", enc->has_keying_material());
          enc->set_key(key);
-         result.test_eq("key is set", enc->has_keying_material(), true);
+         result.test_is_true("key is set", enc->has_keying_material());
 
          if(!is_siv) {
             result.test_throws<Botan::Invalid_State>("Cannot process data until nonce is set (enc)", [&]() {
@@ -172,7 +172,7 @@ class AEAD_Tests final : public Text_Based_Test {
                   buf.erase(buf.begin(), buf.begin() + bytes_to_process);
                   enc->finish(buf);
                } else {
-                  result.test_eq("correct number of bytes processed", bytes_written, bytes_to_process);
+                  result.test_sz_eq("correct number of bytes processed", bytes_written, bytes_to_process);
                   enc->finish(buf, bytes_written);
                }
 
@@ -183,7 +183,7 @@ class AEAD_Tests final : public Text_Based_Test {
          // Make sure we can set the AD after processing a message
          enc->set_associated_data(ad);
          enc->clear();
-         result.test_eq("key is not set", enc->has_keying_material(), false);
+         result.test_is_false("key is not set", enc->has_keying_material());
 
          result.test_throws<Botan::Invalid_State>("Unkeyed object throws for encrypt after clear",
                                                   [&]() { enc->finish(buf); });
@@ -209,7 +209,7 @@ class AEAD_Tests final : public Text_Based_Test {
 
          auto dec = Botan::AEAD_Mode::create(algo, Botan::Cipher_Dir::Decryption);
 
-         result.test_eq("AEAD decrypt output_length is correct", dec->output_length(input.size()), expected.size());
+         result.test_sz_eq("AEAD decrypt output_length is correct", dec->output_length(input.size()), expected.size());
 
          auto get_garbage = [&] { return rng.random_vec(dec->update_granularity()); };
          auto get_ultimate_garbage = [&] { return rng.random_vec(dec->minimum_final_size()); };
@@ -233,9 +233,9 @@ class AEAD_Tests final : public Text_Based_Test {
 
          // First some tests for reset() to make sure it resets what we need it to
          // set garbage values
-         result.test_eq("key is not set", dec->has_keying_material(), false);
+         result.test_is_false("key is not set", dec->has_keying_material());
          dec->set_key(key);
-         result.test_eq("key is set", dec->has_keying_material(), true);
+         result.test_is_true("key is set", dec->has_keying_material());
          dec->set_associated_data(mutate_vec(ad, rng));
 
          if(!is_siv) {
@@ -332,7 +332,7 @@ class AEAD_Tests final : public Text_Based_Test {
                   buf.erase(buf.begin(), buf.begin() + bytes_to_process);
                   dec->finish(buf);
                } else {
-                  result.test_eq("correct number of bytes processed", bytes_written, bytes_to_process);
+                  result.test_sz_eq("correct number of bytes processed", bytes_written, bytes_to_process);
                   dec->finish(buf, bytes_to_process);
                }
 
@@ -401,7 +401,7 @@ class AEAD_Tests final : public Text_Based_Test {
          // Make sure we can set the AD after processing a message
          dec->set_associated_data(ad);
          dec->clear();
-         result.test_eq("key is not set", dec->has_keying_material(), false);
+         result.test_is_false("key is not set", dec->has_keying_material());
 
          result.test_throws<Botan::Invalid_State>("Unkeyed object throws for decrypt", [&]() { dec->finish(buf); });
 
@@ -431,8 +431,8 @@ class AEAD_Tests final : public Text_Based_Test {
          }
 
          // must be authenticated
-         result.test_eq("Encryption algo is an authenticated mode", enc->authenticated(), true);
-         result.test_eq("Decryption algo is an authenticated mode", dec->authenticated(), true);
+         result.test_is_true("Encryption algo is an authenticated mode", enc->authenticated());
+         result.test_is_true("Decryption algo is an authenticated mode", dec->authenticated());
 
          const std::string enc_provider = enc->provider();
          result.test_is_nonempty("enc provider", enc_provider);
@@ -442,15 +442,15 @@ class AEAD_Tests final : public Text_Based_Test {
          result.test_eq("same provider", enc_provider, dec_provider);
 
          // FFI currently requires this, so assure it is true for all modes
-         result.test_gt("enc buffer sizes ok", enc->ideal_granularity(), enc->minimum_final_size());
-         result.test_gt("dec buffer sizes ok", dec->ideal_granularity(), dec->minimum_final_size());
+         result.test_sz_gt("enc buffer sizes ok", enc->ideal_granularity(), enc->minimum_final_size());
+         result.test_sz_gt("dec buffer sizes ok", dec->ideal_granularity(), dec->minimum_final_size());
 
-         result.test_gt("update granularity is non-zero", enc->update_granularity(), 0);
+         result.test_sz_gt("update granularity is non-zero", enc->update_granularity(), 0);
 
-         result.test_eq(
+         result.test_sz_eq(
             "enc and dec ideal granularity is the same", enc->ideal_granularity(), dec->ideal_granularity());
 
-         result.test_gt(
+         result.test_sz_gt(
             "ideal granularity is at least update granularity", enc->ideal_granularity(), enc->update_granularity());
 
          result.confirm("ideal granularity is a multiple of update granularity",

@@ -58,11 +58,11 @@ Test::Result test_oid_registration() {
    const std::string name = "botan-test-oid1";
    const Botan::OID oid("1.3.6.1.4.1.25258.1000.1");
 
-   result.test_eq("named OID not found", Botan::OID::from_name(name).has_value(), false);
+   result.test_is_false("named OID not found", Botan::OID::from_name(name).has_value());
 
    Botan::OID::register_oid(oid, name);
 
-   result.test_eq("named OID found", Botan::OID::from_name(name).has_value(), true);
+   result.test_is_true("named OID found", Botan::OID::from_name(name).has_value());
 
    result.test_eq("name of OID matches expected", oid.to_formatted_string(), name);
 
@@ -77,7 +77,7 @@ Test::Result test_add_and_lookup() {
    const Botan::OID oid("1.3.6.1.4.1.25258.1001.1");
    const Botan::OID oid2("1.3.6.1.4.1.25258.1001.2");
 
-   result.test_eq("named OID not found", Botan::OID::from_name(name).has_value(), false);
+   result.test_is_false("named OID not found", Botan::OID::from_name(name).has_value());
 
    Botan::OID::register_oid(oid, name);
 

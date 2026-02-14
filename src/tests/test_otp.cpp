@@ -38,25 +38,25 @@ class HOTP_KAT_Tests final : public Text_Based_Test {
 
          Botan::HOTP hotp(key, hash_algo, digits);
 
-         result.test_int_eq("OTP", hotp.generate_hotp(counter), otp);
+         result.test_u32_eq("OTP", hotp.generate_hotp(counter), otp);
 
          std::pair<bool, uint64_t> otp_res = hotp.verify_hotp(otp, counter, 0);
-         result.test_eq("OTP verify result", otp_res.first, true);
+         result.test_is_true("OTP verify result", otp_res.first);
          result.confirm("OTP verify next counter", otp_res.second == counter + 1);
 
          // Test invalid OTP
          otp_res = hotp.verify_hotp(otp + 1, counter, 0);
-         result.test_eq("OTP verify result", otp_res.first, false);
+         result.test_is_false("OTP verify result", otp_res.first);
          result.confirm("OTP verify next counter", otp_res.second == counter);
 
          // Test invalid OTP with long range
          otp_res = hotp.verify_hotp(otp + 1, counter, 100);
-         result.test_eq("OTP verify result", otp_res.first, false);
+         result.test_is_false("OTP verify result", otp_res.first);
          result.confirm("OTP verify next counter", otp_res.second == counter);
 
          // Test valid OTP with long range
          otp_res = hotp.verify_hotp(otp, counter - 90, 100);
-         result.test_eq("OTP verify result", otp_res.first, true);
+         result.test_is_true("OTP verify result", otp_res.first);
          result.confirm("OTP verify next counter", otp_res.second == counter + 1);
 
          return result;
@@ -91,13 +91,13 @@ class TOTP_KAT_Tests final : public Text_Based_Test {
          const std::chrono::system_clock::time_point later_time = time + std::chrono::seconds(timestep);
          const std::chrono::system_clock::time_point too_late = time + std::chrono::seconds(2 * timestep);
 
-         result.test_int_eq("TOTP generate", totp.generate_totp(time), otp);
+         result.test_u32_eq("TOTP generate", totp.generate_totp(time), otp);
 
-         result.test_eq("TOTP verify valid", totp.verify_totp(otp, time, 0), true);
-         result.test_eq("TOTP verify invalid", totp.verify_totp(otp ^ 1, time, 0), false);
-         result.test_eq("TOTP verify time slip", totp.verify_totp(otp, later_time, 0), false);
-         result.test_eq("TOTP verify time slip allowed", totp.verify_totp(otp, later_time, 1), true);
-         result.test_eq("TOTP verify time slip out of range", totp.verify_totp(otp, too_late, 1), false);
+         result.test_is_true("TOTP verify valid", totp.verify_totp(otp, time, 0));
+         result.test_is_false("TOTP verify invalid", totp.verify_totp(otp ^ 1, time, 0));
+         result.test_is_false("TOTP verify time slip", totp.verify_totp(otp, later_time, 0));
+         result.test_is_true("TOTP verify time slip allowed", totp.verify_totp(otp, later_time, 1));
+         result.test_is_false("TOTP verify time slip out of range", totp.verify_totp(otp, too_late, 1));
 
          return result;
       }

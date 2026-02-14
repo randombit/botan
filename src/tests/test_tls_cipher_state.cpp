@@ -318,7 +318,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
       {CHECK_both(
           "secret logging during initialization",
           [&](Cipher_State*, Journaling_Secret_Logger* sl, Connection_Side, Test::Result& result) {
-             result.test_eq("logged expected secrets", sl->secrets.size(), 2);
+             result.test_sz_eq("logged expected secrets", sl->secrets.size(), 2);
              result.require("has client traffic secret", sl->secrets.contains("CLIENT_HANDSHAKE_TRAFFIC_SECRET"));
              result.require("has server traffic secret", sl->secrets.contains("SERVER_HANDSHAKE_TRAFFIC_SECRET"));
 
@@ -392,7 +392,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
                      }
 
                      // check the logged key material
-                     result.test_eq("contains expected number of keys", sl->secrets.size(), 5);
+                     result.test_sz_eq("contains expected number of keys", sl->secrets.size(), 5);
                      result.require("has client traffic secret", sl->secrets.contains("CLIENT_TRAFFIC_SECRET_0"));
                      result.require("has server traffic secret", sl->secrets.contains("SERVER_TRAFFIC_SECRET_0"));
                      result.require("has exporter secret", sl->secrets.contains("EXPORTER_SECRET"));
@@ -485,11 +485,11 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
                         side == Connection_Side::Client ? "CLIENT_TRAFFIC_SECRET_1" : "SERVER_TRAFFIC_SECRET_1";
 
                      cs->update_read_keys(*sl);
-                     result.test_eq("read secret update is here", sl->secrets.size(), 6);
+                     result.test_sz_eq("read secret update is here", sl->secrets.size(), 6);
                      result.require("has new read traffic secret", sl->secrets.contains(read_label));
 
                      cs->update_write_keys(*sl);
-                     result.test_eq("write secret update is here", sl->secrets.size(), 7);
+                     result.test_sz_eq("write secret update is here", sl->secrets.size(), 7);
                      result.require("has new write traffic secret", sl->secrets.contains(write_label));
 
                      result.test_eq("client traffic secret (1)",
@@ -677,7 +677,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
    return Test::flatten_result_lists(
       {CHECK_both("no secrets logged for PSK initialization",
                   [&](Cipher_State*, Journaling_Secret_Logger* sl, Connection_Side, Test::Result& result) {
-                     result.test_eq("no secrets logged", sl->secrets.size(), 0);
+                     result.test_sz_eq("no secrets logged", sl->secrets.size(), 0);
                   }),
 
        CHECK_both("calculating PSK binder",
@@ -717,7 +717,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
                            !cs->must_expect_unprotected_alert_traffic());
                      }
 
-                     result.test_eq("logged early secrets", sl->secrets.size(), 1);
+                     result.test_sz_eq("logged early secrets", sl->secrets.size(), 1);
                      result.require("has early exporter secret", sl->secrets.contains("EARLY_EXPORTER_MASTER_SECRET"));
                      result.test_eq(
                         "early exporter secret", sl->secrets.at("EARLY_EXPORTER_MASTER_SECRET"), early_exporter_secret);
@@ -737,7 +737,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
              encrypted_extensions.xxcrypt(result, cs, side);
 
              // check the logged key material
-             result.test_eq("contains expected number of keys", sl->secrets.size(), 3);
+             result.test_sz_eq("contains expected number of keys", sl->secrets.size(), 3);
              result.require("has client handshake traffic secret",
                             sl->secrets.contains("CLIENT_HANDSHAKE_TRAFFIC_SECRET"));
              result.require("has server handshake traffic secret",
@@ -789,7 +789,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
              }
 
              // check the logged key material
-             result.test_eq("contains expected number of keys", sl->secrets.size(), 6);
+             result.test_sz_eq("contains expected number of keys", sl->secrets.size(), 6);
              result.require("has client traffic secret", sl->secrets.contains("CLIENT_TRAFFIC_SECRET_0"));
              result.require("has server traffic secret", sl->secrets.contains("SERVER_TRAFFIC_SECRET_0"));
              result.require("has exporter secret", sl->secrets.contains("EXPORTER_SECRET"));

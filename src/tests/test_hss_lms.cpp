@@ -301,9 +301,9 @@ class HSS_LMS_Missing_API_Test final : public Test {
          // HSS_LMS_PublicKey::key_length()
          auto sk = Botan::create_private_key("HSS-LMS", Test::rng(), "SHA-256,HW(10,4)");
          sk->key_length();
-         result.test_gt("Public key length must be greater than the simply type information plus I",
-                        sk->key_length(),
-                        3 * sizeof(uint32_t) + Botan::LMS_IDENTIFIER_LEN);
+         result.test_sz_gt("Public key length must be greater than the simply type information plus I",
+                           sk->key_length(),
+                           3 * sizeof(uint32_t) + Botan::LMS_IDENTIFIER_LEN);
 
          // HSS_LMS_Verification_Operation::hash_function()
          const Botan::PK_Verifier verifier(*sk, "");

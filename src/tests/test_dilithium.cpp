@@ -156,10 +156,10 @@ class DilithiumRoundtripTests final : public Test {
          const Botan::Dilithium_PrivateKey priv_key(*rng, mode);
          const Botan::Dilithium_PublicKey& pub_key = priv_key;
 
-         result.test_eq("key strength", priv_key.estimated_strength(), strength);
-         result.test_eq("key length", priv_key.key_length(), psid);
-         result.test_eq("key strength", pub_key.estimated_strength(), strength);
-         result.test_eq("key length", pub_key.key_length(), psid);
+         result.test_sz_eq("key strength", priv_key.estimated_strength(), strength);
+         result.test_sz_eq("key length", priv_key.key_length(), psid);
+         result.test_sz_eq("key strength", pub_key.estimated_strength(), strength);
+         result.test_sz_eq("key length", pub_key.key_length(), psid);
 
          const auto sig_before_codec = sign(priv_key, msgvec);
 

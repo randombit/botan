@@ -147,7 +147,7 @@ Test::Result test_multiple_modules() {
    const Module first_module(Test::pkcs11_lib());
 
    result.test_throws("Module ctor fails if module is already initialized",
-                      []() { Module const second_module(Test::pkcs11_lib()); });
+                      []() { const Module second_module(Test::pkcs11_lib()); });
 
    return result;
 }
@@ -158,7 +158,7 @@ Test::Result test_module_get_info() {
    const Module module(Test::pkcs11_lib());
 
    const Info info = module.get_info();
-   result.test_ne("Cryptoki version != 0", info.cryptokiVersion.major, 0);
+   result.test_sz_ne("Cryptoki version != 0", info.cryptokiVersion.major, 0);
 
    return result;
 }
@@ -185,7 +185,7 @@ Test::Result test_slot_get_available_slots() {
 
    Module module(Test::pkcs11_lib());
    const std::vector<SlotId> slot_vec = Slot::get_available_slots(module, true);
-   result.test_gte("Available Slots with attached token >= 1", slot_vec.size(), 1);
+   result.test_sz_gte("Available Slots with attached token >= 1", slot_vec.size(), 1);
 
    return result;
 }
@@ -445,17 +445,18 @@ Test::Result test_attribute_container() {
    attributes.add_numeric(AttributeType::Id, 21);
    attributes.add_numeric(AttributeType::PixelY, 40);
 
-   result.test_eq("8 elements in attribute container", attributes.count(), 8);
+   result.test_sz_eq("8 elements in attribute container", attributes.count(), 8);
 
    const std::vector<Botan::PKCS11::Attribute>& storedAttributes = attributes.attributes();
-   result.test_int_eq("ObjectId type", storedAttributes.at(4).type, AttributeType::ObjectId);
-   result.test_int_eq("ObjectId value", *reinterpret_cast<uint64_t*>(storedAttributes.at(4).pValue), 10);
-   result.test_int_eq("Id type", storedAttributes.at(5).type, AttributeType::Id);
-   result.test_int_eq("Id value", *reinterpret_cast<uint64_t*>(storedAttributes.at(5).pValue), 21);
-   result.test_int_eq("PixelX type", storedAttributes.at(6).type, AttributeType::PixelX);
-   result.test_int_eq("PixelX value", *reinterpret_cast<uint64_t*>(storedAttributes.at(6).pValue), 30);
-   result.test_int_eq("PixelY type", storedAttributes.at(7).type, AttributeType::PixelY);
-   result.test_int_eq("PixelY value", *reinterpret_cast<uint64_t*>(storedAttributes.at(7).pValue), 40);
+   result.test_is_eq(
+      "ObjectId type", storedAttributes.at(4).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::ObjectId));
+   result.test_u64_eq("ObjectId value", *reinterpret_cast<uint64_t*>(storedAttributes.at(4).pValue), 10);
+   result.test_is_eq("Id type", storedAttributes.at(5).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Id));
+   result.test_u64_eq("Id value", *reinterpret_cast<uint64_t*>(storedAttributes.at(5).pValue), 21);
+   result.test_is_eq("PixelX type", storedAttributes.at(6).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::PixelX));
+   result.test_u64_eq("PixelX value", *reinterpret_cast<uint64_t*>(storedAttributes.at(6).pValue), 30);
+   result.test_is_eq("PixelY type", storedAttributes.at(7).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::PixelY));
+   result.test_u64_eq("PixelY value", *reinterpret_cast<uint64_t*>(storedAttributes.at(7).pValue), 40);
 
    return result;
 }
@@ -543,7 +544,7 @@ Test::Result test_object_finder() {
    ObjectFinder finder(test_session.session(), search_template.attributes());
 
    auto search_result = finder.find();
-   result.test_eq("one object found", search_result.size(), 1);
+   result.test_sz_eq("one object found", search_result.size(), 1);
    finder.finish();
 
    const Object obj_found(test_session.session(), search_result.at(0));
@@ -577,7 +578,7 @@ Test::Result test_object_copy() {
 
    const ObjectFinder searcher(test_session.session(), copy_attributes.attributes());
    auto search_result = searcher.find();
-   result.test_eq("one object found", search_result.size(), 1);
+   result.test_sz_eq("one object found", search_result.size(), 1);
 
    data_obj.destroy();
 
@@ -844,7 +845,7 @@ Test::Result test_rsa_sign_verify() {
          rsa_ok = verifier.verify_message(plaintext, signature);
       }
 
-      result.test_eq("RSA PKCS11 sign and verify: " + padding, rsa_ok, true);
+      result.test_is_true("RSA PKCS11 sign and verify: " + padding, rsa_ok);
    };
 
    // single-part sign
@@ -1104,14 +1105,14 @@ Test::Result test_ecdsa_sign_verify_core(EC_Group_Encoding enc, const std::strin
          Botan::PK_Verifier token_verifier(keypair.first, padding, format);
          const bool ecdsa_ok = token_verifier.verify_message(plaintext, signature);
 
-         result.test_eq("ECDSA PKCS11 sign and verify: " + padding, ecdsa_ok, true);
+         result.test_is_true("ECDSA PKCS11 sign and verify: " + padding, ecdsa_ok);
 
          // test against software implementation if available
          if(check_soft) {
             Botan::PK_Verifier soft_verifier(keypair.first, padding, format);
             const bool soft_ecdsa_ok = soft_verifier.verify_message(plaintext, signature);
 
-            result.test_eq("ECDSA PKCS11 verify (in software): " + padding, soft_ecdsa_ok, true);
+            result.test_is_true("ECDSA PKCS11 verify (in software): " + padding, soft_ecdsa_ok);
          }
       };
 
@@ -1354,7 +1355,7 @@ Test::Result test_ecdh_derive() {
    const Botan::SymmetricKey bob_key = kb.derive_key(32, keypair.first.raw_public_key_bits());
 
    const bool eq = alice_key == bob_key;
-   result.test_eq("same secret key derived", eq, true);
+   result.test_is_true("same secret key derived", eq);
 
    keypair.first.destroy();
    keypair.second.destroy();
@@ -1433,9 +1434,9 @@ Test::Result test_pkcs11_hmac_drbg() {
    HMAC_DRBG drbg(MessageAuthenticationCode::create("HMAC(SHA-512)"), p11_rng);
    // result.test_success("HMAC_DRBG(HMAC(SHA512)) instantiated with PKCS11_RNG");
 
-   result.test_eq("HMAC_DRBG is not seeded yet.", drbg.is_seeded(), false);
+   result.test_is_false("HMAC_DRBG is not seeded yet.", drbg.is_seeded());
    const secure_vector<uint8_t> rnd = drbg.random_vec(64);
-   result.test_eq("HMAC_DRBG is seeded now", drbg.is_seeded(), true);
+   result.test_is_true("HMAC_DRBG is seeded now", drbg.is_seeded());
 
    std::string personalization_string = "Botan PKCS#11 Tests";
    std::vector<uint8_t> personalization_data(personalization_string.begin(), personalization_string.end());
@@ -1563,7 +1564,7 @@ Test::Result test_x509_import() {
    result.test_success("X509 certificate imported");
 
    const PKCS11_X509_Certificate pkcs11_cert2(test_session.session(), pkcs11_cert.handle());
-   result.test_eq("X509 certificate by handle", pkcs11_cert == pkcs11_cert2, true);
+   result.test_is_true("X509 certificate by handle", pkcs11_cert == pkcs11_cert2);
 
    pkcs11_cert.destroy();
       #endif

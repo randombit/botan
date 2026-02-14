@@ -23,7 +23,7 @@ class URI_Tests final : public Test {
          const Botan::URI uri(Botan::URI::Type::Domain, "localhost", 9000);
          result.confirm("type", uri.type() == Botan::URI::Type::Domain);
          result.test_eq("host", uri.host(), "localhost");
-         result.test_eq("post", size_t(uri.port()), 9000);
+         result.test_sz_eq("post", size_t(uri.port()), 9000);
          return result;
       }
 
@@ -59,7 +59,7 @@ class URI_Tests final : public Test {
          for(const auto& t : tests) {
             auto test_URI = [&result](const Botan::URI& uri, const std::string& host, const uint16_t port) {
                result.test_eq("host", uri.host(), host);
-               result.test_int_eq("port", uri.port(), port);
+               result.test_u16_eq("port", uri.port(), port);
             };
 
             if(t.type != Botan::URI::Type::IPv4) {

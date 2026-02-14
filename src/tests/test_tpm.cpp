@@ -46,7 +46,7 @@ class TPM_Tests final : public Test {
             std::vector<uint8_t> blob = key.export_blob();
 
             // Has to be at least as large as the key
-            result.test_gte("Blob size is reasonable", blob.size(), 1024 / 8);
+            result.test_sz_gte("Blob size is reasonable", blob.size(), 1024 / 8);
 
             std::vector<std::string> registered_keys = Botan::TPM_PrivateKey::registered_keys(*ctx);
 
@@ -74,16 +74,16 @@ class UUID_Tests final : public Test {
 
          const Botan::UUID empty_uuid;
 
-         result.test_eq("Uninitialized UUID not valid", empty_uuid.is_valid(), false);
+         result.test_is_false("Uninitialized UUID not valid", empty_uuid.is_valid());
 
          const Botan::UUID random_uuid(this->rng());
-         result.test_eq("Random UUID is valid", empty_uuid.is_valid(), false);
+         result.test_is_false("Random UUID is valid", empty_uuid.is_valid());
 
          const Botan::UUID binary_copy(random_uuid.binary_value());
          result.confirm("UUID copied by binary equals original", random_uuid == binary_copy);
 
          std::string uuid_str = random_uuid.to_string();
-         result.test_eq("UUID string in expected format", uuid_str.size(), 36);
+         result.test_sz_eq("UUID string in expected format", uuid_str.size(), 36);
 
          const Botan::UUID string_copy(random_uuid.to_string());
          result.confirm("UUID copied by string equals original", random_uuid == string_copy);

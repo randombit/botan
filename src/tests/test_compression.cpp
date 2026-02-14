@@ -95,20 +95,21 @@ class Compression_Tests final : public Test {
                const size_t c1_s = run_compression(result, 1, *c, *d, short_text);
                const size_t c9_s = run_compression(result, 9, *c, *d, short_text);
 
-               result.test_gte("Empty input L1 compresses to non-empty output", c1_e, 1);
-               result.test_gte("Empty input L9 compresses to non-empty output", c9_e, 1);
+               result.test_sz_gte("Empty input L1 compresses to non-empty output", c1_e, 1);
+               result.test_sz_gte("Empty input L9 compresses to non-empty output", c9_e, 1);
 
                // We assume that Level 9 is better than Level 1, but this is not
                // guaranteed (see GitHub #3896). Hence, we assert that level 9
                // it is at most 10% worse than level 1.
-               result.test_gte("Level 9 compresses empty at least as well as level 1", c1_e + (c1_e / 10), c9_e);
-               result.test_gte("Level 9 compresses zeros at least as well as level 1", c1_z + (c1_z / 10), c9_z);
-               result.test_gte("Level 9 compresses random at least as well as level 1", c1_r + (c1_r / 10), c9_r);
-               result.test_gte("Level 9 compresses text at least as well as level 1", c1_t + (c1_t / 10), c9_t);
-               result.test_gte("Level 9 compresses short text at least as well as level 1", c1_s + (c1_s / 10), c9_s);
+               result.test_sz_gte("Level 9 compresses empty at least as well as level 1", c1_e + (c1_e / 10), c9_e);
+               result.test_sz_gte("Level 9 compresses zeros at least as well as level 1", c1_z + (c1_z / 10), c9_z);
+               result.test_sz_gte("Level 9 compresses random at least as well as level 1", c1_r + (c1_r / 10), c9_r);
+               result.test_sz_gte("Level 9 compresses text at least as well as level 1", c1_t + (c1_t / 10), c9_t);
+               result.test_sz_gte(
+                  "Level 9 compresses short text at least as well as level 1", c1_s + (c1_s / 10), c9_s);
 
-               result.test_lt("Zeros compresses much better than text", c1_z / 8, c1_t);
-               result.test_lt("Text compresses much better than random", c1_t / 2, c1_r);
+               result.test_sz_lt("Zeros compresses much better than text", c1_z / 8, c1_t);
+               result.test_sz_lt("Text compresses much better than random", c1_t / 2, c1_r);
 
                result.end_timer();
 

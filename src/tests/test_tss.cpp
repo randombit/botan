@@ -112,7 +112,7 @@ class TSS_Generation_Tests final : public Text_Based_Test {
          std::vector<Botan::RTSS_Share> shares =
             Botan::RTSS_Share::split(M, N, input.data(), static_cast<uint16_t>(input.size()), id, hash, fixed_rng);
 
-         result.test_eq("Expected number of shares", shares.size(), N);
+         result.test_sz_eq("Expected number of shares", shares.size(), N);
 
          for(size_t i = 0; i != N; ++i) {
             result.test_eq("Expected share", shares[i].data(), expected_shares[i]);

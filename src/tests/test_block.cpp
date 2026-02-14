@@ -57,11 +57,11 @@ class Block_Cipher_Tests final : public Text_Based_Test {
             const std::string provider(cipher->provider());
             result.test_is_nonempty("provider", provider);
             result.test_eq(provider, cipher->name(), algo);
-            result.test_gte(provider, cipher->parallelism(), 1);
-            result.test_gte(provider, cipher->block_size(), 8);
-            result.test_gte(provider, cipher->parallel_bytes(), cipher->block_size() * cipher->parallelism());
+            result.test_sz_gte(provider, cipher->parallelism(), 1);
+            result.test_sz_gte(provider, cipher->block_size(), 8);
+            result.test_sz_gte(provider, cipher->parallel_bytes(), cipher->block_size() * cipher->parallelism());
 
-            result.test_eq("no key set", cipher->has_keying_material(), false);
+            result.test_is_false("no key set", cipher->has_keying_material());
 
             // Test that trying to encrypt or decrypt with no key set throws Botan::Invalid_State
             try {
@@ -97,7 +97,7 @@ class Block_Cipher_Tests final : public Text_Based_Test {
             }
 
             cipher->set_key(key);
-            result.test_eq("key set", cipher->has_keying_material(), true);
+            result.test_is_true("key set", cipher->has_keying_material());
 
             if(!tweak.empty()) {
                Botan::Tweakable_Block_Cipher* tbc = dynamic_cast<Botan::Tweakable_Block_Cipher*>(cipher.get());
@@ -158,9 +158,9 @@ class Block_Cipher_Tests final : public Text_Based_Test {
             result.test_eq(
                provider.c_str(), "decrypt misaligned", buf.data() + 1, buf.size() - 1, input.data(), input.size());
 
-            result.test_eq("key set", cipher->has_keying_material(), true);
+            result.test_is_true("key set", cipher->has_keying_material());
             cipher->clear();
-            result.test_eq("key set", cipher->has_keying_material(), false);
+            result.test_is_false("key set", cipher->has_keying_material());
 
             try {
                std::vector<uint8_t> block(cipher->block_size());

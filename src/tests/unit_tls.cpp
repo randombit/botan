@@ -419,7 +419,7 @@ class TLS_Handshake_Test final {
                   if(unknown_ext != nullptr) {
                      const std::vector<uint8_t> val = unknown_ext->value();
 
-                     if(m_results.test_eq("Expected size for test extn", val.size(), 7)) {
+                     if(m_results.test_sz_eq("Expected size for test extn", val.size(), 7)) {
                         if(which_side == Botan::TLS::Connection_Side::Client) {
                            m_results.test_eq("Expected extension value", val, "06636C69656E74");
                         } else {
@@ -450,7 +450,7 @@ class TLS_Handshake_Test final {
             }
 
             std::string tls_server_choose_app_protocol(const std::vector<std::string>& protos) override {
-               m_results.test_eq("ALPN protocol count", protos.size(), 2);
+               m_results.test_sz_eq("ALPN protocol count", protos.size(), 2);
                m_results.test_eq("ALPN protocol 1", protos[0], "test/1");
                m_results.test_eq("ALPN protocol 2", protos[1], "test/2");
                return "test/3";
@@ -638,7 +638,7 @@ void TLS_Handshake_Test::go() {
 
          try {
             const size_t needed = m_server->received_data(input.data(), input.size());
-            m_results.test_eq("full packet received", needed, 0);
+            m_results.test_sz_eq("full packet received", needed, 0);
          } catch(...) { /* ignore exceptions */
          }
 
@@ -651,7 +651,7 @@ void TLS_Handshake_Test::go() {
 
          try {
             const size_t needed = client->received_data(input.data(), input.size());
-            m_results.test_eq("full packet received", needed, 0);
+            m_results.test_sz_eq("full packet received", needed, 0);
          } catch(...) { /* ignore exceptions */
          }
 
@@ -673,17 +673,17 @@ void TLS_Handshake_Test::go() {
       if(m_server->is_active()) {
          const std::vector<Botan::X509_Certificate> certs = m_server->peer_cert_chain();
          if(m_client_auth) {
-            m_results.test_eq("got client certs", certs.size(), 2);
+            m_results.test_sz_eq("got client certs", certs.size(), 2);
 
             const std::vector<Botan::X509_DN> acceptable_CAs = m_creds->get_acceptable_cas();
 
-            m_results.test_eq("client got CA list", acceptable_CAs.size(), 2);  // RSA + ECDSA
+            m_results.test_sz_eq("client got CA list", acceptable_CAs.size(), 2);  // RSA + ECDSA
 
             for(const Botan::X509_DN& dn : acceptable_CAs) {
                m_results.test_eq("Expected CA country field", dn.get_first_attribute("C"), "VT");
             }
          } else {
-            m_results.test_eq("no client certs", certs.size(), 0);
+            m_results.test_sz_eq("no client certs", certs.size(), 0);
          }
       }
 

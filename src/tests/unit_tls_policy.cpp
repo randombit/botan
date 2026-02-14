@@ -153,7 +153,7 @@ class TLS_Policy_Unit_Tests final : public Test {
          Test::Result result("TLS Policy key share offering");
 
          const Botan::TLS::Policy default_policy;
-         result.test_eq(
+         result.test_sz_eq(
             "default TLS Policy offers exactly one", default_policy.key_exchange_groups_to_offer().size(), 1);
          result.confirm(
             "default TLS Policy offers preferred group",
@@ -161,7 +161,8 @@ class TLS_Policy_Unit_Tests final : public Test {
 
          using TP = Botan::TLS::Text_Policy;
 
-         result.test_eq("default behaviour from text policy (size)", TP("").key_exchange_groups_to_offer().size(), 1);
+         result.test_sz_eq(
+            "default behaviour from text policy (size)", TP("").key_exchange_groups_to_offer().size(), 1);
          result.confirm("default behaviour from text policy (preferred)",
                         TP("").key_exchange_groups().front() == TP("").key_exchange_groups_to_offer().front());
 
@@ -169,7 +170,7 @@ class TLS_Policy_Unit_Tests final : public Test {
                         TP("key_exchange_groups_to_offer = none").key_exchange_groups_to_offer().empty());
 
          const std::string two_groups = "key_exchange_groups_to_offer = secp256r1 ffdhe/ietf/4096";
-         result.test_eq("list of offerings (size)", TP(two_groups).key_exchange_groups_to_offer().size(), 2);
+         result.test_sz_eq("list of offerings (size)", TP(two_groups).key_exchange_groups_to_offer().size(), 2);
          result.confirm("list of offerings (0)",
                         TP(two_groups).key_exchange_groups_to_offer()[0] == Botan::TLS::Group_Params::SECP256R1);
          result.confirm("list of offerings (1)",

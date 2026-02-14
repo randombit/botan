@@ -150,7 +150,7 @@ class Hash_Function_Tests final : public Text_Based_Test {
 
             if(hash->hash_block_size() > 0) {
                // GOST-34.11 uses 32 byte block
-               result.test_gte("If hash_block_size is set, it is large", hash->hash_block_size(), 32);
+               result.test_sz_gte("If hash_block_size is set, it is large", hash->hash_block_size(), 32);
             }
          }
 

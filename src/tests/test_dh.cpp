@@ -104,7 +104,7 @@ class DH_Invalid_Key_Tests final : public Text_Based_Test {
          const Botan::DL_Group group(p, q, g);
 
          auto key = std::make_unique<Botan::DH_PublicKey>(group, pubkey);
-         result.test_eq("public key fails check", key->check_key(this->rng(), false), false);
+         result.test_is_false("public key fails check", key->check_key(this->rng(), false));
          return result;
       }
 };

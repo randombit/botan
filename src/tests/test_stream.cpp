@@ -103,9 +103,9 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
                continue;
             }
 
-            result.test_eq("key not set", cipher->has_keying_material(), false);
+            result.test_is_false("key not set", cipher->has_keying_material());
             cipher->set_key(key);
-            result.test_eq("key set", cipher->has_keying_material(), true);
+            result.test_is_true("key set", cipher->has_keying_material());
 
             /*
             Test invalid nonce sizes. this assumes no implemented cipher supports a nonce of 65000
@@ -194,9 +194,9 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
                result.test_eq(provider, "write_keystream", buf, expected);
             }
 
-            result.test_eq("key set", cipher->has_keying_material(), true);
+            result.test_is_true("key set", cipher->has_keying_material());
             cipher->clear();
-            result.test_eq("key not set", cipher->has_keying_material(), false);
+            result.test_is_false("key not set", cipher->has_keying_material());
 
             try {
                std::vector<uint8_t> buf(128);

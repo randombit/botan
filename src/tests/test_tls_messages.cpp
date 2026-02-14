@@ -134,9 +134,10 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
                } else if(algo == "alert") {
                   const Botan::secure_vector<uint8_t> sb(buffer.begin(), buffer.end());
                   const Botan::TLS::Alert message(sb);
-                  result.test_lt("Alert type vectors result to UNKNOWN_CA or ACCESS_DENIED, which is shorter than 15",
-                                 message.type_string().size(),
-                                 15);
+                  result.test_sz_lt(
+                     "Alert type vectors result to UNKNOWN_CA or ACCESS_DENIED, which is shorter than 15",
+                     message.type_string().size(),
+                     15);
                } else if(algo == "cert_status") {
                   const Botan::TLS::Certificate_Status message(buffer, Botan::TLS::Connection_Side::Server);
 
@@ -145,7 +146,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
                   const std::vector<std::string> CNs = resp.signer_name().get_attribute("CN");
 
                   // This is not required by OCSP protocol, we are just using it as a test here
-                  if(result.test_eq("OCSP response has signer name", CNs.size(), 1)) {
+                  if(result.test_sz_eq("OCSP response has signer name", CNs.size(), 1)) {
                      result.test_eq("Expected name", CNs[0], expected_name);
                   }
                } else {

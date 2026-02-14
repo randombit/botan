@@ -45,10 +45,10 @@ Test::Result thread_pool() {
             futures[i].get();
             result.test_failure("Expected future to throw");
          } catch(size_t x) {
-            result.test_eq("Expected thrown value", x, i);
+            result.test_sz_eq("Expected thrown value", x, i);
          }
       } else {
-         result.test_eq("Expected return value", futures[i].get(), i);
+         result.test_sz_eq("Expected return value", futures[i].get(), i);
       }
    }
 

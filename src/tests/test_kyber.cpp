@@ -53,10 +53,10 @@ class KYBER_Tests final : public Test {
          const Botan::Kyber_PrivateKey priv_key(*rng, mode);
          const auto pub_key = priv_key.public_key();
 
-         result.test_eq("estimated strength private", priv_key.estimated_strength(), strength);
-         result.test_eq("estimated strength public", pub_key->estimated_strength(), strength);
-         result.test_eq("canonical parameter set identifier", priv_key.key_length(), psid);
-         result.test_eq("canonical parameter set identifier", pub_key->key_length(), psid);
+         result.test_sz_eq("estimated strength private", priv_key.estimated_strength(), strength);
+         result.test_sz_eq("estimated strength public", pub_key->estimated_strength(), strength);
+         result.test_sz_eq("canonical parameter set identifier", priv_key.key_length(), psid);
+         result.test_sz_eq("canonical parameter set identifier", pub_key->key_length(), psid);
 
          // Serialize
          const auto priv_key_bits = priv_key.private_key_bits();

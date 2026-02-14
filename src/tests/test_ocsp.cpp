@@ -60,17 +60,17 @@ class OCSP_Tests final : public Test {
          try {
             const Botan::OCSP::Response resp1(Test::read_binary_data_file("x509/ocsp/resp1.der"));
             const auto& certs1 = resp1.certificates();
-            if(result.test_eq("Expected count of certificates", certs1.size(), 1)) {
+            if(result.test_sz_eq("Expected count of certificates", certs1.size(), 1)) {
                const auto& cert = certs1.front();
                const Botan::X509_DN expected_dn(
                   {std::make_pair("X520.CommonName", "Symantec Class 3 EV SSL CA - G3 OCSP Responder")});
                const bool matches = cert.subject_dn() == expected_dn;
-               result.test_eq("CN matches expected", matches, true);
+               result.test_is_true("CN matches expected", matches);
             }
 
             const Botan::OCSP::Response resp2(Test::read_binary_data_file("x509/ocsp/resp2.der"));
             const auto& certs2 = resp2.certificates();
-            result.test_eq("Expect no certificates", certs2.size(), 0);
+            result.test_sz_eq("Expect no certificates", certs2.size(), 0);
          } catch(Botan::Exception& e) {
             result.test_failure("Parsing failed", e.what());
          }
@@ -119,7 +119,7 @@ class OCSP_Tests final : public Test {
          auto bdr_ca = load_test_X509_cert("x509/ocsp/bdr-int.pem");
 
          // The response in bdr_ocsp contains two certificates
-         if(result.test_eq("both certificates found", bdr_ocsp.certificates().size(), 2)) {
+         if(result.test_sz_eq("both certificates found", bdr_ocsp.certificates().size(), 2)) {
             result.test_eq("first cert in response",
                            bdr_ocsp.certificates()[0].subject_info("X520.CommonName").at(0),
                            "D-TRUST OCSP 4 2-2 EV 2016");
@@ -182,8 +182,8 @@ class OCSP_Tests final : public Test {
             const auto ocsp_status = Botan::PKIX::check_ocsp(
                cert_path, {ocsp}, {&certstore}, valid_time, Botan::Path_Validation_Restrictions());
 
-            return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
-                   result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
+            return result.test_sz_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
+                   result.test_sz_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
                    result.confirm(std::string("Status: '") + Botan::to_string(expected) + "'",
                                   ocsp_status[0].contains(expected));
          };
@@ -222,8 +222,8 @@ class OCSP_Tests final : public Test {
             const Botan::Path_Validation_Restrictions pvr(false, 110, false, max_age);
             const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, {ocsp}, {&certstore}, valid_time, pvr);
 
-            return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
-                   result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
+            return result.test_sz_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
+                   result.test_sz_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
                    result.confirm(std::string("Status: '") + Botan::to_string(expected) + "'",
                                   ocsp_status[0].contains(expected));
          };
@@ -262,8 +262,8 @@ class OCSP_Tests final : public Test {
             const Botan::Path_Validation_Restrictions pvr(false, 110, false, max_age);
             const auto ocsp_status = Botan::PKIX::check_ocsp(cert_path, {ocsp}, {&certstore}, valid_time, pvr);
 
-            return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
-                   result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
+            return result.test_sz_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
+                   result.test_sz_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
                    result.confirm(std::string("Status: '") + Botan::to_string(expected) + "'",
                                   ocsp_status[0].contains(expected));
          };
@@ -297,8 +297,8 @@ class OCSP_Tests final : public Test {
             const auto ocsp_status = Botan::PKIX::check_ocsp(
                cert_path, {ocsp}, {&certstore}, valid_time, Botan::Path_Validation_Restrictions());
 
-            return result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
-                   result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
+            return result.test_sz_eq("Expected size of ocsp_status", ocsp_status.size(), 1) &&
+                   result.test_sz_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1) &&
                    result.confirm(std::string("Status: '") + Botan::to_string(expected) + "'",
                                   ocsp_status[0].contains(expected));
          };
@@ -332,9 +332,9 @@ class OCSP_Tests final : public Test {
          const auto ocsp_status =
             Botan::PKIX::check_ocsp(cert_path, {ocsp}, {&certstore}, valid_time, Botan::Path_Validation_Restrictions());
 
-         if(result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1)) {
-            if(result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1)) {
-               result.test_gt(
+         if(result.test_sz_eq("Expected size of ocsp_status", ocsp_status.size(), 1)) {
+            if(result.test_sz_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1)) {
+               result.test_sz_gt(
                   "Status warning", ocsp_status[0].count(Botan::Certificate_Status_Code::OCSP_NO_REVOCATION_URL), 0);
             }
          }
@@ -359,8 +359,8 @@ class OCSP_Tests final : public Test {
          auto ocsp_status = Botan::PKIX::check_ocsp_online(
             cert_path, {&certstore}, now, ocsp_timeout, Botan::Path_Validation_Restrictions());
 
-         if(result.test_eq("Expected size of ocsp_status", ocsp_status.size(), 1)) {
-            if(result.test_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1)) {
+         if(result.test_sz_eq("Expected size of ocsp_status", ocsp_status.size(), 1)) {
+            if(result.test_sz_eq("Expected size of ocsp_status[0]", ocsp_status[0].size(), 1)) {
                const bool status_good = ocsp_status[0].contains(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD);
                const bool server_not_found =
                   ocsp_status[0].contains(Botan::Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE);

@@ -205,13 +205,13 @@ class SIMD_4X32_Tests final : public Test {
 
             simd.store_be(mem_be);
 
-            result.test_int_eq(
+            result.test_u32_eq(
                "SIMD_4x32 " + op + " elem0 BE", Botan::make_uint32(mem_be[0], mem_be[1], mem_be[2], mem_be[3]), exp0);
-            result.test_int_eq(
+            result.test_u32_eq(
                "SIMD_4x32 " + op + " elem1 BE", Botan::make_uint32(mem_be[4], mem_be[5], mem_be[6], mem_be[7]), exp1);
-            result.test_int_eq(
+            result.test_u32_eq(
                "SIMD_4x32 " + op + " elem2 BE", Botan::make_uint32(mem_be[8], mem_be[9], mem_be[10], mem_be[11]), exp2);
-            result.test_int_eq("SIMD_4x32 " + op + " elem3 BE",
+            result.test_u32_eq("SIMD_4x32 " + op + " elem3 BE",
                                Botan::make_uint32(mem_be[12], mem_be[13], mem_be[14], mem_be[15]),
                                exp3);
 
@@ -222,13 +222,13 @@ class SIMD_4X32_Tests final : public Test {
 
             simd.store_le(mem_le);
 
-            result.test_int_eq(
+            result.test_u32_eq(
                "SIMD_4x32 " + op + " elem0 LE", Botan::make_uint32(mem_le[3], mem_le[2], mem_le[1], mem_le[0]), exp0);
-            result.test_int_eq(
+            result.test_u32_eq(
                "SIMD_4x32 " + op + " elem1 LE", Botan::make_uint32(mem_le[7], mem_le[6], mem_le[5], mem_le[4]), exp1);
-            result.test_int_eq(
+            result.test_u32_eq(
                "SIMD_4x32 " + op + " elem2 LE", Botan::make_uint32(mem_le[11], mem_le[10], mem_le[9], mem_le[8]), exp2);
-            result.test_int_eq("SIMD_4x32 " + op + " elem3 LE",
+            result.test_u32_eq("SIMD_4x32 " + op + " elem3 LE",
                                Botan::make_uint32(mem_le[15], mem_le[14], mem_le[13], mem_le[12]),
                                exp3);
 
@@ -375,12 +375,12 @@ class SIMD_2X64_Tests final : public Test {
 
             simd.store_be(mem_be);
 
-            result.test_int_eq(
+            result.test_u64_eq(
                "SIMD_2x64 " + op + " elem0 BE",
                Botan::make_uint64(
                   mem_be[0], mem_be[1], mem_be[2], mem_be[3], mem_be[4], mem_be[5], mem_be[6], mem_be[7]),
                exp0);
-            result.test_int_eq(
+            result.test_u64_eq(
                "SIMD_2x64 " + op + " elem1 BE",
                Botan::make_uint64(
                   mem_be[8], mem_be[9], mem_be[10], mem_be[11], mem_be[12], mem_be[13], mem_be[14], mem_be[15]),
@@ -393,12 +393,12 @@ class SIMD_2X64_Tests final : public Test {
 
             simd.store_le(mem_le);
 
-            result.test_int_eq(
+            result.test_u64_eq(
                "SIMD_2x64 " + op + " elem0 LE",
                Botan::make_uint64(
                   mem_le[7], mem_le[6], mem_le[5], mem_le[4], mem_le[3], mem_le[2], mem_le[1], mem_le[0]),
                exp0);
-            result.test_int_eq(
+            result.test_u64_eq(
                "SIMD_2x64 " + op + " elem1 LE",
                Botan::make_uint64(
                   mem_le[15], mem_le[14], mem_le[13], mem_le[12], mem_le[11], mem_le[10], mem_le[9], mem_le[8]),

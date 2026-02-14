@@ -32,7 +32,7 @@ Test::Result open_certificate_store() {
       result.start_timer();
       const Botan::Flatfile_Certificate_Store unused(get_valid_ca_bundle_path());
       result.end_timer();
-      result.test_gt("found some certificates", unused.all_subjects().size(), 0);
+      result.test_sz_gt("found some certificates", unused.all_subjects().size(), 0);
    } catch(std::exception& e) {
       result.test_failure(e.what());
    }
@@ -53,7 +53,7 @@ Test::Result find_certificate_by_pubkey_sha1() {
 
       if(result.test_not_nullopt("found certificate", cert)) {
          auto cns = cert->subject_dn().get_attribute("CN");
-         result.test_int_eq("exactly one CN", cns.size(), 1);
+         result.test_sz_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), get_subject_cn());
       }
    } catch(std::exception& e) {
@@ -81,7 +81,7 @@ Test::Result find_cert_by_subject_dn() {
 
       if(result.test_not_nullopt("found certificate", cert)) {
          auto cns = cert->subject_dn().get_attribute("CN");
-         result.test_int_eq("exactly one CN", cns.size(), 1);
+         result.test_sz_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), get_subject_cn());
       }
    } catch(std::exception& e) {
@@ -105,7 +105,7 @@ Test::Result find_cert_by_utf8_subject_dn() {
 
       if(result.test_not_nullopt("found certificate", cert)) {
          auto cns = cert->subject_dn().get_attribute("CN");
-         result.test_is_eq("exactly one CN", cns.size(), size_t(1));
+         result.test_sz_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), "D-TRUST Root Class 3 CA 2 EV 2009");
       }
    } catch(std::exception& e) {
@@ -128,7 +128,7 @@ Test::Result find_cert_by_subject_dn_and_key_id() {
 
       if(result.test_not_nullopt("found certificate", cert)) {
          auto cns = cert->subject_dn().get_attribute("CN");
-         result.test_int_eq("exactly one CN", cns.size(), 1);
+         result.test_sz_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), get_subject_cn());
       }
    } catch(std::exception& e) {
@@ -150,9 +150,9 @@ Test::Result find_certs_by_subject_dn_and_key_id() {
       result.end_timer();
 
       if(result.confirm("result not empty", !certs.empty()) &&
-         result.test_eq("exactly one certificate", certs.size(), 1)) {
+         result.test_sz_eq("exactly one certificate", certs.size(), 1)) {
          auto cns = certs.front().subject_dn().get_attribute("CN");
-         result.test_int_eq("exactly one CN", cns.size(), 1);
+         result.test_sz_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), get_subject_cn());
       }
    } catch(std::exception& e) {
@@ -237,7 +237,7 @@ Test::Result find_cert_by_issuer_dn_and_serial_number() {
 
       if(result.test_not_nullopt("found certificate", cert)) {
          auto cns = cert->subject_dn().get_attribute("CN");
-         result.test_int_eq("exactly one CN", cns.size(), 1);
+         result.test_sz_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), get_subject_cn());
          result.test_eq("serial number", cert->serial_number(), get_serial_number());
       }

@@ -257,30 +257,30 @@ class PGP_S2K_Iter_Test final : public Test {
          // The maximum representable iteration count
          const size_t max_iter = 65011712;
 
-         result.test_eq("Encoding of large value accepted", Botan::RFC4880_encode_count(max_iter * 2), size_t(255));
-         result.test_eq("Encoding of small value accepted", Botan::RFC4880_encode_count(0), size_t(0));
+         result.test_sz_eq("Encoding of large value accepted", Botan::RFC4880_encode_count(max_iter * 2), size_t(255));
+         result.test_sz_eq("Encoding of small value accepted", Botan::RFC4880_encode_count(0), size_t(0));
 
          for(size_t c = 0; c != 256; ++c) {
             const size_t dec = Botan::RFC4880_decode_count(static_cast<uint8_t>(c));
             const size_t comp_dec = (16 + (c & 0x0F)) << ((c >> 4) + 6);
-            result.test_eq("Decoded value matches PGP formula", dec, comp_dec);
+            result.test_sz_eq("Decoded value matches PGP formula", dec, comp_dec);
 
             const size_t enc = Botan::RFC4880_encode_count(comp_dec);
-            result.test_eq("Encoded value matches PGP formula", enc, c);
+            result.test_sz_eq("Encoded value matches PGP formula", enc, c);
          }
 
          uint8_t last_enc = 0;
 
          for(size_t i = 0; i <= max_iter; i += 64) {
             const uint8_t enc = Botan::RFC4880_encode_count(i);
-            result.test_lte("Encoded value non-decreasing", last_enc, enc);
+            result.test_sz_lte("Encoded value non-decreasing", last_enc, enc);
 
             /*
             The iteration count as encoded may not be exactly the
             value requested, but should never be less
             */
             const size_t dec = Botan::RFC4880_decode_count(enc);
-            result.test_gte("Decoded value is >= requested", dec, i);
+            result.test_sz_gte("Decoded value is >= requested", dec, i);
 
             last_enc = enc;
          }
