@@ -1,6 +1,7 @@
 /*
  * XMSS Index Registry
  * (C) 2016 Matthias Gierlings
+ * (C) 2026 Kagan Can Sit
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -8,11 +9,12 @@
 #ifndef BOTAN_XMSS_INDEX_REGISTRY_H_
 #define BOTAN_XMSS_INDEX_REGISTRY_H_
 
+#include <atomic>
+#include <memory>
 #include <string>
 
 #include <botan/mutex.h>
 #include <botan/secmem.h>
-#include <botan/internal/atomic.h>
 
 namespace Botan {
 
@@ -49,8 +51,8 @@ class XMSS_Index_Registry final {
        *
        * @return last unused leaf index for private_key.
        **/
-      std::shared_ptr<Atomic<size_t>> get(const secure_vector<uint8_t>& private_seed,
-                                          const secure_vector<uint8_t>& prf);
+      std::shared_ptr<std::atomic<size_t>> get(const secure_vector<uint8_t>& private_seed,
+                                               const secure_vector<uint8_t>& prf);
 
    private:
       XMSS_Index_Registry() = default;
@@ -91,7 +93,7 @@ class XMSS_Index_Registry final {
       size_t add(uint64_t id, size_t last_unused = 0);
 
       std::vector<uint64_t> m_key_ids;
-      std::vector<std::shared_ptr<Atomic<size_t>>> m_leaf_indices;
+      std::vector<std::shared_ptr<std::atomic<size_t>>> m_leaf_indices;
       mutex_type m_mutex;
 };
 

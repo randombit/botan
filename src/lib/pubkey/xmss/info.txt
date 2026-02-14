@@ -12,7 +12,6 @@ xmss_parameters.h
 </header:public>
 
 <header:internal>
-atomic.h
 xmss_address.h
 xmss_common_ops.h
 xmss_hash.h

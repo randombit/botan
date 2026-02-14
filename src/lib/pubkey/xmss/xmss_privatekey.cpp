@@ -151,7 +151,7 @@ class XMSS_PrivateKey_Internal {
 
       XMSS_Index_Registry& index_registry() { return m_index_reg; }
 
-      std::shared_ptr<Atomic<size_t>> recover_global_leaf_index() const {
+      std::shared_ptr<std::atomic<size_t>> recover_global_leaf_index() const {
          BOTAN_ASSERT(
             m_private_seed.size() == m_xmss_params.element_size() && m_prf.size() == m_xmss_params.element_size(),
             "Trying to retrieve index for partially initialized key");
@@ -162,7 +162,7 @@ class XMSS_PrivateKey_Internal {
          if(idx >= (1ULL << m_xmss_params.tree_height())) {
             throw Decoding_Error("XMSS private key leaf index out of bounds");
          } else {
-            std::atomic<size_t>& index = static_cast<std::atomic<size_t>&>(*recover_global_leaf_index());
+            auto& index = *recover_global_leaf_index();
             size_t current = 0;
 
             // NOLINTNEXTLINE(*-avoid-do-while)
@@ -176,17 +176,17 @@ class XMSS_PrivateKey_Internal {
       }
 
       size_t reserve_unused_leaf_index() {
-         const size_t idx = (static_cast<std::atomic<size_t>&>(*recover_global_leaf_index())).fetch_add(1);
+         const size_t idx = recover_global_leaf_index()->fetch_add(1);
          if(idx >= m_xmss_params.total_number_of_signatures()) {
             throw Decoding_Error("XMSS private key, one time signatures exhausted");
          }
          return idx;
       }
 
-      size_t unused_leaf_index() const { return *recover_global_leaf_index(); }
+      size_t unused_leaf_index() const { return recover_global_leaf_index()->load(); }
 
       size_t remaining_signatures() const {
-         return m_xmss_params.total_number_of_signatures() - *recover_global_leaf_index();
+         return m_xmss_params.total_number_of_signatures() - recover_global_leaf_index()->load();
       }
 
    private:
