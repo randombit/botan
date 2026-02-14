@@ -489,21 +489,21 @@ class Test {
             };
 
          public:
-            bool test_throws(std::string_view what, const std::function<void()>& fn);
+            bool test_throws(std::string_view what, std::function<void()> fn);
 
-            bool test_throws(std::string_view what, std::string_view expected, const std::function<void()>& fn);
+            bool test_throws(std::string_view what, std::string_view expected, std::function<void()> fn);
 
-            bool test_no_throw(std::string_view what, const std::function<void()>& fn);
+            bool test_no_throw(std::string_view what, std::function<void()> fn);
 
             template <typename ExceptionT>
-            bool test_throws(std::string_view what, const std::function<void()>& fn) {
-               return ThrowExpectations(fn).expect_exception_type<ExceptionT>().check(what, *this);
+            bool test_throws(std::string_view what, std::function<void()> fn) {
+               return ThrowExpectations(std::move(fn)).expect_exception_type<ExceptionT>().check(what, *this);
             }
 
             template <typename ExceptionT>
-            bool test_throws(std::string_view what, std::string_view expected, const std::function<void()>& fn) {
+            bool test_throws(std::string_view what, std::string_view expected, std::function<void()> fn) {
                // clang-format off
-               return ThrowExpectations(fn).expect_exception_type<ExceptionT>().expect_message(expected).check(what, *this);
+               return ThrowExpectations(std::move(fn)).expect_exception_type<ExceptionT>().expect_message(expected).check(what, *this);
                // clang-format on
             }
 
