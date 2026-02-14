@@ -9,6 +9,8 @@
 #define BOTAN_TEST_REPORTER_H_
 
 #include "../tests.h"
+
+#include <botan/assert.h>
 #include <chrono>
 #include <map>
 

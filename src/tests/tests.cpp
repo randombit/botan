@@ -132,6 +132,26 @@ void Test::Result::require(std::string_view what, bool expr, bool expected) {
    }
 }
 
+Test::Result::ThrowExpectations::~ThrowExpectations() {
+   BOTAN_ASSERT_NOMSG(m_consumed);
+}
+
+void Test::Result::ThrowExpectations::assert_that_success_is_not_expected() const {
+   BOTAN_ASSERT_NOMSG(!m_expect_success);
+}
+
+Test::Result::ThrowExpectations& Test::Result::ThrowExpectations::expect_success() {
+   BOTAN_ASSERT_NOMSG(!m_expected_message && !m_expected_exception_check_fn);
+   m_expect_success = true;
+   return *this;
+}
+
+Test::Result::ThrowExpectations& Test::Result::ThrowExpectations::expect_message(std::string_view message) {
+   assert_that_success_is_not_expected();
+   m_expected_message = message;
+   return *this;
+}
+
 bool Test::Result::ThrowExpectations::check(std::string_view test_name, Test::Result& result) {
    m_consumed = true;
 

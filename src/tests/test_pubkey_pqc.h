@@ -61,36 +61,32 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
       virtual bool is_available(const std::string& params) const = 0;
 
       /// Callback to test the RNG's state after key generation. If not overridden checks that the RNG is empty.
-      virtual void inspect_rng_after_keygen(const std::string& params,
+      virtual void inspect_rng_after_keygen(const std::string& /*params*/,
                                             const Fixed_Output_RNG& rng_keygen,
                                             Test::Result& result) const {
-         BOTAN_UNUSED(params);
          result.confirm("All prepared random bits used for key generation", rng_keygen.empty());
       }
 
       /// Callback to test the RNG's state after encapsulation. If not overridden checks that the RNG is empty.
-      virtual void inspect_rng_after_encaps(const std::string& params,
+      virtual void inspect_rng_after_encaps(const std::string& /*params*/,
                                             const Fixed_Output_RNG& rng_encaps,
                                             Test::Result& result) const {
-         BOTAN_UNUSED(params);
          result.confirm("All prepared random bits used for encapsulation", rng_encaps.empty());
       }
 
    private:
-      bool skip_this_test(const std::string& params, const VarMap& /*vars*/) final {
+      bool skip_this_test([[maybe_unused]] const std::string& params, const VarMap& /*vars*/) final {
    #if !defined(BOTAN_HAS_AES)
-         BOTAN_UNUSED(params);
          return true;
    #else
          return !is_available(params);
    #endif
       }
 
-      std::unique_ptr<Botan::RandomNumberGenerator> create_drbg(std::span<const uint8_t> seed) {
+      std::unique_ptr<Botan::RandomNumberGenerator> create_drbg([[maybe_unused]] std::span<const uint8_t> seed) {
    #if defined(BOTAN_HAS_AES)
          return std::make_unique<CTR_DRBG_AES256>(seed);
    #else
-         BOTAN_UNUSED(seed);
          throw Botan_Tests::Test_Error("PQC KAT tests require a build with AES");
    #endif
       }

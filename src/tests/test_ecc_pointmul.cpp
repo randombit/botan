@@ -7,6 +7,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_ECC_GROUP)
+   #include <botan/assert.h>
    #include <botan/bigint.h>
    #include <botan/ec_group.h>
    #include <botan/rng.h>

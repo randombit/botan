@@ -8,6 +8,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
+   #include <botan/assert.h>
    #include <botan/data_src.h>
    #include <botan/exceptn.h>
    #include <botan/pk_keys.h>

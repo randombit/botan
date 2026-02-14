@@ -331,15 +331,13 @@ class Stateful_RNG_Tests : public Test {
             ::close(fd[0]);  // close read end in child
             rng->randomize(child_bytes.data(), child_bytes.size());
             count = counting_rng.randomize_count();
-            ssize_t written = ::write(fd[1], &count, sizeof(count));
-            BOTAN_UNUSED(written);
+            [[maybe_unused]] ssize_t written = ::write(fd[1], &count, sizeof(count));
             try {
                rng->randomize(child_bytes.data(), child_bytes.size());
             } catch(std::exception& e) {
                static_cast<void>(fprintf(stderr, "%s", e.what()));  // NOLINT(*-vararg)
             }
             written = ::write(fd[1], child_bytes.data(), child_bytes.size());
-            BOTAN_UNUSED(written);
             ::close(fd[1]);  // close write end in child
 
             /*

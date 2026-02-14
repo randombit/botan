@@ -14,7 +14,6 @@ Warning: be very careful about adding any new includes here
 Each include is parsed for every test file which can get quite expensive
 */
 
-#include <botan/assert.h>
 #include <botan/types.h>
 #include <functional>
 #include <iosfwd>
@@ -446,23 +445,16 @@ class Test {
                   ThrowExpectations(ThrowExpectations&&) = default;
                   ThrowExpectations& operator=(ThrowExpectations&&) = default;
 
-                  ~ThrowExpectations() { BOTAN_ASSERT_NOMSG(m_consumed); }
+                  ~ThrowExpectations();
 
-                  ThrowExpectations& expect_success() {
-                     BOTAN_ASSERT_NOMSG(!m_expected_message && !m_expected_exception_check_fn);
-                     m_expect_success = true;
-                     return *this;
-                  }
+                  ThrowExpectations& expect_success();
 
-                  ThrowExpectations& expect_message(std::string_view message) {
-                     BOTAN_ASSERT_NOMSG(!m_expect_success);
-                     m_expected_message = message;
-                     return *this;
-                  }
+                  ThrowExpectations& expect_message(std::string_view message);
 
                   template <typename ExT>
                   ThrowExpectations& expect_exception_type() {
-                     BOTAN_ASSERT_NOMSG(!m_expect_success);
+                     assert_that_success_is_not_expected();
+
                      m_expected_exception_check_fn = [](const std::exception_ptr& e) {
                         try {
                            if(e) {
@@ -481,6 +473,8 @@ class Test {
                   bool check(std::string_view test_name, Test::Result& result);
 
                private:
+                  void assert_that_success_is_not_expected() const;
+
                   std::function<void()> m_fn;
                   std::optional<std::string> m_expected_message;
                   std::function<bool(std::exception_ptr)> m_expected_exception_check_fn;

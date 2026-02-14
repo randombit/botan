@@ -307,8 +307,7 @@ class Certstor_System_Tests final : public Test {
             open_result.start_timer();
             system = std::make_unique<Botan::System_Certificate_Store>();
             open_result.end_timer();
-         } catch(Botan::Not_Implemented& e) {
-            BOTAN_UNUSED(e);
+         } catch(Botan::Not_Implemented&) {
             open_result.test_note("Skipping due to not available in current build");
             return {open_result};
          } catch(std::exception& e) {

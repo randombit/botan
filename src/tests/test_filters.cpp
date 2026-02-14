@@ -242,8 +242,7 @@ class Filter_Tests final : public Test {
 
          result.test_throws("pipe error", "Pipe::read: Invalid message number 100", [&]() {
             uint8_t b = 0;
-            const size_t got = pipe.read(&b, 1, 100);
-            BOTAN_UNUSED(got);
+            [[maybe_unused]] const size_t got = pipe.read(&b, 1, 100);
          });
 
          pipe.append(nullptr);   // ignored
