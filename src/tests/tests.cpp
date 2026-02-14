@@ -162,16 +162,16 @@ bool Test::Result::ThrowExpectations::check(std::string_view test_name, Test::Re
    return result.test_success();
 }
 
-bool Test::Result::test_throws(std::string_view what, const std::function<void()>& fn) {
-   return ThrowExpectations(fn).check(what, *this);
+bool Test::Result::test_throws(std::string_view what, std::function<void()> fn) {
+   return ThrowExpectations(std::move(fn)).check(what, *this);
 }
 
-bool Test::Result::test_throws(std::string_view what, std::string_view expected, const std::function<void()>& fn) {
-   return ThrowExpectations(fn).expect_message(expected).check(what, *this);
+bool Test::Result::test_throws(std::string_view what, std::string_view expected, std::function<void()> fn) {
+   return ThrowExpectations(std::move(fn)).expect_message(expected).check(what, *this);
 }
 
-bool Test::Result::test_no_throw(std::string_view what, const std::function<void()>& fn) {
-   return ThrowExpectations(fn).expect_success().check(what, *this);
+bool Test::Result::test_no_throw(std::string_view what, std::function<void()> fn) {
+   return ThrowExpectations(std::move(fn)).expect_success().check(what, *this);
 }
 
 bool Test::Result::test_success(std::string_view note) {
