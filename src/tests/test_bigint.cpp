@@ -57,8 +57,8 @@ class BigInt_Unit_Tests final : public Test {
             // Test 2^n and 2^n-1
             for(size_t i = 0; i != 2; ++i) {
                const size_t exp_bits = bit + 1 - i;
-               result.test_eq("BigInt::bits", a.bits(), exp_bits);
-               result.test_eq(
+               result.test_sz_eq("BigInt::bits", a.bits(), exp_bits);
+               result.test_sz_eq(
                   "BigInt::bytes", a.bytes(), (exp_bits % 8 == 0) ? (exp_bits / 8) : (exp_bits + 8 - exp_bits % 8) / 8);
 
                if(bit == 1 && i == 1) {
@@ -106,13 +106,13 @@ class BigInt_Unit_Tests final : public Test {
 
          for(size_t bits = 5; bits <= 32; ++bits) {
             p = Botan::random_prime(*rng, bits);
-            result.test_eq("Expected bit size", p.bits(), bits);
-            result.test_eq("P is prime", Botan::is_prime(p, *rng), true);
+            result.test_sz_eq("Expected bit size", p.bits(), bits);
+            result.test_is_true("P is prime", Botan::is_prime(p, *rng));
          }
 
          const size_t safe_prime_bits = 65;
          const BigInt safe_prime = Botan::random_safe_prime(*rng, safe_prime_bits);
-         result.test_eq("Safe prime size", safe_prime.bits(), safe_prime_bits);
+         result.test_sz_eq("Safe prime size", safe_prime.bits(), safe_prime_bits);
          result.confirm("P is prime", Botan::is_prime(safe_prime, *rng));
          result.confirm("(P-1)/2 is prime", Botan::is_prime((safe_prime - 1) / 2, *rng));
 
@@ -159,7 +159,7 @@ class BigInt_Unit_Tests final : public Test {
 
                const uint32_t cmp = t.to_u32bit();
 
-               result.test_eq("Same value", size_t(val), size_t(cmp));
+               result.test_sz_eq("Same value", size_t(val), size_t(cmp));
             }
          }
 
@@ -702,7 +702,7 @@ class BigInt_IsPrime_Test final : public Text_Based_Test {
          const bool is_prime = (header == "Prime");
 
          Test::Result result("BigInt Test " + header);
-         result.test_eq("is_prime", Botan::is_prime(value, this->rng()), is_prime);
+         result.test_bool_eq("is_prime", Botan::is_prime(value, this->rng()), is_prime);
 
          return result;
       }

@@ -18,31 +18,31 @@ class CT_Mask_Tests final : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result("CT::Mask");
 
-         result.test_eq_sz("CT::is_zero8", Botan::CT::Mask<uint8_t>::is_zero(0).value(), 0xFF);
-         result.test_eq_sz("CT::is_zero8", Botan::CT::Mask<uint8_t>::is_zero(1).value(), 0x00);
-         result.test_eq_sz("CT::is_zero8", Botan::CT::Mask<uint8_t>::is_zero(0xFF).value(), 0x00);
+         result.test_u8_eq("CT::is_zero8", Botan::CT::Mask<uint8_t>::is_zero(0).value(), 0xFF);
+         result.test_u8_eq("CT::is_zero8", Botan::CT::Mask<uint8_t>::is_zero(1).value(), 0x00);
+         result.test_u8_eq("CT::is_zero8", Botan::CT::Mask<uint8_t>::is_zero(0xFF).value(), 0x00);
 
-         result.test_eq_sz("CT::is_zero16", Botan::CT::Mask<uint16_t>::is_zero(0).value(), 0xFFFF);
-         result.test_eq_sz("CT::is_zero16", Botan::CT::Mask<uint16_t>::is_zero(1).value(), 0x0000);
-         result.test_eq_sz("CT::is_zero16", Botan::CT::Mask<uint16_t>::is_zero(0xFF).value(), 0x0000);
+         result.test_u16_eq("CT::is_zero16", Botan::CT::Mask<uint16_t>::is_zero(0).value(), 0xFFFF);
+         result.test_u16_eq("CT::is_zero16", Botan::CT::Mask<uint16_t>::is_zero(1).value(), 0x0000);
+         result.test_u16_eq("CT::is_zero16", Botan::CT::Mask<uint16_t>::is_zero(0xFF).value(), 0x0000);
 
-         result.test_eq_sz("CT::is_zero32", Botan::CT::Mask<uint32_t>::is_zero(0).value(), 0xFFFFFFFF);
-         result.test_eq_sz("CT::is_zero32", Botan::CT::Mask<uint32_t>::is_zero(1).value(), 0x00000000);
-         result.test_eq_sz("CT::is_zero32", Botan::CT::Mask<uint32_t>::is_zero(0xFF).value(), 0x00000000);
+         result.test_u32_eq("CT::is_zero32", Botan::CT::Mask<uint32_t>::is_zero(0).value(), 0xFFFFFFFF);
+         result.test_u32_eq("CT::is_zero32", Botan::CT::Mask<uint32_t>::is_zero(1).value(), 0x00000000);
+         result.test_u32_eq("CT::is_zero32", Botan::CT::Mask<uint32_t>::is_zero(0xFF).value(), 0x00000000);
 
-         result.test_eq_sz("CT::is_less8", Botan::CT::Mask<uint8_t>::is_lt(0, 1).value(), 0xFF);
-         result.test_eq_sz("CT::is_less8", Botan::CT::Mask<uint8_t>::is_lt(1, 0).value(), 0x00);
-         result.test_eq_sz("CT::is_less8", Botan::CT::Mask<uint8_t>::is_lt(0xFF, 5).value(), 0x00);
+         result.test_u8_eq("CT::is_less8", Botan::CT::Mask<uint8_t>::is_lt(0, 1).value(), 0xFF);
+         result.test_u8_eq("CT::is_less8", Botan::CT::Mask<uint8_t>::is_lt(1, 0).value(), 0x00);
+         result.test_u8_eq("CT::is_less8", Botan::CT::Mask<uint8_t>::is_lt(0xFF, 5).value(), 0x00);
 
-         result.test_eq_sz("CT::is_less16", Botan::CT::Mask<uint16_t>::is_lt(0, 1).value(), 0xFFFF);
-         result.test_eq_sz("CT::is_less16", Botan::CT::Mask<uint16_t>::is_lt(1, 0).value(), 0x0000);
-         result.test_eq_sz("CT::is_less16", Botan::CT::Mask<uint16_t>::is_lt(0xFFFF, 5).value(), 0x0000);
+         result.test_u16_eq("CT::is_less16", Botan::CT::Mask<uint16_t>::is_lt(0, 1).value(), 0xFFFF);
+         result.test_u16_eq("CT::is_less16", Botan::CT::Mask<uint16_t>::is_lt(1, 0).value(), 0x0000);
+         result.test_u16_eq("CT::is_less16", Botan::CT::Mask<uint16_t>::is_lt(0xFFFF, 5).value(), 0x0000);
 
-         result.test_eq_sz("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(0, 1).value(), 0xFFFFFFFF);
-         result.test_eq_sz("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(1, 0).value(), 0x00000000);
-         result.test_eq_sz("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(0xFFFF5, 5).value(), 0x00000000);
-         result.test_eq_sz("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(0xFFFFFFFF, 5).value(), 0x00000000);
-         result.test_eq_sz("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(5, 0xFFFFFFFF).value(), 0xFFFFFFFF);
+         result.test_u32_eq("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(0, 1).value(), 0xFFFFFFFF);
+         result.test_u32_eq("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(1, 0).value(), 0x00000000);
+         result.test_u32_eq("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(0xFFFF5, 5).value(), 0x00000000);
+         result.test_u32_eq("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(0xFFFFFFFF, 5).value(), 0x00000000);
+         result.test_u32_eq("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(5, 0xFFFFFFFF).value(), 0xFFFFFFFF);
 
          for(auto bad_input : {0, 1}) {
             for(size_t input_length = 0; input_length != 64; ++input_length) {
@@ -63,10 +63,10 @@ class CT_Mask_Tests final : public Test {
                         result.confirm("If offset is too large, no output", !written.has_value().as_bool());
                      } else {
                         const size_t bytes = written.value();
-                        result.test_eq_sz("CT::copy_output length", bytes, input.size() - offset);
+                        result.test_sz_eq("CT::copy_output length", bytes, input.size() - offset);
 
                         for(size_t i = 0; i != bytes; ++i) {
-                           result.test_eq_sz("CT::copy_output offset", output[i], input[i + offset]);
+                           result.test_u8_eq("CT::copy_output offset", output[i], input[i + offset]);
                         }
                      }
                   }
@@ -85,8 +85,8 @@ class CT_Choice_Tests final : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result("CT::Choice");
 
-         result.test_eq("CT::Choice::yes", Botan::CT::Choice::yes().as_bool(), true);
-         result.test_eq("CT::Choice::no", Botan::CT::Choice::no().as_bool(), false);
+         result.test_is_true("CT::Choice::yes", Botan::CT::Choice::yes().as_bool());
+         result.test_is_false("CT::Choice::no", Botan::CT::Choice::no().as_bool());
 
          test_choice_from_int<uint8_t>("uint8_t", result);
          test_choice_from_int<uint16_t>("uint16_t", result);
@@ -102,10 +102,10 @@ class CT_Choice_Tests final : public Test {
          const auto tname = Botan::fmt("CT::Choice::from_int<{}>", type_name);
          constexpr size_t tbits = sizeof(T) * 8;
 
-         result.test_eq(tname, Botan::CT::Choice::from_int<T>(0).as_bool(), false);
+         result.test_is_false(tname, Botan::CT::Choice::from_int<T>(0).as_bool());
          for(size_t b = 0; b != tbits; ++b) {
             const auto choice = Botan::CT::Choice::from_int<T>(static_cast<T>(1) << b);
-            result.test_eq(tname, choice.as_bool(), true);
+            result.test_is_true(tname, choice.as_bool());
          }
       }
 };
@@ -152,7 +152,7 @@ class CT_Option_Tests final : public Test {
       template <typename T>
       void test_ct_option(Test::Result& result, const T& value, const T& value2) {
          auto unset = Botan::CT::Option<T>();
-         result.test_eq("Unset does not have value", unset.has_value().as_bool(), false);
+         result.test_is_false("Unset does not have value", unset.has_value().as_bool());
          result.test_throws("Unset Option throws if value is called", [&]() { unset.value(); });
          result.confirm("Unset Option returns alternative with value_or", unset.value_or(value) == value);
          result.confirm("Unset Option returns alternative with value_or", unset.value_or(value2) == value2);
@@ -165,10 +165,10 @@ class CT_Option_Tests final : public Test {
             return n;
          };
 
-         result.test_eq("Unset Option transform returns unset", unset.transform(next).has_value().as_bool(), false);
+         result.test_is_false("Unset Option transform returns unset", unset.transform(next).has_value().as_bool());
 
          auto set = Botan::CT::Option<T>(value);
-         result.test_eq("Set does have value", set.has_value().as_bool(), true);
+         result.test_is_true("Set does have value", set.has_value().as_bool());
          result.confirm("Set Option has the expected value", set.value() == value);
          result.confirm("Set Option returns original with value_or", set.value_or(value2) == value);
 

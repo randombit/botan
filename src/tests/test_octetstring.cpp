@@ -19,7 +19,7 @@ Test::Result test_from_rng() {
    auto rng = Test::new_rng("octet_string_from_rng");
 
    const Botan::OctetString os(*rng, 32);
-   result.test_eq("length is 32 bytes", os.size(), 32);
+   result.test_sz_eq("length is 32 bytes", os.size(), 32);
 
    return result;
 }
@@ -28,7 +28,7 @@ Test::Result test_from_hex() {
    Test::Result result("OctetString");
 
    const Botan::OctetString os("0123456789ABCDEF");
-   result.test_eq("length is 8 bytes", os.size(), 8);
+   result.test_sz_eq("length is 8 bytes", os.size(), 8);
 
    return result;
 }
@@ -39,7 +39,7 @@ Test::Result test_from_byte() {
    auto rng = Test::new_rng("octet_string_from_byte");
    auto rand_bytes = rng->random_vec(8);
    const Botan::OctetString os(rand_bytes.data(), rand_bytes.size());
-   result.test_eq("length is 8 bytes", os.size(), 8);
+   result.test_sz_eq("length is 8 bytes", os.size(), 8);
 
    return result;
 }

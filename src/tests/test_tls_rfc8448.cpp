@@ -1077,7 +1077,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                      {"tls_examine_extensions_new_session_ticket",
                                                       "tls_should_persist_resumption_information",
                                                       "tls_current_timestamp"});
-                     if(result.test_eq("session was stored", ctx->stored_sessions().size(), 1)) {
+                     if(result.test_sz_eq("session was stored", ctx->stored_sessions().size(), 1)) {
                         const auto& [stored_session, stored_handle] = ctx->stored_sessions().front();
                         result.require("session handle contains a ticket", stored_handle.ticket().has_value());
                         result.test_is_eq("session was serialized as expected",
@@ -1895,7 +1895,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.require("ctx is available", ctx != nullptr);
                      const auto new_tickets = ctx->server.send_new_session_tickets(1);
 
-                     result.test_eq("session ticket was sent", new_tickets, 1);
+                     result.test_sz_eq("session ticket was sent", new_tickets, 1);
 
                      ctx->check_callback_invocations(result,
                                                      "issued new session ticket",

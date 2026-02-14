@@ -99,12 +99,12 @@ class XOF_Tests final : public Text_Based_Test {
             const auto new_accepts_input = xof->accepts_input();
 
             result.confirm("advertised block size is > 0", xof->block_size() > 0);
-            result.test_eq("new object may accept input", xof->accepts_input(), new_accepts_input);
+            result.test_bool_eq("new object may accept input", xof->accepts_input(), new_accepts_input);
 
             // input and output in bulk
             xof->start(salt, key);
             xof->update(in);
-            result.test_eq("object may accept input before first output", xof->accepts_input(), new_accepts_input);
+            result.test_bool_eq("object may accept input before first output", xof->accepts_input(), new_accepts_input);
             result.test_eq("generated output", xof->output_stdvec(expected.size()), expected);
             result.confirm("object does not accept input after first output", !xof->accepts_input());
 
@@ -128,7 +128,7 @@ class XOF_Tests final : public Text_Based_Test {
 
             // input again and output bytewise
             xof->clear();
-            result.test_eq("object might accept input after clear()", xof->accepts_input(), new_accepts_input);
+            result.test_bool_eq("object might accept input after clear()", xof->accepts_input(), new_accepts_input);
             xof->start(salt, key);
             xof->update(in);
 
@@ -141,9 +141,9 @@ class XOF_Tests final : public Text_Based_Test {
             // input and output blocksize-ish wise
             auto process_as_blocks = [&](const std::string& id, size_t block_size) {
                auto new_xof = xof->new_object();
-               result.test_eq(Botan::fmt("reconstructed XOF may accept input ({})", id),
-                              new_xof->accepts_input(),
-                              new_accepts_input);
+               result.test_bool_eq(Botan::fmt("reconstructed XOF may accept input ({})", id),
+                                   new_xof->accepts_input(),
+                                   new_accepts_input);
 
                new_xof->start(salt, key);
                std::span<const uint8_t> in_span(in);
@@ -172,7 +172,7 @@ class XOF_Tests final : public Text_Based_Test {
                xof->start(salt, key);
                xof->update(std::span(in).first(in.size() / 2));
                auto xof2 = xof->copy_state();
-               result.test_eq("copied object might still accept input", xof2->accepts_input(), new_accepts_input);
+               result.test_bool_eq("copied object might still accept input", xof2->accepts_input(), new_accepts_input);
                xof->update(std::span(in).last(in.size() - in.size() / 2));
                xof2->update(std::span(in).last(in.size() - in.size() / 2));
                auto cp_out1 = xof->output_stdvec(expected.size());

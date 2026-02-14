@@ -211,7 +211,7 @@ class ECDSA_Key_Recovery_Tests final : public Text_Based_Test {
             result.test_eq("Pubkey X coordinate", pubkey.public_key_bits(), expected_pubkey);
 
             const uint8_t computed_V = pubkey.recovery_param(msg, R, S);
-            result.test_eq("Recovery param is correct", static_cast<size_t>(computed_V), static_cast<size_t>(V));
+            result.test_u8_eq("Recovery param is correct", computed_V, V);
 
             Botan::PK_Verifier verifier(pubkey, "Raw");
 
@@ -288,7 +288,7 @@ class ECDSA_AllGroups_Test : public Test {
                   for(size_t i = 0; i != 16; ++i) {
                      auto message = Botan::unlock(rng().random_vec(rng().next_byte()));
                      auto sig = signer.sign_message(message, rng());
-                     result.test_eq("Expected signature size", sig.size(), 2 * group.get_order_bytes());
+                     result.test_sz_eq("Expected signature size", sig.size(), 2 * group.get_order_bytes());
 
                      result.confirm("Signature accepted", verifier.verify_message(message, sig));
 
@@ -335,7 +335,7 @@ class ECDSA_ExplicitCurveKey_Test : public Text_Based_Test {
                result.test_success("Returned key was ECDSA");
 
                const auto& group = ecdsa->domain();
-               result.test_eq("Key is marked as explicit encoding", group.used_explicit_encoding(), true);
+               result.test_is_true("Key is marked as explicit encoding", group.used_explicit_encoding());
                result.confirm("Group has expected OID", group.get_curve_oid() == expected_oid);
             } else {
                result.test_failure("Returned key was some other type");

@@ -114,7 +114,7 @@ class TLS_CBC_Padding_Tests final : public Text_Based_Test {
          const uint16_t res = Botan::TLS::check_tls_cbc_padding(record.data(), record.size());
 
          Test::Result result("TLS CBC padding check");
-         result.test_eq("Expected", res, output);
+         result.test_sz_eq("Expected", res, output);
          return result;
       }
 };
@@ -486,7 +486,7 @@ class Test_TLS_Alert_Strings : public Test {
 
          for(auto alert : alert_types) {
             const std::string str = Botan::TLS::Alert(alert).type_string();
-            result.test_eq("No duplicate strings", seen.count(str), 0);
+            result.test_sz_eq("No duplicate strings", seen.count(str), 0);
             seen.insert(str);
          }
 
@@ -602,13 +602,13 @@ class Test_TLS_Ciphersuites : public Test {
             auto ciphersuite = Botan::TLS::Ciphersuite::by_id(csuite_id16);
 
             if(ciphersuite && ciphersuite->valid()) {
-               result.test_eq("Valid Ciphersuite is not SCSV", Botan::TLS::Ciphersuite::is_scsv(csuite_id16), false);
+               result.test_is_false("Valid Ciphersuite is not SCSV", Botan::TLS::Ciphersuite::is_scsv(csuite_id16));
 
                if(ciphersuite->cbc_ciphersuite() == false && ciphersuite->null_ciphersuite() == false) {
-                  result.test_eq("Expected AEAD ciphersuite", ciphersuite->aead_ciphersuite(), true);
+                  result.test_is_true("Expected AEAD ciphersuite", ciphersuite->aead_ciphersuite());
                   result.test_eq("Expected MAC name for AEAD ciphersuites", ciphersuite->mac_algo(), "AEAD");
                } else {
-                  result.test_eq("Did not expect AEAD ciphersuite", ciphersuite->aead_ciphersuite(), false);
+                  result.test_is_false("Did not expect AEAD ciphersuite", ciphersuite->aead_ciphersuite());
                   result.test_eq("MAC algo and PRF algo same for CBC and NULL suites",
                                  ciphersuite->prf_algo(),
                                  ciphersuite->mac_algo());
@@ -648,7 +648,7 @@ class Test_TLS_Algo_Strings : public Test {
          for(auto scheme : Botan::TLS::Signature_Scheme::all_available_schemes()) {
             const std::string scheme_str = scheme.to_string();
 
-            result.test_eq("Scheme strings unique", scheme_strs.count(scheme_str), 0);
+            result.test_sz_eq("Scheme strings unique", scheme_strs.count(scheme_str), 0);
 
             scheme_strs.insert(scheme_str);
          }

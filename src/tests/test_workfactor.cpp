@@ -32,7 +32,7 @@ class PK_Workfactor_Tests final : public Text_Based_Test {
          }
 
          Test::Result result(type + " work factor calculation");
-         result.test_eq("Calculated workfactor for " + std::to_string(param_size), output, exp_output);
+         result.test_sz_eq("Calculated workfactor for " + std::to_string(param_size), output, exp_output);
          return result;
       }
 };

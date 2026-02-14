@@ -288,7 +288,7 @@ class Test {
             void test_failure(std::string_view what, std::span<const uint8_t> context);
 
             bool confirm(std::string_view what, bool expr, bool expected = true) {
-               return test_eq(what, expr, expected);
+               return test_bool_eq(what, expr, expected);
             }
 
             /**
@@ -341,20 +341,41 @@ class Test {
 
             bool test_eq(std::string_view what, std::string_view produced, std::string_view expected);
 
-            bool test_eq(std::string_view what, bool produced, bool expected);
+            /* Test predicates on bool */
+            bool test_bool_eq(std::string_view what, bool produced, bool expected);
 
-            bool test_eq(std::string_view what, size_t produced, size_t expected);
-            bool test_eq_sz(std::string_view what, size_t produced, size_t expected);
+            bool test_is_false(std::string_view what, bool produced);
 
-            template <typename I1, typename I2>
-            bool test_int_eq(I1 x, I2 y, const char* what) {
-               return test_eq(what, static_cast<size_t>(x), static_cast<size_t>(y));
-            }
+            bool test_is_true(std::string_view what, bool produced);
 
-            template <typename I1, typename I2>
-            bool test_int_eq(std::string_view what, I1 x, I2 y) {
-               return test_eq(what, static_cast<size_t>(x), static_cast<size_t>(y));
-            }
+            /* Test predicates on size_t */
+            bool test_sz_eq(std::string_view what, size_t produced, size_t expected);
+            bool test_sz_ne(std::string_view what, size_t produced, size_t expected);
+            bool test_sz_lt(std::string_view what, size_t produced, size_t expected);
+            bool test_sz_lte(std::string_view what, size_t produced, size_t expected);
+            bool test_sz_gt(std::string_view what, size_t produced, size_t expected);
+            bool test_sz_gte(std::string_view what, size_t produced, size_t expected);
+
+            /* Type-hinted unsigned integer equality predicates */
+            bool test_u8_eq(uint8_t produced, uint8_t expected);
+            bool test_u8_eq(std::string_view what, uint8_t produced, uint8_t expected);
+
+            bool test_u16_eq(uint16_t produced, uint16_t expected);
+            bool test_u16_eq(std::string_view what, uint16_t produced, uint16_t expected);
+
+            bool test_u32_eq(uint32_t produced, uint32_t expected);
+            bool test_u32_eq(std::string_view what, uint32_t produced, uint32_t expected);
+
+            bool test_u64_eq(uint64_t produced, uint64_t expected);
+            bool test_u64_eq(std::string_view what, uint64_t produced, uint64_t expected);
+
+            /* Test predicates on integer return codes */
+            bool test_rc_ok(std::string_view func, int rc);
+            bool test_rc_fail(std::string_view func, std::string_view why, int rc);
+            bool test_rc(std::string_view func, int expected, int rc);
+            bool test_rc_init(std::string_view func, int rc);
+
+            bool test_ne(std::string_view what, std::string_view str1, std::string_view str2);
 
             template <typename T>
             bool test_eq(std::string_view what, const std::optional<T>& a, const std::optional<T>& b) {
@@ -369,21 +390,6 @@ class Test {
                   return test_success();
                }
             }
-
-            bool test_lt(std::string_view what, size_t produced, size_t expected);
-            bool test_lte(std::string_view what, size_t produced, size_t expected);
-            bool test_gt(std::string_view what, size_t produced, size_t expected);
-            bool test_gte(std::string_view what, size_t produced, size_t expected);
-
-            /* Test predicates on integer return codes */
-            bool test_rc_ok(std::string_view func, int rc);
-            bool test_rc_fail(std::string_view func, std::string_view why, int rc);
-            bool test_rc(std::string_view func, int expected, int rc);
-            bool test_rc_init(std::string_view func, int rc);
-
-            bool test_ne(std::string_view what, size_t produced, size_t expected);
-
-            bool test_ne(std::string_view what, std::string_view str1, std::string_view str2);
 
 #if defined(BOTAN_HAS_BIGINT)
             bool test_eq(std::string_view what, const BigInt& produced, const BigInt& expected);

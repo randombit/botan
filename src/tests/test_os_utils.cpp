@@ -51,12 +51,12 @@ class OS_Utils_Tests final : public Test {
          const uint32_t pid1 = Botan::OS::get_process_id();
          const uint32_t pid2 = Botan::OS::get_process_id();
 
-         result.test_eq("PID same across calls", static_cast<size_t>(pid1), static_cast<size_t>(pid2));
+         result.test_u32_eq("PID same across calls", pid1, pid2);
 
    #if defined(BOTAN_TARGET_OS_IS_LLVM) || defined(BOTAN_TARGET_OS_IS_NONE)
-         result.test_eq("PID is expected to be zero on this platform", pid1, size_t(0));
+         result.test_u32_eq("PID is expected to be zero on this platform", pid1, 0);
    #else
-         result.test_ne("PID is non-zero on systems with processes", pid1, 0);
+         result.test_sz_ne("PID is non-zero on systems with processes", pid1, 0);
    #endif
 
          return result;
@@ -81,7 +81,7 @@ class OS_Utils_Tests final : public Test {
             ++counts;
          }
 
-         result.test_lt("CPU cycle counter eventually changes value", counts, max_repeats);
+         result.test_sz_lt("CPU cycle counter eventually changes value", counts, max_repeats);
 
          return result;
       }
@@ -115,7 +115,7 @@ class OS_Utils_Tests final : public Test {
 
          const size_t ta = Botan::OS::get_cpu_available();
 
-         result.test_gte("get_cpu_available is at least 1", ta, 1);
+         result.test_sz_gte("get_cpu_available is at least 1", ta, 1);
 
          return result;
       }

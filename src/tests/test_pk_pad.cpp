@@ -37,13 +37,13 @@ class EME_PKCS1v15_Decoding_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> plaintext = vars.get_opt_bin("Plaintext");
 
          if(!is_valid) {
-            result.test_eq("Plaintext value should be empty for invalid EME inputs", plaintext.size(), 0);
+            result.test_sz_eq("Plaintext value should be empty for invalid EME inputs", plaintext.size(), 0);
          }
 
          std::vector<uint8_t> decoded(ciphertext.size());
          auto len = pkcs->unpad(decoded, ciphertext);
 
-         result.test_eq("EME decoding valid/invalid matches", len.has_value().as_bool(), is_valid);
+         result.test_bool_eq("EME decoding valid/invalid matches", len.has_value().as_bool(), is_valid);
 
          if(len.has_value().as_bool()) {
             decoded.resize(len.value_or(0));

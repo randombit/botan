@@ -200,7 +200,7 @@ Test::Result test_cert_status_strings() {
    for(const auto code : codes) {
       const std::string s = Botan::to_string(code);
       result.confirm("String is long enough to be informative", s.size() > 12);
-      result.test_eq("No duplicates", seen.count(s), 0);
+      result.test_sz_eq("No duplicates", seen.count(s), 0);
       seen.insert(s);
    }
 
@@ -457,7 +457,7 @@ Test::Result test_x509_encode_authority_info_access_extension() {
 
    Botan::X509_Certificate cert = ca.sign_request(req, *rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
-   if(!result.test_eq("number of ca_issuers URIs", cert.ca_issuers().size(), 2)) {
+   if(!result.test_sz_eq("number of ca_issuers URIs", cert.ca_issuers().size(), 2)) {
       return result;
    }
 
@@ -561,7 +561,7 @@ Test::Result test_x509_decode_list() {
    std::vector<Botan::X509_Certificate> certs;
    dec.decode_list(certs);
 
-   result.test_eq("Expected number of certs in list", certs.size(), 2);
+   result.test_sz_eq("Expected number of certs in list", certs.size(), 2);
 
    result.test_eq("Expected cert 1 CN", certs[0].subject_dn().get_first_attribute("CN"), "CA1-PP.01.02");
    result.test_eq("Expected cert 2 CN", certs[1].subject_dn().get_first_attribute("CN"), "User1-PP.01.02");
@@ -651,7 +651,7 @@ Test::Result test_x509_authority_info_access_extension() {
    // contains no AIA extension
    const Botan::X509_Certificate no_aia_cert(Test::data_file("x509/misc/contains_utf8string.pem"));
 
-   result.test_eq("number of ca_issuers URLs", no_aia_cert.ca_issuers().size(), 0);
+   result.test_sz_eq("number of ca_issuers URLs", no_aia_cert.ca_issuers().size(), 0);
    result.test_eq("CA issuer URL matches", no_aia_cert.ocsp_responder(), "");
 
    // contains AIA extension with 1 CA issuer URL and 1 OCSP responder
@@ -659,7 +659,7 @@ Test::Result test_x509_authority_info_access_extension() {
 
    const auto ca_issuers = aia_cert.ca_issuers();
 
-   result.test_eq("number of ca_issuers URLs", ca_issuers.size(), 1);
+   result.test_sz_eq("number of ca_issuers URLs", ca_issuers.size(), 1);
    if(result.tests_failed() > 0) {
       return result;
    }
@@ -673,7 +673,7 @@ Test::Result test_x509_authority_info_access_extension() {
 
    const auto ca_issuers2 = aia_cert_2ca.ca_issuers();
 
-   result.test_eq("number of ca_issuers URLs", ca_issuers2.size(), 2);
+   result.test_sz_eq("number of ca_issuers URLs", ca_issuers2.size(), 2);
    if(result.tests_failed() > 0) {
       return result;
    }
@@ -864,7 +864,7 @@ Test::Result test_pkcs10_ext(const Botan::Private_Key& key,
 
    const auto alt_dns_names = req.subject_alt_name().get_attribute("DNS");
 
-   result.test_eq("Expected number of DNS names", alt_dns_names.size(), 4);
+   result.test_sz_eq("Expected number of DNS names", alt_dns_names.size(), 4);
 
    if(alt_dns_names.size() == 4) {
       result.test_eq("Expected DNS name 1", alt_dns_names.at(0), "bonus.example.org");
@@ -873,7 +873,7 @@ Test::Result test_pkcs10_ext(const Botan::Private_Key& key,
       result.test_eq("Expected DNS name 3", alt_dns_names.at(3), "more2.example.org");
    }
 
-   result.test_eq("Expected number of alt DNs", req.subject_alt_name().directory_names().size(), 1);
+   result.test_sz_eq("Expected number of alt DNs", req.subject_alt_name().directory_names().size(), 1);
    result.confirm("Alt DN is correct", *req.subject_alt_name().directory_names().begin() == alt_dn);
 
    return result;
@@ -923,12 +923,12 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    const Botan::X509_Certificate user1_cert =
       ca.sign_request(user1_req, rng, user1_serial, from_date(-1, 01, 01), from_date(2, 01, 01));
 
-   result.test_eq("User1 serial size matches expected", user1_cert.serial_number().size(), 1);
-   result.test_eq("User1 serial matches expected", user1_cert.serial_number().at(0), size_t(99));
+   result.test_sz_eq("User1 serial size matches expected", user1_cert.serial_number().size(), 1);
+   result.test_sz_eq("User1 serial matches expected", user1_cert.serial_number().at(0), size_t(99));
 
    const Botan::X509_Certificate user2_cert =
       ca.sign_request(user2_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
-   result.test_eq("extended key usage is set", user2_cert.has_ex_constraint("PKIX.EmailProtection"), true);
+   result.test_is_true("extended key usage is set", user2_cert.has_ex_constraint("PKIX.EmailProtection"));
 
    const Botan::X509_Certificate user3_cert =
       ca.sign_request(user3_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
@@ -944,18 +944,18 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
 
    /* Copy, assign and compare */
    Botan::X509_Certificate user1_cert_copy(user1_cert);
-   result.test_eq("certificate copy", user1_cert == user1_cert_copy, true);
+   result.test_is_true("certificate copy", user1_cert == user1_cert_copy);
 
    user1_cert_copy = user2_cert;
-   result.test_eq("certificate assignment", user2_cert == user1_cert_copy, true);
+   result.test_is_true("certificate assignment", user2_cert == user1_cert_copy);
 
    const Botan::X509_Certificate user1_cert_differ =
       ca.sign_request(user1_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
-   result.test_eq("certificate differs", user1_cert == user1_cert_differ, false);
+   result.test_is_false("certificate differs", user1_cert == user1_cert_differ);
 
    /* Get cert data */
-   result.test_eq("x509 version", user1_cert.x509_version(), size_t(3));
+   result.test_sz_eq("x509 version", user1_cert.x509_version(), size_t(3));
 
    const Botan::X509_DN& user1_issuer_dn = user1_cert.issuer_dn();
    result.test_eq("issuer info CN", user1_issuer_dn.get_first_attribute("CN"), ca_opts().common_name);
@@ -964,9 +964,9 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    result.test_eq("issuer info OrgaUnit", user1_issuer_dn.get_first_attribute("OU"), ca_opts().org_unit);
 
    const Botan::X509_DN& user3_subject_dn = user3_cert.subject_dn();
-   result.test_eq("subject OrgaUnit count",
-                  user3_subject_dn.get_attribute("OU").size(),
-                  req_opts3(sig_algo).more_org_units.size() + 1);
+   result.test_sz_eq("subject OrgaUnit count",
+                     user3_subject_dn.get_attribute("OU").size(),
+                     req_opts3(sig_algo).more_org_units.size() + 1);
    result.test_eq(
       "subject OrgaUnit #2", user3_subject_dn.get_attribute("OU").at(1), req_opts3(sig_algo).more_org_units.at(0));
 
@@ -976,7 +976,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    result.test_eq("subject alt uri", user1_altname.get_first_attribute("URI"), "https://botan.randombit.net");
 
    const Botan::AlternativeName& user3_altname = user3_cert.subject_alt_name();
-   result.test_eq(
+   result.test_sz_eq(
       "subject alt dns count", user3_altname.get_attribute("DNS").size(), req_opts3(sig_algo).more_dns.size() + 1);
    result.test_eq("subject alt dns #2", user3_altname.get_attribute("DNS").at(1), req_opts3(sig_algo).more_dns.at(0));
 
@@ -1071,11 +1071,10 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
       ca.sign_request(user1_req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
    // cert only allows digitalSignature, but we check for both digitalSignature and cRLSign
-   result.test_eq(
+   result.test_is_false(
       "key usage cRLSign not allowed",
-      user1_cert.allowed_usage(Key_Constraints(Key_Constraints::DigitalSignature | Key_Constraints::CrlSign)),
-      false);
-   result.test_eq("encryption is not allowed", user1_cert.allowed_usage(Usage_Type::ENCRYPTION), false);
+      user1_cert.allowed_usage(Key_Constraints(Key_Constraints::DigitalSignature | Key_Constraints::CrlSign)));
+   result.test_is_false("encryption is not allowed", user1_cert.allowed_usage(Usage_Type::ENCRYPTION));
 
    // cert only allows digitalSignature, so checking for only that should be ok
    result.confirm("key usage digitalSignature allowed", user1_cert.allowed_usage(Key_Constraints::DigitalSignature));
@@ -1094,7 +1093,7 @@ Test::Result test_usage(const Botan::Private_Key& ca_key,
    result.confirm(
       "key usage multiple digitalSignature and cRLSign allowed",
       mult_usage_cert.allowed_usage(Key_Constraints(Key_Constraints::DigitalSignature | Key_Constraints::CrlSign)));
-   result.test_eq("encryption is not allowed", mult_usage_cert.allowed_usage(Usage_Type::ENCRYPTION), false);
+   result.test_is_false("encryption is not allowed", mult_usage_cert.allowed_usage(Usage_Type::ENCRYPTION));
 
    opts.constraints = Key_Constraints();
 
@@ -1212,69 +1211,69 @@ Test::Result test_valid_constraints(const Botan::Private_Key& key, const std::st
 
    if(pk_algo == "DH" || pk_algo == "ECDH") {
       // DH and ECDH only for key agreement
-      result.test_eq("all constraints not permitted", all.compatible_with(key), false);
-      result.test_eq("cert sign not permitted", ca.compatible_with(key), false);
-      result.test_eq("signature not permitted", sign_data.compatible_with(key), false);
-      result.test_eq("non repudiation not permitted", non_repudiation.compatible_with(key), false);
-      result.test_eq("key encipherment not permitted", key_encipherment.compatible_with(key), false);
-      result.test_eq("data encipherment not permitted", data_encipherment.compatible_with(key), false);
-      result.test_eq("usage acceptable", key_agreement.compatible_with(key), true);
-      result.test_eq("usage acceptable", key_agreement_encipher_only.compatible_with(key), true);
-      result.test_eq("usage acceptable", key_agreement_decipher_only.compatible_with(key), true);
-      result.test_eq("crl sign not permitted", crl_sign.compatible_with(key), false);
-      result.test_eq("sign", sign_everything.compatible_with(key), false);
+      result.test_is_false("all constraints not permitted", all.compatible_with(key));
+      result.test_is_false("cert sign not permitted", ca.compatible_with(key));
+      result.test_is_false("signature not permitted", sign_data.compatible_with(key));
+      result.test_is_false("non repudiation not permitted", non_repudiation.compatible_with(key));
+      result.test_is_false("key encipherment not permitted", key_encipherment.compatible_with(key));
+      result.test_is_false("data encipherment not permitted", data_encipherment.compatible_with(key));
+      result.test_is_true("usage acceptable", key_agreement.compatible_with(key));
+      result.test_is_true("usage acceptable", key_agreement_encipher_only.compatible_with(key));
+      result.test_is_true("usage acceptable", key_agreement_decipher_only.compatible_with(key));
+      result.test_is_false("crl sign not permitted", crl_sign.compatible_with(key));
+      result.test_is_false("sign", sign_everything.compatible_with(key));
    } else if(pk_algo == "Kyber" || pk_algo == "FrodoKEM" || pk_algo == "ML-KEM" || pk_algo == "ClassicMcEliece") {
       // KEMs can encrypt and agree
-      result.test_eq("all constraints not permitted", all.compatible_with(key), false);
-      result.test_eq("cert sign not permitted", ca.compatible_with(key), false);
-      result.test_eq("signature not permitted", sign_data.compatible_with(key), false);
-      result.test_eq("non repudiation not permitted", non_repudiation.compatible_with(key), false);
-      result.test_eq("crl sign not permitted", crl_sign.compatible_with(key), false);
-      result.test_eq("sign", sign_everything.compatible_with(key), false);
-      result.test_eq("key agreement not permitted", key_agreement.compatible_with(key), false);
-      result.test_eq("usage acceptable", data_encipherment.compatible_with(key), false);
-      result.test_eq("usage acceptable", key_encipherment.compatible_with(key), true);
+      result.test_is_false("all constraints not permitted", all.compatible_with(key));
+      result.test_is_false("cert sign not permitted", ca.compatible_with(key));
+      result.test_is_false("signature not permitted", sign_data.compatible_with(key));
+      result.test_is_false("non repudiation not permitted", non_repudiation.compatible_with(key));
+      result.test_is_false("crl sign not permitted", crl_sign.compatible_with(key));
+      result.test_is_false("sign", sign_everything.compatible_with(key));
+      result.test_is_false("key agreement not permitted", key_agreement.compatible_with(key));
+      result.test_is_false("usage acceptable", data_encipherment.compatible_with(key));
+      result.test_is_true("usage acceptable", key_encipherment.compatible_with(key));
    } else if(pk_algo == "RSA") {
       // RSA can do everything except key agreement
-      result.test_eq("all constraints not permitted", all.compatible_with(key), false);
+      result.test_is_false("all constraints not permitted", all.compatible_with(key));
 
-      result.test_eq("usage acceptable", ca.compatible_with(key), true);
-      result.test_eq("usage acceptable", sign_data.compatible_with(key), true);
-      result.test_eq("usage acceptable", non_repudiation.compatible_with(key), true);
-      result.test_eq("usage acceptable", key_encipherment.compatible_with(key), true);
-      result.test_eq("usage acceptable", data_encipherment.compatible_with(key), true);
-      result.test_eq("key agreement not permitted", key_agreement.compatible_with(key), false);
-      result.test_eq("key agreement", key_agreement_encipher_only.compatible_with(key), false);
-      result.test_eq("key agreement", key_agreement_decipher_only.compatible_with(key), false);
-      result.test_eq("usage acceptable", crl_sign.compatible_with(key), true);
-      result.test_eq("usage acceptable", sign_everything.compatible_with(key), true);
+      result.test_is_true("usage acceptable", ca.compatible_with(key));
+      result.test_is_true("usage acceptable", sign_data.compatible_with(key));
+      result.test_is_true("usage acceptable", non_repudiation.compatible_with(key));
+      result.test_is_true("usage acceptable", key_encipherment.compatible_with(key));
+      result.test_is_true("usage acceptable", data_encipherment.compatible_with(key));
+      result.test_is_false("key agreement not permitted", key_agreement.compatible_with(key));
+      result.test_is_false("key agreement", key_agreement_encipher_only.compatible_with(key));
+      result.test_is_false("key agreement", key_agreement_decipher_only.compatible_with(key));
+      result.test_is_true("usage acceptable", crl_sign.compatible_with(key));
+      result.test_is_true("usage acceptable", sign_everything.compatible_with(key));
    } else if(pk_algo == "ElGamal") {
       // only ElGamal encryption is currently implemented
-      result.test_eq("all constraints not permitted", all.compatible_with(key), false);
-      result.test_eq("cert sign not permitted", ca.compatible_with(key), false);
-      result.test_eq("data encipherment permitted", data_encipherment.compatible_with(key), true);
-      result.test_eq("key encipherment permitted", key_encipherment.compatible_with(key), true);
-      result.test_eq("key agreement not permitted", key_agreement.compatible_with(key), false);
-      result.test_eq("key agreement", key_agreement_encipher_only.compatible_with(key), false);
-      result.test_eq("key agreement", key_agreement_decipher_only.compatible_with(key), false);
-      result.test_eq("crl sign not permitted", crl_sign.compatible_with(key), false);
-      result.test_eq("sign", sign_everything.compatible_with(key), false);
+      result.test_is_false("all constraints not permitted", all.compatible_with(key));
+      result.test_is_false("cert sign not permitted", ca.compatible_with(key));
+      result.test_is_true("data encipherment permitted", data_encipherment.compatible_with(key));
+      result.test_is_true("key encipherment permitted", key_encipherment.compatible_with(key));
+      result.test_is_false("key agreement not permitted", key_agreement.compatible_with(key));
+      result.test_is_false("key agreement", key_agreement_encipher_only.compatible_with(key));
+      result.test_is_false("key agreement", key_agreement_decipher_only.compatible_with(key));
+      result.test_is_false("crl sign not permitted", crl_sign.compatible_with(key));
+      result.test_is_false("sign", sign_everything.compatible_with(key));
    } else if(pk_algo == "DSA" || pk_algo == "ECDSA" || pk_algo == "ECGDSA" || pk_algo == "ECKCDSA" ||
              pk_algo == "GOST-34.10" || pk_algo == "Dilithium" || pk_algo == "ML-DSA" || pk_algo == "SLH-DSA" ||
              pk_algo == "HSS-LMS") {
       // these are signature algorithms only
-      result.test_eq("all constraints not permitted", all.compatible_with(key), false);
+      result.test_is_false("all constraints not permitted", all.compatible_with(key));
 
-      result.test_eq("ca allowed", ca.compatible_with(key), true);
-      result.test_eq("sign allowed", sign_data.compatible_with(key), true);
-      result.test_eq("non-repudiation allowed", non_repudiation.compatible_with(key), true);
-      result.test_eq("key encipherment not permitted", key_encipherment.compatible_with(key), false);
-      result.test_eq("data encipherment not permitted", data_encipherment.compatible_with(key), false);
-      result.test_eq("key agreement not permitted", key_agreement.compatible_with(key), false);
-      result.test_eq("key agreement", key_agreement_encipher_only.compatible_with(key), false);
-      result.test_eq("key agreement", key_agreement_decipher_only.compatible_with(key), false);
-      result.test_eq("crl sign allowed", crl_sign.compatible_with(key), true);
-      result.test_eq("sign allowed", sign_everything.compatible_with(key), true);
+      result.test_is_true("ca allowed", ca.compatible_with(key));
+      result.test_is_true("sign allowed", sign_data.compatible_with(key));
+      result.test_is_true("non-repudiation allowed", non_repudiation.compatible_with(key));
+      result.test_is_false("key encipherment not permitted", key_encipherment.compatible_with(key));
+      result.test_is_false("data encipherment not permitted", data_encipherment.compatible_with(key));
+      result.test_is_false("key agreement not permitted", key_agreement.compatible_with(key));
+      result.test_is_false("key agreement", key_agreement_encipher_only.compatible_with(key));
+      result.test_is_false("key agreement", key_agreement_decipher_only.compatible_with(key));
+      result.test_is_true("crl sign allowed", crl_sign.compatible_with(key));
+      result.test_is_true("sign allowed", sign_everything.compatible_with(key));
    }
 
    return result;
@@ -1350,7 +1349,7 @@ Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
 
    const Botan::X509_DN& req_dn = req.subject_dn();
 
-   result.test_eq("Expected number of DN entries", req_dn.dn_info().size(), 2);
+   result.test_sz_eq("Expected number of DN entries", req_dn.dn_info().size(), 2);
 
    const Botan::ASN1_String req_val1 = req_dn.get_first_attribute(attr1);
    const Botan::ASN1_String req_val2 = req_dn.get_first_attribute(attr2);
@@ -1366,7 +1365,7 @@ Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
 
    const Botan::X509_DN& cert_dn = cert.subject_dn();
 
-   result.test_eq("Expected number of DN entries", cert_dn.dn_info().size(), 2);
+   result.test_sz_eq("Expected number of DN entries", cert_dn.dn_info().size(), 2);
 
    const Botan::ASN1_String cert_val1 = cert_dn.get_first_attribute(attr1);
    const Botan::ASN1_String cert_val2 = cert_dn.get_first_attribute(attr2);
@@ -1585,18 +1584,18 @@ Test::Result test_x509_tn_auth_list_extension_decode() {
    result.test_throws("wrong service_provider_code() accessor for one",
                       [&tn_entries] { tn_entries[2].service_provider_code(); });
 
-   result.test_eq("spc entry type", tn_entries[0].type() == TNAuthList::Entry::ServiceProviderCode, true);
+   result.test_is_true("spc entry type", tn_entries[0].type() == TNAuthList::Entry::ServiceProviderCode);
    result.test_eq("spc entry data", tn_entries[0].service_provider_code(), "1001");
 
-   result.test_eq("range entry type", tn_entries[1].type() == TNAuthList::Entry::TelephoneNumberRange, true);
+   result.test_is_true("range entry type", tn_entries[1].type() == TNAuthList::Entry::TelephoneNumberRange);
    const auto& range = tn_entries[1].telephone_number_range();
-   result.test_eq("range entries count", range.size(), 2);
+   result.test_sz_eq("range entries count", range.size(), 2);
    result.test_eq("range entry 0 start data", range[0].start.value(), "111");
-   result.test_eq("range entry 0 count data", range[0].count, 128);
+   result.test_sz_eq("range entry 0 count data", range[0].count, 128);
    result.test_eq("range entry 1 start data", range[1].start.value(), "222");
-   result.test_eq("range entry 1 count data", range[1].count, 256);
+   result.test_sz_eq("range entry 1 count data", range[1].count, 256);
 
-   result.test_eq("one entry type", tn_entries[2].type() == TNAuthList::Entry::TelephoneNumber, true);
+   result.test_is_true("one entry type", tn_entries[2].type() == TNAuthList::Entry::TelephoneNumber);
    result.test_eq("one entry data", tn_entries[2].telephone_number(), "333");
 
    result.end_timer();

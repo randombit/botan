@@ -84,7 +84,7 @@ class Test_Tests final : public Test {
             Test::Result test_result(testcase_name);
             const size_t x = 5;
             const size_t y = 6;
-            test_result.test_eq("test ints equal", x, y);
+            test_result.test_sz_eq("test ints equal", x, y);
             verify_failure("test ints equal", result, test_result);
          }
 
@@ -92,7 +92,7 @@ class Test_Tests final : public Test {
             Test::Result test_result(testcase_name);
             const size_t x = 5;
             const size_t y = 5;
-            test_result.test_ne("test ints not equal", x, y);
+            test_result.test_sz_ne("test ints not equal", x, y);
             verify_failure("test ints not equal", result, test_result);
          }
 
@@ -104,19 +104,19 @@ class Test_Tests final : public Test {
 
          {
             Test::Result test_result(testcase_name);
-            test_result.test_lt("not less", 5, 5);
+            test_result.test_sz_lt("not less", 5, 5);
             verify_failure("test_lt", result, test_result);
          }
 
          {
             Test::Result test_result(testcase_name);
-            test_result.test_lte("not lte", 6, 5);
+            test_result.test_sz_lte("not lte", 6, 5);
             verify_failure("test_lte", result, test_result);
          }
 
          {
             Test::Result test_result(testcase_name);
-            test_result.test_gte("not gte", 5, 6);
+            test_result.test_sz_gte("not gte", 5, 6);
             verify_failure("test_gte", result, test_result);
          }
 

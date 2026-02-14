@@ -40,11 +40,11 @@ class Entropy_Source_Tests final : public Test {
 
                const size_t bits = srcs.poll_just(rng, src_name);
 
-               result.test_gte("Entropy estimate", rng.seed_material().size() * 8, bits);
+               result.test_sz_gte("Entropy estimate", rng.seed_material().size() * 8, bits);
 
                if(rng.samples() > 0) {
-                  result.test_gte("Seed material bytes", rng.seed_material().size(), 1);
-                  result.test_gte("Samples", rng.samples(), 1);
+                  result.test_sz_gte("Seed material bytes", rng.seed_material().size(), 1);
+                  result.test_sz_gte("Samples", rng.samples(), 1);
                }
 
                result.test_note("poll result", rng.seed_material());
@@ -69,7 +69,7 @@ class Entropy_Source_Tests final : public Test {
 
                            comp1_size = compressed.size();
 
-                           result.test_gte(
+                           result.test_sz_gte(
                               comp_algo + " compressed entropy better than advertised", compressed.size() * 8, bits);
                         } catch(std::exception& e) {
                            result.test_failure(comp_algo + " exception while compressing", e.what());
@@ -94,11 +94,11 @@ class Entropy_Source_Tests final : public Test {
 
                               const size_t comp2_size = compressed.size();
 
-                              result.test_lt("Two blocks of entropy are larger than one", comp1_size, comp2_size);
+                              result.test_sz_lt("Two blocks of entropy are larger than one", comp1_size, comp2_size);
 
                               const size_t comp_diff = comp2_size - comp1_size;
 
-                              result.test_gte(
+                              result.test_sz_gte(
                                  comp_algo + " diff compressed entropy better than advertised", comp_diff * 8, bits2);
                            } catch(std::exception& e) {
                               result.test_failure(comp_algo + " exception while compressing", e.what());

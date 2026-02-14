@@ -286,57 +286,88 @@ bool Test::Result::test_eq(std::string_view what, const char* produced, const ch
    return test_is_eq(what, std::string(produced), std::string(expected));
 }
 
-bool Test::Result::test_eq(std::string_view what, size_t produced, size_t expected) {
-   return test_is_eq(what, produced, expected);
+bool Test::Result::test_u8_eq(uint8_t produced, uint8_t expected) {
+   return test_sz_eq("comparison", produced, expected);
 }
 
-bool Test::Result::test_eq_sz(std::string_view what, size_t produced, size_t expected) {
-   return test_is_eq(what, produced, expected);
+bool Test::Result::test_u8_eq(std::string_view what, uint8_t produced, uint8_t expected) {
+   return test_sz_eq(what, produced, expected);
 }
 
-bool Test::Result::test_lt(std::string_view what, size_t produced, size_t expected) {
-   if(produced >= expected) {
-      std::ostringstream err;
-      err << m_who << " " << what;
-      err << " unexpected result " << produced << " >= " << expected;
-      return test_failure(err.str());
+bool Test::Result::test_u16_eq(uint16_t produced, uint16_t expected) {
+   return test_sz_eq("comparison", produced, expected);
+}
+
+bool Test::Result::test_u16_eq(std::string_view what, uint16_t produced, uint16_t expected) {
+   return test_sz_eq(what, produced, expected);
+}
+
+bool Test::Result::test_u32_eq(uint32_t produced, uint32_t expected) {
+   return test_sz_eq("comparison", produced, expected);
+}
+
+bool Test::Result::test_u32_eq(std::string_view what, uint32_t produced, uint32_t expected) {
+   return test_sz_eq(what, produced, expected);
+}
+
+bool Test::Result::test_u64_eq(uint64_t produced, uint64_t expected) {
+   return test_u64_eq("comparison", produced, expected);
+}
+
+bool Test::Result::test_u64_eq(std::string_view what, uint64_t produced, uint64_t expected) {
+   if(produced == expected) {
+      return test_success();
+   } else {
+      return test_failure(Botan::fmt("Assertion failure in {} {}: {} == {}", who(), what, produced, expected));
    }
-
-   return test_success();
 }
 
-bool Test::Result::test_lte(std::string_view what, size_t produced, size_t expected) {
-   if(produced > expected) {
-      std::ostringstream err;
-      err << m_who << " " << what << " unexpected result " << produced << " > " << expected;
-      return test_failure(err.str());
+bool Test::Result::test_sz_eq(std::string_view what, size_t produced, size_t expected) {
+   if(produced == expected) {
+      return test_success();
+   } else {
+      return test_failure(Botan::fmt("Assertion failure in {} {}: {} == {}", who(), what, produced, expected));
    }
-
-   return test_success();
 }
 
-bool Test::Result::test_gte(std::string_view what, size_t produced, size_t expected) {
+bool Test::Result::test_sz_ne(std::string_view what, size_t produced, size_t expected) {
+   if(produced != expected) {
+      return test_success();
+   } else {
+      return test_failure(Botan::fmt("Assertion failure in {} {}: {} != {}", who(), what, produced, expected));
+   }
+}
+
+bool Test::Result::test_sz_lt(std::string_view what, size_t produced, size_t expected) {
    if(produced < expected) {
-      std::ostringstream err;
-      err << m_who;
-      err << " " << what;
-      err << " unexpected result " << produced << " < " << expected;
-      return test_failure(err.str());
+      return test_success();
+   } else {
+      return test_failure(Botan::fmt("Assertion failure in {} {}: {} < {}", who(), what, produced, expected));
    }
-
-   return test_success();
 }
 
-bool Test::Result::test_gt(std::string_view what, size_t produced, size_t expected) {
+bool Test::Result::test_sz_lte(std::string_view what, size_t produced, size_t expected) {
    if(produced <= expected) {
-      std::ostringstream err;
-      err << m_who;
-      err << " " << what;
-      err << " unexpected result " << produced << " <= " << expected;
-      return test_failure(err.str());
+      return test_success();
+   } else {
+      return test_failure(Botan::fmt("Assertion failure in {} {}: {} <= {}", who(), what, produced, expected));
    }
+}
 
-   return test_success();
+bool Test::Result::test_sz_gt(std::string_view what, size_t produced, size_t expected) {
+   if(produced > expected) {
+      return test_success();
+   } else {
+      return test_failure(Botan::fmt("Assertion failure in {} {}: {} > {}", who(), what, produced, expected));
+   }
+}
+
+bool Test::Result::test_sz_gte(std::string_view what, size_t produced, size_t expected) {
+   if(produced >= expected) {
+      return test_success();
+   } else {
+      return test_failure(Botan::fmt("Assertion failure in {} {}: {} >= {}", who(), what, produced, expected));
+   }
 }
 
 bool Test::Result::test_ne(std::string_view what, std::string_view str1, std::string_view str2) {
@@ -345,16 +376,6 @@ bool Test::Result::test_ne(std::string_view what, std::string_view str1, std::st
    } else {
       return test_failure(Botan::fmt("{} {} unexpectedly produced matching strings {}", who(), what, str1));
    }
-}
-
-bool Test::Result::test_ne(std::string_view what, size_t produced, size_t expected) {
-   if(produced != expected) {
-      return test_success();
-   }
-
-   std::ostringstream err;
-   err << who() << " " << what << " produced " << produced << " unexpected value";
-   return test_failure(err.str());
 }
 
 #if defined(BOTAN_HAS_BIGINT)
@@ -387,8 +408,24 @@ bool Test::Result::test_eq(std::string_view what, const Botan::EC_Point& a, cons
 }
 #endif
 
-bool Test::Result::test_eq(std::string_view what, bool produced, bool expected) {
-   return test_is_eq(what, produced, expected);
+bool Test::Result::test_bool_eq(std::string_view what, bool produced, bool expected) {
+   if(produced == expected) {
+      return test_success();
+   } else {
+      if(expected == true) {
+         return test_failure(Botan::fmt("Assertion failure in {}, {} was unexpectedly false", who(), what));
+      } else {
+         return test_failure(Botan::fmt("Assertion failure in {}, {} was unexpectedly true", who(), what));
+      }
+   }
+}
+
+bool Test::Result::test_is_true(std::string_view what, bool produced) {
+   return test_bool_eq(what, produced, true);
+}
+
+bool Test::Result::test_is_false(std::string_view what, bool produced) {
+   return test_bool_eq(what, produced, false);
 }
 
 bool Test::Result::test_rc_ok(std::string_view func, int rc) {

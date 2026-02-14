@@ -64,9 +64,9 @@ class Message_Auth_Tests final : public Text_Based_Test {
                result.test_success("Trying to MAC with no key set fails");
             }
 
-            result.test_eq("key not set", mac->has_keying_material(), false);
+            result.test_is_false("key not set", mac->has_keying_material());
             mac->set_key(key);
-            result.test_eq("key set", mac->has_keying_material(), true);
+            result.test_is_true("key set", mac->has_keying_material());
             mac->start(iv);
             mac->update(input);
             result.test_eq(provider, "correct mac", mac->final(), expected);
@@ -95,7 +95,7 @@ class Message_Auth_Tests final : public Text_Based_Test {
             mac->start(iv);
             mac->update("some discarded input");
             mac->clear();
-            result.test_eq("key not set", mac->has_keying_material(), false);
+            result.test_is_false("key not set", mac->has_keying_material());
 
             // do the same to test verify_mac()
             mac->set_key(key);
@@ -110,7 +110,7 @@ class Message_Auth_Tests final : public Text_Based_Test {
             clone->start(iv);
             clone->update(this->rng().random_vec(32));
 
-            result.test_eq(provider + " verify mac", mac->verify_mac(expected.data(), expected.size()), true);
+            result.test_is_true(provider + " verify mac", mac->verify_mac(expected.data(), expected.size()));
 
             if(input.size() > 2) {
                mac->set_key(key);  // Poly1305 requires the re-key
@@ -130,7 +130,7 @@ class Message_Auth_Tests final : public Text_Based_Test {
                mac->update(&input[1], input.size() - 2);
                mac->update(input[input.size() - 1]);
 
-               result.test_eq(provider + " split mac", mac->verify_mac(expected.data(), expected.size()), true);
+               result.test_is_true(provider + " split mac", mac->verify_mac(expected.data(), expected.size()));
             }
 
             mac->clear();

@@ -228,14 +228,14 @@ class ECC_Point_Addition_Tests final : public Test {
             const auto group = Botan::EC_Group::from_name(group_id);
 
             const auto g = Botan::EC_AffinePoint::generator(group);
-            result.test_eq("g is not the identity element", g.is_identity(), false);
+            result.test_is_false("g is not the identity element", g.is_identity());
 
             // Choose some other random point z
             const auto z = g.mul(Botan::EC_Scalar::random(group, rng()), rng());
-            result.test_eq("z is not the identity element", z.is_identity(), false);
+            result.test_is_false("z is not the identity element", z.is_identity());
 
             const auto id = Botan::EC_AffinePoint::identity(group);
-            result.test_eq("id is the identity element", id.is_identity(), true);
+            result.test_is_true("id is the identity element", id.is_identity());
 
             const auto g_bytes = g.serialize_uncompressed();
 
@@ -304,9 +304,9 @@ class ECC_Scalar_Arithmetic_Tests final : public Test {
          result.test_eq("Serialization of zero is expected value", zero.serialize(), ser_zero);
          result.test_eq("Serialization of one is expected value", one.serialize(), ser_one);
 
-         result.test_eq("Zero is zero", zero.is_zero(), true);
-         result.test_eq("Negation of zero is zero", zero.negate().is_zero(), true);
-         result.test_eq("One is not zero", one.is_zero(), false);
+         result.test_is_true("Zero is zero", zero.is_zero());
+         result.test_is_true("Negation of zero is zero", zero.negate().is_zero());
+         result.test_is_false("One is not zero", one.is_zero());
 
          // Zero inverse is not mathematically correct, but works out for our purposes
          result.test_eq("Inverse of zero is zero", zero.invert().serialize(), ser_zero);
@@ -376,7 +376,7 @@ class ECC_Scalar_Arithmetic_Tests final : public Test {
             result.test_eq("matches BigInt", c.serialize(), (c_bn % group.get_order()).serialize(order_bytes));
 
             const auto c_wide_bytes = c_bn.serialize();
-            result.test_lte("Expected size", c_wide_bytes.size(), 2 * order_bytes);
+            result.test_sz_lte("Expected size", c_wide_bytes.size(), 2 * order_bytes);
 
             const auto z = Botan::EC_Scalar::from_bytes_mod_order(group, c_wide_bytes);
 

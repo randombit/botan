@@ -104,14 +104,15 @@ std::vector<Test::Result> test_frodo_roundtrips() {
       Botan::PK_KEM_Encryptor enc1(pk1, "Raw");
       const auto enc_res = enc1.encrypt(*rng, 0 /* no KDF */);
 
-      result.test_eq("length of shared secret", enc_res.shared_key().size(), enc1.shared_key_length(0));
-      result.test_eq("length of ciphertext", enc_res.encapsulated_shared_key().size(), enc1.encapsulated_key_length());
+      result.test_sz_eq("length of shared secret", enc_res.shared_key().size(), enc1.shared_key_length(0));
+      result.test_sz_eq(
+         "length of ciphertext", enc_res.encapsulated_shared_key().size(), enc1.encapsulated_key_length());
 
       Botan::PK_KEM_Decryptor dec1(sk1, *rng, "Raw");
       auto ss = dec1.decrypt(enc_res.encapsulated_shared_key(), 0 /* no KDF */);
 
       result.test_eq("shared secrets match", ss, enc_res.shared_key());
-      result.test_eq("length of shared secret (decaps)", ss.size(), dec1.shared_key_length(0));
+      result.test_sz_eq("length of shared secret (decaps)", ss.size(), dec1.shared_key_length(0));
 
       // Decryption failures ("All right then, keep your secrets.")
       const Botan::FrodoKEM_PrivateKey sk2(*rng, mode);

@@ -152,7 +152,7 @@ Test::Result test_x509_ip_addr_blocks_extension_decode() {
 
       const auto& addr_blocks = ip_addr_blocks->addr_blocks();
       result.confirm("cert has IPAddrBlocks extension", ip_addr_blocks != nullptr, true);
-      result.test_eq("cert has two IpAddrBlocks", addr_blocks.size(), 2);
+      result.test_sz_eq("cert has two IpAddrBlocks", addr_blocks.size(), 2);
 
       const auto& ipv4block = std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(addr_blocks[0].addr_choice());
       const auto& ipv6block = std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(addr_blocks[1].addr_choice());
@@ -225,7 +225,7 @@ Test::Result test_x509_ip_addr_blocks_extension_decode() {
       // IPv4 ranges should be merged, IPv4 should come before IPv6, all should be sorted by safi
 
       const auto& addr_blocks = ip_addr_blocks->addr_blocks();
-      result.test_eq("cert has two IpAddrBlocks", addr_blocks.size(), 5);
+      result.test_sz_eq("cert has two IpAddrBlocks", addr_blocks.size(), 5);
 
       result.test_eq("block 0 has no safi", addr_blocks[0].safi(), std::optional<uint8_t>{std::nullopt});
       result.confirm(
@@ -827,7 +827,7 @@ Test::Result test_x509_ip_addr_blocks_range_merge() {
 
       result.test_eq("range expected min", ranges[0].min().value(), expected_min);
       result.test_eq("range expected max", ranges[0].max().value(), expected_max);
-      result.test_eq("range length", ranges.size(), 1);
+      result.test_sz_eq("range length", ranges.size(), 1);
    }
 
    result.end_timer();

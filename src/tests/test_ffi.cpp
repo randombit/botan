@@ -207,7 +207,7 @@ void ffi_test_pubkey_export(Test::Result& result, botan_pubkey_t pub, botan_priv
 
    privkey.resize(privkey_len);
 
-   result.test_gte("Reasonable size", privkey.size(), 32);
+   result.test_sz_gte("Reasonable size", privkey.size(), 32);
 
    // reimport exported private key
    botan_privkey_t copy;
@@ -287,10 +287,10 @@ void ffi_test_pubkey_export(Test::Result& result, botan_pubkey_t pub, botan_priv
                 0));
 
    if(pbe_hash == "Scrypt") {
-      result.test_eq("Scrypt iters set to zero in this API", pbkdf_iters_out, 0);
+      result.test_sz_eq("Scrypt iters set to zero in this API", pbkdf_iters_out, 0);
    } else {
       // PBKDF2 currently always rounds to multiple of 2000
-      result.test_eq("Expected PBKDF2 iters", pbkdf_iters_out % 2000, 0);
+      result.test_sz_eq("Expected PBKDF2 iters", pbkdf_iters_out % 2000, 0);
    }
 
    privkey.resize(privkey_len);
@@ -302,7 +302,7 @@ void ffi_test_pubkey_export(Test::Result& result, botan_pubkey_t pub, botan_priv
    // calculate fingerprint
    size_t strength = 0;
    TEST_FFI_OK(botan_pubkey_estimated_strength, (pub, &strength));
-   result.test_gte("estimated strength", strength, 1);
+   result.test_sz_gte("estimated strength", strength, 1);
 
    size_t fingerprint_len = 0;
    TEST_FFI_RC(
@@ -317,18 +317,18 @@ class FFI_Utils_Test final : public FFI_Test {
       std::string name() const override { return "FFI Utils"; }
 
       void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
-         result.test_is_eq("FFI API version macro", uint32_t(BOTAN_FFI_API_VERSION), uint32_t(BOTAN_HAS_FFI));
-         result.test_is_eq("FFI API version function", botan_ffi_api_version(), uint32_t(BOTAN_HAS_FFI));
-         result.test_is_eq("Major version", botan_version_major(), Botan::version_major());
-         result.test_is_eq("Minor version", botan_version_minor(), Botan::version_minor());
-         result.test_is_eq("Patch version", botan_version_patch(), Botan::version_patch());
-         result.test_is_eq("Botan version", botan_version_string(), Botan::version_cstr());
-         result.test_is_eq("Botan version datestamp", botan_version_datestamp(), Botan::version_datestamp());
+         result.test_u32_eq("FFI API version macro", uint32_t(BOTAN_FFI_API_VERSION), uint32_t(BOTAN_HAS_FFI));
+         result.test_u32_eq("FFI API version function", botan_ffi_api_version(), uint32_t(BOTAN_HAS_FFI));
+         result.test_u32_eq("Major version", botan_version_major(), Botan::version_major());
+         result.test_u32_eq("Minor version", botan_version_minor(), Botan::version_minor());
+         result.test_u32_eq("Patch version", botan_version_patch(), Botan::version_patch());
+         result.test_eq("Botan version", botan_version_string(), Botan::version_cstr());
+         result.test_u32_eq("Botan version datestamp", botan_version_datestamp(), Botan::version_datestamp());
          result.test_is_eq("FFI supports its own version", botan_ffi_supports_api(botan_ffi_api_version()), 0);
 
-         result.test_is_eq("FFI compile time time var matches botan_ffi_api_version",
-                           botan_ffi_api_version(),
-                           uint32_t(BOTAN_FFI_API_VERSION));
+         result.test_u32_eq("FFI compile time time var matches botan_ffi_api_version",
+                            botan_ffi_api_version(),
+                            uint32_t(BOTAN_FFI_API_VERSION));
 
          result.test_is_eq("FFI supports 2.0 version", botan_ffi_supports_api(20150515), 0);
          result.test_is_eq("FFI supports 2.1 version", botan_ffi_supports_api(20170327), 0);
@@ -442,22 +442,22 @@ class FFI_RNG_Test final : public FFI_Test {
                (&custom_rng, "custom rng", &cb_counter, custom_get_cb, custom_add_entropy_cb, custom_destroy_cb))) {
             Botan::clear_mem(outbuf.data(), outbuf.size());
             TEST_FFI_OK(botan_rng_get, (custom_rng, outbuf.data(), outbuf.size()));
-            result.test_eq("custom_get_cb called", cb_counter, 1);
+            result.test_sz_eq("custom_get_cb called", cb_counter, 1);
             std::vector<uint8_t> pattern(outbuf.size(), 0x12);
             result.test_eq("custom_get_cb returned bytes", pattern, outbuf);
 
             TEST_FFI_OK(botan_rng_reseed, (custom_rng, 256));
-            result.test_eq("custom_add_entropy_cb called", cb_counter, 2);
+            result.test_sz_eq("custom_add_entropy_cb called", cb_counter, 2);
 
             TEST_FFI_OK(botan_rng_reseed_from_rng, (custom_rng, system_rng, 256));
-            result.test_eq("custom_add_entropy_cb called", cb_counter, 3);
+            result.test_sz_eq("custom_add_entropy_cb called", cb_counter, 3);
 
             uint8_t not_really_entropy[32] = {0};
             TEST_FFI_OK(botan_rng_add_entropy, (custom_rng, not_really_entropy, 32));
-            result.test_eq("custom_add_entropy_cb called", cb_counter, 4);
+            result.test_sz_eq("custom_add_entropy_cb called", cb_counter, 4);
 
             TEST_FFI_OK(botan_rng_destroy, (custom_rng));
-            result.test_eq("custom_destroy_cb called", cb_counter, 5);
+            result.test_sz_eq("custom_destroy_cb called", cb_counter, 5);
          }
 
    #ifdef BOTAN_HAS_JITTER_RNG
@@ -716,9 +716,9 @@ class FFI_CRL_Test final : public FFI_Test {
          TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE, botan_x509_crl_next_update, (crl_without_next_update, nullptr));
          TEST_FFI_OK(botan_x509_crl_this_update, (bytecrl, &this_update));
          TEST_FFI_OK(botan_x509_crl_next_update, (bytecrl, &next_update));
-         result.test_is_eq(
+         result.test_u64_eq(
             "this update", this_update, Botan::calendar_point(2050, 2, 25, 15, 21, 42).seconds_since_epoch());
-         result.test_is_eq(
+         result.test_u64_eq(
             "next update", next_update, Botan::calendar_point(2050, 2, 25, 15, 24, 41).seconds_since_epoch());
 
          TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_x509_crl_this_update, (bytecrl, nullptr));
@@ -749,9 +749,9 @@ class FFI_CRL_Test final : public FFI_Test {
 
          size_t entries;
          TEST_FFI_OK(botan_x509_crl_entries_count, (crl, &entries));
-         result.test_eq("one revoked cert", entries, 1);
+         result.test_sz_eq("one revoked cert", entries, 1);
          TEST_FFI_OK(botan_x509_crl_entries_count, (bytecrl, &entries));
-         result.test_eq("no revoked cert", entries, 0);
+         result.test_sz_eq("no revoked cert", entries, 0);
 
          ViewBytesSink serial;
          TEST_FFI_OK(botan_mp_view_bin, (cert2_serial_bn, serial.delegate(), serial.callback()));
@@ -775,7 +775,7 @@ class FFI_CRL_Test final : public FFI_Test {
          result.test_is_eq(
             "Reason", static_cast<uint8_t>(reason), Botan::to_underlying(Botan::CRL_Code::KeyCompromise));
    #endif
-         result.test_is_eq("Revocation time", ts, Botan::calendar_point(1999, 1, 1, 12, 0, 0).seconds_since_epoch());
+         result.test_u64_eq("Revocation time", ts, Botan::calendar_point(1999, 1, 1, 12, 0, 0).seconds_since_epoch());
          result.test_eq("Revoked cert serial", serial.get(), cert2_serial);
 
          TEST_FFI_OK(botan_mp_view_bin, (entry_serial_bn, serial.delegate(), serial.callback()));
@@ -825,7 +825,7 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          REQUIRE_FFI_OK(botan_x509_cert_load_file,
                         (&root_with_pathlen, Test::data_file("x509/extended/02/root.crt").c_str()));
          TEST_FFI_OK(botan_x509_cert_get_path_length_constraint, (root_with_pathlen, &path_limit));
-         result.test_eq("Path length constraint", path_limit, 1);
+         result.test_sz_eq("Path length constraint", path_limit, 1);
 
          TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end2, &sub2, 1, &root, 1, nullptr, 0, nullptr, 0));
          result.confirm("Validation test02 failed", rc == 5002);
@@ -935,7 +935,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             std::vector<uint8_t> serial(serial_len);
             TEST_FFI_OK(botan_x509_cert_get_serial_number, (cert, serial.data(), &serial_len));
-            result.test_eq("cert serial length", serial.size(), 16);
+            result.test_sz_eq("cert serial length", serial.size(), 16);
             result.test_eq("cert serial", Botan::hex_encode(serial), "41D29DD172EAEEA780C12C6CE92F8752");
 
             size_t fingerprint_len = 0;
@@ -955,7 +955,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
                         botan_x509_cert_get_authority_key_id,
                         (cert, nullptr, &key_id_len));
 
-            result.test_eq("No AKID", key_id_len, 0);
+            result.test_sz_eq("No AKID", key_id_len, 0);
 
             key_id_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
@@ -986,9 +986,9 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             size_t rdn_count;
             TEST_FFI_OK(botan_x509_cert_get_issuer_dn_count, (cert, "Name", &rdn_count));
-            result.test_eq("issuer DN 'name' count", rdn_count, 1);
+            result.test_sz_eq("issuer DN 'name' count", rdn_count, 1);
             TEST_FFI_OK(botan_x509_cert_get_issuer_dn_count, (cert, "Organizational Unit", &rdn_count));
-            result.test_eq("issuer DN 'organizational unit' count", rdn_count, 0);
+            result.test_sz_eq("issuer DN 'organizational unit' count", rdn_count, 0);
 
             size_t dn_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
@@ -1000,9 +1000,9 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
             result.test_eq("issuer dn", reinterpret_cast<const char*>(dn.data()), "ISRG Root X2");
 
             TEST_FFI_OK(botan_x509_cert_get_subject_dn_count, (cert, "Name", &rdn_count));
-            result.test_eq("subject DN 'name' count", rdn_count, 1);
+            result.test_sz_eq("subject DN 'name' count", rdn_count, 1);
             TEST_FFI_OK(botan_x509_cert_get_subject_dn_count, (cert, "Organizational Unit", &rdn_count));
-            result.test_eq("subject DN 'organizational unit' count", rdn_count, 0);
+            result.test_sz_eq("subject DN 'organizational unit' count", rdn_count, 0);
 
             dn_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
@@ -1122,7 +1122,7 @@ class FFI_Cert_AlternativeNames_Test final : public FFI_Test {
                // Now check we are at the expected index
                size_t count;
                TEST_FFI_OK(count_fn, (cert, &count));
-               result.test_eq("enumerator reached end at expected index", i, count);
+               result.test_sz_eq("enumerator reached end at expected index", i, count);
             } else {
                result.test_note(
                   Botan::fmt("enumerator produced unexpected return code: {}", botan_error_description(rc)));
@@ -1207,32 +1207,32 @@ class FFI_Cert_AlternativeNames_Test final : public FFI_Test {
 
          const auto san_email =
             read_string_alternative_names(result, cert, get_san, count_san, BOTAN_X509_EMAIL_ADDRESS);
-         result.test_eq("expected number of emails in SAN", san_email.size(), 2);
+         result.test_sz_eq("expected number of emails in SAN", san_email.size(), 2);
          result.confirm("testing@x509-labs.com", Botan::value_exists(san_email, "testing@x509-labs.com"));
          result.confirm("info@x509-labs.com", Botan::value_exists(san_email, "info@x509-labs.com"));
 
          const auto san_dns = read_string_alternative_names(result, cert, get_san, count_san, BOTAN_X509_DNS_NAME);
-         result.test_eq("expected number of hostnames in SAN", san_dns.size(), 3);
+         result.test_sz_eq("expected number of hostnames in SAN", san_dns.size(), 3);
          result.confirm("test.x509-labs.com", Botan::value_exists(san_dns, "test.x509-labs.com"));
          result.confirm("versuch.x509-labs.com", Botan::value_exists(san_dns, "versuch.x509-labs.com"));
          result.confirm("trail.x509-labs.com", Botan::value_exists(san_dns, "trail.x509-labs.com"));
 
          const auto san_uri = read_string_alternative_names(result, cert, get_san, count_san, BOTAN_X509_URI);
-         result.test_eq("expected number of URIs in SAN", san_uri.size(), 2);
+         result.test_sz_eq("expected number of URIs in SAN", san_uri.size(), 2);
          result.confirm("https://x509-labs.com", Botan::value_exists(san_uri, "https://x509-labs.com"));
          result.confirm("http://x509-labs.com", Botan::value_exists(san_uri, "http://x509-labs.com"));
 
          const auto san_ip4 = read_string_alternative_names(result, cert, get_san, count_san, BOTAN_X509_IP_ADDRESS);
-         result.test_eq("expected number of IPv4 addresses", san_ip4.size(), 1);
+         result.test_sz_eq("expected number of IPv4 addresses", san_ip4.size(), 1);
          result.confirm("127.0.0.1", Botan::value_exists(san_ip4, "127.0.0.1"));
          const auto san_ip4_bin =
             read_binary_alternative_names(result, cert, get_san, count_san, BOTAN_X509_IP_ADDRESS);
-         result.test_eq("expected number of IPv4 addresses (bin)", san_ip4_bin.size(), 1);
+         result.test_sz_eq("expected number of IPv4 addresses (bin)", san_ip4_bin.size(), 1);
          result.test_eq("127.0.0.1 (bin)", san_ip4_bin.front(), Botan::store_be(uint32_t(0x7F000001)));
 
          const auto san_dn_bytes =
             read_binary_alternative_names(result, cert, get_san, count_san, BOTAN_X509_DIRECTORY_NAME);
-         result.test_eq("expected number of DNs in SAN", san_dn_bytes.size(), 3);
+         result.test_sz_eq("expected number of DNs in SAN", san_dn_bytes.size(), 3);
          const auto san_dn_cns = read_common_names(san_dn_bytes);
          result.confirm("First Name", Botan::value_exists(san_dn_cns, "First Name"));
          result.confirm("Middle Name", Botan::value_exists(san_dn_cns, "Middle Name"));
@@ -1243,30 +1243,30 @@ class FFI_Cert_AlternativeNames_Test final : public FFI_Test {
 
          const auto ian_email =
             read_string_alternative_names(result, cert, get_ian, count_ian, BOTAN_X509_EMAIL_ADDRESS);
-         result.test_eq("expected number of emails in IAN", ian_email.size(), 0);
+         result.test_sz_eq("expected number of emails in IAN", ian_email.size(), 0);
 
          const auto ian_dns = read_string_alternative_names(result, cert, get_ian, count_ian, BOTAN_X509_DNS_NAME);
-         result.test_eq("expected number of hostnames in IAN", ian_dns.size(), 3);
+         result.test_sz_eq("expected number of hostnames in IAN", ian_dns.size(), 3);
          result.confirm("test.x509-labs-ca.com", Botan::value_exists(ian_dns, "test.x509-labs-ca.com"));
          result.confirm("versuch.x509-labs-ca.com", Botan::value_exists(ian_dns, "versuch.x509-labs-ca.com"));
          result.confirm("trail.x509-labs-ca.com", Botan::value_exists(ian_dns, "trail.x509-labs-ca.com"));
 
          const auto ian_uri = read_string_alternative_names(result, cert, get_ian, count_ian, BOTAN_X509_URI);
-         result.test_eq("expected number of URIs in IAN", ian_uri.size(), 2);
+         result.test_sz_eq("expected number of URIs in IAN", ian_uri.size(), 2);
          result.confirm("https://x509-labs-ca.com", Botan::value_exists(ian_uri, "https://x509-labs-ca.com"));
          result.confirm("http://x509-labs-ca.com", Botan::value_exists(ian_uri, "http://x509-labs-ca.com"));
 
          const auto ian_ip4 = read_string_alternative_names(result, cert, get_ian, count_ian, BOTAN_X509_IP_ADDRESS);
-         result.test_eq("expected number of IPv4 addresses", ian_ip4.size(), 1);
+         result.test_sz_eq("expected number of IPv4 addresses", ian_ip4.size(), 1);
          result.confirm("192.168.1.1", Botan::value_exists(ian_ip4, "192.168.1.1"));
          const auto ian_ip4_bin =
             read_binary_alternative_names(result, cert, get_ian, count_ian, BOTAN_X509_IP_ADDRESS);
-         result.test_eq("expected number of IPv4 addresses (bin)", ian_ip4_bin.size(), 1);
+         result.test_sz_eq("expected number of IPv4 addresses (bin)", ian_ip4_bin.size(), 1);
          result.test_eq("192.168.1.1 (bin)", ian_ip4_bin.front(), Botan::store_be(uint32_t(0xC0A80101)));
 
          const auto ian_dn_bytes =
             read_binary_alternative_names(result, cert, get_ian, count_ian, BOTAN_X509_DIRECTORY_NAME);
-         result.test_eq("expected number of DNs in IAN", ian_dn_bytes.size(), 3);
+         result.test_sz_eq("expected number of DNs in IAN", ian_dn_bytes.size(), 3);
          const auto ian_dn_cns = read_common_names(ian_dn_bytes);
          result.confirm("First CA", Botan::value_exists(ian_dn_cns, "First CA"));
          result.confirm("Middle CA", Botan::value_exists(ian_dn_cns, "Middle CA"));
@@ -1331,7 +1331,7 @@ class FFI_Cert_NameConstraints_Test final : public FFI_Test {
                } else {
                   TEST_FFI_OK(botan_x509_cert_excluded_name_constraints_count, (cert, &count));
                }
-               result.test_eq("expected length of name constraint list", i, count);
+               result.test_sz_eq("expected length of name constraint list", i, count);
             } else {
                result.test_failure(Botan::fmt("unexpected error code: {}", botan_error_description(rc)));
             }
@@ -1353,8 +1353,8 @@ class FFI_Cert_NameConstraints_Test final : public FFI_Test {
          const auto permitted = read_constraints(result, cert, true);
          const auto excluded = read_constraints(result, cert, false);
 
-         result.test_eq_sz("permissions", permitted.size(), 72);
-         result.test_eq_sz("exclusions", excluded.size(), 1);
+         result.test_sz_eq("permissions", permitted.size(), 72);
+         result.test_sz_eq("exclusions", excluded.size(), 1);
 
          using V = decltype(permitted)::value_type;
          result.confirm("email", Botan::value_exists(permitted, V{BOTAN_X509_EMAIL_ADDRESS, "pec.aruba.it"}));
@@ -1409,7 +1409,7 @@ class FFI_Cert_NameConstraints_Test final : public FFI_Test {
                      (dn, str.delegate(), str.callback()));
 
          TEST_FFI_OK(botan_x509_general_name_view_binary_value, (ip, bin.delegate(), bin.callback()));
-         result.test_eq_sz("ip has correct length", bin.get().size(), 8);
+         result.test_sz_eq("ip has correct length", bin.get().size(), 8);
          TEST_FFI_OK(botan_x509_general_name_view_string_value, (ip, str.delegate(), str.callback()));
          result.test_eq("ip has correct length", str.get(), "0.0.0.0/0.0.0.0");
 
@@ -1433,7 +1433,7 @@ class FFI_PKCS_Hashid_Test final : public FFI_Test {
          size_t hash_id_len = hash_id.size();
 
          if(TEST_FFI_INIT(botan_pkcs_hash_id, ("SHA-256", hash_id.data(), &hash_id_len))) {
-            result.test_eq("Expected SHA-256 PKCS hash id len", hash_id_len, 19);
+            result.test_sz_eq("Expected SHA-256 PKCS hash id len", hash_id_len, 19);
 
             hash_id.resize(hash_id_len);
             result.test_eq("Expected SHA_256 PKCS hash id", hash_id, "3031300D060960864801650304020105000420");
@@ -1458,8 +1458,8 @@ class FFI_CBC_Cipher_Test final : public FFI_Test {
             size_t min_keylen = 0;
             size_t max_keylen = 0;
             TEST_FFI_OK(botan_cipher_query_keylen, (cipher_encrypt, &min_keylen, &max_keylen));
-            result.test_int_eq(min_keylen, 16, "Min key length");
-            result.test_int_eq(max_keylen, 16, "Max key length");
+            result.test_sz_eq("Min key length", min_keylen, 16);
+            result.test_sz_eq("Max key length", max_keylen, 16);
 
             // from https://github.com/geertj/bluepass/blob/master/tests/vectors/aes-cbc-pkcs7.txt
             const std::vector<uint8_t> plaintext =
@@ -1476,7 +1476,7 @@ class FFI_CBC_Cipher_Test final : public FFI_Test {
             for(size_t r = 0; r != 2; ++r) {
                size_t ctext_len;
                TEST_FFI_OK(botan_cipher_output_length, (cipher_encrypt, plaintext.size(), &ctext_len));
-               result.test_eq("Expected size of padded message", ctext_len, plaintext.size() + 15);
+               result.test_sz_eq("Expected size of padded message", ctext_len, plaintext.size() + 15);
                std::vector<uint8_t> ciphertext(ctext_len);
 
                size_t update_granularity = 0;
@@ -1487,9 +1487,9 @@ class FFI_CBC_Cipher_Test final : public FFI_Test {
                TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_encrypt, &ideal_granularity));
                TEST_FFI_OK(botan_cipher_get_tag_length, (cipher_encrypt, &taglen));
 
-               result.test_eq(
+               result.test_sz_eq(
                   "ideal granularity is a multiple of update granularity", ideal_granularity % update_granularity, 0);
-               result.test_eq("not an AEAD, hence no tag", taglen, 0);
+               result.test_sz_eq("not an AEAD, hence no tag", taglen, 0);
 
                TEST_FFI_OK(botan_cipher_set_key, (cipher_encrypt, symkey.data(), symkey.size()));
                TEST_FFI_OK(botan_cipher_start, (cipher_encrypt, nonce.data(), nonce.size()));
@@ -1530,10 +1530,10 @@ class FFI_CBC_Cipher_Test final : public FFI_Test {
                   TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_decrypt, &ideal_granularity));
                   TEST_FFI_OK(botan_cipher_get_tag_length, (cipher_decrypt, &taglen));
 
-                  result.test_eq("ideal granularity is a multiple of update granularity (decrypt)",
-                                 ideal_granularity % update_granularity,
-                                 0);
-                  result.test_eq("not an AEAD, hence no tag (decrypt)", taglen, 0);
+                  result.test_sz_eq("ideal granularity is a multiple of update granularity (decrypt)",
+                                    ideal_granularity % update_granularity,
+                                    0);
+                  result.test_sz_eq("not an AEAD, hence no tag (decrypt)", taglen, 0);
 
                   TEST_FFI_OK(botan_cipher_set_key, (cipher_decrypt, symkey.data(), symkey.size()));
                   TEST_FFI_OK(botan_cipher_start, (cipher_decrypt, nonce.data(), nonce.size()));
@@ -1572,11 +1572,11 @@ class FFI_GCM_Test final : public FFI_Test {
             std::array<char, 18> namebuf{};
             size_t name_len = 15;
             TEST_FFI_FAIL("output buffer too short", botan_cipher_name, (cipher_encrypt, namebuf.data(), &name_len));
-            result.test_eq("name len", name_len, 16);
+            result.test_sz_eq("name len", name_len, 16);
 
             name_len = namebuf.size();
             if(TEST_FFI_OK(botan_cipher_name, (cipher_encrypt, namebuf.data(), &name_len))) {
-               result.test_eq("name len", name_len, 16);
+               result.test_sz_eq("name len", name_len, 16);
                result.test_eq("name", namebuf.data(), "AES-128/GCM(16)");
             }
 
@@ -1590,18 +1590,18 @@ class FFI_GCM_Test final : public FFI_Test {
             TEST_FFI_OK(botan_cipher_get_update_granularity, (cipher_encrypt, &update_granularity));
             TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_encrypt, &ideal_granularity));
 
-            result.test_eq(
+            result.test_sz_eq(
                "ideal granularity is a multiple of update granularity", ideal_granularity % update_granularity, 0);
 
             TEST_FFI_OK(botan_cipher_query_keylen, (cipher_encrypt, &min_keylen, &max_keylen));
-            result.test_int_eq(min_keylen, 16, "Min key length");
-            result.test_int_eq(max_keylen, 16, "Max key length");
+            result.test_sz_eq("Min key length", min_keylen, 16);
+            result.test_sz_eq("Max key length", max_keylen, 16);
 
             TEST_FFI_OK(botan_cipher_get_default_nonce_length, (cipher_encrypt, &nonce_len));
-            result.test_int_eq(nonce_len, 12, "Expected default GCM nonce length");
+            result.test_sz_eq("Expected default GCM nonce length", nonce_len, 12);
 
             TEST_FFI_OK(botan_cipher_get_tag_length, (cipher_encrypt, &tag_len));
-            result.test_int_eq(tag_len, 16, "Expected GCM tag length");
+            result.test_sz_eq("Expected GCM tag length", tag_len, 16);
 
             TEST_FFI_RC(1, botan_cipher_is_authenticated, (cipher_encrypt));
 
@@ -1668,9 +1668,9 @@ class FFI_GCM_Test final : public FFI_Test {
                   TEST_FFI_OK(botan_cipher_get_update_granularity, (cipher_decrypt, &update_granularity));
                   TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_decrypt, &ideal_granularity));
 
-                  result.test_eq("ideal granularity is a multiple of update granularity (decrypt)",
-                                 ideal_granularity % update_granularity,
-                                 0);
+                  result.test_sz_eq("ideal granularity is a multiple of update granularity (decrypt)",
+                                    ideal_granularity % update_granularity,
+                                    0);
 
                   TEST_FFI_OK(botan_cipher_set_key, (cipher_decrypt, symkey.data(), symkey.size()));
                   TEST_FFI_OK(botan_cipher_set_associated_data, (cipher_decrypt, aad.data(), aad.size()));
@@ -1685,8 +1685,8 @@ class FFI_GCM_Test final : public FFI_Test {
                                ciphertext.size(),
                                &input_consumed));
 
-                  result.test_int_eq(input_consumed, ciphertext.size(), "All input consumed");
-                  result.test_int_eq(output_written, decrypted.size(), "Expected output size produced");
+                  result.test_sz_eq("All input consumed", input_consumed, ciphertext.size());
+                  result.test_sz_eq("Expected output size produced", output_written, decrypted.size());
                   result.test_eq("AES/GCM plaintext", decrypted, plaintext);
 
                   TEST_FFI_OK(botan_cipher_destroy, (cipher_decrypt));
@@ -1710,11 +1710,11 @@ class FFI_ChaCha20Poly1305_Test final : public FFI_Test {
             std::array<char, 17> namebuf{};
             size_t name_len = 15;
             TEST_FFI_FAIL("output buffer too short", botan_cipher_name, (cipher_encrypt, namebuf.data(), &name_len));
-            result.test_eq("name len", name_len, 17);
+            result.test_sz_eq("name len", name_len, 17);
 
             name_len = namebuf.size();
             if(TEST_FFI_OK(botan_cipher_name, (cipher_encrypt, namebuf.data(), &name_len))) {
-               result.test_eq("name len", name_len, 17);
+               result.test_sz_eq("name len", name_len, 17);
                result.test_eq("name", std::string(namebuf.data()), "ChaCha20Poly1305");
             }
 
@@ -1728,18 +1728,18 @@ class FFI_ChaCha20Poly1305_Test final : public FFI_Test {
             TEST_FFI_OK(botan_cipher_get_update_granularity, (cipher_encrypt, &update_granularity));
             TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_encrypt, &ideal_granularity));
 
-            result.test_eq(
+            result.test_sz_eq(
                "ideal granularity is a multiple of update granularity", ideal_granularity % update_granularity, 0);
 
             TEST_FFI_OK(botan_cipher_query_keylen, (cipher_encrypt, &min_keylen, &max_keylen));
-            result.test_int_eq(min_keylen, 32, "Min key length");
-            result.test_int_eq(max_keylen, 32, "Max key length");
+            result.test_sz_eq("Min key length", min_keylen, 32);
+            result.test_sz_eq("Max key length", max_keylen, 32);
 
             TEST_FFI_OK(botan_cipher_get_default_nonce_length, (cipher_encrypt, &nonce_len));
-            result.test_int_eq(nonce_len, 12, "Expected default ChaCha20Poly1305 nonce length");
+            result.test_sz_eq("Expected default ChaCha20Poly1305 nonce length", nonce_len, 12);
 
             TEST_FFI_OK(botan_cipher_get_tag_length, (cipher_encrypt, &tag_len));
-            result.test_int_eq(tag_len, 16, "Expected Chacha20Poly1305 tag length");
+            result.test_sz_eq("Expected Chacha20Poly1305 tag length", tag_len, 16);
 
             TEST_FFI_RC(1, botan_cipher_is_authenticated, (cipher_encrypt));
 
@@ -1801,9 +1801,9 @@ class FFI_ChaCha20Poly1305_Test final : public FFI_Test {
                   TEST_FFI_OK(botan_cipher_get_update_granularity, (cipher_decrypt, &update_granularity));
                   TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_decrypt, &ideal_granularity));
 
-                  result.test_eq("ideal granularity is a multiple of update granularity (decrypt)",
-                                 ideal_granularity % update_granularity,
-                                 0);
+                  result.test_sz_eq("ideal granularity is a multiple of update granularity (decrypt)",
+                                    ideal_granularity % update_granularity,
+                                    0);
 
                   TEST_FFI_OK(botan_cipher_set_key, (cipher_decrypt, symkey.data(), symkey.size()));
                   TEST_FFI_OK(botan_cipher_set_associated_data, (cipher_decrypt, aad.data(), aad.size()));
@@ -1818,8 +1818,8 @@ class FFI_ChaCha20Poly1305_Test final : public FFI_Test {
                                ciphertext.size(),
                                &input_consumed));
 
-                  result.test_int_eq(input_consumed, ciphertext.size(), "All input consumed");
-                  result.test_int_eq(output_written, decrypted.size(), "Expected output size produced");
+                  result.test_sz_eq("All input consumed", input_consumed, ciphertext.size());
+                  result.test_sz_eq("Expected output size produced", output_written, decrypted.size());
                   result.test_eq("AES/GCM plaintext", decrypted, plaintext);
 
                   TEST_FFI_OK(botan_cipher_destroy, (cipher_decrypt));
@@ -1851,23 +1851,23 @@ class FFI_EAX_Test final : public FFI_Test {
             TEST_FFI_OK(botan_cipher_get_update_granularity, (cipher_encrypt, &update_granularity));
             TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_encrypt, &ideal_granularity));
 
-            result.test_eq(
+            result.test_sz_eq(
                "ideal granularity is a multiple of update granularity", ideal_granularity % update_granularity, 0);
 
             TEST_FFI_OK(botan_cipher_query_keylen, (cipher_encrypt, &min_keylen, &max_keylen));
-            result.test_int_eq(min_keylen, 16, "Min key length");
-            result.test_int_eq(max_keylen, 16, "Max key length");
+            result.test_sz_eq("Min key length", min_keylen, 16);
+            result.test_sz_eq("Max key length", max_keylen, 16);
 
             TEST_FFI_OK(botan_cipher_get_keyspec, (cipher_encrypt, &min_keylen, &max_keylen, &mod_keylen));
-            result.test_int_eq(min_keylen, 16, "Min key length");
-            result.test_int_eq(max_keylen, 16, "Max key length");
-            result.test_int_eq(mod_keylen, 1, "Mod key length");
+            result.test_sz_eq("Min key length", min_keylen, 16);
+            result.test_sz_eq("Max key length", max_keylen, 16);
+            result.test_sz_eq("Mod key length", mod_keylen, 1);
 
             TEST_FFI_OK(botan_cipher_get_default_nonce_length, (cipher_encrypt, &nonce_len));
-            result.test_int_eq(nonce_len, 12, "Expected default EAX nonce length");
+            result.test_sz_eq("Expected default EAX nonce length", nonce_len, 12);
 
             TEST_FFI_OK(botan_cipher_get_tag_length, (cipher_encrypt, &tag_len));
-            result.test_int_eq(tag_len, 16, "Expected EAX tag length");
+            result.test_sz_eq("Expected EAX tag length", tag_len, 16);
 
             TEST_FFI_RC(1, botan_cipher_is_authenticated, (cipher_encrypt));
 
@@ -1923,9 +1923,9 @@ class FFI_EAX_Test final : public FFI_Test {
                   TEST_FFI_OK(botan_cipher_get_update_granularity, (cipher_decrypt, &update_granularity));
                   TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_decrypt, &ideal_granularity));
 
-                  result.test_eq("ideal granularity is a multiple of update granularity (decrypt)",
-                                 ideal_granularity % update_granularity,
-                                 0);
+                  result.test_sz_eq("ideal granularity is a multiple of update granularity (decrypt)",
+                                    ideal_granularity % update_granularity,
+                                    0);
 
                   TEST_FFI_OK(botan_cipher_set_key, (cipher_decrypt, symkey.data(), symkey.size()));
                   TEST_FFI_OK(botan_cipher_start, (cipher_decrypt, nonce.data(), nonce.size()));
@@ -1939,8 +1939,8 @@ class FFI_EAX_Test final : public FFI_Test {
                                ciphertext.size(),
                                &input_consumed));
 
-                  result.test_int_eq(input_consumed, ciphertext.size(), "All input consumed");
-                  result.test_int_eq(output_written, decrypted.size(), "Expected output size produced");
+                  result.test_sz_eq("All input consumed", input_consumed, ciphertext.size());
+                  result.test_sz_eq("Expected output size produced", output_written, decrypted.size());
                   result.test_eq("AES/EAX plaintext", decrypted, plaintext);
 
                   TEST_FFI_OK(botan_cipher_destroy, (cipher_decrypt));
@@ -1989,7 +1989,7 @@ class FFI_AEAD_Test final : public FFI_Test {
             TEST_FFI_OK(botan_cipher_get_default_nonce_length, (cipher_encrypt, &noncelen));
             TEST_FFI_OK(botan_cipher_get_tag_length, (cipher_encrypt, &taglen));
 
-            result.test_eq(
+            result.test_sz_eq(
                "ideal granularity is a multiple of update granularity", ideal_granularity % update_granularity, 0);
 
             std::vector<uint8_t> key(max_keylen);
@@ -2009,7 +2009,7 @@ class FFI_AEAD_Test final : public FFI_Test {
             std::vector<uint8_t> dummy_buffer_reference = dummy_buffer;
 
             const bool requires_entire_message = botan_cipher_requires_entire_message(cipher_encrypt) == 1;
-            result.test_eq(
+            result.test_bool_eq(
                "requires entire message", requires_entire_message, (aead == "AES-256/SIV" || aead == "AES-128/CCM"));
 
             std::span<const uint8_t> pt_slicer(plaintext);
@@ -2042,14 +2042,14 @@ class FFI_AEAD_Test final : public FFI_Test {
                             pt_chunk.size(),
                             &input_consumed));
 
-               result.test_gt("some input consumed", input_consumed, 0);
-               result.test_lte("at most, all input consumed", input_consumed, pt_chunk.size());
+               result.test_sz_gt("some input consumed", input_consumed, 0);
+               result.test_sz_lte("at most, all input consumed", input_consumed, pt_chunk.size());
                pt_slicer = pt_slicer.subspan(input_consumed);
 
                if(requires_entire_message) {
-                  result.test_eq("no output produced", output_written, 0);
+                  result.test_sz_eq("no output produced", output_written, 0);
                } else {
-                  result.test_eq("all bytes produced", output_written, input_consumed);
+                  result.test_sz_eq("all bytes produced", output_written, input_consumed);
                   ct_stuffer = ct_stuffer.subspan(output_written);
                }
             }
@@ -2072,8 +2072,9 @@ class FFI_AEAD_Test final : public FFI_Test {
 
             const size_t expected_final_size = requires_entire_message ? ciphertext.size() : taglen + pt_slicer.size();
 
-            result.test_eq("remaining bytes consumed in bogus final", final_input_consumed, pt_slicer.size());
-            result.test_eq("required buffer size is written in bogus final", final_output_written, expected_final_size);
+            result.test_sz_eq("remaining bytes consumed in bogus final", final_input_consumed, pt_slicer.size());
+            result.test_sz_eq(
+               "required buffer size is written in bogus final", final_output_written, expected_final_size);
 
             auto final_ct_chunk = ct_stuffer.first(expected_final_size);
 
@@ -2087,8 +2088,8 @@ class FFI_AEAD_Test final : public FFI_Test {
                          0,
                          &final_input_consumed));
 
-            result.test_eq("no bytes consumed in final", final_input_consumed, 0);
-            result.test_eq("final bytes written", final_output_written, expected_final_size);
+            result.test_sz_eq("no bytes consumed in final", final_input_consumed, 0);
+            result.test_sz_eq("final bytes written", final_output_written, expected_final_size);
             result.test_eq("dummy buffer unchanged", dummy_buffer, dummy_buffer_reference);
 
             TEST_FFI_OK(botan_cipher_destroy, (cipher_encrypt));
@@ -2100,9 +2101,9 @@ class FFI_AEAD_Test final : public FFI_Test {
             TEST_FFI_OK(botan_cipher_get_update_granularity, (cipher_decrypt, &update_granularity));
             TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_decrypt, &ideal_granularity));
 
-            result.test_eq("ideal granularity is a multiple of update granularity (decrypt)",
-                           ideal_granularity % update_granularity,
-                           0);
+            result.test_sz_eq("ideal granularity is a multiple of update granularity (decrypt)",
+                              ideal_granularity % update_granularity,
+                              0);
 
             TEST_FFI_OK(botan_cipher_set_key, (cipher_decrypt, key.data(), key.size()));
             TEST_FFI_OK(botan_cipher_start, (cipher_decrypt, nonce.data(), nonce.size()));
@@ -2138,14 +2139,14 @@ class FFI_AEAD_Test final : public FFI_Test {
                             ct_chunk.size(),
                             &input_consumed));
 
-               result.test_gt("some input consumed", input_consumed, 0);
-               result.test_lte("at most, all input consumed", input_consumed, ct_chunk.size());
+               result.test_sz_gt("some input consumed", input_consumed, 0);
+               result.test_sz_lte("at most, all input consumed", input_consumed, ct_chunk.size());
                ct_slicer = ct_slicer.subspan(input_consumed);
 
                if(requires_entire_message) {
-                  result.test_eq("no output produced", output_written, 0);
+                  result.test_sz_eq("no output produced", output_written, 0);
                } else {
-                  result.test_eq("all bytes produced", output_written, input_consumed);
+                  result.test_sz_eq("all bytes produced", output_written, input_consumed);
                   pt_stuffer = pt_stuffer.subspan(output_written);
                }
             }
@@ -2166,8 +2167,9 @@ class FFI_AEAD_Test final : public FFI_Test {
                          ct_slicer.size(),
                          &final_input_consumed_dec));
 
-            result.test_eq("remaining bytes consumed in final (decrypt)", final_input_consumed_dec, ct_slicer.size());
-            result.test_eq("bytes written in final (decrypt)", final_output_written_dec, expected_final_size_dec);
+            result.test_sz_eq(
+               "remaining bytes consumed in final (decrypt)", final_input_consumed_dec, ct_slicer.size());
+            result.test_sz_eq("bytes written in final (decrypt)", final_output_written_dec, expected_final_size_dec);
             result.test_eq("dummy buffer unchanged", dummy_buffer, dummy_buffer_reference);
 
             result.test_eq("decrypted plaintext", decrypted, plaintext);
@@ -2202,7 +2204,7 @@ class FFI_StreamCipher_Test final : public FFI_Test {
             TEST_FFI_OK(botan_cipher_get_update_granularity, (ctr, &update_granularity));
             TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (ctr, &ideal_granularity));
 
-            result.test_eq(
+            result.test_sz_eq(
                "ideal granularity is a multiple of update granularity", ideal_granularity % update_granularity, 0);
 
             TEST_FFI_RC(0, botan_cipher_is_authenticated, (ctr));
@@ -2217,14 +2219,14 @@ class FFI_StreamCipher_Test final : public FFI_Test {
             TEST_FFI_OK(botan_cipher_update,
                         (ctr, 0, ct.data(), ct.size(), &output_written, pt.data(), 5, &input_consumed));
 
-            result.test_int_eq(output_written, 5, "Expected output written");
-            result.test_int_eq(input_consumed, 5, "Expected input consumed");
+            result.test_sz_eq("Expected output written", output_written, 5);
+            result.test_sz_eq("Expected input consumed", input_consumed, 5);
 
             TEST_FFI_OK(botan_cipher_update,
                         (ctr, 0, &ct[5], ct.size() - 5, &output_written, &pt[5], pt.size() - 5, &input_consumed));
 
-            result.test_int_eq(output_written, ct.size() - 5, "Expected output written");
-            result.test_int_eq(input_consumed, pt.size() - 5, "Expected input consumed");
+            result.test_sz_eq("Expected output written", output_written, ct.size() - 5);
+            result.test_sz_eq("Expected input consumed", input_consumed, pt.size() - 5);
             result.test_eq("AES-128/CTR ciphertext", ct, exp_ct);
 
             TEST_FFI_OK(botan_cipher_destroy, (ctr));
@@ -2252,12 +2254,12 @@ class FFI_XOF_Test final : public FFI_Test {
          std::array<char, 10> out_name{};
          size_t out_name_len = 5;
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_xof_name, (xof1, nullptr, &out_name_len));
-         result.test_eq("valid XOF name length", out_name_len, out_name.size());
+         result.test_sz_eq("valid XOF name length", out_name_len, out_name.size());
          TEST_FFI_OK(botan_xof_name, (xof1, out_name.data(), &out_name_len));
 
          size_t out_block_size;
          TEST_FFI_OK(botan_xof_block_size, (xof1, &out_block_size));
-         result.test_eq("valid XOF block size", out_block_size, 168);
+         result.test_sz_eq("valid XOF block size", out_block_size, 168);
 
          result.test_is_eq("ready for input", botan_xof_accepts_input(xof1), 1);
          TEST_FFI_OK(botan_xof_update, (xof1, reinterpret_cast<const uint8_t*>(input1), strlen(input1)));
@@ -2274,7 +2276,7 @@ class FFI_XOF_Test final : public FFI_Test {
          TEST_FFI_OK(botan_xof_output, (xof1, out_bytes.data(), out_bytes.size()));
 
          result.test_eq("expected first output", out_bytes, "2E870A5FE35999A7B15F9F0BB5AC1689");
-         result.test_ne("no more input", botan_xof_accepts_input(xof1), 1);
+         result.test_sz_ne("no more input", botan_xof_accepts_input(xof1), 1);
          TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE,
                      botan_xof_update,
                      (xof1, reinterpret_cast<const uint8_t*>(input1), strlen(input1)));
@@ -2314,22 +2316,22 @@ class FFI_HashFunction_Test final : public FFI_Test {
             std::array<char, 10> namebuf{};
             size_t name_len = 7;
             TEST_FFI_FAIL("output buffer too short", botan_hash_name, (hash, namebuf.data(), &name_len));
-            result.test_eq("name len", name_len, 8);
+            result.test_sz_eq("name len", name_len, 8);
 
             name_len = namebuf.size();
             if(TEST_FFI_OK(botan_hash_name, (hash, namebuf.data(), &name_len))) {
-               result.test_eq("name len", name_len, 8);
+               result.test_sz_eq("name len", name_len, 8);
                result.test_eq("name", namebuf.data(), "SHA-256");
             }
 
             size_t block_size;
             if(TEST_FFI_OK(botan_hash_block_size, (hash, &block_size))) {
-               result.test_eq("hash block size", block_size, 64);
+               result.test_sz_eq("hash block size", block_size, 64);
             }
 
             size_t output_len;
             if(TEST_FFI_OK(botan_hash_output_length, (hash, &output_len))) {
-               result.test_eq("hash output length", output_len, 32);
+               result.test_sz_eq("hash output length", output_len, 32);
 
                std::vector<uint8_t> outbuf(output_len);
 
@@ -2391,11 +2393,11 @@ class FFI_MAC_Test final : public FFI_Test {
             std::array<char, 16> namebuf{};
             size_t name_len = 13;
             TEST_FFI_FAIL("output buffer too short", botan_mac_name, (mac, namebuf.data(), &name_len));
-            result.test_eq("name len", name_len, 14);
+            result.test_sz_eq("name len", name_len, 14);
 
             name_len = namebuf.size();
             if(TEST_FFI_OK(botan_mac_name, (mac, namebuf.data(), &name_len))) {
-               result.test_eq("name len", name_len, 14);
+               result.test_sz_eq("name len", name_len, 14);
                result.test_eq("name", namebuf.data(), "HMAC(SHA-256)");
             }
 
@@ -2407,13 +2409,13 @@ class FFI_MAC_Test final : public FFI_Test {
             TEST_FFI_RC(0, botan_mac_get_keyspec, (mac, nullptr, &max_keylen, nullptr));
             TEST_FFI_RC(0, botan_mac_get_keyspec, (mac, nullptr, nullptr, &mod_keylen));
 
-            result.test_eq("Expected min keylen", min_keylen, 0);
-            result.test_eq("Expected max keylen", max_keylen, 8192);
-            result.test_eq("Expected mod keylen", mod_keylen, 1);
+            result.test_sz_eq("Expected min keylen", min_keylen, 0);
+            result.test_sz_eq("Expected max keylen", max_keylen, 8192);
+            result.test_sz_eq("Expected mod keylen", mod_keylen, 1);
 
             size_t output_len;
             if(TEST_FFI_OK(botan_mac_output_length, (mac, &output_len))) {
-               result.test_eq("MAC output length", output_len, 32);
+               result.test_sz_eq("MAC output length", output_len, 32);
 
                const uint8_t mac_key[] = {0xAA, 0xBB, 0xCC, 0xDD};
                std::vector<uint8_t> outbuf(output_len);
@@ -2543,7 +2545,7 @@ class FFI_KDF_Test final : public FFI_Test {
             botan_bcrypt_generate(reinterpret_cast<uint8_t*>(outstr.data()), &out_len, passphrase.c_str(), rng, 4, 0);
 
          if(rc == 0) {
-            result.test_eq("bcrypt output size", out_len, 61);
+            result.test_sz_eq("bcrypt output size", out_len, 61);
 
             TEST_FFI_OK(botan_bcrypt_is_valid, (passphrase.c_str(), outstr.data()));
             TEST_FFI_FAIL("bad password", botan_bcrypt_is_valid, ("nope", outstr.data()));
@@ -2562,11 +2564,11 @@ class FFI_Blockcipher_Test final : public FFI_Test {
             std::array<char, 10> namebuf{};
             size_t name_len = 7;
             TEST_FFI_FAIL("output buffer too short", botan_block_cipher_name, (cipher, namebuf.data(), &name_len));
-            result.test_eq("name len", name_len, 8);
+            result.test_sz_eq("name len", name_len, 8);
 
             name_len = namebuf.size();
             if(TEST_FFI_OK(botan_block_cipher_name, (cipher, namebuf.data(), &name_len))) {
-               result.test_eq("name len", name_len, 8);
+               result.test_sz_eq("name len", name_len, 8);
                result.test_eq("name", namebuf.data(), "AES-128");
             }
 
@@ -2593,9 +2595,9 @@ class FFI_Blockcipher_Test final : public FFI_Test {
             TEST_FFI_RC(0, botan_block_cipher_get_keyspec, (cipher, nullptr, &max_keylen, nullptr));
             TEST_FFI_RC(0, botan_block_cipher_get_keyspec, (cipher, nullptr, nullptr, &mod_keylen));
 
-            result.test_eq("Expected min keylen", min_keylen, 16);
-            result.test_eq("Expected max keylen", max_keylen, 16);
-            result.test_eq("Expected mod keylen", mod_keylen, 1);
+            result.test_sz_eq("Expected min keylen", min_keylen, 16);
+            result.test_sz_eq("Expected max keylen", max_keylen, 16);
+            result.test_sz_eq("Expected mod keylen", mod_keylen, 1);
 
             TEST_FFI_OK(botan_block_cipher_set_key, (cipher, zero16.data(), zero16.size()));
 
@@ -2675,7 +2677,7 @@ class FFI_Base64_Test final : public FFI_Test {
                      botan_base64_decode,
                      (base64, strlen(base64), out_bin, &out_len));
 
-         result.test_eq("output length", out_len, 18);
+         result.test_sz_eq("output length", out_len, 18);
 
          out_len = sizeof(out_bin);
          TEST_FFI_OK(botan_base64_decode, (base64, strlen(base64), out_bin, &out_len));
@@ -2732,15 +2734,15 @@ class FFI_MP_Test final : public FFI_Test {
          botan_mp_init(&x);
          size_t bn_bytes = 0;
          TEST_FFI_OK(botan_mp_num_bytes, (x, &bn_bytes));
-         result.test_eq("Expected size for MP 0", bn_bytes, 0);
+         result.test_sz_eq("Expected size for MP 0", bn_bytes, 0);
 
          botan_mp_set_from_int(x, 5);
          TEST_FFI_OK(botan_mp_num_bytes, (x, &bn_bytes));
-         result.test_eq("Expected size for MP 5", bn_bytes, 1);
+         result.test_sz_eq("Expected size for MP 5", bn_bytes, 1);
 
          botan_mp_add_u32(x, x, 75);
          TEST_FFI_OK(botan_mp_num_bytes, (x, &bn_bytes));
-         result.test_eq("Expected size for MP 80", bn_bytes, 1);
+         result.test_sz_eq("Expected size for MP 80", bn_bytes, 1);
 
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (x, 10, str_buf, &str_len));
@@ -2750,7 +2752,7 @@ class FFI_MP_Test final : public FFI_Test {
          TEST_FFI_RC(1, botan_mp_is_zero, (x));
          botan_mp_add_u32(x, x, 259);
          TEST_FFI_OK(botan_mp_num_bytes, (x, &bn_bytes));
-         result.test_eq("Expected size for MP 259", bn_bytes, 2);
+         result.test_sz_eq("Expected size for MP 259", bn_bytes, 2);
 
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (x, 10, str_buf, &str_len));
@@ -2811,7 +2813,7 @@ class FFI_MP_Test final : public FFI_Test {
 
          size_t x_bits = 0;
          TEST_FFI_OK(botan_mp_num_bits, (x, &x_bits));
-         result.test_eq("botan_mp_num_bits", x_bits, 9);
+         result.test_sz_eq("botan_mp_num_bits", x_bits, 9);
 
          TEST_FFI_OK(botan_mp_to_hex, (x, str_buf));
          result.test_eq("botan_mp_to_hex", std::string(str_buf), "0x0103");
@@ -2830,7 +2832,7 @@ class FFI_MP_Test final : public FFI_Test {
 
          uint32_t x_32;
          TEST_FFI_OK(botan_mp_to_uint32, (x, &x_32));
-         result.test_eq("botan_mp_to_uint32", size_t(x_32), size_t(0x103));
+         result.test_sz_eq("botan_mp_to_uint32", size_t(x_32), size_t(0x103));
 
          TEST_FFI_RC(1, botan_mp_get_bit, (x, 1));
          TEST_FFI_RC(0, botan_mp_get_bit, (x, 87));
@@ -2904,7 +2906,7 @@ class FFI_MP_Test final : public FFI_Test {
 
          size_t p_bits = 0;
          TEST_FFI_OK(botan_mp_num_bits, (p, &p_bits));
-         result.test_eq("botan_mp_num_bits", p_bits, 127);
+         result.test_sz_eq("botan_mp_num_bits", p_bits, 127);
 
          TEST_FFI_OK(botan_mp_mod_inverse, (r, x, p));
          str_len = sizeof(str_buf);
@@ -2917,7 +2919,7 @@ class FFI_MP_Test final : public FFI_Test {
          result.test_eq("botan_mp_powmod", std::string(str_buf), "40550417419160441638948180641668117560");
 
          TEST_FFI_OK(botan_mp_num_bytes, (r, &bn_bytes));
-         result.test_eq("botan_mp_num_bytes", bn_bytes, 16);
+         result.test_sz_eq("botan_mp_num_bytes", bn_bytes, 16);
 
          std::vector<uint8_t> bn_buf;
          bn_buf.resize(bn_bytes);
@@ -2936,15 +2938,15 @@ class FFI_MP_Test final : public FFI_Test {
          size_t x_bytes;
          botan_mp_rand_bits(x, rng, 512);
          TEST_FFI_OK(botan_mp_num_bytes, (x, &x_bytes));
-         result.test_lte("botan_mp_num_bytes", x_bytes, 512 / 8);
+         result.test_sz_lte("botan_mp_num_bytes", x_bytes, 512 / 8);
 
          TEST_FFI_OK(botan_mp_set_from_radix_str, (x, "909A", 16));
          TEST_FFI_OK(botan_mp_to_uint32, (x, &x_32));
-         result.test_eq("botan_mp_set_from_radix_str(16)", x_32, static_cast<size_t>(0x909A));
+         result.test_u32_eq("botan_mp_set_from_radix_str(16)", x_32, 0x909A);
 
          TEST_FFI_OK(botan_mp_set_from_radix_str, (x, "9098135", 10));
          TEST_FFI_OK(botan_mp_to_uint32, (x, &x_32));
-         result.test_eq("botan_mp_set_from_radix_str(10)", x_32, static_cast<size_t>(9098135));
+         result.test_u32_eq("botan_mp_set_from_radix_str(10)", x_32, 9098135);
 
          botan_mp_destroy(p);
          botan_mp_destroy(x);
@@ -2979,14 +2981,14 @@ class FFI_FPE_Test final : public FFI_Test {
 
          uint32_t xval = 0;
          TEST_FFI_OK(botan_mp_to_uint32, (x, &xval));
-         result.test_eq("Expected FPE ciphertext", xval, size_t(605648666));
+         result.test_sz_eq("Expected FPE ciphertext", xval, size_t(605648666));
 
          TEST_FFI_OK(botan_fpe_encrypt, (fpe, x, nullptr, 0));
          TEST_FFI_OK(botan_fpe_decrypt, (fpe, x, nullptr, 0));
          TEST_FFI_OK(botan_fpe_decrypt, (fpe, x, nullptr, 0));
 
          TEST_FFI_OK(botan_mp_to_uint32, (x, &xval));
-         result.test_eq("FPE round trip", xval, size_t(178051120));
+         result.test_sz_eq("FPE round trip", xval, size_t(178051120));
 
          TEST_FFI_OK(botan_fpe_destroy, (fpe));
          TEST_FFI_OK(botan_mp_destroy, (x));
@@ -3076,7 +3078,7 @@ class FFI_Keywrap_Test final : public FFI_Test {
                                                           0x81, 0xCA, 0x4F, 0x59, 0x74, 0x4D, 0xED, 0x29,
                                                           0x1F, 0x3F, 0xE5, 0x24, 0x00, 0x1B, 0x93, 0x20};
 
-            result.test_eq("Expected wrapped keylen size", wrapped_keylen, 16 + 8);
+            result.test_sz_eq("Expected wrapped keylen size", wrapped_keylen, 16 + 8);
 
             result.test_eq(
                nullptr, "Wrapped key", wrapped, wrapped_keylen, expected_wrapped_key, sizeof(expected_wrapped_key));
@@ -3363,7 +3365,7 @@ class FFI_DSA_Test final : public FFI_Test {
 
             size_t output_sig_len = sig_len;
             TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &output_sig_len));
-            result.test_lte("Output length is upper bound", output_sig_len, sig_len);
+            result.test_sz_lte("Output length is upper bound", output_sig_len, sig_len);
             signature.resize(output_sig_len);
 
             TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
@@ -4182,8 +4184,8 @@ class FFI_KEM_Roundtrip_Test : public FFI_Test {
                          &shared_key_length_out,
                          ciphertext.data(),
                          &ciphertext_length_out));
-            result.test_eq("shared key length", shared_key_length, shared_key_length_out);
-            result.test_eq("ciphertext length", ciphertext_length, ciphertext_length_out);
+            result.test_sz_eq("shared key length", shared_key_length, shared_key_length_out);
+            result.test_sz_eq("ciphertext length", ciphertext_length, ciphertext_length_out);
             shared_key.resize(shared_key_length_out);
             ciphertext.resize(ciphertext_length_out);
             TEST_FFI_OK(botan_pk_op_kem_encrypt_destroy, (kem_enc));
@@ -4193,7 +4195,7 @@ class FFI_KEM_Roundtrip_Test : public FFI_Test {
             TEST_FFI_OK(botan_pk_op_kem_decrypt_create, (&kem_dec, priv, "Raw"));
             size_t shared_key_length2 = 0;
             TEST_FFI_OK(botan_pk_op_kem_decrypt_shared_key_length, (kem_dec, shared_key_length, &shared_key_length2));
-            result.test_eq("shared key lengths are consistent", shared_key_length, shared_key_length2);
+            result.test_sz_eq("shared key lengths are consistent", shared_key_length, shared_key_length2);
 
             // check that insufficient buffer space is handled correctly
             shared_key_length_out = 0;
@@ -4207,7 +4209,7 @@ class FFI_KEM_Roundtrip_Test : public FFI_Test {
                          0 /* default length */,
                          nullptr,
                          &shared_key_length_out));
-            result.test_eq("reported buffer length requirement", shared_key_length, shared_key_length_out);
+            result.test_sz_eq("reported buffer length requirement", shared_key_length, shared_key_length_out);
 
             // allocate buffer (double the size) and perform the actual decryption
             shared_key_length_out = shared_key_length * 2;
@@ -4221,7 +4223,7 @@ class FFI_KEM_Roundtrip_Test : public FFI_Test {
                          0 /* default length */,
                          shared_key2.data(),
                          &shared_key_length_out));
-            result.test_eq("shared key output length", shared_key_length, shared_key_length_out);
+            result.test_sz_eq("shared key output length", shared_key_length, shared_key_length_out);
             shared_key2.resize(shared_key_length_out);
             TEST_FFI_OK(botan_pk_op_kem_decrypt_destroy, (kem_dec));
 
@@ -4304,7 +4306,7 @@ class FFI_Signature_Roundtrip_Test : public FFI_Test {
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
                         botan_pk_op_sign_finish,
                         (signer, rng, nullptr, &sig_output_length_out));
-            result.test_eq("reported sig lengths are equal", sig_output_length, sig_output_length_out);
+            result.test_sz_eq("reported sig lengths are equal", sig_output_length, sig_output_length_out);
 
             // Recreate signer and try again
             TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
@@ -4316,7 +4318,7 @@ class FFI_Signature_Roundtrip_Test : public FFI_Test {
             sig_output_length_out = sig_output_length * 2;
             Botan::secure_vector<uint8_t> signature(sig_output_length_out);
             TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &sig_output_length_out));
-            result.test_eq("signature length", sig_output_length, sig_output_length_out);
+            result.test_sz_eq("signature length", sig_output_length, sig_output_length_out);
             signature.resize(sig_output_length_out);
             TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
 
@@ -5214,14 +5216,14 @@ class FFI_SRP6_Test final : public FFI_Test {
 
          size_t group_size = 0;
          TEST_FFI_OK(botan_srp6_group_size, (srp_group, &group_size));
-         result.test_eq("reported group size", group_size, group_bytes);
+         result.test_sz_eq("reported group size", group_size, group_bytes);
 
          size_t short_output_len = output.size() / 2;
          TEST_FFI_RC(
             BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
             botan_srp6_generate_verifier,
             (username, password, salt.data(), salt.size(), srp_group, srp_hash, output.data(), &short_output_len));
-         result.test_eq("requested verifier length", short_output_len, group_bytes);
+         result.test_sz_eq("requested verifier length", short_output_len, group_bytes);
 
          size_t verifier_output_len = short_output_len;
          TEST_FFI_OK(
@@ -5237,7 +5239,7 @@ class FFI_SRP6_Test final : public FFI_Test {
             BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
             botan_srp6_server_session_step1,
             (srp_server, verifier.data(), verifier.size(), srp_group, srp_hash, rng, output.data(), &short_output_len));
-         result.test_eq("requested B_pub length", short_output_len, group_bytes);
+         result.test_sz_eq("requested B_pub length", short_output_len, group_bytes);
 
          size_t pub_B_output_len = short_output_len;
          TEST_FFI_OK(
@@ -5263,8 +5265,8 @@ class FFI_SRP6_Test final : public FFI_Test {
                       &short_output_len,
                       output2.data(),
                       &short_output_len2));
-         result.test_eq("requested pub_A length", short_output_len, group_bytes);
-         result.test_eq("requested K1 length", short_output_len2, group_bytes);
+         result.test_sz_eq("requested pub_A length", short_output_len, group_bytes);
+         result.test_sz_eq("requested K1 length", short_output_len2, group_bytes);
 
          size_t pub_A_output_len = short_output_len;
          size_t K1_output_len = short_output_len2;
@@ -5289,7 +5291,7 @@ class FFI_SRP6_Test final : public FFI_Test {
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
                      botan_srp6_server_session_step2,
                      (srp_server, pub_A.data(), pub_A.size(), output.data(), &short_output_len));
-         result.test_eq("requested K2 length", short_output_len, group_bytes);
+         result.test_sz_eq("requested K2 length", short_output_len, group_bytes);
 
          size_t K2_output_len = short_output_len;
          TEST_FFI_OK(botan_srp6_server_session_step2,

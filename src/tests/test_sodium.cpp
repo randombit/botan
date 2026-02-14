@@ -198,8 +198,8 @@ class Sodium_API_Tests : public Test {
          const std::vector<uint8_t> nonce = Botan::hex_decode("0000000000000000");
          const std::vector<uint8_t> in = Botan::hex_decode("000000000000000000000000000000");
 
-         result.test_eq("key len", Botan::Sodium::crypto_aead_chacha20poly1305_keybytes(), key.size());
-         result.test_eq("nonce len", Botan::Sodium::crypto_aead_chacha20poly1305_npubbytes(), nonce.size());
+         result.test_sz_eq("key len", Botan::Sodium::crypto_aead_chacha20poly1305_keybytes(), key.size());
+         result.test_sz_eq("nonce len", Botan::Sodium::crypto_aead_chacha20poly1305_npubbytes(), nonce.size());
 
          std::vector<uint8_t> ctext(in.size());
          std::vector<uint8_t> mac(16);
@@ -215,7 +215,7 @@ class Sodium_API_Tests : public Test {
                                                                       nonce.data(),
                                                                       key.data());
 
-         result.test_eq("maclen", size_t(maclen), 16);
+         result.test_sz_eq("maclen", size_t(maclen), 16);
          result.test_eq("mac", mac, "09998877ABA156DDC68F8344098F68B9");
          result.test_eq("ctext", ctext, "9F07E7BE5551387A98BA977C732D08");
 
@@ -259,7 +259,7 @@ class Sodium_API_Tests : public Test {
                                                                                nonce.data(),
                                                                                key.data()));
 
-         result.test_eq("ctext_len", size_t(ctext_len), ctext.size());
+         result.test_sz_eq("ctext_len", size_t(ctext_len), ctext.size());
          result.test_eq("ctext", ctext, "9F07E7BE5551387A98BA977C732D0809998877ABA156DDC68F8344098F68B9");
 
          unsigned long long recovered_len = 0;
@@ -288,8 +288,8 @@ class Sodium_API_Tests : public Test {
          const std::vector<uint8_t> nonce = Botan::hex_decode("000000000000000000000000");
          const std::vector<uint8_t> in = Botan::hex_decode("000000000000000000000000000000");
 
-         result.test_eq("key len", Botan::Sodium::crypto_aead_chacha20poly1305_ietf_keybytes(), key.size());
-         result.test_eq("nonce len", Botan::Sodium::crypto_aead_chacha20poly1305_ietf_npubbytes(), nonce.size());
+         result.test_sz_eq("key len", Botan::Sodium::crypto_aead_chacha20poly1305_ietf_keybytes(), key.size());
+         result.test_sz_eq("nonce len", Botan::Sodium::crypto_aead_chacha20poly1305_ietf_npubbytes(), nonce.size());
 
          std::vector<uint8_t> ctext(in.size());
          std::vector<uint8_t> mac(16);
@@ -305,7 +305,7 @@ class Sodium_API_Tests : public Test {
                                                                            nonce.data(),
                                                                            key.data());
 
-         result.test_eq("maclen", size_t(maclen), 16);
+         result.test_sz_eq("maclen", size_t(maclen), 16);
          result.test_eq("mac", mac, "3679F1FB9843FD81E26D962888296954");
          result.test_eq("ctext", ctext, "9F07E7BE5551387A98BA977C732D08");
 
@@ -349,7 +349,7 @@ class Sodium_API_Tests : public Test {
                                                                                     nonce.data(),
                                                                                     key.data()));
 
-         result.test_eq("ctext_len", size_t(ctext_len), ctext.size());
+         result.test_sz_eq("ctext_len", size_t(ctext_len), ctext.size());
          result.test_eq("ctext", ctext, "9F07E7BE5551387A98BA977C732D083679F1FB9843FD81E26D962888296954");
 
          unsigned long long recovered_len = 0;
@@ -378,8 +378,8 @@ class Sodium_API_Tests : public Test {
          const std::vector<uint8_t> nonce = Botan::hex_decode("000000000000000000000000000000000000000000000000");
          const std::vector<uint8_t> in = Botan::hex_decode("000000000000000000000000000000");
 
-         result.test_eq("key len", Botan::Sodium::crypto_aead_xchacha20poly1305_ietf_keybytes(), key.size());
-         result.test_eq("nonce len", Botan::Sodium::crypto_aead_xchacha20poly1305_ietf_npubbytes(), nonce.size());
+         result.test_sz_eq("key len", Botan::Sodium::crypto_aead_xchacha20poly1305_ietf_keybytes(), key.size());
+         result.test_sz_eq("nonce len", Botan::Sodium::crypto_aead_xchacha20poly1305_ietf_npubbytes(), nonce.size());
 
          std::vector<uint8_t> ctext(in.size());
          std::vector<uint8_t> mac(16);
@@ -395,7 +395,7 @@ class Sodium_API_Tests : public Test {
                                                                             nonce.data(),
                                                                             key.data());
 
-         result.test_eq("maclen", size_t(maclen), 16);
+         result.test_sz_eq("maclen", size_t(maclen), 16);
          result.test_eq("mac", mac, "b2f7033812ac9ebd3745e2c99c7bbfeb");
          result.test_eq("ctext", ctext, "789e9689e5208d7fd9e1f3c5b5341f");
 
@@ -439,7 +439,7 @@ class Sodium_API_Tests : public Test {
                                                                                      nonce.data(),
                                                                                      key.data()));
 
-         result.test_eq("ctext_len", size_t(ctext_len), ctext.size());
+         result.test_sz_eq("ctext_len", size_t(ctext_len), ctext.size());
          result.test_eq("ctext", ctext, "789e9689e5208d7fd9e1f3c5b5341fb2f7033812ac9ebd3745e2c99c7bbfeb");
 
          unsigned long long recovered_len = 0;
@@ -466,7 +466,7 @@ class Sodium_API_Tests : public Test {
             Botan::hex_decode("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F");
          const std::vector<uint8_t> in = Botan::hex_decode("616263");
 
-         result.test_eq("key_size", key.size(), Botan::Sodium::crypto_auth_hmacsha512_keybytes());
+         result.test_sz_eq("key_size", key.size(), Botan::Sodium::crypto_auth_hmacsha512_keybytes());
 
          std::vector<uint8_t> mac(64);
          Botan::Sodium::crypto_auth_hmacsha512(mac.data(), in.data(), in.size(), key.data());

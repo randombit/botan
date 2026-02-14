@@ -120,8 +120,8 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
          result.test_eq("Algorithm name", sk->algo_name(), algo_name());
          result.confirm("Supported operation KeyEncapsulation",
                         sk->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation));
-         result.test_gte("Key has reasonable estimated strength (lower)", sk->estimated_strength(), 64);
-         result.test_lt("Key has reasonable estimated strength (upper)", sk->estimated_strength(), 512);
+         result.test_sz_gte("Key has reasonable estimated strength (lower)", sk->estimated_strength(), 64);
+         result.test_sz_lt("Key has reasonable estimated strength (upper)", sk->estimated_strength(), 512);
 
          // Extract Public Key
          auto pk = sk->public_key();
@@ -211,8 +211,8 @@ class PK_PQC_KEM_ACVP_KAT_KeyGen_Test : public PK_Test {
          result.test_eq("Algorithm name", sk->algo_name(), algo_name());
          result.confirm("Supported operation KeyEncapsulation",
                         sk->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation));
-         result.test_gte("Key has reasonable estimated strength (lower)", sk->estimated_strength(), 64);
-         result.test_lt("Key has reasonable estimated strength (upper)", sk->estimated_strength(), 512);
+         result.test_sz_gte("Key has reasonable estimated strength (lower)", sk->estimated_strength(), 64);
+         result.test_sz_lt("Key has reasonable estimated strength (upper)", sk->estimated_strength(), 512);
 
          // Extract Public Key
          auto pk = sk->public_key();

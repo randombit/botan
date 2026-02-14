@@ -99,7 +99,7 @@ Test::Result test_certstor_sqlite3_insert_find_remove_test(const std::vector<Cer
                      return c.fingerprint() == cert.fingerprint();
                   });
 
-               result.test_eq("Got wrong/no certificate", found, true);
+               result.test_is_true("Got wrong/no certificate", found);
             }
          }
 
@@ -107,14 +107,14 @@ Test::Result test_certstor_sqlite3_insert_find_remove_test(const std::vector<Cer
             result.test_eq("Got wrong certificate", cert.fingerprint(), wo_keyid->fingerprint());
          }
 
-         result.test_eq("Can't remove certificate", store.remove_cert(cert), true);
-         result.test_eq("Can't remove certificate", !store.find_cert(cert.subject_dn(), cert.subject_key_id()), true);
+         result.test_is_true("Can't remove certificate", store.remove_cert(cert));
+         result.test_is_true("Can't remove certificate", !store.find_cert(cert.subject_dn(), cert.subject_key_id()));
 
          if(priv) {
             store.remove_key(key);
          }
 
-         result.test_eq("Can't remove key", !store.find_key(cert), true);
+         result.test_is_true("Can't remove key", !store.find_key(cert));
       }
 
       return result;
@@ -143,15 +143,13 @@ Test::Result test_certstor_sqlite3_crl_test(const std::vector<CertificateAndKey>
       {
          const auto crls = store.generate_crls();
 
-         result.test_eq("Can't revoke certificate", crls.size(), 2);
-         result.test_eq(
+         result.test_sz_eq("Can't revoke certificate", crls.size(), 2);
+         result.test_is_true(
             "Can't revoke certificate",
-            crls[0].is_revoked(certsandkeys[0].certificate()) ^ crls[1].is_revoked(certsandkeys[0].certificate()),
-            true);
-         result.test_eq(
+            crls[0].is_revoked(certsandkeys[0].certificate()) ^ crls[1].is_revoked(certsandkeys[0].certificate()));
+         result.test_is_true(
             "Can't revoke certificate",
-            crls[0].is_revoked(certsandkeys[3].certificate()) ^ crls[1].is_revoked(certsandkeys[3].certificate()),
-            true);
+            crls[0].is_revoked(certsandkeys[3].certificate()) ^ crls[1].is_revoked(certsandkeys[3].certificate()));
       }
 
       store.affirm_cert(certsandkeys[3].certificate());
@@ -159,21 +157,21 @@ Test::Result test_certstor_sqlite3_crl_test(const std::vector<CertificateAndKey>
       {
          const auto crls = store.generate_crls();
 
-         result.test_eq("Can't revoke certificate, wrong crl size", crls.size(), 1);
-         result.test_eq(
-            "Can't revoke certificate, cert 0 not revoked", crls[0].is_revoked(certsandkeys[0].certificate()), true);
+         result.test_sz_eq("Can't revoke certificate, wrong crl size", crls.size(), 1);
+         result.test_is_true("Can't revoke certificate, cert 0 not revoked",
+                             crls[0].is_revoked(certsandkeys[0].certificate()));
       }
 
       const auto cert0_crl = store.find_crl_for(certsandkeys[0].certificate());
 
-      result.test_eq("Can't revoke certificate, crl for cert 0", !cert0_crl, false);
-      result.test_eq("Can't revoke certificate, crl for cert 0 size check", cert0_crl->get_revoked().size(), 1);
-      result.test_eq(
-         "Can't revoke certificate, no crl for cert 0", cert0_crl->is_revoked(certsandkeys[0].certificate()), true);
+      result.test_is_false("Can't revoke certificate, crl for cert 0", !cert0_crl);
+      result.test_sz_eq("Can't revoke certificate, crl for cert 0 size check", cert0_crl->get_revoked().size(), 1);
+      result.test_is_true("Can't revoke certificate, no crl for cert 0",
+                          cert0_crl->is_revoked(certsandkeys[0].certificate()));
 
       const auto cert3_crl = store.find_crl_for(certsandkeys[3].certificate());
 
-      result.test_eq("Can't revoke certificate, crl for cert 3", !cert3_crl, true);
+      result.test_is_true("Can't revoke certificate, crl for cert 3", !cert3_crl);
 
       return result;
    } catch(std::exception& e) {
@@ -196,16 +194,15 @@ Test::Result test_certstor_sqlite3_all_subjects_test(const std::vector<Certifica
 
       const auto subjects = store.all_subjects();
 
-      result.test_eq("Check subject list length", subjects.size(), 6);
+      result.test_sz_eq("Check subject list length", subjects.size(), 6);
 
       for(const auto& sub : subjects) {
          const std::string ss = sub.to_string();
 
-         result.test_eq("Check subject " + ss,
-                        certsandkeys[0].subject_dn() == sub || certsandkeys[1].subject_dn() == sub ||
-                           certsandkeys[2].subject_dn() == sub || certsandkeys[3].subject_dn() == sub ||
-                           certsandkeys[4].subject_dn() == sub || certsandkeys[5].subject_dn() == sub,
-                        true);
+         result.test_is_true("Check subject " + ss,
+                             certsandkeys[0].subject_dn() == sub || certsandkeys[1].subject_dn() == sub ||
+                                certsandkeys[2].subject_dn() == sub || certsandkeys[3].subject_dn() == sub ||
+                                certsandkeys[4].subject_dn() == sub || certsandkeys[5].subject_dn() == sub);
       }
       return result;
    } catch(std::exception& e) {

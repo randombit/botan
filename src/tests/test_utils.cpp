@@ -71,7 +71,7 @@ class Utility_Function_Tests final : public Test {
             result.confirm("checked_add looks at all args", sum1 == sum2);
 
             if(i < 5) {
-               result.test_eq("checked_add worked", sum1.value(), i + large);
+               result.test_sz_eq("checked_add worked", sum1.value(), i + large);
             } else {
                result.confirm("checked_add did not return a result", !sum1.has_value());
             }
@@ -86,7 +86,7 @@ class Utility_Function_Tests final : public Test {
             const uint32_t ref = static_cast<uint32_t>(x) + y;
 
             if(auto z = Botan::checked_add(x, y)) {
-               result.test_int_eq("checked_add adds", z.value(), ref);
+               result.test_u32_eq("checked_add adds", static_cast<uint32_t>(z.value()), ref);
             } else {
                result.confirm("checked_add checks", (ref >> 16) > 0);
             }
@@ -107,7 +107,7 @@ class Utility_Function_Tests final : public Test {
             const uint32_t ref = static_cast<uint32_t>(x) * y;
 
             if(auto z = Botan::checked_mul(x, y)) {
-               result.test_int_eq("checked_mul multiplies", z.value(), ref);
+               result.test_u32_eq("checked_mul multiplies", static_cast<uint32_t>(z.value()), ref);
             } else {
                result.confirm("checked_mul checks", (ref >> 16) > 0);
             }
@@ -126,9 +126,9 @@ class Utility_Function_Tests final : public Test {
          result.test_throws("checked_cast checks", [&] { Botan::checked_cast_to<uint16_t>(large); });
          result.test_throws("checked_cast checks", [&] { Botan::checked_cast_to<uint8_t>(large); });
 
-         result.test_int_eq("checked_cast converts", Botan::checked_cast_to<uint32_t>(large), large);
-         result.test_int_eq("checked_cast converts", Botan::checked_cast_to<uint16_t>(is_16_bits), 0x8123);
-         result.test_int_eq("checked_cast converts", Botan::checked_cast_to<uint8_t>(is_8_bits), 0x89);
+         result.test_u32_eq("checked_cast converts", Botan::checked_cast_to<uint32_t>(large), large);
+         result.test_u16_eq("checked_cast converts", Botan::checked_cast_to<uint16_t>(is_16_bits), 0x8123);
+         result.test_u8_eq("checked_cast converts", Botan::checked_cast_to<uint8_t>(is_8_bits), 0x89);
 
          return result;
       }
@@ -191,50 +191,50 @@ class Utility_Function_Tests final : public Test {
          const uint32_t in32 = 0xA0B0C0D0;
          const uint64_t in64 = 0xABCDEF0123456789;
 
-         result.test_is_eq<uint8_t>(Botan::get_byte<0>(in32), 0xA0);
-         result.test_is_eq<uint8_t>(Botan::get_byte<1>(in32), 0xB0);
-         result.test_is_eq<uint8_t>(Botan::get_byte<2>(in32), 0xC0);
-         result.test_is_eq<uint8_t>(Botan::get_byte<3>(in32), 0xD0);
+         result.test_u8_eq(Botan::get_byte<0>(in32), 0xA0);
+         result.test_u8_eq(Botan::get_byte<1>(in32), 0xB0);
+         result.test_u8_eq(Botan::get_byte<2>(in32), 0xC0);
+         result.test_u8_eq(Botan::get_byte<3>(in32), 0xD0);
 
-         result.test_is_eq<uint16_t>(Botan::make_uint16(0xAA, 0xBB), 0xAABB);
-         result.test_is_eq<uint32_t>(Botan::make_uint32(0x01, 0x02, 0x03, 0x04), 0x01020304);
+         result.test_u16_eq(Botan::make_uint16(0xAA, 0xBB), 0xAABB);
+         result.test_u32_eq(Botan::make_uint32(0x01, 0x02, 0x03, 0x04), 0x01020304);
 
-         result.test_is_eq<uint16_t>(Botan::load_be<uint16_t>(mem, 0), 0x0011);
-         result.test_is_eq<uint16_t>(Botan::load_be<uint16_t>(mem, 1), 0x2233);
-         result.test_is_eq<uint16_t>(Botan::load_be<uint16_t>(mem, 2), 0x4455);
-         result.test_is_eq<uint16_t>(Botan::load_be<uint16_t>(mem, 3), 0x6677);
+         result.test_u16_eq(Botan::load_be<uint16_t>(mem, 0), 0x0011);
+         result.test_u16_eq(Botan::load_be<uint16_t>(mem, 1), 0x2233);
+         result.test_u16_eq(Botan::load_be<uint16_t>(mem, 2), 0x4455);
+         result.test_u16_eq(Botan::load_be<uint16_t>(mem, 3), 0x6677);
 
-         result.test_is_eq<uint16_t>(Botan::load_le<uint16_t>(mem, 0), 0x1100);
-         result.test_is_eq<uint16_t>(Botan::load_le<uint16_t>(mem, 1), 0x3322);
-         result.test_is_eq<uint16_t>(Botan::load_le<uint16_t>(mem, 2), 0x5544);
-         result.test_is_eq<uint16_t>(Botan::load_le<uint16_t>(mem, 3), 0x7766);
+         result.test_u16_eq(Botan::load_le<uint16_t>(mem, 0), 0x1100);
+         result.test_u16_eq(Botan::load_le<uint16_t>(mem, 1), 0x3322);
+         result.test_u16_eq(Botan::load_le<uint16_t>(mem, 2), 0x5544);
+         result.test_u16_eq(Botan::load_le<uint16_t>(mem, 3), 0x7766);
 
-         result.test_is_eq<uint32_t>(Botan::load_be<uint32_t>(mem, 0), 0x00112233);
-         result.test_is_eq<uint32_t>(Botan::load_be<uint32_t>(mem, 1), 0x44556677);
-         result.test_is_eq<uint32_t>(Botan::load_be<uint32_t>(mem, 2), 0x8899AABB);
-         result.test_is_eq<uint32_t>(Botan::load_be<uint32_t>(mem, 3), 0xCCDDEEFF);
+         result.test_u32_eq(Botan::load_be<uint32_t>(mem, 0), 0x00112233);
+         result.test_u32_eq(Botan::load_be<uint32_t>(mem, 1), 0x44556677);
+         result.test_u32_eq(Botan::load_be<uint32_t>(mem, 2), 0x8899AABB);
+         result.test_u32_eq(Botan::load_be<uint32_t>(mem, 3), 0xCCDDEEFF);
 
-         result.test_is_eq<uint32_t>(Botan::load_le<uint32_t>(mem, 0), 0x33221100);
-         result.test_is_eq<uint32_t>(Botan::load_le<uint32_t>(mem, 1), 0x77665544);
-         result.test_is_eq<uint32_t>(Botan::load_le<uint32_t>(mem, 2), 0xBBAA9988);
-         result.test_is_eq<uint32_t>(Botan::load_le<uint32_t>(mem, 3), 0xFFEEDDCC);
+         result.test_u32_eq(Botan::load_le<uint32_t>(mem, 0), 0x33221100);
+         result.test_u32_eq(Botan::load_le<uint32_t>(mem, 1), 0x77665544);
+         result.test_u32_eq(Botan::load_le<uint32_t>(mem, 2), 0xBBAA9988);
+         result.test_u32_eq(Botan::load_le<uint32_t>(mem, 3), 0xFFEEDDCC);
 
-         result.test_is_eq<uint64_t>(Botan::load_be<uint64_t>(mem, 0), 0x0011223344556677);
-         result.test_is_eq<uint64_t>(Botan::load_be<uint64_t>(mem, 1), 0x8899AABBCCDDEEFF);
+         result.test_u64_eq(Botan::load_be<uint64_t>(mem, 0), 0x0011223344556677);
+         result.test_u64_eq(Botan::load_be<uint64_t>(mem, 1), 0x8899AABBCCDDEEFF);
 
-         result.test_is_eq<uint64_t>(Botan::load_le<uint64_t>(mem, 0), 0x7766554433221100);
-         result.test_is_eq<uint64_t>(Botan::load_le<uint64_t>(mem, 1), 0xFFEEDDCCBBAA9988);
+         result.test_u64_eq(Botan::load_le<uint64_t>(mem, 0), 0x7766554433221100);
+         result.test_u64_eq(Botan::load_le<uint64_t>(mem, 1), 0xFFEEDDCCBBAA9988);
 
          // Check misaligned loads:
-         result.test_is_eq<uint16_t>(Botan::load_be<uint16_t>(mem + 1, 0), 0x1122);
-         result.test_is_eq<uint16_t>(Botan::load_le<uint16_t>(mem + 3, 0), 0x4433);
+         result.test_u16_eq(Botan::load_be<uint16_t>(mem + 1, 0), 0x1122);
+         result.test_u16_eq(Botan::load_le<uint16_t>(mem + 3, 0), 0x4433);
 
-         result.test_is_eq<uint32_t>(Botan::load_be<uint32_t>(mem + 1, 1), 0x55667788);
-         result.test_is_eq<uint32_t>(Botan::load_le<uint32_t>(mem + 3, 1), 0xAA998877);
+         result.test_u32_eq(Botan::load_be<uint32_t>(mem + 1, 1), 0x55667788);
+         result.test_u32_eq(Botan::load_le<uint32_t>(mem + 3, 1), 0xAA998877);
 
-         result.test_is_eq<uint64_t>(Botan::load_be<uint64_t>(mem + 1, 0), 0x1122334455667788);
-         result.test_is_eq<uint64_t>(Botan::load_le<uint64_t>(mem + 7, 0), 0xEEDDCCBBAA998877);
-         result.test_is_eq<uint64_t>(Botan::load_le<uint64_t>(mem + 5, 0), 0xCCBBAA9988776655);
+         result.test_u64_eq(Botan::load_be<uint64_t>(mem + 1, 0), 0x1122334455667788);
+         result.test_u64_eq(Botan::load_le<uint64_t>(mem + 7, 0), 0xEEDDCCBBAA998877);
+         result.test_u64_eq(Botan::load_le<uint64_t>(mem + 5, 0), 0xCCBBAA9988776655);
 
          uint8_t outbuf[16] = {0};
 
@@ -242,44 +242,44 @@ class Utility_Function_Tests final : public Test {
             uint8_t* out = outbuf + offset;  // NOLINT(*-const-correctness) clang-tidy bug
 
             Botan::store_be(in16, out);
-            result.test_is_eq<uint8_t>(out[0], 0x12);
-            result.test_is_eq<uint8_t>(out[1], 0x34);
+            result.test_u8_eq(out[0], 0x12);
+            result.test_u8_eq(out[1], 0x34);
 
             Botan::store_le(in16, out);
-            result.test_is_eq<uint8_t>(out[0], 0x34);
-            result.test_is_eq<uint8_t>(out[1], 0x12);
+            result.test_u8_eq(out[0], 0x34);
+            result.test_u8_eq(out[1], 0x12);
 
             Botan::store_be(in32, out);
-            result.test_is_eq<uint8_t>(out[0], 0xA0);
-            result.test_is_eq<uint8_t>(out[1], 0xB0);
-            result.test_is_eq<uint8_t>(out[2], 0xC0);
-            result.test_is_eq<uint8_t>(out[3], 0xD0);
+            result.test_u8_eq(out[0], 0xA0);
+            result.test_u8_eq(out[1], 0xB0);
+            result.test_u8_eq(out[2], 0xC0);
+            result.test_u8_eq(out[3], 0xD0);
 
             Botan::store_le(in32, out);
-            result.test_is_eq<uint8_t>(out[0], 0xD0);
-            result.test_is_eq<uint8_t>(out[1], 0xC0);
-            result.test_is_eq<uint8_t>(out[2], 0xB0);
-            result.test_is_eq<uint8_t>(out[3], 0xA0);
+            result.test_u8_eq(out[0], 0xD0);
+            result.test_u8_eq(out[1], 0xC0);
+            result.test_u8_eq(out[2], 0xB0);
+            result.test_u8_eq(out[3], 0xA0);
 
             Botan::store_be(in64, out);
-            result.test_is_eq<uint8_t>(out[0], 0xAB);
-            result.test_is_eq<uint8_t>(out[1], 0xCD);
-            result.test_is_eq<uint8_t>(out[2], 0xEF);
-            result.test_is_eq<uint8_t>(out[3], 0x01);
-            result.test_is_eq<uint8_t>(out[4], 0x23);
-            result.test_is_eq<uint8_t>(out[5], 0x45);
-            result.test_is_eq<uint8_t>(out[6], 0x67);
-            result.test_is_eq<uint8_t>(out[7], 0x89);
+            result.test_u8_eq(out[0], 0xAB);
+            result.test_u8_eq(out[1], 0xCD);
+            result.test_u8_eq(out[2], 0xEF);
+            result.test_u8_eq(out[3], 0x01);
+            result.test_u8_eq(out[4], 0x23);
+            result.test_u8_eq(out[5], 0x45);
+            result.test_u8_eq(out[6], 0x67);
+            result.test_u8_eq(out[7], 0x89);
 
             Botan::store_le(in64, out);
-            result.test_is_eq<uint8_t>(out[0], 0x89);
-            result.test_is_eq<uint8_t>(out[1], 0x67);
-            result.test_is_eq<uint8_t>(out[2], 0x45);
-            result.test_is_eq<uint8_t>(out[3], 0x23);
-            result.test_is_eq<uint8_t>(out[4], 0x01);
-            result.test_is_eq<uint8_t>(out[5], 0xEF);
-            result.test_is_eq<uint8_t>(out[6], 0xCD);
-            result.test_is_eq<uint8_t>(out[7], 0xAB);
+            result.test_u8_eq(out[0], 0x89);
+            result.test_u8_eq(out[1], 0x67);
+            result.test_u8_eq(out[2], 0x45);
+            result.test_u8_eq(out[3], 0x23);
+            result.test_u8_eq(out[4], 0x01);
+            result.test_u8_eq(out[5], 0xEF);
+            result.test_u8_eq(out[6], 0xCD);
+            result.test_u8_eq(out[7], 0xAB);
          }
 
          std::array<uint8_t, 8> outarr{};
@@ -290,30 +290,30 @@ class Utility_Function_Tests final : public Test {
          Botan::store_be(in64, outarr);
 
          Botan::load_be(outarr, i0, i1, i2, i3);
-         result.test_is_eq<uint16_t>(i0, 0xABCD);
-         result.test_is_eq<uint16_t>(i1, 0xEF01);
-         result.test_is_eq<uint16_t>(i2, 0x2345);
-         result.test_is_eq<uint16_t>(i3, 0x6789);
+         result.test_u16_eq(i0, 0xABCD);
+         result.test_u16_eq(i1, 0xEF01);
+         result.test_u16_eq(i2, 0x2345);
+         result.test_u16_eq(i3, 0x6789);
 
          Botan::load_le(std::span{outarr}.first<6>(), i0, i1, i2);
-         result.test_is_eq<uint16_t>(i0, 0xCDAB);
-         result.test_is_eq<uint16_t>(i1, 0x01EF);
-         result.test_is_eq<uint16_t>(i2, 0x4523);
-         result.test_is_eq<uint16_t>(i3, 0x6789);  // remains unchanged
+         result.test_u16_eq(i0, 0xCDAB);
+         result.test_u16_eq(i1, 0x01EF);
+         result.test_u16_eq(i2, 0x4523);
+         result.test_u16_eq(i3, 0x6789);  // remains unchanged
 
          Botan::store_le(in64, outarr);
 
          Botan::load_le(outarr, i0, i1, i2, i3);
-         result.test_is_eq<uint16_t>(i0, 0x6789);
-         result.test_is_eq<uint16_t>(i1, 0x2345);
-         result.test_is_eq<uint16_t>(i2, 0xEF01);
-         result.test_is_eq<uint16_t>(i3, 0xABCD);
+         result.test_u16_eq(i0, 0x6789);
+         result.test_u16_eq(i1, 0x2345);
+         result.test_u16_eq(i2, 0xEF01);
+         result.test_u16_eq(i3, 0xABCD);
 
          Botan::load_be(std::span{outarr}.first<6>(), i0, i1, i2);
-         result.test_is_eq<uint16_t>(i0, 0x8967);
-         result.test_is_eq<uint16_t>(i1, 0x4523);
-         result.test_is_eq<uint16_t>(i2, 0x01EF);
-         result.test_is_eq<uint16_t>(i3, 0xABCD);  // remains unchanged
+         result.test_u16_eq(i0, 0x8967);
+         result.test_u16_eq(i1, 0x4523);
+         result.test_u16_eq(i2, 0x01EF);
+         result.test_u16_eq(i3, 0xABCD);  // remains unchanged
 
          i0 = 0xAA11;
          i1 = 0xBB22;
@@ -413,20 +413,20 @@ class Utility_Function_Tests final : public Test {
          // Test load of entire ranges
          const auto in_buffer = Botan::hex_decode("AABBCCDD");
          auto out16_array_be = Botan::load_be<std::array<uint16_t, 2>>(in_buffer);
-         result.test_is_eq<uint16_t>(out16_array_be[0], 0xAABB);
-         result.test_is_eq<uint16_t>(out16_array_be[1], 0xCCDD);
+         result.test_u16_eq(out16_array_be[0], 0xAABB);
+         result.test_u16_eq(out16_array_be[1], 0xCCDD);
          auto out16_vec_be = Botan::load_be<std::vector<uint16_t>>(in_buffer);
-         result.test_eq_sz("be-vector has expected size", out16_vec_be.size(), 2);
-         result.test_is_eq<uint16_t>(out16_vec_be[0], 0xAABB);
-         result.test_is_eq<uint16_t>(out16_vec_be[1], 0xCCDD);
+         result.test_sz_eq("be-vector has expected size", out16_vec_be.size(), 2);
+         result.test_u16_eq(out16_vec_be[0], 0xAABB);
+         result.test_u16_eq(out16_vec_be[1], 0xCCDD);
 
          auto out16_array_le = Botan::load_le<std::array<uint16_t, 2>>(in_buffer);
-         result.test_is_eq<uint16_t>(out16_array_le[0], 0xBBAA);
-         result.test_is_eq<uint16_t>(out16_array_le[1], 0xDDCC);
+         result.test_u16_eq(out16_array_le[0], 0xBBAA);
+         result.test_u16_eq(out16_array_le[1], 0xDDCC);
          auto out16_vec_le = Botan::load_le<Botan::secure_vector<uint16_t>>(in_buffer);
-         result.test_eq_sz("le-vector has expected size", out16_vec_be.size(), 2);
-         result.test_is_eq<uint16_t>(out16_vec_le[0], 0xBBAA);
-         result.test_is_eq<uint16_t>(out16_vec_le[1], 0xDDCC);
+         result.test_sz_eq("le-vector has expected size", out16_vec_be.size(), 2);
+         result.test_u16_eq(out16_vec_le[0], 0xBBAA);
+         result.test_u16_eq(out16_vec_le[1], 0xDDCC);
 
          // Test loading/storing of strong type integers
          const TestInt64 in64_strong{0xABCDEF0123456789};
@@ -526,12 +526,12 @@ class Utility_Function_Tests final : public Test {
          const auto out_be_szt = Botan::store_be(inszt);
          const auto out_le_szt = Botan::store_le(inszt);
 
-         result.test_is_eq<uint32_t>("be 32", Botan::load_be<uint32_t>(out_be_32), in32);
-         result.test_is_eq<uint32_t>("le 32", Botan::load_le<uint32_t>(out_le_32), in32);
-         result.test_is_eq<uint64_t>("be 64", Botan::load_be<uint64_t>(out_be_64), in64);
-         result.test_is_eq<uint64_t>("le 64", Botan::load_le<uint64_t>(out_le_64), in64);
-         result.test_is_eq<size_t>("be szt", Botan::load_be<size_t>(out_be_szt), inszt);
-         result.test_is_eq<size_t>("le szt", Botan::load_le<size_t>(out_le_szt), inszt);
+         result.test_u32_eq("be 32", Botan::load_be<uint32_t>(out_be_32), in32);
+         result.test_u32_eq("le 32", Botan::load_le<uint32_t>(out_le_32), in32);
+         result.test_u64_eq("be 64", Botan::load_be<uint64_t>(out_be_64), in64);
+         result.test_u64_eq("le 64", Botan::load_le<uint64_t>(out_le_64), in64);
+         result.test_sz_eq("be sz", Botan::load_be<size_t>(out_be_szt), inszt);
+         result.test_sz_eq("le sz", Botan::load_le<size_t>(out_le_szt), inszt);
 
          return result;
       }
@@ -543,13 +543,13 @@ class Utility_Function_Tests final : public Test {
          // won't be called in production.
          Test::Result result("Util load/store fallback");
 
-         result.test_is_eq<uint16_t>("lLE 16", fb_load_le<uint16_t>({1, 2}), 0x0201);
-         result.test_is_eq<uint32_t>("lLE 32", fb_load_le<uint32_t>({1, 2, 3, 4}), 0x04030201);
-         result.test_is_eq<uint64_t>("lLE 64", fb_load_le<uint64_t>({1, 2, 3, 4, 5, 6, 7, 8}), 0x0807060504030201);
+         result.test_u16_eq("lLE 16", fb_load_le<uint16_t>({1, 2}), 0x0201);
+         result.test_u32_eq("lLE 32", fb_load_le<uint32_t>({1, 2, 3, 4}), 0x04030201);
+         result.test_u64_eq("lLE 64", fb_load_le<uint64_t>({1, 2, 3, 4, 5, 6, 7, 8}), 0x0807060504030201);
 
-         result.test_is_eq<uint16_t>("lBE 16", fb_load_be<uint16_t>({1, 2}), 0x0102);
-         result.test_is_eq<uint32_t>("lBE 32", fb_load_be<uint32_t>({1, 2, 3, 4}), 0x01020304);
-         result.test_is_eq<uint64_t>("lBE 64", fb_load_be<uint64_t>({1, 2, 3, 4, 5, 6, 7, 8}), 0x0102030405060708);
+         result.test_u16_eq("lBE 16", fb_load_be<uint16_t>({1, 2}), 0x0102);
+         result.test_u32_eq("lBE 32", fb_load_be<uint32_t>({1, 2, 3, 4}), 0x01020304);
+         result.test_u64_eq("lBE 64", fb_load_be<uint64_t>({1, 2, 3, 4, 5, 6, 7, 8}), 0x0102030405060708);
 
          result.test_is_eq<a<2>>("sLE 16", fb_store_le<uint16_t>(0x0201), {1, 2});
          result.test_is_eq<a<4>>("sLE 32", fb_store_le<uint32_t>(0x04030201), {1, 2, 3, 4});
@@ -577,45 +577,45 @@ class Utility_Function_Tests final : public Test {
 
          // get_byte<> w/ 16bit
          constexpr auto cex_byte_16_0 = Botan::get_byte<0>(in16);
-         result.test_is_eq<uint8_t>(cex_byte_16_0, 0x12);
+         result.test_u8_eq(cex_byte_16_0, 0x12);
          constexpr auto cex_byte_16_1 = Botan::get_byte<1>(in16);
-         result.test_is_eq<uint8_t>(cex_byte_16_1, 0x34);
+         result.test_u8_eq(cex_byte_16_1, 0x34);
 
          // get_byte<> w/ 32bit
          constexpr auto cex_byte_32_0 = Botan::get_byte<0>(in32);
-         result.test_is_eq<uint8_t>(cex_byte_32_0, 0xA0);
+         result.test_u8_eq(cex_byte_32_0, 0xA0);
          constexpr auto cex_byte_32_1 = Botan::get_byte<1>(in32);
-         result.test_is_eq<uint8_t>(cex_byte_32_1, 0xB0);
+         result.test_u8_eq(cex_byte_32_1, 0xB0);
          constexpr auto cex_byte_32_2 = Botan::get_byte<2>(in32);
-         result.test_is_eq<uint8_t>(cex_byte_32_2, 0xC0);
+         result.test_u8_eq(cex_byte_32_2, 0xC0);
          constexpr auto cex_byte_32_3 = Botan::get_byte<3>(in32);
-         result.test_is_eq<uint8_t>(cex_byte_32_3, 0xD0);
+         result.test_u8_eq(cex_byte_32_3, 0xD0);
 
          // get_byte<> w/ 64bit
          constexpr auto cex_byte_64_0 = Botan::get_byte<0>(in64);
-         result.test_is_eq<uint8_t>(cex_byte_64_0, 0xAB);
+         result.test_u8_eq(cex_byte_64_0, 0xAB);
          constexpr auto cex_byte_64_1 = Botan::get_byte<1>(in64);
-         result.test_is_eq<uint8_t>(cex_byte_64_1, 0xCD);
+         result.test_u8_eq(cex_byte_64_1, 0xCD);
          constexpr auto cex_byte_64_2 = Botan::get_byte<2>(in64);
-         result.test_is_eq<uint8_t>(cex_byte_64_2, 0xEF);
+         result.test_u8_eq(cex_byte_64_2, 0xEF);
          constexpr auto cex_byte_64_3 = Botan::get_byte<3>(in64);
-         result.test_is_eq<uint8_t>(cex_byte_64_3, 0x01);
+         result.test_u8_eq(cex_byte_64_3, 0x01);
          constexpr auto cex_byte_64_4 = Botan::get_byte<4>(in64);
-         result.test_is_eq<uint8_t>(cex_byte_64_4, 0x23);
+         result.test_u8_eq(cex_byte_64_4, 0x23);
          constexpr auto cex_byte_64_5 = Botan::get_byte<5>(in64);
-         result.test_is_eq<uint8_t>(cex_byte_64_5, 0x45);
+         result.test_u8_eq(cex_byte_64_5, 0x45);
          constexpr auto cex_byte_64_6 = Botan::get_byte<6>(in64);
-         result.test_is_eq<uint8_t>(cex_byte_64_6, 0x67);
+         result.test_u8_eq(cex_byte_64_6, 0x67);
          constexpr auto cex_byte_64_7 = Botan::get_byte<7>(in64);
-         result.test_is_eq<uint8_t>(cex_byte_64_7, 0x89);
+         result.test_u8_eq(cex_byte_64_7, 0x89);
 
          // make_uintXX()
          constexpr auto cex_uint16_t = Botan::make_uint16(0x12, 0x34);
-         result.test_is_eq<uint16_t>(cex_uint16_t, in16);
+         result.test_u16_eq(cex_uint16_t, in16);
          constexpr auto cex_uint32_t = Botan::make_uint32(0xA0, 0xB0, 0xC0, 0xD0);
-         result.test_is_eq<uint32_t>(cex_uint32_t, in32);
+         result.test_u32_eq(cex_uint32_t, in32);
          constexpr auto cex_uint64_t = Botan::make_uint64(0xAB, 0xCD, 0xEF, 0x01, 0x23, 0x45, 0x67, 0x89);
-         result.test_is_eq<uint64_t>(cex_uint64_t, in64);
+         result.test_u64_eq(cex_uint64_t, in64);
 
          // store_le/be with a single integer
          constexpr std::array<uint8_t, 2> cex_store_le16 = Botan::store_le(in16);
@@ -799,7 +799,7 @@ class BitOps_Tests final : public Test {
          Botan::CT::poison(val);
          const size_t computed = Botan::ctz<T>(val);
          Botan::CT::unpoison_all(computed, val);
-         result.test_eq("ctz(" + std::to_string(val) + ")", computed, expected);
+         result.test_sz_eq("ctz(" + std::to_string(val) + ")", computed, expected);
       }
 
       Test::Result test_ctz() {
@@ -819,7 +819,7 @@ class BitOps_Tests final : public Test {
          Botan::CT::poison(val);
          const size_t computed = Botan::significant_bytes<T>(val);
          Botan::CT::unpoison_all(computed, val);
-         result.test_eq("significant_bytes(" + std::to_string(val) + ")", computed, expected);
+         result.test_sz_eq("significant_bytes(" + std::to_string(val) + ")", computed, expected);
       }
 
       Test::Result test_sig_bytes() {
@@ -845,7 +845,7 @@ class BitOps_Tests final : public Test {
 
       template <typename T>
       void test_power_of_2(Test::Result& result, T val, bool expected) {
-         result.test_eq("power_of_2(" + std::to_string(val) + ")", Botan::is_power_of_2<T>(val), expected);
+         result.test_bool_eq("power_of_2(" + std::to_string(val) + ")", Botan::is_power_of_2<T>(val), expected);
       }
 
       Test::Result test_power_of_2() {
@@ -879,31 +879,31 @@ class BitOps_Tests final : public Test {
       template <typename T>
       auto random_pc(Test::Result& result) {
          auto n = Botan::load_le<T>(Test::rng().random_array<sizeof(T)>());
-         result.test_is_eq<size_t>(Botan::fmt("popcount({}) == {}", n, std::popcount(n)), pc(n), std::popcount(n));
+         result.test_sz_eq(Botan::fmt("popcount({}) == {}", n, std::popcount(n)), pc(n), std::popcount(n));
       }
 
       Test::Result test_popcount() {
          Test::Result result("popcount");
 
-         result.test_is_eq<uint8_t>("popcount<uint8_t>(0)", pc<uint8_t>(0), 0);
-         result.test_is_eq<uint8_t>("popcount<uint16_t>(0)", pc<uint16_t>(0), 0);
-         result.test_is_eq<uint8_t>("popcount<uint32_t>(0)", pc<uint32_t>(0), 0);
-         result.test_is_eq<uint8_t>("popcount<uint64_t>(0)", pc<uint64_t>(0), 0);
+         result.test_u8_eq("popcount<uint8_t>(0)", pc<uint8_t>(0), 0);
+         result.test_u8_eq("popcount<uint16_t>(0)", pc<uint16_t>(0), 0);
+         result.test_u8_eq("popcount<uint32_t>(0)", pc<uint32_t>(0), 0);
+         result.test_u8_eq("popcount<uint64_t>(0)", pc<uint64_t>(0), 0);
 
-         result.test_is_eq<uint8_t>("popcount<uint8_t>(1)", pc<uint8_t>(1), 1);
-         result.test_is_eq<uint8_t>("popcount<uint16_t>(1)", pc<uint16_t>(1), 1);
-         result.test_is_eq<uint8_t>("popcount<uint32_t>(1)", pc<uint32_t>(1), 1);
-         result.test_is_eq<uint8_t>("popcount<uint64_t>(1)", pc<uint64_t>(1), 1);
+         result.test_u8_eq("popcount<uint8_t>(1)", pc<uint8_t>(1), 1);
+         result.test_u8_eq("popcount<uint16_t>(1)", pc<uint16_t>(1), 1);
+         result.test_u8_eq("popcount<uint32_t>(1)", pc<uint32_t>(1), 1);
+         result.test_u8_eq("popcount<uint64_t>(1)", pc<uint64_t>(1), 1);
 
-         result.test_is_eq<uint8_t>("popcount<uint8_t>(0xAA)", pc<uint8_t>(0xAA), 4);
-         result.test_is_eq<uint8_t>("popcount<uint16_t>(0xAAAA)", pc<uint16_t>(0xAAAA), 8);
-         result.test_is_eq<uint8_t>("popcount<uint32_t>(0xAAAA...)", pc<uint32_t>(0xAAAAAAAA), 16);
-         result.test_is_eq<uint8_t>("popcount<uint64_t>(0xAAAA...)", pc<uint64_t>(0xAAAAAAAAAAAAAAAA), 32);
+         result.test_u8_eq("popcount<uint8_t>(0xAA)", pc<uint8_t>(0xAA), 4);
+         result.test_u8_eq("popcount<uint16_t>(0xAAAA)", pc<uint16_t>(0xAAAA), 8);
+         result.test_u8_eq("popcount<uint32_t>(0xAAAA...)", pc<uint32_t>(0xAAAAAAAA), 16);
+         result.test_u8_eq("popcount<uint64_t>(0xAAAA...)", pc<uint64_t>(0xAAAAAAAAAAAAAAAA), 32);
 
-         result.test_is_eq<uint8_t>("popcount<uint8_t>(0xFF)", pc<uint8_t>(0xFF), 8);
-         result.test_is_eq<uint8_t>("popcount<uint16_t>(0xFFFF)", pc<uint16_t>(0xFFFF), 16);
-         result.test_is_eq<uint8_t>("popcount<uint32_t>(0xFFFF...)", pc<uint32_t>(0xFFFFFFFF), 32);
-         result.test_is_eq<uint8_t>("popcount<uint64_t>(0xFFFF...)", pc<uint64_t>(0xFFFFFFFFFFFFFFFF), 64);
+         result.test_u8_eq("popcount<uint8_t>(0xFF)", pc<uint8_t>(0xFF), 8);
+         result.test_u8_eq("popcount<uint16_t>(0xFFFF)", pc<uint16_t>(0xFFFF), 16);
+         result.test_u8_eq("popcount<uint32_t>(0xFFFF...)", pc<uint32_t>(0xFFFFFFFF), 32);
+         result.test_u8_eq("popcount<uint64_t>(0xFFFF...)", pc<uint64_t>(0xFFFFFFFFFFFFFFFF), 64);
 
          random_pc<uint8_t>(result);
          random_pc<uint16_t>(result);
@@ -916,27 +916,21 @@ class BitOps_Tests final : public Test {
       Test::Result test_reverse_bits() {
          Test::Result result("reverse_bits");
 
-         result.test_is_eq<uint8_t>("rev(0u8)", Botan::ct_reverse_bits<uint8_t>(0b00000000), 0b00000000);
-         result.test_is_eq<uint8_t>("rev(1u8)", Botan::ct_reverse_bits<uint8_t>(0b01010101), 0b10101010);
-         result.test_is_eq<uint8_t>("rev(2u8)", Botan::ct_reverse_bits<uint8_t>(0b01001011), 0b11010010);
+         result.test_u8_eq("rev(0u8)", Botan::ct_reverse_bits<uint8_t>(0b00000000), 0b00000000);
+         result.test_u8_eq("rev(1u8)", Botan::ct_reverse_bits<uint8_t>(0b01010101), 0b10101010);
+         result.test_u8_eq("rev(2u8)", Botan::ct_reverse_bits<uint8_t>(0b01001011), 0b11010010);
 
-         result.test_is_eq<uint16_t>(
-            "rev(0u16)", Botan::ct_reverse_bits<uint16_t>(0b0000000000000000), 0b0000000000000000);
-         result.test_is_eq<uint16_t>(
-            "rev(1u16)", Botan::ct_reverse_bits<uint16_t>(0b0101010101010101), 0b1010101010101010);
-         result.test_is_eq<uint16_t>(
-            "rev(2u16)", Botan::ct_reverse_bits<uint16_t>(0b0100101101011010), 0b0101101011010010);
+         result.test_u16_eq("rev(0u16)", Botan::ct_reverse_bits<uint16_t>(0b0000000000000000), 0b0000000000000000);
+         result.test_u16_eq("rev(1u16)", Botan::ct_reverse_bits<uint16_t>(0b0101010101010101), 0b1010101010101010);
+         result.test_u16_eq("rev(2u16)", Botan::ct_reverse_bits<uint16_t>(0b0100101101011010), 0b0101101011010010);
 
-         result.test_is_eq<uint32_t>("rev(0u32)", Botan::ct_reverse_bits<uint32_t>(0xFFFFFFFF), 0xFFFFFFFF);
-         result.test_is_eq<uint32_t>("rev(1u32)", Botan::ct_reverse_bits<uint32_t>(0x55555555), 0xAAAAAAAA);
-         result.test_is_eq<uint32_t>("rev(2u32)", Botan::ct_reverse_bits<uint32_t>(0x4B6A2C1D), 0xB83456D2);
+         result.test_u32_eq("rev(0u32)", Botan::ct_reverse_bits<uint32_t>(0xFFFFFFFF), 0xFFFFFFFF);
+         result.test_u32_eq("rev(1u32)", Botan::ct_reverse_bits<uint32_t>(0x55555555), 0xAAAAAAAA);
+         result.test_u32_eq("rev(2u32)", Botan::ct_reverse_bits<uint32_t>(0x4B6A2C1D), 0xB83456D2);
 
-         result.test_is_eq<uint64_t>(
-            "rev(0u64)", Botan::ct_reverse_bits<uint64_t>(0xF0E0D0C005040302), 0x40C020A0030B070F);
-         result.test_is_eq<uint64_t>(
-            "rev(1u64)", Botan::ct_reverse_bits<uint64_t>(0x5555555555555555), 0xAAAAAAAAAAAAAAAA);
-         result.test_is_eq<uint64_t>(
-            "rev(2u64)", Botan::ct_reverse_bits<uint64_t>(0x4B6A2C1D5E7F8A90), 0x951FE7AB83456D2);
+         result.test_u64_eq("rev(0u64)", Botan::ct_reverse_bits<uint64_t>(0xF0E0D0C005040302), 0x40C020A0030B070F);
+         result.test_u64_eq("rev(1u64)", Botan::ct_reverse_bits<uint64_t>(0x5555555555555555), 0xAAAAAAAAAAAAAAAA);
+         result.test_u64_eq("rev(2u64)", Botan::ct_reverse_bits<uint64_t>(0x4B6A2C1D5E7F8A90), 0x951FE7AB83456D2);
 
          return result;
       }
@@ -1032,24 +1026,24 @@ class Date_Format_Tests final : public Text_Based_Test {
 
          if(type == "valid" || type == "valid.not_std" || type == "valid.64_bit_time_t") {
             const Botan::calendar_point c(d[0], d[1], d[2], d[3], d[4], d[5]);
-            result.test_is_eq(date_str + " year", c.year(), d[0]);
-            result.test_is_eq(date_str + " month", c.month(), d[1]);
-            result.test_is_eq(date_str + " day", c.day(), d[2]);
-            result.test_is_eq(date_str + " hour", c.hour(), d[3]);
-            result.test_is_eq(date_str + " minute", c.minutes(), d[4]);
-            result.test_is_eq(date_str + " second", c.seconds(), d[5]);
+            result.test_u32_eq(date_str + " year", c.year(), d[0]);
+            result.test_u32_eq(date_str + " month", c.month(), d[1]);
+            result.test_u32_eq(date_str + " day", c.day(), d[2]);
+            result.test_u32_eq(date_str + " hour", c.hour(), d[3]);
+            result.test_u32_eq(date_str + " minute", c.minutes(), d[4]);
+            result.test_u32_eq(date_str + " second", c.seconds(), d[5]);
 
             if(type == "valid.not_std" ||
                (type == "valid.64_bit_time_t" && c.year() > 2037 && sizeof(std::time_t) == 4)) {
                result.test_throws("valid but out of std::timepoint range", [c]() { c.to_std_timepoint(); });
             } else {
                const Botan::calendar_point c2(c.to_std_timepoint());
-               result.test_is_eq(date_str + " year", c2.year(), d[0]);
-               result.test_is_eq(date_str + " month", c2.month(), d[1]);
-               result.test_is_eq(date_str + " day", c2.day(), d[2]);
-               result.test_is_eq(date_str + " hour", c2.hour(), d[3]);
-               result.test_is_eq(date_str + " minute", c2.minutes(), d[4]);
-               result.test_is_eq(date_str + " second", c2.seconds(), d[5]);
+               result.test_u32_eq(date_str + " year", c2.year(), d[0]);
+               result.test_u32_eq(date_str + " month", c2.month(), d[1]);
+               result.test_u32_eq(date_str + " day", c2.day(), d[2]);
+               result.test_u32_eq(date_str + " hour", c2.hour(), d[3]);
+               result.test_u32_eq(date_str + " minute", c2.minutes(), d[4]);
+               result.test_u32_eq(date_str + " second", c2.seconds(), d[5]);
             }
          } else if(type == "invalid") {
             result.test_throws("invalid date",
@@ -1115,7 +1109,7 @@ class Hostname_Tests final : public Text_Based_Test {
          const bool expected = (type == "Invalid") ? false : true;
 
          const std::string what = hostname + ((expected == true) ? " matches " : " does not match ") + issued;
-         result.test_eq(what, Botan::host_wildcard_match(issued, hostname), expected);
+         result.test_bool_eq(what, Botan::host_wildcard_match(issued, hostname), expected);
 
          return result;
       }
@@ -1168,7 +1162,7 @@ class IPv4_Parsing_Tests final : public Text_Based_Test {
 
          auto ipv4 = Botan::string_to_ipv4(input);
 
-         result.test_eq("string_to_ipv4 accepts only valid", valid, ipv4.has_value());
+         result.test_bool_eq("string_to_ipv4 accepts only valid", ipv4.has_value(), valid);
 
          if(ipv4) {
             const std::string rt = Botan::ipv4_to_string(ipv4.value());
@@ -1229,7 +1223,7 @@ class ReadKV_Tests final : public Text_Based_Test {
       static void confirm_kv(Test::Result& result,
                              const std::map<std::string, std::string>& kv,
                              const std::vector<std::string>& expected) {
-         if(!result.test_eq("expected size", expected.size() % 2, size_t(0))) {
+         if(!result.test_sz_eq("expected size", expected.size() % 2, size_t(0))) {
             return;
          }
 
@@ -1240,7 +1234,7 @@ class ReadKV_Tests final : public Text_Based_Test {
             }
          }
 
-         result.test_eq("KV has same size as expected", kv.size(), expected.size() / 2);
+         result.test_sz_eq("KV has same size as expected", kv.size(), expected.size() / 2);
       }
 };
 
@@ -1267,7 +1261,7 @@ class CPUID_Tests final : public Test {
                result.confirm("Feature string is not empty", !feat_str.empty());
 
                if(auto from_str = Botan::CPUID::Feature::from_string(feat_str)) {
-                  result.test_int_eq("Feature::from_string returns expected bit", from_str->as_u32(), bit);
+                  result.test_u32_eq("Feature::from_string returns expected bit", from_str->as_u32(), bit);
                } else {
                   result.test_failure(
                      Botan::fmt("Feature::from_string didn't recognize its own output ({})", feat_str));
@@ -1286,12 +1280,10 @@ class CPUID_Tests final : public Test {
 
             Botan::CPUID::clear_cpuid_bit(bit);
 
-            result.test_eq(
-               "After clearing cpuid bit, CPUID::has for SSE2 returns false", Botan::CPUID::has(bit), false);
+            result.test_is_false("After clearing cpuid bit, CPUID::has for SSE2 returns false", Botan::CPUID::has(bit));
 
             Botan::CPUID::initialize();  // reset state
-            result.test_eq(
-               "After reinitializing, CPUID::has for SSE2 returns true again", Botan::CPUID::has(bit), true);
+            result.test_is_true("After reinitializing, CPUID::has for SSE2 returns true again", Botan::CPUID::has(bit));
          }
    #else
          BOTAN_UNUSED(cpuid_string);
@@ -1320,13 +1312,13 @@ class UUID_Tests : public Test {
          result.test_throws("Cannot load wrong number of bytes",
                             []() { const Botan::UUID u(std::vector<uint8_t>(15)); });
 
-         result.test_eq("Empty UUID is empty", empty_uuid.is_valid(), false);
+         result.test_is_false("Empty UUID is empty", empty_uuid.is_valid());
          result.confirm("Empty UUID equals another empty UUID", empty_uuid == Botan::UUID());
 
          result.test_throws("Empty UUID cannot become a string", [&]() { empty_uuid.to_string(); });
 
-         result.test_eq("Random UUID not empty", random_uuid1.is_valid(), true);
-         result.test_eq("Random UUID not empty", random_uuid2.is_valid(), true);
+         result.test_is_true("Random UUID not empty", random_uuid1.is_valid());
+         result.test_is_true("Random UUID not empty", random_uuid2.is_valid());
 
          result.confirm("Random UUIDs are distinct", random_uuid1 != random_uuid2);
          result.confirm("Random UUIDs not equal to empty", random_uuid1 != empty_uuid);

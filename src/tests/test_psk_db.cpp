@@ -118,18 +118,18 @@ class PSK_DB_Tests final : public Test {
 
          std::set<std::string> all_names = db.list_names();
 
-         result.test_eq("Expected number of names", all_names.size(), 3);
-         result.test_eq("Have expected name", all_names.count("name"), 1);
-         result.test_eq("Have expected name", all_names.count("name2"), 1);
-         result.test_eq("Have expected name", all_names.count("leroy jeeeeeeeenkins"), 1);
+         result.test_sz_eq("Expected number of names", all_names.size(), 3);
+         result.test_sz_eq("Have expected name", all_names.count("name"), 1);
+         result.test_sz_eq("Have expected name", all_names.count("name2"), 1);
+         result.test_sz_eq("Have expected name", all_names.count("leroy jeeeeeeeenkins"), 1);
 
          db.remove("name2");
 
          all_names = db.list_names();
 
-         result.test_eq("Expected number of names", all_names.size(), 2);
-         result.test_eq("Have expected name", all_names.count("name"), 1);
-         result.test_eq("Have expected name", all_names.count("leroy jeeeeeeeenkins"), 1);
+         result.test_sz_eq("Expected number of names", all_names.size(), 2);
+         result.test_sz_eq("Have expected name", all_names.count("name"), 1);
+         result.test_sz_eq("Have expected name", all_names.count("leroy jeeeeeeeenkins"), 1);
 
          result.test_throws(
             "exception if get called on non-existent PSK", "Named PSK not located", [&]() { db.get("name2"); });
@@ -205,22 +205,22 @@ class PSK_DB_Tests final : public Test {
          Botan::Encrypted_PSK_Database_SQL db2(not_zeros, sqldb, table_name);
          db2.set_str("name", "price&value");
          result.test_eq("DB read", db2.get_str("name"), "price&value");
-         result.test_eq("DB2 size", db2.list_names().size(), 1);
+         result.test_sz_eq("DB2 size", db2.list_names().size(), 1);
 
          std::set<std::string> all_names = db.list_names();
 
-         result.test_eq("Expected number of names", all_names.size(), 3);
-         result.test_eq("Have expected name", all_names.count("name"), 1);
-         result.test_eq("Have expected name", all_names.count("name2"), 1);
-         result.test_eq("Have expected name", all_names.count("leroy jeeeeeeeenkins"), 1);
+         result.test_sz_eq("Expected number of names", all_names.size(), 3);
+         result.test_sz_eq("Have expected name", all_names.count("name"), 1);
+         result.test_sz_eq("Have expected name", all_names.count("name2"), 1);
+         result.test_sz_eq("Have expected name", all_names.count("leroy jeeeeeeeenkins"), 1);
 
          db.remove("name2");
 
          all_names = db.list_names();
 
-         result.test_eq("Expected number of names", all_names.size(), 2);
-         result.test_eq("Have expected name", all_names.count("name"), 1);
-         result.test_eq("Have expected name", all_names.count("leroy jeeeeeeeenkins"), 1);
+         result.test_sz_eq("Expected number of names", all_names.size(), 2);
+         result.test_sz_eq("Have expected name", all_names.count("name"), 1);
+         result.test_sz_eq("Have expected name", all_names.count("leroy jeeeeeeeenkins"), 1);
 
          result.test_throws(
             "exception if get called on non-existent PSK", "Named PSK not located", [&]() { db.get("name2"); });

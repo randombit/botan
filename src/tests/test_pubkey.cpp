@@ -40,13 +40,13 @@ void check_invalid_signatures(Test::Result& result,
    const size_t tests_to_run = (Test::run_long_tests() ? 20 : 5);
 
    const std::vector<uint8_t> zero_sig(signature.size());
-   result.test_eq("all zero signature invalid", verifier.verify_message(message, zero_sig), false);
+   result.test_is_false("all zero signature invalid", verifier.verify_message(message, zero_sig));
 
    for(size_t i = 0; i < tests_to_run; ++i) {
       const std::vector<uint8_t> bad_sig = Test::mutate_vec(signature, rng);
 
       try {
-         if(!result.test_eq("incorrect signature invalid", verifier.verify_message(message, bad_sig), false)) {
+         if(!result.test_is_false("incorrect signature invalid", verifier.verify_message(message, bad_sig))) {
             result.test_note("Accepted invalid signature " + Botan::hex_encode(bad_sig));
          }
       } catch(std::exception& e) {
@@ -147,11 +147,11 @@ Test::Result PK_Signature_Generation_Test::run_one_test(const std::string& pad_h
          continue;
       }
 
-      result.test_eq("KAT signature valid", verifier->verify_message(message, signature), true);
+      result.test_is_true("KAT signature valid", verifier->verify_message(message, signature));
 
       check_invalid_signatures(result, *verifier, message, signature, this->rng());
 
-      result.test_eq("KAT signature valid (try 2)", verifier->verify_message(message, signature), true);
+      result.test_is_true("KAT signature valid (try 2)", verifier->verify_message(message, signature));
 
       verifiers.push_back(std::move(verifier));
    }
@@ -172,7 +172,7 @@ Test::Result PK_Signature_Generation_Test::run_one_test(const std::string& pad_h
             generated_signature = signer->sign_message(message, this->rng());
          }
 
-         result.test_lte(
+         result.test_sz_lte(
             "Generated signature within announced bound", generated_signature.size(), signer->signature_length());
       } catch(Botan::Lookup_Error&) {
          //result.test_note("Skipping signing with " + sign_provider);
@@ -183,8 +183,8 @@ Test::Result PK_Signature_Generation_Test::run_one_test(const std::string& pad_h
          result.test_eq("generated signature matches KAT", generated_signature, signature);
       } else if(generated_signature != signature) {
          for(std::unique_ptr<Botan::PK_Verifier>& verifier : verifiers) {
-            if(!result.test_eq(
-                  "generated signature valid", verifier->verify_message(message, generated_signature), true)) {
+            if(!result.test_is_true("generated signature valid",
+                                    verifier->verify_message(message, generated_signature))) {
                result.test_failure("generated signature", generated_signature);
             }
          }
@@ -235,7 +235,7 @@ Test::Result PK_Signature_Verification_Test::run_one_test(const std::string& pad
             const bool verified = verifier->verify_message(message, signature);
 
             if(expected_valid) {
-               result.test_eq("correct signature valid with " + verify_provider, verified, true);
+               result.test_is_true("correct signature valid with " + verify_provider, verified);
 
                if(test_random_invalid_sigs()) {
                   check_invalid_signatures(result, *verifier, message, signature, this->rng());
@@ -267,7 +267,7 @@ Test::Result PK_Signature_NonVerification_Test::run_one_test(const std::string& 
       try {
          verifier =
             std::make_unique<Botan::PK_Verifier>(*pubkey, padding, Botan::Signature_Format::Standard, verify_provider);
-         result.test_eq("incorrect signature rejected", verifier->verify_message(message, invalid_signature), false);
+         result.test_is_false("incorrect signature rejected", verifier->verify_message(message, invalid_signature));
       } catch(Botan::Lookup_Error&) {
          result.test_note("Skipping verifying with " + verify_provider);
       }
@@ -306,7 +306,7 @@ std::vector<Test::Result> PK_Sign_Verify_DER_Test::run() {
             std::vector<uint8_t> generated_signature = signer->sign_message(message, this->rng());
             const bool verified = verifier->verify_message(message, generated_signature);
 
-            result.test_eq("correct signature valid with " + provider, verified, true);
+            result.test_is_true("correct signature valid with " + provider, verified);
 
             if(test_random_invalid_sigs()) {
                check_invalid_signatures(result, *verifier, message, generated_signature, this->rng());
@@ -385,7 +385,8 @@ Test::Result PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_
       try {
          decrypted = decryptor->decrypt(ciphertext);
 
-         result.test_lte("Plaintext within length", decrypted.size(), decryptor->plaintext_length(ciphertext.size()));
+         result.test_sz_lte(
+            "Plaintext within length", decrypted.size(), decryptor->plaintext_length(ciphertext.size()));
       } catch(Botan::Exception& e) {
          result.test_failure("Failed to decrypt KAT ciphertext", e.what());
       }
@@ -414,14 +415,14 @@ Test::Result PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_
          Hack for RSA with no padding since sometimes one more bit will fit in but maximum_input_size
          rounds down to nearest byte
          */
-         result.test_lte("Input within accepted bounds", plaintext.size(), encryptor->maximum_input_size() + 1);
+         result.test_sz_lte("Input within accepted bounds", plaintext.size(), encryptor->maximum_input_size() + 1);
       } else {
-         result.test_lte("Input within accepted bounds", plaintext.size(), encryptor->maximum_input_size());
+         result.test_sz_lte("Input within accepted bounds", plaintext.size(), encryptor->maximum_input_size());
       }
 
       const std::vector<uint8_t> generated_ciphertext = encryptor->encrypt(plaintext, kat_rng ? *kat_rng : this->rng());
 
-      result.test_lte(
+      result.test_sz_lte(
          "Ciphertext within length", generated_ciphertext.size(), encryptor->ciphertext_length(plaintext.size()));
 
       if(enc_provider == "base") {
@@ -497,11 +498,11 @@ Test::Result PK_KEM_Test::run_one_test(const std::string& /*header*/, const VarM
 
    const auto kem_result = enc->encrypt(fixed_output_rng, desired_key_len, salt);
 
-   result.test_eq("encapsulated key length matches expected",
-                  kem_result.encapsulated_shared_key().size(),
-                  enc->encapsulated_key_length());
+   result.test_sz_eq("encapsulated key length matches expected",
+                     kem_result.encapsulated_shared_key().size(),
+                     enc->encapsulated_key_length());
 
-   result.test_eq(
+   result.test_sz_eq(
       "shared key length matches expected", kem_result.shared_key().size(), enc->shared_key_length(desired_key_len));
 
    result.test_eq("C0 matches", kem_result.encapsulated_shared_key(), C0);
@@ -515,14 +516,14 @@ Test::Result PK_KEM_Test::run_one_test(const std::string& /*header*/, const VarM
       return result;
    }
 
-   result.test_eq("encapsulated key length matches expected",
-                  kem_result.encapsulated_shared_key().size(),
-                  dec->encapsulated_key_length());
+   result.test_sz_eq("encapsulated key length matches expected",
+                     kem_result.encapsulated_shared_key().size(),
+                     dec->encapsulated_key_length());
 
    const Botan::secure_vector<uint8_t> decr_shared_key =
       dec->decrypt(C0.data(), C0.size(), desired_key_len, salt.data(), salt.size());
 
-   result.test_eq(
+   result.test_sz_eq(
       "shared key length matches expected", decr_shared_key.size(), dec->shared_key_length(desired_key_len));
 
    result.test_eq("decrypted K matches", decr_shared_key, K);
@@ -558,7 +559,7 @@ Test::Result PK_Key_Agreement_Test::run_one_test(const std::string& header, cons
             result.test_eq(provider, "agreement", derived_key, shared);
 
             if(key_len == 0 && kdf == "Raw") {
-               result.test_eq("Expected size", derived_key.size(), kas->agreed_value_size());
+               result.test_sz_eq("Expected size", derived_key.size(), kas->agreed_value_size());
             }
          }
       } catch(Botan::Lookup_Error&) {
@@ -663,8 +664,8 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
             }
          }
 
-         result.test_gte("Key has reasonable estimated strength (lower)", key.estimated_strength(), 64);
-         result.test_lt("Key has reasonable estimated strength (upper)", key.estimated_strength(), 512);
+         result.test_sz_gte("Key has reasonable estimated strength (lower)", key.estimated_strength(), 64);
+         result.test_sz_lt("Key has reasonable estimated strength (upper)", key.estimated_strength(), 512);
 
          auto public_key = key.public_key();
 
@@ -682,11 +683,11 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
 
             result.test_eq("new private key has the same name", sk2->algo_name(), key.algo_name());
             result.test_eq("new public key has the same name", pk2->algo_name(), public_key->algo_name());
-            result.test_eq(
+            result.test_sz_eq(
                "new private key has the same est. strength", sk2->estimated_strength(), key.estimated_strength());
-            result.test_eq("new public key has the same est. strength",
-                           pk2->estimated_strength(),
-                           public_key->estimated_strength());
+            result.test_sz_eq("new public key has the same est. strength",
+                              pk2->estimated_strength(),
+                              public_key->estimated_strength());
             result.test_ne("new private keys are different keys", sk2->private_key_bits(), key.private_key_bits());
          } catch(const Botan::Not_Implemented&) {
             result.confirm("KEX algorithms are required to implement 'generate_another'",
@@ -698,7 +699,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
          const std::vector<std::string> algos_that_dont_have_a_raw_encoding = {"RSA"};
          try {
             auto raw = public_key->raw_public_key_bits();
-            result.test_ne("raw_public_key_bits is not empty", raw.size(), 0);
+            result.test_sz_ne("raw_public_key_bits is not empty", raw.size(), 0);
 
             if(public_key->supports_operation(Botan::PublicKeyOperation::KeyAgreement)) {
                // For KEX algorithms, raw_public_key_bits must be equal to the canonical
@@ -729,7 +730,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
             result.test_eq("public key has same type", loaded->algo_name(), key.algo_name());
 
             try {
-               result.test_eq("public key passes checks", loaded->check_key(this->rng(), false), true);
+               result.test_is_true("public key passes checks", loaded->check_key(this->rng(), false));
             } catch(Botan::Lookup_Error&) {}
          } catch(std::exception& e) {
             result.test_failure("roundtrip PEM public key", e.what());
@@ -802,7 +803,7 @@ Test::Result PK_Key_Validity_Test::run_one_test(const std::string& header, const
 
    const bool tested_valid = pubkey->check_key(this->rng(), true);
 
-   result.test_eq("Expected validation result", tested_valid, expected_valid);
+   result.test_bool_eq("Expected validation result", tested_valid, expected_valid);
 
    return result;
 }
@@ -911,7 +912,7 @@ class PK_API_Sign_Test : public Text_Based_Test {
                         privkey->supports_operation(Botan::PublicKeyOperation::Signature));
          result.confirm("public key claims to support signatures",
                         pubkey->supports_operation(Botan::PublicKeyOperation::Signature));
-         result.test_gt("Public key length must be greater than 0", pubkey->key_length(), 0);
+         result.test_sz_gt("Public key length must be greater than 0", pubkey->key_length(), 0);
          if(privkey->stateful_operation()) {
             result.confirm("A stateful key reports the number of remaining operations",
                            privkey->remaining_operations().has_value());
@@ -950,10 +951,9 @@ class PK_API_Sign_Test : public Text_Based_Test {
          privkey.reset();
          const std::array<uint8_t, 4> msg{0xde, 0xad, 0xbe, 0xef};
          const auto sig = signer->sign_message(msg, this->rng());
-         result.test_gt("Signer should still work if no one else hold a reference to the key", sig.size(), 0);
-         result.test_eq("Verifier should still work if no one else hold a reference to the key",
-                        verifier->verify_message(msg, sig),
-                        true);
+         result.test_sz_gt("Signer should still work if no one else hold a reference to the key", sig.size(), 0);
+         result.test_is_true("Verifier should still work if no one else hold a reference to the key",
+                             verifier->verify_message(msg, sig));
 
          return result;
       }

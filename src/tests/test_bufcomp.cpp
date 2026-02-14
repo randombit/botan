@@ -28,7 +28,7 @@ class Test_Buf_Comp final : public Botan::Buffered_Computation {
       size_t output_length() const override { return sizeof(m_counter); }
 
       void add_data(std::span<const uint8_t> input) override {
-         if(m_result.test_eq("input length as expected", input.size(), size_t(5))) {
+         if(m_result.test_sz_eq("input length as expected", input.size(), size_t(5))) {
             m_result.confirm("input[0] == 'A'", input[0] == 'A');
             m_result.confirm("input[0] == 'B'", input[1] == 'B');
             m_result.confirm("input[0] == 'C'", input[2] == 'C');
@@ -105,7 +105,7 @@ Test::Result test_buffered_computation_convenience_api() {
    t.final(out_vec);
    out_vec.resize(t.output_length() * 2);
    t.final(out_vec);
-   result.test_int_eq("out vector is resized", out_vec.size(), t.output_length());
+   result.test_sz_eq("out vector is resized", out_vec.size(), t.output_length());
 
    check(result, out_vec, 6);
 
