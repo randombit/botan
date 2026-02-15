@@ -18,6 +18,7 @@
 #include <botan/internal/tls_handshake_layer_13.h>
 #include <botan/internal/tls_messages_internal.h>
 #include <botan/internal/tls_transcript_hash_13.h>
+#include <algorithm>
 
 namespace Botan::TLS {
 
