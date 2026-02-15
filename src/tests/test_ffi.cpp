@@ -3085,13 +3085,13 @@ class FFI_Keywrap_Test final : public FFI_Test {
             result.test_sz_eq("Expected wrapped keylen size", wrapped_keylen, 16 + 8);
 
             result.test_bin_eq(
-               nullptr, "Wrapped key", wrapped, wrapped_keylen, expected_wrapped_key, sizeof(expected_wrapped_key));
+               "Wrapped key", {wrapped, wrapped_keylen}, {expected_wrapped_key, sizeof(expected_wrapped_key)});
 
             uint8_t dec_key[16] = {0};
             size_t dec_keylen = sizeof(dec_key);
             TEST_FFI_OK(botan_key_unwrap3394, (wrapped, sizeof(wrapped), kek, sizeof(kek), dec_key, &dec_keylen));
 
-            result.test_bin_eq(nullptr, "Unwrapped key", dec_key, dec_keylen, key, sizeof(key));
+            result.test_bin_eq("Unwrapped key", {dec_key, dec_keylen}, {key, sizeof(key)});
          }
       }
 };
@@ -3879,13 +3879,13 @@ class FFI_Ed25519_Test final : public FFI_Test {
          uint8_t retr_privkey[64];
          TEST_FFI_OK(botan_privkey_ed25519_get_privkey, (priv, retr_privkey));
 
-         result.test_bin_eq(nullptr, "Public key matches", retr_privkey + 32, 32, pubkey.data(), pubkey.size());
+         result.test_bin_eq("Public key matches", {retr_privkey + 32, 32}, pubkey);
 
          TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
 
          uint8_t retr_pubkey[32];
          TEST_FFI_OK(botan_pubkey_ed25519_get_pubkey, (pub, retr_pubkey));
-         result.test_bin_eq(nullptr, "Public key matches", retr_pubkey, 32, pubkey.data(), pubkey.size());
+         result.test_bin_eq("Public key matches", {retr_pubkey, 32}, pubkey);
 
          TEST_FFI_OK(botan_pubkey_destroy, (pub));
          TEST_FFI_OK(botan_pubkey_load_ed25519, (&pub, pubkey.data()));

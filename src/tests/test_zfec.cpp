@@ -64,7 +64,7 @@ class ZFEC_KAT final : public Text_Based_Test {
             result.test_sz_lt("ZFEC enc share in range", share, N);
 
             result.test_bin_eq(
-               zfec_impl.c_str(), "share " + std::to_string(share), block, len, shares[share], share_size);
+               zfec_impl + " share " + std::to_string(share), {block, len}, {shares[share], share_size});
          };
 
          zfec.encode(input.data(), input.size(), zfec_enc_fn);
@@ -82,7 +82,7 @@ class ZFEC_KAT final : public Text_Based_Test {
             result.test_sz_lt("ZFEC dec share in range", share, K);
 
             result.test_bin_eq(
-               zfec_impl.c_str(), "share " + std::to_string(share), block, len, &input[share * share_size], share_size);
+               zfec_impl + " share " + std::to_string(share), {block, len}, {&input[share * share_size], share_size});
          };
 
          zfec.decode_shares(shares, share_size, zfec_dec_fn);

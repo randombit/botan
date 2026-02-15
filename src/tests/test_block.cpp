@@ -121,7 +121,7 @@ class Block_Cipher_Tests final : public Text_Based_Test {
                cipher->encrypt(buf);
             }
 
-            result.test_bin_eq(provider, "encrypt", buf, expected);
+            result.test_bin_eq(provider + " encrypt", buf, expected);
 
             // always decrypt expected ciphertext vs what we produced above
             buf = expected;
@@ -130,7 +130,7 @@ class Block_Cipher_Tests final : public Text_Based_Test {
                cipher->decrypt(buf);
             }
 
-            result.test_bin_eq(provider, "decrypt", buf, input);
+            result.test_bin_eq(provider + " decrypt", buf, input);
 
             // Now test misaligned buffers
             const size_t blocks = input.size() / cipher->block_size();
@@ -141,12 +141,7 @@ class Block_Cipher_Tests final : public Text_Based_Test {
                cipher->encrypt_n(buf.data() + 1, buf.data() + 1, blocks);
             }
 
-            result.test_bin_eq(provider.c_str(),
-                               "encrypt misaligned",
-                               buf.data() + 1,
-                               buf.size() - 1,
-                               expected.data(),
-                               expected.size());
+            result.test_bin_eq(provider + " encrypt misaligned", {buf.data() + 1, buf.size() - 1}, expected);
 
             // always decrypt expected ciphertext vs what we produced above
             Botan::copy_mem(buf.data() + 1, expected.data(), expected.size());
@@ -155,8 +150,7 @@ class Block_Cipher_Tests final : public Text_Based_Test {
                cipher->decrypt_n(buf.data() + 1, buf.data() + 1, blocks);
             }
 
-            result.test_bin_eq(
-               provider.c_str(), "decrypt misaligned", buf.data() + 1, buf.size() - 1, input.data(), input.size());
+            result.test_bin_eq(provider + " decrypt misaligned", std::span{buf.data() + 1, buf.size() - 1}, input);
 
             result.test_is_true("key set", cipher->has_keying_material());
             cipher->clear();

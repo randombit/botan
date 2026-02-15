@@ -140,7 +140,7 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
             {
                std::vector<uint8_t> buf = input;
                cipher->encrypt(buf);
-               result.test_bin_eq(provider, "encrypt", buf, expected);
+               result.test_bin_eq(provider + " encrypt", buf, expected);
             }
 
             {
@@ -154,7 +154,7 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
                }
                std::vector<uint8_t> buf = input;
                cipher->encrypt(buf);
-               result.test_bin_eq(provider, "encrypt 2", buf, expected);
+               result.test_bin_eq(provider + " encrypt 2", buf, expected);
             }
 
             if(!nonce.empty()) {
@@ -164,7 +164,7 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
                }
                std::vector<uint8_t> buf = input;
                cipher->encrypt(buf);
-               result.test_bin_eq(provider, "second encrypt", buf, expected);
+               result.test_bin_eq(provider + " second encrypt", buf, expected);
             }
 
             {
@@ -191,7 +191,7 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
                for(size_t i = 0; i != input.size(); ++i) {
                   buf[i] ^= input[i];
                }
-               result.test_bin_eq(provider, "write_keystream", buf, expected);
+               result.test_bin_eq(provider + " write_keystream", buf, expected);
             }
 
             result.test_is_true("key set", cipher->has_keying_material());

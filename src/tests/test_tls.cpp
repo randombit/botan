@@ -62,13 +62,12 @@ class TLS_Session_Tests final : public Test {
          const std::vector<uint8_t> ctext1 = session.encrypt(key, this->rng());
          const std::vector<uint8_t> ctext2 = session.encrypt(key, this->rng());
 
-         result.test_bin_ne(
-            "TLS session encryption is non-deterministic", ctext1.data(), ctext1.size(), ctext2.data(), ctext2.size());
+         result.test_bin_ne("TLS session encryption is non-deterministic", ctext1, ctext2);
 
-         const std::vector<uint8_t> expected_hdr = Botan::hex_decode("068B5A9D396C0000F2322CAE");
-
-         result.test_bin_eq("tls", "TLS session encryption same header", ctext1.data(), 12, expected_hdr.data(), 12);
-         result.test_bin_eq("tls", "TLS session encryption same header", ctext2.data(), 12, expected_hdr.data(), 12);
+         result.test_bin_eq(
+            "TLS session encryption same header", std::span{ctext1}.first(12), "068B5A9D396C0000F2322CAE");
+         result.test_bin_eq(
+            "TLS session encryption same header", std::span{ctext2}.first(12), "068B5A9D396C0000F2322CAE");
 
          const Botan::TLS::Session dsession = Botan::TLS::Session::decrypt(ctext1.data(), ctext1.size(), key);
 

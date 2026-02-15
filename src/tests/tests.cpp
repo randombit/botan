@@ -233,35 +233,39 @@ bool Test::Result::test_failure(std::string err) {
 
 namespace {
 
-bool same_contents(const uint8_t x[], const uint8_t y[], size_t len) {
-   return (len == 0) ? true : std::memcmp(x, y, len) == 0;
+bool same_contents(std::span<const uint8_t> x, std::span<const uint8_t> y) {
+   if(x.size() != y.size()) {
+      return false;
+   }
+   if(x.empty()) {
+      return true;
+   }
+
+   return std::memcmp(x.data(), y.data(), x.size()) == 0;
 }
 
 }  // namespace
 
 bool Test::Result::test_bin_ne(std::string_view what,
-                               const uint8_t produced[],
-                               size_t produced_len,
-                               const uint8_t expected[],
-                               size_t expected_len) {
-   if(produced_len == expected_len && same_contents(produced, expected, expected_len)) {
+                               std::span<const uint8_t> produced,
+                               std::span<const uint8_t> expected) {
+   if(produced.size() == expected.size() && same_contents(produced, expected)) {
       return test_failure(Botan::fmt("{} {} produced matching bytes", who(), what));
    }
    return test_success();
 }
 
-bool Test::Result::test_bin_eq(std::string_view what, std::span<const uint8_t> produced, std::string_view expected_hex) {
+bool Test::Result::test_bin_eq(std::string_view what,
+                               std::span<const uint8_t> produced,
+                               std::string_view expected_hex) {
    const std::vector<uint8_t> expected = Botan::hex_decode(expected_hex);
-   return test_bin_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
+   return test_bin_eq(what, produced, expected);
 }
 
-bool Test::Result::test_bin_eq(const char* producer,
-                               std::string_view what,
-                               const uint8_t produced[],
-                               size_t produced_size,
-                               const uint8_t expected[],
-                               size_t expected_size) {
-   if(produced_size == expected_size && same_contents(produced, expected, expected_size)) {
+bool Test::Result::test_bin_eq(std::string_view what,
+                               std::span<const uint8_t> produced,
+                               std::span<const uint8_t> expected) {
+   if(same_contents(produced, expected)) {
       return test_success();
    }
 
@@ -269,17 +273,13 @@ bool Test::Result::test_bin_eq(const char* producer,
 
    err << who();
 
-   if(producer != nullptr) {
-      err << " producer '" << producer << "'";
-   }
-
    err << " unexpected result for " << what;
 
-   if(produced_size != expected_size) {
-      err << " produced " << produced_size << " bytes expected " << expected_size;
+   if(produced.size() != expected.size()) {
+      err << " produced " << produced.size() << " bytes expected " << expected.size();
    }
 
-   std::vector<uint8_t> xor_diff(std::min(produced_size, expected_size));
+   std::vector<uint8_t> xor_diff(std::min(produced.size(), expected.size()));
    size_t bytes_different = 0;
 
    for(size_t i = 0; i != xor_diff.size(); ++i) {
@@ -289,8 +289,7 @@ bool Test::Result::test_bin_eq(const char* producer,
       }
    }
 
-   err << "\nProduced: " << Botan::hex_encode(produced, produced_size)
-       << "\nExpected: " << Botan::hex_encode(expected, expected_size);
+   err << "\nProduced: " << Botan::hex_encode(produced) << "\nExpected: " << Botan::hex_encode(expected);
 
    if(bytes_different > 0) {
       err << "\nXOR Diff: " << Botan::hex_encode(xor_diff);

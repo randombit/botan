@@ -391,7 +391,7 @@ Test::Result PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_
          result.test_failure("Failed to decrypt KAT ciphertext", e.what());
       }
 
-      result.test_bin_eq(dec_provider, "decryption of KAT", decrypted, plaintext);
+      result.test_bin_eq(dec_provider + " decryption of KAT", decrypted, plaintext);
       check_invalid_ciphertexts(result, *decryptor, plaintext, ciphertext, this->rng());
       decryptors.push_back(std::move(decryptor));
    }
@@ -426,7 +426,7 @@ Test::Result PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_
          "Ciphertext within length", generated_ciphertext.size(), encryptor->ciphertext_length(plaintext.size()));
 
       if(enc_provider == "base") {
-         result.test_bin_eq(enc_provider, "generated ciphertext matches KAT", generated_ciphertext, ciphertext);
+         result.test_bin_eq(enc_provider + " generated ciphertext matches KAT", generated_ciphertext, ciphertext);
       } else if(generated_ciphertext != ciphertext) {
          for(std::unique_ptr<Botan::PK_Decryptor>& dec : decryptors) {
             result.test_bin_eq("decryption of generated ciphertext", dec->decrypt(generated_ciphertext), plaintext);
@@ -462,7 +462,7 @@ Test::Result PK_Decryption_Test::run_one_test(const std::string& pad_hdr, const 
          result.test_failure("Failed to decrypt KAT ciphertext", e.what());
       }
 
-      result.test_bin_eq(dec_provider, "decryption of KAT", decrypted, plaintext);
+      result.test_bin_eq(dec_provider + " decryption of KAT", decrypted, plaintext);
       check_invalid_ciphertexts(result, *decryptor, plaintext, ciphertext, this->rng());
    }
 
@@ -556,7 +556,7 @@ Test::Result PK_Key_Agreement_Test::run_one_test(const std::string& header, cons
             result.test_throws("key agreement fails", [&] { kas->derive_key(key_len, pubkey); });
          } else {
             auto derived_key = kas->derive_key(key_len, pubkey).bits_of();
-            result.test_bin_eq(provider, "agreement", derived_key, shared);
+            result.test_bin_eq(provider + " agreement", derived_key, shared);
 
             if(key_len == 0 && kdf == "Raw") {
                result.test_sz_eq("Expected size", derived_key.size(), kas->agreed_value_size());

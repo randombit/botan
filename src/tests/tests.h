@@ -395,36 +395,14 @@ class Test {
             bool test_bn_ne(std::string_view what, const BigInt& produced, const BigInt& expected);
 #endif
 
-            bool test_bin_eq(const char* producer,
-                             std::string_view what,
-                             const uint8_t produced[],
-                             size_t produced_size,
-                             const uint8_t expected[],
-                             size_t expected_size);
-
+            /* Test predicates for binary strings */
             bool test_bin_ne(std::string_view what,
-                             const uint8_t produced[],
-                             size_t produced_len,
-                             const uint8_t expected[],
-                             size_t expected_len);
+                             std::span<const uint8_t> produced,
+                             std::span<const uint8_t> expected);
 
             bool test_bin_eq(std::string_view what,
                              std::span<const uint8_t> produced,
-                             std::span<const uint8_t> expected) {
-               return test_bin_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
-            }
-
-            bool test_bin_eq(std::string_view producer,
-                             std::string_view what,
-                             std::span<const uint8_t> produced,
-                             std::span<const uint8_t> expected) {
-               return test_bin_eq(std::string(producer).c_str(),
-                                  what,
-                                  produced.data(),
-                                  produced.size(),
-                                  expected.data(),
-                                  expected.size());
-            }
+                             std::span<const uint8_t> expected);
 
             bool test_bin_eq(std::string_view what, std::span<const uint8_t> produced, std::string_view expected_hex);
 
@@ -432,13 +410,7 @@ class Test {
             bool test_bin_eq(std::string_view what,
                              const std::array<uint8_t, N>& produced,
                              const std::array<uint8_t, N>& expected) {
-               return test_bin_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
-            }
-
-            bool test_bin_ne(std::string_view what,
-                             std::span<const uint8_t> produced,
-                             std::span<const uint8_t> expected) {
-               return test_bin_ne(what, produced.data(), produced.size(), expected.data(), expected.size());
+               return test_bin_eq(what, std::span{produced}, std::span{expected});
             }
 
          private:

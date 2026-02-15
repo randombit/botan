@@ -218,7 +218,7 @@ class SIMD_4X32_Tests final : public Test {
             // Check load_be+store_be results in same value
             const Botan::SIMD_4x32 reloaded_be = Botan::SIMD_4x32::load_be(mem_be);
             reloaded_be.store_be(mem_be2);
-            result.test_bin_eq(nullptr, "SIMD_4x32 load_be", mem_be, 16, mem_be2, 16);
+            result.test_bin_eq("SIMD_4x32 load_be", {mem_be, 16}, {mem_be2, 16});
 
             simd.store_le(mem_le);
 
@@ -235,7 +235,7 @@ class SIMD_4X32_Tests final : public Test {
             // Check load_le+store_le results in same value
             const Botan::SIMD_4x32 reloaded_le = Botan::SIMD_4x32::load_le(mem_le);
             reloaded_le.store_le(mem_le2);
-            result.test_bin_eq(nullptr, "SIMD_4x32 load_le", mem_le, 16, mem_le2, 16);
+            result.test_bin_eq("SIMD_4x32 load_le", {mem_le, 16}, {mem_le2, 16});
          }
       }
 };
@@ -389,7 +389,7 @@ class SIMD_2X64_Tests final : public Test {
             // Check load_be+store_be results in same value
             const Botan::SIMD_2x64 reloaded_be = Botan::SIMD_2x64::load_be(mem_be);
             reloaded_be.store_be(mem_be2);
-            result.test_bin_eq(nullptr, "SIMD_2x64 load_be", mem_be, 16, mem_be2, 16);
+            result.test_bin_eq("SIMD_2x64 load_be", {mem_be, 16}, {mem_be2, 16});
 
             simd.store_le(mem_le);
 
@@ -407,7 +407,7 @@ class SIMD_2X64_Tests final : public Test {
             // Check load_le+store_le results in same value
             const Botan::SIMD_2x64 reloaded_le = Botan::SIMD_2x64::load_le(mem_le);
             reloaded_le.store_le(mem_le2);
-            result.test_bin_eq(nullptr, "SIMD_2x64 load_le", mem_le, 16, mem_le2, 16);
+            result.test_bin_eq("SIMD_2x64 load_le", {mem_le, 16}, {mem_le2, 16});
          }
       }
 };
