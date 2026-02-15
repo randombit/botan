@@ -39,8 +39,8 @@ class OCSP_Tests final : public Test {
          for(const std::string& ocsp_input_path : ocsp_input_paths) {
             try {
                const Botan::OCSP::Response resp(Test::read_binary_data_file(ocsp_input_path));
-               result.test_is_true("parsing was successful",
-                                   resp.status() == Botan::OCSP::Response_Status_Code::Successful);
+               result.test_enum_eq(
+                  "parsing was successful", resp.status(), Botan::OCSP::Response_Status_Code::Successful);
                result.test_success("Parsed input " + ocsp_input_path);
             } catch(Botan::Exception& e) {
                result.test_failure("Parsing failed", e.what());
@@ -49,8 +49,8 @@ class OCSP_Tests final : public Test {
 
          const Botan::OCSP::Response resp(
             Test::read_binary_data_file("x509/ocsp/patrickschmidt_ocsp_try_later_wrong_sig.der"));
-         result.test_is_true("parsing exposes correct status code",
-                             resp.status() == Botan::OCSP::Response_Status_Code::Try_Later);
+         result.test_enum_eq(
+            "parsing exposes correct status code", resp.status(), Botan::OCSP::Response_Status_Code::Try_Later);
 
          return result;
       }
@@ -402,9 +402,9 @@ class OCSP_Tests final : public Test {
                            ocsp.find_signing_certificate(ca, &trusted_responders),
                            std::optional(responder));
 
-         result.test_is_eq("the responder's signature checks out",
-                           ocsp.verify_signature(responder),
-                           Botan::Certificate_Status_Code::OCSP_SIGNATURE_OK);
+         result.test_enum_eq("the responder's signature checks out",
+                             ocsp.verify_signature(responder),
+                             Botan::Certificate_Status_Code::OCSP_SIGNATURE_OK);
 
          return result;
       }

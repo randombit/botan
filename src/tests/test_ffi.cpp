@@ -1381,13 +1381,13 @@ class FFI_Cert_NameConstraints_Test final : public FFI_Test {
 
          unsigned int type;
          TEST_FFI_OK(botan_x509_general_name_get_type, (email, &type));
-         result.test_is_eq("email", static_cast<botan_x509_general_name_types>(type), BOTAN_X509_EMAIL_ADDRESS);
+         result.test_enum_eq("email", static_cast<botan_x509_general_name_types>(type), BOTAN_X509_EMAIL_ADDRESS);
          TEST_FFI_OK(botan_x509_general_name_get_type, (dns, &type));
-         result.test_is_eq("dns", static_cast<botan_x509_general_name_types>(type), BOTAN_X509_DNS_NAME);
+         result.test_enum_eq("dns", static_cast<botan_x509_general_name_types>(type), BOTAN_X509_DNS_NAME);
          TEST_FFI_OK(botan_x509_general_name_get_type, (dn, &type));
-         result.test_is_eq("dn", static_cast<botan_x509_general_name_types>(type), BOTAN_X509_DIRECTORY_NAME);
+         result.test_enum_eq("dn", static_cast<botan_x509_general_name_types>(type), BOTAN_X509_DIRECTORY_NAME);
          TEST_FFI_OK(botan_x509_general_name_get_type, (ip, &type));
-         result.test_is_eq("ip", static_cast<botan_x509_general_name_types>(type), BOTAN_X509_IP_ADDRESS);
+         result.test_enum_eq("ip", static_cast<botan_x509_general_name_types>(type), BOTAN_X509_IP_ADDRESS);
 
          ViewBytesSink bin;
          ViewStringSink str;

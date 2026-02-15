@@ -520,7 +520,7 @@ std::vector<Test::Result> read_encrypted_records() {
                result.require("some records decrypted", !std::holds_alternative<Botan::TLS::BytesNeeded>(res));
                auto record = std::get<TLS::Record>(res);
 
-               result.test_is_eq("inner type was 'HANDSHAKE'", record.type, Botan::TLS::Record_Type::Handshake);
+               result.test_enum_eq("inner type was 'HANDSHAKE'", record.type, Botan::TLS::Record_Type::Handshake);
                result.test_sz_eq("decrypted payload length", record.fragment.size(), 657 /* taken from RFC 8448 */);
 
                result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));

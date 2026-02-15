@@ -683,7 +683,7 @@ class Root_Cert_Time_Check_Test final : public Test {
             const std::string descr_str = Botan::fmt(
                "Root cert validity range {}: {}", ignore_trusted_root_time_range ? "ignored" : "checked", descr);
 
-            result.test_is_eq(descr_str, validation_result.result(), exp_status);
+            result.test_enum_eq(descr_str, validation_result.result(), exp_status);
             const auto warnings = validation_result.warnings();
             BOTAN_ASSERT_NOMSG(warnings.size() == 2);
             result.test_is_true("No warning for leaf cert", warnings.at(0).empty());
@@ -1448,7 +1448,7 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                                          std::chrono::milliseconds(0),
                                          {ocsp});
 
-            result.test_is_eq(
+            result.test_enum_eq(
                "Path validation with forged OCSP response should fail with", path_result.result(), expected);
             result.test_is_true("Secondary error is also present",
                                 flatten(path_result.all_statuses()).contains(also_expected));
@@ -1665,7 +1665,8 @@ class Path_Validation_With_Immortal_CRL final : public Test {
          if(!result.test_is_true("No valid certificate", !revoked.successful_validation())) {
             result.test_note(revoked.result_string());
          }
-         result.test_is_eq("Certificate is revoked", revoked.result(), Botan::Certificate_Status_Code::CERT_IS_REVOKED);
+         result.test_enum_eq(
+            "Certificate is revoked", revoked.result(), Botan::Certificate_Status_Code::CERT_IS_REVOKED);
 
          return {result};
       }

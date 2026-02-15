@@ -302,6 +302,7 @@ class Test {
             }
 
             template <typename T>
+               requires(!std::is_enum_v<T>)
             bool test_is_eq(std::string_view what, const T& produced, const T& expected) {
                std::ostringstream out;
                out << m_who << " " << what;
@@ -314,6 +315,14 @@ class Test {
                       << "'";
                   return test_failure(out.str());
                }
+            }
+
+            template <typename E>
+               requires std::is_enum_v<E>
+            bool test_enum_eq(std::string_view what, const E& produced, const E& expected) {
+               auto produced_v = static_cast<std::underlying_type_t<E>>(produced);
+               auto expected_v = static_cast<std::underlying_type_t<E>>(expected);
+               return test_u64_eq(what, produced_v, expected_v);
             }
 
             template <typename T>

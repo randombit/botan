@@ -462,17 +462,17 @@ class Utility_Function_Tests final : public Test {
 
          // Test loading/storing of enum types with different endianness
          const auto in64_enum_le = Botan::load_le<TestEnum64>(Botan::hex_decode("1234567890ABCDEF"));
-         result.test_is_eq(in64_enum_le, TestEnum64::_2);
+         result.test_enum_eq("load_le(enum64)", in64_enum_le, TestEnum64::_2);
          const auto in64_enum_be = Botan::load_be<TestEnum64>(Botan::hex_decode("1234567890ABCDEF"));
-         result.test_is_eq(in64_enum_be, TestEnum64::_1);
+         result.test_enum_eq("load_be(enum64)", in64_enum_be, TestEnum64::_1);
          result.test_eq("store_be(enum64)", Botan::store_le<std::vector<uint8_t>>(TestEnum64::_1), "EFCDAB9078563412");
          result.test_is_eq<std::array<uint8_t, 8>>(Botan::store_be(TestEnum64::_2),
                                                    {0xEF, 0xCD, 0xAB, 0x90, 0x78, 0x56, 0x34, 0x12});
 
          const auto in32_enum_le = Botan::load_le<TestEnum32>(Botan::hex_decode("78563412"));
-         result.test_is_eq(in32_enum_le, TestEnum32::_1);
+         result.test_enum_eq("load_le(enum32)", in32_enum_le, TestEnum32::_1);
          const auto in32_enum_be = Botan::load_be<TestEnum32>(Botan::hex_decode("78563412"));
-         result.test_is_eq(in32_enum_be, TestEnum32::_2);
+         result.test_enum_eq("load_be(enum32)", in32_enum_be, TestEnum32::_2);
          result.test_eq("store_le(enum32)", Botan::store_le<std::vector<uint8_t>>(TestEnum32::_1), "78563412");
          result.test_is_eq<std::array<uint8_t, 4>>(Botan::store_be(TestEnum32::_2), {0x78, 0x56, 0x34, 0x12});
 
