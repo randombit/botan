@@ -30,7 +30,7 @@ class Blowfish_Salted_Tests final : public Text_Based_Test {
          std::vector<uint8_t> block(8);
          blowfish.encrypt(block);
 
-         result.test_eq("Expected output", block, expected);
+         result.test_bin_eq("Expected output", block, expected);
 
          return result;
       }

@@ -421,9 +421,9 @@ class TLS_Handshake_Test final {
 
                      if(m_results.test_sz_eq("Expected size for test extn", val.size(), 7)) {
                         if(which_side == Botan::TLS::Connection_Side::Client) {
-                           m_results.test_eq("Expected extension value", val, "06636C69656E74");
+                           m_results.test_bin_eq("Expected extension value", val, "06636C69656E74");
                         } else {
-                           m_results.test_eq("Expected extension value", val, "06736572766572");
+                           m_results.test_bin_eq("Expected extension value", val, "06736572766572");
                         }
                      }
                   } else {
@@ -659,11 +659,11 @@ void TLS_Handshake_Test::go() {
       }
 
       if(!m_client_recv.empty()) {
-         m_results.test_eq("client recv", m_client_recv, server_msg);
+         m_results.test_bin_eq("client recv", m_client_recv, server_msg);
       }
 
       if(!m_server_recv.empty()) {
-         m_results.test_eq("server recv", m_server_recv, client_msg);
+         m_results.test_bin_eq("server recv", m_server_recv, client_msg);
       }
 
       if(client->is_closed() && m_server->is_closed()) {
@@ -691,7 +691,7 @@ void TLS_Handshake_Test::go() {
          const Botan::SymmetricKey client_key = client->key_material_export("label", "context", 32);
          const Botan::SymmetricKey server_key = m_server->key_material_export("label", "context", 32);
 
-         m_results.test_eq("TLS key material export", client_key.bits_of(), server_key.bits_of());
+         m_results.test_bin_eq("TLS key material export", client_key.bits_of(), server_key.bits_of());
 
          m_results.test_is_true("Client is active", client->is_active());
          m_results.test_is_false("Client is not closed", client->is_closed());
@@ -1487,8 +1487,8 @@ class DTLS_Reconnection_Test : public Test {
             }
 
             if(!server_recv.empty() && !client1_recv.empty()) {
-               result.test_eq("Expected message from client1", server_recv, c1_to_server_magic);
-               result.test_eq("Expected message to client1", client1_recv, server_to_c1_magic);
+               result.test_bin_eq("Expected message from client1", server_recv, c1_to_server_magic);
+               result.test_bin_eq("Expected message to client1", client1_recv, server_to_c1_magic);
                break;
             }
          }
@@ -1551,8 +1551,8 @@ class DTLS_Reconnection_Test : public Test {
             }
 
             if(!server_recv.empty() && !client2_recv.empty()) {
-               result.test_eq("Expected message from client2", server_recv, c2_to_server_magic);
-               result.test_eq("Expected message to client2", client2_recv, server_to_c2_magic);
+               result.test_bin_eq("Expected message from client2", server_recv, c2_to_server_magic);
+               result.test_bin_eq("Expected message to client2", client2_recv, server_to_c2_magic);
                break;
             }
          }

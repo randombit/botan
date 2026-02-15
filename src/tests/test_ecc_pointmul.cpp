@@ -41,16 +41,16 @@ class ECC_Basepoint_Mul_Tests final : public Text_Based_Test {
    #if defined(BOTAN_HAS_LEGACY_EC_POINT)
          const auto pt = group.OS2ECP(P_bytes);
          const Botan::EC_Point p1 = group.get_base_point() * k;
-         result.test_eq("EC_Point Montgomery ladder", p1.encode(Botan::EC_Point_Format::Uncompressed), P_bytes);
+         result.test_bin_eq("EC_Point Montgomery ladder", p1.encode(Botan::EC_Point_Format::Uncompressed), P_bytes);
    #endif
 
          const auto scalar = Botan::EC_Scalar::from_bigint(group, k);
          const auto apg = Botan::EC_AffinePoint::g_mul(scalar, this->rng());
-         result.test_eq("AffinePoint::g_mul", apg.serialize_uncompressed(), P_bytes);
+         result.test_bin_eq("AffinePoint::g_mul", apg.serialize_uncompressed(), P_bytes);
 
          const auto ag = Botan::EC_AffinePoint::generator(group);
          const auto ap = ag.mul(scalar, this->rng());
-         result.test_eq("AffinePoint::mul", ap.serialize_uncompressed(), P_bytes);
+         result.test_bin_eq("AffinePoint::mul", ap.serialize_uncompressed(), P_bytes);
 
          return result;
       }
@@ -77,19 +77,19 @@ class ECC_Varpoint_Mul_Tests final : public Text_Based_Test {
 
    #if defined(BOTAN_HAS_LEGACY_EC_POINT)
          const Botan::EC_Point p1 = group.OS2ECP(p) * k;
-         result.test_eq("EC_Point Montgomery ladder", p1.encode(Botan::EC_Point::Compressed), z);
+         result.test_bin_eq("EC_Point Montgomery ladder", p1.encode(Botan::EC_Point::Compressed), z);
    #endif
 
          const auto s_k = Botan::EC_Scalar::from_bigint(group, k);
          const auto apt = Botan::EC_AffinePoint::deserialize(group, p).value();
          const auto apt_k = apt.mul(s_k, this->rng());
-         result.test_eq("p * k (AffinePoint)", apt_k.serialize_compressed(), z);
+         result.test_bin_eq("p * k (AffinePoint)", apt_k.serialize_compressed(), z);
 
          const auto apt_k_neg = apt.negate().mul(s_k.negate(), this->rng());
-         result.test_eq("-p * -k (AffinePoint)", apt_k_neg.serialize_compressed(), z);
+         result.test_bin_eq("-p * -k (AffinePoint)", apt_k_neg.serialize_compressed(), z);
 
          const auto neg_apt_neg_k = apt.mul(s_k.negate(), this->rng()).negate();
-         result.test_eq("-(p * -k) (AffinePoint)", neg_apt_neg_k.serialize_compressed(), z);
+         result.test_bin_eq("-(p * -k) (AffinePoint)", neg_apt_neg_k.serialize_compressed(), z);
 
          return result;
       }
@@ -118,9 +118,9 @@ class ECC_Mul2_Tests final : public Text_Based_Test {
                                       bool with_final_negation = false) {
             if(const auto z = Botan::EC_AffinePoint::mul_px_qy(p, x, q, y, rng())) {
                if(with_final_negation) {
-                  result.test_eq(what, z->negate().serialize_compressed(), Z_bytes);
+                  result.test_bin_eq(what, z->negate().serialize_compressed(), Z_bytes);
                } else {
-                  result.test_eq(what, z->serialize_compressed(), Z_bytes);
+                  result.test_bin_eq(what, z->serialize_compressed(), Z_bytes);
                }
             } else {
                result.test_failure("EC_AffinePoint::mul_px_qy failed to produce a result");
@@ -131,7 +131,7 @@ class ECC_Mul2_Tests final : public Text_Based_Test {
             if(with_final_negation) {
                z = z.negate();
             }
-            result.test_eq("p*x + q*y naive", z.serialize_compressed(), Z_bytes);
+            result.test_bin_eq("p*x + q*y naive", z.serialize_compressed(), Z_bytes);
          };
 
          const auto group = Botan::EC_Group::from_name(group_id);
@@ -241,7 +241,7 @@ class ECC_Point_Addition_Tests final : public Test {
             const auto g_bytes = g.serialize_uncompressed();
 
             auto check_expr_is_g = [&](const char* msg, const Botan::EC_AffinePoint& pt) {
-               result.test_eq(Botan::fmt("{} is g", msg), pt.serialize_uncompressed(), g_bytes);
+               result.test_bin_eq(Botan::fmt("{} is g", msg), pt.serialize_uncompressed(), g_bytes);
             };
 
             const auto nz = z.negate();
@@ -302,19 +302,19 @@ class ECC_Scalar_Arithmetic_Tests final : public Test {
             return b;
          }();
 
-         result.test_eq("Serialization of zero is expected value", zero.serialize(), ser_zero);
-         result.test_eq("Serialization of one is expected value", one.serialize(), ser_one);
+         result.test_bin_eq("Serialization of zero is expected value", zero.serialize(), ser_zero);
+         result.test_bin_eq("Serialization of one is expected value", one.serialize(), ser_one);
 
          result.test_is_true("Zero is zero", zero.is_zero());
          result.test_is_true("Negation of zero is zero", zero.negate().is_zero());
          result.test_is_false("One is not zero", one.is_zero());
 
          // Zero inverse is not mathematically correct, but works out for our purposes
-         result.test_eq("Inverse of zero is zero", zero.invert().serialize(), ser_zero);
-         result.test_eq("Inverse of one is one", one.invert().serialize(), ser_one);
+         result.test_bin_eq("Inverse of zero is zero", zero.invert().serialize(), ser_zero);
+         result.test_bin_eq("Inverse of one is one", one.invert().serialize(), ser_one);
 
-         result.test_eq("Inverse (vt) of zero is zero", zero.invert_vartime().serialize(), ser_zero);
-         result.test_eq("Inverse (vt) of one is one", one.invert_vartime().serialize(), ser_one);
+         result.test_bin_eq("Inverse (vt) of zero is zero", zero.invert_vartime().serialize(), ser_zero);
+         result.test_bin_eq("Inverse (vt) of one is one", one.invert_vartime().serialize(), ser_one);
 
          constexpr size_t test_iter = 128;
 
@@ -322,18 +322,18 @@ class ECC_Scalar_Arithmetic_Tests final : public Test {
             const auto r = Botan::EC_Scalar::random(group, rng);
 
             // Negation and addition are inverses
-            result.test_eq("r + -r == 0", (r + r.negate()).serialize(), ser_zero);
+            result.test_bin_eq("r + -r == 0", (r + r.negate()).serialize(), ser_zero);
 
             // Serialization and deserialization are inverses
             const auto r_bytes = r.serialize();
-            result.test_eq("Deserialization of r round trips",
-                           Botan::EC_Scalar::deserialize(group, r_bytes).value().serialize(),
-                           r_bytes);
+            result.test_bin_eq("Deserialization of r round trips",
+                               Botan::EC_Scalar::deserialize(group, r_bytes).value().serialize(),
+                               r_bytes);
 
             // Multiplication and inversion are inverses
             const auto r2 = r * r;
             const auto r_inv = r.invert();
-            result.test_eq("r * r^-1 = 1", (r * r_inv).serialize(), ser_one);
+            result.test_bin_eq("r * r^-1 = 1", (r * r_inv).serialize(), ser_one);
 
             const auto r_inv_vt = r.invert_vartime();
             result.test_is_true("CT and variable time inversions produced same result", r_inv == r_inv_vt);
@@ -347,14 +347,14 @@ class ECC_Scalar_Arithmetic_Tests final : public Test {
             const auto a_inv = a.invert();
             const auto b_inv = b.invert();
 
-            result.test_eq("a * b / b = a", (ab * b_inv).serialize(), a.serialize());
-            result.test_eq("a * b / a = b", (ab * a_inv).serialize(), b.serialize());
+            result.test_bin_eq("a * b / b = a", (ab * b_inv).serialize(), a.serialize());
+            result.test_bin_eq("a * b / a = b", (ab * a_inv).serialize(), b.serialize());
 
             auto a_plus_b = a + b;
-            result.test_eq("(a + b) - b == a", (a_plus_b - b).serialize(), a.serialize());
-            result.test_eq("(a + b) - a == b", (a_plus_b - a).serialize(), b.serialize());
-            result.test_eq("b - (a + b) == -a", (b - a_plus_b).serialize(), a.negate().serialize());
-            result.test_eq("a - (a + b) == -b", (a - a_plus_b).serialize(), b.negate().serialize());
+            result.test_bin_eq("(a + b) - b == a", (a_plus_b - b).serialize(), a.serialize());
+            result.test_bin_eq("(a + b) - a == b", (a_plus_b - a).serialize(), b.serialize());
+            result.test_bin_eq("b - (a + b) == -a", (b - a_plus_b).serialize(), a.negate().serialize());
+            result.test_bin_eq("a - (a + b) == -b", (a - a_plus_b).serialize(), b.negate().serialize());
          }
 
          for(size_t i = 0; i != test_iter; ++i) {
@@ -365,7 +365,7 @@ class ECC_Scalar_Arithmetic_Tests final : public Test {
             const auto ab_c = (a + b) * c;
             const auto ac_bc = a * c + b * c;
 
-            result.test_eq("(a + b)*c == a * c + b * c", ab_c.serialize(), ac_bc.serialize());
+            result.test_bin_eq("(a + b)*c == a * c + b * c", ab_c.serialize(), ac_bc.serialize());
          }
 
          for(size_t i = 0; i != test_iter; ++i) {
@@ -374,14 +374,14 @@ class ECC_Scalar_Arithmetic_Tests final : public Test {
             const auto c = a * b;
 
             const auto c_bn = (a.to_bigint() * b.to_bigint());
-            result.test_eq("matches BigInt", c.serialize(), (c_bn % group.get_order()).serialize(order_bytes));
+            result.test_bin_eq("matches BigInt", c.serialize(), (c_bn % group.get_order()).serialize(order_bytes));
 
             const auto c_wide_bytes = c_bn.serialize();
             result.test_sz_lte("Expected size", c_wide_bytes.size(), 2 * order_bytes);
 
             const auto z = Botan::EC_Scalar::from_bytes_mod_order(group, c_wide_bytes);
 
-            result.test_eq("from_bytes_mod_order", c.serialize(), z.serialize());
+            result.test_bin_eq("from_bytes_mod_order", c.serialize(), z.serialize());
          }
 
          for(size_t i = 0; i != test_iter; ++i) {
@@ -393,7 +393,8 @@ class ECC_Scalar_Arithmetic_Tests final : public Test {
 
             const auto scalar = Botan::EC_Scalar::from_bytes_mod_order(group, r);
 
-            result.test_eq("from_bytes_mod_order (random)", scalar.serialize(), ref.serialize(group.get_order_bytes()));
+            result.test_bin_eq(
+               "from_bytes_mod_order (random)", scalar.serialize(), ref.serialize(group.get_order_bytes()));
          }
 
          result.end_timer();

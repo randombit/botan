@@ -60,7 +60,7 @@ class Test_Tests final : public Test {
             Test::Result test_result(testcase_name);
             std::vector<uint8_t> vec1(5);
             std::vector<uint8_t> vec2(3, 9);
-            test_result.test_eq("test vectors equal", vec1, vec2);
+            test_result.test_bin_eq("test vectors equal", vec1, vec2);
             verify_failure("test vectors equal", result, test_result);
          }
 
@@ -68,7 +68,7 @@ class Test_Tests final : public Test {
             Test::Result test_result(testcase_name);
             std::vector<uint8_t> vec1(5);
             std::vector<uint8_t> vec2(5);
-            test_result.test_ne("test vectors not equal", vec1, vec2);
+            test_result.test_bin_ne("test vectors not equal", vec1, vec2);
             verify_failure("test vectors equal", result, test_result);
          }
 
@@ -76,7 +76,7 @@ class Test_Tests final : public Test {
             Test::Result test_result(testcase_name);
             std::vector<uint8_t> vec1(5);
             std::vector<uint8_t> vec2(5);
-            test_result.test_ne("test arrays not equal", vec1.data(), vec1.size(), vec2.data(), vec2.size());
+            test_result.test_bin_ne("test arrays not equal", vec1.data(), vec1.size(), vec2.data(), vec2.size());
             verify_failure("test vectors equal", result, test_result);
          }
 

@@ -54,7 +54,8 @@ class Test_Buf_Comp final : public Botan::Buffered_Computation {
 void check(Test::Result& result, std::span<const uint8_t> produced, size_t expected) {
    uint8_t expected_bytes[sizeof(size_t)];
    std::memcpy(expected_bytes, &expected, sizeof(expected));
-   result.test_eq("", "result is correct", produced.data(), produced.size(), expected_bytes, sizeof(expected_bytes));
+   result.test_bin_eq(
+      "", "result is correct", produced.data(), produced.size(), expected_bytes, sizeof(expected_bytes));
 }
 
 using TestStdVector = Botan::Strong<std::vector<uint8_t>, struct TestStdVector_>;

@@ -109,7 +109,7 @@ class PSK_DB_Tests final : public Test {
 
          db.set_vec("name2", zeros);
          db.test_entry(result, "7CvsM7HDCZsV6VsFwWylNg==", "x+I1bUF/fJYPOTvKwOihEPWGR1XGzVuyRdsw4n5gpBRzNR7LjH7vjw==");
-         result.test_eq("DB read", db.get("name2"), zeros);
+         result.test_bin_eq("DB read", db.get("name2"), zeros);
 
          // Test longer names
          db.set_str("leroy jeeeeeeeenkins", "chicken");
@@ -190,7 +190,7 @@ class PSK_DB_Tests final : public Test {
                     table_name,
                     "7CvsM7HDCZsV6VsFwWylNg==",
                     "x+I1bUF/fJYPOTvKwOihEPWGR1XGzVuyRdsw4n5gpBRzNR7LjH7vjw==");
-         result.test_eq("DB read", db.get("name2"), zeros);
+         result.test_bin_eq("DB read", db.get("name2"), zeros);
 
          // Test longer names
          db.set_str("leroy jeeeeeeeenkins", "chicken");

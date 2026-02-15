@@ -869,7 +869,7 @@ std::vector<Test::Result> test_session_manager_sqlite() {
                   mgr.establish(default_session(Botan::TLS::Connection_Side::Server, cbs), some_random_id);
                result.require("establishment was successful", some_random_handle.has_value());
                result.require("session id was set", some_random_handle->id().has_value());
-               result.test_eq("session id is correct", some_random_handle->id().value(), some_random_id);
+               result.test_bin_eq("session id is correct", some_random_handle->id().value(), some_random_id);
 
                auto some_virtual_handle = mgr.establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
                result.require("establishment was successful", some_virtual_handle.has_value());

@@ -165,16 +165,16 @@ Test::Result test_x509_ip_addr_blocks_extension_decode() {
       // 194.168.0.0 - 195.175.1.2
       // 196.168.0.1 - 196.168.0.1 (196.168.0.1/32)
 
-      result.test_eq("ipv4 block 0 min", v4_blocks[0].min().value(), {192, 168, 0, 0});
-      result.test_eq("ipv4 block 0 max", v4_blocks[0].max().value(), {192, 168, 127, 255});
+      result.test_bin_eq("ipv4 block 0 min", v4_blocks[0].min().value(), {192, 168, 0, 0});
+      result.test_bin_eq("ipv4 block 0 max", v4_blocks[0].max().value(), {192, 168, 127, 255});
 
-      result.test_eq("ipv4 block 1 min", v4_blocks[1].min().value(), {193, 168, 0, 0});
-      result.test_eq("ipv4 block 1 max", v4_blocks[1].max().value(), {193, 169, 255, 255});
-      result.test_eq("ipv4 block 2 min", v4_blocks[2].min().value(), {194, 168, 0, 0});
-      result.test_eq("ipv4 block 2 max", v4_blocks[2].max().value(), {195, 175, 1, 2});
+      result.test_bin_eq("ipv4 block 1 min", v4_blocks[1].min().value(), {193, 168, 0, 0});
+      result.test_bin_eq("ipv4 block 1 max", v4_blocks[1].max().value(), {193, 169, 255, 255});
+      result.test_bin_eq("ipv4 block 2 min", v4_blocks[2].min().value(), {194, 168, 0, 0});
+      result.test_bin_eq("ipv4 block 2 max", v4_blocks[2].max().value(), {195, 175, 1, 2});
 
-      result.test_eq("ipv4 block 3 min", v4_blocks[3].min().value(), {196, 168, 0, 1});
-      result.test_eq("ipv4 block 3 max", v4_blocks[3].max().value(), {196, 168, 0, 1});
+      result.test_bin_eq("ipv4 block 3 min", v4_blocks[3].min().value(), {196, 168, 0, 1});
+      result.test_bin_eq("ipv4 block 3 max", v4_blocks[3].max().value(), {196, 168, 0, 1});
 
       const auto& v6_blocks = ipv6block.ranges().value();
 
@@ -184,30 +184,38 @@ Test::Result test_x509_ip_addr_blocks_extension_decode() {
       // 2003:0:6829:3435:420:10c5:0:c4/128
       // ab01:0:0:0:0:0:0:1-cd02:0:0:0:0:0:0:2
 
-      result.test_eq("ipv6 block 0 min",
-                     v6_blocks[0].min().value(),
-                     {0x20, 0x03, 0x00, 0x00, 0x68, 0x29, 0x34, 0x35, 0x04, 0x20, 0x10, 0xc5, 0x00, 0x00, 0x00, 0xc4});
-      result.test_eq("ipv6 block 0 max",
-                     v6_blocks[0].max().value(),
-                     {0x20, 0x03, 0x00, 0x00, 0x68, 0x29, 0x34, 0x35, 0x04, 0x20, 0x10, 0xc5, 0x00, 0x00, 0x00, 0xc4});
-      result.test_eq("ipv6 block 1 min",
-                     v6_blocks[1].min().value(),
-                     {0xab, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01});
-      result.test_eq("ipv6 block 1 max",
-                     v6_blocks[1].max().value(),
-                     {0xcd, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02});
-      result.test_eq("ipv6 block 2 min",
-                     v6_blocks[2].min().value(),
-                     {0xfa, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
-      result.test_eq("ipv6 block 2 max",
-                     v6_blocks[2].max().value(),
-                     {0xfa, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff});
-      result.test_eq("ipv6 block 3 min",
-                     v6_blocks[3].min().value(),
-                     {0xfe, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
-      result.test_eq("ipv6 block 3 max",
-                     v6_blocks[3].max().value(),
-                     {0xfe, 0x20, 0x00, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff});
+      result.test_bin_eq(
+         "ipv6 block 0 min",
+         v6_blocks[0].min().value(),
+         {0x20, 0x03, 0x00, 0x00, 0x68, 0x29, 0x34, 0x35, 0x04, 0x20, 0x10, 0xc5, 0x00, 0x00, 0x00, 0xc4});
+      result.test_bin_eq(
+         "ipv6 block 0 max",
+         v6_blocks[0].max().value(),
+         {0x20, 0x03, 0x00, 0x00, 0x68, 0x29, 0x34, 0x35, 0x04, 0x20, 0x10, 0xc5, 0x00, 0x00, 0x00, 0xc4});
+      result.test_bin_eq(
+         "ipv6 block 1 min",
+         v6_blocks[1].min().value(),
+         {0xab, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01});
+      result.test_bin_eq(
+         "ipv6 block 1 max",
+         v6_blocks[1].max().value(),
+         {0xcd, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02});
+      result.test_bin_eq(
+         "ipv6 block 2 min",
+         v6_blocks[2].min().value(),
+         {0xfa, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
+      result.test_bin_eq(
+         "ipv6 block 2 max",
+         v6_blocks[2].max().value(),
+         {0xfa, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff});
+      result.test_bin_eq(
+         "ipv6 block 3 min",
+         v6_blocks[3].min().value(),
+         {0xfe, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
+      result.test_bin_eq(
+         "ipv6 block 3 max",
+         v6_blocks[3].max().value(),
+         {0xfe, 0x20, 0x00, 0x00, 0x07, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff});
    }
    {
       const std::string filename("IPAddrBlocksUnsorted.pem");
@@ -237,8 +245,8 @@ Test::Result test_x509_ip_addr_blocks_extension_decode() {
          std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(addr_blocks[1].addr_choice()).ranges().value();
 
       result.test_is_true("block 1 has correct size", block_1.size() == 1);
-      result.test_eq("block 1 min is correct", block_1[0].min().value(), {192, 168, 0, 0});
-      result.test_eq("block 1 max is correct", block_1[0].max().value(), {200, 0, 0, 0});
+      result.test_bin_eq("block 1 min is correct", block_1[0].min().value(), {192, 168, 0, 0});
+      result.test_bin_eq("block 1 max is correct", block_1[0].max().value(), {200, 0, 0, 0});
 
       result.test_opt_u8_eq("block 2 has correct safi", addr_blocks[2].safi(), 2);
       result.test_is_true(
@@ -250,12 +258,14 @@ Test::Result test_x509_ip_addr_blocks_extension_decode() {
          std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(addr_blocks[3].addr_choice()).ranges().value();
 
       result.test_is_true("block 3 has correct size", block_3.size() == 1);
-      result.test_eq("block 3 min is correct",
-                     block_3[0].min().value(),
-                     {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff});
-      result.test_eq("block 3 max is correct",
-                     block_3[0].max().value(),
-                     {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff});
+      result.test_bin_eq(
+         "block 3 min is correct",
+         block_3[0].min().value(),
+         {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff});
+      result.test_bin_eq(
+         "block 3 max is correct",
+         block_3[0].max().value(),
+         {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff});
 
       result.test_opt_u8_eq("block 24 has correct safi", addr_blocks[4].safi(), 1);
       result.test_is_true(
@@ -382,7 +392,7 @@ Test::Result test_x509_ip_addr_blocks_rfc3779_example() {
 
    auto bits_1 = cert_1.v3_extensions().get_extension_bits(IPAddressBlocks::static_oid());
 
-   result.test_eq(
+   result.test_bin_eq(
       "extension is encoded as specified",
       bits_1,
       "3035302B040300010130240304040A00200304000A00400303000A01300C0304040A02300304000A02400303000A033006040200020500");
@@ -393,20 +403,20 @@ Test::Result test_x509_ip_addr_blocks_rfc3779_example() {
    result.test_opt_u8_eq("extension 1 ipv4 safi", ext_1_addr_fam_1.safi(), 1);
    auto ext_1_ranges =
       std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(ext_1_addr_fam_1.addr_choice()).ranges().value();
-   result.test_eq("extension 1 range 1 min", ext_1_ranges[0].min().value(), {10, 0, 32, 0});
-   result.test_eq("extension 1 range 1 max", ext_1_ranges[0].max().value(), {10, 0, 47, 255});
+   result.test_bin_eq("extension 1 range 1 min", ext_1_ranges[0].min().value(), {10, 0, 32, 0});
+   result.test_bin_eq("extension 1 range 1 max", ext_1_ranges[0].max().value(), {10, 0, 47, 255});
 
-   result.test_eq("extension 1 range 2 min", ext_1_ranges[1].min().value(), {10, 0, 64, 0});
-   result.test_eq("extension 1 range 2 max", ext_1_ranges[1].max().value(), {10, 0, 64, 255});
+   result.test_bin_eq("extension 1 range 2 min", ext_1_ranges[1].min().value(), {10, 0, 64, 0});
+   result.test_bin_eq("extension 1 range 2 max", ext_1_ranges[1].max().value(), {10, 0, 64, 255});
 
-   result.test_eq("extension 1 range 3 min", ext_1_ranges[2].min().value(), {10, 1, 0, 0});
-   result.test_eq("extension 1 range 3 max", ext_1_ranges[2].max().value(), {10, 1, 255, 255});
+   result.test_bin_eq("extension 1 range 3 min", ext_1_ranges[2].min().value(), {10, 1, 0, 0});
+   result.test_bin_eq("extension 1 range 3 max", ext_1_ranges[2].max().value(), {10, 1, 255, 255});
 
-   result.test_eq("extension 1 range 4 min", ext_1_ranges[3].min().value(), {10, 2, 48, 0});
-   result.test_eq("extension 1 range 4 max", ext_1_ranges[3].max().value(), {10, 2, 64, 255});
+   result.test_bin_eq("extension 1 range 4 min", ext_1_ranges[3].min().value(), {10, 2, 48, 0});
+   result.test_bin_eq("extension 1 range 4 max", ext_1_ranges[3].max().value(), {10, 2, 64, 255});
 
-   result.test_eq("extension 1 range 5 min", ext_1_ranges[4].min().value(), {10, 3, 0, 0});
-   result.test_eq("extension 1 range 5 max", ext_1_ranges[4].max().value(), {10, 3, 255, 255});
+   result.test_bin_eq("extension 1 range 5 min", ext_1_ranges[4].min().value(), {10, 3, 0, 0});
+   result.test_bin_eq("extension 1 range 5 max", ext_1_ranges[4].max().value(), {10, 3, 255, 255});
 
    result.test_opt_u8_eq("extension 1 ipv6 safi", ext_1->addr_blocks()[1].safi(), std::nullopt);
    result.test_is_true(
@@ -430,9 +440,9 @@ Test::Result test_x509_ip_addr_blocks_rfc3779_example() {
    auto bits_2 = cert_2.v3_extensions().get_extension_bits(IPAddressBlocks::static_oid());
 
    // see https://www.rfc-editor.org/errata/eid6792 as to why the B0 specified in the RFC is a AC here
-   result.test_eq("extension is encoded as specified",
-                  bits_2,
-                  "302C3010040300010130090302000A030304AC10300704030001020500300F040200023009030700200100000002");
+   result.test_bin_eq("extension is encoded as specified",
+                      bits_2,
+                      "302C3010040300010130090302000A030304AC10300704030001020500300F040200023009030700200100000002");
 
    const auto* ext_2 = cert_2.v3_extensions().get_extension_object_as<IPAddressBlocks>();
 
@@ -440,11 +450,11 @@ Test::Result test_x509_ip_addr_blocks_rfc3779_example() {
    result.test_opt_u8_eq("extension 2 ipv4 1 safi", ext_2_addr_fam_1.safi(), 1);
    auto ext_2_ranges_1 =
       std::get<IPAddressBlocks::IPAddressChoice<IPv4>>(ext_2_addr_fam_1.addr_choice()).ranges().value();
-   result.test_eq("extension 2 fam 1 range 1 min", ext_2_ranges_1[0].min().value(), {10, 0, 0, 0});
-   result.test_eq("extension 2 fam 1 range 1 max", ext_2_ranges_1[0].max().value(), {10, 255, 255, 255});
+   result.test_bin_eq("extension 2 fam 1 range 1 min", ext_2_ranges_1[0].min().value(), {10, 0, 0, 0});
+   result.test_bin_eq("extension 2 fam 1 range 1 max", ext_2_ranges_1[0].max().value(), {10, 255, 255, 255});
 
-   result.test_eq("extension 2 fam 1 range 2 min", ext_2_ranges_1[1].min().value(), {172, 16, 0, 0});
-   result.test_eq("extension 2 fam 1 range 2 max", ext_2_ranges_1[1].max().value(), {172, 31, 255, 255});
+   result.test_bin_eq("extension 2 fam 1 range 2 min", ext_2_ranges_1[1].min().value(), {172, 16, 0, 0});
+   result.test_bin_eq("extension 2 fam 1 range 2 max", ext_2_ranges_1[1].max().value(), {172, 31, 255, 255});
 
    result.test_opt_u8_eq("extension 2 ipv4 2 safi", ext_2->addr_blocks()[1].safi(), 2);
    result.test_is_true(
@@ -455,12 +465,12 @@ Test::Result test_x509_ip_addr_blocks_rfc3779_example() {
    result.test_opt_u8_eq("extension 2 ipv4 1 safi", ext_2_addr_fam_3.safi(), std::nullopt);
    auto ext_2_ranges_3 =
       std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(ext_2_addr_fam_3.addr_choice()).ranges().value();
-   result.test_eq("extension 2 fam 3 range 1 min",
-                  ext_2_ranges_3[0].min().value(),
-                  {0x20, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
-   result.test_eq("extension 2 fam 3 range 1 max",
-                  ext_2_ranges_3[0].max().value(),
-                  {0x20, 0x01, 0x00, 0x00, 0x00, 0x02, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff});
+   result.test_bin_eq("extension 2 fam 3 range 1 min",
+                      ext_2_ranges_3[0].min().value(),
+                      {0x20, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
+   result.test_bin_eq("extension 2 fam 3 range 1 max",
+                      ext_2_ranges_3[0].max().value(),
+                      {0x20, 0x01, 0x00, 0x00, 0x00, 0x02, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff});
 
    result.end_timer();
    return result;
@@ -496,7 +506,7 @@ Test::Result test_x509_ip_addr_blocks_encode_builder() {
    auto bits = cert.v3_extensions().get_extension_bits(IPAddressBlocks::static_oid());
 
    // hand validated with https://lapo.it/asn1js/
-   result.test_eq(
+   result.test_bin_eq(
       "extension is encoded as specified",
       bits,
       "304630290402000130230305007B7B0201300D0305007F000001030403BD0500030407BE0500030500FFFFFFFF300A04030001013003030100300D04030001023006030406C0A840");
@@ -645,14 +655,14 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_ctor() {
             if(!inherit_ipv4) {
                auto ranges = choice.ranges().value();
                if(push_ipv4_ranges) {
-                  result.test_eq("ipv4 entry 0 min", ranges[0].min().value(), ipv4_range_1.min().value());
-                  result.test_eq("ipv4 entry 0 max", ranges[0].max().value(), ipv4_range_1.max().value());
-                  result.test_eq("ipv4 entry 1 min", ranges[1].min().value(), ipv4_range_2.min().value());
-                  result.test_eq("ipv4 entry 1 max", ranges[1].max().value(), ipv4_range_2.max().value());
-                  result.test_eq("ipv4 entry 2 min", ranges[2].min().value(), ipv4_range_3.min().value());
-                  result.test_eq("ipv4 entry 2 max", ranges[2].max().value(), ipv4_range_3.max().value());
-                  result.test_eq("ipv4 entry 3 min", ranges[3].min().value(), ipv4_range_4.min().value());
-                  result.test_eq("ipv4 entry 3 max", ranges[3].max().value(), ipv4_range_4.max().value());
+                  result.test_bin_eq("ipv4 entry 0 min", ranges[0].min().value(), ipv4_range_1.min().value());
+                  result.test_bin_eq("ipv4 entry 0 max", ranges[0].max().value(), ipv4_range_1.max().value());
+                  result.test_bin_eq("ipv4 entry 1 min", ranges[1].min().value(), ipv4_range_2.min().value());
+                  result.test_bin_eq("ipv4 entry 1 max", ranges[1].max().value(), ipv4_range_2.max().value());
+                  result.test_bin_eq("ipv4 entry 2 min", ranges[2].min().value(), ipv4_range_3.min().value());
+                  result.test_bin_eq("ipv4 entry 2 max", ranges[2].max().value(), ipv4_range_3.max().value());
+                  result.test_bin_eq("ipv4 entry 3 min", ranges[3].min().value(), ipv4_range_4.min().value());
+                  result.test_bin_eq("ipv4 entry 3 max", ranges[3].max().value(), ipv4_range_4.max().value());
                } else {
                   result.test_is_true("ipv4 range has no entries", ranges.empty());
                }
@@ -669,14 +679,14 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_ctor() {
             if(!inherit_ipv6) {
                auto ranges = choice.ranges().value();
                if(push_ipv6_ranges) {
-                  result.test_eq("ipv6 entry 0 min", ranges[0].min().value(), ipv6_range_1.min().value());
-                  result.test_eq("ipv6 entry 0 max", ranges[0].max().value(), ipv6_range_1.max().value());
-                  result.test_eq("ipv6 entry 1 min", ranges[1].min().value(), ipv6_range_2.min().value());
-                  result.test_eq("ipv6 entry 1 max", ranges[1].max().value(), ipv6_range_2.max().value());
-                  result.test_eq("ipv6 entry 2 min", ranges[2].min().value(), ipv6_range_3.min().value());
-                  result.test_eq("ipv6 entry 2 max", ranges[2].max().value(), ipv6_range_3.max().value());
-                  result.test_eq("ipv6 entry 3 min", ranges[3].min().value(), ipv6_range_4.min().value());
-                  result.test_eq("ipv6 entry 3 max", ranges[3].max().value(), ipv6_range_4.max().value());
+                  result.test_bin_eq("ipv6 entry 0 min", ranges[0].min().value(), ipv6_range_1.min().value());
+                  result.test_bin_eq("ipv6 entry 0 max", ranges[0].max().value(), ipv6_range_1.max().value());
+                  result.test_bin_eq("ipv6 entry 1 min", ranges[1].min().value(), ipv6_range_2.min().value());
+                  result.test_bin_eq("ipv6 entry 1 max", ranges[1].max().value(), ipv6_range_2.max().value());
+                  result.test_bin_eq("ipv6 entry 2 min", ranges[2].min().value(), ipv6_range_3.min().value());
+                  result.test_bin_eq("ipv6 entry 2 max", ranges[2].max().value(), ipv6_range_3.max().value());
+                  result.test_bin_eq("ipv6 entry 3 min", ranges[3].min().value(), ipv6_range_4.min().value());
+                  result.test_bin_eq("ipv6 entry 3 max", ranges[3].max().value(), ipv6_range_4.max().value());
                } else {
                   result.test_is_true("ipv6 range has no entries", ranges.empty());
                }
@@ -761,8 +771,8 @@ Test::Result test_x509_ip_addr_blocks_extension_encode_edge_cases_ctor() {
                auto choice = std::get<IPAddressBlocks::IPAddressChoice<IPv6>>(family.addr_choice());
                auto ranges = choice.ranges().value();
 
-               result.test_eq("ipv6 edge case min", ranges[0].min().value(), ipv6_range.min().value());
-               result.test_eq("ipv6 edge case max", ranges[0].max().value(), ipv6_range.max().value());
+               result.test_bin_eq("ipv6 edge case min", ranges[0].min().value(), ipv6_range.min().value());
+               result.test_bin_eq("ipv6 edge case max", ranges[0].max().value(), ipv6_range.max().value());
             }
          }
       }
@@ -825,8 +835,8 @@ Test::Result test_x509_ip_addr_blocks_range_merge() {
       const std::array<uint8_t, 4> expected_min = {5, 0, 0, 0};
       const std::array<uint8_t, 4> expected_max = {193, 0, 255, 255};
 
-      result.test_eq("range expected min", ranges[0].min().value(), expected_min);
-      result.test_eq("range expected max", ranges[0].max().value(), expected_max);
+      result.test_bin_eq("range expected min", ranges[0].min().value(), expected_min);
+      result.test_bin_eq("range expected max", ranges[0].max().value(), expected_max);
       result.test_sz_eq("range length", ranges.size(), 1);
    }
 
@@ -968,11 +978,11 @@ Test::Result test_x509_ip_addr_blocks_family_merge() {
             }
 
             for(size_t j = 0; j < exp_ranges.size(); j++) {
-               result.test_eq(
+               result.test_bin_eq(
                   "block ranges min got merged valuewise at indices " + std::to_string(i) + "," + std::to_string(j),
                   exp_ranges[j].min().value(),
                   dec_ranges[j].min().value());
-               result.test_eq(
+               result.test_bin_eq(
                   "block ranges max got merged valuewise at indices " + std::to_string(i) + "," + std::to_string(j),
                   exp_ranges[j].max().value(),
                   dec_ranges[j].max().value());
@@ -1004,11 +1014,11 @@ Test::Result test_x509_ip_addr_blocks_family_merge() {
             }
 
             for(size_t j = 0; j < exp_ranges.size(); j++) {
-               result.test_eq(
+               result.test_bin_eq(
                   "block ranges min got merged valuewise at indices " + std::to_string(i) + "," + std::to_string(j),
                   exp_ranges[j].min().value(),
                   dec_ranges[j].min().value());
-               result.test_eq(
+               result.test_bin_eq(
                   "block ranges max got merged valuewise at indices " + std::to_string(i) + "," + std::to_string(j),
                   exp_ranges[j].max().value(),
                   dec_ranges[j].max().value());
@@ -1479,7 +1489,7 @@ Test::Result test_x509_as_blocks_rfc3779_example() {
    auto cert = make_self_signed(rng, opts);
    auto bits = cert.v3_extensions().get_extension_bits(ASBlocks::static_oid());
 
-   result.test_eq(
+   result.test_bin_eq(
       "extension is encoded as specified", bits, "301AA014301202020087300802020BB802020F9F02021389A1020500");
 
    auto as_idents = cert.v3_extensions().get_extension_object_as<ASBlocks>()->as_identifiers();
@@ -1516,7 +1526,7 @@ Test::Result test_x509_as_blocks_encode_builder() {
    auto cert = make_self_signed(rng, opts);
    auto bits = cert.v3_extensions().get_extension_bits(ASBlocks::static_oid());
 
-   result.test_eq("extension is encoded as specified", bits, "3011A0023000A10B300930070201090202012D");
+   result.test_bin_eq("extension is encoded as specified", bits, "3011A0023000A10B300930070201090202012D");
 
    result.end_timer();
    return result;

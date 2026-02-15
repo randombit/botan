@@ -108,11 +108,11 @@ class AEAD_Tests final : public Text_Based_Test {
          // have to check here first if input is empty if not we can test update() and eventually process()
          if(buf.empty()) {
             enc->finish(buf);
-            result.test_eq("encrypt with empty input", buf, expected);
+            result.test_bin_eq("encrypt with empty input", buf, expected);
          } else {
             // test finish() with full input
             enc->finish(buf);
-            result.test_eq("encrypt full", buf, expected);
+            result.test_bin_eq("encrypt full", buf, expected);
 
             // additionally test update() if possible
             const size_t update_granularity = enc->update_granularity();
@@ -144,7 +144,7 @@ class AEAD_Tests final : public Text_Based_Test {
                enc->finish(block);
                ciphertext.insert(ciphertext.end(), block.begin(), block.end());
 
-               result.test_eq("encrypt update", ciphertext, expected);
+               result.test_bin_eq("encrypt update", ciphertext, expected);
             }
 
             // additionally test process() if possible
@@ -179,7 +179,7 @@ class AEAD_Tests final : public Text_Based_Test {
                   enc->finish(buf, bytes_written);
                }
 
-               result.test_eq("encrypt process", buf, expected);
+               result.test_bin_eq("encrypt process", buf, expected);
             }
          }
 
@@ -275,7 +275,7 @@ class AEAD_Tests final : public Text_Based_Test {
 
             // test finish() with full input
             dec->finish(buf);
-            result.test_eq("decrypt full", buf, expected);
+            result.test_bin_eq("decrypt full", buf, expected);
 
             // additionally test update() if possible
             const size_t update_granularity = dec->update_granularity();
@@ -306,7 +306,7 @@ class AEAD_Tests final : public Text_Based_Test {
                dec->finish(block);
                plaintext.insert(plaintext.end(), block.begin(), block.end());
 
-               result.test_eq("decrypt update", plaintext, expected);
+               result.test_bin_eq("decrypt update", plaintext, expected);
             }
 
             // additionally test process() if possible
@@ -341,7 +341,7 @@ class AEAD_Tests final : public Text_Based_Test {
                   dec->finish(buf, bytes_to_process);
                }
 
-               result.test_eq("decrypt process", buf, expected);
+               result.test_bin_eq("decrypt process", buf, expected);
             }
 
          } catch(Botan::Exception& e) {

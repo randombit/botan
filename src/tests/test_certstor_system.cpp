@@ -236,7 +236,7 @@ Test::Result find_cert_by_issuer_dn_and_serial_number(Botan::Certificate_Store& 
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_sz_eq("exactly one CN", cns.size(), 1);
          result.test_str_eq("CN", cns.front(), get_subject_cn());
-         result.test_eq("serial number", cert->serial_number(), get_serial_number());
+         result.test_bin_eq("serial number", cert->serial_number(), get_serial_number());
       }
    } catch(std::exception& e) {
       result.test_failure(e.what());

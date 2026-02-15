@@ -50,12 +50,12 @@ Test::Result test_odd_parity() {
    Botan::OctetString os("FFFFFFFFFFFFFFFF");
    os.set_odd_parity();
    const Botan::OctetString expected("FEFEFEFEFEFEFEFE");
-   result.test_eq("odd parity set correctly", os, expected);
+   result.test_bin_eq("odd parity set correctly", os, expected);
 
    Botan::OctetString os2("EFCBDA4FAA997F63");
    os2.set_odd_parity();
    const Botan::OctetString expected2("EFCBDA4FAB987F62");
-   result.test_eq("odd parity set correctly", os2, expected2);
+   result.test_bin_eq("odd parity set correctly", os2, expected2);
 
    return result;
 }
@@ -76,19 +76,19 @@ Test::Result test_xor() {
    const Botan::OctetString os2("FFFFFFFFFFFFFFFF");
 
    Botan::OctetString xor_result = os1 ^ os2;
-   result.test_eq("OctetString XOR operations works as expected", xor_result, os2);
+   result.test_bin_eq("OctetString XOR operations works as expected", xor_result, os2);
 
    xor_result = os1;
    xor_result ^= os2;
-   result.test_eq("OctetString XOR operations works as expected", xor_result, os2);
+   result.test_bin_eq("OctetString XOR operations works as expected", xor_result, os2);
 
    xor_result = os2 ^ os2;  // NOLINT(*-redundant-expression)
-   result.test_eq("OctetString XOR operations works as expected", xor_result, os1);
+   result.test_bin_eq("OctetString XOR operations works as expected", xor_result, os1);
 
    const Botan::OctetString os3("0123456789ABCDEF");
    xor_result = os3 ^ os2;
    const Botan::OctetString expected("FEDCBA9876543210");
-   result.test_eq("OctetString XOR operations works as expected", xor_result, expected);
+   result.test_bin_eq("OctetString XOR operations works as expected", xor_result, expected);
 
    return result;
 }
@@ -117,7 +117,7 @@ Test::Result test_append() {
 
    const Botan::OctetString append_result = os1 + os2;
 
-   result.test_eq("OctetString append operations works as expected", append_result, expected);
+   result.test_bin_eq("OctetString append operations works as expected", append_result, expected);
 
    return result;
 }

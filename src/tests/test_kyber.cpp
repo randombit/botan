@@ -71,7 +71,7 @@ class KYBER_Tests final : public Test {
          const Botan::Kyber_PrivateKey alice_priv_key(priv_key_bits, mode);
          auto dec = Botan::PK_KEM_Decryptor(alice_priv_key, *rng, "Raw", "base");
          const auto key_alice = dec.decrypt(kem_result.encapsulated_shared_key(), 0 /* no KDF */, empty_salt);
-         result.test_eq("shared secrets are equal", key_alice, kem_result.shared_key());
+         result.test_bin_eq("shared secrets are equal", key_alice, kem_result.shared_key());
 
          //
          // negative tests
@@ -94,7 +94,7 @@ class KYBER_Tests final : public Test {
 
          // Try to decrypt the valid ciphertext again
          const auto key_alice_try2 = dec.decrypt(kem_result.encapsulated_shared_key(), 0 /* no KDF */, empty_salt);
-         result.test_eq("shared secrets are equal", key_alice_try2, kem_result.shared_key());
+         result.test_bin_eq("shared secrets are equal", key_alice_try2, kem_result.shared_key());
 
          return result;
       }
@@ -252,34 +252,34 @@ class Kyber_Encoding_Test : public Text_Based_Test {
             const auto skr = std::make_unique<Botan::Kyber_PrivateKey>(sk_raw, mode);
             const auto pkr = std::make_unique<Botan::Kyber_PublicKey>(pk_raw, mode);
 
-            result.test_eq("sk's encoding of pk", skr->public_key_bits(), pk_raw);
-            result.test_eq("sk's encoding of sk", skr->private_key_bits(), sk_raw);
-            result.test_eq("pk's encoding of pk", pkr->public_key_bits(), pk_raw);
+            result.test_bin_eq("sk's encoding of pk", skr->public_key_bits(), pk_raw);
+            result.test_bin_eq("sk's encoding of sk", skr->private_key_bits(), sk_raw);
+            result.test_bin_eq("pk's encoding of pk", pkr->public_key_bits(), pk_raw);
 
             // expanded vs seed encoding
             if(skr->private_key_format() == Botan::MlPrivateKeyFormat::Seed) {
-               result.test_eq("sk's seed encoding of sk",
-                              skr->private_key_bits_with_format(Botan::MlPrivateKeyFormat::Seed),
-                              sk_raw);
+               result.test_bin_eq("sk's seed encoding of sk",
+                                  skr->private_key_bits_with_format(Botan::MlPrivateKeyFormat::Seed),
+                                  sk_raw);
                const auto skr_expanded = std::make_unique<Botan::Kyber_PrivateKey>(
                   skr->private_key_bits_with_format(Botan::MlPrivateKeyFormat::Expanded), mode);
-               result.test_eq("sk's expanded encoding consistency",
-                              skr->private_key_bits_with_format(Botan::MlPrivateKeyFormat::Expanded),
-                              skr_expanded->private_key_bits_with_format(Botan::MlPrivateKeyFormat::Expanded));
+               result.test_bin_eq("sk's expanded encoding consistency",
+                                  skr->private_key_bits_with_format(Botan::MlPrivateKeyFormat::Expanded),
+                                  skr_expanded->private_key_bits_with_format(Botan::MlPrivateKeyFormat::Expanded));
                result.test_throws<Botan::Encoding_Error>("expect no seed in expanded sk", [&] {
                   skr_expanded->private_key_bits_with_format(Botan::MlPrivateKeyFormat::Seed);
                });
 
                const auto encapsulation = Botan::PK_KEM_Encryptor(*pkr, "Raw").encrypt(rng());
-               result.test_eq(
+               result.test_bin_eq(
                   "expanded sk decapsulation",
                   Botan::PK_KEM_Decryptor(*skr_expanded, rng(), "Raw").decrypt(encapsulation.encapsulated_shared_key()),
                   encapsulation.shared_key());
 
             } else {
-               result.test_eq("sk's expanded encoding of sk",
-                              skr->private_key_bits_with_format(Botan::MlPrivateKeyFormat::Expanded),
-                              sk_raw);
+               result.test_bin_eq("sk's expanded encoding of sk",
+                                  skr->private_key_bits_with_format(Botan::MlPrivateKeyFormat::Expanded),
+                                  sk_raw);
             }
          }
 

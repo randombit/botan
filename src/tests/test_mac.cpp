@@ -69,24 +69,24 @@ class Message_Auth_Tests final : public Text_Based_Test {
             result.test_is_true("key set", mac->has_keying_material());
             mac->start(iv);
             mac->update(input);
-            result.test_eq(provider, "correct mac", mac->final(), expected);
+            result.test_bin_eq(provider, "correct mac", mac->final(), expected);
 
             mac->set_key(key);
             mac->start(iv);
             mac->update(input);
-            result.test_eq(provider, "correct mac (try 2)", mac->final(), expected);
+            result.test_bin_eq(provider, "correct mac (try 2)", mac->final(), expected);
 
             if(iv.empty()) {
                mac->set_key(key);
                mac->update(input);
-               result.test_eq(provider, "correct mac (no start call)", mac->final(), expected);
+               result.test_bin_eq(provider, "correct mac (no start call)", mac->final(), expected);
             }
 
             if(!mac->fresh_key_required_per_message()) {
                for(size_t i = 0; i != 3; ++i) {
                   mac->start(iv);
                   mac->update(input);
-                  result.test_eq(provider, "correct mac (same key)", mac->final(), expected);
+                  result.test_bin_eq(provider, "correct mac (same key)", mac->final(), expected);
                }
             }
 
@@ -120,7 +120,7 @@ class Message_Auth_Tests final : public Text_Based_Test {
                mac->update(&input[1], input.size() - 2);
                mac->update(input[input.size() - 1]);
 
-               result.test_eq(provider, "split mac", mac->final(), expected);
+               result.test_bin_eq(provider, "split mac", mac->final(), expected);
 
                // do the same to test verify_mac()
                mac->set_key(key);

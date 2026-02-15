@@ -192,9 +192,9 @@ std::vector<Test::Result> test_container_strong_type() {
                Test_Fixed_Array tfa;
                rng.random_vec(tfa);
 
-               result.test_eq("generated expected output", tb.get(), "deadbeef");
-               result.test_eq("generated expected secure output", tsb.get(), "baadcafe");
-               result.test_eq("generated expected fixed output", std::vector(tfa.begin(), tfa.end()), "baadf00d");
+               result.test_bin_eq("generated expected output", tb.get(), "deadbeef");
+               result.test_bin_eq("generated expected secure output", tsb.get(), "baadcafe");
+               result.test_bin_eq("generated expected fixed output", std::vector(tfa.begin(), tfa.end()), "baadf00d");
             }),
 
       CHECK("subscript accessors are exposed",

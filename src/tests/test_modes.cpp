@@ -183,7 +183,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
 
          buf.assign(input.begin(), input.end());
          mode.finish(buf);
-         result.test_eq(direction + " all-in-one", buf, expected);
+         result.test_bin_eq(direction + " all-in-one", buf, expected);
 
          // additionally test update() and process() if possible
          if(input.size() >= update_granularity + min_final_bytes) {
@@ -207,7 +207,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
                mode.finish(last_bits);
                buf += last_bits;
 
-               result.test_eq(direction + " update-1", buf, expected);
+               result.test_bin_eq(direction + " update-1", buf, expected);
             }
 
             // test update with maximum length input
@@ -220,7 +220,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
 
             buf += last_bits;
 
-            result.test_eq(direction + " update-all", buf, expected);
+            result.test_bin_eq(direction + " update-all", buf, expected);
 
             // test process with maximum length input
             mode.start(nonce);
@@ -231,7 +231,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
             result.test_sz_eq("correct number of bytes processed", bytes_written, bytes_to_process);
 
             mode.finish(buf, bytes_to_process);
-            result.test_eq(direction + " process", buf, expected);
+            result.test_bin_eq(direction + " process", buf, expected);
          }
 
          mode.clear();
@@ -279,17 +279,18 @@ class Cipher_Mode_IV_Carry_Tests final : public Test {
 
          enc->start(iv);
          enc->finish(msg1);
-         result.test_eq("First ciphertext", msg1, "9BDD7300E0CB61CA71FFF957A71605DB6836159C36781246A1ADF50982757F4B");
+         result.test_bin_eq(
+            "First ciphertext", msg1, "9BDD7300E0CB61CA71FFF957A71605DB6836159C36781246A1ADF50982757F4B");
 
          enc->start();
          enc->finish(msg2);
 
-         result.test_eq("Second ciphertext", msg2, "AA8D682958A4A044735DAC502B274DB2");
+         result.test_bin_eq("Second ciphertext", msg2, "AA8D682958A4A044735DAC502B274DB2");
 
          enc->start();
          enc->finish(msg3);
 
-         result.test_eq("Third ciphertext", msg3, "1241B9976F73051BCF809525D6E86C25");
+         result.test_bin_eq("Third ciphertext", msg3, "1241B9976F73051BCF809525D6E86C25");
 
          dec->start(iv);
          dec->finish(msg1);
@@ -299,7 +300,7 @@ class Cipher_Mode_IV_Carry_Tests final : public Test {
 
          dec->start();
          dec->finish(msg3);
-         result.test_eq("Third plaintext", msg3, "49562063617272796F76657232");
+         result.test_bin_eq("Third plaintext", msg3, "49562063617272796F76657232");
 
    #endif
          return result;
@@ -325,29 +326,29 @@ class Cipher_Mode_IV_Carry_Tests final : public Test {
 
          enc->start(iv);
          enc->finish(msg1);
-         result.test_eq("First ciphertext", msg1, "a51522387c4c9b");
+         result.test_bin_eq("First ciphertext", msg1, "a51522387c4c9b");
 
          enc->start();
          enc->finish(msg2);
 
-         result.test_eq("Second ciphertext", msg2, "105457dc2e0649d4");
+         result.test_bin_eq("Second ciphertext", msg2, "105457dc2e0649d4");
 
          enc->start();
          enc->finish(msg3);
 
-         result.test_eq("Third ciphertext", msg3, "53bd65");
+         result.test_bin_eq("Third ciphertext", msg3, "53bd65");
 
          dec->start(iv);
          dec->finish(msg1);
-         result.test_eq("First plaintext", msg1, "ABCDEF01234567");
+         result.test_bin_eq("First plaintext", msg1, "ABCDEF01234567");
 
          dec->start();
          dec->finish(msg2);
-         result.test_eq("Second plaintext", msg2, "0000123456ABCDEF");
+         result.test_bin_eq("Second plaintext", msg2, "0000123456ABCDEF");
 
          dec->start();
          dec->finish(msg3);
-         result.test_eq("Third plaintext", msg3, "012345");
+         result.test_bin_eq("Third plaintext", msg3, "012345");
    #endif
          return result;
       }
@@ -392,7 +393,7 @@ class Cipher_Mode_IV_Carry_Tests final : public Test {
             Botan::secure_vector<uint8_t> msg(i, 0);
             enc->finish(msg);
 
-            result.test_eq("Ciphertext", msg, exp_ciphertext[i - 1].c_str());
+            result.test_bin_eq("Ciphertext", msg, exp_ciphertext[i - 1]);
 
             dec->finish(msg);
 

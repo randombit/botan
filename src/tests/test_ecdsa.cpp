@@ -208,7 +208,7 @@ class ECDSA_Key_Recovery_Tests final : public Text_Based_Test {
 
          try {
             const Botan::ECDSA_PublicKey pubkey(group, msg, R, S, V);
-            result.test_eq("Pubkey X coordinate", pubkey.public_key_bits(), expected_pubkey);
+            result.test_bin_eq("Pubkey X coordinate", pubkey.public_key_bits(), expected_pubkey);
 
             const uint8_t computed_V = pubkey.recovery_param(msg, R, S);
             result.test_u8_eq("Recovery param is correct", computed_V, V);

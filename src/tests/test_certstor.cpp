@@ -87,7 +87,7 @@ Test::Result test_certstor_sqlite3_insert_find_remove_test(const std::vector<Cer
          result.test_str_eq("Got wrong certificate", cert.fingerprint(), w_keyid->fingerprint());
 
          if(priv) {
-            result.test_eq("Got wrong private key", key.private_key_bits(), priv->private_key_bits());
+            result.test_bin_eq("Got wrong private key", key.private_key_bits(), priv->private_key_bits());
 
             const auto rev_certs = store.find_certs_for_key(*priv);
 
@@ -288,7 +288,7 @@ Test::Result test_certstor_all_finders(const std::vector<CertificateAndKey>& cer
                return result;
             }
 
-            result.test_eq("Got wrong certificate", hash, found->raw_subject_dn_sha256());
+            result.test_bin_eq("Got wrong certificate", hash, found->raw_subject_dn_sha256());
          }
 
          // find by issuer dn and serial number
@@ -302,7 +302,7 @@ Test::Result test_certstor_all_finders(const std::vector<CertificateAndKey>& cer
                return result;
             }
 
-            result.test_eq("Got wrong certificate", serial_number, found->serial_number());
+            result.test_bin_eq("Got wrong certificate", serial_number, found->serial_number());
          }
       }
 

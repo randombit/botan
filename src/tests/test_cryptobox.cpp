@@ -42,7 +42,7 @@ class Cryptobox_KAT final : public Text_Based_Test {
 
          result.test_str_eq("encryption is expected value", ciphertext, expected_pem);
 
-         result.test_eq("decryption works", Botan::CryptoBox::decrypt_bin(ciphertext, password), input);
+         result.test_bin_eq("decryption works", Botan::CryptoBox::decrypt_bin(ciphertext, password), input);
 
          // Now corrupt a bit and ensure it fails
          try {

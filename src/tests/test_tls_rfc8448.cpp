@@ -1011,7 +1011,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_current_timestamp",
                                                      });
 
-                     result.test_eq(
+                     result.test_bin_eq(
                         "TLS client hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
                   }),
 
@@ -1061,9 +1061,9 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                      result.require("client is active", ctx->client.is_active());
                      result.test_is_true("handshake is complete", ctx->client.is_handshake_complete());
 
-                     result.test_eq("correct handshake finished",
-                                    ctx->pull_send_buffer(),
-                                    vars.get_req_bin("Record_ClientFinished"));
+                     result.test_bin_eq("correct handshake finished",
+                                        ctx->pull_send_buffer(),
+                                        vars.get_req_bin("Record_ClientFinished"));
                   }),
 
             CHECK("Post-Handshake: NewSessionTicket",
@@ -1093,9 +1093,9 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
 
                      ctx->check_callback_invocations(result, "application data sent", {"tls_emit_data"});
 
-                     result.test_eq("correct client application data",
-                                    ctx->pull_send_buffer(),
-                                    vars.get_req_bin("Record_Client_AppData"));
+                     result.test_bin_eq("correct client application data",
+                                        ctx->pull_send_buffer(),
+                                        vars.get_req_bin("Record_Client_AppData"));
                   }),
 
             CHECK("Receive Application Data",
@@ -1106,7 +1106,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                      ctx->check_callback_invocations(result, "application data sent", {"tls_record_received"});
 
                      const auto rcvd = ctx->pull_receive_buffer();
-                     result.test_eq("decrypted application traffic", rcvd, vars.get_req_bin("Server_AppData"));
+                     result.test_bin_eq("decrypted application traffic", rcvd, vars.get_req_bin("Server_AppData"));
                      result.test_u64_eq("sequence number", ctx->last_received_seq_no(), uint64_t(1));
                   }),
 
@@ -1115,7 +1115,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                      result.require("ctx is available", ctx != nullptr);
                      ctx->client.close();
 
-                     result.test_eq(
+                     result.test_bin_eq(
                         "close payload", ctx->pull_send_buffer(), vars.get_req_bin("Record_Client_CloseNotify"));
                      ctx->check_callback_invocations(result, "CLOSE_NOTIFY sent", {"tls_emit_data"});
 
@@ -1176,7 +1176,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_generate_ephemeral_key",
                                                      });
 
-                     result.test_eq(
+                     result.test_bin_eq(
                         "TLS client hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
                   })
 
@@ -1237,7 +1237,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_current_timestamp",
                                                      });
 
-                     result.test_eq(
+                     result.test_bin_eq(
                         "TLS client hello (1)", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
                   }),
 
@@ -1257,7 +1257,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_generate_ephemeral_key",
                                                      });
 
-                     result.test_eq(
+                     result.test_bin_eq(
                         "TLS client hello (2)", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_2"));
                   }),
 
@@ -1295,7 +1295,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                       "tls_verify_cert_chain",
                                                       "tls_verify_message"});
 
-                     result.test_eq(
+                     result.test_bin_eq(
                         "client finished", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientFinished"));
                   }),
 
@@ -1305,7 +1305,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                      ctx->client.close();
                      ctx->check_callback_invocations(
                         result, "encrypted handshake messages received", {"tls_emit_data"});
-                     result.test_eq(
+                     result.test_bin_eq(
                         "client close notify", ctx->pull_send_buffer(), vars.get_req_bin("Record_Client_CloseNotify"));
 
                      ctx->client.received_data(vars.get_req_bin("Record_Server_CloseNotify"));
@@ -1356,7 +1356,8 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_current_timestamp",
                                                      });
 
-                     result.test_eq("Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
+                     result.test_bin_eq(
+                        "Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
                   }),
 
             CHECK("Server Hello",
@@ -1401,7 +1402,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
 
                      // ClientFinished contains the entire coalesced client authentication flight
                      // Messages: Certificate, CertificateVerify, Finished
-                     result.test_eq(
+                     result.test_bin_eq(
                         "Client Auth and Finished", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientFinished"));
                   }),
 
@@ -1409,7 +1410,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                   [&](Test::Result& result) {
                      result.require("ctx is available", ctx != nullptr);
                      ctx->client.close();
-                     result.test_eq(
+                     result.test_bin_eq(
                         "Client close_notify", ctx->pull_send_buffer(), vars.get_req_bin("Record_Client_CloseNotify"));
 
                      ctx->check_callback_invocations(result,
@@ -1447,26 +1448,26 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
          std::unique_ptr<Client_Context> ctx;
 
          return {
-            CHECK("Client Hello",
-                  [&](Test::Result& result) {
-                     ctx =
-                        std::make_unique<Client_Context>(std::move(rng),
+            CHECK(
+               "Client Hello",
+               [&](Test::Result& result) {
+                  ctx = std::make_unique<Client_Context>(std::move(rng),
                                                          std::make_shared<RFC8448_Text_Policy>("rfc8448_compat_client"),
                                                          vars.get_req_u64("CurrentTimestamp"),
                                                          add_extensions_and_sort);
 
-                     result.test_eq("Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
+                  result.test_bin_eq("Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
 
-                     ctx->check_callback_invocations(result,
-                                                     "client hello prepared",
-                                                     {
-                                                        "tls_emit_data",
-                                                        "tls_inspect_handshake_msg_client_hello",
-                                                        "tls_modify_extensions_client_hello",
-                                                        "tls_generate_ephemeral_key",
-                                                        "tls_current_timestamp",
-                                                     });
-                  }),
+                  ctx->check_callback_invocations(result,
+                                                  "client hello prepared",
+                                                  {
+                                                     "tls_emit_data",
+                                                     "tls_inspect_handshake_msg_client_hello",
+                                                     "tls_modify_extensions_client_hello",
+                                                     "tls_generate_ephemeral_key",
+                                                     "tls_current_timestamp",
+                                                  });
+               }),
 
             CHECK("Server Hello + other handshake messages",
                   [&](Test::Result& result) {
@@ -1496,10 +1497,10 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_ephemeral_key_agreement",
                                                      });
 
-                     result.test_eq("CCS + Client Finished",
-                                    ctx->pull_send_buffer(),
-                                    // ClientFinished contains the expected ChangeCipherSpec record
-                                    vars.get_req_bin("Record_ClientFinished"));
+                     result.test_bin_eq("CCS + Client Finished",
+                                        ctx->pull_send_buffer(),
+                                        // ClientFinished contains the expected ChangeCipherSpec record
+                                        vars.get_req_bin("Record_ClientFinished"));
 
                      result.test_is_true("client is ready to send application traffic", ctx->client.is_active());
                      result.test_is_true("handshake is complete", ctx->client.is_handshake_complete());
@@ -1510,7 +1511,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                      result.require("ctx is available", ctx != nullptr);
                      ctx->client.close();
 
-                     result.test_eq(
+                     result.test_bin_eq(
                         "Client close_notify", ctx->pull_send_buffer(), vars.get_req_bin("Record_Client_CloseNotify"));
 
                      result.require("client cannot send application traffic anymore", !ctx->client.is_active());
@@ -1576,7 +1577,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_generate_ephemeral_key",
                                                      });
 
-                     result.test_eq(
+                     result.test_bin_eq(
                         "TLS client hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
                   }),
 
@@ -1614,7 +1615,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                   result.require("client is active", ctx->client.is_active());
                   result.test_is_true("handshake is complete", ctx->client.is_handshake_complete());
 
-                  result.test_eq(
+                  result.test_bin_eq(
                      "correct handshake finished", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientFinished"));
                }),
 
@@ -1625,9 +1626,9 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
 
                      ctx->check_callback_invocations(result, "application data sent", {"tls_emit_data"});
 
-                     result.test_eq("correct client application data",
-                                    ctx->pull_send_buffer(),
-                                    vars.get_req_bin("Record_Client_AppData"));
+                     result.test_bin_eq("correct client application data",
+                                        ctx->pull_send_buffer(),
+                                        vars.get_req_bin("Record_Client_AppData"));
                   }),
 
             CHECK("Receive Application Data",
@@ -1638,7 +1639,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                      ctx->check_callback_invocations(result, "application data sent", {"tls_record_received"});
 
                      const auto rcvd = ctx->pull_receive_buffer();
-                     result.test_eq("decrypted application traffic", rcvd, vars.get_req_bin("Server_AppData"));
+                     result.test_bin_eq("decrypted application traffic", rcvd, vars.get_req_bin("Server_AppData"));
                      result.test_u64_eq("sequence number", ctx->last_received_seq_no(), uint64_t(0));
                   }),
 
@@ -1647,7 +1648,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                      result.require("ctx is available", ctx != nullptr);
                      ctx->client.close();
 
-                     result.test_eq(
+                     result.test_bin_eq(
                         "close payload", ctx->pull_send_buffer(), vars.get_req_bin("Record_Client_CloseNotify"));
                      ctx->check_callback_invocations(result, "CLOSE_NOTIFY sent", {"tls_emit_data"});
 
@@ -1711,7 +1712,8 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                         "tls_current_timestamp",
                                                      });
 
-                     result.test_eq("Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
+                     result.test_bin_eq(
+                        "Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
                   }),
 
             CHECK("Server Hello",
@@ -1761,7 +1763,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
 
                      // ClientFinished contains the entire coalesced client authentication flight
                      // Messages: Certificate, CertificateVerify, Finished
-                     result.test_eq(
+                     result.test_bin_eq(
                         "Client Auth and Finished", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientFinished"));
                   }),
 
@@ -1769,7 +1771,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                   [&](Test::Result& result) {
                      result.require("ctx is available", ctx != nullptr);
                      ctx->client.close();
-                     result.test_eq(
+                     result.test_bin_eq(
                         "Client close_notify", ctx->pull_send_buffer(), vars.get_req_bin("Record_Client_CloseNotify"));
 
                      ctx->check_callback_invocations(result,
@@ -1850,23 +1852,23 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.require("ctx is available", ctx != nullptr);
                      const auto& msgs = ctx->observed_handshake_messages();
 
-                     result.test_eq("Server Hello",
-                                    msgs.at("server_hello")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_ServerHello")));
-                     result.test_eq("Encrypted Extensions",
-                                    msgs.at("encrypted_extensions")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
-                     result.test_eq("Certificate",
-                                    msgs.at("certificate")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
-                     result.test_eq("CertificateVerify",
-                                    msgs.at("certificate_verify")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
+                     result.test_bin_eq("Server Hello",
+                                        msgs.at("server_hello")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_ServerHello")));
+                     result.test_bin_eq("Encrypted Extensions",
+                                        msgs.at("encrypted_extensions")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
+                     result.test_bin_eq("Certificate",
+                                        msgs.at("certificate")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
+                     result.test_bin_eq("CertificateVerify",
+                                        msgs.at("certificate_verify")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
 
-                     result.test_eq("Server's entire first flight",
-                                    ctx->pull_send_buffer(),
-                                    concat(vars.get_req_bin("Record_ServerHello"),
-                                           vars.get_req_bin("Record_ServerHandshakeMessages")));
+                     result.test_bin_eq("Server's entire first flight",
+                                        ctx->pull_send_buffer(),
+                                        concat(vars.get_req_bin("Record_ServerHello"),
+                                               vars.get_req_bin("Record_ServerHandshakeMessages")));
 
                      // Note: is_active() defines that we can send application data.
                      //       RFC 8446 Section 4.4.4 explicitly allows that for servers
@@ -1909,7 +1911,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
             CHECK("Verify generated new session ticket message",
                   [&](Test::Result& result) {
                      result.require("ctx is available", ctx != nullptr);
-                     result.test_eq(
+                     result.test_bin_eq(
                         "New Session Ticket", ctx->pull_send_buffer(), vars.get_req_bin("Record_NewSessionTicket"));
                   }),
 
@@ -1920,7 +1922,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      ctx->check_callback_invocations(result, "application data received", {"tls_record_received"});
 
                      const auto rcvd = ctx->pull_receive_buffer();
-                     result.test_eq("decrypted application traffic", rcvd, vars.get_req_bin("Client_AppData"));
+                     result.test_bin_eq("decrypted application traffic", rcvd, vars.get_req_bin("Client_AppData"));
                      result.test_u64_eq("sequence number", ctx->last_received_seq_no(), uint64_t(0));
                   }),
 
@@ -1931,9 +1933,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
 
                      ctx->check_callback_invocations(result, "application data sent", {"tls_emit_data"});
 
-                     result.test_eq("correct server application data",
-                                    ctx->pull_send_buffer(),
-                                    vars.get_req_bin("Record_Server_AppData"));
+                     result.test_bin_eq("correct server application data",
+                                        ctx->pull_send_buffer(),
+                                        vars.get_req_bin("Record_Server_AppData"));
                   }),
 
             CHECK("Receive Client's close_notify",
@@ -1957,9 +1959,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.test_is_true("connection is now inactive", !ctx->server.is_active());
                      result.test_is_true("connection is now closed", ctx->server.is_closed());
                      result.test_is_true("handshake is still finished", ctx->server.is_handshake_complete());
-                     result.test_eq("Server's close notify",
-                                    ctx->pull_send_buffer(),
-                                    vars.get_req_bin("Record_Server_CloseNotify"));
+                     result.test_bin_eq("Server's close notify",
+                                        ctx->pull_send_buffer(),
+                                        vars.get_req_bin("Record_Server_CloseNotify"));
                   }),
          };
       }
@@ -2020,17 +2022,17 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.require("ctx is available", ctx != nullptr);
                      const auto& msgs = ctx->observed_handshake_messages();
 
-                     result.test_eq("Server Hello",
-                                    msgs.at("server_hello")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_ServerHello")));
-                     result.test_eq("Encrypted Extensions",
-                                    msgs.at("encrypted_extensions")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
+                     result.test_bin_eq("Server Hello",
+                                        msgs.at("server_hello")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_ServerHello")));
+                     result.test_bin_eq("Encrypted Extensions",
+                                        msgs.at("encrypted_extensions")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
 
-                     result.test_eq("Server's entire first flight",
-                                    ctx->pull_send_buffer(),
-                                    concat(vars.get_req_bin("Record_ServerHello"),
-                                           vars.get_req_bin("Record_ServerHandshakeMessages")));
+                     result.test_bin_eq("Server's entire first flight",
+                                        ctx->pull_send_buffer(),
+                                        concat(vars.get_req_bin("Record_ServerHello"),
+                                               vars.get_req_bin("Record_ServerHandshakeMessages")));
 
                      // Note: is_active() defines that we can send application data.
                      //       RFC 8446 Section 4.4.4 explicitly allows that for servers
@@ -2093,9 +2095,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
             CHECK("Verify generated Hello Retry Request message",
                   [&](Test::Result& result) {
                      result.require("ctx is available", ctx != nullptr);
-                     result.test_eq("Server's Hello Retry Request record",
-                                    ctx->pull_send_buffer(),
-                                    vars.get_req_bin("Record_HelloRetryRequest"));
+                     result.test_bin_eq("Server's Hello Retry Request record",
+                                        ctx->pull_send_buffer(),
+                                        vars.get_req_bin("Record_HelloRetryRequest"));
                      result.test_is_true("TLS handshake not yet finished", !ctx->server.is_active());
                      result.test_is_true("handshake is not yet complete", !ctx->server.is_handshake_complete());
                   }),
@@ -2128,26 +2130,26 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.require("ctx is available", ctx != nullptr);
                      const auto& msgs = ctx->observed_handshake_messages();
 
-                     result.test_eq("Server Hello",
-                                    msgs.at("server_hello")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_ServerHello")));
-                     result.test_eq("Encrypted Extensions",
-                                    msgs.at("encrypted_extensions")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
-                     result.test_eq("Certificate",
-                                    msgs.at("certificate")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
-                     result.test_eq("CertificateVerify",
-                                    msgs.at("certificate_verify")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
-                     result.test_eq("Finished",
-                                    msgs.at("finished")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
+                     result.test_bin_eq("Server Hello",
+                                        msgs.at("server_hello")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_ServerHello")));
+                     result.test_bin_eq("Encrypted Extensions",
+                                        msgs.at("encrypted_extensions")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
+                     result.test_bin_eq("Certificate",
+                                        msgs.at("certificate")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
+                     result.test_bin_eq("CertificateVerify",
+                                        msgs.at("certificate_verify")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
+                     result.test_bin_eq("Finished",
+                                        msgs.at("finished")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
 
-                     result.test_eq("Server's entire second flight",
-                                    ctx->pull_send_buffer(),
-                                    concat(vars.get_req_bin("Record_ServerHello"),
-                                           vars.get_req_bin("Record_ServerHandshakeMessages")));
+                     result.test_bin_eq("Server's entire second flight",
+                                        ctx->pull_send_buffer(),
+                                        concat(vars.get_req_bin("Record_ServerHello"),
+                                               vars.get_req_bin("Record_ServerHandshakeMessages")));
                      result.test_is_true("Server could now send application data", ctx->server.is_active());
                      result.test_is_true("handshake is not yet complete",
                                          !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
@@ -2190,9 +2192,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.test_is_true("connection is now inactive", !ctx->server.is_active());
                      result.test_is_true("connection is now closed", ctx->server.is_closed());
                      result.test_is_true("handshake is still complete", ctx->server.is_handshake_complete());
-                     result.test_eq("Server's close notify",
-                                    ctx->pull_send_buffer(),
-                                    vars.get_req_bin("Record_Server_CloseNotify"));
+                     result.test_bin_eq("Server's close notify",
+                                        ctx->pull_send_buffer(),
+                                        vars.get_req_bin("Record_Server_CloseNotify"));
                   }),
 
          };
@@ -2246,29 +2248,29 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.require("ctx is available", ctx != nullptr);
                      const auto& msgs = ctx->observed_handshake_messages();
 
-                     result.test_eq("Server Hello",
-                                    msgs.at("server_hello")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_ServerHello")));
-                     result.test_eq("Encrypted Extensions",
-                                    msgs.at("encrypted_extensions")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
-                     result.test_eq("Certificate Request",
-                                    msgs.at("certificate_request")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_CertificateRequest")));
-                     result.test_eq("Certificate",
-                                    msgs.at("certificate")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
-                     result.test_eq("CertificateVerify",
-                                    msgs.at("certificate_verify")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
-                     result.test_eq("Finished",
-                                    msgs.at("finished")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
+                     result.test_bin_eq("Server Hello",
+                                        msgs.at("server_hello")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_ServerHello")));
+                     result.test_bin_eq("Encrypted Extensions",
+                                        msgs.at("encrypted_extensions")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
+                     result.test_bin_eq("Certificate Request",
+                                        msgs.at("certificate_request")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_CertificateRequest")));
+                     result.test_bin_eq("Certificate",
+                                        msgs.at("certificate")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
+                     result.test_bin_eq("CertificateVerify",
+                                        msgs.at("certificate_verify")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
+                     result.test_bin_eq("Finished",
+                                        msgs.at("finished")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
 
-                     result.test_eq("Server's entire first flight",
-                                    ctx->pull_send_buffer(),
-                                    concat(vars.get_req_bin("Record_ServerHello"),
-                                           vars.get_req_bin("Record_ServerHandshakeMessages")));
+                     result.test_bin_eq("Server's entire first flight",
+                                        ctx->pull_send_buffer(),
+                                        concat(vars.get_req_bin("Record_ServerHello"),
+                                               vars.get_req_bin("Record_ServerHandshakeMessages")));
 
                      result.test_is_true("Not yet aware of client's cert chain", ctx->server.peer_cert_chain().empty());
                      result.test_is_true("Server could now send application data", ctx->server.is_active());
@@ -2326,9 +2328,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.test_is_true("connection is now inactive", !ctx->server.is_active());
                      result.test_is_true("connection is now closed", ctx->server.is_closed());
                      result.test_is_true("handshake is still complete", ctx->server.is_handshake_complete());
-                     result.test_eq("Server's close notify",
-                                    ctx->pull_send_buffer(),
-                                    vars.get_req_bin("Record_Server_CloseNotify"));
+                     result.test_bin_eq("Server's close notify",
+                                        ctx->pull_send_buffer(),
+                                        vars.get_req_bin("Record_Server_CloseNotify"));
                   }),
 
          };
@@ -2379,27 +2381,27 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.require("ctx is available", ctx != nullptr);
                      const auto& msgs = ctx->observed_handshake_messages();
 
-                     result.test_eq("Server Hello",
-                                    msgs.at("server_hello")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_ServerHello")));
-                     result.test_eq("Encrypted Extensions",
-                                    msgs.at("encrypted_extensions")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
-                     result.test_eq("Certificate",
-                                    msgs.at("certificate")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
-                     result.test_eq("CertificateVerify",
-                                    msgs.at("certificate_verify")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
-                     result.test_eq("Finished",
-                                    msgs.at("finished")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
+                     result.test_bin_eq("Server Hello",
+                                        msgs.at("server_hello")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_ServerHello")));
+                     result.test_bin_eq("Encrypted Extensions",
+                                        msgs.at("encrypted_extensions")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
+                     result.test_bin_eq("Certificate",
+                                        msgs.at("certificate")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
+                     result.test_bin_eq("CertificateVerify",
+                                        msgs.at("certificate_verify")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
+                     result.test_bin_eq("Finished",
+                                        msgs.at("finished")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
 
                      // Those records contain the required Change Cipher Spec message the server must produce for compatibility mode compliance
-                     result.test_eq("Server's entire first flight",
-                                    ctx->pull_send_buffer(),
-                                    concat(vars.get_req_bin("Record_ServerHello"),
-                                           vars.get_req_bin("Record_ServerHandshakeMessages")));
+                     result.test_bin_eq("Server's entire first flight",
+                                        ctx->pull_send_buffer(),
+                                        concat(vars.get_req_bin("Record_ServerHello"),
+                                               vars.get_req_bin("Record_ServerHandshakeMessages")));
 
                      result.test_is_true("Server could now send application data", ctx->server.is_active());
                      result.test_is_true("handshake is not yet complete",
@@ -2443,9 +2445,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.test_is_true("connection is now inactive", !ctx->server.is_active());
                      result.test_is_true("connection is now closed", ctx->server.is_closed());
                      result.test_is_true("handshake is still complete", ctx->server.is_handshake_complete());
-                     result.test_eq("Server's close notify",
-                                    ctx->pull_send_buffer(),
-                                    vars.get_req_bin("Record_Server_CloseNotify"));
+                     result.test_bin_eq("Server's close notify",
+                                        ctx->pull_send_buffer(),
+                                        vars.get_req_bin("Record_Server_CloseNotify"));
                   }),
 
          };
@@ -2520,20 +2522,20 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.require("ctx is available", ctx != nullptr);
                      const auto& msgs = ctx->observed_handshake_messages();
 
-                     result.test_eq("Server Hello",
-                                    msgs.at("server_hello")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_ServerHello")));
-                     result.test_eq("Encrypted Extensions",
-                                    msgs.at("encrypted_extensions")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
-                     result.test_eq("Server Finished",
-                                    msgs.at("finished")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
+                     result.test_bin_eq("Server Hello",
+                                        msgs.at("server_hello")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_ServerHello")));
+                     result.test_bin_eq("Encrypted Extensions",
+                                        msgs.at("encrypted_extensions")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
+                     result.test_bin_eq("Server Finished",
+                                        msgs.at("finished")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
 
-                     result.test_eq("Server's entire first flight",
-                                    ctx->pull_send_buffer(),
-                                    concat(vars.get_req_bin("Record_ServerHello"),
-                                           vars.get_req_bin("Record_ServerHandshakeMessages")));
+                     result.test_bin_eq("Server's entire first flight",
+                                        ctx->pull_send_buffer(),
+                                        concat(vars.get_req_bin("Record_ServerHello"),
+                                               vars.get_req_bin("Record_ServerHandshakeMessages")));
 
                      result.test_is_true("Server can now send application data", ctx->server.is_active());
                      result.test_is_true("handshake is not yet complete",
@@ -2562,14 +2564,14 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      ctx->check_callback_invocations(result, "application data received", {"tls_record_received"});
 
                      const auto rcvd = ctx->pull_receive_buffer();
-                     result.test_eq("decrypted application traffic", rcvd, vars.get_req_bin("Client_AppData"));
+                     result.test_bin_eq("decrypted application traffic", rcvd, vars.get_req_bin("Client_AppData"));
                      result.test_u64_eq("sequence number", ctx->last_received_seq_no(), uint64_t(0));
 
                      ctx->send(vars.get_req_bin("Server_AppData"));
                      ctx->check_callback_invocations(result, "application data sent", {"tls_emit_data"});
-                     result.test_eq("correct server application data",
-                                    ctx->pull_send_buffer(),
-                                    vars.get_req_bin("Record_Server_AppData"));
+                     result.test_bin_eq("correct server application data",
+                                        ctx->pull_send_buffer(),
+                                        vars.get_req_bin("Record_Server_AppData"));
                   }),
 
             CHECK("Terminate Connection",
@@ -2589,9 +2591,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.test_is_true("connection is now inactive", !ctx->server.is_active());
                      result.test_is_true("connection is now closed", ctx->server.is_closed());
                      result.test_is_true("handshake is still complete", ctx->server.is_handshake_complete());
-                     result.test_eq("Server's close notify",
-                                    ctx->pull_send_buffer(),
-                                    vars.get_req_bin("Record_Server_CloseNotify"));
+                     result.test_bin_eq("Server's close notify",
+                                        ctx->pull_send_buffer(),
+                                        vars.get_req_bin("Record_Server_CloseNotify"));
                   }),
          };
       }
@@ -2666,29 +2668,29 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.require("ctx is available", ctx != nullptr);
                      const auto& msgs = ctx->observed_handshake_messages();
 
-                     result.test_eq("Server Hello",
-                                    msgs.at("server_hello")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_ServerHello")));
-                     result.test_eq("Encrypted Extensions",
-                                    msgs.at("encrypted_extensions")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
-                     result.test_eq("Certificate Request",
-                                    msgs.at("certificate_request")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_CertificateRequest")));
-                     result.test_eq("Certificate",
-                                    msgs.at("certificate")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
-                     result.test_eq("CertificateVerify",
-                                    msgs.at("certificate_verify")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
-                     result.test_eq("Finished",
-                                    msgs.at("finished")[0],
-                                    strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
+                     result.test_bin_eq("Server Hello",
+                                        msgs.at("server_hello")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_ServerHello")));
+                     result.test_bin_eq("Encrypted Extensions",
+                                        msgs.at("encrypted_extensions")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
+                     result.test_bin_eq("Certificate Request",
+                                        msgs.at("certificate_request")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_CertificateRequest")));
+                     result.test_bin_eq("Certificate",
+                                        msgs.at("certificate")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
+                     result.test_bin_eq("CertificateVerify",
+                                        msgs.at("certificate_verify")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
+                     result.test_bin_eq("Finished",
+                                        msgs.at("finished")[0],
+                                        strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
 
-                     result.test_eq("Server's entire first flight",
-                                    ctx->pull_send_buffer(),
-                                    concat(vars.get_req_bin("Record_ServerHello"),
-                                           vars.get_req_bin("Record_ServerHandshakeMessages")));
+                     result.test_bin_eq("Server's entire first flight",
+                                        ctx->pull_send_buffer(),
+                                        concat(vars.get_req_bin("Record_ServerHello"),
+                                               vars.get_req_bin("Record_ServerHandshakeMessages")));
 
                      result.test_is_true("Not yet aware of client's cert chain", ctx->server.peer_cert_chain().empty());
                      result.test_is_true("Server could now send application data", ctx->server.is_active());
@@ -2747,9 +2749,9 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                      result.test_is_true("connection is now inactive", !ctx->server.is_active());
                      result.test_is_true("connection is now closed", ctx->server.is_closed());
                      result.test_is_true("handshake is still complete", ctx->server.is_handshake_complete());
-                     result.test_eq("Server's close notify",
-                                    ctx->pull_send_buffer(),
-                                    vars.get_req_bin("Record_Server_CloseNotify"));
+                     result.test_bin_eq("Server's close notify",
+                                        ctx->pull_send_buffer(),
+                                        vars.get_req_bin("Record_Server_CloseNotify"));
                   }),
          };
       }

@@ -239,28 +239,28 @@ bool same_contents(const uint8_t x[], const uint8_t y[], size_t len) {
 
 }  // namespace
 
-bool Test::Result::test_ne(std::string_view what,
-                           const uint8_t produced[],
-                           size_t produced_len,
-                           const uint8_t expected[],
-                           size_t expected_len) {
+bool Test::Result::test_bin_ne(std::string_view what,
+                               const uint8_t produced[],
+                               size_t produced_len,
+                               const uint8_t expected[],
+                               size_t expected_len) {
    if(produced_len == expected_len && same_contents(produced, expected, expected_len)) {
       return test_failure(Botan::fmt("{} {} produced matching bytes", who(), what));
    }
    return test_success();
 }
 
-bool Test::Result::test_eq(std::string_view what, std::span<const uint8_t> produced, const char* expected_hex) {
+bool Test::Result::test_bin_eq(std::string_view what, std::span<const uint8_t> produced, std::string_view expected_hex) {
    const std::vector<uint8_t> expected = Botan::hex_decode(expected_hex);
-   return test_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
+   return test_bin_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
 }
 
-bool Test::Result::test_eq(const char* producer,
-                           std::string_view what,
-                           const uint8_t produced[],
-                           size_t produced_size,
-                           const uint8_t expected[],
-                           size_t expected_size) {
+bool Test::Result::test_bin_eq(const char* producer,
+                               std::string_view what,
+                               const uint8_t produced[],
+                               size_t produced_size,
+                               const uint8_t expected[],
+                               size_t expected_size) {
    if(produced_size == expected_size && same_contents(produced, expected, expected_size)) {
       return test_success();
    }

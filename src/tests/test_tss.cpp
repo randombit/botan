@@ -39,7 +39,7 @@ class TSS_Recovery_Tests final : public Text_Based_Test {
             }
 
             auto reconstructed_secret_all = Botan::RTSS_Share::reconstruct(shares);
-            result.test_eq("Reconstructed secret correctly from all shares", reconstructed_secret_all, input);
+            result.test_bin_eq("Reconstructed secret correctly from all shares", reconstructed_secret_all, input);
 
             if(header == "Invalid") {
                result.test_failure("Invalid shares should not result in recovery");
@@ -51,7 +51,8 @@ class TSS_Recovery_Tests final : public Text_Based_Test {
                   shares.erase(shares.begin() + to_remove);
                   try {
                      auto reconstructed_secret = Botan::RTSS_Share::reconstruct(shares);
-                     result.test_eq("Reconstructed secret correctly from reduced shares", reconstructed_secret, input);
+                     result.test_bin_eq(
+                        "Reconstructed secret correctly from reduced shares", reconstructed_secret, input);
                   } catch(Botan::Decoding_Error&) {
                      result.test_failure("Reconstruction failed with share count " + std::to_string(shares.size()));
                   }
@@ -115,11 +116,11 @@ class TSS_Generation_Tests final : public Text_Based_Test {
          result.test_sz_eq("Expected number of shares", shares.size(), N);
 
          for(size_t i = 0; i != N; ++i) {
-            result.test_eq("Expected share", shares[i].data(), expected_shares[i]);
+            result.test_bin_eq("Expected share", shares[i].data(), expected_shares[i]);
          }
 
          auto reconstructed_secret_all = Botan::RTSS_Share::reconstruct(shares);
-         result.test_eq("Reconstructed secret correctly from all shares", reconstructed_secret_all, input);
+         result.test_bin_eq("Reconstructed secret correctly from all shares", reconstructed_secret_all, input);
 
          if(N != M) {
             while(shares.size() > M) {
@@ -128,7 +129,7 @@ class TSS_Generation_Tests final : public Text_Based_Test {
 
                try {
                   auto reconstructed_secret = Botan::RTSS_Share::reconstruct(shares);
-                  result.test_eq("Reconstructed secret correctly from reduced shares", reconstructed_secret, input);
+                  result.test_bin_eq("Reconstructed secret correctly from reduced shares", reconstructed_secret, input);
                } catch(Botan::Decoding_Error&) {
                   result.test_failure("Reconstruction failed with share count " + std::to_string(shares.size()));
                }

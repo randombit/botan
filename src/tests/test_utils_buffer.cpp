@@ -104,7 +104,7 @@ std::vector<Test::Result> test_buffer_slicer() {
                s.copy_into(vec4);
 
                const auto reproduce = Botan::concat<std::vector<uint8_t>>(span1, span2, vec1, vec2, vec3, vec4);
-               result.test_eq("sliced into various types", reproduce, secure_buffer);
+               result.test_bin_eq("sliced into various types", reproduce, secure_buffer);
             }),
    };
 }

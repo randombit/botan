@@ -86,8 +86,8 @@ class DLIES_KAT_Tests final : public Text_Based_Test {
 
          encryptor.set_other_key(to.public_value());
 
-         result.test_eq("encryption", encryptor.encrypt(input, this->rng()), expected);
-         result.test_eq("decryption", decryptor.decrypt(expected), input);
+         result.test_bin_eq("encryption", encryptor.encrypt(input, this->rng()), expected);
+         result.test_bin_eq("decryption", decryptor.decrypt(expected), input);
 
          check_invalid_ciphertexts(result, decryptor, input, expected, this->rng());
 
@@ -147,7 +147,7 @@ Test::Result test_xor() {
          // negative test: ciphertext too short
          result.test_throws("ciphertext too short", [&decryptor]() { decryptor.decrypt(std::vector<uint8_t>(2)); });
 
-         result.test_eq("decryption", decryptor.decrypt(ciphertext), plaintext);
+         result.test_bin_eq("decryption", decryptor.decrypt(ciphertext), plaintext);
 
          check_invalid_ciphertexts(result, decryptor, unlock(plaintext), ciphertext, *rng);
       }

@@ -48,18 +48,18 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
 
          const Botan::Dilithium_PrivateKey priv_key(*dilithium_test_rng, DerivedT::mode);
 
-         result.test_eq(
+         result.test_bin_eq(
             "generated expected private key hash", sha3_256->process(priv_key.private_key_bits()), ref_sk_hash);
 
-         result.test_eq(
+         result.test_bin_eq(
             "generated expected public key hash", sha3_256->process(priv_key.public_key_bits()), ref_pk_hash);
 
          auto signer = Botan::PK_Signer(priv_key, *dilithium_test_rng, DerivedT::sign_param);
          auto signature = signer.sign_message(ref_msg.data(), ref_msg.size(), *dilithium_test_rng);
 
-         result.test_eq("generated expected signature hash", sha3_256->process(signature), ref_sig_hash);
+         result.test_bin_eq("generated expected signature hash", sha3_256->process(signature), ref_sig_hash);
          if(!ref_sig.empty()) {
-            result.test_eq("generated expected signature", signature, ref_sig);
+            result.test_bin_eq("generated expected signature", signature, ref_sig);
          }
 
          const Botan::Dilithium_PublicKey pub_key(priv_key.public_key_bits(), DerivedT::mode);

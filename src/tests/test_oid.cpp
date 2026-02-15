@@ -151,7 +151,7 @@ class OID_Encoding_Tests : public Text_Based_Test {
             std::vector<uint8_t> der;
             Botan::DER_Encoder enc(der);
             enc.encode(oid);
-            result.test_eq("Encoding correct", der, expected_der);
+            result.test_bin_eq("Encoding correct", der, expected_der);
          } catch(std::exception& e) {
             result.test_failure("Encoding OID failed", e.what());
          }

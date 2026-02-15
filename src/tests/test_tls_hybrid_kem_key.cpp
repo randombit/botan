@@ -166,7 +166,7 @@ void roundtrip_test(Test::Result& result, Ts... kex_kem_fn) {
    Botan::PK_KEM_Decryptor decryptor(hybrid_key, rng, "Raw");
    Botan::secure_vector<uint8_t> decaps_shared_secret = decryptor.decrypt(kem_result.encapsulated_shared_key(), 0, {});
 
-   result.test_eq("shared secret after KEM roundtrip matches", decaps_shared_secret, kem_result.shared_key());
+   result.test_bin_eq("shared secret after KEM roundtrip matches", decaps_shared_secret, kem_result.shared_key());
    result.test_sz_eq(
       "expected shared secret has expected length", decryptor.shared_key_length(0), expected_shared_secret_length);
    result.test_sz_eq("shared secret has expected length", decaps_shared_secret.size(), expected_shared_secret_length);
@@ -267,7 +267,7 @@ void kex_to_kem_roundtrip(Test::Result& result,
    result.test_sz_eq(
       "decapsulated shared secret has expected length", decaps_shared_secret.size(), decryptor.shared_key_length(0));
 
-   result.test_eq("shared secret after KEM roundtrip matches", decaps_shared_secret, kem_result.shared_key());
+   result.test_bin_eq("shared secret after KEM roundtrip matches", decaps_shared_secret, kem_result.shared_key());
 }
 
 std::vector<Test::Result> kex_to_kem_adapter() {

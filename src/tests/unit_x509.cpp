@@ -222,14 +222,14 @@ Test::Result test_x509_extension() {
    result.test_is_true("SKID is not set", !extn.extension_set(oid_skid));
    result.test_is_true("SKID is not critical", !extn.critical_extension_set(oid_skid));
 
-   result.test_eq("Extension::get_extension_bits", extn.get_extension_bits(oid_bc), "30060101FF020100");
+   result.test_bin_eq("Extension::get_extension_bits", extn.get_extension_bits(oid_bc), "30060101FF020100");
 
    result.test_throws("Extension::get_extension_bits throws if not set", [&]() { extn.get_extension_bits(oid_skid); });
 
    result.test_throws("Extension::add throws on second add",
                       [&]() { extn.add(std::make_unique<Botan::Cert_Extension::Basic_Constraints>(false), false); });
 
-   result.test_eq("Extension::get_extension_bits", extn.get_extension_bits(oid_bc), "30060101FF020100");
+   result.test_bin_eq("Extension::get_extension_bits", extn.get_extension_bits(oid_bc), "30060101FF020100");
 
    result.test_is_true("Returns false since extension already existed",
                        !extn.add_new(std::make_unique<Botan::Cert_Extension::Basic_Constraints>(false), false));
@@ -238,7 +238,7 @@ Test::Result test_x509_extension() {
 
    extn.replace(std::make_unique<Botan::Cert_Extension::Basic_Constraints>(false), false);
    result.test_is_true("Replaced basic constraints is not critical", !extn.critical_extension_set(oid_bc));
-   result.test_eq("Extension::get_extension_bits", extn.get_extension_bits(oid_bc), "3000");
+   result.test_bin_eq("Extension::get_extension_bits", extn.get_extension_bits(oid_bc), "3000");
 
    result.test_is_true("Delete returns false if extn not set", !extn.remove(oid_skid));
    result.test_is_true("Delete returns true if extn was set", extn.remove(oid_bc));

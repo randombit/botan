@@ -52,7 +52,7 @@ Test::Result test_hello_verify_request() {
    hmac->update_be(uint64_t(0));  // length of client identity
    std::vector<uint8_t> test = unlock(hmac->final());
 
-   result.test_eq("Cookie comparison", hfr.cookie(), test);
+   result.test_bin_eq("Cookie comparison", hfr.cookie(), test);
    return result;
 }
 
@@ -237,7 +237,7 @@ class TLS_Key_Share_CH_Generation_Test final : public Text_Based_Test {
          const Botan::TLS::Key_Share share(policy, cb, rng);
          const auto serialized_buffer = share.serialize(Botan::TLS::Connection_Side::Client);
 
-         result.test_eq("key_share_CH_offers test", serialized_buffer, expected_key_share);
+         result.test_bin_eq("key_share_CH_offers test", serialized_buffer, expected_key_share);
 
          return result;
       }
@@ -312,7 +312,7 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
                                     }));
                   }
 
-                  result.test_eq("supported_groups extension - serialization test", serialized_buffer, buffer);
+                  result.test_bin_eq("supported_groups extension - serialization test", serialized_buffer, buffer);
                } else if(extension == "signature_algorithms_cert") {
                   Botan::TLS::TLS_Data_Reader tls_data_reader("ClientHello", buffer);
                   const Botan::TLS::Signature_Algorithms_Cert sig_algo_cert(tls_data_reader,
@@ -335,7 +335,8 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
                      offset += 2;
                   }
 
-                  result.test_eq("signature_algorithms_cert extension - serialization test", serialized_buffer, buffer);
+                  result.test_bin_eq(
+                     "signature_algorithms_cert extension - serialization test", serialized_buffer, buffer);
                } else if(extension == "cookie") {
                   Botan::TLS::TLS_Data_Reader tls_data_reader("HelloRetryRequest", buffer);
                   const Botan::TLS::Cookie cookie(tls_data_reader, static_cast<uint16_t>(buffer.size()));
@@ -441,7 +442,7 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
                         ciphersuites_buffer.push_back(Botan::get_byte<0>(cs));
                         ciphersuites_buffer.push_back(Botan::get_byte<1>(cs));
                      }
-                     result.test_eq("Supported ciphersuites", ciphersuites_buffer, ciphersuite);
+                     result.test_bin_eq("Supported ciphersuites", ciphersuites_buffer, ciphersuite);
 
                      result.test_is_true("this is a positive test that should not have failed yet", is_positive_test);
                   },

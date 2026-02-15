@@ -395,46 +395,50 @@ class Test {
             bool test_bn_ne(std::string_view what, const BigInt& produced, const BigInt& expected);
 #endif
 
-            bool test_eq(const char* producer,
-                         std::string_view what,
-                         const uint8_t produced[],
-                         size_t produced_size,
-                         const uint8_t expected[],
-                         size_t expected_size);
+            bool test_bin_eq(const char* producer,
+                             std::string_view what,
+                             const uint8_t produced[],
+                             size_t produced_size,
+                             const uint8_t expected[],
+                             size_t expected_size);
 
-            bool test_ne(std::string_view what,
-                         const uint8_t produced[],
-                         size_t produced_len,
-                         const uint8_t expected[],
-                         size_t expected_len);
+            bool test_bin_ne(std::string_view what,
+                             const uint8_t produced[],
+                             size_t produced_len,
+                             const uint8_t expected[],
+                             size_t expected_len);
 
-            bool test_eq(std::string_view what, std::span<const uint8_t> produced, std::span<const uint8_t> expected) {
-               return test_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
+            bool test_bin_eq(std::string_view what,
+                             std::span<const uint8_t> produced,
+                             std::span<const uint8_t> expected) {
+               return test_bin_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
             }
 
-            bool test_eq(std::string_view producer,
-                         std::string_view what,
-                         std::span<const uint8_t> produced,
-                         std::span<const uint8_t> expected) {
-               return test_eq(std::string(producer).c_str(),
-                              what,
-                              produced.data(),
-                              produced.size(),
-                              expected.data(),
-                              expected.size());
+            bool test_bin_eq(std::string_view producer,
+                             std::string_view what,
+                             std::span<const uint8_t> produced,
+                             std::span<const uint8_t> expected) {
+               return test_bin_eq(std::string(producer).c_str(),
+                                  what,
+                                  produced.data(),
+                                  produced.size(),
+                                  expected.data(),
+                                  expected.size());
             }
 
-            bool test_eq(std::string_view what, std::span<const uint8_t> produced, const char* expected_hex);
+            bool test_bin_eq(std::string_view what, std::span<const uint8_t> produced, std::string_view expected_hex);
 
             template <std::size_t N>
-            bool test_eq(std::string_view what,
-                         const std::array<uint8_t, N>& produced,
-                         const std::array<uint8_t, N>& expected) {
-               return test_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
+            bool test_bin_eq(std::string_view what,
+                             const std::array<uint8_t, N>& produced,
+                             const std::array<uint8_t, N>& expected) {
+               return test_bin_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
             }
 
-            bool test_ne(std::string_view what, std::span<const uint8_t> produced, std::span<const uint8_t> expected) {
-               return test_ne(what, produced.data(), produced.size(), expected.data(), expected.size());
+            bool test_bin_ne(std::string_view what,
+                             std::span<const uint8_t> produced,
+                             std::span<const uint8_t> expected) {
+               return test_bin_ne(what, produced.data(), produced.size(), expected.data(), expected.size());
             }
 
          private:
