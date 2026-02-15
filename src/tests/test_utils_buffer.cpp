@@ -50,11 +50,11 @@ std::vector<Test::Result> test_buffer_slicer() {
 
                const auto hello = s.take(5);
                result.require("has 5 bytes", hello.size() == 5);
-               result.test_is_eq("took hello", hello[0], uint8_t('h'));
-               result.test_is_eq("took hello", hello[1], uint8_t('e'));
-               result.test_is_eq("took hello", hello[2], uint8_t('l'));
-               result.test_is_eq("took hello", hello[3], uint8_t('l'));
-               result.test_is_eq("took hello", hello[4], uint8_t('o'));
+               result.test_u8_eq("took hello", hello[0], uint8_t('h'));
+               result.test_u8_eq("took hello", hello[1], uint8_t('e'));
+               result.test_u8_eq("took hello", hello[2], uint8_t('l'));
+               result.test_u8_eq("took hello", hello[3], uint8_t('l'));
+               result.test_u8_eq("took hello", hello[4], uint8_t('o'));
 
                result.test_sz_eq("remaining bytes", s.remaining(), 8);
 
@@ -63,22 +63,22 @@ std::vector<Test::Result> test_buffer_slicer() {
 
                const auto wor = s.copy_as_vector(3);
                result.require("has 3 bytes", wor.size() == 3);
-               result.test_is_eq("took wor...", wor[0], uint8_t('w'));
-               result.test_is_eq("took wor...", wor[1], uint8_t('o'));
-               result.test_is_eq("took wor...", wor[2], uint8_t('r'));
+               result.test_u8_eq("took wor...", wor[0], uint8_t('w'));
+               result.test_u8_eq("took wor...", wor[1], uint8_t('o'));
+               result.test_u8_eq("took wor...", wor[2], uint8_t('r'));
                result.test_sz_eq("remaining bytes", s.remaining(), 4);
 
                std::vector<uint8_t> ld(2);
                s.copy_into(ld);
-               result.test_is_eq("took ...ld", ld[0], uint8_t('l'));
-               result.test_is_eq("took ...ld", ld[1], uint8_t('d'));
+               result.test_u8_eq("took ...ld", ld[0], uint8_t('l'));
+               result.test_u8_eq("took ...ld", ld[1], uint8_t('d'));
                result.test_sz_eq("remaining bytes", s.remaining(), 2);
 
                s.skip(1);
                result.test_sz_eq("remaining bytes", s.remaining(), 1);
 
                const auto exclaim = s.take<1>();
-               result.test_is_eq("took ...!", exclaim[0], uint8_t('!'));
+               result.test_u8_eq("took ...!", exclaim[0], uint8_t('!'));
                result.test_is_true("has static extent", decltype(exclaim)::extent != std::dynamic_extent);
                result.test_is_true("static extent is 1", decltype(exclaim)::extent == 1);
 

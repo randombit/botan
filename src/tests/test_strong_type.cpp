@@ -147,7 +147,7 @@ std::vector<Test::Result> test_container_strong_type() {
 
                const auto nonce = Test_Nonce(Botan::hex_decode("DEADBEEF"));
 
-               result.test_is_eq("can bind to std::span<>", get_size(nonce), nonce.size());
+               result.test_sz_eq("can bind to std::span<>", get_size(nonce), nonce.size());
             }),
 
       CHECK("std::string container",
@@ -207,7 +207,7 @@ std::vector<Test::Result> test_container_strong_type() {
                result.test_u8_eq("[] returns 3", a[2], 3);
 
                Test_Map m({{1, "one"}, {2, "two"}, {3, "three"}});
-               result.test_is_eq<std::string>("[] returns 'two'", m[2], "two");
+               result.test_str_eq("[] returns 'two'", m[2], "two");
 
                Test_Vector v({1, 2, 3, 4});
                result.test_u8_eq("[] returns 2", v[1], 2);

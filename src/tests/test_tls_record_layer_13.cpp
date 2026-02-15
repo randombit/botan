@@ -750,9 +750,9 @@ std::vector<Test::Result> write_encrypted_records() {
                         ct.size() > big_data.size() + Botan::TLS::TLS_HEADER_SIZE * 2);
 
          auto read_record_header = [&](auto& reader) {
-            result.test_is_eq(
+            result.test_u8_eq(
                "APPLICATION_DATA", reader.get_byte(), static_cast<uint8_t>(TLS::Record_Type::ApplicationData));
-            result.test_is_eq("TLS legacy version", reader.get_uint16_t(), uint16_t(0x0303));
+            result.test_u16_eq("TLS legacy version", reader.get_uint16_t(), uint16_t(0x0303));
 
             const auto fragment_length = reader.get_uint16_t();
             result.test_sz_lte("TLS limits", fragment_length, TLS::MAX_CIPHERTEXT_SIZE_TLS13);

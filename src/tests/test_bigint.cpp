@@ -62,9 +62,9 @@ class BigInt_Unit_Tests final : public Test {
                   "BigInt::bytes", a.bytes(), (exp_bits % 8 == 0) ? (exp_bits / 8) : (exp_bits + 8 - exp_bits % 8) / 8);
 
                if(bit == 1 && i == 1) {
-                  result.test_is_eq("BigInt::to_u32bit zero", a.to_u32bit(), static_cast<uint32_t>(1));
+                  result.test_u32_eq("BigInt::to_u32bit zero", a.to_u32bit(), static_cast<uint32_t>(1));
                } else if(bit <= 31 || (bit == 32 && i == 1)) {
-                  result.test_is_eq(
+                  result.test_u32_eq(
                      "BigInt::to_u32bit", a.to_u32bit(), static_cast<uint32_t>((uint64_t(1) << bit) - i));
                } else {
                   try {

@@ -58,7 +58,7 @@ namespace {
       result.test_rc_fail(_TEST_FFI_SOURCE_LOCATION(#func, __FILE__, __LINE__), msg, func args)
 
    #define TEST_FFI_RC(rc, func, args) \
-      result.test_rc(_TEST_FFI_SOURCE_LOCATION(#func, __FILE__, __LINE__), rc, func args)
+      result.test_rc(_TEST_FFI_SOURCE_LOCATION(#func, __FILE__, __LINE__), func args, rc)
 
    #define REQUIRE_FFI_OK(func, args)                           \
       if(!TEST_FFI_OK(func, args)) {                            \
@@ -324,18 +324,18 @@ class FFI_Utils_Test final : public FFI_Test {
          result.test_u32_eq("Patch version", botan_version_patch(), Botan::version_patch());
          result.test_str_eq("Botan version", botan_version_string(), Botan::version_cstr());
          result.test_u32_eq("Botan version datestamp", botan_version_datestamp(), Botan::version_datestamp());
-         result.test_is_eq("FFI supports its own version", botan_ffi_supports_api(botan_ffi_api_version()), 0);
+         result.test_rc_ok("FFI supports its own version", botan_ffi_supports_api(botan_ffi_api_version()));
 
          result.test_u32_eq("FFI compile time time var matches botan_ffi_api_version",
                             botan_ffi_api_version(),
                             uint32_t(BOTAN_FFI_API_VERSION));
 
-         result.test_is_eq("FFI supports 2.0 version", botan_ffi_supports_api(20150515), 0);
-         result.test_is_eq("FFI supports 2.1 version", botan_ffi_supports_api(20170327), 0);
-         result.test_is_eq("FFI supports 2.3 version", botan_ffi_supports_api(20170815), 0);
-         result.test_is_eq("FFI supports 2.8 version", botan_ffi_supports_api(20180713), 0);
+         result.test_rc_ok("FFI supports 2.0 version", botan_ffi_supports_api(20150515));
+         result.test_rc_ok("FFI supports 2.1 version", botan_ffi_supports_api(20170327));
+         result.test_rc_ok("FFI supports 2.3 version", botan_ffi_supports_api(20170815));
+         result.test_rc_ok("FFI supports 2.8 version", botan_ffi_supports_api(20180713));
 
-         result.test_is_eq("FFI doesn't support bogus version", botan_ffi_supports_api(20160229), -1);
+         result.test_rc("FFI doesn't support bogus version", botan_ffi_supports_api(20160229), -1);
 
          const std::vector<uint8_t> mem1 = {0xFF, 0xAA, 0xFF};
          const std::vector<uint8_t> mem2 = {0xFF, 0xA9, 0xFF};
@@ -772,7 +772,7 @@ class FFI_CRL_Test final : public FFI_Test {
          TEST_FFI_OK(botan_x509_crl_entry_destroy, (entry));
 
    #if defined(BOTAN_HAS_X509)
-         result.test_is_eq(
+         result.test_u8_eq(
             "Reason", static_cast<uint8_t>(reason), Botan::to_underlying(Botan::CRL_Code::KeyCompromise));
    #endif
          result.test_u64_eq("Revocation time", ts, Botan::calendar_point(1999, 1, 1, 12, 0, 0).seconds_since_epoch());
@@ -2264,14 +2264,14 @@ class FFI_XOF_Test final : public FFI_Test {
          TEST_FFI_OK(botan_xof_block_size, (xof1, &out_block_size));
          result.test_sz_eq("valid XOF block size", out_block_size, 168);
 
-         result.test_is_eq("ready for input", botan_xof_accepts_input(xof1), 1);
+         result.test_rc("ready for input", botan_xof_accepts_input(xof1), 1);
          TEST_FFI_OK(botan_xof_update, (xof1, reinterpret_cast<const uint8_t*>(input1), strlen(input1)));
-         result.test_is_eq("still ready for input", botan_xof_accepts_input(xof1), 1);
+         result.test_rc("still ready for input", botan_xof_accepts_input(xof1), 1);
          TEST_FFI_OK(botan_xof_update, (xof1, reinterpret_cast<const uint8_t*>(input2), strlen(input2)));
 
          botan_xof_t xof2;
          TEST_FFI_OK(botan_xof_copy_state, (&xof2, xof1));
-         result.test_is_eq("copy still ready for input", botan_xof_accepts_input(xof2), 1);
+         result.test_rc("copy still ready for input", botan_xof_accepts_input(xof2), 1);
 
          std::array<uint8_t, 16> out_bytes{};
          TEST_FFI_OK(botan_xof_output, (xof1, nullptr, 0));
@@ -2292,7 +2292,7 @@ class FFI_XOF_Test final : public FFI_Test {
          result.test_eq("expected first output after additional input", out_bytes, "D9D5416188659DDC5C26FCF52E49A157");
 
          TEST_FFI_OK(botan_xof_clear, (xof1));
-         result.test_is_eq("again ready for input", botan_xof_accepts_input(xof1), 1);
+         result.test_rc("again ready for input", botan_xof_accepts_input(xof1), 1);
          TEST_FFI_OK(botan_xof_update, (xof1, reinterpret_cast<const uint8_t*>(input1), strlen(input1)));
          TEST_FFI_OK(botan_xof_update, (xof1, reinterpret_cast<const uint8_t*>(input2), strlen(input2)));
          TEST_FFI_OK(botan_xof_update, (xof1, reinterpret_cast<const uint8_t*>(input3), strlen(input3)));
@@ -3945,13 +3945,13 @@ class FFI_Ed448_Test final : public FFI_Test {
 
          std::vector<uint8_t> retr_privkey(57);
          TEST_FFI_OK(botan_privkey_ed448_get_privkey, (priv, retr_privkey.data()));
-         result.test_is_eq("Private key matches", retr_privkey, sk);
+         result.test_eq("Private key matches", retr_privkey, sk);
 
          TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
 
          std::vector<uint8_t> retr_pubkey(57);
          TEST_FFI_OK(botan_pubkey_ed448_get_pubkey, (pub, retr_pubkey.data()));
-         result.test_is_eq("Public key matches", retr_pubkey, pk_ref);
+         result.test_eq("Public key matches", retr_pubkey, pk_ref);
 
          TEST_FFI_OK(botan_pubkey_destroy, (pub));
          TEST_FFI_OK(botan_pubkey_load_ed448, (&pub, pk_ref.data()));

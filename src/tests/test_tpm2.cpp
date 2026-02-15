@@ -533,7 +533,7 @@ auto load_persistent(Test::Result& result,
    }();
 
    result.test_str_eq("Algo", key->algo_name(), "RSA" /* TODO ECC support*/);
-   result.test_is_eq("Handle", key->handles().persistent_handle(), persistent_key_id);
+   result.test_u64_eq("Handle", key->handles().persistent_handle(), persistent_key_id);
    return key;
 }
 
@@ -880,7 +880,7 @@ std::vector<Test::Result> test_tpm2_rsa() {
             result.test_sz_eq("One more handle", ctx->persistent_handles().size(), handles + 1);
             result.test_is_true("New location occupied", Botan::value_exists(ctx->persistent_handles(), new_location));
             result.test_is_true("is persistent", sk->handles().has_persistent_handle());
-            result.test_is_eq("Persistent handle is the new handle", sk->handles().persistent_handle(), new_location);
+            result.test_u64_eq("Persistent handle is the new handle", sk->handles().persistent_handle(), new_location);
             result.test_throws<Botan::Invalid_Argument>("Cannot persist to the same location",
                                                         [&] { ctx->persist(*sk, authed_session, {}, new_location); });
             result.test_throws<Botan::Invalid_Argument>("Cannot persist and already persistent key",
@@ -920,7 +920,7 @@ auto load_persistent_ecc(Test::Result& result,
    }();
 
    result.test_str_eq("Algo", key->algo_name(), "ECDSA");
-   result.test_is_eq("Handle", key->handles().persistent_handle(), persistent_key_id);
+   result.test_u64_eq("Handle", key->handles().persistent_handle(), persistent_key_id);
    return key;
 }
 
@@ -1202,7 +1202,7 @@ std::vector<Test::Result> test_tpm2_ecc() {
                result.test_is_true("New location occupied",
                                    Botan::value_exists(ctx->persistent_handles(), new_location));
                result.test_is_true("is persistent", sk->handles().has_persistent_handle());
-               result.test_is_eq(
+               result.test_u64_eq(
                   "Persistent handle is the new handle", sk->handles().persistent_handle(), new_location);
                result.test_throws<Botan::Invalid_Argument>(
                   "Cannot persist to the same location", [&] { ctx->persist(*sk, authed_session, {}, new_location); });

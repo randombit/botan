@@ -502,7 +502,7 @@ bool Test::Result::test_rc_init(std::string_view func, int rc) {
    }
 }
 
-bool Test::Result::test_rc(std::string_view func, int expected, int rc) {
+bool Test::Result::test_rc(std::string_view func, int rc, int expected) {
    if(expected != rc) {
       std::ostringstream err;
       err << m_who;

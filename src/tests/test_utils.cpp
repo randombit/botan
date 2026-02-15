@@ -357,13 +357,13 @@ class Utility_Function_Tests final : public Test {
          result.test_eq("store_le(vec)", out64_vec_le, "11AA22BB33CC44DD");
          result.test_eq("store_le(strong)", out64_strong_le, "11AA22BB33CC44DD");
 
-         result.test_is_eq(in16, Botan::load_be(Botan::store_be(in16)));
-         result.test_is_eq(in32, Botan::load_be(Botan::store_be(in32)));
-         result.test_is_eq(in64, Botan::load_be(Botan::store_be(in64)));
+         result.test_u16_eq(in16, Botan::load_be(Botan::store_be(in16)));
+         result.test_u32_eq(in32, Botan::load_be(Botan::store_be(in32)));
+         result.test_u64_eq(in64, Botan::load_be(Botan::store_be(in64)));
 
-         result.test_is_eq(in16, Botan::load_le(Botan::store_le(in16)));
-         result.test_is_eq(in32, Botan::load_le(Botan::store_le(in32)));
-         result.test_is_eq(in64, Botan::load_le(Botan::store_le(in64)));
+         result.test_u16_eq(in16, Botan::load_le(Botan::store_le(in16)));
+         result.test_u32_eq(in32, Botan::load_le(Botan::store_le(in32)));
+         result.test_u64_eq(in64, Botan::load_le(Botan::store_le(in64)));
 
          // Test that the runtime detects incompatible range sizes
 #if !defined(BOTAN_TERMINATE_ON_ASSERTS)
@@ -677,18 +677,18 @@ class Utility_Function_Tests final : public Test {
 
          // load_le/be a single integer
          constexpr uint16_t cex_load_le16 = Botan::load_le<uint16_t>(cex_store_le16);
-         result.test_is_eq(cex_load_le16, in16);
+         result.test_u16_eq(cex_load_le16, in16);
          constexpr uint32_t cex_load_le32 = Botan::load_le<uint32_t>(cex_store_le32);
-         result.test_is_eq(cex_load_le32, in32);
+         result.test_u32_eq(cex_load_le32, in32);
          constexpr uint64_t cex_load_le64 = Botan::load_le<uint64_t>(cex_store_le64);
-         result.test_is_eq(cex_load_le64, in64);
+         result.test_u64_eq(cex_load_le64, in64);
 
          constexpr uint16_t cex_load_be16 = Botan::load_be<uint16_t>(cex_store_be16);
-         result.test_is_eq(cex_load_be16, in16);
+         result.test_u16_eq(cex_load_be16, in16);
          constexpr uint32_t cex_load_be32 = Botan::load_be<uint32_t>(cex_store_be32);
-         result.test_is_eq(cex_load_be32, in32);
+         result.test_u32_eq(cex_load_be32, in32);
          constexpr uint64_t cex_load_be64 = Botan::load_be<uint64_t>(cex_store_be64);
-         result.test_is_eq(cex_load_be64, in64);
+         result.test_u64_eq(cex_load_be64, in64);
 
          // load_le/be multiple integers into a std::array for constexpr
          constexpr auto cex_load_le16s = Botan::load_le<std::array<uint16_t, cex_mem.size() / 2>>(cex_mem);

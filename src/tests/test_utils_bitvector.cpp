@@ -1306,7 +1306,7 @@ std::vector<Test::Result> test_bitvector_strongtype_adapter(Botan::RandomNumberG
 
    auto bv5 = bv2.subvector<TestUInt32>(1);
    result.test_is_true("bv5 is a TestUInt32", std::same_as<TestUInt32, decltype(bv5)>);
-   result.test_is_eq<TestUInt32::wrapped_type>("bv5 has expected value", bv5.get(), 0xFFFFFFF4);
+   result.test_u32_eq("bv5 has expected value", bv5.get(), 0xFFFFFFF4);
 
    const auto str = bv4.to_string();
    result.test_str_eq("bv4 to_string", str, "00010");

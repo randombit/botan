@@ -198,7 +198,7 @@ Test::Result test_slot_ctor() {
 
    const Slot slot(module, slot_vec.at(0));
    result.test_success("Slot ctor completed successfully");
-   result.test_is_eq(slot.slot_id(), slot_vec.at(0));
+   result.test_u64_eq(slot.slot_id(), slot_vec.at(0));
 
    return result;
 }
@@ -389,13 +389,13 @@ Test::Result test_session_info() {
 
    Session session(slot, false);
    SessionInfo info = session.get_info();
-   result.test_is_eq("slot id is correct", info.slotID, slot_vec.at(0));
-   result.test_is_eq(
+   result.test_u64_eq("slot id is correct", info.slotID, slot_vec.at(0));
+   result.test_u64_eq(
       "state is a read write public session", info.state, static_cast<CK_STATE>(SessionState::RwPublicSession));
 
    session.login(UserType::User, PIN());
    info = session.get_info();
-   result.test_is_eq(
+   result.test_u64_eq(
       "state is a read write user session", info.state, static_cast<CK_STATE>(SessionState::RwUserFunctions));
 
    session.logoff();
@@ -448,14 +448,14 @@ Test::Result test_attribute_container() {
    result.test_sz_eq("8 elements in attribute container", attributes.count(), 8);
 
    const std::vector<Botan::PKCS11::Attribute>& storedAttributes = attributes.attributes();
-   result.test_is_eq(
+   result.test_u64_eq(
       "ObjectId type", storedAttributes.at(4).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::ObjectId));
    result.test_u64_eq("ObjectId value", *reinterpret_cast<uint64_t*>(storedAttributes.at(4).pValue), 10);
-   result.test_is_eq("Id type", storedAttributes.at(5).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Id));
+   result.test_u64_eq("Id type", storedAttributes.at(5).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Id));
    result.test_u64_eq("Id value", *reinterpret_cast<uint64_t*>(storedAttributes.at(5).pValue), 21);
-   result.test_is_eq("PixelX type", storedAttributes.at(6).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::PixelX));
+   result.test_u64_eq("PixelX type", storedAttributes.at(6).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::PixelX));
    result.test_u64_eq("PixelX value", *reinterpret_cast<uint64_t*>(storedAttributes.at(6).pValue), 30);
-   result.test_is_eq("PixelY type", storedAttributes.at(7).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::PixelY));
+   result.test_u64_eq("PixelY type", storedAttributes.at(7).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::PixelY));
    result.test_u64_eq("PixelY value", *reinterpret_cast<uint64_t*>(storedAttributes.at(7).pValue), 40);
 
    return result;

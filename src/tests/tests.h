@@ -302,7 +302,7 @@ class Test {
             }
 
             template <typename T>
-               requires(!std::is_enum_v<T>)
+            requires(!std::is_enum_v<T> && !std::is_unsigned_v<T>)
             bool test_is_eq(std::string_view what, const T& produced, const T& expected) {
                std::ostringstream out;
                out << m_who << " " << what;
@@ -372,7 +372,7 @@ class Test {
             /* Test predicates on integer return codes */
             bool test_rc_ok(std::string_view func, int rc);
             bool test_rc_fail(std::string_view func, std::string_view why, int rc);
-            bool test_rc(std::string_view func, int expected, int rc);
+            bool test_rc(std::string_view func, int rc, int expected);
             bool test_rc_init(std::string_view func, int rc);
 
             /* Test predicates on optional values */

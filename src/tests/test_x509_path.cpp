@@ -1395,7 +1395,7 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                                                                std::chrono::milliseconds(0),
                                                                {ocsp_ee});
 
-            result.test_is_eq("should result in expected validation status code",
+            result.test_u32_eq("should result in expected validation status code",
                               static_cast<uint32_t>(path_result.result()),
                               static_cast<uint32_t>(expected));
             if(also_expected) {

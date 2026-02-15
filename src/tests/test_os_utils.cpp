@@ -72,7 +72,7 @@ class OS_Utils_Tests final : public Test {
 
          if(proc_ts1 == 0) {
             const uint64_t proc_ts2 = Botan::OS::get_cpu_cycle_counter();
-            result.test_is_eq("Disabled processor timestamp stays at zero", proc_ts1, proc_ts2);
+            result.test_u64_eq("Disabled processor timestamp stays at zero", proc_ts1, proc_ts2);
             return result;
          }
 
