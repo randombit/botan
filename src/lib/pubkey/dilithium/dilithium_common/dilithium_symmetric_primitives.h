@@ -13,8 +13,8 @@
 
 #include <botan/dilithium.h>
 
+#include <botan/xof.h>
 #include <botan/internal/dilithium_types.h>
-#include <botan/internal/shake_xof.h>
 
 namespace Botan {
 
@@ -28,9 +28,9 @@ class RandomNumberGenerator;
  */
 class DilithiumMessageHash /* NOLINT(*-special-member-functions) */ {
    public:
-      explicit DilithiumMessageHash(DilithiumHashedPublicKey tr) : m_tr(std::move(tr)) {}
+      explicit DilithiumMessageHash(DilithiumHashedPublicKey tr);
 
-      virtual ~DilithiumMessageHash() = default;
+      virtual ~DilithiumMessageHash();
 
       std::string name() const;
 
@@ -48,18 +48,18 @@ class DilithiumMessageHash /* NOLINT(*-special-member-functions) */ {
 
       void update(std::span<const uint8_t> data) {
          ensure_started();
-         m_shake.update(data);
+         m_shake->update(data);
       }
 
       DilithiumMessageRepresentative final() {
          ensure_started();
          const scoped_cleanup clean([this]() { clear(); });
-         return m_shake.output<DilithiumMessageRepresentative>(DilithiumConstants::MESSAGE_HASH_BYTES);
+         return m_shake->output<DilithiumMessageRepresentative>(DilithiumConstants::MESSAGE_HASH_BYTES);
       }
 
    private:
       void clear() {
-         m_shake.clear();
+         m_shake->clear();
          m_was_started = false;
       }
 
@@ -73,7 +73,7 @@ class DilithiumMessageHash /* NOLINT(*-special-member-functions) */ {
    private:
       DilithiumHashedPublicKey m_tr;
       bool m_was_started = false;
-      SHAKE_256_XOF m_shake;
+      std::unique_ptr<XOF> m_shake;
 };
 
 /**
@@ -96,11 +96,7 @@ class DilithiumXOF /* NOLINT(*-special-member-functions) */ {
 */
 class Dilithium_Symmetric_Primitives_Base {
    protected:
-      Dilithium_Symmetric_Primitives_Base(const DilithiumConstants& mode, std::unique_ptr<DilithiumXOF> xof_adapter) :
-            m_commitment_hash_length_bytes(mode.commitment_hash_full_bytes()),
-            m_public_key_hash_bytes(mode.public_key_hash_bytes()),
-            m_mode(mode.mode()),
-            m_xof_adapter(std::move(xof_adapter)) {}
+      Dilithium_Symmetric_Primitives_Base(const DilithiumConstants& mode, std::unique_ptr<DilithiumXOF> xof_adapter);
 
    public:
       static std::unique_ptr<Dilithium_Symmetric_Primitives_Base> create(const DilithiumConstants& mode);
@@ -128,18 +124,18 @@ class Dilithium_Symmetric_Primitives_Base {
 
       std::tuple<DilithiumSeedRho, DilithiumSeedRhoPrime, DilithiumSigningSeedK> H(
          StrongSpan<const DilithiumSeedRandomness> seed) const {
-         m_xof.update(seed);
+         m_xof->update(seed);
          if(auto domsep = seed_expansion_domain_separator()) {
-            m_xof.update(domsep.value());
+            m_xof->update(domsep.value());
          }
 
          // Note: The order of invocations in an initializer list is not
          //       guaranteed by the C++ standard. Hence, we have to store the
          //       results in variables to ensure the correct order of execution.
-         auto rho = m_xof.output<DilithiumSeedRho>(DilithiumConstants::SEED_RHO_BYTES);
-         auto rhoprime = m_xof.output<DilithiumSeedRhoPrime>(DilithiumConstants::SEED_RHOPRIME_BYTES);
-         auto k = m_xof.output<DilithiumSigningSeedK>(DilithiumConstants::SEED_SIGNING_KEY_BYTES);
-         m_xof.clear();
+         auto rho = m_xof->output<DilithiumSeedRho>(DilithiumConstants::SEED_RHO_BYTES);
+         auto rhoprime = m_xof->output<DilithiumSeedRhoPrime>(DilithiumConstants::SEED_RHOPRIME_BYTES);
+         auto k = m_xof->output<DilithiumSigningSeedK>(DilithiumConstants::SEED_SIGNING_KEY_BYTES);
+         m_xof->clear();
 
          return {std::move(rho), std::move(rhoprime), std::move(k)};
       }
@@ -149,10 +145,10 @@ class Dilithium_Symmetric_Primitives_Base {
          return H_256<DilithiumCommitmentHash>(m_commitment_hash_length_bytes, mu, w1);
       }
 
-      SHAKE_256_XOF& H(StrongSpan<const DilithiumCommitmentHash> seed) const {
-         m_xof_external.clear();
-         m_xof_external.update(truncate_commitment_hash(seed));
-         return m_xof_external;
+      XOF& H(StrongSpan<const DilithiumCommitmentHash> seed) const {
+         m_xof_external->clear();
+         m_xof_external->update(truncate_commitment_hash(seed));
+         return *m_xof_external;
       }
 
       // Once Dilithium AES is removed, this could return a SHAKE_256_XOF and
@@ -185,9 +181,9 @@ class Dilithium_Symmetric_Primitives_Base {
 
       template <concepts::resizable_byte_buffer OutT, ranges::spanable_range... InTs>
       OutT H_256(size_t outbytes, const InTs&... ins) const {
-         const scoped_cleanup clean([this]() { m_xof.clear(); });
-         (m_xof.update(ins), ...);
-         return m_xof.output<OutT>(outbytes);
+         const scoped_cleanup clean([this]() { m_xof->clear(); });
+         (m_xof->update(ins), ...);
+         return m_xof->output<OutT>(outbytes);
       }
 
    private:
@@ -196,8 +192,8 @@ class Dilithium_Symmetric_Primitives_Base {
       DilithiumMode m_mode;
 
       std::unique_ptr<DilithiumXOF> m_xof_adapter;
-      mutable SHAKE_256_XOF m_xof;
-      mutable SHAKE_256_XOF m_xof_external;
+      std::unique_ptr<XOF> m_xof;
+      std::unique_ptr<XOF> m_xof_external;
 };
 
 }  // namespace Botan
