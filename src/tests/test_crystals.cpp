@@ -41,7 +41,7 @@ Test::Result test_extended_euclidean_algorithm() {
    // The wrapper template functions gcd<>(), v<>() and u<>() are workarounds
    // for an assumed bug in MSVC 19.38.33134 that does not accept the invocation
    // of the consteval function `extended_euclidean_algorithm` as a parameter to
-   // `test_is_eq()`.
+   // `test_.._eq()`.
    //
    // The resulting error is:
    //    error C7595: 'Botan::extended_euclidean_algorithm': call to immediate function is not a constant expression
@@ -60,8 +60,8 @@ Test::Result test_extended_euclidean_algorithm() {
    res.test_u16_eq("v(1337, 1337)", v<uint16_t>(1337, 1337), 1);
    res.test_u16_eq("u(294, 350)", u<uint16_t>(294, 350), 6);
 
-   res.test_is_eq<int16_t>("q^-1(3329) - Kyber::Q", Botan::modular_inverse<int16_t>(3329), -3327);
-   res.test_is_eq<int32_t>("q^-1(8380417) - Dilithium::Q", Botan::modular_inverse<int32_t>(8380417), 58728449);
+   res.test_i16_eq("q^-1(3329) - Kyber::Q", Botan::modular_inverse<int16_t>(3329), -3327);
+   res.test_i32_eq("q^-1(8380417) - Dilithium::Q", Botan::modular_inverse<int32_t>(8380417), 58728449);
 
    return res;
 }
@@ -131,13 +131,13 @@ std::vector<Test::Result> test_polynomial_basics() {
                const Kyberish_Poly<Domain::Normal> p;
                res.test_is_true("default constructed poly owns memory", p.owns_storage());
                for(auto coeff : p) {
-                  res.test_is_eq<int16_t>("default constructed poly has 0 coefficients", coeff, 0);
+                  res.test_i16_eq("default constructed poly has 0 coefficients", coeff, 0);
                }
 
                const Kyberish_Poly<Domain::NTT> p_ntt;
                res.test_is_true("default constructed poly owns memory (NTT)", p_ntt.owns_storage());
                for(auto coeff : p) {
-                  res.test_is_eq<int16_t>("default constructed poly (NTT) has 0 coefficients", coeff, 0);
+                  res.test_i16_eq("default constructed poly (NTT) has 0 coefficients", coeff, 0);
                }
             }),
 
@@ -417,7 +417,7 @@ std::vector<Test::Result> test_encoding() {
                Botan::CRYSTALS::unpack<6>(p1, slicer1);
                res.require("read all bytes from 3-bit encoding", slicer1.empty());
                for(size_t i = 0; i < p1.size(); ++i) {
-                  res.test_is_eq<int16_t>("decoded 3-bit coefficient", p1[i], i % 7);
+                  res.test_i16_eq("decoded 3-bit coefficient", p1[i], i % 7);
                }
 
                Kyberish_Poly<Domain::Normal> p2;
@@ -444,7 +444,7 @@ std::vector<Test::Result> test_encoding() {
                DeterministicXOF xof1(threebitencoding);
                Botan::CRYSTALS::unpack<6>(p1, xof1);
                for(size_t i = 0; i < p1.size(); ++i) {
-                  res.test_is_eq<int16_t>("decoded 3-bit coefficient", p1[i], i % 7);
+                  res.test_i16_eq("decoded 3-bit coefficient", p1[i], i % 7);
                }
 
                Kyberish_Poly<Domain::Normal> p2;

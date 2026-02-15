@@ -453,9 +453,11 @@ Test::Result test_attribute_container() {
    result.test_u64_eq("ObjectId value", *reinterpret_cast<uint64_t*>(storedAttributes.at(4).pValue), 10);
    result.test_u64_eq("Id type", storedAttributes.at(5).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::Id));
    result.test_u64_eq("Id value", *reinterpret_cast<uint64_t*>(storedAttributes.at(5).pValue), 21);
-   result.test_u64_eq("PixelX type", storedAttributes.at(6).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::PixelX));
+   result.test_u64_eq(
+      "PixelX type", storedAttributes.at(6).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::PixelX));
    result.test_u64_eq("PixelX value", *reinterpret_cast<uint64_t*>(storedAttributes.at(6).pValue), 30);
-   result.test_u64_eq("PixelY type", storedAttributes.at(7).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::PixelY));
+   result.test_u64_eq(
+      "PixelY type", storedAttributes.at(7).type, static_cast<CK_ATTRIBUTE_TYPE>(AttributeType::PixelY));
    result.test_u64_eq("PixelY value", *reinterpret_cast<uint64_t*>(storedAttributes.at(7).pValue), 40);
 
    return result;

@@ -1,5 +1,5 @@
 /*
-* (C) 2014,2015 Jack Lloyd
+* (C) 2014,2015,2026 Jack Lloyd
 * (C) 2015 Simon Warta (Kullo GmbH)
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -302,7 +302,7 @@ class Test {
             }
 
             template <typename T>
-            requires(!std::is_enum_v<T> && !std::is_unsigned_v<T>)
+               requires(!std::is_enum_v<T> && !std::is_integral_v<T>)
             bool test_is_eq(std::string_view what, const T& produced, const T& expected) {
                std::ostringstream out;
                out << m_who << " " << what;
@@ -357,17 +357,18 @@ class Test {
             bool test_sz_gte(std::string_view what, size_t produced, size_t expected);
 
             /* Type-hinted unsigned integer equality predicates */
-            bool test_u8_eq(uint8_t produced, uint8_t expected);
             bool test_u8_eq(std::string_view what, uint8_t produced, uint8_t expected);
-
-            bool test_u16_eq(uint16_t produced, uint16_t expected);
             bool test_u16_eq(std::string_view what, uint16_t produced, uint16_t expected);
-
-            bool test_u32_eq(uint32_t produced, uint32_t expected);
             bool test_u32_eq(std::string_view what, uint32_t produced, uint32_t expected);
-
-            bool test_u64_eq(uint64_t produced, uint64_t expected);
             bool test_u64_eq(std::string_view what, uint64_t produced, uint64_t expected);
+            bool test_i16_eq(std::string_view what, int16_t produced, int16_t expected);
+            bool test_i32_eq(std::string_view what, int32_t produced, int32_t expected);
+
+            /* Prefer the versions that take a descriptor string above */
+            bool test_u8_eq(uint8_t produced, uint8_t expected);
+            bool test_u16_eq(uint16_t produced, uint16_t expected);
+            bool test_u32_eq(uint32_t produced, uint32_t expected);
+            bool test_u64_eq(uint64_t produced, uint64_t expected);
 
             /* Test predicates on integer return codes */
             bool test_rc_ok(std::string_view func, int rc);

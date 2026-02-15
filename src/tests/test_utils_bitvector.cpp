@@ -1202,14 +1202,12 @@ std::vector<Test::Result> test_bitvector_iterators(Botan::RandomNumberGenerator&
       CHECK("Iterators: std::distance and std::advance",
             [](auto& result) {
                Botan::bitvector bv(6);
-               using signed_size_t = std::make_signed_t<size_t>;
-
-               result.test_is_eq("distance", std::distance(bv.begin(), bv.end()), signed_size_t(6));
-               result.test_is_eq("const distance", std::distance(bv.cbegin(), bv.cend()), signed_size_t(6));
+               result.test_sz_eq("distance", static_cast<size_t>(std::distance(bv.begin(), bv.end())), 6);
+               result.test_sz_eq("const distance", static_cast<size_t>(std::distance(bv.cbegin(), bv.cend())), 6);
 
                auto b = bv.begin();
                std::advance(b, 3);
-               result.test_is_eq("half distance", std::distance(bv.begin(), b), signed_size_t(3));
+               result.test_sz_eq("half distance", static_cast<size_t>(std::distance(bv.begin(), b)), 3);
             }),
 
       CHECK("Iterators: large bitvector",

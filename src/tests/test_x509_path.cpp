@@ -1396,8 +1396,8 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                                                                {ocsp_ee});
 
             result.test_u32_eq("should result in expected validation status code",
-                              static_cast<uint32_t>(path_result.result()),
-                              static_cast<uint32_t>(expected));
+                               static_cast<uint32_t>(path_result.result()),
+                               static_cast<uint32_t>(expected));
             if(also_expected) {
                result.test_is_true("Secondary error is also present",
                                    flatten(path_result.all_statuses()).contains(also_expected.value()));

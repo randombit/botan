@@ -193,7 +193,8 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                   result.test_is_eq("protocol version was echoed",
                                     sessions[0].session.version(),
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
-                  result.test_u16_eq("ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
+                  result.test_u16_eq(
+                     "ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
                   result.test_is_eq("ID was echoed", sessions[0].handle.id().value(), default_id);
                   result.test_is_true("not a ticket", !sessions[0].handle.ticket().has_value());
                }
@@ -257,7 +258,8 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                   result.test_is_eq("protocol version was echoed",
                                     sessions[0].session.version(),
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
-                  result.test_u16_eq("ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
+                  result.test_u16_eq(
+                     "ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
                   result.test_is_eq("ID was echoed", sessions[0].handle.id().value(), new_id);
                   result.test_is_true("ticket was not stored", !sessions[0].handle.ticket().has_value());
                }
@@ -277,7 +279,8 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                   result.test_is_eq("protocol version was echoed",
                                     sessions[0].session.version(),
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
-                  result.test_u16_eq("ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
+                  result.test_u16_eq(
+                     "ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
                   result.test_is_true("ID was not stored", !sessions[0].handle.id().has_value());
                   result.test_is_eq("ticket was echoed", sessions[0].handle.ticket().value(), new_ticket);
                }

@@ -319,6 +319,18 @@ bool Test::Result::test_str_ne(std::string_view what, std::string_view str1, std
    }
 }
 
+bool Test::Result::test_i16_eq(std::string_view what, int16_t produced, int16_t expected) {
+   return test_i32_eq(what, produced, expected);
+}
+
+bool Test::Result::test_i32_eq(std::string_view what, int32_t produced, int32_t expected) {
+   if(produced == expected) {
+      return test_success();
+   } else {
+      return test_failure(Botan::fmt("Assertion failure in {} {}: {} == {}", who(), what, produced, expected));
+   }
+}
+
 bool Test::Result::test_u8_eq(uint8_t produced, uint8_t expected) {
    return test_sz_eq("comparison", produced, expected);
 }
