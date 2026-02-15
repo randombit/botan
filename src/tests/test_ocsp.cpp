@@ -8,6 +8,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_OCSP)
+   #include "test_arb_eq.h"
    #include <botan/certstor.h>
    #include <botan/ocsp.h>
    #include <botan/x509path.h>
@@ -139,24 +140,27 @@ class OCSP_Tests final : public Test {
          result.test_opt_is_null("Dummy has no signing certificate",
                                  dummy_ocsp.find_signing_certificate(Botan::X509_Certificate()));
 
-         result.test_is_eq("CA is returned as signing certificate",
-                           randombit_ocsp.find_signing_certificate(randombit_ca),
-                           std::optional(randombit_ca));
+         test_arb_eq(result,
+                     "CA is returned as signing certificate",
+                     randombit_ocsp.find_signing_certificate(randombit_ca),
+                     std::optional(randombit_ca));
          result.test_opt_is_null("No signer certificate is returned when signer couldn't be determined",
                                  randombit_ocsp.find_signing_certificate(bdr_ca));
 
-         result.test_is_eq("Delegated responder certificate is returned for further validation",
-                           bdr_ocsp.find_signing_certificate(bdr_ca),
-                           std::optional(bdr_responder));
+         test_arb_eq(result,
+                     "Delegated responder certificate is returned for further validation",
+                     bdr_ocsp.find_signing_certificate(bdr_ca),
+                     std::optional(bdr_responder));
 
          result.test_opt_is_null(
             "Delegated responder without stapled certs does not find signer without user-provided certs",
             randombit_alt_resp_ocsp.find_signing_certificate(randombit_ca));
 
          auto trusted_responders = std::make_unique<Botan::Certificate_Store_In_Memory>(randombit_alt_resp_cert);
-         result.test_is_eq("Delegated responder returns user-provided cert",
-                           randombit_alt_resp_ocsp.find_signing_certificate(randombit_ca, trusted_responders.get()),
-                           std::optional(randombit_alt_resp_cert));
+         test_arb_eq(result,
+                     "Delegated responder returns user-provided cert",
+                     randombit_alt_resp_ocsp.find_signing_certificate(randombit_ca, trusted_responders.get()),
+                     std::optional(randombit_alt_resp_cert));
 
          return result;
       }
@@ -391,9 +395,10 @@ class OCSP_Tests final : public Test {
          // add the 3rd party responder certificate to the list of trusted OCSP responder certs
          // to find the issuer certificate of this response
          trusted_responders.add_certificate(responder);
-         result.test_is_eq("the responder certificate is returned when it is trusted",
-                           ocsp.find_signing_certificate(ca, &trusted_responders),
-                           std::optional(responder));
+         test_arb_eq(result,
+                     "the responder certificate is returned when it is trusted",
+                     ocsp.find_signing_certificate(ca, &trusted_responders),
+                     std::optional(responder));
 
          result.test_enum_eq("the responder's signature checks out",
                              ocsp.verify_signature(responder),

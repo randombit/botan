@@ -8,6 +8,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_HSS_LMS)
+   #include "test_arb_eq.h"
    #include "test_pubkey.h"
    #include <botan/hss_lms.h>
    #include <botan/pk_algs.h>
@@ -30,7 +31,7 @@ std::vector<Test::Result> test_hss_lms_params_parsing() {
                result.test_no_throw("no throw", [&] {
                   const Botan::HSS_LMS_Params hss_params("SHA-256,HW(5,1),HW(25,8)");
 
-                  result.test_is_eq("hss levels", hss_params.L(), Botan::HSS_Level(2));
+                  test_arb_eq(result, "hss levels", hss_params.L(), Botan::HSS_Level(2));
                   const auto& top_lms_params = hss_params.params_at_level(Botan::HSS_Level(0));
                   result.test_str_eq("hash name", top_lms_params.lms_params().hash_name(), std::string("SHA-256"));
                   result.test_enum_eq("top level - lms type",
@@ -314,7 +315,7 @@ class HSS_LMS_Missing_API_Test final : public Test {
 
          // HSS_LMS_Signature_Operation::algorithm_identifier()
          const Botan::PK_Signer signer(*sk, Test::rng(), "");
-         result.test_is_eq(signer.algorithm_identifier(), sk->algorithm_identifier());
+         test_arb_eq(result, "signature algorithm", signer.algorithm_identifier(), sk->algorithm_identifier());
 
          // HSS_LMS_Signature_Operation::hash_function()
          result.test_str_eq("PK_Signer should report the hash of the key", signer.hash_function(), "SHA-256");

@@ -16,6 +16,7 @@
    #include <botan/pipe.h>
    #include <botan/internal/secqueue.h>
    #include <botan/internal/target_info.h>
+   #include <sstream>
 #endif
 
 #if defined(BOTAN_HAS_PIPE_UNIXFD_IO)

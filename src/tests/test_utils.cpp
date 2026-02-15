@@ -7,6 +7,8 @@
 */
 
 #include "tests.h"
+
+#include "test_arb_eq.h"
 #include <botan/hex.h>
 #include <botan/rng.h>
 #include <botan/version.h>
@@ -439,10 +441,14 @@ class Utility_Function_Tests final : public Test {
          result.test_bin_eq("store_be(u32,strong)", Botan::store_be<std::vector<uint8_t>>(in32_strong), "ABCDEF01");
          result.test_bin_eq("store_le(u32,strong)", Botan::store_le<std::vector<uint8_t>>(in32_strong), "01EFCDAB");
 
-         result.test_is_eq(Botan::load_be<TestInt64>(Botan::hex_decode("ABCDEF0123456789")), in64_strong);
-         result.test_is_eq(Botan::load_le<TestInt64>(Botan::hex_decode("8967452301EFCDAB")), in64_strong);
-         result.test_is_eq(Botan::load_be<TestInt32>(Botan::hex_decode("ABCDEF01")), in32_strong);
-         result.test_is_eq(Botan::load_le<TestInt32>(Botan::hex_decode("01EFCDAB")), in32_strong);
+         test_arb_eq(
+            result, "load_be(strong64)", Botan::load_be<TestInt64>(Botan::hex_decode("ABCDEF0123456789")), in64_strong);
+         test_arb_eq(
+            result, "load_le(strong64)", Botan::load_le<TestInt64>(Botan::hex_decode("8967452301EFCDAB")), in64_strong);
+         test_arb_eq(
+            result, "load_be(strong32)", Botan::load_be<TestInt32>(Botan::hex_decode("ABCDEF01")), in32_strong);
+         test_arb_eq(
+            result, "load_le(strong32)", Botan::load_le<TestInt32>(Botan::hex_decode("01EFCDAB")), in32_strong);
 
          const std::vector<TestInt64> some_in64_strongs{TestInt64{0xABCDEF0123456789}, TestInt64{0x0123456789ABCDEF}};
          result.test_bin_eq("store_be(vector,strong)",
@@ -454,13 +460,13 @@ class Utility_Function_Tests final : public Test {
 
          const auto in64_strongs_le =
             Botan::load_le<std::array<TestInt64, 2>>(Botan::hex_decode("8967452301EFCDABEFCDAB8967452301"));
-         result.test_is_eq(in64_strongs_le[0], TestInt64{0xABCDEF0123456789});
-         result.test_is_eq(in64_strongs_le[1], TestInt64{0x0123456789ABCDEF});
+         test_arb_eq(result, "load_le(strong arr)", in64_strongs_le[0], TestInt64{0xABCDEF0123456789});
+         test_arb_eq(result, "load_le(strong arr)", in64_strongs_le[1], TestInt64{0x0123456789ABCDEF});
 
          const auto in64_strongs_be =
             Botan::load_be<std::vector<TestInt64>>(Botan::hex_decode("ABCDEF01234567890123456789ABCDEF"));
-         result.test_is_eq(in64_strongs_be[0], TestInt64{0xABCDEF0123456789});
-         result.test_is_eq(in64_strongs_be[1], TestInt64{0x0123456789ABCDEF});
+         test_arb_eq(result, "load_be(strong arr)", in64_strongs_be[0], TestInt64{0xABCDEF0123456789});
+         test_arb_eq(result, "load_be(strong arr)", in64_strongs_be[1], TestInt64{0x0123456789ABCDEF});
 
          // Test loading/storing of enum types with different endianness
          const auto in64_enum_le = Botan::load_le<TestEnum64>(Botan::hex_decode("1234567890ABCDEF"));
@@ -682,18 +688,26 @@ class Utility_Function_Tests final : public Test {
 
          // load_le/be multiple integers into a std::array for constexpr
          constexpr auto cex_load_le16s = Botan::load_le<std::array<uint16_t, cex_mem.size() / 2>>(cex_mem);
-         result.test_is_eq(cex_load_le16s, {0x1100, 0x3322, 0x5544, 0x7766, 0x9988, 0xBBAA, 0xDDCC, 0xFFEE});
+         test_arb_eq(result,
+                     "constexpr load_le(u16)",
+                     cex_load_le16s,
+                     {0x1100, 0x3322, 0x5544, 0x7766, 0x9988, 0xBBAA, 0xDDCC, 0xFFEE});
          constexpr auto cex_load_le32s = Botan::load_le<std::array<uint32_t, cex_mem.size() / 4>>(cex_mem);
-         result.test_is_eq(cex_load_le32s, {0x33221100, 0x77665544, 0xBBAA9988, 0xFFEEDDCC});
+         test_arb_eq(
+            result, "constexpr load_le(u32)", cex_load_le32s, {0x33221100, 0x77665544, 0xBBAA9988, 0xFFEEDDCC});
          constexpr auto cex_load_le64s = Botan::load_le<std::array<uint64_t, cex_mem.size() / 8>>(cex_mem);
-         result.test_is_eq(cex_load_le64s, {0x7766554433221100, 0xFFEEDDCCBBAA9988});
+         test_arb_eq(result, "constexpr load_le(u64)", cex_load_le64s, {0x7766554433221100, 0xFFEEDDCCBBAA9988});
 
          constexpr auto cex_load_be16s = Botan::load_be<std::array<uint16_t, cex_mem.size() / 2>>(cex_mem);
-         result.test_is_eq(cex_load_be16s, {0x0011, 0x2233, 0x4455, 0x6677, 0x8899, 0xAABB, 0xCCDD, 0xEEFF});
+         test_arb_eq(result,
+                     "constexpr load_be(u16)",
+                     cex_load_be16s,
+                     {0x0011, 0x2233, 0x4455, 0x6677, 0x8899, 0xAABB, 0xCCDD, 0xEEFF});
          constexpr auto cex_load_be32s = Botan::load_be<std::array<uint32_t, cex_mem.size() / 4>>(cex_mem);
-         result.test_is_eq(cex_load_be32s, {0x00112233, 0x44556677, 0x8899AABB, 0xCCDDEEFF});
+         test_arb_eq(
+            result, "constexpr load_be(u32)", cex_load_be32s, {0x00112233, 0x44556677, 0x8899AABB, 0xCCDDEEFF});
          constexpr auto cex_load_be64s = Botan::load_be<std::array<uint64_t, cex_mem.size() / 8>>(cex_mem);
-         result.test_is_eq(cex_load_be64s, {0x0011223344556677, 0x8899AABBCCDDEEFF});
+         test_arb_eq(result, "constexpr load_be(u64)", cex_load_be64s, {0x0011223344556677, 0x8899AABBCCDDEEFF});
 
          return result;
       }
