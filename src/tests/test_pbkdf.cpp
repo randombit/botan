@@ -74,8 +74,8 @@ class Pwdhash_Tests : public Test {
          const std::vector<std::string> all_pwdhash = {
             "Scrypt", "PBKDF2(SHA-256)", "OpenPGP-S2K(SHA-384)", "Argon2d", "Argon2i", "Argon2id", "Bcrypt-PBKDF"};
 
-         const auto run_time = std::chrono::milliseconds(3);
-         const auto tune_time = std::chrono::milliseconds(1);
+         const uint64_t run_time = 3;
+         const uint64_t tune_time = 1;
          const size_t max_mem = 32;
 
          for(const std::string& pwdhash : all_pwdhash) {
@@ -88,7 +88,7 @@ class Pwdhash_Tests : public Test {
                const std::vector<uint8_t> salt(8);
                const std::string password = "test";
 
-               auto tuned_pwhash = pwdhash_fam->tune(32, run_time, max_mem, tune_time);
+               auto tuned_pwhash = pwdhash_fam->tune_params(32, run_time, max_mem, tune_time);
 
                std::vector<uint8_t> output1(32);
                tuned_pwhash->hash(output1, password, salt);

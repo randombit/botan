@@ -27,10 +27,10 @@ std::string Bcrypt_PBKDF_Family::name() const {
    return "Bcrypt-PBKDF";
 }
 
-std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::tune(size_t output_length,
-                                                        std::chrono::milliseconds msec,
-                                                        size_t /*max_memory*/,
-                                                        std::chrono::milliseconds tune_time) const {
+std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::tune_params(size_t output_length,
+                                                               uint64_t desired_msec,
+                                                               std::optional<size_t> /*max_memory*/,
+                                                               uint64_t tune_msec) const {
    const size_t blocks = (output_length + 32 - 1) / 32;
 
    if(blocks == 0) {
@@ -46,9 +46,9 @@ std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::tune(size_t output_length,
       pwhash->derive_key(output, sizeof(output), "test", 4, nullptr, 0);
    };
 
-   const uint64_t measured_time = measure_cost(tune_time, tune_fn) / blocks;
+   const uint64_t measured_time = measure_cost(tune_msec, tune_fn) / blocks;
 
-   const uint64_t target_nsec = msec.count() * static_cast<uint64_t>(1000000);
+   const uint64_t target_nsec = desired_msec * static_cast<uint64_t>(1000000);
 
    const uint64_t desired_increase = target_nsec / measured_time;
 

@@ -13,14 +13,12 @@
    #include <botan/internal/os_utils.h>
 #endif
 
-#include <chrono>
-
 namespace Botan {
 
 template <typename F>
-uint64_t measure_cost(std::chrono::milliseconds trial_msec, F func) {
+uint64_t measure_cost(uint64_t trial_msec, F func) {
 #if defined(BOTAN_HAS_OS_UTILS)
-   const uint64_t trial_nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(trial_msec).count();
+   const uint64_t trial_nsec = trial_msec * 1000000;
 
    uint64_t total_nsec = 0;
    uint64_t trials = 0;

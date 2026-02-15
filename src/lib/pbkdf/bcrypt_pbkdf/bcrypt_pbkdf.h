@@ -51,10 +51,10 @@ class BOTAN_PUBLIC_API(2, 11) Bcrypt_PBKDF_Family final : public PasswordHashFam
 
       std::string name() const override;
 
-      std::unique_ptr<PasswordHash> tune(size_t output_length,
-                                         std::chrono::milliseconds msec,
-                                         size_t max_memory,
-                                         std::chrono::milliseconds tune_msec) const override;
+      std::unique_ptr<PasswordHash> tune_params(size_t output_len,
+                                                uint64_t desired_runtime_msec,
+                                                std::optional<size_t> max_memory,
+                                                uint64_t tune_msec) const override;
 
       std::unique_ptr<PasswordHash> default_params() const override;
 

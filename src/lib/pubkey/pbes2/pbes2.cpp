@@ -114,8 +114,7 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
       std::unique_ptr<PasswordHash> pwhash;
 
       if(msec_in_iterations_out != nullptr) {
-         const std::chrono::milliseconds msec(*msec_in_iterations_out);
-         pwhash = pwhash_fam->tune(key_length, msec);
+         pwhash = pwhash_fam->tune_params(key_length, *msec_in_iterations_out);
       } else {
          pwhash = pwhash_fam->from_iterations(iterations_if_msec_null);
       }
@@ -155,8 +154,7 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
       std::unique_ptr<PasswordHash> pwhash;
 
       if(msec_in_iterations_out != nullptr) {
-         const std::chrono::milliseconds msec(*msec_in_iterations_out);
-         pwhash = pwhash_fam->tune(key_length, msec);
+         pwhash = pwhash_fam->tune_params(key_length, *msec_in_iterations_out);
       } else {
          pwhash = pwhash_fam->from_iterations(iterations_if_msec_null);
       }

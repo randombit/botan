@@ -8,11 +8,15 @@
 #define BOTAN_PWDHASH_H_
 
 #include <botan/types.h>
-#include <chrono>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <vector>
+
+#if !defined(BOTAN_IS_BEING_BUILT)
+   #include <chrono>
+#endif
 
 namespace Botan {
 
@@ -219,6 +223,38 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHashFamily /* NOLINT(*-special-member-funct
       * controlled using the @p tuning_msec parameter.
       *
       * @param output_length how long the output length will be
+      * @param desired_runtime_msec the desired execution time in milliseconds
+      *
+      * @param max_memory_usage_mb some password hash functions can use a
+      * tunable amount of memory, in this case max_memory_usage limits the
+      * amount of RAM the returned parameters will require, in mebibytes (2**20
+      * bytes). It may require some small amount above the request. Set to nullopt
+      * to place no limit at all.
+      * @param tuning_msec how long to run the tuning loop
+      */
+      virtual std::unique_ptr<PasswordHash> tune_params(size_t output_length,
+                                                        uint64_t desired_runtime_msec,
+                                                        std::optional<size_t> max_memory_usage_mb = 0,
+                                                        uint64_t tuning_msec = 10) const = 0;
+
+#if !defined(BOTAN_IS_BEING_BUILT)
+      /**
+      * Return a new parameter set tuned for this machine
+      *
+      * Return a password hash instance tuned to run for approximately @p msec
+      * milliseconds when producing an output of length @p output_length.
+      * (Accuracy may vary, use the command line utility ``botan pbkdf_tune`` to
+      * check.)
+      *
+      * The parameters will be selected to use at most @p max_memory_usage_mb
+      * megabytes of memory, or if left as zero any size is allowed.
+      *
+      * This function works by running a short tuning loop to estimate the
+      * performance of the algorithm, then scaling the parameters appropriately
+      * to hit the target size. The length of time the tuning loop runs can be
+      * controlled using the @p tuning_msec parameter.
+      *
+      * @param output_length how long the output length will be
       * @param msec the desired execution time in milliseconds
       *
       * @param max_memory_usage_mb some password hash functions can use a
@@ -227,13 +263,25 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHashFamily /* NOLINT(*-special-member-funct
       * bytes). It may require some small amount above the request. Set to zero
       * to place no limit at all.
       * @param tuning_msec how long to run the tuning loop
+      *
+      * TODO(Botan4) remove this
       */
-      virtual std::unique_ptr<PasswordHash> tune(
-         size_t output_length,
-         std::chrono::milliseconds msec,
-         size_t max_memory_usage_mb = 0,
-         std::chrono::milliseconds tuning_msec = std::chrono::milliseconds(10)) const = 0;
+      BOTAN_DEPRECATED("Use tune_params instead")
+      std::unique_ptr<PasswordHash> tune(size_t output_length,
+                                         std::chrono::milliseconds msec,
+                                         size_t max_memory_usage_mb = 0,
+                                         std::chrono::milliseconds tuning_msec = std::chrono::milliseconds(10)) const {
+         std::optional<size_t> max_memory_opt;
+         if(max_memory_usage_mb > 0) {
+            max_memory_opt = max_memory_usage_mb;
+         }
 
+         return this->tune_params(output_length,
+                                  static_cast<uint32_t>(msec.count()),
+                                  max_memory_opt,
+                                  static_cast<uint32_t>(tuning_msec.count()));
+      }
+#endif
       /**
       * Return some default parameter set for this PBKDF that should be good
       * enough for most users. The value returned may change over time as

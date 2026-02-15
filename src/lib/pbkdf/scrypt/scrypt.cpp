@@ -34,12 +34,10 @@ std::unique_ptr<PasswordHash> Scrypt_Family::default_params() const {
    return std::make_unique<Scrypt>(32768, 8, 1);
 }
 
-std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
-                                                  std::chrono::milliseconds msec,
-                                                  size_t max_memory_usage_mb,
-                                                  std::chrono::milliseconds tune_time) const {
-   BOTAN_UNUSED(output_length);
-
+std::unique_ptr<PasswordHash> Scrypt_Family::tune_params(size_t /*output_length*/,
+                                                         uint64_t desired_msec,
+                                                         std::optional<size_t> max_memory,
+                                                         uint64_t tuning_msec) const {
    /*
    * Some rough relations between scrypt parameters and runtime.
    * Denote here by stime(N,r,p) the msec it takes to run scrypt.
@@ -53,7 +51,7 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
    */
 
    // This is zero if max_memory_usage_mb == 0 (unbounded)
-   const size_t max_memory_usage = max_memory_usage_mb * 1024 * 1024;
+   const size_t max_memory_bytes = max_memory.value_or(0) * 1024 * 1024;
 
    // Starting parameters
    size_t N = 8 * 1024;
@@ -62,12 +60,12 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
 
    auto pwdhash = this->from_params(N, r, p);
 
-   const uint64_t measured_time = measure_cost(tune_time, [&]() {
+   const uint64_t measured_time = measure_cost(tuning_msec, [&]() {
       uint8_t output[32] = {0};
       pwdhash->derive_key(output, sizeof(output), "test", 4, nullptr, 0);
    });
 
-   const uint64_t target_nsec = msec.count() * static_cast<uint64_t>(1000000);
+   const uint64_t target_nsec = desired_msec * static_cast<uint64_t>(1000000);
 
    uint64_t est_nsec = measured_time;
 
@@ -76,7 +74,7 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
    // Including p leads to using an N half as large as what the user would expect.
 
    // First increase r by 8x if possible
-   if(max_memory_usage == 0 || scrypt_memory_usage(N, r * 8, 0) <= max_memory_usage) {
+   if(max_memory_bytes == 0 || scrypt_memory_usage(N, r * 8, 0) <= max_memory_bytes) {
       if(target_nsec / est_nsec >= 5) {
          r *= 8;
          est_nsec *= 5;
@@ -84,7 +82,7 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
    }
 
    // Now double N as many times as we can
-   while(max_memory_usage == 0 || scrypt_memory_usage(N * 2, r, 0) <= max_memory_usage) {
+   while(max_memory_bytes == 0 || scrypt_memory_usage(N * 2, r, 0) <= max_memory_bytes) {
       if(target_nsec / est_nsec >= 2) {
          N *= 2;
          est_nsec *= 2;

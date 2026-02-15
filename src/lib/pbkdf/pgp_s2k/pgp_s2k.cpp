@@ -76,10 +76,10 @@ size_t OpenPGP_S2K::pbkdf(uint8_t output_buf[],
                           const uint8_t salt[],
                           size_t salt_len,
                           size_t iterations,
-                          std::chrono::milliseconds msec) const {
+                          std::chrono::milliseconds desired_msec) const {
    if(iterations == 0) {
       const RFC4880_S2K_Family s2k_params(m_hash->new_object());
-      iterations = s2k_params.tune(output_len, msec, 0, std::chrono::milliseconds(10))->iterations();
+      iterations = s2k_params.tune_params(output_len, desired_msec.count(), {}, 10)->iterations();
    }
 
    pgp_s2k(*m_hash, output_buf, output_len, password.data(), password.size(), salt, salt_len, iterations);
@@ -91,17 +91,17 @@ std::string RFC4880_S2K_Family::name() const {
    return fmt("OpenPGP-S2K({})", m_hash->name());
 }
 
-std::unique_ptr<PasswordHash> RFC4880_S2K_Family::tune(size_t output_len,
-                                                       std::chrono::milliseconds msec,
-                                                       size_t /*max_memory_usage_mb*/,
-                                                       std::chrono::milliseconds tune_time) const {
+std::unique_ptr<PasswordHash> RFC4880_S2K_Family::tune_params(size_t output_len,
+                                                              uint64_t desired_msec,
+                                                              std::optional<size_t> /*max_memory*/,
+                                                              uint64_t tuning_msec) const {
    constexpr size_t buf_size = 1024;
    std::vector<uint8_t> buffer(buf_size);
 
-   const uint64_t measured_nsec = measure_cost(tune_time, [&]() { m_hash->update(buffer); });
+   const uint64_t measured_nsec = measure_cost(tuning_msec, [&]() { m_hash->update(buffer); });
 
    const double hash_bytes_per_second = (buf_size * 1000000000.0) / measured_nsec;
-   const uint64_t desired_nsec = msec.count() * 1000000;
+   const uint64_t desired_nsec = desired_msec * 1000000;
 
    const size_t hash_size = m_hash->output_length();
    const size_t blocks_required = (output_len <= hash_size ? 1 : (output_len + hash_size - 1) / hash_size);

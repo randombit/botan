@@ -109,7 +109,7 @@ int botan_pwdhash_timed(const char* algo,
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
       }
 
-      auto pwdhash = pwdhash_fam->tune(out_len, std::chrono::milliseconds(msec));
+      auto pwdhash = pwdhash_fam->tune_params(out_len, msec);
 
       if(param1 != nullptr) {
          *param1 = pwdhash->iterations();
