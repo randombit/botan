@@ -84,7 +84,7 @@ Test::Result test_certstor_sqlite3_insert_find_remove_test(const std::vector<Cer
             return result;
          }
 
-         result.test_eq("Got wrong certificate", cert.fingerprint(), w_keyid->fingerprint());
+         result.test_str_eq("Got wrong certificate", cert.fingerprint(), w_keyid->fingerprint());
 
          if(priv) {
             result.test_eq("Got wrong private key", key.private_key_bits(), priv->private_key_bits());
@@ -104,7 +104,7 @@ Test::Result test_certstor_sqlite3_insert_find_remove_test(const std::vector<Cer
          }
 
          if(certsandkeys[4] != certandkey && certsandkeys[5] != certandkey) {
-            result.test_eq("Got wrong certificate", cert.fingerprint(), wo_keyid->fingerprint());
+            result.test_str_eq("Got wrong certificate", cert.fingerprint(), wo_keyid->fingerprint());
          }
 
          result.test_is_true("Can't remove certificate", store.remove_cert(cert));
@@ -231,7 +231,7 @@ Test::Result test_certstor_sqlite3_find_all_certs_test(const std::vector<Certifi
          } else {
             const std::string a_str = a.subject_dn().to_string();
             const std::string res_str = res_vec.at(0).subject_dn().to_string();
-            result.test_eq("Check subject " + a_str, a_str, res_str);
+            result.test_str_eq("Check subject " + a_str, a_str, res_str);
          }
       }
 
@@ -251,10 +251,10 @@ Test::Result test_certstor_sqlite3_find_all_certs_test(const std::vector<Certifi
          const std::string cert_dn = same_dn_1.subject_dn().to_string();
          const std::string res0_dn = res_vec.at(0).subject_dn().to_string();
 
-         result.test_eq("Check subject " + cert_dn, cert_dn, res0_dn);
+         result.test_str_eq("Check subject " + cert_dn, cert_dn, res0_dn);
 
          const std::string res1_dn = res_vec.at(1).subject_dn().to_string();
-         result.test_eq("Check subject " + cert_dn, cert_dn, res1_dn);
+         result.test_str_eq("Check subject " + cert_dn, cert_dn, res1_dn);
       }
    } catch(const std::exception& e) {
       result.test_failure(e.what());

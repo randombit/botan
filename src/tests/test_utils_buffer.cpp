@@ -174,7 +174,7 @@ std::vector<Test::Result> test_buffer_stuffer() {
                });
 
                const std::string final_string(Botan::cast_uint8_ptr_to_char(sink.data()), sink.size());
-               result.test_eq("final buffer is as expected", final_string, "hello world !");
+               result.test_str_eq("final buffer is as expected", final_string, "hello world !");
             }),
    };
 }

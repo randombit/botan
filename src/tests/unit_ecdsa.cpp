@@ -37,12 +37,12 @@ Test::Result test_decode_ecdsa_X509() {
       try {
          const Botan::X509_Certificate cert(Test::data_file("x509/ecc/CSCA.CSCA.csca-germany.1.crt"));
 
-         result.test_eq(
+         result.test_str_eq(
             "correct signature oid", cert.signature_algorithm().oid().to_formatted_string(), "ECDSA/SHA-224");
 
          result.test_eq("serial number", cert.serial_number(), std::vector<uint8_t>{1});
          result.test_eq("authority key id", cert.authority_key_id(), cert.subject_key_id());
-         result.test_eq(
+         result.test_str_eq(
             "key fingerprint",
             cert.fingerprint("SHA-256"),
             "3B:6C:99:1C:D6:5A:51:FC:EB:17:E3:AA:F6:3C:1A:DA:14:1F:82:41:30:6F:64:EE:FF:63:F3:1F:D6:07:14:9F");
@@ -147,7 +147,7 @@ Test::Result test_ecc_key_with_rfc5915_extensions() {
          auto pkcs8 = Botan::PKCS8::load_key(key_stream);
 
          result.test_is_true("loaded RFC 5915 key", pkcs8 != nullptr);
-         result.test_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
+         result.test_str_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
          result.test_is_true("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()) != nullptr);
       }
    } catch(std::exception& e) {
@@ -166,7 +166,7 @@ Test::Result test_ecc_key_with_rfc5915_parameters() {
          auto pkcs8 = Botan::PKCS8::load_key(key_stream);
 
          result.test_is_true("loaded RFC 5915 key", pkcs8 != nullptr);
-         result.test_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
+         result.test_str_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
          result.test_is_true("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()) != nullptr);
       }
    } catch(std::exception& e) {

@@ -307,7 +307,7 @@ class HSS_LMS_Missing_API_Test final : public Test {
 
          // HSS_LMS_Verification_Operation::hash_function()
          const Botan::PK_Verifier verifier(*sk, "");
-         result.test_eq("PK_Verifier should report the hash of the key", verifier.hash_function(), "SHA-256");
+         result.test_str_eq("PK_Verifier should report the hash of the key", verifier.hash_function(), "SHA-256");
 
          // HSS_LMS_PrivateKey::raw_private_key_bits()
          result.test_eq("Our BER and raw encoding is the same", sk->raw_private_key_bits(), sk->private_key_bits());
@@ -317,7 +317,7 @@ class HSS_LMS_Missing_API_Test final : public Test {
          result.test_is_eq(signer.algorithm_identifier(), sk->algorithm_identifier());
 
          // HSS_LMS_Signature_Operation::hash_function()
-         result.test_eq("PK_Signer should report the hash of the key", signer.hash_function(), "SHA-256");
+         result.test_str_eq("PK_Signer should report the hash of the key", signer.hash_function(), "SHA-256");
 
          return {result};
       }

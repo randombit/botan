@@ -64,7 +64,7 @@ Test::Result test_to_string() {
    Test::Result result("OctetString");
 
    const Botan::OctetString os("0123456789ABCDEF");
-   result.test_eq("OctetString::to_string() returns correct string", os.to_string(), "0123456789ABCDEF");
+   result.test_str_eq("OctetString::to_string() returns correct string", os.to_string(), "0123456789ABCDEF");
 
    return result;
 }

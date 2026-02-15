@@ -142,9 +142,9 @@ Test::Result test_cert_status_strings() {
 
    std::set<std::string> seen;
 
-   result.test_eq("Same string",
-                  Botan::to_string(Botan::Certificate_Status_Code::OK),
-                  Botan::to_string(Botan::Certificate_Status_Code::VERIFIED));
+   result.test_str_eq("Same string",
+                      Botan::to_string(Botan::Certificate_Status_Code::OK),
+                      Botan::to_string(Botan::Certificate_Status_Code::VERIFIED));
 
    const Botan::Certificate_Status_Code codes[]{
       Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD,
@@ -255,22 +255,22 @@ Test::Result test_x509_dates() {
    result.test_is_true("unset time not set", !time.time_is_set());
    time = Botan::X509_Time("080201182200Z", Botan::ASN1_Type::UtcTime);
    result.test_is_true("time set after construction", time.time_is_set());
-   result.test_eq("time readable_string", time.readable_string(), "2008/02/01 18:22:00 UTC");
+   result.test_str_eq("time readable_string", time.readable_string(), "2008/02/01 18:22:00 UTC");
 
    time = Botan::X509_Time("200305100350Z", Botan::ASN1_Type::UtcTime);
-   result.test_eq("UTC_TIME readable_string", time.readable_string(), "2020/03/05 10:03:50 UTC");
+   result.test_str_eq("UTC_TIME readable_string", time.readable_string(), "2020/03/05 10:03:50 UTC");
 
    time = Botan::X509_Time("200305100350Z");
-   result.test_eq(
+   result.test_str_eq(
       "UTC_OR_GENERALIZED_TIME from UTC_TIME readable_string", time.readable_string(), "2020/03/05 10:03:50 UTC");
 
    time = Botan::X509_Time("20200305100350Z");
-   result.test_eq("UTC_OR_GENERALIZED_TIME from GENERALIZED_TIME readable_string",
-                  time.readable_string(),
-                  "2020/03/05 10:03:50 UTC");
+   result.test_str_eq("UTC_OR_GENERALIZED_TIME from GENERALIZED_TIME readable_string",
+                      time.readable_string(),
+                      "2020/03/05 10:03:50 UTC");
 
    time = Botan::X509_Time("20200305100350Z", Botan::ASN1_Type::GeneralizedTime);
-   result.test_eq("GENERALIZED_TIME readable_string", time.readable_string(), "2020/03/05 10:03:50 UTC");
+   result.test_str_eq("GENERALIZED_TIME readable_string", time.readable_string(), "2020/03/05 10:03:50 UTC");
 
    // Dates that are valid per X.500 but rejected as unsupported
    const std::string valid_but_unsup[]{
@@ -478,7 +478,7 @@ Test::Result test_x509_encode_authority_info_access_extension() {
 
    result.test_is_true("OCSP URI available", !cert.ocsp_responder().empty());
    result.test_is_true("no CA Issuer URI available", cert.ca_issuers().empty());
-   result.test_eq("OCSP responder URI matches", cert.ocsp_responder(), std::string(ocsp_uri));
+   result.test_str_eq("OCSP responder URI matches", cert.ocsp_responder(), std::string(ocsp_uri));
 
    // create a certificate with OCSP URI and CA Issuer information
    Botan::X509_Cert_Options opts3 = req_opts1(sig_algo);
@@ -546,7 +546,7 @@ Test::Result test_rsa_oaep() {
    result.test_not_null("Decoding RSA-OAEP worked", public_key.get());
    const auto& pk_info = cert.subject_public_key_algo();
 
-   result.test_eq("RSA-OAEP OID", pk_info.oid().to_string(), Botan::OID::from_string("RSA/OAEP").to_string());
+   result.test_str_eq("RSA-OAEP OID", pk_info.oid().to_string(), Botan::OID::from_string("RSA/OAEP").to_string());
       #endif
 
    return result;
@@ -563,8 +563,8 @@ Test::Result test_x509_decode_list() {
 
    result.test_sz_eq("Expected number of certs in list", certs.size(), 2);
 
-   result.test_eq("Expected cert 1 CN", certs[0].subject_dn().get_first_attribute("CN"), "CA1-PP.01.02");
-   result.test_eq("Expected cert 2 CN", certs[1].subject_dn().get_first_attribute("CN"), "User1-PP.01.02");
+   result.test_str_eq("Expected cert 1 CN", certs[0].subject_dn().get_first_attribute("CN"), "CA1-PP.01.02");
+   result.test_str_eq("Expected cert 2 CN", certs[1].subject_dn().get_first_attribute("CN"), "User1-PP.01.02");
 
    return result;
 }
@@ -589,10 +589,10 @@ Test::Result test_x509_utf8() {
 
       const Botan::X509_DN& issuer_dn = utf8_cert.issuer_dn();
 
-      result.test_eq("O", issuer_dn.get_first_attribute("O"), organization);
-      result.test_eq("OU", issuer_dn.get_first_attribute("OU"), organization_unit);
-      result.test_eq("CN", issuer_dn.get_first_attribute("CN"), common_name);
-      result.test_eq("L", issuer_dn.get_first_attribute("L"), location);
+      result.test_str_eq("O", issuer_dn.get_first_attribute("O"), organization);
+      result.test_str_eq("OU", issuer_dn.get_first_attribute("OU"), organization_unit);
+      result.test_str_eq("CN", issuer_dn.get_first_attribute("CN"), common_name);
+      result.test_str_eq("L", issuer_dn.get_first_attribute("L"), location);
    } catch(const Botan::Decoding_Error& ex) {
       result.test_failure(ex.what());
    }
@@ -616,9 +616,9 @@ Test::Result test_x509_bmpstring() {
 
       const Botan::X509_DN& issuer_dn = ucs2_cert.issuer_dn();
 
-      result.test_eq("O", issuer_dn.get_first_attribute("O"), organization);
-      result.test_eq("CN", issuer_dn.get_first_attribute("CN"), common_name);
-      result.test_eq("L", issuer_dn.get_first_attribute("L"), location);
+      result.test_str_eq("O", issuer_dn.get_first_attribute("O"), organization);
+      result.test_str_eq("CN", issuer_dn.get_first_attribute("CN"), common_name);
+      result.test_str_eq("L", issuer_dn.get_first_attribute("L"), location);
    } catch(const Botan::Decoding_Error& ex) {
       result.test_failure(ex.what());
    }
@@ -636,8 +636,8 @@ Test::Result test_x509_teletex() {
 
       const std::string common_name = "neam Gesellschaft f\xc3\xbcr Kommunikationsl\xc3\xb6sungen mbH";
 
-      result.test_eq("O", issuer_dn.get_first_attribute("O"), "neam CA");
-      result.test_eq("CN", issuer_dn.get_first_attribute("CN"), common_name);
+      result.test_str_eq("O", issuer_dn.get_first_attribute("O"), "neam CA");
+      result.test_str_eq("CN", issuer_dn.get_first_attribute("CN"), common_name);
    } catch(const Botan::Decoding_Error& ex) {
       result.test_failure(ex.what());
    }
@@ -652,7 +652,7 @@ Test::Result test_x509_authority_info_access_extension() {
    const Botan::X509_Certificate no_aia_cert(Test::data_file("x509/misc/contains_utf8string.pem"));
 
    result.test_sz_eq("number of ca_issuers URLs", no_aia_cert.ca_issuers().size(), 0);
-   result.test_eq("CA issuer URL matches", no_aia_cert.ocsp_responder(), "");
+   result.test_str_eq("CA issuer URL matches", no_aia_cert.ocsp_responder(), "");
 
    // contains AIA extension with 1 CA issuer URL and 1 OCSP responder
    const Botan::X509_Certificate aia_cert(Test::data_file("x509/misc/contains_authority_info_access.pem"));
@@ -664,8 +664,8 @@ Test::Result test_x509_authority_info_access_extension() {
       return result;
    }
 
-   result.test_eq("CA issuer URL matches", ca_issuers[0], "http://gp.symcb.com/gp.crt");
-   result.test_eq("OCSP responder URL matches", aia_cert.ocsp_responder(), "http://gp.symcd.com");
+   result.test_str_eq("CA issuer URL matches", ca_issuers[0], "http://gp.symcb.com/gp.crt");
+   result.test_str_eq("OCSP responder URL matches", aia_cert.ocsp_responder(), "http://gp.symcd.com");
 
    // contains AIA extension with 2 CA issuer URL and 1 OCSP responder
    const Botan::X509_Certificate aia_cert_2ca(
@@ -678,13 +678,13 @@ Test::Result test_x509_authority_info_access_extension() {
       return result;
    }
 
-   result.test_eq(
+   result.test_str_eq(
       "CA issuer URL matches", ca_issuers2[0], "http://www.d-trust.net/cgi-bin/Bdrive_Test_CA_1-2_2017.crt");
-   result.test_eq(
+   result.test_str_eq(
       "CA issuer URL matches",
       ca_issuers2[1],
       "ldap://directory.d-trust.net/CN=Bdrive%20Test%20CA%201-2%202017,O=Bundesdruckerei%20GmbH,C=DE?cACertificate?base?");
-   result.test_eq("OCSP responder URL matches", aia_cert_2ca.ocsp_responder(), "http://staging.ocsp.d-trust.net");
+   result.test_str_eq("OCSP responder URL matches", aia_cert_2ca.ocsp_responder(), "http://staging.ocsp.d-trust.net");
 
    return result;
 }
@@ -749,16 +749,16 @@ Test::Result test_padding_config() {
    opt.CA_key();
 
    const Botan::X509_Certificate ca_cert_def = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", *rng);
-   test_result.test_eq("CA certificate signature algorithm (default)",
-                       ca_cert_def.signature_algorithm().oid().to_formatted_string(),
-                       "RSA/PKCS1v15(SHA-512)");
+   test_result.test_str_eq("CA certificate signature algorithm (default)",
+                           ca_cert_def.signature_algorithm().oid().to_formatted_string(),
+                           "RSA/PKCS1v15(SHA-512)");
 
    // Create X509 CA certificate; RSA-PSS is explicitly set
    opt.set_padding_scheme("PSSR");
    const Botan::X509_Certificate ca_cert_exp = Botan::X509::create_self_signed_cert(opt, (*sk), "SHA-512", *rng);
-   test_result.test_eq("CA certificate signature algorithm (explicit)",
-                       ca_cert_exp.signature_algorithm().oid().to_formatted_string(),
-                       "RSA/PSS");
+   test_result.test_str_eq("CA certificate signature algorithm (explicit)",
+                           ca_cert_exp.signature_algorithm().oid().to_formatted_string(),
+                           "RSA/PSS");
 
          #if defined(BOTAN_HAS_EMSA_X931)
    // Try to set a padding scheme that is not supported for signing with the given key type
@@ -768,15 +768,15 @@ Test::Result test_padding_config() {
       test_result.test_failure("Could build CA cert with invalid encoding scheme X9.31 for key type " +
                                sk->algo_name());
    } catch(const Botan::Invalid_Argument& e) {
-      test_result.test_eq("Build CA certificate with invalid encoding scheme X9.31 for key type " + sk->algo_name(),
-                          e.what(),
-                          "Signatures using RSA/X9.31(SHA-512) are not supported");
+      test_result.test_str_eq("Build CA certificate with invalid encoding scheme X9.31 for key type " + sk->algo_name(),
+                              e.what(),
+                              "Signatures using RSA/X9.31(SHA-512) are not supported");
    }
          #endif
 
-   test_result.test_eq("CA certificate signature algorithm (explicit)",
-                       ca_cert_exp.signature_algorithm().oid().to_formatted_string(),
-                       "RSA/PSS");
+   test_result.test_str_eq("CA certificate signature algorithm (explicit)",
+                           ca_cert_exp.signature_algorithm().oid().to_formatted_string(),
+                           "RSA/PSS");
 
    const Botan::X509_Time not_before = from_date(-1, 1, 1);
    const Botan::X509_Time not_after = from_date(2, 1, 2);
@@ -785,7 +785,7 @@ Test::Result test_padding_config() {
    Botan::X509_Cert_Options req_opt("endpoint");
    req_opt.set_padding_scheme("PSS(SHA-512,MGF1,64)");
    const Botan::PKCS10_Request end_req = Botan::X509::create_cert_req(req_opt, (*sk), "SHA-512", *rng);
-   test_result.test_eq(
+   test_result.test_str_eq(
       "Certificate request signature algorithm", end_req.signature_algorithm().oid().to_formatted_string(), "RSA/PSS");
 
    // Create X509 CA object: will fail as the chosen hash functions differ
@@ -793,7 +793,7 @@ Test::Result test_padding_config() {
       const Botan::X509_CA ca_fail(ca_cert_exp, (*sk), "SHA-512", "PSS(SHA-256)", *rng);
       test_result.test_failure("Configured conflicting hash functions for CA");
    } catch(const Botan::Invalid_Argument& e) {
-      test_result.test_eq(
+      test_result.test_str_eq(
          "Configured conflicting hash functions for CA",
          e.what(),
          "Specified hash function SHA-512 is incompatible with RSA chose hash function SHA-256 with user specified padding PSS(SHA-256)");
@@ -802,26 +802,26 @@ Test::Result test_padding_config() {
    // Create X509 CA object: its signer will use the padding scheme from the CA certificate, i.e. PKCS1v15
    const Botan::X509_CA ca_def(ca_cert_def, (*sk), "SHA-512", *rng);
    const Botan::X509_Certificate end_cert_pkcs1 = ca_def.sign_request(end_req, *rng, not_before, not_after);
-   test_result.test_eq("End certificate signature algorithm",
-                       end_cert_pkcs1.signature_algorithm().oid().to_formatted_string(),
-                       "RSA/PKCS1v15(SHA-512)");
+   test_result.test_str_eq("End certificate signature algorithm",
+                           end_cert_pkcs1.signature_algorithm().oid().to_formatted_string(),
+                           "RSA/PKCS1v15(SHA-512)");
 
    // Create X509 CA object: its signer will use the explicitly configured padding scheme, which is different from the CA certificate's scheme
    const Botan::X509_CA ca_diff(ca_cert_def, (*sk), "SHA-512", "PSS", *rng);
    const Botan::X509_Certificate end_cert_diff_pss = ca_diff.sign_request(end_req, *rng, not_before, not_after);
-   test_result.test_eq("End certificate signature algorithm",
-                       end_cert_diff_pss.signature_algorithm().oid().to_formatted_string(),
-                       "RSA/PSS");
+   test_result.test_str_eq("End certificate signature algorithm",
+                           end_cert_diff_pss.signature_algorithm().oid().to_formatted_string(),
+                           "RSA/PSS");
 
    // Create X509 CA object: its signer will use the explicitly configured padding scheme, which is identical to the CA certificate's scheme
    const Botan::X509_CA ca_exp(ca_cert_exp, (*sk), "SHA-512", "PSS(SHA-512,MGF1,64)", *rng);
    const Botan::X509_Certificate end_cert_pss = ca_exp.sign_request(end_req, *rng, not_before, not_after);
-   test_result.test_eq(
+   test_result.test_str_eq(
       "End certificate signature algorithm", end_cert_pss.signature_algorithm().oid().to_formatted_string(), "RSA/PSS");
 
    // Check CRL signature algorithm
    const Botan::X509_CRL crl = ca_exp.new_crl(*rng);
-   test_result.test_eq("CRL signature algorithm", crl.signature_algorithm().oid().to_formatted_string(), "RSA/PSS");
+   test_result.test_str_eq("CRL signature algorithm", crl.signature_algorithm().oid().to_formatted_string(), "RSA/PSS");
 
    // sanity check for verification, the heavy lifting is done in the other unit tests
    const Botan::Certificate_Store_In_Memory trusted(ca_exp.ca_certificate());
@@ -867,10 +867,10 @@ Test::Result test_pkcs10_ext(const Botan::Private_Key& key,
    result.test_sz_eq("Expected number of DNS names", alt_dns_names.size(), 4);
 
    if(alt_dns_names.size() == 4) {
-      result.test_eq("Expected DNS name 1", alt_dns_names.at(0), "bonus.example.org");
-      result.test_eq("Expected DNS name 2", alt_dns_names.at(1), "main.example.org");
-      result.test_eq("Expected DNS name 3", alt_dns_names.at(2), "more1.example.org");
-      result.test_eq("Expected DNS name 3", alt_dns_names.at(3), "more2.example.org");
+      result.test_str_eq("Expected DNS name 1", alt_dns_names.at(0), "bonus.example.org");
+      result.test_str_eq("Expected DNS name 2", alt_dns_names.at(1), "main.example.org");
+      result.test_str_eq("Expected DNS name 3", alt_dns_names.at(2), "more1.example.org");
+      result.test_str_eq("Expected DNS name 3", alt_dns_names.at(3), "more2.example.org");
    }
 
    result.test_sz_eq("Expected number of alt DNs", req.subject_alt_name().directory_names().size(), 1);
@@ -900,7 +900,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    const Botan::PKCS10_Request user1_req =
       Botan::X509::create_cert_req(req_opts1(sig_algo, sig_padding), *user1_key, hash_fn, rng);
 
-   result.test_eq("PKCS10 challenge password parsed", user1_req.challenge_password(), "zoom");
+   result.test_str_eq("PKCS10 challenge password parsed", user1_req.challenge_password(), "zoom");
 
    /* Create user #2's key and cert request */
    auto user2_key = make_a_private_key(sig_algo, rng);
@@ -958,27 +958,28 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    result.test_sz_eq("x509 version", user1_cert.x509_version(), size_t(3));
 
    const Botan::X509_DN& user1_issuer_dn = user1_cert.issuer_dn();
-   result.test_eq("issuer info CN", user1_issuer_dn.get_first_attribute("CN"), ca_opts().common_name);
-   result.test_eq("issuer info Country", user1_issuer_dn.get_first_attribute("C"), ca_opts().country);
-   result.test_eq("issuer info Orga", user1_issuer_dn.get_first_attribute("O"), ca_opts().organization);
-   result.test_eq("issuer info OrgaUnit", user1_issuer_dn.get_first_attribute("OU"), ca_opts().org_unit);
+   result.test_str_eq("issuer info CN", user1_issuer_dn.get_first_attribute("CN"), ca_opts().common_name);
+   result.test_str_eq("issuer info Country", user1_issuer_dn.get_first_attribute("C"), ca_opts().country);
+   result.test_str_eq("issuer info Orga", user1_issuer_dn.get_first_attribute("O"), ca_opts().organization);
+   result.test_str_eq("issuer info OrgaUnit", user1_issuer_dn.get_first_attribute("OU"), ca_opts().org_unit);
 
    const Botan::X509_DN& user3_subject_dn = user3_cert.subject_dn();
    result.test_sz_eq("subject OrgaUnit count",
                      user3_subject_dn.get_attribute("OU").size(),
                      req_opts3(sig_algo).more_org_units.size() + 1);
-   result.test_eq(
+   result.test_str_eq(
       "subject OrgaUnit #2", user3_subject_dn.get_attribute("OU").at(1), req_opts3(sig_algo).more_org_units.at(0));
 
    const Botan::AlternativeName& user1_altname = user1_cert.subject_alt_name();
-   result.test_eq("subject alt email", user1_altname.get_first_attribute("RFC822"), "testing@randombit.net");
-   result.test_eq("subject alt dns", user1_altname.get_first_attribute("DNS"), "botan.randombit.net");
-   result.test_eq("subject alt uri", user1_altname.get_first_attribute("URI"), "https://botan.randombit.net");
+   result.test_str_eq("subject alt email", user1_altname.get_first_attribute("RFC822"), "testing@randombit.net");
+   result.test_str_eq("subject alt dns", user1_altname.get_first_attribute("DNS"), "botan.randombit.net");
+   result.test_str_eq("subject alt uri", user1_altname.get_first_attribute("URI"), "https://botan.randombit.net");
 
    const Botan::AlternativeName& user3_altname = user3_cert.subject_alt_name();
    result.test_sz_eq(
       "subject alt dns count", user3_altname.get_attribute("DNS").size(), req_opts3(sig_algo).more_dns.size() + 1);
-   result.test_eq("subject alt dns #2", user3_altname.get_attribute("DNS").at(1), req_opts3(sig_algo).more_dns.at(0));
+   result.test_str_eq(
+      "subject alt dns #2", user3_altname.get_attribute("DNS").at(1), req_opts3(sig_algo).more_dns.at(0));
 
    const Botan::X509_CRL crl1 = ca.new_crl(rng);
 
@@ -988,9 +989,10 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
 
    // First try with an empty store
    const Botan::Path_Validation_Result result_no_issuer = Botan::x509_path_validate(user1_cert, restrictions, store);
-   result.test_eq("user 1 issuer not found",
-                  result_no_issuer.result_string(),
-                  Botan::Path_Validation_Result::status_string(Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND));
+   result.test_str_eq(
+      "user 1 issuer not found",
+      result_no_issuer.result_string(),
+      Botan::Path_Validation_Result::status_string(Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND));
 
    store.add_certificate(ca.ca_certificate());
 
@@ -1006,9 +1008,10 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
 
    const Botan::Path_Validation_Result result_self_signed =
       Botan::x509_path_validate(user1_ss_cert, restrictions, store);
-   result.test_eq("user 1 issuer not found",
-                  result_no_issuer.result_string(),
-                  Botan::Path_Validation_Result::status_string(Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND));
+   result.test_str_eq(
+      "user 1 issuer not found",
+      result_no_issuer.result_string(),
+      Botan::Path_Validation_Result::status_string(Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND));
    store.add_crl(crl1);
 
    std::vector<Botan::CRL_Entry> revoked;
@@ -1023,10 +1026,10 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
       Botan::Path_Validation_Result::status_string(Botan::Certificate_Status_Code::CERT_IS_REVOKED);
 
    result_u1 = Botan::x509_path_validate(user1_cert, restrictions, store);
-   result.test_eq("user 1 revoked", result_u1.result_string(), revoked_str);
+   result.test_str_eq("user 1 revoked", result_u1.result_string(), revoked_str);
 
    result_u2 = Botan::x509_path_validate(user2_cert, restrictions, store);
-   result.test_eq("user 1 revoked", result_u2.result_string(), revoked_str);
+   result.test_str_eq("user 1 revoked", result_u2.result_string(), revoked_str);
 
    revoked.clear();
    revoked.push_back(Botan::CRL_Entry(user1_cert, Botan::CRL_Code::RemoveFromCrl));
@@ -1040,7 +1043,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    }
 
    result_u2 = Botan::x509_path_validate(user2_cert, restrictions, store);
-   result.test_eq("user 2 still revoked", result_u2.result_string(), revoked_str);
+   result.test_str_eq("user 2 still revoked", result_u2.result_string(), revoked_str);
 
    return result;
 }
@@ -1441,7 +1444,7 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    // check if custom extension is present in self-signed cert
    auto string_ext = self_signed_cert.v3_extensions().get_raw<String_Extension>(oid);
    if(result.test_is_true("Custom extension present in self-signed certificate", string_ext != nullptr)) {
-      result.test_eq(
+      result.test_str_eq(
          "Custom extension value matches in self-signed certificate", string_ext->value(), "AAAAAAAAAAAAAABCDEF");
    }
 
@@ -1479,7 +1482,7 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
                        ca_signed_cert.v3_extensions().extension_set(oid));
    string_ext = ca_signed_cert.v3_extensions().get_raw<String_Extension>(oid);
    if(result.test_is_true("Custom extension present in CA-signed certificate", string_ext != nullptr)) {
-      result.test_eq(
+      result.test_str_eq(
          "Custom extension value matches in CA-signed certificate", string_ext->value(), "AAAAAAAAAAAAAABCDEF");
    }
 
@@ -1533,8 +1536,8 @@ Test::Result test_hashes(const Botan::Private_Key& key, const std::string& hash_
 
       const Botan::X509_Certificate issuer_cert = Botan::X509::create_self_signed_cert(opts, key, hash_fn, rng);
 
-      result.test_eq(a.issuer, Botan::hex_encode(issuer_cert.raw_issuer_dn_sha256()), a.issuer_hash);
-      result.test_eq(a.issuer, Botan::hex_encode(issuer_cert.raw_subject_dn_sha256()), a.issuer_hash);
+      result.test_str_eq(a.issuer, Botan::hex_encode(issuer_cert.raw_issuer_dn_sha256()), a.issuer_hash);
+      result.test_str_eq(a.issuer, Botan::hex_encode(issuer_cert.raw_subject_dn_sha256()), a.issuer_hash);
 
       const Botan::X509_CA ca(issuer_cert, key, hash_fn, rng);
       const Botan::PKCS10_Request req =
@@ -1542,8 +1545,8 @@ Test::Result test_hashes(const Botan::Private_Key& key, const std::string& hash_
       const Botan::X509_Certificate subject_cert =
          ca.sign_request(req, rng, from_date(-1, 01, 01), from_date(2, 01, 01));
 
-      result.test_eq(a.subject, Botan::hex_encode(subject_cert.raw_issuer_dn_sha256()), a.issuer_hash);
-      result.test_eq(a.subject, Botan::hex_encode(subject_cert.raw_subject_dn_sha256()), a.subject_hash);
+      result.test_str_eq(a.subject, Botan::hex_encode(subject_cert.raw_issuer_dn_sha256()), a.issuer_hash);
+      result.test_str_eq(a.subject, Botan::hex_encode(subject_cert.raw_subject_dn_sha256()), a.subject_hash);
    }
    return result;
 }
@@ -1588,18 +1591,18 @@ Test::Result test_x509_tn_auth_list_extension_decode() {
                       [&tn_entries] { tn_entries[2].service_provider_code(); });
 
    result.test_is_true("spc entry type", tn_entries[0].type() == TNAuthList::Entry::ServiceProviderCode);
-   result.test_eq("spc entry data", tn_entries[0].service_provider_code(), "1001");
+   result.test_str_eq("spc entry data", tn_entries[0].service_provider_code(), "1001");
 
    result.test_is_true("range entry type", tn_entries[1].type() == TNAuthList::Entry::TelephoneNumberRange);
    const auto& range = tn_entries[1].telephone_number_range();
    result.test_sz_eq("range entries count", range.size(), 2);
-   result.test_eq("range entry 0 start data", range[0].start.value(), "111");
+   result.test_str_eq("range entry 0 start data", range[0].start.value(), "111");
    result.test_sz_eq("range entry 0 count data", range[0].count, 128);
-   result.test_eq("range entry 1 start data", range[1].start.value(), "222");
+   result.test_str_eq("range entry 1 start data", range[1].start.value(), "222");
    result.test_sz_eq("range entry 1 count data", range[1].count, 256);
 
    result.test_is_true("one entry type", tn_entries[2].type() == TNAuthList::Entry::TelephoneNumber);
-   result.test_eq("one entry data", tn_entries[2].telephone_number(), "333");
+   result.test_str_eq("one entry data", tn_entries[2].telephone_number(), "333");
 
    result.end_timer();
    return result;

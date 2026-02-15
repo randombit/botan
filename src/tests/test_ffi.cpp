@@ -322,7 +322,7 @@ class FFI_Utils_Test final : public FFI_Test {
          result.test_u32_eq("Major version", botan_version_major(), Botan::version_major());
          result.test_u32_eq("Minor version", botan_version_minor(), Botan::version_minor());
          result.test_u32_eq("Patch version", botan_version_patch(), Botan::version_patch());
-         result.test_eq("Botan version", botan_version_string(), Botan::version_cstr());
+         result.test_str_eq("Botan version", botan_version_string(), Botan::version_cstr());
          result.test_u32_eq("Botan version datestamp", botan_version_datestamp(), Botan::version_datestamp());
          result.test_is_eq("FFI supports its own version", botan_ffi_supports_api(botan_ffi_api_version()), 0);
 
@@ -352,10 +352,10 @@ class FFI_Utils_Test final : public FFI_Test {
          std::string outstr;
          outstr.resize(2 * bin.size());
          TEST_FFI_OK(botan_hex_encode, (bin.data(), bin.size(), outstr.data(), 0));
-         result.test_eq("uppercase hex", outstr, "AADE01");
+         result.test_str_eq("uppercase hex", outstr, "AADE01");
 
          TEST_FFI_OK(botan_hex_encode, (bin.data(), bin.size(), outstr.data(), BOTAN_FFI_HEX_LOWER_CASE));
-         result.test_eq("lowercase hex", outstr, "aade01");
+         result.test_str_eq("lowercase hex", outstr, "aade01");
       }
 };
 
@@ -829,11 +829,12 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
 
          TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end2, &sub2, 1, &root, 1, nullptr, 0, nullptr, 0));
          result.test_is_true("Validation test02 failed", rc == 5002);
-         result.test_eq("Validation test02 status string", botan_x509_cert_validation_status(rc), "Signature error");
+         result.test_str_eq(
+            "Validation test02 status string", botan_x509_cert_validation_status(rc), "Signature error");
 
          TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end2, nullptr, 0, &root, 1, nullptr, 0, nullptr, 0));
          result.test_is_true("Validation test02 failed (missing int)", rc == 3000);
-         result.test_eq(
+         result.test_str_eq(
             "Validation test02 status string", botan_x509_cert_validation_status(rc), "Certificate issuer not found");
 
          botan_x509_cert_t end7;
@@ -844,19 +845,19 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          const botan_x509_cert_t subs[2] = {sub2, sub7};
          TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end7, subs, 2, &root, 1, nullptr, 0, nullptr, 0));
          result.test_is_true("Validation test07 failed with expected error", rc == 1001);
-         result.test_eq("Validation test07 status string",
-                        botan_x509_cert_validation_status(rc),
-                        "Hash function used is considered too weak for security");
+         result.test_str_eq("Validation test07 status string",
+                            botan_x509_cert_validation_status(rc),
+                            "Hash function used is considered too weak for security");
 
          TEST_FFI_RC(0, botan_x509_cert_verify, (&rc, end7, subs, 2, &root, 1, nullptr, 80, nullptr, 0));
          result.test_is_true("Validation test07 passed", rc == 0);
-         result.test_eq("Validation test07 status string", botan_x509_cert_validation_status(rc), "Verified");
+         result.test_str_eq("Validation test07 status string", botan_x509_cert_validation_status(rc), "Verified");
 
          TEST_FFI_RC(1,
                      botan_x509_cert_verify_with_crl,
                      (&rc, end7, subs, 2, nullptr, 0, nullptr, 0, "x509/farce", 0, nullptr, 0));
          result.test_is_true("Validation test07 failed with expected error", rc == 3000);
-         result.test_eq(
+         result.test_str_eq(
             "Validation test07 status string", botan_x509_cert_validation_status(rc), "Certificate issuer not found");
 
          botan_x509_crl_t rootcrl;
@@ -865,7 +866,8 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          TEST_FFI_RC(
             0, botan_x509_cert_verify_with_crl, (&rc, end7, subs, 2, &root, 1, &rootcrl, 1, nullptr, 80, nullptr, 0));
          result.test_is_true("Validation test07 with CRL passed", rc == 0);
-         result.test_eq("Validation test07 with CRL status string", botan_x509_cert_validation_status(rc), "Verified");
+         result.test_str_eq(
+            "Validation test07 with CRL status string", botan_x509_cert_validation_status(rc), "Verified");
 
          botan_x509_cert_t end20;
          botan_x509_cert_t sub20;
@@ -877,7 +879,7 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          TEST_FFI_RC(
             1, botan_x509_cert_verify_with_crl, (&rc, end20, &sub20, 1, &root, 1, crls, 2, nullptr, 80, nullptr, 0));
          result.test_is_true("Validation test20 failed with expected error", rc == 5000);
-         result.test_eq(
+         result.test_str_eq(
             "Validation test20 status string", botan_x509_cert_validation_status(rc), "Certificate is revoked");
 
          TEST_FFI_OK(botan_x509_cert_destroy, (root_with_pathlen));
@@ -910,7 +912,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             std::string date(date_len - 1, '0');
             TEST_FFI_OK(botan_x509_cert_get_time_starts, (cert, date.data(), &date_len));
-            result.test_eq("cert valid from", date, "200904000000Z");
+            result.test_str_eq("cert valid from", date, "200904000000Z");
 
             date_len = 0;
             TEST_FFI_RC(
@@ -918,7 +920,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             date.resize(date_len - 1);
             TEST_FFI_OK(botan_x509_cert_get_time_expires, (cert, date.data(), &date_len));
-            result.test_eq("cert valid until", date, "400917160000Z");
+            result.test_str_eq("cert valid until", date, "400917160000Z");
 
             uint64_t not_before = 0;
             TEST_FFI_OK(botan_x509_cert_not_before, (cert, &not_before));
@@ -936,7 +938,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
             std::vector<uint8_t> serial(serial_len);
             TEST_FFI_OK(botan_x509_cert_get_serial_number, (cert, serial.data(), &serial_len));
             result.test_sz_eq("cert serial length", serial.size(), 16);
-            result.test_eq("cert serial", Botan::hex_encode(serial), "41D29DD172EAEEA780C12C6CE92F8752");
+            result.test_str_eq("cert serial", Botan::hex_encode(serial), "41D29DD172EAEEA780C12C6CE92F8752");
 
             size_t fingerprint_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
@@ -945,7 +947,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             std::vector<uint8_t> fingerprint(fingerprint_len);
             TEST_FFI_OK(botan_x509_cert_get_fingerprint, (cert, "SHA-256", fingerprint.data(), &fingerprint_len));
-            result.test_eq(
+            result.test_str_eq(
                "cert fingerprint",
                reinterpret_cast<const char*>(fingerprint.data()),
                "69:72:9B:8E:15:A8:6E:FC:17:7A:57:AF:B7:17:1D:FC:64:AD:D2:8C:2F:CA:8C:F1:50:7E:34:45:3C:CB:14:70");
@@ -964,9 +966,9 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             std::vector<uint8_t> key_id(key_id_len);
             TEST_FFI_OK(botan_x509_cert_get_subject_key_id, (cert, key_id.data(), &key_id_len));
-            result.test_eq("cert subject key id",
-                           Botan::hex_encode(key_id.data(), key_id.size(), true),
-                           "7C4296AEDE4B483BFA92F89E8CCF6D8BA9723795");
+            result.test_str_eq("cert subject key id",
+                               Botan::hex_encode(key_id.data(), key_id.size(), true),
+                               "7C4296AEDE4B483BFA92F89E8CCF6D8BA9723795");
 
             size_t pubkey_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
@@ -997,7 +999,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             std::vector<uint8_t> dn(dn_len);
             TEST_FFI_OK(botan_x509_cert_get_issuer_dn, (cert, "Name", 0, dn.data(), &dn_len));
-            result.test_eq("issuer dn", reinterpret_cast<const char*>(dn.data()), "ISRG Root X2");
+            result.test_str_eq("issuer dn", reinterpret_cast<const char*>(dn.data()), "ISRG Root X2");
 
             TEST_FFI_OK(botan_x509_cert_get_subject_dn_count, (cert, "Name", &rdn_count));
             result.test_sz_eq("subject DN 'name' count", rdn_count, 1);
@@ -1011,7 +1013,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             dn.resize(dn_len);
             TEST_FFI_OK(botan_x509_cert_get_subject_dn, (cert, "Name", 0, dn.data(), &dn_len));
-            result.test_eq("subject dn", reinterpret_cast<const char*>(dn.data()), "ISRG Root X2");
+            result.test_str_eq("subject dn", reinterpret_cast<const char*>(dn.data()), "ISRG Root X2");
 
             size_t printable_len = 0;
             TEST_FFI_RC(
@@ -1391,20 +1393,20 @@ class FFI_Cert_NameConstraints_Test final : public FFI_Test {
          ViewStringSink str;
 
          TEST_FFI_OK(botan_x509_general_name_view_string_value, (email, str.delegate(), str.callback()));
-         result.test_eq("email as expected", str.get(), "agid.gov.it");
+         result.test_str_eq("email as expected", str.get(), "agid.gov.it");
          TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE,
                      botan_x509_general_name_view_binary_value,
                      (email, bin.delegate(), bin.callback()));
 
          TEST_FFI_OK(botan_x509_general_name_view_string_value, (dns, str.delegate(), str.callback()));
-         result.test_eq("dns as expected", str.get(), "agendadigitale.it");
+         result.test_str_eq("dns as expected", str.get(), "agendadigitale.it");
          TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE,
                      botan_x509_general_name_view_binary_value,
                      (dns, bin.delegate(), bin.callback()));
 
          TEST_FFI_OK(botan_x509_general_name_view_binary_value, (dn, bin.delegate(), bin.callback()));
          const auto organization = read_distinguished_name(bin.get()).get_first_attribute("O");
-         result.test_eq("dn as expected", organization, "ACI Informatica S.p.A.");
+         result.test_str_eq("dn as expected", organization, "ACI Informatica S.p.A.");
          TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE,
                      botan_x509_general_name_view_string_value,
                      (dn, str.delegate(), str.callback()));
@@ -1412,7 +1414,7 @@ class FFI_Cert_NameConstraints_Test final : public FFI_Test {
          TEST_FFI_OK(botan_x509_general_name_view_binary_value, (ip, bin.delegate(), bin.callback()));
          result.test_sz_eq("ip has correct length", bin.get().size(), 8);
          TEST_FFI_OK(botan_x509_general_name_view_string_value, (ip, str.delegate(), str.callback()));
-         result.test_eq("ip has correct length", str.get(), "0.0.0.0/0.0.0.0");
+         result.test_str_eq("ip has correct length", str.get(), "0.0.0.0/0.0.0.0");
 
          TEST_FFI_OK(botan_x509_general_name_destroy, (email));
          TEST_FFI_OK(botan_x509_general_name_destroy, (dns));
@@ -1578,7 +1580,7 @@ class FFI_GCM_Test final : public FFI_Test {
             name_len = namebuf.size();
             if(TEST_FFI_OK(botan_cipher_name, (cipher_encrypt, namebuf.data(), &name_len))) {
                result.test_sz_eq("name len", name_len, 16);
-               result.test_eq("name", namebuf.data(), "AES-128/GCM(16)");
+               result.test_str_eq("name", namebuf.data(), "AES-128/GCM(16)");
             }
 
             size_t min_keylen = 0;
@@ -1716,7 +1718,7 @@ class FFI_ChaCha20Poly1305_Test final : public FFI_Test {
             name_len = namebuf.size();
             if(TEST_FFI_OK(botan_cipher_name, (cipher_encrypt, namebuf.data(), &name_len))) {
                result.test_sz_eq("name len", name_len, 17);
-               result.test_eq("name", std::string(namebuf.data()), "ChaCha20Poly1305");
+               result.test_str_eq("name", std::string(namebuf.data()), "ChaCha20Poly1305");
             }
 
             size_t min_keylen = 0;
@@ -2322,7 +2324,7 @@ class FFI_HashFunction_Test final : public FFI_Test {
             name_len = namebuf.size();
             if(TEST_FFI_OK(botan_hash_name, (hash, namebuf.data(), &name_len))) {
                result.test_sz_eq("name len", name_len, 8);
-               result.test_eq("name", namebuf.data(), "SHA-256");
+               result.test_str_eq("name", namebuf.data(), "SHA-256");
             }
 
             size_t block_size;
@@ -2399,7 +2401,7 @@ class FFI_MAC_Test final : public FFI_Test {
             name_len = namebuf.size();
             if(TEST_FFI_OK(botan_mac_name, (mac, namebuf.data(), &name_len))) {
                result.test_sz_eq("name len", name_len, 14);
-               result.test_eq("name", namebuf.data(), "HMAC(SHA-256)");
+               result.test_str_eq("name", namebuf.data(), "HMAC(SHA-256)");
             }
 
             size_t min_keylen = 0;
@@ -2570,7 +2572,7 @@ class FFI_Blockcipher_Test final : public FFI_Test {
             name_len = namebuf.size();
             if(TEST_FFI_OK(botan_block_cipher_name, (cipher, namebuf.data(), &name_len))) {
                result.test_sz_eq("name len", name_len, 8);
-               result.test_eq("name", namebuf.data(), "AES-128");
+               result.test_str_eq("name", namebuf.data(), "AES-128");
             }
 
             const std::vector<uint8_t> zero16(16, 0);
@@ -2664,7 +2666,7 @@ class FFI_Base64_Test final : public FFI_Test {
          size_t out_len = sizeof(out_buf);
          TEST_FFI_OK(botan_base64_encode, (bin, sizeof(bin), out_buf, &out_len));
 
-         result.test_eq("encoded string", out_buf, "FoofBunny900");
+         result.test_str_eq("encoded string", out_buf, "FoofBunny900");
 
          out_len -= 1;
          TEST_FFI_RC(
@@ -2683,7 +2685,7 @@ class FFI_Base64_Test final : public FFI_Test {
          out_len = sizeof(out_bin);
          TEST_FFI_OK(botan_base64_decode, (base64, strlen(base64), out_bin, &out_len));
 
-         result.test_eq(
+         result.test_str_eq(
             "decoded string", std::string(reinterpret_cast<const char*>(out_bin), out_len), "Such base64 wow!");
       }
 };
@@ -2698,7 +2700,7 @@ class FFI_Hex_Test final : public FFI_Test {
 
          TEST_FFI_OK(botan_hex_encode, (bin, sizeof(bin), hex_buf, 0));
 
-         result.test_eq("encoded string", hex_buf, "DEADBEEF");
+         result.test_str_eq("encoded string", hex_buf, "DEADBEEF");
 
          const char* hex = "67657420796572206A756D626F20736872696D70";
          uint8_t out_bin[1024] = {0};
@@ -2710,7 +2712,7 @@ class FFI_Hex_Test final : public FFI_Test {
          out_len = sizeof(out_bin);
          TEST_FFI_OK(botan_hex_decode, (hex, strlen(hex), out_bin, &out_len));
 
-         result.test_eq(
+         result.test_str_eq(
             "decoded string", std::string(reinterpret_cast<const char*>(out_bin), out_len), "get yer jumbo shrimp");
       }
 };
@@ -2747,7 +2749,7 @@ class FFI_MP_Test final : public FFI_Test {
 
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (x, 10, str_buf, &str_len));
-         result.test_eq("botan_mp_add", std::string(str_buf), "80");
+         result.test_str_eq("botan_mp_add", std::string(str_buf), "80");
 
          botan_mp_sub_u32(x, x, 80);
          TEST_FFI_RC(1, botan_mp_is_zero, (x));
@@ -2757,7 +2759,7 @@ class FFI_MP_Test final : public FFI_Test {
 
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (x, 10, str_buf, &str_len));
-         result.test_eq("botan_mp_add", std::string(str_buf), "259");
+         result.test_str_eq("botan_mp_add", std::string(str_buf), "259");
 
          TEST_FFI_RC(1, botan_mp_is_odd, (x));
          TEST_FFI_RC(0, botan_mp_is_even, (x));
@@ -2817,15 +2819,15 @@ class FFI_MP_Test final : public FFI_Test {
          result.test_sz_eq("botan_mp_num_bits", x_bits, 9);
 
          TEST_FFI_OK(botan_mp_to_hex, (x, str_buf));
-         result.test_eq("botan_mp_to_hex", std::string(str_buf), "0x0103");
+         result.test_str_eq("botan_mp_to_hex", std::string(str_buf), "0x0103");
 
          ViewStringSink hex_sink;
          TEST_FFI_OK(botan_mp_view_hex, (x, hex_sink.delegate(), hex_sink.callback()));
-         result.test_eq("botan_mp_view_hex", hex_sink.get(), "0x0103");
+         result.test_str_eq("botan_mp_view_hex", hex_sink.get(), "0x0103");
 
          ViewStringSink str_sink;
          TEST_FFI_OK(botan_mp_view_str, (x, 10, str_sink.delegate(), str_sink.callback()));
-         result.test_eq("botan_mp_view_str", str_sink.get(), "259");
+         result.test_str_eq("botan_mp_view_str", str_sink.get(), "259");
 
          ViewBytesSink bin_sink;
          TEST_FFI_OK(botan_mp_view_bin, (x, bin_sink.delegate(), bin_sink.callback()));
@@ -2840,11 +2842,11 @@ class FFI_MP_Test final : public FFI_Test {
          TEST_FFI_OK(botan_mp_set_bit, (x, 87));
          TEST_FFI_RC(1, botan_mp_get_bit, (x, 87));
          TEST_FFI_OK(botan_mp_to_hex, (x, str_buf));
-         result.test_eq("botan_mp_set_bit", std::string(str_buf), "0x8000000000000000000103");
+         result.test_str_eq("botan_mp_set_bit", std::string(str_buf), "0x8000000000000000000103");
 
          TEST_FFI_OK(botan_mp_clear_bit, (x, 87));
          TEST_FFI_OK(botan_mp_to_hex, (x, str_buf));
-         result.test_eq("botan_mp_set_bit", std::string(str_buf), "0x0103");
+         result.test_str_eq("botan_mp_set_bit", std::string(str_buf), "0x0103");
 
          botan_mp_t y;
          TEST_FFI_OK(botan_mp_init, (&y));
@@ -2856,12 +2858,12 @@ class FFI_MP_Test final : public FFI_Test {
          TEST_FFI_OK(botan_mp_add, (r, x, y));
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_eq("botan_mp_add", std::string(str_buf), "19089002");
+         result.test_str_eq("botan_mp_add", std::string(str_buf), "19089002");
 
          TEST_FFI_OK(botan_mp_mul, (r, x, y));
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_eq("botan_mp_mul", std::string(str_buf), "4943984437");
+         result.test_str_eq("botan_mp_mul", std::string(str_buf), "4943984437");
          TEST_FFI_RC(0, botan_mp_is_negative, (r));
 
          botan_mp_t q;
@@ -2870,33 +2872,33 @@ class FFI_MP_Test final : public FFI_Test {
 
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (q, 10, str_buf, &str_len));
-         result.test_eq("botan_mp_div_q", std::string(str_buf), "73701");
+         result.test_str_eq("botan_mp_div_q", std::string(str_buf), "73701");
 
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_eq("botan_mp_div_r", std::string(str_buf), "184");
+         result.test_str_eq("botan_mp_div_r", std::string(str_buf), "184");
 
          TEST_FFI_OK(botan_mp_set_from_str, (y, "4943984437"));
          TEST_FFI_OK(botan_mp_sub, (r, x, y));
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_eq("botan_mp_sub", std::string(str_buf), "-4943984178");
+         result.test_str_eq("botan_mp_sub", std::string(str_buf), "-4943984178");
          TEST_FFI_RC(1, botan_mp_is_negative, (r));
 
          TEST_FFI_OK(botan_mp_lshift, (r, x, 39));
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_eq("botan_mp_lshift", std::string(str_buf), "142386755796992");
+         result.test_str_eq("botan_mp_lshift", std::string(str_buf), "142386755796992");
 
          TEST_FFI_OK(botan_mp_rshift, (r, r, 3));
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_eq("botan_mp_rshift", std::string(str_buf), "17798344474624");
+         result.test_str_eq("botan_mp_rshift", std::string(str_buf), "17798344474624");
 
          TEST_FFI_OK(botan_mp_gcd, (r, x, y));
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_eq("botan_mp_gcd", std::string(str_buf), "259");
+         result.test_str_eq("botan_mp_gcd", std::string(str_buf), "259");
 
          botan_mp_t p;
          botan_mp_init(&p);
@@ -2912,12 +2914,12 @@ class FFI_MP_Test final : public FFI_Test {
          TEST_FFI_OK(botan_mp_mod_inverse, (r, x, p));
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_eq("botan_mp_mod_inverse", std::string(str_buf), "40728777507911553541948312086427855425");
+         result.test_str_eq("botan_mp_mod_inverse", std::string(str_buf), "40728777507911553541948312086427855425");
 
          TEST_FFI_OK(botan_mp_powmod, (r, x, r, p));
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_eq("botan_mp_powmod", std::string(str_buf), "40550417419160441638948180641668117560");
+         result.test_str_eq("botan_mp_powmod", std::string(str_buf), "40550417419160441638948180641668117560");
 
          TEST_FFI_OK(botan_mp_num_bytes, (r, &bn_bytes));
          result.test_sz_eq("botan_mp_num_bytes", bn_bytes, 16);
@@ -2931,7 +2933,7 @@ class FFI_MP_Test final : public FFI_Test {
          TEST_FFI_OK(botan_mp_mod_mul, (r, x, y, p));
          str_len = sizeof(str_buf);
          TEST_FFI_OK(botan_mp_to_str, (r, 10, str_buf, &str_len));
-         result.test_eq("botan_mp_mod_mul", std::string(str_buf), "123945920473931248854653259523111998693");
+         result.test_str_eq("botan_mp_mod_mul", std::string(str_buf), "123945920473931248854653259523111998693");
 
          str_len = 0;
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_mp_to_str, (r, 10, str_buf, &str_len));
@@ -3233,12 +3235,12 @@ class FFI_RSA_Test final : public FFI_Test {
             std::array<char, 32> namebuf{};
             size_t name_len = namebuf.size();
             if(TEST_FFI_OK(botan_pubkey_algo_name, (loaded_pubkey, namebuf.data(), &name_len))) {
-               result.test_eq("algo name", namebuf.data(), "RSA");
+               result.test_str_eq("algo name", namebuf.data(), "RSA");
             }
 
             name_len = namebuf.size();
             if(TEST_FFI_OK(botan_privkey_algo_name, (loaded_privkey, namebuf.data(), &name_len))) {
-               result.test_eq("algo name", namebuf.data(), "RSA");
+               result.test_str_eq("algo name", namebuf.data(), "RSA");
             }
 
             botan_pk_op_encrypt_t encrypt;
@@ -3455,7 +3457,7 @@ class FFI_ECDSA_Test final : public FFI_Test {
          size_t name_len = namebuf.size();
 
          TEST_FFI_OK(botan_pubkey_algo_name, (pub, namebuf.data(), &name_len));
-         result.test_eq("Algo name is expected", namebuf.data(), "ECDSA");
+         result.test_str_eq("Algo name is expected", namebuf.data(), "ECDSA");
 
          std::vector<uint8_t> message(1280);
          std::vector<uint8_t> signature;
@@ -3571,7 +3573,7 @@ class FFI_SM2_Sig_Test final : public FFI_Test {
          size_t name_len = namebuf.size();
 
          TEST_FFI_OK(botan_pubkey_algo_name, (pub, namebuf.data(), &name_len));
-         result.test_eq("Algo name is expected", namebuf.data(), "SM2");
+         result.test_str_eq("Algo name is expected", namebuf.data(), "SM2");
 
          std::vector<uint8_t> message(1280);
          std::vector<uint8_t> signature;
@@ -3679,7 +3681,7 @@ class FFI_SM2_Enc_Test final : public FFI_Test {
          size_t name_len = namebuf.size();
 
          TEST_FFI_OK(botan_pubkey_algo_name, (pub, namebuf.data(), &name_len));
-         result.test_eq("Algo name is expected", namebuf.data(), "SM2");
+         result.test_str_eq("Algo name is expected", namebuf.data(), "SM2");
 
          std::vector<uint8_t> message(32);
 
@@ -3840,7 +3842,7 @@ class FFI_McEliece_Test final : public FFI_Test {
             std::array<char, 32> namebuf{};
             size_t name_len = namebuf.size();
             if(TEST_FFI_OK(botan_pubkey_algo_name, (pub, namebuf.data(), &name_len))) {
-               result.test_eq("algo name", namebuf.data(), "McEliece");
+               result.test_str_eq("algo name", namebuf.data(), "McEliece");
             }
 
             // TODO test KEM
@@ -4922,7 +4924,7 @@ class FFI_OID_Test final : public FFI_Test {
             TEST_FFI_OK(botan_oid_view_string, (rsa_oid_expected, oid_string.delegate(), oid_string.callback()));
             const std::string oid_actual = {oid_string.get().begin(), oid_string.get().end()};
 
-            result.test_eq("oid to string", oid_actual, oid_rsa_expected);
+            result.test_str_eq("oid to string", oid_actual, oid_rsa_expected);
 
             TEST_FFI_OK(botan_oid_from_string, (&rsa_oid_from_name, "RSA"));
             TEST_FFI_RC(1, botan_oid_equal, (rsa_oid_expected, rsa_oid_from_name));
@@ -4930,7 +4932,7 @@ class FFI_OID_Test final : public FFI_Test {
             ViewStringSink rsa_name;
             TEST_FFI_OK(botan_oid_view_name, (rsa_oid_from_name, rsa_name.delegate(), rsa_name.callback()));
             const std::string rsa_name_string = {rsa_name.get().begin(), rsa_name.get().end()};
-            result.test_eq("oid to name", rsa_name_string, "RSA");
+            result.test_str_eq("oid to name", rsa_name_string, "RSA");
 
             TEST_FFI_OK(botan_oid_destroy, (rsa_oid_priv));
             TEST_FFI_OK(botan_oid_destroy, (rsa_oid_pub));
@@ -5161,7 +5163,7 @@ class FFI_EC_Group_Test final : public FFI_Test {
             size_t name_len = namebuf.size();
 
             TEST_FFI_OK(botan_privkey_algo_name, (priv, namebuf.data(), &name_len));
-            result.test_eq("Key name is expected value", namebuf.data(), "ECDSA");
+            result.test_str_eq("Key name is expected value", namebuf.data(), "ECDSA");
 
             botan_privkey_destroy(priv);
 

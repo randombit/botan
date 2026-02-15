@@ -970,11 +970,11 @@ class Version_Tests final : public Test {
 
          const char* version_cstr = Botan::version_cstr();
          const std::string version_str = Botan::version_string();
-         result.test_eq("Same version string", version_str, std::string(version_cstr));
+         result.test_str_eq("Same version string", version_str, std::string(version_cstr));
 
          const char* sversion_cstr = Botan::short_version_cstr();
          const std::string sversion_str = Botan::short_version_string();
-         result.test_eq("Same short version string", sversion_str, std::string(sversion_cstr));
+         result.test_str_eq("Same short version string", sversion_str, std::string(sversion_cstr));
 
          const auto expected_sversion =
             Botan::fmt("{}.{}.{}", BOTAN_VERSION_MAJOR, BOTAN_VERSION_MINOR, BOTAN_VERSION_PATCH);
@@ -992,7 +992,7 @@ class Version_Tests final : public Test {
          const std::string expected_error =
             "Warning: linked version (" + sversion_str + ") does not match version built against (1.19.42)\n";
 
-         result.test_eq("Expected warning text", version_check_bad, expected_error);
+         result.test_str_eq("Expected warning text", version_check_bad, expected_error);
 
          return {result};
       }
@@ -1059,7 +1059,7 @@ class Date_Format_Tests final : public Text_Based_Test {
          Test::Result result("calendar_point::to_string");
          const Botan::calendar_point d(2008, 5, 15, 9, 30, 33);
          // desired format: <YYYY>-<MM>-<dd>T<HH>:<mm>:<ss>
-         result.test_eq("calendar_point::to_string", d.to_string(), "2008-05-15T09:30:33");
+         result.test_str_eq("calendar_point::to_string", d.to_string(), "2008-05-15T09:30:33");
          return {result};
       }
 };
@@ -1166,7 +1166,7 @@ class IPv4_Parsing_Tests final : public Text_Based_Test {
 
          if(ipv4) {
             const std::string rt = Botan::ipv4_to_string(ipv4.value());
-            result.test_eq("ipv4_to_string and string_to_ipv4 round trip", input, rt);
+            result.test_str_eq("ipv4_to_string and string_to_ipv4 round trip", input, rt);
          }
 
          return result;
@@ -1230,7 +1230,7 @@ class ReadKV_Tests final : public Text_Based_Test {
          for(size_t i = 0; i != expected.size(); i += 2) {
             auto j = kv.find(expected[i]);
             if(result.test_is_true("Found key", j != kv.end())) {
-               result.test_eq("Matching value", j->second, expected[i + 1]);
+               result.test_str_eq("Matching value", j->second, expected[i + 1]);
             }
          }
 
@@ -1324,7 +1324,7 @@ class UUID_Tests : public Test {
          result.test_is_true("Random UUIDs not equal to empty", random_uuid1 != empty_uuid);
 
          const std::string uuid4_str = loaded_uuid.to_string();
-         result.test_eq("String matches expected", uuid4_str, "04040404-0404-0404-0404-040404040404");
+         result.test_str_eq("String matches expected", uuid4_str, "04040404-0404-0404-0404-040404040404");
 
          const std::string uuid_r1_str = random_uuid1.to_string();
          result.test_is_true("UUID from string matches", Botan::UUID(uuid_r1_str) == random_uuid1);
@@ -1351,11 +1351,13 @@ class UUID_Tests : public Test {
 
          AllSame_RNG zeros(0x00);
          const Botan::UUID zero_uuid(zeros);
-         result.test_eq("Zero UUID matches expected", zero_uuid.to_string(), "00000000-0000-4000-8000-000000000000");
+         result.test_str_eq(
+            "Zero UUID matches expected", zero_uuid.to_string(), "00000000-0000-4000-8000-000000000000");
 
          AllSame_RNG ones(0xFF);
          const Botan::UUID ones_uuid(ones);
-         result.test_eq("Ones UUID matches expected", ones_uuid.to_string(), "FFFFFFFF-FFFF-4FFF-BFFF-FFFFFFFFFFFF");
+         result.test_str_eq(
+            "Ones UUID matches expected", ones_uuid.to_string(), "FFFFFFFF-FFFF-4FFF-BFFF-FFFFFFFFFFFF");
 
          return {result};
       }
@@ -1376,12 +1378,12 @@ class Formatter_Tests : public Test {
          checking that we don't crash, rather than we return that precise string.
          */
 
-         result.test_eq("test 1", Botan::fmt("hi"), "hi");
-         result.test_eq("test 2", Botan::fmt("ignored", 5), "ignored");
-         result.test_eq("test 3", Botan::fmt("answer is {}", 42), "answer is 42");
-         result.test_eq("test 4", Botan::fmt("{", 5), "{");
-         result.test_eq("test 4", Botan::fmt("{}"), "{}");
-         result.test_eq("test 5", Botan::fmt("{} == '{}'", 5, "five"), "5 == 'five'");
+         result.test_str_eq("test 1", Botan::fmt("hi"), "hi");
+         result.test_str_eq("test 2", Botan::fmt("ignored", 5), "ignored");
+         result.test_str_eq("test 3", Botan::fmt("answer is {}", 42), "answer is 42");
+         result.test_str_eq("test 4", Botan::fmt("{", 5), "{");
+         result.test_str_eq("test 4", Botan::fmt("{}"), "{}");
+         result.test_str_eq("test 5", Botan::fmt("{} == '{}'", 5, "five"), "5 == 'five'");
 
          return {result};
       }

@@ -113,7 +113,7 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
          inspect_rng_after_keygen(params, rng_keygen, result);
 
          // Algorithm properties
-         result.test_eq("Algorithm name", sk->algo_name(), algo_name());
+         result.test_str_eq("Algorithm name", sk->algo_name(), algo_name());
          result.test_is_true("Supported operation KeyEncapsulation",
                              sk->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation));
          result.test_sz_gte("Key has reasonable estimated strength (lower)", sk->estimated_strength(), 64);
@@ -204,7 +204,7 @@ class PK_PQC_KEM_ACVP_KAT_KeyGen_Test : public PK_Test {
          result.test_is_eq("Generated private key", compress_value(sk->raw_private_key_bits()), vars.get_req_bin("DK"));
 
          // Algorithm properties
-         result.test_eq("Algorithm name", sk->algo_name(), algo_name());
+         result.test_str_eq("Algorithm name", sk->algo_name(), algo_name());
          result.test_is_true("Supported operation KeyEncapsulation",
                              sk->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation));
          result.test_sz_gte("Key has reasonable estimated strength (lower)", sk->estimated_strength(), 64);

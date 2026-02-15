@@ -440,11 +440,11 @@ class AEAD_Tests final : public Text_Based_Test {
          result.test_is_true("Decryption algo is an authenticated mode", dec->authenticated());
 
          const std::string enc_provider = enc->provider();
-         result.test_is_nonempty("enc provider", enc_provider);
+         result.test_str_not_empty("enc provider", enc_provider);
          const std::string dec_provider = enc->provider();
-         result.test_is_nonempty("dec provider", dec_provider);
+         result.test_str_not_empty("dec provider", dec_provider);
 
-         result.test_eq("same provider", enc_provider, dec_provider);
+         result.test_str_eq("same provider", enc_provider, dec_provider);
 
          // FFI currently requires this, so assure it is true for all modes
          result.test_sz_gt("enc buffer sizes ok", enc->ideal_granularity(), enc->minimum_final_size());

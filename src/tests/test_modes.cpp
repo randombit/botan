@@ -103,11 +103,11 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
          const bool is_cbc = (algo.find("/CBC") != std::string::npos);
          const bool is_ctr = (algo.find("CTR") != std::string::npos);
 
-         result.test_eq("name", mode.name(), algo);
+         result.test_str_eq("name", mode.name(), algo);
 
          // Some modes report base even if got from another provider
          if(mode.provider() != "base") {
-            result.test_eq("provider", mode.provider(), provider);
+            result.test_str_eq("provider", mode.provider(), provider);
          }
 
          result.test_is_false("mode not authenticated", mode.authenticated());

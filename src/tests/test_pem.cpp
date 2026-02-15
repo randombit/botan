@@ -21,12 +21,12 @@ class PEM_Tests : public Test {
 
          const std::string pem1 = Botan::PEM_Code::encode(vec, "BUNNY", 3);
 
-         result.test_eq("PEM encoding", pem1, "-----BEGIN BUNNY-----\nAAE\nCAw\nQ=\n-----END BUNNY-----\n");
+         result.test_str_eq("PEM encoding", pem1, "-----BEGIN BUNNY-----\nAAE\nCAw\nQ=\n-----END BUNNY-----\n");
 
          std::string label1 = "this is overwritten";
          const Botan::secure_vector<uint8_t> decoded1 = Botan::PEM_Code::decode(pem1, label1);
 
-         result.test_eq("PEM decoding label", label1, "BUNNY");
+         result.test_str_eq("PEM decoding label", label1, "BUNNY");
 
          result.test_throws("PEM decoding unexpected label",
                             "PEM: Label mismatch, wanted 'FLOOFY' got 'BUNNY'",

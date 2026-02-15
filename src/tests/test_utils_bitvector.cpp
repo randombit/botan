@@ -1309,7 +1309,7 @@ std::vector<Test::Result> test_bitvector_strongtype_adapter(Botan::RandomNumberG
    result.test_is_eq<TestUInt32::wrapped_type>("bv5 has expected value", bv5.get(), 0xFFFFFFF4);
 
    const auto str = bv4.to_string();
-   result.test_eq("bv4 to_string", str, "00010");
+   result.test_str_eq("bv4 to_string", str, "00010");
 
    return {result};
 }

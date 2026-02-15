@@ -204,15 +204,15 @@ class Roughtime final : public Test {
             "ticktock ed25519 cj8GsiNlRkqiDElAeNMSBBMwrAl15hYPgX50+GWX/lA= udp ticktock.mixmin.net:5333\n");
 
          result.test_is_true("size", servers.size() == 5);
-         result.test_eq("name", servers[0].name(), "Chainpoint-Roughtime");
-         result.test_eq("name", servers[4].name(), "ticktock");
+         result.test_str_eq("name", servers[0].name(), "Chainpoint-Roughtime");
+         result.test_str_eq("name", servers[4].name(), "ticktock");
          result.test_is_true(
             "public key",
             servers[0].public_key().get_public_key() ==
                Botan::Ed25519_PublicKey(Botan::base64_decode("bbT+RPS7zKX6w71ssPibzmwWqU9ffRV5oj2OresSmhE="))
                   .get_public_key());
          result.test_is_true("single address", servers[0].addresses().size() == 1);
-         result.test_eq("address", servers[0].addresses()[0], "roughtime.chainpoint.org:2002");
+         result.test_str_eq("address", servers[0].addresses()[0], "roughtime.chainpoint.org:2002");
 
          result.test_throws("1 field", [&]() { Botan::Roughtime::servers_from_str("A"); });
          result.test_throws("2 fields", [&]() { Botan::Roughtime::servers_from_str("A ed25519"); });

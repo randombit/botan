@@ -41,11 +41,11 @@ class Invalid_Hash_Name_Tests final : public Test {
          } catch(Botan::Invalid_Argument& e) {
             const std::string msg = e.what();
             const std::string full_msg = "" + expected_msg;
-            result.test_eq("expected error message", msg, full_msg);
+            result.test_str_eq("expected error message", msg, full_msg);
          } catch(Botan::Lookup_Error& e) {
             const std::string algo_not_found_msg = "Unavailable Hash " + name;
             const std::string msg = e.what();
-            result.test_eq("expected error message", msg, algo_not_found_msg);
+            result.test_str_eq("expected error message", msg, algo_not_found_msg);
          } catch(std::exception& e) {
             result.test_failure("some unknown exception", e.what());
          } catch(...) {
@@ -88,9 +88,9 @@ class Hash_Function_Tests final : public Text_Based_Test {
             auto clone = hash->new_object();
 
             const std::string provider(hash->provider());
-            result.test_is_nonempty("provider", provider);
-            result.test_eq(provider, hash->name(), algo);
-            result.test_eq(provider, hash->name(), clone->name());
+            result.test_str_not_empty("provider", provider);
+            result.test_str_eq(provider, hash->name(), algo);
+            result.test_str_eq(provider, hash->name(), clone->name());
 
             for(size_t i = 0; i != 3; ++i) {
                hash->update(input);

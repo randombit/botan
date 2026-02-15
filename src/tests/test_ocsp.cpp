@@ -96,10 +96,10 @@ class OCSP_Tests final : public Test {
             "ME4wTKADAgEAMEUwQzBBMAkGBSsOAwIaBQAEFPLgavmFih2NcJtJGSN6qbUaKH5kBBRK3QYWG7z2aLV29YG2u2IaulqBLwIIQkg+DF+RYMY=";
 
          const Botan::OCSP::Request req1(issuer, end_entity);
-         result.test_eq("Encoded OCSP request", req1.base64_encode(), expected_request);
+         result.test_str_eq("Encoded OCSP request", req1.base64_encode(), expected_request);
 
          const Botan::OCSP::Request req2(issuer, BigInt::from_bytes(end_entity.serial_number()));
-         result.test_eq("Encoded OCSP request", req2.base64_encode(), expected_request);
+         result.test_str_eq("Encoded OCSP request", req2.base64_encode(), expected_request);
 
          return result;
       }
@@ -121,12 +121,12 @@ class OCSP_Tests final : public Test {
 
          // The response in bdr_ocsp contains two certificates
          if(result.test_sz_eq("both certificates found", bdr_ocsp.certificates().size(), 2)) {
-            result.test_eq("first cert in response",
-                           bdr_ocsp.certificates()[0].subject_info("X520.CommonName").at(0),
-                           "D-TRUST OCSP 4 2-2 EV 2016");
-            result.test_eq("second cert in response",
-                           bdr_ocsp.certificates()[1].subject_info("X520.CommonName").at(0),
-                           "D-TRUST CA 2-2 EV 2016");
+            result.test_str_eq("first cert in response",
+                               bdr_ocsp.certificates()[0].subject_info("X520.CommonName").at(0),
+                               "D-TRUST OCSP 4 2-2 EV 2016");
+            result.test_str_eq("second cert in response",
+                               bdr_ocsp.certificates()[1].subject_info("X520.CommonName").at(0),
+                               "D-TRUST CA 2-2 EV 2016");
          }
 
          // Dummy OCSP response is not signed at all

@@ -724,8 +724,8 @@ Test::Result test_c_get_attribute_value() {
 
    const std::string _label(getter[AttributeType::Label].begin(), getter[AttributeType::Label].end());
    const std::string value(getter[AttributeType::Value].begin(), getter[AttributeType::Value].end());
-   result.test_eq("label", _label, "A data object");
-   result.test_eq("value", value, "Sample data");
+   result.test_str_eq("label", _label, "A data object");
+   result.test_str_eq("value", value, "Sample data");
 
    // cleanup
    p11_low_level.get()->C_DestroyObject(session_handle, object_handle);
@@ -782,7 +782,7 @@ Test::Result test_c_set_attribute_value() {
    const std::string retrieved_label(received_attributes[AttributeType::Label].begin(),
                                      received_attributes[AttributeType::Label].end());
 
-   result.test_eq("label", new_label, retrieved_label);
+   result.test_str_eq("label", new_label, retrieved_label);
 
    // cleanup
    p11_low_level.get()->C_DestroyObject(session_handle, object_handle);
@@ -821,7 +821,7 @@ Test::Result test_c_copy_object() {
    const std::string retrieved_label(received_attributes[AttributeType::Label].begin(),
                                      received_attributes[AttributeType::Label].end());
 
-   result.test_eq("label", copied_label, retrieved_label);
+   result.test_str_eq("label", copied_label, retrieved_label);
 
    // cleanup
    p11_low_level.get()->C_DestroyObject(session_handle, object_handle);

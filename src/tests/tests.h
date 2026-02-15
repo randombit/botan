@@ -270,6 +270,8 @@ class Test {
 
             void merge(const Result& other, bool ignore_test_name = false);
 
+            /* Test reporting functions */
+
             void test_note(std::string_view note, const char* extra = nullptr);
 
             void test_note(std::string_view note, std::span<const uint8_t> context);
@@ -295,6 +297,8 @@ class Test {
              * Note: works best when combined with CHECK scopes!
              */
             void require(std::string_view what, bool expr, bool expected = true);
+
+            /* Generic arbitrary equality check */
 
             template <typename T>
             bool test_is_eq(const T& produced, const T& expected) {
@@ -325,11 +329,12 @@ class Test {
                }
             }
 
-            bool test_eq(std::string_view what, const char* produced, const char* expected);
+            /* String comparison predicates */
+            bool test_str_not_empty(std::string_view what, std::string_view produced);
 
-            bool test_is_nonempty(std::string_view what_is_it, std::string_view to_examine);
+            bool test_str_eq(std::string_view what, std::string_view produced, std::string_view expected);
 
-            bool test_eq(std::string_view what, std::string_view produced, std::string_view expected);
+            bool test_str_ne(std::string_view what, std::string_view produced, std::string_view expected);
 
             /* Test predicates on bool */
             bool test_bool_eq(std::string_view what, bool produced, bool expected);
@@ -364,8 +369,6 @@ class Test {
             bool test_rc_fail(std::string_view func, std::string_view why, int rc);
             bool test_rc(std::string_view func, int expected, int rc);
             bool test_rc_init(std::string_view func, int rc);
-
-            bool test_ne(std::string_view what, std::string_view str1, std::string_view str2);
 
             /* Test predicates on optional values */
 

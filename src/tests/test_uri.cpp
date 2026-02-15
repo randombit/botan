@@ -22,7 +22,7 @@ class URI_Tests final : public Test {
          Test::Result result("URI constructors");
          const Botan::URI uri(Botan::URI::Type::Domain, "localhost", 9000);
          result.test_is_true("type", uri.type() == Botan::URI::Type::Domain);
-         result.test_eq("host", uri.host(), "localhost");
+         result.test_str_eq("host", uri.host(), "localhost");
          result.test_sz_eq("post", size_t(uri.port()), 9000);
          return result;
       }
@@ -30,10 +30,12 @@ class URI_Tests final : public Test {
       static Test::Result test_uri_tostring() {
          Test::Result result("URI to_string");
 
-         result.test_eq("domain", Botan::URI(Botan::URI::Type::Domain, "localhost", 23).to_string(), "localhost:23");
-         result.test_eq("IPv4", Botan::URI(Botan::URI::Type::IPv4, "192.168.1.1", 25).to_string(), "192.168.1.1:25");
-         result.test_eq("IPv6", Botan::URI(Botan::URI::Type::IPv6, "::1", 65535).to_string(), "[::1]:65535");
-         result.test_eq("IPv6 no port", Botan::URI(Botan::URI::Type::IPv6, "::1", 0).to_string(), "::1");
+         result.test_str_eq(
+            "domain", Botan::URI(Botan::URI::Type::Domain, "localhost", 23).to_string(), "localhost:23");
+         result.test_str_eq(
+            "IPv4", Botan::URI(Botan::URI::Type::IPv4, "192.168.1.1", 25).to_string(), "192.168.1.1:25");
+         result.test_str_eq("IPv6", Botan::URI(Botan::URI::Type::IPv6, "::1", 65535).to_string(), "[::1]:65535");
+         result.test_str_eq("IPv6 no port", Botan::URI(Botan::URI::Type::IPv6, "::1", 0).to_string(), "::1");
 
          return result;
       }
@@ -58,7 +60,7 @@ class URI_Tests final : public Test {
 
          for(const auto& t : tests) {
             auto test_URI = [&result](const Botan::URI& uri, const std::string& host, const uint16_t port) {
-               result.test_eq("host", uri.host(), host);
+               result.test_str_eq("host", uri.host(), host);
                result.test_u16_eq("port", uri.port(), port);
             };
 

@@ -153,8 +153,8 @@ class McEliece_Tests final : public Test {
                const Botan::McEliece_PublicKey pk(pk_enc);
                const Botan::McEliece_PrivateKey sk(sk_enc);
 
-               result.test_eq("decoded public key equals original", fingerprint(pk1), fingerprint(pk));
-               result.test_eq("decoded private key equals original", fingerprint(sk1), fingerprint(sk));
+               result.test_str_eq("decoded public key equals original", fingerprint(pk1), fingerprint(pk));
+               result.test_str_eq("decoded private key equals original", fingerprint(sk1), fingerprint(sk));
                result.test_is_true("key validation passes", sk.check_key(this->rng(), false));
                result.end_timer();
 

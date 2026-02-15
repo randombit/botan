@@ -47,7 +47,7 @@ Test::Result test_OID_to_string() {
 
    Test::Result result("OID::to_string");
 
-   result.test_eq("OID::to_string behaves as we expect", oid.to_string(), "1.2.1000.1001.1002000");
+   result.test_str_eq("OID::to_string behaves as we expect", oid.to_string(), "1.2.1000.1001.1002000");
 
    return result;
 }
@@ -64,7 +64,7 @@ Test::Result test_oid_registration() {
 
    result.test_is_true("named OID found", Botan::OID::from_name(name).has_value());
 
-   result.test_eq("name of OID matches expected", oid.to_formatted_string(), name);
+   result.test_str_eq("name of OID matches expected", oid.to_formatted_string(), name);
 
    return result;
 }
@@ -82,7 +82,7 @@ Test::Result test_add_and_lookup() {
    Botan::OID::register_oid(oid, name);
 
    result.test_is_true("named OID found", Botan::OID::from_name(name).value_or(Botan::OID()) == oid);
-   result.test_eq("name of OID matches expected", oid.to_formatted_string(), name);
+   result.test_str_eq("name of OID matches expected", oid.to_formatted_string(), name);
 
    // completely redundant, nothing happens:
    Botan::OID::register_oid(oid, name);
@@ -96,9 +96,9 @@ Test::Result test_add_and_lookup() {
    // name->oid map is unchanged:
    result.test_is_true("named OID found after second insert",
                        Botan::OID::from_name(name).value_or(Botan::OID()) == oid);
-   result.test_eq("name of OID matches expected", oid.to_formatted_string(), name);
+   result.test_str_eq("name of OID matches expected", oid.to_formatted_string(), name);
    // now second OID maps back to the string as expected:
-   result.test_eq("name of OID matches expected", oid2.to_formatted_string(), name);
+   result.test_str_eq("name of OID matches expected", oid2.to_formatted_string(), name);
 
    try {
       Botan::OID::register_oid(oid2, name2);
@@ -161,7 +161,7 @@ class OID_Encoding_Tests : public Text_Based_Test {
             Botan::OID dec_oid;
             dec.decode(dec_oid);
             dec.verify_end();
-            result.test_eq("Decoding OID correct", dec_oid.to_string(), oid_str);
+            result.test_str_eq("Decoding OID correct", dec_oid.to_string(), oid_str);
          } catch(std::exception& e) {
             result.test_failure("Decoding OID failed", e.what());
          }

@@ -74,7 +74,7 @@ class Compression_Tests final : public Test {
                   continue;
                }
 
-               result.test_ne("Not the same name", c->name(), d->name());
+               result.test_str_ne("Not the same name", c->name(), d->name());
 
                const Botan::secure_vector<uint8_t> empty;
                const Botan::secure_vector<uint8_t> all_zeros(text_len, 0);
@@ -185,7 +185,7 @@ class CompressionCreate_Tests final : public Test {
                   result.note_missing(algo);
                   continue;
                }
-               result.test_ne("Not the same name after create", c1->name(), d1->name());
+               result.test_str_ne("Not the same name after create", c1->name(), d1->name());
 
                auto c2 = Botan::Compression_Algorithm::create_or_throw(algo);
                auto d2 = Botan::Decompression_Algorithm::create_or_throw(algo);
@@ -194,7 +194,7 @@ class CompressionCreate_Tests final : public Test {
                   result.note_missing(algo);
                   continue;
                }
-               result.test_ne("Not the same name after create_or_throw", c2->name(), d2->name());
+               result.test_str_ne("Not the same name after create_or_throw", c2->name(), d2->name());
 
                results.emplace_back(result);
             } catch(std::exception& e) {
