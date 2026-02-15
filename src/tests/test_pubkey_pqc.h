@@ -107,9 +107,9 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
          if(!result.test_not_null("Successfully generated private key", sk)) {
             return result;
          }
-         result.test_is_eq("Generated private key",
-                           map_value(params, sk->raw_private_key_bits(), VarType::PrivateKey),
-                           vars.get_req_bin("SK"));
+         result.test_bin_eq("Generated private key",
+                            map_value(params, sk->raw_private_key_bits(), VarType::PrivateKey),
+                            vars.get_req_bin("SK"));
          inspect_rng_after_keygen(params, rng_keygen, result);
 
          // Algorithm properties
@@ -121,9 +121,9 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
 
          // Extract Public Key
          auto pk = sk->public_key();
-         result.test_is_eq("Generated public key",
-                           map_value(params, pk->public_key_bits(), VarType::PublicKey),
-                           vars.get_req_bin("PK"));
+         result.test_bin_eq("Generated public key",
+                            map_value(params, pk->public_key_bits(), VarType::PublicKey),
+                            vars.get_req_bin("PK"));
 
          // Serialize/Deserialize the Public Key
          auto pk2 = Botan::load_public_key(pk->algorithm_identifier(), pk->public_key_bits());
@@ -134,11 +134,11 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
          // Encapsulation
          auto enc = Botan::PK_KEM_Encryptor(*pk2, "Raw");
          const auto encaped = enc.encrypt(rng_encaps, 0 /* no KDF */);
-         result.test_is_eq(
+         result.test_bin_eq(
             "Shared Secret", map_value(params, encaped.shared_key(), VarType::SharedSecret), vars.get_req_bin("SS"));
-         result.test_is_eq("Ciphertext",
-                           map_value(params, encaped.encapsulated_shared_key(), VarType::Ciphertext),
-                           vars.get_req_bin("CT"));
+         result.test_bin_eq("Ciphertext",
+                            map_value(params, encaped.encapsulated_shared_key(), VarType::Ciphertext),
+                            vars.get_req_bin("CT"));
          inspect_rng_after_encaps(params, rng_keygen, result);
 
          // Decapsulation
@@ -150,13 +150,12 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
          Botan::Null_RNG null_rng;
          auto dec = Botan::PK_KEM_Decryptor(*sk2, null_rng, "Raw");
          const auto shared_key = dec.decrypt(encaped.encapsulated_shared_key(), 0 /* no KDF */);
-         result.test_is_eq("Decaps. Shared Secret", shared_key, Botan::lock(vars.get_req_bin("SS")));
+         result.test_bin_eq("Decaps. Shared Secret", shared_key, vars.get_req_bin("SS"));
 
          if(vars.has_key("CT_N")) {
             // Shared secret from invalid KEM ciphertext
             const auto shared_key_invalid = dec.decrypt(vars.get_req_bin("CT_N"), 0 /* no KDF */);
-            result.test_is_eq(
-               "Decaps. Shared Secret Invalid", shared_key_invalid, Botan::lock(vars.get_req_bin("SS_N")));
+            result.test_bin_eq("Decaps. Shared Secret Invalid", shared_key_invalid, vars.get_req_bin("SS_N"));
          }
 
          return result;
@@ -201,7 +200,8 @@ class PK_PQC_KEM_ACVP_KAT_KeyGen_Test : public PK_Test {
          if(!result.test_not_null("Successfully generated private key", sk)) {
             return result;
          }
-         result.test_is_eq("Generated private key", compress_value(sk->raw_private_key_bits()), vars.get_req_bin("DK"));
+         result.test_bin_eq(
+            "Generated private key", compress_value(sk->raw_private_key_bits()), vars.get_req_bin("DK"));
 
          // Algorithm properties
          result.test_str_eq("Algorithm name", sk->algo_name(), algo_name());
@@ -212,7 +212,7 @@ class PK_PQC_KEM_ACVP_KAT_KeyGen_Test : public PK_Test {
 
          // Extract Public Key
          auto pk = sk->public_key();
-         result.test_is_eq("Generated public key", compress_value(pk->public_key_bits()), vars.get_req_bin("EK"));
+         result.test_bin_eq("Generated public key", compress_value(pk->public_key_bits()), vars.get_req_bin("EK"));
 
          result.test_is_true("All prepared random bits used for key generation", rng_keygen.empty());
 
@@ -254,8 +254,8 @@ class PK_PQC_KEM_ACVP_KAT_Encap_Test : public PK_Test {
 
          auto enc = Botan::PK_KEM_Encryptor(*pk, "Raw");
          const auto encaped = enc.encrypt(rng_encap, 0 /* no KDF */);
-         result.test_is_eq("Shared Secret", encaped.shared_key(), Botan::lock(vars.get_req_bin("K")));
-         result.test_is_eq("Ciphertext", compress_value(encaped.encapsulated_shared_key()), vars.get_req_bin("C"));
+         result.test_bin_eq("Shared Secret", encaped.shared_key(), vars.get_req_bin("K"));
+         result.test_bin_eq("Ciphertext", compress_value(encaped.encapsulated_shared_key()), vars.get_req_bin("C"));
 
          result.test_is_true("All prepared random bits used for key generation", rng_encap.empty());
 
@@ -285,7 +285,7 @@ class PK_PQC_KEM_ACVP_KAT_Decap_Test : public PK_Test {
          Botan::Null_RNG null_rng;
          auto dec = Botan::PK_KEM_Decryptor(*sk, null_rng, "Raw");
          const auto shared_key = dec.decrypt(vars.get_req_bin("C"), 0 /* no KDF */);
-         result.test_is_eq("Decaps. Shared Secret", shared_key, Botan::lock(vars.get_req_bin("K")));
+         result.test_bin_eq("Decaps. Shared Secret", shared_key, vars.get_req_bin("K"));
 
          return result;
       }

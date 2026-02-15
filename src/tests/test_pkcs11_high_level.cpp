@@ -550,14 +550,14 @@ Test::Result test_object_finder() {
    finder.finish();
 
    const Object obj_found(test_session.session(), search_result.at(0));
-   result.test_eq("found the object just created (same application)",
-                  obj_found.get_attribute_value(AttributeType::Application),
-                  data_obj.get_attribute_value(AttributeType::Application));
+   result.test_bin_eq("found the object just created (same application)",
+                      obj_found.get_attribute_value(AttributeType::Application),
+                      data_obj.get_attribute_value(AttributeType::Application));
 
    auto search_result2 = Object::search<Object>(test_session.session(), search_template.attributes());
-   result.test_eq("found the object just created (same label)",
-                  obj_found.get_attribute_value(AttributeType::Label),
-                  search_result2.at(0).get_attribute_value(AttributeType::Label));
+   result.test_bin_eq("found the object just created (same label)",
+                      obj_found.get_attribute_value(AttributeType::Label),
+                      search_result2.at(0).get_attribute_value(AttributeType::Label));
 
    data_obj.destroy();
    return result;
@@ -795,7 +795,7 @@ Test::Result test_rsa_encrypt_decrypt() {
             result.test_failure(err.str(), e.what());
          }
 
-         result.test_eq("RSA PKCS11 encrypt and decrypt: " + padding, decrypted, plaintext);
+         result.test_bin_eq("RSA PKCS11 encrypt and decrypt: " + padding, decrypted, plaintext);
       };
 
    std::vector<uint8_t> plaintext(256);
@@ -955,7 +955,7 @@ Test::Result test_ecdsa_privkey_export() {
    const ECDSA_PrivateKey exported = pk.export_key();
    result.test_success("ECDSA private key export was successful");
    result.test_is_true("Check exported key valid", exported.check_key(*rng, true));
-   result.test_eq("Check exported key contents", exported.private_key_bits(), priv_key.private_key_bits());
+   result.test_bin_eq("Check exported key contents", exported.private_key_bits(), priv_key.private_key_bits());
 
    pk.destroy();
    return result;
@@ -1398,7 +1398,7 @@ Test::Result test_rng_generate_random() {
 
    std::vector<uint8_t> random(20);
    p11_rng.randomize(random.data(), random.size());
-   result.test_ne("random data generated", random, std::vector<uint8_t>(20));
+   result.test_bin_ne("random data generated", random, std::vector<uint8_t>(20));
 
    return result;
 }
@@ -1445,7 +1445,7 @@ Test::Result test_pkcs11_hmac_drbg() {
    drbg.add_entropy(personalization_data.data(), personalization_data.size());
 
    auto rnd_vec = drbg.random_vec(256);
-   result.test_ne("HMAC_DRBG generated a random vector", rnd_vec, std::vector<uint8_t>(256));
+   result.test_bin_ne("HMAC_DRBG generated a random vector", rnd_vec, std::vector<uint8_t>(256));
 
    return result;
 }

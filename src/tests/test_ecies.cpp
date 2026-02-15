@@ -64,10 +64,10 @@ void check_encrypt_decrypt(Test::Result& result,
 
       const std::vector<uint8_t> encrypted = ecies_enc.encrypt(plaintext, rng);
       if(!ciphertext.empty()) {
-         result.test_eq("encrypted data", encrypted, ciphertext);
+         result.test_bin_eq("encrypted data", encrypted, ciphertext);
       }
       const Botan::secure_vector<uint8_t> decrypted = ecies_dec.decrypt(encrypted);
-      result.test_eq("decrypted data equals plaintext", decrypted, plaintext);
+      result.test_bin_eq("decrypted data equals plaintext", decrypted, plaintext);
 
       std::vector<uint8_t> invalid_encrypted = encrypted;
       uint8_t& last_byte = invalid_encrypted[invalid_encrypted.size() - 1];
@@ -138,7 +138,7 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
          // (ephemeral) keys of alice
          const Botan::ECDH_PrivateKey eph_private_key(this->rng(), domain, r);
          const auto eph_public_key_bin = eph_private_key.public_value(compression_type);
-         result.test_eq("encoded (ephemeral) public key", eph_public_key_bin, c0);
+         result.test_bin_eq("encoded (ephemeral) public key", eph_public_key_bin, c0);
 
          // test secret derivation: ISO 18033 test vectors use KDF1 from ISO 18033
          // no cofactor-/oldcofactor-/singlehash-/check-mode and 128 byte secret length
@@ -146,7 +146,7 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
             eph_private_key.domain(), "KDF1-18033(SHA-1)", 128, compression_type, Flags::None);
          const Botan::ECIES_KA_Operation ka(eph_private_key, ka_params, true, this->rng());
          const Botan::SymmetricKey secret_key = ka.derive_secret(eph_public_key_bin, other_public_key_point);
-         result.test_eq("derived secret key", secret_key.bits_of(), k);
+         result.test_bin_eq("derived secret key", secret_key.bits_of(), k);
 
          // test encryption / decryption
 

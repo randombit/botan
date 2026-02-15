@@ -107,7 +107,7 @@ class X25519_Roundtrip_Test final : public Test {
                const Botan::SymmetricKey a_key = a_ka.derive_key(32, b_pub_key->public_value());
                const Botan::SymmetricKey b_key = b_ka.derive_key(32, a_pub_key->public_value());
 
-               if(!result.test_eq("key agreement", a_key.bits_of(), b_key.bits_of())) {
+               if(!result.test_bin_eq("key agreement", a_key.bits_of(), b_key.bits_of())) {
                   result.test_note(a_priv_pem);
                   result.test_note(b_priv_pem);
                }

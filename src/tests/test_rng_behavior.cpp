@@ -317,7 +317,7 @@ class Stateful_RNG_Tests : public Test {
 
             if(got > 0) {
                result.test_sz_eq("expected bytes from child", got, child_bytes.size());
-               result.test_ne("parent and child output sequences differ", parent_bytes, child_bytes);
+               result.test_bin_ne("parent and child output sequences differ", parent_bytes, child_bytes);
             } else {
                result.test_failure("Failed to read RNG bytes from child process");
             }
@@ -372,12 +372,12 @@ class Stateful_RNG_Tests : public Test {
          rng1->randomize(output1.data(), output1.size());
          rng2->randomize(output2.data(), output2.size());
 
-         result.test_eq("equal output due to same seed", output1, output2);
+         result.test_bin_eq("equal output due to same seed", output1, output2);
 
          rng1->randomize_with_ts_input(output1.data(), output1.size());
          rng2->randomize_with_ts_input(output2.data(), output2.size());
 
-         result.test_ne("output differs due to different timestamp", output1, output2);
+         result.test_bin_ne("output differs due to different timestamp", output1, output2);
 
          return result;
       }
@@ -541,12 +541,14 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests {
 
          rng->randomize(out.data(), out.size());
          result.test_sz_eq("underlying RNG calls", counting_rng.randomize_count(), size_t(0));
-         result.test_eq("out before reseed", out, "48D3B45AAB65EF92CCFCB9427EF20C90297065ECC1B8A525BFE4DC6FF36D0E38");
+         result.test_bin_eq(
+            "out before reseed", out, "48D3B45AAB65EF92CCFCB9427EF20C90297065ECC1B8A525BFE4DC6FF36D0E38");
 
          // reseed must happen here
          rng->randomize(out.data(), out.size());
          result.test_sz_eq("underlying RNG calls", counting_rng.randomize_count(), size_t(1));
-         result.test_eq("out after reseed", out, "2F8FCA696832C984781123FD64F4B20C7379A25C87AB29A21C9BF468B0081CE2");
+         result.test_bin_eq(
+            "out after reseed", out, "2F8FCA696832C984781123FD64F4B20C7379A25C87AB29A21C9BF468B0081CE2");
 
          return result;
       }
@@ -580,7 +582,7 @@ std::vector<Test::Result> hmac_drbg_multiple_requests() {
                     auto split2 = rng2->random_vec<std::vector<uint8_t>>(rng_max_output);
                     split1.insert(split1.end(), split2.begin(), split2.end());
 
-                    result.test_eq("Output is equal, regardless bulk request", bulk, split1);
+                    result.test_bin_eq("Output is equal, regardless bulk request", bulk, split1);
 
                     return result;
                  }),
@@ -601,7 +603,7 @@ std::vector<Test::Result> hmac_drbg_multiple_requests() {
               rng2->randomize_with_input(split_span.subspan(rng_max_output, rng_max_output), {});
               rng2->randomize_with_input(split_span.subspan(2 * rng_max_output), {});
 
-              result.test_eq("Output is equal, regardless bulk request", bulk, split);
+              result.test_bin_eq("Output is equal, regardless bulk request", bulk, split);
 
               return result;
            })};
@@ -669,12 +671,14 @@ class ChaCha_RNG_Unit_Tests final : public Stateful_RNG_Tests {
 
          rng->randomize(out.data(), out.size());
          result.test_sz_eq("underlying RNG calls", counting_rng.randomize_count(), size_t(0));
-         result.test_eq("out before reseed", out, "1F0E6F13429D5073B59C057C37CBE9587740A0A894D247E2596C393CE91DDC6F");
+         result.test_bin_eq(
+            "out before reseed", out, "1F0E6F13429D5073B59C057C37CBE9587740A0A894D247E2596C393CE91DDC6F");
 
          // reseed must happen here
          rng->randomize(out.data(), out.size());
          result.test_sz_eq("underlying RNG calls", counting_rng.randomize_count(), size_t(1));
-         result.test_eq("out after reseed", out, "F2CAE73F22684D5D773290B48FDCDA0E6C0661EBA0A854AFEC922832BDBB9C49");
+         result.test_bin_eq(
+            "out after reseed", out, "F2CAE73F22684D5D773290B48FDCDA0E6C0661EBA0A854AFEC922832BDBB9C49");
 
          return result;
       }

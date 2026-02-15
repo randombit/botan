@@ -94,11 +94,11 @@ class Hash_Function_Tests final : public Text_Based_Test {
 
             for(size_t i = 0; i != 3; ++i) {
                hash->update(input);
-               result.test_eq(provider, "hashing", hash->final(), expected);
+               result.test_bin_eq(provider + " hashing", hash->final(), expected);
             }
 
             clone->update(input);
-            result.test_eq(provider, "hashing (clone)", clone->final(), expected);
+            result.test_bin_eq(provider + " hashing (clone)", clone->final(), expected);
 
             // Test to make sure clear() resets what we need it to
             hash->update("some discarded input");
@@ -106,7 +106,7 @@ class Hash_Function_Tests final : public Text_Based_Test {
             hash->update(nullptr, 0);  // this should be effectively ignored
             hash->update(input);
 
-            result.test_eq(provider, "hashing after clear", hash->final(), expected);
+            result.test_bin_eq(provider + " hashing after clear", hash->final(), expected);
 
             // Test that misaligned inputs work
 
@@ -121,7 +121,7 @@ class Hash_Function_Tests final : public Text_Based_Test {
                }
 
                hash->update(&misaligned[bytes_to_misalign], input.size());
-               result.test_eq(provider, "hashing misaligned data", hash->final(), expected);
+               result.test_bin_eq(provider + " hashing misaligned data", hash->final(), expected);
             }
 
             if(input.size() > 5) {
@@ -142,10 +142,10 @@ class Hash_Function_Tests final : public Text_Based_Test {
                   hash->update(&input[so_far], take);
                   so_far += take;
                }
-               result.test_eq(provider, "hashing split", hash->final(), expected);
+               result.test_bin_eq(provider + " hashing split", hash->final(), expected);
 
                fork->update(&input[input.size() - 1], 1);
-               result.test_eq(provider, "hashing split", fork->final(), expected);
+               result.test_bin_eq(provider + " hashing split", fork->final(), expected);
             }
 
             if(hash->hash_block_size() > 0) {
@@ -212,7 +212,7 @@ class Hash_NIST_MonteCarlo_Tests final : public Text_Based_Test {
                }
             }
 
-            result.test_eq("Output is expected", input[2], expected);
+            result.test_bin_eq("Output is expected", input[2], expected);
          }
 
          return result;
@@ -280,7 +280,7 @@ class Hash_LongRepeat_Tests final : public Text_Based_Test {
 
             std::vector<uint8_t> output(hash->output_length());
             hash->final(output.data());
-            result.test_eq("Output is expected", output, expected);
+            result.test_bin_eq("Output is expected", output, expected);
          }
 
          return result;

@@ -111,7 +111,7 @@ std::vector<Test::Result> test_frodo_roundtrips() {
       Botan::PK_KEM_Decryptor dec1(sk1, *rng, "Raw");
       auto ss = dec1.decrypt(enc_res.encapsulated_shared_key(), 0 /* no KDF */);
 
-      result.test_eq("shared secrets match", ss, enc_res.shared_key());
+      result.test_bin_eq("shared secrets match", ss, enc_res.shared_key());
       result.test_sz_eq("length of shared secret (decaps)", ss.size(), dec1.shared_key_length(0));
 
       // Decryption failures ("All right then, keep your secrets.")
@@ -120,14 +120,14 @@ std::vector<Test::Result> test_frodo_roundtrips() {
       // Decryption failure: mismatching private key
       Botan::PK_KEM_Decryptor dec2(sk2, *rng, "Raw");
       auto ss_mismatch = dec2.decrypt(enc_res.encapsulated_shared_key(), 0 /* no KDF */);
-      result.test_eq("decryption failure sk",
-                     ss_mismatch,
-                     get_decryption_error_value(constants, enc_res.encapsulated_shared_key(), sk2));
+      result.test_bin_eq("decryption failure sk",
+                         ss_mismatch,
+                         get_decryption_error_value(constants, enc_res.encapsulated_shared_key(), sk2));
 
       // Decryption failure: bitflip in encapsulated shared value
       const auto mutated_encaps_value = Test::mutate_vec(enc_res.encapsulated_shared_key(), *rng);
       ss_mismatch = dec2.decrypt(mutated_encaps_value, 0 /* no KDF */);
-      result.test_eq(
+      result.test_bin_eq(
          "decryption failure bitflip", ss_mismatch, get_decryption_error_value(constants, mutated_encaps_value, sk2));
 
       // Decryption failure: malformed encapsulation value

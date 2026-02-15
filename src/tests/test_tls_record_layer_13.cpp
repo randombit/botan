@@ -92,7 +92,7 @@ std::vector<Test::Result> read_full_records() {
 
                     auto record = std::get<TLS::Record>(read);
                     result.test_is_true("received CCS", record.type == TLS::Record_Type::ChangeCipherSpec);
-                    result.test_eq("CCS byte is 0x01", record.fragment, "01");
+                    result.test_bin_eq("CCS byte is 0x01", record.fragment, "01");
 
                     result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
                  }),
@@ -110,14 +110,14 @@ std::vector<Test::Result> read_full_records() {
                     auto record = std::get<TLS::Record>(read);
 
                     result.test_is_true("received CCS 1", record.type == TLS::Record_Type::ChangeCipherSpec);
-                    result.test_eq("CCS byte is 0x01", record.fragment, "01");
+                    result.test_bin_eq("CCS byte is 0x01", record.fragment, "01");
 
                     read = rl.next_record();
                     result.require("received something", std::holds_alternative<TLS::Record>(read));
                     record = std::get<TLS::Record>(read);
 
                     result.test_is_true("received CCS 2", record.type == TLS::Record_Type::ChangeCipherSpec);
-                    result.test_eq("CCS byte is 0x01", record.fragment, "01");
+                    result.test_bin_eq("CCS byte is 0x01", record.fragment, "01");
 
                     result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
                  }),
@@ -132,10 +132,10 @@ std::vector<Test::Result> read_full_records() {
 
                     auto rec = std::get<TLS::Record>(read);
                     result.test_is_true("received handshake record", rec.type == TLS::Record_Type::Handshake);
-                    result.test_eq("contains the full handshake message",
-                                   Botan::secure_vector<uint8_t>(client_hello_record.begin() + TLS::TLS_HEADER_SIZE,
-                                                                 client_hello_record.end()),
-                                   rec.fragment);
+                    result.test_bin_eq("contains the full handshake message",
+                                       Botan::secure_vector<uint8_t>(client_hello_record.begin() + TLS::TLS_HEADER_SIZE,
+                                                                     client_hello_record.end()),
+                                       rec.fragment);
 
                     result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
                  }),
@@ -151,17 +151,17 @@ std::vector<Test::Result> read_full_records() {
 
               auto rec = std::get<TLS::Record>(read);
               result.test_is_true("received handshake record", rec.type == TLS::Record_Type::Handshake);
-              result.test_eq("contains the full handshake message",
-                             Botan::secure_vector<uint8_t>(client_hello_record.begin() + TLS::TLS_HEADER_SIZE,
-                                                           client_hello_record.end()),
-                             rec.fragment);
+              result.test_bin_eq("contains the full handshake message",
+                                 Botan::secure_vector<uint8_t>(client_hello_record.begin() + TLS::TLS_HEADER_SIZE,
+                                                               client_hello_record.end()),
+                                 rec.fragment);
 
               read = rl.next_record();
               result.require("received something", std::holds_alternative<TLS::Record>(read));
 
               rec = std::get<TLS::Record>(read);
               result.test_is_true("received CCS record", rec.type == TLS::Record_Type::ChangeCipherSpec);
-              result.test_eq("CCS byte is 0x01", rec.fragment, "01");
+              result.test_bin_eq("CCS byte is 0x01", rec.fragment, "01");
 
               result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
            })};
@@ -336,7 +336,7 @@ std::vector<Test::Result> read_fragmented_records() {
 
                     auto rec1 = std::get<TLS::Record>(res1);
                     result.test_is_true("received CCS", rec1.type == TLS::Record_Type::ChangeCipherSpec);
-                    result.test_eq("CCS byte is 0x01", rec1.fragment, "01");
+                    result.test_bin_eq("CCS byte is 0x01", rec1.fragment, "01");
 
                     result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
                  }),
@@ -397,7 +397,7 @@ std::vector<Test::Result> write_records() {
                               record.size() == client_hello_msg.size() + Botan::TLS::TLS_HEADER_SIZE);
 
                const auto header = std::vector<uint8_t>(record.cbegin(), record.cbegin() + Botan::TLS::TLS_HEADER_SIZE);
-               result.test_eq("record header is well-formed", header, "16030100c4");
+               result.test_bin_eq("record header is well-formed", header, "16030100c4");
             }),
       CHECK("prepare a dummy CCS",
             [&](auto& result) {
@@ -406,7 +406,7 @@ std::vector<Test::Result> write_records() {
                   record_layer_client(true).prepare_records(Botan::TLS::Record_Type::ChangeCipherSpec, ccs_content);
                result.require("record was created", record.size() == Botan::TLS::TLS_HEADER_SIZE + 1);
 
-               result.test_eq("CCS record is well-formed", record, "140303000101");
+               result.test_bin_eq("CCS record is well-formed", record, "140303000101");
             }),
       CHECK("cannot prepare non-dummy CCS",
             [&](auto& result) {
@@ -659,17 +659,17 @@ std::vector<Test::Result> read_encrypted_records() {
                auto res = rl.next_record(cs.get());
                result.require("decrypted a record", std::holds_alternative<TLS::Record>(res));
                auto records = std::get<TLS::Record>(res);
-               result.test_eq("first record", records.fragment, plaintext_records.at(0));
+               result.test_bin_eq("first record", records.fragment, plaintext_records.at(0));
 
                res = rl.next_record(cs.get());
                result.require("decrypted a record", std::holds_alternative<TLS::Record>(res));
                records = std::get<TLS::Record>(res);
-               result.test_eq("second record", records.fragment, plaintext_records.at(1));
+               result.test_bin_eq("second record", records.fragment, plaintext_records.at(1));
 
                res = rl.next_record(cs.get());
                result.require("decrypted a record", std::holds_alternative<TLS::Record>(res));
                records = std::get<TLS::Record>(res);
-               result.test_eq("third record", records.fragment, plaintext_records.at(2));
+               result.test_bin_eq("third record", records.fragment, plaintext_records.at(2));
 
                result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
             }),
@@ -730,7 +730,7 @@ std::vector<Test::Result> write_encrypted_records() {
                   "17 03 03 00 35 75 ec 4d c2 38 cc e6"
                   "0b 29 80 44 a7 1e 21 9c 56 cc 77 b0 51 7f e9 b9 3c 7a 4b fc 44 d8 7f"
                   "38 f8 03 38 ac 98 fc 46 de b3 84 bd 1c ae ac ab 68 67 d7 26 c4 05 46");
-               result.test_eq("produced the expected ciphertext", ct, expected_ct);
+               result.test_bin_eq("produced the expected ciphertext", ct, expected_ct);
             }),
 
       CHECK("write a dummy CCS (that must not be encrypted)",
@@ -740,7 +740,7 @@ std::vector<Test::Result> write_encrypted_records() {
                   Botan::TLS::Record_Type::ChangeCipherSpec, ccs_content, cs.get());
                result.require("record was created and not encrypted", record.size() == Botan::TLS::TLS_HEADER_SIZE + 1);
 
-               result.test_eq("CCS record is well-formed", record, "140303000101");
+               result.test_bin_eq("CCS record is well-formed", record, "140303000101");
             }),
 
       CHECK("write a lot of data producing two protected records", [&](Test::Result& result) {

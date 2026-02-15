@@ -107,7 +107,7 @@ class ECDH_AllGroups_Tests : public Test {
                   const Botan::PK_Key_Agreement b_ka(b_priv, rng(), kdf);
                   const auto b_ss = b_ka.derive_key(0, a_pub);
 
-                  result.test_eq("Same shared secret", a_ss.bits_of(), b_ss.bits_of());
+                  result.test_bin_eq("Same shared secret", a_ss.bits_of(), b_ss.bits_of());
                }
             } catch(std::exception& e) {
                result.test_failure("Exception", e.what());

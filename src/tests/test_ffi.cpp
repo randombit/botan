@@ -444,7 +444,7 @@ class FFI_RNG_Test final : public FFI_Test {
             TEST_FFI_OK(botan_rng_get, (custom_rng, outbuf.data(), outbuf.size()));
             result.test_sz_eq("custom_get_cb called", cb_counter, 1);
             std::vector<uint8_t> pattern(outbuf.size(), 0x12);
-            result.test_eq("custom_get_cb returned bytes", pattern, outbuf);
+            result.test_bin_eq("custom_get_cb returned bytes", pattern, outbuf);
 
             TEST_FFI_OK(botan_rng_reseed, (custom_rng, 256));
             result.test_sz_eq("custom_add_entropy_cb called", cb_counter, 2);
@@ -755,7 +755,7 @@ class FFI_CRL_Test final : public FFI_Test {
 
          ViewBytesSink serial;
          TEST_FFI_OK(botan_mp_view_bin, (cert2_serial_bn, serial.delegate(), serial.callback()));
-         result.test_eq("serial == serial_bn", serial.get(), cert2_serial);
+         result.test_bin_eq("serial == serial_bn", serial.get(), cert2_serial);
          TEST_FFI_OK(botan_mp_destroy, (cert2_serial_bn));
 
          botan_x509_crl_entry_t entry;
@@ -776,10 +776,10 @@ class FFI_CRL_Test final : public FFI_Test {
             "Reason", static_cast<uint8_t>(reason), Botan::to_underlying(Botan::CRL_Code::KeyCompromise));
    #endif
          result.test_u64_eq("Revocation time", ts, Botan::calendar_point(1999, 1, 1, 12, 0, 0).seconds_since_epoch());
-         result.test_eq("Revoked cert serial", serial.get(), cert2_serial);
+         result.test_bin_eq("Revoked cert serial", serial.get(), cert2_serial);
 
          TEST_FFI_OK(botan_mp_view_bin, (entry_serial_bn, serial.delegate(), serial.callback()));
-         result.test_eq("Revoked cert serial_bn", serial.get(), cert2_serial);
+         result.test_bin_eq("Revoked cert serial_bn", serial.get(), cert2_serial);
          TEST_FFI_OK(botan_mp_destroy, (entry_serial_bn));
 
          TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE, botan_x509_crl_entries, (crl, 1, &entry));
@@ -938,7 +938,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
             std::vector<uint8_t> serial(serial_len);
             TEST_FFI_OK(botan_x509_cert_get_serial_number, (cert, serial.data(), &serial_len));
             result.test_sz_eq("cert serial length", serial.size(), 16);
-            result.test_str_eq("cert serial", Botan::hex_encode(serial), "41D29DD172EAEEA780C12C6CE92F8752");
+            result.test_bin_eq("cert serial", serial, "41D29DD172EAEEA780C12C6CE92F8752");
 
             size_t fingerprint_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
@@ -1230,7 +1230,7 @@ class FFI_Cert_AlternativeNames_Test final : public FFI_Test {
          const auto san_ip4_bin =
             read_binary_alternative_names(result, cert, get_san, count_san, BOTAN_X509_IP_ADDRESS);
          result.test_sz_eq("expected number of IPv4 addresses (bin)", san_ip4_bin.size(), 1);
-         result.test_eq("127.0.0.1 (bin)", san_ip4_bin.front(), Botan::store_be(uint32_t(0x7F000001)));
+         result.test_bin_eq("127.0.0.1 (bin)", san_ip4_bin.front(), Botan::store_be(uint32_t(0x7F000001)));
 
          const auto san_dn_bytes =
             read_binary_alternative_names(result, cert, get_san, count_san, BOTAN_X509_DIRECTORY_NAME);
@@ -1264,7 +1264,7 @@ class FFI_Cert_AlternativeNames_Test final : public FFI_Test {
          const auto ian_ip4_bin =
             read_binary_alternative_names(result, cert, get_ian, count_ian, BOTAN_X509_IP_ADDRESS);
          result.test_sz_eq("expected number of IPv4 addresses (bin)", ian_ip4_bin.size(), 1);
-         result.test_eq("192.168.1.1 (bin)", ian_ip4_bin.front(), Botan::store_be(uint32_t(0xC0A80101)));
+         result.test_bin_eq("192.168.1.1 (bin)", ian_ip4_bin.front(), Botan::store_be(uint32_t(0xC0A80101)));
 
          const auto ian_dn_bytes =
             read_binary_alternative_names(result, cert, get_ian, count_ian, BOTAN_X509_DIRECTORY_NAME);
@@ -1439,7 +1439,7 @@ class FFI_PKCS_Hashid_Test final : public FFI_Test {
             result.test_sz_eq("Expected SHA-256 PKCS hash id len", hash_id_len, 19);
 
             hash_id.resize(hash_id_len);
-            result.test_eq("Expected SHA_256 PKCS hash id", hash_id, "3031300D060960864801650304020105000420");
+            result.test_bin_eq("Expected SHA_256 PKCS hash id", hash_id, "3031300D060960864801650304020105000420");
 
             hash_id_len = 3;  // too short
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
@@ -1520,7 +1520,7 @@ class FFI_CBC_Cipher_Test final : public FFI_Test {
                             &input_consumed));
 
                ciphertext.resize(output_written);
-               result.test_eq("AES/CBC ciphertext", ciphertext, exp_ciphertext);
+               result.test_bin_eq("AES/CBC ciphertext", ciphertext, exp_ciphertext);
 
                if(TEST_FFI_OK(botan_cipher_init, (&cipher_decrypt, "AES-128/CBC", BOTAN_CIPHER_INIT_FLAG_DECRYPT))) {
                   size_t ptext_len;
@@ -1552,7 +1552,7 @@ class FFI_CBC_Cipher_Test final : public FFI_Test {
 
                   decrypted.resize(output_written);
 
-                  result.test_eq("AES/CBC plaintext", decrypted, plaintext);
+                  result.test_bin_eq("AES/CBC plaintext", decrypted, plaintext);
 
                   TEST_FFI_OK(botan_cipher_destroy, (cipher_decrypt));
                }
@@ -1663,7 +1663,7 @@ class FFI_GCM_Test final : public FFI_Test {
                             &input_consumed));
 
                ciphertext.resize(output_written);
-               result.test_eq("AES/GCM ciphertext", ciphertext, exp_ciphertext);
+               result.test_bin_eq("AES/GCM ciphertext", ciphertext, exp_ciphertext);
 
                if(TEST_FFI_OK(botan_cipher_init, (&cipher_decrypt, "AES-128/GCM", BOTAN_CIPHER_INIT_FLAG_DECRYPT))) {
                   std::vector<uint8_t> decrypted(plaintext.size());
@@ -1690,7 +1690,7 @@ class FFI_GCM_Test final : public FFI_Test {
 
                   result.test_sz_eq("All input consumed", input_consumed, ciphertext.size());
                   result.test_sz_eq("Expected output size produced", output_written, decrypted.size());
-                  result.test_eq("AES/GCM plaintext", decrypted, plaintext);
+                  result.test_bin_eq("AES/GCM plaintext", decrypted, plaintext);
 
                   TEST_FFI_OK(botan_cipher_destroy, (cipher_decrypt));
                }
@@ -1795,7 +1795,7 @@ class FFI_ChaCha20Poly1305_Test final : public FFI_Test {
                             &input_consumed));
 
                ciphertext.resize(output_written);
-               result.test_eq("AES/GCM ciphertext", ciphertext, exp_ciphertext);
+               result.test_bin_eq("AES/GCM ciphertext", ciphertext, exp_ciphertext);
 
                if(TEST_FFI_OK(botan_cipher_init,
                               (&cipher_decrypt, "ChaCha20Poly1305", BOTAN_CIPHER_INIT_FLAG_DECRYPT))) {
@@ -1823,7 +1823,7 @@ class FFI_ChaCha20Poly1305_Test final : public FFI_Test {
 
                   result.test_sz_eq("All input consumed", input_consumed, ciphertext.size());
                   result.test_sz_eq("Expected output size produced", output_written, decrypted.size());
-                  result.test_eq("AES/GCM plaintext", decrypted, plaintext);
+                  result.test_bin_eq("AES/GCM plaintext", decrypted, plaintext);
 
                   TEST_FFI_OK(botan_cipher_destroy, (cipher_decrypt));
                }
@@ -1918,7 +1918,7 @@ class FFI_EAX_Test final : public FFI_Test {
                             &input_consumed));
 
                ciphertext.resize(output_written);
-               result.test_eq("AES/EAX ciphertext", ciphertext, exp_ciphertext);
+               result.test_bin_eq("AES/EAX ciphertext", ciphertext, exp_ciphertext);
 
                if(TEST_FFI_OK(botan_cipher_init, (&cipher_decrypt, "AES-128/EAX", BOTAN_CIPHER_INIT_FLAG_DECRYPT))) {
                   std::vector<uint8_t> decrypted(plaintext.size());
@@ -1944,7 +1944,7 @@ class FFI_EAX_Test final : public FFI_Test {
 
                   result.test_sz_eq("All input consumed", input_consumed, ciphertext.size());
                   result.test_sz_eq("Expected output size produced", output_written, decrypted.size());
-                  result.test_eq("AES/EAX plaintext", decrypted, plaintext);
+                  result.test_bin_eq("AES/EAX plaintext", decrypted, plaintext);
 
                   TEST_FFI_OK(botan_cipher_destroy, (cipher_decrypt));
                }
@@ -2093,7 +2093,7 @@ class FFI_AEAD_Test final : public FFI_Test {
 
             result.test_sz_eq("no bytes consumed in final", final_input_consumed, 0);
             result.test_sz_eq("final bytes written", final_output_written, expected_final_size);
-            result.test_eq("dummy buffer unchanged", dummy_buffer, dummy_buffer_reference);
+            result.test_bin_eq("dummy buffer unchanged", dummy_buffer, dummy_buffer_reference);
 
             TEST_FFI_OK(botan_cipher_destroy, (cipher_encrypt));
 
@@ -2173,9 +2173,9 @@ class FFI_AEAD_Test final : public FFI_Test {
             result.test_sz_eq(
                "remaining bytes consumed in final (decrypt)", final_input_consumed_dec, ct_slicer.size());
             result.test_sz_eq("bytes written in final (decrypt)", final_output_written_dec, expected_final_size_dec);
-            result.test_eq("dummy buffer unchanged", dummy_buffer, dummy_buffer_reference);
+            result.test_bin_eq("dummy buffer unchanged", dummy_buffer, dummy_buffer_reference);
 
-            result.test_eq("decrypted plaintext", decrypted, plaintext);
+            result.test_bin_eq("decrypted plaintext", decrypted, plaintext);
 
             TEST_FFI_OK(botan_cipher_destroy, (cipher_decrypt));
 
@@ -2230,7 +2230,7 @@ class FFI_StreamCipher_Test final : public FFI_Test {
 
             result.test_sz_eq("Expected output written", output_written, ct.size() - 5);
             result.test_sz_eq("Expected input consumed", input_consumed, pt.size() - 5);
-            result.test_eq("AES-128/CTR ciphertext", ct, exp_ct);
+            result.test_bin_eq("AES-128/CTR ciphertext", ct, exp_ct);
 
             TEST_FFI_OK(botan_cipher_destroy, (ctr));
          }
@@ -2278,18 +2278,19 @@ class FFI_XOF_Test final : public FFI_Test {
          TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_xof_output, (xof1, nullptr, 1));
          TEST_FFI_OK(botan_xof_output, (xof1, out_bytes.data(), out_bytes.size()));
 
-         result.test_eq("expected first output", out_bytes, "2E870A5FE35999A7B15F9F0BB5AC1689");
+         result.test_bin_eq("expected first output", out_bytes, "2E870A5FE35999A7B15F9F0BB5AC1689");
          result.test_sz_ne("no more input", botan_xof_accepts_input(xof1), 1);
          TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_OBJECT_STATE,
                      botan_xof_update,
                      (xof1, reinterpret_cast<const uint8_t*>(input1), strlen(input1)));
 
          TEST_FFI_OK(botan_xof_output, (xof1, out_bytes.data(), out_bytes.size()));
-         result.test_eq("expected second output", out_bytes, "E266E213DA0F2763AE29601AB8F9DEDC");
+         result.test_bin_eq("expected second output", out_bytes, "E266E213DA0F2763AE29601AB8F9DEDC");
 
          TEST_FFI_OK(botan_xof_update, (xof2, reinterpret_cast<const uint8_t*>(input3), strlen(input3)));
          TEST_FFI_OK(botan_xof_output, (xof2, out_bytes.data(), out_bytes.size()));
-         result.test_eq("expected first output after additional input", out_bytes, "D9D5416188659DDC5C26FCF52E49A157");
+         result.test_bin_eq(
+            "expected first output after additional input", out_bytes, "D9D5416188659DDC5C26FCF52E49A157");
 
          TEST_FFI_OK(botan_xof_clear, (xof1));
          result.test_rc("again ready for input", botan_xof_accepts_input(xof1), 1);
@@ -2297,7 +2298,7 @@ class FFI_XOF_Test final : public FFI_Test {
          TEST_FFI_OK(botan_xof_update, (xof1, reinterpret_cast<const uint8_t*>(input2), strlen(input2)));
          TEST_FFI_OK(botan_xof_update, (xof1, reinterpret_cast<const uint8_t*>(input3), strlen(input3)));
          TEST_FFI_OK(botan_xof_output, (xof1, out_bytes.data(), out_bytes.size()));
-         result.test_eq("expected first output with full input", out_bytes, "D9D5416188659DDC5C26FCF52E49A157");
+         result.test_bin_eq("expected first output with full input", out_bytes, "D9D5416188659DDC5C26FCF52E49A157");
 
          TEST_FFI_OK(botan_xof_destroy, (xof1));
          TEST_FFI_OK(botan_xof_destroy, (xof2));
@@ -2347,7 +2348,7 @@ class FFI_HashFunction_Test final : public FFI_Test {
                               (hash, reinterpret_cast<const uint8_t*>(input_str), std::strlen(input_str)));
                   TEST_FFI_OK(botan_hash_final, (hash, outbuf.data()));
 
-                  result.test_eq(
+                  result.test_bin_eq(
                      "SHA-256 output", outbuf, "B5D4045C3F466FA91FE2CC6ABE79232A1A57CDF104F7A26E716E0A1E2789DF78");
                }
 
@@ -2364,12 +2365,12 @@ class FFI_HashFunction_Test final : public FFI_Test {
                   TEST_FFI_OK(botan_hash_update,
                               (hash, reinterpret_cast<const uint8_t*>(&msg[1]), std::strlen(msg) - 1));
                   TEST_FFI_OK(botan_hash_final, (hash, outbuf.data()));
-                  result.test_eq("hashing split", outbuf, expected);
+                  result.test_bin_eq("hashing split", outbuf, expected);
 
                   TEST_FFI_OK(botan_hash_update,
                               (fork, reinterpret_cast<const uint8_t*>(&msg[std::strlen(msg) - 1]), 1));
                   TEST_FFI_OK(botan_hash_final, (fork, outbuf.data()));
-                  result.test_eq("hashing split", outbuf, expected);
+                  result.test_bin_eq("hashing split", outbuf, expected);
 
                   TEST_FFI_OK(botan_hash_destroy, (fork));
                }
@@ -2435,7 +2436,7 @@ class FFI_MAC_Test final : public FFI_Test {
                               (mac, reinterpret_cast<const uint8_t*>(input_str), std::strlen(input_str)));
                   TEST_FFI_OK(botan_mac_final, (mac, outbuf.data()));
 
-                  result.test_eq(
+                  result.test_bin_eq(
                      "HMAC output", outbuf, "1A82EEA984BC4A7285617CC0D05F1FE1D6C96675924A81BC965EE8FF7B0697A7");
                }
             }
@@ -2455,7 +2456,7 @@ class FFI_Scrypt_Test final : public FFI_Test {
          const char* pass = "password";
 
          if(TEST_FFI_INIT(botan_scrypt, (output.data(), output.size(), pass, salt, sizeof(salt), 8, 1, 1))) {
-            result.test_eq("scrypt output", output, "4B9B888D695288E002CC4F9D90808A4D296A45CE4471AFBB");
+            result.test_bin_eq("scrypt output", output, "4B9B888D695288E002CC4F9D90808A4D296A45CE4471AFBB");
 
             size_t N;
             size_t r;
@@ -2466,7 +2467,7 @@ class FFI_Scrypt_Test final : public FFI_Test {
             std::vector<uint8_t> cmp(output.size());
 
             TEST_FFI_OK(botan_pwdhash, ("Scrypt", N, r, p, cmp.data(), cmp.size(), "bunny", 5, salt, sizeof(salt)));
-            result.test_eq("recomputed scrypt", cmp, output);
+            result.test_bin_eq("recomputed scrypt", cmp, output);
          }
       }
 };
@@ -2494,7 +2495,7 @@ class FFI_KDF_Test final : public FFI_Test {
                            pbkdf_salt.data(),
                            pbkdf_salt.size(),
                            pbkdf_iterations))) {
-            result.test_eq("PBKDF output", outbuf, "027AFADD48F4BE8DCC4F");
+            result.test_bin_eq("PBKDF output", outbuf, "027AFADD48F4BE8DCC4F");
 
             size_t iters_10ms;
             size_t iters_100ms;
@@ -2537,7 +2538,7 @@ class FFI_KDF_Test final : public FFI_Test {
                            kdf_salt.size(),
                            nullptr,
                            0))) {
-            result.test_eq("KDF output", outbuf, "3A5DC9AA1C872B4744515AC2702D6396FC2A");
+            result.test_bin_eq("KDF output", outbuf, "3A5DC9AA1C872B4744515AC2702D6396FC2A");
          }
 
          size_t out_len = 64;
@@ -2605,16 +2606,16 @@ class FFI_Blockcipher_Test final : public FFI_Test {
             TEST_FFI_OK(botan_block_cipher_set_key, (cipher, zero16.data(), zero16.size()));
 
             TEST_FFI_OK(botan_block_cipher_encrypt_blocks, (cipher, block.data(), block.data(), 1));
-            result.test_eq("AES-128 encryption works", block, "66E94BD4EF8A2C3B884CFA59CA342B2E");
+            result.test_bin_eq("AES-128 encryption works", block, "66E94BD4EF8A2C3B884CFA59CA342B2E");
 
             TEST_FFI_OK(botan_block_cipher_encrypt_blocks, (cipher, block.data(), block.data(), 1));
-            result.test_eq("AES-128 encryption works", block, "F795BD4A52E29ED713D313FA20E98DBC");
+            result.test_bin_eq("AES-128 encryption works", block, "F795BD4A52E29ED713D313FA20E98DBC");
 
             TEST_FFI_OK(botan_block_cipher_decrypt_blocks, (cipher, block.data(), block.data(), 1));
-            result.test_eq("AES-128 decryption works", block, "66E94BD4EF8A2C3B884CFA59CA342B2E");
+            result.test_bin_eq("AES-128 decryption works", block, "66E94BD4EF8A2C3B884CFA59CA342B2E");
 
             TEST_FFI_OK(botan_block_cipher_decrypt_blocks, (cipher, block.data(), block.data(), 1));
-            result.test_eq("AES-128 decryption works", block, "00000000000000000000000000000000");
+            result.test_bin_eq("AES-128 decryption works", block, "00000000000000000000000000000000");
 
             TEST_FFI_OK(botan_block_cipher_clear, (cipher));
             botan_block_cipher_destroy(cipher);
@@ -2831,7 +2832,7 @@ class FFI_MP_Test final : public FFI_Test {
 
          ViewBytesSink bin_sink;
          TEST_FFI_OK(botan_mp_view_bin, (x, bin_sink.delegate(), bin_sink.callback()));
-         result.test_eq("botan_mp_view_str", bin_sink.get(), "0103");
+         result.test_bin_eq("botan_mp_view_str", bin_sink.get(), "0103");
 
          uint32_t x_32;
          TEST_FFI_OK(botan_mp_to_uint32, (x, &x_32));
@@ -2927,7 +2928,7 @@ class FFI_MP_Test final : public FFI_Test {
          std::vector<uint8_t> bn_buf;
          bn_buf.resize(bn_bytes);
          botan_mp_to_bin(r, bn_buf.data());
-         result.test_eq("botan_mp_to_bin", bn_buf, "1E81B9EFE0BE1902F6D03F9F5E5FB438");
+         result.test_bin_eq("botan_mp_to_bin", bn_buf, "1E81B9EFE0BE1902F6D03F9F5E5FB438");
 
          TEST_FFI_OK(botan_mp_set_from_mp, (y, r));
          TEST_FFI_OK(botan_mp_mod_mul, (r, x, y, p));
@@ -3083,14 +3084,14 @@ class FFI_Keywrap_Test final : public FFI_Test {
 
             result.test_sz_eq("Expected wrapped keylen size", wrapped_keylen, 16 + 8);
 
-            result.test_eq(
-               nullptr, "Wrapped key", wrapped, wrapped_keylen, expected_wrapped_key, sizeof(expected_wrapped_key));
+            result.test_bin_eq(
+               "Wrapped key", {wrapped, wrapped_keylen}, {expected_wrapped_key, sizeof(expected_wrapped_key)});
 
             uint8_t dec_key[16] = {0};
             size_t dec_keylen = sizeof(dec_key);
             TEST_FFI_OK(botan_key_unwrap3394, (wrapped, sizeof(wrapped), kek, sizeof(kek), dec_key, &dec_keylen));
 
-            result.test_eq(nullptr, "Unwrapped key", dec_key, dec_keylen, key, sizeof(key));
+            result.test_bin_eq("Unwrapped key", {dec_key, dec_keylen}, {key, sizeof(key)});
          }
       }
 };
@@ -3265,7 +3266,7 @@ class FFI_RSA_Test final : public FFI_Test {
                                  (decrypt, decrypted.data(), &decrypted_len, ciphertext.data(), ciphertext.size()));
                      decrypted.resize(decrypted_len);
 
-                     result.test_eq("RSA plaintext", decrypted, plaintext);
+                     result.test_bin_eq("RSA plaintext", decrypted, plaintext);
                   }
 
                   TEST_FFI_OK(botan_pk_op_decrypt_destroy, (decrypt));
@@ -3810,7 +3811,7 @@ class FFI_ECDH_Test final : public FFI_Test {
          TEST_FFI_OK(botan_pk_op_key_agreement,
                      (ka2, key2.data(), &key2_len, pubkey1.data(), pubkey1.size(), salt.data(), salt.size()));
 
-         result.test_eq("shared ECDH key", key1, key2);
+         result.test_bin_eq("shared ECDH key", key1, key2);
 
          TEST_FFI_OK(botan_mp_destroy, (private_scalar));
          TEST_FFI_OK(botan_mp_destroy, (public_x));
@@ -3878,13 +3879,13 @@ class FFI_Ed25519_Test final : public FFI_Test {
          uint8_t retr_privkey[64];
          TEST_FFI_OK(botan_privkey_ed25519_get_privkey, (priv, retr_privkey));
 
-         result.test_eq(nullptr, "Public key matches", retr_privkey + 32, 32, pubkey.data(), pubkey.size());
+         result.test_bin_eq("Public key matches", {retr_privkey + 32, 32}, pubkey);
 
          TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
 
          uint8_t retr_pubkey[32];
          TEST_FFI_OK(botan_pubkey_ed25519_get_pubkey, (pub, retr_pubkey));
-         result.test_eq(nullptr, "Public key matches", retr_pubkey, 32, pubkey.data(), pubkey.size());
+         result.test_bin_eq("Public key matches", {retr_pubkey, 32}, pubkey);
 
          TEST_FFI_OK(botan_pubkey_destroy, (pub));
          TEST_FFI_OK(botan_pubkey_load_ed25519, (&pub, pubkey.data()));
@@ -3906,7 +3907,7 @@ class FFI_Ed25519_Test final : public FFI_Test {
             TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
          }
 
-         result.test_eq("Expected signature", signature, exp_sig);
+         result.test_bin_eq("Expected signature", signature, exp_sig);
 
          botan_pk_op_verify_t verifier;
 
@@ -3945,13 +3946,13 @@ class FFI_Ed448_Test final : public FFI_Test {
 
          std::vector<uint8_t> retr_privkey(57);
          TEST_FFI_OK(botan_privkey_ed448_get_privkey, (priv, retr_privkey.data()));
-         result.test_eq("Private key matches", retr_privkey, sk);
+         result.test_bin_eq("Private key matches", retr_privkey, sk);
 
          TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
 
          std::vector<uint8_t> retr_pubkey(57);
          TEST_FFI_OK(botan_pubkey_ed448_get_pubkey, (pub, retr_pubkey.data()));
-         result.test_eq("Public key matches", retr_pubkey, pk_ref);
+         result.test_bin_eq("Public key matches", retr_pubkey, pk_ref);
 
          TEST_FFI_OK(botan_pubkey_destroy, (pub));
          TEST_FFI_OK(botan_pubkey_load_ed448, (&pub, pk_ref.data()));
@@ -3973,7 +3974,7 @@ class FFI_Ed448_Test final : public FFI_Test {
             TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
          }
 
-         result.test_eq("Expected signature", signature, sig_ref);
+         result.test_bin_eq("Expected signature", signature, sig_ref);
 
          botan_pk_op_verify_t verifier;
 
@@ -4012,19 +4013,19 @@ class FFI_X25519_Test final : public FFI_Test {
 
          std::vector<uint8_t> privkey_read(32);
          TEST_FFI_OK(botan_privkey_x25519_get_privkey, (b_priv, privkey_read.data()));
-         result.test_eq("X25519 private key", privkey_read, b_priv_bits);
+         result.test_bin_eq("X25519 private key", privkey_read, b_priv_bits);
 
          std::vector<uint8_t> pubkey_read(32);
 
          botan_pubkey_t b_pub;
          TEST_FFI_OK(botan_privkey_export_pubkey, (&b_pub, b_priv));
          TEST_FFI_OK(botan_pubkey_x25519_get_pubkey, (b_pub, pubkey_read.data()));
-         result.test_eq("X25519 public key b", pubkey_read, b_pub_bits);
+         result.test_bin_eq("X25519 public key b", pubkey_read, b_pub_bits);
 
          botan_pubkey_t a_pub;
          TEST_FFI_OK(botan_pubkey_load_x25519, (&a_pub, a_pub_bits.data()));
          TEST_FFI_OK(botan_pubkey_x25519_get_pubkey, (a_pub, pubkey_read.data()));
-         result.test_eq("X25519 public key a", pubkey_read, a_pub_bits);
+         result.test_bin_eq("X25519 public key a", pubkey_read, a_pub_bits);
 
          botan_pk_op_ka_t ka;
          REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka, b_priv, "Raw", 0));
@@ -4034,7 +4035,7 @@ class FFI_X25519_Test final : public FFI_Test {
          TEST_FFI_OK(botan_pk_op_key_agreement,
                      (ka, shared_output.data(), &shared_len, a_pub_bits.data(), a_pub_bits.size(), nullptr, 0));
 
-         result.test_eq("Shared secret matches expected", shared_secret_bits, shared_output);
+         result.test_bin_eq("Shared secret matches expected", shared_secret_bits, shared_output);
 
          TEST_FFI_OK(botan_pubkey_destroy, (a_pub));
          TEST_FFI_OK(botan_pubkey_destroy, (b_pub));
@@ -4065,19 +4066,19 @@ class FFI_X448_Test final : public FFI_Test {
 
          std::vector<uint8_t> privkey_read(56);
          TEST_FFI_OK(botan_privkey_x448_get_privkey, (b_priv, privkey_read.data()));
-         result.test_eq("X448 private key", privkey_read, b_priv_ref);
+         result.test_bin_eq("X448 private key", privkey_read, b_priv_ref);
 
          std::vector<uint8_t> pubkey_read(56);
 
          botan_pubkey_t b_pub;
          TEST_FFI_OK(botan_privkey_export_pubkey, (&b_pub, b_priv));
          TEST_FFI_OK(botan_pubkey_x448_get_pubkey, (b_pub, pubkey_read.data()));
-         result.test_eq("X448 public key b", pubkey_read, b_pub_ref);
+         result.test_bin_eq("X448 public key b", pubkey_read, b_pub_ref);
 
          botan_pubkey_t a_pub;
          TEST_FFI_OK(botan_pubkey_load_x448, (&a_pub, a_pub_ref.data()));
          TEST_FFI_OK(botan_pubkey_x448_get_pubkey, (a_pub, pubkey_read.data()));
-         result.test_eq("X448 public key a", pubkey_read, a_pub_ref);
+         result.test_bin_eq("X448 public key a", pubkey_read, a_pub_ref);
 
          botan_pk_op_ka_t ka;
          REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka, b_priv, "Raw", 0));
@@ -4087,7 +4088,7 @@ class FFI_X448_Test final : public FFI_Test {
          TEST_FFI_OK(botan_pk_op_key_agreement,
                      (ka, shared_output.data(), &shared_len, a_pub_ref.data(), a_pub_ref.size(), nullptr, 0));
 
-         result.test_eq("Shared secret matches expected", shared_secret_ref, shared_output);
+         result.test_bin_eq("Shared secret matches expected", shared_secret_ref, shared_output);
 
          TEST_FFI_OK(botan_pubkey_destroy, (a_pub));
          TEST_FFI_OK(botan_pubkey_destroy, (b_pub));
@@ -4140,8 +4141,8 @@ class FFI_KEM_Roundtrip_Test : public FFI_Test {
             ViewBytesSink pub_bytes2;
             TEST_FFI_OK(botan_privkey_view_raw, (priv_loaded, priv_bytes2.delegate(), priv_bytes2.callback()));
             TEST_FFI_OK(botan_pubkey_view_raw, (pub_loaded, pub_bytes2.delegate(), pub_bytes2.callback()));
-            result.test_eq("private key encoding", priv_bytes.get(), priv_bytes2.get());
-            result.test_eq("public key encoding", pub_bytes.get(), pub_bytes2.get());
+            result.test_bin_eq("private key encoding", priv_bytes.get(), priv_bytes2.get());
+            result.test_bin_eq("public key encoding", pub_bytes.get(), pub_bytes2.get());
 
             // KEM encryption (using the loaded public key)
             botan_pk_op_kem_encrypt_t kem_enc;
@@ -4232,7 +4233,7 @@ class FFI_KEM_Roundtrip_Test : public FFI_Test {
             TEST_FFI_OK(botan_pk_op_kem_decrypt_destroy, (kem_dec));
 
             // final check and clean up
-            result.test_eq("shared keys match", shared_key, shared_key2);
+            result.test_bin_eq("shared keys match", shared_key, shared_key2);
 
             TEST_FFI_OK(botan_pubkey_destroy, (pub));
             TEST_FFI_OK(botan_pubkey_destroy, (pub_loaded));
@@ -4290,8 +4291,8 @@ class FFI_Signature_Roundtrip_Test : public FFI_Test {
             ViewBytesSink pub_bytes2;
             TEST_FFI_OK(botan_privkey_view_raw, (priv_loaded, priv_bytes2.delegate(), priv_bytes2.callback()));
             TEST_FFI_OK(botan_pubkey_view_raw, (pub_loaded, pub_bytes2.delegate(), pub_bytes2.callback()));
-            result.test_eq("private key encoding", priv_bytes.get(), priv_bytes2.get());
-            result.test_eq("public key encoding", pub_bytes.get(), pub_bytes2.get());
+            result.test_bin_eq("private key encoding", priv_bytes.get(), priv_bytes2.get());
+            result.test_bin_eq("public key encoding", pub_bytes.get(), pub_bytes2.get());
 
             // Signature Creation (using the loaded private key)
             botan_pk_op_sign_t signer;
@@ -4373,8 +4374,8 @@ class FFI_Kyber512_Test final : public FFI_Test {
          ViewBytesSink privkey_read_raw;
          TEST_FFI_OK(botan_privkey_view_kyber_raw_key, (b_priv, privkey_read.delegate(), privkey_read.callback()));
          TEST_FFI_OK(botan_privkey_view_raw, (b_priv, privkey_read_raw.delegate(), privkey_read_raw.callback()));
-         result.test_eq("kyber512 private key", privkey_read.get(), b_priv_bits);
-         result.test_eq("kyber512 private key raw", privkey_read_raw.get(), b_priv_bits);
+         result.test_bin_eq("kyber512 private key", privkey_read.get(), b_priv_bits);
+         result.test_bin_eq("kyber512 private key raw", privkey_read_raw.get(), b_priv_bits);
 
          ViewBytesSink pubkey_read;
          ViewBytesSink pubkey_read_raw;
@@ -4383,13 +4384,13 @@ class FFI_Kyber512_Test final : public FFI_Test {
          TEST_FFI_OK(botan_privkey_export_pubkey, (&b_pub, b_priv));
          TEST_FFI_OK(botan_pubkey_view_kyber_raw_key, (b_pub, pubkey_read.delegate(), pubkey_read.callback()));
          TEST_FFI_OK(botan_pubkey_view_raw, (b_pub, pubkey_read_raw.delegate(), pubkey_read_raw.callback()));
-         result.test_eq("kyber512 public key b", pubkey_read.get(), b_pub_bits);
-         result.test_eq("kyber512 raw public key b", pubkey_read_raw.get(), b_pub_bits);
+         result.test_bin_eq("kyber512 public key b", pubkey_read.get(), b_pub_bits);
+         result.test_bin_eq("kyber512 raw public key b", pubkey_read_raw.get(), b_pub_bits);
 
          botan_pubkey_t a_pub;
          TEST_FFI_OK(botan_pubkey_load_kyber, (&a_pub, a_pub_bits.data(), 800));
          TEST_FFI_OK(botan_pubkey_view_kyber_raw_key, (a_pub, pubkey_read.delegate(), pubkey_read.callback()));
-         result.test_eq("kyber512 public key a", pubkey_read.get(), a_pub_bits);
+         result.test_bin_eq("kyber512 public key a", pubkey_read.get(), a_pub_bits);
 
          TEST_FFI_OK(botan_pubkey_destroy, (a_pub));
          TEST_FFI_OK(botan_pubkey_destroy, (b_pub));
@@ -4418,8 +4419,8 @@ class FFI_Kyber768_Test final : public FFI_Test {
          ViewBytesSink privkey_read_raw;
          TEST_FFI_OK(botan_privkey_view_kyber_raw_key, (b_priv, privkey_read.delegate(), privkey_read.callback()));
          TEST_FFI_OK(botan_privkey_view_raw, (b_priv, privkey_read_raw.delegate(), privkey_read_raw.callback()));
-         result.test_eq("kyber768 private key", privkey_read.get(), b_priv_bits);
-         result.test_eq("kyber768 private key raw", privkey_read_raw.get(), b_priv_bits);
+         result.test_bin_eq("kyber768 private key", privkey_read.get(), b_priv_bits);
+         result.test_bin_eq("kyber768 private key raw", privkey_read_raw.get(), b_priv_bits);
 
          ViewBytesSink pubkey_read;
          ViewBytesSink pubkey_read_raw;
@@ -4428,13 +4429,13 @@ class FFI_Kyber768_Test final : public FFI_Test {
          TEST_FFI_OK(botan_privkey_export_pubkey, (&b_pub, b_priv));
          TEST_FFI_OK(botan_pubkey_view_kyber_raw_key, (b_pub, pubkey_read.delegate(), pubkey_read.callback()));
          TEST_FFI_OK(botan_pubkey_view_raw, (b_pub, pubkey_read_raw.delegate(), pubkey_read_raw.callback()));
-         result.test_eq("kyber768 public key b", pubkey_read.get(), b_pub_bits);
-         result.test_eq("kyber768 public key raw b", pubkey_read_raw.get(), b_pub_bits);
+         result.test_bin_eq("kyber768 public key b", pubkey_read.get(), b_pub_bits);
+         result.test_bin_eq("kyber768 public key raw b", pubkey_read_raw.get(), b_pub_bits);
 
          botan_pubkey_t a_pub;
          TEST_FFI_OK(botan_pubkey_load_kyber, (&a_pub, a_pub_bits.data(), 1184));
          TEST_FFI_OK(botan_pubkey_view_kyber_raw_key, (a_pub, pubkey_read.delegate(), pubkey_read.callback()));
-         result.test_eq("kyber768 public key a", pubkey_read.get(), a_pub_bits);
+         result.test_bin_eq("kyber768 public key a", pubkey_read.get(), a_pub_bits);
 
          TEST_FFI_OK(botan_pubkey_destroy, (a_pub));
          TEST_FFI_OK(botan_pubkey_destroy, (b_pub));
@@ -4463,8 +4464,8 @@ class FFI_Kyber1024_Test final : public FFI_Test {
          ViewBytesSink privkey_read_raw;
          TEST_FFI_OK(botan_privkey_view_kyber_raw_key, (b_priv, privkey_read.delegate(), privkey_read.callback()));
          TEST_FFI_OK(botan_privkey_view_raw, (b_priv, privkey_read_raw.delegate(), privkey_read_raw.callback()));
-         result.test_eq("kyber1024 private key", privkey_read.get(), b_priv_bits);
-         result.test_eq("kyber1024 private key raw", privkey_read_raw.get(), b_priv_bits);
+         result.test_bin_eq("kyber1024 private key", privkey_read.get(), b_priv_bits);
+         result.test_bin_eq("kyber1024 private key raw", privkey_read_raw.get(), b_priv_bits);
 
          ViewBytesSink pubkey_read;
          ViewBytesSink pubkey_read_raw;
@@ -4473,13 +4474,13 @@ class FFI_Kyber1024_Test final : public FFI_Test {
          TEST_FFI_OK(botan_privkey_export_pubkey, (&b_pub, b_priv));
          TEST_FFI_OK(botan_pubkey_view_kyber_raw_key, (b_pub, pubkey_read.delegate(), pubkey_read.callback()));
          TEST_FFI_OK(botan_pubkey_view_raw, (b_pub, pubkey_read_raw.delegate(), pubkey_read_raw.callback()));
-         result.test_eq("kyber1024 public key b", pubkey_read.get(), b_pub_bits);
-         result.test_eq("kyber1024 public key raw b", pubkey_read_raw.get(), b_pub_bits);
+         result.test_bin_eq("kyber1024 public key b", pubkey_read.get(), b_pub_bits);
+         result.test_bin_eq("kyber1024 public key raw b", pubkey_read_raw.get(), b_pub_bits);
 
          botan_pubkey_t a_pub;
          TEST_FFI_OK(botan_pubkey_load_kyber, (&a_pub, a_pub_bits.data(), 1568));
          TEST_FFI_OK(botan_pubkey_view_kyber_raw_key, (a_pub, pubkey_read.delegate(), pubkey_read.callback()));
-         result.test_eq("kyber1024 public key a", pubkey_read.get(), a_pub_bits);
+         result.test_bin_eq("kyber1024 public key a", pubkey_read.get(), a_pub_bits);
 
          TEST_FFI_OK(botan_pubkey_destroy, (a_pub));
          TEST_FFI_OK(botan_pubkey_destroy, (b_pub));
@@ -4717,7 +4718,7 @@ class FFI_ElGamal_Test final : public FFI_Test {
             TEST_FFI_OK(botan_pk_op_decrypt_destroy, (op_dec));
          }
 
-         result.test_eq("decryption worked", decryption, plaintext);
+         result.test_bin_eq("decryption worked", decryption, plaintext);
 
          TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey));
          TEST_FFI_OK(botan_pubkey_destroy, (pub));
@@ -4823,7 +4824,7 @@ class FFI_DH_Test final : public FFI_Test {
          TEST_FFI_OK(botan_pk_op_key_agreement,
                      (ka2, key2.data(), &key2_len, pubkey1.data(), pubkey1.size(), nullptr, 0));
 
-         result.test_eq("shared DH key", key1, key2);
+         result.test_bin_eq("shared DH key", key1, key2);
 
          TEST_FFI_OK(botan_mp_destroy, (private_x));
          TEST_FFI_OK(botan_mp_destroy, (public_p));
@@ -5302,7 +5303,7 @@ class FFI_SRP6_Test final : public FFI_Test {
                      (srp_server, pub_A.data(), pub_A.size(), output.data(), &K2_output_len));
          const auto K2 = std::vector(output.data(), output.data() + K2_output_len);
 
-         result.test_eq("K1 == K2", K1, K2);
+         result.test_bin_eq("K1 == K2", K1, K2);
 
          TEST_FFI_OK(botan_srp6_server_session_destroy, (srp_server));
       }

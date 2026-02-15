@@ -75,8 +75,8 @@ class SRP6_KAT_Tests final : public Text_Based_Test {
 
          const auto S = server.step2(srp_resp.first);
 
-         result.test_eq("SRP client S", srp_resp.second, exp_S);
-         result.test_eq("SRP server S", S, exp_S);
+         result.test_bin_eq("SRP client S", srp_resp.second, exp_S);
+         result.test_bin_eq("SRP server S", S, exp_S);
 
          return result;
       }
@@ -122,7 +122,7 @@ class SRP6_RT_Tests final : public Test {
 
                const Botan::SymmetricKey server_K = server.step2(client.first);
 
-               result.test_eq("computed same keys", client.second.bits_of(), server_K.bits_of());
+               result.test_bin_eq("computed same keys", client.second.bits_of(), server_K.bits_of());
             }
             result.end_timer();
             results.push_back(result);

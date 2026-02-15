@@ -59,8 +59,8 @@ class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test {
          rng.initialize_with(keygen_seed.data(), keygen_seed.size());
          const Botan::McEliece_PrivateKey mce_priv(rng, keygen_n, keygen_t);
 
-         result.test_eq("public key fingerprint", hash_bytes(mce_priv.public_key_bits()), fprint_pub);
-         result.test_eq("private key fingerprint", hash_bytes(mce_priv.private_key_bits()), fprint_priv);
+         result.test_bin_eq("public key fingerprint", hash_bytes(mce_priv.public_key_bits()), fprint_pub);
+         result.test_bin_eq("private key fingerprint", hash_bytes(mce_priv.private_key_bits()), fprint_priv);
 
          rng.clear();
          rng.initialize_with(encrypt_seed.data(), encrypt_seed.size());
@@ -74,9 +74,9 @@ class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test {
             Botan::secure_vector<uint8_t> dec_shared_key =
                kem_dec.decrypt(kem_result.encapsulated_shared_key(), 64, {});
 
-            result.test_eq("ciphertext", kem_result.encapsulated_shared_key(), ciphertext);
-            result.test_eq("encrypt shared", kem_result.shared_key(), shared_key);
-            result.test_eq("decrypt shared", dec_shared_key, shared_key);
+            result.test_bin_eq("ciphertext", kem_result.encapsulated_shared_key(), ciphertext);
+            result.test_bin_eq("encrypt shared", kem_result.shared_key(), shared_key);
+            result.test_bin_eq("decrypt shared", dec_shared_key, shared_key);
          } catch(Botan::Lookup_Error&) {}
 
          result.end_timer();
@@ -189,7 +189,7 @@ class McEliece_Tests final : public Test {
 
             Botan::secure_vector<uint8_t> shared_key2 = dec_op.decrypt(kem_result.encapsulated_shared_key(), 64, salt);
 
-            result.test_eq("same key", kem_result.shared_key(), shared_key2);
+            result.test_bin_eq("same key", kem_result.shared_key(), shared_key2);
          }
          result.end_timer();
          return result;

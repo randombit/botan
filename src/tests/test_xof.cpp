@@ -105,7 +105,7 @@ class XOF_Tests final : public Text_Based_Test {
             xof->start(salt, key);
             xof->update(in);
             result.test_bool_eq("object may accept input before first output", xof->accepts_input(), new_accepts_input);
-            result.test_eq("generated output", xof->output_stdvec(expected.size()), expected);
+            result.test_bin_eq("generated output", xof->output_stdvec(expected.size()), expected);
             result.test_is_true("object does not accept input after first output", !xof->accepts_input());
 
             // input and output (overwriting existing data)
@@ -117,13 +117,13 @@ class XOF_Tests final : public Text_Based_Test {
             xof->update(in);
             auto nonzero_data = rng().random_vec(expected.size());
             xof->output(nonzero_data);
-            result.test_eq("generated output (overwriting existing data)", nonzero_data, expected);
+            result.test_bin_eq("generated output (overwriting existing data)", nonzero_data, expected);
 
             // if not necessary, invoking start() should be optional
             if(salt.empty() && key.empty()) {
                xof->clear();
                xof->update(in);
-               result.test_eq("generated output (w/o start())", xof->output_stdvec(expected.size()), expected);
+               result.test_bin_eq("generated output (w/o start())", xof->output_stdvec(expected.size()), expected);
             }
 
             // input again and output bytewise
@@ -136,7 +136,7 @@ class XOF_Tests final : public Text_Based_Test {
             for(uint8_t& chr : singlebyte_out) {
                chr = xof->output_next_byte();
             }
-            result.test_eq("generated singlebyte output", singlebyte_out, expected);
+            result.test_bin_eq("generated singlebyte output", singlebyte_out, expected);
 
             // input and output blocksize-ish wise
             auto process_as_blocks = [&](const std::string& id, size_t block_size) {
@@ -159,7 +159,7 @@ class XOF_Tests final : public Text_Based_Test {
                   new_xof->output(out_span.first(bytes));
                   out_span = out_span.last(out_span.size() - bytes);
                }
-               result.test_eq(Botan::fmt("generated blockwise output ({})", id), blockwise_out, expected);
+               result.test_bin_eq(Botan::fmt("generated blockwise output ({})", id), blockwise_out, expected);
             };
 
             process_as_blocks("-1", xof->block_size() - 1);
@@ -181,9 +181,11 @@ class XOF_Tests final : public Text_Based_Test {
                result.test_is_true("copied object doesn't allow input after reading output", !xof3->accepts_input());
                auto cp_out2_2a = xof2->output_stdvec(expected.size() - expected.size() / 2);
                auto cp_out2_2b = xof3->output_stdvec(expected.size() - expected.size() / 2);
-               result.test_eq("output is equal, after state copy", cp_out1, expected);
-               result.test_eq("output is equal, after state copy (A)", Botan::concat(cp_out2_1, cp_out2_2a), expected);
-               result.test_eq("output is equal, after state copy (B)", Botan::concat(cp_out2_1, cp_out2_2b), expected);
+               result.test_bin_eq("output is equal, after state copy", cp_out1, expected);
+               result.test_bin_eq(
+                  "output is equal, after state copy (A)", Botan::concat(cp_out2_1, cp_out2_2a), expected);
+               result.test_bin_eq(
+                  "output is equal, after state copy (B)", Botan::concat(cp_out2_1, cp_out2_2b), expected);
             } catch(const Botan::Not_Implemented&) {
                // pass...
             }

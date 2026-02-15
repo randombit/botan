@@ -38,7 +38,7 @@ class TPM_Tests final : public Test {
             Botan::TPM_RNG rng(*ctx);
             Botan::secure_vector<uint8_t> output = rng.random_vec(16);
 
-            result.test_ne("TPM RNG output not all zeros", output, std::vector<uint8_t>(16));
+            result.test_bin_ne("TPM RNG output not all zeros", output, std::vector<uint8_t>(16));
 
             Botan::TPM_PrivateKey key(*ctx, 1024, nullptr);
             result.test_success("Created TPM RSA key");

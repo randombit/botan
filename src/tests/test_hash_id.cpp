@@ -65,7 +65,7 @@ class PKCS_HashID_Test final : public Test {
 
                std::vector<uint8_t> encoded_id(bits.begin(), bits.begin() + pkcs_id.size());
 
-               result.test_eq("Encoded ID matches hardcoded", encoded_id, pkcs_id);
+               result.test_bin_eq("Encoded ID matches hardcoded", encoded_id, pkcs_id);
 
             } catch(Botan::Exception& e) {
                result.test_failure(e.what());

@@ -81,7 +81,7 @@ class Filter_Tests final : public Test {
 
             Botan::secure_vector<uint8_t> produced(b);
             Botan::secure_vector<uint8_t> expected(test_data.at(0));
-            result.test_eq("byte read is correct", produced, expected);
+            result.test_bin_eq("byte read is correct", produced, expected);
 
             result.test_sz_eq("1 bytes read so far from SecureQueue", queue_a.get_bytes_read(), 1);
 
@@ -318,8 +318,8 @@ class Filter_Tests final : public Test {
          result.test_sz_eq("Bytes read", pipe.get_bytes_read(0), 32);
          result.test_is_true("No more to read", pipe.end_of_data());
 
-         result.test_eq("Expected output", out, "C34AB6ABB7B2BB595BC25C3B388C872FD1D575819A8F55CC689510285E212385");
-         result.test_eq("Expected last16", last16, "D1D575819A8F55CC689510285E212385");
+         result.test_bin_eq("Expected output", out, "C34AB6ABB7B2BB595BC25C3B388C872FD1D575819A8F55CC689510285E212385");
+         result.test_bin_eq("Expected last16", last16, "D1D575819A8F55CC689510285E212385");
 
          pipe.reset();
 
@@ -327,7 +327,7 @@ class Filter_Tests final : public Test {
          pipe.prepend(new Botan::Hash_Filter("CRC32"));
          pipe.append(new Botan::Hash_Filter("CRC32"));
          pipe.process_msg(std::vector<uint8_t>(1024, 0));
-         result.test_eq("Expected CRC32d", pipe.read_all(1), "99841F60");
+         result.test_bin_eq("Expected CRC32d", pipe.read_all(1), "99841F60");
       #endif
    #endif
          return result;
@@ -421,7 +421,8 @@ class Filter_Tests final : public Test {
          auto ciphertext = pipe.read_all();
          result.test_sz_eq("Bytes read after", pipe.get_bytes_read(), ciphertext.size());
 
-         result.test_eq("Ciphertext", ciphertext, "9BDD7300E0CB61CA71FFF957A71605DB 6836159C36781246A1ADF50982757F4B");
+         result.test_bin_eq(
+            "Ciphertext", ciphertext, "9BDD7300E0CB61CA71FFF957A71605DB 6836159C36781246A1ADF50982757F4B");
 
          pipe.process_msg("IV carryover");
          auto ciphertext2 = pipe.read_all(1);
@@ -429,8 +430,8 @@ class Filter_Tests final : public Test {
          auto ciphertext3 = pipe.read_all(2);
 
          // These values tested against PyCrypto
-         result.test_eq("Ciphertext2", ciphertext2, "AA8D682958A4A044735DAC502B274DB2");
-         result.test_eq("Ciphertext3", ciphertext3, "1241B9976F73051BCF809525D6E86C25");
+         result.test_bin_eq("Ciphertext2", ciphertext2, "AA8D682958A4A044735DAC502B274DB2");
+         result.test_bin_eq("Ciphertext3", ciphertext3, "1241B9976F73051BCF809525D6E86C25");
 
          Botan::Cipher_Mode_Filter* dec_cipher = new Botan::Cipher_Mode_Filter(
             Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::Cipher_Dir::Decryption));
@@ -452,7 +453,7 @@ class Filter_Tests final : public Test {
          Botan::secure_vector<uint8_t> zeros_out = pipe.read_all();
          result.test_sz_eq("Bytes read", pipe.get_bytes_read(), zeros_out.size());
 
-         result.test_eq("Cipher roundtrip", zeros_in, zeros_out);
+         result.test_bin_eq("Cipher roundtrip", zeros_in, zeros_out);
    #endif
          return result;
       }
@@ -559,7 +560,7 @@ class Filter_Tests final : public Test {
 
          pipe.process_msg("F331F00D");
          Botan::secure_vector<uint8_t> bin = pipe.read_all(3);
-         result.test_eq("hex decoded", bin, "F331F00D");
+         result.test_bin_eq("hex decoded", bin, "F331F00D");
 
          pipe.append(new Botan::Hex_Encoder);
          pipe.process_msg("F331F00D");
@@ -617,10 +618,10 @@ class Filter_Tests final : public Test {
          pipe.process_msg("ABCDEF");
 
          result.test_sz_eq("Message count", pipe.message_count(), 1);
-         result.test_eq("Ciphertext", pipe.read_all(), "FDFD6238F7C6");
+         result.test_bin_eq("Ciphertext", pipe.read_all(), "FDFD6238F7C6");
 
          pipe.process_msg("ABCDEF");
-         result.test_eq("Ciphertext", pipe.read_all(1), "8E72F1153514");
+         result.test_bin_eq("Ciphertext", pipe.read_all(1), "8E72F1153514");
    #endif
          return result;
       }
@@ -636,8 +637,10 @@ class Filter_Tests final : public Test {
          result.test_sz_eq("Message count", pipe.message_count(), 2);
 
          // Test reading out of order
-         result.test_eq("Hash 2", pipe.read_all(1), "610480FFA82F24F6926544B976FE387878E3D973C03DFD591C2E9896EFB903E0");
-         result.test_eq("Hash 1", pipe.read_all(0), "C00862D1C6C1CF7C1B49388306E7B3C1BB79D8D6EC978B41035B556DBB3797DF");
+         result.test_bin_eq(
+            "Hash 2", pipe.read_all(1), "610480FFA82F24F6926544B976FE387878E3D973C03DFD591C2E9896EFB903E0");
+         result.test_bin_eq(
+            "Hash 1", pipe.read_all(0), "C00862D1C6C1CF7C1B49388306E7B3C1BB79D8D6EC978B41035B556DBB3797DF");
    #endif
          return result;
       }
@@ -736,7 +739,7 @@ class Filter_Tests final : public Test {
 
          result.test_sz_eq("Message count after end_msg", pipe.message_count(), 2 + filter_count);
          for(size_t i = 0; i != filter_count; ++i) {
-            result.test_eq(
+            result.test_bin_eq(
                "Output", pipe.read_all(2 + i), "327AD8055223F5926693D8BEA40F7B35BDEEB535647DFB93F464E40EA01939A9");
          }
    #endif

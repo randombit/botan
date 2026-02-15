@@ -182,7 +182,7 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                if(result.test_is_true("establishment was successful", handle.has_value())) {
                   result.require("session id was set", handle->id().has_value());
                   result.test_is_true("session ticket was empty", !handle->ticket().has_value());
-                  result.test_is_eq("session id is correct", handle->id().value(), default_id);
+                  result.test_bin_eq("session id is correct", handle->id().value(), default_id);
                }
             }),
 
@@ -195,7 +195,7 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
                   result.test_u16_eq(
                      "ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
-                  result.test_is_eq("ID was echoed", sessions[0].handle.id().value(), default_id);
+                  result.test_bin_eq("ID was echoed", sessions[0].handle.id().value(), default_id);
                   result.test_is_true("not a ticket", !sessions[0].handle.ticket().has_value());
                }
             }),
@@ -260,7 +260,7 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
                   result.test_u16_eq(
                      "ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
-                  result.test_is_eq("ID was echoed", sessions[0].handle.id().value(), new_id);
+                  result.test_bin_eq("ID was echoed", sessions[0].handle.id().value(), new_id);
                   result.test_is_true("ticket was not stored", !sessions[0].handle.ticket().has_value());
                }
 
@@ -282,7 +282,7 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                   result.test_u16_eq(
                      "ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
                   result.test_is_true("ID was not stored", !sessions[0].handle.id().has_value());
-                  result.test_is_eq("ticket was echoed", sessions[0].handle.ticket().value(), new_ticket);
+                  result.test_bin_eq("ticket was echoed", sessions[0].handle.ticket().value(), new_ticket);
                }
 
                mgr->remove_all();
@@ -869,7 +869,7 @@ std::vector<Test::Result> test_session_manager_sqlite() {
                   mgr.establish(default_session(Botan::TLS::Connection_Side::Server, cbs), some_random_id);
                result.require("establishment was successful", some_random_handle.has_value());
                result.require("session id was set", some_random_handle->id().has_value());
-               result.test_eq("session id is correct", some_random_handle->id().value(), some_random_id);
+               result.test_bin_eq("session id is correct", some_random_handle->id().value(), some_random_id);
 
                auto some_virtual_handle = mgr.establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
                result.require("establishment was successful", some_virtual_handle.has_value());
@@ -1076,7 +1076,7 @@ std::vector<Test::Result> tls_session_manager_expiry() {
                       auto sessions_and_handles = mgr->find(server_info(), cbs, plcy);
                       result.require("sessions are found", !sessions_and_handles.empty());
                       result.test_sz_eq("exactly one session is found", sessions_and_handles.size(), 1);
-                      result.test_is_eq(
+                      result.test_bin_eq(
                          "the new session is found", sessions_and_handles.front().handle.id().value(), handle_new);
 
                       result.test_sz_eq("old session was deleted when it expired", mgr->remove_all(), 1);
@@ -1115,7 +1115,7 @@ std::vector<Test::Result> tls_session_manager_expiry() {
                auto sessions_and_handles2 = mgr->find(server_info(), cbs, plcy);
                result.test_sz_eq("only one session is found", sessions_and_handles2.size(), 1);
                result.test_is_true("found session is the Session_ID", sessions_and_handles2.front().handle.is_id());
-               result.test_is_eq(
+               result.test_bin_eq(
                   "found session is the Session_ID", sessions_and_handles2.front().handle.id().value(), handle_1);
                result.test_is_true("found session is TLS 1.2",
                                    sessions_and_handles2.front().session.version().is_pre_tls_13());

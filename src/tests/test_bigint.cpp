@@ -130,7 +130,7 @@ class BigInt_Unit_Tests final : public Test {
          const auto expected = Botan::concat(encoded_n1, encoded_n2);
 
          const auto encoded_n1_n2 = BigInt::encode_fixed_length_int_pair(n1, n2, 256);
-         result.test_eq("encode_fixed_length_int_pair", encoded_n1_n2, expected);
+         result.test_bin_eq("encode_fixed_length_int_pair", encoded_n1_n2, expected);
 
          for(size_t i = 0; i < 256 - n1.bytes(); ++i) {
             if(encoded_n1[i] != 0) {
@@ -945,10 +945,10 @@ std::vector<Test::Result> test_bigint_serialization() {
             [](Test::Result& res) {
                Botan::BigInt a(0x1234567890ABCDEF);
                auto enc = a.serialize();
-               res.test_eq("BigInt::serialize", enc, "1234567890ABCDEF");
+               res.test_bin_eq("BigInt::serialize", enc, "1234567890ABCDEF");
 
                auto enc10 = a.serialize(10);
-               res.test_eq("BigInt::serialize", enc10, "00001234567890ABCDEF");
+               res.test_bin_eq("BigInt::serialize", enc10, "00001234567890ABCDEF");
 
                res.test_throws("BigInt::serialize rejects short output", [&]() { a.serialize(7); });
             }),
@@ -959,28 +959,28 @@ std::vector<Test::Result> test_bigint_serialization() {
 
                std::vector<uint8_t> enc1(a.bytes() - 1);
                a.binary_encode(enc1.data(), enc1.size());
-               res.test_eq("BigInt::binary_encode", enc1, "DCBA9876543210");
+               res.test_bin_eq("BigInt::binary_encode", enc1, "DCBA9876543210");
 
                std::vector<uint8_t> enc2(a.bytes() - 3);
                a.binary_encode(enc2.data(), enc2.size());
-               res.test_eq("BigInt::binary_encode", enc2, "9876543210");
+               res.test_bin_eq("BigInt::binary_encode", enc2, "9876543210");
 
                std::vector<uint8_t> enc3(a.bytes() + 1);
                a.binary_encode(enc3.data(), enc3.size());
-               res.test_eq("BigInt::binary_encode", enc3, "00FEDCBA9876543210");
+               res.test_bin_eq("BigInt::binary_encode", enc3, "00FEDCBA9876543210");
 
                // make sure that the padding is actually written
                std::vector<uint8_t> enc4(a.bytes() + 3);
                rng->randomize(enc4);
                a.binary_encode(enc4.data(), enc4.size());
-               res.test_eq("BigInt::binary_encode", enc4, "000000FEDCBA9876543210");
+               res.test_bin_eq("BigInt::binary_encode", enc4, "000000FEDCBA9876543210");
 
                const Botan::BigInt b(Botan::hex_decode("FEDCBA9876543210BAADC0FFEE"));
 
                std::vector<uint8_t> enc5(b.bytes() + 12);
                rng->randomize(enc5);
                b.binary_encode(enc5.data(), enc5.size());
-               res.test_eq("BigInt::binary_encode", enc5, "000000000000000000000000FEDCBA9876543210BAADC0FFEE");
+               res.test_bin_eq("BigInt::binary_encode", enc5, "000000000000000000000000FEDCBA9876543210BAADC0FFEE");
             }),
    };
 }

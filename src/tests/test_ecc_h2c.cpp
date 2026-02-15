@@ -37,7 +37,7 @@ class ECC_H2C_XMD_Tests final : public Text_Based_Test {
          std::vector<uint8_t> output(expected.size());
          Botan::expand_message_xmd(hash, output, Botan::as_span_of_bytes(input), Botan::as_span_of_bytes(domain));
 
-         result.test_eq("XMD output", output, expected);
+         result.test_bin_eq("XMD output", output, expected);
          return result;
       }
 };
@@ -73,7 +73,7 @@ class ECC_H2S_Tests final : public Text_Based_Test {
 
          try {
             auto scalar = Botan::EC_Scalar::hash(group, hash_fn, input, domain).serialize();
-            result.test_eq("output", scalar, expected_value);
+            result.test_bin_eq("output", scalar, expected_value);
          } catch(Botan::Not_Implemented&) {
             result.test_note("Skipping due to not implemented");
          }
@@ -121,7 +121,7 @@ class ECC_H2C_Tests final : public Text_Based_Test {
                pt = Botan::EC_AffinePoint::hash_to_curve_nu(group, hash_fn, input, domain).serialize_uncompressed();
             }
 
-            result.test_eq("Generated point serialization", pt, expected_point);
+            result.test_bin_eq("Generated point serialization", pt, expected_point);
          } catch(Botan::Not_Implemented&) {
             result.test_note("Skipping due to not implemented");
          }

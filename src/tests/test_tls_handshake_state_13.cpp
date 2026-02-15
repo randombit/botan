@@ -63,7 +63,7 @@ std::vector<Test::Result> finished_message_handling() {
                const std::reference_wrapper<Botan::TLS::Finished_13>
                   client_fin = state.sending(std::move(client_finished));
                result.test_throws("not stored as server Finished", [&] { state.server_finished(); });
-               result.test_eq(
+               result.test_bin_eq(
                   "correct client Finished stored", state.client_finished().serialize(), client_finished_message);
 
                Botan::TLS::Finished_13 server_finished(server_finished_message);
@@ -71,9 +71,9 @@ std::vector<Test::Result> finished_message_handling() {
                auto server_fin = state.received(std::move(server_finished));
                result.require("client can receive server finished",
                               std::holds_alternative<std::reference_wrapper<Botan::TLS::Finished_13>>(server_fin));
-               result.test_eq(
+               result.test_bin_eq(
                   "correct client Finished stored", state.client_finished().serialize(), client_finished_message);
-               result.test_eq(
+               result.test_bin_eq(
                   "correct server Finished stored", state.server_finished().serialize(), server_finished_message);
             }),
    };
@@ -93,7 +93,8 @@ std::vector<Test::Result> handshake_message_filtering() {
                [[maybe_unused]]  // just making sure that the return type of .sending is correct
                const std::reference_wrapper<Botan::TLS::Client_Hello_13>
                   filtered = state.sending(std::move(client_hello));
-               result.test_eq("correct client hello stored", state.client_hello().serialize(), client_hello_message);
+               result.test_bin_eq(
+                  "correct client hello stored", state.client_hello().serialize(), client_hello_message);
 
                result.template test_throws<Botan::TLS::TLS_Exception>(
                   "client cannot receive client hello", "received an illegal handshake message", [&] {
@@ -102,22 +103,22 @@ std::vector<Test::Result> handshake_message_filtering() {
                      state.received(std::move(ch));
                   });
             }),
-      CHECK("Client with server hello",
-            [&](auto& result) {
-               Botan::TLS::Client_Handshake_State_13 state;
+      CHECK(
+         "Client with server hello",
+         [&](auto& result) {
+            Botan::TLS::Client_Handshake_State_13 state;
 
-               const auto server_hello_message = Botan::hex_decode(server_hello_message_hex);
+            const auto server_hello_message = Botan::hex_decode(server_hello_message_hex);
 
-               auto server_hello =
-                  std::get<Botan::TLS::Server_Hello_13>(Botan::TLS::Server_Hello_13::parse(server_hello_message));
+            auto server_hello =
+               std::get<Botan::TLS::Server_Hello_13>(Botan::TLS::Server_Hello_13::parse(server_hello_message));
 
-               auto filtered = state.received(std::move(server_hello));
-               result.test_is_true(
-                  "client can receive server hello",
-                  std::holds_alternative<std::reference_wrapper<Botan::TLS::Server_Hello_13>>(filtered));
+            auto filtered = state.received(std::move(server_hello));
+            result.test_is_true("client can receive server hello",
+                                std::holds_alternative<std::reference_wrapper<Botan::TLS::Server_Hello_13>>(filtered));
 
-               result.test_eq("correct server hello stored", state.server_hello().serialize(), server_hello_message);
-            }),
+            result.test_bin_eq("correct server hello stored", state.server_hello().serialize(), server_hello_message);
+         }),
    };
 }
 

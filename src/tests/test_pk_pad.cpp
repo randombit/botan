@@ -47,7 +47,7 @@ class EME_PKCS1v15_Decoding_Tests final : public Text_Based_Test {
 
          if(len.has_value().as_bool()) {
             decoded.resize(len.value_or(0));
-            result.test_eq("EME decoded plaintext correct", decoded, plaintext);
+            result.test_bin_eq("EME decoded plaintext correct", decoded, plaintext);
          } else {
             bool all_zeros = true;
             for(const uint8_t b : decoded) {

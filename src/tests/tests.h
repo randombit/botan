@@ -302,8 +302,12 @@ class Test {
             }
 
             template <typename T>
-               requires(!std::is_enum_v<T> && !std::is_integral_v<T> && !std::convertible_to<T, std::string>)
             bool test_is_eq(std::string_view what, const T& produced, const T& expected) {
+               static_assert(!std::convertible_to<T, std::span<const uint8_t>>, "Use test_bin_eq");
+               static_assert(!std::convertible_to<T, std::string_view>, "Use test_str_eq");
+               static_assert(!std::is_integral_v<T>, "Use test_{sz,u8,u16,u32,u64}_eq");
+               static_assert(!std::is_enum_v<T>, "Use test_enum_eq");
+
                std::ostringstream out;
                out << m_who << " " << what;
 
@@ -395,46 +399,22 @@ class Test {
             bool test_bn_ne(std::string_view what, const BigInt& produced, const BigInt& expected);
 #endif
 
-            bool test_eq(const char* producer,
-                         std::string_view what,
-                         const uint8_t produced[],
-                         size_t produced_size,
-                         const uint8_t expected[],
-                         size_t expected_size);
+            /* Test predicates for binary strings */
+            bool test_bin_ne(std::string_view what,
+                             std::span<const uint8_t> produced,
+                             std::span<const uint8_t> expected);
 
-            bool test_ne(std::string_view what,
-                         const uint8_t produced[],
-                         size_t produced_len,
-                         const uint8_t expected[],
-                         size_t expected_len);
+            bool test_bin_eq(std::string_view what,
+                             std::span<const uint8_t> produced,
+                             std::span<const uint8_t> expected);
 
-            bool test_eq(std::string_view what, std::span<const uint8_t> produced, std::span<const uint8_t> expected) {
-               return test_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
-            }
-
-            bool test_eq(std::string_view producer,
-                         std::string_view what,
-                         std::span<const uint8_t> produced,
-                         std::span<const uint8_t> expected) {
-               return test_eq(std::string(producer).c_str(),
-                              what,
-                              produced.data(),
-                              produced.size(),
-                              expected.data(),
-                              expected.size());
-            }
-
-            bool test_eq(std::string_view what, std::span<const uint8_t> produced, const char* expected_hex);
+            bool test_bin_eq(std::string_view what, std::span<const uint8_t> produced, std::string_view expected_hex);
 
             template <std::size_t N>
-            bool test_eq(std::string_view what,
-                         const std::array<uint8_t, N>& produced,
-                         const std::array<uint8_t, N>& expected) {
-               return test_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
-            }
-
-            bool test_ne(std::string_view what, std::span<const uint8_t> produced, std::span<const uint8_t> expected) {
-               return test_ne(what, produced.data(), produced.size(), expected.data(), expected.size());
+            bool test_bin_eq(std::string_view what,
+                             const std::array<uint8_t, N>& produced,
+                             const std::array<uint8_t, N>& expected) {
+               return test_bin_eq(what, std::span{produced}, std::span{expected});
             }
 
          private:

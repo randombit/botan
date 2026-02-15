@@ -390,7 +390,7 @@ std::vector<Test::Result> test_encoding() {
                std::vector<uint8_t> buffer1(96);
                Botan::BufferStuffer stuffer1(buffer1);
                Botan::CRYSTALS::pack<6>(p1, stuffer1);
-               res.test_eq("3 bit encoding", buffer1, threebitencoding);
+               res.test_bin_eq("3 bit encoding", buffer1, threebitencoding);
 
                // value range is exactly one byte
                Kyberish_Poly<Domain::Normal> p2;
@@ -401,13 +401,13 @@ std::vector<Test::Result> test_encoding() {
                std::vector<uint8_t> buffer2(256);
                Botan::BufferStuffer stuffer2(buffer2);
                Botan::CRYSTALS::pack<255>(p2, stuffer2);
-               res.test_eq("8 bit encoding", buffer2, eightbitencoding);
+               res.test_bin_eq("8 bit encoding", buffer2, eightbitencoding);
 
                // value range for 10 bits, with mapping function
                std::vector<uint8_t> buffer3(p2.size() / 8 * 10 /* bits */);
                Botan::BufferStuffer stuffer3(buffer3);
                Botan::CRYSTALS::pack<512>(p2, stuffer3, [](int16_t x) -> uint16_t { return x * 2; });
-               res.test_eq("10 bit encoding", buffer3, tenbitencoding);
+               res.test_bin_eq("10 bit encoding", buffer3, tenbitencoding);
             }),
 
       CHECK("decode polynomial coefficients from buffer",

@@ -121,14 +121,14 @@ class OCB_Wide_KAT_Tests final : public Text_Based_Test {
          enc.set_associated_data(ad);
          enc.start(nonce);
          enc.finish(buf);
-         result.test_eq("Ciphertext matches", buf, expected);
+         result.test_bin_eq("Ciphertext matches", buf, expected);
 
          Botan::OCB_Decryption dec(std::make_unique<OCB_Wide_Test_Block_Cipher>(bs), std::min<size_t>(bs, 32));
          dec.set_key(key);
          dec.set_associated_data(ad);
          dec.start(nonce);
          dec.finish(buf);
-         result.test_eq("Decryption correct", buf, input);
+         result.test_bin_eq("Decryption correct", buf, input);
 
          return result;
       }
@@ -222,7 +222,7 @@ class OCB_Wide_Long_KAT_Tests final : public Text_Based_Test {
          std::vector<uint8_t> final_result;
          ocb_encrypt(result, final_result, enc, N, empty, C);
 
-         result.test_eq("correct value", final_result, expected);
+         result.test_bin_eq("correct value", final_result, expected);
 
          return result;
       }
@@ -292,7 +292,7 @@ class OCB_Long_KAT_Tests final : public Text_Based_Test {
          std::vector<uint8_t> final_result;
          ocb_encrypt(result, final_result, enc, dec, N, empty, C);
 
-         result.test_eq("correct value", final_result, expected);
+         result.test_bin_eq("correct value", final_result, expected);
 
          return result;
       }
@@ -320,7 +320,7 @@ class OCB_Long_KAT_Tests final : public Text_Based_Test {
 
             dec.finish(buf, 0);
 
-            result.test_eq("OCB round tripped", buf, pt);
+            result.test_bin_eq("OCB round tripped", buf, pt);
          } catch(std::exception& e) {
             result.test_failure("OCB round trip error", e.what());
          }

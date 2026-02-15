@@ -52,23 +52,22 @@ class TLS_Session_Tests final : public Test {
 
          const std::string pem = session.PEM_encode();
          const Botan::TLS::Session session_from_pem(pem);
-         result.test_eq("Roundtrip from pem", session.DER_encode(), session_from_pem.DER_encode());
+         result.test_bin_eq("Roundtrip from pem", session.DER_encode(), session_from_pem.DER_encode());
 
          const auto der = session.DER_encode();
          const Botan::TLS::Session session_from_der(der);
-         result.test_eq("Roundtrip from der", session.DER_encode(), session_from_der.DER_encode());
+         result.test_bin_eq("Roundtrip from der", session.DER_encode(), session_from_der.DER_encode());
 
          const Botan::SymmetricKey key("ABCDEF");
          const std::vector<uint8_t> ctext1 = session.encrypt(key, this->rng());
          const std::vector<uint8_t> ctext2 = session.encrypt(key, this->rng());
 
-         result.test_ne(
-            "TLS session encryption is non-deterministic", ctext1.data(), ctext1.size(), ctext2.data(), ctext2.size());
+         result.test_bin_ne("TLS session encryption is non-deterministic", ctext1, ctext2);
 
-         const std::vector<uint8_t> expected_hdr = Botan::hex_decode("068B5A9D396C0000F2322CAE");
-
-         result.test_eq("tls", "TLS session encryption same header", ctext1.data(), 12, expected_hdr.data(), 12);
-         result.test_eq("tls", "TLS session encryption same header", ctext2.data(), 12, expected_hdr.data(), 12);
+         result.test_bin_eq(
+            "TLS session encryption same header", std::span{ctext1}.first(12), "068B5A9D396C0000F2322CAE");
+         result.test_bin_eq(
+            "TLS session encryption same header", std::span{ctext2}.first(12), "068B5A9D396C0000F2322CAE");
 
          const Botan::TLS::Session dsession = Botan::TLS::Session::decrypt(ctext1.data(), ctext1.size(), key);
 
@@ -77,7 +76,7 @@ class TLS_Session_Tests final : public Test {
          Fixed_Output_RNG frng2("00112233445566778899AABBCCDDEEFF802802802802802802802802");
          const std::vector<uint8_t> ctextf2 = session.encrypt(key, frng2);
 
-         result.test_eq("Only randomness comes from RNG", ctextf1, ctextf2);
+         result.test_bin_eq("Only randomness comes from RNG", ctextf1, ctextf2);
 
          const Botan::TLS::Session session2(Botan::secure_vector<uint8_t>{0xCC, 0xEE},
                                             Botan::TLS::Protocol_Version::TLS_V12,
@@ -323,7 +322,7 @@ class TLS_CBC_KAT_Tests final : public Text_Based_Test {
          std::vector<uint8_t> inout = in;
          tls_cbc.start(nonce);
          tls_cbc.finish(inout);  // in-place processing ('in' should now contain 'out')
-         result.test_eq(std::string("expected output of ") + direction, inout, out);
+         result.test_bin_eq(std::string("expected output of ") + direction, inout, out);
 
          // Test 2: process the message in chunks
          auto in_span = std::span{in};
@@ -336,7 +335,7 @@ class TLS_CBC_KAT_Tests final : public Text_Based_Test {
 
          std::vector<uint8_t> chunked_out(in_span.begin(), in_span.end());
          tls_cbc.finish(chunked_out);
-         result.test_eq(std::string("expected output with chunking of ") + direction, chunked_out, out);
+         result.test_bin_eq(std::string("expected output with chunking of ") + direction, chunked_out, out);
       }
 };
 
@@ -368,7 +367,7 @@ class TLS_Null_Tests final : public Text_Based_Test {
          Botan::secure_vector<uint8_t> buffer(message.begin(), message.end());
          tls_null_encrypt.finish(buffer);
 
-         result.test_eq("Encrypted TLS fragment matches expectation", Botan::unlock(buffer), expected_tls_fragment);
+         result.test_bin_eq("Encrypted TLS fragment matches expectation", buffer, expected_tls_fragment);
       }
 
       void decryption_test(Test::Result& result,
@@ -394,7 +393,7 @@ class TLS_Null_Tests final : public Text_Based_Test {
             });
          } else {
             tls_null_decrypt.finish(buffer, 0);
-            result.test_eq("Decrypted TLS fragment matches expectation", Botan::unlock(buffer), expected_message);
+            result.test_bin_eq("Decrypted TLS fragment matches expectation", buffer, expected_message);
          }
       }
 

@@ -58,7 +58,7 @@ class Cipher_Mode_Padding_Tests final : public Text_Based_Test {
             }
             buf.resize(outlen);
             pad->add_padding(buf, input.size() % block_size, block_size);
-            result.test_eq("pad", buf, expected);
+            result.test_bin_eq("pad", buf, expected);
 
             buf.assign(expected.begin(), expected.end());
 
@@ -74,7 +74,7 @@ class Cipher_Mode_Padding_Tests final : public Text_Based_Test {
             }();
 
             buf.resize(buf.size() - pad_bytes);  // remove padding
-            result.test_eq("unpad", buf, input);
+            result.test_bin_eq("unpad", buf, input);
          }
 
          return result;

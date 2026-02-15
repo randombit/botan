@@ -121,7 +121,7 @@ class Block_Cipher_Tests final : public Text_Based_Test {
                cipher->encrypt(buf);
             }
 
-            result.test_eq(provider, "encrypt", buf, expected);
+            result.test_bin_eq(provider + " encrypt", buf, expected);
 
             // always decrypt expected ciphertext vs what we produced above
             buf = expected;
@@ -130,7 +130,7 @@ class Block_Cipher_Tests final : public Text_Based_Test {
                cipher->decrypt(buf);
             }
 
-            result.test_eq(provider, "decrypt", buf, input);
+            result.test_bin_eq(provider + " decrypt", buf, input);
 
             // Now test misaligned buffers
             const size_t blocks = input.size() / cipher->block_size();
@@ -141,12 +141,7 @@ class Block_Cipher_Tests final : public Text_Based_Test {
                cipher->encrypt_n(buf.data() + 1, buf.data() + 1, blocks);
             }
 
-            result.test_eq(provider.c_str(),
-                           "encrypt misaligned",
-                           buf.data() + 1,
-                           buf.size() - 1,
-                           expected.data(),
-                           expected.size());
+            result.test_bin_eq(provider + " encrypt misaligned", {buf.data() + 1, buf.size() - 1}, expected);
 
             // always decrypt expected ciphertext vs what we produced above
             Botan::copy_mem(buf.data() + 1, expected.data(), expected.size());
@@ -155,8 +150,7 @@ class Block_Cipher_Tests final : public Text_Based_Test {
                cipher->decrypt_n(buf.data() + 1, buf.data() + 1, blocks);
             }
 
-            result.test_eq(
-               provider.c_str(), "decrypt misaligned", buf.data() + 1, buf.size() - 1, input.data(), input.size());
+            result.test_bin_eq(provider + " decrypt misaligned", std::span{buf.data() + 1, buf.size() - 1}, input);
 
             result.test_is_true("key set", cipher->has_keying_material());
             cipher->clear();
@@ -252,7 +246,7 @@ class BlockCipher_ParallelOp_Test final : public Test {
 
          cipher->encrypt(enc_all);
 
-         result.test_eq("Same output no matter how encrypted", enc_all, enc_1by1);
+         result.test_bin_eq("Same output no matter how encrypted", enc_all, enc_1by1);
 
          // Decrypt the message one block at a time
          for(size_t i = 0; i != test_blocks; ++i) {
@@ -262,9 +256,9 @@ class BlockCipher_ParallelOp_Test final : public Test {
          // Decrypt the message with all blocks potentially in parallel
          cipher->decrypt(enc_all);
 
-         result.test_eq("Same output no matter how decrypted", enc_all, enc_1by1);
-         result.test_eq("Original input recovered in 1-by-1", enc_1by1, input);
-         result.test_eq("Original input recovered in parallel processing", enc_all, input);
+         result.test_bin_eq("Same output no matter how decrypted", enc_all, enc_1by1);
+         result.test_bin_eq("Original input recovered in 1-by-1", enc_1by1, input);
+         result.test_bin_eq("Original input recovered in parallel processing", enc_all, input);
 
          return result;
       }

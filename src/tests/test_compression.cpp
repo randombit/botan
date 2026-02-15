@@ -157,7 +157,7 @@ class Compression_Tests final : public Test {
 
                decompressed += final_outputs;
 
-               result.test_eq("compression round tripped", msg, decompressed);
+               result.test_bin_eq("compression round tripped", msg, decompressed);
             } catch(Botan::Exception& e) {
                result.test_failure(e.what());
             }

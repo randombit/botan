@@ -132,28 +132,28 @@ std::vector<Test::Result> ECC_Randomized_Tests::run() {
             Botan::EC_Point A1 = P + Q;
             Botan::EC_Point A2 = Q + P;
 
-            result.test_eq("p + q", A1.xy_bytes(), R.xy_bytes());
-            result.test_eq("q + p", A2.xy_bytes(), R.xy_bytes());
+            result.test_bin_eq("p + q", A1.xy_bytes(), R.xy_bytes());
+            result.test_bin_eq("q + p", A2.xy_bytes(), R.xy_bytes());
 
             A1.force_affine();
             A2.force_affine();
-            result.test_eq("p + q", A1.xy_bytes(), R.xy_bytes());
-            result.test_eq("q + p", A2.xy_bytes(), R.xy_bytes());
+            result.test_bin_eq("p + q", A1.xy_bytes(), R.xy_bytes());
+            result.test_bin_eq("q + p", A2.xy_bytes(), R.xy_bytes());
 
             result.test_is_true("p on the curve", P.on_the_curve());
             result.test_is_true("q on the curve", Q.on_the_curve());
             result.test_is_true("r on the curve", R.on_the_curve());
 
-            result.test_eq("P1", P1.xy_bytes(), P.xy_bytes());
-            result.test_eq("Q1", Q1.xy_bytes(), Q.xy_bytes());
-            result.test_eq("R1", R1.xy_bytes(), R.xy_bytes());
+            result.test_bin_eq("P1", P1.xy_bytes(), P.xy_bytes());
+            result.test_bin_eq("Q1", Q1.xy_bytes(), Q.xy_bytes());
+            result.test_bin_eq("R1", R1.xy_bytes(), R.xy_bytes());
 
             P1.force_affine();
             Q1.force_affine();
             R1.force_affine();
-            result.test_eq("P1", P1.xy_bytes(), P.xy_bytes());
-            result.test_eq("Q1", Q1.xy_bytes(), Q.xy_bytes());
-            result.test_eq("R1", R1.xy_bytes(), R.xy_bytes());
+            result.test_bin_eq("P1", P1.xy_bytes(), P.xy_bytes());
+            result.test_bin_eq("Q1", Q1.xy_bytes(), Q.xy_bytes());
+            result.test_bin_eq("R1", R1.xy_bytes(), R.xy_bytes());
          }
       } catch(std::exception& e) {
          result.test_failure(group_name, e.what());
@@ -278,7 +278,7 @@ class EC_Group_Tests : public Test {
                             Botan::EC_Point_Format::Compressed,
                             Botan::EC_Point_Format::Hybrid}) {
             try {
-               result.test_eq("encoded/decode rt works", group.OS2ECP(pt.encode(scheme)).xy_bytes(), pt.xy_bytes());
+               result.test_bin_eq("encoded/decode rt works", group.OS2ECP(pt.encode(scheme)).xy_bytes(), pt.xy_bytes());
             } catch(Botan::Exception& e) {
                result.test_failure("Failed to round trip encode a random point", e.what());
             }
@@ -300,11 +300,11 @@ class EC_Group_Tests : public Test {
          Botan::EC_Point p1 = G2;
          p1 += G;
 
-         result.test_eq("point addition", p1.xy_bytes(), G3.xy_bytes());
+         result.test_bin_eq("point addition", p1.xy_bytes(), G3.xy_bytes());
 
          p1 -= G2;
 
-         result.test_eq("point subtraction", p1.xy_bytes(), G.xy_bytes());
+         result.test_bin_eq("point subtraction", p1.xy_bytes(), G.xy_bytes());
 
          // The scalar multiplication algorithm relies on this being true:
          try {
@@ -324,8 +324,8 @@ class EC_Group_Tests : public Test {
          Botan::EC_Point d(b);
 
          d.swap(c);
-         result.test_eq("swap correct", a.xy_bytes(), d.xy_bytes());
-         result.test_eq("swap correct", b.xy_bytes(), c.xy_bytes());
+         result.test_bin_eq("swap correct", a.xy_bytes(), d.xy_bytes());
+         result.test_bin_eq("swap correct", b.xy_bytes(), c.xy_bytes());
       }
 
       static void test_zeropoint(Test::Result& result, const Botan::EC_Group& group) {
@@ -355,9 +355,9 @@ class EC_Group_Tests : public Test {
 
          result.test_is_true("zero point is zero", zero.is_zero());
          result.test_is_true("zero point is on the curve", zero.on_the_curve());
-         result.test_eq("addition of zero does nothing", p1.xy_bytes(), (p1 + zero).xy_bytes());
-         result.test_eq("addition of zero does nothing", p1.xy_bytes(), (zero + p1).xy_bytes());
-         result.test_eq("addition of zero does nothing", p1.xy_bytes(), (p1 - zero).xy_bytes());
+         result.test_bin_eq("addition of zero does nothing", p1.xy_bytes(), (p1 + zero).xy_bytes());
+         result.test_bin_eq("addition of zero does nothing", p1.xy_bytes(), (zero + p1).xy_bytes());
+         result.test_bin_eq("addition of zero does nothing", p1.xy_bytes(), (p1 - zero).xy_bytes());
          result.test_is_true("zero times anything is the zero point", (zero * 39193).is_zero());
 
          for(auto scheme : {Botan::EC_Point_Format::Uncompressed,
@@ -632,18 +632,18 @@ class EC_PointEnc_Tests final : public Test {
                const uint8_t expected_c_header = (pt_u[pt_u.size() - 1] % 2 == 0) ? 0x02 : 0x03;
                result.test_is_true("Expected compressed header", pt_c[0] == expected_c_header);
 
-               result.test_eq(
+               result.test_bin_eq(
                   "Expected compressed x", std::span{pt_c}.subspan(1), std::span{pt_u}.subspan(1, fe_bytes));
 
                if(auto d_pt_u = Botan::EC_AffinePoint::deserialize(group, pt_u)) {
-                  result.test_eq(
+                  result.test_bin_eq(
                      "Deserializing uncompressed returned correct point", d_pt_u->serialize_uncompressed(), pt_u);
                } else {
                   result.test_failure("Failed to deserialize uncompressed point");
                }
 
                if(auto d_pt_c = Botan::EC_AffinePoint::deserialize(group, pt_c)) {
-                  result.test_eq(
+                  result.test_bin_eq(
                      "Deserializing compressed returned correct point", d_pt_c->serialize_uncompressed(), pt_u);
                } else {
                   result.test_failure("Failed to deserialize compressed point");
@@ -656,9 +656,9 @@ class EC_PointEnc_Tests final : public Test {
                }();
 
                if(auto d_neg_pt_c = Botan::EC_AffinePoint::deserialize(group, neg_pt_c)) {
-                  result.test_eq("Deserializing compressed with inverted header returned negated point",
-                                 d_neg_pt_c->serialize_uncompressed(),
-                                 pt.negate().serialize_uncompressed());
+                  result.test_bin_eq("Deserializing compressed with inverted header returned negated point",
+                                     d_neg_pt_c->serialize_uncompressed(),
+                                     pt.negate().serialize_uncompressed());
                } else {
                   result.test_failure("Failed to deserialize compressed point");
                }
@@ -701,13 +701,13 @@ class EC_Point_Arithmetic_Tests final : public Test {
             result.test_is_true("identity plus itself is identity", id2.is_identity());
 
             const auto g_one = Botan::EC_AffinePoint::g_mul(one, rng);
-            result.test_eq("g*one == generator", g_one.serialize_uncompressed(), g_bytes);
+            result.test_bin_eq("g*one == generator", g_one.serialize_uncompressed(), g_bytes);
 
             const auto g_plus_id = g_one.add(id);
-            result.test_eq("g + id == g", g_plus_id.serialize_uncompressed(), g_bytes);
+            result.test_bin_eq("g + id == g", g_plus_id.serialize_uncompressed(), g_bytes);
 
             const auto id_plus_g = id.add(g_one);
-            result.test_eq("id + g == g", id_plus_g.serialize_uncompressed(), g_bytes);
+            result.test_bin_eq("id + g == g", id_plus_g.serialize_uncompressed(), g_bytes);
 
             const auto g_neg_one = Botan::EC_AffinePoint::g_mul(one.negate(), rng);
 
@@ -716,7 +716,7 @@ class EC_Point_Arithmetic_Tests final : public Test {
 
             const auto g_two = Botan::EC_AffinePoint::g_mul(one + one, rng);
             const auto g_plus_g = g_one.add(g_one);
-            result.test_eq("2*g == g+g", g_two.serialize_uncompressed(), g_plus_g.serialize_uncompressed());
+            result.test_bin_eq("2*g == g+g", g_two.serialize_uncompressed(), g_plus_g.serialize_uncompressed());
 
             result.test_is_true("Scalar::zero is zero", zero.is_zero());
             result.test_is_true("(zero+zero) is zero", (zero + zero).is_zero());
@@ -749,10 +749,10 @@ class EC_Point_Arithmetic_Tests final : public Test {
                const auto Pc_bytes = Pc.serialize_uncompressed();
 
                const auto Pab = Pa.add(Pb);
-               result.test_eq("Pa + Pb == Pc", Pab.serialize_uncompressed(), Pc_bytes);
+               result.test_bin_eq("Pa + Pb == Pc", Pab.serialize_uncompressed(), Pc_bytes);
 
                const auto Pba = Pb.add(Pa);
-               result.test_eq("Pb + Pa == Pc", Pba.serialize_uncompressed(), Pc_bytes);
+               result.test_bin_eq("Pb + Pa == Pc", Pba.serialize_uncompressed(), Pc_bytes);
             }
 
             for(size_t i = 0; i != 64; ++i) {
@@ -787,7 +787,7 @@ class EC_Point_Arithmetic_Tests final : public Test {
                const auto ref = Botan::EC_AffinePoint::g_mul(s1, rng).add(h.mul(s2, rng));
 
                if(auto mul2pt = mul2_table.mul2_vartime(s1, s2)) {
-                  result.test_eq("ref == mul2t", ref.serialize_uncompressed(), mul2pt->serialize_uncompressed());
+                  result.test_bin_eq("ref == mul2t", ref.serialize_uncompressed(), mul2pt->serialize_uncompressed());
                } else {
                   result.test_is_true("ref is identity", ref.is_identity());
                }

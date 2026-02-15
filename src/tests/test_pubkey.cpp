@@ -76,8 +76,8 @@ void check_invalid_ciphertexts(Test::Result& result,
          const Botan::secure_vector<uint8_t> decrypted = decryptor.decrypt(bad_ctext);
          ++ciphertext_accepted;
 
-         if(!result.test_ne("incorrect ciphertext different", decrypted, plaintext)) {
-            result.test_eq("used corrupted ciphertext", bad_ctext, ciphertext);
+         if(!result.test_bin_ne("incorrect ciphertext different", decrypted, plaintext)) {
+            result.test_bin_eq("used corrupted ciphertext", bad_ctext, ciphertext);
          }
       } catch(std::exception&) {
          ++ciphertext_rejected;
@@ -180,7 +180,7 @@ Test::Result PK_Signature_Generation_Test::run_one_test(const std::string& pad_h
       }
 
       if(sign_provider == "base") {
-         result.test_eq("generated signature matches KAT", generated_signature, signature);
+         result.test_bin_eq("generated signature matches KAT", generated_signature, signature);
       } else if(generated_signature != signature) {
          for(std::unique_ptr<Botan::PK_Verifier>& verifier : verifiers) {
             if(!result.test_is_true("generated signature valid",
@@ -391,7 +391,7 @@ Test::Result PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_
          result.test_failure("Failed to decrypt KAT ciphertext", e.what());
       }
 
-      result.test_eq(dec_provider, "decryption of KAT", decrypted, plaintext);
+      result.test_bin_eq(dec_provider + " decryption of KAT", decrypted, plaintext);
       check_invalid_ciphertexts(result, *decryptor, plaintext, ciphertext, this->rng());
       decryptors.push_back(std::move(decryptor));
    }
@@ -426,10 +426,10 @@ Test::Result PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_
          "Ciphertext within length", generated_ciphertext.size(), encryptor->ciphertext_length(plaintext.size()));
 
       if(enc_provider == "base") {
-         result.test_eq(enc_provider, "generated ciphertext matches KAT", generated_ciphertext, ciphertext);
+         result.test_bin_eq(enc_provider + " generated ciphertext matches KAT", generated_ciphertext, ciphertext);
       } else if(generated_ciphertext != ciphertext) {
          for(std::unique_ptr<Botan::PK_Decryptor>& dec : decryptors) {
-            result.test_eq("decryption of generated ciphertext", dec->decrypt(generated_ciphertext), plaintext);
+            result.test_bin_eq("decryption of generated ciphertext", dec->decrypt(generated_ciphertext), plaintext);
          }
       }
    }
@@ -462,7 +462,7 @@ Test::Result PK_Decryption_Test::run_one_test(const std::string& pad_hdr, const 
          result.test_failure("Failed to decrypt KAT ciphertext", e.what());
       }
 
-      result.test_eq(dec_provider, "decryption of KAT", decrypted, plaintext);
+      result.test_bin_eq(dec_provider + " decryption of KAT", decrypted, plaintext);
       check_invalid_ciphertexts(result, *decryptor, plaintext, ciphertext, this->rng());
    }
 
@@ -505,8 +505,8 @@ Test::Result PK_KEM_Test::run_one_test(const std::string& /*header*/, const VarM
    result.test_sz_eq(
       "shared key length matches expected", kem_result.shared_key().size(), enc->shared_key_length(desired_key_len));
 
-   result.test_eq("C0 matches", kem_result.encapsulated_shared_key(), C0);
-   result.test_eq("K matches", kem_result.shared_key(), K);
+   result.test_bin_eq("C0 matches", kem_result.encapsulated_shared_key(), C0);
+   result.test_bin_eq("K matches", kem_result.shared_key(), K);
 
    std::unique_ptr<Botan::PK_KEM_Decryptor> dec;
    try {
@@ -526,7 +526,7 @@ Test::Result PK_KEM_Test::run_one_test(const std::string& /*header*/, const VarM
    result.test_sz_eq(
       "shared key length matches expected", decr_shared_key.size(), dec->shared_key_length(desired_key_len));
 
-   result.test_eq("decrypted K matches", decr_shared_key, K);
+   result.test_bin_eq("decrypted K matches", decr_shared_key, K);
 
    return result;
 }
@@ -556,7 +556,7 @@ Test::Result PK_Key_Agreement_Test::run_one_test(const std::string& header, cons
             result.test_throws("key agreement fails", [&] { kas->derive_key(key_len, pubkey); });
          } else {
             auto derived_key = kas->derive_key(key_len, pubkey).bits_of();
-            result.test_eq(provider, "agreement", derived_key, shared);
+            result.test_bin_eq(provider + " agreement", derived_key, shared);
 
             if(key_len == 0 && kdf == "Raw") {
                result.test_sz_eq("Expected size", derived_key.size(), kas->agreed_value_size());
@@ -596,7 +596,7 @@ void test_pbe_roundtrip(Test::Result& result,
 
       result.test_is_true("recovered private key from encrypted blob", loaded != nullptr);
       result.test_str_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
-      result.test_eq("reloaded key has same encoding", loaded->private_key_info(), pkcs8);
+      result.test_bin_eq("reloaded key has same encoding", loaded->private_key_info(), pkcs8);
    } catch(std::exception& e) {
       result.test_failure("roundtrip encrypted PEM private key", e.what());
    }
@@ -609,7 +609,7 @@ void test_pbe_roundtrip(Test::Result& result,
 
       result.test_is_true("recovered private key from BER blob", loaded != nullptr);
       result.test_str_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
-      result.test_eq("reloaded key has same encoding", loaded->private_key_info(), pkcs8);
+      result.test_bin_eq("reloaded key has same encoding", loaded->private_key_info(), pkcs8);
    } catch(std::exception& e) {
       result.test_failure("roundtrip encrypted BER private key", e.what());
    }
@@ -688,7 +688,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
             result.test_sz_eq("new public key has the same est. strength",
                               pk2->estimated_strength(),
                               public_key->estimated_strength());
-            result.test_ne("new private keys are different keys", sk2->private_key_bits(), key.private_key_bits());
+            result.test_bin_ne("new private keys are different keys", sk2->private_key_bits(), key.private_key_bits());
          } catch(const Botan::Not_Implemented&) {
             result.test_is_true("KEX algorithms are required to implement 'generate_another'",
                                 !public_key->supports_operation(Botan::PublicKeyOperation::KeyAgreement));
@@ -706,12 +706,13 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
                // public value obtained by PK_Key_Agreement_Key::public_value().
                const auto* ka_key = dynamic_cast<const Botan::PK_Key_Agreement_Key*>(&key);
                result.require("is a key agreement private key", ka_key != nullptr);
-               result.test_eq("public_key_bits has same encoding", raw, ka_key->public_value());
+               result.test_bin_eq("public_key_bits has same encoding", raw, ka_key->public_value());
             }
 
             if(auto raw_pk = public_key_from_raw(param, prov, raw)) {
                result.test_str_eq("public_key has same type", raw_pk->algo_name(), public_key->algo_name());
-               result.test_eq("public_key has same encoding", raw_pk->public_key_bits(), public_key->public_key_bits());
+               result.test_bin_eq(
+                  "public_key has same encoding", raw_pk->public_key_bits(), public_key->public_key_bits());
             }
          } catch(const Botan::Not_Implemented&) {
             if(!Botan::value_exists(algos_that_dont_have_a_raw_encoding, public_key->algo_name())) {
@@ -744,7 +745,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
 
             result.test_is_true("recovered public key from private", loaded != nullptr);
             result.test_str_eq("public key has same type", loaded->algo_name(), key.algo_name());
-            result.test_eq("public key has same encoding", loaded->subject_public_key(), ber);
+            result.test_bin_eq("public key has same encoding", loaded->subject_public_key(), ber);
          } catch(std::exception& e) {
             result.test_failure("roundtrip BER public key", e.what());
          }
@@ -757,7 +758,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
 
             result.test_is_true("recovered private key from PEM blob", loaded != nullptr);
             result.test_str_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
-            result.test_eq("reloaded key has same encoding", loaded->private_key_info(), ber);
+            result.test_bin_eq("reloaded key has same encoding", loaded->private_key_info(), ber);
          } catch(std::exception& e) {
             result.test_failure("roundtrip PEM private key", e.what());
          }
@@ -853,7 +854,7 @@ Test::Result PK_Key_Generation_Stability_Test::run_one_test(const std::string& /
          auto key = Botan::create_private_key(algo_name(), *rng, key_param);
          if(key) {
             const auto key_bits = key->private_key_info();
-            result.test_eq("Generated key matched expected value", key_bits, expected_key);
+            result.test_bin_eq("Generated key matched expected value", key_bits, expected_key);
          }
       } catch(Botan::Exception& e) {
          result.test_note("failed to create key", e.what());

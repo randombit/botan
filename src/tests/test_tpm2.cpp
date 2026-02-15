@@ -700,7 +700,7 @@ std::vector<Test::Result> test_tpm2_rsa() {
                // decrypt the message using the TPM's private RSA key
                const Botan::PK_Decryptor_EME dec(*sk, null_rng, "OAEP(SHA-256)");
                const auto decrypted = dec.decrypt(ciphertext);
-               result.test_eq("decrypted message", decrypted, plaintext);
+               result.test_bin_eq("decrypted message", decrypted, plaintext);
             }),
 
       CHECK("Decrypt a message",
@@ -720,7 +720,7 @@ std::vector<Test::Result> test_tpm2_rsa() {
                Botan::Null_RNG null_rng;
                Botan::PK_Decryptor_EME dec(*key, null_rng /* TPM takes care of this */, "OAEP(SHA-256)");
                const auto decrypted = dec.decrypt(ciphertext);
-               result.test_eq("decrypted message", decrypted, plaintext);
+               result.test_bin_eq("decrypted message", decrypted, plaintext);
 
                // corrupt the ciphertext and try to decrypt it
                auto mutated_ciphertext = Test::mutate_vec(ciphertext, *rng);
@@ -749,7 +749,7 @@ std::vector<Test::Result> test_tpm2_rsa() {
                Botan::Null_RNG null_rng;
                const Botan::PK_Decryptor_EME dec(*sk, null_rng, "OAEP(SHA-256)");
                const auto decrypted = dec.decrypt(ciphertext);
-               result.test_eq("decrypted message", decrypted, plaintext);
+               result.test_bin_eq("decrypted message", decrypted, plaintext);
 
                // encrypt a message using the TPM's public key (using PKCS#1)
                const Botan::PK_Encryptor_EME enc_pkcs(*pk, *rng, "PKCS1v15");
@@ -758,7 +758,7 @@ std::vector<Test::Result> test_tpm2_rsa() {
                // decrypt the message using the TPM's private RSA key (using PKCS#1)
                const Botan::PK_Decryptor_EME dec_pkcs(*sk, null_rng, "PKCS1v15");
                const auto decrypted_pkcs = dec_pkcs.decrypt(ciphertext_pkcs);
-               result.test_eq("decrypted message", decrypted_pkcs, plaintext);
+               result.test_bin_eq("decrypted message", decrypted_pkcs, plaintext);
             }),
 
       CHECK("Cannot export private key blob from persistent key",
@@ -813,8 +813,8 @@ std::vector<Test::Result> test_tpm2_rsa() {
                const auto sk_blob_loaded = sk_loaded->raw_private_key_bits();
                const auto pk_blob_loaded = sk_loaded->raw_public_key_bits();
 
-               result.test_is_eq("secret blob did not change", sk_blob, sk_blob_loaded);
-               result.test_is_eq("public blob did not change", pk_blob, pk_blob_loaded);
+               result.test_bin_eq("secret blob did not change", sk_blob, sk_blob_loaded);
+               result.test_bin_eq("public blob did not change", pk_blob, pk_blob_loaded);
 
                // Perform a round-trip sign/verify test with the new key pair
                std::vector<uint8_t> message_loaded = {'g', 'u', 't', 'e', 'n', ' ', 't', 'a', 'g'};
@@ -1146,8 +1146,8 @@ std::vector<Test::Result> test_tpm2_ecc() {
                   const auto sk_blob_loaded = sk_loaded->raw_private_key_bits();
                   const auto pk_blob_loaded = sk_loaded->raw_public_key_bits();
 
-                  result.test_is_eq("secret blob did not change", sk_blob, sk_blob_loaded);
-                  result.test_is_eq("public blob did not change", pk_blob, pk_blob_loaded);
+                  result.test_bin_eq("secret blob did not change", sk_blob, sk_blob_loaded);
+                  result.test_bin_eq("public blob did not change", pk_blob, pk_blob_loaded);
 
                   // Perform a round-trip sign/verify test with the new key pair
                   std::vector<uint8_t> message_loaded = {'g', 'u', 't', 'e', 'n', ' ', 't', 'a', 'g'};
@@ -1267,10 +1267,11 @@ std::vector<Test::Result> test_tpm2_hash() {
       // multiple update calls
       tpm_hash->update("Hello, ");
       tpm_hash->update("world!");
-      result.test_eq("digest (multi-update)", tpm_hash->final(), soft_hash->process("Hello, world!"));
+      result.test_bin_eq("digest (multi-update)", tpm_hash->final(), soft_hash->process("Hello, world!"));
 
       // single process call
-      result.test_eq("digest (single-process)", tpm_hash->process("Hallo, Welt."), soft_hash->process("Hallo, Welt."));
+      result.test_bin_eq(
+         "digest (single-process)", tpm_hash->process("Hallo, Welt."), soft_hash->process("Hallo, Welt."));
 
       // create a message that is larger than the TPM2 max buffer size
       const auto long_message = [] {
@@ -1282,23 +1283,23 @@ std::vector<Test::Result> test_tpm2_hash() {
       }();
 
       tpm_hash->update(long_message);
-      result.test_eq("digest (long msg via update)", tpm_hash->final(), soft_hash->process(long_message));
-      result.test_eq(
+      result.test_bin_eq("digest (long msg via update)", tpm_hash->final(), soft_hash->process(long_message));
+      result.test_bin_eq(
          "digest (long msg via process)", tpm_hash->process(long_message), soft_hash->process(long_message));
 
       // test clear
       tpm_hash->update("Hello");
       tpm_hash->clear();
       tpm_hash->update("Bonjour");
-      result.test_eq("digest (clear)", tpm_hash->final(), soft_hash->process("Bonjour"));
+      result.test_bin_eq("digest (clear)", tpm_hash->final(), soft_hash->process("Bonjour"));
 
       // new_object
       auto new_tpm_hash = tpm_hash->new_object();
       result.test_str_eq("Name (new_object)", new_tpm_hash->name(), tpm_hash->name());
       result.test_sz_eq("Output length (new_object)", new_tpm_hash->output_length(), tpm_hash->output_length());
-      result.test_eq("digest (new object)",
-                     new_tpm_hash->process("Salut tout le monde!"),
-                     soft_hash->process("Salut tout le monde!"));
+      result.test_bin_eq("digest (new object)",
+                         new_tpm_hash->process("Salut tout le monde!"),
+                         soft_hash->process("Salut tout le monde!"));
    };
 
    return {
@@ -1352,13 +1353,14 @@ std::vector<Test::Result> test_tpm2_hash() {
                result.test_is_true("ticket is not empty", ticket_owner->digest.size > 0);
 
                const auto digest_vec = Botan::TPM2::copy_into<Botan::secure_vector<uint8_t>>(*digest_owner);
-               result.test_eq("digest",
-                              digest_vec,
-                              Botan::hex_decode("1e479f4d871e59e9054aad62105a259726801d5f494acbfcd40591c82f9b3136"));
+               result.test_bin_eq(
+                  "digest",
+                  digest_vec,
+                  Botan::hex_decode("1e479f4d871e59e9054aad62105a259726801d5f494acbfcd40591c82f9b3136"));
 
-               result.test_eq("digests are the same, regardless of ticket",
-                              Botan::TPM2::copy_into<std::vector<uint8_t>>(*digest_null),
-                              digest_vec);
+               result.test_bin_eq("digests are the same, regardless of ticket",
+                                  Botan::TPM2::copy_into<std::vector<uint8_t>>(*digest_null),
+                                  digest_vec);
             }),
    };
 }

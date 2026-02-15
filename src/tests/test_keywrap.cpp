@@ -37,8 +37,8 @@ class RFC3394_Keywrap_Tests final : public Text_Based_Test {
             const Botan::secure_vector<uint8_t> key_l(key.begin(), key.end());
             const Botan::secure_vector<uint8_t> exp_l(expected.begin(), expected.end());
 
-            result.test_eq("encryption", Botan::rfc3394_keywrap(key_l, kek_sym), expected);
-            result.test_eq("decryption", Botan::rfc3394_keyunwrap(exp_l, kek_sym), key);
+            result.test_bin_eq("encryption", Botan::rfc3394_keywrap(key_l, kek_sym), expected);
+            result.test_bin_eq("decryption", Botan::rfc3394_keyunwrap(exp_l, kek_sym), key);
          } catch(std::exception& e) {
             result.test_failure("", e.what());
          }
@@ -81,7 +81,7 @@ class NIST_Keywrap_Tests final : public Text_Based_Test {
                wrapped = nist_key_wrap_padded(input.data(), input.size(), *bc);
             }
 
-            result.test_eq("key wrap", wrapped, expected);
+            result.test_bin_eq("key wrap", wrapped, expected);
 
             try {
                Botan::secure_vector<uint8_t> unwrapped;
@@ -91,7 +91,7 @@ class NIST_Keywrap_Tests final : public Text_Based_Test {
                   unwrapped = nist_key_unwrap_padded(expected.data(), expected.size(), *bc);
                }
 
-               result.test_eq("key unwrap", unwrapped, input);
+               result.test_bin_eq("key unwrap", unwrapped, input);
             } catch(Botan::Integrity_Failure& e) {
                result.test_failure("NIST key unwrap failed with integrity failure", e.what());
             }

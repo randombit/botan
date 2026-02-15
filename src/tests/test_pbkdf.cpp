@@ -44,7 +44,7 @@ class PBKDF_KAT_Tests final : public Text_Based_Test {
 
          const Botan::secure_vector<uint8_t> derived =
             pbkdf->derive_key(outlen, passphrase, salt.data(), salt.size(), iterations).bits_of();
-         result.test_eq("derived key", derived, expected);
+         result.test_bin_eq("derived key", derived, expected);
 
          auto pwdhash_fam = Botan::PasswordHashFamily::create(pbkdf_name);
 
@@ -58,7 +58,7 @@ class PBKDF_KAT_Tests final : public Text_Based_Test {
          std::vector<uint8_t> pwdhash_derived(outlen);
          pwdhash->hash(pwdhash_derived, passphrase, salt);
 
-         result.test_eq("pwdhash derived key", pwdhash_derived, expected);
+         result.test_bin_eq("pwdhash derived key", pwdhash_derived, expected);
 
          return result;
       }
@@ -105,7 +105,7 @@ class Pwdhash_Tests : public Test {
                std::vector<uint8_t> output2(32);
                pwhash->hash(output2, password, salt);
 
-               result.test_eq("PasswordHash produced same output when run with same params", output1, output2);
+               result.test_bin_eq("PasswordHash produced same output when run with same params", output1, output2);
 
                auto default_pwhash = pwdhash_fam->default_params();
                std::vector<uint8_t> output3(32);
@@ -153,7 +153,7 @@ class Bcrypt_PBKDF_KAT_Tests final : public Text_Based_Test {
          std::vector<uint8_t> derived(expected.size());
          pwdhash->hash(derived, passphrase, salt);
 
-         result.test_eq("derived key", derived, expected);
+         result.test_bin_eq("derived key", derived, expected);
 
          return result;
       }
@@ -195,7 +195,7 @@ class Scrypt_KAT_Tests final : public Text_Based_Test {
          std::vector<uint8_t> pwdhash_derived(expected.size());
          pwdhash->hash(pwdhash_derived, passphrase, salt);
 
-         result.test_eq("pwdhash derived key", pwdhash_derived, expected);
+         result.test_bin_eq("pwdhash derived key", pwdhash_derived, expected);
 
          return result;
       }
@@ -237,7 +237,7 @@ class Argon2_KAT_Tests final : public Text_Based_Test {
          std::vector<uint8_t> pwdhash_derived(expected.size());
          pwdhash->hash(pwdhash_derived, passphrase_str, salt, ad, key);
 
-         result.test_eq("pwdhash derived key", pwdhash_derived, expected);
+         result.test_bin_eq("pwdhash derived key", pwdhash_derived, expected);
 
          return result;
       }

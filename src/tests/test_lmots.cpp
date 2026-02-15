@@ -48,18 +48,18 @@ class LMOTS_Test final : public Text_Based_Test {
          // Test private/public OTS key creation
          auto sk = Botan::LMOTS_Private_Key(params, identifier, q, seed);
          const auto pk = Botan::LMOTS_Public_Key(sk);
-         result.test_is_eq("Public key generation", pk.K(), pk_ref);
+         result.test_bin_eq("Public key generation", pk.K(), pk_ref);
 
          // Test signature creation
          Botan::LMOTS_Signature_Bytes sig(Botan::LMOTS_Signature::size(params));
          sk.sign(sig, msg);
-         result.test_is_eq("Signature generation", hash->process<std::vector<uint8_t>>(sig), sig_ref);
+         result.test_bin_eq("Signature generation", hash->process<std::vector<uint8_t>>(sig), sig_ref);
 
          // Test create pubkey from signature
          auto sig_slicer = Botan::BufferSlicer(sig);
          auto sig_obj = Botan::LMOTS_Signature::from_bytes_or_throw(sig_slicer);
          const Botan::LMOTS_K pk_from_sig = Botan::lmots_compute_pubkey_from_sig(sig_obj, msg, identifier, q);
-         result.test_is_eq("Public key from signature", pk_from_sig, pk_ref);
+         result.test_bin_eq("Public key from signature", pk_from_sig, pk_ref);
 
          return result;
       }

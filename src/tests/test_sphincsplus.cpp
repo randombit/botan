@@ -115,14 +115,14 @@ class SPHINCS_Plus_Test_Base : public Text_Based_Test {
          // Generate Keypair
          const Botan::SphincsPlus_PrivateKey priv_key(fixed_rng, params);
 
-         result.test_is_eq("public key bits", priv_key.public_key_bits(), pk_ref);
-         result.test_is_eq("private key bits", unlock(priv_key.private_key_bits()), sk_ref);
+         result.test_bin_eq("public key bits", priv_key.public_key_bits(), pk_ref);
+         result.test_bin_eq("private key bits", priv_key.private_key_bits(), sk_ref);
 
          // Signature roundtrip (Randomized mode)
          auto signer_rand = Botan::PK_Signer(priv_key, fixed_rng, "Randomized");
          auto signature_rand = signer_rand.sign_message(msg_ref.data(), msg_ref.size(), fixed_rng);
 
-         result.test_is_eq("signature creation randomized", unlock(hash->process(signature_rand)), sig_rand_hash);
+         result.test_bin_eq("signature creation randomized", hash->process(signature_rand), sig_rand_hash);
 
          Botan::PK_Verifier verifier(*priv_key.public_key(), params.algorithm_identifier());
          const bool verify_success =
@@ -136,7 +136,7 @@ class SPHINCS_Plus_Test_Base : public Text_Based_Test {
             auto signer_det = Botan::PK_Signer(priv_key, fixed_rng, "Deterministic");
             auto signature_det = signer_det.sign_message(msg_ref.data(), msg_ref.size(), fixed_rng);
 
-            result.test_is_eq("signature creation deterministic", unlock(hash->process(signature_det)), *sig_det_hash);
+            result.test_bin_eq("signature creation deterministic", hash->process(signature_det), *sig_det_hash);
 
             auto verify_success_det =
                verifier.verify_message(msg_ref.data(), msg_ref.size(), signature_det.data(), signature_det.size());
@@ -158,9 +158,8 @@ class SPHINCS_Plus_Test_Base : public Text_Based_Test {
             auto deserialized_signer = Botan::PK_Signer(deserialized_priv_key, fixed_rng, "Randomized");
             auto deserialized_signature = deserialized_signer.sign_message(msg_ref.data(), msg_ref.size(), fixed_rng);
 
-            result.test_is_eq("signature creation after deserialization",
-                              unlock(hash->process(deserialized_signature)),
-                              sig_rand_hash);
+            result.test_bin_eq(
+               "signature creation after deserialization", hash->process(deserialized_signature), sig_rand_hash);
 
             // Verification with deserialized Keypair
             Botan::PK_Verifier deserialized_verifier(deserialized_pub_key, params.algorithm_identifier());

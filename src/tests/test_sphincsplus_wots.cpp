@@ -101,17 +101,17 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test {
                              params,
                              *hashes);
 
-         result.test_is_eq("WOTS+ signature generation", hash->process(sig_out), hashed_wots_sig_ref.get());
-         result.test_is_eq("WOTS+ public key generation", hashed_pk_out, hashed_pk_ref);
+         result.test_bin_eq("WOTS+ signature generation", hash->process(sig_out), hashed_wots_sig_ref.get());
+         result.test_bin_eq("WOTS+ public key generation", hashed_pk_out, hashed_pk_ref);
 
          // Test: Create PK from signature (Verification)
          const Botan::WotsPublicKey wots_pk_from_sig =
             Botan::wots_public_key_from_signature(root_to_sign, sig_out, address, params, *hashes);
 
          // The WOTS+ PK is hashed like for creating a leaf.
-         result.test_is_eq("WOTS+ public key from signature",
-                           hashes->T<Botan::SphincsTreeNode>(pk_addr_pk_from_sig, wots_pk_from_sig),
-                           hashed_pk_ref);
+         result.test_bin_eq("WOTS+ public key from signature",
+                            hashes->T<Botan::SphincsTreeNode>(pk_addr_pk_from_sig, wots_pk_from_sig),
+                            hashed_pk_ref);
 
          return result;
       }

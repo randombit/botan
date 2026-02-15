@@ -48,14 +48,14 @@ class LMS_Test final : public Text_Based_Test {
             Botan::LMS_PrivateKey(lms_pk_ref.lms_params(), lms_pk_ref.lmots_params(), lms_pk_ref.identifier(), seed);
          auto pub_key = Botan::LMS_PublicKey(lms_sk);
 
-         result.test_is_eq("Public key generation", pub_key.to_bytes(), pk_ref);
+         result.test_bin_eq("Public key generation", pub_key.to_bytes(), pk_ref);
 
          // Test signature creation and verification
          auto sk =
             Botan::LMS_PrivateKey(lms_pk_ref.lms_params(), lms_pk_ref.lmots_params(), lms_pk_ref.identifier(), seed);
          Botan::LMS_Signature_Bytes sig(Botan::LMS_Signature::size(lms_pk_ref.lms_params(), lms_pk_ref.lmots_params()));
          auto pk_from_sig = sk.sign_and_get_pk(sig, q, msg);
-         result.test_is_eq("Signature creation", hash->process<std::vector<uint8_t>>(sig), hashed_sig_ref);
+         result.test_bin_eq("Signature creation", hash->process<std::vector<uint8_t>>(sig), hashed_sig_ref);
 
          auto sig_slicer = Botan::BufferSlicer(sig);
          auto sig_obj = Botan::LMS_Signature::from_bytes_or_throw(sig_slicer);
