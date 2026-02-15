@@ -185,6 +185,93 @@ class Block_Cipher_Tests final : public Text_Based_Test {
 
 BOTAN_REGISTER_SERIALIZED_SMOKE_TEST("block", "block_ciphers", Block_Cipher_Tests);
 
+class BlockCipher_ParallelOp_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         /*
+         * This is somewhat intentionally not a list of all ciphers
+         * but rather those that are or are likely in the future to be
+         * implemented using some kind of bitslicing or SIMD technique.
+         */
+         const std::vector<std::string> ciphers = {"AES-128",
+                                                   "AES-192",
+                                                   "AES-256",
+                                                   "ARIA-128",
+                                                   "ARIA-256",
+                                                   "Camellia-128",
+                                                   "Camellia-192",
+                                                   "Camellia-256",
+                                                   "DES",
+                                                   "TripleDES",
+                                                   "IDEA",
+                                                   "Noekeon",
+                                                   "SEED",
+                                                   "Serpent",
+                                                   "SHACAL2",
+                                                   "SM4"};
+
+         std::vector<Test::Result> results;
+         results.reserve(ciphers.size());
+         for(const auto& cipher : ciphers) {
+            results.push_back(test_parallel_op(cipher));
+         }
+         return results;
+      }
+
+   private:
+      Test::Result test_parallel_op(const std::string& cipher_name) const {
+         Test::Result result(cipher_name + " parallel operation");
+
+         auto cipher = Botan::BlockCipher::create(cipher_name);
+         if(cipher == nullptr) {
+            result.note_missing(cipher_name);
+            return result;
+         }
+
+         result.test_sz_gte("Has non-zero parallelism", cipher->parallelism(), 1);
+
+         const size_t block_size = cipher->block_size();
+
+         // Chosen to maximize coverage of handling of tail blocks
+         constexpr size_t test_blocks = 128 + 64 + 32 + 16 + 8 + 4 + 2 + 1;
+
+         std::vector<uint8_t> input(block_size * test_blocks);
+         rng().randomize(input);
+
+         cipher->set_key(rng().random_vec(cipher->maximum_keylength()));
+
+         // Encrypt the message one block at a time
+         std::vector<uint8_t> enc_1by1(input);
+
+         for(size_t i = 0; i != test_blocks; ++i) {
+            cipher->encrypt(&enc_1by1[i * block_size], &enc_1by1[i * block_size]);
+         }
+
+         // Encrypt the message with all blocks potentially in parallel
+         std::vector<uint8_t> enc_all(input);
+
+         cipher->encrypt(enc_all);
+
+         result.test_eq("Same output no matter how encrypted", enc_all, enc_1by1);
+
+         // Decrypt the message one block at a time
+         for(size_t i = 0; i != test_blocks; ++i) {
+            cipher->decrypt(&enc_1by1[i * block_size], &enc_1by1[i * block_size]);
+         }
+
+         // Decrypt the message with all blocks potentially in parallel
+         cipher->decrypt(enc_all);
+
+         result.test_eq("Same output no matter how decrypted", enc_all, enc_1by1);
+         result.test_eq("Original input recovered in 1-by-1", enc_1by1, input);
+         result.test_eq("Original input recovered in parallel processing", enc_all, input);
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("block", "bc_parop", BlockCipher_ParallelOp_Test);
+
 #endif
 
 }  // namespace Botan_Tests
