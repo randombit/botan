@@ -186,27 +186,23 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                }
             }),
 
-      CHECK("obtain session from server info",
-            [&](auto& result) {
-               auto sessions = mgr->find(server_info(), cbs, plcy);
-               if(result.test_is_true("session was found successfully", sessions.size() == 1)) {
-                  result.test_is_eq("protocol version was echoed",
-                                    sessions[0].session.version(),
-                                    Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
-                  result.test_u16_eq(
-                     "ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
-                  result.test_bin_eq("ID was echoed", sessions[0].handle.id().value(), default_id);
-                  result.test_is_true("not a ticket", !sessions[0].handle.ticket().has_value());
-               }
-            }),
+      CHECK(
+         "obtain session from server info",
+         [&](auto& result) {
+            auto sessions = mgr->find(server_info(), cbs, plcy);
+            if(result.test_is_true("session was found successfully", sessions.size() == 1)) {
+               result.test_u16_eq("protocol version was echoed", sessions[0].session.version().version_code(), 0x0303);
+               result.test_u16_eq("ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
+               result.test_bin_eq("ID was echoed", sessions[0].handle.id().value(), default_id);
+               result.test_is_true("not a ticket", !sessions[0].handle.ticket().has_value());
+            }
+         }),
 
       CHECK("obtain session from ID",
             [&](auto& result) {
                auto session = mgr->retrieve(default_id, cbs, plcy);
                if(result.test_is_true("session was found successfully", session.has_value())) {
-                  result.test_is_eq("protocol version was echoed",
-                                    session->version(),
-                                    Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
+                  result.test_u16_eq("protocol version was echoed", session->version().version_code(), 0x0303);
                   result.test_u16_eq("ciphersuite was echoed", session->ciphersuite_code(), uint16_t(0x009C));
                }
             }),
@@ -215,9 +211,7 @@ std::vector<Test::Result> test_session_manager_in_memory() {
             [&](auto& result) {
                auto session = mgr->retrieve(Botan::TLS::Opaque_Session_Handle(default_id), cbs, plcy);
                if(result.test_is_true("session was found successfully", session.has_value())) {
-                  result.test_is_eq("protocol version was echoed",
-                                    session->version(),
-                                    Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
+                  result.test_u16_eq("protocol version was echoed", session->version().version_code(), 0x0303);
                   result.test_u16_eq("ciphersuite was echoed", session->ciphersuite_code(), uint16_t(0x009C));
                }
             }),
@@ -246,47 +240,43 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                result.test_sz_eq("should be empty now", mgr->remove_all(), 0);
             }),
 
-      CHECK("add session with ID",
-            [&](auto& result) {
-               const Botan::TLS::Session_ID new_id = random_id(*rng);
+      CHECK(
+         "add session with ID",
+         [&](auto& result) {
+            const Botan::TLS::Session_ID new_id = random_id(*rng);
 
-               mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs), new_id);
-               result.require("obtain via ID", mgr->retrieve(new_id, cbs, plcy).has_value());
+            mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs), new_id);
+            result.require("obtain via ID", mgr->retrieve(new_id, cbs, plcy).has_value());
 
-               auto sessions = mgr->find(server_info(), cbs, plcy);
-               if(result.test_is_true("found via server info", sessions.size() == 1)) {
-                  result.test_is_eq("protocol version was echoed",
-                                    sessions[0].session.version(),
-                                    Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
-                  result.test_u16_eq(
-                     "ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
-                  result.test_bin_eq("ID was echoed", sessions[0].handle.id().value(), new_id);
-                  result.test_is_true("ticket was not stored", !sessions[0].handle.ticket().has_value());
-               }
+            auto sessions = mgr->find(server_info(), cbs, plcy);
+            if(result.test_is_true("found via server info", sessions.size() == 1)) {
+               result.test_u16_eq("protocol version was echoed", sessions[0].session.version().version_code(), 0x0303);
+               result.test_u16_eq("ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
+               result.test_bin_eq("ID was echoed", sessions[0].handle.id().value(), new_id);
+               result.test_is_true("ticket was not stored", !sessions[0].handle.ticket().has_value());
+            }
 
-               mgr->remove_all();
-            }),
+            mgr->remove_all();
+         }),
 
-      CHECK("add session with ticket",
-            [&](auto& result) {
-               const Botan::TLS::Session_Ticket new_ticket = random_ticket(*rng);
+      CHECK(
+         "add session with ticket",
+         [&](auto& result) {
+            const Botan::TLS::Session_Ticket new_ticket = random_ticket(*rng);
 
-               mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs), new_ticket);
-               // cannot be obtained by (non-existent) ID or randomly generated ticket
+            mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs), new_ticket);
+            // cannot be obtained by (non-existent) ID or randomly generated ticket
 
-               auto sessions = mgr->find(server_info(), cbs, plcy);
-               if(result.test_is_true("found via server info", sessions.size() == 1)) {
-                  result.test_is_eq("protocol version was echoed",
-                                    sessions[0].session.version(),
-                                    Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
-                  result.test_u16_eq(
-                     "ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
-                  result.test_is_true("ID was not stored", !sessions[0].handle.id().has_value());
-                  result.test_bin_eq("ticket was echoed", sessions[0].handle.ticket().value(), new_ticket);
-               }
+            auto sessions = mgr->find(server_info(), cbs, plcy);
+            if(result.test_is_true("found via server info", sessions.size() == 1)) {
+               result.test_u16_eq("protocol version was echoed", sessions[0].session.version().version_code(), 0x0303);
+               result.test_u16_eq("ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
+               result.test_is_true("ID was not stored", !sessions[0].handle.id().has_value());
+               result.test_bin_eq("ticket was echoed", sessions[0].handle.ticket().value(), new_ticket);
+            }
 
-               mgr->remove_all();
-            }),
+            mgr->remove_all();
+         }),
 
       CHECK("removing by ID or opaque handle",
             [&](auto& result) {
@@ -890,17 +880,13 @@ std::vector<Test::Result> test_session_manager_sqlite() {
 
                auto session1 = mgr.retrieve(some_random_handle.value(), cbs, plcy);
                if(result.test_is_true("found session by user-provided ID", session1.has_value())) {
-                  result.test_is_eq("protocol version was echoed",
-                                    session1->version(),
-                                    Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
+                  result.test_u16_eq("protocol version was echoed", session1->version().version_code(), 0x0303);
                   result.test_u16_eq("ciphersuite was echoed", session1->ciphersuite_code(), uint16_t(0x009C));
                }
 
                auto session2 = mgr.retrieve(some_virtual_handle.value(), cbs, plcy);
                if(result.test_is_true("found session by manager-generated ID", session2.has_value())) {
-                  result.test_is_eq("protocol version was echoed",
-                                    session2->version(),
-                                    Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
+                  result.test_u16_eq("protocol version was echoed", session2->version().version_code(), 0x0303);
                   result.test_u16_eq("ciphersuite was echoed", session2->ciphersuite_code(), uint16_t(0x009C));
                }
 
