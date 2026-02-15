@@ -1305,6 +1305,12 @@ ofvkP1EDmpx50fHLawIDAQAB
             self.assertEqual(g_y, group_from_name.get_g_y())
             self.assertEqual(order, group_from_name.get_order())
 
+            self.assertTrue(botan.ECGroup.unregister(secp256r1_new_oid))
+            self.assertFalse(botan.ECGroup.unregister(secp256r1_new_oid))
+
+        self.assertTrue(botan.ECGroup.unregister(secp256r1_oid))
+        self.assertFalse(botan.ECGroup.unregister(secp256r1_oid))
+
 
 class BotanPythonZfecTests(unittest.TestCase):
     """

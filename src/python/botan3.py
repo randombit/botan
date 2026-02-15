@@ -310,6 +310,7 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_ec_group_from_pem, [c_void_p, c_char_p])
     ffi_api(dll.botan_ec_group_from_oid, [c_void_p, c_void_p])
     ffi_api(dll.botan_ec_group_from_name, [c_void_p, c_char_p])
+    ffi_api(dll.botan_ec_group_unregister, [c_void_p])
     ffi_api(dll.botan_ec_group_view_der, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_ec_group_view_pem, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
     ffi_api(dll.botan_ec_group_get_curve_oid, [c_void_p, c_void_p])
@@ -2733,6 +2734,14 @@ class ECGroup:
         ec_group = ECGroup()
         _DLL.botan_ec_group_from_name(byref(ec_group.handle_()), _ctype_str(name))
         return ec_group
+
+    @classmethod
+    def unregister(cls, oid: OID) -> bool:
+        """Unregister a previously registered group"""
+        rc = _DLL.botan_ec_group_unregister(oid.handle_())
+        if rc == 1:
+            return True
+        return False
 
     def to_der(self) -> bytes:
         """Export the group in DER encoding"""
