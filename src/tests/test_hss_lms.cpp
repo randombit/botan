@@ -32,7 +32,7 @@ std::vector<Test::Result> test_hss_lms_params_parsing() {
 
                   result.test_is_eq("hss levels", hss_params.L(), Botan::HSS_Level(2));
                   const auto& top_lms_params = hss_params.params_at_level(Botan::HSS_Level(0));
-                  result.test_is_eq("hash name", top_lms_params.lms_params().hash_name(), std::string("SHA-256"));
+                  result.test_str_eq("hash name", top_lms_params.lms_params().hash_name(), std::string("SHA-256"));
                   result.test_enum_eq("top level - lms type",
                                       top_lms_params.lms_params().algorithm_type(),
                                       Botan::LMS_Algorithm_Type::SHA256_M32_H5);

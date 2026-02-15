@@ -302,7 +302,7 @@ class Test {
             }
 
             template <typename T>
-               requires(!std::is_enum_v<T> && !std::is_integral_v<T>)
+               requires(!std::is_enum_v<T> && !std::is_integral_v<T> && !std::convertible_to<T, std::string>)
             bool test_is_eq(std::string_view what, const T& produced, const T& expected) {
                std::ostringstream out;
                out << m_who << " " << what;
