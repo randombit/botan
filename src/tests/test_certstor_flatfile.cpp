@@ -51,7 +51,7 @@ Test::Result find_certificate_by_pubkey_sha1() {
       auto cert = certstore.find_cert_by_pubkey_sha1(get_key_id());
       result.end_timer();
 
-      if(result.test_not_nullopt("found certificate", cert)) {
+      if(result.test_opt_not_null("found certificate", cert)) {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_sz_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), get_subject_cn());
@@ -79,7 +79,7 @@ Test::Result find_cert_by_subject_dn() {
       auto cert = certstore.find_cert(dn, std::vector<uint8_t>());
       result.end_timer();
 
-      if(result.test_not_nullopt("found certificate", cert)) {
+      if(result.test_opt_not_null("found certificate", cert)) {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_sz_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), get_subject_cn());
@@ -103,7 +103,7 @@ Test::Result find_cert_by_utf8_subject_dn() {
 
       result.end_timer();
 
-      if(result.test_not_nullopt("found certificate", cert)) {
+      if(result.test_opt_not_null("found certificate", cert)) {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_sz_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), "D-TRUST Root Class 3 CA 2 EV 2009");
@@ -126,7 +126,7 @@ Test::Result find_cert_by_subject_dn_and_key_id() {
       auto cert = certstore.find_cert(dn, get_key_id());
       result.end_timer();
 
-      if(result.test_not_nullopt("found certificate", cert)) {
+      if(result.test_opt_not_null("found certificate", cert)) {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_sz_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), get_subject_cn());
@@ -235,7 +235,7 @@ Test::Result find_cert_by_issuer_dn_and_serial_number() {
       auto cert = certstore.find_cert_by_issuer_dn_and_serial_number(get_dn(), get_serial_number());
       result.end_timer();
 
-      if(result.test_not_nullopt("found certificate", cert)) {
+      if(result.test_opt_not_null("found certificate", cert)) {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_sz_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), get_subject_cn());

@@ -278,7 +278,11 @@ class Test {
 
             bool test_success(std::string_view note = "");
 
+            bool test_failure(std::string err);
+
             bool test_failure(std::string_view err);
+
+            bool test_failure(const char* err);
 
             bool test_failure(std::string_view what, std::string_view error);
 
@@ -318,15 +322,6 @@ class Test {
                   return test_failure(what, "was null");
                } else {
                   return test_success("not null");
-               }
-            }
-
-            template <typename T>
-            bool test_not_nullopt(std::string_view what, const std::optional<T>& val) {
-               if(val == std::nullopt) {
-                  return test_failure(what, "was nullopt");
-               } else {
-                  return test_success("not nullopt");
                }
             }
 
@@ -372,19 +367,18 @@ class Test {
 
             bool test_ne(std::string_view what, std::string_view str1, std::string_view str2);
 
+            /* Test predicates on optional values */
+
             template <typename T>
-            bool test_eq(std::string_view what, const std::optional<T>& a, const std::optional<T>& b) {
-               if(a.has_value() != b.has_value()) {
-                  std::ostringstream err;
-                  err << m_who << " " << what << " only one of a/b was nullopt";
-                  return test_failure(err.str());
-               } else if(a.has_value() && b.has_value()) {
-                  return test_is_eq(what, a.value(), b.value());
+            bool test_opt_not_null(std::string_view what, const std::optional<T>& val) {
+               if(val == std::nullopt) {
+                  return test_failure(what, "was nullopt");
                } else {
-                  // both nullopt
-                  return test_success();
+                  return test_success("not nullopt");
                }
             }
+
+            bool test_opt_u8_eq(std::string_view what, std::optional<uint8_t> a, std::optional<uint8_t> b);
 
 #if defined(BOTAN_HAS_BIGINT)
             bool test_eq(std::string_view what, const BigInt& produced, const BigInt& expected);

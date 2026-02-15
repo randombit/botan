@@ -214,8 +214,16 @@ void Test::Result::test_failure(std::string_view what, std::span<const uint8_t> 
    test_failure(Botan::fmt("{} {} with value {}", who(), what, Botan::hex_encode(context)));
 }
 
+bool Test::Result::test_failure(const char* err) {
+   return test_failure(std::string_view(err));
+}
+
 bool Test::Result::test_failure(std::string_view err) {
-   m_fail_log.push_back(std::string(err));
+   return test_failure(std::string(err));
+}
+
+bool Test::Result::test_failure(std::string err) {
+   m_fail_log.push_back(std::move(err));
 
    if(Test::options().abort_on_first_fail() && m_who != "Failing Test") {
       std::abort();
@@ -387,6 +395,19 @@ bool Test::Result::test_sz_gte(std::string_view what, size_t produced, size_t ex
       return test_success();
    } else {
       return test_failure(Botan::fmt("Assertion failure in {} {}: {} >= {}", who(), what, produced, expected));
+   }
+}
+
+bool Test::Result::test_opt_u8_eq(std::string_view what, std::optional<uint8_t> a, std::optional<uint8_t> b) {
+   if(a.has_value() != b.has_value()) {
+      std::ostringstream err;
+      err << m_who << " " << what << " only one of a/b was nullopt";
+      return test_failure(err.str());
+   } else if(a.has_value() && b.has_value()) {
+      return test_u8_eq(what, a.value(), b.value());
+   } else {
+      // both nullopt
+      return test_success();
    }
 }
 
