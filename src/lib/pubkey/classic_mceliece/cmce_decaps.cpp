@@ -30,7 +30,7 @@ Classic_McEliece_Polynomial Classic_McEliece_Decryptor::compute_goppa_syndrome(
       auto g_alpha = goppa_poly(alphas[i]);
       auto r = (g_alpha * g_alpha).inv();
 
-      auto c_mask = GF_Mask::expand(static_cast<bool>(code_word.at(i)));
+      auto c_mask = GF_Mask::expand(code_word.at(i).is_set());
 
       for(size_t j = 0; j < 2 * params.t(); ++j) {
          syndrome[j] += c_mask.if_set_return(r);

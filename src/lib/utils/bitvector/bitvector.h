@@ -279,8 +279,7 @@ class bitvector_base final {
             ~bitref_base() = default;
 
          public:
-            // NOLINTNEXTLINE(*-explicit-conversions) FIXME
-            constexpr operator bool() const noexcept { return is_set(); }
+            explicit constexpr operator bool() const noexcept { return is_set(); }
 
             constexpr bool is_set() const noexcept { return (m_block & m_mask) > 0; }
 
@@ -526,7 +525,7 @@ class bitvector_base final {
       std::string to_string() const {
          std::stringstream ss;
          for(size_type i = 0; i < size(); ++i) {
-            ss << ref(i);
+            ss << ref(i).is_set();
          }
          return ss.str();
       }
