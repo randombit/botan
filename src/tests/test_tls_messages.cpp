@@ -49,7 +49,7 @@ Test::Result test_hello_verify_request() {
    hmac->set_key(sk);
    hmac->update_be(uint64_t(0));  // length of client hello
    hmac->update_be(uint64_t(0));  // length of client identity
-   std::vector<uint8_t> test = unlock(hmac->final());
+   std::vector<uint8_t> test = hmac->final<std::vector<uint8_t>>();
 
    result.test_bin_eq("Cookie comparison", hfr.cookie(), test);
    return result;

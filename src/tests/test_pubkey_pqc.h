@@ -155,8 +155,7 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
          if(vars.has_key("CT_N")) {
             // Shared secret from invalid KEM ciphertext
             const auto shared_key_invalid = dec.decrypt(vars.get_req_bin("CT_N"), 0 /* no KDF */);
-            result.test_bin_eq(
-               "Decaps. Shared Secret Invalid", shared_key_invalid, Botan::lock(vars.get_req_bin("SS_N")));
+            result.test_bin_eq("Decaps. Shared Secret Invalid", shared_key_invalid, vars.get_req_bin("SS_N"));
          }
 
          return result;

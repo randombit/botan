@@ -231,9 +231,9 @@ class CMCE_Invalid_Test : public Text_Based_Test {
 
          auto params = Botan::Classic_McEliece_Parameters::create(params_str);
 
-         const auto kat_seed = Botan::lock(vars.get_req_bin("seed"));
+         const auto kat_seed = vars.get_req_bin("seed");
          const auto ct_invalid = vars.get_req_bin("ct_invalid");
-         const auto ref_ss_invalid = Botan::lock(vars.get_req_bin("ss_invalid"));
+         const auto ref_ss_invalid = vars.get_req_bin("ss_invalid");
 
          const auto test_rng = std::make_unique<CTR_DRBG_AES256>(kat_seed);
 
@@ -250,7 +250,7 @@ class CMCE_Invalid_Test : public Text_Based_Test {
             // flipping a bit in the second part of the ciphertext (C_1 in pc). In this case
             // C_0 is decoded correctly, but pc will change the shared secret, since C_1' != C_1.
             const auto ct_invalid_c1 = vars.get_opt_bin("ct_invalid_c1");
-            const auto ref_ss_invalid_c1 = Botan::lock(vars.get_opt_bin("ss_invalid_c1"));
+            const auto ref_ss_invalid_c1 = vars.get_opt_bin("ss_invalid_c1");
             auto decaps_ct_invalid_c1 = dec.decrypt(ct_invalid_c1);
 
             result.test_bin_eq("Decaps with invalid C_1 in pc", decaps_ct_invalid_c1, ref_ss_invalid_c1);

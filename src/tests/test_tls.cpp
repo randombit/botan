@@ -367,7 +367,7 @@ class TLS_Null_Tests final : public Text_Based_Test {
          Botan::secure_vector<uint8_t> buffer(message.begin(), message.end());
          tls_null_encrypt.finish(buffer);
 
-         result.test_bin_eq("Encrypted TLS fragment matches expectation", Botan::unlock(buffer), expected_tls_fragment);
+         result.test_bin_eq("Encrypted TLS fragment matches expectation", buffer, expected_tls_fragment);
       }
 
       void decryption_test(Test::Result& result,
@@ -393,7 +393,7 @@ class TLS_Null_Tests final : public Text_Based_Test {
             });
          } else {
             tls_null_decrypt.finish(buffer, 0);
-            result.test_bin_eq("Decrypted TLS fragment matches expectation", Botan::unlock(buffer), expected_message);
+            result.test_bin_eq("Decrypted TLS fragment matches expectation", buffer, expected_message);
          }
       }
 

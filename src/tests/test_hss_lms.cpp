@@ -64,7 +64,7 @@ class HSS_LMS_Signature_Generation_Test final : public PK_Signature_Generation_T
       std::string default_padding(const VarMap& /*vars*/) const final { return ""; }
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) final {
-         const auto sk_bytes = Botan::lock(vars.get_req_bin("PrivateKey"));
+         const auto sk_bytes = vars.get_req_bin("PrivateKey");
          return std::make_unique<Botan::HSS_LMS_PrivateKey>(sk_bytes);
       }
 };
