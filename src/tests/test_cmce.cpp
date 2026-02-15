@@ -11,6 +11,7 @@
 
 #if defined(BOTAN_HAS_CLASSICMCELIECE)
 
+   #include "test_arb_eq.h"
    #include "test_pubkey.h"
    #include "test_pubkey_pqc.h"
    #include "test_rng.h"
@@ -131,7 +132,7 @@ class CMCE_Utility_Tests final : public Test {
 
          auto g = params.poly_ring().compute_minimal_polynomial(random_bits);
          result.test_is_true("Minimize polynomial successful", g.has_value());
-         result.test_is_eq("Minimize polynomial", g.value().coef(), exp_g.coef());
+         result.test_is_true("Minimize polynomial", g.value().coef() == exp_g.coef());
 
          return result;
       }
@@ -144,7 +145,7 @@ class CMCE_Utility_Tests final : public Test {
 
          auto v = params.gf(Botan::CmceGfElem(42));
          auto v_inv = v.inv();
-         result.test_is_eq("Control bits creation", (v * v_inv).elem(), Botan::CmceGfElem(1));
+         test_arb_eq(result, "Control bits creation", (v * v_inv).elem(), Botan::CmceGfElem(1));
 
          return result;
       }
@@ -176,7 +177,7 @@ class CMCE_Utility_Tests final : public Test {
             field);
 
          auto mul = field.multiply(val1, val2);  // val1 * val2;
-         result.test_is_eq("GF multiplication", mul.coef(), exp_mul.coef());
+         result.test_is_true("GF multiplication", mul.coef() == exp_mul.coef());
 
          return result;
       }

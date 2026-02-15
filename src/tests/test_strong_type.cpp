@@ -106,7 +106,7 @@ std::vector<Test::Result> test_container_strong_type() {
 
                result.test_sz_eq("size()", nonce.size(), 4);
                result.test_is_true("empty()", !nonce.empty());
-               result.test_is_eq("data()", nonce.data(), dataptr);
+               result.test_is_true("data()", nonce.data() == dataptr);
 
                for(const auto& c : nonce) {
                   result.test_is_true("iteration", c > 0);
