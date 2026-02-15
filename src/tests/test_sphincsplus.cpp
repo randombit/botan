@@ -217,10 +217,11 @@ class SPHINCS_Plus_Keygen_Tests final : public PK_Key_Generation_Test {
          };
          const auto& tested_params = Test::run_long_tests() ? all_params : short_test_params;
          std::vector<std::string> available_params;
-         std::copy_if(tested_params.begin(),
-                      tested_params.end(),
-                      std::back_inserter(available_params),
-                      [](const std::string& param) { return Botan::Sphincs_Parameters::create(param).is_available(); });
+         for(const auto& param : tested_params) {
+            if(Botan::Sphincs_Parameters::create(param).is_available()) {
+               available_params.push_back(param);
+            }
+         }
          return available_params;
       }
 
