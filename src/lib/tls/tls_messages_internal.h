@@ -29,6 +29,14 @@ class Policy;
 namespace Botan::TLS {
 
 /**
+ * Generate a (client) hello random value.
+ *
+ * Depending on the policy, the RNG output may be hashed and if TLS 1.2 is
+ * offered, the random value may contain a timestamp.
+ */
+std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng, Callbacks& cb, const Policy& policy);
+
+/**
  * Generate a server hello random value for the given protocol version.
  *
  * Depending on the protocol version, the random value is generated differently.
@@ -40,6 +48,59 @@ std::vector<uint8_t> make_server_hello_random(RandomNumberGenerator& rng,
                                               Protocol_Version offered_version,
                                               Callbacks& cb,
                                               const Policy& policy);
+
+/**
+ * Version-agnostic internal client hello data container that allows
+ * parsing Client_Hello messages without prior knowledge of the contained
+ * protocol version.
+ */
+class Client_Hello_Internal {
+   public:
+      Client_Hello_Internal() : m_comp_methods({0}) {}
+
+      explicit Client_Hello_Internal(const std::vector<uint8_t>& buf);
+
+      /**
+       * This distinguishes between a TLS 1.3 compliant Client Hello (containing
+       * the "supported_version" extension) and legacy Client Hello messages.
+       *
+       * @return TLS 1.3 if the Client Hello contains "supported_versions", or
+       *         the content of the "legacy_version" version field if it
+       *         indicates (D)TLS 1.2 or older, or
+       *         (D)TLS 1.2 if the "legacy_version" was some other odd value.
+       */
+      Protocol_Version version() const;
+
+      Protocol_Version legacy_version() const { return m_legacy_version; }
+
+      const Session_ID& session_id() const { return m_session_id; }
+
+      const std::vector<uint8_t>& random() const { return m_random; }
+
+      const std::vector<uint16_t>& ciphersuites() const { return m_suites; }
+
+      const std::vector<uint8_t>& comp_methods() const { return m_comp_methods; }
+
+      const std::vector<uint8_t>& hello_cookie() const { return m_hello_cookie; }
+
+      const std::vector<uint8_t>& hello_cookie_input_bits() const { return m_cookie_input_bits; }
+
+      const Extensions& extensions() const { return m_extensions; }
+
+      Extensions& extensions() { return m_extensions; }
+
+   public:
+      Protocol_Version m_legacy_version;    // NOLINT(*-non-private-member-variable*)
+      Session_ID m_session_id;              // NOLINT(*-non-private-member-variable*)
+      std::vector<uint8_t> m_random;        // NOLINT(*-non-private-member-variable*)
+      std::vector<uint16_t> m_suites;       // NOLINT(*-non-private-member-variable*)
+      std::vector<uint8_t> m_comp_methods;  // NOLINT(*-non-private-member-variable*)
+      Extensions m_extensions;              // NOLINT(*-non-private-member-variable*)
+
+      // These fields are only for DTLS:
+      std::vector<uint8_t> m_hello_cookie;       // NOLINT(*-non-private-member-variable*)
+      std::vector<uint8_t> m_cookie_input_bits;  // NOLINT(*-non-private-member-variable*)
+};
 
 /**
 * Version-agnostic internal server hello data container that allows

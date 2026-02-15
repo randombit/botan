@@ -409,7 +409,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Hello_Retry_Request hello_retr
    m_transitions.set_expected_next(Handshake_Type::ClientHello);
 }
 
-void Server_Impl_13::handle(const Client_Hello_12& ch) {
+void Server_Impl_13::handle(const Client_Hello_12_Shim& ch) {
    // The detailed handling of the TLS 1.2 compliant Client Hello is left to
    // the TLS 1.2 server implementation.
    BOTAN_UNUSED(ch);

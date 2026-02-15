@@ -17,7 +17,8 @@
    #include <botan/internal/stl_util.h>
    #include <sstream>
 
-   #if defined(BOTAN_HAS_TLS_13)
+   #if defined(BOTAN_HAS_TLS_12) && defined(BOTAN_HAS_TLS_13)
+      #include <botan/tls_messages_12.h>
       #include <botan/tls_messages_13.h>
    #endif
 
@@ -64,7 +65,7 @@ class TLS_Ciphersuites final : public Command {
 
 BOTAN_REGISTER_COMMAND("tls_ciphers", TLS_Ciphersuites);
 
-   #if defined(BOTAN_HAS_TLS_13)
+   #if defined(BOTAN_HAS_TLS_12) && defined(BOTAN_HAS_TLS_13)
 
 class TLS_Client_Hello_Reader final : public Command {
    public:
@@ -114,9 +115,14 @@ class TLS_Client_Hello_Reader final : public Command {
          }
 
          try {
-            auto hello = Botan::TLS::Client_Hello_13::parse(input);
-
-            output() << format_hello(hello);
+            output() << format_hello([&]() -> std::variant<Botan::TLS::Client_Hello_13, Botan::TLS::Client_Hello_12> {
+               auto data = Botan::TLS::Client_Hello_13::parse(input);
+               if(std::holds_alternative<Botan::TLS::Client_Hello_13>(data)) {
+                  return std::get<Botan::TLS::Client_Hello_13>(std::move(data));
+               } else {
+                  return Botan::TLS::Client_Hello_12(input);
+               }
+            }());
          } catch(std::exception& e) {
             error_output() << "Parsing client hello failed: " << e.what() << "\n";
          }

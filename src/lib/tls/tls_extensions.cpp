@@ -19,6 +19,7 @@
 #include <botan/tls_policy.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/mem_utils.h>
+#include <botan/internal/parsing.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_reader.h>
 
@@ -296,6 +297,25 @@ std::vector<uint8_t> Server_Name_Indicator::serialize(Connection_Side whoami) co
    buf += as_span_of_bytes(m_sni_host_name);
 
    return buf;
+}
+
+bool Server_Name_Indicator::hostname_acceptable_for_sni(std::string_view hostname) {
+   // Avoid sending an IPv4/IPv6 address in SNI as this is prohibited
+
+   if(hostname.empty()) {
+      return false;
+   }
+
+   if(string_to_ipv4(hostname).has_value()) {
+      return false;
+   }
+
+   // IPv6? Anyway ':' is not valid in DNS
+   if(hostname.find(':') != std::string_view::npos) {
+      return false;
+   }
+
+   return true;
 }
 
 Renegotiation_Extension::Renegotiation_Extension(TLS_Data_Reader& reader, uint16_t extension_size) :
