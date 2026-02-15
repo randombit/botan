@@ -10,24 +10,40 @@
 
 #include "tests.h"
 
+#include <array>
+#include <span>
 #include <sstream>
+#include <vector>
 
 namespace Botan_Tests {
 
 namespace detail {
 
+/* Does T have a member to_string() returning std::string? */
+template <typename, typename = void>
+constexpr bool has_member_to_string = false;
+
+template <typename T>
+constexpr bool has_member_to_string<T, std::void_t<decltype(std::declval<const T&>().to_string())>> =
+   std::is_convertible_v<decltype(std::declval<const T&>().to_string()), std::string>;
+
+/* Is std::to_string(T) defined? */
 template <typename, typename = void>
 constexpr bool has_std_to_string = false;
+
 template <typename T>
 constexpr bool has_std_to_string<T, std::void_t<decltype(std::to_string(std::declval<T>()))>> = true;
 
+/* Is ostream<<(T) defined? */
 template <typename, typename = void>
 constexpr bool has_ostream_operator = false;
+
 template <typename T>
 constexpr bool
    has_ostream_operator<T, std::void_t<decltype(operator<<(std::declval<std::ostringstream&>(), std::declval<T>()))>> =
       true;
 
+/* Is T a std::optional? */
 template <typename T>
 struct is_optional : std::false_type {};
 
@@ -37,19 +53,51 @@ struct is_optional<std::optional<T>> : std::true_type {};
 template <typename T>
 constexpr bool is_optional_v = is_optional<T>::value;
 
+/* Is T a std::vector? */
+template <typename T>
+struct is_vector : std::false_type {};
+
+template <typename T>
+struct is_vector<std::vector<T>> : std::true_type {};
+
+template <typename T>
+constexpr bool is_vector_v = is_vector<T>::value;
+
+/* Is T a std::array? */
+template <typename T>
+struct is_std_array : std::false_type {};
+
+template <typename T, std::size_t N>
+struct is_std_array<std::array<T, N>> : std::true_type {};
+
+template <typename T>
+constexpr bool is_std_array_v = is_std_array<T>::value;
+
 template <typename T>
 std::string to_string(const T& v) {
    if constexpr(detail::is_optional_v<T>) {
       return (v.has_value()) ? to_string(v.value()) : std::string("std::nullopt");
+   } else if constexpr(detail::is_vector_v<T> || detail::is_std_array_v<T>) {
+      std::ostringstream oss;
+      oss << "{";
+      for(size_t i = 0; i != v.size(); ++i) {
+         if(i > 0) {
+            oss << ", ";
+         }
+         oss << to_string(v[i]);
+      }
+      oss << "}";
+      return oss.str();
+   } else if constexpr(detail::has_member_to_string<T>) {
+      return v.to_string();
    } else if constexpr(detail::has_ostream_operator<T>) {
       std::ostringstream oss;
       oss << v;
       return oss.str();
    } else if constexpr(detail::has_std_to_string<T>) {
-      //static_assert(false, "no std::to_string for you");
       return std::to_string(v);
    } else {
-      //static_assert(false, "unknown type");
+      static_assert(!sizeof(T), "This type is not printable");
       return "<?>";
    }
 }

@@ -132,7 +132,7 @@ class CMCE_Utility_Tests final : public Test {
 
          auto g = params.poly_ring().compute_minimal_polynomial(random_bits);
          result.test_is_true("Minimize polynomial successful", g.has_value());
-         test_arb_eq(result, "Minimize polynomial", g.value().coef(), exp_g.coef());
+         result.test_is_true("Minimize polynomial", g.value().coef() == exp_g.coef());
 
          return result;
       }
@@ -177,7 +177,7 @@ class CMCE_Utility_Tests final : public Test {
             field);
 
          auto mul = field.multiply(val1, val2);  // val1 * val2;
-         test_arb_eq(result, "GF multiplication", mul.coef(), exp_mul.coef());
+         result.test_is_true("GF multiplication", mul.coef() == exp_mul.coef());
 
          return result;
       }

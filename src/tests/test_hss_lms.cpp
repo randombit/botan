@@ -315,7 +315,7 @@ class HSS_LMS_Missing_API_Test final : public Test {
 
          // HSS_LMS_Signature_Operation::algorithm_identifier()
          const Botan::PK_Signer signer(*sk, Test::rng(), "");
-         test_arb_eq(result, "signature algorithm", signer.algorithm_identifier(), sk->algorithm_identifier());
+         result.test_is_true("signature algorithm", signer.algorithm_identifier() == sk->algorithm_identifier());
 
          // HSS_LMS_Signature_Operation::hash_function()
          result.test_str_eq("PK_Signer should report the hash of the key", signer.hash_function(), "SHA-256");
