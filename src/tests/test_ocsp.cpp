@@ -107,8 +107,6 @@ class OCSP_Tests final : public Test {
       static Test::Result test_response_find_signing_certificate() {
          Test::Result result("OCSP response finding signature certificates");
 
-         const std::optional<Botan::X509_Certificate> nullopt_cert;
-
          // OCSP response is signed by the issuing CA itself
          auto randombit_ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
          auto randombit_ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
@@ -138,24 +136,23 @@ class OCSP_Tests final : public Test {
          auto randombit_alt_resp_ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp_forged_valid_nocerts.der");
          auto randombit_alt_resp_cert = load_test_X509_cert("x509/ocsp/randombit_ocsp_forged_responder.pem");
 
-         result.test_is_eq("Dummy has no signing certificate",
-                           dummy_ocsp.find_signing_certificate(Botan::X509_Certificate()),
-                           nullopt_cert);
+         result.test_opt_is_null("Dummy has no signing certificate",
+                                 dummy_ocsp.find_signing_certificate(Botan::X509_Certificate()));
 
          result.test_is_eq("CA is returned as signing certificate",
                            randombit_ocsp.find_signing_certificate(randombit_ca),
                            std::optional(randombit_ca));
-         result.test_is_eq("No signer certificate is returned when signer couldn't be determined",
-                           randombit_ocsp.find_signing_certificate(bdr_ca),
-                           nullopt_cert);
+         result.test_opt_is_null("No signer certificate is returned when signer couldn't be determined",
+                                 randombit_ocsp.find_signing_certificate(bdr_ca));
 
          result.test_is_eq("Delegated responder certificate is returned for further validation",
                            bdr_ocsp.find_signing_certificate(bdr_ca),
                            std::optional(bdr_responder));
 
-         result.test_is_eq("Delegated responder without stapled certs does not find signer without user-provided certs",
-                           randombit_alt_resp_ocsp.find_signing_certificate(randombit_ca),
-                           nullopt_cert);
+         result.test_opt_is_null(
+            "Delegated responder without stapled certs does not find signer without user-provided certs",
+            randombit_alt_resp_ocsp.find_signing_certificate(randombit_ca));
+
          auto trusted_responders = std::make_unique<Botan::Certificate_Store_In_Memory>(randombit_alt_resp_cert);
          result.test_is_eq("Delegated responder returns user-provided cert",
                            randombit_alt_resp_ocsp.find_signing_certificate(randombit_ca, trusted_responders.get()),
@@ -383,17 +380,13 @@ class OCSP_Tests final : public Test {
          auto responder = load_test_X509_cert("x509/ocsp/randombit_ocsp_forged_responder.pem");
          auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
 
-         const std::optional<Botan::X509_Certificate> nullopt_cert;
-
          Botan::Certificate_Store_In_Memory trusted_responders;
 
          // without providing the 3rd party responder certificate no issuer will be found
-         result.test_is_eq("cannot find signing certificate without trusted responders",
-                           ocsp.find_signing_certificate(ca),
-                           nullopt_cert);
-         result.test_is_eq("cannot find signing certificate without additional help",
-                           ocsp.find_signing_certificate(ca, &trusted_responders),
-                           nullopt_cert);
+         result.test_opt_is_null("cannot find signing certificate without trusted responders",
+                                 ocsp.find_signing_certificate(ca));
+         result.test_opt_is_null("cannot find signing certificate without additional help",
+                                 ocsp.find_signing_certificate(ca, &trusted_responders));
 
          // add the 3rd party responder certificate to the list of trusted OCSP responder certs
          // to find the issuer certificate of this response

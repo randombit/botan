@@ -391,6 +391,15 @@ class Test {
                }
             }
 
+            template <typename T>
+            bool test_opt_is_null(std::string_view what, const std::optional<T>& val) {
+               if(val == std::nullopt) {
+                  return test_success("was nullopt");
+               } else {
+                  return test_failure(what, "not nullopt");
+               }
+            }
+
             bool test_opt_u8_eq(std::string_view what, std::optional<uint8_t> a, std::optional<uint8_t> b);
 
 #if defined(BOTAN_HAS_BIGINT)
