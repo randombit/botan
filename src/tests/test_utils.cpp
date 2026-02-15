@@ -956,7 +956,7 @@ class Version_Tests final : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result("Versions");
 
-         result.test_is_true("Version datestamp matches macro", Botan::version_datestamp() == BOTAN_VERSION_DATESTAMP);
+         result.test_u32_eq("Version datestamp matches macro", Botan::version_datestamp(), BOTAN_VERSION_DATESTAMP);
 
          const char* version_cstr = Botan::version_cstr();
          const std::string version_str = Botan::version_string();
