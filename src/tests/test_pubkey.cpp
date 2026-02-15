@@ -595,7 +595,7 @@ void test_pbe_roundtrip(Test::Result& result,
       auto loaded = Botan::PKCS8::load_key(data_src, passphrase);
 
       result.test_is_true("recovered private key from encrypted blob", loaded != nullptr);
-      result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
+      result.test_str_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
       result.test_eq("reloaded key has same encoding", loaded->private_key_info(), pkcs8);
    } catch(std::exception& e) {
       result.test_failure("roundtrip encrypted PEM private key", e.what());
@@ -608,7 +608,7 @@ void test_pbe_roundtrip(Test::Result& result,
       auto loaded = Botan::PKCS8::load_key(data_src, passphrase);
 
       result.test_is_true("recovered private key from BER blob", loaded != nullptr);
-      result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
+      result.test_str_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
       result.test_eq("reloaded key has same encoding", loaded->private_key_info(), pkcs8);
    } catch(std::exception& e) {
       result.test_failure("roundtrip encrypted BER private key", e.what());
@@ -653,9 +653,9 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
          if(auto oid = Botan::OID::from_name(name)) {
             result.test_success("Keys name maps to an OID");
 
-            result.test_eq("Keys name OID is the same as the object oid",
-                           oid.value().to_string(),
-                           key.object_identifier().to_string());
+            result.test_str_eq("Keys name OID is the same as the object oid",
+                               oid.value().to_string(),
+                               key.object_identifier().to_string());
          } else {
             const bool exception = name == "Kyber" || name == "ML-KEM" || name == "ML-DSA" || name == "SLH-DSA" ||
                                    name == "FrodoKEM" || name == "SPHINCS+" || name == "ClassicMcEliece";
@@ -669,9 +669,9 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
 
          auto public_key = key.public_key();
 
-         result.test_eq("public_key has same name", public_key->algo_name(), key.algo_name());
+         result.test_str_eq("public_key has same name", public_key->algo_name(), key.algo_name());
 
-         result.test_eq(
+         result.test_str_eq(
             "public_key has same encoding", Botan::X509::PEM_encode(key), Botan::X509::PEM_encode(*public_key));
 
          // Test generation of another key pair from a given (abstract) asymmetric key
@@ -681,8 +681,8 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
             auto sk2 = public_key->generate_another(this->rng());
             auto pk2 = sk2->public_key();
 
-            result.test_eq("new private key has the same name", sk2->algo_name(), key.algo_name());
-            result.test_eq("new public key has the same name", pk2->algo_name(), public_key->algo_name());
+            result.test_str_eq("new private key has the same name", sk2->algo_name(), key.algo_name());
+            result.test_str_eq("new public key has the same name", pk2->algo_name(), public_key->algo_name());
             result.test_sz_eq(
                "new private key has the same est. strength", sk2->estimated_strength(), key.estimated_strength());
             result.test_sz_eq("new public key has the same est. strength",
@@ -710,7 +710,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
             }
 
             if(auto raw_pk = public_key_from_raw(param, prov, raw)) {
-               result.test_eq("public_key has same type", raw_pk->algo_name(), public_key->algo_name());
+               result.test_str_eq("public_key has same type", raw_pk->algo_name(), public_key->algo_name());
                result.test_eq("public_key has same encoding", raw_pk->public_key_bits(), public_key->public_key_bits());
             }
          } catch(const Botan::Not_Implemented&) {
@@ -727,7 +727,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
             auto loaded = Botan::X509::load_key(data_src);
 
             result.test_is_true("recovered public key from private", loaded != nullptr);
-            result.test_eq("public key has same type", loaded->algo_name(), key.algo_name());
+            result.test_str_eq("public key has same type", loaded->algo_name(), key.algo_name());
 
             try {
                result.test_is_true("public key passes checks", loaded->check_key(this->rng(), false));
@@ -743,7 +743,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
             auto loaded = Botan::X509::load_key(data_src);
 
             result.test_is_true("recovered public key from private", loaded != nullptr);
-            result.test_eq("public key has same type", loaded->algo_name(), key.algo_name());
+            result.test_str_eq("public key has same type", loaded->algo_name(), key.algo_name());
             result.test_eq("public key has same encoding", loaded->subject_public_key(), ber);
          } catch(std::exception& e) {
             result.test_failure("roundtrip BER public key", e.what());
@@ -756,7 +756,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
             auto loaded = Botan::PKCS8::load_key(data_src);
 
             result.test_is_true("recovered private key from PEM blob", loaded != nullptr);
-            result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
+            result.test_str_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
             result.test_eq("reloaded key has same encoding", loaded->private_key_info(), ber);
          } catch(std::exception& e) {
             result.test_failure("roundtrip PEM private key", e.what());
@@ -767,7 +767,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
             auto loaded = Botan::PKCS8::load_key(data_src);
 
             result.test_is_true("recovered public key from private", loaded != nullptr);
-            result.test_eq("public key has same type", loaded->algo_name(), key.algo_name());
+            result.test_str_eq("public key has same type", loaded->algo_name(), key.algo_name());
          } catch(std::exception& e) {
             result.test_failure("roundtrip BER private key", e.what());
          }
@@ -941,10 +941,10 @@ class PK_API_Sign_Test : public Text_Based_Test {
          result.test_is_true("Creating PK_Signer works", signer != nullptr);
          result.test_is_true("Creating PK_Signer works", verifier != nullptr);
 
-         result.test_is_nonempty("PK_Signer should report some hash", signer->hash_function());
-         result.test_is_nonempty("PK_Verifier should report some hash", verifier->hash_function());
+         result.test_str_not_empty("PK_Signer should report some hash", signer->hash_function());
+         result.test_str_not_empty("PK_Verifier should report some hash", verifier->hash_function());
 
-         result.test_eq(
+         result.test_str_eq(
             "PK_Signer and PK_Verifier report the same hash", signer->hash_function(), verifier->hash_function());
 
          pubkey.reset();

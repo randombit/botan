@@ -39,7 +39,7 @@ class KDF_KAT_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> label = vars.get_opt_bin("Label");
          const std::vector<uint8_t> expected = vars.get_req_bin("Output");
 
-         result.test_eq("name", kdf->name(), kdf_name);
+         result.test_str_eq("name", kdf->name(), kdf_name);
          result.test_eq("derived key", kdf->derive_key(expected.size(), secret, salt, label), expected);
 
          if(expected.size() == 32) {
@@ -50,7 +50,7 @@ class KDF_KAT_Tests final : public Text_Based_Test {
          // Test that clone works
          auto clone = kdf->new_object();
          result.test_is_true("Clone has different pointer", kdf.get() != clone.get());
-         result.test_eq("Clone has same name", kdf->name(), clone->name());
+         result.test_str_eq("Clone has same name", kdf->name(), clone->name());
 
          return result;
       }

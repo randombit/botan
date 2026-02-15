@@ -191,19 +191,19 @@ class BigInt_Unit_Tests final : public Test {
                                             const std::string& neg_hex) {
             std::ostringstream oss;
             oss << n;
-            result.test_eq("output decimal", oss.str(), dec);
+            result.test_str_eq("output decimal", oss.str(), dec);
 
             oss.str("");
             oss << (-n);
-            result.test_eq("output negative decimal", oss.str(), neg_dec);
+            result.test_str_eq("output negative decimal", oss.str(), neg_dec);
 
             oss.str("");
             oss << std::hex << n;
-            result.test_eq("output hex", oss.str(), hex);
+            result.test_str_eq("output hex", oss.str(), hex);
 
             oss.str("");
             oss << std::hex << (-n);
-            result.test_eq("output negative hex", oss.str(), neg_hex);
+            result.test_str_eq("output negative hex", oss.str(), neg_hex);
          };
 
          check_bigint_formatting(Botan::BigInt(33), "33", "0x21", "-33", "-0x21");
@@ -581,11 +581,11 @@ class BigInt_Jacobi_Test final : public Text_Based_Test {
          const int32_t j = Botan::jacobi(a, n);
 
          if(j == 0) {
-            result.test_eq("jacobi", expected, "0");
+            result.test_str_eq("jacobi", expected, "0");
          } else if(j == -1) {
-            result.test_eq("jacobi", expected, "-1");
+            result.test_str_eq("jacobi", expected, "-1");
          } else {
-            result.test_eq("jacobi", expected, "1");
+            result.test_str_eq("jacobi", expected, "1");
          }
 
          return result;

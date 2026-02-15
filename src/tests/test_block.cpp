@@ -55,8 +55,8 @@ class Block_Cipher_Tests final : public Text_Based_Test {
             }
 
             const std::string provider(cipher->provider());
-            result.test_is_nonempty("provider", provider);
-            result.test_eq(provider, cipher->name(), algo);
+            result.test_str_not_empty("provider", provider);
+            result.test_str_eq(provider, cipher->name(), algo);
             result.test_sz_gte(provider, cipher->parallelism(), 1);
             result.test_sz_gte(provider, cipher->block_size(), 8);
             result.test_sz_gte(provider, cipher->parallel_bytes(), cipher->block_size() * cipher->parallelism());
@@ -111,7 +111,7 @@ class Block_Cipher_Tests final : public Text_Based_Test {
             // Test that clone works and does not affect parent object
             auto clone = cipher->new_object();
             result.test_is_true("Clone has different pointer", cipher.get() != clone.get());
-            result.test_eq("Clone has same name", cipher->name(), clone->name());
+            result.test_str_eq("Clone has same name", cipher->name(), clone->name());
             clone->set_key(this->rng().random_vec(cipher->maximum_keylength()));
 
             // have called set_key on clone: process input values

@@ -106,7 +106,7 @@ class SignaturePaddingSchemeNameTests final : public Test {
                const std::string hash_to_use = "SHA-256";
                auto padding = Botan::SignaturePaddingScheme::create_or_throw(Botan::fmt("{}({})", pad, hash_to_use));
                auto padding_copy = Botan::SignaturePaddingScheme::create(padding->name());
-               result.test_eq("SignaturePaddingScheme::name for " + pad, padding->name(), padding_copy->name());
+               result.test_str_eq("SignaturePaddingScheme::name for " + pad, padding->name(), padding_copy->name());
             } catch(Botan::Lookup_Error&) {
                result.test_note("Skipping test due to missing hash");
             } catch(const std::exception& e) {
@@ -123,9 +123,9 @@ class SignaturePaddingSchemeNameTests final : public Test {
             } catch(Botan::Lookup_Error&) {
                result.test_note("Skipping test due to missing hash");
             } catch(const std::exception& e) {
-               result.test_eq("SignaturePaddingScheme::name for " + pad,
-                              e.what(),
-                              "Could not find any algorithm named \"" + algo_name + "\"");
+               result.test_str_eq("SignaturePaddingScheme::name for " + pad,
+                                  e.what(),
+                                  "Could not find any algorithm named \"" + algo_name + "\"");
             }
          }
 
@@ -133,7 +133,7 @@ class SignaturePaddingSchemeNameTests final : public Test {
             try {
                auto padding = Botan::SignaturePaddingScheme::create(pad);
                auto padding_copy = Botan::SignaturePaddingScheme::create(padding->name());
-               result.test_eq("SignaturePaddingScheme::name for " + pad, padding->name(), padding_copy->name());
+               result.test_str_eq("SignaturePaddingScheme::name for " + pad, padding->name(), padding_copy->name());
             } catch(Botan::Lookup_Error&) {
                result.test_note("Skipping test due to missing hash");
             } catch(const std::exception& e) {

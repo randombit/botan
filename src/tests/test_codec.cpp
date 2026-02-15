@@ -38,7 +38,7 @@ class Base32_Tests final : public Text_Based_Test {
             if(is_valid) {
                const std::vector<uint8_t> binary = vars.get_req_bin("Binary");
                result.test_eq("base32 decoding", Botan::base32_decode(base32), binary);
-               result.test_eq("base32 encoding", Botan::base32_encode(binary), base32);
+               result.test_str_eq("base32 encoding", Botan::base32_encode(binary), base32);
             } else {
                auto res = Botan::base32_decode(base32);
                result.test_failure("decoded invalid base32 to " + Botan::hex_encode(res));
@@ -99,7 +99,7 @@ class Base58_Tests final : public Text_Based_Test {
             if(is_valid) {
                const std::vector<uint8_t> binary = vars.get_req_bin("Binary");
                result.test_eq("base58 decoding", Botan::base58_decode(base58), binary);
-               result.test_eq("base58 encoding", Botan::base58_encode(binary), base58);
+               result.test_str_eq("base58 encoding", Botan::base58_encode(binary), base58);
             } else {
                auto res = Botan::base58_decode(base58);
                result.test_failure("decoded invalid base58 to " + Botan::hex_encode(res));
@@ -132,7 +132,7 @@ class Base58_Check_Tests final : public Text_Based_Test {
             if(is_valid) {
                const std::vector<uint8_t> binary = vars.get_req_bin("Binary");
                result.test_eq("base58 decoding", Botan::base58_check_decode(base58), binary);
-               result.test_eq("base58 encoding", Botan::base58_check_encode(binary), base58);
+               result.test_str_eq("base58 encoding", Botan::base58_check_encode(binary), base58);
             } else {
                auto res = Botan::base58_check_decode(base58);
                result.test_failure("decoded invalid base58c to " + Botan::hex_encode(res));
@@ -169,7 +169,7 @@ class Base64_Tests final : public Text_Based_Test {
             if(is_valid) {
                const std::vector<uint8_t> binary = vars.get_req_bin("Binary");
                result.test_eq("base64 decoding", Botan::base64_decode(base64), binary);
-               result.test_eq("base64 encoding", Botan::base64_encode(binary), base64);
+               result.test_str_eq("base64 encoding", Botan::base64_encode(binary), base64);
             } else {
                auto res = Botan::base64_decode(base64);
                result.test_failure("decoded invalid base64 to " + Botan::hex_encode(res));

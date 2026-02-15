@@ -158,8 +158,8 @@ class X509test_Path_Validation_Tests final : public Test {
                path_result = Botan::Path_Validation_Result(Botan::Certificate_Status_Code::CANNOT_ESTABLISH_TRUST);
             }
 
-            result.test_eq("test " + filename, path_result.result_string(), expected_result);
-            result.test_eq("test no warnings string", path_result.warnings_string(), "");
+            result.test_str_eq("test " + filename, path_result.result_string(), expected_result);
+            result.test_str_eq("test no warnings string", path_result.warnings_string(), "");
             result.test_is_true("test no warnings", path_result.no_warnings());
             result.end_timer();
             results.push_back(result);
@@ -194,11 +194,11 @@ class X509test_Path_Validation_Tests final : public Test {
 
             // certificate verification succeed even if no OCSP URL (softfail)
             result.test_is_true("test success", path_result.successful_validation());
-            result.test_eq("test " + filename, path_result.result_string(), "Verified");
+            result.test_str_eq("test " + filename, path_result.result_string(), "Verified");
       #if defined(BOTAN_TARGET_OS_HAS_THREADS) && defined(BOTAN_HAS_HTTP_UTIL)
             // if softfail, there is warnings
             result.test_is_true("test warnings", !path_result.no_warnings());
-            result.test_eq("test warnings string", path_result.warnings_string(), "[0] OCSP URL not available");
+            result.test_str_eq("test warnings string", path_result.warnings_string(), "[0] OCSP URL not available");
       #endif
             result.end_timer();
             results.push_back(result);
@@ -281,7 +281,7 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run_with_restrictions(
          const Botan::Path_Validation_Result validation_result = Botan::x509_path_validate(
             end_certs, restrictions, store, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
-         result.test_eq(test_name + " path validation result", validation_result.result_string(), expected_result);
+         result.test_str_eq(test_name + " path validation result", validation_result.result_string(), expected_result);
       } catch(std::exception& e) {
          result.test_failure(test_name, e.what());
       }
@@ -329,7 +329,7 @@ std::vector<Test::Result> Extended_Path_Validation_Tests::run() {
       const Botan::Path_Validation_Result validation_result =
          Botan::x509_path_validate(end_user, restrictions, store, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
-      result.test_eq(test_name + " path validation result", validation_result.result_string(), expected_result);
+      result.test_str_eq(test_name + " path validation result", validation_result.result_string(), expected_result);
 
       result.end_timer();
       results.push_back(result);
@@ -396,9 +396,9 @@ std::vector<Test::Result> PSS_Path_Validation_Tests::run() {
             crls,
             validation_time);  // alternatively we could just call crl.check_signature( root_pubkey )
 
-         result.test_eq(test_name + " check_crl result",
-                        Botan::Path_Validation_Result::status_string(Botan::PKIX::overall_status(crl_status)),
-                        expected_result);
+         result.test_str_eq(test_name + " check_crl result",
+                            Botan::Path_Validation_Result::status_string(Botan::PKIX::overall_status(crl_status)),
+                            expected_result);
       } else if(end && root) {
          // CRT chain test
 
@@ -407,7 +407,7 @@ std::vector<Test::Result> PSS_Path_Validation_Tests::run() {
          const Botan::Path_Validation_Result validation_result =
             Botan::x509_path_validate(*end, restrictions, store, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
-         result.test_eq(test_name + " path validation result", validation_result.result_string(), expected_result);
+         result.test_str_eq(test_name + " path validation result", validation_result.result_string(), expected_result);
       } else if(end && !root) {
          // CRT self signed test
          auto pubkey = end->subject_public_key();
@@ -463,7 +463,7 @@ std::vector<Test::Result> Validate_V1Cert_Test::run() {
       Botan::x509_path_validate(chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
    Test::Result result("Verifying using v1 certificate");
-   result.test_eq("Path validation result", validation_result.result_string(), "Verified");
+   result.test_str_eq("Path validation result", validation_result.result_string(), "Verified");
 
    const Botan::Certificate_Store_In_Memory empty;
 
@@ -472,7 +472,7 @@ std::vector<Test::Result> Validate_V1Cert_Test::run() {
    const Botan::Path_Validation_Result validation_result2 =
       Botan::x509_path_validate(new_chain, restrictions, empty, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
-   result.test_eq("Path validation result", validation_result2.result_string(), "Cannot establish trust");
+   result.test_str_eq("Path validation result", validation_result2.result_string(), "Cannot establish trust");
 
    return {result};
 }
@@ -512,7 +512,7 @@ std::vector<Test::Result> Validate_V2Uid_in_V1_Test::run() {
 
    Test::Result result("Verifying v1 certificate using v2 uid fields");
    result.test_is_false("Path validation failed", validation_result.successful_validation());
-   result.test_eq(
+   result.test_str_eq(
       "Path validation result", validation_result.result_string(), "Encountered v2 identifiers in v1 certificate");
 
    return {result};
@@ -553,7 +553,7 @@ std::vector<Test::Result> Validate_Name_Constraint_SAN_Test::run() {
 
    Test::Result result("Verifying certificate with alternative SAN violating name constraint");
    result.test_is_false("Path validation failed", validation_result.successful_validation());
-   result.test_eq(
+   result.test_str_eq(
       "Path validation result", validation_result.result_string(), "Certificate does not pass name constraint");
 
    return {result};
@@ -794,7 +794,7 @@ class Non_Self_Signed_Trust_Anchors_Test final : public Test {
                path_result = Botan::Path_Validation_Result(Botan::Certificate_Status_Code::CANNOT_ESTABLISH_TRUST);
             }
 
-            result.test_eq(
+            result.test_str_eq(
                "path validation failed", path_result.result_string(), to_string(Botan::Certificate_Status_Code::OK));
 
             results.push_back(result);
@@ -876,16 +876,16 @@ class Non_Self_Signed_Trust_Anchors_Test final : public Test {
          const auto path_result = Botan::x509_path_validate(
             certs, restrictions, {&cert_store}, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
-         result.test_eq("unexpected path validation result",
-                        path_result.result_string(),
-                        to_string(Botan::Certificate_Status_Code::CANNOT_ESTABLISH_TRUST));
+         result.test_str_eq("unexpected path validation result",
+                            path_result.result_string(),
+                            to_string(Botan::Certificate_Status_Code::CANNOT_ESTABLISH_TRUST));
 
          const auto check_chain_result = Botan::PKIX::check_chain(
             {certs.at(0), certs.at(1), certs.at(2)}, validation_time, "", Botan::Usage_Type::UNSPECIFIED, restrictions);
 
-         result.test_ne("unexpected check_chain result",
-                        Botan::Path_Validation_Result(check_chain_result, {}).result_string(),
-                        to_string(Botan::Certificate_Status_Code::OK));
+         result.test_str_ne("unexpected check_chain result",
+                            Botan::Path_Validation_Result(check_chain_result, {}).result_string(),
+                            to_string(Botan::Certificate_Status_Code::OK));
 
          return {result};
       }
@@ -905,7 +905,7 @@ class Non_Self_Signed_Trust_Anchors_Test final : public Test {
          if(path_result.result() == Botan::Certificate_Status_Code::CERT_PUBKEY_INVALID) {
             result.test_note("CERT_PUBKEY_INVALID encountered - was that key type disabled at build time?");
          } else {
-            result.test_eq(
+            result.test_str_eq(
                "unexpected x509_path_validate result", path_result.result_string(), to_string(expected_result));
          }
 
@@ -1093,7 +1093,7 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run_with_restrictions(
                   for(const auto& warning : warning_set) {
                      const std::string warning_str(Botan::to_string(warning));
                      if(stripped == warning_str) {
-                        result.test_eq(test_name + " path validation result", warning_str, stripped);
+                        result.test_str_eq(test_name + " path validation result", warning_str, stripped);
                         found_warning = true;
                      }
                   }
@@ -1103,11 +1103,11 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run_with_restrictions(
                }
             } else {
                if(expected_result == "Hash function used is considered too weak for security" && has_md5 == false) {
-                  result.test_eq(test_name + " path validation result",
-                                 validation_result.result_string(),
-                                 "Certificate signed with unknown/unavailable algorithm");
+                  result.test_str_eq(test_name + " path validation result",
+                                     validation_result.result_string(),
+                                     "Certificate signed with unknown/unavailable algorithm");
                } else {
-                  result.test_eq(
+                  result.test_str_eq(
                      test_name + " path validation result", validation_result.result_string(), expected_result);
                }
             }
@@ -1119,7 +1119,7 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run_with_restrictions(
        */
       catch(const Botan::Exception& e) {
          if(e.error_type() == Botan::ErrorType::DecodingFailure) {
-            result.test_eq(test_name + " path validation result", e.what(), expected_result);
+            result.test_str_eq(test_name + " path validation result", e.what(), expected_result);
          } else {
             result.test_failure(test_name, e.what());
          }
@@ -1690,7 +1690,7 @@ class XMSS_Path_Validation_Tests final : public Test {
 
          auto status = Botan::PKIX::overall_status(
             Botan::PKIX::check_chain(cert_path, valid_time, "", Botan::Usage_Type::UNSPECIFIED, restrictions));
-         result.test_eq("Cert validation status", Botan::to_string(status), "Verified");
+         result.test_str_eq("Cert validation status", Botan::to_string(status), "Verified");
          return result;
       }
 
@@ -1733,9 +1733,10 @@ class Name_Constraint_DN_Prefix_Test final : public Test {
          const Botan::X509_Certificate subject_cert_accepted(
             Test::data_file("x509/name_constraint_prefix/nc_prefix_strongswan_subject_accepted.pem"));
 
-         result.test_eq("CA DN", ca_accepted.subject_dn().to_string(), R"(C="CH",O="strongSwan",CN="CA")");
-         result.test_eq("IM DN", intermediate_accepted.subject_dn().to_string(), R"(C="CH",O="strongSwan",CN="IM")");
-         result.test_eq(
+         result.test_str_eq("CA DN", ca_accepted.subject_dn().to_string(), R"(C="CH",O="strongSwan",CN="CA")");
+         result.test_str_eq(
+            "IM DN", intermediate_accepted.subject_dn().to_string(), R"(C="CH",O="strongSwan",CN="IM")");
+         result.test_str_eq(
             "Subject DN", subject_cert_accepted.subject_dn().to_string(), R"(C="CH",CN="tester",O="another")");
 
          Botan::Certificate_Store_In_Memory trusted;
@@ -1771,10 +1772,10 @@ class Name_Constraint_DN_Prefix_Test final : public Test {
          const Botan::X509_Certificate subject_cert_not_accepted(
             Test::data_file("x509/name_constraint_prefix/nc_prefix_strongswan_subject_not_accepted.pem"));
 
-         result.test_eq("CA DN", ca_not_accepted.subject_dn().to_string(), R"(C="CH",O="strongSwan",CN="CA")");
-         result.test_eq(
+         result.test_str_eq("CA DN", ca_not_accepted.subject_dn().to_string(), R"(C="CH",O="strongSwan",CN="CA")");
+         result.test_str_eq(
             "IM DN", intermediate_not_accepted.subject_dn().to_string(), R"(C="CH",O="strongSwan",CN="IM")");
-         result.test_eq(
+         result.test_str_eq(
             "Subject DN", subject_cert_not_accepted.subject_dn().to_string(), R"(C="CH",O="another",CN="tester")");
 
          Botan::Certificate_Store_In_Memory trusted;

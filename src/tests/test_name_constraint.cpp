@@ -59,7 +59,7 @@ class Name_Constraint_Tests final : public Test {
                path_result = Botan::Path_Validation_Result(Botan::Certificate_Status_Code::CANNOT_ESTABLISH_TRUST);
             }
 
-            result.test_eq("validation result", path_result.result_string(), std::get<3>(t));
+            result.test_str_eq("validation result", path_result.result_string(), std::get<3>(t));
             results.emplace_back(result);
          }
 

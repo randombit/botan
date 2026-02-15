@@ -91,8 +91,8 @@ class XOF_Tests final : public Text_Based_Test {
             }
 
             const std::string provider(xof->provider());
-            result.test_is_nonempty("provider", provider);
-            result.test_eq(provider, xof->name(), algo);
+            result.test_str_not_empty("provider", provider);
+            result.test_str_eq(provider, xof->name(), algo);
 
             // Some XOFs don't accept input at all. We assume that this stays the same
             // after calling `XOF::clear()`.

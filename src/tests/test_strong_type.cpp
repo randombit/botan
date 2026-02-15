@@ -73,8 +73,8 @@ std::vector<Test::Result> test_strong_type() {
 
       CHECK("function overloading",
             [](auto& result) {
-               result.test_eq("overloading size", foo(Test_Size(42)), "some size");
-               result.test_eq("overloading size", foo(Test_Length(42)), "some length");
+               result.test_str_eq("overloading size", foo(Test_Size(42)), "some size");
+               result.test_str_eq("overloading size", foo(Test_Length(42)), "some length");
             }),
 
       CHECK("is_strong_type",
@@ -156,7 +156,7 @@ std::vector<Test::Result> test_container_strong_type() {
 
                std::stringstream stream;
                stream << name;
-               result.test_eq("strong types are streamable", stream.str(), std::string("SHA-1"));
+               result.test_str_eq("strong types are streamable", stream.str(), std::string("SHA-1"));
             }),
 
       CHECK("strong types are sortable",
@@ -432,10 +432,10 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
                auto stt_rvalue_ref = Botan::wrap_strong_type<Strong_String>(std::move(rval));
                auto stt_rvalue = Botan::wrap_strong_type<Strong_String>("rvalue creation from std::string (literal)"s);
 
-               result.test_eq("stt_copy", stt_copy.get(), "explicit creation");
-               result.test_eq("stt_implicit", stt_implicit.get(), "implicit conversion from const char*");
-               result.test_eq("stt_rvalue_ref", stt_rvalue_ref.get(), "rvalue-ref creation");
-               result.test_eq("stt_rvalue", stt_rvalue.get(), "rvalue creation from std::string (literal)");
+               result.test_str_eq("stt_copy", stt_copy.get(), "explicit creation");
+               result.test_str_eq("stt_implicit", stt_implicit.get(), "implicit conversion from const char*");
+               result.test_str_eq("stt_rvalue_ref", stt_rvalue_ref.get(), "rvalue-ref creation");
+               result.test_str_eq("stt_rvalue", stt_rvalue.get(), "rvalue creation from std::string (literal)");
 
                // unique_ptr does not support copy construction and prohibits
                // implicit conversion from a raw pointer of its wrapped type.
@@ -445,8 +445,8 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
                   Botan::wrap_strong_type<Strong_Unique>(new std::string("implicit creation from ptr"));
                auto stt_rvalue_ptr = Botan::wrap_strong_type<Strong_Unique>(std::move(rval_ptr));
 
-               result.test_eq("stt_implicit_ptr", *stt_implicit_ptr.get(), "implicit creation from ptr");
-               result.test_eq("stt_rvalue_ptr", *stt_rvalue_ptr.get(), "rvalue creation from ptr");
+               result.test_str_eq("stt_implicit_ptr", *stt_implicit_ptr.get(), "implicit creation from ptr");
+               result.test_str_eq("stt_rvalue_ptr", *stt_rvalue_ptr.get(), "rvalue creation from ptr");
             }),
 
       CHECK("generically wrapping a strong type from itself",
@@ -458,15 +458,15 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
                auto stt_move = Botan::wrap_strong_type<Strong_String>(std::move(stt_rval));
                auto stt_inplace = Botan::wrap_strong_type<Strong_String>(Strong_String("inplace"));
 
-               result.test_eq("stt_copy", stt_copy.get(), "wrapped");
-               result.test_eq("stt_move", stt_move.get(), "wrapped and moved");
-               result.test_eq("stt_inplace", stt_inplace.get(), "inplace");
+               result.test_str_eq("stt_copy", stt_copy.get(), "wrapped");
+               result.test_str_eq("stt_move", stt_move.get(), "wrapped and moved");
+               result.test_str_eq("stt_inplace", stt_inplace.get(), "inplace");
 
                Strong_Unique stt_ptr(std::make_unique<std::string>("wrapped ptr"));
 
                auto stt_ptr_move = Botan::wrap_strong_type<Strong_Unique>(std::move(stt_ptr));
 
-               result.test_eq("stt_ptr_move", *stt_ptr_move.get(), "wrapped ptr");
+               result.test_str_eq("stt_ptr_move", *stt_ptr_move.get(), "wrapped ptr");
             }),
 
       CHECK(
@@ -563,10 +563,10 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
                auto unwrapped_rvalue = Botan::unwrap_strong_type(std::move(stt_move));
                auto unwrapped_rvalue2 = Botan::unwrap_strong_type(Strong_String("wrapped rvalue"));
 
-               result.test_eq("unwrapped_stt", unwrapped_stt, "wrapped lvalue");
-               result.test_eq("unwrapped_const_stt", unwrapped_const_stt, "wrapped const lvalue");
-               result.test_eq("unwrapped_rvalue", unwrapped_rvalue, "wrapped lvalue to be moved");
-               result.test_eq("unwrapped_rvalue2", unwrapped_rvalue2, "wrapped rvalue");
+               result.test_str_eq("unwrapped_stt", unwrapped_stt, "wrapped lvalue");
+               result.test_str_eq("unwrapped_const_stt", unwrapped_const_stt, "wrapped const lvalue");
+               result.test_str_eq("unwrapped_rvalue", unwrapped_rvalue, "wrapped lvalue to be moved");
+               result.test_str_eq("unwrapped_rvalue2", unwrapped_rvalue2, "wrapped rvalue");
 
                Strong_Unique stt_ptr(std::make_unique<std::string>("wrapped ptr"));
                Strong_Unique stt_ptr_move(std::make_unique<std::string>("wrapped ptr to be moved"));
@@ -576,9 +576,9 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
                auto unwrapped_ptr_rvalue =
                   Botan::unwrap_strong_type(std::make_unique<std::string>("wrapped ptr rvalue"));
 
-               result.test_eq("unwrapped_ptr", *unwrapped_ptr, "wrapped ptr");
-               result.test_eq("unwrapped_ptr_move", *unwrapped_ptr_move, "wrapped ptr to be moved");
-               result.test_eq("unwrapped_ptr_rvalue", *unwrapped_ptr_rvalue, "wrapped ptr rvalue");
+               result.test_str_eq("unwrapped_ptr", *unwrapped_ptr, "wrapped ptr");
+               result.test_str_eq("unwrapped_ptr_move", *unwrapped_ptr_move, "wrapped ptr to be moved");
+               result.test_str_eq("unwrapped_ptr_rvalue", *unwrapped_ptr_rvalue, "wrapped ptr rvalue");
             }),
 
       CHECK("generically unwrapping an object that isn't a strong type",
@@ -592,10 +592,10 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
                auto unwrapped_rvalue = Botan::unwrap_strong_type(std::move(stt_move));
                auto unwrapped_rvalue2 = Botan::unwrap_strong_type(std::string("wrapped rvalue"));
 
-               result.test_eq("unwrapped_stt", unwrapped_stt, "wrapped lvalue");
-               result.test_eq("unwrapped_const_stt", unwrapped_const_stt, "wrapped const lvalue");
-               result.test_eq("unwrapped_rvalue", unwrapped_rvalue, "wrapped lvalue to be moved");
-               result.test_eq("unwrapped_rvalue2", unwrapped_rvalue2, "wrapped rvalue");
+               result.test_str_eq("unwrapped_stt", unwrapped_stt, "wrapped lvalue");
+               result.test_str_eq("unwrapped_const_stt", unwrapped_const_stt, "wrapped const lvalue");
+               result.test_str_eq("unwrapped_rvalue", unwrapped_rvalue, "wrapped lvalue to be moved");
+               result.test_str_eq("unwrapped_rvalue2", unwrapped_rvalue2, "wrapped rvalue");
 
                std::unique_ptr<std::string> stt_ptr(std::make_unique<std::string>("wrapped ptr"));
                std::unique_ptr<std::string> stt_ptr_move(std::make_unique<std::string>("wrapped ptr to be moved"));
@@ -605,9 +605,9 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
                auto unwrapped_ptr_rvalue =
                   Botan::unwrap_strong_type(std::make_unique<std::string>("wrapped ptr rvalue"));
 
-               result.test_eq("unwrapped_ptr", *unwrapped_ptr, "wrapped ptr");
-               result.test_eq("unwrapped_ptr_move", *unwrapped_ptr_move, "wrapped ptr to be moved");
-               result.test_eq("unwrapped_ptr_rvalue", *unwrapped_ptr_rvalue, "wrapped ptr rvalue");
+               result.test_str_eq("unwrapped_ptr", *unwrapped_ptr, "wrapped ptr");
+               result.test_str_eq("unwrapped_ptr_move", *unwrapped_ptr_move, "wrapped ptr to be moved");
+               result.test_str_eq("unwrapped_ptr_rvalue", *unwrapped_ptr_rvalue, "wrapped ptr rvalue");
             }),
    };
 }

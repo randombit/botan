@@ -104,7 +104,7 @@ class Argon2_Tests final : public Text_Based_Test {
             const std::string generated =
                Botan::argon2_generate_pwhash(password.data(), password.size(), rng, p, M, t, y, salt.size(), out_len);
 
-            result.test_eq("expected hash generated", generated, passhash);
+            result.test_str_eq("expected hash generated", generated, passhash);
             const bool accepted = Botan::argon2_check_pwhash(password.data(), password.size(), generated);
             result.test_is_true("generated hash accepted", accepted);
          } else {

@@ -299,19 +299,24 @@ bool Test::Result::test_eq(const char* producer,
    return test_failure(err.str());
 }
 
-bool Test::Result::test_is_nonempty(std::string_view what_is_it, std::string_view to_examine) {
-   if(to_examine.empty()) {
-      return test_failure(what_is_it, "was empty");
+bool Test::Result::test_str_not_empty(std::string_view what, std::string_view produced) {
+   if(produced.empty()) {
+      return test_failure(what, "was empty");
+   } else {
+      return test_success();
    }
-   return test_success();
 }
 
-bool Test::Result::test_eq(std::string_view what, std::string_view produced, std::string_view expected) {
+bool Test::Result::test_str_eq(std::string_view what, std::string_view produced, std::string_view expected) {
    return test_is_eq(what, produced, expected);
 }
 
-bool Test::Result::test_eq(std::string_view what, const char* produced, const char* expected) {
-   return test_is_eq(what, std::string(produced), std::string(expected));
+bool Test::Result::test_str_ne(std::string_view what, std::string_view str1, std::string_view str2) {
+   if(str1 != str2) {
+      return test_success(Botan::fmt("{} != {}", str1, str2));
+   } else {
+      return test_failure(Botan::fmt("{} {} unexpectedly produced matching strings {}", who(), what, str1));
+   }
 }
 
 bool Test::Result::test_u8_eq(uint8_t produced, uint8_t expected) {
@@ -408,14 +413,6 @@ bool Test::Result::test_opt_u8_eq(std::string_view what, std::optional<uint8_t> 
    } else {
       // both nullopt
       return test_success();
-   }
-}
-
-bool Test::Result::test_ne(std::string_view what, std::string_view str1, std::string_view str2) {
-   if(str1 != str2) {
-      return test_success(Botan::fmt("{} != {}", str1, str2));
-   } else {
-      return test_failure(Botan::fmt("{} {} unexpectedly produced matching strings {}", who(), what, str1));
    }
 }
 

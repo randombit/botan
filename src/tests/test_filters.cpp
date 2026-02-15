@@ -106,18 +106,18 @@ class Filter_Tests final : public Test {
          Botan::DataSource_Memory input_mem("65666768");
          pipe.process_msg(input_mem);
 
-         result.test_eq("output string", oss.str(), "efgh");
+         result.test_str_eq("output string", oss.str(), "efgh");
 
          Botan::DataSource_Memory input_mem2("41414141");
          pipe.process_msg(input_mem2);
 
-         result.test_eq("output string", oss.str(), "efghAAAA");
+         result.test_str_eq("output string", oss.str(), "efghAAAA");
 
          std::istringstream iss("4343");
          Botan::DataSource_Stream input_strm(iss);
          pipe.process_msg(input_strm);
 
-         result.test_eq("output string", oss.str(), "efghAAAACC");
+         result.test_str_eq("output string", oss.str(), "efghAAAACC");
    #endif
          return result;
       }
@@ -144,7 +144,7 @@ class Filter_Tests final : public Test {
          std::stringstream ss;
          ss << outfile_read.rdbuf();
 
-         result.test_eq("output string", ss.str(), "efgh");
+         result.test_str_eq("output string", ss.str(), "efgh");
 
          // ensure files are closed
          outfile.close();
@@ -167,7 +167,7 @@ class Filter_Tests final : public Test {
 
          std::ostringstream oss;
          oss << pipe;
-         result.test_eq("output string", oss.str(), "41424344");
+         result.test_str_eq("output string", oss.str(), "41424344");
 
          std::istringstream iss("AAAA");
          pipe.start_msg();
@@ -176,7 +176,7 @@ class Filter_Tests final : public Test {
 
          pipe.set_default_msg(1);
          oss << pipe;
-         result.test_eq("output string2", oss.str(), "4142434441414141");
+         result.test_str_eq("output string2", oss.str(), "4142434441414141");
    #endif
 
          return result;
@@ -272,9 +272,9 @@ class Filter_Tests final : public Test {
          pipe.process_msg("Bye");
          pipe.process_msg("Hi");
 
-         result.test_eq("MAC 1", pipe.read_all_as_string(0), "e7NoVbtudgU0QiCZ");
-         result.test_eq("MAC 2", pipe.read_all_as_string(1), "LhPnfEG+0rk+Ej6y");
-         result.test_eq("MAC 3", pipe.read_all_as_string(2), "e7NoVbtudgU0QiCZ");
+         result.test_str_eq("MAC 1", pipe.read_all_as_string(0), "e7NoVbtudgU0QiCZ");
+         result.test_str_eq("MAC 2", pipe.read_all_as_string(1), "LhPnfEG+0rk+Ej6y");
+         result.test_str_eq("MAC 3", pipe.read_all_as_string(2), "e7NoVbtudgU0QiCZ");
    #endif
          return result;
       }
@@ -382,11 +382,11 @@ class Filter_Tests final : public Test {
          result.test_sz_eq("dec pipe msg count", dec_pipe.message_count(), sizeof(msg_bits) - 1);
 
          for(size_t i = 0; i != enc_pipe.message_count(); ++i) {
-            result.test_eq("encrypt", enc_pipe.read_all_as_string(i), cfb_expected[i]);
+            result.test_str_eq("encrypt", enc_pipe.read_all_as_string(i), cfb_expected[i]);
          }
 
          for(size_t i = 0; i != dec_pipe.message_count(); ++i) {
-            result.test_eq("decrypt", dec_pipe.read_all_as_string(i), Botan::hex_encode(msg_bits, i + 1));
+            result.test_str_eq("decrypt", dec_pipe.read_all_as_string(i), Botan::hex_encode(msg_bits, i + 1));
          }
    #endif
 
@@ -400,7 +400,7 @@ class Filter_Tests final : public Test {
          Botan::Cipher_Mode_Filter* cipher = new Botan::Cipher_Mode_Filter(
             Botan::Cipher_Mode::create("AES-128/CBC/PKCS7", Botan::Cipher_Dir::Encryption));
 
-         result.test_eq("Cipher filter name", cipher->name(), "AES-128/CBC/PKCS7");
+         result.test_str_eq("Cipher filter name", cipher->name(), "AES-128/CBC/PKCS7");
 
          result.test_is_true("Cipher filter nonce size", cipher->valid_iv_length(16));
          result.test_is_false("Cipher filter nonce size", cipher->valid_iv_length(17));
@@ -464,7 +464,7 @@ class Filter_Tests final : public Test {
 
          auto comp_f = std::make_unique<Botan::Compression_Filter>("zlib", 9);
 
-         result.test_eq("Compressor filter name", comp_f->name(), "Zlib_Compression");
+         result.test_str_eq("Compressor filter name", comp_f->name(), "Zlib_Compression");
          Botan::Pipe pipe(comp_f.release());
 
          const std::string input_str = "Hello there HELLO there I said is this thing on?";
@@ -478,14 +478,14 @@ class Filter_Tests final : public Test {
          result.test_sz_lt("Compressed is shorter", compr.size(), input_str.size());
 
          auto decomp_f = std::make_unique<Botan::Decompression_Filter>("zlib");
-         result.test_eq("Decompressor name", decomp_f->name(), "Zlib_Decompression");
+         result.test_str_eq("Decompressor name", decomp_f->name(), "Zlib_Decompression");
          pipe.append(decomp_f.release());
          pipe.pop();  // remove compressor
 
          pipe.process_msg(compr);
 
          const std::string decomp = pipe.read_all_as_string(1);
-         result.test_eq("Decompressed ok", decomp, input_str);
+         result.test_str_eq("Decompressed ok", decomp, input_str);
    #endif
 
          return result;
@@ -498,7 +498,7 @@ class Filter_Tests final : public Test {
 
          auto comp_f = std::make_unique<Botan::Compression_Filter>("bzip2", 9);
 
-         result.test_eq("Compressor filter name", comp_f->name(), "Bzip2_Compression");
+         result.test_str_eq("Compressor filter name", comp_f->name(), "Bzip2_Compression");
          Botan::Pipe pipe(comp_f.release());
 
          const std::string input_str = "foo\n";
@@ -511,14 +511,14 @@ class Filter_Tests final : public Test {
          // Here the output is actually longer than the input as input is so short
 
          auto decomp_f = std::make_unique<Botan::Decompression_Filter>("bzip2");
-         result.test_eq("Decompressor name", decomp_f->name(), "Bzip2_Decompression");
+         result.test_str_eq("Decompressor name", decomp_f->name(), "Bzip2_Decompression");
          pipe.append(decomp_f.release());
          pipe.pop();  // remove compressor
 
          pipe.process_msg(compr);
 
          const std::string decomp = pipe.read_all_as_string(1);
-         result.test_eq("Decompressed ok", decomp, input_str);
+         result.test_str_eq("Decompressed ok", decomp, input_str);
    #endif
 
          return result;
@@ -539,12 +539,12 @@ class Filter_Tests final : public Test {
 
          const std::string output = pipe.read_all_as_string(0);
          result.test_sz_eq("Message size", pipe.remaining(0), 0);
-         result.test_eq("Output round tripped", output, "QUJDRFg=");
+         result.test_str_eq("Output round tripped", output, "QUJDRFg=");
 
          pipe.append(new Botan::Base64_Decoder);
          pipe.process_msg("FOOBAZ");
 
-         result.test_eq("base64 roundtrip", pipe.read_all_as_string(1), "FOOBAZ");
+         result.test_str_eq("base64 roundtrip", pipe.read_all_as_string(1), "FOOBAZ");
 
          pipe.pop();
          pipe.pop();
@@ -553,7 +553,7 @@ class Filter_Tests final : public Test {
          pipe.process_msg("surprise plaintext");
 
          pipe.set_default_msg(2);
-         result.test_eq("Message 2", pipe.read_all_as_string(), "surprise plaintext");
+         result.test_str_eq("Message 2", pipe.read_all_as_string(), "surprise plaintext");
 
          pipe.append(new Botan::Hex_Decoder);
 
@@ -563,7 +563,7 @@ class Filter_Tests final : public Test {
 
          pipe.append(new Botan::Hex_Encoder);
          pipe.process_msg("F331F00D");
-         result.test_eq("hex roundtrip", pipe.read_all_as_string(4), "F331F00D");
+         result.test_str_eq("hex roundtrip", pipe.read_all_as_string(4), "F331F00D");
 
          // Now tests with line wrapping enabled
 
@@ -574,28 +574,28 @@ class Filter_Tests final : public Test {
                                                /*trailing_newline=*/true));
 
          pipe.process_msg("6dab1eeb8a2eb69bad");
-         result.test_eq(
+         result.test_str_eq(
             "base64 with linebreaks and trailing newline", pipe.read_all_as_string(5), "base\n64ou\ntput\n\n");
 
          pipe.reset();
          pipe.append(new Botan::Hex_Decoder);
          pipe.append(new Botan::Base64_Encoder(true, 5, false));
          pipe.process_msg("6dab1eeb8a2eb69bad");
-         result.test_eq("base64 with linebreaks", pipe.read_all_as_string(6), "base6\n4outp\nut\n");
+         result.test_str_eq("base64 with linebreaks", pipe.read_all_as_string(6), "base6\n4outp\nut\n");
 
          pipe.reset();
          pipe.append(new Botan::Hex_Encoder(true, 13, Botan::Hex_Encoder::Uppercase));
          pipe.process_msg("hex encoding this string");
-         result.test_eq("hex uppercase with linebreaks",
-                        pipe.read_all_as_string(7),
-                        "68657820656E6\n36F64696E6720\n7468697320737\n472696E67\n");
+         result.test_str_eq("hex uppercase with linebreaks",
+                            pipe.read_all_as_string(7),
+                            "68657820656E6\n36F64696E6720\n7468697320737\n472696E67\n");
 
          pipe.reset();
          pipe.append(new Botan::Hex_Encoder(true, 16, Botan::Hex_Encoder::Lowercase));
          pipe.process_msg("hex encoding this string");
-         result.test_eq("hex lowercase with linebreaks",
-                        pipe.read_all_as_string(8),
-                        "68657820656e636f\n64696e6720746869\n7320737472696e67\n");
+         result.test_str_eq("hex lowercase with linebreaks",
+                            pipe.read_all_as_string(8),
+                            "68657820656e636f\n64696e6720746869\n7320737472696e67\n");
    #endif
 
          return result;
@@ -652,21 +652,21 @@ class Filter_Tests final : public Test {
 
          auto chain = std::make_unique<Botan::Chain>(filters, 2);
 
-         result.test_eq("Chain has a name", chain->name(), "Chain");
+         result.test_str_eq("Chain has a name", chain->name(), "Chain");
 
          auto fork = std::make_unique<Botan::Fork>(
             chain.release(), new Botan::Chain(new Botan::Hash_Filter("SHA-512-256", 19), new Botan::Hex_Encoder));
 
-         result.test_eq("Fork has a name", fork->name(), "Fork");
+         result.test_str_eq("Fork has a name", fork->name(), "Fork");
          Botan::Pipe pipe(fork.release());
 
          result.test_sz_eq("Message count", pipe.message_count(), 0);
          pipe.process_msg("OMG");
          result.test_sz_eq("Message count", pipe.message_count(), 2);
 
-         result.test_eq(
+         result.test_str_eq(
             "Hash 1", pipe.read_all_as_string(0), "C00862D1C6C1CF7C1B49388306E7B3C1BB79D8D6EC978B41035B556DBB3797DF");
-         result.test_eq("Hash 2", pipe.read_all_as_string(1), "610480FFA82F24F6926544B976FE387878E3D9");
+         result.test_str_eq("Hash 2", pipe.read_all_as_string(1), "610480FFA82F24F6926544B976FE387878E3D9");
    #endif
 
          return result;
@@ -695,7 +695,7 @@ class Filter_Tests final : public Test {
 
          const std::string dec = hex_dec.read_all_as_string();
 
-         result.test_eq("IO through Unix pipe works", dec, "hi chappy");
+         result.test_str_eq("IO through Unix pipe works", dec, "hi chappy");
    #endif
 
          return result;
@@ -712,8 +712,8 @@ class Filter_Tests final : public Test {
          result.test_sz_eq("Message count", pipe.message_count(), 2);
 
          // Test reading out of order
-         result.test_eq("Hash 2", pipe.read_all_as_string(1), "d29v");
-         result.test_eq("Hash 1", pipe.read_all_as_string(0), "776F6F");
+         result.test_str_eq("Hash 2", pipe.read_all_as_string(1), "d29v");
+         result.test_str_eq("Hash 1", pipe.read_all_as_string(0), "776F6F");
 
          pipe.reset();
 

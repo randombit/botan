@@ -29,7 +29,7 @@ Test::Result find_certificate_by_pubkey_sha1(Botan::Certificate_Store& certstore
       if(result.test_opt_not_null("found certificate", cert)) {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_sz_eq("exactly one CN", cns.size(), 1);
-         result.test_eq("CN", cns.front(), get_subject_cn());
+         result.test_str_eq("CN", cns.front(), get_subject_cn());
       }
    } catch(std::exception& e) {
       result.test_failure(e.what());
@@ -56,7 +56,7 @@ Test::Result find_certificate_by_pubkey_sha1_with_unmatching_key_id(Botan::Certi
       if(result.test_opt_not_null("found certificate", cert)) {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_sz_eq("exactly one CN", cns.size(), 1);
-         result.test_eq("CN", cns.front(), "SecureTrust CA");
+         result.test_str_eq("CN", cns.front(), "SecureTrust CA");
       }
    } catch(std::exception& e) {
       result.test_failure(e.what());
@@ -78,7 +78,7 @@ Test::Result find_cert_by_subject_dn(Botan::Certificate_Store& certstore) {
       if(result.test_opt_not_null("found certificate", cert)) {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_sz_eq("exactly one CN", cns.size(), 1);
-         result.test_eq("CN", cns.front(), get_subject_cn());
+         result.test_str_eq("CN", cns.front(), get_subject_cn());
       }
    } catch(std::exception& e) {
       result.test_failure(e.what());
@@ -100,7 +100,7 @@ Test::Result find_cert_by_utf8_subject_dn(Botan::Certificate_Store& certstore) {
          if(auto cert = certstore.find_cert(dn, {})) {
             auto cns = cert->subject_dn().get_attribute("CN");
             result.test_sz_eq("exactly one CN", cns.size(), 1);
-            result.test_eq("CN", cns.front(), cn);
+            result.test_str_eq("CN", cns.front(), cn);
 
             ++found;
          }
@@ -138,7 +138,7 @@ Test::Result find_cert_by_subject_dn_and_key_id(Botan::Certificate_Store& certst
       if(result.test_opt_not_null("found certificate", cert)) {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_sz_eq("exactly one CN", cns.size(), 1);
-         result.test_eq("CN", cns.front(), get_subject_cn());
+         result.test_str_eq("CN", cns.front(), get_subject_cn());
       }
    } catch(std::exception& e) {
       result.test_failure(e.what());
@@ -161,7 +161,7 @@ Test::Result find_certs_by_subject_dn_and_key_id(Botan::Certificate_Store& certs
          result.test_sz_eq("exactly one certificate", certs.size(), 1)) {
          auto cns = certs.front().subject_dn().get_attribute("CN");
          result.test_sz_eq("exactly one CN", cns.size(), 1);
-         result.test_eq("CN", cns.front(), get_subject_cn());
+         result.test_str_eq("CN", cns.front(), get_subject_cn());
       }
    } catch(std::exception& e) {
       result.test_failure(e.what());
@@ -191,7 +191,7 @@ Test::Result find_all_certs_by_subject_dn(Botan::Certificate_Store& certstore) {
       if(result.test_is_true("result not empty", !certs.empty())) {
          auto cns = certs.front().subject_dn().get_attribute("CN");
          result.test_sz_gte("at least one CN", cns.size(), size_t(1));
-         result.test_eq("CN", cns.front(), get_subject_cn());
+         result.test_str_eq("CN", cns.front(), get_subject_cn());
       }
    } catch(std::exception& e) {
       result.test_failure(e.what());
@@ -235,7 +235,7 @@ Test::Result find_cert_by_issuer_dn_and_serial_number(Botan::Certificate_Store& 
       if(result.test_opt_not_null("found certificate", cert)) {
          auto cns = cert->subject_dn().get_attribute("CN");
          result.test_sz_eq("exactly one CN", cns.size(), 1);
-         result.test_eq("CN", cns.front(), get_subject_cn());
+         result.test_str_eq("CN", cns.front(), get_subject_cn());
          result.test_eq("serial number", cert->serial_number(), get_serial_number());
       }
    } catch(std::exception& e) {
@@ -283,9 +283,9 @@ Test::Result certificate_matching_with_dn_normalization(Botan::Certificate_Store
 
       if(result.test_is_true("find_all_certs did find the skewed DN", !certs.empty()) &&
          result.test_is_true("find_cert did find the skewed DN", cert.has_value())) {
-         result.test_eq(
+         result.test_str_eq(
             "it is the correct cert", certs.front().subject_dn().get_first_attribute("CN"), get_subject_cn());
-         result.test_eq("it is the correct cert", cert->subject_dn().get_first_attribute("CN"), get_subject_cn());
+         result.test_str_eq("it is the correct cert", cert->subject_dn().get_first_attribute("CN"), get_subject_cn());
       }
    } catch(std::exception& e) {
       result.test_failure(e.what());

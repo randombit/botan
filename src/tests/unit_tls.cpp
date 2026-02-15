@@ -451,8 +451,8 @@ class TLS_Handshake_Test final {
 
             std::string tls_server_choose_app_protocol(const std::vector<std::string>& protos) override {
                m_results.test_sz_eq("ALPN protocol count", protos.size(), 2);
-               m_results.test_eq("ALPN protocol 1", protos[0], "test/1");
-               m_results.test_eq("ALPN protocol 2", protos[1], "test/2");
+               m_results.test_str_eq("ALPN protocol 1", protos[0], "test/1");
+               m_results.test_str_eq("ALPN protocol 2", protos[1], "test/2");
                return "test/3";
             }
 
@@ -595,7 +595,7 @@ void TLS_Handshake_Test::go() {
       }
 
       if(client->is_active() && !client_has_written) {
-         m_results.test_eq("client ALPN protocol", client->application_protocol(), "test/3");
+         m_results.test_str_eq("client ALPN protocol", client->application_protocol(), "test/3");
 
          size_t sent_so_far = 0;
          while(sent_so_far != client_msg.size()) {
@@ -611,7 +611,7 @@ void TLS_Handshake_Test::go() {
       }
 
       if(m_server->is_active() && !server_has_written) {
-         m_results.test_eq("server ALPN protocol", m_server->application_protocol(), "test/3");
+         m_results.test_str_eq("server ALPN protocol", m_server->application_protocol(), "test/3");
 
          size_t sent_so_far = 0;
          while(sent_so_far != server_msg.size()) {
@@ -680,7 +680,7 @@ void TLS_Handshake_Test::go() {
             m_results.test_sz_eq("client got CA list", acceptable_CAs.size(), 2);  // RSA + ECDSA
 
             for(const Botan::X509_DN& dn : acceptable_CAs) {
-               m_results.test_eq("Expected CA country field", dn.get_first_attribute("C"), "VT");
+               m_results.test_str_eq("Expected CA country field", dn.get_first_attribute("C"), "VT");
             }
          } else {
             m_results.test_sz_eq("no client certs", certs.size(), 0);

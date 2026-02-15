@@ -173,7 +173,7 @@ class RSA_Keygen_Bad_RNG_Test final : public Test {
             result.test_failure("Generated a key with a bad RNG");
          } catch(Botan::Internal_Error& e) {
             result.test_success("Key generation with bad RNG failed");
-            result.test_eq("Expected message", e.what(), "Internal error: RNG failure during RSA key generation");
+            result.test_str_eq("Expected message", e.what(), "Internal error: RNG failure during RSA key generation");
          }
 
          return {result};

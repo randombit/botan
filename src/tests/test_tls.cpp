@@ -492,7 +492,7 @@ class Test_TLS_Alert_Strings : public Test {
 
          const Botan::TLS::Alert unknown_alert = Botan::TLS::Alert({01, 66});
 
-         result.test_eq("Unknown alert str", unknown_alert.type_string(), "unrecognized_alert_66");
+         result.test_str_eq("Unknown alert str", unknown_alert.type_string(), "unrecognized_alert_66");
 
          return {result};
       }
@@ -606,16 +606,16 @@ class Test_TLS_Ciphersuites : public Test {
 
                if(ciphersuite->cbc_ciphersuite() == false && ciphersuite->null_ciphersuite() == false) {
                   result.test_is_true("Expected AEAD ciphersuite", ciphersuite->aead_ciphersuite());
-                  result.test_eq("Expected MAC name for AEAD ciphersuites", ciphersuite->mac_algo(), "AEAD");
+                  result.test_str_eq("Expected MAC name for AEAD ciphersuites", ciphersuite->mac_algo(), "AEAD");
                } else {
                   result.test_is_false("Did not expect AEAD ciphersuite", ciphersuite->aead_ciphersuite());
-                  result.test_eq("MAC algo and PRF algo same for CBC and NULL suites",
-                                 ciphersuite->prf_algo(),
-                                 ciphersuite->mac_algo());
+                  result.test_str_eq("MAC algo and PRF algo same for CBC and NULL suites",
+                                     ciphersuite->prf_algo(),
+                                     ciphersuite->mac_algo());
                }
 
                if(ciphersuite->null_ciphersuite()) {
-                  result.test_eq("Expected NULL ciphersuite", ciphersuite->cipher_algo(), "NULL");
+                  result.test_str_eq("Expected NULL ciphersuite", ciphersuite->cipher_algo(), "NULL");
                };
 
                // TODO more tests here
@@ -667,7 +667,7 @@ class Test_TLS_Algo_Strings : public Test {
 
          for(const Botan::TLS::Auth_Method meth : auth_methods) {
             const std::string meth_str = Botan::TLS::auth_method_to_string(meth);
-            result.test_ne("Method string is not empty", meth_str, "");
+            result.test_str_not_empty("Method string is not empty", meth_str);
             const Botan::TLS::Auth_Method meth2 = Botan::TLS::auth_method_from_string(meth_str);
             result.test_is_true("Decoded method matches", meth == meth2);
          }
@@ -686,7 +686,7 @@ class Test_TLS_Algo_Strings : public Test {
 
          for(const Botan::TLS::Kex_Algo meth : kex_algos) {
             const std::string meth_str = Botan::TLS::kex_method_to_string(meth);
-            result.test_ne("Method string is not empty", meth_str, "");
+            result.test_str_not_empty("Method string is not empty", meth_str);
             const Botan::TLS::Kex_Algo meth2 = Botan::TLS::kex_method_from_string(meth_str);
             result.test_is_true("Decoded method matches", meth == meth2);
          }

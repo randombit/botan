@@ -40,7 +40,7 @@ class PBKDF_KAT_Tests final : public Text_Based_Test {
             return result;
          }
 
-         result.test_eq("Expected name", pbkdf->name(), pbkdf_name);
+         result.test_str_eq("Expected name", pbkdf->name(), pbkdf_name);
 
          const Botan::secure_vector<uint8_t> derived =
             pbkdf->derive_key(outlen, passphrase, salt.data(), salt.size(), iterations).bits_of();

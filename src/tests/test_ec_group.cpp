@@ -192,7 +192,7 @@ class EC_Group_Tests : public Test {
 
             const Botan::OID from_order = Botan::EC_Group::EC_group_identity_from_order(group.get_order());
 
-            result.test_eq(
+            result.test_str_eq(
                "EC_group_identity_from_order works", from_order.to_string(), group.get_curve_oid().to_string());
 
             result.test_is_true("Same group is same", group == Botan::EC_Group::from_name(group_name));

@@ -828,7 +828,7 @@ class Processor_RNG_Tests final : public Test {
          if(Botan::Processor_RNG::available()) {
             Botan::Processor_RNG rng;
 
-            result.test_ne("Has a name", rng.name(), "");
+            result.test_str_not_empty("Has a name", rng.name());
             result.test_is_true("CPU RNG always seeded", rng.is_seeded());
             rng.clear();  // clear is a noop for rdrand
             result.test_is_true("CPU RNG always seeded", rng.is_seeded());

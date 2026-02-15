@@ -98,8 +98,8 @@ class Test_Tests final : public Test {
 
          {
             Test::Result test_result(testcase_name);
-            test_result.test_is_nonempty("empty", "");
-            verify_failure("test_is_nonempty", result, test_result);
+            test_result.test_str_not_empty("empty", "");
+            verify_failure("test_str_not_empty", result, test_result);
          }
 
          {
@@ -122,7 +122,7 @@ class Test_Tests final : public Test {
 
          {
             Test::Result test_result(testcase_name);
-            test_result.test_ne("string ne", "foo", "foo");
+            test_result.test_str_ne("string ne", "foo", "foo");
             verify_failure("test_ne", result, test_result);
          }
 

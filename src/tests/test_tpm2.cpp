@@ -186,8 +186,8 @@ std::vector<Test::Result> test_tpm2_properties() {
    return {
       CHECK("Vendor and Manufacturer",
             [&](Test::Result& result) {
-               result.test_eq("Vendor", ctx->vendor(), "SW   TPM");
-               result.test_eq("Manufacturer", ctx->manufacturer(), "IBM");
+               result.test_str_eq("Vendor", ctx->vendor(), "SW   TPM");
+               result.test_str_eq("Manufacturer", ctx->manufacturer(), "IBM");
             }),
 
       CHECK("Max random bytes per request",
@@ -264,7 +264,7 @@ std::vector<Test::Result> test_tpm2_context() {
          CHECK("Fetch Storage Root Key RSA", [&](Test::Result& result) {
             auto srk = ctx->storage_root_key({}, {});
             result.require("SRK is not null", srk != nullptr);
-            result.test_eq("Algo", srk->algo_name(), "RSA");
+            result.test_str_eq("Algo", srk->algo_name(), "RSA");
             result.test_sz_eq("Key size", srk->key_length(), 2048);
             result.test_is_true("Has persistent handle", srk->handles().has_persistent_handle());
          }),
@@ -447,7 +447,7 @@ std::vector<Test::Result> test_tpm2_sessions() {
 
             auto ecc_key = Botan::TPM2::EC_PrivateKey::load_persistent(ctx, persistent_key_id, {}, {});
             result.require("EK is not null", ecc_key != nullptr);
-            result.test_eq("Algo", ecc_key->algo_name(), "ECDSA");
+            result.test_str_eq("Algo", ecc_key->algo_name(), "ECDSA");
             result.test_is_true("Has persistent handle", ecc_key->handles().has_persistent_handle());
 
             ok(result, "default", Session::authenticated_session(ctx, *ecc_key));
@@ -474,7 +474,7 @@ std::vector<Test::Result> test_tpm2_rng() {
             [&](Test::Result& result) {
                result.test_is_true("Accepts input", rng.accepts_input());
                result.test_is_true("Is seeded", rng.is_seeded());
-               result.test_eq("Right name", rng.name(), "TPM2_RNG");
+               result.test_str_eq("Right name", rng.name(), "TPM2_RNG");
 
                result.test_no_throw("Clear", [&] { rng.clear(); });
             }),
@@ -532,7 +532,7 @@ auto load_persistent(Test::Result& result,
       }
    }();
 
-   result.test_eq("Algo", key->algo_name(), "RSA" /* TODO ECC support*/);
+   result.test_str_eq("Algo", key->algo_name(), "RSA" /* TODO ECC support*/);
    result.test_is_eq("Handle", key->handles().persistent_handle(), persistent_key_id);
    return key;
 }
@@ -565,7 +565,7 @@ std::vector<Test::Result> test_tpm2_rsa() {
                for(size_t i = 0; i < 20; ++i) {
                   auto key =
                      load_persistent<Botan::TPM2::RSA_PrivateKey>(result, ctx, persistent_key_id, password, session);
-                  result.test_eq(Botan::fmt("Key loaded successfully ({})", i), key->algo_name(), "RSA");
+                  result.test_str_eq(Botan::fmt("Key loaded successfully ({})", i), key->algo_name(), "RSA");
                }
             }),
 
@@ -808,7 +808,7 @@ std::vector<Test::Result> test_tpm2_rsa() {
                auto sk_loaded =
                   Botan::TPM2::PrivateKey::load_transient(ctx, secret, *srk, pk_blob, sk_blob, authed_session);
                result.require("key was loaded", sk_loaded != nullptr);
-               result.test_eq("loaded key is RSA", sk_loaded->algo_name(), "RSA");
+               result.test_str_eq("loaded key is RSA", sk_loaded->algo_name(), "RSA");
 
                const auto sk_blob_loaded = sk_loaded->raw_private_key_bits();
                const auto pk_blob_loaded = sk_loaded->raw_public_key_bits();
@@ -919,7 +919,7 @@ auto load_persistent_ecc(Test::Result& result,
       }
    }();
 
-   result.test_eq("Algo", key->algo_name(), "ECDSA");
+   result.test_str_eq("Algo", key->algo_name(), "ECDSA");
    result.test_is_eq("Handle", key->handles().persistent_handle(), persistent_key_id);
    return key;
 }
@@ -947,7 +947,7 @@ std::vector<Test::Result> test_tpm2_ecc() {
                   for(size_t i = 0; i < 20; ++i) {
                      auto key = load_persistent_ecc<Botan::TPM2::EC_PrivateKey>(
                         result, ctx, persistent_key_id, password, session);
-                     result.test_eq(Botan::fmt("Key loaded successfully ({})", i), key->algo_name(), "ECDSA");
+                     result.test_str_eq(Botan::fmt("Key loaded successfully ({})", i), key->algo_name(), "ECDSA");
                   }
                }),
          CHECK("Sign a message ECDSA",
@@ -1141,7 +1141,7 @@ std::vector<Test::Result> test_tpm2_ecc() {
                   auto sk_loaded =
                      Botan::TPM2::PrivateKey::load_transient(ctx, secret, *srk, pk_blob, sk_blob, authed_session);
                   result.require("key was loaded", sk_loaded != nullptr);
-                  result.test_eq("loaded key is ECDSA", sk_loaded->algo_name(), "ECDSA");
+                  result.test_str_eq("loaded key is ECDSA", sk_loaded->algo_name(), "ECDSA");
 
                   const auto sk_blob_loaded = sk_loaded->raw_private_key_bits();
                   const auto pk_blob_loaded = sk_loaded->raw_public_key_bits();
@@ -1261,7 +1261,7 @@ std::vector<Test::Result> test_tpm2_hash() {
          return;
       }
 
-      result.test_eq("Name", tpm_hash->name(), soft_hash->name());
+      result.test_str_eq("Name", tpm_hash->name(), soft_hash->name());
       result.test_sz_eq("Output length", tpm_hash->output_length(), soft_hash->output_length());
 
       // multiple update calls
@@ -1294,7 +1294,7 @@ std::vector<Test::Result> test_tpm2_hash() {
 
       // new_object
       auto new_tpm_hash = tpm_hash->new_object();
-      result.test_eq("Name (new_object)", new_tpm_hash->name(), tpm_hash->name());
+      result.test_str_eq("Name (new_object)", new_tpm_hash->name(), tpm_hash->name());
       result.test_sz_eq("Output length (new_object)", new_tpm_hash->output_length(), tpm_hash->output_length());
       result.test_eq("digest (new object)",
                      new_tpm_hash->process("Salut tout le monde!"),

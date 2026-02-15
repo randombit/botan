@@ -512,7 +512,7 @@ Test::Result test_get_set_attribute_values() {
    // get attribute
    secure_vector<uint8_t> retrieved_label = data_obj.get_attribute_value(AttributeType::Label);
    std::string retrieved_label_string(retrieved_label.begin(), retrieved_label.end());
-   result.test_eq("label was set correctly", retrieved_label_string, label);
+   result.test_str_eq("label was set correctly", retrieved_label_string, label);
 
    // set attribute
    std::string new_label = "Botan test modified data object label";
@@ -522,7 +522,7 @@ Test::Result test_get_set_attribute_values() {
    // get and check attribute
    retrieved_label = data_obj.get_attribute_value(AttributeType::Label);
    retrieved_label_string = std::string(retrieved_label.begin(), retrieved_label.end());
-   result.test_eq("label was modified correctly", retrieved_label_string, new_label);
+   result.test_str_eq("label was modified correctly", retrieved_label_string, new_label);
 
    data_obj.destroy();
    return result;

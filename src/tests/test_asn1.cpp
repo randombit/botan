@@ -94,7 +94,7 @@ Test::Result test_asn1_utf8_ascii_parsing() {
       Botan::ASN1_String str;
       str.decode_from(dec);
 
-      result.test_eq("value()", str.value(), moscow_plain);
+      result.test_str_eq("value()", str.value(), moscow_plain);
    } catch(const Botan::Decoding_Error& ex) {
       result.test_failure(ex.what());
    }
@@ -117,7 +117,7 @@ Test::Result test_asn1_utf8_parsing() {
       Botan::ASN1_String str;
       str.decode_from(dec);
 
-      result.test_eq("value()", str.value(), moscow_plain);
+      result.test_str_eq("value()", str.value(), moscow_plain);
    } catch(const Botan::Decoding_Error& ex) {
       result.test_failure(ex.what());
    }
@@ -141,7 +141,7 @@ Test::Result test_asn1_ucs2_parsing() {
       Botan::ASN1_String str;
       str.decode_from(dec);
 
-      result.test_eq("value()", str.value(), moscow_plain);
+      result.test_str_eq("value()", str.value(), moscow_plain);
    } catch(const Botan::Decoding_Error& ex) {
       result.test_failure(ex.what());
    }
@@ -165,7 +165,7 @@ Test::Result test_asn1_ucs4_parsing() {
       Botan::ASN1_String str;
       str.decode_from(dec);
 
-      result.test_eq("value()", str.value(), moscow_plain);
+      result.test_str_eq("value()", str.value(), moscow_plain);
    } catch(const Botan::Decoding_Error& ex) {
       result.test_failure(ex.what());
    }
@@ -333,7 +333,7 @@ class ASN1_Printer_Tests final : public Test {
 
             try {
                const std::string output = printer.print(input_data);
-               result.test_eq("Test " + i_str, output, expected_output);
+               result.test_str_eq("Test " + i_str, output, expected_output);
             } catch(Botan::Exception& e) {
                result.test_failure(Botan::fmt("Printing test {} failed with an exception: '{}'", i, e.what()));
             }

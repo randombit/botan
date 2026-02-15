@@ -40,7 +40,7 @@ class Cryptobox_KAT final : public Text_Based_Test {
 
          const std::string ciphertext = Botan::CryptoBox::encrypt(input.data(), input.size(), password, salt_rng);
 
-         result.test_eq("encryption is expected value", ciphertext, expected_pem);
+         result.test_str_eq("encryption is expected value", ciphertext, expected_pem);
 
          result.test_eq("decryption works", Botan::CryptoBox::decrypt_bin(ciphertext, password), input);
 

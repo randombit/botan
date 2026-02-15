@@ -102,14 +102,14 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
                   const std::string extensions = vars.get_req_str("AdditionalData");
                   const Botan::TLS::Protocol_Version pv(protocol[0], protocol[1]);
                   const Botan::TLS::Client_Hello_12 message(buffer);
-                  result.test_eq("Protocol version", message.legacy_version().to_string(), pv.to_string());
+                  result.test_str_eq("Protocol version", message.legacy_version().to_string(), pv.to_string());
                   std::vector<uint8_t> buf;
                   for(const Botan::TLS::Extension_Code& type : message.extension_types()) {
                      const uint16_t u16type = static_cast<uint16_t>(type);
                      buf.push_back(Botan::get_byte<0>(u16type));
                      buf.push_back(Botan::get_byte<1>(u16type));
                   }
-                  result.test_eq("Hello extensions", Botan::hex_encode(buf), extensions);
+                  result.test_str_eq("Hello extensions", Botan::hex_encode(buf), extensions);
                } else if(algo == "hello_verify") {
                   const Botan::TLS::Hello_Verify_Request message(buffer);
                } else if(algo == "hello_request") {
@@ -122,7 +122,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
                   const Botan::TLS::Ciphersuite cs =
                      Botan::TLS::Ciphersuite::by_id(Botan::make_uint16(ciphersuite[0], ciphersuite[1])).value();
                   const Botan::TLS::Server_Hello_12 message(buffer);
-                  result.test_eq("Protocol version", message.legacy_version().to_string(), pv.to_string());
+                  result.test_str_eq("Protocol version", message.legacy_version().to_string(), pv.to_string());
                   result.test_is_true("Ciphersuite", (message.ciphersuite() == cs.ciphersuite_code()));
                   std::vector<uint8_t> buf;
                   for(const Botan::TLS::Extension_Code& type : message.extension_types()) {
@@ -130,7 +130,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
                      buf.push_back(Botan::get_byte<0>(u16type));
                      buf.push_back(Botan::get_byte<1>(u16type));
                   }
-                  result.test_eq("Hello extensions", Botan::hex_encode(buf), extensions);
+                  result.test_str_eq("Hello extensions", Botan::hex_encode(buf), extensions);
                } else if(algo == "alert") {
                   const Botan::secure_vector<uint8_t> sb(buffer.begin(), buffer.end());
                   const Botan::TLS::Alert message(sb);
@@ -147,7 +147,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
 
                   // This is not required by OCSP protocol, we are just using it as a test here
                   if(result.test_sz_eq("OCSP response has signer name", CNs.size(), 1)) {
-                     result.test_eq("Expected name", CNs[0], expected_name);
+                     result.test_str_eq("Expected name", CNs[0], expected_name);
                   }
                } else {
                   throw Test_Error("Unknown message type " + algo + " in TLS parsing tests");
@@ -277,7 +277,7 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
                                             Botan::TLS::Protocol_Version(expected_version[0], expected_version[1])));
                   }
 
-                  result.test_eq("supported_version test 1", Botan::hex_encode(serialized_buffer), expected_buffer);
+                  result.test_str_eq("supported_version test 1", Botan::hex_encode(serialized_buffer), expected_buffer);
                } else if(extension == "supported_groups") {
                   Botan::TLS::TLS_Data_Reader tls_data_reader("ClientHello", buffer);
                   const Botan::TLS::Supported_Groups supp_groups_ext(tls_data_reader,
@@ -343,9 +343,9 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
                   const auto serialized_buffer = cookie.serialize(Botan::TLS::Connection_Side::Server);
                   const auto expected_cookie = vars.get_req_bin("Expected_Content");
 
-                  result.test_eq("Cookie extension test",
-                                 Botan::hex_encode(expected_cookie),
-                                 Botan::hex_encode(cookie.get_cookie()));
+                  result.test_str_eq("Cookie extension test",
+                                     Botan::hex_encode(expected_cookie),
+                                     Botan::hex_encode(cookie.get_cookie()));
                } else if(extension == "key_share_HRR") {
                   Botan::TLS::TLS_Data_Reader tls_data_reader("HelloRetryRequest", buffer);
                   const Botan::TLS::Key_Share key_share(tls_data_reader,
@@ -355,7 +355,7 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
                   const auto serialized_buffer = key_share.serialize(Botan::TLS::Connection_Side::Client);
                   const auto expected_key_share = vars.get_req_bin("Expected_Content");
 
-                  result.test_eq(
+                  result.test_str_eq(
                      "key_share_HRR test", Botan::hex_encode(serialized_buffer), Botan::hex_encode(expected_key_share));
                } else if(extension == "key_share_SH") {
                   Botan::TLS::TLS_Data_Reader tls_data_reader("ServerHello", buffer);
@@ -365,7 +365,7 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
                   const auto serialized_buffer = key_share.serialize(Botan::TLS::Connection_Side::Client);
                   const auto expected_key_share = vars.get_req_bin("Expected_Content");
 
-                  result.test_eq(
+                  result.test_str_eq(
                      "key_share_SH test", Botan::hex_encode(serialized_buffer), Botan::hex_encode(expected_key_share));
                } else if(extension == "key_share_CH") {
                   Botan::TLS::TLS_Data_Reader tls_data_reader("ClientHello", buffer);
@@ -375,7 +375,7 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
                   const auto serialized_buffer = key_share.serialize(Botan::TLS::Connection_Side::Server);
                   const auto expected_key_share = vars.get_req_bin("Expected_Content");
 
-                  result.test_eq(
+                  result.test_str_eq(
                      "key_share_CH test", Botan::hex_encode(serialized_buffer), Botan::hex_encode(expected_key_share));
                } else {
                   throw Test_Error("Unknown extension type " + extension + " in TLS parsing tests");
@@ -434,7 +434,7 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
                         exts_buffer.push_back(Botan::get_byte<0>(u16type));
                         exts_buffer.push_back(Botan::get_byte<1>(u16type));
                      }
-                     result.test_eq("Hello extensions", Botan::hex_encode(exts_buffer), extensions);
+                     result.test_str_eq("Hello extensions", Botan::hex_encode(exts_buffer), extensions);
 
                      std::vector<uint8_t> ciphersuites_buffer;
                      for(const auto& cs : ch.ciphersuites()) {
@@ -447,7 +447,7 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
                   },
                   Botan::TLS::Client_Hello_13::parse(buffer));
             } catch(const std::exception& ex) {
-               result.test_eq("correct error produced", ex.what(), exception);
+               result.test_str_eq("correct error produced", ex.what(), exception);
                result.test_is_true("negative test", !is_positive_test);
             }
          }
@@ -478,11 +478,11 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
                         buf.push_back(Botan::get_byte<0>(u16type));
                         buf.push_back(Botan::get_byte<1>(u16type));
                      }
-                     result.test_eq("Hello extensions", Botan::hex_encode(buf), extensions);
+                     result.test_str_eq("Hello extensions", Botan::hex_encode(buf), extensions);
                   },
                   Botan::TLS::Server_Hello_13::parse(buffer));
             } catch(const std::exception& ex) {
-               result.test_eq("correct error produced", ex.what(), exception);
+               result.test_str_eq("correct error produced", ex.what(), exception);
                result.test_is_true("negative test", !is_positive_test);
             }
          }
