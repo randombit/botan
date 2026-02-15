@@ -8,6 +8,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
+   #include "test_arb_eq.h"
    #include <botan/assert.h>
    #include <botan/data_src.h>
    #include <botan/exceptn.h>
@@ -843,7 +844,7 @@ class Non_Self_Signed_Trust_Anchors_Test final : public Test {
             result.test_str_eq("build_all_certificate_paths result",
                                to_string(build_all_res),
                                to_string(Botan::Certificate_Status_Code::OK));
-            result.test_is_eq("build_all_certificate_paths paths", cert_paths, expected_paths);
+            test_arb_eq(result, "build_all_certificate_paths paths", cert_paths, expected_paths);
 
             Cert_Path cert_path;
             const auto build_path_res =
@@ -853,10 +854,10 @@ class Non_Self_Signed_Trust_Anchors_Test final : public Test {
                                to_string(Botan::Certificate_Status_Code::OK));
 
             if(std::ranges::find(cert_paths, path_to(4)) != cert_paths.end()) {
-               result.test_is_eq("build_certificate_path (with self-signed anchor)", cert_path, path_to(4));
+               test_arb_eq(result, "build_certificate_path (with self-signed anchor)", cert_path, path_to(4));
             } else {
-               result.test_is_eq(
-                  "build_certificate_path (without self-signed anchor)", cert_path, expected_paths.at(0));
+               test_arb_eq(
+                  result, "build_certificate_path (without self-signed anchor)", cert_path, expected_paths.at(0));
             }
             results.push_back(result);
          }

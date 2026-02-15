@@ -16,11 +16,9 @@ Each include is parsed for every test file which can get quite expensive
 
 #include <botan/types.h>
 #include <functional>
-#include <iosfwd>
 #include <memory>
 #include <optional>
 #include <span>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <variant>
@@ -170,31 +168,6 @@ class Test_Options {
       bool m_no_stdout = false;
 };
 
-namespace detail {
-
-template <typename, typename = void>
-constexpr bool has_std_to_string = false;
-template <typename T>
-constexpr bool has_std_to_string<T, std::void_t<decltype(std::to_string(std::declval<T>()))>> = true;
-
-template <typename, typename = void>
-constexpr bool has_ostream_operator = false;
-template <typename T>
-constexpr bool
-   has_ostream_operator<T, std::void_t<decltype(operator<<(std::declval<std::ostringstream&>(), std::declval<T>()))>> =
-      true;
-
-template <typename T>
-struct is_optional : std::false_type {};
-
-template <typename T>
-struct is_optional<std::optional<T>> : std::true_type {};
-
-template <typename T>
-constexpr bool is_optional_v = is_optional<T>::value;
-
-}  // namespace detail
-
 /**
  * A code location consisting of the source file path and a line
  */
@@ -296,31 +269,6 @@ class Test {
 
             /* Generic arbitrary equality check */
 
-            template <typename T>
-            bool test_is_eq(const T& produced, const T& expected) {
-               return test_is_eq("comparison", produced, expected);
-            }
-
-            template <typename T>
-            bool test_is_eq(std::string_view what, const T& produced, const T& expected) {
-               static_assert(!std::convertible_to<T, std::span<const uint8_t>>, "Use test_bin_eq");
-               static_assert(!std::convertible_to<T, std::string_view>, "Use test_str_eq");
-               static_assert(!std::is_integral_v<T>, "Use test_{sz,u8,u16,u32,u64}_eq");
-               static_assert(!std::is_enum_v<T>, "Use test_enum_eq");
-
-               std::ostringstream out;
-               out << m_who << " " << what;
-
-               if(produced == expected) {
-                  out << " produced expected result";
-                  return test_success(out.str());
-               } else {
-                  out << " produced unexpected result '" << to_string(produced) << "' expected '" << to_string(expected)
-                      << "'";
-                  return test_failure(out.str());
-               }
-            }
-
             template <typename E>
                requires std::is_enum_v<E>
             bool test_enum_eq(std::string_view what, const E& produced, const E& expected) {
@@ -388,6 +336,15 @@ class Test {
                   return test_failure(what, "was nullopt");
                } else {
                   return test_success("not nullopt");
+               }
+            }
+
+            template <typename T>
+            bool test_opt_is_null(std::string_view what, const std::optional<T>& val) {
+               if(val == std::nullopt) {
+                  return test_success("was nullopt");
+               } else {
+                  return test_failure(what, "not nullopt");
                }
             }
 
@@ -491,24 +448,6 @@ class Test {
             void set_code_location(CodeLocation where) { m_where = where; }
 
             const std::optional<CodeLocation>& code_location() const { return m_where; }
-
-         private:
-            template <typename T>
-            std::string to_string(const T& v) {
-               if constexpr(detail::is_optional_v<T>) {
-                  return (v.has_value()) ? to_string(v.value()) : std::string("std::nullopt");
-               } else if constexpr(detail::has_ostream_operator<T>) {
-                  std::ostringstream oss;
-                  oss << v;
-                  return oss.str();
-               } else if constexpr(detail::has_std_to_string<T>) {
-                  //static_assert(false, "no std::to_string for you");
-                  return std::to_string(v);
-               } else {
-                  //static_assert(false, "unknown type");
-                  return "<?>";
-               }
-            }
 
          private:
             std::string m_who;
