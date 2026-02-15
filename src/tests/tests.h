@@ -1,5 +1,5 @@
 /*
-* (C) 2014,2015 Jack Lloyd
+* (C) 2014,2015,2026 Jack Lloyd
 * (C) 2015 Simon Warta (Kullo GmbH)
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -32,10 +32,6 @@ class RandomNumberGenerator;
 
 #if defined(BOTAN_HAS_BIGINT)
 class BigInt;
-#endif
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-class EC_Point;
 #endif
 
 }  // namespace Botan
@@ -306,6 +302,7 @@ class Test {
             }
 
             template <typename T>
+               requires(!std::is_enum_v<T> && !std::is_integral_v<T> && !std::convertible_to<T, std::string>)
             bool test_is_eq(std::string_view what, const T& produced, const T& expected) {
                std::ostringstream out;
                out << m_who << " " << what;
@@ -318,6 +315,14 @@ class Test {
                       << "'";
                   return test_failure(out.str());
                }
+            }
+
+            template <typename E>
+               requires std::is_enum_v<E>
+            bool test_enum_eq(std::string_view what, const E& produced, const E& expected) {
+               auto produced_v = static_cast<std::underlying_type_t<E>>(produced);
+               auto expected_v = static_cast<std::underlying_type_t<E>>(expected);
+               return test_u64_eq(what, produced_v, expected_v);
             }
 
             template <typename T>
@@ -352,22 +357,23 @@ class Test {
             bool test_sz_gte(std::string_view what, size_t produced, size_t expected);
 
             /* Type-hinted unsigned integer equality predicates */
-            bool test_u8_eq(uint8_t produced, uint8_t expected);
             bool test_u8_eq(std::string_view what, uint8_t produced, uint8_t expected);
-
-            bool test_u16_eq(uint16_t produced, uint16_t expected);
             bool test_u16_eq(std::string_view what, uint16_t produced, uint16_t expected);
-
-            bool test_u32_eq(uint32_t produced, uint32_t expected);
             bool test_u32_eq(std::string_view what, uint32_t produced, uint32_t expected);
-
-            bool test_u64_eq(uint64_t produced, uint64_t expected);
             bool test_u64_eq(std::string_view what, uint64_t produced, uint64_t expected);
+            bool test_i16_eq(std::string_view what, int16_t produced, int16_t expected);
+            bool test_i32_eq(std::string_view what, int32_t produced, int32_t expected);
+
+            /* Prefer the versions that take a descriptor string above */
+            bool test_u8_eq(uint8_t produced, uint8_t expected);
+            bool test_u16_eq(uint16_t produced, uint16_t expected);
+            bool test_u32_eq(uint32_t produced, uint32_t expected);
+            bool test_u64_eq(uint64_t produced, uint64_t expected);
 
             /* Test predicates on integer return codes */
             bool test_rc_ok(std::string_view func, int rc);
             bool test_rc_fail(std::string_view func, std::string_view why, int rc);
-            bool test_rc(std::string_view func, int expected, int rc);
+            bool test_rc(std::string_view func, int rc, int expected);
             bool test_rc_init(std::string_view func, int rc);
 
             /* Test predicates on optional values */
@@ -384,12 +390,9 @@ class Test {
             bool test_opt_u8_eq(std::string_view what, std::optional<uint8_t> a, std::optional<uint8_t> b);
 
 #if defined(BOTAN_HAS_BIGINT)
-            bool test_eq(std::string_view what, const BigInt& produced, const BigInt& expected);
-            bool test_ne(std::string_view what, const BigInt& produced, const BigInt& expected);
-#endif
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-            bool test_eq(std::string_view what, const Botan::EC_Point& a, const Botan::EC_Point& b);
+            /* Test predicates for BigInt */
+            bool test_bn_eq(std::string_view what, const BigInt& produced, const BigInt& expected);
+            bool test_bn_ne(std::string_view what, const BigInt& produced, const BigInt& expected);
 #endif
 
             bool test_eq(const char* producer,

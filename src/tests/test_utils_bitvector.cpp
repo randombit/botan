@@ -1202,14 +1202,12 @@ std::vector<Test::Result> test_bitvector_iterators(Botan::RandomNumberGenerator&
       CHECK("Iterators: std::distance and std::advance",
             [](auto& result) {
                Botan::bitvector bv(6);
-               using signed_size_t = std::make_signed_t<size_t>;
-
-               result.test_is_eq("distance", std::distance(bv.begin(), bv.end()), signed_size_t(6));
-               result.test_is_eq("const distance", std::distance(bv.cbegin(), bv.cend()), signed_size_t(6));
+               result.test_sz_eq("distance", static_cast<size_t>(std::distance(bv.begin(), bv.end())), 6);
+               result.test_sz_eq("const distance", static_cast<size_t>(std::distance(bv.cbegin(), bv.cend())), 6);
 
                auto b = bv.begin();
                std::advance(b, 3);
-               result.test_is_eq("half distance", std::distance(bv.begin(), b), signed_size_t(3));
+               result.test_sz_eq("half distance", static_cast<size_t>(std::distance(bv.begin(), b)), 3);
             }),
 
       CHECK("Iterators: large bitvector",
@@ -1306,7 +1304,7 @@ std::vector<Test::Result> test_bitvector_strongtype_adapter(Botan::RandomNumberG
 
    auto bv5 = bv2.subvector<TestUInt32>(1);
    result.test_is_true("bv5 is a TestUInt32", std::same_as<TestUInt32, decltype(bv5)>);
-   result.test_is_eq<TestUInt32::wrapped_type>("bv5 has expected value", bv5.get(), 0xFFFFFFF4);
+   result.test_u32_eq("bv5 has expected value", bv5.get(), 0xFFFFFFF4);
 
    const auto str = bv4.to_string();
    result.test_str_eq("bv4 to_string", str, "00010");

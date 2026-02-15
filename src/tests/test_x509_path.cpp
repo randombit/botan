@@ -683,7 +683,7 @@ class Root_Cert_Time_Check_Test final : public Test {
             const std::string descr_str = Botan::fmt(
                "Root cert validity range {}: {}", ignore_trusted_root_time_range ? "ignored" : "checked", descr);
 
-            result.test_is_eq(descr_str, validation_result.result(), exp_status);
+            result.test_enum_eq(descr_str, validation_result.result(), exp_status);
             const auto warnings = validation_result.warnings();
             BOTAN_ASSERT_NOMSG(warnings.size() == 2);
             result.test_is_true("No warning for leaf cert", warnings.at(0).empty());
@@ -840,17 +840,17 @@ class Non_Self_Signed_Trust_Anchors_Test final : public Test {
             std::vector<Cert_Path> cert_paths;
             const auto build_all_res =
                Botan::PKIX::build_all_certificate_paths(cert_paths, {&cert_store}, certs.at(0), certs);
-            result.test_is_eq("build_all_certificate_paths result",
-                              to_string(build_all_res),
-                              to_string(Botan::Certificate_Status_Code::OK));
+            result.test_str_eq("build_all_certificate_paths result",
+                               to_string(build_all_res),
+                               to_string(Botan::Certificate_Status_Code::OK));
             result.test_is_eq("build_all_certificate_paths paths", cert_paths, expected_paths);
 
             Cert_Path cert_path;
             const auto build_path_res =
                Botan::PKIX::build_certificate_path(cert_path, {&cert_store}, certs.at(0), certs);
-            result.test_is_eq("build_certificate_path result",
-                              to_string(build_path_res),
-                              to_string(Botan::Certificate_Status_Code::OK));
+            result.test_str_eq("build_certificate_path result",
+                               to_string(build_path_res),
+                               to_string(Botan::Certificate_Status_Code::OK));
 
             if(std::ranges::find(cert_paths, path_to(4)) != cert_paths.end()) {
                result.test_is_eq("build_certificate_path (with self-signed anchor)", cert_path, path_to(4));
@@ -1395,9 +1395,9 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                                                                std::chrono::milliseconds(0),
                                                                {ocsp_ee});
 
-            result.test_is_eq("should result in expected validation status code",
-                              static_cast<uint32_t>(path_result.result()),
-                              static_cast<uint32_t>(expected));
+            result.test_u32_eq("should result in expected validation status code",
+                               static_cast<uint32_t>(path_result.result()),
+                               static_cast<uint32_t>(expected));
             if(also_expected) {
                result.test_is_true("Secondary error is also present",
                                    flatten(path_result.all_statuses()).contains(also_expected.value()));
@@ -1448,7 +1448,7 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                                          std::chrono::milliseconds(0),
                                          {ocsp});
 
-            result.test_is_eq(
+            result.test_enum_eq(
                "Path validation with forged OCSP response should fail with", path_result.result(), expected);
             result.test_is_true("Secondary error is also present",
                                 flatten(path_result.all_statuses()).contains(also_expected));
@@ -1665,7 +1665,8 @@ class Path_Validation_With_Immortal_CRL final : public Test {
          if(!result.test_is_true("No valid certificate", !revoked.successful_validation())) {
             result.test_note(revoked.result_string());
          }
-         result.test_is_eq("Certificate is revoked", revoked.result(), Botan::Certificate_Status_Code::CERT_IS_REVOKED);
+         result.test_enum_eq(
+            "Certificate is revoked", revoked.result(), Botan::Certificate_Status_Code::CERT_IS_REVOKED);
 
          return {result};
       }

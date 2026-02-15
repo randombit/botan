@@ -1107,7 +1107,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
 
                      const auto rcvd = ctx->pull_receive_buffer();
                      result.test_eq("decrypted application traffic", rcvd, vars.get_req_bin("Server_AppData"));
-                     result.test_is_eq("sequence number", ctx->last_received_seq_no(), uint64_t(1));
+                     result.test_u64_eq("sequence number", ctx->last_received_seq_no(), uint64_t(1));
                   }),
 
             CHECK("Close Connection",
@@ -1639,7 +1639,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
 
                      const auto rcvd = ctx->pull_receive_buffer();
                      result.test_eq("decrypted application traffic", rcvd, vars.get_req_bin("Server_AppData"));
-                     result.test_is_eq("sequence number", ctx->last_received_seq_no(), uint64_t(0));
+                     result.test_u64_eq("sequence number", ctx->last_received_seq_no(), uint64_t(0));
                   }),
 
             CHECK("Close Connection",
@@ -1921,7 +1921,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
 
                      const auto rcvd = ctx->pull_receive_buffer();
                      result.test_eq("decrypted application traffic", rcvd, vars.get_req_bin("Client_AppData"));
-                     result.test_is_eq("sequence number", ctx->last_received_seq_no(), uint64_t(0));
+                     result.test_u64_eq("sequence number", ctx->last_received_seq_no(), uint64_t(0));
                   }),
 
             CHECK("Send Application Data",
@@ -2563,7 +2563,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
 
                      const auto rcvd = ctx->pull_receive_buffer();
                      result.test_eq("decrypted application traffic", rcvd, vars.get_req_bin("Client_AppData"));
-                     result.test_is_eq("sequence number", ctx->last_received_seq_no(), uint64_t(0));
+                     result.test_u64_eq("sequence number", ctx->last_received_seq_no(), uint64_t(0));
 
                      ctx->send(vars.get_req_bin("Server_AppData"));
                      ctx->check_callback_invocations(result, "application data sent", {"tls_emit_data"});

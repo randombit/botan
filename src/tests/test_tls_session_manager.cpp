@@ -193,7 +193,8 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                   result.test_is_eq("protocol version was echoed",
                                     sessions[0].session.version(),
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
-                  result.test_is_eq("ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
+                  result.test_u16_eq(
+                     "ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
                   result.test_is_eq("ID was echoed", sessions[0].handle.id().value(), default_id);
                   result.test_is_true("not a ticket", !sessions[0].handle.ticket().has_value());
                }
@@ -206,7 +207,7 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                   result.test_is_eq("protocol version was echoed",
                                     session->version(),
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
-                  result.test_is_eq("ciphersuite was echoed", session->ciphersuite_code(), uint16_t(0x009C));
+                  result.test_u16_eq("ciphersuite was echoed", session->ciphersuite_code(), uint16_t(0x009C));
                }
             }),
 
@@ -217,7 +218,7 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                   result.test_is_eq("protocol version was echoed",
                                     session->version(),
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
-                  result.test_is_eq("ciphersuite was echoed", session->ciphersuite_code(), uint16_t(0x009C));
+                  result.test_u16_eq("ciphersuite was echoed", session->ciphersuite_code(), uint16_t(0x009C));
                }
             }),
 
@@ -257,7 +258,8 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                   result.test_is_eq("protocol version was echoed",
                                     sessions[0].session.version(),
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
-                  result.test_is_eq("ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
+                  result.test_u16_eq(
+                     "ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
                   result.test_is_eq("ID was echoed", sessions[0].handle.id().value(), new_id);
                   result.test_is_true("ticket was not stored", !sessions[0].handle.ticket().has_value());
                }
@@ -277,7 +279,8 @@ std::vector<Test::Result> test_session_manager_in_memory() {
                   result.test_is_eq("protocol version was echoed",
                                     sessions[0].session.version(),
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
-                  result.test_is_eq("ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
+                  result.test_u16_eq(
+                     "ciphersuite was echoed", sessions[0].session.ciphersuite_code(), uint16_t(0x009C));
                   result.test_is_true("ID was not stored", !sessions[0].handle.id().has_value());
                   result.test_is_eq("ticket was echoed", sessions[0].handle.ticket().value(), new_ticket);
                }
@@ -456,19 +459,19 @@ std::vector<Test::Result> test_session_manager_choose_ticket() {
                auto session1 =
                   mgr.choose_from_offered_tickets(std::vector{ticket(handles[0].id().value())}, "SHA-256", cbs, plcy);
                result.require("ticket was chosen and produced a session (1)", session1.has_value());
-               result.test_is_eq("chosen offset", session1->second, uint16_t(0));
+               result.test_u16_eq("chosen offset", session1->second, uint16_t(0));
 
                // choose from a list of tickets that contains only handles[1]
                auto session2 =
                   mgr.choose_from_offered_tickets(std::vector{ticket(handles[1].id().value())}, "SHA-256", cbs, plcy);
                result.require("ticket was chosen and produced a session (2)", session2.has_value());
-               result.test_is_eq("chosen offset", session2->second, uint16_t(0));
+               result.test_u16_eq("chosen offset", session2->second, uint16_t(0));
 
                // choose from a list of tickets that contains a random ticket and handles[1]
                auto session3 = mgr.choose_from_offered_tickets(
                   std::vector{ticket(random_ticket(*rng)), ticket(handles[1].id().value())}, "SHA-256", cbs, plcy);
                result.require("ticket was chosen and produced a session (3)", session3.has_value());
-               result.test_is_eq("chosen second offset", session3->second, uint16_t(1));
+               result.test_u16_eq("chosen second offset", session3->second, uint16_t(1));
             }),
 
       CHECK("choose ticket by ticket",
@@ -484,19 +487,19 @@ std::vector<Test::Result> test_session_manager_choose_ticket() {
                auto session1 = mgr.choose_from_offered_tickets(
                   std::vector{ticket(handles[0].ticket().value())}, "SHA-256", cbs, plcy);
                result.require("ticket was chosen and produced a session (1)", session1.has_value());
-               result.test_is_eq("chosen offset", session1->second, uint16_t(0));
+               result.test_u16_eq("chosen offset", session1->second, uint16_t(0));
 
                // choose from a list of tickets that contains only handles[1]
                auto session2 = mgr.choose_from_offered_tickets(
                   std::vector{ticket(handles[1].ticket().value())}, "SHA-256", cbs, plcy);
                result.require("ticket was chosen and produced a session (2)", session2.has_value());
-               result.test_is_eq("chosen offset", session2->second, uint16_t(0));
+               result.test_u16_eq("chosen offset", session2->second, uint16_t(0));
 
                // choose from a list of tickets that contains a random ticket and handles[1]
                auto session3 = mgr.choose_from_offered_tickets(
                   std::vector{ticket(random_ticket(*rng)), ticket(handles[1].ticket().value())}, "SHA-256", cbs, plcy);
                result.require("ticket was chosen and produced a session (3)", session3.has_value());
-               result.test_is_eq("chosen second offset", session3->second, uint16_t(1));
+               result.test_u16_eq("chosen second offset", session3->second, uint16_t(1));
             }),
 
       CHECK("choose ticket based on requested hash function",
@@ -515,7 +518,7 @@ std::vector<Test::Result> test_session_manager_choose_ticket() {
                                                               cbs,
                                                               plcy);
                result.require("ticket was chosen and produced a session", session.has_value());
-               result.test_is_eq("chosen second offset", session->second, uint16_t(2));
+               result.test_u16_eq("chosen second offset", session->second, uint16_t(2));
             }),
 
       CHECK("choose ticket based on protocol version",
@@ -536,7 +539,7 @@ std::vector<Test::Result> test_session_manager_choose_ticket() {
                                                               cbs,
                                                               plcy);
                result.require("ticket was chosen and produced a session", session.has_value());
-               result.test_is_eq("chosen second offset (TLS 1.3 ticket)", session->second, uint16_t(2));
+               result.test_u16_eq("chosen second offset (TLS 1.3 ticket)", session->second, uint16_t(2));
             }),
    };
    #else
@@ -664,7 +667,7 @@ std::vector<Test::Result> test_session_manager_stateless() {
             auto session_after = mgr.retrieve(ticket.value(), cbs, plcy);
             result.require("got the session back", session_after.has_value());
 
-            result.test_is_eq(
+            result.test_u64_eq(
                "timestamps match",
                std::chrono::duration_cast<std::chrono::seconds>(session_before.start_time().time_since_epoch()).count(),
                std::chrono::duration_cast<std::chrono::seconds>(session_after->start_time().time_since_epoch())
@@ -866,7 +869,7 @@ std::vector<Test::Result> test_session_manager_sqlite() {
                   mgr.establish(default_session(Botan::TLS::Connection_Side::Server, cbs), some_random_id);
                result.require("establishment was successful", some_random_handle.has_value());
                result.require("session id was set", some_random_handle->id().has_value());
-               result.test_is_eq("session id is correct", some_random_handle->id().value(), some_random_id);
+               result.test_eq("session id is correct", some_random_handle->id().value(), some_random_id);
 
                auto some_virtual_handle = mgr.establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
                result.require("establishment was successful", some_virtual_handle.has_value());
@@ -890,7 +893,7 @@ std::vector<Test::Result> test_session_manager_sqlite() {
                   result.test_is_eq("protocol version was echoed",
                                     session1->version(),
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
-                  result.test_is_eq("ciphersuite was echoed", session1->ciphersuite_code(), uint16_t(0x009C));
+                  result.test_u16_eq("ciphersuite was echoed", session1->ciphersuite_code(), uint16_t(0x009C));
                }
 
                auto session2 = mgr.retrieve(some_virtual_handle.value(), cbs, plcy);
@@ -898,7 +901,7 @@ std::vector<Test::Result> test_session_manager_sqlite() {
                   result.test_is_eq("protocol version was echoed",
                                     session2->version(),
                                     Botan::TLS::Protocol_Version(Botan::TLS::Version_Code::TLS_V12));
-                  result.test_is_eq("ciphersuite was echoed", session2->ciphersuite_code(), uint16_t(0x009C));
+                  result.test_u16_eq("ciphersuite was echoed", session2->ciphersuite_code(), uint16_t(0x009C));
                }
 
                auto session3 = mgr.retrieve(random_id(*rng), cbs, plcy);
@@ -1135,12 +1138,12 @@ std::vector<Test::Result> tls_session_manager_expiry() {
                       plcy.set_allow_session_reuse(true);
 
                       plcy.set_session_limit(1);
-                      result.test_is_eq("find one",
+                      result.test_sz_eq("find one",
                                         mgr->find(server_info(), cbs, plcy).size(),
                                         plcy.maximum_session_tickets_per_client_hello());
 
                       plcy.set_session_limit(3);
-                      result.test_is_eq("find three",
+                      result.test_sz_eq("find three",
                                         mgr->find(server_info(), cbs, plcy).size(),
                                         plcy.maximum_session_tickets_per_client_hello());
 
@@ -1167,7 +1170,7 @@ std::vector<Test::Result> tls_session_manager_expiry() {
                       auto session_and_index = mgr->choose_from_offered_tickets(
                          std::vector{ticket(old_handle.value()), ticket(new_handle.value())}, "SHA-256", cbs, plcy);
                       result.require("a ticket was chosen", session_and_index.has_value());
-                      result.test_is_eq("the new ticket was chosen", session_and_index->second, uint16_t(1));
+                      result.test_u16_eq("the new ticket was chosen", session_and_index->second, uint16_t(1));
 
                       cbs.tick();
 

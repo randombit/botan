@@ -191,7 +191,7 @@ class Test_Tests final : public Test {
             Test::Result test_result(testcase_name);
             const auto x = Botan::BigInt::from_word(5);
             const auto y = Botan::BigInt::from_word(6);
-            test_result.test_eq("test ints equal", x, y);
+            test_result.test_bn_eq("test ints equal", x, y);
             verify_failure("test ints equal", result, test_result);
          }
 
@@ -199,7 +199,7 @@ class Test_Tests final : public Test {
             Test::Result test_result(testcase_name);
             const auto x = Botan::BigInt::from_word(5);
             const auto y = Botan::BigInt::from_word(5);
-            test_result.test_ne("test ints not equal", x, y);
+            test_result.test_bn_ne("test ints not equal", x, y);
             verify_failure("test ints not equal", result, test_result);
          }
 #endif

@@ -147,7 +147,7 @@ std::vector<Test::Result> test_container_strong_type() {
 
                const auto nonce = Test_Nonce(Botan::hex_decode("DEADBEEF"));
 
-               result.test_is_eq("can bind to std::span<>", get_size(nonce), nonce.size());
+               result.test_sz_eq("can bind to std::span<>", get_size(nonce), nonce.size());
             }),
 
       CHECK("std::string container",
@@ -207,7 +207,7 @@ std::vector<Test::Result> test_container_strong_type() {
                result.test_u8_eq("[] returns 3", a[2], 3);
 
                Test_Map m({{1, "one"}, {2, "two"}, {3, "three"}});
-               result.test_is_eq<std::string>("[] returns 'two'", m[2], "two");
+               result.test_str_eq("[] returns 'two'", m[2], "two");
 
                Test_Vector v({1, 2, 3, 4});
                result.test_u8_eq("[] returns 2", v[1], 2);
@@ -381,15 +381,15 @@ std::vector<Test::Result> test_integer_strong_type() {
 using Test_Foo = Botan::Strong<std::vector<uint8_t>, struct Test_Foo_>;
 using Test_Bar = Botan::Strong<std::vector<uint8_t>, struct Test_Bar_>;
 
-[[maybe_unused]] int test_strong_helper(const Botan::StrongSpan<Test_Foo>& /*unused*/) {
+[[maybe_unused]] uint32_t test_strong_helper(const Botan::StrongSpan<Test_Foo>& /*unused*/) {
    return 0;
 }
 
-[[maybe_unused]] int test_strong_helper(const Botan::StrongSpan<const Test_Foo>& /*unused*/) {
+[[maybe_unused]] uint32_t test_strong_helper(const Botan::StrongSpan<const Test_Foo>& /*unused*/) {
    return 1;
 }
 
-[[maybe_unused]] int test_strong_helper(const Botan::StrongSpan<Test_Bar>& /*unused*/) {
+[[maybe_unused]] uint32_t test_strong_helper(const Botan::StrongSpan<Test_Bar>& /*unused*/) {
    return 2;
 }
 
@@ -397,10 +397,10 @@ Test::Result test_strong_span() {
    Test::Result result("StrongSpan<>");
 
    const Test_Foo foo(Botan::hex_decode("DEADBEEF"));
-   result.test_is_eq("binds to StrongSpan<const Test_Foo>", test_strong_helper(foo), 1);
+   result.test_u32_eq("binds to StrongSpan<const Test_Foo>", test_strong_helper(foo), 1);
 
    Test_Bar bar(Botan::hex_decode("CAFECAFE"));
-   result.test_is_eq("binds to StrongSpan<Test_Bar>", test_strong_helper(bar), 2);
+   result.test_u32_eq("binds to StrongSpan<Test_Bar>", test_strong_helper(bar), 2);
 
    const Botan::StrongSpan<const Test_Foo> span(foo);
 

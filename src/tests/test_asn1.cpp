@@ -74,7 +74,7 @@ Test::Result test_ber_eoc_decoding_limits() {
       }
    }
 
-   result.test_eq("EOC limited to prevent stack exhaustion", max_eoc_allowed, 16);
+   result.test_sz_eq("EOC limited to prevent stack exhaustion", max_eoc_allowed, 16);
 
    return result;
 }
@@ -254,7 +254,7 @@ Test::Result test_asn1_negative_int_encoding() {
       BigInt n_dec;
       Botan::BER_Decoder(enc).decode(n_dec);
 
-      result.test_eq("DER encoding round trips negative integers", n_dec, n);
+      result.test_bn_eq("DER encoding round trips negative integers", n_dec, n);
    }
 
    return result;

@@ -132,28 +132,28 @@ std::vector<Test::Result> ECC_Randomized_Tests::run() {
             Botan::EC_Point A1 = P + Q;
             Botan::EC_Point A2 = Q + P;
 
-            result.test_eq("p + q", A1, R);
-            result.test_eq("q + p", A2, R);
+            result.test_eq("p + q", A1.xy_bytes(), R.xy_bytes());
+            result.test_eq("q + p", A2.xy_bytes(), R.xy_bytes());
 
             A1.force_affine();
             A2.force_affine();
-            result.test_eq("p + q", A1, R);
-            result.test_eq("q + p", A2, R);
+            result.test_eq("p + q", A1.xy_bytes(), R.xy_bytes());
+            result.test_eq("q + p", A2.xy_bytes(), R.xy_bytes());
 
             result.test_is_true("p on the curve", P.on_the_curve());
             result.test_is_true("q on the curve", Q.on_the_curve());
             result.test_is_true("r on the curve", R.on_the_curve());
 
-            result.test_eq("P1", P1, P);
-            result.test_eq("Q1", Q1, Q);
-            result.test_eq("R1", R1, R);
+            result.test_eq("P1", P1.xy_bytes(), P.xy_bytes());
+            result.test_eq("Q1", Q1.xy_bytes(), Q.xy_bytes());
+            result.test_eq("R1", R1.xy_bytes(), R.xy_bytes());
 
             P1.force_affine();
             Q1.force_affine();
             R1.force_affine();
-            result.test_eq("P1", P1, P);
-            result.test_eq("Q1", Q1, Q);
-            result.test_eq("R1", R1, R);
+            result.test_eq("P1", P1.xy_bytes(), P.xy_bytes());
+            result.test_eq("Q1", Q1.xy_bytes(), Q.xy_bytes());
+            result.test_eq("R1", R1.xy_bytes(), R.xy_bytes());
          }
       } catch(std::exception& e) {
          result.test_failure(group_name, e.what());
@@ -188,7 +188,7 @@ class EC_Group_Tests : public Test {
             result.test_sz_eq("EC_Group has correct bit size", group.get_p().bits(), group.get_p_bits());
             result.test_sz_eq("EC_Group has byte size", group.get_p().bytes(), group.get_p_bytes());
 
-            result.test_eq("EC_Group has cofactor == 1", group.get_cofactor(), 1);
+            result.test_bn_eq("EC_Group has cofactor == 1", group.get_cofactor(), 1);
 
             const Botan::OID from_order = Botan::EC_Group::EC_group_identity_from_order(group.get_order());
 
@@ -220,15 +220,15 @@ class EC_Group_Tests : public Test {
                                 group_via_explicit.used_explicit_encoding());
 
             if(group.a_is_minus_3()) {
-               result.test_eq("Group A equals -3", group.get_a(), group.get_p() - 3);
+               result.test_bn_eq("Group A equals -3", group.get_a(), group.get_p() - 3);
             } else {
-               result.test_ne("Group " + group_name + " A does not equal -3", group.get_a(), group.get_p() - 3);
+               result.test_bn_ne("Group " + group_name + " A does not equal -3", group.get_a(), group.get_p() - 3);
             }
 
             if(group.a_is_zero()) {
-               result.test_eq("Group A is zero", group.get_a(), BigInt(0));
+               result.test_bn_eq("Group A is zero", group.get_a(), BigInt(0));
             } else {
-               result.test_ne("Group " + group_name + " A does not equal zero", group.get_a(), BigInt(0));
+               result.test_bn_ne("Group " + group_name + " A does not equal zero", group.get_a(), BigInt(0));
             }
 
    #if defined(BOTAN_HAS_LEGACY_EC_POINT)
@@ -244,13 +244,13 @@ class EC_Group_Tests : public Test {
             p.randomize_repr(this->rng());
             q.randomize_repr(this->rng());
 
-            result.test_eq("affine x after copy", p.get_affine_x(), q.get_affine_x());
-            result.test_eq("affine y after copy", p.get_affine_y(), q.get_affine_y());
+            result.test_bn_eq("affine x after copy", p.get_affine_x(), q.get_affine_x());
+            result.test_bn_eq("affine y after copy", p.get_affine_y(), q.get_affine_y());
 
             q.force_affine();
 
-            result.test_eq("affine x after copy", p.get_affine_x(), q.get_affine_x());
-            result.test_eq("affine y after copy", p.get_affine_y(), q.get_affine_y());
+            result.test_bn_eq("affine x after copy", p.get_affine_x(), q.get_affine_x());
+            result.test_bn_eq("affine y after copy", p.get_affine_y(), q.get_affine_y());
 
             test_ser_der(result, group);
             test_basic_math(result, group);
@@ -278,15 +278,15 @@ class EC_Group_Tests : public Test {
                             Botan::EC_Point_Format::Compressed,
                             Botan::EC_Point_Format::Hybrid}) {
             try {
-               result.test_eq("encoded/decode rt works", group.OS2ECP(pt.encode(scheme)), pt);
+               result.test_eq("encoded/decode rt works", group.OS2ECP(pt.encode(scheme)).xy_bytes(), pt.xy_bytes());
             } catch(Botan::Exception& e) {
                result.test_failure("Failed to round trip encode a random point", e.what());
             }
 
             try {
-               result.test_eq("encoded/decode rt works", group.OS2ECP(zero.encode(scheme)), zero);
+               result.test_is_true("encoded/decode rt works", group.OS2ECP(zero.encode(scheme)).is_zero());
             } catch(Botan::Exception& e) {
-               result.test_failure("Failed to round trip encode a random point", e.what());
+               result.test_failure("Failed to round trip encode the identity element", e.what());
             }
          }
       }
@@ -294,14 +294,17 @@ class EC_Group_Tests : public Test {
       static void test_basic_math(Test::Result& result, const Botan::EC_Group& group) {
          const Botan::EC_Point& G = group.get_base_point();
 
-         Botan::EC_Point p1 = G * 2;
+         const auto G2 = G * 2;
+         const auto G3 = G * 3;
+
+         Botan::EC_Point p1 = G2;
          p1 += G;
 
-         result.test_eq("point addition", p1, G * 3);
+         result.test_eq("point addition", p1.xy_bytes(), G3.xy_bytes());
 
-         p1 -= G * 2;
+         p1 -= G2;
 
-         result.test_eq("point subtraction", p1, G);
+         result.test_eq("point subtraction", p1.xy_bytes(), G.xy_bytes());
 
          // The scalar multiplication algorithm relies on this being true:
          try {
@@ -321,8 +324,8 @@ class EC_Group_Tests : public Test {
          Botan::EC_Point d(b);
 
          d.swap(c);
-         result.test_eq("swap correct", a, d);
-         result.test_eq("swap correct", b, c);
+         result.test_eq("swap correct", a.xy_bytes(), d.xy_bytes());
+         result.test_eq("swap correct", b.xy_bytes(), c.xy_bytes());
       }
 
       static void test_zeropoint(Test::Result& result, const Botan::EC_Group& group) {
@@ -347,21 +350,21 @@ class EC_Group_Tests : public Test {
          result.test_is_true("point is on the curve", shouldBeZero.on_the_curve());
          result.test_is_true("point is zero", shouldBeZero.is_zero());
 
-         result.test_eq("minus point x", minus_p1.get_affine_x(), p1.get_affine_x());
-         result.test_eq("minus point y", minus_p1.get_affine_y(), group.get_p() - p1.get_affine_y());
+         result.test_bn_eq("minus point x", minus_p1.get_affine_x(), p1.get_affine_x());
+         result.test_bn_eq("minus point y", minus_p1.get_affine_y(), group.get_p() - p1.get_affine_y());
 
          result.test_is_true("zero point is zero", zero.is_zero());
          result.test_is_true("zero point is on the curve", zero.on_the_curve());
-         result.test_eq("addition of zero does nothing", p1, p1 + zero);
-         result.test_eq("addition of zero does nothing", p1, zero + p1);
-         result.test_eq("addition of zero does nothing", p1, p1 - zero);
+         result.test_eq("addition of zero does nothing", p1.xy_bytes(), (p1 + zero).xy_bytes());
+         result.test_eq("addition of zero does nothing", p1.xy_bytes(), (zero + p1).xy_bytes());
+         result.test_eq("addition of zero does nothing", p1.xy_bytes(), (p1 - zero).xy_bytes());
          result.test_is_true("zero times anything is the zero point", (zero * 39193).is_zero());
 
          for(auto scheme : {Botan::EC_Point_Format::Uncompressed,
                             Botan::EC_Point_Format::Compressed,
                             Botan::EC_Point_Format::Hybrid}) {
             const std::vector<uint8_t> v = zero.encode(scheme);
-            result.test_eq("encoded/decode rt works", group.OS2ECP(v), zero);
+            result.test_is_true("encoded/decode rt works", group.OS2ECP(v).is_zero());
          }
       }
    #endif
@@ -378,7 +381,7 @@ Test::Result test_decoding_with_seed() {
          const auto secp384r1_with_seed =
             Botan::EC_Group::from_PEM(Test::read_data_file("x509/ecc/secp384r1_seed.pem"));
          result.test_is_true("decoding worked", secp384r1_with_seed.initialized());
-         result.test_eq("P-384 prime", secp384r1_with_seed.get_p(), secp384r1.get_p());
+         result.test_bn_eq("P-384 prime", secp384r1_with_seed.get_p(), secp384r1.get_p());
       }
    } catch(Botan::Exception& e) {
       result.test_failure(e.what());
@@ -459,7 +462,7 @@ class EC_Group_Registration_Tests final : public Test {
 
          auto group = Botan::EC_Group::from_OID(oid);
 
-         result.test_eq("Group registration worked", group.get_p(), p);
+         result.test_bn_eq("Group registration worked", group.get_p(), p);
 
          // TODO(Botan4) this could change to == Generic
          result.test_is_true("Group is not pcurve", group.engine() != Botan::EC_Group_Engine::Optimized);

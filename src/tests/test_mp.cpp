@@ -38,13 +38,13 @@ class MP_Unit_Tests final : public Test {
          Botan::word a = 2;
          Botan::word c = Botan::bigint_cnd_add<Botan::word>(0, &a, &max, 1);
 
-         result.test_is_eq<Botan::word>("No op", a, 2);
-         result.test_is_eq<Botan::word>("No op", c, 0);
+         result.test_u64_eq("No op", a, 2);
+         result.test_u64_eq("No op", c, 0);
 
          c = Botan::bigint_cnd_add<Botan::word>(1, &a, &max, 1);
 
-         result.test_is_eq<Botan::word>("Add", a, 1);
-         result.test_is_eq<Botan::word>("Carry", c, 1);
+         result.test_u64_eq("Add", a, 1);
+         result.test_u64_eq("Carry", c, 1);
 
          // TODO more tests
 
@@ -58,13 +58,13 @@ class MP_Unit_Tests final : public Test {
          const Botan::word b = 3;
          Botan::word c = Botan::bigint_cnd_sub<Botan::word>(0, &a, &b, 1);
 
-         result.test_is_eq<Botan::word>("No op", a, 2);
-         result.test_is_eq<Botan::word>("No op", c, 0);
+         result.test_u64_eq("No op", a, 2);
+         result.test_u64_eq("No op", c, 0);
 
          c = Botan::bigint_cnd_sub<Botan::word>(1, &a, &b, 1);
 
-         result.test_is_eq<Botan::word>("Sub", a, ~static_cast<Botan::word>(0));
-         result.test_is_eq<Botan::word>("Borrow", c, 1);
+         result.test_u64_eq("Sub", a, ~static_cast<Botan::word>(0));
+         result.test_u64_eq("Borrow", c, 1);
 
          return result;
       }
@@ -76,25 +76,25 @@ class MP_Unit_Tests final : public Test {
 
          Botan::word x1 = max;
          Botan::bigint_cnd_abs<Botan::word>(1, &x1, 1);
-         result.test_is_eq<Botan::word>("Abs", x1, 1);
+         result.test_u64_eq("Abs", x1, 1);
 
          x1 = 0;
          Botan::bigint_cnd_abs<Botan::word>(1, &x1, 1);
-         result.test_is_eq<Botan::word>("Abs", x1, 0);
+         result.test_u64_eq("Abs", x1, 0);
 
          x1 = 1;
          Botan::bigint_cnd_abs<Botan::word>(1, &x1, 1);
-         result.test_is_eq<Botan::word>("Abs", x1, max);
+         result.test_u64_eq("Abs", x1, max);
 
          x1 = 1;
          Botan::bigint_cnd_abs<Botan::word>(0, &x1, 1);
-         result.test_is_eq<Botan::word>("No change", x1, 1);
+         result.test_u64_eq("No change", x1, 1);
 
          Botan::word x2[2] = {max, max};
 
          Botan::bigint_cnd_abs<Botan::word>(1, x2, 2);
-         result.test_is_eq<Botan::word>("Abs", x2[0], 1);
-         result.test_is_eq<Botan::word>("Abs", x2[1], 0);
+         result.test_u64_eq("Abs", x2[0], 1);
+         result.test_u64_eq("Abs", x2[1], 0);
 
          return result;
       }
@@ -110,9 +110,9 @@ class MP_Unit_Tests final : public Test {
          Botan::word y1 = 9;
 
          Botan::bigint_cnd_swap<Botan::word>(0, &x1, &y1, 1);
-         result.test_is_eq<Botan::word>("No swap", x1, 5);
+         result.test_u64_eq("No swap", x1, 5);
          Botan::bigint_cnd_swap<Botan::word>(1, &x1, &y1, 1);
-         result.test_is_eq<Botan::word>("Swap", x1, 9);
+         result.test_u64_eq("Swap", x1, 9);
 
          Botan::word x5[5] = {0, 1, 2, 3, 4};
          Botan::word y5[5] = {3, 2, 1, 0, 9};
@@ -121,14 +121,14 @@ class MP_Unit_Tests final : public Test {
          Botan::bigint_cnd_swap<Botan::word>(1, x5, y5, 4);
 
          for(size_t i = 0; i != 4; ++i) {
-            result.test_is_eq<Botan::word>("Swap x5", x5[i], static_cast<Botan::word>(3 - i));
+            result.test_u64_eq("Swap x5", x5[i], static_cast<Botan::word>(3 - i));
          }
-         result.test_is_eq<Botan::word>("Not touched", x5[4], 4);
+         result.test_u64_eq("Not touched", x5[4], 4);
 
          for(size_t i = 0; i != 4; ++i) {
-            result.test_is_eq<Botan::word>("Swap y5", y5[i], static_cast<Botan::word>(i));
+            result.test_u64_eq("Swap y5", y5[i], static_cast<Botan::word>(i));
          }
-         result.test_is_eq<Botan::word>("Not touched", y5[4], 9);
+         result.test_u64_eq("Not touched", y5[4], 9);
 
          return result;
       }
