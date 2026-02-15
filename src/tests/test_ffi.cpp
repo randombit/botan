@@ -938,7 +938,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
             std::vector<uint8_t> serial(serial_len);
             TEST_FFI_OK(botan_x509_cert_get_serial_number, (cert, serial.data(), &serial_len));
             result.test_sz_eq("cert serial length", serial.size(), 16);
-            result.test_str_eq("cert serial", Botan::hex_encode(serial), "41D29DD172EAEEA780C12C6CE92F8752");
+            result.test_bin_eq("cert serial", serial, "41D29DD172EAEEA780C12C6CE92F8752");
 
             size_t fingerprint_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
