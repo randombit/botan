@@ -51,21 +51,21 @@ class DL_Group_Tests final : public Test {
 
          const auto group1 = Botan::DL_Group::from_PEM(pem1);
 
-         result.test_eq("Same p in X9.42 decoding", group1.get_p(), orig.get_p());
-         result.test_eq("Same q in X9.42 decoding", group1.get_q(), orig.get_q());
-         result.test_eq("Same g in X9.42 decoding", group1.get_g(), orig.get_g());
+         result.test_bn_eq("Same p in X9.42 decoding", group1.get_p(), orig.get_p());
+         result.test_bn_eq("Same q in X9.42 decoding", group1.get_q(), orig.get_q());
+         result.test_bn_eq("Same g in X9.42 decoding", group1.get_g(), orig.get_g());
 
          const auto group2 = Botan::DL_Group::from_PEM(pem2);
 
-         result.test_eq("Same p in X9.57 decoding", group2.get_p(), orig.get_p());
-         result.test_eq("Same q in X9.57 decoding", group2.get_q(), orig.get_q());
-         result.test_eq("Same g in X9.57 decoding", group2.get_g(), orig.get_g());
+         result.test_bn_eq("Same p in X9.57 decoding", group2.get_p(), orig.get_p());
+         result.test_bn_eq("Same q in X9.57 decoding", group2.get_q(), orig.get_q());
+         result.test_bn_eq("Same g in X9.57 decoding", group2.get_g(), orig.get_g());
 
          const auto group3 = Botan::DL_Group::from_PEM(pem3);
 
-         result.test_eq("Same p in X9.57 decoding", group3.get_p(), orig.get_p());
+         result.test_bn_eq("Same p in X9.57 decoding", group3.get_p(), orig.get_p());
          // no q in PKCS #3 format
-         result.test_eq("Same g in X9.57 decoding", group3.get_g(), orig.get_g());
+         result.test_bn_eq("Same g in X9.57 decoding", group3.get_g(), orig.get_g());
 
          return result;
       }
@@ -132,7 +132,7 @@ class DL_Generate_Group_Tests final : public Test {
 
          const Botan::DL_Group dsa_from_seed(rng, seed, 1024, 160);
 
-         result.test_eq(
+         result.test_bn_eq(
             "DSA q from seed", dsa_from_seed.get_q(), Botan::BigInt("0xAB1A788BCE3C557A965A5BFA6908FAA665FDEB7D"));
 
          // Modulo just to avoid embedding entire 1024-bit P in src file
@@ -172,8 +172,8 @@ class DL_Named_Group_Tests final : public Test {
             // Confirm we can load every group we expect
             auto group = Botan::DL_Group::from_name(name);
 
-            result.test_ne("DL_Group p is set", group.get_p(), 0);
-            result.test_ne("DL_Group g is set", group.get_g(), 0);
+            result.test_bn_ne("DL_Group p is set", group.get_p(), 0);
+            result.test_bn_ne("DL_Group g is set", group.get_g(), 0);
 
             const size_t strength = group.estimated_strength();
 
@@ -183,9 +183,9 @@ class DL_Named_Group_Tests final : public Test {
             result.test_is_true("Expected source", group.source() == Botan::DL_Group_Source::Builtin);
 
             if(name.find("modp/srp/") == std::string::npos) {
-               result.test_ne("DL_Group q is set", group.get_q(), 0);
+               result.test_bn_ne("DL_Group q is set", group.get_q(), 0);
             } else {
-               result.test_eq("DL_Group q is not set for SRP groups", group.get_q(), 0);
+               result.test_bn_eq("DL_Group q is not set for SRP groups", group.get_q(), 0);
             }
 
             if(group.p_bits() <= 1536 || Test::run_long_tests()) {

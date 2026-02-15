@@ -181,7 +181,7 @@ class BigInt_Unit_Tests final : public Test {
 
             iss.str(vec.first);
             iss >> n;
-            result.test_eq("input '" + vec.first + "'", n, vec.second);
+            result.test_bn_eq("input '" + vec.first + "'", n, vec.second);
          }
 
          auto check_bigint_formatting = [&](const Botan::BigInt& n,
@@ -276,16 +276,16 @@ class BigInt_Add_Test final : public Text_Based_Test {
          const BigInt b = vars.get_req_bn("In2");
          const BigInt c = vars.get_req_bn("Output");
 
-         result.test_eq("a + b", a + b, c);
-         result.test_eq("b + a", b + a, c);
+         result.test_bn_eq("a + b", a + b, c);
+         result.test_bn_eq("b + a", b + a, c);
 
          BigInt e = a;
          e += b;
-         result.test_eq("a += b", e, c);
+         result.test_bn_eq("a += b", e, c);
 
          e = b;
          e += a;
-         result.test_eq("b += a", e, c);
+         result.test_bn_eq("b += a", e, c);
 
          return result;
       }
@@ -304,11 +304,11 @@ class BigInt_Sub_Test final : public Text_Based_Test {
          const BigInt b = vars.get_req_bn("In2");
          const BigInt c = vars.get_req_bn("Output");
 
-         result.test_eq("a - b", a - b, c);
+         result.test_bn_eq("a - b", a - b, c);
 
          BigInt e = a;
          e -= b;
-         result.test_eq("a -= b", e, c);
+         result.test_bn_eq("a -= b", e, c);
 
          return result;
       }
@@ -327,16 +327,16 @@ class BigInt_Mul_Test final : public Text_Based_Test {
          const BigInt b = vars.get_req_bn("In2");
          const BigInt c = vars.get_req_bn("Output");
 
-         result.test_eq("a * b", a * b, c);
-         result.test_eq("b * a", b * a, c);
+         result.test_bn_eq("a * b", a * b, c);
+         result.test_bn_eq("b * a", b * a, c);
 
          BigInt e = a;
          e *= b;
-         result.test_eq("a *= b", e, c);
+         result.test_bn_eq("a *= b", e, c);
 
          e = b;
          e *= a;
-         result.test_eq("b *= a", e, c);
+         result.test_bn_eq("b *= a", e, c);
 
          return result;
       }
@@ -354,8 +354,8 @@ class BigInt_Sqr_Test final : public Text_Based_Test {
          const BigInt input = vars.get_req_bn("Input");
          const BigInt output = vars.get_req_bn("Output");
 
-         result.test_eq("a * a", input * input, output);
-         result.test_eq("sqr(a)", square(input), output);
+         result.test_bn_eq("a * a", input * input, output);
+         result.test_bn_eq("sqr(a)", square(input), output);
 
          return result;
       }
@@ -374,28 +374,28 @@ class BigInt_Div_Test final : public Text_Based_Test {
          const BigInt b = vars.get_req_bn("In2");
          const BigInt c = vars.get_req_bn("Output");
 
-         result.test_eq("a / b", a / b, c);
+         result.test_bn_eq("a / b", a / b, c);
 
          BigInt e = a;
          e /= b;
-         result.test_eq("a /= b", e, c);
+         result.test_bn_eq("a /= b", e, c);
 
          if(b.sig_words() == 1 && b.is_positive()) {
             const Botan::word bw = b.word_at(0);
-            result.test_eq("Low word correct", Botan::BigInt::from_word(bw), b);
+            result.test_bn_eq("Low word correct", Botan::BigInt::from_word(bw), b);
 
             Botan::BigInt ct_q;
             Botan::word ct_r = 0;
             Botan::ct_divide_word(a, bw, ct_q, ct_r);
-            result.test_eq("ct_divide_word q", ct_q, c);
-            result.test_eq("ct_divide_word r", ct_q * b + ct_r, a);
+            result.test_bn_eq("ct_divide_word q", ct_q, c);
+            result.test_bn_eq("ct_divide_word r", ct_q * b + ct_r, a);
          }
 
          Botan::BigInt ct_q;
          Botan::BigInt ct_r;
          Botan::ct_divide(a, b, ct_q, ct_r);
-         result.test_eq("ct_divide q", ct_q, c);
-         result.test_eq("ct_divide r", ct_q * b + ct_r, a);
+         result.test_bn_eq("ct_divide q", ct_q, c);
+         result.test_bn_eq("ct_divide r", ct_q * b + ct_r, a);
 
          return result;
       }
@@ -436,8 +436,8 @@ class BigInt_DivPow2k_Test final : public Test {
          const BigInt vt_pow2k = vartime_divide_pow2k(k, y);
          const BigInt ref = BigInt::power_of_2(k) / y;
 
-         result.test_eq("ct_divide_pow2k matches Knuth division", ct_pow2k, ref);
-         result.test_eq("vartime_divide_pow2k matches Knuth division", vt_pow2k, ref);
+         result.test_bn_eq("ct_divide_pow2k matches Knuth division", ct_pow2k, ref);
+         result.test_bn_eq("vartime_divide_pow2k matches Knuth division", vt_pow2k, ref);
       }
 };
 
@@ -454,18 +454,18 @@ class BigInt_Mod_Test final : public Text_Based_Test {
          const BigInt b = vars.get_req_bn("In2");
          const BigInt expected = vars.get_req_bn("Output");
 
-         result.test_eq("a % b", a % b, expected);
+         result.test_bn_eq("a % b", a % b, expected);
 
          BigInt e = a;
          e %= b;
-         result.test_eq("a %= b", e, expected);
+         result.test_bn_eq("a %= b", e, expected);
 
          if(a.is_positive() && a < (b * b)) {
             auto mod_b_pub = Botan::Barrett_Reduction::for_public_modulus(b);
-            result.test_eq("Barrett public", mod_b_pub.reduce(a), expected);
+            result.test_bn_eq("Barrett public", mod_b_pub.reduce(a), expected);
 
             auto mod_b_sec = Botan::Barrett_Reduction::for_secret_modulus(b);
-            result.test_eq("Barrett secret", mod_b_sec.reduce(a), expected);
+            result.test_bn_eq("Barrett secret", mod_b_sec.reduce(a), expected);
          }
 
          // if b fits into a Botan::word test %= operator for words
@@ -474,20 +474,20 @@ class BigInt_Mod_Test final : public Text_Based_Test {
 
             e = a;
             e %= b_word;
-            result.test_eq("a %= b (as word)", e, expected);
+            result.test_bn_eq("a %= b (as word)", e, expected);
 
-            result.test_eq("a % b (as word)", a % b_word, expected);
+            result.test_bn_eq("a % b (as word)", a % b_word, expected);
 
             Botan::BigInt ct_q;
             Botan::word ct_r = 0;
             Botan::ct_divide_word(a, b.word_at(0), ct_q, ct_r);
-            result.test_eq("ct_divide_u8 r", ct_r, expected);
+            result.test_bn_eq("ct_divide_u8 r", ct_r, expected);
          }
 
          Botan::BigInt ct_q;
          Botan::BigInt ct_r;
          Botan::ct_divide(a, b, ct_q, ct_r);
-         result.test_eq("ct_divide r", ct_r, expected);
+         result.test_bn_eq("ct_divide r", ct_r, expected);
 
          return result;
       }
@@ -534,7 +534,7 @@ class Barrett_Redc_Test final : public Test {
                const auto reduced_ref = input % mod;
                const auto reduced_barrett = barrett.reduce(input);
 
-               result.test_eq("Barrett reduction matches variable time division", reduced_barrett, reduced_ref);
+               result.test_bn_eq("Barrett reduction matches variable time division", reduced_barrett, reduced_ref);
             }
          }
 
@@ -556,10 +556,10 @@ class BigInt_GCD_Test final : public Text_Based_Test {
          const BigInt expected = vars.get_req_bn("GCD");
 
          const BigInt g1 = Botan::gcd(x, y);
-         result.test_eq("gcd", g1, expected);
+         result.test_bn_eq("gcd", g1, expected);
 
          const BigInt g2 = Botan::gcd(y, x);
-         result.test_eq("gcd", g2, expected);
+         result.test_bn_eq("gcd", g2, expected);
 
          return result;
       }
@@ -605,11 +605,11 @@ class BigInt_Lshift_Test final : public Text_Based_Test {
          const size_t shift = vars.get_req_bn("Shift").to_u32bit();
          const BigInt output = vars.get_req_bn("Output");
 
-         result.test_eq("a << s", value << shift, output);
+         result.test_bn_eq("a << s", value << shift, output);
 
          BigInt e = value;
          e <<= shift;
-         result.test_eq("a <<= s", e, output);
+         result.test_bn_eq("a <<= s", e, output);
 
          return result;
       }
@@ -628,11 +628,11 @@ class BigInt_Rshift_Test final : public Text_Based_Test {
          const size_t shift = vars.get_req_bn("Shift").to_u32bit();
          const BigInt output = vars.get_req_bn("Output");
 
-         result.test_eq("a >> s", value >> shift, output);
+         result.test_bn_eq("a >> s", value >> shift, output);
 
          BigInt e = value;
          e >>= shift;
-         result.test_eq("a >>= s", e, output);
+         result.test_bn_eq("a >>= s", e, output);
 
          return result;
       }
@@ -662,7 +662,7 @@ Test::Result test_const_time_left_shift() {
       ct.ct_shift_left(i);
       Botan::CT::unpoison(ct);
       chk <<= i;
-      result.test_eq(Botan::fmt("ct << {}", i), ct, chk);
+      result.test_bn_eq(Botan::fmt("ct << {}", i), ct, chk);
    }
 
    result.end_timer();
@@ -682,7 +682,7 @@ class BigInt_Powmod_Test final : public Text_Based_Test {
          const BigInt modulus = vars.get_req_bn("Modulus");
          const BigInt expected = vars.get_req_bn("Output");
 
-         result.test_eq("power_mod", Botan::power_mod(base, exponent, modulus), expected);
+         result.test_bn_eq("power_mod", Botan::power_mod(base, exponent, modulus), expected);
          return result;
       }
 };
@@ -720,7 +720,7 @@ class BigInt_IsSquare_Test final : public Text_Based_Test {
          const BigInt computed = Botan::is_perfect_square(value);
 
          Test::Result result("BigInt IsSquare");
-         result.test_eq("is_perfect_square", computed, expected);
+         result.test_bn_eq("is_perfect_square", computed, expected);
          return result;
       }
 };
@@ -740,11 +740,11 @@ class BigInt_Sqrt_Modulo_Prime_Test final : public Text_Based_Test {
 
          const Botan::BigInt a_sqrt = Botan::sqrt_modulo_prime(a, p);
 
-         result.test_eq("sqrt_modulo_prime", a_sqrt, exp);
+         result.test_bn_eq("sqrt_modulo_prime", a_sqrt, exp);
 
          if(a_sqrt > 1) {
             const Botan::BigInt a_sqrt2 = (a_sqrt * a_sqrt) % p;
-            result.test_eq("square correct", a_sqrt2, a);
+            result.test_bn_eq("square correct", a_sqrt2, a);
          }
 
          return result;
@@ -764,21 +764,21 @@ class BigInt_InvMod_Test final : public Text_Based_Test {
          const Botan::BigInt mod = vars.get_req_bn("Modulus");
          const Botan::BigInt expected = vars.get_req_bn("Output");
 
-         result.test_eq("inverse_mod", Botan::inverse_mod(a, mod), expected);
+         result.test_bn_eq("inverse_mod", Botan::inverse_mod(a, mod), expected);
 
          if(a < mod && a > 0 && a < mod) {
             auto g = Botan::inverse_mod_general(a, mod);
             if(g.has_value()) {
-               result.test_eq("inverse_mod_general", g.value(), expected);
-               result.test_eq("inverse works", ((g.value() * a) % mod), BigInt::one());
+               result.test_bn_eq("inverse_mod_general", g.value(), expected);
+               result.test_bn_eq("inverse works", ((g.value() * a) % mod), BigInt::one());
             } else {
                result.test_is_true("inverse_mod_general", expected.is_zero());
             }
 
             if(Botan::is_prime(mod, rng()) && mod != 2) {
                BOTAN_ASSERT_NOMSG(expected > 0);
-               result.test_eq("inverse_mod_secret_prime", Botan::inverse_mod_secret_prime(a, mod), expected);
-               result.test_eq("inverse_mod_public_prime", Botan::inverse_mod_public_prime(a, mod), expected);
+               result.test_bn_eq("inverse_mod_secret_prime", Botan::inverse_mod_secret_prime(a, mod), expected);
+               result.test_bn_eq("inverse_mod_public_prime", Botan::inverse_mod_public_prime(a, mod), expected);
             }
          }
 
@@ -803,7 +803,7 @@ class BigInt_Rand_Test final : public Text_Based_Test {
          Fixed_Output_RNG rng(seed);
          const Botan::BigInt generated = BigInt::random_integer(rng, min, max);
 
-         result.test_eq("random_integer KAT", generated, expected);
+         result.test_bn_eq("random_integer KAT", generated, expected);
 
          return result;
       }
@@ -889,7 +889,7 @@ class RSA_Compute_Exp_Test : public Test {
 
             auto ed_mod_phi_n = (e * d) % phi_n;
 
-            result.test_eq("compute_rsa_secret_exponent returned inverse", ed_mod_phi_n, Botan::BigInt::one());
+            result.test_bn_eq("compute_rsa_secret_exponent returned inverse", ed_mod_phi_n, Botan::BigInt::one());
          }
 
          return {result};
@@ -924,8 +924,8 @@ class DSA_ParamGen_Test final : public Text_Based_Test {
             Botan::BigInt gen_P;
             Botan::BigInt gen_Q;
             if(Botan::generate_dsa_primes(this->rng(), gen_P, gen_Q, p_bits, q_bits, seed, offset)) {
-               result.test_eq("P", gen_P, exp_P);
-               result.test_eq("Q", gen_Q, exp_Q);
+               result.test_bn_eq("P", gen_P, exp_P);
+               result.test_bn_eq("Q", gen_Q, exp_Q);
             } else {
                result.test_failure("Seed did not generate a DSA parameter");
             }

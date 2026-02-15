@@ -39,12 +39,12 @@ class Montgomery_Integer_Tests : public Test {
             auto monty_x = Botan::Montgomery_Int(params, x, true);
             auto monty_y = Botan::Montgomery_Int(params, y, true);
 
-            result.test_eq("Montgomery addition", (monty_x + monty_y).value(), (x + y) % p);
-            result.test_eq("Montgomery subtraction", (monty_x - monty_y).value(), (x - y) % p);
-            result.test_eq("Montgomery multiplication", (monty_x.mul(monty_y, ws)).value(), (x * y) % p);
+            result.test_bn_eq("Montgomery addition", (monty_x + monty_y).value(), (x + y) % p);
+            result.test_bn_eq("Montgomery subtraction", (monty_x - monty_y).value(), (x - y) % p);
+            result.test_bn_eq("Montgomery multiplication", (monty_x.mul(monty_y, ws)).value(), (x * y) % p);
 
-            result.test_eq("Montgomery square x", (monty_x.square(ws)).value(), (x * x) % p);
-            result.test_eq("Montgomery square y", (monty_y.square(ws)).value(), (y * y) % p);
+            result.test_bn_eq("Montgomery square x", (monty_x.square(ws)).value(), (x * x) % p);
+            result.test_bn_eq("Montgomery square y", (monty_y.square(ws)).value(), (y * y) % p);
 
             results.push_back(result);
          }

@@ -34,10 +34,6 @@ class RandomNumberGenerator;
 class BigInt;
 #endif
 
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-class EC_Point;
-#endif
-
 }  // namespace Botan
 
 namespace Botan_Tests {
@@ -384,12 +380,9 @@ class Test {
             bool test_opt_u8_eq(std::string_view what, std::optional<uint8_t> a, std::optional<uint8_t> b);
 
 #if defined(BOTAN_HAS_BIGINT)
-            bool test_eq(std::string_view what, const BigInt& produced, const BigInt& expected);
-            bool test_ne(std::string_view what, const BigInt& produced, const BigInt& expected);
-#endif
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-            bool test_eq(std::string_view what, const Botan::EC_Point& a, const Botan::EC_Point& b);
+            /* Test predicates for BigInt */
+            bool test_bn_eq(std::string_view what, const BigInt& produced, const BigInt& expected);
+            bool test_bn_ne(std::string_view what, const BigInt& produced, const BigInt& expected);
 #endif
 
             bool test_eq(const char* producer,

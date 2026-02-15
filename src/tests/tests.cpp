@@ -417,32 +417,24 @@ bool Test::Result::test_opt_u8_eq(std::string_view what, std::optional<uint8_t> 
 }
 
 #if defined(BOTAN_HAS_BIGINT)
-bool Test::Result::test_eq(std::string_view what, const BigInt& produced, const BigInt& expected) {
-   return test_is_eq(what, produced, expected);
+bool Test::Result::test_bn_eq(std::string_view what, const BigInt& produced, const BigInt& expected) {
+   if(produced == expected) {
+      return test_success();
+   } else {
+      std::ostringstream err;
+      err << who() << " " << what << " produced " << produced << " != expected value " << expected;
+      return test_failure(err.str());
+   }
 }
 
-bool Test::Result::test_ne(std::string_view what, const BigInt& produced, const BigInt& expected) {
+bool Test::Result::test_bn_ne(std::string_view what, const BigInt& produced, const BigInt& expected) {
    if(produced != expected) {
       return test_success();
+   } else {
+      std::ostringstream err;
+      err << who() << " " << what << " produced " << produced << " prohibited value";
+      return test_failure(err.str());
    }
-
-   std::ostringstream err;
-   err << who() << " " << what << " produced " << produced << " prohibited value";
-   return test_failure(err.str());
-}
-#endif
-
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-bool Test::Result::test_eq(std::string_view what, const Botan::EC_Point& a, const Botan::EC_Point& b) {
-   //return test_is_eq(what, a, b);
-   if(a == b) {
-      return test_success();
-   }
-
-   std::ostringstream err;
-   err << who() << " " << what << " a=(" << a.get_affine_x() << "," << a.get_affine_y() << ")"
-       << " b=(" << b.get_affine_x() << "," << b.get_affine_y();
-   return test_failure(err.str());
 }
 #endif
 

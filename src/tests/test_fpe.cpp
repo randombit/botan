@@ -29,11 +29,11 @@ class FPE_FE1_Tests final : public Text_Based_Test {
 
          const Botan::BigInt got = Botan::FPE::fe1_encrypt(modulus, input, key, tweak);
 
-         result.test_eq("ciphertext", got, expected);
+         result.test_bn_eq("ciphertext", got, expected);
 
          const Botan::BigInt decry = Botan::FPE::fe1_decrypt(modulus, got, key, tweak);
 
-         result.test_eq("decrypted", decry, input);
+         result.test_bn_eq("decrypted", decry, input);
 
          return result;
       }
