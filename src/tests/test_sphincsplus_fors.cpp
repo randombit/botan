@@ -77,13 +77,13 @@ class SPHINCS_Plus_FORS_Test final : public Text_Based_Test {
          auto pk = Botan::fors_sign_and_pkgen(sig, hashed_message, secret_seed, address, params, *hashes);
 
          const auto pk_ref = Botan::SphincsTreeNode(vars.get_req_bin("PublicKey"));
-         result.test_is_eq("Derived public key", pk, pk_ref);
+         result.test_bin_eq("Derived public key", pk, pk_ref);
 
          const auto hashed_sig_ref = Botan::ForsSignature(vars.get_req_bin("HashSig"));
-         result.test_is_eq("Signature result", unlock(hash->process(sig)), hashed_sig_ref.get());
+         result.test_bin_eq("Signature result", hash->process(sig), hashed_sig_ref.get());
 
          auto pk_from_sig = Botan::fors_public_key_from_signature(hashed_message, sig, address, params, *hashes);
-         result.test_is_eq("Public key from signature", pk_from_sig, pk);
+         result.test_bin_eq("Public key from signature", pk_from_sig, pk);
 
          return result;
       }

@@ -813,8 +813,8 @@ std::vector<Test::Result> test_tpm2_rsa() {
                const auto sk_blob_loaded = sk_loaded->raw_private_key_bits();
                const auto pk_blob_loaded = sk_loaded->raw_public_key_bits();
 
-               result.test_is_eq("secret blob did not change", sk_blob, sk_blob_loaded);
-               result.test_is_eq("public blob did not change", pk_blob, pk_blob_loaded);
+               result.test_bin_eq("secret blob did not change", sk_blob, sk_blob_loaded);
+               result.test_bin_eq("public blob did not change", pk_blob, pk_blob_loaded);
 
                // Perform a round-trip sign/verify test with the new key pair
                std::vector<uint8_t> message_loaded = {'g', 'u', 't', 'e', 'n', ' ', 't', 'a', 'g'};
@@ -1146,8 +1146,8 @@ std::vector<Test::Result> test_tpm2_ecc() {
                   const auto sk_blob_loaded = sk_loaded->raw_private_key_bits();
                   const auto pk_blob_loaded = sk_loaded->raw_public_key_bits();
 
-                  result.test_is_eq("secret blob did not change", sk_blob, sk_blob_loaded);
-                  result.test_is_eq("public blob did not change", pk_blob, pk_blob_loaded);
+                  result.test_bin_eq("secret blob did not change", sk_blob, sk_blob_loaded);
+                  result.test_bin_eq("public blob did not change", pk_blob, pk_blob_loaded);
 
                   // Perform a round-trip sign/verify test with the new key pair
                   std::vector<uint8_t> message_loaded = {'g', 'u', 't', 'e', 'n', ' ', 't', 'a', 'g'};

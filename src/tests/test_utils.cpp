@@ -320,13 +320,13 @@ class Utility_Function_Tests final : public Test {
          i2 = 0xCC33;
          i3 = 0xDD44;
          Botan::store_be(outarr, i0, i1, i2, i3);
-         result.test_is_eq(outarr, {0xAA, 0x11, 0xBB, 0x22, 0xCC, 0x33, 0xDD, 0x44});
+         result.test_bin_eq("store_be", outarr, "AA11BB22CC33DD44");
          std::vector<uint8_t> outvec(8);
          Botan::store_be(outvec, i0, i1, i2, i3);
          result.test_bin_eq("store_be", outvec, "AA11BB22CC33DD44");
 
          Botan::store_le(outarr, i0, i1, i2, i3);
-         result.test_is_eq(outarr, {0x11, 0xAA, 0x22, 0xBB, 0x33, 0xCC, 0x44, 0xDD});
+         result.test_bin_eq("store_le(arr)", outarr, "11AA22BB33CC44DD");
          Botan::store_le(outvec, i0, i1, i2, i3);
          result.test_bin_eq("store_le", outvec, "11AA22BB33CC44DD");
 
@@ -347,13 +347,13 @@ class Utility_Function_Tests final : public Test {
          auto out64_array_be = Botan::store_be(i0, i1, i2, i3);
          auto out64_vec_be = Botan::store_be<std::vector<uint8_t>>(i0, i1, i2, i3);
          auto out64_strong_be = Botan::store_be<TestVectorSink>(i0, i1, i2, i3);
-         result.test_is_eq(out64_array_be, {0xAA, 0x11, 0xBB, 0x22, 0xCC, 0x33, 0xDD, 0x44});
+         result.test_bin_eq("store_be(arr)", out64_array_be, "AA11BB22CC33DD44");
          result.test_bin_eq("store_be(vec)", out64_vec_be, "AA11BB22CC33DD44");
          result.test_bin_eq("store_be(strong)", out64_strong_be, "AA11BB22CC33DD44");
          auto out64_array_le = Botan::store_le(i0, i1, i2, i3);
          auto out64_vec_le = Botan::store_le<std::vector<uint8_t>>(i0, i1, i2, i3);
          auto out64_strong_le = Botan::store_le<TestVectorSink>(i0, i1, i2, i3);
-         result.test_is_eq(out64_array_le, {0x11, 0xAA, 0x22, 0xBB, 0x33, 0xCC, 0x44, 0xDD});
+         result.test_bin_eq("store_le(arr)", out64_array_le, "11AA22BB33CC44DD");
          result.test_bin_eq("store_le(vec)", out64_vec_le, "11AA22BB33CC44DD");
          result.test_bin_eq("store_le(strong)", out64_strong_le, "11AA22BB33CC44DD");
 
@@ -401,14 +401,14 @@ class Utility_Function_Tests final : public Test {
 
          std::array<uint8_t, 4> out_array{};
          Botan::store_be(out_array, in16_array);
-         result.test_is_eq(out_array, std::array<uint8_t, 4>{0x0A, 0x0B, 0x0C, 0x0D});
+         result.test_bin_eq("store_be(arr)", out_array, "0A0B0C0D");
          Botan::store_le(out_array, in16_array);
-         result.test_is_eq(out_array, std::array<uint8_t, 4>{0x0B, 0x0A, 0x0D, 0x0C});
+         result.test_bin_eq("store_le(arr)", out_array, "0B0A0D0C");
 
          const auto be_inferred = Botan::store_be(in16_array);
-         result.test_is_eq(be_inferred, std::array<uint8_t, 4>{0x0A, 0x0B, 0x0C, 0x0D});
+         result.test_bin_eq("store_be(arr)", be_inferred, "0A0B0C0D");
          const auto le_inferred = Botan::store_le(in16_array);
-         result.test_is_eq(le_inferred, std::array<uint8_t, 4>{0x0B, 0x0A, 0x0D, 0x0C});
+         result.test_bin_eq("store_le(arr)", le_inferred, "0B0A0D0C");
 
          // Test load of entire ranges
          const auto in_buffer = Botan::hex_decode("AABBCCDD");
@@ -469,15 +469,14 @@ class Utility_Function_Tests final : public Test {
          result.test_enum_eq("load_be(enum64)", in64_enum_be, TestEnum64::_1);
          result.test_bin_eq(
             "store_be(enum64)", Botan::store_le<std::vector<uint8_t>>(TestEnum64::_1), "EFCDAB9078563412");
-         result.test_is_eq<std::array<uint8_t, 8>>(Botan::store_be(TestEnum64::_2),
-                                                   {0xEF, 0xCD, 0xAB, 0x90, 0x78, 0x56, 0x34, 0x12});
+         result.test_bin_eq("store_be(enum64)", Botan::store_be(TestEnum64::_2), "EFCDAB9078563412");
 
          const auto in32_enum_le = Botan::load_le<TestEnum32>(Botan::hex_decode("78563412"));
          result.test_enum_eq("load_le(enum32)", in32_enum_le, TestEnum32::_1);
          const auto in32_enum_be = Botan::load_be<TestEnum32>(Botan::hex_decode("78563412"));
          result.test_enum_eq("load_be(enum32)", in32_enum_be, TestEnum32::_2);
          result.test_bin_eq("store_le(enum32)", Botan::store_le<std::vector<uint8_t>>(TestEnum32::_1), "78563412");
-         result.test_is_eq<std::array<uint8_t, 4>>(Botan::store_be(TestEnum32::_2), {0x78, 0x56, 0x34, 0x12});
+         result.test_bin_eq("store_be(enum32)", Botan::store_be(TestEnum32::_2), "78563412");
 
          return result;
       }
@@ -554,13 +553,13 @@ class Utility_Function_Tests final : public Test {
          result.test_u32_eq("lBE 32", fb_load_be<uint32_t>({1, 2, 3, 4}), 0x01020304);
          result.test_u64_eq("lBE 64", fb_load_be<uint64_t>({1, 2, 3, 4, 5, 6, 7, 8}), 0x0102030405060708);
 
-         result.test_is_eq<a<2>>("sLE 16", fb_store_le<uint16_t>(0x0201), {1, 2});
-         result.test_is_eq<a<4>>("sLE 32", fb_store_le<uint32_t>(0x04030201), {1, 2, 3, 4});
-         result.test_is_eq<a<8>>("sLE 64", fb_store_le<uint64_t>(0x0807060504030201), {1, 2, 3, 4, 5, 6, 7, 8});
+         result.test_bin_eq("sLE 16", fb_store_le<uint16_t>(0x0201), "0102");
+         result.test_bin_eq("sLE 32", fb_store_le<uint32_t>(0x04030201), "01020304");
+         result.test_bin_eq("sLE 64", fb_store_le<uint64_t>(0x0807060504030201), "0102030405060708");
 
-         result.test_is_eq<a<2>>("sBE 16", fb_store_be<uint16_t>(0x0102), {1, 2});
-         result.test_is_eq<a<4>>("sBE 32", fb_store_be<uint32_t>(0x01020304), {1, 2, 3, 4});
-         result.test_is_eq<a<8>>("sBE 64", fb_store_be<uint64_t>(0x0102030405060708), {1, 2, 3, 4, 5, 6, 7, 8});
+         result.test_bin_eq("sBE 16", fb_store_be<uint16_t>(0x0102), "0102");
+         result.test_bin_eq("sBE 32", fb_store_be<uint32_t>(0x01020304), "01020304");
+         result.test_bin_eq("sBE 64", fb_store_be<uint64_t>(0x0102030405060708), "0102030405060708");
 
          return result;
       }
@@ -622,61 +621,49 @@ class Utility_Function_Tests final : public Test {
 
          // store_le/be with a single integer
          constexpr std::array<uint8_t, 2> cex_store_le16 = Botan::store_le(in16);
-         result.test_is_eq(cex_store_le16, std::array<uint8_t, 2>{0x34, 0x12});
+         result.test_bin_eq("store_le(u16 arr)", cex_store_le16, "3412");
          constexpr std::array<uint8_t, 4> cex_store_le32 = Botan::store_le(in32);
-         result.test_is_eq(cex_store_le32, std::array<uint8_t, 4>{0xD0, 0xC0, 0xB0, 0xA0});
+         result.test_bin_eq("store_le(u32 arr)", cex_store_le32, "D0C0B0A0");
          constexpr std::array<uint8_t, 8> cex_store_le64 = Botan::store_le(in64);
-         result.test_is_eq(cex_store_le64, std::array<uint8_t, 8>{0x89, 0x67, 0x45, 0x23, 0x01, 0xEF, 0xCD, 0xAB});
+         result.test_bin_eq("store_le(u32,arr)", cex_store_le64, "8967452301EFCDAB");
 
          constexpr std::array<uint8_t, 2> cex_store_be16 = Botan::store_be(in16);
-         result.test_is_eq(cex_store_be16, std::array<uint8_t, 2>{0x12, 0x34});
+         result.test_bin_eq("store_be(u16 arr)", cex_store_be16, "1234");
          constexpr std::array<uint8_t, 4> cex_store_be32 = Botan::store_be(in32);
-         result.test_is_eq(cex_store_be32, std::array<uint8_t, 4>{0xA0, 0xB0, 0xC0, 0xD0});
+         result.test_bin_eq("store_be(u32 arr)", cex_store_be32, "A0B0C0D0");
          constexpr std::array<uint8_t, 8> cex_store_be64 = Botan::store_be(in64);
-         result.test_is_eq(cex_store_be64, std::array<uint8_t, 8>{0xAB, 0xCD, 0xEF, 0x01, 0x23, 0x45, 0x67, 0x89});
+         result.test_bin_eq("store_be(u64 arr)", cex_store_be64, "ABCDEF0123456789");
 
          // store_le/be with multiple integers, both as a parameter pack and a range (std::array for constexpr)
          constexpr std::array<uint8_t, 16> cex_store_le16s =
             Botan::store_le(in16, in16, in16, in16, in16, in16, in16, in16);
          constexpr std::array<uint8_t, 16> cex_store_le16s2 =
             Botan::store_le(std::array{in16, in16, in16, in16, in16, in16, in16, in16});
-         result.test_is_eq(
-            cex_store_le16s,
-            {0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12});
-         result.test_is_eq(cex_store_le16s, cex_store_le16s2);
+         result.test_bin_eq("store_le", cex_store_le16s, "34123412341234123412341234123412");
+         result.test_bin_eq("cex_store_le16s", cex_store_le16s, cex_store_le16s2);
          constexpr std::array<uint8_t, 16> cex_store_le32s = Botan::store_le(in32, in32, in32, in32);
          constexpr std::array<uint8_t, 16> cex_store_le32s2 = Botan::store_le(std::array{in32, in32, in32, in32});
-         result.test_is_eq(
-            cex_store_le32s,
-            {0xD0, 0xC0, 0xB0, 0xA0, 0xD0, 0xC0, 0xB0, 0xA0, 0xD0, 0xC0, 0xB0, 0xA0, 0xD0, 0xC0, 0xB0, 0xA0});
-         result.test_is_eq(cex_store_le32s, cex_store_le32s2);
+         result.test_bin_eq("cex_store_le32s", cex_store_le32s, "D0C0B0A0D0C0B0A0D0C0B0A0D0C0B0A0");
+         result.test_bin_eq("cex_store_le32s2", cex_store_le32s, cex_store_le32s2);
          constexpr std::array<uint8_t, 16> cex_store_le64s = Botan::store_le(in64, in64);
          constexpr std::array<uint8_t, 16> cex_store_le64s2 = Botan::store_le(std::array{in64, in64});
-         result.test_is_eq(
-            cex_store_le64s,
-            {0x89, 0x67, 0x45, 0x23, 0x01, 0xEF, 0xCD, 0xAB, 0x89, 0x67, 0x45, 0x23, 0x01, 0xEF, 0xCD, 0xAB});
-         result.test_is_eq(cex_store_le64s, cex_store_le64s2);
+         result.test_bin_eq("cex_store_le64s", cex_store_le64s, "8967452301EFCDAB8967452301EFCDAB");
+         result.test_bin_eq("cex_store_le64s2", cex_store_le64s, cex_store_le64s2);
 
          constexpr std::array<uint8_t, 16> cex_store_be16s =
             Botan::store_be(in16, in16, in16, in16, in16, in16, in16, in16);
          constexpr std::array<uint8_t, 16> cex_store_be16s2 =
             Botan::store_be(std::array{in16, in16, in16, in16, in16, in16, in16, in16});
-         result.test_is_eq(
-            cex_store_be16s,
-            {0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34});
-         result.test_is_eq(cex_store_be16s, cex_store_be16s2);
+         result.test_bin_eq("cex_store_be16s", cex_store_be16s, "12341234123412341234123412341234");
+         result.test_bin_eq("cex_store_be16s2", cex_store_be16s, cex_store_be16s2);
          constexpr std::array<uint8_t, 16> cex_store_be32s = Botan::store_be(in32, in32, in32, in32);
          constexpr std::array<uint8_t, 16> cex_store_be32s2 = Botan::store_be(std::array{in32, in32, in32, in32});
-         result.test_is_eq(
-            cex_store_be32s,
-            {0xA0, 0xB0, 0xC0, 0xD0, 0xA0, 0xB0, 0xC0, 0xD0, 0xA0, 0xB0, 0xC0, 0xD0, 0xA0, 0xB0, 0xC0, 0xD0});
-         result.test_is_eq(cex_store_be32s, cex_store_be32s2);
+         result.test_bin_eq("cex_store_be32s", cex_store_be32s, "A0B0C0D0A0B0C0D0A0B0C0D0A0B0C0D0");
+         result.test_bin_eq("cex_store_be32s2", cex_store_be32s, cex_store_be32s2);
          constexpr std::array<uint8_t, 16> cex_store_be64s = Botan::store_be(in64, in64);
          constexpr std::array<uint8_t, 16> cex_store_be64s2 = Botan::store_be(std::array{in64, in64});
-         result.test_is_eq(
-            cex_store_be64s,
-            {0xAB, 0xCD, 0xEF, 0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x01, 0x23, 0x45, 0x67, 0x89});
-         result.test_is_eq(cex_store_be64s, cex_store_be64s2);
+         result.test_bin_eq("cex_store_be64s", cex_store_be64s, "ABCDEF0123456789ABCDEF0123456789");
+         result.test_bin_eq("cex_store_be64s2", cex_store_be64s, cex_store_be64s2);
 
          // load_le/be a single integer
          constexpr uint16_t cex_load_le16 = Botan::load_le<uint16_t>(cex_store_le16);

@@ -97,12 +97,12 @@ class Ed448_General_Test final : public Text_Based_Test {
          const auto p = Botan::Ed448Point::decode(pub_key_ref);
          const auto reencoded_point_data = p.encode();
 
-         result.test_is_eq("Enc- and decoding roundtrip", reencoded_point_data, pub_key_ref);
+         result.test_bin_eq("Enc- and decoding roundtrip", reencoded_point_data, pub_key_ref);
 
          // Test public key creation
          const auto pub_key = Botan::create_pk_from_sk(sk);
 
-         result.test_is_eq("Public key from secret key", pub_key, pub_key_ref);
+         result.test_bin_eq("Public key from secret key", pub_key, pub_key_ref);
 
          return result;
       }
@@ -138,7 +138,7 @@ class Ed448_Utils_Test final : public Test {
             const auto ref = reduce_mod_L_ref(t);
             std::array<uint8_t, 56> res{};
             result.test_no_throw("Reduce mod L does not throw", [&] { res = Botan::Scalar448(t).to_bytes<56>(); });
-            result.test_is_eq("Reduce mod L result", res, ref);
+            result.test_bin_eq("Reduce mod L result", res, ref);
          }
 
          return result;

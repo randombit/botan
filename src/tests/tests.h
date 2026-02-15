@@ -302,8 +302,12 @@ class Test {
             }
 
             template <typename T>
-               requires(!std::is_enum_v<T> && !std::is_integral_v<T> && !std::convertible_to<T, std::string>)
             bool test_is_eq(std::string_view what, const T& produced, const T& expected) {
+               static_assert(!std::convertible_to<T, std::span<const uint8_t>>, "Use test_bin_eq");
+               static_assert(!std::convertible_to<T, std::string_view>, "Use test_str_eq");
+               static_assert(!std::is_integral_v<T>, "Use test_{sz,u8,u16,u32,u64}_eq");
+               static_assert(!std::is_enum_v<T>, "Use test_enum_eq");
+
                std::ostringstream out;
                out << m_who << " " << what;
 

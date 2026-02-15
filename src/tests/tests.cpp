@@ -307,7 +307,11 @@ bool Test::Result::test_str_not_empty(std::string_view what, std::string_view pr
 }
 
 bool Test::Result::test_str_eq(std::string_view what, std::string_view produced, std::string_view expected) {
-   return test_is_eq(what, produced, expected);
+   if(produced == expected) {
+      return test_success();
+   } else {
+      return test_failure(Botan::fmt("Assertion failure in {} {}: '{}' == '{}'", who(), what, produced, expected));
+   }
 }
 
 bool Test::Result::test_str_ne(std::string_view what, std::string_view str1, std::string_view str2) {

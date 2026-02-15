@@ -1080,9 +1080,9 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                      if(result.test_sz_eq("session was stored", ctx->stored_sessions().size(), 1)) {
                         const auto& [stored_session, stored_handle] = ctx->stored_sessions().front();
                         result.require("session handle contains a ticket", stored_handle.ticket().has_value());
-                        result.test_is_eq("session was serialized as expected",
-                                          Botan::unlock(stored_session.DER_encode()),
-                                          vars.get_req_bin("Client_SessionData"));
+                        result.test_bin_eq("session was serialized as expected",
+                                           stored_session.DER_encode(),
+                                           vars.get_req_bin("Client_SessionData"));
                      }
                   }),
 

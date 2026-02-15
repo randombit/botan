@@ -107,7 +107,7 @@ class CMCE_Utility_Tests final : public Test {
          auto rand = params.prg(seed)->output_stdvec(byte_length);
          rand.erase(rand.begin() + 8, rand.end() - 8);
 
-         result.test_is_eq("Seed expansion", rand, exp_first_and_last_bytes);
+         result.test_bin_eq("Seed expansion", rand, exp_first_and_last_bytes);
 
          return result;
       }
@@ -243,7 +243,7 @@ class CMCE_Invalid_Test : public Text_Based_Test {
          auto dec = Botan::PK_KEM_Decryptor(*private_key, *test_rng, "Raw");
          auto decaps_ct_invalid = dec.decrypt(ct_invalid);
 
-         result.test_is_eq("Decaps an invalid encapsulated key", decaps_ct_invalid, ref_ss_invalid);
+         result.test_bin_eq("Decaps an invalid encapsulated key", decaps_ct_invalid, ref_ss_invalid);
 
          if(params.is_pc()) {
             // For pc variants, additionally check the plaintext confirmation (pc) logic by
@@ -253,7 +253,7 @@ class CMCE_Invalid_Test : public Text_Based_Test {
             const auto ref_ss_invalid_c1 = Botan::lock(vars.get_opt_bin("ss_invalid_c1"));
             auto decaps_ct_invalid_c1 = dec.decrypt(ct_invalid_c1);
 
-            result.test_is_eq("Decaps with invalid C_1 in pc", decaps_ct_invalid_c1, ref_ss_invalid_c1);
+            result.test_bin_eq("Decaps with invalid C_1 in pc", decaps_ct_invalid_c1, ref_ss_invalid_c1);
          }
 
          return result;
