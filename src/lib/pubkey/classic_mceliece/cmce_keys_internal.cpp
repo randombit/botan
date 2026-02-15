@@ -71,7 +71,7 @@ Classic_McEliece_PrivateKeyInternal Classic_McEliece_PrivateKeyInternal::from_by
    BufferSlicer sk_slicer(sk_bytes);
 
    auto delta = sk_slicer.copy<CmceKeyGenSeed>(params.seed_len());
-   auto c = CmceColumnSelection(sk_slicer.take(params.sk_c_bytes()));
+   auto c = CmceColumnSelection(secure_bitvector(sk_slicer.take(params.sk_c_bytes())));
    auto g = Classic_McEliece_Minimal_Polynomial::from_bytes(sk_slicer.take(params.sk_poly_g_bytes()), params.poly_f());
    auto field_ordering = Classic_McEliece_Field_Ordering::create_from_control_bits(
       params, secure_bitvector(sk_slicer.take(params.sk_alpha_control_bytes())));
