@@ -678,7 +678,7 @@ class FFI_CRL_Test final : public FFI_Test {
    public:
       std::string name() const override { return "FFI CRL"; }
 
-      void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
+      void ffi_test(Test::Result& result, botan_rng_t rng) override {
          const char* crl_string =
             "-----BEGIN X509 CRL-----\n"
             "MIICoTCCAQkCAQEwDQYJKoZIhvcNAQELBQAwgZQxLTArBgNVBAMTJFVzYWJsZSBj\n"
@@ -788,6 +788,105 @@ class FFI_CRL_Test final : public FFI_Test {
          TEST_FFI_OK(botan_x509_crl_destroy, (crl));
          TEST_FFI_OK(botan_x509_crl_destroy, (bytecrl));
          TEST_FFI_OK(botan_x509_crl_destroy, (crl_without_next_update));
+
+         const uint64_t now =
+            std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch())
+               .count();
+
+         const char* priv_string =
+            "-----BEGIN PRIVATE KEY-----\n"
+            "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgoVEKnWZw2Bfrf3MM\n"
+            "WLrfvRcAqq/sOf58jny37NLGQHShRANCAARageRLkKQEh1M86zvqeeesx2u9duLP\n"
+            "iWtHjIcunpiq6+IiB8IVu7Ncu6uPKoFS/mWzTvjgdNusmgNle9p3OAbE\n"
+            "-----END PRIVATE KEY-----";
+
+         botan_privkey_t ca_key;
+         botan_x509_cert_t ca_cert;
+         botan_x509_cert_t sub1_cert;
+         botan_x509_cert_t sub2_cert;
+
+         REQUIRE_FFI_OK(botan_privkey_load,
+                        (&ca_key, nullptr, reinterpret_cast<const uint8_t*>(priv_string), 240, nullptr));
+         REQUIRE_FFI_OK(botan_x509_cert_load_file, (&ca_cert, Test::data_file("x509/crl/ca.crt").c_str()));
+         REQUIRE_FFI_OK(botan_x509_cert_load_file, (&sub1_cert, Test::data_file("x509/crl/sub1.crt").c_str()));
+         REQUIRE_FFI_OK(botan_x509_cert_load_file, (&sub2_cert, Test::data_file("x509/crl/sub2.crt").c_str()));
+
+         botan_pubkey_t ca_pubkey;
+         REQUIRE_FFI_OK(botan_privkey_export_pubkey, (&ca_pubkey, ca_key));
+
+         botan_x509_crl_t empty_crl;
+         TEST_FFI_OK(botan_x509_crl_create, (&empty_crl, rng, ca_cert, ca_key, now, 86400, nullptr, nullptr));
+
+         int rc;
+         // both validate, because the crl is empty
+         TEST_FFI_RC(0,
+                     botan_x509_cert_verify_with_crl,
+                     (&rc, sub1_cert, nullptr, 0, &ca_cert, 1, &empty_crl, 1, nullptr, 0, nullptr, 0));
+         TEST_FFI_RC(0,
+                     botan_x509_cert_verify_with_crl,
+                     (&rc, sub2_cert, nullptr, 0, &ca_cert, 1, &empty_crl, 1, nullptr, 0, nullptr, 0));
+
+         botan_x509_crl_entry_t crl_entry;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE, botan_x509_crl_entries, (empty_crl, 0, &crl_entry));
+         TEST_FFI_OK(botan_x509_crl_entry_create, (&crl_entry, sub2_cert, BOTAN_CRL_ENTRY_KEY_COMPROMISE));
+
+         botan_x509_crl_t new_crl;
+         botan_x509_crl_entry_t crl_entries[1] = {crl_entry};
+
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER,
+                     botan_x509_crl_update,
+                     (&new_crl, empty_crl, rng, ca_cert, ca_key, now, 86400, nullptr, 1, nullptr, nullptr));
+         TEST_FFI_OK(botan_x509_crl_update,
+                     (&new_crl, empty_crl, rng, ca_cert, ca_key, now, 86400, crl_entries, 1, nullptr, nullptr));
+         // sub 1 still validates
+         TEST_FFI_RC(0,
+                     botan_x509_cert_verify_with_crl,
+                     (&rc, sub1_cert, nullptr, 0, &ca_cert, 1, &new_crl, 1, nullptr, 0, nullptr, 0));
+         // but sub 2 is revoked
+         TEST_FFI_RC(1,
+                     botan_x509_cert_verify_with_crl,
+                     (&rc, sub2_cert, nullptr, 0, &ca_cert, 1, &new_crl, 1, nullptr, 0, nullptr, 0));
+
+         botan_x509_crl_entry_t crl_entry_2;
+         TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE, botan_x509_crl_entries, (new_crl, 1, &crl_entry_2));
+         TEST_FFI_OK(botan_x509_crl_entries, (new_crl, 0, &crl_entry_2));
+
+         botan_mp_t serial_from_str;
+         TEST_FFI_OK(botan_mp_init, (&serial_from_str));
+         TEST_FFI_OK(botan_mp_set_from_str, (serial_from_str, "270431672985589325219914342203841486494"));
+
+         uint64_t expire_time;
+         TEST_FFI_OK(botan_x509_crl_entry_revocation_date, (crl_entry_2, &expire_time));
+         TEST_FFI_OK(botan_x509_crl_entry_reason, (crl_entry_2, &reason));
+
+         botan_mp_t serial_from_crl;
+         TEST_FFI_OK(botan_x509_crl_entry_serial_number, (crl_entry_2, &serial_from_crl));
+         TEST_FFI_RC(1, botan_mp_equal, (serial_from_str, serial_from_crl));
+         result.test_is_true("expire time is correct", now - 20 <= expire_time && expire_time <= now + 20);
+         result.test_is_true("reason is correct", reason == BOTAN_CRL_ENTRY_KEY_COMPROMISE);
+
+         TEST_FFI_OK(botan_x509_crl_verify_signature, (new_crl, ca_pubkey, &rc));
+         result.test_is_true("crl signature is valid", rc == 1);
+
+         botan_x509_crl_t even_newer_crl;
+         TEST_FFI_OK(botan_x509_crl_update,
+                     (&even_newer_crl, new_crl, rng, ca_cert, ca_key, now, 456, nullptr, 0, nullptr, nullptr));
+
+         TEST_FFI_OK(botan_x509_crl_next_update, (even_newer_crl, &expire_time));
+         result.test_is_true("expire time is correct", expire_time == now + 456);
+
+         TEST_FFI_OK(botan_x509_crl_entry_destroy, (crl_entry));
+         TEST_FFI_OK(botan_x509_crl_entry_destroy, (crl_entry_2));
+         TEST_FFI_OK(botan_mp_destroy, (serial_from_str));
+         TEST_FFI_OK(botan_mp_destroy, (serial_from_crl));
+         TEST_FFI_OK(botan_x509_crl_destroy, (empty_crl));
+         TEST_FFI_OK(botan_x509_crl_destroy, (new_crl));
+         TEST_FFI_OK(botan_x509_crl_destroy, (even_newer_crl));
+         TEST_FFI_OK(botan_x509_cert_destroy, (ca_cert));
+         TEST_FFI_OK(botan_x509_cert_destroy, (sub1_cert));
+         TEST_FFI_OK(botan_x509_cert_destroy, (sub2_cert));
+         TEST_FFI_OK(botan_pubkey_destroy, (ca_pubkey));
+         TEST_FFI_OK(botan_privkey_destroy, (ca_key));
       }
 };
 

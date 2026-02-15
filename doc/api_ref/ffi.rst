@@ -1963,6 +1963,52 @@ X.509 Certificate Revocation Lists
 
    Load a CRL from a file.
 
+.. cpp:function:: int botan_x509_crl_create(botan_x509_crl_t* crl_obj, \
+                  botan_rng_t rng, \
+                  botan_x509_cert_t ca_cert, \
+                  botan_privkey_t ca_key, \
+                  uint64_t issue_time, \
+                  uint32_t next_update, \
+                  const char* hash_fn, \
+                  const char* padding)
+
+   Create a new CRL. ``issue_time`` is expected to be a UNIX timestamp, in seconds.
+   ``next_update`` is the number of seconds after ``issue_time`` until the CRL expires.
+   ``hash_fn`` and ``padding`` may be NULL.
+
+.. cpp:enum:: botan_x509_crl_reason_code
+
+   CRL revocation reason codes. Allowed values: `BOTAN_CRL_ENTRY_UNSPECIFIED`,
+   `BOTAN_CRL_ENTRY_KEY_COMPROMISE`, `BOTAN_CRL_ENTRY_CA_COMPROMISE`, `BOTAN_CRL_ENTRY_AFFILIATION_CHANGED`,
+   `BOTAN_CRL_ENTRY_SUPERSEDED`, `BOTAN_CRL_ENTRY_CESSATION_OF_OPERATION`, `BOTAN_CRL_ENTRY_CERTIFICATE_HOLD`,
+   `BOTAN_CRL_ENTRY_REMOVE_FROM_CRL`, `BOTAN_CRL_ENTRY_PRIVILEGE_WITHDRAWN`, `BOTAN_CRL_ENTRY_AA_COMPROMISE`.
+
+.. cpp:function:: int botan_x509_crl_entry_create(botan_x509_crl_entry_t* entry, botan_x509_cert_t cert, int reason_code)
+
+   Create a new CRL entry to be added to a CRL later.
+
+.. cpp:function:: int botan_x509_crl_update(botan_x509_crl_t* crl_obj, \
+                  botan_x509_crl_t last_crl, \
+                  botan_rng_t rng, \
+                  botan_x509_cert_t ca_cert, \
+                  botan_privkey_t ca_key, \
+                  uint64_t issue_time, \
+                  uint32_t next_update, \
+                  const botan_x509_crl_entry_t* new_entries, \
+                  size_t new_entries_len, \
+                  const char* hash_fn, \
+                  const char* padding)
+
+   Revoke some certificates. This does not update the given CRL in place.
+   ``issue_time`` is expected to be a UNIX timestamp, in seconds.
+   ``next_update`` is the number of seconds after ``issue_time`` until the CRL expires.
+   ``hash_fn`` and ``padding`` may be NULL.
+   ``new_entries`` is an array of ``botan_x509_crl_entry_t`` objects, ``new_entries_len`` is its length.
+
+.. cpp:function:: int botan_x509_crl_verify_signature(botan_x509_crl_t crl, botan_pubkey_t key, int* result)
+
+   Verify the signature of a CRL. Sets ``result`` to 1 if the signature is valid, otherwise to 0.
+
 .. cpp:function:: int botan_x509_crl_destroy(botan_x509_crl_t crl)
 
    Destroy the CRL object.

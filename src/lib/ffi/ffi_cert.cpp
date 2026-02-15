@@ -6,7 +6,9 @@
 
 #include <botan/ffi.h>
 
+#include <botan/internal/ffi_cert.h>
 #include <botan/internal/ffi_pkey.h>
+#include <botan/internal/ffi_rng.h>
 #include <botan/internal/ffi_util.h>
 #include <memory>
 
@@ -107,6 +109,18 @@ std::optional<botan_x509_general_name_types> to_botan_x509_general_name_types(Bo
    BOTAN_ASSERT_UNREACHABLE();
 }
 
+std::chrono::system_clock::time_point timepoint_from_timestamp(uint64_t time_since_epoch) {
+   return std::chrono::system_clock::time_point(std::chrono::seconds(time_since_epoch));
+}
+
+std::string default_from_ptr(const char* value) {
+   std::string ret;
+   if(value != nullptr) {
+      ret = value;
+   }
+   return ret;
+}
+
 }  // namespace
 
 }  // namespace Botan_FFI
@@ -116,13 +130,6 @@ std::optional<botan_x509_general_name_types> to_botan_x509_general_name_types(Bo
 extern "C" {
 
 using namespace Botan_FFI;
-
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-
-BOTAN_FFI_DECLARE_STRUCT(botan_x509_cert_struct, Botan::X509_Certificate, 0x8F628937);
-BOTAN_FFI_DECLARE_STRUCT(botan_x509_general_name_struct, Botan::GeneralName, 0x563654FD);
-
-#endif
 
 int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* cert_path) {
    if(cert_obj == nullptr || cert_path == nullptr) {
@@ -781,13 +788,6 @@ const char* botan_x509_cert_validation_status(int code) {
 #endif
 }
 
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-
-BOTAN_FFI_DECLARE_STRUCT(botan_x509_crl_struct, Botan::X509_CRL, 0x2C628910);
-BOTAN_FFI_DECLARE_STRUCT(botan_x509_crl_entry_struct, Botan::CRL_Entry, 0x4EAA5346);
-
-#endif
-
 int botan_x509_crl_load_file(botan_x509_crl_t* crl_obj, const char* crl_path) {
    if(crl_obj == nullptr || crl_path == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
@@ -854,6 +854,107 @@ int botan_x509_crl_next_update(botan_x509_crl_t crl, uint64_t* time_since_epoch)
    });
 #else
    BOTAN_UNUSED(crl, time_since_epoch);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_crl_create(botan_x509_crl_t* crl_obj,
+                          botan_rng_t rng,
+                          botan_x509_cert_t ca_cert,
+                          botan_privkey_t ca_key,
+                          uint64_t issue_time,
+                          uint32_t next_update,
+                          const char* hash_fn,
+                          const char* padding) {
+   if(Botan::any_null_pointers(crl_obj)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto& rng_ = safe_get(rng);
+      auto ca = Botan::X509_CA(
+         safe_get(ca_cert), safe_get(ca_key), default_from_ptr(hash_fn), default_from_ptr(padding), rng_);
+      auto crl = std::make_unique<Botan::X509_CRL>(
+         ca.new_crl(rng_, timepoint_from_timestamp(issue_time), std::chrono::seconds(next_update)));
+      return ffi_new_object(crl_obj, std::move(crl));
+   });
+#else
+   BOTAN_UNUSED(rng, ca_cert, ca_key, hash_fn, padding, issue_time, next_update);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_crl_entry_create(botan_x509_crl_entry_t* entry, botan_x509_cert_t cert, int reason_code) {
+   if(Botan::any_null_pointers(entry)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      return ffi_new_object(
+         entry, std::make_unique<Botan::CRL_Entry>(safe_get(cert), static_cast<Botan::CRL_Code>(reason_code)));
+   });
+#else
+   BOTAN_UNUSED(cert, reason_code);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_crl_update(botan_x509_crl_t* crl_obj,
+                          botan_x509_crl_t last_crl,
+                          botan_rng_t rng,
+                          botan_x509_cert_t ca_cert,
+                          botan_privkey_t ca_key,
+                          uint64_t issue_time,
+                          uint32_t next_update,
+                          const botan_x509_crl_entry_t* new_entries,
+                          size_t new_entries_len,
+                          const char* hash_fn,
+                          const char* padding) {
+   if(Botan::any_null_pointers(crl_obj)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   if(new_entries_len > 0 && Botan::any_null_pointers(new_entries)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto& rng_ = safe_get(rng);
+      auto ca = Botan::X509_CA(
+         safe_get(ca_cert), safe_get(ca_key), default_from_ptr(hash_fn), default_from_ptr(padding), rng_);
+
+      std::vector<Botan::CRL_Entry> entries;
+      entries.reserve(new_entries_len);
+      for(size_t i = 0; i < new_entries_len; i++) {
+         entries.push_back(safe_get(new_entries[i]));
+      }
+
+      auto crl = std::make_unique<Botan::X509_CRL>(ca.update_crl(
+         safe_get(last_crl), entries, rng_, timepoint_from_timestamp(issue_time), std::chrono::seconds(next_update)));
+      return ffi_new_object(crl_obj, std::move(crl));
+   });
+#else
+   BOTAN_UNUSED(
+      last_crl, rng, ca_cert, ca_key, hash_fn, padding, issue_time, next_update, new_entries, new_entries_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_crl_verify_signature(botan_x509_crl_t crl, botan_pubkey_t key, int* result) {
+   if(Botan::any_null_pointers(result)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const bool ok = safe_get(crl).check_signature(safe_get(key));
+      if(ok) {
+         *result = 1;
+      } else {
+         *result = 0;
+      }
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(crl, key);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
