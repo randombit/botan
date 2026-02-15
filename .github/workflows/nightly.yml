@@ -22,6 +22,41 @@ on:
     - cron:  '14 3 * * *'
 
 jobs:
+  strubbing:
+    name: "Strubbing"
+    strategy:
+      fail-fast: false
+
+      matrix:
+        include:
+          - target: strubbing
+            compiler: gcc-14
+            host_os: ubuntu-24.04
+          - target: strubbing
+            compiler: gcc-14
+            host_os: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.host_os }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: ./source
+
+      - name: Read Repository Configuration
+        uses: ./source/.github/actions/read-repo-config
+
+      - name: Setup Build Agent
+        uses: ./source/.github/actions/setup-build-agent
+        with:
+          target: ${{ matrix.target }}
+          compiler: ${{ matrix.compiler }}
+          cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
+
+      - name: Build and Test Botan
+        run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --cc='${{ matrix.compiler }}' --ci-image='${{ matrix.host_os }}' --test-results-dir=junit_results ${{ matrix.target }}
+
   sanitizer:
     name: "Sanitizers"
     strategy:
