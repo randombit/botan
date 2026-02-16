@@ -11,6 +11,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/pkix_enums.h>
 #include <memory>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -60,7 +61,7 @@ class BOTAN_PUBLIC_API(2, 0) X509_Object : public ASN1_Object {
       static std::vector<uint8_t> make_signed(PK_Signer& signer,
                                               RandomNumberGenerator& rng,
                                               const AlgorithmIdentifier& alg_id,
-                                              const secure_vector<uint8_t>& tbs);
+                                              std::span<const uint8_t> tbs);
 
       /**
       * Check the signature on this data

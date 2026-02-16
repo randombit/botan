@@ -166,7 +166,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer& signer,
              .end_cons()
          .end_explicit()
       .end_cons()
-      .get_contents()
+      .get_contents_unlocked()
       ));
    // clang-format on
 }
@@ -244,7 +244,7 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
             .end_cons()
          .end_explicit()
       .end_cons()
-      .get_contents());
+      .get_contents_unlocked());
    // clang-format on
 
    return X509_CRL(crl);

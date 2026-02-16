@@ -27,6 +27,10 @@ void secure_scrub_memory(void* ptr, size_t n) {
 }
 
 void secure_zeroize_buffer(void* ptr, size_t n) {
+   if(n == 0) {
+      return;
+   }
+
 #if defined(BOTAN_TARGET_OS_HAS_RTLSECUREZEROMEMORY)
    ::RtlSecureZeroMemory(ptr, n);
 
