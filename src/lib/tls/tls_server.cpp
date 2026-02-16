@@ -11,7 +11,7 @@
 #include <botan/tls_server.h>
 
 #include <botan/tls_policy.h>
-#include <botan/internal/tls_channel_impl.h>
+#include <botan/x509cert.h>
 
 #if defined(BOTAN_HAS_TLS_12)
    #include <botan/internal/tls_server_impl_12.h>

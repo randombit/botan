@@ -18,6 +18,7 @@
    #include <botan/tls_session_manager_hybrid.h>
    #include <botan/tls_session_manager_memory.h>
    #include <botan/tls_session_manager_stateless.h>
+   #include <botan/x509cert.h>
    #include <botan/internal/fmt.h>
    #include <array>
    #include <chrono>

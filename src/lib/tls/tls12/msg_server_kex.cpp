@@ -11,9 +11,7 @@
 #include <botan/bigint.h>
 #include <botan/credentials_manager.h>
 #include <botan/dl_group.h>
-#include <botan/pubkey.h>
 #include <botan/tls_callbacks.h>
-#include <botan/tls_extensions.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/target_info.h>

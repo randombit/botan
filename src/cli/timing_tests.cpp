@@ -59,7 +59,10 @@
 #endif
 
 #if defined(BOTAN_HAS_TLS_CBC)
+   #include <botan/block_cipher.h>
+   #include <botan/mac.h>
    #include <botan/tls_exceptn.h>
+   #include <botan/tls_version.h>
    #include <botan/internal/tls_cbc.h>
 #endif
 

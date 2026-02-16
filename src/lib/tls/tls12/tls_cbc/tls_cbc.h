@@ -10,11 +10,17 @@
 #define BOTAN_TLS_CBC_HMAC_AEAD_H_
 
 #include <botan/aead.h>
-#include <botan/block_cipher.h>
-#include <botan/mac.h>
-#include <botan/tls_version.h>
+
+namespace Botan {
+
+class BlockCipher;
+class MessageAuthenticationCode;
+
+}  // namespace Botan
 
 namespace Botan::TLS {
+
+class Protocol_Version;
 
 /**
 * TLS CBC+HMAC AEAD base class (GenericBlockCipher in TLS spec)
@@ -44,13 +50,21 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode {
 
       bool has_keying_material() const final;
 
+      ~TLS_CBC_HMAC_AEAD_Mode() override;
+
+      TLS_CBC_HMAC_AEAD_Mode(const TLS_CBC_HMAC_AEAD_Mode& other) = delete;
+      TLS_CBC_HMAC_AEAD_Mode(TLS_CBC_HMAC_AEAD_Mode&& other) = delete;
+
+      TLS_CBC_HMAC_AEAD_Mode& operator=(const TLS_CBC_HMAC_AEAD_Mode& other) = delete;
+      TLS_CBC_HMAC_AEAD_Mode& operator=(TLS_CBC_HMAC_AEAD_Mode&& other) = delete;
+
    protected:
       TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir direction,
                              std::unique_ptr<BlockCipher> cipher,
                              std::unique_ptr<MessageAuthenticationCode> mac,
                              size_t cipher_keylen,
                              size_t mac_keylen,
-                             Protocol_Version version,
+                             const Protocol_Version& version,
                              bool use_encrypt_then_mac);
 
       size_t cipher_keylen() const { return m_cipher_keylen; }
@@ -110,17 +124,10 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Encryption final : public TLS_CBC_HMAC_AE
       */
       TLS_CBC_HMAC_AEAD_Encryption(std::unique_ptr<BlockCipher> cipher,
                                    std::unique_ptr<MessageAuthenticationCode> mac,
-                                   const size_t cipher_keylen,
-                                   const size_t mac_keylen,
-                                   const Protocol_Version version,
-                                   bool use_encrypt_then_mac) :
-            TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir::Encryption,
-                                   std::move(cipher),
-                                   std::move(mac),
-                                   cipher_keylen,
-                                   mac_keylen,
-                                   version,
-                                   use_encrypt_then_mac) {}
+                                   size_t cipher_keylen,
+                                   size_t mac_keylen,
+                                   const Protocol_Version& version,
+                                   bool use_encrypt_then_mac);
 
       void set_associated_data_n(size_t idx, std::span<const uint8_t> ad) override;
 
@@ -142,17 +149,10 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Decryption final : public TLS_CBC_HMAC_AE
       */
       TLS_CBC_HMAC_AEAD_Decryption(std::unique_ptr<BlockCipher> cipher,
                                    std::unique_ptr<MessageAuthenticationCode> mac,
-                                   const size_t cipher_keylen,
-                                   const size_t mac_keylen,
-                                   const Protocol_Version version,
-                                   bool use_encrypt_then_mac) :
-            TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir::Decryption,
-                                   std::move(cipher),
-                                   std::move(mac),
-                                   cipher_keylen,
-                                   mac_keylen,
-                                   version,
-                                   use_encrypt_then_mac) {}
+                                   size_t cipher_keylen,
+                                   size_t mac_keylen,
+                                   const Protocol_Version& version,
+                                   bool use_encrypt_then_mac);
 
       size_t output_length(size_t input_length) const override;
 

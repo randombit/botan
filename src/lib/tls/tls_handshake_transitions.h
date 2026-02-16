@@ -10,9 +10,8 @@
 #ifndef BOTAN_TLS_HANDSHAKE_TRANSITIONS_H_
 #define BOTAN_TLS_HANDSHAKE_TRANSITIONS_H_
 
-#include <vector>
-
 #include <botan/tls_magic.h>
+#include <vector>
 
 namespace Botan::TLS {
 

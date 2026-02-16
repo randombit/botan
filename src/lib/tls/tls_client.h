@@ -25,7 +25,6 @@ namespace Botan::TLS {
 class Callbacks;
 class Session_Manager;
 class Channel_Impl;
-class Handshake_IO;
 class Policy;
 
 /**

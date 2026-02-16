@@ -17,9 +17,16 @@
 #include <botan/tls_server_info.h>
 #include <botan/tls_session_id.h>
 #include <botan/tls_version.h>
-#include <botan/x509cert.h>
 #include <chrono>
+#include <memory>
 #include <span>
+
+namespace Botan {
+
+class Public_Key;
+class X509_Certificate;
+
+}  // namespace Botan
 
 namespace Botan::TLS {
 
@@ -41,22 +48,20 @@ class BOTAN_PUBLIC_API(3, 0) Session_Base {
                    uint16_t srtp_profile,
                    bool extended_master_secret,
                    bool encrypt_then_mac,
-                   std::vector<X509_Certificate> peer_certs,
+                   const std::vector<X509_Certificate>& peer_certs,
                    std::shared_ptr<const Public_Key> peer_raw_public_key,
-                   Server_Information server_info) :
-            m_start_time(start_time),
-            m_version(version),
-            m_ciphersuite(ciphersuite),
-            m_connection_side(connection_side),
-            m_srtp_profile(srtp_profile),
-            m_extended_master_secret(extended_master_secret),
-            m_encrypt_then_mac(encrypt_then_mac),
-            m_peer_certs(std::move(peer_certs)),
-            m_peer_raw_public_key(std::move(peer_raw_public_key)),
-            m_server_info(std::move(server_info)) {}
+                   Server_Information server_info);
+
+      Session_Base(const Session_Base& other);
+      Session_Base& operator=(const Session_Base& other);
+
+      Session_Base(Session_Base&& other) noexcept;
+      Session_Base& operator=(Session_Base&& other) noexcept;
+
+      ~Session_Base();
 
    protected:
-      Session_Base() = default;
+      Session_Base();
 
    public:
       /**
@@ -205,7 +210,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Summary : public Session_Base {
 #if defined(BOTAN_HAS_TLS_13)
       Session_Summary(const Server_Hello_13& server_hello,
                       Connection_Side side,
-                      std::vector<X509_Certificate> peer_certs,
+                      const std::vector<X509_Certificate>& peer_certs,
                       std::shared_ptr<const Public_Key> peer_raw_public_key,
                       std::optional<std::string> psk_identity,
                       bool session_was_resumed,
