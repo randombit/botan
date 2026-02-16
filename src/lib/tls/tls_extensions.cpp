@@ -18,6 +18,7 @@
 #include <botan/internal/parsing.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_reader.h>
+#include <algorithm>
 
 #if defined(BOTAN_HAS_TLS_13)
    #include <botan/tls_extensions_13.h>

@@ -16,6 +16,7 @@
 #include <botan/tls_alert.h>
 #include <botan/tls_exceptn.h>
 #include <botan/internal/tls_reader.h>
+#include <algorithm>
 
 namespace Botan::TLS {
 
