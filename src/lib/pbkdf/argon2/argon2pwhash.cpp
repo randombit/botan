@@ -74,15 +74,16 @@ std::string Argon2_Family::name() const {
    return argon2_family_name(m_family);
 }
 
-std::unique_ptr<PasswordHash> Argon2_Family::tune(size_t /*output_length*/,
-                                                  std::chrono::milliseconds msec,
-                                                  size_t max_memory,
-                                                  std::chrono::milliseconds tune_time) const {
-   const size_t max_kib = (max_memory == 0) ? 256 * 1024 : max_memory * 1024;
+std::unique_ptr<PasswordHash> Argon2_Family::tune_params(size_t /*output_length*/,
+                                                         uint64_t desired_msec,
+                                                         std::optional<size_t> max_memory,
+                                                         uint64_t tune_msec) const {
+   // If not set use 256 MB as default max
+   const size_t max_kib = max_memory.value_or(256) * 1024;
 
    // Tune with a large memory otherwise we measure cache vs RAM speeds and underestimate
    // costs for larger params. Default is 36 MiB, or use 128 for long times.
-   const size_t tune_M = (msec >= std::chrono::milliseconds(200) ? 128 : 36) * 1024;
+   const size_t tune_M = (desired_msec >= 200 ? 128 : 36) * 1024;
    const size_t p = 1;
    size_t t = 1;
 
@@ -95,9 +96,9 @@ std::unique_ptr<PasswordHash> Argon2_Family::tune(size_t /*output_length*/,
       pwhash->derive_key(output, sizeof(output), "test", 4, nullptr, 0);
    };
 
-   const uint64_t measured_time = measure_cost(tune_time, tune_fn) / (tune_M / M);
+   const uint64_t measured_time = measure_cost(tune_msec, tune_fn) / (tune_M / M);
 
-   const uint64_t target_nsec = msec.count() * static_cast<uint64_t>(1000000);
+   const uint64_t target_nsec = desired_msec * static_cast<uint64_t>(1000000);
 
    /*
    * Argon2 scaling rules:

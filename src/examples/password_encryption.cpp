@@ -27,7 +27,7 @@ Botan::secure_vector<uint8_t> derive_key_material(std::string_view password,
                                                   std::span<const uint8_t> salt,
                                                   size_t output_length) {
    // Here, we use statically defined password hash parameters. Alternatively
-   // you could use Botan::PasswordHashFamily::tune() to automatically select
+   // you could use Botan::PasswordHashFamily::tune_params() to automatically select
    // parameters based on your desired runtime and memory usage.
    //
    // Defining those parameters highly depends on your use case and the

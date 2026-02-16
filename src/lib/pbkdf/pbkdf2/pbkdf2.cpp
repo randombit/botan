@@ -28,8 +28,8 @@ void pbkdf2_set_key(MessageAuthenticationCode& prf, const char* password, size_t
 
 size_t tune_pbkdf2(MessageAuthenticationCode& prf,
                    size_t output_length,
-                   std::chrono::milliseconds msec,
-                   std::chrono::milliseconds tune_time = std::chrono::milliseconds(10)) {
+                   uint64_t desired_msec,
+                   uint64_t tuning_msec = 10) {
    if(output_length == 0) {
       output_length = 1;
    }
@@ -44,13 +44,13 @@ size_t tune_pbkdf2(MessageAuthenticationCode& prf,
 
    prf.set_key(nullptr, 0);
 
-   const uint64_t duration_nsec = measure_cost(tune_time, [&]() {
+   const uint64_t duration_nsec = measure_cost(tuning_msec, [&]() {
       uint8_t out[12] = {0};
       uint8_t salt[12] = {0};
       pbkdf2(prf, out, sizeof(out), salt, sizeof(salt), trial_iterations);
    });
 
-   const uint64_t desired_nsec = static_cast<uint64_t>(msec.count()) * 1000000;
+   const uint64_t desired_nsec = desired_msec * 1000000;
 
    if(duration_nsec > desired_nsec) {
       return trial_iterations;
@@ -78,7 +78,7 @@ size_t pbkdf2(MessageAuthenticationCode& prf,
               size_t iterations,
               std::chrono::milliseconds msec) {
    if(iterations == 0) {
-      iterations = tune_pbkdf2(prf, out_len, msec);
+      iterations = tune_pbkdf2(prf, out_len, msec.count());
    }
 
    const PBKDF2 pbkdf2(prf, iterations);
@@ -139,7 +139,7 @@ size_t PKCS5_PBKDF2::pbkdf(uint8_t key[],
                            size_t iterations,
                            std::chrono::milliseconds msec) const {
    if(iterations == 0) {
-      iterations = tune_pbkdf2(*m_mac, key_len, msec);
+      iterations = tune_pbkdf2(*m_mac, key_len, msec.count());
    }
 
    const PBKDF2 pbkdf2(*m_mac, iterations);
@@ -160,7 +160,7 @@ std::unique_ptr<PBKDF> PKCS5_PBKDF2::new_object() const {
 // PasswordHash interface
 
 PBKDF2::PBKDF2(const MessageAuthenticationCode& prf, size_t olen, std::chrono::milliseconds msec) :
-      m_prf(prf.new_object()), m_iterations(tune_pbkdf2(*m_prf, olen, msec)) {}
+      m_prf(prf.new_object()), m_iterations(tune_pbkdf2(*m_prf, olen, msec.count())) {}
 
 std::string PBKDF2::to_string() const {
    return fmt("PBKDF2({},{})", m_prf->name(), m_iterations);
@@ -180,11 +180,11 @@ std::string PBKDF2_Family::name() const {
    return fmt("PBKDF2({})", m_prf->name());
 }
 
-std::unique_ptr<PasswordHash> PBKDF2_Family::tune(size_t output_len,
-                                                  std::chrono::milliseconds msec,
-                                                  size_t /*max_memory_usage_mb*/,
-                                                  std::chrono::milliseconds tune_time) const {
-   auto iterations = tune_pbkdf2(*m_prf, output_len, msec, tune_time);
+std::unique_ptr<PasswordHash> PBKDF2_Family::tune_params(size_t output_len,
+                                                         uint64_t desired_runtime_msec,
+                                                         std::optional<size_t> /*max_memory*/,
+                                                         uint64_t tune_msec) const {
+   auto iterations = tune_pbkdf2(*m_prf, output_len, desired_runtime_msec, tune_msec);
    return std::make_unique<PBKDF2>(*m_prf, iterations);
 }
 

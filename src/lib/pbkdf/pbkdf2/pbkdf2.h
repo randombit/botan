@@ -46,7 +46,7 @@ class BOTAN_PUBLIC_API(2, 8) PBKDF2 final : public PasswordHash {
    public:
       PBKDF2(const MessageAuthenticationCode& prf, size_t iter) : m_prf(prf.new_object()), m_iterations(iter) {}
 
-      BOTAN_DEPRECATED("For runtime tuning use PBKDF2_Family::tune")
+      BOTAN_DEPRECATED("For runtime tuning use PBKDF2_Family::tune_params")
       PBKDF2(const MessageAuthenticationCode& prf, size_t olen, std::chrono::milliseconds msec);
 
       size_t iterations() const override { return m_iterations; }
@@ -74,10 +74,10 @@ class BOTAN_PUBLIC_API(2, 8) PBKDF2_Family final : public PasswordHashFamily {
 
       std::string name() const override;
 
-      std::unique_ptr<PasswordHash> tune(size_t output_len,
-                                         std::chrono::milliseconds msec,
-                                         size_t max_memory,
-                                         std::chrono::milliseconds tune_msec) const override;
+      std::unique_ptr<PasswordHash> tune_params(size_t output_len,
+                                                uint64_t desired_runtime_msec,
+                                                std::optional<size_t> max_memory,
+                                                uint64_t tune_msec) const override;
 
       /**
       * Return some default parameter set for this PBKDF that should be good

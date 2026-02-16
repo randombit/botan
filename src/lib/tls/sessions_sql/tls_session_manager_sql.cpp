@@ -13,7 +13,6 @@
 #include <botan/rng.h>
 #include <botan/tls_session.h>
 #include <botan/internal/loadstor.h>
-#include <chrono>
 
 namespace Botan::TLS {
 
@@ -97,8 +96,8 @@ void Session_Manager_SQL::create_with_latest_schema(std::string_view passphrase,
    const std::string pbkdf_name = "PBKDF2(SHA-512)";
    auto pbkdf_fam = PasswordHashFamily::create_or_throw(pbkdf_name);
 
-   auto desired_runtime = std::chrono::milliseconds(100);
-   auto pbkdf = pbkdf_fam->tune(derived_key.size(), desired_runtime);
+   constexpr uint32_t desired_runtime_msec = 100;
+   auto pbkdf = pbkdf_fam->tune_params(derived_key.size(), desired_runtime_msec);
 
    pbkdf->derive_key(
       derived_key.data(), derived_key.size(), passphrase.data(), passphrase.size(), salt.data(), salt.size());
