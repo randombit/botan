@@ -6,14 +6,40 @@
 
 #include "test_rng.h"
 
+#include <botan/hex.h>
+#include <array>
+
 #if defined(BOTAN_HAS_AES)
    #include <botan/block_cipher.h>
    #include <botan/internal/loadstor.h>
 #endif
 
-#include <array>
-
 namespace Botan_Tests {
+
+uint8_t Fixed_Output_RNG::random() {
+   if(m_buf_pos >= m_buf.size()) {
+      if(m_fallback.has_value()) {
+         return m_fallback.value()->next_byte();
+      } else {
+         throw Test_Error("Fixed output RNG ran out of bytes, test bug?");
+      }
+   }
+
+   const uint8_t out = m_buf[m_buf_pos];
+   m_buf_pos += 1;
+   return out;
+}
+
+Fixed_Output_RNG::Fixed_Output_RNG(const std::string& in_str) {
+   std::vector<uint8_t> in = Botan::hex_decode(in_str);
+   m_buf.insert(m_buf.end(), in.begin(), in.end());
+}
+
+Fixed_Output_RNG::Fixed_Output_RNG(RandomNumberGenerator& rng, size_t len) {
+   std::vector<uint8_t> output;
+   rng.random_vec(output, len);
+   m_buf.insert(m_buf.end(), output.begin(), output.end());
+}
 
 #if defined(BOTAN_HAS_AES)
 

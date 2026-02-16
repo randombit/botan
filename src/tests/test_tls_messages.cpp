@@ -472,7 +472,7 @@ class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
                         buf.push_back(Botan::get_byte<0>(u16type));
                         buf.push_back(Botan::get_byte<1>(u16type));
                      }
-                     result.test_str_eq("Hello extensions", Botan::hex_encode(buf), extensions);
+                     result.test_bin_eq("Hello extensions", buf, extensions);
                   },
                   Botan::TLS::Server_Hello_13::parse(buffer));
             } catch(const std::exception& ex) {

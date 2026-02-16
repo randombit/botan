@@ -27,6 +27,7 @@
    #include <botan/data_src.h>
    #include <botan/dl_group.h>
    #include <botan/ec_group.h>
+   #include <botan/hex.h>
    #include <botan/pk_algs.h>
    #include <botan/pkcs8.h>
    #include <botan/tls_callbacks.h>

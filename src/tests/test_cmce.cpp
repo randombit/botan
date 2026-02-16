@@ -17,6 +17,7 @@
    #include "test_rng.h"
    #include <botan/cmce.h>
    #include <botan/hash.h>
+   #include <botan/hex.h>
    #include <botan/pk_algs.h>
    #include <botan/pubkey.h>
    #include <botan/internal/cmce_gf.h>
