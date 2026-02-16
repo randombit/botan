@@ -47,7 +47,7 @@ std::vector<uint8_t> Certificate_Status::serialize() const {
       buf.push_back(get_byte_var(i, response_len));
    }
 
-   buf += m_response;
+   buf.insert(buf.end(), m_response.begin(), m_response.end());
    return buf;
 }
 

@@ -8,7 +8,6 @@
 #define BOTAN_ASN1_OBJECT_TYPES_H_
 
 #include <botan/exceptn.h>
-#include <botan/secmem.h>
 #include <iosfwd>
 #include <optional>
 #include <span>
@@ -134,7 +133,7 @@ class BOTAN_PUBLIC_API(2, 0) BER_Object final {
       BER_Object(BER_Object&& other) = default;
       BER_Object& operator=(const BER_Object& other) = default;
       BER_Object& operator=(BER_Object&& other) = default;
-      ~BER_Object() = default;
+      ~BER_Object();
 
       bool is_set() const { return m_type_tag != ASN1_Type::NoObject; }
 
@@ -163,7 +162,7 @@ class BOTAN_PUBLIC_API(2, 0) BER_Object final {
    private:
       ASN1_Type m_type_tag = ASN1_Type::NoObject;
       ASN1_Class m_class_tag = ASN1_Class::Universal;
-      secure_vector<uint8_t> m_value;
+      std::vector<uint8_t> m_value;
 
       friend class BER_Decoder;
 

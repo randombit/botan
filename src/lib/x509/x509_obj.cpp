@@ -125,7 +125,7 @@ std::pair<Certificate_Status_Code, std::string> X509_Object::verify_signature(co
 std::vector<uint8_t> X509_Object::make_signed(PK_Signer& signer,
                                               RandomNumberGenerator& rng,
                                               const AlgorithmIdentifier& algo,
-                                              const secure_vector<uint8_t>& tbs_bits) {
+                                              std::span<const uint8_t> tbs_bits) {
    const std::vector<uint8_t> signature = signer.sign_message(tbs_bits, rng);
 
    std::vector<uint8_t> output;

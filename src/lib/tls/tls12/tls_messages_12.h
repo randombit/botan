@@ -9,6 +9,7 @@
 #ifndef BOTAN_TLS_MESSAGES_12_H_
 #define BOTAN_TLS_MESSAGES_12_H_
 
+#include <botan/secmem.h>
 #include <botan/tls_messages.h>
 
 namespace Botan {

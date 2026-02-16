@@ -9,6 +9,7 @@
 #define BOTAN_BER_DECODER_H_
 
 #include <botan/asn1_obj.h>
+#include <botan/secmem.h>
 #include <cstring>
 #include <memory>
 #include <optional>

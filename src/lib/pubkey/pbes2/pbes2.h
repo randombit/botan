@@ -9,6 +9,7 @@
 #define BOTAN_PBE_PKCS_V20_H_
 
 #include <botan/asn1_obj.h>
+#include <botan/secmem.h>
 #include <chrono>
 #include <span>
 

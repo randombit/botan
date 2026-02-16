@@ -9,8 +9,10 @@
 #define BOTAN_DER_ENCODER_H_
 
 #include <botan/asn1_obj.h>
+#include <botan/secmem.h>
 #include <functional>
 #include <optional>
+#include <span>
 #include <vector>
 
 namespace Botan {
@@ -84,10 +86,7 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
       */
       DER_Encoder& raw_bytes(const uint8_t val[], size_t len);
 
-      template <typename Alloc>
-      DER_Encoder& raw_bytes(const std::vector<uint8_t, Alloc>& val) {
-         return raw_bytes(val.data(), val.size());
-      }
+      DER_Encoder& raw_bytes(std::span<const uint8_t> val) { return raw_bytes(val.data(), val.size()); }
 
       DER_Encoder& encode_null();
       DER_Encoder& encode(bool b);

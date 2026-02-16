@@ -10,6 +10,7 @@
 #include <botan/assert.h>
 #include <botan/data_src.h>
 #include <botan/der_enc.h>
+#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/mem_utils.h>
 #include <sstream>
@@ -21,6 +22,10 @@ std::vector<uint8_t> ASN1_Object::BER_encode() const {
    DER_Encoder der(output);
    this->encode_into(der);
    return output;
+}
+
+BER_Object::~BER_Object() {
+   secure_scrub_memory(m_value);
 }
 
 /*
