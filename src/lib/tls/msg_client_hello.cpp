@@ -18,6 +18,7 @@
 #include <botan/tls_callbacks.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/tls_reader.h>
+#include <algorithm>
 
 namespace Botan::TLS {
 
