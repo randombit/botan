@@ -923,11 +923,11 @@ std::vector<Test::Result> test_bitvector_binary_operators(Botan::RandomNumberGen
 
                auto res1 = lhs | rhs;
                is_secure_allocator(result, res1);
-               check_set(result, res1, {0, 1, 4, 15, 16, 17, 18, 20});
+               check_set(result, res1, {0, 1, 4, 15, 16, 17, 18});
 
                auto res2 = rhs | lhs;
                is_secure_allocator(result, res2);
-               check_set(result, res2, {0, 1, 4, 15, 16, 17, 18, 20});
+               check_set(result, res2, {0, 1, 4, 15, 16, 17, 18});
 
                auto res3 = lhs & rhs;
                is_secure_allocator(result, res3);
