@@ -15,7 +15,6 @@
    #include <botan/secmem.h>
    #include <botan/sp_parameters.h>
    #include <botan/sphincsplus.h>
-   #include <algorithm>
 
    #include "test_pubkey.h"
    #include "test_rng.h"

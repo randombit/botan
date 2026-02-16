@@ -11,12 +11,9 @@
 #include <botan/hash.h>
 #include <botan/sym_algo.h>
 #include <botan/internal/alignment_buffer.h>
-#include <memory>
 #include <string>
 
 namespace Botan {
-
-class BLAKE2bMAC;
 
 constexpr size_t BLAKE2B_BLOCKBYTES = 128;
 

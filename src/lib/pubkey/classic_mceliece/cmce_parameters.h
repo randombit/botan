@@ -20,9 +20,6 @@
 
 namespace Botan {
 
-struct Classic_McEliece_Big_F_Coefficient;
-class Classic_McEliece_Polynomial_Ring;
-
 /**
  * Container for all Classic McEliece parameters.
  */

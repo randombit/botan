@@ -9,7 +9,6 @@
 
 #include <botan/types.h>
 
-#include <cstdint>
 #include <span>
 #include <string>
 #include <string_view>

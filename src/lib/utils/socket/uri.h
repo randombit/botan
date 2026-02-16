@@ -9,7 +9,6 @@
 #define BOTAN_URI_H_
 
 #include <botan/types.h>
-#include <cstdint>
 #include <string>
 #include <string_view>
 

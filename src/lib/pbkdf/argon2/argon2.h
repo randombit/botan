@@ -18,8 +18,6 @@ BOTAN_FUTURE_INTERNAL_HEADER(argon2.h)
 
 namespace Botan {
 
-class RandomNumberGenerator;
-
 /**
 * Argon2 key derivation function
 */

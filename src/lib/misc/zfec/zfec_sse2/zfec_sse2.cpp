@@ -8,7 +8,7 @@
 
 #include <botan/internal/isa_extn.h>
 #include <botan/internal/simd_4x32.h>
-#include <immintrin.h>
+#include <emmintrin.h>
 
 // TODO(Botan4) remove this module - SSE2 only processors are basically nonexistent now
 
