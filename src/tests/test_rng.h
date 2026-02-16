@@ -9,9 +9,7 @@
 #define BOTAN_TESTS_RNGS_FOR_TESTING_H_
 
 #include "tests.h"
-#include <botan/hex.h>
 #include <botan/rng.h>
-#include <deque>
 #include <optional>
 #include <string>
 
@@ -31,7 +29,7 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator {
    public:
       bool empty() const { return !is_seeded(); }
 
-      bool is_seeded() const override { return !m_buf.empty(); }
+      bool is_seeded() const override { return m_buf_pos < m_buf.size(); }
 
       bool accepts_input() const override { return true; }
 
@@ -41,16 +39,9 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator {
 
       explicit Fixed_Output_RNG(std::span<const uint8_t> in) { m_buf.insert(m_buf.end(), in.begin(), in.end()); }
 
-      explicit Fixed_Output_RNG(const std::string& in_str) {
-         std::vector<uint8_t> in = Botan::hex_decode(in_str);
-         m_buf.insert(m_buf.end(), in.begin(), in.end());
-      }
+      explicit Fixed_Output_RNG(const std::string& in_str);
 
-      Fixed_Output_RNG(RandomNumberGenerator& rng, size_t len) {
-         std::vector<uint8_t> output;
-         rng.random_vec(output, len);
-         m_buf.insert(m_buf.end(), output.begin(), output.end());
-      }
+      Fixed_Output_RNG(RandomNumberGenerator& rng, size_t len);
 
       /**
        * Provide a non-fixed RNG as fallback to be used once the Fixed_Output_RNG runs out of bytes.
@@ -69,22 +60,11 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator {
          }
       }
 
-      uint8_t random() {
-         if(m_buf.empty()) {
-            if(m_fallback.has_value()) {
-               return m_fallback.value()->next_byte();
-            } else {
-               throw Test_Error("Fixed output RNG ran out of bytes, test bug?");
-            }
-         }
-
-         const uint8_t out = m_buf.front();
-         m_buf.pop_front();
-         return out;
-      }
+      uint8_t random();
 
    private:
-      std::deque<uint8_t> m_buf;
+      std::vector<uint8_t> m_buf;
+      size_t m_buf_pos = 0;
       std::optional<RandomNumberGenerator*> m_fallback;
 };
 

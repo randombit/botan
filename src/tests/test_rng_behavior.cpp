@@ -10,6 +10,7 @@
 #include "test_rng.h"
 
 #include <botan/exceptn.h>
+#include <botan/hex.h>
 #include <botan/internal/target_info.h>
 #include <cstring>
 

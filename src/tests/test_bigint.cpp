@@ -975,7 +975,7 @@ std::vector<Test::Result> test_bigint_serialization() {
                a.binary_encode(enc4.data(), enc4.size());
                res.test_bin_eq("BigInt::binary_encode", enc4, "000000FEDCBA9876543210");
 
-               const Botan::BigInt b(Botan::hex_decode("FEDCBA9876543210BAADC0FFEE"));
+               const Botan::BigInt b("0xFEDCBA9876543210BAADC0FFEE");
 
                std::vector<uint8_t> enc5(b.bytes() + 12);
                rng->randomize(enc5);
