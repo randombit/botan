@@ -136,7 +136,7 @@ class HSS_LMS_Negative_Tests final : public Test {
          signer.update(mes);
          auto valid_sig = signer.signature(Test::rng());
          verifier.update(mes);
-         result.test_is_true("Entire signature is valid", verifier.check_signature(valid_sig.data(), valid_sig.size()));
+         result.test_is_true("Entire signature is valid", verifier.check_signature(valid_sig));
          for(size_t idx = 0; idx < valid_sig.size(); ++idx) {
             auto bad_sig = valid_sig;
             bad_sig.at(idx) ^= 0x80;
@@ -163,7 +163,7 @@ class HSS_LMS_Negative_Tests final : public Test {
          signer.update(mes);
          auto valid_sig = signer.signature(Test::rng());
          verifier.update(mes);
-         result.test_is_true("Entire signature is valid", verifier.check_signature(valid_sig.data(), valid_sig.size()));
+         result.test_is_true("Entire signature is valid", verifier.check_signature(valid_sig));
          for(size_t n = 0; n < valid_sig.size(); ++n) {
             result.test_no_throw("Verification does not throw", [&]() {
                verifier.update(mes);
@@ -247,8 +247,8 @@ class HSS_LMS_Statefulness_Test final : public Test {
 
          // Tree heights: 5,5 => 2^(5+5) = 1024 signatures available
          const uint64_t expected_total = 1024;
-         result.test_is_true("Fresh key starts with total number of remaining signatures.",
-                             sk.remaining_operations() == expected_total);
+         result.test_opt_u64_eq(
+            "Fresh key starts with total number of remaining signatures.", sk.remaining_operations(), expected_total);
 
          // Creating a signature should update the private key's state
          auto sig_0 = signer.sign_message(mes, Test::rng());
@@ -258,8 +258,8 @@ class HSS_LMS_Statefulness_Test final : public Test {
 
          auto sk_bytes_after_sig = sk.private_key_bits();
 
-         result.test_is_true("Signature decreases number of remaining signatures.",
-                             sk.remaining_operations() == expected_total - 1);
+         result.test_opt_u64_eq(
+            "Signature decreases number of remaining signatures.", sk.remaining_operations(), expected_total - 1);
          result.test_bin_ne("Signature updates private key.", sk_bytes_after_sig, sk_bytes_begin);
 
          auto sig_1 = signer.sign_message(mes, Test::rng());
@@ -280,11 +280,11 @@ class HSS_LMS_Statefulness_Test final : public Test {
          std::vector<uint8_t> mes = {0xde, 0xad, 0xbe, 0xef};
          auto sk_bytes_begin = sk.private_key_bits();
 
-         result.test_is_true("One remaining signature.", sk.remaining_operations() == uint64_t(1));
+         result.test_opt_u64_eq("One remaining signature.", sk.remaining_operations(), 1);
          result.test_no_throw("Use last signature index.", [&]() { signer.sign_message(mes, Test::rng()); });
-         result.test_is_true("No remaining signatures.", sk.remaining_operations() == uint64_t(0));
+         result.test_opt_u64_eq("No remaining signatures.", sk.remaining_operations(), 0);
          result.test_throws("Cannot sign with exhausted key.", [&]() { signer.sign_message(mes, Test::rng()); });
-         result.test_is_true("Still zero remaining signatures.", sk.remaining_operations() == uint64_t(0));
+         result.test_opt_u64_eq("Still zero remaining signatures.", sk.remaining_operations(), 0);
 
          return result;
       }

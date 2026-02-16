@@ -265,7 +265,7 @@ class Test {
              * Require a condition, throw Test_Aborted otherwise
              * Note: works best when combined with CHECK scopes!
              */
-            void require(std::string_view what, bool expr, bool expected = true);
+            void require(std::string_view what, bool expr);
 
             /* Generic arbitrary equality check */
 
@@ -348,7 +348,13 @@ class Test {
                }
             }
 
-            bool test_opt_u8_eq(std::string_view what, std::optional<uint8_t> a, std::optional<uint8_t> b);
+            bool test_opt_u8_eq(std::string_view what,
+                                std::optional<uint8_t> produced,
+                                std::optional<uint8_t> expected);
+
+            bool test_opt_u64_eq(std::string_view what,
+                                 std::optional<uint64_t> produced,
+                                 std::optional<uint64_t> expected);
 
 #if defined(BOTAN_HAS_BIGINT)
             /* Test predicates for BigInt */

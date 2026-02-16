@@ -588,7 +588,7 @@ class EC_Group_Registration_Tests final : public Test {
          // However we should have gotten a pcurves out of the deal *and* it
          // should be the exact same shared_ptr as the official curve
 
-         result.test_is_true("Group is pcurves based", reg_group.engine() == Botan::EC_Group_Engine::Optimized);
+         result.test_enum_eq("Group is pcurves based", reg_group.engine(), Botan::EC_Group_Engine::Optimized);
 
          try {
             const auto& pcurve = reg_group._data()->pcurve();
@@ -630,7 +630,7 @@ class EC_PointEnc_Tests final : public Test {
 
                result.test_sz_eq("Expected compressed size", pt_c.size(), 1 + fe_bytes);
                const uint8_t expected_c_header = (pt_u[pt_u.size() - 1] % 2 == 0) ? 0x02 : 0x03;
-               result.test_is_true("Expected compressed header", pt_c[0] == expected_c_header);
+               result.test_u8_eq("Expected compressed header", pt_c[0], expected_c_header);
 
                result.test_bin_eq(
                   "Expected compressed x", std::span{pt_c}.subspan(1), std::span{pt_u}.subspan(1, fe_bytes));
