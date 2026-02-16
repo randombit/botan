@@ -3016,10 +3016,10 @@ class FFI_TOTP_Test final : public FFI_Test {
 
          uint32_t code;
          TEST_FFI_OK(botan_totp_generate, (totp, &code, 59));
-         result.test_is_true("TOTP code", code == 94287082);
+         result.test_u32_eq("TOTP code", code, 94287082);
 
          TEST_FFI_OK(botan_totp_generate, (totp, &code, 1111111109));
-         result.test_is_true("TOTP code 2", code == 7081804);
+         result.test_u32_eq("TOTP code 2", code, 7081804);
 
          TEST_FFI_OK(botan_totp_check, (totp, 94287082, 59 + 60, 60));
          TEST_FFI_RC(1, botan_totp_check, (totp, 94287082, 59 + 31, 1));
@@ -3045,22 +3045,22 @@ class FFI_HOTP_Test final : public FFI_Test {
          }
 
          TEST_FFI_OK(botan_hotp_generate, (hotp, &hotp_val, 0));
-         result.test_is_true("Valid value for counter 0", hotp_val == 755224);
+         result.test_u32_eq("Valid value for counter 0", hotp_val, 755224);
          TEST_FFI_OK(botan_hotp_generate, (hotp, &hotp_val, 1));
-         result.test_is_true("Valid value for counter 0", hotp_val == 287082);
+         result.test_u32_eq("Valid value for counter 0", hotp_val, 287082);
          TEST_FFI_OK(botan_hotp_generate, (hotp, &hotp_val, 2));
-         result.test_is_true("Valid value for counter 0", hotp_val == 359152);
+         result.test_u32_eq("Valid value for counter 0", hotp_val, 359152);
          TEST_FFI_OK(botan_hotp_generate, (hotp, &hotp_val, 0));
-         result.test_is_true("Valid value for counter 0", hotp_val == 755224);
+         result.test_u32_eq("Valid value for counter 0", hotp_val, 755224);
 
          uint64_t next_ctr = 0;
 
          TEST_FFI_OK(botan_hotp_check, (hotp, &next_ctr, 755224, 0, 0));
-         result.test_is_true("HOTP resync", next_ctr == 1);
+         result.test_u64_eq("HOTP resync", next_ctr, 1);
          TEST_FFI_OK(botan_hotp_check, (hotp, nullptr, 359152, 2, 0));
          TEST_FFI_RC(1, botan_hotp_check, (hotp, nullptr, 359152, 1, 0));
          TEST_FFI_OK(botan_hotp_check, (hotp, &next_ctr, 359152, 0, 2));
-         result.test_is_true("HOTP resync", next_ctr == 3);
+         result.test_u64_eq("HOTP resync", next_ctr, 3);
 
          TEST_FFI_OK(botan_hotp_destroy, (hotp));
       }
@@ -3114,7 +3114,7 @@ class FFI_XMSS_Test final : public FFI_Test {
 
             uint64_t remaining;
             TEST_FFI_OK(botan_privkey_remaining_operations, (priv, &remaining));
-            result.test_is_true("key has remaining operations", remaining == 1024);
+            result.test_u64_eq("key has remaining operations", remaining, 1024);
 
             TEST_FFI_OK(botan_privkey_destroy, (priv));
          }

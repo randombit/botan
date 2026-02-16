@@ -190,12 +190,12 @@ class Result_Wrapper {
 
       Test::Result& result() { return m_result; }
 
-      void expect_success(const std::string& msg, const error_code& ec) {
+      void expect_success(std::string_view msg, const error_code& ec) {
          const error_code success;
          expect_ec(msg, success, ec);
       }
 
-      void expect_ec(const std::string& msg, const error_code& expected, const error_code& ec) {
+      void expect_ec(std::string_view msg, const error_code& expected, const error_code& ec) {
          if(ec != expected) {
             m_result.test_failure(msg, "Unexpected error code: " + ec.message() + " expected: " + expected.message());
          } else {
@@ -203,9 +203,13 @@ class Result_Wrapper {
          }
       }
 
-      void test_is_true(const std::string& msg, bool condition) { m_result.test_is_true(msg, condition); }
+      void test_is_true(std::string_view msg, bool condition) { m_result.test_is_true(msg, condition); }
 
-      void test_failure(const std::string& msg) { m_result.test_failure(msg); }
+      void test_str_eq(std::string_view what, std::string_view produced, std::string_view expected) {
+         m_result.test_str_eq(what, produced, expected);
+      }
+
+      void test_failure(std::string_view msg) { m_result.test_failure(msg); }
 
    private:
       Test::Result m_result;
@@ -422,7 +426,7 @@ class TestBase {
 
       virtual void finishAsynchronousWork() {}
 
-      void fail(const std::string& msg) { m_result.test_failure(msg); }
+      void fail(std::string_view msg) { m_result.test_failure(msg); }
 
       void extend_results(std::vector<Test::Result>& results) {
          results.push_back(m_result.result());
@@ -518,7 +522,7 @@ class Test_Conversation : public TestBase,
                                   std::bind(&Client::received_zero_byte, client().get(), _1, _2),
                                   std::bind(test_case, shared_from_this(), _1));
             result().expect_success("receive_response", ec);
-            result().test_is_true("correct message", client()->message() == message);
+            result().test_str_eq("correct message", client()->message(), message);
 
             client()->reset_timeout("shutdown");
             yield client()->stream().async_shutdown(std::bind(test_case, shared_from_this(), _1));
@@ -560,7 +564,7 @@ class Test_Conversation_Sync : public Synchronous_Test {
          net::read(
             client()->stream(), client()->buffer(), std::bind(&Client::received_zero_byte, client().get(), _1, _2), ec);
          result().expect_success("receive_response", ec);
-         result().test_is_true("correct message", client()->message() == message);
+         result().test_str_eq("correct message", client()->message(), message);
 
          client()->stream().shutdown(ec);
          result().expect_success("shutdown", ec);

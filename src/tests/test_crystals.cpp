@@ -415,7 +415,7 @@ std::vector<Test::Result> test_encoding() {
                Kyberish_Poly<Domain::Normal> p1;
                Botan::BufferSlicer slicer1(threebitencoding);
                Botan::CRYSTALS::unpack<6>(p1, slicer1);
-               res.require("read all bytes from 3-bit encoding", slicer1.empty());
+               res.test_is_true("read all bytes from 3-bit encoding", slicer1.empty());
                for(size_t i = 0; i < p1.size(); ++i) {
                   res.test_i16_eq("decoded 3-bit coefficient", p1[i], i % 7);
                }
@@ -423,7 +423,7 @@ std::vector<Test::Result> test_encoding() {
                Kyberish_Poly<Domain::Normal> p2;
                Botan::BufferSlicer slicer2(eightbitencoding);
                Botan::CRYSTALS::unpack<255>(p2, slicer2);
-               res.require("read all bytes from 8-bit encoding", slicer2.empty());
+               res.test_is_true("read all bytes from 8-bit encoding", slicer2.empty());
                for(size_t i = 0; i < p2.size(); ++i) {
                   res.test_sz_eq("decoded 8-bit coefficient", p2[i], i);
                }
@@ -431,7 +431,7 @@ std::vector<Test::Result> test_encoding() {
                Kyberish_Poly<Domain::Normal> p3;
                Botan::BufferSlicer slicer3(tenbitencoding);
                Botan::CRYSTALS::unpack<512>(p3, slicer3, [](uint16_t x) -> int16_t { return x / 2; });
-               res.require("read all bytes from 10-bit encoding", slicer3.empty());
+               res.test_is_true("read all bytes from 10-bit encoding", slicer3.empty());
                for(size_t i = 0; i < p3.size(); ++i) {
                   res.test_sz_eq("decoded 10-bit coefficient with mapping", p3[i], i);
                }

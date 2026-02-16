@@ -91,7 +91,7 @@ std::vector<Test::Result> read_full_records() {
                     result.require("received something", std::holds_alternative<TLS::Record>(read));
 
                     auto record = std::get<TLS::Record>(read);
-                    result.test_is_true("received CCS", record.type == TLS::Record_Type::ChangeCipherSpec);
+                    result.test_enum_eq("received CCS", record.type, TLS::Record_Type::ChangeCipherSpec);
                     result.test_bin_eq("CCS byte is 0x01", record.fragment, "01");
 
                     result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
@@ -109,14 +109,14 @@ std::vector<Test::Result> read_full_records() {
                     result.require("received something", std::holds_alternative<TLS::Record>(read));
                     auto record = std::get<TLS::Record>(read);
 
-                    result.test_is_true("received CCS 1", record.type == TLS::Record_Type::ChangeCipherSpec);
+                    result.test_enum_eq("received CCS 1", record.type, TLS::Record_Type::ChangeCipherSpec);
                     result.test_bin_eq("CCS byte is 0x01", record.fragment, "01");
 
                     read = rl.next_record();
                     result.require("received something", std::holds_alternative<TLS::Record>(read));
                     record = std::get<TLS::Record>(read);
 
-                    result.test_is_true("received CCS 2", record.type == TLS::Record_Type::ChangeCipherSpec);
+                    result.test_enum_eq("received CCS 2", record.type, TLS::Record_Type::ChangeCipherSpec);
                     result.test_bin_eq("CCS byte is 0x01", record.fragment, "01");
 
                     result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
@@ -160,7 +160,7 @@ std::vector<Test::Result> read_full_records() {
               result.require("received something", std::holds_alternative<TLS::Record>(read));
 
               rec = std::get<TLS::Record>(read);
-              result.test_is_true("received CCS record", rec.type == TLS::Record_Type::ChangeCipherSpec);
+              result.test_enum_eq("received CCS record", rec.type, TLS::Record_Type::ChangeCipherSpec);
               result.test_bin_eq("CCS byte is 0x01", rec.fragment, "01");
 
               result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
@@ -335,7 +335,7 @@ std::vector<Test::Result> read_fragmented_records() {
                     result.require("received something 1", std::holds_alternative<TLS::Record>(res1));
 
                     auto rec1 = std::get<TLS::Record>(res1);
-                    result.test_is_true("received CCS", rec1.type == TLS::Record_Type::ChangeCipherSpec);
+                    result.test_enum_eq("received CCS", rec1.type, TLS::Record_Type::ChangeCipherSpec);
                     result.test_bin_eq("CCS byte is 0x01", rec1.fragment, "01");
 
                     result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
@@ -350,7 +350,7 @@ std::vector<Test::Result> read_fragmented_records() {
               result.require("received something 2", std::holds_alternative<TLS::Record>(res2));
 
               auto rec2 = std::get<TLS::Record>(res2);
-              result.test_is_true("received CCS", rec2.type == TLS::Record_Type::ChangeCipherSpec);
+              result.test_enum_eq("received CCS", rec2.type, TLS::Record_Type::ChangeCipherSpec);
               result.test_is_true("demands more bytes", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
 
               wait_for_more_bytes(2, rl, {'\x03'}, result);
@@ -360,7 +360,7 @@ std::vector<Test::Result> read_fragmented_records() {
               result.require("received something 3", std::holds_alternative<TLS::Record>(res3));
 
               auto rec3 = std::get<TLS::Record>(res3);
-              result.test_is_true("received CCS", rec3.type == TLS::Record_Type::ChangeCipherSpec);
+              result.test_enum_eq("received CCS", rec3.type, TLS::Record_Type::ChangeCipherSpec);
 
               result.test_is_true("no more records", std::holds_alternative<TLS::BytesNeeded>(rl.next_record()));
            })};

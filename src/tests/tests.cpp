@@ -126,8 +126,8 @@ void Test::Result::note_missing(std::string_view whatever_sv) {
    }
 }
 
-void Test::Result::require(std::string_view what, bool expr, bool expected) {
-   if(!test_bool_eq(what, expr, expected)) {
+void Test::Result::require(std::string_view what, bool expr) {
+   if(!test_is_true(what, expr)) {
       throw Test_Aborted(Botan::fmt("Test aborted, because required condition was not met: {}", what));
    }
 }
@@ -418,15 +418,30 @@ bool Test::Result::test_sz_gte(std::string_view what, size_t produced, size_t ex
    }
 }
 
-bool Test::Result::test_opt_u8_eq(std::string_view what, std::optional<uint8_t> a, std::optional<uint8_t> b) {
-   if(a.has_value() != b.has_value()) {
-      std::ostringstream err;
-      err << m_who << " " << what << " only one of a/b was nullopt";
-      return test_failure(err.str());
-   } else if(a.has_value() && b.has_value()) {
-      return test_u8_eq(what, a.value(), b.value());
+bool Test::Result::test_opt_u8_eq(std::string_view what,
+                                  std::optional<uint8_t> produced,
+                                  std::optional<uint8_t> expected) {
+   if(produced.has_value() and !expected.has_value()) {
+      return test_failure(Botan::fmt("Assertion {} produced value {} but nullopt was expected", what, *produced));
+   } else if(!produced.has_value() && expected.has_value()) {
+      return test_failure(Botan::fmt("Assertion {} produced nullopt but {} was expected", what, *expected));
+   } else if(produced.has_value() && expected.has_value()) {
+      return test_u8_eq(what, *produced, *expected);
    } else {
-      // both nullopt
+      return test_success();
+   }
+}
+
+bool Test::Result::test_opt_u64_eq(std::string_view what,
+                                   std::optional<uint64_t> produced,
+                                   std::optional<uint64_t> expected) {
+   if(produced.has_value() and !expected.has_value()) {
+      return test_failure(Botan::fmt("Assertion {} produced value {} but nullopt was expected", what, *produced));
+   } else if(!produced.has_value() && expected.has_value()) {
+      return test_failure(Botan::fmt("Assertion {} produced nullopt but {} was expected", what, *expected));
+   } else if(produced.has_value() && expected.has_value()) {
+      return test_u64_eq(what, *produced, *expected);
+   } else {
       return test_success();
    }
 }
