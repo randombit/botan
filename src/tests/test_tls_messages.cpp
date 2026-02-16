@@ -24,6 +24,7 @@
 
    #if defined(BOTAN_HAS_TLS_13)
       #include "test_rng.h"
+      #include <botan/tls_extensions_13.h>
       #include <botan/tls_messages_13.h>
       #include <botan/internal/tls_reader.h>
    #endif

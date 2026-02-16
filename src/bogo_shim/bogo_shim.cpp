@@ -13,6 +13,7 @@
 #include <botan/base64.h>
 #include <botan/certstor.h>
 #include <botan/chacha_rng.h>
+#include <botan/credentials_manager.h>
 #include <botan/data_src.h>
 #include <botan/hex.h>
 #include <botan/mem_ops.h>
@@ -23,6 +24,7 @@
 #include <botan/tls_client.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_extensions.h>
+#include <botan/tls_external_psk.h>
 #include <botan/tls_messages.h>
 #include <botan/tls_policy.h>
 #include <botan/tls_server.h>

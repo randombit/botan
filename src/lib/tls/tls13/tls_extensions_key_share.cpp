@@ -8,7 +8,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/tls_extensions.h>
+#include <botan/tls_extensions_13.h>
 
 #include <botan/ecdh.h>
 #include <botan/tls_callbacks.h>

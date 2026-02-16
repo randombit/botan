@@ -14,11 +14,16 @@
 #include <botan/tls_alert.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
+#include <botan/tls_extensions_13.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/tls_handshake_layer_13.h>
 #include <botan/internal/tls_messages_internal.h>
 #include <botan/internal/tls_transcript_hash_13.h>
 #include <algorithm>
+
+#if defined(BOTAN_HAS_TLS_12)
+   #include <botan/tls_extensions_12.h>
+#endif
 
 namespace Botan::TLS {
 
@@ -226,6 +231,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    m_data->extensions().add(new Client_Certificate_Type(policy.accepted_client_certificate_types()));
    m_data->extensions().add(new Server_Certificate_Type(policy.accepted_server_certificate_types()));
 
+#if defined(BOTAN_HAS_TLS_12)
    if(policy.allow_tls12()) {
       m_data->extensions().add(new Renegotiation_Extension());
       m_data->extensions().add(new Session_Ticket_Extension());
@@ -242,6 +248,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
          m_data->extensions().add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
       }
    }
+#endif
 
    if(session.has_value() || !psks.empty()) {
       m_data->extensions().add(new PSK(session, std::move(psks), cb));
