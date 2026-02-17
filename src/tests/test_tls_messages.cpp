@@ -15,12 +15,15 @@
    #include <botan/tls_alert.h>
    #include <botan/tls_callbacks.h>
    #include <botan/tls_ciphersuite.h>
-   #include <botan/tls_messages_12.h>
    #include <botan/tls_policy.h>
    #include <botan/tls_version.h>
    #include <botan/internal/loadstor.h>
    #include <algorithm>
    #include <exception>
+
+   #if defined(BOTAN_HAS_TLS_12)
+      #include <botan/tls_messages_12.h>
+   #endif
 
    #if defined(BOTAN_HAS_TLS_13)
       #include "test_rng.h"
@@ -35,6 +38,8 @@ namespace Botan_Tests {
 namespace {
 
 #if defined(BOTAN_HAS_TLS)
+
+   #if defined(BOTAN_HAS_TLS_12)
 Test::Result test_hello_verify_request() {
    Test::Result result("hello_verify_request construction");
 
@@ -55,6 +60,7 @@ Test::Result test_hello_verify_request() {
    result.test_bin_eq("Cookie comparison", hfr.cookie(), test);
    return result;
 }
+   #endif
 
 class Test_Callbacks : public Botan::TLS::Callbacks {
    public:
@@ -79,6 +85,7 @@ class Test_Callbacks : public Botan::TLS::Callbacks {
       Test::Result& m_result;
 };
 
+   #if defined(BOTAN_HAS_TLS_12)
 class TLS_Message_Parsing_Test final : public Text_Based_Test {
    public:
       TLS_Message_Parsing_Test() :
@@ -208,6 +215,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_TEST("tls", "tls_messages", TLS_Message_Parsing_Test);
+   #endif
 
    #if defined(BOTAN_HAS_TLS_13)
       #if defined(BOTAN_HAS_X25519)
@@ -388,7 +396,9 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
       std::vector<Test::Result> run_final_tests() override {
          std::vector<Test::Result> results;
 
+      #if defined(BOTAN_HAS_TLS_12)
          results.push_back(test_hello_verify_request());
+      #endif
 
          return results;
       }

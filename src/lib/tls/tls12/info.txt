@@ -25,17 +25,9 @@ tls_session_key.h
 </header:internal>
 
 <requires>
-aead
-aes
-asn1
-dh
 eme_pkcs1
 emsa_pkcs1
-gcm
-hmac
 prf_tls
-rng
 rsa
-x509
 tls
 </requires>

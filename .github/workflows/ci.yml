@@ -269,6 +269,9 @@ jobs:
           - target: minimized
             compiler: gcc
             host_os: ubuntu-24.04
+          - target: no_tls12
+            compiler: gcc
+            host_os: ubuntu-24.04
           - target: no_tls13
             compiler: gcc
             host_os: ubuntu-24.04
@@ -306,7 +309,7 @@ jobs:
           repository: ${{ env.BORINGSSL_REPO }}
           ref: ${{ env.BORINGSSL_BRANCH }}
           path: ./boringssl
-        if: matrix.target == 'no_tls13'
+        if: matrix.target == 'no_tls12' || matrix.target == 'no_tls13'
 
       - name: Setup Build Agent
         uses: ./source/.github/actions/setup-build-agent
