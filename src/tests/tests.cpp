@@ -1115,22 +1115,9 @@ std::vector<uint8_t> VarMap::get_req_bin(std::string_view key) const {
    const auto& var = get_req_var(key);
 
    try {
-      if(var.starts_with("0x")) {
-         if(var.size() % 2 == 0) {
-            return Botan::hex_decode(var.substr(2));
-         } else {
-            std::string z = var;
-            std::swap(z[0], z[1]);  // swap 0x to x0 then remove x
-            return Botan::hex_decode(z.substr(1));
-         }
-      } else {
-         return Botan::hex_decode(var);
-      }
+      return Botan::hex_decode(var);
    } catch(std::exception& e) {
-      std::ostringstream oss;
-      oss << "Bad input '" << var << "'"
-          << " for key " << key << " - " << e.what();
-      throw Test_Error(oss.str());
+      throw Test_Error(Botan::fmt("Bad hex input '{}' for key '{}' err '{}'", var, key, e.what()));
    }
 }
 
