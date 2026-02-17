@@ -9,8 +9,6 @@
 #ifndef BOTAN_TLS_HANDSHAKE_STATE_H_
 #define BOTAN_TLS_HANDSHAKE_STATE_H_
 
-#include <botan/pk_keys.h>
-#include <botan/pubkey.h>
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_extensions.h>
@@ -24,6 +22,8 @@
 
 namespace Botan {
 
+enum class Signature_Format : uint8_t;
+class Public_Key;
 class KDF;
 
 namespace TLS {

@@ -30,7 +30,6 @@ class Policy;
 class PskIdentity;
 class Server_Information;
 class Session;
-class Session_Handle;
 class Session_with_Handle;
 
 /**

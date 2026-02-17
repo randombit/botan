@@ -17,10 +17,13 @@
    #include <botan/tls_session.h>
    #include <botan/tls_signature_scheme.h>
    #include <botan/tls_version.h>
+   #include <botan/x509cert.h>
    #include <botan/internal/fmt.h>
    #include <set>
 
    #if defined(BOTAN_HAS_TLS_CBC)
+      #include <botan/block_cipher.h>
+      #include <botan/mac.h>
       #include <botan/internal/tls_cbc.h>
    #endif
 

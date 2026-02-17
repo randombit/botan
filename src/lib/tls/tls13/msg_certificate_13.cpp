@@ -267,7 +267,7 @@ Certificate_13::Certificate_Entry::Certificate_Entry(TLS_Data_Reader& reader,
          // RFC 8446 4.2.2
          //    [...] each CertificateEntry contains a DER-encoded X.509
          //    certificate.
-         m_certificate = X509_Certificate(reader.get_tls_length_value(3));
+         m_certificate = std::make_unique<X509_Certificate>(reader.get_tls_length_value(3));
          m_raw_public_key = m_certificate->subject_public_key();
          break;
       case Certificate_Type::RawPublicKey:
@@ -313,17 +313,23 @@ Certificate_13::Certificate_Entry::Certificate_Entry(TLS_Data_Reader& reader,
    }
 }
 
+Certificate_13::Certificate_Entry::~Certificate_Entry() = default;
+
+Certificate_13::Certificate_Entry::Certificate_Entry(Certificate_13::Certificate_Entry&& other) noexcept = default;
+Certificate_13::Certificate_Entry& Certificate_13::Certificate_Entry::operator=(
+   Certificate_13::Certificate_Entry&& other) noexcept = default;
+
 Certificate_13::Certificate_Entry::Certificate_Entry(const X509_Certificate& cert) :
-      m_certificate(cert), m_raw_public_key(m_certificate->subject_public_key()) {}
+      m_certificate(std::make_unique<X509_Certificate>(cert)), m_raw_public_key(m_certificate->subject_public_key()) {}
 
 Certificate_13::Certificate_Entry::Certificate_Entry(std::shared_ptr<Public_Key> raw_public_key) :
-      m_certificate(std::nullopt), m_raw_public_key(std::move(raw_public_key)) {
+      m_raw_public_key(std::move(raw_public_key)) {
    BOTAN_ASSERT_NONNULL(m_raw_public_key);
 }
 
 const X509_Certificate& Certificate_13::Certificate_Entry::certificate() const {
    BOTAN_STATE_CHECK(has_certificate());
-   return m_certificate.value();
+   return *m_certificate;
 }
 
 std::shared_ptr<const Public_Key> Certificate_13::Certificate_Entry::public_key() const {

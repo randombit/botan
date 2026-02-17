@@ -39,6 +39,7 @@
    #include <botan/tls_server.h>
    #include <botan/tls_session_manager.h>
    #include <botan/x509_key.h>
+   #include <botan/x509cert.h>
    #include <botan/internal/concat_util.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/stl_util.h>

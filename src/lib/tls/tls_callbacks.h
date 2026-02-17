@@ -12,7 +12,6 @@
 #define BOTAN_TLS_CALLBACKS_H_
 
 #include <botan/ec_point_format.h>
-#include <botan/pkix_enums.h>
 #include <botan/pubkey.h>
 #include <botan/tls_alert.h>
 #include <botan/tls_algos.h>
@@ -24,6 +23,8 @@
 
 namespace Botan {
 
+enum class Signature_Format : uint8_t;
+enum class Usage_Type : uint8_t;
 class DL_Group;
 class PK_Key_Agreement_Key;
 class Certificate_Store;
@@ -414,6 +415,10 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        *
        * @returns the shared secret both in plaintext and encapsulated with
        *          @p encoded_public_key.
+       *
+       * TODO(Botan4) change this return type to something else so the pubkey.h
+       * dependency is removed
+       * TODO(Botan4) change encoded_public_key to a span
        */
       virtual KEM_Encapsulation tls_kem_encapsulate(TLS::Group_Params group,
                                                     const std::vector<uint8_t>& encoded_public_key,
@@ -444,6 +449,8 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        *
        * @returns the plaintext shared secret from @p encapsulated_bytes after
        *          decapsulation with @p private_key.
+       *
+       * TODO(Botan4) change encapsulated_bytes to a std::span
        */
       virtual secure_vector<uint8_t> tls_kem_decapsulate(TLS::Group_Params group,
                                                          const Private_Key& private_key,
@@ -528,6 +535,8 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        * @param policy        a TLS policy object
        *
        * @return the shared secret derived from public_value and private_key
+       *
+       * TODO(Botan4) change public_value to a std::span
        */
       virtual secure_vector<uint8_t> tls_ephemeral_key_agreement(const std::variant<TLS::Group_Params, DL_Group>& group,
                                                                  const PK_Key_Agreement_Key& private_key,
@@ -621,6 +630,8 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        *
        * @param raw_response raw OCSP response buffer
        * @returns the parsed OCSP response or std::nullopt on error
+       *
+       * TODO(Botan4) change raw_response to a std::span
        */
       virtual std::optional<OCSP::Response> tls_parse_ocsp_response(const std::vector<uint8_t>& raw_response);
 
@@ -652,12 +663,16 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
       /**
        * Optional callback: error logging. (not currently called)
        * @param err An error message related to this connection.
+       *
+       * TODO(Botan4) remove this
        */
       virtual void tls_log_error(const char* err);
 
       /**
        * Optional callback: debug logging. (not currently called)
        * @param what Some hopefully informative string
+       *
+       * TODO(Botan4) remove this
        */
       virtual void tls_log_debug(const char* what);
 
@@ -666,6 +681,8 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks /* NOLINT(*-special-member-functions) */ 
        * @param descr What this buffer is
        * @param val the bytes
        * @param val_len length of val
+       *
+       * TODO(Botan4) remove this
        */
       virtual void tls_log_debug_bin(const char* descr, const uint8_t val[], size_t val_len);
 

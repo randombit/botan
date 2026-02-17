@@ -11,11 +11,16 @@
 #define BOTAN_TLS_MESSAGES_13_H_
 
 #include <botan/tls_extensions.h>
+#include <botan/tls_external_psk.h>
 #include <botan/tls_messages.h>
-#include <botan/x509cert.h>
 #include <chrono>
 
-#include <botan/tls_external_psk.h>
+namespace Botan {
+
+enum class Usage_Type : uint8_t;
+class X509_Certificate;
+
+}  // namespace Botan
 
 namespace Botan::TLS {
 
@@ -166,7 +171,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
             explicit Certificate_Entry(const X509_Certificate& cert);
             explicit Certificate_Entry(std::shared_ptr<Public_Key> raw_public_key);
 
-            bool has_certificate() const { return m_certificate.has_value(); }
+            bool has_certificate() const { return m_certificate != nullptr; }
 
             const X509_Certificate& certificate() const;
             std::shared_ptr<const Public_Key> public_key() const;
@@ -177,8 +182,16 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
 
             const Extensions& extensions() const { return m_extensions; }
 
+            Certificate_Entry(const Certificate_Entry& other) = delete;
+            Certificate_Entry& operator=(const Certificate_Entry& other) = delete;
+
+            Certificate_Entry(Certificate_Entry&& other) noexcept;
+            Certificate_Entry& operator=(Certificate_Entry&& other) noexcept;
+
+            ~Certificate_Entry();
+
          private:
-            std::optional<X509_Certificate> m_certificate;
+            std::unique_ptr<X509_Certificate> m_certificate;  // possibly null if raw public key in use
             std::shared_ptr<Public_Key> m_raw_public_key;
             Extensions m_extensions;
       };

@@ -16,6 +16,7 @@
 #include <botan/rng.h>
 #include <botan/tls_callbacks.h>
 #include <botan/x509_key.h>
+#include <botan/x509cert.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
@@ -88,6 +89,37 @@ std::optional<Session_Ticket> Session_Handle::ticket() const {
    return std::nullopt;
 }
 
+Session_Base::Session_Base() = default;
+
+Session_Base::~Session_Base() = default;
+
+Session_Base::Session_Base(const Session_Base& other) = default;
+Session_Base& Session_Base::operator=(const Session_Base& other) = default;
+
+Session_Base::Session_Base(Session_Base&& other) noexcept = default;
+Session_Base& Session_Base::operator=(Session_Base&& other) noexcept = default;
+
+Session_Base::Session_Base(std::chrono::system_clock::time_point start_time,
+                           Protocol_Version version,
+                           uint16_t ciphersuite,
+                           Connection_Side connection_side,
+                           uint16_t srtp_profile,
+                           bool extended_master_secret,
+                           bool encrypt_then_mac,
+                           const std::vector<X509_Certificate>& peer_certs,
+                           std::shared_ptr<const Public_Key> peer_raw_public_key,
+                           Server_Information server_info) :
+      m_start_time(start_time),
+      m_version(version),
+      m_ciphersuite(ciphersuite),
+      m_connection_side(connection_side),
+      m_srtp_profile(srtp_profile),
+      m_extended_master_secret(extended_master_secret),
+      m_encrypt_then_mac(encrypt_then_mac),
+      m_peer_certs(peer_certs),
+      m_peer_raw_public_key(std::move(peer_raw_public_key)),
+      m_server_info(std::move(server_info)) {}
+
 Ciphersuite Session_Base::ciphersuite() const {
    auto suite = Ciphersuite::by_id(m_ciphersuite);
    if(!suite.has_value()) {
@@ -147,7 +179,7 @@ std::string tls13_kex_to_string(bool psk, std::optional<Named_Group> group) {
 
 Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
                                  Connection_Side side,
-                                 std::vector<X509_Certificate> peer_certs,
+                                 const std::vector<X509_Certificate>& peer_certs,
                                  std::shared_ptr<const Public_Key> peer_raw_public_key,
                                  std::optional<std::string> psk_identity,
                                  bool session_was_resumed,
@@ -170,7 +202,7 @@ Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
 
                    // TLS 1.3 uses AEADs, so technically encrypt-then-MAC is not applicable.
                    false,
-                   std::move(peer_certs),
+                   peer_certs,
                    std::move(peer_raw_public_key),
                    std::move(server_info)),
       m_external_psk_identity(std::move(psk_identity)),

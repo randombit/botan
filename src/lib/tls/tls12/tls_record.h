@@ -9,23 +9,24 @@
 #ifndef BOTAN_TLS_RECORDS_H_
 #define BOTAN_TLS_RECORDS_H_
 
-#include <botan/aead.h>
 #include <botan/assert.h>
+#include <botan/secmem.h>
 #include <botan/tls_algos.h>
 #include <botan/tls_magic.h>
 #include <botan/tls_version.h>
 #include <functional>
+#include <memory>
 #include <vector>
 
 namespace Botan {
 
+class AEAD_Mode;
 class RandomNumberGenerator;
 
-}
+}  // namespace Botan
 
 namespace Botan::TLS {
 
-class Callbacks;
 class Ciphersuite;
 class Session_Keys;
 
@@ -45,6 +46,14 @@ class Connection_Cipher_State final {
                               const Ciphersuite& suite,
                               const Session_Keys& keys,
                               bool uses_encrypt_then_mac);
+
+      ~Connection_Cipher_State();
+
+      Connection_Cipher_State(const Connection_Cipher_State& other) = delete;
+      Connection_Cipher_State(Connection_Cipher_State&& other) = delete;
+
+      Connection_Cipher_State& operator=(const Connection_Cipher_State& other) = delete;
+      Connection_Cipher_State& operator=(Connection_Cipher_State&& other) = delete;
 
       AEAD_Mode& aead() {
          BOTAN_ASSERT_NONNULL(m_aead.get());

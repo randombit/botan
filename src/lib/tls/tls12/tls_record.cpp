@@ -9,6 +9,9 @@
 
 #include <botan/internal/tls_record.h>
 
+#include <botan/aead.h>
+#include <botan/block_cipher.h>
+#include <botan/mac.h>
 #include <botan/rng.h>
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_exceptn.h>
@@ -26,6 +29,8 @@
 #endif
 
 namespace Botan::TLS {
+
+Connection_Cipher_State::~Connection_Cipher_State() = default;
 
 Connection_Cipher_State::Connection_Cipher_State(Protocol_Version version,
                                                  Connection_Side side,

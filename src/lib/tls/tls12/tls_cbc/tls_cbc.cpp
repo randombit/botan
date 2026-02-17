@@ -10,15 +10,19 @@
 
 #include <botan/internal/tls_cbc.h>
 
-#include <botan/internal/cbc.h>
-
+#include <botan/block_cipher.h>
+#include <botan/mac.h>
 #include <botan/tls_alert.h>
 #include <botan/tls_exceptn.h>
+#include <botan/tls_version.h>
+#include <botan/internal/cbc.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rounding.h>
 
 namespace Botan::TLS {
+
+TLS_CBC_HMAC_AEAD_Mode::~TLS_CBC_HMAC_AEAD_Mode() = default;
 
 /*
 * TLS_CBC_HMAC_AEAD_Mode Constructor
@@ -28,7 +32,7 @@ TLS_CBC_HMAC_AEAD_Mode::TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir dir,
                                                std::unique_ptr<MessageAuthenticationCode> mac,
                                                size_t cipher_keylen,
                                                size_t mac_keylen,
-                                               Protocol_Version version,
+                                               const Protocol_Version& version,
                                                bool use_encrypt_then_mac) :
       m_mac(std::move(mac)),
       m_cipher_name(cipher->name()),
@@ -133,6 +137,20 @@ void TLS_CBC_HMAC_AEAD_Mode::set_associated_data_n(size_t idx, std::span<const u
    }
    m_ad.assign(ad.begin(), ad.end());
 }
+
+TLS_CBC_HMAC_AEAD_Encryption::TLS_CBC_HMAC_AEAD_Encryption(std::unique_ptr<BlockCipher> cipher,
+                                                           std::unique_ptr<MessageAuthenticationCode> mac,
+                                                           const size_t cipher_keylen,
+                                                           const size_t mac_keylen,
+                                                           const Protocol_Version& version,
+                                                           bool use_encrypt_then_mac) :
+      TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir::Encryption,
+                             std::move(cipher),
+                             std::move(mac),
+                             cipher_keylen,
+                             mac_keylen,
+                             version,
+                             use_encrypt_then_mac) {}
 
 void TLS_CBC_HMAC_AEAD_Encryption::set_associated_data_n(size_t idx, std::span<const uint8_t> ad) {
    TLS_CBC_HMAC_AEAD_Mode::set_associated_data_n(idx, ad);
@@ -260,6 +278,20 @@ uint16_t check_tls_cbc_padding(const uint8_t record[], size_t record_len) {
 
    return pad_invalid.if_not_set_return(pad_bytes);
 }
+
+TLS_CBC_HMAC_AEAD_Decryption::TLS_CBC_HMAC_AEAD_Decryption(std::unique_ptr<BlockCipher> cipher,
+                                                           std::unique_ptr<MessageAuthenticationCode> mac,
+                                                           const size_t cipher_keylen,
+                                                           const size_t mac_keylen,
+                                                           const Protocol_Version& version,
+                                                           bool use_encrypt_then_mac) :
+      TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir::Decryption,
+                             std::move(cipher),
+                             std::move(mac),
+                             cipher_keylen,
+                             mac_keylen,
+                             version,
+                             use_encrypt_then_mac) {}
 
 void TLS_CBC_HMAC_AEAD_Decryption::cbc_decrypt_record(uint8_t record_contents[], size_t record_len) {
    if(record_len == 0 || record_len % block_size() != 0) {
