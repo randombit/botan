@@ -8,7 +8,7 @@ testing cryptographic algorithms.
 
 The intent is that the test framework and the test suite evolve
 symbiotically; as a general rule of thumb if a new function would make
-the implementation of just two distinct tests simpler, it is worth
+the implementation of just a few distinct tests simpler, it is worth
 adding to the framework on the assumption it will prove useful again.
 Feel free to propose changes to the test system.
 
@@ -30,11 +30,13 @@ Test Data
 -----------
 
 The test framework is heavily data driven. As of this writing, there
-is about 1 Mib of test code and 17 MiB of test data. For most (though
+is about 2.5 Mib of test code and 28 MiB of test data. For most (though
 certainly not all) tests, it is better to add a data file representing
 the input and outputs, and run the tests over it. Data driven tests
 make adding or editing tests easier, for example by writing scripts
 which produce new test data and output it in the expected format.
+
+Test data lives in ``src/tests/data``.
 
 Test
 --------
@@ -93,7 +95,7 @@ Test::Result
     return true or false if the test was successful or not; this allows
     performing conditional blocks as a result of earlier tests::
 
-      if(result.test_eq("first value", produced, expected))
+      if(result.test_str_eq("first value", produced, expected))
          {
          // further tests that rely on the initial test being correct
          }
@@ -110,90 +112,109 @@ Test::Result
 
        Report a test that was successful.
 
-    .. cpp:function:: bool test_success(const std::string& note)
+    .. cpp:function:: bool test_success(std::string_view note)
 
        Report a test that was successful, including some comment.
 
-    .. cpp:function:: bool test_failure(const std::string& err)
+    .. cpp:function:: bool test_failure(std::string_view err)
 
        Report a test failure of some kind. The error string will be logged.
 
-    .. cpp:function:: bool test_failure(const std::string& what, const std::string& error)
+    .. cpp:function:: bool test_failure(std::string_view what, std::string_view error)
 
        Report a test failure of some kind, with a description of what failed and
        what the error was.
 
-    .. cpp:function:: void test_failure(const std::string& what, const uint8_t buf[], size_t buf_len)
+    .. cpp:function:: void test_failure(std::string_view what, std::span<const uint8_t> context)
 
        Report a test failure due to some particular input, which is provided as
-       arguments. Normally this is only used if the test was using some
+       ``context``. Normally this is only used if the test was using some
        randomized input which unexpectedly failed, since if the input is
        hardcoded or from a file it is easier to just reference the test number.
 
-    .. cpp:function:: bool test_eq(const std::string& what, const std::string& produced, const std::string& expected)
+    .. cpp:function:: bool test_str_eq(std::string_view what, std::string_view produced, std::string_view expected)
 
-       Compare to strings for equality.
+       Compare two strings for equality.
 
-    .. cpp:function:: bool test_ne(const std::string& what, const std::string& produced, const std::string& expected)
+    .. cpp:function:: bool test_str_ne(std::string_view what, std::string_view produced, std::string_view expected)
 
-       Compare to strings for non-equality.
+       Compare two strings for non-equality.
 
-    .. cpp:function:: bool test_eq(const char* producer, const std::string& what, \
-                                   const uint8_t produced[], size_t produced_len, \
-                                   const uint8_t expected[], size_t expected_len)
+    .. cpp:function:: bool test_bin_eq(std::string_view what, \
+                             std::span<const uint8_t> produced, \
+                             std::span<const uint8_t> expected);
 
        Compare two arrays for equality.
 
-    .. cpp:function:: bool test_ne(const char* producer, const std::string& what, \
-                                   const uint8_t produced[], size_t produced_len, \
-                                   const uint8_t expected[], size_t expected_len)
+    .. cpp:function:: bool test_bin_eq(std::string_view what, \
+                             std::span<const uint8_t> produced, \
+                             std::string_view expected_hex);
 
-       Compare two arrays for non-equality.
+       Compare two arrays for equality, with the expected value provided as a hex string.
 
-    .. cpp:function:: bool test_eq(const std::string& producer, const std::string& what, \
-                                   const std::vector<uint8_t>& produced, \
-                                   const std::vector<uint8_t>& expected)
-
-       Compare two vectors for equality.
-
-    .. cpp:function:: bool test_ne(const std::string& producer, const std::string& what, \
-                                   const std::vector<uint8_t>& produced, \
-                                   const std::vector<uint8_t>& expected)
-
-       Compare two vectors for non-equality.
-
-    .. cpp:function:: bool confirm(const std::string& what, bool expr)
-
-       Test that some expression evaluates to ``true``.
-
-    .. cpp:function:: template<typename T> bool test_not_null(const std::string& what, T* ptr)
+    .. cpp:function:: template<typename T> bool test_not_null(std::string_view what, T* ptr)
 
        Verify that the pointer is not null.
 
-    .. cpp:function:: bool test_lt(const std::string& what, size_t produced, size_t expected)
+    .. cpp:function:: bool test_u8_eq(std::string_view what, uint8_t produced, uint8_t expected)
+
+       Test that ``produced`` == ``expected``.
+
+    .. cpp:function:: bool test_u16_eq(std::string_view what, uint16_t produced, uint16_t expected)
+
+       Test that ``produced`` == ``expected``.
+
+    .. cpp:function:: bool test_u32_eq(std::string_view what, uint32_t produced, uint32_t expected)
+
+       Test that ``produced`` == ``expected``.
+
+    .. cpp:function:: bool test_u64_eq(std::string_view what, uint64_t produced, uint64_t expected)
+
+       Test that ``produced`` == ``expected``.
+
+    .. cpp:function:: bool test_sz_eq(std::string_view what, size_t produced, size_t expected)
+
+       Test that ``produced`` == ``expected``.
+
+    .. cpp:function:: bool test_sz_lt(std::string_view what, size_t produced, size_t expected)
 
        Test that ``produced`` < ``expected``.
 
-    .. cpp:function:: bool test_lte(const std::string& what, size_t produced, size_t expected)
+    .. cpp:function:: bool test_sz_lte(std::string_view what, size_t produced, size_t expected)
 
        Test that ``produced`` <= ``expected``.
 
-    .. cpp:function:: bool test_gt(const std::string& what, size_t produced, size_t expected)
+    .. cpp:function:: bool test_sz_gt(std::string_view what, size_t produced, size_t expected)
 
        Test that ``produced`` > ``expected``.
 
-    .. cpp:function:: bool test_gte(const std::string& what, size_t produced, size_t expected)
+    .. cpp:function:: bool test_sz_gte(std::string_view what, size_t produced, size_t expected)
 
        Test that ``produced`` >= ``expected``.
 
-    .. cpp:function:: bool test_throws(const std::string& what, std::function<void ()> fn)
+    .. cpp:function:: bool test_throws(std::string_view what, std::function<void ()> fn)
 
        Call a function and verify it throws an exception of some kind.
 
-    .. cpp:function:: bool test_throws(const std::string& what, const std::string& expected, std::function<void ()> fn)
+    .. cpp:function:: bool test_throws(std::string_view what, std::string_view expected, std::function<void ()> fn)
 
        Call a function and verify it throws an exception of some kind
        and that the exception message exactly equals ``expected``.
+
+There is also a comparison function for arbitrary types, which is defined in the
+separate header ``test_arb_eq.h`` because it drags in some additional headers.
+
+.. cpp:function:: template <typename T> \
+      bool test_arb_eq(Test::Result& result, std::string_view what, const T& produced, const T& expected)
+
+       Compare some arbitrary Ts for equality.
+
+       It is required that ``T`` not be something that is handled by one of the
+       existing comparison functions (eg not a string, integer, or bytestring
+       type) and also that ``test_arb_eq`` is able to deduce some way of
+       printing values of ``T``. Depending on your ``T`` you may need to extend
+       the implementation of ``detail::to_string`` in that header.
+
 
 Text_Based_Test
 -----------------
@@ -221,37 +242,36 @@ with a particular format which looks somewhat like an INI-file::
   the test provides a default value which is returned if the key was not set
   for this particular instance of the test.
 
-  .. cpp:function:: std::vector<uint8_t> get_req_bin(const std::string& key) const
+  .. cpp:function:: std::vector<uint8_t> get_req_bin(std::string_view key) const
 
      Return a required binary string. The input is assumed to be hex encoded.
 
-  .. cpp:function:: std::vector<uint8_t> get_opt_bin(const std::string& key) const
+  .. cpp:function:: std::vector<uint8_t> get_opt_bin(std::string_view key) const
 
      Return an optional binary string. The input is assumed to be hex encoded.
+     Returns empty if the value was not provided.
 
-  .. cpp:function:: std::vector<std::vector<uint8_t>> get_req_bin_list(const std::string& key) const
-
-  .. cpp:function:: Botan::BigInt get_req_bn(const std::string& key) const
+  .. cpp:function:: Botan::BigInt get_req_bn(std::string_view key) const
 
      Return a required BigInt. The input can be decimal or (with "0x" prefix) hex encoded.
 
-  .. cpp:function:: Botan::BigInt get_opt_bn(const std::string& key, const Botan::BigInt& def_value) const
+  .. cpp:function:: Botan::BigInt get_opt_bn(std::string_view key, const Botan::BigInt& def_value) const
 
      Return an optional BigInt. The input can be decimal or (with "0x" prefix) hex encoded.
 
-  .. cpp:function:: std::string get_req_str(const std::string& key) const
+  .. cpp:function:: std::string get_req_str(std::string_view key) const
 
      Return a required text string.
 
-  .. cpp:function:: std::string get_opt_str(const std::string& key, const std::string& def_value) const
+  .. cpp:function:: std::string get_opt_str(std::string_view key, std::string_view def_value) const
 
-     Return an optional text string.
+     Return an optional text string, or the specified default value if not set.
 
-  .. cpp:function:: size_t get_req_sz(const std::string& key) const
+  .. cpp:function:: size_t get_req_sz(std::string_view key) const
 
      Return a required integer. The input should be decimal.
 
-  .. cpp:function:: size_t get_opt_sz(const std::string& key, const size_t def_value) const
+  .. cpp:function:: size_t get_opt_sz(std::string_view key, const size_t def_value) const
 
      Return an optional integer. The input should be decimal.
 
@@ -260,8 +280,6 @@ with a particular format which looks somewhat like an INI-file::
   .. cpp:function:: Text_Based_Test(const std::string& input_file, \
                     const std::string& required_keys, \
                     const std::string& optional_keys = "")
-
-     This constructor is
 
      .. note::
         The final element of required_keys is the "output key", that is
@@ -291,24 +309,21 @@ Test Runner
 If you are simply writing a new test there should be no need to modify
 the runner, however it can be useful to be aware of its abilities.
 
-The runner can run tests concurrently across many cores. By default single
-threaded execution is used, but you can use ``--test-threads`` option to
-specify the number of threads to use. If you use ``--test-threads=0`` then
-the runner will probe the number of active CPUs and use that (but limited
-to at most 16). If you want to run across many cores on a large machine,
-explicitly specify a thread count. The speedup is close to linear.
+The runner can run tests concurrently across many cores, and does so by default
+on most systems. If you want single-threaded testing for some reason, use the
+option ``--test-threads=1``. If not specified then (as of this writing) at most
+16 threads will be used; you can use eg ``--test-threads=128`` if running on
+a large system.
 
 The RNG used in the tests is deterministic, and the seed is logged for each
 execution. You can cause the random sequence to repeat using ``--drbg-seed``
-option.
-
-.. note::
-   Currently the RNG is seeded just once at the start of execution. So you
-   must run the exact same sequence of tests as the original test run in
-   order to get reproducible results.
+option. It's not necessary that the same sequence of tests be executed in order
+to replay the state; if you see a test ``foo`` fail with a specific DRBG seed,
+for example in a CI run, you should be able to replicate that with just
+``botan-test --drbg-seed=<seed> foo``.
 
 If you are trying to track down a bug that happens only occasionally, two very
 useful options are ``--test-runs`` and ``--abort-on-first-fail``. The first
 takes an integer and runs the specified test cases that many times. The second
-causes abort to be called on the very first failed test. This is sometimes
+causes ``abort`` to be called on the very first failed test. This is sometimes
 useful when tracing a memory corruption bug.
