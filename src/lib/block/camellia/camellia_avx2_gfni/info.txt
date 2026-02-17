@@ -1,9 +1,9 @@
 <internal_defines>
-CAMELLIA_GFNI -> 20250502
+CAMELLIA_AVX2_GFNI -> 20250502
 </internal_defines>
 
 <module_info>
-name -> "Camellia using GFNI"
+name -> "Camellia using GFNI/AVX2"
 </module_info>
 
 <isa>

@@ -4,7 +4,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/camellia_gfni.h>
+#include <botan/internal/camellia.h>
 
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
@@ -14,7 +14,7 @@ namespace Botan {
 
 namespace {
 
-namespace Camellia_GFNI {
+namespace Camellia_AVX2_GFNI {
 
 // NOLINTBEGIN(portability-simd-intrinsics)
 
@@ -129,15 +129,13 @@ inline uint64_t FLINV(uint64_t v, uint64_t K) {
    return ((static_cast<uint64_t>(x1) << 32) | x2);
 }
 
-}  // namespace Camellia_GFNI
+}  // namespace Camellia_AVX2_GFNI
 
-}  // namespace
-
-BOTAN_FN_ISA_AVX2_GFNI void camellia_gfni_encrypt9(const uint8_t in[],
-                                                   uint8_t out[],
-                                                   size_t blocks,
-                                                   std::span<const uint64_t> SK) {
-   using namespace Camellia_GFNI;
+BOTAN_FN_ISA_AVX2_GFNI void camellia_avx2_gfni_encrypt9(const uint8_t in[],
+                                                        uint8_t out[],
+                                                        size_t blocks,
+                                                        std::span<const uint64_t> SK) {
+   using namespace Camellia_AVX2_GFNI;
 
    for(size_t i = 0; i < blocks; ++i) {
       uint64_t D1 = load_be<uint64_t>(in, 2 * i + 0);
@@ -180,11 +178,11 @@ BOTAN_FN_ISA_AVX2_GFNI void camellia_gfni_encrypt9(const uint8_t in[],
    }
 }
 
-BOTAN_FN_ISA_AVX2_GFNI void camellia_gfni_decrypt9(const uint8_t in[],
-                                                   uint8_t out[],
-                                                   size_t blocks,
-                                                   std::span<const uint64_t> SK) {
-   using namespace Camellia_GFNI;
+BOTAN_FN_ISA_AVX2_GFNI void camellia_avx2_gfni_decrypt9(const uint8_t in[],
+                                                        uint8_t out[],
+                                                        size_t blocks,
+                                                        std::span<const uint64_t> SK) {
+   using namespace Camellia_AVX2_GFNI;
 
    for(size_t i = 0; i < blocks; ++i) {
       uint64_t D1 = load_be<uint64_t>(in, 2 * i + 0);
@@ -229,11 +227,11 @@ BOTAN_FN_ISA_AVX2_GFNI void camellia_gfni_decrypt9(const uint8_t in[],
    }
 }
 
-BOTAN_FN_ISA_AVX2_GFNI void camellia_gfni_encrypt12(const uint8_t in[],
-                                                    uint8_t out[],
-                                                    size_t blocks,
-                                                    std::span<const uint64_t> SK) {
-   using namespace Camellia_GFNI;
+BOTAN_FN_ISA_AVX2_GFNI void camellia_avx2_gfni_encrypt12(const uint8_t in[],
+                                                         uint8_t out[],
+                                                         size_t blocks,
+                                                         std::span<const uint64_t> SK) {
+   using namespace Camellia_AVX2_GFNI;
 
    for(size_t i = 0; i < blocks; ++i) {
       uint64_t D1 = load_be<uint64_t>(in, 2 * i + 0);
@@ -286,11 +284,11 @@ BOTAN_FN_ISA_AVX2_GFNI void camellia_gfni_encrypt12(const uint8_t in[],
    }
 }
 
-BOTAN_FN_ISA_AVX2_GFNI void camellia_gfni_decrypt12(const uint8_t in[],
-                                                    uint8_t out[],
-                                                    size_t blocks,
-                                                    std::span<const uint64_t> SK) {
-   using namespace Camellia_GFNI;
+BOTAN_FN_ISA_AVX2_GFNI void camellia_avx2_gfni_decrypt12(const uint8_t in[],
+                                                         uint8_t out[],
+                                                         size_t blocks,
+                                                         std::span<const uint64_t> SK) {
+   using namespace Camellia_AVX2_GFNI;
 
    for(size_t i = 0; i < blocks; ++i) {
       uint64_t D1 = load_be<uint64_t>(in, 2 * i + 0);
@@ -340,6 +338,56 @@ BOTAN_FN_ISA_AVX2_GFNI void camellia_gfni_decrypt12(const uint8_t in[],
 
       store_be(out + 16 * i, D2, D1);
    }
+}
+
+}  // namespace
+
+//static
+void BOTAN_FN_ISA_AVX2_GFNI Camellia_128::avx2_gfni_encrypt(const uint8_t in[],
+                                                            uint8_t out[],
+                                                            size_t blocks,
+                                                            std::span<const uint64_t> SK) {
+   return camellia_avx2_gfni_encrypt9(in, out, blocks, SK);
+}
+
+//static
+void BOTAN_FN_ISA_AVX2_GFNI Camellia_128::avx2_gfni_decrypt(const uint8_t in[],
+                                                            uint8_t out[],
+                                                            size_t blocks,
+                                                            std::span<const uint64_t> SK) {
+   return camellia_avx2_gfni_decrypt9(in, out, blocks, SK);
+}
+
+//static
+void BOTAN_FN_ISA_AVX2_GFNI Camellia_192::avx2_gfni_encrypt(const uint8_t in[],
+                                                            uint8_t out[],
+                                                            size_t blocks,
+                                                            std::span<const uint64_t> SK) {
+   return camellia_avx2_gfni_encrypt12(in, out, blocks, SK);
+}
+
+//static
+void BOTAN_FN_ISA_AVX2_GFNI Camellia_192::avx2_gfni_decrypt(const uint8_t in[],
+                                                            uint8_t out[],
+                                                            size_t blocks,
+                                                            std::span<const uint64_t> SK) {
+   return camellia_avx2_gfni_decrypt12(in, out, blocks, SK);
+}
+
+//static
+void BOTAN_FN_ISA_AVX2_GFNI Camellia_256::avx2_gfni_encrypt(const uint8_t in[],
+                                                            uint8_t out[],
+                                                            size_t blocks,
+                                                            std::span<const uint64_t> SK) {
+   return camellia_avx2_gfni_encrypt12(in, out, blocks, SK);
+}
+
+//static
+void BOTAN_FN_ISA_AVX2_GFNI Camellia_256::avx2_gfni_decrypt(const uint8_t in[],
+                                                            uint8_t out[],
+                                                            size_t blocks,
+                                                            std::span<const uint64_t> SK) {
+   return camellia_avx2_gfni_decrypt12(in, out, blocks, SK);
 }
 
 }  // namespace Botan
