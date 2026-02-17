@@ -34,6 +34,11 @@ class Camellia_128 final : public Block_Cipher_Fixed_Params<16, 16> {
    private:
       void key_schedule(std::span<const uint8_t> key) override;
 
+#if defined(BOTAN_HAS_CAMELLIA_AVX2_GFNI)
+      static void avx2_gfni_encrypt(const uint8_t in[], uint8_t out[], size_t blocks, std::span<const uint64_t> SK);
+      static void avx2_gfni_decrypt(const uint8_t in[], uint8_t out[], size_t blocks, std::span<const uint64_t> SK);
+#endif
+
       secure_vector<uint64_t> m_SK;
 };
 
@@ -58,6 +63,11 @@ class Camellia_192 final : public Block_Cipher_Fixed_Params<16, 24> {
    private:
       void key_schedule(std::span<const uint8_t> key) override;
 
+#if defined(BOTAN_HAS_CAMELLIA_AVX2_GFNI)
+      static void avx2_gfni_encrypt(const uint8_t in[], uint8_t out[], size_t blocks, std::span<const uint64_t> SK);
+      static void avx2_gfni_decrypt(const uint8_t in[], uint8_t out[], size_t blocks, std::span<const uint64_t> SK);
+#endif
+
       secure_vector<uint64_t> m_SK;
 };
 
@@ -81,6 +91,11 @@ class Camellia_256 final : public Block_Cipher_Fixed_Params<16, 32> {
 
    private:
       void key_schedule(std::span<const uint8_t> key) override;
+
+#if defined(BOTAN_HAS_CAMELLIA_AVX2_GFNI)
+      static void avx2_gfni_encrypt(const uint8_t in[], uint8_t out[], size_t blocks, std::span<const uint64_t> SK);
+      static void avx2_gfni_decrypt(const uint8_t in[], uint8_t out[], size_t blocks, std::span<const uint64_t> SK);
+#endif
 
       secure_vector<uint64_t> m_SK;
 };
