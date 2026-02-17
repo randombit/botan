@@ -16,7 +16,7 @@ Version 3.11.0, Not Yet Released
 
 * Add optimized SM3 implementations using AVX2/BMI2 (GH #5178) and SM3-NI (GH #5183)
 
-* Add optimized SM4 implementation using AVX-512/GFNI (GH #5192)
+* Add optimized SM4 implementation using AVX-512/GFNI (GH #5192 #5333)
 
 * Add AVX-512/CLMUL optimized XTS mode (GH #5251)
 
@@ -35,13 +35,18 @@ Version 3.11.0, Not Yet Released
 * Add support for WebAssembly SIMD, optimizing various algorithms including AES, GCM,
   ChaCha, SHA-1, SHA-256, Argon2 and others. (GH #5155 #5163 #5201)
 
+* Allow building TLS 1.3 without TLS 1.2 (GH #5292 #5293 #5303 #5309 #5318)
+
 * Emscripten/WebAssembly improvements including using the new Wasm exception mechanism
   (GH #5202) and re-enabling testing in CI with Emscripten (GH #5209)
 
 * Support for AltiVec on 32-bit PowerPC platforms has been dropped (GH #5266)
 
 * Many changes to improve library build times (GH #5279 #5280 #5284 #5285 #5286 #5287 #5288
-  #5289 #5291 #5294 #5295 #5296 #5300 #5304)
+  #5289 #5291 #5294 #5295 #5296 #5300 #5302 #5304 #5314 #5315 #5321 #5323 #5343 #5344 #5345 #5346)
+
+* Test suite infrastructure cleanups (GH #5327 #5328 #5329 #5330 #5334 #5337 #5338 #5340
+  #5341 #5342 #5348 #5351)
 
 * Unroll loops to improve Montgomery reduction performance. (GH #5150)
 
@@ -49,6 +54,8 @@ Version 3.11.0, Not Yet Released
 
 * Python binding additions including custom RNG (GH #5271) and checks for explicit
   EC parameter encoding (GH #5282)
+
+* On MSVC default to using embedded debug info rather than the PDB (GH #5349)
 
 * Fix various clang-tidy and cppcheck warnings (GH #5172 #5207 #5204 #5205)
 
