@@ -46,7 +46,7 @@ class PerfTest_BlockCipher final : public PerfTest {
       void go(const PerfConfig& config) override {
          for(const auto& provider : Botan::BlockCipher::providers(m_alg)) {
             if(auto cipher = Botan::BlockCipher::create(m_alg, provider)) {
-               bench_stream_cipher(config, *cipher);
+               bench_block_cipher(config, *cipher);
             }
          }
       }
@@ -54,7 +54,7 @@ class PerfTest_BlockCipher final : public PerfTest {
       static bool has_impl_for(std::string_view alg) { return !Botan::BlockCipher::providers(alg).empty(); }
 
    private:
-      static void bench_stream_cipher(const PerfConfig& config, Botan::BlockCipher& cipher) {
+      static void bench_block_cipher(const PerfConfig& config, Botan::BlockCipher& cipher) {
          auto& rng = config.rng();
          const auto runtime = config.runtime();
          const auto provider = cipher.provider();
