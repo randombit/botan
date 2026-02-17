@@ -726,7 +726,8 @@ class VarMap {
       void add(std::string_view key, std::string_view value);
 
    private:
-      std::optional<std::string> get_var(std::string_view key) const;
+      const std::string& get_req_var(std::string_view key) const;
+      std::optional<std::string> get_opt_var(std::string_view key) const;
 
       std::vector<std::pair<std::string, std::string>> m_vars;
 };
