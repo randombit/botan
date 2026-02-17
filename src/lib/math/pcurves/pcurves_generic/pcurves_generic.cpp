@@ -11,12 +11,14 @@
 #include <botan/rng.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/ec_sec1.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/mp_core.h>
 #include <botan/internal/pcurves_algos.h>
 #include <botan/internal/pcurves_instance.h>
 #include <botan/internal/pcurves_mul.h>
 #include <botan/internal/primality.h>
+#include <botan/internal/stl_util.h>
 #include <algorithm>
 
 namespace Botan::PCurve {
@@ -977,37 +979,38 @@ class GenericAffinePoint final {
       */
       static std::optional<GenericAffinePoint> deserialize(const GenericPrimeOrderCurve* curve,
                                                            std::span<const uint8_t> bytes) {
-         const size_t fe_bytes = curve->_params().field_bytes();
+         return sec1_decode(bytes,
+                            curve->_params().field_bytes(),
+                            overloaded{
+                               [curve](const SEC1_Identity) { return GenericAffinePoint::identity(curve); },
+                               [curve](const SEC1_Compressed compressed) -> std::optional<GenericAffinePoint> {
+                                  if(auto x = GenericField::deserialize(curve, compressed.x)) {
+                                     auto [y, is_square] = x3_ax_b(*x).sqrt();
 
-         if(bytes.size() == 1 + 2 * fe_bytes && bytes[0] == 0x04) {
-            auto x = GenericField::deserialize(curve, bytes.subspan(1, fe_bytes));
-            auto y = GenericField::deserialize(curve, bytes.subspan(1 + fe_bytes, fe_bytes));
+                                     if(is_square.as_bool()) {
+                                        const auto flip_y = compressed.y_is_even != y.is_even();
+                                        y.conditional_assign(flip_y, y.negate());
+                                        return GenericAffinePoint(*x, y);
+                                     }
+                                  }
 
-            if(x && y) {
-               const auto lhs = (*y).square();
-               const auto rhs = GenericAffinePoint::x3_ax_b(*x);
-               if((lhs == rhs).as_bool()) {
-                  return GenericAffinePoint(*x, *y);
-               }
-            }
-         } else if(bytes.size() == 1 + fe_bytes && (bytes[0] == 0x02 || bytes[0] == 0x03)) {
-            const CT::Choice y_is_even = CT::Mask<uint8_t>::is_equal(bytes[0], 0x02).as_choice();
+                                  return {};
+                               },
+                               [curve](const SEC1_Full full) -> std::optional<GenericAffinePoint> {
+                                  auto x = GenericField::deserialize(curve, full.x);
+                                  auto y = GenericField::deserialize(curve, full.y);
 
-            if(auto x = GenericField::deserialize(curve, bytes.subspan(1, fe_bytes))) {
-               auto [y, is_square] = x3_ax_b(*x).sqrt();
+                                  if(x && y) {
+                                     const auto lhs = (*y).square();
+                                     const auto rhs = GenericAffinePoint::x3_ax_b(*x);
+                                     if((lhs == rhs).as_bool()) {
+                                        return GenericAffinePoint(*x, *y);
+                                     }
+                                  }
 
-               if(is_square.as_bool()) {
-                  const auto flip_y = y_is_even != y.is_even();
-                  y.conditional_assign(flip_y, y.negate());
-                  return GenericAffinePoint(*x, y);
-               }
-            }
-         } else if(bytes.size() == 1 && bytes[0] == 0x00) {
-            // See SEC1 section 2.3.4
-            return GenericAffinePoint::identity(curve);
-         }
-
-         return {};
+                                  return {};
+                               },
+                            });
       }
 
       /**
