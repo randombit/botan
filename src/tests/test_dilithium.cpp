@@ -9,9 +9,9 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  */
 
-#include "botan/pk_keys.h"
 #include "test_rng.h"
 #include "tests.h"
+
 #include <memory>
 #include <vector>
 
@@ -21,6 +21,7 @@
    #include <botan/pk_algs.h>
    #include <botan/pk_options.h>
    #include <botan/pubkey.h>
+   #include <botan/pk_keys.h>
 
    #include "test_pubkey.h"
 #endif
