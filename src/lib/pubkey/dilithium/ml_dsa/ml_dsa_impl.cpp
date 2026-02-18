@@ -23,7 +23,7 @@ namespace {
 typedef Botan::DilithiumInternalKeypair (*decoding_func)(std::span<const uint8_t> key_bits,
                                                          Botan::DilithiumConstants mode);
 
-Botan::DilithiumInternalKeypair decode_seed_only_or_throw(std::span<const uint8_t> key_bits,
+Botan::DilithiumInternalKeypair decode_seed_only(std::span<const uint8_t> key_bits,
                                                      Botan::DilithiumConstants mode) {
    Botan::secure_vector<uint8_t> seed;
    Botan::BER_Decoder(key_bits)
@@ -32,7 +32,7 @@ Botan::DilithiumInternalKeypair decode_seed_only_or_throw(std::span<const uint8_
    return Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(seed), std::move(mode));
 }
 
-Botan::DilithiumInternalKeypair decode_expanded_only_or_throw(std::span<const uint8_t> key_bits,
+Botan::DilithiumInternalKeypair decode_expanded_only(std::span<const uint8_t> key_bits,
                                                          Botan::DilithiumConstants mode) {
    Botan::secure_vector<uint8_t> expanded;
    Botan::BER_Decoder(key_bits).decode(expanded, Botan::ASN1_Type::OctetString).verify_end();
@@ -41,7 +41,7 @@ Botan::DilithiumInternalKeypair decode_expanded_only_or_throw(std::span<const ui
    return key_pair;
 }
 
-Botan::DilithiumInternalKeypair decode_seed_plus_expanded_or_throw(std::span<const uint8_t> key_bits, Botan::DilithiumConstants mode) {
+Botan::DilithiumInternalKeypair decode_seed_plus_expanded(std::span<const uint8_t> key_bits, Botan::DilithiumConstants mode) {
    Botan::secure_vector<uint8_t> expanded;
    Botan::secure_vector<uint8_t> seed;
    Botan::BER_Decoder(key_bits)
@@ -105,18 +105,17 @@ DilithiumInternalKeypair ML_DSA_Expanding_Keypair_Codec::decode_keypair(std::spa
       // backwards compatibility (not RFC 9881 conforming) to raw seed format.
       return Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(private_key_bits), std::move(mode));
    }
-   /* we have to check 3 different format: "seed-only", "expanded-only", and "both"
-     */
-   decoding_func fn_arr[3] = {decode_seed_plus_expanded_or_throw, decode_seed_only_or_throw, decode_expanded_only_or_throw};
-   for(auto fn : fn_arr) {
-      try {
-         return fn(private_key_bits, mode);
-      } catch(const Botan::Decoding_Error& e) {
-         // pass
-      }
+   // "seed-only" format from RFC 9881
+   BER_Decoder ber_dec(private_key_bits);
+   auto obj = ber_dec.peek_next_object();
+   if(obj.type() == ASN1_Type(0)) {
+        return decode_seed_only(private_key_bits, mode); 
    }
-   throw Decoding_Error("unsupported ML-DSA private key format, key size in bytes: " +
-                        std::to_string(private_key_bits.size()));
+   // now it could still be "expanded-only" or "both"
+   if(obj.type() == ASN1_Type::OctetString) {
+        return decode_expanded_only(private_key_bits, mode); 
+   }
+   return decode_seed_plus_expanded(private_key_bits, mode);
 }
 
 }  // namespace Botan
