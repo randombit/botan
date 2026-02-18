@@ -6,15 +6,14 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "botan/asn1_obj.h"
-#include "botan/exceptn.h"
-#include "botan/internal/dilithium_types.h"
 #include <botan/internal/ml_dsa_impl.h>
 
-#include <botan/internal/dilithium_algos.h>
-
+#include <botan/asn1_obj.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/exceptn.h>
+#include <botan/internal/dilithium_algos.h>
+#include <botan/internal/dilithium_types.h>
 #include <string>
 #include <utility>
 
