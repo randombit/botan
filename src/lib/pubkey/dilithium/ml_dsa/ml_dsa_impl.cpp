@@ -52,7 +52,7 @@ Botan::DilithiumInternalKeypair decode_seed_plus_expanded(std::span<const uint8_
       .verify_end();
    Botan::DilithiumInternalKeypair key_pair =
       Botan::Dilithium_Algos::decode_keypair(Botan::DilithiumSerializedPrivateKey(expanded), mode);
-   Botan::DilithiumInternalKeypair key_pair_from_seed =
+   Botan::DilithiumInternalKeypair const key_pair_from_seed =
       Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(seed), std::move(mode));
 
    DilithiumSerializedPrivateKey expanded_from_seed = Dilithium_Algos::encode_keypair(key_pair_from_seed);
@@ -60,7 +60,7 @@ Botan::DilithiumInternalKeypair decode_seed_plus_expanded(std::span<const uint8_
    if(expanded_from_seed.get() != expanded) {
       throw Botan::Decoding_Error("seed and expanded key in ML-DSA serialized key do not match");
    }
-   return key_pair;
+   return key_pair_from_seed;
 }
 
 }  // namespace
