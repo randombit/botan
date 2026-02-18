@@ -279,7 +279,7 @@ class bitvector_base final {
             ~bitref_base() = default;
 
          public:
-            // NOLINTNEXTLINE(*-explicit-conversions) FIXME
+            // NOLINTNEXTLINE(*-explicit-conversions)
             constexpr operator bool() const noexcept { return is_set(); }
 
             constexpr bool is_set() const noexcept { return (m_block & m_mask) > 0; }
@@ -389,7 +389,7 @@ class bitvector_base final {
        * @param bits  The number of bits to be loaded. This must not be more
        *              than the number of bytes in @p bytes.
        */
-      bitvector_base(std::span<const uint8_t> bytes, /* NOLINT(*-explicit-conversions) FIXME */
+      bitvector_base(std::span<const uint8_t> bytes, /* NOLINT(*-explicit-conversions) */
                      std::optional<size_type> bits = std::nullopt) :
             m_bits() {
          from_bytes(bytes, bits);
