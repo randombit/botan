@@ -317,7 +317,7 @@ class MLDSA_Privkey_Tests : public Text_Based_Test {
          try {
             priv_key = std::make_unique<Botan::Dilithium_PrivateKey>(key_bits, mode);
          } catch(const Botan::Decoding_Error& e) {
-            result.confirm("invalid ML-DSA key rejected", expect_decoding_failure);
+            result.test_is_true("invalid ML-DSA key rejected", expect_decoding_failure);
             return result;
          }
          std::vector<uint8_t> ref_msg = {0, 1, 2, 4};
@@ -329,11 +329,11 @@ class MLDSA_Privkey_Tests : public Text_Based_Test {
          const Botan::Dilithium_PublicKey pub_key(priv_key->public_key_bits(), mode);
          auto verifier = Botan::PK_Verifier(pub_key, "");
          verifier.update(ref_msg.data(), ref_msg.size());
-         result.confirm("signature verifies", verifier.check_signature(signature.data(), signature.size()));
+         result.test_is_true("signature verifies", verifier.check_signature(signature.data(), signature.size()));
 
          auto reencoded_priv_key = priv_key->private_key_bits();
          auto redecoded_priv_key = Botan::Dilithium_PrivateKey(reencoded_priv_key, mode);
-         result.confirm("re-encoding and subsequent re-decoding of private ML-DSA key without error", true);
+         result.test_is_true("re-encoding and subsequent re-decoding of private ML-DSA key without error", true);
          return result;
       }
 };

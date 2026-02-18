@@ -14,7 +14,6 @@
 #include <botan/exceptn.h>
 #include <botan/internal/dilithium_algos.h>
 #include <botan/internal/dilithium_types.h>
-#include <string>
 #include <utility>
 
 namespace Botan {
