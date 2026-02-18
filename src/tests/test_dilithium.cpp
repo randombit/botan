@@ -22,7 +22,6 @@
    #include <botan/pubkey.h>
 
    #include "test_pubkey.h"
-   #include "test_rng.h"
 #endif
 
 namespace Botan_Tests {
