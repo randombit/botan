@@ -290,10 +290,10 @@ class MldsaCertificateTests final : public Test {
       std::vector<Test::Result> run() override {
          std::vector<Test::Result> result_vec;
 
-         std::vector<std::string> cert_file_names = {
+         std::vector<std::string> const cert_file_names = {
             "mldsa44_rfc9881.pem.crt", "mldsa65_rfc9881.pem.crt", "mldsa87_rfc9881.pem.crt"};
 
-         for(auto& cert_file : cert_file_names) {
+         for(auto const& cert_file : cert_file_names) {
             Botan::X509_Certificate cert(Test::data_file("x509/mldsa/" + cert_file));
             Test::Result this_result(cert_file);
             auto ver_res = cert.verify_signature(*cert.subject_public_key());
