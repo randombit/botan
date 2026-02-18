@@ -32,7 +32,7 @@ class RFC6979_KAT_Tests final : public Text_Based_Test {
          auto hash_func = Botan::HashFunction::create(hash);
 
          if(!hash_func) {
-            result.test_note("Skipping due to missing: " + hash);
+            result.test_note("Skipping due to missing hash", hash);
             return result;
          }
 

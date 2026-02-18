@@ -384,7 +384,7 @@ class TLS_Handshake_Test final {
                                             " expected: " + m_expected_handshake_alert->type_string());
                   } else {
                      // acknowledge that the expected Alert was detected
-                     m_results.test_note("saw expected alert: " + m_expected_handshake_alert->type_string());
+                     m_results.test_note("saw expected alert", m_expected_handshake_alert->type_string());
                      m_expected_handshake_alert.reset();
                   }
                }

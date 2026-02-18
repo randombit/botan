@@ -242,7 +242,9 @@ class Test {
 
             /* Test reporting functions */
 
-            void test_note(std::string_view note, const char* extra = nullptr);
+            void test_note(std::string_view note);
+
+            void test_note(std::string_view note, std::string_view context);
 
             void test_note(std::string_view note, std::span<const uint8_t> context);
 

@@ -47,10 +47,10 @@ void check_invalid_signatures(Test::Result& result,
 
       try {
          if(!result.test_is_false("incorrect signature invalid", verifier.verify_message(message, bad_sig))) {
-            result.test_note("Accepted invalid signature " + Botan::hex_encode(bad_sig));
+            result.test_note("Accepted invalid signature", bad_sig);
          }
       } catch(std::exception& e) {
-         result.test_note("Accepted invalid signature " + Botan::hex_encode(bad_sig));
+         result.test_note("Modified signature", bad_sig);
          result.test_failure("Modified signature rejected with exception", e.what());
       }
    }
@@ -84,8 +84,8 @@ void check_invalid_ciphertexts(Test::Result& result,
       }
    }
 
-   result.test_note("Accepted " + std::to_string(ciphertext_accepted) + " invalid ciphertexts, rejected " +
-                    std::to_string(ciphertext_rejected));
+   result.test_note(
+      Botan::fmt("Accepted {} invalid ciphertexts, rejected {}", ciphertext_accepted, ciphertext_rejected));
 }
 
 std::string PK_Test::choose_padding(const VarMap& vars, const std::string& pad_hdr) {
@@ -143,7 +143,7 @@ Test::Result PK_Signature_Generation_Test::run_one_test(const std::string& pad_h
          verifier =
             std::make_unique<Botan::PK_Verifier>(*pubkey, padding, Botan::Signature_Format::Standard, verify_provider);
       } catch(Botan::Lookup_Error&) {
-         //result.test_note("Skipping verifying with " + verify_provider);
+         //result.test_note("Skipping verifying", verify_provider);
          continue;
       }
 
@@ -175,7 +175,7 @@ Test::Result PK_Signature_Generation_Test::run_one_test(const std::string& pad_h
          result.test_sz_lte(
             "Generated signature within announced bound", generated_signature.size(), signer->signature_length());
       } catch(Botan::Lookup_Error&) {
-         //result.test_note("Skipping signing with " + sign_provider);
+         //result.test_note("Skipping signing", sign_provider);
          continue;
       }
 
@@ -227,7 +227,7 @@ Test::Result PK_Signature_Verification_Test::run_one_test(const std::string& pad
       try {
          verifier = std::make_unique<Botan::PK_Verifier>(*pubkey, padding, sig_format(), verify_provider);
       } catch(Botan::Lookup_Error&) {
-         //result.test_note("Skipping verifying with " + verify_provider);
+         //result.test_note("Skipping verifying", verify_provider);
       }
 
       if(verifier) {
@@ -269,7 +269,7 @@ Test::Result PK_Signature_NonVerification_Test::run_one_test(const std::string& 
             std::make_unique<Botan::PK_Verifier>(*pubkey, padding, Botan::Signature_Format::Standard, verify_provider);
          result.test_is_false("incorrect signature rejected", verifier->verify_message(message, invalid_signature));
       } catch(Botan::Lookup_Error&) {
-         result.test_note("Skipping verifying with " + verify_provider);
+         result.test_note("Skipping verifying", verify_provider);
       }
    }
 
@@ -490,7 +490,7 @@ Test::Result PK_KEM_Test::run_one_test(const std::string& /*header*/, const VarM
    try {
       enc = std::make_unique<Botan::PK_KEM_Encryptor>(*pubkey, kdf);
    } catch(Botan::Lookup_Error&) {
-      result.test_note("Skipping due to missing KDF: " + kdf);
+      result.test_note("Skipping due to missing KDF", kdf);
       return result;
    }
 
@@ -563,7 +563,7 @@ Test::Result PK_Key_Agreement_Test::run_one_test(const std::string& header, cons
             }
          }
       } catch(Botan::Lookup_Error&) {
-         //result.test_note("Skipping key agreement with with " + provider);
+         //result.test_note("Skipping key agreement", provider);
       }
    }
 
@@ -718,7 +718,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
             if(!Botan::value_exists(algos_that_dont_have_a_raw_encoding, public_key->algo_name())) {
                result.test_failure("raw_public_key_bits not implemented for " + public_key->algo_name());
             } else {
-               result.test_note("raw_public_key_bits threw Not_Implemented as expected for " + public_key->algo_name());
+               result.test_note("raw_public_key_bits threw Not_Implemented as expected", public_key->algo_name());
             }
          }
 

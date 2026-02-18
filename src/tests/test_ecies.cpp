@@ -75,7 +75,7 @@ void check_encrypt_decrypt(Test::Result& result,
       result.test_throws("throw on invalid ciphertext",
                          [&ecies_dec, &invalid_encrypted] { ecies_dec.decrypt(invalid_encrypted); });
    } catch(Botan::Lookup_Error& e) {
-      result.test_note(std::string("Test not executed: ") + e.what());
+      result.test_note("Not available", e.what());
    }
 }
 
