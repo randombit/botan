@@ -265,21 +265,17 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
        * @param start_idx The start index.
        * @param target_node_height Height of the target node.
        * @param adrs Address of the tree containing the target node.
+       * @param hash The hash function to use
        *
        * @return The root node of a tree of height target_node height with the
        *         leftmost leaf being the hash of the WOTS+ pk with index
        *         start_idx.
        **/
-      secure_vector<uint8_t> tree_hash(size_t start_idx, size_t target_node_height, XMSS_Address& adrs);
+      secure_vector<uint8_t> tree_hash(size_t start_idx,
+                                       size_t target_node_height,
+                                       XMSS_Address& adrs,
+                                       XMSS_Hash& hash);
 
-      void tree_hash_subtree(secure_vector<uint8_t>& result,
-                             size_t start_idx,
-                             size_t target_node_height,
-                             XMSS_Address& adrs);
-
-      /**
-       * Helper for multithreaded tree hashing.
-       */
       void tree_hash_subtree(secure_vector<uint8_t>& result,
                              size_t start_idx,
                              size_t target_node_height,
