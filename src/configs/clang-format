@@ -57,3 +57,4 @@ IndentAccessModifiers: true
 ReflowComments: false
 RequiresClausePosition: OwnLine
 IndentRequiresClause: true
+InsertNewlineAtEOF: True
