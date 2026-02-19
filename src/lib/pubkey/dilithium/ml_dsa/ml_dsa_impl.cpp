@@ -22,8 +22,7 @@ namespace {
 typedef Botan::DilithiumInternalKeypair (*decoding_func)(std::span<const uint8_t> key_bits,
                                                          Botan::DilithiumConstants mode);
 
-Botan::DilithiumInternalKeypair decode_seed_only(std::span<const uint8_t> key_bits,
-                                                     Botan::DilithiumConstants mode) {
+Botan::DilithiumInternalKeypair decode_seed_only(std::span<const uint8_t> key_bits, Botan::DilithiumConstants mode) {
    Botan::secure_vector<uint8_t> seed;
    Botan::BER_Decoder(key_bits)
       .decode(seed, Botan::ASN1_Type::OctetString, Botan::ASN1_Type(0), Botan::ASN1_Class::ContextSpecific)
@@ -32,7 +31,7 @@ Botan::DilithiumInternalKeypair decode_seed_only(std::span<const uint8_t> key_bi
 }
 
 Botan::DilithiumInternalKeypair decode_expanded_only(std::span<const uint8_t> key_bits,
-                                                         Botan::DilithiumConstants mode) {
+                                                     Botan::DilithiumConstants mode) {
    Botan::secure_vector<uint8_t> expanded;
    Botan::BER_Decoder(key_bits).decode(expanded, Botan::ASN1_Type::OctetString).verify_end();
    Botan::DilithiumInternalKeypair key_pair =
@@ -40,7 +39,8 @@ Botan::DilithiumInternalKeypair decode_expanded_only(std::span<const uint8_t> ke
    return key_pair;
 }
 
-Botan::DilithiumInternalKeypair decode_seed_plus_expanded(std::span<const uint8_t> key_bits, Botan::DilithiumConstants mode) {
+Botan::DilithiumInternalKeypair decode_seed_plus_expanded(std::span<const uint8_t> key_bits,
+                                                          Botan::DilithiumConstants mode) {
    Botan::secure_vector<uint8_t> expanded;
    Botan::secure_vector<uint8_t> seed;
    Botan::BER_Decoder(key_bits)
@@ -49,9 +49,9 @@ Botan::DilithiumInternalKeypair decode_seed_plus_expanded(std::span<const uint8_
       .decode(expanded, Botan::ASN1_Type::OctetString)
       .end_cons()
       .verify_end();
-   Botan::DilithiumInternalKeypair const key_pair =
+   const Botan::DilithiumInternalKeypair key_pair =
       Botan::Dilithium_Algos::decode_keypair(Botan::DilithiumSerializedPrivateKey(expanded), mode);
-   Botan::DilithiumInternalKeypair const key_pair_from_seed =
+   const Botan::DilithiumInternalKeypair key_pair_from_seed =
       Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(seed), std::move(mode));
 
    DilithiumSerializedPrivateKey expanded_from_seed = Dilithium_Algos::encode_keypair(key_pair_from_seed);
@@ -108,11 +108,11 @@ DilithiumInternalKeypair ML_DSA_Expanding_Keypair_Codec::decode_keypair(std::spa
    BER_Decoder ber_dec(private_key_bits);
    auto obj = ber_dec.peek_next_object();
    if(obj.type() == ASN1_Type(0)) {
-        return decode_seed_only(private_key_bits, mode); 
+      return decode_seed_only(private_key_bits, mode);
    }
    // now it could still be "expanded-only" or "both"
    if(obj.type() == ASN1_Type::OctetString) {
-        return decode_expanded_only(private_key_bits, mode); 
+      return decode_expanded_only(private_key_bits, mode);
    }
    return decode_seed_plus_expanded(private_key_bits, mode);
 }

@@ -138,7 +138,7 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PrivateKey final : public virtual Dilithi
                                                               const PK_Signature_Options& options) const override;
 
       bool is_mldsa() const;
-      
+
       bool is_dilithium_round3() const;
 
    private:
