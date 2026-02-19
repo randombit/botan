@@ -76,16 +76,16 @@ std::vector<Test::Result> test_frodo_roundtrips() {
                             Botan::FrodoKEMMode::FrodoKEM976_AES,
                             Botan::FrodoKEMMode::FrodoKEM640_AES};
 
-   auto get_decryption_error_value = [](Botan::FrodoKEMConstants& constants,
+   auto get_decryption_error_value = [](const Botan::FrodoKEMConstants& constants,
                                         std::span<const uint8_t> encaps_value,
                                         const Botan::FrodoKEM_PrivateKey& sk) {
       // Extracts the `S` value from the encoded private key
-      auto& shake = constants.SHAKE_XOF();
+      auto shake = constants.create_xof();
       const auto sk_bytes = sk.raw_private_key_bits();
       auto sk_s = std::span<const uint8_t>(sk_bytes.data(), constants.len_sec_bytes());
-      shake.update(encaps_value);
-      shake.update(sk_s);
-      return shake.output(constants.len_sec_bytes());
+      shake->update(encaps_value);
+      shake->update(sk_s);
+      return shake->output(constants.len_sec_bytes());
    };
 
    std::vector<Test::Result> results;
@@ -94,7 +94,7 @@ std::vector<Test::Result> test_frodo_roundtrips() {
       if(!m.is_available()) {
          continue;
       }
-      Botan::FrodoKEMConstants constants(mode);
+      const Botan::FrodoKEMConstants constants(mode);
       Test::Result& result = results.emplace_back("FrodoKEM roundtrip: " + m.to_string());
 
       const Botan::FrodoKEM_PrivateKey sk1(*rng, mode);
