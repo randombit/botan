@@ -19,8 +19,8 @@
    #include <botan/dilithium.h>
    #include <botan/hash.h>
    #include <botan/pk_algs.h>
-   #include <botan/pubkey.h>
    #include <botan/pk_keys.h>
+   #include <botan/pubkey.h>
 
    #include "test_pubkey.h"
 #endif
