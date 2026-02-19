@@ -19,6 +19,9 @@
    #include <botan/x509_key.h>
    #include <botan/internal/barrett.h>
    #include <botan/internal/ec_inner_data.h>
+   #if defined(BOTAN_HAS_ECDSA)
+      #include <botan/pk_algs.h>
+   #endif
 #endif
 
 namespace Botan_Tests {
@@ -437,6 +440,7 @@ class EC_Group_Registration_Tests final : public Test {
             results.push_back(test_ec_group_bad_registration());
             results.push_back(test_ec_group_duplicate_orders());
             results.push_back(test_ec_group_registration_with_custom_oid());
+            results.push_back(test_ec_group_unregistration());
          }
 
          return results;
@@ -598,6 +602,67 @@ class EC_Group_Registration_Tests final : public Test {
             result.test_failure("Group with custom OID did not get a pcurve pointer");
          }
    #endif
+
+         return result;
+      }
+
+      Test::Result test_ec_group_unregistration() {
+         Test::Result result("EC_Group unregistration of group");
+
+         Botan::EC_Group::clear_registered_curve_data();
+
+         const Botan::OID secp256r1_oid("1.2.840.10045.3.1.7");
+         const auto secp256r1 = Botan::EC_Group::from_OID(secp256r1_oid);
+         const Botan::OID custom_oid("1.3.6.1.4.1.25258.100.99");
+         Botan::OID::register_oid(custom_oid, "secp256r1");
+
+         const Botan::EC_Group reg_group(custom_oid,
+                                         secp256r1.get_p(),
+                                         secp256r1.get_a(),
+                                         secp256r1.get_b(),
+                                         secp256r1.get_g_x(),
+                                         secp256r1.get_g_y(),
+                                         secp256r1.get_order());
+
+         const Botan::EC_Group group_from_oid = Botan::EC_Group::from_OID(custom_oid);
+
+         result.test_is_true("Internal group is unregistered", Botan::EC_Group::unregister(secp256r1_oid));
+         result.test_is_false("Unregistering internal group again does nothing",
+                              Botan::EC_Group::unregister(secp256r1_oid));
+         result.test_is_true("User defined group is unregistered", Botan::EC_Group::unregister(custom_oid));
+         result.test_is_false("Unregistering user defined group again does nothing",
+                              Botan::EC_Group::unregister(custom_oid));
+
+         try {
+            Botan::EC_Group::from_OID(custom_oid);
+            result.test_failure("Should have failed");
+         } catch(Botan::Invalid_Argument&) {
+            result.test_success("Got expected exception");
+         }
+
+         result.test_is_true("Group can still be accessed", reg_group.get_curve_oid() == custom_oid);
+         result.test_is_true("Group has correct p parameter", reg_group.get_p() == secp256r1.get_p());
+         result.test_is_true("Group has correct a parameter", reg_group.get_a() == secp256r1.get_a());
+         result.test_is_true("Group has correct b parameter", reg_group.get_b() == secp256r1.get_b());
+         result.test_is_true("Group has correct g_x parameter", reg_group.get_g_x() == secp256r1.get_g_x());
+         result.test_is_true("Group has correct g_y parameter", reg_group.get_g_y() == secp256r1.get_g_y());
+         result.test_is_true("Group has correct order parameter", reg_group.get_order() == secp256r1.get_order());
+
+   #if defined(BOTAN_HAS_ECDSA)
+         std::unique_ptr<Botan::RandomNumberGenerator> rng = Test::new_rng("test_ec_group_unregistration");
+         std::unique_ptr<Botan::Private_Key> key = Botan::create_ec_private_key("ECDSA", group_from_oid, *rng);
+         result.test_success("Can still use group to create a key");
+         result.test_is_true("Key was created correctly", key->check_key(*rng, true));
+   #endif
+
+         // TODO(Botan4) remove this when OIDs lose internal nullability
+         try {
+            const Botan::OID empty_oid("");
+            Botan::EC_Group::unregister(empty_oid);
+            result.test_failure("Should have failed");
+         } catch(Botan::Invalid_Argument&) {
+            result.test_success("Got expected exception");
+         }
 
          return result;
       }

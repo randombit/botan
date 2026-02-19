@@ -5099,6 +5099,15 @@ class FFI_EC_Group_Test final : public FFI_Test {
                botan_mp_destroy(g_y_parameter);
                botan_mp_destroy(order_parameter);
 
+               TEST_FFI_RC(1, botan_ec_group_unregister, (group_parameter_oid));
+               TEST_FFI_RC(0, botan_ec_group_unregister, (group_parameter_oid));
+               TEST_FFI_RC(1, botan_ec_group_unregister, (oid_from_name));
+               TEST_FFI_RC(0, botan_ec_group_unregister, (oid_from_name));
+
+               botan_ec_group_t unregistered_group;
+               TEST_FFI_RC(
+                  BOTAN_FFI_ERROR_BAD_PARAMETER, botan_ec_group_from_oid, (&unregistered_group, group_parameter_oid));
+
                botan_oid_destroy(group_parameter_oid);
                botan_oid_destroy(oid_from_parameters);
 

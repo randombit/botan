@@ -35,6 +35,22 @@ class EC_Group_Data_Map final {
          return count;
       }
 
+      bool unregister(const OID& oid) {
+         // TODO(Botan4)
+         if(oid.empty()) {
+            throw Invalid_Argument("OID must not be empty");
+         }
+
+         const lock_guard_type<mutex_type> lock(m_mutex);
+         for(size_t i = 0; i < m_registered_curves.size(); i++) {
+            if(m_registered_curves[i]->oid() == oid) {
+               m_registered_curves.erase(m_registered_curves.begin() + i);
+               return true;
+            }
+         }
+         return false;
+      }
+
       std::shared_ptr<EC_Group_Data> lookup(const OID& oid) {
          const lock_guard_type<mutex_type> lock(m_mutex);
 
@@ -560,6 +576,11 @@ EC_Group::EC_Group(std::span<const uint8_t> ber) {
    auto data = BER_decode_EC_group(ber, EC_Group_Source::ExternalSource);
    m_data = data.first;
    m_explicit_encoding = data.second;
+}
+
+// static
+bool EC_Group::unregister(const OID& oid) {
+   return ec_group_data().unregister(oid);
 }
 
 const EC_Group_Data& EC_Group::data() const {
