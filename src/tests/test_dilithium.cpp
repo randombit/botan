@@ -19,8 +19,8 @@
    #include <botan/dilithium.h>
    #include <botan/hash.h>
    #include <botan/pk_algs.h>
-   #include <botan/pubkey.h>
    #include <botan/pk_keys.h>
+   #include <botan/pubkey.h>
 
    #include "test_pubkey.h"
 #endif
@@ -51,7 +51,7 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
          auto dilithium_test_rng = std::make_unique<CTR_DRBG_AES256>(ref_seed);
 
          const Botan::Dilithium_PrivateKey priv_key(*dilithium_test_rng, DerivedT::mode);
-         
+
          if(!priv_key.is_mldsa()) {
             result.test_bin_eq(
                "generated expected private key hash", sha3_256->process(priv_key.private_key_bits()), ref_sk_hash);
