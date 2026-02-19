@@ -1453,7 +1453,7 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                "Path validation with forged OCSP response should fail with", path_result.result(), expected);
             result.test_is_true("Secondary error is also present",
                                 flatten(path_result.all_statuses()).contains(also_expected));
-            result.test_note(std::string("Failed with: ") + Botan::to_string(path_result.result()));
+            result.test_note("Validation result", Botan::to_string(path_result.result()));
          };
 
          // In both cases the path validation should detect the forged OCSP
@@ -1503,7 +1503,7 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                                       {ocsp_ee, ocsp_ca});
          result.test_is_true("should reject intermediate OCSP response",
                              path_result.result() == Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND);
-         result.test_note(std::string("Failed with: ") + Botan::to_string(path_result.result()));
+         result.test_note("Validation result", Botan::to_string(path_result.result()));
 
          return result;
       }

@@ -101,19 +101,15 @@ void Test::Result::end_timer() {
 }
 
 void Test::Result::test_note(std::string_view note, std::span<const uint8_t> context) {
-   const std::string hex = Botan::hex_encode(context);
-   return test_note(note, hex.c_str());
+   return test_note(note, Botan::hex_encode(context));
 }
 
-void Test::Result::test_note(std::string_view note, const char* extra) {
-   if(!note.empty()) {
-      std::ostringstream out;
-      out << who() << " " << note;
-      if(extra != nullptr) {
-         out << ": " << extra;
-      }
-      m_log.push_back(out.str());
-   }
+void Test::Result::test_note(std::string_view note, std::string_view context) {
+   m_log.emplace_back(Botan::fmt("{} {}: {}", who(), note, context));
+}
+
+void Test::Result::test_note(std::string_view note) {
+   m_log.emplace_back(Botan::fmt("{} {}", who(), note));
 }
 
 void Test::Result::note_missing(std::string_view whatever_sv) {

@@ -143,7 +143,7 @@ class Passhash9_Tests final : public Text_Based_Test {
                const std::string gen_hash = Botan::generate_passhash9(password, this->rng(), 2, alg_id);
 
                if(!result.test_is_true("generated hash accepted", Botan::check_passhash9(password, gen_hash))) {
-                  result.test_note("hash was " + gen_hash);
+                  result.test_note("rejected hash", gen_hash);
                }
             }
          }
@@ -155,7 +155,7 @@ class Passhash9_Tests final : public Text_Based_Test {
             if(Botan::is_passhash9_alg_supported(alg_id)) {
                const std::string gen_hash = Botan::generate_passhash9(password, this->rng(), level, alg_id);
                if(!result.test_is_true("generated hash accepted", Botan::check_passhash9(password, gen_hash))) {
-                  result.test_note("hash was " + gen_hash);
+                  result.test_note("rejected hash", gen_hash);
                }
             }
          }

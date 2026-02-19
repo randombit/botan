@@ -998,12 +998,12 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
 
    Botan::Path_Validation_Result result_u1 = Botan::x509_path_validate(user1_cert, restrictions, store);
    if(!result.test_is_true("user 1 validates", result_u1.successful_validation())) {
-      result.test_note("user 1 validation result was " + result_u1.result_string());
+      result.test_note("user 1 validation result", result_u1.result_string());
    }
 
    Botan::Path_Validation_Result result_u2 = Botan::x509_path_validate(user2_cert, restrictions, store);
    if(!result.test_is_true("user 2 validates", result_u2.successful_validation())) {
-      result.test_note("user 2 validation result was " + result_u2.result_string());
+      result.test_note("user 2 validation result", result_u2.result_string());
    }
 
    const Botan::Path_Validation_Result result_self_signed =
@@ -1039,7 +1039,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
 
    result_u1 = Botan::x509_path_validate(user1_cert, restrictions, store);
    if(!result.test_is_true("user 1 validates", result_u1.successful_validation())) {
-      result.test_note("user 1 validation result was " + result_u1.result_string());
+      result.test_note("user 1 validation result", result_u1.result_string());
    }
 
    result_u2 = Botan::x509_path_validate(user2_cert, restrictions, store);

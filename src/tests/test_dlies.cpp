@@ -43,13 +43,13 @@ class DLIES_KAT_Tests final : public Text_Based_Test {
 
          auto kdf = Botan::KDF::create(kdf_algo);
          if(!kdf) {
-            result.test_note("Skipping due to missing KDF:  " + kdf_algo);
+            result.test_note("Skipping due to missing KDF", kdf_algo);
             return result;
          }
 
          auto mac = Botan::MAC::create(mac_algo);
          if(!mac) {
-            result.test_note("Skipping due to missing MAC:  " + mac_algo);
+            result.test_note("Skipping due to missing MAC", mac_algo);
             return result;
          }
 
@@ -62,7 +62,7 @@ class DLIES_KAT_Tests final : public Text_Based_Test {
             dec = Botan::Cipher_Mode::create(cipher_algo, Botan::Cipher_Dir::Decryption);
 
             if(!enc || !dec) {
-               result.test_note("Skipping due to missing cipher:  " + mac_algo);
+               result.test_note("Skipping due to missing cipher", cipher_algo);
                return result;
             }
 
@@ -119,7 +119,7 @@ Test::Result test_xor() {
       kdf = Botan::KDF::create(kfunc);
 
       if(!kdf) {
-         result.test_note("Skipping due to missing KDF: " + kfunc);
+         result.test_note("Skipping due to missing KDF", kfunc);
          continue;
       }
 
@@ -127,7 +127,7 @@ Test::Result test_xor() {
          mac = Botan::MAC::create(mfunc);
 
          if(!mac) {
-            result.test_note("Skipping due to missing MAC: " + mfunc);
+            result.test_note("Skipping due to missing MAC", mfunc);
             continue;
          }
 
