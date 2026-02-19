@@ -431,6 +431,10 @@ bool Dilithium_PrivateKey::is_mldsa() const {
    return m_private->mode().is_ml_dsa();
 }
 
+bool Dilithium_PrivateKey::is_dilithium_round3() const {
+   return !m_private->mode().is_ml_dsa();
+}
+
 std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
                                                                              std::string_view params,
                                                                              std::string_view provider) const {

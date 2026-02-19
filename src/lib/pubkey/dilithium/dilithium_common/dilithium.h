@@ -143,6 +143,8 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PrivateKey final : public virtual Dilithi
                                                              std::string_view provider) const override;
 
       bool is_mldsa() const;
+      
+      bool is_dilithium_round3() const;
 
    private:
       friend class Dilithium_Signature_Operation;
