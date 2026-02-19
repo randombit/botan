@@ -49,7 +49,7 @@ Botan::DilithiumInternalKeypair decode_seed_plus_expanded(std::span<const uint8_
       .decode(expanded, Botan::ASN1_Type::OctetString)
       .end_cons()
       .verify_end();
-   Botan::DilithiumInternalKeypair key_pair =
+   Botan::DilithiumInternalKeypair const key_pair =
       Botan::Dilithium_Algos::decode_keypair(Botan::DilithiumSerializedPrivateKey(expanded), mode);
    Botan::DilithiumInternalKeypair const key_pair_from_seed =
       Botan::Dilithium_Algos::expand_keypair(Botan::DilithiumSeedRandomness(seed), std::move(mode));
