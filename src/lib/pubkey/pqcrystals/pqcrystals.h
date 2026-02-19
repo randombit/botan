@@ -216,8 +216,7 @@ class Polynomial {
       using T = typename Trait::T;
 
    private:
-      // TODO: perhaps secure vector
-      std::vector<T> m_coeffs_storage;
+      secure_vector<T> m_coeffs_storage;
       std::span<T, Trait::N> m_coeffs;
 
    private:
