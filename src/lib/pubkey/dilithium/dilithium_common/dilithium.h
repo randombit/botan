@@ -21,11 +21,11 @@ namespace Botan {
 class BOTAN_PUBLIC_API(3, 0) DilithiumMode {
    public:
       enum Mode : uint8_t /* NOLINT(*-use-enum-class) */ {
-         Dilithium4x4 = 1,
+         Dilithium4x4 BOTAN_DEPRECATED("Dilithium R3 is deprecated - use ML-DSA") = 1,
          Dilithium4x4_AES BOTAN_DEPRECATED("Dilithium AES mode is deprecated"),
-         Dilithium6x5,
+         Dilithium6x5 BOTAN_DEPRECATED("Dilithium R3 is deprecated - use ML-DSA"),
          Dilithium6x5_AES BOTAN_DEPRECATED("Dilithium AES mode is deprecated"),
-         Dilithium8x7,
+         Dilithium8x7 BOTAN_DEPRECATED("Dilithium R3 is deprecated - use ML-DSA"),
          Dilithium8x7_AES BOTAN_DEPRECATED("Dilithium AES mode is deprecated"),
          ML_DSA_4x4,
          ML_DSA_6x5,

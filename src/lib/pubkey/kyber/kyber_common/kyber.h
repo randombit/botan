@@ -29,15 +29,15 @@ class BOTAN_PUBLIC_API(3, 0) KyberMode {
    public:
       enum Mode : uint8_t /* NOLINT(*-use-enum-class) */ {
          // Kyber512 as proposed in round 3 of the NIST competition
-         Kyber512_R3 = 0,
+         Kyber512_R3 BOTAN_DEPRECATED("Kyber R3 is deprecated - use ML-KEM") = 0,
          // Kyber768 as proposed in round 3 of the NIST competition
-         Kyber768_R3 = 1,
+         Kyber768_R3 BOTAN_DEPRECATED("Kyber R3 is deprecated - use ML-KEM") = 1,
          // Kyber1024 as proposed in round 3 of the NIST competition
-         Kyber1024_R3 = 2,
+         Kyber1024_R3 BOTAN_DEPRECATED("Kyber R3 is deprecated - use ML-KEM") = 2,
 
-         Kyber512 BOTAN_DEPRECATED("Use Kyber512_R3") = Kyber512_R3,
-         Kyber768 BOTAN_DEPRECATED("Use Kyber768_R3") = Kyber768_R3,
-         Kyber1024 BOTAN_DEPRECATED("Use Kyber1024_R3") = Kyber1024_R3,
+         Kyber512 BOTAN_DEPRECATED("Kyber R3 is deprecated - use ML-KEM") = 0,
+         Kyber768 BOTAN_DEPRECATED("Kyber R3 is deprecated - use ML-KEM") = 1,
+         Kyber1024 BOTAN_DEPRECATED("Kyber R3 is deprecated - use ML-KEM") = 2,
 
          ML_KEM_512 = 3,
          ML_KEM_768 = 4,
