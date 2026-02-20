@@ -163,7 +163,7 @@ bool BigInt::is_equal(const BigInt& other) const {
       return false;
    }
 
-   return bigint_ct_is_eq(this->_data(), this->sig_words(), other._data(), other.sig_words()).as_bool();
+   return bigint_ct_is_eq(this->_data(), this->size(), other._data(), other.size()).as_bool();
 }
 
 bool BigInt::is_less_than(const BigInt& other) const {
@@ -176,10 +176,10 @@ bool BigInt::is_less_than(const BigInt& other) const {
    }
 
    if(other.is_negative() && this->is_negative()) {
-      return bigint_ct_is_lt(other._data(), other.sig_words(), this->_data(), this->sig_words()).as_bool();
+      return bigint_ct_is_lt(other._data(), other.size(), this->_data(), this->size()).as_bool();
    }
 
-   return bigint_ct_is_lt(this->_data(), this->sig_words(), other._data(), other.sig_words()).as_bool();
+   return bigint_ct_is_lt(this->_data(), this->size(), other._data(), other.size()).as_bool();
 }
 
 void BigInt::encode_words(word out[], size_t size) const {
