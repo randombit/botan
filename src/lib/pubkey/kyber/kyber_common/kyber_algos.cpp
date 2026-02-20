@@ -384,10 +384,14 @@ KyberPolyMat sample_matrix(StrongSpan<const KyberSeedRho> seed, bool transposed,
 
    KyberPolyMat mat(mode.k(), mode.k());
 
+   const auto& sym = mode.symmetric_primitives();
+   std::unique_ptr<Botan::XOF> xof;
+
    for(uint8_t i = 0; i < mode.k(); ++i) {
       for(uint8_t j = 0; j < mode.k(); ++j) {
          const auto pos = (transposed) ? std::tuple(i, j) : std::tuple(j, i);
-         sample_ntt_uniform(mat[i][j], mode.symmetric_primitives().XOF(seed, pos));
+         sym.setup_XOF(xof, seed, pos);
+         sample_ntt_uniform(mat[i][j], *xof);
       }
    }
 

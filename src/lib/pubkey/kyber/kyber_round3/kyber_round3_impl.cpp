@@ -22,14 +22,14 @@ namespace Botan {
 void Kyber_KEM_Encryptor::encapsulate(StrongSpan<KyberCompressedCiphertext> out_encapsulated_key,
                                       StrongSpan<KyberSharedSecret> out_shared_key,
                                       RandomNumberGenerator& rng) {
-   const auto& sym = m_public_key->mode().symmetric_primitives();
+   const auto& sym = mode().symmetric_primitives();
 
    const auto seed_m = rng.random_vec<KyberMessage>(KyberConstants::SEED_BYTES);
    CT::poison(seed_m);
 
    const auto m = sym.H(seed_m);
    const auto [K_bar, r] = sym.G(m, m_public_key->H_public_key_bits_raw());
-   m_public_key->indcpa_encrypt(out_encapsulated_key, m, r, precomputed_matrix_At());
+   m_public_key->indcpa_encrypt(out_encapsulated_key, m, r, precomputed_matrix_At(), mode());
 
    sym.KDF(out_shared_key, K_bar, sym.H(out_encapsulated_key));
    CT::unpoison_all(out_shared_key, out_encapsulated_key);
@@ -42,7 +42,7 @@ void Kyber_KEM_Decryptor::decapsulate(StrongSpan<KyberSharedSecret> out_shared_k
                                       StrongSpan<const KyberCompressedCiphertext> encapsulated_key) {
    auto scope = CT::scoped_poison(*m_private_key);
 
-   const auto& sym = m_public_key->mode().symmetric_primitives();
+   const auto& sym = mode().symmetric_primitives();
 
    const auto& h = m_public_key->H_public_key_bits_raw();
    const auto& z = m_private_key->z();
@@ -50,7 +50,7 @@ void Kyber_KEM_Decryptor::decapsulate(StrongSpan<KyberSharedSecret> out_shared_k
    const auto m_prime = m_private_key->indcpa_decrypt(encapsulated_key);
    const auto [K_bar_prime, r_prime] = sym.G(m_prime, h);
 
-   const auto c_prime = m_public_key->indcpa_encrypt(m_prime, r_prime, precomputed_matrix_At());
+   const auto c_prime = m_public_key->indcpa_encrypt(m_prime, r_prime, precomputed_matrix_At(), mode());
 
    KyberSharedSecret K(KyberConstants::SEED_BYTES);
    BOTAN_ASSERT_NOMSG(encapsulated_key.size() == c_prime.size());
