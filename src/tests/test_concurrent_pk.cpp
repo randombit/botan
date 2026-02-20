@@ -386,13 +386,10 @@ class Concurrent_Public_Key_Operations_Test : public Test {
             ConcurrentPkTestCase("Ed448", "", "Pure"),
             ConcurrentPkTestCase("SLH-DSA", "SLH-DSA-SHA2-128f"),
             ConcurrentPkTestCase("HSS-LMS", "SHA-256,HW(5,8)"),
+            ConcurrentPkTestCase("XMSS", "XMSS-SHA2_10_256"),
          };
 
          for(const auto& tc : test_cases) {
-            if(tc.algo_name() == "XMSS" && !Test::run_long_tests()) {
-               continue;
-            }
-
             auto rng = Test::new_rng(tc.algo_name());
 
             if(auto privkey = tc.try_create_key(*rng)) {

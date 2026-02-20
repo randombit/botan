@@ -25,6 +25,7 @@
 #include <botan/internal/concat_util.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/xmss_common_ops.h>
+#include <botan/internal/xmss_hash.h>
 #include <botan/internal/xmss_index_registry.h>
 #include <botan/internal/xmss_signature_operation.h>
 
@@ -63,7 +64,6 @@ class XMSS_PrivateKey_Internal {
             m_xmss_params(xmss_params),
             m_wots_params(wots_params),
             m_wots_derivation_method(wots_derivation_method),
-            m_hash(xmss_params),
             m_prf(rng.random_vec(xmss_params.element_size())),
             m_private_seed(rng.random_vec(xmss_params.element_size())),
             m_index_reg(XMSS_Index_Registry::get_instance()) {}
@@ -76,7 +76,6 @@ class XMSS_PrivateKey_Internal {
             m_xmss_params(xmss_params),
             m_wots_params(wots_params),
             m_wots_derivation_method(wots_derivation_method),
-            m_hash(m_xmss_params),
             m_prf(std::move(prf)),
             m_private_seed(std::move(private_seed)),
             m_index_reg(XMSS_Index_Registry::get_instance()) {}
@@ -84,10 +83,7 @@ class XMSS_PrivateKey_Internal {
       XMSS_PrivateKey_Internal(const XMSS_Parameters& xmss_params,
                                const XMSS_WOTS_Parameters& wots_params,
                                std::span<const uint8_t> key_bits) :
-            m_xmss_params(xmss_params),
-            m_wots_params(wots_params),
-            m_hash(m_xmss_params),
-            m_index_reg(XMSS_Index_Registry::get_instance()) {
+            m_xmss_params(xmss_params), m_wots_params(wots_params), m_index_reg(XMSS_Index_Registry::get_instance()) {
          /*
          The code requires sizeof(size_t) >= ceil(tree_height / 8)
 
@@ -138,8 +134,6 @@ class XMSS_PrivateKey_Internal {
          return concat<secure_vector<uint8_t>>(
             raw_public_key, unused_index, m_prf, m_private_seed, wots_derivation_method);
       }
-
-      XMSS_Hash& hash() { return m_hash; }
 
       const secure_vector<uint8_t>& prf_value() const { return m_prf; }
 
@@ -194,7 +188,6 @@ class XMSS_PrivateKey_Internal {
       XMSS_WOTS_Parameters m_wots_params;
       WOTS_Derivation_Method m_wots_derivation_method;
 
-      XMSS_Hash m_hash;
       secure_vector<uint8_t> m_prf;
       secure_vector<uint8_t> m_private_seed;
       XMSS_Index_Registry& m_index_reg;
@@ -210,7 +203,8 @@ XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
       XMSS_PublicKey(xmss_algo_id, rng),
       m_private(std::make_shared<XMSS_PrivateKey_Internal>(m_xmss_params, m_wots_params, wots_derivation_method, rng)) {
    XMSS_Address adrs;
-   m_root = tree_hash(0, XMSS_PublicKey::m_xmss_params.tree_height(), adrs);
+   XMSS_Hash hash(m_xmss_params);
+   m_root = tree_hash(0, XMSS_PublicKey::m_xmss_params.tree_height(), adrs, hash);
 }
 
 XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
@@ -230,7 +224,10 @@ XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
                    "XMSS: unexpected byte length of private seed");
 }
 
-secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx, size_t target_node_height, XMSS_Address& adrs) {
+secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx,
+                                                  size_t target_node_height,
+                                                  XMSS_Address& adrs,
+                                                  XMSS_Hash& hash) {
    BOTAN_ASSERT_NOMSG(target_node_height <= 30);
    BOTAN_ASSERT((start_idx % (static_cast<size_t>(1) << target_node_height)) == 0,
                 "Start index must be divisible by 2^{target node height}.");
@@ -245,7 +242,7 @@ secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx, size_t targe
    // skip parallelization overhead for leaf nodes.
    if(split_level == 0) {
       secure_vector<uint8_t> result;
-      tree_hash_subtree(result, start_idx, target_node_height, adrs);
+      tree_hash_subtree(result, start_idx, target_node_height, adrs, hash);
       return result;
    }
 
@@ -262,7 +259,7 @@ secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx, size_t targe
    std::vector<secure_vector<uint8_t>> nodes(subtrees,
                                              secure_vector<uint8_t>(XMSS_PublicKey::m_xmss_params.element_size()));
    std::vector<XMSS_Address> node_addresses(subtrees, adrs);
-   std::vector<XMSS_Hash> xmss_hash(subtrees, m_private->hash());
+   std::vector<XMSS_Hash> xmss_hash(subtrees, hash);
    std::vector<std::future<void>> work;
 
    // Calculate multiple subtrees in parallel.
@@ -317,20 +314,13 @@ secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx, size_t targe
    node_addresses[0].set_tree_height(static_cast<uint32_t>(target_node_height - 1));
    node_addresses[0].set_tree_index((node_addresses[1].get_tree_index() - 1) >> 1);
    XMSS_Common_Ops::randomize_tree_hash(
-      nodes[0], nodes[0], nodes[1], node_addresses[0], this->public_seed(), m_private->hash(), m_xmss_params);
+      nodes[0], nodes[0], nodes[1], node_addresses[0], this->public_seed(), hash, m_xmss_params);
    return nodes[0];
 #else
    secure_vector<uint8_t> result;
-   tree_hash_subtree(result, start_idx, target_node_height, adrs, m_private->hash());
+   tree_hash_subtree(result, start_idx, target_node_height, adrs, hash);
    return result;
 #endif
-}
-
-void XMSS_PrivateKey::tree_hash_subtree(secure_vector<uint8_t>& result,
-                                        size_t start_idx,
-                                        size_t target_node_height,
-                                        XMSS_Address& adrs) {
-   return tree_hash_subtree(result, start_idx, target_node_height, adrs, m_private->hash());
 }
 
 void XMSS_PrivateKey::tree_hash_subtree(
