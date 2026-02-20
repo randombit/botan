@@ -36,6 +36,7 @@ RUN echo "installing essential devtools" \
         ninja-build \
         pipx \
         procps \
+        pylint \
         python3-pip \
         python3.12 \
         shellcheck \
@@ -51,6 +52,7 @@ RUN echo "installing essential devtools" \
 RUN echo "installing Botan-specific tools and dependencies" \
     && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install \
         doxygen \
+        golang \
         libboost-dev \
         libtss2-tcti-tabrmd0 \
         python3-docutils \
