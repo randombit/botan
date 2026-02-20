@@ -34,9 +34,9 @@ class FrodoKEM_PublicKeyInternal {
    public:
       FrodoKEM_PublicKeyInternal(FrodoKEMConstants constants, FrodoSeedA seed_a, FrodoMatrix b) :
             m_constants(std::move(constants)), m_seed_a(std::move(seed_a)), m_b(std::move(b)) {
-         auto& shake = m_constants.SHAKE_XOF();
-         shake.update(serialize());
-         m_hash = shake.output<FrodoPublicKeyHash>(m_constants.len_sec_bytes());
+         auto shake = m_constants.create_xof();
+         shake->update(serialize());
+         m_hash = shake->output<FrodoPublicKeyHash>(m_constants.len_sec_bytes());
       }
 
       const FrodoKEMConstants& constants() const { return m_constants; }
@@ -91,8 +91,8 @@ class Frodo_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF {
                            std::span<uint8_t> out_shared_key,
                            RandomNumberGenerator& rng) override {
          const auto& constants = m_public_key->constants();
-         auto& shake = constants.SHAKE_XOF();
-         auto sample_generator = FrodoMatrix::make_sample_generator(constants, shake);
+         auto shake = constants.create_xof();
+         auto sample_generator = FrodoMatrix::make_sample_generator(constants, *shake);
 
          BufferStuffer out_ct_bs(out_encapsulated_key);
 
@@ -107,15 +107,15 @@ class Frodo_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF {
 
          CT::poison(u);
 
-         shake.update(m_public_key->hash());
-         shake.update(u);
-         shake.update(salt);
-         const auto seed_se = shake.output<FrodoSeedSE>(constants.len_se_bytes());
-         const auto k = shake.output<FrodoIntermediateSharedSecret>(constants.len_sec_bytes());
-         shake.clear();
+         shake->update(m_public_key->hash());
+         shake->update(u);
+         shake->update(salt);
+         const auto seed_se = shake->output<FrodoSeedSE>(constants.len_se_bytes());
+         const auto k = shake->output<FrodoIntermediateSharedSecret>(constants.len_sec_bytes());
+         shake->clear();
 
-         shake.update(constants.encapsulation_domain_separator());
-         shake.update(seed_se);
+         shake->update(constants.encapsulation_domain_separator());
+         shake->update(seed_se);
 
          const auto s_p = sample_generator(std::tuple(constants.n_bar(), constants.n()));
 
@@ -126,7 +126,7 @@ class Frodo_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF {
          b_p.pack(constants, c_1);
 
          const auto e_pp = sample_generator(std::tuple(constants.n_bar(), constants.n_bar()));
-         shake.clear();
+         shake->clear();
 
          const auto v = FrodoMatrix::mul_add_sb_plus_e(constants, m_public_key->b(), s_p, e_pp);
 
@@ -136,9 +136,9 @@ class Frodo_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF {
 
          c.pack(constants, c_2);
 
-         shake.update(out_encapsulated_key);
-         shake.update(k);
-         shake.output(out_shared_key);
+         shake->update(out_encapsulated_key);
+         shake->update(k);
+         shake->output(out_shared_key);
 
          CT::unpoison_all(out_shared_key, out_encapsulated_key);
       }
@@ -162,8 +162,8 @@ class Frodo_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF {
          auto scope = CT::scoped_poison(*m_private_key);
 
          const auto& constants = m_public_key->constants();
-         auto& shake = constants.SHAKE_XOF();
-         auto sample_generator = FrodoMatrix::make_sample_generator(constants, shake);
+         auto shake = constants.create_xof();
+         auto sample_generator = FrodoMatrix::make_sample_generator(constants, *shake);
 
          if(encapsulated_key.size() != constants.len_ct_bytes()) {
             throw Invalid_Argument("FrodoKEM ciphertext does not have the correct byte count");
@@ -183,16 +183,16 @@ class Frodo_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF {
 
          const auto seed_u_p = m.decode(constants);
 
-         shake.update(m_public_key->hash());
-         shake.update(seed_u_p);
-         shake.update(salt);
+         shake->update(m_public_key->hash());
+         shake->update(seed_u_p);
+         shake->update(salt);
 
-         const auto seed_se_p = shake.output<FrodoSeedSE>(constants.len_se_bytes());
-         const auto k_p = shake.output<FrodoIntermediateSharedSecret>(constants.len_sec_bytes());
-         shake.clear();
+         const auto seed_se_p = shake->output<FrodoSeedSE>(constants.len_se_bytes());
+         const auto k_p = shake->output<FrodoIntermediateSharedSecret>(constants.len_sec_bytes());
+         shake->clear();
 
-         shake.update(constants.encapsulation_domain_separator());
-         shake.update(seed_se_p);
+         shake->update(constants.encapsulation_domain_separator());
+         shake->update(seed_se_p);
          const auto s_p = sample_generator(std::tuple(constants.n_bar(), constants.n()));
 
          const auto e_p = sample_generator(std::tuple(constants.n_bar(), constants.n()));
@@ -200,7 +200,7 @@ class Frodo_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF {
          auto b_pp = FrodoMatrix::mul_add_sa_plus_e(constants, s_p, e_p, m_public_key->seed_a());
 
          const auto e_pp = sample_generator(std::tuple(constants.n_bar(), constants.n_bar()));
-         shake.clear();
+         shake->clear();
 
          const auto v = FrodoMatrix::mul_add_sb_plus_e(constants, m_public_key->b(), s_p, e_pp);
 
@@ -221,9 +221,9 @@ class Frodo_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF {
          std::vector<uint8_t> k_bar(constants.len_sec_bytes(), 0);
          CT::conditional_copy_mem(cmp, k_bar.data(), k_p.data(), m_private_key->s().data(), constants.len_sec_bytes());
 
-         shake.update(encapsulated_key);
-         shake.update(k_bar);
-         shake.output(out_shared_key);
+         shake->update(encapsulated_key);
+         shake->update(k_bar);
+         shake->output(out_shared_key);
 
          CT::unpoison(out_shared_key);
       }
@@ -317,7 +317,7 @@ std::unique_ptr<PK_Ops::KEM_Encryption> FrodoKEM_PublicKey::create_kem_encryptio
 
 FrodoKEM_PrivateKey::FrodoKEM_PrivateKey(RandomNumberGenerator& rng, FrodoKEMMode mode) {
    FrodoKEMConstants constants(mode);
-   auto& shake = constants.SHAKE_XOF();
+   auto shake = constants.create_xof();
 
    auto s = rng.random_vec<FrodoSeedS>(constants.len_sec_bytes());
    const auto seed_se = rng.random_vec<FrodoSeedSE>(constants.len_se_bytes());
@@ -325,17 +325,17 @@ FrodoKEM_PrivateKey::FrodoKEM_PrivateKey(RandomNumberGenerator& rng, FrodoKEMMod
 
    CT::poison_all(s, seed_se);
 
-   shake.update(z);
-   auto seed_a = shake.output<FrodoSeedA>(constants.len_a_bytes());
-   shake.clear();
+   shake->update(z);
+   auto seed_a = shake->output<FrodoSeedA>(constants.len_a_bytes());
+   shake->clear();
 
-   shake.update(constants.keygen_domain_separator());
-   shake.update(seed_se);
+   shake->update(constants.keygen_domain_separator());
+   shake->update(seed_se);
 
-   auto sample_generator = FrodoMatrix::make_sample_generator(constants, shake);
+   auto sample_generator = FrodoMatrix::make_sample_generator(constants, *shake);
    auto s_trans = sample_generator(std::tuple(constants.n_bar(), constants.n()));
    auto e = sample_generator(std::tuple(constants.n(), constants.n_bar()));
-   shake.clear();
+   shake->clear();
 
    auto b = FrodoMatrix::mul_add_as_plus_e(constants, s_trans, e, seed_a);
 

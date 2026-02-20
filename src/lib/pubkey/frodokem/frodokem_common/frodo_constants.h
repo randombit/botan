@@ -76,9 +76,7 @@ class BOTAN_TEST_API FrodoKEMConstants final {
 
       FrodoDomainSeparator keygen_domain_separator() const { return FrodoDomainSeparator({0x5F}); }
 
-      // TODO: those aren't actually const. We worked around some constness
-      //       issues when playing with the XOFs that are residing in this class.
-      XOF& SHAKE_XOF() const;
+      std::unique_ptr<XOF> create_xof() const;
 
    private:
       FrodoKEMMode m_mode;
@@ -93,7 +91,7 @@ class BOTAN_TEST_API FrodoKEMConstants final {
 
       std::vector<uint16_t> m_cdf_table;  // Distribution table T_chi
 
-      mutable std::unique_ptr<XOF> m_shake_xof;
+      std::unique_ptr<XOF> m_shake_xof;
 
       std::string m_shake;
 };

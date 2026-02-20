@@ -429,6 +429,8 @@ class Concurrent_Public_Key_Operations_Test : public Test {
             ConcurrentPkTestCase("RSA", "1536", "Raw"),
             ConcurrentPkTestCase("ClassicMcEliece", "348864f", "Raw"),
             ConcurrentPkTestCase("McEliece", "1632,33", "Raw"),
+            ConcurrentPkTestCase("FrodoKEM", "FrodoKEM-640-SHAKE", "Raw"),
+            ConcurrentPkTestCase("FrodoKEM", "FrodoKEM-640-AES", "Raw"),
          };
 
          for(const auto& tc : test_cases) {

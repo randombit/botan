@@ -97,9 +97,8 @@ FrodoKEMConstants::FrodoKEMConstants(FrodoKEMMode mode) : m_mode(mode), m_len_a(
 
 FrodoKEMConstants::~FrodoKEMConstants() = default;
 
-XOF& FrodoKEMConstants::SHAKE_XOF() const {
-   m_shake_xof->clear();
-   return *m_shake_xof;
+std::unique_ptr<XOF> FrodoKEMConstants::create_xof() const {
+   return m_shake_xof->new_object();
 }
 
 }  // namespace Botan
