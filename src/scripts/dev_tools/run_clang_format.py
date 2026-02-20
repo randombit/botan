@@ -14,6 +14,7 @@ import difflib
 import time
 import os
 import re
+import shutil
 from multiprocessing.pool import ThreadPool
 
 def clang_format_style_path():
@@ -94,6 +95,13 @@ def filter_files(files, filters):
 
     return files_to_fmt
 
+def find_clang_format_binary(req_version):
+    for binary_name in ['clang-format', f'clang-format-{req_version}']:
+        binary = shutil.which(binary_name)
+        if binary is not None:
+            return binary
+    return None
+
 # Run clang-version -version and return the major version
 def clang_format_version(clang_format):
     clang_format_version_re = re.compile(r'^(.* )?clang-format version ([0-9]+)\.([0-9]+)\.([0-9]+)')
@@ -121,13 +129,20 @@ def main(args = None):
     parser.add_option('-j', '--jobs', action='store', type='int', default=0)
     parser.add_option('--src-dir', metavar='DIR', default='src')
     parser.add_option('--check', action='store_true', default=False)
-    parser.add_option('--clang-format-binary', metavar='PATH', default='clang-format')
+    parser.add_option('--clang-format-binary', metavar='PATH')
     parser.add_option('--style-file', metavar='FILE', default=clang_format_style_path())
     parser.add_option('--skip-version-check', action='store_true', default=False)
 
     (options, args) = parser.parse_args(args)
 
-    clang_format = options.clang_format_binary
+    # This check is probably stricter than we really need, and should
+    # be revised as we gain more experience with clang-format
+    req_version = 17
+
+    clang_format = options.clang_format_binary or find_clang_format_binary(req_version)
+    if clang_format is None:
+        print("Failed to find clang-format binary, exiting")
+        return 1
 
     if not options.skip_version_check:
         version = clang_format_version(clang_format)
@@ -135,10 +150,6 @@ def main(args = None):
         if version is None:
             print("Failed to get clang-format version, exiting")
             return 1
-
-        # This check is probably stricter than we really need, and should
-        # be revised as we gain more experience with clang-format
-        req_version = 17
 
         if version != req_version:
             print("This script requires clang-format %d but current version is %d" % (req_version, version))
