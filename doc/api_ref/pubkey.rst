@@ -209,6 +209,14 @@ signatures can be created. If the same state is ever used to generate two
 signatures, then the whole scheme becomes insecure, and signatures can be
 forged.
 
+ .. warning::
+
+    Maintaining consistent state without replays is extremely difficult,
+    especially when multiple machines are involved. Even a single error will
+    compromise the entire signature scheme. XMSS should only be used in an
+    environment carefully designed to maintain consistent state. Prefer
+    the stateless SLH-DSA in new designs.
+
 HSS-LMS
 ~~~~~~~
 
@@ -216,6 +224,14 @@ A post-quantum secure hash-based signature scheme similar to XMSS. Contains
 support for multitrees. It is stateful, meaning the private key changes after
 each signature. If the same state is ever used to generate two signatures, then
 the whole scheme becomes insecure, and signatures can be forged.
+
+ .. warning::
+
+    Maintaining consistent state without replays is extremely difficult,
+    especially when multiple machines are involved. Even a single error will
+    compromise the entire signature scheme. HSS-LMS should only be used in an
+    environment carefully designed to maintain consistent state. Prefer
+    the stateless SLH-DSA in new designs.
 
 SLH-DSA (FIPS 205)
 ~~~~~~~~~~~~~~~~~~
