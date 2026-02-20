@@ -1,6 +1,7 @@
 /*
  * XMSS Address
  * (C) 2016 Matthias Gierlings
+ *     2026 Jack Lloyd
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -9,8 +10,9 @@
 #define BOTAN_XMSS_ADDRESS_H_
 
 #include <botan/assert.h>
-#include <botan/secmem.h>
 #include <botan/types.h>
+#include <array>
+#include <span>
 
 namespace Botan {
 
@@ -277,29 +279,18 @@ class XMSS_Address final {
          set_hi32(3, value);
       }
 
-      const secure_vector<uint8_t>& bytes() const { return m_data; }
-
-      secure_vector<uint8_t>& bytes() { return m_data; }
+      std::span<const uint8_t> bytes() const { return std::span{m_data}; }
 
       /**
        * @return the size of an XMSS_Address
        **/
       size_t size() const { return m_data.size(); }
 
-      XMSS_Address() : m_data(m_address_size) { set_type(Type::None); }
+      XMSS_Address() : m_data{} { set_type(Type::None); }
 
-      explicit XMSS_Address(Type type) : m_data(m_address_size) { set_type(type); }
-
-      explicit XMSS_Address(secure_vector<uint8_t> data) : m_data(std::move(data)) {
-         BOTAN_ASSERT(m_data.size() == m_address_size, "XMSS_Address must be of 256 bits size.");
-      }
-
-   protected:
-      secure_vector<uint8_t> m_data;  // NOLINT(*non-private-member-variable*)
+      explicit XMSS_Address(Type type) : m_data() { set_type(type); }
 
    private:
-      static const size_t m_address_size = 32;
-
       inline uint32_t get_hi32(size_t offset) const {
          return ((0x000000FF & m_data[8 * offset + 3]) | (0x000000FF & m_data[8 * offset + 2]) << 8 |
                  (0x000000FF & m_data[8 * offset + 1]) << 16 | (0x000000FF & m_data[8 * offset]) << 24);
@@ -323,6 +314,8 @@ class XMSS_Address final {
          m_data[offset * 8 + 6] = ((value >> 8) & 0xFF);
          m_data[offset * 8 + 7] = ((value) & 0xFF);
       }
+
+      std::array<uint8_t, 32> m_data;  // NOLINT(*non-private-member-variable*)
 };
 
 }  // namespace Botan
