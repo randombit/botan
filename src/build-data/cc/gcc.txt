@@ -36,6 +36,7 @@ default   -> iterator,address
 iterator  -> "-D_GLIBCXX_DEBUG"
 address   -> "-fsanitize=address"
 undefined -> "-fsanitize=undefined -fno-sanitize-recover=undefined"
+thread    -> "-fsanitize=thread"
 </sanitizers>
 
 visibility_build_flags "-fvisibility=hidden"
