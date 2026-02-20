@@ -49,6 +49,7 @@ int ffi_map_error_type(Botan::ErrorType err) {
          return BOTAN_FFI_ERROR_OUT_OF_MEMORY;
       case Botan::ErrorType::InternalError:
          return BOTAN_FFI_ERROR_INTERNAL_ERROR;
+      case Botan::ErrorType::OperationCanceled:
       case Botan::ErrorType::InvalidObjectState:
          return BOTAN_FFI_ERROR_INVALID_OBJECT_STATE;
       case Botan::ErrorType::KeyNotSet:

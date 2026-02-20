@@ -16,6 +16,11 @@
    #include <botan/rfc4880.h>
 #endif
 
+#if defined(BOTAN_HAS_THREAD_UTILS)
+   #include <botan/internal/thread_pool.h>
+   #include <stop_token>
+#endif
+
 namespace Botan_Tests {
 
 namespace {
@@ -124,6 +129,83 @@ class Pwdhash_Tests : public Test {
 };
 
 BOTAN_REGISTER_TEST("pbkdf", "pwdhash", Pwdhash_Tests);
+
+   #if defined(BOTAN_HAS_THREAD_UTILS)
+class Pwdhash_StopToken_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+
+         const std::vector<std::string> all_pwdhash = {
+            "Scrypt", "PBKDF2(SHA-256)", "Argon2d", "Argon2i", "Argon2id", "Bcrypt-PBKDF"};
+         // Private thread pool to guarantee thread availability for cancellation.
+         // We need just 1 thread as the cancellation tests are executed serially.
+         Botan::Thread_Pool thread_pool(1);
+
+         for(const std::string& algo_spec : all_pwdhash) {
+            Test::Result result("Cooperative cancellation " + algo_spec);
+
+            auto fam = Botan::PasswordHashFamily::create(algo_spec);
+            if(!fam) {
+               result.test_note(algo_spec + " family unavailable");
+               results.push_back(result);
+               continue;
+            }
+
+            result.start_timer();
+
+            // Test will be cancelled after 500ms below. If cancellation fails, test runs for 10s.
+            const auto run_time = std::chrono::milliseconds(10000);
+            const auto tune_time = std::chrono::milliseconds(100);
+            const size_t max_mem = 32;
+            auto pwdhash = fam->tune(32, run_time, max_mem, tune_time);
+
+            const std::string password = "cancel-me";
+            const std::vector<uint8_t> salt(16, 0xAA);
+            std::vector<uint8_t> out(32);
+
+            std::stop_source src;
+
+            // Helper thread that will request cancellation
+            auto future = thread_pool.run([&src]() {
+               const auto stop_time = std::chrono::milliseconds(500);
+               std::this_thread::sleep_for(stop_time);
+               src.request_stop();  // fire the cancellation
+            });
+
+            // Run the derivation on the main thread and evaluate the result
+            try {
+               const uint64_t start = timestamp();
+               pwdhash->derive_key(
+                  out.data(), out.size(), password.c_str(), password.size(), salt.data(), salt.size(), src.get_token());
+               // If we reach this line, the stop token was ignored
+               const uint64_t ms_taken = (timestamp() - start) / 1000000;
+               if(ms_taken < static_cast<uint64_t>(run_time.count()) / 2) {
+                  result.test_note("Derivation completed in " + std::to_string(ms_taken) +
+                                   "ms. Ignoring mistuned password hash.");
+               } else {
+                  result.test_failure("Derivation completed without observing stop token");
+               }
+            } catch(const Botan::Operation_Canceled& e) {
+               // Expected – password hash saw the stop token and threw
+               result.test_success("Cancellation raised Botan::Operation_Canceled: " + std::string(e.what()));
+            } catch(const std::exception& e) {
+               result.test_failure("Unexpected std::exception", e.what());
+            } catch(...) {
+               result.test_failure("Non-standard exception thrown on cancellation");
+            }
+
+            future.get();  // ensure the canceller thread finished
+
+            result.end_timer();
+            results.push_back(result);
+         }
+         return results;
+      }
+};
+
+BOTAN_REGISTER_TEST("pbkdf", "pwdhash_stop_token", Pwdhash_StopToken_Test);
+   #endif
 
 #endif
 

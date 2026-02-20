@@ -56,6 +56,8 @@ enum class ErrorType : uint16_t {
    InvalidTag = 110,
    /** An error during Roughtime validation */
    RoughtimeError = 111,
+   /** The operation was canceled */
+   OperationCanceled = 112,
 
    /** An error when interacting with CommonCrypto API */
    CommonCryptoError = 201,
@@ -228,6 +230,17 @@ class BOTAN_PUBLIC_API(2, 4) Key_Not_Set : public Invalid_State {
       explicit Key_Not_Set(std::string_view algo);
 
       ErrorType error_type() const noexcept override { return ErrorType::KeyNotSet; }
+};
+
+/**
+* The operation was canceled. Thrown when the caller aborts a long-running operation,
+* for example a key derivation.
+*/
+class BOTAN_PUBLIC_API(3, 10) Operation_Canceled : public Invalid_State {
+   public:
+      explicit Operation_Canceled(std::string_view operation);
+
+      ErrorType error_type() const noexcept override { return ErrorType::OperationCanceled; }
 };
 
 /**
