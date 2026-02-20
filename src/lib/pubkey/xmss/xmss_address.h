@@ -288,6 +288,13 @@ class XMSS_Address final {
 
       XMSS_Address() : m_data{} { set_type(Type::None); }
 
+      ~XMSS_Address() = default;
+      XMSS_Address(const XMSS_Address& other) = default;
+      XMSS_Address(XMSS_Address&& other) = default;
+
+      XMSS_Address& operator=(const XMSS_Address& other) = default;
+      XMSS_Address& operator=(XMSS_Address&& other) = default;
+
       explicit XMSS_Address(Type type) : m_data() { set_type(type); }
 
    private:

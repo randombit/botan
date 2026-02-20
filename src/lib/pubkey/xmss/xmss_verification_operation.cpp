@@ -21,11 +21,11 @@ XMSS_Verification_Operation::XMSS_Verification_Operation(const XMSS_PublicKey& p
 
 secure_vector<uint8_t> XMSS_Verification_Operation::root_from_signature(const XMSS_Signature& sig,
                                                                         const secure_vector<uint8_t>& msg,
-                                                                        XMSS_Address& adrs,
                                                                         const secure_vector<uint8_t>& seed) {
    const auto& params = m_pub_key.xmss_parameters();
 
    const uint32_t next_index = static_cast<uint32_t>(sig.unused_leaf_index());
+   XMSS_Address adrs;
    adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
    adrs.set_ots_address(next_index);
 
@@ -60,12 +60,11 @@ secure_vector<uint8_t> XMSS_Verification_Operation::root_from_signature(const XM
 bool XMSS_Verification_Operation::verify(const XMSS_Signature& sig,
                                          const secure_vector<uint8_t>& msg,
                                          const XMSS_PublicKey& public_key) {
-   XMSS_Address adrs;
    secure_vector<uint8_t> index_bytes;
    xmss_concat(index_bytes, sig.unused_leaf_index(), m_pub_key.xmss_parameters().element_size());
    const secure_vector<uint8_t> msg_digest = m_hash.h_msg(sig.randomness(), public_key.root(), index_bytes, msg);
 
-   const secure_vector<uint8_t> node = root_from_signature(sig, msg_digest, adrs, public_key.public_seed());
+   const secure_vector<uint8_t> node = root_from_signature(sig, msg_digest, public_key.public_seed());
 
    return (node == public_key.root());
 }

@@ -202,7 +202,7 @@ XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
                                  WOTS_Derivation_Method wots_derivation_method) :
       XMSS_PublicKey(xmss_algo_id, rng),
       m_private(std::make_shared<XMSS_PrivateKey_Internal>(m_xmss_params, m_wots_params, wots_derivation_method, rng)) {
-   XMSS_Address adrs;
+   const XMSS_Address adrs;
    XMSS_Hash hash(m_xmss_params);
    m_root = tree_hash(0, XMSS_PublicKey::m_xmss_params.tree_height(), adrs, hash);
 }
@@ -226,8 +226,8 @@ XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
 
 secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx,
                                                   size_t target_node_height,
-                                                  XMSS_Address& adrs,
-                                                  XMSS_Hash& hash) {
+                                                  const XMSS_Address& adrs,
+                                                  XMSS_Hash& hash) const {
    BOTAN_ASSERT_NOMSG(target_node_height <= 30);
    BOTAN_ASSERT((start_idx % (static_cast<size_t>(1) << target_node_height)) == 0,
                 "Start index must be divisible by 2^{target node height}.");
@@ -242,7 +242,8 @@ secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx,
    // skip parallelization overhead for leaf nodes.
    if(split_level == 0) {
       secure_vector<uint8_t> result;
-      tree_hash_subtree(result, start_idx, target_node_height, adrs, hash);
+      XMSS_Address subtree_addr(adrs);
+      tree_hash_subtree(result, start_idx, target_node_height, subtree_addr, hash);
       return result;
    }
 
@@ -265,7 +266,7 @@ secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx,
    // Calculate multiple subtrees in parallel.
    for(size_t i = 0; i < subtrees; i++) {
       using tree_hash_subtree_fn_t =
-         void (XMSS_PrivateKey::*)(secure_vector<uint8_t>&, size_t, size_t, XMSS_Address&, XMSS_Hash&);
+         void (XMSS_PrivateKey::*)(secure_vector<uint8_t>&, size_t, size_t, XMSS_Address&, XMSS_Hash&) const;
 
       const tree_hash_subtree_fn_t work_fn = &XMSS_PrivateKey::tree_hash_subtree;
 
@@ -298,7 +299,7 @@ secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx,
                                         std::ref(nodes[i]),
                                         std::cref(ro_nodes[2 * i]),
                                         std::cref(ro_nodes[2 * i + 1]),
-                                        std::ref(node_addresses[i]),
+                                        node_addresses[i],
                                         std::cref(this->public_seed()),
                                         std::ref(xmss_hash[i]),
                                         std::cref(m_xmss_params)));
@@ -318,13 +319,17 @@ secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx,
    return nodes[0];
 #else
    secure_vector<uint8_t> result;
-   tree_hash_subtree(result, start_idx, target_node_height, adrs, hash);
+   XMSS_Address subtree_addr(adrs);
+   tree_hash_subtree(result, start_idx, target_node_height, subtree_addr, hash);
    return result;
 #endif
 }
 
-void XMSS_PrivateKey::tree_hash_subtree(
-   secure_vector<uint8_t>& result, size_t start_idx, size_t target_node_height, XMSS_Address& adrs, XMSS_Hash& hash) {
+void XMSS_PrivateKey::tree_hash_subtree(secure_vector<uint8_t>& result,
+                                        size_t start_idx,
+                                        size_t target_node_height,
+                                        XMSS_Address& adrs,
+                                        XMSS_Hash& hash) const {
    const secure_vector<uint8_t>& seed = this->public_seed();
 
    std::vector<secure_vector<uint8_t>> nodes(target_node_height + 1,
@@ -367,12 +372,12 @@ void XMSS_PrivateKey::tree_hash_subtree(
    result = nodes[level - 1];
 }
 
-XMSS_WOTS_PublicKey XMSS_PrivateKey::wots_public_key_for(XMSS_Address& adrs, XMSS_Hash& hash) const {
+XMSS_WOTS_PublicKey XMSS_PrivateKey::wots_public_key_for(const XMSS_Address& adrs, XMSS_Hash& hash) const {
    const auto private_key = wots_private_key_for(adrs, hash);
    return XMSS_WOTS_PublicKey(m_private->wots_parameters(), m_public_seed, private_key, adrs, hash);
 }
 
-XMSS_WOTS_PrivateKey XMSS_PrivateKey::wots_private_key_for(XMSS_Address& adrs, XMSS_Hash& hash) const {
+XMSS_WOTS_PrivateKey XMSS_PrivateKey::wots_private_key_for(const XMSS_Address& adrs, XMSS_Hash& hash) const {
    switch(wots_derivation_method()) {
       case WOTS_Derivation_Method::NIST_SP800_208:
          return XMSS_WOTS_PrivateKey(

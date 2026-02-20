@@ -11,11 +11,11 @@
 
 #include <botan/secmem.h>
 #include <botan/xmss_parameters.h>
+#include <botan/internal/xmss_address.h>
 #include <vector>
 
 namespace Botan {
 
-class XMSS_Address;
 class XMSS_Hash;
 class XMSS_WOTS_PrivateKey;
 
@@ -61,7 +61,7 @@ class XMSS_WOTS_PublicKey : public XMSS_WOTS_Base {
       XMSS_WOTS_PublicKey(XMSS_WOTS_Parameters params,
                           std::span<const uint8_t> public_seed,
                           const XMSS_WOTS_PrivateKey& private_key,
-                          XMSS_Address& adrs,
+                          XMSS_Address adrs,
                           XMSS_Hash& hash);
 
       /**
@@ -81,7 +81,7 @@ class XMSS_WOTS_PublicKey : public XMSS_WOTS_Base {
                           std::span<const uint8_t> public_seed,
                           wots_keysig_t signature,
                           const secure_vector<uint8_t>& msg,
-                          XMSS_Address& adrs,
+                          XMSS_Address adrs,
                           XMSS_Hash& hash);
 };
 
@@ -153,7 +153,7 @@ class XMSS_WOTS_PrivateKey : public XMSS_WOTS_Base {
        **/
       wots_keysig_t sign(const secure_vector<uint8_t>& msg,
                          std::span<const uint8_t> public_seed,
-                         XMSS_Address& adrs,
+                         XMSS_Address adrs,
                          XMSS_Hash& hash);
 };
 

@@ -27,10 +27,10 @@ XMSS_Signature_Operation::XMSS_Signature_Operation(const XMSS_PrivateKey& privat
       m_is_initialized(false) {}
 
 XMSS_Signature::TreeSignature XMSS_Signature_Operation::generate_tree_signature(const secure_vector<uint8_t>& msg,
-                                                                                XMSS_PrivateKey& xmss_priv_key,
-                                                                                XMSS_Address& adrs) {
+                                                                                const XMSS_PrivateKey& xmss_priv_key) {
    XMSS_Signature::TreeSignature result;
 
+   XMSS_Address adrs;
    result.authentication_path = build_auth_path(xmss_priv_key, adrs);
    adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
    adrs.set_ots_address(m_leaf_idx);
@@ -41,9 +41,9 @@ XMSS_Signature::TreeSignature XMSS_Signature_Operation::generate_tree_signature(
    return result;
 }
 
-XMSS_Signature XMSS_Signature_Operation::sign(const secure_vector<uint8_t>& msg_hash, XMSS_PrivateKey& xmss_priv_key) {
-   XMSS_Address adrs;
-   XMSS_Signature sig(m_leaf_idx, m_randomness, generate_tree_signature(msg_hash, xmss_priv_key, adrs));
+XMSS_Signature XMSS_Signature_Operation::sign(const secure_vector<uint8_t>& msg_hash,
+                                              const XMSS_PrivateKey& xmss_priv_key) {
+   XMSS_Signature sig(m_leaf_idx, m_randomness, generate_tree_signature(msg_hash, xmss_priv_key));
    return sig;
 }
 
@@ -53,7 +53,7 @@ size_t XMSS_Signature_Operation::signature_length() const {
           params.element_size() + params.len() * params.element_size() + params.tree_height() * params.element_size();
 }
 
-wots_keysig_t XMSS_Signature_Operation::build_auth_path(XMSS_PrivateKey& priv_key, XMSS_Address& adrs) {
+wots_keysig_t XMSS_Signature_Operation::build_auth_path(const XMSS_PrivateKey& priv_key, XMSS_Address& adrs) {
    const auto& params = m_priv_key.xmss_parameters();
    wots_keysig_t auth_path(params.tree_height());
    adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);

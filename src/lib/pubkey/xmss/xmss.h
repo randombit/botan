@@ -255,8 +255,8 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
 
       const secure_vector<uint8_t>& prf_value() const;
 
-      XMSS_WOTS_PublicKey wots_public_key_for(XMSS_Address& adrs, XMSS_Hash& hash) const;
-      XMSS_WOTS_PrivateKey wots_private_key_for(XMSS_Address& adrs, XMSS_Hash& hash) const;
+      XMSS_WOTS_PublicKey wots_public_key_for(const XMSS_Address& adrs, XMSS_Hash& hash) const;
+      XMSS_WOTS_PrivateKey wots_private_key_for(const XMSS_Address& adrs, XMSS_Hash& hash) const;
 
       /**
        * Algorithm 9: "treeHash"
@@ -273,14 +273,14 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
        **/
       secure_vector<uint8_t> tree_hash(size_t start_idx,
                                        size_t target_node_height,
-                                       XMSS_Address& adrs,
-                                       XMSS_Hash& hash);
+                                       const XMSS_Address& adrs,
+                                       XMSS_Hash& hash) const;
 
       void tree_hash_subtree(secure_vector<uint8_t>& result,
                              size_t start_idx,
                              size_t target_node_height,
                              XMSS_Address& adrs,
-                             XMSS_Hash& hash);
+                             XMSS_Hash& hash) const;
 
       std::shared_ptr<XMSS_PrivateKey_Internal> m_private;
 };

@@ -53,11 +53,9 @@ class XMSS_Signature_Operation final : public virtual PK_Ops::Signature {
        *
        * @param msg A message.
        * @param xmss_priv_key A XMSS private key.
-       * @param adrs A XMSS Address.
        **/
       XMSS_Signature::TreeSignature generate_tree_signature(const secure_vector<uint8_t>& msg,
-                                                            XMSS_PrivateKey& xmss_priv_key,
-                                                            XMSS_Address& adrs);
+                                                            const XMSS_PrivateKey& xmss_priv_key);
 
       /**
        * Algorithm 12: "XMSS_sign"
@@ -69,9 +67,9 @@ class XMSS_Signature_Operation final : public virtual PK_Ops::Signature {
        *
        * @return The signature of msg signed using xmss_priv_key.
        **/
-      XMSS_Signature sign(const secure_vector<uint8_t>& msg, XMSS_PrivateKey& xmss_priv_key);
+      XMSS_Signature sign(const secure_vector<uint8_t>& msg, const XMSS_PrivateKey& xmss_priv_key);
 
-      wots_keysig_t build_auth_path(XMSS_PrivateKey& priv_key, XMSS_Address& adrs);
+      wots_keysig_t build_auth_path(const XMSS_PrivateKey& priv_key, XMSS_Address& adrs);
 
       void initialize();
 
