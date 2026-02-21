@@ -386,7 +386,7 @@ class Concurrent_Public_Key_Operations_Test : public Test {
             ConcurrentPkTestCase("Ed448", "", "Pure"),
             ConcurrentPkTestCase("SLH-DSA", "SLH-DSA-SHA2-128f"),
             ConcurrentPkTestCase("HSS-LMS", "SHA-256,HW(5,8)"),
-            //ConcurrentPkTestCase("XMSS", "XMSS-SHA2_10_256"),
+            ConcurrentPkTestCase("XMSS", "XMSS-SHA2_10_256"),
          };
 
          for(const auto& tc : test_cases) {
@@ -394,7 +394,10 @@ class Concurrent_Public_Key_Operations_Test : public Test {
 
             if(auto privkey = tc.try_create_key(*rng)) {
                auto pubkey = privkey->public_key();
-               results.push_back(test_concurrent_signing(tc, *privkey, *pubkey));
+
+               if(tc.algo_name() != "XMSS") {
+                  results.push_back(test_concurrent_signing(tc, *privkey, *pubkey));
+               }
                results.push_back(test_concurrent_verification(tc, *privkey, *pubkey));
             } else {
                results.push_back(tc.skip_missing("signing"));
