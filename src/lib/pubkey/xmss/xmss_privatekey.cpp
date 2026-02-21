@@ -232,7 +232,7 @@ secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx,
    BOTAN_ASSERT((start_idx % (static_cast<size_t>(1) << target_node_height)) == 0,
                 "Start index must be divisible by 2^{target node height}.");
 
-#if defined(BOTAN_HAS_THREAD_UTILS)
+#if defined(BOTAN_HAS_THREAD_UTILS) && 0
    // determine number of parallel tasks to split the tree_hashing into.
 
    Thread_Pool& thread_pool = Thread_Pool::global_instance();
