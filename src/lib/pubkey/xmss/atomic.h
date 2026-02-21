@@ -10,7 +10,6 @@
 
 #include <botan/types.h>
 #include <atomic>
-#include <memory>
 
 namespace Botan {
 
