@@ -29,8 +29,8 @@
 #include <botan/internal/xmss_index_registry.h>
 #include <botan/internal/xmss_signature_operation.h>
 
-#if defined(BOTAN_HAS_THREAD_UTILS)
-   #include <botan/internal/thread_pool.h>
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+   #include <future>
 #endif
 
 namespace Botan {
@@ -232,12 +232,10 @@ secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx,
    BOTAN_ASSERT((start_idx % (static_cast<size_t>(1) << target_node_height)) == 0,
                 "Start index must be divisible by 2^{target node height}.");
 
-#if defined(BOTAN_HAS_THREAD_UTILS)
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
    // determine number of parallel tasks to split the tree_hashing into.
 
-   Thread_Pool& thread_pool = Thread_Pool::global_instance();
-
-   const size_t split_level = std::min(target_node_height, thread_pool.worker_count());
+   const size_t split_level = std::min<size_t>(target_node_height, 8);
 
    // skip parallelization overhead for leaf nodes.
    if(split_level == 0) {
@@ -269,13 +267,14 @@ secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx,
 
       const tree_hash_subtree_fn_t work_fn = &XMSS_PrivateKey::tree_hash_subtree;
 
-      work.push_back(thread_pool.run(work_fn,
-                                     this,
-                                     std::ref(nodes[i]),
-                                     start_idx + i * offs,
-                                     target_node_height - split_level,
-                                     std::ref(node_addresses[i]),
-                                     std::ref(xmss_hash[i])));
+      work.push_back(std::async(std::launch::async,
+                                work_fn,
+                                this,
+                                std::ref(nodes[i]),
+                                start_idx + i * offs,
+                                target_node_height - split_level,
+                                std::ref(node_addresses[i]),
+                                std::ref(xmss_hash[i])));
    }
 
    for(auto& w : work) {
@@ -294,14 +293,15 @@ secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx,
          node_addresses[i].set_tree_height(static_cast<uint32_t>(target_node_height - (level + 1)));
          node_addresses[i].set_tree_index((node_addresses[2 * i + 1].get_tree_index() - 1) >> 1);
 
-         work.push_back(thread_pool.run(&XMSS_Common_Ops::randomize_tree_hash,
-                                        std::ref(nodes[i]),
-                                        std::cref(ro_nodes[2 * i]),
-                                        std::cref(ro_nodes[2 * i + 1]),
-                                        std::ref(node_addresses[i]),
-                                        std::cref(this->public_seed()),
-                                        std::ref(xmss_hash[i]),
-                                        std::cref(m_xmss_params)));
+         work.push_back(std::async(std::launch::async,
+                                   &XMSS_Common_Ops::randomize_tree_hash,
+                                   std::ref(nodes[i]),
+                                   std::cref(ro_nodes[2 * i]),
+                                   std::cref(ro_nodes[2 * i + 1]),
+                                   std::ref(node_addresses[i]),
+                                   std::cref(this->public_seed()),
+                                   std::ref(xmss_hash[i]),
+                                   std::cref(m_xmss_params)));
       }
 
       for(auto& w : work) {
