@@ -94,6 +94,10 @@ class RSA_Private_Data final {
 
       const BigInt& get_d2() const { return m_d2; }
 
+      BigInt blinded_d1(const BigInt& m) const { return m_d1 + m * (m_p - 1); }
+
+      BigInt blinded_d2(const BigInt& m) const { return m_d2 + m * (m_q - 1); }
+
       const BigInt& get_c() const { return m_c; }
 
       const Montgomery_Int& get_c_monty() const { return m_c_monty; }
@@ -575,7 +579,7 @@ class RSA_Private_Operation {
 
          auto future_j1 = Thread_Pool::global_instance().run([this, &m, &d1_mask]() {
 #endif
-            const BigInt masked_d1 = m_private->get_d1() + (d1_mask * (m_private->get_p() - 1));
+            const BigInt masked_d1 = m_private->blinded_d1(d1_mask);
             auto powm_d1_p = monty_precompute(Montgomery_Int::from_wide_int(m_private->monty_p(), m), powm_window);
             auto j1 = monty_execute(*powm_d1_p, masked_d1, m_max_d1_bits);
 
@@ -585,7 +589,7 @@ class RSA_Private_Operation {
 #endif
 
          const BigInt d2_mask(m_blinder.rng(), m_blinding_bits);
-         const BigInt masked_d2 = m_private->get_d2() + (d2_mask * (m_private->get_q() - 1));
+         const BigInt masked_d2 = m_private->blinded_d2(d2_mask);
          auto powm_d2_q = monty_precompute(Montgomery_Int::from_wide_int(m_private->monty_q(), m), powm_window);
          const auto j2 = monty_execute(*powm_d2_q, masked_d2, m_max_d2_bits).value();
 
