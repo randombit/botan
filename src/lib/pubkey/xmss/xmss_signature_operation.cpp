@@ -9,6 +9,7 @@
  *     https://datatracker.ietf.org/doc/rfc8391/
  *
  * (C) 2016,2017,2018 Matthias Gierlings
+ *     2026 Jack Lloyd
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -26,44 +27,10 @@ XMSS_Signature_Operation::XMSS_Signature_Operation(const XMSS_PrivateKey& privat
       m_leaf_idx(0),
       m_is_initialized(false) {}
 
-XMSS_Signature::TreeSignature XMSS_Signature_Operation::generate_tree_signature(const secure_vector<uint8_t>& msg,
-                                                                                XMSS_PrivateKey& xmss_priv_key,
-                                                                                XMSS_Address& adrs) {
-   XMSS_Signature::TreeSignature result;
-
-   result.authentication_path = build_auth_path(xmss_priv_key, adrs);
-   adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
-   adrs.set_ots_address(m_leaf_idx);
-
-   result.ots_signature =
-      xmss_priv_key.wots_private_key_for(adrs, m_hash).sign(msg, xmss_priv_key.public_seed(), adrs, m_hash);
-
-   return result;
-}
-
-XMSS_Signature XMSS_Signature_Operation::sign(const secure_vector<uint8_t>& msg_hash, XMSS_PrivateKey& xmss_priv_key) {
-   XMSS_Address adrs;
-   XMSS_Signature sig(m_leaf_idx, m_randomness, generate_tree_signature(msg_hash, xmss_priv_key, adrs));
-   return sig;
-}
-
 size_t XMSS_Signature_Operation::signature_length() const {
    const auto& params = m_priv_key.xmss_parameters();
    return sizeof(uint64_t) +  // size of leaf index
           params.element_size() + params.len() * params.element_size() + params.tree_height() * params.element_size();
-}
-
-wots_keysig_t XMSS_Signature_Operation::build_auth_path(XMSS_PrivateKey& priv_key, XMSS_Address& adrs) {
-   const auto& params = m_priv_key.xmss_parameters();
-   wots_keysig_t auth_path(params.tree_height());
-   adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
-
-   for(size_t j = 0; j < params.tree_height(); j++) {
-      const size_t k = (m_leaf_idx / (static_cast<size_t>(1) << j)) ^ 0x01;
-      auth_path[j] = priv_key.tree_hash(k * (static_cast<size_t>(1) << j), j, adrs, m_hash);
-   }
-
-   return auth_path;
 }
 
 void XMSS_Signature_Operation::update(std::span<const uint8_t> input) {
@@ -73,9 +40,31 @@ void XMSS_Signature_Operation::update(std::span<const uint8_t> input) {
 
 std::vector<uint8_t> XMSS_Signature_Operation::sign(RandomNumberGenerator& /*rng*/) {
    initialize();
-   auto sig = sign(m_hash.h_msg_final(), m_priv_key).bytes();
+
+   const auto msg_hash = m_hash.h_msg_final();
+
+   const auto& params = m_priv_key.xmss_parameters();
+   wots_keysig_t auth_path(params.tree_height());
+
+   XMSS_Address adrs;
+   adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
+
+   for(size_t j = 0; j < params.tree_height(); j++) {
+      const size_t k = (m_leaf_idx / (static_cast<size_t>(1) << j)) ^ 0x01;
+      auth_path[j] = m_priv_key.tree_hash(k * (static_cast<size_t>(1) << j), j, adrs, m_hash);
+   }
+
+   adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
+   adrs.set_ots_address(m_leaf_idx);
+
+   XMSS_Signature::TreeSignature tree_sig;
+   tree_sig.authentication_path = auth_path;
+   tree_sig.ots_signature =
+      m_priv_key.wots_private_key_for(adrs, m_hash).sign(msg_hash, m_priv_key.public_seed(), adrs, m_hash);
+
+   const XMSS_Signature sig(m_leaf_idx, m_randomness, tree_sig);
    m_is_initialized = false;
-   return sig;
+   return sig.bytes();
 }
 
 void XMSS_Signature_Operation::initialize() {

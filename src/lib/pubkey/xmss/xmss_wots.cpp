@@ -47,7 +47,7 @@ void chain(const XMSS_WOTS_Parameters& params,
            secure_vector<uint8_t>& result,
            size_t start_idx,
            size_t steps,
-           XMSS_Address& adrs,
+           XMSS_Address adrs,
            std::span<const uint8_t> seed,
            XMSS_Hash& hash) {
    BOTAN_ASSERT_NOMSG(result.size() == hash.output_length());
@@ -81,7 +81,7 @@ void chain(const XMSS_WOTS_Parameters& params,
 XMSS_WOTS_PublicKey::XMSS_WOTS_PublicKey(XMSS_WOTS_Parameters params,
                                          std::span<const uint8_t> public_seed,
                                          const XMSS_WOTS_PrivateKey& private_key,
-                                         XMSS_Address& adrs,
+                                         XMSS_Address adrs,
                                          XMSS_Hash& hash) :
       XMSS_WOTS_Base(std::move(params), private_key.key_data()) {
    for(size_t i = 0; i < m_params.len(); ++i) {
@@ -94,7 +94,7 @@ XMSS_WOTS_PublicKey::XMSS_WOTS_PublicKey(XMSS_WOTS_Parameters params,
                                          std::span<const uint8_t> public_seed,
                                          wots_keysig_t signature,
                                          const secure_vector<uint8_t>& msg,
-                                         XMSS_Address& adrs,
+                                         XMSS_Address adrs,
                                          XMSS_Hash& hash) :
       XMSS_WOTS_Base(std::move(params), std::move(signature)) {
    secure_vector<uint8_t> msg_digest{m_params.base_w(msg, m_params.len_1())};
@@ -115,7 +115,7 @@ XMSS_WOTS_PublicKey::XMSS_WOTS_PublicKey(XMSS_WOTS_Parameters params,
 
 wots_keysig_t XMSS_WOTS_PrivateKey::sign(const secure_vector<uint8_t>& msg,
                                          std::span<const uint8_t> public_seed,
-                                         XMSS_Address& adrs,
+                                         XMSS_Address adrs,
                                          XMSS_Hash& hash) {
    secure_vector<uint8_t> msg_digest{m_params.base_w(msg, m_params.len_1())};
 

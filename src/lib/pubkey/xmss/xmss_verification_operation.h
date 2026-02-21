@@ -36,7 +36,6 @@ class XMSS_Verification_Operation final : public virtual PK_Ops::Verification {
        *
        * @param msg A message.
        * @param sig The XMSS signature for msg.
-       * @param ards A XMSS tree address.
        * @param seed A seed.
        *
        * @return An n-byte string holding the value of the root of a tree
@@ -44,7 +43,6 @@ class XMSS_Verification_Operation final : public virtual PK_Ops::Verification {
        **/
       secure_vector<uint8_t> root_from_signature(const XMSS_Signature& sig,
                                                  const secure_vector<uint8_t>& msg,
-                                                 XMSS_Address& ards,
                                                  const secure_vector<uint8_t>& seed);
 
       /**

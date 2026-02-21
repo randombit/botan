@@ -45,7 +45,7 @@ class XMSS_Common_Ops {
       static void randomize_tree_hash(secure_vector<uint8_t>& result,
                                       const secure_vector<uint8_t>& left,
                                       const secure_vector<uint8_t>& right,
-                                      XMSS_Address& adrs,
+                                      XMSS_Address adrs,
                                       const secure_vector<uint8_t>& seed,
                                       XMSS_Hash& hash,
                                       const XMSS_Parameters& params);
@@ -69,7 +69,7 @@ class XMSS_Common_Ops {
       **/
       static void create_l_tree(secure_vector<uint8_t>& result,
                                 wots_keysig_t pk,
-                                XMSS_Address& adrs,
+                                XMSS_Address adrs,
                                 const secure_vector<uint8_t>& seed,
                                 XMSS_Hash& hash,
                                 const XMSS_Parameters& params);
