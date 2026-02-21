@@ -222,7 +222,7 @@ uint32_t botan_ffi_api_version() {
 
 int botan_ffi_supports_api(uint32_t api_version) {
    // This is the API introduced in 3.11
-   if(api_version == 20260203) {
+   if(api_version == 20260303) {
       return BOTAN_FFI_SUCCESS;
    }
 
