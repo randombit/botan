@@ -24,6 +24,7 @@ API Reference
    keywrap
    passhash
    cryptobox
+   spake2
    srp
    psk_db
    filters
