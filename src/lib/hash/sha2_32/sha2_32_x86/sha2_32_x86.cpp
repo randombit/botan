@@ -3,7 +3,7 @@
 *
 * Further changes
 *
-* (C) 2017,2020,2025 Jack Lloyd
+* (C) 2017,2020,2025,2026 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -30,10 +30,14 @@ BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha256_rnds4(SIMD_4x32& S0,
    S0 = SIMD_4x32(_mm_sha256rnds2_epu32(S0.raw(), S1.raw(), mk.shift_elems_right<2>().raw()));
 }
 
-BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha256_msg_exp(SIMD_4x32& m0, SIMD_4x32& m1, SIMD_4x32& m2) {
-   m2 += SIMD_4x32::alignr4(m1, m0);
-   m0 = SIMD_4x32(_mm_sha256msg1_epu32(m0.raw(), m1.raw()));
-   m2 = SIMD_4x32(_mm_sha256msg2_epu32(m2.raw(), m1.raw()));
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha256_msg_exp(SIMD_4x32& W0, SIMD_4x32& W1, SIMD_4x32& W2, SIMD_4x32& W3) {
+   W2 += SIMD_4x32::alignr4(W1, W0);
+   W0 = SIMD_4x32(_mm_sha256msg1_epu32(W0.raw(), W1.raw()));
+   W2 = SIMD_4x32(_mm_sha256msg2_epu32(W2.raw(), W1.raw()));
+
+   W3 += SIMD_4x32::alignr4(W2, W1);
+   W1 = SIMD_4x32(_mm_sha256msg1_epu32(W1.raw(), W2.raw()));
+   W3 = SIMD_4x32(_mm_sha256msg2_epu32(W3.raw(), W2.raw()));
 }
 
 BOTAN_FORCE_INLINE BOTAN_FN_ISA_SHANI void sha256_permute_state(SIMD_4x32& S0, SIMD_4x32& S1) {
@@ -87,19 +91,35 @@ void BOTAN_FN_ISA_SHANI BOTAN_SCRUB_STACK_AFTER_RETURN SHA_256::compress_digest_
       W0 = SIMD_4x32(_mm_sha256msg1_epu32(W0.raw(), W1.raw()));
       W1 = SIMD_4x32(_mm_sha256msg1_epu32(W1.raw(), W2.raw()));
 
-      for(size_t r = 4; r != 16; r += 4) {
-         sha256_msg_exp(W2, W3, W0);
-         sha256_rnds4(S0, S1, W0, SIMD_4x32::load_le(&K[4 * (r + 0)]));
+      sha256_msg_exp(W2, W3, W0, W1);
 
-         sha256_msg_exp(W3, W0, W1);
-         sha256_rnds4(S0, S1, W1, SIMD_4x32::load_le(&K[4 * (r + 1)]));
+      sha256_rnds4(S0, S1, W0, SIMD_4x32::load_le(&K[4 * 4]));
+      sha256_rnds4(S0, S1, W1, SIMD_4x32::load_le(&K[4 * 5]));
 
-         sha256_msg_exp(W0, W1, W2);
-         sha256_rnds4(S0, S1, W2, SIMD_4x32::load_le(&K[4 * (r + 2)]));
+      sha256_msg_exp(W0, W1, W2, W3);
 
-         sha256_msg_exp(W1, W2, W3);
-         sha256_rnds4(S0, S1, W3, SIMD_4x32::load_le(&K[4 * (r + 3)]));
-      }
+      sha256_rnds4(S0, S1, W2, SIMD_4x32::load_le(&K[4 * 6]));
+      sha256_rnds4(S0, S1, W3, SIMD_4x32::load_le(&K[4 * 7]));
+
+      sha256_msg_exp(W2, W3, W0, W1);
+
+      sha256_rnds4(S0, S1, W0, SIMD_4x32::load_le(&K[4 * 8]));
+      sha256_rnds4(S0, S1, W1, SIMD_4x32::load_le(&K[4 * 9]));
+
+      sha256_msg_exp(W0, W1, W2, W3);
+
+      sha256_rnds4(S0, S1, W2, SIMD_4x32::load_le(&K[4 * 10]));
+      sha256_rnds4(S0, S1, W3, SIMD_4x32::load_le(&K[4 * 11]));
+
+      sha256_msg_exp(W2, W3, W0, W1);
+
+      sha256_rnds4(S0, S1, W0, SIMD_4x32::load_le(&K[4 * 12]));
+      sha256_rnds4(S0, S1, W1, SIMD_4x32::load_le(&K[4 * 13]));
+
+      sha256_msg_exp(W0, W1, W2, W3);
+
+      sha256_rnds4(S0, S1, W2, SIMD_4x32::load_le(&K[4 * 14]));
+      sha256_rnds4(S0, S1, W3, SIMD_4x32::load_le(&K[4 * 15]));
 
       // Add values back to state
       S0 += S0_SAVE;
