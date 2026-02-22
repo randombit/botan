@@ -6,11 +6,20 @@
 
 #include <botan/internal/dilithium_shake_xof.h>
 
+#include <botan/internal/loadstor.h>
+
 namespace Botan {
 
-DilithiumShakeXOF::DilithiumShakeXOF() :
-      m_xof_256(XOF::create_or_throw("SHAKE-256")), m_xof_128(XOF::create_or_throw("SHAKE-128")) {}
-
 DilithiumShakeXOF::~DilithiumShakeXOF() = default;
+
+//static
+std::unique_ptr<Botan::XOF> DilithiumShakeXOF::createXOF(std::string_view name,
+                                                         std::span<const uint8_t> seed,
+                                                         uint16_t nonce) {
+   auto xof = Botan::XOF::create_or_throw(name);
+   xof->update(seed);
+   xof->update(store_le(nonce));
+   return xof;
+}
 
 }  // namespace Botan

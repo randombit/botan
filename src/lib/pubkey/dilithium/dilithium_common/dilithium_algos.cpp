@@ -534,8 +534,8 @@ DilithiumSerializedCommitment encode_commitment(const DilithiumPolyVec& w1, cons
  */
 DilithiumPoly sample_in_ball(StrongSpan<const DilithiumCommitmentHash> seed, const DilithiumConstants& mode) {
    // This generator resembles the while loop in the spec.
-   auto& xof = mode.symmetric_primitives().H(seed);
-   auto bounded_xof = Bounded_XOF<DilithiumConstants::SAMPLE_IN_BALL_XOF_BOUND + 8>(xof);
+   auto xof = mode.symmetric_primitives().H(seed);
+   auto bounded_xof = Bounded_XOF<DilithiumConstants::SAMPLE_IN_BALL_XOF_BOUND + 8>(*xof);
 
    DilithiumPoly c;
    uint64_t signs = load_le(bounded_xof.next<8>());
@@ -565,8 +565,8 @@ void sample_ntt_uniform(StrongSpan<const DilithiumSeedRho> rho,
     * A generator that returns the next coefficient sampled from the XOF,
     * according to: NIST FIPS 204, Algorithm 14 (CoeffFromThreeBytes).
     */
-   auto& xof = mode.symmetric_primitives().H(rho, nonce);
-   auto bounded_xof = Bounded_XOF<DilithiumConstants::SAMPLE_NTT_POLY_FROM_XOF_BOUND>(xof);
+   auto xof = mode.symmetric_primitives().H(rho, nonce);
+   auto bounded_xof = Bounded_XOF<DilithiumConstants::SAMPLE_NTT_POLY_FROM_XOF_BOUND>(*xof);
 
    for(auto& coeff : p) {
       coeff =
@@ -641,13 +641,13 @@ void sample_uniform_eta(StrongSpan<const DilithiumSeedRhoPrime> rhoprime,
                         const DilithiumConstants& mode) {
    using Eta = DilithiumConstants::DilithiumEta;
 
-   auto& xof = mode.symmetric_primitives().H(rhoprime, nonce);
+   auto xof = mode.symmetric_primitives().H(rhoprime, nonce);
    switch(mode.eta()) {
       case Eta::_2:
-         sample_uniform_eta<Eta::_2>(p, xof);
+         sample_uniform_eta<Eta::_2>(p, *xof);
          break;
       case Eta::_4:
-         sample_uniform_eta<Eta::_4>(p, xof);
+         sample_uniform_eta<Eta::_4>(p, *xof);
          break;
    }
 
@@ -733,8 +733,8 @@ DilithiumPolyVec expand_mask(StrongSpan<const DilithiumSeedRhoPrime> rhoprime,
                              const DilithiumConstants& mode) {
    DilithiumPolyVec s(mode.l());
    for(auto& p : s) {
-      auto& xof = mode.symmetric_primitives().H(rhoprime, nonce++);
-      poly_unpack_gamma1(p, xof, mode);
+      auto xof = mode.symmetric_primitives().H(rhoprime, nonce++);
+      poly_unpack_gamma1(p, *xof, mode);
    }
    return s;
 }

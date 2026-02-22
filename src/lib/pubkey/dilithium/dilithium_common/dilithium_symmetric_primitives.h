@@ -12,7 +12,6 @@
 #define BOTAN_DILITHIUM_ASYM_PRIMITIVES_H_
 
 #include <botan/dilithium.h>
-
 #include <botan/xof.h>
 #include <botan/internal/dilithium_types.h>
 
@@ -86,8 +85,8 @@ class DilithiumXOF /* NOLINT(*-special-member-functions) */ {
    public:
       virtual ~DilithiumXOF() = default;
 
-      virtual Botan::XOF& XOF128(std::span<const uint8_t> seed, uint16_t nonce) const = 0;
-      virtual Botan::XOF& XOF256(std::span<const uint8_t> seed, uint16_t nonce) const = 0;
+      virtual std::unique_ptr<XOF> XOF128(std::span<const uint8_t> seed, uint16_t nonce) const = 0;
+      virtual std::unique_ptr<XOF> XOF256(std::span<const uint8_t> seed, uint16_t nonce) const = 0;
 };
 
 /**
@@ -124,18 +123,18 @@ class Dilithium_Symmetric_Primitives_Base {
 
       std::tuple<DilithiumSeedRho, DilithiumSeedRhoPrime, DilithiumSigningSeedK> H(
          StrongSpan<const DilithiumSeedRandomness> seed) const {
-         m_xof->update(seed);
+         auto xof = XOF::create_or_throw("SHAKE-256");
+         xof->update(seed);
          if(auto domsep = seed_expansion_domain_separator()) {
-            m_xof->update(domsep.value());
+            xof->update(domsep.value());
          }
 
          // Note: The order of invocations in an initializer list is not
          //       guaranteed by the C++ standard. Hence, we have to store the
          //       results in variables to ensure the correct order of execution.
-         auto rho = m_xof->output<DilithiumSeedRho>(DilithiumConstants::SEED_RHO_BYTES);
-         auto rhoprime = m_xof->output<DilithiumSeedRhoPrime>(DilithiumConstants::SEED_RHOPRIME_BYTES);
-         auto k = m_xof->output<DilithiumSigningSeedK>(DilithiumConstants::SEED_SIGNING_KEY_BYTES);
-         m_xof->clear();
+         auto rho = xof->output<DilithiumSeedRho>(DilithiumConstants::SEED_RHO_BYTES);
+         auto rhoprime = xof->output<DilithiumSeedRhoPrime>(DilithiumConstants::SEED_RHOPRIME_BYTES);
+         auto k = xof->output<DilithiumSigningSeedK>(DilithiumConstants::SEED_SIGNING_KEY_BYTES);
 
          return {std::move(rho), std::move(rhoprime), std::move(k)};
       }
@@ -145,21 +144,17 @@ class Dilithium_Symmetric_Primitives_Base {
          return H_256<DilithiumCommitmentHash>(m_commitment_hash_length_bytes, mu, w1);
       }
 
-      XOF& H(StrongSpan<const DilithiumCommitmentHash> seed) const {
-         m_xof_external->clear();
-         m_xof_external->update(truncate_commitment_hash(seed));
-         return *m_xof_external;
+      std::unique_ptr<XOF> H(StrongSpan<const DilithiumCommitmentHash> seed) const {
+         auto xof = XOF::create_or_throw("SHAKE-256");
+         xof->update(truncate_commitment_hash(seed));
+         return xof;
       }
 
-      // Once Dilithium AES is removed, this could return a SHAKE_256_XOF and
-      // avoid the virtual method call.
-      Botan::XOF& H(StrongSpan<const DilithiumSeedRho> seed, uint16_t nonce) const {
+      std::unique_ptr<XOF> H(StrongSpan<const DilithiumSeedRho> seed, uint16_t nonce) const {
          return m_xof_adapter->XOF128(seed, nonce);
       }
 
-      // Once Dilithium AES is removed, this could return a SHAKE_128_XOF and
-      // avoid the virtual method call.
-      Botan::XOF& H(StrongSpan<const DilithiumSeedRhoPrime> seed, uint16_t nonce) const {
+      std::unique_ptr<XOF> H(StrongSpan<const DilithiumSeedRhoPrime> seed, uint16_t nonce) const {
          return m_xof_adapter->XOF256(seed, nonce);
       }
 
@@ -181,9 +176,9 @@ class Dilithium_Symmetric_Primitives_Base {
 
       template <concepts::resizable_byte_buffer OutT, ranges::spanable_range... InTs>
       OutT H_256(size_t outbytes, const InTs&... ins) const {
-         const scoped_cleanup clean([this]() { m_xof->clear(); });
-         (m_xof->update(ins), ...);
-         return m_xof->output<OutT>(outbytes);
+         auto xof = XOF::create_or_throw("SHAKE-256");
+         (xof->update(ins), ...);
+         return xof->output<OutT>(outbytes);
       }
 
    private:
@@ -192,8 +187,6 @@ class Dilithium_Symmetric_Primitives_Base {
       DilithiumMode m_mode;
 
       std::unique_ptr<DilithiumXOF> m_xof_adapter;
-      std::unique_ptr<XOF> m_xof;
-      std::unique_ptr<XOF> m_xof_external;
 };
 
 }  // namespace Botan
