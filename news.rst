@@ -24,9 +24,18 @@ Version 3.11.0, Not Yet Released
 
 * Poly1305 optimizations, including AVX2 and AVX-512 implementations (GH #5227)
 
+* Certain signature and KEM schemes, including XMSS and FrodoKEM, would fail or produce
+  incorrect results if multiple threads attempted operations on the same key object
+  concurrently. In a strict sense uncoordinated multithreaded use of the same object was
+  never supported, but this usage did work for RSA, ECDSA, and other schemes, and the
+  previous behaviour is potentially quite surprising. Tests have been added to ensure this
+  usage works for all schemes going forward. (GH #5359 #5361 #5366 #5371)
+
 * Improve handling of constant time and variable time divisions (GH #5176 #5177 #5180)
 
 * Optimize ECDSA signature setup phase (GH #5173)
+
+* The R3 versions of Kyber and Dilithium are official deprecated (GH #5368)
 
 * Various elliptic curve arithmetic optimizations (GH #5186 #5194 #5195 #5196 #5275)
 
@@ -43,10 +52,11 @@ Version 3.11.0, Not Yet Released
 * Support for AltiVec on 32-bit PowerPC platforms has been dropped (GH #5266)
 
 * Many changes to improve library build times (GH #5279 #5280 #5284 #5285 #5286 #5287 #5288
-  #5289 #5291 #5294 #5295 #5296 #5300 #5302 #5304 #5314 #5315 #5321 #5323 #5343 #5344 #5345 #5346)
+  #5289 #5291 #5294 #5295 #5296 #5300 #5302 #5304 #5314 #5315 #5321 #5323 #5343 #5344 #5345
+  #5346 #5347 #5354)
 
 * Test suite infrastructure cleanups (GH #5327 #5328 #5329 #5330 #5334 #5337 #5338 #5340
-  #5341 #5342 #5348 #5351)
+  #5341 #5342 #5348 #5351 #5352 #5357)
 
 * Unroll loops to improve Montgomery reduction performance. (GH #5150)
 
