@@ -15,7 +15,6 @@
 #include <botan/internal/ctr.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/ghash.h>
-
 #include <array>
 
 namespace Botan {
@@ -83,8 +82,8 @@ bool GCM_Mode::has_keying_material() const {
 void GCM_Mode::key_schedule(std::span<const uint8_t> key) {
    m_ctr->set_key(key);
 
-   const std::vector<uint8_t> zeros(GCM_BS);
-   m_ctr->set_iv(zeros.data(), zeros.size());
+   std::array<uint8_t, GCM_BS> zeros{};
+   m_ctr->set_iv(zeros);
 
    uint8_t H[GCM_BS] = {0};
    m_ctr->encipher(H);
