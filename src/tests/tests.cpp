@@ -366,6 +366,14 @@ bool Test::Result::test_u64_eq(std::string_view what, uint64_t produced, uint64_
    }
 }
 
+bool Test::Result::test_u64_lt(std::string_view what, uint64_t produced, uint64_t expected) {
+   if(produced < expected) {
+      return test_success();
+   } else {
+      return test_failure(Botan::fmt("Assertion failure in {} {}: {} < {}", who(), what, produced, expected));
+   }
+}
+
 bool Test::Result::test_sz_eq(std::string_view what, size_t produced, size_t expected) {
    if(produced == expected) {
       return test_success();

@@ -158,7 +158,7 @@ AlgorithmIdentifier HSS_LMS_PrivateKey::pkcs8_algorithm_identifier() const {
 }
 
 std::optional<uint64_t> HSS_LMS_PrivateKey::remaining_operations() const {
-   return (m_private->hss_params().max_sig_count() - m_private->get_idx()).get();
+   return m_private->remaining_operations(m_private->hss_params().max_sig_count()).get();
 }
 
 std::unique_ptr<Private_Key> HSS_LMS_PrivateKey::generate_another(RandomNumberGenerator& rng) const {

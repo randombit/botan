@@ -12,11 +12,9 @@ xmss_parameters.h
 </header:public>
 
 <header:internal>
-atomic.h
 xmss_address.h
 xmss_common_ops.h
 xmss_hash.h
-xmss_index_registry.h
 xmss_signature.h
 xmss_signature_operation.h
 xmss_tools.h
@@ -28,10 +26,6 @@ xmss_wots.h
 asn1
 rng
 hash
-sha2_32
+stateful_key_index
 trunc_hash
 </requires>
-
-<os_features>
-atomics
-</os_features>

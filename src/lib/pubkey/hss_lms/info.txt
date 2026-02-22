@@ -21,6 +21,7 @@ hss.h
 rng
 sha2_32
 shake
+stateful_key_index
 trunc_hash
 tree_hash
 </requires>

@@ -1,0 +1,13 @@
+<module_info>
+name -> "Stateful Key Index"
+brief -> "Tracks updates for stateful signing algorithms"
+type -> "Internal"
+</module_info>
+
+<requires>
+sha2_32
+</requires>
+
+<os_features>
+atomics
+</os_features>
