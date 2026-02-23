@@ -1,6 +1,6 @@
 /**
  * HSS - Hierarchical Signatures System (RFC 8554)
- * (C) 2023 Jack Lloyd
+ * (C) 2023,2026 Jack Lloyd
  *     2023 Fabian Albert, Philippe Lieser - Rohde & Schwarz Cybersecurity GmbH
  *
  * Botan is released under the Simplified BSD License (see license.txt)
@@ -16,6 +16,7 @@
 #include <botan/internal/hss_lms_utils.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/scan_name.h>
+#include <botan/internal/stateful_key_index_registry.h>
 #include <limits>
 
 namespace Botan {
@@ -120,9 +121,26 @@ HSS_Sig_Idx HSS_LMS_Params::calc_max_sig_count() const {
 }
 
 HSS_LMS_PrivateKeyInternal::HSS_LMS_PrivateKeyInternal(const HSS_LMS_Params& hss_params, RandomNumberGenerator& rng) :
-      m_hss_params(hss_params), m_current_idx(0), m_sig_size(HSS_Signature::size(m_hss_params)) {
-   m_hss_seed = rng.random_vec<LMS_Seed>(m_hss_params.params_at_level(HSS_Level(0)).lms_params().m());
-   m_identifier = rng.random_vec<LMS_Identifier>(LMS_IDENTIFIER_LEN);
+      m_hss_params(hss_params),
+      m_hss_seed(rng.random_vec<LMS_Seed>(m_hss_params.params_at_level(HSS_Level(0)).lms_params().m())),
+      m_identifier(rng.random_vec<LMS_Identifier>(LMS_IDENTIFIER_LEN)),
+      // LMS doesn't have a single unique parameter code that we can easily use,
+      // so algo_params is left as 0
+      m_keyid("HSS-LMS", 0, m_hss_seed, m_identifier),
+      m_sig_size(HSS_Signature::size(m_hss_params)) {}
+
+HSS_LMS_PrivateKeyInternal::HSS_LMS_PrivateKeyInternal(HSS_LMS_Params hss_params,
+                                                       LMS_Seed hss_seed,
+                                                       LMS_Identifier identifier) :
+      m_hss_params(std::move(hss_params)),
+      m_hss_seed(std::move(hss_seed)),
+      m_identifier(std::move(identifier)),
+      // LMS doesn't have a single unique parameter code that we can easily use, so algo_params is left as 0
+      m_keyid("HSS-LMS", 0, m_hss_seed, m_identifier),
+      m_sig_size(HSS_Signature::size(m_hss_params)) {
+   BOTAN_ARG_CHECK(m_hss_seed.size() == m_hss_params.params_at_level(HSS_Level(0)).lms_params().m(),
+                   "Invalid HSS-LMS seed size");
+   BOTAN_ARG_CHECK(m_identifier.size() == LMS_IDENTIFIER_LEN, "Invalid HSS-LMS identifier size");
 }
 
 std::shared_ptr<HSS_LMS_PrivateKeyInternal> HSS_LMS_PrivateKeyInternal::from_bytes_or_throw(
@@ -178,8 +196,10 @@ secure_vector<uint8_t> HSS_LMS_PrivateKeyInternal::to_bytes() const {
    secure_vector<uint8_t> sk_bytes(size());
    BufferStuffer stuffer(sk_bytes);
 
+   const uint64_t current_index = Stateful_Key_Index_Registry::global().current_index(m_keyid);
+
    stuffer.append(store_be(hss_params().L()));
-   stuffer.append(store_be(get_idx()));
+   stuffer.append(store_be(current_index));
 
    for(HSS_Level layer(1); layer <= hss_params().L(); ++layer) {
       const auto& params = hss_params().params_at_level(layer - 1);
@@ -193,17 +213,20 @@ secure_vector<uint8_t> HSS_LMS_PrivateKeyInternal::to_bytes() const {
    return sk_bytes;
 }
 
+HSS_Sig_Idx HSS_LMS_PrivateKeyInternal::remaining_operations(HSS_Sig_Idx idx) const {
+   return HSS_Sig_Idx(Stateful_Key_Index_Registry::global().remaining_operations(m_keyid, idx.get()));
+}
+
 void HSS_LMS_PrivateKeyInternal::set_idx(HSS_Sig_Idx idx) {
-   m_current_idx = idx;
+   Stateful_Key_Index_Registry::global().set_index_lower_bound(m_keyid, idx.get());
 }
 
 HSS_Sig_Idx HSS_LMS_PrivateKeyInternal::reserve_next_idx() {
-   HSS_Sig_Idx next_idx = m_current_idx;
-   if(next_idx >= m_hss_params.max_sig_count()) {
+   const auto idx = HSS_Sig_Idx(Stateful_Key_Index_Registry::global().reserve_next_index(m_keyid));
+   if(idx >= m_hss_params.max_sig_count()) {
       throw Decoding_Error("HSS private key is exhausted");
    }
-   set_idx(m_current_idx + 1);
-   return next_idx;
+   return idx;
 }
 
 size_t HSS_LMS_PrivateKeyInternal::size() const {
@@ -212,19 +235,6 @@ size_t HSS_LMS_PrivateKeyInternal::size() const {
    sk_size += hss_params().L().get() * (sizeof(LMS_Algorithm_Type) + sizeof(LMOTS_Algorithm_Type));
    sk_size += m_hss_seed.size() + m_identifier.size();
    return sk_size;
-}
-
-HSS_LMS_PrivateKeyInternal::HSS_LMS_PrivateKeyInternal(HSS_LMS_Params hss_params,
-                                                       LMS_Seed hss_seed,
-                                                       LMS_Identifier identifier) :
-      m_hss_params(std::move(hss_params)),
-      m_hss_seed(std::move(hss_seed)),
-      m_identifier(std::move(identifier)),
-      m_current_idx(0),
-      m_sig_size(HSS_Signature::size(m_hss_params)) {
-   BOTAN_ARG_CHECK(m_hss_seed.size() == m_hss_params.params_at_level(HSS_Level(0)).lms_params().m(),
-                   "Invalid seed size");
-   BOTAN_ARG_CHECK(m_identifier.size() == LMS_IDENTIFIER_LEN, "Invalid identifier size");
 }
 
 std::vector<uint8_t> HSS_LMS_PrivateKeyInternal::sign(std::span<const uint8_t> msg) {

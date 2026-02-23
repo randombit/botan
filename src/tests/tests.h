@@ -319,6 +319,8 @@ class Test {
             bool test_i16_eq(std::string_view what, int16_t produced, int16_t expected);
             bool test_i32_eq(std::string_view what, int32_t produced, int32_t expected);
 
+            bool test_u64_lt(std::string_view what, uint64_t produced, uint64_t expected);
+
             /* Prefer the versions that take a descriptor string above */
             bool test_u8_eq(uint8_t produced, uint8_t expected);
             bool test_u16_eq(uint16_t produced, uint16_t expected);

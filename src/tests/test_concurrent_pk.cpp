@@ -82,6 +82,8 @@ Test::Result test_concurrent_signing(const ConcurrentPkTestCase& tc,
    auto rng = Test::new_rng(result.who());
    const auto test_message = rng->random_vec(32);
 
+   const auto operations_remaining_at_start = privkey.remaining_operations();
+
    std::vector<std::future<std::vector<uint8_t>>> futures;
    futures.reserve(ConcurrentThreads);
 
@@ -108,6 +110,25 @@ Test::Result test_concurrent_signing(const ConcurrentPkTestCase& tc,
       } catch(std::exception& e) {
          result.test_failure(Botan::fmt("Thread {} failed: {}", i, e.what()));
       }
+   }
+
+   if(operations_remaining_at_start.has_value()) {
+      result.test_is_true("Private key should be stateful", privkey.stateful_operation());
+      const auto left_at_end = privkey.remaining_operations();
+
+      if(left_at_end.has_value()) {
+         result.test_u64_lt(
+            "Number of operations went down", left_at_end.value(), operations_remaining_at_start.value());
+
+         const uint64_t consumed = operations_remaining_at_start.value() - left_at_end.value();
+
+         result.test_u64_eq(
+            "Private key should have consumed exactly ConcurrentThreads many operations", consumed, ConcurrentThreads);
+      } else {
+         result.test_failure("Private key remaining_operations should return something both times");
+      }
+   } else {
+      result.test_is_false("Private key should not be stateful", privkey.stateful_operation());
    }
 
    return result;
