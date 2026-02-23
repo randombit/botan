@@ -8,11 +8,12 @@
 #ifndef BOTAN_XMSS_INDEX_REGISTRY_H_
 #define BOTAN_XMSS_INDEX_REGISTRY_H_
 
-#include <string>
-
 #include <botan/mutex.h>
-#include <botan/secmem.h>
 #include <botan/internal/atomic.h>
+#include <array>
+#include <memory>
+#include <span>
+#include <vector>
 
 namespace Botan {
 
@@ -26,72 +27,43 @@ class XMSS_Index_Registry final {
       XMSS_Index_Registry(XMSS_Index_Registry&&) = delete;
       XMSS_Index_Registry& operator=(const XMSS_Index_Registry&) = delete;
       XMSS_Index_Registry& operator=(XMSS_Index_Registry&&) = delete;
-      ~XMSS_Index_Registry() = default;
+      ~XMSS_Index_Registry();
 
       /**
        * Retrieves a handle to the process-wide unique XMSS index registry.
        *
        * @return Reference to unique XMSS index registry.
        **/
-      static XMSS_Index_Registry& get_instance() {
-         static XMSS_Index_Registry self;
-         return self;
-      }
+      static XMSS_Index_Registry& get_instance();
 
       /**
        * Retrieves the last unused leaf index for the private key identified
        * by private_seed and prf. The leaf index will be updated properly
-       * across independent copies of private_key.
+       * across independent copies of private_key. If the key is not yet
+       * registered, a new entry is created with leaf index 0.
        *
+       * @param params The XMSS parameter identifier
        * @param private_seed Part of the unique identifier for an
        *                     XMSS_PrivateKey.
        * @param prf Part of the unique identifier for an XMSS_PrivateKey.
        *
        * @return last unused leaf index for private_key.
        **/
-      std::shared_ptr<Atomic<size_t>> get(const secure_vector<uint8_t>& private_seed,
-                                          const secure_vector<uint8_t>& prf);
+      std::shared_ptr<Atomic<size_t>> get(uint32_t params,
+                                          std::span<const uint8_t> private_seed,
+                                          std::span<const uint8_t> prf);
 
    private:
-      XMSS_Index_Registry() = default;
+      using key_id_t = std::array<uint8_t, 32>;
 
-      /**
-       * Creates a unique 64-bit id for an XMSS_Private key, by interpreting
-       * the first 64-bit of HASH(PRIVATE_SEED || PRF) as 64 bit integer
-       * value.
-       *
-       * @return unique integral identifier for an XMSS private key.
-       **/
-      static uint64_t make_key_id(const secure_vector<uint8_t>& private_seed, const secure_vector<uint8_t>& prf);
+      struct Entry {
+            key_id_t key_id;
+            std::shared_ptr<Atomic<size_t>> leaf_index;
+      };
 
-      /**
-       * Retrieves the index position of a key within the registry or
-       * max(size_t) if key has not been found.
-       *
-       * @param id unique id of the XMSS private key (see make_key_id()).
-       *
-       * @return index position of key or max(size_t) if key not found.
-       **/
-      size_t get(uint64_t id) const;
+      XMSS_Index_Registry();
 
-      /**
-       * If XMSS_PrivateKey identified by id is already registered, the
-       * position of the according registry entry is returned. If last_unused
-       * is bigger than the last unused index stored for the key identified by
-       * id the unused leaf index for this key is set to last_unused. If no key
-       * matching id is registered yet, an entry of id is added, with the last
-       * unused leaf index initialized to the value of last_unused.
-       *
-       * @last_unused Initial value for the last unused leaf index of the
-       *              registered key.
-       *
-       * @return position of leaf index registry entry for key identified
-       *         by id.
-       **/
-      size_t add(uint64_t id, size_t last_unused = 0);
-
-      std::vector<uint64_t> m_key_ids;
-      std::vector<std::shared_ptr<Atomic<size_t>>> m_leaf_indices;
+      std::vector<Entry> m_registry;
       mutex_type m_mutex;
 };
 

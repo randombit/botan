@@ -149,7 +149,7 @@ class XMSS_PrivateKey_Internal {
          BOTAN_ASSERT(
             m_private_seed.size() == m_xmss_params.element_size() && m_prf.size() == m_xmss_params.element_size(),
             "Trying to retrieve index for partially initialized key");
-         return m_index_reg.get(m_private_seed, m_prf);
+         return m_index_reg.get(m_xmss_params.oid(), m_private_seed, m_prf);
       }
 
       void set_unused_leaf_index(size_t idx) {

@@ -3,6 +3,7 @@
  * A registry for XMSS private keys, keeps track of the leaf index for
  * independent copies of the same key.
  * (C) 2016 Matthias Gierlings
+ *     2026 Jack Lloyd
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -11,61 +12,54 @@
 
 #include <botan/assert.h>
 #include <botan/hash.h>
-#include <limits>
 
 namespace Botan {
 
-//static
-uint64_t XMSS_Index_Registry::make_key_id(const secure_vector<uint8_t>& private_seed,
-                                          const secure_vector<uint8_t>& prf) {
+namespace {
+
+std::array<uint8_t, 32> make_xmss_index_key_id(uint32_t params,
+                                               std::span<const uint8_t> private_seed,
+                                               std::span<const uint8_t> prf) {
    const std::string_view index_hash_function = "SHA-256";
-   std::unique_ptr<HashFunction> hash = HashFunction::create(index_hash_function);
-   BOTAN_ASSERT(hash != nullptr, "XMSS_Index_Registry requires SHA-256");
+   std::unique_ptr<HashFunction> hash = HashFunction::create_or_throw(index_hash_function);
+   hash->update("Botan XMSS Index Registry KeyId");
+   hash->update_be(params);
    hash->update(private_seed);
    hash->update(prf);
-   secure_vector<uint8_t> result = hash->final();
-   uint64_t key_id = 0;
-   for(size_t i = 0; i < sizeof(key_id); i++) {
-      key_id = ((key_id << 8) | result[i]);
-   }
 
+   std::array<uint8_t, 32> key_id{};
+   hash->final(key_id);
    return key_id;
 }
 
-std::shared_ptr<Atomic<size_t>> XMSS_Index_Registry::get(const secure_vector<uint8_t>& private_seed,
-                                                         const secure_vector<uint8_t>& prf) {
-   const size_t pos = get(make_key_id(private_seed, prf));
+}  // namespace
 
-   if(pos < std::numeric_limits<size_t>::max()) {
-      return m_leaf_indices[pos];
-   } else {
-      return m_leaf_indices[add(make_key_id(private_seed, prf))];
-   }
+//static
+XMSS_Index_Registry& XMSS_Index_Registry::get_instance() {
+   static XMSS_Index_Registry g_xmss_index_registry;
+   return g_xmss_index_registry;
 }
 
-size_t XMSS_Index_Registry::get(uint64_t id) const {
-   for(size_t i = 0; i < m_key_ids.size(); i++) {
-      if(m_key_ids[i] == id) {
-         return i;
-      }
-   }
+XMSS_Index_Registry::XMSS_Index_Registry() = default;
 
-   return std::numeric_limits<size_t>::max();
-}
+XMSS_Index_Registry::~XMSS_Index_Registry() = default;
 
-size_t XMSS_Index_Registry::add(uint64_t id, size_t last_unused) {
+std::shared_ptr<Atomic<size_t>> XMSS_Index_Registry::get(uint32_t params,
+                                                         std::span<const uint8_t> private_seed,
+                                                         std::span<const uint8_t> prf) {
+   // Compute the key id outside the lock
+   const auto id = make_xmss_index_key_id(params, private_seed, prf);
+
    const lock_guard_type<mutex_type> lock(m_mutex);
-   const size_t pos = get(id);
-   if(pos < m_key_ids.size()) {
-      if(last_unused > *(m_leaf_indices[pos])) {
-         m_leaf_indices[pos] = std::make_shared<Atomic<size_t>>(last_unused);
+
+   for(const auto& reg : m_registry) {
+      if(reg.key_id == id) {
+         return reg.leaf_index;
       }
-      return pos;
    }
 
-   m_key_ids.push_back(id);
-   m_leaf_indices.push_back(std::make_shared<Atomic<size_t>>(last_unused));
-   return m_key_ids.size() - 1;
+   m_registry.push_back({id, std::make_shared<Atomic<size_t>>(0)});
+   return m_registry.back().leaf_index;
 }
 
 }  // namespace Botan
