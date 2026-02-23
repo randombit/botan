@@ -7,7 +7,3 @@ type -> "Internal"
 <requires>
 sha2_32
 </requires>
-
-<os_features>
-atomics
-</os_features>

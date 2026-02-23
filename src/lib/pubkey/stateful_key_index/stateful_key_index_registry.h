@@ -11,11 +11,9 @@
 #include <botan/mutex.h>
 #include <botan/types.h>
 #include <array>
-#include <atomic>
-#include <memory>
+#include <map>
 #include <span>
 #include <string_view>
-#include <vector>
 
 namespace Botan {
 
@@ -84,17 +82,14 @@ class Stateful_Key_Index_Registry final {
       uint64_t remaining_operations(const KeyId& key_id, uint64_t max);
 
    private:
-      std::shared_ptr<std::atomic<uint64_t>> lookup(const KeyId& key_id);
+      typedef std::map<KeyId, uint64_t> RegistryMap;
+
+      RegistryMap::iterator lookup(const KeyId& key_id);
 
       Stateful_Key_Index_Registry();
 
-      struct Entry {
-            KeyId key_id;
-            std::shared_ptr<std::atomic<uint64_t>> leaf_index;
-      };
-
       mutex_type m_mutex;
-      std::vector<Entry> m_registry;
+      RegistryMap m_registry;
 };
 
 }  // namespace Botan

@@ -43,47 +43,34 @@ Stateful_Key_Index_Registry::KeyId::KeyId(std::string_view algo_name,
 }
 
 // Lock must be held while this function is called
-std::shared_ptr<std::atomic<uint64_t>> Stateful_Key_Index_Registry::lookup(const KeyId& key_id) {
-   for(const auto& reg : m_registry) {
-      if(reg.key_id == key_id) {
-         return reg.leaf_index;
-      }
-   }
-
-   m_registry.push_back({key_id, std::make_shared<std::atomic<uint64_t>>(0)});
-   return m_registry.back().leaf_index;
+Stateful_Key_Index_Registry::RegistryMap::iterator Stateful_Key_Index_Registry::lookup(const KeyId& key_id) {
+   auto [i, _inserted] = m_registry.emplace(key_id, 0);
+   return i;
 }
 
 uint64_t Stateful_Key_Index_Registry::current_index(const KeyId& key_id) {
    const lock_guard_type<mutex_type> lock(m_mutex);
    auto idx = this->lookup(key_id);
-   return (*idx);
+   return idx->second;
 }
 
 uint64_t Stateful_Key_Index_Registry::reserve_next_index(const KeyId& key_id) {
    const lock_guard_type<mutex_type> lock(m_mutex);
    auto idx = this->lookup(key_id);
-   return idx->fetch_add(1);
+   const uint64_t cur = idx->second;
+   idx->second += 1;
+   return cur;
 }
 
 void Stateful_Key_Index_Registry::set_index_lower_bound(const KeyId& key_id, uint64_t min) {
    const lock_guard_type<mutex_type> lock(m_mutex);
    auto idx = this->lookup(key_id);
-
-   uint64_t current = 0;
-
-   // NOLINTNEXTLINE(*-avoid-do-while)
-   do {
-      current = idx->load();
-      if(current > min) {
-         return;
-      }
-   } while(!idx->compare_exchange_strong(current, min));
+   idx->second = std::max(idx->second, min);
 }
 
 uint64_t Stateful_Key_Index_Registry::remaining_operations(const KeyId& key_id, uint64_t max) {
    const lock_guard_type<mutex_type> lock(m_mutex);
-   const uint64_t idx = this->lookup(key_id)->load();
+   const uint64_t idx = this->lookup(key_id)->second;
 
    if(idx >= max) {
       return 0;
