@@ -41,9 +41,7 @@ Dilithium_Symmetric_Primitives_Base::Dilithium_Symmetric_Primitives_Base(const D
       m_commitment_hash_length_bytes(mode.commitment_hash_full_bytes()),
       m_public_key_hash_bytes(mode.public_key_hash_bytes()),
       m_mode(mode.mode()),
-      m_xof_adapter(std::move(xof_adapter)),
-      m_xof(XOF::create_or_throw("SHAKE-256")),
-      m_xof_external(m_xof->new_object()) {}
+      m_xof_adapter(std::move(xof_adapter)) {}
 
 std::unique_ptr<Dilithium_Symmetric_Primitives_Base> Dilithium_Symmetric_Primitives_Base::create(
    const DilithiumConstants& mode) {
