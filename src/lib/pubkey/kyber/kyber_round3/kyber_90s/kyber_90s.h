@@ -21,44 +21,45 @@
 namespace Botan {
 
 class Kyber_90s_Symmetric_Primitives final : public Kyber_Symmetric_Primitives {
-   public:
-      Kyber_90s_Symmetric_Primitives() :
-            m_sha512(HashFunction::create_or_throw("SHA-512")),
-            m_sha256(HashFunction::create_or_throw("SHA-256")),
-            m_aes256_xof(std::make_unique<AES_256_CTR_XOF>()) {}
-
    protected:
       std::optional<std::array<uint8_t, 1>> seed_expansion_domain_separator(
          const KyberConstants& /*constants*/) const override {
          return {};
       }
 
-      HashFunction& get_G() const override { return *m_sha512; }
+      std::unique_ptr<HashFunction> create_G() const override { return HashFunction::create_or_throw("SHA-512"); }
 
-      HashFunction& get_H() const override { return *m_sha256; }
+      std::unique_ptr<HashFunction> create_H() const override { return HashFunction::create_or_throw("SHA-256"); }
 
-      HashFunction& get_J() const override { throw Invalid_State("Kyber-R3 in 90s mode does not support J()"); }
-
-      HashFunction& get_KDF() const override { return *m_sha256; }
-
-      Botan::XOF& get_PRF(std::span<const uint8_t> seed, const uint8_t nonce) const override {
-         m_aes256_xof->clear();
-         const std::array<uint8_t, 12> nonce_buffer{nonce, 0};
-         m_aes256_xof->start(nonce_buffer, seed);
-         return *m_aes256_xof;
+      std::unique_ptr<HashFunction> create_J() const override {
+         throw Invalid_State("Kyber-R3 in 90s mode does not support J()");
       }
 
-      Botan::XOF& get_XOF(std::span<const uint8_t> seed, std::tuple<uint8_t, uint8_t> mpos) const override {
-         m_aes256_xof->clear();
-         const std::array<uint8_t, 12> iv{std::get<0>(mpos), std::get<1>(mpos), 0};
-         m_aes256_xof->start(iv, seed);
-         return *m_aes256_xof;
+      std::unique_ptr<HashFunction> create_KDF() const override { return HashFunction::create_or_throw("SHA-256"); }
+
+      std::unique_ptr<Botan::XOF> create_PRF(std::span<const uint8_t> seed, const uint8_t nonce) const override {
+         auto xof = std::make_unique<AES_256_CTR_XOF>();
+         init_PRF(*xof, seed, nonce);
+         return xof;
       }
 
-   private:
-      std::unique_ptr<HashFunction> m_sha512;
-      std::unique_ptr<HashFunction> m_sha256;
-      mutable std::unique_ptr<AES_256_CTR_XOF> m_aes256_xof;
+      void init_PRF(Botan::XOF& xof, std::span<const uint8_t> seed, const uint8_t nonce) const override {
+         xof.clear();
+         dynamic_cast<AES_256_CTR_XOF&>(xof).start(std::array<uint8_t, 12>{nonce, 0}, seed);
+      }
+
+      std::unique_ptr<Botan::XOF> create_XOF(std::span<const uint8_t> seed,
+                                             std::tuple<uint8_t, uint8_t> mpos) const override {
+         auto xof = std::make_unique<AES_256_CTR_XOF>();
+         init_XOF(*xof, seed, mpos);
+         return xof;
+      }
+
+      void init_XOF(Botan::XOF& xof, std::span<const uint8_t> seed, std::tuple<uint8_t, uint8_t> mpos) const override {
+         xof.clear();
+         dynamic_cast<AES_256_CTR_XOF&>(xof).start(std::array<uint8_t, 12>{std::get<0>(mpos), std::get<1>(mpos), 0},
+                                                   seed);
+      }
 };
 
 }  // namespace Botan

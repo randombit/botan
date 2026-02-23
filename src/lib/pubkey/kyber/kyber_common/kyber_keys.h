@@ -48,13 +48,15 @@ class Kyber_PublicKeyInternal final {
       void indcpa_encrypt(StrongSpan<KyberCompressedCiphertext> out_ct,
                           StrongSpan<const KyberMessage> m,
                           StrongSpan<const KyberEncryptionRandomness> r,
-                          const KyberPolyMat& At) const;
+                          const KyberPolyMat& At,
+                          const KyberConstants& mode) const;
 
       KyberCompressedCiphertext indcpa_encrypt(const KyberMessage& m,
                                                const KyberEncryptionRandomness& r,
-                                               const KyberPolyMat& At) const {
+                                               const KyberPolyMat& At,
+                                               const KyberConstants& mode) const {
          KyberCompressedCiphertext ct(m_mode.ciphertext_bytes());
-         indcpa_encrypt(ct, m, r, At);
+         indcpa_encrypt(ct, m, r, At, mode);
          return ct;
       }
 

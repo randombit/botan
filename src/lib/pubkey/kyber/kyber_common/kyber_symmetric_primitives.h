@@ -30,15 +30,15 @@ class Kyber_Symmetric_Primitives /* NOLINT(*-special-member-functions) */ {
       virtual ~Kyber_Symmetric_Primitives() = default;
 
       // TODO: remove this once Kyber-R3 is removed
-      KyberMessage H(StrongSpan<const KyberMessage> m) const { return get_H().process<KyberMessage>(m); }
+      KyberMessage H(StrongSpan<const KyberMessage> m) const { return create_H()->process<KyberMessage>(m); }
 
       // TODO: remove this once Kyber-R3 is removed
       KyberHashedCiphertext H(StrongSpan<const KyberCompressedCiphertext> r) const {
-         return get_H().process<KyberHashedCiphertext>(r);
+         return create_H()->process<KyberHashedCiphertext>(r);
       }
 
       KyberHashedPublicKey H(StrongSpan<const KyberSerializedPublicKey> pk) const {
-         return get_H().process<KyberHashedPublicKey>(pk);
+         return create_H()->process<KyberHashedPublicKey>(pk);
       }
 
       std::pair<KyberSeedRho, KyberSeedSigma> G(StrongSpan<const KyberSeedRandomness> seed,
@@ -57,31 +57,47 @@ class Kyber_Symmetric_Primitives /* NOLINT(*-special-member-functions) */ {
 
       KyberSharedSecret J(StrongSpan<const KyberImplicitRejectionValue> rejection_value,
                           StrongSpan<const KyberCompressedCiphertext> ciphertext) const {
-         auto& j = get_J();
-         j.update(rejection_value);
-         j.update(ciphertext);
-         return j.final<KyberSharedSecret>();
+         auto j = create_J();
+         j->update(rejection_value);
+         j->update(ciphertext);
+         return j->final<KyberSharedSecret>();
       }
 
       // TODO: remove this once Kyber-R3 is removed
       void KDF(StrongSpan<KyberSharedSecret> out,
                StrongSpan<const KyberSharedSecret> shared_secret,
                StrongSpan<const KyberHashedCiphertext> hashed_ciphertext) const {
-         auto& kdf = get_KDF();
-         kdf.update(shared_secret);
-         kdf.update(hashed_ciphertext);
-         kdf.final(out);
+         auto kdf = create_KDF();
+         kdf->update(shared_secret);
+         kdf->update(hashed_ciphertext);
+         kdf->final(out);
       }
 
       KyberSamplingRandomness PRF(KyberSigmaOrEncryptionRandomness seed,
                                   const uint8_t nonce,
                                   const size_t outlen) const {
          auto bare_seed_span = std::visit([&](const auto s) { return s.get(); }, seed);
-         return get_PRF(bare_seed_span, nonce).output<KyberSamplingRandomness>(outlen);
+         return create_PRF(bare_seed_span, nonce)->output<KyberSamplingRandomness>(outlen);
       }
 
-      Botan::XOF& XOF(StrongSpan<const KyberSeedRho> seed, std::tuple<uint8_t, uint8_t> matrix_position) const {
-         return get_XOF(seed, matrix_position);
+      /// Setup an XOF object for matrix sampling
+      void setup_XOF(std::unique_ptr<Botan::XOF>& xof,
+                     StrongSpan<const KyberSeedRho> seed,
+                     std::tuple<uint8_t, uint8_t> matrix_position) const {
+         if(!xof) {
+            xof = create_XOF(seed, matrix_position);
+         } else {
+            init_XOF(*xof, seed, matrix_position);
+         }
+      }
+
+      /// Setup a seeded PRF XOF for polynomial sampling
+      void setup_PRF(std::unique_ptr<Botan::XOF>& xof, std::span<const uint8_t> seed, uint8_t nonce) const {
+         if(!xof) {
+            xof = create_PRF(seed, nonce);
+         } else {
+            init_PRF(*xof, seed, nonce);
+         }
       }
 
    private:
@@ -89,9 +105,9 @@ class Kyber_Symmetric_Primitives /* NOLINT(*-special-member-functions) */ {
                 concepts::contiguous_strong_type T2,
                 ranges::contiguous_range... InputTs>
       std::pair<T1, T2> G_split(const InputTs&... inputs) const {
-         auto& g = get_G();
-         (g.update(inputs), ...);
-         auto s = g.final();
+         auto g = create_G();
+         (g->update(inputs), ...);
+         const auto s = g->final();
 
          BufferSlicer bs(s);
          std::pair<T1, T2> result;
@@ -105,13 +121,19 @@ class Kyber_Symmetric_Primitives /* NOLINT(*-special-member-functions) */ {
       virtual std::optional<std::array<uint8_t, 1>> seed_expansion_domain_separator(
          const KyberConstants& mode) const = 0;
 
-      virtual HashFunction& get_G() const = 0;
-      virtual HashFunction& get_H() const = 0;
-      virtual HashFunction& get_J() const = 0;
-      virtual HashFunction& get_KDF() const = 0;
-      virtual Botan::XOF& get_PRF(std::span<const uint8_t> seed, uint8_t nonce) const = 0;
-      virtual Botan::XOF& get_XOF(std::span<const uint8_t> seed,
-                                  std::tuple<uint8_t, uint8_t> matrix_position) const = 0;
+      virtual std::unique_ptr<HashFunction> create_G() const = 0;
+      virtual std::unique_ptr<HashFunction> create_H() const = 0;
+      virtual std::unique_ptr<HashFunction> create_J() const = 0;
+      virtual std::unique_ptr<HashFunction> create_KDF() const = 0;
+
+      virtual std::unique_ptr<Botan::XOF> create_PRF(std::span<const uint8_t> seed, uint8_t nonce) const = 0;
+      virtual void init_PRF(Botan::XOF& xof, std::span<const uint8_t> seed, uint8_t nonce) const = 0;
+
+      virtual std::unique_ptr<Botan::XOF> create_XOF(std::span<const uint8_t> seed,
+                                                     std::tuple<uint8_t, uint8_t> matrix_position) const = 0;
+      virtual void init_XOF(Botan::XOF& xof,
+                            std::span<const uint8_t> seed,
+                            std::tuple<uint8_t, uint8_t> matrix_position) const = 0;
 };
 
 }  // namespace Botan

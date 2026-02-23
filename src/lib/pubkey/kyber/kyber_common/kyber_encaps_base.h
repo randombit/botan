@@ -18,11 +18,15 @@ namespace Botan {
 class Kyber_KEM_Operation_Base {
    protected:
       explicit Kyber_KEM_Operation_Base(const Kyber_PublicKeyInternal& pk) :
-            m_At(Kyber_Algos::sample_matrix(pk.rho(), true /* transposed */, pk.mode())) {}
+            m_mode(pk.mode()), m_At(Kyber_Algos::sample_matrix(pk.rho(), true /* transposed */, m_mode)) {}
+
+      const KyberConstants& mode() const { return m_mode; }
 
       const KyberPolyMat& precomputed_matrix_At() const { return m_At; }
 
    private:
+      const KyberConstants& m_mode;
+
       // The public key's matrix is pre-computed to avoid redundant work when
       // encapsulating multiple keys. This matrix is needed for encapsulation as
       // well as for the Fujisaki-Okamoto transform in the decapsulation.
@@ -51,8 +55,6 @@ class Kyber_KEM_Encryptor_Base : public PK_Ops::KEM_Encryption_with_KDF,
       virtual void encapsulate(StrongSpan<KyberCompressedCiphertext> out_encapsulated_key,
                                StrongSpan<KyberSharedSecret> out_shared_key,
                                RandomNumberGenerator& rng) = 0;
-
-      virtual const KyberConstants& mode() const = 0;
 };
 
 class Kyber_KEM_Decryptor_Base : public PK_Ops::KEM_Decryption_with_KDF,
@@ -73,8 +75,6 @@ class Kyber_KEM_Decryptor_Base : public PK_Ops::KEM_Decryption_with_KDF,
 
       virtual void decapsulate(StrongSpan<KyberSharedSecret> out_shared_key,
                                StrongSpan<const KyberCompressedCiphertext> encapsulated_key) = 0;
-
-      virtual const KyberConstants& mode() const = 0;
 };
 
 }  // namespace Botan

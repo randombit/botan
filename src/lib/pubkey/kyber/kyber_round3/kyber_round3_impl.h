@@ -27,8 +27,6 @@ class Kyber_KEM_Encryptor final : public Kyber_KEM_Encryptor_Base {
                        StrongSpan<KyberSharedSecret> out_shared_key,
                        RandomNumberGenerator& rng) override;
 
-      const KyberConstants& mode() const override { return m_public_key->mode(); }
-
    private:
       std::shared_ptr<const Kyber_PublicKeyInternal> m_public_key;
 };
@@ -45,8 +43,6 @@ class Kyber_KEM_Decryptor final : public Kyber_KEM_Decryptor_Base {
    protected:
       void decapsulate(StrongSpan<KyberSharedSecret> out_shared_key,
                        StrongSpan<const KyberCompressedCiphertext> encapsulated_key) override;
-
-      const KyberConstants& mode() const override { return m_private_key->mode(); }
 
    private:
       std::shared_ptr<const Kyber_PublicKeyInternal> m_public_key;

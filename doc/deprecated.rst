@@ -117,6 +117,10 @@ Deprecated modules include
 
 - Dilithium mode ``dilithium_aes``: Similar situation to Kyber 90s mode.
 
+- Kyber R3 support: prefer ML-KEM
+
+- Dilithium R3 support: prefer ML-DSA
+
 - Block cipher ``gost_28147``: This cipher was obsolete 20 years ago.
 
 - Block cipher ``noekeon``: An interesting design but not widely implemented.
