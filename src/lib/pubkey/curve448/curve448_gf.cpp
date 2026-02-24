@@ -75,9 +75,12 @@ void reduce_after_mul(std::span<uint64_t, WORDS_448> out, std::span<const uint64
    r[0] = word_add(in[0], in[7], &carry);
 
    // Line 5-7
-   for(size_t i = 1; i < 7; ++i) {
-      r[i] = word_add(in[i], in[i + 7], &carry);
-   }
+   r[1] = word_add(in[1], in[1 + 7], &carry);
+   r[2] = word_add(in[2], in[2 + 7], &carry);
+   r[3] = word_add(in[3], in[3 + 7], &carry);
+   r[4] = word_add(in[4], in[4 + 7], &carry);
+   r[5] = word_add(in[5], in[5 + 7], &carry);
+   r[6] = word_add(in[6], in[6 + 7], &carry);
    r[7] = carry;
    s[0] = r[0];
    s[1] = r[1];
@@ -86,26 +89,30 @@ void reduce_after_mul(std::span<uint64_t, WORDS_448> out, std::span<const uint64
    carry = 0;
    s[3] = word_add(r[3], in[10] & 0xFFFFFFFF00000000, &carry);
    // Line 11-13
-   for(size_t i = 4; i < 7; ++i) {
-      s[i] = word_add(r[i], in[i + 7], &carry);
-   }
+   s[4] = word_add(r[4], in[4 + 7], &carry);
+   s[5] = word_add(r[5], in[5 + 7], &carry);
+   s[6] = word_add(r[6], in[6 + 7], &carry);
    s[7] = r[7] + carry;
 
    // Line 15-17
-   for(size_t i = 0; i < 3; ++i) {
-      t_0[i] = (in[i + 11] << 32) | (in[i + 10] >> 32);
-   }
+   t_0[0] = (in[0 + 11] << 32) | (in[0 + 10] >> 32);
+   t_0[1] = (in[1 + 11] << 32) | (in[1 + 10] >> 32);
+   t_0[2] = (in[2 + 11] << 32) | (in[2 + 10] >> 32);
    // Line 18
    t_0[3] = (in[7] << 32) | (in[13] >> 32);
    // Line 19-21
-   for(size_t i = 4; i < 7; ++i) {
-      t_0[i] = (in[i + 4] << 32) | (in[i + 3] >> 32);
-   }
+   t_0[4] = (in[4 + 4] << 32) | (in[4 + 3] >> 32);
+   t_0[5] = (in[5 + 4] << 32) | (in[5 + 3] >> 32);
+   t_0[6] = (in[6 + 4] << 32) | (in[6 + 3] >> 32);
    carry = 0;
    // Line 23-25
-   for(size_t i = 0; i < 7; ++i) {
-      h_1[i] = word_add(s[i], t_0[i], &carry);
-   }
+   h_1[0] = word_add(s[0], t_0[0], &carry);
+   h_1[1] = word_add(s[1], t_0[1], &carry);
+   h_1[2] = word_add(s[2], t_0[2], &carry);
+   h_1[3] = word_add(s[3], t_0[3], &carry);
+   h_1[4] = word_add(s[4], t_0[4], &carry);
+   h_1[5] = word_add(s[5], t_0[5], &carry);
+   h_1[6] = word_add(s[6], t_0[6], &carry);
    h_1[7] = s[7] + carry;
 
    reduce_after_add(out, h_1);
@@ -131,10 +138,14 @@ void gf_add(std::span<uint64_t, WORDS_448> out,
    std::array<uint64_t, WORDS_448 + 1> ws;  // NOLINT(*-member-init)
 
    uint64_t carry = 0;
-   for(size_t i = 0; i < WORDS_448; ++i) {
-      ws[i] = word_add(a[i], b[i], &carry);
-   }
-   ws[WORDS_448] = carry;
+   ws[0] = word_add(a[0], b[0], &carry);
+   ws[1] = word_add(a[1], b[1], &carry);
+   ws[2] = word_add(a[2], b[2], &carry);
+   ws[3] = word_add(a[3], b[3], &carry);
+   ws[4] = word_add(a[4], b[4], &carry);
+   ws[5] = word_add(a[5], b[5], &carry);
+   ws[6] = word_add(a[6], b[6], &carry);
+   ws[7] = carry;
 
    reduce_after_add(out, ws);
 }
@@ -151,9 +162,13 @@ void gf_sub(std::span<uint64_t, WORDS_448> out,
    std::array<uint64_t, WORDS_448> h_1;  // NOLINT(*-member-init)
 
    uint64_t borrow = 0;
-   for(size_t i = 0; i < WORDS_448; ++i) {
-      h_0[i] = word_sub(a[i], b[i], &borrow);
-   }
+   h_0[0] = word_sub(a[0], b[0], &borrow);
+   h_0[1] = word_sub(a[1], b[1], &borrow);
+   h_0[2] = word_sub(a[2], b[2], &borrow);
+   h_0[3] = word_sub(a[3], b[3], &borrow);
+   h_0[4] = word_sub(a[4], b[4], &borrow);
+   h_0[5] = word_sub(a[5], b[5], &borrow);
+   h_0[6] = word_sub(a[6], b[6], &borrow);
    uint64_t delta = borrow;
    uint64_t delta_p = delta << 32;
    borrow = 0;
