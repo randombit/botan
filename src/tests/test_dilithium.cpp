@@ -285,7 +285,7 @@ class Dilithium_Keygen_Tests final : public PK_Key_Generation_Test {
 
 BOTAN_REGISTER_TEST("pubkey", "dilithium_keygen", Dilithium_Keygen_Tests);
 
-#if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+   #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 class MldsaCertificateTests final : public Test {
    public:
@@ -310,7 +310,7 @@ class MldsaCertificateTests final : public Test {
 
 BOTAN_REGISTER_TEST("pubkey", "mldsa_certificate", MldsaCertificateTests);
 
-#endif
+   #endif
 
 #endif
 
