@@ -9,6 +9,7 @@
 #ifndef BOTAN_ED448_INTERNAL_H_
 #define BOTAN_ED448_INTERNAL_H_
 
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/curve448_gf.h>
 #include <botan/internal/curve448_scalar.h>
 
@@ -51,6 +52,18 @@ class BOTAN_TEST_API Ed448Point final {
       /// Scalar multiplication
       Ed448Point scalar_mul(const Scalar448& scalar) const;
 
+      /// Fixed base point scalar multiplication (precomputed table, no doublings)
+      static Ed448Point base_point_mul(const Scalar448& scalar);
+
+      /// Variable-time double scalar multiplication using Shamir's trick: [s1]P + [s2]Q
+      static Ed448Point double_scalar_mul_vartime(const Scalar448& s1,
+                                                  const Ed448Point& p1,
+                                                  const Scalar448& s2,
+                                                  const Ed448Point& p2);
+
+      /// Negate the point
+      Ed448Point negate() const { return Ed448Point(-m_x, m_y, m_z); }
+
       /// Getter for projective coordinate X
       Gf448Elem x_proj() const { return m_x; }
 
@@ -69,8 +82,8 @@ class BOTAN_TEST_API Ed448Point final {
       /// Check if two points are equal (constant time)
       bool operator==(const Ed448Point& other) const;
 
-      /// Assign other to this if cond is true (constant time)
-      void ct_conditional_assign(bool cond, const Ed448Point& other);
+      /// Assign other to this if @p mask is set (constant time)
+      void ct_conditional_assign(CT::Mask<uint64_t> mask, const Ed448Point& other);
 
    private:
       Gf448Elem m_x;

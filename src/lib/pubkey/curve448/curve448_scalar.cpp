@@ -160,6 +160,31 @@ bool Scalar448::get_bit(size_t bit_pos) const {
    return (((m_scalar_words[bit_pos / word_sz] >> (bit_pos % word_sz)) & 1) == 1);
 }
 
+uint32_t Scalar448::get_window(size_t starting_pos, size_t width) const {
+   BOTAN_ARG_CHECK(width <= 32, "Window too wide");
+   constexpr size_t word_sz = sizeof(word) * 8;
+
+   // Bits at or beyond position 446 are zero
+   if(starting_pos >= 446) {
+      return 0;
+   }
+
+   // Clamp the effective width so we don't read past bit 445
+   const size_t effective_bits = std::min(width, size_t(446) - starting_pos);
+
+   const size_t word_idx = starting_pos / word_sz;
+   const size_t bit_idx = starting_pos % word_sz;
+
+   const uint64_t mask = (effective_bits >= 64) ? ~uint64_t(0) : (uint64_t(1) << effective_bits) - 1;
+
+   uint64_t val = m_scalar_words[word_idx] >> bit_idx;
+   if(bit_idx + effective_bits > word_sz && word_idx + 1 < WORDS) {
+      val |= m_scalar_words[word_idx + 1] << (word_sz - bit_idx);
+   }
+
+   return static_cast<uint32_t>(val & mask);
+}
+
 Scalar448 Scalar448::operator+(const Scalar448& other) const {
    auto sum = add(m_scalar_words, other.m_scalar_words);
    ct_subtract_L_if_bigger(sum);

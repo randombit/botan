@@ -52,6 +52,10 @@ class BOTAN_TEST_API Scalar448 final {
       /// @brief Access the i-th bit of the scalar. From 0 (lsb) to 445 (msb).
       bool get_bit(size_t i) const;
 
+      /// @brief Extract a window of @p width bits starting at bit position @p starting_pos.
+      /// Bits beyond position 445 are treated as zero.
+      uint32_t get_window(size_t starting_pos, size_t width) const;
+
       /// @brief scalar = (scalar + other) mod L
       Scalar448 operator+(const Scalar448& other) const;
 

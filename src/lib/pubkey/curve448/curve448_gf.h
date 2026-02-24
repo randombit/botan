@@ -11,6 +11,7 @@
 #include <botan/mem_ops.h>
 #include <botan/types.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/ct_utils.h>
 
 #include <array>
 #include <span>
@@ -77,14 +78,14 @@ class Gf448Elem final {
       std::array<uint8_t, BYTES_448> to_bytes() const;
 
       /**
-       * @brief Swap this and other if b == true. Constant time for any b.
+       * @brief Swap this and @p other if @p mask is set. Constant time.
        */
-      void ct_cond_swap(bool b, Gf448Elem& other);
+      void ct_cond_swap(CT::Mask<uint64_t> mask, Gf448Elem& other);
 
       /**
-       * @brief Set this to @p other if b is true. Constant time for any b.
+       * @brief Set this to @p other if @p mask is true. Constant time.
        */
-      void ct_cond_assign(bool b, const Gf448Elem& other);
+      void ct_cond_assign(CT::Mask<uint64_t> mask, const Gf448Elem& other);
 
       Gf448Elem operator+(const Gf448Elem& other) const;
 
@@ -135,6 +136,11 @@ class Gf448Elem final {
    private:
       std::array<uint64_t, WORDS_448> m_x;
 };
+
+/**
+ * @brief Multiply a field element by the Curve448 constant a24 = 39081.
+ */
+Gf448Elem mul_a24(const Gf448Elem& a);
 
 /**
  * @brief Computes elem^2. Faster than operator*.
