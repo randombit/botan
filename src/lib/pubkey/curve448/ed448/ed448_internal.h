@@ -51,6 +51,18 @@ class BOTAN_TEST_API Ed448Point final {
       /// Scalar multiplication
       Ed448Point scalar_mul(const Scalar448& scalar) const;
 
+      /// Fixed base point scalar multiplication (precomputed table, no doublings)
+      static Ed448Point base_point_mul(const Scalar448& scalar);
+
+      /// Variable-time double scalar multiplication using Shamir's trick: [s1]P + [s2]Q
+      static Ed448Point double_scalar_mul_vartime(const Scalar448& s1,
+                                                  const Ed448Point& p1,
+                                                  const Scalar448& s2,
+                                                  const Ed448Point& p2);
+
+      /// Negate the point
+      Ed448Point negate() const { return Ed448Point(-m_x, m_y, m_z); }
+
       /// Getter for projective coordinate X
       Gf448Elem x_proj() const { return m_x; }
 

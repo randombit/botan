@@ -190,18 +190,155 @@ Ed448Point Ed448Point::double_point() const {
 }
 
 Ed448Point Ed448Point::scalar_mul(const Scalar448& s) const {
+   // 4-bit windowed scalar multiplication.
+   std::array<Ed448Point, 16> table = {Ed448Point::identity(),
+                                       *this,
+                                       Ed448Point::identity(),
+                                       Ed448Point::identity(),
+                                       Ed448Point::identity(),
+                                       Ed448Point::identity(),
+                                       Ed448Point::identity(),
+                                       Ed448Point::identity(),
+                                       Ed448Point::identity(),
+                                       Ed448Point::identity(),
+                                       Ed448Point::identity(),
+                                       Ed448Point::identity(),
+                                       Ed448Point::identity(),
+                                       Ed448Point::identity(),
+                                       Ed448Point::identity(),
+                                       Ed448Point::identity()};
+
+   for(size_t i = 2; i < 16; ++i) {
+      if(i % 2 == 0) {
+         table[i] = table[i / 2].double_point();
+      } else {
+         table[i] = table[i - 1] + *this;
+      }
+   }
+
+   // Process 448 bits (446-bit scalar + 2 leading zero bits) in 112 4-bit windows
    auto res = Ed448Point::identity();
 
-   // Square and multiply (double and add) in constant time.
-   // TODO: Optimization potential. E.g. for a = *this precompute
-   //       0, a, 2a, 3a, ..., 15a and ct select and add the right one for
-   //       each 4 bit window instead of conditional add.
-   for(int16_t i = 445; i >= 0; --i) {
+   for(int window = 111; window >= 0; --window) {
+      // Double 4 times
       res = res.double_point();
-      // Conditional add if bit is set
-      auto add_sum = res + *this;
-      res.ct_conditional_assign(s.get_bit(i), add_sum);
+      res = res.double_point();
+      res = res.double_point();
+      res = res.double_point();
+
+      // Extract 4-bit window value. Bits at position >= 446 are zero.
+      const uint8_t w = static_cast<uint8_t>(s.get_window(static_cast<size_t>(window) * 4, 4));
+
+      // Constant-time table lookup
+      auto selected = Ed448Point::identity();
+      for(size_t i = 0; i < 16; ++i) {
+         selected.ct_conditional_assign(CT::Mask<uint8_t>::is_equal(static_cast<uint8_t>(i), w).as_bool(), table[i]);
+      }
+
+      res = res + selected;
    }
+
+   return res;
+}
+
+Ed448Point Ed448Point::base_point_mul(const Scalar448& scalar) {
+   /*
+   Fixed base point multiplication
+
+   Same idea as base point multiply used in pcurves
+   */
+   constexpr size_t W = 4;
+   constexpr size_t WindowElements = (1 << W) - 1;         // 15
+   constexpr size_t Windows = (448 + W - 1) / W;           // 112
+   constexpr size_t TableSize = Windows * WindowElements;  // 1680
+
+   static const auto table = []() {
+      std::vector<Ed448Point> tbl(TableSize, Ed448Point::identity());
+
+      auto accum = Ed448Point::base_point();
+
+      for(size_t i = 0; i < TableSize; i += WindowElements) {
+         tbl[i] = accum;
+
+         for(size_t j = 1; j < WindowElements; ++j) {
+            if(j % 2 == 1) {
+               tbl[i + j] = tbl[i + j / 2].double_point();
+            } else {
+               tbl[i + j] = tbl[i + j - 1] + tbl[i];
+            }
+         }
+
+         accum = tbl[i + (WindowElements / 2)].double_point();
+      }
+
+      return tbl;
+   }();
+
+   auto res = Ed448Point::identity();
+
+   for(size_t i = 0; i < Windows; ++i) {
+      const uint8_t w = static_cast<uint8_t>(scalar.get_window(i * W, W));
+
+      // Constant-time table lookup from this window's 15-entry subtable
+      auto selected = Ed448Point::identity();
+      for (size_t j = 0; j < WindowElements; ++j) {
+         const auto assign = CT::Mask<uint8_t>::is_equal(static_cast<uint8_t>(j + 1), w);
+         selected.ct_conditional_assign(assign.as_bool(), table[i * WindowElements + j]);
+      }
+
+      res = res + selected;
+   }
+
+   return res;
+}
+
+Ed448Point Ed448Point::double_scalar_mul_vartime(const Scalar448& s1,
+                                                 const Ed448Point& p1,
+                                                 const Scalar448& s2,
+                                                 const Ed448Point& p2) {
+   // 2-bit 2-ary Shamir's trick (variable time)
+   // Process 2 bits from each scalar per iteration, using a 16-entry table.
+   // table[w1 | (w2 << 2)] = w1*p1 + w2*p2, for w1,w2 in 0..3.
+
+   // Precompute small multiples of each point
+   const auto p1x2 = p1.double_point();
+   const auto p1x3 = p1x2 + p1;
+   const auto p2x2 = p2.double_point();
+   const auto p2x3 = p2x2 + p2;
+
+   // Build table indexed by (w2 << 2) | w1, excluding identity at index 0
+   const std::array<Ed448Point, 15> table = {
+      p1,           // 1*p1 + 0*p2
+      p1x2,         // 2*p1 + 0*p2
+      p1x3,         // 3*p1 + 0*p2
+      p2,           // 0*p1 + 1*p2
+      p1 + p2,      // 1*p1 + 1*p2
+      p1x2 + p2,    // 2*p1 + 1*p2
+      p1x3 + p2,    // 3*p1 + 1*p2
+      p2x2,         // 0*p1 + 2*p2
+      p1 + p2x2,    // 1*p1 + 2*p2
+      p1x2 + p2x2,  // 2*p1 + 2*p2
+      p1x3 + p2x2,  // 3*p1 + 2*p2
+      p2x3,         // 0*p1 + 3*p2
+      p1 + p2x3,    // 1*p1 + 3*p2
+      p1x2 + p2x3,  // 2*p1 + 3*p2
+      p1x3 + p2x3,  // 3*p1 + 3*p2
+   };
+
+   auto res = Ed448Point::identity();
+
+   // 446 bits / 2 = 223 windows, covering bit positions 0..445
+   for(int window = 222; window >= 0; --window) {
+      res = res.double_point();
+      res = res.double_point();
+
+      const size_t bit_pos = static_cast<size_t>(window) * 2;
+      const uint8_t idx = static_cast<uint8_t>(s1.get_window(bit_pos, 2) | (s2.get_window(bit_pos, 2) << 2));
+      if(idx > 0) {
+         res = res + table[idx - 1];
+      }
+   }
+
    return res;
 }
 
@@ -240,7 +377,7 @@ std::array<uint8_t, ED448_LEN> create_pk_from_sk(std::span<const uint8_t, ED448_
    // 3. Interpret the buffer as the little-endian integer, forming a
    //    secret scalar s. Perform a known-base-point scalar
    //    multiplication [s]B.
-   return (s * Ed448Point::base_point()).encode();
+   return Ed448Point::base_point_mul(s).encode();
 }
 
 std::array<uint8_t, 2 * ED448_LEN> sign_message(std::span<const uint8_t, ED448_LEN> sk,
@@ -270,7 +407,7 @@ std::array<uint8_t, 2 * ED448_LEN> sign_message(std::span<const uint8_t, ED448_L
    // 3. Compute the point [r]B. For efficiency, do this by first
    //    reducing r modulo L, the group order of B. Let the string R be
    //    the encoding of this point.
-   const auto big_r = (r * Ed448Point::base_point()).encode();
+   const auto big_r = Ed448Point::base_point_mul(r).encode();
    // 4. Compute SHAKE256(dom4(F, C) || R || A || PH(M), 114), and
    //    interpret the 114-octet digest as a little-endian integer k.
    const Scalar448 k(shake(pgflag, context, big_r, pk, msg));
@@ -318,7 +455,9 @@ bool verify_signature(std::span<const uint8_t, ED448_LEN> pk,
    const Scalar448 k(shake(phflag, context, big_r_bytes, pk, msg));
    // 3. Check the group equation [4][S]B = [4]R + [4][k]A’. It’s
    //    sufficient, but not required, to instead check [S]B = R + [k]A’.
-   return (big_s * Ed448Point::base_point()) == (big_r + k * Ed448Point::decode(pk));
+   //    Rearranged as [S]B + [k](-A’) = R, computed via Shamir’s trick.
+   const auto neg_A = Ed448Point::decode(pk).negate();
+   return Ed448Point::double_scalar_mul_vartime(big_s, Ed448Point::base_point(), k, neg_A) == big_r;
 }
 
 }  // namespace Botan
