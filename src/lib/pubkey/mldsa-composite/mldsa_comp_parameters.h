@@ -11,9 +11,11 @@
 #include <botan/types.h>
 
 namespace Botan {
-class BOTAN_PUBLIC_API(2, 0) MLDSA_Composite_Parameters {
+class BOTAN_PUBLIC_API(3, 12) MLDSA_Composite_Parameters {
    public:
-      enum MLDSA_Composite_Algorithm_t : uint32_t /* NOLINT(*-enum-size,*-use-enum-class) */ { dummy };
+        
+   private:
+      //enum MLDSA_Composite_Algorithm_t : uint32_t /* NOLINT(*-enum-size,*-use-enum-class) */ { dummy };
 };
 
 }  // namespace Botan
