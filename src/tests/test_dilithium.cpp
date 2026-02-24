@@ -294,12 +294,10 @@ class MldsaCertificateTests final : public Test {
             "mldsa44_rfc9881.pem.crt", "mldsa65_rfc9881.pem.crt", "mldsa87_rfc9881.pem.crt"};
 
          for(const auto& cert_file : cert_file_names) {
-             
             Botan::DataSource_Stream in(Test::data_file("x509/mldsa/" + cert_file));
             const Botan::X509_Certificate cert(in);
             Test::Result this_result(cert_file);
             auto ver_res = cert.verify_signature(*cert.subject_public_key());
-
             this_result.test_is_true("signature of certificate verifies",
                                      ver_res.first == Botan::Certificate_Status_Code::OK);
             result_vec.push_back(this_result);
