@@ -16,9 +16,9 @@
    #include <botan/dilithium.h>
    #include <botan/hash.h>
    #include <botan/pk_algs.h>
+   #include <botan/pkix_enums.h>
    #include <botan/pubkey.h>
    #include <botan/x509cert.h>
-   #include <botan/pkix_enums.h>
 
    #include "test_pubkey.h"
 #endif
