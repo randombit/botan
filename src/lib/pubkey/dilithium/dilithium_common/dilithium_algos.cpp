@@ -363,8 +363,6 @@ std::pair<DilithiumSeedRho, DilithiumPolyVec> decode_public_key(StrongSpan<const
    return {std::move(rho), std::move(t1)};
 }
 
-#if defined(BOTAN_NEEDS_DILITHIUM_PRIVATE_KEY_ENCODING)
-
 /**
  * NIST FIPS 204, Algorithm 24 (skEncode)
  */
@@ -468,8 +466,6 @@ DilithiumInternalKeypair decode_keypair(StrongSpan<const DilithiumSerializedPriv
 
    return keypair;
 }
-
-#endif
 
 /**
  * NIST FIPS 204, Algorithm 26 (sigEncode)
