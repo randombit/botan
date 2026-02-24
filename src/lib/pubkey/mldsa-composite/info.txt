@@ -1,0 +1,22 @@
+<defines>
+mldsacomposite -> 20260315
+</defines>
+
+<module_info>
+name -> "ML-DSA-composite"
+</module_info>
+
+<header:public>
+mldsa_comp.h
+mldsa_comp_parameters.h
+</header:public>
+
+<header:internal>
+mldsa_comp_keys.h
+</header:internal>
+
+<requires>
+dilithium
+rng
+hash
+</requires>
