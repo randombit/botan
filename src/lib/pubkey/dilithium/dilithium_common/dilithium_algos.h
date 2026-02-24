@@ -51,14 +51,9 @@ DilithiumSerializedPublicKey encode_public_key(StrongSpan<const DilithiumSeedRho
 
 std::pair<DilithiumSeedRho, DilithiumPolyVec> decode_public_key(StrongSpan<const DilithiumSerializedPublicKey> pk,
                                                                 const DilithiumConstants& mode);
-
-#if BOTAN_NEEDS_DILITHIUM_PRIVATE_KEY_ENCODING
-
 DilithiumSerializedPrivateKey encode_keypair(const DilithiumInternalKeypair& keypair);
 
 DilithiumInternalKeypair decode_keypair(StrongSpan<const DilithiumSerializedPrivateKey> sk, DilithiumConstants mode);
-
-#endif
 
 std::pair<DilithiumPolyVec, DilithiumPolyVec> power2round(const DilithiumPolyVec& vec);
 
