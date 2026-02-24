@@ -18,18 +18,22 @@ Version 3.11.0, Not Yet Released
 
 * Add optimized SM4 implementation using AVX-512/GFNI (GH #5192 #5333)
 
+* Ed448 and X448 optimizations (GH #5383)
+
 * Add AVX-512/CLMUL optimized XTS mode (GH #5251)
 
-* GCM and GMAC optimizations (GH #5273 #5278)
+* GCM and GMAC optimizations (GH #5273 #5278 #5379)
 
 * Poly1305 optimizations, including AVX2 and AVX-512 implementations (GH #5227)
 
-* Certain signature and KEM schemes, including XMSS and FrodoKEM, would fail or produce
-  incorrect results if multiple threads attempted operations on the same key object
-  concurrently. In a strict sense uncoordinated multithreaded use of the same object was
-  never supported, but this usage did work for RSA, ECDSA, and other schemes, and the
-  previous behaviour is potentially quite surprising. Tests have been added to ensure this
-  usage works for all schemes going forward. (GH #5359 #5361 #5366 #5371)
+* Certain signature and KEM schemes, including XMSS, LMS, FrodoKEM,
+  ML-KEM/Kyber, and ML-DSA/Dilithium, would fail or produce incorrect results if
+  multiple threads attempted operations on the same key object concurrently. In
+  a strict sense uncoordinated multithreaded use of the same object was never
+  supported, but this usage did work for RSA, ECDSA, and other schemes, and the
+  previous behaviour is potentially quite surprising. Tests have been added to
+  ensure this usage works for all schemes going forward. (GH #5359 #5361 #5366
+  #5367 #5371 #5376 #5380 #5382)
 
 * Improve handling of constant time and variable time divisions (GH #5176 #5177 #5180)
 
