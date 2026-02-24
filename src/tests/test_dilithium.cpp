@@ -316,7 +316,7 @@ class MLDSA_Privkey_Tests : public Text_Based_Test {
          std::unique_ptr<Botan::Dilithium_PrivateKey> priv_key;
          try {
             priv_key = std::make_unique<Botan::Dilithium_PrivateKey>(key_bits, mode);
-         } catch(const Botan::Decoding_Error& e) {
+         } catch(const Botan::Decoding_Error&) {
             result.test_is_true("invalid ML-DSA key rejected", expect_decoding_failure);
             return result;
          }
