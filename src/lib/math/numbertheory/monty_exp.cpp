@@ -49,7 +49,11 @@ Montgomery_Exponentiation_State::Montgomery_Exponentiation_State(const Montgomer
    secure_vector<word> ws(2 * m_params.p_words());
 
    for(size_t i = 2; i != window_size; ++i) {
-      m_g.push_back(m_g[1].mul(m_g[i - 1], ws));
+      if(i % 2 == 0) {
+         m_g.push_back(m_g[i / 2].square(ws));
+      } else {
+         m_g.push_back(m_g[1].mul(m_g[i - 1], ws));
+      }
    }
 
    if(const_time) {
