@@ -9,7 +9,6 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  */
 
-#include "botan/pkix_enums.h"
 #include "test_rng.h"
 #include "tests.h"
 
@@ -19,6 +18,7 @@
    #include <botan/pk_algs.h>
    #include <botan/pubkey.h>
    #include <botan/x509cert.h>
+   #include <botan/pkix_enums.h>
 
    #include "test_pubkey.h"
 #endif
