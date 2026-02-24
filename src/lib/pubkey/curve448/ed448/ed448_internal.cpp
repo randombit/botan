@@ -206,9 +206,16 @@ Ed448Point Ed448Point::scalar_mul(const Scalar448& s) const {
 }
 
 bool Ed448Point::operator==(const Ed448Point& other) const {
-   // Note that the operator== of of Gf448Elem is constant time
-   const auto mask_x = CT::Mask<uint8_t>::expand_bool(x() == other.x());
-   const auto mask_y = CT::Mask<uint8_t>::expand_bool(y() == other.y());
+   // Compare in projective coordinates: (X1:Y1:Z1) == (X2:Y2:Z2)
+   // iff X1*Z2 == X2*Z1 && Y1*Z2 == Y2*Z1
+   // This avoids two field inversions that x() and y() would require.
+   const auto lhs_x = m_x * other.m_z;
+   const auto rhs_x = other.m_x * m_z;
+   const auto lhs_y = m_y * other.m_z;
+   const auto rhs_y = other.m_y * m_z;
+
+   const auto mask_x = CT::Mask<uint8_t>::expand_bool(lhs_x == rhs_x);
+   const auto mask_y = CT::Mask<uint8_t>::expand_bool(lhs_y == rhs_y);
 
    return (mask_x & mask_y).as_bool();
 }
