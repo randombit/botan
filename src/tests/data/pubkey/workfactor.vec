@@ -37,13 +37,28 @@ ParamSize = 1536
 Workfactor = 224
 
 ParamSize = 2048
-Workfactor = 256
+Workfactor = 224
 
 ParamSize = 3072
-Workfactor = 384
+Workfactor = 256
+
+ParamSize = 4090
+Workfactor = 304
 
 ParamSize = 4096
-Workfactor = 384
+Workfactor = 304
+
+ParamSize = 4097
+Workfactor = 352
+
+ParamSize = 6144
+Workfactor = 352
+
+ParamSize = 6145
+Workfactor = 400
 
 ParamSize = 8192
+Workfactor = 400
+
+ParamSize = 8193
 Workfactor = 512
