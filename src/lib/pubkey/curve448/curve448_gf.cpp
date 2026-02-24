@@ -181,21 +181,116 @@ void gf_sub(std::span<uint64_t, WORDS_448> out,
    out[6] = h_1[6];
 }
 
+/// Square a field element n times
+void gf_sqr_n(std::span<uint64_t, WORDS_448> out, std::span<const uint64_t, WORDS_448> a, size_t n) {
+   gf_square(out, a);
+   for(size_t i = 1; i < n; ++i) {
+      gf_square(out, out);
+   }
+}
+
+/**
+ * @brief Compute x^(2^222 - 1) using an addition chain.
+ *
+ * This is the shared prefix of the addition chains for both
+ * inversion (x^(p-2)) and square root (x^((p-3)/4)).
+ *
+ * Addition chain from addchain tool (cost 446):
+ *   _11     = 1 + _10
+ *   _111    = 1 + _110
+ *   _111111 = _111 + _111 << 3
+ *   x12     = _111111 << 6 + _111111
+ *   x24     = x12 << 12 + x12
+ *   x30     = _111111 + x24 << 6
+ *   x48     = x24 << 6 << 18 + x24
+ *   x96     = x48 << 48 + x48
+ *   x192    = x96 << 96 + x96
+ *   x222    = x192 << 30 + x30
+ */
+void gf_pow_2_222m1(std::span<uint64_t, WORDS_448> x222,
+                    std::span<uint64_t, WORDS_448> x223,
+                    std::span<const uint64_t, WORDS_448> a) {
+   std::array<uint64_t, WORDS_448> t;  // NOLINT(*-member-init)
+
+   // _10 = a^2
+   std::array<uint64_t, WORDS_448> a2;  // NOLINT(*-member-init)
+   gf_square(a2, a);
+
+   // _11 = a^3
+   std::array<uint64_t, WORDS_448> a3;  // NOLINT(*-member-init)
+   gf_mul(a3, a, a2);
+
+   // _111 = a^7
+   std::array<uint64_t, WORDS_448> a7;  // NOLINT(*-member-init)
+   gf_square(t, a3);
+   gf_mul(a7, a, t);
+
+   // _111111 = a^63
+   std::array<uint64_t, WORDS_448> a63;  // NOLINT(*-member-init)
+   gf_sqr_n(t, a7, 3);
+   gf_mul(a63, a7, t);
+
+   // x12 = a^(2^12 - 1)
+   std::array<uint64_t, WORDS_448> x12;  // NOLINT(*-member-init)
+   gf_sqr_n(t, a63, 6);
+   gf_mul(x12, a63, t);
+
+   // x24 = a^(2^24 - 1)
+   std::array<uint64_t, WORDS_448> x24;  // NOLINT(*-member-init)
+   gf_sqr_n(t, x12, 12);
+   gf_mul(x24, x12, t);
+
+   // i34 = x24 << 6 = a^((2^24 - 1) * 2^6)
+   std::array<uint64_t, WORDS_448> i34;  // NOLINT(*-member-init)
+   gf_sqr_n(i34, x24, 6);
+
+   // x30 = a^(2^30 - 1)
+   std::array<uint64_t, WORDS_448> x30;  // NOLINT(*-member-init)
+   gf_mul(x30, a63, i34);
+
+   // x48 = a^(2^48 - 1)
+   std::array<uint64_t, WORDS_448> x48;  // NOLINT(*-member-init)
+   gf_sqr_n(t, i34, 18);
+   gf_mul(x48, x24, t);
+
+   // x96 = a^(2^96 - 1)
+   std::array<uint64_t, WORDS_448> x96;  // NOLINT(*-member-init)
+   gf_sqr_n(t, x48, 48);
+   gf_mul(x96, x48, t);
+
+   // x192 = a^(2^192 - 1)
+   std::array<uint64_t, WORDS_448> x192;  // NOLINT(*-member-init)
+   gf_sqr_n(t, x96, 96);
+   gf_mul(x192, x96, t);
+
+   // x222 = a^(2^222 - 1)
+   gf_sqr_n(t, x192, 30);
+   gf_mul(x222, x30, t);
+
+   // x223 = a^(2^223 - 1)
+   gf_square(t, x222);
+   gf_mul(x223, a, t);
+}
+
 /**
  * @brief Inversion in GF(P) using Fermat's little theorem:
  * x^-1 = x^(P-2) mod P
+ *
+ * Uses an optimized addition chain (cost 460) found by addchain.
+ * P-2 = 2^448 - 2^224 - 3
+ * return = (x223 << 223 + x222) << 2 + 1
  */
 void gf_inv(std::span<uint64_t, WORDS_448> out, std::span<const uint64_t, WORDS_448> a) {
-   clear_mem(out);
-   out[0] = 1;
-   // Square and multiply
-   for(int16_t t = 448; t >= 0; --t) {
-      gf_square(out, out);
-      // (P-2) has zero bits at indices 1, 224, 448. All others are one.
-      if(t != 448 && t != 224 && t != 1) {
-         gf_mul(out, out, a);
-      }
-   }
+   std::array<uint64_t, WORDS_448> x222;  // NOLINT(*-member-init)
+   std::array<uint64_t, WORDS_448> x223;  // NOLINT(*-member-init)
+   gf_pow_2_222m1(x222, x223, a);
+
+   // (x223 << 223 + x222) << 2 + 1
+   std::array<uint64_t, WORDS_448> t;  // NOLINT(*-member-init)
+   gf_sqr_n(t, x223, 223);
+   gf_mul(t, t, x222);
+   gf_sqr_n(t, t, 2);
+   gf_mul(out, t, a);
 }
 
 /**
@@ -315,16 +410,16 @@ Gf448Elem square(const Gf448Elem& elem) {
 }
 
 Gf448Elem root(const Gf448Elem& elem) {
-   Gf448Elem res(1);
+   // Compute elem^((P-3)/4) using an optimized addition chain (cost 457).
+   // (P-3)/4 = 2^446 - 2^222 - 1
+   // return = x223 << 223 + x222
+   std::array<uint64_t, WORDS_448> x222;  // NOLINT(*-member-init)
+   std::array<uint64_t, WORDS_448> x223;  // NOLINT(*-member-init)
+   gf_pow_2_222m1(x222, x223, elem.words());
 
-   // (P-3)/4 is an 445 bit integer with one zero bits at 222. All others are one.
-   for(int16_t t = 445; t >= 0; --t) {
-      gf_square(res.words(), res.words());
-      if(t != 222) {
-         gf_mul(res.words(), res.words(), elem.words());
-      }
-   }
-
+   Gf448Elem res(0);
+   gf_sqr_n(res.words(), x223, 223);
+   gf_mul(res.words(), res.words(), x222);
    return res;
 }
 
