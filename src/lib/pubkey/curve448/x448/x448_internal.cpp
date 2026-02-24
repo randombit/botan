@@ -46,8 +46,6 @@ Point448 x448_basepoint(const ScalarX448& k) {
 // Algorithm see RFC 7748, Section 5:
 // https://datatracker.ietf.org/doc/html/rfc7748#section-5
 Point448 x448(const ScalarX448& k, const Point448& u) {
-   const auto a24 = Gf448Elem(39081);
-
    const Gf448Elem x_1 = Gf448Elem(u.get());
    Gf448Elem x_2 = Gf448Elem::one();
    Gf448Elem z_2 = Gf448Elem::zero();
@@ -75,7 +73,7 @@ Point448 x448(const ScalarX448& k, const Point448& u) {
       x_3 = square(DA + CB);
       z_3 = x_1 * square(DA - CB);
       x_2 = AA * BB;
-      z_2 = E * (AA + a24 * E);
+      z_2 = E * (AA + mul_a24(E));
    }
 
    x_2.ct_cond_swap(swap, x_3);

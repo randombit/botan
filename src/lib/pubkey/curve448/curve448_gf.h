@@ -138,6 +138,11 @@ class Gf448Elem final {
 };
 
 /**
+ * @brief Multiply a field element by the Curve448 constant a24 = 39081.
+ */
+Gf448Elem mul_a24(const Gf448Elem& a);
+
+/**
  * @brief Computes elem^2. Faster than operator*.
  */
 Gf448Elem square(const Gf448Elem& elem);

@@ -20,8 +20,6 @@
 namespace Botan {
 namespace {
 
-constexpr uint64_t MINUS_D = 39081;
-
 std::vector<uint8_t> dom4(uint8_t x, std::span<const uint8_t> y) {
    // RFC 8032 2. Notation and Conventions
    // dom4(x, y) The octet string "SigEd448" || octet(x) ||
@@ -98,9 +96,8 @@ Ed448Point Ed448Point::decode(std::span<const uint8_t, ED448_LEN> enc) {
    //    inversion of v and the square root:
    //                      (p+1)/4    3            (p-3)/4
    //             x = (u/v)        = u  v (u^5 v^3)         (mod p)
-   const auto d = -Gf448Elem(MINUS_D);
    const auto u = square(Gf448Elem(y)) - Gf448Elem::one();
-   const auto v = d * square(Gf448Elem(y)) - Gf448Elem::one();
+   const auto v = -mul_a24(square(Gf448Elem(y))) - Gf448Elem::one();
    const auto maybe_x = (u * square(u)) * v * root((square(square(u)) * u) * square(v) * v);
 
    // 3. If v * x^2 = u, the recovered x-coordinate is x.  Otherwise, no
@@ -163,7 +160,7 @@ Ed448Point Ed448Point::operator+(const Ed448Point& other) const {
    const Gf448Elem B = square(A);
    const Gf448Elem C = m_x * other.m_x;
    const Gf448Elem D = m_y * other.m_y;
-   const Gf448Elem E = (-Gf448Elem(MINUS_D)) * C * D;
+   const Gf448Elem E = -mul_a24(C * D);
    const Gf448Elem F = B - E;
    const Gf448Elem G = B + E;
    const Gf448Elem H = (m_x + m_y) * (other.m_x + other.m_y);

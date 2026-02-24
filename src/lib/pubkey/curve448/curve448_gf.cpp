@@ -118,6 +118,24 @@ void reduce_after_mul(std::span<uint64_t, WORDS_448> out, std::span<const uint64
    reduce_after_add(out, h_1);
 }
 
+// Multiply by the Curve448 constant a24 = (a-2)/4 = 39081.
+// Uses a 7-word × 1-word multiply (7 muls vs 49 for full comba_mul<7>),
+// and the result fits in 8 words so only needs reduce_after_add.
+void gf_mul_a24(std::span<uint64_t, WORDS_448> out, std::span<const uint64_t, WORDS_448> a) {
+   constexpr uint64_t A24 = 39081;
+   std::array<uint64_t, 8> ws;  // NOLINT(*-member-init)
+   uint64_t carry = 0;
+   ws[0] = word_madd2(a[0], A24, &carry);
+   ws[1] = word_madd2(a[1], A24, &carry);
+   ws[2] = word_madd2(a[2], A24, &carry);
+   ws[3] = word_madd2(a[3], A24, &carry);
+   ws[4] = word_madd2(a[4], A24, &carry);
+   ws[5] = word_madd2(a[5], A24, &carry);
+   ws[6] = word_madd2(a[6], A24, &carry);
+   ws[7] = carry;
+   reduce_after_add(out, ws);
+}
+
 void gf_mul(std::span<uint64_t, WORDS_448> out,
             std::span<const uint64_t, WORDS_448> a,
             std::span<const uint64_t, WORDS_448> b) {
@@ -416,6 +434,12 @@ bool Gf448Elem::bytes_are_canonical_representation(std::span<const uint8_t, BYTE
    const auto x_words = load_le<std::array<uint64_t, WORDS_448>>(x);
    const auto x_words_canonical = to_canonical(x_words);
    return CT::is_equal(x_words.data(), x_words_canonical.data(), WORDS_448).as_bool();
+}
+
+Gf448Elem mul_a24(const Gf448Elem& a) {
+   Gf448Elem res(0);
+   gf_mul_a24(res.words(), a.words());
+   return res;
 }
 
 Gf448Elem square(const Gf448Elem& elem) {
