@@ -59,8 +59,8 @@ Point448 x448(const ScalarX448& k, const Point448& u) {
       auto k_t = CT::Mask<uint64_t>::expand(get_bit(k, t));
       swap ^= k_t;
 
-      x_2.ct_cond_swap(swap.as_bool(), x_3);
-      z_2.ct_cond_swap(swap.as_bool(), z_3);
+      x_2.ct_cond_swap(swap, x_3);
+      z_2.ct_cond_swap(swap, z_3);
       swap = k_t;
 
       const auto A = x_2 + z_2;
@@ -78,8 +78,8 @@ Point448 x448(const ScalarX448& k, const Point448& u) {
       z_2 = E * (AA + a24 * E);
    }
 
-   x_2.ct_cond_swap(swap.as_bool(), x_3);
-   z_2.ct_cond_swap(swap.as_bool(), z_3);
+   x_2.ct_cond_swap(swap, x_3);
+   z_2.ct_cond_swap(swap, z_3);
 
    const auto res = x_2 / z_2;
 

@@ -9,6 +9,7 @@
 #ifndef BOTAN_ED448_INTERNAL_H_
 #define BOTAN_ED448_INTERNAL_H_
 
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/curve448_gf.h>
 #include <botan/internal/curve448_scalar.h>
 
@@ -81,8 +82,8 @@ class BOTAN_TEST_API Ed448Point final {
       /// Check if two points are equal (constant time)
       bool operator==(const Ed448Point& other) const;
 
-      /// Assign other to this if cond is true (constant time)
-      void ct_conditional_assign(bool cond, const Ed448Point& other);
+      /// Assign other to this if @p mask is set (constant time)
+      void ct_conditional_assign(CT::Mask<uint64_t> mask, const Ed448Point& other);
 
    private:
       Gf448Elem m_x;

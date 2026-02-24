@@ -354,14 +354,14 @@ std::array<uint8_t, BYTES_448> Gf448Elem::to_bytes() const {
    return bytes;
 }
 
-void Gf448Elem::ct_cond_swap(bool b, Gf448Elem& other) {
+void Gf448Elem::ct_cond_swap(CT::Mask<uint64_t> mask, Gf448Elem& other) {
    for(size_t i = 0; i < WORDS_448; ++i) {
-      CT::conditional_swap(b, m_x[i], other.m_x[i]);
+      mask.conditional_swap(m_x[i], other.m_x[i]);
    }
 }
 
-void Gf448Elem::ct_cond_assign(bool b, const Gf448Elem& other) {
-   CT::conditional_assign_mem(static_cast<uint64_t>(b), m_x.data(), other.m_x.data(), WORDS_448);
+void Gf448Elem::ct_cond_assign(CT::Mask<uint64_t> mask, const Gf448Elem& other) {
+   mask.select_n(m_x.data(), other.m_x.data(), m_x.data(), WORDS_448);
 }
 
 Gf448Elem Gf448Elem::operator+(const Gf448Elem& other) const {
