@@ -356,7 +356,7 @@ class PolynomialVector {
       using T = typename Trait::T;
 
    private:
-      std::vector<T> m_polys_storage;
+      secure_vector<T> m_polys_storage;
       std::vector<Polynomial<Trait, D>> m_vec;
 
    private:
