@@ -115,7 +115,7 @@ removed in a future major release.
 
       Returns true if this keys operation is stateful, that is if updating the
       key is required after each private operation. Currently the only stateful
-      schemes included are XMSS and LMS.
+      schemes included are XMSS, XMSS^MT, and LMS.
 
    .. cpp:function:: std::optional<uint64_t> remaining_operations() const
 
@@ -214,6 +214,20 @@ forged.
     Maintaining consistent state without replays is extremely difficult,
     especially when multiple machines are involved. Even a single error will
     compromise the entire signature scheme. XMSS should only be used in an
+    environment carefully designed to maintain consistent state. Prefer
+    the stateless SLH-DSA in new designs.
+
+XMSS^MT
+~~~~~~~~~
+
+XMSS^MT is the multi-tree variant of XMSS.
+It makes the generation of larger trees feasible which allows for more signatures. 
+
+ .. warning::
+
+    Maintaining consistent state without replays is extremely difficult,
+    especially when multiple machines are involved. Even a single error will
+    compromise the entire signature scheme. XMSS^MT should only be used in an
     environment carefully designed to maintain consistent state. Prefer
     the stateless SLH-DSA in new designs.
 
@@ -1043,6 +1057,7 @@ Botan implements the following signature algorithms:
 #. SLH-DSA.
    Takes the optional parameter ``Deterministic`` (default) or ``Randomized``.
 #. XMSS. Takes no parameter.
+#. XMSSMT. Takes no parameter.
 #. HSS-LMS. Takes no parameter.
 
 .. _ecdsa_example:
@@ -1603,6 +1618,102 @@ public/private key pair and how to use these keys to create and verify a
 signature:
 
 .. literalinclude:: /../src/examples/xmss.cpp
+   :language: cpp
+
+Multi-Tree XMSS (XMSS^MT)
+----------------------------------------
+
+Botan implements the multi-tree version of the eXtended Merkle Signature
+Scheme (XMSS^MT) using Winternitz One Time Signatures+ (WOTS+). The implementation
+is based on `RFC 8391 "XMSS: eXtended Merkle Signature Scheme"
+<https://tools.ietf.org/html/rfc8391>`_
+and `Recommendation for Stateful Hash-Based Signature Schemes 
+<https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-208.pdf>`_.
+
+.. warning::
+
+   XMSS^MT is stateful, meaning the private key updates after each signature
+   creation. Applications are responsible for updating their persistent secret
+   with the new output of ``Private_Key::private_key_bits()`` after each signature
+   creation. If the same private key is ever used to generate
+   two different signatures, then the scheme becomes insecure. For this reason,
+   it can be challenging to use XMSS^MT securely.
+
+XMSS^MT uses the Botan interfaces for public key cryptography.
+The following algorithms are implemented:
+
+1. XMSSMT-SHA2_20/2_256
+#. XMSSMT-SHA2_20/4_256
+#. XMSSMT-SHA2_40/2_256
+#. XMSSMT-SHA2_40/4_256
+#. XMSSMT-SHA2_40/8_256
+#. XMSSMT-SHA2_60/3_256
+#. XMSSMT-SHA2_60/6_256
+#. XMSSMT-SHA2_60/12_256
+#. XMSSMT-SHA2_20/2_512
+#. XMSSMT-SHA2_20/4_512
+#. XMSSMT-SHA2_40/2_512
+#. XMSSMT-SHA2_40/4_512
+#. XMSSMT-SHA2_40/8_512
+#. XMSSMT-SHA2_60/3_512
+#. XMSSMT-SHA2_60/6_512
+#. XMSSMT-SHA2_60/12_512
+#. XMSSMT-SHAKE_20/2_256
+#. XMSSMT-SHAKE_20/4_256
+#. XMSSMT-SHAKE_40/2_256
+#. XMSSMT-SHAKE_40/4_256
+#. XMSSMT-SHAKE_40/8_256
+#. XMSSMT-SHAKE_60/3_256
+#. XMSSMT-SHAKE_60/6_256
+#. XMSSMT-SHAKE_60/12_256
+#. XMSSMT-SHAKE_20/2_512
+#. XMSSMT-SHAKE_20/4_512
+#. XMSSMT-SHAKE_40/2_512
+#. XMSSMT-SHAKE_40/4_512
+#. XMSSMT-SHAKE_40/8_512
+#. XMSSMT-SHAKE_60/3_512
+#. XMSSMT-SHAKE_60/6_512
+#. XMSSMT-SHAKE_60/12_512
+#. XMSSMT-SHA2_20/2_192
+#. XMSSMT-SHA2_20/4_192
+#. XMSSMT-SHA2_40/2_192
+#. XMSSMT-SHA2_40/4_192
+#. XMSSMT-SHA2_40/8_192
+#. XMSSMT-SHA2_60/3_192
+#. XMSSMT-SHA2_60/6_192
+#. XMSSMT-SHA2_60/12_192
+#. XMSSMT-SHAKE256_20/2_256
+#. XMSSMT-SHAKE256_20/4_256
+#. XMSSMT-SHAKE256_40/2_256
+#. XMSSMT-SHAKE256_40/4_256
+#. XMSSMT-SHAKE256_40/8_256
+#. XMSSMT-SHAKE256_60/3_256
+#. XMSSMT-SHAKE256_60/6_256
+#. XMSSMT-SHAKE256_60/12_256
+#. XMSSMT-SHAKE256_20/2_192
+#. XMSSMT-SHAKE256_20/4_192
+#. XMSSMT-SHAKE256_40/2_192
+#. XMSSMT-SHAKE256_40/4_192
+#. XMSSMT-SHAKE256_40/8_192
+#. XMSSMT-SHAKE256_60/3_192
+#. XMSSMT-SHAKE256_60/6_192
+#. XMSSMT-SHAKE256_60/12_192
+
+The algorithm name contains the hash function name, tree height, number of layers,
+and digest width defined by the corresponding parameter set. Choosing `XMSSMT-SHA2_20/2_256`
+for instance will use the SHA2-256 hash function to generate a tree of height
+twenty, divided into two layers (of equal height).
+
+.. _xmssmt_example:
+
+Code Example: XMSS^MT
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following code snippet shows a minimum example on how to create an XMSS^MT
+public/private key pair and how to use these keys to create and verify a
+signature:
+
+.. literalinclude:: /../src/examples/xmssmt.cpp
    :language: cpp
 
 

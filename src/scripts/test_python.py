@@ -556,6 +556,12 @@ ofvkP1EDmpx50fHLawIDAQAB
         remaining = priv2.remaining_operations()
         self.assertEqual(remaining, 1024)
 
+        priv3 = botan.PrivateKey.create('XMSSMT', 'XMSSMT-SHA2_20/2_256', rng)
+        self.assertEqual(priv3.stateful_operation(), True)
+
+        remaining = priv3.remaining_operations()
+        self.assertEqual(remaining, 1024*1024)
+
     def test_check_key(self):
         # valid (if rather small) RSA key
         n = 273279220906618527352827457840955116141
