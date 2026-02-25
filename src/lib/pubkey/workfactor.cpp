@@ -1,11 +1,13 @@
 /*
 * Public Key Work Factor Functions
-* (C) 1999-2007,2012 Jack Lloyd
+* (C) 1999-2007,2012,2026 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/internal/workfactor.h>
+
+#include <botan/assert.h>
 #include <cmath>
 #include <numbers>
 
@@ -48,26 +50,54 @@ size_t dl_work_factor(size_t bits) {
    return if_work_factor(bits);
 }
 
-size_t dl_exponent_size(size_t bits) {
-   if(bits == 0) {
-      return 0;
-   }
-   if(bits <= 256) {
-      return bits - 1;
-   }
-   if(bits <= 1024) {
+size_t dl_exponent_size(size_t p_bits) {
+   BOTAN_ARG_CHECK(p_bits > 1, "Invalid prime length");
+
+   /*
+   For relevant sizes we follow the suggestions in
+   NIST SP 800-56B Rev 2 Appendix D
+   "Maximum Security Strength Estimates for IFC Modulus Lengths"
+
+   For sizes outside the range considered in the SP we use some sensible values
+
+   Note that we return twice the value given in Table 4 since we are choosing
+   the exponent size as twice the estimated security strength.
+
+   See also NIST SP 800-56A Rev 3 Appendix D, Tables 25 and 26
+   */
+
+   if(p_bits <= 256) {
+      /*
+      * For stupidly small groups we might return a value larger than the group
+      * size if we fell into the conditionals below. Just use the maximum
+      * possible exponent size - for all the good it will do you with a group
+      * this weak.
+      */
+      return p_bits - 1;
+   } else if(p_bits <= 1024) {
+      /*
+      Not in the SP, but general estimates are that a 1024 bit group provides at
+      most 80 bits security, so using an exponent appropriate for 96 bit security
+      is more than sufficient.
+      */
       return 192;
+   } else if(p_bits <= 2048) {
+      return 224;  // SP 800-56B
+   } else if(p_bits <= 3072) {
+      return 256;  // SP 800-56B
+   } else if(p_bits <= 4096) {
+      return 304;  // SP 800-56B
+   } else if(p_bits <= 6144) {
+      return 352;  // SP 800-56B
+   } else if(p_bits <= 8192) {
+      return 400;  // SP 800-56B
+   } else {
+      // For values larger than we know about, just saturate to 256 bit security
+      // which is Good Enough for FFDH
+      //
+      // NIST puts 15360 bit groups at exactly 256 bits security
+      return 512;
    }
-   if(bits <= 1536) {
-      return 224;
-   }
-   if(bits <= 2048) {
-      return 256;
-   }
-   if(bits <= 4096) {
-      return 384;
-   }
-   return 512;
 }
 
 }  // namespace Botan
