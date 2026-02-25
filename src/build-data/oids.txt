@@ -464,3 +464,6 @@
 1.3.6.1.4.1.25258.4.1 = numsp256d1
 1.3.6.1.4.1.25258.4.2 = numsp384d1
 1.3.6.1.4.1.25258.4.3 = numsp512d1
+
+# ML-DSA composite from draft-ietf-lamps-pq-composite-sigs
+1.3.6.1.5.5.7.6.37 = id-MLDSA44-RSA2048-PSS-SHA256

@@ -1,5 +1,5 @@
 <defines>
-mldsacomposite -> 20260315
+MLDSA_COMPOSITE -> 20260315
 </defines>
 
 <module_info>

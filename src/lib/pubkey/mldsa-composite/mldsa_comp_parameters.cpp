@@ -1,53 +1,43 @@
 
+#include "botan/exceptn.h"
+#include <botan/asn1_obj.h>
 #include <botan/mldsa_comp_parameters.h>
 #include <botan/oids.h>
-#include <botan/asn1_obj.h>
+#include <botan/pss_params.h>
+#include <string_view>
 
 namespace Botan {
 
-    template<typename T>
-    struct MLDSA_Composite_param_set {
-        OID oid;
-        std::string label;
-        std::string prehash_func;
-        std::string mldsa_variant;
-        std::string traditional_algoritm;
-       };
+static const std::array<MLDSA_Composite_Param, 1> mldsa_composite_registry = {{
+   {MLDSA_Composite_Param::id_t::id_MLDSA44_RSA2048_PSS_SHA256,
+    "id-MLDSA44-RSA2048-PSS-SHA256",
+    "COMPSIG-MLDSA44-RSA2048-PSS-SHA256",
+    "SHA256",
+    "ML-DSA-4x4",
+    "2.16.840.1.101.3.4.3.17",  // ML-DSA OID
+    "RSA/PSS(SHA-256,MGF1,32)",
+    1312,
+    2048},
+}};
 
-/*
-id-MLDSA44-RSA2048-PSS-SHA256
-
-      -  OID: 1.3.6.1.5.5.7.6.37
-
-      -  Label: COMPSIG-MLDSA44-RSA2048-PSS-SHA256
-
-      -  Pre-Hash function (PH): SHA256
-
-      -  ML-DSA variant: ML-DSA-44
-
-      -  Traditional Algorithm: RSA
-
-         o  Traditional Signature Algorithm: id-RSASSA-PSS
-
-         o  RSA size: 2048
-
-         o  RSASSA-PSS parameters: See Table 2
-
-                +=============================+===========+
-                | RSASSA-PSS-params field     | Value     |
-                +=============================+===========+
-                | hashAlgorithm               | id-sha256 |
-                +-----------------------------+-----------+
-                | maskGenAlgorithm.algorithm  | id-mgf1   |
-                +-----------------------------+-----------+
-                | maskGenAlgorithm.parameters | id-sha256 |
-                +-----------------------------+-----------+
-                | saltLength                  | 32        |
-                +-----------------------------+-----------+
-                | trailerField                | 1         |
-                +-----------------------------+-----------+
-
-                     Table 2: RSASSA-PSS 2048 and 3072
-                                 Parameters
-*/
+// static
+MLDSA_Composite_Param MLDSA_Composite_Param::get_param_by_id_str(std::string_view id_str) {
+   for(const auto& param : mldsa_composite_registry) {
+      if(param.id_str == id_str) {
+         return param;
+      }
+   }
+   throw Botan::Invalid_Argument("no parameter found for provided MLDSA composite id (string)");
 }
+
+// static
+MLDSA_Composite_Param MLDSA_Composite_Param::get_param_by_id(MLDSA_Composite_Param::id_t id) {
+   for(const auto& param : mldsa_composite_registry) {
+      if(param.id == id) {
+         return param;
+      }
+   }
+   throw Botan::Invalid_Argument("no parameter found for provided MLDSA composite id (enum)");
+}
+
+}  // namespace Botan
