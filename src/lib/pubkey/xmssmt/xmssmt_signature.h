@@ -1,6 +1,6 @@
 /*
  * XMSS^MT Signature
- * (C) 2026 Johannes Roth
+ * (C) 2026 Johannes Roth - MTG AG
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -12,7 +12,7 @@
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <botan/xmssmt_parameters.h>
-#include <botan/internal/xmss_core.h>
+#include <botan/internal/xmss_core_ops.h>
 #include <botan/internal/xmss_wots.h>
 #include <cstddef>
 

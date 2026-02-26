@@ -8,7 +8,7 @@
  *     Release: May 2018.
  *     https://datatracker.ietf.org/doc/rfc8391/
  *
- * (C) 2026 Johannes Roth
+ * (C) 2026 Johannes Roth - MTG AG
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/

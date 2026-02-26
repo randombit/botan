@@ -26,7 +26,7 @@
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/stateful_key_index_registry.h>
-#include <botan/internal/xmss_core.h>
+#include <botan/internal/xmss_core_ops.h>
 #include <botan/internal/xmss_hash.h>
 #include <botan/internal/xmss_signature_operation.h>
 

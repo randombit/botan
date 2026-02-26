@@ -16,7 +16,7 @@
 
 #include <botan/internal/xmss_signature_operation.h>
 
-#include <botan/internal/xmss_core.h>
+#include <botan/internal/xmss_core_ops.h>
 #include <botan/internal/xmss_tools.h>
 
 namespace Botan {

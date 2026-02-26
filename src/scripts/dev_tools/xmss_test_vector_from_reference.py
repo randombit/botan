@@ -8,6 +8,7 @@ Uses the XMSS reference implementation from here:
    https://github.com/XMSS/xmss-reference
 
 (C) 2023 René Meusel (Rohde & Schwarz Cybersecurity)
+(C) 2026 Johannes Roth - MTG AG
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
@@ -16,6 +17,8 @@ import asyncio
 import tempfile
 import sys
 import binascii
+from pyasn1.type import univ
+from pyasn1.codec.der.encoder import encode as asn1encode
 
 
 async def run(cmd, args):
@@ -68,15 +71,24 @@ def idx_len_by_param_name(param):
 def is_xmss(param):
     return not param.startswith("XMSSMT")
 
+def encode_hex_octet_string(data):
+    octet_str = univ.OctetString(data)
+    encoded =  asn1encode(octet_str)
+    return encoded.hex()
 
-# XMSS:
+
+# XMSS Reference Code:
 # * Format sk: [(32bit) index || SK_SEED || SK_PRF || root || PUB_SEED]
 # * Format pk: [root || PUB_SEED], omitting algorithm OID.
-# XMSS^MT:
+# XMSS^MT Reference Code:
 # * Format sk: [(ceil(h/8) bit) idx || SK_SEED || SK_PRF || root || PUB_SEED]
 # * Format pk: [root || PUB_SEED] omitting algo oid.
 #
-# Keypair output format (both): [oid || pk || oid || sk]
+# Reference Code Keypair output format: [oid || pk || oid || sk]
+#
+# Desired Format for Botan:
+# PK: OCTET STRING [oid || root || PUB_SEED]
+# SK: OCTET STRING [oid || root || PUB_SEED || index || SK_PRF || SK_SEED (|| WOTS_derivation_method)]
 class Keypair:
     @staticmethod
     async def generate(xmss_param):
@@ -133,12 +145,15 @@ async def join(strings):
     return "\n".join(await asyncio.gather(*strings))
 
 
-async def make_xmss_sig_vec_entry(xmss_param):
+async def make_xmss_sig_vec_entry(xmss_param, key_encoding):
     async def entry(msg):
         kp = await Keypair.generate(xmss_param)
         out = "Params = {}\n".format(kp.params_name)
         out += "Msg = {}\n".format(tohex(msg))
-        out += "PrivateKey = {}\n".format(tohex(kp.secret_key))
+        if key_encoding == 'raw':
+            out += "PrivateKey = {}\n".format(tohex(kp.secret_key))
+        else:
+            out += "PrivateKey = {}\n".format(encode_hex_octet_string(kp.secret_key))
         sig = await kp.sign(msg)
         out += "Signature = {}\n".format(tohex(sig))
         return out
@@ -146,12 +161,15 @@ async def make_xmss_sig_vec_entry(xmss_param):
     return await join([entry(msg) for msg in TEST_MESSAGES])
 
 
-async def make_xmss_verify_vec_entry(xmss_param):
+async def make_xmss_verify_vec_entry(xmss_param, key_encoding):
     async def entry(msg):
         kp = await Keypair.generate(xmss_param)
         out = "Params = {}\n".format(kp.params_name)
         out += "Msg = {}\n".format(tohex(msg))
-        out += "PublicKey = {}\n".format(tohex(kp.public_key))
+        if key_encoding == 'raw':
+            out += "PublicKey = {}\n".format(tohex(kp.public_key))
+        else:
+            out += "PublicKey = {}\n".format(encode_hex_octet_string(kp.public_key))
         sig = await kp.sign(msg)
         out += "Signature = {}\n".format(tohex(sig))
         return out
@@ -159,21 +177,31 @@ async def make_xmss_verify_vec_entry(xmss_param):
     return await join([entry(msg) for msg in TEST_MESSAGES])
 
 
-async def make_xmss_keygen_vec_entry(xmss_param):
+async def make_xmss_keygen_vec_entry(xmss_param, key_encoding):
     kp = await Keypair.generate(xmss_param)
     out = "Params = {}\n".format(xmss_param)
     out += "SecretSeed = {}\n".format(tohex(kp.secret_seed))
     out += "PublicSeed = {}\n".format(tohex(kp.public_seed))
     out += "SecretPrf = {}\n".format(tohex(kp.secret_prf))
-    out += "PublicKey = {}\n".format(tohex(kp.public_key))
-    out += "PrivateKey = {}\n".format(tohex(kp.secret_key))
+    if key_encoding == 'raw':
+        out += "PublicKey = {}\n".format(tohex(kp.public_key))
+        out += "PrivateKey = {}\n".format(tohex(kp.secret_key))
+    else:
+        out += "PublicKey = {}\n".format(encode_hex_octet_string(kp.public_key))
+        out += "PrivateKey = {}\n".format(encode_hex_octet_string(kp.secret_key))
     return out
 
+def print_usage():
+    print("Usage: {} <test vector: 'sig', 'verify', 'keygen'> <key encoding: 'octet_string', 'raw'> <XMSS Parameter Set Name(s)>".format(sys.argv[0]))
 
-if len(sys.argv) < 3:
-    print("Usage: {} <test vector: 'sig', 'verify', 'keygen'> <XMSS Parameter Set Name(s)>".format(
-        sys.argv[0]))
+if len(sys.argv) < 4:
+    print_usage()
     sys.exit(1)
+
+if not sys.argv[2] in ['octet_string', 'raw']:
+    print_usage()
+    sys.exit(1)
+
 
 funs = {
     "sig": make_xmss_sig_vec_entry,
@@ -188,6 +216,6 @@ if tv not in funs:
 
 
 async def main():
-    print(await join([funs[tv](p) for p in sys.argv[2:]]))
+    print(await join([funs[tv](p, sys.argv[2]) for p in sys.argv[3:]]))
 
 asyncio.run(main())

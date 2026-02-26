@@ -10,7 +10,7 @@
  *     Release: October 2020.
  *     https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-208.pdf
  *
- * (C) 2026 Johannes Roth
+ * (C) 2026 Johannes Roth - MTG AG
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -192,6 +192,19 @@ XMSSMT_Parameters::xmssmt_algorithm_t XMSSMT_Parameters::xmssmt_id_from_string(s
       return XMSSMT_SHAKE256_60_12_192;
    }
    throw Lookup_Error(fmt("Unknown XMSS^MT algorithm param '{}'", param_set));
+}
+
+XMSSMT_Parameters::xmssmt_algorithm_t XMSSMT_Parameters::parse_oid(std::span<const uint8_t> bytes) {
+   if(bytes.size() != 4) {
+      throw Decoding_Error("can't parse invalid XMSS^MT OID length.");
+   }
+
+   // extract and convert algorithm id to enum type
+   uint32_t raw_id = 0;
+   for(size_t i = 0; i < 4; i++) {
+      raw_id = ((raw_id << 8) | bytes[i]);
+   }
+   return static_cast<XMSSMT_Parameters::xmssmt_algorithm_t>(raw_id);
 }
 
 XMSSMT_Parameters::XMSSMT_Parameters(std::string_view param_set) :

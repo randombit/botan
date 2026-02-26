@@ -4,12 +4,12 @@
  * (C) 2016,2017 Matthias Gierlings
  * (C) 2019 Jack Lloyd
  * (C) 2023 René Meusel - Rohde & Schwarz Cybersecurity
- * (C) 2026 Johannes Roth
+ * (C) 2026 Johannes Roth - MTG AG
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
 
-#include <botan/internal/xmss_core.h>
+#include <botan/internal/xmss_core_ops.h>
 
 #include <botan/internal/xmss_hash.h>
 #include <botan/internal/xmss_wots.h>

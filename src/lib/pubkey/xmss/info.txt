@@ -14,7 +14,7 @@ xmss_wots_parameters.h
 
 <header:internal>
 xmss_address.h
-xmss_core.h
+xmss_core_ops.h
 xmss_hash.h
 xmss_signature.h
 xmss_signature_operation.h

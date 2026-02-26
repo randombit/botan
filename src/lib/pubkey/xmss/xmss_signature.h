@@ -12,7 +12,7 @@
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <botan/xmss_parameters.h>
-#include <botan/internal/xmss_core.h>
+#include <botan/internal/xmss_core_ops.h>
 #include <botan/internal/xmss_wots.h>
 #include <cstddef>
 

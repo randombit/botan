@@ -1,6 +1,6 @@
 /*
  * XMSS^MT Parameters
- * (C) 2026 Johannes Roth
+ * (C) 2026 Johannes Roth - MTG AG
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -94,6 +94,7 @@ class BOTAN_PUBLIC_API(3, 12) XMSSMT_Parameters {
       };
 
       static xmssmt_algorithm_t xmssmt_id_from_string(std::string_view algo_name);
+      static xmssmt_algorithm_t parse_oid(std::span<const uint8_t> bytes);
 
       explicit XMSSMT_Parameters(std::string_view algo_name);
       explicit XMSSMT_Parameters(xmssmt_algorithm_t oid);

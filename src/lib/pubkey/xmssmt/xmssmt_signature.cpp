@@ -1,6 +1,6 @@
 /*
  * XMSS^MT Signature
- * (C) 2026 Johannes Roth
+ * (C) 2026 Johannes Roth - MTG AG
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/

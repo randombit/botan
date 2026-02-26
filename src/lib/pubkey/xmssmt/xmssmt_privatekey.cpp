@@ -1,6 +1,6 @@
 /*
  * XMSS^MT Private Key
- * (C) 2026 Johannes Roth
+ * (C) 2026 Johannes Roth - MTG AG
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -15,7 +15,7 @@
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/stateful_key_index_registry.h>
-#include <botan/internal/xmss_core.h>
+#include <botan/internal/xmss_core_ops.h>
 #include <botan/internal/xmss_hash.h>
 #include <botan/internal/xmssmt_signature_operation.h>
 
@@ -26,22 +26,43 @@ namespace Botan {
 
 namespace {
 
-// fall back to raw decoding for previous versions, which did not encode an OCTET STRING
-secure_vector<uint8_t> extract_raw_private_key(std::span<const uint8_t> key_bits,
-                                               const XMSSMT_Parameters& xmssmt_params) {
+secure_vector<uint8_t> extract_raw_private_key(std::span<const uint8_t> key_bits) {
    secure_vector<uint8_t> raw_key;
-
-   // The public part of the input key bits was already parsed, so we can
-   // decide depending on the buffer length whether this must be BER decoded.
-   if(key_bits.size() == xmssmt_params.raw_private_key_size()) {
-      raw_key.assign(key_bits.begin(), key_bits.end());
-   } else {
-      BER_Decoder(key_bits).decode(raw_key, ASN1_Type::OctetString).verify_end();
-   }
-
+   BER_Decoder(key_bits).decode(raw_key, ASN1_Type::OctetString).verify_end();
    return raw_key;
 }
 
+XMSSMT_Parameters::xmssmt_algorithm_t oid_from_priv(std::span<const uint8_t> key_bits) {
+   const secure_vector<uint8_t> raw_key = extract_raw_private_key(key_bits);
+   if(raw_key.size() < 4) {
+      throw Decoding_Error("XMSS^MT signature OID missing.");
+   }
+   return XMSSMT_Parameters::parse_oid({raw_key.data(), 4});
+}
+
+secure_vector<uint8_t> root_from_priv(std::span<const uint8_t> key_bits) {
+   const XMSSMT_Parameters params = XMSSMT_Parameters(oid_from_priv(key_bits));
+   const secure_vector<uint8_t> raw_key = extract_raw_private_key(key_bits);
+   if(raw_key.size() < params.raw_public_key_size()) {
+      throw Decoding_Error("XMSS^MT private key too short");
+   }
+
+   BufferSlicer s(raw_key);
+   s.skip(4);  // oid
+   return s.copy_as_secure_vector(params.element_size());
+}
+
+secure_vector<uint8_t> public_seed_from_priv(std::span<const uint8_t> key_bits) {
+   const XMSSMT_Parameters params = XMSSMT_Parameters(oid_from_priv(key_bits));
+   const secure_vector<uint8_t> raw_key = extract_raw_private_key(key_bits);
+   if(raw_key.size() < params.raw_public_key_size()) {
+      throw Decoding_Error("XMSS^MT private key too short");
+   }
+   BufferSlicer s(raw_key);
+   s.skip(4);                      // oid
+   s.skip(params.element_size());  // root
+   return s.copy_as_secure_vector(params.element_size());
+}
 }  // namespace
 
 class XMSSMT_PrivateKey_Internal {
@@ -74,7 +95,7 @@ class XMSSMT_PrivateKey_Internal {
             m_wots_params(wots_params),
             m_hash(m_xmssmt_params.hash_function_name(), m_xmssmt_params.hash_id_size()),
             m_keyid(/* initialized later*/) {
-         const secure_vector<uint8_t> raw_key = extract_raw_private_key(key_bits, xmssmt_params);
+         const secure_vector<uint8_t> raw_key = extract_raw_private_key(key_bits);
 
          if(raw_key.size() != m_xmssmt_params.raw_private_key_size()) {
             throw Decoding_Error("Invalid XMSS^MT private key size");
@@ -158,7 +179,7 @@ class XMSSMT_PrivateKey_Internal {
 };
 
 XMSSMT_PrivateKey::XMSSMT_PrivateKey(std::span<const uint8_t> key_bits) :
-      XMSSMT_PublicKey(key_bits),
+      XMSSMT_PublicKey(oid_from_priv(key_bits), root_from_priv(key_bits), public_seed_from_priv(key_bits)),
       m_private(std::make_shared<XMSSMT_PrivateKey_Internal>(m_xmssmt_params, m_wots_params, key_bits)) {}
 
 XMSSMT_PrivateKey::XMSSMT_PrivateKey(XMSSMT_Parameters::xmssmt_algorithm_t xmssmt_algo_id, RandomNumberGenerator& rng) :

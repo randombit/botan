@@ -1,6 +1,6 @@
 /*
  * XMSS^MT Public Key
- * (C) 2026 Johannes Roth
+ * (C) 2026 Johannes Roth - MTG AG
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
@@ -25,37 +25,12 @@ XMSSMT_Parameters::xmssmt_algorithm_t deserialize_xmssmt_oid(std::span<const uin
    if(raw_key.size() < 4) {
       throw Decoding_Error("XMSS^MT signature OID missing.");
    }
-
-   // extract and convert algorithm id to enum type
-   uint32_t raw_id = 0;
-   for(size_t i = 0; i < 4; i++) {
-      raw_id = ((raw_id << 8) | raw_key[i]);
-   }
-
-   return static_cast<XMSSMT_Parameters::xmssmt_algorithm_t>(raw_id);
+   return XMSSMT_Parameters::parse_oid(raw_key.first(4));
 }
 
-// fall back to raw decoding
-// TODO: in contrast to XMSS there are no old versions to support, however, the test vectors are decoded as raw keys (no octet string)
-//       encode test vector public keys accordingly and remove the fallback here (?)
 std::vector<uint8_t> extract_raw_xmssmt_public_key(std::span<const uint8_t> key_bits) {
    std::vector<uint8_t> raw_key;
-   try {
-      BER_Decoder(key_bits).decode(raw_key, ASN1_Type::OctetString).verify_end();
-
-      // Smoke check the decoded key. Valid raw keys might be decodable as BER
-      // and they might be either a sole public key or a concatenation of public
-      // and private key (with the optional WOTS+ derivation identifier).
-      const XMSSMT_Parameters params(deserialize_xmssmt_oid(raw_key));
-      if(raw_key.size() != params.raw_public_key_size() && raw_key.size() != params.raw_private_key_size()) {
-         throw Decoding_Error("unpacked XMSS^MT key does not have the correct length");
-      }
-   } catch(Decoding_Error&) {
-      raw_key.assign(key_bits.begin(), key_bits.end());
-   } catch(Not_Implemented&) {
-      raw_key.assign(key_bits.begin(), key_bits.end());
-   }
-
+   BER_Decoder(key_bits).decode(raw_key, ASN1_Type::OctetString).verify_end();
    return raw_key;
 }
 }  // namespace

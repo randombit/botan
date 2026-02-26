@@ -188,12 +188,13 @@ std::vector<Test::Result> xmssmt_statefulness() {
 
            CHECK("state can become exhausted", [&](auto& result) {
               const auto skbytes = Botan::hex_decode(
-                 "00000002"
-                 "1ffb7a0511d1f733f52918e21960f1c6c0386e79c65aeaad8e6883382cf56ec7"
-                 "9bcd386b92deae42b7aee30bc28ed5a9acd1cd23d0d2ad761f654b82176f7def"
-                 "0fffff"  // 2^20-1
-                 "69a2ad2eed76ca2dc4969d91dbd6e63bdbe23cc6032575b0a7158eca8b36be0d"
-                 "89781cdf4762d69c796ed711efdc10371405be818ffb69f2c76dc094df4f46a6");
+                 "048187"                                                              // OCTET STRING tag+len
+                 "00000002"                                                            // oid
+                 "1ffb7a0511d1f733f52918e21960f1c6c0386e79c65aeaad8e6883382cf56ec7"    // root
+                 "9bcd386b92deae42b7aee30bc28ed5a9acd1cd23d0d2ad761f654b82176f7def"    // pub seed
+                 "0fffff"                                                              // leaf idx 2^20-1
+                 "69a2ad2eed76ca2dc4969d91dbd6e63bdbe23cc6032575b0a7158eca8b36be0d"    // PRF
+                 "89781cdf4762d69c796ed711efdc10371405be818ffb69f2c76dc094df4f46a6");  // private seed
               Botan::XMSSMT_PrivateKey sk(skbytes);
               result.test_opt_u64_eq("allow one last signature", sk.remaining_operations(), 1);
 
