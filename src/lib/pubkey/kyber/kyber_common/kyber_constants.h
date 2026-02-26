@@ -17,7 +17,6 @@
 namespace Botan {
 
 class Kyber_Symmetric_Primitives;
-class Kyber_Keypair_Codec;
 
 class KyberConstants final {
    public:

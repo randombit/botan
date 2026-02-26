@@ -15,7 +15,6 @@
 
 namespace Botan {
 
-class Sphincs_Address;
 class Sphincs_Hash_Functions;
 class Sphincs_Parameters;
 

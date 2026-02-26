@@ -20,7 +20,6 @@ namespace Botan {
 class BigInt;
 class RandomNumberGenerator;
 class EC_Group;
-class EC_Group_Data;
 class EC_Scalar_Data;
 
 /**

@@ -8,7 +8,7 @@
 
 #include <botan/internal/isa_extn.h>
 #include <botan/internal/simd_avx2.h>
-#include <wmmintrin.h>
+#include <immintrin.h>
 
 namespace Botan {
 
