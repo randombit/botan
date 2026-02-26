@@ -69,6 +69,16 @@ SM2_PrivateKey::SM2_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group
       m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()),
       m_da_inv_legacy(m_da_inv.to_bigint()) {}
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
+                                    std::string_view user_id,
+                                    const EC_Group& group,
+                                    const EC_Point& pubkey) {
+   auto apoint = EC_AffinePoint(group, pubkey);
+   return sm2_compute_za(hash, user_id, group, apoint);
+}
+#endif
+
 std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
                                     std::string_view user_id,
                                     const EC_Group& group,

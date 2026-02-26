@@ -9,7 +9,6 @@
 #define BOTAN_SM2_KEY_H_
 
 #include <botan/bigint.h>
-#include <botan/ec_apoint.h>
 #include <botan/ec_scalar.h>
 #include <botan/ecc_key.h>
 
@@ -154,10 +153,7 @@ BOTAN_DEPRECATED("Deprecated unclear usage")
 inline std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
                                            std::string_view user_id,
                                            const EC_Group& group,
-                                           const EC_Point& pubkey) {
-   auto apoint = EC_AffinePoint(group, pubkey);
-   return sm2_compute_za(hash, user_id, group, apoint);
-}
+                                           const EC_Point& pubkey);
 #endif
 
 // For compat with versions 2.2 - 2.7
