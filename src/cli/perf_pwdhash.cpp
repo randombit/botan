@@ -7,6 +7,7 @@
 #include "perf.h"
 
 #include <botan/internal/fmt.h>
+#include <array>
 
 #if defined(BOTAN_HAS_PASSWORD_HASHING)
    #include <botan/pwdhash.h>
@@ -113,6 +114,45 @@ class PerfTest_Scrypt final : public PerfTest {
 };
 
 BOTAN_REGISTER_PERF_TEST("scrypt", PerfTest_Scrypt);
+
+#endif
+
+#if defined(BOTAN_HAS_PBKDF2) && defined(BOTAN_HAS_PASSWORD_HASHING)
+
+class PerfTest_PBKDF2 final : public PerfTest {
+   public:
+      void go(const PerfConfig& config) override {
+         const std::string hash = "SHA-256";
+         auto pwdhash_fam = Botan::PasswordHashFamily::create(Botan::fmt("PBKDF2({})", hash));
+
+         if(pwdhash_fam != nullptr) {
+            for(const size_t iter : {10000, 100000}) {
+               auto pwdhash = pwdhash_fam->from_params(iter);
+
+               auto pbkdf2_timer = config.make_timer(Botan::fmt("PBKDF2({},{})", hash, iter));
+
+               std::array<uint8_t, 16> salt{};
+               config.rng().randomize(salt);
+
+               const std::string password = "password";
+               auto runtime = config.runtime();
+
+               std::array<uint8_t, 32> out{};
+
+               while(pbkdf2_timer->under(runtime)) {
+                  pbkdf2_timer->run([&] {
+                     pwdhash->hash(out, password, salt);
+                     std::memcpy(salt.data(), out.data(), 8);
+                  });
+               }
+
+               config.record_result(*pbkdf2_timer);
+            }
+         }
+      }
+};
+
+BOTAN_REGISTER_PERF_TEST("pbkdf2", PerfTest_PBKDF2);
 
 #endif
 
