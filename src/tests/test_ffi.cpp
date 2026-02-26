@@ -724,6 +724,19 @@ class FFI_CRL_Test final : public FFI_Test {
          TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_x509_crl_this_update, (bytecrl, nullptr));
          TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_x509_crl_next_update, (bytecrl, nullptr));
 
+         ViewBytesSink akid;
+         TEST_FFI_OK(botan_x509_crl_view_binary_values,
+                     (bytecrl, BOTAN_X509_AUTHORITY_KEY_IDENTIFIER, 0, akid.delegate(), akid.callback()));
+         result.test_bin_eq("authority key ID", akid.get(), "4ACF102F238FAB555A3F2732E2811CE7444C81F9");
+
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE,
+                     botan_x509_crl_view_binary_values,
+                     (bytecrl, BOTAN_X509_SUBJECT_KEY_IDENTIFIER, 0, akid.delegate(), akid.callback()));
+         size_t akid_count;
+         TEST_FFI_OK(botan_x509_crl_view_binary_values_count,
+                     (bytecrl, BOTAN_X509_SUBJECT_KEY_IDENTIFIER, &akid_count));
+         result.test_sz_eq("no subject key ID entries", akid_count, 0);
+
          botan_x509_crl_t crl;
          REQUIRE_FFI_OK(botan_x509_crl_load_file, (&crl, Test::data_file("x509/nist/root.crl").c_str()));
 
@@ -785,6 +798,22 @@ class FFI_CRL_Test final : public FFI_Test {
          TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE, botan_x509_crl_entries, (crl, 1, &entry));
          TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE, botan_x509_crl_entries, (bytecrl, 0, &entry));
 
+         ViewStringSink crl_pem;
+         TEST_FFI_OK(botan_x509_crl_view_string_values,
+                     (bytecrl, BOTAN_X509_PEM_ENCODING, 0, crl_pem.delegate(), crl_pem.callback()));
+         size_t pem_count;
+         TEST_FFI_OK(botan_x509_crl_view_string_values_count, (bytecrl, BOTAN_X509_PEM_ENCODING, &pem_count));
+         result.test_sz_eq("one PEM encoding", pem_count, 1);
+
+         auto remove_newlines = [](std::string_view str) {
+            auto out = std::string(str);
+            std::erase(out, '\n');
+            std::erase(out, '\r');
+            return out;
+         };
+
+         result.test_str_eq("CRL PEM", remove_newlines(crl_pem.get()), remove_newlines(crl_string));
+
          TEST_FFI_OK(botan_x509_crl_destroy, (crl));
          TEST_FFI_OK(botan_x509_crl_destroy, (bytecrl));
          TEST_FFI_OK(botan_x509_crl_destroy, (crl_without_next_update));
@@ -801,6 +830,67 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
    #else
          return false;
    #endif
+      }
+
+      void verify_bare_pkcs1_rsa_signature(Test::Result& result, botan_x509_cert_t ee, botan_x509_cert_t ca) {
+         ViewBytesSink tbs_data;
+         ViewBytesSink sig_scheme;
+         ViewBytesSink signature;
+         ViewBytesSink public_key;
+
+         TEST_FFI_OK(botan_x509_cert_view_binary_values,
+                     (ee, BOTAN_X509_TBS_DATA_BITS, 0, tbs_data.delegate(), tbs_data.callback()));
+         TEST_FFI_OK(botan_x509_cert_view_binary_values,
+                     (ee, BOTAN_X509_SIGNATURE_SCHEME_BITS, 0, sig_scheme.delegate(), sig_scheme.callback()));
+         TEST_FFI_OK(botan_x509_cert_view_binary_values,
+                     (ee, BOTAN_X509_SIGNATURE_BITS, 0, signature.delegate(), signature.callback()));
+         TEST_FFI_OK(botan_x509_cert_view_binary_values,
+                     (ca, BOTAN_X509_PUBLIC_KEY_PKCS8_BITS, 0, public_key.delegate(), public_key.callback()));
+
+         // These values exist exactly once in a certificate
+         TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE,
+                     botan_x509_cert_view_binary_values,
+                     (ee, BOTAN_X509_TBS_DATA_BITS, 1, tbs_data.delegate(), tbs_data.callback()));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE,
+                     botan_x509_cert_view_binary_values,
+                     (ee, BOTAN_X509_SIGNATURE_SCHEME_BITS, 1, sig_scheme.delegate(), sig_scheme.callback()));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE,
+                     botan_x509_cert_view_binary_values,
+                     (ee, BOTAN_X509_SIGNATURE_BITS, 1, signature.delegate(), signature.callback()));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE,
+                     botan_x509_cert_view_binary_values,
+                     (ca, BOTAN_X509_PUBLIC_KEY_PKCS8_BITS, 1, public_key.delegate(), public_key.callback()));
+
+         size_t count;
+         TEST_FFI_OK(botan_x509_cert_view_binary_values_count, (ee, BOTAN_X509_TBS_DATA_BITS, &count));
+         result.test_sz_eq("TBS data count", count, 1);
+         TEST_FFI_OK(botan_x509_cert_view_binary_values_count, (ee, BOTAN_X509_SIGNATURE_SCHEME_BITS, &count));
+         result.test_sz_eq("Signature scheme count", count, 1);
+         TEST_FFI_OK(botan_x509_cert_view_binary_values_count, (ee, BOTAN_X509_SIGNATURE_BITS, &count));
+         result.test_sz_eq("Signature count", count, 1);
+         TEST_FFI_OK(botan_x509_cert_view_binary_values_count, (ca, BOTAN_X509_PUBLIC_KEY_PKCS8_BITS, &count));
+         result.test_sz_eq("Public key count", count, 1);
+
+         // At the moment there's no way to directly instantiate a signature
+         // verifier object with an encoded signature algorithm scheme. Hence,
+         // we just check that the hard-coded expectation is fulfilled.
+         //
+         // TODO: improve this if we ever have a pk_op_verify_t constructor that
+         //       takes an encoded AlgorithmIdentifier.
+         const auto expected_sig_scheme =
+            Botan::AlgorithmIdentifier("RSA/PKCS1v15(SHA-1)", Botan::AlgorithmIdentifier::USE_NULL_PARAM).BER_encode();
+         result.test_bin_eq("AlgorithmIdentifier", sig_scheme.get(), expected_sig_scheme);
+
+         botan_pubkey_t pubkey;
+         TEST_FFI_INIT(botan_pubkey_load, (&pubkey, public_key.data(), public_key.size()));
+
+         botan_pk_op_verify_t verifier;
+         TEST_FFI_INIT(botan_pk_op_verify_create, (&verifier, pubkey, "PKCS1v15(SHA-1)", 0));
+         TEST_FFI_OK(botan_pk_op_verify_update, (verifier, tbs_data.data(), tbs_data.size()));
+         TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+
+         TEST_FFI_OK(botan_pk_op_verify_destroy, (verifier));
+         TEST_FFI_OK(botan_pubkey_destroy, (pubkey));
       }
 
       void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
@@ -852,6 +942,8 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          TEST_FFI_RC(0, botan_x509_cert_verify, (&rc, end7, subs, 2, &root, 1, nullptr, 80, nullptr, 0));
          result.test_is_true("Validation test07 passed", rc == 0);
          result.test_str_eq("Validation test07 status string", botan_x509_cert_validation_status(rc), "Verified");
+
+         verify_bare_pkcs1_rsa_signature(result, end7, sub7);
 
          TEST_FFI_RC(1,
                      botan_x509_cert_verify_with_crl,
@@ -940,6 +1032,11 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
             result.test_sz_eq("cert serial length", serial.size(), 16);
             result.test_bin_eq("cert serial", serial, "41D29DD172EAEEA780C12C6CE92F8752");
 
+            ViewBytesSink serial_sink;
+            TEST_FFI_OK(botan_x509_cert_view_binary_values,
+                        (cert, BOTAN_X509_SERIAL_NUMBER, 0, serial_sink.delegate(), serial_sink.callback()));
+            result.test_bin_eq("cert serial (2)", serial_sink.get(), "41D29DD172EAEEA780C12C6CE92F8752");
+
             size_t fingerprint_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
                         botan_x509_cert_get_fingerprint,
@@ -959,6 +1056,12 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             result.test_sz_eq("No AKID", key_id_len, 0);
 
+            // "No AKID" is explicitly communicated with an error code
+            ViewBytesSink key_id_sink;
+            TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE,
+                        botan_x509_cert_view_binary_values,
+                        (cert, BOTAN_X509_AUTHORITY_KEY_IDENTIFIER, 0, key_id_sink.delegate(), key_id_sink.callback()));
+
             key_id_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
                         botan_x509_cert_get_subject_key_id,
@@ -969,6 +1072,10 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
             result.test_str_eq("cert subject key id",
                                Botan::hex_encode(key_id.data(), key_id.size(), true),
                                "7C4296AEDE4B483BFA92F89E8CCF6D8BA9723795");
+
+            TEST_FFI_OK(botan_x509_cert_view_binary_values,
+                        (cert, BOTAN_X509_SUBJECT_KEY_IDENTIFIER, 0, key_id_sink.delegate(), key_id_sink.callback()));
+            result.test_bin_eq("cert subject key id", key_id_sink.get(), "7C4296AEDE4B483BFA92F89E8CCF6D8BA9723795");
 
             size_t pubkey_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
@@ -1021,6 +1128,21 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             std::string printable(printable_len - 1, '0');
             TEST_FFI_OK(botan_x509_cert_to_string, (cert, printable.data(), &printable_len));
+
+            size_t count;
+            TEST_FFI_OK(botan_x509_cert_view_string_values_count, (cert, BOTAN_X509_PEM_ENCODING, &count));
+            result.test_sz_eq("one PEM encoding", count, 1);
+            TEST_FFI_OK(botan_x509_cert_view_binary_values_count, (cert, BOTAN_X509_DER_ENCODING, &count));
+            result.test_sz_eq("one DER encoding", count, 1);
+
+            ViewBytesSink der;
+            ViewStringSink pem;
+            TEST_FFI_OK(botan_x509_cert_view_binary_values,
+                        (cert, BOTAN_X509_DER_ENCODING, 0, der.delegate(), der.callback()));
+            result.test_is_true("DER encoding produced something", !der.get().empty());
+            TEST_FFI_OK(botan_x509_cert_view_string_values,
+                        (cert, BOTAN_X509_PEM_ENCODING, 0, pem.delegate(), pem.callback()));
+            result.test_is_true("PEM encoding produced something", !pem.get().empty());
 
             TEST_FFI_RC(0, botan_x509_cert_allowed_usage, (cert, KEY_CERT_SIGN));
             TEST_FFI_RC(0, botan_x509_cert_allowed_usage, (cert, CRL_SIGN));
@@ -1422,6 +1544,73 @@ class FFI_Cert_NameConstraints_Test final : public FFI_Test {
          TEST_FFI_OK(botan_x509_general_name_destroy, (ip));
 
          TEST_FFI_OK(botan_x509_cert_destroy, (cert));
+      }
+};
+
+class FFI_Cert_AuthorityInformationAccess_Test final : public FFI_Test {
+   private:
+      static auto read_aia_string_list(Test::Result& result, botan_x509_cert_t cert, botan_x509_value_type value_type) {
+         std::vector<std::string> out;
+
+         size_t count = 0;
+         TEST_FFI_OK(botan_x509_cert_view_string_values_count, (cert, value_type, &count));
+         for(size_t i = 0; i < count; ++i) {
+            TEST_FFI_OK(botan_x509_cert_view_string_values,
+                        (cert, value_type, i, &out, [](botan_view_ctx ctx, const char* str, size_t) -> int {
+                           static_cast<std::vector<std::string>*>(ctx)->emplace_back(str);
+                           return BOTAN_FFI_SUCCESS;
+                        }));
+         }
+
+         return out;
+      }
+
+   public:
+      std::string name() const override { return "FFI X509 Authority Information Access"; }
+
+      void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
+         botan_x509_cert_t cert_with_aia;
+         botan_x509_cert_t cert_without_crl_dps;
+         if(!TEST_FFI_INIT(
+               botan_x509_cert_load_file,
+               (&cert_with_aia,
+                Test::data_file("x509/misc/contains_authority_info_access_with_two_ca_issuers.pem").c_str()))) {
+            return;
+         }
+
+         if(!TEST_FFI_INIT(botan_x509_cert_load_file,
+                           (&cert_without_crl_dps, Test::data_file("x509/misc/no_alternative_names.pem").c_str()))) {
+            return;
+         }
+
+         TEST_FFI_RC(
+            BOTAN_FFI_ERROR_OUT_OF_RANGE,
+            botan_x509_cert_view_string_values,
+            (cert_without_crl_dps, BOTAN_X509_CRL_DISTRIBUTION_URLS, 0, nullptr, [](auto, auto, auto) { return 0; }));
+
+         const auto crl_dps = read_aia_string_list(result, cert_with_aia, BOTAN_X509_CRL_DISTRIBUTION_URLS);
+         result.test_sz_eq("has two CRL URI distribution points", crl_dps.size(), 2);
+         result.test_is_true("has expected CRL URI distribution point",
+                             Botan::value_exists(crl_dps, "http://crl.d-trust.net/crl/bdrive_test_ca_1-2_2017.crl"));
+
+         const auto dummy_callback = [](auto, auto, auto) -> int { return BOTAN_FFI_SUCCESS; };
+
+         TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE,
+                     botan_x509_cert_view_string_values,
+                     (cert_without_crl_dps, BOTAN_X509_OCSP_RESPONDER_URLS, 0, nullptr, dummy_callback));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE,
+                     botan_x509_cert_view_string_values,
+                     (cert_without_crl_dps, BOTAN_X509_CA_ISSUERS_URLS, 0, nullptr, dummy_callback));
+
+         const auto ocsps = read_aia_string_list(result, cert_with_aia, BOTAN_X509_OCSP_RESPONDER_URLS);
+         result.test_is_true("OCSP responder found", Botan::value_exists(ocsps, "http://staging.ocsp.d-trust.net"));
+
+         const auto cas = read_aia_string_list(result, cert_with_aia, BOTAN_X509_CA_ISSUERS_URLS);
+         result.test_is_true("CA issuer found",
+                             Botan::value_exists(cas, "http://www.d-trust.net/cgi-bin/Bdrive_Test_CA_1-2_2017.crt"));
+
+         TEST_FFI_OK(botan_x509_cert_destroy, (cert_with_aia));
+         TEST_FFI_OK(botan_x509_cert_destroy, (cert_without_crl_dps));
       }
 };
 
@@ -5378,6 +5567,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_srp6", FFI_SRP6_Test);
    #if defined(BOTAN_HAS_X509)
 BOTAN_REGISTER_TEST("ffi", "ffi_cert_alt_names", FFI_Cert_AlternativeNames_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_cert_name_constraints", FFI_Cert_NameConstraints_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_cert_aia", FFI_Cert_AuthorityInformationAccess_Test);
    #endif
 
 #endif

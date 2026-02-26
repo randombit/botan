@@ -6,18 +6,21 @@
 
 #include <botan/ffi.h>
 
+#include <botan/assert.h>
 #include <botan/internal/ffi_pkey.h>
 #include <botan/internal/ffi_util.h>
 #include <memory>
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   #include <botan/assert.h>
    #include <botan/data_src.h>
    #include <botan/x509_crl.h>
+   #include <botan/x509_ext.h>
    #include <botan/x509cert.h>
    #include <botan/x509path.h>
    #include <botan/internal/ffi_mp.h>
    #include <botan/internal/ffi_oid.h>
+   #include <botan/internal/loadstor.h>
+   #include <botan/internal/stl_util.h>
 #endif
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
@@ -107,6 +110,38 @@ std::optional<botan_x509_general_name_types> to_botan_x509_general_name_types(Bo
    BOTAN_ASSERT_UNREACHABLE();
 }
 
+/**
+ * Given some enumerator-style function @p fn, count how many values it can
+ * produce before returning BOTAN_FFI_ERROR_OUT_OF_RANGE. If the first call to
+ * @p fn returns BOTAN_FFI_ERROR_NO_VALUE, zero is written to @p count.
+ *
+ * If this function returns BOTAN_FFI_SUCCESS, @p count contains the number of
+ * values that can be enumerated. Otherwise, the value of @p count is undefined.
+ */
+template <std::invocable<size_t> EnumeratorT>
+int enumerator_count_values(size_t* count, EnumeratorT fn) {
+   if(Botan::any_null_pointers(count)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   *count = 0;
+   for(;; ++(*count)) {
+      const auto rc = fn(*count);
+      switch(rc) {
+         case BOTAN_FFI_ERROR_NO_VALUE:
+         case BOTAN_FFI_ERROR_OUT_OF_RANGE:
+            // hit the end of the enumeration
+            return BOTAN_FFI_SUCCESS;
+         case BOTAN_FFI_SUCCESS:
+            // got a value, continue counting
+            break;
+         default:
+            // unexpected error from enumerator function
+            return rc;
+      }
+   }
+}
+
 }  // namespace
 
 }  // namespace Botan_FFI
@@ -172,6 +207,219 @@ int botan_x509_cert_load(botan_x509_cert_t* cert_obj, const uint8_t cert_bits[],
    });
 #else
    BOTAN_UNUSED(cert_bits_len);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+}
+
+namespace {
+
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+
+int botan_x509_object_view_value(const Botan::X509_Object& object,
+                                 botan_x509_value_type value_type,
+                                 size_t index,
+                                 botan_view_ctx ctx,
+                                 botan_view_str_fn view_fn) {
+   if(index != 0) {
+      // As of now there are no multi-value generic string entries.
+      return BOTAN_FFI_ERROR_OUT_OF_RANGE;
+   }
+
+   auto view = [=](const std::string& value) { return invoke_view_callback(view_fn, ctx, value); };
+
+   switch(value_type) {
+      case BOTAN_X509_PEM_ENCODING:
+         return view(object.PEM_encode());
+      default:
+         BOTAN_ASSERT_UNREACHABLE(); /* called with unexpected (non-generic) value_type */
+   }
+}
+
+int botan_x509_object_view_value(const Botan::X509_Object& object,
+                                 botan_x509_value_type value_type,
+                                 size_t index,
+                                 botan_view_ctx ctx,
+                                 botan_view_bin_fn view_fn) {
+   if(index != 0) {
+      // As of now there are no multi-value generic binary entries.
+      return BOTAN_FFI_ERROR_OUT_OF_RANGE;
+   }
+
+   auto view = [=](std::span<const uint8_t> value) { return invoke_view_callback(view_fn, ctx, value); };
+
+   switch(value_type) {
+      case BOTAN_X509_TBS_DATA_BITS:
+         return view(object.tbs_data());
+      case BOTAN_X509_SIGNATURE_SCHEME_BITS:
+         return view(object.signature_algorithm().BER_encode());
+      case BOTAN_X509_SIGNATURE_BITS:
+         return view(object.signature());
+      case BOTAN_X509_DER_ENCODING:
+         return view(object.BER_encode());
+      default:
+         BOTAN_ASSERT_UNREACHABLE(); /* called with unexpected (non-generic) value_type */
+   }
+}
+
+#endif
+
+}  // namespace
+
+extern "C" {
+
+int botan_x509_cert_view_binary_values(botan_x509_cert_t cert,
+                                       botan_x509_value_type value_type,
+                                       size_t index,
+                                       botan_view_ctx ctx,
+                                       botan_view_bin_fn view_fn) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   if(index != 0) {
+      // As of now there are no multi-value binary entries.
+      return BOTAN_FFI_ERROR_OUT_OF_RANGE;
+   }
+
+   auto view = [=](std::span<const uint8_t> value) -> int {
+      if(value.empty()) {
+         return BOTAN_FFI_ERROR_NO_VALUE;
+      } else {
+         return invoke_view_callback(view_fn, ctx, value);
+      }
+   };
+
+   return BOTAN_FFI_VISIT(cert, [=](const Botan::X509_Certificate& c) -> int {
+      switch(value_type) {
+         case BOTAN_X509_SERIAL_NUMBER:
+            return view(c.serial_number());
+         case BOTAN_X509_SUBJECT_DN_BITS:
+            return view(c.raw_subject_dn());
+         case BOTAN_X509_ISSUER_DN_BITS:
+            return view(c.raw_issuer_dn());
+         case BOTAN_X509_SUBJECT_KEY_IDENTIFIER:
+            return view(c.subject_key_id());
+         case BOTAN_X509_AUTHORITY_KEY_IDENTIFIER:
+            return view(c.authority_key_id());
+         case BOTAN_X509_PUBLIC_KEY_PKCS8_BITS:
+            return view(c.subject_public_key_info());
+
+         case BOTAN_X509_TBS_DATA_BITS:
+         case BOTAN_X509_SIGNATURE_SCHEME_BITS:
+         case BOTAN_X509_SIGNATURE_BITS:
+         case BOTAN_X509_DER_ENCODING:
+            return botan_x509_object_view_value(c, value_type, index, ctx, view_fn);
+
+         case BOTAN_X509_PEM_ENCODING:
+         case BOTAN_X509_CRL_DISTRIBUTION_URLS:
+         case BOTAN_X509_OCSP_RESPONDER_URLS:
+         case BOTAN_X509_CA_ISSUERS_URLS:
+            return BOTAN_FFI_ERROR_NO_VALUE;
+      }
+
+      return BOTAN_FFI_ERROR_BAD_PARAMETER;
+   });
+#else
+   BOTAN_UNUSED(cert, value_type, index, ctx, view_fn);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_view_binary_values_count(botan_x509_cert_t cert, botan_x509_value_type value_type, size_t* count) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return enumerator_count_values(count, [=](size_t index) {
+      return botan_x509_cert_view_binary_values(
+         cert, value_type, index, nullptr, [](auto, auto, auto) -> int { return BOTAN_FFI_SUCCESS; });
+   });
+#else
+   BOTAN_UNUSED(cert, value_type, count);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_view_string_values(botan_x509_cert_t cert,
+                                       botan_x509_value_type value_type,
+                                       size_t index,
+                                       botan_view_ctx ctx,
+                                       botan_view_str_fn view_fn) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   auto enumerate = [view_fn, ctx](auto values, size_t idx) -> int {
+      if(idx >= values.size()) {
+         return BOTAN_FFI_ERROR_OUT_OF_RANGE;
+      } else {
+         return invoke_view_callback(view_fn, ctx, values[idx]);
+      }
+   };
+
+   auto enumerate_crl_distribution_points = [view_fn, ctx](const Botan::X509_Certificate& c, size_t idx) -> int {
+      const auto* crl_dp_ext =
+         c.v3_extensions().get_extension_object_as<Botan::Cert_Extension::CRL_Distribution_Points>();
+      if(crl_dp_ext == nullptr) {
+         return BOTAN_FFI_ERROR_OUT_OF_RANGE;  // essentially an empty list
+      }
+
+      const auto& dps = crl_dp_ext->distribution_points();
+      for(size_t i = idx; const auto& dp : dps) {
+         const auto& uris = dp.point().uris();
+         if(i >= uris.size()) {
+            i -= uris.size();
+            continue;
+         }
+
+         auto itr = uris.begin();
+         std::advance(itr, i);
+         return invoke_view_callback(view_fn, ctx, *itr);
+      }
+
+      return BOTAN_FFI_ERROR_OUT_OF_RANGE;
+   };
+
+   auto wrap_or_empty = [](std::string str) -> std::vector<std::string> {
+      if(str.empty()) {
+         return {};
+      } else {
+         return {std::move(str)};
+      }
+   };
+
+   return BOTAN_FFI_VISIT(cert, [=](const Botan::X509_Certificate& c) -> int {
+      switch(value_type) {
+         case BOTAN_X509_CRL_DISTRIBUTION_URLS:
+            return enumerate_crl_distribution_points(c, index);
+         case BOTAN_X509_OCSP_RESPONDER_URLS:
+            return enumerate(wrap_or_empty(c.ocsp_responder()), index);
+         case BOTAN_X509_CA_ISSUERS_URLS:
+            return enumerate(c.ca_issuers(), index);
+         case BOTAN_X509_PEM_ENCODING:
+            return botan_x509_object_view_value(c, value_type, index, ctx, view_fn);
+
+         case BOTAN_X509_SERIAL_NUMBER:
+         case BOTAN_X509_SUBJECT_DN_BITS:
+         case BOTAN_X509_ISSUER_DN_BITS:
+         case BOTAN_X509_SUBJECT_KEY_IDENTIFIER:
+         case BOTAN_X509_AUTHORITY_KEY_IDENTIFIER:
+         case BOTAN_X509_PUBLIC_KEY_PKCS8_BITS:
+         case BOTAN_X509_TBS_DATA_BITS:
+         case BOTAN_X509_SIGNATURE_SCHEME_BITS:
+         case BOTAN_X509_SIGNATURE_BITS:
+         case BOTAN_X509_DER_ENCODING:
+            return BOTAN_FFI_ERROR_NO_VALUE;
+      }
+
+      return BOTAN_FFI_ERROR_BAD_PARAMETER;
+   });
+#else
+   BOTAN_UNUSED(cert, value_type, index, ctx, view_fn);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_cert_view_string_values_count(botan_x509_cert_t cert, botan_x509_value_type value_type, size_t* count) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return enumerator_count_values(count, [=](size_t index) {
+      return botan_x509_cert_view_string_values(
+         cert, value_type, index, nullptr, [](auto, auto, auto) -> int { return BOTAN_FFI_SUCCESS; });
+   });
+#else
+   BOTAN_UNUSED(cert, value_type, count);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
@@ -863,6 +1111,117 @@ int botan_x509_crl_destroy(botan_x509_crl_t crl) {
    return BOTAN_FFI_CHECKED_DELETE(crl);
 #else
    BOTAN_UNUSED(crl);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_crl_view_binary_values(botan_x509_crl_t crl_obj,
+                                      botan_x509_value_type value_type,
+                                      size_t index,
+                                      botan_view_ctx ctx,
+                                      botan_view_bin_fn view_fn) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   if(index != 0) {
+      // As of now there are no multi-value binary entries.
+      return BOTAN_FFI_ERROR_OUT_OF_RANGE;
+   }
+
+   auto view = [=](std::span<const uint8_t> value) -> int {
+      if(value.empty()) {
+         return BOTAN_FFI_ERROR_NO_VALUE;
+      } else {
+         return invoke_view_callback(view_fn, ctx, value);
+      }
+   };
+
+   return BOTAN_FFI_VISIT(crl_obj, [=](const Botan::X509_CRL& crl) -> int {
+      switch(value_type) {
+         case BOTAN_X509_SERIAL_NUMBER:
+            return view(Botan::store_be(crl.crl_number()));
+         case BOTAN_X509_ISSUER_DN_BITS:
+            return view(Botan::ASN1::put_in_sequence(crl.issuer_dn().get_bits()));
+         case BOTAN_X509_AUTHORITY_KEY_IDENTIFIER:
+            return view(crl.authority_key_id());
+
+         case BOTAN_X509_TBS_DATA_BITS:
+         case BOTAN_X509_SIGNATURE_SCHEME_BITS:
+         case BOTAN_X509_SIGNATURE_BITS:
+         case BOTAN_X509_DER_ENCODING:
+            return botan_x509_object_view_value(crl, value_type, index, ctx, view_fn);
+
+         case BOTAN_X509_SUBJECT_DN_BITS:
+         case BOTAN_X509_SUBJECT_KEY_IDENTIFIER:
+         case BOTAN_X509_PUBLIC_KEY_PKCS8_BITS:
+         case BOTAN_X509_PEM_ENCODING:
+         case BOTAN_X509_CRL_DISTRIBUTION_URLS:
+         case BOTAN_X509_OCSP_RESPONDER_URLS:
+         case BOTAN_X509_CA_ISSUERS_URLS:
+            return BOTAN_FFI_ERROR_NO_VALUE;
+      }
+
+      return BOTAN_FFI_ERROR_BAD_PARAMETER;
+   });
+#else
+   BOTAN_UNUSED(crl_obj, value_type, index, ctx, view_fn);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_crl_view_binary_values_count(botan_x509_crl_t crl_obj, botan_x509_value_type value_type, size_t* count) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return enumerator_count_values(count, [=](size_t index) {
+      return botan_x509_crl_view_binary_values(
+         crl_obj, value_type, index, nullptr, [](auto, auto, auto) -> int { return BOTAN_FFI_SUCCESS; });
+   });
+#else
+   BOTAN_UNUSED(crl_obj, value_type, count);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_crl_view_string_values(botan_x509_crl_t crl_obj,
+                                      botan_x509_value_type value_type,
+                                      size_t index,
+                                      botan_view_ctx ctx,
+                                      botan_view_str_fn view) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return BOTAN_FFI_VISIT(crl_obj, [=](const Botan::X509_CRL& crl) -> int {
+      switch(value_type) {
+         case BOTAN_X509_PEM_ENCODING:
+            return botan_x509_object_view_value(crl, value_type, index, ctx, view);
+
+         case BOTAN_X509_SERIAL_NUMBER:
+         case BOTAN_X509_SUBJECT_DN_BITS:
+         case BOTAN_X509_ISSUER_DN_BITS:
+         case BOTAN_X509_SUBJECT_KEY_IDENTIFIER:
+         case BOTAN_X509_AUTHORITY_KEY_IDENTIFIER:
+         case BOTAN_X509_PUBLIC_KEY_PKCS8_BITS:
+         case BOTAN_X509_TBS_DATA_BITS:
+         case BOTAN_X509_SIGNATURE_SCHEME_BITS:
+         case BOTAN_X509_SIGNATURE_BITS:
+         case BOTAN_X509_DER_ENCODING:
+         case BOTAN_X509_CRL_DISTRIBUTION_URLS:
+         case BOTAN_X509_OCSP_RESPONDER_URLS:
+         case BOTAN_X509_CA_ISSUERS_URLS:
+            return BOTAN_FFI_ERROR_NO_VALUE;
+      }
+
+      return BOTAN_FFI_ERROR_BAD_PARAMETER;
+   });
+#else
+   BOTAN_UNUSED(crl_obj, value_type, index, ctx, view);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_x509_crl_view_string_values_count(botan_x509_crl_t crl_obj, botan_x509_value_type value_type, size_t* count) {
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   return enumerator_count_values(count, [=](size_t index) {
+      return botan_x509_crl_view_string_values(
+         crl_obj, value_type, index, nullptr, [](auto, auto, auto) -> int { return BOTAN_FFI_SUCCESS; });
+   });
+#else
+   BOTAN_UNUSED(crl_obj, value_type, count);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }

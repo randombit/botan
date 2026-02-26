@@ -103,6 +103,11 @@ The following enum values are defined in the FFI header:
 
    While decrypting in an AEAD mode, the tag failed to verify.
 
+.. cpp:enumerator:: BOTAN_FFI_ERROR_NO_VALUE = -3
+
+   Given the context of the invocation no semantically reasonable value could
+   be produced, any provided out-parameters must be ignored.
+
 .. cpp:enumerator:: BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE = -10
 
    Functions which write a variable amount of space return this if the indicated
@@ -1684,6 +1689,52 @@ X.509 Certificates
                                              const char* common_name, \
                                              const char* org_name)
 
+.. cpp:function:: int botan_x509_cert_view_binary_values(botan_x509_cert_t cert, \
+                                                         botan_x509_value_type value_type, \
+                                                         size_t index, \
+                                                         botan_view_ctx ctx, \
+                                                         botan_view_bin_fn view_fn)
+
+   Access various binary fields of information contained in the certificate.
+
+   Some of those may be multi-value fields, the `index` parameter may be used
+   to enumerate such values until :cpp:enumerator:`BOTAN_FFI_ERROR_OUT_OF_RANGE`
+   is returned. For singular values, an `index` of 0 must be used.
+
+   See :ref:`x509_getter_function` for further information about the available
+   values. If a value does not exist :cpp:enumerator:`BOTAN_FFI_ERROR_NO_VALUE`
+   is returned.
+
+.. cpp:function:: int botan_x509_cert_view_binary_values_count(botan_x509_cert_t cert, \
+                                                               botan_x509_value_type value_type, \
+                                                               size_t* count)
+
+   Get the number of entries for multi-value binary fields of information
+   contained in the certificate.
+
+.. cpp:function:: int botan_x509_cert_view_string_values(botan_x509_cert_t cert, \
+                                                         botan_x509_value_type value_type, \
+                                                         size_t index, \
+                                                         botan_view_ctx ctx, \
+                                                         botan_view_str_fn view_fn)
+
+   Access various string fields of information contained in the certificate.
+
+   Some of those may be multi-value fields, the `index` parameter may be used
+   to enumerate such values until :cpp:enumerator:`BOTAN_FFI_ERROR_OUT_OF_RANGE`
+   is returned. For singular values, an `index` of 0 must be used.
+
+   See :ref:`x509_getter_function` for further information about the available
+   values. If a value does not exist :cpp:enumerator:`BOTAN_FFI_ERROR_NO_VALUE`
+   is returned.
+
+.. cpp:function:: int botan_x509_cert_view_string_values_count(botan_x509_cert_t cert, \
+                                                               botan_x509_value_type value_type, \
+                                                               size_t* count)
+
+   Get the number of entries for multi-value string fields of information
+   contained in the certificate.
+
 .. cpp:function:: int botan_x509_cert_get_time_starts(botan_x509_cert_t cert, char out[], size_t* out_len)
 
    Return the time the certificate becomes valid, as a string in form
@@ -1984,6 +2035,52 @@ X.509 Certificate Revocation Lists
    is technically optional in CRLs, if the CRL does not specify a "next update"
    timestamp, :cpp:enumerator:`BOTAN_FFI_ERROR_NO_VALUE` is returned.
 
+.. cpp:function:: int botan_x509_crl_view_binary_values(botan_x509_crl_t crl, \
+                                                        botan_x509_value_type value_type, \
+                                                        size_t index, \
+                                                        botan_view_ctx ctx, \
+                                                        botan_view_bin_fn view_fn)
+
+   Access various binary fields of information contained in the CRL.
+
+   Some of those may be multi-value fields, the `index` parameter may be used
+   to enumerate such values until :cpp:enumerator:`BOTAN_FFI_ERROR_OUT_OF_RANGE`
+   is returned. For singular values, an `index` of 0 must be used.
+
+   See :ref:`x509_getter_function` for further information about the available
+   values. If a value does not exist :cpp:enumerator:`BOTAN_FFI_ERROR_NO_VALUE`
+   is returned.
+
+.. cpp:function:: int botan_x509_crl_view_binary_values_count(botan_x509_crl_t crl, \
+                                                               botan_x509_value_type value_type, \
+                                                               size_t* count)
+
+   Get the number of entries for multi-value binary fields of information
+   contained in the CRL.
+
+.. cpp:function:: int botan_x509_crl_view_string_values(botan_x509_crl_t crl, \
+                                                        botan_x509_value_type value_type, \
+                                                        size_t index, \
+                                                        botan_view_ctx ctx, \
+                                                        botan_view_str_fn view_fn)
+
+   Access various string fields of information contained in the CRL.
+
+   Some of those may be multi-value fields, the `index` parameter may be used
+   to enumerate such values until :cpp:enumerator:`BOTAN_FFI_ERROR_OUT_OF_RANGE`
+   is returned. For singular values, an `index` of 0 must be used.
+
+   See :ref:`x509_getter_function` for further information about the available
+   values. If a value does not exist :cpp:enumerator:`BOTAN_FFI_ERROR_NO_VALUE`
+   is returned.
+
+.. cpp:function:: int botan_x509_crl_view_string_values_count(botan_x509_crl_t crl, \
+                                                               botan_x509_value_type value_type, \
+                                                               size_t* count)
+
+   Get the number of entries for multi-value string fields of information
+   contained in the CRL.
+
 .. cpp:function:: int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert)
 
    Check whether a given ``crl`` contains a given ``cert``.
@@ -2021,6 +2118,79 @@ X.509 Certificate Revocation Lists
 .. cpp:function:: int botan_x509_crl_entry_destroy(botan_x509_crl_entry_t entry)
 
    Destroy the CRL entry object.
+
+.. _x509_getter_function:
+
+X.509 Available Generic Getter Values
+----------------------------------------
+
+Most X.509 objects may contain various data fields that may be of interest for
+using applications. Many of those values can be queried through a generic API
+that is extensible without introducing ABI incompatibilities.
+
+All available value types of the generic X.509 object getters are:
+
+.. cpp:enumerator:: BOTAN_X509_SERIAL_NUMBER
+
+   The binary big-endian encoded serial number of a certificate or CRL.
+
+.. cpp:enumerator:: BOTAN_X509_SUBJECT_DN_BITS
+
+   The DER encoded subject distinguished name of the certificate.
+
+.. cpp:enumerator:: BOTAN_X509_ISSUER_DN_BITS
+
+   The DER encoded issuer distinguished name of a certificate or CRL.
+
+.. cpp:enumerator:: BOTAN_X509_SUBJECT_KEY_IDENTIFIER
+
+   The subject key identifier (usually a hash of the certificate's public key)
+   in binary format.
+
+.. cpp:enumerator:: BOTAN_X509_AUTHORITY_KEY_IDENTIFIER
+
+   The issuer's key identifier (usually a hash of the issuer's public key) in
+   binary format.
+
+.. cpp:enumerator:: BOTAN_X509_PUBLIC_KEY_PKCS8_BITS
+
+   The certificate's public key in PKCS#8 format (DER encoding).
+
+.. cpp:enumerator:: BOTAN_X509_TBS_DATA_BITS
+
+   The "To-Be-Signed" data of a certificate or CRL (DER encoding).
+
+.. cpp:enumerator:: BOTAN_X509_SIGNATURE_SCHEME_BITS
+
+   The signature scheme descriptor of a certificate or CRL (DER encoding).
+
+.. cpp:enumerator:: BOTAN_X509_SIGNATURE_BITS
+
+   The raw signature data of a certificate or CRL. The encoding depends on the
+   signature algorithm but is always in binary format.
+
+.. cpp:enumerator:: BOTAN_X509_DER_ENCODING
+
+   The binary DER encoding of the entire certificate or CRL object.
+
+.. cpp:enumerator:: BOTAN_X509_PEM_ENCODING
+
+   The string-based PEM encoding of the entire certificate or CRL object.
+
+.. cpp:enumerator:: BOTAN_X509_CRL_DISTRIBUTION_URLS
+
+   The CRL distribution points (URLs) noted in the certificate as a character
+   array. There might be more than one such URL defined in a certificate.
+
+.. cpp:enumerator:: BOTAN_X509_OCSP_RESPONDER_URLS
+
+   The OCSP responders (URLs) noted in the certificate as a character array.
+   There might be more than one such URL defined in a certificate.
+
+.. cpp:enumerator:: BOTAN_X509_CA_ISSUERS_URLS
+
+   The URLs of the issuing CA certificate of a certificate as a character array.
+   There might be more than one such URL defined in a certificate.
 
 ZFEC (Forward Error Correction)
 ----------------------------------------
