@@ -1655,7 +1655,7 @@ def cli_speed_pk_slow_tests(_tmp_dir):
 
 def cli_speed_pbkdf_tests(_tmp_dir):
     msec = 1
-    pbkdf_ops = ['bcrypt', 'passhash9', 'argon2']
+    pbkdf_ops = ['bcrypt', 'passhash9', 'argon2', 'pbkdf2', 'scrypt']
 
     format_re = re.compile(r'^.* [0-9]+ /sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+(\.[0-9]+)? ms\)')
     for op in pbkdf_ops:
