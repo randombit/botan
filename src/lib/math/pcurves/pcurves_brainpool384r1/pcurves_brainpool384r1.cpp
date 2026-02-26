@@ -12,8 +12,10 @@ namespace Botan::PCurve {
 
 namespace {
 
-// clang-format off
 namespace brainpool384r1 {
+
+// clang-format off
+
 class Params final : public EllipticCurveParameters<
    "8CB91E82A3386D280F5D6F7E50E641DF152F7109ED5456B412B1DA197FB71123ACD3A729901D1A71874700133107EC53",
    "7BC382C63D8C150C3C72080ACE05AFA0C2BEA28E4FB22787139165EFBA91F90F8AA5814A503AD4EB04A8C7DD22CE2826",
@@ -23,11 +25,11 @@ class Params final : public EllipticCurveParameters<
    "8ABE1D7520F9C2A45CB1EB8E95CFD55262B70B29FEEC5864E19C054FF99129280E4646217791811142820341263C5315"> {
 };
 
+// clang-format on
+
 class Curve final : public EllipticCurve<Params> {};
 
-}
-
-// clang-format on
+}  // namespace brainpool384r1
 
 }  // namespace
 

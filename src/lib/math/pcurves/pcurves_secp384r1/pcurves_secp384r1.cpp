@@ -120,8 +120,9 @@ class Secp384r1Rep final {
       }
 };
 
-// clang-format off
 namespace secp384r1 {
+
+// clang-format off
 
 class Params final : public EllipticCurveParameters<
    "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF",

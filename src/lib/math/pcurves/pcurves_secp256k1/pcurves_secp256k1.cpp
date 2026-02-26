@@ -39,6 +39,7 @@ class Secp256k1Rep final {
 };
 
 // clang-format off
+
 class Params final : public EllipticCurveParameters<
    "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F",
    "0",
@@ -49,6 +50,7 @@ class Params final : public EllipticCurveParameters<
 };
 
 // clang-format on
+
 using Secp256k1Base =
    std::conditional_t<WordInfo<word>::bits >= 33, EllipticCurve<Params, Secp256k1Rep>, EllipticCurve<Params>>;
 

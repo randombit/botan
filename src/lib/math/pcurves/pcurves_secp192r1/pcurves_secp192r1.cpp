@@ -122,6 +122,7 @@ class Secp192r1Rep final {
 };
 
 // clang-format off
+
 class Params final : public EllipticCurveParameters<
    "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFF",
    "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFC",

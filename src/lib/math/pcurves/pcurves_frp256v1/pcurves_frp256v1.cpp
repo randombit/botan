@@ -12,8 +12,9 @@ namespace Botan::PCurve {
 
 namespace {
 
-// clang-format off
 namespace frp256v1 {
+
+// clang-format off
 
 class Params final : public EllipticCurveParameters<
    "F1FD178C0B3AD58F10126DE8CE42435B3961ADBCABC8CA6DE8FCF353D86E9C03",
@@ -24,11 +25,11 @@ class Params final : public EllipticCurveParameters<
    "6142E0F7C8B204911F9271F0F3ECEF8C2701C307E8E4C9E183115A1554062CFB"> {
 };
 
+// clang-format on
+
 class Curve final : public EllipticCurve<Params> {};
 
-}
-
-// clang-format on
+}  // namespace frp256v1
 
 }  // namespace
 
