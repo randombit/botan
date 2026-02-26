@@ -26,22 +26,25 @@ Version 3.11.0, Not Yet Released
 
 * Poly1305 optimizations, including AVX2 and AVX-512 implementations (GH #5227)
 
+* Various elliptic curve arithmetic optimizations (GH #5186 #5194 #5195 #5196 #5275 #5387)
+
 * Certain signature and KEM schemes, including XMSS, LMS, FrodoKEM,
   ML-KEM/Kyber, and ML-DSA/Dilithium, would fail or produce incorrect results if
   multiple threads attempted operations on the same key object concurrently. In
   a strict sense uncoordinated multithreaded use of the same object was never
   supported, but this usage did work for RSA, ECDSA, and other schemes, and the
-  previous behaviour is potentially quite surprising. Tests have been added to
+  previous behavior is potentially quite surprising. Tests have been added to
   ensure this usage works for all schemes going forward. (GH #5359 #5361 #5366
   #5367 #5371 #5376 #5380 #5382)
 
 * Improve handling of constant time and variable time divisions (GH #5176 #5177 #5180)
 
+* In finite-field Diffie-Hellman use exponent lengths as prescribed in NIST SP 800-56A
+  and SP 800-56B. (GH #5384)
+
 * Optimize ECDSA signature setup phase (GH #5173)
 
 * The R3 versions of Kyber and Dilithium are official deprecated (GH #5368)
-
-* Various elliptic curve arithmetic optimizations (GH #5186 #5194 #5195 #5196 #5275)
 
 * Check for already known/validated groups when decoding explicit EC parameters (GH #5268)
 
