@@ -218,6 +218,15 @@ class BOTAN_PUBLIC_API(3, 12) XMSSMT_PrivateKey final : public virtual XMSSMT_Pu
                                        XMSS_Hash& hash) const;
 
       std::shared_ptr<XMSSMT_PrivateKey_Internal> m_private;
+
+      struct XMSSMT_Pubkey_Parts {
+            XMSSMT_Parameters::xmssmt_algorithm_t oid{};
+            secure_vector<uint8_t> root;
+            secure_vector<uint8_t> public_seed;
+      };
+
+      XMSSMT_PrivateKey(XMSSMT_Pubkey_Parts parsed_pub, std::span<const uint8_t> key_bits);
+      static XMSSMT_Pubkey_Parts parse_pubkey_parts(std::span<const uint8_t> key_bits);
 };
 
 BOTAN_DIAGNOSTIC_POP

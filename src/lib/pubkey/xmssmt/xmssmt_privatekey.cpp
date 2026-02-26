@@ -31,38 +31,6 @@ secure_vector<uint8_t> extract_raw_private_key(std::span<const uint8_t> key_bits
    BER_Decoder(key_bits).decode(raw_key, ASN1_Type::OctetString).verify_end();
    return raw_key;
 }
-
-XMSSMT_Parameters::xmssmt_algorithm_t oid_from_priv(std::span<const uint8_t> key_bits) {
-   const secure_vector<uint8_t> raw_key = extract_raw_private_key(key_bits);
-   if(raw_key.size() < 4) {
-      throw Decoding_Error("XMSS^MT signature OID missing.");
-   }
-   return XMSSMT_Parameters::parse_oid({raw_key.data(), 4});
-}
-
-secure_vector<uint8_t> root_from_priv(std::span<const uint8_t> key_bits) {
-   const XMSSMT_Parameters params = XMSSMT_Parameters(oid_from_priv(key_bits));
-   const secure_vector<uint8_t> raw_key = extract_raw_private_key(key_bits);
-   if(raw_key.size() < params.raw_public_key_size()) {
-      throw Decoding_Error("XMSS^MT private key too short");
-   }
-
-   BufferSlicer s(raw_key);
-   s.skip(4);  // oid
-   return s.copy_as_secure_vector(params.element_size());
-}
-
-secure_vector<uint8_t> public_seed_from_priv(std::span<const uint8_t> key_bits) {
-   const XMSSMT_Parameters params = XMSSMT_Parameters(oid_from_priv(key_bits));
-   const secure_vector<uint8_t> raw_key = extract_raw_private_key(key_bits);
-   if(raw_key.size() < params.raw_public_key_size()) {
-      throw Decoding_Error("XMSS^MT private key too short");
-   }
-   BufferSlicer s(raw_key);
-   s.skip(4);                      // oid
-   s.skip(params.element_size());  // root
-   return s.copy_as_secure_vector(params.element_size());
-}
 }  // namespace
 
 class XMSSMT_PrivateKey_Internal {
@@ -178,8 +146,32 @@ class XMSSMT_PrivateKey_Internal {
       Stateful_Key_Index_Registry::KeyId m_keyid;
 };
 
+XMSSMT_PrivateKey::XMSSMT_Pubkey_Parts XMSSMT_PrivateKey::parse_pubkey_parts(std::span<const uint8_t> key_bits) {
+   XMSSMT_PrivateKey::XMSSMT_Pubkey_Parts parts;
+
+   const secure_vector<uint8_t> raw_key = extract_raw_private_key(key_bits);
+   BufferSlicer s(raw_key);
+   if(raw_key.size() < 4) {
+      throw Decoding_Error("XMSS^MT signature OID missing.");
+   }
+   parts.oid = XMSSMT_Parameters::parse_oid(s.take(4));
+
+   const XMSSMT_Parameters params = XMSSMT_Parameters(parts.oid);
+   if(raw_key.size() < params.raw_public_key_size()) {
+      throw Decoding_Error("XMSS^MT private key too short");
+   }
+
+   parts.root = s.copy_as_secure_vector(params.element_size());
+   parts.public_seed = s.copy_as_secure_vector(params.element_size());
+
+   return parts;
+}
+
 XMSSMT_PrivateKey::XMSSMT_PrivateKey(std::span<const uint8_t> key_bits) :
-      XMSSMT_PublicKey(oid_from_priv(key_bits), root_from_priv(key_bits), public_seed_from_priv(key_bits)),
+      XMSSMT_PrivateKey(parse_pubkey_parts(key_bits), key_bits) {}
+
+XMSSMT_PrivateKey::XMSSMT_PrivateKey(XMSSMT_Pubkey_Parts parsed, std::span<const uint8_t> key_bits) :
+      XMSSMT_PublicKey(parsed.oid, std::move(parsed.root), std::move(parsed.public_seed)),
       m_private(std::make_shared<XMSSMT_PrivateKey_Internal>(m_xmssmt_params, m_wots_params, key_bits)) {}
 
 XMSSMT_PrivateKey::XMSSMT_PrivateKey(XMSSMT_Parameters::xmssmt_algorithm_t xmssmt_algo_id, RandomNumberGenerator& rng) :

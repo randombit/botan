@@ -198,7 +198,7 @@ if len(sys.argv) < 4:
     print_usage()
     sys.exit(1)
 
-if not sys.argv[2] in ['octet_string', 'raw']:
+if sys.argv[2] not in ['octet_string', 'raw']:
     print_usage()
     sys.exit(1)
 
