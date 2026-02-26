@@ -574,7 +574,7 @@ int botan_x509_cert_allowed_extended_usage_str(botan_x509_cert_t cert, const cha
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
 
-      return c.has_ex_constraint(oid) ? BOTAN_FFI_SUCCESS : 1;
+      return c.has_ex_constraint(oid) ? 1 : 0;
    });
 #else
    BOTAN_UNUSED(cert, oid);
@@ -584,8 +584,7 @@ int botan_x509_cert_allowed_extended_usage_str(botan_x509_cert_t cert, const cha
 
 int botan_x509_cert_allowed_extended_usage_oid(botan_x509_cert_t cert, botan_asn1_oid_t oid) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_VISIT(
-      cert, [=](const auto& c) -> int { return c.has_ex_constraint(safe_get(oid)) ? BOTAN_FFI_SUCCESS : 1; });
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) -> int { return c.has_ex_constraint(safe_get(oid)) ? 1 : 0; });
 #else
    BOTAN_UNUSED(cert, oid);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
