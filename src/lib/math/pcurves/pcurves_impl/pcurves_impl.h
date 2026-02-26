@@ -1,5 +1,5 @@
 /*
-* (C) 2024,2025 Jack Lloyd
+* (C) 2024,2025,2026 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -1414,16 +1414,17 @@ class PrecomputedBaseMulTable final {
       static constexpr size_t WindowBits = W;
       static_assert(WindowBits >= 1 && WindowBits <= 8);
 
-      using BlindedScalar = BlindedScalarBits<C, WindowBits>;
+      // W+1 bit extraction windows for Booth recoding overlap
+      using BlindedScalar = BlindedScalarBits<C, WindowBits + 1>;
 
-      static constexpr size_t Windows = (BlindedScalar::Bits + WindowBits - 1) / WindowBits;
-
+      // +1 for Booth carry: if the top window's sign bit is set, the
+      // carry propagates into an extra window
       explicit PrecomputedBaseMulTable(const AffinePoint& p) :
-            m_table(basemul_setup<C, WindowBits>(p, BlindedScalar::Bits)) {}
+            m_table(basemul_booth_setup<C, WindowBits>(p, BlindedScalar::Bits + 1)) {}
 
       ProjectivePoint mul(const Scalar& s, RandomNumberGenerator& rng) const {
          const BlindedScalar scalar(s, rng);
-         return basemul_exec<C, WindowBits>(m_table, scalar, rng);
+         return basemul_booth_exec<C, WindowBits>(m_table, scalar, rng);
       }
 
    private:
@@ -1548,18 +1549,6 @@ class WindowedBoothMulTable final {
       }
 
    private:
-      template <size_t B, std::unsigned_integral T>
-      static constexpr std::pair<size_t, CT::Choice> booth_recode(T x) {
-         static_assert(B < sizeof(T) * 8 - 2, "Invalid B");
-
-         auto s_mask = CT::Mask<T>::expand(x >> B);
-         const T neg_x = (1 << (B + 1)) - x - 1;
-         T d = s_mask.select(neg_x, x);
-         d = (d >> 1) + (d & 1);
-
-         return std::make_pair(static_cast<size_t>(d), s_mask.as_choice());
-      }
-
       AffinePointTable<C> m_table;
 };
 

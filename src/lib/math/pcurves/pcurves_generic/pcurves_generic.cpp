@@ -1100,11 +1100,19 @@ class GenericProjectivePoint final {
 
       CT::Choice is_identity() const { return z().is_zero(); }
 
+      void conditional_assign(CT::Choice cond, const Self& pt) {
+         GenericField::conditional_assign(m_x, m_y, m_z, cond, pt.x(), pt.y(), pt.z());
+      }
+
       /**
       * Mixed (projective + affine) point addition
       */
       static Self add_mixed(const Self& a, const GenericAffinePoint& b) {
          return point_add_mixed<Self, GenericAffinePoint, GenericField>(a, b, GenericField::one(a.curve()));
+      }
+
+      static Self add_or_sub(const Self& a, const GenericAffinePoint& b, CT::Choice sub) {
+         return point_add_or_sub_mixed<Self, GenericAffinePoint, GenericField>(a, b, sub, GenericField::one(a.curve()));
       }
 
       /**
@@ -1208,8 +1216,7 @@ class GenericCurve final {
 class GenericBlindedScalarBits final {
    public:
       GenericBlindedScalarBits(const GenericScalar& scalar, RandomNumberGenerator& rng, size_t wb) {
-         // Just a simplifying assumption for get_window, can extend to 1..7 as required
-         BOTAN_ASSERT_NOMSG(wb == 3 || wb == 4 || wb == 5);
+         BOTAN_ASSERT_NOMSG(wb == 1 || wb == 2 || wb == 3 || wb == 4 || wb == 5 || wb == 6 || wb == 7);
 
          const auto& params = scalar.curve()->_params();
 
@@ -1256,12 +1263,20 @@ class GenericBlindedScalarBits final {
       size_t bits() const { return m_bits; }
 
       size_t get_window(size_t offset) const {
-         if(m_window_bits == 3) {
+         if(m_window_bits == 1) {
+            return read_window_bits<1>(std::span{m_bytes}, offset);
+         } else if(m_window_bits == 2) {
+            return read_window_bits<2>(std::span{m_bytes}, offset);
+         } else if(m_window_bits == 3) {
             return read_window_bits<3>(std::span{m_bytes}, offset);
          } else if(m_window_bits == 4) {
             return read_window_bits<4>(std::span{m_bytes}, offset);
          } else if(m_window_bits == 5) {
             return read_window_bits<5>(std::span{m_bytes}, offset);
+         } else if(m_window_bits == 6) {
+            return read_window_bits<6>(std::span{m_bytes}, offset);
+         } else if(m_window_bits == 7) {
+            return read_window_bits<7>(std::span{m_bytes}, offset);
          } else {
             BOTAN_ASSERT_UNREACHABLE();
          }
@@ -1305,14 +1320,14 @@ class GenericBaseMulTable final {
    public:
       static constexpr size_t WindowBits = BasePointWindowBits;
 
-      static constexpr size_t WindowElements = (1 << WindowBits) - 1;
-
+      // +1 for Booth carry from the top window
       explicit GenericBaseMulTable(const GenericAffinePoint& pt) :
-            m_table(basemul_setup<GenericCurve, WindowBits>(pt, blinded_scalar_bits(*pt.curve()))) {}
+            m_table(basemul_booth_setup<GenericCurve, WindowBits>(pt, blinded_scalar_bits(*pt.curve()) + 1)) {}
 
       GenericProjectivePoint mul(const GenericScalar& s, RandomNumberGenerator& rng) {
-         const GenericBlindedScalarBits scalar(s, rng, WindowBits);
-         return basemul_exec<GenericCurve, WindowBits>(m_table, scalar, rng);
+         // W+1 bit windows for Booth recoding overlap
+         const GenericBlindedScalarBits scalar(s, rng, WindowBits + 1);
+         return basemul_booth_exec<GenericCurve, WindowBits>(m_table, scalar, rng);
       }
 
    private:

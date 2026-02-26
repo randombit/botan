@@ -439,6 +439,14 @@ class Speed final : public Command {
                   ecc_groups.push_back(group_name);
                }
             }
+         } else if(ecc_groups.size() == 1 && ecc_groups[0] == "pcurves") {
+            ecc_groups.clear();
+            for(const auto& group_name : Botan::EC_Group::known_named_groups()) {
+               const Botan::EC_Group group(group_name);
+               if(group.engine() == Botan::EC_Group_Engine::Optimized) {
+                  ecc_groups.push_back(group_name);
+               }
+            }
          }
 #endif
 
