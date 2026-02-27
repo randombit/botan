@@ -48,6 +48,9 @@ std::optional<uint32_t> aarch64_feat_via_auxval(uint32_t allowed) {
          SHA2_512_bit = (1 << 21),
          SVE_bit = (1 << 22),
       };
+      enum class ARM_hwcap2_bit : uint64_t /* NOLINT(*-enum-size) */ {
+         RNG_bit = (1 << 16),
+      };
 
       const auto hwcap = auxval->first;
 
@@ -64,6 +67,9 @@ std::optional<uint32_t> aarch64_feat_via_auxval(uint32_t allowed) {
          feat |= CPUID::if_set(hwcap, ARM_hwcap_bit::SHA2_512_bit, CPUFeature::Bit::SHA2_512, allowed);
          feat |= CPUID::if_set(hwcap, ARM_hwcap_bit::SVE_bit, CPUFeature::Bit::SVE, allowed);
       }
+
+      const auto hwcap2 = auxval->second;
+      feat |= CPUID::if_set(hwcap2, ARM_hwcap2_bit::RNG_bit, CPUFeature::Bit::RNG, allowed);
 
       return feat;
    }
