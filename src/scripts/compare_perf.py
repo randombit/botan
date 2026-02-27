@@ -55,6 +55,12 @@ def parse_perf_report(report):
     results = sorted(results, key=lambda r: r[0])
     return (version, results)
 
+def read_src(src):
+    if src in ['stdin', '-']:
+        return sys.stdin.read()
+    else:
+        return open(src, encoding='utf8').read()
+
 def main(args = None):
     if args is None:
         args = sys.argv
@@ -71,8 +77,15 @@ def main(args = None):
         print("Usage: compare_perf.py orig.json new.json")
         return 1
 
-    (ver0, rep0) = parse_perf_report(json.loads(open(args[1], encoding='utf8').read()))
-    (ver1, rep1) = parse_perf_report(json.loads(open(args[2], encoding='utf8').read()))
+    src1 = args[1]
+    src2 = args[2]
+
+    if src1 == src2:
+        print("Doesn't make sense to compare the same inputs")
+        return 1
+
+    (ver0, rep0) = parse_perf_report(json.loads(read_src(src1)))
+    (ver1, rep1) = parse_perf_report(json.loads(read_src(src2)))
 
     reportable = float(options.limit) / 100
     filter_re = re.compile(options.filter)
@@ -88,7 +101,7 @@ def main(args = None):
 
         # TODO check/diff the compiler flags
 
-        s += args[1]
+        s += src1
 
         if diff_version or diff_git:
             s += " ("
@@ -100,7 +113,7 @@ def main(args = None):
                 s += ver0['git']
             s += ")"
 
-        s += " and " + args[2]
+        s += " and " + src2
 
         if diff_version or diff_git:
             s += " ("
