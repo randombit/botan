@@ -1592,7 +1592,7 @@ class VartimeMul2Table final {
       using ProjectivePoint = typename C::ProjectivePoint;
 
       VartimeMul2Table(const AffinePoint& p, const AffinePoint& q) :
-            m_table(to_affine_batch<C>(mul2_setup<C, W>(p, q))) {}
+            m_table(to_affine_batch<C, true>(mul2_setup<C, W>(p, q))) {}
 
       /**
       * Variable time 2-ary multiplication

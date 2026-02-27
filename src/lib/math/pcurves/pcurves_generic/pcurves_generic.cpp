@@ -755,6 +755,12 @@ class GenericField final {
 
       GenericField invert() const { return pow_vartime(m_curve->_params().field_minus_2()); }
 
+      GenericField invert_vartime() const {
+         // TODO take advantage of variable time here using eg BEEA
+         // see IntMod::invert_vartime in pcurves_impl.h
+         return invert();
+      }
+
       template <concepts::resizable_byte_buffer T>
       T serialize() const {
          T bytes(m_curve->_params().field_bytes());
@@ -1375,7 +1381,7 @@ class GenericVartimeWindowedMul2 final : public PrimeOrderCurve::PrecomputedMul2
       ~GenericVartimeWindowedMul2() override = default;
 
       GenericVartimeWindowedMul2(const GenericAffinePoint& p, const GenericAffinePoint& q) :
-            m_table(to_affine_batch<GenericCurve>(mul2_setup<GenericCurve, WindowBits>(p, q))) {}
+            m_table(to_affine_batch<GenericCurve, true>(mul2_setup<GenericCurve, WindowBits>(p, q))) {}
 
       GenericProjectivePoint mul2_vartime(const GenericScalar& x, const GenericScalar& y) const {
          const auto x_bits = x.serialize<std::vector<uint8_t>>();

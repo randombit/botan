@@ -103,7 +103,7 @@ auto to_affine_x(const typename C::ProjectivePoint& pt) {
    }
 }
 
-template <typename C>
+template <typename C, bool VariableTime = false>
 auto to_affine_batch(std::span<const typename C::ProjectivePoint> projective) {
    using AffinePoint = typename C::AffinePoint;
 
@@ -146,7 +146,13 @@ auto to_affine_batch(std::span<const typename C::ProjectivePoint> projective) {
          c.push_back(c[i - 1] * projective[i].z());
       }
 
-      auto s_inv = invert_field_element<C>(c[N - 1]);
+      auto s_inv = [&]() {
+         if constexpr(VariableTime) {
+            return c[N - 1].invert_vartime();
+         } else {
+            return invert_field_element<C>(c[N - 1]);
+         }
+      }();
 
       for(size_t i = N - 1; i > 0; --i) {
          const auto& p = projective[i];
