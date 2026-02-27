@@ -877,26 +877,33 @@ class RandomNumberGenerator:
     no matter how many 'system' rng instances are created. Thus it is
     easy to use the RNG in a one-off way, with `botan.RandomNumberGenerator().get(32)`.
 
+    For some use cases it can be useful to provide a custom RNG implementation.
+    Use 'custom' as the rng_type and provide the ``get_callback=`` and
+    ``add_entropy_callback=`` arguments. The latter is optional.
+    ``get_callback`` takes an integer and is expected to return a bytes object
+    with the requested number of random bytes.
+    ``add_entropy_callback`` takes a bytes object containing entropy bytes and
+    is expected to add the given entropy to the RNG.
+
     When Botan is configured with TPM 2.0 support, also 'tpm2' is allowed
     to instantiate a TPM-backed RNG. Note that this requires passing
     additional named arguments ``tpm2_context=`` with a ``TPM2Context`` and
-    (optionally) ``tpm2_sessions=`` with one or more ``TPM2Session`` objects."""
+    (optionally) ``tpm2_sessions=`` with one or more ``TPM2Session`` objects.
 
-    # Can also use type "system"
+    Constructs a RandomNumberGenerator of type rng_type.
+    Available RNG types are:
+
+    * 'system': Adapter to the operating system's RNG
+    * 'user':   Software-PRNG that is auto-seeded by the system RNG
+    * 'null':   Mock-RNG that fails if randomness is pulled from it
+    * 'hwrng':  Adapter to an available hardware RNG (platform dependent)
+    * 'tpm2':   Adapter to a TPM 2.0 RNG
+                (needs additional named arguments tpm2_context= and, optionally, tpm2_sessions=)
+    * 'custom': Adapter to user-defined callbacks
+                (needs additional named arguments get_callback= and, optionally, add_entropy_callback=)
+    """
+
     def __init__(self, rng_type: str = 'system', **kwargs):
-        """Constructs a RandomNumberGenerator of type rng_type
-
-        Available RNG types are::
-
-        * 'system': Adapter to the operating system's RNG
-        * 'user':   Software-PRNG that is auto-seeded by the system RNG
-        * 'null':   Mock-RNG that fails if randomness is pulled from it
-        * 'hwrng':  Adapter to an available hardware RNG (platform dependent)
-        * 'tpm2':   Adapter to a TPM 2.0 RNG
-                    (needs additional named arguments tpm2_context= and, optionally, tpm2_sessions=)
-        * 'custom': Adapter to user-defined callbacks
-                    (needs additional named arguments get_callback= and, optionally, add_entropy_callback=)
-        """
         self.__obj = c_void_p(0)
         if rng_type == 'custom':
             custom_rng_ctx = _CustomRngContext(kwargs.pop("get_callback", None), kwargs.pop("add_entropy_callback", None))
@@ -1020,11 +1027,11 @@ class BlockCipher:
 # Hash function
 #
 class HashFunction:
-    """Previously ``hash_function``"""
+    """Previously ``hash_function``
+
+    The ``algo`` param is a string (eg 'SHA-1', 'SHA-384', 'BLAKE2b')"""
 
     def __init__(self, algo: str | c_void_p):
-        """The ``algo`` param is a string (eg 'SHA-1', 'SHA-384', 'BLAKE2b')"""
-
         if isinstance(algo, c_void_p):
             self.__obj = algo
         else:
@@ -1125,10 +1132,11 @@ class XOF:
 # Message authentication codes
 #
 class MsgAuthCode:
-    """Previously ``message_authentication_code``"""
+    """Previously ``message_authentication_code``
+
+    Algo is a string (eg 'HMAC(SHA-256)', 'Poly1305', 'CMAC(AES-256)')"""
 
     def __init__(self, algo: str):
-        """Algo is a string (eg 'HMAC(SHA-256)', 'Poly1305', 'CMAC(AES-256)')"""
         flags = c_uint32(0) # always zero in this API version
         self.__obj = c_void_p(0)
         _DLL.botan_mac_init(byref(self.__obj), _ctype_str(algo), flags)
@@ -1189,13 +1197,13 @@ class MsgAuthCode:
         return _ctype_bufout(out)
 
 class SymmetricCipher:
-    """Previously ``cipher``"""
+    """Previously ``cipher``
+
+    The algorithm is specified as a string (eg 'AES-128/GCM', 'Serpent/OCB(12)', 'Threefish-512/EAX').
+    Set `encrypt` to False for decryption."""
 
     def __init__(self, algo: str, encrypt: bool = True):
-        """The algorithm is specified as a string (eg 'AES-128/GCM',
-        'Serpent/OCB(12)', 'Threefish-512/EAX').
 
-        Set `encrypt` to False for decryption"""
         flags = 0 if encrypt else 1
         self.__obj = c_void_p(0)
         _DLL.botan_cipher_init(byref(self.__obj), _ctype_str(algo), flags)
@@ -2347,11 +2355,14 @@ class X509Cert: # pylint: disable=invalid-name
 # X.509 Certificate revocation lists
 #
 class X509CRL:
-    """Class representing an X.509 Certificate Revocation List."""
+    """Class representing an X.509 Certificate Revocation List.
+
+    A CRL in PEM or DER format can be loaded from a file, with the ``filename`` argument,
+    or from a bytestring, with the ``buf`` argument.
+    """
 
     def __init__(self, filename: str | None = None, buf: bytes | None = None):
-        """A CRL in PEM or DER format can be loaded from a file, with the ``filename`` argument,
-        or from a bytestring, with the ``buf`` argument."""
+
         self.__obj = c_void_p(0)
         self.__obj = _load_buf_or_file(filename, buf, _DLL.botan_x509_crl_load_file, _DLL.botan_x509_crl_load)
 
@@ -2363,13 +2374,14 @@ class X509CRL:
 
 
 class MPI:
-    """Most of the usual arithmetic operators (``__add__``, ``__mul__``, etc) are defined."""
+    """Initialize an MPI object with specified value, left as zero otherwise. The
+    ``initial_value`` should be an ``int``, ``str``, or ``MPI``.
+    The ``radix`` value should be set to 16 when initializing from a base 16 `str` value.
+
+    Most of the usual arithmetic operators (``__add__``, ``__mul__``, etc) are defined.
+    """
 
     def __init__(self, initial_value: MPILike | c_void_p = None, radix: int | None = None):
-        """Initialize an MPI object with specified value, left as zero otherwise.  The
-        ``initial_value`` should be an ``int``, ``str``, or ``MPI``.
-        The ``radix`` value should be set to 16 when initializing from a base 16 `str` value."""
-
         if isinstance(initial_value, c_void_p):
             self.__obj = initial_value
             return
@@ -2809,9 +2821,9 @@ class ECGroup:
 
 
 class FormatPreservingEncryptionFE1:
+    """Initialize an instance for format preserving encryption"""
 
     def __init__(self, modulus: MPI, key: bytes, rounds: int = 5, compat_mode: bool = False):
-        """Initialize an instance for format preserving encryption"""
         flags = c_uint32(1 if compat_mode else 0)
         self.__obj = c_void_p(0)
         _DLL.botan_fpe_fe1_init(byref(self.__obj), modulus.handle_(), key, len(key), c_size_t(rounds), flags)
