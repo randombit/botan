@@ -4,6 +4,7 @@
 *     2017 René Korthaus, Rohde & Schwarz Cybersecurity
 *     2017 Harry Reimann, Rohde & Schwarz Cybersecurity
 *     2023 René Meusel, Rohde & Schwarz Cybersecurity
+*     2025 Lars Dürkop, CARIAD SE
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -254,6 +255,7 @@ class TLS_Handshake_Test final {
                                                      const std::vector<uint8_t>&,
                                                      Botan::RandomNumberGenerator&,
                                                      const Botan::TLS::Policy&)>;
+      using custom_kdf_clbk = std::function<std::unique_ptr<Botan::KDF>(std::string_view)>;
 
    public:
       TLS_Handshake_Test(const std::string& test_descr,
@@ -317,6 +319,16 @@ class TLS_Handshake_Test final {
       void set_server_expected_handshake_alert(Botan::TLS::Alert alert) {
          BOTAN_ASSERT_NONNULL(m_server_cb);
          m_server_cb->set_expected_handshake_alert(alert);
+      }
+
+      void set_client_custom_kdf_callback(custom_kdf_clbk clbk) {
+         BOTAN_ASSERT_NONNULL(m_client_cb);
+         m_client_cb->set_custom_kdf_callback(std::move(clbk));
+      }
+
+      void set_server_custom_kdf_callback(custom_kdf_clbk clbk) {
+         BOTAN_ASSERT_NONNULL(m_server_cb);
+         m_server_cb->set_custom_kdf_callback(std::move(clbk));
       }
 
    private:
@@ -503,6 +515,14 @@ class TLS_Handshake_Test final {
                return Botan::TLS::Callbacks::tls_ephemeral_key_agreement(group, private_key, public_value, rng, policy);
             }
 
+            std::unique_ptr<Botan::KDF> tls12_protocol_specific_kdf(std::string_view prf_algo) const override {
+               if(m_custom_kdf_callback) {
+                  return m_custom_kdf_callback(prf_algo);
+               } else {
+                  return Botan::TLS::Callbacks::tls12_protocol_specific_kdf(prf_algo);
+               }
+            }
+
             void set_custom_tls_session_established_callback(
                std::function<void(const Botan::TLS::Session_Summary&)> clbk) {
                m_session_established_callback = std::move(clbk);
@@ -518,6 +538,8 @@ class TLS_Handshake_Test final {
 
             void set_expected_handshake_alert(Botan::TLS::Alert alert) { m_expected_handshake_alert = alert; }
 
+            void set_custom_kdf_callback(custom_kdf_clbk clbk) { m_custom_kdf_callback = std::move(clbk); }
+
          private:
             Test::Result& m_results;
             const Botan::TLS::Protocol_Version m_expected_version;
@@ -527,6 +549,7 @@ class TLS_Handshake_Test final {
             std::function<void(const Botan::TLS::Session_Summary&)> m_session_established_callback;
             generate_ephemeral_ecdh_key_clbk m_generate_ephemeral_ecdh_key_callback;
             ephemeral_key_agreement_clbk m_ephemeral_key_agreement_callback;
+            custom_kdf_clbk m_custom_kdf_callback;
             std::optional<Botan::TLS::Alert> m_expected_handshake_alert;
       };
 
@@ -1076,6 +1099,58 @@ class TLS_Unit_Tests final : public Test {
          }
       }
 
+      class CustomKDF : public Botan::KDF {
+         public:
+            std::string name() const override { return "CustomKDF"; }
+
+            std::unique_ptr<KDF> new_object() const override { return std::make_unique<CustomKDF>(); }
+
+            // always returns a static master secret
+            void perform_kdf(std::span<uint8_t> key,
+                             std::span<const uint8_t> /*secret*/,
+                             std::span<const uint8_t> /*salt*/,
+                             std::span<const uint8_t> /*label*/) const override {
+               std::fill(key.begin(), key.end(), 0xAA);
+            }
+      };
+
+      void test_custom_kdf_provider(std::vector<Test::Result>& results,
+                                    const std::shared_ptr<Credentials_Manager_Test>& creds,
+                                    const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+         auto noop_session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
+
+         auto policy = std::make_shared<Test_Policy>();
+
+         TLS_Handshake_Test test("Client and Server use a custom KDF provider in TLS 1.2",
+                                 Botan::TLS::Protocol_Version::TLS_V12,
+                                 creds,
+                                 policy,
+                                 policy,
+                                 rng,
+                                 noop_session_manager,
+                                 noop_session_manager,
+                                 false);
+
+         bool client_custom_kdf_called = false;
+         bool server_custom_kdf_called = false;
+
+         test.set_client_custom_kdf_callback([&](std::string_view) -> std::unique_ptr<Botan::KDF> {
+            client_custom_kdf_called = true;
+            return std::make_unique<CustomKDF>();
+         });
+
+         test.set_server_custom_kdf_callback([&](std::string_view) -> std::unique_ptr<Botan::KDF> {
+            server_custom_kdf_called = true;
+            return std::make_unique<CustomKDF>();
+         });
+
+         test.go();
+
+         test.results().test_is_true("custom KDF was used on client side", client_custom_kdf_called);
+         test.results().test_is_true("custom KDF was used on server side", server_custom_kdf_called);
+         results.push_back(test.results());
+      }
+
    public:
       std::vector<Test::Result> run() override {
          std::vector<Test::Result> results;
@@ -1348,6 +1423,10 @@ class TLS_Unit_Tests final : public Test {
          // establishment (as it used to work in Botan 2.x via tls_ecdh_agree()).
 
          test_custom_ecdh_provider(results, creds, rng);
+
+         // Test using a custom KDF instead of the original TLS 1.2 KDF
+
+         test_custom_kdf_provider(results, creds, rng);
 
          return results;
       }
