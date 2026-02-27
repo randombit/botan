@@ -1587,6 +1587,15 @@ The following algorithms are implemented:
 #. XMSS-SHAKE_10_512
 #. XMSS-SHAKE_16_512
 #. XMSS-SHAKE_20_512
+#. XMSS-SHA2_10_192
+#. XMSS-SHA2_16_192
+#. XMSS-SHA2_20_192
+#. XMSS-SHAKE256_10_256
+#. XMSS-SHAKE256_16_256
+#. XMSS-SHAKE256_20_256
+#. XMSS-SHAKE256_10_192
+#. XMSS-SHAKE256_16_192
+#. XMSS-SHAKE256_20_192
 
 The algorithm name contains the hash function name, tree height and digest
 width defined by the corresponding parameter set. Choosing `XMSS-SHA2_10_256`
