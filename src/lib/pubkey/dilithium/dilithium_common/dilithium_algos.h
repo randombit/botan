@@ -14,12 +14,6 @@
 
 #include <botan/internal/dilithium_types.h>
 
-// ML-DSA does encode the private key only by its random seeds.
-#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
-   // NOLINTNEXTLINE(*-macro-usage)
-   #define BOTAN_NEEDS_DILITHIUM_PRIVATE_KEY_ENCODING 1
-#endif
-
 namespace Botan::Dilithium_Algos {
 
 DilithiumInternalKeypair expand_keypair(DilithiumSeedRandomness xi, DilithiumConstants mode);
@@ -51,14 +45,9 @@ DilithiumSerializedPublicKey encode_public_key(StrongSpan<const DilithiumSeedRho
 
 std::pair<DilithiumSeedRho, DilithiumPolyVec> decode_public_key(StrongSpan<const DilithiumSerializedPublicKey> pk,
                                                                 const DilithiumConstants& mode);
-
-#if BOTAN_NEEDS_DILITHIUM_PRIVATE_KEY_ENCODING
-
 DilithiumSerializedPrivateKey encode_keypair(const DilithiumInternalKeypair& keypair);
 
 DilithiumInternalKeypair decode_keypair(StrongSpan<const DilithiumSerializedPrivateKey> sk, DilithiumConstants mode);
-
-#endif
 
 std::pair<DilithiumPolyVec, DilithiumPolyVec> power2round(const DilithiumPolyVec& vec);
 

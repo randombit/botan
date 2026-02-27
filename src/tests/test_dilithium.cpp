@@ -9,16 +9,20 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  */
 
+#include "test_rng.h"
 #include "tests.h"
+
+#include <memory>
+#include <vector>
 
 #if defined(BOTAN_HAS_DILITHIUM_COMMON)
    #include <botan/dilithium.h>
    #include <botan/hash.h>
    #include <botan/pk_algs.h>
+   #include <botan/pk_keys.h>
    #include <botan/pubkey.h>
 
    #include "test_pubkey.h"
-   #include "test_rng.h"
 #endif
 
 namespace Botan_Tests {
@@ -48,8 +52,10 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
 
          const Botan::Dilithium_PrivateKey priv_key(*dilithium_test_rng, DerivedT::mode);
 
-         result.test_bin_eq(
-            "generated expected private key hash", sha3_256->process(priv_key.private_key_bits()), ref_sk_hash);
+         if(!priv_key.is_mldsa()) {
+            result.test_bin_eq(
+               "generated expected private key hash", sha3_256->process(priv_key.private_key_bits()), ref_sk_hash);
+         }
 
          result.test_bin_eq(
             "generated expected public key hash", sha3_256->process(priv_key.public_key_bits()), ref_pk_hash);
@@ -281,6 +287,58 @@ class Dilithium_Keygen_Tests final : public PK_Key_Generation_Test {
 };
 
 BOTAN_REGISTER_TEST("pubkey", "dilithium_keygen", Dilithium_Keygen_Tests);
+
+#endif
+
+#if defined(BOTAN_HAS_DILITHIUM_COMMON) && defined(BOTAN_HAS_SHA3)
+class MLDSA_Privkey_Tests : public Text_Based_Test {
+   public:
+      MLDSA_Privkey_Tests() : Text_Based_Test("mldsa_privkey.vec", "key") {}
+
+      Test::Result run_one_test(const std::string& name, const VarMap& vars) override {
+         Test::Result result(name);
+         const std::vector<uint8_t> key_bits = vars.get_req_bin("key");
+         bool expect_decoding_failure = false;
+         Botan::DilithiumMode mode = Botan::DilithiumMode::ML_DSA_4x4;
+         if(name.starts_with("mldsa-44")) {
+            mode = Botan::DilithiumMode::ML_DSA_4x4;
+         } else if(name.starts_with("mldsa-65")) {
+            mode = Botan::DilithiumMode::ML_DSA_6x5;
+         } else if(name.starts_with("mldsa-87")) {
+            mode = Botan::DilithiumMode::ML_DSA_8x7;
+         } else {
+            throw Botan_Tests::Test_Error(
+               "internal error for ML-DSA test vector: encountered unknown ml-dsa mode string (test-case-specific token)");
+         }
+         if(name.ends_with("-invalid")) {
+            expect_decoding_failure = true;
+         }
+         std::unique_ptr<Botan::Dilithium_PrivateKey> priv_key;
+         try {
+            priv_key = std::make_unique<Botan::Dilithium_PrivateKey>(key_bits, mode);
+         } catch(const Botan::Decoding_Error&) {
+            result.test_is_true("invalid ML-DSA key rejected", expect_decoding_failure);
+            return result;
+         }
+         std::vector<uint8_t> ref_msg = {0, 1, 2, 4};
+         std::vector<uint8_t> rng_seed(48);
+         Botan_Tests::CTR_DRBG_AES256 rng(rng_seed);
+         auto signer = Botan::PK_Signer(*priv_key, rng, "Randomized");
+         auto signature = signer.sign_message(ref_msg.data(), ref_msg.size(), rng);
+
+         const Botan::Dilithium_PublicKey pub_key(priv_key->public_key_bits(), mode);
+         auto verifier = Botan::PK_Verifier(pub_key, "");
+         verifier.update(ref_msg.data(), ref_msg.size());
+         result.test_is_true("signature verifies", verifier.check_signature(signature.data(), signature.size()));
+
+         auto reencoded_priv_key = priv_key->private_key_bits();
+         auto redecoded_priv_key = Botan::Dilithium_PrivateKey(reencoded_priv_key, mode);
+         result.test_is_true("re-encoding and subsequent re-decoding of private ML-DSA key without error", true);
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "mldsa_private_key", MLDSA_Privkey_Tests);
 
 #endif
 
