@@ -242,7 +242,8 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
        *
        * @return byte sequence consisting of the following elements in order:
        *         4-byte OID, n-byte root node, n-byte public seed,
-       *         8-byte unused leaf index, n-byte prf seed, n-byte private seed.
+       *         4-byte unused leaf index, n-byte prf seed, n-byte private seed.
+       *         At last 1-byte that encodes the WOTS+ key derivation method.
        **/
       secure_vector<uint8_t> raw_private_key() const;
 
