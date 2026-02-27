@@ -21,6 +21,19 @@ EXE_LINKS_TO        = %{link_to_botan} ${LIB_LINKS_TO} %{extra_libs}
 SCRIPTS_DIR    = %{scripts_dir}
 INSTALLED_LIB_DIR = %{libdir}
 
+%{if enable_pch}
+rule compile_pch_lib
+  command = %{cxx} %{lib_flags} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile} %{dash_c} $in %{dash_o}$out
+
+rule compile_pch_exe
+  command = %{cxx} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile} %{dash_c} $in %{dash_o}$out
+
+build %{pch_path_for_lib}: compile_pch_lib %{pch_dir}/pch_lib.h
+
+build %{pch_path_for_exe}: compile_pch_exe %{pch_dir}/pch_exe.h
+
+%{endif}
+
 rule compile_lib
 %{if header_deps_out}
   depfile = $out.d
@@ -28,7 +41,7 @@ rule compile_lib
 %{if ninja_header_deps_style}
   deps = %{ninja_header_deps_style}
 %{endif}
-  command = %{cxx} %{lib_flags} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{header_deps_flag} %{header_deps_out|concat: $out.d} %{dash_c} $in %{dash_o}$out
+  command = %{cxx} %{pch_include_for_lib} %{lib_flags} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{header_deps_flag} %{header_deps_out|concat: $out.d} %{dash_c} $in %{dash_o}$out
 
 rule compile_exe
 %{if header_deps_out}
@@ -37,7 +50,7 @@ rule compile_exe
 %{if ninja_header_deps_style}
   deps = %{ninja_header_deps_style}
 %{endif}
-  command = %{cxx} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{header_deps_flag} %{header_deps_out|concat: $out.d} %{dash_c} $in %{dash_o}$out
+  command = %{cxx} %{pch_include_for_exe} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{header_deps_flag} %{header_deps_out|concat: $out.d} %{dash_c} $in %{dash_o}$out
 
 rule compile_example_exe
 %{if header_deps_out}
@@ -195,6 +208,10 @@ build libs: phony %{library_targets} $
 
 build docs: phony %{doc_stamp_file}
 
+%{if enable_pch}
+build pch: phony %{pch_path_for_lib} %{pch_path_for_exe}
+%{endif}
+
 build clean: clean
 
 build distclean: distclean
@@ -211,15 +228,15 @@ build tidy: tidy
 # Build Commands
 
 %{for lib_build_info}
-build %{obj}: compile_lib %{src}
+build %{obj}: compile_lib %{src} | %{pch_target}
 %{endfor}
 
 %{for cli_build_info}
-build %{obj}: compile_exe %{src}
+build %{obj}: compile_exe %{src} | %{pch_target}
 %{endfor}
 
 %{for test_build_info}
-build %{obj}: compile_exe %{src}
+build %{obj}: compile_exe %{src} | %{pch_target}
 %{endfor}
 
 %{for fuzzer_build_info}
