@@ -18,8 +18,10 @@
 #include <botan/rng.h>
 #include <botan/internal/barrett.h>
 #include <botan/internal/ec_inner_data.h>
+#include <botan/internal/ec_sec1.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/primality.h>
+#include <botan/internal/stl_util.h>
 #include <vector>
 
 namespace Botan {
@@ -344,32 +346,44 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
          throw Decoding_Error("Invalid ECC base point encoding");
       }
 
-      auto [g_x, g_y] = [&]() {
-         const uint8_t hdr = base_pt[0];
+      auto [g_x, g_y] = [&] {
+         auto base_pt_components =
+            sec1_decode(base_pt,
+                        p_bytes,
+                        overloaded{
+                           [](const SEC1_Identity) -> std::pair<BigInt, BigInt> {
+                              throw Decoding_Error("Identity is not a valid base point");
+                           },  //
+                           [&](const SEC1_Compressed compressed) -> std::optional<std::pair<BigInt, BigInt>> {
+                              BigInt x = BigInt::from_bytes(compressed.x);
+                              BigInt y = sqrt_modulo_prime(((x * x + a) * x + b) % p, p);
 
-         if(hdr == 0x04 && base_pt.size() == 1 + 2 * p_bytes) {
-            const BigInt x = BigInt::decode(&base_pt[1], p_bytes);
-            const BigInt y = BigInt::decode(&base_pt[p_bytes + 1], p_bytes);
+                              if(x < p && y >= 0) {
+                                 if(y.is_even() != compressed.y_is_even.as_bool()) {
+                                    y = p - y;
+                                 }
 
-            if(x < p && y < p) {
-               return std::make_pair(x, y);
-            }
-         } else if((hdr == 0x02 || hdr == 0x03) && base_pt.size() == 1 + p_bytes) {
-            // TODO(Botan4) remove this branch; we won't support compressed points
-            const BigInt x = BigInt::decode(&base_pt[1], p_bytes);
-            BigInt y = sqrt_modulo_prime(((x * x + a) * x + b) % p, p);
+                                 return std::pair{std::move(x), std::move(y)};
+                              }
 
-            if(x < p && y >= 0) {
-               const bool y_mod_2 = (hdr & 0x01) == 1;
-               if(y.get_bit(0) != y_mod_2) {
-                  y = p - y;
-               }
+                              return {};
+                           },
+                           [&](const SEC1_Full full) -> std::optional<std::pair<BigInt, BigInt>> {
+                              auto xy = std::pair{BigInt::from_bytes(full.x), BigInt::from_bytes(full.y)};
 
-               return std::make_pair(x, y);
-            }
+                              if(xy.first < p && xy.second < p) {
+                                 return xy;
+                              }
+
+                              return {};
+                           },
+                        });
+
+         if(!base_pt_components.has_value()) {
+            throw Decoding_Error("Invalid ECC base point encoding");
          }
 
-         throw Decoding_Error("Invalid ECC base point encoding");
+         return std::move(base_pt_components).value();
       }();
 
       // TODO(Botan4) we can remove this check since we'll only accept pre-registered groups

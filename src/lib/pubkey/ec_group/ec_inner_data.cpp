@@ -8,8 +8,10 @@
 
 #include <botan/der_enc.h>
 #include <botan/internal/ec_inner_pc.h>
+#include <botan/internal/ec_sec1.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/pcurves.h>
+#include <botan/internal/stl_util.h>
 #include <algorithm>
 
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
@@ -178,44 +180,26 @@ bool EC_Group_Data::params_match(const BigInt& p,
    }
 
    const size_t field_len = this->p_bytes();
+   const auto base_pt_okay =
+      sec1_decode(base_pt,
+                  field_len,
+                  overloaded{
+                     [](const SEC1_Identity) -> bool { throw Decoding_Error("Identity is not a valid base point"); },
+                     [&](const SEC1_Compressed compressed) {
+                        return std::ranges::equal(compressed.x, m_g_x.serialize(field_len)) &&
+                               compressed.y_is_even.as_bool() == m_g_y.is_even();
+                     },
+                     [&](const SEC1_Full full) {
+                        return std::ranges::equal(full.x, m_g_x.serialize(field_len)) &&
+                               std::ranges::equal(full.y, m_g_y.serialize(field_len));
+                     },
+                  });
 
-   if(base_pt.size() == 1 + field_len && (base_pt[0] == 0x02 || base_pt[0] == 0x03)) {
-      // compressed
-
-      const auto g_x = m_g_x.serialize(field_len);
-      const auto g_y = m_g_y.is_odd();
-
-      const auto sec1_x = base_pt.subspan(1, field_len);
-      const bool sec1_y = (base_pt[0] == 0x03);
-
-      if(!std::ranges::equal(sec1_x, g_x)) {
-         return false;
-      }
-
-      if(sec1_y != g_y) {
-         return false;
-      }
-
-      return true;
-   } else if(base_pt.size() == 1 + 2 * field_len && base_pt[0] == 0x04) {
-      const auto g_x = m_g_x.serialize(field_len);
-      const auto g_y = m_g_y.serialize(field_len);
-
-      const auto sec1_x = base_pt.subspan(1, field_len);
-      const auto sec1_y = base_pt.subspan(1 + field_len, field_len);
-
-      if(!std::ranges::equal(sec1_x, g_x)) {
-         return false;
-      }
-
-      if(!std::ranges::equal(sec1_y, g_y)) {
-         return false;
-      }
-
-      return true;
-   } else {
+   if(!base_pt_okay.has_value() /* SEC1 parsing failed */) {
       throw Decoding_Error("Invalid base point encoding in explicit group");
    }
+
+   return *base_pt_okay;
 }
 
 bool EC_Group_Data::params_match(const EC_Group_Data& other) const {
@@ -373,19 +357,6 @@ std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_deserialize(std::span<cons
 }
 
 std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_deserialize(std::span<const uint8_t> bytes) const {
-   // The deprecated "hybrid" point format
-   // TODO(Botan4) remove this
-   if(bytes.size() >= 1 + 2 * 4 && (bytes[0] == 0x06 || bytes[0] == 0x07)) {
-      const bool hdr_y_is_even = bytes[0] == 0x06;
-      const bool y_is_even = (bytes.back() & 0x01) == 0;
-
-      if(hdr_y_is_even == y_is_even) {
-         std::vector<uint8_t> sec1(bytes.begin(), bytes.end());
-         sec1[0] = 0x04;
-         return this->point_deserialize(sec1);
-      }
-   }
-
    try {
       if(m_pcurve) {
          if(auto pt = m_pcurve->deserialize_point(bytes)) {

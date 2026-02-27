@@ -15,8 +15,10 @@
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/ec_inner_data.h>
+#include <botan/internal/ec_sec1.h>
 #include <botan/internal/mod_inv.h>
 #include <botan/internal/monty.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -853,74 +855,59 @@ BigInt decompress_point(bool y_mod_2, const BigInt& x, const BigInt& p, const Bi
 }  // namespace
 
 EC_Point OS2ECP(std::span<const uint8_t> data, const CurveGFp& curve) {
-   return OS2ECP(data.data(), data.size(), curve);
-}
+   auto point = sec1_decode(data,
+                            curve.get_p().bytes(),
+                            overloaded{
+                               [&](const Botan::SEC1_Identity&) { return EC_Point(curve); },
+                               [&](const auto&) {
+                                  auto [g_x, g_y] =
+                                     OS2ECP(data.data(), data.size(), curve.get_p(), curve.get_a(), curve.get_b());
+                                  return EC_Point(curve, std::move(g_x), std::move(g_y));
+                               },
+                            });
 
-EC_Point OS2ECP(const uint8_t data[], size_t data_len, const CurveGFp& curve) {
-   if(data_len == 1 && data[0] == 0) {
-      // SEC1 standard representation of the point at infinity
-      return EC_Point(curve);
+   if(!point) {
+      throw Decoding_Error("OS2ECP: Invalid or unsupported point encoding");
    }
 
-   const auto [g_x, g_y] = OS2ECP(data, data_len, curve.get_p(), curve.get_a(), curve.get_b());
-
-   EC_Point point(curve, g_x, g_y);
-
-   if(!point.on_the_curve()) {
+   if(!point->on_the_curve()) {
       throw Decoding_Error("OS2ECP: Decoded point was not on the curve");
    }
 
-   return point;
+   return std::move(point).value();
+}
+
+EC_Point OS2ECP(const uint8_t data[], size_t data_len, const CurveGFp& curve) {
+   return OS2ECP({data, data_len}, curve);
 }
 
 std::pair<BigInt, BigInt> OS2ECP(const uint8_t pt[], size_t pt_len, const BigInt& p, const BigInt& a, const BigInt& b) {
-   if(pt_len <= 1) {
-      throw Decoding_Error("OS2ECP invalid point encoding");
+   auto point = sec1_decode({pt, pt_len},
+                            p.bytes(),
+                            overloaded{
+                               [&](const Botan::SEC1_Identity&) -> std::pair<BigInt, BigInt> {
+                                  throw Decoding_Error("OS2ECP: Point at infinity encountered in affine conversion");
+                               },
+                               [&](const Botan::SEC1_Compressed& compressed) {
+                                  const bool y_is_odd = !compressed.y_is_even.as_bool();
+                                  auto x = BigInt::decode(compressed.x);
+                                  auto y = decompress_point(y_is_odd, x, p, a, b);
+                                  return std::pair{std::move(x), std::move(y)};
+                               },
+                               [&](const Botan::SEC1_Full& full) {
+                                  return std::pair{BigInt::decode(full.x), BigInt::decode(full.y)};
+                               },
+                            });
+
+   if(!point) {
+      throw Decoding_Error("OS2ECP: invalid or unsupported point encoding");
    }
 
-   const uint8_t pc = pt[0];
-   const size_t p_bytes = p.bytes();
-
-   BigInt x;
-   BigInt y;
-
-   if(pc == 2 || pc == 3) {
-      if(pt_len != 1 + p_bytes) {
-         throw Decoding_Error("OS2ECP invalid point encoding");
-      }
-      x = BigInt::decode(&pt[1], pt_len - 1);
-
-      const bool y_mod_2 = ((pc & 0x01) == 1);
-      y = decompress_point(y_mod_2, x, p, a, b);
-   } else if(pc == 4) {
-      if(pt_len != 1 + 2 * p_bytes) {
-         throw Decoding_Error("OS2ECP invalid point encoding");
-      }
-
-      x = BigInt::decode(&pt[1], p_bytes);
-      y = BigInt::decode(&pt[p_bytes + 1], p_bytes);
-   } else if(pc == 6 || pc == 7) {
-      if(pt_len != 1 + 2 * p_bytes) {
-         throw Decoding_Error("OS2ECP invalid point encoding");
-      }
-
-      x = BigInt::decode(&pt[1], p_bytes);
-      y = BigInt::decode(&pt[p_bytes + 1], p_bytes);
-
-      const bool y_mod_2 = ((pc & 0x01) == 1);
-
-      if(decompress_point(y_mod_2, x, p, a, b) != y) {
-         throw Decoding_Error("OS2ECP: Decoding error in hybrid format");
-      }
-   } else {
-      throw Decoding_Error("OS2ECP: Unknown format type " + std::to_string(static_cast<int>(pc)));
+   if(point->first >= p || point->second >= p) {
+      throw Decoding_Error("OS2ECP: invalid point encoding");
    }
 
-   if(x >= p || y >= p) {
-      throw Decoding_Error("OS2ECP invalid point encoding");
-   }
-
-   return std::make_pair(x, y);
+   return std::move(point).value();
 }
 
 }  // namespace Botan

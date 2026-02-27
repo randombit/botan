@@ -18,6 +18,7 @@ pem
 <header:internal>
 ec_inner_pc.h
 ec_inner_data.h
+ec_sec1.h
 </header:internal>
 
 <header:public>
