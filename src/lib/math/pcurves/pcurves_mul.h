@@ -168,7 +168,8 @@ std::vector<typename C::AffinePoint> basemul_setup(const typename C::AffinePoint
       accum = table[i + (WindowElements / 2)].dbl();
    }
 
-   return to_affine_batch<C>(table);
+   // Variable time batch conversion is fine since generator is public
+   return to_affine_batch<C, true>(table);
 }
 
 template <typename C, size_t WindowBits, typename BlindedScalar>
@@ -258,7 +259,8 @@ std::vector<typename C::AffinePoint> basemul_booth_setup(const typename C::Affin
       accum = table[i + WindowElements - 1].dbl();
    }
 
-   return to_affine_batch<C>(table);
+   // Variable time batch conversion is fine since generator is public
+   return to_affine_batch<C, true>(table);
 }
 
 /*
