@@ -49,6 +49,9 @@ class PerfTest_Rng final : public PerfTest {
          // Provide a dummy seed
          Botan::ChaCha_RNG chacha_rng(Botan::secure_vector<uint8_t>(32));
          bench_rng(config, chacha_rng, "ChaCha_RNG");
+
+         Botan::ChaCha_RNG chacha_rng_fke(Botan::secure_vector<uint8_t>(32), true);
+         bench_rng(config, chacha_rng_fke, "ChaCha_RNG (with key erasure)");
 #endif
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)

@@ -8,7 +8,7 @@ name -> "ChaCha RNG"
 
 <requires>
 hmac
-sha2_32
+sha2_64
 chacha
 stateful_rng
 </requires>
