@@ -262,7 +262,7 @@ class IntMod final {
       /**
       * Modular addition; return c = a + b
       */
-      friend constexpr Self operator+(const Self& a, const Self& b) {
+      friend constexpr BOTAN_FORCE_INLINE Self operator+(const Self& a, const Self& b) {
          std::array<W, N> t;  // NOLINT(*-member-init)
 
          W carry = 0;
@@ -278,14 +278,21 @@ class IntMod final {
       /**
       * Modular subtraction; return c = a - b
       */
-      friend constexpr Self operator-(const Self& a, const Self& b) {
+      friend constexpr BOTAN_FORCE_INLINE Self operator-(const Self& a, const Self& b) {
          std::array<W, N> r;  // NOLINT(*-member-init)
          W carry = 0;
          for(size_t i = 0; i != N; ++i) {
             r[i] = word_sub(a.m_val[i], b.m_val[i], &carry);
          }
 
-         bigint_cnd_add(carry, r.data(), P.data(), N);
+         const auto mask = CT::Mask<W>::expand(carry).value();
+
+         carry = 0;
+
+         for(size_t i = 0; i != N; ++i) {
+            r[i] = word_add(r[i], P[i] & mask, &carry);
+         }
+
          return Self(r);
       }
 
@@ -303,13 +310,19 @@ class IntMod final {
          const W borrow = shift_right<1>(t);
 
          // If value was odd, add (P/2)+1
-         bigint_cnd_add(borrow, t.data(), INV_2.data(), N);
+         const auto mask = CT::Mask<W>::expand(borrow).value();
+
+         W carry = 0;
+
+         for(size_t i = 0; i != N; ++i) {
+            t[i] = word_add(t[i], INV_2[i] & mask, &carry);
+         }
 
          return Self(t);
       }
 
       /// Return (*this) multiplied by 2
-      constexpr Self mul2() const {
+      constexpr BOTAN_FORCE_INLINE Self mul2() const {
          std::array<W, N> t = value();
          const W carry = shift_left<1>(t);
 
@@ -319,18 +332,18 @@ class IntMod final {
       }
 
       /// Return (*this) multiplied by 3
-      constexpr Self mul3() const { return mul2() + (*this); }
+      constexpr inline Self mul3() const { return mul2() + (*this); }
 
       /// Return (*this) multiplied by 4
-      constexpr Self mul4() const { return mul2().mul2(); }
+      constexpr inline Self mul4() const { return mul2().mul2(); }
 
       /// Return (*this) multiplied by 8
-      constexpr Self mul8() const { return mul2().mul2().mul2(); }
+      constexpr inline Self mul8() const { return mul2().mul2().mul2(); }
 
       /**
       * Modular multiplication; return c = a * b
       */
-      friend constexpr Self operator*(const Self& a, const Self& b) {
+      friend constexpr BOTAN_FORCE_INLINE Self operator*(const Self& a, const Self& b) {
          std::array<W, 2 * N> z;  // NOLINT(*-member-init)
          comba_mul<N>(z.data(), a.data(), b.data());
          return Self(Rep::redc(z));
@@ -339,7 +352,7 @@ class IntMod final {
       /**
       * Modular multiplication; set this to this * other
       */
-      constexpr Self& operator*=(const Self& other) {
+      constexpr BOTAN_FORCE_INLINE Self& operator*=(const Self& other) {
          std::array<W, 2 * N> z;  // NOLINT(*-member-init)
          comba_mul<N>(z.data(), data(), other.data());
          m_val = Rep::redc(z);
@@ -410,7 +423,7 @@ class IntMod final {
       *
       * Returns the square of this after modular reduction
       */
-      constexpr Self square() const {
+      constexpr BOTAN_FORCE_INLINE Self square() const {
          std::array<W, 2 * N> z;  // NOLINT(*-member-init)
          comba_sqr<N>(z.data(), this->data());
          return Self(Rep::redc(z));
