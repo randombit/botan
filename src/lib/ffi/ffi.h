@@ -2594,7 +2594,7 @@ int botan_x509_crl_view_string_values_count(botan_x509_crl_t crl_obj, botan_x509
  * Given a CRL and a certificate,
  * check if the certificate is revoked on that particular CRL
  */
-BOTAN_FFI_EXPORT(2, 13) int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert);
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert);
 
 /**
 * Allows iterating all entries of the CRL.

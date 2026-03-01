@@ -530,7 +530,7 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_x509_crl_load, [c_void_p, c_char_p, c_size_t])
     ffi_api(dll.botan_x509_crl_load_file, [c_void_p, c_char_p])
     ffi_api(dll.botan_x509_crl_destroy, [c_void_p])
-    ffi_api(dll.botan_x509_is_revoked, [c_void_p, c_void_p], [-1])
+    ffi_api(dll.botan_x509_is_revoked, [c_void_p, c_void_p])
     ffi_api(dll.botan_x509_cert_verify_with_crl,
             [POINTER(c_int), c_void_p, c_void_p, c_size_t, c_void_p, c_size_t, c_void_p, c_size_t, c_char_p, c_size_t, c_char_p, c_uint64])
 
@@ -2340,7 +2340,7 @@ class X509Cert: # pylint: disable=invalid-name
     def is_revoked(self, crl: X509CRL) -> bool:
         """Check if the certificate (``self``) is revoked on the given ``crl``."""
         rc = _DLL.botan_x509_is_revoked(crl.handle_(), self.__obj)
-        return rc == 0
+        return rc == 1
 
 
 #

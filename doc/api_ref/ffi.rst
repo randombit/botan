@@ -2084,7 +2084,7 @@ X.509 Certificate Revocation Lists
 .. cpp:function:: int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert)
 
    Check whether a given ``crl`` contains a given ``cert``.
-   Return ``0`` when the certificate is revoked, ``-1`` otherwise.
+   Return ``1`` when the certificate is revoked, ``0`` otherwise.
 
 .. cpp:function:: int botan_x509_crl_entries(botan_x509_crl_t crl, \
                                              size_t index, \

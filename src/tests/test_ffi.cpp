@@ -742,7 +742,7 @@ class FFI_CRL_Test final : public FFI_Test {
 
          botan_x509_cert_t cert1;
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&cert1, Test::data_file("x509/nist/test01/end.crt").c_str()));
-         TEST_FFI_RC(-1, botan_x509_is_revoked, (crl, cert1));
+         TEST_FFI_RC(0, botan_x509_is_revoked, (crl, cert1));
          TEST_FFI_OK(botan_x509_cert_destroy, (cert1));
 
          botan_x509_cert_t cert2;
@@ -750,8 +750,8 @@ class FFI_CRL_Test final : public FFI_Test {
          botan_mp_t cert2_serial_bn;
          size_t cert2_serial_len = 0;
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&cert2, Test::data_file("x509/nist/test20/int.crt").c_str()));
-         TEST_FFI_RC(0, botan_x509_is_revoked, (crl, cert2));
-         TEST_FFI_RC(-1, botan_x509_is_revoked, (bytecrl, cert2));
+         TEST_FFI_RC(1, botan_x509_is_revoked, (crl, cert2));
+         TEST_FFI_RC(0, botan_x509_is_revoked, (bytecrl, cert2));
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
                      botan_x509_cert_get_serial_number,
                      (cert2, nullptr, &cert2_serial_len));

@@ -1227,7 +1227,7 @@ int botan_x509_crl_view_string_values_count(botan_x509_crl_t crl_obj, botan_x509
 
 int botan_x509_is_revoked(botan_x509_crl_t crl, botan_x509_cert_t cert) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_VISIT(crl, [=](const auto& c) { return c.is_revoked(safe_get(cert)) ? 0 : -1; });
+   return BOTAN_FFI_VISIT(crl, [=](const auto& c) { return c.is_revoked(safe_get(cert)) ? 1 : 0; });
 #else
    BOTAN_UNUSED(cert);
    BOTAN_UNUSED(crl);
