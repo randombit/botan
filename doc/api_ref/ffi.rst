@@ -28,10 +28,16 @@ pleasant, at least straightforward.
   :cpp:enumerator:`BOTAN_FFI_ERROR_INVALID_OBJECT` error, instead of a crash or
   memory corruption.
 
-* (Almost) all functions return an integer error code indicating success or
-  failure. The exception is a small handful of version query functions, which
-  are guaranteed to never fail. All functions returning errors use the same
-  set of error codes.
+* (Almost) all functions return an integer error code indicating success (0) or
+  failure (negative value). All functions returning errors use the same set of
+  error codes (:cpp:enum:`BOTAN_FFI_ERROR`).
+
+  There are two exceptions to this rule:
+
+    * version calls (``botan_version_*``) as well as error translation functions
+      (``botan_error_*``), which are guaranteed to always produce valid output.
+    * boolean predicate functions, which return 1 for true, 0 for false and
+      negative values from :cpp:enum:`BOTAN_FFI_ERROR` for errors.
 
 * The set of types used is small and commonly supported: ``uint8_t`` arrays for
   binary data, ``size_t`` for lengths, and NULL-terminated UTF-8 encoded
