@@ -1227,41 +1227,49 @@ class GenericBlindedScalarBits final {
          const auto& params = scalar.curve()->_params();
 
          const size_t order_bits = params.order_bits();
-         const size_t blinder_bits = blinding_bits(order_bits);
+         m_window_bits = wb;
 
-         const size_t mask_words = blinder_bits / WordInfo<word>::bits;
-         const size_t mask_bytes = mask_words * WordInfo<word>::bytes;
+         const size_t blinder_bits = scalar_blinding_bits(order_bits);
 
-         const size_t words = params.words();
+         if(blinder_bits > 0 && rng.is_seeded()) {
+            const size_t mask_words = (blinder_bits + WordInfo<word>::bits - 1) / WordInfo<word>::bits;
+            const size_t mask_bytes = mask_words * WordInfo<word>::bytes;
 
-         secure_vector<uint8_t> maskb(mask_bytes);
-         if(rng.is_seeded()) {
+            const size_t words = params.words();
+
+            secure_vector<uint8_t> maskb(mask_bytes);
             rng.randomize(maskb);
-         } else {
-            auto sbytes = scalar.serialize<std::vector<uint8_t>>();
-            for(size_t i = 0; i != sbytes.size(); ++i) {
-               maskb[i % mask_bytes] ^= sbytes[i];
+
+            std::array<word, PrimeOrderCurve::StorageWords> mask{};
+            load_le(mask.data(), maskb.data(), mask_words);
+
+            // Mask to exactly blinder_bits and set MSB and LSB
+            const size_t excess = mask_words * WordInfo<word>::bits - blinder_bits;
+            if(excess > 0) {
+               mask[mask_words - 1] &= (static_cast<word>(1) << (WordInfo<word>::bits - excess)) - 1;
             }
+            const size_t msb_pos = (blinder_bits - 1) % WordInfo<word>::bits;
+            mask[(blinder_bits - 1) / WordInfo<word>::bits] |= static_cast<word>(1) << msb_pos;
+            mask[0] |= 1;
+
+            std::array<word, 2 * PrimeOrderCurve::StorageWords> mask_n{};
+
+            const auto sw = scalar.to_words();
+
+            // Compute masked scalar s + k*n
+            params.mul(mask_n, mask, params.order());
+            bigint_add2(mask_n.data(), 2 * words, sw.data(), words);
+
+            std::reverse(mask_n.begin(), mask_n.end());
+            m_bytes = store_be<std::vector<uint8_t>>(mask_n);
+            m_bits = order_bits + blinder_bits;
+         } else {
+            // No RNG available, skip blinding
+            m_bytes = scalar.serialize<std::vector<uint8_t>>();
+            m_bits = order_bits;
          }
 
-         std::array<word, PrimeOrderCurve::StorageWords> mask{};
-         load_le(mask.data(), maskb.data(), mask_words);
-         mask[mask_words - 1] |= WordInfo<word>::top_bit;
-         mask[0] |= 1;
-
-         std::array<word, 2 * PrimeOrderCurve::StorageWords> mask_n{};
-
-         const auto sw = scalar.to_words();
-
-         // Compute masked scalar s + k*n
-         params.mul(mask_n, mask, params.order());
-         bigint_add2(mask_n.data(), 2 * words, sw.data(), words);
-
-         std::reverse(mask_n.begin(), mask_n.end());
-         m_bytes = store_be<std::vector<uint8_t>>(mask_n);
-         m_bits = order_bits + blinder_bits;
-         m_window_bits = wb;
-         m_windows = (order_bits + blinder_bits + wb - 1) / wb;
+         m_windows = (m_bits + wb - 1) / wb;
       }
 
       size_t windows() const { return m_windows; }
@@ -1286,15 +1294,6 @@ class GenericBlindedScalarBits final {
          } else {
             BOTAN_ASSERT_UNREACHABLE();
          }
-      }
-
-      static size_t blinding_bits(size_t order_bits) {
-         if(order_bits > 512) {
-            return blinding_bits(512);
-         }
-
-         const size_t wb = sizeof(word) * 8;
-         return ((order_bits / 4 + wb - 1) / wb) * wb;
       }
 
    private:
@@ -1339,7 +1338,7 @@ class GenericBaseMulTable final {
    private:
       static size_t blinded_scalar_bits(const GenericPrimeOrderCurve& curve) {
          const size_t order_bits = curve.order_bits();
-         return order_bits + GenericBlindedScalarBits::blinding_bits(order_bits);
+         return order_bits + scalar_blinding_bits(order_bits);
       }
 
       std::vector<GenericAffinePoint> m_table;
