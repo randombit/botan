@@ -26,7 +26,7 @@
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/stateful_key_index_registry.h>
-#include <botan/internal/xmss_common_ops.h>
+#include <botan/internal/xmss_core_ops.h>
 #include <botan/internal/xmss_hash.h>
 #include <botan/internal/xmss_signature_operation.h>
 
@@ -216,152 +216,18 @@ XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,
                    "XMSS: unexpected byte length of private seed");
 }
 
-secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(size_t start_idx,
+secure_vector<uint8_t> XMSS_PrivateKey::tree_hash(uint32_t start_idx,
                                                   size_t target_node_height,
-                                                  const XMSS_Address& adrs,
+                                                  XMSS_Address adrs,
                                                   XMSS_Hash& hash) const {
-   BOTAN_ASSERT_NOMSG(target_node_height <= 30);
-   BOTAN_ASSERT((start_idx % (static_cast<size_t>(1) << target_node_height)) == 0,
-                "Start index must be divisible by 2^{target node height}.");
-
-#if defined(BOTAN_HAS_THREAD_UTILS)
-   // determine number of parallel tasks to split the tree_hashing into.
-
-   Thread_Pool& thread_pool = Thread_Pool::global_instance();
-
-   const size_t split_level = std::min(target_node_height, thread_pool.worker_count());
-
-   // skip parallelization overhead for leaf nodes.
-   if(split_level == 0) {
-      secure_vector<uint8_t> result;
-      XMSS_Address subtree_addr(adrs);
-      tree_hash_subtree(result, start_idx, target_node_height, subtree_addr, hash);
-      return result;
-   }
-
-   const size_t subtrees = static_cast<size_t>(1) << split_level;
-   const size_t last_idx = (static_cast<size_t>(1) << (target_node_height)) + start_idx;
-   const size_t offs = (last_idx - start_idx) / subtrees;
-   // this cast cannot overflow because target_node_height is limited
-   uint8_t level = static_cast<uint8_t>(split_level);  // current level in the tree
-
-   BOTAN_ASSERT((last_idx - start_idx) % subtrees == 0,
-                "Number of worker threads in tree_hash need to divide range "
-                "of calculated nodes.");
-
-   std::vector<secure_vector<uint8_t>> nodes(subtrees,
-                                             secure_vector<uint8_t>(XMSS_PublicKey::m_xmss_params.element_size()));
-   std::vector<XMSS_Address> node_addresses(subtrees, adrs);
-   std::vector<XMSS_Hash> xmss_hash(subtrees, hash);
-   std::vector<std::future<void>> work;
-
-   // Calculate multiple subtrees in parallel.
-   for(size_t i = 0; i < subtrees; i++) {
-      using tree_hash_subtree_fn_t =
-         void (XMSS_PrivateKey::*)(secure_vector<uint8_t>&, size_t, size_t, XMSS_Address&, XMSS_Hash&) const;
-
-      const tree_hash_subtree_fn_t work_fn = &XMSS_PrivateKey::tree_hash_subtree;
-
-      work.push_back(thread_pool.run(work_fn,
-                                     this,
-                                     std::ref(nodes[i]),
-                                     start_idx + i * offs,
-                                     target_node_height - split_level,
-                                     std::ref(node_addresses[i]),
-                                     std::ref(xmss_hash[i])));
-   }
-
-   for(auto& w : work) {
-      w.get();
-   }
-   work.clear();
-
-   // Parallelize the top tree levels horizontally
-   while(level-- > 1) {
-      std::vector<secure_vector<uint8_t>> ro_nodes(nodes.begin(),
-                                                   nodes.begin() + (static_cast<size_t>(1) << (level + 1)));
-
-      for(size_t i = 0; i < (static_cast<size_t>(1) << level); i++) {
-         BOTAN_ASSERT_NOMSG(xmss_hash.size() > i);
-
-         node_addresses[i].set_tree_height(static_cast<uint32_t>(target_node_height - (level + 1)));
-         node_addresses[i].set_tree_index((node_addresses[2 * i + 1].get_tree_index() - 1) >> 1);
-
-         work.push_back(thread_pool.run(&XMSS_Common_Ops::randomize_tree_hash,
-                                        std::ref(nodes[i]),
-                                        std::cref(ro_nodes[2 * i]),
-                                        std::cref(ro_nodes[2 * i + 1]),
-                                        node_addresses[i],
-                                        std::cref(this->public_seed()),
-                                        std::ref(xmss_hash[i]),
-                                        std::cref(m_xmss_params)));
-      }
-
-      for(auto& w : work) {
-         w.get();
-      }
-      work.clear();
-   }
-
-   // Avoid creation an extra thread to calculate root node.
-   node_addresses[0].set_tree_height(static_cast<uint32_t>(target_node_height - 1));
-   node_addresses[0].set_tree_index((node_addresses[1].get_tree_index() - 1) >> 1);
-   XMSS_Common_Ops::randomize_tree_hash(
-      nodes[0], nodes[0], nodes[1], node_addresses[0], this->public_seed(), hash, m_xmss_params);
-   return nodes[0];
-#else
-   secure_vector<uint8_t> result;
-   XMSS_Address subtree_addr(adrs);
-   tree_hash_subtree(result, start_idx, target_node_height, subtree_addr, hash);
-   return result;
-#endif
-}
-
-void XMSS_PrivateKey::tree_hash_subtree(secure_vector<uint8_t>& result,
-                                        size_t start_idx,
-                                        size_t target_node_height,
-                                        XMSS_Address& adrs,
-                                        XMSS_Hash& hash) const {
-   const secure_vector<uint8_t>& seed = this->public_seed();
-
-   std::vector<secure_vector<uint8_t>> nodes(target_node_height + 1,
-                                             secure_vector<uint8_t>(XMSS_PublicKey::m_xmss_params.element_size()));
-
-   // node stack, holds all nodes on stack and one extra "pending" node. This
-   // temporary node referred to as "node" in the XMSS standard document stays
-   // a pending element, meaning it is not regarded as element on the stack
-   // until level is increased.
-   std::vector<uint8_t> node_levels(target_node_height + 1);
-
-   uint8_t level = 0;  // current level on the node stack.
-   const size_t last_idx = (static_cast<size_t>(1) << target_node_height) + start_idx;
-
-   for(size_t i = start_idx; i < last_idx; i++) {
-      adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
-      adrs.set_ots_address(static_cast<uint32_t>(i));
-
-      const XMSS_WOTS_PublicKey pk = this->wots_public_key_for(adrs, hash);
-
-      adrs.set_type(XMSS_Address::Type::LTree_Address);
-      adrs.set_ltree_address(static_cast<uint32_t>(i));
-      XMSS_Common_Ops::create_l_tree(nodes[level], pk.key_data(), adrs, seed, hash, m_xmss_params);
-      node_levels[level] = 0;
-
-      adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
-      adrs.set_tree_height(0);
-      adrs.set_tree_index(static_cast<uint32_t>(i));
-
-      while(level > 0 && node_levels[level] == node_levels[level - 1]) {
-         adrs.set_tree_index(((adrs.get_tree_index() - 1) >> 1));
-         XMSS_Common_Ops::randomize_tree_hash(
-            nodes[level - 1], nodes[level - 1], nodes[level], adrs, seed, hash, m_xmss_params);
-         node_levels[level - 1]++;
-         level--;  //Pop stack top element
-         adrs.set_tree_height(adrs.get_tree_height() + 1);
-      }
-      level++;  //push temporary node to stack
-   }
-   result = nodes[level - 1];
+   return XMSS_Core_Ops::tree_hash(
+      start_idx,
+      target_node_height,
+      adrs,
+      hash,
+      m_private->wots_parameters(),
+      this->public_seed(),
+      [this](XMSS_Address adrs_inner, XMSS_Hash& hash_inner) { return wots_public_key_for(adrs_inner, hash_inner); });
 }
 
 XMSS_WOTS_PublicKey XMSS_PrivateKey::wots_public_key_for(const XMSS_Address& adrs, XMSS_Hash& hash) const {

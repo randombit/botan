@@ -3310,6 +3310,31 @@ class FFI_XMSS_Test final : public FFI_Test {
       }
 };
 
+class FFI_XMSSMT_Test final : public FFI_Test {
+   public:
+      std::string name() const override { return "FFI XMSSMT"; }
+
+      void ffi_test(Test::Result& result, botan_rng_t rng) override {
+         botan_privkey_t priv;
+         if(TEST_FFI_INIT(botan_privkey_create, (&priv, "XMSSMT", "XMSSMT-SHA2_20/2_256", rng))) {
+            TEST_FFI_OK(botan_privkey_check_key, (priv, rng, 0));
+
+            TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_privkey_stateful_operation, (priv, nullptr));
+            TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER, botan_privkey_remaining_operations, (priv, nullptr));
+
+            int stateful;
+            TEST_FFI_OK(botan_privkey_stateful_operation, (priv, &stateful));
+            result.test_is_true("key is stateful", stateful == 1);
+
+            uint64_t remaining;
+            TEST_FFI_OK(botan_privkey_remaining_operations, (priv, &remaining));
+            result.test_u64_eq("key has remaining operations", remaining, 1024 * 1024);
+
+            TEST_FFI_OK(botan_privkey_destroy, (priv));
+         }
+      }
+};
+
 class FFI_RSA_Test final : public FFI_Test {
    public:
       std::string name() const override { return "FFI RSA"; }
@@ -5539,6 +5564,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_totp", FFI_TOTP_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_hotp", FFI_HOTP_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_keywrap", FFI_Keywrap_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_xmss", FFI_XMSS_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_xmssmt", FFI_XMSSMT_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_rsa", FFI_RSA_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_dsa", FFI_DSA_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ecdsa", FFI_ECDSA_Test);

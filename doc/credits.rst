@@ -160,6 +160,11 @@ snail-mail address (S), and Bitcoin address (B).
   D: TLS 1.3, Kyber, Dilithium
   S: Berlin, Germany
 
+  N: Johannes Roth
+  E: johannes.roth@posteo.de
+  D: XMSS^MT
+  S: Darmstadt, Germany
+
   N: Amos Treiber
   E: amos.treiber@rohde-schwarz.com
   W: https://www.rohde-schwarz.com/cybersecurity

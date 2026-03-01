@@ -32,6 +32,17 @@ XMSS_Hash::XMSS_Hash(const XMSS_Parameters& params) :
    BOTAN_ASSERT(m_hash->output_length() > 0, "Hash output length of zero is invalid.");
 }
 
+XMSS_Hash::XMSS_Hash(std::string_view hash_function_name, size_t hash_id_size) :
+      m_hash(HashFunction::create(hash_function_name)),
+      m_msg_hash(HashFunction::create(hash_function_name)),
+      m_zero_padding(hash_id_size - 1 /* hash IDs are a single uint8_t */) {
+   if(!m_hash || !m_msg_hash) {
+      throw Lookup_Error(fmt("XMSS cannot use hash {} because it is unavailable", hash_function_name));
+   }
+
+   BOTAN_ASSERT(m_hash->output_length() > 0, "Hash output length of zero is invalid.");
+}
+
 void XMSS_Hash::h_msg_init(std::span<const uint8_t> randomness,
                            std::span<const uint8_t> root,
                            std::span<const uint8_t> index_bytes) {

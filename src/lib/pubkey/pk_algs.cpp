@@ -105,6 +105,10 @@
    #include <botan/xmss.h>
 #endif
 
+#if defined(BOTAN_HAS_XMSSMT_RFC8391)
+   #include <botan/xmssmt.h>
+#endif
+
 #if defined(BOTAN_HAS_SM2)
    #include <botan/sm2.h>
 #endif
@@ -244,6 +248,12 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_XMSS_RFC8391)
    if(alg_name == "XMSS") {
       return std::make_unique<XMSS_PublicKey>(key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_XMSSMT_RFC8391)
+   if(alg_name == "XMSSMT") {
+      return std::make_unique<XMSSMT_PublicKey>(key_bits);
    }
 #endif
 
@@ -403,6 +413,12 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_XMSS_RFC8391)
    if(alg_name == "XMSS") {
       return std::make_unique<XMSS_PrivateKey>(key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_XMSSMT_RFC8391)
+   if(alg_name == "XMSSMT") {
+      return std::make_unique<XMSSMT_PrivateKey>(key_bits);
    }
 #endif
 
@@ -644,6 +660,19 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
       }();
 
       return std::make_unique<XMSS_PrivateKey>(xmss_oid, rng);
+   }
+#endif
+
+#if defined(BOTAN_HAS_XMSSMT_RFC8391)
+   if(alg_name == "XMSSMT") {
+      const auto xmssmt_oid = [&]() -> XMSSMT_Parameters::xmssmt_algorithm_t {
+         if(params.empty()) {
+            return XMSSMT_Parameters::XMSSMT_SHA2_20_2_256;
+         }
+         return XMSSMT_Parameters(params).oid();
+      }();
+
+      return std::make_unique<XMSSMT_PrivateKey>(xmssmt_oid, rng);
    }
 #endif
 
