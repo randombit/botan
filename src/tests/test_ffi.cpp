@@ -3244,11 +3244,11 @@ class FFI_HOTP_Test final : public FFI_Test {
 
          uint64_t next_ctr = 0;
 
-         TEST_FFI_OK(botan_hotp_check, (hotp, &next_ctr, 755224, 0, 0));
+         TEST_FFI_RC(1, botan_hotp_check, (hotp, &next_ctr, 755224, 0, 0));
          result.test_u64_eq("HOTP resync", next_ctr, 1);
-         TEST_FFI_OK(botan_hotp_check, (hotp, nullptr, 359152, 2, 0));
-         TEST_FFI_RC(1, botan_hotp_check, (hotp, nullptr, 359152, 1, 0));
-         TEST_FFI_OK(botan_hotp_check, (hotp, &next_ctr, 359152, 0, 2));
+         TEST_FFI_RC(1, botan_hotp_check, (hotp, nullptr, 359152, 2, 0));
+         TEST_FFI_RC(0, botan_hotp_check, (hotp, nullptr, 359152, 1, 0));
+         TEST_FFI_RC(1, botan_hotp_check, (hotp, &next_ctr, 359152, 0, 2));
          result.test_u64_eq("HOTP resync", next_ctr, 3);
 
          TEST_FFI_OK(botan_hotp_destroy, (hotp));

@@ -74,7 +74,7 @@ int botan_hotp_check(
          *next_hotp_counter = resp.second;
       }
 
-      return (resp.first == true) ? BOTAN_FFI_SUCCESS : BOTAN_FFI_INVALID_VERIFIER;
+      return (resp.first == true) ? 1 : 0;
    });
 
 #else

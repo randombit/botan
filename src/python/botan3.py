@@ -2860,7 +2860,7 @@ class HOTP:
         next counter will always be counter+1."""
         next_ctr = c_uint64(0)
         rc = _DLL.botan_hotp_check(self.__obj, byref(next_ctr), code, counter, resync_range)
-        if rc == 0:
+        if rc == 1:
             return (True, next_ctr.value)
         else:
             return (False, counter)

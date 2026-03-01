@@ -2724,7 +2724,7 @@ int botan_hotp_generate(botan_hotp_t hotp, uint32_t* hotp_code, uint64_t hotp_co
 /**
 * Verify a HOTP code
 */
-BOTAN_FFI_EXPORT(2, 8)
+BOTAN_FFI_EXPORT(3, 11)
 int botan_hotp_check(
    botan_hotp_t hotp, uint64_t* next_hotp_counter, uint32_t hotp_code, uint64_t hotp_counter, size_t resync_range);
 
