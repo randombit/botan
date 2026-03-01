@@ -600,6 +600,24 @@ Test::Result test_x509_utf8() {
    return result;
 }
 
+Test::Result test_x509_any_key_extended_usage() {
+   using Botan::Key_Constraints;
+   using Botan::Usage_Type;
+
+   Test::Result result("X509 with X509v3.AnyExtendedKeyUsage");
+   try {
+      const Botan::X509_Certificate any_eku_cert(Test::data_file("x509/misc/contains_any_extended_key_usage.pem"));
+
+      result.test_is_true("is CA cert", any_eku_cert.is_CA_cert());
+      result.test_is_true("DigitalSignature is allowed", any_eku_cert.allowed_usage(Key_Constraints::DigitalSignature));
+      result.test_is_true("CrlSign is allowed", any_eku_cert.allowed_usage(Key_Constraints::CrlSign));
+      result.test_is_true("OCSP responder is allowed", any_eku_cert.allowed_usage(Usage_Type::OCSP_RESPONDER));
+   } catch(const Botan::Decoding_Error& ex) {
+      result.test_failure(ex.what());
+   }
+   return result;
+}
+
 Test::Result test_x509_bmpstring() {
    Test::Result result("X509 with UCS-2 (BMPString) encoded fields");
 
@@ -1760,6 +1778,7 @@ class X509_Cert_Unit_Tests final : public Test {
 
    #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
          results.push_back(test_x509_utf8());
+         results.push_back(test_x509_any_key_extended_usage());
          results.push_back(test_x509_bmpstring());
          results.push_back(test_x509_teletex());
          results.push_back(test_crl_dn_name());

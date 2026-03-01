@@ -229,9 +229,10 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
             const auto server_auth = OID::from_name("PKIX.ServerAuth");
             const auto client_auth = OID::from_name("PKIX.ClientAuth");
             const auto ocsp_sign = OID::from_name("PKIX.OCSPSigning");
+            const auto any_eku = OID::from_name("X509v3.AnyExtendedKeyUsage");
 
             for(const auto& oid : ext_ku) {
-               if(oid == server_auth || oid == client_auth || oid == ocsp_sign) {
+               if(oid == any_eku || oid == server_auth || oid == client_auth || oid == ocsp_sign) {
                   return true;
                }
             }
@@ -484,7 +485,7 @@ bool X509_Certificate::allowed_extended_usage(const OID& usage) const {
       return true;
    }
 
-   if(std::find(ex.begin(), ex.end(), usage) != ex.end()) {
+   if(has_ex_constraint(usage)) {
       return true;
    }
 
@@ -527,7 +528,10 @@ bool X509_Certificate::has_ex_constraint(std::string_view ex_constraint) const {
 
 bool X509_Certificate::has_ex_constraint(const OID& usage) const {
    const std::vector<OID>& ex = extended_key_usage();
-   return (std::find(ex.begin(), ex.end(), usage) != ex.end());
+   const auto any_eku = OID::from_name("X509v3.AnyExtendedKeyUsage");
+   return std::find_if(ex.begin(), ex.end(), [&any_eku, &usage](auto& oid) {
+             return oid == usage || oid == any_eku;
+          }) != ex.end();
 }
 
 /*
