@@ -135,8 +135,10 @@ size_t CFB_Encryption::process_msg(uint8_t buf[], size_t sz) {
    }
 
    while(left >= shift) {
-      xor_buf(m_keystream.data(), buf, shift);
-      copy_mem(buf, m_keystream.data(), shift);
+      const std::span keystream = std::span{m_keystream}.first(shift);
+      const std::span tbuf = std::span(buf, shift);
+      xor_buf(keystream, tbuf);
+      copy_mem(tbuf, keystream);
 
       left -= shift;
       buf += shift;
