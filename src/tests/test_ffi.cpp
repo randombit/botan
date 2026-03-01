@@ -3210,9 +3210,9 @@ class FFI_TOTP_Test final : public FFI_Test {
          TEST_FFI_OK(botan_totp_generate, (totp, &code, 1111111109));
          result.test_u32_eq("TOTP code 2", code, 7081804);
 
-         TEST_FFI_OK(botan_totp_check, (totp, 94287082, 59 + 60, 60));
-         TEST_FFI_RC(1, botan_totp_check, (totp, 94287082, 59 + 31, 1));
-         TEST_FFI_RC(1, botan_totp_check, (totp, 94287082, 59 + 61, 1));
+         TEST_FFI_RC(1, botan_totp_check, (totp, 94287082, 59 + 60, 60));
+         TEST_FFI_RC(0, botan_totp_check, (totp, 94287082, 59 + 31, 1));
+         TEST_FFI_RC(0, botan_totp_check, (totp, 94287082, 59 + 61, 1));
 
          TEST_FFI_OK(botan_totp_destroy, (totp));
       }

@@ -69,7 +69,7 @@ int botan_totp_check(botan_totp_t totp, uint32_t totp_code, uint64_t timestamp, 
 #if defined(BOTAN_HAS_TOTP)
    return BOTAN_FFI_VISIT(totp, [=](auto& t) {
       const bool ok = t.verify_totp(totp_code, timestamp, acceptable_clock_drift);
-      return (ok ? BOTAN_FFI_SUCCESS : BOTAN_FFI_INVALID_VERIFIER);
+      return (ok ? 1 : 0);
    });
 
 #else

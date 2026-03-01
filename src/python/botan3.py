@@ -2884,7 +2884,7 @@ class TOTP:
         if timestamp is None:
             timestamp = int(system_time())
         rc = _DLL.botan_totp_check(self.__obj, code, timestamp, acceptable_drift)
-        if rc == 0:
+        if rc == 1:
             return True
         return False
 

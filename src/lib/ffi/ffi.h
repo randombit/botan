@@ -2765,7 +2765,7 @@ int botan_totp_generate(botan_totp_t totp, uint32_t* totp_code, uint64_t timesta
 * @param acceptable_clock_drift specifies the acceptable amount
 * of clock drift (in terms of time steps) between the two hosts.
 */
-BOTAN_FFI_EXPORT(2, 8)
+BOTAN_FFI_EXPORT(3, 11)
 int botan_totp_check(botan_totp_t totp, uint32_t totp_code, uint64_t timestamp, size_t acceptable_clock_drift);
 
 /**
