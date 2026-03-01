@@ -381,24 +381,23 @@ class Shim_Socket final {
 
       static std::string get_last_socket_error() { return ::strerror(errno); }
 
-      using unique_addrinfo_t = std::unique_ptr<addrinfo, decltype(&::freeaddrinfo)>;
+      using unique_addr_info_ptr = std::unique_ptr<addrinfo, decltype([](addrinfo* p) {
+                                                      if(p != nullptr) {
+                                                         ::freeaddrinfo(p);
+                                                      }
+                                                   })>;
 
    public:
       Shim_Socket(const std::string& hostname, int port, const bool ipv6) : m_socket(-1) {
          addrinfo hints{};
-         std::memset(&hints, 0, sizeof(hints));
          hints.ai_family = AF_UNSPEC;
          hints.ai_socktype = SOCK_STREAM;
          hints.ai_flags = AI_NUMERICSERV;
 
          const std::string service = std::to_string(port);
 
-         // TODO: C++23 will introduce std::out_ptr() that should replace the
-         //       temporary variable for the call to ::getaddrinfo() and
-         //       std::unique_ptr<>::reset().
-         unique_addrinfo_t::pointer res_tmp = nullptr;
-         const int rc = ::getaddrinfo(hostname.c_str(), service.c_str(), &hints, &res_tmp);
-         const unique_addrinfo_t res(res_tmp, &::freeaddrinfo);
+         unique_addr_info_ptr res = nullptr;
+         const int rc = ::getaddrinfo(hostname.c_str(), service.c_str(), &hints, Botan::out_ptr(res));
 
          shim_log("Connecting " + hostname + ":" + service);
 

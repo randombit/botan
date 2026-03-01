@@ -10,6 +10,7 @@
 
 #include "cli.h"
 
+#include <botan/internal/stl_util.h>
 #include <botan/internal/target_info.h>
 
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM) && defined(BOTAN_TARGET_OS_HAS_SOCKETS)
@@ -387,19 +388,19 @@ class TLS_Client final : public Command {
    private:
       static socket_type connect_to_host(const std::string& host, uint16_t port, bool tcp) {
          addrinfo hints{};
-         std::memset(&hints, 0, sizeof(hints));
          hints.ai_family = AF_UNSPEC;
          hints.ai_socktype = tcp ? SOCK_STREAM : SOCK_DGRAM;
-         addrinfo* res = nullptr;
 
-         if(::getaddrinfo(host.c_str(), std::to_string(port).c_str(), &hints, &res) != 0) {
+         unique_addr_info_ptr res = nullptr;
+
+         if(::getaddrinfo(host.c_str(), std::to_string(port).c_str(), &hints, Botan::out_ptr(res)) != 0) {
             throw CLI_Error("getaddrinfo failed for " + host);
          }
 
          socket_type fd = 0;
          bool success = false;
 
-         for(const addrinfo* rp = res; rp != nullptr; rp = rp->ai_next) {
+         for(const addrinfo* rp = res.get(); rp != nullptr; rp = rp->ai_next) {
             fd = ::socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 
             if(fd == invalid_socket()) {
@@ -414,8 +415,6 @@ class TLS_Client final : public Command {
             success = true;
             break;
          }
-
-         ::freeaddrinfo(res);
 
          if(!success) {
             // no address succeeded
@@ -434,6 +433,12 @@ class TLS_Client final : public Command {
       }
 
       socket_type m_sockfd = invalid_socket();
+
+      using unique_addr_info_ptr = std::unique_ptr<addrinfo, decltype([](addrinfo* p) {
+                                                      if(p != nullptr) {
+                                                         ::freeaddrinfo(p);
+                                                      }
+                                                   })>;
 };
 
 namespace {
