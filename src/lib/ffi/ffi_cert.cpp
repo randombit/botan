@@ -941,7 +941,7 @@ int botan_x509_cert_hostname_match(botan_x509_cert_t cert, const char* hostname)
    }
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return c.matches_dns_name(hostname) ? 0 : -1; });
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return c.matches_dns_name(hostname) ? 1 : 0; });
 #else
    BOTAN_UNUSED(cert);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;

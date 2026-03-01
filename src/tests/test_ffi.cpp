@@ -570,15 +570,15 @@ class FFI_RSA_Cert_Test final : public FFI_Test {
       void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
          botan_x509_cert_t cert;
          if(TEST_FFI_INIT(botan_x509_cert_load_file, (&cert, Test::data_file("x509/ocsp/randombit.pem").c_str()))) {
-            TEST_FFI_RC(0, botan_x509_cert_hostname_match, (cert, "randombit.net"));
-            TEST_FFI_RC(0, botan_x509_cert_hostname_match, (cert, "www.randombit.net"));
-            TEST_FFI_RC(-1, botan_x509_cert_hostname_match, (cert, "*.randombit.net"));
-            TEST_FFI_RC(-1, botan_x509_cert_hostname_match, (cert, "flub.randombit.net"));
-            TEST_FFI_RC(-1, botan_x509_cert_hostname_match, (cert, "randombit.net.com"));
+            TEST_FFI_RC(1, botan_x509_cert_hostname_match, (cert, "randombit.net"));
+            TEST_FFI_RC(1, botan_x509_cert_hostname_match, (cert, "www.randombit.net"));
+            TEST_FFI_RC(0, botan_x509_cert_hostname_match, (cert, "*.randombit.net"));
+            TEST_FFI_RC(0, botan_x509_cert_hostname_match, (cert, "flub.randombit.net"));
+            TEST_FFI_RC(0, botan_x509_cert_hostname_match, (cert, "randombit.net.com"));
 
             botan_x509_cert_t copy;
             TEST_FFI_OK(botan_x509_cert_dup, (&copy, cert));
-            TEST_FFI_RC(0, botan_x509_cert_hostname_match, (copy, "randombit.net"));
+            TEST_FFI_RC(1, botan_x509_cert_hostname_match, (copy, "randombit.net"));
 
             TEST_FFI_OK(botan_x509_cert_destroy, (copy));
             TEST_FFI_OK(botan_x509_cert_destroy, (cert));

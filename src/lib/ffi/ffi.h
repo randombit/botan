@@ -2508,7 +2508,7 @@ BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_issuer_alternative_names_count(botan
 * Check if the certificate matches the specified hostname via alternative name or CN match.
 * RFC 5280 wildcards also supported.
 */
-BOTAN_FFI_EXPORT(2, 5) int botan_x509_cert_hostname_match(botan_x509_cert_t cert, const char* hostname);
+BOTAN_FFI_EXPORT(3, 11) int botan_x509_cert_hostname_match(botan_x509_cert_t cert, const char* hostname);
 
 /**
 * Returns 0 if the validation was successful, 1 if validation failed,

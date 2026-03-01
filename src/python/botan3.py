@@ -519,7 +519,7 @@ def _set_prototypes(dll):
             [c_void_p, c_char_p, c_size_t, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_x509_cert_view_as_string, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
     ffi_api(dll.botan_x509_cert_allowed_usage, [c_void_p, c_uint])
-    ffi_api(dll.botan_x509_cert_hostname_match, [c_void_p, c_char_p], [-1])
+    ffi_api(dll.botan_x509_cert_hostname_match, [c_void_p, c_char_p])
     ffi_api(dll.botan_x509_cert_verify,
             [POINTER(c_int), c_void_p, c_void_p, c_size_t, c_void_p, c_size_t, c_char_p, c_size_t, c_char_p, c_uint64])
 
@@ -2215,7 +2215,7 @@ class X509Cert: # pylint: disable=invalid-name
     def hostname_match(self, hostname: str) -> bool:
         """Return True if the Common Name (CN) field of the certificate matches a given ``hostname``."""
         rc = _DLL.botan_x509_cert_hostname_match(self.__obj, _ctype_str(hostname))
-        return rc == 0
+        return rc == 1
 
     def not_before(self) -> int:
         """Return the time the certificate becomes valid, as seconds since epoch."""
