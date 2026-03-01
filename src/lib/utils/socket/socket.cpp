@@ -10,6 +10,7 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/stl_util.h>
 #include <botan/internal/target_info.h>
 #include <chrono>
 
@@ -203,21 +204,22 @@ class BSD_Socket final : public OS::Socket {
             m_timeout(timeout), m_socket(invalid_socket()) {
          socket_init();
 
-         addrinfo hints{};
-         hints.ai_family = AF_UNSPEC;
-         hints.ai_socktype = SOCK_STREAM;
-         addrinfo* res = nullptr;
-
          const std::string hostname_str(hostname);
          const std::string service_str(service);
 
-         const int rc = ::getaddrinfo(hostname_str.c_str(), service_str.c_str(), &hints, &res);
+         addrinfo hints{};
+         hints.ai_family = AF_UNSPEC;
+         hints.ai_socktype = SOCK_STREAM;
+
+         unique_addr_info_ptr res = nullptr;
+
+         const int rc = ::getaddrinfo(hostname_str.c_str(), service_str.c_str(), &hints, Botan::out_ptr(res));
 
          if(rc != 0) {
             throw System_Error(fmt("Name resolution failed for {}", hostname), rc);
          }
 
-         for(const addrinfo* rp = res; (m_socket == invalid_socket()) && (rp != nullptr); rp = rp->ai_next) {
+         for(const addrinfo* rp = res.get(); (m_socket == invalid_socket()) && (rp != nullptr); rp = rp->ai_next) {
             if(rp->ai_family != AF_INET && rp->ai_family != AF_INET6) {
                continue;
             }
@@ -265,8 +267,6 @@ class BSD_Socket final : public OS::Socket {
                }
             }
          }
-
-         ::freeaddrinfo(res);
 
          if(m_socket == invalid_socket()) {
             throw System_Error(fmt("Connecting to {} for service {} failed with errno {}", hostname, service, errno),
@@ -345,6 +345,12 @@ class BSD_Socket final : public OS::Socket {
 
       const std::chrono::microseconds m_timeout;
       socket_type m_socket;
+
+      using unique_addr_info_ptr = std::unique_ptr<addrinfo, decltype([](addrinfo* p) {
+                                                      if(p != nullptr) {
+                                                         ::freeaddrinfo(p);
+                                                      }
+                                                   })>;
 };
 
 #endif
