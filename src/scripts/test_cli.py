@@ -1730,7 +1730,8 @@ def cli_speed_math_tests(_tmp_dir):
     msec = 1
     # these all have a common output format
     math_ops = ['mp_mul', 'mp_div', 'mp_div10', 'modexp', 'random_prime', 'inverse_mod',
-                'rfc3394', 'fpe_fe1', 'ecdsa_recovery', 'ecc', 'bn_redc', 'primality_test']
+                'rfc3394', 'fpe_fe1', 'ecdsa_recovery', 'bn_redc', 'primality_test',
+                'ecc_misc', 'ecc_mul', 'ecc_mul2', 'ecc_h2c']
 
     format_re = re.compile(r'^.* [0-9]+ /sec; [0-9]+\.[0-9]+ ms/op .*\([0-9]+ (op|ops) in [0-9]+(\.[0-9]+)? ms\)')
     for op in math_ops:
