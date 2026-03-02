@@ -372,20 +372,12 @@ int botan_x509_cert_view_string_values(botan_x509_cert_t cert,
       return BOTAN_FFI_ERROR_OUT_OF_RANGE;
    };
 
-   auto wrap_or_empty = [](std::string str) -> std::vector<std::string> {
-      if(str.empty()) {
-         return {};
-      } else {
-         return {std::move(str)};
-      }
-   };
-
    return BOTAN_FFI_VISIT(cert, [=](const Botan::X509_Certificate& c) -> int {
       switch(value_type) {
          case BOTAN_X509_CRL_DISTRIBUTION_URLS:
             return enumerate_crl_distribution_points(c, index);
          case BOTAN_X509_OCSP_RESPONDER_URLS:
-            return enumerate(wrap_or_empty(c.ocsp_responder()), index);
+            return enumerate(c.ocsp_responders(), index);
          case BOTAN_X509_CA_ISSUERS_URLS:
             return enumerate(c.ca_issuers(), index);
          case BOTAN_X509_PEM_ENCODING:
