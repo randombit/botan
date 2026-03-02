@@ -53,6 +53,21 @@ def normalize_source_path(source):
 def normalize_source_paths(sources):
     return [normalize_source_path(p) for p in sources]
 
+def is_subpath(child_path, parent_path):
+    """
+    Check if child_path is a subpath of parent_path
+    """
+
+    child_abs = os.path.abspath(child_path)
+    parent_abs = os.path.abspath(parent_path)
+    try:
+        rel = os.path.relpath(child_abs, parent_abs)
+        return (not rel.startswith(os.pardir + os.sep)
+                and rel != os.pardir
+                and rel != os.curdir)
+    except ValueError:  # This can happen if on different drives under Windows
+        return False
+
 def parse_version_file(version_path):
     version_file = open(version_path, encoding='utf8')
     key_and_val = re.compile(r"([a-z_]+) = ([a-zA-Z0-9:\-\']+)")
@@ -647,6 +662,8 @@ def process_command_line(args):
                              help='set the install dir for man pages')
     install_group.add_option('--includedir', metavar='DIR',
                              help='set the include file install dir')
+    install_group.add_option('--cmakeconfigdir', metavar='DIR',
+                             help='set the CMake config (botan-config.cmake, botan-config-version.cmake) install dir')
 
     info_group = optparse.OptionGroup(parser, 'Informational')
 
@@ -2386,6 +2403,11 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
     if options.with_cmake_config:
         variables['botan_cmake_config'] = os.path.join(build_paths.build_dir, 'cmake', 'botan-config.cmake')
         variables['botan_cmake_version_config'] = os.path.join(build_paths.build_dir, 'cmake', 'botan-config-version.cmake')
+        cmake_install_dir = absolute_install_dir(options.cmakeconfigdir) if options.cmakeconfigdir else \
+            os.path.join(variables['libdir'], 'cmake', 'Botan-%s' % variables['version'])
+        if not is_subpath(cmake_install_dir, variables['prefix']):
+            logging.error("The CMake module must be installed into a subdirectory of the install prefix.")
+        variables['cmake_install_dir'] = cmake_install_dir
 
     # The name is always set because Windows build needs it
     variables['static_lib_name'] = '%s%s.%s' % (variables['lib_prefix'], variables['libname'],
