@@ -51,6 +51,18 @@ MLDSA_Composite_Param MLDSA_Composite_Param::get_param_by_id(MLDSA_Composite_Par
    throw Botan::Invalid_Argument("no parameter found for provided MLDSA composite id (enum)");
 }
 
+size_t MLDSA_Composite_Param::mldsa_signature_size() const {
+   // TODO: USE ENUM, NOT STRING
+   if(this->mldsa_variant == std::string("ML-DSA-4x4")) {
+      return 2420;
+   } else if(this->mldsa_variant == std::string("ML-DSA-6x5")) {
+      return 3309;
+   } else if(this->mldsa_variant == std::string("ML-DSA-8x7")) {
+      return 4627;
+   }
+   throw Botan::Internal_Error("MLDSA_Composite_Param::mldsa_signature_size() encountered unknown ML-DSA variant ");
+}
+
 AlgorithmIdentifier MLDSA_Composite_Param::get_mldsa_algorithm_id() const {
    OID oid(this->mldsa_oid_str);
    return AlgorithmIdentifier(oid, AlgorithmIdentifier::Encoding_Option::USE_EMPTY_PARAM);

@@ -1,5 +1,6 @@
 
 #include "botan/assert.h"
+#include "botan/internal/pk_ops_impl.h"
 #include "botan/ml_dsa.h"
 #include "botan/pk_ops.h"
 #include <botan/exceptn.h>
@@ -7,6 +8,7 @@
 #include <botan/mldsa_comp.h>
 #include <botan/pk_algs.h>
 #include <memory>
+#include <string_view>
 #include <vector>
 
 #include <iostream>
@@ -38,22 +40,56 @@ std::span<const uint8_t> traditional_pubkey_subspan(const MLDSA_Composite_Param&
 
 //
 
-class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification {
+class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
-      explicit MLDSA_Composite_Verification_Operation(const ML_DSA_PublicKey& pubkey) : m_mldsa_public_key((pubkey)) {}
+      explicit MLDSA_Composite_Verification_Operation(const MLDSA_Composite_Param& param,
+                                                      const ML_DSA_PublicKey& mldsa_pubkey,
+                                                      const Public_Key* trad_pubkey,
+                                                      std::string_view trad_params,
+                                                      std::string_view pre_hash_algo) :
+            PK_Ops::Verification_with_Hash(pre_hash_algo),
+            m_parameters(param),
+            m_mldsa_ver_op(mldsa_pubkey.create_verification_op("", "")),
+            m_traditional_ver_op(trad_pubkey->create_verification_op("", trad_params)) {}
 
-      void update(std::span<const uint8_t> input) override { throw Botan::Exception("update() not implemented"); }
+      //void update(std::span<const uint8_t> input) override { throw Botan::Exception("update() not implemented"); }
+
+      virtual bool verify(std::span<const uint8_t> ph, std::span<const uint8_t> sig) override {
+         std::string msg_str = "CompositeAlgorithmSignatures2025";
+         msg_str += m_parameters.label;
+         std::vector<uint8_t> msg(msg_str.begin(), msg_str.end());
+         msg.push_back(0);  // ctx = empty
+         msg.insert(msg.end(), ph.begin(), ph.end());
+         size_t mldsa_sig_size = m_parameters.mldsa_signature_size();
+         if(sig.size() <= mldsa_sig_size) {
+            return false;
+         }
+         std::span<const uint8_t> mldsa_sig(sig.begin(), sig.begin() + mldsa_sig_size);
+         std::span<const uint8_t> trad_sig(sig.begin() + mldsa_sig_size, sig.end());
+         if(!m_mldsa_ver_op->is_valid_signature(mldsa_sig)) {
+            return false;
+         }
+         if(!m_traditional_ver_op->is_valid_signature(trad_sig)) {
+            return false;
+         }
+         return true;
+
+         //  M' = Prefix || Label || len(ctx) || ctx || PH( M )
+      }
 
       /**
        */
-      bool is_valid_signature(std::span<const uint8_t> sig) override {
-         throw Botan::Exception("is_valid_signature() not implemented");
-      }
+      // bool is_valid_signature(std::span<const uint8_t> sig) override {
+      //    throw Botan::Exception("is_valid_signature() not implemented");
+      // }
 
-      std::string hash_function() const override { throw Botan::Exception("hash_function() not implemented"); }
+      //std::string hash_function() const override { throw Botan::Exception("hash_function() not implemented"); }
 
    private:
-      ML_DSA_PublicKey m_mldsa_public_key;
+      //ML_DSA_PublicKey m_mldsa_public_key;
+      MLDSA_Composite_Param m_parameters;
+      std::unique_ptr<PK_Ops::Verification> m_mldsa_ver_op;
+      std::unique_ptr<PK_Ops::Verification> m_traditional_ver_op;
 };
 
 MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t id,
@@ -89,10 +125,10 @@ std::unique_ptr<Private_Key> MLDSA_Composite_PublicKey::generate_another(RandomN
 }
 
 std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_verification_op(
-   std::string_view params, std::string_view provider) const {
-   BOTAN_ARG_CHECK(params.empty(), "Unexpected parameters for verifying with Dilithium");
+   std::string_view traditional_params, std::string_view provider) const {
    if(provider.empty() || provider == "base") {
-      return std::make_unique<Dilithium_Verification_Operation>(m_public);
+      return std::make_unique<MLDSA_Composite_Verification_Operation>(
+         this->m_mldsa_pubkey, this->m_tradtional_pubkey.get(), traditional_params);
    }
    throw Provider_Not_Found(algo_name(), provider);
 }

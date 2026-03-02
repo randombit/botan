@@ -31,6 +31,8 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
 
       OID object_identifier() const { return OID_Map::global_registry().str2oid(this->id_str); }
 
+      size_t mldsa_signature_size() const;
+
       size_t traditional_pubkey_encoded_size() const;
 
       // TODO: MAKE PRIVATE
