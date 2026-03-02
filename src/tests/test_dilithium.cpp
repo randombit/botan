@@ -9,16 +9,19 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  */
 
+#include "test_rng.h"
 #include "tests.h"
 
 #if defined(BOTAN_HAS_DILITHIUM_COMMON)
+   #include <botan/data_src.h>
    #include <botan/dilithium.h>
    #include <botan/hash.h>
    #include <botan/pk_algs.h>
+   #include <botan/pkix_enums.h>
    #include <botan/pubkey.h>
+   #include <botan/x509cert.h>
 
    #include "test_pubkey.h"
-   #include "test_rng.h"
 #endif
 
 namespace Botan_Tests {
@@ -281,6 +284,33 @@ class Dilithium_Keygen_Tests final : public PK_Key_Generation_Test {
 };
 
 BOTAN_REGISTER_TEST("pubkey", "dilithium_keygen", Dilithium_Keygen_Tests);
+
+   #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+
+class MldsaCertificateTests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> result_vec;
+
+         const std::vector<std::string> cert_file_names = {
+            "mldsa44_rfc9881.pem.crt", "mldsa65_rfc9881.pem.crt", "mldsa87_rfc9881.pem.crt"};
+
+         for(const auto& cert_file : cert_file_names) {
+            Botan::DataSource_Stream in(Test::data_file("x509/mldsa/" + cert_file));
+            const Botan::X509_Certificate cert(in);
+            Test::Result this_result(cert_file);
+            auto ver_res = cert.verify_signature(*cert.subject_public_key());
+            this_result.test_is_true("signature of certificate verifies",
+                                     ver_res.first == Botan::Certificate_Status_Code::OK);
+            result_vec.push_back(this_result);
+         }
+         return result_vec;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "mldsa_certificate", MldsaCertificateTests);
+
+   #endif
 
 #endif
 
