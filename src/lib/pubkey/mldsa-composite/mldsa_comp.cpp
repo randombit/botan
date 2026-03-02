@@ -1,4 +1,7 @@
 
+#include "botan/assert.h"
+#include "botan/ml_dsa.h"
+#include "botan/pk_ops.h"
 #include <botan/exceptn.h>
 #include <botan/hex.h>
 #include <botan/mldsa_comp.h>
@@ -33,6 +36,26 @@ std::span<const uint8_t> traditional_pubkey_subspan(const MLDSA_Composite_Param&
 }
 }  // namespace
 
+//
+
+class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification {
+   public:
+      explicit MLDSA_Composite_Verification_Operation(const ML_DSA_PublicKey& pubkey) : m_mldsa_public_key((pubkey)) {}
+
+      void update(std::span<const uint8_t> input) override { throw Botan::Exception("update() not implemented"); }
+
+      /**
+       */
+      bool is_valid_signature(std::span<const uint8_t> sig) override {
+         throw Botan::Exception("is_valid_signature() not implemented");
+      }
+
+      std::string hash_function() const override { throw Botan::Exception("hash_function() not implemented"); }
+
+   private:
+      ML_DSA_PublicKey m_mldsa_public_key;
+};
+
 MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t id,
                                                      std::span<const uint8_t> key_bits) :
       m_parameters(MLDSA_Composite_Param::get_param_by_id(id)),
@@ -66,8 +89,12 @@ std::unique_ptr<Private_Key> MLDSA_Composite_PublicKey::generate_another(RandomN
 }
 
 std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_verification_op(
-   std::string_view /*params*/, std::string_view /*provider*/) const {
-   throw Botan::Exception("not implemented");
+   std::string_view params, std::string_view provider) const {
+   BOTAN_ARG_CHECK(params.empty(), "Unexpected parameters for verifying with Dilithium");
+   if(provider.empty() || provider == "base") {
+      return std::make_unique<Dilithium_Verification_Operation>(m_public);
+   }
+   throw Provider_Not_Found(algo_name(), provider);
 }
 
 std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_x509_verification_op(
