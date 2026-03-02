@@ -1,6 +1,9 @@
 
-#include "botan/exceptn.h"
+#include <botan/exceptn.h>
+#include <botan/hex.h>
 #include <botan/mldsa_comp.h>
+#include <botan/pk_algs.h>
+#include <memory>
 #include <vector>
 
 #include <iostream>
@@ -8,13 +11,24 @@
 namespace Botan {
 
 namespace {
-std::span<const uint8_t> mldsa_key_subspan(const MLDSA_Composite_Param& param, std::span<const uint8_t> key_bits) {
+std::span<const uint8_t> mldsa_pubkey_subspan(const MLDSA_Composite_Param& param, std::span<const uint8_t> key_bits) {
    OID oid(param.mldsa_oid_str);
    AlgorithmIdentifier aid(oid, AlgorithmIdentifier::Encoding_Option::USE_EMPTY_PARAM);
    if(key_bits.size() <= param.mldsa_pubkey_size) {
       throw Invalid_Argument("encoded key is too short");
    }
-   const std::span<const uint8_t> result(key_bits.begin(), param.mldsa_pubkey_size);
+   return std::span<const uint8_t>(key_bits.begin(), param.mldsa_pubkey_size);
+}
+
+std::span<const uint8_t> traditional_pubkey_subspan(const MLDSA_Composite_Param& param,
+                                                    std::span<const uint8_t> key_bits) {
+   const size_t offset = param.mldsa_pubkey_size;
+   if(key_bits.size() - offset <= 1) {
+      throw Invalid_Argument("encoded key is too short");
+   }
+   std::cout << "RSA pub key byte size = " << key_bits.size() - offset << std::endl;
+   std::span<const uint8_t> result(key_bits.begin() + offset, key_bits.end());
+   std::cout << "RSA pub key hex = " << hex_encode(result) << std::endl;
    return result;
 }
 }  // namespace
@@ -22,9 +36,10 @@ std::span<const uint8_t> mldsa_key_subspan(const MLDSA_Composite_Param& param, s
 MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t id,
                                                      std::span<const uint8_t> key_bits) :
       m_parameters(MLDSA_Composite_Param::get_param_by_id(id)),
-      m_mldsa_pubkey(m_parameters.get_mldsa_algorithm_id_by_id(), mldsa_key_subspan(m_parameters, key_bits)) {
-   // TODO: GET RID AUF POINTERS FOR KEYS, INSTANTIATE DIRECTLY
-   std::cout << "MLDSA_Composite_PublicKey() decoded ML-DSA key\n";
+      m_mldsa_pubkey(m_parameters.get_mldsa_algorithm_id(), mldsa_pubkey_subspan(m_parameters, key_bits)),
+      m_tradtional_pubkey(load_public_key(m_parameters.get_traditional_algorithm_id(),
+                                          traditional_pubkey_subspan(m_parameters, key_bits))) {
+   std::cout << "MLDSA_Composite_PublicKey() decoded both keys\n";
    // TODO: DECODE TRADITIONAL KEY
 }
 

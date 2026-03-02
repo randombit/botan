@@ -9,6 +9,7 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  */
 
+#include "botan/exceptn.h"
 #include "tests.h"
 
 #include <iostream>  // TODO remove
@@ -35,14 +36,28 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
 
       // TODO: NEGATIVE TESTS WITH TOO SHORT PUBLIC AND PRIVATE KEYS
       Test::Result run_one_test(const std::string& name, const VarMap& vars) override {
+         bool pubkey_valid = true;
+         bool exc_during_pubkey_decoding = false;
+         if(name.ends_with("pubkey-invalid")) {
+            pubkey_valid = false;
+         }
          Test::Result result(name);
          std::cout << "test name = " << name << std::endl;
          const auto tcId = vars.get_req_str("tcId");
          std::cout << "tcId = " << tcId << std::endl;
          const auto pk = vars.get_req_str("pk");
          const auto pk_bin = Botan::base64_decode(pk);
+
          const auto comp_parm = Botan::MLDSA_Composite_Param::get_param_by_id_str(tcId);
-         Botan::MLDSA_Composite_PublicKey pubkey(comp_parm.id, pk_bin);
+         try {
+            Botan::MLDSA_Composite_PublicKey pubkey(comp_parm.id, pk_bin);
+         } catch(const Botan::Exception& e) {
+            exc_during_pubkey_decoding = true;
+         }
+         result.test_bool_eq("pubkey decoding OK", !exc_during_pubkey_decoding, pubkey_valid);
+         if(exc_during_pubkey_decoding) {
+            return result;
+         }
          return result;
       }
 };
