@@ -12,6 +12,7 @@ import os
 import platform
 import argparse
 import sys
+import time
 from itertools import permutations
 
 # Starting with Python 3.8 DLL search locations are more restricted on Windows.
@@ -949,6 +950,40 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertFalse(int04_1.is_revoked(rootcrl))
         self.assertTrue(end21.is_revoked(int21crl))
 
+    def test_crls(self):
+        rng = botan.RandomNumberGenerator()
+        now = int(time.time())
+
+        priv_pem = """
+-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgoVEKnWZw2Bfrf3MM
+WLrfvRcAqq/sOf58jny37NLGQHShRANCAARageRLkKQEh1M86zvqeeesx2u9duLP
+iWtHjIcunpiq6+IiB8IVu7Ncu6uPKoFS/mWzTvjgdNusmgNle9p3OAbE
+-----END PRIVATE KEY-----"""
+
+        ca_cert = botan.X509Cert(filename=test_data("src/tests/data/x509/crl/ca.crt"))
+        ca_key = botan.PrivateKey.load(priv_pem)
+        ca_pubkey = ca_key.get_public_key()
+
+        sub1_cert = botan.X509Cert(filename=test_data("src/tests/data/x509/crl/sub1.crt"))
+        sub2_cert = botan.X509Cert(filename=test_data("src/tests/data/x509/crl/sub2.crt"))
+
+        crl = botan.X509CRL.create(rng, ca_cert, ca_key, now, 600)
+        self.assertTrue(crl.verify(ca_pubkey))
+        self.assertEqual(sub1_cert.verify(None, [ca_cert], crls=[crl]), 0)
+        self.assertEqual(sub2_cert.verify(None, [ca_cert], crls=[crl]), 0)
+
+        to_revoke = botan.X509CRLEntry.create(sub2_cert, botan.X509CRLReason.KEY_COMPROMISE)
+
+        crl = crl.revoke(rng, ca_cert, ca_key, now, 86400, [to_revoke])
+        self.assertTrue(crl.verify(ca_pubkey))
+        self.assertEqual(sub1_cert.verify(None, [ca_cert], crls=[crl]), 0)
+        self.assertEqual(sub2_cert.verify(None, [ca_cert], crls=[crl]), 5000)
+        self.assertEqual(len(crl.revoked()), 1)
+        revoked_entry = crl.revoked()[0]
+        self.assertEqual(revoked_entry.reason(), botan.X509CRLReason.KEY_COMPROMISE)
+        self.assertEqual(revoked_entry.serial_number(), botan.MPI("270431672985589325219914342203841486494"))
+        self.assertTrue(now - 20 <= revoked_entry.revocation_date() <= now + 20)
 
     def test_mpi(self):
         z = botan.MPI()
