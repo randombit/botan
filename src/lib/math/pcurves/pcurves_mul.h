@@ -26,6 +26,30 @@ static constexpr size_t Mul2PrecompWindowBits = 3;
 static constexpr size_t Mul2WindowBits = 2;
 
 /**
+* Return number of blinding bits to use
+*
+* This can return any value between 0 and the scalar bit length.
+*
+* The field arithmetic and scalar multiplication algorithms are anyway written and tested
+* to be constant time; blinding is just used as a safety net in the case that the compiler
+* rewrites constant time code to include variable time behavior. If utmost performance is
+* of concern and you are in a position to test that your specific compiler for your
+* specific architecture is not inserting variable time behavior where not expected (for
+* example by using the existing valgrind-based CT checking) it is safe to modify this
+* function to just return 0, or some very small blinding factor of 1-4 bits.
+*/
+constexpr size_t scalar_blinding_bits(size_t scalar_bits) {
+   // For blinding use 1/8 the order length for most curves; for P-521 we round down a bit
+   // so the masked scalar fits exactly in 9 or 18 words.
+
+   if(scalar_bits == 521) {
+      return 55;
+   } else {
+      return scalar_bits / 8;
+   }
+}
+
+/**
 * A precomputed table of affine points with constant time lookup
 *
 * If R is zero then the entire table is scanned for each lookup.
