@@ -2407,7 +2407,11 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
             os.path.join(variables['libdir'], 'cmake', 'Botan-%s' % variables['version'])
         if not is_subpath(cmake_install_dir, variables['prefix']):
             logging.error("The CMake module must be installed into a subdirectory of the install prefix.")
-        variables['cmake_install_dir'] = cmake_install_dir
+        variables['cmake_install_dir'] = normalize_source_path(cmake_install_dir)
+        variables['libdir_rel'] = normalize_source_path(os.path.relpath(variables['libdir'], variables['prefix']))
+        variables['bindir_rel'] = normalize_source_path(os.path.relpath(variables['bindir'], variables['prefix']))
+        cmake_rel = os.path.relpath(cmake_install_dir, variables['prefix'])
+        variables['cmake_relpath_components'] = [p for p in cmake_rel.replace('\\', '/').split('/') if p and p != '.']
 
     # The name is always set because Windows build needs it
     variables['static_lib_name'] = '%s%s.%s' % (variables['lib_prefix'], variables['libname'],
