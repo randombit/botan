@@ -40,4 +40,9 @@ MLDSA_Composite_Param MLDSA_Composite_Param::get_param_by_id(MLDSA_Composite_Par
    throw Botan::Invalid_Argument("no parameter found for provided MLDSA composite id (enum)");
 }
 
+AlgorithmIdentifier MLDSA_Composite_Param::get_mldsa_algorithm_id_by_id() const {
+   OID oid(this->mldsa_oid_str);
+   return AlgorithmIdentifier(oid, AlgorithmIdentifier::Encoding_Option::USE_EMPTY_PARAM);
+}
+
 }  // namespace Botan

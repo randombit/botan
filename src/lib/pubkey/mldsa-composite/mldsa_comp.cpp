@@ -7,23 +7,30 @@
 
 namespace Botan {
 
-MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t id,
-                                                     std::span<const uint8_t> key_bits) :
-      m_parameters(MLDSA_Composite_Param::get_param_by_id(id)) {
-   OID oid(m_parameters.mldsa_oid_str);
+namespace {
+std::span<const uint8_t> mldsa_key_subspan(const MLDSA_Composite_Param& param, std::span<const uint8_t> key_bits) {
+   OID oid(param.mldsa_oid_str);
    AlgorithmIdentifier aid(oid, AlgorithmIdentifier::Encoding_Option::USE_EMPTY_PARAM);
-   if(key_bits.size() <= m_parameters.mldsa_pubkey_size) {
+   if(key_bits.size() <= param.mldsa_pubkey_size) {
       throw Invalid_Argument("encoded key is too short");
    }
-   const std::span<const uint8_t> mldsa_pub_enc(key_bits.begin(), m_parameters.mldsa_pubkey_size);
-   m_mldsa_pubkey = std::make_unique<Dilithium_PublicKey>(aid, mldsa_pub_enc);
+   const std::span<const uint8_t> result(key_bits.begin(), param.mldsa_pubkey_size);
+   return result;
+}
+}  // namespace
+
+MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t id,
+                                                     std::span<const uint8_t> key_bits) :
+      m_parameters(MLDSA_Composite_Param::get_param_by_id(id)),
+      m_mldsa_pubkey(m_parameters.get_mldsa_algorithm_id_by_id(), mldsa_key_subspan(m_parameters, key_bits)) {
+   // TODO: GET RID AUF POINTERS FOR KEYS, INSTANTIATE DIRECTLY
    std::cout << "MLDSA_Composite_PublicKey() decoded ML-DSA key\n";
    // TODO: DECODE TRADITIONAL KEY
 }
 
 std::vector<uint8_t> MLDSA_Composite_PublicKey::raw_public_key_bits() const {
    // TODO: CHECK POINTER NON-NULL
-   std::vector<uint8_t> result = m_mldsa_pubkey->raw_public_key_bits();
+   std::vector<uint8_t> result = m_mldsa_pubkey.raw_public_key_bits();
    std::cerr << "MLDSA_Composite_PublicKey::raw_public_key_bits(): ML-DSA public_key_bits.size() = " << result.size()
              << std::endl;
    std::vector<uint8_t> trad = m_tradtional_pubkey->raw_public_key_bits();

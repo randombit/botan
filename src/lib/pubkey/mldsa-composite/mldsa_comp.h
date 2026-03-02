@@ -103,7 +103,7 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PublicKey : public virtual Public_K
 
    private:
       MLDSA_Composite_Param m_parameters;
-      std::unique_ptr<Dilithium_PublicKey> m_mldsa_pubkey;
+      Dilithium_PublicKey m_mldsa_pubkey;
       std::unique_ptr<Public_Key> m_tradtional_pubkey;
 };
 
