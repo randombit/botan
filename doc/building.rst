@@ -1105,6 +1105,12 @@ Set the man page installation dir.
 
 Set the include file installation dir.
 
+``--cmakeconfigdir=DIR``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Set the CMake config (botan-config.cmake, botan-config-version.cmake) installation dir.
+Defaults to ``<libdir>/cmake/Botan-<version>``.
+
 ``--list-modules``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
