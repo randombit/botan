@@ -146,7 +146,7 @@ def main(args):
     lib_dir = cfg['libdir']
     target_include_dir = cfg['installed_include_dir']
     pkgconfig_dir = os.path.join(lib_dir, 'pkgconfig')
-    cmake_dir = os.path.join(lib_dir, 'cmake', 'Botan-%s' % cfg["version"])
+    cmake_dir = cfg.get('cmake_install_dir')
 
     prefix = cfg['prefix']
 
