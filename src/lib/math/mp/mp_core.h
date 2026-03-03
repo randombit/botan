@@ -710,28 +710,30 @@ inline constexpr auto monty_inverse(W a) -> W {
 
 template <size_t S, WordType W, size_t N>
 inline constexpr W shift_left(std::array<W, N>& x) {
+   static_assert(N >= 1, "Invalid input size");
    static_assert(S < WordInfo<W>::bits, "Shift too large");
 
-   W carry = 0;
-   for(size_t i = 0; i != N; ++i) {
-      const W w = x[i];
-      x[i] = (w << S) | carry;
-      carry = w >> (WordInfo<W>::bits - S);
+   const W carry = x[N - 1] >> (WordInfo<W>::bits - S);
+
+   for(size_t i = N - 1; i != 0; --i) {
+      x[i] = (x[i] << S) | (x[i - 1] >> (WordInfo<W>::bits - S));
    }
+   x[0] <<= S;
 
    return carry;
 }
 
 template <size_t S, WordType W, size_t N>
 inline constexpr W shift_right(std::array<W, N>& x) {
+   static_assert(N >= 1, "Invalid input size");
    static_assert(S < WordInfo<W>::bits, "Shift too large");
 
-   W carry = 0;
-   for(size_t i = 0; i != N; ++i) {
-      const W w = x[N - 1 - i];
-      x[N - 1 - i] = (w >> S) | carry;
-      carry = w << (WordInfo<W>::bits - S);
+   const W carry = x[0] << (WordInfo<W>::bits - S);
+
+   for(size_t i = 0; i != N - 1; ++i) {
+      x[i] = (x[i] >> S) | (x[i + 1] << (WordInfo<W>::bits - S));
    }
+   x[N - 1] >>= S;
 
    return carry;
 }
