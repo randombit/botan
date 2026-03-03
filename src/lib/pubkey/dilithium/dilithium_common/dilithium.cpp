@@ -13,9 +13,10 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "botan/hex.h"
 #include <botan/dilithium.h>
+#include <botan/hex.h>
 #include <botan/internal/parsing.h>
+#include <iostream>
 
 #include <botan/exceptn.h>
 #include <botan/rng.h>
@@ -67,6 +68,7 @@ DilithiumMode::Mode dilithium_mode_from_string(std::string_view str) {
 class MLDSA_Signing_Parameters {
    public:
       MLDSA_Signing_Parameters(std::string_view param_str) {
+         std::cout << "MLDSA_Signing_Parameters: parsing string " << param_str << std::endl;
          const char* error_tmpl = "Parameter string '{}' is not a valid ML-DSA or Dilithium parameter specification";
          if(param_str.size() == 0) {
             // return the defaults

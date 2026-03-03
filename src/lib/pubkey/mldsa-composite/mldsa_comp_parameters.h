@@ -34,6 +34,9 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
       std::string mldsa_param_str() const;
 
       size_t mldsa_signature_size() const;
+      size_t traditional_signature_size() const;
+
+      size_t signature_size() const { return mldsa_signature_size() + traditional_signature_size(); }
 
       size_t traditional_pubkey_encoded_size() const;
 

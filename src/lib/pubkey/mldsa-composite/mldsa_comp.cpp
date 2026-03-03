@@ -95,6 +95,46 @@ class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification
       std::unique_ptr<PK_Ops::Verification> m_traditional_ver_op;
 };
 
+class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_Hash {
+   public:
+      MLDSA_Composite_Signature_Operation(const MLDSA_Composite_Param& param,
+                                          const ML_DSA_PrivateKey& mldsa_privkey,
+                                          const Private_Key* trad_privkey,
+                                          RandomNumberGenerator& rng) :
+
+            PK_Ops::Signature_with_Hash(param.prehash_func),
+            m_mldsa_sig_op(mldsa_privkey.create_signature_op(rng, param.mldsa_param_str(), "")),
+            m_traditional_sig_op(trad_privkey->create_signature_op(rng, param.traditional_padding, "")) {}
+
+      std::vector<uint8_t> raw_sign(std::span<const uint8_t> ph, RandomNumberGenerator& rng) override {
+         //  M' = Prefix || Label || len(ctx) || ctx || PH( M )
+         std::string msg_str = "CompositeAlgorithmSignatures2025";
+         msg_str += m_parameters.label;
+         std::vector<uint8_t> msg(msg_str.begin(), msg_str.end());
+         msg.push_back(0);  // ctx = empty
+         msg.insert(msg.end(), ph.begin(), ph.end());
+         m_mldsa_sig_op->update(msg);
+         m_traditional_sig_op->update(msg);
+         auto sig = m_mldsa_sig_op->sign(rng);
+         auto trad_sig = m_traditional_sig_op->sign(rng);
+         sig.insert(sig.end(), trad_sig.begin(), trad_sig.end());
+         return sig;
+      }
+
+      //std::vector<uint8_t> sign(RandomNumberGenerator& rng) override { throw Botan::Exception("TODO: NOT IMPLMENTED"); }
+
+      size_t signature_length() const override { return m_parameters.signature_size(); }
+
+      AlgorithmIdentifier algorithm_identifier() const override { throw Botan::Exception("TODO: NOT IMPLMENTED"); }
+
+   private:
+
+   private:
+      MLDSA_Composite_Param m_parameters;
+      std::unique_ptr<PK_Ops::Signature> m_mldsa_sig_op;
+      std::unique_ptr<PK_Ops::Signature> m_traditional_sig_op;
+};
+
 MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t id,
                                                      std::span<const uint8_t> key_bits) :
       m_parameters(MLDSA_Composite_Param::get_param_by_id(id)),
@@ -124,7 +164,10 @@ std::unique_ptr<Private_Key> MLDSA_Composite_PublicKey::generate_another(RandomN
 
 // TODO: ALLOW NON-EMPTY CTX VIA PARAMS?
 std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_verification_op(
-   std::string_view /*params_for_ctx*/, std::string_view provider) const {
+   std::string_view params_for_ctx, std::string_view provider) const {
+   if(params_for_ctx != "") {
+      throw Botan::Invalid_Argument("signature parameters not supported for MLDSA composite signatures");
+   }
    if(provider.empty() || provider == "base") {
       return std::make_unique<MLDSA_Composite_Verification_Operation>(
          this->m_parameters, *this->m_mldsa_pubkey, this->m_tradtional_pubkey.get());
@@ -168,9 +211,17 @@ std::unique_ptr<Public_Key> MLDSA_Composite_PrivateKey::public_key() const {
 /**
        * Create a signature operation that produces a MLDSA_Composite signature.
        */
-std::unique_ptr<PK_Ops::Signature> MLDSA_Composite_PrivateKey::create_signature_op(
-   RandomNumberGenerator& /*rng*/, std::string_view /*params*/, std::string_view /*provider*/) const {
-   throw Botan::Exception("TODO: not implemented");
+std::unique_ptr<PK_Ops::Signature> MLDSA_Composite_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
+                                                                                   std::string_view params_for_ctx,
+                                                                                   std::string_view provider) const {
+   if(params_for_ctx != "") {
+      throw Botan::Invalid_Argument("signature parameters not supported for MLDSA composite signatures");
+   }
+   if(provider.empty() || provider == "base") {
+      return std::make_unique<MLDSA_Composite_Signature_Operation>(
+         this->m_parameters, *this->m_mldsa_privkey, this->m_tradtional_privkey.get(), rng);
+   }
+   throw Provider_Not_Found(algo_name(), provider);
 }
 
 // MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> sk) :

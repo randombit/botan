@@ -59,6 +59,14 @@ std::string MLDSA_Composite_Param::mldsa_param_str() const {
    return std::string("Pure,Randomized,ctx_hex=") + hex_encode(label_vec);
 }
 
+size_t MLDSA_Composite_Param::traditional_signature_size() const {
+   if(traditional_algoritm == "RSA") {
+      return traditional_key_size;
+   }
+   throw Botan::Exception(
+      "TODO: MLDSA_Composite_Param::traditional_signature_size(): not implemented for parameters other than RSA");
+}
+
 size_t MLDSA_Composite_Param::mldsa_signature_size() const {
    // TODO: USE ENUM, NOT STRING
    if(this->mldsa_variant == std::string("ML-DSA-4x4")) {

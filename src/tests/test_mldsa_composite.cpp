@@ -10,6 +10,7 @@
  */
 
 #include "botan/exceptn.h"
+#include "botan/hex.h"
 #include "botan/pk_keys.h"
 #include "tests.h"
 
@@ -38,6 +39,8 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
 
       // TODO: NEGATIVE TESTS WITH TOO SHORT PUBLIC AND PRIVATE KEYS
       Test::Result run_one_test(const std::string& name, const VarMap& vars) override {
+         auto rng = std::make_unique<CTR_DRBG_AES256>(Botan::hex_decode(
+            "061550234D158C5EC95595FE04EF7A25767F2E24CC2BC479D09D86DC9ABCFDE7056A8C266F9EF97ED08541DBD2E1FFA1"));
          bool pubkey_valid = true;
          bool privkey_valid = true;
          bool exc_during_pubkey_decoding = false;
@@ -70,6 +73,7 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
          } catch(const Botan::Exception& e) {
             exc_during_pubkey_decoding = true;
          }
+         std::cout << "pubkey decoding passed\n";
          result.test_bool_eq("pubkey decoding OK", !exc_during_pubkey_decoding, pubkey_valid);
          if(exc_during_pubkey_decoding) {
             return result;
@@ -78,6 +82,7 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
          verifier.update(message);
          result.test_bool_eq("verification of correct signature", verifier.check_signature(sig_bin), true);
          //std::cout << "\nis " << (verifier.check_signature(sig_bin) ? "valid" : "invalid");
+         std::cout << "verification passed \n";
 
          try {
             privkey = std::make_unique<Botan::MLDSA_Composite_PrivateKey>(comp_parm.id, sk_bin);
@@ -88,7 +93,19 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
          if(exc_during_privkey_decoding) {
             return result;
          }
+         // sign data
+         std::cout << "signing data with decoded private key\n";
+         Botan::PK_Signer signer(*privkey, *rng, "");
+         signer.update(message);
+         std::vector<uint8_t> signature2 = signer.signature(*rng);
+         std::cout << "finished signing data with decoded private key\n";
+         //std::cout << "Signature:\n" << Botan::hex_encode(signature);
 
+         Botan::PK_Verifier verifier2(*pubkey, "");
+         verifier.update(message);
+         result.test_bool_eq("verification of correct signature (produced by decoded private key)",
+                             verifier.check_signature(signature2),
+                             true);
          return result;
       }
 };
