@@ -37,15 +37,17 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
 
       size_t traditional_pubkey_encoded_size() const;
 
+      size_t mldsa_privkey_size() const { return 32; }
+
       // TODO: MAKE PRIVATE
       id_t id;
-      const std::string id_str;
-      const std::string label;
-      const std::string prehash_func;
-      const std::string mldsa_variant;
-      const std::string mldsa_oid_str;
-      const std::string traditional_algoritm;
-      const std::string traditional_padding;
+      std::string id_str;
+      std::string label;
+      std::string prehash_func;
+      std::string mldsa_variant;
+      std::string mldsa_oid_str;
+      std::string traditional_algoritm;
+      std::string traditional_padding;
       uint32_t mldsa_pubkey_size;
       uint32_t traditional_key_size;
 

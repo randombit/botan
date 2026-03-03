@@ -8,8 +8,7 @@
 #ifndef BOTAN_MLDSA_COMP_H_
 #define BOTAN_MLDSA_COMP_H_
 
-// id-MLDSA44-RSA2048-PSS-SHA256
-
+#include "botan/ml_dsa.h"
 #include <botan/dilithium.h>
 #include <botan/mldsa_comp_parameters.h>
 #include <botan/pk_keys.h>
@@ -101,10 +100,52 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PublicKey : public virtual Public_K
       std::unique_ptr<PK_Ops::Verification> create_x509_verification_op(const AlgorithmIdentifier& alg_id,
                                                                         std::string_view provider) const override;
 
+   protected:
+      MLDSA_Composite_PublicKey() = default;
+
+      MLDSA_Composite_Param m_parameters;                   // NOLINT(*non-private-member-variable*)
+      std::shared_ptr<Dilithium_PublicKey> m_mldsa_pubkey;  // NOLINT(*non-private-member-variable*)
+      std::shared_ptr<Public_Key> m_tradtional_pubkey;      // NOLINT(*non-private-member-variable*)
+};
+
+class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PrivateKey final : public virtual MLDSA_Composite_PublicKey,
+                                                                public virtual Botan::Private_Key {
+   public:
+      std::unique_ptr<Public_Key> public_key() const override;
+
+      /**
+       * Generates a new key pair
+       */
+      //MLDSA_Composite_PrivateKey(RandomNumberGenerator& rng, MLDSA_Composite_Param param);
+
+      /**
+       * Read an encoded private key.
+       */
+      //MLDSA_Composite_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> sk);
+
+      MLDSA_Composite_PrivateKey(MLDSA_Composite_Param::id_t id, std::span<const uint8_t> sk);
+
+      /**
+       * Read an encoded private key given the composite @p param.
+       */
+      //MLDSA_Composite_PrivateKey(std::span<const uint8_t> sk, MLDSA_Composite_Param param);
+
+      secure_vector<uint8_t> private_key_bits() const override;
+
+      secure_vector<uint8_t> raw_private_key_bits() const override;
+
+      /**
+       * Create a signature operation that produces a MLDSA_Composite signature.
+       */
+      std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
+                                                             std::string_view params,
+                                                             std::string_view provider) const override;
+
    private:
+      friend class MLDSA_Composite_Signature_Operation;
       MLDSA_Composite_Param m_parameters;
-      Dilithium_PublicKey m_mldsa_pubkey;
-      std::unique_ptr<Public_Key> m_tradtional_pubkey;
+      std::shared_ptr<ML_DSA_PrivateKey> m_mldsa_privkey;
+      std::shared_ptr<Private_Key> m_tradtional_privkey;
 };
 
 }  // namespace Botan

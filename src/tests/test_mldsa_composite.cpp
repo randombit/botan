@@ -39,9 +39,14 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
       // TODO: NEGATIVE TESTS WITH TOO SHORT PUBLIC AND PRIVATE KEYS
       Test::Result run_one_test(const std::string& name, const VarMap& vars) override {
          bool pubkey_valid = true;
+         bool privkey_valid = true;
          bool exc_during_pubkey_decoding = false;
+         bool exc_during_privkey_decoding = false;
          if(name.ends_with("pubkey-invalid")) {
             pubkey_valid = false;
+         }
+         if(name.ends_with("privkey-invalid")) {
+            privkey_valid = false;
          }
          Test::Result result(name);
          std::cout << "test name = " << name << std::endl;
@@ -49,12 +54,17 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
          std::cout << "tcId = " << tcId << std::endl;
          const auto pk = vars.get_req_str("pk");
          const auto pk_bin = Botan::base64_decode(pk);
+
+         const auto sk = vars.get_req_str("sk");
+         const auto sk_bin = Botan::base64_decode(sk);
+
          const auto sig_bin = Botan::base64_decode(vars.get_req_str("s"));
 
          const auto comp_parm = Botan::MLDSA_Composite_Param::get_param_by_id_str(tcId);
 
          const char* message = "The quick brown fox jumps over the lazy dog.";
          std::unique_ptr<Botan::Public_Key> pubkey;
+         std::unique_ptr<Botan::Private_Key> privkey;
          try {
             pubkey = std::make_unique<Botan::MLDSA_Composite_PublicKey>(comp_parm.id, pk_bin);
          } catch(const Botan::Exception& e) {
@@ -68,6 +78,17 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
          verifier.update(message);
          result.test_bool_eq("verification of correct signature", verifier.check_signature(sig_bin), true);
          //std::cout << "\nis " << (verifier.check_signature(sig_bin) ? "valid" : "invalid");
+
+         try {
+            privkey = std::make_unique<Botan::MLDSA_Composite_PrivateKey>(comp_parm.id, sk_bin);
+         } catch(const Botan::Exception& e) {
+            exc_during_privkey_decoding = true;
+         }
+         result.test_bool_eq("privkey decoding OK", !exc_during_privkey_decoding, privkey_valid);
+         if(exc_during_privkey_decoding) {
+            return result;
+         }
+
          return result;
       }
 };
