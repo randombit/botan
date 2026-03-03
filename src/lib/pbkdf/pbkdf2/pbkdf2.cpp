@@ -83,7 +83,7 @@ size_t pbkdf2(MessageAuthenticationCode& prf,
 
    const PBKDF2 pbkdf2(prf, iterations);
 
-   pbkdf2.derive_key(out, out_len, password.data(), password.size(), salt, salt_len);
+   pbkdf2.derive_key(out, out_len, password.data(), password.size(), salt, salt_len, std::nullopt);
 
    return iterations;
 }
@@ -93,7 +93,8 @@ void pbkdf2(MessageAuthenticationCode& prf,
             size_t out_len,
             const uint8_t salt[],
             size_t salt_len,
-            size_t iterations) {
+            size_t iterations,
+            const std::optional<std::stop_token>& stop_token) {
    if(iterations == 0) {
       throw Invalid_Argument("PBKDF2: Invalid iteration count");
    }
@@ -120,6 +121,9 @@ void pbkdf2(MessageAuthenticationCode& prf,
       xor_buf(out, U.data(), prf_output);
 
       for(size_t i = 1; i != iterations; ++i) {
+         if((i & 4095) == 1 && stop_token.has_value() && stop_token->stop_requested()) {
+            throw Botan::Operation_Canceled("pbkdf2");
+         }
          prf.update(U);
          prf.final(U.data());
          xor_buf(out, U.data(), prf_output);
@@ -144,7 +148,7 @@ size_t PKCS5_PBKDF2::pbkdf(uint8_t key[],
 
    const PBKDF2 pbkdf2(*m_mac, iterations);
 
-   pbkdf2.derive_key(key, key_len, password.data(), password.size(), salt, salt_len);
+   pbkdf2.derive_key(key, key_len, password.data(), password.size(), salt, salt_len, std::nullopt);
 
    return iterations;
 }
@@ -171,9 +175,10 @@ void PBKDF2::derive_key(uint8_t out[],
                         const char* password,
                         const size_t password_len,
                         const uint8_t salt[],
-                        size_t salt_len) const {
+                        size_t salt_len,
+                        const std::optional<std::stop_token>& stop_token) const {
    pbkdf2_set_key(*m_prf, password, password_len);
-   pbkdf2(*m_prf, out, out_len, salt, salt_len, m_iterations);
+   pbkdf2(*m_prf, out, out_len, salt, salt_len, m_iterations, stop_token);
 }
 
 std::string PBKDF2_Family::name() const {

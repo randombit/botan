@@ -11,6 +11,7 @@
 #include <memory>
 #include <optional>
 #include <span>
+#include <stop_token>
 #include <string>
 #include <vector>
 
@@ -81,12 +82,19 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash /* NOLINT(*-special-member-functions) 
       * @param out a span where the derived key will be placed
       * @param password the password to derive the key from
       * @param salt a randomly chosen salt
+      * @param stop_token (optional) A cancellation token. If provided and cancellation is requested
+      *        via @p stop_token.stop_requested(), the operation will terminate early by throwing
+      *        an Operation_Canceled exception.
       *
       * This function is const, but is not thread safe. Different threads should
       * either use unique objects, or serialize all access.
       */
-      void hash(std::span<uint8_t> out, std::string_view password, std::span<const uint8_t> salt) const {
-         this->derive_key(out.data(), out.size(), password.data(), password.size(), salt.data(), salt.size());
+      void hash(std::span<uint8_t> out,
+                std::string_view password,
+                std::span<const uint8_t> salt,
+                const std::optional<std::stop_token>& stop_token = std::nullopt) const {
+         this->derive_key(
+            out.data(), out.size(), password.data(), password.size(), salt.data(), salt.size(), stop_token);
       }
 
       /**
@@ -102,6 +110,9 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash /* NOLINT(*-special-member-functions) 
       * @param salt a randomly chosen salt
       * @param associated_data some additional data
       * @param key a secret key
+      * @param stop_token (optional) A cancellation token. If provided and cancellation is requested
+      *        via @p stop_token.stop_requested(), the operation will terminate early by throwing
+      *        an Operation_Canceled exception.
       *
       * This function is const, but is not thread safe. Different threads should
       * either use unique objects, or serialize all access.
@@ -110,7 +121,8 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash /* NOLINT(*-special-member-functions) 
                 std::string_view password,
                 std::span<const uint8_t> salt,
                 std::span<const uint8_t> associated_data,
-                std::span<const uint8_t> key) const {
+                std::span<const uint8_t> key,
+                const std::optional<std::stop_token>& stop_token = std::nullopt) const {
          this->derive_key(out.data(),
                           out.size(),
                           password.data(),
@@ -120,7 +132,8 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash /* NOLINT(*-special-member-functions) 
                           associated_data.data(),
                           associated_data.size(),
                           key.data(),
-                          key.size());
+                          key.size(),
+                          stop_token);
       }
 
       /**
@@ -132,6 +145,9 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash /* NOLINT(*-special-member-functions) 
       * @param password_len the length of password in bytes
       * @param salt a randomly chosen salt
       * @param salt_len length of salt in bytes
+      * @param stop_token (optional) A cancellation token. If provided and cancellation is requested
+      *        via @p stop_token.stop_requested(), the operation will terminate early by throwing
+      *        an Operation_Canceled exception.
       *
       * This function is const, but is not thread safe. Different threads should
       * either use unique objects, or serialize all access.
@@ -141,7 +157,8 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash /* NOLINT(*-special-member-functions) 
                               const char* password,
                               size_t password_len,
                               const uint8_t salt[],
-                              size_t salt_len) const = 0;
+                              size_t salt_len,
+                              const std::optional<std::stop_token>& stop_token = std::nullopt) const = 0;
 
       /**
       * Derive a key from a password plus additional data and/or a secret key
@@ -159,6 +176,9 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash /* NOLINT(*-special-member-functions) 
       * @param ad_len length of ad in bytes
       * @param key a secret key
       * @param key_len length of key in bytes
+      * @param stop_token (optional) A cancellation token. If provided and cancellation is requested
+      *        via @p stop_token.stop_requested(), the operation will terminate early by throwing
+      *        an Operation_Canceled exception.
       *
       * This function is const, but is not thread safe. Different threads should
       * either use unique objects, or serialize all access.
@@ -172,7 +192,8 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash /* NOLINT(*-special-member-functions) 
                               const uint8_t ad[],
                               size_t ad_len,
                               const uint8_t key[],
-                              size_t key_len) const;
+                              size_t key_len,
+                              const std::optional<std::stop_token>& stop_token = std::nullopt) const;
 };
 
 class BOTAN_PUBLIC_API(2, 8) PasswordHashFamily /* NOLINT(*-special-member-functions) */ {
