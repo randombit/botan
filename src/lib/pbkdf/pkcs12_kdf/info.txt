@@ -1,0 +1,17 @@
+<defines>
+PKCS12_KDF -> 20260303
+</defines>
+
+<module_info>
+name -> "PKCS12 KDF"
+brief -> "PKCS#12 password-based key derivation (RFC 7292)"
+</module_info>
+
+<requires>
+sha1
+utils
+</requires>
+
+<header:public>
+pkcs12_kdf.h
+</header:public>
