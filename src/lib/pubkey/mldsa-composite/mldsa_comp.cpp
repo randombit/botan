@@ -31,14 +31,10 @@ std::span<const uint8_t> traditional_pubkey_subspan(const MLDSA_Composite_Param&
    if(key_bits.size() - offset <= 1) {
       throw Invalid_Argument("encoded key is too short");
    }
-   std::cout << "RSA pub key byte size = " << key_bits.size() - offset << std::endl;
    std::span<const uint8_t> result(key_bits.begin() + offset, key_bits.end());
-   std::cout << "RSA pub key hex = " << hex_encode(result) << std::endl;
    return result;
 }
 }  // namespace
-
-//
 
 class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
@@ -50,51 +46,31 @@ class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification
             m_mldsa_ver_op(mldsa_pubkey.create_verification_op(param.mldsa_param_str(), "")),
             m_traditional_ver_op(trad_pubkey->create_verification_op(param.traditional_padding, "")) {}
 
-      //void update(std::span<const uint8_t> input) override { throw Botan::Exception("update() not implemented"); }
-
       bool verify(std::span<const uint8_t> ph, std::span<const uint8_t> sig) override {
+         //  M' = Prefix || Label || len(ctx) || ctx || PH( M )
          std::string msg_str = "CompositeAlgorithmSignatures2025";
          msg_str += m_parameters.label;
          std::vector<uint8_t> msg(msg_str.begin(), msg_str.end());
          msg.push_back(0);  // ctx = empty
          msg.insert(msg.end(), ph.begin(), ph.end());
          size_t mldsa_sig_size = m_parameters.mldsa_signature_size();
+         m_mldsa_ver_op->update(msg);
+         m_traditional_ver_op->update(msg);
          if(sig.size() <= mldsa_sig_size) {
             return false;
          }
-         m_mldsa_ver_op->update(msg);
-         m_traditional_ver_op->update(msg);
-         std::cout << "traditional signature size = " << sig.size() - mldsa_sig_size << std::endl;
          std::span<const uint8_t> mldsa_sig(sig.begin(), sig.begin() + mldsa_sig_size);
          std::span<const uint8_t> trad_sig(sig.begin() + mldsa_sig_size, sig.end());
-         bool overall = true;
          if(!m_mldsa_ver_op->is_valid_signature(mldsa_sig)) {
-            std::cout << "MLDSA signature valditation failed\n";
-            overall = false;
-         } else {
-            std::cout << "MLDSA signature valditation SUCCEEDED\n";
+            return false;
          }
          if(!m_traditional_ver_op->is_valid_signature(trad_sig)) {
-            std::cout << "traditional signature valditation failed\n";
-            overall = false;
-         } else {
-            std::cout << "traditional signature valditation SUCCEEDED\n";
+            return false;
          }
-         return overall;
-
-         //  M' = Prefix || Label || len(ctx) || ctx || PH( M )
+         return true;
       }
 
-      /**
-       */
-      // bool is_valid_signature(std::span<const uint8_t> sig) override {
-      //    throw Botan::Exception("is_valid_signature() not implemented");
-      // }
-
-      //std::string hash_function() const override { throw Botan::Exception("hash_function() not implemented"); }
-
    private:
-      //ML_DSA_PublicKey m_mldsa_public_key;
       MLDSA_Composite_Param m_parameters;
       std::unique_ptr<PK_Ops::Verification> m_mldsa_ver_op;
       std::unique_ptr<PK_Ops::Verification> m_traditional_ver_op;
@@ -105,15 +81,10 @@ MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t
       m_parameters(MLDSA_Composite_Param::get_param_by_id(id)),
       m_mldsa_pubkey(m_parameters.get_mldsa_algorithm_id(), mldsa_pubkey_subspan(m_parameters, key_bits)),
       m_tradtional_pubkey(load_public_key(m_parameters.get_traditional_algorithm_id(),
-                                          traditional_pubkey_subspan(m_parameters, key_bits))) {
-   std::cout << "MLDSA_Composite_PublicKey() decoded both keys\n";
-}
+                                          traditional_pubkey_subspan(m_parameters, key_bits))) {}
 
 std::vector<uint8_t> MLDSA_Composite_PublicKey::raw_public_key_bits() const {
-   // TODO: CHECK POINTER NON-NULL
    std::vector<uint8_t> result = m_mldsa_pubkey.raw_public_key_bits();
-   std::cerr << "MLDSA_Composite_PublicKey::raw_public_key_bits(): ML-DSA public_key_bits.size() = " << result.size()
-             << std::endl;
    std::vector<uint8_t> trad = m_tradtional_pubkey->raw_public_key_bits();
    result.insert(result.end(), trad.begin(), trad.end());
    return result;

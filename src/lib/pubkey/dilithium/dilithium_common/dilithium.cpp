@@ -72,18 +72,6 @@ class MLDSA_Signing_Parameters {
             // return the defaults
             return;
          }
-         // if(!param_str.starts_with("Pure")) {
-         //    throw Invalid_Argument(fmt(error_tmpl), param_str);
-         // }
-         // auto x = param_str.substr(4);
-         // if(param_str.size() == 0) {
-         //    return;
-         // }
-         // if(!x.starts_with("(") || !x.ends_with(")")) {
-         //    throw Invalid_Argument(fmt(error_tmpl), param_str);
-         // }
-         // x = x.substr(1, x.size() - 1);
-         // const auto v = split_on(x, ',');
          const auto v = split_on(param_str, ',');
          bool rndmz_set = false;
          bool ctx_set = false;
