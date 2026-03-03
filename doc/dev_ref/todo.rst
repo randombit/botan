@@ -23,7 +23,7 @@ Hardware Specific Optimizations
 ----------------------------------------
 * AVX512 IFMA optimized field arithmetic for P-256 and/or P-384
 * Stitched AES/GCM implementation
-* GFNI implementations of SEED, ARIA, others?
+* GFNI implementations of SEED, others?
 * NEON/VMX/LSX support for the SIMD based GHASH
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
 * Improved Salsa implementations (SIMD_4x32 and/or AVX2)

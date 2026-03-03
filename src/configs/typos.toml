@@ -46,5 +46,15 @@ ACI = "ACI"
 
 [default.extend-identifiers]
 countr_zero = "countr_zero"
-ARIA_FO = "ARIA_FO"
 Tru64 = "Tru64"
+
+# ARIA "FO" rounds makes typos upset
+ARIA_FO = "ARIA_FO"
+FO = "FO"
+apply_fo_sbox = "apply_fo_sbox"
+aria_fo = "aria_fo"
+aria_fo_m = "aria_fo_m"
+fo_pre_const = "fo_pre_const"
+fo_post_const = "fo_post_const"
+fo_pre_mat = "fo_pre_mat"
+fo_post_mat = "fo_post_mat"

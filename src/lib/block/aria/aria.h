@@ -35,10 +35,17 @@ class ARIA_128 final : public Block_Cipher_Fixed_Params<16, 16> {
 
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<ARIA_128>(); }
 
+      std::string provider() const override;
+      size_t parallelism() const override;
       bool has_keying_material() const override;
 
    private:
       void key_schedule(std::span<const uint8_t> key) override;
+
+#if defined(BOTAN_HAS_ARIA_AVX512_GFNI)
+      void aria_avx512_gfni_encrypt(const uint8_t in[], uint8_t out[], size_t blocks) const;
+      void aria_avx512_gfni_decrypt(const uint8_t in[], uint8_t out[], size_t blocks) const;
+#endif
 
       // Encryption and Decryption round keys.
       secure_vector<uint32_t> m_ERK, m_DRK;
@@ -58,10 +65,17 @@ class ARIA_192 final : public Block_Cipher_Fixed_Params<16, 24> {
 
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<ARIA_192>(); }
 
+      std::string provider() const override;
+      size_t parallelism() const override;
       bool has_keying_material() const override;
 
    private:
       void key_schedule(std::span<const uint8_t> key) override;
+
+#if defined(BOTAN_HAS_ARIA_AVX512_GFNI)
+      void aria_avx512_gfni_encrypt(const uint8_t in[], uint8_t out[], size_t blocks) const;
+      void aria_avx512_gfni_decrypt(const uint8_t in[], uint8_t out[], size_t blocks) const;
+#endif
 
       // Encryption and Decryption round keys.
       secure_vector<uint32_t> m_ERK, m_DRK;
@@ -81,10 +95,17 @@ class ARIA_256 final : public Block_Cipher_Fixed_Params<16, 32> {
 
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<ARIA_256>(); }
 
+      std::string provider() const override;
+      size_t parallelism() const override;
       bool has_keying_material() const override;
 
    private:
       void key_schedule(std::span<const uint8_t> key) override;
+
+#if defined(BOTAN_HAS_ARIA_AVX512_GFNI)
+      void aria_avx512_gfni_encrypt(const uint8_t in[], uint8_t out[], size_t blocks) const;
+      void aria_avx512_gfni_decrypt(const uint8_t in[], uint8_t out[], size_t blocks) const;
+#endif
 
       // Encryption and Decryption round keys.
       secure_vector<uint32_t> m_ERK, m_DRK;
