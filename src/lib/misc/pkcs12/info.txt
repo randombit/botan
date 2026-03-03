@@ -14,13 +14,11 @@ pubkey
 pkcs12_kdf
 des
 sha1
+sha2_32
 hmac
 cbc
 </requires>
 
-<header:public>
-pkcs12.h
-</header:public>
 <header:public>
 pkcs12.h
 </header:public>

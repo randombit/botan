@@ -1,6 +1,6 @@
 /*
 * PKCS#12 Tests
-* (C) 2026
+* (C) 2026 Damiano Mazzella
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -36,33 +36,36 @@ class PKCS12_Tests final : public Test {
          // Key encryption algorithms
          results.push_back(test_key_encryption("PBE-SHA1-3DES"));
          results.push_back(test_key_encryption("PBE-SHA1-2DES"));
-#if defined(BOTAN_HAS_RC2)
-         results.push_back(test_key_encryption("PBE-SHA1-RC2-40"));
-         results.push_back(test_key_encryption("PBE-SHA1-RC2-128"));
-#endif
+#if defined(BOTAN_HAS_PKCS5_PBES2)
          results.push_back(test_key_encryption("PBES2-SHA256-AES256"));
          results.push_back(test_key_encryption("PBES2-SHA256-AES128"));
+#endif
 
          // Certificate encryption algorithms
          results.push_back(test_cert_encryption(""));  // Unencrypted certs
          results.push_back(test_cert_encryption("PBE-SHA1-3DES"));
          results.push_back(test_cert_encryption("PBE-SHA1-2DES"));
-#if defined(BOTAN_HAS_RC2)
-         results.push_back(test_cert_encryption("PBE-SHA1-RC2-40"));
-         results.push_back(test_cert_encryption("PBE-SHA1-RC2-128"));
-#endif
+#if defined(BOTAN_HAS_PKCS5_PBES2)
          results.push_back(test_cert_encryption("PBES2-SHA256-AES256"));
          results.push_back(test_cert_encryption("PBES2-SHA256-AES128"));
+#endif
 
+#if defined(BOTAN_HAS_PKCS5_PBES2)
          // Mixed encryption combinations
          results.push_back(test_mixed_encryption("PBES2-SHA256-AES256", "PBE-SHA1-3DES"));
          results.push_back(test_mixed_encryption("PBE-SHA1-3DES", "PBES2-SHA256-AES128"));
-#if defined(BOTAN_HAS_RC2)
-         results.push_back(test_mixed_encryption("PBE-SHA1-3DES", "PBE-SHA1-RC2-40"));  // Common legacy combination
 #endif
 
+#if defined(BOTAN_HAS_PKCS5_PBES2)
          // Chain with different encryptions
          results.push_back(test_chain_with_pbes2());
+#endif
+
+         // External file parsing tests (OpenSSL-generated)
+         results.push_back(test_parse_openssl_file("openssl_3des.pfx", "test123"));
+#if defined(BOTAN_HAS_PKCS5_PBES2)
+         results.push_back(test_parse_openssl_file("openssl_aes256.pfx", "test123"));
+#endif
 
          return results;
       }
@@ -358,6 +361,32 @@ class PKCS12_Tests final : public Test {
          // Verify end-entity cert
          if(parsed.certificate()) {
             result.test_is_true("EE cert matches", parsed.certificate()->BER_encode() == ee_cert.BER_encode());
+         }
+
+         return result;
+      }
+
+      Test::Result test_parse_openssl_file(const std::string& filename, const std::string& password) {
+         Test::Result result("PKCS12 parse OpenSSL file: " + filename);
+
+         try {
+            const std::vector<uint8_t> pfx_data = Test::read_binary_data_file("pkcs12/" + filename);
+            Botan::PKCS12_Data parsed = Botan::PKCS12::parse(pfx_data, password);
+
+            result.test_is_true("Has private key", parsed.has_private_key());
+            result.test_is_true("Has certificate", parsed.has_certificate());
+
+            if(parsed.private_key()) {
+               result.test_str_eq("Key algorithm", parsed.private_key()->algo_name(), "RSA");
+            }
+
+            if(parsed.certificate()) {
+               result.test_str_eq("Certificate CN", parsed.certificate()->subject_info("CN").at(0), "Test Certificate");
+            }
+
+            result.test_success("Parsed OpenSSL-generated PFX successfully");
+         } catch(const std::exception& e) {
+            result.test_failure("Failed to parse OpenSSL-generated PFX", e.what());
          }
 
          return result;

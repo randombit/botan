@@ -63,10 +63,6 @@
    #include <botan/internal/noekeon.h>
 #endif
 
-#if defined(BOTAN_HAS_RC2)
-   #include <botan/internal/rc2.h>
-#endif
-
 #if defined(BOTAN_HAS_SEED)
    #include <botan/internal/seed.h>
 #endif
@@ -222,12 +218,6 @@ std::unique_ptr<BlockCipher> BlockCipher::create(std::string_view algo, std::str
    }
 #endif
 
-#if defined(BOTAN_HAS_RC2)
-   if(algo == "RC2") {
-      return std::make_unique<RC2>();
-   }
-#endif
-
 #if defined(BOTAN_HAS_SEED)
    if(algo == "SEED") {
       return std::make_unique<SEED>();
@@ -245,14 +235,6 @@ std::unique_ptr<BlockCipher> BlockCipher::create(std::string_view algo, std::str
 #if defined(BOTAN_HAS_GOST_28147_89)
    if(req.algo_name() == "GOST-28147-89") {
       return std::make_unique<GOST_28147_89>(req.arg(0, "R3411_94_TestParam"));
-   }
-#endif
-
-#if defined(BOTAN_HAS_RC2)
-   if(req.algo_name() == "RC2") {
-      // RC2(40) or RC2(128) for effective key bits
-      const size_t effective_bits = req.arg_as_integer(0, 1024);
-      return std::make_unique<RC2>(effective_bits);
    }
 #endif
 

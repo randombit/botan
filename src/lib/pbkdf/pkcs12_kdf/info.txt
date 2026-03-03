@@ -9,9 +9,8 @@ brief -> "PKCS#12 password-based key derivation (RFC 7292)"
 
 <requires>
 sha1
-utils
 </requires>
 
-<header:public>
+<header:internal>
 pkcs12_kdf.h
-</header:public>
+</header:internal>

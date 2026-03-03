@@ -1,6 +1,6 @@
 /*
 * PKCS#12 KDF
-* (C) 2026
+* (C) 2026 Damiano Mazzella
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -25,7 +25,7 @@ namespace Botan {
  *   2 = initialization vector
  *   3 = MAC key
  */
-class BOTAN_PUBLIC_API(3, 7) PKCS12_KDF final : public PasswordHash {
+class PKCS12_KDF final : public PasswordHash {
    public:
       /**
        * @param iterations the number of iterations
@@ -59,7 +59,7 @@ class BOTAN_PUBLIC_API(3, 7) PKCS12_KDF final : public PasswordHash {
 /**
  * PKCS#12 Key Derivation Family
  */
-class BOTAN_PUBLIC_API(3, 7) PKCS12_KDF_Family final : public PasswordHashFamily {
+class PKCS12_KDF_Family final : public PasswordHashFamily {
    public:
       /**
        * @param id the purpose ID (1=key, 2=IV, 3=MAC)
@@ -95,7 +95,6 @@ class BOTAN_PUBLIC_API(3, 7) PKCS12_KDF_Family final : public PasswordHashFamily
  * @param id purpose ID (1=key, 2=IV, 3=MAC)
  * @param hash_algo hash algorithm to use (default: SHA-1, also supports SHA-256)
  */
-BOTAN_PUBLIC_API(3, 7)
 void pkcs12_kdf(uint8_t out[],
                 size_t out_len,
                 std::string_view password,

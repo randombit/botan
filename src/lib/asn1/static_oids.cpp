@@ -594,10 +594,6 @@ std::optional<std::string_view> OID_Map::lookup_static_oid(const OID& oid) {
          return if_match(oid, {1, 2, 840, 113549, 1, 12, 1, 3}, "PBE-SHA1-3DES");
       case 0x96C78:
          return if_match(oid, {1, 2, 840, 113549, 1, 12, 1, 4}, "PBE-SHA1-2DES");
-      case 0x96C79:
-         return if_match(oid, {1, 2, 840, 113549, 1, 12, 1, 5}, "PBE-SHA1-RC2-128");
-      case 0x96C7A:
-         return if_match(oid, {1, 2, 840, 113549, 1, 12, 1, 6}, "PBE-SHA1-RC2-40");
       case 0x9A008:
          return if_match(oid, {1, 3, 36, 3, 3, 2, 8, 1, 1, 1}, "brainpool160r1");
       case 0x9A00A:
@@ -868,8 +864,6 @@ std::optional<OID> OID_Map::lookup_static_oid_name(std::string_view req) {
          return if_match(req, "ECGDSA/RIPEMD-160", {1, 3, 36, 3, 3, 2, 5, 4, 1});
       case 0x2C54F:
          return if_match(req, "ECDSA/SHA-3(224)", {2, 16, 840, 1, 101, 3, 4, 3, 9});
-      case 0x2D119:
-         return if_match(req, "PBE-SHA1-RC2-40", {1, 2, 840, 113549, 1, 12, 1, 6});
       case 0x2EEA6:
          return if_match(req, "RSA/PKCS1v15(RIPEMD-160)", {1, 3, 36, 3, 3, 1, 2});
       case 0x2EFBA:
@@ -1358,8 +1352,6 @@ std::optional<OID> OID_Map::lookup_static_oid_name(std::string_view req) {
          return if_match(req, "ECDH", {1, 3, 132, 1, 12});
       case 0xAFA6A:
          return if_match(req, "RSA/PKCS1v15(SHA-3(384))", {2, 16, 840, 1, 101, 3, 4, 3, 15});
-      case 0xB1D91:
-         return if_match(req, "PBE-SHA1-RC2-128", {1, 2, 840, 113549, 1, 12, 1, 5});
       case 0xB2217:
          return if_match(req, "AES-256/SIV", {1, 3, 6, 1, 4, 1, 25258, 3, 4, 3});
       case 0xB22F7:

@@ -1,6 +1,6 @@
 /*
 * PKCS#12
-* (C) 2026
+* (C) 2026 Damiano Mazzella
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -15,7 +15,7 @@
 #include <botan/der_enc.h>
 #include <botan/hash.h>
 #include <botan/mac.h>
-#include <botan/pkcs12_kdf.h>
+#include <botan/internal/pkcs12_kdf.h>
 #include <botan/pkcs8.h>
 #include <botan/rng.h>
 #include <botan/internal/fmt.h>
@@ -40,8 +40,7 @@ const OID OID_PKCS9_FRIENDLY_NAME("1.2.840.113549.1.9.20");
 const OID OID_PKCS9_LOCAL_KEY_ID("1.2.840.113549.1.9.21");
 const OID OID_PBE_SHA1_3DES("1.2.840.113549.1.12.1.3");
 const OID OID_PBE_SHA1_2DES("1.2.840.113549.1.12.1.4");
-const OID OID_PBE_SHA1_RC2_128("1.2.840.113549.1.12.1.5");
-const OID OID_PBE_SHA1_RC2_40("1.2.840.113549.1.12.1.6");
+const OID OID_PBES2("1.2.840.113549.1.5.13");
 
 /*
 * Encode a friendly name as a BMPString (UTF-16BE)
@@ -66,8 +65,8 @@ secure_vector<uint8_t> pkcs12_pbe_decrypt(std::span<const uint8_t> ciphertext,
                                           const AlgorithmIdentifier& pbe_algo) {
    const OID& oid = pbe_algo.oid();
 
-   // Check if it's PBES2 (OID formatted as "PBE-PKCS5v20")
-   if(oid.to_formatted_string() == "PBE-PKCS5v20") {
+   // Check if it's PBES2
+   if(oid == OID_PBES2) {
 #if defined(BOTAN_HAS_PKCS5_PBES2)
       return pbes2_decrypt(ciphertext, password, pbe_algo.parameters());
 #else
@@ -87,7 +86,7 @@ secure_vector<uint8_t> pkcs12_pbe_decrypt(std::span<const uint8_t> ciphertext,
 
    std::string cipher_name;
    size_t key_len = 0;
-   size_t iv_len = 8;  // DES/RC2 block size
+   size_t iv_len = 8;  // DES block size
 
    if(oid == OID_PBE_SHA1_3DES) {
       cipher_name = "TripleDES/CBC";
@@ -95,14 +94,6 @@ secure_vector<uint8_t> pkcs12_pbe_decrypt(std::span<const uint8_t> ciphertext,
    } else if(oid == OID_PBE_SHA1_2DES) {
       cipher_name = "TripleDES/CBC";
       key_len = 16;  // Only 2 keys
-#if defined(BOTAN_HAS_RC2)
-   } else if(oid == OID_PBE_SHA1_RC2_128) {
-      cipher_name = "RC2(128)/CBC";
-      key_len = 16;  // 128 bits = 16 bytes
-   } else if(oid == OID_PBE_SHA1_RC2_40) {
-      cipher_name = "RC2(40)/CBC";
-      key_len = 5;  // 40 bits = 5 bytes
-#endif
    } else {
       throw Decoding_Error(fmt("Unsupported PKCS#12 PBE algorithm: {}", oid.to_string()));
    }
@@ -169,16 +160,6 @@ std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pkcs12_pbe_encrypt(std::spa
       pbe_oid = OID_PBE_SHA1_2DES;
       cipher_name = "TripleDES/CBC";
       key_len = 16;
-#if defined(BOTAN_HAS_RC2)
-   } else if(algo == "PBE-SHA1-RC2-40") {
-      pbe_oid = OID_PBE_SHA1_RC2_40;
-      cipher_name = "RC2(40)/CBC";
-      key_len = 5;   // 40 bits
-   } else if(algo == "PBE-SHA1-RC2-128") {
-      pbe_oid = OID_PBE_SHA1_RC2_128;
-      cipher_name = "RC2(128)/CBC";
-      key_len = 16;  // 128 bits
-#endif
    } else {
       throw Invalid_Argument(fmt("Unsupported PKCS#12 PBE algorithm: {}", algo));
    }
@@ -324,8 +305,7 @@ void parse_safe_contents(BER_Decoder& decoder,
          shrouded.decode(encrypted_key, ASN1_Type::OctetString);
 
          // Check if it's PBES2 or PKCS#12 PBE
-         if(pbe_algo.oid().to_formatted_string() == "PBE-PKCS5v20" ||
-            pbe_algo.oid().to_formatted_string() == "PBES2") {
+         if(pbe_algo.oid() == OID_PBES2) {
 #if defined(BOTAN_HAS_PKCS5_PBES2)
             auto decrypted = pbes2_decrypt(encrypted_key, password, pbe_algo.parameters());
             DataSource_Memory src(decrypted);
@@ -537,6 +517,9 @@ PKCS12_Data PKCS12::parse(DataSource& source, std::string_view password) {
 
       result.m_ca_certs = all_certs;
    }
+
+   // Verify no trailing data
+   pfx_seq.verify_end();
 
    return result;
 }

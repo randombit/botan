@@ -1,0 +1,46 @@
+# PKCS#12 KDF Test Vectors
+# Per RFC 7292 Appendix B
+
+[PKCS12_KDF(SHA-1)]
+
+# Key derivation (ID=1)
+Password = password
+Salt = 0A58CF64530D823F
+Iterations = 2048
+ID = 1
+OutputLen = 24
+Output = 50E8B3F8FB910AFCC54C246374F05F6FC469D0C85AD39E35
+
+# IV derivation (ID=2)
+Password = password
+Salt = 0A58CF64530D823F
+Iterations = 2048
+ID = 2
+OutputLen = 8
+Output = D56ABFF68E3CC700
+
+# MAC key derivation (ID=3)
+Password = password
+Salt = 0A58CF64530D823F
+Iterations = 2048
+ID = 3
+OutputLen = 20
+Output = A9F257C211043A34726B3338102E88AB5C98A295
+
+# Different password and salt
+Password = test
+Salt = 1234567890ABCDEF
+Iterations = 1000
+ID = 1
+OutputLen = 16
+Output = 632E2BD7FB28D0F76CE3446B97D73ECB
+
+[PKCS12_KDF(SHA-256)]
+
+# Key derivation with SHA-256
+Password = password
+Salt = 0A58CF64530D823F
+Iterations = 2048
+ID = 1
+OutputLen = 32
+Output = 55247EB0AFBFB31CAFBB90A71E5CC0613B4D47FE25110732EE61B16EB47B5BE6

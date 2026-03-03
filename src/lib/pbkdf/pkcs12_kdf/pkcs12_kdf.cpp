@@ -1,11 +1,12 @@
 /*
 * PKCS#12 KDF
-* (C) 2026
+* (C) 2026 Damiano Mazzella
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/pkcs12_kdf.h>
+#include <botan/internal/pkcs12_kdf.h>
+
 
 #include <botan/hash.h>
 #include <botan/internal/fmt.h>
@@ -136,9 +137,11 @@ void pkcs12_kdf(uint8_t out[],
    auto hash = HashFunction::create_or_throw(std::string(hash_algo));
    const size_t hash_len = hash->output_length();
 
-   // Block size depends on hash algorithm
-   // SHA-1 and SHA-256 both use 64-byte blocks
-   const size_t v = 64;
+   // Block size depends on hash algorithm (RFC 7292 uses the hash's block size as v)
+   const size_t v = hash->hash_block_size();
+   if(v == 0) {
+      throw Invalid_Argument(fmt("PKCS#12 KDF does not support hash '{}': undefined block size", hash_algo));
+   }
 
    // Convert password to UTF-16BE
    secure_vector<uint8_t> pwd_bytes = pkcs12_password_to_bytes(password);

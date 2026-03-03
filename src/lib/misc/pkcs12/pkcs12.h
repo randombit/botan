@@ -1,6 +1,6 @@
 /*
 * PKCS#12
-* (C) 2026
+* (C) 2026 Damiano Mazzella
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
