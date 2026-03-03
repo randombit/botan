@@ -26,6 +26,10 @@ namespace Botan {
    #define BOTAN_MP_USE_X86_64_ASM
 #endif
 
+#if defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_ARM64)
+   #define BOTAN_MP_USE_AARCH64_ASM
+#endif
+
 /*
 * Expressing an add with carry is sadly quite difficult in standard C/C++.
 *
@@ -97,6 +101,23 @@ inline constexpr auto word_madd2(W a, W b, W* c) -> W {
 
       return a;
    }
+#elif defined(BOTAN_MP_USE_AARCH64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      W lo = 0;
+      W hi = 0;
+      asm(R"(
+         mul  %[lo], %[a], %[b]
+         umulh %[hi], %[a], %[b]
+         adds %[lo], %[lo], %[c]
+         adc  %[hi], %[hi], xzr
+         )"
+          : [lo] "=&r"(lo), [hi] "=&r"(hi)
+          : [a] "r"(a), [b] "r"(b), [c] "r"(*c)
+          : "cc");
+
+      *c = hi;
+      return lo;
+   }
 #endif
 
    typedef typename WordInfo<W>::dword dword;
@@ -126,6 +147,25 @@ inline constexpr auto word_madd3(W a, W b, W c, W* d) -> W {
           : "cc");
 
       return a;
+   }
+#elif defined(BOTAN_MP_USE_AARCH64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      W lo = 0;
+      W hi = 0;
+      asm(R"(
+         mul  %[lo], %[a], %[b]
+         umulh %[hi], %[a], %[b]
+         adds %[lo], %[lo], %[c]
+         adc  %[hi], %[hi], xzr
+         adds %[lo], %[lo], %[d]
+         adc  %[hi], %[hi], xzr
+         )"
+          : [lo] "=&r"(lo), [hi] "=&r"(hi)
+          : [a] "r"(a), [b] "r"(b), [c] "r"(c), [d] "r"(*d)
+          : "cc");
+
+      *d = hi;
+      return lo;
    }
 #endif
 
@@ -455,7 +495,8 @@ class word3 final {
       inline constexpr void mul(W x, W y) {
    #if defined(BOTAN_MP_USE_X86_64_ASM)
          if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
-            W z0 = 0, z1 = 0;
+            W z0 = 0;
+            W z1 = 0;
 
             asm("mulq %[y]" : "=a"(z0), "=d"(z1) : "a"(x), [y] "rm"(y) : "cc");
 
@@ -466,6 +507,22 @@ class word3 final {
                 )"
                 : [w0] "=r"(m_w0), [w1] "=r"(m_w1), [w2] "=r"(m_w2)
                 : [z0] "r"(z0), [z1] "r"(z1), "0"(m_w0), "1"(m_w1), "2"(m_w2)
+                : "cc");
+            return;
+         }
+   #elif defined(BOTAN_MP_USE_AARCH64_ASM)
+         if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+            W t0 = 0;
+            W t1 = 0;
+            asm(R"(
+                mul  %[t0], %[x], %[y]
+                umulh %[t1], %[x], %[y]
+                adds %[w0], %[w0], %[t0]
+                adcs %[w1], %[w1], %[t1]
+                adc  %[w2], %[w2], xzr
+                )"
+                : [w0] "+r"(m_w0), [w1] "+r"(m_w1), [w2] "+r"(m_w2), [t0] "=&r"(t0), [t1] "=&r"(t1)
+                : [x] "r"(x), [y] "r"(y)
                 : "cc");
             return;
          }
@@ -485,7 +542,8 @@ class word3 final {
       inline constexpr void mul_x2(W x, W y) {
    #if defined(BOTAN_MP_USE_X86_64_ASM)
          if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
-            W z0 = 0, z1 = 0;
+            W z0 = 0;
+            W z1 = 0;
 
             asm("mulq %[y]" : "=a"(z0), "=d"(z1) : "a"(x), [y] "rm"(y) : "cc");
 
@@ -500,6 +558,25 @@ class word3 final {
                    )"
                 : [w0] "=r"(m_w0), [w1] "=r"(m_w1), [w2] "=r"(m_w2)
                 : [z0] "r"(z0), [z1] "r"(z1), "0"(m_w0), "1"(m_w1), "2"(m_w2)
+                : "cc");
+            return;
+         }
+   #elif defined(BOTAN_MP_USE_AARCH64_ASM)
+         if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+            W t0 = 0;
+            W t1 = 0;
+            asm(R"(
+                mul  %[t0], %[x], %[y]
+                umulh %[t1], %[x], %[y]
+                adds %[w0], %[w0], %[t0]
+                adcs %[w1], %[w1], %[t1]
+                adc  %[w2], %[w2], xzr
+                adds %[w0], %[w0], %[t0]
+                adcs %[w1], %[w1], %[t1]
+                adc  %[w2], %[w2], xzr
+                )"
+                : [w0] "+r"(m_w0), [w1] "+r"(m_w1), [w2] "+r"(m_w2), [t0] "=&r"(t0), [t1] "=&r"(t1)
+                : [x] "r"(x), [y] "r"(y)
                 : "cc");
             return;
          }
