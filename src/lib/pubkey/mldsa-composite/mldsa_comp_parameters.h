@@ -31,19 +31,21 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
 
       OID object_identifier() const { return OID_Map::global_registry().str2oid(this->id_str); }
 
+      std::string mldsa_param_str() const;
+
       size_t mldsa_signature_size() const;
 
       size_t traditional_pubkey_encoded_size() const;
 
       // TODO: MAKE PRIVATE
       id_t id;
-      const char* id_str;
-      const char* label;
-      const char* prehash_func;
-      const char* mldsa_variant;
-      const char* mldsa_oid_str;
-      const char* traditional_algoritm;
-      //const char*
+      const std::string id_str;
+      const std::string label;
+      const std::string prehash_func;
+      const std::string mldsa_variant;
+      const std::string mldsa_oid_str;
+      const std::string traditional_algoritm;
+      const std::string traditional_padding;
       uint32_t mldsa_pubkey_size;
       uint32_t traditional_key_size;
 

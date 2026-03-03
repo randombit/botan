@@ -44,17 +44,15 @@ class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification
    public:
       explicit MLDSA_Composite_Verification_Operation(const MLDSA_Composite_Param& param,
                                                       const ML_DSA_PublicKey& mldsa_pubkey,
-                                                      const Public_Key* trad_pubkey,
-                                                      std::string_view trad_params,
-                                                      std::string_view pre_hash_algo) :
-            PK_Ops::Verification_with_Hash(pre_hash_algo),
+                                                      const Public_Key* trad_pubkey) :
+            PK_Ops::Verification_with_Hash(param.prehash_func),
             m_parameters(param),
-            m_mldsa_ver_op(mldsa_pubkey.create_verification_op("", "")),
-            m_traditional_ver_op(trad_pubkey->create_verification_op("", trad_params)) {}
+            m_mldsa_ver_op(mldsa_pubkey.create_verification_op(param.mldsa_param_str(), "")),
+            m_traditional_ver_op(trad_pubkey->create_verification_op(param.traditional_padding, "")) {}
 
       //void update(std::span<const uint8_t> input) override { throw Botan::Exception("update() not implemented"); }
 
-      virtual bool verify(std::span<const uint8_t> ph, std::span<const uint8_t> sig) override {
+      bool verify(std::span<const uint8_t> ph, std::span<const uint8_t> sig) override {
          std::string msg_str = "CompositeAlgorithmSignatures2025";
          msg_str += m_parameters.label;
          std::vector<uint8_t> msg(msg_str.begin(), msg_str.end());
@@ -64,15 +62,25 @@ class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification
          if(sig.size() <= mldsa_sig_size) {
             return false;
          }
+         m_mldsa_ver_op->update(msg);
+         m_traditional_ver_op->update(msg);
+         std::cout << "traditional signature size = " << sig.size() - mldsa_sig_size << std::endl;
          std::span<const uint8_t> mldsa_sig(sig.begin(), sig.begin() + mldsa_sig_size);
          std::span<const uint8_t> trad_sig(sig.begin() + mldsa_sig_size, sig.end());
+         bool overall = true;
          if(!m_mldsa_ver_op->is_valid_signature(mldsa_sig)) {
-            return false;
+            std::cout << "MLDSA signature valditation failed\n";
+            overall = false;
+         } else {
+            std::cout << "MLDSA signature valditation SUCCEEDED\n";
          }
          if(!m_traditional_ver_op->is_valid_signature(trad_sig)) {
-            return false;
+            std::cout << "traditional signature valditation failed\n";
+            overall = false;
+         } else {
+            std::cout << "traditional signature valditation SUCCEEDED\n";
          }
-         return true;
+         return overall;
 
          //  M' = Prefix || Label || len(ctx) || ctx || PH( M )
       }
@@ -99,7 +107,6 @@ MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t
       m_tradtional_pubkey(load_public_key(m_parameters.get_traditional_algorithm_id(),
                                           traditional_pubkey_subspan(m_parameters, key_bits))) {
    std::cout << "MLDSA_Composite_PublicKey() decoded both keys\n";
-   // TODO: DECODE TRADITIONAL KEY
 }
 
 std::vector<uint8_t> MLDSA_Composite_PublicKey::raw_public_key_bits() const {
@@ -124,11 +131,12 @@ std::unique_ptr<Private_Key> MLDSA_Composite_PublicKey::generate_another(RandomN
    throw Botan::Exception("not implemented");
 }
 
+// TODO: ALLOW NON-EMPTY CTX VIA PARAMS?
 std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_verification_op(
-   std::string_view traditional_params, std::string_view provider) const {
+   std::string_view /*params_for_ctx*/, std::string_view provider) const {
    if(provider.empty() || provider == "base") {
       return std::make_unique<MLDSA_Composite_Verification_Operation>(
-         this->m_mldsa_pubkey, this->m_tradtional_pubkey.get(), traditional_params);
+         this->m_parameters, this->m_mldsa_pubkey, this->m_tradtional_pubkey.get());
    }
    throw Provider_Not_Found(algo_name(), provider);
 }

@@ -27,8 +27,10 @@
 
 namespace Botan {
 
-DilithiumMessageHash::DilithiumMessageHash(DilithiumHashedPublicKey tr) :
-      m_tr(std::move(tr)), m_shake(XOF::create_or_throw("SHAKE-256")) {}
+DilithiumMessageHash::DilithiumMessageHash(DilithiumHashedPublicKey tr, std::span<const uint8_t> user_context) :
+      m_tr(std::move(tr)),
+      m_user_context(user_context.begin(), user_context.end()),
+      m_shake(XOF::create_or_throw("SHAKE-256")) {}
 
 DilithiumMessageHash::~DilithiumMessageHash() = default;
 

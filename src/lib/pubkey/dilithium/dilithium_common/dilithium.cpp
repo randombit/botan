@@ -8,11 +8,14 @@
 * (C) 2021-2022 Manuel Glaser - Rohde & Schwarz Cybersecurity
 * (C) 2021-2023 Michael Boric, René Meusel - Rohde & Schwarz Cybersecurity
 * (C) 2024      René Meusel - Rohde & Schwarz Cybersecurity
+* (C) 2026      Falko Strenzke – MTG AG
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include "botan/hex.h"
 #include <botan/dilithium.h>
+#include <botan/internal/parsing.h>
 
 #include <botan/exceptn.h>
 #include <botan/rng.h>
@@ -24,6 +27,7 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/stl_util.h>
+#include <string_view>
 
 namespace Botan {
 namespace {
@@ -59,6 +63,80 @@ DilithiumMode::Mode dilithium_mode_from_string(std::string_view str) {
 
    throw Invalid_Argument(fmt("'{}' is not a valid Dilithium mode name", str));
 }
+
+class MLDSA_Signing_Parameters {
+   public:
+      MLDSA_Signing_Parameters(std::string_view param_str) {
+         const char* error_tmpl = "Parameter string '{}' is not a valid ML-DSA or Dilithium parameter specification";
+         if(param_str.size() == 0) {
+            // return the defaults
+            return;
+         }
+         // if(!param_str.starts_with("Pure")) {
+         //    throw Invalid_Argument(fmt(error_tmpl), param_str);
+         // }
+         // auto x = param_str.substr(4);
+         // if(param_str.size() == 0) {
+         //    return;
+         // }
+         // if(!x.starts_with("(") || !x.ends_with(")")) {
+         //    throw Invalid_Argument(fmt(error_tmpl), param_str);
+         // }
+         // x = x.substr(1, x.size() - 1);
+         // const auto v = split_on(x, ',');
+         const auto v = split_on(param_str, ',');
+         bool rndmz_set = false;
+         bool ctx_set = false;
+         for(const auto& y : v) {
+            if(y == "Pure") {
+               continue;
+            }
+            if((y == "Deterministic" || y == "Randomized") && rndmz_set) {
+               throw Invalid_Argument(fmt(error_tmpl), param_str);
+            }
+            if(y == "Deterministic") {
+               rndmz_set = true;
+               this->m_randomized = false;
+               continue;
+            }
+            if(y == "Randomized") {
+               rndmz_set = true;
+               continue;
+            }
+            const char* ctx_key = "ctx_hex";
+            const size_t prefix_len = std::char_traits<char>::length(ctx_key);
+            if(y.starts_with(ctx_key)) {
+               if(ctx_set || (y.size() > prefix_len && y[prefix_len] != '=')) {
+                  throw Invalid_Argument(fmt(error_tmpl), param_str);
+               }
+               ctx_set = true;
+               // check only whether a non-empty context parameter string was specified
+               if(y.size() > prefix_len + 1) {
+                  // no whitespace allowed
+                  if(y.find(' ') != std::string::npos) {
+                     throw Invalid_Argument(fmt(error_tmpl), param_str);
+                  }
+                  // get the value of the hex-encoded context string
+                  const auto z = y.substr(prefix_len + 1);
+                  const auto ctx_hex = hex_decode(z);
+                  this->m_user_context.insert(m_user_context.end(), ctx_hex.begin(), ctx_hex.end());
+               }
+            }
+         }
+      }
+
+      bool is_pure_signing() const { return m_pure_sign; }
+
+      bool is_randomized_signing() const { return m_randomized; }
+
+      const std::vector<uint8_t>& user_context() const { return m_user_context; }
+
+   private:
+      std::vector<uint8_t> m_user_context;
+
+      const bool m_pure_sign = true;
+      bool m_randomized = true;
+};
 
 }  // namespace
 
@@ -128,10 +206,12 @@ bool DilithiumMode::is_available() const {
 
 class Dilithium_Signature_Operation final : public PK_Ops::Signature {
    public:
-      Dilithium_Signature_Operation(DilithiumInternalKeypair keypair, bool randomized) :
+      Dilithium_Signature_Operation(DilithiumInternalKeypair keypair,
+                                    bool randomized,
+                                    std::span<const uint8_t> user_context = {}) :
             m_keypair(std::move(keypair)),
             m_randomized(randomized),
-            m_h(m_keypair.second->mode().symmetric_primitives().get_message_hash(m_keypair.first->tr())),
+            m_h(m_keypair.second->mode().symmetric_primitives().get_message_hash(m_keypair.first->tr(), user_context)),
             m_s1(ntt(m_keypair.second->s1().clone())),
             m_s2(ntt(m_keypair.second->s2().clone())),
             m_t0(ntt(m_keypair.second->t0().clone())),
@@ -248,11 +328,12 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
 
 class Dilithium_Verification_Operation final : public PK_Ops::Verification {
    public:
-      explicit Dilithium_Verification_Operation(std::shared_ptr<Dilithium_PublicKeyInternal> pubkey) :
+      explicit Dilithium_Verification_Operation(std::shared_ptr<Dilithium_PublicKeyInternal> pubkey,
+                                                std::span<const uint8_t> user_context = {}) :
             m_pub_key(std::move(pubkey)),
             m_A(Dilithium_Algos::expand_A(m_pub_key->rho(), m_pub_key->mode())),
             m_t1_ntt_shifted(ntt(m_pub_key->t1() << DilithiumConstants::D)),
-            m_h(m_pub_key->mode().symmetric_primitives().get_message_hash(m_pub_key->tr())) {}
+            m_h(m_pub_key->mode().symmetric_primitives().get_message_hash(m_pub_key->tr(), user_context)) {}
 
       void update(std::span<const uint8_t> input) override { m_h->update(input); }
 
@@ -375,9 +456,10 @@ std::unique_ptr<Private_Key> Dilithium_PublicKey::generate_another(RandomNumberG
 
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_verification_op(std::string_view params,
                                                                                   std::string_view provider) const {
-   BOTAN_ARG_CHECK(params.empty() || params == "Pure", "Unexpected parameters for verifying with Dilithium");
+   //BOTAN_ARG_CHECK(params.empty() || params == "Pure", "Unexpected parameters for verifying with Dilithium");
+   MLDSA_Signing_Parameters sig_par(params);
    if(provider.empty() || provider == "base") {
-      return std::make_unique<Dilithium_Verification_Operation>(m_public);
+      return std::make_unique<Dilithium_Verification_Operation>(m_public, sig_par.user_context());
    }
    throw Provider_Not_Found(algo_name(), provider);
 }
@@ -432,16 +514,18 @@ std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::create_signature_op(Ran
                                                                              std::string_view provider) const {
    BOTAN_UNUSED(rng);
 
-   BOTAN_ARG_CHECK(params.empty() || params == "Deterministic" || params == "Randomized",
-                   "Unexpected parameters for signing with ML-DSA/Dilithium");
+   MLDSA_Signing_Parameters sig_par(params);
+
+   // BOTAN_ARG_CHECK(params.empty() || params == "Deterministic" || params == "Randomized",
+   //                 "Unexpected parameters for signing with ML-DSA/Dilithium");
 
    // FIPS 204, Section 3.4
    //   By default, this standard specifies the signing algorithm to use both
    //   types of randomness [fresh from the RNG and a value in the private key].
    //   This is referred to as the “hedged” variant of the signing procedure.
-   const bool randomized = (params.empty() || params == "Randomized");
    if(provider.empty() || provider == "base") {
-      return std::make_unique<Dilithium_Signature_Operation>(DilithiumInternalKeypair{m_public, m_private}, randomized);
+      return std::make_unique<Dilithium_Signature_Operation>(
+         DilithiumInternalKeypair{m_public, m_private}, sig_par.is_randomized_signing(), sig_par.user_context());
    }
    throw Provider_Not_Found(algo_name(), provider);
 }

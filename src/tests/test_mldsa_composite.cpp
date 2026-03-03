@@ -10,9 +10,11 @@
  */
 
 #include "botan/exceptn.h"
+#include "botan/pk_keys.h"
 #include "tests.h"
 
 #include <iostream>  // TODO remove
+#include <memory>
 #if defined(BOTAN_HAS_MLDSA_COMPOSITE)
    #include <botan/base64.h>
    #include <botan/hash.h>
@@ -47,10 +49,14 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
          std::cout << "tcId = " << tcId << std::endl;
          const auto pk = vars.get_req_str("pk");
          const auto pk_bin = Botan::base64_decode(pk);
+         const auto sig_bin = Botan::base64_decode(vars.get_req_str("s"));
 
          const auto comp_parm = Botan::MLDSA_Composite_Param::get_param_by_id_str(tcId);
+
+         const char* message = "The quick brown fox jumps over the lazy dog.";
+         std::unique_ptr<Botan::Public_Key> pubkey;
          try {
-            Botan::MLDSA_Composite_PublicKey pubkey(comp_parm.id, pk_bin);
+            pubkey = std::make_unique<Botan::MLDSA_Composite_PublicKey>(comp_parm.id, pk_bin);
          } catch(const Botan::Exception& e) {
             exc_during_pubkey_decoding = true;
          }
@@ -58,6 +64,10 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
          if(exc_during_pubkey_decoding) {
             return result;
          }
+         Botan::PK_Verifier verifier(*pubkey, "");
+         verifier.update(message);
+         result.test_bool_eq("verification of correct signature", verifier.check_signature(sig_bin), true);
+         //std::cout << "\nis " << (verifier.check_signature(sig_bin) ? "valid" : "invalid");
          return result;
       }
 };
