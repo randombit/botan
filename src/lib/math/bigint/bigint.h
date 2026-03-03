@@ -9,6 +9,7 @@
 #ifndef BOTAN_BIGINT_H_
 #define BOTAN_BIGINT_H_
 
+#include <botan/concepts.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <iosfwd>
@@ -708,11 +709,8 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * Throws if the BigInt is too large to encode in the length
        * specified.
        */
-      template <typename T = std::vector<uint8_t>>
+      template <concepts::resizable_byte_buffer T = std::vector<uint8_t>>
       T serialize(size_t len) const {
-         // TODO this supports std::vector and secure_vector
-         // it would be nice if this also could work with std::array as in
-         //   bn.serialize_to<std::array<uint8_t, 32>>(32);
          T out(len);
          this->serialize_to(out);
          return out;
@@ -721,9 +719,25 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       /**
        * Serialize the value of this BigInt as a big endian encoding.
        */
-      template <typename T = std::vector<uint8_t>>
+      template <concepts::resizable_byte_buffer T = std::vector<uint8_t>>
       T serialize() const {
          return serialize<T>(this->bytes());
+      }
+
+      /**
+       * Serialize the BigInt into a fixed-size std::array.
+       * 
+       * This is a convenience method for serialization into compile-time fixed
+       * size arrays.
+       * 
+       * @tparam len the size of the output array in bytes
+       * @return std::array containing the serialized BigInt (big-endian)
+       */
+      template <size_t len>
+      std::array<uint8_t, len> serialize_to_array() const {
+         std::array<uint8_t, len> out{};
+         serialize_to(out);
+         return out;
       }
 
       /**
