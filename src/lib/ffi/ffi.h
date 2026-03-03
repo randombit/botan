@@ -850,16 +850,17 @@ int botan_pbkdf_timed(const char* pbkdf_algo,
 * @param salt_len length of salt in bytes
 * @return 0 on success, a negative value on failure
 */
-int BOTAN_FFI_EXPORT(2, 8) botan_pwdhash(const char* algo,
-                                         size_t param1,
-                                         size_t param2,
-                                         size_t param3,
-                                         uint8_t out[],
-                                         size_t out_len,
-                                         const char* passphrase,
-                                         size_t passphrase_len,
-                                         const uint8_t salt[],
-                                         size_t salt_len);
+BOTAN_FFI_EXPORT(2, 8)
+int botan_pwdhash(const char* algo,
+                  size_t param1,
+                  size_t param2,
+                  size_t param3,
+                  uint8_t out[],
+                  size_t out_len,
+                  const char* passphrase,
+                  size_t passphrase_len,
+                  const uint8_t salt[],
+                  size_t salt_len);
 
 /*
 * Derive a key from a passphrase
@@ -877,17 +878,18 @@ int BOTAN_FFI_EXPORT(2, 8) botan_pwdhash(const char* algo,
 * @param salt_len length of salt in bytes
 * @return 0 on success, a negative value on failure
 */
-int BOTAN_FFI_EXPORT(2, 8) botan_pwdhash_timed(const char* algo,
-                                               uint32_t msec,
-                                               size_t* param1,
-                                               size_t* param2,
-                                               size_t* param3,
-                                               uint8_t out[],
-                                               size_t out_len,
-                                               const char* passphrase,
-                                               size_t passphrase_len,
-                                               const uint8_t salt[],
-                                               size_t salt_len);
+BOTAN_FFI_EXPORT(2, 8)
+int botan_pwdhash_timed(const char* algo,
+                        uint32_t msec,
+                        size_t* param1,
+                        size_t* param2,
+                        size_t* param3,
+                        uint8_t out[],
+                        size_t out_len,
+                        const char* passphrase,
+                        size_t passphrase_len,
+                        const uint8_t salt[],
+                        size_t salt_len);
 
 /**
 * Derive a key using scrypt
