@@ -12,10 +12,13 @@
 #include "botan/exceptn.h"
 #include "botan/hex.h"
 #include "botan/pk_keys.h"
+#include "botan/rng.h"
 #include "tests.h"
 
+#include <format>
 #include <iostream>  // TODO remove
 #include <memory>
+#include <string_view>
 #if defined(BOTAN_HAS_MLDSA_COMPOSITE)
    #include <botan/base64.h>
    #include <botan/hash.h>
@@ -30,6 +33,27 @@
 
 namespace Botan_Tests {
 #if defined(BOTAN_HAS_MLDSA_COMPOSITE)
+
+namespace {
+void sign_and_verify(const Botan::Private_Key& priv_key,
+                     const Botan::Public_Key& pub_key,
+                     Botan::RandomNumberGenerator& rng,
+                     Test::Result& test_result,
+                     std::string_view test_context) {
+   const char* message = "The quick brown fox jumps over the lazy dog.";
+   std::cout << "signing data with decoded private key\n";
+   Botan::PK_Signer signer(priv_key, rng, "");
+   signer.update(message);
+   std::vector<uint8_t> signature2 = signer.signature(rng);
+   std::cout << "finished signing data with decoded private key\n";
+   //std::cout << "Signature:\n" << Botan::hex_encode(signature);
+
+   Botan::PK_Verifier verifier2(pub_key, "");
+   verifier2.update(message);
+   test_result.test_bool_eq(
+      std::format("verification of correct signature ({})", test_context), verifier2.check_signature(signature2), true);
+}
+}  // namespace
 
 class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
    public:
@@ -66,7 +90,7 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
 
          const auto sig_bin = Botan::base64_decode(vars.get_req_str("s"));
 
-         const auto comp_parm = Botan::MLDSA_Composite_Param::get_param_by_id_str(tcId);
+         const auto comp_parm = Botan::MLDSA_Composite_Param::from_id_str_or_throw(tcId);
 
          const char* message = "The quick brown fox jumps over the lazy dog.";
          std::unique_ptr<Botan::Public_Key> pubkey;
@@ -97,18 +121,31 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
             return result;
          }
          // sign data
-         std::cout << "signing data with decoded private key\n";
-         Botan::PK_Signer signer(*privkey, *rng, "");
-         signer.update(message);
-         std::vector<uint8_t> signature2 = signer.signature(*rng);
-         std::cout << "finished signing data with decoded private key\n";
-         //std::cout << "Signature:\n" << Botan::hex_encode(signature);
+         sign_and_verify(*privkey, *pubkey, *rng, result, "produced by decoded private key");
+         //std::cout << "signing data with decoded private key\n";
+         //Botan::PK_Signer signer(*privkey, *rng, "");
+         //signer.update(message);
+         //std::vector<uint8_t> signature2 = signer.signature(*rng);
+         //std::cout << "finished signing data with decoded private key\n";
+         ////std::cout << "Signature:\n" << Botan::hex_encode(signature);
 
-         Botan::PK_Verifier verifier2(*pubkey, "");
-         verifier2.update(message);
-         result.test_bool_eq("verification of correct signature (produced by decoded private key)",
-                             verifier2.check_signature(signature2),
-                             true);
+         //Botan::PK_Verifier verifier2(*pubkey, "");
+         //verifier2.update(message);
+         //result.test_bool_eq("verification of correct signature (produced by decoded private key)",
+         //                    verifier2.check_signature(signature2),
+         //                    true);
+         auto priv_key_generated(Botan::create_private_key(tcId, *rng));
+         if(nullptr == priv_key_generated) {
+            result.test_bool_eq("generated private key non-null", false, true);
+         } else {
+            auto pub_key_generated = priv_key_generated->public_key();
+            if(nullptr == pub_key_generated) {
+               result.test_bool_eq("generated pub key key non-null", false, true);
+            } else {
+               sign_and_verify(
+                  *priv_key_generated, *pub_key_generated, *rng, result, "produced with generated public key");
+            }
+         }
          return result;
       }
 };

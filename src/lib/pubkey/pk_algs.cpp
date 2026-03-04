@@ -12,6 +12,7 @@
 #include <botan/pk_keys.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
+#include <memory>
 
 #if defined(BOTAN_HAS_RSA)
    #include <botan/rsa.h>
@@ -115,6 +116,10 @@
 
 #if defined(BOTAN_HAS_ML_DSA)
    #include <botan/ml_dsa.h>
+#endif
+
+#if defined(BOTAN_HAS_MLDSA_COMPOSITE)
+   #include <botan/mldsa_comp.h>
 #endif
 
 #if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
@@ -602,6 +607,16 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
       }();
 
       return std::make_unique<ML_DSA_PrivateKey>(rng, mode);
+   }
+#endif
+
+#if defined(BOTAN_HAS_MLDSA_COMPOSITE)
+   if(alg_name.starts_with("MLDSA")) {
+      auto comp_parm = MLDSA_Composite_Param::from_id_str(alg_name);
+      if(comp_parm.has_value()) {
+         return std::make_unique<MLDSA_Composite_PrivateKey>(rng, comp_parm.value());
+      }
+      // we continue, there might be other algorithms defined with leading "MLDSA"
    }
 #endif
 

@@ -8,6 +8,7 @@
 #ifndef BOTAN_MLDSA_COMP_PARAMETERS_H_
 #define BOTAN_MLDSA_COMP_PARAMETERS_H_
 
+#include <botan/dilithium.h>
 #include <botan/exceptn.h>
 #include <botan/types.h>
 #include <botan/internal/oid_map.h>
@@ -21,10 +22,12 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
          id_MLDSA44_RSA2048_PKCS15_SHA256,
       };
 
-      static MLDSA_Composite_Param get_param_by_id(MLDSA_Composite_Param::id_t id);
-      static MLDSA_Composite_Param get_param_by_id_str(std::string_view id_str);
+      static MLDSA_Composite_Param from_id_or_throw(MLDSA_Composite_Param::id_t id);
+      static std::optional<MLDSA_Composite_Param> from_id(MLDSA_Composite_Param::id_t id);
+      static MLDSA_Composite_Param from_id_str_or_throw(std::string_view id_str);
+      static std::optional<MLDSA_Composite_Param> from_id_str(std::string_view id_str);
 
-      MLDSA_Composite_Param clone() const { return MLDSA_Composite_Param::get_param_by_id(id); }
+      MLDSA_Composite_Param clone() const { return MLDSA_Composite_Param::from_id_or_throw(id); }
 
       size_t estimated_strength() const { throw Botan::Exception("not implemented"); }  // TODO
 
@@ -36,11 +39,14 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
 
       std::string mldsa_param_str() const;
 
+      DilithiumMode get_mldsa_mode() const { return mldsa_variant; }
+
       size_t mldsa_signature_size() const;
       size_t traditional_signature_size() const;
 
       size_t signature_size() const { return mldsa_signature_size() + traditional_signature_size(); }
 
+      std::string get_traditional_algo_param_str() const;
       size_t traditional_pubkey_encoded_size() const;
 
       size_t mldsa_privkey_size() const { return 32; }
@@ -50,7 +56,7 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
       const char* id_str;
       const char* label;
       const char* prehash_func;
-      const char* mldsa_variant;
+      DilithiumMode::Mode mldsa_variant;
       const char* mldsa_oid_str;
       const char* traditional_algoritm;
       const char* traditional_padding;

@@ -20,18 +20,6 @@ namespace Botan {
 class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PublicKey : public virtual Public_Key {
    public:
       /**
-       * Creates a new MLDSA_Composite public key for the chosen MLDSA_Composite signature method.
-       * New public and prf seeds are generated using rng. The appropriate WOTS
-       * signature method will be automatically set based on the chosen MLDSA_Composite
-       * signature method.
-       *
-       * @param xmss_oid Identifier for the selected MLDSA_Composite signature method.
-       * @param rng A random number generator to use for key generation.
-       **/
-      // TODO: IMPLMEMENT:
-      //MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t xmss_oid, RandomNumberGenerator& rng);
-
-      /**
        * Loads a public key.
        *
        * Public key must be encoded as in RFC
@@ -42,27 +30,14 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PublicKey : public virtual Public_K
       BOTAN_FUTURE_EXPLICIT MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t id,
                                                       std::span<const uint8_t> key_bits);
 
-      /**
-       * Creates a new MLDSA_Composite public key for a chosen MLDSA_Composite signature method as
-       * well as pre-computed root node and public_seed values.
-       *
-       * @param xmss_oid Identifier for the selected MLDSA_Composite signature method.
-       * @param root Root node value.
-       * @param public_seed Public seed value.
-       **/
-      // TODO: NEED CTOR BUILDING KEY FROM COMPONENT KEYS?
-      /* MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t id, */
-      /*                           secure_vector<uint8_t> root, */
-      /*                           secure_vector<uint8_t> public_seed); */
-
       std::string algo_name() const override { return "MLDSA_Composite"; }
 
       AlgorithmIdentifier algorithm_identifier() const override {
          return AlgorithmIdentifier(object_identifier(), AlgorithmIdentifier::USE_EMPTY_PARAM);
       }
 
-      bool check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const override {
-         throw Botan::Exception("not implmented");
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override {
+         return this->m_mldsa_pubkey->check_key(rng, strong) && this->m_tradtional_pubkey->check_key(rng, strong);
       }
 
       OID object_identifier() const override;
@@ -107,7 +82,6 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PublicKey : public virtual Public_K
    protected:
       MLDSA_Composite_PublicKey() = default;
 
-      // TODO: FIX ASSIGNMENT AND COPY OP FOR SHARED_PTR MEMBERS:
       std::shared_ptr<MLDSA_Composite_Param> m_parameters;  // NOLINT(*non-private-member-variable*)
       std::shared_ptr<Dilithium_PublicKey> m_mldsa_pubkey;  // NOLINT(*non-private-member-variable*)
       std::shared_ptr<Public_Key> m_tradtional_pubkey;      // NOLINT(*non-private-member-variable*)
@@ -121,12 +95,12 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PrivateKey final : public virtual M
       /**
        * Generates a new key pair
        */
-      //MLDSA_Composite_PrivateKey(RandomNumberGenerator& rng, MLDSA_Composite_Param param);
+      MLDSA_Composite_PrivateKey(RandomNumberGenerator& rng, MLDSA_Composite_Param param);
 
       /**
        * Read an encoded private key.
        */
-      //MLDSA_Composite_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> sk);
+      MLDSA_Composite_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> sk);
 
       MLDSA_Composite_PrivateKey(MLDSA_Composite_Param::id_t id, std::span<const uint8_t> sk);
 
@@ -147,6 +121,9 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PrivateKey final : public virtual M
                                                              std::string_view provider) const override;
 
    private:
+      // MLDSA_Composite_PrivateKey(MLDSA_Composite_Param::id_t id,
+      //                            const ML_DSA_PrivateKey& mldsa_privkey,
+      //                            const Private_Key* tradtional_privkey);
       friend class MLDSA_Composite_Signature_Operation;
       // TODO: FIX ASSIGNMENT AND COPY OP FOR SHARED_PTR MEMBERS
       std::shared_ptr<MLDSA_Composite_Param> m_parameters;
