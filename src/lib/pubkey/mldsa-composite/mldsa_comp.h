@@ -67,9 +67,9 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PublicKey : public virtual Public_K
 
       OID object_identifier() const override;
 
-      size_t estimated_strength() const override { return m_parameters.estimated_strength(); }
+      size_t estimated_strength() const override { return m_parameters->estimated_strength(); }
 
-      size_t key_length() const override { return m_parameters.estimated_strength(); }
+      size_t key_length() const override { return m_parameters->estimated_strength(); }
 
       /**
        * Generates a byte sequence representing the MLDSA_Composite
@@ -103,7 +103,8 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PublicKey : public virtual Public_K
    protected:
       MLDSA_Composite_PublicKey() = default;
 
-      MLDSA_Composite_Param m_parameters;                   // NOLINT(*non-private-member-variable*)
+      // TODO: FIX ASSIGNMENT AND COPY OP FOR SHARED_PTR MEMBERS:
+      std::shared_ptr<MLDSA_Composite_Param> m_parameters;  // NOLINT(*non-private-member-variable*)
       std::shared_ptr<Dilithium_PublicKey> m_mldsa_pubkey;  // NOLINT(*non-private-member-variable*)
       std::shared_ptr<Public_Key> m_tradtional_pubkey;      // NOLINT(*non-private-member-variable*)
 };
@@ -143,7 +144,8 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PrivateKey final : public virtual M
 
    private:
       friend class MLDSA_Composite_Signature_Operation;
-      MLDSA_Composite_Param m_parameters;
+      // TODO: FIX ASSIGNMENT AND COPY OP FOR SHARED_PTR MEMBERS
+      std::shared_ptr<MLDSA_Composite_Param> m_parameters;
       std::shared_ptr<ML_DSA_PrivateKey> m_mldsa_privkey;
       std::shared_ptr<Private_Key> m_tradtional_privkey;
 };

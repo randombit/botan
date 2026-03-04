@@ -1,8 +1,9 @@
 
-#include "botan/assert.h"
+#include "botan/internal/fmt.h"
 #include "botan/internal/pk_ops_impl.h"
 #include "botan/ml_dsa.h"
 #include "botan/pk_ops.h"
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/hex.h>
 #include <botan/mldsa_comp.h>
@@ -70,23 +71,34 @@ class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification
          std::string msg_str = "CompositeAlgorithmSignatures2025";
          msg_str += m_parameters.label;
          std::vector<uint8_t> msg(msg_str.begin(), msg_str.end());
+         std::cout << fmt("verify: building msg (len = {}) (1) = \n", msg.size()) << hex_encode(msg) << std::endl;
          msg.push_back(0);  // ctx = empty
+         std::cout << fmt("verify: building msg (len = {}) (2) = \n", msg.size()) << hex_encode(msg) << std::endl;
          msg.insert(msg.end(), ph.begin(), ph.end());
+         std::cout << fmt("verify: building msg (len = {}) (3) = \n", msg.size()) << hex_encode(msg) << std::endl;
+         std::cout << "verify: msg = \n" << hex_encode(msg) << std::endl;
          size_t mldsa_sig_size = m_parameters.mldsa_signature_size();
          m_mldsa_ver_op->update(msg);
          m_traditional_ver_op->update(msg);
+
          if(sig.size() <= mldsa_sig_size) {
             return false;
          }
          std::span<const uint8_t> mldsa_sig(sig.begin(), sig.begin() + mldsa_sig_size);
          std::span<const uint8_t> trad_sig(sig.begin() + mldsa_sig_size, sig.end());
+         bool overall = true;
          if(!m_mldsa_ver_op->is_valid_signature(mldsa_sig)) {
-            return false;
+            std::cout << "MLDSA signature verification FAILED\n";
+            //return false;
+            overall = false;
          }
          if(!m_traditional_ver_op->is_valid_signature(trad_sig)) {
-            return false;
+            std::cout << "Traditional signature verification FAILED\n";
+            //return false;
+            overall = false;
          }
-         return true;
+         // return true;
+         return overall;
       }
 
    private:
@@ -103,6 +115,7 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
                                           RandomNumberGenerator& rng) :
 
             PK_Ops::Signature_with_Hash(param.prehash_func),
+            m_parameters(param),
             m_mldsa_sig_op(mldsa_privkey.create_signature_op(rng, param.mldsa_param_str(), "")),
             m_traditional_sig_op(trad_privkey->create_signature_op(rng, param.traditional_padding, "")) {}
 
@@ -111,8 +124,12 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
          std::string msg_str = "CompositeAlgorithmSignatures2025";
          msg_str += m_parameters.label;
          std::vector<uint8_t> msg(msg_str.begin(), msg_str.end());
+         std::cout << fmt("sign: building msg (len = {}) (1) = \n", msg.size()) << hex_encode(msg) << std::endl;
          msg.push_back(0);  // ctx = empty
+         std::cout << fmt("sign: building msg (len = {}) (2) = \n", msg.size()) << hex_encode(msg) << std::endl;
          msg.insert(msg.end(), ph.begin(), ph.end());
+         std::cout << fmt("sign: building msg (len = {}) (3) = \n", msg.size()) << hex_encode(msg) << std::endl;
+         std::cout << "sign: msg = \n" << hex_encode(msg) << std::endl;
          m_mldsa_sig_op->update(msg);
          m_traditional_sig_op->update(msg);
          auto sig = m_mldsa_sig_op->sign(rng);
@@ -137,11 +154,11 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
 
 MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t id,
                                                      std::span<const uint8_t> key_bits) :
-      m_parameters(MLDSA_Composite_Param::get_param_by_id(id)),
-      m_mldsa_pubkey(std::make_unique<ML_DSA_PublicKey>(m_parameters.get_mldsa_algorithm_id(),
-                                                        mldsa_pubkey_subspan(m_parameters, key_bits))),
-      m_tradtional_pubkey(load_public_key(m_parameters.get_traditional_algorithm_id(),
-                                          traditional_pubkey_subspan(m_parameters, key_bits))) {}
+      m_parameters(std::make_shared<MLDSA_Composite_Param>(MLDSA_Composite_Param::get_param_by_id(id))),
+      m_mldsa_pubkey(std::make_unique<ML_DSA_PublicKey>(m_parameters->get_mldsa_algorithm_id(),
+                                                        mldsa_pubkey_subspan(*m_parameters, key_bits))),
+      m_tradtional_pubkey(load_public_key(m_parameters->get_traditional_algorithm_id(),
+                                          traditional_pubkey_subspan(*m_parameters, key_bits))) {}
 
 std::vector<uint8_t> MLDSA_Composite_PublicKey::raw_public_key_bits() const {
    std::vector<uint8_t> result = m_mldsa_pubkey->raw_public_key_bits();
@@ -151,7 +168,7 @@ std::vector<uint8_t> MLDSA_Composite_PublicKey::raw_public_key_bits() const {
 }
 
 OID MLDSA_Composite_PublicKey::object_identifier() const {
-   return m_parameters.object_identifier();
+   return m_parameters->object_identifier();
 }
 
 std::vector<uint8_t> MLDSA_Composite_PublicKey::public_key_bits() const {
@@ -170,7 +187,7 @@ std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_verifica
    }
    if(provider.empty() || provider == "base") {
       return std::make_unique<MLDSA_Composite_Verification_Operation>(
-         this->m_parameters, *this->m_mldsa_pubkey, this->m_tradtional_pubkey.get());
+         *this->m_parameters, *this->m_mldsa_pubkey, this->m_tradtional_pubkey.get());
    }
    throw Provider_Not_Found(algo_name(), provider);
 }
@@ -181,11 +198,11 @@ std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_x509_ver
 }
 
 MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(MLDSA_Composite_Param::id_t id, std::span<const uint8_t> sk) :
-      m_parameters(MLDSA_Composite_Param::get_param_by_id(id)),
-      m_mldsa_privkey(std::make_shared<ML_DSA_PrivateKey>(m_parameters.get_mldsa_algorithm_id(),
-                                                          mldsa_privkey_subspan(m_parameters, sk))),
-      m_tradtional_privkey(
-         load_private_key(m_parameters.get_traditional_algorithm_id(), traditional_privkey_subspan(m_parameters, sk))) {
+      m_parameters(std::make_shared<MLDSA_Composite_Param>(MLDSA_Composite_Param::get_param_by_id(id))),
+      m_mldsa_privkey(std::make_shared<ML_DSA_PrivateKey>(m_parameters->get_mldsa_algorithm_id(),
+                                                          mldsa_privkey_subspan(*m_parameters, sk))),
+      m_tradtional_privkey(load_private_key(m_parameters->get_traditional_algorithm_id(),
+                                            traditional_privkey_subspan(*m_parameters, sk))) {
    // TODO: TO AVOID COPYING AND PROBLEMS WITH REASSIGNEMENTS, MAKE THE MEMBERS IN COMPOSITE PUBLIC KEY shared_ptr
    MLDSA_Composite_PublicKey::m_parameters = m_parameters;
    MLDSA_Composite_PublicKey::m_mldsa_pubkey = m_mldsa_privkey;
@@ -219,7 +236,7 @@ std::unique_ptr<PK_Ops::Signature> MLDSA_Composite_PrivateKey::create_signature_
    }
    if(provider.empty() || provider == "base") {
       return std::make_unique<MLDSA_Composite_Signature_Operation>(
-         this->m_parameters, *this->m_mldsa_privkey, this->m_tradtional_privkey.get(), rng);
+         *this->m_parameters, *this->m_mldsa_privkey, this->m_tradtional_privkey.get(), rng);
    }
    throw Provider_Not_Found(algo_name(), provider);
 }

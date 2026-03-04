@@ -102,9 +102,9 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
          //std::cout << "Signature:\n" << Botan::hex_encode(signature);
 
          Botan::PK_Verifier verifier2(*pubkey, "");
-         verifier.update(message);
+         verifier2.update(message);
          result.test_bool_eq("verification of correct signature (produced by decoded private key)",
-                             verifier.check_signature(signature2),
+                             verifier2.check_signature(signature2),
                              true);
          return result;
       }

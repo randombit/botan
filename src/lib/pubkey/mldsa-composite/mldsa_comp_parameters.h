@@ -24,6 +24,8 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
       static MLDSA_Composite_Param get_param_by_id(MLDSA_Composite_Param::id_t id);
       static MLDSA_Composite_Param get_param_by_id_str(std::string_view id_str);
 
+      MLDSA_Composite_Param clone() const { return MLDSA_Composite_Param::get_param_by_id(id); }
+
       size_t estimated_strength() const { throw Botan::Exception("not implemented"); }  // TODO
 
       AlgorithmIdentifier get_mldsa_algorithm_id() const;
@@ -44,15 +46,17 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
 
       // TODO: MAKE PRIVATE
       id_t id;
-      std::string id_str;
-      std::string label;
-      std::string prehash_func;
-      std::string mldsa_variant;
-      std::string mldsa_oid_str;
-      std::string traditional_algoritm;
-      std::string traditional_padding;
+      const std::string id_str;
+      const std::string label;
+      const std::string prehash_func;
+      const std::string mldsa_variant;
+      const std::string mldsa_oid_str;
+      const std::string traditional_algoritm;
+      const std::string traditional_padding;
       uint32_t mldsa_pubkey_size;
       uint32_t traditional_key_size;
+
+      //MLDSA_Composite_Param() = delete;
 
    private:
 };
