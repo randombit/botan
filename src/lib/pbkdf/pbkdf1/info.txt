@@ -1,0 +1,16 @@
+<defines>
+PBKDF1 -> 20260304
+</defines>
+
+<module_info>
+name -> "PBKDF1"
+brief -> "PKCS#12 password-based key derivation (RFC 7292)"
+</module_info>
+
+<requires>
+sha1
+</requires>
+
+<header:internal>
+pbkdf1.h
+</header:internal>

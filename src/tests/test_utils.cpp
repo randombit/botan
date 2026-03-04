@@ -1086,8 +1086,15 @@ class Charset_Tests final : public Text_Based_Test {
             converted = Botan::ucs2_to_utf8(in.data(), in.size());
          } else if(type == "UCS4-UTF8") {
             converted = Botan::ucs4_to_utf8(in.data(), in.size());
+         } else if(type == "UTF8-UCS2") {
+            std::vector<uint8_t> ucs2 = Botan::utf8_to_ucs2(std::string(in.begin(), in.end()));
+            converted = std::string(ucs2.begin(), ucs2.end());
          } else if(type == "LATIN1-UTF8") {
             converted = Botan::latin1_to_utf8(in.data(), in.size());
+         } else if(type == "LATIN1-UCS2") {
+            const std::string utf8 = Botan::latin1_to_utf8(in.data(), in.size());
+            const std::vector<uint8_t> ucs2 = Botan::utf8_to_ucs2(utf8);
+            converted = std::string(ucs2.begin(), ucs2.end());
          } else {
             throw Test_Error("Unexpected header '" + type + "' in charset tests");
          }

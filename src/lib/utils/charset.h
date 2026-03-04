@@ -10,6 +10,7 @@
 
 #include <botan/types.h>
 #include <string>
+#include <vector>
 
 namespace Botan {
 
@@ -20,6 +21,14 @@ namespace Botan {
 * @param len length of ucs2 in bytes, must be a multiple of 2
 */
 BOTAN_TEST_API std::string ucs2_to_utf8(const uint8_t ucs2[], size_t len);
+
+/**
+ * Convert a UTF-8 string to a sequence of UCS-2 (big endian) characters
+ * This is used for ASN.1 BMPString type
+ * @param utf8 the UTF-8 string
+ * @return a vector of bytes containing the UCS-2 (big endian) encoding
+ */
+BOTAN_TEST_API std::vector<uint8_t> utf8_to_ucs2(const std::string& utf8);
 
 /**
 * Convert a sequence of UCS-4 (big endian) characters to a UTF-8 string

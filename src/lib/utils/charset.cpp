@@ -67,6 +67,45 @@ std::string ucs2_to_utf8(const uint8_t ucs2[], size_t len) {
    return s;
 }
 
+std::vector<uint8_t> utf8_to_ucs2(const std::string& utf8) {
+   std::vector<uint8_t> out;
+   out.reserve(utf8.size() * 2);
+
+   size_t pos = 0;
+   while(pos < utf8.size()) {
+      uint32_t c = static_cast<uint8_t>(utf8[pos++]);
+      if(c >= 0x80) {
+         if((c & 0xE0) == 0xC0) {
+            if(pos >= utf8.size()) throw Decoding_Error("Invalid UTF-8 sequence");
+            c = (c & 0x1F) << 6;
+            c |= (static_cast<uint8_t>(utf8[pos++]) & 0x3F);
+         } else if((c & 0xF0) == 0xE0) {
+            if(pos + 1 >= utf8.size()) throw Decoding_Error("Invalid UTF-8 sequence");
+            c = (c & 0x0F) << 12;
+            c |= (static_cast<uint8_t>(utf8[pos++]) & 0x3F) << 6;
+            c |= (static_cast<uint8_t>(utf8[pos++]) & 0x3F);
+         } else if((c & 0xF8) == 0xF0) {
+            if(pos + 2 >= utf8.size()) throw Decoding_Error("Invalid UTF-8 sequence");
+            c = (c & 0x07) << 18;
+            c |= (static_cast<uint8_t>(utf8[pos++]) & 0x3F) << 12;
+            c |= (static_cast<uint8_t>(utf8[pos++]) & 0x3F) << 6;
+            c |= (static_cast<uint8_t>(utf8[pos++]) & 0x3F);
+         } else {
+            throw Decoding_Error("Invalid UTF-8 sequence");
+         }
+      }
+      if(c > 0xFFFF) {
+         throw Decoding_Error("Cannot encode character in UCS-2");
+      }
+
+      const uint16_t val = static_cast<uint16_t>(c);
+      out.push_back(static_cast<uint8_t>((val >> 8) & 0xFF));
+      out.push_back(static_cast<uint8_t>(val & 0xFF));
+   }
+
+   return out;
+}
+
 std::string ucs4_to_utf8(const uint8_t ucs4[], size_t len) {
    if(len % 4 != 0) {
       throw Decoding_Error("Invalid length for UCS-4 string");
