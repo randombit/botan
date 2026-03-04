@@ -53,7 +53,10 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
          }
          Test::Result result(name);
          std::cout << "test name = " << name << std::endl;
-         const auto tcId = vars.get_req_str("tcId");
+         auto tcId = vars.get_req_str("tcId");
+         if(tcId.starts_with("id-")) {
+            tcId = tcId.substr(3);
+         }
          std::cout << "tcId = " << tcId << std::endl;
          const auto pk = vars.get_req_str("pk");
          const auto pk_bin = Botan::base64_decode(pk);

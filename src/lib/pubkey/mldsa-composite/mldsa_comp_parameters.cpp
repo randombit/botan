@@ -14,7 +14,7 @@ namespace Botan {
 
 static const std::array<MLDSA_Composite_Param, 2> mldsa_composite_registry = {{
    {.id = MLDSA_Composite_Param::id_t::id_MLDSA44_RSA2048_PSS_SHA256,
-    .id_str = "id-MLDSA44-RSA2048-PSS-SHA256",
+    .id_str = "MLDSA44-RSA2048-PSS-SHA256",
     .label = "COMPSIG-MLDSA44-RSA2048-PSS-SHA256",
     .prehash_func = "SHA-256",
     .mldsa_variant = "ML-DSA-4x4",
@@ -24,7 +24,7 @@ static const std::array<MLDSA_Composite_Param, 2> mldsa_composite_registry = {{
     .mldsa_pubkey_size = 1312,
     .traditional_key_size = 2048},
    {.id = MLDSA_Composite_Param::id_t::id_MLDSA44_RSA2048_PKCS15_SHA256,
-    .id_str = "id-MLDSA44-RSA2048-PKCS15-SHA256",
+    .id_str = "MLDSA44-RSA2048-PKCS15-SHA256",
     .label = "COMPSIG-MLDSA44-RSA2048-PKCS15-SHA256",
     .prehash_func = "SHA-256",
     .mldsa_variant = "ML-DSA-4x4",
@@ -79,6 +79,15 @@ size_t MLDSA_Composite_Param::mldsa_signature_size() const {
       return 4627;
    }
    throw Botan::Internal_Error("MLDSA_Composite_Param::mldsa_signature_size() encountered unknown ML-DSA variant ");
+}
+
+AlgorithmIdentifier MLDSA_Composite_Param::get_composite_algorithm_id() const {
+   std::optional<OID> oid;
+   oid = OID::from_name(id_str);
+   if(!oid.has_value()) {
+      throw Botan::Internal_Error("could not look up own MLDSA Composite ID for OID");
+   }
+   return AlgorithmIdentifier(oid.value(), AlgorithmIdentifier::Encoding_Option::USE_EMPTY_PARAM);
 }
 
 AlgorithmIdentifier MLDSA_Composite_Param::get_mldsa_algorithm_id() const {

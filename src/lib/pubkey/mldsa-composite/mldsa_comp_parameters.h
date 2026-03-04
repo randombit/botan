@@ -28,6 +28,7 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
 
       size_t estimated_strength() const { throw Botan::Exception("not implemented"); }  // TODO
 
+      AlgorithmIdentifier get_composite_algorithm_id() const;
       AlgorithmIdentifier get_mldsa_algorithm_id() const;
       AlgorithmIdentifier get_traditional_algorithm_id() const;
 

@@ -100,20 +100,9 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PublicKey : public virtual Public_K
       std::unique_ptr<PK_Ops::Verification> create_x509_verification_op(const AlgorithmIdentifier& alg_id,
                                                                         std::string_view provider) const override;
 
-      MLDSA_Composite_PublicKey(const MLDSA_Composite_PublicKey& other) :
-            m_parameters(std::make_shared<MLDSA_Composite_Param>(*other.m_parameters)),
-            m_mldsa_pubkey(std::make_shared<ML_DSA_PublicKey>(*other.m_mldsa_pubkey)),
-            m_tradtional_pubkey(std::make_shared<ML_DSA_PrivateKey>(*other.m_tradtional_pubkey)) {}
+      MLDSA_Composite_PublicKey(const MLDSA_Composite_PublicKey& other);
 
-      MLDSA_Composite_PublicKey& operator=(const MLDSA_Composite_PublicKey& rhs) {
-         if(this == &rhs) {
-            return *this;
-         }
-         m_parameters = std::make_shared<MLDSA_Composite_Param>(*rhs.m_parameters);
-         m_mldsa_pubkey = std::make_shared<ML_DSA_PublicKey>(*rhs.m_mldsa_pubkey);
-         m_tradtional_pubkey = std::make_shared<ML_DSA_PrivateKey>(*rhs.m_tradtional_pubkey);
-         return *this;
-      }
+      MLDSA_Composite_PublicKey& operator=(const MLDSA_Composite_PublicKey& rhs);
 
    protected:
       MLDSA_Composite_PublicKey() = default;

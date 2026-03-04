@@ -138,13 +138,32 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
       std::unique_ptr<PK_Ops::Signature> m_traditional_sig_op;
 };
 
+MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(const MLDSA_Composite_PublicKey& other) :
+      m_parameters(std::make_shared<MLDSA_Composite_Param>(*other.m_parameters)),
+      m_mldsa_pubkey(std::make_shared<ML_DSA_PublicKey>(*other.m_mldsa_pubkey)),
+      // m_tradtional_pubkey(std::make_shared<Public_Key>(*other.m_tradtional_pubkey)) {}
+      m_tradtional_pubkey(
+         load_public_key(m_parameters->get_composite_algorithm_id(), other.m_tradtional_pubkey->public_key_bits())) {}
+
 MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t id,
                                                      std::span<const uint8_t> key_bits) :
       m_parameters(std::make_shared<MLDSA_Composite_Param>(MLDSA_Composite_Param::get_param_by_id(id))),
-      m_mldsa_pubkey(std::make_unique<ML_DSA_PublicKey>(m_parameters->get_mldsa_algorithm_id(),
+      m_mldsa_pubkey(std::make_shared<ML_DSA_PublicKey>(m_parameters->get_mldsa_algorithm_id(),
                                                         mldsa_pubkey_subspan(*m_parameters, key_bits))),
       m_tradtional_pubkey(load_public_key(m_parameters->get_traditional_algorithm_id(),
                                           traditional_pubkey_subspan(*m_parameters, key_bits))) {}
+
+MLDSA_Composite_PublicKey& MLDSA_Composite_PublicKey::operator=(const MLDSA_Composite_PublicKey& rhs) {
+   if(this == &rhs) {
+      return *this;
+   }
+   m_parameters = std::make_shared<MLDSA_Composite_Param>(*rhs.m_parameters);
+   m_mldsa_pubkey = std::make_shared<ML_DSA_PublicKey>(*rhs.m_mldsa_pubkey);
+   //  m_tradtional_pubkey = std::make_shared<Public_Key>(*rhs.m_tradtional_pubkey);
+   m_tradtional_pubkey =
+      load_public_key(m_parameters->get_composite_algorithm_id(), rhs.m_tradtional_pubkey->public_key_bits());
+   return *this;
+}
 
 std::vector<uint8_t> MLDSA_Composite_PublicKey::raw_public_key_bits() const {
    std::vector<uint8_t> result = m_mldsa_pubkey->raw_public_key_bits();
