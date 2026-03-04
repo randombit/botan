@@ -665,7 +665,7 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
          }
 
          result.test_sz_gte("Key has reasonable estimated strength (lower)", key.estimated_strength(), 64);
-         result.test_sz_lt("Key has reasonable estimated strength (upper)", key.estimated_strength(), 512);
+         result.test_sz_lte("Key has reasonable estimated strength (upper)", key.estimated_strength(), 512);
 
          auto public_key = key.public_key();
 

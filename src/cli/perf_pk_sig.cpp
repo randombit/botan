@@ -270,6 +270,39 @@ BOTAN_REGISTER_PERF_TEST("XMSS", PerfTest_XMSS);
 
 #endif
 
+#if defined(BOTAN_HAS_XMSSMT_RFC8391)
+
+class PerfTest_XMSSMT final : public PerfTest_PKSig {
+   public:
+      std::string algo() const override { return "XMSSMT"; }
+
+      std::string hash() const override { return ""; }
+
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
+         /*
+            Only test parameter sets that have height 5 or 10 subtrees. For larger trees, it is quite slow. 
+         */
+         return {"XMSSMT-SHA2_20/2_192",     "XMSSMT-SHA2_20/4_192",     "XMSSMT-SHA2_40/4_192",
+                 "XMSSMT-SHA2_40/8_192",     "XMSSMT-SHA2_60/6_192",     "XMSSMT-SHA2_60/12_192",
+                 "XMSSMT-SHAKE256_20/2_192", "XMSSMT-SHAKE256_20/4_192", "XMSSMT-SHAKE256_40/4_192",
+                 "XMSSMT-SHAKE256_40/8_192", "XMSSMT-SHAKE256_60/6_192", "XMSSMT-SHAKE256_60/12_192",
+                 "XMSSMT-SHA2_20/2_256",     "XMSSMT-SHA2_20/4_256",     "XMSSMT-SHA2_40/4_256",
+                 "XMSSMT-SHA2_40/8_256",     "XMSSMT-SHA2_60/6_256",     "XMSSMT-SHA2_60/12_256",
+                 "XMSSMT-SHAKE_20/2_256",    "XMSSMT-SHAKE_20/4_256",    "XMSSMT-SHAKE_40/4_256",
+                 "XMSSMT-SHAKE_40/8_256",    "XMSSMT-SHAKE_60/6_256",    "XMSSMT-SHAKE_60/12_256",
+                 "XMSSMT-SHAKE256_20/2_256", "XMSSMT-SHAKE256_20/4_256", "XMSSMT-SHAKE256_40/4_256",
+                 "XMSSMT-SHAKE256_40/8_256", "XMSSMT-SHAKE256_60/6_256", "XMSSMT-SHAKE256_60/12_256",
+                 "XMSSMT-SHA2_20/2_512",     "XMSSMT-SHA2_20/4_512",     "XMSSMT-SHA2_40/4_512",
+                 "XMSSMT-SHA2_40/8_512",     "XMSSMT-SHA2_60/6_512",     "XMSSMT-SHA2_60/12_512",
+                 "XMSSMT-SHAKE_20/2_512",    "XMSSMT-SHAKE_20/4_512",    "XMSSMT-SHAKE_40/4_512",
+                 "XMSSMT-SHAKE_40/8_512",    "XMSSMT-SHAKE_60/6_512",    "XMSSMT-SHAKE_60/12_512"};
+      }
+};
+
+BOTAN_REGISTER_PERF_TEST("XMSSMT", PerfTest_XMSSMT);
+
+#endif
+
 #if defined(BOTAN_HAS_HSS_LMS)
 
 class PerfTest_HSS_LMS final : public PerfTest_PKSig {

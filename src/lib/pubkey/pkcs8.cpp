@@ -128,7 +128,7 @@ std::pair<std::string, std::string> choose_pbe_params(std::string_view pbe_algo,
       * SIV or GCM. For others (RSA, ECDSA, ...) default to something widely
       * compatible.
       */
-      const bool nonstandard_pk = (key_algo == "McEliece" || key_algo == "XMSS");
+      const bool nonstandard_pk = (key_algo == "McEliece" || key_algo == "XMSS" || key_algo == "XMSSMT");
 
       if(nonstandard_pk) {
    #if defined(BOTAN_HAS_AEAD_SIV) && defined(BOTAN_HAS_SHA2_64)

@@ -16,6 +16,7 @@
 
 #include <botan/internal/xmss_signature_operation.h>
 
+#include <botan/internal/xmss_core_ops.h>
 #include <botan/internal/xmss_tools.h>
 
 namespace Botan {
@@ -50,14 +51,14 @@ std::vector<uint8_t> XMSS_Signature_Operation::sign(RandomNumberGenerator& /*rng
    adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
 
    for(size_t j = 0; j < params.tree_height(); j++) {
-      const size_t k = (m_leaf_idx / (static_cast<size_t>(1) << j)) ^ 0x01;
-      auth_path[j] = m_priv_key.tree_hash(k * (static_cast<size_t>(1) << j), j, adrs, m_hash);
+      const uint32_t k = (m_leaf_idx / (static_cast<uint32_t>(1) << j)) ^ 0x01;
+      auth_path[j] = m_priv_key.tree_hash(k * (static_cast<uint32_t>(1) << j), j, adrs, m_hash);
    }
 
    adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
    adrs.set_ots_address(m_leaf_idx);
 
-   XMSS_Signature::TreeSignature tree_sig;
+   XMSS_TreeSignature tree_sig;
    tree_sig.authentication_path = auth_path;
    tree_sig.ots_signature =
       m_priv_key.wots_private_key_for(adrs, m_hash).sign(msg_hash, m_priv_key.public_seed(), adrs, m_hash);

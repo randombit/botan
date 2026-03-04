@@ -10,7 +10,7 @@
 
 #include <botan/internal/xmss_verification_operation.h>
 
-#include <botan/internal/xmss_common_ops.h>
+#include <botan/internal/xmss_core_ops.h>
 #include <botan/internal/xmss_tools.h>
 #include <array>
 
@@ -19,52 +19,26 @@ namespace Botan {
 XMSS_Verification_Operation::XMSS_Verification_Operation(const XMSS_PublicKey& public_key) :
       m_pub_key(public_key), m_hash(public_key.xmss_parameters()), m_msg_buf(0) {}
 
-secure_vector<uint8_t> XMSS_Verification_Operation::root_from_signature(const XMSS_Signature& sig,
-                                                                        const secure_vector<uint8_t>& msg,
-                                                                        const secure_vector<uint8_t>& seed) {
-   const auto& params = m_pub_key.xmss_parameters();
-
-   const uint32_t next_index = static_cast<uint32_t>(sig.unused_leaf_index());
-   XMSS_Address adrs;
-   adrs.set_type(XMSS_Address::Type::OTS_Hash_Address);
-   adrs.set_ots_address(next_index);
-
-   const XMSS_WOTS_Parameters wots_params(params.ots_oid());
-   const XMSS_WOTS_PublicKey pub_key_ots(wots_params, seed, sig.tree().ots_signature, msg, adrs, m_hash);
-
-   adrs.set_type(XMSS_Address::Type::LTree_Address);
-   adrs.set_ltree_address(next_index);
-
-   std::array<secure_vector<uint8_t>, 2> node;
-   XMSS_Common_Ops::create_l_tree(node[0], pub_key_ots.key_data(), adrs, seed, m_hash, params);
-
-   adrs.set_type(XMSS_Address::Type::Hash_Tree_Address);
-   adrs.set_tree_index(next_index);
-
-   for(size_t k = 0; k < params.tree_height(); k++) {
-      adrs.set_tree_height(static_cast<uint32_t>(k));
-      if(((next_index / (static_cast<size_t>(1) << k)) & 0x01) == 0) {
-         adrs.set_tree_index(adrs.get_tree_index() >> 1);
-         XMSS_Common_Ops::randomize_tree_hash(
-            node[1], node[0], sig.tree().authentication_path[k], adrs, seed, m_hash, params);
-      } else {
-         adrs.set_tree_index((adrs.get_tree_index() - 1) >> 1);
-         XMSS_Common_Ops::randomize_tree_hash(
-            node[1], sig.tree().authentication_path[k], node[0], adrs, seed, m_hash, params);
-      }
-      node[0] = node[1];
-   }
-   return node[0];
-}
-
 bool XMSS_Verification_Operation::verify(const XMSS_Signature& sig,
                                          const secure_vector<uint8_t>& msg,
                                          const XMSS_PublicKey& public_key) {
+   const XMSS_Parameters& params = public_key.xmss_parameters();
+   const XMSS_Address adrs;
    secure_vector<uint8_t> index_bytes;
    xmss_concat(index_bytes, sig.unused_leaf_index(), m_pub_key.xmss_parameters().element_size());
    const secure_vector<uint8_t> msg_digest = m_hash.h_msg(sig.randomness(), public_key.root(), index_bytes, msg);
 
-   const secure_vector<uint8_t> node = root_from_signature(sig, msg_digest, public_key.public_seed());
+   const secure_vector<uint8_t> node =
+      XMSS_Core_Ops::root_from_signature(static_cast<uint32_t>(sig.unused_leaf_index()),
+                                         sig.tree(),
+                                         msg_digest,
+                                         adrs,
+                                         public_key.public_seed(),
+                                         m_hash,
+                                         params.element_size(),
+                                         params.tree_height(),
+                                         params.len(),
+                                         params.ots_oid());
 
    return (node == public_key.root());
 }

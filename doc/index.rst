@@ -31,6 +31,7 @@ are listed below:
 * :ref:`ML-KEM <mlkem_example>`
 * :ref:`RSA <rsa_example>`
 * :ref:`XMSS <xmss_example>`
+* :ref:`XMSS^MT <xmssmt_example>`
 * :ref:`Stream Ciphers <stream_ciphers_example>`
 * :ref:`TLS Client <tls_client_example>`
 * :ref:`TLS Client (PQC/hybrid) <tls_hybrid_client_example>`
