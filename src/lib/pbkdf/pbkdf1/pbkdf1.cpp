@@ -23,7 +23,8 @@ namespace {
 */
 secure_vector<uint8_t> pkcs12_password_to_bytes(std::string_view password) {
    if(password.empty()) {
-      return secure_vector<uint8_t>();
+      // For empty password the output must contain the UTF-16BE null terminator
+      return secure_vector<uint8_t>({0, 0});
    }
 
    // Interpret input bytes as Latin-1, convert to UTF-8 then to UCS-2 (big-endian)

@@ -24,6 +24,13 @@ Iterations = 2048
 ID = 3
 Output = A9F257C211043A34726B3338102E88AB5C98A295
 
+# Empty password
+Passphrase = 
+Salt = 02664B0EB6858302
+Iterations = 2048
+ID = 1
+Output = 9175145C6101AE1A738CCE3734E5DC34
+
 # Different password and salt
 Passphrase = test
 Salt = 1234567890ABCDEF
