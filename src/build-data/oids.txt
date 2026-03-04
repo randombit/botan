@@ -354,6 +354,23 @@
 
 1.3.6.1.4.1.11591.4.11 = Scrypt
 
+# PKCS#12 PBE algorithms (password-based encryption)
+1.2.840.113549.1.12.1.3 = PBE-SHA1-3DES
+1.2.840.113549.1.12.1.4 = PBE-SHA1-2DES
+
+[pkcs12]
+# PKCS#12 bag types
+1.2.840.113549.1.12.10.1.1 = PKCS12.KeyBag
+1.2.840.113549.1.12.10.1.2 = PKCS12.PKCS8ShroudedKeyBag
+1.2.840.113549.1.12.10.1.3 = PKCS12.CertBag
+1.2.840.113549.1.12.10.1.4 = PKCS12.CRLBag
+1.2.840.113549.1.12.10.1.5 = PKCS12.SecretBag
+1.2.840.113549.1.12.10.1.6 = PKCS12.SafeContentsBag
+
+# PKCS#7 content types (used by PKCS#12)
+1.2.840.113549.1.7.1 = PKCS7.Data
+1.2.840.113549.1.7.6 = PKCS7.EncryptedData
+
 [pkcs9]
 1.2.840.113549.1.9.1 = PKCS9.EmailAddress
 1.2.840.113549.1.9.2 = PKCS9.UnstructuredName
@@ -361,6 +378,15 @@
 1.2.840.113549.1.9.4 = PKCS9.MessageDigest
 1.2.840.113549.1.9.7 = PKCS9.ChallengePassword
 1.2.840.113549.1.9.14 = PKCS9.ExtensionRequest
+
+# PKCS#12 cert/CRL bag types
+1.2.840.113549.1.9.22.1 = PKCS9.X509Certificate
+1.2.840.113549.1.9.22.2 = PKCS9.SDSICertificate
+1.2.840.113549.1.9.23.1 = PKCS9.X509CRL
+
+# PKCS#12 attributes
+1.2.840.113549.1.9.20 = PKCS9.FriendlyName
+1.2.840.113549.1.9.21 = PKCS9.LocalKeyId
 
 [pkix]
 2.5.29.14 = X509v3.SubjectKeyIdentifier
