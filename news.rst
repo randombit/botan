@@ -9,8 +9,16 @@ Version 3.11.0, Not Yet Released
 * Add support for verifying X509 certificate chains when the trust anchor is
   not self signed. (GH #5047)
 
+* Add support for multiple OCSP responders in an Authority Information Acesss
+  extension. (GH #5231)
+
 * Many additions to the C89/FFI interface, especially regarding X.509
-  certificates and CRLs (GH #5217 #5220 #5221 #5222 #5225) also XOF (GH #5148)
+  certificates and CRLs, also XOF support (GH #5148 #5166 #5188 #5217 #5220
+  #5221 #5222 #5225 #5230 #5232 #5234 #5235 #5236 #5252)
+
+* Avoid using ISA enabling flags (like `-mavx2` or `/arch:AVX`) in the build
+  anymore, as this conflicts with precompiled headers and has been known to cause
+  miscompilations in certain circumstances. (GH #5297 #5260)
 
 * Add optimized Keccak permutation implementation using AVX-512 (GH #5191)
 
@@ -26,7 +34,8 @@ Version 3.11.0, Not Yet Released
 
 * Poly1305 optimizations, including AVX2 and AVX-512 implementations (GH #5227)
 
-* Various elliptic curve arithmetic optimizations (GH #5186 #5194 #5195 #5196 #5275 #5387)
+* Various elliptic curve arithmetic optimizations (GH #5186 #5194 #5195 #5196
+  #5275 #5387 #5393 #5394 #5400 #5403)
 
 * Certain signature and KEM schemes, including XMSS, LMS, FrodoKEM,
   ML-KEM/Kyber, and ML-DSA/Dilithium, would fail or produce incorrect results if
