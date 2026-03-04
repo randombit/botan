@@ -5,6 +5,7 @@
 #include <botan/mldsa_comp_parameters.h>
 #include <botan/oids.h>
 #include <botan/pss_params.h>
+#include <cstring>
 #include <string_view>
 
 #include <iostream>
@@ -55,12 +56,13 @@ MLDSA_Composite_Param MLDSA_Composite_Param::get_param_by_id(MLDSA_Composite_Par
 }
 
 std::string MLDSA_Composite_Param::mldsa_param_str() const {
-   std::vector<uint8_t> label_vec(label.begin(), label.end());
+   std::string label_str(label);
+   std::vector<uint8_t> label_vec(label_str.begin(), label_str.end());
    return std::string("Pure,Randomized,ctx_hex=") + hex_encode(label_vec);
 }
 
 size_t MLDSA_Composite_Param::traditional_signature_size() const {
-   if(traditional_algoritm == "RSA") {
+   if(0 == std::strcmp(traditional_algoritm, "RSA")) {
       return traditional_key_size;
    }
    throw Botan::Exception(

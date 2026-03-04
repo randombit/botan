@@ -16,7 +16,6 @@
 #include <botan/dilithium.h>
 #include <botan/hex.h>
 #include <botan/internal/parsing.h>
-#include <iostream>
 
 #include <botan/exceptn.h>
 #include <botan/rng.h>
@@ -28,6 +27,7 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/stl_util.h>
+
 #include <string_view>
 
 namespace Botan {
@@ -67,8 +67,7 @@ DilithiumMode::Mode dilithium_mode_from_string(std::string_view str) {
 
 class MLDSA_Signing_Parameters {
    public:
-      MLDSA_Signing_Parameters(std::string_view param_str) {
-         std::cout << "MLDSA_Signing_Parameters: parsing string " << param_str << std::endl;
+      explicit MLDSA_Signing_Parameters(std::string_view param_str) {
          const char* error_tmpl = "Parameter string '{}' is not a valid ML-DSA or Dilithium parameter specification";
          if(param_str.size() == 0) {
             // return the defaults

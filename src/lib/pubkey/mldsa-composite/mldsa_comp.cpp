@@ -71,12 +71,8 @@ class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification
          std::string msg_str = "CompositeAlgorithmSignatures2025";
          msg_str += m_parameters.label;
          std::vector<uint8_t> msg(msg_str.begin(), msg_str.end());
-         std::cout << fmt("verify: building msg (len = {}) (1) = \n", msg.size()) << hex_encode(msg) << std::endl;
          msg.push_back(0);  // ctx = empty
-         std::cout << fmt("verify: building msg (len = {}) (2) = \n", msg.size()) << hex_encode(msg) << std::endl;
          msg.insert(msg.end(), ph.begin(), ph.end());
-         std::cout << fmt("verify: building msg (len = {}) (3) = \n", msg.size()) << hex_encode(msg) << std::endl;
-         std::cout << "verify: msg = \n" << hex_encode(msg) << std::endl;
          size_t mldsa_sig_size = m_parameters.mldsa_signature_size();
          m_mldsa_ver_op->update(msg);
          m_traditional_ver_op->update(msg);
@@ -86,19 +82,13 @@ class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification
          }
          std::span<const uint8_t> mldsa_sig(sig.begin(), sig.begin() + mldsa_sig_size);
          std::span<const uint8_t> trad_sig(sig.begin() + mldsa_sig_size, sig.end());
-         bool overall = true;
          if(!m_mldsa_ver_op->is_valid_signature(mldsa_sig)) {
-            std::cout << "MLDSA signature verification FAILED\n";
-            //return false;
-            overall = false;
+            return false;
          }
          if(!m_traditional_ver_op->is_valid_signature(trad_sig)) {
-            std::cout << "Traditional signature verification FAILED\n";
-            //return false;
-            overall = false;
+            return false;
          }
-         // return true;
-         return overall;
+         return true;
       }
 
    private:
@@ -124,12 +114,8 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
          std::string msg_str = "CompositeAlgorithmSignatures2025";
          msg_str += m_parameters.label;
          std::vector<uint8_t> msg(msg_str.begin(), msg_str.end());
-         std::cout << fmt("sign: building msg (len = {}) (1) = \n", msg.size()) << hex_encode(msg) << std::endl;
          msg.push_back(0);  // ctx = empty
-         std::cout << fmt("sign: building msg (len = {}) (2) = \n", msg.size()) << hex_encode(msg) << std::endl;
          msg.insert(msg.end(), ph.begin(), ph.end());
-         std::cout << fmt("sign: building msg (len = {}) (3) = \n", msg.size()) << hex_encode(msg) << std::endl;
-         std::cout << "sign: msg = \n" << hex_encode(msg) << std::endl;
          m_mldsa_sig_op->update(msg);
          m_traditional_sig_op->update(msg);
          auto sig = m_mldsa_sig_op->sign(rng);
@@ -208,9 +194,6 @@ MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(MLDSA_Composite_Param::id
    MLDSA_Composite_PublicKey::m_mldsa_pubkey = m_mldsa_privkey;
 
    MLDSA_Composite_PublicKey::m_tradtional_pubkey = m_tradtional_privkey;
-
-   std::cout
-      << "MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(MLDSA_Composite_Param::id_t id, std::span<const uint8_t> sk) RAN OK\n";
 }
 
 secure_vector<uint8_t> MLDSA_Composite_PrivateKey::private_key_bits() const {
