@@ -8,7 +8,7 @@
   d= 5, l=   9:      OBJECT                                 SHA-256 [2.16.840.1.101.3.4.2.1]
   d= 5, l=   0:      NULL
   d= 3, l=  13:    SEQUENCE
-  d= 4, l=   9:     OBJECT                                  1.2.840.113549.1.7.1
+  d= 4, l=   9:     OBJECT                                  PKCS7.Data [1.2.840.113549.1.7.1]
   d= 3, l=4679:    cons [0] context
   d= 4, l=1799:     SEQUENCE
   d= 5, l=1391:      SEQUENCE
@@ -411,7 +411,7 @@
   d= 6, l=  24:       SEQUENCE
   d= 7, l=   9:        OBJECT                               PKCS9.ContentType [1.2.840.113549.1.9.3]
   d= 7, l=  11:        SET
-  d= 8, l=   9:         OBJECT                              1.2.840.113549.1.7.1
+  d= 8, l=   9:         OBJECT                              PKCS7.Data [1.2.840.113549.1.7.1]
   d= 6, l=  28:       SEQUENCE
   d= 7, l=   9:        OBJECT                               1.2.840.113549.1.9.5
   d= 7, l=  15:        SET
