@@ -433,6 +433,16 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
+#if defined(BOTAN_HAS_MLDSA_COMPOSITE)
+   if(alg_name.starts_with("MLDSA")) {
+      auto comp_parm = MLDSA_Composite_Param::from_id_str(alg_name);
+      if(comp_parm.has_value()) {
+         return std::make_unique<MLDSA_Composite_PrivateKey>(comp_parm->id, key_bits);
+      }
+      // we continue the search as there might be other algorithms defined with leading "MLDSA"
+   }
+#endif
+
 #if defined(BOTAN_HAS_HSS_LMS)
    if(alg_name == "HSS-LMS-Private-Key") {
       return std::make_unique<HSS_LMS_PrivateKey>(key_bits);
@@ -456,7 +466,6 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
       return std::make_unique<Classic_McEliece_PrivateKey>(alg_id, key_bits);
    }
 #endif
-
    throw Decoding_Error(fmt("Unknown or unavailable public key algorithm '{}'", alg_name));
 }
 
@@ -621,6 +630,7 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 #endif
 
 #if defined(BOTAN_HAS_MLDSA_COMPOSITE)
+
    if(alg_name.starts_with("MLDSA")) {
       auto comp_parm = MLDSA_Composite_Param::from_id_str(alg_name);
       if(comp_parm.has_value()) {
