@@ -5,6 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include <iostream>
+
 #include <botan/pk_algs.h>
 
 #include <botan/asn1_obj.h>
@@ -261,6 +263,19 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_ML_DSA)
    if(alg_name.starts_with("ML-DSA-")) {
       return std::make_unique<ML_DSA_PublicKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_MLDSA_COMPOSITE)
+   std::cout << "pk_algs: checking parameter for mldsa composite public key: " << alg_name << std::endl;
+   if(alg_name.starts_with("MLDSA")) {
+      auto comp_parm = MLDSA_Composite_Param::from_id_str(alg_name);
+      if(comp_parm.has_value()) {
+         return std::make_unique<MLDSA_Composite_PublicKey>(comp_parm->id, key_bits);
+      } else {
+         std::cout << "pk_algs: mldsa composite public key lookup negative" << std::endl;
+      }
+      // we continue, there might be other algorithms defined with leading "MLDSA"
    }
 #endif
 
@@ -611,10 +626,13 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 #endif
 
 #if defined(BOTAN_HAS_MLDSA_COMPOSITE)
+   std::cout << "pk_algs: checking parameter for mldsa composite: " << alg_name << std::endl;
    if(alg_name.starts_with("MLDSA")) {
       auto comp_parm = MLDSA_Composite_Param::from_id_str(alg_name);
       if(comp_parm.has_value()) {
          return std::make_unique<MLDSA_Composite_PrivateKey>(rng, comp_parm.value());
+      } else {
+         std::cout << "pk_algs: mldsa composite lookup negative" << std::endl;
       }
       // we continue, there might be other algorithms defined with leading "MLDSA"
    }

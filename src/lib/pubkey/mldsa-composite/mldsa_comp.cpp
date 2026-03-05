@@ -21,7 +21,7 @@ std::span<const uint8_t> mldsa_pubkey_subspan(const MLDSA_Composite_Param& param
    OID oid(param.mldsa_oid_str);
    AlgorithmIdentifier aid(oid, AlgorithmIdentifier::Encoding_Option::USE_EMPTY_PARAM);
    if(key_bits.size() <= param.mldsa_pubkey_size) {
-      throw Invalid_Argument("encoded key is too short");
+      throw Invalid_Argument(fmt("encoded MLDSA component public key is too short (len = {})", key_bits.size()));
    }
    return std::span<const uint8_t>(key_bits.begin(), param.mldsa_pubkey_size);
 }
@@ -30,7 +30,7 @@ std::span<const uint8_t> mldsa_privkey_subspan(const MLDSA_Composite_Param& para
    OID oid(param.mldsa_oid_str);
    AlgorithmIdentifier aid(oid, AlgorithmIdentifier::Encoding_Option::USE_EMPTY_PARAM);
    if(key_bits.size() <= param.mldsa_privkey_size()) {
-      throw Invalid_Argument("encoded key is too short");
+      throw Invalid_Argument("encoded MLDSA component private key is too short");
    }
    return std::span<const uint8_t>(key_bits.begin(), param.mldsa_privkey_size());
 }
@@ -39,7 +39,7 @@ std::span<const uint8_t> traditional_pubkey_subspan(const MLDSA_Composite_Param&
                                                     std::span<const uint8_t> key_bits) {
    const size_t offset = param.mldsa_pubkey_size;
    if(key_bits.size() <= 1 + offset) {
-      throw Invalid_Argument("encoded key is too short");
+      throw Invalid_Argument(fmt("encoded traditional component public key is too short (len = {})", key_bits.size()));
    }
    std::span<const uint8_t> result(key_bits.begin() + offset, key_bits.end());
    return result;
@@ -49,7 +49,7 @@ std::span<const uint8_t> traditional_privkey_subspan(const MLDSA_Composite_Param
                                                      std::span<const uint8_t> key_bits) {
    const size_t offset = param.mldsa_privkey_size();
    if(key_bits.size() <= 1 + offset) {
-      throw Invalid_Argument("encoded key is too short");
+      throw Invalid_Argument("encoded traditional component private key is too short");
    }
    std::span<const uint8_t> result(key_bits.begin() + offset, key_bits.end());
    return result;
@@ -141,7 +141,7 @@ MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(const MLDSA_Composite_Publi
       m_mldsa_pubkey(std::make_shared<ML_DSA_PublicKey>(*other.m_mldsa_pubkey)),
       // m_tradtional_pubkey(std::make_shared<Public_Key>(*other.m_tradtional_pubkey)) {}
       m_tradtional_pubkey(
-         load_public_key(m_parameters->get_composite_algorithm_id(), other.m_tradtional_pubkey->public_key_bits())) {}
+         load_public_key(m_parameters->get_traditional_algorithm_id(), other.m_tradtional_pubkey->public_key_bits())) {}
 
 MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t id,
                                                      std::span<const uint8_t> key_bits) :
@@ -159,15 +159,18 @@ MLDSA_Composite_PublicKey& MLDSA_Composite_PublicKey::operator=(const MLDSA_Comp
    m_mldsa_pubkey = std::make_shared<ML_DSA_PublicKey>(*rhs.m_mldsa_pubkey);
    //  m_tradtional_pubkey = std::make_shared<Public_Key>(*rhs.m_tradtional_pubkey);
    m_tradtional_pubkey =
-      load_public_key(m_parameters->get_composite_algorithm_id(), rhs.m_tradtional_pubkey->public_key_bits());
+      load_public_key(m_parameters->get_traditional_algorithm_id(), rhs.m_tradtional_pubkey->public_key_bits());
    return *this;
 }
 
 std::vector<uint8_t> MLDSA_Composite_PublicKey::raw_public_key_bits() const {
-   std::vector<uint8_t> result = m_mldsa_pubkey->raw_public_key_bits();
-   std::vector<uint8_t> trad = m_tradtional_pubkey->raw_public_key_bits();
-   result.insert(result.end(), trad.begin(), trad.end());
-   return result;
+   return public_key_bits();
+   // std::vector<uint8_t> result = m_mldsa_pubkey->raw_public_key_bits();
+   // auto mldsa_len = result.size();
+   // std::vector<uint8_t> trad = m_tradtional_pubkey->raw_public_key_bits();
+   // result.insert(result.end(), trad.begin(), trad.end());
+   // std::cout << fmt("encoding public key, MLDSA component len = {}, trad. len = {}", mldsa_len, trad.size()) << "\n";
+   // return result;
 }
 
 OID MLDSA_Composite_PublicKey::object_identifier() const {
@@ -176,8 +179,11 @@ OID MLDSA_Composite_PublicKey::object_identifier() const {
 
 std::vector<uint8_t> MLDSA_Composite_PublicKey::public_key_bits() const {
    std::vector<uint8_t> result(this->m_mldsa_pubkey->public_key_bits());
+   auto mldsa_len = result.size();
    std::vector<uint8_t> trad_bytes = this->m_tradtional_pubkey->public_key_bits();
    result.insert(result.end(), trad_bytes.begin(), trad_bytes.end());
+   std::cout << fmt("encoding public key, MLDSA component len = {}, trad. len = {}", mldsa_len, trad_bytes.size())
+             << "\n";
    return result;
 }
 
@@ -225,6 +231,9 @@ secure_vector<uint8_t> MLDSA_Composite_PrivateKey::raw_private_key_bits() const 
 }
 
 std::unique_ptr<Public_Key> MLDSA_Composite_PrivateKey::public_key() const {
+   std::cout << "MLDSA_Composite_PrivateKey::public_key(): making copy of *this\n";
+   std::cout << "  this->m_mldsa_pubkey->public_key_bits() = " << this->m_mldsa_pubkey->public_key_bits().size()
+             << "\n";
    return std::make_unique<MLDSA_Composite_PublicKey>(*this);
 }
 

@@ -138,10 +138,12 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
          if(nullptr == priv_key_generated) {
             result.test_bool_eq("generated private key non-null", false, true);
          } else {
+            std::cout << "retrieving public key from generated private key\n";
             auto pub_key_generated = priv_key_generated->public_key();
             if(nullptr == pub_key_generated) {
                result.test_bool_eq("generated pub key key non-null", false, true);
             } else {
+               std::cout << "calling sign_and_verify() with generated key pair\n";
                sign_and_verify(
                   *priv_key_generated, *pub_key_generated, *rng, result, "produced with generated public key");
             }

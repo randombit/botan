@@ -1,6 +1,7 @@
 
 #include "botan/exceptn.h"
 #include "botan/hex.h"
+#include "botan/internal/fmt.h"
 #include <botan/asn1_obj.h>
 #include <botan/mldsa_comp_parameters.h>
 #include <botan/oids.h>
@@ -104,7 +105,7 @@ AlgorithmIdentifier MLDSA_Composite_Param::get_composite_algorithm_id() const {
    std::optional<OID> oid;
    oid = OID::from_name(id_str);
    if(!oid.has_value()) {
-      throw Botan::Internal_Error("could not look up own MLDSA Composite ID for OID");
+      throw Botan::Internal_Error(fmt("could not look up own MLDSA Composite ID '{}' for OID", id_str));
    }
    return AlgorithmIdentifier(oid.value(), AlgorithmIdentifier::Encoding_Option::USE_EMPTY_PARAM);
 }
