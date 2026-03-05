@@ -48,6 +48,25 @@ std::optional<MLDSA_Composite_Param> MLDSA_Composite_Param::from_id_str(std::str
    return std::optional<MLDSA_Composite_Param>();
 }
 
+//static
+std::optional<MLDSA_Composite_Param> MLDSA_Composite_Param::from_algo_id(const AlgorithmIdentifier& algo_id) {
+   for(const auto& param : mldsa_composite_registry) {
+      if(param.get_composite_algorithm_id() == algo_id) {
+         return std::optional<MLDSA_Composite_Param>(param);
+      }
+   }
+   return std::optional<MLDSA_Composite_Param>();
+}
+
+//static
+MLDSA_Composite_Param MLDSA_Composite_Param::from_algo_id_or_throw(const AlgorithmIdentifier& algo_id) {
+   const auto result = from_algo_id(algo_id);
+   if(!result.has_value()) {
+      throw Botan::Invalid_Argument("no parameter found for provided MLDSA composite algo id");
+   }
+   return result.value();
+}
+
 // static
 MLDSA_Composite_Param MLDSA_Composite_Param::from_id_str_or_throw(std::string_view id_str) {
    const auto result = from_id_str(id_str);

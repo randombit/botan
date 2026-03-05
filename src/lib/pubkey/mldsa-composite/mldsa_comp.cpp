@@ -143,6 +143,14 @@ MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(const MLDSA_Composite_Publi
       m_tradtional_pubkey(
          load_public_key(m_parameters->get_traditional_algorithm_id(), other.m_tradtional_pubkey->public_key_bits())) {}
 
+MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(const AlgorithmIdentifier& algo_id,
+                                                     std::span<const uint8_t> key_bits) :
+      m_parameters(std::make_shared<MLDSA_Composite_Param>(MLDSA_Composite_Param::from_algo_id_or_throw(algo_id))),
+      m_mldsa_pubkey(std::make_shared<ML_DSA_PublicKey>(m_parameters->get_mldsa_algorithm_id(),
+                                                        mldsa_pubkey_subspan(*m_parameters, key_bits))),
+      m_tradtional_pubkey(load_public_key(m_parameters->get_traditional_algorithm_id(),
+                                          traditional_pubkey_subspan(*m_parameters, key_bits))) {}
+
 MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t id,
                                                      std::span<const uint8_t> key_bits) :
       m_parameters(std::make_shared<MLDSA_Composite_Param>(MLDSA_Composite_Param::from_id_or_throw(id))),
@@ -205,8 +213,15 @@ std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_verifica
 }
 
 std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_x509_verification_op(
-   const AlgorithmIdentifier& /*alg_id*/, std::string_view /*provider*/) const {
-   throw Botan::Exception("TODO: not implemented");
+   const AlgorithmIdentifier& alg_id, std::string_view provider) const {
+   if(provider.empty() || provider == "base") {
+      if(alg_id != this->algorithm_identifier()) {
+         throw Decoding_Error("Unexpected AlgorithmIdentifier for MLDSA-Composite X.509 signature");
+      }
+      return std::make_unique<MLDSA_Composite_Verification_Operation>(
+         *this->m_parameters, *this->m_mldsa_pubkey, this->m_tradtional_pubkey.get());
+   }
+   throw Provider_Not_Found(algo_name(), provider);
 }
 
 MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(MLDSA_Composite_Param::id_t id, std::span<const uint8_t> sk) :
@@ -215,25 +230,23 @@ MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(MLDSA_Composite_Param::id
                                                           mldsa_privkey_subspan(*m_parameters, sk))),
       m_tradtional_privkey(load_private_key(m_parameters->get_traditional_algorithm_id(),
                                             traditional_privkey_subspan(*m_parameters, sk))) {
-   // TODO: TO AVOID COPYING AND PROBLEMS WITH REASSIGNEMENTS, MAKE THE MEMBERS IN COMPOSITE PUBLIC KEY shared_ptr
-   MLDSA_Composite_PublicKey::m_parameters = m_parameters;
-   MLDSA_Composite_PublicKey::m_mldsa_pubkey = m_mldsa_privkey;
-
-   MLDSA_Composite_PublicKey::m_tradtional_pubkey = m_tradtional_privkey;
+   init_pubkey_members();
 }
 
 secure_vector<uint8_t> MLDSA_Composite_PrivateKey::private_key_bits() const {
-   throw Botan::Exception("TODO: not implemented");
+   secure_vector<uint8_t> result =
+      m_mldsa_privkey
+         ->raw_private_key_bits();  // "raw_...()" should still return the raw seed even after fixing the PKCS#8 encoding format for ML-DSA
+   secure_vector<uint8_t> trad_bytes = m_tradtional_privkey->private_key_bits();
+   result.insert(result.end(), trad_bytes.begin(), trad_bytes.end());
+   return result;
 }
 
 secure_vector<uint8_t> MLDSA_Composite_PrivateKey::raw_private_key_bits() const {
-   throw Botan::Exception("TODO: not implemented");
+   return private_key_bits();
 }
 
 std::unique_ptr<Public_Key> MLDSA_Composite_PrivateKey::public_key() const {
-   std::cout << "MLDSA_Composite_PrivateKey::public_key(): making copy of *this\n";
-   std::cout << "  this->m_mldsa_pubkey->public_key_bits() = " << this->m_mldsa_pubkey->public_key_bits().size()
-             << "\n";
    return std::make_unique<MLDSA_Composite_PublicKey>(*this);
 }
 
@@ -253,10 +266,17 @@ std::unique_ptr<PK_Ops::Signature> MLDSA_Composite_PrivateKey::create_signature_
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(const AlgorithmIdentifier& /*alg_id*/,
-                                                       std::span<const uint8_t> /*sk*/) {
-   throw Botan::Exception("not implmented");
-   // TODO: NEED TO INIT THE PUBKEY MEMBERS
+MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(const AlgorithmIdentifier& algo_id,
+                                                       std::span<const uint8_t> sk) :
+
+      m_parameters(std::make_shared<MLDSA_Composite_Param>(MLDSA_Composite_Param::from_algo_id_or_throw(algo_id))),
+      m_mldsa_privkey(std::make_shared<ML_DSA_PrivateKey>(m_parameters->get_mldsa_algorithm_id(),
+                                                          mldsa_privkey_subspan(*m_parameters, sk))),
+      m_tradtional_privkey(
+         load_private_key(m_parameters->get_traditional_algorithm_id(), traditional_privkey_subspan(*m_parameters, sk)))
+
+{
+   init_pubkey_members();
 }
 
 MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(RandomNumberGenerator& rng, MLDSA_Composite_Param param) :
@@ -264,7 +284,10 @@ MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(RandomNumberGenerator& rn
       m_mldsa_privkey(std::make_shared<ML_DSA_PrivateKey>(rng, m_parameters->get_mldsa_mode())),
       m_tradtional_privkey(
          create_private_key(m_parameters->traditional_algoritm, rng, m_parameters->get_traditional_algo_param_str())) {
-   // TODO: encapsulate in a method of private key:
+   init_pubkey_members();
+}
+
+void MLDSA_Composite_PrivateKey::init_pubkey_members() {
    MLDSA_Composite_PublicKey::m_parameters = m_parameters;
 
    MLDSA_Composite_PublicKey::m_mldsa_pubkey = m_mldsa_privkey;

@@ -27,6 +27,9 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
       static MLDSA_Composite_Param from_id_str_or_throw(std::string_view id_str);
       static std::optional<MLDSA_Composite_Param> from_id_str(std::string_view id_str);
 
+      static std::optional<MLDSA_Composite_Param> from_algo_id(const AlgorithmIdentifier& algo_id);
+      static MLDSA_Composite_Param from_algo_id_or_throw(const AlgorithmIdentifier& algo_id);
+
       MLDSA_Composite_Param clone() const { return MLDSA_Composite_Param::from_id_or_throw(id); }
 
       size_t estimated_strength() const { throw Botan::Exception("TODO: not implemented"); }  // TODO

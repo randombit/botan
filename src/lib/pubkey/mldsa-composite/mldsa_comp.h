@@ -22,12 +22,12 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PublicKey : public virtual Public_K
       /**
        * Loads a public key.
        *
-       * Public key must be encoded as in RFC
-       * draft-vangeest-x509-hash-sigs-03.
-       *
        * @param key_bits DER encoded public key bits
        */
       BOTAN_FUTURE_EXPLICIT MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t id,
+                                                      std::span<const uint8_t> key_bits);
+
+      BOTAN_FUTURE_EXPLICIT MLDSA_Composite_PublicKey(const AlgorithmIdentifier& algo_id,
                                                       std::span<const uint8_t> key_bits);
 
       std::string algo_name() const override { return "MLDSA_Composite"; }
@@ -121,6 +121,7 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PrivateKey final : public virtual M
                                                              std::string_view provider) const override;
 
    private:
+      void init_pubkey_members();
       // MLDSA_Composite_PrivateKey(MLDSA_Composite_Param::id_t id,
       //                            const ML_DSA_PrivateKey& mldsa_privkey,
       //                            const Private_Key* tradtional_privkey);

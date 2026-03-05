@@ -13,6 +13,7 @@
 #include "botan/hex.h"
 #include "botan/pk_keys.h"
 #include "botan/rng.h"
+#include "botan/secmem.h"
 #include "tests.h"
 
 #include <format>
@@ -144,10 +145,14 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
                result.test_bool_eq("generated pub key key non-null", false, true);
             } else {
                std::cout << "calling sign_and_verify() with generated key pair\n";
-               sign_and_verify(
-                  *priv_key_generated, *pub_key_generated, *rng, result, "produced with generated public key");
+               sign_and_verify(*priv_key_generated, *pub_key_generated, *rng, result, "produced with generated key");
             }
          }
+         Botan::secure_vector<uint8_t> private_enc = priv_key_generated->private_key_bits();
+         std::vector<uint8_t> public_enc = priv_key_generated->public_key_bits();
+         Botan::MLDSA_Composite_PrivateKey priv_key_redec(priv_key_generated->algorithm_identifier(), private_enc);
+         Botan::MLDSA_Composite_PublicKey pub_key_redec(priv_key_generated->algorithm_identifier(), public_enc);
+         sign_and_verify(priv_key_redec, pub_key_redec, *rng, result, "produced with re-decoded key");
          return result;
       }
 };
