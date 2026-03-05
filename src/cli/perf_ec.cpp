@@ -164,20 +164,20 @@ class PerfTest_EllipticCurve_Misc final : public PerfTest {
 
             const auto group = Botan::EC_Group::from_name(group_name);
 
-            auto add_timer = config.make_timer(group_name + " point addition");
+            auto pt_add_timer = config.make_timer(group_name + " point addition");
+            auto pt_neg_timer = config.make_timer(group_name + " point negation");
             auto der_uc_timer = config.make_timer(group_name + " point deserialize (uncompressed)");
             auto der_c_timer = config.make_timer(group_name + " point deserialize (compressed)");
-            auto scalar_inv_timer = config.make_timer(group_name + " scalar inversion");
-            auto scalar_inv_vt_timer = config.make_timer(group_name + " scalar inversion vartime");
 
-            while(add_timer->under(run) && der_c_timer->under(run) && scalar_inv_timer->under(run)) {
+            while(pt_add_timer->under(run) && der_c_timer->under(run)) {
                const auto r1 = Botan::EC_AffinePoint::g_mul(Botan::EC_Scalar::random(group, rng), rng);
                const auto r2 = Botan::EC_AffinePoint::g_mul(Botan::EC_Scalar::random(group, rng), rng);
 
                const auto r1_bytes = r1.serialize_uncompressed();
                const auto r2_bytes = r2.serialize_uncompressed();
 
-               add_timer->run([&]() { r1.add(r2); });
+               pt_add_timer->run([&]() { r1.add(r2); });
+               pt_neg_timer->run([&]() { return r1.negate(); });
 
                der_uc_timer->run([&]() { Botan::EC_AffinePoint::deserialize(group, r1_bytes); });
                der_uc_timer->run([&]() { Botan::EC_AffinePoint::deserialize(group, r2_bytes); });
@@ -186,16 +186,10 @@ class PerfTest_EllipticCurve_Misc final : public PerfTest {
                const auto r2_cbytes = r2.serialize_compressed();
                der_c_timer->run([&]() { Botan::EC_AffinePoint::deserialize(group, r1_cbytes); });
                der_c_timer->run([&]() { Botan::EC_AffinePoint::deserialize(group, r2_cbytes); });
-
-               const auto k = Botan::EC_Scalar::random(group, rng);
-               auto k_vt_inv = scalar_inv_vt_timer->run([&]() { return k.invert_vartime(); });
-               auto k_inv = scalar_inv_timer->run([&]() { return k.invert(); });
-               BOTAN_ASSERT_EQUAL(k_inv, k_vt_inv, "Same result for inversion");
             }
 
-            config.record_result(*add_timer);
-            config.record_result(*scalar_inv_timer);
-            config.record_result(*scalar_inv_vt_timer);
+            config.record_result(*pt_add_timer);
+            config.record_result(*pt_neg_timer);
             config.record_result(*der_uc_timer);
             config.record_result(*der_c_timer);
          }
@@ -203,6 +197,63 @@ class PerfTest_EllipticCurve_Misc final : public PerfTest {
 };
 
 BOTAN_REGISTER_PERF_TEST("ecc_misc", PerfTest_EllipticCurve_Misc);
+
+class PerfTest_EllipticCurve_Scalar final : public PerfTest {
+   public:
+      void go(const PerfConfig& config) override {
+         const auto run = config.runtime();
+         auto& rng = config.rng();
+
+         for(const auto& group_name : config.ecc_groups()) {
+            const auto group = Botan::EC_Group::from_name(group_name);
+
+            auto scalar_add_timer = config.make_timer(group_name + " scalar add");
+            auto scalar_mul_timer = config.make_timer(group_name + " scalar mul");
+            auto scalar_redc_timer = config.make_timer(group_name + " scalar redc");
+            auto scalar_inv_timer = config.make_timer(group_name + " scalar inversion");
+            auto scalar_inv_vt_timer = config.make_timer(group_name + " scalar inversion vartime");
+
+            while(scalar_inv_timer->under(run)) {
+               const auto rnd1 = rng.random_vec(group.get_order_bytes() * 2);
+               const auto rnd2 = rng.random_vec(group.get_order_bytes() * 2);
+
+               const auto s1 =
+                  scalar_redc_timer->run([&]() { return Botan::EC_Scalar::from_bytes_mod_order(group, rnd1); });
+               const auto s2 =
+                  scalar_redc_timer->run([&]() { return Botan::EC_Scalar::from_bytes_mod_order(group, rnd2); });
+
+               const auto sum1 = scalar_add_timer->run([&]() { return s1 + s2; });
+               const auto sum2 = scalar_add_timer->run([&]() { return s2 + s1; });
+               BOTAN_ASSERT_NOMSG(sum1 == sum2);
+
+               const auto s1_inv = scalar_inv_timer->run([&]() { return s1.invert(); });
+               const auto s1_inv_vt = scalar_inv_vt_timer->run([&]() { return s1.invert_vartime(); });
+               BOTAN_ASSERT_NOMSG(s1_inv == s1_inv_vt);
+
+               const auto s2_inv = scalar_inv_timer->run([&]() { return s2.invert(); });
+               const auto s2_inv_vt = scalar_inv_vt_timer->run([&]() { return s2.invert_vartime(); });
+               BOTAN_ASSERT_NOMSG(s2_inv == s2_inv_vt);
+
+               const auto p1 = scalar_mul_timer->run([&]() { return s1 * s2; });
+               const auto p2 = scalar_mul_timer->run([&]() { return s2 * s1; });
+               BOTAN_ASSERT_NOMSG(p1 == p2);
+
+               const auto c1 = scalar_mul_timer->run([&]() { return p1 * s1_inv; });
+               BOTAN_ASSERT_NOMSG(c1 == s2);
+               const auto c2 = scalar_mul_timer->run([&]() { return p2 * s1_inv_vt; });
+               BOTAN_ASSERT_NOMSG(c2 == s2);
+            }
+
+            config.record_result(*scalar_add_timer);
+            config.record_result(*scalar_mul_timer);
+            config.record_result(*scalar_redc_timer);
+            config.record_result(*scalar_inv_timer);
+            config.record_result(*scalar_inv_vt_timer);
+         }
+      }
+};
+
+BOTAN_REGISTER_PERF_TEST("ecc_scalar", PerfTest_EllipticCurve_Scalar);
 
 #endif
 
