@@ -120,6 +120,10 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PrivateKey final : public virtual M
                                                              std::string_view params,
                                                              std::string_view provider) const override;
 
+      MLDSA_Composite_PrivateKey(const MLDSA_Composite_PrivateKey& other);
+
+      MLDSA_Composite_PrivateKey& operator=(const MLDSA_Composite_PrivateKey& rhs);
+
    private:
       void init_pubkey_members();
       // MLDSA_Composite_PrivateKey(MLDSA_Composite_Param::id_t id,

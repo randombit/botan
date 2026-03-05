@@ -126,7 +126,7 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
 
       size_t signature_length() const override { return m_parameters.signature_size(); }
 
-      AlgorithmIdentifier algorithm_identifier() const override { throw Botan::Exception("TODO: NOT IMPLMENTED"); }
+      AlgorithmIdentifier algorithm_identifier() const override { return m_parameters.get_composite_algorithm_id(); }
 
    private:
 
@@ -195,8 +195,8 @@ std::vector<uint8_t> MLDSA_Composite_PublicKey::public_key_bits() const {
    return result;
 }
 
-std::unique_ptr<Private_Key> MLDSA_Composite_PublicKey::generate_another(RandomNumberGenerator& /*rng*/) const {
-   throw Botan::Exception("TODO: not implemented");
+std::unique_ptr<Private_Key> MLDSA_Composite_PublicKey::generate_another(RandomNumberGenerator& rng) const {
+   return std::make_unique<MLDSA_Composite_PrivateKey>(rng, *m_parameters);
 }
 
 // TODO: ALLOW NON-EMPTY CTX VIA PARAMS?
@@ -295,4 +295,26 @@ void MLDSA_Composite_PrivateKey::init_pubkey_members() {
    MLDSA_Composite_PublicKey::m_tradtional_pubkey = m_tradtional_privkey;
 }
 
+MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(const MLDSA_Composite_PrivateKey& other) :
+      MLDSA_Composite_PublicKey(other),  // this assigns private-key independent members in the public key!
+      m_parameters(std::make_shared<MLDSA_Composite_Param>(*other.m_parameters)),
+      m_mldsa_privkey(std::make_shared<ML_DSA_PrivateKey>(*other.m_mldsa_privkey)),
+      // m_tradtional_privkey(std::make_shared<Private_Key>(*other.m_tradtional_privkey)) {}
+      m_tradtional_privkey(load_private_key(m_parameters->get_traditional_algorithm_id(),
+                                            other.m_tradtional_privkey->private_key_bits())) {
+   init_pubkey_members();  // set them as shared, otherwise inconsistency may result
+}
+
+MLDSA_Composite_PrivateKey& MLDSA_Composite_PrivateKey::operator=(const MLDSA_Composite_PrivateKey& rhs) {
+   if(this == &rhs) {
+      return *this;
+   }
+   m_parameters = std::make_shared<MLDSA_Composite_Param>(*rhs.m_parameters);
+   m_mldsa_privkey = std::make_shared<ML_DSA_PrivateKey>(*rhs.m_mldsa_privkey);
+   //  m_tradtional_privkey = std::make_shared<Private_Key>(*rhs.m_tradtional_privkey);
+   m_tradtional_privkey =
+      load_private_key(m_parameters->get_traditional_algorithm_id(), rhs.m_tradtional_privkey->private_key_bits());
+   init_pubkey_members();
+   return *this;
+}
 }  // namespace Botan
