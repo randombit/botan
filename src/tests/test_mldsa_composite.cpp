@@ -29,6 +29,11 @@
 
    #include "test_pubkey.h"
    #include "test_rng.h"
+// TODO: SPLIT OUT TESTS THAT DON'T REQUIRE FILESYSTEM
+   #if defined(BOTAN_HAS_X509) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+      #include <botan/pkix_enums.h>
+      #include <botan/x509cert.h>
+   #endif
 
 #endif
 
@@ -150,8 +155,9 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
          }
          Botan::secure_vector<uint8_t> private_enc = priv_key_generated->private_key_bits();
          std::vector<uint8_t> public_enc = priv_key_generated->public_key_bits();
-         Botan::MLDSA_Composite_PrivateKey priv_key_redec(priv_key_generated->algorithm_identifier(), private_enc);
-         Botan::MLDSA_Composite_PublicKey pub_key_redec(priv_key_generated->algorithm_identifier(), public_enc);
+         const Botan::MLDSA_Composite_PrivateKey priv_key_redec(priv_key_generated->algorithm_identifier(),
+                                                                private_enc);
+         const Botan::MLDSA_Composite_PublicKey pub_key_redec(priv_key_generated->algorithm_identifier(), public_enc);
          sign_and_verify(priv_key_redec, pub_key_redec, *rng, result, "produced with re-decoded key");
          return result;
       }
@@ -168,6 +174,15 @@ class MLDSA_Composite_X509_Tests : public Text_Based_Test {
          auto rng = std::make_unique<CTR_DRBG_AES256>(Botan::hex_decode(
             "061550234D158C5EC95595FE04EF7A25767F2E24CC2BC479D09D86DC9ABCFDE7056A8C266F9EF97ED08541DBD2E1FFA1"));
          Test::Result result(name);
+
+         const auto x5c_b64 = vars.get_req_str("x5c");
+         const auto x5c_sv = Botan::base64_decode(x5c_b64);
+         std::vector<uint8_t> x5c(x5c_sv.begin(), x5c_sv.end());
+         //Botan::DataSource_Stream in());
+         const Botan::X509_Certificate cert(x5c);
+         Test::Result this_result(name);
+         auto ver_res = cert.verify_signature(*cert.subject_public_key());
+         result.test_is_true("signature of certificate verifies", ver_res.first == Botan::Certificate_Status_Code::OK);
          return result;
       }
 };
