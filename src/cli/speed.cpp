@@ -268,6 +268,46 @@ std::string format_timer(const Timer& t, size_t time_unit) {
    return oss.str();
 }
 
+std::vector<std::string> interpret_ecc_groups(const std::string& arg) {
+   if(arg.empty()) {
+      return {"secp256r1", "secp384r1", "secp521r1", "brainpool256r1", "brainpool384r1", "brainpool512r1"};
+   }
+   if(arg == "nist") {
+      return {"secp224r1", "secp256r1", "secp384r1", "secp521r1"};
+   }
+
+#if defined(BOTAN_HAS_ECC_GROUP)
+   if(arg == "all") {
+      const auto& all = Botan::EC_Group::known_named_groups();
+      return std::vector<std::string>(all.begin(), all.end());
+   }
+
+   if(arg == "generic") {
+      std::vector<std::string> groups;
+      for(const auto& group_name : Botan::EC_Group::known_named_groups()) {
+         const Botan::EC_Group group(group_name);
+         if(group.engine() == Botan::EC_Group_Engine::Generic) {
+            groups.push_back(group_name);
+         }
+      }
+      return groups;
+   }
+
+   if(arg == "pcurves") {
+      std::vector<std::string> groups;
+      for(const auto& group_name : Botan::EC_Group::known_named_groups()) {
+         const Botan::EC_Group group(group_name);
+         if(group.engine() == Botan::EC_Group_Engine::Optimized) {
+            groups.push_back(group_name);
+         }
+      }
+      return groups;
+   }
+#endif
+
+   return Command::split_on(arg, ',');
+}
+
 }  // namespace
 
 class Speed final : public Command {
@@ -377,7 +417,7 @@ class Speed final : public Command {
 
       void go() override {
          const uint64_t milliseconds = get_arg_sz("msec");
-         std::vector<std::string> ecc_groups = Command::split_on(get_arg("ecc-groups"), ',');
+         const std::string ecc_groups_arg = get_arg("ecc-groups");
          const std::string format = get_arg("format");
          const std::string clock_ratio = get_arg("cpu-clock-ratio");
 
@@ -425,30 +465,7 @@ class Speed final : public Command {
             throw CLI_Usage_Error("Unknown --format type '" + format + "'");
          }
 
-#if defined(BOTAN_HAS_ECC_GROUP)
-         if(ecc_groups.empty()) {
-            ecc_groups = {"secp256r1", "secp384r1", "secp521r1", "brainpool256r1", "brainpool384r1", "brainpool512r1"};
-         } else if(ecc_groups.size() == 1 && ecc_groups[0] == "all") {
-            const auto& all = Botan::EC_Group::known_named_groups();
-            ecc_groups.assign(all.begin(), all.end());
-         } else if(ecc_groups.size() == 1 && ecc_groups[0] == "generic") {
-            ecc_groups.clear();
-            for(const auto& group_name : Botan::EC_Group::known_named_groups()) {
-               const Botan::EC_Group group(group_name);
-               if(group.engine() == Botan::EC_Group_Engine::Generic) {
-                  ecc_groups.push_back(group_name);
-               }
-            }
-         } else if(ecc_groups.size() == 1 && ecc_groups[0] == "pcurves") {
-            ecc_groups.clear();
-            for(const auto& group_name : Botan::EC_Group::known_named_groups()) {
-               const Botan::EC_Group group(group_name);
-               if(group.engine() == Botan::EC_Group_Engine::Optimized) {
-                  ecc_groups.push_back(group_name);
-               }
-            }
-         }
-#endif
+         const auto ecc_groups = interpret_ecc_groups(ecc_groups_arg);
 
          std::vector<std::string> algos = get_arg_list("algos");
 
