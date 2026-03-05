@@ -42,11 +42,11 @@ void sign_and_verify(const Botan::Private_Key& priv_key,
                      Test::Result& test_result,
                      std::string_view test_context) {
    const char* message = "The quick brown fox jumps over the lazy dog.";
-   std::cout << "signing data with decoded private key\n";
+   //std::cout << "signing data with decoded private key\n";
    Botan::PK_Signer signer(priv_key, rng, "");
    signer.update(message);
    std::vector<uint8_t> signature2 = signer.signature(rng);
-   std::cout << "finished signing data with decoded private key\n";
+   //std::cout << "finished signing data with decoded private key\n";
    //std::cout << "Signature:\n" << Botan::hex_encode(signature);
 
    Botan::PK_Verifier verifier2(pub_key, "");
@@ -77,12 +77,12 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
             privkey_valid = false;
          }
          Test::Result result(name);
-         std::cout << "test name = " << name << std::endl;
+         //std::cout << "test name = " << name << std::endl;
          auto tcId = vars.get_req_str("tcId");
          if(tcId.starts_with("id-")) {
             tcId = tcId.substr(3);
          }
-         std::cout << "tcId = " << tcId << std::endl;
+         //std::cout << "tcId = " << tcId << std::endl;
          const auto pk = vars.get_req_str("pk");
          const auto pk_bin = Botan::base64_decode(pk);
 
@@ -101,7 +101,7 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
          } catch(const Botan::Exception& e) {
             exc_during_pubkey_decoding = true;
          }
-         std::cout << "pubkey decoding passed\n";
+         //std::cout << "pubkey decoding passed\n";
          result.test_bool_eq("pubkey decoding OK", !exc_during_pubkey_decoding, pubkey_valid);
          if(exc_during_pubkey_decoding) {
             return result;
@@ -110,7 +110,7 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
          verifier.update(message);
          result.test_bool_eq("verification of correct signature", verifier.check_signature(sig_bin), true);
          //std::cout << "\nis " << (verifier.check_signature(sig_bin) ? "valid" : "invalid");
-         std::cout << "verification passed \n";
+         //std::cout << "verification passed \n";
 
          try {
             privkey = std::make_unique<Botan::MLDSA_Composite_PrivateKey>(comp_parm.id, sk_bin);
@@ -139,12 +139,12 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
          if(nullptr == priv_key_generated) {
             result.test_bool_eq("generated private key non-null", false, true);
          } else {
-            std::cout << "retrieving public key from generated private key\n";
+            //std::cout << "retrieving public key from generated private key\n";
             auto pub_key_generated = priv_key_generated->public_key();
             if(nullptr == pub_key_generated) {
                result.test_bool_eq("generated pub key key non-null", false, true);
             } else {
-               std::cout << "calling sign_and_verify() with generated key pair\n";
+               //std::cout << "calling sign_and_verify() with generated key pair\n";
                sign_and_verify(*priv_key_generated, *pub_key_generated, *rng, result, "produced with generated key");
             }
          }
@@ -159,5 +159,19 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("pubkey", "mldsa_composite_kat", MLDSA_Composite_KAT_Tests);
 
+class MLDSA_Composite_X509_Tests : public Text_Based_Test {
+   public:
+      // NOLINTNEXTLINE(*crtp-constructor-accessibility)
+      MLDSA_Composite_X509_Tests() : Text_Based_Test("pubkey/mldsa_composite.vec", "tcId,x5c") {}
+
+      Test::Result run_one_test(const std::string& name, const VarMap& vars) override {
+         auto rng = std::make_unique<CTR_DRBG_AES256>(Botan::hex_decode(
+            "061550234D158C5EC95595FE04EF7A25767F2E24CC2BC479D09D86DC9ABCFDE7056A8C266F9EF97ED08541DBD2E1FFA1"));
+         Test::Result result(name);
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "mldsa_composite_x509", MLDSA_Composite_X509_Tests);
 #endif
 }  // namespace Botan_Tests

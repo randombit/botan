@@ -173,12 +173,6 @@ MLDSA_Composite_PublicKey& MLDSA_Composite_PublicKey::operator=(const MLDSA_Comp
 
 std::vector<uint8_t> MLDSA_Composite_PublicKey::raw_public_key_bits() const {
    return public_key_bits();
-   // std::vector<uint8_t> result = m_mldsa_pubkey->raw_public_key_bits();
-   // auto mldsa_len = result.size();
-   // std::vector<uint8_t> trad = m_tradtional_pubkey->raw_public_key_bits();
-   // result.insert(result.end(), trad.begin(), trad.end());
-   // std::cout << fmt("encoding public key, MLDSA component len = {}, trad. len = {}", mldsa_len, trad.size()) << "\n";
-   // return result;
 }
 
 OID MLDSA_Composite_PublicKey::object_identifier() const {
@@ -187,11 +181,8 @@ OID MLDSA_Composite_PublicKey::object_identifier() const {
 
 std::vector<uint8_t> MLDSA_Composite_PublicKey::public_key_bits() const {
    std::vector<uint8_t> result(this->m_mldsa_pubkey->public_key_bits());
-   auto mldsa_len = result.size();
    std::vector<uint8_t> trad_bytes = this->m_tradtional_pubkey->public_key_bits();
    result.insert(result.end(), trad_bytes.begin(), trad_bytes.end());
-   std::cout << fmt("encoding public key, MLDSA component len = {}, trad. len = {}", mldsa_len, trad_bytes.size())
-             << "\n";
    return result;
 }
 
@@ -199,7 +190,7 @@ std::unique_ptr<Private_Key> MLDSA_Composite_PublicKey::generate_another(RandomN
    return std::make_unique<MLDSA_Composite_PrivateKey>(rng, *m_parameters);
 }
 
-// TODO: ALLOW NON-EMPTY CTX VIA PARAMS?
+// ALLOW NON-EMPTY CTX VIA PARAMS?
 std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_verification_op(
    std::string_view params_for_ctx, std::string_view provider) const {
    if(params_for_ctx != "") {
@@ -289,9 +280,7 @@ MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(RandomNumberGenerator& rn
 
 void MLDSA_Composite_PrivateKey::init_pubkey_members() {
    MLDSA_Composite_PublicKey::m_parameters = m_parameters;
-
    MLDSA_Composite_PublicKey::m_mldsa_pubkey = m_mldsa_privkey;
-
    MLDSA_Composite_PublicKey::m_tradtional_pubkey = m_tradtional_privkey;
 }
 
@@ -299,7 +288,6 @@ MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(const MLDSA_Composite_Pri
       MLDSA_Composite_PublicKey(other),  // this assigns private-key independent members in the public key!
       m_parameters(std::make_shared<MLDSA_Composite_Param>(*other.m_parameters)),
       m_mldsa_privkey(std::make_shared<ML_DSA_PrivateKey>(*other.m_mldsa_privkey)),
-      // m_tradtional_privkey(std::make_shared<Private_Key>(*other.m_tradtional_privkey)) {}
       m_tradtional_privkey(load_private_key(m_parameters->get_traditional_algorithm_id(),
                                             other.m_tradtional_privkey->private_key_bits())) {
    init_pubkey_members();  // set them as shared, otherwise inconsistency may result
@@ -311,7 +299,6 @@ MLDSA_Composite_PrivateKey& MLDSA_Composite_PrivateKey::operator=(const MLDSA_Co
    }
    m_parameters = std::make_shared<MLDSA_Composite_Param>(*rhs.m_parameters);
    m_mldsa_privkey = std::make_shared<ML_DSA_PrivateKey>(*rhs.m_mldsa_privkey);
-   //  m_tradtional_privkey = std::make_shared<Private_Key>(*rhs.m_tradtional_privkey);
    m_tradtional_privkey =
       load_private_key(m_parameters->get_traditional_algorithm_id(), rhs.m_tradtional_privkey->private_key_bits());
    init_pubkey_members();

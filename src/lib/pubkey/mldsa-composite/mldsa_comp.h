@@ -126,11 +126,7 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PrivateKey final : public virtual M
 
    private:
       void init_pubkey_members();
-      // MLDSA_Composite_PrivateKey(MLDSA_Composite_Param::id_t id,
-      //                            const ML_DSA_PrivateKey& mldsa_privkey,
-      //                            const Private_Key* tradtional_privkey);
       friend class MLDSA_Composite_Signature_Operation;
-      // TODO: FIX ASSIGNMENT AND COPY OP FOR SHARED_PTR MEMBERS
       std::shared_ptr<MLDSA_Composite_Param> m_parameters;
       std::shared_ptr<ML_DSA_PrivateKey> m_mldsa_privkey;
       std::shared_ptr<Private_Key> m_tradtional_privkey;
