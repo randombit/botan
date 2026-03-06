@@ -1,0 +1,20 @@
+<defines>
+PKCS12_PBE -> 20260305
+</defines>
+
+<module_info>
+name -> "PKCS#12 PBE"
+brief -> "PKCS#12 password-based encryption (RFC 7292 Appendix B)"
+</module_info>
+
+<requires>
+asn1
+cbc
+des
+sha1
+pkcs12_kdf
+</requires>
+
+<header:internal>
+pkcs12_pbe.h
+</header:internal>
