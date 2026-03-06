@@ -78,6 +78,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_SQL : public Session_Manager {
          CORRUPTED = 1,
          PRE_BOTAN_3_0 = 20120609,
          BOTAN_3_0 = 20230112,
+         BOTAN_3_1 = 20260306,
       };
 
       void create_or_migrate_and_open(std::string_view passphrase);
