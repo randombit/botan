@@ -533,9 +533,7 @@ std::vector<uint8_t> PKCS12::create(const Private_Key* key,
          auth_safe.start_sequence();
          auth_safe.encode(OID::from_string("PKCS7.Data"));
          auth_safe.encode(enc_algo);
-         auth_safe.start_context_specific(0);
-         auth_safe.raw_bytes(enc_data);
-         auth_safe.end_cons();
+         auth_safe.add_object(ASN1_Type(0), ASN1_Class::ContextSpecific, enc_data);
          auth_safe.end_cons();
          auth_safe.end_cons();
          auth_safe.end_cons();
