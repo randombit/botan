@@ -950,6 +950,41 @@ std::vector<Test::Result> test_session_manager_sqlite() {
                result.test_sz_eq("removing the rest of the sessions", mgr.remove_all(), 2);
             }),
 
+      CHECK("sessions are isolated by service field",
+            [&](auto& result) {
+               Botan::TLS::Session_Manager_SQLite mgr(
+                  "thetruthisoutthere", rng, Test::temp_file_name("service_isolation.sqlite"));
+
+               const Botan::TLS::Server_Information tls_info("botan.randombit.net", "tls", 443);
+               const Botan::TLS::Server_Information dtls_info("botan.randombit.net", "dtls", 443);
+               const Botan::TLS::Server_Information no_service_info("botan.randombit.net", 443);
+
+               auto tls_session = Botan::TLS::Session(
+                  {}, Botan::TLS::Protocol_Version::TLS_V12, 0x009C,
+                  Botan::TLS::Connection_Side::Client, true, true, {}, tls_info, 0, cbs.tls_current_timestamp());
+               auto dtls_session = Botan::TLS::Session(
+                  {}, Botan::TLS::Protocol_Version::TLS_V12, 0x009C,
+                  Botan::TLS::Connection_Side::Client, true, true, {}, dtls_info, 0, cbs.tls_current_timestamp());
+               auto no_service_session = Botan::TLS::Session(
+                  {}, Botan::TLS::Protocol_Version::TLS_V12, 0x009C,
+                  Botan::TLS::Connection_Side::Client, true, true, {}, no_service_info, 0, cbs.tls_current_timestamp());
+
+               mgr.store(tls_session, random_id(*rng));
+               mgr.store(dtls_session, random_id(*rng));
+               mgr.store(no_service_session, random_id(*rng));
+
+               auto tls_found = mgr.find(tls_info, cbs, plcy);
+               result.test_is_eq("find with 'tls' service returns one session", tls_found.size(), size_t(1));
+
+               auto dtls_found = mgr.find(dtls_info, cbs, plcy);
+               result.test_is_eq("find with 'dtls' service returns one session", dtls_found.size(), size_t(1));
+
+               auto no_service_found = mgr.find(no_service_info, cbs, plcy);
+               result.test_is_eq("find with empty service returns one session", no_service_found.size(), size_t(1));
+
+               result.test_is_eq("all three sessions exist", mgr.remove_all(), size_t(3));
+            }),
+
       CHECK("old sessions are purged when needed",
             [&](auto& result) {
                Botan::TLS::Session_Manager_SQLite mgr(
