@@ -29,8 +29,9 @@ void fuzz(std::span<const uint8_t> in) {
       return;
    }
 
-   const Botan::BigInt x = Botan::BigInt::from_bytes(in.subspan(in.size() / 2));
-   const Botan::BigInt y = Botan::BigInt::from_bytes(in.subspan(in.size() / 2, in.size() - (in.size() / 2)));
+   const size_t half = in.size() / 2;
+   const Botan::BigInt x = Botan::BigInt::from_bytes(in.subspan(0, half));
+   const Botan::BigInt y = Botan::BigInt::from_bytes(in.subspan(half, in.size() - half));
 
    const Botan::BigInt ref = ref_gcd(x, y);
    const Botan::BigInt lib = Botan::gcd(x, y);
