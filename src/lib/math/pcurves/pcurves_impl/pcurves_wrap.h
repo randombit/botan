@@ -8,8 +8,10 @@
 #define BOTAN_PCURVES_WRAP_H_
 
 #include <botan/exceptn.h>
+#include <botan/internal/ec_sec1.h>
 #include <botan/internal/pcurves.h>
 #include <botan/internal/pcurves_impl.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan::PCurve {
 
@@ -237,41 +239,37 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
       }
 
       std::optional<AffinePoint> deserialize_point(std::span<const uint8_t> bytes) const override {
-         // The identity element (see SEC1 section 2.3.4)
-         // TODO(Botan4) remove this - we should reject the identity encoding
-         if(bytes.size() == 1 && bytes[0] == 0x00) {
-            return stash(C::AffinePoint::identity());
-         }
+         return sec1_decode(
+            bytes,
+            C::FieldElement::BYTES,
+            overloaded{
+               [](const SEC1_Identity) { return stash(C::AffinePoint::identity()); },
+               [](const SEC1_Full full) -> std::optional<AffinePoint> {
+                  auto x = C::FieldElement::deserialize(full.x);
+                  auto y = C::FieldElement::deserialize(full.y);
 
-         constexpr size_t FieldElementBytes = C::FieldElement::BYTES;
-         constexpr size_t CompressedBytes = C::FieldElement::BYTES + 1;
-         constexpr size_t UncompressedBytes = 2 * C::FieldElement::BYTES + 1;
+                  if(x && y) {
+                     // Check that y^2 = x^3 + ax + b
+                     const auto lhs = (*y).square();
+                     const auto rhs = C::x3_ax_b(*x);
+                     const auto valid = (lhs == rhs);
+                     if(valid.as_bool()) {
+                        return stash(typename C::AffinePoint(*x, *y));
+                     }
+                  }
 
-         if(bytes.size() == UncompressedBytes && bytes[0] == 0x04) {
-            const auto encoded_point = bytes.subspan(1);
-            auto x = C::FieldElement::deserialize(encoded_point.first(FieldElementBytes));
-            auto y = C::FieldElement::deserialize(encoded_point.last(FieldElementBytes));
+                  return {};
+               },
+               [](const SEC1_Compressed compressed) -> std::optional<AffinePoint> {
+                  if(auto x = C::FieldElement::deserialize(compressed.x)) {
+                     if(auto y = sqrt_field_element<C>(C::x3_ax_b(*x)).as_optional_vartime()) {
+                        return stash(typename C::AffinePoint(*x, y->correct_sign(compressed.y_is_even)));
+                     }
+                  }
 
-            if(x && y) {
-               // Check that y^2 = x^3 + ax + b
-               const auto lhs = (*y).square();
-               const auto rhs = C::x3_ax_b(*x);
-               const auto valid = (lhs == rhs);
-               if(valid.as_bool()) {
-                  return stash(typename C::AffinePoint(*x, *y));
-               }
-            }
-         } else if(bytes.size() == CompressedBytes && (bytes[0] == 0x02 || bytes[0] == 0x03)) {
-            const CT::Choice y_is_even = CT::Mask<uint8_t>::is_equal(bytes[0], 0x02).as_choice();
-
-            if(auto x = C::FieldElement::deserialize(bytes.subspan(1, FieldElementBytes))) {
-               if(auto y = sqrt_field_element<C>(C::x3_ax_b(*x)).as_optional_vartime()) {
-                  return stash(typename C::AffinePoint(*x, y->correct_sign(y_is_even)));
-               }
-            }
-         }
-
-         return {};
+                  return {};
+               },
+            });
       }
 
       AffinePoint hash_to_curve_nu(std::function<void(std::span<uint8_t>)> expand_message) const override {

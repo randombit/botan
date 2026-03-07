@@ -198,7 +198,6 @@ std::string map_to_bogo_error(const std::string& e) noexcept {
       {"No content type found in encrypted record", ":DECRYPTION_FAILED_OR_BAD_RECORD_MAC:"},
       {"No shared DTLS version", ":UNSUPPORTED_PROTOCOL:"},
       {"No shared TLS version", ":UNSUPPORTED_PROTOCOL:"},
-      {"OS2ECP: Unknown format type 251", ":BAD_ECPOINT:"},
       {"Peer sent signature algorithm that is not suitable for TLS 1.3", ":WRONG_SIGNATURE_TYPE:"},
       {"Policy forbids all available DTLS version", ":NO_SUPPORTED_VERSIONS_ENABLED:"},
       {"Policy forbids all available TLS version", ":NO_SUPPORTED_VERSIONS_ENABLED:"},

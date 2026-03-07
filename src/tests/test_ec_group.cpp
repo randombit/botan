@@ -19,6 +19,9 @@
    #include <botan/x509_key.h>
    #include <botan/internal/barrett.h>
    #include <botan/internal/ec_inner_data.h>
+   #include <botan/internal/ec_sec1.h>
+   #include <botan/internal/stl_util.h>
+
    #if defined(BOTAN_HAS_ECDSA)
       #include <botan/pk_algs.h>
    #endif
@@ -897,6 +900,49 @@ class ECC_Invalid_Key_Tests final : public Text_Based_Test {
 BOTAN_REGISTER_TEST("pubkey", "ecc_invalid", ECC_Invalid_Key_Tests);
 
    #endif
+
+class ECC_SEC1_Parsing_Tests final : public Text_Based_Test {
+   public:
+      ECC_SEC1_Parsing_Tests() :
+            Text_Based_Test("pubkey/ecc_point_parsing.vec", "Input,FieldBytes,Result", "X,Y,YIsEven") {}
+
+      Test::Result run_one_test(const std::string& /* header */, const VarMap& vars) override {
+         Test::Result result("ECC SEC1 point parsing");
+
+         const auto parsed = Botan::sec1_decode(
+            vars.get_req_bin("Input"),
+            vars.get_req_sz("FieldBytes"),
+            Botan::overloaded{
+               [&](Botan::SEC1_Identity) {
+                  return result.test_str_eq("result type", "Identity", vars.get_req_str("Result"));
+               },
+               [&](Botan::SEC1_Compressed c) {
+                  return result.test_is_true("X key exists", vars.has_key("X")) &&
+                         result.test_is_true("YIsEven key exists", vars.has_key("YIsEven")) &&
+                         result.test_str_eq("result type", "Compressed", vars.get_req_str("Result")) &&
+                         result.test_bin_eq("x coordinate", c.x, vars.get_req_bin("X")) &&
+                         result.test_bool_eq("y_is_even", c.y_is_even.as_bool(), vars.get_req_bool("YIsEven"));
+               },
+               [&](Botan::SEC1_Full f) {
+                  return result.test_is_true("X key exists", vars.has_key("X")) &&
+                         result.test_is_true("Y key exists", vars.has_key("Y")) &&
+                         result.test_str_eq("result type", "Full", vars.get_req_str("Result")) &&
+                         result.test_bin_eq("x coordinate", f.x, vars.get_req_bin("X")) &&
+                         result.test_bin_eq("y coordinate", f.y, vars.get_req_bin("Y"));
+               },
+            });
+
+         if(parsed.has_value()) {
+            result.test_is_true("value checks have passed", *parsed);
+         } else {
+            result.test_str_eq("result type", "Error", vars.get_req_str("Result"));
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "ecc_sec1_parsing", ECC_SEC1_Parsing_Tests);
 
 #endif
 

@@ -1,0 +1,133 @@
+# Tests for sec1_decode() in ec_sec1.h
+# All tests use FieldBytes = 32 (secp256r1 field size)
+#
+# Reference secp256r1 points used as test material:
+#   G  = well-known secp256r1 generator (y is odd,  y last byte = 0xf5)
+#        Gx = 6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296
+#        Gy = 4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5
+#   P2 = randomly generated point (y is even, y last byte = 0x18)
+#        P2x = b7d35e7a1f856273aaec189a5bc8bfd49666064173c1cfa134636c505a024e66
+#        P2y = 8c55c38c3a9dccc1a0659edfdf63edd26e0ab2ef8c098d817dab4372bd859118
+
+[valid]
+
+# Identity point (single byte 0x00)
+Input = 00
+FieldBytes = 32
+Result = Identity
+
+# Compressed point with even y (prefix 0x02), using P2.x
+Input = 02b7d35e7a1f856273aaec189a5bc8bfd49666064173c1cfa134636c505a024e66
+FieldBytes = 32
+X = b7d35e7a1f856273aaec189a5bc8bfd49666064173c1cfa134636c505a024e66
+YIsEven = true
+Result = Compressed
+
+# Compressed point with odd y (prefix 0x03), using G.x
+Input = 036b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296
+FieldBytes = 32
+X = 6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296
+YIsEven = false
+Result = Compressed
+
+# Uncompressed point with even y (prefix 0x04), using P2
+Input = 04b7d35e7a1f856273aaec189a5bc8bfd49666064173c1cfa134636c505a024e668c55c38c3a9dccc1a0659edfdf63edd26e0ab2ef8c098d817dab4372bd859118
+FieldBytes = 32
+X = b7d35e7a1f856273aaec189a5bc8bfd49666064173c1cfa134636c505a024e66
+Y = 8c55c38c3a9dccc1a0659edfdf63edd26e0ab2ef8c098d817dab4372bd859118
+Result = Full
+
+# Uncompressed point with odd y (prefix 0x04), using G (the secp256r1 generator)
+Input = 046b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c2964fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5
+FieldBytes = 32
+X = 6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296
+Y = 4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5
+Result = Full
+
+# Deprecated hybrid even (prefix 0x06) with even y, using P2
+#  P2y last byte = 0x18 (even), matches even header 0x06 -> valid
+Input = 06b7d35e7a1f856273aaec189a5bc8bfd49666064173c1cfa134636c505a024e668c55c38c3a9dccc1a0659edfdf63edd26e0ab2ef8c098d817dab4372bd859118
+FieldBytes = 32
+X = b7d35e7a1f856273aaec189a5bc8bfd49666064173c1cfa134636c505a024e66
+Y = 8c55c38c3a9dccc1a0659edfdf63edd26e0ab2ef8c098d817dab4372bd859118
+Result = Full
+
+# Deprecated hybrid odd (prefix 0x07) with odd y, using G
+#  Gy last byte = 0xf5 (odd), matches odd header 0x07 -> valid
+Input = 076b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c2964fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5
+FieldBytes = 32
+X = 6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296
+Y = 4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5
+Result = Full
+
+[invalid]
+
+# Empty input (no branch matches any size rule)
+Input =
+FieldBytes = 32
+Result = Error
+
+# Compressed too short: 0x02 + 31 bytes (need 1+32=33 total for N=32)
+Input = 02b7d35e7a1f856273aaec189a5bc8bfd49666064173c1cfa134636c505a024e
+FieldBytes = 32
+Result = Error
+
+# Compressed too long: 0x02 + 33 bytes (one extra byte)
+Input = 02b7d35e7a1f856273aaec189a5bc8bfd49666064173c1cfa134636c505a024e6600
+FieldBytes = 32
+Result = Error
+
+# Uncompressed too short: 0x04 + 63 bytes (need 1+64=65 total for N=32)
+Input = 04b7d35e7a1f856273aaec189a5bc8bfd49666064173c1cfa134636c505a024e668c55c38c3a9dccc1a0659edfdf63edd26e0ab2ef8c098d817dab4372bd8591
+FieldBytes = 32
+Result = Error
+
+# Uncompressed too long: 0x04 + 65 bytes (one extra byte)
+Input = 04b7d35e7a1f856273aaec189a5bc8bfd49666064173c1cfa134636c505a024e668c55c38c3a9dccc1a0659edfdf63edd26e0ab2ef8c098d817dab4372bd85911800
+FieldBytes = 32
+Result = Error
+
+# Identity prefix (0x00) with trailing bytes; total length 6 matches no valid size for N=32
+Input = 00b7d35e7a1f
+FieldBytes = 32
+Result = Error
+
+# Single byte 0x01 (not the identity label 0x00)
+Input = 01
+FieldBytes = 32
+Result = Error
+
+# Single byte 0xff (not the identity label 0x00)
+Input = ff
+FieldBytes = 32
+Result = Error
+
+# Full-point length (65 bytes) with invalid label 0x05
+Input = 05b7d35e7a1f856273aaec189a5bc8bfd49666064173c1cfa134636c505a024e668c55c38c3a9dccc1a0659edfdf63edd26e0ab2ef8c098d817dab4372bd859118
+FieldBytes = 32
+Result = Error
+
+# Full-point length (65 bytes) with invalid label 0x01
+Input = 01b7d35e7a1f856273aaec189a5bc8bfd49666064173c1cfa134636c505a024e668c55c38c3a9dccc1a0659edfdf63edd26e0ab2ef8c098d817dab4372bd859118
+FieldBytes = 32
+Result = Error
+
+# Compressed label 0x02 at full-point length (65 bytes)
+Input = 02b7d35e7a1f856273aaec189a5bc8bfd49666064173c1cfa134636c505a024e668c55c38c3a9dccc1a0659edfdf63edd26e0ab2ef8c098d817dab4372bd859118
+FieldBytes = 32
+Result = Error
+
+# Compressed label 0x03 at full-point length (65 bytes); same as E-11 for 0x03
+Input = 03b7d35e7a1f856273aaec189a5bc8bfd49666064173c1cfa134636c505a024e668c55c38c3a9dccc1a0659edfdf63edd26e0ab2ef8c098d817dab4372bd859118
+FieldBytes = 32
+Result = Error
+
+# Hybrid even label (0x06) but y is odd: Gy last byte = 0xf5 (odd) mismatches even header
+Input = 066b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c2964fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5
+FieldBytes = 32
+Result = Error
+
+# Hybrid odd label (0x07) but y is even: P2y last byte = 0x18 (even) mismatches odd header
+Input = 07b7d35e7a1f856273aaec189a5bc8bfd49666064173c1cfa134636c505a024e668c55c38c3a9dccc1a0659edfdf63edd26e0ab2ef8c098d817dab4372bd859118
+FieldBytes = 32
+Result = Error
