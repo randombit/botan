@@ -455,6 +455,7 @@ void Channel_Impl_12::process_alert(const secure_vector<uint8_t>& record) {
 
    if(alert_msg.is_fatal()) {
       if(const auto* active = active_state()) {
+         BOTAN_ASSERT_NONNULL(active->server_hello());
          const auto& session_id = active->server_hello()->session_id();
          if(!session_id.empty()) {
             session_manager().remove(Session_Handle(session_id));
@@ -544,6 +545,7 @@ void Channel_Impl_12::send_alert(const Alert& alert) {
 
    if(alert.is_fatal()) {
       if(const auto* active = active_state()) {
+         BOTAN_ASSERT_NONNULL(active->server_hello());
          const auto& session_id = active->server_hello()->session_id();
          if(!session_id.empty()) {
             session_manager().remove(Session_Handle(Session_ID(session_id)));
@@ -558,9 +560,11 @@ void Channel_Impl_12::send_alert(const Alert& alert) {
 }
 
 void Channel_Impl_12::secure_renegotiation_check(const Client_Hello_12* client_hello) {
+   BOTAN_ASSERT_NONNULL(client_hello);
    const bool secure_renegotiation = client_hello->secure_renegotiation();
 
    if(const auto* active = active_state()) {
+      BOTAN_ASSERT_NONNULL(active->client_hello());
       const bool active_sr = active->client_hello()->secure_renegotiation();
 
       if(active_sr != secure_renegotiation) {
@@ -578,9 +582,11 @@ void Channel_Impl_12::secure_renegotiation_check(const Client_Hello_12* client_h
 }
 
 void Channel_Impl_12::secure_renegotiation_check(const Server_Hello_12* server_hello) {
+   BOTAN_ASSERT_NONNULL(server_hello);
    const bool secure_renegotiation = server_hello->secure_renegotiation();
 
    if(const auto* active = active_state()) {
+      BOTAN_ASSERT_NONNULL(active->server_hello());
       const bool active_sr = active->server_hello()->secure_renegotiation();
 
       if(active_sr != secure_renegotiation) {
@@ -599,6 +605,7 @@ void Channel_Impl_12::secure_renegotiation_check(const Server_Hello_12* server_h
 
 std::vector<uint8_t> Channel_Impl_12::secure_renegotiation_data_for_client_hello() const {
    if(const auto* active = active_state()) {
+      BOTAN_ASSERT_NONNULL(active->client_finished());
       return active->client_finished()->verify_data();
    }
    return std::vector<uint8_t>();
@@ -606,6 +613,8 @@ std::vector<uint8_t> Channel_Impl_12::secure_renegotiation_data_for_client_hello
 
 std::vector<uint8_t> Channel_Impl_12::secure_renegotiation_data_for_server_hello() const {
    if(const auto* active = active_state()) {
+      BOTAN_ASSERT_NONNULL(active->client_finished());
+      BOTAN_ASSERT_NONNULL(active->server_finished());
       std::vector<uint8_t> buf = active->client_finished()->verify_data();
       buf += active->server_finished()->verify_data();
       return buf;
@@ -640,6 +649,8 @@ SymmetricKey Channel_Impl_12::key_material_export(std::string_view label,
 
       const secure_vector<uint8_t>& master_secret = active->session_keys().master_secret();
 
+      BOTAN_ASSERT_NONNULL(active->client_hello());
+      BOTAN_ASSERT_NONNULL(active->server_hello());
       std::vector<uint8_t> salt;
       salt += active->client_hello()->random();
       salt += active->server_hello()->random();

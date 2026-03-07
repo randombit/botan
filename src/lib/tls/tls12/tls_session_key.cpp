@@ -20,6 +20,10 @@ namespace Botan::TLS {
 Session_Keys::Session_Keys(const Handshake_State* state,
                            const secure_vector<uint8_t>& pre_master_secret,
                            bool resuming) {
+   BOTAN_ASSERT_NONNULL(state);
+   BOTAN_ASSERT_NONNULL(state->client_hello());
+   BOTAN_ASSERT_NONNULL(state->server_hello());
+
    const auto& suite = state->ciphersuite();
    BOTAN_STATE_CHECK(suite.valid());
 

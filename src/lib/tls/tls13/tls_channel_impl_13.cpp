@@ -196,6 +196,7 @@ void Channel_Impl_13::handle(const Key_Update& key_update) {
       throw Unexpected_Message("Unexpected additional post-handshake message data found in record");
    }
 
+   BOTAN_ASSERT_NONNULL(m_cipher_state);
    m_cipher_state->update_read_keys(*this);
 
    // TODO: introduce some kind of rate limit of key updates, otherwise we

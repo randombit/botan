@@ -37,6 +37,7 @@ void Handshake_State::note_message(const Handshake_Message& msg) {
 void Handshake_State::hello_verify_request(const Hello_Verify_Request& hello_verify) {
    note_message(hello_verify);
 
+   BOTAN_ASSERT_NONNULL(m_client_hello);
    m_client_hello->update_hello_cookie(hello_verify);
    hash().reset();
    hash().update(handshake_io().send(*m_client_hello));
@@ -152,6 +153,7 @@ void Handshake_State::set_version(const Protocol_Version& version) {
 }
 
 void Handshake_State::compute_session_keys() {
+   BOTAN_ASSERT_NONNULL(client_kex());
    m_session_keys = Session_Keys(this, client_kex()->pre_master_secret(), false);
 }
 
@@ -183,6 +185,7 @@ Session_Ticket Handshake_State::session_ticket() const {
       }
    }
 
+   BOTAN_ASSERT_NONNULL(client_hello());
    return client_hello()->session_ticket();
 }
 
@@ -203,6 +206,12 @@ std::pair<std::string, Signature_Format> Handshake_State::choose_sig_format(cons
    const std::string sig_algo = key.algo_name();
 
    const std::vector<Signature_Scheme> allowed = policy.allowed_signature_schemes();
+
+   if(for_client_auth) {
+      BOTAN_ASSERT_NONNULL(cert_req());
+   } else {
+      BOTAN_ASSERT_NONNULL(client_hello());
+   }
 
    std::vector<Signature_Scheme> requested =
       (for_client_auth) ? cert_req()->signature_schemes() : client_hello()->signature_schemes();
