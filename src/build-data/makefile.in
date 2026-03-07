@@ -51,6 +51,16 @@ docs: %{doc_stamp_file}
 .PHONY: all cli libs tests check docs clean distclean install fmt tidy
 %{endif}
 
+%{if enable_pch}
+
+%{pch_path_for_lib}: %{pch_dir}/pch_lib.h
+	$(CXX) $(LIB_FLAGS) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile} %{dash_c} %{pch_dir}/pch_lib.h %{dash_o}$@
+
+%{pch_path_for_exe}: %{pch_dir}/pch_exe.h
+	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{pch_compile} %{dash_c} %{pch_dir}/pch_exe.h %{dash_o}$@
+
+%{endif}
+
 %{doc_stamp_file}: %{doc_dir}/*.rst %{doc_dir}/api_ref/*.rst %{doc_dir}/dev_ref/*.rst
 	"$(PYTHON_EXE)" "$(SCRIPTS_DIR)/build_docs.py" --build-dir="%{build_dir}"
 
@@ -150,18 +160,18 @@ ct_selftest: %{out_dir}/botan_ct_selftest
 # Build Commands
 
 %{for lib_build_info}
-%{obj}: %{src}
-	$(CXX) $(LIB_FLAGS) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
+%{obj}: %{pch_path_for_lib} %{src}
+	$(CXX) %{pch_include_for_lib} $(LIB_FLAGS) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for cli_build_info}
-%{obj}: %{src}
-	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
+%{obj}: %{pch_path_for_exe} %{src}
+	$(CXX) %{pch_include_for_exe} $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for test_build_info}
-%{obj}: %{src}
-	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
+%{obj}: %{pch_path_for_exe} %{src}
+	$(CXX) %{pch_include_for_exe} $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for fuzzer_build_info}

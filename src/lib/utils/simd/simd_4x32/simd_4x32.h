@@ -15,7 +15,7 @@
 #include <span>
 
 #if defined(BOTAN_TARGET_ARCH_SUPPORTS_SSSE3)
-   #include <immintrin.h>
+   #include <tmmintrin.h>
    #define BOTAN_SIMD_USE_SSSE3
 
 #elif defined(BOTAN_TARGET_ARCH_SUPPORTS_ALTIVEC)
