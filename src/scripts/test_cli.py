@@ -1601,6 +1601,52 @@ def cli_pk_encrypt_tests(tmp_dir):
     test_cli("pk_decrypt", [rsa_priv_key, ctext_file, "--output=%s" % (recovered_file)], "")
     test_cli("hash", ["--no-fsname", "--algo=SHA-256", recovered_file], rng_output_hash)
 
+def cli_pkcs12_tests(tmp_dir):
+    if not check_for_command("pkcs12_export"):
+        return
+
+    priv_key  = os.path.join(tmp_dir, 'leaf.key')
+    cert_file = os.path.join(tmp_dir, 'leaf.crt')
+    pfx_file  = os.path.join(tmp_dir, 'leaf.pfx')
+    out_key   = os.path.join(tmp_dir, 'out.key')
+    out_cert  = os.path.join(tmp_dir, 'out.crt')
+
+    test_cli("keygen", ["--algo=ECDSA", "--params=secp256r1", "--output=" + priv_key], "")
+    test_cli("gen_self_signed", [priv_key, "PKCS12Test", "--output=" + cert_file], "")
+
+    # Basic export
+    test_cli("pkcs12_export",
+             ["--pass=hunter2", "--output=" + pfx_file, priv_key, cert_file], "")
+
+    # pkcs12_import info-only (no output file args)
+    import_info = test_cli("pkcs12_import", ["--pass=hunter2", pfx_file], None)
+    if "ECDSA" not in import_info:
+        logging.error("pkcs12_import info missing key algorithm: %s", import_info)
+    if 'PKCS12Test' not in import_info:
+        logging.error("pkcs12_import info missing subject: %s", import_info)
+
+    # pkcs12_import: extract key and cert to files
+    test_cli("pkcs12_import",
+             ["--pass=hunter2", "--key-out=" + out_key, "--cert-out=" + out_cert, pfx_file],
+             None)
+
+    if not os.path.exists(out_key):
+        logging.error("pkcs12_import did not write key file")
+    if not os.path.exists(out_cert):
+        logging.error("pkcs12_import did not write cert file")
+
+    # Roundtrip: cert extracted from PFX must match original
+    if open(cert_file, encoding='utf-8').read() != open(out_cert, encoding='utf-8').read():
+        logging.error("pkcs12 roundtrip: certificate mismatch after import")
+
+    # Export with no MAC and no encryption (empty password)
+    pfx_noenc = os.path.join(tmp_dir, 'noenc.pfx')
+    test_cli("pkcs12_export",
+             ["--pass=", "--no-mac", "--output=" + pfx_noenc, priv_key, cert_file], "")
+    info_noenc = test_cli("pkcs12_import", ["--pass=", pfx_noenc], None)
+    if "ECDSA" not in info_noenc:
+        logging.error("pkcs12_import (no-mac) missing key algorithm: %s", info_noenc)
+
 def cli_uuid_tests(_tmp_dir):
     test_cli("uuid", [], "D80F88F6-ADBE-45AC-B10C-3602E67D985B")
 
@@ -1900,6 +1946,7 @@ def main(args=None):
         cli_pbkdf_tune_tests,
         cli_pk_encrypt_tests,
         cli_pk_workfactor_tests,
+        cli_pkcs12_tests,
         cli_psk_db_tests,
         cli_rng_tests,
         cli_roughtime_check_tests,
