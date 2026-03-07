@@ -39,7 +39,7 @@
    #define BOTAN_FN_ISA_AVX512 \
       BOTAN_FUNC_ISA("avx512f,avx512dq,avx512bw,avx512vl,avx512vbmi,avx512vbmi2,avx512bitalg,avx512ifma")
    #define BOTAN_FN_ISA_AVX512_CLMUL \
-      BOTAN_FUNC_ISA("avx512f,avx512dq,avx512bw,avx512vl,avx512vbmi,avx512vbmi2,avx512bitalg,avx512ifma,vpclmulqdq")
+      BOTAN_FUNC_ISA("avx512f,avx512dq,avx512bw,avx512vl,avx512vbmi,avx512vbmi2,avx512bitalg,pclmul,vpclmulqdq")
    #define BOTAN_FN_ISA_AVX512_BMI2 \
       BOTAN_FUNC_ISA("avx512f,avx512dq,avx512bw,avx512vl,avx512vbmi,avx512vbmi2,avx512bitalg,avx512ifma,bmi,bmi2")
    #define BOTAN_FN_ISA_AVX512_GFNI \

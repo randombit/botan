@@ -19,6 +19,12 @@
 namespace Botan {
 
 std::string GHASH::provider() const {
+#if defined(BOTAN_HAS_GHASH_AVX512_CLMUL)
+   if(auto feat = CPUID::check(CPUID::Feature::AVX512_CLMUL)) {
+      return *feat;
+   }
+#endif
+
 #if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
    if(auto feat = CPUID::check(CPUID::Feature::HW_CLMUL)) {
       return *feat;
@@ -36,6 +42,13 @@ std::string GHASH::provider() const {
 
 void GHASH::ghash_multiply(std::span<uint8_t, GCM_BS> x, std::span<const uint8_t> input, size_t blocks) {
    BOTAN_ASSERT_NOMSG(input.size() % GCM_BS == 0);
+
+#if defined(BOTAN_HAS_GHASH_AVX512_CLMUL)
+   if(CPUID::has(CPUID::Feature::AVX512_CLMUL)) {
+      BOTAN_ASSERT_NOMSG(!m_H_pow.empty());
+      return ghash_multiply_avx512_clmul(x.data(), m_H_pow.data(), input.data(), blocks);
+   }
+#endif
 
 #if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
    if(CPUID::has(CPUID::Feature::HW_CLMUL)) {
@@ -94,6 +107,18 @@ void GHASH::key_schedule(std::span<const uint8_t> key) {
 
    BOTAN_ASSERT_NOMSG(key.size() == GCM_BS);
    auto H = load_be<std::array<uint64_t, 2>>(key.first<GCM_BS>());
+
+#if defined(BOTAN_HAS_GHASH_AVX512_CLMUL)
+   if(CPUID::has(CPUID::Feature::AVX512_CLMUL)) {
+      zap(m_HM);
+      if(m_H_pow.size() != 32) {
+         m_H_pow.resize(32);
+      }
+      ghash_precompute_avx512_clmul(key.data(), m_H_pow.data());
+      // m_HM left empty
+      return;
+   }
+#endif
 
 #if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
    if(CPUID::has(CPUID::Feature::HW_CLMUL)) {

@@ -65,6 +65,15 @@ class GHASH final : public SymmetricAlgorithm {
                                      size_t blocks);
 #endif
 
+#if defined(BOTAN_HAS_GHASH_AVX512_CLMUL)
+      static void ghash_precompute_avx512_clmul(const uint8_t H[16], uint64_t H_pow[16 * 2]);
+
+      static void ghash_multiply_avx512_clmul(uint8_t x[16],
+                                              const uint64_t H_pow[16 * 2],
+                                              const uint8_t input[],
+                                              size_t blocks);
+#endif
+
 #if defined(BOTAN_HAS_GHASH_CLMUL_VPERM)
       static void ghash_multiply_vperm(uint8_t x[16], const uint64_t HM[256], const uint8_t input[], size_t blocks);
 #endif
