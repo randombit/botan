@@ -1618,13 +1618,6 @@ def cli_pkcs12_tests(tmp_dir):
     test_cli("pkcs12_export",
              ["--pass=hunter2", "--output=" + pfx_file, priv_key, cert_file], "")
 
-    # pkcs12_info: check key algo and subject appear in output
-    info = test_cli("pkcs12_info", ["--pass=hunter2", pfx_file], None)
-    if "ECDSA" not in info:
-        logging.error("pkcs12_info missing key algorithm in output: %s", info)
-    if 'PKCS12Test' not in info:
-        logging.error("pkcs12_info missing subject in output: %s", info)
-
     # pkcs12_import info-only (no output file args)
     import_info = test_cli("pkcs12_import", ["--pass=hunter2", pfx_file], None)
     if "ECDSA" not in import_info:
@@ -1650,9 +1643,9 @@ def cli_pkcs12_tests(tmp_dir):
     pfx_noenc = os.path.join(tmp_dir, 'noenc.pfx')
     test_cli("pkcs12_export",
              ["--pass=", "--no-mac", "--output=" + pfx_noenc, priv_key, cert_file], "")
-    info_noenc = test_cli("pkcs12_info", ["--pass=", pfx_noenc], None)
+    info_noenc = test_cli("pkcs12_import", ["--pass=", pfx_noenc], None)
     if "ECDSA" not in info_noenc:
-        logging.error("pkcs12_info (no-mac) missing key algorithm: %s", info_noenc)
+        logging.error("pkcs12_import (no-mac) missing key algorithm: %s", info_noenc)
 
 def cli_uuid_tests(_tmp_dir):
     test_cli("uuid", [], "D80F88F6-ADBE-45AC-B10C-3602E67D985B")

@@ -157,86 +157,39 @@ class PKCS12_Import final : public Command {
 
          // If no output files specified, show info
          if(key_out.empty() && cert_out.empty() && chain_out.empty()) {
-            output() << "PKCS#12 contents:\n";
+            output() << "PKCS#12 contents:\n\n";
             if(pkcs12_data.has_private_key()) {
-               output() << "  Private key: " << pkcs12_data.private_key()->algo_name() << " ("
-                        << pkcs12_data.private_key()->key_length() << " bits)\n";
+               output() << "Private Key:\n";
+               output() << "  Algorithm: " << pkcs12_data.private_key()->algo_name() << "\n";
+               output() << "  Key Size: " << pkcs12_data.private_key()->key_length() << " bits\n\n";
             }
             if(pkcs12_data.has_certificate()) {
-               output() << "  Certificate: " << pkcs12_data.certificate()->subject_dn().to_string() << "\n";
+               output() << "End-Entity Certificate:\n";
+               output() << "  Subject: " << pkcs12_data.certificate()->subject_dn().to_string() << "\n";
+               output() << "  Issuer: " << pkcs12_data.certificate()->issuer_dn().to_string() << "\n";
+               output() << "  Serial: " << Botan::hex_encode(pkcs12_data.certificate()->serial_number()) << "\n";
+               output() << "  Not Before: " << pkcs12_data.certificate()->not_before().readable_string() << "\n";
+               output() << "  Not After: " << pkcs12_data.certificate()->not_after().readable_string() << "\n";
+               output() << "  SHA-1 Fingerprint: " << pkcs12_data.certificate()->fingerprint("SHA-1") << "\n\n";
             }
             if(!pkcs12_data.ca_certificates().empty()) {
-               output() << "  CA certificates: " << pkcs12_data.ca_certificates().size() << "\n";
+               output() << "CA Certificate Chain (" << pkcs12_data.ca_certificates().size() << " certificates):\n";
+               size_t idx = 1;
                for(const auto& ca_cert : pkcs12_data.ca_certificates()) {
-                  output() << "    - " << ca_cert->subject_dn().to_string() << "\n";
+                  output() << "  [" << idx++ << "] Subject: " << ca_cert->subject_dn().to_string() << "\n";
+                  output() << "      Issuer: " << ca_cert->issuer_dn().to_string() << "\n";
+                  output() << "      Not After: " << ca_cert->not_after().readable_string() << "\n";
                }
+               output() << "\n";
             }
-            if(!pkcs12_data.friendly_name().empty()) {
-               output() << "  Friendly name: " << pkcs12_data.friendly_name() << "\n";
+            if(pkcs12_data.has_friendly_name()) {
+               output() << "Friendly name: " << pkcs12_data.friendly_name() << "\n";
             }
          }
       }
 };
 
 BOTAN_REGISTER_COMMAND("pkcs12_import", PKCS12_Import);
-
-class PKCS12_Info final : public Command {
-   public:
-      PKCS12_Info() : Command("pkcs12_info --pass= pfx_file") {}
-
-      std::string group() const override { return "pkcs12"; }
-
-      std::string description() const override { return "Display information about a PKCS#12/PFX file"; }
-
-      void go() override {
-         const std::string pfx_file = get_arg("pfx_file");
-         const std::string pfx_pass = get_passphrase_arg("PFX password", "pass");
-
-         std::vector<uint8_t> pfx_data = slurp_file(pfx_file);
-
-         const auto pkcs12_data = Botan::PKCS12::parse(pfx_data, pfx_pass);
-
-         output() << "PKCS#12 File: " << pfx_file << "\n";
-         output() << "=====================================\n\n";
-
-         // Private key info
-         if(pkcs12_data.has_private_key()) {
-            output() << "Private Key:\n";
-            output() << "  Algorithm: " << pkcs12_data.private_key()->algo_name() << "\n";
-            output() << "  Key Size: " << pkcs12_data.private_key()->key_length() << " bits\n\n";
-         }
-
-         // End-entity certificate info
-         if(pkcs12_data.has_certificate()) {
-            output() << "End-Entity Certificate:\n";
-            output() << "  Subject: " << pkcs12_data.certificate()->subject_dn().to_string() << "\n";
-            output() << "  Issuer: " << pkcs12_data.certificate()->issuer_dn().to_string() << "\n";
-            output() << "  Serial: " << Botan::hex_encode(pkcs12_data.certificate()->serial_number()) << "\n";
-            output() << "  Not Before: " << pkcs12_data.certificate()->not_before().readable_string() << "\n";
-            output() << "  Not After: " << pkcs12_data.certificate()->not_after().readable_string() << "\n";
-            output() << "  SHA-1 Fingerprint: " << pkcs12_data.certificate()->fingerprint("SHA-1") << "\n\n";
-         }
-
-         // CA chain info
-         if(!pkcs12_data.ca_certificates().empty()) {
-            output() << "CA Certificate Chain (" << pkcs12_data.ca_certificates().size() << " certificates):\n";
-            size_t idx = 1;
-            for(const auto& ca_cert : pkcs12_data.ca_certificates()) {
-               output() << "  [" << idx++ << "] Subject: " << ca_cert->subject_dn().to_string() << "\n";
-               output() << "      Issuer: " << ca_cert->issuer_dn().to_string() << "\n";
-               output() << "      Not After: " << ca_cert->not_after().readable_string() << "\n";
-            }
-            output() << "\n";
-         }
-
-         // Friendly name
-         if(!pkcs12_data.friendly_name().empty()) {
-            output() << "Friendly Name: " << pkcs12_data.friendly_name() << "\n";
-         }
-      }
-};
-
-BOTAN_REGISTER_COMMAND("pkcs12_info", PKCS12_Info);
 
 }  // namespace Botan_CLI
 
