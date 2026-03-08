@@ -225,6 +225,9 @@ Deprecated Headers
 These headers are currently publicly available, but will be made
 internal to the library in the future.
 
+  System-specific certificate store headers: ``certstor_macos.h``, ``certstor_windows.h`` --
+  use via ``Certificate_Store_System`` in ``certstor_system.h``
+
   PBKDF headers: ``bcrypt_pbkdf.h``, ``pbkdf2.h``, ``pgp_s2k.h``, ``scrypt.h``,
   and ``argon2.h``: Use the ``PasswordHash`` interface instead.
 
