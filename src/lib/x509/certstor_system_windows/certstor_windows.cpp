@@ -247,9 +247,16 @@ std::optional<X509_CRL> Certificate_Store_Windows::find_crl_for(const X509_Certi
 
 std::optional<X509_Certificate> Certificate_Store_Windows::find_cert_by_pubkey_sha1_via_exhaustive_search(
    const std::vector<uint8_t>& key_hash) const {
-   if(const auto cache_hit = m_non_rfc3289_certs.find(key_hash); cache_hit != m_non_rfc3289_certs.end()) {
+   const lock_guard_type<mutex_type> lock(m_mutex);
+
+   if(const auto cache_hit = m_sha1_pubkey_to_cert.find(key_hash); cache_hit != m_sha1_pubkey_to_cert.end()) {
       return cache_hit->second;
    }
+
+   /*
+   * TODO: it would be possible to perform this search loop without holding the lock, and
+   * only taking the lock once right when the result was saved to the map.
+   */
 
    auto sha1 = HashFunction::create_or_throw("SHA-1");
    for(const auto store_name : cert_store_names) {
@@ -264,14 +271,14 @@ std::optional<X509_Certificate> Certificate_Store_Windows::find_cert_by_pubkey_s
 
          if(std::equal(key_hash.begin(), key_hash.end(), key_hash_candidate.begin())) {
             X509_Certificate result(cert_context->pbCertEncoded, cert_context->cbCertEncoded);
-            m_non_rfc3289_certs[key_hash] = result;
+            m_sha1_pubkey_to_cert[key_hash] = result;
             return result;
          }
       }
    }
 
    // insert a negative query result into the cache
-   m_non_rfc3289_certs[key_hash] = std::nullopt;
+   m_sha1_pubkey_to_cert[key_hash] = std::nullopt;
    return std::nullopt;
 }
 
