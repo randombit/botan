@@ -9,9 +9,11 @@
 #ifndef BOTAN_CERT_STORE_SYSTEM_MACOS_H_
 #define BOTAN_CERT_STORE_SYSTEM_MACOS_H_
 
+#include <botan/certstor.h>
 #include <memory>
 
-#include <botan/certstor.h>
+// Use Certificate_Store_System instead
+BOTAN_FUTURE_INTERNAL_HEADER(certstor_macos.h)
 
 namespace Botan {
 

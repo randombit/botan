@@ -14,6 +14,9 @@
 #include <botan/mutex.h>
 #include <map>
 
+// Use Certificate_Store_System instead
+BOTAN_FUTURE_INTERNAL_HEADER(certstor_windows.h)
+
 namespace Botan {
 /**
 * Certificate Store that is backed by the system trust store on Windows.
