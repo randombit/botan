@@ -7,6 +7,7 @@
 
 #include <botan/bigint.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/hex.h>
 #include <botan/mem_ops.h>
@@ -120,6 +121,65 @@ std::string BigInt::to_hex_string() const {
    return hrep;
 }
 
+//static
+BigInt BigInt::from_radix_digits(std::string_view digits, size_t radix) {
+   if(radix == 16) {
+      secure_vector<uint8_t> binary;
+
+      if(digits.size() % 2 == 1) {
+         // Handle lack of leading 0
+         const char buf0_with_leading_0[2] = {'0', digits[0]};
+
+         binary = hex_decode_locked(buf0_with_leading_0, 2);
+
+         if(digits.size() > 1) {
+            binary += hex_decode_locked(&digits[1], digits.size() - 1, false);
+         }
+      } else {
+         binary = hex_decode_locked(digits, false);
+      }
+
+      return BigInt::from_bytes(binary);
+   } else if(radix == 10) {
+      // Use the largest power of 10 that fits in a word, accumulating
+      // groups of digits into word-sized chunks to minimize the number
+      // of multiprecision multiplications.
+      constexpr word conversion_radix = decimal_conversion_radix();
+      constexpr size_t radix_digits = decimal_conversion_radix_digits();
+
+      BigInt r;
+
+      // Handle the initial partial block (if digit count is not a multiple of radix_digits)
+      const size_t partial_block = digits.size() % radix_digits;
+
+      if(partial_block > 0) {
+         word acc = 0;
+         for(size_t i = 0; i < partial_block; ++i) {
+            const char c = digits[i];
+            BOTAN_ARG_CHECK(c >= '0' && c <= '9', "Invalid decimal character");
+            acc = acc * 10 + static_cast<word>(c - '0');
+         }
+         r += acc;
+      }
+
+      // Process full blocks of radix_digits
+      for(size_t i = partial_block; i != digits.size(); i += radix_digits) {
+         word acc = 0;
+         for(size_t j = 0; j < radix_digits; ++j) {
+            const char c = digits[i + j];
+            BOTAN_ARG_CHECK(c >= '0' && c <= '9', "Invalid decimal character");
+            acc = acc * 10 + static_cast<word>(c - '0');
+         }
+         r *= conversion_radix;
+         r += acc;
+      }
+
+      return r;
+   } else {
+      throw Invalid_Argument("BigInt::from_radix_digits unknown radix");
+   }
+}
+
 /*
 * Encode two BigInt, with leading 0s if needed, and concatenate
 */
@@ -151,41 +211,11 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base) {
    if(base == Binary) {
       return BigInt::from_bytes(std::span{buf, length});
    } else if(base == Hexadecimal) {
-      BigInt r;
-      secure_vector<uint8_t> binary;
-
-      if(length % 2 == 1) {
-         // Handle lack of leading 0
-         const char buf0_with_leading_0[2] = {'0', static_cast<char>(buf[0])};
-
-         binary = hex_decode_locked(buf0_with_leading_0, 2);
-
-         if(length > 1) {
-            binary += hex_decode_locked(cast_uint8_ptr_to_char(&buf[1]), length - 1, false);
-         }
-      } else {
-         binary = hex_decode_locked(cast_uint8_ptr_to_char(buf), length, false);
-      }
-
-      r.assign_from_bytes(binary);
-      return r;
+      const std::string_view sv{cast_uint8_ptr_to_char(buf), length};
+      return BigInt::from_radix_digits(sv, 16);
    } else if(base == Decimal) {
-      BigInt r;
-      // This could be made faster using the same trick as to_dec_string
-      for(size_t i = 0; i != length; ++i) {
-         const char c = buf[i];
-
-         if(c < '0' || c > '9') {
-            throw Invalid_Argument("BigInt::decode: invalid decimal char");
-         }
-
-         const uint8_t x = c - '0';
-         BOTAN_ASSERT_NOMSG(x < 10);
-
-         r *= 10;
-         r += x;
-      }
-      return r;
+      const std::string_view sv{cast_uint8_ptr_to_char(buf), length};
+      return BigInt::from_radix_digits(sv, 10);
    } else {
       throw Invalid_Argument("Unknown BigInt decoding method");
    }

@@ -1,0 +1,233 @@
+[Valid]
+
+# Decimal inputs for 0 to 40 characters
+
+Radix = 10
+
+Input =
+Output =
+
+Input = 2
+Output = 02
+
+Input = 14
+Output = 0E
+
+Input = 432
+Output = 01B0
+
+Input = 2819
+Output = 0B03
+
+Input = 70013
+Output = 01117D
+
+Input = 489083
+Output = 07767B
+
+Input = 9637940
+Output = 931034
+
+Input = 36542351
+Output = 022D978F
+
+Input = 261559407
+Output = 0F97146F
+
+Input = 9161849593
+Output = 022216BAF9
+
+Input = 20341316475
+Output = 04BC6FDB7B
+
+Input = 355341928327
+Output = 52BC078787
+
+Input = 7483503056413
+Output = 06CE638A961D
+
+Input = 63767242388496
+Output = 39FEF7D4B410
+
+Input = 753287101226916
+Output = 02AD1C52151FA4
+
+Input = 7978480184514627
+Output = 1C5862AD3ED843
+
+Input = 14828148932528809
+Output = 34AE1F75CCCAA9
+
+Input = 670154303911718227
+Output = 094CDDC9ED5B6D53
+
+Input = 9248963834657871331
+Output = 805AEB9AC13795E3
+
+Input = 60983930103105183473
+Output = 034E52715272D5DEF1
+
+Input = 929973763116566701065
+Output = 3269FA8257A439E409
+
+Input = 2333872624731781080132
+Output = 7E84FD32CE725C2444
+
+Input = 77736026064746872343098
+Output = 1076141322C5001C8A3A
+
+Input = 150097882081219136193990
+Output = 1FC8D28ED434E04C05C6
+
+Input = 2699854353462475107991183
+Output = 023BB765D450B21EB5FE8F
+
+Input = 94251354278498084124118244
+Output = 4DF6802746B1380C004CE4
+
+Input = 453487401640052427868011280
+Output = 01771DB14D7A4F9C5BB6FB10
+
+Input = 6982620450533158692322602563
+Output = 168FE3651B0144F9F014EE43
+
+Input = 52160733754330365414586850142
+Output = A88A5902BE807F2D532E1B5E
+
+Input = 501965569816934060883561595148
+Output = 0655F030016C157FD008A6C10C
+
+Input = 5656482366299468044369957773872
+Output = 4765148C746439C1A797006230
+
+Input = 24895134332003791769367632016328
+Output = 013A38847761D952560A8969F3C8
+
+Input = 808317278895798687277434873471434
+Output = 27DA65FDE4EBD0E9FECAC0DE61CA
+
+Input = 6581223623166587603669096705466889
+Output = 01447AB86BF59ADA36C84FAC0EA209
+
+Input = 47346706562729806990162720465375564
+Output = 091E5F73E8ED635915A4EB43A4514C
+
+Input = 741708053100330923271937452991241904
+Output = 8ED907C7630B9978F3F1B3A276DEB0
+
+Input = 7631931491905865185067165726284987769
+Output = 05BDDB462A256F99A0A533245B303D79
+
+Input = 55314737996507527354549480831367837770
+Output = 299D3B249B9954CEC55612552338F84A
+
+Input = 243634957885685574443135182337498941343
+Output = B74A62D6BD2C7E68A6D690359054079F
+
+Input = 6240824008427109477752047116719022941318
+Output = 125712FBC9CE29F7429AA5A21A0F382486
+
+# Decimal with leading zeros
+Input = 000123
+Output = 7B
+
+Input = 00000
+Output =
+
+Input = 340282366920938463463374607431768211455
+Output = FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+
+Input = 0000000340282366920938463463374607431768211456
+Output = 0100000000000000000000000000000000
+
+# Hexadecimal inputs
+
+Radix = 16
+
+Input = 0
+Output =
+
+Input = 00
+Output =
+
+Input = 000
+Output =
+
+Input = F
+Output = 0F
+
+Input = FF
+Output = FF
+
+Input = ff
+Output = FF
+
+Input = ABC
+Output = 0ABC
+
+Input = 0ABC
+Output = 0ABC
+
+Input = abcdef
+Output = ABCDEF
+
+Input = FEDCBA9876543210
+Output = FEDCBA9876543210
+
+# Odd-length hex
+Input = 1
+Output = 01
+
+Input = 123
+Output = 0123
+
+Input = 12345
+Output = 012345
+
+# Hex with leading zeros
+Input = 00FF
+Output = FF
+
+Input = 000001
+Output = 01
+
+[Invalid]
+
+# Unsupported radix
+Input = 101
+Radix = 2
+Output = BigInt::from_radix_digits unknown radix
+
+Input = 777
+Radix = 8
+Output = BigInt::from_radix_digits unknown radix
+
+Input = 0
+Radix = 0
+Output = BigInt::from_radix_digits unknown radix
+
+Input = hello
+Radix = 36
+Output = BigInt::from_radix_digits unknown radix
+
+# Invalid decimal characters
+Input = 123abc
+Radix = 10
+Output = Invalid decimal character
+
+Input = -42
+Radix = 10
+Output = Invalid decimal character
+
+Input = 1 2
+Radix = 10
+Output = Invalid decimal character
+
+Input = 12.34
+Radix = 10
+Output = Invalid decimal character
+
+# Invalid hex characters
+Input = ABCXYZ
+Radix = 16
+Output = hex_decode: invalid character

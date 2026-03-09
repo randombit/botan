@@ -54,35 +54,30 @@ BigInt BigInt::with_capacity(size_t size) {
    return bn;
 }
 
-/*
-* Construct a BigInt from a string
-*/
-BigInt::BigInt(std::string_view str) {
-   Base base = Decimal;
-   size_t markers = 0;
+BigInt BigInt::from_string(std::string_view str) {
+   size_t prefix_bytes = 0;
    bool negative = false;
+   size_t radix = 10;
 
    if(!str.empty() && str[0] == '-') {
-      markers += 1;
+      prefix_bytes += 1;
       negative = true;
    }
 
-   if(str.length() > markers + 2 && str[markers] == '0' && str[markers + 1] == 'x') {
-      markers += 2;
-      base = Hexadecimal;
+   if(str.length() > prefix_bytes + 2 && str[prefix_bytes] == '0' && str[prefix_bytes + 1] == 'x') {
+      prefix_bytes += 2;
+      radix = 16;
    }
 
-   *this = decode(as_span_of_bytes(str).subspan(markers), base);
+   BigInt r = BigInt::from_radix_digits(str.substr(prefix_bytes), radix);
 
    if(negative) {
-      set_sign(Negative);
+      r.set_sign(Negative);
    } else {
-      set_sign(Positive);
+      r.set_sign(Positive);
    }
-}
 
-BigInt BigInt::from_string(std::string_view str) {
-   return BigInt(str);
+   return r;
 }
 
 BigInt BigInt::from_bytes(std::span<const uint8_t> input) {
