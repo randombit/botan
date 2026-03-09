@@ -8,6 +8,7 @@
 #include <botan/internal/divide.h>
 
 #include <botan/exceptn.h>
+#include <botan/mem_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/mp_core.h>
 
@@ -222,6 +223,41 @@ BigInt ct_modulo(const BigInt& x, const BigInt& y) {
    return r;
 }
 
+namespace {
+
+size_t reduce_below(BigInt& r, const BigInt& y, secure_vector<word>& ws) {
+   BOTAN_ARG_CHECK(r.is_negative() == false, "Invalid r");
+   BOTAN_ARG_CHECK(y.is_negative() == false, "Invalid y");
+
+   const size_t y_words = y.sig_words();
+
+   if(r.size() < y_words + 1) {
+      r.grow_to(y_words + 1);
+   }
+
+   if(ws.size() < y_words + 1) {
+      ws.resize(y_words + 1);
+   }
+
+   clear_mem(ws);
+
+   size_t reductions = 0;
+
+   for(;;) {
+      const word borrow = bigint_sub3(ws.data(), r._data(), y_words + 1, y._data(), y_words);
+      if(borrow > 0) {
+         break;
+      }
+
+      ++reductions;
+      r.swap_reg(ws);
+   }
+
+   return reductions;
+}
+
+}  // namespace
+
 BigInt vartime_divide_pow2k(size_t k, const BigInt& y_arg) {
    constexpr size_t WB = WordInfo<word>::bits;
 
@@ -260,7 +296,7 @@ BigInt vartime_divide_pow2k(size_t k, const BigInt& y_arg) {
 
    // Set q_{n-t} to number of times r > shifted_y
    secure_vector<word> ws;
-   q_words[n - t] = r.reduce_below(shifted_y, ws);
+   q_words[n - t] = reduce_below(r, shifted_y, ws);
 
    const word y_t0 = y.word_at(t);
    const word y_t1 = y.word_at(t - 1);
@@ -363,7 +399,7 @@ void vartime_divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt&
    BigInt shifted_y = y << (WB * (n - t));
 
    // Set q_{n-t} to number of times r > shifted_y
-   q_words[n - t] = r.reduce_below(shifted_y, ws);
+   q_words[n - t] = reduce_below(r, shifted_y, ws);
 
    const word y_t0 = y.word_at(t);
    const word y_t1 = y.word_at(t - 1);

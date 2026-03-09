@@ -84,7 +84,7 @@ BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>&
    bigint_add3(&ws[mod_sw * 2], this->_data(), mod_sw, s._data(), mod_sw);
 
    CT::conditional_copy_mem(borrow, &ws[0], &ws[mod_sw * 2], &ws[mod_sw], mod_sw);
-   set_words(&ws[0], mod_sw);
+   m_data.set_words(&ws[0], mod_sw);
 
    // NOLINTEND(readability-container-data-pointer)
 
@@ -193,7 +193,7 @@ BigInt& BigInt::operator*=(word y) {
    }
 
    const word carry = bigint_linmul2(mutable_data(), size(), y);
-   set_word_at(size(), carry);
+   m_data.set_word_at(size(), carry);
 
    return (*this);
 }
