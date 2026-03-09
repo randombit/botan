@@ -57,7 +57,7 @@ BigInt barrett_reduce(
    BOTAN_ASSERT_NOMSG(modulus.sig_words() == mod_words);
 
    // Caller must expand input to be at least this size
-   BOTAN_ASSERT_NOMSG(x_words.size() >= 2 * mod_words);
+   BOTAN_ASSERT_NOMSG(x_words.size() >= mod_words + 1);
 
    // Normally mod_words + 1 but can be + 2 if the modulus is a power of 2
    const size_t mu_words = mu.sig_words();
@@ -82,7 +82,11 @@ BigInt barrett_reduce(
    // 2 * mod_words + 1 is sufficient, extra is to enable Karatsuba
    secure_vector<word> r(2 * mu_words + 2);
 
-   copy_mem(r.data(), x_words.data() + (mod_words - 1), mod_words + 1);
+   for(size_t i = 0; i != mod_words + 1; ++i) {
+      const size_t idx = mod_words - 1 + i;
+      const word x_word = idx < x_words.size() ? x_words[idx] : 0;
+      r[i] = x_word;
+   }
 
    // Now compute q2 = q1 * μ
 
@@ -195,11 +199,17 @@ BigInt Barrett_Reduction::reduce(const BigInt& x) const {
 
    const size_t x_sw = x.sig_words();
    BOTAN_ARG_CHECK(x_sw <= 2 * m_mod_words, "Argument is too large for Barrett reduction");
-
-   x.grow_to(2 * m_mod_words);
-
    secure_vector<word> ws;
-   return barrett_reduce(m_mod_words, m_modulus, m_mu, x._as_span(), ws);
+
+   const size_t min_input_size = m_mod_words + 1;
+
+   if(x.size() < min_input_size) {
+      secure_vector<word> x_words(min_input_size);
+      copy_mem(std::span{x_words}.first(x.size()), x._as_span());
+      return barrett_reduce(m_mod_words, m_modulus, m_mu, x_words, ws);
+   } else {
+      return barrett_reduce(m_mod_words, m_modulus, m_mu, x._as_span(), ws);
+   }
 }
 
 }  // namespace Botan
