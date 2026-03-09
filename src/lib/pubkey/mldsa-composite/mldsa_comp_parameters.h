@@ -18,9 +18,14 @@ namespace Botan {
 class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
    public:
       enum id_t : uint32_t /* NOLINT(*-enum-size,*-use-enum-class) */ {
-         id_MLDSA44_RSA2048_PSS_SHA256,
-         id_MLDSA44_RSA2048_PKCS15_SHA256,
+         MLDSA44_RSA2048_PSS_SHA256,
+         MLDSA44_RSA2048_PKCS15_SHA256,
+         MLDSA44_Ed25519_SHA512,
+         MLDSA44_ECDSA_P256_SHA256,
+
       };
+
+      static std::vector<MLDSA_Composite_Param> all_param_sets();
 
       static MLDSA_Composite_Param from_id_or_throw(MLDSA_Composite_Param::id_t id);
       static std::optional<MLDSA_Composite_Param> from_id(MLDSA_Composite_Param::id_t id);

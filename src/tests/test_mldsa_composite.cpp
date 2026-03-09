@@ -103,11 +103,14 @@ class MLDSA_Composite_RT_Tests : public Test {
       }
 
       std::vector<Test::Result> run() override {
-         return {
-            run_roundtrip(Botan::MLDSA_Composite_Param::id_t::id_MLDSA44_RSA2048_PKCS15_SHA256),
-            run_roundtrip(Botan::MLDSA_Composite_Param::id_t::id_MLDSA44_RSA2048_PSS_SHA256),
-            // TODO: ADD INVALID SIGNATURE AND KEY SIZE TESTS
-         };
+         auto all_params = Botan::MLDSA_Composite_Param::all_param_sets();
+         std::vector<Test::Result> result;
+         result.reserve(all_params.size());
+         for(const auto& param : all_params) {
+            result.push_back(run_roundtrip(param.id));
+         }
+         return result;
+         // TODO: ADD INVALID SIGNATURE AND KEY SIZE TESTS
       }
 };
 

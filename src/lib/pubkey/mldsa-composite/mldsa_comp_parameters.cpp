@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-static const std::array<MLDSA_Composite_Param, 2> mldsa_composite_registry = {{
-   {.id = MLDSA_Composite_Param::id_t::id_MLDSA44_RSA2048_PSS_SHA256,
+static const MLDSA_Composite_Param mldsa_composite_registry[] = {
+   {.id = MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PSS_SHA256,
     .id_str = "MLDSA44-RSA2048-PSS-SHA256",
     .label = "COMPSIG-MLDSA44-RSA2048-PSS-SHA256",
     .prehash_func = "SHA-256",
@@ -23,10 +23,8 @@ static const std::array<MLDSA_Composite_Param, 2> mldsa_composite_registry = {{
     .traditional_algoritm = "RSA",
     .traditional_padding = "PSS(SHA-256,MGF1,32)",
     .mldsa_pubkey_size = 1312,
-    .traditional_key_size = 2048}  // namespace Botan
-
-   ,
-   {.id = MLDSA_Composite_Param::id_t::id_MLDSA44_RSA2048_PKCS15_SHA256,
+    .traditional_key_size = 2048},
+   {.id = MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PKCS15_SHA256,
     .id_str = "MLDSA44-RSA2048-PKCS15-SHA256",
     .label = "COMPSIG-MLDSA44-RSA2048-PKCS15-SHA256",
     .prehash_func = "SHA-256",
@@ -36,7 +34,26 @@ static const std::array<MLDSA_Composite_Param, 2> mldsa_composite_registry = {{
     .traditional_padding = "PKCS1v15(SHA-256)",
     .mldsa_pubkey_size = 1312,
     .traditional_key_size = 2048},
-}};
+   {.id = MLDSA_Composite_Param::id_t::MLDSA44_Ed25519_SHA512,
+    .id_str = "MLDSA44-Ed25519-SHA512",
+    .label = "COMPSIG-MLDSA44-Ed25519-SHA512",
+    .prehash_func = "SHA-512",
+    .mldsa_variant = DilithiumMode::ML_DSA_4x4,
+    .mldsa_oid_str = "2.16.840.1.101.3.4.3.17",
+    .traditional_algoritm = "Ed25519",
+    .traditional_padding = "",
+    .mldsa_pubkey_size = 1312,
+    .traditional_key_size = 255}
+
+};
+
+std::vector<MLDSA_Composite_Param> MLDSA_Composite_Param::all_param_sets() {
+   std::vector<MLDSA_Composite_Param> result;
+   for(const auto& param : mldsa_composite_registry) {
+      result.push_back(param);
+   }
+   return result;
+}
 
 // static
 std::optional<MLDSA_Composite_Param> MLDSA_Composite_Param::from_id_str(std::string_view id_str) {
@@ -104,6 +121,8 @@ std::string MLDSA_Composite_Param::mldsa_param_str() const {
 size_t MLDSA_Composite_Param::traditional_signature_size() const {
    if(0 == std::strcmp(traditional_algoritm, "RSA")) {
       return traditional_key_size;
+   } else if(0 == std::strcmp(traditional_algoritm, "Ed25519")) {
+      return 255;
    }
    throw Botan::Exception(
       "TODO: MLDSA_Composite_Param::traditional_signature_size(): not implemented for parameters other than RSA");
@@ -156,6 +175,8 @@ AlgorithmIdentifier MLDSA_Composite_Param::get_traditional_algorithm_id() const 
 std::string MLDSA_Composite_Param::get_traditional_algo_param_str() const {
    if(0 == strcmp(this->traditional_algoritm, "RSA")) {
       return std::to_string(traditional_key_size);
+   } else if(0 == strcmp(this->traditional_algoritm, "Ed25519")) {
+      return "";
    }
    throw Botan::Invalid_Argument(
       "TODO: MLDSA_Composite_Param::get_traditional_algo_param_str() not implemented for ECC or other");
