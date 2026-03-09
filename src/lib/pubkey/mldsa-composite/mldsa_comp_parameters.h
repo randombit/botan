@@ -68,6 +68,7 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
       const char* mldsa_oid_str;
       const char* traditional_algoritm;
       const char* traditional_padding;
+      const char* curve;
       uint32_t mldsa_pubkey_size;
       uint32_t traditional_key_size;
 

@@ -156,24 +156,27 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
          const char* message = "The quick brown fox jumps over the lazy dog.";
          std::unique_ptr<Botan::Public_Key> pubkey;
          std::unique_ptr<Botan::Private_Key> privkey;
+
          try {
             pubkey = std::make_unique<Botan::MLDSA_Composite_PublicKey>(comp_parm.id, pk_bin);
          } catch(const Botan::Exception& e) {
             exc_during_pubkey_decoding = true;
          }
-         //std::cout << "pubkey decoding passed\n";
+         std::cout << std::format("pubkey decoding passed: {}\n", !exc_during_pubkey_decoding);
          result.test_bool_eq("pubkey decoding OK", !exc_during_pubkey_decoding, pubkey_valid);
          if(exc_during_pubkey_decoding) {
             return result;
          }
          Botan::PK_Verifier verifier(*pubkey, "");
+         std::cout << "created verifier\n";
          verifier.update(message);
          result.test_bool_eq("verification of correct signature", verifier.check_signature(sig_bin), true);
-         //std::cout << "\nis " << (verifier.check_signature(sig_bin) ? "valid" : "invalid");
-         //std::cout << "verification passed \n";
+         std::cout << "\nverification passed \n";
 
          try {
+            std::cout << std::format("starting to decode private key of length {}... \n", sk_bin.size());
             privkey = std::make_unique<Botan::MLDSA_Composite_PrivateKey>(comp_parm.id, sk_bin);
+            std::cout << "  ... done decode private key\n";
          } catch(const Botan::Exception& e) {
             exc_during_privkey_decoding = true;
          }

@@ -80,6 +80,8 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PublicKey : public virtual Public_K
       MLDSA_Composite_PublicKey& operator=(const MLDSA_Composite_PublicKey& rhs);
 
    protected:
+      static std::shared_ptr<Public_Key> load_traditional_public_key(const MLDSA_Composite_Param& param,
+                                                                     std::span<const uint8_t> key_bits);
       MLDSA_Composite_PublicKey() = default;
 
       std::shared_ptr<MLDSA_Composite_Param> m_parameters;  // NOLINT(*non-private-member-variable*)
@@ -125,6 +127,10 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PrivateKey final : public virtual M
       MLDSA_Composite_PrivateKey& operator=(const MLDSA_Composite_PrivateKey& rhs);
 
    private:
+      static std::shared_ptr<Private_Key> load_traditional_private_key(const MLDSA_Composite_Param& param,
+                                                                       std::span<const uint8_t> key_bits);
+      static std::unique_ptr<Private_Key> create_traditional_private_key(RandomNumberGenerator& rng,
+                                                                         MLDSA_Composite_Param param);
       void init_pubkey_members();
       friend class MLDSA_Composite_Signature_Operation;
       std::shared_ptr<MLDSA_Composite_Param> m_parameters;

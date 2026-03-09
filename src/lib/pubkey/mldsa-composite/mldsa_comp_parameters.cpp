@@ -22,8 +22,11 @@ static const MLDSA_Composite_Param mldsa_composite_registry[] = {
     .mldsa_oid_str = "2.16.840.1.101.3.4.3.17",
     .traditional_algoritm = "RSA",
     .traditional_padding = "PSS(SHA-256,MGF1,32)",
+    .curve = "",
     .mldsa_pubkey_size = 1312,
-    .traditional_key_size = 2048},
+    .traditional_key_size = 2048}  // namespace Botan
+
+   ,
    {.id = MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PKCS15_SHA256,
     .id_str = "MLDSA44-RSA2048-PKCS15-SHA256",
     .label = "COMPSIG-MLDSA44-RSA2048-PKCS15-SHA256",
@@ -32,8 +35,11 @@ static const MLDSA_Composite_Param mldsa_composite_registry[] = {
     .mldsa_oid_str = "2.16.840.1.101.3.4.3.17",
     .traditional_algoritm = "RSA",
     .traditional_padding = "PKCS1v15(SHA-256)",
+    .curve = "",
     .mldsa_pubkey_size = 1312,
-    .traditional_key_size = 2048},
+    .traditional_key_size = 2048}  // namespace Botan
+
+   ,
    {.id = MLDSA_Composite_Param::id_t::MLDSA44_Ed25519_SHA512,
     .id_str = "MLDSA44-Ed25519-SHA512",
     .label = "COMPSIG-MLDSA44-Ed25519-SHA512",
@@ -42,10 +48,22 @@ static const MLDSA_Composite_Param mldsa_composite_registry[] = {
     .mldsa_oid_str = "2.16.840.1.101.3.4.3.17",
     .traditional_algoritm = "Ed25519",
     .traditional_padding = "",
+    .curve = "",
     .mldsa_pubkey_size = 1312,
-    .traditional_key_size = 255}
-
-};
+    .traditional_key_size = 255},
+   {
+      .id = MLDSA_Composite_Param::id_t::MLDSA44_ECDSA_P256_SHA256,
+      .id_str = "MLDSA44-ECDSA-P256-SHA256",
+      .label = "COMPSIG-MLDSA44-ECDSA-P256-SHA256",
+      .prehash_func = "SHA-256",
+      .mldsa_variant = DilithiumMode::ML_DSA_4x4,
+      .mldsa_oid_str = "2.16.840.1.101.3.4.3.17",
+      .traditional_algoritm = "ECDSA",
+      .traditional_padding = "SHA-256",
+      .curve = "secp256r1",
+      .mldsa_pubkey_size = 1312,
+      .traditional_key_size = 256  // NEEDED?
+   }};
 
 std::vector<MLDSA_Composite_Param> MLDSA_Composite_Param::all_param_sets() {
    std::vector<MLDSA_Composite_Param> result;
@@ -164,7 +182,11 @@ AlgorithmIdentifier MLDSA_Composite_Param::get_mldsa_algorithm_id() const {
 
 AlgorithmIdentifier MLDSA_Composite_Param::get_traditional_algorithm_id() const {
    std::optional<OID> oid;
-   oid = OID::from_name(this->traditional_algoritm);
+   if(0 == std::strcmp(this->traditional_algoritm, "ECDSA")) {
+      oid = OID::from_name(std::string("ECDSA/") + prehash_func);
+   } else {
+      oid = OID::from_name(this->traditional_algoritm);
+   }
    if(!oid.has_value()) {
       throw Botan::Internal_Error(
          "MLDSA_Composite_Param::get_traditional_algorithm_id_by_id(): could not lookup algorithm OID of traditional algorithm as expected");
