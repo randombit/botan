@@ -420,7 +420,12 @@ Dilithium_PrivateKey::Dilithium_PrivateKey(std::span<const uint8_t> sk, Dilithiu
 }
 
 secure_vector<uint8_t> Dilithium_PrivateKey::raw_private_key_bits() const {
-   return this->private_key_bits();
+   const auto& seed_opt = this->m_private->seed();
+   if(!seed_opt.has_value()) {
+      throw Invalid_State(
+         "cannot return Dilithium or ML-DSA private key raw bits, since the key does not contain the seed");
+   }
+   return seed_opt.value().get();
 }
 
 secure_vector<uint8_t> Dilithium_PrivateKey::private_key_bits() const {
