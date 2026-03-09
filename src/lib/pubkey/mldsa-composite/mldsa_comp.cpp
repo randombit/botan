@@ -65,6 +65,7 @@ std::span<const uint8_t> traditional_privkey_subspan(const MLDSA_Composite_Param
       throw Invalid_Argument("encoded traditional component private key is too short");
    }
    std::span<const uint8_t> result(key_bits.begin() + offset, key_bits.end());
+   std::cout << fmt("traditional priv key (length = {}) = {}\n", key_bits.size() - offset, hex_encode(result));
    return result;
 }
 }  // namespace
@@ -273,24 +274,35 @@ std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_x509_ver
 }
 
 std::shared_ptr<Private_Key> MLDSA_Composite_PrivateKey::load_traditional_private_key(
-   const MLDSA_Composite_Param& param, std::span<const uint8_t> key_bits) {
+   const MLDSA_Composite_Param& param, std::span<const uint8_t> trad_key_bits) {
    if(0 == strcmp(param.traditional_algoritm, "Ed25519")) {
-      std::cout << fmt("load_traditional_private_key(): decoding Ed25519_PrivateKey of length {}\n", key_bits.size());
-      return std::shared_ptr<Private_Key>(
-         new Ed25519_PrivateKey(Ed25519_PrivateKey::from_seed(traditional_privkey_subspan(param, key_bits))));
+      std::cout << fmt("load_traditional_private_key(): decoding Ed25519_PrivateKey of length {}\n",
+                       trad_key_bits.size());
+      return std::shared_ptr<Private_Key>(new Ed25519_PrivateKey(Ed25519_PrivateKey::from_seed(trad_key_bits)));
    }
    if(0 == strcmp(param.traditional_algoritm, "ECDSA")) {
-      const auto group = Botan::EC_Group::from_name(param.curve);
-      return std::make_shared<ECDSA_PrivateKey>(param.get_traditional_algorithm_id(), key_bits);
+      /* Must decode this private key format:
+ * SEQUENCE {
+  INTEGER 1
+  OCTET STRING
+    B9 4E 76 09 A7 17 6A BA FB D4 A3 4F AB AE 42 B0
+    91 E4 4D 9E 46 E6 7F CA 56 6C 2A 18 8A 63 C6 5F
+  [0] {
+    OBJECT IDENTIFIER prime256v1 (1 2 840 10045 3 1 7)
+    }
+  } */
+      std::cout << "load_traditional_private_key(): about to decode ECDSA key\n";
+      return std::make_shared<ECDSA_PrivateKey>(param.get_traditional_algorithm_id(), trad_key_bits);
    }
-   return load_private_key(param.get_traditional_algorithm_id(), traditional_privkey_subspan(param, key_bits));
+   return load_private_key(param.get_traditional_algorithm_id(), trad_key_bits);
 }
 
 MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(MLDSA_Composite_Param::id_t id, std::span<const uint8_t> sk) :
       m_parameters(std::make_shared<MLDSA_Composite_Param>(MLDSA_Composite_Param::from_id_or_throw(id))),
       m_mldsa_privkey(std::make_shared<ML_DSA_PrivateKey>(m_parameters->get_mldsa_algorithm_id(),
                                                           mldsa_privkey_subspan(*m_parameters, sk))),
-      m_tradtional_privkey(load_traditional_private_key(*m_parameters, sk)) {
+      m_tradtional_privkey(
+         load_traditional_private_key(*m_parameters, traditional_privkey_subspan(*m_parameters, sk))) {
    init_pubkey_members();
 }
 
@@ -387,7 +399,8 @@ MLDSA_Composite_PrivateKey& MLDSA_Composite_PrivateKey::operator=(const MLDSA_Co
    }
    m_parameters = std::make_shared<MLDSA_Composite_Param>(*rhs.m_parameters);
    m_mldsa_privkey = std::make_shared<ML_DSA_PrivateKey>(*rhs.m_mldsa_privkey);
-   m_tradtional_privkey = load_traditional_private_key(*m_parameters, rhs.m_tradtional_privkey->private_key_bits());
+   m_tradtional_privkey = load_traditional_private_key(
+      *m_parameters, traditional_privkey_subspan(*m_parameters, rhs.m_tradtional_privkey->private_key_bits()));
    init_pubkey_members();
    return *this;
 }
