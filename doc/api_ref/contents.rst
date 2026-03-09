@@ -22,6 +22,7 @@ API Reference
    kdf
    pbkdf
    keywrap
+   pkcs12
    passhash
    cryptobox
    srp

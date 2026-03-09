@@ -25,7 +25,7 @@ class RandomNumberGenerator;
 /**
  * Options for PKCS#12 generation
  */
-struct BOTAN_PUBLIC_API(3, 7) PKCS12_Options {
+struct BOTAN_PUBLIC_API(3, 11) PKCS12_Options {
       /**
        * Password for encrypting the private key and optionally certificates.
        * If empty, no encryption is applied (not recommended).
@@ -75,7 +75,7 @@ struct BOTAN_PUBLIC_API(3, 7) PKCS12_Options {
 /**
  * Result of parsing a PKCS#12 file
  */
-class BOTAN_PUBLIC_API(3, 7) PKCS12_Data {
+class BOTAN_PUBLIC_API(3, 11) PKCS12_Data {
    public:
       PKCS12_Data() = default;
 
@@ -156,7 +156,7 @@ class BOTAN_PUBLIC_API(3, 7) PKCS12_Data {
  * auto pfx = PKCS12::create(private_key, cert, ca_certs, opts, rng);
  * @endcode
  */
-class BOTAN_PUBLIC_API(3, 7) PKCS12 final {
+class BOTAN_PUBLIC_API(3, 11) PKCS12 final {
    public:
       /**
        * Parse a PKCS#12/PFX file
