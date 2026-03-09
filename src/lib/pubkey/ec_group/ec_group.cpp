@@ -348,15 +348,15 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
          const uint8_t hdr = base_pt[0];
 
          if(hdr == 0x04 && base_pt.size() == 1 + 2 * p_bytes) {
-            const BigInt x = BigInt::decode(&base_pt[1], p_bytes);
-            const BigInt y = BigInt::decode(&base_pt[p_bytes + 1], p_bytes);
+            const BigInt x = BigInt::from_bytes(std::span{base_pt}.subspan(1, p_bytes));
+            const BigInt y = BigInt::from_bytes(std::span{base_pt}.subspan(1 + p_bytes, p_bytes));
 
             if(x < p && y < p) {
                return std::make_pair(x, y);
             }
          } else if((hdr == 0x02 || hdr == 0x03) && base_pt.size() == 1 + p_bytes) {
             // TODO(Botan4) remove this branch; we won't support compressed points
-            const BigInt x = BigInt::decode(&base_pt[1], p_bytes);
+            const BigInt x = BigInt::from_bytes(std::span{base_pt}.subspan(1, p_bytes));
             BigInt y = sqrt_modulo_prime(((x * x + a) * x + b) % p, p);
 
             if(x < p && y >= 0) {

@@ -17,6 +17,7 @@
    #include <botan/pkcs8.h>
    #include <botan/pubkey.h>
    #include <botan/rng.h>
+   #include <botan/internal/buffer_stuffer.h>
 #endif
 
 namespace Botan_Tests {
@@ -215,7 +216,11 @@ class ECDSA_Key_Recovery_Tests final : public Text_Based_Test {
 
             Botan::PK_Verifier verifier(pubkey, "Raw");
 
-            auto sig = Botan::BigInt::encode_fixed_length_int_pair(R, S, group.get_order_bytes());
+            const size_t n_bytes = group.get_order_bytes();
+            std::vector<uint8_t> sig(2 * n_bytes);
+            Botan::BufferStuffer stuffer(sig);
+            R.serialize_to(stuffer.next(n_bytes));
+            S.serialize_to(stuffer.next(n_bytes));
 
             result.test_is_true("Signature verifies", verifier.verify_message(msg, sig));
          } catch(Botan::Exception& e) {

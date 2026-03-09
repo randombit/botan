@@ -9,6 +9,7 @@
 #include <botan/dsa.h>
 
 #include <botan/assert.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/dl_scheme.h>
 #include <botan/internal/keypair.h>
@@ -196,7 +197,12 @@ std::vector<uint8_t> DSA_Signature_Operation::raw_sign(std::span<const uint8_t> 
       throw Internal_Error("Computed zero r/s during DSA signature");
    }
 
-   return unlock(BigInt::encode_fixed_length_int_pair(r, s, q.bytes()));
+   const size_t q_bytes = q.bytes();
+   std::vector<uint8_t> sig(2 * q_bytes);
+   BufferStuffer stuffer(sig);
+   r.serialize_to(stuffer.next(q_bytes));
+   s.serialize_to(stuffer.next(q_bytes));
+   return sig;
 }
 
 /**
