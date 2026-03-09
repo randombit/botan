@@ -220,7 +220,13 @@ uint64_t OS::get_cpu_cycle_counter() {
    asm volatile("mov %0=ar.itc" : "=r"(rtc));
 
    #elif defined(BOTAN_TARGET_ARCH_IS_S390X)
+#ifdef __MVS__
+   unsigned long long value;
+   __stckf(&value);
+   return value;
+#else
    asm volatile("stck 0(%0)" : : "a"(&rtc) : "memory", "cc");
+#endif
 
    #elif defined(BOTAN_TARGET_ARCH_IS_HPPA)
    asm volatile("mfctl 16,%0" : "=r"(rtc));  // 64-bit only?

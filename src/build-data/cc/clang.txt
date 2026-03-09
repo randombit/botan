@@ -52,6 +52,7 @@ macos         -> "{cxx} -dynamiclib -fPIC -install_name {libdir}/{soname_abi} -c
 
 # The default works for GNU ld and several other Unix linkers
 default       -> "{cxx} -shared -fPIC -Wl,-soname,{soname_abi}"
+zos           -> "{cxx} -shared -fPIC"
 
 mingw         -> "{cxx} -shared -Wl,--out-implib,{shared_lib_name}.a"
 </so_link_commands>
@@ -105,11 +106,12 @@ llvm    -> "-emit-llvm -fno-use-cxa-atexit"
 </cpu_flags>
 
 <mach_abi_linking>
-all!haiku,llvm -> "-pthread"
+all!haiku,llvm,zos -> "-pthread"
 
 x86_32  -> "-m32"
 x86_64  -> "-m64"
 ppc64   -> "-m64"
+zos     -> "-fzos-le-char-mode=ascii -mnocsect -fno-short-enums -m64 -mzos-target=zosv3r1 -DNSIG=42 -D_XOPEN_SOURCE=600 -D_ALL_SOURCE -D_OPEN_SYS_FILE_EXT=1 -D_AE_BIMODAL=1 -D_ENHANCED_ASCII_EXT=0xFFFFFFFF"
 
 macos   -> "-stdlib=libc++"
 ios     -> "-stdlib=libc++"

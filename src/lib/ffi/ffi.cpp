@@ -23,7 +23,8 @@ namespace Botan_FFI {
 namespace {
 
 // NOLINTNEXTLINE(*-avoid-non-const-global-variables)
-thread_local std::string g_last_exception_what;
+//thread_local std::string g_last_exception_what;
+std::string g_last_exception_what;
 
 int ffi_map_error_type(Botan::ErrorType err) {
    switch(err) {
