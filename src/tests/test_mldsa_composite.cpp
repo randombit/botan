@@ -120,7 +120,6 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
       MLDSA_Composite_KAT_Tests() :
             Text_Based_Test("pubkey/mldsa_composite.vec", "tcId,pk,x5c,sk,sk_pkcs8,s,sWithContext") {}
 
-      // TODO: NEGATIVE TESTS WITH TOO SHORT PUBLIC AND PRIVATE KEYS
       Test::Result run_one_test(const std::string& name, const VarMap& vars) override {
          auto rng = std::make_unique<CTR_DRBG_AES256>(Botan::hex_decode(
             "061550234D158C5EC95595FE04EF7A25767F2E24CC2BC479D09D86DC9ABCFDE7056A8C266F9EF97ED08541DBD2E1FFA1"));
