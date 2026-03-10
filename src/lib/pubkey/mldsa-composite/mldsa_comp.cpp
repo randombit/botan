@@ -8,6 +8,7 @@
 #include <botan/hex.h>
 #include <botan/ml_dsa.h>
 #include <botan/mldsa_comp.h>
+#include <botan/oids.h>
 #include <botan/pk_algs.h>
 #include <botan/pk_ops.h>
 #include <botan/internal/fmt.h>
@@ -155,10 +156,10 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
          if(0 == std::strcmp(m_parameters.traditional_algoritm, "ECDSA")) {
             BOTAN_ASSERT(trad_sig.size() % 2 == 0, "ECDSA signature size is not divisible by 2");
             std::vector<uint8_t> enc_sig;
-            std::span<uint8_t> rs(trad_sig.begin(), trad_sig.begin() + trad_sig.size() / 2);
-            std::span<uint8_t> ss(trad_sig.begin() + trad_sig.size() / 2, trad_sig.end());
-            BigInt r(rs);
-            BigInt s(ss);
+            const std::span<uint8_t> rs(trad_sig.begin(), trad_sig.begin() + trad_sig.size() / 2);
+            const std::span<uint8_t> ss(trad_sig.begin() + trad_sig.size() / 2, trad_sig.end());
+            const BigInt r(rs);
+            const BigInt s(ss);
             DER_Encoder enc(enc_sig);
             enc.start_sequence().encode(r).encode(s).end_cons();
             std::swap(trad_sig, enc_sig);
@@ -291,6 +292,7 @@ std::shared_ptr<Private_Key> MLDSA_Composite_PrivateKey::load_traditional_privat
     OBJECT IDENTIFIER prime256v1 (1 2 840 10045 3 1 7)
     }
   } */
+
       std::cout << "load_traditional_private_key(): about to decode ECDSA key\n";
       return std::make_shared<ECDSA_PrivateKey>(param.get_traditional_algorithm_id(), trad_key_bits);
    }
@@ -312,8 +314,30 @@ secure_vector<uint8_t> MLDSA_Composite_PrivateKey::private_key_bits() const {
          ->raw_private_key_bits();  // "raw_...()" should still return the raw seed even after fixing the PKCS#8 encoding format for ML-DSA
    secure_vector<uint8_t> trad_bytes;
    if(0 == strcmp(m_parameters->traditional_algoritm, "ECDSA")) {
-      trad_bytes = m_tradtional_privkey->raw_private_key_bits();
+      /* For ML-DSA hybrid, must encode this private key format:
+ * SEQUENCE {
+  INTEGER 1
+  OCTET STRING
+    B9 4E 76 09 A7 17 6A BA FB D4 A3 4F AB AE 42 B0
+    91 E4 4D 9E 46 E6 7F CA 56 6C 2A 18 8A 63 C6 5F
+  [0] {
+    OBJECT IDENTIFIER prime256v1 (1 2 840 10045 3 1 7)
+    }
+  } */
+      OID oid = OIDS::str2oid_or_empty(m_parameters->curve);
+      BOTAN_ASSERT(!oid.empty(), "lookup of MLDSA-composite curve OID");
+      trad_bytes = DER_Encoder()
+                      .start_sequence()
+                      .encode(static_cast<size_t>(1))
+                      .encode(m_tradtional_privkey->raw_private_key_bits(), ASN1_Type::OctetString)
+                      .start_explicit_context_specific(0)
+                      .encode(oid)
+                      //.encode(m_public_key->public_key().serialize_uncompressed(), ASN1_Type::BitString)
+                      .end_cons()
+                      .end_cons()
+                      .get_contents();
    } else {
+      // for RSA
       trad_bytes = m_tradtional_privkey->private_key_bits();
    }
    if(0 == strcmp(m_parameters->traditional_algoritm, "Ed25519")) {
