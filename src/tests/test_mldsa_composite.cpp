@@ -61,12 +61,14 @@ void sign_and_verify(const Botan::Private_Key& priv_key,
    const char* message = "The quick brown fox jumps over the lazy dog.";
    Botan::PK_Signer signer(priv_key, rng, "");
    signer.update(message);
-   std::vector<uint8_t> signature2 = signer.signature(rng);
+   std::vector<uint8_t> signature = signer.signature(rng);
+   size_t sig_max_len = signer.signature_length();
+   test_result.test_sz_lte("signature not larger than indicated by signature OP", signature.size(), sig_max_len);
 
-   Botan::PK_Verifier verifier2(pub_key, "");
-   verifier2.update(message);
+   Botan::PK_Verifier verifier(pub_key, "");
+   verifier.update(message);
    test_result.test_bool_eq(
-      std::format("verification of correct signature ({})", test_context), verifier2.check_signature(signature2), true);
+      std::format("verification of correct signature ({})", test_context), verifier.check_signature(signature), true);
 }
 }  // namespace
 

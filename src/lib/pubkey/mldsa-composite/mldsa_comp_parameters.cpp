@@ -13,7 +13,8 @@
 
 namespace Botan {
 
-static const MLDSA_Composite_Param mldsa_composite_registry[] = {
+const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = {
+
    {.id = MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PSS_SHA256,
     .id_str = "MLDSA44-RSA2048-PSS-SHA256",
     .label = "COMPSIG-MLDSA44-RSA2048-PSS-SHA256",
@@ -23,7 +24,6 @@ static const MLDSA_Composite_Param mldsa_composite_registry[] = {
     .traditional_algoritm = "RSA",
     .traditional_padding = "PSS(SHA-256,MGF1,32)",
     .curve = "",
-    .mldsa_pubkey_size = 1312,
     .traditional_key_size = 2048}  // namespace Botan
 
    ,
@@ -36,7 +36,6 @@ static const MLDSA_Composite_Param mldsa_composite_registry[] = {
     .traditional_algoritm = "RSA",
     .traditional_padding = "PKCS1v15(SHA-256)",
     .curve = "",
-    .mldsa_pubkey_size = 1312,
     .traditional_key_size = 2048}  // namespace Botan
 
    ,
@@ -49,7 +48,6 @@ static const MLDSA_Composite_Param mldsa_composite_registry[] = {
     .traditional_algoritm = "Ed25519",
     .traditional_padding = "",
     .curve = "",
-    .mldsa_pubkey_size = 1312,
     .traditional_key_size = 255},
    {
       .id = MLDSA_Composite_Param::id_t::MLDSA44_ECDSA_P256_SHA256,
@@ -61,8 +59,19 @@ static const MLDSA_Composite_Param mldsa_composite_registry[] = {
       .traditional_algoritm = "ECDSA",
       .traditional_padding = "SHA-256",
       .curve = "secp256r1",
-      .mldsa_pubkey_size = 1312,
       .traditional_key_size = 256  // NEEDED?
+   },
+   {
+      .id = MLDSA_Composite_Param::id_t::MLDSA87_ECDSA_P521_SHA512,
+      .id_str = "MLDSA87-ECDSA-P521-SHA512",
+      .label = "COMPSIG-MLDSA87-ECDSA-P521-SHA512",
+      .prehash_func = "SHA-512",
+      .mldsa_variant = DilithiumMode::ML_DSA_8x7,
+      .mldsa_oid_str = "2.16.840.1.101.3.4.3.19",
+      .traditional_algoritm = "ECDSA",
+      .traditional_padding = "SHA-512",
+      .curve = "secp521r1",
+      .traditional_key_size = 521  // NEEDED?
    }};
 
 std::vector<MLDSA_Composite_Param> MLDSA_Composite_Param::all_param_sets() {
@@ -128,6 +137,15 @@ MLDSA_Composite_Param MLDSA_Composite_Param::from_id_or_throw(MLDSA_Composite_Pa
       throw Botan::Invalid_Argument("no parameter found for provided MLDSA composite id (enum)");
    }
    return result.value();
+}
+
+size_t MLDSA_Composite_Param::mldsa_pubkey_size() const {
+   if(mldsa_variant == DilithiumMode::ML_DSA_4x4) {
+      return 1312;
+   } else if(mldsa_variant == DilithiumMode::ML_DSA_6x5) {
+      return 1952;
+   }
+   return 2592;  // must be ML-DSA-87
 }
 
 std::string MLDSA_Composite_Param::mldsa_param_str() const {
@@ -197,11 +215,9 @@ AlgorithmIdentifier MLDSA_Composite_Param::get_traditional_algorithm_id() const 
 std::string MLDSA_Composite_Param::get_traditional_algo_param_str() const {
    if(0 == strcmp(this->traditional_algoritm, "RSA")) {
       return std::to_string(traditional_key_size);
-   } else if(0 == strcmp(this->traditional_algoritm, "Ed25519")) {
-      return "";
-   }
-   throw Botan::Invalid_Argument(
-      "TODO: MLDSA_Composite_Param::get_traditional_algo_param_str() not implemented for ECC or other");
+   }  //else if(0 == strcmp(this->traditional_algoritm, "Ed25519")) {
+   return "";
+   // }
 }
 
 }  // namespace Botan

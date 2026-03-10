@@ -23,6 +23,8 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
          MLDSA44_Ed25519_SHA512,
          MLDSA44_ECDSA_P256_SHA256,
 
+         MLDSA87_ECDSA_P521_SHA512
+
       };
 
       static std::vector<MLDSA_Composite_Param> all_param_sets();
@@ -54,12 +56,14 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
 
       size_t signature_size() const { return mldsa_signature_size() + traditional_signature_size(); }
 
+      size_t mldsa_pubkey_size() const;
+
       std::string get_traditional_algo_param_str() const;
       size_t traditional_pubkey_encoded_size() const;
 
       size_t mldsa_privkey_size() const { return 32; }
 
-      // TODO: MAKE PRIVATE
+      // TODO: MAKE PRIVATE (create ctor for building registry)
       id_t id;
       const char* id_str;
       const char* label;
@@ -69,12 +73,12 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
       const char* traditional_algoritm;
       const char* traditional_padding;
       const char* curve;
-      uint32_t mldsa_pubkey_size;
       uint32_t traditional_key_size;
 
       //MLDSA_Composite_Param() = delete;
 
    private:
+      static const MLDSA_Composite_Param mldsa_composite_registry[];
 };
 
 }  // namespace Botan

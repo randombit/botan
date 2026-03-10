@@ -26,10 +26,10 @@ namespace {
 std::span<const uint8_t> mldsa_pubkey_subspan(const MLDSA_Composite_Param& param, std::span<const uint8_t> key_bits) {
    OID oid(param.mldsa_oid_str);
    AlgorithmIdentifier aid(oid, AlgorithmIdentifier::Encoding_Option::USE_EMPTY_PARAM);
-   if(key_bits.size() <= param.mldsa_pubkey_size) {
+   if(key_bits.size() <= param.mldsa_pubkey_size()) {
       throw Invalid_Argument(fmt("encoded MLDSA component public key is too short (len = {})", key_bits.size()));
    }
-   return std::span<const uint8_t>(key_bits.begin(), param.mldsa_pubkey_size);
+   return std::span<const uint8_t>(key_bits.begin(), param.mldsa_pubkey_size());
 }
 
 std::span<const uint8_t> mldsa_privkey_subspan(const MLDSA_Composite_Param& param, std::span<const uint8_t> key_bits) {
@@ -45,7 +45,7 @@ std::span<const uint8_t> mldsa_privkey_subspan(const MLDSA_Composite_Param& para
 
 std::span<const uint8_t> traditional_pubkey_subspan(const MLDSA_Composite_Param& param,
                                                     std::span<const uint8_t> key_bits) {
-   const size_t offset = param.mldsa_pubkey_size;
+   const size_t offset = param.mldsa_pubkey_size();
    if(key_bits.size() <= 1 + offset) {
       throw Invalid_Argument(fmt("encoded traditional component public key is too short (len = {})", key_bits.size()));
    }
@@ -162,13 +162,21 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
             const BigInt s(ss);
             DER_Encoder enc(enc_sig);
             enc.start_sequence().encode(r).encode(s).end_cons();
+            std::cout << "ECDSA signature = " << hex_encode(enc_sig) << std::endl;
             std::swap(trad_sig, enc_sig);
          }
          sig.insert(sig.end(), trad_sig.begin(), trad_sig.end());
          return sig;
       }
 
-      size_t signature_length() const override { return m_parameters.signature_size(); }
+      size_t signature_length() const override {
+         size_t encoding_len = 0;
+         if(0 == std::strcmp(m_parameters.traditional_algoritm, "ECDSA")) {
+            encoding_len =
+               3 /* SEQ */ + 2 * 2 /* 2x INTEGER T+L */ + 2 * 1 /* 2x potential leading sign octet in INTEGER */;
+         }
+         return m_mldsa_sig_op->signature_length() + m_traditional_sig_op->signature_length() + encoding_len;
+      }
 
       AlgorithmIdentifier algorithm_identifier() const override { return m_parameters.get_composite_algorithm_id(); }
 
@@ -376,11 +384,11 @@ MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(const AlgorithmIdentifier
 // static
 std::unique_ptr<Private_Key> MLDSA_Composite_PrivateKey::create_traditional_private_key(RandomNumberGenerator& rng,
                                                                                         MLDSA_Composite_Param param) {
-   if(0 != std::strcmp(param.traditional_algoritm, "ECDSA")) {
-      return create_private_key(param.traditional_algoritm, rng, param.get_traditional_algo_param_str());
+   if(0 == std::strcmp(param.traditional_algoritm, "ECDSA")) {
+      const auto group = Botan::EC_Group::from_name(param.curve);
+      return std::make_unique<Botan::ECDSA_PrivateKey>(rng, group);
    }
-   const auto group = Botan::EC_Group::from_name(param.curve);
-   return std::make_unique<Botan::ECDSA_PrivateKey>(rng, group);
+   return create_private_key(param.traditional_algoritm, rng, param.get_traditional_algo_param_str());
 }
 
 MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(RandomNumberGenerator& rng, MLDSA_Composite_Param param) :
