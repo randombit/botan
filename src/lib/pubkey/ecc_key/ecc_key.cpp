@@ -8,7 +8,6 @@
 */
 
 #include <botan/ecc_key.h>
-#include <memory>
 
 #include <botan/assert.h>
 #include <botan/ber_dec.h>
@@ -17,6 +16,8 @@
 #include <botan/internal/ec_key_data.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/workfactor.h>
+
+#include <memory>
 
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
    #include <botan/ec_point.h>

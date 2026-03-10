@@ -282,18 +282,6 @@ std::shared_ptr<Private_Key> MLDSA_Composite_PrivateKey::load_traditional_privat
       return std::shared_ptr<Private_Key>(new Ed25519_PrivateKey(Ed25519_PrivateKey::from_seed(trad_key_bits)));
    }
    if(0 == strcmp(param.traditional_algoritm, "ECDSA")) {
-      /* Must decode this private key format:
- * SEQUENCE {
-  INTEGER 1
-  OCTET STRING
-    B9 4E 76 09 A7 17 6A BA FB D4 A3 4F AB AE 42 B0
-    91 E4 4D 9E 46 E6 7F CA 56 6C 2A 18 8A 63 C6 5F
-  [0] {
-    OBJECT IDENTIFIER prime256v1 (1 2 840 10045 3 1 7)
-    }
-  } */
-
-      std::cout << "load_traditional_private_key(): about to decode ECDSA key\n";
       return std::make_shared<ECDSA_PrivateKey>(param.get_traditional_algorithm_id(), trad_key_bits);
    }
    return load_private_key(param.get_traditional_algorithm_id(), trad_key_bits);
@@ -314,16 +302,16 @@ secure_vector<uint8_t> MLDSA_Composite_PrivateKey::private_key_bits() const {
          ->raw_private_key_bits();  // "raw_...()" should still return the raw seed even after fixing the PKCS#8 encoding format for ML-DSA
    secure_vector<uint8_t> trad_bytes;
    if(0 == strcmp(m_parameters->traditional_algoritm, "ECDSA")) {
-      /* For ML-DSA hybrid, must encode this private key format:
- * SEQUENCE {
-  INTEGER 1
-  OCTET STRING
-    B9 4E 76 09 A7 17 6A BA FB D4 A3 4F AB AE 42 B0
-    91 E4 4D 9E 46 E6 7F CA 56 6C 2A 18 8A 63 C6 5F
-  [0] {
-    OBJECT IDENTIFIER prime256v1 (1 2 840 10045 3 1 7)
-    }
-  } */
+      /* For ML-DSA hybrid, we MUST encode this private key format:
+        * SEQUENCE {
+        * INTEGER 1
+        * OCTET STRING
+        *   B9 4E 76 09 A7 17 6A BA FB D4 A3 4F AB AE 42 B0
+        *   91 E4 4D 9E 46 E6 7F CA 56 6C 2A 18 8A 63 C6 5F
+        * [0] {
+        *   OBJECT IDENTIFIER prime256v1 (1 2 840 10045 3 1 7)
+        *   }
+        * } */
       OID oid = OIDS::str2oid_or_empty(m_parameters->curve);
       BOTAN_ASSERT(!oid.empty(), "lookup of MLDSA-composite curve OID");
       trad_bytes = DER_Encoder()

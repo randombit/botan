@@ -9,6 +9,7 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  */
 
+#include "botan/ber_dec.h"
 #include "botan/mldsa_comp_parameters.h"
 #include "tests.h"
 
@@ -94,6 +95,9 @@ class MLDSA_Composite_RT_Tests : public Test {
             }
          }
          Botan::secure_vector<uint8_t> private_enc = priv_key_generated->private_key_bits();
+         if(test_name.find("ECDSA") != std::string::npos) {
+            check_encoded_ecdsa_private_key(private_enc, result);
+         }
          std::vector<uint8_t> public_enc = priv_key_generated->public_key_bits();
          const Botan::MLDSA_Composite_PrivateKey priv_key_redec(priv_key_generated->algorithm_identifier(),
                                                                 private_enc);
@@ -111,6 +115,30 @@ class MLDSA_Composite_RT_Tests : public Test {
          }
          return result;
          // TODO: ADD INVALID SIGNATURE AND KEY SIZE TESTS
+      }
+
+   private:
+      static void check_encoded_ecdsa_private_key(std::span<uint8_t> composite_private_key, Test::Result& result) {
+         Botan::OID key_parameters;
+         Botan::secure_vector<uint8_t> private_key_bits;
+         Botan::secure_vector<uint8_t> public_key_bits;
+         if(composite_private_key.size() < 33) {
+            result.test_failure("encoded ECDSA component private key is too short");
+         }
+         std::vector<uint8_t> ecdsa_private_enc(composite_private_key.begin() + 32, composite_private_key.end());
+         try {
+            std::cout << "encoded private key = " << Botan::hex_encode(ecdsa_private_enc) << std::endl;
+
+            Botan::BER_Decoder(ecdsa_private_enc)
+               .start_sequence()
+               .decode_and_check<size_t>(1, "Unknown version code for ECC key")
+               .decode(private_key_bits, Botan::ASN1_Type::OctetString)
+               .decode_optional(key_parameters, Botan::ASN1_Type(0), Botan::ASN1_Class::ExplicitContextSpecific)
+               .end_cons()
+               .verify_end();
+         } catch(const Botan::Exception& e) {
+            result.test_failure(std::format("verify ECDSA private format decoding: {}", e.what()));
+         }
       }
 };
 
