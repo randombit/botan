@@ -48,31 +48,27 @@ const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = 
     .traditional_algoritm = "Ed25519",
     .traditional_padding = "",
     .curve = "",
-    .traditional_key_size = 255},
-   {
-      .id = MLDSA_Composite_Param::id_t::MLDSA44_ECDSA_P256_SHA256,
-      .id_str = "MLDSA44-ECDSA-P256-SHA256",
-      .label = "COMPSIG-MLDSA44-ECDSA-P256-SHA256",
-      .prehash_func = "SHA-256",
-      .mldsa_variant = DilithiumMode::ML_DSA_4x4,
-      .mldsa_oid_str = "2.16.840.1.101.3.4.3.17",
-      .traditional_algoritm = "ECDSA",
-      .traditional_padding = "SHA-256",
-      .curve = "secp256r1",
-      .traditional_key_size = 256  // NEEDED?
-   },
-   {
-      .id = MLDSA_Composite_Param::id_t::MLDSA87_ECDSA_P521_SHA512,
-      .id_str = "MLDSA87-ECDSA-P521-SHA512",
-      .label = "COMPSIG-MLDSA87-ECDSA-P521-SHA512",
-      .prehash_func = "SHA-512",
-      .mldsa_variant = DilithiumMode::ML_DSA_8x7,
-      .mldsa_oid_str = "2.16.840.1.101.3.4.3.19",
-      .traditional_algoritm = "ECDSA",
-      .traditional_padding = "SHA-512",
-      .curve = "secp521r1",
-      .traditional_key_size = 521  // NEEDED?
-   }};
+    .traditional_key_size = 0},
+   {.id = MLDSA_Composite_Param::id_t::MLDSA44_ECDSA_P256_SHA256,
+    .id_str = "MLDSA44-ECDSA-P256-SHA256",
+    .label = "COMPSIG-MLDSA44-ECDSA-P256-SHA256",
+    .prehash_func = "SHA-256",
+    .mldsa_variant = DilithiumMode::ML_DSA_4x4,
+    .mldsa_oid_str = "2.16.840.1.101.3.4.3.17",
+    .traditional_algoritm = "ECDSA",
+    .traditional_padding = "SHA-256",
+    .curve = "secp256r1",
+    .traditional_key_size = 0},
+   {.id = MLDSA_Composite_Param::id_t::MLDSA87_ECDSA_P521_SHA512,
+    .id_str = "MLDSA87-ECDSA-P521-SHA512",
+    .label = "COMPSIG-MLDSA87-ECDSA-P521-SHA512",
+    .prehash_func = "SHA-512",
+    .mldsa_variant = DilithiumMode::ML_DSA_8x7,
+    .mldsa_oid_str = "2.16.840.1.101.3.4.3.19",
+    .traditional_algoritm = "ECDSA",
+    .traditional_padding = "SHA-512",
+    .curve = "secp521r1",
+    .traditional_key_size = 0}};
 
 std::vector<MLDSA_Composite_Param> MLDSA_Composite_Param::all_param_sets() {
    std::vector<MLDSA_Composite_Param> result;
