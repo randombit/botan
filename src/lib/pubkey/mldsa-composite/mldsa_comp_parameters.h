@@ -22,7 +22,19 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
          MLDSA44_RSA2048_PKCS15_SHA256,
          MLDSA44_Ed25519_SHA512,
          MLDSA44_ECDSA_P256_SHA256,
-
+         MLDSA65_RSA3072_PSS_SHA512,
+         MLDSA65_RSA3072_PKCS15_SHA512,
+         MLDSA65_RSA4096_PSS_SHA512,
+         MLDSA65_RSA4096_PKCS15_SHA512,
+         MLDSA65_ECDSA_P256_SHA512,
+         MLDSA65_ECDSA_P384_SHA512,
+         MLDSA65_ECDSA_brainpoolP256r1_SHA512,
+         MLDSA65_Ed25519_SHA512,
+         MLDSA87_ECDSA_P384_SHA512,
+         MLDSA87_ECDSA_brainpoolP384r1_SHA512,
+         MLDSA87_Ed448_SHAKE256,
+         MLDSA87_RSA3072_PSS_SHA512,
+         MLDSA87_RSA4096_PSS_SHA512,
          MLDSA87_ECDSA_P521_SHA512
 
       };
@@ -37,7 +49,7 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
       static std::optional<MLDSA_Composite_Param> from_algo_id(const AlgorithmIdentifier& algo_id);
       static MLDSA_Composite_Param from_algo_id_or_throw(const AlgorithmIdentifier& algo_id);
 
-      MLDSA_Composite_Param clone() const { return MLDSA_Composite_Param::from_id_or_throw(id); }
+      MLDSA_Composite_Param clone() const { return MLDSA_Composite_Param::from_id_or_throw(m_id); }
 
       size_t estimated_strength() const { throw Botan::Exception("TODO: not implemented"); }  // TODO
 
@@ -45,11 +57,11 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
       AlgorithmIdentifier get_mldsa_algorithm_id() const;
       AlgorithmIdentifier get_traditional_algorithm_id() const;
 
-      OID object_identifier() const { return OID_Map::global_registry().str2oid(this->id_str); }
+      OID object_identifier() const { return OID_Map::global_registry().str2oid(this->m_id_str); }
 
       std::string mldsa_param_str() const;
 
-      DilithiumMode get_mldsa_mode() const { return mldsa_variant; }
+      DilithiumMode get_mldsa_mode() const { return m_mldsa_variant; }
 
       size_t mldsa_signature_size() const;
       size_t traditional_signature_size() const;
@@ -58,26 +70,52 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
 
       size_t mldsa_pubkey_size() const;
 
+      const char* mldsa_oid_str() const;
+
+      MLDSA_Composite_Param::id_t id() const { return m_id; }
+
+      std::string id_str() const { return std::string(this->m_id_str); }
+
+      std::string label() const { return std::string(this->m_label); }
+
+      std::string prehash_func() const { return std::string(this->m_prehash_func); }
+
+      std::string traditional_algorithm() const { return std::string(this->m_traditional_algorithm); }
+
+      std::string traditional_padding() const { return std::string(this->m_traditional_padding); }
+
+      std::string curve() const { return std::string(this->m_curve); }
+
       std::string get_traditional_algo_param_str() const;
       size_t traditional_pubkey_encoded_size() const;
 
       size_t mldsa_privkey_size() const { return 32; }
 
+      MLDSA_Composite_Param(id_t id,
+                            const char* id_str,
+                            const char* label,
+                            const char* prehash_func,
+                            DilithiumMode::Mode mldsa_variant,
+                            const char* traditional_algorithm,
+                            const char* traditional_padding,
+                            const char* curve,
+                            uint32_t traditional_key_size) noexcept;
+
       // TODO: MAKE PRIVATE (create ctor for building registry)
-      id_t id;
-      const char* id_str;
-      const char* label;
-      const char* prehash_func;
-      DilithiumMode::Mode mldsa_variant;
-      const char* mldsa_oid_str;
-      const char* traditional_algoritm;
-      const char* traditional_padding;
-      const char* curve;
-      uint32_t traditional_key_size;
 
       //MLDSA_Composite_Param() = delete;
 
    private:
+      id_t m_id;
+      const char* m_id_str;
+      const char* m_label;
+      const char* m_prehash_func;
+      DilithiumMode::Mode m_mldsa_variant;
+      //const char* mldsa_oid_str;
+      const char* m_traditional_algorithm;
+      const char* m_traditional_padding;
+      const char* m_curve;
+      uint32_t m_traditional_key_size;
       static const MLDSA_Composite_Param mldsa_composite_registry[];
 };
 

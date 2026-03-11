@@ -79,11 +79,11 @@ class MLDSA_Composite_RT_Tests : public Test {
    public:
       static Test::Result run_roundtrip(Botan::MLDSA_Composite_Param::id_t id) {
          auto param = Botan::MLDSA_Composite_Param::from_id_or_throw(id);
-         std::string test_name = std::string("MLDSA_Composite_round_trip_") + param.id_str;
+         std::string test_name = std::string("MLDSA_Composite_round_trip_") + param.id_str();
          Test::Result result(test_name);
          auto rng = Test::new_rng(test_name);
 
-         auto priv_key_generated(Botan::create_private_key(param.id_str, *rng));
+         auto priv_key_generated(Botan::create_private_key(param.id_str(), *rng));
          if(nullptr == priv_key_generated) {
             result.test_bool_eq("generated private key non-null", false, true);
          } else {
@@ -113,7 +113,7 @@ class MLDSA_Composite_RT_Tests : public Test {
          std::vector<Test::Result> result;
          result.reserve(all_params.size());
          for(const auto& param : all_params) {
-            result.push_back(run_roundtrip(param.id));
+            result.push_back(run_roundtrip(param.id()));
          }
          return result;
          // TODO: ADD INVALID SIGNATURE AND KEY SIZE TESTS
@@ -188,7 +188,7 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
          std::unique_ptr<Botan::Private_Key> privkey;
 
          try {
-            pubkey = std::make_unique<Botan::MLDSA_Composite_PublicKey>(comp_parm.id, pk_bin);
+            pubkey = std::make_unique<Botan::MLDSA_Composite_PublicKey>(comp_parm.id(), pk_bin);
          } catch(const Botan::Exception& e) {
             exc_during_pubkey_decoding = true;
          }
@@ -205,7 +205,7 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
 
          try {
             std::cout << std::format("starting to decode private key of length {}... \n", sk_bin.size());
-            privkey = std::make_unique<Botan::MLDSA_Composite_PrivateKey>(comp_parm.id, sk_bin);
+            privkey = std::make_unique<Botan::MLDSA_Composite_PrivateKey>(comp_parm.id(), sk_bin);
             std::cout << "  ... done decode private key\n";
          } catch(const Botan::Exception& e) {
             exc_during_privkey_decoding = true;

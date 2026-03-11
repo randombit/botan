@@ -268,7 +268,7 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
    if(alg_name.starts_with("MLDSA")) {
       auto comp_parm = MLDSA_Composite_Param::from_id_str(alg_name);
       if(comp_parm.has_value()) {
-         return std::make_unique<MLDSA_Composite_PublicKey>(comp_parm->id, key_bits);
+         return std::make_unique<MLDSA_Composite_PublicKey>(comp_parm->id(), key_bits);
       }
       // we continue the search as there might be other algorithms defined with leading "MLDSA"
    }
@@ -437,7 +437,7 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
    if(alg_name.starts_with("MLDSA")) {
       auto comp_parm = MLDSA_Composite_Param::from_id_str(alg_name);
       if(comp_parm.has_value()) {
-         return std::make_unique<MLDSA_Composite_PrivateKey>(comp_parm->id, key_bits);
+         return std::make_unique<MLDSA_Composite_PrivateKey>(comp_parm->id(), key_bits);
       }
       // we continue the search as there might be other algorithms defined with leading "MLDSA"
    }
