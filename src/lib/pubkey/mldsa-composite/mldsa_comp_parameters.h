@@ -36,25 +36,28 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
          MLDSA87_RSA3072_PSS_SHA512,
          MLDSA87_RSA4096_PSS_SHA512,
          MLDSA87_ECDSA_P521_SHA512
-
       };
 
       static std::vector<MLDSA_Composite_Param> all_param_sets();
 
       static MLDSA_Composite_Param from_id_or_throw(MLDSA_Composite_Param::id_t id);
+
       static std::optional<MLDSA_Composite_Param> from_id(MLDSA_Composite_Param::id_t id);
+
       static MLDSA_Composite_Param from_id_str_or_throw(std::string_view id_str);
+
       static std::optional<MLDSA_Composite_Param> from_id_str(std::string_view id_str);
 
       static std::optional<MLDSA_Composite_Param> from_algo_id(const AlgorithmIdentifier& algo_id);
+
       static MLDSA_Composite_Param from_algo_id_or_throw(const AlgorithmIdentifier& algo_id);
 
       MLDSA_Composite_Param clone() const { return MLDSA_Composite_Param::from_id_or_throw(m_id); }
 
-      size_t estimated_strength() const { throw Botan::Exception("TODO: not implemented"); }  // TODO
-
       AlgorithmIdentifier get_composite_algorithm_id() const;
+
       AlgorithmIdentifier get_mldsa_algorithm_id() const;
+
       AlgorithmIdentifier get_traditional_algorithm_id() const;
 
       OID object_identifier() const { return OID_Map::global_registry().str2oid(this->m_id_str); }
@@ -98,21 +101,17 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
                             const char* curve,
                             uint32_t traditional_key_size) noexcept;
 
-      // TODO: MAKE PRIVATE (create ctor for building registry)
-
-      //MLDSA_Composite_Param() = delete;
-
    private:
       id_t m_id;
       const char* m_id_str;
       const char* m_label;
       const char* m_prehash_func;
       DilithiumMode::Mode m_mldsa_variant;
-      //const char* mldsa_oid_str;
       const char* m_traditional_algorithm;
       const char* m_traditional_padding;
       const char* m_curve;
       uint32_t m_traditional_key_size;
+
       static const MLDSA_Composite_Param mldsa_composite_registry[];
 };
 

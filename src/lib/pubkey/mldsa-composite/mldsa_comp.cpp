@@ -39,8 +39,8 @@ std::span<const uint8_t> mldsa_privkey_subspan(const MLDSA_Composite_Param& para
    if(key_bits.size() <= param.mldsa_privkey_size()) {
       throw Invalid_Argument("encoded MLDSA component private key is too short");
    }
-   std::cout << "mldsa_privkey_subspan(): trad private key size = " << key_bits.size() - param.mldsa_privkey_size()
-             << std::endl;
+   // std::cout << "mldsa_privkey_subspan(): trad private key size = " << key_bits.size() - param.mldsa_privkey_size()
+   //           << std::endl;
    return std::span<const uint8_t>(key_bits.begin(), param.mldsa_privkey_size());
 }
 
@@ -50,12 +50,6 @@ std::span<const uint8_t> traditional_pubkey_subspan(const MLDSA_Composite_Param&
    if(key_bits.size() <= 1 + offset) {
       throw Invalid_Argument(fmt("encoded traditional component public key is too short (len = {})", key_bits.size()));
    }
-   // debug ->
-   // if(param.id == MLDSA_Composite_Param::id_t::MLDSA44_ECDSA_P256_SHA256) {
-   //    std::vector<uint8_t> ecdsa_pub_bytes(key_bits.begin() + offset, key_bits.end());
-   //    std::cout << "ECDSA Public Key bytes = " << hex_encode(ecdsa_pub_bytes) << std::endl;
-   // }
-   // <-
    std::span<const uint8_t> result(key_bits.begin() + offset, key_bits.end());
    return result;
 }
@@ -67,7 +61,7 @@ std::span<const uint8_t> traditional_privkey_subspan(const MLDSA_Composite_Param
       throw Invalid_Argument("encoded traditional component private key is too short");
    }
    std::span<const uint8_t> result(key_bits.begin() + offset, key_bits.end());
-   std::cout << fmt("traditional priv key (length = {}) = {}\n", key_bits.size() - offset, hex_encode(result));
+   // std::cout << fmt("traditional priv key (length = {}) = {}\n", key_bits.size() - offset, hex_encode(result));
    return result;
 }
 }  // namespace
@@ -100,21 +94,21 @@ class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification
          std::span<const uint8_t> trad_sig(sig.begin() + mldsa_sig_size, sig.end());
          std::vector<uint8_t> trad_sig_buf;
          if(m_parameters.traditional_algorithm() == "ECDSA") {
-            std::cout << "MLDSA_Composite_Verification_Operation: Verifying ECDSA signature: " << hex_encode(trad_sig)
-                      << std::endl;
+            // std::cout << "MLDSA_Composite_Verification_Operation: Verifying ECDSA signature: " << hex_encode(trad_sig)
+            // << std::endl;
             BER_Decoder dec(trad_sig);
             BigInt ri;
             BigInt si;
             dec.start_sequence().decode(ri).decode(si).end_cons();
             const auto group = Botan::EC_Group::from_name(m_parameters.curve());
             EC_Scalar r = EC_Scalar::from_bigint(group, ri);
-            std::cout << "  decoded r from signature = " << hex_encode(r.serialize()) << std::endl;
+            // std::cout << "  decoded r from signature = " << hex_encode(r.serialize()) << std::endl;
             EC_Scalar s = EC_Scalar::from_bigint(group, si);
-            std::cout << "  decoded s from signature = " << hex_encode(s.serialize()) << std::endl;
+            // std::cout << "  decoded s from signature = " << hex_encode(s.serialize()) << std::endl;
 
             trad_sig_buf = EC_Scalar::serialize_pair(r, s);
             trad_sig = trad_sig_buf;
-            std::cout << "  serialized pair = " << hex_encode(trad_sig) << std::endl;
+            // std::cout << "  serialized pair = " << hex_encode(trad_sig) << std::endl;
          }
          if(!m_mldsa_ver_op->is_valid_signature(mldsa_sig)) {
             return false;
@@ -163,7 +157,7 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
             const BigInt s(ss);
             DER_Encoder enc(enc_sig);
             enc.start_sequence().encode(r).encode(s).end_cons();
-            std::cout << "ECDSA signature = " << hex_encode(enc_sig) << std::endl;
+            // std::cout << "ECDSA signature = " << hex_encode(enc_sig) << std::endl;
             std::swap(trad_sig, enc_sig);
          }
          sig.insert(sig.end(), trad_sig.begin(), trad_sig.end());
@@ -194,9 +188,9 @@ std::shared_ptr<Public_Key> MLDSA_Composite_PublicKey::load_traditional_public_k
                                                                                    std::span<const uint8_t> key_bits) {
    if(param.traditional_algorithm() == "ECDSA") {
       const auto group = Botan::EC_Group::from_name(param.curve());
-      std::cout << fmt("load_traditional_public_key(): decoding ECDSA_PublicKey (length = {}) {}\n",
-                       key_bits.size(),
-                       hex_encode(key_bits));
+      // std::cout << fmt("load_traditional_public_key(): decoding ECDSA_PublicKey (length = {}) {}\n",
+      // key_bits.size(),
+      // hex_encode(key_bits));
 
       return std::make_shared<Botan::ECDSA_PublicKey>(group, EC_AffinePoint(group, key_bits));
    }
@@ -206,15 +200,15 @@ std::shared_ptr<Public_Key> MLDSA_Composite_PublicKey::load_traditional_public_k
 MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(const MLDSA_Composite_PublicKey& other) :
       m_parameters(std::make_shared<MLDSA_Composite_Param>(*other.m_parameters)),
       m_mldsa_pubkey(std::make_shared<ML_DSA_PublicKey>(*other.m_mldsa_pubkey)),
-      // m_tradtional_pubkey(std::make_shared<Public_Key>(*other.m_tradtional_pubkey)) {}
-      m_tradtional_pubkey(load_traditional_public_key(*m_parameters, other.m_tradtional_pubkey->public_key_bits())) {}
+      // m_traditional_pubkey(std::make_shared<Public_Key>(*other.m_traditional_pubkey)) {}
+      m_traditional_pubkey(load_traditional_public_key(*m_parameters, other.m_traditional_pubkey->public_key_bits())) {}
 
 MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(const AlgorithmIdentifier& algo_id,
                                                      std::span<const uint8_t> key_bits) :
       m_parameters(std::make_shared<MLDSA_Composite_Param>(MLDSA_Composite_Param::from_algo_id_or_throw(algo_id))),
       m_mldsa_pubkey(std::make_shared<ML_DSA_PublicKey>(m_parameters->get_mldsa_algorithm_id(),
                                                         mldsa_pubkey_subspan(*m_parameters, key_bits))),
-      m_tradtional_pubkey(
+      m_traditional_pubkey(
          load_traditional_public_key(*m_parameters, traditional_pubkey_subspan(*m_parameters, key_bits))) {}
 
 MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t id,
@@ -222,7 +216,7 @@ MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t
       m_parameters(std::make_shared<MLDSA_Composite_Param>(MLDSA_Composite_Param::from_id_or_throw(id))),
       m_mldsa_pubkey(std::make_shared<ML_DSA_PublicKey>(m_parameters->get_mldsa_algorithm_id(),
                                                         mldsa_pubkey_subspan(*m_parameters, key_bits))),
-      m_tradtional_pubkey(
+      m_traditional_pubkey(
          load_traditional_public_key(*m_parameters, traditional_pubkey_subspan(*m_parameters, key_bits))) {}
 
 MLDSA_Composite_PublicKey& MLDSA_Composite_PublicKey::operator=(const MLDSA_Composite_PublicKey& rhs) {
@@ -231,9 +225,8 @@ MLDSA_Composite_PublicKey& MLDSA_Composite_PublicKey::operator=(const MLDSA_Comp
    }
    m_parameters = std::make_shared<MLDSA_Composite_Param>(*rhs.m_parameters);
    m_mldsa_pubkey = std::make_shared<ML_DSA_PublicKey>(*rhs.m_mldsa_pubkey);
-   //  m_tradtional_pubkey = std::make_shared<Public_Key>(*rhs.m_tradtional_pubkey);
-   m_tradtional_pubkey =
-      load_public_key(m_parameters->get_traditional_algorithm_id(), rhs.m_tradtional_pubkey->public_key_bits());
+   //  m_traditional_pubkey = std::make_shared<Public_Key>(*rhs.m_traditional_pubkey);
+   m_traditional_pubkey = load_traditional_public_key(*m_parameters, rhs.m_traditional_pubkey->public_key_bits());
    return *this;
 }
 
@@ -247,9 +240,9 @@ OID MLDSA_Composite_PublicKey::object_identifier() const {
 
 std::vector<uint8_t> MLDSA_Composite_PublicKey::public_key_bits() const {
    std::vector<uint8_t> result(this->m_mldsa_pubkey->public_key_bits());
-   std::vector<uint8_t> trad_bytes = this->m_tradtional_pubkey->public_key_bits();
+   std::vector<uint8_t> trad_bytes = this->m_traditional_pubkey->public_key_bits();
    if(m_parameters->traditional_algorithm() == "ECDSA") {
-      std::cout << fmt("encoded ECDSA public key (len = {}) = {}\n", trad_bytes.size(), hex_encode(trad_bytes));
+      // std::cout << fmt("encoded ECDSA public key (len = {}) = {}\n", trad_bytes.size(), hex_encode(trad_bytes));
    }
    result.insert(result.end(), trad_bytes.begin(), trad_bytes.end());
    return result;
@@ -262,13 +255,13 @@ std::unique_ptr<Private_Key> MLDSA_Composite_PublicKey::generate_another(RandomN
 // ALLOW NON-EMPTY CTX VIA PARAMS?
 std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_verification_op(
    std::string_view params_for_ctx, std::string_view provider) const {
-   std::cout << "MLDSA_Composite_PublicKey::create_verification_op() called\n";
+   // std::cout << "MLDSA_Composite_PublicKey::create_verification_op() called\n";
    if(params_for_ctx != "") {
       throw Botan::Invalid_Argument("signature parameters not supported for MLDSA composite signatures");
    }
    if(provider.empty() || provider == "base") {
       return std::make_unique<MLDSA_Composite_Verification_Operation>(
-         *this->m_parameters, *this->m_mldsa_pubkey, this->m_tradtional_pubkey.get());
+         *this->m_parameters, *this->m_mldsa_pubkey, this->m_traditional_pubkey.get());
    }
    throw Provider_Not_Found(algo_name(), provider);
 }
@@ -280,7 +273,7 @@ std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_x509_ver
          throw Decoding_Error("Unexpected AlgorithmIdentifier for MLDSA-Composite X.509 signature");
       }
       return std::make_unique<MLDSA_Composite_Verification_Operation>(
-         *this->m_parameters, *this->m_mldsa_pubkey, this->m_tradtional_pubkey.get());
+         *this->m_parameters, *this->m_mldsa_pubkey, this->m_traditional_pubkey.get());
    }
    throw Provider_Not_Found(algo_name(), provider);
 }
@@ -288,13 +281,13 @@ std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_x509_ver
 std::shared_ptr<Private_Key> MLDSA_Composite_PrivateKey::load_traditional_private_key(
    const MLDSA_Composite_Param& param, std::span<const uint8_t> trad_key_bits) {
    if(param.traditional_algorithm() == "Ed25519") {
-      std::cout << fmt("load_traditional_private_key(): decoding Ed25519_PrivateKey of length {}\n",
-                       trad_key_bits.size());
+      // std::cout << fmt("load_traditional_private_key(): decoding Ed25519_PrivateKey of length {}\n",
+      //              trad_key_bits.size());
       return std::shared_ptr<Private_Key>(new Ed25519_PrivateKey(Ed25519_PrivateKey::from_seed(trad_key_bits)));
    }
    if(param.traditional_algorithm() == "Ed448") {
-      std::cout << fmt("load_traditional_private_key(): decoding Ed448_PrivateKey of length {}\n",
-                       trad_key_bits.size());
+      // std::cout << fmt("load_traditional_private_key(): decoding Ed448_PrivateKey of length {}\n",
+      //               trad_key_bits.size());
       return std::make_shared<Ed448_PrivateKey>(trad_key_bits);
    }
    if(param.traditional_algorithm() == "ECDSA") {
@@ -307,15 +300,12 @@ MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(MLDSA_Composite_Param::id
       m_parameters(std::make_shared<MLDSA_Composite_Param>(MLDSA_Composite_Param::from_id_or_throw(id))),
       m_mldsa_privkey(std::make_shared<ML_DSA_PrivateKey>(m_parameters->get_mldsa_algorithm_id(),
                                                           mldsa_privkey_subspan(*m_parameters, sk))),
-      m_tradtional_privkey(
+      m_traditional_privkey(
          load_traditional_private_key(*m_parameters, traditional_privkey_subspan(*m_parameters, sk))) {
    init_pubkey_members();
 }
 
-secure_vector<uint8_t> MLDSA_Composite_PrivateKey::private_key_bits() const {
-   secure_vector<uint8_t> result =
-      m_mldsa_privkey
-         ->raw_private_key_bits();  // "raw_...()" should still return the raw seed even after fixing the PKCS#8 encoding format for ML-DSA
+secure_vector<uint8_t> MLDSA_Composite_PrivateKey::encode_traditional_private_key() const {
    secure_vector<uint8_t> trad_bytes;
    if(m_parameters->traditional_algorithm() == "ECDSA") {
       /* For ML-DSA hybrid, we MUST encode this private key format:
@@ -333,7 +323,7 @@ secure_vector<uint8_t> MLDSA_Composite_PrivateKey::private_key_bits() const {
       trad_bytes = DER_Encoder()
                       .start_sequence()
                       .encode(static_cast<size_t>(1))
-                      .encode(m_tradtional_privkey->raw_private_key_bits(), ASN1_Type::OctetString)
+                      .encode(m_traditional_privkey->raw_private_key_bits(), ASN1_Type::OctetString)
                       .start_explicit_context_specific(0)
                       .encode(oid)
                       //.encode(m_public_key->public_key().serialize_uncompressed(), ASN1_Type::BitString)
@@ -342,13 +332,21 @@ secure_vector<uint8_t> MLDSA_Composite_PrivateKey::private_key_bits() const {
                       .get_contents();
    } else {
       // for RSA
-      trad_bytes = m_tradtional_privkey->private_key_bits();
+      trad_bytes = m_traditional_privkey->private_key_bits();
    }
    if(m_parameters->traditional_algorithm() == "Ed25519" || m_parameters->traditional_algorithm() == "Ed448") {
       secure_vector<uint8_t> key_bits;
       BER_Decoder(trad_bytes).decode(key_bits, ASN1_Type::OctetString).discard_remaining();
       std::swap(trad_bytes, key_bits);
    }
+   return trad_bytes;
+}
+
+secure_vector<uint8_t> MLDSA_Composite_PrivateKey::private_key_bits() const {
+   secure_vector<uint8_t> result =
+      m_mldsa_privkey
+         ->raw_private_key_bits();  // "raw_...()" should still return the raw seed even after fixing the PKCS#8 encoding format for ML-DSA
+   secure_vector<uint8_t> trad_bytes = encode_traditional_private_key();
    result.insert(result.end(), trad_bytes.begin(), trad_bytes.end());
    return result;
 }
@@ -372,7 +370,7 @@ std::unique_ptr<PK_Ops::Signature> MLDSA_Composite_PrivateKey::create_signature_
    }
    if(provider.empty() || provider == "base") {
       return std::make_unique<MLDSA_Composite_Signature_Operation>(
-         *this->m_parameters, *this->m_mldsa_privkey, this->m_tradtional_privkey.get(), rng);
+         *this->m_parameters, *this->m_mldsa_privkey, this->m_traditional_privkey.get(), rng);
    }
    throw Provider_Not_Found(algo_name(), provider);
 }
@@ -383,7 +381,7 @@ MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(const AlgorithmIdentifier
       m_parameters(std::make_shared<MLDSA_Composite_Param>(MLDSA_Composite_Param::from_algo_id_or_throw(algo_id))),
       m_mldsa_privkey(std::make_shared<ML_DSA_PrivateKey>(m_parameters->get_mldsa_algorithm_id(),
                                                           mldsa_privkey_subspan(*m_parameters, sk))),
-      m_tradtional_privkey(load_traditional_private_key(*m_parameters, traditional_privkey_subspan(*m_parameters, sk)))
+      m_traditional_privkey(load_traditional_private_key(*m_parameters, traditional_privkey_subspan(*m_parameters, sk)))
 
 {
    init_pubkey_members();
@@ -402,22 +400,22 @@ std::unique_ptr<Private_Key> MLDSA_Composite_PrivateKey::create_traditional_priv
 MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(RandomNumberGenerator& rng, MLDSA_Composite_Param param) :
       m_parameters(std::make_shared<MLDSA_Composite_Param>(param)),
       m_mldsa_privkey(std::make_shared<ML_DSA_PrivateKey>(rng, m_parameters->get_mldsa_mode())),
-      m_tradtional_privkey(create_traditional_private_key(rng, param)) {
+      m_traditional_privkey(create_traditional_private_key(rng, param)) {
    init_pubkey_members();
 }
 
 void MLDSA_Composite_PrivateKey::init_pubkey_members() {
    MLDSA_Composite_PublicKey::m_parameters = m_parameters;
    MLDSA_Composite_PublicKey::m_mldsa_pubkey = m_mldsa_privkey;
-   MLDSA_Composite_PublicKey::m_tradtional_pubkey = m_tradtional_privkey;
+   MLDSA_Composite_PublicKey::m_traditional_pubkey = m_traditional_privkey;
 }
 
 MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(const MLDSA_Composite_PrivateKey& other) :
       MLDSA_Composite_PublicKey(other),  // this assigns private-key independent members in the public key!
       m_parameters(std::make_shared<MLDSA_Composite_Param>(*other.m_parameters)),
       m_mldsa_privkey(std::make_shared<ML_DSA_PrivateKey>(*other.m_mldsa_privkey)),
-      m_tradtional_privkey(
-         load_traditional_private_key(*m_parameters, other.m_tradtional_privkey->private_key_bits())) {
+      m_traditional_privkey(load_traditional_private_key(
+         *m_parameters, traditional_privkey_subspan(*m_parameters, other.private_key_bits()))) {
    init_pubkey_members();  // set them as shared, otherwise inconsistency may result
 }
 
@@ -427,8 +425,8 @@ MLDSA_Composite_PrivateKey& MLDSA_Composite_PrivateKey::operator=(const MLDSA_Co
    }
    m_parameters = std::make_shared<MLDSA_Composite_Param>(*rhs.m_parameters);
    m_mldsa_privkey = std::make_shared<ML_DSA_PrivateKey>(*rhs.m_mldsa_privkey);
-   m_tradtional_privkey = load_traditional_private_key(
-      *m_parameters, traditional_privkey_subspan(*m_parameters, rhs.m_tradtional_privkey->private_key_bits()));
+   m_traditional_privkey =
+      load_traditional_private_key(*m_parameters, traditional_privkey_subspan(*m_parameters, rhs.private_key_bits()));
    init_pubkey_members();
    return *this;
 }

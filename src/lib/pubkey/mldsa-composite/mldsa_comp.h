@@ -37,30 +37,30 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PublicKey : public virtual Public_K
       }
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override {
-         return this->m_mldsa_pubkey->check_key(rng, strong) && this->m_tradtional_pubkey->check_key(rng, strong);
+         return this->m_mldsa_pubkey->check_key(rng, strong) && this->m_traditional_pubkey->check_key(rng, strong);
       }
 
       OID object_identifier() const override;
 
-      size_t estimated_strength() const override { return m_parameters->estimated_strength(); }
-
-      size_t key_length() const override { return m_parameters->estimated_strength(); }
+      /**
+       * Return the pessimistic estimated key strength, i.e., the smaller strength of the component keys. 
+       * This is justified by the assumption that composite algorithms are used in the assumption that 
+       * one of the component algorithms might be broken.
+       *
+       * @return the mimium of the componens' estimated strengths.
+       */
+      size_t estimated_strength() const override {
+         return std::min(this->m_mldsa_pubkey->estimated_strength(), this->m_traditional_pubkey->estimated_strength());
+      }
 
       /**
-       * Generates a byte sequence representing the MLDSA_Composite
-       * public key, as defined in [1] (p. 23, "MLDSA_Composite Public Key")
-       *
-       * @return 4-byte OID, followed by n-byte root node, followed by
-       *         public seed.
-       **/
+       * 
+       * @return The sum of the component key lengths.
+       */
+      size_t key_length() const override { return m_mldsa_pubkey->key_length() + m_traditional_pubkey->key_length(); }
+
       std::vector<uint8_t> raw_public_key_bits() const override;
 
-      /**
-       * Returns the encoded public key as defined in RFC
-       * draft-vangeest-x509-hash-sigs-03.
-       *
-       * @return encoded public key bits
-       **/
       std::vector<uint8_t> public_key_bits() const override;
 
       BOTAN_DEPRECATED("Use raw_public_key_bits()") std::vector<uint8_t> raw_public_key() const;
@@ -79,6 +79,11 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PublicKey : public virtual Public_K
 
       MLDSA_Composite_PublicKey& operator=(const MLDSA_Composite_PublicKey& rhs);
 
+      ~MLDSA_Composite_PublicKey() override = default;
+
+      MLDSA_Composite_PublicKey(const MLDSA_Composite_PublicKey&& other) = delete;
+      MLDSA_Composite_PublicKey& operator=(const MLDSA_Composite_PublicKey&& rhs) = delete;
+
    protected:
       static std::shared_ptr<Public_Key> load_traditional_public_key(const MLDSA_Composite_Param& param,
                                                                      std::span<const uint8_t> key_bits);
@@ -86,7 +91,7 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PublicKey : public virtual Public_K
 
       std::shared_ptr<MLDSA_Composite_Param> m_parameters;  // NOLINT(*non-private-member-variable*)
       std::shared_ptr<Dilithium_PublicKey> m_mldsa_pubkey;  // NOLINT(*non-private-member-variable*)
-      std::shared_ptr<Public_Key> m_tradtional_pubkey;      // NOLINT(*non-private-member-variable*)
+      std::shared_ptr<Public_Key> m_traditional_pubkey;     // NOLINT(*non-private-member-variable*)
 };
 
 class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PrivateKey final : public virtual MLDSA_Composite_PublicKey,
@@ -126,16 +131,23 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PrivateKey final : public virtual M
 
       MLDSA_Composite_PrivateKey& operator=(const MLDSA_Composite_PrivateKey& rhs);
 
+      ~MLDSA_Composite_PrivateKey() override = default;
+
+      MLDSA_Composite_PrivateKey(const MLDSA_Composite_PrivateKey&& other) = delete;
+      MLDSA_Composite_PrivateKey& operator=(const MLDSA_Composite_PrivateKey&& rhs) = delete;
+
    private:
       static std::shared_ptr<Private_Key> load_traditional_private_key(const MLDSA_Composite_Param& param,
                                                                        std::span<const uint8_t> key_bits);
       static std::unique_ptr<Private_Key> create_traditional_private_key(RandomNumberGenerator& rng,
                                                                          MLDSA_Composite_Param param);
       void init_pubkey_members();
+
+      secure_vector<uint8_t> encode_traditional_private_key() const;
       friend class MLDSA_Composite_Signature_Operation;
       std::shared_ptr<MLDSA_Composite_Param> m_parameters;
       std::shared_ptr<ML_DSA_PrivateKey> m_mldsa_privkey;
-      std::shared_ptr<Private_Key> m_tradtional_privkey;
+      std::shared_ptr<Private_Key> m_traditional_privkey;
 };
 
 }  // namespace Botan
