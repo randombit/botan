@@ -152,16 +152,25 @@ class MLDSA_Composite_Key_Detail_Tests : public Test {
       }
 
       std::vector<Test::Result> run() override {
-         std::vector<Botan::MLDSA_Composite_Param> params{
+         std::vector<Botan::MLDSA_Composite_Param> params {
+   #if defined(BOTAN_HAS_RSA)
             Botan::MLDSA_Composite_Param::from_id_or_throw(
                Botan::MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PKCS15_SHA256),
-            Botan::MLDSA_Composite_Param::from_id_or_throw(Botan::MLDSA_Composite_Param::id_t::MLDSA44_Ed25519_SHA512),
-            Botan::MLDSA_Composite_Param::from_id_or_throw(
-               Botan::MLDSA_Composite_Param::id_t::MLDSA65_ECDSA_brainpoolP256r1_SHA512),
-            Botan::MLDSA_Composite_Param::from_id_or_throw(Botan::MLDSA_Composite_Param::id_t::MLDSA87_Ed448_SHAKE256),
-            Botan::MLDSA_Composite_Param::from_id_or_throw(
-               Botan::MLDSA_Composite_Param::id_t::MLDSA87_ECDSA_P521_SHA512),
-
+   #endif
+   #if defined(BOTAN_HAS_ED25519)
+               Botan::MLDSA_Composite_Param::from_id_or_throw(
+                  Botan::MLDSA_Composite_Param::id_t::MLDSA44_Ed25519_SHA512),
+   #endif
+   #if defined(BOTAN_HAS_ECDSA)
+               Botan::MLDSA_Composite_Param::from_id_or_throw(
+                  Botan::MLDSA_Composite_Param::id_t::MLDSA65_ECDSA_brainpoolP256r1_SHA512),
+               Botan::MLDSA_Composite_Param::from_id_or_throw(
+                  Botan::MLDSA_Composite_Param::id_t::MLDSA87_ECDSA_P521_SHA512),
+   #endif
+   #if defined(BOTAN_HAS_ED448)
+               Botan::MLDSA_Composite_Param::from_id_or_throw(
+                  Botan::MLDSA_Composite_Param::id_t::MLDSA87_Ed448_SHAKE256),
+   #endif
          };
          std::vector<Test::Result> result;
          result.reserve(params.size());
@@ -229,15 +238,28 @@ class MLDSA_Composite_Sig_Detail_Tests : public Test {
       }
 
       std::vector<Test::Result> run() override {
-         std::vector<Botan::MLDSA_Composite_Param> params{
+         std::vector<Botan::MLDSA_Composite_Param> params {
+   #if defined(BOTAN_HAS_RSA)
             Botan::MLDSA_Composite_Param::from_id_or_throw(
                Botan::MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PKCS15_SHA256),
-            Botan::MLDSA_Composite_Param::from_id_or_throw(
-               Botan::MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PKCS15_SHA256),
-            Botan::MLDSA_Composite_Param::from_id_or_throw(Botan::MLDSA_Composite_Param::id_t::MLDSA44_Ed25519_SHA512),
-            Botan::MLDSA_Composite_Param::from_id_or_throw(
-               Botan::MLDSA_Composite_Param::id_t::MLDSA65_ECDSA_brainpoolP256r1_SHA512),
-            Botan::MLDSA_Composite_Param::from_id_or_throw(Botan::MLDSA_Composite_Param::id_t::MLDSA87_Ed448_SHAKE256)};
+   #endif
+   #if defined(BOTAN_HAS_PSS)
+               Botan::MLDSA_Composite_Param::from_id_or_throw(
+                  Botan::MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PSS_SHA256),
+   #endif
+   #if defined(BOTAN_HAS_ED25519)
+               Botan::MLDSA_Composite_Param::from_id_or_throw(
+                  Botan::MLDSA_Composite_Param::id_t::MLDSA44_Ed25519_SHA512),
+   #endif
+   #if defined(BOTAN_HAS_ECDSA)
+               Botan::MLDSA_Composite_Param::from_id_or_throw(
+                  Botan::MLDSA_Composite_Param::id_t::MLDSA65_ECDSA_brainpoolP256r1_SHA512),
+   #endif
+   #if defined(BOTAN_HAS_ED448)
+               Botan::MLDSA_Composite_Param::from_id_or_throw(
+                  Botan::MLDSA_Composite_Param::id_t::MLDSA87_Ed448_SHAKE256)
+   #endif
+         };
 
          std::vector<Test::Result> result;
          result.reserve(params.size());
@@ -381,7 +403,13 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
 
          const auto sig_bin = Botan::base64_decode(vars.get_req_str("s"));
 
-         const auto comp_parm = Botan::MLDSA_Composite_Param::from_id_str_or_throw(tcId);
+         const auto comp_parm_opt = Botan::MLDSA_Composite_Param::from_id_str(tcId);
+         // support of composite algorithms also depends on whether Botan's build configuration supports the individual  traditional component algorithm.
+         if(!comp_parm_opt.has_value()) {
+            return result;
+         }
+
+         const auto comp_parm = comp_parm_opt.value();
 
          const char* message = "The quick brown fox jumps over the lazy dog.";
          std::unique_ptr<Botan::Public_Key> pubkey;
