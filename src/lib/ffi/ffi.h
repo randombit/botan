@@ -2243,7 +2243,7 @@ typedef struct botan_x509_cert_struct* botan_x509_cert_t;
  *   * botan_x509_crl_view_binary_values()
  *   * botan_x509_cert_view_string_values()
  */
-typedef enum /* NOLINT(*-enum-size) */ {
+typedef enum /* NOLINT(*-enum-size,*-use-enum-class) */ {
    BOTAN_X509_SERIAL_NUMBER = 0,            /** singleton binary big-endian encoding */
    BOTAN_X509_SUBJECT_DN_BITS = 1,          /** singleton binary DER encoding of the subject distinguished name */
    BOTAN_X509_ISSUER_DN_BITS = 2,           /** singleton binary DER encoding of the issuer distinguished name */
@@ -2574,7 +2574,7 @@ int botan_x509_crl_create(botan_x509_crl_t* crl_obj,
                           const char* padding);
 
 /* Must match values of CRL_Code in pkix_enums.h */
-enum botan_x509_crl_reason_code /* NOLINT(*-enum-size) */ {
+enum botan_x509_crl_reason_code /* NOLINT(*-enum-size,*-use-enum-class) */ {
    BOTAN_CRL_ENTRY_UNSPECIFIED = 0,
    BOTAN_CRL_ENTRY_KEY_COMPROMISE = 1,
    BOTAN_CRL_ENTRY_CA_COMPROMISE = 2,
