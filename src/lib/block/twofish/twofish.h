@@ -32,16 +32,6 @@ class Twofish final : public Block_Cipher_Fixed_Params<16, 16, 32, 8> {
    private:
       void key_schedule(std::span<const uint8_t> key) override;
 
-      static const uint32_t MDS0[256];
-      static const uint32_t MDS1[256];
-      static const uint32_t MDS2[256];
-      static const uint32_t MDS3[256];
-      static const uint8_t Q0[256];
-      static const uint8_t Q1[256];
-      static const uint8_t RS[32];
-      static const uint8_t EXP_TO_POLY[255];
-      static const uint8_t POLY_TO_EXP[255];
-
       secure_vector<uint32_t> m_SB, m_RK;
 };
 
