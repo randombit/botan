@@ -304,16 +304,6 @@ std::string MLDSA_Composite_Param::mldsa_param_str() const {
    return std::string("Pure,Randomized,ctx_hex=") + hex_encode(label_vec);
 }
 
-size_t MLDSA_Composite_Param::traditional_signature_size() const {
-   if(0 == std::strcmp(m_traditional_algorithm, "RSA")) {
-      return m_traditional_key_size;
-   } else if(0 == std::strcmp(m_traditional_algorithm, "Ed25519")) {
-      return 255;
-   }
-   throw Botan::Exception(
-      "TODO: MLDSA_Composite_Param::traditional_signature_size(): not implemented for parameters other than RSA");
-}
-
 size_t MLDSA_Composite_Param::mldsa_signature_size() const {
    if(this->m_mldsa_variant == DilithiumMode::ML_DSA_4x4) {
       return 2420;

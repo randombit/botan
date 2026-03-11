@@ -16,7 +16,9 @@
 #include <format>
 #include <iostream>  // TODO remove
 #include <memory>
+#include <optional>
 #include <string_view>
+#include <vector>
 #if defined(BOTAN_HAS_MLDSA_COMPOSITE)
 
    #include <botan/base64.h>
@@ -73,11 +75,180 @@ void sign_and_verify(const Botan::Private_Key& priv_key,
 }  // namespace
 
 //
-//
+
+class MLDSA_Composite_Key_Detail_Tests : public Test {
+   public:
+      static Test::Result run_detail_test(Botan::MLDSA_Composite_Param::id_t id) {
+         auto param = Botan::MLDSA_Composite_Param::from_id_or_throw(id);
+         std::string test_name = std::string("MLDSA_Composite_Key_Detail_") + param.id_str();
+         Test::Result result(test_name);
+         auto rng = Test::new_rng(test_name);
+
+         auto priv_key_generated(Botan::create_private_key(param.id_str(), *rng));
+
+         auto pub_key_generated = priv_key_generated->public_key();
+         Botan::Public_Key* pub_key_cast = static_cast<Botan::Public_Key*>(priv_key_generated.get());
+
+         auto message = std::vector<uint8_t>();
+         Botan::PK_Signer signer(*priv_key_generated, *rng, "");
+         signer.update(message);
+         std::vector<uint8_t> signature = signer.signature(*rng);
+
+         Botan::PK_Verifier verifier(*pub_key_cast, "");
+         verifier.update(message);
+         result.test_bool_eq("verification of correct signature ", verifier.check_signature(signature), true);
+         const auto priv_key_sv = priv_key_generated->private_key_bits();
+         const std::vector<uint8_t> priv_key_v(priv_key_sv.begin(), priv_key_sv.end());
+         const auto false_private_keys = generate_false_keys(priv_key_v, param.mldsa_privkey_size());
+
+         const auto pub_key = pub_key_generated->public_key_bits();
+         const auto false_public_keys = generate_false_keys(pub_key, param.mldsa_pubkey_size());
+
+         for(const auto& false_private_key_enc : false_private_keys) {
+            bool exc = false;
+            try {
+               Botan::MLDSA_Composite_PrivateKey priv_key_dec(param.id(), false_private_key_enc);
+            } catch(const Botan::Exception& e) {
+               exc = true;
+            }
+            result.test_bool_eq("decoding of false private key", exc, true);
+         }
+         for(const auto& false_public_key_enc : false_public_keys) {
+            bool exc = false;
+            try {
+               Botan::MLDSA_Composite_PublicKey pub_key_dec(param.id(), false_public_key_enc);
+            } catch(const Botan::Exception& e) {
+               exc = true;
+            }
+            result.test_bool_eq("decoding of false public key", exc, true);
+         }
+         return result;
+      }
+
+      std::vector<Test::Result> run() override {
+         std::vector<Botan::MLDSA_Composite_Param> params{
+            Botan::MLDSA_Composite_Param::from_id_or_throw(
+               Botan::MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PKCS15_SHA256),
+            Botan::MLDSA_Composite_Param::from_id_or_throw(Botan::MLDSA_Composite_Param::id_t::MLDSA44_Ed25519_SHA512),
+            Botan::MLDSA_Composite_Param::from_id_or_throw(
+               Botan::MLDSA_Composite_Param::id_t::MLDSA65_ECDSA_brainpoolP256r1_SHA512),
+            Botan::MLDSA_Composite_Param::from_id_or_throw(Botan::MLDSA_Composite_Param::id_t::MLDSA87_Ed448_SHAKE256)};
+         std::vector<Test::Result> result;
+         result.reserve(params.size());
+         for(const auto& param : params) {
+            result.push_back(run_detail_test(param.id()));
+         }
+         return result;
+      }
+
+   private:
+      static std::vector<std::vector<uint8_t>> generate_false_keys(const std::span<const uint8_t> correct_key,
+                                                                   size_t mldsa_key_size) {
+         std::cout << std::format("generate_false_keys(): correct_key.size() = {}, mldsa_key_size = {}\n",
+                                  correct_key.size(),
+                                  mldsa_key_size);
+         std::vector<std::vector<uint8_t>> result;
+         result.push_back(std::vector<uint8_t>());
+         result.push_back(std::vector<uint8_t>(1));
+         result.push_back(std::vector<uint8_t>(2));
+         result.push_back(std::vector<uint8_t>(correct_key.begin(), correct_key.begin() + mldsa_key_size - 1));
+         result.push_back(std::vector<uint8_t>(correct_key.begin(), correct_key.begin() + mldsa_key_size));
+         result.push_back(std::vector<uint8_t>(correct_key.begin(), correct_key.begin() + mldsa_key_size + 1));
+         result.push_back(std::vector<uint8_t>(correct_key.begin(), correct_key.begin() + correct_key.size() - 1));
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "mldsa_composite_key_detail", MLDSA_Composite_Key_Detail_Tests);
+
+class MLDSA_Composite_Sig_Detail_Tests : public Test {
+   public:
+      static Test::Result run_detail_test(Botan::MLDSA_Composite_Param::id_t id) {
+         auto param = Botan::MLDSA_Composite_Param::from_id_or_throw(id);
+         std::string test_name = std::string("MLDSA_Composite_Signature_Detail_") + param.id_str();
+         Test::Result result(test_name);
+         auto rng = Test::new_rng(test_name);
+
+         auto priv_key_generated(Botan::create_private_key(param.id_str(), *rng));
+
+         //std::cout << "retrieving public key from generated private key\n";
+         auto pub_key_generated = priv_key_generated->public_key();
+         //std::cout << "calling sign_and_verify() with generated key pair\n";
+         Botan::Public_Key* pub_key_cast = static_cast<Botan::Public_Key*>(priv_key_generated.get());
+         // sign_and_verify(
+         //    *priv_key_generated, *pub_key_cast, *rng, result, "verify with cast public key, some false signatures", false_signatures);
+
+         auto message = std::vector<uint8_t>();
+         Botan::PK_Signer signer(*priv_key_generated, *rng, "");
+         signer.update(message);
+         std::vector<uint8_t> signature = signer.signature(*rng);
+
+         const auto false_signatures = generate_false_signatures(signature, param.mldsa_signature_size());
+
+         Botan::PK_Verifier verifier(*pub_key_cast, "");
+         verifier.update(message);
+         result.test_bool_eq("verification of correct signature ", verifier.check_signature(signature), true);
+
+         for(const auto& false_signature : false_signatures) {
+            Botan::PK_Verifier verifier2(*pub_key_cast, "");
+            verifier2.update(message);
+            result.test_bool_eq("verification of false signature", verifier2.check_signature(false_signature), false);
+         }
+         return result;
+      }
+
+      std::vector<Test::Result> run() override {
+         std::vector<Botan::MLDSA_Composite_Param> params{
+            Botan::MLDSA_Composite_Param::from_id_or_throw(
+               Botan::MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PKCS15_SHA256),
+            Botan::MLDSA_Composite_Param::from_id_or_throw(
+               Botan::MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PKCS15_SHA256),
+            Botan::MLDSA_Composite_Param::from_id_or_throw(Botan::MLDSA_Composite_Param::id_t::MLDSA44_Ed25519_SHA512),
+            Botan::MLDSA_Composite_Param::from_id_or_throw(
+               Botan::MLDSA_Composite_Param::id_t::MLDSA65_ECDSA_brainpoolP256r1_SHA512),
+            Botan::MLDSA_Composite_Param::from_id_or_throw(Botan::MLDSA_Composite_Param::id_t::MLDSA87_Ed448_SHAKE256)};
+
+         std::vector<Test::Result> result;
+         result.reserve(params.size());
+         for(const auto& param : params) {
+            result.push_back(run_detail_test(param.id()));
+         }
+         return result;
+      }
+
+   private:
+      static std::vector<std::vector<uint8_t>> generate_false_signatures(std::span<uint8_t> correct_signature,
+                                                                         size_t mldsa_signature_size) {
+         std::vector<std::vector<uint8_t>> result;
+         result.push_back(std::vector<uint8_t>());
+         result.push_back(std::vector<uint8_t>(1));
+         result.push_back(
+            std::vector<uint8_t>(correct_signature.begin(), correct_signature.begin() + mldsa_signature_size));
+         result.push_back(
+            std::vector<uint8_t>(correct_signature.begin(), correct_signature.begin() + mldsa_signature_size + 1));
+
+         std::vector<uint8_t> flip_start(correct_signature.begin(), correct_signature.end());
+         flip_start[0] ^= 1;
+         result.push_back(flip_start);
+
+         std::vector<uint8_t> flip_end(correct_signature.begin(), correct_signature.end());
+         flip_end[flip_end.size() - 1] ^= 1;
+         result.push_back(flip_end);
+
+         std::vector<uint8_t> flip_start_of_trad(correct_signature.begin(), correct_signature.end());
+         flip_start_of_trad[mldsa_signature_size] ^= 1;
+         result.push_back(flip_start_of_trad);
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "mldsa_composite_sig_detail", MLDSA_Composite_Sig_Detail_Tests);
 
 class MLDSA_Composite_RT_Tests : public Test {
    public:
-      static Test::Result run_roundtrip(Botan::MLDSA_Composite_Param::id_t id) {
+      static Test::Result run_detail_test(Botan::MLDSA_Composite_Param::id_t id) {
          auto param = Botan::MLDSA_Composite_Param::from_id_or_throw(id);
          std::string test_name = std::string("MLDSA_Composite_round_trip_") + param.id_str();
          Test::Result result(test_name);
@@ -113,10 +284,9 @@ class MLDSA_Composite_RT_Tests : public Test {
          std::vector<Test::Result> result;
          result.reserve(all_params.size());
          for(const auto& param : all_params) {
-            result.push_back(run_roundtrip(param.id()));
+            result.push_back(run_detail_test(param.id()));
          }
          return result;
-         // TODO: ADD INVALID SIGNATURE AND KEY SIZE TESTS
       }
 
    private:

@@ -64,9 +64,6 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
       DilithiumMode get_mldsa_mode() const { return m_mldsa_variant; }
 
       size_t mldsa_signature_size() const;
-      size_t traditional_signature_size() const;
-
-      size_t signature_size() const { return mldsa_signature_size() + traditional_signature_size(); }
 
       size_t mldsa_pubkey_size() const;
 
