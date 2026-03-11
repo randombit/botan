@@ -126,7 +126,7 @@ class StreamCallbacks : public Callbacks {
           }
           // No match.
           throw TLS_Exception(Alert::NoApplicationProtocol,
-                              "Rejecting ALPN request with alert");
+                              "Rejecting ALPN request: no overlap between client-offered and server-configured application protocols");
       }
 
    private:
