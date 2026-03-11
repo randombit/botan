@@ -19,8 +19,6 @@
 #include <string_view>
 #include <vector>
 
-#include <iostream>
-
 namespace Botan {
 
 namespace {
@@ -39,8 +37,6 @@ std::span<const uint8_t> mldsa_privkey_subspan(const MLDSA_Composite_Param& para
    if(key_bits.size() <= param.mldsa_privkey_size()) {
       throw Invalid_Argument("encoded MLDSA component private key is too short");
    }
-   // std::cout << "mldsa_privkey_subspan(): trad private key size = " << key_bits.size() - param.mldsa_privkey_size()
-   //           << std::endl;
    return std::span<const uint8_t>(key_bits.begin(), param.mldsa_privkey_size());
 }
 
@@ -61,7 +57,6 @@ std::span<const uint8_t> traditional_privkey_subspan(const MLDSA_Composite_Param
       throw Invalid_Argument("encoded traditional component private key is too short");
    }
    std::span<const uint8_t> result(key_bits.begin() + offset, key_bits.end());
-   // std::cout << fmt("traditional priv key (length = {}) = {}\n", key_bits.size() - offset, hex_encode(result));
    return result;
 }
 }  // namespace
@@ -187,10 +182,6 @@ std::shared_ptr<Public_Key> MLDSA_Composite_PublicKey::load_traditional_public_k
 #if defined(BOTAN_HAS_ECDSA)
    if(param.traditional_algorithm() == "ECDSA") {
       const auto group = Botan::EC_Group::from_name(param.curve());
-      // std::cout << fmt("load_traditional_public_key(): decoding ECDSA_PublicKey (length = {}) {}\n",
-      // key_bits.size(),
-      // hex_encode(key_bits));
-
       return std::make_shared<Botan::ECDSA_PublicKey>(group, EC_AffinePoint(group, key_bits));
    }
 #endif
@@ -252,7 +243,6 @@ std::unique_ptr<Private_Key> MLDSA_Composite_PublicKey::generate_another(RandomN
 // ALLOW NON-EMPTY CTX VIA PARAMS?
 std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_verification_op(
    std::string_view params_for_ctx, std::string_view provider) const {
-   // std::cout << "MLDSA_Composite_PublicKey::create_verification_op() called\n";
    if(params_for_ctx != "") {
       throw Botan::Invalid_Argument("signature parameters not supported for MLDSA composite signatures");
    }
