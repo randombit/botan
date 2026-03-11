@@ -155,7 +155,7 @@ const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = 
    MLDSA_Composite_Param(MLDSA_Composite_Param::id_t::MLDSA87_Ed448_SHAKE256,
                          "MLDSA87-Ed448-SHAKE256",
                          "COMPSIG-MLDSA87-Ed448-SHAKE256",
-                         "SHAKE-256(64)",
+                         "SHAKE-256(512)",
                          DilithiumMode::ML_DSA_8x7,
                          "Ed448",
                          "",
