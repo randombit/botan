@@ -336,15 +336,6 @@ AlgorithmIdentifier MLDSA_Composite_Param::get_mldsa_algorithm_id() const {
    return AlgorithmIdentifier(oid, AlgorithmIdentifier::Encoding_Option::USE_EMPTY_PARAM);
 }
 
-// size_t MLDSA_Composite_Param::traditional_pubkey_encoded_size() const {
-//    if(std::string(traditional_algoritm).starts_with("RSA")) {
-//       std::cout << "MLDSA_Composite_Param::traditional_pubkey_encoded_size() RSA key byte size = "
-//                 << (traditional_key_size + 7) / 8 << std::endl;
-//       return (traditional_key_size + 7) / 8;
-//    }
-//    throw Botan::Exception("MLDSA_Composite_Param::traditional_pubkey_encoded_size(): algorithm not implemented");
-// }
-
 AlgorithmIdentifier MLDSA_Composite_Param::get_traditional_algorithm_id() const {
    std::optional<OID> oid;
    if(0 == std::strcmp(this->m_traditional_algorithm, "ECDSA")) {
@@ -362,9 +353,8 @@ AlgorithmIdentifier MLDSA_Composite_Param::get_traditional_algorithm_id() const 
 std::string MLDSA_Composite_Param::get_traditional_algo_param_str() const {
    if(0 == strcmp(this->m_traditional_algorithm, "RSA")) {
       return std::to_string(m_traditional_key_size);
-   }  //else if(0 == strcmp(this->traditional_algoritm, "Ed25519")) {
+   }
    return "";
-   // }
 }
 
 }  // namespace Botan

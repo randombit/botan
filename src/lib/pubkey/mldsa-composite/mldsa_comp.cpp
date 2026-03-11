@@ -93,23 +93,21 @@ class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification
          std::span<const uint8_t> mldsa_sig(sig.begin(), sig.begin() + mldsa_sig_size);
          std::span<const uint8_t> trad_sig(sig.begin() + mldsa_sig_size, sig.end());
          std::vector<uint8_t> trad_sig_buf;
+
+#if defined(BOTAN_HAS_ECDSA)
          if(m_parameters.traditional_algorithm() == "ECDSA") {
-            // std::cout << "MLDSA_Composite_Verification_Operation: Verifying ECDSA signature: " << hex_encode(trad_sig)
-            // << std::endl;
             BER_Decoder dec(trad_sig);
             BigInt ri;
             BigInt si;
             dec.start_sequence().decode(ri).decode(si).end_cons();
             const auto group = Botan::EC_Group::from_name(m_parameters.curve());
             EC_Scalar r = EC_Scalar::from_bigint(group, ri);
-            // std::cout << "  decoded r from signature = " << hex_encode(r.serialize()) << std::endl;
             EC_Scalar s = EC_Scalar::from_bigint(group, si);
-            // std::cout << "  decoded s from signature = " << hex_encode(s.serialize()) << std::endl;
 
             trad_sig_buf = EC_Scalar::serialize_pair(r, s);
             trad_sig = trad_sig_buf;
-            // std::cout << "  serialized pair = " << hex_encode(trad_sig) << std::endl;
          }
+#endif
          if(!m_mldsa_ver_op->is_valid_signature(mldsa_sig)) {
             return false;
          }
@@ -148,6 +146,7 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
          m_traditional_sig_op->update(msg);
          auto sig = m_mldsa_sig_op->sign(rng);
          auto trad_sig = m_traditional_sig_op->sign(rng);
+
          if(m_parameters.traditional_algorithm() == "ECDSA") {
             BOTAN_ASSERT(trad_sig.size() % 2 == 0, "ECDSA signature size is not divisible by 2");
             std::vector<uint8_t> enc_sig;
@@ -157,7 +156,6 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
             const BigInt s(ss);
             DER_Encoder enc(enc_sig);
             enc.start_sequence().encode(r).encode(s).end_cons();
-            // std::cout << "ECDSA signature = " << hex_encode(enc_sig) << std::endl;
             std::swap(trad_sig, enc_sig);
          }
          sig.insert(sig.end(), trad_sig.begin(), trad_sig.end());
@@ -186,6 +184,7 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
 // static
 std::shared_ptr<Public_Key> MLDSA_Composite_PublicKey::load_traditional_public_key(const MLDSA_Composite_Param& param,
                                                                                    std::span<const uint8_t> key_bits) {
+#if defined(BOTAN_HAS_ECDSA)
    if(param.traditional_algorithm() == "ECDSA") {
       const auto group = Botan::EC_Group::from_name(param.curve());
       // std::cout << fmt("load_traditional_public_key(): decoding ECDSA_PublicKey (length = {}) {}\n",
@@ -194,6 +193,7 @@ std::shared_ptr<Public_Key> MLDSA_Composite_PublicKey::load_traditional_public_k
 
       return std::make_shared<Botan::ECDSA_PublicKey>(group, EC_AffinePoint(group, key_bits));
    }
+#endif
    return load_public_key(param.get_traditional_algorithm_id(), key_bits);
 }
 
@@ -241,9 +241,6 @@ OID MLDSA_Composite_PublicKey::object_identifier() const {
 std::vector<uint8_t> MLDSA_Composite_PublicKey::public_key_bits() const {
    std::vector<uint8_t> result(this->m_mldsa_pubkey->public_key_bits());
    std::vector<uint8_t> trad_bytes = this->m_traditional_pubkey->public_key_bits();
-   if(m_parameters->traditional_algorithm() == "ECDSA") {
-      // std::cout << fmt("encoded ECDSA public key (len = {}) = {}\n", trad_bytes.size(), hex_encode(trad_bytes));
-   }
    result.insert(result.end(), trad_bytes.begin(), trad_bytes.end());
    return result;
 }
@@ -280,19 +277,23 @@ std::unique_ptr<PK_Ops::Verification> MLDSA_Composite_PublicKey::create_x509_ver
 
 std::shared_ptr<Private_Key> MLDSA_Composite_PrivateKey::load_traditional_private_key(
    const MLDSA_Composite_Param& param, std::span<const uint8_t> trad_key_bits) {
+#if defined(BOTAN_HAS_ED25519)
    if(param.traditional_algorithm() == "Ed25519") {
-      // std::cout << fmt("load_traditional_private_key(): decoding Ed25519_PrivateKey of length {}\n",
-      //              trad_key_bits.size());
       return std::shared_ptr<Private_Key>(new Ed25519_PrivateKey(Ed25519_PrivateKey::from_seed(trad_key_bits)));
    }
+#endif
+
+#if defined(BOTAN_HAS_ED448)
    if(param.traditional_algorithm() == "Ed448") {
-      // std::cout << fmt("load_traditional_private_key(): decoding Ed448_PrivateKey of length {}\n",
-      //               trad_key_bits.size());
       return std::make_shared<Ed448_PrivateKey>(trad_key_bits);
    }
+#endif
+
+#if defined(BOTAN_HAS_ECDSA)
    if(param.traditional_algorithm() == "ECDSA") {
       return std::make_shared<ECDSA_PrivateKey>(param.get_traditional_algorithm_id(), trad_key_bits);
    }
+#endif
    return load_private_key(param.get_traditional_algorithm_id(), trad_key_bits);
 }
 
@@ -307,6 +308,7 @@ MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(MLDSA_Composite_Param::id
 
 secure_vector<uint8_t> MLDSA_Composite_PrivateKey::encode_traditional_private_key() const {
    secure_vector<uint8_t> trad_bytes;
+
    if(m_parameters->traditional_algorithm() == "ECDSA") {
       /* For ML-DSA hybrid, we MUST encode this private key format:
         * SEQUENCE {
@@ -326,12 +328,10 @@ secure_vector<uint8_t> MLDSA_Composite_PrivateKey::encode_traditional_private_ke
                       .encode(m_traditional_privkey->raw_private_key_bits(), ASN1_Type::OctetString)
                       .start_explicit_context_specific(0)
                       .encode(oid)
-                      //.encode(m_public_key->public_key().serialize_uncompressed(), ASN1_Type::BitString)
                       .end_cons()
                       .end_cons()
                       .get_contents();
    } else {
-      // for RSA
       trad_bytes = m_traditional_privkey->private_key_bits();
    }
    if(m_parameters->traditional_algorithm() == "Ed25519" || m_parameters->traditional_algorithm() == "Ed448") {
@@ -390,10 +390,12 @@ MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(const AlgorithmIdentifier
 // static
 std::unique_ptr<Private_Key> MLDSA_Composite_PrivateKey::create_traditional_private_key(RandomNumberGenerator& rng,
                                                                                         MLDSA_Composite_Param param) {
+#if defined(BOTAN_HAS_ECDSA)
    if(param.traditional_algorithm() == "ECDSA") {
       const auto group = Botan::EC_Group::from_name(param.curve());
       return std::make_unique<Botan::ECDSA_PrivateKey>(rng, group);
    }
+#endif
    return create_private_key(param.traditional_algorithm(), rng, param.get_traditional_algo_param_str());
 }
 
