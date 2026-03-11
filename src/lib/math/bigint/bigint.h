@@ -95,7 +95,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param str the string to parse for an integer value
        */
       //BOTAN_DEPRECATED("Use BigInt::from_string")
-      explicit BigInt(std::string_view str);
+      explicit BigInt(std::string_view str) { *this = BigInt::from_string(str); }
 
       /**
        * Create BigInt from a string.
@@ -109,6 +109,21 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param str the string to parse for an integer value
        */
       static BigInt from_string(std::string_view str);
+
+      /**
+       * Create BigInt from a sequence of digits
+       *
+       * The string is interpreted as a sequence of digits in base @p radix.
+       *
+       * Each character must be interpretable as such a digit; there is no support
+       * for whitespace or prefixes (eg '0x' or '-').
+       *
+       * Currently radix must be 10 or 16.
+       *
+       * @param digits the sequence of digits
+       * @param radix the base
+       */
+      static BigInt from_radix_digits(std::string_view digits, size_t radix);
 
       /**
        * Create a BigInt from an integer in a byte array

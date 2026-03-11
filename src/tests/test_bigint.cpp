@@ -987,6 +987,42 @@ std::vector<Test::Result> test_bigint_serialization() {
 
 BOTAN_REGISTER_TEST_FN("math", "bignum_auxiliary", test_const_time_left_shift, test_bigint_serialization);
 
+class BigInt_FromRadix_Tests final : public Text_Based_Test {
+   public:
+      BigInt_FromRadix_Tests() : Text_Based_Test("bn/from_radix.vec", "Input,Radix,Output") {}
+
+      bool clear_between_callbacks() const override { return false; }
+
+      Test::Result run_one_test(const std::string& header, const VarMap& vars) override {
+         Test::Result result("BigInt from_radix_digits");
+
+         const std::string input = vars.get_req_str("Input");
+         const size_t radix = vars.get_req_sz("Radix");
+         const std::string expected_output = vars.get_req_str("Output");
+
+         if(header == "Valid") {
+            const Botan::BigInt n = Botan::BigInt::from_radix_digits(input, radix);
+            const auto serialized = n.serialize();
+            result.test_bin_eq("from_radix_digits", serialized, expected_output);
+         } else if(header == "Invalid") {
+            try {
+               Botan::BigInt::from_radix_digits(input, radix);
+               result.test_failure("from_radix_digits should have thrown");
+            } catch(const std::exception& e) {
+               const std::string msg = e.what();
+               result.test_is_true("exception message contains '" + expected_output + "'",
+                                   msg.find(expected_output) != std::string::npos);
+            }
+         } else {
+            result.test_failure("Unknown header " + header);
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("math", "bn_from_radix", BigInt_FromRadix_Tests);
+
 #endif
 
 }  // namespace

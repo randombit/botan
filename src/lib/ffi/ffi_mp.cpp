@@ -46,16 +46,11 @@ int botan_mp_set_from_str(botan_mp_t mp, const char* str) {
 
 int botan_mp_set_from_radix_str(botan_mp_t mp, const char* str, size_t radix) {
    return BOTAN_FFI_VISIT(mp, [=](auto& bn) {
-      Botan::BigInt::Base base;
-      if(radix == 10) {
-         base = Botan::BigInt::Decimal;
-      } else if(radix == 16) {
-         base = Botan::BigInt::Hexadecimal;
-      } else {
+      if(radix != 10 && radix != 16) {
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
       }
 
-      bn = Botan::BigInt::decode(Botan::cstr_as_span_of_bytes(str), base);
+      bn = Botan::BigInt::from_radix_digits(std::string_view(str), radix);
       return BOTAN_FFI_SUCCESS;
    });
 }

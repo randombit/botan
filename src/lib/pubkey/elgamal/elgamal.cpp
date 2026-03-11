@@ -8,6 +8,7 @@
 #include <botan/elgamal.h>
 
 #include <botan/internal/blinding.h>
+#include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/dl_scheme.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/monty_exp.h>
@@ -148,7 +149,12 @@ std::vector<uint8_t> ElGamal_Encryption_Operation::raw_encrypt(std::span<const u
    const BigInt a = group.power_g_p(k, k_bits);
    const BigInt b = group.multiply_mod_p(m, monty_execute(*m_monty_y_p, k, k_bits).value());
 
-   return unlock(BigInt::encode_fixed_length_int_pair(a, b, group.p_bytes()));
+   const size_t p_bytes = group.p_bytes();
+   std::vector<uint8_t> ctext(2 * p_bytes);
+   BufferStuffer stuffer(ctext);
+   a.serialize_to(stuffer.next(p_bytes));
+   b.serialize_to(stuffer.next(p_bytes));
+   return ctext;
 }
 
 /**
