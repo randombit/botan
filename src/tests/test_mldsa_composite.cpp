@@ -84,10 +84,12 @@ class MLDSA_Composite_Key_Detail_Tests : public Test {
          Test::Result result(test_name);
          auto rng = Test::new_rng(test_name);
 
-         Botan::MLDSA_Composite_PrivateKey priv_key_generated(*rng, param);
+         const Botan::MLDSA_Composite_PrivateKey priv_key_generated(*rng, param);
+         Botan::MLDSA_Composite_PrivateKey priv_key_generated_cp(priv_key_generated);
+         Botan::MLDSA_Composite_PrivateKey priv_key_other(*rng, param);
 
          auto pub_key_generated = priv_key_generated.public_key();
-         Botan::Public_Key* pub_key_cast = static_cast<Botan::Public_Key*>(&priv_key_generated);
+         const Botan::Public_Key* pub_key_cast = static_cast<const Botan::Public_Key*>(&priv_key_generated);
 
          auto message = std::vector<uint8_t>();
          Botan::PK_Signer signer(priv_key_generated, *rng, "");
@@ -109,16 +111,20 @@ class MLDSA_Composite_Key_Detail_Tests : public Test {
             //std::cout << "copy public key\n";
             Botan::MLDSA_Composite_PublicKey pub_key2(pub_key_dec);
             //std::cout << "copy private key\n";
-            auto priv_key2(priv_key_generated);
+            auto priv_key2(priv_key_generated_cp);
+            priv_key_generated_cp = priv_key_other;  // must not influence the copy made above
             //std::cout << " ... did copy private key\n";
             sign_and_verify(priv_key2, pub_key2, *rng, result, "use copied keys");
+            priv_key_generated_cp = priv_key_generated;  // back to normal
 
             //std::cout << "assign public key\n";
             pub_key2 = pub_key_dec;
             //std::cout << "assign private key\n";
             priv_key2 = priv_key_generated;
+            priv_key_generated_cp = priv_key_other;  // must not influence the assignemt made above
             //std::cout << " ... did assign private key\n";
             sign_and_verify(priv_key2, pub_key2, *rng, result, "use assigned keys");
+            priv_key_generated_cp = priv_key_generated;  // back to normal
 
          } catch(const Botan::Exception& e) {
             result.test_failure(std::format("Exception during key operations: {}", e.what()));
@@ -152,7 +158,11 @@ class MLDSA_Composite_Key_Detail_Tests : public Test {
             Botan::MLDSA_Composite_Param::from_id_or_throw(Botan::MLDSA_Composite_Param::id_t::MLDSA44_Ed25519_SHA512),
             Botan::MLDSA_Composite_Param::from_id_or_throw(
                Botan::MLDSA_Composite_Param::id_t::MLDSA65_ECDSA_brainpoolP256r1_SHA512),
-            Botan::MLDSA_Composite_Param::from_id_or_throw(Botan::MLDSA_Composite_Param::id_t::MLDSA87_Ed448_SHAKE256)};
+            Botan::MLDSA_Composite_Param::from_id_or_throw(Botan::MLDSA_Composite_Param::id_t::MLDSA87_Ed448_SHAKE256),
+            Botan::MLDSA_Composite_Param::from_id_or_throw(
+               Botan::MLDSA_Composite_Param::id_t::MLDSA87_ECDSA_P521_SHA512),
+
+         };
          std::vector<Test::Result> result;
          result.reserve(params.size());
          for(const auto& param : params) {
