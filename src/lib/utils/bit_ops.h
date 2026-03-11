@@ -289,6 +289,41 @@ BOTAN_FORCE_INLINE constexpr uint8_t ct_popcount(T x) {
    }
 }
 
+/**
+* Compile-time polynomial multiplication in GF(2^8) modulo an irreducible
+* polynomial POLY
+*
+* When T is larger than a byte, the function computes the product of each byte
+* of T and returns the packed result.
+*
+* This function is intended only for use at compile-time, and in particular
+* should not be used with secret inputs.
+*
+* TODO(Botan4) this function should be consteval, but that hits bugs in
+* older versions of GCC and Clang.
+*/
+template <uint8_t POLY, std::unsigned_integral T>
+constexpr T poly_mul(T x, uint8_t y) {
+   // The constant 0x010101... as a T
+   constexpr T lo_bit = (static_cast<T>(-1) / 255);
+
+   // The constant 0x7F7F7F... as a T
+   constexpr T mask = static_cast<T>(~(lo_bit << 7));
+
+   constexpr T poly = POLY;
+
+   T r = 0;
+   while(x > 0 && y > 0) {
+      if((y & 1) != 0) {
+         r ^= x;
+      }
+      const T carry = ((x >> 7) & lo_bit) * poly;
+      x = ((x & mask) << 1) ^ carry;
+      y >>= 1;
+   }
+   return r;
+}
+
 }  // namespace Botan
 
 #endif

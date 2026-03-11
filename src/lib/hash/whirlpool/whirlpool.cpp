@@ -7,6 +7,7 @@
 
 #include <botan/internal/whirlpool.h>
 
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
@@ -15,23 +16,6 @@
 namespace Botan {
 
 namespace {
-
-// GF(2^8) multiplication with irreducible polynomial x^8 + x^4 + x^3 + x^2 + 1
-constexpr uint64_t whirlpool_poly_mul(uint64_t x, uint8_t y) {
-   constexpr uint64_t lo_bit = 0x0101010101010101;
-   constexpr uint64_t mask = 0x7F7F7F7F7F7F7F7F;
-   constexpr uint64_t poly = 0x1D;
-
-   uint64_t r = 0;
-   while(x > 0 && y > 0) {
-      if((y & 1) != 0) {
-         r ^= x;
-      }
-      x = ((x & mask) << 1) ^ (((x >> 7) & lo_bit) * poly);
-      y >>= 1;
-   }
-   return r;
-}
 
 // Derive the 256-byte S-box from the Whirlpool E and R mini-boxes
 consteval std::array<uint8_t, 256> whirlpool_sbox() noexcept {
@@ -61,7 +45,7 @@ consteval std::array<uint64_t, 256> whirlpool_T_table(const std::array<uint8_t, 
 
    std::array<uint64_t, 256> T = {};
    for(size_t i = 0; i != 256; ++i) {
-      T[i] = whirlpool_poly_mul(MDS, S[i]);
+      T[i] = poly_mul<0x1D>(MDS, S[i]);
    }
    return T;
 }

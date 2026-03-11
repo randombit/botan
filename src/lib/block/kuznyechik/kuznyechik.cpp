@@ -11,6 +11,7 @@
 
 #include <botan/internal/kuznyechik.h>
 
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/loadstor.h>
 
 namespace Botan {
@@ -52,36 +53,6 @@ namespace Kuznyechik_T {
 const constexpr uint8_t LINEAR[16] = {
    0x94, 0x20, 0x85, 0x10, 0xC2, 0xC0, 0x01, 0xFB, 0x01, 0xC0, 0xC2, 0x10, 0x85, 0x20, 0x94, 0x01};
 
-constexpr uint8_t poly_mul(uint8_t x, uint8_t y) {
-   const uint8_t poly = 0xC3;
-
-   uint8_t r = 0;
-   while(x > 0 && y > 0) {
-      if((y & 1) != 0) {
-         r ^= x;
-      }
-      x = (x << 1) ^ ((x >> 7) * poly);
-      y >>= 1;
-   }
-   return r;
-}
-
-constexpr uint64_t poly_mul(uint64_t x, uint8_t y) {
-   const uint64_t lo_bit = 0x0101010101010101;
-   const uint64_t mask = 0x7F7F7F7F7F7F7F7F;
-   const uint64_t poly = 0xC3;
-
-   uint64_t r = 0;
-   while(x > 0 && y > 0) {
-      if((y & 1) != 0) {
-         r ^= x;
-      }
-      x = ((x & mask) << 1) ^ (((x >> 7) & lo_bit) * poly);
-      y >>= 1;
-   }
-   return r;
-}
-
 consteval std::array<uint8_t, 256> L_table(bool forward) noexcept {
    std::array<uint8_t, 256> L = {};
 
@@ -104,7 +75,7 @@ consteval std::array<uint8_t, 256> L_table(bool forward) noexcept {
       for(size_t i = 0; i != 16; ++i) {
          for(size_t j = 0; j != 16; ++j) {
             for(size_t k = 0; k != 16; ++k) {
-               res[16 * i + j] ^= poly_mul(mat[16 * i + k], mat[16 * k + j]);
+               res[16 * i + j] ^= poly_mul<0xC3>(mat[16 * i + k], mat[16 * k + j]);
             }
          }
       }
@@ -132,8 +103,8 @@ consteval std::array<uint64_t, 16 * 256 * 2> T_table(std::span<const uint8_t> L,
 
       for(size_t j = 0; j != 256; ++j) {
          const uint8_t Sj = SB[j];
-         T[512 * i + 2 * j] = poly_mul(L_stride_0, Sj);
-         T[512 * i + 2 * j + 1] = poly_mul(L_stride_1, Sj);
+         T[512 * i + 2 * j] = poly_mul<0xC3>(L_stride_0, Sj);
+         T[512 * i + 2 * j + 1] = poly_mul<0xC3>(L_stride_1, Sj);
       }
    }
 
