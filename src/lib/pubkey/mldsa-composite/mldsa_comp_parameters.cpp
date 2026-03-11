@@ -138,7 +138,7 @@ const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = 
                          "SHA-512",
                          DilithiumMode::ML_DSA_8x7,
                          "ECDSA",
-                         "SHA-512",
+                         "SHA-384",
                          "secp384r1",
                          0),
 
@@ -148,7 +148,7 @@ const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = 
                          "SHA-512",
                          DilithiumMode::ML_DSA_8x7,
                          "ECDSA",
-                         "SHA-512",
+                         "SHA-384",
                          "brainpool384r1",
                          0),
 
