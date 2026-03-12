@@ -1,5 +1,5 @@
 /*
-* (C) 2018,2020 Jack Lloyd
+* (C) 2018,2020,2026 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -11,6 +11,7 @@
 #include <botan/hash.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/divide.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/mul128.h>
 
@@ -141,35 +142,38 @@ size_t count_leading_zeros(const T input[], size_t input_length, Z zero) {
 }
 
 uint8_t base58_value_of(char input) {
-   // "123456789 ABCDEFGH JKLMN PQRSTUVWXYZ abcdefghijk mnopqrstuvwxyz"
+   /*
+   * Alphabet: "123456789 ABCDEFGH JKLMN PQRSTUVWXYZ abcdefghijk mnopqrstuvwxyz"
+   *
+   * Valid input ranges are:
+   *
+   * '1'-'9' (length 9)
+   * 'A'-'H' (length 8)
+   * 'J'-'N' (length 5)
+   * 'P'-'Z' (length 11)
+   * 'a'-'k' (length 11)
+   * 'm'-'z' (length 14)
+   */
+   constexpr uint64_t v_lo = make_uint64(0, '1', 'A', 'J', 'P', 'a', 'm', 0);
+   constexpr uint64_t v_range = make_uint64(0, 9, 8, 5, 11, 11, 14, 0);
 
-   const uint8_t c = static_cast<uint8_t>(input);
+   const uint8_t x = static_cast<uint8_t>(input);
+   const uint64_t x8 = x * 0x0101010101010101;  // replicate x to each byte
 
-   const auto is_dec_19 = CT::Mask<uint8_t>::is_within_range(c, uint8_t('1'), uint8_t('9'));
-   const auto is_alpha_AH = CT::Mask<uint8_t>::is_within_range(c, uint8_t('A'), uint8_t('H'));
-   const auto is_alpha_JN = CT::Mask<uint8_t>::is_within_range(c, uint8_t('J'), uint8_t('N'));
-   const auto is_alpha_PZ = CT::Mask<uint8_t>::is_within_range(c, uint8_t('P'), uint8_t('Z'));
+   // is x8 in any of the ranges?
+   const uint64_t v_mask = swar_in_range<uint64_t>(x8, v_lo, v_range) ^ 0x8000000000000000;
 
-   const auto is_alpha_ak = CT::Mask<uint8_t>::is_within_range(c, uint8_t('a'), uint8_t('k'));
-   const auto is_alpha_mz = CT::Mask<uint8_t>::is_within_range(c, uint8_t('m'), uint8_t('z'));
+   /*
+   * Offsets mapping from the character code x to the base58 value of x in each range
+   *
+   * For example '2' (50) + 0xCF == 1
+   *
+   * Fallback byte 7 is set to 0xFF - x so that if used it results in 0xFF to indicate invalid.
+   */
+   constexpr uint64_t val_v_const = make_uint64(0, 0xCF, 0xC8, 0xC7, 0xC6, 0xC0, 0xBF, 0);
+   const uint64_t val_v = val_v_const ^ (static_cast<uint64_t>(0xFF - x) << 56);
 
-   const uint8_t c_dec_19 = c - uint8_t('1');
-   const uint8_t c_AH = c - uint8_t('A') + 9;
-   const uint8_t c_JN = c - uint8_t('J') + 17;
-   const uint8_t c_PZ = c - uint8_t('P') + 22;
-
-   const uint8_t c_ak = c - uint8_t('a') + 33;
-   const uint8_t c_mz = c - uint8_t('m') + 44;
-
-   uint8_t ret = 0xFF;  // default value
-
-   ret = is_dec_19.select(c_dec_19, ret);
-   ret = is_alpha_AH.select(c_AH, ret);
-   ret = is_alpha_JN.select(c_JN, ret);
-   ret = is_alpha_PZ.select(c_PZ, ret);
-   ret = is_alpha_ak.select(c_ak, ret);
-   ret = is_alpha_mz.select(c_mz, ret);
-   return ret;
+   return x + static_cast<uint8_t>(val_v >> (8 * index_of_first_set_byte(v_mask)));
 }
 
 }  // namespace
