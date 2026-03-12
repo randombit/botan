@@ -8,6 +8,7 @@ name -> "Argon2"
 
 <requires>
 blake2
+os_utils
 </requires>
 
 <header:public>
