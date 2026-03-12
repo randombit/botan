@@ -9,6 +9,7 @@
 #include <botan/internal/streebog.h>
 
 #include <botan/exceptn.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/bswap.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/fmt.h>
@@ -19,23 +20,6 @@
 namespace Botan {
 
 namespace {
-
-// GF(2^8) multiplication with polynomial x^8+x^4+x^3+x^2+1 (0x1D)
-constexpr uint64_t streebog_poly_mul(uint64_t x, uint8_t y) {
-   const uint64_t lo_bit = 0x0101010101010101;
-   const uint64_t mask = 0x7F7F7F7F7F7F7F7F;
-   const uint64_t poly = 0x1D;
-
-   uint64_t r = 0;
-   while(x > 0 && y > 0) {
-      if((y & 1) != 0) {
-         r ^= x;
-      }
-      x = ((x & mask) << 1) ^ (((x >> 7) & lo_bit) * poly);
-      y >>= 1;
-   }
-   return r;
-}
 
 // Build the combined T-tables at compile time
 consteval std::array<std::array<uint64_t, 256>, 8> streebog_Ax_table() noexcept {
@@ -71,7 +55,7 @@ consteval std::array<std::array<uint64_t, 256>, 8> streebog_Ax_table() noexcept 
 
    for(size_t j = 0; j != 8; ++j) {
       for(size_t x = 0; x != 256; ++x) {
-         Ax[j][x] = streebog_poly_mul(L[j], S[x]);
+         Ax[j][x] = poly_mul<0x1D>(L[j], S[x]);
       }
    }
 
