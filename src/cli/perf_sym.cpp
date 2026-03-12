@@ -151,17 +151,23 @@ class PerfTest_CipherMode final : public PerfTest {
                   }
                });
 
+               Botan::secure_vector<uint8_t> dbuffer;
+
+               size_t iter = 0;
+
                while(decrypt_timer->under(runtime)) {
-                  if(!iv.empty()) {
-                     iv[iv.size() - 1] += 1;
+                  if(iter == 0 || iter % 128 == 0) {
+                     if(!iv.empty()) {
+                        iv[iv.size() - 1] += 1;
+                     }
+
+                     // Create a valid ciphertext/tag for decryption to run on
+                     buffer.resize(buf_size);
+                     enc.start(iv);
+                     enc.finish(buffer);
                   }
 
-                  // Create a valid ciphertext/tag for decryption to run on
-                  buffer.resize(buf_size);
-                  enc.start(iv);
-                  enc.finish(buffer);
-
-                  Botan::secure_vector<uint8_t> dbuffer;
+                  ++iter;
 
                   decrypt_timer->run([&]() {
                      for(size_t i = 0; i != mult; ++i) {
