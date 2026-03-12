@@ -27,6 +27,8 @@ class DES final : public Block_Cipher_Fixed_Params<8, 8> {
 
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<DES>(); }
 
+      size_t parallelism() const override { return 32; }
+
       bool has_keying_material() const override;
 
    private:
@@ -48,6 +50,8 @@ class TripleDES final : public Block_Cipher_Fixed_Params<8, 16, 24, 8> {
       std::string name() const override { return "TripleDES"; }
 
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<TripleDES>(); }
+
+      size_t parallelism() const override { return 32; }
 
       bool has_keying_material() const override;
 

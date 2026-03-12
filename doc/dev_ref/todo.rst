@@ -26,7 +26,6 @@ Hardware Specific Optimizations
 * GFNI implementations of SEED, ARIA, others?
 * NEON/VMX/LSX support for the SIMD based GHASH
 * Poly1305 using AVX2/AVX512
-* Constant time bitsliced DES
 * SIMD evaluation of SHA-2 and SHA-3 compression functions
 * Improved Salsa implementations (SIMD_4x32 and/or AVX2)
 * Add CLMUL/PMULL implementations for CRC24
