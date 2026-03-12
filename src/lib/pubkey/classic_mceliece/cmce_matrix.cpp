@@ -33,7 +33,7 @@ CT::Mask<uint64_t> bit_at_mask(uint64_t val, size_t pos) {
 }
 
 /// Swaps bit i with bit j in val
-void swap_bits(uint64_t& val, size_t i, size_t j) {
+void swap_1_bit(uint64_t& val, size_t i, size_t j) {
    const uint64_t bit_i = (val >> i) & CT::value_barrier<uint64_t>(1);
    const uint64_t bit_j = (val >> j) & CT::value_barrier<uint64_t>(1);
    const uint64_t xor_sum = bit_i ^ bit_j;
@@ -165,7 +165,7 @@ std::optional<CmceColumnSelection> move_columns(CmceMatrix& mat, const Classic_M
    // Swap the rows so the matrix can be transformed into systematic form
    for(size_t mat_row = 0; mat_row < params.pk_no_rows(); ++mat_row) {
       for(size_t col = 0; col < Classic_McEliece_Parameters::mu(); ++col) {
-         swap_bits(matrix_swap_area.at(mat_row), col, pivot_indices.at(col));
+         swap_1_bit(matrix_swap_area.at(mat_row), col, pivot_indices.at(col));
       }
    }
 
