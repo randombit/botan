@@ -9,8 +9,6 @@
 #include <cstring>
 #include <string_view>
 
-#include <iostream>
-
 namespace Botan {
 
 const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = {

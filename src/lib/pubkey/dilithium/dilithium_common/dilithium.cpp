@@ -14,17 +14,16 @@
 */
 
 #include <botan/dilithium.h>
-#include <botan/hex.h>
-#include <botan/internal/parsing.h>
 
 #include <botan/exceptn.h>
+#include <botan/hex.h>
 #include <botan/rng.h>
-
 #include <botan/internal/dilithium_algos.h>
 #include <botan/internal/dilithium_keys.h>
 #include <botan/internal/dilithium_symmetric_primitives.h>
 #include <botan/internal/dilithium_types.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/parsing.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/stl_util.h>
 
@@ -107,8 +106,8 @@ class MLDSA_Signing_Parameters {
                   }
                   // get the value of the hex-encoded context string
                   const auto z = y.substr(prefix_len + 1);
-                  const auto ctx_hex = hex_decode(z);
-                  this->m_user_context.insert(m_user_context.end(), ctx_hex.begin(), ctx_hex.end());
+                  const auto ctx = hex_decode(z);
+                  this->m_user_context.insert(m_user_context.end(), ctx.begin(), ctx.end());
                }
             }
          }

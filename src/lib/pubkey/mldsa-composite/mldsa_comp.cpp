@@ -1,3 +1,5 @@
+#include <botan/mldsa_comp.h>
+
 #include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
@@ -8,12 +10,12 @@
 #include <botan/exceptn.h>
 #include <botan/hex.h>
 #include <botan/ml_dsa.h>
-#include <botan/mldsa_comp.h>
 #include <botan/oids.h>
 #include <botan/pk_algs.h>
 #include <botan/pk_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/pk_ops_impl.h>
+
 #include <cstring>
 #include <memory>
 #include <string_view>
@@ -103,17 +105,15 @@ class MLDSA_Composite_Verification_Operation final : public PK_Ops::Verification
             trad_sig = trad_sig_buf;
          }
 #endif
-         if(!m_mldsa_ver_op->is_valid_signature(mldsa_sig)) {
-            return false;
-         }
-         if(!m_traditional_ver_op->is_valid_signature(trad_sig)) {
-            return false;
-         }
-         return true;
+         // must invoke both signature verifications to ensure the correct hasher state
+         bool result = m_mldsa_ver_op->is_valid_signature(mldsa_sig);
+         result &= m_traditional_ver_op->is_valid_signature(trad_sig);
+         return result;
       }
 
    private:
       MLDSA_Composite_Param m_parameters;
+
       std::unique_ptr<PK_Ops::Verification> m_mldsa_ver_op;
       std::unique_ptr<PK_Ops::Verification> m_traditional_ver_op;
 };
@@ -131,6 +131,7 @@ class MLDSA_Composite_Signature_Operation final : public PK_Ops::Signature_with_
             m_traditional_sig_op(trad_privkey->create_signature_op(rng, param.traditional_padding(), "")) {}
 
       std::vector<uint8_t> raw_sign(std::span<const uint8_t> ph, RandomNumberGenerator& rng) override {
+         // PROBLEM: when called repeatedly, the computed pre-hash ph differs and leads to failed verifications.
          //  M' = Prefix || Label || len(ctx) || ctx || PH( M )
          std::string msg_str = "CompositeAlgorithmSignatures2025";
          msg_str += m_parameters.label();

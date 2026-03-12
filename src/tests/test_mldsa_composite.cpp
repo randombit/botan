@@ -1,10 +1,10 @@
 /*
- * Tests for Crystals Dilithium
+ * Tests for MLDSA-composite 
  * - KAT tests using the KAT vectors from
- *   https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+ *  https://datatracker.ietf.org/doc/html/draft-ietf-lamps-pq-composite-sigs-15
+ *  Used the corresponding JSON file at https://github.com/lamps-wg/draft-composite-sigs/blob/main/src/testvectors.json 
  *
- * (C) 2022,2023 Jack Lloyd
- * (C) 2022 Manuel Glaser, Michael Boric, René Meusel - Rohde & Schwarz Cybersecurity
+ * (C) 2026 Falko Strenzke (MTG AG)
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */
@@ -14,7 +14,6 @@
 #include "tests.h"
 
 #include <format>
-#include <iostream>  // TODO remove
 #include <memory>
 #include <optional>
 #include <string_view>
@@ -55,12 +54,34 @@ std::vector<uint8_t> decode_var_base64(const VarMap& vars, std::string_view var)
    return std::vector<uint8_t>(var_sv.begin(), var_sv.end());
 }
 
+void mimic_speed_test(Botan::RandomNumberGenerator& rng, Test::Result& result) {
+   // test for a real-life bug that occured because of lazy evaluation of the 2nd signature verification.
+   std::vector<uint8_t> message;
+   std::vector<uint8_t> signature;
+   std::vector<uint8_t> bad_signature;
+   rng.random_vec(message, 48);
+   auto sk = Botan::create_private_key("MLDSA65-RSA3072-PKCS15-SHA512", rng, "");
+   const char* padding = "";
+   Botan::PK_Signer sig(*sk, rng, padding, Botan::Signature_Format::Standard, "");
+   auto pk = sk->public_key();
+   Botan::PK_Verifier ver(*pk, padding, Botan::Signature_Format::Standard, "");
+   signature = sig.sign_message(message, rng);
+   bad_signature = signature;
+   bad_signature[0] ^= 1;
+   result.test_bool_eq("first valid signature", ver.verify_message(message, signature), true);
+   ver.verify_message(message, bad_signature);
+   // 2nd run after invalid signature
+   signature = sig.sign_message(message, rng);
+   result.test_bool_eq("2nd valid signature", ver.verify_message(message, signature), true);
+}
+
 void sign_and_verify(const Botan::Private_Key& priv_key,
                      const Botan::Public_Key& pub_key,
                      Botan::RandomNumberGenerator& rng,
                      Test::Result& test_result,
                      std::string_view test_context) {
-   const char* message = "The quick brown fox jumps over the lazy dog.";
+   const char* message_cstr = "The quick brown fox jumps over the lazy dog.";
+   std::vector<uint8_t> message(message_cstr, message_cstr + strlen(message_cstr));
    Botan::PK_Signer signer(priv_key, rng, "");
    signer.update(message);
    std::vector<uint8_t> signature = signer.signature(rng);
@@ -71,6 +92,33 @@ void sign_and_verify(const Botan::Private_Key& priv_key,
    verifier.update(message);
    test_result.test_bool_eq(
       std::format("verification of correct signature ({})", test_context), verifier.check_signature(signature), true);
+
+   verifier.update(message);
+   test_result.test_bool_eq(
+      std::format("verification of correct signature (repeated use of only verifier with update) ({})", test_context),
+      verifier.check_signature(signature),
+      true);
+
+   // test sign_message() with already used signature-op and already used verify-op
+   for(size_t i = 0; i < 2; i++) {
+      signature = signer.sign_message(message, rng);  // PK_Ops::Signature_with_Hash::update() is called before signing
+      test_result.test_bool_eq(
+         std::format(
+            "verification of correct signature (repeated use of signer and verifier with sign/verify_message) ({})",
+            test_context),
+         verifier.verify_message(message, signature),
+         true);
+   }
+
+   // test update() with already used signature-op and already used verify-op
+   signer.update(message);
+   signature = signer.signature(rng);
+   verifier.update(message);
+   test_result.test_bool_eq(
+      std::format("verification of correct signature (repeated use of signer and verifier with update) ({})",
+                  test_context),
+      verifier.check_signature(signature),
+      true);
 }
 }  // namespace
 
@@ -108,23 +156,19 @@ class MLDSA_Composite_Key_Detail_Tests : public Test {
 
          try {
             Botan::MLDSA_Composite_PublicKey pub_key_dec(param.id(), pub_key_bits);
-            //std::cout << "copy public key\n";
             Botan::MLDSA_Composite_PublicKey pub_key2(pub_key_dec);
-            //std::cout << "copy private key\n";
             auto priv_key2(priv_key_generated_cp);
             priv_key_generated_cp = priv_key_other;  // must not influence the copy made above
-            //std::cout << " ... did copy private key\n";
             sign_and_verify(priv_key2, pub_key2, *rng, result, "use copied keys");
             priv_key_generated_cp = priv_key_generated;  // back to normal
 
-            //std::cout << "assign public key\n";
             pub_key2 = pub_key_dec;
-            //std::cout << "assign private key\n";
             priv_key2 = priv_key_generated;
             priv_key_generated_cp = priv_key_other;  // must not influence the assignemt made above
-            //std::cout << " ... did assign private key\n";
             sign_and_verify(priv_key2, pub_key2, *rng, result, "use assigned keys");
             priv_key_generated_cp = priv_key_generated;  // back to normal
+                                                         //
+            mimic_speed_test(*rng, result);
 
          } catch(const Botan::Exception& e) {
             result.test_failure(std::format("Exception during key operations: {}", e.what()));
@@ -183,9 +227,6 @@ class MLDSA_Composite_Key_Detail_Tests : public Test {
    private:
       static std::vector<std::vector<uint8_t>> generate_false_keys(const std::span<const uint8_t> correct_key,
                                                                    size_t mldsa_key_size) {
-         // std::cout << std::format("generate_false_keys(): correct_key.size() = {}, mldsa_key_size = {}\n",
-         //                          correct_key.size(),
-         //                          mldsa_key_size);
          std::vector<std::vector<uint8_t>> result;
          result.push_back(std::vector<uint8_t>());
          result.push_back(std::vector<uint8_t>(1));
@@ -211,12 +252,8 @@ class MLDSA_Composite_Sig_Detail_Tests : public Test {
 
          auto priv_key_generated(Botan::create_private_key(param.id_str(), *rng));
 
-         //std::cout << "retrieving public key from generated private key\n";
          auto pub_key_generated = priv_key_generated->public_key();
-         //std::cout << "calling sign_and_verify() with generated key pair\n";
          Botan::Public_Key* pub_key_cast = static_cast<Botan::Public_Key*>(priv_key_generated.get());
-         // sign_and_verify(
-         //    *priv_key_generated, *pub_key_cast, *rng, result, "verify with cast public key, some false signatures", false_signatures);
 
          auto message = std::vector<uint8_t>();
          Botan::PK_Signer signer(*priv_key_generated, *rng, "");
@@ -310,24 +347,26 @@ class MLDSA_Composite_RT_Tests : public Test {
          if(nullptr == priv_key_generated) {
             result.test_bool_eq("generated private key non-null", false, true);
          } else {
-            //std::cout << "retrieving public key from generated private key\n";
             auto pub_key_generated = priv_key_generated->public_key();
             if(nullptr == pub_key_generated) {
                result.test_bool_eq("generated pub key key non-null", false, true);
             } else {
-               //std::cout << "calling sign_and_verify() with generated key pair\n";
                sign_and_verify(*priv_key_generated, *pub_key_generated, *rng, result, "produced with generated key");
             }
          }
-         Botan::secure_vector<uint8_t> private_enc = priv_key_generated->private_key_bits();
-         if(test_name.find("ECDSA") != std::string::npos) {
-            check_encoded_ecdsa_private_key(private_enc, result);
+         uint64_t rep_cnt = options().run_long_tests() ? 150 : 1;
+         for(uint64_t i = 1; i < rep_cnt; i++) {
+            Botan::secure_vector<uint8_t> private_enc = priv_key_generated->private_key_bits();
+            if(test_name.find("ECDSA") != std::string::npos) {
+               check_encoded_ecdsa_private_key(private_enc, result);
+            }
+            std::vector<uint8_t> public_enc = priv_key_generated->public_key_bits();
+            const Botan::MLDSA_Composite_PrivateKey priv_key_redec(priv_key_generated->algorithm_identifier(),
+                                                                   private_enc);
+            const Botan::MLDSA_Composite_PublicKey pub_key_redec(priv_key_generated->algorithm_identifier(),
+                                                                 public_enc);
+            sign_and_verify(priv_key_redec, pub_key_redec, *rng, result, "produced with re-decoded key");
          }
-         std::vector<uint8_t> public_enc = priv_key_generated->public_key_bits();
-         const Botan::MLDSA_Composite_PrivateKey priv_key_redec(priv_key_generated->algorithm_identifier(),
-                                                                private_enc);
-         const Botan::MLDSA_Composite_PublicKey pub_key_redec(priv_key_generated->algorithm_identifier(), public_enc);
-         sign_and_verify(priv_key_redec, pub_key_redec, *rng, result, "produced with re-decoded key");
          return result;
       }
 
@@ -351,8 +390,6 @@ class MLDSA_Composite_RT_Tests : public Test {
          }
          std::vector<uint8_t> ecdsa_private_enc(composite_private_key.begin() + 32, composite_private_key.end());
          try {
-            // std::cout << "encoded private key = " << Botan::hex_encode(ecdsa_private_enc) << std::endl;
-
             Botan::BER_Decoder(ecdsa_private_enc)
                .start_sequence()
                .decode_and_check<size_t>(1, "Unknown version code for ECC key")
@@ -389,12 +426,10 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
             privkey_valid = false;
          }
          Test::Result result(name);
-         //std::cout << "test name = " << name << std::endl;
          auto tcId = vars.get_req_str("tcId");
          if(tcId.starts_with("id-")) {
             tcId = tcId.substr(3);
          }
-         //std::cout << "tcId = " << tcId << std::endl;
          const auto pk = vars.get_req_str("pk");
          const auto pk_bin = Botan::base64_decode(pk);
 
@@ -420,21 +455,16 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
          } catch(const Botan::Exception& e) {
             exc_during_pubkey_decoding = true;
          }
-         // std::cout << std::format("pubkey decoding passed: {}\n", !exc_during_pubkey_decoding);
          result.test_bool_eq("pubkey decoding OK", !exc_during_pubkey_decoding, pubkey_valid);
          if(exc_during_pubkey_decoding) {
             return result;
          }
          Botan::PK_Verifier verifier(*pubkey, "");
-         // std::cout << "created verifier\n";
          verifier.update(message);
          result.test_bool_eq("verification of correct signature", verifier.check_signature(sig_bin), true);
-         // std::cout << "\nverification passed \n";
 
          try {
-            // std::cout << std::format("starting to decode private key of length {}... \n", sk_bin.size());
             privkey = std::make_unique<Botan::MLDSA_Composite_PrivateKey>(comp_parm.id(), sk_bin);
-            // std::cout << "  ... done decode private key\n";
          } catch(const Botan::Exception& e) {
             exc_during_privkey_decoding = true;
          }
