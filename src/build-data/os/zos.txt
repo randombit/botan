@@ -1,0 +1,21 @@
+soname_suffix "so"
+
+use_stack_protector no
+
+<target_features>
+posix1
+clock_gettime
+dev_random
+
+atomics
+sockets
+system_clock
+threads
+thread_local
+filesystem
+</target_features>
+
+<aliases>
+os/390
+os390
+</aliases>

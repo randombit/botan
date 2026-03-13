@@ -59,6 +59,7 @@ solaris -> "{cxx} -shared -fPIC -Wl,-h,{soname_abi}"
 
 # AIX and OpenBSD don't use sonames at all
 aix     -> "{cxx} -shared -fPIC"
+zos     -> "{cxx} -shared -fPIC"
 openbsd -> "{cxx} -shared -fPIC"
 
 mingw   -> "{cxx} -shared -Wl,--out-implib,{shared_lib_name}.a"
@@ -107,7 +108,7 @@ arm64:neon    -> ""
 
 # Flags set here are included at compile and link time
 <mach_abi_linking>
-all!haiku,qnx,none -> "-pthread"
+all!haiku,qnx,zos,none -> "-pthread"
 
 s390    -> "-m31"
 s390x   -> "-m64"

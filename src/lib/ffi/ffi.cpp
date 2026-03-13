@@ -18,9 +18,15 @@
    #include <botan/internal/os_utils.h>
 #endif
 
+#if defined(__MVS__)
+// z/OS has a bug with thread_local
+   #define thread_local
+#endif
+
 namespace Botan_FFI {
 
 namespace {
+
 
 // NOLINTNEXTLINE(*-avoid-non-const-global-variables)
 thread_local std::string g_last_exception_what;
