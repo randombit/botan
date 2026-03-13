@@ -85,6 +85,8 @@ Version 3.11.0, Not Yet Released
 
 * Fix various clang-tidy and cppcheck warnings (GH #5172 #5207 #5204 #5205)
 
+* Add optional callback to provide a user-defined TLS 1.2 key derivation function (GH #5107)
+
 Version 3.10.0, 2025-11-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
