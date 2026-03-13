@@ -8,6 +8,7 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_PBKDF)
+   #include <botan/exceptn.h>
    #include <botan/pbkdf.h>
    #include <botan/pwdhash.h>
 #endif
@@ -85,32 +86,38 @@ class Pwdhash_Tests : public Test {
             if(pwdhash_fam) {
                result.start_timer();
 
-               const std::vector<uint8_t> salt(8);
-               const std::string password = "test";
-
-               auto tuned_pwhash = pwdhash_fam->tune_params(32, run_time, max_mem, tune_time);
-
-               std::vector<uint8_t> output1(32);
-               tuned_pwhash->hash(output1, password, salt);
-
-               std::unique_ptr<Botan::PasswordHash> pwhash;
-
-               if(pwdhash_fam->name() == "Scrypt" || pwdhash_fam->name().starts_with("Argon2")) {
-                  pwhash = pwdhash_fam->from_params(
-                     tuned_pwhash->memory_param(), tuned_pwhash->iterations(), tuned_pwhash->parallelism());
-               } else {
-                  pwhash = pwdhash_fam->from_params(tuned_pwhash->iterations());
+               std::unique_ptr<Botan::PasswordHash> tuned_pwhash;
+               try {
+                  tuned_pwhash = pwdhash_fam->tune_params(32, run_time, max_mem, tune_time);
+               } catch(const Botan::Not_Implemented&) {
+                  // tune_params requires os_utils for clock access; not available in minimized builds
+                  result.test_note("tune_params not available in current build config");
                }
 
-               std::vector<uint8_t> output2(32);
-               pwhash->hash(output2, password, salt);
+               if(tuned_pwhash != nullptr) {
+                  std::vector<uint8_t> output1(32);
+                  const std::vector<uint8_t> salt(8);
+                  const std::string password = "test";
+                  tuned_pwhash->hash(output1, password, salt);
 
-               result.test_bin_eq("PasswordHash produced same output when run with same params", output1, output2);
+                  std::unique_ptr<Botan::PasswordHash> pwhash;
 
-               auto default_pwhash = pwdhash_fam->default_params();
-               std::vector<uint8_t> output3(32);
-               default_pwhash->hash(output3, password, salt);
+                  if(pwdhash_fam->name() == "Scrypt" || pwdhash_fam->name().starts_with("Argon2")) {
+                     pwhash = pwdhash_fam->from_params(
+                        tuned_pwhash->memory_param(), tuned_pwhash->iterations(), tuned_pwhash->parallelism());
+                  } else {
+                     pwhash = pwdhash_fam->from_params(tuned_pwhash->iterations());
+                  }
 
+                  std::vector<uint8_t> output2(32);
+                  pwhash->hash(output2, password, salt);
+
+                  result.test_bin_eq("PasswordHash produced same output when run with same params", output1, output2);
+
+                  auto default_pwhash = pwdhash_fam->default_params();
+                  std::vector<uint8_t> output3(32);
+                  default_pwhash->hash(output3, password, salt);
+               }
                result.end_timer();
             } else {
                result.test_note("No such algo", pwdhash);
