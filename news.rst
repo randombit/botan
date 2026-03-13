@@ -30,12 +30,20 @@ Version 3.11.0, Not Yet Released
 
 * Add AVX-512/CLMUL optimized XTS mode (GH #5251)
 
-* GCM and GMAC optimizations (GH #5273 #5278 #5379)
+* GCM and GMAC optimizations including new AVX-512 codepaths (GH #5273 #5278 #5379 #5418)
 
 * Poly1305 optimizations, including AVX2 and AVX-512 implementations (GH #5227)
 
+* Add new DES implementation using bitslicing (GH #5433)
+
+* Rewrite Twofish key schedule to avoid use of large tables (GH #5432)
+
+* Generate Streebog and Whirlpool tables at compile time (GH #5427 #5430 #5434)
+
 * Various elliptic curve arithmetic optimizations (GH #5186 #5194 #5195 #5196
   #5275 #5387 #5393 #5394 #5400 #5403)
+
+* Add some inline asm for aarch64 improving multiprecision integer performance (GH #5407)
 
 * Certain signature and KEM schemes, including XMSS, LMS, FrodoKEM,
   ML-KEM/Kyber, and ML-DSA/Dilithium, would fail or produce incorrect results if
@@ -60,10 +68,14 @@ Version 3.11.0, Not Yet Released
 * Add support for WebAssembly SIMD, optimizing various algorithms including AES, GCM,
   ChaCha, SHA-1, SHA-256, Argon2 and others. (GH #5155 #5163 #5201)
 
-* Allow building TLS 1.3 without TLS 1.2 (GH #5292 #5293 #5303 #5309 #5318)
-
 * Emscripten/WebAssembly improvements including using the new Wasm exception mechanism
   (GH #5202) and re-enabling testing in CI with Emscripten (GH #5209)
+
+* Allow building TLS 1.3 without TLS 1.2 (GH #5292 #5293 #5303 #5309 #5318)
+
+* Add optional callback to provide a user-defined TLS 1.2 key derivation function (GH #5107)
+
+* Add scripts to run Wycheproof tests every night in CI (GH #5269)
 
 * Support for AltiVec on 32-bit PowerPC platforms has been dropped (GH #5266)
 
@@ -84,8 +96,6 @@ Version 3.11.0, Not Yet Released
 * On MSVC default to using embedded debug info rather than the PDB (GH #5349)
 
 * Fix various clang-tidy and cppcheck warnings (GH #5172 #5207 #5204 #5205)
-
-* Add optional callback to provide a user-defined TLS 1.2 key derivation function (GH #5107)
 
 Version 3.10.0, 2025-11-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
