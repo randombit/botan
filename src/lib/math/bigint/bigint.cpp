@@ -34,7 +34,7 @@ BigInt BigInt::from_u64(uint64_t n) {
 //static
 BigInt BigInt::from_word(word n) {
    BigInt bn;
-   bn.set_word_at(0, n);
+   bn.m_data.set_word_at(0, n);
    return bn;
 }
 
@@ -539,7 +539,7 @@ void BigInt::ct_cond_assign(bool predicate, const BigInt& other) {
    for(size_t i = 0; i != r_words; ++i) {
       const word o_word = other.word_at(i);
       const word t_word = this->word_at(i);
-      this->set_word_at(i, mask.select(o_word, t_word));
+      m_data.set_word_at(i, mask.select(o_word, t_word));
    }
 
    const auto same_sign = CT::Mask<word>::is_equal(sign(), other.sign()).as_choice();
