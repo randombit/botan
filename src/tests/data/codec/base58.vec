@@ -51,6 +51,69 @@ Base58 = 111ZiCa
 Binary = 00000000616263
 Base58 = 1111ZiCa
 
+# Single zero byte
+Binary = 00
+Base58 = 1
+
+# All zeros
+Binary = 0000
+Base58 = 11
+
+# Single byte at each character range boundary
+Binary = 01
+Base58 = 2
+
+Binary = 08
+Base58 = 9
+
+Binary = 09
+Base58 = A
+
+Binary = 10
+Base58 = H
+
+Binary = 11
+Base58 = J
+
+Binary = 15
+Base58 = N
+
+Binary = 16
+Base58 = P
+
+Binary = 21
+Base58 = a
+
+Binary = 2B
+Base58 = k
+
+Binary = 2C
+Base58 = m
+
+Binary = 0D
+Base58 = E
+
+Binary = 0E
+Base58 = F
+
+Binary = 0F
+Base58 = G
+
+Binary = 1C
+Base58 = V
+
+Binary = 25
+Base58 = e
+
+Binary = 28
+Base58 = h
+
+Binary = 2F
+Base58 = p
+
+Binary = FF
+Base58 = 5Q
+
 [invalid]
 
 Base58 = 0
@@ -64,5 +127,9 @@ Base58 = 4kl8
 Base58 = s!5<
 Base58 = t$@mX<*
 Base58 = AreYouEvenLookingAtThese?
+
+Base58 = abc:def
+Base58 = abc[def
+Base58 = `abcdef
 
 

@@ -46,7 +46,6 @@ Public Key Crypto, Math
 Utility Functions
 ------------------
 
-* Constant time base32/base64/hex are optimized using SWAR; apply this to base58
 * Make Memory_Pool more concurrent (currently uses a global lock)
 * Guarded integer type to prevent overflow bugs
 
