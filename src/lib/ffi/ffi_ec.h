@@ -1,6 +1,6 @@
 /*
 * (C) 2025 Jack Lloyd
-* (C) 2025 Dominik Schricker
+* (C) 2025,2026 Dominik Schricker
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -14,6 +14,8 @@
 extern "C" {
 
 BOTAN_FFI_DECLARE_STRUCT(botan_ec_group_struct, Botan::EC_Group, 0xC5A5DB46);
+BOTAN_FFI_DECLARE_STRUCT(botan_ec_scalar_struct, Botan::EC_Scalar, 0x504CC641);
+BOTAN_FFI_DECLARE_STRUCT(botan_ec_point_struct, Botan::EC_AffinePoint, 0xE3DAD046);
 }
 
 #endif

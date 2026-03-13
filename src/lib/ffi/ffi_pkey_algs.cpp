@@ -13,6 +13,7 @@
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
 #include <botan/pem.h>
+#include <botan/internal/ffi_ec.h>
 #include <botan/internal/ffi_mp.h>
 #include <botan/internal/ffi_pkey.h>
 #include <botan/internal/ffi_rng.h>
@@ -833,6 +834,48 @@ int botan_pubkey_load_sm2_enc(botan_pubkey_t* key,
 
 int botan_privkey_load_sm2_enc(botan_privkey_t* key, const botan_mp_t scalar, const char* curve_name) {
    return botan_privkey_load_sm2(key, scalar, curve_name);
+}
+
+/* EC key specific operations */
+
+int botan_ec_privkey_get_private_key(botan_privkey_t key, botan_ec_scalar_t* value) {
+   if(Botan::any_null_pointers(value)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const Botan::EC_PrivateKey* ec_key = dynamic_cast<const Botan::EC_PrivateKey*>(&safe_get(key));
+      if(ec_key == nullptr) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+      return ffi_new_object(value, std::make_unique<Botan::EC_Scalar>(ec_key->_private_key()));
+   });
+}
+
+int botan_ec_privkey_get_group(botan_privkey_t key, botan_ec_group_t* ec_group) {
+   if(Botan::any_null_pointers(ec_group)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const Botan::EC_PrivateKey* ec_key = dynamic_cast<const Botan::EC_PrivateKey*>(&safe_get(key));
+      if(ec_key == nullptr) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+      return ffi_new_object(ec_group, std::make_unique<Botan::EC_Group>(ec_key->domain()));
+   });
+}
+
+int botan_ec_pubkey_get_group(botan_pubkey_t key, botan_ec_group_t* ec_group) {
+   if(Botan::any_null_pointers(ec_group)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const Botan::EC_PublicKey* ec_key = dynamic_cast<const Botan::EC_PublicKey*>(&safe_get(key));
+      if(ec_key == nullptr) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+      return ffi_new_object(ec_group, std::make_unique<Botan::EC_Group>(ec_key->domain()));
+   });
 }
 
 /* Ed25519 specific operations */
