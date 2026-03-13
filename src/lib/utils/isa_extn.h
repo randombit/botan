@@ -55,6 +55,7 @@
    #define BOTAN_FN_ISA_SHA2 BOTAN_FUNC_ISA("+crypto+sha2")
    #define BOTAN_FN_ISA_SM4 BOTAN_FUNC_ISA("arch=armv8.2-a+sm4")
    #define BOTAN_FN_ISA_SHA512 BOTAN_FUNC_ISA("arch=armv8.2-a+sha3")
+   #define BOTAN_FN_ISA_RNG BOTAN_FUNC_ISA("arch=armv8.5-a+rng")
 
 #endif
 
