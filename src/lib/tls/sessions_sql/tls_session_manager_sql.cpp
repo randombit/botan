@@ -29,13 +29,14 @@ void Session_Manager_SQL::create_or_migrate_and_open(std::string_view passphrase
       case CORRUPTED:
       case PRE_BOTAN_3_0:
       case EMPTY:
-         // Legacy sessions before Botan 3.0 are simply dropped, no actual
-         // migration is implemented. Same for apparently corrupt databases.
+      case BOTAN_3_0:
+         // Legacy sessions are simply dropped, no actual migration is
+         // implemented. Same for apparently corrupt databases.
          m_db->exec("DROP TABLE IF EXISTS tls_sessions");
          m_db->exec("DROP TABLE IF EXISTS tls_sessions_metadata");
-         create_with_latest_schema(passphrase, BOTAN_3_0);
+         create_with_latest_schema(passphrase, BOTAN_3_1);
          break;
-      case BOTAN_3_0:
+      case BOTAN_3_1:
          initialize_existing_database(passphrase);
          break;
       default:
@@ -73,6 +74,7 @@ void Session_Manager_SQL::create_with_latest_schema(std::string_view passphrase,
       "session_start INTEGER, "
       "hostname TEXT, "
       "hostport INTEGER, "
+      "service TEXT NOT NULL DEFAULT '', "
       "session BLOB NOT NULL"
       ")");
 
@@ -157,7 +159,7 @@ void Session_Manager_SQL::store(const Session& session, const Session_Handle& ha
 
    auto stmt = m_db->new_statement(
       "INSERT OR REPLACE INTO tls_sessions"
-      " VALUES (?1, ?2, ?3, ?4, ?5, ?6)");
+      " VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)");
 
    // Generate a random session ID if the peer did not provide one. Note that
    // this ID will not be returned on ::find(), as the ticket is preferred.
@@ -169,7 +171,8 @@ void Session_Manager_SQL::store(const Session& session, const Session_Handle& ha
    stmt->bind(3, session.start_time());
    stmt->bind(4, session.server_info().hostname());
    stmt->bind(5, session.server_info().port());
-   stmt->bind(6, session.encrypt(m_session_key, *m_rng));
+   stmt->bind(6, session.server_info().service());
+   stmt->bind(7, session.encrypt(m_session_key, *m_rng));
 
    stmt->spin();
 
@@ -208,13 +211,14 @@ std::vector<Session_with_Handle> Session_Manager_SQL::find_some(const Server_Inf
 
    auto stmt = m_db->new_statement(
       "SELECT session_id, session_ticket, session FROM tls_sessions"
-      " WHERE hostname = ?1 AND hostport = ?2"
+      " WHERE hostname = ?1 AND hostport = ?2 AND service = ?3"
       " ORDER BY session_start DESC"
-      " LIMIT ?3");
+      " LIMIT ?4");
 
    stmt->bind(1, info.hostname());
    stmt->bind(2, info.port());
-   stmt->bind(3, max_sessions_hint);
+   stmt->bind(3, info.service());
+   stmt->bind(4, max_sessions_hint);
 
    std::vector<Session_with_Handle> found_sessions;
    while(stmt->step()) {

@@ -73,11 +73,14 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_SQL : public Session_Manager {
       // 20120609 - older (Botan 2.0) database scheme
       // 20230113 - adapt to Botan 3.0 Session_Manager API
       //            (Session objects don't contain Session_ID, Session_Ticket)
+      // 20260306 - add service column to isolate sessions by service type
+      //            (e.g. TLS vs DTLS on the same host:port)
       enum Schema_Revision /* NOLINT(*-use-enum-class) */ {
          EMPTY = 0,
          CORRUPTED = 1,
          PRE_BOTAN_3_0 = 20120609,
          BOTAN_3_0 = 20230112,
+         BOTAN_3_1 = 20260306,
       };
 
       void create_or_migrate_and_open(std::string_view passphrase);
