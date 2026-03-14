@@ -33,6 +33,10 @@ class IDEA final : public Block_Cipher_Fixed_Params<8, 16> {
       bool has_keying_material() const override;
 
    private:
+#if defined(BOTAN_HAS_IDEA_AVX2)
+      static void avx2_idea_op_16(const uint8_t in[128], uint8_t out[128], const uint16_t EK[52]);
+#endif
+
 #if defined(BOTAN_HAS_IDEA_SSE2)
       static void sse2_idea_op_8(const uint8_t in[64], uint8_t out[64], const uint16_t EK[52]);
 #endif

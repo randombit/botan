@@ -109,6 +109,12 @@ void idea_op(const uint8_t in[], uint8_t out[], size_t blocks, const uint16_t K[
 }  // namespace
 
 size_t IDEA::parallelism() const {
+#if defined(BOTAN_HAS_IDEA_AVX2)
+   if(CPUID::has(CPUID::Feature::AVX2)) {
+      return 16;
+   }
+#endif
+
 #if defined(BOTAN_HAS_IDEA_SSE2)
    if(CPUID::has(CPUID::Feature::SSE2)) {
       return 8;
@@ -119,6 +125,12 @@ size_t IDEA::parallelism() const {
 }
 
 std::string IDEA::provider() const {
+#if defined(BOTAN_HAS_IDEA_AVX2)
+   if(auto feat = CPUID::check(CPUID::Feature::AVX2)) {
+      return *feat;
+   }
+#endif
+
 #if defined(BOTAN_HAS_IDEA_SSE2)
    if(auto feat = CPUID::check(CPUID::Feature::SSE2)) {
       return *feat;
@@ -133,6 +145,17 @@ std::string IDEA::provider() const {
 */
 void IDEA::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();
+
+#if defined(BOTAN_HAS_IDEA_AVX2)
+   if(CPUID::has(CPUID::Feature::AVX2)) {
+      while(blocks >= 16) {
+         avx2_idea_op_16(in, out, m_EK.data());
+         in += 16 * BLOCK_SIZE;
+         out += 16 * BLOCK_SIZE;
+         blocks -= 16;
+      }
+   }
+#endif
 
 #if defined(BOTAN_HAS_IDEA_SSE2)
    if(CPUID::has(CPUID::Feature::SSE2)) {
@@ -153,6 +176,17 @@ void IDEA::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
 */
 void IDEA::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();
+
+#if defined(BOTAN_HAS_IDEA_AVX2)
+   if(CPUID::has(CPUID::Feature::AVX2)) {
+      while(blocks >= 16) {
+         avx2_idea_op_16(in, out, m_DK.data());
+         in += 16 * BLOCK_SIZE;
+         out += 16 * BLOCK_SIZE;
+         blocks -= 16;
+      }
+   }
+#endif
 
 #if defined(BOTAN_HAS_IDEA_SSE2)
    if(CPUID::has(CPUID::Feature::SSE2)) {
