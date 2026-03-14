@@ -1,0 +1,21 @@
+<defines>
+PKCS12 -> 20260305
+</defines>
+
+<module_info>
+name -> "PKCS#12"
+brief -> "PKCS#12/PFX certificate and key bundle format"
+</module_info>
+
+<requires>
+asn1
+x509
+pubkey
+pkcs12_pbe
+sha2_32
+hmac
+</requires>
+
+<header:public>
+pkcs12.h
+</header:public>

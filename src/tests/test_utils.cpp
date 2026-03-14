@@ -1086,6 +1086,12 @@ class Charset_Tests final : public Text_Based_Test {
             converted = Botan::ucs2_to_utf8(in.data(), in.size());
          } else if(type == "UCS4-UTF8") {
             converted = Botan::ucs4_to_utf8(in.data(), in.size());
+         } else if(type == "UTF8-UCS2") {
+            std::vector<uint8_t> ucs2 = Botan::utf8_to_ucs2(std::string(in.begin(), in.end()));
+            converted = std::string(ucs2.begin(), ucs2.end());
+         } else if(type == "UTF8-UCS4") {
+            std::vector<uint8_t> ucs4 = Botan::utf8_to_ucs4(std::string(in.begin(), in.end()));
+            converted = std::string(ucs4.begin(), ucs4.end());
          } else if(type == "LATIN1-UTF8") {
             converted = Botan::latin1_to_utf8(in.data(), in.size());
          } else {
