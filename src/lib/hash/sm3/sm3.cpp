@@ -22,6 +22,12 @@ namespace Botan {
 * SM3 Compression Function
 */
 void SM3::compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
+#if defined(BOTAN_HAS_SM3_ARMV8)
+   if(CPUID::has(CPUID::Feature::SM3)) {
+      return compress_digest_armv8(digest, input, blocks);
+   }
+#endif
+
 #if defined(BOTAN_HAS_SM3_X86)
    if(CPUID::has(CPUID::Feature::SM3, CPUID::Feature::AVX2)) {
       return compress_digest_x86(digest, input, blocks);
@@ -203,6 +209,12 @@ void SM3::final_result(std::span<uint8_t> output) {
 }
 
 std::string SM3::provider() const {
+#if defined(BOTAN_HAS_SM3_ARMV8)
+   if(auto feat = CPUID::check(CPUID::Feature::SM3)) {
+      return *feat;
+   }
+#endif
+
 #if defined(BOTAN_HAS_SM3_X86)
    if(auto feat = CPUID::check(CPUID::Feature::SM3, CPUID::Feature::AVX2)) {
       return *feat;
