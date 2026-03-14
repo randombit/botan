@@ -1,0 +1,18 @@
+<internal_defines>
+CAMELLIA_AVX512_GFNI -> 20260313
+</internal_defines>
+
+<module_info>
+name -> "Camellia AVX-512/GFNI"
+</module_info>
+
+<requires>
+cpuid
+simd_avx2
+simd_8x64
+</requires>
+
+<isa>
+gfni
+avx512
+</isa>
