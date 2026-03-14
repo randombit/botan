@@ -107,6 +107,28 @@ class StreamCallbacks : public Callbacks {
          }
       }
 
+      std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos) override {
+          if(client_protos.empty()) {
+              return "";
+          }
+          auto ctx = m_context.lock();
+
+          if(!ctx || ctx->m_app_protocols.empty()) {
+              return "";
+          }
+          // Priority is to the server.
+          for(const auto& server_proto : ctx->m_app_protocols) {
+              for(const auto& client_proto : client_protos) {
+                  if(server_proto == client_proto) {
+                      return server_proto;
+                  }
+              }
+          }
+          // No match.
+          throw TLS_Exception(Alert::NoApplicationProtocol,
+                              "Rejecting ALPN request: no overlap between client-offered and server-configured application protocols");
+      }
+
    private:
       // The members below are meant for the tightly-coupled Stream class only
       template <class SL, class C>
@@ -750,7 +772,8 @@ class Stream {
                                    m_context->m_policy,
                                    m_context->m_rng,
                                    m_context->m_server_info,
-                                   m_context->m_policy->latest_supported_version(false /* no DTLS */)));
+                                   m_context->m_policy->latest_supported_version(false /* no DTLS */),
+                                   m_context->m_app_protocols));
                   } else {
                      m_native_handle = std::unique_ptr<Server>(new Server(m_core,
                                                                           m_context->m_session_manager,
