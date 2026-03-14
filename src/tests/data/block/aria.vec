@@ -1,3 +1,6 @@
+
+#test cpuid avx512
+
 [ARIA-128]
 
 # ARIA Test Vector PDF

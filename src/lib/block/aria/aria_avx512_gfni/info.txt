@@ -1,0 +1,18 @@
+<internal_defines>
+ARIA_AVX512_GFNI -> 20260303
+</internal_defines>
+
+<module_info>
+name -> "ARIA AVX-512/GFNI"
+</module_info>
+
+<requires>
+cpuid
+simd_avx2
+simd_avx512
+</requires>
+
+<isa>
+gfni
+avx512
+</isa>
