@@ -70,6 +70,8 @@ class SIMD_4x64 final {
          _mm256_storeu2_m128i(reinterpret_cast<__m128i*>(outh), reinterpret_cast<__m128i*>(outl), m_simd);
       }
 
+      BOTAN_FN_ISA_SIMD_4X64 void store_be(uint8_t out[]) const { bswap().store_le(out); }
+
       SIMD_4x64 BOTAN_FN_ISA_SIMD_4X64 operator+(const SIMD_4x64& other) const {
          SIMD_4x64 retval(*this);
          retval += other;
@@ -82,6 +84,18 @@ class SIMD_4x64 final {
          return retval;
       }
 
+      SIMD_4x64 BOTAN_FN_ISA_SIMD_4X64 operator&(const SIMD_4x64& other) const {
+         SIMD_4x64 retval(*this);
+         retval &= other;
+         return retval;
+      }
+
+      SIMD_4x64 BOTAN_FN_ISA_SIMD_4X64 operator|(const SIMD_4x64& other) const {
+         SIMD_4x64 retval(*this);
+         retval |= other;
+         return retval;
+      }
+
       BOTAN_FN_ISA_SIMD_4X64 void operator+=(const SIMD_4x64& other) {
          m_simd = _mm256_add_epi64(m_simd, other.m_simd);
       }
@@ -89,6 +103,12 @@ class SIMD_4x64 final {
       BOTAN_FN_ISA_SIMD_4X64 void operator^=(const SIMD_4x64& other) {
          m_simd = _mm256_xor_si256(m_simd, other.m_simd);
       }
+
+      BOTAN_FN_ISA_SIMD_4X64 void operator&=(const SIMD_4x64& other) {
+         m_simd = _mm256_and_si256(m_simd, other.m_simd);
+      }
+
+      BOTAN_FN_ISA_SIMD_4X64 void operator|=(const SIMD_4x64& other) { m_simd = _mm256_or_si256(m_simd, other.m_simd); }
 
       template <size_t ROT>
       BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64 rotr() const
@@ -134,6 +154,11 @@ class SIMD_4x64 final {
          return SIMD_4x64(_mm256_srli_epi64(m_simd, SHIFT));
       }
 
+      template <int SHIFT>
+      SIMD_4x64 BOTAN_FN_ISA_SIMD_4X64 shl() const noexcept {
+         return SIMD_4x64(_mm256_slli_epi64(m_simd, SHIFT));
+      }
+
       static SIMD_4x64 BOTAN_FN_ISA_SIMD_4X64 alignr8(const SIMD_4x64& a, const SIMD_4x64& b) {
          return SIMD_4x64(_mm256_alignr_epi8(a.m_simd, b.m_simd, 8));
       }
@@ -162,6 +187,11 @@ class SIMD_4x64 final {
          C = SIMD_4x64::permute_4x64<0b01'00'11'10>(C);
          D = SIMD_4x64::permute_4x64<0b00'11'10'01>(D);
       }
+
+      BOTAN_FN_ISA_SIMD_4X64
+      static SIMD_4x64 splat(uint64_t v) { return SIMD_4x64(_mm256_set1_epi64x(v)); }
+
+      __m256i BOTAN_FN_ISA_SIMD_4X64 raw() const noexcept { return m_simd; }
 
       explicit BOTAN_FN_ISA_SIMD_4X64 SIMD_4x64(__m256i x) : m_simd(x) {}
 

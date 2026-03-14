@@ -26,6 +26,7 @@ class Camellia_128 final : public Block_Cipher_Fixed_Params<16, 16> {
       std::string name() const override { return "Camellia-128"; }
 
       std::string provider() const override;
+      size_t parallelism() const override;
 
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Camellia_128>(); }
 
@@ -37,6 +38,11 @@ class Camellia_128 final : public Block_Cipher_Fixed_Params<16, 16> {
 #if defined(BOTAN_HAS_CAMELLIA_AVX2_GFNI)
       static void avx2_gfni_encrypt(const uint8_t in[], uint8_t out[], size_t blocks, std::span<const uint64_t> SK);
       static void avx2_gfni_decrypt(const uint8_t in[], uint8_t out[], size_t blocks, std::span<const uint64_t> SK);
+#endif
+
+#if defined(BOTAN_HAS_CAMELLIA_AVX512_GFNI)
+      static void avx512_gfni_encrypt(const uint8_t in[], uint8_t out[], size_t blocks, std::span<const uint64_t> SK);
+      static void avx512_gfni_decrypt(const uint8_t in[], uint8_t out[], size_t blocks, std::span<const uint64_t> SK);
 #endif
 
       secure_vector<uint64_t> m_SK;
@@ -55,6 +61,7 @@ class Camellia_192 final : public Block_Cipher_Fixed_Params<16, 24> {
       std::string name() const override { return "Camellia-192"; }
 
       std::string provider() const override;
+      size_t parallelism() const override;
 
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Camellia_192>(); }
 
@@ -66,6 +73,11 @@ class Camellia_192 final : public Block_Cipher_Fixed_Params<16, 24> {
 #if defined(BOTAN_HAS_CAMELLIA_AVX2_GFNI)
       static void avx2_gfni_encrypt(const uint8_t in[], uint8_t out[], size_t blocks, std::span<const uint64_t> SK);
       static void avx2_gfni_decrypt(const uint8_t in[], uint8_t out[], size_t blocks, std::span<const uint64_t> SK);
+#endif
+
+#if defined(BOTAN_HAS_CAMELLIA_AVX512_GFNI)
+      static void avx512_gfni_encrypt(const uint8_t in[], uint8_t out[], size_t blocks, std::span<const uint64_t> SK);
+      static void avx512_gfni_decrypt(const uint8_t in[], uint8_t out[], size_t blocks, std::span<const uint64_t> SK);
 #endif
 
       secure_vector<uint64_t> m_SK;
@@ -84,6 +96,7 @@ class Camellia_256 final : public Block_Cipher_Fixed_Params<16, 32> {
       std::string name() const override { return "Camellia-256"; }
 
       std::string provider() const override;
+      size_t parallelism() const override;
 
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Camellia_256>(); }
 
@@ -95,6 +108,11 @@ class Camellia_256 final : public Block_Cipher_Fixed_Params<16, 32> {
 #if defined(BOTAN_HAS_CAMELLIA_AVX2_GFNI)
       static void avx2_gfni_encrypt(const uint8_t in[], uint8_t out[], size_t blocks, std::span<const uint64_t> SK);
       static void avx2_gfni_decrypt(const uint8_t in[], uint8_t out[], size_t blocks, std::span<const uint64_t> SK);
+#endif
+
+#if defined(BOTAN_HAS_CAMELLIA_AVX512_GFNI)
+      static void avx512_gfni_encrypt(const uint8_t in[], uint8_t out[], size_t blocks, std::span<const uint64_t> SK);
+      static void avx512_gfni_decrypt(const uint8_t in[], uint8_t out[], size_t blocks, std::span<const uint64_t> SK);
 #endif
 
       secure_vector<uint64_t> m_SK;

@@ -77,6 +77,8 @@ class SIMD_8x64 final {
          _mm512_storeu_si512(reinterpret_cast<__m512i*>(out), m_simd);
       }
 
+      BOTAN_FN_ISA_SIMD_8X64 void store_be(uint8_t out[]) const { bswap().store_le(out); }
+
       BOTAN_FN_ISA_SIMD_8X64 void store_le4(void* out0, void* out1, void* out2, void* out3) {
          _mm_storeu_si128(reinterpret_cast<__m128i*>(out0), _mm512_extracti32x4_epi32(m_simd, 3));
          _mm_storeu_si128(reinterpret_cast<__m128i*>(out1), _mm512_extracti32x4_epi32(m_simd, 2));
@@ -84,15 +86,27 @@ class SIMD_8x64 final {
          _mm_storeu_si128(reinterpret_cast<__m128i*>(out3), _mm512_extracti32x4_epi32(m_simd, 0));
       }
 
-      SIMD_8x64 operator+(const SIMD_8x64& other) const {
+      SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 operator+(const SIMD_8x64& other) const {
          SIMD_8x64 retval(*this);
          retval += other;
          return retval;
       }
 
-      SIMD_8x64 operator^(const SIMD_8x64& other) const {
+      SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 operator^(const SIMD_8x64& other) const {
          SIMD_8x64 retval(*this);
          retval ^= other;
+         return retval;
+      }
+
+      SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 operator&(const SIMD_8x64& other) const {
+         SIMD_8x64 retval(*this);
+         retval &= other;
+         return retval;
+      }
+
+      SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 operator|(const SIMD_8x64& other) const {
+         SIMD_8x64 retval(*this);
+         retval |= other;
          return retval;
       }
 
@@ -104,6 +118,12 @@ class SIMD_8x64 final {
          m_simd = _mm512_xor_si512(m_simd, other.m_simd);
       }
 
+      BOTAN_FN_ISA_SIMD_8X64 void operator&=(const SIMD_8x64& other) {
+         m_simd = _mm512_and_si512(m_simd, other.m_simd);
+      }
+
+      BOTAN_FN_ISA_SIMD_8X64 void operator|=(const SIMD_8x64& other) { m_simd = _mm512_or_si512(m_simd, other.m_simd); }
+
       template <size_t ROT>
       BOTAN_FN_ISA_SIMD_8X64 SIMD_8x64 rotr() const
          requires(ROT > 0 && ROT < 64)
@@ -112,7 +132,7 @@ class SIMD_8x64 final {
       }
 
       template <size_t ROT>
-      SIMD_8x64 rotl() const {
+      BOTAN_FN_ISA_SIMD_8X64 SIMD_8x64 rotl() const {
          return this->rotr<64 - ROT>();
       }
 
@@ -121,9 +141,19 @@ class SIMD_8x64 final {
          return SIMD_8x64(_mm512_srli_epi64(m_simd, SHIFT));
       }
 
+      template <int SHIFT>
+      SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 shl() const noexcept {
+         return SIMD_8x64(_mm512_slli_epi64(m_simd, SHIFT));
+      }
+
       static SIMD_8x64 BOTAN_FN_ISA_SIMD_8X64 alignr8(const SIMD_8x64& a, const SIMD_8x64& b) {
          return SIMD_8x64(_mm512_alignr_epi8(a.m_simd, b.m_simd, 8));
       }
+
+      BOTAN_FN_ISA_SIMD_8X64
+      static SIMD_8x64 splat(uint64_t v) { return SIMD_8x64(_mm512_set1_epi64(v)); }
+
+      __m512i BOTAN_FN_ISA_SIMD_8X64 raw() const noexcept { return m_simd; }
 
       explicit BOTAN_FN_ISA_SIMD_8X64 SIMD_8x64(__m512i x) : m_simd(x) {}
 
