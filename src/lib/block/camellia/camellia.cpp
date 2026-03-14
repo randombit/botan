@@ -368,7 +368,13 @@ std::string provider() {
 size_t parallelism() {
 #if defined(BOTAN_HAS_CAMELLIA_AVX512_GFNI)
    if(CPUID::has(CPUID::Feature::AVX512, CPUID::Feature::GFNI)) {
-      return 8;
+      return 16;
+   }
+#endif
+
+#if defined(BOTAN_HAS_CAMELLIA_AVX2_GFNI)
+   if(CPUID::has(CPUID::Feature::GFNI)) {
+      return 4;
    }
 #endif
 

@@ -1,393 +1,444 @@
 /*
-* (C) 2025 Jack Lloyd
+* (C) 2025,2026 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/internal/camellia.h>
 
-#include <botan/internal/loadstor.h>
-#include <botan/internal/rotate.h>
+#include <botan/mem_ops.h>
+#include <botan/internal/simd_4x64.h>
 #include <botan/internal/simd_avx2_gfni.h>
 
 namespace Botan {
 
+namespace Camellia_AVX2_GFNI {
+
+/*
+* This follows exactly the approach used in the AVX-512+GFNI implementation
+* with only minor complications due to missing rotate and masked operations.
+*/
+
 namespace {
 
-namespace Camellia_AVX2_GFNI {
+constexpr uint64_t pre123_a = gfni_matrix(R"(
+   1 1 1 0 1 1 0 1
+   0 0 1 1 0 0 1 0
+   1 1 0 1 0 0 0 0
+   1 0 1 1 0 0 1 1
+   0 0 0 0 1 1 0 0
+   1 0 1 0 0 1 0 0
+   0 0 1 0 1 1 0 0
+   1 0 0 0 0 1 1 0)");
+
+constexpr uint64_t pre4_a = gfni_matrix(R"(
+   1 1 0 1 1 0 1 1
+   0 1 1 0 0 1 0 0
+   1 0 1 0 0 0 0 1
+   0 1 1 0 0 1 1 1
+   0 0 0 1 1 0 0 0
+   0 1 0 0 1 0 0 1
+   0 1 0 1 1 0 0 0
+   0 0 0 0 1 1 0 1)");
+
+constexpr uint8_t pre_c = 0b01000101;
+
+constexpr uint64_t post2_a = gfni_matrix(R"(
+   0 0 0 1 1 1 0 0
+   0 0 0 0 0 0 0 1
+   0 1 1 0 0 1 1 0
+   1 0 1 1 1 1 1 0
+   0 0 0 1 1 0 1 1
+   1 0 0 0 1 1 1 0
+   0 1 0 1 1 1 1 0
+   0 1 1 1 1 1 1 1)");
+
+constexpr uint64_t post3_a = gfni_matrix(R"(
+   0 1 1 0 0 1 1 0
+   1 0 1 1 1 1 1 0
+   0 0 0 1 1 0 1 1
+   1 0 0 0 1 1 1 0
+   0 1 0 1 1 1 1 0
+   0 1 1 1 1 1 1 1
+   0 0 0 1 1 1 0 0
+   0 0 0 0 0 0 0 1)");
+
+constexpr uint64_t post14_a = gfni_matrix(R"(
+   0 0 0 0 0 0 0 1
+   0 1 1 0 0 1 1 0
+   1 0 1 1 1 1 1 0
+   0 0 0 1 1 0 1 1
+   1 0 0 0 1 1 1 0
+   0 1 0 1 1 1 1 0
+   0 1 1 1 1 1 1 1
+   0 0 0 1 1 1 0 0)");
 
 // NOLINTBEGIN(portability-simd-intrinsics)
 
-inline BOTAN_FN_ISA_AVX2_GFNI __m256i camellia_s1234(__m256i x) {
-   constexpr uint64_t pre123_a = gfni_matrix(R"(
-      1 1 1 0 1 1 0 1
-      0 0 1 1 0 0 1 0
-      1 1 0 1 0 0 0 0
-      1 0 1 1 0 0 1 1
-      0 0 0 0 1 1 0 0
-      1 0 1 0 0 1 0 0
-      0 0 1 0 1 1 0 0
-      1 0 0 0 0 1 1 0)");
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_GFNI SIMD_4x64 camellia_f(SIMD_4x64 x) {
+   const __m256i xr = x.raw();
 
-   constexpr uint64_t pre4_a = gfni_matrix(R"(
-      1 1 0 1 1 0 1 1
-      0 1 1 0 0 1 0 0
-      1 0 1 0 0 0 0 1
-      0 1 1 0 0 1 1 1
-      0 0 0 1 1 0 0 0
-      0 1 0 0 1 0 0 1
-      0 1 0 1 1 0 0 0
-      0 0 0 0 1 1 0 1)");
+   // Compute S1(x), S2(x), S3(x), S4(x) for all bytes
+   const auto y123 = _mm256_gf2p8affine_epi64_epi8(xr, _mm256_set1_epi64x(pre123_a), pre_c);
+   const auto y4 = _mm256_gf2p8affine_epi64_epi8(xr, _mm256_set1_epi64x(pre4_a), pre_c);
 
-   constexpr uint8_t pre_c = 0b01000101;
-   const auto pre = _mm256_set_epi64x(pre4_a, pre123_a, pre123_a, pre123_a);
+   const auto s1 = _mm256_gf2p8affineinv_epi64_epi8(y123, _mm256_set1_epi64x(post14_a), 0x6E);
+   const auto s2 = _mm256_gf2p8affineinv_epi64_epi8(y123, _mm256_set1_epi64x(post2_a), 0xDC);
+   const auto s3 = _mm256_gf2p8affineinv_epi64_epi8(y123, _mm256_set1_epi64x(post3_a), 0x37);
+   const auto s4 = _mm256_gf2p8affineinv_epi64_epi8(y4, _mm256_set1_epi64x(post14_a), 0x6E);
 
-   constexpr uint64_t post2_a = gfni_matrix(R"(
-      0 0 0 1 1 1 0 0
-      0 0 0 0 0 0 0 1
-      0 1 1 0 0 1 1 0
-      1 0 1 1 1 1 1 0
-      0 0 0 1 1 0 1 1
-      1 0 0 0 1 1 1 0
-      0 1 0 1 1 1 1 0
-      0 1 1 1 1 1 1 1)");
+   // Blend to find correct S(x) for each byte position
 
-   constexpr uint64_t post3_a = gfni_matrix(R"(
-      0 1 1 0 0 1 1 0
-      1 0 1 1 1 1 1 0
-      0 0 0 1 1 0 1 1
-      1 0 0 0 1 1 1 0
-      0 1 0 1 1 1 1 0
-      0 1 1 1 1 1 1 1
-      0 0 0 1 1 1 0 0
-      0 0 0 0 0 0 0 1)");
+   const auto mask_s2 = _mm256_set1_epi64x(0x00FF0000FF000000);
+   const auto mask_s3 = _mm256_set1_epi64x(0x0000FF0000FF0000);
+   const auto mask_s4 = _mm256_set1_epi64x(0x000000FF0000FF00);
 
-   constexpr uint64_t post14_a = gfni_matrix(R"(
-      0 0 0 0 0 0 0 1
-      0 1 1 0 0 1 1 0
-      1 0 1 1 1 1 1 0
-      0 0 0 1 1 0 1 1
-      1 0 0 0 1 1 1 0
-      0 1 0 1 1 1 1 0
-      0 1 1 1 1 1 1 1
-      0 0 0 1 1 1 0 0)");
+   auto sx = s1;
+   sx = _mm256_blendv_epi8(sx, s2, mask_s2);
+   sx = _mm256_blendv_epi8(sx, s3, mask_s3);
+   sx = _mm256_blendv_epi8(sx, s4, mask_s4);
 
-   const auto post_a = _mm256_set_epi64x(post14_a, post3_a, post2_a, post14_a);
+   // Linear mixing layer
+   const auto P1 = _mm256_set_epi64x(0x0808080908080809, 0x0000000100000001, 0x0808080908080809, 0x0000000100000001);
+   const auto P2 = _mm256_set_epi64x(0x09090A0A09090A0A, 0x0101020201010202, 0x09090A0A09090A0A, 0x0101020201010202);
+   const auto P3 = _mm256_set_epi64x(0x0A0B0B0B0A0B0B0B, 0x0203030302030303, 0x0A0B0B0B0A0B0B0B, 0x0203030302030303);
+   const auto P4 = _mm256_set_epi64x(0x0C0C0D0C0E0D0C0C, 0x0404050406050404, 0x0C0C0D0C0E0D0C0C, 0x0404050406050404);
+   const auto P5 = _mm256_set_epi64x(0x0D0E0E0D0F0E0D0F, 0x0506060507060507, 0x0D0E0E0D0F0E0D0F, 0x0506060507060507);
+   const auto P6 = _mm256_set_epi64x(0x0F0F0F0EFFFFFFFF, 0x07070706FFFFFFFF, 0x0F0F0F0EFFFFFFFF, 0x07070706FFFFFFFF);
 
-   const auto post_c =
-      _mm256_set_epi64x(0x6E6E6E6E6E6E6E6E, 0x3737373737373737, 0xDCDCDCDCDCDCDCDC, 0x6E6E6E6E6E6E6E6E);
+   const auto t1 = SIMD_4x64(_mm256_shuffle_epi8(sx, P1));
+   const auto t2 = SIMD_4x64(_mm256_shuffle_epi8(sx, P2));
+   const auto t3 = SIMD_4x64(_mm256_shuffle_epi8(sx, P3));
+   const auto t4 = SIMD_4x64(_mm256_shuffle_epi8(sx, P4));
+   const auto t5 = SIMD_4x64(_mm256_shuffle_epi8(sx, P5));
+   const auto t6 = SIMD_4x64(_mm256_shuffle_epi8(sx, P6));
 
-   auto y = _mm256_gf2p8affine_epi64_epi8(x, pre, pre_c);
-   return _mm256_xor_si256(post_c, _mm256_gf2p8affineinv_epi64_epi8(y, post_a, 0));
+   return (t1 ^ t2 ^ t3 ^ t4 ^ t5 ^ t6);
 }
 
-inline BOTAN_FN_ISA_AVX2_GFNI uint64_t F(uint64_t x) {
-   // All 4 Camellia Sboxes in parallel
-   auto s_vec = camellia_s1234(_mm256_set1_epi64x(x));
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 void load_and_deinterleave(const uint8_t in[], SIMD_4x64& L, SIMD_4x64& R) {
+   auto A = SIMD_4x64::load_be(in);
+   auto B = SIMD_4x64::load_be(in + 32);
 
-   // The linear transformation just sprays bytes about which can be done with two byte shuffles
-   auto Z0 = _mm256_shuffle_epi8(
-      s_vec, _mm256_set_epi64x(0x0C0CFF0CFFFF0C0C, 0x05FF0505FF0505FF, 0xFF0E0E0E0E0EFFFF, 0x070707FF07FFFF07));
+   auto Ap = _mm256_permute4x64_epi64(A.raw(), 0b11'01'10'00);  // [L[0], L[1], R[0], R[1]]
+   auto Bp = _mm256_permute4x64_epi64(B.raw(), 0b11'01'10'00);  // [L[2], L[3], R[2], R[3]]
 
-   auto Z1 = _mm256_shuffle_epi8(
-      s_vec, _mm256_set_epi64x(0x0909FF090909FF09, 0x02FF020202FF0202, 0xFF0B0B0BFF0B0B0B, 0x000000FF000000FF));
+   L = SIMD_4x64(_mm256_permute2x128_si256(Ap, Bp, 0x20));  // [L[0], L[1], L[2], L[3]]
+   R = SIMD_4x64(_mm256_permute2x128_si256(Ap, Bp, 0x31));  // [R[0], R[1], R[2], R[3]]
+}
 
-   Z0 = _mm256_xor_si256(Z0, Z1);
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 void interleave_and_store(uint8_t out[], SIMD_4x64 L, SIMD_4x64 R) {
+   auto T1 = _mm256_permute2x128_si256(R.raw(), L.raw(), 0x20);  // [R[0], R[1], L[0], L[1]]
+   auto T2 = _mm256_permute2x128_si256(R.raw(), L.raw(), 0x31);  // [R[2], R[3], L[2], L[3]]
 
-   uint64_t Z[4];
-   _mm256_store_si256(reinterpret_cast<__m256i*>(Z), Z0);
+   auto A = SIMD_4x64(_mm256_permute4x64_epi64(T1, 0b11'01'10'00));  // [R[0], L[0], R[1], L[1]]
+   auto B = SIMD_4x64(_mm256_permute4x64_epi64(T2, 0b11'01'10'00));  // [R[2], L[2], R[3], L[3]]
 
-   // My kingdom for a horizontal XOR (even AVX-512 doesn't have this, only OR/AND)
-   return Z[0] ^ Z[1] ^ Z[2] ^ Z[3];
+   A.store_be(out);
+   B.store_be(out + 32);
+}
+
+/*
+* 32-bit rotate on SIMD_4x64 helper for FL/FLINV
+*/
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 SIMD_4x64 rotl32_1(SIMD_4x64 t) {
+   return SIMD_4x64(_mm256_or_si256(_mm256_slli_epi32(t.raw(), 1), _mm256_srli_epi32(t.raw(), 31)));
 }
 
 // NOLINTEND(portability-simd-intrinsics)
 
-inline uint64_t FL(uint64_t v, uint64_t K) {
-   uint32_t x1 = static_cast<uint32_t>(v >> 32);
-   uint32_t x2 = static_cast<uint32_t>(v & 0xFFFFFFFF);
-
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 SIMD_4x64 FL_4(SIMD_4x64 v, uint64_t K) {
    const uint32_t k1 = static_cast<uint32_t>(K >> 32);
    const uint32_t k2 = static_cast<uint32_t>(K & 0xFFFFFFFF);
 
-   x2 ^= rotl<1>(x1 & k1);
-   x1 ^= (x2 | k2);
+   auto x1 = v.shr<32>();
+   auto x2 = v & SIMD_4x64::splat(0xFFFFFFFF);
 
-   return ((static_cast<uint64_t>(x1) << 32) | x2);
+   x2 ^= rotl32_1(x1 & SIMD_4x64::splat(k1));
+   x1 ^= (x2 | SIMD_4x64::splat(k2));
+
+   return x1.shl<32>() | x2;
 }
 
-inline uint64_t FLINV(uint64_t v, uint64_t K) {
-   uint32_t x1 = static_cast<uint32_t>(v >> 32);
-   uint32_t x2 = static_cast<uint32_t>(v & 0xFFFFFFFF);
-
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2 SIMD_4x64 FLINV_4(SIMD_4x64 v, uint64_t K) {
    const uint32_t k1 = static_cast<uint32_t>(K >> 32);
    const uint32_t k2 = static_cast<uint32_t>(K & 0xFFFFFFFF);
 
-   x1 ^= (x2 | k2);
-   x2 ^= rotl<1>(x1 & k1);
+   auto x1 = v.shr<32>();
+   auto x2 = v & SIMD_4x64::splat(0xFFFFFFFF);
 
-   return ((static_cast<uint64_t>(x1) << 32) | x2);
+   x1 ^= (x2 | SIMD_4x64::splat(k2));
+   x2 ^= rotl32_1(x1 & SIMD_4x64::splat(k1));
+
+   return x1.shl<32>() | x2;
 }
 
-}  // namespace Camellia_AVX2_GFNI
+// Helpers for 6 round iterations
 
-BOTAN_FN_ISA_AVX2_GFNI void camellia_avx2_gfni_encrypt9(const uint8_t in[],
-                                                        uint8_t out[],
-                                                        size_t blocks,
-                                                        std::span<const uint64_t> SK) {
-   using namespace Camellia_AVX2_GFNI;
-
-   for(size_t i = 0; i < blocks; ++i) {
-      uint64_t D1 = load_be<uint64_t>(in, 2 * i + 0);
-      uint64_t D2 = load_be<uint64_t>(in, 2 * i + 1);
-
-      D1 ^= SK[0];
-      D2 ^= SK[1];
-
-      D2 ^= F(D1 ^ SK[2]);
-      D1 ^= F(D2 ^ SK[3]);
-      D2 ^= F(D1 ^ SK[4]);
-      D1 ^= F(D2 ^ SK[5]);
-      D2 ^= F(D1 ^ SK[6]);
-      D1 ^= F(D2 ^ SK[7]);
-
-      D1 = FL(D1, SK[8]);
-      D2 = FLINV(D2, SK[9]);
-
-      D2 ^= F(D1 ^ SK[10]);
-      D1 ^= F(D2 ^ SK[11]);
-      D2 ^= F(D1 ^ SK[12]);
-      D1 ^= F(D2 ^ SK[13]);
-      D2 ^= F(D1 ^ SK[14]);
-      D1 ^= F(D2 ^ SK[15]);
-
-      D1 = FL(D1, SK[16]);
-      D2 = FLINV(D2, SK[17]);
-
-      D2 ^= F(D1 ^ SK[18]);
-      D1 ^= F(D2 ^ SK[19]);
-      D2 ^= F(D1 ^ SK[20]);
-      D1 ^= F(D2 ^ SK[21]);
-      D2 ^= F(D1 ^ SK[22]);
-      D1 ^= F(D2 ^ SK[23]);
-
-      D2 ^= SK[24];
-      D1 ^= SK[25];
-
-      store_be(out + 16 * i, D2, D1);
-   }
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_GFNI void six_e_rounds(SIMD_4x64& L, SIMD_4x64& R, std::span<const uint64_t> SK) {
+   R ^= camellia_f(L ^ SIMD_4x64::splat(SK[0]));
+   L ^= camellia_f(R ^ SIMD_4x64::splat(SK[1]));
+   R ^= camellia_f(L ^ SIMD_4x64::splat(SK[2]));
+   L ^= camellia_f(R ^ SIMD_4x64::splat(SK[3]));
+   R ^= camellia_f(L ^ SIMD_4x64::splat(SK[4]));
+   L ^= camellia_f(R ^ SIMD_4x64::splat(SK[5]));
 }
 
-BOTAN_FN_ISA_AVX2_GFNI void camellia_avx2_gfni_decrypt9(const uint8_t in[],
-                                                        uint8_t out[],
-                                                        size_t blocks,
-                                                        std::span<const uint64_t> SK) {
-   using namespace Camellia_AVX2_GFNI;
-
-   for(size_t i = 0; i < blocks; ++i) {
-      uint64_t D1 = load_be<uint64_t>(in, 2 * i + 0);
-      uint64_t D2 = load_be<uint64_t>(in, 2 * i + 1);
-
-      D2 ^= SK[25];
-      D1 ^= SK[24];
-
-      D2 ^= F(D1 ^ SK[23]);
-      D1 ^= F(D2 ^ SK[22]);
-
-      D2 ^= F(D1 ^ SK[21]);
-      D1 ^= F(D2 ^ SK[20]);
-
-      D2 ^= F(D1 ^ SK[19]);
-      D1 ^= F(D2 ^ SK[18]);
-
-      D1 = FL(D1, SK[17]);
-      D2 = FLINV(D2, SK[16]);
-
-      D2 ^= F(D1 ^ SK[15]);
-      D1 ^= F(D2 ^ SK[14]);
-      D2 ^= F(D1 ^ SK[13]);
-      D1 ^= F(D2 ^ SK[12]);
-      D2 ^= F(D1 ^ SK[11]);
-      D1 ^= F(D2 ^ SK[10]);
-
-      D1 = FL(D1, SK[9]);
-      D2 = FLINV(D2, SK[8]);
-
-      D2 ^= F(D1 ^ SK[7]);
-      D1 ^= F(D2 ^ SK[6]);
-      D2 ^= F(D1 ^ SK[5]);
-      D1 ^= F(D2 ^ SK[4]);
-      D2 ^= F(D1 ^ SK[3]);
-      D1 ^= F(D2 ^ SK[2]);
-
-      D1 ^= SK[1];
-      D2 ^= SK[0];
-
-      store_be(out + 16 * i, D2, D1);
-   }
+BOTAN_FORCE_INLINE BOTAN_FN_ISA_AVX2_GFNI void six_d_rounds(SIMD_4x64& L, SIMD_4x64& R, std::span<const uint64_t> SK) {
+   R ^= camellia_f(L ^ SIMD_4x64::splat(SK[5]));
+   L ^= camellia_f(R ^ SIMD_4x64::splat(SK[4]));
+   R ^= camellia_f(L ^ SIMD_4x64::splat(SK[3]));
+   L ^= camellia_f(R ^ SIMD_4x64::splat(SK[2]));
+   R ^= camellia_f(L ^ SIMD_4x64::splat(SK[1]));
+   L ^= camellia_f(R ^ SIMD_4x64::splat(SK[0]));
 }
 
-BOTAN_FN_ISA_AVX2_GFNI void camellia_avx2_gfni_encrypt12(const uint8_t in[],
-                                                         uint8_t out[],
-                                                         size_t blocks,
-                                                         std::span<const uint64_t> SK) {
-   using namespace Camellia_AVX2_GFNI;
+BOTAN_FN_ISA_AVX2_GFNI
+void camellia_encrypt_x4_18r(const uint8_t in[], uint8_t out[], std::span<const uint64_t> SK) {
+   SIMD_4x64 L;
+   SIMD_4x64 R;
+   load_and_deinterleave(in, L, R);
 
-   for(size_t i = 0; i < blocks; ++i) {
-      uint64_t D1 = load_be<uint64_t>(in, 2 * i + 0);
-      uint64_t D2 = load_be<uint64_t>(in, 2 * i + 1);
+   L ^= SIMD_4x64::splat(SK[0]);
+   R ^= SIMD_4x64::splat(SK[1]);
 
-      D1 ^= SK[0];
-      D2 ^= SK[1];
+   six_e_rounds(L, R, SK.subspan(2));
 
-      D2 ^= F(D1 ^ SK[2]);
-      D1 ^= F(D2 ^ SK[3]);
-      D2 ^= F(D1 ^ SK[4]);
-      D1 ^= F(D2 ^ SK[5]);
-      D2 ^= F(D1 ^ SK[6]);
-      D1 ^= F(D2 ^ SK[7]);
+   L = FL_4(L, SK[8]);
+   R = FLINV_4(R, SK[9]);
 
-      D1 = FL(D1, SK[8]);
-      D2 = FLINV(D2, SK[9]);
+   six_e_rounds(L, R, SK.subspan(10));
 
-      D2 ^= F(D1 ^ SK[10]);
-      D1 ^= F(D2 ^ SK[11]);
-      D2 ^= F(D1 ^ SK[12]);
-      D1 ^= F(D2 ^ SK[13]);
-      D2 ^= F(D1 ^ SK[14]);
-      D1 ^= F(D2 ^ SK[15]);
+   L = FL_4(L, SK[16]);
+   R = FLINV_4(R, SK[17]);
 
-      D1 = FL(D1, SK[16]);
-      D2 = FLINV(D2, SK[17]);
+   six_e_rounds(L, R, SK.subspan(18));
 
-      D2 ^= F(D1 ^ SK[18]);
-      D1 ^= F(D2 ^ SK[19]);
-      D2 ^= F(D1 ^ SK[20]);
-      D1 ^= F(D2 ^ SK[21]);
-      D2 ^= F(D1 ^ SK[22]);
-      D1 ^= F(D2 ^ SK[23]);
+   R ^= SIMD_4x64::splat(SK[24]);
+   L ^= SIMD_4x64::splat(SK[25]);
 
-      D1 = FL(D1, SK[24]);
-      D2 = FLINV(D2, SK[25]);
-
-      D2 ^= F(D1 ^ SK[26]);
-      D1 ^= F(D2 ^ SK[27]);
-      D2 ^= F(D1 ^ SK[28]);
-      D1 ^= F(D2 ^ SK[29]);
-      D2 ^= F(D1 ^ SK[30]);
-      D1 ^= F(D2 ^ SK[31]);
-
-      D2 ^= SK[32];
-      D1 ^= SK[33];
-
-      store_be(out + 16 * i, D2, D1);
-   }
+   interleave_and_store(out, L, R);
 }
 
-BOTAN_FN_ISA_AVX2_GFNI void camellia_avx2_gfni_decrypt12(const uint8_t in[],
-                                                         uint8_t out[],
-                                                         size_t blocks,
-                                                         std::span<const uint64_t> SK) {
-   using namespace Camellia_AVX2_GFNI;
+BOTAN_FN_ISA_AVX2_GFNI
+void camellia_decrypt_x4_18r(const uint8_t in[], uint8_t out[], std::span<const uint64_t> SK) {
+   SIMD_4x64 L;
+   SIMD_4x64 R;
+   load_and_deinterleave(in, L, R);
 
-   for(size_t i = 0; i < blocks; ++i) {
-      uint64_t D1 = load_be<uint64_t>(in, 2 * i + 0);
-      uint64_t D2 = load_be<uint64_t>(in, 2 * i + 1);
+   R ^= SIMD_4x64::splat(SK[25]);
+   L ^= SIMD_4x64::splat(SK[24]);
 
-      D2 ^= SK[33];
-      D1 ^= SK[32];
+   six_d_rounds(L, R, SK.subspan(18));
 
-      D2 ^= F(D1 ^ SK[31]);
-      D1 ^= F(D2 ^ SK[30]);
+   L = FL_4(L, SK[17]);
+   R = FLINV_4(R, SK[16]);
 
-      D2 ^= F(D1 ^ SK[29]);
-      D1 ^= F(D2 ^ SK[28]);
+   six_d_rounds(L, R, SK.subspan(10));
 
-      D2 ^= F(D1 ^ SK[27]);
-      D1 ^= F(D2 ^ SK[26]);
+   L = FL_4(L, SK[9]);
+   R = FLINV_4(R, SK[8]);
 
-      D1 = FL(D1, SK[25]);
-      D2 = FLINV(D2, SK[24]);
-      D2 ^= F(D1 ^ SK[23]);
-      D1 ^= F(D2 ^ SK[22]);
-      D2 ^= F(D1 ^ SK[21]);
-      D1 ^= F(D2 ^ SK[20]);
-      D2 ^= F(D1 ^ SK[19]);
-      D1 ^= F(D2 ^ SK[18]);
+   six_d_rounds(L, R, SK.subspan(2));
 
-      D1 = FL(D1, SK[17]);
-      D2 = FLINV(D2, SK[16]);
-      D2 ^= F(D1 ^ SK[15]);
-      D1 ^= F(D2 ^ SK[14]);
-      D2 ^= F(D1 ^ SK[13]);
-      D1 ^= F(D2 ^ SK[12]);
-      D2 ^= F(D1 ^ SK[11]);
-      D1 ^= F(D2 ^ SK[10]);
+   L ^= SIMD_4x64::splat(SK[1]);
+   R ^= SIMD_4x64::splat(SK[0]);
 
-      D1 = FL(D1, SK[9]);
-      D2 = FLINV(D2, SK[8]);
-      D2 ^= F(D1 ^ SK[7]);
-      D1 ^= F(D2 ^ SK[6]);
-      D2 ^= F(D1 ^ SK[5]);
-      D1 ^= F(D2 ^ SK[4]);
-      D2 ^= F(D1 ^ SK[3]);
-      D1 ^= F(D2 ^ SK[2]);
+   interleave_and_store(out, L, R);
+}
 
-      D1 ^= SK[1];
-      D2 ^= SK[0];
+BOTAN_FN_ISA_AVX2_GFNI
+void camellia_encrypt_x4_24r(const uint8_t in[], uint8_t out[], std::span<const uint64_t> SK) {
+   SIMD_4x64 L;
+   SIMD_4x64 R;
+   load_and_deinterleave(in, L, R);
 
-      store_be(out + 16 * i, D2, D1);
-   }
+   L ^= SIMD_4x64::splat(SK[0]);
+   R ^= SIMD_4x64::splat(SK[1]);
+
+   six_e_rounds(L, R, SK.subspan(2));
+
+   L = FL_4(L, SK[8]);
+   R = FLINV_4(R, SK[9]);
+
+   six_e_rounds(L, R, SK.subspan(10));
+
+   L = FL_4(L, SK[16]);
+   R = FLINV_4(R, SK[17]);
+
+   six_e_rounds(L, R, SK.subspan(18));
+
+   L = FL_4(L, SK[24]);
+   R = FLINV_4(R, SK[25]);
+
+   six_e_rounds(L, R, SK.subspan(26));
+
+   R ^= SIMD_4x64::splat(SK[32]);
+   L ^= SIMD_4x64::splat(SK[33]);
+
+   interleave_and_store(out, L, R);
+}
+
+BOTAN_FN_ISA_AVX2_GFNI
+void camellia_decrypt_x4_24r(const uint8_t in[], uint8_t out[], std::span<const uint64_t> SK) {
+   SIMD_4x64 L;
+   SIMD_4x64 R;
+   load_and_deinterleave(in, L, R);
+
+   R ^= SIMD_4x64::splat(SK[33]);
+   L ^= SIMD_4x64::splat(SK[32]);
+
+   six_d_rounds(L, R, SK.subspan(26));
+
+   L = FL_4(L, SK[25]);
+   R = FLINV_4(R, SK[24]);
+
+   six_d_rounds(L, R, SK.subspan(18));
+
+   L = FL_4(L, SK[17]);
+   R = FLINV_4(R, SK[16]);
+
+   six_d_rounds(L, R, SK.subspan(10));
+
+   L = FL_4(L, SK[9]);
+   R = FLINV_4(R, SK[8]);
+
+   six_d_rounds(L, R, SK.subspan(2));
+
+   L ^= SIMD_4x64::splat(SK[1]);
+   R ^= SIMD_4x64::splat(SK[0]);
+
+   interleave_and_store(out, L, R);
 }
 
 }  // namespace
 
-//static
+}  // namespace Camellia_AVX2_GFNI
+
+// static
 void BOTAN_FN_ISA_AVX2_GFNI Camellia_128::avx2_gfni_encrypt(const uint8_t in[],
                                                             uint8_t out[],
                                                             size_t blocks,
                                                             std::span<const uint64_t> SK) {
-   return camellia_avx2_gfni_encrypt9(in, out, blocks, SK);
+   while(blocks >= 4) {
+      Camellia_AVX2_GFNI::camellia_encrypt_x4_18r(in, out, SK);
+      in += 4 * 16;
+      out += 4 * 16;
+      blocks -= 4;
+   }
+
+   if(blocks > 0) {
+      uint8_t ibuf[4 * 16] = {0};
+      uint8_t obuf[4 * 16] = {0};
+      copy_mem(ibuf, in, blocks * 16);
+      Camellia_AVX2_GFNI::camellia_encrypt_x4_18r(ibuf, obuf, SK);
+      copy_mem(out, obuf, blocks * 16);
+   }
 }
 
-//static
+// static
 void BOTAN_FN_ISA_AVX2_GFNI Camellia_128::avx2_gfni_decrypt(const uint8_t in[],
                                                             uint8_t out[],
                                                             size_t blocks,
                                                             std::span<const uint64_t> SK) {
-   return camellia_avx2_gfni_decrypt9(in, out, blocks, SK);
+   while(blocks >= 4) {
+      Camellia_AVX2_GFNI::camellia_decrypt_x4_18r(in, out, SK);
+      in += 4 * 16;
+      out += 4 * 16;
+      blocks -= 4;
+   }
+
+   if(blocks > 0) {
+      uint8_t ibuf[4 * 16] = {0};
+      uint8_t obuf[4 * 16] = {0};
+      copy_mem(ibuf, in, blocks * 16);
+      Camellia_AVX2_GFNI::camellia_decrypt_x4_18r(ibuf, obuf, SK);
+      copy_mem(out, obuf, blocks * 16);
+   }
 }
 
-//static
+// static
 void BOTAN_FN_ISA_AVX2_GFNI Camellia_192::avx2_gfni_encrypt(const uint8_t in[],
                                                             uint8_t out[],
                                                             size_t blocks,
                                                             std::span<const uint64_t> SK) {
-   return camellia_avx2_gfni_encrypt12(in, out, blocks, SK);
+   while(blocks >= 4) {
+      Camellia_AVX2_GFNI::camellia_encrypt_x4_24r(in, out, SK);
+      in += 4 * 16;
+      out += 4 * 16;
+      blocks -= 4;
+   }
+
+   if(blocks > 0) {
+      uint8_t ibuf[4 * 16] = {0};
+      uint8_t obuf[4 * 16] = {0};
+      copy_mem(ibuf, in, blocks * 16);
+      Camellia_AVX2_GFNI::camellia_encrypt_x4_24r(ibuf, obuf, SK);
+      copy_mem(out, obuf, blocks * 16);
+   }
 }
 
-//static
+// static
 void BOTAN_FN_ISA_AVX2_GFNI Camellia_192::avx2_gfni_decrypt(const uint8_t in[],
                                                             uint8_t out[],
                                                             size_t blocks,
                                                             std::span<const uint64_t> SK) {
-   return camellia_avx2_gfni_decrypt12(in, out, blocks, SK);
+   while(blocks >= 4) {
+      Camellia_AVX2_GFNI::camellia_decrypt_x4_24r(in, out, SK);
+      in += 4 * 16;
+      out += 4 * 16;
+      blocks -= 4;
+   }
+
+   if(blocks > 0) {
+      uint8_t ibuf[4 * 16] = {0};
+      uint8_t obuf[4 * 16] = {0};
+      copy_mem(ibuf, in, blocks * 16);
+      Camellia_AVX2_GFNI::camellia_decrypt_x4_24r(ibuf, obuf, SK);
+      copy_mem(out, obuf, blocks * 16);
+   }
 }
 
-//static
+// static
 void BOTAN_FN_ISA_AVX2_GFNI Camellia_256::avx2_gfni_encrypt(const uint8_t in[],
                                                             uint8_t out[],
                                                             size_t blocks,
                                                             std::span<const uint64_t> SK) {
-   return camellia_avx2_gfni_encrypt12(in, out, blocks, SK);
+   while(blocks >= 4) {
+      Camellia_AVX2_GFNI::camellia_encrypt_x4_24r(in, out, SK);
+      in += 4 * 16;
+      out += 4 * 16;
+      blocks -= 4;
+   }
+
+   if(blocks > 0) {
+      uint8_t ibuf[4 * 16] = {0};
+      uint8_t obuf[4 * 16] = {0};
+      copy_mem(ibuf, in, blocks * 16);
+      Camellia_AVX2_GFNI::camellia_encrypt_x4_24r(ibuf, obuf, SK);
+      copy_mem(out, obuf, blocks * 16);
+   }
 }
 
-//static
+// static
 void BOTAN_FN_ISA_AVX2_GFNI Camellia_256::avx2_gfni_decrypt(const uint8_t in[],
                                                             uint8_t out[],
                                                             size_t blocks,
                                                             std::span<const uint64_t> SK) {
-   return camellia_avx2_gfni_decrypt12(in, out, blocks, SK);
+   while(blocks >= 4) {
+      Camellia_AVX2_GFNI::camellia_decrypt_x4_24r(in, out, SK);
+      in += 4 * 16;
+      out += 4 * 16;
+      blocks -= 4;
+   }
+
+   if(blocks > 0) {
+      uint8_t ibuf[4 * 16] = {0};
+      uint8_t obuf[4 * 16] = {0};
+      copy_mem(ibuf, in, blocks * 16);
+      Camellia_AVX2_GFNI::camellia_decrypt_x4_24r(ibuf, obuf, SK);
+      copy_mem(out, obuf, blocks * 16);
+   }
 }
 
 }  // namespace Botan
