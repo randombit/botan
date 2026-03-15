@@ -106,10 +106,10 @@ class Strong_Adapter<T> : public Strong_Base<T> {
 template <concepts::container T>
 class Container_Strong_Adapter_Base : public Strong_Base<T> {
    public:
-      using value_type = typename T::value_type;
-      using size_type = typename T::size_type;
-      using iterator = typename T::iterator;
-      using const_iterator = typename T::const_iterator;
+      using value_type = T::value_type;
+      using size_type = T::size_type;
+      using iterator = T::iterator;
+      using const_iterator = T::const_iterator;
 
    public:
       using Strong_Base<T>::Strong_Base;
@@ -723,7 +723,7 @@ class StrongSpan {
 
       decltype(auto) end() const noexcept(noexcept(this->m_span.end())) { return this->m_span.end(); }
 
-      decltype(auto) operator[](typename underlying_span::size_type i) const noexcept { return this->m_span[i]; }
+      decltype(auto) operator[](underlying_span::size_type i) const noexcept { return this->m_span[i]; }
 
    private:
       underlying_span m_span;
