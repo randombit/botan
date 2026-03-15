@@ -69,6 +69,35 @@ class Name_Constraint_Tests final : public Test {
 
 BOTAN_REGISTER_TEST("x509", "x509_path_name_constraint", Name_Constraint_Tests);
 
+// Verify that DNS constraints are case-insensitive also when falling back to the CN
+class Name_Constraint_Excluded_CN_Case_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("X509v3 Name Constraints: excluded DNS with mixed-case CN and no SAN");
+
+         const Botan::X509_Certificate root(
+            Test::data_file("x509/name_constraint/Root_DNS_Excluded_Mixed_Case_CN.crt"));
+         const Botan::X509_Certificate leaf(
+            Test::data_file("x509/name_constraint/Invalid_DNS_Excluded_Mixed_Case_CN.crt"));
+
+         Botan::Certificate_Store_In_Memory trusted;
+         trusted.add_certificate(root);
+
+         const Botan::Path_Validation_Restrictions restrictions(false, 80);
+         const auto validation_time = Botan::calendar_point(2026, 6, 1, 0, 0, 0).to_std_timepoint();
+
+         const auto path_result = Botan::x509_path_validate(
+            leaf, restrictions, trusted, "" /* hostname */, Botan::Usage_Type::UNSPECIFIED, validation_time);
+
+         result.test_str_eq(
+            "validation result", path_result.result_string(), "Certificate does not pass name constraint");
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("x509", "x509_name_constraint_excluded_cn_case", Name_Constraint_Excluded_CN_Case_Test);
+
 #endif
 
 }  // namespace

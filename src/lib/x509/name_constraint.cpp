@@ -22,6 +22,14 @@ namespace Botan {
 
 class DER_Encoder;
 
+namespace {
+
+std::string canonicalize_dns_name(std::string_view name) {
+   return tolower_string(name);
+}
+
+}  // namespace
+
 std::string GeneralName::type() const {
    switch(m_type) {
       case NameType::Unknown:
@@ -131,7 +139,7 @@ void GeneralName::decode_from(BER_Decoder& ber) {
       m_type = NameType::DNS;
       // Store it in case insensitive form so we don't have to do it
       // again while matching
-      m_name.emplace<DNS_IDX>(tolower_string(ASN1::to_string(obj)));
+      m_name.emplace<DNS_IDX>(canonicalize_dns_name(ASN1::to_string(obj)));
    } else if(obj.is_a(6, ASN1_Class::ContextSpecific)) {
       m_type = NameType::URI;
       m_name.emplace<URI_IDX>(ASN1::to_string(obj));
@@ -230,7 +238,7 @@ GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) cons
          // Check CN instead...
          for(const std::string& cn : dn.get_attribute("CN")) {
             if(!string_to_ipv4(cn).has_value()) {
-               score.add(matches_dns(cn, constraint));
+               score.add(matches_dns(canonicalize_dns_name(cn), constraint));
             }
          }
       }
@@ -480,7 +488,7 @@ bool NameConstraints::is_permitted(const X509_Certificate& cert, bool reject_unk
                   return false;
                }
             } else {
-               if(!is_permitted_dns_name(cn)) {
+               if(!is_permitted_dns_name(canonicalize_dns_name(cn))) {
                   return false;
                }
             }
@@ -599,7 +607,7 @@ bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unkn
                   return true;
                }
             } else {
-               if(is_excluded_dns_name(cn)) {
+               if(is_excluded_dns_name(canonicalize_dns_name(cn))) {
                   return true;
                }
             }
