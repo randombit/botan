@@ -1,0 +1,16 @@
+<internal_defines>
+SM3_ARMV8 -> 20260314
+</internal_defines>
+
+<module_info>
+name -> "SM3 ARMv8"
+brief -> "SM3 using ARMv8 crypto instructions"
+</module_info>
+
+<isa>
+armv8sm3
+</isa>
+
+<requires>
+cpuid
+</requires>
