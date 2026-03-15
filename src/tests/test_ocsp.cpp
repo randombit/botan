@@ -407,6 +407,52 @@ class OCSP_Tests final : public Test {
          return result;
       }
 
+      static Test::Result test_forged_ocsp_signature_is_rejected() {
+         Test::Result result("OCSP response with forged signature is rejected by path validation");
+
+         auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
+         auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
+         auto trust_root = load_test_X509_cert("x509/ocsp/geotrust.pem");
+
+         const std::vector<Botan::X509_Certificate> cert_path = {ee, ca, trust_root};
+
+         Botan::Certificate_Store_In_Memory certstore;
+         certstore.add_certificate(trust_root);
+
+         const auto valid_time = Botan::calendar_point(2016, 11, 18, 12, 30, 0).to_std_timepoint();
+
+         // Verify the unmodified response is accepted
+         {
+            auto ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
+            const auto ocsp_status = Botan::PKIX::check_ocsp(
+               cert_path, {ocsp}, {&certstore}, valid_time, Botan::Path_Validation_Restrictions());
+
+            if(result.test_sz_eq("Legitimate: expected result count", ocsp_status.size(), 1) &&
+               result.test_sz_eq("Legitimate: expected status count", ocsp_status[0].size(), 1)) {
+               result.test_is_true("Legitimate response is accepted",
+                                   ocsp_status[0].contains(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD));
+            }
+         }
+
+         // Tamper with the signature and verify check_ocsp rejects it
+         {
+            auto ocsp_bytes = Test::read_binary_data_file("x509/ocsp/randombit_ocsp.der");
+            ocsp_bytes.back() ^= 0x01;
+            Botan::OCSP::Response forged_ocsp(ocsp_bytes.data(), ocsp_bytes.size());
+
+            const auto ocsp_status = Botan::PKIX::check_ocsp(
+               cert_path, {forged_ocsp}, {&certstore}, valid_time, Botan::Path_Validation_Restrictions());
+
+            if(result.test_sz_eq("Forged: expected result count", ocsp_status.size(), 1) &&
+               result.test_sz_eq("Forged: expected status count", ocsp_status[0].size(), 1)) {
+               result.test_is_true("Forged signature is rejected",
+                                   ocsp_status[0].contains(Botan::Certificate_Status_Code::OCSP_SIGNATURE_ERROR));
+            }
+         }
+
+         return result;
+      }
+
       static Test::Result test_responder_cert_with_nocheck_extension() {
          Test::Result result("BDr's OCSP response contains certificate featuring NoCheck extension");
 
@@ -435,6 +481,7 @@ class OCSP_Tests final : public Test {
          results.push_back(test_response_verification_without_next_update_without_max_age());
          results.push_back(test_response_verification_softfail());
          results.push_back(test_response_verification_with_additionally_trusted_responder());
+         results.push_back(test_forged_ocsp_signature_is_rejected());
          results.push_back(test_responder_cert_with_nocheck_extension());
 
    #if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)
