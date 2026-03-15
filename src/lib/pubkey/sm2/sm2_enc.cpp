@@ -134,6 +134,11 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
             .end_cons()
             .verify_end();
 
+         // Wrong length so certainly invalid, reject immediately
+         if(C3.size() != m_hash->output_length()) {
+            return secure_vector<uint8_t>();
+         }
+
          std::vector<uint8_t> recode_ctext;
          DER_Encoder(recode_ctext)
             .start_sequence()
@@ -167,7 +172,7 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
          m_hash->update(y2_bytes);
          const auto u = m_hash->final();
 
-         if(!CT::is_equal(u.data(), C3.data(), m_hash->output_length()).as_bool()) {
+         if(!CT::is_equal<uint8_t>(u, C3).as_bool()) {
             return secure_vector<uint8_t>();
          }
 
