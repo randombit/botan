@@ -112,10 +112,12 @@ class BOTAN_PUBLIC_API(2, 0) ECDH_PrivateKey final : public ECDH_PublicKey,
 
       std::unique_ptr<Public_Key> public_key() const override;
 
+      // NOLINTNEXTLINE(bugprone-derived-method-shadowing-base-method)
       std::vector<uint8_t> public_value() const override {
          return ECDH_PublicKey::public_value(EC_Point_Format::Uncompressed);
       }
 
+      // NOLINTNEXTLINE(bugprone-derived-method-shadowing-base-method)
       std::vector<uint8_t> public_value(EC_Point_Format type) const { return ECDH_PublicKey::public_value(type); }
 
       std::unique_ptr<PK_Ops::Key_Agreement> create_key_agreement_op(RandomNumberGenerator& rng,

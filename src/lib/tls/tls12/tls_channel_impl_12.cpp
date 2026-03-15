@@ -208,13 +208,13 @@ void Channel_Impl_12::change_cipher_spec_reader(Connection_Side side) {
    BOTAN_ASSERT(!m_read_cipher_states.contains(epoch), "No read cipher state currently set for next epoch");
 
    // flip side as we are reading
-   const std::shared_ptr<Connection_Cipher_State> read_state(
-      new Connection_Cipher_State(pending->version(),
-                                  (side == Connection_Side::Client) ? Connection_Side::Server : Connection_Side::Client,
-                                  false,
-                                  pending->ciphersuite(),
-                                  pending->session_keys(),
-                                  pending->server_hello()->supports_encrypt_then_mac()));
+   auto read_state = std::make_shared<Connection_Cipher_State>(
+      pending->version(),
+      (side == Connection_Side::Client) ? Connection_Side::Server : Connection_Side::Client,
+      false,
+      pending->ciphersuite(),
+      pending->session_keys(),
+      pending->server_hello()->supports_encrypt_then_mac());
 
    m_read_cipher_states[epoch] = read_state;
 }
@@ -234,13 +234,12 @@ void Channel_Impl_12::change_cipher_spec_writer(Connection_Side side) {
 
    BOTAN_ASSERT(!m_write_cipher_states.contains(epoch), "No write cipher state currently set for next epoch");
 
-   const std::shared_ptr<Connection_Cipher_State> write_state(
-      new Connection_Cipher_State(pending->version(),
-                                  side,
-                                  true,
-                                  pending->ciphersuite(),
-                                  pending->session_keys(),
-                                  pending->server_hello()->supports_encrypt_then_mac()));
+   auto write_state = std::make_shared<Connection_Cipher_State>(pending->version(),
+                                                                side,
+                                                                true,
+                                                                pending->ciphersuite(),
+                                                                pending->session_keys(),
+                                                                pending->server_hello()->supports_encrypt_then_mac());
 
    m_write_cipher_states[epoch] = write_state;
 }

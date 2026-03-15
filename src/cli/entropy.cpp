@@ -18,9 +18,9 @@
 
 namespace Botan_CLI {
 
-#if defined(BOTAN_HAS_ENTROPY_SOURCE)
-
 namespace {
+
+#if defined(BOTAN_HAS_ENTROPY_SOURCE)
 
 class SeedCapturing_RNG final : public Botan::RandomNumberGenerator {
    public:
@@ -50,8 +50,6 @@ class SeedCapturing_RNG final : public Botan::RandomNumberGenerator {
       std::vector<uint8_t> m_seed;
       size_t m_samples = 0;
 };
-
-}  // namespace
 
 class Entropy final : public Command {
    public:
@@ -121,5 +119,7 @@ class Entropy final : public Command {
 BOTAN_REGISTER_COMMAND("entropy", Entropy);
 
 #endif
+
+}  // namespace
 
 }  // namespace Botan_CLI

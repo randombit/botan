@@ -23,6 +23,8 @@
 
 namespace Botan_Tests {
 
+namespace {
+
 #if defined(BOTAN_HAS_DILITHIUM_COMMON) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_SHA3)
 
 template <typename DerivedT>
@@ -283,5 +285,7 @@ class Dilithium_Keygen_Tests final : public PK_Key_Generation_Test {
 BOTAN_REGISTER_TEST("pubkey", "dilithium_keygen", Dilithium_Keygen_Tests);
 
 #endif
+
+}  // namespace
 
 }  // namespace Botan_Tests

@@ -151,10 +151,13 @@ class BOTAN_PUBLIC_API(2, 0) Fanout_Filter : public Filter {
       */
       void incr_owns() { ++m_filter_owns; }
 
+      // NOLINTNEXTLINE(bugprone-derived-method-shadowing-base-method)
       void set_port(size_t n) { Filter::set_port(n); }
 
+      // NOLINTNEXTLINE(bugprone-derived-method-shadowing-base-method)
       void set_next(Filter* f[], size_t n) { Filter::set_next(f, n); }
 
+      // NOLINTNEXTLINE(bugprone-derived-method-shadowing-base-method)
       void attach(Filter* f) { Filter::attach(f); }
 };
 

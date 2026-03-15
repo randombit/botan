@@ -180,6 +180,8 @@ std::unique_ptr<Private_Key> SphincsPlus_PublicKey::generate_another(RandomNumbe
    return std::make_unique<SphincsPlus_PrivateKey>(rng, m_public->parameters());
 }
 
+namespace {
+
 class SphincsPlus_Verification_Operation final : public PK_Ops::Verification {
    public:
       explicit SphincsPlus_Verification_Operation(std::shared_ptr<SphincsPlus_PublicKeyInternal> pub_key) :
@@ -242,6 +244,8 @@ class SphincsPlus_Verification_Operation final : public PK_Ops::Verification {
       SphincsInputMessage m_msg_buffer;
       SphincsContext m_context;
 };
+
+}  // namespace
 
 std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::create_verification_op(std::string_view /*params*/,
                                                                                     std::string_view provider) const {
@@ -340,6 +344,8 @@ std::unique_ptr<Public_Key> SphincsPlus_PrivateKey::public_key() const {
    return std::make_unique<SphincsPlus_PublicKey>(*this);
 }
 
+namespace {
+
 class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
    public:
       SphincsPlus_Signature_Operation(std::shared_ptr<SphincsPlus_PrivateKeyInternal> private_key,
@@ -428,6 +434,8 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
       bool m_randomized;
       SphincsContext m_context;
 };
+
+}  // namespace
 
 std::unique_ptr<PK_Ops::Signature> SphincsPlus_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
                                                                                std::string_view params,

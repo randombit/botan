@@ -207,7 +207,7 @@ size_t SecureQueue::size() const {
 * Test if the queue has any data in it
 */
 bool SecureQueue::end_of_data() const {
-   return (size() == 0);
+   return empty();
 }
 
 bool SecureQueue::empty() const {

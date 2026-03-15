@@ -198,7 +198,7 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_Parameters {
       /**
        * @returns total number of signatures allowed for this XMSS instance
        */
-      size_t total_number_of_signatures() const { return size_t(1) << tree_height(); }
+      size_t total_number_of_signatures() const { return static_cast<size_t>(1) << tree_height(); }
 
       /**
        * The Winternitz parameter.

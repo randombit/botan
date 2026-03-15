@@ -17,6 +17,8 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_STREAM_CIPHER)
 
+namespace {
+
 class Stream_Cipher_Tests final : public Text_Based_Test {
    public:
       Stream_Cipher_Tests() : Text_Based_Test("stream", "Key,Out", "In,Nonce,Seek") {}
@@ -212,6 +214,8 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_SERIALIZED_SMOKE_TEST("stream", "stream_ciphers", Stream_Cipher_Tests);
+
+}  // namespace
 
 #endif
 

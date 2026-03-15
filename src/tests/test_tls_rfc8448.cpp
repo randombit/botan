@@ -47,9 +47,9 @@
 
 namespace Botan_Tests {
 
-#if defined(BOTAN_CAN_RUN_TEST_TLS_RFC8448)
-
 namespace {
+
+#if defined(BOTAN_CAN_RUN_TEST_TLS_RFC8448)
 
 void add_entropy(Fixed_Output_RNG& rng, const std::vector<uint8_t>& bin) {
    rng.add_entropy(bin.data(), bin.size());
@@ -850,8 +850,6 @@ std::vector<MockSignature> make_mock_signatures(const VarMap& vars) {
 
    return result;
 }
-
-}  // namespace
 
 /**
  * Traffic transcripts and supporting data for the TLS RFC 8448 and TLS policy
@@ -2764,5 +2762,7 @@ BOTAN_REGISTER_TEST("tls", "tls_rfc8448_client", Test_TLS_RFC8448_Client);
 BOTAN_REGISTER_TEST("tls", "tls_rfc8448_server", Test_TLS_RFC8448_Server);
 
 #endif
+
+}  // namespace
 
 }  // namespace Botan_Tests

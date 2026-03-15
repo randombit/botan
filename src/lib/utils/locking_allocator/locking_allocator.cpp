@@ -20,7 +20,7 @@ void* mlock_allocator::allocate(size_t num_elems, size_t elem_size) {
    }
 
    if(auto n = checked_mul(num_elems, elem_size)) {
-      return m_pool->allocate(n.value());
+      return m_pool->allocate(*n);
    } else {
       // overflow!
       return nullptr;
@@ -33,7 +33,7 @@ bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size) no
    }
 
    if(auto n = checked_mul(num_elems, elem_size)) {
-      return m_pool->deallocate(p, n.value());
+      return m_pool->deallocate(p, *n);
    } else {
       /*
       We return nullptr in allocate if there was an overflow, so if an

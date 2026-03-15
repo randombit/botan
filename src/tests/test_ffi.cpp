@@ -860,7 +860,7 @@ class FFI_CRL_Test final : public FFI_Test {
          TEST_FFI_OK(botan_x509_crl_entry_create, (&crl_entry, sub2_cert, BOTAN_CRL_ENTRY_KEY_COMPROMISE));
 
          botan_x509_crl_t new_crl;
-         botan_x509_crl_entry_t crl_entries[1] = {crl_entry};
+         const botan_x509_crl_entry_t crl_entries[1] = {crl_entry};
 
          TEST_FFI_RC(BOTAN_FFI_ERROR_NULL_POINTER,
                      botan_x509_crl_update,

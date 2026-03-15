@@ -21,6 +21,8 @@
 
 namespace Botan_Tests {
 
+namespace {
+
 /**
  * Test all implemented SLH-DSA instances using the data of the KAT files.
  */
@@ -292,6 +294,8 @@ BOTAN_REGISTER_TEST("pubkey", "slh_dsa", SLH_DSA_Test);
 BOTAN_REGISTER_TEST("pubkey", "slh_dsa_keygen", SPHINCS_Plus_Keygen_Tests);
 BOTAN_REGISTER_TEST("pubkey", "slh_dsa_sign_generic", Generic_SlhDsa_Signature_Tests);
 BOTAN_REGISTER_TEST("pubkey", "slh_dsa_verify_generic", Generic_SlhDsa_Verification_Tests);
+
+}  // namespace
 
 }  // namespace Botan_Tests
 

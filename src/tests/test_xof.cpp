@@ -29,6 +29,8 @@
 
 namespace Botan_Tests {
 
+namespace {
+
 #if defined(BOTAN_HAS_XOF)
 
 class XOF_Tests final : public Text_Based_Test {
@@ -228,5 +230,7 @@ class XOF_Tests final : public Text_Based_Test {
 BOTAN_REGISTER_SERIALIZED_TEST("xof", "extendable_output_functions", XOF_Tests);
 
 #endif
+
+}  // namespace
 
 }  // namespace Botan_Tests

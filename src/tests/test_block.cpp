@@ -16,6 +16,8 @@
 
 namespace Botan_Tests {
 
+namespace {
+
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
 
 class Block_Cipher_Tests final : public Text_Based_Test {
@@ -267,5 +269,7 @@ class BlockCipher_ParallelOp_Test final : public Test {
 BOTAN_REGISTER_TEST("block", "bc_parop", BlockCipher_ParallelOp_Test);
 
 #endif
+
+}  // namespace
 
 }  // namespace Botan_Tests

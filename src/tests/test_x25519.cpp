@@ -17,6 +17,8 @@
 
 namespace Botan_Tests {
 
+namespace {
+
 #if defined(BOTAN_HAS_X25519)
 
 class X25519_Agreement_Tests final : public PK_Key_Agreement_Test {
@@ -140,5 +142,7 @@ class X25519_Keygen_Tests final : public PK_Key_Generation_Test {
 BOTAN_REGISTER_TEST("pubkey", "x25519_keygen", X25519_Keygen_Tests);
 
 #endif
+
+}  // namespace
 
 }  // namespace Botan_Tests

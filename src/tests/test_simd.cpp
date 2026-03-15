@@ -27,6 +27,8 @@
 
 namespace Botan_Tests {
 
+namespace {
+
 #if defined(BOTAN_HAS_SIMD_4X32) && defined(BOTAN_HAS_CPUID)
 
 class SIMD_4X32_Tests final : public Test {
@@ -414,5 +416,7 @@ class SIMD_2X64_Tests final : public Test {
 
 BOTAN_REGISTER_TEST("utils", "simd_2x64", SIMD_2X64_Tests);
 #endif
+
+}  // namespace
 
 }  // namespace Botan_Tests

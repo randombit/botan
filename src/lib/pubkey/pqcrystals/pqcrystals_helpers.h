@@ -40,7 +40,7 @@ using next_longer_int_t =
 // clang-format on
 
 template <std::integral T>
-   requires(size_t(sizeof(T)) <= 4)
+   requires(sizeof(T) <= 4)
 consteval T montgomery_R(T q) {
    using T_unsigned = std::make_unsigned_t<T>;
    using T2 = next_longer_uint_t<T_unsigned>;
@@ -48,7 +48,7 @@ consteval T montgomery_R(T q) {
 }
 
 template <std::integral T>
-   requires(size_t(sizeof(T)) <= 4)
+   requires(sizeof(T) <= 4)
 consteval T montgomery_R2(T q) {
    using T2 = next_longer_int_t<T>;
    return (static_cast<T2>(montgomery_R(q)) * static_cast<T2>(montgomery_R(q))) % q;
