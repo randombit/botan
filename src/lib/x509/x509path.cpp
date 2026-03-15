@@ -317,6 +317,41 @@ Certificate_Status_Code verify_ocsp_signing_cert(const X509_Certificate& signing
    return validation_result.result();
 }
 
+std::set<Certificate_Status_Code> evaluate_ocsp_response(const OCSP::Response& ocsp_response,
+                                                         const X509_Certificate& subject,
+                                                         const X509_Certificate& ca,
+                                                         const std::vector<X509_Certificate>& cert_path,
+                                                         const std::vector<Certificate_Store*>& certstores,
+                                                         std::chrono::system_clock::time_point ref_time,
+                                                         const Path_Validation_Restrictions& restrictions) {
+   // Handle softfail conditions (eg. OCSP unavailable)
+   if(auto dummy_status = ocsp_response.dummy_status()) {
+      return {dummy_status.value()};
+   }
+
+   // Find the certificate that signed this OCSP response
+   auto signing_cert = ocsp_response.find_signing_certificate(ca, restrictions.trusted_ocsp_responders());
+   if(!signing_cert) {
+      return {Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND};
+   }
+
+   // Verify the signing certificate is trusted
+   auto cert_status = verify_ocsp_signing_cert(
+      signing_cert.value(), ca, concat(ocsp_response.certificates(), cert_path), certstores, ref_time, restrictions);
+   if(cert_status > Certificate_Status_Code::FIRST_ERROR_STATUS) {
+      return {cert_status, Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED};
+   }
+
+   // Verify the cryptographic signature on the OCSP response
+   auto sig_status = ocsp_response.verify_signature(signing_cert.value());
+   if(sig_status != Certificate_Status_Code::OCSP_SIGNATURE_OK) {
+      return {sig_status};
+   }
+
+   // All checks passed, return the certificate's revocation status
+   return {ocsp_response.status_for(ca, subject, ref_time, restrictions.max_ocsp_age())};
+}
+
 }  // namespace
 
 CertificatePathStatusCodes PKIX::check_ocsp(const std::vector<X509_Certificate>& cert_path,
@@ -331,38 +366,16 @@ CertificatePathStatusCodes PKIX::check_ocsp(const std::vector<X509_Certificate>&
    CertificatePathStatusCodes cert_status(cert_path.size() - 1);
 
    for(size_t i = 0; i != cert_path.size() - 1; ++i) {
-      std::set<Certificate_Status_Code>& status = cert_status.at(i);
-
       const X509_Certificate& subject = cert_path.at(i);
       const X509_Certificate& ca = cert_path.at(i + 1);
 
-      if(i < ocsp_responses.size() && (ocsp_responses.at(i) != std::nullopt) &&
-         (ocsp_responses.at(i)->status() == OCSP::Response_Status_Code::Successful)) {
+      if(i < ocsp_responses.size() && ocsp_responses.at(i).has_value() &&
+         ocsp_responses.at(i)->status() == OCSP::Response_Status_Code::Successful) {
          try {
-            const auto& ocsp_response = ocsp_responses.at(i);
-
-            if(auto dummy_status = ocsp_response->dummy_status()) {
-               // handle softfail conditions
-               status.insert(dummy_status.value());
-            } else if(auto signing_cert =
-                         ocsp_response->find_signing_certificate(ca, restrictions.trusted_ocsp_responders());
-                      !signing_cert) {
-               status.insert(Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND);
-            } else if(auto ocsp_signing_cert_status =
-                         verify_ocsp_signing_cert(signing_cert.value(),
-                                                  ca,
-                                                  concat(ocsp_response->certificates(), cert_path),
-                                                  certstores,
-                                                  ref_time,
-                                                  restrictions);
-                      ocsp_signing_cert_status > Certificate_Status_Code::FIRST_ERROR_STATUS) {
-               status.insert(ocsp_signing_cert_status);
-               status.insert(Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED);
-            } else {
-               status.insert(ocsp_response->status_for(ca, subject, ref_time, restrictions.max_ocsp_age()));
-            }
+            cert_status.at(i) = evaluate_ocsp_response(
+               ocsp_responses.at(i).value(), subject, ca, cert_path, certstores, ref_time, restrictions);
          } catch(Exception&) {
-            status.insert(Certificate_Status_Code::OCSP_RESPONSE_INVALID);
+            cert_status.at(i).insert(Certificate_Status_Code::OCSP_RESPONSE_INVALID);
          }
       }
    }
