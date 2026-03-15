@@ -592,6 +592,8 @@ class GenericScalar final {
       StorageUnit m_val;
 };
 
+namespace {
+
 class GenericField final {
    public:
       typedef word W;
@@ -914,6 +916,8 @@ class GenericField final {
       StorageUnit m_val;
 };
 
+}  // namespace
+
 /**
 * Affine Curve Point
 *
@@ -1208,6 +1212,8 @@ class GenericProjectivePoint final {
       GenericField m_z;
 };
 
+namespace {
+
 class GenericCurve final {
    public:
       typedef GenericField FieldElement;
@@ -1216,7 +1222,6 @@ class GenericCurve final {
       typedef GenericProjectivePoint ProjectivePoint;
 
       typedef word WordType;
-      static constexpr size_t Words = PCurve::PrimeOrderCurve::StorageWords;
 };
 
 class GenericBlindedScalarBits final {
@@ -1321,6 +1326,8 @@ class GenericWindowedMul final {
       AffinePointTable<GenericCurve> m_table;
 };
 
+}  // namespace
+
 class GenericBaseMulTable final {
    public:
       static constexpr size_t WindowBits = BasePointWindowBits;
@@ -1343,6 +1350,8 @@ class GenericBaseMulTable final {
 
       std::vector<GenericAffinePoint> m_table;
 };
+
+namespace {
 
 class GenericWindowedMul2 final {
    public:
@@ -1414,6 +1423,8 @@ class GenericVartimeWindowedMul2 final : public PrimeOrderCurve::PrecomputedMul2
    private:
       std::vector<GenericAffinePoint> m_table;
 };
+
+}  // namespace
 
 GenericPrimeOrderCurve::GenericPrimeOrderCurve(
    const BigInt& p, const BigInt& a, const BigInt& b, const BigInt& base_x, const BigInt& base_y, const BigInt& order) :

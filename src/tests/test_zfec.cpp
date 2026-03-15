@@ -14,6 +14,8 @@
 
 namespace Botan_Tests {
 
+namespace {
+
 class ZFEC_KAT final : public Text_Based_Test {
    public:
       ZFEC_KAT() : Text_Based_Test("zfec.vec", "K,N,Data,Code") {}
@@ -106,6 +108,8 @@ class ZFEC_KAT final : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_SERIALIZED_TEST("zfec", "zfec", ZFEC_KAT);
+
+}  // namespace
 
 }  // namespace Botan_Tests
 

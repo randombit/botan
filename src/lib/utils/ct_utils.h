@@ -151,7 +151,7 @@ template <typename T>
    requires requires(const T& v) { ::Botan::CT::poison(v); }
 constexpr void poison(const std::optional<T>& x) {
    if(x.has_value()) {
-      poison(x.value());
+      poison(*x);
    }
 }
 
@@ -159,7 +159,7 @@ template <typename T>
    requires requires(const T& v) { ::Botan::CT::unpoison(v); }
 constexpr void unpoison(const std::optional<T>& x) {
    if(x.has_value()) {
-      unpoison(x.value());
+      unpoison(*x);
    }
 }
 

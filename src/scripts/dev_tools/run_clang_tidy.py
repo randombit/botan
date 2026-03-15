@@ -43,9 +43,12 @@ disabled_needs_work = [
     'cppcoreguidelines-avoid-const-or-ref-data-members',
     'cppcoreguidelines-pro-type-const-cast',
     'misc-include-cleaner', # warning: useful but quite buggy
+    'misc-multiple-inheritance', # public key uses this but should be fixed
+    'misc-override-with-different-visibility', # mostly fine but should be looked at
     'modernize-pass-by-value',
     'modernize-use-ranges', # limited by compiler support currently
     'performance-avoid-endl',
+    'readability-redundant-typename', # TODO(Botan4) when Clang min version increases this can be fixed
     'readability-convert-member-functions-to-static',
     'readability-inconsistent-declaration-parameter-name', # should fix this, blocked by https://github.com/llvm/llvm-project/issues/60845
     'readability-simplify-boolean-expr', # sometimes ok
@@ -67,11 +70,13 @@ disabled_not_interested = [
     'cert-dcl21-cpp', # invalid, and removed already in clang-tidy 19
     'bugprone-easily-swappable-parameters',
     'bugprone-implicit-widening-of-multiplication-result', # would be reasonable if it ignored constants (it doesn't)
+    'cppcoreguidelines-pro-bounds-avoid-unchecked-container-access',
     'cppcoreguidelines-pro-bounds-pointer-arithmetic',
     'cppcoreguidelines-pro-bounds-constant-array-index',
     'cppcoreguidelines-pro-type-reinterpret-cast',
     'hicpp-signed-bitwise', # would be reasonable if it ignored constants (it doesn't)
     'misc-no-recursion',
+    'modernize-avoid-c-style-cast', # the kind of cast clang-tidy is complaining about here is fine
     'modernize-use-trailing-return-type', # fine, but we're not using it everywhere
     'modernize-return-braced-init-list', # thanks I hate it
     'modernize-use-default-member-init',
@@ -84,6 +89,7 @@ disabled_not_interested = [
     'readability-math-missing-parentheses',
     'readability-non-const-parameter',
     'readability-use-concise-preprocessor-directives', # it's not more readable...
+    'readability-redundant-parentheses', # often improves readability ...
     'readability-redundant-inline-specifier', # Jack likes doing this
     'readability-redundant-access-specifiers', # reneme likes doing this
     'readability-use-anyofallof', # not more readable

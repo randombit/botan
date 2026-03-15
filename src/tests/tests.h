@@ -593,17 +593,17 @@ class TestClassRegistration {
 
 // NOLINTBEGIN(*-macro-usage)
 
-#define BOTAN_REGISTER_TEST(category, name, Test_Class) \
-   /* NOLINTNEXTLINE(cert-err58-cpp) */                 \
+#define BOTAN_REGISTER_TEST(category, name, Test_Class)                  \
+   /* NOLINTNEXTLINE(cert-err58-cpp,*-throwing-static-initialization) */ \
    const TestClassRegistration<Test_Class> reg_##Test_Class##_tests(category, name, false, false, {__FILE__, __LINE__})
-#define BOTAN_REGISTER_SERIALIZED_TEST(category, name, Test_Class) \
-   /* NOLINTNEXTLINE(cert-err58-cpp) */                            \
+#define BOTAN_REGISTER_SERIALIZED_TEST(category, name, Test_Class)       \
+   /* NOLINTNEXTLINE(cert-err58-cpp,*-throwing-static-initialization) */ \
    const TestClassRegistration<Test_Class> reg_##Test_Class##_tests(category, name, false, true, {__FILE__, __LINE__})
-#define BOTAN_REGISTER_SMOKE_TEST(category, name, Test_Class) \
-   /* NOLINTNEXTLINE(cert-err58-cpp) */                       \
+#define BOTAN_REGISTER_SMOKE_TEST(category, name, Test_Class)            \
+   /* NOLINTNEXTLINE(cert-err58-cpp,*-throwing-static-initialization) */ \
    const TestClassRegistration<Test_Class> reg_##Test_Class##_tests(category, name, true, false, {__FILE__, __LINE__})
 #define BOTAN_REGISTER_SERIALIZED_SMOKE_TEST(category, name, Test_Class) \
-   /* NOLINTNEXTLINE(cert-err58-cpp) */                                  \
+   /* NOLINTNEXTLINE(cert-err58-cpp,*-throwing-static-initialization) */ \
    const TestClassRegistration<Test_Class> reg_##Test_Class##_tests(category, name, true, true, {__FILE__, __LINE__})
 
 // NOLINTEND(*-macro-usage)
@@ -681,7 +681,7 @@ class TestFnRegistration {
 // NOLINTBEGIN(*-macro-usage)
 
 #define BOTAN_REGISTER_TEST_FN_IMPL(category, name, smoke_test, needs_serialization, fn0, ...) \
-   /* NOLINTNEXTLINE(cert-err58-cpp) */                                                        \
+   /* NOLINTNEXTLINE(cert-err58-cpp,*-throwing-static-initialization) */                       \
    static const TestFnRegistration register_##fn0(                                             \
       category, name, smoke_test, needs_serialization, {__FILE__, __LINE__}, fn0 __VA_OPT__(, ) __VA_ARGS__)
 

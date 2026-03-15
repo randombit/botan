@@ -15,6 +15,8 @@
 
 namespace Botan_CLI {
 
+namespace {
+
 #if defined(BOTAN_HAS_HMAC)
 
 class HMAC final : public Command {
@@ -65,5 +67,7 @@ class HMAC final : public Command {
 BOTAN_REGISTER_COMMAND("hmac", HMAC);
 
 #endif  // hmac
+
+}  // namespace
 
 }  // namespace Botan_CLI

@@ -13,6 +13,8 @@
 
 namespace Botan_Tests {
 
+namespace {
+
 class CT_Mask_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -182,8 +184,6 @@ class CT_Option_Tests final : public Test {
 
 BOTAN_REGISTER_TEST("ct_utils", "ct_option", CT_Option_Tests);
 
-namespace {
-
 template <typename T = void>
 struct Poisonable {
       mutable bool poisoned = false;  // NOLINT(*non-private-member-variable*)
@@ -266,8 +266,8 @@ std::vector<Test::Result> test_higher_level_ct_poison() {
    };
 }
 
-}  // namespace
-
 BOTAN_REGISTER_TEST_FN("ct_utils", "ct_poison", test_higher_level_ct_poison);
+
+}  // namespace
 
 }  // namespace Botan_Tests

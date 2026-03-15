@@ -58,6 +58,8 @@ std::vector<uint8_t> HSS_LMS_PublicKey::public_key_bits() const {
    return raw_public_key_bits();
 }
 
+namespace {
+
 class HSS_LMS_Verification_Operation final : public PK_Ops::Verification {
    public:
       explicit HSS_LMS_Verification_Operation(std::shared_ptr<HSS_LMS_PublicKeyInternal> pub_key) :
@@ -84,6 +86,8 @@ class HSS_LMS_Verification_Operation final : public PK_Ops::Verification {
       std::shared_ptr<HSS_LMS_PublicKeyInternal> m_public;
       std::vector<uint8_t> m_msg_buffer;
 };
+
+}  // namespace
 
 std::unique_ptr<PK_Ops::Verification> HSS_LMS_PublicKey::create_verification_op(std::string_view /*params*/,
                                                                                 std::string_view provider) const {
@@ -167,6 +171,8 @@ std::unique_ptr<Private_Key> HSS_LMS_PrivateKey::generate_another(RandomNumberGe
       new HSS_LMS_PrivateKey(std::make_shared<HSS_LMS_PrivateKeyInternal>(m_private->hss_params(), rng)));
 }
 
+namespace {
+
 class HSS_LMS_Signature_Operation final : public PK_Ops::Signature {
    public:
       HSS_LMS_Signature_Operation(std::shared_ptr<HSS_LMS_PrivateKeyInternal> private_key,
@@ -194,6 +200,8 @@ class HSS_LMS_Signature_Operation final : public PK_Ops::Signature {
       std::shared_ptr<HSS_LMS_PublicKeyInternal> m_public;
       std::vector<uint8_t> m_msg_buffer;
 };
+
+}  // namespace
 
 std::unique_ptr<PK_Ops::Signature> HSS_LMS_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
                                                                            std::string_view params,

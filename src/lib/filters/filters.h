@@ -663,6 +663,7 @@ class BOTAN_PUBLIC_API(2, 0) Fork : public Fanout_Filter {
    public:
       void write(const uint8_t input[], size_t length) override { send(input, length); }
 
+      // NOLINTNEXTLINE(bugprone-derived-method-shadowing-base-method)
       void set_port(size_t n) { Fanout_Filter::set_port(n); }
 
       std::string name() const override { return "Fork"; }

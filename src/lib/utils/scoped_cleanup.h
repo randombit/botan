@@ -40,7 +40,7 @@ class scoped_cleanup final {
 
       ~scoped_cleanup() {
          if(m_cleanup.has_value()) {
-            m_cleanup.value()();
+            (*m_cleanup)();  // NOLINT(bugprone-exception-escape) clang-tidy bug
          }
       }
 

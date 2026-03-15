@@ -78,6 +78,8 @@ class FrodoKEM_PrivateKeyInternal {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //
 
+namespace {
+
 class Frodo_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF {
    public:
       Frodo_KEM_Encryptor(std::shared_ptr<FrodoKEM_PublicKeyInternal> key, std::string_view kdf) :
@@ -232,6 +234,8 @@ class Frodo_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF {
       std::shared_ptr<FrodoKEM_PublicKeyInternal> m_public_key;
       std::shared_ptr<FrodoKEM_PrivateKeyInternal> m_private_key;
 };
+
+}  // namespace
 
 //
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
