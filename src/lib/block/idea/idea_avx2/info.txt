@@ -1,0 +1,16 @@
+<internal_defines>
+IDEA_AVX2 -> 20260314
+</internal_defines>
+
+<module_info>
+name -> "IDEA AVX2"
+brief -> "IDEA using AVX2 SIMD instructions"
+</module_info>
+
+<isa>
+avx2
+</isa>
+
+<requires>
+cpuid
+</requires>
