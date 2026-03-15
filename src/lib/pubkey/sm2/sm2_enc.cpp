@@ -143,11 +143,7 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
             .encode(masked_msg, ASN1_Type::OctetString)
             .end_cons();
 
-         if(recode_ctext.size() != ctext.size()) {
-            return secure_vector<uint8_t>();
-         }
-
-         if(CT::is_equal(recode_ctext.data(), ctext.data(), ctext.size()).as_bool() == false) {
+         if(!CT::is_equal<uint8_t>(recode_ctext, ctext).as_bool()) {
             return secure_vector<uint8_t>();
          }
 
