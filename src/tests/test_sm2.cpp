@@ -10,6 +10,7 @@
    #include "test_pubkey.h"
    #include "test_rng.h"
    #include <botan/ec_group.h>
+   #include <botan/pubkey.h>
    #include <botan/sm2.h>
 #endif
 
@@ -106,6 +107,36 @@ class SM2_Keygen_Tests final : public PK_Key_Generation_Test {
 };
 
 BOTAN_REGISTER_TEST("pubkey", "sm2_keygen", SM2_Keygen_Tests);
+
+namespace {
+
+class SM2_Invalid_Ciphertexts : public Text_Based_Test {
+   public:
+      SM2_Invalid_Ciphertexts() : Text_Based_Test("pubkey/sm2_invalid.vec", "Key,Ctext") {}
+
+      bool clear_between_callbacks() const override { return false; }
+
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
+         Test::Result result("SM2 invalid ciphertext");
+
+         const auto key = vars.get_req_bin("Key");
+         const auto ctext = vars.get_req_bin("Ctext");
+
+         const auto group = Botan::EC_Group::from_name("sm2p256v1");
+         const auto pkey = Botan::SM2_PrivateKey(group, Botan::EC_Scalar::deserialize(group, key).value());
+
+         Botan::PK_Decryptor_EME dec(pkey, rng(), "SM3");
+
+         result.test_throws<Botan::Exception>("Decryption should fail for invalid ciphertext",
+                                              [&] { dec.decrypt(ctext); });
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "sm2_invalid_ctext", SM2_Invalid_Ciphertexts);
+
+}  // namespace
 
 #endif
 
