@@ -55,7 +55,7 @@ void Kyber_KEM_Decryptor::decapsulate(StrongSpan<KyberSharedSecret> out_shared_k
    KyberSharedSecret K(KyberConstants::SEED_BYTES);
    BOTAN_ASSERT_NOMSG(encapsulated_key.size() == c_prime.size());
    BOTAN_ASSERT_NOMSG(K_bar_prime.size() == K.size());
-   const auto reencrypt_success = CT::is_equal(encapsulated_key.data(), c_prime.data(), encapsulated_key.size());
+   const auto reencrypt_success = CT::is_equal<uint8_t>(encapsulated_key, c_prime);
    CT::conditional_copy_mem(reencrypt_success, K.data(), K_bar_prime.data(), z.data(), K_bar_prime.size());
 
    sym.KDF(out_shared_key, K, sym.H(encapsulated_key));

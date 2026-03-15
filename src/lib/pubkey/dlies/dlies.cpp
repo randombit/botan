@@ -156,7 +156,7 @@ secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
 
    const std::span<const uint8_t> tag(msg + m_pub_key_size + ciphertext_len, m_mac->output_length());
 
-   valid_mask = CT::is_equal(tag.data(), calculated_tag.data(), tag.size()).value();
+   valid_mask = CT::is_equal<uint8_t>(tag, calculated_tag).value();
 
    // decrypt
    if(m_cipher) {

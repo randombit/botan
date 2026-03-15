@@ -52,12 +52,7 @@ bool Finished_12::verify(const Handshake_State& state, Connection_Side side) con
 #if defined(BOTAN_UNSAFE_FUZZER_MODE)
    return true;
 #else
-   // first check the size:
-   if(m_verification_data.size() != computed_verify.size()) {
-      return false;
-   }
-
-   return CT::is_equal(m_verification_data.data(), computed_verify.data(), computed_verify.size()).as_bool();
+   return CT::is_equal<uint8_t>(m_verification_data, computed_verify).as_bool();
 #endif
 }
 

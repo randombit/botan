@@ -156,7 +156,7 @@ void Classic_McEliece_Decryptor::raw_kem_decrypt(std::span<uint8_t> out_shared_k
       hash_func->update(0x02);
       hash_func->update(e_bytes);
       const auto c1_p = hash_func->final_stdvec();
-      const CT::Mask<uint8_t> eq_mask = CT::is_equal(c1.data(), c1_p.data(), c1.size());
+      const CT::Mask<uint8_t> eq_mask = CT::is_equal<uint8_t>(c1, c1_p);
       eq_mask.select_n(e_bytes.data(), e_bytes.data(), m_key->s().data(), m_key->s().size());
       b = eq_mask.select(b, 0);
    }

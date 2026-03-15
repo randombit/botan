@@ -61,7 +61,7 @@ void ML_KEM_Decryptor::decapsulate(StrongSpan<KyberSharedSecret> out_shared_key,
 
    BOTAN_ASSERT_NOMSG(c.size() == c_prime.size());
    BOTAN_ASSERT_NOMSG(K_prime.size() == K_bar.size() && out_shared_key.size() == K_bar.size());
-   const auto reencrypt_success = CT::is_equal(c.data(), c_prime.data(), c.size());
+   const auto reencrypt_success = CT::is_equal<uint8_t>(c, c_prime);
    CT::conditional_copy_mem(reencrypt_success, out_shared_key.data(), K_prime.data(), K_bar.data(), K_prime.size());
 
    CT::unpoison(out_shared_key);

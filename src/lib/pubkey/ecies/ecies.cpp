@@ -426,7 +426,7 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
       m_mac->update(m_label);
    }
    const secure_vector<uint8_t> calculated_mac = m_mac->final();
-   valid_mask = CT::is_equal(mac_data.data(), calculated_mac.data(), mac_data.size()).value();
+   valid_mask = CT::is_equal<uint8_t>(mac_data, calculated_mac).value();
 
    if(valid_mask == 0xFF) {
       // decrypt data
