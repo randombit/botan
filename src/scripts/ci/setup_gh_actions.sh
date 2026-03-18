@@ -92,7 +92,9 @@ else
         brew install emscripten
     fi
 
-    if [ -d '/Applications/Xcode_16.1.app/Contents/Developer' ]; then
+    if [ -d '/Applications/Xcode_26.3.app/Contents/Developer' ]; then
+        sudo xcrun xcode-select --switch '/Applications/Xcode_26.3.app/Contents/Developer'
+    elif [ -d '/Applications/Xcode_16.1.app/Contents/Developer' ]; then
         sudo xcrun xcode-select --switch '/Applications/Xcode_16.1.app/Contents/Developer'
     elif [ -d '/Applications/Xcode_15.2.app/Contents/Developer' ]; then
         sudo xcrun xcode-select --switch '/Applications/Xcode_15.2.app/Contents/Developer'
