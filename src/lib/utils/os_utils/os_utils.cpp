@@ -515,6 +515,34 @@ int get_locked_fd() {
    #endif
 }
 
+int mmap_flags() {
+   int flags = MAP_PRIVATE;
+
+   #if defined(MAP_ANONYMOUS)
+   flags |= MAP_ANONYMOUS;
+   #elif defined(MAP_ANON)
+   flags |= MAP_ANON;
+   #endif
+
+   #if defined(MAP_CONCEAL)
+   flags |= MAP_CONCEAL;
+   #elif defined(MAP_NOCORE)
+   flags |= MAP_NOCORE;
+   #endif
+
+   return flags;
+}
+
+int mmap_prot() {
+   int prot = PROT_READ | PROT_WRITE;  // NOLINT(*-const-correctness)
+
+   #if defined(PROT_MAX)
+   prot |= PROT_MAX(prot);
+   #endif
+
+   return prot;
+}
+
 }  // namespace
 
 #endif
@@ -537,31 +565,10 @@ std::vector<void*> OS::allocate_locked_pages(size_t count) {
       void* ptr = nullptr;
 
    #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && defined(BOTAN_TARGET_OS_HAS_POSIX_MLOCK)
-
-      int mmap_flags = MAP_PRIVATE;
-
-      #if defined(MAP_ANONYMOUS)
-      mmap_flags |= MAP_ANONYMOUS;
-      #elif defined(MAP_ANON)
-      mmap_flags |= MAP_ANON;
-      #endif
-
-      #if defined(MAP_CONCEAL)
-      mmap_flags |= MAP_CONCEAL;
-      #elif defined(MAP_NOCORE)
-      mmap_flags |= MAP_NOCORE;
-      #endif
-
-      const int mmap_prot = PROT_READ | PROT_WRITE;
-
-      #if defined(PROT_MAX)
-      mmap_prot |= PROT_MAX(mmap_prot);
-      #endif
-
       ptr = ::mmap(nullptr,
                    3 * page_size,
-                   mmap_prot,
-                   mmap_flags,
+                   mmap_prot(),
+                   mmap_flags(),
                    /*fd=*/locked_fd,
                    /*offset=*/0);
 
