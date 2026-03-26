@@ -6,6 +6,8 @@
 */
 
 #include "cli.h"
+#include <algorithm>
+#include <memory>
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
@@ -13,7 +15,11 @@
    #include <botan/data_src.h>
    #include <botan/pk_keys.h>
    #include <botan/pkcs8.h>
+   #include <botan/pkix_enums.h>
+   #include <botan/pkix_types.h>
    #include <botan/x509_ca.h>
+   #include <botan/x509_ext.h>
+   #include <botan/x509_key.h>
    #include <botan/x509cert.h>
    #include <botan/x509path.h>
    #include <botan/x509self.h>
@@ -380,6 +386,119 @@ class Generate_PKCS10 final : public Command {
 };
 
 BOTAN_REGISTER_COMMAND("gen_pkcs10", Generate_PKCS10);
+
+class Create_Cert_for_Key final : public Command {
+   public:
+      Create_Cert_for_Key() :
+            Command(
+               "create_cert_for_key client_public_key ca_cert ca_key CN --ca-key-pass= --duration=365  --country= --organization= "
+               "--ca --path-limit=1 --email= --dns= --ext-ku= --hash= --padding=") {}
+
+      std::string group() const override { return "x509"; }
+
+      std::string description() const override {
+         return "Generate a certificate by a CA for a given public key. This is for instance needed to issue ML-KEM certificates, for which PKCS#10 requests cannot be generated.";
+      }
+
+      void go() override {
+         const std::string ca_key_file = get_arg("ca_key");
+         const std::string passphrase = get_passphrase_arg("Passphrase for CA key " + ca_key_file, "ca-key-pass");
+
+         auto key = load_private_key(ca_key_file, passphrase);
+         std::unique_ptr<Botan::Public_Key> client_pub_key = Botan::X509::load_key(get_arg("client_public_key"));
+
+         const Botan::X509_Certificate ca_cert(get_arg("ca_cert"));
+
+         const std::string hash = get_arg("hash");
+
+         size_t path_limit = 0;
+         const bool is_ca = flag_set("ca");
+         if(is_ca) {
+            path_limit = get_arg_sz("path-limit");
+         }
+
+         const std::string padding = get_arg("padding");
+         Botan::X509_CA ca(ca_cert, *key, hash, padding, rng());
+
+         Botan::Extensions extensions;
+         extensions.add_new(std::make_unique<Botan::Cert_Extension::Basic_Constraints>(is_ca, path_limit));
+         extensions.replace(create_alt_name_ext());
+
+         add_key_usage_extension(extensions, *client_pub_key, is_ca);
+
+         add_extended_key_usage_extension(extensions);
+
+         extensions.replace(std::make_unique<Botan::Cert_Extension::Authority_Key_ID>(ca_cert.subject_key_id()));
+
+         extensions.replace(std::make_unique<Botan::Cert_Extension::Subject_Key_ID>(
+            client_pub_key->subject_public_key(), ca.hash_function()));
+
+         Botan::X509_DN subject_dn;
+
+         subject_dn.add_attribute("X520.CommonName", get_arg("CN"));
+         subject_dn.add_attribute("X520.Country", get_arg("country"));
+         subject_dn.add_attribute("X520.Organization", get_arg("organization"));
+
+         auto now = std::chrono::system_clock::now();
+
+         const Botan::X509_Time start_time(now);
+
+         typedef std::chrono::duration<int, std::ratio<86400>> days;
+
+         const Botan::X509_Time end_time(now + days(get_arg_sz("duration")));
+
+         const Botan::X509_Certificate new_cert = Botan::X509_CA::make_cert(ca.signature_op(),
+                                                                            rng(),
+                                                                            ca.algorithm_identifier(),
+                                                                            client_pub_key->subject_public_key(),
+                                                                            start_time,
+                                                                            end_time,
+                                                                            ca_cert.subject_dn(),
+                                                                            subject_dn,
+                                                                            extensions);
+         update_stateful_private_key(*key, rng(), ca_key_file, passphrase);
+
+         output() << new_cert.PEM_encode();
+      }
+
+   private:
+      std::unique_ptr<Botan::Cert_Extension::Subject_Alternative_Name> create_alt_name_ext() {
+         Botan::AlternativeName subject_alt;
+
+         auto more_dns = Command::split_on(get_arg("dns"), ',');
+         for(const auto& nm : more_dns) {
+            subject_alt.add_dns(nm);
+         }
+         subject_alt.add_email(get_arg("email"));
+
+         return std::make_unique<Botan::Cert_Extension::Subject_Alternative_Name>(subject_alt);
+      }
+
+      void add_extended_key_usage_extension(Botan::Extensions& extensions) {
+         std::vector<Botan::OID> ex_constraints;
+         for(const std::string& ext_ku : Command::split_on(get_arg("ext-ku"), ',')) {
+            ex_constraints.push_back(Botan::OID(ext_ku));
+         }
+         if(!ex_constraints.empty()) {
+            extensions.add_new(std::make_unique<Botan::Cert_Extension::Extended_Key_Usage>(ex_constraints));
+         }
+      }
+
+      void add_key_usage_extension(Botan::Extensions& extensions, const Botan::Public_Key& client_pub_key, bool is_ca) {
+         const Botan::Key_Constraints constraints =
+            is_ca ? Botan::Key_Constraints::ca_constraints() : Botan::Key_Constraints();
+
+         if(!constraints.compatible_with(client_pub_key)) {
+            throw Botan::Invalid_Argument("The requested key constraints are incompatible with the algorithm");
+         }
+
+         if(!constraints.empty()) {
+            extensions.add_new(std::make_unique<Botan::Cert_Extension::Key_Usage>(constraints));
+         }
+      }
+};
+
+BOTAN_REGISTER_COMMAND("create_cert_for_key", Create_Cert_for_Key);
 
 }  // namespace
 
