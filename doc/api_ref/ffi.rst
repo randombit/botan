@@ -2113,6 +2113,70 @@ X.509 Certificates
    Return a (statically allocated) string associated with the verification
    result, or NULL if the code is not known.
 
+.. cpp:function:: int botan_x509_ext_ip_addr_blocks_get_counts(botan_x509_cert_t cert, \
+                  size_t* v4_count, \
+                  size_t* v6_count)
+
+   Get info about the IP Address Blocks extension from `RFC 3779 <https://www.rfc-editor.org/rfc/rfc3779>`_.
+   ``v4_count`` is set to the number of v4 families contained in the extension,
+   ``v6_count`` to the number of v6 families. If the extension is not present, :cpp:enumerator:`BOTAN_FFI_ERROR_NO_VALUE` is returned.
+
+.. cpp:function:: int botan_x509_ext_ip_addr_blocks_get_family(botan_x509_cert_t cert, \
+                  size_t v4_count, \
+                  int ipv6, \
+                  size_t i, \
+                  int* has_safi, \
+                  uint8_t* safi, \
+                  int* present, \
+                  size_t* count)
+
+   Get info about a specific family in the extension.
+   ``v4_count`` is obtained from :cpp:func:`botan_x509_ext_ip_addr_blocks_get_counts`, ``ipv6`` should be set to 0 for v4 families,
+   1 for v6 families. ``i`` is the local index for each family type, the first v4 family is at ``i = 0``,
+   ``ipv6 = 0``, the first v6 family is at ``i = 0``, ``ipv6 = 1``.
+   ``has_safi`` is set to 1 if the family has an associated SAFI, else 0.
+   ``safi`` contains the SAFI if the family has one, otherwise its value is undefined.
+   ``present`` is set to 1 if the family has range values, 0 if it is marked as "inherit".
+   ``count`` is set to the number of ranges contained if any, otherwise its value is undefined.
+
+.. cpp:function:: int botan_x509_ext_ip_addr_blocks_get_address(botan_x509_cert_t cert, \
+                  size_t v4_count, \
+                  int ipv6, \
+                  size_t i, \
+                  size_t entry, \
+                  uint8_t min_out[], \
+                  uint8_t max_out[], \
+                  size_t* out_len)
+
+   Get info about a specific range in the extension.
+   ``v4_count``, ``ipv6`` and ``i`` behave as in `botan_x509_ext_ip_addr_blocks_get_family`.
+   ``entry`` is the index to the range in the family, between 0 and (not including) ``count``.
+   ``min_out`` and ``max_out`` are set to the min and max addresses of the range respectively.
+   ``out_len`` should be set to 4 for v4 families, 16 for v6 families, the two arrays must also be that size.
+
+.. cpp:function:: int botan_x509_ext_as_blocks_get_info(botan_x509_cert_t cert, \
+                  int asnum, \
+                  int* present, \
+                  size_t* count)
+
+   Get info about the AS Blocks extension from `RFC 3779 <https://www.rfc-editor.org/rfc/rfc3779>`_.
+   ``asnum`` should be set to 1 to get info about the ASNUM part of the extension, 0 for RDI.
+   ``present`` is set to 1 if a value is contained, 0 if that part of the extension is marked as "inherit".
+   If the part is not present at all, :cpp:enumerator:`BOTAN_FFI_ERROR_NO_VALUE` will be returned.
+   ``count`` is set to the number of entries for that part if any, otherwise its value is undefined.
+
+
+.. cpp:function:: int botan_x509_ext_as_blocks_get_entry_at(botan_x509_cert_t cert, \
+                  int asnum, \
+                  size_t i, \
+                  uint32_t* min, \
+                  uint32_t* max)
+
+   Get info about a specific entry from the extension.
+   ``asnum`` behaves as in :cpp:func:`botan_x509_ext_as_blocks_get_info`, ``i`` is the index for that part,
+   between 0 and (not including) ``count``.
+   ``min`` and ``max`` will be set to the minimum and maximum AS numbers of the range respectively.
+
 X.509 Certificate Revocation Lists
 ----------------------------------------
 
