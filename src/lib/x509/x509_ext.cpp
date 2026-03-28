@@ -1794,6 +1794,8 @@ void IPAddressBlocks::sort_and_merge() {
    }
 
    std::vector<IPAddressFamily> merged_blocks;
+   size_t v4_count = 0;
+   size_t v6_count = 0;
    for(auto& it : afam_map) {
       // fams consists of families with the same afi/safi combination
       std::vector<IPAddressFamily>& fams = it.second;
@@ -1804,11 +1806,16 @@ void IPAddressBlocks::sort_and_merge() {
       // fams[0] has to have the same choice type as the fams in the same bucket
       if(std::holds_alternative<IPAddressChoice<Version::IPv4>>(fams[0].addr_choice())) {
          merged_blocks.push_back(merge<Version::IPv4>(fams));
+         v4_count++;
       } else {
          merged_blocks.push_back(merge<Version::IPv6>(fams));
+         v6_count++;
       }
    }
+   BOTAN_ASSERT_NOMSG(v4_count + v6_count == merged_blocks.size());
    m_ip_addr_blocks = merged_blocks;
+   m_v4_count = v4_count;
+   m_v6_count = v6_count;
 }
 
 template <IPAddressBlocks::Version V>
