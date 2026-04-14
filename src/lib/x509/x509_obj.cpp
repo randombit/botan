@@ -14,7 +14,6 @@
 #include <botan/pem.h>
 #include <botan/pubkey.h>
 #include <botan/internal/fmt.h>
-#include <iostream>
 #include <sstream>
 
 namespace Botan {
@@ -127,10 +126,8 @@ std::vector<uint8_t> X509_Object::make_signed(PK_Signer& signer,
                                               RandomNumberGenerator& rng,
                                               const AlgorithmIdentifier& algo,
                                               std::span<const uint8_t> tbs_bits) {
-   std::cout << "X509_Object::make_signed(): before signing message \n";
    const std::vector<uint8_t> signature = signer.sign_message(tbs_bits, rng);
 
-   std::cout << "X509_Object::make_signed(): before creating structure \n";
    std::vector<uint8_t> output;
    DER_Encoder(output)
       .start_sequence()
@@ -138,7 +135,6 @@ std::vector<uint8_t> X509_Object::make_signed(PK_Signer& signer,
       .encode(algo)
       .encode(signature, ASN1_Type::BitString)
       .end_cons();
-   std::cout << "X509_Object::make_signed(): after creating structure \n";
 
    return output;
 }
