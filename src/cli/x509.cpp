@@ -5,9 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "botan/x509_key.h"
 #include "cli.h"
-#include <iostream>
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
@@ -16,6 +14,7 @@
    #include <botan/pk_keys.h>
    #include <botan/pkcs8.h>
    #include <botan/x509_ca.h>
+   #include <botan/x509_key.h>
    #include <botan/x509cert.h>
    #include <botan/x509path.h>
    #include <botan/x509self.h>
@@ -392,11 +391,12 @@ class Create_Cert_for_Key final : public Command {
 
       std::string group() const override { return "x509"; }
 
-      std::string description() const override { return "Generate a certificate by a CA for a given public key"; }
+      std::string description() const override {
+         return "Generate a certificate by a CA for a given public key. This is for instance needed to issue ML-KEM certificates, for which PKCS#10 requests cannot be generated.";
+      }
 
       void go() override {
          const std::string ca_key_file = get_arg("ca_key");
-         // const std::string client_key_file = get_arg("client_key_file");
          const std::string passphrase = get_passphrase_arg("Passphrase for CA key " + ca_key_file, "ca-key-pass");
 
          auto key = load_private_key(ca_key_file, passphrase);
@@ -447,24 +447,13 @@ class Create_Cert_for_Key final : public Command {
          for(const auto& extra_ou : opts.more_org_units) {
             subject_dn.add_attribute("X520.OrganizationalUnit", extra_ou);
          }
-         // const Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *key, get_arg("hash"), rng());
-         // update_stateful_private_key(*key, rng(), key_file, passphrase);
 
-         // output() << req.PEM_encode();
-         //
-         std::cout << "before loading client public key\n";
          auto client_pub_key = Botan::X509::load_key(get_arg("client_public_key"));
-         std::cout << "before loading CA cert\n";
          const Botan::X509_Certificate ca_cert(get_arg("ca_cert"));
 
          const std::string hash = get_arg("hash");
 
-         //auto key = load_private_key(key_file, pass);
-
-         std::cout << "before loading CA key\n";
          Botan::X509_CA ca(ca_cert, *key, hash, padding, rng());
-
-         //const Botan::PKCS10_Request req(get_arg("pkcs10_req"));
 
          auto now = std::chrono::system_clock::now();
 
@@ -474,19 +463,16 @@ class Create_Cert_for_Key final : public Command {
 
          const Botan::X509_Time end_time(now + days(get_arg_sz("duration")));
 
-         std::cout << "before creating cert\n";
-         //const Botan::X509_Certificate new_cert = ca.sign_request(req, rng(), start_time, end_time);
          const Botan::X509_Certificate new_cert = Botan::X509_CA::make_cert(ca.signature_op(),
                                                                             rng(),
                                                                             ca.algorithm_identifier(),
-                                                                            client_pub_key->raw_public_key_bits(),
+                                                                            client_pub_key->subject_public_key(),
                                                                             start_time,
                                                                             end_time,
                                                                             ca_cert.subject_dn(),
                                                                             subject_dn,
                                                                             opts.extensions);
          update_stateful_private_key(*key, rng(), ca_key_file, passphrase);
-         std::cout << "after creating cert\n";
 
          output() << new_cert.PEM_encode();
       }
