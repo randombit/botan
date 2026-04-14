@@ -387,7 +387,7 @@ class Create_Cert_for_Key final : public Command {
       Create_Cert_for_Key() :
             Command(
                "create_cert_for_key client_public_key ca_cert ca_key CN --ca-key-pass= --duration=365  --country= --organization= "
-               "--ca --path-limit=1 --email= --dns= --ext-ku= --hash= --padding= --emsa=") {}
+               "--email= --dns= --ext-ku= --hash= --padding= --emsa=") {}
 
       std::string group() const override { return "x509"; }
 
@@ -408,10 +408,6 @@ class Create_Cert_for_Key final : public Command {
          opts.organization = get_arg("organization");
          opts.email = get_arg("email");
          opts.more_dns = Command::split_on(get_arg("dns"), ',');
-
-         if(flag_set("ca")) {
-            opts.CA_key(get_arg_sz("path-limit"));
-         }
 
          for(const std::string& ext_ku : Command::split_on(get_arg("ext-ku"), ',')) {
             opts.add_ex_constraint(ext_ku);
