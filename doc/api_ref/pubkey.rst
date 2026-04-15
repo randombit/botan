@@ -168,6 +168,15 @@ Currently two flavors of Dilithium are implemented in separate Botan modules:
  * ``dilithium_aes``, that uses AES instead of Keccak-based primitives.
    This mode is deprecated and will be removed in a future release.
 
+ML-DSA (draft-ietf-lamps-pq-composite-sigs-15)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Composite signature algorithms combining ML-DSA with a traditional signature algorithm. All
+variants defined in draft-ietf-lamps-pq-composite-sigs-15 are supported. Each is modelled as a
+distinct algorithm in Botan. The module for the composite algorithms is given by `mldsa-composite`, but note that
+naturally only those algorithm combinations are available for which the respective module
+support is compiled.
+
+
 ML-KEM (FIPS 203)
 ~~~~~~~~~~~~~~~~~
 
@@ -1324,6 +1333,16 @@ equivalent options are listed in :ref:`pk_signature_options`.
    bytes via ``PK_Signature_Options::with_context`` (FIPS 204, Algorithm 2);
    the same context must be given for verification. The pre-standard Dilithium
    round 3 variants do not support a context.
+
+#. ML-DSA-composite (draft-ietf-lamps-pq-composite-sigs-15).
+   Takes no parameters. The following algorithms are defined and are accessed by the respective
+   string value: MLDSA44-RSA2048-PKCS15-SHA256, MLDSA65-RSA3072-PKCS15-SHA512,
+   MLDSA65-RSA4096-PKCS15-SHA512, MLDSA44-RSA2048-PSS-SHA256, MLDSA65-RSA3072-PSS-SHA512,
+   MLDSA65-RSA4096-PSS-SHA512, MLDSA87-RSA3072-PSS-SHA512, MLDSA87-RSA4096-PSS-SHA512,
+   MLDSA44-ECDSA-P256-SHA256, MLDSA65-ECDSA-P256-SHA512, MLDSA65-ECDSA-P384-SHA512,
+   MLDSA65-ECDSA-brainpoolP256r1-SHA512, MLDSA87-ECDSA-P384-SHA512,
+   MLDSA87-ECDSA-brainpoolP384r1-SHA512, MLDSA87-ECDSA-P521-SHA512, MLDSA44-Ed25519-SHA512,
+   MLDSA65-Ed25519-SHA512, MLDSA87-Ed448-SHAKE256
 #. SLH-DSA.
    Takes the optional parameter ``Deterministic`` (default) or ``Randomized``.
 #. XMSS. Takes no parameter.
