@@ -15,6 +15,9 @@ General Notes
 New APIs and Features
 ----------------------------------------
 
+* ML-DSA signatures now support the application context string of FIPS 204
+  (at most 255 bytes), passed via ``PK_Signature_Options::with_context``.
+
 * Add types ``PK_Signature_Options`` ``PK_Encryption_Options``, ``PK_KEM_Options``,
   and ``PK_Key_Agreement_Options`` which allow an application to precisely control
   how public key operations (signature, encryption, decryption, KEM, etc) are
