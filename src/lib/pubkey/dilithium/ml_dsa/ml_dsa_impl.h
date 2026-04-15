@@ -85,8 +85,9 @@ class ML_DSA_Symmetric_Primitives final : public Dilithium_Symmetric_Primitives_
          return seed;
       }
 
-      std::unique_ptr<DilithiumMessageHash> get_message_hash(DilithiumHashedPublicKey tr) const override {
-         return std::make_unique<ML_DSA_MessageHash>(std::move(tr));
+      std::unique_ptr<DilithiumMessageHash> get_message_hash(DilithiumHashedPublicKey tr,
+                                                             std::span<const uint8_t> user_context) const override {
+         return std::make_unique<ML_DSA_MessageHash>(std::move(tr), user_context);
       }
 
       std::optional<std::array<uint8_t, 2>> seed_expansion_domain_separator() const override {

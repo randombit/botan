@@ -1320,6 +1320,10 @@ equivalent options are listed in :ref:`pk_signature_options`.
 
 #. ML-DSA (Dilithium).
    Takes the optional parameter ``Deterministic`` (default) or ``Randomized``.
+   ML-DSA additionally accepts an application context string of at most 255
+   bytes via ``PK_Signature_Options::with_context`` (FIPS 204, Algorithm 2);
+   the same context must be given for verification. The pre-standard Dilithium
+   round 3 variants do not support a context.
 #. SLH-DSA.
    Takes the optional parameter ``Deterministic`` (default) or ``Randomized``.
 #. XMSS. Takes no parameter.

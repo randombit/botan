@@ -346,4 +346,109 @@ BOTAN_REGISTER_TEST("pubkey", "dilithium_keygen", Dilithium_Keygen_Tests);
 
 }  // namespace
 
+#if defined(BOTAN_HAS_DILITHIUM_COMMON)
+
+/**
+ * The application context string of FIPS 204 (Algorithm 2 line 10, Algorithm 3
+ * line 5), passed via PK_Signature_Options::with_context().
+ */
+class MLDSA_Context_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+         results.push_back(test_ml_dsa_context());
+         results.push_back(test_round3_rejects_context());
+         return results;
+      }
+
+   private:
+      static Test::Result test_ml_dsa_context() {
+         Test::Result result("ML-DSA signature context");
+         const auto mode = Botan::DilithiumMode(Botan::DilithiumMode::ML_DSA_4x4);
+         if(!mode.is_available()) {
+            result.note_missing(mode.to_string());
+            return result;
+         }
+         auto rng = Test::new_rng("ML-DSA signature context");
+
+         const std::string msg = "The quick brown fox jumps over the lazy dog.";
+         const std::vector<uint8_t> msgvec(msg.data(), msg.data() + msg.size());
+
+         const Botan::Dilithium_PrivateKey priv_key(*rng, mode);
+         const auto pub_key = priv_key.public_key();
+
+         auto sign = [&](const Botan::PK_Signature_Options& options) {
+            Botan::PK_Signer signer(priv_key, *rng, options);
+            return signer.sign_message(msgvec, *rng);
+         };
+         auto verify = [&](const Botan::PK_Signature_Options& options, const std::vector<uint8_t>& signature) {
+            Botan::PK_Verifier verifier(*pub_key, options);
+            return verifier.verify_message(msgvec, signature);
+         };
+
+         const auto ctx_a = Botan::PK_Signature_Options().with_context("application A");
+         const auto ctx_b = Botan::PK_Signature_Options().with_context("application B");
+         const auto no_ctx = Botan::PK_Signature_Options();
+         const auto empty_ctx = Botan::PK_Signature_Options().with_context(std::span<const uint8_t>{});
+
+         const auto sig_a = sign(ctx_a);
+         result.test_is_true("verifies with the same context", verify(ctx_a, sig_a));
+         result.test_is_false("fails with a different context", verify(ctx_b, sig_a));
+         result.test_is_false("fails without the context", verify(no_ctx, sig_a));
+
+         const auto sig_none = sign(no_ctx);
+         result.test_is_true("no context verifies without context", verify(no_ctx, sig_none));
+         result.test_is_true("no context equals the empty context", verify(empty_ctx, sig_none));
+         result.test_is_false("no context fails with a context", verify(ctx_a, sig_none));
+
+         const auto det = Botan::PK_Signature_Options().with_context("application A").with_deterministic_signature();
+         const auto sig_det1 = sign(det);
+         const auto sig_det2 = sign(det);
+         result.test_bin_eq("deterministic signature with context is stable", sig_det1, sig_det2);
+         result.test_is_true("deterministic signature with context verifies", verify(ctx_a, sig_det1));
+
+         const std::vector<uint8_t> max_ctx(255, 0x42);
+         result.test_no_throw("a 255-byte context is accepted", [&] {
+            const auto sig = sign(Botan::PK_Signature_Options().with_context(max_ctx));
+            result.test_is_true("255-byte context verifies",
+                                verify(Botan::PK_Signature_Options().with_context(max_ctx), sig));
+         });
+         const std::vector<uint8_t> too_long_ctx(256, 0x42);
+         result.test_throws<Botan::Invalid_Argument>("a 256-byte context is rejected when signing", [&] {
+            const Botan::PK_Signer signer(priv_key, *rng, Botan::PK_Signature_Options().with_context(too_long_ctx));
+         });
+         result.test_throws<Botan::Invalid_Argument>("a 256-byte context is rejected when verifying", [&] {
+            const Botan::PK_Verifier verifier(*pub_key, Botan::PK_Signature_Options().with_context(too_long_ctx));
+         });
+
+         return result;
+      }
+
+      static Test::Result test_round3_rejects_context() {
+         Test::Result result("Dilithium round 3 signature context");
+         const auto mode = Botan::DilithiumMode(Botan::DilithiumMode::Dilithium4x4);
+         if(!mode.is_available()) {
+            result.note_missing(mode.to_string());
+            return result;
+         }
+         auto rng = Test::new_rng("Dilithium round 3 signature context");
+         const Botan::Dilithium_PrivateKey priv_key(*rng, mode);
+         const auto pub_key = priv_key.public_key();
+
+         result.test_throws<Botan::Invalid_Argument>("round 3 rejects a context when signing", [&] {
+            const Botan::PK_Signer signer(priv_key, *rng, Botan::PK_Signature_Options().with_context("ctx"));
+         });
+         result.test_throws<Botan::Invalid_Argument>("round 3 rejects a context when verifying", [&] {
+            const Botan::PK_Verifier verifier(*pub_key, Botan::PK_Signature_Options().with_context("ctx"));
+         });
+         result.test_no_throw("round 3 without context still works",
+                              [&] { const Botan::PK_Signer signer(priv_key, *rng, Botan::PK_Signature_Options()); });
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "mldsa_context", MLDSA_Context_Tests);
+#endif
+
 }  // namespace Botan_Tests

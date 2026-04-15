@@ -4,6 +4,9 @@ Release Notes
 Version 3.14.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* ML-DSA signatures now support the application context string of FIPS 204
+  (at most 255 bytes), passed via ``PK_Signature_Options::with_context``.
+
 * Add new type ``PK_Signature_Options`` which allows precisely controlling how
   signatures are created and verified. (GH #5849)
 
