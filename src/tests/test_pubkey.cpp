@@ -5,6 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include "botan/asn1_obj.h"
 #include "tests.h"
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
@@ -21,6 +22,9 @@
    #include <botan/x509_key.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/stl_util.h>
+   #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
+      #include <botan/ecdh.h>
+   #endif
 
    #if defined(BOTAN_HAS_HMAC_DRBG)
       #include <botan/hmac_drbg.h>
@@ -1037,6 +1041,73 @@ BOTAN_REGISTER_TEST("pubkey", "pk_key_decoding", PK_Key_Decoding_Test);
 
 }  // namespace
 
+/**
+ * @brief Test ECC private key decoding
+ */
+class EC_Private_Key_Decoding_Test : public Test {
+   public:
+      //EC_Private_Key_Decoding_Test() {}
+
+   protected:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+         const auto p256_private_key_with_group_encoded = Botan::hex_decode(
+            "30310201010420984397BCC439C060EF5109CCE70B96DD735A33D0EE53A17AB997A9CCE46ACAABA00A06082A8648CE3D030107");
+
+         const auto p256_private_key_without_group_encoded =
+            Botan::hex_decode("30250201010420984397BCC439C060EF5109CCE70B96DD735A33D0EE53A17AB997A9CCE46ACAABA0");
+         // ECDH: 1.3.132.1.12
+         // Test encoded group only:
+         {
+            Test::Result result_with_encoded_parameter_only("decode with group parameter only");
+
+            const Botan::AlgorithmIdentifier secp256r1_alg_id_without_param(
+               Botan::OID("1.3.132.1.12"), Botan::AlgorithmIdentifier::Encoding_Option::USE_EMPTY_PARAM);
+            const Botan::ECDH_PrivateKey p256_without_param(secp256r1_alg_id_without_param,
+                                                            p256_private_key_with_group_encoded);
+            result_with_encoded_parameter_only.test_bool_eq(
+               "can decode ECDH key with optional group parameter", true, true);
+            results.push_back(result_with_encoded_parameter_only);
+         }
+         // Test valid combination of encoded group and AlgorithmIdentifier parameter:
+         {
+            Test::Result result_with_both_parameter(
+               "decode with group parameter and fitting AlgorithmIdentifier parameter");
+
+            const Botan::AlgorithmIdentifier secp256r1_alg_id(
+               Botan::OID("1.3.132.1.12"), Botan::OID("1.2.840.10045.3.1.7" /* secp256r1*/).BER_encode());
+            const Botan::ECDH_PrivateKey p256_with_param(secp256r1_alg_id, p256_private_key_with_group_encoded);
+            result_with_both_parameter.test_bool_eq("can decode ECDH key with optional group parameter", true, true);
+            results.push_back(result_with_both_parameter);
+         }
+         // Test invalid combination of encoded group and AlgorithmIdentifier parameter:
+         {
+            Test::Result result_with_wrong_parameter("decode with wrong group parameter combination");
+            Botan::AlgorithmIdentifier secp384r1_alg_id(Botan::OID("1.3.132.1.12"),
+                                                        Botan::OID("1.3.132.0.34" /* secp384r1*/).BER_encode());
+
+            result_with_wrong_parameter.test_throws(
+               "exception when decoding group parameters conflicting with AlgorithmIdentifier",
+               [&]() { Botan::ECDH_PrivateKey(secp384r1_alg_id, p256_private_key_with_group_encoded); });
+            results.push_back(result_with_wrong_parameter);
+         }
+         // Test no parameter at all:
+         {
+            Test::Result result_with_no_parameter("decode with without any parameter");
+            const Botan::AlgorithmIdentifier secp256r1_alg_id_without_param(
+               Botan::OID("1.3.132.1.12"), Botan::AlgorithmIdentifier::Encoding_Option::USE_EMPTY_PARAM);
+
+            result_with_no_parameter.test_throws(
+               "exception when decoding group without any group parameters provided", [&]() {
+                  Botan::ECDH_PrivateKey(secp256r1_alg_id_without_param, p256_private_key_without_group_encoded);
+               });
+            results.push_back(result_with_no_parameter);
+         }
+         return results;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "ec_priv_key_decoding", EC_Private_Key_Decoding_Test);
 }  // namespace Botan_Tests
 
 #endif
