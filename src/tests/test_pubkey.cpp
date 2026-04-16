@@ -5,7 +5,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "botan/asn1_obj.h"
 #include "tests.h"
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
@@ -13,6 +12,7 @@
    #include "test_pubkey.h"
    #include "test_rng.h"
 
+   #include <botan/asn1_obj.h>
    #include <botan/data_src.h>
    #include <botan/exceptn.h>
    #include <botan/hex.h>
@@ -1046,7 +1046,6 @@ BOTAN_REGISTER_TEST("pubkey", "pk_key_decoding", PK_Key_Decoding_Test);
  */
 class EC_Private_Key_Decoding_Test : public Test {
    public:
-      //EC_Private_Key_Decoding_Test() {}
 
    protected:
       std::vector<Test::Result> run() override {
