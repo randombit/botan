@@ -140,9 +140,8 @@ void BOTAN_FN_ISA_AVX512 Keccak_Permutation::permute_avx512() {
       SIMD_5x64::load(&S[20]),
    };
 
-   // NOLINTNEXTLINE(modernize-loop-convert)
-   for(size_t i = 0; i != 24; ++i) {
-      Keccak_Permutation_round_avx512(X.data(), RC[i]);
+   for(const uint64_t round_constant : RC) {
+      Keccak_Permutation_round_avx512(X.data(), round_constant);
    }
 
    for(size_t i = 0; i != 5; ++i) {

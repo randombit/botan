@@ -216,9 +216,9 @@ void Streebog::compress_64(const uint64_t M[], bool last_block) {
       hN[i] ^= M[i];
    }
 
-   for(size_t i = 0; i < 12; ++i) {  // NOLINT(modernize-loop-convert)
+   for(const auto& round_constant : STREEBOG_C) {
       for(size_t j = 0; j != 8; ++j) {
-         A[j] ^= force_le(STREEBOG_C[i][7 - j]);
+         A[j] ^= force_le(round_constant[7 - j]);
       }
       lps(A);
 
