@@ -14,7 +14,6 @@
 #include <optional>
 #include <span>
 #include <variant>
-#include <vector>
 
 namespace Botan::TLS {
 

@@ -15,7 +15,6 @@
 
 #include <map>
 #include <string>
-#include <vector>
 
 #if defined(_MSC_VER)
    // PKCS #11 v3.2, section 2.1 - Structure packing

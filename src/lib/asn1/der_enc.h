@@ -13,7 +13,6 @@
 #include <functional>
 #include <optional>
 #include <span>
-#include <vector>
 
 namespace Botan {
 
