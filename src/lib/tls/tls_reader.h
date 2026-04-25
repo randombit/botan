@@ -14,7 +14,6 @@
 #include <botan/internal/mem_utils.h>
 #include <span>
 #include <string>
-#include <vector>
 
 namespace Botan::TLS {
 

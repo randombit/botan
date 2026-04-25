@@ -16,7 +16,6 @@
 #include <botan/tls_version.h>
 #include <functional>
 #include <memory>
-#include <vector>
 
 namespace Botan {
 

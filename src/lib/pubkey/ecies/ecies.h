@@ -20,7 +20,6 @@
 #include <optional>
 #include <string>
 #include <string_view>
-#include <vector>
 
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
    #include <botan/ec_point.h>
