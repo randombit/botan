@@ -13,6 +13,11 @@
    #include <botan/internal/fmt.h>
 #endif
 
+#if defined(BOTAN_HAS_MLDSA_COMPOSITE)
+   #include <botan/mldsa_comp.h>
+   #include <botan/mldsa_comp_parameters.h>
+#endif
+
 namespace Botan_CLI {
 
 namespace {
@@ -404,5 +409,58 @@ BOTAN_REGISTER_PERF_TEST("ML-DSA", PerfTest_ML_DSA);
 #endif
 
 }  // namespace
+
+#if defined(BOTAN_HAS_MLDSA_COMPOSITE)
+
+template <Botan::MLDSA_Composite_Param::id_t A>
+class PerfTest_MLDSA_Composite final : public PerfTest_PKSig {
+   public:
+      std::string algo() const override { return Botan::MLDSA_Composite_Param::from_id_or_throw(A).id_str(); }
+
+      std::string hash() const override { return ""; }
+
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
+         return {Botan::MLDSA_Composite_Param::from_id_or_throw(A).id_str()};
+      }
+};
+
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usag)
+   #define BOTAN_REGISTER_PERF_TEST_TMPL(name, Perf_Class)                                   \
+      /* NOLINTNEXTLINE(cert-err58-cpp) */                                                   \
+      const Botan_CLI::PerfTest::Registration reg_perf_##Perf_Class##_##name(                \
+         #name, []() -> std::unique_ptr<Botan_CLI::PerfTest> {                               \
+            /* NOLINTNEXTLINE(bugprone-macro-parentheses) */                                 \
+            return std::make_unique<Perf_Class<Botan::MLDSA_Composite_Param::id_t::name>>(); \
+         })
+
+   #if defined(BOTAN_HAS_RSA)
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA44_RSA2048_PKCS15_SHA256, PerfTest_MLDSA_Composite);
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA65_RSA3072_PKCS15_SHA512, PerfTest_MLDSA_Composite);
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA65_RSA4096_PKCS15_SHA512, PerfTest_MLDSA_Composite);
+   #endif
+   #if defined(BOTAN_HAS_PSS)
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA44_RSA2048_PSS_SHA256, PerfTest_MLDSA_Composite);
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA65_RSA3072_PSS_SHA512, PerfTest_MLDSA_Composite);
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA65_RSA4096_PSS_SHA512, PerfTest_MLDSA_Composite);
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA87_RSA3072_PSS_SHA512, PerfTest_MLDSA_Composite);
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA87_RSA4096_PSS_SHA512, PerfTest_MLDSA_Composite);
+   #endif
+   #if defined(BOTAN_HAS_ECDSA)
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA44_ECDSA_P256_SHA256, PerfTest_MLDSA_Composite);
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA65_ECDSA_P256_SHA512, PerfTest_MLDSA_Composite);
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA65_ECDSA_P384_SHA512, PerfTest_MLDSA_Composite);
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA65_ECDSA_brainpoolP256r1_SHA512, PerfTest_MLDSA_Composite);
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA87_ECDSA_P384_SHA512, PerfTest_MLDSA_Composite);
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA87_ECDSA_brainpoolP384r1_SHA512, PerfTest_MLDSA_Composite);
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA87_ECDSA_P521_SHA512, PerfTest_MLDSA_Composite);
+   #endif
+   #if defined(BOTAN_HAS_ED25519)
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA44_Ed25519_SHA512, PerfTest_MLDSA_Composite);
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA65_Ed25519_SHA512, PerfTest_MLDSA_Composite);
+   #endif
+   #if defined(BOTAN_HAS_ED448)
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA87_Ed448_SHAKE256, PerfTest_MLDSA_Composite);
+   #endif
+#endif
 
 }  // namespace Botan_CLI

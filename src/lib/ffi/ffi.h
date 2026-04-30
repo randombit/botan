@@ -2047,6 +2047,22 @@ BOTAN_FFI_EXPORT(3, 6)
 int botan_pubkey_load_ml_dsa(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len, const char* mldsa_mode);
 
 /*
+* Algorithm specific key operations: MLDSA-Composite
+*/
+
+BOTAN_FFI_EXPORT(3, 12)
+int botan_privkey_load_mldsa_composite(botan_privkey_t* key,
+                                       const uint8_t privkey[],
+                                       size_t key_len,
+                                       const char* mldsa_composite_algo);
+
+BOTAN_FFI_EXPORT(3, 12)
+int botan_pubkey_load_mldsa_composite(botan_pubkey_t* key,
+                                      const uint8_t pubkey[],
+                                      size_t key_len,
+                                      const char* mldsa_composite_algo);
+
+/*
 * Algorithm specific key operations: Kyber R3
 *
 * Note that Kyber R3 support is somewhat deprecated and may be removed in a
