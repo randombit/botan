@@ -35,17 +35,6 @@ class XMSS_WOTS_PrivateKey;
 class BOTAN_PUBLIC_API(2, 0) XMSS_PublicKey : public virtual Public_Key {
    public:
       /**
-       * Creates a new XMSS public key for the chosen XMSS signature method.
-       * New public and prf seeds are generated using rng. The appropriate WOTS
-       * signature method will be automatically set based on the chosen XMSS
-       * signature method.
-       *
-       * @param xmss_oid Identifier for the selected XMSS signature method.
-       * @param rng A random number generator to use for key generation.
-       **/
-      XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid, RandomNumberGenerator& rng);
-
-      /**
        * Loads a public key.
        *
        * Public key must be encoded as in RFC
@@ -109,6 +98,22 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PublicKey : public virtual Public_Key {
                                                                         std::string_view provider) const override;
 
    protected:
+      /**
+       * Creates a new XMSS public key for the chosen XMSS signature method.
+       * New public and prf seeds are generated using rng. The appropriate WOTS
+       * signature method will be automatically set based on the chosen XMSS
+       * signature method.
+       *
+       * This is the matching PublicKey constructor for
+       * `XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t, RandomNumberGenerator&, WOTS_Derivation_Method)`
+       * and is be called to generate the public seed.
+       * It should not be called in other contexts.
+       *
+       * @param xmss_oid Identifier for the selected XMSS signature method.
+       * @param rng A random number generator to use for key generation.
+       **/
+      XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid, RandomNumberGenerator& rng);
+
       friend class XMSS_Verification_Operation;
 
       const secure_vector<uint8_t>& public_seed() const { return m_public_seed; }
@@ -127,8 +132,6 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PublicKey : public virtual Public_Key {
 
 template <typename>
 class Atomic;
-
-class XMSS_Index_Registry;
 
 /**
  * Determines how WOTS+ private keys are derived from the XMSS private key
@@ -272,16 +275,10 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
        *         leftmost leaf being the hash of the WOTS+ pk with index
        *         start_idx.
        **/
-      secure_vector<uint8_t> tree_hash(size_t start_idx,
+      secure_vector<uint8_t> tree_hash(uint32_t start_idx,
                                        size_t target_node_height,
-                                       const XMSS_Address& adrs,
+                                       XMSS_Address adrs,
                                        XMSS_Hash& hash) const;
-
-      void tree_hash_subtree(secure_vector<uint8_t>& result,
-                             size_t start_idx,
-                             size_t target_node_height,
-                             XMSS_Address& adrs,
-                             XMSS_Hash& hash) const;
 
       std::shared_ptr<XMSS_PrivateKey_Internal> m_private;
 };

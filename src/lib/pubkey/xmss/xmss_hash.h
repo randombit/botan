@@ -23,6 +23,7 @@ class XMSS_Parameters;
 class XMSS_Hash final {
    public:
       explicit XMSS_Hash(const XMSS_Parameters& params);
+      explicit XMSS_Hash(std::string_view hash_function_name, size_t hash_id_size);  // for XMSS^MT
 
       XMSS_Hash(const XMSS_Hash& hash);
       XMSS_Hash(XMSS_Hash&& hash) = default;

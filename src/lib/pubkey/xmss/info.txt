@@ -9,11 +9,12 @@ name -> "XMSS"
 <header:public>
 xmss.h
 xmss_parameters.h
+xmss_wots_parameters.h
 </header:public>
 
 <header:internal>
 xmss_address.h
-xmss_common_ops.h
+xmss_core_ops.h
 xmss_hash.h
 xmss_signature.h
 xmss_signature_operation.h

@@ -12,10 +12,9 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  **/
 
-#include <botan/xmss_parameters.h>
-
 #include <botan/assert.h>
 #include <botan/exceptn.h>
+#include <botan/xmss_wots_parameters.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/xmss_tools.h>
 #include <cmath>

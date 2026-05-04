@@ -14,6 +14,7 @@
 
 #include <botan/mem_ops.h>
 #include <botan/internal/concat_util.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/xmss_address.h>
 #include <botan/internal/xmss_hash.h>
 #include <botan/internal/xmss_tools.h>
@@ -88,6 +89,12 @@ XMSS_WOTS_PublicKey::XMSS_WOTS_PublicKey(XMSS_WOTS_Parameters params,
       adrs.set_chain_address(static_cast<uint32_t>(i));
       chain(m_params, m_key_data[i], 0, m_params.wots_parameter() - 1, adrs, public_seed, hash);
    }
+
+   // unpoison: m_key_data is derived from secret values but now public
+   // correlation with privkey data destroyed by hashing
+   for(const auto& v : m_key_data) {
+      CT::unpoison(std::span(v.data(), v.size()));
+   }
 }
 
 XMSS_WOTS_PublicKey::XMSS_WOTS_PublicKey(XMSS_WOTS_Parameters params,
@@ -125,6 +132,11 @@ wots_keysig_t XMSS_WOTS_PrivateKey::sign(const secure_vector<uint8_t>& msg,
    for(size_t i = 0; i < m_params.len(); i++) {
       adrs.set_chain_address(static_cast<uint32_t>(i));
       chain(m_params, sig[i], 0, msg_digest[i], adrs, public_seed, hash);
+   }
+
+   // unpoison: sig is now public
+   for(const auto& v : sig) {
+      CT::unpoison(std::span(v.data(), v.size()));
    }
 
    return sig;

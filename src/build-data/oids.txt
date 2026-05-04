@@ -127,6 +127,7 @@
 1.3.6.1.4.1.25258.1.8 = XMSS-draft12
 # draft-vangeest-x509-hash-sigs-03
 0.4.0.127.0.15.1.1.13.0 = XMSS
+0.4.0.127.0.15.1.1.14.0 = XMSSMT
 
 # X9.62 ecPublicKey, valid for ECDSA and ECDH (RFC 3279 sec 2.3.5)
 1.2.840.10045.2.1 = ECDSA

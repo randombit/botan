@@ -12,6 +12,7 @@
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <botan/xmss_parameters.h>
+#include <botan/internal/xmss_core_ops.h>
 #include <botan/internal/xmss_wots.h>
 
 namespace Botan {
@@ -20,13 +21,6 @@ namespace Botan {
  * Helper class for marshalling an XMSS signature
  */
 class XMSS_Signature final {
-   public:
-      struct TreeSignature final {
-         public:
-            wots_keysig_t ots_signature;
-            wots_keysig_t authentication_path;
-      };
-
    public:
       /**
        * Creates a signature from an XMSS signature method and a uint8_t sequence
@@ -46,14 +40,14 @@ class XMSS_Signature final {
        * @param randomness A random value.
        * @param tree_sig A tree signature.
        **/
-      XMSS_Signature(size_t leaf_idx, secure_vector<uint8_t> randomness, XMSS_Signature::TreeSignature tree_sig) :
+      XMSS_Signature(size_t leaf_idx, secure_vector<uint8_t> randomness, XMSS_TreeSignature tree_sig) :
             m_leaf_idx(leaf_idx), m_randomness(std::move(randomness)), m_tree_sig(std::move(tree_sig)) {}
 
       size_t unused_leaf_index() const { return m_leaf_idx; }
 
       const secure_vector<uint8_t>& randomness() const { return m_randomness; }
 
-      const XMSS_Signature::TreeSignature& tree() const { return m_tree_sig; }
+      const XMSS_TreeSignature& tree() const { return m_tree_sig; }
 
       // These mutating operations should be removed:
       void set_unused_leaf_idx(size_t idx) { m_leaf_idx = idx; }
@@ -62,9 +56,9 @@ class XMSS_Signature final {
 
       void set_randomness(secure_vector<uint8_t> randomness) { m_randomness = std::move(randomness); }
 
-      XMSS_Signature::TreeSignature& tree() { return m_tree_sig; }
+      XMSS_TreeSignature& tree() { return m_tree_sig; }
 
-      void set_tree(XMSS_Signature::TreeSignature tree_sig) { m_tree_sig = std::move(tree_sig); }
+      void set_tree(XMSS_TreeSignature tree_sig) { m_tree_sig = std::move(tree_sig); }
 
       /**
        * Generates a serialized representation of XMSS Signature by
@@ -83,7 +77,7 @@ class XMSS_Signature final {
    private:
       size_t m_leaf_idx;
       secure_vector<uint8_t> m_randomness;
-      XMSS_Signature::TreeSignature m_tree_sig;
+      XMSS_TreeSignature m_tree_sig;
 };
 
 }  // namespace Botan

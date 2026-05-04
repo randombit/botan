@@ -595,6 +595,12 @@ ofvkP1EDmpx50fHLawIDAQAB
         remaining = priv2.remaining_operations()
         self.assertEqual(remaining, 1024)
 
+        priv3 = botan.PrivateKey.create('XMSSMT', 'XMSSMT-SHA2_20/2_256', rng)
+        self.assertEqual(priv3.stateful_operation(), True)
+
+        remaining = priv3.remaining_operations()
+        self.assertEqual(remaining, 1024*1024)
+
     def test_check_key(self):
         n = 0xc64bad5b1c8ec30ba72ed8b5374ef8989fefb771c7c9e68c3598d73170df75403f7571f5ebd2f69008741fcd04319a7f10a296b2fbd1038bbfc5e4d83ef17d6a495cfeef9d779b9910bfb48bd891860f85fa26ac9a420d2d3c6c2ec30636fea3fbdb5ef3a372e5f217b211deb59229b01d43ee71b1e87e5ffe185a9eb3ec696f
         e = 0x10001

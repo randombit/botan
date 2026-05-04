@@ -31,21 +31,6 @@ class XMSS_Verification_Operation final : public virtual PK_Ops::Verification {
 
    private:
       /**
-       * Algorithm 13: "XMSS_rootFromSig"
-       * Computes a root node using an XMSS signature, a message and a seed.
-       *
-       * @param msg A message.
-       * @param sig The XMSS signature for msg.
-       * @param seed A seed.
-       *
-       * @return An n-byte string holding the value of the root of a tree
-       *         defined by the input parameters.
-       **/
-      secure_vector<uint8_t> root_from_signature(const XMSS_Signature& sig,
-                                                 const secure_vector<uint8_t>& msg,
-                                                 const secure_vector<uint8_t>& seed);
-
-      /**
        * Algorithm 14: "XMSS_verify"
        * Verifies a XMSS signature using the corresponding XMSS public key.
        *

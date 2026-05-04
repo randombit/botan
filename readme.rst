@@ -116,7 +116,7 @@ Public Key Cryptography
 * RSA signatures and encryption
 * DH, ECDH, X25519 and X448 key agreement
 * Elliptic curve signature schemes ECDSA, Ed25519, Ed448, ECGDSA, ECKCDSA, SM2
-* Post-quantum signature schemes ML-DSA (Dilithium), SLH-DSA (SPHINCS+), HSS/LMS, XMSS
+* Post-quantum signature schemes ML-DSA (Dilithium), SLH-DSA (SPHINCS+), HSS/LMS, XMSS, XMSS^MT
 * Post-quantum key encapsulation schemes ML-KEM (Kyber), FrodoKEM, Classic McEliece
 
 Ciphers, hashes, MACs, and checksums
