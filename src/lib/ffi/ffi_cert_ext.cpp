@@ -8,7 +8,11 @@
 #include <botan/ffi.h>
 
 #include <botan/internal/ffi_cert.h>
-#include <botan/internal/ffi_cert_ext.h>
+#include <botan/internal/ffi_util.h>
+
+#if defined(BOTAN_HAS_X509_CERTIFICATES)
+   #include <botan/x509_ext.h>
+#endif
 
 namespace {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
@@ -65,53 +69,22 @@ extern "C" {
 using namespace Botan_FFI;
 
 // ip addr blocks ext
-
-int botan_x509_ext_ip_addr_blocks_destroy(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks) {
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_CHECKED_DELETE(ip_addr_blocks);
-#else
-   BOTAN_UNUSED(ip_addr_blocks);
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
-int botan_x509_ext_ip_addr_blocks_create_from_cert(botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks,
-                                                   botan_x509_cert_t cert) {
-   if(Botan::any_null_pointers(ip_addr_blocks)) {
-      return BOTAN_FFI_ERROR_NULL_POINTER;
-   }
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return ffi_guard_thunk(__func__, [=]() -> int {
-      const auto* const ext =
-         safe_get(cert).v3_extensions().get_extension_object_as<Botan::Cert_Extension::IPAddressBlocks>();
-
-      if(Botan::any_null_pointers(ext)) {
-         return BOTAN_FFI_ERROR_NO_VALUE;
-      }
-      return ffi_new_object(ip_addr_blocks,
-                            std::unique_ptr<Botan::Cert_Extension::IPAddressBlocks>(
-                               dynamic_cast<Botan::Cert_Extension::IPAddressBlocks*>(ext->copy().release())),
-                            false);
-   });
-#else
-   BOTAN_UNUSED(cert);
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
-int botan_x509_ext_ip_addr_blocks_get_counts(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
-                                             size_t* v4_count,
-                                             size_t* v6_count) {
+int botan_x509_ext_ip_addr_blocks_get_counts(botan_x509_cert_t cert, size_t* v4_count, size_t* v6_count) {
    if(Botan::any_null_pointers(v4_count, v6_count)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(__func__, [=]() -> int {
-      const auto& ext = safe_get(ip_addr_blocks);
+      const auto& ext =
+         safe_get(cert).v3_extensions().get_extension_object_as<Botan::Cert_Extension::IPAddressBlocks>();
+      if(Botan::any_null_pointers(ext)) {
+         return BOTAN_FFI_ERROR_NO_VALUE;
+      }
+
       size_t v4 = 0;
       size_t v6 = 0;
 
-      for(const auto& entry : ext.addr_blocks()) {
+      for(const auto& entry : ext->addr_blocks()) {
          if(entry.afi() == 1) {
             v4++;
          } else {
@@ -124,18 +97,13 @@ int botan_x509_ext_ip_addr_blocks_get_counts(botan_x509_ext_ip_addr_blocks_t ip_
       return BOTAN_FFI_SUCCESS;
    });
 #else
-   BOTAN_UNUSED(ip_addr_blocks);
+   BOTAN_UNUSED(cert);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
 
-int botan_x509_ext_ip_addr_blocks_get_family(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
-                                             int ipv6,
-                                             size_t i,
-                                             int* has_safi,
-                                             uint8_t* safi,
-                                             int* present,
-                                             size_t* count) {
+int botan_x509_ext_ip_addr_blocks_get_family(
+   botan_x509_cert_t cert, int ipv6, size_t i, int* has_safi, uint8_t* safi, int* present, size_t* count) {
    if(Botan::any_null_pointers(has_safi, safi, present, count)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
@@ -144,8 +112,14 @@ int botan_x509_ext_ip_addr_blocks_get_family(botan_x509_ext_ip_addr_blocks_t ip_
       if(ipv6 != 0 && ipv6 != 1) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }
-      const auto& addr_blocks = safe_get(ip_addr_blocks).addr_blocks();
 
+      const auto& ext =
+         safe_get(cert).v3_extensions().get_extension_object_as<Botan::Cert_Extension::IPAddressBlocks>();
+      if(Botan::any_null_pointers(ext)) {
+         return BOTAN_FFI_ERROR_NO_VALUE;
+      }
+
+      const auto& addr_blocks = ext->addr_blocks();
       if(i >= addr_blocks.size()) {
          return BOTAN_FFI_ERROR_OUT_OF_RANGE;
       }
@@ -167,18 +141,13 @@ int botan_x509_ext_ip_addr_blocks_get_family(botan_x509_ext_ip_addr_blocks_t ip_
       }
    });
 #else
-   BOTAN_UNUSED(ip_addr_blocks, ipv6, i);
+   BOTAN_UNUSED(cert, ipv6, i);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
 
-int botan_x509_ext_ip_addr_blocks_get_address(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
-                                              int ipv6,
-                                              size_t i,
-                                              size_t entry,
-                                              uint8_t min_out[],
-                                              uint8_t max_out[],
-                                              size_t* out_len) {
+int botan_x509_ext_ip_addr_blocks_get_address(
+   botan_x509_cert_t cert, int ipv6, size_t i, size_t entry, uint8_t min_out[], uint8_t max_out[], size_t* out_len) {
    if(out_len == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
@@ -187,8 +156,13 @@ int botan_x509_ext_ip_addr_blocks_get_address(botan_x509_ext_ip_addr_blocks_t ip
       if(ipv6 != 0 && ipv6 != 1) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }
-      const auto& addr_blocks = safe_get(ip_addr_blocks).addr_blocks();
+      const auto& ext =
+         safe_get(cert).v3_extensions().get_extension_object_as<Botan::Cert_Extension::IPAddressBlocks>();
+      if(Botan::any_null_pointers(ext)) {
+         return BOTAN_FFI_ERROR_NO_VALUE;
+      }
 
+      const auto& addr_blocks = ext->addr_blocks();
       if(i >= addr_blocks.size()) {
          return BOTAN_FFI_ERROR_OUT_OF_RANGE;
       }
@@ -203,45 +177,13 @@ int botan_x509_ext_ip_addr_blocks_get_address(botan_x509_ext_ip_addr_blocks_t ip
       }
    });
 #else
-   BOTAN_UNUSED(ip_addr_blocks, ipv6, i, entry, min_out, max_out);
+   BOTAN_UNUSED(cert, ipv6, i, entry, min_out, max_out);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
 
 // as blocks ext
-
-int botan_x509_ext_as_blocks_destroy(botan_x509_ext_as_blocks_t as_blocks) {
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_CHECKED_DELETE(as_blocks);
-#else
-   BOTAN_UNUSED(as_blocks);
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
-int botan_x509_ext_as_blocks_create_from_cert(botan_x509_ext_as_blocks_t* as_blocks, botan_x509_cert_t cert) {
-   if(Botan::any_null_pointers(as_blocks)) {
-      return BOTAN_FFI_ERROR_NULL_POINTER;
-   }
-#if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return ffi_guard_thunk(__func__, [=]() -> int {
-      const auto* const ext = safe_get(cert).v3_extensions().get_extension_object_as<Botan::Cert_Extension::ASBlocks>();
-
-      if(Botan::any_null_pointers(ext)) {
-         return BOTAN_FFI_ERROR_NO_VALUE;
-      }
-      return ffi_new_object(as_blocks,
-                            std::unique_ptr<Botan::Cert_Extension::ASBlocks>(
-                               dynamic_cast<Botan::Cert_Extension::ASBlocks*>(ext->copy().release())),
-                            false);
-   });
-#else
-   BOTAN_UNUSED(cert);
-   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
-#endif
-}
-
-int botan_x509_ext_as_blocks_get_info(botan_x509_ext_as_blocks_t as_blocks, int asnum, int* present, size_t* count) {
+int botan_x509_ext_as_blocks_get_info(botan_x509_cert_t cert, int asnum, int* present, size_t* count) {
    if(Botan::any_null_pointers(present, count)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
@@ -250,8 +192,13 @@ int botan_x509_ext_as_blocks_get_info(botan_x509_ext_as_blocks_t as_blocks, int 
       if(asnum != 0 && asnum != 1) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }
-      const auto& blocks = safe_get(as_blocks);
-      const auto& asnum_or_rdi = asnum == 1 ? blocks.as_identifiers().asnum() : blocks.as_identifiers().rdi();
+
+      const auto& ext = safe_get(cert).v3_extensions().get_extension_object_as<Botan::Cert_Extension::ASBlocks>();
+      if(Botan::any_null_pointers(ext)) {
+         return BOTAN_FFI_ERROR_NO_VALUE;
+      }
+
+      const auto& asnum_or_rdi = asnum == 1 ? ext->as_identifiers().asnum() : ext->as_identifiers().rdi();
 
       if(!asnum_or_rdi.has_value()) {
          return BOTAN_FFI_ERROR_NO_VALUE;
@@ -270,13 +217,12 @@ int botan_x509_ext_as_blocks_get_info(botan_x509_ext_as_blocks_t as_blocks, int 
       return BOTAN_FFI_SUCCESS;
    });
 #else
-   BOTAN_UNUSED(as_blocks, asnum);
+   BOTAN_UNUSED(cert, asnum);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
 
-int botan_x509_ext_as_blocks_get_entry_at(
-   botan_x509_ext_as_blocks_t as_blocks, int asnum, size_t i, uint32_t* min, uint32_t* max) {
+int botan_x509_ext_as_blocks_get_entry_at(botan_x509_cert_t cert, int asnum, size_t i, uint32_t* min, uint32_t* max) {
    if(Botan::any_null_pointers(min, max)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
@@ -285,9 +231,13 @@ int botan_x509_ext_as_blocks_get_entry_at(
       if(asnum != 0 && asnum != 1) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }
-      const auto& blocks = safe_get(as_blocks);
-      const auto& asnum_or_rdi = asnum == 1 ? blocks.as_identifiers().asnum() : blocks.as_identifiers().rdi();
 
+      const auto& ext = safe_get(cert).v3_extensions().get_extension_object_as<Botan::Cert_Extension::ASBlocks>();
+      if(Botan::any_null_pointers(ext)) {
+         return BOTAN_FFI_ERROR_NO_VALUE;
+      }
+
+      const auto& asnum_or_rdi = asnum == 1 ? ext->as_identifiers().asnum() : ext->as_identifiers().rdi();
       if(!asnum_or_rdi.has_value() || !asnum_or_rdi.value().ranges().has_value()) {
          return BOTAN_FFI_ERROR_NO_VALUE;
       }
@@ -302,7 +252,7 @@ int botan_x509_ext_as_blocks_get_entry_at(
       return BOTAN_FFI_SUCCESS;
    });
 #else
-   BOTAN_UNUSED(as_blocks, asnum, i);
+   BOTAN_UNUSED(cert, asnum, i);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }

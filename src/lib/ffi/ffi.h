@@ -2698,28 +2698,14 @@ BOTAN_FFI_EXPORT(2, 8) const char* botan_x509_cert_validation_status(int code);
 * X.509 Extensions
 */
 
-typedef struct botan_x509_ext_ip_addr_blocks_struct* botan_x509_ext_ip_addr_blocks_t;
-
-BOTAN_FFI_EXPORT(3, 12)
-int botan_x509_ext_ip_addr_blocks_destroy(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks);
-
-/**
-* Get the IP Address Blocks extension from a certificate
-* @returns 0 on success, a negative number on error, e.g. when the certificate does not contain the extension
-*/
-BOTAN_FFI_EXPORT(3, 12)
-int botan_x509_ext_ip_addr_blocks_create_from_cert(botan_x509_ext_ip_addr_blocks_t* ip_addr_blocks,
-                                                   botan_x509_cert_t cert);
-
 /**
 * Get info about the IP Address Blocks extension
 * @param v4_count is set to the number of v4 families contained in the extension
 * @param v6_count is set to the number of v6 families
+* @returns 0 on sucess, negative number on error
 */
 BOTAN_FFI_EXPORT(3, 12)
-int botan_x509_ext_ip_addr_blocks_get_counts(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
-                                             size_t* v4_count,
-                                             size_t* v6_count);
+int botan_x509_ext_ip_addr_blocks_get_counts(botan_x509_cert_t cert, size_t* v4_count, size_t* v6_count);
 
 /**
 * Get info about a specific family in the extension
@@ -2729,16 +2715,11 @@ int botan_x509_ext_ip_addr_blocks_get_counts(botan_x509_ext_ip_addr_blocks_t ip_
 * @param safi will be set to the families' SAFI, if it has one
 * @param present is set to 1 if the family contains values (ranges), 0 if it is marked as "inherit"
 * @param count is set to the number of values (ranges), if they were present
-* @returns 0 on success, negative number on error,
+* @returns 0 on success, negative number on error
 */
 BOTAN_FFI_EXPORT(3, 12)
-int botan_x509_ext_ip_addr_blocks_get_family(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
-                                             int ipv6,
-                                             size_t i,
-                                             int* has_safi,
-                                             uint8_t* safi,
-                                             int* present,
-                                             size_t* count);
+int botan_x509_ext_ip_addr_blocks_get_family(
+   botan_x509_cert_t cert, int ipv6, size_t i, int* has_safi, uint8_t* safi, int* present, size_t* count);
 
 /**
 * Get info about a specific range in the extension
@@ -2748,37 +2729,21 @@ int botan_x509_ext_ip_addr_blocks_get_family(botan_x509_ext_ip_addr_blocks_t ip_
 * @param min_out is set to the lower address of the range
 * @param max_out is set to the upper address of the range
 * @param out_len is set to the length of the addresses (4 for IPv4, 16 for IPv6)
+* @returns 0 on sucess, negative number on error
 */
 BOTAN_FFI_EXPORT(3, 12)
-int botan_x509_ext_ip_addr_blocks_get_address(botan_x509_ext_ip_addr_blocks_t ip_addr_blocks,
-                                              int ipv6,
-                                              size_t i,
-                                              size_t entry,
-                                              uint8_t min_out[],
-                                              uint8_t max_out[],
-                                              size_t* out_len);
-
-typedef struct botan_x509_ext_as_blocks_struct* botan_x509_ext_as_blocks_t;
-
-BOTAN_FFI_EXPORT(3, 12)
-int botan_x509_ext_as_blocks_destroy(botan_x509_ext_as_blocks_t as_blocks);
-
-/**
-* Get the AS Blocks extension from a certificate
-* @returns 0 on success, a negative number on error, e.g. when the certificate does not contain the extension
-*/
-BOTAN_FFI_EXPORT(3, 12)
-int botan_x509_ext_as_blocks_create_from_cert(botan_x509_ext_as_blocks_t* as_blocks, botan_x509_cert_t cert);
+int botan_x509_ext_ip_addr_blocks_get_address(
+   botan_x509_cert_t cert, int ipv6, size_t i, size_t entry, uint8_t min_out[], uint8_t max_out[], size_t* out_len);
 
 /**
 * Get basic info about the AS Blocks extension
 * @param asnum must be set to 1 to get info about AS numbers, 0 for RDIs (the type)
 * @param present is set to 1 if the extension contains entries for the type, 0 if it is marked as "inherit"
 * @param count is set to number of entries for this type, if it was present
-* @returns 0 on success, negative number on error. If the type is not present at all, return `BOTAN_FFI_ERROR_NO_VALUE`.
+* @returns 0 on success, negative number on error
 */
 BOTAN_FFI_EXPORT(3, 12)
-int botan_x509_ext_as_blocks_get_info(botan_x509_ext_as_blocks_t as_blocks, int asnum, int* present, size_t* count);
+int botan_x509_ext_as_blocks_get_info(botan_x509_cert_t cert, int asnum, int* present, size_t* count);
 
 /**
 * Get a specific entry from the extension
@@ -2786,10 +2751,10 @@ int botan_x509_ext_as_blocks_get_info(botan_x509_ext_as_blocks_t as_blocks, int 
 * @param i The index of the entry to get
 * @param min is set to the min value of the range
 * @param max is set to the max value of the range
+* @returns 0 on success, negative number on error
 */
 BOTAN_FFI_EXPORT(3, 12)
-int botan_x509_ext_as_blocks_get_entry_at(
-   botan_x509_ext_as_blocks_t as_blocks, int asnum, size_t i, uint32_t* min, uint32_t* max);
+int botan_x509_ext_as_blocks_get_entry_at(botan_x509_cert_t cert, int asnum, size_t i, uint32_t* min, uint32_t* max);
 
 /*
 * X.509 CRL

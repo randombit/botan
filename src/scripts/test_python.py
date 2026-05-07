@@ -991,14 +991,16 @@ ofvkP1EDmpx50fHLawIDAQAB
         no_ext_cert = botan.X509Cert(filename=test_data("src/tests/data/x509/x509test/root.pem"))
 
         with self.assertRaisesRegex(botan.BotanException, r".*No value available.*"):
-            no_ext_cert.ext_as_blocks()
+            no_ext_cert.ext_as_blocks_asnum()
+
+        with self.assertRaisesRegex(botan.BotanException, r".*No value available.*"):
+            no_ext_cert.ext_as_blocks_rdi()
 
         with self.assertRaisesRegex(botan.BotanException, r".*No value available.*"):
             no_ext_cert.ext_ip_addr_blocks()
 
         ip_addr_blocks_cert = botan.X509Cert(filename=test_data("src/tests/data/x509/x509test/IPAddrBlocksUnsorted.pem"))
-        ip_addr_blocks = ip_addr_blocks_cert.ext_ip_addr_blocks()
-        v4, v6 = ip_addr_blocks.addresses()
+        v4, v6 = ip_addr_blocks_cert.ext_ip_addr_blocks()
 
         self.assertEqual(v4, [
             (None, None),
@@ -1013,10 +1015,11 @@ ofvkP1EDmpx50fHLawIDAQAB
             (1, None)
         ])
         as_blocks_cert = botan.X509Cert(filename=test_data("src/tests/data/x509/x509test/ASNumberInherit.pem"))
-        as_blocks = as_blocks_cert.ext_as_blocks()
+        asnum = as_blocks_cert.ext_as_blocks_asnum()
+        rdi = as_blocks_cert.ext_as_blocks_rdi()
 
-        self.assertEqual(as_blocks.asnum(), None)
-        self.assertEqual(as_blocks.rdi(), [(0, 4294967295)])
+        self.assertEqual(asnum, None)
+        self.assertEqual(rdi, [(0, 4294967295)])
 
     def test_crls(self):
         rng = botan.RandomNumberGenerator()

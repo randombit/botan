@@ -1724,13 +1724,9 @@ class FFI_Cert_ExtRFC3779_Test final : public FFI_Test {
             return;
          }
 
-         botan_x509_ext_ip_addr_blocks_t ip_addr_blocks;
-         TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_create_from_cert, (&ip_addr_blocks, ip_addr_blocks_cert));
-         TEST_FFI_OK(botan_x509_cert_destroy, (ip_addr_blocks_cert));
-
          size_t v4_count;
          size_t v6_count;
-         TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_get_counts, (ip_addr_blocks, &v4_count, &v6_count));
+         TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_get_counts, (ip_addr_blocks_cert, &v4_count, &v6_count));
          result.test_sz_eq("V4 count is correct", v4_count, 3);
          result.test_sz_eq("V6 count is correct", v6_count, 2);
 
@@ -1741,17 +1737,17 @@ class FFI_Cert_ExtRFC3779_Test final : public FFI_Test {
 
          TEST_FFI_RC(BOTAN_FFI_ERROR_BAD_PARAMETER,
                      botan_x509_ext_ip_addr_blocks_get_family,
-                     (ip_addr_blocks, 1, 2, &has_safi, &safi, &present, &count));
+                     (ip_addr_blocks_cert, 1, 2, &has_safi, &safi, &present, &count));
 
          TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_get_family,
-                     (ip_addr_blocks, 0, 2, &has_safi, &safi, &present, &count));
+                     (ip_addr_blocks_cert, 0, 2, &has_safi, &safi, &present, &count));
 
          result.test_is_true("Family has a SAFI", has_safi == 1);
          result.test_u8_eq("SAFI is correct", safi, 2);
          result.test_is_true("Family is marked as inherit", present == 0);
 
          TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_get_family,
-                     (ip_addr_blocks, 0, 1, &has_safi, &safi, &present, &count));
+                     (ip_addr_blocks_cert, 0, 1, &has_safi, &safi, &present, &count));
 
          result.test_is_true("Family has a SAFI", has_safi == 1);
          result.test_u8_eq("SAFI is correct", safi, 1);
@@ -1763,49 +1759,64 @@ class FFI_Cert_ExtRFC3779_Test final : public FFI_Test {
          size_t out_len = 4;
 
          TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_get_address,
-                     (ip_addr_blocks, 0, 1, 0, min_addr.data(), max_addr.data(), &out_len));
+                     (ip_addr_blocks_cert, 0, 1, 0, min_addr.data(), max_addr.data(), &out_len));
 
          result.test_bin_eq("Min address is correct", min_addr, "C0A80000");
          result.test_bin_eq("Max address is correct", max_addr, "C8000000");
 
          TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE,
                      botan_x509_ext_ip_addr_blocks_get_address,
-                     (ip_addr_blocks, 0, 1, 1, min_addr.data(), max_addr.data(), &out_len));
+                     (ip_addr_blocks_cert, 0, 1, 1, min_addr.data(), max_addr.data(), &out_len));
 
          TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE,
                      botan_x509_ext_ip_addr_blocks_get_address,
-                     (ip_addr_blocks, 0, 6, 0, min_addr.data(), max_addr.data(), &out_len));
+                     (ip_addr_blocks_cert, 0, 6, 0, min_addr.data(), max_addr.data(), &out_len));
 
-         TEST_FFI_OK(botan_x509_ext_ip_addr_blocks_destroy, (ip_addr_blocks));
+         TEST_FFI_OK(botan_x509_cert_destroy, (ip_addr_blocks_cert));
 
          botan_x509_cert_t as_blocks_cert;
          TEST_FFI_OK(botan_x509_cert_load_file,
                      (&as_blocks_cert, Test::data_file("x509/x509test/ASNumberOnly.pem").c_str()));
 
-         botan_x509_ext_as_blocks_t as_blocks;
-         TEST_FFI_OK(botan_x509_ext_as_blocks_create_from_cert, (&as_blocks, as_blocks_cert));
-         TEST_FFI_OK(botan_x509_cert_destroy, (as_blocks_cert));
-
-         TEST_FFI_OK(botan_x509_ext_as_blocks_get_info, (as_blocks, 1, &present, &count));
+         TEST_FFI_OK(botan_x509_ext_as_blocks_get_info, (as_blocks_cert, 1, &present, &count));
          result.test_is_true("AS numbers are present", present == 1);
          result.test_sz_eq("Correct number of AS ranges are present", count, 1);
 
-         TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE, botan_x509_ext_as_blocks_get_info, (as_blocks, 0, &present, &count));
+         TEST_FFI_RC(
+            BOTAN_FFI_ERROR_NO_VALUE, botan_x509_ext_as_blocks_get_info, (as_blocks_cert, 0, &present, &count));
 
          uint32_t min_as;
          uint32_t max_as;
 
-         TEST_FFI_OK(botan_x509_ext_as_blocks_get_entry_at, (as_blocks, 1, 0, &min_as, &max_as));
+         TEST_FFI_OK(botan_x509_ext_as_blocks_get_entry_at, (as_blocks_cert, 1, 0, &min_as, &max_as));
          result.test_u32_eq("Min AS number is correct", min_as, 0);
          result.test_u32_eq("Max AS number is correct", max_as, 4294967295);
 
-         TEST_FFI_RC(
-            BOTAN_FFI_ERROR_OUT_OF_RANGE, botan_x509_ext_as_blocks_get_entry_at, (as_blocks, 1, 1, &min_as, &max_as));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_OUT_OF_RANGE,
+                     botan_x509_ext_as_blocks_get_entry_at,
+                     (as_blocks_cert, 1, 1, &min_as, &max_as));
 
          TEST_FFI_RC(
-            BOTAN_FFI_ERROR_NO_VALUE, botan_x509_ext_as_blocks_get_entry_at, (as_blocks, 0, 0, &min_as, &max_as));
+            BOTAN_FFI_ERROR_NO_VALUE, botan_x509_ext_as_blocks_get_entry_at, (as_blocks_cert, 0, 0, &min_as, &max_as));
 
-         TEST_FFI_OK(botan_x509_ext_as_blocks_destroy, (as_blocks));
+         TEST_FFI_OK(botan_x509_cert_destroy, (as_blocks_cert));
+
+         botan_x509_cert_t no_ext_cert;
+         TEST_FFI_OK(botan_x509_cert_load_file, (&no_ext_cert, Test::data_file("x509/x509test/root.pem").c_str()));
+         TEST_FFI_RC(
+            BOTAN_FFI_ERROR_NO_VALUE, botan_x509_ext_ip_addr_blocks_get_counts, (no_ext_cert, &v4_count, &v6_count));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE,
+                     botan_x509_ext_ip_addr_blocks_get_family,
+                     (no_ext_cert, 0, 0, &has_safi, &safi, &present, &count));
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE,
+                     botan_x509_ext_ip_addr_blocks_get_address,
+                     (no_ext_cert, 0, 0, 0, min_addr.data(), max_addr.data(), &out_len));
+
+         TEST_FFI_RC(BOTAN_FFI_ERROR_NO_VALUE, botan_x509_ext_as_blocks_get_info, (no_ext_cert, 0, &present, &count));
+         TEST_FFI_RC(
+            BOTAN_FFI_ERROR_NO_VALUE, botan_x509_ext_as_blocks_get_entry_at, (no_ext_cert, 0, 0, &min_as, &max_as));
+
+         TEST_FFI_OK(botan_x509_cert_destroy, (no_ext_cert));
       }
 };
    #endif
