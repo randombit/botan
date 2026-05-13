@@ -1,0 +1,11 @@
+<defines>
+DNS_NAME -> 20260512
+</defines>
+
+<module_info>
+name -> "DNS name"
+</module_info>
+
+<header:public>
+dns_name.h
+</header:public>

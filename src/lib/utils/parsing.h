@@ -97,13 +97,6 @@ std::string tolower_string(std::string_view str);
 BOTAN_TEST_API
 bool host_wildcard_match(std::string_view wildcard, std::string_view host);
 
-/**
-* If name is a valid DNS name, return it canonicalized
-*
-* Otherwise throws Decoding_Error
-*/
-BOTAN_TEST_API std::string check_and_canonicalize_dns_name(std::string_view name);
-
 }  // namespace Botan
 
 #endif
