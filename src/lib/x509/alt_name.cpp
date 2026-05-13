@@ -191,43 +191,41 @@ void AlternativeName::decode_from(BER_Decoder& source) {
 
          OID oid;
          othername.decode(oid);
-         if(othername.more_items()) {
-            const BER_Object othername_value_outer = othername.get_next_object();
-            othername.verify_end();
+         const BER_Object othername_value_outer = othername.get_next_object();
+         othername.verify_end();
 
-            if(!othername_value_outer.is_a(0, ASN1_Class::ExplicitContextSpecific)) {
-               throw Decoding_Error("Invalid tags on otherName value");
+         if(!othername_value_outer.is_a(0, ASN1_Class::ExplicitContextSpecific)) {
+            throw Decoding_Error("Invalid tags on otherName value");
+         }
+
+         BER_Decoder othername_value_inner(othername_value_outer, names.limits());
+
+         const BER_Object value = othername_value_inner.get_next_object();
+         othername_value_inner.verify_end();
+
+         // Capture the inner ANY value verbatim so applications can retrieve
+         // it regardless of its ASN.1 form.
+         std::vector<uint8_t> raw_value;
+         DER_Encoder(raw_value).add_object(value.type_tag(), value.class_tag(), value.data());
+         m_other_name_values.insert(OtherNameValue{oid, std::move(raw_value)});
+
+         // Populate old string view for compatibility
+         if(ASN1_String::is_string_type(value.type()) && value.get_class() == ASN1_Class::Universal) {
+            try {
+               m_othernames.insert(std::make_pair(oid, ASN1_String(ASN1::to_string(value), value.type())));
+            } catch(const Invalid_Argument&) {  // NOLINT(*-empty-catch)
             }
+         }
 
-            BER_Decoder othername_value_inner(othername_value_outer, names.limits());
-
-            const BER_Object value = othername_value_inner.get_next_object();
-            othername_value_inner.verify_end();
-
-            // Capture the inner ANY value verbatim so applications can retrieve
-            // it regardless of its ASN.1 form.
-            std::vector<uint8_t> raw_value;
-            DER_Encoder(raw_value).add_object(value.type_tag(), value.class_tag(), value.data());
-            m_other_name_values.insert(OtherNameValue{oid, std::move(raw_value)});
-
-            // Populate old string view for compatibility
-            if(ASN1_String::is_string_type(value.type()) && value.get_class() == ASN1_Class::Universal) {
-               try {
-                  m_othernames.insert(std::make_pair(oid, ASN1_String(ASN1::to_string(value), value.type())));
-               } catch(const Invalid_Argument&) {  // NOLINT(*-empty-catch)
-               }
+         if(oid == OID::from_string("PKIX.SmtpUTF8Mailbox")) {
+            if(!value.is_a(ASN1_Type::Utf8String, ASN1_Class::Universal)) {
+               throw Decoding_Error("SmtpUTF8Mailbox otherName must contain a UTF8String");
             }
-
-            if(oid == OID::from_string("PKIX.SmtpUTF8Mailbox")) {
-               if(!value.is_a(ASN1_Type::Utf8String, ASN1_Class::Universal)) {
-                  throw Decoding_Error("SmtpUTF8Mailbox otherName must contain a UTF8String");
-               }
-               auto parsed_mailbox = SmtpUtf8Mailbox::from_string(ASN1::to_string(value));
-               if(!parsed_mailbox.has_value()) {
-                  throw Decoding_Error("Invalid SmtpUTF8Mailbox encoding");
-               }
-               m_smtp_utf8_mailboxes.insert(std::move(*parsed_mailbox));
+            auto parsed_mailbox = SmtpUtf8Mailbox::from_string(ASN1::to_string(value));
+            if(!parsed_mailbox.has_value()) {
+               throw Decoding_Error("Invalid SmtpUTF8Mailbox encoding");
             }
+            m_smtp_utf8_mailboxes.insert(std::move(*parsed_mailbox));
          }
       } else if(obj.is_a(1, ASN1_Class::ContextSpecific)) {
          add_email(ASN1::to_string(obj));
