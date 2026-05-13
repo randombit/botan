@@ -8,6 +8,7 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
@@ -231,11 +232,21 @@ void AlternativeName::decode_from(BER_Decoder& source) {
          add_email(ASN1::to_string(obj));
       } else if(obj.is_a(2, ASN1_Class::ContextSpecific)) {
          add_dns(ASN1::to_string(obj));
+      } else if(obj.is_a(3, ASN1_Class::ContextSpecific | ASN1_Class::Constructed)) {
+         // x400Address not supported but it is a SEQUENCE so we know it cannot be empty
+         if(obj.length() == 0) {
+            throw Decoding_Error("Invalid x400Address field");
+         }
       } else if(obj.is_a(4, ASN1_Class::ContextSpecific | ASN1_Class::Constructed)) {
          BER_Decoder dec(obj, names.limits());
          X509_DN dn;
          dec.decode(dn).verify_end();
          this->add_dn(dn);
+      } else if(obj.is_a(5, ASN1_Class::ContextSpecific | ASN1_Class::Constructed)) {
+         // ediPartyName not supported but it is a SEQUENCE so we know it cannot be empty
+         if(obj.length() == 0) {
+            throw Decoding_Error("Invalid ediPartyName field");
+         }
       } else if(obj.is_a(6, ASN1_Class::ContextSpecific)) {
          this->add_uri(ASN1::to_string(obj));
       } else if(obj.is_a(7, ASN1_Class::ContextSpecific)) {
@@ -253,6 +264,10 @@ void AlternativeName::decode_from(BER_Decoder& source) {
          OID oid;
          names.decode_implicit(obj, oid, ASN1_Type::ObjectId, ASN1_Class::Universal);
          this->add_registered_id(oid);
+      } else {
+         throw Decoding_Error(fmt("Unknown GeneralName tag {}/class {}",
+                                  static_cast<uint32_t>(obj.type_tag()),
+                                  static_cast<uint32_t>(obj.class_tag())));
       }
    }
 }
