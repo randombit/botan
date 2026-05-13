@@ -1,0 +1,11 @@
+<internal_defines>
+PCURVES_BRAINPOOL384T1 -> 20260430
+</internal_defines>
+
+<module_info>
+name -> "PCurve brainpool384t1"
+</module_info>
+
+<requires>
+pcurves_impl
+</requires>
