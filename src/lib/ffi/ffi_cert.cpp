@@ -41,19 +41,19 @@ namespace {
  *       count_general_names_in() must be updated accordingly!
  */
 std::optional<Botan::GeneralName> extract_general_name_at(const Botan::AlternativeName& altnames, size_t index) {
-   if(index < altnames.email().size()) {
-      auto itr = altnames.email().begin();
+   if(index < altnames.email_addresses().size()) {
+      auto itr = altnames.email_addresses().begin();
       std::advance(itr, index);
-      return Botan::GeneralName::email(*itr);
+      return Botan::GeneralName::email(itr->to_string());
    }
-   index -= altnames.email().size();
+   index -= altnames.email_addresses().size();
 
-   if(index < altnames.dns().size()) {
-      auto itr = altnames.dns().begin();
+   if(index < altnames.dns_names().size()) {
+      auto itr = altnames.dns_names().begin();
       std::advance(itr, index);
-      return Botan::GeneralName::dns(*itr);
+      return Botan::GeneralName::_dns_san_value(itr->to_string());
    }
-   index -= altnames.dns().size();
+   index -= altnames.dns_names().size();
 
    if(index < altnames.directory_names().size()) {
       auto itr = altnames.directory_names().begin();
@@ -62,12 +62,12 @@ std::optional<Botan::GeneralName> extract_general_name_at(const Botan::Alternati
    }
    index -= altnames.directory_names().size();
 
-   if(index < altnames.uris().size()) {
-      auto itr = altnames.uris().begin();
+   if(index < altnames.uri_names().size()) {
+      auto itr = altnames.uri_names().begin();
       std::advance(itr, index);
-      return Botan::GeneralName::uri(*itr);
+      return Botan::GeneralName::_uri_san_value(itr->original_input());
    }
-   index -= altnames.uris().size();
+   index -= altnames.uri_names().size();
 
    if(index < altnames.ipv4_address().size()) {
       auto itr = altnames.ipv4_address().begin();
@@ -93,8 +93,8 @@ std::optional<Botan::GeneralName> extract_general_name_at(const Botan::Alternati
  *       extract_general_name_at() must be updated accordingly!
  */
 size_t count_general_names_in(const Botan::AlternativeName& alt_names) {
-   return alt_names.email().size() + alt_names.dns().size() + alt_names.directory_names().size() +
-          alt_names.uris().size() + alt_names.ipv4_address().size() + alt_names.ipv6_address().size();
+   return alt_names.email_addresses().size() + alt_names.dns_names().size() + alt_names.directory_names().size() +
+          alt_names.uri_names().size() + alt_names.ipv4_address().size() + alt_names.ipv6_address().size();
 }
 
 std::optional<botan_x509_general_name_types> to_botan_x509_general_name_types(Botan::GeneralName::NameType gn_type) {
@@ -373,7 +373,7 @@ int botan_x509_cert_view_string_values(botan_x509_cert_t cert,
 
       const auto& dps = crl_dp_ext->distribution_points();
       for(size_t i = idx; const auto& dp : dps) {
-         const auto& uris = dp.point().uris();
+         const auto& uris = dp.point().uri_names();
          if(i >= uris.size()) {
             i -= uris.size();
             continue;
@@ -381,7 +381,7 @@ int botan_x509_cert_view_string_values(botan_x509_cert_t cert,
 
          auto itr = uris.begin();
          std::advance(itr, i);
-         return invoke_view_callback(view_fn, ctx, *itr);
+         return invoke_view_callback(view_fn, ctx, itr->original_input());
       }
 
       return BOTAN_FFI_ERROR_OUT_OF_RANGE;

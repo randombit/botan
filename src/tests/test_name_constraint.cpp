@@ -9,230 +9,102 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    #include <botan/ber_dec.h>
+   #include <botan/data_src.h>
    #include <botan/pkix_types.h>
    #include <botan/x509cert.h>
    #include <botan/x509path.h>
    #include <botan/internal/calendar.h>
+   #include <botan/internal/x509_utils.h>
+   #include <algorithm>
+   #include <fstream>
 #endif
 
 namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EMSA_PKCS1) && \
+#if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_ECDSA) && defined(BOTAN_HAS_SHA2_32) && \
    defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
-class Name_Constraint_Tests final : public Test {
+class Name_Constraint_Validation_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
-         const std::vector<std::tuple<std::string, std::string, std::string, std::string>> test_cases = {
-            std::make_tuple("Root_Email_Name_Constraint.crt",
-                            "Invalid_Email_Name_Constraint.crt",
-                            "",
-                            "Certificate does not pass name constraint"),
-            std::make_tuple("Root_DN_Name_Constraint.crt",
-                            "Invalid_DN_Name_Constraint.crt",
-                            "",
-                            "Certificate does not pass name constraint"),
-            std::make_tuple("Root_DN_Name_Constraint.crt", "Valid_DN_Name_Constraint.crt", "", "Verified"),
-            std::make_tuple(
-               "Root_DNS_Name_Constraint.crt", "Valid_DNS_Name_Constraint.crt", "aexample.com", "Verified"),
-            std::make_tuple("Root_IP_Name_Constraint.crt", "Valid_IP_Name_Constraint.crt", "", "Verified"),
-            std::make_tuple("Root_IP_Name_Constraint.crt",
-                            "Invalid_IP_Name_Constraint.crt",
-                            "",
-                            "Certificate does not pass name constraint"),
-         };
          std::vector<Test::Result> results;
-         const Botan::Path_Validation_Restrictions restrictions(false, 80);
 
-         const std::chrono::system_clock::time_point validation_time =
-            Botan::calendar_point(2016, 10, 21, 4, 20, 0).to_std_timepoint();
-
-         for(const auto& t : test_cases) {
-            const Botan::X509_Certificate root(Test::data_file("x509/name_constraint/" + std::get<0>(t)));
-            const Botan::X509_Certificate sub(Test::data_file("x509/name_constraint/" + std::get<1>(t)));
-            Botan::Certificate_Store_In_Memory trusted;
-            Test::Result result("X509v3 Name Constraints: " + std::get<1>(t));
-
-            trusted.add_certificate(root);
-            Botan::Path_Validation_Result path_result = Botan::x509_path_validate(
-               sub, restrictions, trusted, std::get<2>(t), Botan::Usage_Type::TLS_SERVER_AUTH, validation_time);
-
-            if(path_result.successful_validation() && path_result.trust_root() != root) {
-               path_result = Botan::Path_Validation_Result(Botan::Certificate_Status_Code::CANNOT_ESTABLISH_TRUST);
-            }
-
-            result.test_str_eq("validation result", path_result.result_string(), std::get<3>(t));
-            results.emplace_back(result);
-         }
-
-         return results;
-      }
-};
-
-BOTAN_REGISTER_TEST("x509", "x509_path_name_constraint", Name_Constraint_Tests);
-
-// Verify that DNS constraints are case-insensitive also when falling back to the CN
-class Name_Constraint_Excluded_CN_Case_Test final : public Test {
-   public:
-      std::vector<Test::Result> run() override {
-         Test::Result result("X509v3 Name Constraints: excluded DNS with mixed-case CN and no SAN");
-
-         const Botan::X509_Certificate root(
-            Test::data_file("x509/name_constraint/Root_DNS_Excluded_Mixed_Case_CN.crt"));
-         const Botan::X509_Certificate leaf(
-            Test::data_file("x509/name_constraint/Invalid_DNS_Excluded_Mixed_Case_CN.crt"));
-
-         Botan::Certificate_Store_In_Memory trusted;
-         trusted.add_certificate(root);
-
-         const Botan::Path_Validation_Restrictions restrictions(false, 80);
-         const auto validation_time = Botan::calendar_point(2026, 6, 1, 0, 0, 0).to_std_timepoint();
-
-         const auto path_result = Botan::x509_path_validate(
-            leaf, restrictions, trusted, "" /* hostname */, Botan::Usage_Type::UNSPECIFIED, validation_time);
-
-         result.test_str_eq(
-            "validation result", path_result.result_string(), "Certificate does not pass name constraint");
-
-         return {result};
-      }
-};
-
-BOTAN_REGISTER_TEST("x509", "x509_name_constraint_excluded_cn_case", Name_Constraint_Excluded_CN_Case_Test);
-
-class Name_Constraint_Empty_Subject_Test final : public Test {
-   public:
-      std::vector<Test::Result> run() override {
          /*
-         - `root.pem`:
-              Self-signed CA, `O=Acme NC Root, C=US`
-         - `intermediate.pem`:
-              CA signed by root, `O=Acme NC Intermediate, C=US`, critical `nameConstraints` with
-              `permittedSubtrees: [directoryName=O=Acme, C=US]`
-         - `leaf.pem`:
-              End-entity signed by the intermediate, empty subject DN and critical SAN
-              `directoryName=CN=server, O=Acme, C=US`
+         * Each test is a single PEM file containing the chain leaf-first (leaf,
+         * intermediates...), the trust anchor is shared as root.pem, and expected.txt
+         * maps test-name to the Path_Validation_Result::result_string() output.
          */
-         Test::Result result("X509v3 Name Constraints: empty subject + SAN directoryName inside permittedSubtrees");
+         const std::string base = "x509/name_constraints/";
+         const auto expected = read_manifest(Test::data_file(base + "expected.txt"));
 
-         const Botan::X509_Certificate root(Test::data_file("x509/name_constraint_empty_subject/root.pem"));
-         const Botan::X509_Certificate intermediate(
-            Test::data_file("x509/name_constraint_empty_subject/intermediate.pem"));
-         const Botan::X509_Certificate leaf(Test::data_file("x509/name_constraint_empty_subject/leaf.pem"));
+         const Botan::X509_Certificate trust_anchor(Test::data_file(base + "root.pem"));
 
-         result.test_is_true("Leaf subject DN is empty", leaf.subject_dn().empty());
-         result.test_sz_eq("Leaf SAN has one directoryName entry", leaf.subject_alt_name().directory_names().size(), 1);
+         const auto when = Botan::calendar_point(2027, 1, 1, 0, 0, 0).to_std_timepoint();
 
-         Botan::Certificate_Store_In_Memory trusted;
-         trusted.add_certificate(root);
+         const Botan::Path_Validation_Restrictions restrictions(false, 128);
 
-         const std::vector<Botan::X509_Certificate> chain{leaf, intermediate};
-         const Botan::Path_Validation_Restrictions restrictions(false, 80);
-         const auto validation_time = Botan::calendar_point(2027, 1, 1, 0, 0, 0).to_std_timepoint();
+         for(const auto& [name, expected_result] : expected) {
+            Test::Result result("Name constraints test " + name);
 
-         const auto path_result = Botan::x509_path_validate(
-            chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
+            Botan::Certificate_Store_In_Memory store;
+            store.add_certificate(trust_anchor);
 
-         result.test_str_eq("validation result", path_result.result_string(), "Verified");
-
-         return {result};
-      }
-};
-
-BOTAN_REGISTER_TEST("x509", "x509_name_constraint_empty_subject", Name_Constraint_Empty_Subject_Test);
-
-class Name_Constraint_IPv6_Chain_Tests final : public Test {
-   public:
-      std::vector<Test::Result> run() override {
-         struct Case {
-               std::string label;
-               std::string dir;
-               std::vector<std::string> intermediates;
-               std::string leaf;
-               bool accept;
-         };
-
-         const std::vector<Case> cases = {
-            // IPv6 permittedSubtree 2001:db8::/32
-            {"IPv6 permit: SAN inside subtree", "permitted", {}, "leaf_valid.pem", true},
-            {"IPv6 permit: SAN outside subtree", "permitted", {}, "leaf_invalid.pem", false},
-
-            // IPv6 excludedSubtree 2001:db8::/32
-            {"IPv6 exclude: SAN outside subtree", "excluded", {}, "leaf_valid.pem", true},
-            {"IPv6 exclude: SAN inside subtree", "excluded", {}, "leaf_invalid.pem", false},
-
-            // Root permits only IPv4 10.0.0.0/8, so an IPv6 SAN must be rejected
-            // because iPAddress is a single GeneralName form (RFC 5280 4.2.1.10).
-            {"IPv4-only permit: IPv4 SAN", "cross_v4only", {}, "leaf_valid.pem", true},
-            {"IPv4-only permit: IPv6 SAN", "cross_v4only", {}, "leaf_invalid.pem", false},
-
-            // Similar to previous - root permits only IPv6 2001:db8::/32 so IPv4 must be rejected
-            {"IPv6-only permit: IPv6 SAN", "cross_v6only", {}, "leaf_valid.pem", true},
-            {"IPv6-only permit: IPv4 SAN", "cross_v6only", {}, "leaf_invalid.pem", false},
-
-            // Constraints across multiple issuers
-            // - root permits {10/8, 2001:db8::/32}
-            // - intermediate narrows permits to {10.1/16, 2001:db8:cafe::/48} and excludes
-            //   {10.1.99/24, 2001:db8:cafe:bad::/64}.
-            //
-            // Every leaf has one IPv4 and one IPv6 SAN
-            {"Mixed v4+v6: all SANs in range", "mixed_multi", {"int.pem"}, "leaf_valid.pem", true},
-            {"Mixed v4+v6: IPv4 outside int permit", "mixed_multi", {"int.pem"}, "leaf_invalid_int_v4.pem", false},
-            {"Mixed v4+v6: IPv6 outside int permit", "mixed_multi", {"int.pem"}, "leaf_invalid_int_v6.pem", false},
-            {"Mixed v4+v6: IPv4 hits int exclude", "mixed_multi", {"int.pem"}, "leaf_invalid_excl_v4.pem", false},
-            {"Mixed v4+v6: IPv6 hits int exclude", "mixed_multi", {"int.pem"}, "leaf_invalid_excl_v6.pem", false},
-            {"Mixed v4+v6: IPv4 outside root permit", "mixed_multi", {"int.pem"}, "leaf_invalid_root_v4.pem", false},
-            {"Mixed v4+v6: IPv6 outside root permit", "mixed_multi", {"int.pem"}, "leaf_invalid_root_v6.pem", false},
-
-            // Here the root excludes IPv4 10.0.0.0/8 and the leaf certs have IPv6 SAN; the
-            // invalid leaf has a IPv4-mapped IPv6 address matching 10.0.0.0/8 while the valid leaf
-            // has some other IPv6 address which is not excluded
-            {"v4 exclude: mapped-v6 SAN inside v4 excl", "v4_exclude_mapped", {}, "leaf_invalid.pem", false},
-            {"v4 exclude: mapped-v6 SAN outside v4 excl", "v4_exclude_mapped", {}, "leaf_valid.pem", true},
-
-            // Here the root permits only IPv4 10.0.0.0/8. The invalid leaf has an IPv6 address in the SAN
-            // which should be rejected as not being in the range. The 'valid' leaf is a questionable case: it
-            // has an IPv6 SAN which is an IPv4-mapped IPv6 address inside 10.0.0.0/8. Arguably it really is
-            // valid; RFC 5280 is silent on the issue. But lacking a clear consensus, it is rejected for now.
-            {"v4 permit: mapped-v6 SAN inside v4 permit", "v4_permit_mapped", {}, "leaf_valid.pem", false},
-            {"v4 permit: mapped-v6 SAN outside v4 permit", "v4_permit_mapped", {}, "leaf_invalid.pem", false},
-         };
-
-         const Botan::Path_Validation_Restrictions restrictions(false, 80);
-
-         const auto validation_time = Botan::calendar_point(2027, 4, 22, 20, 0, 0).to_std_timepoint();
-
-         std::vector<Test::Result> results;
-         for(const auto& c : cases) {
-            const std::string base = "x509/name_constraint_ipv6/" + c.dir + "/";
-            const Botan::X509_Certificate root(Test::data_file(base + "root.pem"));
-            const Botan::X509_Certificate leaf(Test::data_file(base + c.leaf));
-
-            std::vector<Botan::X509_Certificate> chain{leaf};
-            for(const auto& intermediate_file : c.intermediates) {
-               chain.emplace_back(Test::data_file(base + intermediate_file));
+            const auto chain = load_chain(Test::data_file(base + name + ".pem"));
+            if(chain.empty()) {
+               result.test_failure("No certs found in " + name + ".pem");
+               results.emplace_back(std::move(result));
+               continue;
             }
 
-            Botan::Certificate_Store_In_Memory trusted;
-            trusted.add_certificate(root);
+            const std::string hostname;
 
-            const auto pv = Botan::x509_path_validate(
-               chain, restrictions, trusted, "" /* hostname */, Botan::Usage_Type::UNSPECIFIED, validation_time);
+            const auto pv =
+               Botan::x509_path_validate(chain, restrictions, store, hostname, Botan::Usage_Type::UNSPECIFIED, when);
 
-            Test::Result result("X509v3 Name Constraints (IPv6 chains): " + c.label);
-
-            const std::string expected = c.accept ? "Verified" : "Certificate does not pass name constraint";
-            result.test_str_eq("path validation result", pv.result_string(), expected);
+            result.test_str_eq("validation result", pv.result_string(), expected_result);
             results.emplace_back(std::move(result));
          }
 
          return results;
       }
+
+   private:
+      // Read all certificates from a PEM bundle in file order (leaf first).
+      static std::vector<Botan::X509_Certificate> load_chain(const std::string& filename) {
+         Botan::DataSource_Stream in(filename);
+         std::vector<Botan::X509_Certificate> certs;
+         while(!in.end_of_data()) {
+            try {
+               certs.emplace_back(in);
+            } catch(const Botan::Decoding_Error&) {
+               break;
+            }
+         }
+         return certs;
+      }
+
+      // Parse `<chain-name>:<result>` lines; ignore blanks and `#` comments.
+      static std::vector<std::pair<std::string, std::string>> read_manifest(const std::string& path) {
+         std::vector<std::pair<std::string, std::string>> out;
+         std::ifstream in(path);
+         std::string line;
+         while(std::getline(in, line)) {
+            if(line.empty() || line.front() == '#') {
+               continue;
+            }
+            const auto colon = line.find(':');
+            if(colon == std::string::npos) {
+               continue;
+            }
+            out.emplace_back(line.substr(0, colon), line.substr(colon + 1));
+         }
+         return out;
+      }
 };
 
-BOTAN_REGISTER_TEST("x509", "x509_name_constraint_ipv6_chains", Name_Constraint_IPv6_Chain_Tests);
+BOTAN_REGISTER_TEST("x509", "x509_name_constraints", Name_Constraint_Validation_Tests);
 
 /*
 * Validate that GeneralName iPAddress decoding rejects masks that are not a
@@ -287,6 +159,302 @@ class Name_Constraint_IP_Mask_Tests final : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_TEST("x509", "x509_name_constraint_ip_mask", Name_Constraint_IP_Mask_Tests);
+
+/*
+* Strict validation at the constraint-factory boundary: malformed
+* inputs throw, valid inputs are canonicalized (lowercase host,
+* preserve email local-part case).
+*/
+class Name_Constraint_Factory_Validation_Tests final : public Test {
+   private:
+      using FactoryFn = Botan::GeneralName (*)(std::string_view);
+
+      static void check_valid(Test::Result& result,
+                              const std::string& label,
+                              FactoryFn make,
+                              std::string_view input,
+                              std::string_view expected_name) {
+         try {
+            const auto gn = make(input);
+            result.test_str_eq(label + " canonical: " + std::string(input), gn.name(), expected_name);
+         } catch(const std::exception& e) {
+            result.test_failure(label + " rejected valid '" + std::string(input) + "': " + e.what());
+         }
+      }
+
+      static void check_invalid(Test::Result& result,
+                                const std::string& label,
+                                FactoryFn make,
+                                std::string_view input) {
+         try {
+            (void)make(input);
+            result.test_failure(label + " accepted invalid '" + std::string(input) + "'");
+         } catch(const Botan::Invalid_Argument&) {
+            result.test_success(label + " rejected '" + std::string(input) + "'");
+         }
+      }
+
+      static Test::Result test_dns() {
+         Test::Result result("X509v3 Name Constraints: DNS factory validation");
+         const auto m = &Botan::GeneralName::dns;
+         check_valid(result, "DNS", m, "example.com", "example.com");
+         check_valid(result, "DNS", m, "EXAMPLE.com", "example.com");
+         check_valid(result, "DNS", m, "host", "host");
+         check_valid(result, "DNS", m, ".example.com", ".example.com");
+
+         const auto rejected = {"",
+                                ".",
+                                "..example.com",
+                                "example..com",
+                                "example.com.",
+                                "*.example.com",
+                                "host name",
+                                " example.com",
+                                "example.com ",
+                                "_acme-challenge.example.com"};
+
+         for(const auto& bad : rejected) {
+            check_invalid(result, "DNS", m, bad);
+         }
+         return result;
+      }
+
+      static Test::Result test_uri() {
+         Test::Result result("X509v3 Name Constraints: URI factory validation");
+         const auto m = &Botan::GeneralName::uri;
+         check_valid(result, "URI", m, "example.com", "example.com");
+         check_valid(result, "URI", m, ".example.com", ".example.com");
+         check_valid(result, "URI", m, "EXAMPLE.com", "example.com");
+         // RFC 5280 4.2.1.10: "The constraint MUST be specified as a
+         // fully qualified domain name". Single-label hosts and full
+         // URIs are not constraint-shaped; both are rejected.
+         for(const auto& bad : {"",
+                                ".",
+                                "localhost",
+                                ".localhost",
+                                "https://example.com",
+                                "https://example.com/path",
+                                "example.com:443",
+                                "*.example.com",
+                                "example.com.",
+                                "..example.com"}) {
+            check_invalid(result, "URI", m, bad);
+         }
+         return result;
+      }
+
+      static Test::Result test_uri_san_value() {
+         Test::Result result("X509v3 Name Constraints: URI SAN value factory validation");
+         const auto m = &Botan::GeneralName::_uri_san_value;
+         check_valid(result, "URI SAN", m, "https://example.com", "https://example.com");
+         check_valid(result, "URI SAN", m, "https://example.com/path?q=1#frag", "https://example.com/path?q=1#frag");
+         check_valid(result, "URI SAN", m, "HTTPS://Example.COM/", "HTTPS://Example.COM/");
+         check_valid(result, "URI SAN", m, "https://localhost/", "https://localhost/");
+         // Inputs URI::parse rejects (RFC 3986 syntax violations,
+         // constraint-shape values that aren't URIs).
+         for(const auto& bad : {"",
+                                "example.com",
+                                ".example.com",
+                                "not a uri",
+                                "://no.scheme/",
+                                "https://example.com/has space",
+                                "https://user@bad@example.com/",
+                                "https://example.com/%G0"}) {
+            check_invalid(result, "URI SAN", m, bad);
+         }
+         return result;
+      }
+
+      static Test::Result test_dns_san_value() {
+         Test::Result result("X509v3 Name Constraints: DNS SAN value factory validation");
+         const auto m = &Botan::GeneralName::_dns_san_value;
+
+         check_valid(result, "DNS SAN", m, "example.com", "example.com");
+         check_valid(result, "DNS SAN", m, "EXAMPLE.com", "example.com");
+         check_valid(result, "DNS SAN", m, "*.example.com", "*.example.com");
+         check_valid(result, "DNS SAN", m, "foo*.example.com", "foo*.example.com");
+         check_valid(result, "DNS SAN", m, "*bar.example.com", "*bar.example.com");
+
+         for(const auto& bad : {"", ".", "..example.com", "*.*.example.com", "foo.*.example.com", "host name"}) {
+            check_invalid(result, "DNS SAN", m, bad);
+         }
+         return result;
+      }
+
+      static Test::Result test_email() {
+         Test::Result result("X509v3 Name Constraints: email factory validation");
+         const auto m = &Botan::GeneralName::email;
+         // Mailbox form: local-part case-preserved, host lowercased (RFC 5280 7.5).
+         check_valid(result, "Email", m, "Alice@Example.COM", "Alice@example.com");
+         check_valid(result, "Email", m, "user@example.com", "user@example.com");
+         // Host form: bare DNS name.
+         check_valid(result, "Email", m, "example.com", "example.com");
+         // Subtree form: leading dot is preserved.
+         check_valid(result, "Email", m, ".example.com", ".example.com");
+         for(const auto& bad : {"",
+                                "@example.com",
+                                "user@",
+                                "a@b@c",
+                                ".",
+                                "user@example..com",
+                                "user@.example.com",
+                                "user@*.example.com"}) {
+            check_invalid(result, "Email", m, bad);
+         }
+         return result;
+      }
+
+   public:
+      std::vector<Test::Result> run() override {
+         return {test_dns(), test_uri(), test_email(), test_uri_san_value(), test_dns_san_value()};
+      }
+};
+
+BOTAN_REGISTER_TEST("x509", "x509_name_constraint_factory_validation", Name_Constraint_Factory_Validation_Tests);
+
+class Wildcard_Excluded_Subtree_Containment_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("X509v3 Name Constraints: wildcard SAN vs excluded DNS subtree");
+
+         struct Case {
+               std::string pattern;     // SAN wildcard
+               std::string constraint;  // excluded DNS constraint value
+               bool expect_intersect;
+         };
+
+         const std::vector<Case> cases = {
+            // SAN of *.com can expand to evil.com.
+            {"*.com", "evil.com", true},
+            // Leading-dot subtree: *.com can expand to <anything>.com.
+            {"*.com", ".com", true},
+            // Wildcard whose tail equals the constraint: every expansion
+            // is in the subtree.
+            {"*.example.com", "example.com", true},
+            {"*.example.com", ".example.com", true},
+            // Wildcard with extra labels under the constraint: every
+            // expansion is in the subtree.
+            {"*.foo.example.com", "example.com", true},
+            // Partial wildcards in the leftmost label that absorb the
+            // missing labels of the constraint base.
+            {"foo*.example.com", "example.com", true},
+            {"*bar.example.com", "example.com", true},
+            // Non-overlapping suffixes: no expansion in subtree.
+            {"*.example.com", "evil.com", false},
+            {"*.example.com", ".other.com", false},
+            // Wildcard tail shorter than constraint, and leftover prefix
+            // contains a dot - can't be produced by a single-label wildcard.
+            {"*.com", "evil.example.com", false},
+            // Single-label wildcards only match single-label hosts.
+            {"*", "evil.com", false},
+            {"*", "com", true},
+            {"foo*", "foobar", true},
+            // Leading-dot subtree excludes the apex; single-label wildcard
+            // can't reach into it.
+            {"*", ".com", false},
+         };
+
+         for(const auto& c : cases) {
+            const bool got = Botan::wildcard_intersects_excluded_dns_subtree(c.pattern, c.constraint);
+            result.test_bool_eq(c.pattern + " vs " + c.constraint, got, c.expect_intersect);
+         }
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("x509",
+                    "x509_name_constraint_wildcard_excluded_containment",
+                    Wildcard_Excluded_Subtree_Containment_Tests);
+
+class SmtpUTF8Mailbox_Constraint_Match_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("X509v3 Name Constraints: rfc822Name matches SmtpUTF8Mailbox");
+
+         // RFC 9598 Section 6: rfc822Name constraints extend to SmtpUTF8Mailbox
+         // SAN entries. The constraint's local-part (if any) is
+         // ignored; comparison is on the domain part.
+
+         const auto host_constraint = Botan::GeneralName::email("example.com");
+         const auto subtree_constraint = Botan::GeneralName::email(".example.com");
+         const auto mailbox_constraint = Botan::GeneralName::email("alice@example.com");
+
+         const auto mailbox = [](std::string_view s) { return Botan::SmtpUtf8Mailbox::from_string(s).value(); };
+
+         // Host constraint: domain must match exactly.
+         result.test_is_true("host constraint matches identical domain",
+                             host_constraint.matches_email(mailbox("user@example.com")));
+         result.test_is_false("host constraint rejects subdomain",
+                              host_constraint.matches_email(mailbox("user@sub.example.com")));
+         result.test_is_false("host constraint rejects unrelated domain",
+                              host_constraint.matches_email(mailbox("user@evil.com")));
+
+         // Subtree constraint (leading dot): proper subdomains match,
+         // base does not.
+         result.test_is_true("subtree constraint matches subdomain",
+                             subtree_constraint.matches_email(mailbox("user@sub.example.com")));
+         result.test_is_false("subtree constraint rejects apex",
+                              subtree_constraint.matches_email(mailbox("user@example.com")));
+         result.test_is_false("subtree constraint rejects unrelated domain",
+                              subtree_constraint.matches_email(mailbox("user@evil.com")));
+
+         // RFC 9549 deprecates mailbox-form rfc822Name constraints for
+         // SmtpUTF8Mailbox matching: such constraints must not match.
+         result.test_is_false("mailbox constraint does not apply to SmtpUTF8Mailbox",
+                              mailbox_constraint.matches_email(mailbox("alice@example.com")));
+
+         // The reviewer's bypass: a CA permitted to ".example.com" issues
+         // a leaf with SmtpUTF8Mailbox "alice@evil.com". Before the fix
+         // this would slip through; after, the matcher correctly reports
+         // no match, and is_excluded/is_permitted will reject the chain.
+         result.test_is_false("bypass closed: ASCII evil.com against .example.com",
+                              subtree_constraint.matches_email(mailbox("alice@evil.com")));
+         result.test_is_false("bypass closed: UTF-8 local part doesn't change the answer",
+                              subtree_constraint.matches_email(mailbox("\xCE\xB4\xCE\xBF\xCE\xBA\xCE\xB9@evil.com")));
+
+         // Non-email constraints don't match regardless of mailbox.
+         const auto dns_constraint = Botan::GeneralName::dns("example.com");
+         result.test_is_false("DNS constraint doesn't match SmtpUTF8Mailbox",
+                              dns_constraint.matches_email(mailbox("user@example.com")));
+
+         // SmtpUtf8Mailbox::from_string rejects the malformed shapes
+         // we previously had to guard against in the matcher.
+         for(const auto& bad : {"",
+                                "no-at-sign.example.com",
+                                "@example.com",
+                                "alice@",
+                                "a@b@c",
+                                "alice@.example.com",
+                                "alice@example..com",
+                                "alice..bob@example.com",
+                                ".alice@example.com",
+                                // RFC 9598 Section 3: non-ASCII domain labels
+                                // MUST be in A-label form on the wire.
+                                // Raw UTF-8 in the domain is rejected.
+                                "alice@\xD0\xBF\xD1\x80\xD0\xB8\xD0\xBC\xD0\xB5\xD1\x80.\xD1\x80\xD1\x84",
+                                // Invalid UTF-8 anywhere in the input.
+                                "alice@\xC0\xC0.com"}) {
+            result.test_is_false("SmtpUtf8Mailbox rejects malformed: " + std::string(bad),
+                                 Botan::SmtpUtf8Mailbox::from_string(bad).has_value());
+         }
+
+         // ASCII and UTF-8-local-part mailboxes both parse.
+         result.test_is_true("ASCII mailbox parses",
+                             Botan::SmtpUtf8Mailbox::from_string("alice@example.com").has_value());
+         result.test_is_true(
+            "UTF-8 local part parses",
+            Botan::SmtpUtf8Mailbox::from_string("\xCE\xB4\xCE\xBF\xCE\xBA\xCE\xB9@example.com").has_value());
+         // A-label encoded IDN domain parses (RFC 9598 Section 3 mandates this
+         // form for any label containing non-ASCII characters).
+         result.test_is_true("A-label IDN domain parses",
+                             Botan::SmtpUtf8Mailbox::from_string("alice@xn--e1afmkfd.xn--p1ai").has_value());
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("x509", "x509_name_constraint_smtp_utf8_match", SmtpUTF8Mailbox_Constraint_Match_Tests);
 
 #endif
 

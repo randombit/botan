@@ -15,21 +15,60 @@
 namespace Botan {
 
 void AlternativeName::add_uri(std::string_view uri) {
-   if(!uri.empty()) {
-      m_uri.insert(std::string(uri));
+   if(uri.empty()) {
+      return;
    }
+   if(auto parsed = URI::parse(uri)) {
+      m_uri.insert(std::move(*parsed));
+   } else {
+      throw Decoding_Error("Invalid URI in SubjectAlternativeName");
+   }
+}
+
+std::set<std::string> AlternativeName::uris() const {
+   std::set<std::string> out;
+   for(const auto& uri : m_uri) {
+      out.insert(uri.original_input());
+   }
+   return out;
 }
 
 void AlternativeName::add_email(std::string_view addr) {
-   if(!addr.empty()) {
-      m_email.insert(std::string(addr));
+   if(addr.empty()) {
+      return;
+   }
+   if(auto parsed = EmailAddress::from_string(addr)) {
+      m_email.insert(std::move(*parsed));
+   } else {
+      throw Decoding_Error("Invalid email address in SubjectAlternativeName");
    }
 }
 
-void AlternativeName::add_dns(std::string_view dns) {
-   if(!dns.empty()) {
-      m_dns.insert(tolower_string(dns));
+std::set<std::string> AlternativeName::email() const {
+   std::set<std::string> out;
+   for(const auto& addr : m_email) {
+      out.insert(addr.to_string());
    }
+   return out;
+}
+
+void AlternativeName::add_dns(std::string_view dns) {
+   if(dns.empty()) {
+      return;
+   }
+   if(auto parsed = DNSName::from_san_string(dns)) {
+      m_dns.insert(std::move(*parsed));
+   } else {
+      throw Decoding_Error("Invalid DNS name in SubjectAlternativeName");
+   }
+}
+
+std::set<std::string> AlternativeName::dns() const {
+   std::set<std::string> out;
+   for(const auto& name : m_dns) {
+      out.insert(name.to_string());
+   }
+   return out;
 }
 
 void AlternativeName::add_other_name(const OID& oid, const ASN1_String& value) {
@@ -102,13 +141,13 @@ void AlternativeName::encode_into(DER_Encoder& der) const {
          .end_explicit();
    }
 
-   for(const auto& name : m_email) {
-      const ASN1_String str(name, ASN1_Type::Ia5String);
+   for(const auto& addr : m_email) {
+      const ASN1_String str(addr.to_string(), ASN1_Type::Ia5String);
       der.add_object(ASN1_Type(1), ASN1_Class::ContextSpecific, str.value());
    }
 
    for(const auto& name : m_dns) {
-      const ASN1_String str(name, ASN1_Type::Ia5String);
+      const ASN1_String str(name.to_string(), ASN1_Type::Ia5String);
       der.add_object(ASN1_Type(2), ASN1_Class::ContextSpecific, str.value());
    }
 
@@ -117,7 +156,7 @@ void AlternativeName::encode_into(DER_Encoder& der) const {
    }
 
    for(const auto& name : m_uri) {
-      const ASN1_String str(name, ASN1_Type::Ia5String);
+      const ASN1_String str(name.original_input(), ASN1_Type::Ia5String);
       der.add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, str.value());
    }
 
@@ -178,11 +217,22 @@ void AlternativeName::decode_from(BER_Decoder& source) {
                } catch(const Invalid_Argument&) {  // NOLINT(*-empty-catch)
                }
             }
+
+            if(oid == OID::from_string("PKIX.SmtpUTF8Mailbox")) {
+               if(!value.is_a(ASN1_Type::Utf8String, ASN1_Class::Universal)) {
+                  throw Decoding_Error("SmtpUTF8Mailbox otherName must contain a UTF8String");
+               }
+               auto parsed_mailbox = SmtpUtf8Mailbox::from_string(ASN1::to_string(value));
+               if(!parsed_mailbox.has_value()) {
+                  throw Decoding_Error("Invalid SmtpUTF8Mailbox encoding");
+               }
+               m_smtp_utf8_mailboxes.insert(std::move(*parsed_mailbox));
+            }
          }
       } else if(obj.is_a(1, ASN1_Class::ContextSpecific)) {
          add_email(ASN1::to_string(obj));
       } else if(obj.is_a(2, ASN1_Class::ContextSpecific)) {
-         m_dns.insert(check_and_canonicalize_dns_name(ASN1::to_string(obj)));
+         add_dns(ASN1::to_string(obj));
       } else if(obj.is_a(4, ASN1_Class::ContextSpecific | ASN1_Class::Constructed)) {
          BER_Decoder dec(obj, names.limits());
          X509_DN dn;

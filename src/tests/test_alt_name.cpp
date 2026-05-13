@@ -28,6 +28,7 @@ class X509_Alt_Name_Tests final : public Test {
          const std::vector<std::string> dns_names = {
             "dns1.example.com",
             "dns2.example.org",
+            "*.wildcard.example.com",
          };
 
          const std::vector<std::string> email_names = {
@@ -90,19 +91,32 @@ class X509_Alt_Name_Tests final : public Test {
          Botan::BER_Decoder dec(der);
          dec.decode(recoded);
 
-         result.test_sz_eq("Expected number of domains", recoded.dns().size(), dns_names.size());
+         result.test_sz_eq("Expected number of domains", recoded.dns_names().size(), dns_names.size());
          for(const auto& name : dns_names) {
-            result.test_is_true("Has expected DNS name", recoded.dns().contains(name));
+            // SAN dnsName entries can be wildcards, so use from_san_string.
+            auto parsed = Botan::DNSName::from_san_string(name);
+            result.test_is_true("DNS name parses: " + name, parsed.has_value());
+            if(parsed.has_value()) {
+               result.test_is_true("Has expected DNS name: " + name, recoded.dns_names().contains(*parsed));
+            }
          }
 
-         result.test_sz_eq("Expected number of URIs", recoded.uris().size(), uri_names.size());
+         result.test_sz_eq("Expected number of URIs", recoded.uri_names().size(), uri_names.size());
          for(const auto& name : uri_names) {
-            result.test_is_true("Has expected URI name", recoded.uris().contains(name));
+            auto parsed = Botan::URI::parse(name);
+            result.test_is_true("URI parses: " + name, parsed.has_value());
+            if(parsed.has_value()) {
+               result.test_is_true("Has expected URI name: " + name, recoded.uri_names().contains(*parsed));
+            }
          }
 
-         result.test_sz_eq("Expected number of email", recoded.email().size(), email_names.size());
+         result.test_sz_eq("Expected number of email", recoded.email_addresses().size(), email_names.size());
          for(const auto& name : email_names) {
-            result.test_is_true("Has expected email name", recoded.email().contains(name));
+            auto parsed = Botan::EmailAddress::from_string(name);
+            result.test_is_true("Email name parses: " + name, parsed.has_value());
+            if(parsed.has_value()) {
+               result.test_is_true("Has expected email name: " + name, recoded.email_addresses().contains(*parsed));
+            }
          }
 
          result.test_sz_eq("Expected number of IPv4", recoded.ipv4_address().size(), ipv4_names.size());
@@ -139,6 +153,51 @@ class X509_Alt_Name_Tests final : public Test {
 };
 
 BOTAN_REGISTER_TEST("x509", "x509_alt_name", X509_Alt_Name_Tests);
+
+class X509_Alt_Name_SmtpUtf8_Wire_Type_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("X509 AlternativeName SmtpUTF8Mailbox wire-type guard");
+
+         std::vector<uint8_t> ia5_inner;
+         Botan::DER_Encoder(ia5_inner).encode(Botan::ASN1_String("alice@evil.com", Botan::ASN1_Type::Ia5String));
+
+         Botan::AlternativeName crafted;
+         crafted.add_other_name_value(Botan::OID::from_string("PKIX.SmtpUTF8Mailbox"), ia5_inner);
+
+         std::vector<uint8_t> der;
+         Botan::DER_Encoder(der).encode(crafted);
+
+         Botan::AlternativeName recoded;
+         Botan::BER_Decoder dec(der);
+         result.test_throws<Botan::Decoding_Error>("SmtpUTF8Mailbox with non-UTF8String inner is rejected",
+                                                   [&] { dec.decode(recoded); });
+
+         // Check that the valid type is accepted
+         std::vector<uint8_t> utf8_inner;
+         Botan::DER_Encoder(utf8_inner).encode(Botan::ASN1_String("alicé@example.com", Botan::ASN1_Type::Utf8String));
+
+         Botan::AlternativeName ok;
+         ok.add_other_name_value(Botan::OID::from_string("PKIX.SmtpUTF8Mailbox"), utf8_inner);
+
+         std::vector<uint8_t> ok_der;
+         Botan::DER_Encoder(ok_der).encode(ok);
+
+         Botan::AlternativeName ok_recoded;
+         Botan::BER_Decoder ok_dec(ok_der);
+         try {
+            ok_dec.decode(ok_recoded);
+            result.test_sz_eq(
+               "UTF8String inner surfaces in smtp_utf8_mailboxes", ok_recoded.smtp_utf8_mailboxes().size(), 1);
+         } catch(const std::exception& e) {
+            result.test_failure(std::string("UTF8String inner round-trip threw: ") + e.what());
+         }
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("x509", "x509_alt_name_smtputf8_wire_type", X509_Alt_Name_SmtpUtf8_Wire_Type_Test);
 
 #endif
 
