@@ -10,10 +10,10 @@
 
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
+#include <botan/uri.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/target_info.h>
-#include <botan/internal/uri.h>
 #include <chrono>
 
 #if defined(BOTAN_HAS_BOOST_ASIO)
@@ -361,11 +361,11 @@ std::unique_ptr<OS::SocketUDP> OS::open_socket_udp(std::string_view hostname,
 }
 
 std::unique_ptr<OS::SocketUDP> OS::open_socket_udp(std::string_view uri_string, std::chrono::microseconds timeout) {
-   const auto uri = URI::from_any(uri_string);
-   if(uri.port() == 0) {
+   const auto authority = URI::Authority::parse(uri_string);
+   if(!authority.has_value() || !authority->port().has_value()) {
       throw Invalid_Argument("UDP port not specified");
    }
-   return open_socket_udp(uri.host(), std::to_string(uri.port()), timeout);
+   return open_socket_udp(authority->host_to_string(), std::to_string(*authority->port()), timeout);
 }
 
 }  // namespace Botan

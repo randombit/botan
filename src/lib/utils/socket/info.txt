@@ -7,10 +7,13 @@ name -> "Socket"
 </module_info>
 
 <header:internal>
-uri.h
 socket.h
 socket_udp.h
 </header:internal>
+
+<requires>
+uri
+</requires>
 
 <libs>
 linux -> rt
