@@ -63,6 +63,8 @@ BOTAN_TEST_API std::ostream& operator<<(std::ostream& o, const Response& resp);
 
 typedef std::function<std::string(std::string_view, std::string_view, std::string_view)> http_exch_fn;
 
+// TODO: convert this to using URI type
+
 Response http_sync(const http_exch_fn& fn,
                    std::string_view verb,
                    std::string_view url,
