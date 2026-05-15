@@ -141,7 +141,7 @@ class BOTAN_PUBLIC_API(2, 0) Session final {
       /// Takes ownership of a session
       Session(Slot& slot, SessionHandle handle);
 
-      Session(Session&& other) = default;
+      Session(Session&& other) noexcept;
       Session& operator=(Session&& other) = delete;
 
       // Dtor calls C_CloseSession() and eventually C_Logout. A copy could close the session while the origin still exists

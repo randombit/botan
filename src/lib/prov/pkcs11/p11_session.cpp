@@ -29,6 +29,11 @@ Session::Session(Slot& slot, SessionHandle handle) : m_slot(slot), m_handle(hand
    }
 }
 
+Session::Session(Session&& other) noexcept :
+      m_slot(other.m_slot), m_handle(other.release()), m_logged_in(other.m_logged_in) {
+   other.m_logged_in = false;
+}
+
 Session::~Session() noexcept {
    try {
       if(m_handle != 0) {

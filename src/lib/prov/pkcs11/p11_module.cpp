@@ -23,20 +23,35 @@ Module::Module(Module&& other) noexcept = default;
 
 Module::~Module() noexcept {
    try {
-      m_low_level->C_Finalize(nullptr, nullptr);
+      if(m_low_level) {
+         m_low_level->C_Finalize(nullptr, nullptr);
+      }
    } catch(...) {
       // we are noexcept and must swallow any exception here
    }
 }
 
 void Module::reload(C_InitializeArgs init_args) {
+   // Build the new library + LowLevel in locals so library load and interface
+   // discovery failures leave m_library / m_low_level untouched.
+   auto new_library = std::make_unique<Dynamically_Loaded_Library>(m_file_path);
+   auto new_low_level = std::make_unique<LowLevel>(InterfaceWrapper::latest_p11_interface(*new_library));
+
+   // m_file_path is const, so dlopen typically returns the same handle as the
+   // old module and PKCS#11 state is shared; we must finalize before
+   // re-initializing. Clear the old members up front so a C_Initialize failure
+   // below leaves the Module empty rather than holding a function table for an
+   // already-finalized library.
    if(m_low_level) {
       m_low_level->C_Finalize(nullptr);
    }
-   m_library = std::make_unique<Dynamically_Loaded_Library>(m_file_path);
-   m_low_level = std::make_unique<LowLevel>(InterfaceWrapper::latest_p11_interface(*m_library));
+   m_low_level.reset();
+   m_library.reset();
 
-   m_low_level->C_Initialize(&init_args);
+   new_low_level->C_Initialize(&init_args);
+
+   m_low_level = std::move(new_low_level);
+   m_library = std::move(new_library);
 }
 
 }  // namespace Botan::PKCS11

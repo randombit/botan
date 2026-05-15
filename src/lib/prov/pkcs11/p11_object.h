@@ -119,10 +119,14 @@ class BOTAN_PUBLIC_API(2, 0) ObjectFinder final {
       */
       ObjectFinder(Session& session, const std::vector<Attribute>& search_template);
 
-      ObjectFinder(const ObjectFinder& other) = default;
+      ObjectFinder(const ObjectFinder& other) = delete;
       ObjectFinder& operator=(const ObjectFinder& other) = delete;
 
-      ObjectFinder(ObjectFinder&& other) = default;
+      ObjectFinder(ObjectFinder&& other) noexcept :
+            m_session(other.m_session), m_search_terminated(other.m_search_terminated) {
+         other.m_search_terminated = true;
+      }
+
       ObjectFinder& operator=(ObjectFinder&& other) = delete;
 
       /// Terminates a search for token and session objects (calls C_FindObjectsFinal)
@@ -560,11 +564,18 @@ class BOTAN_PUBLIC_API(2, 0) Object {
 template <typename T>
 std::vector<T> Object::search(Session& session, const std::vector<Attribute>& search_template) {
    const ObjectFinder finder(session, search_template);
-   const std::vector<ObjectHandle> handles = finder.find();
    std::vector<T> result;
-   result.reserve(handles.size());
-   for(const auto& handle : handles) {
-      result.emplace_back(T(session, handle));
+   // C_FindObjects returns up to the requested batch; the search is exhausted
+   // when a call yields zero handles. Loop until then so callers see all matches.
+   for(;;) {
+      const std::vector<ObjectHandle> handles = finder.find();
+      if(handles.empty()) {
+         break;
+      }
+      result.reserve(result.size() + handles.size());
+      for(const auto& handle : handles) {
+         result.emplace_back(T(session, handle));
+      }
    }
    return result;
 }

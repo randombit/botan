@@ -5,7 +5,6 @@
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
-#include <botan/assert.h>
 #include <botan/p11.h>
 
 #include <algorithm>
@@ -51,8 +50,9 @@ std::span<const Utf8Char> name_of(const Interface& p11_interface) {
 }  // namespace
 
 InterfaceWrapper::InterfaceWrapper(Interface p11_interface) : m_p11_interface(p11_interface) {
-   BOTAN_ASSERT_NONNULL(p11_interface.pInterfaceName);
-   BOTAN_ASSERT_NONNULL(p11_interface.pFunctionList);
+   if(p11_interface.pInterfaceName == nullptr || p11_interface.pFunctionList == nullptr) {
+      throw PKCS11_Error("PKCS #11 interface has null pInterfaceName or pFunctionList");
+   }
 }
 
 Version InterfaceWrapper::version() const {
@@ -71,7 +71,7 @@ InterfaceWrapper InterfaceWrapper::latest_p11_interface(Dynamically_Loaded_Libra
       // Try the legacy C_GetFunctionList method (for PKCS#11 version 2.40).
       FunctionList* func_list = nullptr;  // NOLINT(*-const-correctness) bug in clang-tidy
       rv = LowLevel::C_GetFunctionList(library, &func_list, nullptr);
-      if(!rv) {
+      if(!rv || func_list == nullptr) {
          throw Invalid_Argument("Failed to load function list for PKCS#11 library.");
       }
 
@@ -91,9 +91,12 @@ InterfaceWrapper InterfaceWrapper::latest_p11_interface(Dynamically_Loaded_Libra
    // We only load interfaces named "PKCS 11" (which are the pure ones defined in the spec) with
    // version >= 2.40.
    auto is_valid_interface = [](const Interface& i) {
-      // This is also done by the example in PKCS #11 (version >= 3.0) spec.
-      // Note that version above the currently supported maximal version should
-      // be compatible too.
+      if(i.pFunctionList == nullptr || i.pInterfaceName == nullptr) {
+         return false;
+      }
+      if(!std::ranges::equal(name_of(i), PKCS11_INTERFACE_NAME)) {
+         return false;
+      }
       const Version version = version_of(i);
       return version >= Version{2, 40};
    };

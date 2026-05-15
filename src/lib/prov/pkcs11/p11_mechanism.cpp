@@ -11,6 +11,7 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/scan_name.h>
+#include <botan/internal/stl_util.h>
 #include <tuple>
 
 namespace Botan::PKCS11 {
@@ -177,7 +178,7 @@ MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(std::string_view pa
       {"PSS(SHA-1,MGF1,20)", RSA_SignMechanism(MechanismType::Sha1RsaPkcsPss)},
 
       {"PSS(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcsPss)},
-      {"PSS(SHA-224,MGF1,24)", RSA_SignMechanism(MechanismType::Sha224RsaPkcsPss)},
+      {"PSS(SHA-224,MGF1,28)", RSA_SignMechanism(MechanismType::Sha224RsaPkcsPss)},
 
       {"PSS(SHA-256)", RSA_SignMechanism(MechanismType::Sha256RsaPkcsPss)},
       {"PSS(SHA-256,MGF1,32)", RSA_SignMechanism(MechanismType::Sha256RsaPkcsPss)},
@@ -239,7 +240,7 @@ MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(std::string_view pa
       mech.m_parameters = std::make_shared<MechanismParameters>();
       mech.m_parameters->pss_params.hashAlg = static_cast<CK_MECHANISM_TYPE>(mechanism_info.hash());
       mech.m_parameters->pss_params.mgf = static_cast<CK_RSA_PKCS_MGF_TYPE>(mechanism_info.mgf());
-      mech.m_parameters->pss_params.sLen = static_cast<Ulong>(mechanism_info.salt_size());
+      mech.m_parameters->pss_params.sLen = checked_ulong_cast(mechanism_info.salt_size());
       mech.m_mechanism.pParameter = mech.m_parameters.get();
       mech.m_mechanism.ulParameterLen = sizeof(RsaPkcsPssParams);
    }
@@ -282,27 +283,34 @@ MechanismWrapper MechanismWrapper::create_ecdh_mechanism(std::string_view params
                                                                       {"SHA-384", KeyDerivation::Sha384Kdf},
                                                                       {"SHA-512", KeyDerivation::Sha512Kdf}};
 
-   std::vector<std::string> param_parts = split_on(params, ',');
+   const std::vector<std::string> param_parts = split_on(params, ',');
 
    if(param_parts.empty() || param_parts.size() > 2) {
       throw Invalid_Argument(fmt("PKCS #11 ECDH key derivation bad params {}", params));
    }
 
-   const bool use_cofactor =
-      (param_parts[0] == "Cofactor") || (param_parts.size() == 2 && param_parts[1] == "Cofactor");
-
-   const std::string kdf_name = (param_parts[0] == "Cofactor" ? param_parts[1] : param_parts[0]);
-   std::string hash = kdf_name;
-
-   if(kdf_name != "Raw") {
-      const SCAN_Name kdf_hash(kdf_name);
-
-      if(kdf_hash.arg_count() > 0) {
-         hash = kdf_hash.arg(0);
+   // TODO(Botan4) remove this cofactor nonsense
+   bool use_cofactor = false;
+   std::string kdf_name;
+   for(const auto& part : param_parts) {
+      if(part == "Cofactor") {
+         if(use_cofactor) {
+            throw Invalid_Argument(fmt("PKCS #11 ECDH key derivation bad params {}", params));
+         }
+         use_cofactor = true;
+      } else {
+         if(!kdf_name.empty()) {
+            throw Invalid_Argument(fmt("PKCS #11 ECDH key derivation bad params {}", params));
+         }
+         kdf_name = part;
       }
    }
 
-   auto kdf = EcdhHash.find(hash);
+   if(kdf_name.empty()) {
+      throw Invalid_Argument(fmt("PKCS #11 ECDH key derivation bad params {}", params));
+   }
+
+   auto kdf = EcdhHash.find(kdf_name);
    if(kdf == EcdhHash.end()) {
       throw Lookup_Error("PKCS#11 ECDH key derivation does not support KDF " + kdf_name);
    }

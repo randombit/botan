@@ -113,11 +113,11 @@ bool LowLevel::C_GetInterfaceList(const Dynamically_Loaded_Library& pkcs11_modul
 bool LowLevel::C_GetInterface(const Dynamically_Loaded_Library& pkcs11_module,
                               const Utf8Char* interface_name_ptr,
                               const Version* version_ptr,
-                              Interface* interface_ptr_ptr,
+                              Interface** interface_ptr_ptr,
                               Flags flags,
                               ReturnValue* return_value) {
    using get_interface =
-      CK_RV (*)(Utf8Char* interface_name_ptr, Version* version_ptr, Interface* interface_ptr_ptr, Flags flags);
+      CK_RV (*)(Utf8Char* interface_name_ptr, Version* version_ptr, Interface** interface_ptr_ptr, Flags flags);
    if(auto get_interface_ptr = pkcs11_module.try_resolve_symbol<get_interface>("C_GetInterface");
       get_interface_ptr.has_value()) {
       return handle_return_value(

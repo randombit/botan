@@ -12,6 +12,11 @@
 
 namespace Botan::PKCS11 {
 
+const X509_Certificate& PKCS11_X509_Certificate::certificate() const {
+   // TODO(Botan4) this should instead return a ref to a member variable
+   return (*this);
+}
+
 X509_CertificateProperties::X509_CertificateProperties(const std::vector<uint8_t>& subject,
                                                        const std::vector<uint8_t>& value) :
       CertificateProperties(CertificateType::X509), m_subject(subject), m_value(value) {
