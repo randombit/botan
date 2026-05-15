@@ -43,7 +43,7 @@ class BOTAN_PUBLIC_API(3, 13) DNSName final {
 
       const std::string& to_string() const { return m_name; }
 
-      const std::string& value() const { return m_name; }
+      const std::string& name() const { return m_name; }
 
       /**
       * True if this name is a wildcard pattern: a single "*" somewhere
@@ -65,6 +65,14 @@ class BOTAN_PUBLIC_API(3, 13) DNSName final {
 
       auto operator<=>(const DNSName&) const = default;
       bool operator==(const DNSName&) const = default;
+
+      /**
+      * Test if the issued name (which might be a wildcard pattern) can match the host,
+      * which should be a complete and valid DNS name.
+      *
+      * Returns false if either the pattern or the host seem invalid
+      */
+      static bool host_wildcard_match(std::string_view issued, std::string_view host);
 
    private:
       explicit DNSName(std::string canonical) : m_name(std::move(canonical)) {}

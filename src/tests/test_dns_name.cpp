@@ -16,6 +16,25 @@ namespace Botan_Tests {
 
 namespace {
 
+class DNS_Wildcard_Tests final : public Text_Based_Test {
+   public:
+      DNS_Wildcard_Tests() : Text_Based_Test("utils/dns_wildcards.vec", "Issued,Hostname") {}
+
+      Test::Result run_one_test(const std::string& type, const VarMap& vars) override {
+         Test::Result result("DNS wildcard matching");
+
+         const auto issued = vars.get_req_str("Issued");
+         const auto hostname = vars.get_req_str("Hostname");
+         const bool should_accept = (type == "Invalid") ? false : true;
+
+         result.test_bool_eq("match", Botan::DNSName::host_wildcard_match(issued, hostname), should_accept);
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("utils", "dns_wildcard", DNS_Wildcard_Tests);
+
 class DNS_Check_Tests final : public Text_Based_Test {
    public:
       DNS_Check_Tests() : Text_Based_Test("utils/dns.vec", "DNS") {}

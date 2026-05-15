@@ -21,6 +21,7 @@ namespace Botan {
 
 class Path_Validation_Restrictions;
 class Certificate_Store;
+class URI;
 
 namespace OCSP {
 
@@ -273,14 +274,28 @@ class BOTAN_PUBLIC_API(2, 0) Response final {
 #if defined(BOTAN_HAS_HTTP_UTIL)
 
 /**
-* Makes an online OCSP request via HTTP and returns the (unverified) OCSP response.
+* Makes an online OCSP request via HTTP and returns the (unverified!) OCSP response.
 * @param issuer issuer certificate
 * @param subject_serial the subject's serial number
 * @param ocsp_responder the OCSP responder to query
 * @param timeout a timeout on the HTTP request
 * @return OCSP response
 */
-BOTAN_PUBLIC_API(3, 0)
+BOTAN_PUBLIC_API(3, 13)
+Response online_check(const X509_Certificate& issuer,
+                      const BigInt& subject_serial,
+                      const URI& ocsp_responder,
+                      std::chrono::milliseconds timeout = std::chrono::milliseconds(3000));
+
+/**
+* Makes an online OCSP request via HTTP and returns the (unverified!) OCSP response.
+* @param issuer issuer certificate
+* @param subject_serial the subject's serial number
+* @param ocsp_responder the OCSP responder to query
+* @param timeout a timeout on the HTTP request
+* @return OCSP response
+*/
+BOTAN_DEPRECATED_API("Prefer version taking a URI")
 Response online_check(const X509_Certificate& issuer,
                       const BigInt& subject_serial,
                       std::string_view ocsp_responder,

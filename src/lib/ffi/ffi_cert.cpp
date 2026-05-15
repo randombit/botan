@@ -69,15 +69,15 @@ std::optional<Botan::GeneralName> extract_general_name_at(const Botan::Alternati
    }
    index -= altnames.uri_names().size();
 
-   if(index < altnames.ipv4_address().size()) {
-      auto itr = altnames.ipv4_address().begin();
+   if(index < altnames.ipv4_addresses().size()) {
+      auto itr = altnames.ipv4_addresses().begin();
       std::advance(itr, index);
       return Botan::GeneralName::ipv4_address(*itr);
    }
-   index -= altnames.ipv4_address().size();
+   index -= altnames.ipv4_addresses().size();
 
-   if(index < altnames.ipv6_address().size()) {
-      auto itr = altnames.ipv6_address().begin();
+   if(index < altnames.ipv6_addresses().size()) {
+      auto itr = altnames.ipv6_addresses().begin();
       std::advance(itr, index);
       return Botan::GeneralName::ipv6_address(*itr);
    }
@@ -94,7 +94,7 @@ std::optional<Botan::GeneralName> extract_general_name_at(const Botan::Alternati
  */
 size_t count_general_names_in(const Botan::AlternativeName& alt_names) {
    return alt_names.email_addresses().size() + alt_names.dns_names().size() + alt_names.directory_names().size() +
-          alt_names.uri_names().size() + alt_names.ipv4_address().size() + alt_names.ipv6_address().size();
+          alt_names.uri_names().size() + alt_names.ipv4_addresses().size() + alt_names.ipv6_addresses().size();
 }
 
 std::optional<botan_x509_general_name_types> to_botan_x509_general_name_types(Botan::GeneralName::NameType gn_type) {
@@ -356,11 +356,11 @@ int botan_x509_cert_view_string_values(botan_x509_cert_t cert,
                                        botan_view_ctx ctx,
                                        botan_view_str_fn view_fn) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   auto enumerate = [view_fn, ctx](auto values, size_t idx) -> int {
+   auto enumerate_uris = [view_fn, ctx](const std::vector<Botan::URI>& values, size_t idx) -> int {
       if(idx >= values.size()) {
          return BOTAN_FFI_ERROR_OUT_OF_RANGE;
       } else {
-         return invoke_view_callback(view_fn, ctx, values[idx]);
+         return invoke_view_callback(view_fn, ctx, values[idx].original_input());
       }
    };
 
@@ -392,9 +392,9 @@ int botan_x509_cert_view_string_values(botan_x509_cert_t cert,
          case BOTAN_X509_CRL_DISTRIBUTION_URLS:
             return enumerate_crl_distribution_points(c, index);
          case BOTAN_X509_OCSP_RESPONDER_URLS:
-            return enumerate(c.ocsp_responders(), index);
+            return enumerate_uris(c.ocsp_responder_uris(), index);
          case BOTAN_X509_CA_ISSUERS_URLS:
-            return enumerate(c.ca_issuers(), index);
+            return enumerate_uris(c.ca_issuer_uris(), index);
          case BOTAN_X509_PEM_ENCODING:
             return botan_x509_object_view_value(c, value_type, index, ctx, view_fn);
 

@@ -11,7 +11,6 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/parsing.h>
 
 namespace Botan {
 
@@ -91,20 +90,20 @@ void AlternativeName::add_dn(const X509_DN& dn) {
    m_dn_names.insert(dn);
 }
 
-void AlternativeName::add_ipv4_address(uint32_t ip) {
-   m_ipv4_addr.insert(ip);
+void AlternativeName::add_ipv4_address(const IPv4Address& ip) {
+   m_ipv4_addrs.insert(ip);
 }
 
 void AlternativeName::add_ipv6_address(const IPv6Address& ip) {
-   m_ipv6_addr.insert(ip);
+   m_ipv6_addrs.insert(ip);
 }
 
 size_t AlternativeName::count() const {
    const auto sum = checked_add(m_dns.size(),
                                 m_uri.size(),
                                 m_email.size(),
-                                m_ipv4_addr.size(),
-                                m_ipv6_addr.size(),
+                                m_ipv4_addrs.size(),
+                                m_ipv6_addrs.size(),
                                 m_dn_names.size(),
                                 m_other_name_values.size(),
                                 m_registered_ids.size());
@@ -115,6 +114,10 @@ size_t AlternativeName::count() const {
 
 bool AlternativeName::has_items() const {
    return this->count() > 0;
+}
+
+bool AlternativeName::is_empty() const {
+   return this->count() == 0;
 }
 
 void AlternativeName::encode_into(DER_Encoder& der) const {
@@ -161,13 +164,12 @@ void AlternativeName::encode_into(DER_Encoder& der) const {
       der.add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, str.value());
    }
 
-   for(const uint32_t ip : m_ipv4_addr) {
-      auto ip_buf = store_be(ip);
+   for(const auto& ip : m_ipv4_addrs) {
       // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
-      der.add_object(ASN1_Type(7), ASN1_Class::ContextSpecific, ip_buf.data(), 4);
+      der.add_object(ASN1_Type(7), ASN1_Class::ContextSpecific, ip.to_bytes());
    }
 
-   for(const auto& ip : m_ipv6_addr) {
+   for(const auto& ip : m_ipv6_addrs) {
       // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
       der.add_object(ASN1_Type(7), ASN1_Class::ContextSpecific, ip.address().data(), ip.address().size());
    }

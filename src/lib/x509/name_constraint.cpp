@@ -15,7 +15,6 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/parsing.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/x509_utils.h>
 #include <span>
@@ -657,14 +656,14 @@ GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) cons
          score.add(dns_subtree_match(dns.to_string(), constraint));
       }
 
-      if(alt_name.count() == 0) {
+      if(alt_name.is_empty()) {
          // TODO(Botan4): CN fallback is deprecated for removal in Botan4.
          // Check CN instead...
          for(const std::string& cn : dn.get_attribute("CN")) {
             if(cn.find('.') == std::string::npos) {
                continue;
             }
-            if(string_to_ipv4(cn).has_value()) {
+            if(IPv4Address::from_string(cn).has_value()) {
                continue;
             }
             if(auto dns_form = DNSName::from_san_string(cn)) {
@@ -682,21 +681,21 @@ GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) cons
    } else if(m_type == NameType::IPv4) {
       const auto& subnet = std::get<IPv4Subnet>(m_name);
 
-      if(alt_name.count() == 0) {
+      if(alt_name.is_empty()) {
          // TODO(Botan4): CN fallback is deprecated for removal in Botan4.
          // Check CN instead...
          for(const std::string& cn : dn.get_attribute("CN")) {
-            if(auto ipv4 = string_to_ipv4(cn)) {
-               score.add(subnet.contains(IPv4Address(*ipv4)));
+            if(auto ipv4 = IPv4Address::from_string(cn)) {
+               score.add(subnet.contains(*ipv4));
             }
          }
       } else {
-         for(const uint32_t ipv4 : alt_name.ipv4_address()) {
-            score.add(subnet.contains(IPv4Address(ipv4)));
+         for(const auto& ipv4 : alt_name.ipv4_addresses()) {
+            score.add(subnet.contains(ipv4));
          }
       }
    } else if(m_type == NameType::IPv6) {
-      for(const auto& ipv6 : alt_name.ipv6_address()) {
+      for(const auto& ipv6 : alt_name.ipv6_addresses()) {
          score.add(matches_ipv6(ipv6));
       }
    } else if(m_type == NameType::URI) {
@@ -886,7 +885,7 @@ bool NameConstraints::is_permitted(const X509_Certificate& cert, bool reject_unk
    const bool ip_form_restricted = m_permitted_name_types.contains(GeneralName::NameType::IPv4) ||
                                    m_permitted_name_types.contains(GeneralName::NameType::IPv6);
 
-   auto is_permitted_ipv4 = [&](uint32_t ipv4) {
+   auto is_permitted_ipv4 = [&](const IPv4Address& ipv4) {
       if(!ip_form_restricted) {
          return true;
       }
@@ -1008,13 +1007,13 @@ bool NameConstraints::is_permitted(const X509_Certificate& cert, bool reject_unk
       }
    }
 
-   for(const auto& alt_ipv4 : alt_name.ipv4_address()) {
+   for(const auto& alt_ipv4 : alt_name.ipv4_addresses()) {
       if(!is_permitted_ipv4(alt_ipv4)) {
          return false;
       }
    }
 
-   for(const auto& alt_ipv6 : alt_name.ipv6_address()) {
+   for(const auto& alt_ipv6 : alt_name.ipv6_addresses()) {
       if(!is_permitted_ipv6(alt_ipv6)) {
          return false;
       }
@@ -1039,10 +1038,10 @@ bool NameConstraints::is_permitted(const X509_Certificate& cert, bool reject_unk
    }
 
    // TODO(Botan4): CN fallback is deprecated for removal in Botan4.
-   if(alt_name.count() == 0) {
-      for(const auto& cn : cert.subject_info("Name")) {
-         if(auto ipv4 = string_to_ipv4(cn)) {
-            if(!is_permitted_ipv4(ipv4.value())) {
+   if(alt_name.is_empty()) {
+      for(const auto& cn : cert.subject_info("CN")) {
+         if(auto ipv4 = IPv4Address::from_string(cn)) {
+            if(!is_permitted_ipv4(*ipv4)) {
                return false;
             }
          } else if(cn.find('.') != std::string::npos) {
@@ -1150,7 +1149,7 @@ bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unkn
       return false;
    };
 
-   auto is_excluded_ipv4 = [&](uint32_t ipv4) {
+   auto is_excluded_ipv4 = [&](const IPv4Address& ipv4) {
       if(m_excluded_name_types.contains(GeneralName::NameType::IPv4)) {
          for(const auto& c : m_excluded_subtrees) {
             if(c.base().matches_ipv4(ipv4)) {
@@ -1294,13 +1293,13 @@ bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unkn
       }
    }
 
-   for(const auto& alt_ipv4 : alt_name.ipv4_address()) {
+   for(const auto& alt_ipv4 : alt_name.ipv4_addresses()) {
       if(is_excluded_ipv4(alt_ipv4)) {
          return true;
       }
    }
 
-   for(const auto& alt_ipv6 : alt_name.ipv6_address()) {
+   for(const auto& alt_ipv6 : alt_name.ipv6_addresses()) {
       if(is_excluded_ipv6(alt_ipv6)) {
          return true;
       }
@@ -1325,10 +1324,10 @@ bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unkn
    }
 
    // TODO(Botan4): CN fallback is deprecated for removal in Botan4.
-   if(alt_name.count() == 0) {
+   if(alt_name.is_empty()) {
       for(const auto& cn : cert.subject_info("Name")) {
-         if(auto ipv4 = string_to_ipv4(cn)) {
-            if(is_excluded_ipv4(ipv4.value())) {
+         if(auto ipv4 = IPv4Address::from_string(cn)) {
+            if(is_excluded_ipv4(*ipv4)) {
                return true;
             }
          } else if(cn.find('.') != std::string::npos) {

@@ -1,6 +1,6 @@
 /*
 * X.509 Certificates
-* (C) 1999-2007,2015,2017 Jack Lloyd
+* (C) 1999-2007,2015,2017,2026 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -21,6 +21,12 @@ class Extensions;
 class NameConstraints;
 class Public_Key;
 class X509_DN;
+
+class DNSName;
+class EmailAddress;
+class IPv4Address;
+class IPv6Address;
+class URI;
 
 class X509_Certificate_Data;
 
@@ -99,26 +105,18 @@ class BOTAN_PUBLIC_API(2, 0) X509_Certificate : public X509_Object {
 
       /**
       * Get a value for a specific subject_info parameter name.
-      * @param name the name of the parameter to look up. Possible names include
-      * "X509.Certificate.version", "X509.Certificate.serial",
-      * "X509.Certificate.start", "X509.Certificate.end",
-      * "X509.Certificate.v2.key_id", "X509.Certificate.public_key",
-      * "X509v3.BasicConstraints.path_constraint",
-      * "X509v3.BasicConstraints.is_ca", "X509v3.NameConstraints",
-      * "X509v3.ExtendedKeyUsage", "X509v3.CertificatePolicies",
-      * "X509v3.SubjectKeyIdentifier", "X509.Certificate.serial",
-      * "X520.CommonName", "X520.Organization", "X520.Country",
-      * "RFC822" (Email in SAN) or "PKCS9.EmailAddress" (Email in DN).
-      * @return value(s) of the specified parameter
+      * @param name the name of the parameter to look up.
+      * @return value(s) of the specified parameter or empty if not found
       */
+      BOTAN_DEPRECATED("Use subject_dn and subject_alt_name to access subject names")
       std::vector<std::string> subject_info(std::string_view name) const;
 
       /**
       * Get a value for a specific subject_info parameter name.
-      * @param name the name of the parameter to look up. Possible names are
-      * "X509.Certificate.v2.key_id" or "X509v3.AuthorityKeyIdentifier".
-      * @return value(s) of the specified parameter
+      * @param name the name of the parameter to look up.
+      * @return value(s) of the specified parameter or empty if not found
       */
+      BOTAN_DEPRECATED("Use issuer_dn and issuer_alt_name to access issuer names")
       std::vector<std::string> issuer_info(std::string_view name) const;
 
       /**
@@ -345,27 +343,54 @@ class BOTAN_PUBLIC_API(2, 0) X509_Certificate : public X509_Object {
       /**
       * Return the listed address of an OCSP responder, or empty if not set
       */
-      BOTAN_DEPRECATED("Use ocsp_responders") std::string ocsp_responder() const;
+      BOTAN_DEPRECATED("Use ocsp_responder_uris") std::string ocsp_responder() const;
 
       /**
       * Return the listed addresses of OCSP responders, or empty if not set
       */
-      const std::vector<std::string>& ocsp_responders() const;
+      BOTAN_DEPRECATED("Use ocsp_responder_uris") std::vector<std::string> ocsp_responders() const;
+
+      /**
+      * Return the listed addresses of OCSP responders, or empty if not set
+      */
+      const std::vector<URI>& ocsp_responder_uris() const;
 
       /**
       * Return the listed addresses of ca issuers, or empty if not set
       */
-      std::vector<std::string> ca_issuers() const;
+      BOTAN_DEPRECATED("Use ca_issuer_uris") std::vector<std::string> ca_issuers() const;
+
+      /**
+      * Return the listed addresses of ca issuers, or empty if not set
+      */
+      const std::vector<URI>& ca_issuer_uris() const;
 
       /**
       * Return the CRL distribution point, or empty if not set
       */
-      BOTAN_DEPRECATED("Use crl_distribution_points") std::string crl_distribution_point() const;
+      BOTAN_DEPRECATED("Use crl_distribution_point_uris") std::string crl_distribution_point() const;
 
       /**
       * Return the CRL distribution points, or empty if not set
       */
-      std::vector<std::string> crl_distribution_points() const;
+      BOTAN_DEPRECATED("Use crl_distribution_point_uris") std::vector<std::string> crl_distribution_points() const;
+
+      /**
+      * Return the CRL distribution points, or empty if not set
+      */
+      const std::vector<URI>& crl_distribution_point_uris() const;
+
+      /**
+      * Return all email addresses associated with the subject of this
+      * certificate, in parsed form.
+      *
+      * This combines RFC 822 names from the subjectAltName extension with
+      * email addresses carried in the subject DN's emailAddress attribute
+      * (the latter is the legacy location for subject email, see RFC 5280
+      * 4.2.1.10). DN attribute values that fail to parse as a mailbox are
+      * silently skipped.
+      */
+      std::vector<EmailAddress> subject_email_addresses() const;
 
       /**
       * @return a free-form string describing the certificate
@@ -419,12 +444,34 @@ class BOTAN_PUBLIC_API(2, 0) X509_Certificate : public X509_Object {
       /**
       * Check if a certain DNS name matches up with the information in
       * the cert
-      * @param name DNS name to match
       *
-      * Note: this will also accept a dotted quad input, in which case
-      * the SAN for IPv4 addresses will be checked.
+      * The string variant additionally accepts a dotted-quad IPv4 input,
+      * in which case the SAN for IPv4 addresses will be checked. Prefer
+      * the typed overloads for IP and DNS matching.
+      *
+      * @param name DNS name to match
       */
+      BOTAN_DEPRECATED("Use the DNSName / IPv4Address / IPv6Address overload")
       bool matches_dns_name(std::string_view name) const;
+
+      /**
+      * Check whether @p name matches the subject DNS names in this certificate.
+      *
+      * Compares against the dnsName entries in the subjectAltName, with the
+      * RFC 6125 wildcard rules. If the certificate has no SAN at all, falls
+      * back to a wildcard comparison against the subject CN.
+      */
+      bool matches_dns_name(const DNSName& name) const;
+
+      /**
+      * Check whether @p address appears as an iPAddress entry in the subjectAltName.
+      */
+      bool matches_ip(const IPv4Address& address) const;
+
+      /**
+      * Check whether @p address appears as an iPAddress entry in the subjectAltName.
+      */
+      bool matches_ip(const IPv6Address& address) const;
 
       /**
       * Check to certificates for equality.

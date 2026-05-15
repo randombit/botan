@@ -203,10 +203,12 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
       void add_dn(const X509_DN& dn);
 
       /// Add an IP address to this alternative name
-      void add_ipv4_address(uint32_t ipv4);
+      BOTAN_DEPRECATED("Use variant taking IPv4Address") void add_ipv4_address(uint32_t ipv4) {
+         this->add_ipv4_address(IPv4Address(ipv4));
+      }
 
       /// Add an IP address to this alternative name
-      void add_ipv4_address(IPv4Address ipv4) { add_ipv4_address(ipv4.value()); }
+      void add_ipv4_address(const IPv4Address& ipv4);
 
       /// Add an IPv6 address to this alternative name
       void add_ipv6_address(const IPv6Address& ipv6);
@@ -239,10 +241,18 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
       const std::set<DNSName>& dns_names() const { return m_dns; }
 
       /// Return the set of IPv4 addresses included in this alternative name
-      const std::set<uint32_t>& ipv4_address() const { return m_ipv4_addr; }
+      BOTAN_DEPRECATED("Use ipv4_addresses") std::set<uint32_t> ipv4_address() const;
 
       /// Return the set of IPv6 addresses included in this alternative name
-      const std::set<IPv6Address>& ipv6_address() const { return m_ipv6_addr; }
+      BOTAN_DEPRECATED("Use ipv6_addresses") const std::set<IPv6Address>& ipv6_address() const {
+         return ipv6_addresses();
+      }
+
+      /// Return the set of IPv4 addresses included in this alternative name
+      const std::set<IPv4Address>& ipv4_addresses() const { return m_ipv4_addrs; }
+
+      /// Return the set of IPv6 addresses included in this alternative name
+      const std::set<IPv6Address>& ipv6_addresses() const { return m_ipv6_addrs; }
 
       /// Return the set of "other names" whose value was a recognized ASN1_String type
       BOTAN_DEPRECATED("Use AlternativeName::other_name_values")
@@ -272,6 +282,9 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
 
       /// Return true if this has any names set
       bool has_items() const;
+
+      /// Return true if this alternative name is empty (zero names)
+      bool is_empty() const;
 
       // Old, now deprecated interface follows:
       BOTAN_DEPRECATED("Use AlternativeName::{uris, email, dns, othernames, directory_names}")
@@ -309,8 +322,8 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
       std::set<DNSName> m_dns;
       std::set<URI> m_uri;
       std::set<EmailAddress> m_email;
-      std::set<uint32_t> m_ipv4_addr;
-      std::set<IPv6Address> m_ipv6_addr;
+      std::set<IPv4Address> m_ipv4_addrs;
+      std::set<IPv6Address> m_ipv6_addrs;
       std::set<X509_DN> m_dn_names;
       std::set<std::pair<OID, ASN1_String>> m_othernames;  // TODO(Botan4) remove this
       std::set<OtherNameValue> m_other_name_values;
@@ -436,7 +449,7 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
 
       bool matches_ipv4(uint32_t ip) const;
 
-      bool matches_ipv4(IPv4Address ip) const { return matches_ipv4(ip.value()); }
+      bool matches_ipv4(const IPv4Address& ip) const { return matches_ipv4(ip.address()); }
 
       bool matches_ipv6(const IPv6Address& ip) const;
       bool matches_dn(const X509_DN& dn) const;

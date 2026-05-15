@@ -39,7 +39,10 @@ class BOTAN_PUBLIC_API(3, 12) IPv4Address final {
       auto operator<=>(const IPv4Address&) const = default;
 
       /// The address as a 32-bit big-endian integer
-      uint32_t value() const { return m_ip; }
+      BOTAN_DEPRECATED("Use IPv4Address::address") uint32_t value() const { return m_ip; }
+
+      /// The address as a 32-bit big-endian integer
+      uint32_t address() const { return m_ip; }
 
       /// The address as four bytes, network-byte-order.
       std::array<uint8_t, 4> to_bytes() const;
@@ -115,9 +118,10 @@ class BOTAN_PUBLIC_API(3, 12) IPv4Subnet final {
       std::string to_string() const;
 
       /**
-      * Bytes for use in a DER-encoded GeneralName iPAddress field:
-      *  - 4 bytes (the address) if is_host() — SAN form per RFC 5280 4.2.1.6.
-      *  - 8 bytes (address || netmask) otherwise — name constraint form per RFC 5280 4.2.1.10.
+      * Bytes for use in a DER-encoded GeneralName iPAddress field.
+      *
+      * If this is an address (is_host returns true) the output is 4 bytes (the address in network order)
+      * Otherwise it is a subnet and the output is 4 bytes (address || netmask)
       */
       std::vector<uint8_t> serialize() const;
 

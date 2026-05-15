@@ -30,6 +30,10 @@
    #include <botan/internal/cpuid.h>
 #endif
 
+#if defined(BOTAN_HAS_IPV4_ADDRESS)
+   #include <botan/ipv4_address.h>
+#endif
+
 #if defined(BOTAN_HAS_IPV6_ADDRESS)
    #include <botan/ipv6_address.h>
 #endif
@@ -1126,25 +1130,7 @@ class Charset_Tests final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("utils", "charset", Charset_Tests);
 
-class Hostname_Tests final : public Text_Based_Test {
-   public:
-      Hostname_Tests() : Text_Based_Test("hostnames.vec", "Issued,Hostname") {}
-
-      Test::Result run_one_test(const std::string& type, const VarMap& vars) override {
-         Test::Result result("Hostname Matching");
-
-         const std::string issued = vars.get_req_str("Issued");
-         const std::string hostname = vars.get_req_str("Hostname");
-         const bool expected = (type == "Invalid") ? false : true;
-
-         const std::string what = hostname + ((expected == true) ? " matches " : " does not match ") + issued;
-         result.test_bool_eq(what, Botan::host_wildcard_match(issued, hostname), expected);
-
-         return result;
-      }
-};
-
-BOTAN_REGISTER_TEST("utils", "hostname", Hostname_Tests);
+#if defined(BOTAN_HAS_IPV4_ADDRESS)
 
 class IPv4_Parsing_Tests final : public Text_Based_Test {
    public:
@@ -1156,13 +1142,13 @@ class IPv4_Parsing_Tests final : public Text_Based_Test {
          const std::string input = vars.get_req_str("IPv4");
          const bool valid = (status == "Valid");
 
-         auto ipv4 = Botan::string_to_ipv4(input);
+         auto ipv4 = Botan::IPv4Address::from_string(input);
 
-         result.test_bool_eq("string_to_ipv4 accepts only valid", ipv4.has_value(), valid);
+         result.test_bool_eq("IPv4Address::from_string accepts only valid", ipv4.has_value(), valid);
 
          if(ipv4) {
-            const std::string rt = Botan::ipv4_to_string(ipv4.value());
-            result.test_str_eq("ipv4_to_string and string_to_ipv4 round trip", input, rt);
+            const std::string rt = ipv4->to_string();
+            result.test_str_eq("IPv4Address::from_string and IPv4Address::to_string round trip", input, rt);
          }
 
          return result;
@@ -1170,6 +1156,8 @@ class IPv4_Parsing_Tests final : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_TEST("utils", "ipv4_parse", IPv4_Parsing_Tests);
+
+#endif
 
 #if defined(BOTAN_HAS_IPV6_ADDRESS)
 

@@ -16,6 +16,12 @@
 #include <string>
 #include <vector>
 
+namespace Botan {
+
+class URI;
+
+}
+
 namespace Botan::HTTP {
 
 /**
@@ -63,27 +69,25 @@ BOTAN_TEST_API std::ostream& operator<<(std::ostream& o, const Response& resp);
 
 typedef std::function<std::string(std::string_view, std::string_view, std::string_view)> http_exch_fn;
 
-// TODO: convert this to using URI type
-
 Response http_sync(const http_exch_fn& fn,
                    std::string_view verb,
-                   std::string_view url,
+                   const URI& uri,
                    std::string_view content_type,
                    const std::vector<uint8_t>& body,
                    size_t allowable_redirects);
 
 Response http_sync(std::string_view verb,
-                   std::string_view url,
+                   const URI& uri,
                    std::string_view content_type,
                    const std::vector<uint8_t>& body,
                    size_t allowable_redirects,
                    std::chrono::milliseconds timeout = std::chrono::milliseconds(3000));
 
-Response BOTAN_TEST_API GET_sync(std::string_view url,
+Response BOTAN_TEST_API GET_sync(const URI& uri,
                                  size_t allowable_redirects = 1,
                                  std::chrono::milliseconds timeout = std::chrono::milliseconds(3000));
 
-Response POST_sync(std::string_view url,
+Response POST_sync(const URI& uri,
                    std::string_view content_type,
                    const std::vector<uint8_t>& body,
                    size_t allowable_redirects = 1,

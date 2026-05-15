@@ -738,6 +738,58 @@ void Certificate_Policies::validate(const X509_Certificate& /*subject*/,
    }
 }
 
+namespace {
+
+std::vector<URI> parse_aia_uris(const std::vector<std::string>& uris, const char* context) {
+   std::vector<URI> out;
+   out.reserve(uris.size());
+   for(const auto& uri : uris) {
+      if(auto parsed = URI::parse(uri)) {
+         out.push_back(std::move(*parsed));
+      } else {
+         throw Invalid_Argument(fmt("Invalid URI in {}", context));
+      }
+   }
+   return out;
+}
+
+}  // namespace
+
+Authority_Information_Access::Authority_Information_Access(std::string_view ocsp,
+                                                           const std::vector<std::string>& ca_issuers) :
+      m_ca_issuers(parse_aia_uris(ca_issuers, "AuthorityInformationAccess CA issuers")) {
+   if(!ocsp.empty()) {
+      if(auto parsed = URI::parse(ocsp)) {
+         m_ocsp_responders.push_back(std::move(*parsed));
+      } else {
+         throw Invalid_Argument("Invalid URI in AuthorityInformationAccess OCSP responder");
+      }
+   }
+}
+
+Authority_Information_Access::Authority_Information_Access(const std::vector<std::string>& ocsp_responders,
+                                                           const std::vector<std::string>& ca_issuers) :
+      m_ocsp_responders(parse_aia_uris(ocsp_responders, "AuthorityInformationAccess OCSP responders")),
+      m_ca_issuers(parse_aia_uris(ca_issuers, "AuthorityInformationAccess CA issuers")) {}
+
+std::vector<std::string> Authority_Information_Access::ocsp_responders() const {
+   std::vector<std::string> out;
+   out.reserve(m_ocsp_responders.size());
+   for(const auto& uri : m_ocsp_responders) {
+      out.push_back(uri.original_input());
+   }
+   return out;
+}
+
+std::vector<std::string> Authority_Information_Access::ca_issuers() const {
+   std::vector<std::string> out;
+   out.reserve(m_ca_issuers.size());
+   for(const auto& uri : m_ca_issuers) {
+      out.push_back(uri.original_input());
+   }
+   return out;
+}
+
 std::vector<uint8_t> Authority_Information_Access::encode_inner() const {
    std::vector<uint8_t> output;
    DER_Encoder der(output);
@@ -745,7 +797,7 @@ std::vector<uint8_t> Authority_Information_Access::encode_inner() const {
    der.start_sequence();
    // OCSP Responders
    for(const auto& ocsp_responder : m_ocsp_responders) {
-      const ASN1_String url(ocsp_responder, ASN1_Type::Ia5String);
+      const ASN1_String url(ocsp_responder.original_input(), ASN1_Type::Ia5String);
       der.start_sequence()
          .encode(OID::from_string("PKIX.OCSP"))
          .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, url.value())
@@ -754,7 +806,7 @@ std::vector<uint8_t> Authority_Information_Access::encode_inner() const {
 
    // CA Issuers
    for(const auto& ca_issuer : m_ca_issuers) {
-      const ASN1_String asn1_ca_issuer(ca_issuer, ASN1_Type::Ia5String);
+      const ASN1_String asn1_ca_issuer(ca_issuer.original_input(), ASN1_Type::Ia5String);
       der.start_sequence()
          .encode(OID::from_string("PKIX.CertificateAuthorityIssuers"))
          .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, asn1_ca_issuer.value())
@@ -793,9 +845,17 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in) 
       access_descriptions_seen += 1;
 
       if(oid == ocsp_responder && name.is_a(6, ASN1_Class::ContextSpecific)) {
-         m_ocsp_responders.push_back(ASN1::to_string(name));
+         if(auto parsed = URI::parse(ASN1::to_string(name))) {
+            m_ocsp_responders.push_back(std::move(*parsed));
+         } else {
+            throw Decoding_Error("Invalid URI in AuthorityInformationAccess OCSP responder");
+         }
       } else if(oid == ca_issuer && name.is_a(6, ASN1_Class::ContextSpecific)) {
-         m_ca_issuers.push_back(ASN1::to_string(name));
+         if(auto parsed = URI::parse(ASN1::to_string(name))) {
+            m_ca_issuers.push_back(std::move(*parsed));
+         } else {
+            throw Decoding_Error("Invalid URI in AuthorityInformationAccess CA issuers");
+         }
       }
    }
 
@@ -906,9 +966,18 @@ void CRL_Distribution_Points::decode_inner(const std::vector<uint8_t>& buf) {
 
    for(const auto& distribution_point : m_distribution_points) {
       for(const auto& uri : distribution_point.point().uri_names()) {
-         m_crl_distribution_urls.push_back(uri.original_input());
+         m_crl_distribution_urls.push_back(uri);
       }
    }
+}
+
+std::vector<std::string> CRL_Distribution_Points::crl_distribution_urls() const {
+   std::vector<std::string> out;
+   out.reserve(m_crl_distribution_urls.size());
+   for(const auto& uri : m_crl_distribution_urls) {
+      out.push_back(uri.original_input());
+   }
+   return out;
 }
 
 void CRL_Distribution_Points::Distribution_Point::encode_into(DER_Encoder& der) const {
@@ -1929,7 +1998,7 @@ void NoRevocationAvailable::validate(const X509_Certificate& subject,
    //    The Authority Information Access certificate extension, if
    //    present, MUST NOT include an id-ad-ocsp accessMethod
    if(const auto* aia = exts.get_extension_object_as<Authority_Information_Access>();
-      aia != nullptr && !aia->ocsp_responders().empty()) {
+      aia != nullptr && !aia->ocsp_responder_uris().empty()) {
       cert_status.at(pos).insert(Certificate_Status_Code::NO_REV_AVAIL_INVALID_USE);
    }
 }
