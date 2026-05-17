@@ -9,21 +9,19 @@
 #define BOTAN_CHARSET_H_
 
 #include <botan/types.h>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
 
 namespace Botan {
 
-// TODO convert these to take arguments as spans or std::string_view
-
 /**
 * Convert a sequence of UCS-2 (big endian) characters to a UTF-8 string
 * This is used for ASN.1 BMPString type
-* @param ucs2 the sequence of UCS-2 characters
-* @param len length of ucs2 in bytes, must be a multiple of 2
+* @param ucs2 the sequence of UCS-2 characters, length must be a multiple of 2
 */
-BOTAN_TEST_API std::string ucs2_to_utf8(const uint8_t ucs2[], size_t len);
+BOTAN_TEST_API std::string ucs2_to_utf8(std::span<const uint8_t> ucs2);
 
 /**
  * Convert a UTF-8 string to a sequence of UCS-2 (big endian) characters
@@ -34,15 +32,14 @@ BOTAN_TEST_API std::string ucs2_to_utf8(const uint8_t ucs2[], size_t len);
  *         surrogate code points, or values outside Unicode), or if a code point exceeds
  *         U+FFFF and cannot be represented in UCS-2
  */
-BOTAN_TEST_API std::vector<uint8_t> utf8_to_ucs2(const std::string& utf8);
+BOTAN_TEST_API std::vector<uint8_t> utf8_to_ucs2(std::string_view utf8);
 
 /**
 * Convert a sequence of UCS-4 (big endian) characters to a UTF-8 string
 * This is used for ASN.1 UniversalString type
-* @param ucs4 the sequence of UCS-4 characters
-* @param len length of ucs4 in bytes, must be a multiple of 4
+* @param ucs4 the sequence of UCS-4 characters, length must be a multiple of 4
 */
-BOTAN_TEST_API std::string ucs4_to_utf8(const uint8_t ucs4[], size_t len);
+BOTAN_TEST_API std::string ucs4_to_utf8(std::span<const uint8_t> ucs4);
 
 /**
  * Convert a UTF-8 string to a sequence of UCS-4 (big endian) characters
@@ -52,14 +49,14 @@ BOTAN_TEST_API std::string ucs4_to_utf8(const uint8_t ucs4[], size_t len);
  * @throws Decoding_Error if the input is not valid UTF-8 (including overlong encodings,
  *         surrogate code points, or values outside the Unicode scalar value range U+0000..U+10FFFF)
  */
-BOTAN_TEST_API std::vector<uint8_t> utf8_to_ucs4(const std::string& utf8);
+BOTAN_TEST_API std::vector<uint8_t> utf8_to_ucs4(std::string_view utf8);
 
-BOTAN_TEST_API std::string latin1_to_utf8(const uint8_t latin1[], size_t len);
+BOTAN_TEST_API std::string latin1_to_utf8(std::span<const uint8_t> latin1);
 
 /**
 * Return true if this string seems to contain a valid sequence of UTF-8
 */
-bool is_valid_utf8(const std::string& str);
+bool is_valid_utf8(std::string_view str);
 
 /**
 * Return a string containing 'c', quoted and possibly escaped

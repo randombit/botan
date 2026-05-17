@@ -1083,15 +1083,17 @@ class Charset_Tests final : public Text_Based_Test {
 
          const std::vector<uint8_t> in = vars.get_req_bin("In");
 
+         const auto in_sv = std::string_view(reinterpret_cast<const char*>(in.data()), in.size());
+
          if(type == "UTF8-UCS2-INVALID") {
             result.test_throws<Botan::Decoding_Error>("utf8_to_ucs2 rejects invalid input",
-                                                      [&] { Botan::utf8_to_ucs2(std::string(in.begin(), in.end())); });
+                                                      [&] { Botan::utf8_to_ucs2(in_sv); });
             return result;
          }
 
          if(type == "UTF8-UCS4-INVALID") {
             result.test_throws<Botan::Decoding_Error>("utf8_to_ucs4 rejects invalid input",
-                                                      [&] { Botan::utf8_to_ucs4(std::string(in.begin(), in.end())); });
+                                                      [&] { Botan::utf8_to_ucs4(in_sv); });
             return result;
          }
 
@@ -1100,17 +1102,17 @@ class Charset_Tests final : public Text_Based_Test {
          std::string converted;
 
          if(type == "UCS2-UTF8") {
-            converted = Botan::ucs2_to_utf8(in.data(), in.size());
+            converted = Botan::ucs2_to_utf8(in);
          } else if(type == "UCS4-UTF8") {
-            converted = Botan::ucs4_to_utf8(in.data(), in.size());
+            converted = Botan::ucs4_to_utf8(in);
          } else if(type == "UTF8-UCS2") {
-            std::vector<uint8_t> ucs2 = Botan::utf8_to_ucs2(std::string(in.begin(), in.end()));
+            std::vector<uint8_t> ucs2 = Botan::utf8_to_ucs2(in_sv);
             converted = std::string(ucs2.begin(), ucs2.end());
          } else if(type == "UTF8-UCS4") {
-            std::vector<uint8_t> ucs4 = Botan::utf8_to_ucs4(std::string(in.begin(), in.end()));
+            std::vector<uint8_t> ucs4 = Botan::utf8_to_ucs4(in_sv);
             converted = std::string(ucs4.begin(), ucs4.end());
          } else if(type == "LATIN1-UTF8") {
-            converted = Botan::latin1_to_utf8(in.data(), in.size());
+            converted = Botan::latin1_to_utf8(in);
          } else {
             throw Test_Error("Unexpected header '" + type + "' in charset tests");
          }

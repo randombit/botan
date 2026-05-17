@@ -49,7 +49,7 @@ void append_utf8_for(std::string& s, uint32_t c) {
    }
 }
 
-uint32_t next_utf8_codepoint(const std::string& utf8, size_t& pos) {
+uint32_t next_utf8_codepoint(std::string_view utf8, size_t& pos) {
    auto read_continuation = [&]() -> uint32_t {
       if(pos >= utf8.size()) {
          throw Decoding_Error("Invalid UTF-8 sequence");
@@ -103,7 +103,7 @@ uint32_t next_utf8_codepoint(const std::string& utf8, size_t& pos) {
 
 }  // namespace
 
-bool is_valid_utf8(const std::string& utf8) {
+bool is_valid_utf8(std::string_view utf8) {
    try {
       size_t pos = 0;
       while(pos < utf8.size()) {
@@ -116,23 +116,23 @@ bool is_valid_utf8(const std::string& utf8) {
    return true;
 }
 
-std::string ucs2_to_utf8(const uint8_t ucs2[], size_t len) {
-   if(len % 2 != 0) {
+std::string ucs2_to_utf8(std::span<const uint8_t> ucs2) {
+   if(ucs2.size() % 2 != 0) {
       throw Decoding_Error("Invalid length for UCS-2 string");
    }
 
-   const size_t chars = len / 2;
+   const size_t chars = ucs2.size() / 2;
 
    std::string s;
    for(size_t i = 0; i != chars; ++i) {
-      const uint32_t c = load_be<uint16_t>(ucs2, i);
+      const uint32_t c = load_be<uint16_t>(ucs2.data(), i);
       append_utf8_for(s, c);
    }
 
    return s;
 }
 
-std::vector<uint8_t> utf8_to_ucs2(const std::string& utf8) {
+std::vector<uint8_t> utf8_to_ucs2(std::string_view utf8) {
    std::vector<uint8_t> out;
    out.reserve(utf8.size() * 2);
 
@@ -150,23 +150,23 @@ std::vector<uint8_t> utf8_to_ucs2(const std::string& utf8) {
    return out;
 }
 
-std::string ucs4_to_utf8(const uint8_t ucs4[], size_t len) {
-   if(len % 4 != 0) {
+std::string ucs4_to_utf8(std::span<const uint8_t> ucs4) {
+   if(ucs4.size() % 4 != 0) {
       throw Decoding_Error("Invalid length for UCS-4 string");
    }
 
-   const size_t chars = len / 4;
+   const size_t chars = ucs4.size() / 4;
 
    std::string s;
    for(size_t i = 0; i != chars; ++i) {
-      const uint32_t c = load_be<uint32_t>(ucs4, i);
+      const uint32_t c = load_be<uint32_t>(ucs4.data(), i);
       append_utf8_for(s, c);
    }
 
    return s;
 }
 
-std::vector<uint8_t> utf8_to_ucs4(const std::string& utf8) {
+std::vector<uint8_t> utf8_to_ucs4(std::string_view utf8) {
    std::vector<uint8_t> out;
    out.reserve(utf8.size() * 4);
 
@@ -185,11 +185,10 @@ std::vector<uint8_t> utf8_to_ucs4(const std::string& utf8) {
 /*
 * Convert from ISO 8859-1 to UTF-8
 */
-std::string latin1_to_utf8(const uint8_t chars[], size_t len) {
+std::string latin1_to_utf8(std::span<const uint8_t> chars) {
    std::string s;
-   for(size_t i = 0; i != len; ++i) {
-      const uint32_t c = static_cast<uint8_t>(chars[i]);
-      append_utf8_for(s, c);
+   for(const uint8_t b : chars) {
+      append_utf8_for(s, static_cast<uint32_t>(b));
    }
    return s;
 }
