@@ -319,7 +319,8 @@ class HTTP_Get final : public Command {
             throw CLI_Usage_Error("Could not parse URL '" + url + "'");
          }
 
-         output() << Botan::HTTP::GET_sync(*uri, redirects, timeout) << "\n";
+         const auto limits = Botan::HTTP::RequestLimits().set_max_redirects(redirects).set_timeout(timeout);
+         output() << Botan::HTTP::GET_sync(*uri, limits) << "\n";
       }
 };
 

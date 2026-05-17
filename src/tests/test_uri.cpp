@@ -208,9 +208,33 @@ class URI_Tests final : public Test {
          result.test_is_true("empty userinfo: accessor reports present", empty.authority().userinfo().has_value());
          result.test_str_eq("empty userinfo: accessor reports empty string", *empty.authority().userinfo(), "");
 
-         // path_query_fragment exposes the verbatim tail.
-         const auto with_query = Botan::URI::parse("https://example.com/path?q=1#frag").value();
-         result.test_str_eq("path_query_fragment preserved", with_query.path_query_fragment(), "/path?q=1#frag");
+         // Path, query, and fragment are split out and exposed separately.
+         const auto full = Botan::URI::parse("https://example.com/path?q=1#frag").value();
+         result.test_str_eq("path component", full.path(), "/path");
+         result.test_is_true("query present", full.query().has_value());
+         result.test_str_eq("query component", *full.query(), "q=1");
+         result.test_is_true("fragment present", full.fragment().has_value());
+         result.test_str_eq("fragment component", *full.fragment(), "frag");
+
+         // Empty path is preserved as empty (not defaulted to "/").
+         const auto no_path = Botan::URI::parse("https://example.com").value();
+         result.test_str_eq("empty path stays empty", no_path.path(), "");
+         result.test_is_false("no query", no_path.query().has_value());
+         result.test_is_false("no fragment", no_path.fragment().has_value());
+
+         // Query without path: empty path, present query.
+         const auto query_only = Botan::URI::parse("https://example.com?q=1").value();
+         result.test_str_eq("query-only: path is empty", query_only.path(), "");
+         result.test_is_true("query-only: query present", query_only.query().has_value());
+         result.test_str_eq("query-only: query value", *query_only.query(), "q=1");
+
+         // Present-but-empty query / fragment are distinct from absent.
+         const auto empty_query = Botan::URI::parse("https://example.com/p?").value();
+         result.test_is_true("empty query: present", empty_query.query().has_value());
+         result.test_str_eq("empty query: value", *empty_query.query(), "");
+         const auto empty_frag = Botan::URI::parse("https://example.com/p#").value();
+         result.test_is_true("empty fragment: present", empty_frag.fragment().has_value());
+         result.test_str_eq("empty fragment: value", *empty_frag.fragment(), "");
 
          return result;
       }

@@ -138,11 +138,25 @@ class BOTAN_PUBLIC_API(3, 13) URI final {
       std::optional<uint16_t> port() const { return m_authority.port(); }
 
       /**
-      * Everything after the authority: path (with leading `/`), query
-      * (with leading `?`), and fragment (with leading `#`), preserved
-      * verbatim. Empty if the parsed URI had only an authority.
+      * The path component, preserved verbatim. Begins with "/" when present;
+      * empty if the parsed URI had no path (e.g. "http://example.com" or
+      * "http://example.com?q").
       */
-      const std::string& path_query_fragment() const { return m_path_query_fragment; }
+      const std::string& path() const { return m_path; }
+
+      /**
+      * The query component, without the leading "?". Nullopt if no "?" was
+      * present; present-but-empty distinguishes "http://h/p?" from
+      * "http://h/p".
+      */
+      const std::optional<std::string>& query() const { return m_query; }
+
+      /**
+      * The fragment component, without the leading "#". Nullopt if no "#"
+      * was present; present-but-empty distinguishes "http://h/p#" from
+      * "http://h/p".
+      */
+      const std::optional<std::string>& fragment() const { return m_fragment; }
 
       /**
       * The original input that was parsed.
@@ -159,16 +173,25 @@ class BOTAN_PUBLIC_API(3, 13) URI final {
       static std::vector<URI> filter_scheme(std::string_view scheme, std::span<const URI> uris);
 
    private:
-      URI(std::string raw, std::string scheme, Authority authority, std::string path_query_fragment) :
+      URI(std::string raw,
+          std::string scheme,
+          Authority authority,
+          std::string path,
+          std::optional<std::string> query,
+          std::optional<std::string> fragment) :
             m_raw(std::move(raw)),
             m_scheme(std::move(scheme)),
             m_authority(std::move(authority)),
-            m_path_query_fragment(std::move(path_query_fragment)) {}
+            m_path(std::move(path)),
+            m_query(std::move(query)),
+            m_fragment(std::move(fragment)) {}
 
       std::string m_raw;
       std::string m_scheme;
       Authority m_authority;
-      std::string m_path_query_fragment;
+      std::string m_path;
+      std::optional<std::string> m_query;
+      std::optional<std::string> m_fragment;
 };
 
 }  // namespace Botan

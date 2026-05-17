@@ -133,13 +133,13 @@ bool validate_userinfo(std::string_view userinfo) {
 }  // namespace
 
 std::strong_ordering URI::operator<=>(const URI& other) const {
-   return std::tie(m_scheme, m_authority, m_path_query_fragment) <=>
-          std::tie(other.m_scheme, other.m_authority, other.m_path_query_fragment);
+   return std::tie(m_scheme, m_authority, m_path, m_query, m_fragment) <=>
+          std::tie(other.m_scheme, other.m_authority, other.m_path, other.m_query, other.m_fragment);
 }
 
 bool URI::operator==(const URI& other) const {
-   return m_scheme == other.m_scheme && m_authority == other.m_authority &&
-          m_path_query_fragment == other.m_path_query_fragment;
+   return m_scheme == other.m_scheme && m_authority == other.m_authority && m_path == other.m_path &&
+          m_query == other.m_query && m_fragment == other.m_fragment;
 }
 
 std::strong_ordering URI::Authority::operator<=>(const URI::Authority& other) const {
@@ -219,8 +219,27 @@ std::optional<URI> URI::parse(std::string_view raw) {
       return {};
    }
 
+   // Split into path / query / fragment. Validation above guarantees at most
+   // one '#', so the first '#' is the fragment delimiter, and within the
+   // pre-fragment portion the first '?' (if any) is the query delimiter.
+   const auto hash = path_query_fragment.find('#');
+   const auto pre_fragment =
+      (hash == std::string_view::npos) ? path_query_fragment : path_query_fragment.substr(0, hash);
+   std::optional<std::string> fragment;
+   if(hash != std::string_view::npos) {
+      fragment = std::string(path_query_fragment.substr(hash + 1));
+   }
+
+   const auto qmark = pre_fragment.find('?');
+   const auto path = (qmark == std::string_view::npos) ? pre_fragment : pre_fragment.substr(0, qmark);
+   std::optional<std::string> query;
+   if(qmark != std::string_view::npos) {
+      query = std::string(pre_fragment.substr(qmark + 1));
+   }
+
    // Accept
-   return URI(std::string(raw), scheme, std::move(*parsed_authority), std::string(path_query_fragment));
+   return URI(
+      std::string(raw), scheme, std::move(*parsed_authority), std::string(path), std::move(query), std::move(fragment));
 }
 
 //static
