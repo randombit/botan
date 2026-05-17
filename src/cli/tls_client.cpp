@@ -407,6 +407,11 @@ class TLS_Client final : public Command {
                continue;
             }
 
+            if(fd >= FD_SETSIZE) {
+               ::close(fd);
+               throw CLI_Error("Socket descriptor exceeds FD_SETSIZE; select() would be unsafe");
+            }
+
             if(::connect(fd, rp->ai_addr, rp->ai_addrlen) != 0) {
                ::close(fd);
                continue;
