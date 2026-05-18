@@ -53,12 +53,12 @@ std::optional<X509_Certificate> Certificate_Store_In_SQL::find_cert(const X509_D
 
    if(key_id.empty()) {
       stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix +
-                                       "certificates WHERE subject_dn == ?1 LIMIT 1");
+                                       "certificates WHERE subject_dn = ?1 LIMIT 1");
       stmt->bind(1, dn_encoding);
    } else {
       stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix +
                                        "certificates WHERE\
-                                        subject_dn == ?1 AND (key_id IS NULL OR key_id == ?2) LIMIT 1");
+                                        subject_dn = ?1 AND (key_id IS NULL OR key_id = ?2) LIMIT 1");
       stmt->bind(1, dn_encoding);
       stmt->bind(2, key_id);
    }
@@ -79,12 +79,12 @@ std::vector<X509_Certificate> Certificate_Store_In_SQL::find_all_certs(const X50
    const std::vector<uint8_t> dn_encoding = subject_dn.BER_encode();
 
    if(key_id.empty()) {
-      stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE subject_dn == ?1");
+      stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE subject_dn = ?1");
       stmt->bind(1, dn_encoding);
    } else {
       stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix +
                                        "certificates WHERE\
-                                        subject_dn == ?1 AND (key_id IS NULL OR key_id == ?2)");
+                                        subject_dn = ?1 AND (key_id IS NULL OR key_id = ?2)");
       stmt->bind(1, dn_encoding);
       stmt->bind(2, key_id);
    }
@@ -163,7 +163,7 @@ bool Certificate_Store_In_SQL::insert_cert(const X509_Certificate& cert) {
 }
 
 bool Certificate_Store_In_SQL::contains(const X509_Certificate& cert) const {
-   auto stmt = m_database->new_statement("SELECT 1 FROM " + m_prefix + "certificates WHERE fingerprint == ?1");
+   auto stmt = m_database->new_statement("SELECT 1 FROM " + m_prefix + "certificates WHERE fingerprint = ?1");
    stmt->bind(1, cert.fingerprint("SHA-256"));
    return stmt->step();
 }
@@ -173,7 +173,7 @@ bool Certificate_Store_In_SQL::remove_cert(const X509_Certificate& cert) {
       return false;
    }
 
-   auto stmt = m_database->new_statement("DELETE FROM " + m_prefix + "certificates WHERE fingerprint == ?1");
+   auto stmt = m_database->new_statement("DELETE FROM " + m_prefix + "certificates WHERE fingerprint = ?1");
 
    stmt->bind(1, cert.fingerprint("SHA-256"));
    stmt->spin();
@@ -186,10 +186,10 @@ std::shared_ptr<const Private_Key> Certificate_Store_In_SQL::find_key(const X509
    auto stmt = m_database->new_statement("SELECT key FROM " + m_prefix +
                                          "keys "
                                          "JOIN " +
-                                         m_prefix + "certificates ON " + m_prefix + "keys.fingerprint == " + m_prefix +
+                                         m_prefix + "certificates ON " + m_prefix + "keys.fingerprint = " + m_prefix +
                                          "certificates.priv_fingerprint "
                                          "WHERE " +
-                                         m_prefix + "certificates.fingerprint == ?1");
+                                         m_prefix + "certificates.fingerprint = ?1");
    stmt->bind(1, cert.fingerprint("SHA-256"));
 
    std::shared_ptr<const Private_Key> key;
@@ -204,7 +204,7 @@ std::shared_ptr<const Private_Key> Certificate_Store_In_SQL::find_key(const X509
 std::vector<X509_Certificate> Certificate_Store_In_SQL::find_certs_for_key(const Private_Key& key) const {
    auto fprint = key.fingerprint_private("SHA-256");
    auto stmt =
-      m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE priv_fingerprint == ?1");
+      m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE priv_fingerprint = ?1");
 
    stmt->bind(1, fprint);
 
@@ -233,8 +233,8 @@ bool Certificate_Store_In_SQL::insert_key(const X509_Certificate& cert, const Pr
    stmt1->bind(2, pkcs8.data(), pkcs8.size());
    stmt1->spin();
 
-   auto stmt2 = m_database->new_statement("UPDATE " + m_prefix +
-                                          "certificates SET priv_fingerprint = ?1 WHERE fingerprint == ?2");
+   auto stmt2 =
+      m_database->new_statement("UPDATE " + m_prefix + "certificates SET priv_fingerprint = ?1 WHERE fingerprint = ?2");
 
    stmt2->bind(1, fprint);
    stmt2->bind(2, cert.fingerprint("SHA-256"));
@@ -245,7 +245,7 @@ bool Certificate_Store_In_SQL::insert_key(const X509_Certificate& cert, const Pr
 
 void Certificate_Store_In_SQL::remove_key(const Private_Key& key) {
    auto fprint = key.fingerprint_private("SHA-256");
-   auto stmt = m_database->new_statement("DELETE FROM " + m_prefix + "keys WHERE fingerprint == ?1");
+   auto stmt = m_database->new_statement("DELETE FROM " + m_prefix + "keys WHERE fingerprint = ?1");
 
    stmt->bind(1, fprint);
    stmt->spin();
@@ -286,7 +286,7 @@ void Certificate_Store_In_SQL::revoke_cert(const X509_Certificate& cert, CRL_Cod
 }
 
 void Certificate_Store_In_SQL::affirm_cert(const X509_Certificate& cert) {
-   auto stmt = m_database->new_statement("DELETE FROM " + m_prefix + "revoked WHERE fingerprint == ?1");
+   auto stmt = m_database->new_statement("DELETE FROM " + m_prefix + "revoked WHERE fingerprint = ?1");
 
    stmt->bind(1, cert.fingerprint("SHA-256"));
    stmt->spin();
@@ -297,7 +297,7 @@ std::vector<X509_CRL> Certificate_Store_In_SQL::generate_crls() const {
                                          "revoked "
                                          "JOIN " +
                                          m_prefix + "certificates ON " + m_prefix +
-                                         "certificates.fingerprint == " + m_prefix + "revoked.fingerprint");
+                                         "certificates.fingerprint = " + m_prefix + "revoked.fingerprint");
 
    std::map<X509_DN, std::vector<CRL_Entry>> crls;
    while(stmt->step()) {
