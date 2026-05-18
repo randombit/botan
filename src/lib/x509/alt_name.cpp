@@ -8,6 +8,7 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/dns_name.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
@@ -182,7 +183,12 @@ void AlternativeName::decode_from(BER_Decoder& source) {
       } else if(obj.is_a(1, ASN1_Class::ContextSpecific)) {
          add_email(ASN1::to_string(obj));
       } else if(obj.is_a(2, ASN1_Class::ContextSpecific)) {
-         m_dns.insert(check_and_canonicalize_dns_name(ASN1::to_string(obj)));
+         auto name = ASN1::to_string(obj);
+         if(auto dns = DNSName::from_string(name)) {
+            m_dns.insert(dns->to_string());
+         } else {
+            throw Decoding_Error("Invalid DNS name");
+         }
       } else if(obj.is_a(4, ASN1_Class::ContextSpecific | ASN1_Class::Constructed)) {
          BER_Decoder dec(obj, names.limits());
          X509_DN dn;
