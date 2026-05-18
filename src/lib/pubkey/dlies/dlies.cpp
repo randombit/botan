@@ -69,7 +69,7 @@ std::vector<uint8_t> DLIES_Encryptor::enc(const uint8_t in[], size_t length, Ran
       m_cipher->start(m_iv.bits_of());
       m_cipher->finish(ciphertext);
    } else {
-      xor_buf(ciphertext, secret_keys, cipher_key_len);
+      xor_buf(std::span{ciphertext}.first(cipher_key_len), std::span{secret_keys}.first(cipher_key_len));
    }
 
    // calculate MAC
@@ -181,7 +181,7 @@ secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
          return secure_vector<uint8_t>();
       }
    } else {
-      xor_buf(ciphertext, secret_keys.data(), cipher_key_len);
+      xor_buf(std::span{ciphertext}.first(cipher_key_len), std::span{secret_keys}.first(cipher_key_len));
    }
 
    return ciphertext;

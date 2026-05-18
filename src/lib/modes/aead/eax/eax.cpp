@@ -134,13 +134,13 @@ void EAX_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    update(buffer, offset);
 
    secure_vector<uint8_t> data_mac = m_cmac->final();
-   xor_buf(data_mac, m_nonce_mac, data_mac.size());
+   xor_buf(data_mac, m_nonce_mac);
 
    if(m_ad_mac.empty()) {
       m_ad_mac = eax_prf(1, block_size(), *m_cmac, nullptr, 0);
    }
 
-   xor_buf(data_mac, m_ad_mac, data_mac.size());
+   xor_buf(data_mac, m_ad_mac);
 
    buffer += std::make_pair(data_mac.data(), tag_size());
 
