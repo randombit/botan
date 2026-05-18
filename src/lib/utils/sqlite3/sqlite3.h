@@ -58,7 +58,7 @@ class BOTAN_PUBLIC_API(2, 0) Sqlite3_Database final : public SQL_Database {
             void bind_null(int column) override;
 
             std::span<const uint8_t> get_blob(int column) override;
-            std::string get_str(int column) override;
+            std::optional<std::string> get_str(int column) override;
             size_t get_size_t(int column) override;
 
             size_t spin() override;

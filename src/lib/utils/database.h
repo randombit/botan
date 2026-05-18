@@ -12,6 +12,7 @@
 #include <botan/types.h>
 #include <chrono>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <vector>
@@ -49,10 +50,11 @@ class BOTAN_PUBLIC_API(2, 0) SQL_Database /* NOLINT(*-special-member-functions) 
 
             virtual void bind_null(int column) = 0;
 
-            /* Get output */
+            /* Get blob output */
             virtual std::span<const uint8_t> get_blob(int column) = 0;
 
-            virtual std::string get_str(int column) = 0;
+            /* Get string output, returns nullopt if the column value was NULL */
+            virtual std::optional<std::string> get_str(int column) = 0;
 
             virtual size_t get_size_t(int column) = 0;
 

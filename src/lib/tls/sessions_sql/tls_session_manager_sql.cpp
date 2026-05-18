@@ -126,7 +126,7 @@ void Session_Manager_SQL::initialize_existing_database(std::string_view passphra
    const auto salt = stmt->get_blob(0);
    const size_t iterations = stmt->get_size_t(1);
    const size_t check_val_db = stmt->get_size_t(2);
-   const std::string pbkdf_name = stmt->get_str(3);
+   const std::string pbkdf_name = stmt->get_str(3).value();
 
    secure_vector<uint8_t> derived_key(32 + 2);
 
@@ -221,7 +221,7 @@ std::vector<Session_with_Handle> Session_Manager_SQL::find_some(const Server_Inf
          if(!ticket_blob.empty()) {
             return Session_Handle(Session_Ticket(ticket_blob));
          } else {
-            return Session_Handle(Session_ID(Botan::hex_decode(stmt->get_str(0))));
+            return Session_Handle(Session_ID(Botan::hex_decode(stmt->get_str(0).value())));
          }
       }();
 

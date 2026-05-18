@@ -154,12 +154,19 @@ std::span<const uint8_t> Sqlite3_Database::Sqlite3_Statement::get_blob(int colum
    return {static_cast<const uint8_t*>(session_blob), static_cast<size_t>(session_blob_size)};
 }
 
-std::string Sqlite3_Database::Sqlite3_Statement::get_str(int column) {
-   BOTAN_ASSERT(::sqlite3_column_type(m_stmt, column) == SQLITE_TEXT, "Return value is text");
+std::optional<std::string> Sqlite3_Database::Sqlite3_Statement::get_str(int column) {
+   const auto column_type = ::sqlite3_column_type(m_stmt, column);
+   if(column_type == SQLITE_NULL) {
+      return std::nullopt;
+   }
+
+   BOTAN_ASSERT(column_type == SQLITE_TEXT, "Return value is text");
 
    const unsigned char* str = ::sqlite3_column_text(m_stmt, column);
+   const int len = ::sqlite3_column_bytes(m_stmt, column);
+   BOTAN_ASSERT(len >= 0, "Text length is non-negative");
 
-   return std::string(cast_uint8_ptr_to_char(str));
+   return std::string(cast_uint8_ptr_to_char(str), static_cast<size_t>(len));
 }
 
 size_t Sqlite3_Database::Sqlite3_Statement::get_size_t(int column) {

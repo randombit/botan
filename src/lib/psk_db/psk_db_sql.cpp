@@ -40,7 +40,7 @@ std::string Encrypted_PSK_Database_SQL::kv_get(std::string_view name) const {
    stmt->bind(1, name);
 
    while(stmt->step()) {
-      return stmt->get_str(0);
+      return stmt->get_str(0).value_or("");
    }
    return "";
 }
@@ -51,7 +51,7 @@ std::set<std::string> Encrypted_PSK_Database_SQL::kv_get_all() const {
    auto stmt = m_db->new_statement("select psk_name from " + m_table_name);
 
    while(stmt->step()) {
-      names.insert(stmt->get_str(0));
+      names.insert(stmt->get_str(0).value());
    }
 
    return names;
