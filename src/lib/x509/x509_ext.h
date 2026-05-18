@@ -520,6 +520,12 @@ class OCSP_NoCheck final : public Certificate_Extension {
 
       OID oid_of() const override { return static_oid(); }
 
+      void validate(const X509_Certificate& subject,
+                    const std::optional<X509_Certificate>& issuer,
+                    const std::vector<X509_Certificate>& cert_path,
+                    std::vector<std::set<Certificate_Status_Code>>& cert_status,
+                    size_t pos) override;
+
    private:
       std::string oid_name() const override { return "PKIX.OCSP.NoCheck"; }
 

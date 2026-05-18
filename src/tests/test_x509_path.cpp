@@ -576,6 +576,51 @@ std::vector<Test::Result> Validate_NoRevAvail_Test::run() {
 
 BOTAN_REGISTER_TEST("x509", "x509_no_rev_avail", Validate_NoRevAvail_Test);
 
+class Validate_Invalid_OCSP_NoCheck_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override;
+};
+
+std::vector<Test::Result> Validate_Invalid_OCSP_NoCheck_Test::run() {
+   if(Botan::has_filesystem_impl() == false) {
+      return {Test::Result::Note("Path validation", "Skipping due to missing filesystem access")};
+   }
+
+   Test::Result result("Invalid use of OCSP nocheck extension");
+
+   const std::string root_crt = Test::data_file("x509/invalid_ocsp_nocheck/root.pem");
+   const std::string ee_crt = Test::data_file("x509/invalid_ocsp_nocheck/leaf.pem");
+
+   auto validation_time = Botan::calendar_point(2026, 5, 19, 4, 58, 33).to_std_timepoint();
+
+   const Botan::X509_Certificate root(root_crt);
+   const Botan::X509_Certificate ee_cert(ee_crt);
+
+   Botan::Certificate_Store_In_Memory trusted;
+   trusted.add_certificate(root);
+
+   const std::vector<Botan::X509_Certificate> chain = {ee_cert};
+
+   const auto ocsp_nocheck_oid = Botan::OID::from_name("PKIX.OCSP.NoCheck").value();
+   result.test_is_true("leaf has OCSP nocheck extension", ee_cert.v3_extensions().extension_set(ocsp_nocheck_oid));
+   result.test_is_false("leaf is not an OCSP responder", ee_cert.allowed_usage(Botan::Usage_Type::OCSP_RESPONDER));
+
+   const Botan::Path_Validation_Restrictions restrictions;
+   const Botan::Path_Validation_Result validation_result =
+      Botan::x509_path_validate(chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
+
+   result.test_is_false("Path validation failed", validation_result.successful_validation());
+   result.test_enum_eq("Result code is INVALID_OCSP_NOCHECK",
+                       validation_result.result(),
+                       Botan::Certificate_Status_Code::INVALID_OCSP_NOCHECK);
+   result.test_str_eq(
+      "Path validation result string", validation_result.result_string(), "Invalid use of OCSP NoCheck extension");
+
+   return {result};
+}
+
+BOTAN_REGISTER_TEST("x509", "x509_invalid_ocsp_nocheck", Validate_Invalid_OCSP_NoCheck_Test);
+
 class Validate_Name_Constraint_CaseInsensitive final : public Test {
    public:
       std::vector<Test::Result> run() override;
