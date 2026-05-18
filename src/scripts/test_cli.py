@@ -1003,15 +1003,22 @@ def cli_cert_issuance_tests(tmp_dir, algos=None):
     test_cli("gen_pkcs10", "%s Intermediate --ca --output=%s" % (int_key, int_csr))
     test_cli("sign_cert", "%s %s %s --output=%s" % (root_crt, root_key, int_csr, int_crt))
 
-    test_cli("gen_pkcs10", "%s Leaf --output=%s" % (leaf_key, leaf_csr))
-    test_cli("sign_cert", "%s %s %s --output=%s" % (int_crt, int_key, leaf_csr, leaf_crt))
+    if algos[2][0] != "ML-KEM":
+        test_cli("gen_pkcs10", "%s Leaf --output=%s" % (leaf_key, leaf_csr))
+        test_cli("sign_cert", "%s %s %s --output=%s" % (int_crt, int_key, leaf_csr, leaf_crt))
+    else:
+        leaf_pub = os.path.join(tmp_dir, 'leaf.pub')
+        test_cli("pkcs8", "%s --pub-out --output=%s" % (leaf_key, leaf_pub ))
+        test_cli("create_cert_for_key", "%s %s %s Leaf --output=%s" % (leaf_pub, int_crt, int_key, leaf_crt))
 
     test_cli("cert_verify", "%s %s %s" % (leaf_crt, int_crt, root_crt), "Certificate passes validation checks")
 
 def cli_cert_issuance_alternative_algos_tests(tmp_dir):
     for i, algo in enumerate([[("Dilithium", "Dilithium-8x7-AES-r3"), ("Dilithium", "Dilithium-8x7-AES-r3"), ("Dilithium", "Dilithium-8x7-AES-r3")],
                               [("ECDSA",     "secp256r1"),            ("ECDSA",     "secp384r1"),            ("ECDSA",     "secp256r1")],
-                              [("Dilithium", "Dilithium-6x5-r3"),     ("ECDSA",     "secp256r1"),            ("RSA",       "2048")]]):
+                              [("Dilithium", "Dilithium-6x5-r3"),     ("ECDSA",     "secp256r1"),            ("RSA",       "2048")],
+                              [("Dilithium", "Dilithium-6x5-r3"),     ("ECDSA",     "secp256r1"),            ("ML-KEM",    "")]
+                             ]):
         sub_tmp_dir = os.path.join(tmp_dir, str(i))
         os.mkdir(sub_tmp_dir)
         cli_cert_issuance_tests(sub_tmp_dir, algo)

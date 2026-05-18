@@ -14,6 +14,7 @@
    #include <botan/pk_keys.h>
    #include <botan/pkcs8.h>
    #include <botan/x509_ca.h>
+   #include <botan/x509_key.h>
    #include <botan/x509cert.h>
    #include <botan/x509path.h>
    #include <botan/x509self.h>
@@ -380,6 +381,100 @@ class Generate_PKCS10 final : public Command {
 };
 
 BOTAN_REGISTER_COMMAND("gen_pkcs10", Generate_PKCS10);
+
+class Create_Cert_for_Key final : public Command {
+   public:
+      Create_Cert_for_Key() :
+            Command(
+               "create_cert_for_key client_public_key ca_cert ca_key CN --ca-key-pass= --duration=365  --country= --organization= "
+               "--email= --dns= --ext-ku= --hash= --padding= --emsa=") {}
+
+      std::string group() const override { return "x509"; }
+
+      std::string description() const override {
+         return "Generate a certificate by a CA for a given public key. This is for instance needed to issue ML-KEM certificates, for which PKCS#10 requests cannot be generated.";
+      }
+
+      void go() override {
+         const std::string ca_key_file = get_arg("ca_key");
+         const std::string passphrase = get_passphrase_arg("Passphrase for CA key " + ca_key_file, "ca-key-pass");
+
+         auto key = load_private_key(ca_key_file, passphrase);
+
+         Botan::X509_Cert_Options opts;
+
+         opts.common_name = get_arg("CN");
+         opts.country = get_arg("country");
+         opts.organization = get_arg("organization");
+         opts.email = get_arg("email");
+         opts.more_dns = Command::split_on(get_arg("dns"), ',');
+
+         for(const std::string& ext_ku : Command::split_on(get_arg("ext-ku"), ',')) {
+            opts.add_ex_constraint(ext_ku);
+         }
+
+         // TODO(Botan4) remove --emsa option and this logic
+         const std::string padding = [&]() {
+            auto p = get_arg("padding");
+            auto e = get_arg("emsa");
+            if(e.empty() || p == e) {
+               return p;
+            } else if(p.empty()) {
+               return e;
+            } else {
+               throw CLI_Usage_Error("Use either --padding or --emsa not both");
+            }
+         }();
+
+         if(padding.empty() == false) {
+            opts.set_padding_scheme(padding);
+         }
+
+         Botan::X509_DN subject_dn;
+
+         subject_dn.add_attribute("X520.CommonName", opts.common_name);
+         subject_dn.add_attribute("X520.Country", opts.country);
+         subject_dn.add_attribute("X520.State", opts.state);
+         subject_dn.add_attribute("X520.Locality", opts.locality);
+         subject_dn.add_attribute("X520.Organization", opts.organization);
+         subject_dn.add_attribute("X520.OrganizationalUnit", opts.org_unit);
+         subject_dn.add_attribute("X520.SerialNumber", opts.serial_number);
+
+         for(const auto& extra_ou : opts.more_org_units) {
+            subject_dn.add_attribute("X520.OrganizationalUnit", extra_ou);
+         }
+
+         auto client_pub_key = Botan::X509::load_key(get_arg("client_public_key"));
+         const Botan::X509_Certificate ca_cert(get_arg("ca_cert"));
+
+         const std::string hash = get_arg("hash");
+
+         Botan::X509_CA ca(ca_cert, *key, hash, padding, rng());
+
+         auto now = std::chrono::system_clock::now();
+
+         const Botan::X509_Time start_time(now);
+
+         typedef std::chrono::duration<int, std::ratio<86400>> days;
+
+         const Botan::X509_Time end_time(now + days(get_arg_sz("duration")));
+
+         const Botan::X509_Certificate new_cert = Botan::X509_CA::make_cert(ca.signature_op(),
+                                                                            rng(),
+                                                                            ca.algorithm_identifier(),
+                                                                            client_pub_key->subject_public_key(),
+                                                                            start_time,
+                                                                            end_time,
+                                                                            ca_cert.subject_dn(),
+                                                                            subject_dn,
+                                                                            opts.extensions);
+         update_stateful_private_key(*key, rng(), ca_key_file, passphrase);
+
+         output() << new_cert.PEM_encode();
+      }
+};
+
+BOTAN_REGISTER_COMMAND("create_cert_for_key", Create_Cert_for_Key);
 
 }  // namespace
 
