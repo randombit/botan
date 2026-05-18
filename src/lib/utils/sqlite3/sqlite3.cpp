@@ -56,11 +56,9 @@ void Sqlite3_Database::create_table(std::string_view table_schema) {
    const int rc = ::sqlite3_exec(m_db, std::string(table_schema).c_str(), nullptr, nullptr, &errmsg);
 
    if(rc != SQLITE_OK) {
-      const std::string err_msg = errmsg;
+      const std::string err_msg = (errmsg != nullptr) ? errmsg : "unknown error";
       ::sqlite3_free(errmsg);
-      ::sqlite3_close(m_db);
-      m_db = nullptr;
-      throw SQL_DB_Error("sqlite3_exec for table failed - " + err_msg);
+      throw SQL_DB_Error("sqlite3_exec for table failed - " + err_msg, rc);
    }
 }
 
