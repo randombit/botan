@@ -26,8 +26,9 @@ void Argon2::derive_key(uint8_t output[],
                         const char* password,
                         size_t password_len,
                         const uint8_t salt[],
-                        size_t salt_len) const {
-   argon2(output, output_len, password, password_len, salt, salt_len, nullptr, 0, nullptr, 0);
+                        size_t salt_len,
+                        const std::optional<std::stop_token>& stop_token) const {
+   argon2(output, output_len, password, password_len, salt, salt_len, nullptr, 0, nullptr, 0, stop_token);
 }
 
 void Argon2::derive_key(uint8_t output[],
@@ -39,8 +40,9 @@ void Argon2::derive_key(uint8_t output[],
                         const uint8_t ad[],
                         size_t ad_len,
                         const uint8_t key[],
-                        size_t key_len) const {
-   argon2(output, output_len, password, password_len, salt, salt_len, key, key_len, ad, ad_len);
+                        size_t key_len,
+                        const std::optional<std::stop_token>& stop_token) const {
+   argon2(output, output_len, password, password_len, salt, salt_len, key, key_len, ad, ad_len, stop_token);
 }
 
 namespace {
