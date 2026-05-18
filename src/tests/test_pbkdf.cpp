@@ -72,8 +72,15 @@ class Pwdhash_Tests : public Test {
       std::vector<Test::Result> run() override {
          std::vector<Test::Result> results;
 
-         const std::vector<std::string> all_pwdhash = {
-            "Scrypt", "PBKDF2(SHA-256)", "OpenPGP-S2K(SHA-384)", "Argon2d", "Argon2i", "Argon2id", "Bcrypt-PBKDF"};
+         const std::vector<std::string> all_pwdhash = {"Scrypt",
+                                                       "PBKDF2(SHA-256)",
+                                                       "OpenPGP-S2K(SHA-384)",
+                                                       "Argon2d",
+                                                       "Argon2i",
+                                                       "Argon2id",
+                                                       "Bcrypt-PBKDF",
+                                                       "PKCS12-KDF(SHA-1,1)",
+                                                       "PKCS12-KDF(SHA-256,2)"};
 
          const uint64_t run_time = 3;
          const uint64_t tune_time = 1;

@@ -1,0 +1,72 @@
+# PKCS#12 KDF Test Vectors
+#
+# SHA-1 vectors are taken from RFC 7292 Appendix B.4 (the only digest
+# enumerated by the RFC). SHA-256 vectors are not part of any IETF spec;
+# they were generated with an independent reference implementation
+# (Bouncy Castle org.bouncycastle.crypto.generators.PKCS12ParametersGenerator
+# configured with SHA-256) and cross-checked against OpenSSL's PKCS12_key_gen_uni.
+#
+# Section header encodes algo spec: PKCS12-KDF(hash,id)
+#   id 1 = encryption key, 2 = IV, 3 = MAC key
+
+[PKCS12-KDF(SHA-1,1)]
+
+Passphrase = password
+Salt = 0A58CF64530D823F
+Iterations = 2048
+Output = 50E8B3F8FB910AFCC54C246374F05F6FC469D0C85AD39E35
+
+Passphrase =
+Salt = 02664B0EB6858302
+Iterations = 2048
+Output = 9175145C6101AE1A738CCE3734E5DC34
+
+Passphrase = test
+Salt = 1234567890ABCDEF
+Iterations = 1000
+Output = 632E2BD7FB28D0F76CE3446B97D73ECB
+
+[PKCS12-KDF(SHA-1,2)]
+
+Passphrase = password
+Salt = 0A58CF64530D823F
+Iterations = 2048
+Output = D56ABFF68E3CC700
+
+[PKCS12-KDF(SHA-1,3)]
+
+Passphrase = password
+Salt = 0A58CF64530D823F
+Iterations = 2048
+Output = A9F257C211043A34726B3338102E88AB5C98A295
+
+[PKCS12-KDF(SHA-256,1)]
+
+Passphrase = password
+Salt = 0A58CF64530D823F
+Iterations = 2048
+Output = 55247EB0AFBFB31CAFBB90A71E5CC0613B4D47FE25110732EE61B16EB47B5BE6
+
+Passphrase =
+Salt = 02664B0EB6858302
+Iterations = 2048
+Output = 59C88980C24F150ECD8952A3F5FB4941BF058AA65D1FF7604014E943A23C9098
+
+Passphrase = test
+Salt = 1234567890ABCDEF
+Iterations = 1000
+Output = 6253B5524D1972099FA23BD5D532C5EABD274E6DC2F6FEBAAE2AD01F84AE2C05
+
+[PKCS12-KDF(SHA-256,2)]
+
+Passphrase = password
+Salt = 0A58CF64530D823F
+Iterations = 2048
+Output = 7D7B4032062808484775EA7FC2AC3552D670B7D62B22280A7C296A4642ABE5F5
+
+[PKCS12-KDF(SHA-256,3)]
+
+Passphrase = password
+Salt = 0A58CF64530D823F
+Iterations = 2048
+Output = A790374DDEE08C419FFF12A3983E9CA9451BCC6B44B7973A19F5BB72CA61D7A7
