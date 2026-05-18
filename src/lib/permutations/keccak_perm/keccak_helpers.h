@@ -123,7 +123,8 @@ size_t keccak_absorb_padded_strings_encoding(T& sink, size_t padding_mod, Ts... 
    // staight into the given xof
    absorb(keccak_int_left_encode(int_encoding_buffer, padding_mod));
    (encode_string_and_absorb(byte_strings), ...);
-   absorb_padding(padding_mod - (bytes_absorbed % padding_mod));
+   // SP.800-185 Section 2.3.3 bytepad: "while len(z)/8 mod w != 0: z = z || 00000000"
+   absorb_padding((padding_mod - (bytes_absorbed % padding_mod)) % padding_mod);
 
    return bytes_absorbed;
 }

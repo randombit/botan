@@ -109,6 +109,33 @@ std::vector<Test::Result> keccak_helpers() {
                   "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
             }),
 
+         CHECK("keccak_absorb_padded_strings_encoding() with block-aligned encoded prefix",
+               [](Test::Result& result) {
+                  // SP.800-185 bytepad appends zero bytes only while the encoded
+                  // length is not a multiple of w. When the encoded prefix is
+                  // already block-aligned no padding is added. KMAC-128 with a
+                  // 163-byte key and KMAC-256 with a 131-byte key both hit this
+                  // edge case.
+
+                  std::vector<uint8_t> key128(163);
+                  for(size_t i = 0; i < key128.size(); ++i) {
+                     key128[i] = static_cast<uint8_t>(i);
+                  }
+                  std::vector<uint8_t> out128;
+                  const auto bytes128 = Botan::keccak_absorb_padded_strings_encoding(out128, 168, key128);
+                  result.test_sz_eq("KMAC-128 aligned: bytes absorbed", bytes128, 168);
+                  result.test_sz_eq("KMAC-128 aligned: output size", out128.size(), 168);
+
+                  std::vector<uint8_t> key256(131);
+                  for(size_t i = 0; i < key256.size(); ++i) {
+                     key256[i] = static_cast<uint8_t>(i);
+                  }
+                  std::vector<uint8_t> out256;
+                  const auto bytes256 = Botan::keccak_absorb_padded_strings_encoding(out256, 136, key256);
+                  result.test_sz_eq("KMAC-256 aligned: bytes absorbed", bytes256, 136);
+                  result.test_sz_eq("KMAC-256 aligned: output size", out256.size(), 136);
+               }),
+
          CHECK(
             "keccak_absorb_padded_strings_encoding() with two byte strings (std::vector<>)",
             [](Test::Result& result) {
