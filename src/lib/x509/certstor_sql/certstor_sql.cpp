@@ -25,6 +25,7 @@ Certificate_Store_In_SQL::Certificate_Store_In_SQL(std::shared_ptr<SQL_Database>
       m_rng(rng), m_database(std::move(db)), m_prefix(table_prefix), m_password(passwd) {
    using DB = SQL_Database;
    const auto blob = DB::Column_Type::Blob;
+   const auto integer = DB::Column_Type::Integer;
 
    m_database->create_table(DB::Table_Schema(m_prefix + "certificates",
                                              {
@@ -32,20 +33,22 @@ Certificate_Store_In_SQL::Certificate_Store_In_SQL(std::shared_ptr<SQL_Database>
                                                 DB::Column("subject_dn", blob),
                                                 DB::Column("key_id", blob),
                                                 DB::Column("priv_fingerprint", blob),
-                                                DB::Column("certificate", blob).not_null().unique(),
+                                                DB::Column("certificate", blob).not_null(),
                                              })
                                .if_not_exists());
+
    m_database->create_table(DB::Table_Schema(m_prefix + "keys",
                                              {
                                                 DB::Column("fingerprint", blob).primary_key(),
-                                                DB::Column("key", blob).not_null().unique(),
+                                                DB::Column("key", blob).not_null(),
                                              })
                                .if_not_exists());
+
    m_database->create_table(DB::Table_Schema(m_prefix + "revoked",
                                              {
                                                 DB::Column("fingerprint", blob).primary_key(),
-                                                DB::Column("reason", blob).not_null(),
-                                                DB::Column("time", blob).not_null(),
+                                                DB::Column("reason", integer).not_null(),
+                                                DB::Column("time", integer),
                                              })
                                .if_not_exists());
 }
@@ -257,9 +260,9 @@ void Certificate_Store_In_SQL::revoke_cert(const X509_Certificate& cert, CRL_Cod
    stmt1->bind(2, static_cast<uint32_t>(code));
 
    if(time.time_is_set()) {
-      stmt1->bind(3, time.BER_encode());
+      stmt1->bind(3, time.to_std_timepoint());
    } else {
-      stmt1->bind(3, static_cast<size_t>(-1));
+      stmt1->bind_null(3);
    }
 
    stmt1->spin();
@@ -273,7 +276,7 @@ void Certificate_Store_In_SQL::revoke_cert(const X509_Certificate& cert, CRL_Cod
 
    stmt1->bind(1, cert.fingerprint("SHA-256"));
    stmt1->bind(2, static_cast<uint32_t>(code));
-   stmt1->bind(3, static_cast<size_t>(-1));
+   stmt1->bind_null(3);
 
    stmt1->spin();
 }
