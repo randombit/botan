@@ -63,7 +63,7 @@ class BOTAN_PUBLIC_API(2, 0) Sqlite3_Database final : public SQL_Database {
             size_t spin() override;
             bool step() override;
 
-            Sqlite3_Statement(sqlite3* db, std::string_view base_sql);
+            Sqlite3_Statement(std::shared_ptr<sqlite3> db, std::string_view base_sql);
             ~Sqlite3_Statement() override;
 
             Sqlite3_Statement(const Sqlite3_Statement& other) = delete;
@@ -72,10 +72,13 @@ class BOTAN_PUBLIC_API(2, 0) Sqlite3_Database final : public SQL_Database {
             Sqlite3_Statement& operator=(Sqlite3_Statement&& other) = delete;
 
          private:
+            // m_db is declared before m_stmt so the prepared statement is
+            // finalized before the connection's refcount is released.
+            std::shared_ptr<sqlite3> m_db;
             sqlite3_stmt* m_stmt;
       };
 
-      sqlite3* m_db;
+      std::shared_ptr<sqlite3> m_db;
 };
 
 }  // namespace Botan

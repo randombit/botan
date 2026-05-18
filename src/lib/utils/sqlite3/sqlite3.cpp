@@ -20,22 +20,19 @@ Sqlite3_Database::Sqlite3_Database(std::string_view db_filename, std::optional<i
    // concurrently from multiple threads.
    const int open_flags =
       sqlite_open_flags.value_or(SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
-   const int rc = ::sqlite3_open_v2(std::string(db_filename).c_str(), &m_db, open_flags, nullptr);
+   sqlite3* db = nullptr;
+   const int rc = ::sqlite3_open_v2(std::string(db_filename).c_str(), &db, open_flags, nullptr);
 
    if(rc != 0) [[unlikely]] {
-      const std::string err_msg = ::sqlite3_errmsg(m_db);
-      ::sqlite3_close(m_db);
-      m_db = nullptr;
+      const std::string err_msg = (db != nullptr) ? ::sqlite3_errmsg(db) : "unknown error";
+      ::sqlite3_close_v2(db);
       throw SQL_DB_Error("sqlite3_open failed - " + err_msg);
    }
+
+   m_db = std::shared_ptr<sqlite3>(db, [](sqlite3* p) noexcept { ::sqlite3_close_v2(p); });
 }
 
-Sqlite3_Database::~Sqlite3_Database() {
-   if(m_db != nullptr) [[likely]] {
-      ::sqlite3_close(m_db);
-   }
-   m_db = nullptr;
-}
+Sqlite3_Database::~Sqlite3_Database() = default;
 
 std::shared_ptr<SQL_Database::Statement> Sqlite3_Database::new_statement(std::string_view base_sql) const {
    return std::make_shared<Sqlite3_Statement>(m_db, base_sql);
@@ -53,7 +50,7 @@ size_t Sqlite3_Database::row_count(std::string_view table_name) {
 
 void Sqlite3_Database::create_table(std::string_view table_schema) {
    char* errmsg = nullptr;
-   const int rc = ::sqlite3_exec(m_db, std::string(table_schema).c_str(), nullptr, nullptr, &errmsg);
+   const int rc = ::sqlite3_exec(m_db.get(), std::string(table_schema).c_str(), nullptr, nullptr, &errmsg);
 
    if(rc != SQLITE_OK) {
       const std::string err_msg = (errmsg != nullptr) ? errmsg : "unknown error";
@@ -63,7 +60,7 @@ void Sqlite3_Database::create_table(std::string_view table_schema) {
 }
 
 size_t Sqlite3_Database::rows_changed_by_last_statement() {
-   const auto result = ::sqlite3_changes64(m_db);
+   const auto result = ::sqlite3_changes64(m_db.get());
    BOTAN_ASSERT_NOMSG(result >= 0);
    return static_cast<size_t>(result);
 }
@@ -86,8 +83,10 @@ bool Sqlite3_Database::is_threadsafe() const {
    return flag >= 1;
 }
 
-Sqlite3_Database::Sqlite3_Statement::Sqlite3_Statement(sqlite3* db, std::string_view base_sql) : m_stmt{} {
-   const int rc = ::sqlite3_prepare_v2(db, base_sql.data(), static_cast<int>(base_sql.size()), &m_stmt, nullptr);
+Sqlite3_Database::Sqlite3_Statement::Sqlite3_Statement(std::shared_ptr<sqlite3> db, std::string_view base_sql) :
+      m_db(std::move(db)), m_stmt{} {
+   const int rc =
+      ::sqlite3_prepare_v2(m_db.get(), base_sql.data(), static_cast<int>(base_sql.size()), &m_stmt, nullptr);
 
    if(rc != SQLITE_OK) {
       throw SQL_DB_Error(fmt("sqlite3_prepare failed on '{}' with err {}", base_sql, rc), rc);
