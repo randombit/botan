@@ -46,6 +46,8 @@ class BOTAN_PUBLIC_API(2, 0) SQL_Database /* NOLINT(*-special-member-functions) 
 
             virtual void bind(int column, const uint8_t* data, size_t len) = 0;
 
+            virtual void bind_null(int column) = 0;
+
             // TODO(Botan4) change this return type to a span
             /* Get output */
             virtual std::pair<const uint8_t*, size_t> get_blob(int column) = 0;

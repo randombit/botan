@@ -94,6 +94,10 @@ Sqlite3_Database::Sqlite3_Statement::Sqlite3_Statement(std::shared_ptr<sqlite3> 
 }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, std::string_view val) {
+   if(val.data() == nullptr) {
+      bind_null(column);
+      return;
+   }
    const int rc = ::sqlite3_bind_text64(m_stmt, column, val.data(), val.size(), SQLITE_TRANSIENT, SQLITE_UTF8);
    if(rc != SQLITE_OK) {
       throw SQL_DB_Error("sqlite3_bind_text failed", rc);
@@ -113,16 +117,24 @@ void Sqlite3_Database::Sqlite3_Statement::bind(int column, std::chrono::system_c
 }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, const std::vector<uint8_t>& val) {
-   const int rc = ::sqlite3_bind_blob64(m_stmt, column, val.data(), val.size(), SQLITE_TRANSIENT);
-   if(rc != SQLITE_OK) {
-      throw SQL_DB_Error("sqlite3_bind_text failed", rc);
-   }
+   bind(column, val.data(), val.size());
 }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, const uint8_t* p, size_t len) {
+   if(p == nullptr) {
+      bind_null(column);
+      return;
+   }
    const int rc = ::sqlite3_bind_blob64(m_stmt, column, p, len, SQLITE_TRANSIENT);
    if(rc != SQLITE_OK) {
-      throw SQL_DB_Error("sqlite3_bind_text failed", rc);
+      throw SQL_DB_Error("sqlite3_bind_blob failed", rc);
+   }
+}
+
+void Sqlite3_Database::Sqlite3_Statement::bind_null(int column) {
+   const int rc = ::sqlite3_bind_null(m_stmt, column);
+   if(rc != SQLITE_OK) {
+      throw SQL_DB_Error("sqlite3_bind_null failed", rc);
    }
 }
 
