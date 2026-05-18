@@ -1,0 +1,16 @@
+<defines>
+URI -> 20260512
+</defines>
+
+<module_info>
+name -> "URI type"
+</module_info>
+
+<header:public>
+uri.h
+</header:public>
+
+<requires>
+dns_name
+ip_address
+</requires>

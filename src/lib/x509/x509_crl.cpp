@@ -187,8 +187,8 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body, cons
       data->m_auth_key_id = ext->get_key_id();
    }
    if(const auto* ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_Issuing_Distribution_Point>()) {
-      for(const auto& uri : ext->get_point().uris()) {
-         data->m_idp_urls.push_back(uri);
+      for(const auto& uri : ext->get_point().uri_names()) {
+         data->m_idp_urls.push_back(uri.original_input());
       }
    }
 
@@ -290,7 +290,7 @@ bool dp_names_overlap(const AlternativeName& a, const AlternativeName& b) {
       return std::ranges::any_of(s1, [&](const auto& e) { return s2.contains(e); });
    };
 
-   return has_common(a.uris(), b.uris()) || has_common(a.directory_names(), b.directory_names());
+   return has_common(a.uri_names(), b.uri_names()) || has_common(a.directory_names(), b.directory_names());
 }
 
 }  // namespace

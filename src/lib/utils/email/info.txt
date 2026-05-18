@@ -1,0 +1,15 @@
+<defines>
+EMAIL_ADDRESS -> 20260512
+</defines>
+
+<module_info>
+name -> "Email address type"
+</module_info>
+
+<header:public>
+email.h
+</header:public>
+
+<requires>
+dns_name
+</requires>

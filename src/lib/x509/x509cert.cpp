@@ -610,16 +610,29 @@ const AlternativeName& X509_Certificate::issuer_alt_name() const {
 namespace {
 
 std::vector<std::string> get_cert_user_info(std::string_view req, const X509_DN& dn, const AlternativeName& alt_name) {
-   auto set_to_vector = [](const std::set<std::string>& s) -> std::vector<std::string> { return {s.begin(), s.end()}; };
-
    if(dn.has_field(req)) {
       return dn.get_attribute(req);
    } else if(req == "RFC822" || req == "Email") {
-      return set_to_vector(alt_name.email());
+      std::vector<std::string> out;
+      out.reserve(alt_name.email_addresses().size());
+      for(const auto& addr : alt_name.email_addresses()) {
+         out.push_back(addr.to_string());
+      }
+      return out;
    } else if(req == "DNS") {
-      return set_to_vector(alt_name.dns());
+      std::vector<std::string> out;
+      out.reserve(alt_name.dns_names().size());
+      for(const auto& dns : alt_name.dns_names()) {
+         out.push_back(dns.to_string());
+      }
+      return out;
    } else if(req == "URI") {
-      return set_to_vector(alt_name.uris());
+      std::vector<std::string> out;
+      out.reserve(alt_name.uri_names().size());
+      for(const auto& uri : alt_name.uri_names()) {
+         out.push_back(uri.original_input());
+      }
+      return out;
    } else if(req == "IP") {
       std::vector<std::string> ip_str;
       for(const uint32_t ipv4 : alt_name.ipv4_address()) {

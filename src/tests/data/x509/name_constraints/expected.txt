@@ -1,0 +1,231 @@
+all-leaf-san-names-enforced-invalid:Certificate does not pass name constraint
+constraints-intersection-empty-invalid:Certificate does not pass name constraint
+critical-aia-intermediate-invalid:Certificate extension encoding error
+different-name-type-constraints-compose-valid:Verified
+directory-name-attribute-type-mismatch-invalid:Certificate does not pass name constraint
+directory-name-case-space-valid-rfc5280:Verified
+directory-name-domain-component-case-valid:Verified
+directory-name-excluded-invalid:Certificate does not pass name constraint
+directory-name-excluded-valid:Verified
+directory-name-permit-multiple-san-mixed-invalid:Certificate does not pass name constraint
+directory-name-rdn-order-mismatch-invalid:Certificate does not pass name constraint
+directory-name-san-constraint-invalid:Certificate does not pass name constraint
+directory-name-subtree-invalid:Certificate does not pass name constraint
+directory-name-subtree-valid:Verified
+dn-excluded-prefix-broken-by-rdn-reorder-valid:Verified
+dn-excluded-prefix-strict-match-invalid:Certificate does not pass name constraint
+dns-case-insensitive-valid:Verified
+dns-cn-fallback-cn-is-email-string-valid:Verified
+dns-cn-fallback-multiple-cn-one-outside-invalid:Certificate does not pass name constraint
+dns-cn-fallback-no-san-valid:Verified
+dns-constraint-ignored-for-cn-when-dns-san-present-valid:Verified
+dns-constraint-ignored-for-cn-when-non-dns-san-present-valid:Verified
+dns-constraint-trailing-dot-invalid:Certificate extension encoding error
+dns-constraint-with-underscore-invalid:Certificate extension encoding error
+dns-constraint-with-wildcard-invalid:Certificate extension encoding error
+dns-double-dot-san-invalid:Certificate extension encoding error
+dns-empty-san-invalid:Certificate extension encoding error
+dns-excluded-mixed-case-cn-invalid:Certificate does not pass name constraint
+dns-excluded-not-prefix-valid:Verified
+dns-excluded-overrides-permitted:Certificate does not pass name constraint
+dns-excluded-subtree-only-invalid:Certificate does not pass name constraint
+dns-idn-a-label-valid:Verified
+dns-label-boundary-invalid:Certificate does not pass name constraint
+dns-leading-dot-apex-invalid:Certificate does not pass name constraint
+dns-leading-dot-subdomain-valid:Verified
+dns-leading-empty-label-invalid:Certificate extension encoding error
+dns-non-ascii-raw-san-invalid:Certificate extension encoding error
+dns-noncritical-san-violates-invalid:Certificate does not pass name constraint
+dns-permitted-exact-host-valid:Verified
+dns-permitted-valid:Verified
+dns-san-present-cn-outside-valid:Verified
+dns-space-san-invalid:Certificate extension encoding error
+edi-party-name-constraint-rejected:Certificate does not pass name constraint
+email-embedded-nul-constraint-invalid:Certificate extension encoding error
+email-embedded-nul-san-invalid:Certificate extension encoding error
+email-excluded-mailbox-different-domain-valid:Verified
+email-excluded-mailbox-same-domain-different-local-valid:Verified
+email-excluded-same-local-different-domain-invalid:Certificate does not pass name constraint
+email-excluded-subtree-inside-invalid:Certificate does not pass name constraint
+email-excluded-subtree-outside-valid:Verified
+email-full-mailbox-localpart-case-sensitive-invalid:Certificate does not pass name constraint
+email-full-mailbox-valid:Verified
+email-host-case-insensitive-valid:Verified
+email-host-valid:Verified
+email-leading-dot-apex-invalid:Certificate does not pass name constraint
+email-leading-dot-subdomain-valid:Verified
+email-multiple-at-raw-san-invalid:Certificate extension encoding error
+email-multiple-san-mixed-pass-fail-invalid:Certificate does not pass name constraint
+email-permitted-host-subdomain-invalid:Certificate does not pass name constraint
+email-permitted-mailbox-different-invalid:Certificate does not pass name constraint
+email-punycode-a-label-constraint-valid:Verified
+email-rfc822-and-smtputf8-san-mixed-invalid:Certificate does not pass name constraint
+empty-dns-excluded-rejects-everything-invalid:Certificate extension encoding error
+empty-dns-permitted-allows-anything-valid:Certificate extension encoding error
+empty-email-excluded-rejects-everything-invalid:Certificate extension encoding error
+empty-email-permitted-allows-anything-invalid:Certificate extension encoding error
+empty-name-constraints-extension-invalid:Certificate extension encoding error
+empty-san-sequence-invalid:Certificate extension encoding error
+empty-subject-directory-name-san-excluded-invalid:Certificate does not pass name constraint
+empty-subject-directory-name-san-permitted-valid:Verified
+empty-uri-excluded-rejects-everything-invalid:Certificate extension encoding error
+empty-uri-permitted-allows-anything-invalid:Certificate extension encoding error
+excluded-union-across-cas-invalid:Certificate does not pass name constraint
+general-name-context-class-mismatch-invalid:Certificate does not pass name constraint
+general-name-empty-context-tag-invalid:Certificate extension encoding error
+general-name-tag-out-of-range-invalid:Certificate does not pass name constraint
+general-subtree-with-extra-fields-invalid:Certificate extension encoding error
+ia5-locale-independent-case-valid:Verified
+intermediate-narrows-ip-exclusion-invalid:Certificate does not pass name constraint
+intermediate-san-outside-permitted-invalid:Certificate does not pass name constraint
+ip-cidr-invalid:Certificate does not pass name constraint
+ip-cidr-valid:Verified
+ip-cn-fallback-no-san-valid:Verified
+ip-cn-fallback-outside-permit-invalid:Certificate does not pass name constraint
+ip-mapped-v6-in-v4-excluded-invalid:Certificate does not pass name constraint
+ip-mixed-v4-v6-intermediate-narrows-valid:Verified
+ip-mixed-v4-v6-leaf-hits-intermediate-exclude-invalid:Certificate does not pass name constraint
+ip-mixed-v4-v6-leaf-v4-hits-int-exclude-invalid:Certificate does not pass name constraint
+ip-mixed-v4-v6-leaf-v4-outside-int-permit-invalid:Certificate does not pass name constraint
+ip-mixed-v4-v6-leaf-v4-outside-root-permit-invalid:Certificate does not pass name constraint
+ip-mixed-v4-v6-leaf-v6-outside-int-permit-invalid:Certificate does not pass name constraint
+ip-mixed-v4-v6-leaf-v6-outside-root-permit-invalid:Certificate does not pass name constraint
+ip-multiple-excluded-disjoint-inside-invalid:Certificate does not pass name constraint
+ip-multiple-excluded-disjoint-outside-valid:Verified
+ip-multiple-permitted-disjoint-valid:Verified
+ip-name-constraint-wrong-length-invalid:Certificate does not pass name constraint
+ip-san-wrong-length-invalid:Certificate extension encoding error
+ipv4-mapped-ipv6-excl-does-not-affect-ipv4-valid:Verified
+ipv4-mapped-ipv6-not-in-v4-exclude-valid:Verified
+ipv4-mapped-ipv6-rejected-from-v4-permit-invalid:Certificate does not pass name constraint
+ipv4-only-permit-ipv6-san-invalid:Certificate does not pass name constraint
+ipv6-catch-all-exclude-does-not-block-ipv4-valid:Verified
+ipv6-excluded-inside-invalid:Certificate does not pass name constraint
+ipv6-excluded-outside-valid:Verified
+ipv6-only-permit-ipv4-san-invalid:Certificate does not pass name constraint
+ipv6-permitted-outside-invalid:Certificate does not pass name constraint
+ipv6-permitted-valid:Verified
+issuer-alt-name-outside-dns-permit-valid:Verified
+issuer-name-mismatch-invalid:Certificate issuer not found
+malformed-policy-constraints-invalid:Unknown critical extension encountered
+multi-ca-excluded-at-leaf-issuer-invalid:Certificate does not pass name constraint
+multi-ca-permit-and-exclude-overlap-invalid:Certificate does not pass name constraint
+multi-ca-permit-for-unused-name-form-valid:Verified
+multi-ca-widening-attempt-invalid:Certificate does not pass name constraint
+multi-dns-san-one-outside-invalid:Certificate does not pass name constraint
+multi-type-san-no-restricted-form-valid:Verified
+multi-type-san-only-restricted-form-checked-valid:Verified
+multi-type-san-only-restricted-form-fails-invalid:Certificate does not pass name constraint
+name-constraints-both-empty-invalid:Certificate extension encoding error
+name-constraints-duplicate-excluded-invalid:Certificate does not pass name constraint
+name-constraints-duplicate-permitted-valid:Verified
+name-constraints-extension-in-leaf-invalid:Certificate does not pass name constraint
+name-constraints-many-excluded-many-sans-under-limit-valid:Verified
+name-constraints-many-names-complexity:Certificate does not pass name constraint
+name-constraints-many-permitted-equivalent-valid:Verified
+name-constraints-maximum-present-invalid:Certificate does not pass name constraint
+name-constraints-minimum-nonzero-invalid:Certificate does not pass name constraint
+name-constraints-noncritical-valid:Verified
+name-constraints-permit-and-exclude-same-name-invalid:Certificate does not pass name constraint
+name-form-absent-valid:Verified
+non-ca-issuer-invalid:CA certificate not allowed to issue certs
+non-hostname-cn-no-san-excluded-dns-valid:Verified
+non-hostname-cn-no-san-permitted-dns-valid:Verified
+othername-known-oid-non-smtputf8-rejected:Certificate does not pass name constraint
+othername-san-with-critical-unknown-constraint-invalid:Certificate does not pass name constraint
+# We ignore non-critical name constraints that we don't understand
+othername-san-with-noncritical-unknown-constraint-invalid:Verified
+othername-san-without-constraint-valid:Verified
+othername-smtputf8-constraint-rejected:Certificate does not pass name constraint
+othername-unsupported-constraint-rejected:Certificate does not pass name constraint
+permitted-intersection-narrows-valid:Verified
+permitted-subtrees-empty-invalid:Certificate does not pass name constraint
+permitted-wildcard-match-valid:Verified
+policy-invalid-leaf-extension-invalid:Certificate extension encoding error
+registered-id-critical-constraint:Certificate does not pass name constraint
+registered-id-excluded-critical-constraint:Certificate does not pass name constraint
+rfc3779-asidentifiers-malformed-invalid:Certificate extension encoding error
+rfc3779-ipaddrblocks-malformed-invalid:IP Address Blocks extension invalid
+san-rfc822-and-smtputf8-both-permitted-valid:Verified
+san-rfc822-pass-smtputf8-fail-invalid:Certificate does not pass name constraint
+self-constraint-not-applied-to-issuing-ca-valid:Verified
+self-issued-final-constrained-invalid:Certificate does not pass name constraint
+self-issued-middle-of-chain-valid:Verified
+self-issued-rollover-skips-name-check-valid:Verified
+sim-othername-constraint-invalid:Certificate does not pass name constraint
+smtp-utf8-alabel-domain-permit-valid:Verified
+smtp-utf8-pass-rfc822-fail-invalid:Certificate does not pass name constraint
+smtp-utf8-rfc822-host-permit-valid:Verified
+smtp-utf8-rfc822-mailbox-permit-diff-domain-invalid:Certificate does not pass name constraint
+smtp-utf8-rfc822-mailbox-permit-invalid:Certificate does not pass name constraint
+# These next 2 are valid per RFC, but hit our conservative behavior of rejecting all mailbox constraints applying to SmtpUtf8Mailbox
+smtp-utf8-rfc822-mailbox-permit-strict-9549-exact-valid:Certificate does not pass name constraint
+smtp-utf8-rfc822-mailbox-permit-strict-9549-same-domain-valid:Certificate does not pass name constraint
+smtp-utf8-rfc822-subtree-permit-apex-invalid:Certificate does not pass name constraint
+smtp-utf8-rfc822-subtree-permit-valid:Verified
+smtp-utf8-san-excluded-host-invalid:Certificate does not pass name constraint
+smtp-utf8-san-excluded-mailbox-diff-domain-valid:Verified
+smtp-utf8-san-excluded-mailbox-diff-local-invalid:Certificate does not pass name constraint
+smtp-utf8-san-excluded-mailbox-exact-invalid:Certificate does not pass name constraint
+smtp-utf8-san-excluded-subtree-invalid:Certificate does not pass name constraint
+# Valid under the rules of RFC 8393, and explicitly invalid under RFC 9598
+smtp-utf8-ulabel-domain-permit-valid:Certificate extension encoding error
+smtp-utf8-utf8-localpart-permit-valid:Verified
+subject-email-ignored-when-san-present-valid:Verified
+subject-email-legacy-excluded-inside-invalid:Certificate does not pass name constraint
+subject-email-legacy-excluded-outside-valid:Verified
+subject-email-legacy-invalid:Certificate does not pass name constraint
+subject-email-legacy-valid:Verified
+subject-email-no-san-excluded-malformed-attribute-valid:Certificate does not pass name constraint
+subject-email-no-san-malformed-attribute-invalid:Certificate does not pass name constraint
+subject-email-no-san-multiple-excluded-one-inside-invalid:Certificate does not pass name constraint
+subject-email-no-san-multiple-excluded-valid:Verified
+subject-email-no-san-multiple-one-outside-invalid:Certificate does not pass name constraint
+subject-email-no-san-multiple-permitted-valid:Verified
+unknown-critical-extension-intermediate-invalid:Unknown critical extension encountered
+# Currently we don't track which names we didn't understand, so end up rejecting as an unknown constraint
+unsupported-critical-constraint-name-form-absent-valid:Certificate does not pass name constraint
+uri-constraint-not-fqdn-invalid:Certificate extension encoding error
+uri-excluded-host-exact-subdomain-valid:Verified
+uri-excluded-ip-host-invalid:Certificate does not pass name constraint
+uri-excluded-no-authority-invalid:Certificate extension encoding error
+uri-excluded-subtree-inside-invalid:Certificate does not pass name constraint
+uri-excluded-subtree-outside-valid:Verified
+uri-host-case-insensitive-valid:Verified
+uri-host-exact-subdomain-invalid:Certificate does not pass name constraint
+uri-host-single-label-invalid:Certificate does not pass name constraint
+uri-idn-a-label-valid:Verified
+uri-idn-mismatch-invalid:Certificate does not pass name constraint
+uri-ip-host-invalid:Certificate does not pass name constraint
+uri-ipv6-zone-host-invalid:Certificate extension encoding error
+uri-leading-dot-apex-invalid:Certificate does not pass name constraint
+uri-leading-dot-subdomain-valid:Verified
+uri-no-authority-invalid:Certificate extension encoding error
+uri-permitted-host-exact-multi-san-mixed-invalid:Certificate does not pass name constraint
+uri-permitted-multiple-uri-sans-any-outside-invalid:Certificate does not pass name constraint
+uri-permitted-subtree-deep-valid:Verified
+uri-permitted-with-path-query-fragment-valid:Verified
+uri-relative-san-invalid:Certificate extension encoding error
+uri-userinfo-excluded-invalid:Certificate does not pass name constraint
+uri-userinfo-valid:Verified
+wildcard-cn-exclude-match-invalid:Certificate does not pass name constraint
+wildcard-cn-exclude-miss-valid:Verified
+wildcard-cn-permit-match-valid:Verified
+wildcard-cn-permit-miss-invalid:Certificate does not pass name constraint
+wildcard-excluded-case-insensitive-invalid:Certificate does not pass name constraint
+wildcard-excluded-cross-subtree-valid:Verified
+wildcard-excluded-far-inner-invalid:Certificate does not pass name constraint
+wildcard-excluded-far-outer-valid:Verified
+wildcard-excluded-inner-invalid:Certificate does not pass name constraint
+wildcard-excluded-parent-invalid:Certificate does not pass name constraint
+wildcard-excluded-single-label-valid:Verified
+wildcard-middle-label-san-invalid:Certificate extension encoding error
+wildcard-multi-label-san-invalid:Certificate extension encoding error
+wildcard-permitted-cross-subtree-invalid:Certificate does not pass name constraint
+wildcard-permitted-far-inner-valid:Verified
+wildcard-permitted-far-outer-too-broad-invalid:Certificate does not pass name constraint
+wildcard-permitted-inner-valid:Verified
+wildcard-permitted-inside-subtree-valid:Verified
+wildcard-permitted-outer-too-broad-invalid:Certificate does not pass name constraint
+wildcard-permitted-outside-subtree-invalid:Certificate does not pass name constraint
+x400-address-constraint-rejected:Certificate does not pass name constraint

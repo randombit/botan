@@ -31,6 +31,16 @@ X509/PKIX Deprecations
   deprecated. In a future major release, any such certificate or CRL will be
   rejected at parse time.
 
+* Currently the library accepts wildcard certificates following the rules of RFC 6125,
+  and accepts for example ``foo*baz.example.net`` as matching the hostname of
+  ``foobarbaz.example.net``. In a future major release the semantics of wildcard
+  certificates will follow RFC 9525 in which case only wildcard certificates of the form
+  ``*.example.net`` will be allowed.
+
+* Currently the library falls back to checking the CN field if the subjectAlternativeName
+  extension is not included in the certificate. In a future major release, CN
+  fallback will be removed entirely.
+
 TLS Protocol Deprecations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

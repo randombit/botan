@@ -9,6 +9,7 @@
 #define BOTAN_CHARSET_H_
 
 #include <botan/types.h>
+#include <array>
 #include <span>
 #include <string>
 #include <string_view>
@@ -69,6 +70,42 @@ bool is_valid_utf8(std::string_view str);
 * "\xHH" where HH is the hex code.
 */
 std::string format_char_for_display(char c);
+
+/**
+* Character classifier
+*/
+class CharacterValidityTable final {
+   public:
+      static constexpr CharacterValidityTable alpha_numeric_plus(std::string_view extras) {
+         TableStorage tbl{};
+
+         set_tbl_range(tbl, "0123456789");
+         set_tbl_range(tbl, "abcdefghijklmnopqrstuvwxyz");
+         set_tbl_range(tbl, "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+         set_tbl_range(tbl, extras);
+
+         return CharacterValidityTable(tbl);
+      }
+
+      constexpr bool operator()(char c) const {
+         const uint8_t uc = static_cast<uint8_t>(c);
+         return ((m_tbl[uc / 32] >> (uc % 32)) & 1) != 0;
+      }
+
+   private:
+      using TableStorage = std::array<uint32_t, 8>;  // 256 bits of storage
+
+      static constexpr void set_tbl_range(TableStorage& tbl, std::string_view valid_chars) {
+         for(const char c : valid_chars) {
+            const uint8_t uc = static_cast<uint8_t>(c);
+            tbl[uc / 32] |= (uint32_t{1} << (uc % 32));
+         }
+      }
+
+      explicit constexpr CharacterValidityTable(TableStorage tbl) : m_tbl(tbl) {}
+
+      TableStorage m_tbl;
+};
 
 }  // namespace Botan
 
