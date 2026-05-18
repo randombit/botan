@@ -138,10 +138,10 @@ void Sqlite3_Database::Sqlite3_Statement::bind_null(int column) {
    }
 }
 
-std::pair<const uint8_t*, size_t> Sqlite3_Database::Sqlite3_Statement::get_blob(int column) {
+std::span<const uint8_t> Sqlite3_Database::Sqlite3_Statement::get_blob(int column) {
    const auto column_type = ::sqlite3_column_type(m_stmt, column);
    if(column_type == SQLITE_NULL) {
-      return {nullptr, 0};
+      return {};
    }
 
    BOTAN_ASSERT(column_type == SQLITE_BLOB, "Return value is a blob");
@@ -151,7 +151,7 @@ std::pair<const uint8_t*, size_t> Sqlite3_Database::Sqlite3_Statement::get_blob(
 
    BOTAN_ASSERT(session_blob_size >= 0, "Blob size is non-negative");
 
-   return std::make_pair(static_cast<const uint8_t*>(session_blob), static_cast<size_t>(session_blob_size));
+   return {static_cast<const uint8_t*>(session_blob), static_cast<size_t>(session_blob_size)};
 }
 
 std::string Sqlite3_Database::Sqlite3_Statement::get_str(int column) {

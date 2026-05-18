@@ -123,7 +123,7 @@ void Session_Manager_SQL::initialize_existing_database(std::string_view passphra
       throw Internal_Error("Failed to initialize TLS session database");
    }
 
-   const std::pair<const uint8_t*, size_t> salt = stmt->get_blob(0);
+   const auto salt = stmt->get_blob(0);
    const size_t iterations = stmt->get_size_t(1);
    const size_t check_val_db = stmt->get_size_t(2);
    const std::string pbkdf_name = stmt->get_str(3);
@@ -134,7 +134,7 @@ void Session_Manager_SQL::initialize_existing_database(std::string_view passphra
    auto pbkdf = pbkdf_fam->from_params(iterations);
 
    pbkdf->derive_key(
-      derived_key.data(), derived_key.size(), passphrase.data(), passphrase.size(), salt.first, salt.second);
+      derived_key.data(), derived_key.size(), passphrase.data(), passphrase.size(), salt.data(), salt.size());
 
    const size_t check_val_created = make_uint16(derived_key[0], derived_key[1]);
 
@@ -188,10 +188,8 @@ std::optional<Session> Session_Manager_SQL::retrieve_one(const Session_Handle& h
       stmt->bind(1, hex_encode(session_id->get()));
 
       while(stmt->step()) {
-         const std::pair<const uint8_t*, size_t> blob = stmt->get_blob(0);
-
          try {
-            return Session::decrypt(blob.first, blob.second, m_session_key);
+            return Session::decrypt(stmt->get_blob(0), m_session_key);
          } catch(...) {}
       }
    }
@@ -220,18 +218,16 @@ std::vector<Session_with_Handle> Session_Manager_SQL::find_some(const Server_Inf
    while(stmt->step()) {
       auto handle = [&]() -> Session_Handle {
          auto ticket_blob = stmt->get_blob(1);
-         if(ticket_blob.second > 0) {
-            return Session_Handle(Session_Ticket(std::span(ticket_blob.first, ticket_blob.second)));
+         if(!ticket_blob.empty()) {
+            return Session_Handle(Session_Ticket(ticket_blob));
          } else {
             return Session_Handle(Session_ID(Botan::hex_decode(stmt->get_str(0))));
          }
       }();
 
-      const std::pair<const uint8_t*, size_t> blob = stmt->get_blob(2);
-
       try {
          found_sessions.emplace_back(
-            Session_with_Handle{Session::decrypt(blob.first, blob.second, m_session_key), std::move(handle)});
+            Session_with_Handle{Session::decrypt(stmt->get_blob(2), m_session_key), std::move(handle)});
       } catch(...) {}
    }
 

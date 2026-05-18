@@ -64,8 +64,7 @@ std::optional<X509_Certificate> Certificate_Store_In_SQL::find_cert(const X509_D
    }
 
    while(stmt->step()) {
-      auto blob = stmt->get_blob(0);
-      return X509_Certificate(blob.first, blob.second);
+      return X509_Certificate(stmt->get_blob(0));
    }
 
    return std::optional<X509_Certificate>();
@@ -91,8 +90,7 @@ std::vector<X509_Certificate> Certificate_Store_In_SQL::find_all_certs(const X50
    }
 
    while(stmt->step()) {
-      auto blob = stmt->get_blob(0);
-      certs.push_back(X509_Certificate(blob.first, blob.second));
+      certs.push_back(X509_Certificate(stmt->get_blob(0)));
    }
 
    return certs;
@@ -130,8 +128,7 @@ std::vector<X509_DN> Certificate_Store_In_SQL::all_subjects() const {
    auto stmt = m_database->new_statement("SELECT subject_dn FROM " + m_prefix + "certificates");
 
    while(stmt->step()) {
-      auto blob = stmt->get_blob(0);
-      BER_Decoder dec(std::span<const uint8_t>{blob.first, blob.second}, BER_Decoder::Limits::DER());
+      BER_Decoder dec(stmt->get_blob(0), BER_Decoder::Limits::DER());
       X509_DN dn;
 
       dn.decode_from(dec);
@@ -197,8 +194,7 @@ std::shared_ptr<const Private_Key> Certificate_Store_In_SQL::find_key(const X509
 
    std::shared_ptr<const Private_Key> key;
    while(stmt->step()) {
-      auto blob = stmt->get_blob(0);
-      DataSource_Memory src(blob.first, blob.second);
+      DataSource_Memory src(stmt->get_blob(0));
       key = PKCS8::load_key(src, m_password);
    }
 
@@ -214,8 +210,7 @@ std::vector<X509_Certificate> Certificate_Store_In_SQL::find_certs_for_key(const
 
    std::vector<X509_Certificate> certs;
    while(stmt->step()) {
-      auto blob = stmt->get_blob(0);
-      certs.push_back(X509_Certificate(blob.first, blob.second));
+      certs.push_back(X509_Certificate(stmt->get_blob(0)));
    }
 
    return certs;
@@ -306,8 +301,7 @@ std::vector<X509_CRL> Certificate_Store_In_SQL::generate_crls() const {
 
    std::map<X509_DN, std::vector<CRL_Entry>> crls;
    while(stmt->step()) {
-      auto blob = stmt->get_blob(0);
-      auto cert = X509_Certificate(std::vector<uint8_t>(blob.first, blob.first + blob.second));
+      auto cert = X509_Certificate(stmt->get_blob(0));
       auto code = static_cast<CRL_Code>(stmt->get_size_t(1));
       auto ent = CRL_Entry(cert, code);
 

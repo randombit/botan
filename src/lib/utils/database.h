@@ -12,6 +12,7 @@
 #include <botan/types.h>
 #include <chrono>
 #include <memory>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -48,9 +49,8 @@ class BOTAN_PUBLIC_API(2, 0) SQL_Database /* NOLINT(*-special-member-functions) 
 
             virtual void bind_null(int column) = 0;
 
-            // TODO(Botan4) change this return type to a span
             /* Get output */
-            virtual std::pair<const uint8_t*, size_t> get_blob(int column) = 0;
+            virtual std::span<const uint8_t> get_blob(int column) = 0;
 
             virtual std::string get_str(int column) = 0;
 
