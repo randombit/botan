@@ -123,9 +123,7 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod) {
 
    CT::unpoison(tmp_mem.data(), tmp_mem.size());
 
-   BigInt r;
-   r.swap_reg(tmp_mem);
-   return r;
+   return BigInt::_from_words(tmp_mem);
 }
 
 BigInt inverse_mod_pow2(const BigInt& a1, size_t k) {
