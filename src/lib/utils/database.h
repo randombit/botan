@@ -1,6 +1,6 @@
 /*
 * SQL database interface
-* (C) 2014 Jack Lloyd
+* (C) 2014,2026 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -73,6 +73,17 @@ class BOTAN_PUBLIC_API(2, 0) SQL_Database /* NOLINT(*-special-member-functions) 
       * Use ?1, ?2, ?3, etc for parameters to set later with bind
       */
       virtual std::shared_ptr<Statement> new_statement(std::string_view base_sql) const = 0;
+
+      /*
+      * Prepare a "SELECT <columns> FROM <table> [WHERE <where>] [LIMIT <limit>]"
+      * statement. `where` is the body of the WHERE clause (e.g.
+      * "id = ?1 AND name = ?2"); pass an empty string for no WHERE clause. Use
+      * ?1, ?2, ... for bound parameters. Virtual so backends can override if helpful.
+      */
+      virtual std::shared_ptr<Statement> select(std::string_view columns,
+                                                std::string_view table,
+                                                std::string_view where = {},
+                                                std::optional<size_t> limit = std::nullopt) const;
 
       /*
       * Prepare an upsert (insert-or-replace) statement for the given columns of

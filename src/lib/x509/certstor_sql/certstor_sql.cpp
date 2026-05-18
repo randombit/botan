@@ -58,13 +58,11 @@ std::optional<X509_Certificate> Certificate_Store_In_SQL::find_cert(const X509_D
    const std::vector<uint8_t> dn_encoding = subject_dn.BER_encode();
 
    if(key_id.empty()) {
-      stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix +
-                                       "certificates WHERE subject_dn = ?1 LIMIT 1");
+      stmt = m_database->select("certificate", m_prefix + "certificates", "subject_dn = ?1", 1);
       stmt->bind(1, dn_encoding);
    } else {
-      stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix +
-                                       "certificates WHERE\
-                                        subject_dn = ?1 AND (key_id IS NULL OR key_id = ?2) LIMIT 1");
+      stmt = m_database->select(
+         "certificate", m_prefix + "certificates", "subject_dn = ?1 AND (key_id IS NULL OR key_id = ?2)", 1);
       stmt->bind(1, dn_encoding);
       stmt->bind(2, key_id);
    }
@@ -85,12 +83,11 @@ std::vector<X509_Certificate> Certificate_Store_In_SQL::find_all_certs(const X50
    const std::vector<uint8_t> dn_encoding = subject_dn.BER_encode();
 
    if(key_id.empty()) {
-      stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE subject_dn = ?1");
+      stmt = m_database->select("certificate", m_prefix + "certificates", "subject_dn = ?1");
       stmt->bind(1, dn_encoding);
    } else {
-      stmt = m_database->new_statement("SELECT certificate FROM " + m_prefix +
-                                       "certificates WHERE\
-                                        subject_dn = ?1 AND (key_id IS NULL OR key_id = ?2)");
+      stmt = m_database->select(
+         "certificate", m_prefix + "certificates", "subject_dn = ?1 AND (key_id IS NULL OR key_id = ?2)");
       stmt->bind(1, dn_encoding);
       stmt->bind(2, key_id);
    }
@@ -131,7 +128,7 @@ std::optional<X509_CRL> Certificate_Store_In_SQL::find_crl_for(const X509_Certif
 
 std::vector<X509_DN> Certificate_Store_In_SQL::all_subjects() const {
    std::vector<X509_DN> ret;
-   auto stmt = m_database->new_statement("SELECT subject_dn FROM " + m_prefix + "certificates");
+   auto stmt = m_database->select("subject_dn", m_prefix + "certificates");
 
    while(stmt->step()) {
       BER_Decoder dec(stmt->get_blob(0), BER_Decoder::Limits::DER());
@@ -163,7 +160,7 @@ bool Certificate_Store_In_SQL::insert_cert(const X509_Certificate& cert) {
 }
 
 bool Certificate_Store_In_SQL::contains(const X509_Certificate& cert) const {
-   auto stmt = m_database->new_statement("SELECT 1 FROM " + m_prefix + "certificates WHERE fingerprint = ?1");
+   auto stmt = m_database->select("1", m_prefix + "certificates", "fingerprint = ?1");
    stmt->bind(1, cert.fingerprint("SHA-256"));
    return stmt->step();
 }
@@ -203,8 +200,7 @@ std::shared_ptr<const Private_Key> Certificate_Store_In_SQL::find_key(const X509
 
 std::vector<X509_Certificate> Certificate_Store_In_SQL::find_certs_for_key(const Private_Key& key) const {
    auto fprint = key.fingerprint_private("SHA-256");
-   auto stmt =
-      m_database->new_statement("SELECT certificate FROM " + m_prefix + "certificates WHERE priv_fingerprint = ?1");
+   auto stmt = m_database->select("certificate", m_prefix + "certificates", "priv_fingerprint = ?1");
 
    stmt->bind(1, fprint);
 

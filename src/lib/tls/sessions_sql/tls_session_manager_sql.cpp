@@ -54,7 +54,7 @@ Session_Manager_SQL::Schema_Revision Session_Manager_SQL::detect_schema_revision
    }
 
    try {
-      auto stmt = m_db->new_statement("SELECT database_revision FROM tls_sessions_metadata");
+      auto stmt = m_db->select("database_revision", "tls_sessions_metadata");
       if(!stmt->step()) {
          throw Internal_Error("Failed to read revision of TLS session database");
       }
@@ -121,7 +121,7 @@ void Session_Manager_SQL::create_with_latest_schema(std::string_view passphrase,
 }
 
 void Session_Manager_SQL::initialize_existing_database(std::string_view passphrase) {
-   auto stmt = m_db->new_statement("SELECT * FROM tls_sessions_metadata");
+   auto stmt = m_db->select("*", "tls_sessions_metadata");
    if(!stmt->step()) {
       throw Internal_Error("Failed to initialize TLS session database");
    }
@@ -185,7 +185,7 @@ std::optional<Session> Session_Manager_SQL::retrieve_one(const Session_Handle& h
    }
 
    if(auto session_id = handle.id()) {
-      auto stmt = m_db->new_statement("SELECT session FROM tls_sessions WHERE session_id = ?1");
+      auto stmt = m_db->select("session", "tls_sessions", "session_id = ?1");
 
       stmt->bind(1, hex_encode(session_id->get()));
 

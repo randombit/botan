@@ -41,7 +41,7 @@ void Encrypted_PSK_Database_SQL::kv_set(std::string_view name, std::string_view 
 }
 
 std::string Encrypted_PSK_Database_SQL::kv_get(std::string_view name) const {
-   auto stmt = m_db->new_statement("select psk_value from " + m_table_name + " where psk_name = ?1");
+   auto stmt = m_db->select("psk_value", m_table_name, "psk_name = ?1");
 
    stmt->bind(1, name);
 
@@ -54,7 +54,7 @@ std::string Encrypted_PSK_Database_SQL::kv_get(std::string_view name) const {
 std::set<std::string> Encrypted_PSK_Database_SQL::kv_get_all() const {
    std::set<std::string> names;
 
-   auto stmt = m_db->new_statement("select psk_name from " + m_table_name);
+   auto stmt = m_db->select("psk_name", m_table_name);
 
    while(stmt->step()) {
       names.insert(stmt->get_str(0).value());
