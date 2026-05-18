@@ -19,6 +19,10 @@
    #include <botan/argon2fmt.h>
 #endif
 
+#if defined(BOTAN_HAS_PKCS12_KDF)
+   #include <botan/pwdhash.h>
+#endif
+
 namespace Botan_Tests {
 
 namespace {
@@ -183,6 +187,46 @@ class Passhash9_Tests final : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_TEST("pbkdf", "passhash9", Passhash9_Tests);
+
+#endif
+
+#if defined(BOTAN_HAS_PKCS12_KDF)
+
+class PKCS12_KDF_Tests final : public Text_Based_Test {
+   public:
+      PKCS12_KDF_Tests() : Text_Based_Test("pbkdf/pkcs12_kdf.vec", "Passphrase,Salt,Iterations,Output") {}
+
+      Test::Result run_one_test(const std::string& algo_spec, const VarMap& vars) override {
+         const std::string passphrase = vars.get_req_str("Passphrase");
+         const std::vector<uint8_t> salt = vars.get_req_bin("Salt");
+         const size_t iterations = vars.get_req_sz("Iterations");
+         const std::vector<uint8_t> expected = vars.get_req_bin("Output");
+
+         Test::Result result(algo_spec);
+
+         auto pwdhash_fam = Botan::PasswordHashFamily::create(algo_spec);
+         if(!pwdhash_fam) {
+            result.note_missing(algo_spec);
+            return result;
+         }
+
+         auto pwdhash = pwdhash_fam->from_iterations(iterations);
+
+         std::vector<uint8_t> derived(expected.size());
+         pwdhash->hash(derived, passphrase, salt);
+         result.test_bin_eq("derived key", derived, expected);
+
+         // Verify from_params(iterations) produces the same result
+         auto pwdhash2 = pwdhash_fam->from_params(iterations);
+         std::vector<uint8_t> derived2(expected.size());
+         pwdhash2->hash(derived2, passphrase, salt);
+         result.test_bin_eq("from_params matches from_iterations", derived2, expected);
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("pbkdf", "pkcs12_kdf", PKCS12_KDF_Tests);
 
 #endif
 
