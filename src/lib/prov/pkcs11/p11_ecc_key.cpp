@@ -14,6 +14,7 @@
 
    #include <botan/ber_dec.h>
    #include <botan/internal/ec_key_data.h>
+   #include <botan/internal/scoped_cleanup.h>
    #include <botan/internal/workfactor.h>
 
 namespace Botan::PKCS11 {
@@ -86,14 +87,20 @@ PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session,
    session.module()->C_GenerateKeyPair(session.handle(),
                                        &mechanism,
                                        pub_key_props.data(),
-                                       static_cast<Ulong>(pub_key_props.count()),
+                                       checked_ulong_cast(pub_key_props.count()),
                                        props.data(),
-                                       static_cast<Ulong>(props.count()),
+                                       checked_ulong_cast(props.count()),
                                        &pub_key_handle,
                                        &priv_key_handle);
 
    this->reset_handle(priv_key_handle);
    const Object public_key(session, pub_key_handle);
+   auto destroy_public = scoped_cleanup([&]() noexcept {
+      try {
+         public_key.destroy();
+      } catch(...) {  // NOLINT(*-empty-catch)
+      }
+   });
 
    auto pt_bytes = public_key.get_attribute_value(AttributeType::EcPoint);
    m_public_key = decode_public_point(m_domain_params, pt_bytes);
@@ -104,6 +111,7 @@ size_t PKCS11_EC_PrivateKey::key_length() const {
 }
 
 std::vector<uint8_t> PKCS11_EC_PrivateKey::raw_public_key_bits() const {
+   // It seems odd that this serializes compressed without ability to control
    return public_ec_point().serialize_compressed();
 }
 

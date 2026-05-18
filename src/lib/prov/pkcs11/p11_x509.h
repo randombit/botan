@@ -76,6 +76,11 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_X509_Certificate final : public Object,
       static const ObjectClass Class = ObjectClass::Certificate;
 
       /**
+      * Return the certificate
+      */
+      const X509_Certificate& certificate() const;
+
+      /**
       * Create a PKCS11_X509_Certificate object from an existing PKCS#11 X509 cert
       * @param session the session to use
       * @param handle the handle of the X.509 certificate
