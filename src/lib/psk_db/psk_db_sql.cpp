@@ -26,7 +26,7 @@ void Encrypted_PSK_Database_SQL::kv_del(std::string_view name) {
 }
 
 void Encrypted_PSK_Database_SQL::kv_set(std::string_view name, std::string_view value) {
-   auto stmt = m_db->new_statement("insert or replace into " + m_table_name + " values(?1, ?2)");
+   auto stmt = m_db->upsert(m_table_name, {"psk_name", "psk_value"});
 
    stmt->bind(1, name);
    stmt->bind(2, value);

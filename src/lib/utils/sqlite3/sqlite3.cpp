@@ -38,6 +38,33 @@ std::shared_ptr<SQL_Database::Statement> Sqlite3_Database::new_statement(std::st
    return std::make_shared<Sqlite3_Statement>(m_db, base_sql);
 }
 
+std::shared_ptr<SQL_Database::Statement> Sqlite3_Database::upsert(
+   std::string_view table, std::initializer_list<std::string_view> columns) const {
+   BOTAN_ARG_CHECK(columns.size() > 0, "upsert requires at least one column");
+
+   std::string sql = "INSERT OR REPLACE INTO ";
+   sql += table;
+   sql += " (";
+   bool first = true;
+   for(const auto& col : columns) {
+      if(!first) {
+         sql += ", ";
+      }
+      sql += col;
+      first = false;
+   }
+   sql += ") VALUES (";
+   for(size_t i = 1; i <= columns.size(); ++i) {
+      if(i > 1) {
+         sql += ", ";
+      }
+      sql += fmt("?{}", i);
+   }
+   sql += ")";
+
+   return new_statement(sql);
+}
+
 size_t Sqlite3_Database::row_count(std::string_view table_name) {
    auto stmt = new_statement(fmt("select count(*) from {}", table_name));
 

@@ -45,6 +45,9 @@ class BOTAN_PUBLIC_API(2, 0) Sqlite3_Database final : public SQL_Database {
 
       std::shared_ptr<Statement> new_statement(std::string_view sql) const override;
 
+      std::shared_ptr<Statement> upsert(std::string_view table,
+                                        std::initializer_list<std::string_view> columns) const override;
+
       bool is_threadsafe() const override;
 
    private:

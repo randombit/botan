@@ -155,9 +155,8 @@ void Session_Manager_SQL::store(const Session& session, const Session_Handle& ha
       return;
    }
 
-   auto stmt = m_db->new_statement(
-      "INSERT OR REPLACE INTO tls_sessions"
-      " VALUES (?1, ?2, ?3, ?4, ?5, ?6)");
+   auto stmt = m_db->upsert("tls_sessions",
+                            {"session_id", "session_ticket", "session_start", "hostname", "hostport", "session"});
 
    // Generate a random session ID if the peer did not provide one. Note that
    // this ID will not be returned on ::find(), as the ticket is preferred.

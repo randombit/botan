@@ -11,6 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/types.h>
 #include <chrono>
+#include <initializer_list>
 #include <memory>
 #include <optional>
 #include <span>
@@ -72,6 +73,17 @@ class BOTAN_PUBLIC_API(2, 0) SQL_Database /* NOLINT(*-special-member-functions) 
       * Use ?1, ?2, ?3, etc for parameters to set later with bind
       */
       virtual std::shared_ptr<Statement> new_statement(std::string_view base_sql) const = 0;
+
+      /*
+      * Prepare an upsert (insert-or-replace) statement for the given columns of
+      * the given table. The returned statement expects placeholders ?1..?N
+      * bound in the order the columns were given. The list must include every
+      * column of the table's primary key; backends that need the key/value
+      * distinction (e.g. Postgres ON CONFLICT) derive it by introspecting the
+      * schema.
+      */
+      virtual std::shared_ptr<Statement> upsert(std::string_view table,
+                                                std::initializer_list<std::string_view> columns) const = 0;
 
       virtual size_t row_count(std::string_view table_name) = 0;
 

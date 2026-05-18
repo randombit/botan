@@ -143,14 +143,8 @@ bool Certificate_Store_In_SQL::insert_cert(const X509_Certificate& cert) {
    const std::vector<uint8_t> dn_encoding = cert.subject_dn().BER_encode();
    const std::vector<uint8_t> cert_encoding = cert.BER_encode();
 
-   auto stmt = m_database->new_statement("INSERT OR REPLACE INTO " + m_prefix +
-                                         "certificates (\
-                                         fingerprint,          \
-                                         subject_dn,           \
-                                         key_id,               \
-                                         priv_fingerprint,     \
-                                         certificate           \
-                                     ) VALUES ( ?1, ?2, ?3, ?4, ?5 )");
+   auto stmt = m_database->upsert(m_prefix + "certificates",
+                                  {"fingerprint", "subject_dn", "key_id", "priv_fingerprint", "certificate"});
 
    stmt->bind(1, cert.fingerprint("SHA-256"));
    stmt->bind(2, dn_encoding);
@@ -226,8 +220,7 @@ bool Certificate_Store_In_SQL::insert_key(const X509_Certificate& cert, const Pr
    auto pkcs8 = PKCS8::BER_encode(key, m_rng, m_password);
    auto fprint = key.fingerprint_private("SHA-256");
 
-   auto stmt1 =
-      m_database->new_statement("INSERT OR REPLACE INTO " + m_prefix + "keys ( fingerprint, key ) VALUES ( ?1, ?2 )");
+   auto stmt1 = m_database->upsert(m_prefix + "keys", {"fingerprint", "key"});
 
    stmt1->bind(1, fprint);
    stmt1->bind(2, pkcs8.data(), pkcs8.size());
@@ -256,8 +249,7 @@ void Certificate_Store_In_SQL::revoke_cert(const X509_Certificate& cert, CRL_Cod
    // TODO(Botan4) require that time be valid
    insert_cert(cert);
 
-   auto stmt1 = m_database->new_statement("INSERT OR REPLACE INTO " + m_prefix +
-                                          "revoked ( fingerprint, reason, time ) VALUES ( ?1, ?2, ?3 )");
+   auto stmt1 = m_database->upsert(m_prefix + "revoked", {"fingerprint", "reason", "time"});
 
    stmt1->bind(1, cert.fingerprint("SHA-256"));
    stmt1->bind(2, static_cast<uint32_t>(code));
@@ -275,8 +267,7 @@ void Certificate_Store_In_SQL::revoke_cert(const X509_Certificate& cert, CRL_Cod
 void Certificate_Store_In_SQL::revoke_cert(const X509_Certificate& cert, CRL_Code code) {
    insert_cert(cert);
 
-   auto stmt1 = m_database->new_statement("INSERT OR REPLACE INTO " + m_prefix +
-                                          "revoked ( fingerprint, reason, time ) VALUES ( ?1, ?2, ?3 )");
+   auto stmt1 = m_database->upsert(m_prefix + "revoked", {"fingerprint", "reason", "time"});
 
    stmt1->bind(1, cert.fingerprint("SHA-256"));
    stmt1->bind(2, static_cast<uint32_t>(code));
