@@ -303,6 +303,8 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHashFamily /* NOLINT(*-special-member-funct
       * - For PBKDF2, PGP-S2K, and Bcrypt-PBKDF, i1 is iterations
       * - Scrypt uses N, r, p for i{1-3}
       * - Argon2 family uses memory (in KB), iterations, and parallelism for i{1-3}
+      * - PKCS12-KDF uses iterations for i1 (the hash and id are fixed by the family name,
+      *   e.g. "PKCS12-KDF(SHA-256,1)")
       *
       * All unneeded parameters should be set to 0 or left blank.
       */

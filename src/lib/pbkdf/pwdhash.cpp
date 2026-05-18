@@ -30,6 +30,10 @@
    #include <botan/bcrypt_pbkdf.h>
 #endif
 
+#if defined(BOTAN_HAS_PKCS12_KDF)
+   #include <botan/internal/pkcs12_kdf.h>
+#endif
+
 namespace Botan {
 
 void PasswordHash::derive_key(uint8_t out[],
@@ -96,6 +100,15 @@ std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(std::string_view 
    if(req.algo_name() == "OpenPGP-S2K" && req.arg_count() == 1) {
       if(auto hash = HashFunction::create(req.arg(0))) {
          return std::make_unique<RFC4880_S2K_Family>(std::move(hash));
+      }
+   }
+#endif
+
+#if defined(BOTAN_HAS_PKCS12_KDF)
+   if(req.algo_name() == "PKCS12-KDF" && req.arg_count() == 2) {
+      if(auto hash = HashFunction::create(req.arg(0))) {
+         const auto id_param = req.arg_as_integer(1);
+         return std::make_unique<PKCS12_KDF_Family>(std::move(hash), id_param);
       }
    }
 #endif

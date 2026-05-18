@@ -194,6 +194,28 @@ If a ``HashFunction`` is provided as an argument,
 it will create ``HMAC(HashFunction)`` as the ``MessageAuthenticationCode``.
 I.e. ``PBKDF2(SHA-256)`` will result in ``PBKDF2(HMAC(SHA-256))``.
 
+PKCS12-KDF
+^^^^^^^^^^^^
+
+.. versionadded:: 3.13.0
+
+PKCS12-KDF follows the construction in :rfc:`7292` (Appendix B).
+
+Algorithm specification name for ``PasswordHashFamily::create``:
+``PKCS12-KDF(<HashFunction>,<ID>)``
+
+Where ``ID`` selects the derivation purpose:
+
+* ``1`` = encryption key
+* ``2`` = IV
+* ``3`` = MAC key
+
+For example: ``PKCS12-KDF(SHA-256,1)``.
+
+Instances created from a family include the iteration count in
+``PasswordHash::to_string()``, yielding
+``PKCS12-KDF(<HashFunction>,<ID>,<iterations>)``.
+
 Scrypt
 ^^^^^^^^^^
 
