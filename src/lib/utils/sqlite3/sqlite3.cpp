@@ -169,7 +169,14 @@ size_t Sqlite3_Database::Sqlite3_Statement::spin() {
 }
 
 bool Sqlite3_Database::Sqlite3_Statement::step() {
-   return (::sqlite3_step(m_stmt) == SQLITE_ROW);
+   const int rc = ::sqlite3_step(m_stmt);
+   if(rc == SQLITE_ROW) {
+      return true;
+   }
+   if(rc == SQLITE_DONE) {
+      return false;
+   }
+   throw SQL_DB_Error(fmt("sqlite3_step failed - {}", ::sqlite3_errmsg(::sqlite3_db_handle(m_stmt))), rc);
 }
 
 Sqlite3_Database::Sqlite3_Statement::~Sqlite3_Statement() {
