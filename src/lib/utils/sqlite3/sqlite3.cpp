@@ -75,14 +75,54 @@ size_t Sqlite3_Database::row_count(std::string_view table_name) {
    }
 }
 
-void Sqlite3_Database::create_table(std::string_view table_schema) {
+void Sqlite3_Database::create_table(const Table_Schema& schema) {
+   BOTAN_ARG_CHECK(!schema.name().empty(), "create_table requires a table name");
+   BOTAN_ARG_CHECK(!schema.columns().empty(), "create_table requires at least one column");
+
+   std::string sql = "CREATE TABLE ";
+   if(schema.is_if_not_exists()) {
+      sql += "IF NOT EXISTS ";
+   }
+   sql += schema.name();
+   sql += " (";
+   bool first = true;
+   for(const auto& col : schema.columns()) {
+      if(!first) {
+         sql += ", ";
+      }
+      sql += col.name();
+      sql += ' ';
+      switch(col.type()) {
+         case Column_Type::Blob:
+            sql += "BLOB";
+            break;
+         case Column_Type::String:
+            sql += "TEXT";
+            break;
+         case Column_Type::Integer:
+            sql += "INTEGER";
+            break;
+      }
+      if(col.is_primary_key()) {
+         sql += " PRIMARY KEY";
+      }
+      if(col.is_unique()) {
+         sql += " UNIQUE";
+      }
+      if(col.is_not_null()) {
+         sql += " NOT NULL";
+      }
+      first = false;
+   }
+   sql += ")";
+
    char* errmsg = nullptr;
-   const int rc = ::sqlite3_exec(m_db.get(), std::string(table_schema).c_str(), nullptr, nullptr, &errmsg);
+   const int rc = ::sqlite3_exec(m_db.get(), sql.c_str(), nullptr, nullptr, &errmsg);
 
    if(rc != SQLITE_OK) {
       const std::string err_msg = (errmsg != nullptr) ? errmsg : "unknown error";
       ::sqlite3_free(errmsg);
-      throw SQL_DB_Error("sqlite3_exec for table failed - " + err_msg, rc);
+      throw SQL_DB_Error("sqlite3_exec for create_table failed - " + err_msg, rc);
    }
 }
 

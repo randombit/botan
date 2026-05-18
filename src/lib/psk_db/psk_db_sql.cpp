@@ -14,7 +14,13 @@ Encrypted_PSK_Database_SQL::Encrypted_PSK_Database_SQL(const secure_vector<uint8
                                                        std::shared_ptr<SQL_Database> db,
                                                        std::string_view table_name) :
       Encrypted_PSK_Database(master_key), m_db(std::move(db)), m_table_name(table_name) {
-   m_db->create_table("create table if not exists " + m_table_name + "(psk_name TEXT PRIMARY KEY, psk_value TEXT)");
+   using DB = SQL_Database;
+   m_db->create_table(DB::Table_Schema(m_table_name,
+                                       {
+                                          DB::Column("psk_name", DB::Column_Type::String).primary_key(),
+                                          DB::Column("psk_value", DB::Column_Type::String),
+                                       })
+                         .if_not_exists());
 }
 
 Encrypted_PSK_Database_SQL::~Encrypted_PSK_Database_SQL() = default;

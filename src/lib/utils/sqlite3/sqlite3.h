@@ -39,7 +39,7 @@ class BOTAN_PUBLIC_API(2, 0) Sqlite3_Database final : public SQL_Database {
 
       size_t row_count(std::string_view table_name) override;
 
-      void create_table(std::string_view table_schema) override;
+      void create_table(const Table_Schema& schema) override;
 
       size_t rows_changed_by_last_statement() override;
 

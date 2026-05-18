@@ -65,29 +65,32 @@ Session_Manager_SQL::Schema_Revision Session_Manager_SQL::detect_schema_revision
 }
 
 void Session_Manager_SQL::create_with_latest_schema(std::string_view passphrase, Schema_Revision rev) {
-   m_db->create_table(
-      "CREATE TABLE tls_sessions "
-      "("
-      "session_id TEXT PRIMARY KEY, "
-      "session_ticket BLOB, "
-      "session_start INTEGER, "
-      "hostname TEXT, "
-      "hostport INTEGER, "
-      "session BLOB NOT NULL"
-      ")");
+   using DB = SQL_Database;
+   const auto blob = DB::Column_Type::Blob;
+   const auto str = DB::Column_Type::String;
+   const auto integer = DB::Column_Type::Integer;
 
-   m_db->create_table(
-      "CREATE TABLE tls_sessions_metadata "
-      "("
-      "passphrase_salt BLOB, "
-      "passphrase_iterations INTEGER, "
-      "passphrase_check INTEGER, "
-      "password_hash_family TEXT, "
-      "database_revision INTEGER"
-      ")");
+   m_db->create_table(DB::Table_Schema("tls_sessions",
+                                       {
+                                          DB::Column("session_id", str).primary_key(),
+                                          DB::Column("session_ticket", blob),
+                                          DB::Column("session_start", integer),
+                                          DB::Column("hostname", str),
+                                          DB::Column("hostport", integer),
+                                          DB::Column("session", blob).not_null(),
+                                       }));
+
+   m_db->create_table(DB::Table_Schema("tls_sessions_metadata",
+                                       {
+                                          DB::Column("passphrase_salt", blob).not_null(),
+                                          DB::Column("passphrase_iterations", integer).not_null(),
+                                          DB::Column("passphrase_check", integer).not_null(),
+                                          DB::Column("password_hash_family", str).not_null(),
+                                          DB::Column("database_revision", integer).not_null(),
+                                       }));
 
    // speeds up lookups on session_tickets when deleting
-   m_db->create_table("CREATE INDEX tls_tickets ON tls_sessions (session_ticket)");
+   m_db->exec("CREATE INDEX tls_tickets ON tls_sessions (session_ticket)");
 
    auto salt = m_rng->random_vec<std::vector<uint8_t>>(16);
 

@@ -87,7 +87,72 @@ class BOTAN_PUBLIC_API(2, 0) SQL_Database /* NOLINT(*-special-member-functions) 
 
       virtual size_t row_count(std::string_view table_name) = 0;
 
-      virtual void create_table(std::string_view table_schema) = 0;
+      enum class Column_Type : uint8_t {
+         Blob,
+         String,
+         Integer,
+      };
+
+      class Column {
+         public:
+            Column(std::string name, Column_Type type) : m_name(std::move(name)), m_type(type) {}
+
+            Column& primary_key() {
+               m_primary_key = true;
+               return *this;
+            }
+
+            Column& not_null() {
+               m_not_null = true;
+               return *this;
+            }
+
+            Column& unique() {
+               m_unique = true;
+               return *this;
+            }
+
+            const std::string& name() const { return m_name; }
+
+            Column_Type type() const { return m_type; }
+
+            bool is_primary_key() const { return m_primary_key; }
+
+            bool is_not_null() const { return m_not_null; }
+
+            bool is_unique() const { return m_unique; }
+
+         private:
+            std::string m_name;
+            Column_Type m_type;
+            bool m_primary_key = false;
+            bool m_not_null = false;
+            bool m_unique = false;
+      };
+
+      class Table_Schema {
+         public:
+            Table_Schema(std::string name, std::vector<Column> columns) :
+                  m_name(std::move(name)), m_columns(std::move(columns)) {}
+
+            Table_Schema& if_not_exists() {
+               m_if_not_exists = true;
+               return *this;
+            }
+
+            const std::string& name() const { return m_name; }
+
+            const std::vector<Column>& columns() const { return m_columns; }
+
+            bool is_if_not_exists() const { return m_if_not_exists; }
+
+         private:
+            std::string m_name;
+            std::vector<Column> m_columns;
+            bool m_if_not_exists = false;
+      };
+
+      virtual void create_table(const Table_Schema& schema) = 0;
 
       virtual size_t rows_changed_by_last_statement() = 0;
 

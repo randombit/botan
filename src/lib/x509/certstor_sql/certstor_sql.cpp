@@ -23,25 +23,31 @@ Certificate_Store_In_SQL::Certificate_Store_In_SQL(std::shared_ptr<SQL_Database>
                                                    RandomNumberGenerator& rng,
                                                    std::string_view table_prefix) :
       m_rng(rng), m_database(std::move(db)), m_prefix(table_prefix), m_password(passwd) {
-   m_database->create_table("CREATE TABLE IF NOT EXISTS " + m_prefix +
-                            "certificates (                \
-                                 fingerprint       BLOB PRIMARY KEY,   \
-                                 subject_dn        BLOB,               \
-                                 key_id            BLOB,               \
-                                 priv_fingerprint  BLOB,               \
-                                 certificate       BLOB UNIQUE NOT NULL\
-                             )");
-   m_database->create_table("CREATE TABLE IF NOT EXISTS " + m_prefix +
-                            "keys (\
-                                 fingerprint BLOB PRIMARY KEY,                \
-                                 key         BLOB UNIQUE NOT NULL             \
-                             )");
-   m_database->create_table("CREATE TABLE IF NOT EXISTS " + m_prefix +
-                            "revoked (\
-                                 fingerprint BLOB PRIMARY KEY,                   \
-                                 reason      BLOB NOT NULL,                      \
-                                 time        BLOB NOT NULL                       \
-                            )");
+   using DB = SQL_Database;
+   const auto blob = DB::Column_Type::Blob;
+
+   m_database->create_table(DB::Table_Schema(m_prefix + "certificates",
+                                             {
+                                                DB::Column("fingerprint", blob).primary_key(),
+                                                DB::Column("subject_dn", blob),
+                                                DB::Column("key_id", blob),
+                                                DB::Column("priv_fingerprint", blob),
+                                                DB::Column("certificate", blob).not_null().unique(),
+                                             })
+                               .if_not_exists());
+   m_database->create_table(DB::Table_Schema(m_prefix + "keys",
+                                             {
+                                                DB::Column("fingerprint", blob).primary_key(),
+                                                DB::Column("key", blob).not_null().unique(),
+                                             })
+                               .if_not_exists());
+   m_database->create_table(DB::Table_Schema(m_prefix + "revoked",
+                                             {
+                                                DB::Column("fingerprint", blob).primary_key(),
+                                                DB::Column("reason", blob).not_null(),
+                                                DB::Column("time", blob).not_null(),
+                                             })
+                               .if_not_exists());
 }
 
 // Certificate handling
