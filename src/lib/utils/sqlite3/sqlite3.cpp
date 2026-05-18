@@ -66,21 +66,13 @@ size_t Sqlite3_Database::rows_changed_by_last_statement() {
 }
 
 bool Sqlite3_Database::is_threadsafe() const {
-   const int flag = sqlite3_threadsafe();
-
-   // `flag` can have three values:
+   // sqlite3_db_mutex() returns the connection's mutex if the connection is in
+   // serialized mode, and nullptr otherwise. This reflects both the compile-time
+   // SQLITE_THREADSAFE setting and the per-connection SQLITE_OPEN_(FULL|NO)MUTEX
+   // open flags actually used.
    //
-   // 0 - single threaded:  no locking is done inside the SQLite code
-   // 1 - serialized:       all SQLite database features can be used safely
-   //                       from multiple threads
-   // 2 - reduced locking:  application must ensure not to use a single
-   //                       database connection across threads
-   //
-   // https://www.sqlite.org/c3ref/threadsafe.html
-
-   // When opening the database connection we explicitly request
-   // SQLITE_OPEN_FULLMUTEX to ensure restrictive locking in SQLite.
-   return flag >= 1;
+   // https://www.sqlite.org/c3ref/db_mutex.html
+   return ::sqlite3_db_mutex(m_db.get()) != nullptr;
 }
 
 Sqlite3_Database::Sqlite3_Statement::Sqlite3_Statement(std::shared_ptr<sqlite3> db, std::string_view base_sql) :
