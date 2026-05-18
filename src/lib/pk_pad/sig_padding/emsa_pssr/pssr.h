@@ -17,22 +17,14 @@ namespace Botan {
 
 class RandomNumberGenerator;
 class HashFunction;
+class PK_Signature_Options;
 
 /**
 * PSSR (called EMSA4 in IEEE 1363 and in old versions of the library)
 */
 class PSSR final : public SignaturePaddingScheme {
    public:
-      /**
-      * @param hash the hash function to use
-      */
-      explicit PSSR(std::unique_ptr<HashFunction> hash);
-
-      /**
-      * @param hash the hash function to use
-      * @param salt_size the size of the salt to use in bytes
-      */
-      PSSR(std::unique_ptr<HashFunction> hash, size_t salt_size);
+      explicit PSSR(const PK_Signature_Options& options);
 
       std::string name() const override;
 
@@ -60,16 +52,7 @@ class PSSR final : public SignaturePaddingScheme {
 */
 class PSS_Raw final : public SignaturePaddingScheme {
    public:
-      /**
-      * @param hash the hash function to use
-      */
-      explicit PSS_Raw(std::unique_ptr<HashFunction> hash);
-
-      /**
-      * @param hash the hash function to use
-      * @param salt_size the size of the salt to use in bytes
-      */
-      PSS_Raw(std::unique_ptr<HashFunction> hash, size_t salt_size);
+      explicit PSS_Raw(const PK_Signature_Options& options);
 
       std::string hash_function() const override;
 

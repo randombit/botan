@@ -12,6 +12,7 @@
    #include "test_pubkey.h"
    #include <botan/hss_lms.h>
    #include <botan/pk_algs.h>
+   #include <botan/pk_options.h>
    #include <botan/pubkey.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/hss.h>
@@ -128,8 +129,8 @@ class HSS_LMS_Negative_Tests final : public Test {
 
          auto sk = Botan::create_private_key("HSS-LMS", Test::rng(), "Truncated(SHA-256,192),HW(5,8)");
 
-         Botan::PK_Signer signer(*sk, Test::rng(), "");
-         Botan::PK_Verifier verifier(*sk, "");
+         Botan::PK_Signer signer(*sk, Test::rng(), Botan::PK_Signature_Options());
+         Botan::PK_Verifier verifier(*sk, Botan::PK_Signature_Options());
 
          std::vector<uint8_t> mes = {0xde, 0xad, 0xbe, 0xef};
 
@@ -155,8 +156,8 @@ class HSS_LMS_Negative_Tests final : public Test {
 
          auto sk = Botan::create_private_key("HSS-LMS", Test::rng(), "Truncated(SHA-256,192),HW(5,8)");
 
-         Botan::PK_Signer signer(*sk, Test::rng(), "");
-         Botan::PK_Verifier verifier(*sk, "");
+         Botan::PK_Signer signer(*sk, Test::rng(), Botan::PK_Signature_Options());
+         Botan::PK_Verifier verifier(*sk, Botan::PK_Signature_Options());
 
          std::vector<uint8_t> mes = {0xde, 0xad, 0xbe, 0xef};
 
@@ -241,7 +242,7 @@ class HSS_LMS_Statefulness_Test final : public Test {
          Test::Result result("HSS-LMS");
 
          auto sk = Botan::HSS_LMS_PrivateKey(Test::rng(), "Truncated(SHA-256,192),HW(5,8),HW(5,8)");
-         Botan::PK_Signer signer(sk, Test::rng(), "");
+         Botan::PK_Signer signer(sk, Test::rng(), Botan::PK_Signature_Options());
          std::vector<uint8_t> mes = {0xde, 0xad, 0xbe, 0xef};
          auto sk_bytes_begin = sk.private_key_bits();
 
@@ -276,7 +277,7 @@ class HSS_LMS_Statefulness_Test final : public Test {
          const uint64_t total_sig_count = 32;
          auto sk = create_private_key_with_idx(total_sig_count - 1);
 
-         Botan::PK_Signer signer(sk, Test::rng(), "");
+         Botan::PK_Signer signer(sk, Test::rng(), Botan::PK_Signature_Options());
          std::vector<uint8_t> mes = {0xde, 0xad, 0xbe, 0xef};
          auto sk_bytes_begin = sk.private_key_bits();
 
@@ -307,14 +308,14 @@ class HSS_LMS_Missing_API_Test final : public Test {
                            3 * sizeof(uint32_t) + Botan::LMS_IDENTIFIER_LEN);
 
          // HSS_LMS_Verification_Operation::hash_function()
-         const Botan::PK_Verifier verifier(*sk, "");
+         Botan::PK_Verifier verifier(*sk, Botan::PK_Signature_Options());
          result.test_str_eq("PK_Verifier should report the hash of the key", verifier.hash_function(), "SHA-256");
 
          // HSS_LMS_PrivateKey::raw_private_key_bits()
          result.test_bin_eq("Our BER and raw encoding is the same", sk->raw_private_key_bits(), sk->private_key_bits());
 
          // HSS_LMS_Signature_Operation::algorithm_identifier()
-         const Botan::PK_Signer signer(*sk, Test::rng(), "");
+         Botan::PK_Signer signer(*sk, Test::rng(), Botan::PK_Signature_Options());
          result.test_is_true("signature algorithm", signer.algorithm_identifier() == sk->algorithm_identifier());
 
          // HSS_LMS_Signature_Operation::hash_function()

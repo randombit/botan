@@ -95,7 +95,7 @@ int main() {
 
    std::vector<uint8_t> plaintext(20, 0x01);
 
-   Botan::PK_Signer signer(key_pair.second, rng, "Raw", Botan::Signature_Format::Standard, "pkcs11");
+   Botan::PK_Signer signer(key_pair.second, rng, Botan::PK_Signature_Options().with_hash("Raw"));
    auto signature = signer.sign_message(plaintext, rng);
 
    Botan::PK_Verifier token_verifier(key_pair.first, "Raw", Botan::Signature_Format::Standard, "pkcs11");

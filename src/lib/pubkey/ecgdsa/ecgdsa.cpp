@@ -8,6 +8,7 @@
 
 #include <botan/ecgdsa.h>
 
+#include <botan/assert.h>
 #include <botan/ec_group.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/pk_ops_impl.h>
@@ -37,8 +38,10 @@ namespace {
 */
 class ECGDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
    public:
-      ECGDSA_Signature_Operation(const ECGDSA_PrivateKey& ecgdsa, std::string_view hash_fn) :
-            PK_Ops::Signature_with_Hash(hash_fn), m_group(ecgdsa.domain()), m_x(ecgdsa._private_key()) {}
+      ECGDSA_Signature_Operation(const ECGDSA_PrivateKey& ecgdsa, const PK_Signature_Options& options) :
+            PK_Ops::Signature_with_Hash(options), m_group(ecgdsa.domain()), m_x(ecgdsa._private_key()) {
+         BOTAN_ARG_CHECK(!options.using_deterministic_signature(), "ECGDSA does not support deterministic signatures");
+      }
 
       std::vector<uint8_t> raw_sign(std::span<const uint8_t> msg, RandomNumberGenerator& rng) override;
 
@@ -79,8 +82,8 @@ std::vector<uint8_t> ECGDSA_Signature_Operation::raw_sign(std::span<const uint8_
 */
 class ECGDSA_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
-      ECGDSA_Verification_Operation(const ECGDSA_PublicKey& ecgdsa, std::string_view padding) :
-            PK_Ops::Verification_with_Hash(padding), m_group(ecgdsa.domain()), m_gy_mul(ecgdsa._public_ec_point()) {}
+      ECGDSA_Verification_Operation(const ECGDSA_PublicKey& ecgdsa, const PK_Signature_Options& options) :
+            PK_Ops::Verification_with_Hash(options), m_group(ecgdsa.domain()), m_gy_mul(ecgdsa._public_ec_point()) {}
 
       ECGDSA_Verification_Operation(const ECGDSA_PublicKey& ecgdsa, const AlgorithmIdentifier& alg_id) :
             PK_Ops::Verification_with_Hash(alg_id, "ECGDSA"),
@@ -121,12 +124,12 @@ std::unique_ptr<Private_Key> ECGDSA_PublicKey::generate_another(RandomNumberGene
    return std::make_unique<ECGDSA_PrivateKey>(rng, domain());
 }
 
-std::unique_ptr<PK_Ops::Verification> ECGDSA_PublicKey::create_verification_op(std::string_view params,
-                                                                               std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<ECGDSA_Verification_Operation>(*this, params);
+std::unique_ptr<PK_Ops::Verification> ECGDSA_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   if(!options.using_provider()) {
+      return std::make_unique<ECGDSA_Verification_Operation>(*this, options);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Verification> ECGDSA_PublicKey::create_x509_verification_op(
@@ -138,13 +141,13 @@ std::unique_ptr<PK_Ops::Verification> ECGDSA_PublicKey::create_x509_verification
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Signature> ECGDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                                                          std::string_view params,
-                                                                          std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<ECGDSA_Signature_Operation>(*this, params);
+std::unique_ptr<PK_Ops::Signature> ECGDSA_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                           const PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng);
+   if(!options.using_provider()) {
+      return std::make_unique<ECGDSA_Signature_Operation>(*this, options);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 }  // namespace Botan

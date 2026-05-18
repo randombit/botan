@@ -14,6 +14,7 @@
    #include <botan/ecdsa.h>
    #include <botan/hash.h>
    #include <botan/pk_algs.h>
+   #include <botan/pk_options.h>
    #include <botan/pkcs8.h>
    #include <botan/pubkey.h>
    #include <botan/rng.h>
@@ -84,16 +85,7 @@ class ECDSA_Wycheproof_Verification_Tests final : public PK_Signature_Verificati
 class ECDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test {
    public:
       ECDSA_Signature_KAT_Tests() :
-            PK_Signature_Generation_Test("ECDSA",
-   #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-                                         "pubkey/ecdsa_rfc6979.vec",
-                                         "Group,X,Hash,Msg,Signature") {
-      }
-   #else
-                                         "pubkey/ecdsa_prob.vec",
-                                         "Group,X,Hash,Msg,Nonce,Signature") {
-      }
-   #endif
+            PK_Signature_Generation_Test("ECDSA", "pubkey/ecdsa_prob.vec", "Group,X,Hash,Msg,Nonce,Signature") {}
 
       bool clear_between_callbacks() const override { return false; }
 
@@ -111,28 +103,57 @@ class ECDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test {
 
       std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Hash"); }
 
-   #if !defined(BOTAN_HAS_RFC6979_GENERATOR)
       std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const override {
          // probabilistic ecdsa signature generation extracts more random than just the nonce,
          // but the nonce is extracted first
          return std::make_unique<Fixed_Output_Position_RNG>(nonce, 1, this->rng());
       }
-   #endif
 };
+
+   #if defined(BOTAN_HAS_RFC6979_GENERATOR)
+
+class ECDSA_RFC6979_KAT_Tests final : public Text_Based_Test {
+   public:
+      ECDSA_RFC6979_KAT_Tests() : Text_Based_Test("pubkey/ecdsa_rfc6979.vec", "Group,X,Hash,Msg,Signature") {}
+
+      bool clear_between_callbacks() const override { return false; }
+
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
+         return !Botan::EC_Group::supports_named_group(vars.get_req_str("Group"));
+      }
+
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
+         const std::string group_id = vars.get_req_str("Group");
+         const std::string hash = vars.get_req_str("Hash");
+         const auto msg = vars.get_req_bin("Msg");
+         const auto expected_sig = vars.get_req_bin("Signature");
+         const BigInt x = vars.get_req_bn("X");
+
+         Test::Result result("ECDSA RFC6979 " + group_id + "/" + hash);
+
+         const auto group = Botan::EC_Group::from_name(group_id);
+         const Botan::ECDSA_PrivateKey priv_key(this->rng(), group, x);
+
+         Botan::PK_Signer signer(
+            priv_key, this->rng(), Botan::PK_Signature_Options(hash).with_deterministic_signature());
+
+         const auto sig = signer.sign_message(msg, this->rng());
+         result.test_bin_eq("RFC6979 signature matches KAT", sig, expected_sig);
+
+         const auto pub = priv_key.public_key();
+         Botan::PK_Verifier verifier(*pub, Botan::PK_Signature_Options(hash));
+         result.test_is_true("Signature verifies", verifier.verify_message(msg, sig));
+
+         return result;
+      }
+};
+
+   #endif
 
 class ECDSA_KAT_Verification_Tests final : public PK_Signature_Verification_Test {
    public:
       ECDSA_KAT_Verification_Tests() :
-            PK_Signature_Verification_Test("ECDSA",
-   #if !defined(BOTAN_HAS_RFC6979_GENERATOR)
-                                           "pubkey/ecdsa_rfc6979.vec",
-                                           "Group,X,Hash,Msg,Signature") {
-      }
-   #else
-                                           "pubkey/ecdsa_prob.vec",
-                                           "Group,X,Hash,Msg,Nonce,Signature") {
-      }
-   #endif
+            PK_Signature_Verification_Test("ECDSA", "pubkey/ecdsa_rfc6979.vec", "Group,X,Hash,Msg,Signature") {}
 
       bool clear_between_callbacks() const override { return false; }
 
@@ -287,8 +308,8 @@ class ECDSA_AllGroups_Test : public Test {
                }
 
                try {
-                  Botan::PK_Signer signer(priv, rng(), hash);
-                  Botan::PK_Verifier verifier(*pub, hash);
+                  Botan::PK_Signer signer(priv, rng(), Botan::PK_Signature_Options().with_hash(hash));
+                  Botan::PK_Verifier verifier(*pub, Botan::PK_Signature_Options().with_hash(hash));
 
                   for(size_t i = 0; i != 16; ++i) {
                      auto message = Botan::unlock(rng().random_vec(rng().next_byte()));
@@ -357,6 +378,9 @@ class ECDSA_ExplicitCurveKey_Test : public Text_Based_Test {
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_verify", ECDSA_Verification_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_verify_wycheproof", ECDSA_Wycheproof_Verification_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_sign", ECDSA_Signature_KAT_Tests);
+   #if defined(BOTAN_HAS_RFC6979_GENERATOR)
+BOTAN_REGISTER_TEST("pubkey", "ecdsa_rfc6979_sign", ECDSA_RFC6979_KAT_Tests);
+   #endif
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_verify_kat", ECDSA_KAT_Verification_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_sign_verify_der", ECDSA_Sign_Verify_DER_Test);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_keygen", ECDSA_Keygen_Tests);
