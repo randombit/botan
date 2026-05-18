@@ -21,6 +21,8 @@
    #include "test_rng.h"
 #endif
 
+#include <format>
+
 namespace Botan_Tests {
 
 namespace {
@@ -287,5 +289,67 @@ BOTAN_REGISTER_TEST("pubkey", "dilithium_keygen", Dilithium_Keygen_Tests);
 #endif
 
 }  // namespace
+
+#if defined(BOTAN_HAS_DILITHIUM_COMMON)
+
+class MLDSA_Param_Tests final : public Test {
+   public:
+      struct Test_Case {
+            bool expect_success;
+            std::string param;
+            bool randomized_signature;
+      };
+
+      std::vector<Test::Result> run() override {
+         std::string test_name = "MLDSA_Param_Tests";
+         std::vector<Test::Result> results;
+         auto rng = Test::new_rng(test_name);
+
+         const std::string msg = "The quick brown fox jumps over the lazy dog.";
+         const std::vector<uint8_t> msgvec(msg.data(), msg.data() + msg.size());
+
+         const Botan::Dilithium_PrivateKey priv_key(*rng, Botan::DilithiumMode::ML_DSA_4x4);
+
+         const std::vector<Test_Case> sign_params = {
+            Test_Case{true, std::string(""), true},
+            Test_Case{true, std::string("Randomized,Pure"), true},
+            Test_Case{true, std::string("Deterministic,ctx_hex=00AABB"), false},
+            Test_Case{false, std::string("ctx_hex=,ctx_hex="), true},
+            Test_Case{false, std::string("Randomized,Deterministic"), false},
+            Test_Case{false, std::string("ctx=AA"), true},
+            Test_Case{false, std::string("X"), true},
+            Test_Case{false, std::string("ctx=A"), true}};
+
+         for(const auto& [expect_success, param_str, random_sig] : sign_params) {
+            Test::Result result(std::format("{}: param string = '{}'", test_name, param_str));
+            std::unique_ptr<Botan::PK_Signer> signer;
+            bool exc = false;
+            try {
+               signer = std::make_unique<Botan::PK_Signer>(Botan::PK_Signer(priv_key, *rng, param_str));
+            } catch(Botan::Exception&) {
+               exc = true;
+            }
+            result.test_bool_eq(std::format("parameters string '{}' for ML-DSA op was valid", param_str),
+                                !exc && signer,
+                                expect_success);
+            if(exc) {
+               results.push_back(result);
+               continue;
+            }
+            auto verifier = Botan::PK_Verifier(*priv_key.public_key(), param_str);
+            auto signature = signer->sign_message(msgvec, *rng);
+            auto signature2 = signer->sign_message(msgvec, *rng);
+            result.test_bool_eq(
+               std::format("signature randomization (param = '{}')", param_str), signature != signature2, random_sig);
+            result.test_is_true("signature verification", verifier.verify_message(msgvec, signature));
+            results.push_back(result);
+         }
+
+         return results;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "mldsa_op_params", MLDSA_Param_Tests);
+#endif
 
 }  // namespace Botan_Tests
