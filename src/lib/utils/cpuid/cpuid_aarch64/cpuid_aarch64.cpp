@@ -79,10 +79,13 @@ std::optional<uint32_t> aarch64_feat_using_mac_api(uint32_t allowed) {
    uint32_t feat = 0;
 
    auto sysctlbyname_has_feature = [](const char* feature_name) -> bool {
-      unsigned int feature;
+      unsigned int feature = 0;
       size_t size = sizeof(feature);
-      ::sysctlbyname(feature_name, &feature, &size, nullptr, 0);
-      return (feature == 1);
+      if(::sysctlbyname(feature_name, &feature, &size, nullptr, 0) == 0) {
+         return (feature == 1);
+      } else {
+         return false;
+      }
    };
 
    // All 64-bit Apple ARM chips have NEON, AES, and SHA support
