@@ -616,6 +616,8 @@ class BOTAN_PUBLIC_API(2, 0) NameConstraints final {
       std::set<GeneralName::NameType> m_excluded_name_types;
 };
 
+enum class Extension_Context : uint8_t { Certificate, CRL, CRL_Entry, OCSP_Request, OCSP_Response };
+
 /**
 * X.509 Certificate Extension
 */
@@ -640,6 +642,8 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Extension /* NOLINT(*-special-member-fu
       */
 
       virtual std::unique_ptr<Certificate_Extension> copy() const = 0;
+
+      virtual bool is_appropriate_context(Extension_Context context) const = 0;
 
       /*
       * Callback visited during path validation.
@@ -734,6 +738,14 @@ class BOTAN_PUBLIC_API(2, 0) Extensions final : public ASN1_Object {
 
       void encode_into(DER_Encoder& to) const override;
       void decode_from(BER_Decoder& from) override;
+      void decode_from(BER_Decoder& from, std::optional<Extension_Context> context);
+
+      /**
+      * Return true if an unrecognized critical extension was encountered
+      * during the most recent decode_from. Resets on each call to decode_from
+      * and is not affected by subsequent calls to add/replace/remove.
+      */
+      bool has_unknown_critical_extension() const { return m_has_unknown_critical_extension; }
 
       /**
       * Adds a new extension to the list.
@@ -828,7 +840,8 @@ class BOTAN_PUBLIC_API(2, 0) Extensions final : public ASN1_Object {
    private:
       static std::unique_ptr<Certificate_Extension> create_extn_obj(const OID& oid,
                                                                     bool critical,
-                                                                    const std::vector<uint8_t>& body);
+                                                                    const std::vector<uint8_t>& body,
+                                                                    std::optional<Extension_Context> context);
 
       class BOTAN_UNSTABLE_API Extensions_Info final {
          public:
@@ -854,6 +867,7 @@ class BOTAN_PUBLIC_API(2, 0) Extensions final : public ASN1_Object {
 
       std::vector<OID> m_extension_oids;
       std::map<OID, Extensions_Info> m_extension_info;
+      bool m_has_unknown_critical_extension = false;
 };
 
 }  // namespace Botan

@@ -119,6 +119,12 @@ class BOTAN_PUBLIC_API(2, 0) X509_CRL final : public X509_Object {
       const Extensions& extensions() const;
 
       /**
+      * Return true if either the CRL extensions or any CRL entry extensions
+      * contained a critical extension which we did not recognize.
+      */
+      bool has_unknown_critical_extension() const;
+
+      /**
       * Get the AuthorityKeyIdentifier of this CRL.
       * @return this CRLs AuthorityKeyIdentifier
       */
@@ -126,7 +132,7 @@ class BOTAN_PUBLIC_API(2, 0) X509_CRL final : public X509_Object {
 
       /**
       * Get the serial number of this CRL.
-      * @return CRLs serial number
+      * @return CRLs serial number (or zero if not set in the extensions)
       */
       uint32_t crl_number() const;
 

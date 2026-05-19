@@ -94,7 +94,7 @@ void CRL_Entry::decode_from(BER_Decoder& source) {
    entry.decode(data->m_time);
 
    if(entry.more_items()) {
-      entry.decode(data->m_extensions);
+      data->m_extensions.decode_from(entry, Extension_Context::CRL_Entry);
       if(const auto* ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_ReasonCode>()) {
          data->m_reason = ext->get_reason();
       } else {
