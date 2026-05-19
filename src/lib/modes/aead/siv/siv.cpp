@@ -34,13 +34,13 @@ SIV_Mode::~SIV_Mode() = default;
 void SIV_Mode::clear() {
    m_ctr->clear();
    m_mac->clear();
+   m_ad_macs.clear();
    reset();
 }
 
 void SIV_Mode::reset() {
    m_nonce.clear();
    m_msg_buf.clear();
-   m_ad_macs.clear();
 }
 
 std::string SIV_Mode::name() const {
@@ -85,7 +85,7 @@ size_t SIV_Mode::maximum_associated_data_inputs() const {
 
 void SIV_Mode::set_associated_data_n(size_t n, std::span<const uint8_t> ad) {
    const size_t max_ads = maximum_associated_data_inputs();
-   if(n > max_ads) {
+   if(n >= max_ads) {
       throw Invalid_Argument(name() + " allows no more than " + std::to_string(max_ads) + " ADs");
    }
 

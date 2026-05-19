@@ -47,6 +47,8 @@ class L_computer final {
 
       void init(const secure_vector<uint8_t>& offset) { m_offset = offset; }
 
+      void reset() { m_offset.clear(); }
+
       bool initialized() const { return !m_offset.empty(); }
 
       const secure_vector<uint8_t>& star() const { return m_L_star; }
@@ -183,18 +185,21 @@ OCB_Mode::~OCB_Mode() = default;
 
 void OCB_Mode::clear() {
    m_cipher->clear();
-   m_L.reset();  // add clear here?
+   m_L.reset();
+   zeroise(m_ad_hash);
    reset();
 }
 
 void OCB_Mode::reset() {
    m_block_index = 0;
-   zeroise(m_ad_hash);
    zeroise(m_checksum);
    m_last_nonce.clear();
    m_stretch.clear();
    zeroise(m_nonce_buf);
    zeroise(m_offset);
+   if(m_L) {
+      m_L->reset();
+   }
 }
 
 bool OCB_Mode::valid_nonce_length(size_t length) const {
@@ -415,8 +420,7 @@ void OCB_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    buffer += std::make_pair(mac.data(), tag_size());
 
-   zeroise(m_checksum);
-   m_block_index = 0;
+   reset();
 }
 
 void OCB_Decryption::decrypt(uint8_t buffer[], size_t blocks) {
@@ -500,9 +504,7 @@ void OCB_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    m_cipher->encrypt(mac);
    mac ^= m_ad_hash;
 
-   // reset state
-   zeroise(m_checksum);
-   m_block_index = 0;
+   reset();
 
    // compare mac
    const uint8_t* included_tag = &buf[remaining];
