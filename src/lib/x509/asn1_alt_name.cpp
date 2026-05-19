@@ -6,10 +6,11 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+// TODO(Botan4) this entire file can be deleted
+
 #include <botan/pkix_types.h>
 
 #include <botan/internal/fmt.h>
-#include <botan/internal/parsing.h>
 #include <sstream>
 
 namespace Botan {
@@ -31,7 +32,7 @@ AlternativeName::AlternativeName(std::string_view email_addr,
       add_uri(uri);
    }
    if(!ip.empty()) {
-      if(auto ipv4 = string_to_ipv4(ip)) {
+      if(auto ipv4 = IPv4Address::from_string(ip)) {
          add_ipv4_address(*ipv4);
       } else {
          throw Invalid_Argument(fmt("Invalid IPv4 address '{}'", ip));
@@ -59,7 +60,7 @@ void AlternativeName::add_attribute(std::string_view type, std::string_view valu
       ss >> dn;
       this->add_dn(dn);
    } else if(type == "IP") {
-      if(auto ipv4 = string_to_ipv4(value)) {
+      if(auto ipv4 = IPv4Address::from_string(value)) {
          add_ipv4_address(*ipv4);
       } else {
          throw Invalid_Argument(fmt("Invalid IPv4 address '{}'", value));
@@ -97,11 +98,11 @@ std::multimap<std::string, std::string> AlternativeName::contents() const {
       names.emplace("URI", nm);
    }
 
-   for(const uint32_t ipv4 : this->ipv4_address()) {
-      names.emplace("IP", ipv4_to_string(ipv4));
+   for(const auto& ipv4 : this->ipv4_addresses()) {
+      names.emplace("IP", ipv4.to_string());
    }
 
-   for(const auto& ipv6 : this->ipv6_address()) {
+   for(const auto& ipv6 : this->ipv6_addresses()) {
       names.emplace("IPv6", ipv6.to_string());
    }
 
@@ -159,8 +160,8 @@ std::vector<std::string> AlternativeName::get_attribute(std::string_view attr) c
       return ret;
    } else if(attr == "IP") {
       std::vector<std::string> ip_str;
-      for(const uint32_t ipv4 : this->ipv4_address()) {
-         ip_str.push_back(ipv4_to_string(ipv4));
+      for(const auto& ipv4 : this->ipv4_addresses()) {
+         ip_str.push_back(ipv4.to_string());
       }
       return ip_str;
    } else {
@@ -185,7 +186,12 @@ X509_DN AlternativeName::dn() const {
    return combined_dn;
 }
 
-/*
-* Return if this object has anything useful
-*/
+std::set<uint32_t> AlternativeName::ipv4_address() const {
+   std::set<uint32_t> out;
+   for(const auto& a : m_ipv4_addrs) {
+      out.insert(a.address());
+   }
+   return out;
+}
+
 }  // namespace Botan

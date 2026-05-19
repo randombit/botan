@@ -204,7 +204,7 @@ class ServerCertificateSuite:
         test_cli("keygen", ["--algo=ECDSA", f"--params={ecdsa_algo}", f"--output={self.private_key}"], "")
         test_cli("gen_self_signed", [self.private_key, "CA", "--ca", "--country=VT", "--dns=ca.example", f"--hash={hash_algo}", f"--output={self.ca_cert}"], "")
         test_cli("cert_verify", self.ca_cert, "Certificate did not validate - Cannot establish trust")
-        test_cli("gen_pkcs10", [f"{self.private_key}", "localhost", f"--output={crt_req}"])
+        test_cli("gen_pkcs10", [f"{self.private_key}", "localhost", "--dns=localhost", f"--output={crt_req}"])
         test_cli("sign_cert", [self.ca_cert, self.private_key, crt_req, f"--output={self.cert}"])
 
 

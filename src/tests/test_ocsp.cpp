@@ -173,10 +173,10 @@ class OCSP_Tests final : public Test {
          // The response in bdr_ocsp contains two certificates
          if(result.test_sz_eq("both certificates found", bdr_ocsp.certificates().size(), 2)) {
             result.test_str_eq("first cert in response",
-                               bdr_ocsp.certificates()[0].subject_info("X520.CommonName").at(0),
+                               bdr_ocsp.certificates()[0].subject_dn().get_first_attribute("CN"),
                                "D-TRUST OCSP 4 2-2 EV 2016");
             result.test_str_eq("second cert in response",
-                               bdr_ocsp.certificates()[1].subject_info("X520.CommonName").at(0),
+                               bdr_ocsp.certificates()[1].subject_dn().get_first_attribute("CN"),
                                "D-TRUST CA 2-2 EV 2016");
          }
 

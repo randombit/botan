@@ -55,7 +55,7 @@ class CRL_Data final {
       // cached values from extensions
       size_t m_crl_number = 0;
       std::vector<uint8_t> m_auth_key_id;
-      std::vector<std::string> m_idp_urls;
+      std::vector<URI> m_idp_urls;
       // NOLINTEND(*non-private-member-variables-in-classes)
 };
 
@@ -188,7 +188,7 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body, cons
    }
    if(const auto* ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_Issuing_Distribution_Point>()) {
       for(const auto& uri : ext->get_point().uri_names()) {
-         data->m_idp_urls.push_back(uri.original_input());
+         data->m_idp_urls.push_back(uri);
       }
    }
 
@@ -265,7 +265,7 @@ const X509_Time& X509_CRL::next_update() const {
 */
 std::string X509_CRL::crl_issuing_distribution_point() const {
    if(!data().m_idp_urls.empty()) {
-      return data().m_idp_urls[0];
+      return data().m_idp_urls[0].original_input();
    }
    return "";
 }
@@ -274,6 +274,15 @@ std::string X509_CRL::crl_issuing_distribution_point() const {
 * Return the CRL's issuing distribution point
 */
 std::vector<std::string> X509_CRL::issuing_distribution_points() const {
+   std::vector<std::string> out;
+   out.reserve(data().m_idp_urls.size());
+   for(const auto& uri : data().m_idp_urls) {
+      out.push_back(uri.original_input());
+   }
+   return out;
+}
+
+const std::vector<URI>& X509_CRL::issuing_distribution_point_uris() const {
    return data().m_idp_urls;
 }
 

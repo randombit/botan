@@ -1,6 +1,6 @@
 /*
 * X.509 Certificates
-* (C) 1999-2010,2015,2017 Jack Lloyd
+* (C) 1999-2010,2015,2017,2026 Jack Lloyd
 * (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -15,9 +15,9 @@
 #include <botan/hash.h>
 #include <botan/hex.h>
 #include <botan/pk_keys.h>
+#include <botan/uri.h>
 #include <botan/x509_ext.h>
 #include <botan/x509_key.h>
-#include <botan/internal/parsing.h>
 #include <sstream>
 
 namespace Botan {
@@ -47,9 +47,9 @@ class X509_Certificate_Data final {
       std::vector<uint8_t> m_subject_key_id;
       std::vector<OID> m_cert_policies;
 
-      std::vector<std::string> m_crl_distribution_points;
-      std::vector<std::string> m_ocsp_responders;
-      std::vector<std::string> m_ca_issuers;
+      std::vector<URI> m_crl_distribution_points;
+      std::vector<URI> m_ocsp_responders;
+      std::vector<URI> m_ca_issuers;
 
       std::vector<uint8_t> m_issuer_dn_bits_sha256;
       std::vector<uint8_t> m_subject_dn_bits_sha256;
@@ -274,12 +274,12 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    }
 
    if(const auto* ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Authority_Information_Access>()) {
-      data->m_ocsp_responders = ext->ocsp_responders();
-      data->m_ca_issuers = ext->ca_issuers();
+      data->m_ocsp_responders = ext->ocsp_responder_uris();
+      data->m_ca_issuers = ext->ca_issuer_uris();
    }
 
    if(const auto* ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::CRL_Distribution_Points>()) {
-      data->m_crl_distribution_points = ext->crl_distribution_urls();
+      data->m_crl_distribution_points = ext->crl_distribution_point_uris();
    }
 
    /*
@@ -572,31 +572,75 @@ bool X509_Certificate::is_critical(std::string_view ex_name) const {
    return v3_extensions().critical_extension_set(OID::from_string(ex_name));
 }
 
+namespace {
+
+std::vector<std::string> uris_as_strings(const std::vector<URI>& uris) {
+   std::vector<std::string> out;
+   out.reserve(uris.size());
+   for(const auto& uri : uris) {
+      out.push_back(uri.original_input());
+   }
+   return out;
+}
+
+}  // namespace
+
 std::string X509_Certificate::ocsp_responder() const {
    if(data().m_ocsp_responders.empty()) {
       return {};
    }
-   return data().m_ocsp_responders[0];
+   return data().m_ocsp_responders[0].original_input();
 }
 
-const std::vector<std::string>& X509_Certificate::ocsp_responders() const {
+std::vector<std::string> X509_Certificate::ocsp_responders() const {
+   return uris_as_strings(data().m_ocsp_responders);
+}
+
+const std::vector<URI>& X509_Certificate::ocsp_responder_uris() const {
    return data().m_ocsp_responders;
 }
 
 std::vector<std::string> X509_Certificate::ca_issuers() const {
+   return uris_as_strings(data().m_ca_issuers);
+}
+
+const std::vector<URI>& X509_Certificate::ca_issuer_uris() const {
    return data().m_ca_issuers;
 }
 
 std::vector<std::string> X509_Certificate::crl_distribution_points() const {
+   return uris_as_strings(data().m_crl_distribution_points);
+}
+
+const std::vector<URI>& X509_Certificate::crl_distribution_point_uris() const {
    return data().m_crl_distribution_points;
 }
 
 std::string X509_Certificate::crl_distribution_point() const {
    // just returns the first (arbitrarily)
    if(!data().m_crl_distribution_points.empty()) {
-      return data().m_crl_distribution_points[0];
+      return data().m_crl_distribution_points[0].original_input();
    }
    return "";
+}
+
+std::vector<EmailAddress> X509_Certificate::subject_email_addresses() const {
+   const auto& san_emails = subject_alt_name().email_addresses();
+
+   std::vector<EmailAddress> out;
+   out.reserve(san_emails.size());
+
+   for(const auto& addr : san_emails) {
+      out.push_back(addr);
+   }
+
+   for(const auto& dn_email_str : subject_dn().get_attribute("PKCS9.EmailAddress")) {
+      if(auto parsed = EmailAddress::from_string(dn_email_str)) {
+         out.push_back(std::move(*parsed));
+      }
+   }
+
+   return out;
 }
 
 const AlternativeName& X509_Certificate::subject_alt_name() const {
@@ -635,13 +679,13 @@ std::vector<std::string> get_cert_user_info(std::string_view req, const X509_DN&
       return out;
    } else if(req == "IP") {
       std::vector<std::string> ip_str;
-      for(const uint32_t ipv4 : alt_name.ipv4_address()) {
-         ip_str.push_back(ipv4_to_string(ipv4));
+      for(const auto& ipv4 : alt_name.ipv4_addresses()) {
+         ip_str.push_back(ipv4.to_string());
       }
       return ip_str;
    } else if(req == "IPv6") {
       std::vector<std::string> ip_str;
-      for(const auto& ipv6 : alt_name.ipv6_address()) {
+      for(const auto& ipv6 : alt_name.ipv6_addresses()) {
          ip_str.push_back(ipv6.to_string());
       }
       return ip_str;
@@ -718,36 +762,58 @@ X509_Certificate::Tag X509_Certificate::tag() const {
    return Tag(data().m_cert_data_sha256);
 }
 
-bool X509_Certificate::matches_dns_name(std::string_view name) const {
-   if(name.empty()) {
+bool X509_Certificate::matches_dns_name(const DNSName& name) const {
+   const auto& sans = subject_alt_name().dns_names();
+   if(!sans.empty()) {
+      for(const auto& san : sans) {
+         if(name.matches_wildcard(san.name())) {
+            return true;
+         }
+      }
       return false;
    }
-
-   if(auto req_ipv4 = string_to_ipv4(name)) {
-      const auto& ipv4_names = subject_alt_name().ipv4_address();
-      return ipv4_names.contains(req_ipv4.value());
-   }
-
-   if(auto req_ipv6 = IPv6Address::from_string(name)) {
-      const auto& ipv6_names = subject_alt_name().ipv6_address();
-      return ipv6_names.contains(req_ipv6.value());
-   }
-
-   auto issued_names = subject_info("DNS");
 
    /*
    Fall back to CN for DNS name only if no SAN is included
    We assume if the issuer knew about SAN then they would have included
    the DNS name there if the intention was to provide such a name.
    */
-   if(issued_names.empty() && !data().m_subject_alt_name_exists) {
-      issued_names = subject_info("Name");
+   if(!data().m_subject_alt_name_exists) {
+      for(const auto& cn : subject_dn().get_attribute("CN")) {
+         if(auto cn_dns = DNSName::from_san_string(cn)) {
+            if(name.matches_wildcard(cn_dns->name())) {
+               return true;
+            }
+         }
+      }
    }
 
-   for(const auto& issued_name : issued_names) {
-      if(host_wildcard_match(issued_name, name)) {
-         return true;
-      }
+   return false;
+}
+
+bool X509_Certificate::matches_ip(const IPv4Address& address) const {
+   return subject_alt_name().ipv4_addresses().contains(address);
+}
+
+bool X509_Certificate::matches_ip(const IPv6Address& address) const {
+   return subject_alt_name().ipv6_addresses().contains(address);
+}
+
+bool X509_Certificate::matches_dns_name(std::string_view name) const {
+   if(name.empty()) {
+      return false;
+   }
+
+   if(auto req_ipv4 = IPv4Address::from_string(name)) {
+      return matches_ip(*req_ipv4);
+   }
+
+   if(auto req_ipv6 = IPv6Address::from_string(name)) {
+      return matches_ip(*req_ipv6);
+   }
+
+   if(auto parsed = DNSName::from_string(name)) {
+      return matches_dns_name(*parsed);
    }
 
    return false;
@@ -872,24 +938,24 @@ std::string X509_Certificate::to_string() const {
       }
    }
 
-   const auto& ocsp_responders = this->ocsp_responders();
+   const auto& ocsp_responders = this->ocsp_responder_uris();
    if(!ocsp_responders.empty()) {
       out << "OCSP Responders:\n";
       for(const auto& ocsp_responder : ocsp_responders) {
-         out << "   URI: " << ocsp_responder << "\n";
+         out << "   URI: " << ocsp_responder.original_input() << "\n";
       }
    }
 
-   const std::vector<std::string> ca_issuers = this->ca_issuers();
+   const auto& ca_issuers = this->ca_issuer_uris();
    if(!ca_issuers.empty()) {
       out << "CA Issuers:\n";
       for(const auto& ca_issuer : ca_issuers) {
-         out << "   URI: " << ca_issuer << "\n";
+         out << "   URI: " << ca_issuer.original_input() << "\n";
       }
    }
 
-   for(const auto& cdp : crl_distribution_points()) {
-      out << "CRL " << cdp << "\n";
+   for(const auto& cdp : crl_distribution_point_uris()) {
+      out << "CRL " << cdp.original_input() << "\n";
    }
 
    out << "Signature algorithm: " << this->signature_algorithm().oid().to_formatted_string() << "\n";

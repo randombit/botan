@@ -338,4 +338,19 @@ URI::Authority::HostKind URI::Authority::host_kind() const {
    }
 }
 
+//static
+std::vector<URI> URI::filter_scheme(std::string_view scheme, std::span<const URI> uris) {
+   std::vector<URI> results;
+
+   const auto normalized_scheme = tolower_string(scheme);
+
+   for(const auto& uri : uris) {
+      if(uri.scheme() == normalized_scheme) {
+         results.push_back(uri);
+      }
+   }
+
+   return results;
+}
+
 }  // namespace Botan

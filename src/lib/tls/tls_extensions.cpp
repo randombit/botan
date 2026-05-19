@@ -12,6 +12,9 @@
 
 #include <botan/tls_extensions.h>
 
+#include <botan/dns_name.h>
+#include <botan/ipv4_address.h>
+#include <botan/ipv6_address.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/fmt.h>
@@ -407,20 +410,23 @@ std::vector<uint8_t> Server_Name_Indicator::serialize(Connection_Side whoami) co
 bool Server_Name_Indicator::hostname_acceptable_for_sni(std::string_view hostname) {
    // Avoid sending an IPv4/IPv6 address in SNI as this is prohibited
 
-   if(hostname.empty()) {
+   if(hostname.empty() || hostname.size() > 255) {
       return false;
    }
 
-   if(string_to_ipv4(hostname).has_value()) {
+   if(auto ipv4 = IPv4Address::from_string(hostname)) {
       return false;
    }
 
-   // IPv6? Anyway ':' is not valid in DNS
-   if(hostname.find(':') != std::string_view::npos) {
+   if(auto ipv6 = IPv6Address::from_string(hostname)) {
       return false;
    }
 
-   return true;
+   if(auto dns = DNSName::from_string(hostname)) {
+      return true;
+   } else {
+      return false;
+   }
 }
 
 Application_Layer_Protocol_Notification::Application_Layer_Protocol_Notification(std::string_view protocol) {

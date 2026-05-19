@@ -9,6 +9,7 @@
 #include <botan/internal/http_util.h>
 
 #include <botan/mem_ops.h>
+#include <botan/uri.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/mem_utils.h>
 #include <botan/internal/parsing.h>
@@ -119,52 +120,29 @@ std::ostream& operator<<(std::ostream& o, const Response& resp) {
 
 Response http_sync(const http_exch_fn& http_transact,
                    std::string_view verb,
-                   std::string_view url,
+                   const URI& uri,
                    std::string_view content_type,
                    const std::vector<uint8_t>& body,
                    size_t allowable_redirects) {
-   if(url.empty()) {
-      throw HTTP_Error("URL empty");
+   if(uri.scheme() != "http") {
+      throw HTTP_Error(fmt("Cannot initiate HTTP request to URI with scheme of '{}'", uri.scheme()));
    }
+   const std::string hostname = uri.host_to_string();
+   const std::string service = uri.port().has_value() ? std::to_string(*uri.port()) : uri.scheme();
+   const std::string loc = uri.path_query_fragment().empty() ? "/" : uri.path_query_fragment();
 
-   const auto protocol_host_sep = url.find("://");
-   if(protocol_host_sep == std::string::npos) {
-      throw HTTP_Error(fmt("Invalid URL '{}'", url));
-   }
-
-   const auto host_loc_sep = url.find('/', protocol_host_sep + 3);
-
-   std::string hostname;
-   std::string loc;
-   std::string service;
-
-   if(host_loc_sep == std::string::npos) {
-      hostname = url.substr(protocol_host_sep + 3);
-      loc = "/";
-   } else {
-      hostname = url.substr(protocol_host_sep + 3, host_loc_sep - protocol_host_sep - 3);
-      loc = url.substr(host_loc_sep);
-   }
-
-   const auto port_sep = hostname.find(':');
-   if(port_sep == std::string::npos) {
-      service = "http";
-      // hostname not modified
-   } else {
-      service = hostname.substr(port_sep + 1, std::string::npos);
-      hostname = hostname.substr(0, port_sep);
-   }
+   const std::string host_header = [&]() -> std::string {
+      const std::string h = (uri.host_kind() == URI::HostKind::IPv6) ? "[" + hostname + "]" : hostname;
+      return uri.port().has_value() ? h + ":" + std::to_string(*uri.port()) : h;
+   }();
 
    check_no_crlf_nul("verb", verb);
-   check_no_crlf_nul("hostname", hostname);
-   check_no_crlf_nul("port", service);
-   check_no_crlf_nul("path", loc);
    check_no_crlf_nul("content type", content_type);
 
    std::ostringstream outbuf;
 
    outbuf << verb << " " << loc << " HTTP/1.0\r\n";
-   outbuf << "Host: " << hostname << "\r\n";
+   outbuf << "Host: " << host_header << "\r\n";
 
    if(verb == "GET") {
       outbuf << "Accept: */*\r\n";
@@ -219,7 +197,11 @@ Response http_sync(const http_exch_fn& http_transact,
       if(allowable_redirects == 0) {
          throw HTTP_Error("HTTP redirection count exceeded");
       }
-      return GET_sync(headers["Location"], allowable_redirects - 1);
+      if(auto redir = URI::parse(headers["Location"])) {
+         return GET_sync(*redir, allowable_redirects - 1);
+      } else {
+         throw HTTP_Error("HTTP redirected to invalid URL");
+      }
    }
 
    std::vector<uint8_t> resp_body;
@@ -242,7 +224,7 @@ Response http_sync(const http_exch_fn& http_transact,
 }
 
 Response http_sync(std::string_view verb,
-                   std::string_view url,
+                   const URI& uri,
                    std::string_view content_type,
                    const std::vector<uint8_t>& body,
                    size_t allowable_redirects,
@@ -252,19 +234,19 @@ Response http_sync(std::string_view verb,
       return http_transact(hostname, service, message, timeout);
    };
 
-   return http_sync(transact_with_timeout, verb, url, content_type, body, allowable_redirects);
+   return http_sync(transact_with_timeout, verb, uri, content_type, body, allowable_redirects);
 }
 
-Response GET_sync(std::string_view url, size_t allowable_redirects, std::chrono::milliseconds timeout) {
-   return http_sync("GET", url, "", std::vector<uint8_t>(), allowable_redirects, timeout);
+Response GET_sync(const URI& uri, size_t allowable_redirects, std::chrono::milliseconds timeout) {
+   return http_sync("GET", uri, "", std::vector<uint8_t>(), allowable_redirects, timeout);
 }
 
-Response POST_sync(std::string_view url,
+Response POST_sync(const URI& uri,
                    std::string_view content_type,
                    const std::vector<uint8_t>& body,
                    size_t allowable_redirects,
                    std::chrono::milliseconds timeout) {
-   return http_sync("POST", url, content_type, body, allowable_redirects, timeout);
+   return http_sync("POST", uri, content_type, body, allowable_redirects, timeout);
 }
 
 }  // namespace Botan::HTTP

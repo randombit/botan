@@ -153,6 +153,11 @@ class BOTAN_PUBLIC_API(3, 13) URI final {
 
       bool operator==(const URI& other) const;
 
+      /**
+      * Return a list of URIs (possibly empty) which match the specified scheme
+      */
+      static std::vector<URI> filter_scheme(std::string_view scheme, std::span<const URI> uris);
+
    private:
       URI(std::string raw, std::string scheme, Authority authority, std::string path_query_fragment) :
             m_raw(std::move(raw)),

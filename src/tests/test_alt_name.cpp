@@ -37,9 +37,9 @@ class X509_Alt_Name_Tests final : public Test {
             "root@example.net",
          };
 
-         const std::vector<uint32_t> ipv4_names = {
-            0xC0A80101,
-            0xC0A80102,
+         const std::vector<Botan::IPv4Address> ipv4_names = {
+            Botan::IPv4Address(0xC0A80101),
+            Botan::IPv4Address(0xC0A80102),
          };
 
          const std::vector<Botan::IPv6Address> ipv6_names = {
@@ -119,14 +119,14 @@ class X509_Alt_Name_Tests final : public Test {
             }
          }
 
-         result.test_sz_eq("Expected number of IPv4", recoded.ipv4_address().size(), ipv4_names.size());
+         result.test_sz_eq("Expected number of IPv4", recoded.ipv4_addresses().size(), ipv4_names.size());
          for(const auto ipv4 : ipv4_names) {
-            result.test_is_true("Has expected IPv4 name", recoded.ipv4_address().contains(ipv4));
+            result.test_is_true("Has expected IPv4 name", recoded.ipv4_addresses().contains(ipv4));
          }
 
-         result.test_sz_eq("Expected number of IPv6", recoded.ipv6_address().size(), ipv6_names.size());
+         result.test_sz_eq("Expected number of IPv6", recoded.ipv6_addresses().size(), ipv6_names.size());
          for(const auto& ipv6 : ipv6_names) {
-            result.test_is_true("Has expected IPv6 name", recoded.ipv6_address().contains(ipv6));
+            result.test_is_true("Has expected IPv6 name", recoded.ipv6_addresses().contains(ipv6));
          }
 
          result.test_sz_eq("Expected number of DNs", recoded.directory_names().size(), 2);

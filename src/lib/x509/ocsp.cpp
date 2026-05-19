@@ -7,12 +7,14 @@
 
 #include <botan/ocsp.h>
 
+#include <botan/assert.h>
 #include <botan/base64.h>
 #include <botan/ber_dec.h>
 #include <botan/certstor.h>
 #include <botan/der_enc.h>
 #include <botan/hash.h>
 #include <botan/pubkey.h>
+#include <botan/uri.h>
 #include <botan/x509_ext.h>
 #include <botan/x509path.h>
 
@@ -533,6 +535,17 @@ Response online_check(const X509_Certificate& issuer,
       throw Invalid_Argument("No OCSP responder specified");
    }
 
+   if(auto uri = URI::parse(ocsp_responder)) {
+      return online_check(issuer, subject_serial, *uri, timeout);
+   } else {
+      throw Invalid_Argument("Unparsable URI for OCSP responder");
+   }
+}
+
+Response online_check(const X509_Certificate& issuer,
+                      const BigInt& subject_serial,
+                      const URI& ocsp_responder,
+                      std::chrono::milliseconds timeout) {
    const OCSP::Request req(issuer, subject_serial);
 
    auto http = HTTP::POST_sync(ocsp_responder, "application/ocsp-request", req.BER_encode(), 1, timeout);
@@ -551,7 +564,23 @@ Response online_check(const X509_Certificate& issuer,
       throw Invalid_Argument("Invalid cert pair to OCSP::online_check (mismatched issuer,subject args?)");
    }
 
-   return online_check(issuer, BigInt::from_bytes(subject.serial_number()), subject.ocsp_responder(), timeout);
+   const auto responders = URI::filter_scheme("http", subject.ocsp_responder_uris());
+
+   if(responders.empty()) {
+      throw Invalid_Argument("No HTTP OCSP responder URLs available for this certificate");
+   }
+
+   const auto subject_serial = BigInt::from_bytes(subject.serial_number());
+
+   // Try the first N - 1 responder addresses in sequence, ignoring errors
+   for(size_t i = 0; i + 1 < responders.size(); ++i) {
+      try {
+         return online_check(issuer, subject_serial, responders[i], timeout);
+      } catch(...) {}
+   }
+
+   // Now try the final responder and let any errors propagate
+   return online_check(issuer, subject_serial, responders.back(), timeout);
 }
 
 #endif

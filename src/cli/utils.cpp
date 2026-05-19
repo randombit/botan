@@ -17,6 +17,7 @@
 #endif
 
 #if defined(BOTAN_HAS_HTTP_UTIL)
+   #include <botan/uri.h>
    #include <botan/internal/http_util.h>
 #endif
 
@@ -313,7 +314,12 @@ class HTTP_Get final : public Command {
          const std::chrono::milliseconds timeout(get_arg_sz("timeout"));
          const size_t redirects = get_arg_sz("redirects");
 
-         output() << Botan::HTTP::GET_sync(url, redirects, timeout) << "\n";
+         auto uri = Botan::URI::parse(url);
+         if(!uri) {
+            throw CLI_Usage_Error("Could not parse URL '" + url + "'");
+         }
+
+         output() << Botan::HTTP::GET_sync(*uri, redirects, timeout) << "\n";
       }
 };
 
