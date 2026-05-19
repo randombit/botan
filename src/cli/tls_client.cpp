@@ -397,12 +397,8 @@ class TLS_Client final : public Command {
             throw CLI_Error("getaddrinfo failed for " + host);
          }
 
-         socket_type fd = 0;
-         bool success = false;
-
          for(const addrinfo* rp = res.get(); rp != nullptr; rp = rp->ai_next) {
-            fd = ::socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-
+            const socket_type fd = ::socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
             if(fd == invalid_socket()) {
                continue;
             }
@@ -411,17 +407,11 @@ class TLS_Client final : public Command {
                ::close(fd);
                continue;
             }
-
-            success = true;
-            break;
+            return fd;
          }
 
-         if(!success) {
-            // no address succeeded
-            throw CLI_Error("Connecting to host failed");
-         }
-
-         return fd;
+         // no address succeeded
+         throw CLI_Error("Connecting to host failed");
       }
 
       static void dgram_socket_write(int sockfd, const uint8_t buf[], size_t length) {
