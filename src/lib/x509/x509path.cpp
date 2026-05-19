@@ -530,6 +530,15 @@ Certificate_Status_Code verify_ocsp_signing_cert(const X509_Certificate& signing
    // Note: This needs special care to prevent endless loops on specifically
    //       forged chains of OCSP responses referring to each other.
    //
+   // RFC 6960 4.2.2.2.1 seems to imply that generally OCSP checking of OCSP
+   // signers is not realistic; it suggests either using the nocheck extension,
+   // "using CRL Distribution Points if the check should be done using CRLs",
+   // or just punts with
+   //    A CA may choose not to specify any method of revocation checking
+   //    for the responder's certificate, in which case it would be up to
+   //    the OCSP client's local security policy to decide whether that
+   //    certificate should be checked for revocation or not.
+   //
    // Currently, we're disabling OCSP-based revocation checks by setting the
    // timeout to 0. Additionally, the library's API would not allow an
    // application to pass in the required "second order" OCSP responses. I.e.
@@ -661,25 +670,28 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
          if(crls[i]->check_signature(*ca_key) == false) {
             status.insert(Certificate_Status_Code::CRL_BAD_SIGNATURE);
          } else {
-            status.insert(Certificate_Status_Code::VALID_CRL_CHECKED);
+            /*
+            RFC 5280 5.2 "If a CRL contains a critical extension that the
+            application cannot process, then the application MUST NOT use that
+            CRL to determine the status of certificates."
 
-            if(crls[i]->is_revoked(subject)) {
-               status.insert(Certificate_Status_Code::CERT_IS_REVOKED);
-            }
+            RFC 5280 5.3 "If a CRL contains a critical CRL entry extension that
+            the application cannot process, then the application MUST NOT use
+            that CRL to determine the status of any certificates."
+            */
+            const bool crl_is_not_usable = crls[i]->has_unknown_critical_extension();
 
-            if(!crls[i]->has_matching_distribution_point(subject)) {
-               status.insert(Certificate_Status_Code::NO_MATCHING_CRLDP);
-            }
+            if(crl_is_not_usable) {
+               status.insert(Certificate_Status_Code::CRL_HAS_UNKNOWN_CRITICAL_EXTENSION);
+            } else {
+               status.insert(Certificate_Status_Code::VALID_CRL_CHECKED);
 
-            for(const auto& [extension, critical] : crls[i]->extensions().extensions()) {
-               if(critical) {
-                  /* NIST Certificate Path Validation Testing document: "When an implementation does
-                  * not recognize a critical extension in the crlExtensions field, it shall assume
-                  * that identified certificates have been revoked and are no longer valid"
-                  */
-                  if(dynamic_cast<const Cert_Extension::Unknown_Extension*>(extension.get()) != nullptr) {
-                     status.insert(Certificate_Status_Code::CERT_IS_REVOKED);
-                  }
+               if(crls[i]->is_revoked(subject)) {
+                  status.insert(Certificate_Status_Code::CERT_IS_REVOKED);
+               }
+
+               if(!crls[i]->has_matching_distribution_point(subject)) {
+                  status.insert(Certificate_Status_Code::NO_MATCHING_CRLDP);
                }
             }
          }

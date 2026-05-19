@@ -33,11 +33,7 @@ class CRL_Data final {
       void update_index() {
          m_revoked_serials.clear();
          for(const auto& entry : m_entries) {
-            if(entry.reason_code() == CRL_Code::RemoveFromCrl) {
-               m_revoked_serials.erase(entry.serial_number());
-            } else {
-               m_revoked_serials.insert(entry.serial_number());
-            }
+            m_revoked_serials.insert(entry.serial_number());
          }
       }
 
@@ -56,6 +52,7 @@ class CRL_Data final {
       size_t m_crl_number = 0;
       std::vector<uint8_t> m_auth_key_id;
       std::vector<URI> m_idp_urls;
+      bool m_has_unknown_critical_extension = false;
       // NOLINTEND(*non-private-member-variables-in-classes)
 };
 
@@ -94,6 +91,14 @@ X509_CRL::X509_CRL(const X509_DN& issuer,
 * Check if this particular certificate is listed in the CRL
 */
 bool X509_CRL::is_revoked(const X509_Certificate& cert) const {
+   const bool serial_appears = data().m_revoked_serials.contains(cert.serial_number());
+
+   // If the serial number does not appear in the revocation list then
+   // the later checks are not necessary anyway
+   if(!serial_appears) {
+      return false;
+   }
+
    /*
    If the cert wasn't issued by the CRL issuer, it's possible the cert
    is revoked, but not by this CRL. Maybe throw an exception instead?
@@ -111,7 +116,7 @@ bool X509_CRL::is_revoked(const X509_Certificate& cert) const {
       }
    }
 
-   return data().m_revoked_serials.contains(cert.serial_number());
+   return serial_appears;
 }
 
 /*
@@ -162,15 +167,24 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body, cons
       while(cert_list.more_items()) {
          CRL_Entry entry;
          cert_list.decode(entry);
-         data->m_entries.push_back(entry);
+
+         if(entry.extensions().has_unknown_critical_extension()) {
+            data->m_has_unknown_critical_extension = true;
+         }
+
+         data->m_entries.push_back(std::move(entry));
       }
       next = tbs_crl.get_next_object();
    }
 
    if(next.is_a(0, ASN1_Class::Constructed | ASN1_Class::ContextSpecific)) {
       BER_Decoder crl_options(next, tbs_crl.limits());
-      crl_options.decode(data->m_extensions).verify_end();
+      data->m_extensions.decode_from(crl_options, Extension_Context::CRL);
+      crl_options.verify_end();
       next = tbs_crl.get_next_object();
+      if(data->m_extensions.has_unknown_critical_extension()) {
+         data->m_has_unknown_critical_extension = true;
+      }
    }
 
    if(next.is_set()) {
@@ -223,6 +237,10 @@ const std::vector<CRL_Entry>& X509_CRL::get_revoked() const {
 
 uint32_t X509_CRL::x509_version() const {
    return static_cast<uint32_t>(data().m_version);
+}
+
+bool X509_CRL::has_unknown_critical_extension() const {
+   return data().m_has_unknown_critical_extension;
 }
 
 /*

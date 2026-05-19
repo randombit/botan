@@ -127,13 +127,18 @@ std::vector<OID> Extensions::critical_extensions() const {
 */
 std::unique_ptr<Certificate_Extension> Extensions::create_extn_obj(const OID& oid,
                                                                    bool critical,
-                                                                   const std::vector<uint8_t>& body) {
+                                                                   const std::vector<uint8_t>& body,
+                                                                   std::optional<Extension_Context> context) {
    auto extn = extension_from_oid(oid);
 
    if(!extn) {
       // some other unknown extension type
       extn = std::make_unique<Cert_Extension::Unknown_Extension>(oid, critical);
    } else {
+      if(context.has_value() && !extn->is_appropriate_context(*context)) {
+         throw Decoding_Error(fmt("Extension {} is not allowed in this context", extn->oid_name()));
+      }
+
       try {
          extn->decode_inner(body);
          return extn;
@@ -288,8 +293,13 @@ void Extensions::encode_into(DER_Encoder& to_object) const {
 * Decode a list of Extensions
 */
 void Extensions::decode_from(BER_Decoder& from_source) {
+   decode_from(from_source, std::nullopt);
+}
+
+void Extensions::decode_from(BER_Decoder& from_source, std::optional<Extension_Context> context) {
    m_extension_oids.clear();
    m_extension_info.clear();
+   m_has_unknown_critical_extension = false;
 
    BER_Decoder sequence = from_source.start_sequence();
 
@@ -304,7 +314,11 @@ void Extensions::decode_from(BER_Decoder& from_source) {
          .decode(bits, ASN1_Type::OctetString)
          .end_cons();
 
-      auto obj = create_extn_obj(oid, critical, bits);
+      auto obj = create_extn_obj(oid, critical, bits, context);
+      // Unknown_Extension is the only Certificate_Extension with an empty oid_name
+      if(critical && obj->oid_name().empty()) {
+         m_has_unknown_critical_extension = true;
+      }
       Extensions_Info info(critical, bits, std::move(obj));
 
       // RFC 5280 4.2: "A certificate MUST NOT include more than one
@@ -318,6 +332,88 @@ void Extensions::decode_from(BER_Decoder& from_source) {
 }
 
 namespace Cert_Extension {
+
+bool Basic_Constraints::is_appropriate_context(Extension_Context context) const {
+   return context == Extension_Context::Certificate;
+}
+
+bool Key_Usage::is_appropriate_context(Extension_Context context) const {
+   return context == Extension_Context::Certificate;
+}
+
+bool Subject_Key_ID::is_appropriate_context(Extension_Context context) const {
+   return context == Extension_Context::Certificate;
+}
+
+bool Authority_Key_ID::is_appropriate_context(Extension_Context context) const {
+   return context == Extension_Context::Certificate || context == Extension_Context::CRL;
+}
+
+bool Subject_Alternative_Name::is_appropriate_context(Extension_Context context) const {
+   return context == Extension_Context::Certificate;
+}
+
+bool Issuer_Alternative_Name::is_appropriate_context(Extension_Context context) const {
+   return context == Extension_Context::Certificate || context == Extension_Context::CRL;
+}
+
+bool Extended_Key_Usage::is_appropriate_context(Extension_Context context) const {
+   return context == Extension_Context::Certificate;
+}
+
+bool Name_Constraints::is_appropriate_context(Extension_Context context) const {
+   return context == Extension_Context::Certificate;
+}
+
+bool Certificate_Policies::is_appropriate_context(Extension_Context context) const {
+   return context == Extension_Context::Certificate;
+}
+
+bool Authority_Information_Access::is_appropriate_context(Extension_Context context) const {
+   return context == Extension_Context::Certificate || context == Extension_Context::CRL;
+}
+
+bool CRL_Number::is_appropriate_context(Extension_Context context) const {
+   return context == Extension_Context::CRL;
+}
+
+bool CRL_ReasonCode::is_appropriate_context(Extension_Context context) const {
+   // RFC 6960 4.4.5: "All the extensions specified as CRL entry extensions
+   // -- in Section 5.3 of [RFC5280] -- are also supported as singleExtensions."
+   return context == Extension_Context::CRL_Entry || context == Extension_Context::OCSP_Response;
+}
+
+bool CRL_Distribution_Points::is_appropriate_context(Extension_Context context) const {
+   return context == Extension_Context::Certificate;
+}
+
+bool CRL_Issuing_Distribution_Point::is_appropriate_context(Extension_Context context) const {
+   return context == Extension_Context::CRL;
+}
+
+bool OCSP_NoCheck::is_appropriate_context(Extension_Context context) const {
+   return context == Extension_Context::Certificate;
+}
+
+bool NoRevocationAvailable::is_appropriate_context(Extension_Context context) const {
+   return context == Extension_Context::Certificate;
+}
+
+bool TNAuthList::is_appropriate_context(Extension_Context context) const {
+   return context == Extension_Context::Certificate;
+}
+
+bool IPAddressBlocks::is_appropriate_context(Extension_Context context) const {
+   return context == Extension_Context::Certificate;
+}
+
+bool ASBlocks::is_appropriate_context(Extension_Context context) const {
+   return context == Extension_Context::Certificate;
+}
+
+bool Unknown_Extension::is_appropriate_context(Extension_Context /*context*/) const {
+   return true;
+}
 
 Basic_Constraints::Basic_Constraints(bool is_ca, size_t path_length_constraint) :
       Basic_Constraints(is_ca, is_ca ? std::optional<size_t>(path_length_constraint) : std::nullopt) {}

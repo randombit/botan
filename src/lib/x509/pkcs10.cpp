@@ -136,7 +136,8 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body) {
             value.decode(challenge_password);
             data->m_challenge = challenge_password.value();
          } else if(oid == OID::from_string("PKCS9.ExtensionRequest")) {
-            value.decode(data->m_extensions).verify_end();
+            data->m_extensions.decode_from(value, Extension_Context::Certificate);
+            value.verify_end();
          }
       }
       attributes.verify_end();

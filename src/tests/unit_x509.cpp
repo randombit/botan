@@ -14,6 +14,7 @@
    #include <botan/pk_algs.h>
    #include <botan/pkcs10.h>
    #include <botan/pkcs8.h>
+   #include <botan/pubkey.h>
    #include <botan/rng.h>
    #include <botan/x509_ca.h>
    #include <botan/x509_ext.h>
@@ -244,6 +245,27 @@ Test::Result test_x509_extension() {
    result.test_is_true("Delete returns true if extn was set", extn.remove(oid_bc));
    result.test_is_true("Basic constraints is not set", !extn.extension_set(oid_bc));
    result.test_is_true("Basic constraints is not critical", !extn.critical_extension_set(oid_bc));
+
+   std::vector<uint8_t> crl_number_bits;
+   Botan::DER_Encoder(crl_number_bits).encode(size_t(42));
+
+   std::vector<uint8_t> crl_number_extn_der;
+   Botan::DER_Encoder(crl_number_extn_der)
+      .start_sequence()
+      .start_sequence()
+      .encode(Botan::Cert_Extension::CRL_Number::static_oid())
+      .encode(crl_number_bits, Botan::ASN1_Type::OctetString)
+      .end_cons()
+      .end_cons();
+
+   Botan::Extensions decoded_extns;
+   Botan::BER_Decoder dec(crl_number_extn_der);
+   decoded_extns.decode_from(dec);
+
+   const auto* crl_number = decoded_extns.get_extension_object_as<Botan::Cert_Extension::CRL_Number>();
+   if(result.test_is_true("CRL number recognized without explicit context", crl_number != nullptr)) {
+      result.test_sz_eq("Decoded CRL number", crl_number->get_crl_number(), 42);
+   }
 
    return result;
 }
@@ -1137,6 +1159,10 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    result_u2 = Botan::x509_path_validate(user2_cert, restrictions, store);
    result.test_str_eq("user 1 revoked", result_u2.result_string(), revoked_str);
 
+   // RFC 5280 5.3.1: the removeFromCRL reason code MAY only appear in delta
+   // CRLs. Botan does not process delta CRLs, so a base CRL with this reason
+   // code is malformed; we keep the cert marked as revoked rather than honor
+   // the spec-violating "un-revoke" semantics.
    revoked.clear();
    revoked.push_back(Botan::CRL_Entry(user1_cert, Botan::CRL_Code::RemoveFromCrl));
    const Botan::X509_CRL crl3 = ca.update_crl(crl2, revoked, rng);
@@ -1144,9 +1170,7 @@ Test::Result test_x509_cert(const Botan::Private_Key& ca_key,
    store.add_crl(crl3);
 
    result_u1 = Botan::x509_path_validate(user1_cert, restrictions, store);
-   if(!result.test_is_true("user 1 validates", result_u1.successful_validation())) {
-      result.test_note("user 1 validation result", result_u1.result_string());
-   }
+   result.test_str_eq("user 1 still revoked after RemoveFromCrl in base CRL", result_u1.result_string(), revoked_str);
 
    result_u2 = Botan::x509_path_validate(user2_cert, restrictions, store);
    result.test_str_eq("user 2 still revoked", result_u2.result_string(), revoked_str);
@@ -1458,6 +1482,8 @@ class String_Extension final : public Botan::Certificate_Extension {
 
       std::string oid_name() const override { return "String Extension"; }
 
+      bool is_appropriate_context(Botan::Extension_Context /*context*/) const override { return true; }
+
       std::vector<uint8_t> encode_inner() const override {
          std::vector<uint8_t> bits;
          Botan::DER_Encoder(bits).encode(Botan::ASN1_String(m_contents, Botan::ASN1_Type::Utf8String));
@@ -1473,6 +1499,61 @@ class String_Extension final : public Botan::Certificate_Extension {
    private:
       std::string m_contents;
 };
+
+Test::Result test_x509_wrong_context_certificate_extensions() {
+   Test::Result result("X509 wrong-context certificate extensions");
+
+   const std::string base = "x509/wrong_context_ext/";
+
+   const auto test_rejected = [&](const std::string& filename, std::string_view what) {
+      result.test_throws<Botan::Decoding_Error>(
+         std::string(what), [&]() { Botan::X509_Certificate cert(Test::data_file(base + filename)); });
+   };
+
+   test_rejected("cert_with_crl_number.pem", "CRL number rejected in certificate");
+   test_rejected("cert_with_reason_code.pem", "CRL reason rejected in certificate");
+   test_rejected("cert_with_idp.pem", "CRL issuing distribution point rejected in certificate");
+
+   return result;
+}
+
+Test::Result test_x509_wrong_context_crl_extensions() {
+   Test::Result result("X509 wrong-context CRL extensions");
+
+   const std::string base_dir = "x509/wrong_context_ext";
+
+   auto load_crl_from_pem = [&](std::string_view filename) -> Botan::X509_CRL {
+      return Botan::X509_CRL(Test::data_file(base_dir, filename));
+   };
+
+   result.test_throws<Botan::Decoding_Error>("SubjectAltName rejected in CRL",
+                                             [&]() { load_crl_from_pem("crl_with_san.pem"); });
+   result.test_throws<Botan::Decoding_Error>("SubjectAltName rejected in CRL entry",
+                                             [&]() { load_crl_from_pem("crl_entry_with_san.pem"); });
+
+   const Botan::X509_Certificate ca_cert(Test::data_file(base_dir + "/ca.pem"));
+   const Botan::X509_Certificate user_cert(Test::data_file(base_dir + "/user.pem"));
+   const std::vector<Botan::X509_Certificate> cert_path = {user_cert, ca_cert};
+   const auto validation_time = Botan::calendar_point(2027, 1, 1, 0, 0, 0).to_std_timepoint();
+
+   const auto check_crl_unusable = [&](const std::string& filename, std::string_view what) {
+      const auto crl = load_crl_from_pem(filename);
+      result.test_is_true("CRL records the unknown critical extension", crl.has_unknown_critical_extension());
+
+      const std::vector<std::optional<Botan::X509_CRL>> crls = {crl};
+      const auto crl_status = Botan::PKIX::check_crl(cert_path, crls, validation_time);
+
+      const bool contains_expected_code =
+         !crl_status.empty() &&
+         crl_status[0].contains(Botan::Certificate_Status_Code::CRL_HAS_UNKNOWN_CRITICAL_EXTENSION);
+      result.test_is_true(what, contains_expected_code);
+   };
+
+   check_crl_unusable("crl_with_unknown_critical.pem", "critical unknown CRL extension rejects CRL");
+   check_crl_unusable("crl_entry_with_unknown_critical.pem", "critical unknown CRL entry extension rejects CRL");
+
+   return result;
+}
 
 Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
                                  const std::string& sig_algo,
@@ -1961,6 +2042,8 @@ class X509_Cert_Unit_Tests final : public Test {
          results.push_back(test_x509_encode_authority_info_access_extension());
          results.push_back(test_x509_extension());
          results.push_back(test_x509_extension_decode_duplicate());
+         results.push_back(test_x509_wrong_context_certificate_extensions());
+         results.push_back(test_x509_wrong_context_crl_extensions());
          results.push_back(test_x509_dates());
          results.push_back(test_cert_status_strings());
          results.push_back(test_x509_uninit());

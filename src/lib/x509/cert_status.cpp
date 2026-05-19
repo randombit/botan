@@ -99,6 +99,8 @@ const char* to_string(Certificate_Status_Code code) {
          return "noRevAvail extension used in an invalid manner";
       case Certificate_Status_Code::INVALID_OCSP_NOCHECK:
          return "Invalid use of OCSP NoCheck extension";
+      case Certificate_Status_Code::CRL_HAS_UNKNOWN_CRITICAL_EXTENSION:
+         return "CRL contains a critical extension that could not be processed";
       case Certificate_Status_Code::UNKNOWN_CRITICAL_EXTENSION:
          return "Unknown critical extension encountered";
       case Certificate_Status_Code::DUPLICATE_CERT_EXTENSION:

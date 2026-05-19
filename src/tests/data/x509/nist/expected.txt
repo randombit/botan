@@ -62,10 +62,10 @@ test64:CRL bad signature
 test65:No revocation data
 test66:No revocation data
 test67:Verified
-test68:Certificate is revoked
-test69:Certificate is revoked
-test70:Certificate is revoked
-test71:Certificate is revoked
+test68:CRL contains a critical extension that could not be processed
+test69:CRL contains a critical extension that could not be processed
+test70:CRL contains a critical extension that could not be processed
+test71:CRL contains a critical extension that could not be processed
 test72:CRL has expired
 test73:CRL has expired
 test74:Verified
@@ -77,10 +77,11 @@ test45:Verified
 test46:Verified
 test47:Verified
 
-# Right answer for wrong reason (delta CRL with no base CRL)
-test75:Certificate is revoked
+# Delta CRL with no base CRL: the delta CRL Indicator extension is critical and
+# not processed, so the CRL is unusable.
+test75:CRL contains a critical extension that could not be processed
 
 # CRL contains IDP extension saying CRL is for CA certs only.
 # The IDP parser does not handle onlyContainsCACerts, so the critical
-# extension is treated as unprocessable and certificates are assumed revoked.
-test76:Certificate is revoked
+# extension is treated as unprocessable and the CRL is rejected.
+test76:CRL contains a critical extension that could not be processed
