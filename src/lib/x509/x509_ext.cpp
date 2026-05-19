@@ -1865,6 +1865,23 @@ void ASBlocks::validate(const X509_Certificate& /* unused */,
    }
 }
 
+void OCSP_NoCheck::validate(const X509_Certificate& subject,
+                            const std::optional<X509_Certificate>& /*issuer*/,
+                            const std::vector<X509_Certificate>& /*cert_path*/,
+                            std::vector<std::set<Certificate_Status_Code>>& cert_status,
+                            size_t pos) {
+   /*
+   * RFC 6960 is not particularly explicit about when id-pkix-ocsp-nocheck can
+   * or cannot be included in a certificate, but reasonably we should require
+   * that id-pkix-ocsp-nocheck is only included for certificates that are marked
+   * as OCSP responders. This checks for compatible key usage and also the OCSP
+   * signer extended key usage.
+   */
+   if(!subject.allowed_usage(Usage_Type::OCSP_RESPONDER)) {
+      cert_status.at(pos).insert(Certificate_Status_Code::INVALID_OCSP_NOCHECK);
+   }
+}
+
 std::vector<uint8_t> OCSP_NoCheck::encode_inner() const {
    return {0x05, 0x00};  // NULL
 }
