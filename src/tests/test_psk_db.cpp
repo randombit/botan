@@ -151,7 +151,7 @@ class PSK_DB_Tests final : public Test {
          result.test_is_true("Had expected name", got_it);
 
          if(got_it) {
-            result.test_str_eq("Had expected value", stmt->get_str(0), expected_value);
+            result.test_str_eq("Had expected value", stmt->get_str(0).value(), expected_value);
          }
       }
 

@@ -54,7 +54,7 @@ Session_Manager_SQL::Schema_Revision Session_Manager_SQL::detect_schema_revision
    }
 
    try {
-      auto stmt = m_db->new_statement("SELECT database_revision FROM tls_sessions_metadata");
+      auto stmt = m_db->select("database_revision", "tls_sessions_metadata");
       if(!stmt->step()) {
          throw Internal_Error("Failed to read revision of TLS session database");
       }
@@ -65,29 +65,32 @@ Session_Manager_SQL::Schema_Revision Session_Manager_SQL::detect_schema_revision
 }
 
 void Session_Manager_SQL::create_with_latest_schema(std::string_view passphrase, Schema_Revision rev) {
-   m_db->create_table(
-      "CREATE TABLE tls_sessions "
-      "("
-      "session_id TEXT PRIMARY KEY, "
-      "session_ticket BLOB, "
-      "session_start INTEGER, "
-      "hostname TEXT, "
-      "hostport INTEGER, "
-      "session BLOB NOT NULL"
-      ")");
+   using DB = SQL_Database;
+   const auto blob = DB::Column_Type::Blob;
+   const auto str = DB::Column_Type::String;
+   const auto integer = DB::Column_Type::Integer;
 
-   m_db->create_table(
-      "CREATE TABLE tls_sessions_metadata "
-      "("
-      "passphrase_salt BLOB, "
-      "passphrase_iterations INTEGER, "
-      "passphrase_check INTEGER, "
-      "password_hash_family TEXT, "
-      "database_revision INTEGER"
-      ")");
+   m_db->create_table(DB::Table_Schema("tls_sessions",
+                                       {
+                                          DB::Column("session_id", str).primary_key(),
+                                          DB::Column("session_ticket", blob),
+                                          DB::Column("session_start", integer),
+                                          DB::Column("hostname", str),
+                                          DB::Column("hostport", integer),
+                                          DB::Column("session", blob).not_null(),
+                                       }));
+
+   m_db->create_table(DB::Table_Schema("tls_sessions_metadata",
+                                       {
+                                          DB::Column("passphrase_salt", blob).not_null(),
+                                          DB::Column("passphrase_iterations", integer).not_null(),
+                                          DB::Column("passphrase_check", integer).not_null(),
+                                          DB::Column("password_hash_family", str).not_null(),
+                                          DB::Column("database_revision", integer).not_null(),
+                                       }));
 
    // speeds up lookups on session_tickets when deleting
-   m_db->create_table("CREATE INDEX tls_tickets ON tls_sessions (session_ticket)");
+   m_db->exec("CREATE INDEX tls_tickets ON tls_sessions (session_ticket)");
 
    auto salt = m_rng->random_vec<std::vector<uint8_t>>(16);
 
@@ -118,15 +121,15 @@ void Session_Manager_SQL::create_with_latest_schema(std::string_view passphrase,
 }
 
 void Session_Manager_SQL::initialize_existing_database(std::string_view passphrase) {
-   auto stmt = m_db->new_statement("SELECT * FROM tls_sessions_metadata");
+   auto stmt = m_db->select("*", "tls_sessions_metadata");
    if(!stmt->step()) {
       throw Internal_Error("Failed to initialize TLS session database");
    }
 
-   const std::pair<const uint8_t*, size_t> salt = stmt->get_blob(0);
+   const auto salt = stmt->get_blob(0);
    const size_t iterations = stmt->get_size_t(1);
    const size_t check_val_db = stmt->get_size_t(2);
-   const std::string pbkdf_name = stmt->get_str(3);
+   const std::string pbkdf_name = stmt->get_str(3).value();
 
    secure_vector<uint8_t> derived_key(32 + 2);
 
@@ -134,7 +137,7 @@ void Session_Manager_SQL::initialize_existing_database(std::string_view passphra
    auto pbkdf = pbkdf_fam->from_params(iterations);
 
    pbkdf->derive_key(
-      derived_key.data(), derived_key.size(), passphrase.data(), passphrase.size(), salt.first, salt.second);
+      derived_key.data(), derived_key.size(), passphrase.data(), passphrase.size(), salt.data(), salt.size());
 
    const size_t check_val_created = make_uint16(derived_key[0], derived_key[1]);
 
@@ -155,9 +158,8 @@ void Session_Manager_SQL::store(const Session& session, const Session_Handle& ha
       return;
    }
 
-   auto stmt = m_db->new_statement(
-      "INSERT OR REPLACE INTO tls_sessions"
-      " VALUES (?1, ?2, ?3, ?4, ?5, ?6)");
+   auto stmt = m_db->upsert("tls_sessions",
+                            {"session_id", "session_ticket", "session_start", "hostname", "hostport", "session"});
 
    // Generate a random session ID if the peer did not provide one. Note that
    // this ID will not be returned on ::find(), as the ticket is preferred.
@@ -183,15 +185,13 @@ std::optional<Session> Session_Manager_SQL::retrieve_one(const Session_Handle& h
    }
 
    if(auto session_id = handle.id()) {
-      auto stmt = m_db->new_statement("SELECT session FROM tls_sessions WHERE session_id = ?1");
+      auto stmt = m_db->select("session", "tls_sessions", "session_id = ?1");
 
       stmt->bind(1, hex_encode(session_id->get()));
 
       while(stmt->step()) {
-         const std::pair<const uint8_t*, size_t> blob = stmt->get_blob(0);
-
          try {
-            return Session::decrypt(blob.first, blob.second, m_session_key);
+            return Session::decrypt(stmt->get_blob(0), m_session_key);
          } catch(...) {}
       }
    }
@@ -220,18 +220,16 @@ std::vector<Session_with_Handle> Session_Manager_SQL::find_some(const Server_Inf
    while(stmt->step()) {
       auto handle = [&]() -> Session_Handle {
          auto ticket_blob = stmt->get_blob(1);
-         if(ticket_blob.second > 0) {
-            return Session_Handle(Session_Ticket(std::span(ticket_blob.first, ticket_blob.second)));
+         if(!ticket_blob.empty()) {
+            return Session_Handle(Session_Ticket(ticket_blob));
          } else {
-            return Session_Handle(Session_ID(Botan::hex_decode(stmt->get_str(0))));
+            return Session_Handle(Session_ID(Botan::hex_decode(stmt->get_str(0).value())));
          }
       }();
 
-      const std::pair<const uint8_t*, size_t> blob = stmt->get_blob(2);
-
       try {
          found_sessions.emplace_back(
-            Session_with_Handle{Session::decrypt(blob.first, blob.second, m_session_key), std::move(handle)});
+            Session_with_Handle{Session::decrypt(stmt->get_blob(2), m_session_key), std::move(handle)});
       } catch(...) {}
    }
 
