@@ -121,7 +121,7 @@ class BOTAN_PUBLIC_API(3, 12) IPv4Subnet final {
       * Bytes for use in a DER-encoded GeneralName iPAddress field.
       *
       * If this is an address (is_host returns true) the output is 4 bytes (the address in network order)
-      * Otherwise it is a subnet and the output is 4 bytes (address || netmask)
+      * Otherwise it is a subnet and the output is 8 bytes (address || netmask)
       */
       std::vector<uint8_t> serialize() const;
 
