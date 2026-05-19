@@ -20,12 +20,12 @@ CRL_02$Certificate is revoked
 CRL_03$Certificate is revoked
 CRL_04$CRL bad signature
 CRL_05$Certificate is revoked
-CRL_06$Certificate is revoked
+CRL_06$CRL contains a critical extension that could not be processed
 CRL_07$Certificate is revoked
 CRL_08$CRL response is not yet valid
 CRL_09$CRL has expired
 CRL_10$Certificate is revoked
-CRL_11$Certificate is revoked
+CRL_11$CRL contains a critical extension that could not be processed
 CRL_12$No revocation data
 CRL_13$No CRL with matching distribution point for certificate
 CRL_14$X509 CRL decoding failed with BER: Tag mismatch when decoding object got EOF expected BIT STRING/UNIVERSAL
