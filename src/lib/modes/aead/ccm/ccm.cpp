@@ -39,13 +39,13 @@ CCM_Mode::CCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size, size_t 
 
 void CCM_Mode::clear() {
    m_cipher->clear();
+   m_ad_buf.clear();
    reset();
 }
 
 void CCM_Mode::reset() {
    m_nonce.clear();
    m_msg_buf.clear();
-   m_ad_buf.clear();
 }
 
 std::string CCM_Mode::name() const {
@@ -83,10 +83,14 @@ bool CCM_Mode::has_keying_material() const {
 
 void CCM_Mode::key_schedule(std::span<const uint8_t> key) {
    m_cipher->set_key(key);
+   // Clear any per-message state; AD is preserved per AEAD contract
+   // (CCM advertises associated_data_requires_key() == false).
+   reset();
 }
 
 void CCM_Mode::set_associated_data_n(size_t idx, std::span<const uint8_t> ad) {
    BOTAN_ARG_CHECK(idx == 0, "CCM: cannot handle non-zero index in set_associated_data_n");
+   BOTAN_STATE_CHECK(m_nonce.empty());
 
    m_ad_buf.clear();
 
@@ -104,6 +108,8 @@ void CCM_Mode::set_associated_data_n(size_t idx, std::span<const uint8_t> ad) {
 }
 
 void CCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
+   BOTAN_STATE_CHECK(m_nonce.empty());
+
    if(!valid_nonce_length(nonce_len)) {
       throw Invalid_IV_Length(name(), nonce_len);
    }

@@ -227,11 +227,12 @@ void GHASH::nonce_hash(std::span<uint8_t, GCM_BS> y0, std::span<const uint8_t> n
 void GHASH::clear() {
    zap(m_HM);
    zap(m_H_pow);
+   m_H_ad = {0};
+   m_ad_len = 0;
    this->reset_state();
 }
 
 void GHASH::reset_state() {
-   m_H_ad = {0};
    secure_scrub_memory(m_ghash);
    if(m_nonce) {
       secure_scrub_memory(m_nonce.value());
@@ -239,7 +240,6 @@ void GHASH::reset_state() {
    }
    m_buffer.clear();
    m_text_len = 0;
-   m_ad_len = 0;
 }
 
 void GHASH::ghash_update(std::span<uint8_t, GCM_BS> x, std::span<const uint8_t> input) {

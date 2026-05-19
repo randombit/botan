@@ -85,23 +85,21 @@ class AEAD_Tests final : public Text_Based_Test {
          auto garbage = get_garbage();
          enc->update(garbage);
 
-         // reset message specific state
+         // reset message specific state; AD persists per the AEAD contract
          enc->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
 
-         /*
-         Now try to set the AD *after* setting the nonce
-         For some modes this works, for others it does not.
-         */
+         // Setting AD after start_msg must always throw
          enc->start(nonce);
+         result.test_throws<Botan::Invalid_State>("set_associated_data after start_msg throws (enc)",
+                                                  [&]() { enc->set_associated_data(ad); });
 
-         try {
-            enc->set_associated_data(ad);
-         } catch(Botan::Invalid_State&) {
-            // ad after setting nonce rejected, in this case we need to reset
-            enc->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
-            enc->set_associated_data(ad);
-            enc->start(nonce);
-         }
+         // start_msg called twice without finish/reset must always throw.
+         result.test_throws<Botan::Invalid_State>("double start_msg throws (enc)", [&]() { enc->start(nonce); });
+
+         // Recover into the proper state for the actual encryption tests.
+         enc->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+         enc->set_associated_data(ad);
+         enc->start(nonce);
 
          Botan::secure_vector<uint8_t> buf(input.begin(), input.end());
 
@@ -113,6 +111,22 @@ class AEAD_Tests final : public Text_Based_Test {
             // test finish() with full input
             enc->finish(buf);
             result.test_bin_eq("encrypt full", buf, expected);
+
+            // AD should be persisted between messages unless reset
+            if(!ad.empty()) {
+               enc->start(nonce);
+               buf.assign(input.begin(), input.end());
+               enc->finish(buf);
+               result.test_bin_eq("AD persists across messages without re-setting", buf, expected);
+
+               // AD must also persist across reset() per the AEAD contract:
+               // reset() only resets message-specific state.
+               enc->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+               enc->start(nonce);
+               buf.assign(input.begin(), input.end());
+               enc->finish(buf);
+               result.test_bin_eq("AD persists across reset()", buf, expected);
+            }
 
             // additionally test update() if possible
             const size_t update_granularity = enc->update_granularity();
@@ -183,6 +197,39 @@ class AEAD_Tests final : public Text_Based_Test {
             }
          }
 
+         // After reset, a new call to start must be made before finish is called.
+         // Also verify that after the exception, the input buffer was not modified.
+         if(!is_siv) {
+            enc->start(nonce);
+            enc->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+            Botan::secure_vector<uint8_t> tmp(input.begin(), input.end());
+            const Botan::secure_vector<uint8_t> tmp_orig = tmp;
+            result.test_throws<Botan::Invalid_State>("finish after reset without start throws",
+                                                     [&]() { enc->finish(tmp); });
+            result.test_bin_eq("finish after reset leaves input buffer unmodified", tmp, tmp_orig);
+         }
+
+         // Verify that set_associated_data_n checks its index
+         enc->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+         {
+            const size_t max_ad = enc->maximum_associated_data_inputs();
+            if(max_ad > 0) {
+               result.test_throws<Botan::Invalid_Argument>("set_associated_data_n rejects idx == max",
+                                                           [&]() { enc->set_associated_data_n(max_ad, ad); });
+            }
+         }
+
+         // Verify that finish() with an offset past the end of the buffer throws
+         {
+            enc->set_associated_data(ad);
+            enc->start(nonce);
+            result.test_throws<Botan::Invalid_Argument>("finish with offset > size throws", [&]() {
+               Botan::secure_vector<uint8_t> tmp(input.begin(), input.end());
+               enc->finish(tmp, tmp.size() + 1);
+            });
+            enc->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+         }
+
          // Make sure we can set the AD after processing a message
          enc->set_associated_data(ad);
          enc->clear();
@@ -194,6 +241,70 @@ class AEAD_Tests final : public Text_Based_Test {
          if(enc->associated_data_requires_key()) {
             result.test_throws<Botan::Invalid_State>("Unkeyed object throws for set AD after clear",
                                                      [&]() { enc->set_associated_data(ad.data(), ad.size()); });
+         }
+
+         // Regression test: modes that advertise !associated_data_requires_key()
+         // must retain AD set before keying. enc was just cleared above so it
+         // is in an unkeyed state ready for this check.
+         if(!enc->associated_data_requires_key()) {
+            enc->set_associated_data(ad);
+            enc->set_key(key);
+            enc->start(nonce);
+            Botan::secure_vector<uint8_t> tmp(input.begin(), input.end());
+            enc->finish(tmp);
+            result.test_bin_eq("AD set before key is retained", tmp, expected);
+         }
+
+         // Regression test: modes that advertise associated_data_requires_key()
+         // must drop ALL key-dependent state on re-key, so that anything set
+         // under one key cannot contaminate operations under another.
+         if(enc->associated_data_requires_key()) {
+            auto enc2 = Botan::AEAD_Mode::create(algo, Botan::Cipher_Dir::Encryption);
+            const std::vector<uint8_t> stale_key(key.size(), 0x42);
+            const std::vector<uint8_t> stale_ad{0xCC, 0xDD, 0xEE, 0xFF};
+            enc2->set_key(stale_key);
+            enc2->set_associated_data(stale_ad);
+
+            // Populate per-nonce caches under the stale key. Crucially we
+            // do not call finish_msg here, since that would clear the
+            // caches via the mode's internal reset() and hide the bug.
+            enc2->start(nonce);
+
+            // Re-key, re-set AD, restart with the same nonce. After re-key,
+            // every key-dependent piece of state must be dropped; the
+            // ciphertext must match what a fresh instance would produce.
+            enc2->set_key(key);
+            enc2->set_associated_data(ad);
+            enc2->start(nonce);
+            Botan::secure_vector<uint8_t> tmp(input.begin(), input.end());
+            enc2->finish(tmp);
+            result.test_bin_eq("re-key drops all stale key-dependent state", tmp, expected);
+         }
+
+         // SIV-specific: after finish_msg, the nonce must not be carried
+         // over. A subsequent finish_msg without an intervening start_msg
+         // must run nonce-less SIV, not silently reuse the prior nonce.
+         if(is_siv && !nonce.empty()) {
+            auto siv_enc = Botan::AEAD_Mode::create(algo, Botan::Cipher_Dir::Encryption);
+            siv_enc->set_key(key);
+            siv_enc->set_associated_data(ad);
+            siv_enc->start(nonce);
+            Botan::secure_vector<uint8_t> with_nonce(input.begin(), input.end());
+            siv_enc->finish(with_nonce);
+
+            // No start_msg here.
+            Botan::secure_vector<uint8_t> nonceless(input.begin(), input.end());
+            siv_enc->finish(nonceless);
+
+            // Compute the reference nonce-less ciphertext from a fresh
+            // instance for the same (key, AD, input).
+            auto siv_fresh = Botan::AEAD_Mode::create(algo, Botan::Cipher_Dir::Encryption);
+            siv_fresh->set_key(key);
+            siv_fresh->set_associated_data(ad);
+            Botan::secure_vector<uint8_t> nonceless_ref(input.begin(), input.end());
+            siv_fresh->finish(nonceless_ref);
+
+            result.test_bin_eq("SIV nonce dropped after finish_msg", nonceless, nonceless_ref);
          }
 
          return result;
@@ -256,26 +367,41 @@ class AEAD_Tests final : public Text_Based_Test {
          auto garbage = get_garbage();
          dec->update(garbage);
 
-         // reset message specific state
+         // reset message specific state; AD persists per the AEAD contract
          dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+
+         // Setting AD after start_msg must always throw (uniform behavior).
+         dec->start(nonce);
+         result.test_throws<Botan::Invalid_State>("set_associated_data after start_msg throws (dec)",
+                                                  [&]() { dec->set_associated_data(ad); });
+
+         // start_msg called twice without finish/reset must always throw.
+         result.test_throws<Botan::Invalid_State>("double start_msg throws (dec)", [&]() { dec->start(nonce); });
+
+         dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+         dec->set_associated_data(ad);
+         dec->start(nonce);
 
          Botan::secure_vector<uint8_t> buf(input.begin(), input.end());
          try {
-            // now try to decrypt with correct values
-
-            try {
-               dec->start(nonce);
-               dec->set_associated_data(ad);
-            } catch(Botan::Invalid_State&) {
-               // ad after setting nonce rejected, in this case we need to reset
-               dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
-               dec->set_associated_data(ad);
-               dec->start(nonce);
-            }
-
             // test finish() with full input
             dec->finish(buf);
             result.test_bin_eq("decrypt full", buf, expected);
+
+            // Verify that AD is retained across messages
+            if(!ad.empty()) {
+               dec->start(nonce);
+               buf.assign(input.begin(), input.end());
+               dec->finish(buf);
+               result.test_bin_eq("AD persists across messages without re-setting (dec)", buf, expected);
+
+               // AD must also persist across reset() per the AEAD contract.
+               dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+               dec->start(nonce);
+               buf.assign(input.begin(), input.end());
+               dec->finish(buf);
+               result.test_bin_eq("AD persists across reset() (dec)", buf, expected);
+            }
 
             // additionally test update() if possible
             const size_t update_granularity = dec->update_granularity();
@@ -403,6 +529,40 @@ class AEAD_Tests final : public Text_Based_Test {
             result.test_failure("unexpected error while rejecting modified nonce", e.what());
          }
 
+         // Verify that the mode checks `start` is called prior to `update`.
+         // The state check must fire before the buffer is mutated.
+         if(!is_siv) {
+            dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+            dec->set_associated_data(ad);
+            dec->start(nonce);
+            dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+            Botan::secure_vector<uint8_t> tmp(input.begin(), input.end());
+            const Botan::secure_vector<uint8_t> tmp_orig = tmp;
+            result.test_throws<Botan::Invalid_State>("finish after reset without start throws (dec)",
+                                                     [&]() { dec->finish(tmp); });
+            result.test_bin_eq("finish after reset leaves input buffer unmodified (dec)", tmp, tmp_orig);
+         }
+
+         dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+         {
+            const size_t max_ad = dec->maximum_associated_data_inputs();
+            if(max_ad > 0) {
+               result.test_throws<Botan::Invalid_Argument>("set_associated_data_n rejects idx == max (dec)",
+                                                           [&]() { dec->set_associated_data_n(max_ad, ad); });
+            }
+         }
+
+         // Ensure that finish offsets are checked
+         {
+            dec->set_associated_data(ad);
+            dec->start(nonce);
+            result.test_throws<Botan::Invalid_Argument>("finish with offset > size throws (dec)", [&]() {
+               Botan::secure_vector<uint8_t> tmp(input.begin(), input.end());
+               dec->finish(tmp, tmp.size() + 1);
+            });
+            dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+         }
+
          // Make sure we can set the AD after processing a message
          dec->set_associated_data(ad);
          dec->clear();
@@ -413,6 +573,22 @@ class AEAD_Tests final : public Text_Based_Test {
          if(dec->associated_data_requires_key()) {
             result.test_throws<Botan::Invalid_State>("Unkeyed object throws for set AD",
                                                      [&]() { dec->set_associated_data(ad.data(), ad.size()); });
+         }
+
+         // Regression test: modes that advertise associated_data_requires_key()
+         // == false must retain AD set before keying. dec was just cleared
+         // above so it is in an unkeyed state ready for this check.
+         if(!dec->associated_data_requires_key()) {
+            dec->set_associated_data(ad);
+            dec->set_key(key);
+            dec->start(nonce);
+            Botan::secure_vector<uint8_t> tmp(input.begin(), input.end());
+            try {
+               dec->finish(tmp);
+               result.test_bin_eq("AD set before key is retained (dec)", tmp, expected);
+            } catch(Botan::Exception& e) {
+               result.test_failure("decrypt with AD set pre-key failed", e.what());
+            }
          }
 
          return result;
@@ -441,7 +617,7 @@ class AEAD_Tests final : public Text_Based_Test {
 
          const std::string enc_provider = enc->provider();
          result.test_str_not_empty("enc provider", enc_provider);
-         const std::string dec_provider = enc->provider();
+         const std::string dec_provider = dec->provider();
          result.test_str_not_empty("dec provider", dec_provider);
 
          result.test_str_eq("same provider", enc_provider, dec_provider);

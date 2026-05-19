@@ -59,6 +59,7 @@ class GCM_Mode : public AEAD_Mode /* NOLINT(*-special-member-functions) */ {
 
       std::unique_ptr<StreamCipher> m_ctr;  // NOLINT(*non-private-member-variable*)
       std::unique_ptr<GHASH> m_ghash;       // NOLINT(*non-private-member-variable*)
+      bool m_in_msg = false;                // NOLINT(*non-private-member-variable*)
 
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override;

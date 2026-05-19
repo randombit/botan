@@ -34,13 +34,14 @@ SIV_Mode::~SIV_Mode() = default;
 void SIV_Mode::clear() {
    m_ctr->clear();
    m_mac->clear();
+   m_ad_macs.clear();
    reset();
 }
 
 void SIV_Mode::reset() {
    m_nonce.clear();
    m_msg_buf.clear();
-   m_ad_macs.clear();
+   m_in_msg = false;
 }
 
 std::string SIV_Mode::name() const {
@@ -77,6 +78,7 @@ void SIV_Mode::key_schedule(std::span<const uint8_t> key) {
    m_mac->set_key(key.first(keylen));
    m_ctr->set_key(key.last(keylen));
    m_ad_macs.clear();
+   reset();
 }
 
 size_t SIV_Mode::maximum_associated_data_inputs() const {
@@ -84,8 +86,9 @@ size_t SIV_Mode::maximum_associated_data_inputs() const {
 }
 
 void SIV_Mode::set_associated_data_n(size_t n, std::span<const uint8_t> ad) {
+   BOTAN_STATE_CHECK(!m_in_msg);
    const size_t max_ads = maximum_associated_data_inputs();
-   if(n > max_ads) {
+   if(n >= max_ads) {
       throw Invalid_Argument(name() + " allows no more than " + std::to_string(max_ads) + " ADs");
    }
 
@@ -97,6 +100,8 @@ void SIV_Mode::set_associated_data_n(size_t n, std::span<const uint8_t> ad) {
 }
 
 void SIV_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
+   BOTAN_STATE_CHECK(!m_in_msg);
+
    if(!valid_nonce_length(nonce_len)) {
       throw Invalid_IV_Length(name(), nonce_len);
    }
@@ -108,11 +113,15 @@ void SIV_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
    }
 
    m_msg_buf.clear();
+   m_in_msg = true;
 }
 
 size_t SIV_Mode::process_msg(uint8_t buf[], size_t sz) {
    // all output is saved for processing in finish
    m_msg_buf.insert(m_msg_buf.end(), buf, buf + sz);
+   // SIV supports a "no start_msg" mode (deterministic, nonce-less): the
+   // first process_msg locks AD just as start_msg would.
+   m_in_msg = true;
    return 0;
 }
 
@@ -156,7 +165,6 @@ void SIV_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
 
    buffer.insert(buffer.begin() + offset, msg_buf().begin(), msg_buf().end());
-   msg_buf().clear();
 
    const secure_vector<uint8_t> V = S2V(buffer.data() + offset, buffer.size() - offset);
 
@@ -166,6 +174,12 @@ void SIV_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
       set_ctr_iv(V);
       ctr().cipher1(&buffer[offset + V.size()], buffer.size() - offset - V.size());
    }
+
+   // Drop m_nonce as well as the in-message flag. S2V() consumes m_nonce,
+   // so leaving it live would let a subsequent finish_msg() without an
+   // intervening start_msg() silently re-use the prior nonce instead of
+   // running nonce-less SIV.
+   reset();
 }
 
 void SIV_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
@@ -189,6 +203,10 @@ void SIV_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    }
 
    const secure_vector<uint8_t> T = S2V(buffer.data() + offset, buffer.size() - offset - V.size());
+
+   // See SIV_Encryption::finish_msg for why this is reset() and not just
+   // clearing the in-message flag.
+   reset();
 
    if(!CT::is_equal<uint8_t>(T, V).as_bool()) {
       clear_mem(std::span{buffer}.subspan(offset, buffer.size() - offset - V.size()));

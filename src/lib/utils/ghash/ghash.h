@@ -45,6 +45,8 @@ class GHASH final : public SymmetricAlgorithm {
 
       void clear() override;
 
+      /// Reset the per-message state (nonce/ghash/text-len/buffer) but
+      /// preserve any associated data set via set_associated_data
       void reset_state();
 
       std::string name() const override { return "GHASH"; }

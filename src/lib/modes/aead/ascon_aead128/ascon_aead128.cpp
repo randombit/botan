@@ -59,12 +59,13 @@ void Ascon_AEAD128_Mode::reset() {
 }
 
 void Ascon_AEAD128_Mode::key_schedule(std::span<const uint8_t> key) {
-   clear();
+   reset();
    m_key = as_array_of_uint64<2>(key);
 }
 
 void Ascon_AEAD128_Mode::set_associated_data_n(size_t idx, std::span<const uint8_t> ad) {
    BOTAN_ARG_CHECK(idx == 0, "Ascon-AEAD128: cannot handle non-zero index in set_associated_data_n");
+   BOTAN_STATE_CHECK(!m_has_nonce);
    m_ad.assign(ad.begin(), ad.end());
 }
 
@@ -72,7 +73,7 @@ void Ascon_AEAD128_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
    BOTAN_ARG_CHECK(valid_nonce_length(nonce_len), "Invalid nonce length in Ascon-AEAD128");
 
    BOTAN_STATE_CHECK(has_keying_material());
-   BOTAN_STATE_CHECK(!m_started);
+   BOTAN_STATE_CHECK(!m_has_nonce);
 
    m_ascon_p.state() = concat(std::array{ascon_aead_128_iv}, *m_key, as_array_of_uint64<2>({nonce, nonce_len}));
    m_ascon_p.initial_permute();
@@ -120,6 +121,7 @@ size_t Ascon_AEAD128_Encryption::process_msg(uint8_t buf[], size_t size) {
 
 void Ascon_AEAD128_Encryption::finish_msg(secure_vector<uint8_t>& final_block, size_t offset) {
    BOTAN_STATE_CHECK(has_keying_material());
+   BOTAN_ARG_CHECK(final_block.size() >= offset, "Offset is out of range");
 
    const auto final_block_at_offset = std::span{final_block}.subspan(offset);
    process_msg(final_block_at_offset.data(), final_block_at_offset.size());
@@ -138,6 +140,7 @@ size_t Ascon_AEAD128_Decryption::process_msg(uint8_t buf[], size_t size) {
 
 void Ascon_AEAD128_Decryption::finish_msg(secure_vector<uint8_t>& final_block, size_t offset) {
    BOTAN_STATE_CHECK(has_keying_material());
+   BOTAN_ARG_CHECK(final_block.size() >= offset, "Offset is out of range");
 
    const auto final_block_at_offset = std::span{final_block}.subspan(offset);
    BOTAN_ARG_CHECK(final_block_at_offset.size() >= tag_size(), "input did not include the tag");

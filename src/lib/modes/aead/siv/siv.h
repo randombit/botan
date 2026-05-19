@@ -81,6 +81,7 @@ class BOTAN_TEST_API SIV_Mode : public AEAD_Mode /* NOLINT(*-special-member-func
       std::unique_ptr<MessageAuthenticationCode> m_mac;
       secure_vector<uint8_t> m_nonce, m_msg_buf;
       std::vector<secure_vector<uint8_t>> m_ad_macs;
+      bool m_in_msg = false;
 };
 
 /**

@@ -37,11 +37,11 @@ size_t ChaCha20Poly1305_Mode::ideal_granularity() const {
 void ChaCha20Poly1305_Mode::clear() {
    m_chacha->clear();
    m_poly1305->clear();
+   m_ad.clear();
    reset();
 }
 
 void ChaCha20Poly1305_Mode::reset() {
-   m_ad.clear();
    m_ctext_len = 0;
    m_nonce_len = 0;
 }
@@ -52,6 +52,9 @@ bool ChaCha20Poly1305_Mode::has_keying_material() const {
 
 void ChaCha20Poly1305_Mode::key_schedule(std::span<const uint8_t> key) {
    m_chacha->set_key(key);
+   // Clear any per-message state; AD is preserved per AEAD contract
+   // (ChaCha20Poly1305 advertises associated_data_requires_key() == false).
+   reset();
 }
 
 void ChaCha20Poly1305_Mode::set_associated_data_n(size_t idx, std::span<const uint8_t> ad) {
@@ -69,6 +72,8 @@ void ChaCha20Poly1305_Mode::update_len(uint64_t len) {
 }
 
 void ChaCha20Poly1305_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
+   BOTAN_STATE_CHECK(m_nonce_len == 0);
+
    if(!valid_nonce_length(nonce_len)) {
       throw Invalid_IV_Length(name(), nonce_len);
    }
@@ -98,6 +103,7 @@ void ChaCha20Poly1305_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
 }
 
 size_t ChaCha20Poly1305_Encryption::process_msg(uint8_t buf[], size_t sz) {
+   BOTAN_STATE_CHECK(m_nonce_len > 0);
    m_chacha->cipher1(buf, sz);
    m_poly1305->update(buf, sz);  // poly1305 of ciphertext
    m_ctext_len += sz;
@@ -112,6 +118,8 @@ size_t ChaCha20Poly1305_Encryption::process_msg(uint8_t buf[], size_t sz) {
 }
 
 void ChaCha20Poly1305_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
+   BOTAN_STATE_CHECK(m_nonce_len > 0);
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
    update(buffer, offset);
    if(cfrg_version()) {
       if(m_ctext_len % 16 != 0) {
@@ -130,6 +138,7 @@ void ChaCha20Poly1305_Encryption::finish_msg(secure_vector<uint8_t>& buffer, siz
 }
 
 size_t ChaCha20Poly1305_Decryption::process_msg(uint8_t buf[], size_t sz) {
+   BOTAN_STATE_CHECK(m_nonce_len > 0);
    m_poly1305->update(buf, sz);  // poly1305 of ciphertext
    m_chacha->cipher1(buf, sz);
    m_ctext_len += sz;
@@ -143,6 +152,7 @@ size_t ChaCha20Poly1305_Decryption::process_msg(uint8_t buf[], size_t sz) {
 }
 
 void ChaCha20Poly1305_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
+   BOTAN_STATE_CHECK(m_nonce_len > 0);
    BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
