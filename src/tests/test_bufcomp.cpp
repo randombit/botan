@@ -15,7 +15,6 @@
 #include <array>
 #include <cstring>
 #include <string>
-#include <vector>
 
 namespace Botan_Tests {
 

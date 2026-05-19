@@ -17,7 +17,6 @@
 #include <functional>
 #include <list>
 #include <string>
-#include <vector>
 
 namespace Botan::PKCS11 {
 

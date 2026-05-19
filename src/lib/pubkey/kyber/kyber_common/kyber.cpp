@@ -33,7 +33,6 @@
 #endif
 
 #include <memory>
-#include <vector>
 
 namespace Botan {
 

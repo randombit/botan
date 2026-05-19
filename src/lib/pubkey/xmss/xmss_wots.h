@@ -12,7 +12,6 @@
 #include <botan/secmem.h>
 #include <botan/xmss_parameters.h>
 #include <botan/internal/xmss_address.h>
-#include <vector>
 
 namespace Botan {
 
