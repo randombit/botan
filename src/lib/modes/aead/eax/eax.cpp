@@ -131,6 +131,7 @@ size_t EAX_Encryption::process_msg(uint8_t buf[], size_t sz) {
 
 void EAX_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    BOTAN_STATE_CHECK(!m_nonce_mac.empty());
+   BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
    update(buffer, offset);
 
    secure_vector<uint8_t> data_mac = m_cmac->final();

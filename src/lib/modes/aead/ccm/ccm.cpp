@@ -39,13 +39,13 @@ CCM_Mode::CCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size, size_t 
 
 void CCM_Mode::clear() {
    m_cipher->clear();
+   m_ad_buf.clear();
    reset();
 }
 
 void CCM_Mode::reset() {
    m_nonce.clear();
    m_msg_buf.clear();
-   m_ad_buf.clear();
 }
 
 std::string CCM_Mode::name() const {

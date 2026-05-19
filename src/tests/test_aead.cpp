@@ -114,6 +114,14 @@ class AEAD_Tests final : public Text_Based_Test {
             enc->finish(buf);
             result.test_bin_eq("encrypt full", buf, expected);
 
+            // AD should be persisted between messages unless reset
+            if(!ad.empty()) {
+               enc->start(nonce);
+               buf.assign(input.begin(), input.end());
+               enc->finish(buf);
+               result.test_bin_eq("AD persists across messages without re-setting", buf, expected);
+            }
+
             // additionally test update() if possible
             const size_t update_granularity = enc->update_granularity();
             if(input.size() > update_granularity) {
@@ -183,6 +191,37 @@ class AEAD_Tests final : public Text_Based_Test {
             }
          }
 
+         // After reset, a new call to start must be made before update is called.
+         if(!is_siv) {
+            enc->start(nonce);
+            enc->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+            result.test_throws<Botan::Invalid_State>("finish after reset without start throws", [&]() {
+               Botan::secure_vector<uint8_t> tmp(input.begin(), input.end());
+               enc->finish(tmp);
+            });
+         }
+
+         // Verify that set_associated_data_n checks its index
+         enc->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+         {
+            const size_t max_ad = enc->maximum_associated_data_inputs();
+            if(max_ad > 0) {
+               result.test_throws<Botan::Invalid_Argument>("set_associated_data_n rejects idx == max",
+                                                           [&]() { enc->set_associated_data_n(max_ad, ad); });
+            }
+         }
+
+         // Verify that finish() with an offset past the end of the buffer throws
+         {
+            enc->set_associated_data(ad);
+            enc->start(nonce);
+            result.test_throws<Botan::Invalid_Argument>("finish with offset > size throws", [&]() {
+               Botan::secure_vector<uint8_t> tmp(input.begin(), input.end());
+               enc->finish(tmp, tmp.size() + 1);
+            });
+            enc->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+         }
+
          // Make sure we can set the AD after processing a message
          enc->set_associated_data(ad);
          enc->clear();
@@ -194,6 +233,18 @@ class AEAD_Tests final : public Text_Based_Test {
          if(enc->associated_data_requires_key()) {
             result.test_throws<Botan::Invalid_State>("Unkeyed object throws for set AD after clear",
                                                      [&]() { enc->set_associated_data(ad.data(), ad.size()); });
+         }
+
+         // Regression test: modes that advertise associated_data_requires_key()
+         // == false must retain AD set before keying. enc was just cleared
+         // above so it is in an unkeyed state ready for this check.
+         if(!enc->associated_data_requires_key()) {
+            enc->set_associated_data(ad);
+            enc->set_key(key);
+            enc->start(nonce);
+            Botan::secure_vector<uint8_t> tmp(input.begin(), input.end());
+            enc->finish(tmp);
+            result.test_bin_eq("AD set before key is retained", tmp, expected);
          }
 
          return result;
@@ -276,6 +327,14 @@ class AEAD_Tests final : public Text_Based_Test {
             // test finish() with full input
             dec->finish(buf);
             result.test_bin_eq("decrypt full", buf, expected);
+
+            // Verify that AD is retained across messages
+            if(!ad.empty()) {
+               dec->start(nonce);
+               buf.assign(input.begin(), input.end());
+               dec->finish(buf);
+               result.test_bin_eq("AD persists across messages without re-setting (dec)", buf, expected);
+            }
 
             // additionally test update() if possible
             const size_t update_granularity = dec->update_granularity();
@@ -403,6 +462,38 @@ class AEAD_Tests final : public Text_Based_Test {
             result.test_failure("unexpected error while rejecting modified nonce", e.what());
          }
 
+         // Verify that the mode checks that that start is called prior to update
+         if(!is_siv) {
+            dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+            dec->set_associated_data(ad);
+            dec->start(nonce);
+            dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+            result.test_throws<Botan::Invalid_State>("finish after reset without start throws (dec)", [&]() {
+               Botan::secure_vector<uint8_t> tmp(input.begin(), input.end());
+               dec->finish(tmp);
+            });
+         }
+
+         dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+         {
+            const size_t max_ad = dec->maximum_associated_data_inputs();
+            if(max_ad > 0) {
+               result.test_throws<Botan::Invalid_Argument>("set_associated_data_n rejects idx == max (dec)",
+                                                           [&]() { dec->set_associated_data_n(max_ad, ad); });
+            }
+         }
+
+         // Ensure that finish offsets are checked
+         {
+            dec->set_associated_data(ad);
+            dec->start(nonce);
+            result.test_throws<Botan::Invalid_Argument>("finish with offset > size throws (dec)", [&]() {
+               Botan::secure_vector<uint8_t> tmp(input.begin(), input.end());
+               dec->finish(tmp, tmp.size() + 1);
+            });
+            dec->reset();  // NOLINT(*-ambiguous-smartptr-reset-call)
+         }
+
          // Make sure we can set the AD after processing a message
          dec->set_associated_data(ad);
          dec->clear();
@@ -413,6 +504,22 @@ class AEAD_Tests final : public Text_Based_Test {
          if(dec->associated_data_requires_key()) {
             result.test_throws<Botan::Invalid_State>("Unkeyed object throws for set AD",
                                                      [&]() { dec->set_associated_data(ad.data(), ad.size()); });
+         }
+
+         // Regression test: modes that advertise associated_data_requires_key()
+         // == false must retain AD set before keying. dec was just cleared
+         // above so it is in an unkeyed state ready for this check.
+         if(!dec->associated_data_requires_key()) {
+            dec->set_associated_data(ad);
+            dec->set_key(key);
+            dec->start(nonce);
+            Botan::secure_vector<uint8_t> tmp(input.begin(), input.end());
+            try {
+               dec->finish(tmp);
+               result.test_bin_eq("AD set before key is retained (dec)", tmp, expected);
+            } catch(Botan::Exception& e) {
+               result.test_failure("decrypt with AD set pre-key failed", e.what());
+            }
          }
 
          return result;
@@ -441,7 +548,7 @@ class AEAD_Tests final : public Text_Based_Test {
 
          const std::string enc_provider = enc->provider();
          result.test_str_not_empty("enc provider", enc_provider);
-         const std::string dec_provider = enc->provider();
+         const std::string dec_provider = dec->provider();
          result.test_str_not_empty("dec provider", dec_provider);
 
          result.test_str_eq("same provider", enc_provider, dec_provider);
