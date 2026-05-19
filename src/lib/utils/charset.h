@@ -92,6 +92,14 @@ class CharacterValidityTable final {
          return ((m_tbl[uc / 32] >> (uc % 32)) & 1) != 0;
       }
 
+      constexpr CharacterValidityTable invert() const {
+         TableStorage inverted = m_tbl;
+         for(auto& v : inverted) {
+            v = ~v;
+         }
+         return CharacterValidityTable(inverted);
+      }
+
    private:
       using TableStorage = std::array<uint32_t, 8>;  // 256 bits of storage
 

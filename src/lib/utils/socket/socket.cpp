@@ -51,9 +51,27 @@ class Asio_Socket final : public OS::Socket {
          m_timer.expires_after(m_timeout);
          check_timeout();
 
+         // Resolve asynchronously so the timer covers DNS as well as connect.
+         // check_timeout() only closes m_tcp, which isn't open yet during the
+         // resolve, so cancel the resolver inline if the deadline passes; that
+         // delivers operation_aborted to the callback and breaks the loop.
          boost::asio::ip::tcp::resolver resolver(m_io);
-         const boost::asio::ip::tcp::resolver::results_type dns_iter =
-            resolver.resolve(std::string{hostname}, std::string{service});
+         boost::asio::ip::tcp::resolver::results_type dns_iter;
+         boost::system::error_code resolve_ec = boost::asio::error::would_block;
+         resolver.async_resolve(
+            std::string{hostname}, std::string{service}, [&](const boost::system::error_code& e, auto results) {
+               resolve_ec = e;
+               dns_iter = std::move(results);
+            });
+         while(resolve_ec == boost::asio::error::would_block) {
+            if(m_timer.expiry() < decltype(m_timer)::clock_type::now()) {
+               resolver.cancel();
+            }
+            m_io.run_one();
+         }
+         if(resolve_ec) {
+            throw boost::system::system_error(resolve_ec);
+         }
 
          boost::system::error_code ec = boost::asio::error::would_block;
 
@@ -78,9 +96,9 @@ class Asio_Socket final : public OS::Socket {
 
          boost::system::error_code ec = boost::asio::error::would_block;
 
-         // Some versions of asio don't know about span...
-         m_tcp.async_send(boost::asio::buffer(buf.data(), buf.size()),
-                          [&ec](boost::system::error_code e, size_t) { ec = e; });
+         boost::asio::async_write(m_tcp,
+                                  boost::asio::buffer(buf.data(), buf.size()),
+                                  [&ec](const boost::system::error_code& e, size_t) { ec = e; });
 
          while(ec == boost::asio::error::would_block) {
             m_io.run_one();
@@ -118,7 +136,7 @@ class Asio_Socket final : public OS::Socket {
 
    private:
       void check_timeout() {
-         if(m_tcp.is_open() && m_timer.expiry() < std::chrono::system_clock::now()) {
+         if(m_tcp.is_open() && m_timer.expiry() < decltype(m_timer)::clock_type::now()) {
             boost::system::error_code err;
 
             // NOLINTNEXTLINE(bugprone-unused-return-value,cert-err33-c)
@@ -136,6 +154,19 @@ class Asio_Socket final : public OS::Socket {
 };
 
 #elif defined(BOTAN_TARGET_OS_HAS_SOCKETS) || defined(BOTAN_TARGET_OS_HAS_WINSOCK2)
+
+namespace {
+
+// MSG_NOSIGNAL on the send call prevents SIGPIPE when the peer has gone away
+// (Linux, the BSDs, Cygwin). macOS doesn't define it; we set SO_NOSIGPIPE on
+// the socket instead. Windows has no SIGPIPE.
+   #if defined(MSG_NOSIGNAL)
+constexpr int botan_send_flags = MSG_NOSIGNAL;
+   #else
+constexpr int botan_send_flags = 0;
+   #endif
+
+}  // namespace
 
 class BSD_Socket final : public OS::Socket {
    private:
@@ -155,7 +186,7 @@ class BSD_Socket final : public OS::Socket {
 
       static bool nonblocking_connect_in_progress() { return (::WSAGetLastError() == WSAEWOULDBLOCK); }
 
-      static bool select_error_is_retryable() { return (::WSAGetLastError() == WSAEINTR); }
+      static bool last_error_is_retryable() { return (::WSAGetLastError() == WSAEINTR); }
 
       static void set_nonblocking(socket_type s) {
          u_long nonblocking = 1;
@@ -193,7 +224,7 @@ class BSD_Socket final : public OS::Socket {
 
       static bool nonblocking_connect_in_progress() { return (errno == EINPROGRESS); }
 
-      static bool select_error_is_retryable() { return (errno == EINTR); }
+      static bool last_error_is_retryable() { return (errno == EINTR); }
 
       static void set_nonblocking(socket_type s) {
          // NOLINTNEXTLINE(*-vararg)
@@ -212,6 +243,23 @@ class BSD_Socket final : public OS::Socket {
             m_timeout(timeout), m_socket(invalid_socket()) {
          socket_init();
 
+         // A constructor that throws does not run its destructor, so do
+         // cleanup explicitly on any failure between socket_init() above and
+         // the end of construction below.
+         try {
+            do_connect(hostname, service);
+         } catch(...) {
+            if(m_socket != invalid_socket()) {
+               close_socket(m_socket);
+               m_socket = invalid_socket();
+            }
+            socket_fini();
+            throw;
+         }
+      }
+
+   private:
+      void do_connect(std::string_view hostname, std::string_view service) {
          const std::string hostname_str(hostname);
          const std::string service_str(service);
 
@@ -221,14 +269,27 @@ class BSD_Socket final : public OS::Socket {
 
          unique_addr_info_ptr res = nullptr;
 
+         // getaddrinfo blocks; POSIX has no portable way to time-bound it
+         // without spinning up a thread. Time spent here is not deducted
+         // from the connect budget below.
          const int rc = ::getaddrinfo(hostname_str.c_str(), service_str.c_str(), &hints, Botan::out_ptr(res));
          if(rc != 0) {
             throw System_Error(fmt("Name resolution failed for {}", hostname), rc);
          }
 
+         // Bound the total connect phase by the requested timeout, regardless of
+         // how many candidate addresses getaddrinfo returns.
+         const auto connect_deadline = std::chrono::steady_clock::now() + m_timeout;
+
          for(const addrinfo* rp = res.get(); (m_socket == invalid_socket()) && (rp != nullptr); rp = rp->ai_next) {
             if(rp->ai_family != AF_INET && rp->ai_family != AF_INET6) {
                continue;
+            }
+
+            const auto remaining = std::chrono::duration_cast<std::chrono::microseconds>(
+               connect_deadline - std::chrono::steady_clock::now());
+            if(remaining <= std::chrono::microseconds::zero()) {
+               break;
             }
 
             m_socket = ::socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
@@ -238,6 +299,28 @@ class BSD_Socket final : public OS::Socket {
                continue;
             }
 
+   #if !defined(BOTAN_TARGET_OS_HAS_WINSOCK2)
+            // POSIX fd_set is a bitfield indexed by fd value, so FD_SET(fd, ...)
+            // with fd >= FD_SETSIZE writes past the end of the structure. Refuse
+            // up front rather than corrupt memory in the select() path below.
+            // (Windows fd_set is an array of SOCKET handles, not vulnerable.)
+            if(m_socket >= FD_SETSIZE) {
+               close_socket(m_socket);
+               m_socket = invalid_socket();
+               throw System_Error("Socket descriptor exceeds FD_SETSIZE; select() would be unsafe");
+            }
+   #endif
+
+   #if defined(SO_NOSIGPIPE)
+            // macOS doesn't have MSG_NOSIGNAL; set the socket option instead so
+            // ::send() on a peer-closed socket returns EPIPE rather than
+            // delivering SIGPIPE to the process. Ignore failures (best-effort).
+            {
+               const int on = 1;
+               (void)::setsockopt(m_socket, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on));
+            }
+   #endif
+
             set_nonblocking(m_socket);
 
             const int err = ::connect(m_socket, rp->ai_addr, static_cast<socklen_type>(rp->ai_addrlen));
@@ -245,7 +328,7 @@ class BSD_Socket final : public OS::Socket {
             if(err == -1) {
                int active = 0;
                if(nonblocking_connect_in_progress()) {
-                  struct timeval timeout_tv = make_timeout_tv();
+                  struct timeval timeout_tv = make_timeout_tv_from(remaining);
                   fd_set write_set;
                   FD_ZERO(&write_set);
                   FD_SET(m_socket, &write_set);
@@ -267,7 +350,9 @@ class BSD_Socket final : public OS::Socket {
                   }
                }
 
-               if(active == 0) {
+               // 0 = select timeout, < 0 = select error: both indicate the
+               // connect attempt failed and the socket is not usable.
+               if(active <= 0) {
                   close_socket(m_socket);
                   m_socket = invalid_socket();
                   continue;
@@ -282,6 +367,7 @@ class BSD_Socket final : public OS::Socket {
          }
       }
 
+   public:
       ~BSD_Socket() override {
          close_socket(m_socket);
          m_socket = invalid_socket();
@@ -306,7 +392,7 @@ class BSD_Socket final : public OS::Socket {
             const int active = ::select(static_cast<int>(m_socket + 1), nullptr, &write_set, nullptr, &timeout);
 
             if(active < 0) {
-               if(select_error_is_retryable()) {
+               if(last_error_is_retryable()) {
                   continue;
                }
                throw System_Error("Socket select failed", last_socket_error());
@@ -317,9 +403,14 @@ class BSD_Socket final : public OS::Socket {
             }
 
             const size_t left = len - sent_so_far;
-            const socket_op_ret_type sent =
-               ::send(m_socket, cast_uint8_ptr_to_char(&buf[sent_so_far]), static_cast<sendrecv_len_type>(left), 0);
+            const socket_op_ret_type sent = ::send(m_socket,
+                                                   cast_uint8_ptr_to_char(&buf[sent_so_far]),
+                                                   static_cast<sendrecv_len_type>(left),
+                                                   botan_send_flags);
             if(sent < 0) {
+               if(last_error_is_retryable()) {
+                  continue;
+               }
                throw System_Error("Socket write failed", last_socket_error());
             } else {
                sent_so_far += static_cast<size_t>(sent);
@@ -337,7 +428,7 @@ class BSD_Socket final : public OS::Socket {
             const int active = ::select(static_cast<int>(m_socket + 1), &read_set, nullptr, nullptr, &timeout);
 
             if(active < 0) {
-               if(select_error_is_retryable()) {
+               if(last_error_is_retryable()) {
                   continue;
                }
                throw System_Error("Socket select failed", last_socket_error());
@@ -351,6 +442,9 @@ class BSD_Socket final : public OS::Socket {
                ::recv(m_socket, cast_uint8_ptr_to_char(buf), static_cast<sendrecv_len_type>(len), 0);
 
             if(got < 0) {
+               if(last_error_is_retryable()) {
+                  continue;
+               }
                throw System_Error("Socket read failed", last_socket_error());
             }
 
@@ -359,11 +453,13 @@ class BSD_Socket final : public OS::Socket {
       }
 
    private:
-      struct timeval make_timeout_tv() const {
+      struct timeval make_timeout_tv() const { return make_timeout_tv_from(m_timeout); }
+
+      static struct timeval make_timeout_tv_from(std::chrono::microseconds us) {
          struct timeval tv {};
 
-         tv.tv_sec = static_cast<decltype(timeval::tv_sec)>(m_timeout.count() / 1000000);
-         tv.tv_usec = static_cast<decltype(timeval::tv_usec)>(m_timeout.count() % 1000000);
+         tv.tv_sec = static_cast<decltype(timeval::tv_sec)>(us.count() / 1000000);
+         tv.tv_usec = static_cast<decltype(timeval::tv_usec)>(us.count() % 1000000);
          return tv;
       }
 

@@ -548,7 +548,10 @@ Response online_check(const X509_Certificate& issuer,
                       std::chrono::milliseconds timeout) {
    const OCSP::Request req(issuer, subject_serial);
 
-   auto http = HTTP::POST_sync(ocsp_responder, "application/ocsp-request", req.BER_encode(), 1, timeout);
+   auto http = HTTP::POST_sync(ocsp_responder,
+                               "application/ocsp-request",
+                               req.BER_encode(),
+                               HTTP::RequestLimits().set_timeout(timeout).set_max_body_size(64 * 1024));
 
    http.throw_unless_ok();
 

@@ -766,8 +766,7 @@ CertificatePathStatusCodes PKIX::check_ocsp_online(const std::vector<X509_Certif
                      http = HTTP::POST_sync(ocsp_urls[0],
                                             "application/ocsp-request",
                                             ocsp_req.BER_encode(),
-                                            /*redirects*/ 1,
-                                            timeout);
+                                            HTTP::RequestLimits().set_timeout(timeout).set_max_body_size(64 * 1024));
 
                      if(http.status_code() != 200) {
                         return OCSP::Response(Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE);
@@ -841,9 +840,8 @@ CertificatePathStatusCodes PKIX::check_crl_online(const std::vector<X509_Certifi
             }));
          } else {
             future_crls.emplace_back(std::async(std::launch::async, [cdp_uris, timeout]() -> std::optional<X509_CRL> {
-               auto http = HTTP::GET_sync(cdp_uris[0],
-                                          /*redirects*/ 1,
-                                          timeout);
+               auto http = HTTP::GET_sync(
+                  cdp_uris[0], HTTP::RequestLimits().set_timeout(timeout).set_max_body_size(32 * 1024 * 1024));
 
                http.throw_unless_ok();
                // check the mime type?
