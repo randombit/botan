@@ -717,18 +717,24 @@ GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) cons
 
 //static
 bool GeneralName::matches_dn(const X509_DN& name, const X509_DN& constraint) {
-   // Perform DN matching by comparing RDNs in sequence, i.e.,
-   // whether the constraint is a prefix of the name.
-   const auto& name_info = name.dn_info();
-   const auto& constraint_info = constraint.dn_info();
+   /*
+   RFC 5280 7.1:
+     Two RelativeDistinguishedNames RDN1 and RDN2 match if they have
+     the same number of naming attributes and for each naming attribute
+     in RDN1 there is a matching naming attribute in RDN2.
 
-   if(constraint_info.size() > name_info.size()) {
+   This is implementing directoryName subtree match, so the constraint's RDN
+   sequence must be a prefix of the name's RDN sequence.
+   */
+   const auto& name_rdns = name.rdns();
+   const auto& constraint_rdns = constraint.rdns();
+
+   if(constraint_rdns.size() > name_rdns.size()) {
       return false;
    }
 
-   for(size_t i = 0; i < constraint_info.size(); ++i) {
-      if(name_info[i].first != constraint_info[i].first ||
-         !x500_name_cmp(name_info[i].second.value(), constraint_info[i].second.value())) {
+   for(size_t i = 0; i != constraint_rdns.size(); ++i) {
+      if(!rdn_equality(constraint_rdns[i], name_rdns[i])) {
          return false;
       }
    }

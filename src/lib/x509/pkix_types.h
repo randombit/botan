@@ -90,15 +90,28 @@ class BOTAN_PUBLIC_API(2, 0) X509_DN final : public ASN1_Object {
 
       bool empty() const { return m_rdn.empty(); }
 
+      /**
+      * Number of relative distinguished names (RDNs) in the DN. Note: prior
+      * to multi-AVA RDN support this returned the total number of AVAs; the
+      * two differ only when the DN contains a multi-valued RDN.
+      */
       size_t count() const { return m_rdn.size(); }
 
       std::string to_string() const;
 
       /**
-      * Return the DN components as a vector. Note that the order of the components is
-      * preserved only when using the initializer list constructor.
+      * Return the DN as a sequence of RDNs. Each RDN is an X.501
+      * SET OF AttributeTypeAndValue; the inner vector preserves the
+      * decoded order but RDN equality is set-based per RFC 5280 7.1.
       */
-      const std::vector<std::pair<OID, ASN1_String>>& dn_info() const { return m_rdn; }
+      const std::vector<std::vector<std::pair<OID, ASN1_String>>>& rdns() const { return m_rdn; }
+
+      /**
+      * Return the DN attributes as a flat sequence of AVAs in decoded order.
+      * RDN structure is not preserved in this view; prefer rdns() to retain it.
+      */
+      BOTAN_DEPRECATED("Use rdns() which preserves RDN structure")
+      std::vector<std::pair<OID, ASN1_String>> dn_info() const;
 
       std::multimap<OID, std::string> get_attributes() const;
       std::multimap<std::string, std::string> contents() const;
@@ -125,7 +138,9 @@ class BOTAN_PUBLIC_API(2, 0) X509_DN final : public ASN1_Object {
       static size_t lookup_ub(const OID& oid);
 
    private:
-      std::vector<std::pair<OID, ASN1_String>> m_rdn;
+      // Outer vector: sequence of RDNs. Inner vector: AVAs within
+      // one RDN (X.501 SET OF AttributeTypeAndValue).
+      std::vector<std::vector<std::pair<OID, ASN1_String>>> m_rdn;
       std::vector<uint8_t> m_dn_bits;
 };
 

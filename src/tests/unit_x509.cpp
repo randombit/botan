@@ -1592,7 +1592,7 @@ Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
 
    const Botan::X509_DN& req_dn = req.subject_dn();
 
-   result.test_sz_eq("Expected number of DN entries", req_dn.dn_info().size(), 2);
+   result.test_sz_eq("Expected number of DN entries", req_dn.count(), 2);
 
    const Botan::ASN1_String req_val1 = req_dn.get_first_attribute(attr1);
    const Botan::ASN1_String req_val2 = req_dn.get_first_attribute(attr2);
@@ -1608,7 +1608,7 @@ Test::Result test_custom_dn_attr(const Botan::Private_Key& ca_key,
 
    const Botan::X509_DN& cert_dn = cert.subject_dn();
 
-   result.test_sz_eq("Expected number of DN entries", cert_dn.dn_info().size(), 2);
+   result.test_sz_eq("Expected number of DN entries", cert_dn.count(), 2);
 
    const Botan::ASN1_String cert_val1 = cert_dn.get_first_attribute(attr1);
    const Botan::ASN1_String cert_val2 = cert_dn.get_first_attribute(attr2);
