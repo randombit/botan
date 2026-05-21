@@ -1220,7 +1220,7 @@ class Path_Validation_With_OCSP_Tests final : public Test {
          std::optional<const Botan::OCSP::Response> ocsp = load_test_OCSP_resp("x509/ocsp/randombit_ocsp.der");
 
          auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
-                               const Botan::Certificate_Status_Code expected) {
+                               const Botan::Certificate_Status_Code expected_status) {
             const auto path_result = Botan::x509_path_validate(cert_path,
                                                                restrictions,
                                                                trusted,
@@ -1230,9 +1230,8 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                                                                std::chrono::milliseconds(0),
                                                                {ocsp});
 
-            return result.test_is_true(std::string("Status: '") + Botan::to_string(expected) + "' should match '" +
-                                          Botan::to_string(path_result.result()) + "'",
-                                       path_result.result() == expected);
+            return result.test_str_eq(
+               "Expected status", path_result.result_string(), Botan::to_string(expected_status));
          };
 
          check_path(Botan::calendar_point(2016, 11, 11, 12, 30, 0).to_std_timepoint(),
@@ -1294,7 +1293,8 @@ class Path_Validation_With_OCSP_Tests final : public Test {
          Test::Result result("path check with ocsp w/o next_update w/o max_age");
          Botan::Certificate_Store_In_Memory trusted;
 
-         auto restrictions = Botan::Path_Validation_Restrictions(false, 110, false);
+         // max_age=0 means unbounded (the default is now finite)
+         auto restrictions = Botan::Path_Validation_Restrictions(false, 110, false, std::chrono::seconds(0));
 
          auto ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
          auto ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
@@ -1327,6 +1327,49 @@ class Path_Validation_With_OCSP_Tests final : public Test {
          check_path(Botan::calendar_point(2019, 5, 28, 7, 30, 0).to_std_timepoint(),
                     Botan::Certificate_Status_Code::OK);
          check_path(Botan::calendar_point(2019, 5, 28, 8, 0, 0).to_std_timepoint(), Botan::Certificate_Status_Code::OK);
+         // Well past 7 days: unbounded, so still OK
+         check_path(Botan::calendar_point(2019, 6, 10, 7, 30, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OK);
+
+         return result;
+      }
+
+      static Test::Result validate_with_ocsp_without_next_update_default_restrictions() {
+         Test::Result result("path check with ocsp w/o next_update under default max_age");
+         Botan::Certificate_Store_In_Memory trusted;
+
+         auto restrictions = Botan::Path_Validation_Restrictions(false, 110, false);
+
+         auto ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
+         auto ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
+         auto trust_root = load_test_X509_cert("x509/ocsp/bdrive_root.pem");
+
+         trusted.add_certificate(trust_root);
+
+         const std::vector<Botan::X509_Certificate> cert_path = {ee, ca, trust_root};
+
+         auto ocsp = load_test_OCSP_resp("x509/ocsp/patrickschmidt_ocsp.der");
+
+         auto check_path = [&](const std::chrono::system_clock::time_point valid_time,
+                               const Botan::Certificate_Status_Code expected) {
+            const auto path_result = Botan::x509_path_validate(cert_path,
+                                                               restrictions,
+                                                               trusted,
+                                                               "",
+                                                               Botan::Usage_Type::UNSPECIFIED,
+                                                               valid_time,
+                                                               std::chrono::milliseconds(0),
+                                                               {ocsp});
+
+            return result.test_is_true(std::string("Status: '") + Botan::to_string(expected) + "' should match '" +
+                                          Botan::to_string(path_result.result()) + "'",
+                                       path_result.result() == expected);
+         };
+
+         check_path(Botan::calendar_point(2019, 5, 28, 7, 30, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OK);
+         check_path(Botan::calendar_point(2019, 6, 10, 7, 30, 0).to_std_timepoint(),
+                    Botan::Certificate_Status_Code::OCSP_IS_TOO_OLD);
 
          return result;
       }
@@ -1572,6 +1615,7 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                  validate_with_ocsp_with_next_update_with_max_age(),
                  validate_with_ocsp_without_next_update_without_max_age(),
                  validate_with_ocsp_without_next_update_with_max_age(),
+                 validate_with_ocsp_without_next_update_default_restrictions(),
                  validate_with_ocsp_with_authorized_responder(),
                  validate_with_ocsp_with_authorized_responder_without_keyusage(),
                  validate_with_forged_ocsp_using_self_signed_cert(),
