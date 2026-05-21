@@ -18,6 +18,7 @@
 #include <set>
 #include <string>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 namespace Botan {
@@ -341,9 +342,55 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Policies final : public Certificate_Ext
 */
 class BOTAN_PUBLIC_API(2, 0) Authority_Information_Access final : public Certificate_Extension {
    public:
-      std::unique_ptr<Certificate_Extension> copy() const override {
-         return std::make_unique<Authority_Information_Access>(m_ocsp_responders, m_ca_issuers);
-      }
+      /**
+      * An AccessDescription preserving accessMethod plus a raw view of the
+      * accessLocation GeneralName.
+      *
+      *     AccessDescription  ::=  SEQUENCE {
+      *          accessMethod          OBJECT IDENTIFIER,
+      *          accessLocation        GeneralName }
+      */
+      class BOTAN_PUBLIC_API(3, 13) AccessDescription final {
+         public:
+            AccessDescription(OID method,
+                              ASN1_Type location_tag,
+                              ASN1_Class location_class,
+                              std::vector<uint8_t> location_value) :
+                  m_method(std::move(method)),
+                  m_location_tag(location_tag),
+                  m_location_class(location_class),
+                  m_location_value(std::move(location_value)) {}
+
+            const OID& access_method() const { return m_method; }
+
+            /**
+            * The GeneralName CHOICE tag (the [n] of the access location).
+            */
+            ASN1_Type location_tag() const { return m_location_tag; }
+
+            ASN1_Class location_class() const { return m_location_class; }
+
+            /**
+            * The raw value bytes of the accessLocation, without the leading
+            * tag/length. For a URI accessLocation this is the IA5String value;
+            * for directoryName it is the DER of the Name.
+            */
+            const std::vector<uint8_t>& location_value() const { return m_location_value; }
+
+            /**
+            * If location is a URI (tag 6 IMPLICIT IA5String), return the string;
+            * nullopt otherwise.
+            */
+            std::optional<std::string> location_as_uri_string() const;
+
+         private:
+            OID m_method;
+            ASN1_Type m_location_tag;
+            ASN1_Class m_location_class;
+            std::vector<uint8_t> m_location_value;
+      };
+
+      std::unique_ptr<Certificate_Extension> copy() const override;
 
       Authority_Information_Access() = default;
 
@@ -356,8 +403,23 @@ class BOTAN_PUBLIC_API(2, 0) Authority_Information_Access final : public Certifi
                                             const std::vector<std::string>& ca_issuers = std::vector<std::string>());
 
       explicit Authority_Information_Access(std::vector<URI> ocsp_responders,
-                                            std::vector<URI> ca_issuers = std::vector<URI>()) :
-            m_ocsp_responders(std::move(ocsp_responders)), m_ca_issuers(std::move(ca_issuers)) {}
+                                            std::vector<URI> ca_issuers = std::vector<URI>());
+
+      /**
+      * Construct an AIA from raw AccessDescriptions, allowing the caller to
+      * emit access methods beyond id-ad-ocsp / id-ad-caIssuers and access
+      * locations beyond URIs. The typed URI accessors (ocsp_responder_uris,
+      * ca_issuer_uris) are also populated from any URI-form entries whose
+      * accessMethod is id-ad-ocsp or id-ad-caIssuers so the two views stay
+      * consistent.
+      */
+      explicit Authority_Information_Access(std::vector<AccessDescription> access_descriptions);
+
+      /**
+      * Append a single AccessDescription. URI-form id-ad-ocsp / id-ad-caIssuers
+      * entries also populate the corresponding typed URI accessor list.
+      */
+      void add_access_description(AccessDescription ad);
 
       BOTAN_DEPRECATED("Use ocsp_responder_uris") std::string ocsp_responder() const {
          if(m_ocsp_responders.empty()) {
@@ -369,6 +431,12 @@ class BOTAN_PUBLIC_API(2, 0) Authority_Information_Access final : public Certifi
       BOTAN_DEPRECATED("Use ocsp_responder_uris") std::vector<std::string> ocsp_responders() const;
 
       const std::vector<URI>& ocsp_responder_uris() const { return m_ocsp_responders; }
+
+      /**
+      * The full set of AccessDescriptions, including access methods that are
+      * not id-ad-ocsp or id-ad-caIssuers and access locations that are not URIs
+      */
+      const std::vector<AccessDescription>& access_descriptions() const { return m_access_descriptions; }
 
       static OID static_oid() { return OID({1, 3, 6, 1, 5, 5, 7, 1, 1}); }
 
@@ -383,13 +451,17 @@ class BOTAN_PUBLIC_API(2, 0) Authority_Information_Access final : public Certifi
 
       bool is_appropriate_context(Extension_Context context) const override;
 
-      bool should_encode() const override { return (!m_ocsp_responders.empty() || !m_ca_issuers.empty()); }
+      bool should_encode() const override {
+         // The URI lists are views into the general AccessDescription list
+         return !m_access_descriptions.empty();
+      }
 
       std::vector<uint8_t> encode_inner() const override;
       void decode_inner(const std::vector<uint8_t>& in) override;
 
       std::vector<URI> m_ocsp_responders;
       std::vector<URI> m_ca_issuers;
+      std::vector<AccessDescription> m_access_descriptions;
 };
 
 /**
@@ -458,22 +530,92 @@ class BOTAN_PUBLIC_API(2, 0) CRL_ReasonCode final : public Certificate_Extension
 };
 
 /**
-* CRL Distribution Points Extension
-* todo enforce restrictions from RFC 5280 4.2.1.13
+* DistributionPointName used by CRLDistributionPoints and
+* IssuingDistributionPoint (RFC 5280 4.2.1.13 / 5.2.5).
+*
+*     DistributionPointName ::= CHOICE {
+*          fullName                [0]     GeneralNames,
+*          nameRelativeToCRLIssuer [1]     RelativeDistinguishedName }
+*
+* Currently only the fullName CHOICE arm is supported; nameRelativeToCRLIssuer
+* is rejected at decode time.
+*/
+class BOTAN_PUBLIC_API(3, 13) DistributionPointName final : public ASN1_Object {
+   public:
+      DistributionPointName() = default;
+
+      explicit DistributionPointName(AlternativeName full_name) : m_full_name(std::move(full_name)) {}
+
+      void encode_into(DER_Encoder& to) const override;
+      void decode_from(BER_Decoder& from) override;
+
+      /**
+      * The fullName GeneralNames
+      *
+      * In the current implementation this will always be set, it returns an
+      * optional to help any future addition of nameRelativeToCRLIssuer, in
+      * which case full_name would return nullopt and another getter would
+      * return the relative name.
+      */
+      const std::optional<AlternativeName>& full_name() const { return m_full_name; }
+
+   private:
+      std::optional<AlternativeName> m_full_name;
+};
+
+/**
+* CRL Distribution Points Extension (RFC 5280 4.2.1.13)
 */
 class BOTAN_PUBLIC_API(2, 0) CRL_Distribution_Points final : public Certificate_Extension {
    public:
+      /*
+      * DistributionPoint ::= SEQUENCE {
+      *      distributionPoint       [0]     DistributionPointName OPTIONAL,
+      *      reasons                 [1]     ReasonFlags OPTIONAL,
+      *      cRLIssuer               [2]     GeneralNames OPTIONAL }
+      */
       class BOTAN_PUBLIC_API(2, 0) Distribution_Point final : public ASN1_Object {
          public:
             void encode_into(DER_Encoder& to) const override;
             void decode_from(BER_Decoder& from) override;
 
-            explicit Distribution_Point(const AlternativeName& name = AlternativeName()) : m_point(name) {}
+            Distribution_Point() = default;
 
-            const AlternativeName& point() const { return m_point; }
+            explicit Distribution_Point(const AlternativeName& name) : m_dp_name(DistributionPointName(name)) {}
+
+            Distribution_Point(std::optional<DistributionPointName> dp_name,
+                               std::optional<ReasonFlags> reasons,
+                               std::optional<AlternativeName> crl_issuer) :
+                  m_dp_name(std::move(dp_name)), m_reasons(reasons), m_crl_issuer(std::move(crl_issuer)) {}
+
+            /**
+            * Return the optional distribution point name
+            */
+            const std::optional<DistributionPointName>& distribution_point_name() const { return m_dp_name; }
+
+            /**
+            * Return the optional reason flags
+            */
+            const std::optional<ReasonFlags>& reasons() const { return m_reasons; }
+
+            /**
+            * Return the optional CRL issuer name
+            */
+            const std::optional<AlternativeName>& crl_issuer() const { return m_crl_issuer; }
+
+            /**
+            * Deprecated compatibility shim. Raises Invalid_State if the distributionPoint
+            * field is absent or the name is a relative name.
+            *
+            * Prefer distribution_point_name(), which surfaces both the OPTIONAL field and
+            * the CHOICE arm explicitly.
+            */
+            BOTAN_DEPRECATED("Use distribution_point_name()") const AlternativeName& point() const;
 
          private:
-            AlternativeName m_point;
+            std::optional<DistributionPointName> m_dp_name;
+            std::optional<ReasonFlags> m_reasons;
+            std::optional<AlternativeName> m_crl_issuer;
       };
 
       std::unique_ptr<Certificate_Extension> copy() const override {
@@ -482,7 +624,7 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Distribution_Points final : public Certificate_
 
       CRL_Distribution_Points() = default;
 
-      explicit CRL_Distribution_Points(const std::vector<Distribution_Point>& points) : m_distribution_points(points) {}
+      explicit CRL_Distribution_Points(const std::vector<Distribution_Point>& points);
 
       const std::vector<Distribution_Point>& distribution_points() const { return m_distribution_points; }
 
@@ -509,21 +651,68 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Distribution_Points final : public Certificate_
 };
 
 /**
-* CRL Issuing Distribution Point Extension
-* todo enforce restrictions from RFC 5280 5.2.5
+* CRL Issuing Distribution Point Extension (RFC 5280 5.2.5)
+*
+*     IssuingDistributionPoint ::= SEQUENCE {
+*          distributionPoint          [0] DistributionPointName OPTIONAL,
+*          onlyContainsUserCerts      [1] BOOLEAN DEFAULT FALSE,
+*          onlyContainsCACerts        [2] BOOLEAN DEFAULT FALSE,
+*          onlySomeReasons            [3] ReasonFlags OPTIONAL,
+*          indirectCRL                [4] BOOLEAN DEFAULT FALSE,
+*          onlyContainsAttributeCerts [5] BOOLEAN DEFAULT FALSE }
 */
-class CRL_Issuing_Distribution_Point final : public Certificate_Extension {
+class BOTAN_PUBLIC_API(2, 4) CRL_Issuing_Distribution_Point final : public Certificate_Extension {
    public:
       CRL_Issuing_Distribution_Point() = default;
 
+      explicit CRL_Issuing_Distribution_Point(DistributionPointName dp_name) : m_dp_name(std::move(dp_name)) {}
+
+      CRL_Issuing_Distribution_Point(std::optional<DistributionPointName> dp_name,
+                                     bool only_contains_user_certs,
+                                     bool only_contains_ca_certs,
+                                     std::optional<ReasonFlags> only_some_reasons,
+                                     bool indirect_crl,
+                                     bool only_contains_attribute_certs) :
+            m_dp_name(std::move(dp_name)),
+            m_only_contains_user_certs(only_contains_user_certs),
+            m_only_contains_ca_certs(only_contains_ca_certs),
+            m_only_some_reasons(only_some_reasons),
+            m_indirect_crl(indirect_crl),
+            m_only_contains_attribute_certs(only_contains_attribute_certs) {}
+
+      /**
+      * Deprecated compatibility shim for the pre-3.13 API. Extracts the
+      * DistributionPointName from a cert-side Distribution_Point.
+      */
+      BOTAN_DEPRECATED("Use the DistributionPointName constructor")
       explicit CRL_Issuing_Distribution_Point(const CRL_Distribution_Points::Distribution_Point& distribution_point) :
-            m_distribution_point(distribution_point) {}
+            m_dp_name(distribution_point.distribution_point_name()) {}
 
       std::unique_ptr<Certificate_Extension> copy() const override {
-         return std::make_unique<CRL_Issuing_Distribution_Point>(m_distribution_point);
+         return std::make_unique<CRL_Issuing_Distribution_Point>(*this);
       }
 
-      const AlternativeName& get_point() const { return m_distribution_point.point(); }
+      /**
+      * distributionPoint [0] DistributionPointName OPTIONAL.
+      */
+      const std::optional<DistributionPointName>& distribution_point_name() const { return m_dp_name; }
+
+      bool only_contains_user_certs() const { return m_only_contains_user_certs; }
+
+      bool only_contains_ca_certs() const { return m_only_contains_ca_certs; }
+
+      const std::optional<ReasonFlags>& only_some_reasons() const { return m_only_some_reasons; }
+
+      bool indirect_crl() const { return m_indirect_crl; }
+
+      bool only_contains_attribute_certs() const { return m_only_contains_attribute_certs; }
+
+      /**
+      * Deprecated compatibility shim for the pre-3.13 API. Returns the
+      * fullName GeneralNames; raises Invalid_State if the distributionPoint
+      * field is absent or its CHOICE arm is nameRelativeToCRLIssuer.
+      */
+      BOTAN_DEPRECATED("Use distribution_point_name()") const AlternativeName& get_point() const;
 
       static OID static_oid() { return OID({2, 5, 29, 28}); }
 
@@ -534,12 +723,25 @@ class CRL_Issuing_Distribution_Point final : public Certificate_Extension {
 
       bool is_appropriate_context(Extension_Context context) const override;
 
-      bool should_encode() const override { return true; }
+      /**
+      * RFC 5280 5.2.5: "Conforming CRL issuers MUST NOT issue CRLs where
+      * the DER encoding of the issuing distribution point extension is
+      * an empty sequence." Suppress emission when no field is set.
+      */
+      bool should_encode() const override {
+         return m_dp_name.has_value() || m_only_contains_user_certs || m_only_contains_ca_certs ||
+                m_only_some_reasons.has_value() || m_indirect_crl || m_only_contains_attribute_certs;
+      }
 
       std::vector<uint8_t> encode_inner() const override;
       void decode_inner(const std::vector<uint8_t>& in) override;
 
-      CRL_Distribution_Points::Distribution_Point m_distribution_point;
+      std::optional<DistributionPointName> m_dp_name;
+      bool m_only_contains_user_certs = false;
+      bool m_only_contains_ca_certs = false;
+      std::optional<ReasonFlags> m_only_some_reasons;
+      bool m_indirect_crl = false;
+      bool m_only_contains_attribute_certs = false;
 };
 
 /**

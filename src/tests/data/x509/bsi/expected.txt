@@ -27,9 +27,9 @@ CRL_09$CRL has expired
 CRL_10$Certificate is revoked
 CRL_11$CRL contains a critical extension that could not be processed
 CRL_12$No revocation data
-CRL_13$No CRL with matching distribution point for certificate
+CRL_13$No revocation data
 CRL_14$X509 CRL decoding failed with BER: Tag mismatch when decoding object got EOF expected BIT STRING/UNIVERSAL
-CRL_15$No CRL with matching distribution point for certificate
+CRL_15$No revocation data
 CRL_16$Certificate is revoked
 crypt_01$Signature error
 crypt_02$Signature error
