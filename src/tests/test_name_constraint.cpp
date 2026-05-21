@@ -53,7 +53,7 @@ class Name_Constraint_Validation_Tests final : public Test {
 
             const auto chain = load_chain(Test::data_file(base + name + ".pem"));
             if(chain.empty()) {
-               result.test_failure("No certs found in " + name + ".pem");
+               result.test_str_eq("validation result", "Certificate failed to decode", expected_result);
                results.emplace_back(std::move(result));
                continue;
             }
