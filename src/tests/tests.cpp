@@ -1002,6 +1002,14 @@ std::string Test::data_file(const std::string& file) {
 }
 
 //static
+std::string Test::data_file(std::string_view subdir, std::string_view filename) {
+   if(subdir.empty() || filename.empty()) {
+      throw Test_Error("Empty subdir or filename in Test::data_file");
+   }
+   return Botan::fmt("{}/{}/{}", options().data_dir(), subdir, filename);
+}
+
+//static
 std::string Test::data_dir(const std::string& subdir) {
    return options().data_dir() + "/" + subdir;
 }

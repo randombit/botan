@@ -153,7 +153,9 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
 
    if(v3_exts_data.is_a(3, ASN1_Class::Constructed | ASN1_Class::ContextSpecific)) {
       // Path validation will reject a v1/v2 cert with v3 extensions
-      BER_Decoder(v3_exts_data, BER_Decoder::Limits::DER()).decode(data->m_v3_extensions).verify_end();
+      BER_Decoder cert_extensions(v3_exts_data, BER_Decoder::Limits::DER());
+      data->m_v3_extensions.decode_from(cert_extensions, Extension_Context::Certificate);
+      cert_extensions.verify_end();
    } else if(v3_exts_data.is_set()) {
       throw BER_Bad_Tag("Unknown tag in X.509 cert", v3_exts_data.tagging());
    }

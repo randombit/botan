@@ -522,6 +522,7 @@ class Test {
       static std::string data_dir(const std::string& subdir);
       static std::vector<std::string> files_in_data_dir(const std::string& subdir);
       static std::string data_file(const std::string& file);
+      static std::string data_file(std::string_view subdir, std::string_view filename);
       static std::string data_file_as_temporary_copy(const std::string& what);
 
       static std::string format_time(uint64_t nanoseconds);

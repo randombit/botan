@@ -124,13 +124,23 @@ void SingleResponse::decode_from(BER_Decoder& from) {
    BER_Object cert_status;
    Extensions extensions;
 
-   from.start_sequence()
-      .decode(m_certid)
+   auto seq = from.start_sequence();
+   seq.decode(m_certid)
       .get_next(cert_status)
       .decode(m_thisupdate)
-      .decode_optional(m_nextupdate, ASN1_Type(0), ASN1_Class::ContextSpecific | ASN1_Class::Constructed)
-      .decode_optional(extensions, ASN1_Type(1), ASN1_Class::ContextSpecific | ASN1_Class::Constructed)
-      .end_cons();
+      .decode_optional(m_nextupdate, ASN1_Type(0), ASN1_Class::ContextSpecific | ASN1_Class::Constructed);
+
+   if(seq.more_items()) {
+      const BER_Object next = seq.get_next_object();
+      if(next.is_a(1, ASN1_Class::ContextSpecific | ASN1_Class::Constructed)) {
+         BER_Decoder ext_decoder(next, BER_Decoder::Limits::DER());
+         extensions.decode_from(ext_decoder, Extension_Context::OCSP_Response);
+         ext_decoder.verify_end();
+      } else {
+         throw Decoding_Error("Unexpected tag in OCSP SingleResponse");
+      }
+   }
+   seq.end_cons();
 
    const auto cert_status_class = cert_status.get_class();
    if(cert_status_class != ASN1_Class::ContextSpecific &&
@@ -324,7 +334,8 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
       size_t responsedata_version = 0;
       Extensions extensions;
 
-      BER_Decoder(m_tbs_bits, BER_Decoder::Limits::DER())
+      BER_Decoder tbs_decoder(m_tbs_bits, BER_Decoder::Limits::DER());
+      tbs_decoder
          .decode_optional(responsedata_version, ASN1_Type(0), ASN1_Class::ContextSpecific | ASN1_Class::Constructed)
 
          .decode_optional(m_signer_name, ASN1_Type(1), ASN1_Class::ContextSpecific | ASN1_Class::Constructed)
@@ -334,11 +345,19 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
 
          .decode(m_produced_at)
 
-         .decode_list(m_responses)
+         .decode_list(m_responses);
 
-         .decode_optional(extensions, ASN1_Type(1), ASN1_Class::ContextSpecific | ASN1_Class::Constructed)
-
-         .verify_end();
+      if(tbs_decoder.more_items()) {
+         const BER_Object next = tbs_decoder.get_next_object();
+         if(next.is_a(1, ASN1_Class::ContextSpecific | ASN1_Class::Constructed)) {
+            BER_Decoder ext_decoder(next, BER_Decoder::Limits::DER());
+            extensions.decode_from(ext_decoder, Extension_Context::OCSP_Response);
+            ext_decoder.verify_end();
+         } else {
+            throw Decoding_Error("Unexpected tag in OCSP ResponseData");
+         }
+      }
+      tbs_decoder.verify_end();
 
       const bool has_signer = !m_signer_name.empty();
       const bool has_key_hash = !m_key_hash.empty();

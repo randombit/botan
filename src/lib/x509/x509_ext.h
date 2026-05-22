@@ -59,6 +59,8 @@ class BOTAN_PUBLIC_API(2, 0) Basic_Constraints final : public Certificate_Extens
    private:
       std::string oid_name() const override { return "X509v3.BasicConstraints"; }
 
+      bool is_appropriate_context(Extension_Context context) const override;
+
       std::vector<uint8_t> encode_inner() const override;
       void decode_inner(const std::vector<uint8_t>& in) override;
 
@@ -87,6 +89,8 @@ class BOTAN_PUBLIC_API(2, 0) Key_Usage final : public Certificate_Extension {
 
    private:
       std::string oid_name() const override { return "X509v3.KeyUsage"; }
+
+      bool is_appropriate_context(Extension_Context context) const override;
 
       bool should_encode() const override { return !m_constraints.empty(); }
 
@@ -120,6 +124,8 @@ class BOTAN_PUBLIC_API(2, 0) Subject_Key_ID final : public Certificate_Extension
    private:
       std::string oid_name() const override { return "X509v3.SubjectKeyIdentifier"; }
 
+      bool is_appropriate_context(Extension_Context context) const override;
+
       bool should_encode() const override { return (!m_key_id.empty()); }
 
       std::vector<uint8_t> encode_inner() const override;
@@ -150,6 +156,8 @@ class BOTAN_PUBLIC_API(2, 0) Authority_Key_ID final : public Certificate_Extensi
    private:
       std::string oid_name() const override { return "X509v3.AuthorityKeyIdentifier"; }
 
+      bool is_appropriate_context(Extension_Context context) const override;
+
       bool should_encode() const override { return (!m_key_id.empty()); }
 
       std::vector<uint8_t> encode_inner() const override;
@@ -178,6 +186,8 @@ class BOTAN_PUBLIC_API(2, 4) Subject_Alternative_Name final : public Certificate
    private:
       std::string oid_name() const override { return "X509v3.SubjectAlternativeName"; }
 
+      bool is_appropriate_context(Extension_Context context) const override;
+
       bool should_encode() const override { return m_alt_name.has_items(); }
 
       std::vector<uint8_t> encode_inner() const override;
@@ -205,6 +215,8 @@ class BOTAN_PUBLIC_API(2, 0) Issuer_Alternative_Name final : public Certificate_
 
    private:
       std::string oid_name() const override { return "X509v3.IssuerAlternativeName"; }
+
+      bool is_appropriate_context(Extension_Context context) const override;
 
       bool should_encode() const override { return m_alt_name.has_items(); }
 
@@ -235,6 +247,8 @@ class BOTAN_PUBLIC_API(2, 0) Extended_Key_Usage final : public Certificate_Exten
 
    private:
       std::string oid_name() const override { return "X509v3.ExtendedKeyUsage"; }
+
+      bool is_appropriate_context(Extension_Context context) const override;
 
       bool should_encode() const override { return (!m_oids.empty()); }
 
@@ -272,6 +286,8 @@ class BOTAN_PUBLIC_API(2, 0) Name_Constraints final : public Certificate_Extensi
    private:
       std::string oid_name() const override { return "X509v3.NameConstraints"; }
 
+      bool is_appropriate_context(Extension_Context context) const override;
+
       bool should_encode() const override { return true; }
 
       std::vector<uint8_t> encode_inner() const override;
@@ -307,6 +323,8 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Policies final : public Certificate_Ext
 
    private:
       std::string oid_name() const override { return "X509v3.CertificatePolicies"; }
+
+      bool is_appropriate_context(Extension_Context context) const override;
 
       bool should_encode() const override { return (!m_oids.empty()); }
 
@@ -361,6 +379,8 @@ class BOTAN_PUBLIC_API(2, 0) Authority_Information_Access final : public Certifi
    private:
       std::string oid_name() const override { return "PKIX.AuthorityInformationAccess"; }
 
+      bool is_appropriate_context(Extension_Context context) const override;
+
       bool should_encode() const override { return (!m_ocsp_responders.empty() || !m_ca_issuers.empty()); }
 
       std::vector<uint8_t> encode_inner() const override;
@@ -390,6 +410,8 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Number final : public Certificate_Extension {
    private:
       std::string oid_name() const override { return "X509v3.CRLNumber"; }
 
+      bool is_appropriate_context(Extension_Context context) const override;
+
       bool should_encode() const override { return m_has_value; }
 
       std::vector<uint8_t> encode_inner() const override;
@@ -418,6 +440,8 @@ class BOTAN_PUBLIC_API(2, 0) CRL_ReasonCode final : public Certificate_Extension
 
    private:
       std::string oid_name() const override { return "X509v3.ReasonCode"; }
+
+      bool is_appropriate_context(Extension_Context context) const override;
 
       bool should_encode() const override { return (m_reason != CRL_Code::Unspecified); }
 
@@ -467,6 +491,8 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Distribution_Points final : public Certificate_
    private:
       std::string oid_name() const override { return "X509v3.CRLDistributionPoints"; }
 
+      bool is_appropriate_context(Extension_Context context) const override;
+
       bool should_encode() const override { return !m_distribution_points.empty(); }
 
       std::vector<uint8_t> encode_inner() const override;
@@ -499,6 +525,8 @@ class CRL_Issuing_Distribution_Point final : public Certificate_Extension {
 
    private:
       std::string oid_name() const override { return "X509v3.CRLIssuingDistributionPoint"; }
+
+      bool is_appropriate_context(Extension_Context context) const override;
 
       bool should_encode() const override { return true; }
 
@@ -537,6 +565,8 @@ class OCSP_NoCheck final : public Certificate_Extension {
 
    private:
       std::string oid_name() const override { return "PKIX.OCSP.NoCheck"; }
+
+      bool is_appropriate_context(Extension_Context context) const override;
 
       bool should_encode() const override { return true; }
 
@@ -578,6 +608,8 @@ class BOTAN_PUBLIC_API(3, 13) NoRevocationAvailable final : public Certificate_E
 
    private:
       std::string oid_name() const override { return "X509v3.NoRevocationAvailable"; }
+
+      bool is_appropriate_context(Extension_Context context) const override;
 
       bool should_encode() const override { return true; }
 
@@ -639,6 +671,8 @@ class BOTAN_PUBLIC_API(3, 5) TNAuthList final : public Certificate_Extension {
 
    private:
       std::string oid_name() const override { return "PKIX.TNAuthList"; }
+
+      bool is_appropriate_context(Extension_Context context) const override;
 
       bool should_encode() const override { return true; }
 
@@ -839,6 +873,8 @@ class BOTAN_PUBLIC_API(3, 9) IPAddressBlocks final : public Certificate_Extensio
    private:
       std::string oid_name() const override { return "PKIX.IpAddrBlocks"; }
 
+      bool is_appropriate_context(Extension_Context context) const override;
+
       bool should_encode() const override { return true; }
 
       std::vector<uint8_t> encode_inner() const override;
@@ -982,6 +1018,8 @@ class BOTAN_PUBLIC_API(3, 9) ASBlocks final : public Certificate_Extension {
 
       std::string oid_name() const override { return "PKIX.AutonomousSysIds"; }
 
+      bool is_appropriate_context(Extension_Context context) const override;
+
       bool should_encode() const override { return true; }
 
       static ASIdentifierChoice add_new(const std::optional<ASIdentifierChoice>& old, asnum_t min, asnum_t max);
@@ -1040,6 +1078,8 @@ class BOTAN_PUBLIC_API(2, 4) Unknown_Extension final : public Certificate_Extens
 
    private:
       std::string oid_name() const override { return ""; }
+
+      bool is_appropriate_context(Extension_Context context) const override;
 
       bool should_encode() const override { return true; }
 
