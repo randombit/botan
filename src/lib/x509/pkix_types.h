@@ -126,6 +126,13 @@ class BOTAN_PUBLIC_API(2, 0) X509_DN final : public ASN1_Object {
 
       void add_attribute(const OID& oid, const ASN1_String& val);
 
+      /**
+      * Append a complete RDN. The provided AVAs become one
+      * RelativeDistinguishedName (X.501 SET OF AttributeTypeAndValue).
+      * An empty input is ignored.
+      */
+      void add_rdn(std::vector<std::pair<OID, ASN1_String>> rdn);
+
       static std::string deref_info_field(std::string_view key);
 
       /**

@@ -121,6 +121,14 @@ void X509_DN::add_attribute(const OID& oid, const ASN1_String& str) {
    m_dn_bits.clear();
 }
 
+void X509_DN::add_rdn(std::vector<std::pair<OID, ASN1_String>> rdn) {
+   if(rdn.empty()) {
+      return;
+   }
+   m_rdn.push_back(std::move(rdn));
+   m_dn_bits.clear();
+}
+
 std::vector<std::pair<OID, ASN1_String>> X509_DN::dn_info() const {
    std::vector<std::pair<OID, ASN1_String>> flat;
    for(const auto& rdn : m_rdn) {
@@ -466,13 +474,22 @@ std::string X509_DN::to_string() const {
 std::ostream& operator<<(std::ostream& out, const X509_DN& dn) {
    const auto& rdns = dn.rdns();
 
-   bool first = true;
+   // AVAs within the same RDN are joined with '+' (per RFC 4514), so a
+   // multi-valued RDN remains distinguishable from multiple single-valued
+   // RDNs separated by ','.
+   bool first_rdn = true;
    for(const auto& rdn : rdns) {
+      if(!first_rdn) {
+         out << ",";
+      }
+      first_rdn = false;
+
+      bool first_ava = true;
       for(const auto& ava : rdn) {
-         if(!first) {
-            out << ",";
+         if(!first_ava) {
+            out << "+";
          }
-         first = false;
+         first_ava = false;
          out << to_short_form(ava.first) << "=\"";
          for(const char c : ava.second.value()) {
             if(c == '\\' || c == '\"') {
@@ -488,6 +505,12 @@ std::ostream& operator<<(std::ostream& out, const X509_DN& dn) {
 
 std::istream& operator>>(std::istream& in, X509_DN& dn) {
    in >> std::noskipws;
+
+   // AVAs are buffered until we hit a ',' (or EOF), at which point they
+   // are flushed as a single RDN. A '+' between AVAs keeps them in the
+   // same RDN, matching the output of operator<<.
+   std::vector<std::pair<OID, ASN1_String>> pending_rdn;
+
    // NOLINTNEXTLINE(*-avoid-do-while)
    do {
       std::string key;
@@ -520,6 +543,7 @@ std::istream& operator>>(std::istream& in, X509_DN& dn) {
       }
 
       bool in_quotes = false;
+      char terminator = '\0';
       while(in.good()) {
          in >> c;
 
@@ -536,7 +560,8 @@ std::istream& operator>>(std::istream& in, X509_DN& dn) {
                in >> c;
             }
             val.push_back(c);
-         } else if(c == ',' && !in_quotes) {
+         } else if((c == ',' || c == '+') && !in_quotes) {
+            terminator = c;
             break;
          } else {
             val.push_back(c);
@@ -544,11 +569,18 @@ std::istream& operator>>(std::istream& in, X509_DN& dn) {
       }
 
       if(!key.empty() && !val.empty()) {
-         dn.add_attribute(X509_DN::deref_info_field(key), val);
+         const OID oid = OID::from_string(X509_DN::deref_info_field(key));
+         pending_rdn.emplace_back(oid, ASN1_String(val));
+         if(terminator != '+') {
+            dn.add_rdn(std::move(pending_rdn));
+            pending_rdn.clear();
+         }
       } else {
          break;
       }
    } while(in.good());
+
+   dn.add_rdn(std::move(pending_rdn));
    return in;
 }
 }  // namespace Botan
