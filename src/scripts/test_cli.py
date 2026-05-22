@@ -69,10 +69,7 @@ def setup_logging(options):
     logging.getLogger().setLevel(log_level)
 
 def port_for(service):
-    # use ports in range 63000-63100 for tests, which will hopefully
-    # avoid conflicts with local services
-
-    base_port = 63000
+    base_port = 47890
 
     port_assignments = {
         'tls_server': 0,
