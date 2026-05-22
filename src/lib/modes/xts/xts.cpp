@@ -82,6 +82,11 @@ void XTS_Mode::key_schedule(std::span<const uint8_t> key) {
 
    m_cipher->set_key(key.first(key_half));
    m_tweak_cipher->set_key(key.last(key_half));
+
+   // Drop the tweak: it was computed under the previous tweak-cipher key
+   // and the previous nonce; the user must call start_msg again before
+   // any further processing.
+   reset();
 }
 
 void XTS_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
@@ -167,6 +172,7 @@ size_t XTS_Encryption::process_msg(uint8_t buf[], size_t sz) {
 }
 
 void XTS_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
+   BOTAN_STATE_CHECK(tweak_set());
    BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;
@@ -236,6 +242,7 @@ size_t XTS_Decryption::process_msg(uint8_t buf[], size_t sz) {
 }
 
 void XTS_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
+   BOTAN_STATE_CHECK(tweak_set());
    BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
    const size_t sz = buffer.size() - offset;
    uint8_t* buf = buffer.data() + offset;

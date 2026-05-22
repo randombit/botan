@@ -162,6 +162,15 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
          if(!is_ctr) {
             result.test_throws<Botan::Invalid_State>("Cannot process data until nonce is set",
                                                      [&]() { mode.update(garbage); });
+
+            // Regression: finish_msg without start_msg must throw before
+            // touching the user buffer, even on input sizes that hit a
+            // mode's partial-block / ciphertext-stealing path.
+            Botan::secure_vector<uint8_t> partial(min_final_bytes + update_granularity + 1, 0xAB);
+            const auto partial_orig = partial;
+            result.test_throws<Botan::Invalid_State>("finish without start throws on partial-block input",
+                                                     [&]() { mode.finish(partial); });
+            result.test_bin_eq("buffer unmodified when finish throws on no-start", partial, partial_orig);
          }
 
          mode.start(mutate_vec(nonce, rng));
@@ -276,6 +285,18 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
 
             mode.finish(buf, bytes_to_process);
             result.test_bin_eq(direction + " process", buf, expected);
+         }
+
+         // Regression: re-keying must drop any prior message state so the
+         // user can't accidentally process data under the new key with
+         // leftover IV/feedback/tweak from the previous key.
+         if(!is_ctr) {
+            mode.set_key(key);
+            mode.start(nonce);
+            mode.update(garbage);
+            mode.set_key(mutate_vec(key, rng));
+            result.test_throws<Botan::Invalid_State>("Cannot process data after re-key without restart",
+                                                     [&]() { mode.update(garbage); });
          }
 
          mode.clear();
