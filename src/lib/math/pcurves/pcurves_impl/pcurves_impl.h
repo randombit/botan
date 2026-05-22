@@ -468,7 +468,7 @@ class IntMod final {
       * only be used when exp is not secret. In the current code, `exp` is
       * always a compile-time constant.
       *
-      * This function should not leak any information about this, since the
+      * This function should not leak any information about *this, since the
       * value being operated on may be a secret.
       *
       * TODO: this interface should be changed so that the exponent is always a
