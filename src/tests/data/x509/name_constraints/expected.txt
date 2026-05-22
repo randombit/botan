@@ -19,7 +19,7 @@ dn-countryname-wrong-length-invalid:Certificate does not pass name constraint
 dn-empty-attribute-value-invalid:Certificate does not pass name constraint
 # Theoretically valid under RFC 5280, all known implementations reject
 dn-empty-permitted-subtree-valid:Certificate extension encoding error
-dn-empty-rdn-embedded-invalid:Certificate does not pass name constraint
+dn-empty-rdn-embedded-invalid:Certificate failed to decode
 dn-excluded-prefix-broken-by-rdn-reorder-valid:Verified
 dn-excluded-prefix-strict-match-invalid:Certificate does not pass name constraint
 dn-leaf-shorter-than-constraint-invalid:Certificate does not pass name constraint

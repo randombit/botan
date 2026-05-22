@@ -11,6 +11,7 @@
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/internal/x509_utils.h>
+#include <algorithm>
 #include <ostream>
 #include <sstream>
 
@@ -79,6 +80,10 @@ class X500_Char_Iterator final {
 
 }  // namespace
 
+std::string x500_canonicalize_value(std::string_view name) {
+   return X500_Char_Iterator::canonicalize(name);
+}
+
 bool x500_name_cmp(std::string_view name1, std::string_view name2) {
    X500_Char_Iterator it1(name1);
    X500_Char_Iterator it2(name2);
@@ -111,8 +116,27 @@ void X509_DN::add_attribute(const OID& oid, const ASN1_String& str) {
       return;
    }
 
-   m_rdn.push_back(std::make_pair(oid, str));
+   // Each programmatic add appends a new single-AVA RDN.
+   m_rdn.push_back({std::make_pair(oid, str)});
    m_dn_bits.clear();
+}
+
+void X509_DN::add_rdn(std::vector<std::pair<OID, ASN1_String>> rdn) {
+   if(rdn.empty()) {
+      return;
+   }
+   m_rdn.push_back(std::move(rdn));
+   m_dn_bits.clear();
+}
+
+std::vector<std::pair<OID, ASN1_String>> X509_DN::dn_info() const {
+   std::vector<std::pair<OID, ASN1_String>> flat;
+   for(const auto& rdn : m_rdn) {
+      for(const auto& ava : rdn) {
+         flat.push_back(ava);
+      }
+   }
+   return flat;
 }
 
 /*
@@ -121,8 +145,10 @@ void X509_DN::add_attribute(const OID& oid, const ASN1_String& str) {
 std::multimap<OID, std::string> X509_DN::get_attributes() const {
    std::multimap<OID, std::string> retval;
 
-   for(const auto& i : m_rdn) {
-      retval.emplace(i.first, i.second.value());
+   for(const auto& rdn : m_rdn) {
+      for(const auto& ava : rdn) {
+         retval.emplace(ava.first, ava.second.value());
+      }
    }
    return retval;
 }
@@ -133,8 +159,10 @@ std::multimap<OID, std::string> X509_DN::get_attributes() const {
 std::multimap<std::string, std::string> X509_DN::contents() const {
    std::multimap<std::string, std::string> retval;
 
-   for(const auto& i : m_rdn) {
-      retval.emplace(i.first.to_formatted_string(), i.second.value());
+   for(const auto& rdn : m_rdn) {
+      for(const auto& ava : rdn) {
+         retval.emplace(ava.first.to_formatted_string(), ava.second.value());
+      }
    }
    return retval;
 }
@@ -151,9 +179,11 @@ bool X509_DN::has_field(std::string_view attr) const {
 }
 
 bool X509_DN::has_field(const OID& oid) const {
-   for(const auto& i : m_rdn) {
-      if(i.first == oid) {
-         return true;
+   for(const auto& rdn : m_rdn) {
+      for(const auto& ava : rdn) {
+         if(ava.first == oid) {
+            return true;
+         }
       }
    }
 
@@ -166,9 +196,11 @@ std::string X509_DN::get_first_attribute(std::string_view attr) const {
 }
 
 ASN1_String X509_DN::get_first_attribute(const OID& oid) const {
-   for(const auto& i : m_rdn) {
-      if(i.first == oid) {
-         return i.second;
+   for(const auto& rdn : m_rdn) {
+      for(const auto& ava : rdn) {
+         if(ava.first == oid) {
+            return ava.second;
+         }
       }
    }
 
@@ -183,9 +215,11 @@ std::vector<std::string> X509_DN::get_attribute(std::string_view attr) const {
 
    std::vector<std::string> values;
 
-   for(const auto& i : m_rdn) {
-      if(i.first == oid) {
-         values.push_back(i.second.value());
+   for(const auto& rdn : m_rdn) {
+      for(const auto& ava : rdn) {
+         if(ava.first == oid) {
+            values.push_back(ava.second.value());
+         }
       }
    }
 
@@ -223,39 +257,56 @@ std::string X509_DN::deref_info_field(std::string_view info) {
    return std::string(info);
 }
 
+namespace {
+
+/*
+* Canonical form of an RDN's AVAs: each value is X.500-canonicalized
+* (case-fold and whitespace collapse) and the resulting (OID, value)
+* pairs are sorted, so an RDN's SET semantics reduce to vector equality.
+*/
+std::vector<std::pair<OID, std::string>> canonicalize_rdn(const std::vector<std::pair<OID, ASN1_String>>& rdn) {
+   std::vector<std::pair<OID, std::string>> result;
+   result.reserve(rdn.size());
+   for(const auto& ava : rdn) {
+      result.emplace_back(ava.first, x500_canonicalize_value(ava.second.value()));
+   }
+   std::sort(result.begin(), result.end());
+   return result;
+}
+
+}  // namespace
+
+bool rdn_equality(const std::vector<std::pair<OID, ASN1_String>>& a,
+                  const std::vector<std::pair<OID, ASN1_String>>& b) {
+   if(a.size() != b.size()) {
+      return false;
+   }
+
+   // Single-AVA RDN is the overwhelmingly common case.
+   if(a.size() == 1) {
+      return a[0].first == b[0].first && x500_name_cmp(a[0].second.value(), b[0].second.value());
+   }
+
+   return canonicalize_rdn(a) == canonicalize_rdn(b);
+}
+
 /*
 * Compare two X509_DNs for equality
 */
 bool operator==(const X509_DN& dn1, const X509_DN& dn2) {
-   auto attr1 = dn1.get_attributes();
-   auto attr2 = dn2.get_attributes();
+   const auto& r1 = dn1.rdns();
+   const auto& r2 = dn2.rdns();
 
-   if(attr1.size() != attr2.size()) {
+   if(r1.size() != r2.size()) {
       return false;
    }
 
-   auto p1 = attr1.begin();
-   auto p2 = attr2.begin();
-
-   while(true) {
-      if(p1 == attr1.end() && p2 == attr2.end()) {
-         break;
-      }
-      if(p1 == attr1.end()) {
+   for(size_t i = 0; i < r1.size(); ++i) {
+      if(!rdn_equality(r1[i], r2[i])) {
          return false;
       }
-      if(p2 == attr2.end()) {
-         return false;
-      }
-      if(p1->first != p2->first) {
-         return false;
-      }
-      if(!x500_name_cmp(p1->second, p2->second)) {
-         return false;
-      }
-      ++p1;
-      ++p2;
    }
+
    return true;
 }
 
@@ -267,39 +318,41 @@ bool operator!=(const X509_DN& dn1, const X509_DN& dn2) {
 }
 
 /*
-* Induce an arbitrary ordering on DNs
+* Induce an arbitrary ordering on DNs that respects RDN sequence order
+* and RDN set-equality.
 */
 bool operator<(const X509_DN& dn1, const X509_DN& dn2) {
-   auto attr1 = dn1.get_attributes();
-   auto attr2 = dn2.get_attributes();
+   const auto& r1 = dn1.rdns();
+   const auto& r2 = dn2.rdns();
 
-   // If they are not the same size, choose the smaller as the "lessor"
-   if(attr1.size() != attr2.size()) {
-      return attr1.size() < attr2.size();
+   if(r1.size() != r2.size()) {
+      return r1.size() < r2.size();
    }
 
-   // We know they are the same # of elements, now compare the OIDs:
-   auto p1 = attr1.begin();
-   auto p2 = attr2.begin();
-
-   while(p1 != attr1.end() && p2 != attr2.end()) {
-      if(p1->first != p2->first) {
-         return (p1->first < p2->first);
+   for(size_t i = 0; i < r1.size(); ++i) {
+      if(r1[i].size() != r2[i].size()) {
+         return r1[i].size() < r2[i].size();
       }
 
-      // If they are not (by X.500) the same string, pick the
-      // lexicographic first as the lessor
-      const std::string c1 = X500_Char_Iterator::canonicalize(p1->second);
-      const std::string c2 = X500_Char_Iterator::canonicalize(p2->second);
+      if(r1[i].size() == 1) {
+         if(r1[i][0].first != r2[i][0].first) {
+            return r1[i][0].first < r2[i][0].first;
+         }
+         const auto c1 = x500_canonicalize_value(r1[i][0].second.value());
+         const auto c2 = x500_canonicalize_value(r2[i][0].second.value());
+         if(c1 != c2) {
+            return c1 < c2;
+         }
+         continue;
+      }
+
+      const auto c1 = canonicalize_rdn(r1[i]);
+      const auto c2 = canonicalize_rdn(r2[i]);
       if(c1 != c2) {
          return c1 < c2;
       }
-
-      ++p1;
-      ++p2;
    }
 
-   // if we reach here, then the DNs should be identical
    BOTAN_DEBUG_ASSERT(dn1 == dn2);
    return false;
 }
@@ -324,8 +377,12 @@ void X509_DN::encode_into(DER_Encoder& der) const {
       */
       der.raw_bytes(m_dn_bits);
    } else {
-      for(const auto& dn : m_rdn) {
-         der.start_set().start_sequence().encode(dn.first).encode(dn.second).end_cons().end_cons();
+      for(const auto& rdn : m_rdn) {
+         der.start_set();
+         for(const auto& ava : rdn) {
+            der.start_sequence().encode(ava.first).encode(ava.second).end_cons();
+         }
+         der.end_cons();
       }
    }
 
@@ -344,23 +401,41 @@ void X509_DN::decode_from(BER_Decoder& source) {
 
    m_rdn.clear();
 
-   while(sequence.more_items()) {
-      BER_Decoder rdn = sequence.start_set();
+   // Cap AVAs per RDN to bound work for downstream set-based matching.
+   // No legitimate cert has anywhere near this many AVAs in a single RDN.
+   constexpr size_t MAX_AVAS_PER_RDN = 32;
 
-      while(rdn.more_items()) {
+   while(sequence.more_items()) {
+      BER_Decoder rdn_decoder = sequence.start_set();
+
+      std::vector<std::pair<OID, ASN1_String>> rdn;
+      while(rdn_decoder.more_items()) {
          OID oid;
          ASN1_String str;
 
-         rdn.start_sequence()
+         rdn_decoder.start_sequence()
             .decode(oid)
             .decode(str)  // TODO support Any
             .end_cons();
 
-         add_attribute(oid, str);
+         rdn.emplace_back(std::move(oid), std::move(str));
+
+         if(rdn.size() > MAX_AVAS_PER_RDN) {
+            throw Decoding_Error("X.500 RDN has too many attribute-value assertions");
+         }
       }
+
+      /*
+      RFC 5280 4.1.2.4:
+         RelativeDistinguishedName ::=
+           SET SIZE (1..MAX) OF AttributeTypeAndValue
+      */
+      if(rdn.empty()) {
+         throw Decoding_Error("X.500 RDN must contain at least one attribute-value assertion");
+      }
+      m_rdn.push_back(std::move(rdn));
    }
 
-   // Have to assign last as add_attribute zaps m_dn_bits
    m_dn_bits = bits;
 }
 
@@ -397,20 +472,32 @@ std::string X509_DN::to_string() const {
 }
 
 std::ostream& operator<<(std::ostream& out, const X509_DN& dn) {
-   const auto& info = dn.dn_info();
+   const auto& rdns = dn.rdns();
 
-   for(size_t i = 0; i != info.size(); ++i) {
-      out << to_short_form(info[i].first) << "=\"";
-      for(const char c : info[i].second.value()) {
-         if(c == '\\' || c == '\"') {
-            out << "\\";
-         }
-         out << c;
-      }
-      out << "\"";
-
-      if(i + 1 < info.size()) {
+   // AVAs within the same RDN are joined with '+' (per RFC 4514), so a
+   // multi-valued RDN remains distinguishable from multiple single-valued
+   // RDNs separated by ','.
+   bool first_rdn = true;
+   for(const auto& rdn : rdns) {
+      if(!first_rdn) {
          out << ",";
+      }
+      first_rdn = false;
+
+      bool first_ava = true;
+      for(const auto& ava : rdn) {
+         if(!first_ava) {
+            out << "+";
+         }
+         first_ava = false;
+         out << to_short_form(ava.first) << "=\"";
+         for(const char c : ava.second.value()) {
+            if(c == '\\' || c == '\"') {
+               out << "\\";
+            }
+            out << c;
+         }
+         out << "\"";
       }
    }
    return out;
@@ -418,6 +505,12 @@ std::ostream& operator<<(std::ostream& out, const X509_DN& dn) {
 
 std::istream& operator>>(std::istream& in, X509_DN& dn) {
    in >> std::noskipws;
+
+   // AVAs are buffered until we hit a ',' (or EOF), at which point they
+   // are flushed as a single RDN. A '+' between AVAs keeps them in the
+   // same RDN, matching the output of operator<<.
+   std::vector<std::pair<OID, ASN1_String>> pending_rdn;
+
    // NOLINTNEXTLINE(*-avoid-do-while)
    do {
       std::string key;
@@ -450,6 +543,7 @@ std::istream& operator>>(std::istream& in, X509_DN& dn) {
       }
 
       bool in_quotes = false;
+      char terminator = '\0';
       while(in.good()) {
          in >> c;
 
@@ -466,7 +560,8 @@ std::istream& operator>>(std::istream& in, X509_DN& dn) {
                in >> c;
             }
             val.push_back(c);
-         } else if(c == ',' && !in_quotes) {
+         } else if((c == ',' || c == '+') && !in_quotes) {
+            terminator = c;
             break;
          } else {
             val.push_back(c);
@@ -474,11 +569,18 @@ std::istream& operator>>(std::istream& in, X509_DN& dn) {
       }
 
       if(!key.empty() && !val.empty()) {
-         dn.add_attribute(X509_DN::deref_info_field(key), val);
+         const OID oid = OID::from_string(X509_DN::deref_info_field(key));
+         pending_rdn.emplace_back(oid, ASN1_String(val));
+         if(terminator != '+') {
+            dn.add_rdn(std::move(pending_rdn));
+            pending_rdn.clear();
+         }
       } else {
          break;
       }
    } while(in.good());
+
+   dn.add_rdn(std::move(pending_rdn));
    return in;
 }
 }  // namespace Botan

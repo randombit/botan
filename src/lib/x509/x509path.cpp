@@ -373,11 +373,12 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
 
       // Check the subject's DN components' length
 
-      for(const auto& dn_pair : subject.subject_dn().dn_info()) {
-         const size_t dn_ub = X509_DN::lookup_ub(dn_pair.first);
-         // dn_pair = <OID,str>
-         if(dn_ub > 0 && dn_pair.second.size() > dn_ub) {
-            status.insert(Certificate_Status_Code::DN_TOO_LONG);
+      for(const auto& rdn : subject.subject_dn().rdns()) {
+         for(const auto& ava : rdn) {
+            const size_t dn_ub = X509_DN::lookup_ub(ava.first);
+            if(dn_ub > 0 && ava.second.size() > dn_ub) {
+               status.insert(Certificate_Status_Code::DN_TOO_LONG);
+            }
          }
       }
 
