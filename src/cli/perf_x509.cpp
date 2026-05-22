@@ -15,6 +15,8 @@
    #include <botan/ber_dec.h>
    #include <botan/bigint.h>
    #include <botan/der_enc.h>
+   #include <botan/dns_name.h>
+   #include <botan/email.h>
    #include <botan/pk_algs.h>
    #include <botan/pk_keys.h>
    #include <botan/rng.h>
@@ -52,8 +54,8 @@ class PerfTest_ASN1_Parsing final : public PerfTest {
             .add_country("DE")
             .add_organization("RS")
             .add_organizational_unit("CS")
-            .add_dns("unobtainium.example.com")
-            .add_email("idont@exist.com")
+            .add_dns(Botan::DNSName::from_string("unobtainium.example.com").value())
+            .add_email(Botan::EmailAddress::from_string("idont@exist.com").value())
             .set_as_ca_certificate();
 
          const auto not_before = std::chrono::system_clock::now();

@@ -7,6 +7,10 @@
 
 #include <botan/x509self.h>
 
+#include <botan/dns_name.h>
+#include <botan/email.h>
+#include <botan/ipv4_address.h>
+#include <botan/uri.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 #include <chrono>
@@ -122,25 +126,41 @@ CertificateParametersBuilder X509_Cert_Options::into_builder() const {
       builder.add_serial_number(this->serial_number);
    }
    if(!this->email.empty()) {
-      builder.add_email(this->email);
+      if(auto parsed = EmailAddress::from_string(this->email)) {
+         builder.add_email(*parsed);
+      } else {
+         throw Invalid_Argument(fmt("Invalid email address '{}'", this->email));
+      }
    }
    if(!this->uri.empty()) {
-      builder.add_uri(this->uri);
+      if(auto parsed = URI::parse(this->uri)) {
+         builder.add_uri(*parsed);
+      } else {
+         throw Invalid_Argument(fmt("Invalid URI '{}'", this->uri));
+      }
    }
    if(!this->ip.empty()) {
-      if(auto ipv4 = string_to_ipv4(this->ip)) {
+      if(auto ipv4 = IPv4Address::from_string(this->ip)) {
          builder.add_ipv4(*ipv4);
       } else {
          throw Invalid_Argument(fmt("Invalid IPv4 address '{}'", this->ip));
       }
    }
 
+   auto add_dns = [&](std::string_view nm) {
+      if(auto parsed = DNSName::from_san_string(nm)) {
+         builder.add_dns(*parsed);
+      } else {
+         throw Invalid_Argument(fmt("Invalid DNS name '{}'", nm));
+      }
+   };
+
    if(!this->dns.empty()) {
-      builder.add_dns(this->dns);
+      add_dns(this->dns);
    }
    for(const auto& nm : this->more_dns) {
       if(!nm.empty()) {
-         builder.add_dns(nm);
+         add_dns(nm);
       }
    }
    if(!this->xmpp.empty()) {

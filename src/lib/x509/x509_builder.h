@@ -18,9 +18,14 @@
 namespace Botan {
 
 class Certificate_Extension;
+class DNSName;
+class EmailAddress;
+class IPv4Address;
+class IPv6Address;
+class OID;
 class Private_Key;
 class RandomNumberGenerator;
-class OID;
+class URI;
 
 /**
 * Certificate Metadata Builder
@@ -121,22 +126,27 @@ class BOTAN_PUBLIC_API(3, 9) CertificateParametersBuilder final {
       /**
       * Add an additional email address to the certificate metadata
       */
-      CertificateParametersBuilder& add_email(std::string_view email);
+      CertificateParametersBuilder& add_email(const EmailAddress& email);
 
       /**
       * Add an additional URI to the certificate metadata
       */
-      CertificateParametersBuilder& add_uri(std::string_view uri);
+      CertificateParametersBuilder& add_uri(const URI& uri);
 
       /**
       * Add an additional DNS name to the certificate metadata
       */
-      CertificateParametersBuilder& add_dns(std::string_view dns);
+      CertificateParametersBuilder& add_dns(const DNSName& dns);
 
       /**
       * Add an additional IPv4 address to the certificate metadata
       */
-      CertificateParametersBuilder& add_ipv4(uint32_t ipv4);
+      CertificateParametersBuilder& add_ipv4(const IPv4Address& ipv4);
+
+      /**
+      * Add an additional IPv6 address to the certificate metadata
+      */
+      CertificateParametersBuilder& add_ipv6(const IPv6Address& ipv6);
 
       /**
       * Add a XMPP name to the certificate metadata

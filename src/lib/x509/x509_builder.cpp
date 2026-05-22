@@ -7,7 +7,12 @@
 #include <botan/x509_builder.h>
 
 #include <botan/assert.h>
+#include <botan/dns_name.h>
+#include <botan/email.h>
+#include <botan/ipv4_address.h>
+#include <botan/ipv6_address.h>
 #include <botan/pubkey.h>
+#include <botan/uri.h>
 #include <botan/x509_ca.h>
 #include <botan/x509_ext.h>
 #include <botan/internal/fmt.h>
@@ -73,15 +78,17 @@ class CertificateParametersBuilder::State final {
          }
       }
 
-      void add_email(std::string_view email) { m_email.emplace_back(email); }
+      void add_email(const EmailAddress& email) { m_email.push_back(email); }
 
-      void add_dns(std::string_view dns) { m_dns.emplace_back(dns); }
+      void add_dns(const DNSName& dns) { m_dns.push_back(dns); }
 
-      void add_uri(std::string_view uri) { m_uri.emplace_back(uri); }
+      void add_uri(const URI& uri) { m_uri.push_back(uri); }
 
       void add_xmpp(std::string_view xmpp) { m_xmpp.emplace_back(xmpp); }
 
-      void add_ipv4(uint32_t ipv4) { m_ipv4.push_back(ipv4); }
+      void add_ipv4(const IPv4Address& ipv4) { m_ipv4.push_back(ipv4); }
+
+      void add_ipv6(const IPv6Address& ipv6) { m_ipv6.push_back(ipv6); }
 
       void add_allowed_usage(Key_Constraints usage) { m_usage |= usage; }
 
@@ -126,19 +133,22 @@ class CertificateParametersBuilder::State final {
          }
 
          for(const auto& dns : m_dns) {
-            subject_alt.add_dns(dns);
+            subject_alt.add_dns(dns.name());
          }
          for(const auto& uri : m_uri) {
-            subject_alt.add_uri(uri);
+            subject_alt.add_uri(uri.original_input());
          }
          for(const auto& email : m_email) {
-            subject_alt.add_email(email);
+            subject_alt.add_email(email.to_string());
          }
          for(const auto& xmpp : m_xmpp) {
             subject_alt.add_other_name(OID::from_string("PKIX.XMPPAddr"), ASN1_String(xmpp, ASN1_Type::Utf8String));
          }
-         for(const uint32_t ipv4 : m_ipv4) {
+         for(const auto& ipv4 : m_ipv4) {
             subject_alt.add_ipv4_address(ipv4);
+         }
+         for(const auto& ipv6 : m_ipv6) {
+            subject_alt.add_ipv6_address(ipv6);
          }
 
          return std::make_unique<Cert_Extension::Subject_Alternative_Name>(subject_alt);
@@ -147,11 +157,12 @@ class CertificateParametersBuilder::State final {
       X509_DN m_subject_dn;
       Extensions m_extensions;
       Key_Constraints m_usage;
-      std::vector<std::string> m_email;
-      std::vector<std::string> m_dns;
-      std::vector<std::string> m_uri;
+      std::vector<EmailAddress> m_email;
+      std::vector<DNSName> m_dns;
+      std::vector<URI> m_uri;
       std::vector<std::string> m_xmpp;
-      std::vector<uint32_t> m_ipv4;
+      std::vector<IPv4Address> m_ipv4;
+      std::vector<IPv6Address> m_ipv6;
       std::vector<OID> m_ext_usage;
       bool m_is_ca_request = false;
       std::optional<size_t> m_path_limit;
@@ -239,23 +250,28 @@ CertificateParametersBuilder& CertificateParametersBuilder::add_serial_number(st
    return (*this);
 }
 
-CertificateParametersBuilder& CertificateParametersBuilder::add_email(std::string_view email) {
+CertificateParametersBuilder& CertificateParametersBuilder::add_email(const EmailAddress& email) {
    m_state->add_email(email);
    return (*this);
 }
 
-CertificateParametersBuilder& CertificateParametersBuilder::add_uri(std::string_view uri) {
+CertificateParametersBuilder& CertificateParametersBuilder::add_uri(const URI& uri) {
    m_state->add_uri(uri);
    return (*this);
 }
 
-CertificateParametersBuilder& CertificateParametersBuilder::add_dns(std::string_view dns) {
+CertificateParametersBuilder& CertificateParametersBuilder::add_dns(const DNSName& dns) {
    m_state->add_dns(dns);
    return (*this);
 }
 
-CertificateParametersBuilder& CertificateParametersBuilder::add_ipv4(uint32_t ipv4) {
+CertificateParametersBuilder& CertificateParametersBuilder::add_ipv4(const IPv4Address& ipv4) {
    m_state->add_ipv4(ipv4);
+   return (*this);
+}
+
+CertificateParametersBuilder& CertificateParametersBuilder::add_ipv6(const IPv6Address& ipv6) {
+   m_state->add_ipv6(ipv6);
    return (*this);
 }
 

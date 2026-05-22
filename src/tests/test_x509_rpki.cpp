@@ -10,6 +10,7 @@
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    #include <botan/ber_dec.h>
    #include <botan/certstor.h>
+   #include <botan/dns_name.h>
    #include <botan/pk_algs.h>
    #include <botan/pubkey.h>
    #include <botan/rng.h>
@@ -70,7 +71,7 @@ Botan::CertificateParametersBuilder ca_params() {
    builder.add_common_name("RPKI Test CA")
       .add_country("US")
       .add_organization("Botan")
-      .add_dns("botan.randombit.net")
+      .add_dns(Botan::DNSName::from_string("botan.randombit.net").value())
       .set_as_ca_certificate(1);
 
    return builder;
