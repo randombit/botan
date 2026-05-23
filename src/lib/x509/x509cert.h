@@ -92,6 +92,13 @@ class BOTAN_PUBLIC_API(2, 0) X509_Certificate : public X509_Object {
       const std::vector<uint8_t>& subject_public_key_bitstring_sha1() const;
 
       /**
+      * Get the SHA-256 bit string of the public key associated with this certificate.
+      * This is used for OCSP among other protocols.
+      * @return hash of subject public key of this certificate
+      */
+      std::span<const uint8_t, 32> subject_public_key_bitstring_sha256() const;
+
+      /**
       * Get the certificate's issuer distinguished name (DN).
       * @return issuer DN of this certificate
       */
@@ -125,6 +132,11 @@ class BOTAN_PUBLIC_API(2, 0) X509_Certificate : public X509_Object {
       const std::vector<uint8_t>& raw_issuer_dn() const;
 
       /**
+      * SHA-1 of Raw issuer DN
+      */
+      std::span<const uint8_t, 20> raw_issuer_dn_sha1() const;
+
+      /**
       * SHA-256 of Raw issuer DN
       */
       const std::vector<uint8_t>& raw_issuer_dn_sha256() const;
@@ -133,6 +145,11 @@ class BOTAN_PUBLIC_API(2, 0) X509_Certificate : public X509_Object {
       * Raw subject DN
       */
       const std::vector<uint8_t>& raw_subject_dn() const;
+
+      /**
+      * SHA-1 of Raw subject DN
+      */
+      std::span<const uint8_t, 20> raw_subject_dn_sha1() const;
 
       /**
       * SHA-256 of Raw subject DN
