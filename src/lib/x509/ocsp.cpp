@@ -44,23 +44,33 @@ bool CertID::is_id_for(const X509_Certificate& issuer, const X509_Certificate& s
 
       const std::string hash_algo = m_hash_id.oid().to_formatted_string();
 
-      if(hash_algo != "SHA-1" && hash_algo != "SHA-256") {
-         return false;
-      }
-
-      auto hash = HashFunction::create_or_throw(hash_algo);
-
       /*
       RFC 6960 4.1.1
          issuerNameHash is the hash of the issuer's distinguished name (DN).
          The hash shall be calculated over the DER encoding of the issuer's name
          field in the certificate being checked.
-      */
-      if(m_issuer_dn_hash != hash->process<std::vector<uint8_t>>(subject.raw_issuer_dn())) {
-         return false;
-      }
 
-      if(m_issuer_key_hash != hash->process<std::vector<uint8_t>>(issuer.subject_public_key_bitstring())) {
+         issuerKeyHash is the hash of the issuer's public key. The hash shall be
+         calculated over the value (excluding tag and length) of the subject public key
+         field in the issuer's certificate.
+      */
+
+      if(hash_algo == "SHA-1") {
+         if(!std::ranges::equal(m_issuer_dn_hash, subject.raw_issuer_dn_sha1())) {
+            return false;
+         }
+         if(!std::ranges::equal(m_issuer_key_hash, issuer.subject_public_key_bitstring_sha1())) {
+            return false;
+         }
+      } else if(hash_algo == "SHA-256") {
+         if(!std::ranges::equal(m_issuer_dn_hash, subject.raw_issuer_dn_sha256())) {
+            return false;
+         }
+         if(!std::ranges::equal(m_issuer_key_hash, issuer.subject_public_key_bitstring_sha256())) {
+            return false;
+         }
+      } else {
+         // Exotic hashes are unlikely to occur in OCSP
          return false;
       }
    } catch(...) {
