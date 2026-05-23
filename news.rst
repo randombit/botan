@@ -1,6 +1,28 @@
 Release Notes
 ========================================
 
+Version 3.13.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add URI and email name constraint processing to X509 path validation (GH #5598)
+
+* Add ``DNSName``, ``URI``, and ``EmailAddress`` types. (GH #5598 #5601)
+
+* Add support for the RFC 9608 No Revocation Available extension (GH #5595)
+
+* Improve the HTTP 1.0 client used for OCSP and CRL fetching (GH #5609)
+
+* Fix various edge case bugs in AEAD and cipher mode implementations (GH #5610)
+
+* Improve ``Database`` abstraction type and make it easier to support databases
+  other than SQLite. (GH #5607)
+
+* Various X509/PKIX hardenings, bug fixes, and additional sanity checks.
+  (GH #5593 #5598 #5605 #5611 #5618)
+
+* Various BigInt and number-theoretic hardening and bug fixes.
+  (GH #5581 #5585 #5586 #5588 #5592)
+
 Version 3.12.0, 2026-05-06
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
