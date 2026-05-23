@@ -200,14 +200,23 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
       /// Create an empty name
       AlternativeName() = default;
 
-      /// Add a URI to this AlternativeName
+      /// Add a URI to this AlternativeName, parsing and validating the input
       void add_uri(std::string_view uri);
 
-      /// Add a URI to this AlternativeName
+      /// Add a previously parsed URI to this AlternativeName
+      void add_uri(URI uri);
+
+      /// Add an email address to this AlternativeName, parsing and validating the input
       void add_email(std::string_view addr);
 
-      /// Add a DNS name to this AlternativeName
+      /// Add a previously parsed email address to this AlternativeName
+      void add_email(EmailAddress addr);
+
+      /// Add a DNS name to this AlternativeName, parsing and validating the input
       void add_dns(std::string_view dns);
+
+      /// Add a previously parsed DNS name to this AlternativeName
+      void add_dns(DNSName dns);
 
       /// Add an "OtherName" identified by object identifier to this AlternativeName
       void add_other_name(const OID& oid, const ASN1_String& value);

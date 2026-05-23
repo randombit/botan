@@ -19,10 +19,14 @@ void AlternativeName::add_uri(std::string_view uri) {
       return;
    }
    if(auto parsed = URI::parse(uri)) {
-      m_uri.insert(std::move(*parsed));
+      add_uri(std::move(*parsed));
    } else {
       throw Decoding_Error("Invalid URI in SubjectAlternativeName");
    }
+}
+
+void AlternativeName::add_uri(URI uri) {
+   m_uri.insert(std::move(uri));
 }
 
 std::set<std::string> AlternativeName::uris() const {
@@ -38,10 +42,14 @@ void AlternativeName::add_email(std::string_view addr) {
       return;
    }
    if(auto parsed = EmailAddress::from_string(addr)) {
-      m_email.insert(std::move(*parsed));
+      add_email(std::move(*parsed));
    } else {
       throw Decoding_Error("Invalid email address in SubjectAlternativeName");
    }
+}
+
+void AlternativeName::add_email(EmailAddress addr) {
+   m_email.insert(std::move(addr));
 }
 
 std::set<std::string> AlternativeName::email() const {
@@ -57,10 +65,14 @@ void AlternativeName::add_dns(std::string_view dns) {
       return;
    }
    if(auto parsed = DNSName::from_san_string(dns)) {
-      m_dns.insert(std::move(*parsed));
+      add_dns(std::move(*parsed));
    } else {
       throw Decoding_Error("Invalid DNS name in SubjectAlternativeName");
    }
+}
+
+void AlternativeName::add_dns(DNSName dns) {
+   m_dns.insert(std::move(dns));
 }
 
 std::set<std::string> AlternativeName::dns() const {
