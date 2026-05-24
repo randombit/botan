@@ -6,12 +6,29 @@
 
 #include <botan/internal/raw_sig_padding.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
+#include <botan/hash.h>
 #include <botan/mem_ops.h>
+#include <botan/pk_options.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 
 namespace Botan {
+
+SignRawBytes::SignRawBytes(const PK_Signature_Options& options) :
+      m_expected_size([&]() -> size_t {
+         BOTAN_ARG_CHECK(!options.using_salt_size(), "Raw signing does not support a salt");
+         BOTAN_ARG_CHECK(!options.using_explicit_trailer_field(),
+                         "Raw signing does not support a padding trailer field");
+
+         if(options.using_prehash()) {
+            if(auto hash = HashFunction::create(options.prehash_function().value())) {
+               return hash->output_length();
+            }
+         }
+         return 0;
+      }()) {}
 
 std::string SignRawBytes::name() const {
    if(m_expected_size > 0) {

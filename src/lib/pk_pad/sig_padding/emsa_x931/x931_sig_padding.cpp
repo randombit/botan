@@ -6,9 +6,11 @@
 
 #include <botan/internal/x931_sig_padding.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
+#include <botan/pk_options.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/hash_id.h>
@@ -90,7 +92,12 @@ bool X931_SignaturePadding::verify(std::span<const uint8_t> coded, std::span<con
 /*
 * X931_SignaturePadding Constructor
 */
-X931_SignaturePadding::X931_SignaturePadding(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash)) {
+X931_SignaturePadding::X931_SignaturePadding(const PK_Signature_Options& options) :
+      m_hash(HashFunction::create_or_throw(options.hash_function_name())) {
+   BOTAN_ARG_CHECK(!options.using_prehash(), "X9.31 does not support prehashing");
+   BOTAN_ARG_CHECK(!options.using_salt_size(), "X9.31 does not support a salt");
+   BOTAN_ARG_CHECK(!options.using_explicit_trailer_field(), "X9.31 does not support a padding trailer field");
+
    m_empty_hash = m_hash->final_stdvec();
 
    m_hash_id = ieee1363_hash_id(m_hash->name());

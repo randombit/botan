@@ -12,12 +12,12 @@
 
 #include <memory>
 #include <string>
-#include <string_view>
 #include <vector>
 
 namespace Botan {
 
 class HashFunction;
+class PK_Signature_Options;
 
 /**
 * PKCS #1 v1.5 signature padding
@@ -26,10 +26,7 @@ class HashFunction;
 */
 class PKCS1v15_SignaturePaddingScheme final : public SignaturePaddingScheme {
    public:
-      /**
-      * @param hash the hash function to use
-      */
-      explicit PKCS1v15_SignaturePaddingScheme(std::unique_ptr<HashFunction> hash);
+      explicit PKCS1v15_SignaturePaddingScheme(const PK_Signature_Options& options);
 
       void update(const uint8_t input[], size_t length) override;
 
@@ -57,6 +54,8 @@ class PKCS1v15_SignaturePaddingScheme final : public SignaturePaddingScheme {
 */
 class PKCS1v15_Raw_SignaturePaddingScheme final : public SignaturePaddingScheme {
    public:
+      explicit PKCS1v15_Raw_SignaturePaddingScheme(const PK_Signature_Options& options);
+
       void update(const uint8_t input[], size_t length) override;
 
       std::vector<uint8_t> raw_data() override;
@@ -66,14 +65,6 @@ class PKCS1v15_Raw_SignaturePaddingScheme final : public SignaturePaddingScheme 
                                        RandomNumberGenerator& rng) override;
 
       bool verify(std::span<const uint8_t> coded, std::span<const uint8_t> raw, size_t key_bits) override;
-
-      PKCS1v15_Raw_SignaturePaddingScheme();
-
-      /**
-      * @param hash_algo the digest id for that hash is included in
-      * the signature.
-      */
-      explicit PKCS1v15_Raw_SignaturePaddingScheme(std::string_view hash_algo);
 
       std::string hash_function() const override { return m_hash_name; }
 

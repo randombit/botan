@@ -12,6 +12,7 @@
 namespace Botan {
 
 class HashFunction;
+class PK_Signature_Options;
 
 /**
 * Padding scheme from X9.31 (aka EMSA2 in IEEE 1363)
@@ -23,10 +24,7 @@ class HashFunction;
 */
 class X931_SignaturePadding final : public SignaturePaddingScheme {
    public:
-      /**
-      * @param hash the hash function to use
-      */
-      explicit X931_SignaturePadding(std::unique_ptr<HashFunction> hash);
+      explicit X931_SignaturePadding(const PK_Signature_Options& options);
 
       std::string name() const override;
 

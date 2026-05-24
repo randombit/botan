@@ -7,8 +7,10 @@
 
 #include <botan/internal/pssr.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/hash.h>
+#include <botan/pk_options.h>
 #include <botan/rng.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ct_utils.h>
@@ -146,11 +148,17 @@ bool pss_verify(HashFunction& hash,
 
 }  // namespace
 
-PSSR::PSSR(std::unique_ptr<HashFunction> hash) :
-      m_hash(std::move(hash)), m_salt_size(m_hash->output_length()), m_required_salt_len(false) {}
+PSSR::PSSR(const PK_Signature_Options& options) :
+      m_hash(HashFunction::create_or_throw(options.hash_function_name())),
+      m_salt_size(options.salt_size().value_or(m_hash->output_length())),
+      m_required_salt_len(options.using_salt_size()) {
+   BOTAN_ARG_CHECK(!options.using_prehash(), "PSS does not support prehashing");
+   BOTAN_ARG_CHECK(!options.using_explicit_trailer_field(), "PSS does not support a padding trailer field");
 
-PSSR::PSSR(std::unique_ptr<HashFunction> hash, size_t salt_size) :
-      m_hash(std::move(hash)), m_salt_size(salt_size), m_required_salt_len(true) {}
+   if(options.using_deterministic_signature() && m_salt_size > 0) {
+      throw Invalid_Argument("PSS with a non-zero salt cannot produce deterministic signatures");
+   }
+}
 
 /*
 * PSSR Update Operation
@@ -193,11 +201,17 @@ std::string PSSR::name() const {
    return fmt("PSS({},MGF1,{})", m_hash->name(), m_salt_size);
 }
 
-PSS_Raw::PSS_Raw(std::unique_ptr<HashFunction> hash) :
-      m_hash(std::move(hash)), m_salt_size(m_hash->output_length()), m_required_salt_len(false) {}
+PSS_Raw::PSS_Raw(const PK_Signature_Options& options) :
+      m_hash(HashFunction::create_or_throw(options.hash_function_name())),
+      m_salt_size(options.salt_size().value_or(m_hash->output_length())),
+      m_required_salt_len(options.using_salt_size()) {
+   BOTAN_ARG_CHECK(!options.using_prehash(), "PSS_Raw does not support prehashing");
+   BOTAN_ARG_CHECK(!options.using_explicit_trailer_field(), "PSS does not support a padding trailer field");
 
-PSS_Raw::PSS_Raw(std::unique_ptr<HashFunction> hash, size_t salt_size) :
-      m_hash(std::move(hash)), m_salt_size(salt_size), m_required_salt_len(true) {}
+   if(options.using_deterministic_signature() && m_salt_size > 0) {
+      throw Invalid_Argument("PSS with a non-zero salt cannot produce deterministic signatures");
+   }
+}
 
 /*
 * PSS_Raw Update Operation

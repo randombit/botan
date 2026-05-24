@@ -8,8 +8,10 @@
 
 #include <botan/internal/iso9796.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/hash.h>
+#include <botan/pk_options.h>
 #include <botan/rng.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/ct_utils.h>
@@ -211,6 +213,17 @@ bool iso9796_verification(std::span<const uint8_t> repr,
 
 }  // namespace
 
+ISO_9796_DS2::ISO_9796_DS2(const PK_Signature_Options& options) :
+      m_hash(HashFunction::create_or_throw(options.hash_function_name())),
+      m_implicit(!options.using_explicit_trailer_field()),
+      m_salt_len(options.salt_size().value_or(m_hash->output_length())) {
+   BOTAN_ARG_CHECK(!options.using_prehash(), "ISO_9796_DS2 does not support prehashing");
+
+   if(options.using_deterministic_signature() && m_salt_len > 0) {
+      throw Invalid_Argument("ISO_9796_DS2 with a non-zero salt cannot produce deterministic signatures");
+   }
+}
+
 /*
  *  ISO-9796-2 signature scheme 2
  *  DS 2 is probabilistic
@@ -254,6 +267,13 @@ std::string ISO_9796_DS2::hash_function() const {
  */
 std::string ISO_9796_DS2::name() const {
    return fmt("ISO_9796_DS2({},{},{})", m_hash->name(), (m_implicit ? "imp" : "exp"), m_salt_len);
+}
+
+ISO_9796_DS3::ISO_9796_DS3(const PK_Signature_Options& options) :
+      m_hash(HashFunction::create_or_throw(options.hash_function_name())),
+      m_implicit(!options.using_explicit_trailer_field()) {
+   BOTAN_ARG_CHECK(!options.using_prehash(), "ISO_9796_DS3 does not support prehashing");
+   BOTAN_ARG_CHECK(!options.using_salt_size(), "ISO_9796_DS3 does not support a salt");
 }
 
 /*

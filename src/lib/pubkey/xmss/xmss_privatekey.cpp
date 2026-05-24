@@ -20,11 +20,13 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/pk_options.h>
 #include <botan/rng.h>
 #include <botan/internal/buffer_slicer.h>
 #include <botan/internal/concat_util.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/pk_options_impl.h>
 #include <botan/internal/stateful_key_index_registry.h>
 #include <botan/internal/xmss_common_ops.h>
 #include <botan/internal/xmss_hash.h>
@@ -141,6 +143,8 @@ class XMSS_PrivateKey_Internal final {
       const secure_vector<uint8_t>& prf_value() const { return m_prf; }
 
       const secure_vector<uint8_t>& private_seed() { return m_private_seed; }
+
+      const XMSS_Parameters& parameters() const { return m_xmss_params; }
 
       const XMSS_WOTS_Parameters& wots_parameters() { return m_wots_params; }
 
@@ -414,14 +418,17 @@ std::unique_ptr<Public_Key> XMSS_PrivateKey::public_key() const {
    return std::make_unique<XMSS_PublicKey>(xmss_parameters().oid(), root(), public_seed());
 }
 
-std::unique_ptr<PK_Ops::Signature> XMSS_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                                                        std::string_view /*params*/,
-                                                                        std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
+std::unique_ptr<PK_Ops::Signature> XMSS_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                         const PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng);
+
+   validate_for_hash_based_signature(options, "XMSS", this->m_private->parameters().hash_function_name());
+
+   if(!options.using_provider()) {
       return std::make_unique<XMSS_Signature_Operation>(*this);
    }
 
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 }  // namespace Botan

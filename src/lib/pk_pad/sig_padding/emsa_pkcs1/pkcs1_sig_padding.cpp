@@ -7,9 +7,11 @@
 
 #include <botan/internal/pkcs1_sig_padding.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
+#include <botan/pk_options.h>
 #include <botan/internal/buffer_stuffer.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/hash_id.h>
@@ -75,8 +77,12 @@ bool PKCS1v15_SignaturePaddingScheme::verify(std::span<const uint8_t> coded,
    }
 }
 
-PKCS1v15_SignaturePaddingScheme::PKCS1v15_SignaturePaddingScheme(std::unique_ptr<HashFunction> hash) :
-      m_hash(std::move(hash)) {
+PKCS1v15_SignaturePaddingScheme::PKCS1v15_SignaturePaddingScheme(const PK_Signature_Options& options) :
+      m_hash(HashFunction::create_or_throw(options.hash_function_name())) {
+   BOTAN_ARG_CHECK(!options.using_salt_size(), "PKCS1v15 does not support a salt");
+   BOTAN_ARG_CHECK(!options.using_explicit_trailer_field(), "PKCS1v15 does not support a padding trailer field");
+   BOTAN_ARG_CHECK(!options.using_prehash(), "PKCS1v15 does not support prehashing");
+
    m_hash_id = pkcs_hash_id(m_hash->name());
 }
 
@@ -96,15 +102,19 @@ std::string PKCS1v15_Raw_SignaturePaddingScheme::name() const {
    }
 }
 
-PKCS1v15_Raw_SignaturePaddingScheme::PKCS1v15_Raw_SignaturePaddingScheme() : m_hash_output_len(0) {
-   // m_hash_id, m_hash_name left empty
-}
+PKCS1v15_Raw_SignaturePaddingScheme::PKCS1v15_Raw_SignaturePaddingScheme(const PK_Signature_Options& options) {
+   BOTAN_ARG_CHECK(!options.using_salt_size(), "PKCS1v15 does not support a salt");
+   BOTAN_ARG_CHECK(!options.using_explicit_trailer_field(), "PKCS1v15 does not support a padding trailer field");
 
-PKCS1v15_Raw_SignaturePaddingScheme::PKCS1v15_Raw_SignaturePaddingScheme(std::string_view hash_algo) {
-   std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_algo));
-   m_hash_id = pkcs_hash_id(hash_algo);
-   m_hash_name = hash->name();
-   m_hash_output_len = hash->output_length();
+   if(const auto& hash_algo = options.prehash_function()) {
+      std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_algo.value()));
+      m_hash_id = pkcs_hash_id(hash->name());
+      m_hash_name = hash->name();
+      m_hash_output_len = hash->output_length();
+   } else {
+      m_hash_output_len = 0;
+      // m_hash_id, m_hash_name left empty
+   }
 }
 
 void PKCS1v15_Raw_SignaturePaddingScheme::update(const uint8_t input[], size_t length) {
