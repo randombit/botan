@@ -36,11 +36,10 @@ class Roughtime_Request_Tests final : public Text_Based_Test {
 
          const auto request = Botan::Roughtime::encode_request(nonce);
 
-         // TODO should use byte comparison function
          if(type == "Valid") {
-            result.test_is_true("encode", request == Botan::typecast_copy<std::array<uint8_t, 1024>>(request_v.data()));
+            result.test_bin_eq("encode", request, request_v);
          } else {
-            result.test_is_true("encode", request != Botan::typecast_copy<std::array<uint8_t, 1024>>(request_v.data()));
+            result.test_bin_ne("encode", request, request_v);
          }
 
          return result;
