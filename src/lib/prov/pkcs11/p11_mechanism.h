@@ -63,7 +63,7 @@ class BOTAN_PUBLIC_API(3, 7) MechanismWrapper final {
       */
       inline void set_ecdh_salt(const uint8_t salt[], size_t salt_len) {
          m_parameters->ecdh_params.pSharedData = const_cast<uint8_t*>(salt);
-         m_parameters->ecdh_params.ulSharedDataLen = static_cast<Ulong>(salt_len);
+         m_parameters->ecdh_params.ulSharedDataLen = checked_ulong_cast(salt_len);
       }
 
       /**
@@ -73,7 +73,7 @@ class BOTAN_PUBLIC_API(3, 7) MechanismWrapper final {
       */
       inline void set_ecdh_other_key(const uint8_t other_key[], size_t other_key_len) {
          m_parameters->ecdh_params.pPublicData = const_cast<uint8_t*>(other_key);
-         m_parameters->ecdh_params.ulPublicDataLen = static_cast<Ulong>(other_key_len);
+         m_parameters->ecdh_params.ulPublicDataLen = checked_ulong_cast(other_key_len);
       }
 
       /// @return a pointer to the CK_MECHANISM struct that can be passed to the cryptoki functions
@@ -83,6 +83,9 @@ class BOTAN_PUBLIC_API(3, 7) MechanismWrapper final {
 
       /// @return the size of the padding in bytes (for encryption/decryption)
       inline size_t padding_size() const { return m_padding_size; }
+
+      /// @return the KDF type for an ECDH mechanism
+      inline KeyDerivation ecdh_kdf() const { return static_cast<KeyDerivation>(m_parameters->ecdh_params.kdf); }
 
       /// Holds the mechanism parameters for OAEP, PSS and ECDH
       ///
