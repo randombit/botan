@@ -55,6 +55,9 @@ std::vector<uint8_t> decode_var_base64(const VarMap& vars, std::string_view var)
 
 void mimic_speed_test(Botan::RandomNumberGenerator& rng, Test::Result& result) {
    // test for a real-life bug that occurred because of lazy evaluation of the 2nd signature verification.
+   #if !defined BOTAN_HAS_RSA
+   return;
+   #else
    std::vector<uint8_t> message;
    std::vector<uint8_t> signature;
    std::vector<uint8_t> bad_signature;
@@ -72,6 +75,7 @@ void mimic_speed_test(Botan::RandomNumberGenerator& rng, Test::Result& result) {
    // 2nd run after invalid signature
    signature = sig.sign_message(message, rng);
    result.test_bool_eq("2nd valid signature", ver.verify_message(message, signature), true);
+   #endif
 }
 
 void sign_and_verify(const Botan::Private_Key& priv_key,

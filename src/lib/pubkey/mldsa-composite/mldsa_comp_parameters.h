@@ -101,6 +101,7 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
 
       size_t mldsa_privkey_size() const { return 32; }
 
+   private:
       MLDSA_Composite_Param(id_t id,
                             const char* id_str,
                             const char* label,
@@ -111,7 +112,6 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
                             const char* curve,
                             uint32_t traditional_key_size) noexcept;
 
-   private:
       // m_id_str, m_label, m_prehash_func, m_traditional_algorithm, m_traditional_padding, m_curve, m_id, m_traditional_key_size, m_mldsa_variant,
       const char* m_id_str;
       const char* m_label;
