@@ -9,8 +9,6 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  */
 
-#include "botan/ber_dec.h"
-#include "botan/mldsa_comp_parameters.h"
 #include "tests.h"
 
 #include <format>
@@ -21,10 +19,12 @@
 #if defined(BOTAN_HAS_MLDSA_COMPOSITE)
 
    #include <botan/base64.h>
+   #include <botan/ber_dec.h>
    #include <botan/exceptn.h>
    #include <botan/hash.h>
    #include <botan/hex.h>
    #include <botan/mldsa_comp.h>
+   #include <botan/mldsa_comp_parameters.h>
    #include <botan/pk_algs.h>
    #include <botan/pk_keys.h>
    #include <botan/pkcs8.h>
@@ -130,7 +130,7 @@ void sign_and_verify(const Botan::Private_Key& priv_key,
 class MLDSA_Composite_Key_Detail_Tests : public Test {
    public:
       static Test::Result run_detail_test(Botan::MLDSA_Composite_Param::id_t id) {
-         auto param = Botan::MLDSA_Composite_Param::from_id_or_throw(id);
+         auto param = Botan::MLDSA_Composite_Param::from_id_supported_or_throw(id);
          const std::string test_name = std::string("MLDSA_Composite_Key_Detail_") + param.id_str();
          Test::Result result(test_name);
          auto rng = Test::new_rng(test_name);
@@ -201,21 +201,21 @@ class MLDSA_Composite_Key_Detail_Tests : public Test {
       std::vector<Test::Result> run() override {
          const std::vector<Botan::MLDSA_Composite_Param> params {
    #if defined(BOTAN_HAS_RSA)
-            Botan::MLDSA_Composite_Param::from_id_or_throw(
+            Botan::MLDSA_Composite_Param::from_id_supported_or_throw(
                Botan::MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PKCS15_SHA256),
    #endif
    #if defined(BOTAN_HAS_ED25519)
-               Botan::MLDSA_Composite_Param::from_id_or_throw(
+               Botan::MLDSA_Composite_Param::from_id_supported_or_throw(
                   Botan::MLDSA_Composite_Param::id_t::MLDSA44_Ed25519_SHA512),
    #endif
-   #if defined(BOTAN_HAS_ECDSA)
-               Botan::MLDSA_Composite_Param::from_id_or_throw(
+   #if defined BOTAN_HAS_ECDSA && BOTAN_HAS_PCURVES_BRAINPOOL256R1
+               Botan::MLDSA_Composite_Param::from_id_supported_or_throw(
                   Botan::MLDSA_Composite_Param::id_t::MLDSA65_ECDSA_brainpoolP256r1_SHA512),
-               Botan::MLDSA_Composite_Param::from_id_or_throw(
+               Botan::MLDSA_Composite_Param::from_id_supported_or_throw(
                   Botan::MLDSA_Composite_Param::id_t::MLDSA87_ECDSA_P521_SHA512),
    #endif
-   #if defined(BOTAN_HAS_ED448)
-               Botan::MLDSA_Composite_Param::from_id_or_throw(
+   #if defined BOTAN_HAS_ED448 && defined BOTAN_HAS_SHAKE
+               Botan::MLDSA_Composite_Param::from_id_supported_or_throw(
                   Botan::MLDSA_Composite_Param::id_t::MLDSA87_Ed448_SHAKE256),
    #endif
          };
@@ -248,7 +248,7 @@ BOTAN_REGISTER_TEST("pubkey", "mldsa_composite_key_detail", MLDSA_Composite_Key_
 class MLDSA_Composite_Sig_Detail_Tests : public Test {
    public:
       static Test::Result run_detail_test(Botan::MLDSA_Composite_Param::id_t id) {
-         auto param = Botan::MLDSA_Composite_Param::from_id_or_throw(id);
+         auto param = Botan::MLDSA_Composite_Param::from_id_supported_or_throw(id);
          const std::string test_name = std::string("MLDSA_Composite_Signature_Detail_") + param.id_str();
          Test::Result result(test_name);
          auto rng = Test::new_rng(test_name);
@@ -287,23 +287,23 @@ class MLDSA_Composite_Sig_Detail_Tests : public Test {
       std::vector<Test::Result> run() override {
          const std::vector<Botan::MLDSA_Composite_Param> params {
    #if defined(BOTAN_HAS_RSA)
-            Botan::MLDSA_Composite_Param::from_id_or_throw(
+            Botan::MLDSA_Composite_Param::from_id_supported_or_throw(
                Botan::MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PKCS15_SHA256),
    #endif
    #if defined(BOTAN_HAS_PSS)
-               Botan::MLDSA_Composite_Param::from_id_or_throw(
+               Botan::MLDSA_Composite_Param::from_id_supported_or_throw(
                   Botan::MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PSS_SHA256),
    #endif
    #if defined(BOTAN_HAS_ED25519)
-               Botan::MLDSA_Composite_Param::from_id_or_throw(
+               Botan::MLDSA_Composite_Param::from_id_supported_or_throw(
                   Botan::MLDSA_Composite_Param::id_t::MLDSA44_Ed25519_SHA512),
    #endif
-   #if defined(BOTAN_HAS_ECDSA)
-               Botan::MLDSA_Composite_Param::from_id_or_throw(
+   #if defined BOTAN_HAS_ECDSA && defined BOTAN_HAS_PCURVES_BRAINPOOL256R1
+               Botan::MLDSA_Composite_Param::from_id_supported_or_throw(
                   Botan::MLDSA_Composite_Param::id_t::MLDSA65_ECDSA_brainpoolP256r1_SHA512),
    #endif
-   #if defined(BOTAN_HAS_ED448)
-               Botan::MLDSA_Composite_Param::from_id_or_throw(
+   #if defined BOTAN_HAS_ED448 && defined BOTAN_HAS_SHAKE
+               Botan::MLDSA_Composite_Param::from_id_supported_or_throw(
                   Botan::MLDSA_Composite_Param::id_t::MLDSA87_Ed448_SHAKE256)
    #endif
          };
@@ -348,12 +348,17 @@ BOTAN_REGISTER_TEST("pubkey", "mldsa_composite_sig_detail", MLDSA_Composite_Sig_
 class MLDSA_Composite_RT_Tests : public Test {
    public:
       static Test::Result run_detail_test(Botan::MLDSA_Composite_Param::id_t id) {
-         auto param = Botan::MLDSA_Composite_Param::from_id_or_throw(id);
+         auto param = Botan::MLDSA_Composite_Param::from_id_supported_or_throw(id);
          const std::string test_name = std::string("MLDSA_Composite_round_trip_") + param.id_str();
          Test::Result result(test_name);
          auto rng = Test::new_rng(test_name);
+         if(!param.is_supported()) {
+            result.test_throws<Botan::Not_Implemented>("create MLDSA-composite private key for non-supported parameter",
+                                                       [&]() { Botan::create_private_key(param.id_str(), *rng); });
+            return result;
+         }
 
-         auto priv_key_generated(Botan::create_private_key(param.id_str(), *rng));
+         auto priv_key_generated = Botan::create_private_key(param.id_str(), *rng);
          if(nullptr == priv_key_generated) {
             result.test_bool_eq("generated private key non-null", false, true);
          } else {
@@ -381,7 +386,7 @@ class MLDSA_Composite_RT_Tests : public Test {
       }
 
       std::vector<Test::Result> run() override {
-         auto all_params = Botan::MLDSA_Composite_Param::all_param_sets();
+         auto all_params = Botan::MLDSA_Composite_Param::all_supported_param_sets();
          std::vector<Test::Result> result;
          result.reserve(all_params.size());
          for(const auto& param : all_params) {
@@ -450,7 +455,7 @@ class MLDSA_Composite_KAT_Tests : public Text_Based_Test {
 
          const auto comp_parm_opt = Botan::MLDSA_Composite_Param::from_id_str(tcId);
          // support of composite algorithms also depends on whether Botan's build configuration supports the individual  traditional component algorithm.
-         if(!comp_parm_opt.has_value()) {
+         if(!comp_parm_opt.has_value() or !comp_parm_opt.value().is_supported()) {
             return result;
          }
 
@@ -501,11 +506,25 @@ class MLDSA_Composite_X509_Tests : public Text_Based_Test {
             "061550234D158C5EC95595FE04EF7A25767F2E24CC2BC479D09D86DC9ABCFDE7056A8C266F9EF97ED08541DBD2E1FFA1"));
          Test::Result result(name);
 
+         auto tcId = vars.get_req_str("tcId");
+         if(tcId.starts_with("id-")) {
+            tcId = tcId.substr(3);
+         }
+
          const std::vector<uint8_t> x5c = decode_var_base64(vars, "x5c");
-         const Botan::X509_Certificate cert(x5c);
-         const Test::Result this_result(name);
-         auto ver_res = cert.verify_signature(*cert.subject_public_key());
-         result.test_is_true("signature of certificate verifies", ver_res.first == Botan::Certificate_Status_Code::OK);
+         const auto comp_parm_opt = Botan::MLDSA_Composite_Param::from_id_str(tcId);
+
+         Botan::X509_Certificate cert(x5c);
+         if(comp_parm_opt.has_value() and comp_parm_opt.value().is_supported()) {
+            auto ver_res = cert.verify_signature(*cert.subject_public_key());
+            result.test_is_true("signature of certificate verifies",
+                                ver_res.first == Botan::Certificate_Status_Code::OK);
+         } else {
+            result.test_throws("verify certificate with unsupported MLDSA-composite parameters" +
+                                  (comp_parm_opt.has_value() ? " " + comp_parm_opt.value().id_str() : ""),
+                               [&]() { cert.verify_signature(*cert.subject_public_key()); });
+            return result;
+         }
 
          const std::shared_ptr<Botan::Private_Key> private_key =
             Botan::PKCS8::load_key(decode_var_base64(vars, "sk_pkcs8"));

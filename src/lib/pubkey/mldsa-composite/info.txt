@@ -18,4 +18,5 @@ mldsa_comp_parameters.h
 dilithium
 rng
 hash
+asn1
 </requires>

@@ -18,19 +18,14 @@ namespace Botan {
 class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
    public:
       enum id_t : uint32_t /* NOLINT(*-enum-size,*-use-enum-class) */ {
-#if defined(BOTAN_HAS_RSA)
          MLDSA44_RSA2048_PKCS15_SHA256,
          MLDSA65_RSA3072_PKCS15_SHA512,
          MLDSA65_RSA4096_PKCS15_SHA512,
-#endif
-#if defined(BOTAN_HAS_PSS)
          MLDSA44_RSA2048_PSS_SHA256,
          MLDSA65_RSA3072_PSS_SHA512,
          MLDSA65_RSA4096_PSS_SHA512,
          MLDSA87_RSA3072_PSS_SHA512,
          MLDSA87_RSA4096_PSS_SHA512,
-#endif
-#if defined(BOTAN_HAS_ECDSA)
          MLDSA44_ECDSA_P256_SHA256,
          MLDSA65_ECDSA_P256_SHA512,
          MLDSA65_ECDSA_P384_SHA512,
@@ -38,19 +33,23 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
          MLDSA87_ECDSA_P384_SHA512,
          MLDSA87_ECDSA_brainpoolP384r1_SHA512,
          MLDSA87_ECDSA_P521_SHA512,
-#endif
-#if defined(BOTAN_HAS_ED25519)
          MLDSA44_Ed25519_SHA512,
          MLDSA65_Ed25519_SHA512,
-#endif
-#if defined(BOTAN_HAS_ED448)
          MLDSA87_Ed448_SHAKE256,
-#endif
       };
 
       static std::vector<MLDSA_Composite_Param> all_param_sets();
 
-      static MLDSA_Composite_Param from_id_or_throw(MLDSA_Composite_Param::id_t id);
+      static std::vector<MLDSA_Composite_Param> all_supported_param_sets();
+
+      /**
+       * @brief Create a paramters object from the provided id. If the parameters are not supported by the build configuration of the library, throw a Not_Implemented exception.
+       *
+       * @param id The id of the parameter set to create.
+       *
+       * @return The parameter object.
+       */
+      static MLDSA_Composite_Param from_id_supported_or_throw(MLDSA_Composite_Param::id_t id);
 
       static std::optional<MLDSA_Composite_Param> from_id(MLDSA_Composite_Param::id_t id);
 
@@ -62,7 +61,15 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
 
       static MLDSA_Composite_Param from_algo_id_or_throw(const AlgorithmIdentifier& algo_id);
 
-      MLDSA_Composite_Param clone() const { return MLDSA_Composite_Param::from_id_or_throw(m_id); }
+      MLDSA_Composite_Param clone() const { return MLDSA_Composite_Param::from_id_supported_or_throw(m_id); }
+
+      /**
+       * @brief 
+       * Find out whether the library build supports this parameter. 
+       *
+       * @return true if the parameter is supported, false otherwhise
+       */
+      bool is_supported() const;
 
       AlgorithmIdentifier get_composite_algorithm_id() const;
 
@@ -112,7 +119,6 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_Param {
                             const char* curve,
                             uint32_t traditional_key_size) noexcept;
 
-      // m_id_str, m_label, m_prehash_func, m_traditional_algorithm, m_traditional_padding, m_curve, m_id, m_traditional_key_size, m_mldsa_variant,
       const char* m_id_str;
       const char* m_label;
       const char* m_prehash_func;

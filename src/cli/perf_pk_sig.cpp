@@ -415,12 +415,12 @@ BOTAN_REGISTER_PERF_TEST("ML-DSA", PerfTest_ML_DSA);
 template <Botan::MLDSA_Composite_Param::id_t A>
 class PerfTest_MLDSA_Composite final : public PerfTest_PKSig {
    public:
-      std::string algo() const override { return Botan::MLDSA_Composite_Param::from_id_or_throw(A).id_str(); }
+      std::string algo() const override { return Botan::MLDSA_Composite_Param::from_id_supported_or_throw(A).id_str(); }
 
       std::string hash() const override { return ""; }
 
       std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
-         return {Botan::MLDSA_Composite_Param::from_id_or_throw(A).id_str()};
+         return {Botan::MLDSA_Composite_Param::from_id_supported_or_throw(A).id_str()};
       }
 };
 
@@ -446,19 +446,29 @@ BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA87_RSA3072_PSS_SHA512, PerfTest_MLDSA_Composi
 BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA87_RSA4096_PSS_SHA512, PerfTest_MLDSA_Composite);
    #endif
    #if defined(BOTAN_HAS_ECDSA)
+      #if BOTAN_HAS_PCURVES_SECP256R1
 BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA44_ECDSA_P256_SHA256, PerfTest_MLDSA_Composite);
 BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA65_ECDSA_P256_SHA512, PerfTest_MLDSA_Composite);
+      #endif
+      #if BOTAN_HAS_PCURVES_SECP384R1
 BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA65_ECDSA_P384_SHA512, PerfTest_MLDSA_Composite);
-BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA65_ECDSA_brainpoolP256r1_SHA512, PerfTest_MLDSA_Composite);
 BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA87_ECDSA_P384_SHA512, PerfTest_MLDSA_Composite);
+      #endif
+      #if BOTAN_HAS_PCURVES_BRAINPOOL256R1
+BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA65_ECDSA_brainpoolP256r1_SHA512, PerfTest_MLDSA_Composite);
+      #endif
+      #if BOTAN_HAS_PCURVES_BRAINPOOL384R1
 BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA87_ECDSA_brainpoolP384r1_SHA512, PerfTest_MLDSA_Composite);
+      #endif
+      #if BOTAN_HAS_PCURVES_SECP521R1
 BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA87_ECDSA_P521_SHA512, PerfTest_MLDSA_Composite);
+      #endif
    #endif
    #if defined(BOTAN_HAS_ED25519)
 BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA44_Ed25519_SHA512, PerfTest_MLDSA_Composite);
 BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA65_Ed25519_SHA512, PerfTest_MLDSA_Composite);
    #endif
-   #if defined(BOTAN_HAS_ED448)
+   #if defined(BOTAN_HAS_ED448) && defined(BOTAN_HAS_SHAKE)
 BOTAN_REGISTER_PERF_TEST_TMPL(MLDSA87_Ed448_SHAKE256, PerfTest_MLDSA_Composite);
    #endif
 #endif

@@ -20,7 +20,6 @@ namespace Botan {
 
 const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = {
 
-#if defined(BOTAN_HAS_RSA)
    MLDSA_Composite_Param(MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PKCS15_SHA256,
                          "MLDSA44-RSA2048-PKCS15-SHA256",
                          "COMPSIG-MLDSA44-RSA2048-PKCS15-SHA256",
@@ -30,7 +29,6 @@ const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = 
                          "PKCS1v15(SHA-256)",
                          "",
                          2048),
-
    MLDSA_Composite_Param(MLDSA_Composite_Param::id_t::MLDSA65_RSA3072_PKCS15_SHA512,
                          "MLDSA65-RSA3072-PKCS15-SHA512",
                          "COMPSIG-MLDSA65-RSA3072-PKCS15-SHA512",
@@ -49,9 +47,6 @@ const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = 
                          "PKCS1v15(SHA-384)",
                          "",
                          4096),
-#endif
-
-#if defined(BOTAN_HAS_PSS)
    MLDSA_Composite_Param(MLDSA_Composite_Param::id_t::MLDSA44_RSA2048_PSS_SHA256,
                          "MLDSA44-RSA2048-PSS-SHA256",
                          "COMPSIG-MLDSA44-RSA2048-PSS-SHA256",
@@ -61,7 +56,6 @@ const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = 
                          "PSS(SHA-256,MGF1,32)",
                          "",
                          2048),
-
    MLDSA_Composite_Param(MLDSA_Composite_Param::id_t::MLDSA65_RSA3072_PSS_SHA512,
                          "MLDSA65-RSA3072-PSS-SHA512",
                          "COMPSIG-MLDSA65-RSA3072-PSS-SHA512",
@@ -98,9 +92,6 @@ const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = 
                          "PSS(SHA-384,MGF1,48)",
                          "",
                          4096),
-#endif
-#if defined(BOTAN_HAS_ECDSA)
-
    MLDSA_Composite_Param(MLDSA_Composite_Param::id_t::MLDSA44_ECDSA_P256_SHA256,
                          "MLDSA44-ECDSA-P256-SHA256",
                          "COMPSIG-MLDSA44-ECDSA-P256-SHA256",
@@ -110,7 +101,6 @@ const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = 
                          "SHA-256",
                          "secp256r1",
                          0),
-
    MLDSA_Composite_Param(MLDSA_Composite_Param::id_t::MLDSA65_ECDSA_P256_SHA512,
                          "MLDSA65-ECDSA-P256-SHA512",
                          "COMPSIG-MLDSA65-ECDSA-P256-SHA512",
@@ -129,7 +119,6 @@ const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = 
                          "SHA-384",
                          "secp384r1",
                          0),
-
    MLDSA_Composite_Param(MLDSA_Composite_Param::id_t::MLDSA65_ECDSA_brainpoolP256r1_SHA512,
                          "MLDSA65-ECDSA-brainpoolP256r1-SHA512",
                          "COMPSIG-MLDSA65-ECDSA-BP256-SHA512",
@@ -139,7 +128,6 @@ const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = 
                          "SHA-256",
                          "brainpool256r1",
                          0),
-
    MLDSA_Composite_Param(MLDSA_Composite_Param::id_t::MLDSA87_ECDSA_P384_SHA512,
                          "MLDSA87-ECDSA-P384-SHA512",
                          "COMPSIG-MLDSA87-ECDSA-P384-SHA512",
@@ -149,7 +137,6 @@ const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = 
                          "SHA-384",
                          "secp384r1",
                          0),
-
    MLDSA_Composite_Param(MLDSA_Composite_Param::id_t::MLDSA87_ECDSA_brainpoolP384r1_SHA512,
                          "MLDSA87-ECDSA-brainpoolP384r1-SHA512",
                          "COMPSIG-MLDSA87-ECDSA-BP384-SHA512",
@@ -159,7 +146,6 @@ const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = 
                          "SHA-384",
                          "brainpool384r1",
                          0),
-
    MLDSA_Composite_Param(MLDSA_Composite_Param::id_t::MLDSA87_ECDSA_P521_SHA512,
                          "MLDSA87-ECDSA-P521-SHA512",
                          "COMPSIG-MLDSA87-ECDSA-P521-SHA512",
@@ -169,9 +155,6 @@ const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = 
                          "SHA-512",
                          "secp521r1",
                          0),
-#endif
-
-#if defined(BOTAN_HAS_ED25519)
    MLDSA_Composite_Param(MLDSA_Composite_Param::id_t::MLDSA44_Ed25519_SHA512,
                          "MLDSA44-Ed25519-SHA512",
                          "COMPSIG-MLDSA44-Ed25519-SHA512",
@@ -181,7 +164,6 @@ const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = 
                          "",
                          "",
                          0),
-
    MLDSA_Composite_Param(MLDSA_Composite_Param::id_t::MLDSA65_Ed25519_SHA512,
                          "MLDSA65-Ed25519-SHA512",
                          "COMPSIG-MLDSA65-Ed25519-SHA512",
@@ -191,8 +173,6 @@ const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = 
                          "",
                          "",
                          0),
-#endif
-#if defined(BOTAN_HAS_ED448)
    MLDSA_Composite_Param(MLDSA_Composite_Param::id_t::MLDSA87_Ed448_SHAKE256,
                          "MLDSA87-Ed448-SHAKE256",
                          "COMPSIG-MLDSA87-Ed448-SHAKE256",
@@ -202,14 +182,25 @@ const MLDSA_Composite_Param MLDSA_Composite_Param::mldsa_composite_registry[] = 
                          "",
                          "",
                          0),
-#endif
 
 };
 
+// static
 std::vector<MLDSA_Composite_Param> MLDSA_Composite_Param::all_param_sets() {
    std::vector<MLDSA_Composite_Param> result;
    for(const auto& param : mldsa_composite_registry) {
       result.push_back(param);
+   }
+   return result;
+}
+
+// static
+std::vector<MLDSA_Composite_Param> MLDSA_Composite_Param::all_supported_param_sets() {
+   std::vector<MLDSA_Composite_Param> result;
+   for(const auto& param : mldsa_composite_registry) {
+      if(param.is_supported()) {
+         result.push_back(param);
+      }
    }
    return result;
 }
@@ -263,10 +254,14 @@ std::optional<MLDSA_Composite_Param> MLDSA_Composite_Param::from_id(MLDSA_Compos
 }
 
 // static
-MLDSA_Composite_Param MLDSA_Composite_Param::from_id_or_throw(MLDSA_Composite_Param::id_t id) {
+MLDSA_Composite_Param MLDSA_Composite_Param::from_id_supported_or_throw(MLDSA_Composite_Param::id_t id) {
    const auto result = from_id(id);
    if(!result.has_value()) {
       throw Botan::Invalid_Argument("no parameter found for provided MLDSA composite id (enum)");
+   }
+   if(!result.value().is_supported()) {
+      throw Not_Implemented("Parameter set " + result.value().id_str() +
+                            " is not supported by Botan's build configuration");
    }
    return result.value();
 }
@@ -360,6 +355,90 @@ std::string MLDSA_Composite_Param::get_traditional_algo_param_str() const {
       return std::to_string(m_traditional_key_size);
    }
    return "";
+}
+
+bool MLDSA_Composite_Param::is_supported() const {
+   switch(m_id) {
+      case MLDSA44_RSA2048_PKCS15_SHA256:
+         [[fallthrough]];
+      case MLDSA65_RSA3072_PKCS15_SHA512:
+         [[fallthrough]];
+      case MLDSA65_RSA4096_PKCS15_SHA512:
+#if defined BOTAN_HAS_RSA
+         return true;
+#else
+         return false;
+#endif
+      case MLDSA44_RSA2048_PSS_SHA256:
+         [[fallthrough]];
+      case MLDSA65_RSA3072_PSS_SHA512:
+         [[fallthrough]];
+      case MLDSA65_RSA4096_PSS_SHA512:
+         [[fallthrough]];
+      case MLDSA87_RSA3072_PSS_SHA512:
+         [[fallthrough]];
+      case MLDSA87_RSA4096_PSS_SHA512:
+
+#if defined BOTAN_HAS_RSA && defined BOTAN_HAS_PSS
+         return true;
+#else
+         return false;
+#endif
+      case MLDSA44_ECDSA_P256_SHA256:
+         [[fallthrough]];
+         /* NOLINTNEXTLINE(bugprone-branch-clone) */
+      case MLDSA65_ECDSA_P256_SHA512:
+#if defined BOTAN_HAS_ECDSA && defined BOTAN_HAS_PCURVES_SECP256R1
+         return true;
+#else
+         return false;
+#endif
+      case MLDSA65_ECDSA_P384_SHA512:
+         [[fallthrough]];
+         /* NOLINTNEXTLINE(bugprone-branch-clone) */
+      case MLDSA87_ECDSA_P384_SHA512:
+#if defined BOTAN_HAS_ECDSA && defined BOTAN_HAS_PCURVES_SECP384R1
+         return true;
+#else
+         return false;
+#endif
+      case MLDSA65_ECDSA_brainpoolP256r1_SHA512:
+#if defined BOTAN_HAS_ECDSA && defined BOTAN_HAS_PCURVES_BRAINPOOL256R1
+         return true;
+#else
+         return false;
+#endif
+      case MLDSA87_ECDSA_brainpoolP384r1_SHA512:
+#if defined BOTAN_HAS_ECDSA && defined BOTAN_HAS_PCURVES_BRAINPOOL384R1
+         return true;
+#else
+         return false;
+#endif
+      case MLDSA87_ECDSA_P521_SHA512:
+#if defined BOTAN_HAS_ECDSA && defined BOTAN_HAS_PCURVES_BRAINPOOL512R1
+         return true;
+#else
+         return false;
+#endif
+      case MLDSA_Composite_Param::id_t::MLDSA44_Ed25519_SHA512:
+         [[fallthrough]];
+         /* NOLINTNEXTLINE(bugprone-branch-clone) */
+      case MLDSA_Composite_Param::id_t::MLDSA65_Ed25519_SHA512:
+#if defined BOTAN_HAS_ED25519
+         return true;
+#else
+         return false;
+#endif
+         /* NOLINTNEXTLINE(bugprone-branch-clone) */
+      case MLDSA_Composite_Param::id_t::MLDSA87_Ed448_SHAKE256:
+#if defined BOTAN_HAS_ED448 && defined BOTAN_HAS_SHAKE
+         return true;
+#else
+         return false;
+#endif
+   }
+   // should be dead code, needed for compiler (why?)
+   return false;
 }
 
 }  // namespace Botan

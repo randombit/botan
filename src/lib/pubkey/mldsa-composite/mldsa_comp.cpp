@@ -4,9 +4,15 @@
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/ec_group.h>
-#include <botan/ecdsa.h>
-#include <botan/ed25519.h>
-#include <botan/ed448.h>
+#if defined BOTAN_HAS_ECDSA
+   #include <botan/ecdsa.h>
+#endif
+#if defined BOTAN_HAS_ED25519
+   #include <botan/ed25519.h>
+#endif
+#if defined BOTAN_HAS_ED448
+   #include <botan/ed448.h>
+#endif
 #include <botan/exceptn.h>
 #include <botan/hex.h>
 #include <botan/ml_dsa.h>
@@ -208,7 +214,7 @@ MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(const AlgorithmIdentifier& 
 
 MLDSA_Composite_PublicKey::MLDSA_Composite_PublicKey(MLDSA_Composite_Param::id_t id,
                                                      std::span<const uint8_t> key_bits) :
-      m_parameters(std::make_shared<MLDSA_Composite_Param>(MLDSA_Composite_Param::from_id_or_throw(id))),
+      m_parameters(std::make_shared<MLDSA_Composite_Param>(MLDSA_Composite_Param::from_id_supported_or_throw(id))),
       m_mldsa_pubkey(std::make_shared<ML_DSA_PublicKey>(m_parameters->get_mldsa_algorithm_id(),
                                                         mldsa_pubkey_subspan(*m_parameters, key_bits))),
       m_traditional_pubkey(
@@ -292,7 +298,7 @@ std::shared_ptr<Private_Key> MLDSA_Composite_PrivateKey::load_traditional_privat
 }
 
 MLDSA_Composite_PrivateKey::MLDSA_Composite_PrivateKey(MLDSA_Composite_Param::id_t id, std::span<const uint8_t> sk) :
-      m_parameters(std::make_shared<MLDSA_Composite_Param>(MLDSA_Composite_Param::from_id_or_throw(id))),
+      m_parameters(std::make_shared<MLDSA_Composite_Param>(MLDSA_Composite_Param::from_id_supported_or_throw(id))),
       m_mldsa_privkey(std::make_shared<ML_DSA_PrivateKey>(m_parameters->get_mldsa_algorithm_id(),
                                                           mldsa_privkey_subspan(*m_parameters, sk))),
       m_traditional_privkey(
