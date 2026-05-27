@@ -13,6 +13,7 @@
 #include <botan/types.h>
 
 #include <memory>
+#include <span>
 #include <string>
 #include <string_view>
 
@@ -51,6 +52,22 @@ class PKCS12_KDF final : public PasswordHash {
       uint8_t m_id;
       size_t m_iterations;
 };
+
+/**
+* Low-level PKCS#12 KDF (RFC 7292 Appendix B).
+*
+* Runs the KDF on a caller-supplied @p pwd_bytes buffer without applying
+* @c pkcs12_encode_password. Intended for the very rare case (e.g. OpenSSL
+* empty-password interop) where the RFC 7292 UCS-2 BE encoding + null
+* terminator is not the desired input. Normal callers should use the
+* PKCS12_KDF class.
+*/
+BOTAN_TEST_API void pkcs12_kdf(std::span<uint8_t> out,
+                               std::span<const uint8_t> pwd_bytes,
+                               std::span<const uint8_t> salt,
+                               size_t iterations,
+                               uint8_t id,
+                               HashFunction& hash);
 
 class PKCS12_KDF_Family final : public PasswordHashFamily {
    public:

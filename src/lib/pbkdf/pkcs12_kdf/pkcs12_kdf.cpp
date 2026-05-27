@@ -143,6 +143,15 @@ void pkcs12_kdf_with_hash(std::span<uint8_t> out,
 
 }  // namespace
 
+void pkcs12_kdf(std::span<uint8_t> out,
+                std::span<const uint8_t> pwd_bytes,
+                std::span<const uint8_t> salt,
+                size_t iterations,
+                uint8_t id,
+                HashFunction& hash) {
+   pkcs12_kdf_with_hash(out, pwd_bytes, salt, iterations, id, hash);
+}
+
 PKCS12_KDF::PKCS12_KDF(std::unique_ptr<HashFunction> hash, uint8_t id, size_t iterations) :
       m_hash(std::move(hash)), m_id(id), m_iterations(iterations) {
    BOTAN_ARG_CHECK(m_hash != nullptr, "PKCS12-KDF: hash must not be null");
