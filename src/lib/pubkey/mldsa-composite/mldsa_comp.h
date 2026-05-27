@@ -50,7 +50,7 @@ class BOTAN_PUBLIC_API(3, 0) MLDSA_Composite_PublicKey : public virtual Public_K
        * @return the mimium of the components' estimated strengths.
        */
       size_t estimated_strength() const override {
-         return std::min(this->m_mldsa_pubkey->estimated_strength(), this->m_traditional_pubkey->estimated_strength());
+         return std::max(this->m_mldsa_pubkey->estimated_strength(), this->m_traditional_pubkey->estimated_strength());
       }
 
       /**
