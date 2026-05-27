@@ -520,9 +520,10 @@ class MLDSA_Composite_X509_Tests : public Text_Based_Test {
             result.test_is_true("signature of certificate verifies",
                                 ver_res.first == Botan::Certificate_Status_Code::OK);
          } else {
+            // doesn't throw Not_Implemented, but seems to catch that one and wrap it into another exception.
             result.test_throws("verify certificate with unsupported MLDSA-composite parameters" +
                                   (comp_parm_opt.has_value() ? " " + comp_parm_opt.value().id_str() : ""),
-                               [&]() { cert.verify_signature(*cert.subject_public_key()); });
+                               [&] { cert.verify_signature(*cert.subject_public_key()); });
             return result;
          }
 
