@@ -35,8 +35,11 @@ class X509_Certificate_Data final {
       std::vector<uint8_t> m_subject_public_key_bits;
       std::vector<uint8_t> m_subject_public_key_bits_seq;
       std::vector<uint8_t> m_subject_public_key_bitstring;
-      std::vector<uint8_t> m_subject_public_key_bitstring_sha1;
       AlgorithmIdentifier m_subject_public_key_algid;
+
+      // TODO(Botan4) change this to std::array<uint8_t, 20> and getter to span
+      std::vector<uint8_t> m_subject_public_key_bitstring_sha1;
+      std::array<uint8_t, 32> m_subject_public_key_bitstring_sha256 = {};
 
       std::vector<uint8_t> m_v2_issuer_key_id;
       std::vector<uint8_t> m_v2_subject_key_id;
@@ -51,8 +54,12 @@ class X509_Certificate_Data final {
       std::vector<URI> m_ocsp_responders;
       std::vector<URI> m_ca_issuers;
 
+      // TODO(Botan4) change this to std::array<uint8_t, 32> and getter to span
       std::vector<uint8_t> m_issuer_dn_bits_sha256;
+      // TODO(Botan4) change this to std::array<uint8_t, 32> and getter to span
       std::vector<uint8_t> m_subject_dn_bits_sha256;
+      std::array<uint8_t, 20> m_issuer_dn_bits_sha1 = {};
+      std::array<uint8_t, 20> m_subject_dn_bits_sha1 = {};
 
       std::string m_fingerprint_sha1;
       std::string m_fingerprint_sha256;
@@ -315,6 +322,12 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
       sha1->update(full_encoding);
       sha1->final(data->m_cert_data_sha1);
       data->m_fingerprint_sha1 = format_hex_fingerprint(data->m_cert_data_sha1);
+
+      sha1->update(data->m_issuer_dn_bits);
+      sha1->final(data->m_issuer_dn_bits_sha1);
+
+      sha1->update(data->m_subject_dn_bits);
+      sha1->final(data->m_subject_dn_bits_sha1);
    }
 
    // SHA-256 is a hard dependency of this module
@@ -328,6 +341,9 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    sha256->update(full_encoding);
    sha256->final(data->m_cert_data_sha256);
    data->m_fingerprint_sha256 = format_hex_fingerprint(data->m_cert_data_sha256);
+
+   sha256->update(data->m_subject_public_key_bitstring);
+   sha256->final(data->m_subject_public_key_bitstring_sha256);
 
    return data;
 }
@@ -395,6 +411,10 @@ const std::vector<uint8_t>& X509_Certificate::subject_public_key_bitstring_sha1(
    }
 
    return data().m_subject_public_key_bitstring_sha1;
+}
+
+std::span<const uint8_t, 32> X509_Certificate::subject_public_key_bitstring_sha256() const {
+   return data().m_subject_public_key_bitstring_sha256;
 }
 
 const std::vector<uint8_t>& X509_Certificate::authority_key_id() const {
@@ -739,6 +759,14 @@ const std::vector<uint8_t>& X509_Certificate::raw_subject_dn_sha256() const {
       throw Encoding_Error("X509_Certificate::raw_subject_dn_sha256 called but SHA-256 disabled in build");
    }
    return data().m_subject_dn_bits_sha256;
+}
+
+std::span<const uint8_t, 20> X509_Certificate::raw_issuer_dn_sha1() const {
+   return data().m_issuer_dn_bits_sha1;
+}
+
+std::span<const uint8_t, 20> X509_Certificate::raw_subject_dn_sha1() const {
+   return data().m_subject_dn_bits_sha1;
 }
 
 std::string X509_Certificate::fingerprint(std::string_view hash_name) const {

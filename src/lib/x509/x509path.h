@@ -59,7 +59,7 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
          bool require_rev = false,
          size_t minimum_key_strength = 110,
          bool ocsp_all_intermediates = false,
-         std::chrono::seconds max_ocsp_age = std::chrono::seconds::zero(),
+         std::chrono::seconds max_ocsp_age = std::chrono::hours(24 * 7),
          std::unique_ptr<Certificate_Store> trusted_ocsp_responders = std::make_unique<Certificate_Store_In_Memory>(),
          bool ignore_trusted_root_time_range = false,
          bool require_self_signed_trust_anchors = true);
@@ -89,7 +89,7 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
          size_t minimum_key_strength,
          bool ocsp_all_intermediates,
          const std::set<std::string>& trusted_hashes,
-         std::chrono::seconds max_ocsp_age = std::chrono::seconds::zero(),
+         std::chrono::seconds max_ocsp_age = std::chrono::hours(24 * 7),
          std::unique_ptr<Certificate_Store> trusted_ocsp_responders = std::make_unique<Certificate_Store_In_Memory>(),
          bool ignore_trusted_root_time_range = false,
          bool require_self_signed_trust_anchors = true) :

@@ -551,7 +551,11 @@ Certificate_Status_Code verify_ocsp_signing_cert(const X509_Certificate& signing
       Path_Validation_Restrictions(false /* do not enforce revocation data */,
                                    restrictions.minimum_key_strength(),
                                    false /* OCSP is not available, so don't try for intermediates */,
-                                   restrictions.trusted_hashes());
+                                   restrictions.trusted_hashes(),
+                                   /* max_ocsp_age */ std::chrono::seconds(0),
+                                   /* trusted_responders */ {},
+                                   restrictions.ignore_trusted_root_time_range(),
+                                   restrictions.require_self_signed_trust_anchors());
 
    const auto validation_result = x509_path_validate(concat(std::vector{signing_cert}, extra_certs),
                                                      relaxed_restrictions,
