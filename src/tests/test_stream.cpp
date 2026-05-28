@@ -74,13 +74,18 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
                result.test_success("Trying to encrypt with no key set fails");
             }
 
-            try {
-               cipher->seek(0);
-               result.test_failure("Was able to seek without a key being set");
-            } catch(Botan::Invalid_State&) {
-               result.test_success("Trying to seek with no key set fails");
-            } catch(Botan::Not_Implemented&) {
-               result.test_success("Trying to seek failed because not implemented");
+            const bool supports_seek = cipher->supports_seek();
+
+            if(supports_seek) {
+               try {
+                  cipher->seek(0);
+                  result.test_failure("Was able to seek without a key being set");
+               } catch(Botan::Invalid_State&) {
+                  result.test_success("Trying to seek with no key set fails");
+               }
+            } else {
+               result.test_throws<Botan::Not_Implemented>("seek() throws Not_Implemented when supports_seek() is false",
+                                                          [&]() { cipher->seek(0); });
             }
 
             if(!cipher->valid_iv_length(nonce.size())) {
@@ -143,6 +148,35 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
                std::vector<uint8_t> buf = input;
                cipher->encrypt(buf);
                result.test_bin_eq(provider + " encrypt", buf, expected);
+            }
+
+            /*
+            * Verify that seek is idempotent
+            */
+            if(supports_seek && seek > 0) {
+               if(!nonce.empty()) {
+                  cipher->set_iv(nonce.data(), nonce.size());
+               }
+               cipher->seek(seek);
+               cipher->seek(0);
+               cipher->seek(seek);
+               std::vector<uint8_t> seek_buf = input;
+               cipher->encrypt(seek_buf);
+               result.test_bin_eq(provider + " seek is idempotent", seek_buf, expected);
+
+               // After seeking, seek(0) must reset back to original keystream.
+               cipher->seek(0);
+               std::vector<uint8_t> seek0_buf(input.size());
+               cipher->encrypt(seek0_buf);
+
+               auto fresh = cipher->new_object();
+               fresh->set_key(key);
+               if(!nonce.empty()) {
+                  fresh->set_iv(nonce.data(), nonce.size());
+               }
+               std::vector<uint8_t> fresh_buf(input.size());
+               fresh->encrypt(fresh_buf);
+               result.test_bin_eq(provider + " seek(0) after high seek round-trips", fresh_buf, seek0_buf);
             }
 
             {
@@ -214,6 +248,286 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_SERIALIZED_SMOKE_TEST("stream", "stream_ciphers", Stream_Cipher_Tests);
+
+class Stream_Cipher_Seek_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+         results.push_back(test_idempotent_and_round_trip());
+         results.push_back(test_strict_counter_limits());
+         return results;
+      }
+
+   private:
+      static std::unique_ptr<Botan::StreamCipher> create_with_iv(std::string_view algo, size_t iv_len) {
+         auto cipher = Botan::StreamCipher::create(algo);
+
+         if(cipher) {
+            std::vector<uint8_t> key(cipher->maximum_keylength(), 0);
+            std::vector<uint8_t> iv(iv_len, 0);
+            cipher->set_key(key);
+            if(iv_len > 0) {
+               cipher->set_iv(iv);
+            }
+         }
+
+         return cipher;
+      }
+
+      Test::Result test_idempotent_and_round_trip() {
+         Test::Result result("StreamCipher seek idempotence and round-trip at high offsets");
+
+         struct Case {
+               std::string algo;
+               size_t iv_len;
+               uint64_t seek_bytes;
+         };
+
+         // Seeks chosen so the high counter word is non-zero
+         const std::vector<Case> cases = {
+            {"ChaCha(20)", 8, (uint64_t{1} << 32) * 64},
+            {"ChaCha(20)", 8, (uint64_t{1} << 32) * 64 + 5 * 64 + 17},
+            {"ChaCha(20)", 24, (uint64_t{1} << 32) * 64},
+            {"Salsa20", 8, (uint64_t{1} << 32) * 64},
+            {"Salsa20", 8, (uint64_t{1} << 32) * 64 + 5 * 64 + 17},
+            {"Salsa20", 24, (uint64_t{1} << 32) * 64},
+         };
+
+         for(const auto& c : cases) {
+            const std::string tag = Botan::fmt("{} iv={} seek={}", c.algo, c.iv_len, c.seek_bytes);
+
+            auto a = create_with_iv(c.algo, c.iv_len);
+            if(!a) {
+               result.note_missing(c.algo);
+               continue;
+            }
+
+            constexpr size_t sample_bytes = 128;
+
+            // Take reference value: seek to offset, output sample_bytes bytes of keystream.
+            a->seek(c.seek_bytes);
+            const auto ks_a = a->keystream_bytes<std::vector<uint8_t>>(sample_bytes);
+
+            auto b = create_with_iv(c.algo, c.iv_len);
+            b->seek(c.seek_bytes);
+            b->seek(c.seek_bytes);
+            const auto ks_b = b->keystream_bytes<std::vector<uint8_t>>(sample_bytes);
+            result.test_bin_eq(tag + " idempotent", ks_a, ks_b);
+
+            // seek(0) after a high seek must reproduce the keystream of a fresh cipher.
+            auto fresh = create_with_iv(c.algo, c.iv_len);
+            const auto ks_fresh = fresh->keystream_bytes<std::vector<uint8_t>>(sample_bytes);
+
+            auto rt = create_with_iv(c.algo, c.iv_len);
+            rt->seek(c.seek_bytes);
+            (void)rt->keystream_bytes<std::vector<uint8_t>>(64);
+            rt->seek(0);
+            const auto ks_rt = rt->keystream_bytes<std::vector<uint8_t>>(sample_bytes);
+            result.test_bin_eq(tag + " seek(0) round-trip", ks_rt, ks_fresh);
+         }
+
+         return result;
+      }
+
+      Test::Result test_strict_counter_limits() {
+         Test::Result result("StreamCipher seek rejection past counter limits");
+
+         if(auto chacha = create_with_iv("ChaCha(20)", 12)) {
+            // Last addressable byte: block 2^32 - 1, offset 63.
+            const uint64_t max_ok = (uint64_t{1} << 32) * 64 - 1;
+            result.test_no_throw("ChaCha 12-byte nonce seek at counter limit", [&]() { chacha->seek(max_ok); });
+
+            // First rejected byte: block 2^32, offset 0.
+            const uint64_t seek_limit = (uint64_t{1} << 32) * 64;
+
+            chacha->seek(seek_limit - 1);  // ok
+
+            result.test_throws<Botan::Invalid_Argument>("ChaCha 12-byte nonce seek past counter limit throws",
+                                                        [&]() { chacha->seek(seek_limit); });
+
+            // Test a seek way past that limit:
+            result.test_throws<Botan::Invalid_Argument>("ChaCha 12-byte nonce seek well past counter limit throws",
+                                                        [&]() { chacha->seek((uint64_t{1} << 40) * 64); });
+         }
+
+         if(auto ctr_be = Botan::StreamCipher::create("CTR-BE(AES-128,4)")) {
+            std::vector<uint8_t> key(16, 0);
+            std::vector<uint8_t> iv(16, 0xFF);
+            ctr_be->set_key(key);
+            ctr_be->set_iv(iv);
+
+            constexpr uint64_t ctr32_max = (uint64_t{1} << 32) * 16 - 1;
+
+            result.test_no_throw("CTR-BE(AES,4) seek at counter limit", [&]() { ctr_be->seek(ctr32_max); });
+
+            result.test_throws<Botan::Invalid_Argument>("CTR-BE(AES,4) seek past 2^32 blocks throws",
+                                                        [&]() { ctr_be->seek(ctr32_max + 1); });
+         }
+
+         // With a 64-bit counter, you can go anywhere you want
+         if(auto ctr_be = Botan::StreamCipher::create("CTR-BE(AES-128,8)")) {
+            std::vector<uint8_t> key(16, 0);
+            std::vector<uint8_t> iv(16, 0);
+            ctr_be->set_key(key);
+            ctr_be->set_iv(iv);
+            result.test_no_throw("CTR-BE(AES,8) high seek accepted", [&]() { ctr_be->seek((uint64_t{1} << 40) * 16); });
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("stream", "stream_cipher_seek", Stream_Cipher_Seek_Tests);
+
+class Stream_Cipher_Keystream_Cap_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+         results.push_back(test_remaining_getter());
+         results.push_back(test_exhaustion());
+         return results;
+      }
+
+   private:
+      Test::Result test_remaining_getter() {
+         Test::Result result("StreamCipher::remaining_keystream_bytes");
+
+         if(auto chacha = Botan::StreamCipher::create("ChaCha(20)")) {
+            // Unkeyed cipher: nullopt regardless
+            result.test_is_true("Unkeyed ChaCha returns nullopt", !chacha->remaining_keystream_bytes().has_value());
+
+            // With a 64-bit counter, you can go anywhere you want
+            const std::vector<uint8_t> key(32, 0);
+            const std::vector<uint8_t> iv8(8, 0);
+            chacha->set_key(key);
+            chacha->set_iv(iv8);
+            result.test_is_true("ChaCha 8-byte nonce returns nullopt",
+                                !chacha->remaining_keystream_bytes().has_value());
+
+            const std::vector<uint8_t> iv24(24, 0);
+            chacha->set_iv(iv24);
+            result.test_is_true("ChaCha 24-byte nonce returns nullopt",
+                                !chacha->remaining_keystream_bytes().has_value());
+
+            // 96-bit nonce: cap = 2^32 * 64 = 2^38 bytes from a fresh IV.
+            const std::vector<uint8_t> iv12(12, 0);
+            chacha->set_key(key);
+            chacha->set_iv(iv12);
+            constexpr auto cap = uint64_t{1} << 38;
+            const auto remaining = chacha->remaining_keystream_bytes();
+            result.test_is_true("ChaCha 12-byte nonce returns a value", remaining.has_value());
+            result.test_u64_eq("ChaCha 12-byte nonce fresh capacity", *remaining, cap);
+
+            // Consume some bytes, the available keystream decreases
+            std::vector<uint8_t> buf(100);
+            chacha->write_keystream(buf);
+            result.test_opt_u64_eq(
+               "ChaCha 12-byte nonce after 100 byte write", chacha->remaining_keystream_bytes(), cap - buf.size());
+
+            // After seek the count tracks the new offset
+            chacha->seek(cap - 64);
+            result.test_opt_u64_eq("ChaCha 12-byte nonce after near-end seek", chacha->remaining_keystream_bytes(), 64);
+         }
+
+         // CTR-BE with 64-bit counter
+         if(auto ctr_be = Botan::StreamCipher::create("CTR-BE(AES-128,8)")) {
+            const std::vector<uint8_t> key(16, 0);
+            const std::vector<uint8_t> iv(16, 0);
+            ctr_be->set_key(key);
+            ctr_be->set_iv(iv);
+            result.test_opt_is_null("CTR-BE(AES,8) remaining_keystream_bytes", ctr_be->remaining_keystream_bytes());
+         }
+
+         if(auto ctr_be = Botan::StreamCipher::create("CTR-BE(AES-128,4)")) {
+            const std::vector<uint8_t> key(16, 0);
+            const std::vector<uint8_t> iv(16, 0);
+            ctr_be->set_key(key);
+            ctr_be->set_iv(iv);
+
+            constexpr auto cap = (uint64_t{1} << 32) * 16;
+            const auto remaining = ctr_be->remaining_keystream_bytes();
+            result.test_is_true("CTR-BE(AES,4) returns a value", remaining.has_value());
+            result.test_u64_eq("CTR-BE(AES,4) fresh capacity", *remaining, cap);
+         }
+
+         // Ciphers without seek also return nullopt.
+         if(auto rc4 = Botan::StreamCipher::create("RC4")) {
+            std::vector<uint8_t> key(16, 0);
+            rc4->set_key(key);
+            result.test_is_true("RC4 returns nullopt", !rc4->remaining_keystream_bytes().has_value());
+         }
+
+         return result;
+      }
+
+      Test::Result test_exhaustion() {
+         Test::Result result("StreamCipher keystream exhaustion");
+
+         /*
+         * ChaCha 96-bit nonce, near the cap: consume the last 200
+         * bytes successfully, then any further byte must throw.
+         */
+         if(auto chacha = Botan::StreamCipher::create("ChaCha(20)")) {
+            const std::vector<uint8_t> key(32, 0);
+            const std::vector<uint8_t> iv(12, 0xFF);
+            chacha->set_key(key);
+            chacha->set_iv(iv);
+            constexpr uint64_t cap = uint64_t{1} << 38;
+            chacha->seek(cap - 200);
+
+            std::vector<uint8_t> buf(200);
+            result.test_no_throw("ChaCha 12-byte nonce: consume up to cap", [&]() { chacha->write_keystream(buf); });
+            result.test_opt_u64_eq(
+               "ChaCha 12-byte nonce: remaining is 0 at cap", chacha->remaining_keystream_bytes(), 0);
+
+            std::vector<uint8_t> one(1);
+            result.test_throws<Botan::Invalid_State>("ChaCha 12-byte nonce: write past cap throws",
+                                                     [&]() { chacha->write_keystream(one); });
+
+            chacha->seek(cap - 100);
+
+            const auto orig = buf;
+            result.test_throws<Botan::Invalid_State>("ChaCha 12-byte nonce: oversize encrypt throws",
+                                                     [&]() { chacha->encrypt(buf); });
+            result.test_bin_eq("ChaCha 12-byte nonce: oversize encrypt leaves buffer untouched", buf, orig);
+         }
+
+         /*
+         * CTR-BE(AES,4) near the end of the counter cycle (set up by
+         * a high seek): the cap is 2^36 bytes regardless of IV, and
+         * we approach it from the bottom via seek. Consume the last
+         * 64 bytes successfully, then the 65th must throw without
+         * writing.
+         */
+         if(auto ctr_be = Botan::StreamCipher::create("CTR-BE(AES-128,4)")) {
+            const std::vector<uint8_t> key(16, 0);
+            const std::vector<uint8_t> iv(16, 0xFF);
+            ctr_be->set_key(key);
+            ctr_be->set_iv(iv);
+
+            constexpr uint64_t cap = (uint64_t{1} << 32) * 16;
+
+            result.test_opt_u64_eq("CTR-BE(AES,4): remaining at 0", ctr_be->remaining_keystream_bytes(), cap);
+
+            ctr_be->seek(cap - 64);
+            result.test_opt_u64_eq("CTR-BE(AES,4): remaining at 0", ctr_be->remaining_keystream_bytes(), 64);
+
+            std::vector<uint8_t> buf(64);
+            result.test_no_throw("CTR-BE(AES,4): consume last 64 bytes before counter cycle",
+                                 [&]() { ctr_be->write_keystream(buf); });
+            result.test_opt_u64_eq("CTR-BE(AES,4): remaining at 0", ctr_be->remaining_keystream_bytes(), 0);
+
+            const auto orig = buf;
+            result.test_throws<Botan::Invalid_State>("CTR-BE(AES,4): write past cap throws",
+                                                     [&]() { ctr_be->encrypt(buf); });
+            result.test_bin_eq("CTR-BE(AES,4): throw leaves buffer untouched", buf, orig);
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("stream", "stream_cipher_keystream_cap", Stream_Cipher_Keystream_Cap_Tests);
 
 }  // namespace
 

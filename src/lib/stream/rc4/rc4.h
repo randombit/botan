@@ -27,6 +27,10 @@ class RC4 final : public StreamCipher {
 
       void seek(uint64_t offset) override;
 
+      bool supports_seek() const override { return false; }
+
+      std::optional<uint64_t> remaining_keystream_bytes() const override { return {}; }
+
       bool has_keying_material() const override;
 
       size_t buffer_size() const override;

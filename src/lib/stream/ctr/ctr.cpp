@@ -44,6 +44,14 @@ void CTR_BE::clear() {
    zeroise(m_counter);
    zap(m_iv);
    m_pad_pos = 0;
+   m_bytes_remaining = 0;
+}
+
+std::optional<uint64_t> CTR_BE::remaining_keystream_bytes() const {
+   if(!has_keying_material() || m_ctr_size >= sizeof(uint64_t)) {
+      return std::nullopt;
+   }
+   return m_bytes_remaining;
 }
 
 size_t CTR_BE::default_iv_length() const {
@@ -87,6 +95,13 @@ std::string CTR_BE::name() const {
 
 void CTR_BE::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) {
    assert_key_material_set();
+
+   if(m_ctr_size < sizeof(uint64_t)) {
+      if(length > m_bytes_remaining) {
+         throw Invalid_State(fmt("CTR_BE with {}-byte counter has exhausted its keystream", m_ctr_size));
+      }
+      m_bytes_remaining -= length;
+   }
 
    const uint8_t* pad_bits = m_pad.data();
    const size_t pad_size = m_pad.size();
@@ -150,6 +165,13 @@ void CTR_BE::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) {
 
 void CTR_BE::generate_keystream(uint8_t out[], size_t length) {
    assert_key_material_set();
+
+   if(m_ctr_size < sizeof(uint64_t)) {
+      if(length > m_bytes_remaining) {
+         throw Invalid_State(fmt("CTR_BE with {}-byte counter has exhausted its keystream", m_ctr_size));
+      }
+      m_bytes_remaining -= length;
+   }
 
    const size_t avail = m_pad.size() - m_pad_pos;
    const size_t take = std::min(length, avail);
@@ -240,6 +262,16 @@ void CTR_BE::add_counter(const uint64_t counter) {
 
 void CTR_BE::seek(uint64_t offset) {
    assert_key_material_set();
+
+   if(m_ctr_size < sizeof(uint64_t)) {
+      const uint64_t requested_block = offset / m_block_size;
+      const uint64_t max_blocks = uint64_t{1} << (8 * m_ctr_size);
+      if(requested_block >= max_blocks) {
+         throw Invalid_Argument(fmt("CTR_BE::seek offset {} exceeds {}-byte counter range", offset, m_ctr_size));
+      }
+
+      m_bytes_remaining = max_blocks * m_block_size - offset;
+   }
 
    const uint64_t base_counter = m_ctr_blocks * (offset / m_counter.size());
 

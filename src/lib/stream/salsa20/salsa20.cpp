@@ -297,13 +297,10 @@ void Salsa20::clear() {
 void Salsa20::seek(uint64_t offset) {
    assert_key_material_set();
 
-   // Find the block offset
    const uint64_t counter = offset / 64;
-   uint8_t counter8[8];
-   store_le(counter, counter8);
 
-   m_state[8] = load_le<uint32_t>(counter8, 0);
-   m_state[9] += load_le<uint32_t>(counter8, 1);
+   m_state[8] = static_cast<uint32_t>(counter);
+   m_state[9] = static_cast<uint32_t>(counter >> 32);
 
    salsa_core(m_buffer.data(), m_state.data(), 20);
 

@@ -41,6 +41,10 @@ class OFB final : public StreamCipher {
 
       void seek(uint64_t offset) override;
 
+      bool supports_seek() const override { return false; }
+
+      std::optional<uint64_t> remaining_keystream_bytes() const override { return {}; }
+
    private:
       void key_schedule(std::span<const uint8_t> key) override;
       void cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) override;

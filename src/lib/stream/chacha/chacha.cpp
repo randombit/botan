@@ -20,6 +20,13 @@ namespace Botan {
 
 namespace {
 
+/*
+* RFC 8439 defines ChaCha with 96-bit nonces by stealing one of the
+* words used for the block counter. With 64-bit nonces, the block
+* counter is also 64 bits and practically not exhaustible.
+*/
+constexpr uint64_t chacha_96bit_nonce_cap = uint64_t{1} << 38;
+
 inline void chacha_quarter_round(uint32_t& a, uint32_t& b, uint32_t& c, uint32_t& d) {
    a += b;
    d ^= a;
@@ -235,6 +242,13 @@ void ChaCha::chacha(uint8_t output[], size_t output_blocks, uint32_t state[16], 
 void ChaCha::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) {
    assert_key_material_set();
 
+   if(m_iv_length == 12) {
+      if(length > m_bytes_remaining) {
+         throw Invalid_State("ChaCha 96-bit nonce keystream exhausted");
+      }
+      m_bytes_remaining -= length;
+   }
+
    while(length >= m_buffer.size() - m_position) {
       const size_t available = m_buffer.size() - m_position;
 
@@ -254,6 +268,13 @@ void ChaCha::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) {
 
 void ChaCha::generate_keystream(uint8_t out[], size_t length) {
    assert_key_material_set();
+
+   if(m_iv_length == 12) {
+      if(length > m_bytes_remaining) {
+         throw Invalid_State("ChaCha 96-bit nonce keystream exhausted");
+      }
+      m_bytes_remaining -= length;
+   }
 
    while(length >= m_buffer.size() - m_position) {
       const size_t available = m_buffer.size() - m_position;
@@ -395,6 +416,12 @@ void ChaCha::set_iv_bytes(const uint8_t iv[], size_t length) {
       m_state[15] = load_le<uint32_t>(iv, 5);
    }
 
+   m_iv_length = length;
+   m_state13_post_iv = m_state[13];
+   if(length == 12) {
+      m_bytes_remaining = chacha_96bit_nonce_cap;
+   }
+
    chacha(m_buffer.data(), m_buffer.size() / 64, m_state.data(), m_rounds);
    m_position = 0;
 }
@@ -404,6 +431,16 @@ void ChaCha::clear() {
    zap(m_state);
    zap(m_buffer);
    m_position = 0;
+   m_iv_length = 0;
+   m_state13_post_iv = 0;
+   m_bytes_remaining = 0;
+}
+
+std::optional<uint64_t> ChaCha::remaining_keystream_bytes() const {
+   if(!has_keying_material() || m_iv_length != 12) {
+      return std::nullopt;
+   }
+   return m_bytes_remaining;
 }
 
 std::string ChaCha::name() const {
@@ -413,15 +450,21 @@ std::string ChaCha::name() const {
 void ChaCha::seek(uint64_t offset) {
    assert_key_material_set();
 
-   // Find the block offset
-   const uint64_t counter = offset / 64;
+   const uint64_t block = offset / 64;
 
-   uint8_t out[8];
-
-   store_le(counter, out);
-
-   m_state[12] = load_le<uint32_t>(out, 0);
-   m_state[13] += load_le<uint32_t>(out, 1);
+   if(m_iv_length == 12) {
+      // 96 bit nonce implies a 32-bit counter; prevent seeking beyond that
+      if((block >> 32) != 0) {
+         throw Invalid_Argument("ChaCha::seek with 96-bit nonce limited to 2^32 blocks (256 GiB)");
+      }
+      m_state[12] = static_cast<uint32_t>(block);
+      m_state[13] = m_state13_post_iv;
+      m_bytes_remaining = chacha_96bit_nonce_cap - offset;
+   } else {
+      // 64-bit block counter spanning state words 12 and 13.
+      m_state[12] = static_cast<uint32_t>(block);
+      m_state[13] = m_state13_post_iv + static_cast<uint32_t>(block >> 32);
+   }
 
    chacha(m_buffer.data(), m_buffer.size() / 64, m_state.data(), m_rounds);
    m_position = offset % 64;
