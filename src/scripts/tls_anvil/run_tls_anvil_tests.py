@@ -12,11 +12,16 @@ import argparse
 import os
 import subprocess
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+from repo_config import RepoConfig  # noqa: E402
+
+_repo_config = RepoConfig()
+
 
 class Config:
     """ Hardcoded configurations for this CI script """
-    tls_anvil_docker_image = "ghcr.io/tls-attacker/tlsanvil"
-    tls_anvil_version_tag = "@sha256:fc25911df5a2dce9912e9db2037af88f3424fecf52368284bba5a1f50726ccc3" # 1.4.0
+    tls_anvil_docker_image = _repo_config["TLS_ANVIL_DOCKER_IMAGE"]
+    tls_anvil_version_tag = _repo_config["TLS_ANVIL_VERSION_TAG"]
     key_and_cert_storage_path = "/tmp/"
     test_suite_results_dest = "."
     test_suite_results_dir_name = "TestSuiteResults"
