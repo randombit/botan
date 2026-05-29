@@ -42,15 +42,6 @@
       #include <botan/tls_session_manager_sqlite.h>
    #endif
 
-namespace Botan::TLS {
-
-// TODO: remove this, once TLS 1.3 is fully implemented
-class Strict_Policy_Without_TLS13 : public Strict_Policy {
-      bool allow_tls13() const override { return false; }
-};
-
-}  // namespace Botan::TLS
-
 #endif
 
 namespace Botan_Tests {
@@ -1241,17 +1232,17 @@ class TLS_Unit_Tests final : public Test {
          test_modern_versions("NULL PSK", results, client_ses, server_ses, creds, rng, "PSK", "NULL", "SHA-256");
    #endif
 
-         auto strict_policy = std::make_shared<Botan::TLS::Strict_Policy_Without_TLS13>();
+         auto strict_policy = std::make_shared<Botan::TLS::Strict_Policy>();
          test_with_policy("Strict policy",
                           results,
                           client_ses,
                           server_ses,
                           creds,
-                          {Botan::TLS::Protocol_Version::TLS_V12},
+                          {Botan::TLS::Protocol_Version::TLS_V12, Botan::TLS::Protocol_Version::TLS_V13},
                           strict_policy,
                           rng);
 
-         auto suiteb_128 = std::make_shared<Botan::TLS::NSA_Suite_B_128>();
+         auto suiteb_128 = std::make_shared<Botan::TLS::NSA_Suite_B_192>();
          test_with_policy("Suite B",
                           results,
                           client_ses,
