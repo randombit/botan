@@ -427,7 +427,8 @@ void Argon2::argon2(uint8_t output[],
 
    const size_t memory = (m_M / (SYNC_POINTS * m_p)) * (SYNC_POINTS * m_p);
 
-   secure_vector<uint64_t> B(memory * 1024 / 8);
+   constexpr size_t M_scale = 1024 / 8;
+   secure_vector<uint64_t> B(memory * M_scale);
 
    init_blocks(B, *blake2, H0, memory, m_p);
    process_blocks(B, m_t, memory, m_p, m_family);
