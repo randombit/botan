@@ -46,6 +46,10 @@ class ChaCha final : public StreamCipher {
 
       void seek(uint64_t offset) override;
 
+      bool supports_seek() const override { return true; }
+
+      std::optional<uint64_t> remaining_keystream_bytes() const override;
+
       bool has_keying_material() const override;
 
       size_t buffer_size() const override;
@@ -82,6 +86,11 @@ class ChaCha final : public StreamCipher {
       secure_vector<uint32_t> m_state;
       secure_vector<uint8_t> m_buffer;
       size_t m_position = 0;
+      size_t m_iv_length = 0;
+      uint32_t m_state13_post_iv = 0;
+      // Valid only when m_iv_length == 12: bytes the user can still
+      // generate before the 32-bit counter would wrap into the nonce.
+      uint64_t m_bytes_remaining = 0;
 };
 
 }  // namespace Botan

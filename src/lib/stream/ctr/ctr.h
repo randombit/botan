@@ -43,6 +43,10 @@ class CTR_BE final : public StreamCipher {
 
       void seek(uint64_t offset) override;
 
+      bool supports_seek() const override { return true; }
+
+      std::optional<uint64_t> remaining_keystream_bytes() const override;
+
    private:
       void key_schedule(std::span<const uint8_t> key) override;
       void cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) override;
@@ -67,6 +71,9 @@ class CTR_BE final : public StreamCipher {
       secure_vector<uint8_t> m_counter, m_pad;
       std::vector<uint8_t> m_iv;
       size_t m_pad_pos;
+      // Valid only when m_ctr_size < 8: bytes the user can still
+      // generate before the narrow counter would wrap.
+      uint64_t m_bytes_remaining = 0;
 };
 
 }  // namespace Botan

@@ -12,6 +12,7 @@
 #include <botan/secmem.h>
 #include <botan/sym_algo.h>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -207,11 +208,36 @@ class BOTAN_PUBLIC_API(2, 0) StreamCipher : public SymmetricAlgorithm {
       * can be called.
       *
       * @note Not all ciphers support seeking; such objects will throw
-      *       Not_Implemented in this case.
+      *       Not_Implemented in this case. Use supports_seek() to query
+      *       in advance.
       *
       * @param offset the offset where we begin to generate the keystream
       */
       virtual void seek(uint64_t offset) = 0;
+
+      /**
+      * @return true if this cipher implements seek(); false if seek() will
+      *         throw Not_Implemented for any offset.
+      */
+      virtual bool supports_seek() const = 0;
+
+      /**
+      * Many stream ciphers are internally based on encrypting a counter of some
+      * kind. If the counter wraps around, keystream bytes would be repeated.
+      *
+      * This function returns the number of keystream bytes that can still be
+      * produced under the current key/nonce settings, if that limit fits in a
+      * uint64_t. If there is no specific limit (eg due to being based on
+      * permutations rather than a counter), or if the limit is at least 2**64
+      * bytes (where consuming the entire keystream is not practically
+      * possible), then this function returns nullopt.
+      *
+      * Note this returns nullopt if no key is set (there are no keystream bytes
+      * at all available, in that state) or potentially if the nonce is not set
+      * (as in some cases, such as ChaCha, the available counter bytes vary
+      * depending on the size of the nonce used).
+      */
+      virtual std::optional<uint64_t> remaining_keystream_bytes() const = 0;
 
       /**
       * @return provider information about this implementation. Default is "base",

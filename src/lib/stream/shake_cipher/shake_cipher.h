@@ -27,6 +27,10 @@ class SHAKE_Cipher : public StreamCipher {
       */
       void seek(uint64_t offset) final;
 
+      bool supports_seek() const final { return false; }
+
+      std::optional<uint64_t> remaining_keystream_bytes() const override { return {}; }
+
       void clear() final;
 
       Key_Length_Specification key_spec() const final;
