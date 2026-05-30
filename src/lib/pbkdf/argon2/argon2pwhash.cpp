@@ -15,9 +15,28 @@
 
 namespace Botan {
 
+namespace {
+
+std::string argon2_family_name(uint8_t f) {
+   switch(f) {
+      case 0:
+         return "Argon2d";
+      case 1:
+         return "Argon2i";
+      case 2:
+         return "Argon2id";
+      default:
+         throw Invalid_Argument("Unknown Argon2 parameter");
+   }
+}
+
+constexpr size_t MAX_ARGON_MEMORY_GB = sizeof(size_t) == 4 ? 2 : 8;
+
+}  // namespace
+
 Argon2::Argon2(uint8_t family, size_t M, size_t t, size_t p) : m_family(family), m_M(M), m_t(t), m_p(p) {
    BOTAN_ARG_CHECK(m_p >= 1 && m_p <= 128, "Invalid Argon2 threads parameter");
-   BOTAN_ARG_CHECK(m_M >= 8 * m_p && m_M <= 8192 * 1024, "Invalid Argon2 M parameter");
+   BOTAN_ARG_CHECK(m_M >= 8 * m_p && m_M <= MAX_ARGON_MEMORY_GB * 1024 * 1024, "Invalid Argon2 M parameter");
    BOTAN_ARG_CHECK(m_t >= 1 && m_t <= std::numeric_limits<uint32_t>::max(), "Invalid Argon2 t parameter");
 }
 
@@ -43,23 +62,6 @@ void Argon2::derive_key(uint8_t output[],
    argon2(output, output_len, password, password_len, salt, salt_len, key, key_len, ad, ad_len);
 }
 
-namespace {
-
-std::string argon2_family_name(uint8_t f) {
-   switch(f) {
-      case 0:
-         return "Argon2d";
-      case 1:
-         return "Argon2i";
-      case 2:
-         return "Argon2id";
-      default:
-         throw Invalid_Argument("Unknown Argon2 parameter");
-   }
-}
-
-}  // namespace
-
 std::string Argon2::to_string() const {
    return fmt("{}({},{},{})", argon2_family_name(m_family), m_M, m_t, m_p);
 }
@@ -79,7 +81,7 @@ std::unique_ptr<PasswordHash> Argon2_Family::tune_params(size_t /*output_length*
                                                          std::optional<size_t> max_memory,
                                                          uint64_t tune_msec) const {
    // If not set use 256 MB as default max
-   const size_t max_kib = max_memory.value_or(256) * 1024;
+   const size_t max_kib = std::min(MAX_ARGON_MEMORY_GB * 1024 * 1024, max_memory.value_or(256) * 1024);
 
    // Tune with a large memory otherwise we measure cache vs RAM speeds and underestimate
    // costs for larger params. Default is 36 MiB, or use 128 for long times.

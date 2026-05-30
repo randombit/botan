@@ -11,6 +11,7 @@
 #include <botan/pbkdf2.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/mem_utils.h>
 #include <botan/internal/salsa20.h>
@@ -20,8 +21,19 @@ namespace Botan {
 
 namespace {
 
-size_t scrypt_memory_usage(size_t N, size_t r, size_t p) {
-   return 128 * r * (N + p);
+constexpr size_t MAX_SCRYPT_N = 4194304;
+constexpr size_t MAX_SCRYPT_MEMORY_GB = sizeof(size_t) == 4 ? 2 : 8;
+constexpr size_t MAX_SCRYPT_MEMORY_BYTES = MAX_SCRYPT_MEMORY_GB * 1024 * 1024 * 1024 + 65536;
+
+std::optional<size_t> scrypt_memory_usage(size_t N, size_t r, size_t p) {
+   // 128 * r * (N + p) rejecting on overflow
+   const auto block_size = checked_mul(static_cast<size_t>(128), r);
+   const auto blocks = checked_add(N, p);
+   if(block_size && blocks) {
+      return checked_mul(block_size.value(), blocks.value());
+   } else {
+      return {};
+   }
 }
 
 }  // namespace
@@ -51,7 +63,26 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune_params(size_t /*output_length*
    */
 
    // If max_memory is nullopt or zero this becomes zero and is ignored
-   const size_t max_memory_bytes = max_memory.value_or(0) * 1024 * 1024;
+   const size_t max_memory_bytes = std::min(MAX_SCRYPT_MEMORY_BYTES, max_memory.value_or(0) * 1024 * 1024);
+
+   // In below code we invoke scrypt_memory_usage with p == 0 as p contributes
+   // (very slightly) to memory consumption, but N is the driving factor.
+   // Including p leads to using an N half as large as what the user would expect.
+
+   auto scrypt_parameters_acceptable = [&](size_t N, size_t r) -> bool {
+      if(N > MAX_SCRYPT_N) {
+         return false;
+      }
+      if(const auto consumed = scrypt_memory_usage(N, r, 0)) {
+         if(max_memory_bytes > 0 && *consumed > max_memory_bytes) {
+            return false;
+         } else {
+            return true;
+         }
+      } else {
+         return false;
+      }
+   };
 
    // Starting parameters
    size_t N = 8 * 1024;
@@ -69,12 +100,8 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune_params(size_t /*output_length*
 
    uint64_t est_nsec = measured_time;
 
-   // In below code we invoke scrypt_memory_usage with p == 0 as p contributes
-   // (very slightly) to memory consumption, but N is the driving factor.
-   // Including p leads to using an N half as large as what the user would expect.
-
    // First increase r by 8x if possible
-   if(max_memory_bytes == 0 || scrypt_memory_usage(N, r * 8, 0) <= max_memory_bytes) {
+   if(scrypt_parameters_acceptable(N, r * 8)) {
       if(target_nsec / est_nsec >= 5) {
          r *= 8;
          est_nsec *= 5;
@@ -82,7 +109,7 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune_params(size_t /*output_length*
    }
 
    // Now double N as many times as we can
-   while(max_memory_bytes == 0 || scrypt_memory_usage(N * 2, r, 0) <= max_memory_bytes) {
+   while(scrypt_parameters_acceptable(N * 2, r)) {
       if(target_nsec / est_nsec >= 2) {
          N *= 2;
          est_nsec *= 2;
@@ -133,8 +160,16 @@ Scrypt::Scrypt(size_t N, size_t r, size_t p) : m_N(N), m_r(r), m_p(p) {
    if(r == 0 || r > 256) {
       throw Invalid_Argument("Invalid or unsupported scrypt r");
    }
-   if(N < 1 || N > 4194304) {
+   if(N < 1 || N > MAX_SCRYPT_N) {
       throw Invalid_Argument("Invalid or unsupported scrypt N");
+   }
+
+   if(const auto memory_usage = scrypt_memory_usage(N, r, p)) {
+      if(memory_usage > MAX_SCRYPT_MEMORY_BYTES) {
+         throw Invalid_Argument("Scrypt parameters exceed maximum allowed memory limit");
+      }
+   } else {
+      throw Invalid_Argument("Scrypt parameters are too large for this platform");
    }
 }
 
@@ -147,7 +182,9 @@ size_t Scrypt::total_memory_usage() const {
    const size_t p = parallelism();
    const size_t r = iterations();
 
-   return scrypt_memory_usage(N, r, p);
+   const auto consumption = scrypt_memory_usage(N, r, p);
+   BOTAN_ASSERT_NOMSG(consumption.has_value());
+   return consumption.value();
 }
 
 namespace {
