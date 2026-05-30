@@ -63,9 +63,7 @@ class BOTAN_TEST_API BlockCipherModePaddingMethod /* NOLINT(*-special-member-fun
       * @param block_size   size of each block in bytes
       * @return the total number of output bytes (including the padding)
       */
-      virtual size_t output_length(size_t input_length, size_t block_size) const {
-         return ((input_length + block_size) / block_size) * block_size;
-      }
+      virtual size_t output_length(size_t input_length, size_t block_size) const;
 
       /**
       * @return name of the mode

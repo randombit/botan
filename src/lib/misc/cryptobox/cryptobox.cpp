@@ -15,6 +15,7 @@
 #include <botan/pwdhash.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/mem_utils.h>
 
@@ -48,7 +49,8 @@ std::string encrypt(const uint8_t input[], size_t input_len, std::string_view pa
       mac (20 bytes)
       ciphertext
    */
-   secure_vector<uint8_t> out_buf(CRYPTOBOX_HEADER_LEN + input_len);
+   const size_t out_len = add_or_throw(CRYPTOBOX_HEADER_LEN, input_len, "CryptoBox input too large");
+   secure_vector<uint8_t> out_buf(out_len);
    store_be(CRYPTOBOX_VERSION_CODE, out_buf.data());
    rng.randomize(&out_buf[VERSION_CODE_LEN], PBKDF_SALT_LEN);
    // space left for MAC here

@@ -14,6 +14,7 @@
 #include <botan/internal/cmac.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/ctr.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/poly_dbl.h>
 
 namespace Botan {
@@ -161,6 +162,10 @@ void SIV_Mode::set_ctr_iv(secure_vector<uint8_t> V) {
    ctr().set_iv(V.data(), V.size());
 }
 
+size_t SIV_Encryption::output_length(size_t input_length) const {
+   return add_or_throw(input_length, tag_size(), "SIV input too large");
+}
+
 void SIV_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
 
@@ -180,6 +185,11 @@ void SIV_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    // intervening start_msg() silently re-use the prior nonce instead of
    // running nonce-less SIV.
    reset();
+}
+
+size_t SIV_Decryption::output_length(size_t input_length) const {
+   BOTAN_ARG_CHECK(input_length >= tag_size(), "Message too short to be valid");
+   return input_length - tag_size();
 }
 
 void SIV_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {

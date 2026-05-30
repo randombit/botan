@@ -81,7 +81,7 @@ class EAX_Encryption final : public EAX_Mode {
       explicit EAX_Encryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 0) :
             EAX_Mode(std::move(cipher), tag_size) {}
 
-      size_t output_length(size_t input_length) const override { return input_length + tag_size(); }
+      size_t output_length(size_t input_length) const override;
 
       size_t minimum_final_size() const override { return 0; }
 
@@ -102,10 +102,7 @@ class EAX_Decryption final : public EAX_Mode {
       explicit EAX_Decryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 0) :
             EAX_Mode(std::move(cipher), tag_size) {}
 
-      size_t output_length(size_t input_length) const override {
-         BOTAN_ARG_CHECK(input_length >= tag_size(), "Sufficient input");
-         return input_length - tag_size();
-      }
+      size_t output_length(size_t input_length) const override;
 
       size_t minimum_final_size() const override { return tag_size(); }
 

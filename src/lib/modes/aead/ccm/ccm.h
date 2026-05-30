@@ -94,7 +94,7 @@ class CCM_Encryption final : public CCM_Mode {
       explicit CCM_Encryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16, size_t L = 3) :
             CCM_Mode(std::move(cipher), tag_size, L) {}
 
-      size_t output_length(size_t input_length) const override { return input_length + tag_size(); }
+      size_t output_length(size_t input_length) const override;
 
       size_t minimum_final_size() const override { return 0; }
 
@@ -117,10 +117,7 @@ class CCM_Decryption final : public CCM_Mode {
       explicit CCM_Decryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16, size_t L = 3) :
             CCM_Mode(std::move(cipher), tag_size, L) {}
 
-      size_t output_length(size_t input_length) const override {
-         BOTAN_ARG_CHECK(input_length >= tag_size(), "Sufficient input");
-         return input_length - tag_size();
-      }
+      size_t output_length(size_t input_length) const override;
 
       size_t minimum_final_size() const override { return tag_size(); }
 

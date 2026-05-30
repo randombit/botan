@@ -179,6 +179,11 @@ bool is_miller_rabin_probable_prime(const BigInt& n,
 }
 
 size_t miller_rabin_test_iterations(size_t n_bits, size_t prob, bool random) {
+   // Cap prob at 512 bits as _way_ more than enough; a random fault causing
+   // false accept is much more likely to occur than an actual 2^-512 event is.
+
+   prob = std::min<size_t>(512, prob);
+
    const size_t base = (prob + 2) / 2;  // worst case 4^-t error rate
 
    /*

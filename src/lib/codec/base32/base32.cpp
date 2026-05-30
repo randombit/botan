@@ -37,11 +37,13 @@ class Base32 final {
       static constexpr size_t remaining_bits_before_padding() noexcept { return m_remaining_bits_before_padding; }
 
       static constexpr size_t encode_max_output(size_t input_length) {
-         return (round_up(input_length, m_encoding_bytes_in) / m_encoding_bytes_in) * m_encoding_bytes_out;
+         const size_t encoding_blocks = round_up(input_length, m_encoding_bytes_in) / m_encoding_bytes_in;
+         return mul_or_throw(encoding_blocks, m_encoding_bytes_out, "Input too large to base32 encode");
       }
 
       static constexpr size_t decode_max_output(size_t input_length) {
-         return (round_up(input_length, m_encoding_bytes_out) * m_encoding_bytes_in) / m_encoding_bytes_out;
+         // Divide before multiply to avoid overflow; round_up makes the division exact.
+         return (round_up(input_length, m_encoding_bytes_out) / m_encoding_bytes_out) * m_encoding_bytes_in;
       }
 
       static void encode(char out[8], const uint8_t in[5]) noexcept;

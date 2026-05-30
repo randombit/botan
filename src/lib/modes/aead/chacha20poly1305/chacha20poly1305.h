@@ -73,7 +73,7 @@ class ChaCha20Poly1305_Mode : public AEAD_Mode {
 */
 class ChaCha20Poly1305_Encryption final : public ChaCha20Poly1305_Mode {
    public:
-      size_t output_length(size_t input_length) const override { return input_length + tag_size(); }
+      size_t output_length(size_t input_length) const override;
 
       size_t minimum_final_size() const override { return 0; }
 
@@ -87,10 +87,7 @@ class ChaCha20Poly1305_Encryption final : public ChaCha20Poly1305_Mode {
 */
 class ChaCha20Poly1305_Decryption final : public ChaCha20Poly1305_Mode {
    public:
-      size_t output_length(size_t input_length) const override {
-         BOTAN_ARG_CHECK(input_length >= tag_size(), "Sufficient input");
-         return input_length - tag_size();
-      }
+      size_t output_length(size_t input_length) const override;
 
       size_t minimum_final_size() const override { return tag_size(); }
 

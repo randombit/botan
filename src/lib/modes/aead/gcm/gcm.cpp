@@ -15,6 +15,7 @@
 #include <botan/internal/ctr.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/ghash.h>
+#include <botan/internal/int_utils.h>
 #include <array>
 
 namespace Botan {
@@ -123,6 +124,10 @@ void GCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
    m_in_msg = true;
 }
 
+size_t GCM_Encryption::output_length(size_t input_length) const {
+   return add_or_throw(input_length, tag_size(), "GCM input too large");
+}
+
 size_t GCM_Encryption::process_msg(uint8_t buf[], size_t sz) {
    BOTAN_STATE_CHECK(m_in_msg);
    BOTAN_ARG_CHECK(sz % update_granularity() == 0, "Invalid buffer size");
@@ -144,6 +149,11 @@ void GCM_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    m_ghash->final(std::span(mac).first(tag_size()));
    buffer += std::make_pair(mac.data(), tag_size());
    m_in_msg = false;
+}
+
+size_t GCM_Decryption::output_length(size_t input_length) const {
+   BOTAN_ARG_CHECK(input_length >= tag_size(), "Message too short to be valid");
+   return input_length - tag_size();
 }
 
 size_t GCM_Decryption::process_msg(uint8_t buf[], size_t sz) {

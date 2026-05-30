@@ -12,6 +12,7 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/mode_pad.h>
 
 namespace Botan {
@@ -123,7 +124,8 @@ void CBC_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    const size_t BS = block_size();
 
-   const size_t output_bytes = offset + padding().output_length(buffer.size() - offset, BS);
+   const size_t output_bytes =
+      add_or_throw(offset, padding().output_length(buffer.size() - offset, BS), "CBC input too large");
    const size_t bytes_in_final_block = (buffer.size() - offset) % BS;
    buffer.resize(output_bytes);
    padding().add_padding(std::span(buffer).subspan(offset), bytes_in_final_block, BS);

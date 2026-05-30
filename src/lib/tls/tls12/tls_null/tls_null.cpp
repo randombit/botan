@@ -12,6 +12,7 @@
 #include <botan/tls_alert.h>
 #include <botan/tls_exceptn.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 
 namespace Botan::TLS {
@@ -122,16 +123,18 @@ void TLS_NULL_HMAC_AEAD_Encryption::set_associated_data_n(size_t idx, std::span<
 }
 
 size_t TLS_NULL_HMAC_AEAD_Encryption::output_length(size_t input_length) const {
-   return input_length + tag_size();
+   return add_or_throw(input_length, tag_size(), "TLS NULL input too large");
 }
 
 void TLS_NULL_HMAC_AEAD_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    process(std::span{buffer}.subspan(offset));
-   buffer.resize(buffer.size() + tag_size());
+   const size_t output_size = add_or_throw(buffer.size(), tag_size(), "TLS NULL input too large");
+   buffer.resize(output_size);
    mac().final(std::span{buffer}.last(tag_size()));
 }
 
 size_t TLS_NULL_HMAC_AEAD_Decryption::output_length(size_t input_length) const {
+   BOTAN_ARG_CHECK(input_length >= tag_size(), "Message too short to be valid");
    return input_length - tag_size();
 }
 

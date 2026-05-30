@@ -13,6 +13,7 @@
 #include <botan/pubkey.h>
 #include <botan/rng.h>
 #include <botan/internal/buffer_slicer.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/socket_udp.h>
 
 #include <map>
@@ -72,8 +73,14 @@ std::map<std::string, std::vector<uint8_t>> unpack_roughtime_packet(T bytes) {
    uint32_t start = start_content;
    std::map<std::string, std::vector<uint8_t>> tags;
    for(uint32_t i = 0; i < num_tags; ++i) {
-      const size_t end =
-         ((i + 1) == num_tags) ? bytes.size() : start_content + from_little_endian<uint32_t>(buf + 4 + i * 4);
+      size_t end = bytes.size();
+      if((i + 1) != num_tags) {
+         const auto tag_end = checked_add(start_content, from_little_endian<uint32_t>(buf + 4 + i * 4));
+         if(!tag_end.has_value()) {
+            throw Roughtime::Roughtime_Error("Tag end index out of bounds");
+         }
+         end = tag_end.value();
+      }
       if(end > bytes.size()) {
          throw Roughtime::Roughtime_Error("Tag end index out of bounds");
       }

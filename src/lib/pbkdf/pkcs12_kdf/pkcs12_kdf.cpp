@@ -13,6 +13,7 @@
 #include <botan/mem_ops.h>
 #include <botan/internal/charset.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/time_utils.h>
 #include <algorithm>
 #include <array>
@@ -94,10 +95,20 @@ void pkcs12_kdf_with_hash(std::span<uint8_t> out,
    const size_t pwd_len = pwd_bytes.size();
    const size_t salt_len = salt.size();
 
+   // Round len up to a multiple of v, checking for overflow. Dividing before
+   // the multiply avoids overflow when computing the number of blocks.
+   auto round_up_to_v = [v](size_t len) -> size_t {
+      if(len == 0) {
+         return 0;
+      }
+      const size_t blocks = (len / v) + (len % v != 0 ? 1 : 0);
+      return mul_or_throw(blocks, v, "PKCS12-KDF: input too large");
+   };
+
    // Calculate sizes (must be multiple of v)
-   const size_t S_len = salt_len > 0 ? v * ((salt_len + v - 1) / v) : 0;
-   const size_t P_len = pwd_len > 0 ? v * ((pwd_len + v - 1) / v) : 0;
-   const size_t I_len = S_len + P_len;
+   const size_t S_len = round_up_to_v(salt_len);
+   const size_t P_len = round_up_to_v(pwd_len);
+   const size_t I_len = add_or_throw(S_len, P_len, "PKCS12-KDF: input too large");
 
    // Create D (diversifier): v bytes of id
    secure_vector<uint8_t> D(v, id);

@@ -284,8 +284,12 @@ void decrypt_record(secure_vector<uint8_t>& output,
    AEAD_Mode& aead = cs.aead();
 
    const std::vector<uint8_t> nonce = cs.aead_nonce(record_contents, record_len, record_sequence);
-   const uint8_t* msg = &record_contents[cs.nonce_bytes_from_record()];
-   const size_t msg_length = record_len - cs.nonce_bytes_from_record();
+   const size_t nonce_from_record = cs.nonce_bytes_from_record();
+   if(record_len <= nonce_from_record) {
+      throw TLS_Exception(Alert::BadRecordMac, "AEAD packet too short to be valid");
+   }
+   const uint8_t* msg = &record_contents[nonce_from_record];
+   const size_t msg_length = record_len - nonce_from_record;
 
    /*
    * This early rejection is based just on public information (length of the
