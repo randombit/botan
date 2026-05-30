@@ -22,7 +22,7 @@ namespace Botan {
 * A forward error correction code compatible with the zfec
 * library (https://github.com/tahoe-lafs/zfec)
 *
-* This algorithm is *not constant time* and is likely succeptible to
+* This algorithm is *not constant time* and is likely susceptible to
 * side channels. Do not use this class to encode information that
 * should be kept secret. (If nothing else, because the first K shares
 * are simply the original input!)
