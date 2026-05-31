@@ -10,6 +10,7 @@
    #include <botan/hash.h>
    #include <botan/mem_ops.h>
    #include <botan/zfec.h>
+   #include <botan/internal/int_utils.h>
    #include <botan/internal/loadstor.h>
    #include <fstream>
    #include <sstream>
@@ -238,7 +239,18 @@ class FEC_Decode final : public Command {
 
          const Botan::ZFEC fec(k, n);
 
-         std::vector<uint8_t> decoded(share_size * k);
+         const auto decoded_size = Botan::checked_mul(share_size, k);
+         if(!decoded_size.has_value()) {
+            throw CLI_Error("Share size and count are too large to decode");
+         }
+
+         const size_t decoded_len = decoded_size.value();
+         const size_t trailer_len = Botan::add_or_throw(hash_len, padding, "FEC share padding is too large");
+         if(decoded_len < trailer_len) {
+            throw CLI_Error("Recovered data is too short to be valid");
+         }
+
+         std::vector<uint8_t> decoded(decoded_len);
 
          auto decoder_fn = [&](size_t share, const uint8_t bits[], size_t len) {
             std::memcpy(&decoded[share * share_size], bits, len);
@@ -252,20 +264,20 @@ class FEC_Decode final : public Command {
 
          fec.decode_shares(share_ptrs, share_size, decoder_fn);
 
-         auto decoded_digest = hash->process(decoded.data(), decoded.size() - (hash_len + padding));
+         const size_t output_len = decoded_len - trailer_len;
+         auto decoded_digest = hash->process(decoded.data(), output_len);
 
-         if(!Botan::constant_time_compare(
-               decoded_digest.data(), &decoded[decoded.size() - (hash_len + padding)], hash_len)) {
+         if(!Botan::constant_time_compare(decoded_digest.data(), &decoded[output_len], hash_len)) {
             throw CLI_Error("Recovered data failed digest check");
          }
 
          for(size_t i = 0; i != padding; ++i) {
-            if(decoded[decoded.size() - padding + i] != 0) {
+            if(decoded[decoded_len - padding + i] != 0) {
                throw CLI_Error("Recovered data had non-zero padding bytes");
             }
          }
 
-         output_binary().write(reinterpret_cast<const char*>(decoded.data()), decoded.size() - (hash_len + padding));
+         output_binary().write(reinterpret_cast<const char*>(decoded.data()), output_len);
       }
 };
 

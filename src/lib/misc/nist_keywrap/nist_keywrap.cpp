@@ -8,6 +8,7 @@
 
 #include <botan/block_cipher.h>
 #include <botan/exceptn.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 
 namespace Botan {
@@ -15,9 +16,9 @@ namespace Botan {
 namespace {
 
 std::vector<uint8_t> raw_nist_key_wrap(const uint8_t input[], size_t input_len, const BlockCipher& bc, uint64_t ICV) {
-   const size_t n = (input_len + 7) / 8;
+   const size_t n = input_len / 8 + (input_len % 8 != 0 ? 1 : 0);
 
-   secure_vector<uint8_t> R((n + 1) * 8);
+   secure_vector<uint8_t> R(mul_or_throw<size_t>(8, n + 1, "NIST key wrap input too large"));
    secure_vector<uint8_t> A(16);
 
    store_be(ICV, A.data());
@@ -197,6 +198,8 @@ secure_vector<uint8_t> nist_key_unwrap_padded(const uint8_t input[], size_t inpu
    length, which is R.size() minus 0 to 7 bytes of padding. Compute
    the ICV we'd expect for the zero-padding case and subtract ICV_out;
    for a valid unwrap the difference is at most 7, and equals the padding.
+   For an invalid unwrap the unsigned subtraction wraps to a value > 7
+   (checked below), so the modular arithmetic here is intentional.
    */
    const uint64_t expected_ICV_max = 0xA65959A600000000 | static_cast<uint32_t>(R.size());
    const uint64_t padding = expected_ICV_max - ICV_out;

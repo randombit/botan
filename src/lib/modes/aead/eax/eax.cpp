@@ -14,6 +14,7 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/ctr.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/int_utils.h>
 
 namespace Botan {
 
@@ -131,6 +132,10 @@ void EAX_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
    m_cmac->update(2);
 }
 
+size_t EAX_Encryption::output_length(size_t input_length) const {
+   return add_or_throw(input_length, tag_size(), "EAX input too large");
+}
+
 size_t EAX_Encryption::process_msg(uint8_t buf[], size_t sz) {
    BOTAN_STATE_CHECK(!m_nonce_mac.empty());
    m_ctr->cipher(buf, buf, sz);
@@ -155,6 +160,11 @@ void EAX_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    buffer += std::make_pair(data_mac.data(), tag_size());
 
    m_nonce_mac.clear();
+}
+
+size_t EAX_Decryption::output_length(size_t input_length) const {
+   BOTAN_ARG_CHECK(input_length >= tag_size(), "Message too short to be valid");
+   return input_length - tag_size();
 }
 
 size_t EAX_Decryption::process_msg(uint8_t buf[], size_t sz) {

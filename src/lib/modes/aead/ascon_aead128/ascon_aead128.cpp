@@ -11,6 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/concat_util.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 
 namespace Botan {
@@ -110,6 +111,10 @@ std::array<uint8_t, 16> Ascon_AEAD128_Mode::calculate_tag_and_finish() {
    return tag;
 }
 
+size_t Ascon_AEAD128_Encryption::output_length(size_t input_length) const {
+   return add_or_throw(input_length, tag_size(), "Ascon-AEAD128 input too large");
+}
+
 size_t Ascon_AEAD128_Encryption::process_msg(uint8_t buf[], size_t size) {
    BOTAN_STATE_CHECK(has_keying_material());
    BOTAN_STATE_CHECK(m_has_nonce);
@@ -127,6 +132,11 @@ void Ascon_AEAD128_Encryption::finish_msg(secure_vector<uint8_t>& final_block, s
    process_msg(final_block_at_offset.data(), final_block_at_offset.size());
    const auto tag = calculate_tag_and_finish();
    final_block.insert(final_block.end(), tag.begin(), tag.end());
+}
+
+size_t Ascon_AEAD128_Decryption::output_length(size_t input_length) const {
+   BOTAN_ARG_CHECK(input_length >= tag_size(), "Message too short to be valid");
+   return input_length - tag_size();
 }
 
 size_t Ascon_AEAD128_Decryption::process_msg(uint8_t buf[], size_t size) {

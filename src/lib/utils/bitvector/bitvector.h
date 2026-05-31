@@ -20,6 +20,7 @@
 #include <botan/strong_type.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/stl_util.h>
 
@@ -465,19 +466,22 @@ class bitvector_base final {
        * @param bits   (optional) if not all @p bytes should be loaded in full
        */
       void from_bytes(std::span<const uint8_t> bytes, std::optional<size_type> bits = std::nullopt) {
-         m_bits = bits.value_or(bytes.size_bytes() * 8);
-         BOTAN_ARG_CHECK(m_bits <= bytes.size_bytes() * 8, "not enough data to load so many bits");
-         resize(m_bits);
+         const size_type new_bits = bits.has_value()
+                                       ? bits.value()
+                                       : mul_or_throw<size_t>(8, bytes.size_bytes(), "bitvector input is too large");
+         const size_type bytes_needed = (new_bits / 8) + (new_bits % 8 != 0 ? 1 : 0);
+         BOTAN_ARG_CHECK(bytes_needed <= bytes.size_bytes(), "not enough data to load so many bits");
+         resize(new_bits);
 
          // load as much aligned data as possible
-         const auto verbatim_blocks = m_bits / block_size_bits;
+         const auto verbatim_blocks = new_bits / block_size_bits;
          const auto verbatim_bytes = verbatim_blocks * block_size_bytes;
          if(verbatim_blocks > 0) {
             typecast_copy(std::span{m_blocks}.first(verbatim_blocks), bytes.first(verbatim_bytes));
          }
 
          // load remaining unaligned data
-         for(size_type i = verbatim_bytes * 8; i < m_bits; ++i) {
+         for(size_type i = verbatim_bytes * 8; i < new_bits; ++i) {
             ref(i) = ((bytes[i >> 3] & (uint8_t(1) << (i & 7))) != 0);
          }
       }
@@ -921,7 +925,7 @@ class bitvector_base final {
       }
 
       static constexpr size_type ceil_toblocks(size_type bits) {
-         return (bits + block_size_bits - 1) / block_size_bits;
+         return add_or_throw(bits, block_size_bits - 1, "bitvector size is too large") / block_size_bits;
       }
 
       auto ref(size_type pos) const { return bitref<const block_type>(m_blocks, pos); }

@@ -56,6 +56,36 @@ constexpr inline std::optional<T> checked_mul(T a, T b) {
    return r;
 }
 
+/**
+* Add @p a and @p b, throwing Invalid_Argument with message @p msg if the
+* addition would overflow.
+*
+* TODO(Botan4) add std::source_location argument
+*/
+template <std::unsigned_integral T>
+constexpr T add_or_throw(T a, T b, std::string_view msg) {
+   if(auto r = checked_add(a, b)) {
+      return r.value();
+   } else {
+      throw Invalid_Argument(msg);
+   }
+}
+
+/**
+* Multiply @p a and @p b, throwing Invalid_Argument with message @p msg if the
+* multiplication would overflow.
+*
+* TODO(Botan4) add std::source_location argument
+*/
+template <std::unsigned_integral T>
+constexpr T mul_or_throw(T a, T b, std::string_view msg) {
+   if(auto r = checked_mul(a, b)) {
+      return r.value();
+   } else {
+      throw Invalid_Argument(msg);
+   }
+}
+
 template <typename RT, typename ExceptionType, typename AT>
    requires std::integral<strong_type_wrapped_type<RT>> && std::integral<strong_type_wrapped_type<AT>>
 constexpr RT checked_cast_to_or_throw(AT i, std::string_view error_msg_on_fail) {

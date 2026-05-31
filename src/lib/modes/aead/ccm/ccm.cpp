@@ -12,6 +12,7 @@
 #include <botan/mem_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 
 namespace Botan {
@@ -187,6 +188,10 @@ secure_vector<uint8_t> CCM_Mode::format_c0() {
    return C;
 }
 
+size_t CCM_Encryption::output_length(size_t input_length) const {
+   return add_or_throw(input_length, tag_size(), "CCM input too large");
+}
+
 void CCM_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    BOTAN_ARG_CHECK(buffer.size() >= offset, "Offset is out of range");
 
@@ -235,6 +240,11 @@ void CCM_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    buffer += std::make_pair(T.data(), tag_size());
 
    reset();
+}
+
+size_t CCM_Decryption::output_length(size_t input_length) const {
+   BOTAN_ARG_CHECK(input_length >= tag_size(), "Message too short to be valid");
+   return input_length - tag_size();
 }
 
 void CCM_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {

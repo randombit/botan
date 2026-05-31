@@ -10,8 +10,15 @@
 #include <botan/internal/mode_pad.h>
 
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/int_utils.h>
 
 namespace Botan {
+
+size_t BlockCipherModePaddingMethod::output_length(size_t input_length, size_t block_size) const {
+   // Round input_length down to a multiple of block_size then add a full block
+   const size_t full_blocks = input_length - (input_length % block_size);
+   return add_or_throw(full_blocks, block_size, "Input too large to pad");
+}
 
 /**
 * Get a block cipher padding method by name

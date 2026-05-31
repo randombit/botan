@@ -68,7 +68,7 @@ class Ascon_AEAD128_Mode : public AEAD_Mode {
 */
 class Ascon_AEAD128_Encryption final : public Ascon_AEAD128_Mode {
    public:
-      size_t output_length(size_t input_length) const override { return input_length + tag_size(); }
+      size_t output_length(size_t input_length) const override;
 
       size_t minimum_final_size() const override { return 0; }
 
@@ -82,10 +82,7 @@ class Ascon_AEAD128_Encryption final : public Ascon_AEAD128_Mode {
 */
 class Ascon_AEAD128_Decryption final : public Ascon_AEAD128_Mode {
    public:
-      size_t output_length(size_t input_length) const override {
-         BOTAN_ARG_CHECK(input_length >= tag_size(), "Sufficient input");
-         return input_length - tag_size();
-      }
+      size_t output_length(size_t input_length) const override;
 
       size_t minimum_final_size() const override { return tag_size(); }
 

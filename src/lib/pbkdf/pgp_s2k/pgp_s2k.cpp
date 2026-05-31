@@ -11,6 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/mem_utils.h>
 #include <botan/internal/time_utils.h>
 #include <algorithm>
@@ -31,7 +32,8 @@ void pgp_s2k(HashFunction& hash,
       throw Invalid_Argument("OpenPGP S2K requires a salt in iterated mode");
    }
 
-   secure_vector<uint8_t> input_buf(salt_len + password_size);
+   const size_t input_len = add_or_throw(salt_len, password_size, "OpenPGP S2K salt and password are too large");
+   secure_vector<uint8_t> input_buf(input_len);
    if(salt_len > 0) {
       copy_mem(input_buf.data(), salt, salt_len);
    }
@@ -104,7 +106,7 @@ std::unique_ptr<PasswordHash> RFC4880_S2K_Family::tune_params(size_t output_len,
    const uint64_t desired_nsec = desired_msec * 1000000;
 
    const size_t hash_size = m_hash->output_length();
-   const size_t blocks_required = (output_len <= hash_size ? 1 : (output_len + hash_size - 1) / hash_size);
+   const size_t blocks_required = std::max<size_t>(1, (output_len / hash_size) + (output_len % hash_size != 0 ? 1 : 0));
 
    const double bytes_to_be_hashed = (hash_bytes_per_second * (desired_nsec / 1000000000.0)) / blocks_required;
    const size_t iterations = RFC4880_round_iterations(static_cast<size_t>(bytes_to_be_hashed));

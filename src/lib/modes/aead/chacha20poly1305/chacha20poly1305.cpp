@@ -11,6 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 
 namespace Botan {
@@ -102,6 +103,10 @@ void ChaCha20Poly1305_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
    }
 }
 
+size_t ChaCha20Poly1305_Encryption::output_length(size_t input_length) const {
+   return add_or_throw(input_length, tag_size(), "ChaCha20Poly1305 input too large");
+}
+
 size_t ChaCha20Poly1305_Encryption::process_msg(uint8_t buf[], size_t sz) {
    BOTAN_STATE_CHECK(m_nonce_len > 0);
    m_chacha->cipher1(buf, sz);
@@ -131,10 +136,19 @@ void ChaCha20Poly1305_Encryption::finish_msg(secure_vector<uint8_t>& buffer, siz
    }
    update_len(m_ctext_len);
 
-   buffer.resize(buffer.size() + tag_size());
+   const auto new_size = checked_add(buffer.size(), tag_size());
+   if(!new_size.has_value()) {
+      throw Invalid_State("ChaCha20Poly1305 message length limit exceeded");
+   }
+   buffer.resize(new_size.value());
    m_poly1305->final(&buffer[buffer.size() - tag_size()]);
    m_ctext_len = 0;
    m_nonce_len = 0;
+}
+
+size_t ChaCha20Poly1305_Decryption::output_length(size_t input_length) const {
+   BOTAN_ARG_CHECK(input_length >= tag_size(), "Message too short to be valid");
+   return input_length - tag_size();
 }
 
 size_t ChaCha20Poly1305_Decryption::process_msg(uint8_t buf[], size_t sz) {

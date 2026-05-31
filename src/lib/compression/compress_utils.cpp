@@ -73,8 +73,9 @@ void Stream_Compression::process(secure_vector<uint8_t>& buf, size_t offset, uin
       return;
    }
 
-   if(m_buffer.size() < buf.size() + offset) {
-      m_buffer.resize(buf.size() + offset);
+   const size_t buffer_needed = add_or_throw(buf.size(), offset, "Compression input too large");
+   if(m_buffer.size() < buffer_needed) {
+      m_buffer.resize(buffer_needed);
    }
 
    // If the output buffer has zero length, .data() might return nullptr. This would
@@ -97,8 +98,9 @@ void Stream_Compression::process(secure_vector<uint8_t>& buf, size_t offset, uin
          m_buffer.resize(m_buffer.size() - m_stream->avail_out());
          break;
       } else if(m_stream->avail_out() == 0) {
-         const size_t added = 8 + m_buffer.size();
-         m_buffer.resize(m_buffer.size() + added);
+         const size_t added = add_or_throw<size_t>(m_buffer.size(), 8, "Compression output too large");
+         const size_t new_size = add_or_throw(m_buffer.size(), added, "Compression output too large");
+         m_buffer.resize(new_size);
          m_stream->next_out(m_buffer.data() + m_buffer.size() - added, added);
       } else if(m_stream->avail_in() == 0) {
          m_buffer.resize(m_buffer.size() - m_stream->avail_out());
@@ -133,8 +135,9 @@ void Stream_Decompression::process(secure_vector<uint8_t>& buf, size_t offset, u
    BOTAN_ASSERT(m_stream, "Initialized");
    BOTAN_ASSERT(buf.size() >= offset, "Offset is sane");
 
-   if(m_buffer.size() < buf.size() + offset) {
-      m_buffer.resize(buf.size() + offset);
+   const size_t buffer_needed = add_or_throw(buf.size(), offset, "Compression input too large");
+   if(m_buffer.size() < buffer_needed) {
+      m_buffer.resize(buffer_needed);
    }
 
    m_stream->next_in(buf.data() + offset, buf.size() - offset);
@@ -161,8 +164,9 @@ void Stream_Decompression::process(secure_vector<uint8_t>& buf, size_t offset, u
       }
 
       if(m_stream->avail_out() == 0) {
-         const size_t added = 8 + m_buffer.size();
-         m_buffer.resize(m_buffer.size() + added);
+         const size_t added = add_or_throw<size_t>(m_buffer.size(), 8, "Compression output too large");
+         const size_t new_size = add_or_throw(m_buffer.size(), added, "Compression output too large");
+         m_buffer.resize(new_size);
          m_stream->next_out(m_buffer.data() + m_buffer.size() - added, added);
       } else if(m_stream->avail_in() == 0) {
          m_buffer.resize(m_buffer.size() - m_stream->avail_out());

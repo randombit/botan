@@ -40,7 +40,8 @@ void hex_encode(char output[], const uint8_t input[], size_t input_length, bool 
 }
 
 std::string hex_encode(const uint8_t input[], size_t input_length, bool uppercase) {
-   std::string output(2 * input_length, 0);
+   const size_t output_length = mul_or_throw<size_t>(2, input_length, "Input too large to hex encode");
+   std::string output(output_length, 0);
 
    if(input_length > 0) {
       hex_encode(&output.front(), input, input_length, uppercase);

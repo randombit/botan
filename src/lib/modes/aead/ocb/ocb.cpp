@@ -13,6 +13,7 @@
 #include <botan/mem_ops.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/poly_dbl.h>
 
 namespace Botan {
@@ -352,6 +353,10 @@ void OCB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
    m_block_index = 0;
 }
 
+size_t OCB_Encryption::output_length(size_t input_length) const {
+   return add_or_throw(input_length, tag_size(), "OCB input too large");
+}
+
 void OCB_Encryption::encrypt(uint8_t buffer[], size_t blocks) {
    assert_key_material_set();
    BOTAN_STATE_CHECK(m_L->initialized());
@@ -433,6 +438,11 @@ void OCB_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    buffer += std::make_pair(mac.data(), tag_size());
 
    reset();
+}
+
+size_t OCB_Decryption::output_length(size_t input_length) const {
+   BOTAN_ARG_CHECK(input_length >= tag_size(), "Message too short to be valid");
+   return input_length - tag_size();
 }
 
 void OCB_Decryption::decrypt(uint8_t buffer[], size_t blocks) {

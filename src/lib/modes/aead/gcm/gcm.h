@@ -79,7 +79,7 @@ class GCM_Encryption final : public GCM_Mode {
       explicit GCM_Encryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16) :
             GCM_Mode(std::move(cipher), tag_size) {}
 
-      size_t output_length(size_t input_length) const override { return input_length + tag_size(); }
+      size_t output_length(size_t input_length) const override;
 
       size_t minimum_final_size() const override { return 0; }
 
@@ -100,10 +100,7 @@ class GCM_Decryption final : public GCM_Mode {
       explicit GCM_Decryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16) :
             GCM_Mode(std::move(cipher), tag_size) {}
 
-      size_t output_length(size_t input_length) const override {
-         BOTAN_ARG_CHECK(input_length >= tag_size(), "Sufficient input");
-         return input_length - tag_size();
-      }
+      size_t output_length(size_t input_length) const override;
 
       size_t minimum_final_size() const override { return tag_size(); }
 
