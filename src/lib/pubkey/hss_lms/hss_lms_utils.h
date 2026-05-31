@@ -32,6 +32,14 @@ class PseudorandomKeyGeneration final {
        */
       explicit PseudorandomKeyGeneration(std::span<const uint8_t> identifier);
 
+      PseudorandomKeyGeneration(const PseudorandomKeyGeneration&) = delete;
+      PseudorandomKeyGeneration& operator=(const PseudorandomKeyGeneration&) = delete;
+
+      PseudorandomKeyGeneration(PseudorandomKeyGeneration&&) = delete;
+      PseudorandomKeyGeneration& operator=(PseudorandomKeyGeneration&&) = delete;
+
+      ~PseudorandomKeyGeneration() = default;
+
       /**
        * @brief Specify the value for the u32str(q) hash input field
        */

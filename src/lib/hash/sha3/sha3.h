@@ -51,6 +51,10 @@ class SHA_3 : public HashFunction {
 class SHA_3_224 final : public SHA_3 {
    public:
       SHA_3_224() : SHA_3(224) {}
+
+      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_3_224>(); }
+
+      std::unique_ptr<HashFunction> copy_state() const override { return std::make_unique<SHA_3_224>(*this); }
 };
 
 /**
@@ -59,6 +63,10 @@ class SHA_3_224 final : public SHA_3 {
 class SHA_3_256 final : public SHA_3 {
    public:
       SHA_3_256() : SHA_3(256) {}
+
+      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_3_256>(); }
+
+      std::unique_ptr<HashFunction> copy_state() const override { return std::make_unique<SHA_3_256>(*this); }
 };
 
 /**
@@ -67,6 +75,10 @@ class SHA_3_256 final : public SHA_3 {
 class SHA_3_384 final : public SHA_3 {
    public:
       SHA_3_384() : SHA_3(384) {}
+
+      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_3_384>(); }
+
+      std::unique_ptr<HashFunction> copy_state() const override { return std::make_unique<SHA_3_384>(*this); }
 };
 
 /**
@@ -75,6 +87,10 @@ class SHA_3_384 final : public SHA_3 {
 class SHA_3_512 final : public SHA_3 {
    public:
       SHA_3_512() : SHA_3(512) {}
+
+      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_3_512>(); }
+
+      std::unique_ptr<HashFunction> copy_state() const override { return std::make_unique<SHA_3_512>(*this); }
 };
 
 }  // namespace Botan

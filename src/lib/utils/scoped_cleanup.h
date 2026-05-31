@@ -27,16 +27,9 @@ class scoped_cleanup final {
 
       scoped_cleanup(const scoped_cleanup&) = delete;
       scoped_cleanup& operator=(const scoped_cleanup&) = delete;
+      scoped_cleanup& operator=(scoped_cleanup&& other) = delete;
 
       scoped_cleanup(scoped_cleanup&& other) noexcept : m_cleanup(std::move(other.m_cleanup)) { other.disengage(); }
-
-      scoped_cleanup& operator=(scoped_cleanup&& other) noexcept {
-         if(this != &other) {
-            m_cleanup = std::move(other.m_cleanup);
-            other.disengage();
-         }
-         return *this;
-      }
 
       ~scoped_cleanup() {
          if(m_cleanup.has_value()) {

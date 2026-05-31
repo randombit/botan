@@ -878,6 +878,19 @@ class EC_Point_Arithmetic_Tests final : public Test {
             const auto g = Botan::EC_AffinePoint::generator(group);
             const auto g_bytes = g.serialize_uncompressed();
 
+            auto moved_from = Botan::EC_Scalar::from_bigint(group, 1);
+            const auto replacement = Botan::EC_Scalar::from_bigint(group, 2);
+            auto moved_to = std::move(moved_from);
+            auto as_rvalue = [](auto& x) -> decltype(auto) { return std::move(x); };
+            moved_from = as_rvalue(moved_from);
+            moved_from = replacement;
+            result.test_is_true("copy assignment into moved-from EC_Scalar", moved_from == replacement);
+            moved_from = std::move(moved_to);
+            result.test_is_true("move assignment into EC_Scalar", moved_from == one);
+            const auto before_self_move = moved_from.to_bigint();
+            moved_from = as_rvalue(moved_from);
+            result.test_bn_eq("self-move keeps EC_Scalar value", moved_from.to_bigint(), before_self_move);
+
             const auto id = Botan::EC_AffinePoint::g_mul(zero, rng);
             result.test_is_true("g*zero is point at identity", id.is_identity());
 
