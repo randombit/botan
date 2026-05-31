@@ -775,10 +775,7 @@ class RSA_Verify_Operation final : public PK_Ops::Verification,
          //    If the length of the signature S is not k octets,
          //    output "invalid signature" and stop.
          //
-         // However right now TLS-Anvil has a bug which causes it to occasionally send
-         // short signatures, so accept this for now.
-         // TODO(Botan4) if this check hasn't been addressed by now, do so for Botan4
-         if(input_len > public_modulus_bytes()) {
+         if(input_len != public_modulus_bytes()) {
             throw Decoding_Error("RSA signature is an incorrect size for this public key");
          }
          const BigInt input_bn(input, input_len);

@@ -28,10 +28,6 @@ def xfail_list(side):
         # Okay: RFC does not specifically define an alert. Bogo Test expects an DecodeError Alert
         #   while TLS-Anvil expects an IllegalParameter Alert. We use the DecodeError Alert.
         "server.tls13.rfc8446.PreSharedKey.isLastButDuplicatedExtension",
-
-        # TLS-Anvil expects an alert which is incorrect in our context
-        # https://github.com/tls-attacker/TLS-Anvil/issues/61
-        "client.tls13.rfc8446.EncryptedExtensions.sendPaddingExtensionInEE",
     }
 
     partially_failed = {
