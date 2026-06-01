@@ -92,11 +92,11 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
       DER_Encoder& encode(bool b);
       DER_Encoder& encode(size_t s);
       DER_Encoder& encode(const BigInt& n);
-      DER_Encoder& encode(const uint8_t val[], size_t len, ASN1_Type real_type);
 
-      template <typename Alloc>
-      DER_Encoder& encode(const std::vector<uint8_t, Alloc>& vec, ASN1_Type real_type) {
-         return encode(vec.data(), vec.size(), real_type);
+      DER_Encoder& encode(std::span<const uint8_t> val, ASN1_Type real_type);
+
+      DER_Encoder& encode(const uint8_t val[], size_t len, ASN1_Type real_type) {
+         return this->encode(std::span{val, len}, real_type);
       }
 
       DER_Encoder& encode(bool b, ASN1_Type type_tag, ASN1_Class class_tag = ASN1_Class::ContextSpecific);
@@ -105,18 +105,17 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
 
       DER_Encoder& encode(const BigInt& n, ASN1_Type type_tag, ASN1_Class class_tag = ASN1_Class::ContextSpecific);
 
-      DER_Encoder& encode(const uint8_t v[],
-                          size_t len,
+      DER_Encoder& encode(std::span<const uint8_t> value,
                           ASN1_Type real_type,
                           ASN1_Type type_tag,
                           ASN1_Class class_tag = ASN1_Class::ContextSpecific);
 
-      template <typename Alloc>
-      DER_Encoder& encode(const std::vector<uint8_t, Alloc>& bytes,
+      DER_Encoder& encode(const uint8_t v[],
+                          size_t len,
                           ASN1_Type real_type,
                           ASN1_Type type_tag,
-                          ASN1_Class class_tag) {
-         return encode(bytes.data(), bytes.size(), real_type, type_tag, class_tag);
+                          ASN1_Class class_tag = ASN1_Class::ContextSpecific) {
+         return encode(std::span{v, len}, real_type, type_tag, class_tag);
       }
 
       template <typename T>

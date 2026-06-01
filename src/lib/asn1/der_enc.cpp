@@ -290,8 +290,8 @@ DER_Encoder& DER_Encoder::encode(const BigInt& n) {
 /*
 * Encode this object
 */
-DER_Encoder& DER_Encoder::encode(const uint8_t bytes[], size_t length, ASN1_Type real_type) {
-   return encode(bytes, length, real_type, real_type, ASN1_Class::Universal);
+DER_Encoder& DER_Encoder::encode(std::span<const uint8_t> bytes, ASN1_Type real_type) {
+   return encode(bytes, real_type, real_type, ASN1_Class::Universal);
 }
 
 /*
@@ -346,19 +346,22 @@ DER_Encoder& DER_Encoder::encode(const BigInt& n, ASN1_Type type_tag, ASN1_Class
 /*
 * DER encode an OCTET STRING or BIT STRING
 */
-DER_Encoder& DER_Encoder::encode(
-   const uint8_t bytes[], size_t length, ASN1_Type real_type, ASN1_Type type_tag, ASN1_Class class_tag) {
+DER_Encoder& DER_Encoder::encode(std::span<const uint8_t> bytes,
+                                 ASN1_Type real_type,
+                                 ASN1_Type type_tag,
+                                 ASN1_Class class_tag) {
    if(real_type != ASN1_Type::OctetString && real_type != ASN1_Type::BitString) {
       throw Invalid_Argument("DER_Encoder: Invalid tag for byte/bit string");
    }
 
    if(real_type == ASN1_Type::BitString) {
       secure_vector<uint8_t> encoded;
-      encoded.push_back(0);
-      encoded += std::make_pair(bytes, length);
+      encoded.reserve(1 + bytes.size());
+      encoded.push_back(0);  // unused bit count
+      encoded.insert(encoded.end(), bytes.begin(), bytes.end());
       return add_object(type_tag, class_tag, encoded);
    } else {
-      return add_object(type_tag, class_tag, bytes, length);
+      return add_object(type_tag, class_tag, bytes);
    }
 }
 
