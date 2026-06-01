@@ -905,6 +905,19 @@ class Non_Self_Signed_Trust_Anchors_Test final : public Test {
                                to_string(Botan::Certificate_Status_Code::OK));
             test_arb_eq(result, "build_all_certificate_paths paths", cert_paths, expected_paths);
 
+            // Capped enumeration: asking for fewer than the available paths returns
+            // EXCEEDED_SEARCH_LIMITS with exactly that many paths.
+            if(expected_paths.size() > 1) {
+               std::vector<Cert_Path> capped_paths;
+               const auto capped_res = Botan::PKIX::build_all_certificate_paths(
+                  capped_paths, {&cert_store}, certs.at(0), certs, expected_paths.size() - 1);
+               result.test_enum_eq("build_all_certificate_paths capped result",
+                                   capped_res,
+                                   Botan::Certificate_Status_Code::EXCEEDED_SEARCH_LIMITS);
+               result.test_sz_eq(
+                  "build_all_certificate_paths capped count", capped_paths.size(), expected_paths.size() - 1);
+            }
+
             Cert_Path cert_path;
             const auto build_path_res =
                Botan::PKIX::build_certificate_path(cert_path, {&cert_store}, certs.at(0), certs);
