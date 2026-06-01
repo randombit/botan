@@ -178,6 +178,10 @@ int botan_cipher_set_key(botan_cipher_t cipher, const uint8_t* key, size_t key_l
 }
 
 int botan_cipher_start(botan_cipher_t cipher_obj, const uint8_t* nonce, size_t nonce_len) {
+   if(nonce_len > 0 && nonce == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
    return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::Cipher_Mode& cipher = safe_get(cipher_obj);
       cipher.start(nonce, nonce_len);
@@ -194,6 +198,12 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
                         size_t input_size,
                         size_t* input_consumed) {
    if(any_null_pointers(output_written, input_consumed)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   if(input_size > 0 && input == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   if(output_size > 0 && output == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -308,6 +318,10 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
 }
 
 int botan_cipher_set_associated_data(botan_cipher_t cipher, const uint8_t* ad, size_t ad_len) {
+   if(ad_len > 0 && ad == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
    return BOTAN_FFI_VISIT(cipher, [=](auto& c) {
       if(Botan::AEAD_Mode* aead = dynamic_cast<Botan::AEAD_Mode*>(&c)) {
          aead->set_associated_data(ad, ad_len);

@@ -41,10 +41,18 @@ int botan_mp_set_from_int(botan_mp_t mp, int initial_value) {
 }
 
 int botan_mp_set_from_str(botan_mp_t mp, const char* str) {
+   if(str == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
    return BOTAN_FFI_VISIT(mp, [=](auto& bn) { bn = Botan::BigInt(str); });
 }
 
 int botan_mp_set_from_radix_str(botan_mp_t mp, const char* str, size_t radix) {
+   if(str == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
    return BOTAN_FFI_VISIT(mp, [=](auto& bn) {
       if(radix != 10 && radix != 16) {
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
