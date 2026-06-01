@@ -13,6 +13,7 @@
 #include <botan/pkix_enums.h>
 #include <botan/x509cert.h>
 #include <chrono>
+#include <optional>
 #include <set>
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS) && defined(BOTAN_HAS_HTTP_UTIL)
@@ -361,13 +362,16 @@ namespace PKIX {
 * @param trusted_certstores list of certificate stores that contain trusted certificates
 * @param end_entity the cert to be validated
 * @param end_entity_extra optional list of additional untrusted certs for path building
+* @param max_paths if set, enumerate at most this many paths and return
+*        EXCEEDED_SEARCH_LIMITS if more paths exist; if nullopt, unbounded
 * @return result of the path building operation (OK or error)
 */
 Certificate_Status_Code BOTAN_PUBLIC_API(3, 11)
    build_all_certificate_paths(std::vector<std::vector<X509_Certificate>>& cert_paths,
                                const std::vector<Certificate_Store*>& trusted_certstores,
                                const X509_Certificate& end_entity,
-                               const std::vector<X509_Certificate>& end_entity_extra);
+                               const std::vector<X509_Certificate>& end_entity_extra,
+                               std::optional<size_t> max_paths = std::nullopt);
 
 /**
 * Same as build_all_certificate_paths but only outputs a single path. If there are
@@ -381,6 +385,7 @@ Certificate_Status_Code BOTAN_PUBLIC_API(3, 11)
 * @param trusted_certstores list of certificate stores that contain trusted certificates
 * @param end_entity the cert to be validated
 * @param end_entity_extra optional list of additional untrusted certs for path building
+* @param max_paths if set, examine at most this many candidate paths; if nullopt, unbounded
 * @return result of the path building operation (OK or error)
 */
 BOTAN_DEPRECATED("Use build_all_certificate_paths")
@@ -388,7 +393,8 @@ Certificate_Status_Code BOTAN_PUBLIC_API(2, 0)
    build_certificate_path(std::vector<X509_Certificate>& cert_path_out,
                           const std::vector<Certificate_Store*>& trusted_certstores,
                           const X509_Certificate& end_entity,
-                          const std::vector<X509_Certificate>& end_entity_extra);
+                          const std::vector<X509_Certificate>& end_entity_extra,
+                          std::optional<size_t> max_paths = std::nullopt);
 
 /**
 * Check the certificate chain, but not any revocation data

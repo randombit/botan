@@ -899,13 +899,24 @@ CertificatePathStatusCodes PKIX::check_crl_online(const std::vector<X509_Certifi
 Certificate_Status_Code PKIX::build_certificate_path(std::vector<X509_Certificate>& cert_path,
                                                      const std::vector<Certificate_Store*>& trusted_certstores,
                                                      const X509_Certificate& end_entity,
-                                                     const std::vector<X509_Certificate>& end_entity_extra) {
+                                                     const std::vector<X509_Certificate>& end_entity_extra,
+                                                     std::optional<size_t> max_paths) {
+   if(max_paths.has_value() && max_paths.value() == 0) {
+      return Certificate_Status_Code::EXCEEDED_SEARCH_LIMITS;
+   }
+
    CertificatePathBuilder builder(trusted_certstores, end_entity, end_entity_extra);
 
    std::vector<X509_Certificate> first_path;
+   size_t paths_examined = 0;
 
    while(auto path = builder.next()) {
       BOTAN_ASSERT_NOMSG(path->empty() == false);
+
+      if(max_paths.has_value() && paths_examined >= max_paths.value()) {
+         break;
+      }
+      paths_examined += 1;
 
       // Prefer paths ending in self-signed certificates.
       if(path->back().is_self_signed()) {
@@ -932,7 +943,8 @@ Certificate_Status_Code PKIX::build_certificate_path(std::vector<X509_Certificat
 Certificate_Status_Code PKIX::build_all_certificate_paths(std::vector<std::vector<X509_Certificate>>& cert_paths_out,
                                                           const std::vector<Certificate_Store*>& trusted_certstores,
                                                           const X509_Certificate& end_entity,
-                                                          const std::vector<X509_Certificate>& end_entity_extra) {
+                                                          const std::vector<X509_Certificate>& end_entity_extra,
+                                                          std::optional<size_t> max_paths) {
    if(!cert_paths_out.empty()) {
       throw Invalid_Argument("PKIX::build_all_certificate_paths: cert_paths_out must be empty");
    }
@@ -940,6 +952,10 @@ Certificate_Status_Code PKIX::build_all_certificate_paths(std::vector<std::vecto
 
    while(auto path = builder.next()) {
       BOTAN_ASSERT_NOMSG(path->empty() == false);
+      if(max_paths.has_value() && cert_paths_out.size() >= max_paths.value()) {
+         // More paths exist than the caller permitted us to enumerate
+         return Certificate_Status_Code::EXCEEDED_SEARCH_LIMITS;
+      }
       cert_paths_out.push_back(std::move(*path));
    }
 
