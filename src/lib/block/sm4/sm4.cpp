@@ -8,6 +8,7 @@
 
 #include <botan/internal/sm4.h>
 
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 
@@ -83,15 +84,34 @@ inline uint32_t SM4_T_slow(uint32_t b) {
 }
 
 inline uint32_t SM4_T(uint32_t b) {
-   return (SM4_SBOX_T[get_byte<0>(b)]) ^ rotr<8>(SM4_SBOX_T[get_byte<1>(b)]) ^ rotr<16>(SM4_SBOX_T[get_byte<2>(b)]) ^
-          rotr<24>(SM4_SBOX_T[get_byte<3>(b)]);
+   const uint32_t s0 = SM4_SBOX_T[get_byte<0>(b)];
+   const uint32_t s1 = SM4_SBOX_T[get_byte<1>(b)];
+   const uint32_t s2 = SM4_SBOX_T[get_byte<2>(b)];
+   const uint32_t s3 = SM4_SBOX_T[get_byte<3>(b)];
+   return (s0) ^ rotr<8>(s1) ^ rotr<16>(s2) ^ rotr<24>(s3);
 }
 
 // Variant of T for key schedule
-inline uint32_t SM4_Tp(uint32_t b) {
-   const uint32_t t = make_uint32(
-      SM4_SBOX[get_byte<0>(b)], SM4_SBOX[get_byte<1>(b)], SM4_SBOX[get_byte<2>(b)], SM4_SBOX[get_byte<3>(b)]);
+uint32_t SM4_Tp(uint32_t b) {
+   const uint8_t b0 = get_byte<0>(b);
+   const uint8_t b1 = get_byte<1>(b);
+   const uint8_t b2 = get_byte<2>(b);
+   const uint8_t b3 = get_byte<3>(b);
 
+   uint8_t t0 = 0;
+   uint8_t t1 = 0;
+   uint8_t t2 = 0;
+   uint8_t t3 = 0;
+   for(size_t i = 0; i != 256; ++i) {
+      const uint8_t i8 = static_cast<uint8_t>(i);
+      const uint8_t s = SM4_SBOX[i];
+      t0 |= CT::Mask<uint8_t>::is_equal(i8, b0).if_set_return(s);
+      t1 |= CT::Mask<uint8_t>::is_equal(i8, b1).if_set_return(s);
+      t2 |= CT::Mask<uint8_t>::is_equal(i8, b2).if_set_return(s);
+      t3 |= CT::Mask<uint8_t>::is_equal(i8, b3).if_set_return(s);
+   }
+
+   const uint32_t t = make_uint32(t0, t1, t2, t3);
    // L' linear transform
    return t ^ rotl<13>(t) ^ rotl<23>(t);
 }
@@ -345,16 +365,21 @@ void SM4::key_schedule(std::span<const uint8_t> key) {
                             0x4C535A61, 0x686F767D, 0x848B9299, 0xA0A7AEB5, 0xBCC3CAD1, 0xD8DFE6ED, 0xF4FB0209,
                             0x10171E25, 0x2C333A41, 0x484F565D, 0x646B7279};
 
-   secure_vector<uint32_t> K(4);
-   K[0] = load_be<uint32_t>(key.data(), 0) ^ FK[0];
-   K[1] = load_be<uint32_t>(key.data(), 1) ^ FK[1];
-   K[2] = load_be<uint32_t>(key.data(), 2) ^ FK[2];
-   K[3] = load_be<uint32_t>(key.data(), 3) ^ FK[3];
+   uint32_t K0 = load_be<uint32_t>(key.data(), 0) ^ FK[0];
+   uint32_t K1 = load_be<uint32_t>(key.data(), 1) ^ FK[1];
+   uint32_t K2 = load_be<uint32_t>(key.data(), 2) ^ FK[2];
+   uint32_t K3 = load_be<uint32_t>(key.data(), 3) ^ FK[3];
 
    m_RK.resize(32);
-   for(size_t i = 0; i != 32; ++i) {
-      K[i % 4] ^= SM4_Tp(K[(i + 1) % 4] ^ K[(i + 2) % 4] ^ K[(i + 3) % 4] ^ CK[i]);
-      m_RK[i] = K[i % 4];
+   for(size_t i = 0; i != 32; i += 4) {
+      K0 ^= SM4_Tp(K1 ^ K2 ^ K3 ^ CK[i + 0]);
+      K1 ^= SM4_Tp(K0 ^ K2 ^ K3 ^ CK[i + 1]);
+      K2 ^= SM4_Tp(K3 ^ K0 ^ K1 ^ CK[i + 2]);
+      K3 ^= SM4_Tp(K0 ^ K1 ^ K2 ^ CK[i + 3]);
+      m_RK[i + 0] = K0;
+      m_RK[i + 1] = K1;
+      m_RK[i + 2] = K2;
+      m_RK[i + 3] = K3;
    }
 }
 
