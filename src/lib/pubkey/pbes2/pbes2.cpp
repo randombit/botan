@@ -14,6 +14,7 @@
 #include <botan/der_enc.h>
 #include <botan/pwdhash.h>
 #include <botan/rng.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 
@@ -21,176 +22,291 @@ namespace Botan {
 
 namespace {
 
+class Pbes2KdfParameters {
+   public:
+      virtual ~Pbes2KdfParameters() = default;
+      Pbes2KdfParameters(const Pbes2KdfParameters& other) = delete;
+      Pbes2KdfParameters(Pbes2KdfParameters&& other) = delete;
+      Pbes2KdfParameters& operator=(const Pbes2KdfParameters& other) = delete;
+      Pbes2KdfParameters& operator=(Pbes2KdfParameters&& other) = delete;
+
+      static std::unique_ptr<Pbes2KdfParameters> decode(const AlgorithmIdentifier& alg_id);
+
+      static std::unique_ptr<Pbes2KdfParameters> tune(std::string_view digest,
+                                                      RandomNumberGenerator& rng,
+                                                      size_t key_length,
+                                                      size_t* msec_in_iterations_out,
+                                                      size_t iterations_if_msec_null);
+
+      secure_vector<uint8_t> derive_key(std::string_view passphrase, size_t default_key_size) const;
+
+      virtual AlgorithmIdentifier algorithm_identifier(bool include_key_length) const = 0;
+
+   protected:
+      static constexpr size_t DefaultSaltBytes = 16;
+
+      const PasswordHash& pwdhash() const { return *m_pwdhash; }
+
+      std::optional<size_t> key_length() const { return m_key_length; }
+
+      std::span<const uint8_t> salt() const { return m_salt; }
+
+      Pbes2KdfParameters(std::vector<uint8_t> salt,
+                         std::optional<size_t> key_length,
+                         std::unique_ptr<PasswordHash> pwdhash) :
+            m_salt(std::move(salt)), m_key_length(key_length), m_pwdhash(std::move(pwdhash)) {}
+
+      static std::vector<uint8_t> generate_salt(RandomNumberGenerator& rng) {
+         return rng.random_vec<std::vector<uint8_t>>(DefaultSaltBytes);
+      }
+
+      static void validate_pbes2_params(size_t salt_len, std::optional<size_t> key_length) {
+         if(key_length && (key_length.value() < 8 || key_length.value() >= 256)) {
+            throw Decoding_Error(fmt("PBES2: Encoded key length ({}) is invalid", key_length.value()));
+         }
+         if(salt_len < 8) {
+            throw Decoding_Error("PBES2: Encoded salt is too small");
+         }
+      }
+
+   private:
+      std::vector<uint8_t> m_salt;
+      std::optional<size_t> m_key_length;
+      std::unique_ptr<PasswordHash> m_pwdhash;
+};
+
+class Pbes2Pbkdf2Parameters final : public Pbes2KdfParameters {
+   public:
+      static std::unique_ptr<Pbes2Pbkdf2Parameters> decode(const AlgorithmIdentifier& kdf_algo);
+
+      static std::unique_ptr<Pbes2Pbkdf2Parameters> tune(std::string_view digest,
+                                                         RandomNumberGenerator& rng,
+                                                         size_t key_length,
+                                                         size_t* msec_in_iterations_out,
+                                                         size_t iterations_if_msec_null);
+
+      Pbes2Pbkdf2Parameters(std::vector<uint8_t> salt,
+                            std::optional<size_t> key_length,
+                            std::unique_ptr<PasswordHash> pwdhash,
+                            std::string prf) :
+            Pbes2KdfParameters(std::move(salt), key_length, std::move(pwdhash)), m_prf(std::move(prf)) {}
+
+      AlgorithmIdentifier algorithm_identifier(bool include_key_length) const override;
+
+   private:
+      static void validate_params(size_t iterations);
+
+      std::string m_prf;
+};
+
+class Pbes2ScryptParameters final : public Pbes2KdfParameters {
+   public:
+      static std::unique_ptr<Pbes2ScryptParameters> decode(const AlgorithmIdentifier& kdf_algo);
+
+      static std::unique_ptr<Pbes2ScryptParameters> tune(RandomNumberGenerator& rng,
+                                                         size_t key_length,
+                                                         size_t* msec_in_iterations_out,
+                                                         size_t iterations_if_msec_null);
+
+      Pbes2ScryptParameters(std::vector<uint8_t> salt,
+                            std::optional<size_t> key_length,
+                            std::unique_ptr<PasswordHash> pwdhash) :
+            Pbes2KdfParameters(std::move(salt), key_length, std::move(pwdhash)) {}
+
+      AlgorithmIdentifier algorithm_identifier(bool include_key_length) const override;
+
+   private:
+      static void validate_params(size_t N, size_t r, size_t p);
+};
+
+/* Dispatching */
+
+secure_vector<uint8_t> Pbes2KdfParameters::derive_key(std::string_view passphrase, size_t default_key_size) const {
+   const size_t kl = m_key_length.value_or(default_key_size);
+   secure_vector<uint8_t> key(kl);
+   m_pwdhash->hash(key, passphrase, m_salt);
+   return key;
+}
+
+std::unique_ptr<Pbes2KdfParameters> Pbes2KdfParameters::tune(std::string_view digest,
+                                                             RandomNumberGenerator& rng,
+                                                             size_t key_length,
+                                                             size_t* msec_in_iterations_out,
+                                                             size_t iterations_if_msec_null) {
+   if(digest == "Scrypt") {
+      return Pbes2ScryptParameters::tune(rng, key_length, msec_in_iterations_out, iterations_if_msec_null);
+   } else {
+      return Pbes2Pbkdf2Parameters::tune(digest, rng, key_length, msec_in_iterations_out, iterations_if_msec_null);
+   }
+}
+
+std::unique_ptr<Pbes2KdfParameters> Pbes2KdfParameters::decode(const AlgorithmIdentifier& kdf_algo) {
+   if(kdf_algo.oid() == OID::from_string("PKCS5.PBKDF2")) {
+      return Pbes2Pbkdf2Parameters::decode(kdf_algo);
+   } else if(kdf_algo.oid() == OID::from_string("Scrypt")) {
+      return Pbes2ScryptParameters::decode(kdf_algo);
+   } else {
+      throw Decoding_Error(fmt("PBES2 unknown or unhandled KDF algorithm '{}'", kdf_algo.oid()));
+   }
+}
+
+/* PBES2 PBKDF2 handling */
+
+std::unique_ptr<Pbes2Pbkdf2Parameters> Pbes2Pbkdf2Parameters::tune(std::string_view digest,
+                                                                   RandomNumberGenerator& rng,
+                                                                   size_t key_length,
+                                                                   size_t* msec_in_iterations_out,
+                                                                   size_t iterations_if_msec_null) {
+   const std::string prf = fmt("HMAC({})", digest);
+
+   auto pwhash_fam = PasswordHashFamily::create(fmt("PBKDF2({})", prf));
+   if(!pwhash_fam) {
+      throw Invalid_Argument(fmt("Unknown password hash digest {}", digest));
+   }
+
+   std::unique_ptr<PasswordHash> pwhash;
+   if(msec_in_iterations_out != nullptr) {
+      pwhash = pwhash_fam->tune_params(key_length, *msec_in_iterations_out);
+      *msec_in_iterations_out = pwhash->iterations();
+   } else {
+      pwhash = pwhash_fam->from_iterations(iterations_if_msec_null);
+   }
+
+   // Ensure we will accept these same parameters when decoding
+   validate_params(pwhash->iterations());
+
+   return std::make_unique<Pbes2Pbkdf2Parameters>(generate_salt(rng), key_length, std::move(pwhash), prf);
+}
+
+//static
+void Pbes2Pbkdf2Parameters::validate_params(size_t iterations) {
+   // The upper bound corresponds to about 10 to 60 seconds of CPU time
+   // (depending on hash and hardware) which seems sufficient...
+   if(iterations == 0 || iterations > (1U << 26)) {
+      throw Decoding_Error(fmt("PBES2: Invalid or unacceptable PBKDF2 iteration count ({})", iterations));
+   }
+}
+
+std::unique_ptr<Pbes2Pbkdf2Parameters> Pbes2Pbkdf2Parameters::decode(const AlgorithmIdentifier& kdf_algo) {
+   std::vector<uint8_t> salt;
+   size_t iterations = 0;
+   std::optional<size_t> key_length;
+
+   AlgorithmIdentifier prf_algo;
+   BER_Decoder(kdf_algo.parameters(), BER_Decoder::Limits::DER())
+      .start_sequence()
+      .decode(salt, ASN1_Type::OctetString)
+      .decode(iterations)
+      .decode_optional(key_length, ASN1_Type::Integer, ASN1_Class::Universal)
+      .decode_optional(prf_algo,
+                       ASN1_Type::Sequence,
+                       ASN1_Class::Constructed,
+                       AlgorithmIdentifier("HMAC(SHA-1)", AlgorithmIdentifier::USE_NULL_PARAM))
+      .end_cons()
+      .verify_end();
+
+   validate_pbes2_params(salt.size(), key_length);
+   validate_params(iterations);
+
+   const std::string prf = prf_algo.oid().human_name_or_empty();
+   if(prf.empty() || !prf.starts_with("HMAC")) {
+      throw Decoding_Error(fmt("Unknown PBES2 PRF '{}'", prf_algo.oid()));
+   }
+
+   auto pbkdf_fam = PasswordHashFamily::create_or_throw(fmt("PBKDF2({})", prf));
+   auto pwdhash = pbkdf_fam->from_params(iterations);
+
+   return std::make_unique<Pbes2Pbkdf2Parameters>(std::move(salt), key_length, std::move(pwdhash), prf);
+}
+
+AlgorithmIdentifier Pbes2Pbkdf2Parameters::algorithm_identifier(bool include_key_length) const {
+   std::vector<uint8_t> params;
+   DER_Encoder(params)
+      .start_sequence()
+      .encode(salt(), ASN1_Type::OctetString)
+      .encode(pwdhash().iterations())
+      .encode_if(include_key_length && key_length().has_value(), key_length().value_or(0))
+      .encode_if(m_prf != "HMAC(SHA-1)", AlgorithmIdentifier(m_prf, AlgorithmIdentifier::USE_NULL_PARAM))
+      .end_cons();
+   return AlgorithmIdentifier("PKCS5.PBKDF2", params);
+}
+
+/* PBES2 Scrypt handling */
+
+std::unique_ptr<Pbes2ScryptParameters> Pbes2ScryptParameters::tune(RandomNumberGenerator& rng,
+                                                                   size_t key_length,
+                                                                   size_t* msec_in_iterations_out,
+                                                                   size_t iterations_if_msec_null) {
+   auto pwhash_fam = PasswordHashFamily::create_or_throw("Scrypt");
+
+   std::unique_ptr<PasswordHash> pwhash;
+   if(msec_in_iterations_out != nullptr) {
+      pwhash = pwhash_fam->tune_params(key_length, *msec_in_iterations_out);
+      *msec_in_iterations_out = 0;
+   } else {
+      pwhash = pwhash_fam->from_iterations(iterations_if_msec_null);
+   }
+
+   // Ensure we will accept these same parameters when decoding
+   validate_params(pwhash->memory_param(), pwhash->iterations(), pwhash->parallelism());
+
+   return std::make_unique<Pbes2ScryptParameters>(generate_salt(rng), key_length, std::move(pwhash));
+}
+
+//static
+void Pbes2ScryptParameters::validate_params(size_t N, size_t r, size_t p) {
+   if(N <= 1 || N > 4194304 || !is_power_of_2(N)) {
+      throw Decoding_Error(fmt("PBES2: Invalid or unacceptable Scrypt parameter N ({})", N));
+   }
+   if(r == 0 || r > 64) {
+      throw Decoding_Error(fmt("PBES2: Invalid or unacceptable Scrypt parameter r ({})", r));
+   }
+   if(p == 0 || p >= 1024) {
+      throw Decoding_Error(fmt("PBES2: Invalid or unacceptable Scrypt parameter p ({})", p));
+   }
+}
+
+std::unique_ptr<Pbes2ScryptParameters> Pbes2ScryptParameters::decode(const AlgorithmIdentifier& kdf_algo) {
+   std::vector<uint8_t> salt;
+   size_t N = 0;
+   size_t r = 0;
+   size_t p = 0;
+   std::optional<size_t> key_length;
+
+   BER_Decoder(kdf_algo.parameters(), BER_Decoder::Limits::DER())
+      .start_sequence()
+      .decode(salt, ASN1_Type::OctetString)
+      .decode(N)
+      .decode(r)
+      .decode(p)
+      .decode_optional(key_length, ASN1_Type::Integer, ASN1_Class::Universal)
+      .end_cons()
+      .verify_end();
+
+   validate_pbes2_params(salt.size(), key_length);
+   validate_params(N, r, p);
+
+   auto pwdhash_fam = PasswordHashFamily::create_or_throw("Scrypt");
+   auto pwdhash = pwdhash_fam->from_params(N, r, p);
+
+   return std::make_unique<Pbes2ScryptParameters>(std::move(salt), key_length, std::move(pwdhash));
+}
+
+AlgorithmIdentifier Pbes2ScryptParameters::algorithm_identifier(bool include_key_length) const {
+   std::vector<uint8_t> params;
+   DER_Encoder(params)
+      .start_sequence()
+      .encode(salt(), ASN1_Type::OctetString)
+      .encode(pwdhash().memory_param())
+      .encode(pwdhash().iterations())
+      .encode(pwdhash().parallelism())
+      .encode_if(include_key_length && key_length().has_value(), key_length().value_or(0))
+      .end_cons();
+   return AlgorithmIdentifier(OID::from_string("Scrypt"), params);
+}
+
 bool known_pbes_cipher_mode(std::string_view mode) {
    return (mode == "CBC" || mode == "GCM" || mode == "SIV");
-}
-
-secure_vector<uint8_t> derive_key(std::string_view passphrase,
-                                  const AlgorithmIdentifier& kdf_algo,
-                                  size_t default_key_size) {
-   if(kdf_algo.oid() == OID::from_string("PKCS5.PBKDF2")) {
-      secure_vector<uint8_t> salt;
-      size_t iterations = 0;
-      size_t key_length = 0;
-
-      AlgorithmIdentifier prf_algo;
-      BER_Decoder(kdf_algo.parameters(), BER_Decoder::Limits::DER())
-         .start_sequence()
-         .decode(salt, ASN1_Type::OctetString)
-         .decode(iterations)
-         .decode_optional(key_length, ASN1_Type::Integer, ASN1_Class::Universal)
-         .decode_optional(prf_algo,
-                          ASN1_Type::Sequence,
-                          ASN1_Class::Constructed,
-                          AlgorithmIdentifier("HMAC(SHA-1)", AlgorithmIdentifier::USE_NULL_PARAM))
-         .end_cons()
-         .verify_end();
-
-      if(iterations == 0) {
-         throw Decoding_Error("PBE-PKCS5 v2.0: Iteration count must be positive");
-      }
-
-      if(salt.size() < 8) {
-         throw Decoding_Error("PBE-PKCS5 v2.0: Encoded salt is too small");
-      }
-
-      if(key_length == 0) {
-         key_length = default_key_size;
-      }
-
-      const std::string prf = prf_algo.oid().human_name_or_empty();
-      if(prf.empty() || !prf.starts_with("HMAC")) {
-         throw Decoding_Error(fmt("Unknown PBES2 PRF {}", prf_algo.oid()));
-      }
-
-      auto pbkdf_fam = PasswordHashFamily::create_or_throw(fmt("PBKDF2({})", prf));
-      auto pbkdf = pbkdf_fam->from_params(iterations);
-
-      secure_vector<uint8_t> derived_key(key_length);
-      pbkdf->hash(derived_key, passphrase, salt);
-      return derived_key;
-   } else if(kdf_algo.oid() == OID::from_string("Scrypt")) {
-      secure_vector<uint8_t> salt;
-      size_t N = 0;
-      size_t r = 0;
-      size_t p = 0;
-      size_t key_length = 0;
-
-      const AlgorithmIdentifier prf_algo;
-      BER_Decoder(kdf_algo.parameters(), BER_Decoder::Limits::DER())
-         .start_sequence()
-         .decode(salt, ASN1_Type::OctetString)
-         .decode(N)
-         .decode(r)
-         .decode(p)
-         .decode_optional(key_length, ASN1_Type::Integer, ASN1_Class::Universal)
-         .end_cons()
-         .verify_end();
-
-      if(N == 0 || r == 0 || p == 0) {
-         throw Decoding_Error("PBE-PKCS5 v2.0: Invalid Scrypt parameters");
-      }
-
-      if(key_length == 0) {
-         key_length = default_key_size;
-      }
-
-      secure_vector<uint8_t> derived_key(key_length);
-
-      auto pwdhash_fam = PasswordHashFamily::create_or_throw("Scrypt");
-      auto pwdhash = pwdhash_fam->from_params(N, r, p);
-      pwdhash->hash(derived_key, passphrase, salt);
-
-      return derived_key;
-   } else {
-      throw Decoding_Error(fmt("PBE-PKCS5 v2.0: Unknown KDF algorithm {}", kdf_algo.oid()));
-   }
-}
-
-secure_vector<uint8_t> derive_key(std::string_view passphrase,
-                                  std::string_view digest,
-                                  RandomNumberGenerator& rng,
-                                  size_t* msec_in_iterations_out,
-                                  size_t iterations_if_msec_null,
-                                  size_t key_length,
-                                  bool include_key_length_in_struct,
-                                  AlgorithmIdentifier& kdf_algo) {
-   const size_t salt_len = 16;
-   const secure_vector<uint8_t> salt = rng.random_vec(salt_len);
-
-   if(digest == "Scrypt") {
-      auto pwhash_fam = PasswordHashFamily::create_or_throw("Scrypt");
-
-      std::unique_ptr<PasswordHash> pwhash;
-
-      if(msec_in_iterations_out != nullptr) {
-         pwhash = pwhash_fam->tune_params(key_length, *msec_in_iterations_out);
-      } else {
-         pwhash = pwhash_fam->from_iterations(iterations_if_msec_null);
-      }
-
-      secure_vector<uint8_t> key(key_length);
-      pwhash->hash(key, passphrase, salt);
-
-      const size_t N = pwhash->memory_param();
-      const size_t r = pwhash->iterations();
-      const size_t p = pwhash->parallelism();
-
-      if(msec_in_iterations_out != nullptr) {
-         *msec_in_iterations_out = 0;
-      }
-
-      std::vector<uint8_t> scrypt_params;
-      DER_Encoder(scrypt_params)
-         .start_sequence()
-         .encode(salt, ASN1_Type::OctetString)
-         .encode(N)
-         .encode(r)
-         .encode(p)
-         .encode_if(include_key_length_in_struct, key_length)
-         .end_cons();
-
-      kdf_algo = AlgorithmIdentifier(OID::from_string("Scrypt"), scrypt_params);
-      return key;
-   } else {
-      const std::string prf = fmt("HMAC({})", digest);
-      const std::string pbkdf_name = fmt("PBKDF2({})", prf);
-
-      auto pwhash_fam = PasswordHashFamily::create(pbkdf_name);
-      if(!pwhash_fam) {
-         throw Invalid_Argument(fmt("Unknown password hash digest {}", digest));
-      }
-
-      std::unique_ptr<PasswordHash> pwhash;
-
-      if(msec_in_iterations_out != nullptr) {
-         pwhash = pwhash_fam->tune_params(key_length, *msec_in_iterations_out);
-      } else {
-         pwhash = pwhash_fam->from_iterations(iterations_if_msec_null);
-      }
-
-      secure_vector<uint8_t> key(key_length);
-      pwhash->hash(key, passphrase, salt);
-
-      std::vector<uint8_t> pbkdf2_params;
-
-      const size_t iterations = pwhash->iterations();
-
-      if(msec_in_iterations_out != nullptr) {
-         *msec_in_iterations_out = iterations;
-      }
-
-      DER_Encoder(pbkdf2_params)
-         .start_sequence()
-         .encode(salt, ASN1_Type::OctetString)
-         .encode(iterations)
-         .encode_if(include_key_length_in_struct, key_length)
-         .encode_if(prf != "HMAC(SHA-1)", AlgorithmIdentifier(prf, AlgorithmIdentifier::USE_NULL_PARAM))
-         .end_cons();
-
-      kdf_algo = AlgorithmIdentifier("PKCS5.PBKDF2", pbkdf2_params);
-      return key;
-   }
 }
 
 /*
@@ -208,25 +324,18 @@ std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbes2_encrypt_shared(std::s
    const auto cipher_spec = split_on(cipher, '/');
 
    if(cipher_spec.size() != 2 || !known_pbes_cipher_mode(cipher_spec[1]) || !enc) {
-      throw Encoding_Error(fmt("PBE-PKCS5 v2.0: Invalid or unavailable cipher '{}'", cipher));
+      throw Encoding_Error(fmt("PBES2: Invalid or unavailable cipher '{}'", cipher));
    }
 
    const size_t key_length = enc->key_spec().maximum_keylength();
 
-   const secure_vector<uint8_t> iv = rng.random_vec(enc->default_nonce_length());
-
-   AlgorithmIdentifier kdf_algo;
+   const auto iv = rng.random_vec<std::vector<uint8_t>>(enc->default_nonce_length());
 
    const bool include_key_length_in_struct = enc->key_spec().minimum_keylength() != enc->key_spec().maximum_keylength();
 
-   const auto derived_key = derive_key(passphrase,
-                                       prf,
-                                       rng,
-                                       msec_in_iterations_out,
-                                       iterations_if_msec_null,
-                                       key_length,
-                                       include_key_length_in_struct,
-                                       kdf_algo);
+   auto kdf_params = Pbes2KdfParameters::tune(prf, rng, key_length, msec_in_iterations_out, iterations_if_msec_null);
+   const auto derived_key = kdf_params->derive_key(passphrase, key_length);
+   const auto kdf_algo = kdf_params->algorithm_identifier(include_key_length_in_struct);
 
    enc->set_key(derived_key);
    enc->start(iv);
@@ -304,18 +413,20 @@ secure_vector<uint8_t> pbes2_decrypt(std::span<const uint8_t> key_bits,
    const std::string cipher = enc_algo.oid().human_name_or_empty();
    const auto cipher_spec = split_on(cipher, '/');
    if(cipher_spec.size() != 2 || !known_pbes_cipher_mode(cipher_spec[1])) {
-      throw Decoding_Error(fmt("PBE-PKCS5 v2.0: Unknown/invalid cipher OID {}", enc_algo.oid()));
+      throw Decoding_Error(fmt("PBES2: Unknown/invalid cipher OID {}", enc_algo.oid()));
    }
 
-   secure_vector<uint8_t> iv;
+   std::vector<uint8_t> iv;
    BER_Decoder(enc_algo.parameters(), BER_Decoder::Limits::DER()).decode(iv, ASN1_Type::OctetString).verify_end();
 
    auto dec = Cipher_Mode::create(cipher, Cipher_Dir::Decryption);
    if(!dec) {
-      throw Decoding_Error(fmt("PBE-PKCS5 cannot decrypt no cipher '{}'", cipher));
+      throw Decoding_Error(fmt("PBES2 cannot decrypt due to unavailable cipher '{}'", cipher));
    }
 
-   dec->set_key(derive_key(passphrase, kdf_algo, dec->key_spec().maximum_keylength()));
+   const size_t default_key_size = dec->key_spec().maximum_keylength();
+   auto pbkdf = Pbes2KdfParameters::decode(kdf_algo);
+   dec->set_key(pbkdf->derive_key(passphrase, default_key_size));
 
    dec->start(iv);
 
