@@ -100,6 +100,7 @@ void Stateful_RNG::reseed_from_rng(RandomNumberGenerator& rng, size_t poll_bits)
 void Stateful_RNG::reset_reseed_counter() {
    // Lock is held whenever this function is called
    m_reseed_counter = 1;
+   m_last_pid = OS::get_process_id();
 }
 
 void Stateful_RNG::reseed_check() {
