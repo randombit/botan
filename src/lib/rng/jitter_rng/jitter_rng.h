@@ -14,7 +14,7 @@
 
 namespace Botan {
 
-struct Jitter_RNG_Internal;
+class Jitter_RNG_Internal;
 
 /*
 * RNG using libjitterentropy (https://github.com/smuellerDD/jitterentropy-library).

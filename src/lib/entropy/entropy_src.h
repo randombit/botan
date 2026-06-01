@@ -41,6 +41,12 @@ class BOTAN_PUBLIC_API(2, 0) Entropy_Source {
       * Perform an entropy gathering poll
       * @param rng will be provided with entropy via calls to add_entropy
       * @return conservative estimate of actual entropy added to rng during poll
+      *
+      * Any implementation of this function should be thread safe; it may be
+      * called concurrently in multiple threads if multiple stateful RNGs reseed
+      * across different threads.
+      *
+      * TODO(Botan4) make this member function const
       */
       virtual size_t poll(RandomNumberGenerator& rng) = 0;
 
@@ -55,6 +61,12 @@ class BOTAN_PUBLIC_API(2, 0) Entropy_Source {
 
 class BOTAN_PUBLIC_API(2, 0) Entropy_Sources final {
    public:
+      /**
+      * @warning This object is not synchronized. For general usage (eg polling)
+      * this is fine. However if you use global_sources().add_source() concurrently
+      * with a poll, likely a race leading to memory corruption will occur; only
+      * add a new entropy source at the start of main before RNG objects are created.
+      */
       static Entropy_Sources& global_sources();
 
       void add_source(std::unique_ptr<Entropy_Source> src);
