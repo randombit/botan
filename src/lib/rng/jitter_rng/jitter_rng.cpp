@@ -9,17 +9,25 @@
 
 #include <botan/assert.h>
 #include <botan/exceptn.h>
+#include <botan/mutex.h>
 
 #include <jitterentropy.h>
 
 namespace Botan {
 
-struct Jitter_RNG_Internal {
+class Jitter_RNG_Internal final {
+   public:
       Jitter_RNG_Internal();
       ~Jitter_RNG_Internal();
       void collect_into_buffer(std::span<uint8_t> buf);
 
+      Jitter_RNG_Internal(const Jitter_RNG_Internal& other) = delete;
+      Jitter_RNG_Internal(Jitter_RNG_Internal&& other) = delete;
+      Jitter_RNG_Internal& operator=(const Jitter_RNG_Internal& other) = delete;
+      Jitter_RNG_Internal& operator=(Jitter_RNG_Internal&& other) = delete;
+
    private:
+      mutex_type m_mutex;
       rand_data* m_rand_data;
 };
 
@@ -42,7 +50,8 @@ Jitter_RNG_Internal::Jitter_RNG_Internal() {
 }
 
 Jitter_RNG_Internal::~Jitter_RNG_Internal() {
-   if(m_rand_data) {
+   const lock_guard_type<mutex_type> lock(m_mutex);
+   if(m_rand_data != nullptr) {
       jent_entropy_collector_free(m_rand_data);
       m_rand_data = nullptr;
    }
@@ -53,6 +62,7 @@ void Jitter_RNG_Internal::collect_into_buffer(std::span<uint8_t> buf) {
       return;
    }
 
+   const lock_guard_type<mutex_type> lock(m_mutex);
    BOTAN_STATE_CHECK(m_rand_data != nullptr);
 
    ssize_t num_bytes = jent_read_entropy_safe(&m_rand_data, reinterpret_cast<char*>(buf.data()), buf.size());
@@ -93,7 +103,7 @@ Jitter_RNG::Jitter_RNG() : m_jitter{std::make_unique<Jitter_RNG_Internal>()} {}
 Jitter_RNG::~Jitter_RNG() = default;
 
 void Jitter_RNG::clear() {
-   m_jitter = std::make_unique<Jitter_RNG_Internal>();
+   /* ignored - jitterentropy library does not support this */
 }
 
 void Jitter_RNG::fill_bytes_with_input(std::span<uint8_t> out, std::span<const uint8_t> in) {
