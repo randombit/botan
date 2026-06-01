@@ -35,6 +35,7 @@ secure_vector<uint8_t> PKCS8_extract(DataSource& source, AlgorithmIdentifier& pb
       .start_sequence()
       .decode(pbe_alg_id)
       .decode(key_data, ASN1_Type::OctetString)
+      .end_cons()
       .verify_end();
 
    return key_data;

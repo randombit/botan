@@ -274,7 +274,7 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::DER_decode_EC_group(st
 
    if(next_obj_type == ASN1_Type::ObjectId) {
       OID oid;
-      dec.decode(oid);
+      dec.decode(oid).verify_end();
 
       auto data = ec_group_data().lookup(oid);
       if(!data) {
