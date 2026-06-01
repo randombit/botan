@@ -168,8 +168,9 @@ class DL_Group_Data final {
 std::shared_ptr<DL_Group_Data> DL_Group::DER_decode_DL_group(const std::span<const uint8_t> data,
                                                              DL_Group_Format format,
                                                              DL_Group_Source source) {
-   BER_Decoder decoder(data, BER_Decoder::Limits::DER());
-   BER_Decoder inner = decoder.start_sequence();
+   BER_Decoder outer(data, BER_Decoder::Limits::DER());
+   BER_Decoder inner = outer.start_sequence();
+   outer.verify_end();
 
    if(format == DL_Group_Format::ANSI_X9_57) {
       /*
