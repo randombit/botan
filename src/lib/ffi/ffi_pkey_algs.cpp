@@ -897,7 +897,7 @@ int botan_ec_pubkey_get_group(botan_pubkey_t key, botan_ec_group_t* ec_group) {
 
 int botan_privkey_load_ed25519(botan_privkey_t* key, const uint8_t privkey[32]) {
 #if defined(BOTAN_HAS_ED25519)
-   if(key == nullptr) {
+   if(any_null_pointers(key, privkey)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
    *key = nullptr;
@@ -914,7 +914,7 @@ int botan_privkey_load_ed25519(botan_privkey_t* key, const uint8_t privkey[32]) 
 
 int botan_pubkey_load_ed25519(botan_pubkey_t* key, const uint8_t pubkey[32]) {
 #if defined(BOTAN_HAS_ED25519)
-   if(key == nullptr) {
+   if(any_null_pointers(key, pubkey)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
    *key = nullptr;
@@ -979,7 +979,7 @@ int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key, uint8_t output[32]) {
 
 int botan_privkey_load_ed448(botan_privkey_t* key, const uint8_t privkey[57]) {
 #if defined(BOTAN_HAS_ED448)
-   if(key == nullptr) {
+   if(any_null_pointers(key, privkey)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
    *key = nullptr;
@@ -995,7 +995,7 @@ int botan_privkey_load_ed448(botan_privkey_t* key, const uint8_t privkey[57]) {
 
 int botan_pubkey_load_ed448(botan_pubkey_t* key, const uint8_t pubkey[57]) {
 #if defined(BOTAN_HAS_ED448)
-   if(key == nullptr) {
+   if(any_null_pointers(key, pubkey)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
    *key = nullptr;
@@ -1053,7 +1053,7 @@ int botan_pubkey_ed448_get_pubkey(botan_pubkey_t key, uint8_t output[57]) {
 
 int botan_privkey_load_x25519(botan_privkey_t* key, const uint8_t privkey[32]) {
 #if defined(BOTAN_HAS_X25519)
-   if(key == nullptr) {
+   if(any_null_pointers(key, privkey)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
    *key = nullptr;
@@ -1069,7 +1069,7 @@ int botan_privkey_load_x25519(botan_privkey_t* key, const uint8_t privkey[32]) {
 
 int botan_pubkey_load_x25519(botan_pubkey_t* key, const uint8_t pubkey[32]) {
 #if defined(BOTAN_HAS_X25519)
-   if(key == nullptr) {
+   if(any_null_pointers(key, pubkey)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
    *key = nullptr;
@@ -1129,7 +1129,7 @@ int botan_pubkey_x25519_get_pubkey(botan_pubkey_t key, uint8_t output[32]) {
 
 int botan_privkey_load_x448(botan_privkey_t* key, const uint8_t privkey[56]) {
 #if defined(BOTAN_HAS_X448)
-   if(key == nullptr) {
+   if(any_null_pointers(key, privkey)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
    *key = nullptr;
@@ -1145,7 +1145,7 @@ int botan_privkey_load_x448(botan_privkey_t* key, const uint8_t privkey[56]) {
 
 int botan_pubkey_load_x448(botan_pubkey_t* key, const uint8_t pubkey[56]) {
 #if defined(BOTAN_HAS_X448)
-   if(key == nullptr) {
+   if(any_null_pointers(key, pubkey)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
    *key = nullptr;

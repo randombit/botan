@@ -59,6 +59,10 @@ int botan_pk_op_encrypt(botan_pk_op_encrypt_t op,
                         size_t* out_len,
                         const uint8_t plaintext[],
                         size_t plaintext_len) {
+   if(plaintext_len > 0 && plaintext == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
    return BOTAN_FFI_VISIT(op, [=](const auto& o) {
       return write_vec_output(out, out_len, o.encrypt(plaintext, plaintext_len, safe_get(rng_obj)));
    });
@@ -100,6 +104,10 @@ int botan_pk_op_decrypt_output_length(botan_pk_op_decrypt_t op, size_t ctext_len
 
 int botan_pk_op_decrypt(
    botan_pk_op_decrypt_t op, uint8_t out[], size_t* out_len, const uint8_t ciphertext[], size_t ciphertext_len) {
+   if(ciphertext_len > 0 && ciphertext == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
    return BOTAN_FFI_VISIT(
       op, [=](const auto& o) { return write_vec_output(out, out_len, o.decrypt(ciphertext, ciphertext_len)); });
 }
@@ -140,6 +148,10 @@ int botan_pk_op_sign_output_length(botan_pk_op_sign_t op, size_t* sig_len) {
 }
 
 int botan_pk_op_sign_update(botan_pk_op_sign_t op, const uint8_t in[], size_t in_len) {
+   if(in_len > 0 && in == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
    return BOTAN_FFI_VISIT(op, [=](auto& o) { o.update(in, in_len); });
 }
 
@@ -170,10 +182,18 @@ int botan_pk_op_verify_destroy(botan_pk_op_verify_t op) {
 }
 
 int botan_pk_op_verify_update(botan_pk_op_verify_t op, const uint8_t in[], size_t in_len) {
+   if(in_len > 0 && in == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
    return BOTAN_FFI_VISIT(op, [=](auto& o) { o.update(in, in_len); });
 }
 
 int botan_pk_op_verify_finish(botan_pk_op_verify_t op, const uint8_t sig[], size_t sig_len) {
+   if(sig_len > 0 && sig == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
    return BOTAN_FFI_VISIT(op, [=](auto& o) {
       const bool legit = o.check_signature(sig, sig_len);
 
@@ -236,6 +256,16 @@ int botan_pk_op_key_agreement(botan_pk_op_ka_t op,
                               size_t other_key_len,
                               const uint8_t salt[],
                               size_t salt_len) {
+   if(out_len == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   if(other_key_len > 0 && other_key == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   if(salt_len > 0 && salt == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
    return BOTAN_FFI_VISIT(op, [=](const auto& o) {
       auto k = o.derive_key(*out_len, other_key, other_key_len, salt, salt_len).bits_of();
       return write_vec_output(out, out_len, k);
@@ -291,6 +321,10 @@ int botan_pk_op_kem_encrypt_create_shared_key(botan_pk_op_kem_encrypt_t op,
                                               size_t* shared_key_len,
                                               uint8_t encapsulated_key_out[],
                                               size_t* encapsulated_key_len) {
+   if(salt_len > 0 && salt == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
    return BOTAN_FFI_VISIT(op, [=](auto& kem) {
       const auto result = kem.encrypt(safe_get(rng), desired_shared_key_len, {salt, salt_len});
 
@@ -336,6 +370,13 @@ int botan_pk_op_kem_decrypt_shared_key(botan_pk_op_kem_decrypt_t op,
                                        size_t desired_shared_key_len,
                                        uint8_t shared_key_out[],
                                        size_t* shared_key_len) {
+   if(salt_len > 0 && salt == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   if(Botan::any_null_pointers(encapsulated_key, shared_key_len)) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
    return BOTAN_FFI_VISIT(op, [=](auto& kem) {
       const auto shared_key =
          kem.decrypt(encapsulated_key, encapsulated_key_len, desired_shared_key_len, salt, salt_len);

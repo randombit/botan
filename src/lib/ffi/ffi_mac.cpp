@@ -45,6 +45,10 @@ int botan_mac_set_key(botan_mac_t mac, const uint8_t* key, size_t key_len) {
 }
 
 int botan_mac_set_nonce(botan_mac_t mac, const uint8_t* nonce, size_t nonce_len) {
+   if(nonce_len > 0 && nonce == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
    return BOTAN_FFI_VISIT(mac, [=](auto& m) { m.start(nonce, nonce_len); });
 }
 
