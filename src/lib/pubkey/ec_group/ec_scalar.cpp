@@ -29,7 +29,7 @@ EC_Scalar::EC_Scalar(EC_Scalar&& other) noexcept : m_scalar(std::move(other.m_sc
 
 EC_Scalar& EC_Scalar::operator=(const EC_Scalar& other) {
    if(this != &other) {
-      if(m_scalar == nullptr) {
+      if(m_scalar == nullptr || m_scalar->group() != other.inner().group()) {
          m_scalar = other.inner().clone();
       } else {
          this->assign(other);
@@ -86,6 +86,7 @@ BigInt EC_Scalar::to_bigint() const {
    return BigInt::from_bytes(bytes);
 }
 
+//static
 EC_Scalar EC_Scalar::gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng) {
    const auto& group = scalar._inner().group();
    return EC_Scalar(group->gk_x_mod_order(scalar.inner(), rng));
@@ -157,19 +158,28 @@ void EC_Scalar::square_self() {
 }
 
 EC_Scalar EC_Scalar::add(const EC_Scalar& x) const {
+   BOTAN_ARG_CHECK(inner().group() == x.inner().group(), "Curve mismatch");
    return EC_Scalar(inner().add(x.inner()));
 }
 
 EC_Scalar EC_Scalar::sub(const EC_Scalar& x) const {
+   BOTAN_ARG_CHECK(inner().group() == x.inner().group(), "Curve mismatch");
    return EC_Scalar(inner().sub(x.inner()));
 }
 
 EC_Scalar EC_Scalar::mul(const EC_Scalar& x) const {
+   BOTAN_ARG_CHECK(inner().group() == x.inner().group(), "Curve mismatch");
    return EC_Scalar(inner().mul(x.inner()));
 }
 
 void EC_Scalar::assign(const EC_Scalar& x) {
-   m_scalar->assign(x.inner());
+   if(this != &x) {
+      if(m_scalar == nullptr || m_scalar->group() != x.inner().group()) {
+         m_scalar = x.inner().clone();
+      } else {
+         m_scalar->assign(x.inner());
+      }
+   }
 }
 
 void EC_Scalar::zeroize() {
@@ -177,6 +187,10 @@ void EC_Scalar::zeroize() {
 }
 
 bool EC_Scalar::is_eq(const EC_Scalar& x) const {
+   if(inner().group() != x.inner().group()) {
+      return false;
+   }
+
    return inner().is_eq(x.inner());
 }
 

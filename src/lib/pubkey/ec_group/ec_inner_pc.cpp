@@ -42,6 +42,7 @@ bool EC_Scalar_Data_PC::is_eq(const EC_Scalar_Data& other) const {
 }
 
 void EC_Scalar_Data_PC::assign(const EC_Scalar_Data& other) {
+   BOTAN_STATE_CHECK(other.group() == this->group());
    m_v = checked_ref(other).value();
 }
 
