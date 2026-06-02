@@ -47,8 +47,8 @@ void aes_192_key_expansion(
    K2 ^= K2.shift_elems_left<1>();
    K2 ^= SIMD_4x32(_mm_shuffle_epi32(K1.raw(), _MM_SHUFFLE(3, 3, 3, 3)));
 
-   out[offset + 4] = _mm_cvtsi128_si32(K2.raw());
-   out[offset + 5] = _mm_cvtsi128_si32(K2.shift_elems_right<1>().raw());
+   out[offset + 4] = K2.extract_word<0>();
+   out[offset + 5] = K2.extract_word<1>();
 }
 
 /*
