@@ -66,6 +66,11 @@ class SIMD_4X32_Tests final : public Test {
 
          const Botan::SIMD_4x32 input(pat1, pat2, pat3, pat4);
 
+         result.test_u32_eq("SIMD_4x32::extract_word<0>", input.extract_word<0>(), pat1);
+         result.test_u32_eq("SIMD_4x32::extract_word<1>", input.extract_word<1>(), pat2);
+         result.test_u32_eq("SIMD_4x32::extract_word<2>", input.extract_word<2>(), pat3);
+         result.test_u32_eq("SIMD_4x32::extract_word<3>", input.extract_word<3>(), pat4);
+
          const Botan::SIMD_4x32 rol = input.rotl<3>();
 
          test_eq(result,

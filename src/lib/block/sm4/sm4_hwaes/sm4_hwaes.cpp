@@ -247,6 +247,11 @@ void BOTAN_FN_ISA_HWAES SM4::sm4_hwaes_encrypt(const uint8_t ptext[], uint8_t ct
    }
 }
 
+uint32_t BOTAN_FN_ISA_HWAES SM4::sm4_hwaes_sbox(uint32_t x) {
+   const auto sx = sm4_sbox(SIMD_4x32::splat(x));
+   return sx.extract_word<0>();
+}
+
 void BOTAN_FN_ISA_HWAES SM4::sm4_hwaes_decrypt(const uint8_t ctext[], uint8_t ptext[], size_t blocks) const {
    while(blocks >= 8) {
       sm4_hwaes_decrypt_8(ctext, ptext, m_RK);

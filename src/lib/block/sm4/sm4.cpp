@@ -91,31 +91,6 @@ inline uint32_t SM4_T(uint32_t b) {
    return (s0) ^ rotr<8>(s1) ^ rotr<16>(s2) ^ rotr<24>(s3);
 }
 
-// Variant of T for key schedule
-uint32_t SM4_Tp(uint32_t b) {
-   const uint8_t b0 = get_byte<0>(b);
-   const uint8_t b1 = get_byte<1>(b);
-   const uint8_t b2 = get_byte<2>(b);
-   const uint8_t b3 = get_byte<3>(b);
-
-   uint8_t t0 = 0;
-   uint8_t t1 = 0;
-   uint8_t t2 = 0;
-   uint8_t t3 = 0;
-   for(size_t i = 0; i != 256; ++i) {
-      const uint8_t i8 = static_cast<uint8_t>(i);
-      const uint8_t s = SM4_SBOX[i];
-      t0 |= CT::Mask<uint8_t>::is_equal(i8, b0).if_set_return(s);
-      t1 |= CT::Mask<uint8_t>::is_equal(i8, b1).if_set_return(s);
-      t2 |= CT::Mask<uint8_t>::is_equal(i8, b2).if_set_return(s);
-      t3 |= CT::Mask<uint8_t>::is_equal(i8, b3).if_set_return(s);
-   }
-
-   const uint32_t t = make_uint32(t0, t1, t2, t3);
-   // L' linear transform
-   return t ^ rotl<13>(t) ^ rotl<23>(t);
-}
-
 template <size_t R, typename F>
 BOTAN_FORCE_INLINE void SM4_E(
    uint32_t& B0, uint32_t& B1, uint32_t& B2, uint32_t& B3, const secure_vector<uint32_t>& RK, F& f) {
@@ -355,6 +330,40 @@ bool SM4::has_keying_material() const {
 /*
 * SM4 Key Schedule
 */
+
+//static
+uint32_t SM4::SM4_Tp(uint32_t b) {
+#if defined(BOTAN_HAS_SM4_HWAES)
+   if(CPUID::has(CPUID::Feature::HW_AES)) {
+      const uint32_t t = sm4_hwaes_sbox(b);
+      // L' linear transform
+      return t ^ rotl<13>(t) ^ rotl<23>(t);
+   }
+#endif
+
+   const uint8_t b0 = get_byte<0>(b);
+   const uint8_t b1 = get_byte<1>(b);
+   const uint8_t b2 = get_byte<2>(b);
+   const uint8_t b3 = get_byte<3>(b);
+
+   uint8_t t0 = 0;
+   uint8_t t1 = 0;
+   uint8_t t2 = 0;
+   uint8_t t3 = 0;
+   for(size_t i = 0; i != 256; ++i) {
+      const uint8_t i8 = static_cast<uint8_t>(i);
+      const uint8_t s = SM4_SBOX[i];
+      t0 |= CT::Mask<uint8_t>::is_equal(i8, b0).if_set_return(s);
+      t1 |= CT::Mask<uint8_t>::is_equal(i8, b1).if_set_return(s);
+      t2 |= CT::Mask<uint8_t>::is_equal(i8, b2).if_set_return(s);
+      t3 |= CT::Mask<uint8_t>::is_equal(i8, b3).if_set_return(s);
+   }
+
+   const uint32_t t = make_uint32(t0, t1, t2, t3);
+   // L' linear transform
+   return t ^ rotl<13>(t) ^ rotl<23>(t);
+}
+
 void SM4::key_schedule(std::span<const uint8_t> key) {
    // System parameter or family key
    const uint32_t FK[4] = {0xa3b1bac6, 0x56aa3350, 0x677d9197, 0xb27022dc};
@@ -371,10 +380,11 @@ void SM4::key_schedule(std::span<const uint8_t> key) {
    uint32_t K3 = load_be<uint32_t>(key.data(), 3) ^ FK[3];
 
    m_RK.resize(32);
+
    for(size_t i = 0; i != 32; i += 4) {
       K0 ^= SM4_Tp(K1 ^ K2 ^ K3 ^ CK[i + 0]);
       K1 ^= SM4_Tp(K0 ^ K2 ^ K3 ^ CK[i + 1]);
-      K2 ^= SM4_Tp(K3 ^ K0 ^ K1 ^ CK[i + 2]);
+      K2 ^= SM4_Tp(K0 ^ K1 ^ K3 ^ CK[i + 2]);
       K3 ^= SM4_Tp(K0 ^ K1 ^ K2 ^ CK[i + 3]);
       m_RK[i + 0] = K0;
       m_RK[i + 1] = K1;

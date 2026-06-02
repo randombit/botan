@@ -136,7 +136,7 @@ void BOTAN_FN_ISA_SHANI SHA_1::sha1_compress_x86(digest_type& digest,
    }
 
    rev_words(ABCD).store_le(&digest[0]);  // NOLINT(*-container-data-pointer)
-   digest[4] = _mm_extract_epi32(E0.raw(), 3);
+   digest[4] = E0.extract_word<3>();
 }
 
 }  // namespace Botan
