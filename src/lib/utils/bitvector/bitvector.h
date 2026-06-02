@@ -546,8 +546,11 @@ class bitvector_base final {
 
       void resize(size_type bits) {
          const auto new_number_of_blocks = ceil_toblocks(bits);
-         if(new_number_of_blocks != m_blocks.size()) {
-            m_blocks.resize(new_number_of_blocks);
+         const auto old_number_of_blocks = m_blocks.size();
+         if(new_number_of_blocks > old_number_of_blocks) {
+            m_blocks.insert(m_blocks.end(), new_number_of_blocks - old_number_of_blocks, block_type(0));
+         } else if(new_number_of_blocks < old_number_of_blocks) {
+            m_blocks.erase(m_blocks.begin() + new_number_of_blocks, m_blocks.end());
          }
 
          m_bits = bits;
