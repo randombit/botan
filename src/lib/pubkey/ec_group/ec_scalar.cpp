@@ -29,14 +29,20 @@ EC_Scalar::EC_Scalar(EC_Scalar&& other) noexcept : m_scalar(std::move(other.m_sc
 
 EC_Scalar& EC_Scalar::operator=(const EC_Scalar& other) {
    if(this != &other) {
-      this->assign(other);
+      if(m_scalar == nullptr) {
+         m_scalar = other.inner().clone();
+      } else {
+         this->assign(other);
+      }
    }
    return (*this);
 }
 
 EC_Scalar& EC_Scalar::operator=(EC_Scalar&& other) noexcept {
-   BOTAN_ARG_CHECK(_inner().group() == other._inner().group(), "Curve mismatch");
-   std::swap(m_scalar, other.m_scalar);
+   if(this != &other) {
+      // Even a cross-curve swap is accepted here
+      std::swap(m_scalar, other.m_scalar);
+   }
    return (*this);
 }
 

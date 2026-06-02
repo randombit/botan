@@ -977,10 +977,7 @@ size_t CRL_Number::get_crl_number() const {
 * Copy a CRL_Number extension
 */
 std::unique_ptr<Certificate_Extension> CRL_Number::copy() const {
-   if(!m_has_value) {
-      throw Invalid_State("CRL_Number::copy: Not set");
-   }
-   return std::make_unique<CRL_Number>(m_crl_number);
+   return std::make_unique<CRL_Number>(*this);
 }
 
 /*

@@ -471,7 +471,7 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Distribution_Points final : public Certificate_
       };
 
       std::unique_ptr<Certificate_Extension> copy() const override {
-         return std::make_unique<CRL_Distribution_Points>(m_distribution_points);
+         return std::make_unique<CRL_Distribution_Points>(*this);
       }
 
       CRL_Distribution_Points() = default;
@@ -1038,7 +1038,7 @@ class BOTAN_PUBLIC_API(2, 4) Unknown_Extension final : public Certificate_Extens
             m_oid(oid), m_critical(critical), m_failed_to_decode(failed_to_decode) {}
 
       std::unique_ptr<Certificate_Extension> copy() const override {
-         return std::make_unique<Unknown_Extension>(m_oid, m_critical, m_failed_to_decode);
+         return std::make_unique<Unknown_Extension>(*this);
       }
 
       /**

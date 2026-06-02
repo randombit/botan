@@ -87,6 +87,7 @@ class TR {
 
       TR& operator=(TR&& other) noexcept {
          if(this != &other) {
+            flush();
             m_esys_ctx = other.m_esys_ctx;
             m_handle = std::exchange(other.m_handle, ESYS_TR_NONE);
          }
@@ -96,9 +97,12 @@ class TR {
       TR(const TR&) = delete;
       TR& operator=(const TR&) = delete;
 
-      ~TR() {
+      ~TR() { flush(); }
+
+      void flush() noexcept {
          if(m_esys_ctx != nullptr && m_handle != ESYS_TR_NONE) {
             Esys_FlushContext(m_esys_ctx, m_handle);
+            m_handle = ESYS_TR_NONE;
          }
       }
 
