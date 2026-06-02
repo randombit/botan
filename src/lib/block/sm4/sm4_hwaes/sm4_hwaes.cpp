@@ -10,6 +10,7 @@
 #include <botan/internal/isa_extn.h>
 #include <botan/internal/simd_4x32.h>
 #include <botan/internal/simd_hwaes.h>
+#include <bit>
 
 namespace Botan {
 
@@ -245,6 +246,17 @@ void BOTAN_FN_ISA_HWAES SM4::sm4_hwaes_encrypt(const uint8_t ptext[], uint8_t ct
       sm4_hwaes_encrypt_4(pbuf, cbuf, m_RK);
       copy_mem(ctext, cbuf, blocks * 16);
    }
+}
+
+uint32_t BOTAN_FN_ISA_HWAES SM4::sm4_hwaes_sbox(uint32_t x) {
+   const auto sx = sm4_sbox(SIMD_4x32::splat(x));
+   uint32_t result[4];
+   if constexpr(std::endian::native == std::endian::big) {
+      sx.store_be(result);
+   } else {
+      sx.store_le(result);
+   }
+   return result[0];
 }
 
 void BOTAN_FN_ISA_HWAES SM4::sm4_hwaes_decrypt(const uint8_t ctext[], uint8_t ptext[], size_t blocks) const {
