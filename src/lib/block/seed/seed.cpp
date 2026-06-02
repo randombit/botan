@@ -9,6 +9,7 @@
 
 #include <botan/internal/loadstor.h>
 #include <botan/internal/prefetch.h>
+#include <botan/internal/rotate.h>
 
 #if defined(BOTAN_HAS_CPUID)
    #include <botan/internal/cpuid.h>
@@ -56,16 +57,17 @@ alignas(256) const uint8_t SEED_S1[256] = {
 * SEED G Function
 */
 BOTAN_FORCE_INLINE uint32_t SEED_G(uint32_t X) {
-   const uint32_t M = 0x01010101;
+   constexpr uint32_t M = 0x01010101;
+
    const uint32_t s0 = M * SEED_S0[get_byte<3>(X)];
    const uint32_t s1 = M * SEED_S1[get_byte<2>(X)];
    const uint32_t s2 = M * SEED_S0[get_byte<1>(X)];
    const uint32_t s3 = M * SEED_S1[get_byte<0>(X)];
 
-   const uint32_t M0 = 0x3FCFF3FC;
-   const uint32_t M1 = 0xFC3FCFF3;
-   const uint32_t M2 = 0xF3FC3FCF;
-   const uint32_t M3 = 0xCFF3FC3F;
+   constexpr uint32_t M0 = 0x3FCFF3FC;
+   constexpr uint32_t M1 = 0xFC3FCFF3;
+   constexpr uint32_t M2 = 0xF3FC3FCF;
+   constexpr uint32_t M3 = 0xCFF3FC3F;
 
    return (s0 & M0) ^ (s1 & M1) ^ (s2 & M2) ^ (s3 & M3);
 }
@@ -265,26 +267,30 @@ bool SEED::has_keying_material() const {
    return !m_K.empty();
 }
 
+namespace {
+
+consteval std::array<uint32_t, 16> seed_round_constants() {
+   constexpr uint32_t phi = 0x9E3779B9;
+   std::array<uint32_t, 16> rc{};
+
+   uint32_t v = phi;
+   for(size_t i = 0; i != 16; ++i) {
+      rc[i] = v;
+      v = rotl<1>(v);
+   }
+
+   return rc;
+}
+
+}  // namespace
+
 /*
 * SEED Key Schedule
 */
 void SEED::key_schedule(std::span<const uint8_t> key) {
-   const uint32_t RC[16] = {0x9E3779B9,
-                            0x3C6EF373,
-                            0x78DDE6E6,
-                            0xF1BBCDCC,
-                            0xE3779B99,
-                            0xC6EF3733,
-                            0x8DDE6E67,
-                            0x1BBCDCCF,
-                            0x3779B99E,
-                            0x6EF3733C,
-                            0xDDE6E678,
-                            0xBBCDCCF1,
-                            0x779B99E3,
-                            0xEF3733C6,
-                            0xDE6E678D,
-                            0xBCDCCF1B};
+   constexpr auto RC = seed_round_constants();
+
+   prefetch_arrays(SEED_S0, SEED_S1);
 
    secure_vector<uint32_t> WK(4);
 

@@ -258,6 +258,8 @@ void aria_ks_dk_transform(uint32_t& K0, uint32_t& K1, uint32_t& K2, uint32_t& K3
 * ARIA Key Schedule
 */
 void key_schedule(secure_vector<uint32_t>& ERK, secure_vector<uint32_t>& DRK, std::span<const uint8_t> key) {
+   prefetch_arrays(S1, S2, X1, X2);
+
    const uint32_t KRK[3][4] = {{0x517cc1b7, 0x27220a94, 0xfe13abe8, 0xfa9a6ee0},
                                {0x6db14acc, 0x9e21c820, 0xff28b1d5, 0xef5de2b0},
                                {0xdb92371d, 0x2126e970, 0x03249775, 0x04e8c90e}};
