@@ -88,7 +88,7 @@ bool check_passhash9(std::string_view pass, std::string_view hash) {
       }
    }
 
-   secure_vector<uint8_t> bin = base64_decode(hash.data() + MAGIC_PREFIX.size());
+   secure_vector<uint8_t> bin = base64_decode(hash.substr(MAGIC_PREFIX.size()));
 
    if(bin.size() != BINARY_LENGTH) {
       return false;
