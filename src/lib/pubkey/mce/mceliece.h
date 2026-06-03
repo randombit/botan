@@ -71,8 +71,8 @@ class BOTAN_PUBLIC_API(2, 0) McEliece_PublicKey : public virtual Public_Key /* N
          return (op == PublicKeyOperation::KeyEncapsulation);
       }
 
-      std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(std::string_view params,
-                                                                       std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(
+         std::string_view params, std::string_view provider, RandomNumberGenerator* rng_may_be_null) const override;
 
    protected:
       McEliece_PublicKey() = default;

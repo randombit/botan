@@ -97,6 +97,10 @@
    #include <botan/ml_kem.h>
 #endif
 
+#if defined(BOTAN_HAS_MLKEM_COMPOSITE)
+   #include <botan/mlkem_comp.h>
+#endif
+
 #if defined(BOTAN_HAS_HSS_LMS)
    #include <botan/hss_lms.h>
 #endif
@@ -180,6 +184,21 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_ML_KEM)
    if(alg_name.starts_with("ML-KEM-")) {
       return std::make_unique<ML_KEM_PublicKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_MLKEM_COMPOSITE)
+   {
+      auto mlkem_comp_param_opt = MLKEM_Composite_Param::from_algo_id(alg_id);
+      if(mlkem_comp_param_opt.has_value()) {
+         auto& comp_parm = mlkem_comp_param_opt.value();
+         if(comp_parm.is_supported()) {
+            return std::make_unique<MLKEM_Composite_PublicKey>(alg_id, key_bits);
+         } else {
+            throw Not_Implemented(fmt("MLKEM-composite is supported, but the requested parameter set {} is not",
+                                      alg_id.get_oid().to_string()));
+         }
+      }
    }
 #endif
 
@@ -365,6 +384,21 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_ML_KEM)
    if(alg_name.starts_with("ML-KEM-")) {
       return std::make_unique<ML_KEM_PrivateKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_MLKEM_COMPOSITE)
+   {
+      auto mlkem_comp_param_opt = MLKEM_Composite_Param::from_algo_id(alg_id);
+      if(mlkem_comp_param_opt.has_value()) {
+         auto& comp_parm = mlkem_comp_param_opt.value();
+         if(comp_parm.is_supported()) {
+            return std::make_unique<MLKEM_Composite_PrivateKey>(alg_id, key_bits);
+         } else {
+            throw Not_Implemented(fmt("MLKEM-composite is supported, but the requested parameter set {} is not",
+                                      alg_id.get_oid().to_string()));
+         }
+      }
    }
 #endif
 
@@ -592,6 +626,20 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
       }();
 
       return std::make_unique<ML_KEM_PrivateKey>(rng, mode);
+   }
+#endif
+
+#if defined(BOTAN_HAS_MLKEM_COMPOSITE)
+   {
+      if(alg_name == MLKEM_Composite_Param::generic_algo_name) {
+         auto comp_param = MLKEM_Composite_Param::from_id_str_or_throw(params);
+         if(comp_param.is_supported()) {
+            return std::make_unique<MLKEM_Composite_PrivateKey>(rng, comp_param);
+         } else {
+            throw Not_Implemented(
+               fmt("MLKEM-composite is supported, but the requested parameter set {} is not", params));
+         }
+      }
    }
 #endif
 

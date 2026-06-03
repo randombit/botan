@@ -317,8 +317,8 @@ std::unique_ptr<Private_Key> FrodoKEM_PublicKey::generate_another(RandomNumberGe
    return std::make_unique<FrodoKEM_PrivateKey>(rng, m_public->constants().mode());
 }
 
-std::unique_ptr<PK_Ops::KEM_Encryption> FrodoKEM_PublicKey::create_kem_encryption_op(std::string_view params,
-                                                                                     std::string_view provider) const {
+std::unique_ptr<PK_Ops::KEM_Encryption> FrodoKEM_PublicKey::create_kem_encryption_op(
+   std::string_view params, std::string_view provider, RandomNumberGenerator* /*rng_may_be_null*/) const {
    if(provider.empty() || provider == "base") {
       return std::make_unique<Frodo_KEM_Encryptor>(m_public, params);
    }

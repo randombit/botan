@@ -37,7 +37,9 @@ class BOTAN_TEST_API KEX_to_KEM_Adapter_PublicKey : public virtual Public_Key {
       bool supports_operation(PublicKeyOperation op) const override;
 
       std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(
-         std::string_view kdf, std::string_view provider = "base") const override;
+         std::string_view kdf,
+         std::string_view provider = "base",
+         RandomNumberGenerator* rng_may_be_null = nullptr) const override;
 
    private:
       std::shared_ptr<const Public_Key> m_public_key;

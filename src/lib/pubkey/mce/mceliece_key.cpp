@@ -633,8 +633,8 @@ std::unique_ptr<Private_Key> McEliece_PublicKey::generate_another(RandomNumberGe
    return std::make_unique<McEliece_PrivateKey>(rng, get_code_length(), get_t());
 }
 
-std::unique_ptr<PK_Ops::KEM_Encryption> McEliece_PublicKey::create_kem_encryption_op(std::string_view params,
-                                                                                     std::string_view provider) const {
+std::unique_ptr<PK_Ops::KEM_Encryption> McEliece_PublicKey::create_kem_encryption_op(
+   std::string_view params, std::string_view provider, RandomNumberGenerator* /*rng_may_be_null*/) const {
    if(provider == "base" || provider.empty()) {
       return std::make_unique<MCE_KEM_Encryptor>(m_public, params);
    }

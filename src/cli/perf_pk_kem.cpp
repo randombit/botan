@@ -4,9 +4,11 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include "botan/mlkem_comp_parameters.h"
 #include "perf.h"
 
 #include <ostream>
+#include <vector>
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
    #include <botan/pk_algs.h>
@@ -45,7 +47,12 @@ class PerfTest_PK_KEM : public PerfTest {
          const auto msec = config.runtime();
          auto& rng = config.rng();
 
-         const std::string kdf = "KDF2(SHA-256)";  // arbitrary choice
+         std::string kdf = "KDF2(SHA-256)";  // arbitrary choice
+   #if BOTAN_HAS_MLKEM_COMPOSITE
+         if(algo == Botan::MLKEM_Composite_Param::generic_algo_name) {
+            kdf = "";
+         }
+   #endif
 
          auto keygen_timer = config.make_timer(nm, 1, "keygen");
 
@@ -59,7 +66,7 @@ class PerfTest_PK_KEM : public PerfTest {
             auto pk = sk->public_key();
 
             Botan::PK_KEM_Decryptor dec(*sk, rng, kdf, provider);
-            Botan::PK_KEM_Encryptor enc(*pk, kdf, provider);
+            Botan::PK_KEM_Encryptor enc(*pk, kdf, provider, &rng);
 
             auto kem_enc_timer = config.make_timer(nm, 1, "KEM encrypt");
             auto kem_dec_timer = config.make_timer(nm, 1, "KEM decrypt");
@@ -127,6 +134,27 @@ class PerfTest_ML_KEM final : public PerfTest_PK_KEM {
 };
 
 BOTAN_REGISTER_PERF_TEST("ML-KEM", PerfTest_ML_KEM);
+
+#endif
+
+#if defined(BOTAN_HAS_MLKEM_COMPOSITE)
+
+class PerfTest_MLKEM_Composite final : public PerfTest_PK_KEM {
+   public:
+      std::string algo() const override { return std::string(Botan::MLKEM_Composite_Param::generic_algo_name); }
+
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
+         const auto all_params = Botan::MLKEM_Composite_Param::all_supported_param_sets();
+         std::vector<std::string> result;
+         result.reserve(all_params.size());
+         for(const auto& param : all_params) {
+            result.push_back(param.id_str());
+         }
+         return result;
+      }
+};
+
+BOTAN_REGISTER_PERF_TEST("MLKEM-Composite", PerfTest_MLKEM_Composite);
 
 #endif
 

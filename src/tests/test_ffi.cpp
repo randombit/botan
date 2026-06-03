@@ -7,6 +7,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include "botan/mlkem_comp_parameters.h"
 #include "tests.h"
 #include <botan/version.h>
 
@@ -23,6 +24,10 @@
    #include <botan/internal/stl_util.h>
    #include <botan/internal/target_info.h>
    #include <set>
+#endif
+
+#if BOTAN_HAS_MLKEM_COMPOSITE
+   #include <botan/mlkem_comp_parameters.h>
 #endif
 
 #if defined(BOTAN_HAS_X509)
@@ -4433,7 +4438,14 @@ class FFI_KEM_Roundtrip_Test : public FFI_Test {
 
             // KEM encryption (using the loaded public key)
             botan_pk_op_kem_encrypt_t kem_enc;
-            TEST_FFI_OK(botan_pk_op_kem_encrypt_create, (&kem_enc, pub_loaded, "Raw"));
+   #if defined(BOTAN_HAS_MLKEM_COMPOSITE)
+            if(algo() == Botan::MLKEM_Composite_Param::generic_algo_name) {
+               TEST_FFI_OK(botan_pk_op_kem_encrypt_create_with_rng, (&kem_enc, pub_loaded, "Raw", rng));
+            } else
+   #endif
+            {
+               TEST_FFI_OK(botan_pk_op_kem_encrypt_create, (&kem_enc, pub_loaded, "Raw"));
+            }
 
             // explicitly query output lengths
             size_t shared_key_length = 0;
@@ -4787,6 +4799,33 @@ class FFI_ML_KEM_Test final : public FFI_KEM_Roundtrip_Test {
       pubkey_loader_fn_t public_key_load_function() const override { return botan_pubkey_load_ml_kem; }
 
       std::vector<const char*> modes() const override { return {"ML-KEM-512", "ML-KEM-768", "ML-KEM-1024"}; }
+};
+
+class FFI_MLKEM_Composite_Test final : public FFI_KEM_Roundtrip_Test {
+   public:
+      std::string name() const override { return "FFI MLKEM-composite"; }
+
+   private:
+      const char* algo() const override { return Botan::MLKEM_Composite_Param::generic_algo_name; }
+
+      privkey_loader_fn_t private_key_load_function() const override { return botan_privkey_load_mlkem_composite; }
+
+      pubkey_loader_fn_t public_key_load_function() const override { return botan_pubkey_load_mlkem_composite; }
+
+      /* the type const char in the returned vector is not a good choice since it makes it impossible to dynamically generate the result */
+      std::vector<const char*> modes() const override {
+         return {
+   #if defined(BOTAN_HASH_RSA)
+            "MLKEM768-RSA2048-SHA3-256",
+   #endif
+   #if defined(BOTAN_HAS_X25519)
+               "MLKEM768-X25519-SHA3-256",
+   #endif
+   #if defined(BOTAN_HASH_ECDH) && defined(BOTAN_HAS_PCURVES_SECP256R1)
+               "MLKEM768-ECDH-P256-SHA3-256",
+   #endif
+         };
+      }
 };
 
 class FFI_FrodoKEM_Test final : public FFI_KEM_Roundtrip_Test {
@@ -5755,6 +5794,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_kyber512", FFI_Kyber512_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_kyber768", FFI_Kyber768_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_kyber1024", FFI_Kyber1024_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ml_kem", FFI_ML_KEM_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_mlkem_composite", FFI_MLKEM_Composite_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ml_dsa", FFI_ML_DSA_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_slh_dsa", FFI_SLH_DSA_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_frodokem", FFI_FrodoKEM_Test);

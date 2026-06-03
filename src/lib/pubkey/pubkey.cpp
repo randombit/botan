@@ -139,8 +139,11 @@ secure_vector<uint8_t> PK_Decryptor_EME::do_decrypt(uint8_t& valid_mask, const u
    return m_op->decrypt(valid_mask, {in, in_len});
 }
 
-PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key, std::string_view param, std::string_view provider) {
-   m_op = key.create_kem_encryption_op(param, provider);
+PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key,
+                                   std::string_view param,
+                                   std::string_view provider,
+                                   RandomNumberGenerator* rng_may_be_null) {
+   m_op = key.create_kem_encryption_op(param, provider, rng_may_be_null);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support KEM encryption", key.algo_name()));
    }
@@ -150,9 +153,7 @@ PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key,
                                    RandomNumberGenerator& rng,
                                    std::string_view kem_param,
                                    std::string_view provider) :
-      PK_KEM_Encryptor(key, kem_param, provider) {
-   BOTAN_UNUSED(rng);
-}
+      PK_KEM_Encryptor(key, kem_param, provider, &rng) {}
 
 PK_KEM_Encryptor::~PK_KEM_Encryptor() = default;
 
@@ -205,8 +206,14 @@ void PK_KEM_Decryptor::decrypt(std::span<uint8_t> out_shared_key,
                                std::span<const uint8_t> encap_key,
                                size_t desired_shared_key_len,
                                std::span<const uint8_t> salt) {
-   BOTAN_ARG_CHECK(out_shared_key.size() == shared_key_length(desired_shared_key_len),
-                   "inconsistent size of shared key output buffer");
+   BOTAN_ARG_CHECK(
+      out_shared_key.size() == shared_key_length(desired_shared_key_len),
+      fmt(
+         "inconsistent size of shared key output buffer: requested in call to decrypt: {} bytes; determined in PK_KEM_Decryptor instance for desired key length of {} bytes: {} bytes",
+         out_shared_key.size(),
+         desired_shared_key_len,
+         shared_key_length(desired_shared_key_len))
+         .c_str());
    m_op->kem_decrypt(out_shared_key, encap_key, desired_shared_key_len, salt);
 }
 

@@ -12,6 +12,7 @@
 #include <botan/pk_ops_fwd.h>
 #include <botan/secmem.h>
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <span>
@@ -265,8 +266,8 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       * @param params additional parameters
       * @param provider the provider to use
       */
-      virtual std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(std::string_view params,
-                                                                               std::string_view provider) const;
+      virtual std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(
+         std::string_view params, std::string_view provider, RandomNumberGenerator* rng_may_be_null = nullptr) const;
 
       /**
       * This is an internal library function exposed on key types.
