@@ -101,18 +101,37 @@ Hex_Decoder::Hex_Decoder(Decoder_Checking c) : m_checking(c) {
    m_out.resize(m_in.size() / 2);
 }
 
+namespace {
+
+// Whitespace ignored by hex_char_to_bin() in hex.cpp. Dropping it before
+// buffering keeps the decoder buffer bounded (see Hex_Decoder::write).
+bool hex_ignorable_whitespace(uint8_t c) {
+   return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+}
+
+}  // namespace
+
 /*
 * Convert some data from hex format
 */
 void Hex_Decoder::write(const uint8_t input[], size_t length) {
-   while(length > 0) {
-      const size_t to_copy = std::min<size_t>(length, m_in.size() - m_position);
-      copy_mem(&m_in[m_position], input, to_copy);
-      m_position += to_copy;
+   const bool ignore_ws = (m_checking != FULL_CHECK);
+
+   size_t pos = 0;
+   while(pos < length) {
+      // Drop ignored whitespace before buffering so a partial trailing nibble
+      // stays next to its pair and the fixed buffer can't fill with whitespace.
+      while(pos < length && m_position < m_in.size()) {
+         const uint8_t c = input[pos++];
+         if(ignore_ws && hex_ignorable_whitespace(c)) {
+            continue;
+         }
+         m_in[m_position++] = c;
+      }
 
       size_t consumed = 0;
       const size_t written =
-         hex_decode(m_out.data(), cast_uint8_ptr_to_char(m_in.data()), m_position, consumed, m_checking != FULL_CHECK);
+         hex_decode(m_out.data(), cast_uint8_ptr_to_char(m_in.data()), m_position, consumed, ignore_ws);
 
       send(m_out, written);
 
@@ -122,9 +141,6 @@ void Hex_Decoder::write(const uint8_t input[], size_t length) {
       } else {
          m_position = 0;
       }
-
-      length -= to_copy;
-      input += to_copy;
    }
 }
 

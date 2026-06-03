@@ -77,3 +77,20 @@ Base32 = E4H3DCMCQAG2MQA=
 Base32 = ZOOL!isnotvalidbase32
 
 Base32 = Neitheris:this?
+
+# Final quantum lengths of 1, 3 or 6 symbols cannot occur in a valid encoding
+Base32 = A
+
+Base32 = AAA
+
+Base32 = AAAAAA
+
+# Nonzero pad bits (canonical encoding of 0x66 is "MY")
+Base32 = MZ
+
+Base32 = MZ======
+
+# Padding may only appear at the end (GH #5439)
+Base32 = MY=A
+
+Base32 = MY======AA

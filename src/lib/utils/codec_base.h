@@ -130,6 +130,7 @@ size_t base_decode(const Base& base,
    std::array<uint8_t, decoding_bytes_in> decode_buf{};
    size_t decode_buf_pos = 0;
    size_t final_truncate = 0;
+   bool seen_padding = false;
 
    clear_mem(output, base.decode_max_output(input_length));
 
@@ -138,8 +139,15 @@ size_t base_decode(const Base& base,
 
       // This call might throw Invalid_Argument
       if(base.check_bad_char(bin, input[i], ignore_ws)) {
+         // Padding may only appear at the end, so a data symbol must never
+         // follow one (0x81 marks a padding character)
+         if(seen_padding) {
+            throw Invalid_Argument(base.name() + " decoding failed, data follows padding");
+         }
          decode_buf[decode_buf_pos] = bin;
          ++decode_buf_pos;
+      } else if(bin == 0x81) {
+         seen_padding = true;
       }
 
       /*
@@ -147,6 +155,22 @@ size_t base_decode(const Base& base,
       */
       if(final_inputs && (i == input_length - 1)) {
          if(decode_buf_pos) {
+            const size_t bits_per_symbol = base.bits_consumed();
+            const size_t pad_bits = (decode_buf_pos * bits_per_symbol) % 8;
+
+            // A trailing symbol contributing only pad bits cannot occur in a
+            // valid encoding; RFC 4648 4 and 6 enumerate the reachable cases
+            if(pad_bits >= bits_per_symbol) {
+               throw Invalid_Argument(base.name() + " decoding failed, invalid length");
+            }
+
+            // RFC 4648 3.5: "decoders MAY chose to reject an encoding if the
+            // pad bits have not been set to zero"
+            const uint8_t pad_mask = static_cast<uint8_t>((1U << pad_bits) - 1);
+            if(decode_buf[decode_buf_pos - 1] & pad_mask) {
+               throw Invalid_Argument(base.name() + " decoding failed, nonzero padding bits");
+            }
+
             for(size_t j = decode_buf_pos; j < decoding_bytes_in; ++j) {
                decode_buf[j] = 0;
             }
