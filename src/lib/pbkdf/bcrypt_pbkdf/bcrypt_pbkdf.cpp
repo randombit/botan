@@ -46,11 +46,17 @@ std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::tune_params(size_t output_len
       pwhash->derive_key(output, sizeof(output), "test", 4, nullptr, 0);
    };
 
-   const uint64_t measured_time = measure_cost(tune_msec, tune_fn) / blocks;
+   // Cost of deriving a single 32-byte block at starting_iter
+   const uint64_t measured_time = measure_cost(tune_msec, tune_fn);
+
+   if(measured_time == 0) {
+      return this->from_iterations(starting_iter);
+   }
 
    const uint64_t target_nsec = desired_msec * static_cast<uint64_t>(1000000);
 
-   const uint64_t desired_increase = target_nsec / measured_time;
+   // Output cost grows linearly in blocks, so divide the budget across them
+   const uint64_t desired_increase = target_nsec / measured_time / blocks;
 
    if(desired_increase == 0) {
       return this->from_iterations(starting_iter);
