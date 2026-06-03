@@ -194,6 +194,21 @@ Currently two flavors of Kyber are implemented in separate Botan modules:
  * ``kyber_90s``, that uses AES/SHA-2 instead of Keccak-based primitives.
    This mode is deprecated and will be removed in a future release.
 
+ML-KEM-composite (draft-ietf-lamps-pq-composite-kem-16)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ML-KEM-composite algorithms are accessible in Botan via the generic algorithm string
+"ML-KEM-composite" and the respective OIDs registered
+under the names MLKEM768-RSA2048-SHA3-256, MLKEM768-RSA3072-SHA3-256,
+MLKEM768-RSA4096-SHA3-256, MLKEM768-X25519-SHA3-256,
+MLKEM768-ECDH-P256-SHA3-256, MLKEM768-ECDH-P384-SHA3-256,
+MLKEM768-ECDH-brainpoolP256r1-SHA3-256, MLKEM1024-RSA3072-SHA3-256,
+MLKEM1024-ECDH-P384-SHA3-256, MLKEM1024-ECDH-brainpoolP384r1-SHA3-256,
+MLKEM1024-X448-SHA3-256, MLKEM1024-ECDH-P521-SHA3-256.
+
+There is no default parameter set defined, thus a parameter string has to be
+provided in any case.
+
 Ed25519 and Ed448
 ~~~~~~~~~~~~~~~~~
 

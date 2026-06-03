@@ -79,6 +79,10 @@
    #include <botan/ml_kem.h>
 #endif
 
+#if defined(BOTAN_HAS_MLKEM_COMPOSITE)
+   #include <botan/mlkem_comp.h>
+#endif
+
 #if defined(BOTAN_HAS_FRODOKEM)
    #include <botan/frodokem.h>
 #endif
@@ -1344,6 +1348,63 @@ int botan_pubkey_load_ml_kem(botan_pubkey_t* key, const uint8_t pubkey[], size_t
    });
 #else
    BOTAN_UNUSED(key, key_len, pubkey, mlkem_mode);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+/*
+* Algorithm specific key operations: MLKEM-Composite
+*/
+
+int botan_privkey_load_mlkem_composite(botan_privkey_t* key,
+                                       const uint8_t privkey[],
+                                       size_t key_len,
+                                       const char* mlkem_composite_algo) {
+#if defined(BOTAN_HAS_MLKEM_COMPOSITE)
+   if(key == nullptr || privkey == nullptr || mlkem_composite_algo == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+   *key = nullptr;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto param = Botan::MLKEM_Composite_Param::from_id_str(mlkem_composite_algo);
+      if(!param.has_value()) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+
+      auto mlkem_composite_key =
+         std::make_unique<Botan::MLKEM_Composite_PrivateKey>(param.value().id(), std::span{privkey, key_len});
+      return ffi_new_object(key, std::move(mlkem_composite_key));
+   });
+#else
+   BOTAN_UNUSED(key, key_len, privkey, mlkem_composite_algo);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_pubkey_load_mlkem_composite(botan_pubkey_t* key,
+                                      const uint8_t pubkey[],
+                                      size_t key_len,
+                                      const char* mlkem_composite_algo) {
+#if defined(BOTAN_HAS_MLKEM_COMPOSITE)
+   if(key == nullptr || pubkey == nullptr || mlkem_composite_algo == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   *key = nullptr;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto param = Botan::MLKEM_Composite_Param::from_id_str(mlkem_composite_algo);
+      if(!param.has_value()) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+
+      auto mlkem_composite_key =
+         std::make_unique<Botan::MLKEM_Composite_PublicKey>(param.value().id(), std::span{pubkey, key_len});
+      return ffi_new_object(key, std::move(mlkem_composite_key));
+   });
+#else
+   BOTAN_UNUSED(key, key_len, pubkey, mlkem_composite_algo);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
