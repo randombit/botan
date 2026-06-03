@@ -58,7 +58,8 @@ class HOTP_KAT_Tests final : public Text_Based_Test {
          result.test_u64_eq("OTP verify next counter", otp_res.second, counter);
 
          // Test valid OTP with long range
-         otp_res = hotp.verify_hotp(otp, counter - 90, 100);
+         const uint64_t starting_counter = (counter >= 90) ? (counter - 90) : uint64_t(0);
+         otp_res = hotp.verify_hotp(otp, starting_counter, 100);
          result.test_is_true("OTP verify result", otp_res.first);
          result.test_u64_eq("OTP verify next counter", otp_res.second, counter + 1);
 

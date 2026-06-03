@@ -61,9 +61,17 @@ uint32_t HOTP::generate_hotp(uint64_t counter) {
 }
 
 std::pair<bool, uint64_t> HOTP::verify_hotp(uint32_t otp, uint64_t starting_counter, size_t resync_range) {
+   BOTAN_ARG_CHECK(resync_range <= 100000, "HOTP resync_range too large");
+
    for(size_t i = 0; i <= resync_range; ++i) {
-      if(generate_hotp(starting_counter + i) == otp) {
-         return std::make_pair(true, starting_counter + i + 1);
+      const uint64_t ctr = starting_counter + i;
+
+      if(ctr == std::numeric_limits<uint64_t>::max()) {
+         throw Invalid_State("HOTP counter has been exhausted");
+      }
+
+      if(generate_hotp(ctr) == otp) {
+         return std::make_pair(true, ctr + 1);
       }
    }
    return std::make_pair(false, starting_counter);
