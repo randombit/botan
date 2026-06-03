@@ -117,7 +117,8 @@ Public Key Cryptography
 * DH, ECDH, X25519 and X448 key agreement
 * Elliptic curve signature schemes ECDSA, Ed25519, Ed448, ECGDSA, ECKCDSA, SM2
 * Post-quantum signature schemes ML-DSA (Dilithium), SLH-DSA (SPHINCS+), HSS/LMS, XMSS
-* Post-quantum key encapsulation schemes ML-KEM (Kyber), FrodoKEM, Classic McEliece
+* Post-quantum key encapsulation schemes ML-KEM (Kyber), ML-KEM-composite
+  according to draft-ietf-lamps-pq-composite-kem-16, FrodoKEM, Classic McEliece
 
 Ciphers, hashes, MACs, and checksums
 ----------------------------------------
