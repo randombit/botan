@@ -219,8 +219,14 @@ void PK_Ops::KEM_Encryption_with_KDF::kem_encrypt(std::span<uint8_t> out_encapsu
                                                   size_t desired_shared_key_len,
                                                   std::span<const uint8_t> salt) {
    BOTAN_ARG_CHECK(salt.empty() || m_kdf, "PK_KEM_Encryptor::encrypt requires a KDF to use a salt");
-   BOTAN_ASSERT_NOMSG(out_encapsulated_key.size() == encapsulated_key_length());
-
+   BOTAN_ASSERT_EQUAL(
+      out_encapsulated_key.size(),
+      encapsulated_key_length(),
+      fmt(
+         "size of ciphertext argument to kem_encrypt ({} bytes) and the ciphertext size expected by the KEM_Encryption_with_KDF instance ({} bytes) differ",
+         out_encapsulated_key.size(),
+         encapsulated_key_length())
+         .c_str());
    if(m_kdf) {
       BOTAN_ASSERT_EQUAL(
          out_shared_key.size(), desired_shared_key_len, "KDF output length and shared key length match");

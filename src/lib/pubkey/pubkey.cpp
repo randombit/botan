@@ -209,8 +209,14 @@ void PK_KEM_Decryptor::decrypt(std::span<uint8_t> out_shared_key,
                                std::span<const uint8_t> encap_key,
                                size_t desired_shared_key_len,
                                std::span<const uint8_t> salt) {
-   BOTAN_ARG_CHECK(out_shared_key.size() == shared_key_length(desired_shared_key_len),
-                   "inconsistent size of shared key output buffer");
+   BOTAN_ARG_CHECK(
+      out_shared_key.size() == shared_key_length(desired_shared_key_len),
+      fmt(
+         "inconsistent size of shared key output buffer: requested in call to decrypt: {} bytes; determined in PK_KEM_Decryptor instance for desired key length of {} bytes: {} bytes",
+         out_shared_key.size(),
+         desired_shared_key_len,
+         shared_key_length(desired_shared_key_len))
+         .c_str());
    m_op->kem_decrypt(out_shared_key, encap_key, desired_shared_key_len, salt);
 }
 

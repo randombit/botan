@@ -9,6 +9,7 @@ rsa
 ecies
 dh
 ecdh
+mlkem-composite
 
 # Allowed KDF for ECIES (see 2.3.4)
 kdf1_iso18033
