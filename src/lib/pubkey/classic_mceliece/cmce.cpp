@@ -19,7 +19,12 @@ namespace Botan {
 
 Classic_McEliece_PublicKey::Classic_McEliece_PublicKey(const AlgorithmIdentifier& alg_id,
                                                        std::span<const uint8_t> key_bits) :
-      Classic_McEliece_PublicKey(key_bits, Classic_McEliece_Parameter_Set::from_oid(alg_id.oid())) {}
+      Classic_McEliece_PublicKey(key_bits, Classic_McEliece_Parameter_Set::from_oid(alg_id.oid())) {
+   // The parameter set is identified by the OID; no parameters are defined.
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for Classic McEliece public key");
+   }
+}
 
 Classic_McEliece_PublicKey::Classic_McEliece_PublicKey(std::span<const uint8_t> key_bits,
                                                        Classic_McEliece_Parameter_Set param_set) {
@@ -108,7 +113,12 @@ Classic_McEliece_PrivateKey::Classic_McEliece_PrivateKey(std::span<const uint8_t
 
 Classic_McEliece_PrivateKey::Classic_McEliece_PrivateKey(const AlgorithmIdentifier& alg_id,
                                                          std::span<const uint8_t> key_bits) :
-      Classic_McEliece_PrivateKey(key_bits, Classic_McEliece_Parameter_Set::from_oid(alg_id.oid())) {}
+      Classic_McEliece_PrivateKey(key_bits, Classic_McEliece_Parameter_Set::from_oid(alg_id.oid())) {
+   // The parameter set is identified by the OID; no parameters are defined.
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for Classic McEliece private key");
+   }
+}
 
 std::unique_ptr<Public_Key> Classic_McEliece_PrivateKey::public_key() const {
    return std::make_unique<Classic_McEliece_PublicKey>(*this);

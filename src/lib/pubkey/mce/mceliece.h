@@ -24,6 +24,9 @@ class polyn_gf2m;
 
 class BOTAN_PUBLIC_API(2, 0) McEliece_PublicKey : public virtual Public_Key /* NOLINT(*-special-member-functions) */ {
    public:
+      McEliece_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
+
+      BOTAN_DEPRECATED("Use the constructor taking an AlgorithmIdentifier")
       explicit McEliece_PublicKey(std::span<const uint8_t> key_bits);
 
       McEliece_PublicKey(const std::vector<uint8_t>& pub_matrix, size_t t, size_t the_code_length) :
@@ -96,6 +99,9 @@ class BOTAN_PUBLIC_API(2, 0) McEliece_PrivateKey final : public virtual McEliece
       */
       McEliece_PrivateKey(RandomNumberGenerator& rng, size_t code_length, size_t t);
 
+      McEliece_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
+
+      BOTAN_DEPRECATED("Use the constructor taking an AlgorithmIdentifier")
       explicit McEliece_PrivateKey(std::span<const uint8_t> key_bits);
 
       McEliece_PrivateKey(const polyn_gf2m& goppa_polyn,

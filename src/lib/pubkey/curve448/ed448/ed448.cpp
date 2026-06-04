@@ -33,8 +33,13 @@ bool Ed448_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/)
    return true;
 }
 
-Ed448_PublicKey::Ed448_PublicKey(const AlgorithmIdentifier& /* unused */, std::span<const uint8_t> key_bits) :
-      Ed448_PublicKey(key_bits) {}
+Ed448_PublicKey::Ed448_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
+      Ed448_PublicKey(key_bits) {
+   // RFC 8310 Section 3: "the parameters MUST be absent".
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for Ed448 public key");
+   }
+}
 
 Ed448_PublicKey::Ed448_PublicKey(std::span<const uint8_t> key_bits) {
    if(key_bits.size() != ED448_LEN) {
@@ -55,7 +60,12 @@ std::unique_ptr<Private_Key> Ed448_PublicKey::generate_another(RandomNumberGener
    return std::make_unique<Ed448_PrivateKey>(rng);
 }
 
-Ed448_PrivateKey::Ed448_PrivateKey(const AlgorithmIdentifier& /*unused*/, std::span<const uint8_t> key_bits) {
+Ed448_PrivateKey::Ed448_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
+   // RFC 8310 Section 3: "the parameters MUST be absent".
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for Ed448 private key");
+   }
+
    secure_vector<uint8_t> bits;
    BER_Decoder(key_bits, BER_Decoder::Limits::DER()).decode(bits, ASN1_Type::OctetString).verify_end();
 

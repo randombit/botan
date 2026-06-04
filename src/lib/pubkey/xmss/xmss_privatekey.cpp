@@ -184,7 +184,10 @@ class XMSS_PrivateKey_Internal final {
 };
 
 XMSS_PrivateKey::XMSS_PrivateKey(std::span<const uint8_t> key_bits) :
-      XMSS_PublicKey(key_bits),
+      XMSS_PrivateKey(AlgorithmIdentifier(), key_bits) {}
+
+XMSS_PrivateKey::XMSS_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
+      XMSS_PublicKey(alg_id, key_bits),
       m_private(std::make_shared<XMSS_PrivateKey_Internal>(xmss_parameters().oid(), key_bits)) {}
 
 XMSS_PrivateKey::XMSS_PrivateKey(XMSS_Parameters::xmss_algorithm_t xmss_algo_id,

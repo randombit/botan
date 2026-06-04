@@ -12,6 +12,7 @@
 #if defined(BOTAN_HAS_XMSS_RFC8391)
    #include "test_pubkey.h"
    #include "test_rng.h"
+   #include <botan/asn1_obj.h>
    #include <botan/hash.h>
    #include <botan/hex.h>
    #include <botan/pubkey.h>
@@ -51,7 +52,7 @@ class XMSS_Signature_Tests final : public PK_Signature_Generation_Test {
          const std::vector<uint8_t> raw_key = vars.get_req_bin("PrivateKey");
          const Botan::secure_vector<uint8_t> sec_key(raw_key.begin(), raw_key.end());
 
-         return std::make_unique<Botan::XMSS_PrivateKey>(sec_key);
+         return std::make_unique<Botan::XMSS_PrivateKey>(Botan::AlgorithmIdentifier(), sec_key);
       }
 };
 
@@ -64,7 +65,7 @@ class XMSS_Signature_Verify_Tests final : public PK_Signature_Verification_Test 
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
          const std::vector<uint8_t> raw_key = vars.get_req_bin("PublicKey");
-         return std::make_unique<Botan::XMSS_PublicKey>(raw_key);
+         return std::make_unique<Botan::XMSS_PublicKey>(Botan::AlgorithmIdentifier(), raw_key);
       }
 };
 
@@ -78,7 +79,7 @@ class XMSS_Signature_Verify_Invalid_Tests final : public PK_Signature_NonVerific
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
          const std::vector<uint8_t> raw_key = vars.get_req_bin("PublicKey");
-         return std::make_unique<Botan::XMSS_PublicKey>(raw_key);
+         return std::make_unique<Botan::XMSS_PublicKey>(Botan::AlgorithmIdentifier(), raw_key);
       }
 };
 
@@ -264,9 +265,11 @@ std::vector<Test::Result> xmss_legacy_private_key() {
       "6B250DBD1599FBB09A7F148A7AEFEAB26ADB728A330DD3F616C8A736D1BF4EA17F2C3BF"
       "A5E22C249FA9D1E7DA08DB351709C4");
 
-   Botan::XMSS_PrivateKey legacy_secret_key = Botan::XMSS_PrivateKey(legacy_xmss_private_key);
+   Botan::XMSS_PrivateKey legacy_secret_key =
+      Botan::XMSS_PrivateKey(Botan::AlgorithmIdentifier(), legacy_xmss_private_key);
    auto public_key_from_secret_key = legacy_secret_key.public_key();
-   Botan::XMSS_PublicKey legacy_public_key = Botan::XMSS_PublicKey(legacy_xmss_public_key);
+   Botan::XMSS_PublicKey legacy_public_key =
+      Botan::XMSS_PublicKey(Botan::AlgorithmIdentifier(), legacy_xmss_public_key);
 
    const auto message = Botan::hex_decode("deadcafe");
    const auto* const algo_name = "SHA2_10_256";

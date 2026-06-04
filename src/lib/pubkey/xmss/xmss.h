@@ -47,13 +47,23 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PublicKey : public virtual Public_Key {
       XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid, RandomNumberGenerator& rng);
 
       /**
+       * Loads a public key from an X.509 SubjectPublicKeyInfo.
+       *
+       * Public key must be encoded as in draft-vangeest-x509-hash-sigs-03.
+       *
+       * @param alg_id the X.509 AlgorithmIdentifier
+       * @param key_bits DER encoded public key bits
+       */
+      XMSS_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
+
+      /**
        * Loads a public key.
        *
-       * Public key must be encoded as in RFC
-       * draft-vangeest-x509-hash-sigs-03.
+       * Public key must be encoded as in draft-vangeest-x509-hash-sigs-03.
        *
        * @param key_bits DER encoded public key bits
        */
+      BOTAN_DEPRECATED("Use the constructor taking an AlgorithmIdentifier")
       BOTAN_FUTURE_EXPLICIT XMSS_PublicKey(std::span<const uint8_t> key_bits);
 
       /**
@@ -178,11 +188,20 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
                       WOTS_Derivation_Method wots_derivation_method = WOTS_Derivation_Method::NIST_SP800_208);
 
       /**
+       * Loads a private key from a PKCS #8 PrivateKeyInfo.
+       *
+       * @param alg_id the PKCS #8 AlgorithmIdentifier
+       * @param key_bits An XMSS private key serialized using raw_private_key().
+       **/
+      XMSS_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
+
+      /**
        * Creates an XMSS_PrivateKey from a byte sequence produced by
        * raw_private_key().
        *
        * @param raw_key An XMSS private key serialized using raw_private_key().
        **/
+      BOTAN_DEPRECATED("Use the constructor taking an AlgorithmIdentifier")
       BOTAN_FUTURE_EXPLICIT XMSS_PrivateKey(std::span<const uint8_t> raw_key);
 
       /**

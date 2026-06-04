@@ -45,8 +45,13 @@ bool X25519_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/
    return true;  // no tests possible?
 }
 
-X25519_PublicKey::X25519_PublicKey(const AlgorithmIdentifier& /*unused*/, std::span<const uint8_t> key_bits) :
-      X25519_PublicKey(key_bits) {}
+X25519_PublicKey::X25519_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
+      X25519_PublicKey(key_bits) {
+   // RFC 8310 Section 3: "the parameters MUST be absent".
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for X25519 public key");
+   }
+}
 
 X25519_PublicKey::X25519_PublicKey(std::span<const uint8_t> pub) {
    m_public.assign(pub.begin(), pub.end());
@@ -82,7 +87,12 @@ X25519_PrivateKey::X25519_PrivateKey(RandomNumberGenerator& rng) {
    curve25519_basepoint(m_public.data(), m_private.data());
 }
 
-X25519_PrivateKey::X25519_PrivateKey(const AlgorithmIdentifier& /*unused*/, std::span<const uint8_t> key_bits) {
+X25519_PrivateKey::X25519_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
+   // RFC 8310 Section 3: "the parameters MUST be absent".
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for X25519 private key");
+   }
+
    BER_Decoder(key_bits, BER_Decoder::Limits::DER()).decode(m_private, ASN1_Type::OctetString).discard_remaining();
 
    size_check(m_private.size(), "private key");

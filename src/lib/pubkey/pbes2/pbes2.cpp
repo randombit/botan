@@ -213,6 +213,12 @@ std::unique_ptr<Pbes2Pbkdf2Parameters> Pbes2Pbkdf2Parameters::decode(const Algor
       throw Decoding_Error(fmt("Unknown PBES2 PRF '{}'", prf_algo.oid()));
    }
 
+   // RFC 8018 A.2 defines the PBKDF2 PRFs with NULL parameters; accept NULL or
+   // absent and reject any other parameter encoding rather than ignoring it.
+   if(!prf_algo.parameters_are_null_or_empty()) {
+      throw Decoding_Error("PBES2 PRF AlgorithmIdentifier has unexpected parameters");
+   }
+
    auto pbkdf_fam = PasswordHashFamily::create_or_throw(fmt("PBKDF2({})", prf));
    auto pwdhash = pbkdf_fam->from_params(iterations);
 
@@ -422,6 +428,12 @@ secure_vector<uint8_t> pbes2_decrypt(std::span<const uint8_t> key_bits,
    auto dec = Cipher_Mode::create(cipher, Cipher_Dir::Decryption);
    if(!dec) {
       throw Decoding_Error(fmt("PBES2 cannot decrypt due to unavailable cipher '{}'", cipher));
+   }
+
+   // The cipher parameters carry the IV (RFC 8018 B.2). Require the length be the
+   // expected value; any other length has undocumented semantics.
+   if(iv.size() != dec->default_nonce_length()) {
+      throw Decoding_Error("PBES2 cipher AlgorithmIdentifier has invalid IV length");
    }
 
    const size_t default_key_size = dec->key_spec().maximum_keylength();

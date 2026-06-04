@@ -105,7 +105,14 @@ XMSS_PublicKey::XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid, Rando
       params, secure_vector<uint8_t>(params.element_size()), rng.random_vec(params.element_size()));
 }
 
-XMSS_PublicKey::XMSS_PublicKey(std::span<const uint8_t> key_bits) {
+XMSS_PublicKey::XMSS_PublicKey(std::span<const uint8_t> key_bits) : XMSS_PublicKey(AlgorithmIdentifier(), key_bits) {}
+
+XMSS_PublicKey::XMSS_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
+   // The XMSS parameter set is carried in the key bits; no AlgorithmIdentifier parameters are defined
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for XMSS public key");
+   }
+
    const auto raw_key = extract_raw_public_key(key_bits);
    const auto xmss_oid = deserialize_xmss_oid(raw_key);
    const auto params = XMSS_Parameters::from_id(xmss_oid);

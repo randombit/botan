@@ -56,16 +56,26 @@ std::unique_ptr<Private_Key> X448_PublicKey::generate_another(RandomNumberGenera
    return std::make_unique<X448_PrivateKey>(rng);
 }
 
-X448_PublicKey::X448_PublicKey(const AlgorithmIdentifier& /*alg_id*/, std::span<const uint8_t> key_bits) :
-      X448_PublicKey(key_bits) {}
+X448_PublicKey::X448_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
+      X448_PublicKey(key_bits) {
+   // RFC 8310 Section 3: "the parameters MUST be absent".
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for X448 public key");
+   }
+}
 
 X448_PublicKey::X448_PublicKey(std::span<const uint8_t> pub) {
    BOTAN_ARG_CHECK(pub.size() == X448_LEN, "Invalid size for X448 public key");
    copy_mem(m_public, pub);
 }
 
-X448_PrivateKey::X448_PrivateKey(const AlgorithmIdentifier& /*alg_id*/, std::span<const uint8_t> key_bits) :
-      X448_PrivateKey(ber_decode_sk(key_bits)) {}
+X448_PrivateKey::X448_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
+      X448_PrivateKey(ber_decode_sk(key_bits)) {
+   // RFC 8310 Section 3: "the parameters MUST be absent".
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for X448 private key");
+   }
+}
 
 X448_PrivateKey::X448_PrivateKey(std::span<const uint8_t> secret_key) {
    BOTAN_ARG_CHECK(secret_key.size() == X448_LEN, "Invalid size for X448 private key");

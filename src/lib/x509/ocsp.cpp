@@ -105,6 +105,10 @@ void CertID::decode_from(BER_Decoder& from) {
       .decode(m_issuer_key_hash, ASN1_Type::OctetString)
       .decode(m_subject_serial)
       .end_cons();
+
+   if(!m_hash_id.parameters_are_null_or_empty()) {
+      throw Decoding_Error("OCSP CertID hashAlgorithm has unexpected parameters");
+   }
 }
 
 void SingleResponse::encode_into(DER_Encoder& /*to*/) const {

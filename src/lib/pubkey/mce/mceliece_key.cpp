@@ -103,7 +103,16 @@ size_t McEliece_PublicKey::estimated_strength() const {
    return mceliece_work_factor(m_code_length, m_t);
 }
 
-McEliece_PublicKey::McEliece_PublicKey(std::span<const uint8_t> key_bits) {
+McEliece_PublicKey::McEliece_PublicKey(std::span<const uint8_t> key_bits) :
+      McEliece_PublicKey(AlgorithmIdentifier(), key_bits) {}
+
+McEliece_PublicKey::McEliece_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
+   // The McEliece parameters are carried in the key bits; no AlgorithmIdentifier
+   // parameters are defined.
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for McEliece public key");
+   }
+
    BER_Decoder dec(key_bits, BER_Decoder::Limits::DER());
    size_t n = 0;
    size_t t = 0;
@@ -201,7 +210,16 @@ bool McEliece_PrivateKey::check_key(RandomNumberGenerator& rng, bool /*unused*/)
    return true;
 }
 
-McEliece_PrivateKey::McEliece_PrivateKey(std::span<const uint8_t> key_bits) {
+McEliece_PrivateKey::McEliece_PrivateKey(std::span<const uint8_t> key_bits) :
+      McEliece_PrivateKey(AlgorithmIdentifier(), key_bits) {}
+
+McEliece_PrivateKey::McEliece_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
+   // The McEliece parameters are carried in the key bits; no AlgorithmIdentifier
+   // parameters are defined.
+   if(!alg_id.parameters_are_empty()) {
+      throw Decoding_Error("Unexpected parameters for McEliece private key");
+   }
+
    size_t n = 0;
    size_t t = 0;
    secure_vector<uint8_t> enc_g;

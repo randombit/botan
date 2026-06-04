@@ -153,7 +153,7 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 
 #if defined(BOTAN_HAS_MCELIECE)
    if(alg_name == "McEliece") {
-      return std::make_unique<McEliece_PublicKey>(key_bits);
+      return std::make_unique<McEliece_PublicKey>(alg_id, key_bits);
    }
 #endif
 
@@ -243,7 +243,7 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 
 #if defined(BOTAN_HAS_XMSS_RFC8391)
    if(alg_name == "XMSS") {
-      return std::make_unique<XMSS_PublicKey>(key_bits);
+      return std::make_unique<XMSS_PublicKey>(alg_id, key_bits);
    }
 #endif
 
@@ -261,7 +261,7 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 
 #if defined(BOTAN_HAS_HSS_LMS)
    if(alg_name == "HSS-LMS") {
-      return std::make_unique<HSS_LMS_PublicKey>(key_bits);
+      return std::make_unique<HSS_LMS_PublicKey>(alg_id, key_bits);
    }
 #endif
 
@@ -354,7 +354,7 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 
 #if defined(BOTAN_HAS_MCELIECE)
    if(alg_name == "McEliece") {
-      return std::make_unique<McEliece_PrivateKey>(key_bits);
+      return std::make_unique<McEliece_PrivateKey>(alg_id, key_bits);
    }
 #endif
 
@@ -402,7 +402,7 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 
 #if defined(BOTAN_HAS_XMSS_RFC8391)
    if(alg_name == "XMSS") {
-      return std::make_unique<XMSS_PrivateKey>(key_bits);
+      return std::make_unique<XMSS_PrivateKey>(alg_id, key_bits);
    }
 #endif
 
@@ -420,7 +420,7 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 
 #if defined(BOTAN_HAS_HSS_LMS)
    if(alg_name == "HSS-LMS-Private-Key") {
-      return std::make_unique<HSS_LMS_PrivateKey>(key_bits);
+      return std::make_unique<HSS_LMS_PrivateKey>(alg_id, key_bits);
    }
 #endif
 

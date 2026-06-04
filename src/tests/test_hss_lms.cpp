@@ -10,6 +10,7 @@
 #if defined(BOTAN_HAS_HSS_LMS)
    #include "test_arb_eq.h"
    #include "test_pubkey.h"
+   #include <botan/asn1_obj.h>
    #include <botan/hss_lms.h>
    #include <botan/pk_algs.h>
    #include <botan/pubkey.h>
@@ -66,7 +67,7 @@ class HSS_LMS_Signature_Generation_Test final : public PK_Signature_Generation_T
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) final {
          const auto sk_bytes = vars.get_req_bin("PrivateKey");
-         return std::make_unique<Botan::HSS_LMS_PrivateKey>(sk_bytes);
+         return std::make_unique<Botan::HSS_LMS_PrivateKey>(Botan::AlgorithmIdentifier(), sk_bytes);
       }
 };
 
@@ -82,7 +83,7 @@ class HSS_LMS_Signature_Verify_Tests final : public PK_Signature_Verification_Te
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
          const std::vector<uint8_t> pk_bytes = vars.get_req_bin("PublicKey");
-         return std::make_unique<Botan::HSS_LMS_PublicKey>(pk_bytes);
+         return std::make_unique<Botan::HSS_LMS_PublicKey>(Botan::AlgorithmIdentifier(), pk_bytes);
       }
 };
 
@@ -99,7 +100,7 @@ class HSS_LMS_Signature_Verify_Invalid_Tests final : public PK_Signature_NonVeri
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
          const std::vector<uint8_t> raw_key = vars.get_req_bin("PublicKey");
-         return std::make_unique<Botan::HSS_LMS_PublicKey>(raw_key);
+         return std::make_unique<Botan::HSS_LMS_PublicKey>(Botan::AlgorithmIdentifier(), raw_key);
       }
 };
 
@@ -115,7 +116,7 @@ class HSS_LMS_Key_Generation_Test final : public PK_Key_Generation_Test {
       std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view /* keygen_params */,
                                                              std::string_view /* provider */,
                                                              std::span<const uint8_t> raw_pk) const override {
-         return std::make_unique<Botan::HSS_LMS_PublicKey>(raw_pk);
+         return std::make_unique<Botan::HSS_LMS_PublicKey>(Botan::AlgorithmIdentifier(), raw_pk);
       }
 };
 
@@ -234,7 +235,7 @@ class HSS_LMS_Statefulness_Test final : public Test {
          auto bytes = sk.private_key_bits();
          // The index is store after the level (uint32_t)
          Botan::store_be(idx, bytes.data() + sizeof(uint32_t));
-         return Botan::HSS_LMS_PrivateKey(bytes);
+         return Botan::HSS_LMS_PrivateKey(Botan::AlgorithmIdentifier(), bytes);
       }
 
       Test::Result test_sig_changes_state() {
