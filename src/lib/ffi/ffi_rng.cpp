@@ -199,7 +199,7 @@ int botan_rng_reseed_from_rng(botan_rng_t rng, botan_rng_t source_rng, size_t bi
 
 int botan_rng_init_drbg(botan_rng_t* rng_out, const char* drbg_name, const uint8_t* seed, size_t seed_len) {
    return ffi_guard_thunk(__func__, [=]() -> int {
-      if(rng_out == nullptr || drbg_name == nullptr) {
+      if(any_null_pointers(rng_out, drbg_name)) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
       if(seed_len > 0 && seed == nullptr) {

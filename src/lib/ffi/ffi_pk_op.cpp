@@ -26,7 +26,7 @@ BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_kem_encrypt_struct, Botan::PK_KEM_Encryptor
 BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_kem_decrypt_struct, Botan::PK_KEM_Decryptor, 0x1743D8E6);
 
 int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op, botan_pubkey_t key_obj, const char* padding, uint32_t flags) {
-   if(op == nullptr) {
+   if(Botan::any_null_pointers(op, padding)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -75,7 +75,7 @@ int botan_pk_op_decrypt_create(botan_pk_op_decrypt_t* op,
                                botan_privkey_t key_obj,
                                const char* padding,
                                uint32_t flags) {
-   if(op == nullptr) {
+   if(Botan::any_null_pointers(op, padding)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -116,7 +116,7 @@ int botan_pk_op_decrypt(
 * Signature Generation
 */
 int botan_pk_op_sign_create(botan_pk_op_sign_t* op, botan_privkey_t key_obj, const char* hash, uint32_t flags) {
-   if(op == nullptr) {
+   if(Botan::any_null_pointers(op, hash)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -160,7 +160,7 @@ int botan_pk_op_sign_finish(botan_pk_op_sign_t op, botan_rng_t rng_obj, uint8_t 
 }
 
 int botan_pk_op_verify_create(botan_pk_op_verify_t* op, botan_pubkey_t key_obj, const char* hash, uint32_t flags) {
-   if(op == nullptr) {
+   if(Botan::any_null_pointers(op, hash)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -206,7 +206,7 @@ int botan_pk_op_verify_finish(botan_pk_op_verify_t op, const uint8_t sig[], size
 }
 
 int botan_pk_op_key_agreement_create(botan_pk_op_ka_t* op, botan_privkey_t key_obj, const char* kdf, uint32_t flags) {
-   if(op == nullptr) {
+   if(Botan::any_null_pointers(op, kdf)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -273,7 +273,7 @@ int botan_pk_op_key_agreement(botan_pk_op_ka_t op,
 }
 
 int botan_pk_op_kem_encrypt_create(botan_pk_op_kem_encrypt_t* op, botan_pubkey_t key_obj, const char* padding) {
-   if(op == nullptr || padding == nullptr) {
+   if(Botan::any_null_pointers(op, padding)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -339,7 +339,7 @@ int botan_pk_op_kem_encrypt_create_shared_key(botan_pk_op_kem_encrypt_t op,
 }
 
 int botan_pk_op_kem_decrypt_create(botan_pk_op_kem_decrypt_t* op, botan_privkey_t key_obj, const char* padding) {
-   if(op == nullptr || padding == nullptr) {
+   if(Botan::any_null_pointers(op, padding)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 

@@ -36,7 +36,7 @@ int botan_ec_group_supports_application_specific_group(int* out) {
 
 int botan_ec_group_supports_named_group(const char* name, int* out) {
    return ffi_guard_thunk(__func__, [=]() -> int {
-      if(name == nullptr || out == nullptr) {
+      if(Botan::any_null_pointers(name, out)) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
       if(Botan::EC_Group::supports_named_group(name)) {
@@ -71,7 +71,7 @@ int botan_ec_group_from_params(botan_ec_group_t* ec_group,
 
 int botan_ec_group_from_ber(botan_ec_group_t* ec_group, const uint8_t* ber, size_t ber_len) {
    return ffi_guard_thunk(__func__, [=]() -> int {
-      if(ec_group == nullptr || ber == nullptr) {
+      if(Botan::any_null_pointers(ec_group, ber)) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
 
@@ -84,7 +84,7 @@ int botan_ec_group_from_ber(botan_ec_group_t* ec_group, const uint8_t* ber, size
 
 int botan_ec_group_from_pem(botan_ec_group_t* ec_group, const char* pem) {
    return ffi_guard_thunk(__func__, [=]() -> int {
-      if(ec_group == nullptr || pem == nullptr) {
+      if(Botan::any_null_pointers(ec_group, pem)) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
 
@@ -110,7 +110,7 @@ int botan_ec_group_from_oid(botan_ec_group_t* ec_group, botan_asn1_oid_t oid) {
 
 int botan_ec_group_from_name(botan_ec_group_t* ec_group, const char* name) {
    return ffi_guard_thunk(__func__, [=]() -> int {
-      if(ec_group == nullptr || name == nullptr) {
+      if(Botan::any_null_pointers(ec_group, name)) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
 

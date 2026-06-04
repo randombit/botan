@@ -175,7 +175,7 @@ extern "C" {
 using namespace Botan_FFI;
 
 int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* cert_path) {
-   if(cert_obj == nullptr || cert_path == nullptr) {
+   if(Botan::any_null_pointers(cert_obj, cert_path)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -210,7 +210,7 @@ int botan_x509_cert_dup(botan_x509_cert_t* cert_obj, botan_x509_cert_t cert) {
 }
 
 int botan_x509_cert_load(botan_x509_cert_t* cert_obj, const uint8_t cert_bits[], size_t cert_bits_len) {
-   if(cert_obj == nullptr || cert_bits == nullptr) {
+   if(Botan::any_null_pointers(cert_obj, cert_bits)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -1058,7 +1058,7 @@ const char* botan_x509_cert_validation_status(int code) {
 }
 
 int botan_x509_crl_load_file(botan_x509_crl_t* crl_obj, const char* crl_path) {
-   if(crl_obj == nullptr || crl_path == nullptr) {
+   if(Botan::any_null_pointers(crl_obj, crl_path)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
@@ -1075,7 +1075,7 @@ int botan_x509_crl_load_file(botan_x509_crl_t* crl_obj, const char* crl_path) {
 }
 
 int botan_x509_crl_load(botan_x509_crl_t* crl_obj, const uint8_t crl_bits[], size_t crl_bits_len) {
-   if(crl_obj == nullptr || crl_bits == nullptr) {
+   if(Botan::any_null_pointers(crl_obj, crl_bits)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
