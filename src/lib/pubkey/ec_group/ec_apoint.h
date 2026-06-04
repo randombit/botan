@@ -152,6 +152,9 @@ class BOTAN_PUBLIC_API(3, 6) EC_AffinePoint final {
       /// Point negation
       EC_AffinePoint negate() const;
 
+      /// Return the elliptic curve group this point is associated with
+      EC_Group group() const;
+
       /// Return the number of bytes of a field element
       ///
       /// A point consists of two field elements, plus possibly a header

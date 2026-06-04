@@ -601,7 +601,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * For internal use only
       * @return the inner representation of this group
       */
-      const std::shared_ptr<EC_Group_Data>& _data() const { return m_data; }
+      const std::shared_ptr<const EC_Group_Data>& _data() const { return m_data; }
 
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
       /**
@@ -890,12 +890,14 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
 
    private:
       friend class EC_Group_Data_Map;
+      friend class EC_Scalar;
+      friend class EC_AffinePoint;
 
       static EC_Group_Data_Map& ec_group_data();
 
-      explicit EC_Group(std::shared_ptr<EC_Group_Data>&& data);
+      explicit EC_Group(std::shared_ptr<const EC_Group_Data> data);
 
-      static bool verify_generator_order(std::shared_ptr<EC_Group_Data> data);
+      static bool verify_generator_order(std::shared_ptr<const EC_Group_Data> data);
 
       static std::pair<std::shared_ptr<EC_Group_Data>, bool> DER_decode_EC_group(std::span<const uint8_t> der,
                                                                                  EC_Group_Source source);
@@ -911,7 +913,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       const EC_Group_Data& data() const;
 
       // Member data
-      std::shared_ptr<EC_Group_Data> m_data;
+      std::shared_ptr<const EC_Group_Data> m_data;
       bool m_explicit_encoding = false;
 };
 

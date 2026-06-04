@@ -483,6 +483,28 @@ Test::Result test_mixed_scalars() {
    return result;
 }
 
+Test::Result test_group_accessor() {
+   Test::Result result("EC_Scalar/EC_AffinePoint group accessor");
+
+   if(Botan::EC_Group::supports_named_group("secp256r1") && Botan::EC_Group::supports_named_group("secp384r1")) {
+      const auto secp256r1 = Botan::EC_Group::from_name("secp256r1");
+      const auto secp384r1 = Botan::EC_Group::from_name("secp384r1");
+
+      const auto scalar = Botan::EC_Scalar::one(secp256r1);
+      result.test_is_true("EC_Scalar::group returns the originating group", scalar.group() == secp256r1);
+      result.test_is_true("EC_Scalar::group does not match a different group", scalar.group() != secp384r1);
+      // The recovered group shares the same canonical inner representation
+      result.test_is_true("EC_Scalar::group shares inner data", scalar.group()._data() == secp256r1._data());
+
+      const auto point = Botan::EC_AffinePoint::generator(secp256r1);
+      result.test_is_true("EC_AffinePoint::group returns the originating group", point.group() == secp256r1);
+      result.test_is_true("EC_AffinePoint::group does not match a different group", point.group() != secp384r1);
+      result.test_is_true("EC_AffinePoint::group shares inner data", point.group()._data() == secp256r1._data());
+   }
+
+   return result;
+}
+
 class ECC_Unit_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -491,6 +513,7 @@ class ECC_Unit_Tests final : public Test {
          results.push_back(test_decoding_with_seed());
          results.push_back(test_mixed_points());
          results.push_back(test_mixed_scalars());
+         results.push_back(test_group_accessor());
 
          return results;
       }

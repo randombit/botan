@@ -121,6 +121,11 @@ class BOTAN_PUBLIC_API(3, 6) EC_Scalar final {
       }
 
       /**
+      * Return the elliptic curve group this scalar is associated with
+      */
+      EC_Group group() const;
+
+      /**
       * Return the byte size of this scalar
       */
       size_t bytes() const;

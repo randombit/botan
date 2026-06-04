@@ -45,6 +45,10 @@ EC_Scalar& EC_Scalar::operator=(EC_Scalar&& other) noexcept {
 
 EC_Scalar::~EC_Scalar() = default;
 
+EC_Group EC_Scalar::group() const {
+   return EC_Group(inner().group());
+}
+
 size_t EC_Scalar::bytes() const {
    return m_scalar->bytes();
 }
