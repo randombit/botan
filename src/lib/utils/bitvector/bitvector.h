@@ -1270,8 +1270,13 @@ class bitvector_base final {
             //       If this assumption changes, we need to add further handling
             //       to process a byte padding at the beginning of the bitvector
             //       until a memory alignment boundary is reached.
-            const bool alignment = (ops.template is_memory_aligned_to<uint64_t>() && ...);
-            BOTAN_ASSERT_NOMSG(alignment);
+            //
+            // An empty range has no blocks to process and a possibly-null
+            // underlying buffer, so the alignment check does not apply.
+            if(detail::first(ops...).size() != 0) {
+               const bool alignment = (ops.template is_memory_aligned_to<uint64_t>() && ...);
+               BOTAN_ASSERT_NOMSG(alignment);
+            }
 
             return _process_in_fully_aligned_blocks_of<uint64_t>(fn, ops...) &&
                    _process_in_fully_aligned_blocks_of<uint32_t>(fn, ops...) &&
