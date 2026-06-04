@@ -265,7 +265,7 @@ class Strong_Type_Tests final : public Test {
          auto tb = rng.random_vec<Test_Buffer>(4);
          auto tsb = rng.random_vec<Test_Secure_Buffer>(4);
          Test_Fixed_Array tfa;
-         rng.random_vec(tfa);
+         rng.randomize(tfa);
 
          result.test_bin_eq("generated expected output", tb.get(), "deadbeef");
          result.test_bin_eq("generated expected secure output", tsb.get(), "baadcafe");
