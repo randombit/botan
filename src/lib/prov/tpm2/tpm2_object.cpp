@@ -105,7 +105,9 @@ void Object::_reset() noexcept {
 
 /// Reset the object's internal state without flushing its TPM handles
 void Object::_disengage() noexcept {
-   m_handles = std::make_unique<ObjectHandles>();
+   if(m_handles) {
+      *m_handles = ObjectHandles();
+   }
    m_public_info.reset();
 }
 

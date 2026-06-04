@@ -26,7 +26,7 @@ class BOTAN_TEST_API Memory_Pool final {
       * @param page_size the system page size, each page should
       *        point to exactly this much memory.
       */
-      Memory_Pool(const std::vector<void*>& pages, size_t page_size) noexcept;
+      Memory_Pool(const std::vector<void*>& pages, size_t page_size);
 
       ~Memory_Pool() noexcept;
 

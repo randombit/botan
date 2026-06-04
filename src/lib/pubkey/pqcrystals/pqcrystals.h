@@ -375,7 +375,7 @@ class PolynomialVector {
       template <Domain OtherD>
          requires(D != OtherD)
       /* NOLINTNEXTLINE(*rvalue-reference-param-not-moved) */ explicit PolynomialVector(
-         PolynomialVector<Trait, OtherD>&& other) noexcept :
+         PolynomialVector<Trait, OtherD>&& other) :
             m_polys_storage(std::move(other.m_polys_storage)) {
          BOTAN_DEBUG_ASSERT(m_polys_storage.size() % Trait::N == 0);
          const size_t vecsize = m_polys_storage.size() / Trait::N;

@@ -21,7 +21,7 @@ namespace {
 
 class Base64 final {
    public:
-      static std::string name() noexcept { return "base64"; }
+      static std::string name() { return "base64"; }
 
       static constexpr size_t encoding_bytes_in() noexcept { return m_encoding_bytes_in; }
 

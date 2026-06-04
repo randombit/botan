@@ -362,6 +362,45 @@ std::vector<Test::Result> test_bitvector_capacity(Botan::RandomNumberGenerator& 
                result.test_is_true("XOR sets differing bit 1", xor_ab.at(1).is_set());
                result.test_is_true("XOR clears common bit 3", !xor_ab.at(3).is_set());
             }),
+
+      CHECK("comparison and reduction of empty bitvectors",
+            [](Test::Result& result) {
+               const Botan::bitvector empty1;
+               const Botan::bitvector empty2;
+               result.test_is_true("empty is empty", empty1.empty());
+               result.test_sz_eq("empty has zero size", empty1.size(), size_t(0));
+
+               // Full-range reductions on an empty bitvector must not throw or
+               // terminate (the underlying buffer may be null).
+               result.test_is_true("empty none()", empty1.none());
+               result.test_is_true("empty none_vartime()", empty1.none_vartime());
+               result.test_is_true("empty !any()", !empty1.any());
+               result.test_is_true("empty !any_vartime()", !empty1.any_vartime());
+               result.test_is_true("empty all()", empty1.all());
+               result.test_is_true("empty all_vartime()", empty1.all_vartime());
+               result.test_sz_eq("empty hamming_weight()", empty1.hamming_weight(), size_t(0));
+
+               // Two empty bitvectors compare equal. equals() is constant-time
+               // and noexcept, so a throw here would call std::terminate().
+               result.test_is_true("empty equals empty", empty1.equals(empty2));
+               result.test_is_true("empty equals_vartime empty", empty1.equals_vartime(empty2));
+               result.test_is_true("empty == empty", empty1 == empty2);
+               result.test_is_true("empty not != empty", !(empty1 != empty2));
+
+               // Mismatched sizes must compare unequal without touching blocks.
+               const Botan::bitvector nonempty(8);
+               result.test_is_true("empty does not equal non-empty", !empty1.equals(nonempty));
+               result.test_is_true("empty does not equal_vartime non-empty", !empty1.equals_vartime(nonempty));
+               result.test_is_true("empty != non-empty", empty1 != nonempty);
+
+               // Same coverage for the secure allocator, whose empty buffer is
+               // likewise potentially null.
+               const Botan::secure_bitvector sempty1;
+               const Botan::secure_bitvector sempty2;
+               result.test_is_true("empty secure none()", sempty1.none());
+               result.test_is_true("empty secure equals empty", sempty1.equals(sempty2));
+               result.test_is_true("empty secure == empty", sempty1 == sempty2);
+            }),
    };
 }
 

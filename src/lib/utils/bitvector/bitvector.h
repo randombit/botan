@@ -450,8 +450,17 @@ class bitvector_base final {
        * @returns true if @p other contains the same bit pattern as this
        */
       template <bitvectorish OtherT>
-      bool equals(const OtherT& other) const {
-         return (*this ^ other).none();
+      bool equals(const OtherT& other) const noexcept {
+         if(size() != other.size()) {
+            return false;
+         }
+
+         uint64_t acc = 0;
+         full_range_operation(
+            [&]<std::unsigned_integral BlockT>(BlockT lhs, BlockT rhs) { acc |= static_cast<uint64_t>(lhs ^ rhs); },
+            *this,
+            unwrap_strong_type(other));
+         return !CT::Choice::from_int(acc).as_bool();
       }
 
       /// @name Serialization
@@ -1261,8 +1270,13 @@ class bitvector_base final {
             //       If this assumption changes, we need to add further handling
             //       to process a byte padding at the beginning of the bitvector
             //       until a memory alignment boundary is reached.
-            const bool alignment = (ops.template is_memory_aligned_to<uint64_t>() && ...);
-            BOTAN_ASSERT_NOMSG(alignment);
+            //
+            // An empty range has no blocks to process and a possibly-null
+            // underlying buffer, so the alignment check does not apply.
+            if(detail::first(ops...).size() != 0) {
+               const bool alignment = (ops.template is_memory_aligned_to<uint64_t>() && ...);
+               BOTAN_ASSERT_NOMSG(alignment);
+            }
 
             return _process_in_fully_aligned_blocks_of<uint64_t>(fn, ops...) &&
                    _process_in_fully_aligned_blocks_of<uint32_t>(fn, ops...) &&
